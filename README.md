@@ -15,8 +15,11 @@ cmake --build --preset native-debug
 ctest --preset native-debug
 ```
 
-The optional bridge exposes `PortCore.scaffold_add(20, 22)` to a minimal scene.
-This arithmetic example is infrastructure, not a reconstructed game function.
+The Godot 4.4.1 project starts the recovered front-end movie/title sequence.
+Menus, localisation, background videos, menu sounds and frontend music read the
+user-configured original ZZDATA at runtime. Run `./tools/run_frontend.ps1 -Build`;
+see [media](docs/FRONTEND_MEDIA.md) and [sound](docs/SOUND_RECOVERY.md) for evidence
+and remaining gaps. The separate `main.tscn` arithmetic scaffold remains infrastructure.
 See [development](docs/DEVELOPMENT.md) for dependency checkout, Windows builds,
 and the Godot smoke command. See [progress](docs/PROGRESS.md) for actual checks.
 

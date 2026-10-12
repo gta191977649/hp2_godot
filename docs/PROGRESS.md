@@ -1,4 +1,79 @@
-# Project state — 2026-10-12 (Australia/Sydney)
+# Project state — 2026-10-13 (Australia/Sydney)
+
+## TASK-0017 — Submenu Back and overflow (active)
+
+User reports submenu Backspace failure and Audio items drawing below the hint/footer.
+Confirmed host gap: onlyOptions24 Back is implemented. Root recovered manager history
+strings (0016C4C0/0016B418/0016B438/0016C670) and replaced layout-index history with
+class names. Independent recovery underway for per-screen0x11 permission/side effects
+and original scrolling viewport, clipping/group offsets/arrows. No blanket permission
+or guessed scrolling. Next integrate portable handlers and viewport tests, then actual
+Godot traversal and Audio screenshot. Prior TASK-0016 remains preserved.
+
+## TASK-0016 — Startup/media/audio/scroll integration (active)
+
+Latest user correction: viewport backdrop is now opaque black, replacing Godot
+default gray around movies/title art. Actual DX12 title screenshot inspected;
+RuntimeSmoke PASS and Windows export refreshed. Host color preference, no new
+PS2 equivalence claim.
+
+Run now targets frontend.tscn. Original EA/NFS intro/title sequence, MV30 runtime decode,
+common menu audio and frontend jukebox are integrated. First EA movie cannot be skipped;
+second intro can. Title has a strict >4-second activation gate. Skipping does not start
+music; natural completion does. English text comes from FE_ENGLISH.BIN. Confirmed hint bindings for Audio/Controller/NameEntry are integrated.
+
+Godot 4.4.1 and binding pin e4b7c25e721ce3435a029087e3917a30aa73f06b are installed.
+Actual Windows DX12 capture passed on Intel Arc B390. macOS Metal/LinuxBSD Vulkan defaults
+are configured; those platforms are untested. Recovered blueprint state freezes in normal
+IN_FRONTEND (2), updating only during LOADING_TRACK_COMMON (3).
+
+User correction: BGM now uses original JBC0x8000-byte channel interleave and
+matches the authorized map_tools_ps2 decoder byte-for-byte (E-0016-A06). Movie
+audio uses raw stereo ADPCM, mix48000/pitch3762÷4096 (E-0016-A07), with0.16-second
+video lag. BGM/menu neutral driver pitch is applied separately from PCM metadata.
+Video vertical rows now follow original negative-stride decoding (E-0016-V06);
+actual DX12 EA/main-menu screenshots were inspected and display upright.
+
+Naming sweep E-0016-N01 completed:298 source-path occurrences,118 nonoverlapping
+qualified-name matches. Startup functions moved into fmenus; host decoder remains
+port-side. See NAMING_AUDIT.md for unverified naming debt.
+
+Native and Godot builds PASS; both CTest16/16 PASS. UpdatedRuntimeSmoke,
+ActivationSmoke, AnimationSmoke PASS. WindowsDebug export PASS; DLLs and license
+notices present in ignored out/windows-debug. No staging/commit. Continue
+TASK-0016 with original comparison and remaining boot/settings/handler gaps.
+Final Windows export runtime smoke PASS/exit0; final EA4-second verbose capture
+exited without leak warnings. Earlier transientObjectDB warning remains recorded.
+
+## TASK-0015 — Activation and animation integration (active; remaining gaps explicit)
+
+Main-menu Championship/Speed/Options now request registered documents 1/2/24; the first two
+write DAT_002FC070=1/0. All 37 FUN_0016ADB0 registrations are in a port-side immutable table,
+with class identity retained for shared documents. NameEntry is now resolved to layout 29
+(handler 0024DBD8). Main-menu pulse and selection bars are driven every frame; the renderer
+reads live position, scale, alpha, text/font and layer. Options exit motion is recovered as
+zero-velocity cubic Hermite to x=650, duration 0.05 + original item index*0.05, and transitions
+only after completion. Options Back pops history; Main Menu explicitly rejects Back.
+
+Blocked: Display first needs 001EE6C0's runtime settings snapshot, whose three source blocks
+are not represented yet. That choice throws before exiting. Destination screen internal
+activation/Back handlers, scrolling text/background paths, global constructor bindings and
+localisation remain unimplemented. No PCSX2/reference comparison; no Verified promotion.
+
+Validation (2026-10-12): CMake 3.29.2, Ninja 1.12.0, MinGW GCC 13.2.0, Python 3.14.4,
+Godot 4.3.stable.official.77dcf97d8; godot-cpp pin fbbf9ec4efd8f1055d00edb8d926eef8ba4c2cce.
+`cmake --build --preset native-debug --parallel 4` and `ctest --preset native-debug`: PASS 11/11.
+`cmake --build --preset godot-debug --parallel 4` and `ctest --preset godot-debug`: PASS 11/11.
+`./tools/run_frontend.ps1 -ActivationSmoke`, `-AnimationSmoke`, `-Smoke`: PASS (41 screens,
+1524 resolved resources, 25 missing). Direct Godot `--menu-smoke` also PASS.
+Read-only GhidraMCP evidence E-0015-11/12/21 and E-0015-REG-01; server version not captured.
+No commit or staging performed; prior uncommitted changes preserved.
+
+Exact next action: read tasks/active/TASK-0015-frontend-activation-animation.md, then trace
+DAT_002FC194, DAT_0030CDCC and DAT_0030D49C producers/readers before implementing the Display
+snapshot state. Next independent recovery is Cops On/Off Mode Select handlers 002174A0/00217AF8.
+Run `./tools/run_frontend.ps1 -Build` to try current implementation.
+
 
 ## TASK-0013 — Original front-end actually rendered (not a debug UI)
 
@@ -365,6 +440,32 @@ successfully. No unresolved initialization validation failures remain.
 Only the scaffold call is tested; visual rendering, original gameplay, MSVC,
 Linux, and the installed 4.7.2 runtime were not validated.
 
+## TASK-0014 front-end menu interaction (2026-10-12)
+
+The real front-end screens are now operable, driven by the menu runtime translated out of the
+ELF rather than by a Godot UI. Menu items are the screen's own MENUITEM widgets, navigation
+wraps and skips disabled entries as the original does, the orange highlight and grey disabled
+colours are the values stored in the binary, menu sounds resolve to the original bSound event
+names, and keyboard input is mapped onto the recovered JOY_EVENT_* ids for PC debugging.
+18 of the 41 screens now have their original names recovered by hash match (screen 0 is
+NEW_MAIN_MENU), which confirms TASK-0013's content-based inference.
+
+AGENT.md was added as the binding naming/evidence contract: identifiers are recovered-verbatim
+or address-anchored, never invented descriptive names for recovered code, and an unimplemented
+recovered path raises hp2::NotImplemented instead of degrading silently. Pop-up handling, the
+FMenus Highlight Animation motion and FE_*.BIN localisation are explicitly in that state.
+
+Validation: `ctest --preset native-debug` and `--preset godot-debug` 9/9 (new `fmenus_menu`
+test, 16 groups); `./tools/run_frontend.ps1 -MenuSmoke` prints FRONTEND_MENU_SMOKE_OK;
+`-Smoke` still prints `FRONTEND_SMOKE_OK: screens=41 resolved=1524 missing=25`. No PCSX2 or
+original-hardware comparison was performed, so nothing from this task is Verified.
+
+Exact next action: `Read AGENT.md, docs/FRONTEND_MENU_INTERACTION.md and
+tasks/active/TASK-0014-frontend-menu-interaction.md, then trace the joypad-to-JOY_EVENT
+generation path (ELF strings "GenerateJoyEvents()" 0x002B01C8, "EventNodeSlotPool" 0x002B01F0)
+read-only through GhidraMCP; it is the last unrecovered link between hardware input and the
+menu runtime.`
+
 ## Continuation
 
 Front-end menu next step: "Read docs/PROGRESS.md, docs/FRONTEND_MENU.md and
@@ -372,6 +473,8 @@ tasks/active/TASK-0011-frontend-menu-closed-loop.md, then audit the FUN_0016fa80
 (0x0016fa80..0x001e3dbf) boundary before deciding whether to decompile it; it is the strongest
 lead for New Main Menu's real update/tick logic and eventual menu-item content. Start
 read-only, preserve existing annotations and record evidence before any scoped repair."
+(Superseded in part: the FUN_0016fa80 envelope was audited and retired in TASK-0011's later
+pass, and the menu runtime it was a lead for is now recovered under TASK-0014.)
 
 Original TASK-0003 continuation (still applicable to the broader boundary-audit backlog item,
 now informed by the FUN_0016fa80 priority above): "Read AGENTS.md, docs/PROGRESS.md and

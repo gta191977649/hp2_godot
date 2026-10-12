@@ -56,3 +56,32 @@ change Ghidra analysis. Record tool versions and binary hashes with each export.
 ## Main-loop structure (TASK-0010)
 
 EngineShell in game_core/engine owns the resumable frame orchestration projection. ModuleRegistry binds callsite/target handlers; FrameTrace records provenance and placeholder/error states. State and timing context is separate from host delta; waiting resumes only the original tail. MainLoopObserver is an additive RefCounted bridge and standalone scene. World nested connections remain metadata, preserving dynamic entity loops. See MAIN_LOOP_STRUCTURE.md for APIs and extension rules.
+
+## Current frontend integration checkpoint — TASK-0017 / 2026-10-13
+
+Earlier scaffold descriptions are historical. Current ps2_port is one GDExtension
+DLL registering six RefCounted wrappers: samplePortCore, two diagnostic observers,
+texture loader, frontend layout/runtime adapter and movie host service. These are
+subsystem adapters, not one GodotNode/bridge per native entity or UI widget.
+Recovered game_core remains independent of Godot headers; no Godotphysics/vehicle
+substitution exists. Core tests build without the optional Godot bridge.
+
+The active frontend currently uses GDScript Control._process to drive native menu
+and movie methods, then Control._draw to pull per-widget Dictionaries and draw
+textures/glyphs, including hostUV clipping. RenderingServer references in scripts
+are frame_post_draw waits for captures. There is no direct C++ RenderingServer
+backend or native render-command submission layer. services.hpp::Rendering only
+contains provisionalpresent(); it is not a completed RHI. Frontend orchestration
+and native-object ownership remain split between GDScript and Ps2FrontEndLayout.
+Godot also currently hosts window,input,audio and frame scheduling.
+
+User proposed NativeGameCore→render abstraction→GodotRenderingServer. This is a
+proposed target, not implemented architecture or authorization to silently rewrite
+recovered functions. A concrete next design would move runtime orchestration into
+a Godot-independent native runtime, produce native frame commands/snapshots, and
+use a shared RID-owning Godot renderer behind a narrow host entry point. Keep
+resource IDs/data/time units independent of Godot; preserve original tick/input
+semantics and expose incomplete paths. Observers may stay separate debug wrappers.
+Local pinned4.4.1 RenderingServer bindings expose canvas_item_create,
+canvas_item_add_texture_rect_region,texture_2d_create/update,mesh_create,
+instance_set_transform andfree_rid; this confirms available API, not current use.

@@ -1,11 +1,16 @@
-; Infrastructure smoke project; no original game resources.
+; TASK-0016 runtime front-end entry and per-platform RenderingDevice defaults.
 config_version=5
 
 [application]
-config/name="PS2 PC Port Scaffold"
-run/main_scene="res://scenes/main.tscn"
-config/features=PackedStringArray("4.3", "GL Compatibility")
+config/name="HP2 PS2 Native Port"
+run/main_scene="res://scenes/frontend.tscn"
+config/features=PackedStringArray("4.4", "Forward Plus")
+boot_splash/show_image=false
 
 [rendering]
-renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
+; TASK-0016 user-requested host backdrop for uncovered movie/title pixels.
+environment/defaults/default_clear_color=Color(0, 0, 0, 1)
+renderer/rendering_method="forward_plus"
+rendering_device/driver.windows="d3d12"
+rendering_device/driver.macos="metal"
+rendering_device/driver.linuxbsd="vulkan"

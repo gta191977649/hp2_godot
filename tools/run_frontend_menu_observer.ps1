@@ -1,6 +1,6 @@
 param([switch]$Build, [switch]$Smoke, [string]$Capture)
 $observerRoot = Split-Path -Parent $PSScriptRoot
-$observerGodot = Join-Path $observerRoot 'local/tools/godot-4.3/Godot_v4.3-stable_win64_console.exe'
+$observerGodot = Join-Path $observerRoot 'local/tools/godot-4.4.1/Godot_v4.4.1-stable_win64_console.exe'
 Push-Location -LiteralPath $observerRoot
 try {
     if ($Build) {
@@ -9,7 +9,7 @@ try {
         & cmake --build --preset godot-debug --parallel 4
         if ($LASTEXITCODE -ne 0) { throw 'Godot bridge build failed' }
     }
-    if (-not (Test-Path -LiteralPath $observerGodot)) { throw 'Pinned Godot 4.3 runtime missing; see docs/DEVELOPMENT.md' }
+    if (-not (Test-Path -LiteralPath $observerGodot)) { throw 'Pinned Godot 4.4.1 runtime missing; see docs/DEVELOPMENT.md' }
     if ($Smoke) {
         $observerOutput = & $observerGodot --headless --path godot res://scenes/frontend_menu_observer.tscn --quit-after 120 -- --frontend-menu-smoke 2>&1
         $observerExit = $LASTEXITCODE

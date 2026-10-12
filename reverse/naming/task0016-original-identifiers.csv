@@ -1,0 +1,576 @@
+kind,address,text,evidence,association,references
+paths,0x002AB000,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AB130,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AB180,bWare/inc/bware.hpp,E-0016-N01,string_only,not_queried
+paths,0x002ABC80,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AC528,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AC5C0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AC608,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AC620,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AC638,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AC650,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AC690,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AC8D0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002ACC30,src\care.cpp,E-0016-N01,string_only,0011e79c PARAM
+paths,0x002AD0F8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AD140,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AD418,src\acidfxe.cpp,E-0016-N01,string_only,"00129a24 PARAM
+00129af8 PARAM
+00129bb4 PARAM LAB_00129bb4"
+paths,0x002AD46F,AbWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AD488,src\memorycard.cpp,E-0016-N01,string_only,0012a634 PARAM
+paths,0x002AD558,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AD570,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AD878,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002ADFC8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AE1D0,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AE1F8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AE210,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AE3B0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AE668,..\indep\src\car.cpp,E-0016-N01,string_only,001334b8 PARAM
+paths,0x002AE6E8,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AE910,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AE958,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AEB10,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AEC28,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AED58,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AEE08,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AEED8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AF040,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AF170,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AF2C8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AF5C0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AF8F8,..\indep\src\racecoordinator.cpp,E-0016-N01,string_only,"0014a83c PARAM
+0014ac28 PARAM
+0014ad48 PARAM
+0014bf38 PARAM LAB_0014bf38
+0014bfd0 PARAM
+0014c014 PARAM
+0014c23c PARAM
+0014c328 PARAM
+0014c340 PARAM
+0014c348 PARAM"
+paths,0x002AFB88,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002AFBB0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B0048,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B0100,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B01B0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B12F8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B1408,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B1440,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B1470,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B1668,..\indep\src\cameramover.cpp,E-0016-N01,string_only,"0015e818 PARAM
+0015e898 PARAM"
+paths,0x002B1760,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B1ED0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B1F88,..\indep\src\zonecameras.cpp,E-0016-N01,string_only,"0016078c PARAM
+00160944 PARAM
+00160ba0 PARAM
+001623c0 PARAM
+00162674 PARAM
+00162ac0 PARAM
+00162f0c PARAM
+0016319c PARAM
+00163320 PARAM
+001634bc PARAM
+00163714 PARAM
+00164688 PARAM"
+paths,0x002B2018,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B2150,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B21B0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B26B0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B27F8,..\indep\src\fmenus.cpp,E-0016-N01,string_only,(no references)
+paths,0x002B2D30,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B2DC0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B3058,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B3080,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B34F0,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B3560,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B3998,..\indep\src\player.cpp,E-0016-N01,string_only,"00174f60 PARAM
+00175794 PARAM
+001757ac PARAM
+00176a4c PARAM"
+paths,0x002B4050,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B4078,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B40B0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B4278,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B4528,..\indep\src\carinfo.cpp,E-0016-N01,string_only,00188ee8 PARAM
+paths,0x002B4548,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B4560,..\indep\src\spline.cpp,E-0016-N01,string_only,"001891c8 PARAM
+001894c4 PARAM
+00189d9c PARAM LAB_00189d9c"
+paths,0x002B4578,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B4660,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B47B8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B4810,..\indep\src\carsounds.cpp,E-0016-N01,string_only,0018d9e0 PARAM
+paths,0x002B4870,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B49F0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B4A08,..\indep\src\table.cpp,E-0016-N01,string_only,0018fc1c PARAM
+paths,0x002B4A30,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B4E20,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B4E60,..\indep\src\frontendscreens\selectcar.cpp,E-0016-N01,string_only,"00194438 PARAM LAB_00194438
+00194568 PARAM
+001953c0 PARAM
+001954a8 PARAM"
+paths,0x002B5158,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B5180,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B5240,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B5310,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B5408,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B5480,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B56D0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B5AD0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B5C28,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B5C88,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B5D58,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B5D70,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B5D88,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B5DD0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B5DE8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B5F40,..\indep\src\animateddriver.cpp,E-0016-N01,string_only,001a946c PARAM
+paths,0x002B5F80,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B5FF0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B6018,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B6168,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B6198,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B61B0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B62E8,..\indep\src\sound.cpp,E-0016-N01,string_only,001ae754 PARAM LAB_001ae754
+paths,0x002B6380,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B63A8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B63F0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B6518,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B6540,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B6558,..\indep\src\lzcompress.cpp,E-0016-N01,string_only,(no references)
+paths,0x002B6578,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B6590,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B65B8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B6600,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B6758,..\indep\src\frontendscreens\racesetup.cpp,E-0016-N01,string_only,001b6bf4 PARAM
+paths,0x002B6888,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B6930,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B6948,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B6988,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B6B08,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B6B90,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B6BA8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B7200,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B7288,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B72B0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B73C8,..\indep\src\trackroute.cpp,E-0016-N01,string_only,"001c2a70 PARAM
+001c3048 PARAM"
+paths,0x002B73E8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B74D0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B7CE8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B7DD0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B7E00,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B7E40,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B7E68,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B7ED0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B83B0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B83E8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B8BB8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B8BD0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B8C50,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B8C80,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B91A0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B9248,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B92A8,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B92D0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B93E8,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B9420,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B9528,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B98F8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B9910,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B9940,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B9A50,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B9B00,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002B9E00,..\indep\src\frontendscreens\options.cpp,E-0016-N01,string_only,"001f1a30 PARAM
+001f21f8 PARAM"
+paths,0x002BA470,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BA5C0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BA908,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BA950,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BA9F8,..\indep\src\eventtree.cpp,E-0016-N01,string_only,"001fbd88 PARAM LAB_001fbd88
+001fd35c PARAM
+001fd3bc PARAM
+001fd738 PARAM
+001fe4c0 PARAM
+001fe538 PARAM
+001fe5ac PARAM
+001fe620 PARAM
+001ffc84 PARAM"
+paths,0x002BAF18,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BAF50,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BAF68,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BAFB8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BB048,..\indep\src\beltmover.cpp,E-0016-N01,string_only,"00204114 PARAM
+00204128 PARAM
+00204148 PARAM"
+paths,0x002BB0B0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BB0D8,..\indep\src\speech\sedwedge.cpp,E-0016-N01,string_only,"00205734 PARAM
+00205b94 PARAM
+00205d34 PARAM"
+paths,0x002BB100,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BB158,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BB1E8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BB200,..\indep\src\trackpath.cpp,E-0016-N01,string_only,00207960 PARAM
+paths,0x002BB298,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BB2F0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BB330,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BB3A0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BB3C8,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BB430,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BB460,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BB478,../indep/src/Speech/fragmentedVector.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BB4C0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BB4E8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BBDF0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BBE08,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BBF58,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BC018,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BC120,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BC238,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BC280,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BC2E8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BC3B0,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BC3D8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BC3F0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BC5F8,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BC630,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BC678,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BC770,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BC820,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BC970,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BC9B0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BCCC0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BCD18,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BCDE0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BCFE0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BD290,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BD480,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BD710,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BD7A0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BD998,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BD9E8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BDA00,..\indep\src\movieplayer\cyclicbuffer.cpp,E-0016-N01,string_only,002321f0 PARAM
+paths,0x002BDA30,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BDA48,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BDA60,..\indep\src\movieplayer\dctimage.cpp,E-0016-N01,string_only,0023462c PARAM
+paths,0x002BDB18,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BDC30,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BDC78,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BDD08,..\indep\src\movieplayer\movieplayer.cpp,E-0016-N01,string_only,(no references)
+paths,0x002BDD38,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BDD70,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BDDC0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BDDD8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BDDF0,..\indep\src\movieplayer\ringbuffer.cpp,E-0016-N01,string_only,"00239434 PARAM
+00239450 PARAM
+00239468 PARAM
+002394a4 PARAM"
+paths,0x002BDE18,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BDEE8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BE040,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BE1E0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BE1F8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BE248,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BE270,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BE288,..\indep\src\quickspline.cpp,E-0016-N01,string_only,0023d078 PARAM
+paths,0x002BE2C0,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BE300,..\indep\src\frontendscreens\joystickconfiguration.cpp,E-0016-N01,string_only,0023df58 PARAM
+paths,0x002BE578,bSound/include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BE5D8,bWare/inc/bware.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BE6A8,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BEA30,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BEF30,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BF088,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BF150,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BF220,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BF328,bWare/inc/bware.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BF3E8,bWare/inc/bware.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BF458,bWare/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BF480,bWare/inc/bware.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BF560,inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BF570,inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BF580,inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BF590,inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BF5C8,inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BF5F0,src\bDebug.cpp,E-0016-N01,string_only,"002509c8 PARAM
+00250e94 PARAM
+00250f0c PARAM"
+paths,0x002BF6B0,inc/bware.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BF918,inc/bware.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BF928,inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BF970,src\bFile.cpp,E-0016-N01,string_only,"00253880 PARAM
+00253bd0 PARAM
+00253bfc PARAM
+00253ca4 PARAM
+00253ccc PARAM
+00253d44 PARAM
+002541c0 PARAM
+00254674 PARAM
+00254944 PARAM"
+paths,0x002BFAA0,inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002BFDA0,src\bFileE.cpp,E-0016-N01,string_only,"0025549c PARAM
+002554c4 PARAM
+00255568 PARAM
+00255ed0 PARAM
+002562f4 PARAM
+00256398 PARAM
+002569b4 PARAM
+00256b1c PARAM"
+paths,0x002C0130,inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C0178,src\bMemory.cpp,E-0016-N01,string_only,"00256e64 PARAM
+00257124 PARAM
+002571a0 PARAM
+00257200 PARAM
+002573a0 PARAM
+002573bc PARAM
+002573dc PARAM
+002573f4 PARAM
+00257630 PARAM
+002576c0 PARAM
+00257928 PARAM"
+paths,0x002C0410,inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C07B0,inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C07C0,inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C07F0,src\EspClient.cpp,E-0016-N01,string_only,"0025b1b0 PARAM
+0025b1fc PARAM
+0025b21c PARAM
+0025b2bc PARAM
+0025b3b8 PARAM
+0025b44c PARAM
+0025b504 PARAM
+0025b62c PARAM
+0025b6cc PARAM
+0025b76c PARAM
+0025b80c PARAM
+0025b8b8 PARAM
+0025baac PARAM
+0025bc14 PARAM
+0025bd7c PARAM
+0025be64 PARAM
+0025bef0 PARAM
+0025bfb0 PARAM
+0025c038 PARAM
+0025c0c0 PARAM
+0025c1f4 PARAM
+0025c2a0 PARAM
+0025c350 PARAM
+0025c408 PARAM
+0025c4b8 PARAM
+0025c570 PARAM
+0025c620 PARAM
+0025c6d8 PARAM
+0025c86c PARAM
+0025c938 PARAM
+0025ca00 PARAM
+0025ccf4 PARAM
+0025ce90 PARAM
+0025cf70 PARAM"
+paths,0x002C0918,inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C0940,inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C0950,../bware/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C0998,include/bRegion.h,E-0016-N01,string_only,not_queried
+paths,0x002C09B0,include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C0A60,../bware/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C0B38,src/bDriverPS2.cpp,E-0016-N01,string_only,"0025ec2c PARAM
+00269da4 PARAM"
+paths,0x002C2AF8,../bware/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C3628,../bware/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C3670,include/bRegion.h,E-0016-N01,string_only,not_queried
+paths,0x002C3698,src/bEffect.cpp,E-0016-N01,string_only,002703a0 PARAM
+paths,0x002C36A8,include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C3758,../bware/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C37A0,include/bRegion.h,E-0016-N01,string_only,not_queried
+paths,0x002C37B8,src/bRegion.cpp,E-0016-N01,string_only,00271794 PARAM
+paths,0x002C3800,include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C38B0,../bware/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C38F8,include/bRegion.h,E-0016-N01,string_only,not_queried
+paths,0x002C3940,src/bSample.cpp,E-0016-N01,string_only,"00273400 PARAM
+00273464 PARAM
+002734d8 PARAM
+00273560 PARAM
+00274228 PARAM"
+paths,0x002C3B18,include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C3BE8,../bware/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C3C30,include/bRegion.h,E-0016-N01,string_only,not_queried
+paths,0x002C3C68,src/bSegment.cpp,E-0016-N01,string_only,"00276224 PARAM
+002762ec PARAM
+002763c8 PARAM"
+paths,0x002C3CE8,include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C3D98,../bware/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C3DE0,include/bRegion.h,E-0016-N01,string_only,not_queried
+paths,0x002C3E30,src/bSound.cpp,E-0016-N01,string_only,"00277b64 PARAM
+00277ba8 PARAM
+00277c48 PARAM
+00277fa8 PARAM"
+paths,0x002C3E50,include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C3F00,../bware/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C3F48,include/bRegion.h,E-0016-N01,string_only,not_queried
+paths,0x002C3F80,src/bVoice.cpp,E-0016-N01,string_only,"0027ab58 PARAM
+0027ada4 PARAM"
+paths,0x002C40D8,include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C4188,../bware/inc/bWare.hpp,E-0016-N01,string_only,not_queried
+paths,0x002C41D0,include/bRegion.h,E-0016-N01,string_only,not_queried
+paths,0x002C4208,include/bJukebox.h,E-0016-N01,string_only,not_queried
+paths,0x002C4220,src/bJukebox.cpp,E-0016-N01,string_only,"0027c920 PARAM
+0027c96c PARAM
+0027ca40 PARAM
+0027ca8c PARAM
+0027cbc8 PARAM
+0027cc14 PARAM
+0027cce8 PARAM
+0027cd34 PARAM
+0027ce08 PARAM
+0027ce54 PARAM
+0027cf28 PARAM
+0027cf74 PARAM
+0027d0cc PARAM
+0027d114 PARAM
+0027d1a0 PARAM
+0027d30c PARAM
+0027d354 PARAM
+0027d398 PARAM
+0027db28 PARAM
+0027db5c PARAM
+0027db74 PARAM
+0027dba4 PARAM
+0027dbe8 PARAM
+0027dc14 PARAM
+0027dda0 PARAM
+0027dddc PARAM
+0027e214 PARAM
+0027e370 PARAM
+0027e41c PARAM
+0027e4c4 PARAM
+0027e570 PARAM
+0027e6f8 PARAM
+0027e818 PARAM
+0027e864 PARAM
+0027e940 PARAM
+0027e98c PARAM
+0027ea68 PARAM
+0027eab4 PARAM
+0027ebac PARAM
+0027ec4c PARAM"
+paths,0x002C4740,include/bFragmentedVector2.hpp,E-0016-N01,string_only,not_queried
+methods,0x002AC920,CarPartCuller::CullParts(),E-0016-N01,string_only,(no references)
+methods,0x002ACDF0,CarRenderInfo::Render(),E-0016-N01,string_only,(no references)
+methods,0x002ACE48,CarRenderInfo::RenderDashboard(),E-0016-N01,string_only,(no references)
+methods,0x002AD370,AcidEffectSystem::DoTimeStep(),E-0016-N01,string_only,(no references)
+methods,0x002AD390,AcidEffectSystem::RenderEffects,E-0016-N01,string_only,(no references)
+methods,0x002ADA80,DemoDiscManager::Init(),E-0016-N01,string_only,0012e704 PARAM
+methods,0x002ADDDA,DemoDiscManager::SetEndReason(),E-0016-N01,string_only,(no references)
+methods,0x002ADE4A,DemoDiscManager::EndDemo(),E-0016-N01,string_only,(no references)
+methods,0x002AE150,ReplayScreen::Update(),E-0016-N01,string_only,(no references)
+methods,0x002AE518,Car::SetMovementMode(),E-0016-N01,string_only,(no references)
+methods,0x002AE5A0,Car::Move(),E-0016-N01,string_only,(no references)
+methods,0x002AE690,Car::TriggerCarTerrainEffects(),E-0016-N01,string_only,(no references)
+methods,0x002AEA70,PhysicsCar::Move(),E-0016-N01,string_only,(no references)
+methods,0x002AEA88,PhysicsCar::ResolveForces(),E-0016-N01,string_only,(no references)
+methods,0x002AEF30,ReplayManager::BeginFrame(),E-0016-N01,string_only,(no references)
+methods,0x002AEFF8,ReplayManager::HandleSnapshot(),E-0016-N01,string_only,(no references)
+methods,0x002AF000,nager::HandleSnapshot(),E-0016-N01,nested_match_excluded,(no references)
+methods,0x002AF230,FlailerRenderManager::BeginFrame(),E-0016-N01,string_only,(no references)
+methods,0x002AF258,FlailerRenderManager::RenderLayer(),E-0016-N01,string_only,(no references)
+methods,0x002AF298,FlailerRenderManager::RenderScreenPrintf(),E-0016-N01,string_only,(no references)
+methods,0x002AFD18,World::DoTimestep(),E-0016-N01,string_only,(no references)
+methods,0x002AFD30,World::DoTimestep,E-0016-N01,string_only,(no references)
+methods,0x002AFD58,World::DoTimestep,E-0016-N01,string_only,(no references)
+methods,0x002AFD78,World::DoTimestep,E-0016-N01,string_only,(no references)
+methods,0x002AFDA0,World::DoTimestep,E-0016-N01,string_only,(no references)
+methods,0x002AFDC8,World::DoTimestep,E-0016-N01,string_only,(no references)
+methods,0x002AFDE8,World::DoTimestep,E-0016-N01,string_only,(no references)
+methods,0x002AFE10,World::DoTimestep,E-0016-N01,string_only,(no references)
+methods,0x002AFE30,World::DoTimestep,E-0016-N01,string_only,(no references)
+methods,0x002AFE58,World::DoTimestep,E-0016-N01,string_only,(no references)
+methods,0x002AFE80,World::DoTimestep,E-0016-N01,string_only,(no references)
+methods,0x002AFEB0,World::DoTimestep,E-0016-N01,string_only,(no references)
+methods,0x002AFED8,World::DoTimestep,E-0016-N01,string_only,(no references)
+methods,0x002AFF00,World::DoTimestep,E-0016-N01,string_only,(no references)
+methods,0x002AFF28,World::DoTimestep,E-0016-N01,string_only,(no references)
+methods,0x002AFF50,World::DoTimestep,E-0016-N01,string_only,(no references)
+methods,0x002AFF78,World::DoTimestep,E-0016-N01,string_only,(no references)
+methods,0x002AFFA0,World::DoTimestep,E-0016-N01,string_only,(no references)
+methods,0x002AFFC8,World::DoTimestep,E-0016-N01,string_only,(no references)
+methods,0x002AFFDC,CarList::Sort(),E-0016-N01,string_only,(no references)
+methods,0x002AFFF0,World::DoTimestep,E-0016-N01,string_only,(no references)
+methods,0x002B0020,World::DoTimestep,E-0016-N01,string_only,(no references)
+methods,0x002B0034,Race::Update(),E-0016-N01,string_only,(no references)
+methods,0x002B00A8,GrandSceneryCullInfo::CullView,E-0016-N01,string_only,(no references)
+methods,0x002B00C8,GrandSceneryCullInfo::DoCulling(),E-0016-N01,string_only,(no references)
+methods,0x002B2178,TrafficCar::Move(),E-0016-N01,string_only,(no references)
+methods,0x002B4CD5,AICarController::GetCurrentTrackRoutePoint(),E-0016-N01,string_only,(no references)
+methods,0x002B4D70,NearbyCarList::BuildArray,E-0016-N01,string_only,(no references)
+methods,0x002B5328,PhysicsSystem::IntegrateEuler(),E-0016-N01,string_only,(no references)
+methods,0x002B5348,PhysicsSystem::IntegrateEuler,E-0016-N01,string_only,(no references)
+methods,0x002B5380,PhysicsSystem::GetDerivative(),E-0016-N01,string_only,(no references)
+methods,0x002B57F0,CopMover::Move(),E-0016-N01,string_only,(no references)
+methods,0x002B58D8,CopDriver::Think(),E-0016-N01,string_only,(no references)
+methods,0x002B65E0,CarDamage::AddDamage(),E-0016-N01,string_only,(no references)
+methods,0x002B7328,TrackRoute::FindClosestPoint(),E-0016-N01,string_only,(no references)
+methods,0x002B7685,AIActionAvoidCars::CalculatePointsToDrive(),E-0016-N01,string_only,(no references)
+methods,0x002B76DD,AIActionJustDrive::CalculatePointsToDrive(),E-0016-N01,string_only,(no references)
+methods,0x002B772D,AIActionDraft::CalculatePointsToDrive(),E-0016-N01,string_only,(no references)
+methods,0x002B7775,AIActionPass::CalculatePointsToDrive(),E-0016-N01,string_only,(no references)
+methods,0x002B77C5,AIActionNudgeCar::CalculatePointsToDrive(),E-0016-N01,string_only,(no references)
+methods,0x002B780D,AIActionBlock::CalculatePointsToDrive(),E-0016-N01,string_only,(no references)
+methods,0x002B785D,AIActionPullOver::CalculatePointsToDrive(),E-0016-N01,string_only,(no references)
+methods,0x002B78AD,AIActionGetUnstuck::CalculatePointsToDrive(),E-0016-N01,string_only,(no references)
+methods,0x002B7905,AIActionAvoidRoadBlock::CalculatePointsToDrive(),E-0016-N01,string_only,(no references)
+methods,0x002B795D,AIActionIJustGotHit::CalculatePointsToDrive(),E-0016-N01,string_only,(no references)
+methods,0x002B799D,AIActionAccidentRecovery::CalculatePointsToDrive(),E-0016-N01,string_only,(no references)
+methods,0x002B8658,DynamicCollisionBody::Move(),E-0016-N01,string_only,(no references)
+methods,0x002B8678,DynamicCollisionBody::MaybeCreateWitnesses(),E-0016-N01,string_only,(no references)
+methods,0x002B86A8,DynamicCollisionBody::CreateTrackPolygonCollisionBodies(),E-0016-N01,string_only,(no references)
+methods,0x002B8700,CarCollisionBody::Move(),E-0016-N01,string_only,(no references)
+methods,0x002B8720,TrackPolygonCollisionBody::TrackPolygonCollisionBody(),E-0016-N01,string_only,(no references)
+methods,0x002B95E0,Chopper::ShiftTarget(),E-0016-N01,string_only,(no references)
+methods,0x002B95F8,Chopper::FindUnobstructedSpot(),E-0016-N01,string_only,(no references)
+methods,0x002B9618,Chopper::PlaceChopperInWorld(),E-0016-N01,string_only,(no references)
+methods,0x002B9638,Chopper::StartChaseLogic(),E-0016-N01,string_only,(no references)
+methods,0x002B9658,Chopper::EndChaseLogic(),E-0016-N01,string_only,(no references)
+methods,0x002B9678,Chopper::FindChopperPointFromScratch(),E-0016-N01,string_only,(no references)
+methods,0x002B96A0,Chopper::FindChopperRoutePoint(),E-0016-N01,string_only,(no references)
+methods,0x002B96C8,Chopper::FindPreviousFork(),E-0016-N01,string_only,(no references)
+methods,0x002B96E8,Chopper::SwitchToNearbyFork(),E-0016-N01,string_only,(no references)
+methods,0x002B9708,Chopper::FollowRoute(),E-0016-N01,string_only,(no references)
+methods,0x002B9720,Chopper::BeginStakeout(),E-0016-N01,string_only,(no references)
+methods,0x002B9740,Chopper::HangoutNearHere(),E-0016-N01,string_only,(no references)
+methods,0x002B9760,Chopper::AdjustTargetInBounds(),E-0016-N01,string_only,(no references)
+methods,0x002B9780,Chopper::CleverPursuitPlan(),E-0016-N01,string_only,(no references)
+methods,0x002B97A0,Chopper::BombRunLogic(),E-0016-N01,string_only,(no references)
+methods,0x002B9818,Chopper::HighLevelPlanning(),E-0016-N01,string_only,(no references)
+methods,0x002B9838,Chopper::Think(),E-0016-N01,string_only,(no references)
+methods,0x002B9850,Chopper::MoveChopper(),E-0016-N01,string_only,(no references)
+methods,0x002B9868,Chopper::DrawChopper(),E-0016-N01,string_only,(no references)
+methods,0x002B9880,Chopper::TriggerDustEmitter(),E-0016-N01,string_only,(no references)
+methods,0x002B98A0,Chopper::Fly(),E-0016-N01,string_only,(no references)
+methods,0x002B98B0,Chopper::FireSalvo(),E-0016-N01,string_only,(no references)
+methods,0x002B98C8,Chopper::FireWeapon(),E-0016-N01,string_only,(no references)
+methods,0x002B9928,HeliSheet::FindZValue(),E-0016-N01,string_only,(no references)
+methods,0x002BB078,BeltMover::Move(),E-0016-N01,string_only,(no references)
+methods,0x002BB238,TrackPathCoordinate::UpdatePosition(),E-0016-N01,string_only,(no references)
+methods,0x002BC6A0,MellowMover::Move(),E-0016-N01,string_only,(no references)
+methods,0x002BCAD8,Smokeable::Move(),E-0016-N01,string_only,(no references)
+methods,0x002BCDC0,TrafficTeleporter::DoTimestep(),E-0016-N01,string_only,(no references)
+methods,0x002BD158,CopManager::Think(),E-0016-N01,string_only,(no references)
+methods,0x002BE128,RealController::Think(),E-0016-N01,string_only,(no references)
+methods,0x002BE140,RealController::CalculateLateralPos,E-0016-N01,string_only,(no references)
+methods,0x002BE870,DrivingChoice::BuildDriveTarget(),E-0016-N01,string_only,(no references)
+methods,0x002BE898,DrivingChoice::IsDriveable(),E-0016-N01,string_only,(no references)
+methods,0x002BE8B8,DrivingChoice::MakeNewChoice(),E-0016-N01,string_only,(no references)
+methods,0x002BE8D8,DrivingChoice::TryChoice(),E-0016-N01,string_only,(no references)
+methods,0x002BE8F8,DrivingChoice::FixupCarToExcludeFromCollisionPrediction(),E-0016-N01,string_only,(no references)
+methods,0x002BE938,DrivingChoice::FillUpDriveTarget,E-0016-N01,string_only,(no references)
+methods,0x002BE960,DrivingChoice::GetSpeedBackToLine(),E-0016-N01,string_only,(no references)
+methods,0x002BE988,DrivingChoice::BuildDriveTargetAroundCar(),E-0016-N01,string_only,(no references)
+methods,0x002BE9B8,DrivingChoice::MakeDriveTargetParallelToCar(),E-0016-N01,string_only,(no references)
+methods,0x002BE9E8,FuturePoints::BuildArray(),E-0016-N01,string_only,(no references)
+methods,0x002BEA08,FuturePoints::DoSmoothOffsetChange(),E-0016-N01,string_only,(no references)
+methods,0x002BF95C,bFile::Filename,E-0016-N01,string_only,(no references)
+methods,0x002C045A,SlotPool::CleanupExpandedSlotPools(),E-0016-N01,string_only,(no references)
+methods,0x002C04BA,SlotPoolManager::NewSlotPool,E-0016-N01,string_only,(no references)
+methods,0x002C04E9,SlotPoolManager::SlotPoolManager(),E-0016-N01,string_only,(no references)
+methods,0x002C051A,SlotPoolManager::DeleteSlotPool,E-0016-N01,string_only,(no references)

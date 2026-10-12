@@ -3,7 +3,7 @@
 ## Prerequisites and pinned dependencies
 
 Windows x86-64: Git, CMake >=3.24, Ninja, and a C++17 compiler (MSVC developer
-shell or MinGW-w64). For the bridge add Python 3 and Godot 4.3.stable standard
+shell or MinGW-w64). For the bridge add Python 3 and Godot 4.4.1.stable standard
 edition. godot-cpp is pinned as documented in DECISIONS.md. Ghidra/Java, its R5900
 extension, GhidraMCP, and PCSX2 are needed for later analysis/comparison, not builds.
 See PROGRESS.md for tools actually detected. Python's WindowsApps alias may not
@@ -19,7 +19,7 @@ cmake --build --preset native-debug
 ctest --preset native-debug
 ```
 
-Expected submodule commit: `fbbf9ec4efd8f1055d00edb8d926eef8ba4c2cce`.
+Expected submodule commit: `e4b7c25e721ce3435a029087e3917a30aa73f06b`.
 Do not use `git submodule update --remote`. A fresh clone should use
 `git clone --recurse-submodules <your-repository-url>`. No remote is set yet.
 
@@ -53,20 +53,20 @@ Download the pinned engine from the official archive linked in DECISIONS.md.
 Use an explicit local path, not a guessed system install:
 
 ```powershell
-$portGodot = 'C:\Tools\Godot-4.3\Godot_v4.3-stable_win64_console.exe'
+$portGodot = 'C:\Tools\Godot-4.4.1\Godot_v4.4.1-stable_win64_console.exe'
 & $portGodot --version
 & $portGodot --headless --path godot --editor --import
-& $portGodot --headless --path godot -- --smoke-test
+& $portGodot --headless --path godot res://scenes/main.tscn -- --smoke-test
 & $portGodot --path godot --editor
 ```
 
 Initialization downloaded an isolated portable copy to
-`local/tools/godot-4.3/` (ignored). On this machine use:
+`local/tools/godot-4.4.1/` (ignored). On this machine use:
 
 ```powershell
-$portGodot = Join-Path $PWD 'local/tools/godot-4.3/Godot_v4.3-stable_win64_console.exe'
+$portGodot = Join-Path $PWD 'local/tools/godot-4.4.1/Godot_v4.4.1-stable_win64_console.exe'
 & $portGodot --headless --path godot --editor --import
-& $portGodot --headless --path godot -- --smoke-test
+& $portGodot --headless --path godot res://scenes/main.tscn -- --smoke-test
 ```
 
 The smoke scene must exit 0 and print `PORT_SMOKE_OK: 42`, with no extension or
@@ -99,3 +99,18 @@ formats, and previously tracked files are not protected by ignores.
 ## Main-loop observer (TASK-0010)
 
 Run `./tools/run_main_loop_observer.ps1 -Build` to build the bridge and open the separate scene; `-Smoke` runs its headless acceptance checks. Default demo remains unchanged. `py -3 reverse/scripts/validate_main_loop.py --metadata-only` checks public scheduling catalogs without the original ELF/Ghidra; full validation needs those local prerequisites. See MAIN_LOOP_STRUCTURE.md for module registration and frame-wait contracts.
+
+### TASK-0016 frontend runtime and export
+
+Install the pinned host codec with `py -3 tools/setup_ffmpeg.py`; its shared LGPL
+DLLs provide MV30 without preconverting original assets. Configure ZZDATA using the
+existing local asset config or HP2_PS2_ASSET_ROOT (never commit that config/assets).
+Run `./tools/run_frontend.ps1 -Build` for startup, or `-Screen 0` for direct main-menu
+inspection. `-RuntimeSmoke`, `-ActivationSmoke`, `-AnimationSmoke` validate integration.
+
+Windows debug export: invoke the pinned Godot 4.4.1 console with `--headless --path
+godot --export-debug "Windows Debug" ../out/windows-debug/port.exe`. Matching 4.4.1
+export templates are required. The GDExtension dependency table copies shared codec
+DLLs alongside the extension. Keep the FFmpeg license and exact source/build reference
+with distributions and retain replaceable DLLs. Original assets are read externally.
+macOS/Linux renderer defaults are configured but builds are not validated here.
