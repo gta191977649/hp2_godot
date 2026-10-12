@@ -4,6 +4,7 @@
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/variant/array.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
+#include <map>
 #include <optional>
 
 // TASK-0012: Godot-facing wrapper around hp2::assets::Hp2TpkArchive. Loads real HP2 texture
@@ -29,11 +30,26 @@ public:
     // for normal menu use).
     godot::Array list_textures(const godot::String& relative_path);
 
+    // Resolves a TexturePack entry hash (as stored in frontend widget records at +0x50) against
+    // every bundle in the search list, decoding and caching on first use. Returns a null Ref when
+    // the hash is not present in any searched bundle.
+    godot::Ref<godot::ImageTexture> load_texture_by_hash(std::int64_t texture_hash);
+
+    // Bundles searched by load_texture_by_hash, as ZZDATA-relative forward-slash paths. Defaults
+    // to the frontend/global bundles that actually carry frontend widget textures.
+    void set_search_bundles(const godot::PackedStringArray& bundles);
+    godot::PackedStringArray get_search_bundles() const;
+
     godot::String get_last_error() const { return last_error_; }
 
 private:
     bool load_archive(const godot::String& relative_path, hp2::assets::Hp2TpkArchive& out_archive);
+    const hp2::assets::Hp2TpkArchive* cached_archive(const godot::String& relative_path);
+
     godot::String last_error_;
+    std::map<std::string, hp2::assets::Hp2TpkArchive> archive_cache_;
+    std::map<std::uint32_t, godot::Ref<godot::ImageTexture>> texture_cache_;
+    godot::PackedStringArray search_bundles_;
 };
 
 } // namespace port::godot_bridge

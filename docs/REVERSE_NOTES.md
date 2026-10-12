@@ -94,6 +94,16 @@ See docs/FULL_RECOVERY.md and the 7,544-row recovery inventory. Native police ti
 
 61 loop callsites/39 targets plus five startup sites captured; dynamic startup and frame gates, saved s2/f20 operands, and post-boundary tail retained. World controller path is 00131A30; mover goes via entity virtual 0014D898 -> 001D81F0 -> 00131AC8, with a possible remainder step. 00131A80 is a secondary-object callback, not mover. See docs/MAIN_LOOP_STRUCTURE.md, reverse/main_loop/ catalogs and E-0010 evidence. No Ghidra changes or original verification.
 
+## TASK-0013 frontend layout — 2026-10-12
+
+Asset-format RE. FRONTB.BUN chunk 0x80010200 holds 41 front-end screens (0x80010201), each a list
+of 0x00010210 textured quads and 0x00010212 text widgets; chunk 0x00015010 holds bitmap font
+glyph tables. Field map, evidence and open items: docs/FRONTEND_LAYOUT.md. Widget name hashes at
+record +0x08 are the same literal immediates the ELF frontend code uses, which ties this data
+format to TASK-0011's code-side findings and explains FUN_00249a40's GRID/MASTER_BP_OBJECT/
+FADING_BP_OBJECT bindings. Real screens (main menu, Options, Configuration, Title) now render in
+Godot from the player's ZZDATA at runtime. No Ghidra changes; no original-hardware comparison.
+
 ## TASK-0012 asset pipeline — 2026-10-12
 
 Asset-file format RE (not ELF code), separate from the symbols.csv/functions workflow above. See

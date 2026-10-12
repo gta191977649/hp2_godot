@@ -5,6 +5,7 @@
 #include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/packed_byte_array.hpp>
+#include <godot_cpp/variant/packed_string_array.hpp>
 
 using namespace hp2::assets;
 
@@ -28,6 +29,9 @@ void Ps2TextureLoader::_bind_methods() {
     godot::ClassDB::bind_method(godot::D_METHOD("load_texture", "relative_path", "texture_name"), &Ps2TextureLoader::load_texture);
     godot::ClassDB::bind_method(godot::D_METHOD("list_textures", "relative_path"), &Ps2TextureLoader::list_textures);
     godot::ClassDB::bind_method(godot::D_METHOD("get_last_error"), &Ps2TextureLoader::get_last_error);
+    godot::ClassDB::bind_method(godot::D_METHOD("load_texture_by_hash", "texture_hash"), &Ps2TextureLoader::load_texture_by_hash);
+    godot::ClassDB::bind_method(godot::D_METHOD("set_search_bundles", "bundles"), &Ps2TextureLoader::set_search_bundles);
+    godot::ClassDB::bind_method(godot::D_METHOD("get_search_bundles"), &Ps2TextureLoader::get_search_bundles);
 }
 
 godot::Dictionary Ps2TextureLoader::resolve_root() const {
@@ -110,6 +114,68 @@ godot::Array Ps2TextureLoader::list_textures(const godot::String& relative_path)
         if (!header.name.empty()) names.append(godot::String::utf8(header.name.c_str()));
     }
     return names;
+}
+
+
+void Ps2TextureLoader::set_search_bundles(const godot::PackedStringArray& bundles) {
+    search_bundles_ = bundles;
+    texture_cache_.clear();
+}
+
+godot::PackedStringArray Ps2TextureLoader::get_search_bundles() const {
+    if (!search_bundles_.is_empty()) return search_bundles_;
+    // Default search order: the frontend bundle first (it carries most frontend widget
+    // textures), then the shared global bundles that the remaining widget hashes resolve to.
+    godot::PackedStringArray defaults;
+    defaults.push_back("FRONTEND/FRONTB.BUN");
+    defaults.push_back("GLOBAL/GLOBALB.BUN");
+    defaults.push_back("GLOBAL/INGAMEB.BUN");
+    defaults.push_back("GLOBAL/HUDTEX.BIN");
+    defaults.push_back("GLOBAL/DYNTEX.BIN");
+    defaults.push_back("FRONTEND/TSELECT.BIN");
+    return defaults;
+}
+
+const hp2::assets::Hp2TpkArchive* Ps2TextureLoader::cached_archive(const godot::String& relative_path) {
+    std::string key(relative_path.utf8().get_data());
+    auto found = archive_cache_.find(key);
+    if (found != archive_cache_.end()) return &found->second;
+    hp2::assets::Hp2TpkArchive archive;
+    if (!load_archive(relative_path, archive)) return nullptr;
+    auto inserted = archive_cache_.emplace(std::move(key), std::move(archive));
+    return &inserted.first->second;
+}
+
+godot::Ref<godot::ImageTexture> Ps2TextureLoader::load_texture_by_hash(std::int64_t texture_hash) {
+    const std::uint32_t hash = static_cast<std::uint32_t>(texture_hash);
+    auto cached = texture_cache_.find(hash);
+    if (cached != texture_cache_.end()) return cached->second;
+
+    godot::PackedStringArray bundles = get_search_bundles();
+    for (int i = 0; i < bundles.size(); ++i) {
+        const hp2::assets::Hp2TpkArchive* archive = cached_archive(bundles[i]);
+        if (!archive) continue;
+        for (const auto& header : archive->headers()) {
+            if (header.tex_hash != hash) continue;
+            auto decoded = archive->decode(header, /*flip_vertical=*/true);
+            if (!decoded) continue;
+            godot::PackedByteArray image_bytes;
+            image_bytes.resize(static_cast<std::int64_t>(decoded->rgba.size()));
+            std::memcpy(image_bytes.ptrw(), decoded->rgba.data(), decoded->rgba.size());
+            godot::Ref<godot::Image> image = godot::Image::create_from_data(
+                decoded->width, decoded->height, false, godot::Image::FORMAT_RGBA8, image_bytes);
+            if (image.is_null()) continue;
+            godot::Ref<godot::ImageTexture> texture = godot::ImageTexture::create_from_image(image);
+            texture_cache_[hash] = texture;
+            last_error_ = "";
+            return texture;
+        }
+    }
+    last_error_ = godot::String("No bundle in the search list contains texture hash 0x") +
+                   godot::String::num_int64(static_cast<std::int64_t>(hash), 16);
+    godot::Ref<godot::ImageTexture> empty;
+    texture_cache_[hash] = empty;
+    return empty;
 }
 
 } // namespace port::godot_bridge

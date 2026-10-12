@@ -11,7 +11,7 @@ target_compile_features(platform_api INTERFACE cxx_std_17)
 
 add_library(game_core STATIC src/game_core/scaffold.cpp src/game_core/police/cop_control.cpp
   src/game_core/engine/engine_shell.cpp src/game_core/engine/world_connections.cpp
-  src/game_core/frontend/screen_manager.cpp
+  src/game_core/frontend/screen_manager.cpp src/game_core/frontend/fmenus.cpp
   src/game_core/assets/elab_chunks.cpp src/game_core/assets/hp2_tpk_texture.cpp
   src/platform/ps2_asset_root.cpp)
 target_include_directories(game_core PUBLIC src)
@@ -58,7 +58,7 @@ if(PORT_BUILD_GODOT)
   add_subdirectory("${PORT_GODOT_CPP_DIR}" "${CMAKE_BINARY_DIR}/godot-cpp")
   add_library(ps2_port SHARED src/platform/godot_bridge/port_core.cpp src/platform/godot_bridge/register_types.cpp
     src/platform/godot_bridge/main_loop_observer.cpp src/platform/godot_bridge/frontend_menu_observer.cpp
-    src/platform/godot_bridge/ps2_texture_loader.cpp)
+    src/platform/godot_bridge/ps2_texture_loader.cpp src/platform/godot_bridge/ps2_frontend_layout.cpp)
   target_link_libraries(ps2_port PRIVATE game_core godot-cpp)
   set_target_properties(ps2_port PROPERTIES PREFIX "" OUTPUT_NAME "ps2_port"
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/godot/bin"

@@ -1,5 +1,37 @@
 # Project state — 2026-10-12 (Australia/Sydney)
 
+## TASK-0013 — Original front-end actually rendered (not a debug UI)
+
+User rejected the previous deliverable as "the debug screen", asking for the real game front-end
+rendered exactly like the PS2. Decoded the game's own screen/widget layout format (chunk
+0x80010200: 41 screens of 0x00010210 textured quads and 0x00010212 text widgets, each carrying a
+name hash, 24-byte name, layer byte, x/y, scale, texture hash and RGBA with PS2 alpha) and the
+bitmap font format (chunk 0x00015010: 32-byte glyph records with atlas UV + advance, plus a
+kerning table). Field identification was evidence-driven, not guessed: the texture-hash offset
+(+0x50) was found by correlating every 4-byte-aligned offset across all 1549 widget records
+against the real TexturePack hash set (507/1015 hits for quads vs 79 for the next best offset),
+and the scale semantics were confirmed by TITLE_FULLSCREEN's 512x256 texture at (1.25, 1.88)
+resolving to exactly the 640x480 declared in the screen header. Added native Godot-independent
+parsers (src/game_core/frontend/fmenus.{hpp,cpp}, named after the original source file
+indep\srcmenus.cpp recovered earlier), a layout bridge (Ps2FrontEndLayout), hash-based texture
+resolution with caching (Ps2TextureLoader::load_texture_by_hash), and an immediate-mode Godot
+renderer (godot/scripts/frontend.gd) that draws quads with draw_texture_rect and text glyph-by-
+glyph from the original font atlases. Result: the real Mode Select main menu (Championship /
+Speed / Options with the HP2 logo), Options, Controller Configuration (with PlayStation button
+glyphs drawn from the BUTTONSOUT icon font) and the Title Screen (HP2 splash + PRESS START) all
+render from the player's own ZZDATA at runtime, with nothing pre-extracted. Headless smoke covers
+all 41 screens and resolves 1524 widget resources (25 missing). Strong cross-validation with
+TASK-0011: widget name hashes in the layout data are the same literal immediates the ELF's
+frontend code uses (0xe0105663/4/5 = POPUP_1/2/3, 0xab671c9a = ANIMATING_MENUITEM inside
+FUN_0016b478), and TASK-0011's previously-unexplained FUN_00249a40 is now understood as binding
+the real GRID / MASTER_BP_OBJECT / FADING_BP_OBJECT background widgets by name. CTest 8/8; the
+three pre-existing scene smokes unchanged; standalone out/windows-debug/port.exe rebuilt and
+verified. Open and explicitly not faked: no interaction/animation state yet, text is the authored
+placeholder strings (LANGUAGES/FE_*.BIN not parsed), kerning parsed but not applied, and the
+screen-name <-> screen-index mapping is still unproven (screen 0 == main menu is a content
+inference). Full write-up: docs/FRONTEND_LAYOUT.md; task: tasks/active/TASK-0013-frontend-layout.md.
+Next: localised strings, then drive selection/highlight state so the real screens are operable.
+
 ## TASK-0012 update — Native runtime texture loader; standalone .exe built; original source tree recovered
 
 Three user-directed follow-ups completed in this pass. (1) User required the reversed code to
