@@ -1,0 +1,63 @@
+cmake_minimum_required(VERSION 3.24)
+project(PS2PCPort VERSION 0.1.0 LANGUAGES CXX)
+
+include(CTest)
+option(PORT_BUILD_GODOT "Build the optional Godot 4.3 bridge" OFF)
+set(PORT_GODOT_CPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/godot-cpp" CACHE PATH "Pinned godot-cpp checkout")
+
+add_library(platform_api INTERFACE)
+target_include_directories(platform_api INTERFACE src)
+target_compile_features(platform_api INTERFACE cxx_std_17)
+
+add_library(game_core STATIC src/game_core/scaffold.cpp src/game_core/police/cop_control.cpp
+  src/game_core/engine/engine_shell.cpp src/game_core/engine/world_connections.cpp)
+target_include_directories(game_core PUBLIC src)
+target_compile_features(game_core PUBLIC cxx_std_17)
+target_link_libraries(game_core PUBLIC platform_api)
+set_target_properties(game_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
+if(MSVC)
+  target_compile_options(game_core PRIVATE /W4)
+else()
+  target_compile_options(game_core PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+if(BUILD_TESTING)
+  add_executable(demo_runner src/tests/demo_runner.cpp)
+  target_link_libraries(demo_runner PRIVATE game_core)
+  add_executable(core_tests src/tests/core_tests.cpp)
+  target_link_libraries(core_tests PRIVATE game_core)
+  add_test(NAME core_scaffold COMMAND core_tests)
+  add_executable(police_control_tests src/tests/police_control_tests.cpp)
+  target_link_libraries(police_control_tests PRIVATE game_core)
+  add_test(NAME police_control COMMAND police_control_tests)
+  add_executable(engine_shell_tests src/tests/engine_shell_tests.cpp)
+  target_link_libraries(engine_shell_tests PRIVATE game_core)
+  add_test(NAME engine_shell COMMAND engine_shell_tests)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  add_test(NAME main_loop_catalog COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/reverse/scripts/validate_main_loop.py" --metadata-only)
+  add_test(NAME differential_synthetic COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tools/pipeline.py" verify --runner $<TARGET_FILE:demo_runner>)
+  add_test(NAME pipeline_contracts COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s tools/tests)
+  set_tests_properties(pipeline_contracts PROPERTIES WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+endif()
+
+if(PORT_BUILD_GODOT)
+  if(NOT EXISTS "${PORT_GODOT_CPP_DIR}/CMakeLists.txt")
+    message(FATAL_ERROR "Missing godot-cpp. Follow docs/DEVELOPMENT.md to fetch the pinned checkout.")
+  endif()
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  add_subdirectory("${PORT_GODOT_CPP_DIR}" "${CMAKE_BINARY_DIR}/godot-cpp")
+  add_library(ps2_port SHARED src/platform/godot_bridge/port_core.cpp src/platform/godot_bridge/register_types.cpp
+    src/platform/godot_bridge/main_loop_observer.cpp)
+  target_link_libraries(ps2_port PRIVATE game_core godot-cpp)
+  set_target_properties(ps2_port PROPERTIES PREFIX "" OUTPUT_NAME "ps2_port"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/godot/bin"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/godot/bin")
+  foreach(config DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
+    set_target_properties(ps2_port PROPERTIES RUNTIME_OUTPUT_DIRECTORY_${config} "${CMAKE_CURRENT_SOURCE_DIR}/godot/bin"
+      LIBRARY_OUTPUT_DIRECTORY_${config} "${CMAKE_CURRENT_SOURCE_DIR}/godot/bin")
+  endforeach()
+  # Keep the smoke scene self-contained on Windows with MinGW runtime DLLs.
+  if(MINGW)
+    target_link_options(ps2_port PRIVATE -static -static-libgcc -static-libstdc++)
+  endif()
+endif()

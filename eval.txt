@@ -1,0 +1,123 @@
+# Task: PS2 Decompilation Port Workload Assessment
+
+You are a senior reverse engineering engineer and technical project estimator.
+
+Evaluate the feasibility, scope, technical risks, and estimated engineering effort required to port this PS2 game to Windows using Ghidra, C++, Codex, and Godot 4.
+
+This is an assessment task. Do not start full game implementation.
+
+## Phase 1 — Binary Inventory
+
+Use Ghidra and the available PS2 R5900 analysis extensions to inspect the supplied game ELF.
+
+Collect:
+- Total identified functions
+- Function instruction counts
+- Call graph relationships
+- Cyclomatic complexity estimates
+- Decompiled and failed-decompilation counts
+- Indirect calls and unresolved references
+- Potential PS2 SDK/library functions
+- Possible game-specific functions
+- Hardware-specific operations
+- Possible debug symbols
+
+Record binary hashes, game region and version, tool versions, and analysis limitations.
+
+Do not fabricate statistics. Mark unavailable measurements as unknown.
+
+## Phase 2 — Subsystem Discovery
+
+Attempt to classify functions into:
+- Main loop and engine core
+- Game states
+- Physics and collision
+- AI and gameplay
+- World and scene management
+- Graphics and VU/GS
+- Audio
+- Input
+- Memory and platform services
+- Resource management
+- Unknown
+
+Assign confidence levels and supporting evidence.
+
+Avoid presenting heuristic classifications as confirmed facts.
+
+## Phase 3 — Complexity Analysis
+
+Classify candidate functions by:
+- Code complexity
+- Dependency complexity
+- PS2 hardware coupling
+- Data structure uncertainty
+- Verification difficulty
+
+Identify highly connected functions and high-risk dependencies.
+
+## Phase 4 — Representative Pilot
+
+Select 10–20 representative functions across different subsystems and difficulty levels.
+
+For each function:
+1. Record the original address.
+2. Analyze its purpose and dependencies.
+3. Estimate recovery and porting difficulty.
+4. Identify validation requirements.
+5. Record actual engineering time if the task is executed.
+6. Document blockers and unresolved assumptions.
+
+Do not use an unrepresentative sample of only easy functions.
+
+## Phase 5 — Estimate Engineering Effort
+
+Develop an evidence-based estimation model.
+
+Estimate separately:
+- Reverse engineering
+- Core C++ reconstruction
+- Data structure recovery
+- Resource extraction and conversion
+- Rendering adaptation
+- Audio adaptation
+- Godot integration
+- Verification and testing
+
+Provide optimistic, baseline, and pessimistic estimates.
+
+Separate observed measurements from assumptions.
+
+Do not convert AI token usage directly into engineering hours.
+
+Account for uncertainty, integration, and rework.
+
+## Phase 6 — Reports
+
+Create:
+
+docs/assessment/BINARY_REPORT.md
+
+docs/assessment/FUNCTION_INVENTORY.csv
+
+docs/assessment/SUBSYSTEM_ANALYSIS.md
+
+docs/assessment/RISK_REGISTER.md
+
+docs/assessment/WORKLOAD_ESTIMATE.md
+
+docs/assessment/PILOT_TASKS.md
+
+Update docs/PROGRESS.md and create actionable pilot tasks.
+
+## Rules
+
+- Do not invent game-specific details.
+- Do not assume Ghidra discovers all functions.
+- Do not assume decompilation means successful porting.
+- Do not assume all identified functions require manual rewriting.
+- Distinguish confirmed facts from estimates.
+- Record uncertainty explicitly.
+- Never claim verification without testing.
+
+Begin by identifying the available ELF files, Ghidra environment, and analysis tools. Perform the assessment using available evidence and clearly identify any blocked steps.

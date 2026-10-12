@@ -1,0 +1,343 @@
+{
+  "sha256": "7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2",
+  "elf_bytes": 2321608,
+  "elf_entry": "0x100008",
+  "elf_machine": 8,
+  "sections": [
+    {
+      "name": "",
+      "type": 0,
+      "flags": 0,
+      "address": 0,
+      "offset": 0,
+      "size": 0
+    },
+    {
+      "name": ".text",
+      "type": 1,
+      "flags": 6,
+      "address": 1048576,
+      "offset": 4096,
+      "size": 1726724
+    },
+    {
+      "name": ".vutext",
+      "type": 1,
+      "flags": 6,
+      "address": 2775312,
+      "offset": 1730832,
+      "size": 20624
+    },
+    {
+      "name": ".reginfo",
+      "type": 1879048198,
+      "flags": 0,
+      "address": 2795936,
+      "offset": 2307216,
+      "size": 24
+    },
+    {
+      "name": ".rodata",
+      "type": 1,
+      "flags": 3,
+      "address": 2797568,
+      "offset": 1753088,
+      "size": 115390
+    },
+    {
+      "name": ".gcc_except_table",
+      "type": 1,
+      "flags": 3,
+      "address": 2913024,
+      "offset": 1868544,
+      "size": 92
+    },
+    {
+      "name": ".data",
+      "type": 1,
+      "flags": 3,
+      "address": 2913152,
+      "offset": 1868672,
+      "size": 419144
+    },
+    {
+      "name": ".vudata",
+      "type": 1,
+      "flags": 3,
+      "address": 3332296,
+      "offset": 2287816,
+      "size": 0
+    },
+    {
+      "name": ".lit4",
+      "type": 1,
+      "flags": 268435459,
+      "address": 3332352,
+      "offset": 2287872,
+      "size": 6456
+    },
+    {
+      "name": ".sdata",
+      "type": 1,
+      "flags": 268435459,
+      "address": 3338880,
+      "offset": 2294400,
+      "size": 12699
+    },
+    {
+      "name": ".sbss",
+      "type": 8,
+      "flags": 268435459,
+      "address": 3351680,
+      "offset": 2307200,
+      "size": 240
+    },
+    {
+      "name": ".bss",
+      "type": 8,
+      "flags": 3,
+      "address": 3351936,
+      "offset": 2307216,
+      "size": 45948
+    },
+    {
+      "name": ".vubss",
+      "type": 8,
+      "flags": 3,
+      "address": 3397884,
+      "offset": 2307216,
+      "size": 0
+    },
+    {
+      "name": ".DVP.ovlytab",
+      "type": 2147480608,
+      "flags": 1,
+      "address": 3397884,
+      "offset": 2307240,
+      "size": 96
+    },
+    {
+      "name": ".DVP.ovlystrtab",
+      "type": 3,
+      "flags": 1,
+      "address": 3397884,
+      "offset": 2307336,
+      "size": 302
+    },
+    {
+      "name": ".DVP.overlay..0x0.463841659.44.0",
+      "type": 2147480609,
+      "flags": 5,
+      "address": 0,
+      "offset": 2307638,
+      "size": 16
+    },
+    {
+      "name": ".DVP.overlay..0x0.463841787.205.0",
+      "type": 2147480609,
+      "flags": 5,
+      "address": 0,
+      "offset": 2307654,
+      "size": 2048
+    },
+    {
+      "name": ".DVP.overlay..unknvma.463841787.815.1",
+      "type": 2147480609,
+      "flags": 5,
+      "address": 0,
+      "offset": 2309702,
+      "size": 2048
+    },
+    {
+      "name": ".DVP.overlay..unknvma.463841787.1224.2",
+      "type": 2147480609,
+      "flags": 5,
+      "address": 0,
+      "offset": 2311750,
+      "size": 2048
+    },
+    {
+      "name": ".DVP.overlay..unknvma.463841787.1575.3",
+      "type": 2147480609,
+      "flags": 5,
+      "address": 0,
+      "offset": 2313798,
+      "size": 2048
+    },
+    {
+      "name": ".DVP.overlay..unknvma.463841787.1903.4",
+      "type": 2147480609,
+      "flags": 5,
+      "address": 0,
+      "offset": 2315846,
+      "size": 2048
+    },
+    {
+      "name": ".DVP.overlay..unknvma.463841787.2256.5",
+      "type": 2147480609,
+      "flags": 5,
+      "address": 0,
+      "offset": 2317894,
+      "size": 2048
+    },
+    {
+      "name": ".DVP.overlay..unknvma.463841787.2663.6",
+      "type": 2147480609,
+      "flags": 5,
+      "address": 0,
+      "offset": 2319942,
+      "size": 200
+    },
+    {
+      "name": ".mdebug.eabi64",
+      "type": 1,
+      "flags": 0,
+      "address": 3397884,
+      "offset": 2320142,
+      "size": 0
+    },
+    {
+      "name": ".shstrtab",
+      "type": 3,
+      "flags": 0,
+      "address": 0,
+      "offset": 2320142,
+      "size": 465
+    }
+  ],
+  "function_count": 7544,
+  "unique_call_edges": 17162,
+  "default_named": 7477,
+  "named_other": 67,
+  "thunk_name_prefix": 197,
+  "empty_cfg": 26,
+  "disconnected_cfg": 0,
+  "text_decoded_instructions": 400582,
+  "text_decoded_bytes": 1602328,
+  "loaded_text_sha256": "f3f8392acf663a88c07c5b67b20b42c098d6db8e37e994961d7c05177428dab9",
+  "loaded_text_matches_disk": true,
+  "text_instruction_byte_fraction": 0.9279583766716626,
+  "cfg_covered_unique_instructions": 392685,
+  "jalr_sites": 663,
+  "indirect_jump_sites": 190,
+  "direct_jal_targets_without_function_entry": [],
+  "decomp_probed_unique": 21,
+  "decomp_outputs": 21,
+  "decomp_failed": 0,
+  "decomp_unprobed": 7523,
+  "warnings_functions": 3,
+  "complexity_counts": {
+    "low": 6103,
+    "medium": 1224,
+    "high": 173,
+    "very_high": 18,
+    "unknown": 26
+  },
+  "subsystem_counts": {
+    "Memory and platform services": 6,
+    "Unknown": 7525,
+    "World and scene management": 2,
+    "Graphics and VU/GS": 2,
+    "Main loop and engine core": 2,
+    "AI and gameplay": 1,
+    "Physics and collision": 2,
+    "Game states": 1,
+    "Resource management": 1,
+    "Audio": 1,
+    "Input": 1
+  },
+  "highest_callers": [
+    {
+      "address": "0x002577c0",
+      "name": "FUN_002577c0",
+      "callers": 255
+    },
+    {
+      "address": "0x00114e98",
+      "name": "thunk_FUN_00257850",
+      "callers": 229
+    },
+    {
+      "address": "0x002534a8",
+      "name": "FUN_002534a8",
+      "callers": 109
+    },
+    {
+      "address": "0x002919d0",
+      "name": "FUN_002919d0",
+      "callers": 104
+    },
+    {
+      "address": "0x00114e20",
+      "name": "FUN_00114e20",
+      "callers": 100
+    },
+    {
+      "address": "0x00251398",
+      "name": "FUN_00251398",
+      "callers": 97
+    },
+    {
+      "address": "0x00250340",
+      "name": "FUN_00250340",
+      "callers": 90
+    },
+    {
+      "address": "0x00285958",
+      "name": "FUN_00285958",
+      "callers": 89
+    },
+    {
+      "address": "0x00250ac0",
+      "name": "FUN_00250ac0",
+      "callers": 82
+    },
+    {
+      "address": "0x00257c80",
+      "name": "FUN_00257c80",
+      "callers": 82
+    }
+  ],
+  "largest_cyclomatic": [
+    {
+      "address": "0x00120ef8",
+      "cc": 233
+    },
+    {
+      "address": "0x0017f040",
+      "cc": 219
+    },
+    {
+      "address": "0x00298138",
+      "cc": 193
+    },
+    {
+      "address": "0x001796b0",
+      "cc": 148
+    },
+    {
+      "address": "0x002514f0",
+      "cc": 148
+    },
+    {
+      "address": "0x0015c880",
+      "cc": 146
+    },
+    {
+      "address": "0x00299c60",
+      "cc": 122
+    },
+    {
+      "address": "0x0029d758",
+      "cc": 114
+    },
+    {
+      "address": "0x00161f98",
+      "cc": 100
+    },
+    {
+      "address": "0x00178da0",
+      "cc": 98
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "synthetic-demo-tick",
+  "provenance": {"kind": "synthetic", "binary_sha256": null, "function_address": null, "version": null},
+  "initial": {"registers": {}, "memory": {}, "frame": 0, "position": 0},
+  "inputs": [-1, 0, 1, 1],
+  "expected": {"frame": 4, "position": 1},
+  "memory_side_effects": {},
+  "checkpoint": "after four synthetic ticks",
+  "rules": {"frame": {"kind": "integer"}, "position": {"kind": "integer"}}
+}

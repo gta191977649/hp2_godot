@@ -1,0 +1,67 @@
+caller,call_pc,target,module,phase,guard,evidence,confidence,arguments,original_identifier
+0012f378,0012f3a0,00250f38,Time,Startup,always on reached path,E-0010-01,high,timestamp result v0; complete clock units/ABI unresolved,unknown
+0012f378,0012f3b0,00250f38,Time,FrameStart,always on reached path,E-0010-01,high,timestamp result v0; complete clock units/ABI unresolved,unknown
+0012f378,0012f3c0,001680e8,State,StateDispatch,always on reached path,E-0010-01,high,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f3d4,00149578,UnresolvedCalls,StateDispatch,gp_a938 != 0,E-0010-01,unknown,a0=gp_a938,unknown
+0012f378,0012f3dc,00149dd8,UnresolvedCalls,StateDispatch,gp_a938 != 0,E-0010-01,unknown,a0=gp_a938,unknown
+0012f378,0012f3ec,00149650,UnresolvedCalls,StateDispatch,gp_a938 != 0,E-0010-01,unknown,a0=gp_a938; a1=3; a2=0,unknown
+0012f378,0012f3f4,001680e8,State,StateDispatch,always on reached path,E-0010-01,high,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f3fc,00250f38,Time,PreDispatch,always on reached path,E-0010-01,high,timestamp result v0; complete clock units/ABI unresolved,unknown
+0012f378,0012f404,0024bdb8,UnresolvedCalls,PreDispatch,always on reached path,E-0010-01,unknown,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f418,0012f190,UnresolvedCalls,PreDispatch,gp_ac50 == 0,E-0010-01,unknown,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f420,00181c28,UnresolvedCalls,PreDispatch,always on reached path,E-0010-01,unknown,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f434,0013e078,UnresolvedCalls,PreDispatch,gp_a858 != 0,E-0010-01,unknown,a0=gp_a858,unknown
+0012f378,0012f43c,00250f38,Time,TimeStep,always on reached path,E-0010-01,high,timestamp result v0; complete clock units/ABI unresolved,unknown
+0012f378,0012f448,00250f48,Time,TimeStep,always on reached path,E-0010-01,high,a0=saved s2 timestamp; a1=latest v0 timestamp; result f0,unknown
+0012f378,0012f454,001a33f0,Time,TimeStep,always on reached path,E-0010-01,high,f12=elapsed f0 * fGpffff82d0; side effects populate base step,unknown
+0012f378,0012f45c,00250f38,Time,TimeStep,always on reached path,E-0010-01,high,timestamp result v0; complete clock units/ABI unresolved,unknown
+0012f378,0012f464,001680b8,State,TimeStep,always on reached path,E-0010-01,high,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f488,0014d678,World,WorldBranch,!predicate_1680b8 && gp_a938 != 0,E-0010-01,medium,a0=gp_a998; f12=fGpffffb374,unknown
+0012f378,0012f490,0014d6e0,World,WorldBranch,!predicate_1680b8 && gp_a938 != 0,E-0010-01,medium,a0=gp_a998; predicate result v0,unknown
+0012f378,0012f4a4,001a35e0,Time,WorldBranch,world path && predicate_14d6e0,E-0010-01,high,f12=0,unknown
+0012f378,0012f4ac,00153e48,Input,WorldBranch,world path && predicate_14d6e0,E-0010-01,medium,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f4b4,00250f38,Time,WorldBranch,world path && predicate_14d6e0,E-0010-01,high,timestamp result v0; complete clock units/ABI unresolved,unknown
+0012f378,0012f4c0,0014e768,World,WorldBranch,world path && predicate_14d6e0,E-0010-01,medium,a0=gp_a998,unknown
+0012f378,0012f4d0,0013d880,UnresolvedCalls,WorldBranch,world path && !predicate_14d6e0,E-0010-01,unknown,a0=gp_a858,unknown
+0012f378,0012f4ec,001a35e0,Time,WorldBranch,world path && !predicate_14d6e0 && a858_field18 != 0,E-0010-01,high,f12=0,unknown
+0012f378,0012f4f4,00153e48,Input,WorldBranch,world path && !predicate_14d6e0 && a858_field18 != 0,E-0010-01,medium,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f4fc,00250f38,Time,WorldBranch,world path && !predicate_14d6e0 && a858_field18 != 0,E-0010-01,high,timestamp result v0; complete clock units/ABI unresolved,unknown
+0012f378,0012f50c,0014d718,World,WorldBranch,world path && !predicate_14d6e0 && a858_field18 == 0,E-0010-01,medium,a0=gp_a998; result f0 copied to saved f20,unknown
+0012f378,0012f518,001a35e0,Time,WorldBranch,world path && !predicate_14d6e0 && a858_field18 == 0,E-0010-01,high,f12=saved f20,unknown
+0012f378,0012f520,00153e48,Input,WorldBranch,world path && !predicate_14d6e0 && a858_field18 == 0,E-0010-01,medium,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f528,00250f38,Time,WorldBranch,world path && !predicate_14d6e0 && a858_field18 == 0,E-0010-01,high,timestamp result v0; complete clock units/ABI unresolved,unknown
+0012f378,0012f538,0014dcd8,World,WorldBranch,world path && !predicate_14d6e0 && a858_field18 == 0,E-0010-01,medium,a0=gp_a998; f12=saved f20 (not mutable global game step),unknown
+0012f378,0012f540,0013e008,UnresolvedCalls,WorldBranch,world path && !predicate_14d6e0,E-0010-01,unknown,a0=gp_a858,unknown
+0012f378,0012f550,001a35e0,Time,WorldBranch,predicate_1680b8 || gp_a938 == 0,E-0010-01,high,"f12=0 if predicate_1680b8, otherwise base step when gp_a938==0",unknown
+0012f378,0012f558,00153e48,Input,WorldBranch,predicate_1680b8 || gp_a938 == 0,E-0010-01,medium,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f560,00250f38,Time,WorldBranch,predicate_1680b8 || gp_a938 == 0,E-0010-01,high,timestamp result v0; complete clock units/ABI unresolved,unknown
+0012f378,0012f56c,00250f38,Time,PostModules,always on reached path,E-0010-01,high,timestamp result v0; complete clock units/ABI unresolved,unknown
+0012f378,0012f574,0016d420,UnresolvedCalls,PostModules,always on reached path,E-0010-01,unknown,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f57c,00250f38,Time,PostModules,always on reached path,E-0010-01,high,timestamp result v0; complete clock units/ABI unresolved,unknown
+0012f378,0012f584,00181d88,UnresolvedCalls,PostModules,always on reached path,E-0010-01,unknown,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f5a4,001ec858,UnresolvedCalls,PostModules,gp_a938 != 0 && a938_field2c != 0,E-0010-01,unknown,a0=object(gp_a938)+0x2C; f12=fGpffffb374,unknown
+0012f378,0012f5b0,00199bd0,UnresolvedCalls,PostModules,always on reached path,E-0010-01,unknown,f12=fGpffffb374,unknown
+0012f378,0012f5b8,0015ef28,UnresolvedCalls,PostModules,always on reached path,E-0010-01,unknown,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f5c0,00250f38,Time,PostModules,always on reached path,E-0010-01,high,timestamp result v0; complete clock units/ABI unresolved,unknown
+0012f378,0012f5c8,001af4c0,UnresolvedCalls,PostModules,always on reached path,E-0010-01,unknown,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f5d0,00250f38,Time,PostModules,always on reached path,E-0010-01,high,timestamp result v0; complete clock units/ABI unresolved,unknown
+0012f378,0012f5d8,00155d40,UnresolvedCalls,PostModules,always on reached path,E-0010-01,unknown,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f5e0,00156400,UnresolvedCalls,PostModules,always on reached path,E-0010-01,unknown,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f5f4,0014e5c8,World,PostModules,gp_a998 != 0,E-0010-01,medium,a0=gp_a998,unknown
+0012f378,0012f5fc,00112858,Presentation,PostModules,always on reached path,E-0010-01,medium,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f604,00250f38,Time,PostModules,always on reached path,E-0010-01,high,timestamp result v0; complete clock units/ABI unresolved,unknown
+0012f378,0012f60c,00199788,UnresolvedCalls,PostModules,always on reached path,E-0010-01,unknown,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f614,001ac0a0,UnresolvedCalls,PostModules,always on reached path,E-0010-01,unknown,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f61c,00169538,UnresolvedCalls,PostModules,always on reached path,E-0010-01,unknown,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f624,00250f38,Time,PostModules,always on reached path,E-0010-01,high,timestamp result v0; complete clock units/ABI unresolved,unknown
+0012f378,0012f62c,001a3500,Time,Commit,always on reached path,E-0010-01,high,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f634,001a35f0,Time,Commit,always on reached path,E-0010-01,high,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f63c,001003c0,UnresolvedCalls,Commit,always on reached path,E-0010-01,unknown,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f664,00250f38,Time,Tail,signed boundary-counter difference > 0,E-0010-01,high,timestamp result v0; complete clock units/ABI unresolved,unknown
+0012f378,0012f66c,0012f090,Time,Tail,signed boundary-counter difference > 0,E-0010-01,high,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f378,0012f674,0012f088,Lifecycle,Tail,signed boundary-counter difference > 0,E-0010-01,high,Caller registers/callee contract unresolved; not invented zero arguments,unknown
+0012f000,0012f014,00100118,Lifecycle,Startup,always,E-0010-02,high,"a0=boot_a0; a1=boot_a1 (register observations, callee signature unknown)",unknown
+0012f000,0012f020,0012ee98,Lifecycle,Startup,always,E-0010-02,high,a0=boot_a0; a1=boot_a1,unknown
+0012f000,0012f034,00184bd8,Lifecycle,Startup,gp_a54c != 0,E-0010-02,high,a0=0x002FC050,unknown
+0012f000,0012f048,001680d8,Lifecycle,Startup,gp_a54c == 0,E-0010-02,high,a0=1; a1=0,unknown
+0012f000,0012f064,001001cc,Lifecycle,Startup,always,E-0010-02,high,a0=0x0012F378; a1=0x70004000; a2=0; a3=0 (callback/thread semantics unresolved),unknown

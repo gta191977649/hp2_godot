@@ -1,0 +1,202 @@
+[
+  {
+    "id": "P001",
+    "address": "00100008",
+    "subsystem": "Memory and platform services",
+    "confidence": "high",
+    "evidence": "runtime startup; clears BSS, syscalls and bootstrap calls",
+    "verification": "high",
+    "validation": "BSS clear, register state and bootstrap order; exclude host OS internals",
+    "data_uncertainty": "medium (unverified global/ABI contracts)"
+  },
+  {
+    "id": "P002",
+    "address": "0012f000",
+    "subsystem": "Main loop and engine core",
+    "confidence": "medium",
+    "evidence": "entry calls this; installs callback 0012f378; indirect scheduling semantics unresolved",
+    "verification": "high",
+    "validation": "startup state and callback order",
+    "data_uncertainty": "medium (unverified global/ABI contracts)"
+  },
+  {
+    "id": "P003",
+    "address": "0016fa80",
+    "subsystem": "Game states",
+    "confidence": "low",
+    "evidence": "branches on global values 8/9 and invokes coordinated service set; state meaning unknown",
+    "verification": "high",
+    "validation": "mode branches, service-call ordering, global side effects",
+    "data_uncertainty": "medium (unverified global/ABI contracts)"
+  },
+  {
+    "id": "P004",
+    "address": "0019a4b8",
+    "subsystem": "World and scene management",
+    "confidence": "low",
+    "evidence": "preexisting camera-oriented name; vector-distance loops and virtual calls; body/CFG corrupt",
+    "verification": "very_high",
+    "validation": "repair body first; camera transitions and vector math state",
+    "data_uncertainty": "high (unrecovered object/buffer layouts)"
+  },
+  {
+    "id": "P005",
+    "address": "001ebd20",
+    "subsystem": "Resource management",
+    "confidence": "medium",
+    "evidence": "preexisting flight-area name; magic test, offset arithmetic and aligned pointer fixups; one-byte body",
+    "verification": "high",
+    "validation": "repair body; malformed/valid synthetic buffers and relocation results",
+    "data_uncertainty": "high (unrecovered object/buffer layouts)"
+  },
+  {
+    "id": "P006",
+    "address": "00120ef8",
+    "subsystem": "Graphics and VU/GS",
+    "confidence": "medium",
+    "evidence": "many COP2 operations, matrix transforms and buffer/packet construction; cc=233",
+    "verification": "very_high",
+    "validation": "buffer writes, VU math and captured frame output",
+    "data_uncertainty": "high (unrecovered object/buffer layouts)"
+  },
+  {
+    "id": "P007",
+    "address": "001796b0",
+    "subsystem": "Unknown",
+    "confidence": "unknown",
+    "evidence": "large complex function intentionally retained without speculative subsystem label",
+    "verification": "very_high",
+    "validation": "identify purpose/dependency closure before behavior tests",
+    "data_uncertainty": "high (unrecovered object/buffer layouts)"
+  },
+  {
+    "id": "P008",
+    "address": "002514f0",
+    "subsystem": "Memory and platform services",
+    "confidence": "medium",
+    "evidence": "format specifier switch, numeric conversion and callback output; possible printf-like library",
+    "verification": "high",
+    "validation": "formatting vectors and output callbacks; warnings and ABI review",
+    "data_uncertainty": "medium (unverified global/ABI contracts)"
+  },
+  {
+    "id": "P009",
+    "address": "002577c0",
+    "subsystem": "Memory and platform services",
+    "confidence": "medium",
+    "evidence": "255 callers; size/alignment-like arguments and helper 00257690; allocation wrapper hypothesis",
+    "verification": "high",
+    "validation": "allocation/failure behavior and return ABI, logging side effects",
+    "data_uncertainty": "medium (unverified global/ABI contracts)"
+  },
+  {
+    "id": "P010",
+    "address": "00250340",
+    "subsystem": "Memory and platform services",
+    "confidence": "high",
+    "evidence": "byte fill with aligned word loop; memset-like semantics observed",
+    "verification": "low",
+    "validation": "guarded buffers, zero length, all byte values, aligned/unaligned pointers",
+    "data_uncertainty": "low (byte-buffer contract)"
+  },
+  {
+    "id": "P011",
+    "address": "00250ac0",
+    "subsystem": "Memory and platform services",
+    "confidence": "low",
+    "evidence": "shared diagnostic/output wrapper; exact formatting/error policy unresolved",
+    "verification": "medium",
+    "validation": "delegate-call order, output and failure behavior",
+    "data_uncertainty": "medium (unverified global/ABI contracts)"
+  },
+  {
+    "id": "P012",
+    "address": "00285958",
+    "subsystem": "Memory and platform services",
+    "confidence": "high",
+    "evidence": "request structures plus CreateSema/WaitSema/DeleteSema and transport helper; RPC-like service",
+    "verification": "very_high",
+    "validation": "sync/async completions, failure codes, callbacks and ordering",
+    "data_uncertainty": "high (unrecovered object/buffer layouts)"
+  },
+  {
+    "id": "P013",
+    "address": "0026a310",
+    "subsystem": "Audio",
+    "confidence": "high",
+    "evidence": "SOUND_EndCommand and audio-command/flush diagnostics reference this function",
+    "verification": "high",
+    "validation": "command buffer framing, overflow/flush and timing; then audible comparison",
+    "data_uncertainty": "medium (unverified global/ABI contracts)"
+  },
+  {
+    "id": "P014",
+    "address": "00282fa0",
+    "subsystem": "Graphics and VU/GS",
+    "confidence": "medium",
+    "evidence": "existing SetGsCrt symbol; syscall stub; external system semantics unresolved",
+    "verification": "high",
+    "validation": "identify syscall/register contract and define host replacement observable effect",
+    "data_uncertainty": "medium (unverified global/ABI contracts)"
+  },
+  {
+    "id": "P015",
+    "address": "001044c8",
+    "subsystem": "World and scene management",
+    "confidence": "low",
+    "evidence": "matrix/vector operations over corner-like data used by camera-named entry; culling hypothesis",
+    "verification": "high",
+    "validation": "geometric boundary vectors, float tolerances and side effects",
+    "data_uncertainty": "medium (unverified global/ABI contracts)"
+  },
+  {
+    "id": "P016",
+    "address": "00131618",
+    "subsystem": "Physics and collision",
+    "confidence": "medium",
+    "evidence": "PhysicsCar parameter string and movement-mode dispatch; inherited comments are unverified",
+    "verification": "high",
+    "validation": "mode constructors/destruction, movement-object layouts and state transitions",
+    "data_uncertainty": "high (unrecovered object/buffer layouts)"
+  },
+  {
+    "id": "P017",
+    "address": "00131da8",
+    "subsystem": "Physics and collision",
+    "confidence": "medium",
+    "evidence": "CarCollision parameter string, delta-time vector calculations and side effects",
+    "verification": "very_high",
+    "validation": "timestep/collision traces, contact edges, zero dt and COP2 precision",
+    "data_uncertainty": "high (unrecovered object/buffer layouts)"
+  },
+  {
+    "id": "P018",
+    "address": "0012f378",
+    "subsystem": "Main loop and engine core",
+    "confidence": "medium",
+    "evidence": "registered startup callback; repeated timing, update calls and state-dependent orchestration",
+    "verification": "very_high",
+    "validation": "frame/input trace and update-order/time-step comparisons",
+    "data_uncertainty": "medium (unverified global/ABI contracts)"
+  },
+  {
+    "id": "P019",
+    "address": "00131410",
+    "subsystem": "AI and gameplay",
+    "confidence": "medium",
+    "evidence": "AIDriver allocation label and controller-mode switch/virtual destruction",
+    "verification": "high",
+    "validation": "controller modes, AI object layout, allocation and virtual-call traces",
+    "data_uncertainty": "high (unrecovered object/buffer layouts)"
+  },
+  {
+    "id": "P020",
+    "address": "00281f58",
+    "subsystem": "Input",
+    "confidence": "high",
+    "evidence": "libpad port/alignment diagnostics and RPC-backed pad-port initialization",
+    "verification": "high",
+    "validation": "aligned buffers, port/slot/error responses, request layout and input traces",
+    "data_uncertainty": "high (unrecovered object/buffer layouts)"
+  }
+]

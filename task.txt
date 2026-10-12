@@ -1,0 +1,304 @@
+# Task: Initialize PS2-to-PC Decompilation Port Project
+
+You are a senior C++ engine developer, reverse engineer, and software architect.
+
+## Project Goal
+
+Initialize a long-term PS2-to-PC native decompilation port project.
+
+The technology stack is:
+
+- **Ghidra** — PS2 Emotion Engine (MIPS R5900) reverse engineering
+- **GhidraMCP** — AI-assisted reverse engineering integration
+- **OpenAI Codex** — C++ development, analysis, documentation, and testing
+- **C++17 or C++20** — Recovered original game and engine logic
+- **Godot 4.x** — Rendering, audio, input, window management, and platform integration
+- **GDExtension / godot-cpp** — Native C++ integration
+- **CMake** — Native core library and test builds
+- **Git** — Version control
+- **GitHub Issues** — Long-term task tracking
+
+The objective is to preserve original PS2 game logic wherever possible while replacing PS2-specific platform functionality with Godot-based implementations.
+
+This is a long-term reverse engineering project that may require hundreds of development sessions.
+
+**Important: Do not attempt to reverse engineer or port the actual game yet. This task is strictly for project initialization.**
+
+---
+
+## 1. Initialize Project Structure
+
+Create the following structure, adjusting it where technically necessary:
+
+```text
+PS2-PC-Port/
+├── AGENTS.md
+├── README.md
+├── .gitignore
+├── CMakeLists.txt
+├── CMakePresets.json
+│
+├── docs/
+│   ├── ARCHITECTURE.md
+│   ├── ROADMAP.md
+│   ├── PROGRESS.md
+│   ├── DECISIONS.md
+│   ├── REVERSE_NOTES.md
+│   └── DEVELOPMENT.md
+│
+├── tasks/
+│   ├── backlog/
+│   ├── active/
+│   ├── completed/
+│   └── TEMPLATE.md
+│
+├── reverse/
+│   ├── symbols.csv
+│   ├── structures/
+│   ├── functions/
+│   └── scripts/
+│
+├── src/
+│   ├── game_core/
+│   ├── platform/
+│   │   └── godot_bridge/
+│   └── tests/
+│
+├── godot/
+│   ├── project.godot
+│   ├── scenes/
+│   ├── scripts/
+│   ├── shaders/
+│   └── assets/
+│
+├── tools/
+│   ├── asset_extractor/
+│   └── asset_converter/
+│
+└── third_party/
+```
+
+The structure must support adding thousands of recovered functions without becoming disorganized.
+
+## 2. Architecture Requirements
+
+Design the project around three independent layers:
+
+### Layer A: Recovered Game Core
+
+- Pure native C++.
+- Independent from Godot.
+- Contains recovered PS2 game logic.
+- Includes physics, AI, game state, world management, and other recovered systems.
+- Preserves original behavior wherever possible.
+- Every recovered function must be traceable to its original ELF address and binary version.
+
+### Layer B: Platform Abstraction
+
+- Provides interfaces for rendering, audio, input, filesystem, timing, and platform services.
+- Keeps platform-specific implementations separated from game logic.
+- Must allow unit testing without running Godot.
+
+### Layer C: Godot Integration
+
+- Uses GDExtension and godot-cpp.
+- Connects the recovered game core to Godot.
+- Godot handles rendering, input, audio, and window management.
+- Original game logic remains authoritative for gameplay behavior.
+- Avoid replacing recovered physics with Godot physics unless explicitly decided.
+
+Document the dependencies and ownership responsibilities between these layers.
+
+## 3. Codex Long-Term Memory System
+
+Create a comprehensive `AGENTS.md`.
+
+Include the following mandatory rules:
+
+1. Read project documentation before making changes.
+2. Read the current task file before implementation.
+3. Work on one clearly scoped task at a time.
+4. Never invent unverified PS2 behavior.
+5. Preserve original function addresses and provenance.
+6. Separate confirmed findings from hypotheses.
+7. Keep recovered C++ logic independent of Godot.
+8. Avoid unnecessary modifications to unrelated modules.
+9. Require tests for reconstructed behavior whenever practical.
+10. Update task status and documentation after completing work.
+11. Never mark unverified code as verified.
+12. Ensure future Codex sessions can continue without relying on conversation history.
+
+Add a session startup protocol and a session completion protocol.
+
+Codex must be able to reconstruct the project's current state from repository files alone.
+
+## 4. Reverse Engineering Knowledge Base
+
+Design a maintainable system for recording:
+
+- Original ELF addresses
+- Original function identifiers
+- Recovered function names
+- Function signatures
+- Calling conventions
+- Dependencies and callers
+- Recovered structures and memory layouts
+- Confidence levels
+- Decompiled source references
+- PC implementation locations
+- Verification status
+- PCSX2 comparison results
+
+Create templates and example entries using clearly marked dummy addresses.
+
+Define these statuses:
+
+- Unidentified
+- Identified
+- Decompiled
+- Implemented
+- Tested
+- Verified
+
+Include documentation explaining the difference between analysis confidence and verification status.
+
+## 5. Task Management
+
+Create a task template supporting:
+
+- Task ID
+- Objective
+- Scope
+- Original PS2 function addresses
+- Dependencies
+- Relevant source files
+- Acceptance criteria
+- Verification procedure
+- Current findings
+- Unresolved questions
+- Next steps
+- Related Git commits
+
+Set up backlog, active, and completed task folders.
+
+Do not automatically move unfinished tasks to completed.
+
+## 6. Development Environment
+
+Set up a minimal working native C++ core library using CMake.
+
+Set up a minimal Godot 4 GDExtension integration.
+
+Provide:
+
+- A buildable native library
+- A sample core function
+- A Godot GDExtension class calling that function
+- A minimal Godot scene exercising the integration
+- A basic C++ unit test
+- Windows build instructions
+
+Use compatible Godot and godot-cpp versions, pin dependencies, and document their versions.
+
+Do not assume dependencies are installed. Detect the existing environment and report missing prerequisites.
+
+Prefer conventional, maintainable tooling over unnecessary custom infrastructure.
+
+## 7. Git and Repository Safety
+
+Initialize Git if necessary.
+
+Create appropriate `.gitignore` rules for:
+
+- Compiled binaries
+- Temporary build files
+- Godot-generated files
+- Ghidra temporary databases
+- Extracted proprietary game assets
+- Original game ISO and ELF binaries
+- Local machine configuration
+- Secrets
+
+Do not delete existing user files.
+
+Do not overwrite existing project configurations without inspecting them.
+
+Do not commit copyrighted game binaries or extracted assets.
+
+## 8. Documentation
+
+Create meaningful initial documentation, not empty placeholder files.
+
+The documentation must explain:
+
+- Overall architecture
+- Responsibilities of each module
+- Build instructions
+- Development workflow
+- Reverse engineering workflow
+- Adding recovered functions
+- Recording reverse engineering evidence
+- Running tests
+- Continuing work in a new Codex session
+- Task completion requirements
+
+Avoid unnecessary duplication between documentation files.
+
+## 9. Initial Roadmap
+
+Define practical milestones:
+
+M0 — Project infrastructure and build validation
+
+M1 — Ghidra integration and function identification
+
+M2 — Recovered data structures and core interfaces
+
+M3 — First verified original gameplay function
+
+M4 — PS2 asset extraction and conversion
+
+M5 — First original asset rendered in Godot
+
+M6 — First playable reconstructed scene
+
+Keep the milestones achievable and evidence-driven.
+
+## 10. Validation
+
+After creating the project:
+
+1. Validate the directory structure.
+2. Run CMake configuration.
+3. Compile the native C++ core.
+4. Run available unit tests.
+5. Build the GDExtension if dependencies are available.
+6. Validate Godot project startup if Godot is installed.
+7. Report precisely which validations passed, failed, or were blocked by unavailable tools.
+
+Never claim successful validation without actually performing it.
+
+## 11. Final Deliverables
+
+At the end:
+
+- Summarize created files.
+- Explain the architecture.
+- Report build and test results.
+- List missing dependencies.
+- Update `docs/PROGRESS.md`.
+- Create the first actionable task in `tasks/backlog/`.
+- Explain the exact next command or Codex prompt needed to continue.
+
+## Important Constraints
+
+- Do not reverse engineer actual game functions yet.
+- Do not create fictional recovered game code.
+- Do not fabricate ELF addresses.
+- Do not implement unnecessary engine systems.
+- Do not replace the original game engine with Godot gameplay systems.
+- Do not claim features are working unless tested.
+- Keep the initial project small but extensible.
+- Prioritize maintainability, modularity, and continuity across Codex sessions.
+
+**Begin by inspecting the current directory and environment. Then implement the project scaffold, documentation, minimal compilable code, and validation.**

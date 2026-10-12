@@ -1,0 +1,147 @@
+{
+  "basis": "Uncalibrated assumptions applied to observed CFG strata; not a forecast",
+  "counts": {
+    "low": 6103,
+    "medium": 1224,
+    "high": 173,
+    "very_high": 18,
+    "unknown": 26
+  },
+  "rates_re_cpp_test": {
+    "low": [
+      [
+        1,
+        0.5,
+        0.75
+      ],
+      [
+        3,
+        2,
+        2
+      ],
+      [
+        8,
+        6,
+        6
+      ]
+    ],
+    "medium": [
+      [
+        4,
+        3,
+        4
+      ],
+      [
+        12,
+        10,
+        12
+      ],
+      [
+        32,
+        24,
+        40
+      ]
+    ],
+    "high": [
+      [
+        16,
+        12,
+        24
+      ],
+      [
+        48,
+        40,
+        72
+      ],
+      [
+        120,
+        100,
+        200
+      ]
+    ],
+    "very_high": [
+      [
+        40,
+        32,
+        60
+      ],
+      [
+        120,
+        100,
+        180
+      ],
+      [
+        300,
+        240,
+        500
+      ]
+    ],
+    "unknown": [
+      [
+        8,
+        4,
+        8
+      ],
+      [
+        40,
+        24,
+        48
+      ],
+      [
+        160,
+        80,
+        160
+      ]
+    ]
+  },
+  "scenarios": [
+    {
+      "scenario": "optimistic",
+      "manual_fraction": 0.2,
+      "weighted_function_equivalents": 1508.8000000000002,
+      "reverse_engineering": 2939.0,
+      "core_reconstruction": 1895.9,
+      "verification_testing": 2982.65,
+      "data_structures": 400,
+      "assets": 400,
+      "rendering": 1000,
+      "audio": 250,
+      "godot_integration": 200,
+      "subtotal": 10067.55,
+      "integration_rework_factor": 1.15,
+      "total_hours": 11577.682499999999
+    },
+    {
+      "scenario": "baseline",
+      "manual_fraction": 0.4,
+      "weighted_function_equivalents": 3017.6000000000004,
+      "reverse_engineering": 17800.4,
+      "core_reconstruction": 13516.0,
+      "verification_testing": 17535.2,
+      "data_structures": 2000,
+      "assets": 1500,
+      "rendering": 4000,
+      "audio": 1000,
+      "godot_integration": 800,
+      "subtotal": 58151.600000000006,
+      "integration_rework_factor": 1.35,
+      "total_hours": 78504.66000000002
+    },
+    {
+      "scenario": "pessimistic",
+      "manual_fraction": 0.7,
+      "weighted_function_equivalents": 5280.799999999999,
+      "reverse_engineering": 82818.4,
+      "core_reconstruction": 62785.799999999996,
+      "verification_testing": 93336.59999999999,
+      "data_structures": 8000,
+      "assets": 6000,
+      "rendering": 15000,
+      "audio": 4000,
+      "godot_integration": 2400,
+      "subtotal": 274340.8,
+      "integration_rework_factor": 1.75,
+      "total_hours": 480096.39999999997
+    }
+  ]
+}

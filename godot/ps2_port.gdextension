@@ -1,0 +1,10 @@
+[configuration]
+entry_symbol = "ps2_port_library_init"
+compatibility_minimum = "4.3"
+reloadable = false
+
+[libraries]
+windows.debug.x86_64 = "res://bin/ps2_port.dll"
+windows.release.x86_64 = "res://bin/ps2_port.dll"
+linux.debug.x86_64 = "res://bin/ps2_port.so"
+linux.release.x86_64 = "res://bin/ps2_port.so"

@@ -1,0 +1,13 @@
+branch_pc,normalized_condition,true_next,false_next,observation
+0012f02c,gp_a54c != 0,0012f034,0012f048,Startup gate loaded AFTER bootstrap calls
+0012f3cc,gp_a938 != 0,0012f3d4,0012f3f4,Optional object pre-dispatch
+0012f410,gp_ac50 == 0,0012f418,0012f420,Record/compare candidate
+0012f42c,gp_a858 != 0,0012f434,0012f43c,Record object pre-dispatch
+0012f46c,predicate_1680b8 != 0,0012f550,0012f480,Nonzero result routes to zero effective step
+0012f480,gp_a938 != 0,0012f488,0012f550,Absent object routes to base-step fallback
+0012f498,predicate_14d6e0 != 0,0012f4a4,0012f4d0,World gate candidate
+0012f4e0,a858_field18 != 0,0012f4ec,0012f50c,Record field route; meaning not original enum
+0012f590,gp_a938 != 0,0012f59c,0012f5b0,First optional callback guard
+0012f59c,a938_field2c != 0,0012f5a4,0012f5b0,Second optional callback guard
+0012f5ec,gp_a998 != 0,0012f5f4,0012f5fc,Optional world call
+0012f65c,signed32(gp_b360 - gp_a544) > 0,0012f664,0012f648,Port wait replaces busy polling; preserves signed wrap comparison
