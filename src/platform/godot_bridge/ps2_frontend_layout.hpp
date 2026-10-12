@@ -1,5 +1,6 @@
 #pragma once
 #include "game_core/frontend/fmenus.hpp"
+#include "game_core/frontend/frontendscreens/modeselect.hpp"
 #include "game_core/frontend/frontendscreens/options.hpp"
 #include "game_core/assets/fe_language.hpp"
 #include "game_core/audio/sound.hpp"
@@ -133,6 +134,8 @@ private:
     int menu_screen_index_ = -1;
     std::uint32_t activated_name_hash_ = 0;
     std::int32_t dat_002FC070_ = -1; // Unknown initial value; written only by recovered actions.
+    // Cops On / Cops Off Mode Select globals (FUN_002174A0 / FUN_00217AF8). (E-0016-03)
+    port::frontend::ModeSelectGlobals mode_select_globals_;
     std::string active_class_name_;
     std::string requested_class_for_open_;
     std::string pending_class_name_;
@@ -140,7 +143,7 @@ private:
     std::unique_ptr<hp2::frontend::Type_002490D8> exit_animation_;
     std::string exit_class_name_;
     std::vector<std::string> navigation_history_; // 0016B418 stores class-name strings, not layout indices. // Port projection of recovered screen history.
-    void dispatch_activation(std::uint32_t name_hash);
+    void dispatch_activation(hp2::frontend::MenuEvent_0016A458& event);
     void apply_pending_screen(); // Deferred until callback returns to preserve list lifetime.
     std::vector<godot::String> message_log_;
 };

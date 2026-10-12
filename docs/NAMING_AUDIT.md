@@ -1,5 +1,12 @@
 # TASK-0016 — Original source/identifier audit
 
+> TASK-0019 follow-up: embedded qualified identifiers must be cross-referenced
+> at the beginning of their whole C string, not only the regex match offset.
+> This recovered five original method/address mappings, including the previously
+> tentative DemoDiscManager::Init association. See
+> [FUNCTION_NAME_RECOVERY.md](FUNCTION_NAME_RECOVERY.md). TASK-0016 negative
+> method-reference results were bounded offset queries, not proof of absent names.
+
 Evidence E-0016-N01, 2026-10-12. Target US PS2 `SLUS_203.62`, revision unknown,
 SHA-256 `7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2`.
 Read-only Ghidra MCP. No symbol, prototype, comment or function boundary changed.

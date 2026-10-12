@@ -23,3 +23,8 @@ extension steps and unfinished original behavior. No fake3D/physics/AI implement
 Prior TASK0017 Back/Audio/Display changes retained:18/18native+Godot tests passed,
 SubmenuSmoke covered8 Backspace routes/locale direct-pop/viewport/selector/ends;
 Display snapshot, changed settings, editor/save/preview branches remain unknown.
+
+User steering: deferRenderingServer; switchtoTASK0019name recovery. Only unlinked
+port render/value/asset infrastructure files created sofar. Runtime/RenderingServer
+migrationnotimplemented. Preservefiles; no buildintegration or successfulmigration
+claimed. Resumeonlywhenuserreturns tothearchitecture task.

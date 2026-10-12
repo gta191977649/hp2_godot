@@ -15,6 +15,7 @@ add_library(game_core STATIC src/game_core/scaffold.cpp src/game_core/police/cop
   src/game_core/frontend/frontendscreens/options.cpp
   src/game_core/frontend/frontendscreens/joystickconfiguration.cpp
   src/game_core/frontend/frontendscreens/registry_0016adb0.cpp
+  src/game_core/frontend/frontendscreens/modeselect.cpp
   src/game_core/input/joyevents.cpp
   src/game_core/audio/sound.cpp
   src/game_core/audio/bJukebox.cpp
@@ -82,6 +83,9 @@ if(BUILD_TESTING)
   add_executable(fmenus_menu_tests src/tests/fmenus_menu_tests.cpp)
   target_link_libraries(fmenus_menu_tests PRIVATE game_core)
   add_test(NAME fmenus_menu COMMAND fmenus_menu_tests)
+  add_executable(frontend_modeselect_tests src/tests/frontend_modeselect_tests.cpp)
+  target_link_libraries(frontend_modeselect_tests PRIVATE game_core)
+  add_test(NAME frontend_modeselect COMMAND frontend_modeselect_tests)
   add_executable(frontend_actions_tests src/tests/frontend_actions_tests.cpp)
   target_link_libraries(frontend_actions_tests PRIVATE game_core)
   add_test(NAME frontend_actions COMMAND frontend_actions_tests)

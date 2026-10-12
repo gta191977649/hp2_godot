@@ -53,6 +53,8 @@ public:
 private:
     FeScreen* field_0x00 = nullptr;
     std::vector<Type_00248568> field_0x04;
+    // E-0019-N01: original name unknown. Shared by entrance/exit lists initialized
+    // at 00248BE8; membership in this port projection is not original class evidence.
     void Sub_00248C60(float x, float duration, std::uint32_t group, std::uint32_t mask);
     void Sub_002486E8(Type_00248568& path);
 };

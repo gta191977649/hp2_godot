@@ -336,7 +336,7 @@ godot::Dictionary Ps2FrontEndLayout::menu_open(int screen_index) {
         }
         if (message == hp2::frontend::kMenuMessage0x01) {
             activated_name_hash_ = event.field_0x00;
-            dispatch_activation(event.field_0x00);
+            dispatch_activation(event);
         }
         if (message_log_.size() >= 64) message_log_.erase(message_log_.begin());
         message_log_.push_back(describe_menu_message(message));
@@ -383,7 +383,8 @@ godot::Dictionary Ps2FrontEndLayout::menu_open(int screen_index) {
     return result;
 }
 
-void Ps2FrontEndLayout::dispatch_activation(std::uint32_t name_hash) {
+void Ps2FrontEndLayout::dispatch_activation(hp2::frontend::MenuEvent_0016A458& event) {
+    const std::uint32_t name_hash = event.field_0x00;
     port::frontend::ScreenActionServices services{
         [this](const char* name, bool push) {
             pending_class_name_ = name;
@@ -399,6 +400,12 @@ void Ps2FrontEndLayout::dispatch_activation(std::uint32_t name_hash) {
         hp2::frontend::Sub_00216638(1, name_hash, dat_002FC070_, services);
     } else if (menu_screen_index_ == 24) {
         hp2::frontend::Sub_001EECA8(1, name_hash, services);
+    } else if (menu_screen_index_ == 1) {
+        // "Cops On Mode Select" (FUN_002174A0). The event is passed through because the original
+        // gates Quick Race and Tournament on its +0x04 pad field.
+        hp2::frontend::Sub_002174A0(1, name_hash, event, mode_select_globals_, services);
+    } else if (menu_screen_index_ == 2) {
+        hp2::frontend::Sub_00217AF8(1, name_hash, event, mode_select_globals_, services); // 0x00217AF8
     } else {
         const auto* registration = port::frontend::find_registration(active_class_name_);
         const std::string address = registration == nullptr ? "unknown screen handler" :
@@ -607,12 +614,18 @@ void Ps2FrontEndLayout::open_menu_animation(int screen_index) {
     highlight_animation_ = {};
     menu_clock_seconds_ = 0;
     // E-0016-V01: Title also binds ANIMATING_MENUITEM/PRESS_START_1, retaining default 4s period.
-    if (screen_index != 0 && screen_index != 22) return;
+    // Screens 1 and 2 bind it the same way: FUN_00216E80 and FUN_00217538 each call
+    // FUN_00248870(instance+0x23C, document, ANIMATING_MENUITEM, gp-0x3F08). (E-0016-08)
+    if (screen_index != 0 && screen_index != 1 && screen_index != 2 && screen_index != 22) return;
     highlight_animation_.Construct_00248870(&screens_[static_cast<std::size_t>(screen_index)],
         hp2::frontend::StringHash_002534A8("ANIMATING_MENUITEM"),
         hp2::frontend::kAnimGhostColour_gp_0x3F08, 0);
-    if (screen_index == 0) highlight_animation_.period_0x1C = hp2::frontend::kAnimFMenusPeriod_0016FBB0;
-    else highlight_animation_.Bind_002488D0(0xB070DBC9, 0);
+    // Correction (E-0016-08): the 2 s period belongs to the manager-level object FUN_0016FBB0
+    // builds at manager+0x1B8, which binds GLOBAL_ANIMATING_MENUITEM against the LOADING_TRACK
+    // document. Every screen-owned instance -- FUN_00216460 at +0x1A8 for New Main Menu and
+    // FUN_00216E80/FUN_00217538 at +0x23C for the two mode selects -- goes through FUN_00248870
+    // without overriding +0x1C, so it keeps the default 4 s.
+    if (screen_index == 22) highlight_animation_.Bind_002488D0(0xB070DBC9, 0);
 }
 
 void Ps2FrontEndLayout::bind_menu_animation(std::uint32_t name_hash) {

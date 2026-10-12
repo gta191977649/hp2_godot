@@ -190,6 +190,34 @@ See docs/FULL_RECOVERY.md and the 7,544-row recovery inventory. Native police ti
 
 
 
+## TASK-0016 mode-select screens + front-end movie loop — 2026-10-13
+
+ELF-code RE. The main menu's Hot Pursuit and World Racing entries open "Cops On Mode Select"
+(FUN_002174A0, document 0x5B35F533, FRONTB.BUN screen 1) and "Cops Off Mode Select"
+(FUN_00217AF8, 0x033E7771, screen 2). Both handlers are fully decompiled: per-item targets, the
+globals they set (DAT_002FC06C, DAT_0031AB90, DAT_0030C77C 9 vs 8, DAT_0030C784, DAT_002FC1C0),
+the pad gate that refuses Quick Race and the tournament entry from any pad but 0 by zeroing the
+event's sound field, the highlight tables (MI_1..5_MASK plus localised string ids), and the
+tExitScreenAnimation transition that locks the screen while the items slide out at 650 px/s.
+"Ultimate Racer" (Hot Pursuit) and "Championship" (World Racing) are the same tournament entry on
+the two branches; both request "View Event Tree", which is NOT reversed -- it is registered
+through the other wrapper FUN_0016AD88, whose class names come from runtime gp pointers, and its
+document is not one of FRONTB.BUN's 41 screens.
+
+**Background movie loops.** FUN_0016CCA8 -> FUN_0016D028 calls the decoder step FUN_002380A8 every
+frame and re-opens the same file with FUN_00237AD8 whenever it does not return exactly 1
+(`xori v0,v0,1; beq v0,zero`). FUN_0016CE30 early-outs when asked for the path already cached at
+manager+0x1E4, and FUN_0016D0A0 keeps that cache, so re-entering a screen does not restart its
+movie -- the re-open path is the loop. No play-once branch exists.
+
+**Correction to TASK-0015**: the 2 s highlight-pulse period belongs only to the manager-level
+object FUN_0016FBB0 builds at manager+0x1B8 against GLOBAL_ANIMATING_MENUITEM; every screen-owned
+instance keeps FUN_00248870's default 4 s. The driver TASK-0015 could not find is
+FUN_0016CCA8 -> FUN_0016FCD8 -> FUN_00248970.
+
+Write-up: docs/FRONTEND_MODE_SELECT.md; 14 new reverse/functions records; E-0016-01..14.
+No Ghidra changes; no original-hardware comparison.
+
 ## TASK-0014 frontend menu interaction — 2026-10-12
 
 

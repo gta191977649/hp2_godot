@@ -1,5 +1,20 @@
 # Project state — 2026-10-13 (Australia/Sydney)
 
+## TASK-0019 — Original function names (completed scoped investigation)
+
+RenderingServer work is deferred at the user's request; TASK-0018 remains incomplete.
+Read-only Ghidra inventory classified 7,544 function symbols. Whole-C-string references
+and MIPS instruction proof recover five original methods (E-0019-N03), now adopted
+in reverse/symbols.csv; see FUNCTION_NAME_RECOVERY.md. No native implementations of
+these five exist to rename. Requested 002490D8/00248C60 original identifiers remain
+unknown: allocation labels are not type/method proof, and 00248C60 is shared by
+entrance and exit lists. Source comments record this port enclosure limitation.
+Metadata checks and git diff --check passed; no behavior changed or Verified promotion.
+Next naming work: recover computed references for the remaining diagnostic/profiler
+strings before adopting more names. TASK-0017 normal submenu paths and Audio/Display
+viewport checks passed previously (18/18 CTest plus Godot smoke); remaining settings,
+editor/save branches and original equivalence are still incomplete.
+
 ## TASK-0017 — Submenu Back and overflow (active)
 
 User reports submenu Backspace failure and Audio items drawing below the hint/footer.
