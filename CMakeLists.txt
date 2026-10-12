@@ -10,7 +10,10 @@ target_include_directories(platform_api INTERFACE src)
 target_compile_features(platform_api INTERFACE cxx_std_17)
 
 add_library(game_core STATIC src/game_core/scaffold.cpp src/game_core/police/cop_control.cpp
-  src/game_core/engine/engine_shell.cpp src/game_core/engine/world_connections.cpp)
+  src/game_core/engine/engine_shell.cpp src/game_core/engine/world_connections.cpp
+  src/game_core/frontend/screen_manager.cpp
+  src/game_core/assets/elab_chunks.cpp src/game_core/assets/hp2_tpk_texture.cpp
+  src/platform/ps2_asset_root.cpp)
 target_include_directories(game_core PUBLIC src)
 target_compile_features(game_core PUBLIC cxx_std_17)
 target_link_libraries(game_core PUBLIC platform_api)
@@ -33,6 +36,13 @@ if(BUILD_TESTING)
   add_executable(engine_shell_tests src/tests/engine_shell_tests.cpp)
   target_link_libraries(engine_shell_tests PRIVATE game_core)
   add_test(NAME engine_shell COMMAND engine_shell_tests)
+  add_executable(screen_manager_tests src/tests/screen_manager_tests.cpp)
+  target_link_libraries(screen_manager_tests PRIVATE game_core)
+  add_test(NAME screen_manager COMMAND screen_manager_tests)
+  add_executable(hp2_tpk_texture_tests src/tests/hp2_tpk_texture_tests.cpp)
+  target_link_libraries(hp2_tpk_texture_tests PRIVATE game_core)
+  add_test(NAME hp2_tpk_texture COMMAND hp2_tpk_texture_tests
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
   add_test(NAME main_loop_catalog COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/reverse/scripts/validate_main_loop.py" --metadata-only)
   add_test(NAME differential_synthetic COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tools/pipeline.py" verify --runner $<TARGET_FILE:demo_runner>)
@@ -47,7 +57,8 @@ if(PORT_BUILD_GODOT)
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
   add_subdirectory("${PORT_GODOT_CPP_DIR}" "${CMAKE_BINARY_DIR}/godot-cpp")
   add_library(ps2_port SHARED src/platform/godot_bridge/port_core.cpp src/platform/godot_bridge/register_types.cpp
-    src/platform/godot_bridge/main_loop_observer.cpp)
+    src/platform/godot_bridge/main_loop_observer.cpp src/platform/godot_bridge/frontend_menu_observer.cpp
+    src/platform/godot_bridge/ps2_texture_loader.cpp)
   target_link_libraries(ps2_port PRIVATE game_core godot-cpp)
   set_target_properties(ps2_port PROPERTIES PREFIX "" OUTPUT_NAME "ps2_port"
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/godot/bin"

@@ -24,6 +24,8 @@ __pycache__/
 /godot/assets/extracted/
 /tools/asset_extractor/output/
 /tools/asset_converter/output/
+# Machine-local PS2 asset root pointer (real path + nothing else); see config/ps2_assets.example.json.
+/config/ps2_assets.local.json
 *.iso
 *.cso
 *.bin

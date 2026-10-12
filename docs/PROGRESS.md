@@ -1,5 +1,155 @@
 # Project state — 2026-10-12 (Australia/Sydney)
 
+## TASK-0012 update — Native runtime texture loader; standalone .exe built; original source tree recovered
+
+Three user-directed follow-ups completed in this pass. (1) User required the reversed code to
+load everything directly from the original PS2 assets at runtime, not via a manual Python export
+step: ported tools/asset_extractor/hp2_tpk_textures.py's decode path (chunk parser + full
+Modelulator-derived P8/4bpp RWBuffer decode) verbatim into Godot-independent C++
+(src/game_core/assets/elab_chunks.*, hp2_tpk_texture.*), added a runtime ZZDATA-root resolver
+(src/platform/ps2_asset_root.*, same env-var/config precedence as tools/ps2_assets.py) and a
+Godot bridge (src/platform/godot_bridge/ps2_texture_loader.*, class `Ps2TextureLoader`). Added a
+new CTest (`hp2_tpk_texture`) that decodes the same real texture via C++ and Python and asserts
+byte-for-byte equality -- passed. frontend_menu_observer.gd now calls
+`Ps2TextureLoader.load_texture("FRONTEND/FRONTB.BUN", "LOGO_NFS")` etc. directly at runtime; the
+manually-exported PNGs under godot/assets/extracted/ were deleted. (2) User asked to search for
+the original PS2 loader code via Ghidra MCP before trusting the ported algorithm: searched for
+the TPK chunk tag constants and "TPK"/".tpk"/"eLab" strings as both ELF code and data -- zero
+hits, confirming these are pure resource-file data never referenced by name in the ELF; most
+likely explanation (not proven) is that real PS2 GS hardware natively samples swizzled/indexed
+textures, so the original code probably never does a CPU-side "decode to linear RGBA" at all --
+documented as an open item rather than claimed as a recovered original function. (3) User noted
+that a `.cpp`/`.hpp` string search would reveal the original source tree: it did, spectacularly --
+93 embedded `__FILE__`-style strings recovered the real original directory layout
+(`indep\src\fmenus.cpp`, `indep\src\frontendscreens\{selectcar,racesetup,options,
+joystickconfiguration}.cpp`, the bWare middleware's own `src\b*.cpp` files) and several confirmed
+original class/method names (`World::DoTimestep`, `Race::Update()`, `RaceCoordinator`,
+`ReplayManager::HandleSnapshot()`, `TrafficCar::Move()`, `TexturePack`/`TextureAnimPack` --
+the last one confirming "TPK" is itself derived from the real original class name, not a
+community-invented abbreviation). None of these strings had resolvable code cross-references this
+session (likely retail-stripped assert/profiler call sites), so file-to-function attribution
+remains unconfirmed per-address; full catalog in new docs/ORIGINAL_SOURCE_TREE.md.
+Finally built and ran an actual standalone Windows executable (`out/windows-debug/port.exe` +
+`port.pck` + `ps2_port.dll`, via the existing "Windows Debug" export preset, main scene
+temporarily pointed at frontend_menu_observer.tscn for the export then reverted) -- launches
+independently of the Godot editor/portable runtime, resolves the ZZDATA config, and renders the
+same operable, evidence-backed menu closed loop with live-loaded real PS2 textures (NFS logo,
+brushed metal panel). Screenshot captured and sent to the user. `out/` is gitignored; nothing
+proprietary committed. No Ghidra mutations, no PCSX2 comparison, no Git commit.
+Next: locate the actual GAMEFLOW_STATE_IN_FRONTEND sustained update loop (still the top open item
+from the prior pass); cross-reference the newly-recovered fmenus.cpp/frontendscreens file names
+against specific function addresses if a viable method is found; consider renaming port-side
+`HP2_*` labels to align with recovered original class names where confidently attributable.
+
+## TASK-0011 update — Central GAMEFLOW_STATE_* dispatcher found; FUN_0016fa80 hypothesis retired
+
+User pointed at an existing, independently-validated local PS2 texture decoder
+(D:\dev\eagl-godot\map_tools_ps2) and asked to combine it with continued Ghidra MCP work to
+fully reverse the original menu source, explicitly "don't guess yourself." Fixed TASK-0012's
+texture decoder by porting that project's validated decode path verbatim (root cause of the prior
+artifact: a missing 0x80-byte alignment on the pixel/palette data-pool base offset); FRONTB.BUN
+decode success rate went from 210/365 to 357/365 with zero visible artifacts (see
+docs/ASSET_PIPELINE.md §4.4). Returned to the ELF side and obtained a full decompile of
+FUN_0016fa80 (previously assumed to be an unaudited ~465KB function and the likely New Main Menu
+update/tick routine) -- it is actually a clean 312-byte one-shot cleanup function; the "oversized
+envelope" hypothesis from TASK-0006/0007/0011 is retired as almost certainly a Ghidra
+function-record bookkeeping artifact, not real code. Tracing its single caller led to a major
+structural discovery: the game's central `GAMEFLOW_STATE_*` state-machine dispatcher
+(`FUN_001680d8`=request-transition, `FUN_001680e8`=per-frame pump, already known from TASK-0010 as
+a main-loop StateDispatch target but previously uninterpreted) and its function-pointer table at
+ELF 0x002faea4, whose rows point to ORIGINAL ASCII enum-name strings recovered verbatim from the
+binary: GAMEFLOW_STATE_LOADING_FRONTEND, _UNLOADING_FRONTEND, _IN_FRONTEND,
+_LOADING_TRACK_COMMON, _LOADING_TRACK_SPECIFIC, _RACING, _UNLOADING_TRACK_COMMON (row order
+inferred, not re-verified), _EXIT_DEMO_DISC. This connects to TASK-0011's prior evidence:
+GAMEFLOW_STATE_UNLOADING_FRONTEND's exit callback (0x001687a8, decompiled) calls FUN_0016f950
+(the confirmed attract-sequence gate leading to "New Main Menu"); GAMEFLOW_STATE_IN_FRONTEND's
+enter callback (0x00168830, decompiled) calls FUN_0016fa80 then unconditionally requests
+GAMEFLOW_STATE_LOADING_TRACK_SPECIFIC -- an unresolved contradiction with "IN_FRONTEND" sounding
+like a sustained browse-the-menu state (its update slot is empty), flagged as the top open
+question. 4 new/updated function records (E-0011-17 superseded/corrected, E-0011-18..22); 0x0016fa80's
+record rewritten in place rather than left stale. Full write-up: docs/FRONTEND_MENU.md §8. No
+Ghidra mutations; no PCSX2 comparison; no Git commit.
+Next: resolve the IN_FRONTEND contradiction (decompile 0x00168db8/0x001690a0/etc. to see whether
+gameplay ever returns to IN_FRONTEND, or whether the sustained menu-browsing loop lives entirely
+inside one state's update callback rather than in this dispatcher), then the remaining open items
+in docs/FRONTEND_MENU.md's updated priority list.
+
+## TASK-0012 — PS2 original asset pipeline (active; container + P8/RGBA decode delivered)
+
+User pointed at an authorized local PS2 disc dump (D:\ps2_game\GAME\ZZDATA) and asked for a
+non-hardcoded global config entry point, plus reverse engineering that can actually render the
+original UI matching real PS2 behavior, with file/function naming reflecting the recovered
+structure. Delivered: `tools/ps2_assets.py` as the single global ZZDATA-path resolver (env var
+`HP2_PS2_ASSET_ROOT` then gitignored `config/ps2_assets.local.json`; tracked
+`config/ps2_assets.example.json` template). Reverse engineered and validated (byte-exact full
+file consumption) a generic "eLab" nested-chunk container format shared by FRONTEND/FRONTB.BUN
+(14.4MB, 1760 chunks) and GLOBAL/HUDTEX.BIN (1.5MB, 9 chunks) — `tools/asset_extractor/
+elab_chunks.py`. Found real original frontend UI text in FRONTB.BUN including developer
+placeholder/joke strings ("Phil is a loser, so I have to make this fake menu item") proving
+unmodified shipped data, plus real labels (PRESS START, Championship, Options, Credits,
+Controller, Language Select, Setup, Race Type) and `UwE*`-prefixed widget type names — not yet
+cross-referenced to specific screens. Identified and validated (cross-checked against three
+independent open-source community references: xan1242/xnfstpktool, PS2HomeDeveloper/
+ps2-tim2-tool, leeao/PS2Textures, all cited in docs/ASSET_PIPELINE.md) the HP2 TPK texture
+container's 164-byte `AncientTextureInfo` header and implemented P8 (8-bit indexed, PSMT8
+swizzle + CSM1 CLUT reorder + PS2 alpha range) and RGBA32 pixel decode in
+`tools/asset_extractor/hp2_tpk_textures.py`. Decoded 89/89 HUDTEX.BIN and 210/365 FRONTB.BUN
+texture headers with zero failures (remainder skipped: unsupported 4bpp/DXT, not guessed).
+Visually confirmed multiple decoded textures are clearly recognizable real game art (tachometer
+gauges, car badges including a legible BMW roundel, a full `DISPLAYSETUP_BG` road scene, and a
+`PURSUIT_TREE_BG` event-tree map) — sent to the user. All decoded images and chunk dumps are
+gitignored (`tools/asset_extractor/output/`); no proprietary bytes committed. Open: a fine
+speckle artifact remains in every P8 decode, most likely authentic PS2-era dithering but not
+confirmed; 4bpp/DXT/swizzled-RGBA decode not implemented; the widget/layout record format (which
+texture/text belongs to which named screen) is completely unparsed, so no Godot rendering of
+real original layout exists yet — explicitly do not treat the decoded images as "the rendered
+menu," only as validated raw material toward it. Full report: docs/ASSET_PIPELINE.md. Registered
+analyzed asset file hashes in reverse/assets.csv. No Git commit (left to the user, per prior note
+in TASK-0011).
+Next: parse LANGUAGES/FE_ENGLISH.BIN for authoritative menu text, then reverse the UwEMENUITEM_*
+widget record layout, then resolve the P8 artifact (ideally against a real PCSX2 screenshot),
+then implement 4bpp/DXT decode — only after that attempt an actual layout-accurate Godot render.
+
+## TASK-0011 — Front-end menu minimal closed loop (active; scoped completion)
+
+User asked for the "original front-end flow minimal closed loop": confirm a main menu and its
+adjacent pages, trace NewMainMenu creation/update/input-callback/page-switching, restore
+navigation state in the native core, and show an operable Godot UI, menu closed loop first.
+Confirmed via read-only GhidraMCP: string "New Main Menu" at ELF 0x002b2f00; CONFIRMED edge
+TitleScreen -> New Main Menu (TitleScreen's instance handler FUN_0016eef8, message==1, calling
+FUN_0014cc78->FUN_0016c4c0). Manager-level screen switch/find/history push-pop/reset fully
+decompiled (FUN_0014cc78/0016c4c0/0016c8c8/0016b418/0016b438/0016b460). MumboJumboScreen
+(FUN_0016f810) confirmed as a sibling registered screen class; its edge to Title/MainMenu is
+NOT confirmed. The long-flagged oversized FUN_0016fa80 envelope (0x0016fa80..0x001e3dbf, ~465KB,
+previously noted in TASK-0006/0007) routes several of its opening state values directly to
+"New Main Menu" -- strong candidate for New Main Menu's own update/tick function, still
+unaudited (TASK-0003 remains the right next step for it). New Main Menu's own class
+constructor/dispatcher was not located; input wiring from raw joypad events
+(JOY_EVENT_MENU_SELECT/CANCEL/BACK/HELP strings found, not traced to a call site) to
+FUN_0016eef8's message dispatch was not traced. 16 new reverse/functions/.../frontend/ records
+(E-0011-01..16) plus a reclassified/updated 0016fa80 record (E-0011-17, moved from unknown/ to
+frontend/, Unidentified->Identified, confidence low->medium). reverse/symbols.csv updated.
+Native `hp2::frontend::ScreenManager` (src/game_core/frontend/screen_manager.cpp) implements the
+confirmed manager-level API as a structural projection (name registry, current screen, 12-slot
+history with push/pop, reset); 9 new unit tests. Godot bridge `FrontEndMenuObserver` +
+operable scene `godot/scenes/frontend_menu_observer.tscn` (buttons for the confirmed edge, an
+explicitly-labelled unconfirmed sibling switch, Back, and Reset; live history/registry display;
+evidence footer). Native CTest 7/7 and bridge CTest 7/7 passed (no regressions in the five
+pre-existing tests); Godot headless import clean; new `--frontend-menu-smoke` passed
+(FRONTEND_MENU_OBSERVER_SMOKE_OK); prior `--observer-smoke` and `--smoke-test` still pass
+unchanged. Two real rendered screenshots captured and visually checked
+(local/frontend-menu-observer.png, local/frontend-menu-observer-after-press-start.png, both
+1380x760, git-ignored). Symlinked the user's existing `reverse-engineer-anything` (REA) skill
+from `~/.agents/skills/` into `~/.claude/skills/` at the user's request so Claude Code can load
+it; REA's own tool routing has no Ghidra/MIPS-R5900 provider (IDA-only for native targets), so
+actual decompilation continued through the existing Ghidra MCP server as in prior sessions.
+No Ghidra mutations, no Verified promotion, no PCSX2/original comparison, no Git commit (the
+user committed the pre-existing scaffold independently mid-session; this task's new files are
+uncommitted). Full report: docs/FRONTEND_MENU.md.
+Next: TASK-0003-style boundary/ABI audit of FUN_0016fa80 (highest-value next step -- it is the
+best lead for New Main Menu's real update logic and menu-item content); then trace
+FUN_0016eef8's raw-input source; then locate New Main Menu's own construction site.
+
 ## TASK-0010 — Main-loop structural shell completed
 
 Mainloop 0x0012F378 mapped: 61 callsites / 39 distinct targets, five startup sites,
@@ -85,9 +235,13 @@ M0 is complete for Windows x86-64. TASK-0002 static workload assessment is compl
 for the current Ghidra snapshot; no game reconstruction or asset conversion was
 performed. M1 is in progress: read-only MCP/R5900 connectivity and ELF identity
 are established, but boundary/ABI quality and broad identification are unfinished.
-M2–M6 have not been achieved. Current active task: TASK-0005 (independent infrastructure).
-Completed tasks: TASK-0000, TASK-0002, TASK-0006, TASK-0007 and TASK-0008. Next reverse task: TASK-0003 boundary/ABI audit,
-then TASK-0004 original comparison setup and the scoped pilot backlog.
+M2–M6 have not been achieved. Current active tasks: TASK-0005 (independent infrastructure),
+TASK-0009 (full-binary recovery), TASK-0011 (front-end menu; closed-loop scope delivered,
+broader menu-content recovery remains open), TASK-0012 (PS2 asset pipeline; container + P8/RGBA
+texture decode delivered, layout/text semantic decode and remaining pixel formats remain open).
+Completed tasks: TASK-0000, TASK-0002, TASK-0006, TASK-0007, TASK-0008 and TASK-0010.
+Next reverse task: TASK-0003 boundary/ABI audit (now prioritizing the FUN_0016fa80 envelope
+surfaced by TASK-0011), then TASK-0004 original comparison setup and the scoped pilot backlog.
 
 ## Assessment snapshot — TASK-0002
 
@@ -181,10 +335,17 @@ Linux, and the installed 4.7.2 runtime were not validated.
 
 ## Continuation
 
-Use: "Read AGENTS.md, docs/PROGRESS.md and docs/assessment/BINARY_REPORT.md, then
-work on tasks/backlog/TASK-0003-boundary-abi-audit.md. Audit the one-byte bodies at
-0x0019a4b8 and 0x001ebd20 and the shared return/ABI contracts. Start read-only,
-preserve existing annotations and record evidence before any scoped repair.
+Front-end menu next step: "Read docs/PROGRESS.md, docs/FRONTEND_MENU.md and
+tasks/active/TASK-0011-frontend-menu-closed-loop.md, then audit the FUN_0016fa80 envelope
+(0x0016fa80..0x001e3dbf) boundary before deciding whether to decompile it; it is the strongest
+lead for New Main Menu's real update/tick logic and eventual menu-item content. Start
+read-only, preserve existing annotations and record evidence before any scoped repair."
+
+Original TASK-0003 continuation (still applicable to the broader boundary-audit backlog item,
+now informed by the FUN_0016fa80 priority above): "Read AGENTS.md, docs/PROGRESS.md and
+docs/assessment/BINARY_REPORT.md, then work on tasks/backlog/TASK-0003-boundary-abi-audit.md.
+Audit the one-byte bodies at 0x0019a4b8 and 0x001ebd20 and the shared return/ABI contracts.
+Start read-only, preserve existing annotations and record evidence before any scoped repair.
 Do not start full game implementation."
 
 Original request-file SHA-256 values after scaffold creation:

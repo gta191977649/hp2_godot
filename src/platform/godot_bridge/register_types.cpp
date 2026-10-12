@@ -1,11 +1,15 @@
 #include "port_core.hpp"
 #include "main_loop_observer.hpp"
+#include "frontend_menu_observer.hpp"
+#include "ps2_texture_loader.hpp"
 #include <godot_cpp/godot.hpp>
 
 void initialize_port(godot::ModuleInitializationLevel level) {
     if (level == godot::MODULE_INITIALIZATION_LEVEL_SCENE) {
         godot::ClassDB::register_class<port::godot_bridge::PortCore>();
         godot::ClassDB::register_class<port::godot_bridge::MainLoopObserver>();
+        godot::ClassDB::register_class<port::godot_bridge::FrontEndMenuObserver>();
+        godot::ClassDB::register_class<port::godot_bridge::Ps2TextureLoader>();
     }
 }
 void terminate_port(godot::ModuleInitializationLevel) {}

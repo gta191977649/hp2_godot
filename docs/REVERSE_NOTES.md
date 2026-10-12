@@ -93,3 +93,31 @@ See docs/FULL_RECOVERY.md and the 7,544-row recovery inventory. Native police ti
 ## TASK-0010 main loop — 2026-10-12
 
 61 loop callsites/39 targets plus five startup sites captured; dynamic startup and frame gates, saved s2/f20 operands, and post-boundary tail retained. World controller path is 00131A30; mover goes via entity virtual 0014D898 -> 001D81F0 -> 00131AC8, with a possible remainder step. 00131A80 is a secondary-object callback, not mover. See docs/MAIN_LOOP_STRUCTURE.md, reverse/main_loop/ catalogs and E-0010 evidence. No Ghidra changes or original verification.
+
+## TASK-0012 asset pipeline — 2026-10-12
+
+Asset-file format RE (not ELF code), separate from the symbols.csv/functions workflow above. See
+docs/ASSET_PIPELINE.md for the full write-up. Global ZZDATA path resolution lives only in
+tools/ps2_assets.py (env var HP2_PS2_ASSET_ROOT, then gitignored config/ps2_assets.local.json) —
+never hardcode a ZZDATA path elsewhere. A generic eLab nested-chunk container format and the HP2
+TPK 164-byte texture header are confirmed via byte-exact full-file consumption and cross-checked
+against three independent open-source community references (cited in the doc, not silently
+trusted). P8/RGBA pixel decode produces recognizable real game art with one unresolved residual
+artifact. reverse/assets.csv registers analyzed asset file SHA-256 hashes, parallel to
+reverse/binaries.csv for ELF identity. No ELF/Ghidra state touched by this task.
+
+## TASK-0011 frontend menu — 2026-10-12
+
+String literal "New Main Menu" at 0x002b2f00 confirmed; CONFIRMED edge TitleScreen (FUN_0016f440 class, instance handler FUN_0016eef8 message==1) -> New Main Menu via FUN_0014cc78->FUN_0016c4c0. Manager-level RequestScreen/FindByName/PushHistory/PopHistory/Reset fully decompiled (FUN_0014cc78, FUN_0016c4c0, FUN_0016c8c8, FUN_0016b418, FUN_0016b438, FUN_0016b460). MumboJumboScreen (FUN_0016f810) is a confirmed sibling screen class with no confirmed edge to Title/MainMenu. New Main Menu's own class constructor was not located. See docs/FRONTEND_MENU.md and E-0011-01..22 evidence; 16 new reverse/functions/<binary-id>/frontend/ records. No Ghidra changes or original verification.
+
+**Correction (same day, later pass)**: FUN_0016fa80 was initially mischaracterized as an unaudited
+~465KB "oversized envelope" and update/tick candidate based on a 176-byte listing slice; a full
+decompile shows it is a clean 312-byte one-shot cleanup function (`functions get`'s reported
+~465KB end_address does not reflect real/reachable code -- treat as a Ghidra bookkeeping artifact
+for this address). Its single caller led to the game's central GAMEFLOW_STATE_* dispatcher
+(FUN_001680d8/FUN_001680e8, table at 0x002faea4) with original ASCII enum names recovered
+verbatim (GAMEFLOW_STATE_LOADING_FRONTEND/_UNLOADING_FRONTEND/_IN_FRONTEND/
+_LOADING_TRACK_COMMON/_SPECIFIC/_RACING/_UNLOADING_TRACK_COMMON/_EXIT_DEMO_DISC), connecting to
+the TitleScreen->New Main Menu evidence above via GAMEFLOW_STATE_UNLOADING_FRONTEND's exit
+callback. See docs/FRONTEND_MENU.md §8 for the full write-up; 0x0016fa80's function record was
+rewritten in place (not left stale) and 4 new records added (E-0011-18..22).

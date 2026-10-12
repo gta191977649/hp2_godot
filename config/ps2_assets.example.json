@@ -1,0 +1,18 @@
+{
+  "root": "D:/path/to/your/ps2_game/GAME/ZZDATA",
+  "_comment": [
+    "This is the single, global entry point for pointing tooling at an authorized local copy",
+    "of the original PS2 disc's ZZDATA tree (the directory containing FRONTEND/, GLOBAL/,",
+    "CARS/, TRACKS/, LANGUAGES/, MOVIES/, NIS/, SOUND/, __Unknown/). Never hardcode this path",
+    "in source, scripts, or docs.",
+    "",
+    "To use it: copy this file to config/ps2_assets.local.json (gitignored) and replace the",
+    "'root' value with your own path, OR set the HP2_PS2_ASSET_ROOT environment variable to the",
+    "same kind of path instead (the env var always wins over the local config file).",
+    "'root' may point either directly at .../GAME/ZZDATA or at its parent; see tools/ps2_assets.py.",
+    "",
+    "Never commit ps2_assets.local.json, extracted asset bytes, or any file under this project's",
+    "ignored /local//ps2_decomp//private/ extraction output directories. The original ZZDATA",
+    "contents are proprietary game data, not project source."
+  ]
+}
