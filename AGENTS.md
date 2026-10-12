@@ -3,6 +3,10 @@
 This repository initializes a PS2-to-PC native port. No actual game functions
 have been recovered. Repository files are the durable project memory.
 
+See **[AGENT.md](AGENT.md)** for the binding naming/evidence rules (no guesswork; identifiers
+must be recovered-verbatim, address-anchored, or explicitly port-side; unimplemented paths throw
+`hp2::NotImplemented`). AGENT.md is stricter than this file wherever they overlap.
+
 ## Mandatory rules
 
 1. Read project documentation before making changes.
@@ -17,6 +21,9 @@ have been recovered. Repository files are the durable project memory.
 10. Update task status and documentation after completing work.
 11. Never mark unverified code as Verified. PC tests alone do not establish equivalence.
 12. Ensure the next session can continue from repository files without chat history.
+13. Follow AGENT.md identifier provenance: recovered names verbatim, otherwise address-anchored
+    (`Sub_<ADDR>`), never an invented descriptive name for recovered code.
+14. An unimplemented recovered path throws `hp2::NotImplemented`; never a silent default.
 
 Do not replace recovered physics with Godot physics without an explicit recorded
 decision. Never add proprietary ELF/ISO files, extracted assets, secrets, or Ghidra
