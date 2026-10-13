@@ -19,19 +19,19 @@
 
 ## Acceptance criteria
 
-- [ ] The event detail panel shows the original's own Status and Reward text, from the
+- [x] The event detail panel shows the original's own Status and Reward text, from the
       recovered FUN_001F6B70 over document 17.
-- [ ] The connector colour rule is read out of FUN_001F96B8's tLineSegment build, or the port's
+- [x] The connector colour rule is read out of FUN_001F96B8's tLineSegment build, or the port's
       rule is explicitly recorded as port-side in both the code and the doc.
-- [ ] The zoom easing is recovered from FUN_0015E6A0 / cameramover.cpp, or the snap is recorded
+- [x] The zoom easing is recovered from FUN_0015E6A0 / cameramover.cpp, or the snap is recorded
       as port-side with what was ruled out.
-- [ ] kPortPanelFit is gone, replaced by whatever transform makes the authored 256 px panel fit
+- [x] kPortPanelFit is gone, replaced by whatever transform makes the authored 256 px panel fit
       the recovered 130/350 lattice at zoom 0.4.
 - [ ] States 5, 6 and 7 are translated, including FUN_001F9F10's intro path.
-- [ ] Reused, not reimplemented: the zero-velocity cubic Hermite in
+- [x] Reused, not reimplemented: the zero-velocity cubic Hermite in
       Type_002490D8::Update_00249128 and the scrolling-text Type_002491B0 that screen 39 already
       binds through EVENT_TITLE_BAR and WHITEOUT_BAR.
-- [ ] No new descriptive identifier for recovered code; no new silent default.
+- [x] No new descriptive identifier for recovered code; no new silent default.
 
 ## Verification procedure
 
@@ -93,4 +93,32 @@ None yet. Record actual commit hashes only after creation.
 
 ## Completion evidence
 
-Not complete.
+Not complete: full car/track 3D reward preview, race/car-selection effects, event31
+completion globals, and original-execution comparison are still missing.
+
+The Status/Reward producers are browsing-overlay functions001F8890/001F60E8/001F6220;
+001F6B70 is the input handler, and document17 is drawn by001F6770. All are now documented.
+The old easing target was misidentified:0015E6A0 constructs the preview camera; the tree
+uses the same native Hermite interpolator as the screen-exit animation. The renderer
+does not apply node+0x0C's selected multiplier; kPortPanelFit is removed as unsupported.
+
+Implemented state1/3/4/6 transitions and state5 return, doc17 text and doc18 introduction,
+car-logo cycling and track-logo transitions, original selection border pulse, authored
+line widgets/colors and clipping, live title and recovered frontend document names.
+State5's missing model renderer reports0x001F6440; unlocked selection reports0x001F6A28.
+Unknown special nodes carry explicit diagnostics rather than a fabricated Locked state.
+
+Validation on2026-10-13: `cmake --build --preset native-debug --parallel 4` passed;
+`cmake --build --preset godot-debug --parallel 4` passed;
+`ctest --preset godot-debug --output-on-failure` passed24/24. Native full rerun is
+recorded in PROGRESS.md. Targeted text/catalog/animation tests pass with original assets
+configured. Private DX12 browse/detail captures inspected; no original comparison.
+Earlier test failures (old recovered-name count18 and a fixture assuming the saved
+cursor reset on reopen) were corrected; the latter demonstrated the recovered profile
+write was now taking effect. An initial DLL-link failure was due to the previous
+running game holding the DLL; closing that game allowed the rebuild.
+
+Evidence: E-0022-D01..D10, E-0022-C01/C02, E-0022-T01..T12, E-0022-G01..G07,
+E-0022-R01..R05. See docs/TASK_0022_DETAIL_TEXT.md and docs/TASK_0022_INTEGRATION.md.
+No commit was made. Continue TASK-0022 at001F6440/001F6A28 and the event31 gate;
+TASK-0023 is required before any Verified promotion.

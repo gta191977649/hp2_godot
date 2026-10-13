@@ -77,6 +77,24 @@ does not make the Godot scene runnable; the bridge DLL must exist.
 
 ## Normal workflow
 
+### Project-root build entry point (TASK-0024)
+
+```powershell
+./build.ps1                         # configure and build godot-debug
+./build.ps1 --run                   # build successfully, then start the frontend
+./build.ps1 --clean --run            # clean generated outputs, build, then run
+./build.ps1 --clean --preset native-debug --jobs 4
+./build.ps1 --preset=godot-release --jobs=4
+./build.ps1 --help
+```
+
+GNU-style options work in PowerShell7 and Windows PowerShell5.1. Run mode requires
+the local pinned engine described above; native-debug cannot launch a Godot scene.
+`--clean` invokes CMake's generator clean target in the selected preset's build
+directory, then rebuilds. It preserves arbitrary user files and the configuration;
+it does not recursively delete build/, third_party/, assets, or local/. If a running
+frontend holds ps2_port.dll open, close it before rebuilding. Build errors prevent launch.
+
 Follow AGENTS.md startup/completion protocols and a task's acceptance criteria.
 Keep implementation, evidence, test vectors, and current status together in a
 scoped change. Adding recovered functions follows REVERSE_NOTES.md. Add source

@@ -1,6 +1,12 @@
 # PS2 PC Port
 
 Project initialization for a native C++17 decompilation port, hosted by Godot.
+
+Build from the project root in PowerShell with `./build.ps1`. Use
+`./build.ps1 --run` to build and start the frontend, or
+`./build.ps1 --clean --run` for a clean rebuild and launch. The default preset is
+`godot-debug`; `--preset native-debug` builds only the independent core.
+See `./build.ps1 --help` for presets and parallel-build options.
 Two police helper local bodies now have evidence-backed native implementations and PC tests; original equivalence remains unverified. No proprietary assets are included. See [whole-binary recovery](docs/FULL_RECOVERY.md) for scope and gaps. Static binary
 assessment results are in [the assessment report](docs/assessment/BINARY_REPORT.md).
 The existing `task.txt` and `eval.txt` are preserved user request documents;

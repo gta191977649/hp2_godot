@@ -1,5 +1,14 @@
 # TASK-0018: `tEventTreeView` — data source, geometry, navigation and UI
 
+> **TASK-0022 continuation (2026-10-13):** Status/Reward text, document17 details,
+> runtime title and document names, zoom/alpha transitions, connector rendering,
+> selection border, and car/track logo effects now have native implementations.
+> See [the integration record](TASK_0022_INTEGRATION.md) for E-0022 evidence and
+> remaining gaps. Several earlier interpretations below are superseded: node+0x0C
+> does not double drawn size, detail zoom is3.0, the tree uses native interpolators
+> rather than tStillCameraMover, and001FAE40 enters reward preview rather than a race.
+> TASK-0022 remains active; full3D preview and original equivalence are not recovered.
+
 > **TASK-0021 update (2026-10-13).** The save system was reversed
 > ([docs/SAVE_SYSTEM.md](SAVE_SYSTEM.md)), which unblocked five of the six open questions in
 > section 7. Section 7 below now records the state of each one. Two claims on this page are
