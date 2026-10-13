@@ -1,5 +1,5 @@
 #pragma once
-#include "game_core/movieplayer/movieplayer.hpp"
+#include "game_core/indep/src/movieplayer/movieplayer.hpp"
 #include "port/render/frame.hpp"
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/classes/image_texture.hpp>

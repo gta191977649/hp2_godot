@@ -1,5 +1,5 @@
 #pragma once
-#include "game_core/assets/hp2_tpk_texture.hpp"
+#include "game_core/port/assets/hp2_tpk_texture.hpp"
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/variant/array.hpp>

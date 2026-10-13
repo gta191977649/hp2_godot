@@ -407,6 +407,16 @@ func _native_render_smoke() -> void:
 	var total_quads := 0
 	var total_glyphs := 0
 	var empty_screens: Array = []
+	# Screen 39 only has a tree once a mode is selected: FUN_001FB218 asks
+	# FUN_00185568(0x2FC050), i.e. profile+0x1072C, which only a mode-select screen writes. So
+	# walk the real route once first -- screen 1, down three to Tournament, select, then tick the
+	# tExitScreenAnimation out -- instead of opening screen 39 cold and silently losing the
+	# overlay from this smoke's coverage. JOY_EVENT_SCROLL_DOWN is 4, JOY_EVENT_MENU_SELECT 9.
+	layout.menu_open(1)
+	for _step in 3:
+		layout.menu_joy_event(0, 4, true)
+	layout.menu_joy_event(0, 9, true)
+	layout.menu_tick(1.0)
 	for index in screen_count:
 		screen_index = index
 		var opened: Dictionary = layout.menu_open(index)

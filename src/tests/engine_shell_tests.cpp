@@ -1,5 +1,5 @@
-#include "game_core/engine/engine_shell.hpp"
-#include "game_core/engine/world_connections.hpp"
+#include "game_core/port/engine/engine_shell.hpp"
+#include "game_core/port/engine/world_connections.hpp"
 #include <algorithm>
 #include <iostream>
 #include <limits>

@@ -1,5 +1,6 @@
 #include "ps2_render_host.hpp"
-#include "game_core/not_implemented.hpp"
+#include "boundary.hpp"
+#include "game_core/port/not_implemented.hpp"
 #include "port/runtime/frame_builder.hpp"
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
@@ -155,10 +156,19 @@ godot::Dictionary Ps2RenderHost::draw(godot::Object* runtime, godot::Object* int
 
     port::render::Frame frame;
     port::runtime::FrameStats stats;
-    try {
-        stats = layout->runtime().build_frame(resources, frame);
-    } catch (const hp2::NotImplemented& error) {
-        last_error_ = godot::String::utf8(error.what());
+    // Two different outcomes: a recovered path we have not translated (expected, reported as
+    // not_implemented) and a port bug (unexpected, reported as an error). Neither may cross into
+    // Godot, which is compiled -fno-exceptions.
+    std::string gap;
+    const auto failure =
+        catch_all([&] { gap = hp2::guard([&] { stats = layout->runtime().build_frame(resources, frame); }); });
+    if (!failure.empty()) {
+        last_error_ = godot::String::utf8(("port error building the frame: " + failure).c_str());
+        result["error"] = last_error_;
+        return result;
+    }
+    if (!gap.empty()) {
+        last_error_ = godot::String::utf8(gap.c_str());
         result["error"] = last_error_;
         result["not_implemented"] = last_error_;
         return result;

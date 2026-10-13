@@ -1,6 +1,6 @@
-#include "game_core/frontend/frontendscreens/options.hpp"
-#include "game_core/not_implemented.hpp"
-#include "game_core/frontend/frontendscreens/registry_0016adb0.hpp"
+#include "game_core/indep/src/frontendscreens/options.hpp"
+#include "game_core/port/not_implemented.hpp"
+#include "game_core/port/frontend/frontendscreens/registry_0016adb0.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -15,7 +15,12 @@ int main() {
             [&](const char* name) { animated = name; },
             [&] { ++preparations; }};
         auto check = [](bool value) { if (!value) throw std::runtime_error("action mismatch"); };
-        check(port::frontend::registrations().size() == 37);
+        // 37 FUN_0016ADB0 registrations plus the one TASK-0021 added: "View Event Tree"
+        // registers through the sibling FUN_0016AD88 at 0x001FB860, which is why it was missed.
+        check(port::frontend::registrations().size() == 38);
+        const auto* tree = port::frontend::find_registration("View Event Tree");
+        check(tree != nullptr && tree->document_hash == 0x147F8A59u &&
+              tree->handler_address == 0x001FB218u);
         const auto* language = port::frontend::find_registration("Language Options Pre FE");
         check(language && language->document_hash == 0x632B068E);
         const auto* name_entry = port::frontend::find_registration("NameEntry");

@@ -1,5 +1,5 @@
 #include "main_loop_observer.hpp"
-#include "game_core/engine/world_connections.hpp"
+#include "game_core/port/engine/world_connections.hpp"
 #include <godot_cpp/core/class_db.hpp>
 #include <cstdio>
 using namespace hp2::engine;

@@ -5,10 +5,13 @@
 #include "ps2_frontend_layout.hpp"
 #include "ps2_movie_player.hpp"
 #include "ps2_render_host.hpp"
+#include "platform/not_implemented_dialog.hpp"
 #include <godot_cpp/godot.hpp>
 
 void initialize_port(godot::ModuleInitializationLevel level) {
     if (level == godot::MODULE_INITIALIZATION_LEVEL_SCENE) {
+        // One call, one place: opt-in debugger reaction for untranslated recovered paths.
+        hp2::platform::install_not_implemented_dialog();
         godot::ClassDB::register_class<port::godot_bridge::PortCore>();
         godot::ClassDB::register_class<port::godot_bridge::MainLoopObserver>();
         godot::ClassDB::register_class<port::godot_bridge::FrontEndMenuObserver>();

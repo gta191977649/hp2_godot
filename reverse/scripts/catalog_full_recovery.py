@@ -45,7 +45,7 @@ def main():
             instruction_translation=paths.get(address,'none'),
             candidate_instruction_translation=candidate_paths.get(address,'none'),
             candidate_boundary_status='static-flow candidate; not repaired in Ghidra' if address=='001a1030' else 'unchanged',
-            native_body='src/game_core/police/cop_control.cpp' if address in ('001a0ea0','001a2a90') else 'none',
+            native_body='src/game_core/port/police/cop_control.cpp' if address in ('001a0ea0','001a2a90') else 'none',
             native_status='Tested local body; original unverified' if address in ('001a0ea0','001a2a90') else 'not_implemented'))
     assert len(catalog)==len({r['address'] for r in catalog})==7544
     with (PUBLIC/'TASK-0009-functions.csv').open('w',newline='',encoding='utf-8') as f:

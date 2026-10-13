@@ -2,7 +2,7 @@
 //
 // Needs the configured ZZDATA copy; skips cleanly when it is not configured, exactly like
 // hp2_tpk_texture_tests. Port-side only: nothing here establishes equivalence with the original.
-#include "game_core/frontend/eventtree.hpp"
+#include "game_core/indep/src/eventtree.hpp"
 #include "platform/ps2_asset_root.hpp"
 #include <cstdio>
 #include <fstream>
@@ -84,7 +84,15 @@ void trees_parse_from_the_shipped_bundle(const std::string& root) {
         // status above Locked without a profile.
         check(tree.leaves[0].incoming.empty(), "event 1 is a root");
         check(tree.leaves[0].depth_0x1C == 0 && tree.leaves[0].y == 0.0f, "root sits on row 0");
-        check(tree.Status_002010B8(0) == kEventStatusUnlocked, "the root is unlocked");
+        check(tree.StatusWithoutProfile_002010B8(0) == kEventStatusUnlocked,
+              "the root is unlocked by the profile-less reduction");
+        // TASK-0021: and the recovered decoder agrees for an all-zero profile, which is what the
+        // original hands its own driver before a load. Event 1 has no requirement rows, so
+        // FUN_002010B8 skips the prerequisite test and decodes its slice; every zero slice means
+        // "not attempted", i.e. status 1.
+        const hp2::memorycard::Profile_002FC050 empty_profile;
+        check(tree.Status_002010B8(empty_profile, 0) == kEventStatusUnlocked,
+              "the recovered decoder agrees with the reduction for an empty profile");
 
         // Every other event hangs off the graph, and the whole tree is one connected component.
         int roots = 0;

@@ -1,5 +1,260 @@
 # Project state — 2026-10-13 (Australia/Sydney)
 
+## TASK-0021 — The memory-card save system and the event tree it unblocked (active)
+
+User asked to finish reversing `eventtree`, with the correct front-end implementation including
+its animations and effects, and said the save system had to come first because the event tree
+cannot be implemented without it. That was right: five of the six open questions in
+`docs/EVENT_TREE.md` were blocked on save data.
+
+**Ghidra MCP is connected for the first time in this project.** Earlier sessions recorded it as
+unavailable. It is reachable at `http://127.0.0.1:8080/mcp` (14 tools) through the existing
+read-only client `tools/ghidra.py`; no Ghidra state was modified (AGENT.md R5).
+
+### The save system, recovered end to end
+
+- Original source file `src\memorycard.cpp` (ELF string 0x002AD488), module at roughly
+  0x0012A000..0x0012E6FF, immediately below `HP2_MainFrameLoop`.
+- Save directory **`BASLUS-20362HP2`** (NTSC-U) / `BESLES-50731HP2` (PAL), built by
+  `FUN_0012DEE0` from recovered format strings; `icon.sys`, icon `nfs6.ico`, magic `PS2D`.
+- **One payload file, `settings.db`, of 0x114E0 = 70,880 bytes**, self-describing and with no
+  separate header: `FUN_00245738` stamps the payload's own length into its first word and a
+  checksum into its last. `FUN_001878B0` is a signed 32-bit sum of 0x4537 words == 0x114DC bytes,
+  i.e. everything except the checksum — a figure derived from the loop's termination condition
+  and then found to agree exactly with the checksum's offset.
+- **The global player profile is that payload**: one 0x114E0-byte block at **0x002FC050**, with
+  no serialiser at either end. Three arithmetic identities from three different functions confirm
+  the base, one of them being that profile+0x1072C is `DAT_0030C77C`, the tree selector
+  `docs/EVENT_TREE.md` already named.
+
+### What that unblocked in the event tree
+
+- The `0x34A03` table is a **requirement** table, not a link table: `row+0x02` names a
+  prerequisite event and `row+0x04` is the goal it must meet. Four of the six bytes TASK-0018
+  listed as unknown are now identified.
+- `FUN_002010B8` fully decompiled: five status values (0 locked, 1 not attempted, 2 below the
+  floor, 3 goal missed, 4 won) and four per-GoalType slice decoders. Two decoders and both
+  completion gates are still unrecovered and now **raise `hp2::NotImplemented`** naming their ELF
+  address instead of being silently skipped.
+- The camera is recovered: `FUN_001FAB00` pins the selected node to (320, 240) and scales by a
+  zoom **level**, 0 or 1, out of the two-float table `{0.4f, 1.0f}` at gp-0x4178 (gp ==
+  0x003358F0, established from the already-known 350.0/130.0 pair). The port-side `kPortZoom =
+  0.6f` and `kPortPanelScale = 0.26f` are gone.
+- Nine unexplained ELF immediates resolved by hashing screen 39's real widget names:
+  0x0880AC4C is `HELP_TEXT`, 0x027F7503 `HELP_BUTTON`, 0xAA5D7D3F `BOTTOM_MASK`, 0xA3B23510
+  `EVENT_PANEL`, 0xA01BCDC6 the class EVENT_PANEL and EVENT_NUMBER share, and 0xA744BA7B /
+  0xFD297FD4 / 0xF1EED4CD are screens 17, 18 and 19 — so the event tree is a four-document
+  cluster, not one screen.
+- Start node, tree type and view state all come from the profile (`FUN_001F5D00` /
+  `FUN_001F5D28` / `FUN_001F5D50`, read from the listing because the decompiler lost the R5900
+  argument order). `FUN_001F5D50` turns out not to be "tree selection" as recorded; it is a
+  two-instruction setter.
+
+### Defects found and fixed in the existing port
+
+- **`EventTreeView::move_cursor` invented the left/right rule.** It stepped one place through the
+  same-depth leaves in parse order; `FUN_001FA880` takes the nearest leaf in **X** on the
+  requested side, strictly, with no wrap. Replaced, along with `FUN_001FA978` for up/down, which
+  takes the nearest in X on one of the two adjacency lists.
+- **The recovered "moved means sound, not moved means silence" rule was computed and discarded.**
+  `event_tree_joy_event` now routes the recovered ids 0x13/0x14/0x15/0x18/0x8 through
+  `PlayMenuSound_0016E038`, the same path every other screen uses.
+- **State 2 did not exist.** Confirm and Back now drive the recovered 0 to 2 transitions.
+- **`frontend_runtime` was passing under CTest while asserting almost nothing**: it had no
+  `WORKING_DIRECTORY`, so it never resolved the asset root and returned early. Fixed; its runtime
+  went from 0.35 s to about 17 s, and it now covers the event tree properly.
+- Evidence debt: `E-0018-01..12` were cited in `docs/EVENT_TREE.md` and `docs/REVERSE_NOTES.md`
+  but never allocated to any file, and 0x001FFC40 / 0x001F96B8 / 0x002010B8 had no records.
+  Eleven records are filed under `E-0021-NN` with rows in `reverse/symbols.csv`; the
+  `E-0018-NN` gap is noted but not retrofitted.
+
+### Follow-up: the route into the tree was broken, and is now fixed
+
+User reported that choosing Championship or Ultimate Racer from the main menu did not enter the
+event tree. That was correct and it was a real gap: the first pass made the tree work once
+screen 39 was already open, but never reversed how a player gets there. Three links were
+missing.
+
+1. **The class had no registration row.** `View Event Tree` does not register through
+   `FUN_0016ADB0` like the other 37 classes -- it tail-calls the sibling `FUN_0016AD88` at
+   0x001FB860. Its operands (0x001FB7F0..0x001FB830) are the class-name string 0x002BA718, the
+   handler `FUN_001FB218` and the document hash **0x147F8A59**, which is exactly screen 39's
+   stored name hash. The port's registry stopped at the `FUN_0016ADB0` rows, so
+   `find_registration("View Event Tree")` returned null and `apply_pending_screen` raised
+   NotImplemented at 0x0016C8C8. (E-0021-22)
+2. **The transition is deferred behind an animation.** `FUN_00217020` / `FUN_002176D8` do not
+   switch screens; they build a 0x1C-byte `tExitScreenAnimation` through `FUN_002490D8` -- the
+   same `Type_002490D8` the port already implements for Options -- and the switch happens only
+   when it finishes. (E-0021-25)
+3. **The port ignored the chosen mode.** `FrontEndRuntime` held `event_tree_mode_ = 9` as a
+   hardcoded field, so Championship would have opened the Hot Pursuit tree even with the first
+   two fixed. `FUN_001FB218` message 0x0B shows the real source: `FUN_00185568(0x2FC050)`, the
+   profile. The field is gone. (E-0021-24)
+
+Also recovered on the way: five of the six mode-select globals are **inside the profile**
+(`DAT_002FC06C` +0x1C, `DAT_002FC1B4` +0x164, `DAT_002FC1C0` +0x170, `DAT_0030C77C` +0x1072C,
+`DAT_0030C784` +0x10734), so the handlers' writes are save writes; only `DAT_0031AB90` is
+outside. `FUN_001F5D50(0x2FC1B4, n)`, which the port had marked "not translated", is now wired
+through the profile. (E-0021-23)
+
+Both routes are asserted end to end by the new `check_event_tree_route` in
+`src/tests/frontend_runtime_tests.cpp`, which drives the real joy events and ticks the exit
+animation out, and both were confirmed in the running app: screen 1 item 3 and screen 2 item 2
+each reach screen 39, with different modes, different tree types and visibly different panel
+artwork.
+
+**A note on how this was missed.** The first pass's event-tree test opened screen 39 with
+`menu_open(39)` directly, so it exercised the tree without ever exercising the route -- and it
+passed. That is the same shape as the `frontend_runtime` CTest hole fixed earlier in this task.
+The new test enters the way a player does.
+
+### Validation (exact commands and results)
+
+CMake 3.29.2, Ninja 1.12.0, MinGW GCC 13.2.0, Python 3.14.4, Godot 4.4.1.stable.official.49a5bc7b6.
+
+- `cmake --build --preset native-debug --parallel 4` then `ctest --preset native-debug`:
+  **23/23 passed** (22 before; `memorycard` is new).
+- `cmake --build --preset godot-debug --parallel 4` then `ctest --preset godot-debug`:
+  **23/23 passed**.
+- `./tools/run_frontend.ps1 -RenderSmoke`:
+  `NATIVE_RENDER_SMOKE_OK: screens=41 quads=1085 glyphs=7765 textures=120 empty=[36]` —
+  identical to the pre-task baseline. One change was needed to keep it that way, and it is
+  worth recording rather than hiding: once the tree started taking its mode from the profile,
+  the smoke's cold `menu_open(39)` produced no tree at all (927 quads / 7733 glyphs /
+  118 textures), because profile+0x1072C is 0 until a mode-select screen writes it. That is the
+  correct recovered behaviour, not a regression — the original would show nothing either. The
+  smoke now walks the real route once before its per-screen loop, so its screen-39 coverage is
+  real rather than accidental.
+- `./tools/run_frontend.ps1 -RuntimeSmoke`: `FRONTEND_RUNTIME_SMOKE_OK`.
+- Screen 39 captured on DX12 (Intel Arc B390) and inspected: the tree renders with real panel
+  art, the recovered 0.8 vertical squash, and the selected node at twice the size.
+- `py -3 reverse/scripts/validate_main_loop.py --metadata-only` via the `main_loop_catalog`
+  test: unchanged.
+
+**Nothing was promoted to `Verified`.** No PCSX2 or original-hardware comparison was performed,
+no real save file was read or written, and every test fixture is synthetic. A passing PC test
+says the port reproduces what was read out of the ELF and nothing more (AGENT.md R1).
+
+### Exact next action
+
+Read `AGENT.md`, `docs/SAVE_SYSTEM.md`, `docs/EVENT_TREE.md` section 7 and
+`tasks/active/TASK-0021-memorycard-profile.md`, then take TASK-0022's first step: decompile
+`FUN_001F6B70` (the state-2 event detail sub-menu over document 17) and the `tLineSegment` build
+inside `FUN_001F96B8`, read-only through GhidraMCP at 127.0.0.1:8080. TASK-0023 (the PCSX2
+comparison at `D:\Game\pcsx2`) is the only route to a `Verified` promotion. Nothing is
+committed.
+
+## What gta-reversed actually does about "not implemented" (TASK-0020 follow-up)
+
+Studied `D:/dev/gta-reversed` at the user's request, specifically how it *catches*. The finding
+changes the comparison:
+
+**It does not catch it.** Seven `catch (` sites exist in the whole project, none for an
+unimplemented path. `NOTSA_UNREACHABLE` logs, shows an Abort/Retry/Ignore box (Retry calls
+`__debugbreak()`) and then `exit(3)`. The one meaningful catch, in
+`reversiblehooks/ReversibleHook/StatefulHook.h`, converts straight to `NOTSA_UNREACHABLE` with
+the comment that restoring state properly would be work.
+
+**It can afford that because an un-reversed function is not "unimplemented" there.** Its body is
+a thunk into the retail binary -- `plugin::CallMethod<0x4FF900, CAEVehicleAudioEntity*, ...>(this, ...)`
+-- because the project is a DLL inside the original game, so the original code is in the same
+address space and simply runs. `NOTSA_UNREACHABLE` is reserved for genuine invariants, and its
+465 sites are "this cannot happen", not "not reversed yet".
+
+**That option is closed to us.** This is a native port with no original binary in process, and
+PS2RECOMP_TRIAL.md records that the static recompilation attempt produced unverified instruction
+translations only. There is nothing to delegate to, so an untranslated path has to fail, and
+throwing-and-reporting is strictly better than their terminate: a Godot host can show the gap and
+keep running. Our design is the right one for our architecture, not a weaker copy of theirs.
+
+**What was worth taking:** their single process-wide net,
+`SetUnhandledExceptionFilter(WindowsExceptionHandler)` in `source/app/app_debug.cpp`, which logs
+exception code, address and registers. We had no equivalent. `hp2::guard` catches
+`hp2::NotImplemented` -- the expected outcome -- but a `std::bad_alloc` or an asset parse error
+would have crossed into godot-cpp, which is compiled `-fno-exceptions`, i.e. undefined behaviour
+with no diagnostic. `src/platform/godot_bridge/boundary.hpp` now provides `catch_all`, and the
+bound methods that reach into the runtime (`menu_open`, `menu_joy_event`, `menu_tick`,
+`Ps2RenderHost::draw`) run through it, so a port bug becomes a reported error instead of a silent
+editor crash. The net sits at the boundary rather than process-wide because that is where enough
+context still exists to report rather than die.
+
+## NotImplemented reporting made central (TASK-0020 follow-up)
+
+User asked for one unified place instead of a macro at every site, with automatic catching and
+the standard C++ assert dialog. `src/game_core/port/not_implemented.hpp` is now that place:
+
+- The `HP2_NOT_IMPLEMENTED` macro is deleted. All 52 sites call
+  `hp2::not_implemented(elf_address, what)` directly -- a `[[noreturn]]` function, no preprocessor.
+- One reaction point, settable once. It always throws; on top of that
+  `HP2_ASSERT_NOT_IMPLEMENTED=1` routes through the standard `assert()` with no code change
+  (verified), and `hp2::set_not_implemented_handler` installs a debugger reaction.
+- Studied `D:\dev\gta-reversed` at the user's request. Its `notsa::unreachable`
+  (`source/Base.h`) appears at **465 call sites**, which settles the question of whether a mature
+  reversing project can avoid the per-site marker. Borrowed: the reaction belongs in one place,
+  and a debug build should offer Abort/Retry/Ignore with Retry breaking into the debugger --
+  `src/platform/not_implemented_dialog.cpp` now does exactly that behind
+  `HP2_NOT_IMPLEMENTED_DIALOG=1`, kept in `src/platform` so the core still depends on nothing but
+  the standard library. **Not** borrowed: their macro compiles to `__builtin_unreachable()` in
+  release. For them "unreachable" is an invariant; for us "not implemented" is reachable by
+  definition, so compiling it away would manufacture the silent wrong answer R3 forbids.
+- One catch point: `hp2::guard([&]{ ... })` returns the message or an empty string. The five
+  hand-copied production `try`/`catch` blocks are gone. The six that remain are in tests, where
+  catching *is* the assertion.
+
+**The per-site call stays, and that is deliberate.** Each one carries the ELF address of the
+original function that is missing; that address is evidence (AGENT.md R2/R3), nothing else in the
+program knows it, and no mechanism can infer "this path was never reversed". Removing the marker
+would turn a loud failure into a silent wrong result, which is the failure mode the rule exists to
+prevent. AGENT.md R3 now spells this out along with the new API.
+
+Validation: 22/22 CTest, all Godot checks unchanged, both presets build with no warnings.
+
+## Ghidra MCP — still not connected, and why
+
+`session_connectors_status` lists only Claude Docs, visualize and scheduled-tasks. No Ghidra or
+REA MCP server is registered for this session, and `mcpServers` is empty at top level and for
+every project in `~/.claude.json`, so there is nothing to re-enable or reconnect from inside the
+session. The Ghidra side is ready -- **GhydraMCP v2.2.0-rc.3 is installed** into
+`ghidra_12.0.4_PUBLIC/Extensions/GhydraMCP` (its `extension.properties` says `ghidraVersion=11.4.2`,
+a mismatch worth checking) and its jar carries the `XrefsEndpoints` this work needs. What is
+missing is the client half: no MCP bridge is installed anywhere on this machine. Pinning the 97
+identifier strings to addresses is blocked until the user registers that bridge.
+
+## TASK-0020 — Original source tree alignment (active)
+
+User asked that `src/game_core` match the original HP2 project's structure, file names,
+folder names, class names and function names, using the REA skill and a Ghidra MCP string
+scan. **Ghidra MCP is not connected to this session** (no Ghidra or REA MCP tool is
+registered), so the scan was done directly: the authorized ELF is present at
+`D:/ps2_game/SLUS_203.62` with a SHA-256 matching `reverse/binaries.csv` exactly, and a
+read-only scanner parses its PT_LOAD headers to address-anchor every string. 8,153
+strings; 296 source-path hits / 54 distinct, corroborating the TASK-0016 rescan (298/54).
+Catalogue in `reverse/naming/task0020-original-source-tree.csv` (E-0020-N01..N03).
+
+Done: `src/game_core` restructured onto the recovered tree. Seven files whose original
+path is recovered verbatim now sit at it under `indep/src/`, the bWare `bJukebox` pair
+under `bSound/{src,include}` (the `bSound/` root inferred, noted as such), and the 26
+files with no recovered path under `src/game_core/port/`, so no location implies
+provenance it does not have. Every file opens with either its ELF string and address or a
+note that its path is not evidence. Also fixed a pre-existing corrupted path record in
+this file: `indep\src\fmenus.cpp` had been stored with a literal form-feed where the
+`\f` should be.
+
+**No identifier was renamed.** The 74 `Class::Method` and 23 pool-name strings the ELF
+carries are real original identifiers, but every one is `string_only` — none is pinned to
+the address of the function it names, and TASK-0019 already ruled that allocation labels
+are not type/method proof. `Sub_<ADDR>` / `Type_<ADDR>` names therefore stand (AGENT.md
+R13). Tempting but refused: `tExitScreenAnimation` for `Type_002490D8`,
+`tMenuAnimElement` for `MenuHighlightAnim_00248870`.
+
+Validation: 22/22 CTest and all five Godot checks pass unchanged after the move
+(`--native-render-smoke` 41 screens / 1085 quads / 7765 glyphs / 120 textures). Stale
+`src/game_core/...` paths in three scripts were updated; `main_loop_catalog` caught one.
+
+Exact next action: reconnect Ghidra MCP, then pin the `Class::Method` and pool strings to
+addresses via cross-references so identifier renaming becomes evidence-backed
+(TASK-0020 next steps). Nothing is committed.
+
 ## TASK-0018 — Native runtime and replaceable rendering backend (active)
 
 User resumed the deferred architecture task and authorized the migration. The front end
@@ -169,7 +424,7 @@ against the real TexturePack hash set (507/1015 hits for quads vs 79 for the nex
 and the scale semantics were confirmed by TITLE_FULLSCREEN's 512x256 texture at (1.25, 1.88)
 resolving to exactly the 640x480 declared in the screen header. Added native Godot-independent
 parsers (src/game_core/frontend/fmenus.{hpp,cpp}, named after the original source file
-indep\srcmenus.cpp recovered earlier), a layout bridge (Ps2FrontEndLayout), hash-based texture
+indep\src\fmenus.cpp recovered earlier), a layout bridge (Ps2FrontEndLayout), hash-based texture
 resolution with caching (Ps2TextureLoader::load_texture_by_hash), and an immediate-mode Godot
 renderer (godot/scripts/frontend.gd) that draws quads with draw_texture_rect and text glyph-by-
 glyph from the original font atlases. Result: the real Mode Select main menu (Championship /

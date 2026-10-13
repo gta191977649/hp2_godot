@@ -1,4 +1,4 @@
-#include "game_core/audio/sound.hpp"
+#include "game_core/indep/src/sound.hpp"
 #include "platform/ps2_asset_root.hpp"
 #include <algorithm>
 #include <cstdio>

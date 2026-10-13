@@ -47,3 +47,11 @@ __pycache__/
 /.idea/
 Thumbs.db
 .DS_Store
+
+# TASK-0021: never commit a save payload, a memory-card image or a profile dump (AGENT.md R7).
+# The port writes outside the repository by default; these patterns catch a port_save_root
+# someone points back inside it.
+settings.db
+*.ps2
+*.mcd
+saves/

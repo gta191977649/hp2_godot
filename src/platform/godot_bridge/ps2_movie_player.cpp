@@ -1,5 +1,5 @@
 #include "ps2_movie_player.hpp"
-#include "game_core/movieplayer/movie_audio.hpp"
+#include "game_core/port/movieplayer/movie_audio.hpp"
 #include "platform/ps2_asset_root.hpp"
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/project_settings.hpp>

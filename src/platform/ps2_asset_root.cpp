@@ -8,13 +8,15 @@ namespace hp2::platform {
 namespace {
 namespace fs = std::filesystem;
 
-// Minimal, targeted extraction of the "root" string value from config/ps2_assets.local.json.
+// Minimal, targeted extraction of a flat string value from config/ps2_assets.local.json.
 // This is NOT a general JSON parser: it only handles this repo's own config writer output
 // (config/ps2_assets.example.json / ps2_assets.local.json), which is always a flat
 // {"root": "...", ...} object with no escaped quotes inside the path. Do not reuse this for
 // arbitrary JSON.
-std::optional<std::string> extract_root_value(const std::string& json_text) {
-    std::size_t key = json_text.find("\"root\"");
+std::optional<std::string> extract_string_value(const std::string& json_text,
+                                               const std::string& key_name) {
+    const std::string quoted = "\"" + key_name + "\"";
+    std::size_t key = json_text.find(quoted);
     if (key == std::string::npos) return std::nullopt;
     std::size_t colon = json_text.find(':', key);
     if (colon == std::string::npos) return std::nullopt;
@@ -58,7 +60,7 @@ std::optional<std::string> resolve_zzdata_root(const std::string& search_start_d
         if (file) {
             std::ostringstream buffer;
             buffer << file.rdbuf();
-            configured_root = extract_root_value(buffer.str());
+            configured_root = extract_string_value(buffer.str(), "root");
         }
     }
 
@@ -68,6 +70,19 @@ std::optional<std::string> resolve_zzdata_root(const std::string& search_start_d
     if (looks_like_zzdata(root)) return root.generic_string();
     if (looks_like_zzdata(root / "GAME" / "ZZDATA")) return (root / "GAME" / "ZZDATA").generic_string();
     return std::nullopt;
+}
+
+std::optional<std::string> resolve_local_config_value(const std::string& search_start_dir,
+                                                     const std::string& key) {
+    auto config_path = find_local_config(fs::path(search_start_dir));
+    if (!config_path) return std::nullopt;
+    std::ifstream file(*config_path);
+    if (!file) return std::nullopt;
+    std::ostringstream buffer;
+    buffer << file.rdbuf();
+    auto value = extract_string_value(buffer.str(), key);
+    if (!value || value->empty()) return std::nullopt;
+    return value;
 }
 
 } // namespace hp2::platform

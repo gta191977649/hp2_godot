@@ -21,4 +21,10 @@ inline constexpr const char* kAssetRootEnvVar = "HP2_PS2_ASSET_ROOT";
 // Returns std::nullopt if nothing is configured or the configured path doesn't look like ZZDATA.
 std::optional<std::string> resolve_zzdata_root(const std::string& search_start_dir);
 
+// The same config lookup as step 2 above, for any flat string key in
+// config/ps2_assets.local.json. Added by TASK-0021 so the optional save-profile keys resolve
+// through this one entry point instead of a second copy of the file walk and the extractor.
+std::optional<std::string> resolve_local_config_value(const std::string& search_start_dir,
+                                                     const std::string& key);
+
 } // namespace hp2::platform

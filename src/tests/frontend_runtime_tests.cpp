@@ -7,7 +7,7 @@
 // PCM into AudioStreamWAV, and key-event filtering (press/release/echo).
 //
 // PC behaviour only. None of this establishes original-hardware equivalence.
-#include "game_core/input/joyevents.hpp"
+#include "game_core/port/input/joyevents.hpp"
 #include "port/runtime/frontend_runtime.hpp"
 #include <cmath>
 #include <cstdio>
@@ -358,8 +358,64 @@ void check_localisation_and_audio(FrontEndRuntime& runtime) {
 }
 
 // --------------------------------------------------------------------- event tree
+// TASK-0021 follow-up: the route a player actually takes. The main menu opens a mode-select
+// screen, its Tournament entry writes the mode and the tree type into the profile and requests
+// the class "View Event Tree", and that class's registration resolves to FRONTB.BUN screen 39.
+// Every one of those links was broken before: the class had no registration row, so
+// apply_pending_screen raised NotImplemented at 0x0016C8C8 and nothing happened on screen.
+//
+// `mode_screen` is 1 (Cops On, Ultimate Racer) or 2 (Cops Off, Championship); `want_mode` is the
+// value FUN_00185568 keys on and `want_type` the tree type FUN_001F5D50 stores.
+void check_event_tree_route(FrontEndRuntime& runtime, int mode_screen, int want_mode,
+                            int want_type, const char* want_name) {
+    bool reached = false;
+    for (int choice = 0; choice < 6 && !reached; ++choice) {
+        auto state = runtime.menu_open(mode_screen);
+        require(state.ok, "mode select failed to open");
+        for (int step = 0; step < choice; ++step) state = press(runtime, JOY_EVENT_SCROLL_DOWN);
+        state = press(runtime, JOY_EVENT_MENU_SELECT);
+        // FUN_00217020 does not switch screens: it builds a 0x1C-byte tExitScreenAnimation
+        // (pool name string 0x002BC528) through FUN_002490D8 and stores it at instance+0x270,
+        // and the switch happens only when that animation finishes. Tick it out, exactly as
+        // the Options route above does.
+        if (state.exiting) {
+            runtime.menu_tick(1.0);
+            state = runtime.menu_state();
+        }
+        if (state.screen != 39) continue;
+        reached = true;
+        require(state.not_implemented.empty(),
+                "entering the event tree must not raise: " + state.not_implemented);
+        require(runtime.event_tree().loaded(),
+                "the tree must load with screen 39: " + runtime.event_tree_error());
+        require(runtime.profile().SelectedMode_00185568() == want_mode,
+                "the mode select must write its mode id into profile+0x1072C");
+        require(runtime.profile().EventTreeType_001F5D50() == want_type,
+                "FUN_001F5D50 must store the tree type into profile+0x164");
+        require(runtime.profile().EventTreeViewState_001FAF60() == 0,
+                "entering the tree clears the view state at profile+0x170");
+        require(runtime.event_tree().nodes().size() == 32, "the selected tree holds 32 events");
+        require(runtime.event_tree().title_string_id() ==
+                    (want_mode == 8 ? hp2::frontend::kTitleStringChampionship_001F96B8
+                                    : hp2::frontend::kTitleStringHotPursuit_001F96B8),
+                "the screen title id follows the selected mode");
+        std::printf("  event tree route: screen %d item %d -> 39, mode %d, %s\n", mode_screen,
+                    choice, want_mode, want_name);
+    }
+    require(reached, "no item on the mode select screen reached the event tree");
+}
+
 // The View Event Tree screen loads with its screen and navigates without a host.
 void check_event_tree(FrontEndRuntime& runtime) {
+    // Both routes in, which also proves the two screens select *different* trees -- the port
+    // used to pass a hardcoded mode here, so Championship opened the Hot Pursuit tree.
+    check_event_tree_route(runtime, 1, 9, 1, "Hot Pursuit / Ultimate Racer");
+    const std::string hot_pursuit = runtime.event_tree().cursor_info().name;
+    check_event_tree_route(runtime, 2, 8, 0, "Championship");
+    require(runtime.event_tree().cursor_info().name != hot_pursuit ||
+                runtime.event_tree().nodes()[1].name != hot_pursuit,
+            "the two mode-select screens must not open the same tree");
+
     const auto state = runtime.menu_open(39);
     require(state.ok || !state.not_implemented.empty(), "event tree screen failed to open");
     require(runtime.event_tree().loaded(), "event tree did not load with its screen: " +
@@ -367,15 +423,78 @@ void check_event_tree(FrontEndRuntime& runtime) {
     const auto nodes = runtime.event_tree().nodes();
     require(nodes.size() == 32, "both shipped trees hold 32 events, got " + std::to_string(nodes.size()));
     const auto start = runtime.event_tree().cursor_info();
-    require(start.number == 1, "the profile-less port must start on event 1");
-    require(runtime.event_tree_joy_event(JOY_EVENT_SCROLL_UP), "the tree must consume its own events");
-    require(runtime.event_tree().cursor_info().number != start.number, "cursor did not move");
+    require(start.number == 1, "an empty profile starts on event 1 (FUN_001F5D00's fallback)");
+    require(runtime.event_tree().state() == hp2::frontend::kViewStateBrowsing_001FAF60,
+            "an empty profile opens the tree in state 0");
+    require(runtime.event_tree().zoom() == hp2::frontend::kZoomLevels_gp_0x4178[0],
+            "FUN_001FAB50(view, 0) leaves the tree at zoom level 0");
+
+    // TASK-0021 replaced an invented navigation rule, so these expectations changed with it.
+    // FUN_001FA9C8 sends +2 to FUN_001FA978 over leaf+0x20, the list FUN_001F96B8 threads with
+    // an event's prerequisites. Event 1 is the root and has none, so up does nothing and answers
+    // sound 0 -- the port used to walk the outgoing list here and move downward on an up press.
+    require(runtime.event_tree_joy_event(JOY_EVENT_SCROLL_UP),
+            "the tree consumes its own events even when nothing moves");
+    require(runtime.event_tree().cursor_info().number == start.number,
+            "up from the root must not move: the root has no prerequisites");
+    // Sound 0 is observed by nothing reaching the queue: FUN_0016E038 returns early for id 0
+    // and deliberately leaves the previous request in place, so the queue is the only honest
+    // witness. Drain first so the screen-open sounds do not count.
+    runtime.drain_menu_audio();
+    require(runtime.event_tree_joy_event(JOY_EVENT_SCROLL_UP), "up is consumed again");
+    require(runtime.drain_menu_audio().empty(), "a move that lands nowhere queues no sound");
+
+    // Down walks leaf+0x28, the events that require this one, picking the one nearest in X.
+    require(runtime.event_tree_joy_event(JOY_EVENT_SCROLL_DOWN), "down is consumed");
+    const int after_down = runtime.event_tree().cursor_info().number;
+    require(after_down != start.number, "down from the root reaches a dependent event");
+    require(hp2::frontend::last_menu_sound_request().sound_id ==
+                hp2::frontend::kSoundTreeUpDown_001FAF60,
+            "an up/down move answers TreeUpDown (0x13)");
+    require(!runtime.drain_menu_audio().empty(), "and it reaches the audio queue");
+
+    // Left/right stay at the same depth and do not wrap, so one of the two must fail at a row
+    // end while the other succeeds -- and a successful one answers TreeLeftRight.
+    const bool left = runtime.event_tree_joy_event(JOY_EVENT_SCROLL_LEFT);
+    const int after_left = runtime.event_tree().cursor_info().number;
+    require(left, "left is consumed");
+    if (after_left != after_down) {
+        require(hp2::frontend::last_menu_sound_request().sound_id ==
+                    hp2::frontend::kSoundTreeLeftRight_001FAF60,
+                "a left/right move answers TreeLeftRight (0x14)");
+        const auto moved = runtime.event_tree().cursor_info();
+        require(moved.depth == 1, "left/right stayed on the depth down had reached");
+    }
+
+    // Confirm enters state 2 and zooms in; Back leaves it again. Both answer TreeZoomInOut.
+    require(runtime.event_tree_joy_event(JOY_EVENT_MENU_SELECT), "confirm is consumed in state 0");
+    require(runtime.event_tree().state() == hp2::frontend::kViewStateEventSelected_001FAF60,
+            "confirm moves the view into state 2");
+    require(runtime.event_tree().zoom() == hp2::frontend::kZoomLevels_gp_0x4178[1],
+            "state 2 sits at zoom level 1");
+    require(hp2::frontend::last_menu_sound_request().sound_id ==
+                hp2::frontend::kSoundTreeZoomInOut_001FAF60,
+            "confirm answers TreeZoomInOut (0x15)");
     require(!runtime.event_tree_joy_event(JOY_EVENT_MENU_SELECT),
-            "the tree must leave events it does not handle to the menu");
+            "state 2 leaves confirm to the untranslated event sub-menu");
+    require(runtime.event_tree_joy_event(JOY_EVENT_MENU_BACK), "state 2 consumes Back");
+    require(runtime.event_tree().state() == hp2::frontend::kViewStateBrowsing_001FAF60,
+            "Back returns to state 0");
+    require(!runtime.event_tree_joy_event(JOY_EVENT_MENU_BACK),
+            "state 0 leaves Back to the navigation history");
+
+    // The recovered screen title id follows whichever mode the route above left in the profile.
+    require(runtime.event_tree().title_string_id() ==
+                hp2::frontend::TitleStringId_001F96B8(runtime.profile().SelectedMode_00185568()),
+            "the screen title id follows profile+0x1072C");
+
     // Leaving the screen drops the view.
     runtime.menu_open(0);
     require(!runtime.event_tree().loaded(), "event tree outlived its screen");
-    std::printf("  event tree: %zu events, cursor navigation, screen-scoped lifetime\n", nodes.size());
+    std::printf("  event tree: %zu events, recovered nav (root up blocked, down to %d), "
+                "state 0<->2, zoom %.2f/%.2f\n",
+                nodes.size(), after_down, hp2::frontend::kZoomLevels_gp_0x4178[0],
+                hp2::frontend::kZoomLevels_gp_0x4178[1]);
 }
 
 } // namespace

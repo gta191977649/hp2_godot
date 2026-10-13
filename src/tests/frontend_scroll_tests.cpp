@@ -1,5 +1,5 @@
-#include "game_core/assets/fe_language.hpp"
-#include "game_core/frontend/fmenus.hpp"
+#include "game_core/port/assets/fe_language.hpp"
+#include "game_core/indep/src/fmenus.hpp"
 #include <iostream>
 #include <stdexcept>
 int main() {

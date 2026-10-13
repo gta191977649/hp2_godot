@@ -1,4 +1,4 @@
-#include "game_core/movieplayer/movieplayer.hpp"
+#include "game_core/indep/src/movieplayer/movieplayer.hpp"
 #include <fstream>
 #include <iostream>
 #include <iterator>

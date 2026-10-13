@@ -1,5 +1,5 @@
 #include "ps2_texture_loader.hpp"
-#include "game_core/frontend/fmenus.hpp"
+#include "game_core/indep/src/fmenus.hpp"
 #include "platform/ps2_asset_root.hpp"
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/os.hpp>

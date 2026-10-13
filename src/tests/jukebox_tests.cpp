@@ -1,4 +1,4 @@
-#include "game_core/audio/bJukebox.hpp"
+#include "game_core/bSound/include/bJukebox.h"
 #include "platform/ps2_asset_root.hpp"
 #include <cstdio>
 #include <stdexcept>

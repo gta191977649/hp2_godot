@@ -1,5 +1,43 @@
 # Decision log
 
+> Numbering note (TASK-0021): this file carries **two** entries numbered D008 — the one below,
+> from TASK-0016, and "One render contract" from TASK-0018 further down. Neither is renumbered,
+> because both are referenced elsewhere by number. The next free number is D009.
+
+## D009 — The profile is an opaque block, and saves are written host-side (TASK-0021, 2026-10-13)
+
+The 0x114E0-byte player profile at ELF 0x002FC050 is modelled as an opaque byte array with
+named accessors, not as a struct. Only an offset some function was observed to read gets a
+name; 0x10E30 of its bytes have no reading instruction behind them in this session's search and
+are left unidentified rather than filled in with plausible fields. Adding a field to
+`Profile_002FC050` requires citing the instruction that reads it. The reason is the same one
+behind AGENT.md R1: a struct declares that its layout is known, and a reader cannot tell a
+recovered field from a guessed one once both are members.
+
+This is cheap to hold to because the save path has no serialiser at either end. `FUN_00245D30`
+copies a loaded payload onto the profile verbatim and `FUN_00245738` returns the same address as
+the store source, so the on-card byte order **is** the in-memory layout and the port can be
+faithful byte-for-byte while understanding almost none of it.
+
+The recovered half (`src/game_core/memorycard/`) touches no file and no card: it takes and
+returns `std::vector<std::uint8_t>`. The PS2 driver sequencing in the same original translation
+unit — `FUN_0012C938` and the `sceMc*` wrappers below it — is not translated at all, because a
+host file is not a memory card and reproducing the driver would be port-side invention wearing a
+recovered function's name.
+
+Save **writing** is port-side by construction and is bounded deliberately. The port writes
+`<save root>/BASLUS-20362HP2/settings.db` — the recovered directory and file names, the
+recovered 0x114E0 layout, the recovered size word and checksum — under a host save root
+(`HP2_PORT_SAVE_ROOT`, then a `port_save_root` config key, then a per-user location). It never
+writes to a memory card, never writes inside the player's ZZDATA tree, and never overwrites a
+configured read-only `profile_path`; that last collision is checked and refused rather than
+trusted not to happen. Save **reading** stays opt-in and off by default, so with nothing
+configured the runtime gets a zeroed profile — which is exactly what `FUN_00245700` hands the
+original's own driver before a load, so the front end's behaviour is unchanged by the save
+system existing.
+
+Whether a real PS2 or PCSX2 accepts a file this port writes is untested and is TASK-0023.
+
 ## D008 — Platform renderer defaults and host movie codec (TASK-0016)
 
 Current engine pin is Godot 4.4.1 with godot-cpp e4b7c25e721ce3435a029087e3917a30aa73f06b

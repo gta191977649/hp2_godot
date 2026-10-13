@@ -1,9 +1,9 @@
 // TASK-0016: the two mode-select screens (FUN_002174A0 "Cops On Mode Select" and FUN_00217AF8
 // "Cops Off Mode Select"). Port-side tests against the switch immediates read out of the ELF;
 // they do not establish equivalence with the original (AGENT.md R1).
-#include "game_core/frontend/frontendscreens/modeselect.hpp"
-#include "game_core/frontend/frontendscreens/registry_0016adb0.hpp"
-#include "game_core/not_implemented.hpp"
+#include "game_core/port/frontend/frontendscreens/modeselect.hpp"
+#include "game_core/port/frontend/frontendscreens/registry_0016adb0.hpp"
+#include "game_core/port/not_implemented.hpp"
 #include <cstdio>
 #include <stdexcept>
 #include <string>

@@ -223,7 +223,7 @@ can be continued:
   address in the identifier**, with interpretation left to the comments.
 - `src/game_core/input/joyevents.hpp/.cpp` — the `JOY_EVENT_*` enum, **verbatim**.
 - `src/game_core/not_implemented.hpp` — `hp2::NotImplemented` plus
-  `HP2_NOT_IMPLEMENTED(addr, what)`.
+  `hp2::not_implemented(addr, what)`.
 - `src/platform/godot_bridge/ps2_frontend_layout.*` — gained `menu_open` / `menu_joy_event` /
   `menu_state` / `get_widget_colours` / `find_screen_by_name` / `joy_event_name` /
   `probe_not_implemented`. The menu mutates the colours in the layout records directly, so the

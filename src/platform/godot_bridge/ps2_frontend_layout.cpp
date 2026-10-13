@@ -1,4 +1,5 @@
 #include "ps2_frontend_layout.hpp"
+#include "boundary.hpp"
 #include <godot_cpp/classes/audio_stream_wav.hpp>
 #include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/classes/project_settings.hpp>
@@ -76,6 +77,15 @@ godot::Dictionary to_dictionary(const port::runtime::MenuState& state) {
     return result;
 }
 
+// What a bound method returns when something unexpected escaped the runtime. The port keeps
+// running and the host sees the message instead of Godot dying inside the extension.
+godot::Dictionary boundary_failure(const std::string& error) {
+    godot::Dictionary result;
+    result["ok"] = false;
+    result["error"] = to_godot("port error crossing the GDExtension boundary: " + error);
+    return result;
+}
+
 } // namespace
 
 void Ps2FrontEndLayout::_bind_methods() {
@@ -115,11 +125,16 @@ int Ps2FrontEndLayout::load_fonts(const godot::PackedStringArray& bundles) {
 
 
 godot::Dictionary Ps2FrontEndLayout::menu_open(int screen_index) {
-    return to_dictionary(runtime_.menu_open(screen_index));
+    port::runtime::MenuState state;
+    const auto failure = catch_all([&] { state = runtime_.menu_open(screen_index); });
+    return failure.empty() ? to_dictionary(state) : boundary_failure(failure);
 }
 
 godot::Dictionary Ps2FrontEndLayout::menu_joy_event(int pad_index, int joy_event, bool pressed) {
-    return to_dictionary(runtime_.menu_joy_event(pad_index, joy_event, pressed));
+    port::runtime::MenuState state;
+    const auto failure =
+        catch_all([&] { state = runtime_.menu_joy_event(pad_index, joy_event, pressed); });
+    return failure.empty() ? to_dictionary(state) : boundary_failure(failure);
 }
 
 godot::Dictionary Ps2FrontEndLayout::menu_state() const {
@@ -131,7 +146,9 @@ godot::Dictionary Ps2FrontEndLayout::menu_state() const {
 }
 
 godot::Dictionary Ps2FrontEndLayout::menu_tick(double delta) {
-    const auto tick = runtime_.menu_tick(delta);
+    port::runtime::TickResult tick;
+    const auto failure = catch_all([&] { tick = runtime_.menu_tick(delta); });
+    if (!failure.empty()) return boundary_failure(failure);
     godot::Dictionary result;
     result["ok"] = tick.ok;
     if (!tick.error.empty()) result["error"] = to_godot(tick.error);

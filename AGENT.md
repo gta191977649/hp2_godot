@@ -71,13 +71,45 @@ Rules that follow from this:
 
 ## R3. Not implemented must fail loudly, never silently
 
-If a recovered code path is reached but has not been implemented, it must raise
-`hp2::NotImplemented` (`src/game_core/not_implemented.hpp`) via `HP2_NOT_IMPLEMENTED(...)`, naming
-the ELF address and what is missing. Do not:
+If a recovered code path is reached but has not been implemented, it must call
+`hp2::not_implemented(elf_address, what)` (`src/game_core/port/not_implemented.hpp`), naming the
+ELF address and what is missing. The ELF address is the point of the call: it is the evidence of
+which original function is absent, and nothing else in the program knows it, so the call cannot be
+factored out of the site. Do not:
 
 - return a default value and carry on,
 - substitute a plausible approximation,
 - quietly no-op.
+
+That header is the only place that decides what the failure does and the only place that catches
+it:
+
+- It always throws `hp2::NotImplemented`, in every build configuration. An untranslated path will
+  be reached, so it must never compile away.
+- `HP2_ASSERT_NOT_IMPLEMENTED=1` additionally routes through the standard `assert()`, with no
+  host code at all.
+- `hp2::set_not_implemented_handler` installs a debugger reaction once, at startup.
+  `hp2::platform::install_not_implemented_dialog()` is the supplied one (Abort/Retry/Ignore, Retry
+  breaks into the debugger), enabled by `HP2_NOT_IMPLEMENTED_DIALOG=1`. It lives in `src/platform`
+  so the recovered core depends on nothing but the standard library. A handler may return; the
+  throw still happens, so execution never continues into untranslated code.
+- A boundary that reports a gap rather than propagating it uses `hp2::guard([&]{ ... })`, which
+  returns the message or an empty string. Do not write a new `try`/`catch` for `NotImplemented`
+  outside a test that is asserting one is raised.
+
+Nothing may cross the GDExtension ABI: godot-cpp is compiled `-fno-exceptions`, so an exception
+reaching Godot's frames is undefined behaviour, not a catchable error. Bound methods run their
+body through `port::godot_bridge::catch_all` (`src/platform/godot_bridge/boundary.hpp`), which
+turns anything `guard` does not handle into a reported error.
+
+Compared with gta-reversed, which was studied for this: it does not catch unimplemented paths at
+all, because an un-reversed function there is a thunk into the original retail binary running in
+the same process (`plugin::CallMethod<addr, ...>`), and `NOTSA_UNREACHABLE` is reserved for
+genuine invariants, where it terminates. This port has no original binary to delegate to, so an
+untranslated path must fail and be reported. Two consequences: `not_implemented` must stay live in
+release (their macro compiles to `__builtin_unreachable()`, which for us would manufacture the
+silent wrong answer R3 forbids), and the boundary net above replaces the process-wide
+`SetUnhandledExceptionFilter` they rely on.
 
 A silent fallback is indistinguishable from recovered behaviour at runtime, which is exactly the
 failure mode these rules exist to prevent. Keep the throw site at the boundary of the missing

@@ -1,13 +1,14 @@
 #pragma once
-#include "game_core/assets/fe_language.hpp"
-#include "game_core/audio/bJukebox.hpp"
-#include "game_core/audio/sound.hpp"
-#include "game_core/frontend/fmenus.hpp"
-#include "game_core/frontend/frontendscreens/modeselect.hpp"
-#include "game_core/frontend/frontendscreens/options.hpp"
+#include "game_core/port/assets/fe_language.hpp"
+#include "game_core/bSound/include/bJukebox.h"
+#include "game_core/indep/src/sound.hpp"
+#include "game_core/indep/src/fmenus.hpp"
+#include "game_core/port/frontend/frontendscreens/modeselect.hpp"
+#include "game_core/indep/src/frontendscreens/options.hpp"
 #include "port/assets/catalog.hpp"
 #include "port/runtime/event_tree_view.hpp"
 #include "port/runtime/frame_builder.hpp"
+#include "platform/ps2_profile_store.hpp"
 #include <memory>
 #include <string>
 #include <vector>
@@ -133,9 +134,15 @@ public:
 
     // The View Event Tree screen (FRONTB.BUN screen 39, class "View Event Tree", instance pool
     // "tEventTreeView"). The view loads when that screen opens and clears when another does; its
-    // overlay is appended by build_frame. Per-event progress comes from the memory-card profile,
-    // which this port does not read, so every event but the root reports Locked.
+    // overlay is appended by build_frame. Per-event progress comes from the memory-card profile
+    // (TASK-0021); with nothing configured that profile is all zero, so every event but the root
+    // reports Locked -- which is the recovered answer for an untouched save, not a shortcut.
     const EventTreeView& event_tree() const { return event_tree_; }
+
+    // The player profile this runtime loaded, and how that load went. `loaded()` false with an
+    // error of "not configured" is the normal, expected state.
+    const hp2::memorycard::Profile_002FC050& profile() const { return profile_; }
+    const hp2::platform::ProfileLoad& profile_load() const { return profile_load_; }
     bool move_event_cursor(int direction) { return event_tree_.move_cursor(direction); }
     // FUN_001FAF60 state 0 drives the tree directly. Returns true when the event handled it.
     bool event_tree_joy_event(int joy_event);
@@ -202,9 +209,17 @@ private:
     std::vector<std::string> navigation_history_; // 0016B418 stores class-name strings, not layout indices.
     std::vector<std::string> message_log_;
 
-    // DAT_0030C77C: 9 = Hot Pursuit (Ultimate Racer), 8 = Championship.
+    // TASK-0021: the player profile, loaded once by load() and handed to every screen that
+    // reads it. All zero when nothing is configured.
+    hp2::memorycard::Profile_002FC050 profile_;
+    hp2::platform::ProfileLoad profile_load_;
+
+    // E-0021-23: copy the profile-resident mode-select globals into the profile.
+    void commit_mode_select_globals();
+
+    // FRONTB.BUN screen 39, document hash 0x147F8A59, class "View Event Tree". The mode is
+    // profile+0x1072C and is no longer a field here: FUN_001FB218 reads it from the profile.
     static constexpr int kEventTreeScreen = 39;
-    int event_tree_mode_ = 9;
     EventTreeView event_tree_;
     std::string event_tree_error_;
     std::string event_tree_bundle_;

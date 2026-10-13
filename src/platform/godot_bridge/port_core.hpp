@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include "game_core/demo.hpp"
+#include "game_core/port/demo.hpp"
 #include <godot_cpp/classes/ref_counted.hpp>
 
 namespace port::godot_bridge {

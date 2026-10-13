@@ -1,4 +1,4 @@
-#include "game_core/assets/hp2_tpk_texture.hpp"
+#include "game_core/port/assets/hp2_tpk_texture.hpp"
 #include <cstdio>
 #include <fstream>
 #include <stdexcept>

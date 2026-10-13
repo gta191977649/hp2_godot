@@ -1,5 +1,5 @@
 #pragma once
-#include "game_core/assets/hp2_tpk_texture.hpp"
+#include "game_core/port/assets/hp2_tpk_texture.hpp"
 #include "port/render/frame.hpp"
 #include <map>
 #include <string>

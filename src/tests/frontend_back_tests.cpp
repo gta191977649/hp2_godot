@@ -1,5 +1,5 @@
-#include "game_core/frontend/frontendscreens/options.hpp"
-#include "game_core/not_implemented.hpp"
+#include "game_core/indep/src/frontendscreens/options.hpp"
+#include "game_core/port/not_implemented.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <string>

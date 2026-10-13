@@ -1,5 +1,20 @@
 # The original source tree and class names (recovered directly from ELF strings)
 
+> **TASK-0020 update (2026-10-13).** The scan was repeated without Ghidra, by parsing the ELF's
+> PT_LOAD program headers directly and mapping every printable-ASCII run's file offset to its
+> virtual address (`reverse/naming/task0020-original-source-tree.csv`, E-0020-N01..N03). Result:
+> 8,153 strings, **296 source-path hits / 54 distinct**, 74 distinct `Class::Method` strings and
+> 23 `t`-prefixed pool names. That matches the TASK-0016 rescan (298/54) and confirms the
+> original 93-hit figure on this page was truncated. The recovered root prefix is `..\indep\src\`,
+> with the leading `..\`, not `indep\src\` as written below.
+>
+> `src/game_core` was restructured onto these paths in TASK-0020: the seven files whose original
+> path is recovered verbatim now sit at it, the bWare `bJukebox` pair sits under `bSound/`, and
+> everything with no recovered path moved under `src/game_core/port/` so no file's location
+> implies provenance it does not have. **No identifier was renamed**: every `Class::Method` and
+> pool string here is still `string_only`, and pinning them needs the cross-references only
+> Ghidra MCP provides, which was not connected for that task.
+
 > TASK-0016 correction (E-0016-N01): the original count of 93 below was not a complete scan — the
 > 50 `.hpp` hits were a truncated page. A proper rescan of the canonical address space through
 > Ghidra MCP on 2026-10-12 found 43 `.cpp`, 246 `.hpp` and 9 `.h` strings, 298 path matches in all

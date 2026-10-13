@@ -4,17 +4,43 @@
 
 `game_core` is a static C++17 library. It owns authoritative game state, recovered
 physics, AI, world management, and rules as these become understood. It cannot
-include Godot headers or depend on the Godot runtime. It contains the scaffold and two police local bodies over explicit PS2 byte-storage
-views. PoliceMemory supplies 32-bit memory reads and an opaque external predicate
-contract. These views do not implement original class inheritance, constructors or
-the rest of the game; see docs/FULL_RECOVERY.md.
+include Godot headers or depend on the Godot runtime.
 
-Organize future source as `src/game_core/<subsystem>/<module>.cpp` with cohesive
-headers. Each recovered function links to a reverse record keyed by binary ID
-and original ELF virtual address. Keep one record per function, not one enormous
-decompilation file. Use explicit fixed-width types and review PS2 overflow,
-endianness, float precision, alignment, pointer width, and R5900 ABI assumptions.
-Never treat a PS2 address as a native pointer without an evidence-backed mapping.
+Its layout mirrors the original HP2 source tree where the ELF proves that tree
+(TASK-0020, `reverse/naming/task0020-original-source-tree.csv`):
+
+```text
+src/game_core/
+├── indep/src/     # paths recovered verbatim from ELF compile-time strings
+│   ├── fmenus.cpp            0x002B27F8   ..\indep\src\fmenus.cpp
+│   ├── eventtree.cpp         0x002BA9F8
+│   ├── sound.cpp             0x002B62E8
+│   ├── frontendscreens/      options.cpp 0x002B9E00, joystickconfiguration.cpp 0x002BE300
+│   └── movieplayer/          movieplayer.cpp 0x002BDD08
+├── bSound/        # bWare bSound middleware; src/bJukebox.cpp 0x002C4220,
+│   │              # include/bJukebox.h 0x002C4208. The bSound/ root is inferred.
+│   ├── include/bJukebox.h
+│   └── src/bJukebox.cpp
+└── port/          # NO original path recovered: name and location are this project's
+    ├── assets/ engine/ frontend/ input/ movieplayer/ police/
+    └── scaffold, demo, not_implemented
+```
+
+Every file under `indep/` and `bSound/` opens with the ELF string and address that
+justifies its path; every file under `port/` opens with a note that its path is not
+evidence. A path being original does not make the file's contents original: each is
+still a partial port-side reconstruction, not the original translation unit.
+
+Each recovered function links to a reverse record keyed by binary ID and original ELF
+virtual address. Keep one record per function, not one enormous decompilation file. Use
+explicit fixed-width types and review PS2 overflow, endianness, float precision,
+alignment, pointer width, and R5900 ABI assumptions. Never treat a PS2 address as a
+native pointer without an evidence-backed mapping.
+
+Identifier naming is unchanged by the restructure: `Sub_<ADDR>` / `Type_<ADDR>` names
+stay until a cross-reference pins a recovered identifier to that address. The 74
+`Class::Method` and 23 pool-name strings the ELF carries are real original identifiers
+but are `string_only` — a string's presence is not proof of which function it names.
 
 ## B: Platform abstraction
 

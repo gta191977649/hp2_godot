@@ -9,7 +9,7 @@ def catalog_check():
     assert len(rows)==len(pairs)==66
     main=[r for r in rows if r['caller']=='0012f378']
     assert len(main)==61 and len({r['target'] for r in main})==39
-    source=(ROOT/'src/game_core/engine/call_sites.inc').read_text(encoding='utf-8')
+    source=(ROOT/'src/game_core/port/engine/call_sites.inc').read_text(encoding='utf-8')
     generated=[]
     for m in re.finditer(r'\{0x([0-9a-f]+), 0x([0-9a-f]+), 0x([0-9a-f]+), Module::(\w+), Phase::(\w+), "([^"]+)", "([^"]+)", "([^"]+)"\}',source):
         generated.append(m.groups())
@@ -20,7 +20,7 @@ def catalog_check():
     assert historical=={r['target'] for r in main}
     with (ROOT/'reverse/main_loop/world_connections.csv').open(newline='',encoding='utf-8') as f:world=list(csv.DictReader(f))
     assert len(world)==19 and len({r['call_pc'] for r in world})==19
-    world_source=(ROOT/'src/game_core/engine/world_connections.cpp').read_text(encoding='utf-8')
+    world_source=(ROOT/'src/game_core/port/engine/world_connections.cpp').read_text(encoding='utf-8')
     world_pairs={(int(m[1],16),int(m[2],16),int(m[3],16)) for m in re.finditer(r'\{0x([0-9a-f]+),0x([0-9a-f]+),(0x[0-9a-f]+|0),',world_source)}
     assert world_pairs=={(int(r['caller'],16),int(r['call_pc'],16),int(r['target'],16)) for r in world}
     with (ROOT/'reverse/main_loop/branches.csv').open(newline='',encoding='utf-8') as f:branches=list(csv.DictReader(f))

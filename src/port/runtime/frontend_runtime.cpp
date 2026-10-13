@@ -1,7 +1,7 @@
 #include "port/runtime/frontend_runtime.hpp"
-#include "game_core/frontend/frontendscreens/registry_0016adb0.hpp"
-#include "game_core/input/joyevents.hpp"
-#include "game_core/not_implemented.hpp"
+#include "game_core/port/frontend/frontendscreens/registry_0016adb0.hpp"
+#include "game_core/port/input/joyevents.hpp"
+#include "game_core/port/not_implemented.hpp"
 #include "platform/ps2_asset_root.hpp"
 #include <cmath>
 #include <cstdio>
@@ -73,6 +73,8 @@ void FrontEndRuntime::reset_state() {
     event_tree_.clear();
     event_tree_error_.clear();
     event_tree_bundle_.clear();
+    profile_ = {};
+    profile_load_ = {};
 }
 
 LoadResult FrontEndRuntime::load(const std::string& asset_search_start_dir,
@@ -93,6 +95,12 @@ LoadResult FrontEndRuntime::load(const std::string& asset_search_start_dir,
     catalog_ = std::make_unique<assets::Catalog>(*asset_source_);
 
     event_tree_bundle_ = relative_path;
+    // TASK-0021: the optional player profile. Nothing configured leaves it all zero, which is
+    // what the original hands its own driver before a load, so the front end behaves exactly as
+    // it did before the save system existed. hp2::platform owns every path decision.
+    profile_ = {};
+    profile_load_ = hp2::platform::load_profile(asset_search_start_dir,
+                                                hp2::memorycard::kRegionNtsc_001A3390, profile_);
     std::vector<std::uint8_t> buffer;
     try {
         buffer = asset_source_->read(relative_path);
@@ -270,7 +278,7 @@ MenuState FrontEndRuntime::menu_open(int screen_index) {
         pending_sound_names_.push_back(request.name);
     });
 
-    try {
+    result.not_implemented = hp2::guard([&] {
         open_menu_animation(screen_index);
         background_animation_.Bind_00249A40(&screens_[slot],
             [this](int bound) { return hp2::frontend::Sub_0025A3D0(bound, random_state_); },
@@ -290,16 +298,19 @@ MenuState FrontEndRuntime::menu_open(int screen_index) {
             menu_selector_->Construct_0024A690(*menu_group_->screen_0x14, 0xD1CDA594, 0x9345E4A7);
         }
         menu_group_->EnsureMenu_0016A858();
-    } catch (const hp2::NotImplemented& error) {
-        result.not_implemented = error.what();
-        return result;
-    }
+    });
+    if (!result.not_implemented.empty()) return result;
 
     menu_screen_index_ = screen_index;
     // The tree is view state belonging to one screen, so it follows that screen in and out.
     event_tree_error_.clear();
     if (screen_index == kEventTreeScreen && asset_source_) {
-        const auto loaded = event_tree_.load(*asset_source_, event_tree_bundle_, event_tree_mode_);
+        // FUN_001FB218 message 0x0B: `FUN_00185568(0x2FC050)`, i.e. the tree is chosen by
+        // profile+0x1072C, which the mode-select screen just wrote. The port used to pass a
+        // hardcoded 9 here, so Championship opened the Hot Pursuit tree.
+        const int mode = profile_.SelectedMode_00185568();
+        const auto loaded =
+            event_tree_.load(*asset_source_, event_tree_bundle_, mode, profile_);
         if (!loaded.ok) event_tree_error_ = loaded.error;
     } else {
         event_tree_.clear();
@@ -311,21 +322,49 @@ MenuState FrontEndRuntime::menu_open(int screen_index) {
 
 bool FrontEndRuntime::event_tree_joy_event(int joy_event) {
     if (menu_screen_index_ != kEventTreeScreen || !event_tree_.loaded()) return false;
-    // FUN_001FAF60 state 0: left/right move the cursor by -1/+1 and up/down by +2/-2 through
-    // FUN_001FA9C8, with sounds TreeLeftRight and TreeUpDown.
-    int direction = 0;
+    // FUN_001FAF60. State 0: left/right move the cursor by -1/+1 and up/down by +2/-2 through
+    // FUN_001FA9C8, answering TreeLeftRight (0x14) or TreeUpDown (0x13), or 0 for a move that
+    // does not land on a new node. Confirm zooms into the event (0x15) and Back zooms out again.
+    // State 2 passes everything else to the event detail sub-menu FUN_001F6B70, which is not
+    // translated, so the tree declines those and the menu keeps them.
+    int sound = hp2::frontend::kSoundSilent_001FAF60;
     switch (joy_event) {
         case hp2::input::JOY_EVENT_SCROLL_LEFT:
-        case hp2::input::JOY_EVENT_MENU_ANALOG_LEFT: direction = -1; break;
+        case hp2::input::JOY_EVENT_MENU_ANALOG_LEFT:
+            sound = event_tree_.move_cursor_sound(-1);
+            break;
         case hp2::input::JOY_EVENT_SCROLL_RIGHT:
-        case hp2::input::JOY_EVENT_MENU_ANALOG_RIGHT: direction = 1; break;
+        case hp2::input::JOY_EVENT_MENU_ANALOG_RIGHT:
+            sound = event_tree_.move_cursor_sound(1);
+            break;
         case hp2::input::JOY_EVENT_SCROLL_UP:
-        case hp2::input::JOY_EVENT_MENU_ANALOG_UP: direction = 2; break;
+        case hp2::input::JOY_EVENT_MENU_ANALOG_UP:
+            sound = event_tree_.move_cursor_sound(2);
+            break;
         case hp2::input::JOY_EVENT_SCROLL_DOWN:
-        case hp2::input::JOY_EVENT_MENU_ANALOG_DOWN: direction = -2; break;
+        case hp2::input::JOY_EVENT_MENU_ANALOG_DOWN:
+            sound = event_tree_.move_cursor_sound(-2);
+            break;
+        case hp2::input::JOY_EVENT_MENU_SELECT:
+            if (event_tree_.state() != hp2::frontend::kViewStateBrowsing_001FAF60) return false;
+            sound = event_tree_.confirm();
+            break;
+        case hp2::input::JOY_EVENT_MENU_BACK:
+        case hp2::input::JOY_EVENT_MENU_CANCEL:
+            // Only state 2 consumes Back; in state 0 the tree is a normal screen and Back pops
+            // the navigation history, so the tree must let it through.
+            if (event_tree_.state() != hp2::frontend::kViewStateEventSelected_001FAF60) {
+                return false;
+            }
+            sound = event_tree_.back();
+            break;
         default: return false;
     }
-    event_tree_.move_cursor(direction);
+    // The recovered sound id goes through the recovered FUN_0016E038 and the same sink every
+    // other screen uses, so the bSound event names and the 34 ms repeat suppression stay in one
+    // place. Id 0 is the original's "nothing happened"; PlayMenuSound_0016E038 resolves it to a
+    // null name, so nothing plays.
+    hp2::frontend::PlayMenuSound_0016E038(sound);
     return true;
 }
 
@@ -341,7 +380,7 @@ void FrontEndRuntime::dispatch_activation(hp2::frontend::MenuEvent_0016A458& eve
             exit_animation_->Construct_002490D8(screens_[static_cast<std::size_t>(menu_screen_index_)]);
             exit_class_name_ = name;
         },
-        [] { HP2_NOT_IMPLEMENTED("0x001EE6C0", "display preparation not translated"); }};
+        [] { hp2::not_implemented("0x001EE6C0", "display preparation not translated"); }};
     if (menu_screen_index_ == 0) {
         hp2::frontend::Sub_00216638(1, name_hash, dat_002FC070_, services);
     } else if (menu_screen_index_ == 24) {
@@ -350,13 +389,33 @@ void FrontEndRuntime::dispatch_activation(hp2::frontend::MenuEvent_0016A458& eve
         // "Cops On Mode Select" (FUN_002174A0). The event is passed through because the original
         // gates Quick Race and Tournament on its +0x04 pad field.
         hp2::frontend::Sub_002174A0(1, name_hash, event, mode_select_globals_, services);
+        commit_mode_select_globals();
     } else if (menu_screen_index_ == 2) {
         hp2::frontend::Sub_00217AF8(1, name_hash, event, mode_select_globals_, services); // 0x00217AF8
+        commit_mode_select_globals();
     } else {
         const auto* registration = port::frontend::find_registration(active_class_name_);
         const std::string address = registration == nullptr ? "unknown screen handler"
                                                             : hex(registration->handler_address);
-        HP2_NOT_IMPLEMENTED(address.c_str(), "screen item activation handler not translated");
+        hp2::not_implemented(address.c_str(), "screen item activation handler not translated");
+    }
+}
+
+void FrontEndRuntime::commit_mode_select_globals() {
+    // E-0021-23: five of the six mode-select globals live inside the profile, so in the original
+    // the handler's writes ARE profile writes. ModeSelectGlobals is a port-side mirror, and this
+    // is the one place that reconciles it, right after a handler returns. Without this the
+    // event tree read a hardcoded mode and ignored which entry the player chose.
+    using hp2::memorycard::Profile_002FC050;
+    profile_.write_u32(0x001c, static_cast<std::uint32_t>(mode_select_globals_.DAT_002FC06C));
+    profile_.write_u32(hp2::memorycard::kEventTreeViewState_001FAF60,
+                       static_cast<std::uint32_t>(mode_select_globals_.DAT_002FC1C0));
+    profile_.write_u32(hp2::memorycard::kSelectedModeField_00185568,
+                       static_cast<std::uint32_t>(mode_select_globals_.DAT_0030C77C));
+    profile_.write_u32(0x10734, static_cast<std::uint32_t>(mode_select_globals_.DAT_0030C784));
+    // FUN_001F5D50(0x2FC1B4, n), only when the handler actually called it.
+    if (mode_select_globals_.DAT_002FC1B4_tree_type >= 0) {
+        profile_.SetEventTreeType_001F5D50(mode_select_globals_.DAT_002FC1B4_tree_type);
     }
 }
 
@@ -365,12 +424,12 @@ void FrontEndRuntime::apply_pending_screen() {
     const std::string name = pending_class_name_;
     pending_class_name_.clear();
     const auto* registration = port::frontend::find_registration(name);
-    if (registration == nullptr) HP2_NOT_IMPLEMENTED("0x0016C8C8", "requested class not recovered");
+    if (registration == nullptr) hp2::not_implemented("0x0016C8C8", "requested class not recovered");
     const int target = hp2::frontend::screen_index_for_name_hash(screens_, registration->document_hash);
-    if (target < 0) HP2_NOT_IMPLEMENTED("0x0016ADB0", "registered document not present in loaded bundle");
+    if (target < 0) hp2::not_implemented("0x0016ADB0", "registered document not present in loaded bundle");
     if (pending_push_history_) {
         if (navigation_history_.size() >= 12)
-            HP2_NOT_IMPLEMENTED("0x0016B418", "history overflow behavior not recovered");
+            hp2::not_implemented("0x0016B418", "history overflow behavior not recovered");
         navigation_history_.push_back(active_class_name_);
     }
     const auto activated = activated_name_hash_;
@@ -378,7 +437,7 @@ void FrontEndRuntime::apply_pending_screen() {
     const auto opened = menu_open(target);
     active_class_name_ = name; // preserve many-to-one class identity (e.g. NameEntry)
     activated_name_hash_ = activated;
-    if (!opened.ok) HP2_NOT_IMPLEMENTED("0x0016C4C0", "target menu construction failed");
+    if (!opened.ok) hp2::not_implemented("0x0016C4C0", "target menu construction failed");
 }
 
 void FrontEndRuntime::request_history_back() {
@@ -393,13 +452,13 @@ void FrontEndRuntime::apply_language(int language) {
     if (language == port_language_) return; // 0021E0D0 returns immediately for unchanged locale.
     // Port asset I/O seam for 0021E0D0; enum order matches original locale table.
     static constexpr const char* names[]{"ENGLISH", "FRENCH", "GERMAN", "ITALIAN", "SPANISH", "SWEDISH"};
-    if (language < 0 || language >= 6) HP2_NOT_IMPLEMENTED("0x0021E0D0", "unknown locale");
-    if (!asset_source_) HP2_NOT_IMPLEMENTED("0x0021E0D0", "asset root unavailable");
+    if (language < 0 || language >= 6) hp2::not_implemented("0x0021E0D0", "unknown locale");
+    if (!asset_source_) hp2::not_implemented("0x0021E0D0", "asset root unavailable");
     std::vector<std::uint8_t> bytes;
     try {
         bytes = asset_source_->read(std::string("LANGUAGES/FE_") + names[language] + ".BIN");
     } catch (const std::exception&) {
-        HP2_NOT_IMPLEMENTED("0x0021E0D0", "locale asset unavailable");
+        hp2::not_implemented("0x0021E0D0", "locale asset unavailable");
     }
     language_ = std::make_unique<hp2::port::assets::FeLanguage>(bytes);
     for (auto* collection : {&screens_, &authored_screens_}) for (auto& screen : *collection)
@@ -414,8 +473,7 @@ MenuState FrontEndRuntime::menu_joy_event(int pad_index, int joy_event, bool pre
         result.error = "no menu open";
         return result;
     }
-    std::string not_implemented;
-    try {
+    const std::string not_implemented = hp2::guard([&] {
         // FUN_001EEF00 forwards to 00249128 during exit, which consumes further menu input.
         if (!exit_animation_ && joy_event == hp2::input::JOY_EVENT_MENU_BACK && pressed) {
             if (active_class_name_ == "Options") {
@@ -423,7 +481,7 @@ MenuState FrontEndRuntime::menu_joy_event(int pad_index, int joy_event, bool pre
                 request_history_back();
             } else if (active_class_name_ != "New Main Menu") {
                 const auto* registration = port::frontend::find_registration(active_class_name_);
-                if (!registration) HP2_NOT_IMPLEMENTED("0x0016C670", "Back class registration missing");
+                if (!registration) hp2::not_implemented("0x0016C670", "Back class registration missing");
                 port::frontend::BackContext context;
                 // No settings/editor mutation handlers are enabled in this runtime. The
                 // entry snapshots therefore remain identical, not an unknown comparison.
@@ -440,10 +498,10 @@ MenuState FrontEndRuntime::menu_joy_event(int pad_index, int joy_event, bool pre
                             request_history_back();
                             apply_pending_screen(); // Language handler pops before outer sound playback.
                         }
-                        else HP2_NOT_IMPLEMENTED("0x0016C670", "Back side-effect dependency not translated");
+                        else hp2::not_implemented("0x0016C670", "Back side-effect dependency not translated");
                     },
                     [this](const char* name) {
-                        if (navigation_history_.size() >= 12) HP2_NOT_IMPLEMENTED("0x0016B418", "history overflow");
+                        if (navigation_history_.size() >= 12) hp2::not_implemented("0x0016B418", "history overflow");
                         navigation_history_.emplace_back(name);
                     }};
                 const auto event = port::frontend::query_back(registration->handler_address, context, services);
@@ -454,9 +512,7 @@ MenuState FrontEndRuntime::menu_joy_event(int pad_index, int joy_event, bool pre
             menu_group_->HandleJoyEvent_0016AA00(pad_index, joy_event, pressed);
         }
         apply_pending_screen();
-    } catch (const hp2::NotImplemented& error) {
-        not_implemented = error.what();
-    }
+    });
     result = menu_state();
     result.ok = true;
     result.not_implemented = not_implemented;
@@ -555,7 +611,7 @@ void FrontEndRuntime::bind_scrolling_text(std::uint32_t name_hash) {
     if (!scrolling_text_ || !language_) return;
     const auto binding = port::frontend::hint_binding(active_class_name_, name_hash);
     if (!binding.attachment_known)
-        HP2_NOT_IMPLEMENTED("0x002491B0", "screen scrolling-text attachment not recovered");
+        hp2::not_implemented("0x002491B0", "screen scrolling-text attachment not recovered");
     std::string text;
     if (!language_->lookup(binding.string_id, text)) text = "NOT TRANSLATED PROPERLY";
     scrolling_text_->Bind_00249518(text);
@@ -580,8 +636,7 @@ TickResult FrontEndRuntime::menu_tick(double delta) {
         pending_class_name_ = exit_class_name_;
         pending_push_history_ = true;
         exit_class_name_.clear();
-        try { apply_pending_screen(); }
-        catch (const hp2::NotImplemented& error) { result.not_implemented = error.what(); }
+        result.not_implemented = hp2::guard([&] { apply_pending_screen(); });
     }
     if (highlight_animation_.active() && (menu_screen_index_ != 22 || !title_movie_state_)) {
         highlight_animation_.Update_00248970(static_cast<float>(menu_clock_seconds_),
@@ -680,7 +735,12 @@ FrameStats FrontEndRuntime::build_frame(render::Resources& resources, render::Fr
     auto stats = port::runtime::build_frame(screens_[static_cast<std::size_t>(menu_screen_index_)],
                                             sizes, options, frame);
     if (menu_screen_index_ == kEventTreeScreen && options.exclusive_widget.empty()) {
-        const auto overlay = append_event_tree(event_tree_, sizes, resources, frame);
+        // FUN_001F6FA0 takes every node's panel geometry from screen 39's own EVENT_PANEL
+        // widget, so hand the authored record over instead of inventing a size.
+        const hp2::frontend::FeWidget* panel = hp2::frontend::FindWidget_00143D50(
+            screens_[static_cast<std::size_t>(menu_screen_index_)],
+            hp2::frontend::StringHash_002534A8(hp2::frontend::kWidgetEventPanel_A3B23510), 0);
+        const auto overlay = append_event_tree(event_tree_, sizes, resources, frame, panel);
         stats.quads += overlay.panels + overlay.connectors * 3 + overlay.missing_panels * 4;
         stats.glyphs += overlay.numbers;
         stats.missing += overlay.missing_panels;
@@ -690,22 +750,16 @@ FrameStats FrontEndRuntime::build_frame(render::Resources& resources, render::Fr
 
 FrontEndRuntime::ProbeResult FrontEndRuntime::probe_not_implemented(const std::string& which) {
     ProbeResult result;
-    try {
-        if (which == "popup") {
-            hp2::frontend::Sub_0016BAC0(0, hp2::input::JOY_EVENT_MENU_SELECT, true);
-        } else if (which == "highlight_animation") {
-            hp2::frontend::Sub_0016FBB0();
-        } else if (which == "localised_text") {
-            hp2::frontend::localised_text(0);
-        } else {
-            result.error = "unknown probe: " + which;
-            return result;
-        }
-    } catch (const hp2::NotImplemented& error) {
-        result.not_implemented = error.what();
+    if (which != "popup" && which != "highlight_animation" && which != "localised_text") {
+        result.error = "unknown probe: " + which;
         return result;
     }
-    result.error = "probe did not raise hp2::NotImplemented";
+    result.not_implemented = hp2::guard([&] {
+        if (which == "popup") hp2::frontend::Sub_0016BAC0(0, hp2::input::JOY_EVENT_MENU_SELECT, true);
+        else if (which == "highlight_animation") hp2::frontend::Sub_0016FBB0();
+        else hp2::frontend::localised_text(0);
+    });
+    if (result.not_implemented.empty()) result.error = "probe did not raise hp2::NotImplemented";
     return result;
 }
 

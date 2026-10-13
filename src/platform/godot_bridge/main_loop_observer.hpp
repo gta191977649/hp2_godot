@@ -1,5 +1,5 @@
 #pragma once
-#include "game_core/engine/engine_shell.hpp"
+#include "game_core/port/engine/engine_shell.hpp"
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/variant/array.hpp>
 #include <godot_cpp/variant/dictionary.hpp>

@@ -1,5 +1,5 @@
 #include "port_core.hpp"
-#include "game_core/scaffold.hpp"
+#include "game_core/port/scaffold.hpp"
 #include <godot_cpp/core/class_db.hpp>
 
 namespace port::godot_bridge {

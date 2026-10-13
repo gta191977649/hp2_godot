@@ -4,9 +4,9 @@
 // says, using the literal constants and hashes read out of the binary as oracles. They do NOT
 // establish equivalence with the original hardware (AGENTS.md rule 11 / AGENT.md R1), and nothing
 // here may be used to promote a status to Verified.
-#include "game_core/frontend/fmenus.hpp"
-#include "game_core/input/joyevents.hpp"
-#include "game_core/not_implemented.hpp"
+#include "game_core/indep/src/fmenus.hpp"
+#include "game_core/port/input/joyevents.hpp"
+#include "game_core/port/not_implemented.hpp"
 #include <cstdio>
 #include <stdexcept>
 #include <utility>

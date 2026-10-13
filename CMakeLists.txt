@@ -5,20 +5,21 @@ include(CTest)
 option(PORT_BUILD_GODOT "Build the optional Godot 4.4 bridge" OFF)
 set(PORT_GODOT_CPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/godot-cpp" CACHE PATH "Pinned godot-cpp checkout")
 
-add_library(game_core STATIC src/game_core/scaffold.cpp src/game_core/police/cop_control.cpp
-  src/game_core/engine/engine_shell.cpp src/game_core/engine/world_connections.cpp
-  src/game_core/frontend/screen_manager.cpp src/game_core/frontend/fmenus.cpp
-  src/game_core/frontend/frontendscreens/options.cpp
-  src/game_core/frontend/frontendscreens/joystickconfiguration.cpp
-  src/game_core/frontend/frontendscreens/registry_0016adb0.cpp
-  src/game_core/frontend/frontendscreens/modeselect.cpp
-  src/game_core/frontend/eventtree.cpp
-  src/game_core/input/joyevents.cpp
-  src/game_core/audio/sound.cpp
-  src/game_core/audio/bJukebox.cpp
-  src/game_core/movieplayer/movie_audio.cpp
-  src/game_core/assets/elab_chunks.cpp src/game_core/assets/hp2_tpk_texture.cpp
-  src/platform/ps2_asset_root.cpp)
+add_library(game_core STATIC src/game_core/port/scaffold.cpp src/game_core/port/police/cop_control.cpp
+  src/game_core/port/engine/engine_shell.cpp src/game_core/port/engine/world_connections.cpp
+  src/game_core/port/frontend/screen_manager.cpp src/game_core/indep/src/fmenus.cpp
+  src/game_core/indep/src/frontendscreens/options.cpp
+  src/game_core/indep/src/frontendscreens/joystickconfiguration.cpp
+  src/game_core/port/frontend/frontendscreens/registry_0016adb0.cpp
+  src/game_core/port/frontend/frontendscreens/modeselect.cpp
+  src/game_core/indep/src/eventtree.cpp
+  src/game_core/port/input/joyevents.cpp
+  src/game_core/indep/src/sound.cpp
+  src/game_core/bSound/src/bJukebox.cpp
+  src/game_core/memorycard/src/memorycard.cpp
+  src/game_core/port/movieplayer/movie_audio.cpp
+  src/game_core/port/assets/elab_chunks.cpp src/game_core/port/assets/hp2_tpk_texture.cpp
+  src/platform/ps2_asset_root.cpp src/platform/ps2_profile_store.cpp)
 target_include_directories(game_core PUBLIC src)
 target_compile_features(game_core PUBLIC cxx_std_17)
 set_target_properties(game_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -41,7 +42,7 @@ endif()
 # Host-side MV30 decoder. Codec/runtime assets stay outside Git; original AVI is read at runtime.
 set(PORT_FFMPEG_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/local/tools/ffmpeg/ffmpeg-n8.1-latest-win64-lgpl-shared-8.1" CACHE PATH "Pinned LGPL FFmpeg 8.1 host SDK")
 if(WIN32 AND EXISTS "${PORT_FFMPEG_ROOT}/include/libavcodec/avcodec.h")
-  add_library(port_media STATIC src/game_core/movieplayer/movieplayer.cpp)
+  add_library(port_media STATIC src/game_core/indep/src/movieplayer/movieplayer.cpp)
   target_include_directories(port_media PUBLIC src PRIVATE "${PORT_FFMPEG_ROOT}/include")
   target_compile_features(port_media PUBLIC cxx_std_17)
   foreach(component avcodec avutil swscale)
@@ -57,7 +58,7 @@ elseif(NOT WIN32)
   if(PkgConfig_FOUND)
     pkg_check_modules(PORT_FFMPEG QUIET IMPORTED_TARGET libavcodec>=62 libavutil>=60 libswscale>=9)
     if(PORT_FFMPEG_FOUND)
-      add_library(port_media STATIC src/game_core/movieplayer/movieplayer.cpp)
+      add_library(port_media STATIC src/game_core/indep/src/movieplayer/movieplayer.cpp)
       target_include_directories(port_media PUBLIC src)
       target_compile_features(port_media PUBLIC cxx_std_17)
       target_link_libraries(port_media PUBLIC PkgConfig::PORT_FFMPEG)
@@ -97,6 +98,12 @@ if(BUILD_TESTING)
   add_executable(eventtree_tests src/tests/eventtree_tests.cpp)
   target_link_libraries(eventtree_tests PRIVATE game_core)
   add_test(NAME eventtree COMMAND eventtree_tests WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+
+  # TASK-0021: the recovered save container and the 0x114E0 player profile. Needs no original
+  # asset and no save file -- every fixture is synthetic -- so it has no WORKING_DIRECTORY.
+  add_executable(memorycard_tests src/tests/memorycard_tests.cpp)
+  target_link_libraries(memorycard_tests PRIVATE game_core)
+  add_test(NAME memorycard COMMAND memorycard_tests)
   add_executable(frontend_modeselect_tests src/tests/frontend_modeselect_tests.cpp)
   target_link_libraries(frontend_modeselect_tests PRIVATE game_core)
   add_test(NAME frontend_modeselect COMMAND frontend_modeselect_tests)
@@ -138,7 +145,11 @@ if(BUILD_TESTING)
   endif()
   add_executable(frontend_runtime_tests src/tests/frontend_runtime_tests.cpp)
   target_link_libraries(frontend_runtime_tests PRIVATE port_runtime)
-  add_test(NAME frontend_runtime COMMAND frontend_runtime_tests)
+  # TASK-0021: this test drives the runtime against the player's own ZZDATA, so it needs the
+  # repo root as its working directory to find config/ps2_assets.local.json. Without it the
+  # whole suite ran against an unresolved asset root and reported success having asserted
+  # almost nothing.
+  add_test(NAME frontend_runtime COMMAND frontend_runtime_tests WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
   add_executable(frame_builder_tests src/tests/frame_builder_tests.cpp)
   target_link_libraries(frame_builder_tests PRIVATE port_runtime)
   add_test(NAME frame_builder COMMAND frame_builder_tests)
@@ -176,7 +187,7 @@ if(PORT_BUILD_GODOT)
   add_library(ps2_port SHARED src/platform/godot_bridge/port_core.cpp src/platform/godot_bridge/register_types.cpp
     src/platform/godot_bridge/main_loop_observer.cpp src/platform/godot_bridge/frontend_menu_observer.cpp
     src/platform/godot_bridge/ps2_texture_loader.cpp src/platform/godot_bridge/ps2_frontend_layout.cpp
-    src/platform/godot_bridge/ps2_render_host.cpp)
+    src/platform/godot_bridge/ps2_render_host.cpp src/platform/not_implemented_dialog.cpp)
   target_sources(ps2_port PRIVATE src/platform/godot_bridge/ps2_movie_player.cpp)
   # Godot-cpp 4.4 propagates -fno-exceptions. Port adapters catch recovered NotImplemented
   # locally; enable exceptions in these source files without changing Godot's own code.

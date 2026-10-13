@@ -1,0 +1,307 @@
+// Original source path, recovered verbatim from the authorized ELF: `..\indep\src\eventtree.cpp`
+// (string at 0x002BA9F8, SLUS_203.62 sha256 7335b8ed...facc2; TASK-0020, E-0020-N01).
+// This file sits at that path. The path is original; what the file holds is a
+// partial port-side reconstruction, and the `.hpp` extension is port-side -- only
+// the `.cpp` path was recovered.
+#pragma once
+#include "game_core/memorycard/include/memorycard.h"
+#include "game_core/port/assets/elab_chunks.hpp"
+#include <cstdint>
+#include <string>
+#include <vector>
+
+// TASK-0018: the event tree behind the Ultimate Racer / Championship entries.
+//
+// Original source file: `..\indep\src\eventtree.cpp` (ELF string 0x002BA9F8), so this file keeps
+// that name. The class names in it are the original pool-name strings: `tEventTreeView`
+// (0x002BA8F8), `tEventLeaf` (0x002BA878), `tEventGroup` (0x002BA888) and `tLineSegment`
+// (0x002BA858). Everything whose original identifier was not recovered carries its ELF address,
+// per AGENT.md R2.
+//
+// SLUS_203.62, SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Evidence E-0018-01..12; records under reverse/functions/<binary-id>/frontend/.
+namespace hp2::frontend {
+
+// ------------------------------------------------------------------- the data source
+// FUN_001FFC40 parses one `0x80034A00` container per tree. FRONTEND/FRONTB.BUN carries exactly
+// two of them, named "Championship" and "Hot Pursuit" by their `0x00000001` child. The tree the
+// player sees is picked by FUN_00185568 from profile+0x1072C: 8 -> "Championship" (the World
+// Racing branch), 9 -> "Hot Pursuit" (the branch whose menu entry is labelled Ultimate Racer).
+// `iGpffffA548` switches both to their "... E3" variants, which this bundle does not carry.
+// (E-0018-01)
+inline constexpr std::uint32_t kEventTreeChunkId_80034A00 = 0x80034a00;
+inline constexpr std::uint32_t kEventTreeNameChunkId_00000001 = 0x00000001;
+inline constexpr std::uint32_t kEventTreeChunk_00034A01 = 0x00034a01; // -> tree+0x14, 4-byte rows
+inline constexpr std::uint32_t kEventTreeChunk_00034A02 = 0x00034a02; // -> tree+0x1C, 4-byte rows
+inline constexpr std::uint32_t kEventTreeChunk_00034A03 = 0x00034a03; // -> tree+0x24, the 8-byte
+                                                                      //    link table
+inline constexpr std::uint32_t kEventTreeChunk_00034A04 = 0x00034a04; // -> tree+0x2C, 8-byte rows
+inline constexpr std::uint32_t kEventTreeChunk_00034A05 = 0x00034a05; // -> the event records
+inline constexpr std::uint32_t kEventTreeChunk_00034A06 = 0x00034a06; // -> tree+0x34, 4-byte rows
+
+// FUN_001FFF60 divides the 0x34A05 payload by 0xBC, so an event record is 188 bytes and both
+// shipped trees hold exactly 32 of them. (E-0018-02)
+inline constexpr std::size_t kEventRecordSize_001FFF60 = 0xbc;
+inline constexpr std::size_t kEventLinkSize_002008B8 = 8;
+
+// ------------------------------------------------------------------- node placement
+// FUN_001F96B8 lays the nodes out from a 200-character ASCII map held in the ELF: it walks the
+// map counting non-space characters until it has counted `record+0x28` (the event number) of
+// them, and stores `130.0f * (position % 20)` as that event's X. So the map is 10 rows of 20
+// columns and the n-th 'x' in reading order is event n. Y is not taken from the map: FUN_001F7730
+// returns `depth * 350.0f`, where FUN_001F7FA8 computes depth by following the first incoming
+// link back to the root. (E-0018-03)
+inline constexpr int kLayoutColumns_001F96B8 = 20;
+inline constexpr float kColumnSpacing_gp_0x41B0 = 130.0f;
+inline constexpr float kRowSpacing_gp_0x41B4 = 350.0f;
+
+inline constexpr const char* kLayoutChampionship_0031B3C0 =
+    "        x           "
+    "    x       x       "
+    "  x   x  x  x  x    "
+    " x x   x x   x   x  "
+    "x  x  x x x    x   x"
+    "x  x   x x x     x  "
+    "     x       x      "
+    "        x           "
+    "        x           "
+    "        x           ";
+
+inline constexpr const char* kLayoutHotPursuit_0031B490 =
+    "        x           "
+    "    x       x       "
+    "  x   x x x   x     "
+    " x x    x  x  x  x  "
+    " x    x   x x x x  x"
+    "x x      x   x x x  "
+    "     x          x   "
+    "        x           "
+    "        x           "
+    "        x           ";
+
+// ------------------------------------------------------------------- per-node state
+// FUN_001F75F0 picks a node's panel texture from the tree type and the status FUN_002010B8
+// returns: 0 -> LOCKED, 1/2/3 -> UNLOCKED, 4 -> WON. The texture names are the ELF's own strings.
+// (E-0018-04)
+enum EventStatus_002010B8 : int {
+    kEventStatusLocked = 0,
+    kEventStatusUnlocked = 1,
+    kEventStatusUnlocked2 = 2,
+    kEventStatusUnlocked3 = 3,
+    kEventStatusWon = 4,
+};
+inline constexpr const char* kSpeedPanelLocked_002BA768 = "SPEED_EVENT_PANEL_LOCKED";
+inline constexpr const char* kSpeedPanelUnlocked_002BA788 = "SPEED_EVENT_PANEL_UNLOCKED";
+inline constexpr const char* kSpeedPanelWon_002BA7A8 = "SPEED_EVENT_PANEL_WON";
+inline constexpr const char* kPursuitPanelLocked_002BA7C0 = "PURSUIT_EVENT_PANEL_LOCKED";
+inline constexpr const char* kPursuitPanelUnlocked_002BA7E0 = "PURSUIT_EVENT_PANEL_UNLOCKED";
+inline constexpr const char* kPursuitPanelWon_002BA800 = "PURSUIT_EVENT_PANEL_WON";
+// Returns the panel texture name for a tree type (0 = Championship/speed, 1 = Hot Pursuit) and a
+// status, or nullptr for a status FUN_001F75F0's switch does not cover.
+const char* EventPanelTexture_001F75F0(int tree_type, int status);
+
+// FUN_00200DE8: how many bytes of the profile block one event owns, selected by its goal type at
+// record+0x29. (E-0018-05)
+int EventSaveSize_00200DE8(std::uint8_t goal_type);
+
+// ------------------------------------------------------------------- records and links
+// Only the fields this port reads are modelled; the record is 188 bytes and most of it was not
+// identified. Every offset below was read from the code that uses it.
+struct EventRecord_001FFF60 {
+    std::string name_0x08;          // 32-byte field; the authored English event name
+    std::uint8_t number_0x28 = 0;   // 1-based event number; FUN_001FA840 looks nodes up by it
+    std::uint8_t goal_type_0x29 = 0;// FUN_00200DE8's switch
+    std::uint16_t index_0x42 = 0;   // row index into the 0x34A03 link table for this event
+    std::uint8_t link_count_0x3D = 0;      // number of incoming links (FUN_002008B8's bound)
+    std::vector<std::int16_t> link_index_0x7C; // s16 rows into the 0x34A03 table, link_count long
+    std::uint32_t string_id_0xB0 = 0;      // localised description, fed to the scrolling text
+};
+
+// One 8-byte row of chunk 0x34A03. TASK-0021 corrected what this table is: it is a
+// **requirement** table, not a plain link table. `FUN_002008B8(leaf, i)` returns
+// `tree+0x24 + record[0x7C + 2i] * 8` for every `i` below `record+0x3D`, and
+// `FUN_001FFFB0(row, tree)` asks whether the event numbered at `row+0x02` reaches status 4
+// **when judged against this row's own `row+0x04` threshold** -- so the row carries the goal an
+// event has to meet, and an event unlocks when any one of its rows is satisfied.
+// (E-0021-12; supersedes E-0018-06 in part)
+//
+// Retired, kept per AGENT.md R6: TASK-0018 recorded +0x02 as "the event number at the other end
+// of the link" and the remaining six bytes as unidentified. The +0x02 reading stands -- it names
+// the prerequisite event -- but calling the table a link table understated it, and four of those
+// six bytes are now identified. `field_0x00` is still unidentified.
+struct EventLink_002008B8 {
+    std::uint16_t field_0x00 = 0;
+    std::uint16_t prerequisite_number_0x02 = 0;
+    std::uint32_t goal_threshold_0x04 = 0;
+};
+
+// `tEventLeaf` (0x60 bytes in the original). The port keeps the fields it needs plus the graph
+// edges the view builds in FUN_001F96B8.
+struct EventLeaf_001F6FA0 {
+    int record_index = 0;            // position in the record array, leaf+0x08
+    int depth_0x1C = 0;              // FUN_001F7FA8
+    float x = 0.0f, y = 0.0f;        // FUN_001F7710 / FUN_001F7730
+    std::vector<int> incoming;       // record indices; built from link_index_0x7C
+    std::vector<int> outgoing;       // the reverse edges the view also threads (leaf+0x2C list)
+    int group = -1;                  // `tEventGroup` index; connected component
+};
+
+class EventTree_001FFC40 {
+public:
+    std::string name;            // from the 0x00000001 chunk
+    int type_0x08 = -1;          // 0 = "Championship", 1 = "Hot Pursuit" (FUN_001FDEF8)
+    std::vector<EventRecord_001FFF60> records;
+    std::vector<EventLink_002008B8> links;
+    std::vector<EventLeaf_001F6FA0> leaves;
+
+    const char* layout_map() const;
+    // FUN_001FA840(view, number): the leaf whose record+0x28 matches, or -1.
+    int FindLeafByNumber_001FA840(std::uint8_t number) const;
+
+    // FUN_002008B8(leaf, i): the i-th requirement row of a record, or nullptr when `i` is
+    // outside `record+0x3D`. (E-0021-12)
+    const EventLink_002008B8* Requirement_002008B8(int record_index, int i) const;
+
+    // FUN_002010B8, translated against a real profile. `row` is the requirement row whose
+    // threshold the slice is judged against; pass nullptr for the original's `param_2 == 0`
+    // entry, in which case the function performs the prerequisite test first and then picks the
+    // row itself from `record+0x42`, exactly as the original does. (E-0021-10, E-0021-11)
+    //
+    // Raises hp2::NotImplemented for GoalTypes 3 and 4, whose slice decoders
+    // (FUN_002003F8 / FUN_002007D0 and their helpers FUN_002001A8 / FUN_002006A0 /
+    // FUN_00200768) are not recovered, and for events 0x1F and 0x20 whose gate globals
+    // (DAT_0031D7F4+0x180 / +0x1B8) are not recovered -- but only when a non-empty profile
+    // could actually reach those branches. With an all-zero profile the recovered arms answer
+    // first, so nothing throws.
+    int Status_002010B8(const hp2::memorycard::Profile_002FC050& profile, int record_index,
+                        const EventLink_002008B8* row = nullptr) const;
+
+    // Retired, kept per AGENT.md R6 and still used where no profile is available: the
+    // profile-less reduction TASK-0018 shipped. An event with no requirement rows is Unlocked
+    // and every other event is Locked, which is what Status_002010B8 answers for a zero profile
+    // anyway -- so this is now a shortcut, not a different answer.
+    int StatusWithoutProfile_002010B8(int record_index) const;
+
+    // FUN_001FA880(view, leaf, leaf->depth_0x1C, direction): among the leaves at the same depth,
+    // the one nearest in X strictly to the left (direction -1) or strictly to the right
+    // (direction +1) of the current leaf. Returns -1 when there is none -- the original does not
+    // wrap. (E-0021-19)
+    int WalkSameDepth_001FA880(int record_index, int direction) const;
+
+    // FUN_001FA978(view, leaf, list): among the leaves on one of the current leaf's two
+    // adjacency lists, the one whose X is closest to the current leaf's. direction +2 walks
+    // leaf+0x20 (the prerequisites, towards the root) and -2 walks leaf+0x28 (the events that
+    // require this one). First match wins a tie. Returns -1 for an empty list. (E-0021-20)
+    int WalkAdjacent_001FA978(int record_index, int direction) const;
+
+    // FUN_001FA9C8's dispatch: -1/+1 go to WalkSameDepth_001FA880, +2/-2 to
+    // WalkAdjacent_001FA978, anything else answers -1.
+    int MoveCursor_001FA9C8(int record_index, int direction) const;
+};
+
+// ------------------------------------------------------------------- the camera (TASK-0021)
+// Recovered, replacing the port-side calibration TASK-0018 had to use. FUN_001F96B8 allocates a
+// 0x70-byte `tStillCameraMover` (pool name string 0x002BA898) with FUN_002577C0 and constructs
+// it through FUN_0015E6A0(object, 1), then positions it with
+// `FUN_001FAB00(320.0f, 240.0f, view, view->current_leaf)`:
+//
+//     target.x = 320.0f - leaf->x(+0x30) * view->zoom(+0x80)
+//     target.y = 240.0f - leaf->y(+0x34) * view->zoom(+0x80)
+//
+// and hands `target` to FUN_001DAAA0(view+0xA8). So the selected node is pinned to the centre of
+// the 640x480 authored space, and the scale is one of two discrete levels rather than a
+// continuum: FUN_001FAB50(view, delta) clamps `view+0x138` to 0..1 and reads the level's scale
+// out of a two-float table at gp-0x4178. FUN_001F96B8 calls it with delta 0, so a freshly opened
+// tree sits at level 0. (E-0021-13)
+//
+// gp itself is 0x003358F0, established by locating the already-known pair
+// gp-0x41B4 == 350.0f / gp-0x41B0 == 130.0f at 0x0033173C.
+inline constexpr float kCameraCentreX_001FAB00 = 320.0f;
+inline constexpr float kCameraCentreY_001FAB00 = 240.0f;
+inline constexpr float kZoomLevels_gp_0x4178[2] = {0.4f, 1.0f};
+inline constexpr int kZoomLevelMin_001FAB50 = 0;
+inline constexpr int kZoomLevelMax_001FAB50 = 1;
+
+// FUN_001FA880's initial "best" values, read out of gp-0x6CBC and gp-0x6CB8, and FUN_001FA978's
+// out of gp-0x6CB4. They are these literals, not FLT_MAX. (E-0021-14)
+inline constexpr float kWalkWorstLeft_gp_0x6CBC = -999999.0f;
+inline constexpr float kWalkWorstRight_gp_0x6CB8 = 999999.0f;
+inline constexpr float kWalkWorstDistance_gp_0x6CB4 = 999999.0f;
+
+// ------------------------------------------------------------------- screen 39 (TASK-0021)
+// The event tree's own screen is index 39 of FRONTEND/FRONTB.BUN. Every name below was confirmed
+// by matching an ELF immediate against that screen's stored widget name or class hash under
+// StringHash_002534A8, which is why the hash is written next to it. (E-0021-15)
+//
+// This answers docs/EVENT_TREE.md open question 3: the widgets FUN_001FAF60 touches at runtime
+// are HELP_TEXT and HELP_BUTTON, both revealed by `FUN_00144968(screen, hash, 1)` once the
+// state-7 zoom transition finishes.
+inline constexpr const char* kWidgetEventTree_A01F24F0 = "EVENT_TREE";
+inline constexpr const char* kWidgetEventPanel_A3B23510 = "EVENT_PANEL";
+inline constexpr const char* kWidgetEventNumber_16B7D629 = "EVENT_NUMBER";
+inline constexpr const char* kWidgetEventTitleBar_FECEBEF6 = "EVENT_TITLE_BAR";
+inline constexpr const char* kWidgetWhiteoutBar_70A404EC = "WHITEOUT_BAR";
+inline constexpr const char* kWidgetHelpText_0880AC4C = "HELP_TEXT";
+inline constexpr const char* kWidgetHelpButton_027F7503 = "HELP_BUTTON";
+inline constexpr const char* kWidgetBottomMask_AA5D7D3F = "BOTTOM_MASK";
+// EVENT_NUMBER and EVENT_PANEL share this class hash; FUN_001F6FA0 walks every widget of the
+// class with FUN_00143DD8 so each `tEventLeaf` gets its own instance pair.
+inline constexpr std::uint32_t kEventNodeClassHash_A01BCDC6 = 0xa01bcdc6u;
+// The class shared by BG1, DIVERBAR, SMALL_EVENTNUMBER and the OVERLAY_* text widgets, bound by
+// FUN_001F8820.
+inline constexpr std::uint32_t kOverlayClassHash_A2A16EA1 = 0xa2a16ea1u;
+
+// FUN_001F96B8 sets the EVENT_TREE widget's localised string id from DAT_0030C77C
+// (profile+0x1072C) through FUN_001449A8: 8 selects 0x272A and 9 selects 0x272D, anything else
+// 0. That is the screen title, "World Racing" against "Ultimate Racer". (E-0021-16)
+inline constexpr std::uint32_t kTitleStringChampionship_001F96B8 = 0x272a;
+inline constexpr std::uint32_t kTitleStringHotPursuit_001F96B8 = 0x272d;
+std::uint32_t TitleStringId_001F96B8(int selected_mode);
+
+// The three sibling documents FUN_001F96B8 constructs alongside screen 39, identified by
+// matching each ELF immediate against the 41 stored screen name hashes. Their own widget sets
+// are not translated yet. (E-0021-17)
+inline constexpr int kEventDetailScreen_A744BA7B = 17;    // FUN_001F6678(view+0x13C), state 2
+inline constexpr int kZoomTransitionScreen_FD297FD4 = 18; // FUN_001F9480(view+0x654), state 7
+inline constexpr int kState5Screen_F1EED4CD = 19;         // FUN_001F6328(view+0x5AC), state 5
+
+// ------------------------------------------------------------------- the view state machine
+// FUN_001FAF60's state word, view+0x74. FUN_001F96B8 initialises it from profile+0x170
+// (DAT_002FC1C0) unless FUN_001F9F10 asks for the intro, which forces 7. (E-0021-18)
+enum ViewState_001FAF60 : int {
+    kViewStateBrowsing_001FAF60 = 0,
+    kViewStateEventSelected_001FAF60 = 2,
+    kViewStateState5_001FAF60 = 5,
+    kViewStateState6_001FAF60 = 6,
+    kViewStateZoomTransition_001FAF60 = 7,
+};
+
+// The menu sound ids FUN_001FAF60 answers with, from kMenuSoundTable_002FB0A8. Writing 0 means
+// silence, which is what a move that does not land on a new node answers. (E-0017-02)
+inline constexpr int kSoundSilent_001FAF60 = 0;
+inline constexpr int kSoundMenuWrong_001FAF60 = 8;
+inline constexpr int kSoundTreeUpDown_001FAF60 = 0x13;
+inline constexpr int kSoundTreeLeftRight_001FAF60 = 0x14;
+inline constexpr int kSoundTreeZoomInOut_001FAF60 = 0x15;
+inline constexpr int kSoundStartEvent_001FAF60 = 0x18;
+
+// Parses every `0x80034A00` container in a bundle. Returns the trees in file order, which is
+// "Championship" then "Hot Pursuit" in the shipped FRONTEND/FRONTB.BUN.
+std::vector<EventTree_001FFC40> parse_event_trees(const std::vector<std::uint8_t>& buffer);
+
+// ------------------------------------------------------------------- the profile block
+// FUN_001FE988(tree, block, 0x100, 4) hands every event a slice of a 256-byte block -- one block
+// per tree, DAT_002FC1D8 for the Championship tree and DAT_002FC2D8 for Hot Pursuit -- sized by
+// the event's goal type and aligned up to 4. Events whose record+0x28 is 0x20 (event 32) reuse
+// the previous slice rather than taking one of their own. This reproduces the offsets; the
+// contents come from the player's memory-card profile, which this port does not read, so every
+// slice is zero and no event reports a status above Locked. (E-0018-07)
+struct EventProfileLayout_001FE988 {
+    static constexpr std::size_t kBlockSize = 0x100;
+    static constexpr int kAlignment = 4;
+    std::vector<int> offsets;   // per record index; -1 when the record shares the previous slice
+    int used = 0;               // bytes consumed, tree+0x48 at the end of the pass
+};
+EventProfileLayout_001FE988 build_profile_layout_001FE988(const EventTree_001FFC40& tree);
+
+} // namespace hp2::frontend

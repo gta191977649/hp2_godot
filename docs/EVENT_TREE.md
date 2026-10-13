@@ -1,5 +1,13 @@
 # TASK-0018: `tEventTreeView` — data source, geometry, navigation and UI
 
+> **TASK-0021 update (2026-10-13).** The save system was reversed
+> ([docs/SAVE_SYSTEM.md](SAVE_SYSTEM.md)), which unblocked five of the six open questions in
+> section 7. Section 7 below now records the state of each one. Two claims on this page are
+> **superseded**: the `0x34A03` table in section 1 is a *requirement* table, not a link table
+> (section 7.4), and the camera constants in section 7.1 are recovered (section 7.1). Section 6's
+> file paths were stale from the TASK-0020 move and are corrected. Nothing on this page was
+> deleted; superseded text is marked where it stands (AGENT.md R6).
+
 Completed 2026-10-13. Binary `SLUS_203.62`, SHA-256
 `7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2`; Ghidra 12.0.4, GhidraMCP
 **read-only**, no annotations, renames or boundary edits were made. The original source file name
@@ -121,16 +129,72 @@ When the cursor does not land on a new node the handler writes 0 into the event'
 field, so nothing plays. In state 2 (an event is selected) starting the race first checks the node
 record's +0x3E: below 1 it only plays `MenuWrong`.
 
+## 5b. How the player actually gets here (TASK-0021 follow-up)
+
+This page documented the tree but never the route into it, and the route was broken: choosing
+Championship or Ultimate Racer did nothing. Three links were missing, and all three are now
+recovered.
+
+**The mode-select handlers already set up the tree correctly.** `FUN_002174A0` (Cops On, screen 1)
+on its MENUITEM_4 and `FUN_00217AF8` (Cops Off, screen 2) on its MENUITEM_3 do the same four
+things before leaving:
+
+| Write | Where it lands | Meaning |
+|---|---|---|
+| `DAT_0030C77C = 9` / `= 8` | profile+0x1072C | the mode `FUN_00185568` keys on |
+| `DAT_0030C784 = 1` | profile+0x10734 | readers are in the race code; not traced |
+| `FUN_001F5D50(0x2FC1B4, 1)` / `(…, 0)` | profile+0x164 | the event tree's current tree type |
+| `DAT_002FC1C0 = 0` | profile+0x170 | clears the view state, so the tree opens browsing |
+
+Both then request the class **`"View Event Tree"`** (string 0x002BC560). Note that five of the six
+mode-select globals are **inside the profile** — writing them is writing the save (E-0021-23).
+
+**Link 1 — the class had no registration row.** `View Event Tree` does not register through
+`FUN_0016ADB0` like the other 37 classes; it tail-calls the sibling `FUN_0016AD88` at 0x001FB860.
+Its operands, built at 0x001FB7F0..0x001FB830, are the class-name string 0x002BA718, the handler
+`FUN_001FB218`, and the document hash **0x147F8A59** — which is exactly screen 39's stored name
+hash. Because the port's registry stopped at the 37 `FUN_0016ADB0` rows,
+`find_registration("View Event Tree")` returned null and `apply_pending_screen` raised
+NotImplemented at 0x0016C8C8. (E-0021-22)
+
+**Link 2 — the transition is deferred behind an animation.** `FUN_00217020` / `FUN_002176D8` do
+not switch screens. They build a 0x1C-byte `tExitScreenAnimation` through `FUN_002490D8` — the
+same `Type_002490D8` the port already implements for the Options exit — store it at
+instance+0x270, and let the switch happen only when it finishes. (E-0021-25)
+
+**Link 3 — the port ignored the chosen mode.** `FrontEndRuntime` held `event_tree_mode_ = 9` as a
+hardcoded field, so even with the first two links fixed, Championship would have opened the Hot
+Pursuit tree. `FUN_001FB218` message 0x0B shows where it really comes from:
+`FUN_00185568(0x2FC050)` — the profile. The field is gone. (E-0021-24)
+
+Both routes are now asserted end to end in `src/tests/frontend_runtime_tests.cpp`
+(`check_event_tree_route`), which drives the real joy events and ticks the exit animation out, and
+both were confirmed in the running app: screen 1 item 3 and screen 2 item 2 each reach screen 39,
+with different modes, different tree types and visibly different panel artwork
+(`SPEED_EVENT_PANEL_*` against `PURSUIT_EVENT_PANEL_*`).
+
 ## 6. Implementation
 
-- `src/game_core/frontend/eventtree.{hpp,cpp}` — parses both trees, the records, the link table,
-  the connected components that become `tEventGroup`s, depth, x/y, status-to-texture mapping,
-  GoalType-to-save-size, and the two-pass profile slice layout.
-- `src/platform/godot_bridge/ps2_event_tree.{hpp,cpp}` — the `Ps2EventTree` bridge class.
+> **Corrected by TASK-0021.** The two paths this section originally named no longer exist:
+> `src/game_core/frontend/eventtree.{hpp,cpp}` moved to `src/game_core/indep/src/` in TASK-0020,
+> and `src/platform/godot_bridge/ps2_event_tree.{hpp,cpp}` with its `Ps2EventTree` class was
+> deleted in TASK-0018's third pass along with the GDScript host. The current list is below.
+
+- `src/game_core/indep/src/eventtree.{hpp,cpp}` — parses both trees, the records, the
+  **requirement** table, the connected components that become `tEventGroup`s, depth, x/y,
+  status-to-texture mapping, GoalType-to-save-size, the two-pass profile slice layout, the full
+  `Sub_002010B8` status decode, and the two recovered cursor walks `Sub_001FA880` /
+  `Sub_001FA978`.
+- `src/game_core/memorycard/{include/memorycard.h,src/memorycard.cpp}` — the profile the statuses
+  and the start node come from (TASK-0021).
+- `src/port/runtime/event_tree_view.{hpp,cpp}` — draws the connectors and nodes on screen 39 with
+  the recovered camera, the selected node at twice the size, and the recovered left/right and
+  up/down walks. Also the state machine's 0 to 2 transitions and the recovered sound ids.
+- `src/port/runtime/frontend_runtime.{hpp,cpp}` — loads the profile once, scopes the view to
+  screen 39, and routes joy events into the tree, playing the recovered sound through the same
+  `PlayMenuSound_0016E038` every other screen uses.
 - `ps2_texture_loader.*` gained `load_texture_by_name()` and `ps2_frontend_layout.*` gained
-  `name_hash()`, so GDScript **never reimplements** the recovered string hash.
-- `src/port/runtime/event_tree_view.cpp` — draws the connectors and nodes on screen 39, the selected node at
-  twice the size, with left/right/up/down walking the recovered ±1/±2 links.
+  `name_hash()`, so no host code **ever reimplements** the recovered string hash.
 
 ### Tests
 
@@ -150,20 +214,62 @@ those runtimes statically for the same reason; the test executables now do too. 
 
 ## 7. Open questions
 
-1. **The camera is not recovered.** `FUN_001F96B8` ends by attaching a `StillCameraMover` (pool
-   name 0x002BA898) to the current node, but its zoom, easing and bounds were not decompiled. The
-   port's `EVENT_TREE_PORT_ZOOM` and `EVENT_TREE_PORT_PANEL_SCALE` are **port-side values
-   calibrated against the user's original-hardware screenshot, not recovered values**; the code
-   says so, and they must be replaced once the camera is reversed.
-2. **No profile means no real status.** Showing "Passed - 1st" / "Reward: Alpine Trail" as in the
-   screenshot requires parsing the two 256-byte blocks in the memory-card save, plus the part of
-   `FUN_002010B8` that decodes a slice by GoalType (only its opening was read this session).
-3. Screen 39's placeholder widgets ("This Will Change", "Event 1245", "Status Status…") are
-   changed or hidden at runtime by the original; which widgets change and how was not reversed.
-   The tree is currently painted over them.
-4. The remaining six bytes of each link row, and the meaning of the `0x34A01/02/04/06` tables, are
-   unidentified.
-5. `FUN_001F6B70` (the event detail sub-menu) and `FUN_001F5D50` (tree selection) are not
-   decompiled.
-6. The real rule behind the connector colours (green and red in the screenshot) is not recovered;
-   the port currently colours by "is the source node Won", and the code says so.
+Each is marked with its state after TASK-0021. Evidence ids are `E-0021-NN`; see
+[docs/SAVE_SYSTEM.md](SAVE_SYSTEM.md) and the per-function records under
+`reverse/functions/sha256-7335.../`.
+
+1. **The camera — ANSWERED, except the easing.** `FUN_001FAB00(320.0f, 240.0f, view, leaf)` sets
+   the mover's target to `centre - leaf_position * zoom`, so the selected node is pinned to the
+   centre of the authored 640x480 space. `FUN_001FAB50` clamps a zoom **level** into 0..1 and
+   takes that level's scale out of the two-float table at gp-0x4178, `{0.4f, 1.0f}`
+   (gp == 0x003358F0). `FUN_001F96B8` calls it with delta 0, so a freshly opened tree sits at
+   0.4. The camera object is 0x70 bytes, pool name `tStillCameraMover` (0x002BA898), allocated by
+   `FUN_002577C0` and constructed by `FUN_0015E6A0(object, 1)`. The port's measured
+   `kPortZoom = 0.6f` and `kPortPanelScale = 0.26f` are **gone**. (E-0021-13, E-0021-21)
+   Still open: `FUN_0015E6A0` and the mover's update were not decompiled, so the easing between
+   the two levels is unknown and the port snaps; and the authored panel is 256 px wide, which at
+   zoom 0.4 does not fit a lattice 52 px apart, so one clearly-labelled port-side fit factor
+   remains while the missing transform is looked for.
+   *Correction to the original wording: `view+0x3F8..+0x404` is **not** the tree's bounds. It is
+   the rectangle of the widget whose name hash is 0xAA5D7D3F, which is screen 39's `BOTTOM_MASK`.*
+2. **Real status — ANSWERED.** `FUN_002010B8` is fully decompiled and translated, with five
+   distinct status values and four per-GoalType slice decoders; see SAVE_SYSTEM.md section 5. Two
+   of the four decoders and both completion gates are still unrecovered and now raise
+   `hp2::NotImplemented` naming their ELF address. With a zeroed profile every event but the root
+   still reports Locked — but that is now the recovered answer for an untouched save, reached
+   through the real decoder, not a shortcut. Showing "Passed - 1st" / "Reward: ..." additionally
+   needs `FUN_001F6B70` (question 5). (E-0021-10, E-0021-11)
+3. **Runtime widget changes — PARTLY ANSWERED.** The two widgets `FUN_001FAF60` touches are
+   `HELP_TEXT` (hash 0x0880AC4C) and `HELP_BUTTON` (0x027F7503), both revealed by
+   `FUN_00144968(screen, hash, 1)` when the state-7 zoom transition ends. `FUN_001F96B8` also
+   sets `EVENT_TREE`'s localised string id from the selected mode — 0x272A for Championship,
+   0x272D for Hot Pursuit — which is the screen title. Nothing was found that hides the authored
+   placeholder text, so the tree is still painted over it. (E-0021-15, E-0021-16)
+4. **The link row — ANSWERED, and the table was misread.** *Superseded:* section 1 calls the
+   `0x34A03` table a link table. It is a **requirement** table: `row+0x02` names a prerequisite
+   event and `row+0x04` is the u32 goal that prerequisite must meet, and an event unlocks when
+   any one of its `record+0x3D` rows is satisfied. Four of the six "remaining" bytes are
+   therefore identified; `row+0x00..0x01` is not. The `0x34A01/02/04/06` tables remain
+   unidentified. (E-0021-12)
+5. **`FUN_001F5D50` — ANSWERED. `FUN_001F6B70` — still open.** `FUN_001F5D50` is not "tree
+   selection": it is two instructions, `sw a1,0x0(a0)`, and it writes the current tree type into
+   the profile block at 0x002FC1B4. Its siblings `FUN_001F5D00` (read the start node) and
+   `FUN_001F5D28` (write it) are recovered with it, including the quirk that the writer selects
+   on the stored type rather than on its own argument. (E-0021-09) `FUN_001F6B70`, the state-2
+   event detail sub-menu over document 17, is still not decompiled.
+6. **Connector colours — still open.** The `tLineSegment` build inside `FUN_001F96B8` was not
+   read, so the port still colours by "is the source node Won" and the code says so.
+
+New questions TASK-0021 opened:
+
+7. The event tree is a **four-document cluster**, not one screen: besides screen 39 it builds
+   screen 17 (the event detail sub-menu, `FUN_001F6678` at view+0x13C), screen 18 (the zoom
+   transition, `FUN_001F9480` at view+0x654) and screen 19 (state 5, `FUN_001F6328` at
+   view+0x5AC). All three were identified by matching the ELF immediates 0xA744BA7B, 0xFD297FD4
+   and 0xF1EED4CD against the 41 stored screen name hashes. None of their widget sets is
+   translated. (E-0021-17)
+8. The view's state word lives at view+0x74 and is **initialised from the profile** at
+   profile+0x170, with a stored 2 zooming straight into the selected event. States 5 and 6, and
+   `FUN_001F9F10`'s intro path that forces state 7, are not translated. (E-0021-18)
+9. `FUN_001F96B8` also writes a 32-float array at `DAT_0031B240`, indexed by event number minus
+   one, during layout. Its consumer was not traced.

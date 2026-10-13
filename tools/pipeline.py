@@ -185,11 +185,11 @@ def demo_repair(limit=2):
     if limit < 2 or limit > 10:
         raise ValueError('demo needs 2..10 attempts to demonstrate failure and repair')
     workspace = LOGS / 'synthetic-repair'
-    source = ROOT / 'src/game_core/demo.hpp'
+    source = ROOT / 'src/game_core/port/demo.hpp'
     trusted = {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in [ROOT / 'tools/fixtures/demo.json', ROOT / 'src/tests/demo_runner.cpp', source]}
     correct = source.read_text()
     incorrect = correct.replace('axis < 0 ? -1 : axis > 0 ? 1 : 0', 'axis != 0 ? 1 : 0')
-    snapshots = apply_proposal(workspace, {'src/game_core/demo.hpp': incorrect})
+    snapshots = apply_proposal(workspace, {'src/game_core/port/demo.hpp': incorrect})
     write_json(workspace / 'checkpoint.json', snapshots)
     attempts = []
     for index in range(1, limit + 1):
@@ -201,7 +201,7 @@ def demo_repair(limit=2):
         if result['result'] == 'PASS': break
         # Equivalent rollback checkpoint restores previous contents before proposal.
         rollback(snapshots)
-        snapshots = apply_proposal(workspace, {'src/game_core/demo.hpp': correct})
+        snapshots = apply_proposal(workspace, {'src/game_core/port/demo.hpp': correct})
         write_json(workspace / 'checkpoint.json', snapshots)
     unchanged = all(hashlib.sha256(Path(name).read_bytes()).hexdigest() == digest for name, digest in trusted.items())
     report = {'status': 'tested_synthetic' if attempts[-1]['result']['result'] == 'PASS' and unchanged else 'failed', 'attempts': attempts, 'trusted_files_unchanged': unchanged, 'real_agent': 'blocked: no provider configured', 'checkpoint': str(workspace / 'checkpoint.json')}

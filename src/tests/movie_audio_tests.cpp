@@ -1,5 +1,5 @@
-#include "game_core/movieplayer/movie_audio.hpp"
-#include "game_core/movieplayer/movieplayer.hpp"
+#include "game_core/port/movieplayer/movie_audio.hpp"
+#include "game_core/indep/src/movieplayer/movieplayer.hpp"
 #include "platform/ps2_asset_root.hpp"
 #include <fstream>
 #include <cstdio>

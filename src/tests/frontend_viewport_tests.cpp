@@ -1,5 +1,5 @@
-#include "game_core/frontend/fmenus.hpp"
-#include "game_core/frontend/frontendscreens/options.hpp"
+#include "game_core/indep/src/fmenus.hpp"
+#include "game_core/indep/src/frontendscreens/options.hpp"
 #include <iostream>
 #include <stdexcept>
 int main(){try{
