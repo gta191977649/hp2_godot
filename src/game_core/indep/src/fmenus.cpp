@@ -469,6 +469,28 @@ MenuThing_00169740* MenuList_00169F78::Nth_002503F8(std::int32_t index) {
     return node;
 }
 
+MenuThing_00169740* MenuList_00169F78::FindByHash_0016A5B0(std::uint32_t name_hash) {
+    // FUN_0016A5B0: the head is compared against the list address itself, so an empty list
+    // returns 0 before any field is read.
+    for (MenuThing_00169740* node = next_0x00; node != nullptr && node != sentinel();
+         node = node->next_0x00) {
+        if (node->name_hash_0x0C == name_hash) return node;
+    }
+    return nullptr;
+}
+
+void Sub_0016D2A8(MenuList_00169F78* list, FeScreen& screen, std::uint32_t name_hash, int mode) {
+    // FUN_0016D2A8. The two lookups the port is handed the results of (FUN_0016C8C8 on the
+    // class name, FUN_0016B340 on the group) both return 0 silently when they miss, and the
+    // original then returns; so does this.
+    MenuThing_00169740* item = list == nullptr ? nullptr : list->FindByHash_0016A5B0(name_hash);
+    if (item == nullptr) return;
+    if (mode == 0 || mode == 2) item->ClearStateBits_00169CB0(kMenuThingStateEnabled_bit0);
+    else item->SetStateBits_00169BD0(kMenuThingStateEnabled_bit0);
+    if (mode == 2) SetWidgetVisible_00144968(screen, name_hash, false);
+    if (mode == 1) SetWidgetVisible_00144968(screen, name_hash, true);
+}
+
 void MenuList_00169F78::SetCurrentIndex_0016A0F0(std::int32_t index) {
     // FUN_0016A0F0: store the n-th node; when that is the sentinel, fall back to the first item,
     // and when the list is empty leave the current pointer null.

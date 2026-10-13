@@ -137,3 +137,26 @@ Consequence for the host: `Ps2RenderHost` is the Godot backend and owns the
 `RenderingServer` RIDs (canvas items, 2D textures). Godot-side code translates
 input, time, audio hardware and file access; it makes no drawing decisions and
 holds no per-widget game state.
+
+## D009 — Activation slices call out of the front end through the same named-address seam as Back (TASK-0025, 2026-10-13)
+
+`port::frontend::ScreenActionServices` gains `invoke(elf_address, argument)`, the shape
+`BackServices::invoke` already had. The Language Options activation arm (`001F1B08`
+message `0x01`) is the first activation slice whose effects leave the front end: it calls the
+locale loader `0021E0D0`, conditionally the full profile reset `00183830`, and the manager pop
+`00170320(1)`. Those are host services in the port, so the alternative would have been three
+more typed callbacks on the struct, or -- worse -- letting the slice reach for the runtime.
+
+Naming the ELF address at the call keeps two properties the project depends on. The host seam
+cannot silently substitute a different effect, because the slice says which original function
+it is standing in for; and an untranslated dependency fails loudly at the address that is
+missing, which is how `00183830` stays an explicit `NotImplemented` instead of a skipped reset.
+The order of `invoke` calls is the order the original makes them, so the seam also records the
+sequence, not just the set.
+
+This is a port-side dependency seam, not an original ABI: the original passes no such table.
+Recovered slices stay free of Godot types and of the runtime's own headers.
+
+Consequence: a new activation slice that only switches screens keeps using `request` /
+`exit_animation`; one that changes global game state uses `invoke` and names the address. See
+`docs/FRONTEND_MENU_LANGUAGE.md`.

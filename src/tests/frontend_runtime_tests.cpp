@@ -246,6 +246,34 @@ void check_submenus(FrontEndRuntime& runtime) {
     require(state.screen == 24 && before_language != after_language,
             "Language Back did not apply its selected locale before the direct pop");
 
+    // TASK-0025: activating a language item (001F1B08 message 0x01) applies the locale and
+    // performs its own 00170320(1) pop, exactly as its Back arm does. This used to raise
+    // "screen item activation handler not translated (ELF 0x1f1dd8)".
+    state = enter_option(runtime, 6);
+    require(state.screen == 30 && state.not_implemented.empty(), "Language Options not reached");
+    // 001F1A78 always disables and hides MENUITEM_7, because 0016FDB0 returns 0 in this build.
+    // The screen really does author seven items -- six languages plus the one 001F1A78 always
+    // disables and hides, because 0016FDB0 returns 0 in this build. So this is observable
+    // behaviour and not a vacuous check. (E-0025-L02)
+    require(state.item_count == 7, "Language Options must author MENUITEM_1..MENUITEM_7");
+    int seventh_items = 0;
+    for (const auto& item : state.items) {
+        if (item.name_hash != 0x52E039F9u) continue;
+        ++seventh_items;
+        require(!item.enabled, "Language MENUITEM_7 must be disabled on entry");
+    }
+    require(seventh_items == 1, "Language MENUITEM_7 missing from the recovered menu list");
+    const auto* seventh = widget_named(runtime, 30, "MENUITEM_7");
+    require(seventh != nullptr && seventh->visible == 0,
+            "Language MENUITEM_7 must be hidden on entry");
+    press(runtime, JOY_EVENT_SCROLL_DOWN); // from French to German, original enum 2
+    press(runtime, JOY_EVENT_SCROLL_DOWN);
+    state = press(runtime, JOY_EVENT_MENU_SELECT);
+    require(state.not_implemented.empty(), "Language activation reported a missing path");
+    require(state.screen == 24, "Language activation did not pop through 00170320(1)");
+    require(widget_named(runtime, 0, "MENUITEM_1")->text != after_language,
+            "Language activation did not apply the activated item's locale");
+
     // Display Options, entered directly: the same viewport contract on a different screen.
     state = runtime.menu_open(26);
     require(state.ok, "Display Options failed to open");
@@ -261,7 +289,8 @@ void check_submenus(FrontEndRuntime& runtime) {
     require(state.current == 8, "Display must block last-row wrap");
     require(widget_named(runtime, 26, "MENUITEM_9")->y < display_clip.y + display_clip.height,
             "Display overflow did not scroll into view");
-    std::printf("  submenus: 8 Back routes, locale direct-pop, Audio/Display clipping/scroll\n");
+    std::printf("  submenus: 8 Back routes, locale direct-pop and activation, hidden MENUITEM_7,\n"
+                "            Audio/Display clipping/scroll\n");
 }
 
 // --------------------------------------------------------------------- highlight ghost

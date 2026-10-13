@@ -184,7 +184,13 @@ private:
     std::unique_ptr<hp2::frontend::Type_002491B0> scrolling_text_;
     std::unique_ptr<hp2::frontend::Type_00249DE0> menu_viewport_;
     std::unique_ptr<hp2::frontend::Type_0024A690> menu_selector_;
-    int port_language_ = 0; // Explicit host initial locale, English.
+    std::int32_t port_language_ = 0; // Explicit host initial locale, English. DAT_0031C1C8.
+    // The Language Options instance 001F1DD8's message 0x0B allocates. It lives here because
+    // the runtime owns screen lifetime; it is only valid while a Language class is open.
+    hp2::frontend::Type_001F1A78 language_screen_;
+    // DAT_00331A60. Written by the MENUITEM_7 arm of 001F1B08 and by 001740C0; no reader was
+    // located (TASK-0025). Kept so the recovered write is not silently dropped.
+    std::int32_t dat_00331A60_ = 0;
     hp2::frontend::Type_002495F0 background_animation_;
     std::uint32_t random_state_ = 0x12345678; // Original initialized seed; prior boot draws unresolved.
     hp2::frontend::MenuHighlightAnim_00248870 highlight_animation_;

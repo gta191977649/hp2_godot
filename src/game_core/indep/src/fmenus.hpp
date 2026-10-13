@@ -258,6 +258,7 @@ void SetWidgetVisible_00144968(FeScreen& screen, std::uint32_t name_hash, bool v
 // class hash matches, walked with FUN_00143DD8.
 void SetClassVisible_001454E8(FeScreen& screen, std::uint32_t class_hash, bool visible);
 
+
 // FUN_00140CA0(widget, rgb): replaces the low 24 bits of widget +0x5C and leaves the top byte
 // (PS2 alpha) alone, then stamps +0x2b = 7 when the value actually changed. (E-0014-05)
 void SetWidgetColour_00140CA0(FeWidget& widget, const MenuColour_00169BD0& colour);
@@ -362,6 +363,10 @@ public:
 
     // FUN_002503F8(list, index): the n-th item, or the sentinel when index is out of range.
     MenuThing_00169740* Nth_002503F8(std::int32_t index);
+    // FUN_0016A5B0(list, name_hash): walk the circular list from the head comparing item +0x0C,
+    // returning the first match or 0. The head is the sentinel, so an empty list returns 0
+    // without a comparison. (E-0025-L05)
+    MenuThing_00169740* FindByHash_0016A5B0(std::uint32_t name_hash);
     // FUN_0016A0F0(list, index).
     void SetCurrentIndex_0016A0F0(std::int32_t index);
     // FUN_0016A130(list): position of the current item; 0 when the list is empty or the current
@@ -386,6 +391,21 @@ public:
 private:
     std::vector<std::unique_ptr<MenuThing_00169740>> storage_;
 };
+
+// FUN_0016D2A8(class_name, name_hash, screen, mode): the generic "turn one menu item on or
+// off" helper. The original resolves the screen group from the class name with FUN_0016C8C8
+// and FUN_0016B340 before looking the item up with FUN_0016A5B0; the port is handed the list
+// and the screen the caller already owns, so only the item/widget effects are modelled here.
+// Mode is the original's fourth argument:
+//   0 or 2 -> FUN_00169CB0(item, 1, 0), clearing the enabled bit
+//   else   -> FUN_00169BD0(item, 1, 0), setting it
+//   2      -> additionally FUN_00144968(screen, hash, 0), hiding the widget
+//   1      -> additionally FUN_00144968(screen, hash, 1), showing it
+// A missing list or item returns without touching the widget, exactly as the original's two
+// null checks do. The original translation unit for this address is not pinned
+// (docs/ORIGINAL_SOURCE_TREE.md); it lives here because it only operates on this file's menu
+// framework. (E-0025-L04)
+void Sub_0016D2A8(MenuList_00169F78* list, FeScreen& screen, std::uint32_t name_hash, int mode);
 
 // --------------------------------------------------------------- screen menu group (FUN_0016AA00)
 // One node of the per-screen list FUN_0016B140 walks (screen +0x08). Holds the pad filter the

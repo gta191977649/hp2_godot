@@ -17,6 +17,11 @@ struct ScreenActionServices {
     std::function<void(const char*, bool)> request;
     std::function<void(const char*)> exit_animation;
     std::function<void()> display_prepare;
+    // Original function address and immediate parameter, as in BackServices::invoke. The
+    // activation slices that call out of the front end (the locale loader, the profile reset,
+    // the manager pop) name the address they are standing in for, so the host seam cannot
+    // silently substitute a different effect.
+    std::function<void(std::uint32_t, std::uint32_t)> invoke;
 };
 // Host projection of manager 0016C670's message-0x11 payload; not the PS2 ABI.
 struct BackEvent { std::int32_t permission=1, sound=6; };
@@ -70,6 +75,41 @@ void Sub_00216638(int message, std::uint32_t item_hash, std::int32_t& dat_002FC0
                   const ::port::frontend::ScreenActionServices& services);
 // ELF 0x001EECA8; E-0015-12, corresponding function record. Message-1 action slice.
 void Sub_001EECA8(int message, std::uint32_t item_hash,
+                  const ::port::frontend::ScreenActionServices& services);
+
+// ------------------------------------------------------- Language Options (TASK-0025, E-0025-L*)
+// MENUITEM_1..MENUITEM_6 are the six languages the screen offers; MENUITEM_7 is the extra item
+// 001F1A78 always disables and hides. Hashes under StringHash_002534A8, which is why they are
+// contiguous. The same six values appear on other screens with other meanings -- they are
+// positional item names, not language names.
+inline constexpr std::uint32_t kWidgetMenuItem1_52E039F3 = 0x52E039F3u;
+inline constexpr std::uint32_t kWidgetMenuItem6_52E039F8 = 0x52E039F8u;
+inline constexpr std::uint32_t kWidgetMenuItem7_52E039F9 = 0x52E039F9u;
+// Pointer table at ELF 0x0031C168, read verbatim. Index 6 (LANGUAGES\FE_LONGEST.BIN) and 7
+// (LANGUAGES\FE_ID.BIN) exist in the table but no menu item selects them. (E-0025-L03)
+inline constexpr int kLanguageCount_0031C168 = 6;
+
+// ELF 0x001F1A78 instance. "Language Options Pre FE" allocates 0x10 bytes and constructs with
+// 001F1A78 directly; "Language Options" allocates 0x58 and goes through 001F1D70, which
+// forwards to 001F1A78 and then builds a 001EE918 sub-object at +0x10 that is NOT translated.
+// Only the three words 001F1B08 reads are modelled. (E-0025-L01)
+struct Type_001F1A78 {
+    // +0x00: the language the screen will apply. Seeded from DAT_0031C1C8, or 0 when that is -1.
+    std::int32_t field_0x00 = 0;
+    // +0x08: the constructor's third argument. 0 for "Language Options Pre FE", 1 for
+    // "Language Options". Only 0 reaches the 00183830 full profile reset.
+    std::int32_t field_0x08 = 0;
+};
+// ELF 0x001F1A78 / 0x001F1D70, message 0x0B of 001F1DD8. `list` and `screen` are what the
+// original resolves from the current class name inside 0016D2A8.
+void Construct_001F1A78(Type_001F1A78& instance, FeScreen& screen, MenuList_00169F78* list,
+                        std::int32_t dat_0031C1C8, std::int32_t field_0x08);
+// ELF 0x001F1B08 message 0x01, reached through the class router 0x001F1DD8. `dat_0031C1C8` is
+// the current-language global the locale loader 0021E0D0 owns; `dat_00331A60` is the global the
+// MENUITEM_7 arm writes, whose consumer is unresolved (see TASK-0025). The 0x11 (Back) slice is
+// the separate overload below.
+void Sub_001F1B08(int message, std::uint32_t item_hash, Type_001F1A78& instance,
+                  std::int32_t& dat_0031C1C8, std::int32_t& dat_00331A60,
                   const ::port::frontend::ScreenActionServices& services);
 // ELF001EFB80 messages4/8/9, E-0017-S04. Shared viewport utility is fmenus;
 // screen-specific selector target and nonwrapping end guards are the Audio handler.

@@ -50,6 +50,13 @@ the global settings block then reads live bSound group gains into its snapshot.
 Equal snapshots must be established by runtime state; an absent comparison
 must never be silently treated as unchanged.
 
+TASK-0025 reversed the rest of this screen -- the class router's construction/destruction
+messages, both constructors, and the item-activation arm. See
+**docs/FRONTEND_MENU_LANGUAGE.md**. Two corrections it makes to the reading below: `001F1DD8` is
+the class router rather than a wrapper around the Back slice, and the handler's own
+`0021E0D0` call writes the language global itself, so the `-1` test that follows is a re-read
+and not a restatement of the value passed in.
+
 Language wrapper001F1DD8 compares current class-name strings. Normal
 `Language Options` uses001F1D70 forwarding flag1 to001F1A78, whose third argument
 is stored at instance+8. `Language Options Pre FE` uses001F1A78 directly with

@@ -107,6 +107,54 @@ void Sub_001EECA8(int message, std::uint32_t item_hash,
         hp2::not_implemented("0x001EECA8", "unmatched item uses unresolved default target at 0x00331660");
     }
 }
+
+void Construct_001F1A78(Type_001F1A78& instance, FeScreen& screen, MenuList_00169F78* list,
+                        std::int32_t dat_0031C1C8, std::int32_t field_0x08) {
+    // FUN_001F1A78: instance+4 is the screen from the message-0x0B payload, +8 the flag, and
+    // +0 the current language clamped to 0 when it is still the -1 "unset" value. The vtable
+    // written at +0xC (002BA520, or 002BA508 when 001F1D70 overwrites it) has no port analogue.
+    instance.field_0x08 = field_0x08;
+    instance.field_0x00 = dat_0031C1C8;
+    if (dat_0031C1C8 == -1) instance.field_0x00 = 0;
+    // FUN_0016FDB0 returns 0 unconditionally in this build, so `if (FUN_0016fdb0() == 0)` is
+    // always taken and MENUITEM_7 is always disabled and hidden. What the original condition
+    // was meant to express is not recovered; only the constant return is. (E-0025-L02)
+    Sub_0016D2A8(list, screen, kWidgetMenuItem7_52E039F9, 2);
+}
+
+void Sub_001F1B08(int message, std::uint32_t item_hash, Type_001F1A78& instance,
+                  std::int32_t& dat_0031C1C8, std::int32_t& dat_00331A60,
+                  const ::port::frontend::ScreenActionServices& services) {
+    if (message != 1) return; // the 0x11/0x12 arms are elsewhere; every other message returns
+    if (!services.invoke) hp2::not_implemented("0x001F1B08", "activation side-effect service missing");
+    // FUN_001F1B08 case 1: the jump table on (hash - MENUITEM_1) stores the index first, and
+    // only then do the unsigned range guards decide what to do with it. An out-of-range hash
+    // leaves +0x00 alone and returns, so the store and the guards are kept in this order.
+    if (item_hash >= kWidgetMenuItem1_52E039F3 && item_hash <= kWidgetMenuItem6_52E039F8)
+        instance.field_0x00 = static_cast<std::int32_t>(item_hash - kWidgetMenuItem1_52E039F3);
+    if (item_hash < kWidgetMenuItem1_52E039F3) return; // sltu against MENUITEM_1
+    if (item_hash > kWidgetMenuItem6_52E039F8) {
+        // The always-hidden extra item. DAT_00331A60's consumer is unresolved, so the write is
+        // reproduced where the original makes it rather than being reinterpreted; 001740C0 is
+        // the only other writer. The item is unreachable from input because the constructor
+        // disables it, so this arm is recovered but not exercised. (E-0025-L06)
+        if (item_hash == kWidgetMenuItem7_52E039F9) {
+            dat_00331A60 = 1;
+            services.invoke(0x00170320, 1);
+        }
+        return;
+    }
+    // thunk_FUN_0021E0D0(&DAT_0031C1C8, instance+0x00): the loader takes the address of the
+    // global and writes it itself, so the handler must not write it here. That matters: the
+    // check below is a re-read of what the loader left behind, and a handler-side copy of
+    // instance+0x00 would make the -1 arm unreachable.
+    services.invoke(0x0021E0D0, static_cast<std::uint32_t>(instance.field_0x00));
+    // The original tests DAT_0031C1C8 after the loader ran and returns without popping when it
+    // is still -1.
+    if (dat_0031C1C8 == -1) return;
+    if (instance.field_0x08 == 0) services.invoke(0x00183830, 0x002FC050);
+    services.invoke(0x00170320, 1);
+}
 }
 
 namespace port::frontend {

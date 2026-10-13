@@ -1,5 +1,64 @@
 # Project state — 2026-10-13 (Australia/Sydney)
 
+## TASK-0025 — The Language Options screen, reversed end to end (active)
+
+User hit `hp2::NotImplemented: screen item activation handler not translated (ELF 0x1f1dd8 ...)`
+and asked for the language menu and its functions. That address is reached whenever any item on
+the Language Options screen is activated, because the port had the screen's Back arm (TASK-0017)
+but not its activation arm, and `dispatch_activation` had no route for it at all.
+
+**Ghidra MCP was reachable again** through `tools/ghidra.py` at `http://127.0.0.1:8080/mcp`
+(14 tools). Read-only throughout; no Ghidra state was modified (AGENT.md R5).
+
+Full write-up: **docs/FRONTEND_MENU_LANGUAGE.md**. What it establishes:
+
+- `001F1DD8` is the **class router**, not a handler. Message `0x0B` picks a constructor by
+  `strcmp` against the class-name literals (`"Language Options Pre FE"` -> `operator new(0x10)` +
+  `001F1A78(mem, screen, 0)`; `"Language Options"` -> `operator new(0x58)` + `001F1D70(mem,
+  screen, 1)`), `0x0C` destroys, everything else forwards to `001F1B08`.
+- The six language items are `MENUITEM_1..MENUITEM_6` (`0x52E039F3..0x52E039F8`) and map to
+  language index 0..5. The hashes are **positional item names**, which is why the Options and
+  Mode Select screens use the same six values for completely different targets.
+- The locale order is read out of the ELF rather than assumed: the pointer table at
+  `0x0031C168` is ENGLISH, FRENCH, GERMAN, ITALIAN, SPANISH, SWEDISH, then two development
+  locales (`FE_LONGEST.BIN`, `FE_ID.BIN`) that no menu item selects. The port's
+  `apply_language` already used that order; now it has a citation.
+- **There is a seventh item, and the game always hides it.** `001F1A78` ends with
+  `if (FUN_0016fdb0() == 0) FUN_0016d2a8(class, MENUITEM_7, screen, 2)`, and `0016FDB0` is
+  `return 0;` -- so the branch is unconditional, the item's enabled bit is cleared and its
+  widget hidden on every entry. The player's own `FRONTB.BUN` does author seven `MENUITEM_n`
+  widgets, so this is observable behaviour, not a defensive check. Its activation arm
+  (`DAT_00331A60 = 1`, then pop) is therefore recovered but unreachable from input.
+- `instance+0x08` is the single bit of state that separates the two classes: `0` (the boot-time
+  `Pre FE` prompt) reaches the `00183830` full profile and game reset, `1` does not. That holds
+  on the activation arm exactly as TASK-0017 found it on Back.
+
+One bug the tests caught, worth recording because the same shape can recur: `0021E0D0` takes the
+**address** of the language global and writes it itself, so the handler's `== -1` check
+afterwards is a re-read of what the loader left behind. The first port version copied
+`instance+0x00` into the global at that point, which made the `-1` arm unreachable. The Back
+overload has the same pattern but writes a context copy, so it cannot mask the arm -- noted as
+an open item rather than changed under this task.
+
+Validation on 2026-10-13, CMake 3.29.2 / Ninja 1.12.0 / GCC 13.2.0, host only:
+`cmake --build --preset native-debug --parallel 4` then
+`ctest --preset native-debug --output-on-failure` -> **24/24 passed**. The Godot extension
+(`cmake --build --preset godot-debug`) relinks `godot/bin/ps2_port.dll` cleanly.
+`frontend_runtime` drives the real screen off the player's own assets: it enters Language
+Options, asserts seven authored items with `MENUITEM_7` disabled and hidden, activates a
+language, and checks the locale applied and the screen popped. No original hardware or PCSX2
+comparison was performed, so nothing on this path is `Verified` (AGENT.md R1).
+
+**Blockers and explicit NotImplemented boundaries that remain:** `00183830` (so `Language
+Options Pre FE` activation still cannot complete -- depends on TASK-0021's profile work), the
+`001EE918` sub-object `001F1D70` builds at instance `+0x10`, the `0x0C` destructor arm, the
+`0x12` arm, and no located reader of `DAT_00331A60` (search bound recorded in the task file).
+
+**Exact next action:** TASK-0025 step 1 -- translate `FUN_00183830(0x002FC050)`, the full
+profile and game reset, against the TASK-0021 `settings.db` profile layout, so the boot-time
+`Language Options Pre FE` path can complete. Start from
+`tasks/active/TASK-0025-language-options-screen.md` and `docs/FRONTEND_MENU_LANGUAGE.md`.
+
 ## TASK-0021 — The memory-card save system and the event tree it unblocked (active)
 
 User asked to finish reversing `eventtree`, with the correct front-end implementation including
@@ -209,7 +268,14 @@ prevent. AGENT.md R3 now spells this out along with the new API.
 
 Validation: 22/22 CTest, all Godot checks unchanged, both presets build with no warnings.
 
-## Ghidra MCP — still not connected, and why
+## Ghidra MCP — still not connected, and why (RETRACTED 2026-10-13)
+
+**This conclusion was wrong and cost several sessions.** The server was running the whole
+time at `http://127.0.0.1:8080/mcp`, reachable through this repository's own read-only client
+`tools/ghidra.py` (`from ghidra import Client`). It is not registered as a session tool, which
+is why `session_connectors_status` and a tool search both come up empty -- that absence is not
+evidence that it is unavailable. Probe the endpoint before concluding anything. The rest of
+this section is kept as the retired claim, per AGENT.md R6.
 
 `session_connectors_status` lists only Claude Docs, visualize and scheduled-tasks. No Ghidra or
 REA MCP server is registered for this session, and `mcpServers` is empty at top level and for

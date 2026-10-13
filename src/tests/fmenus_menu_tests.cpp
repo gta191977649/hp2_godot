@@ -122,6 +122,42 @@ void state_bits_select_the_recovered_colours() {
             "disabled item takes the 0x18,0x18,0x18 colour");
 }
 
+// FUN_0016A5B0 finds an item by its name hash, and FUN_0016D2A8 mode 2 -- the one the Language
+// Options constructor always uses -- clears the enabled bit and hides the widget. An item the
+// screen never declared is a silent return, not a failure. (TASK-0025, E-0025-L04/L05)
+void item_lookup_and_disable_helper() {
+    FeScreen screen = make_menu_screen(3);
+    for (FeWidget& widget : screen.widgets) widget.visible = 1;
+    MenuGroup_0016AA00 group = make_group(screen);
+    group.EnsureMenu_0016A858();
+    MenuList_00169F78& list = *group.child_0x08;
+
+    const auto third = StringHash_002534A8("MENUITEM_3");
+    MenuThing_00169740* item = list.FindByHash_0016A5B0(third);
+    require(item != nullptr && item->name_hash_0x0C == third, "FUN_0016A5B0 must match on +0x0C");
+    require(list.FindByHash_0016A5B0(StringHash_002534A8("MENUITEM_7")) == nullptr,
+            "an undeclared item must come back as 0");
+
+    Sub_0016D2A8(&list, screen, third, 2);
+    require(!item->enabled(), "mode 2 must clear the enabled bit");
+    require(FindWidget_00143D50(screen, third, 0)->visible == 0, "mode 2 must hide the widget");
+
+    // The item the Language screen hides is usually absent entirely; nothing may change.
+    const auto seventh = StringHash_002534A8("MENUITEM_7");
+    Sub_0016D2A8(&list, screen, seventh, 2);
+    Sub_0016D2A8(nullptr, screen, third, 2);
+    require(FindWidget_00143D50(screen, StringHash_002534A8("MENUITEM_1"), 0)->visible == 1,
+            "a miss must leave the other widgets alone");
+
+    // Mode 1 is the inverse pair, and mode 0 clears without touching visibility.
+    Sub_0016D2A8(&list, screen, third, 1);
+    require(item->enabled() && FindWidget_00143D50(screen, third, 0)->visible == 1,
+            "mode 1 must re-enable and show");
+    Sub_0016D2A8(&list, screen, third, 0);
+    require(!item->enabled() && FindWidget_00143D50(screen, third, 0)->visible == 1,
+            "mode 0 must clear the enabled bit and leave +0x29 alone");
+}
+
 // FUN_00140CA0 keeps the alpha byte and only replaces the low 24 bits.
 void colour_write_preserves_alpha_and_stamps_dirty() {
     FeWidget widget;
@@ -358,6 +394,7 @@ int main() {
         menu_item_index_reverse_lookup();
         menu_list_only_takes_declared_items();
         state_bits_select_the_recovered_colours();
+        item_lookup_and_disable_helper();
         colour_write_preserves_alpha_and_stamps_dirty();
         navigation_wraps_in_both_directions();
         navigation_skips_disabled_items();

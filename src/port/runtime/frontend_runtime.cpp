@@ -300,6 +300,15 @@ MenuState FrontEndRuntime::menu_open(int screen_index) {
             menu_selector_->Construct_0024A690(*menu_group_->screen_0x14, 0xD1CDA594, 0x9345E4A7);
         }
         menu_group_->EnsureMenu_0016A858();
+        // 001F1DD8 message 0x0B, after the menu list exists: 0016D2A8 looks the item up in it.
+        // Both class names share this document and this constructor; only the +0x08 flag
+        // differs, and that is what decides whether Back/activation runs the 00183830 reset.
+        if (active_class_name_ == "Language Options" ||
+            active_class_name_ == "Language Options Pre FE") {
+            hp2::frontend::Construct_001F1A78(
+                language_screen_, *menu_group_->screen_0x14, menu_group_->child_0x08,
+                port_language_, active_class_name_ == "Language Options" ? 1 : 0);
+        }
     });
     if (!result.not_implemented.empty()) return result;
 
@@ -437,8 +446,24 @@ void FrontEndRuntime::dispatch_activation(hp2::frontend::MenuEvent_0016A458& eve
             exit_animation_->Construct_002490D8(screens_[static_cast<std::size_t>(menu_screen_index_)]);
             exit_class_name_ = name;
         },
-        [] { hp2::not_implemented("0x001EE6C0", "display preparation not translated"); }};
-    if (menu_screen_index_ == 0) {
+        [] { hp2::not_implemented("0x001EE6C0", "display preparation not translated"); },
+        [this](std::uint32_t address, std::uint32_t argument) {
+            // The same three seams the Back path uses, in the same order the handler calls them.
+            if (address == 0x0021E0D0) apply_language(static_cast<int>(argument));
+            else if (address == 0x00170320 && argument == 1) {
+                request_history_back();
+                apply_pending_screen(); // 001F1B08 tail-calls the pop itself
+            } else {
+                hp2::not_implemented(hex(address).c_str(),
+                                     "activation side-effect dependency not translated");
+            }
+        }};
+    if (active_class_name_ == "Language Options" ||
+        active_class_name_ == "Language Options Pre FE") {
+        // 001F1DD8 forwards every message but 0x0B/0x0C to 001F1B08.
+        hp2::frontend::Sub_001F1B08(1, name_hash, language_screen_, port_language_,
+                                    dat_00331A60_, services);
+    } else if (menu_screen_index_ == 0) {
         hp2::frontend::Sub_00216638(1, name_hash, dat_002FC070_, services);
     } else if (menu_screen_index_ == 24) {
         hp2::frontend::Sub_001EECA8(1, name_hash, services);
