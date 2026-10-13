@@ -423,6 +423,20 @@ void check_event_tree(FrontEndRuntime& runtime) {
     const auto nodes = runtime.event_tree().nodes();
     require(nodes.size() == 32, "both shipped trees hold 32 events, got " + std::to_string(nodes.size()));
     const auto start = runtime.event_tree().cursor_info();
+    require(runtime.screen_info(39).screen_name == "NEW_EVENT_TREE", "event tree frontend name recovered");
+    auto text_of = [&](int screen, const char* name) {
+        for (const auto& widget : runtime.screen(screen)->widgets) if (widget.name == name) return widget.text;
+        throw std::runtime_error(std::string("missing original widget ") + name);
+    };
+    require(text_of(39, "EVENT_TREE") == "Championship", "runtime title replaces This Will Change");
+    require(text_of(39, "OVERLAY_STATUSTITLE") == "Unlocked", "root status uses real language entry");
+    require(text_of(39, "OVERLAY_REWARDTITLE") == "National Forest",
+            "Championship event 1 reward resolves its original track row");
+    require(text_of(39, "SMALL_EVENTNUMBER") == "Event 1", "event number uses localized format");
+    require(text_of(17, "TRACK_NAME").find("123456") == std::string::npos,
+            "detail track title resolves original track catalog");
+    require(text_of(17, "TRACK_LINE_1").find('$') == std::string::npos,
+            "detail template expands original operands");
     require(start.number == 1, "an empty profile starts on event 1 (FUN_001F5D00's fallback)");
     require(runtime.event_tree().state() == hp2::frontend::kViewStateBrowsing_001FAF60,
             "an empty profile opens the tree in state 0");
@@ -467,21 +481,62 @@ void check_event_tree(FrontEndRuntime& runtime) {
     }
 
     // Confirm enters state 2 and zooms in; Back leaves it again. Both answer TreeZoomInOut.
-    require(runtime.event_tree_joy_event(JOY_EVENT_MENU_SELECT), "confirm is consumed in state 0");
+    require(runtime.menu_joy_event(0, JOY_EVENT_MENU_SELECT, true).not_implemented.empty(),
+            "integrated event dispatch consumes confirm without DummyMenuItem activation");
+    require(runtime.event_tree().state() == 1, "confirm begins the recovered transition state 1");
+    runtime.menu_tick(0.25);
+    require(runtime.event_tree().state() == 1, "half-duration is still transitioning");
+    require(std::fabs(runtime.event_tree().zoom() - 1.7f) < 0.00001f &&
+            std::fabs(runtime.event_tree().alpha() - 0.5f) < 0.00001f,
+            "half-duration uses shared Hermite zoom and alpha");
+    runtime.menu_tick(0.25);
     require(runtime.event_tree().state() == hp2::frontend::kViewStateEventSelected_001FAF60,
             "confirm moves the view into state 2");
-    require(runtime.event_tree().zoom() == hp2::frontend::kZoomLevels_gp_0x4178[1],
-            "state 2 sits at zoom level 1");
+    require(runtime.event_tree().zoom() == 3.0f, "detail uses recovered zoom 3.0");
     require(hp2::frontend::last_menu_sound_request().sound_id ==
                 hp2::frontend::kSoundTreeZoomInOut_001FAF60,
             "confirm answers TreeZoomInOut (0x15)");
-    require(!runtime.event_tree_joy_event(JOY_EVENT_MENU_SELECT),
-            "state 2 leaves confirm to the untranslated event sub-menu");
+    const auto locked_select = runtime.menu_joy_event(0, JOY_EVENT_MENU_SELECT, true);
+    require(locked_select.not_implemented.empty() && runtime.event_tree().state() == 2,
+            "locked detail selection stays on the detail without invented race flow");
+    require(hp2::frontend::last_menu_sound_request().sound_id == 0x17,
+            "FUN_001F6B70 locked selection answers TreeWrong");
     require(runtime.event_tree_joy_event(JOY_EVENT_MENU_BACK), "state 2 consumes Back");
+    require(runtime.event_tree().state() == 3, "Back starts state 3 before returning");
+    runtime.menu_tick(0.5);
     require(runtime.event_tree().state() == hp2::frontend::kViewStateBrowsing_001FAF60,
             "Back returns to state 0");
     require(!runtime.event_tree_joy_event(JOY_EVENT_MENU_BACK),
             "state 0 leaves Back to the navigation history");
+    // Use the integrated route on an unlocked event: the known input handler must
+    // report its actual downstream gaps while preview return remains functional.
+    runtime.menu_open(39);
+    for (int step = 0; runtime.event_tree().cursor_info().number != 1 && step < 10; ++step)
+        runtime.event_tree_joy_event(JOY_EVENT_SCROLL_UP);
+    require(runtime.event_tree().cursor_info().number == 1, "return to unlocked root through recovered navigation");
+    runtime.menu_joy_event(0, JOY_EVENT_MENU_SELECT, true);
+    runtime.menu_tick(0.5);
+    const auto race_gap = runtime.menu_joy_event(0, JOY_EVENT_MENU_SELECT, true);
+    require(race_gap.not_implemented.find("0x001F6A28") != std::string::npos,
+            "unlocked detail selection reports missing car/race selection by original address");
+    require(hp2::frontend::last_menu_sound_request().sound_id == 0x16,
+            "unlocked detail selection answers TreeSelect");
+    const auto preview_gap = runtime.menu_joy_event(0, JOY_EVENT_MENU_SQUARE, true);
+    require(preview_gap.not_implemented.find("0x001F6440") != std::string::npos &&
+            runtime.event_tree().state() == 4, "model preview gap is explicit after state 4 entry");
+    runtime.menu_tick(0.5);
+    require(runtime.event_tree().state() == 5, "preview transition reaches state 5");
+    runtime.menu_joy_event(0, JOY_EVENT_MENU_BACK, true);
+    require(runtime.event_tree().state() == 6 && hp2::frontend::last_menu_sound_request().sound_id == 0x18,
+            "preview Back starts state 6 and preserves original return sound");
+    runtime.menu_tick(0.5);
+    require(runtime.event_tree().state() == 2, "preview Back returns to detail");
+    runtime.menu_joy_event(0, JOY_EVENT_MENU_BACK, true);
+    runtime.menu_tick(0.5);
+    const auto parent = runtime.menu_joy_event(0, JOY_EVENT_MENU_BACK, true);
+    require(parent.screen == 2 && parent.not_implemented.empty(),
+            "browsing Back returns through the actual mode-select history");
+    runtime.menu_open(39);
 
     // The recovered screen title id follows whichever mode the route above left in the profile.
     require(runtime.event_tree().title_string_id() ==

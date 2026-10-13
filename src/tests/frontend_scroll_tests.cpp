@@ -12,6 +12,8 @@ int main() {
         bytes[124]='H';bytes[125]='i';
         hp2::port::assets::FeLanguage language(bytes);std::string text;
         check(language.lookup(0x2720,text)&&text=="Hi");check(!language.lookup(0x2721,text));
+        check(language.lookup_hash(0x111,text)&&text=="Hi");
+        check(!language.lookup_hash(0x112,text));
         word(120,8);bool bad=false;try{hp2::port::assets::FeLanguage invalid(bytes);}catch(const std::runtime_error&){bad=true;}check(bad);
         using namespace hp2::frontend;
         FeScreen screen;FeWidget scroll;scroll.type=1;scroll.name_hash=0x75980cf0;

@@ -5,8 +5,11 @@
 // the `.cpp` path was recovered.
 #pragma once
 #include "game_core/memorycard/include/memorycard.h"
+#include "game_core/indep/src/fmenus.hpp"
 #include "game_core/port/assets/elab_chunks.hpp"
 #include <cstdint>
+#include <array>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -115,6 +118,12 @@ struct EventRecord_001FFF60 {
     std::uint8_t link_count_0x3D = 0;      // number of incoming links (FUN_002008B8's bound)
     std::vector<std::int16_t> link_index_0x7C; // s16 rows into the 0x34A03 table, link_count long
     std::uint32_t string_id_0xB0 = 0;      // localised description, fed to the scrolling text
+    // E-0022-D01: 001F6770 / 002008F8 / 00200938 and text-token consumers.
+    std::uint8_t Field_0x3C = 0, Field_0x3E = 0, Field_0x3F = 0;
+    std::vector<std::int16_t> Field_0x6C, Field_0x8C;
+    std::uint32_t string_id_0xB4 = 0;
+    std::uint8_t Field_0x3B = 0; // E-0022-D08, 00200878 car list bound
+    std::vector<std::int16_t> Field_0x44;
 };
 
 // One 8-byte row of chunk 0x34A03. TASK-0021 corrected what this table is: it is a
@@ -152,6 +161,9 @@ public:
     int type_0x08 = -1;          // 0 = "Championship", 1 = "Hot Pursuit" (FUN_001FDEF8)
     std::vector<EventRecord_001FFF60> records;
     std::vector<EventLink_002008B8> links;
+    std::vector<std::uint32_t> Field_0x1C; // chunk 34A02, 002008F8
+    std::vector<std::uint32_t> Field_0x14; // chunk 34A01, 00200878
+    std::vector<std::array<std::uint8_t, 8>> Field_0x2C; // chunk 34A04, 00200938
     std::vector<EventLeaf_001F6FA0> leaves;
 
     const char* layout_map() const;
@@ -167,9 +179,8 @@ public:
     // entry, in which case the function performs the prerequisite test first and then picks the
     // row itself from `record+0x42`, exactly as the original does. (E-0021-10, E-0021-11)
     //
-    // Raises hp2::NotImplemented for GoalTypes 3 and 4, whose slice decoders
-    // (FUN_002003F8 / FUN_002007D0 and their helpers FUN_002001A8 / FUN_002006A0 /
-    // FUN_00200768) are not recovered, and for events 0x1F and 0x20 whose gate globals
+    // TASK-0022 recovered GoalTypes 3 and 4 (E-0022-D02). Raises hp2::NotImplemented
+    // for events 0x1F and 0x20 whose gate globals
     // (DAT_0031D7F4+0x180 / +0x1B8) are not recovered -- but only when a non-empty profile
     // could actually reach those branches. With an all-zero profile the recovered arms answer
     // first, so nothing throws.
@@ -197,7 +208,78 @@ public:
     // FUN_001FA9C8's dispatch: -1/+1 go to WalkSameDepth_001FA880, +2/-2 to
     // WalkAdjacent_001FA978, anything else answers -1.
     int MoveCursor_001FA9C8(int record_index, int direction) const;
+    // ELF 002008F8 / 00200938, E-0022-D01. Null for original index-bound failure.
+    const std::uint32_t* Sub_002008F8(int record_index, int i) const;
+    // ELF 00200878, E-0022-D08: car list row, bound +3B and signed indices +44.
+    const std::uint32_t* Sub_00200878(int record_index, int i) const;
+    const std::array<std::uint8_t, 8>* Sub_00200938(int record_index, int i) const;
+    // ELF 002012D8, E-0022-D02. Number of completed subevents from profile slice.
+    int Sub_002012D8(const hp2::memorycard::Profile_002FC050& profile, int record_index) const;
 };
+
+// E-0022-D08, ELF 001F8C10/8E18/8D20/8FB0. Original type name unknown.
+// Widget pointer is a port-side representation of original document/hash lookups.
+class Type_001F8C10 {
+    FeWidget* Field_0x00 = nullptr;
+    std::uint32_t Field_0x04 = 0;
+    std::vector<std::uint32_t> Field_0x08;
+    int Field_0x2C = 0, Field_0x30 = 0, Field_0x38 = 0, Field_0x3C = 0;
+    float Field_0x34 = 0;
+    void Sub_001F8D20(bool randomize, std::uint32_t& rng);
+public:
+    void Bind_001F8C10(FeScreen& screen, std::uint32_t now_ticks);
+    void Sub_001F8E18(const std::vector<std::uint32_t>& logos, std::uint32_t now_ticks);
+    void Sub_001F8FB0(std::uint32_t now_ticks, std::uint32_t& rng);
+    // E-0022-D08, ELF 001F8CF0 / 001F8D08: show/hide the bound car-logo widget.
+    void Sub_001F8CF0();
+    void Sub_001F8D08();
+};
+// E-0022-D09, ELF 001F90F0/91F0/9318. Original type name unknown.
+class Type_001F90F0 {
+    FeWidget* Field_0x00 = nullptr;
+    std::vector<std::uint32_t> Field_0x04;
+    int Field_0x38 = 0;
+    float Field_0x40 = 0, Field_0x48 = 0;
+    std::uint32_t Field_0x44 = 0;
+    bool Field_0x4C = false;
+public:
+    void Bind_001F90F0(FeScreen& screen, std::uint32_t now_ticks);
+    void Sub_001F91F0(const std::vector<std::uint32_t>& logos, std::uint32_t now_ticks);
+    void Sub_001F9318(std::uint32_t now_ticks);
+    // E-0022-D09, ELF 001F91D0 / 001F91E0: show/hide the bound track-logo widget.
+    void Sub_001F91D0();
+    void Sub_001F91E0();
+};
+// Both animators reuse fmenus.hpp's Sub_0025A3D0 and the caller's shared RNG seed.
+
+// ELF 00201350, E-0022-D02: goal 3 -> +3F, goal 4 -> +3C, otherwise 1.
+int Sub_00201350(const EventRecord_001FFF60& record);
+// ELF 001A3B98/001A3B28/001A3838/001A37B8, E-0022-D07. Timer formatter,
+// colocated here as a port-side dependency aggregation; source path not recovered.
+// locale is DAT_0031C1C8, flags are original 001A3838 bits (0 in event callers).
+std::string Sub_001A3B98(std::int32_t value, int locale, unsigned flags = 0);
+// ELF 001F60E8, E-0022-D03. The caller resolves ID F230 + status. Its operands
+// are progress/total for status 2, a result string for statuses 3/4, none for 0/1.
+std::uint32_t Sub_001F60E8(int status);
+std::string Sub_001F60E8(int status, const std::string& format, int progress, int total,
+                       const std::string& result);
+// ELF 001F6220, E-0022-D04. Callback seams are port-side dependencies on the
+// original car/track databases; absent callbacks fail loudly on the reached arm.
+std::string Sub_001F6220(const std::array<std::uint8_t, 8>* reward,
+                       const std::string& localized_101D8,
+                       const std::function<std::string(int)>& car_name,
+                       const std::function<std::string(int, int)>& track_name);
+// ELF 001F5F88 and 001F5DD0, E-0022-D05. 512 output bytes, original token order
+// and original placeholder literals. Timer callback is the 001A3B98 dependency.
+std::string Sub_001F5F88(const EventTree_001FFC40& tree, int record_index,
+                       const std::string& source,
+                       const std::function<std::string(std::int32_t)>& timer);
+// ELF 00200E78, E-0022-D06. Result text uses EE48 + placing for byte/nibble/points
+// goals; timed goals use the timer dependency. Requires status >= 3 as original.
+std::string Sub_00200E78(const EventTree_001FFC40& tree,
+                       const hp2::memorycard::Profile_002FC050& profile, int record_index,
+                       int status, const std::function<std::string(std::uint32_t)>& localize,
+                       const std::function<std::string(std::int32_t)>& timer);
 
 // ------------------------------------------------------------------- the camera (TASK-0021)
 // Recovered, replacing the port-side calibration TASK-0018 had to use. FUN_001F96B8 allocates a
@@ -253,7 +335,7 @@ inline constexpr std::uint32_t kOverlayClassHash_A2A16EA1 = 0xa2a16ea1u;
 
 // FUN_001F96B8 sets the EVENT_TREE widget's localised string id from DAT_0030C77C
 // (profile+0x1072C) through FUN_001449A8: 8 selects 0x272A and 9 selects 0x272D, anything else
-// 0. That is the screen title, "World Racing" against "Ultimate Racer". (E-0021-16)
+// 0. FE_ENGLISH.BIN resolves these as "Championship" and "Ultimate Racer". (E-0022-R03)
 inline constexpr std::uint32_t kTitleStringChampionship_001F96B8 = 0x272a;
 inline constexpr std::uint32_t kTitleStringHotPursuit_001F96B8 = 0x272d;
 std::uint32_t TitleStringId_001F96B8(int selected_mode);

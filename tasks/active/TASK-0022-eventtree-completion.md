@@ -45,6 +45,20 @@ Original comparison scope: none here; that is TASK-0023.
 
 ## Current findings
 
+### Continuation on 2026-10-13
+
+Scope: resume Claude's uncommitted work, recover the Status/Reward producers, document
+names and detail input, and replace unsupported event-tree geometry/transition rules.
+Acceptance checks: native and Godot builds/CTest, original-asset runtime assertions,
+render smoke, and private visual captures. Original equivalence is not established by
+these checks. Existing user modifications are preserved; no commit is requested.
+
+Read-only Ghidra MCP confirms that 0x001F6B70 handles input, while 0x001F6770 draws
+document 17 and 0x001F8890 populates the browsing overlay. 0x001F60E8 selects localized
+Status IDs 0xF230..0xF234; 0x001F6220 resolves the first reward's car/track name.
+0x001FAE40 enters reward preview, rather than starting a race. Detailed evidence and
+remaining dependencies are being recorded under E-0022-*.
+
 Carried from TASK-0021, which identified the targets:
 
 - The event tree is a four-document cluster: screen 39 plus screens 17 (detail, 0xA744BA7B),

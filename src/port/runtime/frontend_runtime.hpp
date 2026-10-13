@@ -6,6 +6,7 @@
 #include "game_core/port/frontend/frontendscreens/modeselect.hpp"
 #include "game_core/indep/src/frontendscreens/options.hpp"
 #include "port/assets/catalog.hpp"
+#include "port/assets/event_name_catalog.hpp"
 #include "port/runtime/event_tree_view.hpp"
 #include "port/runtime/frame_builder.hpp"
 #include "platform/ps2_profile_store.hpp"
@@ -216,6 +217,14 @@ private:
 
     // E-0021-23: copy the profile-resident mode-select globals into the profile.
     void commit_mode_select_globals();
+    // E-0021-27/28: the runtime widget writes FUN_001F96B8 and FUN_001FA698 make on screen 39.
+    void apply_event_tree_widgets();
+    void bind_event_tree_text();
+    void update_event_tree_overlay(float delta);
+    std::string event_localize(std::uint32_t id) const;
+    std::string event_track_name(int index, int direction) const;
+    std::string event_car_name(int index) const;
+    std::string event_timer(std::int32_t ticks) const;
 
     // FRONTB.BUN screen 39, document hash 0x147F8A59, class "View Event Tree". The mode is
     // profile+0x1072C and is no longer a field here: FUN_001FB218 reads it from the profile.
@@ -223,6 +232,14 @@ private:
     EventTreeView event_tree_;
     std::string event_tree_error_;
     std::string event_tree_bundle_;
+    assets::EventNameCatalog event_names_;
+    int event_text_cursor_ = -1;
+    double event_overlay_seconds_ = 0;
+    float event_overlay_alpha_ = 0;
+    std::string event_pending_status_, event_pending_reward_, event_pending_number_;
+    bool event_overlay_pending_ = false;
+    hp2::frontend::Type_001F8C10 event_car_logos_;
+    hp2::frontend::Type_001F90F0 event_track_logos_;
 };
 
 } // namespace port::runtime

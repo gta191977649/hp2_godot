@@ -6,6 +6,30 @@
 #include "game_core/port/not_implemented.hpp"
 #include <cstdio>
 
+bool ::port::frontend::advance_zero_velocity_path(hp2::frontend::Type_00248568& path, float delta_seconds) {
+        if (path.field_0x48 == 0) return true;
+        if (path.field_0x48 == 2) {
+            path.field_0x28 = 0;
+            path.field_0x48 = 1;
+            // FUN_001DA780: both endpoint velocities were initialized to zero by 00248568.
+            const float difference = path.field_0x24 - path.field_0x1c;
+            path.field_0x38 = path.field_0x1c;
+            path.field_0x34 = 0;
+            path.field_0x2c = -(difference + difference);
+            path.field_0x30 = difference * 3.0f;
+        }
+        path.field_0x28 += delta_seconds / path.field_0x40;
+        if (1.0f <= path.field_0x28) {
+            path.field_0x1c = path.field_0x24;
+            path.field_0x48 = 0;
+        } else {
+            const float t = path.field_0x28;
+            path.field_0x1c = ((path.field_0x2c * t + path.field_0x30) * t +
+                             path.field_0x34) * t + path.field_0x38;
+        }
+    return path.field_0x48 == 0;
+}
+
 namespace hp2::frontend {
 void Type_002490D8::Sub_002486E8(Type_00248568& path) {
     FeWidget* mask = FindWidget_00143D50(*field_0x00, path.field_0x10, 0);
@@ -59,25 +83,7 @@ void Type_002490D8::Construct_002490D8(FeScreen& screen) {
 bool Type_002490D8::Update_00249128(float delta_seconds) {
     for (Type_00248568& path : field_0x04) {
         if (path.field_0x48 == 0) continue;
-        if (path.field_0x48 == 2) {
-            path.field_0x28 = 0;
-            path.field_0x48 = 1;
-            // FUN_001DA780: both endpoint velocities were initialized to zero by 00248568.
-            const float difference = path.field_0x24 - path.field_0x1c;
-            path.field_0x38 = path.field_0x1c;
-            path.field_0x34 = 0;
-            path.field_0x2c = -(difference + difference);
-            path.field_0x30 = difference * 3.0f;
-        }
-        path.field_0x28 += delta_seconds / path.field_0x40;
-        if (1.0f <= path.field_0x28) {
-            path.field_0x1c = path.field_0x24;
-            path.field_0x48 = 0;
-        } else {
-            const float t = path.field_0x28;
-            path.field_0x1c = ((path.field_0x2c * t + path.field_0x30) * t +
-                             path.field_0x34) * t + path.field_0x38;
-        }
+        ::port::frontend::advance_zero_velocity_path(path, delta_seconds);
         Sub_002486E8(path);
     }
     for (const Type_00248568& path : field_0x04) if (path.field_0x48 != 0) return false;
@@ -198,6 +204,14 @@ BackEvent query_back(std::uint32_t handler,BackContext& c,const BackServices& s)
     case 0x001F19E8:hp2::frontend::Sub_001F1568(c,event,s);break;
     case 0x001F21B0:break; // 001F2070 calls00248AE0, which ignoresmessage0x11
     case 0x002174A0:case 0x00217AF8:break; // active-state handler has no0x11 write
+    // 0x001FB218 "View Event Tree" / TASK-0021, E-0021-26. FUN_001FB218 forwards message 0x11
+    // to FUN_001FAF60, whose state-0 arm calls FUN_001F5D28(0x2FC1B4, tree->type_0x08,
+    // record+0x28) and then returns without writing a permission or a sound -- so the manager's
+    // own history pop decides what happens, exactly as the two mode selects do. The
+    // FUN_001F5D28 call is a profile write and is performed by the caller, which owns the
+    // profile; see FrontEndRuntime::menu_joy_event. State 2 never reaches here, because the
+    // view consumes Back itself through FUN_001FAD20.
+    case 0x001FB218:break;
     case 0x00247830:
         if(c.loadsave_state_0x54!=0)hp2::not_implemented("0x00247530","load/save operation Back polling dependencies missing");
         break; // common pulse dispatcher00248AE0 ignoresmessage0x11

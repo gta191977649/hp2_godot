@@ -39,6 +39,21 @@ public:
         if (lo == count_ || u32(table_ + lo*8) != id) return false;
         result = string_at(u32(table_ + lo*8 + 4)); return true;
     }
+    // Port-side storage seam for FUN_0021E508 -> FUN_0021E2E8, E-0022-R05.
+    // The first table is sorted by signed 32-bit string hashes and allows duplicates.
+    bool lookup_hash(std::uint32_t hash, std::string& result) const {
+        const auto count = static_cast<std::size_t>(u32(0x54));
+        std::size_t lo = 0, hi = count;
+        const auto wanted = static_cast<std::int32_t>(hash);
+        while (lo < hi) {
+            const auto mid = lo + (hi - lo) / 2;
+            const auto key = static_cast<std::int32_t>(u32(108 + mid * 8));
+            if (key < wanted) lo = mid + 1; else hi = mid;
+        }
+        if (lo == count || u32(108 + lo * 8) != hash) return false;
+        result = string_at(u32(108 + lo * 8 + 4));
+        return true;
+    }
 private:
     std::uint32_t u32(std::size_t p) const {
         if (p > bytes_.size() || bytes_.size()-p < 4) throw std::runtime_error("truncated FE word");

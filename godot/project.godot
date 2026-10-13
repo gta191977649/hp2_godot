@@ -5,7 +5,15 @@ config_version=5
 config/name="HP2 PS2 Native Port"
 run/main_scene="res://scenes/frontend_native.tscn"
 config/features=PackedStringArray("4.4", "Forward Plus")
-boot_splash/show_image=false
+; PORT-SIDE. User-requested: show the engine boot splash while the host loads, before the
+; game's own EA/NFS intro sequence begins. The image is Godot's built-in logo (no
+; boot_splash/image key), so nothing is added to the repository, and the background is the
+; same black the rest of the host uses. This is host presentation; it has no original-game
+; counterpart and must not be read as recovered behaviour.
+boot_splash/show_image=true
+boot_splash/fullsize=false
+boot_splash/use_filter=true
+boot_splash/bg_color=Color(0, 0, 0, 1)
 
 [rendering]
 ; TASK-0016 user-requested host backdrop for uncovered movie/title pixels.

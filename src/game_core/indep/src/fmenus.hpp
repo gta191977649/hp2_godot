@@ -239,6 +239,25 @@ const MenuSoundRequest& last_menu_sound_request();
 // offsets, which is what ties the recovered code to the recovered file format. (E-0014-05)
 FeWidget* FindWidget_00143D50(FeScreen& screen, std::uint32_t name_hash, int type);
 
+// TASK-0021 (E-0021-27): the three widget mutators the event tree drives at runtime. All three
+// are tiny and were read in full, so they are translated verbatim rather than approximated.
+//
+// FUN_001449A8(screen, name_hash, string_id) -> FUN_00143D50(screen, hash, 1) then
+// FUN_00140EA8(widget, id), which writes widget+0x60, sets the dirty byte at +0x2B to 5 and
+// **clears the authored placeholder at +0x64**. That last part is why a screen stops showing
+// its authored text once the game assigns a real string id -- the event tree's title is
+// "This Will Change" until this runs.
+void SetWidgetStringId_001449A8(FeScreen& screen, std::uint32_t name_hash,
+                                std::uint32_t string_id);
+
+// FUN_00144968(screen, name_hash, visible) -> FUN_00143D50(screen, hash, 0) then
+// FUN_00140728(widget, visible), which writes widget+0x29.
+void SetWidgetVisible_00144968(FeScreen& screen, std::uint32_t name_hash, bool visible);
+
+// FUN_001454E8(screen, class_hash, visible): the same +0x29 write, for **every** widget whose
+// class hash matches, walked with FUN_00143DD8.
+void SetClassVisible_001454E8(FeScreen& screen, std::uint32_t class_hash, bool visible);
+
 // FUN_00140CA0(widget, rgb): replaces the low 24 bits of widget +0x5C and leaves the top byte
 // (PS2 alpha) alone, then stamps +0x2b = 7 when the value actually changed. (E-0014-05)
 void SetWidgetColour_00140CA0(FeWidget& widget, const MenuColour_00169BD0& colour);
@@ -622,10 +641,16 @@ inline constexpr const char* kItemGroupNameFormat_002BEF88 = "MENUITEM_%d_GROUP"
 class Type_002491B0 {
 public:
     void Construct_002491B0(FeScreen& screen);
+    // ELF 0x002491B0; E-0022-R01. Screen-owned hashes are constructor operands,
+    // including EVENT_TITLE_BAR for the event tree (0x001F96B8).
+    void Construct_002491B0(FeScreen& screen, std::uint32_t text_hash,
+                           std::uint32_t alpha_hash, std::uint32_t bar_hash);
     void Bind_00249518(const std::string& text);
     void Update_00249348(float delta_seconds);
 private:
     FeScreen* field_0x00 = nullptr;
+    std::uint32_t field_0x04 = 0x75980cf0, port_alpha_hash = 0x75980cf0,
+                  port_bar_hash = 0x70a404ec;
     float field_0x08 = 0, field_0x198 = 0;
     int field_0x0c = 0, field_0x19c = 0;
     float field_0x194 = 0, field_0x28 = 0;

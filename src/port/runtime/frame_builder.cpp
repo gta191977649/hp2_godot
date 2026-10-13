@@ -110,7 +110,9 @@ FrameStats build_frame(hp2::frontend::FeScreen& screen, const WidgetSizes& sizes
         if (w.visible == 0) continue;
         if (!options.suppressed_widget.empty() && w.name == options.suppressed_widget) continue;
 
-        const auto clip = clip_of(screen, w, measure);
+        auto clip = clip_of(screen, w, measure);
+        const bool wrapped = options.wrapped_text_hash != 0 && w.name_hash == options.wrapped_text_hash;
+        if (wrapped) clip = options.wrapped_text_bounds;
         const auto colour = widget_colour(w);
 
         if (w.chunk_id == hp2::frontend::kTextWidgetId) {
@@ -123,7 +125,29 @@ FrameStats build_frame(hp2::frontend::FeScreen& screen, const WidgetSizes& sizes
             if ((w.text_align & 4) != 0)
                 pen_x -= WidgetSizes::text_advance(*font, w.text) * w.scale_x * 0.5f;
             int emitted = 0;
-            for (const unsigned char code : w.text) {
+            float pen_y = w.y;
+            for (std::size_t character = 0; character < w.text.size(); ++character) {
+                const unsigned char code = static_cast<unsigned char>(w.text[character]);
+                if (wrapped) {
+                    bool next_line = code == '@';
+                    if (code == ' ' || code == '\t') {
+                        std::size_t end = character + 1;
+                        while (end < w.text.size() && w.text[end] != ' ' && w.text[end] != '\t') ++end;
+                        const float word_width = WidgetSizes::text_advance(*font,
+                            w.text.substr(character + 1, end - character - 1)) * w.scale_x;
+                        float space_width = 0;
+                        for (const auto& glyph : font->glyphs) if (glyph.code == code)
+                            space_width = glyph.advance * w.scale_x;
+                        next_line = pen_x + space_width + word_width > clip.x + clip.width;
+                    }
+                    if (next_line) {
+                        pen_x = w.x;
+                        pen_y += static_cast<float>(font->line_height);
+                        while (character + 1 < w.text.size() &&
+                               (w.text[character + 1] == ' ' || w.text[character + 1] == '\t')) ++character;
+                        continue;
+                    }
+                }
                 const hp2::frontend::FeGlyph* glyph = nullptr;
                 for (const auto& candidate : font->glyphs) {
                     if (candidate.code == code) { glyph = &candidate; break; }
@@ -131,7 +155,7 @@ FrameStats build_frame(hp2::frontend::FeScreen& screen, const WidgetSizes& sizes
                 if (glyph == nullptr) continue;
                 render::Quad quad;
                 quad.texture = w.texture_hash;
-                quad.destination = {pen_x, w.y, glyph->w * w.scale_x, glyph->h * w.scale_y};
+                quad.destination = {pen_x, pen_y, glyph->w * w.scale_x, glyph->h * w.scale_y};
                 quad.source = {glyph->u, glyph->v, glyph->w, glyph->h};
                 quad.color = colour;
                 if (emit(out, quad, clip)) { ++stats.glyphs; ++emitted; }

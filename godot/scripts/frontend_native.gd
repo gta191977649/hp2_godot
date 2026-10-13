@@ -159,7 +159,11 @@ func _ready() -> void:
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--menu-events="):
 			for id_text in argument.trim_prefix("--menu-events=").split(",", false):
-				_send_joy_event(int(id_text))
+				# Port-side reproducible input trace: allow recovered animations to finish.
+				if id_text.begins_with("wait:"):
+					await get_tree().create_timer(float(id_text.trim_prefix("wait:"))).timeout
+				else:
+					_send_joy_event(int(id_text))
 
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--capture="):
@@ -243,10 +247,7 @@ func _send_joy_event(joy_event: int) -> void:
 		if joy_event in [JOY_EVENT_START, JOY_EVENT_MENU_SELECT]:
 			_apply_startup(intro_movie.select_startup())
 		return
-	# The View Event Tree screen drives its own cursor (FUN_001FAF60 state 0); the runtime says
-	# whether it consumed the event, so this script does not need to know which screen is open.
-	if layout.event_tree_joy_event(joy_event):
-		return
+	# One native dispatch also reports untranslated event-tree paths and queues their audio.
 	var state: Dictionary = layout.menu_joy_event(0, joy_event, true)
 	if not bool(state.get("ok", false)):
 		push_error(str(state.get("error", "menu event failed")))

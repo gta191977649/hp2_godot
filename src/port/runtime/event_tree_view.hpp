@@ -1,5 +1,6 @@
 #pragma once
 #include "game_core/indep/src/eventtree.hpp"
+#include "game_core/indep/src/frontendscreens/options.hpp"
 #include "port/assets/catalog.hpp"
 #include "port/runtime/frame_builder.hpp"
 #include <string>
@@ -20,6 +21,7 @@ struct EventTreeNode {
     int depth = 0, group = -1, status = 0;
     std::uint32_t string_id = 0;
     std::string panel_texture; // empty when FUN_001F75F0's switch does not cover the status
+    int visibility = 1; // FUN_001F77F0; -1 denotes an explicitly reported unknown.
     bool selected = false;
     float scale = 1.0f; // FUN_001FA9C8 writes 2.0f into the node it moves to, 1.0f into the other
     std::vector<int> links; // record indices this node points at
@@ -44,11 +46,17 @@ public:
                              const hp2::memorycard::Profile_002FC050& profile = {});
 
     bool loaded() const { return tree() != nullptr; }
+    const hp2::frontend::EventTree_001FFC40* selected_tree() const { return tree(); }
+    const hp2::memorycard::Profile_002FC050& profile() const { return profile_; }
+    const std::vector<std::string>& status_gaps() const { return status_gaps_; }
     std::vector<EventTreeNode> nodes() const;
     int cursor() const { return cursor_; }
 
     // FUN_001FAF60's state word, view+0x74. FUN_001F96B8 initialises it from profile+0x170.
     int state() const { return state_; }
+
+    // The selected tree's type_0x08: 0 Championship, 1 Hot Pursuit, -1 when nothing is loaded.
+    int tree_type() const;
 
     // FUN_001F96B8 sets the EVENT_TREE widget's localised string id from the selected mode.
     std::uint32_t title_string_id() const;
@@ -74,7 +82,16 @@ public:
     // the recovered two-float table. True when the level changed.
     bool step_zoom(int delta);
     int zoom_level() const { return zoom_level_; }
-    float zoom() const { return hp2::frontend::kZoomLevels_gp_0x4178[zoom_level_]; }
+    float zoom() const { return zoom_path_.field_0x1c; }
+    float alpha() const { return alpha_path_.field_0x1c; }
+    float advance_border_phase() const { const float phase = border_phase_; border_phase_ += 0.2f; return phase; }
+    render::Vec2 camera_offset() const { return {camera_x_.field_0x1c, camera_y_.field_0x1c}; }
+    // FUN_001FA698 advances the same zero-velocity cubic used by the menu exit animation.
+    void tick(float delta_seconds);
+    bool transitioning() const { return state_ == 1 || state_ == 3 || state_ == 4 || state_ == 6; }
+    // FUN_001FAE40 and state-5 return in FUN_001FAF60.
+    bool show_preview();
+    bool close_preview();
 
     // The node under the cursor, or a default-constructed node when there is none.
     EventTreeNode cursor_info() const;
@@ -85,6 +102,8 @@ private:
     const hp2::frontend::EventTree_001FFC40* tree() const;
     EventTreeNode node_at(std::size_t index) const;
     int status_of(std::size_t index) const;
+    void target_camera(float zoom);
+    static void target(hp2::frontend::Type_00248568& path, float value);
 
     std::vector<hp2::frontend::EventTree_001FFC40> trees_;
     hp2::memorycard::Profile_002FC050 profile_;
@@ -93,49 +112,16 @@ private:
     int mode_id_ = 0;
     int state_ = hp2::frontend::kViewStateBrowsing_001FAF60;
     int zoom_level_ = hp2::frontend::kZoomLevelMin_001FAB50;
+    hp2::frontend::Type_00248568 zoom_path_, alpha_path_, camera_x_, camera_y_;
+    mutable std::vector<std::string> status_gaps_;
+    mutable float border_phase_ = 0;
 };
 
-// ------------------------------------------------------------------ camera and presentation
-//
-// RECOVERED by TASK-0021, replacing TASK-0018's screenshot calibration. The camera is a
-// 0x70-byte `tStillCameraMover` positioned by `FUN_001FAB00(320.0f, 240.0f, view, leaf)` as
-// `centre - leaf_position * zoom`, so the selected node is pinned to the centre of the 640x480
-// authored space -- which is what the reference screenshot shows, and what this file already
-// did. The zoom is one of two discrete levels from the table at gp-0x4178,
-// `hp2::frontend::kZoomLevels_gp_0x4178` == {0.4f, 1.0f}; the port's measured 0.6f is gone.
-// What is still **not** recovered is the mover's easing between the two levels, so the port
-// snaps. `EventTreeView::step_zoom` is the recovered level clamp; the interpolation is not.
-//
-// The panel's size is now mostly recovered. The original never scales a texture here:
-// FUN_001F6FA0 looks screen 39's own EVENT_PANEL widget up by hash (0xA3B23510) and
-// FUN_00144A28 binds FUN_001F75F0's texture name onto it, so the drawn size is that widget's
-// **authored** scale times the node's 1.0/2.0 times the camera zoom. Screen 39 authors
-// EVENT_PANEL at scale (1.0, 0.8) over SPEED_EVENT_PANEL_LOCKED -- that 0.8 is where the
-// panel's vertical squash comes from, and the port now applies it. (E-0021-21)
-//
-// STILL NOT RECOVERED, and deliberately reduced to this one factor: the authored panel is
-// 256 px wide, so at the recovered zoom 0.4 a node would be ~102 px across a lattice whose
-// columns are 130 * 0.4 == 52 px apart, i.e. every node would overlap its neighbours. Something
-// between the authored widget space and the camera is still missing -- the `tStillCameraMover`
-// may carry a base scale of its own, or the tree may be mapped into the BOTTOM_MASK rectangle
-// FUN_001F96B8 stores at view+0x3F8..+0x404 rather than into the full 640x480. Until that is
-// read out of the binary, this single port-side factor reconciles the two, chosen so the result
-// matches the original-hardware reference screenshot. It multiplies nothing that is recovered:
-// the authored scale, the node scale and the zoom all apply on their own.
-inline constexpr float kPortPanelFit = 0.65f;
-
-// STILL NOT RECOVERED: the connector colour rule. The original colours each `tLineSegment` per
-// branch state and that mapping was not read out of FUN_001F96B8, so a won source is green and
-// anything else red, matching what the reference screenshot shows for a passed and a pending
-// branch.
-//
-// Appends the tree over whatever the frame already holds. TASK-0021 identified the two widgets
-// the original does toggle at runtime -- HELP_TEXT and HELP_BUTTON, revealed when the state-7
-// zoom transition ends -- but the authored placeholder text widgets on screen 39 are left
-// visible, as the earlier host scene did, because nothing was found that hides them.
-//
-// `missing_panels` reports nodes whose panel texture is in no readable bundle; those draw as an
-// explicit outline placeholder rather than with invented art.
+// TASK-0022, E-0022-G01/G02: FUN_001F7978 uses the authored widget scales and the
+// zoom matrix without a fitted size or selected-node multiplier. FUN_001FA458 uses
+// the view+0x78 zoom and view+0xA8 translation interpolators, not the car-preview
+// tStillCameraMover allocated at view+0x5BC. Colour tables are initialized by
+// FUN_001FB790; branch geometry comes from FUN_001F81B8/001F8300/001F8450.
 struct EventTreeOverlayStats {
     int panels = 0, connectors = 0, numbers = 0, missing_panels = 0;
 };
@@ -144,6 +130,8 @@ struct EventTreeOverlayStats {
 // the texture's own size, which is a port-side fallback and is marked as one in the code.
 EventTreeOverlayStats append_event_tree(const EventTreeView& view, const WidgetSizes& sizes,
                                         render::Resources& resources, render::Frame& frame,
-                                        const hp2::frontend::FeWidget* panel_template = nullptr);
+                                        const hp2::frontend::FeWidget* panel_template = nullptr,
+                                        const hp2::frontend::FeWidget* number_template = nullptr,
+                                        const hp2::frontend::FeScreen* screen_template = nullptr);
 
 } // namespace port::runtime

@@ -229,6 +229,38 @@ FeWidget* FindWidget_00143D50(FeScreen& screen, std::uint32_t name_hash, int typ
     return nullptr;
 }
 
+void SetWidgetStringId_001449A8(FeScreen& screen, std::uint32_t name_hash,
+                                std::uint32_t string_id) {
+    // FUN_001449A8 -> FUN_00143D50(screen, hash, 1) -> FUN_00140EA8(widget, id). The type
+    // argument is 1, so only a text widget matches.
+    FeWidget* widget = FindWidget_00143D50(screen, name_hash, 1);
+    if (widget == nullptr) return;
+    // FUN_00140EA8, verbatim: the early-out on an unchanged id matters, because the dirty byte
+    // and the placeholder clear only happen when the id actually changes.
+    if (widget->string_id_0x60 == string_id) return;
+    widget->string_id_0x60 = string_id;
+    widget->dirty_0x2b = 5;
+    widget->text.clear(); // `*(undefined1 *)(param_1 + 100) = 0`, i.e. +0x64 = '\0'
+}
+
+void SetWidgetVisible_00144968(FeScreen& screen, std::uint32_t name_hash, bool visible) {
+    // FUN_00144968 -> FUN_00143D50(screen, hash, 0) -> FUN_00140728(widget, visible), which
+    // writes +0x29. Type 0 here, so it matches a quad or a text widget.
+    FeWidget* widget = FindWidget_00143D50(screen, name_hash, 0);
+    if (widget == nullptr) return;
+    widget->visible = visible ? 1 : 0;
+}
+
+void SetClassVisible_001454E8(FeScreen& screen, std::uint32_t class_hash, bool visible) {
+    // FUN_001454E8: FUN_00143DD8 walks every widget of the class and each one takes the same
+    // +0x29 write. The original's leading FUN_00143DD8(screen, hash, 0, 0) call discards its
+    // result, so it is not reproduced.
+    for (FeWidget& widget : screen.widgets) {
+        if (widget.class_hash != class_hash) continue;
+        widget.visible = visible ? 1 : 0;
+    }
+}
+
 void SetWidgetColour_00140CA0(FeWidget& widget, const MenuColour_00169BD0& colour) {
     // FUN_00140CA0: keep the stored alpha byte, replace the low 24 bits, stamp +0x2b on change.
     const std::uint32_t current = pack_widget_colour(widget);
@@ -667,6 +699,8 @@ constexpr RecoveredScreenName kRecoveredScreenNames[] = {
     {22, "TITLE_SCREEN"},      {24, "OPTIONS"},           {26, "DISPLAY_OPTIONS"},
     {28, "AUDIO_OPTIONS"},     {29, "USERNAME_OPTIONS"},  {30, "LANGUAGE_OPTIONS"},
     {35, "LOADSAVE"},          {36, "BLANK_SCREEN"},      {40, "CREDITS_SCREEN"},
+    // E-0022-R02: exact hashes in original FRONTB.BUN, under StringHash_002534A8.
+    {17, "TREE_DETAIL_VIEW"}, {19, "TREE_REWARD_VIEW"}, {39, "NEW_EVENT_TREE"},
 };
 } // namespace
 
@@ -1017,12 +1051,19 @@ void Sub_00249348() {
 }
 
 void Type_002491B0::Construct_002491B0(FeScreen& screen) {
+    Construct_002491B0(screen, 0x75980cf0, 0x75980cf0, 0x70a404ec);
+}
+
+void Type_002491B0::Construct_002491B0(FeScreen& screen, std::uint32_t text_hash,
+                                     std::uint32_t alpha_hash, std::uint32_t bar_hash) {
+    field_0x04 = text_hash; port_alpha_hash = alpha_hash; port_bar_hash = bar_hash;
     field_0x00 = &screen; field_0x08 = field_0x198 = field_0x28 = 0;
     field_0x0c = field_0x19c = 0; field_0x94.clear();
-    auto* text = FindWidget_00143D50(screen, 0x75980cf0, 1);
-    auto* bar = FindWidget_00143D50(screen, 0x70a404ec, 0);
+    auto* text = FindWidget_00143D50(screen, field_0x04, 1);
+    auto* bar = FindWidget_00143D50(screen, port_bar_hash, 0);
     field_0x194 = text ? text->x : 0;
-    field_0x5c_alpha = text ? text->a : 0;
+    auto* alpha = FindWidget_00143D50(screen, port_alpha_hash, 0);
+    field_0x5c_alpha = alpha ? alpha->a : 0;
     field_0x78_alpha = bar ? bar->a : 0;
     if (text) { text->x = 650; text->dirty_0x2b = 4; }
 }
@@ -1037,16 +1078,17 @@ void Type_002491B0::Bind_00249518(const std::string& text) {
 void Type_002491B0::Update_00249348(float delta_seconds) {
     if (!field_0x00) return;
     field_0x08 += delta_seconds; field_0x198 += delta_seconds;
-    auto* text = FindWidget_00143D50(*field_0x00, 0x75980cf0, 1);
-    auto* bar = FindWidget_00143D50(*field_0x00, 0x70a404ec, 0);
+    auto* text = FindWidget_00143D50(*field_0x00, field_0x04, 1);
+    auto* alpha = FindWidget_00143D50(*field_0x00, port_alpha_hash, 0);
+    auto* bar = FindWidget_00143D50(*field_0x00, port_bar_hash, 0);
     if (field_0x19c == 1) {
         const float t = field_0x08 < 0.6f ? field_0x08 / 0.6f : 1;
-        if (text) SetWidgetAlpha_00140ED0(*text, static_cast<int>(field_0x5c_alpha * (1-t)));
+        if (alpha) SetWidgetAlpha_00140ED0(*alpha, static_cast<int>(field_0x5c_alpha * (1-t)));
         if (bar) SetWidgetAlpha_00140ED0(*bar, static_cast<int>(field_0x78_alpha * t));
         if (field_0x198 > 0.5f) { field_0x0c = 0; field_0x19c = 2; }
     }
     if (field_0x19c != 0 && field_0x19c != 2) return;
-    if (text) SetWidgetAlpha_00140ED0(*text, field_0x5c_alpha);
+    if (alpha) SetWidgetAlpha_00140ED0(*alpha, field_0x5c_alpha);
     if (bar) SetWidgetAlpha_00140ED0(*bar, 0);
     if (field_0x0c == 0) {
         if (text) {

@@ -253,6 +253,18 @@ int main() {
         stats = runtime::build_frame(title, sizes, suppress, frame);
         check(stats.glyphs == 3 && stats.quads == 0, "suppressed widget withheld");
 
+        // E-0022-R04: detail wrapping and explicit '@' rows use the font's line height.
+        hp2::frontend::FeScreen detail;
+        detail.widgets = {text_widget("TRACK_LINE_1", 0, 0, kFont, "AB C@A", 2)};
+        runtime::FrameOptions wrap;
+        wrap.wrapped_text_hash = detail.widgets[0].name_hash;
+        wrap.wrapped_text_bounds = {0, 0, 25, 60};
+        render::Frame wrapped_frame;
+        runtime::build_frame(detail, sizes, wrap, wrapped_frame);
+        check(wrapped_frame.quads.size() == 4, "wrapped text keeps all letters and removes break markers");
+        check(wrapped_frame.quads[2].destination.y == 12 &&
+              wrapped_frame.quads[3].destination.y == 24, "word lookahead and explicit break use successive rows");
+
         // --- the frame crosses a backend boundary with no device type ----------------------
         FakeBackend backend;
         resources.add(kMovie, 512, 256);

@@ -98,6 +98,9 @@ if(BUILD_TESTING)
   add_executable(eventtree_tests src/tests/eventtree_tests.cpp)
   target_link_libraries(eventtree_tests PRIVATE game_core)
   add_test(NAME eventtree COMMAND eventtree_tests WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  add_executable(event_name_catalog_tests src/tests/event_name_catalog_tests.cpp)
+  target_link_libraries(event_name_catalog_tests PRIVATE game_core)
+  add_test(NAME event_name_catalog COMMAND event_name_catalog_tests WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
   # TASK-0021: the recovered save container and the 0x114E0 player profile. Needs no original
   # asset and no save file -- every fixture is synthetic -- so it has no WORKING_DIRECTORY.

@@ -81,6 +81,10 @@ struct FrameOptions {
     float exclusive_width = 0, exclusive_height = 0;
     // Widget suppressed while the startup sequence runs but the movie is not on screen.
     std::string suppressed_widget;
+    // Port projection of FUN_001451E0 -> FUN_00144ED0's text-in-BLURB_BOX draw.
+    // E-0022-R04: whitespace lookahead wraps; '@' starts the next font-height row.
+    std::uint32_t wrapped_text_hash = 0;
+    render::Rect wrapped_text_bounds;
 };
 
 // Emits `screen`'s visible widgets into `out`, ordered by descending authored layer and then

@@ -87,3 +87,8 @@ void Sub_001F1B08(::port::frontend::BackContext&,::port::frontend::BackEvent&,co
 void Sub_001F0D10(::port::frontend::BackContext&,::port::frontend::BackEvent&,const ::port::frontend::BackServices&);
 void Sub_001F1568(::port::frontend::BackContext&,::port::frontend::BackEvent&,const ::port::frontend::BackServices&);
 }
+
+namespace port::frontend {
+// Port-side reuse seam for the recovered 001DA780/001DAEC8 zero-velocity path.
+bool advance_zero_velocity_path(hp2::frontend::Type_00248568& path, float delta_seconds);
+}

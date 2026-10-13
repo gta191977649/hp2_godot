@@ -298,7 +298,11 @@ void recovered_names_are_verbatim() {
 void screen_names_resolve_by_hash() {
     std::size_t count = 0;
     const RecoveredScreenName* names = recovered_screen_names(count);
-    require(count == 18, "18 of the 41 screen names are recovered");
+    require(count == 21, "21 of the 41 screen names are recovered");
+    require(StringHash_002534A8("NEW_EVENT_TREE") == 0x147f8a59 &&
+            StringHash_002534A8("TREE_DETAIL_VIEW") == 0xa744ba7b &&
+            StringHash_002534A8("TREE_REWARD_VIEW") == 0xf1eed4cd,
+            "event documents match their original asset hashes");
 
     std::vector<FeScreen> screens;
     for (int i = 0; i < 41; ++i) {

@@ -5,6 +5,8 @@
 #include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/packed_byte_array.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
+#include "game_core/port/not_implemented.hpp"
 
 namespace port::godot_bridge {
 namespace {
@@ -191,7 +193,16 @@ godot::Dictionary Ps2FrontEndLayout::frontend_music(bool previous_finished) {
 }
 
 bool Ps2FrontEndLayout::event_tree_joy_event(int joy_event) {
-    return runtime_.event_tree_joy_event(joy_event);
+    bool handled = false;
+    std::string gap;
+    const auto failure = catch_all([&] {
+        gap = hp2::guard([&] { handled = runtime_.event_tree_joy_event(joy_event); });
+    });
+    if (!gap.empty() || !failure.empty()) {
+        godot::UtilityFunctions::push_error(to_godot(gap.empty() ? failure : gap));
+        return true;
+    }
+    return handled;
 }
 
 
