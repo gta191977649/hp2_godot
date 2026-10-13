@@ -1046,7 +1046,7 @@ leaves this table by being reversed, never by being given a default.
 | | |
 |---|---|
 | **Focus** | Front-end completeness: the menu screens, their activation and Back arms, the event tree, and the profile the two depend on. |
-| **Last session** | TASK-0029 — all 179 standalone class pairs moved out of port/class_templates: 170 stay at the game_core root and nine use Ghidra-confirmed directories. The sweep covered 298 path occurrences / 54 paths. Native 28/28 tests and isolated Godot linking passed; class APIs/bodies remain unchanged. See [CLASS_SOURCE_PATHS.md](CLASS_SOURCE_PATHS.md). |
+| **Last session** | TASK-0030 completed the concise README overview; documentation-only, links and commands checked. Latest recovery work remains TASK-0029: 179 standalone class pairs relocated, nine Ghidra-confirmed directories, native 28/28 tests and isolated Godot linking passed. See [CLASS_SOURCE_PATHS.md](CLASS_SOURCE_PATHS.md). |
 | **Exact next action** | Translate `FUN_00183830(0x002FC050)`, the full profile and game reset, against the TASK-0021 `settings.db` profile layout. It is the one dependency keeping the boot-time `Language Options Pre FE` path from completing, and other boundaries wait behind it. Start from `tasks/active/TASK-0025-language-options-screen.md` step 1, with [SAVE_SYSTEM.md](SAVE_SYSTEM.md) for the profile layout. |
 | **Tooling note** | Ghidra MCP was registered and usable in TASK-0028. The same service is reachable through the read-only client `tools/ghidra.py` (`from ghidra import Client`, `http://127.0.0.1:8080/mcp`, program `SLUS_203.62`). Inspect/read only; do not mutate the database. Probe actual availability each session. |
 

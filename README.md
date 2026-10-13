@@ -1,48 +1,59 @@
-# PS2 PC Port
+# HP2 PS2 Reversed
 
-Project initialization for a native C++17 decompilation port, hosted by Godot.
+A native C++ reconstruction of *Need for Speed: Hot Pursuit 2* (PS2), with Godot as the host and rendering backend. The current target is the US PS2 release, `SLUS_203.62`, on Windows x86-64.
 
-Build from the project root in PowerShell with `./build.ps1`. Use
-`./build.ps1 --run` to build and start the frontend, or
-`./build.ps1 --clean --run` for a clean rebuild and launch. The default preset is
-`godot-debug`; `--preset native-debug` builds only the independent core.
-See `./build.ps1 --help` for presets and parallel-build options.
-Two police helper local bodies now have evidence-backed native implementations and PC tests; original equivalence remains unverified. No proprietary assets are included. See [whole-binary recovery](docs/FULL_RECOVERY.md) for scope and gaps. Static binary
-assessment results are in [the assessment report](docs/assessment/BINARY_REPORT.md).
-The existing `task.txt` and `eval.txt` are preserved user request documents;
-`eval.txt` supplied the assessment scope; its results are recorded under
-`docs/assessment/` and do not constitute a reconstructed game.
+## 1. Project Goals
 
-The native core builds and tests independently of Godot:
+Reconstruct the original game's behavior from binary and asset evidence and run it natively on modern PC hardware. Preserve original logic, names and function addresses where recovered; keep unknown behavior explicit rather than replacing it with guesses or Godot physics.
+
+## 2. Architecture
+
+- **`src/game_core/`** — independent C++17 game logic and class/function templates, without Godot dependencies. Confirmed original directories are preserved; classes with unknown paths remain at this directory's root.
+- **`src/port/`** — native frontend runtime, asset handling and render-command generation.
+- **`src/platform/` + `godot/`** — platform services, GDExtension adapters and the Godot host. Godot currently handles rendering, windowing, input, audio and frame scheduling; some frontend orchestration also remains in GDScript.
+- **`reverse/`, `docs/`, `tasks/`** — evidence, recovery records, progress and scoped work items.
+
+Unimplemented recovered paths throw `hp2::NotImplemented` with their original ELF address.
+
+## 3. Progress
+
+**Early development: this is not yet a playable reconstruction of the full game.**
+
+- Partial frontend recovery includes startup/title flow, menu navigation, several options screens, localization, event-tree logic, media playback and profile/save handling using the player's original data.
+- Class scaffolding covers 190 class names and 609 member attributions, including 603 throwing templates. These counts describe structure and missing work, not completed game behavior.
+- Racing, vehicle physics, AI and other gameplay systems remain largely untranslated. Native builds and tests pass, but no behavior has been verified against original hardware or PCSX2.
+
+See the generated [progress tracker](docs/PROGRESS.md) for current recovery status, blockers and the next task.
+
+## 4. Build Instructions
+
+On Windows, install a C++17 compiler, CMake 3.24+, Ninja and Python 3. The frontend also requires Godot **4.4.1**, the pinned `godot-cpp` submodule and the pinned FFmpeg **8.1** SDK. Follow the [development guide](docs/DEVELOPMENT.md) for dependency setup and local engine paths.
+
+Provide your own original PS2 `ZZDATA` directory through `HP2_PS2_ASSET_ROOT`, or copy [the configuration example](config/ps2_assets.example.json) to `config/ps2_assets.local.json` and set its `root`. Game binaries and assets are not distributed with this project.
+
+From the repository root in PowerShell:
 
 ```powershell
-cmake --preset native-debug
-cmake --build --preset native-debug
+git submodule update --init --recursive
+./build.ps1                  # Build the Godot frontend
+./build.ps1 --run            # Build and launch
+ctest --preset godot-debug   # Run tests
+```
+
+Build and test the independent core without Godot:
+
+```powershell
+./build.ps1 --preset native-debug
 ctest --preset native-debug
 ```
 
-The Godot 4.4.1 project starts the recovered front-end movie/title sequence.
-Menus, localisation, background videos, menu sounds and frontend music read the
-user-configured original ZZDATA at runtime. Run `./tools/run_frontend.ps1 -Build`;
-see [media](docs/FRONTEND_MEDIA.md) and [sound](docs/SOUND_RECOVERY.md) for evidence
-and remaining gaps. The separate `main.tscn` arithmetic scaffold remains infrastructure.
-See [development](docs/DEVELOPMENT.md) for dependency checkout, Windows builds,
-and the Godot smoke command. See [progress](docs/PROGRESS.md) for actual checks.
+Close a running frontend before rebuilding its DLL. Some integration tests require the configured original assets; see the development guide for details.
 
-Start future sessions with [AGENTS.md](AGENTS.md) and the selected task.
-[Class templates](docs/CLASS_TEMPLATES.md) documents the compiled class/member shells,
-their evidence inventory and safe continuation workflow (TASK-0028).
-[Architecture](docs/ARCHITECTURE.md) describes layer ownership;
-[reverse notes](docs/REVERSE_NOTES.md) defines provenance and evidence records;
-[roadmap](docs/ROADMAP.md) defines milestone gates.
+## 5. Docs & Help
 
-`src/game_core/` holds recovered logic by subsystem; `src/platform/` holds native
-service contracts and `godot_bridge/`; `reverse/` holds binary-specific knowledge;
-`godot/` holds the host project; `tools/` holds future asset utilities;
-`third_party/` holds pinned dependencies; `tasks/` holds durable work items.
-Private inputs belong outside Git, preferably under ignored `private/`.
+- [Development](docs/DEVELOPMENT.md) — setup, build, launch and troubleshooting.
+- [Architecture](docs/ARCHITECTURE.md) and [decisions](docs/DECISIONS.md) — layer ownership and recorded design choices.
+- [Progress](docs/PROGRESS.md) and [session log](docs/PROGRESS_LOG.md) — current state and its evidence/history.
+- [Class templates](docs/CLASS_TEMPLATES.md) and [source paths](docs/CLASS_SOURCE_PATHS.md) — existing scaffolding and how to continue recovery.
 
-The initial target is Windows x86-64. Linux library mapping is provided but has
-not been validated; other platforms need explicit build and loader support.
-
-The evidence-backed main-loop structural shell and separate Godot observer are documented in [main-loop structure](docs/MAIN_LOOP_STRUCTURE.md). Run `./tools/run_main_loop_observer.ps1 -Build`. Module internals are placeholders; this is not a runnable original game.
+Before contributing, read [AGENTS.md](AGENTS.md), the binding [AGENT.md](AGENT.md) rules and the selected file under `tasks/`. Record evidence and limitations, preserve existing implementations, and keep proprietary inputs outside Git.
