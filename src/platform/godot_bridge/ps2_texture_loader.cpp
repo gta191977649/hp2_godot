@@ -1,4 +1,5 @@
 #include "ps2_texture_loader.hpp"
+#include "game_core/frontend/fmenus.hpp"
 #include "platform/ps2_asset_root.hpp"
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/os.hpp>
@@ -30,6 +31,7 @@ void Ps2TextureLoader::_bind_methods() {
     godot::ClassDB::bind_method(godot::D_METHOD("list_textures", "relative_path"), &Ps2TextureLoader::list_textures);
     godot::ClassDB::bind_method(godot::D_METHOD("get_last_error"), &Ps2TextureLoader::get_last_error);
     godot::ClassDB::bind_method(godot::D_METHOD("load_texture_by_hash", "texture_hash"), &Ps2TextureLoader::load_texture_by_hash);
+    godot::ClassDB::bind_method(godot::D_METHOD("load_texture_by_name", "texture_name"), &Ps2TextureLoader::load_texture_by_name);
     godot::ClassDB::bind_method(godot::D_METHOD("set_search_bundles", "bundles"), &Ps2TextureLoader::set_search_bundles);
     godot::ClassDB::bind_method(godot::D_METHOD("get_search_bundles"), &Ps2TextureLoader::get_search_bundles);
 }
@@ -176,6 +178,13 @@ godot::Ref<godot::ImageTexture> Ps2TextureLoader::load_texture_by_hash(std::int6
     godot::Ref<godot::ImageTexture> empty;
     texture_cache_[hash] = empty;
     return empty;
+}
+
+godot::Ref<godot::ImageTexture> Ps2TextureLoader::load_texture_by_name(
+    const godot::String& texture_name) {
+    const std::uint32_t hash =
+        hp2::frontend::StringHash_002534A8(texture_name.utf8().get_data());
+    return load_texture_by_hash(static_cast<std::int64_t>(hash));
 }
 
 } // namespace port::godot_bridge

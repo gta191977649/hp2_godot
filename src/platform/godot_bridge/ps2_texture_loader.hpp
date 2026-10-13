@@ -35,6 +35,12 @@ public:
     // the hash is not present in any searched bundle.
     godot::Ref<godot::ImageTexture> load_texture_by_hash(std::int64_t texture_hash);
 
+    // Same lookup keyed on the texture's name, hashed with the recovered front-end string hash
+    // (hp2::frontend::StringHash_002534A8, ELF 0x002534A8) so callers never have to reimplement
+    // it. Used for the names the recovered code carries as strings, e.g. the event tree's
+    // SPEED_EVENT_PANEL_* / PURSUIT_EVENT_PANEL_* panels.
+    godot::Ref<godot::ImageTexture> load_texture_by_name(const godot::String& texture_name);
+
     // Bundles searched by load_texture_by_hash, as ZZDATA-relative forward-slash paths. Defaults
     // to the frontend/global bundles that actually carry frontend widget textures.
     void set_search_bundles(const godot::PackedStringArray& bundles);

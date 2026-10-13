@@ -78,6 +78,15 @@ static func _font_bundles() -> PackedStringArray:
 
 var layout: Object
 var loader: Object
+# TASK-0018: the View Event Tree screen (FRONTB.BUN screen 39, class "View Event Tree",
+# instance pool "tEventTreeView"). The tree data comes from the two 0x80034A00 containers in
+# the same bundle; the per-event progress comes from the memory-card profile, which this host
+# does not read, so every event but the root reports Locked.
+var event_tree: Object
+var event_tree_mode := 9    # DAT_0030C77C: 9 = Hot Pursuit (Ultimate Racer), 8 = Championship
+var event_tree_nodes: Array = []
+var event_panel_cache: Dictionary = {}
+const EVENT_TREE_SCREEN := 39
 var intro_movie: Object
 var background_movie: Object
 var movie_audio: AudioStreamPlayer
@@ -230,6 +239,7 @@ func _font_for(hash_value: int) -> Dictionary:
 	return font
 
 func _build_screen(open_menu: bool = true) -> void:
+	event_tree_nodes = []
 	_configure_background()
 	draw_list.clear()
 	var widgets: Array = layout.get_widgets(screen_index)
@@ -296,6 +306,7 @@ func _build_screen(open_menu: bool = true) -> void:
 		screen_name = "name hash 0x%08x (name not recovered)" % int(info.get("name_hash", 0))
 	info_label.text = "screen %d/%d  %s  widgets=%d quads=%d text=%d missing=%d" % [
 		screen_index, screen_count - 1, screen_name, widgets.size(), quads, glyph_texts, missing]
+	_event_tree_prepare()
 	_refresh_menu_label()
 	queue_redraw()
 
@@ -358,6 +369,113 @@ func _play_menu_audio() -> void:
 
 # Port rendering seam for the original per-widget clip rectangles (TASK-0017).
 # Intersect destination geometry and shift/scale UVs together, preserving partial glyphs.
+func _event_tree_prepare() -> void:
+	event_tree_nodes = []
+	if screen_index != EVENT_TREE_SCREEN:
+		return
+	if event_tree == null:
+		if not ClassDB.class_exists("Ps2EventTree"):
+			push_error("GDExtension class Ps2EventTree missing")
+			return
+		event_tree = ClassDB.instantiate("Ps2EventTree")
+	var result: Dictionary = event_tree.load("FRONTEND/FRONTB.BUN", event_tree_mode)
+	if not bool(result.get("ok", false)):
+		notice_label.text = str(result.get("error", "event tree load failed"))
+		return
+	event_tree_nodes = event_tree.get_nodes()
+
+func _event_panel_texture(name: String) -> Texture2D:
+	if name.is_empty():
+		return null
+	if event_panel_cache.has(name):
+		return event_panel_cache[name]
+	var texture: Texture2D = loader.load_texture_by_name(name)
+	event_panel_cache[name] = texture
+	return texture
+
+# The tree is laid out in the units the ELF uses -- 130 per column, 350 per row -- which span far
+# more than 640x480, and FUN_001F96B8 ends by attaching a "StillCameraMover" to the selected node.
+# The camera itself was NOT recovered: its zoom, easing and bounds are unknown. The two constants
+# below are a port-side calibration against an original-hardware screenshot (column pitch and the
+# unselected panel size measured off it) purely so the recovered geometry is legible; they are not
+# recovered values and must be replaced once the camera is reversed.
+const EVENT_TREE_PORT_ZOOM := 0.6
+const EVENT_TREE_PORT_PANEL_SCALE := 0.26
+
+func _event_tree_draw(dynamic: Array) -> void:
+	if event_tree_nodes.is_empty():
+		return
+	# Where the camera points is not recovered either; the selected node is put in the middle of
+	# the canvas, which is where the reference screenshot shows it.
+	var centre := Vector2(CANVAS.x * 0.5, CANVAS.y * 0.5)
+	var focus := Vector2.ZERO
+	for node in event_tree_nodes:
+		if bool(node["selected"]):
+			focus = Vector2(node["x"], node["y"])
+	var zoom := EVENT_TREE_PORT_ZOOM
+	var missing := 0
+
+	# tLineSegment: the connectors. The original colours them per branch state; that mapping was
+	# not recovered, so a won source is drawn green and anything else red, matching what the
+	# reference screenshot shows for a passed and a pending branch.
+	for node in event_tree_nodes:
+		var from := centre + (Vector2(node["x"], node["y"]) - focus) * zoom
+		for other_index in node["links"]:
+			var other: Dictionary = event_tree_nodes[int(other_index)]
+			var to := centre + (Vector2(other["x"], other["y"]) - focus) * zoom
+			var colour := Color(0.25, 0.85, 0.25, 0.9) if int(node["status"]) == 4 else Color(0.75, 0.15, 0.15, 0.9)
+			var mid := (from.y + to.y) * 0.5
+			draw_line(from, Vector2(from.x, mid), colour, 2.0)
+			draw_line(Vector2(from.x, mid), Vector2(to.x, mid), colour, 2.0)
+			draw_line(Vector2(to.x, mid), to, colour, 2.0)
+
+	# tEventLeaf: the panel, drawn at twice the size when it is the node under the cursor, which is
+	# the 1.0f/2.0f FUN_001FA9C8 writes into the node it leaves and the one it moves to.
+	for node in event_tree_nodes:
+		var position := centre + (Vector2(node["x"], node["y"]) - focus) * zoom
+		var node_scale: float = float(node["scale"])
+		var texture := _event_panel_texture(str(node["panel_texture"]))
+		if texture != null:
+			var size := Vector2(texture.get_width(), texture.get_height()) * EVENT_TREE_PORT_PANEL_SCALE * node_scale
+			draw_texture_rect(texture, Rect2(position - size * 0.5, size), false)
+		else:
+			# The LOCKED and UNLOCKED panels are not present in any bundle this port can read, so
+			# the node is drawn as an explicit placeholder rather than with invented art.
+			missing += 1
+			var radius := 26.0 * node_scale
+			draw_arc(position, radius, 0.0, TAU, 24, Color(0.55, 0.6, 0.7, 0.8), 1.5)
+		var font := _font_for_name("FONT_EVENTNUMBERS")
+		if not font.is_empty():
+			_draw_event_number(font, int(node["number"]), position, node_scale * 0.6)
+	if missing > 0 and notice_label != null and notice_label.text.is_empty():
+		notice_label.text = "%d event panels unavailable: SPEED/PURSUIT_EVENT_PANEL_LOCKED and _UNLOCKED are not in any readable bundle" % missing
+
+func _font_for_name(name: String) -> Dictionary:
+	var hash_value: int = layout.name_hash(name) if layout.has_method("name_hash") else 0
+	if hash_value == 0:
+		return {}
+	return _font_for(hash_value)
+
+func _draw_event_number(font: Dictionary, number: int, centre: Vector2, scale: float) -> void:
+	var glyphs: Dictionary = font.get("glyphs", {})
+	var atlas: Texture2D = font.get("texture")
+	if atlas == null:
+		return
+	var text := str(number)
+	var width := 0.0
+	for i in text.length():
+		var m = glyphs.get(text.unicode_at(i))
+		if m != null:
+			width += float(m[4])
+	var pen := centre - Vector2(width * scale * 0.5, 14.0 * scale)
+	for i in text.length():
+		var m = glyphs.get(text.unicode_at(i))
+		if m == null:
+			continue
+		var region := Rect2(float(m[0]), float(m[1]), float(m[2]), float(m[3]))
+		draw_texture_rect_region(atlas, Rect2(pen, region.size * scale), region, Color(1, 1, 1, 1))
+		pen.x += float(m[4]) * scale
+
 func _draw_clipped_texture(texture: Texture2D, dest: Rect2, region: Rect2, color: Color, clip: Rect2) -> void:
 	if not dest.has_area():
 		return
@@ -432,6 +550,10 @@ func _draw() -> void:
 				var dest := Rect2(pen, Vector2(region.size.x * sx, region.size.y * sy))
 				_draw_clipped_texture(atlas, dest, region, color, clip)
 				pen.x += float(metrics[4]) * sx
+	# The nodes sit above the map backdrop and below the right-hand info box on the original; the
+	# runtime visibility changes screen 39's authored placeholder widgets go through were not
+	# recovered, so the tree is painted over them here.
+	_event_tree_draw(dynamic)
 
 func _send_joy_event(joy_event: int) -> void:
 	if startup_active:
@@ -463,7 +585,27 @@ func _input(event: InputEvent) -> void:
 		return
 	var map := _key_map()
 	if map.has(event.keycode):
-		_send_joy_event(int(map[event.keycode]))
+		var joy_event: int = int(map[event.keycode])
+		# FUN_001FAF60 state 0 drives the tree directly: left/right move the cursor by -1/+1 and
+		# up/down by +2/-2 through FUN_001FA9C8, with sounds TreeLeftRight and TreeUpDown.
+		if screen_index == EVENT_TREE_SCREEN and not event_tree_nodes.is_empty():
+			var direction := 0
+			match joy_event:
+				JOY_EVENT_SCROLL_LEFT, JOY_EVENT_MENU_ANALOG_LEFT: direction = -1
+				JOY_EVENT_SCROLL_RIGHT, JOY_EVENT_MENU_ANALOG_RIGHT: direction = 1
+				JOY_EVENT_SCROLL_UP, JOY_EVENT_MENU_ANALOG_UP: direction = 2
+				JOY_EVENT_SCROLL_DOWN, JOY_EVENT_MENU_ANALOG_DOWN: direction = -2
+			if direction != 0:
+				if event_tree.move_cursor(direction):
+					event_tree_nodes = event_tree.get_nodes()
+					last_event_text = "%s  ->  %s" % [layout.joy_event_name(joy_event),
+						str(event_tree.get_cursor_info().get("name", ""))]
+				else:
+					last_event_text = "%s (no node)" % layout.joy_event_name(joy_event)
+				_refresh_menu_label()
+				queue_redraw()
+				return
+		_send_joy_event(joy_event)
 		return
 	match event.keycode:
 		KEY_PAGEDOWN, KEY_BRACKETRIGHT:

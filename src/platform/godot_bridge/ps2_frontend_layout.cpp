@@ -69,6 +69,7 @@ void Ps2FrontEndLayout::_bind_methods() {
     godot::ClassDB::bind_method(godot::D_METHOD("joy_event_name", "joy_event"), &Ps2FrontEndLayout::joy_event_name);
     godot::ClassDB::bind_method(godot::D_METHOD("probe_not_implemented", "which"), &Ps2FrontEndLayout::probe_not_implemented);
     godot::ClassDB::bind_method(godot::D_METHOD("find_screen_by_name", "screen_name"), &Ps2FrontEndLayout::find_screen_by_name);
+    godot::ClassDB::bind_method(godot::D_METHOD("name_hash", "name"), &Ps2FrontEndLayout::name_hash);
 }
 
 godot::Dictionary Ps2FrontEndLayout::load(const godot::String& relative_path) {
@@ -776,6 +777,11 @@ godot::Dictionary Ps2FrontEndLayout::probe_not_implemented(const godot::String& 
 int Ps2FrontEndLayout::find_screen_by_name(const godot::String& screen_name) const {
     return hp2::frontend::screen_index_for_screen_name(screens_,
                                                        screen_name.utf8().get_data());
+}
+
+std::int64_t Ps2FrontEndLayout::name_hash(const godot::String& name) const {
+    return static_cast<std::int64_t>(
+        hp2::frontend::StringHash_002534A8(name.utf8().get_data()));
 }
 
 } // namespace port::godot_bridge

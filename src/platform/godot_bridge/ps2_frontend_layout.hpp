@@ -100,6 +100,10 @@ public:
     // Returns {"not_implemented": String} or {"error": String} for an unknown key.
     godot::Dictionary probe_not_implemented(const godot::String& which);
 
+    // The recovered front-end string hash (hp2::frontend::StringHash_002534A8, ELF 0x002534A8),
+    // so GDScript never reimplements recovered logic.
+    std::int64_t name_hash(const godot::String& name) const;
+
     godot::String get_last_error() const { return last_error_; }
 
 private:

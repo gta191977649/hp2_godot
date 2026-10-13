@@ -190,6 +190,25 @@ See docs/FULL_RECOVERY.md and the 7,544-row recovery inventory. Native police ti
 
 
 
+## TASK-0018 event tree (tEventTreeView) — 2026-10-13
+
+The View Event Tree screen's data source is in the player's own FRONTEND/FRONTB.BUN: FUN_001FFC40
+parses two `0x80034A00` containers named "Championship" and "Hot Pursuit", each holding 32 event
+records of 0xBC bytes (FUN_001FFF60) plus an 8-byte link table. FUN_00185568 picks the tree from
+profile+0x1072C, which is the 8/9 the mode-select screens write into DAT_0030C77C. Node X comes
+from a 200-character ASCII map in the ELF (DAT_0031B3C0 / DAT_0031B490), 10 rows of 20 columns,
+the n-th mark being event n, scaled by gp-0x41B0 = 130.0; node Y is depth * gp-0x41B4 = 350.0,
+depth being the hop count back to the root (FUN_001F7FA8). FUN_001F75F0 maps status 0/1-3/4 onto
+the SPEED_/PURSUIT_EVENT_PANEL_LOCKED/_UNLOCKED/_WON textures, and FUN_001FA9C8 writes node scale
+1.0f/2.0f on the node it leaves and the one it moves to, which is why the selected star is twice
+the size. Per-event progress lives in two 256-byte profile blocks (DAT_002FC1D8 / DAT_002FC2D8)
+sliced by FUN_001FE988 in TWO passes -- >= 4-byte events first with 4-byte alignment, 1-byte
+events packed afterwards -- with sizes from the GoalType switch FUN_00200DE8. The port reads no
+memory card, so every event but the root reports Locked and nothing is invented to fill it.
+Write-up: docs/EVENT_TREE.md; 3 new reverse/functions records; E-0018-01..12. Also fixed: test
+executables now link the MinGW runtimes statically, which clears the three long-standing
+0xC0000139 failures. No Ghidra changes; no original-hardware comparison.
+
 ## TASK-0016 mode-select screens + front-end movie loop — 2026-10-13
 
 ELF-code RE. The main menu's Hot Pursuit and World Racing entries open "Cops On Mode Select"

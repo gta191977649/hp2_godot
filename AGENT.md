@@ -101,6 +101,19 @@ Ghidra project. Analysis state belongs in this repository (`reverse/`), not in t
 `inspect`, `memory` (read/search), `functions get/list`, `symbols list`, `analyze`. Never
 `annotate` or `delete`.
 
+## R5b. Everything written in this repository is in English
+
+Documentation, code comments, identifier names, task files, evidence records, commit messages and
+test failure strings are all written in English, without exception. The repository is the durable
+project memory and has to stay readable to every later reader and tool; a document that is only
+legible to one reader is a document the next session cannot verify against the binary.
+
+This covers the `docs/`, `tasks/` and `reverse/` trees as well as source comments. Quoted material
+keeps its original text: an ELF string, an asset filename, a localised line pulled out of the game
+or a snippet of the user's own words stays verbatim, in quotes, with an English explanation
+around it. Chat replies are not covered by this rule; answer the user in whatever language they
+are writing in.
+
 ## R6. Record what you found, where the next session will look
 
 A finding that only exists in a chat transcript does not exist. For each recovered function or

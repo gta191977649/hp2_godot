@@ -16,6 +16,7 @@ add_library(game_core STATIC src/game_core/scaffold.cpp src/game_core/police/cop
   src/game_core/frontend/frontendscreens/joystickconfiguration.cpp
   src/game_core/frontend/frontendscreens/registry_0016adb0.cpp
   src/game_core/frontend/frontendscreens/modeselect.cpp
+  src/game_core/frontend/eventtree.cpp
   src/game_core/input/joyevents.cpp
   src/game_core/audio/sound.cpp
   src/game_core/audio/bJukebox.cpp
@@ -83,6 +84,9 @@ if(BUILD_TESTING)
   add_executable(fmenus_menu_tests src/tests/fmenus_menu_tests.cpp)
   target_link_libraries(fmenus_menu_tests PRIVATE game_core)
   add_test(NAME fmenus_menu COMMAND fmenus_menu_tests)
+  add_executable(eventtree_tests src/tests/eventtree_tests.cpp)
+  target_link_libraries(eventtree_tests PRIVATE game_core)
+  add_test(NAME eventtree COMMAND eventtree_tests WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
   add_executable(frontend_modeselect_tests src/tests/frontend_modeselect_tests.cpp)
   target_link_libraries(frontend_modeselect_tests PRIVATE game_core)
   add_test(NAME frontend_modeselect COMMAND frontend_modeselect_tests)
@@ -131,6 +135,20 @@ if(BUILD_TESTING)
   add_test(NAME differential_synthetic COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tools/pipeline.py" verify --runner $<TARGET_FILE:demo_runner>)
   add_test(NAME pipeline_contracts COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s tools/tests)
   set_tests_properties(pipeline_contracts PROPERTIES WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+
+  # The test executables otherwise resolve libstdc++-6.dll / libgcc_s_seh-1.dll from PATH, and a
+  # mismatched copy makes them exit with STATUS_ENTRYPOINT_NOT_FOUND (0xC0000139) before main
+  # runs. ps2_port already links those runtimes statically for the same reason; do the same here
+  # so a test result reflects the test rather than whatever DLL the host happened to find first.
+  if(MINGW)
+    get_property(_port_test_targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
+    foreach(_target ${_port_test_targets})
+      get_target_property(_type ${_target} TYPE)
+      if(_type STREQUAL "EXECUTABLE")
+        target_link_options(${_target} PRIVATE -static -static-libgcc -static-libstdc++)
+      endif()
+    endforeach()
+  endif()
 endif()
 
 if(PORT_BUILD_GODOT)
@@ -141,7 +159,8 @@ if(PORT_BUILD_GODOT)
   add_subdirectory("${PORT_GODOT_CPP_DIR}" "${CMAKE_BINARY_DIR}/godot-cpp")
   add_library(ps2_port SHARED src/platform/godot_bridge/port_core.cpp src/platform/godot_bridge/register_types.cpp
     src/platform/godot_bridge/main_loop_observer.cpp src/platform/godot_bridge/frontend_menu_observer.cpp
-    src/platform/godot_bridge/ps2_texture_loader.cpp src/platform/godot_bridge/ps2_frontend_layout.cpp)
+    src/platform/godot_bridge/ps2_texture_loader.cpp src/platform/godot_bridge/ps2_frontend_layout.cpp
+    src/platform/godot_bridge/ps2_event_tree.cpp)
   target_sources(ps2_port PRIVATE src/platform/godot_bridge/ps2_movie_player.cpp)
   # Godot-cpp 4.4 propagates -fno-exceptions. Port adapters catch recovered NotImplemented
   # locally; enable exceptions in these source files without changing Godot's own code.
