@@ -32,7 +32,8 @@ databases to Git. Infrastructure examples have no original-game provenance.
 ## Startup protocol
 
 1. Inspect `git status --short`, active tasks, and local instructions before edits.
-2. Read `README.md`, `docs/PROGRESS.md`, `docs/ARCHITECTURE.md`,
+2. Read `README.md`, `docs/PROGRESS.md` (the tracker; `docs/PROGRESS_LOG.md` holds the
+   session narrative behind it), `docs/ARCHITECTURE.md`,
    `docs/DECISIONS.md`, `docs/DEVELOPMENT.md`, and `docs/REVERSE_NOTES.md`.
 3. Read the selected task. If no task is active, select the earliest unblocked
    backlog task matching the user's request and move it to active before work.
@@ -52,7 +53,10 @@ databases to Git. Infrastructure examples have no original-game provenance.
    Move to completed only when every criterion has evidence; blocked/incomplete
    tasks stay active or return to backlog with an explicit explanation.
 4. Update `docs/PROGRESS.md` with active work, blockers, validation, and exact next
-   action. Record architecture changes in `docs/DECISIONS.md`.
+   action. Its tables are generated -- run `py -3 reverse/scripts/generate_progress.py`
+   rather than editing between the `generated:` markers; the `progress_tables` test
+   fails when they are stale. Session narrative goes in `docs/PROGRESS_LOG.md`, not in
+   the tracker. Record architecture changes in `docs/DECISIONS.md`.
 5. Inspect the diff and Git status for unrelated edits and restricted material.
    Never stage everything blindly. Do not claim a commit exists until made.
 6. Report outcome and remaining limitations. Leave a reproducible continuation

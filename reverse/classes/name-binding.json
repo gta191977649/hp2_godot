@@ -1,0 +1,168 @@
+{
+ "labels": 115,
+ "bound": {
+  "bFile::Filename": [
+   {
+    "function": "0x00253828",
+    "file": "FUN_00253828_0x253828.cpp",
+    "sites": [
+     "0x0025387C"
+    ]
+   }
+  ],
+  "SlotPool::CleanupExpandedSlotPools()": [
+   {
+    "function": "0x00257F28",
+    "file": "FUN_00257f28_0x257f28.cpp",
+    "sites": [
+     "0x002580F0"
+    ]
+   }
+  ],
+  "SlotPoolManager::DeleteSlotPool": [
+   {
+    "function": "0x00258548",
+    "file": "FUN_00258548_0x258548.cpp",
+    "sites": [
+     "0x00258578"
+    ]
+   },
+   {
+    "function": "0x002584B0",
+    "file": "sub_002584B0_0x2584b0.cpp",
+    "sites": [
+     "0x00258578"
+    ]
+   }
+  ],
+  "DemoDiscManager::Init()": [
+   {
+    "function": "0x0012E6C8",
+    "file": "sub_0012E6C8_0x12e6c8.cpp",
+    "sites": [
+     "0x0012E704"
+    ]
+   }
+  ],
+  "DemoDiscManager::EndDemo()": [
+   {
+    "function": "0x0012EB00",
+    "file": "sub_0012EB00_0x12eb00.cpp",
+    "sites": [
+     "0x0012EBA4"
+    ]
+   }
+  ],
+  "DemoDiscManager::SetEndReason()": [
+   {
+    "function": "0x0012EB00",
+    "file": "sub_0012EB00_0x12eb00.cpp",
+    "sites": [
+     "0x0012EB2C"
+    ]
+   }
+  ],
+  "SlotPoolManager::SlotPoolManager()": [
+   {
+    "function": "0x002584B0",
+    "file": "sub_002584B0_0x2584b0.cpp",
+    "sites": [
+     "0x00258508"
+    ]
+   }
+  ]
+ },
+ "unbound": [
+  "AIActionAccidentRecovery::CalculatePointsToDrive()",
+  "AIActionAvoidCars::CalculatePointsToDrive()",
+  "AIActionAvoidRoadBlock::CalculatePointsToDrive()",
+  "AIActionBlock::CalculatePointsToDrive()",
+  "AIActionDraft::CalculatePointsToDrive()",
+  "AIActionGetUnstuck::CalculatePointsToDrive()",
+  "AIActionIJustGotHit::CalculatePointsToDrive()",
+  "AIActionJustDrive::CalculatePointsToDrive()",
+  "AIActionNudgeCar::CalculatePointsToDrive()",
+  "AIActionPass::CalculatePointsToDrive()",
+  "AIActionPullOver::CalculatePointsToDrive()",
+  "AICarController::GetCurrentTrackRoutePoint()",
+  "AcidEffectSystem::DoTimeStep()",
+  "AcidEffectSystem::RenderEffects",
+  "BeltMover::Move()",
+  "Car::Move()",
+  "Car::SetMovementMode()",
+  "Car::TriggerCarTerrainEffects()",
+  "CarCollisionBody::Move()",
+  "CarDamage::AddDamage()",
+  "CarList::Sort()",
+  "CarPartCuller::CullParts()",
+  "CarRenderInfo::Render()",
+  "CarRenderInfo::RenderDashboard()",
+  "Chopper::AdjustTargetInBounds()",
+  "Chopper::BeginStakeout()",
+  "Chopper::BombRunLogic()",
+  "Chopper::CleverPursuitPlan()",
+  "Chopper::DrawChopper()",
+  "Chopper::EndChaseLogic()",
+  "Chopper::FindChopperPointFromScratch()",
+  "Chopper::FindChopperRoutePoint()",
+  "Chopper::FindPreviousFork()",
+  "Chopper::FindUnobstructedSpot()",
+  "Chopper::FireSalvo()",
+  "Chopper::FireWeapon()",
+  "Chopper::Fly()",
+  "Chopper::FollowRoute()",
+  "Chopper::HangoutNearHere()",
+  "Chopper::HighLevelPlanning()",
+  "Chopper::MoveChopper()",
+  "Chopper::PlaceChopperInWorld()",
+  "Chopper::ShiftTarget()",
+  "Chopper::StartChaseLogic()",
+  "Chopper::SwitchToNearbyFork()",
+  "Chopper::Think()",
+  "Chopper::TriggerDustEmitter()",
+  "CopDriver::Think()",
+  "CopManager::Think()",
+  "CopMover::Move()",
+  "DrivingChoice::BuildDriveTarget()",
+  "DrivingChoice::BuildDriveTargetAroundCar()",
+  "DrivingChoice::FillUpDriveTarget",
+  "DrivingChoice::FixupCarToExcludeFromCollisionPrediction()",
+  "DrivingChoice::GetSpeedBackToLine()",
+  "DrivingChoice::IsDriveable()",
+  "DrivingChoice::MakeDriveTargetParallelToCar()",
+  "DrivingChoice::MakeNewChoice()",
+  "DrivingChoice::TryChoice()",
+  "DynamicCollisionBody::CreateTrackPolygonCollisionBodies()",
+  "DynamicCollisionBody::MaybeCreateWitnesses()",
+  "DynamicCollisionBody::Move()",
+  "FlailerRenderManager::BeginFrame()",
+  "FlailerRenderManager::RenderLayer()",
+  "FlailerRenderManager::RenderScreenPrintf()",
+  "FuturePoints::BuildArray()",
+  "FuturePoints::DoSmoothOffsetChange()",
+  "GrandSceneryCullInfo::CullView",
+  "GrandSceneryCullInfo::DoCulling()",
+  "HeliSheet::FindZValue()",
+  "MellowMover::Move()",
+  "NearbyCarList::BuildArray",
+  "PhysicsCar::Move()",
+  "PhysicsCar::ResolveForces()",
+  "PhysicsSystem::GetDerivative()",
+  "PhysicsSystem::IntegrateEuler",
+  "PhysicsSystem::IntegrateEuler()",
+  "Race::Update()",
+  "RealController::CalculateLateralPos",
+  "RealController::Think()",
+  "ReplayManager::BeginFrame()",
+  "ReplayManager::HandleSnapshot()",
+  "ReplayScreen::Update()",
+  "Smokeable::Move()",
+  "TrackPathCoordinate::UpdatePosition()",
+  "TrackPolygonCollisionBody::TrackPolygonCollisionBody()",
+  "TrackRoute::FindClosestPoint()",
+  "TrafficCar::Move()",
+  "TrafficTeleporter::DoTimestep()",
+  "World::DoTimestep",
+  "World::DoTimestep()"
+ ]
+}

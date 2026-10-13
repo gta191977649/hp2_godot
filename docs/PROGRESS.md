@@ -1,891 +1,540 @@
-# Project state — 2026-10-13 (Australia/Sydney)
-
-## TASK-0025 — The Language Options screen, reversed end to end (active)
-
-User hit `hp2::NotImplemented: screen item activation handler not translated (ELF 0x1f1dd8 ...)`
-and asked for the language menu and its functions. That address is reached whenever any item on
-the Language Options screen is activated, because the port had the screen's Back arm (TASK-0017)
-but not its activation arm, and `dispatch_activation` had no route for it at all.
-
-**Ghidra MCP was reachable again** through `tools/ghidra.py` at `http://127.0.0.1:8080/mcp`
-(14 tools). Read-only throughout; no Ghidra state was modified (AGENT.md R5).
-
-Full write-up: **docs/FRONTEND_MENU_LANGUAGE.md**. What it establishes:
-
-- `001F1DD8` is the **class router**, not a handler. Message `0x0B` picks a constructor by
-  `strcmp` against the class-name literals (`"Language Options Pre FE"` -> `operator new(0x10)` +
-  `001F1A78(mem, screen, 0)`; `"Language Options"` -> `operator new(0x58)` + `001F1D70(mem,
-  screen, 1)`), `0x0C` destroys, everything else forwards to `001F1B08`.
-- The six language items are `MENUITEM_1..MENUITEM_6` (`0x52E039F3..0x52E039F8`) and map to
-  language index 0..5. The hashes are **positional item names**, which is why the Options and
-  Mode Select screens use the same six values for completely different targets.
-- The locale order is read out of the ELF rather than assumed: the pointer table at
-  `0x0031C168` is ENGLISH, FRENCH, GERMAN, ITALIAN, SPANISH, SWEDISH, then two development
-  locales (`FE_LONGEST.BIN`, `FE_ID.BIN`) that no menu item selects. The port's
-  `apply_language` already used that order; now it has a citation.
-- **There is a seventh item, and the game always hides it.** `001F1A78` ends with
-  `if (FUN_0016fdb0() == 0) FUN_0016d2a8(class, MENUITEM_7, screen, 2)`, and `0016FDB0` is
-  `return 0;` -- so the branch is unconditional, the item's enabled bit is cleared and its
-  widget hidden on every entry. The player's own `FRONTB.BUN` does author seven `MENUITEM_n`
-  widgets, so this is observable behaviour, not a defensive check. Its activation arm
-  (`DAT_00331A60 = 1`, then pop) is therefore recovered but unreachable from input.
-- `instance+0x08` is the single bit of state that separates the two classes: `0` (the boot-time
-  `Pre FE` prompt) reaches the `00183830` full profile and game reset, `1` does not. That holds
-  on the activation arm exactly as TASK-0017 found it on Back.
-
-One bug the tests caught, worth recording because the same shape can recur: `0021E0D0` takes the
-**address** of the language global and writes it itself, so the handler's `== -1` check
-afterwards is a re-read of what the loader left behind. The first port version copied
-`instance+0x00` into the global at that point, which made the `-1` arm unreachable. The Back
-overload has the same pattern but writes a context copy, so it cannot mask the arm -- noted as
-an open item rather than changed under this task.
-
-Validation on 2026-10-13, CMake 3.29.2 / Ninja 1.12.0 / GCC 13.2.0, host only:
-`cmake --build --preset native-debug --parallel 4` then
-`ctest --preset native-debug --output-on-failure` -> **24/24 passed**. The Godot extension
-(`cmake --build --preset godot-debug`) relinks `godot/bin/ps2_port.dll` cleanly.
-`frontend_runtime` drives the real screen off the player's own assets: it enters Language
-Options, asserts seven authored items with `MENUITEM_7` disabled and hidden, activates a
-language, and checks the locale applied and the screen popped. No original hardware or PCSX2
-comparison was performed, so nothing on this path is `Verified` (AGENT.md R1).
-
-**Blockers and explicit NotImplemented boundaries that remain:** `00183830` (so `Language
-Options Pre FE` activation still cannot complete -- depends on TASK-0021's profile work), the
-`001EE918` sub-object `001F1D70` builds at instance `+0x10`, the `0x0C` destructor arm, the
-`0x12` arm, and no located reader of `DAT_00331A60` (search bound recorded in the task file).
-
-**Exact next action:** TASK-0025 step 1 -- translate `FUN_00183830(0x002FC050)`, the full
-profile and game reset, against the TASK-0021 `settings.db` profile layout, so the boot-time
-`Language Options Pre FE` path can complete. Start from
-`tasks/active/TASK-0025-language-options-screen.md` and `docs/FRONTEND_MENU_LANGUAGE.md`.
-
-## TASK-0021 — The memory-card save system and the event tree it unblocked (active)
-
-User asked to finish reversing `eventtree`, with the correct front-end implementation including
-its animations and effects, and said the save system had to come first because the event tree
-cannot be implemented without it. That was right: five of the six open questions in
-`docs/EVENT_TREE.md` were blocked on save data.
-
-**Ghidra MCP is connected for the first time in this project.** Earlier sessions recorded it as
-unavailable. It is reachable at `http://127.0.0.1:8080/mcp` (14 tools) through the existing
-read-only client `tools/ghidra.py`; no Ghidra state was modified (AGENT.md R5).
-
-### The save system, recovered end to end
-
-- Original source file `src\memorycard.cpp` (ELF string 0x002AD488), module at roughly
-  0x0012A000..0x0012E6FF, immediately below `HP2_MainFrameLoop`.
-- Save directory **`BASLUS-20362HP2`** (NTSC-U) / `BESLES-50731HP2` (PAL), built by
-  `FUN_0012DEE0` from recovered format strings; `icon.sys`, icon `nfs6.ico`, magic `PS2D`.
-- **One payload file, `settings.db`, of 0x114E0 = 70,880 bytes**, self-describing and with no
-  separate header: `FUN_00245738` stamps the payload's own length into its first word and a
-  checksum into its last. `FUN_001878B0` is a signed 32-bit sum of 0x4537 words == 0x114DC bytes,
-  i.e. everything except the checksum — a figure derived from the loop's termination condition
-  and then found to agree exactly with the checksum's offset.
-- **The global player profile is that payload**: one 0x114E0-byte block at **0x002FC050**, with
-  no serialiser at either end. Three arithmetic identities from three different functions confirm
-  the base, one of them being that profile+0x1072C is `DAT_0030C77C`, the tree selector
-  `docs/EVENT_TREE.md` already named.
-
-### What that unblocked in the event tree
-
-- The `0x34A03` table is a **requirement** table, not a link table: `row+0x02` names a
-  prerequisite event and `row+0x04` is the goal it must meet. Four of the six bytes TASK-0018
-  listed as unknown are now identified.
-- `FUN_002010B8` fully decompiled: five status values (0 locked, 1 not attempted, 2 below the
-  floor, 3 goal missed, 4 won) and four per-GoalType slice decoders. Two decoders and both
-  completion gates are still unrecovered and now **raise `hp2::NotImplemented`** naming their ELF
-  address instead of being silently skipped.
-- The camera is recovered: `FUN_001FAB00` pins the selected node to (320, 240) and scales by a
-  zoom **level**, 0 or 1, out of the two-float table `{0.4f, 1.0f}` at gp-0x4178 (gp ==
-  0x003358F0, established from the already-known 350.0/130.0 pair). The port-side `kPortZoom =
-  0.6f` and `kPortPanelScale = 0.26f` are gone.
-- Nine unexplained ELF immediates resolved by hashing screen 39's real widget names:
-  0x0880AC4C is `HELP_TEXT`, 0x027F7503 `HELP_BUTTON`, 0xAA5D7D3F `BOTTOM_MASK`, 0xA3B23510
-  `EVENT_PANEL`, 0xA01BCDC6 the class EVENT_PANEL and EVENT_NUMBER share, and 0xA744BA7B /
-  0xFD297FD4 / 0xF1EED4CD are screens 17, 18 and 19 — so the event tree is a four-document
-  cluster, not one screen.
-- Start node, tree type and view state all come from the profile (`FUN_001F5D00` /
-  `FUN_001F5D28` / `FUN_001F5D50`, read from the listing because the decompiler lost the R5900
-  argument order). `FUN_001F5D50` turns out not to be "tree selection" as recorded; it is a
-  two-instruction setter.
-
-### Defects found and fixed in the existing port
-
-- **`EventTreeView::move_cursor` invented the left/right rule.** It stepped one place through the
-  same-depth leaves in parse order; `FUN_001FA880` takes the nearest leaf in **X** on the
-  requested side, strictly, with no wrap. Replaced, along with `FUN_001FA978` for up/down, which
-  takes the nearest in X on one of the two adjacency lists.
-- **The recovered "moved means sound, not moved means silence" rule was computed and discarded.**
-  `event_tree_joy_event` now routes the recovered ids 0x13/0x14/0x15/0x18/0x8 through
-  `PlayMenuSound_0016E038`, the same path every other screen uses.
-- **State 2 did not exist.** Confirm and Back now drive the recovered 0 to 2 transitions.
-- **`frontend_runtime` was passing under CTest while asserting almost nothing**: it had no
-  `WORKING_DIRECTORY`, so it never resolved the asset root and returned early. Fixed; its runtime
-  went from 0.35 s to about 17 s, and it now covers the event tree properly.
-- Evidence debt: `E-0018-01..12` were cited in `docs/EVENT_TREE.md` and `docs/REVERSE_NOTES.md`
-  but never allocated to any file, and 0x001FFC40 / 0x001F96B8 / 0x002010B8 had no records.
-  Eleven records are filed under `E-0021-NN` with rows in `reverse/symbols.csv`; the
-  `E-0018-NN` gap is noted but not retrofitted.
-
-### Follow-up: the route into the tree was broken, and is now fixed
-
-User reported that choosing Championship or Ultimate Racer from the main menu did not enter the
-event tree. That was correct and it was a real gap: the first pass made the tree work once
-screen 39 was already open, but never reversed how a player gets there. Three links were
-missing.
-
-1. **The class had no registration row.** `View Event Tree` does not register through
-   `FUN_0016ADB0` like the other 37 classes -- it tail-calls the sibling `FUN_0016AD88` at
-   0x001FB860. Its operands (0x001FB7F0..0x001FB830) are the class-name string 0x002BA718, the
-   handler `FUN_001FB218` and the document hash **0x147F8A59**, which is exactly screen 39's
-   stored name hash. The port's registry stopped at the `FUN_0016ADB0` rows, so
-   `find_registration("View Event Tree")` returned null and `apply_pending_screen` raised
-   NotImplemented at 0x0016C8C8. (E-0021-22)
-2. **The transition is deferred behind an animation.** `FUN_00217020` / `FUN_002176D8` do not
-   switch screens; they build a 0x1C-byte `tExitScreenAnimation` through `FUN_002490D8` -- the
-   same `Type_002490D8` the port already implements for Options -- and the switch happens only
-   when it finishes. (E-0021-25)
-3. **The port ignored the chosen mode.** `FrontEndRuntime` held `event_tree_mode_ = 9` as a
-   hardcoded field, so Championship would have opened the Hot Pursuit tree even with the first
-   two fixed. `FUN_001FB218` message 0x0B shows the real source: `FUN_00185568(0x2FC050)`, the
-   profile. The field is gone. (E-0021-24)
-
-Also recovered on the way: five of the six mode-select globals are **inside the profile**
-(`DAT_002FC06C` +0x1C, `DAT_002FC1B4` +0x164, `DAT_002FC1C0` +0x170, `DAT_0030C77C` +0x1072C,
-`DAT_0030C784` +0x10734), so the handlers' writes are save writes; only `DAT_0031AB90` is
-outside. `FUN_001F5D50(0x2FC1B4, n)`, which the port had marked "not translated", is now wired
-through the profile. (E-0021-23)
-
-Both routes are asserted end to end by the new `check_event_tree_route` in
-`src/tests/frontend_runtime_tests.cpp`, which drives the real joy events and ticks the exit
-animation out, and both were confirmed in the running app: screen 1 item 3 and screen 2 item 2
-each reach screen 39, with different modes, different tree types and visibly different panel
-artwork.
-
-**A note on how this was missed.** The first pass's event-tree test opened screen 39 with
-`menu_open(39)` directly, so it exercised the tree without ever exercising the route -- and it
-passed. That is the same shape as the `frontend_runtime` CTest hole fixed earlier in this task.
-The new test enters the way a player does.
-
-### Validation (exact commands and results)
-
-CMake 3.29.2, Ninja 1.12.0, MinGW GCC 13.2.0, Python 3.14.4, Godot 4.4.1.stable.official.49a5bc7b6.
-
-- `cmake --build --preset native-debug --parallel 4` then `ctest --preset native-debug`:
-  **23/23 passed** (22 before; `memorycard` is new).
-- `cmake --build --preset godot-debug --parallel 4` then `ctest --preset godot-debug`:
-  **23/23 passed**.
-- `./tools/run_frontend.ps1 -RenderSmoke`:
-  `NATIVE_RENDER_SMOKE_OK: screens=41 quads=1085 glyphs=7765 textures=120 empty=[36]` —
-  identical to the pre-task baseline. One change was needed to keep it that way, and it is
-  worth recording rather than hiding: once the tree started taking its mode from the profile,
-  the smoke's cold `menu_open(39)` produced no tree at all (927 quads / 7733 glyphs /
-  118 textures), because profile+0x1072C is 0 until a mode-select screen writes it. That is the
-  correct recovered behaviour, not a regression — the original would show nothing either. The
-  smoke now walks the real route once before its per-screen loop, so its screen-39 coverage is
-  real rather than accidental.
-- `./tools/run_frontend.ps1 -RuntimeSmoke`: `FRONTEND_RUNTIME_SMOKE_OK`.
-- Screen 39 captured on DX12 (Intel Arc B390) and inspected: the tree renders with real panel
-  art, the recovered 0.8 vertical squash, and the selected node at twice the size.
-- `py -3 reverse/scripts/validate_main_loop.py --metadata-only` via the `main_loop_catalog`
-  test: unchanged.
-
-**Nothing was promoted to `Verified`.** No PCSX2 or original-hardware comparison was performed,
-no real save file was read or written, and every test fixture is synthetic. A passing PC test
-says the port reproduces what was read out of the ELF and nothing more (AGENT.md R1).
-
-### Exact next action
-
-Read `AGENT.md`, `docs/SAVE_SYSTEM.md`, `docs/EVENT_TREE.md` section 7 and
-`tasks/active/TASK-0021-memorycard-profile.md`, then take TASK-0022's first step: decompile
-`FUN_001F6B70` (the state-2 event detail sub-menu over document 17) and the `tLineSegment` build
-inside `FUN_001F96B8`, read-only through GhidraMCP at 127.0.0.1:8080. TASK-0023 (the PCSX2
-comparison at `D:\Game\pcsx2`) is the only route to a `Verified` promotion. Nothing is
-committed.
-
-## What gta-reversed actually does about "not implemented" (TASK-0020 follow-up)
-
-Studied `D:/dev/gta-reversed` at the user's request, specifically how it *catches*. The finding
-changes the comparison:
-
-**It does not catch it.** Seven `catch (` sites exist in the whole project, none for an
-unimplemented path. `NOTSA_UNREACHABLE` logs, shows an Abort/Retry/Ignore box (Retry calls
-`__debugbreak()`) and then `exit(3)`. The one meaningful catch, in
-`reversiblehooks/ReversibleHook/StatefulHook.h`, converts straight to `NOTSA_UNREACHABLE` with
-the comment that restoring state properly would be work.
-
-**It can afford that because an un-reversed function is not "unimplemented" there.** Its body is
-a thunk into the retail binary -- `plugin::CallMethod<0x4FF900, CAEVehicleAudioEntity*, ...>(this, ...)`
--- because the project is a DLL inside the original game, so the original code is in the same
-address space and simply runs. `NOTSA_UNREACHABLE` is reserved for genuine invariants, and its
-465 sites are "this cannot happen", not "not reversed yet".
-
-**That option is closed to us.** This is a native port with no original binary in process, and
-PS2RECOMP_TRIAL.md records that the static recompilation attempt produced unverified instruction
-translations only. There is nothing to delegate to, so an untranslated path has to fail, and
-throwing-and-reporting is strictly better than their terminate: a Godot host can show the gap and
-keep running. Our design is the right one for our architecture, not a weaker copy of theirs.
-
-**What was worth taking:** their single process-wide net,
-`SetUnhandledExceptionFilter(WindowsExceptionHandler)` in `source/app/app_debug.cpp`, which logs
-exception code, address and registers. We had no equivalent. `hp2::guard` catches
-`hp2::NotImplemented` -- the expected outcome -- but a `std::bad_alloc` or an asset parse error
-would have crossed into godot-cpp, which is compiled `-fno-exceptions`, i.e. undefined behaviour
-with no diagnostic. `src/platform/godot_bridge/boundary.hpp` now provides `catch_all`, and the
-bound methods that reach into the runtime (`menu_open`, `menu_joy_event`, `menu_tick`,
-`Ps2RenderHost::draw`) run through it, so a port bug becomes a reported error instead of a silent
-editor crash. The net sits at the boundary rather than process-wide because that is where enough
-context still exists to report rather than die.
-
-## NotImplemented reporting made central (TASK-0020 follow-up)
-
-User asked for one unified place instead of a macro at every site, with automatic catching and
-the standard C++ assert dialog. `src/game_core/port/not_implemented.hpp` is now that place:
-
-- The `HP2_NOT_IMPLEMENTED` macro is deleted. All 52 sites call
-  `hp2::not_implemented(elf_address, what)` directly -- a `[[noreturn]]` function, no preprocessor.
-- One reaction point, settable once. It always throws; on top of that
-  `HP2_ASSERT_NOT_IMPLEMENTED=1` routes through the standard `assert()` with no code change
-  (verified), and `hp2::set_not_implemented_handler` installs a debugger reaction.
-- Studied `D:\dev\gta-reversed` at the user's request. Its `notsa::unreachable`
-  (`source/Base.h`) appears at **465 call sites**, which settles the question of whether a mature
-  reversing project can avoid the per-site marker. Borrowed: the reaction belongs in one place,
-  and a debug build should offer Abort/Retry/Ignore with Retry breaking into the debugger --
-  `src/platform/not_implemented_dialog.cpp` now does exactly that behind
-  `HP2_NOT_IMPLEMENTED_DIALOG=1`, kept in `src/platform` so the core still depends on nothing but
-  the standard library. **Not** borrowed: their macro compiles to `__builtin_unreachable()` in
-  release. For them "unreachable" is an invariant; for us "not implemented" is reachable by
-  definition, so compiling it away would manufacture the silent wrong answer R3 forbids.
-- One catch point: `hp2::guard([&]{ ... })` returns the message or an empty string. The five
-  hand-copied production `try`/`catch` blocks are gone. The six that remain are in tests, where
-  catching *is* the assertion.
-
-**The per-site call stays, and that is deliberate.** Each one carries the ELF address of the
-original function that is missing; that address is evidence (AGENT.md R2/R3), nothing else in the
-program knows it, and no mechanism can infer "this path was never reversed". Removing the marker
-would turn a loud failure into a silent wrong result, which is the failure mode the rule exists to
-prevent. AGENT.md R3 now spells this out along with the new API.
-
-Validation: 22/22 CTest, all Godot checks unchanged, both presets build with no warnings.
-
-## Ghidra MCP — still not connected, and why (RETRACTED 2026-10-13)
-
-**This conclusion was wrong and cost several sessions.** The server was running the whole
-time at `http://127.0.0.1:8080/mcp`, reachable through this repository's own read-only client
-`tools/ghidra.py` (`from ghidra import Client`). It is not registered as a session tool, which
-is why `session_connectors_status` and a tool search both come up empty -- that absence is not
-evidence that it is unavailable. Probe the endpoint before concluding anything. The rest of
-this section is kept as the retired claim, per AGENT.md R6.
-
-`session_connectors_status` lists only Claude Docs, visualize and scheduled-tasks. No Ghidra or
-REA MCP server is registered for this session, and `mcpServers` is empty at top level and for
-every project in `~/.claude.json`, so there is nothing to re-enable or reconnect from inside the
-session. The Ghidra side is ready -- **GhydraMCP v2.2.0-rc.3 is installed** into
-`ghidra_12.0.4_PUBLIC/Extensions/GhydraMCP` (its `extension.properties` says `ghidraVersion=11.4.2`,
-a mismatch worth checking) and its jar carries the `XrefsEndpoints` this work needs. What is
-missing is the client half: no MCP bridge is installed anywhere on this machine. Pinning the 97
-identifier strings to addresses is blocked until the user registers that bridge.
-
-## TASK-0020 — Original source tree alignment (active)
-
-User asked that `src/game_core` match the original HP2 project's structure, file names,
-folder names, class names and function names, using the REA skill and a Ghidra MCP string
-scan. **Ghidra MCP is not connected to this session** (no Ghidra or REA MCP tool is
-registered), so the scan was done directly: the authorized ELF is present at
-`D:/ps2_game/SLUS_203.62` with a SHA-256 matching `reverse/binaries.csv` exactly, and a
-read-only scanner parses its PT_LOAD headers to address-anchor every string. 8,153
-strings; 296 source-path hits / 54 distinct, corroborating the TASK-0016 rescan (298/54).
-Catalogue in `reverse/naming/task0020-original-source-tree.csv` (E-0020-N01..N03).
-
-Done: `src/game_core` restructured onto the recovered tree. Seven files whose original
-path is recovered verbatim now sit at it under `indep/src/`, the bWare `bJukebox` pair
-under `bSound/{src,include}` (the `bSound/` root inferred, noted as such), and the 26
-files with no recovered path under `src/game_core/port/`, so no location implies
-provenance it does not have. Every file opens with either its ELF string and address or a
-note that its path is not evidence. Also fixed a pre-existing corrupted path record in
-this file: `indep\src\fmenus.cpp` had been stored with a literal form-feed where the
-`\f` should be.
-
-**No identifier was renamed.** The 74 `Class::Method` and 23 pool-name strings the ELF
-carries are real original identifiers, but every one is `string_only` — none is pinned to
-the address of the function it names, and TASK-0019 already ruled that allocation labels
-are not type/method proof. `Sub_<ADDR>` / `Type_<ADDR>` names therefore stand (AGENT.md
-R13). Tempting but refused: `tExitScreenAnimation` for `Type_002490D8`,
-`tMenuAnimElement` for `MenuHighlightAnim_00248870`.
-
-Validation: 22/22 CTest and all five Godot checks pass unchanged after the move
-(`--native-render-smoke` 41 screens / 1085 quads / 7765 glyphs / 120 textures). Stale
-`src/game_core/...` paths in three scripts were updated; `main_loop_catalog` caught one.
-
-Exact next action: reconnect Ghidra MCP, then pin the `Class::Method` and pool strings to
-addresses via cross-references so identifier renaming becomes evidence-backed
-(TASK-0020 next steps). Nothing is committed.
-
-## TASK-0018 — Native runtime and replaceable rendering backend (active)
-
-User resumed the deferred architecture task and authorized the migration. The front end
-no longer renders through GDScript. D008 records one rendering contract: native
-`render::Frame` in, a `render::Backend` out, no second command path.
-
-Landed: Godot-free `port_runtime` library (frame contract, original-asset `Catalog`,
-new `frame_builder` producing layer-ordered quads, per-glyph text, align bit and the
-original `GetWidgetClip_00145F30` clips); `Ps2RenderHost`, a RenderingServer backend
-owning canvas-item and texture RIDs with revision-gated uploads; `Ps2MoviePlayer`
-exposing decoded frames as backend-independent bitmaps; native widget measurement
-replacing the host round trip; and `scenes/frontend_native.tscn`, a host that owns only
-window, input translation, delta, audio hardware and lifetime. The previous
-`scenes/frontend.tscn` is retained unchanged.
-
-Validation: `ctest --preset native-debug` 21/21 passed (new `frame_builder` test uses a
-fake Resources and fake Backend, no Godot). `--native-render-smoke` renders all 41
-screens natively (927 quads, 7733 glyphs, 118 textures). Old-vs-new pixel diff over all
-41 screens: **32 byte-for-byte identical**; the 8 background-movie screens differ only in
-video-decode and scroll phase (control experiment isolates this), and screen 39 differs
-because only the old script draws the event-tree overlay. Every pre-existing Godot check
-on the retained scene still passes. PC-to-PC only; nothing promoted to Verified.
-
-Both scenes gained an always-on window-title FPS/frame-time readout naming the render path,
-plus the same line in the Tab overlay. Uncapped main-menu throughput measured once on this
-machine: native ~1380-1450 FPS vs GDScript ~1030-1195. Indicative only, not a benchmark.
-
-Second pass: `port::runtime::FrontEndRuntime` now owns the front end (screens, fonts,
-menu group, localisation, jukebox, animations, navigation history, mode-select globals,
-frame production) with plain C++ results and no Godot. `Ps2FrontEndLayout` shrank from
-846 to 314 lines and is a translation shim with no game state. Fixed a latent namespace
-defect in options.hpp/modeselect.hpp (unqualified `port::frontend::` resolved to
-`hp2::port::frontend` once any `hp2::port::*` namespace existed; the old bridge only
-compiled because of include order). Deleted as unused: `src/port/runtime/value.hpp`,
-`src/platform/services.hpp` with the `platform_api` target, and two uncalled bound
-methods. Re-verified: 21/21 CTest, every Godot check unchanged, and nine screens
-byte-identical both new-vs-old and against the pre-refactor captures, so the extraction
-changed no output.
-
-Third pass, in the sequenced order: (1) the event-tree overlay is native --
-`port::runtime::EventTreeView` plus `append_event_tree`, with `render::Quad::texture == 0`
-added as a solid-colour rect for the recovered axis-aligned `tLineSegment` connectors;
-screen 39 renders byte-for-byte identically to the old host. (2) The front-end behaviour
-checks moved from GDScript smokes into `src/tests/frontend_runtime_tests.cpp`, seven groups
-under CTest driving the runtime directly with the player's own assets, reproducing the old
-counts exactly (resolved=1524 missing=25, 8 Back routes, jukebox 5 then 7). Only the two
-checks that genuinely need Godot stayed there. (3) The old host is deleted:
-`scripts/frontend.gd` (1170 lines), `scenes/frontend.tscn`, `ps2_event_tree.{hpp,cpp}` and
-ten bound methods, plus the whole host-measurement path in the runtime. `project.godot`
-boots the native scene; `tools/run_frontend.ps1` drives it. Every bound method and bridge
-class that remains has a caller.
-
-Validation: 22/22 CTest; `--native-render-smoke` 41 screens / 1085 quads / 7765 glyphs /
-120 textures; `--runtime-smoke`, `main.tscn`, both observer smokes pass; default scene
-boots clean; nine screens 0 differing pixels against the pre-deletion native captures.
-
-Open question carried forward: the highlight ghost period. The old `--animation-smoke`
-expected a 2 s restart and failed; that failure was confirmed **pre-existing** by stashing
-all TASK-0018 work and rebuilding. The native replacement measures instead of asserting —
-scale 1.7071 at 2.01 s against a 1.0000 target, i.e. the 4 s default `open_menu_animation`
-records (E-0016-08). Needs its own task against the original.
-
-Exact next action: move startup/movie/music orchestration and screen selection into
-`FrontEndRuntime`, the last front-end decision-making left in GDScript (TASK-0018 Next
-steps 1). Nothing is committed.
-
-## TASK-0019 — Original function names (completed scoped investigation)
-
-RenderingServer work is deferred at the user's request; TASK-0018 remains incomplete.
-Read-only Ghidra inventory classified 7,544 function symbols. Whole-C-string references
-and MIPS instruction proof recover five original methods (E-0019-N03), now adopted
-in reverse/symbols.csv; see FUNCTION_NAME_RECOVERY.md. No native implementations of
-these five exist to rename. Requested 002490D8/00248C60 original identifiers remain
-unknown: allocation labels are not type/method proof, and 00248C60 is shared by
-entrance and exit lists. Source comments record this port enclosure limitation.
-Metadata checks and git diff --check passed; no behavior changed or Verified promotion.
-Next naming work: recover computed references for the remaining diagnostic/profiler
-strings before adopting more names. TASK-0017 normal submenu paths and Audio/Display
-viewport checks passed previously (18/18 CTest plus Godot smoke); remaining settings,
-editor/save branches and original equivalence are still incomplete.
-
-## TASK-0017 — Submenu Back and overflow (active)
-
-User reports submenu Backspace failure and Audio items drawing below the hint/footer.
-Confirmed host gap: onlyOptions24 Back is implemented. Root recovered manager history
-strings (0016C4C0/0016B418/0016B438/0016C670) and replaced layout-index history with
-class names. Independent recovery underway for per-screen0x11 permission/side effects
-and original scrolling viewport, clipping/group offsets/arrows. No blanket permission
-or guessed scrolling. Next integrate portable handlers and viewport tests, then actual
-Godot traversal and Audio screenshot. Prior TASK-0016 remains preserved.
-
-## TASK-0016 — Startup/media/audio/scroll integration (active)
-
-Latest user correction: viewport backdrop is now opaque black, replacing Godot
-default gray around movies/title art. Actual DX12 title screenshot inspected;
-RuntimeSmoke PASS and Windows export refreshed. Host color preference, no new
-PS2 equivalence claim.
-
-Run now targets frontend.tscn. Original EA/NFS intro/title sequence, MV30 runtime decode,
-common menu audio and frontend jukebox are integrated. First EA movie cannot be skipped;
-second intro can. Title has a strict >4-second activation gate. Skipping does not start
-music; natural completion does. English text comes from FE_ENGLISH.BIN. Confirmed hint bindings for Audio/Controller/NameEntry are integrated.
-
-Godot 4.4.1 and binding pin e4b7c25e721ce3435a029087e3917a30aa73f06b are installed.
-Actual Windows DX12 capture passed on Intel Arc B390. macOS Metal/LinuxBSD Vulkan defaults
-are configured; those platforms are untested. Recovered blueprint state freezes in normal
-IN_FRONTEND (2), updating only during LOADING_TRACK_COMMON (3).
-
-User correction: BGM now uses original JBC0x8000-byte channel interleave and
-matches the authorized map_tools_ps2 decoder byte-for-byte (E-0016-A06). Movie
-audio uses raw stereo ADPCM, mix48000/pitch3762÷4096 (E-0016-A07), with0.16-second
-video lag. BGM/menu neutral driver pitch is applied separately from PCM metadata.
-Video vertical rows now follow original negative-stride decoding (E-0016-V06);
-actual DX12 EA/main-menu screenshots were inspected and display upright.
-
-Naming sweep E-0016-N01 completed:298 source-path occurrences,118 nonoverlapping
-qualified-name matches. Startup functions moved into fmenus; host decoder remains
-port-side. See NAMING_AUDIT.md for unverified naming debt.
-
-Native and Godot builds PASS; both CTest16/16 PASS. UpdatedRuntimeSmoke,
-ActivationSmoke, AnimationSmoke PASS. WindowsDebug export PASS; DLLs and license
-notices present in ignored out/windows-debug. No staging/commit. Continue
-TASK-0016 with original comparison and remaining boot/settings/handler gaps.
-Final Windows export runtime smoke PASS/exit0; final EA4-second verbose capture
-exited without leak warnings. Earlier transientObjectDB warning remains recorded.
-
-## TASK-0015 — Activation and animation integration (active; remaining gaps explicit)
-
-Main-menu Championship/Speed/Options now request registered documents 1/2/24; the first two
-write DAT_002FC070=1/0. All 37 FUN_0016ADB0 registrations are in a port-side immutable table,
-with class identity retained for shared documents. NameEntry is now resolved to layout 29
-(handler 0024DBD8). Main-menu pulse and selection bars are driven every frame; the renderer
-reads live position, scale, alpha, text/font and layer. Options exit motion is recovered as
-zero-velocity cubic Hermite to x=650, duration 0.05 + original item index*0.05, and transitions
-only after completion. Options Back pops history; Main Menu explicitly rejects Back.
-
-Blocked: Display first needs 001EE6C0's runtime settings snapshot, whose three source blocks
-are not represented yet. That choice throws before exiting. Destination screen internal
-activation/Back handlers, scrolling text/background paths, global constructor bindings and
-localisation remain unimplemented. No PCSX2/reference comparison; no Verified promotion.
-
-Validation (2026-10-12): CMake 3.29.2, Ninja 1.12.0, MinGW GCC 13.2.0, Python 3.14.4,
-Godot 4.3.stable.official.77dcf97d8; godot-cpp pin fbbf9ec4efd8f1055d00edb8d926eef8ba4c2cce.
-`cmake --build --preset native-debug --parallel 4` and `ctest --preset native-debug`: PASS 11/11.
-`cmake --build --preset godot-debug --parallel 4` and `ctest --preset godot-debug`: PASS 11/11.
-`./tools/run_frontend.ps1 -ActivationSmoke`, `-AnimationSmoke`, `-Smoke`: PASS (41 screens,
-1524 resolved resources, 25 missing). Direct Godot `--menu-smoke` also PASS.
-Read-only GhidraMCP evidence E-0015-11/12/21 and E-0015-REG-01; server version not captured.
-No commit or staging performed; prior uncommitted changes preserved.
-
-Exact next action: read tasks/active/TASK-0015-frontend-activation-animation.md, then trace
-DAT_002FC194, DAT_0030CDCC and DAT_0030D49C producers/readers before implementing the Display
-snapshot state. Next independent recovery is Cops On/Off Mode Select handlers 002174A0/00217AF8.
-Run `./tools/run_frontend.ps1 -Build` to try current implementation.
-
-
-## TASK-0013 — Original front-end actually rendered (not a debug UI)
-
-User rejected the previous deliverable as "the debug screen", asking for the real game front-end
-rendered exactly like the PS2. Decoded the game's own screen/widget layout format (chunk
-0x80010200: 41 screens of 0x00010210 textured quads and 0x00010212 text widgets, each carrying a
-name hash, 24-byte name, layer byte, x/y, scale, texture hash and RGBA with PS2 alpha) and the
-bitmap font format (chunk 0x00015010: 32-byte glyph records with atlas UV + advance, plus a
-kerning table). Field identification was evidence-driven, not guessed: the texture-hash offset
-(+0x50) was found by correlating every 4-byte-aligned offset across all 1549 widget records
-against the real TexturePack hash set (507/1015 hits for quads vs 79 for the next best offset),
-and the scale semantics were confirmed by TITLE_FULLSCREEN's 512x256 texture at (1.25, 1.88)
-resolving to exactly the 640x480 declared in the screen header. Added native Godot-independent
-parsers (src/game_core/frontend/fmenus.{hpp,cpp}, named after the original source file
-indep\src\fmenus.cpp recovered earlier), a layout bridge (Ps2FrontEndLayout), hash-based texture
-resolution with caching (Ps2TextureLoader::load_texture_by_hash), and an immediate-mode Godot
-renderer (godot/scripts/frontend.gd) that draws quads with draw_texture_rect and text glyph-by-
-glyph from the original font atlases. Result: the real Mode Select main menu (Championship /
-Speed / Options with the HP2 logo), Options, Controller Configuration (with PlayStation button
-glyphs drawn from the BUTTONSOUT icon font) and the Title Screen (HP2 splash + PRESS START) all
-render from the player's own ZZDATA at runtime, with nothing pre-extracted. Headless smoke covers
-all 41 screens and resolves 1524 widget resources (25 missing). Strong cross-validation with
-TASK-0011: widget name hashes in the layout data are the same literal immediates the ELF's
-frontend code uses (0xe0105663/4/5 = POPUP_1/2/3, 0xab671c9a = ANIMATING_MENUITEM inside
-FUN_0016b478), and TASK-0011's previously-unexplained FUN_00249a40 is now understood as binding
-the real GRID / MASTER_BP_OBJECT / FADING_BP_OBJECT background widgets by name. CTest 8/8; the
-three pre-existing scene smokes unchanged; standalone out/windows-debug/port.exe rebuilt and
-verified. Open and explicitly not faked: no interaction/animation state yet, text is the authored
-placeholder strings (LANGUAGES/FE_*.BIN not parsed), kerning parsed but not applied, and the
-screen-name <-> screen-index mapping is still unproven (screen 0 == main menu is a content
-inference). Full write-up: docs/FRONTEND_LAYOUT.md; task: tasks/active/TASK-0013-frontend-layout.md.
-Next: localised strings, then drive selection/highlight state so the real screens are operable.
-
-## TASK-0012 update — Native runtime texture loader; standalone .exe built; original source tree recovered
-
-Three user-directed follow-ups completed in this pass. (1) User required the reversed code to
-load everything directly from the original PS2 assets at runtime, not via a manual Python export
-step: ported tools/asset_extractor/hp2_tpk_textures.py's decode path (chunk parser + full
-Modelulator-derived P8/4bpp RWBuffer decode) verbatim into Godot-independent C++
-(src/game_core/assets/elab_chunks.*, hp2_tpk_texture.*), added a runtime ZZDATA-root resolver
-(src/platform/ps2_asset_root.*, same env-var/config precedence as tools/ps2_assets.py) and a
-Godot bridge (src/platform/godot_bridge/ps2_texture_loader.*, class `Ps2TextureLoader`). Added a
-new CTest (`hp2_tpk_texture`) that decodes the same real texture via C++ and Python and asserts
-byte-for-byte equality -- passed. frontend_menu_observer.gd now calls
-`Ps2TextureLoader.load_texture("FRONTEND/FRONTB.BUN", "LOGO_NFS")` etc. directly at runtime; the
-manually-exported PNGs under godot/assets/extracted/ were deleted. (2) User asked to search for
-the original PS2 loader code via Ghidra MCP before trusting the ported algorithm: searched for
-the TPK chunk tag constants and "TPK"/".tpk"/"eLab" strings as both ELF code and data -- zero
-hits, confirming these are pure resource-file data never referenced by name in the ELF; most
-likely explanation (not proven) is that real PS2 GS hardware natively samples swizzled/indexed
-textures, so the original code probably never does a CPU-side "decode to linear RGBA" at all --
-documented as an open item rather than claimed as a recovered original function. (3) User noted
-that a `.cpp`/`.hpp` string search would reveal the original source tree: it did, spectacularly --
-93 embedded `__FILE__`-style strings recovered the real original directory layout
-(`indep\src\fmenus.cpp`, `indep\src\frontendscreens\{selectcar,racesetup,options,
-joystickconfiguration}.cpp`, the bWare middleware's own `src\b*.cpp` files) and several confirmed
-original class/method names (`World::DoTimestep`, `Race::Update()`, `RaceCoordinator`,
-`ReplayManager::HandleSnapshot()`, `TrafficCar::Move()`, `TexturePack`/`TextureAnimPack` --
-the last one confirming "TPK" is itself derived from the real original class name, not a
-community-invented abbreviation). None of these strings had resolvable code cross-references this
-session (likely retail-stripped assert/profiler call sites), so file-to-function attribution
-remains unconfirmed per-address; full catalog in new docs/ORIGINAL_SOURCE_TREE.md.
-Finally built and ran an actual standalone Windows executable (`out/windows-debug/port.exe` +
-`port.pck` + `ps2_port.dll`, via the existing "Windows Debug" export preset, main scene
-temporarily pointed at frontend_menu_observer.tscn for the export then reverted) -- launches
-independently of the Godot editor/portable runtime, resolves the ZZDATA config, and renders the
-same operable, evidence-backed menu closed loop with live-loaded real PS2 textures (NFS logo,
-brushed metal panel). Screenshot captured and sent to the user. `out/` is gitignored; nothing
-proprietary committed. No Ghidra mutations, no PCSX2 comparison, no Git commit.
-Next: locate the actual GAMEFLOW_STATE_IN_FRONTEND sustained update loop (still the top open item
-from the prior pass); cross-reference the newly-recovered fmenus.cpp/frontendscreens file names
-against specific function addresses if a viable method is found; consider renaming port-side
-`HP2_*` labels to align with recovered original class names where confidently attributable.
-
-## TASK-0011 update — Central GAMEFLOW_STATE_* dispatcher found; FUN_0016fa80 hypothesis retired
-
-User pointed at an existing, independently-validated local PS2 texture decoder
-(D:\dev\eagl-godot\map_tools_ps2) and asked to combine it with continued Ghidra MCP work to
-fully reverse the original menu source, explicitly "don't guess yourself." Fixed TASK-0012's
-texture decoder by porting that project's validated decode path verbatim (root cause of the prior
-artifact: a missing 0x80-byte alignment on the pixel/palette data-pool base offset); FRONTB.BUN
-decode success rate went from 210/365 to 357/365 with zero visible artifacts (see
-docs/ASSET_PIPELINE.md §4.4). Returned to the ELF side and obtained a full decompile of
-FUN_0016fa80 (previously assumed to be an unaudited ~465KB function and the likely New Main Menu
-update/tick routine) -- it is actually a clean 312-byte one-shot cleanup function; the "oversized
-envelope" hypothesis from TASK-0006/0007/0011 is retired as almost certainly a Ghidra
-function-record bookkeeping artifact, not real code. Tracing its single caller led to a major
-structural discovery: the game's central `GAMEFLOW_STATE_*` state-machine dispatcher
-(`FUN_001680d8`=request-transition, `FUN_001680e8`=per-frame pump, already known from TASK-0010 as
-a main-loop StateDispatch target but previously uninterpreted) and its function-pointer table at
-ELF 0x002faea4, whose rows point to ORIGINAL ASCII enum-name strings recovered verbatim from the
-binary: GAMEFLOW_STATE_LOADING_FRONTEND, _UNLOADING_FRONTEND, _IN_FRONTEND,
-_LOADING_TRACK_COMMON, _LOADING_TRACK_SPECIFIC, _RACING, _UNLOADING_TRACK_COMMON (row order
-inferred, not re-verified), _EXIT_DEMO_DISC. This connects to TASK-0011's prior evidence:
-GAMEFLOW_STATE_UNLOADING_FRONTEND's exit callback (0x001687a8, decompiled) calls FUN_0016f950
-(the confirmed attract-sequence gate leading to "New Main Menu"); GAMEFLOW_STATE_IN_FRONTEND's
-enter callback (0x00168830, decompiled) calls FUN_0016fa80 then unconditionally requests
-GAMEFLOW_STATE_LOADING_TRACK_SPECIFIC -- an unresolved contradiction with "IN_FRONTEND" sounding
-like a sustained browse-the-menu state (its update slot is empty), flagged as the top open
-question. 4 new/updated function records (E-0011-17 superseded/corrected, E-0011-18..22); 0x0016fa80's
-record rewritten in place rather than left stale. Full write-up: docs/FRONTEND_MENU.md §8. No
-Ghidra mutations; no PCSX2 comparison; no Git commit.
-Next: resolve the IN_FRONTEND contradiction (decompile 0x00168db8/0x001690a0/etc. to see whether
-gameplay ever returns to IN_FRONTEND, or whether the sustained menu-browsing loop lives entirely
-inside one state's update callback rather than in this dispatcher), then the remaining open items
-in docs/FRONTEND_MENU.md's updated priority list.
-
-## TASK-0012 — PS2 original asset pipeline (active; container + P8/RGBA decode delivered)
-
-User pointed at an authorized local PS2 disc dump (D:\ps2_game\GAME\ZZDATA) and asked for a
-non-hardcoded global config entry point, plus reverse engineering that can actually render the
-original UI matching real PS2 behavior, with file/function naming reflecting the recovered
-structure. Delivered: `tools/ps2_assets.py` as the single global ZZDATA-path resolver (env var
-`HP2_PS2_ASSET_ROOT` then gitignored `config/ps2_assets.local.json`; tracked
-`config/ps2_assets.example.json` template). Reverse engineered and validated (byte-exact full
-file consumption) a generic "eLab" nested-chunk container format shared by FRONTEND/FRONTB.BUN
-(14.4MB, 1760 chunks) and GLOBAL/HUDTEX.BIN (1.5MB, 9 chunks) — `tools/asset_extractor/
-elab_chunks.py`. Found real original frontend UI text in FRONTB.BUN including developer
-placeholder/joke strings ("Phil is a loser, so I have to make this fake menu item") proving
-unmodified shipped data, plus real labels (PRESS START, Championship, Options, Credits,
-Controller, Language Select, Setup, Race Type) and `UwE*`-prefixed widget type names — not yet
-cross-referenced to specific screens. Identified and validated (cross-checked against three
-independent open-source community references: xan1242/xnfstpktool, PS2HomeDeveloper/
-ps2-tim2-tool, leeao/PS2Textures, all cited in docs/ASSET_PIPELINE.md) the HP2 TPK texture
-container's 164-byte `AncientTextureInfo` header and implemented P8 (8-bit indexed, PSMT8
-swizzle + CSM1 CLUT reorder + PS2 alpha range) and RGBA32 pixel decode in
-`tools/asset_extractor/hp2_tpk_textures.py`. Decoded 89/89 HUDTEX.BIN and 210/365 FRONTB.BUN
-texture headers with zero failures (remainder skipped: unsupported 4bpp/DXT, not guessed).
-Visually confirmed multiple decoded textures are clearly recognizable real game art (tachometer
-gauges, car badges including a legible BMW roundel, a full `DISPLAYSETUP_BG` road scene, and a
-`PURSUIT_TREE_BG` event-tree map) — sent to the user. All decoded images and chunk dumps are
-gitignored (`tools/asset_extractor/output/`); no proprietary bytes committed. Open: a fine
-speckle artifact remains in every P8 decode, most likely authentic PS2-era dithering but not
-confirmed; 4bpp/DXT/swizzled-RGBA decode not implemented; the widget/layout record format (which
-texture/text belongs to which named screen) is completely unparsed, so no Godot rendering of
-real original layout exists yet — explicitly do not treat the decoded images as "the rendered
-menu," only as validated raw material toward it. Full report: docs/ASSET_PIPELINE.md. Registered
-analyzed asset file hashes in reverse/assets.csv. No Git commit (left to the user, per prior note
-in TASK-0011).
-Next: parse LANGUAGES/FE_ENGLISH.BIN for authoritative menu text, then reverse the UwEMENUITEM_*
-widget record layout, then resolve the P8 artifact (ideally against a real PCSX2 screenshot),
-then implement 4bpp/DXT decode — only after that attempt an actual layout-accurate Godot render.
-
-## TASK-0011 — Front-end menu minimal closed loop (active; scoped completion)
-
-User asked for the "original front-end flow minimal closed loop": confirm a main menu and its
-adjacent pages, trace NewMainMenu creation/update/input-callback/page-switching, restore
-navigation state in the native core, and show an operable Godot UI, menu closed loop first.
-Confirmed via read-only GhidraMCP: string "New Main Menu" at ELF 0x002b2f00; CONFIRMED edge
-TitleScreen -> New Main Menu (TitleScreen's instance handler FUN_0016eef8, message==1, calling
-FUN_0014cc78->FUN_0016c4c0). Manager-level screen switch/find/history push-pop/reset fully
-decompiled (FUN_0014cc78/0016c4c0/0016c8c8/0016b418/0016b438/0016b460). MumboJumboScreen
-(FUN_0016f810) confirmed as a sibling registered screen class; its edge to Title/MainMenu is
-NOT confirmed. The long-flagged oversized FUN_0016fa80 envelope (0x0016fa80..0x001e3dbf, ~465KB,
-previously noted in TASK-0006/0007) routes several of its opening state values directly to
-"New Main Menu" -- strong candidate for New Main Menu's own update/tick function, still
-unaudited (TASK-0003 remains the right next step for it). New Main Menu's own class
-constructor/dispatcher was not located; input wiring from raw joypad events
-(JOY_EVENT_MENU_SELECT/CANCEL/BACK/HELP strings found, not traced to a call site) to
-FUN_0016eef8's message dispatch was not traced. 16 new reverse/functions/.../frontend/ records
-(E-0011-01..16) plus a reclassified/updated 0016fa80 record (E-0011-17, moved from unknown/ to
-frontend/, Unidentified->Identified, confidence low->medium). reverse/symbols.csv updated.
-Native `hp2::frontend::ScreenManager` (src/game_core/frontend/screen_manager.cpp) implements the
-confirmed manager-level API as a structural projection (name registry, current screen, 12-slot
-history with push/pop, reset); 9 new unit tests. Godot bridge `FrontEndMenuObserver` +
-operable scene `godot/scenes/frontend_menu_observer.tscn` (buttons for the confirmed edge, an
-explicitly-labelled unconfirmed sibling switch, Back, and Reset; live history/registry display;
-evidence footer). Native CTest 7/7 and bridge CTest 7/7 passed (no regressions in the five
-pre-existing tests); Godot headless import clean; new `--frontend-menu-smoke` passed
-(FRONTEND_MENU_OBSERVER_SMOKE_OK); prior `--observer-smoke` and `--smoke-test` still pass
-unchanged. Two real rendered screenshots captured and visually checked
-(local/frontend-menu-observer.png, local/frontend-menu-observer-after-press-start.png, both
-1380x760, git-ignored). Symlinked the user's existing `reverse-engineer-anything` (REA) skill
-from `~/.agents/skills/` into `~/.claude/skills/` at the user's request so Claude Code can load
-it; REA's own tool routing has no Ghidra/MIPS-R5900 provider (IDA-only for native targets), so
-actual decompilation continued through the existing Ghidra MCP server as in prior sessions.
-No Ghidra mutations, no Verified promotion, no PCSX2/original comparison, no Git commit (the
-user committed the pre-existing scaffold independently mid-session; this task's new files are
-uncommitted). Full report: docs/FRONTEND_MENU.md.
-Next: TASK-0003-style boundary/ABI audit of FUN_0016fa80 (highest-value next step -- it is the
-best lead for New Main Menu's real update logic and menu-item content); then trace
-FUN_0016eef8's raw-input source; then locate New Main Menu's own construction site.
-
-## TASK-0010 — Main-loop structural shell completed
-
-Mainloop 0x0012F378 mapped: 61 callsites / 39 distinct targets, five startup sites,
-12 guards and 19 nested World/controller/entity/mover connections. EngineShell
-preserves ordered branches and saved s2/f20 operands; strict mode stops on missing
-contracts, observation mode labels fixtures. Waiting resumes only the original tail.
-Separate Godot observer supports six scenarios, pause/single-step/reset/boundary,
-startup/world tabs; old main scene and PortCore APIs preserved.
-Native and bridge CTest: 6/6 each. New observer headless smoke and prior demo smoke
-passed; actual rendered screenshot inspected (local/main-loop-observer.png).
-Full evidence validator checks 51 live function records, metadata/hash stability,
-all 19 nested connection PCs and three vtable targets. No Ghidra changes/Verified
-promotion or Git commit. Applied REA skill workflow; tools were existing Ghidra MCP.
-Report, architecture graphs and extension example: docs/MAIN_LOOP_STRUCTURE.md.
-Open: ./tools/run_main_loop_observer.ps1; -Build rebuilds; -Smoke checks headlessly.
-Next: resume TASK-0009 with World object/partition/entity ABI and data contracts,
-then recover/register a tested module handler. Original execution oracle, clock,
-state enum and complete behavior remain unresolved. TASK-0005 unchanged.
-
-## TASK-0009 — Whole-binary recovery active
-
-User requested every function, correct names and classes; only the stripped ELF
-is available. Full inventory: reverse/recovery/TASK-0009-functions.csv, 7,544 rows.
-First pass exports 7,516 pseudocode bodies and records 28 boundary blockers;
-49 class texts / 118 method-text hints await address proof. Two police local bodies
-now have native code and partial class storage views. Native CTest 4/4 and five
-export safety tests passed. No Verified functions or trustworthy original names.
-Move control-flow candidate 0x001A1030–0x001A1BCB produces a full separate
-instruction translation; candidate output retains 27 other placeholders. No live
-Ghidra names/types/boundaries changed; previous outputs/config remain preserved.
-Report and reproduction: docs/FULL_RECOVERY.md. Full restoration remains incomplete.
-Next: R5900/pcode/ABI review of Move and tail-call entry 0x001A0E88 before any
-journaled live repair; trace class hints and recover external-call contracts.
-Existing TASK-0005 remains independently active. No commit made.
-
-## TASK-0008 — Police AI map completed
-
-Read-only MCP inspection links mode 4 to CopDriver and mode 5 to CopMover.
-Think candidate 0x001A2110 has 2,432 defined bytes and existing C++ translation.
-Move candidate 0x001A1030 has a one-byte body and TODO output; boundary repair
-remains required. Eight police function records added with original names unknown;
-proposed purpose names were not applied. Report: docs/POLICE_AI_MAP.md.
-Private evidence/pseudocode: ps2_decomp/police-ai/. Eight live metadata matches,
-unchanged ELF hash and seven non-placeholder C++ syntax probes passed; Move blocked.
-No native behavior implemented or Verified status assigned. TASK-0005 untouched.
-Next police action: scoped boundary/ABI audit of 0x001A1030 and undefined vtable
-entry 0x001A0E88, then typed helper recovery with original behavior comparison.
-
-## TASK-0007 — Function naming completed
-
-Screened all 7,544 functions; reviewed all 20 pilots. Applied 16 evidence-backed
-HP2_ purpose names and recorded 11 automatic jump aliases (27 entries total).
-No trustworthy original developer names recovered; original identifiers remain unknown.
-Ghidra saved; ELF SHA-256, function envelopes, namespaces and calling conventions
-unchanged. Names/map/private regenerated C++ agree. Report: docs/FUNCTION_NAMING.md.
-Private output: ps2_decomp/recompiled-named/ (7,516 translations + unchanged 28
-placeholders). Eleven synthetic safety tests and 20 C++ syntax probes passed.
-No full generated link/boot/original comparison; no Verified promotion.
-Name rollback mapping/command and source-type limitations are recorded in the report.
-Existing TASK-0005 remains independent and active; no implementation changes made there.
-Next reverse action: TASK-0003 must audit damaged camera/FlightAreas entries,
-the oversized 0x0016FA80 envelope and allocation return ABI before further naming.
-
-## TASK-0006 — PS2Recomp trial completed
-
-User-requested PS2Recomp/Ghidra generation trial completed on 2026-10-10.
-See `docs/PS2RECOMP_TRIAL.md` for commands, tool/dependency identities and evidence.
-Private outputs: `ps2_decomp/recompiled-triage/`: 7,516 translated functions,
-28 explicit unresolved placeholders, registration and headers (~132 MiB).
-Baseline full run was terminated near 6 GB memory while generating the oversized
-`0x0016FA80` body envelope; its partial output is retained separately.
-Tool build, artifact assertions and five representative C++ syntax probes passed.
-Full generated build/link and original behavior comparison were not performed;
-no equivalence or Verified status is claimed. Existing TASK-0005 remains active
-with its own independent scope; this trial did not modify its implementation.
-Next action: TASK-0003 should audit the `0x0016FA80` discontiguous body/envelope
-alongside its damaged entries before unrestricted generation. Ghidra MCP at
-127.0.0.1:8080 and the original authorized ELF are needed to re-export.
-
-## Scope and milestones
-
-M0 is complete for Windows x86-64. TASK-0002 static workload assessment is complete
-for the current Ghidra snapshot; no game reconstruction or asset conversion was
-performed. M1 is in progress: read-only MCP/R5900 connectivity and ELF identity
-are established, but boundary/ABI quality and broad identification are unfinished.
-M2–M6 have not been achieved. Current active tasks: TASK-0005 (independent infrastructure),
-TASK-0009 (full-binary recovery), TASK-0011 (front-end menu; closed-loop scope delivered,
-broader menu-content recovery remains open), TASK-0012 (PS2 asset pipeline; container + P8/RGBA
-texture decode delivered, layout/text semantic decode and remaining pixel formats remain open).
-Completed tasks: TASK-0000, TASK-0002, TASK-0006, TASK-0007, TASK-0008 and TASK-0010.
-Next reverse task: TASK-0003 boundary/ABI audit (now prioritizing the FUN_0016fa80 envelope
-surfaced by TASK-0011), then TASK-0004 original comparison setup and the scoped pilot backlog.
-
-## Assessment snapshot — TASK-0002
-
-Report: `docs/assessment/BINARY_REPORT.md`. Binary: D:/ps2_game/SLUS_203.62,
-SHA-256 `7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2`.
-Region USA/NTSC inferred; exact executable revision unknown (boot VER 1.00).
-Ghidra project hp2_ps2, R5900/default compiler. Existing annotations preserved.
-
-- 7,544 unique function entries and 17,162 distinct static call relationships.
-- 400,582 decoded .text instructions; complete loaded .text matched the disk ELF.
-- 663 indirect jalr sites, 190 other indirect jr sites, 26 empty CFGs.
-- 21 unique decompile outputs returned, 0 failed probes, 7,523 unprobed;
-  global decompile success/failure totals remain unknown. Three probes contain warnings.
-- 20 varied pilot selections and individual backlog tasks; none executed or verified.
-- Six requested reports plus metadata/evidence exports, a reproducible summarizer,
-  a risk register and explicit uncalibrated workload scenarios.
-
-Blocked future work: trustworthy bodies/ABI for damaged entries; emulator/original
-oracle setup; timed representative recovery; VU/IOP, layout, asset and adapter scope.
-PCSX2 was not located in scoped tool checks; availability elsewhere is unknown.
-Planning scenarios are ~12k / 79k / 480k person-hours under stated assumptions,
-not a delivery forecast. See WORKLOAD_ESTIMATE.md before interpreting these totals.
-
-Assessment validation: summary script assertions passed for population, uniqueness,
-full .text byte coverage/disk agreement and pilot selection. All metadata exports
-are separate from ignored local raw listings/decompilation. Final CSV/task/model
-consistency checks are recorded in the completed assessment task.
-
-## Delivered infrastructure
-
-- Three-layer C++17 architecture; core and provisional service contracts contain no Godot dependency.
-- Optional RefCounted GDExtension wrapper, sample arithmetic, smoke scene, and CTest.
-- Session protocols, architecture/decision/roadmap/development documentation.
-- Task lifecycle folders, templates, and next environment/provenance task.
-- Empty real symbol/binary indexes; function/layout templates and symbolic dummy examples.
-- Git initialized; pinned godot-cpp submodule; restricted-input/build/secret ignores.
-- Existing `task.txt` and `eval.txt` preserved; no Git commit or remote/Issue created.
-
-## Environment observed at initialization (updates below)
-
-| Tool | Observation |
-|---|---|
-| CMake | 3.29.2, C:/Strawberry/c/bin/cmake.exe |
-| Ninja | 1.12.0 |
-| Compiler | MinGW-w64 GCC 13.2.0, x86-64 UCRT |
-| Git | 2.54.0.windows.1; repository initialized here |
-| Python | 3.14.4 via `py -3`; WindowsApps `python` alias failed |
-| Java | Temurin OpenJDK 21.0.11 |
-| Ghidra | 12.0.4 installation present |
-| R5900 extension | ghidra-emotionengine-reloaded present; host compatibility metadata 12.0.4; operation untested |
-| GhidraMCP | Extension description 0.7.0-pre15, compatibility 12.0.4; read-only connectivity confirmed in TASK-0002 |
-| Existing Godot | 4.7.2.stable.official.ed1daf0bf in WinGet package directory, outside PATH |
-| Pinned Godot | Portable 4.3.stable.official.77dcf97d8 downloaded to ignored local/tools/godot-4.3/ |
-| godot-cpp | Submodule fbbf9ec4efd8f1055d00edb8d926eef8ba4c2cce |
-| PCSX2 | Not located/validated in this initialization; not a build prerequisite |
-
-The portable engine came from the official `godotengine/godot-builds` release
-asset `4.3-stable/Godot_v4.3-stable_win64.exe.zip`. No global installation changed.
-Downloaded archive SHA-256:
-`8f2c75b734bd956027ae3ca92c41f78b5d5a255dacc0f20e4e3c523c545ad410`.
-This is a local artifact identity, not an independently checked upstream checksum.
-
-## Initialization validation ledger — 2026-10-09
-
-| Check | Result | Evidence |
+# Port progress
+
+A PS2-to-PC native port of *Need for Speed: Hot Pursuit 2* (`SLUS_203.62`). This file is the
+**tracker**: where recovery stands, what is blocking it, and what to do next. It is the file
+`AGENTS.md`'s startup protocol means.
+
+The tables below are generated from the repository's own records by
+`reverse/scripts/generate_progress.py`, in the spirit of gta-reversed's
+`docs/ReversedClasses.md` — a number written by hand goes stale without anyone noticing, and a
+progress figure nobody can reproduce is worse than none. Regenerate after changing records,
+tasks or `not_implemented` sites:
+
+```bash
+py -3 reverse/scripts/recover_classes.py --emit    # after any class-recovery change
+py -3 reverse/scripts/generate_progress.py
+```
+
+The session-by-session narrative — what each session looked at, found, got wrong and corrected —
+lives in **[PROGRESS_LOG.md](PROGRESS_LOG.md)**. Nothing was deleted when this file was split
+out of it.
+
+## Disclaimers — read before quoting any number here
+
+**No part of this port is verified against the original.** `Verified` requires a recorded
+comparison against PS2 hardware or PCSX2 over a stated scope (AGENT.md R1). That comparison has
+not been performed, so the ladder's top rung is empty and every percentage below describes *how
+much has been read and translated*, not *how much is correct*. Host tests passing is not
+evidence of equivalence, and the tables must never be read as if it were.
+
+**The denominator is the whole ELF**, library and CRT code included, so the headline percentage
+understates progress on the parts that matter and will never reach 100%. It is a floor on what
+is left, not a completion estimate.
+
+**Records are not uniform depth.** A `Decompiled` row means one function's behaviour was read
+and written down; it says nothing about its callees, its structure layouts or its globals. A
+subsystem with many records can still be unusable.
+
+**The untranslated-boundary count moves in both directions.** Reversing a function usually
+reveals further untranslated dependencies, so that number rising is normal progress, not
+regression.
+
+## Recovery
+
+Two views of the same work: **[Classes](#classes)** below is the per-class breakdown -- every
+class name the binary gives up, its member functions, and how far each has got. The function
+totals here are the whole-image counts behind it.
+
+<!-- generated:stats:begin -->
+<!-- Generated by reverse/scripts/generate_progress.py on 2026-10-13. Do not edit by hand. -->
+
+### Functions with a record: 368 of 7544 in the ELF [4.9%]
+
+Binary: `7335b8ed4794…` (unknown executable build; SYSTEM.CNF VER 1.00).
+
+The denominator is every function `docs/assessment/FUNCTION_INVENTORY.csv` found in the ELF,
+including library and CRT code the port will never need, so treat it as a floor on how much is
+left rather than a measure of how much matters. Read the disclaimers above before quoting either
+number.
+
+| Status | Records | Share of records | Meaning |
+|---|---|---|---|
+| Verified | 0 | 0.0% | compared against the original — **nothing is here, by rule** |
+| Tested | 9 | 2.4% | translated and covered by host tests |
+| Implemented | 38 | 10% | translated into `src/`, with the ELF address on the code |
+| Decompiled | 309 | 84% | behaviour read out of the ELF and written down |
+| Identified | 12 | 3.3% | address and role recorded; no decompilation kept |
+
+#### By subsystem
+
+| Subsystem | Records | Verified | Tested | Implemented | Decompiled | Identified |
+|---|---|---|---|---|---|---|
+| audio | 44 | 0 | 0 | 0 | 44 | 0 |
+| containers | 17 | 0 | 0 | 0 | 6 | 11 |
+| engine | 6 | 0 | 0 | 0 | 6 | 0 |
+| frontend | 274 | 0 | 7 | 38 | 228 | 1 |
+| input | 1 | 0 | 0 | 0 | 1 | 0 |
+| memory | 6 | 0 | 0 | 0 | 6 | 0 |
+| memorycard | 5 | 0 | 0 | 0 | 5 | 0 |
+| platform | 1 | 0 | 0 | 0 | 1 | 0 |
+| police | 8 | 0 | 2 | 0 | 6 | 0 |
+| startup | 4 | 0 | 0 | 0 | 4 | 0 |
+| vehicle | 2 | 0 | 0 | 0 | 2 | 0 |
+| **total** | **368** | **0** | **9** | **38** | **309** | **12** |
+
+Structure layout records: **4**, against 368 function records -- roughly 92 to one. That ratio
+is the honest shape of the gap: a translated function whose structure layout is unknown is still
+guesswork at the field level. 2 of them still sit directly in `reverse/structures/` rather than
+the `<binary-id>/<subsystem>/` layout AGENT.md R6 specifies.
+
+<!-- generated:stats:end -->
+
+## Classes
+
+<!-- generated:classes:begin -->
+<!-- Generated by reverse/scripts/generate_progress.py on 2026-10-13. Do not edit by hand. -->
+
+### Classes: 175 names recovered, 58 with a vtable, 702 member functions attributed
+
+"Attributed" counts only members of a vtable reached from a named class whose constructor is
+corroborated. 252 confirmed vtables hold 1577 slots over 791 distinct functions in total
+(reverse/classes/vtables.json); the rest belong to classes this method cannot name. See
+docs/CLASS_RECOVERY.md.
+
+Class names are recovered verbatim (AGENT.md R2) from the second argument of the named allocator
+`FUN_002577C0(size, label)`, which the game calls with the name of the object it is about to
+build. The object size is that call's first argument. Where the call right after the allocation
+is also seen storing a vtable, it is the constructor, and the vtable's slots give the class's
+virtual members. Everything in this table is read out of the binary; nothing is inferred from
+naming or role.
+
+4 of the 64 vtables found are attributed to more than one class. That is the signature of a
+shared base: each derived constructor writes the base vtable too, and label variants of one
+class (the `DriveCameraMover(...)` rows) legitimately share one. For those classes the member
+list includes inherited slots, so their function count is attributed, not exclusive.
+
+What this table does **not** show: a class whose objects are built through the plain allocator
+rather than the named one has no label to recover, so it is absent entirely -- the Language
+Options screen is one such, built with `FUN_00257690(0x10, 0x10)`. Non-virtual members are not
+listed either: nothing in a stripped image ties a non-virtual function to its class. So a
+class's identified-function count is a floor, and 0 means nothing has been bound yet, not that
+the class has no methods.
+
+#### Classes with translated functions (6/175) [3.4%]
+
+At least one member function is translated into `src/` with its ELF address on it.
+
+| Class | Object size | Functions | Record | Implemented | Tested | vtable |
+|---|---|---|---|---|---|---|
+| `JoystickPreconfig` | 644 | 4 | 3 | 2 | 0 | `0x002BE5B8` |
+| `JukeBoxMusicScreen` | 576 | 4 | 3 | 2 | 0 | `0x002BA538` |
+| `AudioOptionsScreen` | 792 | 4 | 2 | 2 | 0 | `0x002BA558` |
+| `tOptionsScreen` | 524 | 4 | 2 | 2 | 1 | `0x002BA578` |
+| `tDisplayOptionsScreen` | 616 | 4 | 2 | 1 | 0 | `0x002BA4E8` |
+| `tCustomizeHUDScreen` | 580 | 4 | 1 | 1 | 0 | `0x002BA4C8` |
+
+#### Classes with recorded functions, none translated yet (4/175) [2.3%]
+
+Behaviour of at least one member has been read out of the ELF and written down.
+
+| Class | Object size | Functions | Record | Implemented | Tested | vtable |
+|---|---|---|---|---|---|---|
+| `CopDriver` | 76 | 37 | 2 | 0 | 0 | `0x002AE7C0`, `0x002AE868`, `0x002B5998` |
+| `CopMover` | 128 | 4 | 2 | 0 | 0 | `0x002B5A08` |
+| `CDBFileSys` | 1464 | 43 | 1 | 0 | 0 | `0x002AD6E8`, `0x002AD7B0` |
+| `StillCameraMover` | 112 | 16 | 1 | 0 | 0 | `0x002B1850` |
+
+#### Classes identified by name only (165/175) [94%]
+
+Name, object size and -- where a vtable was found -- member addresses are known. No member has a
+record yet. This is where most of the binary still is.
+
+<details>
+<summary>See the full list</summary>
+
+| Class | Object size | Functions | Record | Implemented | Tested | vtable |
+|---|---|---|---|---|---|---|
+| `Car (cop)` | 2208 | 40 | 0 | 0 | 0 | `0x002AE710`, `0x002AE780`, `0x002AE7C0`, `0x002AE868` |
+| `PsychoDriver` | 624 | 34 | 0 | 0 | 0 | `0x002AE868`, `0x002AEC50` |
+| `RealDriver` | 640 | 28 | 0 | 0 | 0 | `0x002AE868`, `0x002AEE30` |
+| `AIDriver` | 736 | 17 | 0 | 0 | 0 | `0x002AE328` |
+| `TrafficDriver` | 736 | 17 | 0 | 0 | 0 | `0x002B4730` |
+| `BumperCameraMover` | 1116 | 16 | 0 | 0 | 0 | `0x002B1BD0` |
+| `CubicCameraMover` | 160 | 16 | 0 | 0 | 0 | `0x002B17D0` |
+| `DebugWorldCameraMover` | 76 | 16 | 0 | 0 | 0 | `0x002B1D50` |
+| `DriveCameraMover` | 1008 | 16 | 0 | 0 | 0 | `0x002B1DD0` |
+| `DriveCameraMover(DCC)` | 1008 | 16 | 0 | 0 | 0 | `0x002B1DD0` |
+| `DriveCameraMover(NisCC)` | 1008 | 16 | 0 | 0 | 0 | `0x002B1DD0` |
+| `DriveCameraMover(Player)` | 1008 | 16 | 0 | 0 | 0 | `0x002B1DD0` |
+| `MaxCameraMover` | 68 | 16 | 0 | 0 | 0 | `0x002B19D0` |
+| `OrbitCarCameraMover` | 208 | 16 | 0 | 0 | 0 | `0x002B1C50` |
+| `RearViewMirrorCameraMover` | 48 | 16 | 0 | 0 | 0 | `0x002B1B50` |
+| `TrackCarCameraMover` | 1136 | 16 | 0 | 0 | 0 | `0x002B1AD0` |
+| `TrackFlyCameraMover` | 412 | 16 | 0 | 0 | 0 | `0x002B1A50` |
+| `TrackRouteEditorCameraMover` | 44 | 16 | 0 | 0 | 0 | `0x002B1CD0` |
+| `ZoneFreezeCameraMover` | 872 | 16 | 0 | 0 | 0 | `0x002B20D0` |
+| `ZonePreviewCameraMover` | 1104 | 16 | 0 | 0 | 0 | `0x002B2050` |
+| `PhysicsCar` | 120 | 15 | 0 | 0 | 0 | `0x002AE7A0`, `0x002AEAA8`, `0x002AEAC8`, `0x002AEAE8`, `0x002B5D18` |
+| `AICarSound` | 80 | 14 | 0 | 0 | 0 | `0x002B4898`, `0x002B48D8` |
+| `PlayerCarSound` | 288 | 14 | 0 | 0 | 0 | `0x002B4898`, `0x002B4920` |
+| `RealController` | 84 | 14 | 0 | 0 | 0 | `0x002BE170` |
+| `PlayerTireSound` | 2744 | 10 | 0 | 0 | 0 | `0x002BC198` |
+| `AIEngineSound` | 268 | 8 | 0 | 0 | 0 | `0x002BBF80` |
+| `ChopperSound` | 48 | 8 | 0 | 0 | 0 | `0x002BC2A8` |
+| `NullController` | 12 | 8 | 0 | 0 | 0 | `0x002B7218` |
+| `PlayerEngineSound` | 7176 | 8 | 0 | 0 | 0 | `0x002BBFC0` |
+| `SirenSound` | 616 | 8 | 0 | 0 | 0 | `0x002B49B0` |
+| `kAITireSound` | 804 | 8 | 0 | 0 | 0 | `0x002BC1E8` |
+| `BeACopResults1P` | 8 | 6 | 0 | 0 | 0 | `0x002B8F98` |
+| `BeACopResults2P` | 8 | 6 | 0 | 0 | 0 | `0x002B8F68` |
+| `BestLapTimes` | 8 | 6 | 0 | 0 | 0 | `0x002B8FF8` |
+| `BestTotalTimes` | 8 | 6 | 0 | 0 | 0 | `0x002B8FC8` |
+| `EndGameMenu` | 112 | 6 | 0 | 0 | 0 | `0x002B8F38` |
+| `EventRewardScreen` | 8 | 6 | 0 | 0 | 0 | `0x002B9088` |
+| `Events Unlocked` | 8 | 6 | 0 | 0 | 0 | `0x002B90B8` |
+| `Points Rewards` | 8 | 6 | 0 | 0 | 0 | `0x002B9118` |
+| `RaceResultsScreen` | 60 | 6 | 0 | 0 | 0 | `0x002B9058` |
+| `Task Rewards` | 8 | 6 | 0 | 0 | 0 | `0x002B90E8` |
+| `TourneyStandingsScreen` | 8 | 6 | 0 | 0 | 0 | `0x002B9028` |
+| `BeltMover` | 72 | 4 | 0 | 0 | 0 | `0x002BB090` |
+| `DeliveryMover` | 192 | 4 | 0 | 0 | 0 | `0x002BAF30` |
+| `TrafficCar` | 36 | 4 | 0 | 0 | 0 | `0x002B2190` |
+| `CountdownCameraCoordinator` | 36 | 3 | 0 | 0 | 0 | `0x002B5298` |
+| `DemoCameraCoordinator` | 52 | 3 | 0 | 0 | 0 | `0x002B52E0` |
+| `NisCameraCoordinator` | 40 | 3 | 0 | 0 | 0 | `0x002B5268` |
+| `AnimationGroup` | 76 | 0 | 0 | 0 | 0 | not found |
+| `Autosaver` | 64 | 0 | 0 | 0 | 0 | not found |
+| `AverageInRealController` | 16 | 0 | 0 | 0 | 0 | not found |
+| `BeACopChallengeSetup` | 720 | 0 | 0 | 0 | 0 | not found |
+| `BeTheCopSetup` | 784 | 0 | 0 | 0 | 0 | not found |
+| `BootMemcardLoader` | 88 | 0 | 0 | 0 | 0 | not found |
+| `CD Directory` | unknown | 0 | 0 | 0 | 0 | not found |
+| `CarDamage` | 228 | 0 | 0 | 0 | 0 | not found |
+| `CarRenderInfo` | 2352 | 0 | 0 | 0 | 0 | not found |
+| `CarRenderInfo Saved Alpha Bits` | unknown | 0 | 0 | 0 | 0 | not found |
+| `ChangeableMenuItem` | 44 | 0 | 0 | 0 | 0 | not found |
+| `CollisionBodyNumberAllocator` | 12 | 0 | 0 | 0 | 0 | not found |
+| `CollisionBodyTable` | 824 | 0 | 0 | 0 | 0 | not found |
+| `CollisionBodyWitnessBitField` | 5304 | 0 | 0 | 0 | 0 | not found |
+| `CopsOffModeSelect` | 632 | 0 | 0 | 0 | 0 | not found |
+| `CopsOnModeSelect` | 632 | 0 | 0 | 0 | 0 | not found |
+| `Credits movie player` | 16 | 0 | 0 | 0 | 0 | not found |
+| `CreditsLine` | 12 | 0 | 0 | 0 | 0 | not found |
+| `CreditsScroller` | 116 | 0 | 0 | 0 | 0 | not found |
+| `DebugPauseMenu` | 8 | 0 | 0 | 0 | 0 | not found |
+| `DeltaLineSPeed Average` | 16 | 0 | 0 | 0 | 0 | not found |
+| `DuplicatedSolid` | 192 | 0 | 0 | 0 | 0 | not found |
+| `DuplicatedStripEntryData` | unknown | 0 | 0 | 0 | 0 | not found |
+| `DuplicatedStripEntryTable` | unknown | 0 | 0 | 0 | 0 | not found |
+| `EndGameMenuItem` | 20 | 0 | 0 | 0 | 0 | not found |
+| `EndGameScreens` | 72 | 0 | 0 | 0 | 0 | not found |
+| `FMenus Highlight Animation` | 32 | 0 | 0 | 0 | 0 | not found |
+| `FernShakerInfoTable` | 48 | 0 | 0 | 0 | 0 | not found |
+| `FlailerScreenList` | 488 | 0 | 0 | 0 | 0 | not found |
+| `FreeRunSetup` | 776 | 0 | 0 | 0 | 0 | not found |
+| `GlobalBackgroundAnimation` | 156 | 0 | 0 | 0 | 0 | not found |
+| `HelpAlphaAnimation` | 12 | 0 | 0 | 0 | 0 | not found |
+| `HornSound3d` | 224 | 0 | 0 | 0 | 0 | not found |
+| `HudTexturePack` | 148 | 0 | 0 | 0 | 0 | not found |
+| `Joylog from Codeine` | unknown | 0 | 0 | 0 | 0 | not found |
+| `JoystickCalibrationScreen` | 80 | 0 | 0 | 0 | 0 | not found |
+| `LanguageBuffer` | unknown | 0 | 0 | 0 | 0 | not found |
+| `LapKnockoutSetup` | 788 | 0 | 0 | 0 | 0 | not found |
+| `LapTimesDisplay` | 4 | 0 | 0 | 0 | 0 | not found |
+| `LoadedTextureData` | 44 | 0 | 0 | 0 | 0 | not found |
+| `MumboJumboScreen` | 20 | 0 | 0 | 0 | 0 | not found |
+| `MunitionEffectsHandler` | 8 | 0 | 0 | 0 | 0 | not found |
+| `NIS PreviewRoute` | 24 | 0 | 0 | 0 | 0 | not found |
+| `NameEntry` | 776 | 0 | 0 | 0 | 0 | not found |
+| `NewMainMenu` | 636 | 0 | 0 | 0 | 0 | not found |
+| `NisManager` | 320 | 0 | 0 | 0 | 0 | not found |
+| `NullDriver` | 560 | 0 | 0 | 0 | 0 | not found |
+| `NumberAllocator` | unknown | 0 | 0 | 0 | 0 | not found |
+| `PauseAudioOpts` | 288 | 0 | 0 | 0 | 0 | not found |
+| `PauseDisplayOpts` | 108 | 0 | 0 | 0 | 0 | not found |
+| `PauseMenu` | 56 | 0 | 0 | 0 | 0 | not found |
+| `PauseOptions` | 144 | 0 | 0 | 0 | 0 | not found |
+| `PauseRaceObjective` | 8 | 0 | 0 | 0 | 0 | not found |
+| `PauseViewControls` | 8 | 0 | 0 | 0 | 0 | not found |
+| `Phsycho Body Pid` | 40 | 0 | 0 | 0 | 0 | not found |
+| `Phsycho Heading Pid` | 40 | 0 | 0 | 0 | 0 | not found |
+| `Phsycho Velocity Pid` | 40 | 0 | 0 | 0 | 0 | not found |
+| `PreRace2PBeACop` | 4 | 0 | 0 | 0 | 0 | not found |
+| `PreRaceBlurb` | 4 | 0 | 0 | 0 | 0 | not found |
+| `PreRaceStats` | 400 | 0 | 0 | 0 | 0 | not found |
+| `PreviewPause` | 16 | 0 | 0 | 0 | 0 | not found |
+| `PreviewPausePoint` | 32 | 0 | 0 | 0 | 0 | not found |
+| `Progress Average` | 16 | 0 | 0 | 0 | 0 | not found |
+| `QuickSplineInRealController` | 40 | 0 | 0 | 0 | 0 | not found |
+| `RaceCoordinator` | 144 | 0 | 0 | 0 | 0 | not found |
+| `ReplayLogBuffer` | unknown | 0 | 0 | 0 | 0 | not found |
+| `ReplayManager` | 20664 | 0 | 0 | 0 | 0 | not found |
+| `ReplayScreen` | 584 | 0 | 0 | 0 | 0 | not found |
+| `ReplaySnapshot` | unknown | 0 | 0 | 0 | 0 | not found |
+| `ResourceFile` | 216 | 0 | 0 | 0 | 0 | not found |
+| `Reward Car Model` | 28 | 0 | 0 | 0 | 0 | not found |
+| `RewardTrackModel` | 4 | 0 | 0 | 0 | 0 | not found |
+| `SelectTrackScreen` | 656 | 0 | 0 | 0 | 0 | not found |
+| `SelectableTrack` | 48 | 0 | 0 | 0 | 0 | not found |
+| `SelectionSet` | 148 | 0 | 0 | 0 | 0 | not found |
+| `SingleRaceSetup` | 792 | 0 | 0 | 0 | 0 | not found |
+| `Stomper Stack` | 1024 | 0 | 0 | 0 | 0 | not found |
+| `Temp Fred For Load` | unknown | 0 | 0 | 0 | 0 | not found |
+| `TerrainEffectEmitters` | 1848 | 0 | 0 | 0 | 0 | not found |
+| `TextureTable` | unknown | 0 | 0 | 0 | 0 | not found |
+| `TimeAroundTrackTable` | 2052 | 0 | 0 | 0 | 0 | not found |
+| `TimeOfDayTrack` | 16 | 0 | 0 | 0 | 0 | not found |
+| `TitleScreen` | 56 | 0 | 0 | 0 | 0 | not found |
+| `TourneyPoints` | 20 | 0 | 0 | 0 | 0 | not found |
+| `TrackKnockoutSetup` | 792 | 0 | 0 | 0 | 0 | not found |
+| `TrackMap` | 176 | 0 | 0 | 0 | 0 | not found |
+| `TrackMarkerFile` | 8468 | 0 | 0 | 0 | 0 | not found |
+| `TrackRouteEditor` | 1152 | 0 | 0 | 0 | 0 | not found |
+| `TrafficTeleporter` | 88 | 0 | 0 | 0 | 0 | not found |
+| `Very Stuck Progress Average` | 16 | 0 | 0 | 0 | 0 | not found |
+| `VisibleDrivingLine` | 108 | 0 | 0 | 0 | 0 | not found |
+| `ZonePreview Emitters` | unknown | 0 | 0 | 0 | 0 | not found |
+| `eAnimation` | 80 | 0 | 0 | 0 | 0 | not found |
+| `eFrameMallocBuffer0` | unknown | 0 | 0 | 0 | 0 | not found |
+| `eFrameMallocBuffer1` | unknown | 0 | 0 | 0 | 0 | not found |
+| `feAnimAlphaElement` | 28 | 0 | 0 | 0 | 0 | not found |
+| `mExitScreenAnimation` | 28 | 0 | 0 | 0 | 0 | not found |
+| `m_ptr_SOUND_Memory_EE` | unknown | 0 | 0 | 0 | 0 | not found |
+| `pCarTexturePack` | 148 | 0 | 0 | 0 | 0 | not found |
+| `pDynamicTexturePack` | 148 | 0 | 0 | 0 | 0 | not found |
+| `pInitialSpotlightAlphas` | unknown | 0 | 0 | 0 | 0 | not found |
+| `pInitialSpotlightColours` | unknown | 0 | 0 | 0 | 0 | not found |
+| `pTrackSelectTexturePack` | 148 | 0 | 0 | 0 | 0 | not found |
+| `tCubic1D` | 48 | 0 | 0 | 0 | 0 | not found |
+| `tEventGroup` | 40 | 0 | 0 | 0 | 0 | not found |
+| `tEventLeaf` | 96 | 0 | 0 | 0 | 0 | not found |
+| `tEventTreeView` | 2144 | 0 | 0 | 0 | 0 | not found |
+| `tExitScreenAnimation` | 28 | 0 | 0 | 0 | 0 | not found |
+| `tHelpMenu` | 36 | 0 | 0 | 0 | 0 | not found |
+| `tLineSegment` | 24 | 0 | 0 | 0 | 0 | not found |
+| `tMainMenuTrackDesc` | 16 | 0 | 0 | 0 | 0 | not found |
+| `tMenuAnimElement` | 64 | 0 | 0 | 0 | 0 | not found |
+| `tPointsThingy` | 16 | 0 | 0 | 0 | 0 | not found |
+| `tPopupMenu` | 140 | 0 | 0 | 0 | 0 | not found |
+| `tRandomlyPickableTrackInfo` | 16 | 0 | 0 | 0 | 0 | not found |
+| `tStatsColumn` | 76 | 0 | 0 | 0 | 0 | not found |
+| `tTotalTimeRecord` | 16 | 0 | 0 | 0 | 0 | not found |
+
+</details>
+
+<!-- generated:classes:end -->
+
+## The frontier
+
+<!-- generated:boundaries:begin -->
+<!-- Generated by reverse/scripts/generate_progress.py on 2026-10-13. Do not edit by hand. -->
+
+### Explicit untranslated boundaries: 86 call sites, 62 distinct ELF addresses
+
+Each row is a recovered path that is reached but not translated, and that therefore throws
+`hp2::NotImplemented` naming its ELF address (AGENT.md R3). This is the work queue: a path
+leaves this table by being reversed, never by being given a default.
+
+<details>
+<summary>See all call sites</summary>
+
+| ELF address | What is missing | Call site |
 |---|---|---|
-| Required directory structure | Passed | PowerShell Test-Path check of all 18 requested directories and 14 requested named files |
-| Native configuration | Passed | `cmake --preset native-debug` exited 0 |
-| Native compile | Passed | `cmake --build --preset native-debug` exited 0; core static library and test executable linked |
-| Native unit tests | Passed | `ctest --preset native-debug`: 1/1 passed; arithmetic normal/zero/negative/int32 boundary sums |
-| Bridge configuration | Passed | `cmake --preset godot-debug -DPython3_EXECUTABLE=<py-discovered-path>` exited 0 |
-| Bridge compilation | Passed | `cmake --build --preset godot-debug --parallel 4` exited 0; ps2_port.dll linked |
-| Bridge-build core tests | Passed | `ctest --preset godot-debug`: 1/1 passed |
-| Godot import | Passed after fix | Portable 4.3 `--headless --path godot --editor --import` exited 0 with no errors |
-| Godot scene smoke | Passed | Portable 4.3 `--headless --path godot -- --smoke-test` exited 0, printed `PORT_SMOKE_OK: 42` |
-| DLL runtime dependencies | Passed | `objdump -p godot/bin/ps2_port.dll` shows Windows system imports; no external MinGW runtime DLLs |
-| Ignore checks | Passed | `git check-ignore` matched 11 representative build, private asset, binary, Godot, Ghidra, local-config and secret paths |
-| Original behavior comparison | Not performed | Explicitly outside initialization scope |
+| `(runtime value: address)` | Back settings comparison state missing | [src/game_core/indep/src/frontendscreens/options.cpp:166](../src/game_core/indep/src/frontendscreens/options.cpp:166) |
+| `(runtime value: address.c_str())` | screen item activation handler not translated | [src/port/runtime/frontend_runtime.cpp:482](../src/port/runtime/frontend_runtime.cpp:482) |
+| `(runtime value: hex(address).c_str())` | activation side-effect dependency not translated | [src/port/runtime/frontend_runtime.cpp:457](../src/port/runtime/frontend_runtime.cpp:457) |
+| `0x00140638` | missing background widget measurement | [src/game_core/indep/src/fmenus.cpp:1171](../src/game_core/indep/src/fmenus.cpp:1171) |
+| `0x00140638` | missing background widget measurement | [src/game_core/indep/src/fmenus.cpp:1201](../src/game_core/indep/src/fmenus.cpp:1201) |
+| `0x00144860` | selector target bounds unavailable | [src/game_core/indep/src/fmenus.cpp:1055](../src/game_core/indep/src/fmenus.cpp:1055) |
+| `0x00145F30` | clip-mask measurement missing | [src/game_core/indep/src/fmenus.cpp:903](../src/game_core/indep/src/fmenus.cpp:903) |
+| `0x00153420` | requested track catalog row is absent | [src/port/assets/event_name_catalog.hpp:61](../src/port/assets/event_name_catalog.hpp:61) |
+| `0x00153608` | track catalog chunk 0x34201 missing or malformed | [src/port/assets/event_name_catalog.hpp:26](../src/port/assets/event_name_catalog.hpp:26) |
+| `0x0016ADB0` | registered document not present in loaded bundle | [src/port/runtime/frontend_runtime.cpp:675](../src/port/runtime/frontend_runtime.cpp:675) |
+| `0x0016B418` | history overflow | [src/port/runtime/frontend_runtime.cpp:751](../src/port/runtime/frontend_runtime.cpp:751) |
+| `0x0016B418` | history overflow behavior not recovered | [src/port/runtime/frontend_runtime.cpp:678](../src/port/runtime/frontend_runtime.cpp:678) |
+| `0x0016BAC0` | pop-up / help menu joypad handling (POPUP_1..3 handler table unrecovered) | [src/game_core/indep/src/fmenus.cpp:699](../src/game_core/indep/src/fmenus.cpp:699) |
+| `0x0016C4C0` | target menu construction failed | [src/port/runtime/frontend_runtime.cpp:686](../src/port/runtime/frontend_runtime.cpp:686) |
+| `0x0016C670` | Back class registration missing | [src/port/runtime/frontend_runtime.cpp:731](../src/port/runtime/frontend_runtime.cpp:731) |
+| `0x0016C670` | Back side-effect dependency not translated | [src/port/runtime/frontend_runtime.cpp:748](../src/port/runtime/frontend_runtime.cpp:748) |
+| `0x0016C670` | Back side-effect service missing | [src/game_core/indep/src/frontendscreens/options.cpp:170](../src/game_core/indep/src/frontendscreens/options.cpp:170) |
+| `0x0016C670` | screen Back handler not recovered | [src/game_core/indep/src/frontendscreens/options.cpp:266](../src/game_core/indep/src/frontendscreens/options.cpp:266) |
+| `0x0016C8C8` | requested class not recovered | [src/port/runtime/frontend_runtime.cpp:673](../src/port/runtime/frontend_runtime.cpp:673) |
+| `0x0016FBB0` | global FMenus constructor bindings (main-menu pulse is implemented separately) | [src/game_core/indep/src/fmenus.cpp:704](../src/game_core/indep/src/fmenus.cpp:704) |
+| `0x00187EB8` | original car database name lookup missing | [src/game_core/indep/src/eventtree.cpp:652](../src/game_core/indep/src/eventtree.cpp:652) |
+| `0x00187F98` | car catalog chunk34600 missing | [src/port/assets/event_name_catalog.hpp:44](../src/port/assets/event_name_catalog.hpp:44) |
+| `0x001A3B98` | INT_MIN timer negation behavior not modeled | [src/game_core/indep/src/eventtree.cpp:596](../src/game_core/indep/src/eventtree.cpp:596) |
+| `0x001A3B98` | original timer formatter missing | [src/game_core/indep/src/eventtree.cpp:682](../src/game_core/indep/src/eventtree.cpp:682) |
+| `0x001A3B98` | original timer formatter missing | [src/game_core/indep/src/eventtree.cpp:716](../src/game_core/indep/src/eventtree.cpp:716) |
+| `0x001AEFD0` | jukebox name missing type field | [src/game_core/bSound/src/bJukebox.cpp:52](../src/game_core/bSound/src/bJukebox.cpp:52) |
+| `0x001AF050` | jukebox song type outside recovered matrix | [src/game_core/bSound/src/bJukebox.cpp:74](../src/game_core/bSound/src/bJukebox.cpp:74) |
+| `0x001DC5A8` | original track database name lookup missing | [src/game_core/indep/src/eventtree.cpp:656](../src/game_core/indep/src/eventtree.cpp:656) |
+| `0x001EE6C0` | display preparation not translated | [src/port/runtime/frontend_runtime.cpp:449](../src/port/runtime/frontend_runtime.cpp:449) |
+| `0x001EECA8` | unmatched item uses unresolved default target at 0x00331660 | [src/game_core/indep/src/frontendscreens/options.cpp:107](../src/game_core/indep/src/frontendscreens/options.cpp:107) |
+| `0x001F1B08` | activation side-effect service missing | [src/game_core/indep/src/frontendscreens/options.cpp:129](../src/game_core/indep/src/frontendscreens/options.cpp:129) |
+| `0x001F1B08` | language state missing | [src/game_core/indep/src/frontendscreens/options.cpp:209](../src/game_core/indep/src/frontendscreens/options.cpp:209) |
+| `0x001F5C28` | Autosave history push service missing | [src/game_core/indep/src/frontendscreens/options.cpp:175](../src/game_core/indep/src/frontendscreens/options.cpp:175) |
+| `0x001F5C28` | controller Autosave history service missing | [src/game_core/indep/src/frontendscreens/joystickconfiguration.cpp:16](../src/game_core/indep/src/frontendscreens/joystickconfiguration.cpp:16) |
+| `0x001F5DD0` | NUM_LAPS requires first track row | [src/game_core/indep/src/eventtree.cpp:691](../src/game_core/indep/src/eventtree.cpp:691) |
+| `0x001F6220` | reward kind has no text-producing arm in original | [src/game_core/indep/src/eventtree.cpp:659](../src/game_core/indep/src/eventtree.cpp:659) |
+| `0x001F6440` | reward preview car/track model renderer not translated | [src/port/runtime/frontend_runtime.cpp:406](../src/port/runtime/frontend_runtime.cpp:406) |
+| `0x001F6A28` | event car/race selection dependencies not translated | [src/port/runtime/frontend_runtime.cpp:384](../src/port/runtime/frontend_runtime.cpp:384) |
+| `0x001F6CF0` | authored HLINE/VLINE template unavailable | [src/port/runtime/event_tree_view.cpp:347](../src/port/runtime/event_tree_view.cpp:347) |
+| `0x001F6CF0` | authored line texture unavailable | [src/port/runtime/event_tree_view.cpp:350](../src/port/runtime/event_tree_view.cpp:350) |
+| `0x001F77F0` | event31 tree gate unavailable | [src/port/runtime/event_tree_view.cpp:150](../src/port/runtime/event_tree_view.cpp:150) |
+| `0x001F8C10` | car logo widget C6398C48 missing | [src/game_core/indep/src/eventtree.cpp:732](../src/game_core/indep/src/eventtree.cpp:732) |
+| `0x001F8D20` | car logo animator not bound | [src/game_core/indep/src/eventtree.cpp:739](../src/game_core/indep/src/eventtree.cpp:739) |
+| `0x001F8E18` | car logo index outside catalog | [src/port/assets/event_name_catalog.hpp:67](../src/port/assets/event_name_catalog.hpp:67) |
+| `0x001F8FB0` | car logo animator not bound | [src/game_core/indep/src/eventtree.cpp:763](../src/game_core/indep/src/eventtree.cpp:763) |
+| `0x001F90F0` | track logo widget F60114E4 missing | [src/game_core/indep/src/eventtree.cpp:788](../src/game_core/indep/src/eventtree.cpp:788) |
+| `0x001F91F0` | track logo animator not bound | [src/game_core/indep/src/eventtree.cpp:800](../src/game_core/indep/src/eventtree.cpp:800) |
+| `0x001F9318` | track logo animator not bound | [src/game_core/indep/src/eventtree.cpp:810](../src/game_core/indep/src/eventtree.cpp:810) |
+| `0x001FE988` | event profile slices overflow the 0x100-byte block, which the | [src/game_core/indep/src/eventtree.cpp:548](../src/game_core/indep/src/eventtree.cpp:548) |
+| `0x002006A0` | point-count table index outside recovered eight bytes | [src/game_core/indep/src/eventtree.cpp:38](../src/game_core/indep/src/eventtree.cpp:38) |
+| `0x00200E78` | goal type has no result-text arm in original | [src/game_core/indep/src/eventtree.cpp:720](../src/game_core/indep/src/eventtree.cpp:720) |
+| `0x00200E78` | result index beyond nine recovered placing text IDs | [src/game_core/indep/src/eventtree.cpp:723](../src/game_core/indep/src/eventtree.cpp:723) |
+| `0x002010B8` | event 31's gate reads DAT_0031D7F4+0x180 / +0x1B8, which are not | [src/game_core/indep/src/eventtree.cpp:195](../src/game_core/indep/src/eventtree.cpp:195) |
+| `0x002010B8` | event 32 requires events 1..31 of BOTH trees to be Won, which | [src/game_core/indep/src/eventtree.cpp:204](../src/game_core/indep/src/eventtree.cpp:204) |
+| `0x002010B8` | event32 completion event unavailable | [src/port/runtime/event_tree_view.cpp:113](../src/port/runtime/event_tree_view.cpp:113) |
+| `0x002010B8` | event32 completion event unavailable | [src/port/runtime/event_tree_view.cpp:192](../src/port/runtime/event_tree_view.cpp:192) |
+| `0x00216C18` | Quick Race leaves the front end: it writes the race configuration block | [src/game_core/port/frontend/frontendscreens/modeselect.cpp:133](../src/game_core/port/frontend/frontendscreens/modeselect.cpp:133) |
+| `0x00217020` | exit-screen-animation service missing | [src/game_core/port/frontend/frontendscreens/modeselect.cpp:18](../src/game_core/port/frontend/frontendscreens/modeselect.cpp:18) |
+| `0x0021E0D0` | asset root unavailable | [src/port/runtime/frontend_runtime.cpp:702](../src/port/runtime/frontend_runtime.cpp:702) |
+| `0x0021E0D0` | locale asset unavailable | [src/port/runtime/frontend_runtime.cpp:707](../src/port/runtime/frontend_runtime.cpp:707) |
+| `0x0021E0D0` | unknown locale | [src/port/runtime/frontend_runtime.cpp:701](../src/port/runtime/frontend_runtime.cpp:701) |
+| `0x0021E560` | event text localization entry unavailable | [src/port/runtime/frontend_runtime.cpp:534](../src/port/runtime/frontend_runtime.cpp:534) |
+| `0x0021E560` | result localization lookup missing | [src/game_core/indep/src/eventtree.cpp:724](../src/game_core/indep/src/eventtree.cpp:724) |
+| `0x00237760` | non-PCM movie audio | [src/game_core/indep/src/movieplayer/movieplayer.cpp:59](../src/game_core/indep/src/movieplayer/movieplayer.cpp:59) |
+| `0x00238FB0` | non-MV30 AVI codec | [src/game_core/indep/src/movieplayer/movieplayer.cpp:47](../src/game_core/indep/src/movieplayer/movieplayer.cpp:47) |
+| `0x00238FB0` | unsupported MV30 bitmap format | [src/game_core/indep/src/movieplayer/movieplayer.cpp:56](../src/game_core/indep/src/movieplayer/movieplayer.cpp:56) |
+| `0x00239148` | host FFmpeg MV30 decoder missing | [src/game_core/indep/src/movieplayer/movieplayer.cpp:96](../src/game_core/indep/src/movieplayer/movieplayer.cpp:96) |
+| `0x002402C0` | controller profile comparison missing | [src/game_core/indep/src/frontendscreens/joystickconfiguration.cpp:14](../src/game_core/indep/src/frontendscreens/joystickconfiguration.cpp:14) |
+| `0x00247530` | load/save operation Back polling dependencies missing | [src/game_core/indep/src/frontendscreens/options.cpp:264](../src/game_core/indep/src/frontendscreens/options.cpp:264) |
+| `0x002491B0` | screen scrolling-text attachment not recovered | [src/port/runtime/frontend_runtime.cpp:869](../src/port/runtime/frontend_runtime.cpp:869) |
+| `0x00249348` | scrolling-text update requires the bound Type_002491B0 screen state | [src/game_core/indep/src/fmenus.cpp:1071](../src/game_core/indep/src/fmenus.cpp:1071) |
+| `0x00249FF8` | scrolling screen not bound | [src/game_core/indep/src/fmenus.cpp:953](../src/game_core/indep/src/fmenus.cpp:953) |
+| `0x0024A090` | selected widget not in scrolling list | [src/game_core/indep/src/fmenus.cpp:987](../src/game_core/indep/src/fmenus.cpp:987) |
+| `0x0024A368` | uninitialized viewport slot | [src/game_core/indep/src/fmenus.cpp:1033](../src/game_core/indep/src/fmenus.cpp:1033) |
+| `0x0024D870` | NameEntry keyboard state missing | [src/game_core/indep/src/frontendscreens/options.cpp:199](../src/game_core/indep/src/frontendscreens/options.cpp:199) |
+| `0x00251398` | event localized format conversion not implemented | [src/game_core/indep/src/eventtree.cpp:63](../src/game_core/indep/src/eventtree.cpp:63) |
+| `0x0025A3D0` | original zero-bound trap | [src/game_core/indep/src/fmenus.cpp:1134](../src/game_core/indep/src/fmenus.cpp:1134) |
+| `0x0025A488` | missing shared RNG input | [src/game_core/indep/src/fmenus.cpp:1167](../src/game_core/indep/src/fmenus.cpp:1167) |
+| `0x00266FB0` | E-0016-A02: non-VAG sample chunk | [src/game_core/indep/src/sound.cpp:101](../src/game_core/indep/src/sound.cpp:101) |
+| `0x00266FB0` | E-0016-A02: sound sample chunk variant | [src/game_core/indep/src/sound.cpp:97](../src/game_core/indep/src/sound.cpp:97) |
+| `0x00266FB0` | unobserved VAGx channel layout | [src/game_core/indep/src/sound.cpp:36](../src/game_core/indep/src/sound.cpp:36) |
+| `0x002719B8` | E-0016-A01: requested bSound event absent in Guest asset bank | [src/game_core/indep/src/sound.cpp:172](../src/game_core/indep/src/sound.cpp:172) |
+| `0x0027CA00` | jukebox synchronous prelude not implemented | [src/game_core/bSound/src/bJukebox.cpp:64](../src/game_core/bSound/src/bJukebox.cpp:64) |
+| `0x0027D6A8` | Jukebox preview category/song operands missing | [src/game_core/indep/src/frontendscreens/options.cpp:226](../src/game_core/indep/src/frontendscreens/options.cpp:226) |
+| `0x0027DAC8` | unobserved jukebox cartridge format | [src/game_core/bSound/src/bJukebox.cpp:34](../src/game_core/bSound/src/bJukebox.cpp:34) |
+| `LANGUAGES/FE_*.BIN` | localised string table format not parsed | [src/game_core/indep/src/fmenus.cpp:709](../src/game_core/indep/src/fmenus.cpp:709) |
 
-No unavailable tool blocks native builds. Python is usable with an explicit
-interpreter. Assessment established ELF identity and read-only Ghidra/MCP access;
-exact release matching and a validated original comparison setup remain needed.
+</details>
 
-First host import failed with Windows loader error 126 because the initial DLL
-still imported `libwinpthread-1.dll`. Godot returned exit 0 despite those errors;
-that attempt was treated as failed. Corrected MinGW link options to statically
-link its runtimes, relinked, inspected imports, then reran import and scene smoke
-successfully. No unresolved initialization validation failures remain.
-Only the scaffold call is tested; visual rendering, original gameplay, MSVC,
-Linux, and the installed 4.7.2 runtime were not validated.
+<!-- generated:boundaries:end -->
 
-## TASK-0014 front-end menu interaction (2026-10-12)
+## Current focus and next action
 
-The real front-end screens are now operable, driven by the menu runtime translated out of the
-ELF rather than by a Godot UI. Menu items are the screen's own MENUITEM widgets, navigation
-wraps and skips disabled entries as the original does, the orange highlight and grey disabled
-colours are the values stored in the binary, menu sounds resolve to the original bSound event
-names, and keyboard input is mapped onto the recovered JOY_EVENT_* ids for PC debugging.
-18 of the 41 screens now have their original names recovered by hash match (screen 0 is
-NEW_MAIN_MENU), which confirms TASK-0013's content-based inference.
+| | |
+|---|---|
+| **Focus** | Front-end completeness: the menu screens, their activation and Back arms, the event tree, and the profile the two depend on. |
+| **Last session** | TASK-0027 — class names and member functions recovered from the named allocator and the vtables; see [CLASS_RECOVERY.md](CLASS_RECOVERY.md). Before that, TASK-0025 reversed the Language Options screen ([FRONTEND_MENU_LANGUAGE.md](FRONTEND_MENU_LANGUAGE.md)). |
+| **Exact next action** | Translate `FUN_00183830(0x002FC050)`, the full profile and game reset, against the TASK-0021 `settings.db` profile layout. It is the one dependency keeping the boot-time `Language Options Pre FE` path from completing, and other boundaries wait behind it. Start from `tasks/active/TASK-0025-language-options-screen.md` step 1, with [SAVE_SYSTEM.md](SAVE_SYSTEM.md) for the profile layout. |
+| **Tooling note** | Ghidra MCP is **not** a registered session tool and will not appear in a tool search. It is reached over HTTP through this repository's read-only client `tools/ghidra.py` (`from ghidra import Client`, `http://127.0.0.1:8080/mcp`, program `SLUS_203.62`). Probe it before concluding it is unavailable — earlier sessions recorded it as missing and blocked identifier work for whole tasks on that mistake. |
 
-AGENT.md was added as the binding naming/evidence contract: identifiers are recovered-verbatim
-or address-anchored, never invented descriptive names for recovered code, and an unimplemented
-recovered path raises hp2::NotImplemented instead of degrading silently. Pop-up handling, the
-FMenus Highlight Animation motion and FE_*.BIN localisation are explicitly in that state.
+## Blockers
 
-Validation: `ctest --preset native-debug` and `--preset godot-debug` 9/9 (new `fmenus_menu`
-test, 16 groups); `./tools/run_frontend.ps1 -MenuSmoke` prints FRONTEND_MENU_SMOKE_OK;
-`-Smoke` still prints `FRONTEND_SMOKE_OK: screens=41 resolved=1524 missing=25`. No PCSX2 or
-original-hardware comparison was performed, so nothing from this task is Verified.
+Ordered by how much they hold up. Each is a real dependency, not a decision waiting to be made.
 
-Exact next action: `Read AGENT.md, docs/FRONTEND_MENU_INTERACTION.md and
-tasks/active/TASK-0014-frontend-menu-interaction.md, then trace the joypad-to-JOY_EVENT
-generation path (ELF strings "GenerateJoyEvents()" 0x002B01C8, "EventNodeSlotPool" 0x002B01F0)
-read-only through GhidraMCP; it is the last unrecovered link between hardware input and the
-menu runtime.`
+| # | Blocker | Blocks | Tracked in |
+|---|---|---|---|
+| 1 | No original comparison oracle. Nothing can be promoted to `Verified` until PS2 hardware or PCSX2 traces exist for a stated scope. | every equivalence claim in the repository | [TASK-0023](../tasks/active/TASK-0023-pcsx2-comparison.md), [TASK-0004](../tasks/backlog/TASK-0004-original-comparison-setup.md) |
+| 2 | `00183830`, the full profile and game reset, is untranslated. | `Language Options Pre FE` activation and Back | [TASK-0025](../tasks/active/TASK-0025-language-options-screen.md), [TASK-0021](../tasks/active/TASK-0021-memorycard-profile.md) |
+| 3 | `001EE6C0`, the display-settings snapshot, is untranslated. | entering Display Options at all | [TASK-0017](../tasks/active/TASK-0017-submenu-back-overflow.md) |
+| 4 | Event selection and reward preview (`001F6A28`, `001F6440`) need race, car and model dependencies that do not exist yet. | choosing an event from the tree | [TASK-0022](../tasks/active/TASK-0022-eventtree-completion.md) |
+| 5 | Whole-binary recovery covers a small fraction of the ELF, and the structure records are thinner still. | everything outside the front end | [TASK-0009](../tasks/active/TASK-0009-full-recovery.md) |
+| 6 | Classes built through the unlabelled allocator `00257690` have no recoverable name, and non-virtual members cannot be attributed to a class at all. | naming the rest of the classes above | [TASK-0027](../tasks/active/TASK-0027-class-recovery.md) |
 
-## Continuation
+## Validation snapshot
 
-Front-end menu next step: "Read docs/PROGRESS.md, docs/FRONTEND_MENU.md and
-tasks/active/TASK-0011-frontend-menu-closed-loop.md, then audit the FUN_0016fa80 envelope
-(0x0016fa80..0x001e3dbf) boundary before deciding whether to decompile it; it is the strongest
-lead for New Main Menu's real update/tick logic and eventual menu-item content. Start
-read-only, preserve existing annotations and record evidence before any scoped repair."
-(Superseded in part: the FUN_0016fa80 envelope was audited and retired in TASK-0011's later
-pass, and the menu runtime it was a lead for is now recovered under TASK-0014.)
+Last run 2026-10-13. Host tests only; see the disclaimers above for what that does and does not
+establish.
 
-Original TASK-0003 continuation (still applicable to the broader boundary-audit backlog item,
-now informed by the FUN_0016fa80 priority above): "Read AGENTS.md, docs/PROGRESS.md and
-docs/assessment/BINARY_REPORT.md, then work on tasks/backlog/TASK-0003-boundary-abi-audit.md.
-Audit the one-byte bodies at 0x0019a4b8 and 0x001ebd20 and the shared return/ABI contracts.
-Start read-only, preserve existing annotations and record evidence before any scoped repair.
-Do not start full game implementation."
+| Check | Command | Result |
+|---|---|---|
+| Native build | `cmake --build --preset native-debug --parallel 4` | passed |
+| Native tests | `ctest --preset native-debug --output-on-failure` | **24/24 passed** |
+| Godot extension | `cmake --build --preset godot-debug --parallel 4` | passed; relinks `godot/bin/ps2_port.dll` |
+| Generated tables | `py -3 reverse/scripts/generate_progress.py --check` | passed |
+| Original comparison | — | **not performed** |
 
-Original request-file SHA-256 values after scaffold creation:
+Toolchain pinned by that run: CMake 3.29.2, Ninja 1.12.0, GCC 13.2.0 (Strawberry), Windows 11.
+Do not assume the previous machine's environment; check availability before relying on it
+(`AGENTS.md` startup protocol step 4).
 
-- task.txt: 15244A82D71F2D1C85BBF4DC7189937B7F0ADFD63E5E7A45C1D7A63BE0E1F75B
-- eval.txt: 5B2E413E9B4153C2DF6E4341417D0943063A04734C0BA0E75A551263C10EC2FA
+## Where the detail lives
+
+Rules and process:
+
+| Document | What it holds |
+|---|---|
+| [../AGENT.md](../AGENT.md) | **Binding** naming and evidence rules. Stricter than `AGENTS.md` wherever they overlap. |
+| [../AGENTS.md](../AGENTS.md) | Session contract: startup and completion protocol. |
+| [DECISIONS.md](DECISIONS.md) | Architecture decisions, D001 onward, with the reasoning kept. |
+| [DEVELOPMENT.md](DEVELOPMENT.md) | How to build, run and test. |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Module boundaries and what may depend on what. |
+| [ROADMAP.md](ROADMAP.md) | Milestones beyond the active tasks. |
+
+Recovery knowledge, by subsystem:
+
+| Document | What it holds |
+|---|---|
+| [REVERSE_NOTES.md](REVERSE_NOTES.md) | Cross-cutting findings and method notes. |
+| [CLASS_RECOVERY.md](CLASS_RECOVERY.md) | How the class names and member functions in the table above were recovered, and what that method cannot see. |
+| [ORIGINAL_SOURCE_TREE.md](ORIGINAL_SOURCE_TREE.md) | The original source layout recovered from `__FILE__` strings, and what is *not* pinned to a file. |
+| [MAIN_LOOP_STRUCTURE.md](MAIN_LOOP_STRUCTURE.md) | The main loop and the `GAMEFLOW_STATE_*` dispatcher. |
+| [SAVE_SYSTEM.md](SAVE_SYSTEM.md) | `memorycard.cpp`, `settings.db` and the global player profile. |
+| [EVENT_TREE.md](EVENT_TREE.md) | The event tree, its requirement table and its open questions. |
+| [FRONTEND_MENU.md](FRONTEND_MENU.md) | The menu framework: screens, lists, items, messages. |
+| [FRONTEND_MENU_INTERACTION.md](FRONTEND_MENU_INTERACTION.md) | Navigation, selection and the sound events. |
+| [FRONTEND_MENU_LANGUAGE.md](FRONTEND_MENU_LANGUAGE.md) | The Language Options screen, start to finish. |
+| [FRONTEND_BACK.md](FRONTEND_BACK.md) | Per-screen Back (`0x11`) behaviour across the whole family. |
+| [FRONTEND_LAYOUT.md](FRONTEND_LAYOUT.md) | Authored layout, widgets and bitmap fonts. |
+| [FRONTEND_MEDIA.md](FRONTEND_MEDIA.md) | Startup media, movie player and audio. |
+| [FRONTEND_MODE_SELECT.md](FRONTEND_MODE_SELECT.md) | The Cops On / Cops Off mode selects. |
+| [FRONTEND_SCROLL_BACKGROUND.md](FRONTEND_SCROLL_BACKGROUND.md) | Scrolling text and background animation. |
+| [FRONTEND_VIEWPORT.md](FRONTEND_VIEWPORT.md) | Overflow clipping and the viewport. |
+| [ASSET_PIPELINE.md](ASSET_PIPELINE.md) | The eLab container and TPK texture formats. |
+| [SOUND_RECOVERY.md](SOUND_RECOVERY.md) | `bSound`, the jukebox and the sample banks. |
+| [POLICE_AI_MAP.md](POLICE_AI_MAP.md) | The police AI call map. |
+| [FUNCTION_NAMING.md](FUNCTION_NAMING.md), [FUNCTION_NAME_RECOVERY.md](FUNCTION_NAME_RECOVERY.md), [NAMING_AUDIT.md](NAMING_AUDIT.md) | Identifier recovery and the audits against AGENT.md R2. |
+
+Machine-readable records — these are the source of the tables above, and the thing to update
+when a finding changes (AGENT.md R6):
+
+| Path | What it holds |
+|---|---|
+| `reverse/symbols.csv` | One row per function with a record: address, status, confidence, evidence IDs. |
+| `reverse/classes.csv` | One row per recovered class: name, object size, constructor, vtable, member functions, per-class progress. |
+| `reverse/classes/` | The raw passes behind it: allocator call sites, confirmed vtables, name bindings. |
+| `reverse/functions/<binary-id>/<subsystem>/<address>.md` | Per-function findings, hypotheses and open questions, kept separate. |
+| `reverse/structures/<binary-id>/` | Per-structure layout records. |
+| `reverse/binaries.csv` | Binary identity: SHA-256, region, version provenance. |
+| `docs/assessment/FUNCTION_INVENTORY.csv` | Every function in the ELF — the denominator above. |
+| `tasks/{active,backlog,completed}/` | The task files. `AGENTS.md`'s startup protocol selects from these; they are not summarised here. |
+
+## House rules that keep catching people out
+
+Four that are easy to violate by accident, each one the subject of a real correction in the log:
+
+1. **An unimplemented recovered path throws.** `hp2::not_implemented(elf_address, what)` — never
+   a default return, a plausible approximation or a silent no-op. A silent fallback is
+   indistinguishable from recovered behaviour at runtime, which is the exact failure these rules
+   exist to prevent (AGENT.md R3).
+2. **Identifiers come from the binary or carry its address.** Recovered names verbatim,
+   otherwise `Sub_<ADDR>` / `Type_<ADDR>` / `Field_0x<off>`, otherwise `port::`-namespaced and
+   documented as port-side. Never an invented descriptive English name for recovered code
+   (AGENT.md R2, with the known debt listed in R8).
+3. **Unknown is a required answer.** Say so where a reader would otherwise assume recovery
+   happened. A plausible reconstruction is a hypothesis and must be labelled one (AGENT.md R1).
+4. **Ghidra access is read-only, and no proprietary material enters Git.** No annotations or
+   renames in the database; no ELF, ISO, asset, save file or Ghidra project in the repository
+   (AGENT.md R5, R7).
