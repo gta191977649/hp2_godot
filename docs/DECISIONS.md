@@ -66,3 +66,36 @@ Host stores authored widget copies for re-entry, a bounded history projection, a
 separately from document hashes. Missing screen logic raises NotImplemented. The inherited
 std::sin pulse implementation does not reproduce original sine-table quantization and remains
 an explicit equivalence limitation pending original comparisons and table recovery.
+
+## D008 — One render contract: native frames, replaceable backend (TASK-0018, 2026-10-13)
+
+`port::render` is the project's only rendering contract. The game side produces a
+typed `render::Frame` (quads in the original 640x480 authored space, original clip
+rectangles already applied by `render::crop`) and hands it to a `render::Backend`
+together with a `render::Resources` texture provider. The backend owns every
+device object; nothing device-specific reaches the frame.
+
+`src/platform/services.hpp` and the `platform_api` CMake target are deleted
+(TASK-0018, 2026-10-13). They held provisional scaffold contracts -- `Rendering`,
+`Audio`, `Input`, `FileSystem`, `Timing`, `Diagnostics` -- that no recovered caller
+ever justified and that nothing in the tree included for a symbol. The front end's
+superseding contracts are `port::render::Backend` for drawing and
+`port::assets::Source` for original-asset reads. A future subsystem adds the
+contract its recovered callers require, rather than inheriting an invented one.
+
+Frames carry original units and original resource identities: positions and sizes
+in the authored 640x480 space, textures keyed by the original TexturePack entry
+hash, colours as the PS2 0x80-is-opaque bytes divided by 128. Window scaling,
+viewport size, colour management and frame pacing are backend concerns and never
+appear in a frame.
+
+`Frame` currently holds only textured quads because that is the only evidence the
+front end provides. This is deliberately not a modern RHI: PS2 GS/VU1 command
+semantics are not recovered, so no command buffer, pipeline or descriptor model is
+asserted. Additional command kinds are added when a recovered caller requires one,
+never in advance.
+
+Consequence for the host: `Ps2RenderHost` is the Godot backend and owns the
+`RenderingServer` RIDs (canvas items, 2D textures). Godot-side code translates
+input, time, audio hardware and file access; it makes no drawing decisions and
+holds no per-widget game state.

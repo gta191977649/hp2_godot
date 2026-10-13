@@ -108,6 +108,36 @@ existing local asset config or HP2_PS2_ASSET_ROOT (never commit that config/asse
 Run `./tools/run_frontend.ps1 -Build` for startup, or `-Screen 0` for direct main-menu
 inspection. `-RuntimeSmoke`, `-ActivationSmoke`, `-AnimationSmoke` validate integration.
 
+### TASK-0018 native render path
+
+`scenes/frontend_native.tscn` is the main scene and the only front-end host: the native
+runtime plus the RenderingServer backend. It takes `--screen=`, `--screen-name=`,
+`--scale=`, `--info`, `--capture=`, `--capture-after=` and `--menu-events=`.
+
+The front end's behaviour checks are native and run under CTest, not Godot:
+`frontend_runtime_tests` covers asset resolution, the main menu, activation routing,
+submenu history, Audio/Display clipping and scrolling, the highlight ghost, localisation,
+menu samples, the jukebox and the event tree. It skips with a message when the ZZDATA root
+is not configured. Only two host checks remain in Godot, because only they need it:
+`--native-render-smoke` (every screen builds and submits a frame) and `--runtime-smoke`
+(MV30 decode into a texture, PCM into AudioStreamWAV, the recovered title time gate).
+
+```powershell
+$portGodot = Join-Path $PWD 'local/tools/godot-4.4.1/Godot_v4.4.1-stable_win64_console.exe'
+& $portGodot --headless --path godot --editor --import
+& $portGodot --headless --path godot res://scenes/frontend_native.tscn -- --native-render-smoke
+& $portGodot --path godot res://scenes/frontend_native.tscn -- --screen=0
+```
+
+Both scenes show `<n> FPS  <ms>  [<render path>]` in the window title at all times and on
+the first overlay line under Tab (or `--info`). With vsync on, both read the refresh rate;
+to compare the paths, run uncapped with `--disable-vsync --max-fps 0 --print-fps` placed
+before the scene path.
+
+`--native-render-smoke` must print `NATIVE_RENDER_SMOKE_OK` and exit 0; it builds and
+submits a frame for every screen. `./tools/run_frontend.ps1` drives the scene: `-Build`,
+`-RenderSmoke`, `-RuntimeSmoke`, `-Screen N`, `-Capture path`.
+
 Windows debug export: invoke the pinned Godot 4.4.1 console with `--headless --path
 godot --export-debug "Windows Debug" ../out/windows-debug/port.exe`. Matching 4.4.1
 export templates are required. The GDExtension dependency table copies shared codec

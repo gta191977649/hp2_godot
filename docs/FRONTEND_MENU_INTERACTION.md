@@ -228,7 +228,7 @@ can be continued:
   `menu_state` / `get_widget_colours` / `find_screen_by_name` / `joy_event_name` /
   `probe_not_implemented`. The menu mutates the colours in the layout records directly, so the
   renderer only has to re-read them each frame.
-- `godot/scripts/frontend.gd` — the keyboard mapping onto `JOY_EVENT_*`, the interaction, the
+- `godot/scripts/frontend_native.gd` (TASK-0018; was `frontend.gd`) — the keyboard mapping onto `JOY_EVENT_*`, the interaction, the
   status line and the not-implemented notices.
 
 ### Keyboard mapping (for PC debugging)

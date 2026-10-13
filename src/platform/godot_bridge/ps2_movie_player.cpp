@@ -20,6 +20,14 @@ void Ps2MoviePlayer::_bind_methods() {
     godot::ClassDB::bind_method(godot::D_METHOD("select_startup"), &Ps2MoviePlayer::select_startup);
 }
 void Ps2MoviePlayer::upload_frame(const std::vector<std::uint8_t>& bytes) {
+    // Keep a backend-independent copy first: the native renderer samples this, not the
+    // ImageTexture, which exists only for the older Control-based host scene.
+    const auto revision = bitmap_ ? bitmap_->revision + 1 : 1;
+    bitmap_ = std::make_shared<port::render::Bitmap>();
+    bitmap_->width = static_cast<int>(movie_.width);
+    bitmap_->height = static_cast<int>(movie_.height);
+    bitmap_->rgba = bytes;
+    bitmap_->revision = revision;
     godot::PackedByteArray pixels;
     pixels.resize(static_cast<int64_t>(bytes.size()));
     if (!bytes.empty()) std::memcpy(pixels.ptrw(), bytes.data(), bytes.size());
@@ -28,7 +36,7 @@ void Ps2MoviePlayer::upload_frame(const std::vector<std::uint8_t>& bytes) {
     else texture_->update(image);
 }
 void Ps2MoviePlayer::stop() {
-    decoder_.reset(); movie_ = {}; texture_.unref(); audio_.unref();
+    decoder_.reset(); movie_ = {}; texture_.unref(); audio_.unref(); bitmap_.reset();
     filename_ = ""; elapsed_ = 0; next_frame_ = 0; finished_ = false;
 }
 godot::Dictionary Ps2MoviePlayer::play(const godot::String& relative_path, bool loop) {

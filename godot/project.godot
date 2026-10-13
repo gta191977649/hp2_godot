@@ -3,7 +3,7 @@ config_version=5
 
 [application]
 config/name="HP2 PS2 Native Port"
-run/main_scene="res://scenes/frontend.tscn"
+run/main_scene="res://scenes/frontend_native.tscn"
 config/features=PackedStringArray("4.4", "Forward Plus")
 boot_splash/show_image=false
 

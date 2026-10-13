@@ -129,7 +129,7 @@ record's +0x3E: below 1 it only plays `MenuWrong`.
 - `src/platform/godot_bridge/ps2_event_tree.{hpp,cpp}` — the `Ps2EventTree` bridge class.
 - `ps2_texture_loader.*` gained `load_texture_by_name()` and `ps2_frontend_layout.*` gained
   `name_hash()`, so GDScript **never reimplements** the recovered string hash.
-- `godot/scripts/frontend.gd` — draws the connectors and nodes on screen 39, the selected node at
+- `src/port/runtime/event_tree_view.cpp` — draws the connectors and nodes on screen 39, the selected node at
   twice the size, with left/right/up/down walking the recovered ±1/±2 links.
 
 ### Tests

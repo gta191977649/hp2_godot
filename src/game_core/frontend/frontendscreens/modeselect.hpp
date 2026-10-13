@@ -67,13 +67,13 @@ void ApplyHighlight_00217380(FeScreen& screen, MenuHighlightAnim_00248870& anim,
 // refuses Quick Race and Tournament from any pad other than 0, and silences the event's sound
 // field instead of acting. (E-0016-02)
 void Sub_002174A0(int message, std::uint32_t item_hash, MenuEvent_0016A458& event,
-                  port::frontend::ModeSelectGlobals& globals,
-                  const port::frontend::ScreenActionServices& services);
+                  ::port::frontend::ModeSelectGlobals& globals,
+                  const ::port::frontend::ScreenActionServices& services);
 
 // FUN_00217AF8 message 1. (E-0016-05)
 void Sub_00217AF8(int message, std::uint32_t item_hash, MenuEvent_0016A458& event,
-                  port::frontend::ModeSelectGlobals& globals,
-                  const port::frontend::ScreenActionServices& services);
+                  ::port::frontend::ModeSelectGlobals& globals,
+                  const ::port::frontend::ScreenActionServices& services);
 
 // FUN_00216C18: the Quick Race action. It does not open another front-end screen -- it writes the
 // whole race configuration block (DAT_0031A8xx / DAT_0031ABxx), selects the event-tree mode id 2,

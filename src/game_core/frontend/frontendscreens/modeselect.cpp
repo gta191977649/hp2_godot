@@ -10,7 +10,7 @@ namespace {
 // 650 px/s. While +0x270 is non-null both dispatchers route every message to FUN_00249128
 // instead of their own handling, so the screen is locked until the animation finishes and the
 // screen request fires. The port expresses that as the `exit_animation` service. (E-0016-07)
-void ExitTo_00217020(const port::frontend::ScreenActionServices& services, const char* class_name) {
+void ExitTo_00217020(const ::port::frontend::ScreenActionServices& services, const char* class_name) {
     if (!services.exit_animation) {
         HP2_NOT_IMPLEMENTED("0x00217020", "exit-screen-animation service missing");
     }
@@ -65,8 +65,8 @@ void ApplyHighlight_00217380(FeScreen& screen, MenuHighlightAnim_00248870& anim,
 }
 
 void Sub_002174A0(int message, std::uint32_t item_hash, MenuEvent_0016A458& event,
-                  port::frontend::ModeSelectGlobals& globals,
-                  const port::frontend::ScreenActionServices& services) {
+                  ::port::frontend::ModeSelectGlobals& globals,
+                  const ::port::frontend::ScreenActionServices& services) {
     if (message != 1) return;
     switch (item_hash) {
         case 0x52e039f3u: // Quick Race
@@ -98,8 +98,8 @@ void Sub_002174A0(int message, std::uint32_t item_hash, MenuEvent_0016A458& even
 }
 
 void Sub_00217AF8(int message, std::uint32_t item_hash, MenuEvent_0016A458& event,
-                  port::frontend::ModeSelectGlobals& globals,
-                  const port::frontend::ScreenActionServices& services) {
+                  ::port::frontend::ModeSelectGlobals& globals,
+                  const ::port::frontend::ScreenActionServices& services) {
     if (message != 1) return;
     switch (item_hash) {
         case 0x52e039f3u: // Quick Race

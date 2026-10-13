@@ -61,10 +61,10 @@ private:
 // ELF 0x00216638; E-0015-11, reverse/functions/<binary-id>/frontend/00216638.md.
 // Only message 1 is translated here; visuals are separately driven by the port adapter.
 void Sub_00216638(int message, std::uint32_t item_hash, std::int32_t& dat_002FC070,
-                  const port::frontend::ScreenActionServices& services);
+                  const ::port::frontend::ScreenActionServices& services);
 // ELF 0x001EECA8; E-0015-12, corresponding function record. Message-1 action slice.
 void Sub_001EECA8(int message, std::uint32_t item_hash,
-                  const port::frontend::ScreenActionServices& services);
+                  const ::port::frontend::ScreenActionServices& services);
 // ELF001EFB80 messages4/8/9, E-0017-S04. Shared viewport utility is fmenus;
 // screen-specific selector target and nonwrapping end guards are the Audio handler.
 void Sub_001EFB80(int message,MenuEvent_0016A458& event,Type_00249DE0& viewport,

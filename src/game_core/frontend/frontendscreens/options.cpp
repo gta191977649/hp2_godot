@@ -81,7 +81,7 @@ bool Type_002490D8::Update_00249128(float delta_seconds) {
 }
 
 void Sub_001EECA8(int message, std::uint32_t item_hash,
-                  const port::frontend::ScreenActionServices& services) {
+                  const ::port::frontend::ScreenActionServices& services) {
     if (message != 1) return;
     switch (item_hash) {
     case 0x52E039F3: services.exit_animation("Audio Options"); break;

@@ -5,10 +5,6 @@ include(CTest)
 option(PORT_BUILD_GODOT "Build the optional Godot 4.4 bridge" OFF)
 set(PORT_GODOT_CPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/godot-cpp" CACHE PATH "Pinned godot-cpp checkout")
 
-add_library(platform_api INTERFACE)
-target_include_directories(platform_api INTERFACE src)
-target_compile_features(platform_api INTERFACE cxx_std_17)
-
 add_library(game_core STATIC src/game_core/scaffold.cpp src/game_core/police/cop_control.cpp
   src/game_core/engine/engine_shell.cpp src/game_core/engine/world_connections.cpp
   src/game_core/frontend/screen_manager.cpp src/game_core/frontend/fmenus.cpp
@@ -25,8 +21,22 @@ add_library(game_core STATIC src/game_core/scaffold.cpp src/game_core/police/cop
   src/platform/ps2_asset_root.cpp)
 target_include_directories(game_core PUBLIC src)
 target_compile_features(game_core PUBLIC cxx_std_17)
-target_link_libraries(game_core PUBLIC platform_api)
 set_target_properties(game_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+# TASK-0018 / D008: platform-independent port runtime. Produces render::Frame and owns the
+# original-asset texture catalog. Links game_core only; never godot-cpp or a backend.
+add_library(port_runtime STATIC src/port/render/frame.cpp src/port/assets/catalog.cpp
+  src/port/runtime/frame_builder.cpp src/port/runtime/frontend_runtime.cpp
+  src/port/runtime/event_tree_view.cpp)
+target_include_directories(port_runtime PUBLIC src)
+target_compile_features(port_runtime PUBLIC cxx_std_17)
+target_link_libraries(port_runtime PUBLIC game_core)
+set_target_properties(port_runtime PROPERTIES POSITION_INDEPENDENT_CODE ON)
+if(MSVC)
+  target_compile_options(port_runtime PRIVATE /W4)
+else()
+  target_compile_options(port_runtime PRIVATE -Wall -Wextra -Wpedantic)
+endif()
 
 # Host-side MV30 decoder. Codec/runtime assets stay outside Git; original AVI is read at runtime.
 set(PORT_FFMPEG_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/local/tools/ffmpeg/ffmpeg-n8.1-latest-win64-lgpl-shared-8.1" CACHE PATH "Pinned LGPL FFmpeg 8.1 host SDK")
@@ -126,6 +136,12 @@ if(BUILD_TESTING)
       add_custom_command(TARGET movieplayer_tests POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PORT_FFMPEG_DLLS} "$<TARGET_FILE_DIR:movieplayer_tests>")
     endif()
   endif()
+  add_executable(frontend_runtime_tests src/tests/frontend_runtime_tests.cpp)
+  target_link_libraries(frontend_runtime_tests PRIVATE port_runtime)
+  add_test(NAME frontend_runtime COMMAND frontend_runtime_tests)
+  add_executable(frame_builder_tests src/tests/frame_builder_tests.cpp)
+  target_link_libraries(frame_builder_tests PRIVATE port_runtime)
+  add_test(NAME frame_builder COMMAND frame_builder_tests)
   add_executable(hp2_tpk_texture_tests src/tests/hp2_tpk_texture_tests.cpp)
   target_link_libraries(hp2_tpk_texture_tests PRIVATE game_core)
   add_test(NAME hp2_tpk_texture COMMAND hp2_tpk_texture_tests
@@ -160,7 +176,7 @@ if(PORT_BUILD_GODOT)
   add_library(ps2_port SHARED src/platform/godot_bridge/port_core.cpp src/platform/godot_bridge/register_types.cpp
     src/platform/godot_bridge/main_loop_observer.cpp src/platform/godot_bridge/frontend_menu_observer.cpp
     src/platform/godot_bridge/ps2_texture_loader.cpp src/platform/godot_bridge/ps2_frontend_layout.cpp
-    src/platform/godot_bridge/ps2_event_tree.cpp)
+    src/platform/godot_bridge/ps2_render_host.cpp)
   target_sources(ps2_port PRIVATE src/platform/godot_bridge/ps2_movie_player.cpp)
   # Godot-cpp 4.4 propagates -fno-exceptions. Port adapters catch recovered NotImplemented
   # locally; enable exceptions in these source files without changing Godot's own code.
@@ -170,7 +186,7 @@ if(PORT_BUILD_GODOT)
   else()
     set_source_files_properties(${PORT_BRIDGE_SOURCES} PROPERTIES COMPILE_OPTIONS "-fexceptions")
   endif()
-  target_link_libraries(ps2_port PRIVATE game_core godot-cpp port_media)
+  target_link_libraries(ps2_port PRIVATE game_core port_runtime godot-cpp port_media)
   if(WIN32)
     add_custom_command(TARGET ps2_port POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PORT_FFMPEG_DLLS} "$<TARGET_FILE_DIR:ps2_port>")
   endif()

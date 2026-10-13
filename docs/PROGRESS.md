@@ -1,5 +1,71 @@
 # Project state — 2026-10-13 (Australia/Sydney)
 
+## TASK-0018 — Native runtime and replaceable rendering backend (active)
+
+User resumed the deferred architecture task and authorized the migration. The front end
+no longer renders through GDScript. D008 records one rendering contract: native
+`render::Frame` in, a `render::Backend` out, no second command path.
+
+Landed: Godot-free `port_runtime` library (frame contract, original-asset `Catalog`,
+new `frame_builder` producing layer-ordered quads, per-glyph text, align bit and the
+original `GetWidgetClip_00145F30` clips); `Ps2RenderHost`, a RenderingServer backend
+owning canvas-item and texture RIDs with revision-gated uploads; `Ps2MoviePlayer`
+exposing decoded frames as backend-independent bitmaps; native widget measurement
+replacing the host round trip; and `scenes/frontend_native.tscn`, a host that owns only
+window, input translation, delta, audio hardware and lifetime. The previous
+`scenes/frontend.tscn` is retained unchanged.
+
+Validation: `ctest --preset native-debug` 21/21 passed (new `frame_builder` test uses a
+fake Resources and fake Backend, no Godot). `--native-render-smoke` renders all 41
+screens natively (927 quads, 7733 glyphs, 118 textures). Old-vs-new pixel diff over all
+41 screens: **32 byte-for-byte identical**; the 8 background-movie screens differ only in
+video-decode and scroll phase (control experiment isolates this), and screen 39 differs
+because only the old script draws the event-tree overlay. Every pre-existing Godot check
+on the retained scene still passes. PC-to-PC only; nothing promoted to Verified.
+
+Both scenes gained an always-on window-title FPS/frame-time readout naming the render path,
+plus the same line in the Tab overlay. Uncapped main-menu throughput measured once on this
+machine: native ~1380-1450 FPS vs GDScript ~1030-1195. Indicative only, not a benchmark.
+
+Second pass: `port::runtime::FrontEndRuntime` now owns the front end (screens, fonts,
+menu group, localisation, jukebox, animations, navigation history, mode-select globals,
+frame production) with plain C++ results and no Godot. `Ps2FrontEndLayout` shrank from
+846 to 314 lines and is a translation shim with no game state. Fixed a latent namespace
+defect in options.hpp/modeselect.hpp (unqualified `port::frontend::` resolved to
+`hp2::port::frontend` once any `hp2::port::*` namespace existed; the old bridge only
+compiled because of include order). Deleted as unused: `src/port/runtime/value.hpp`,
+`src/platform/services.hpp` with the `platform_api` target, and two uncalled bound
+methods. Re-verified: 21/21 CTest, every Godot check unchanged, and nine screens
+byte-identical both new-vs-old and against the pre-refactor captures, so the extraction
+changed no output.
+
+Third pass, in the sequenced order: (1) the event-tree overlay is native --
+`port::runtime::EventTreeView` plus `append_event_tree`, with `render::Quad::texture == 0`
+added as a solid-colour rect for the recovered axis-aligned `tLineSegment` connectors;
+screen 39 renders byte-for-byte identically to the old host. (2) The front-end behaviour
+checks moved from GDScript smokes into `src/tests/frontend_runtime_tests.cpp`, seven groups
+under CTest driving the runtime directly with the player's own assets, reproducing the old
+counts exactly (resolved=1524 missing=25, 8 Back routes, jukebox 5 then 7). Only the two
+checks that genuinely need Godot stayed there. (3) The old host is deleted:
+`scripts/frontend.gd` (1170 lines), `scenes/frontend.tscn`, `ps2_event_tree.{hpp,cpp}` and
+ten bound methods, plus the whole host-measurement path in the runtime. `project.godot`
+boots the native scene; `tools/run_frontend.ps1` drives it. Every bound method and bridge
+class that remains has a caller.
+
+Validation: 22/22 CTest; `--native-render-smoke` 41 screens / 1085 quads / 7765 glyphs /
+120 textures; `--runtime-smoke`, `main.tscn`, both observer smokes pass; default scene
+boots clean; nine screens 0 differing pixels against the pre-deletion native captures.
+
+Open question carried forward: the highlight ghost period. The old `--animation-smoke`
+expected a 2 s restart and failed; that failure was confirmed **pre-existing** by stashing
+all TASK-0018 work and rebuilding. The native replacement measures instead of asserting —
+scale 1.7071 at 2.01 s against a 1.0000 target, i.e. the 4 s default `open_menu_animation`
+records (E-0016-08). Needs its own task against the original.
+
+Exact next action: move startup/movie/music orchestration and screen selection into
+`FrontEndRuntime`, the last front-end decision-making left in GDScript (TASK-0018 Next
+steps 1). Nothing is committed.
+
 ## TASK-0019 — Original function names (completed scoped investigation)
 
 RenderingServer work is deferred at the user's request; TASK-0018 remains incomplete.

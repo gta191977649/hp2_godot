@@ -10,6 +10,9 @@ struct Vec2 { float x=0,y=0; };
 struct Rect { float x=0,y=0,width=0,height=0; bool has_area() const {return width>0&&height>0;} };
 struct Color { float r=1,g=1,b=1,a=1; };
 struct Bitmap { int width=0,height=0; std::vector<std::uint8_t> rgba; std::uint64_t revision=1; };
+// texture==0 is a solid-colour rect: `color` fills `destination` and `source` is unused. The
+// recovered event-tree connectors (tLineSegment) are axis-aligned, so they need no other
+// primitive. Every other quad samples `source` from `texture`.
 struct Quad { TextureId texture=0; Rect destination,source; Color color; };
 struct Frame { Vec2 logical_size{640,480}; Color clear{0,0,0,1}; std::vector<Quad> quads; std::uint64_t sequence=0; };
 class Resources {

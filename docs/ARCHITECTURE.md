@@ -18,16 +18,16 @@ Never treat a PS2 address as a native pointer without an evidence-backed mapping
 
 ## B: Platform abstraction
 
-`platform_api` is an interface CMake target exposing native C++ contracts in
-`src/platform/services.hpp`: rendering, audio, input, filesystem, timing, and
-diagnostics. These are provisional scaffold contracts, not recovered signatures.
-Extend them only as actual recovered callers justify a requirement.
+Deleted in TASK-0018 (D008). `platform_api` / `src/platform/services.hpp` held
+provisional scaffold contracts no recovered caller justified; nothing included
+them for a symbol. What replaced them is narrower and real: `port::render::Backend`
+and `port::render::Resources` for drawing, `port::assets::Source` for original-asset
+reads. Core code depends on those, tests supply fakes without Godot, and the host
+owns the concrete implementations and outlives all non-owning references. A new
+subsystem introduces the contract its recovered callers require, nothing more.
 
-Core code may depend on these contracts. Tests can supply fakes without Godot.
-The host owns concrete services and outlives all non-owning service references;
-core code owns its game data. File read failure is explicit; adapters must
-document resource lifetimes, units, threading, and errors when implemented.
-No concrete rendering/audio/input backend is claimed by the current sample.
+`src/platform/ps2_asset_root.{hpp,cpp}` remains: it resolves the local ZZDATA root
+and is Godot-free. The host supplies only the directory the search starts from.
 
 ## C: Godot integration
 
@@ -57,7 +57,72 @@ change Ghidra analysis. Record tool versions and binary hashes with each export.
 
 EngineShell in game_core/engine owns the resumable frame orchestration projection. ModuleRegistry binds callsite/target handlers; FrameTrace records provenance and placeholder/error states. State and timing context is separate from host delta; waiting resumes only the original tail. MainLoopObserver is an additive RefCounted bridge and standalone scene. World nested connections remain metadata, preserving dynamic entity loops. See MAIN_LOOP_STRUCTURE.md for APIs and extension rules.
 
-## Current frontend integration checkpoint — TASK-0017 / 2026-10-13
+## Rendering: native frames, replaceable backend (TASK-0018 / D008, 2026-10-13)
+
+The earlier checkpoint below is historical. The front end no longer renders through
+GDScript. The dependency direction is now:
+
+    game_core (recovered)  ->  port_runtime (Godot-free)  ->  render::Frame
+                                                                  |
+                                           Ps2RenderHost (RenderingServer) or any backend
+
+`port_runtime` is a static library linking only `game_core`. It holds
+`port::runtime::FrontEndRuntime` -- the front end itself: parsed screens and fonts,
+the recovered menu group, localisation, the jukebox and sample bank, the recovered
+animations, navigation history and the mode-select globals, all returning plain C++
+values. It also holds `port::render` (the frame contract and `crop`),
+`port::assets::Catalog` (original TexturePack entries decoded from the configured
+ZZDATA copy) and `port::runtime::build_frame`, which turns the live authored screen
+into a `render::Frame`: layer draw order, authored geometry and scale, the 0x80-is-opaque
+colour bytes, per-glyph placement from the original bitmap fonts, the align bit,
+and the original clip rectangles from `GetWidgetClip_00145F30`. It links no
+backend and includes no Godot header, and `frame_builder_tests` exercises it
+against a fake `Resources` and a fake `Backend`.
+
+`Ps2RenderHost` is the Godot backend and the only place that names a device. It
+owns the `RenderingServer` RIDs -- one canvas item parented to the host node's,
+one 2D texture per original entry actually drawn -- and re-uploads a texture only
+when its bitmap revision changes, which is what makes the per-frame movie surfaces
+cheap. It takes `render::Frame` and makes no drawing decision. `LiveResources`
+resolves an id to an original catalog entry or to a live movie surface
+(`kIntroMovieTexture`, `kBackgroundMovieTexture`).
+
+`Ps2FrontEndLayout` is now only a translation shim: it resolves the ZZDATA search
+root (which needs ProjectSettings/OS), turns native results into Godot values, and
+converts decoded PCM into AudioStreamWAV. It holds no game state, and its surface
+is down to the thirteen methods the host actually calls -- no widget, font, colour
+or measurement API survives. New host code must not grow it.
+
+Widget measurement is native: sizes come from the original font tables and
+TexturePack dimensions through `port::runtime::WidgetSizes`, which also supplies
+the `hp2::frontend::WidgetMeasure` seam the recovered animation, viewport and clip
+arithmetic consumes. `Ps2FrontEndLayout::set_widget_measurements` remains only for
+the older scene and wins when that scene pushes measurements; see TASK-0018 for
+the divergence this preserves.
+
+`godot/scenes/frontend_native.tscn` is the project's main scene and the only host.
+Its script owns the window, key-to-JOY_EVENT translation, frame delta, audio
+hardware and process lifetime, and nothing else -- it never reads a widget,
+position, colour or texture. One call per frame,
+`Ps2RenderHost.draw(layout, intro, background)`, replaces the former per-widget
+Dictionary traffic and `Control._draw`. The previous host
+(`scenes/frontend.tscn` + `scripts/frontend.gd`) is deleted.
+
+The View Event Tree screen is native too: `port::runtime::EventTreeView` holds the
+open tree and the cursor, the runtime loads and clears it with screen 39, and
+`append_event_tree` emits its panels, numbers and `tLineSegment` connectors. The
+connectors are axis-aligned, so they are solid-colour quads (`Quad::texture == 0`),
+which is the only primitive the frame has beyond a textured quad. Its camera
+placement remains explicitly port-side calibration, not recovered.
+
+Widget measurement has no host round trip at all: `FrontEndRuntime::measure_widget`
+and the renderer both go through `WidgetSizes` over the original font tables and
+TexturePack entries, so the recovered arithmetic and the renderer cannot disagree.
+
+Still host-owned and not yet native: startup/movie/music orchestration and screen
+selection.
+
+## Historical: frontend integration checkpoint — TASK-0017 / 2026-10-13
 
 Earlier scaffold descriptions are historical. Current ps2_port is one GDExtension
 DLL registering six RefCounted wrappers: samplePortCore, two diagnostic observers,

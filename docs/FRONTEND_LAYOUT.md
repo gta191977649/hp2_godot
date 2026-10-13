@@ -99,7 +99,9 @@ Every font located:
   exposing screens, widgets and fonts to GDScript.
 - `src/platform/godot_bridge/ps2_texture_loader.*` — gained `load_texture_by_hash()`, resolving a
   texture by hash across bundles with both an archive and a texture cache.
-- `godot/scenes/frontend.tscn` + `godot/scripts/frontend.gd` — a single immediate-mode `_draw()`:
+- (TASK-0018: deleted. The host below was `godot/scenes/frontend.tscn` + `godot/scripts/frontend.gd`;
+  frames are now built by `port::runtime::build_frame` and submitted by `Ps2RenderHost`.)
+  Historical: a single immediate-mode `_draw()`:
   quads through `draw_texture_rect`, text glyph by glyph through `draw_texture_rect_region` taking
   UVs from the font atlas. Left/right arrows change screen, Tab hides the debug line, Esc quits.
 
