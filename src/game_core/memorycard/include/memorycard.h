@@ -54,7 +54,7 @@ enum Region_001A3390 : int {
 };
 
 // "BASLUS-20362HP2" or "BESLES-50731HP2".
-std::string SaveDirectoryName_0012DEE0(int region);
+std::string Sub_0012DEE0(int region);
 
 // ------------------------------------------------------------------ the payload layout
 // FUN_00245B00 and FUN_00245BA0 both pass `settings.db` with length 0x114E0 through

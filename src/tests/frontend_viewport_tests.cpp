@@ -16,7 +16,7 @@ int main(){try{
     FeWidget below;below.name_hash=0x20d73d01;screen.widgets.push_back(below);
     FeWidget unrelated;unrelated.y=999;screen.widgets.push_back(unrelated);
     const auto authored=screen;
-    Type_00249DE0 state;state.ConstructAudio_001EF3C8(screen);
+    Type_00249DE0 state;state.Sub_001EF3C8(screen);
     check(screen.widgets[0].clip_hash_0x4c==0xc67cfb4a&&(screen.widgets[0].text_align&0x10));
     auto rect=GetWidgetClip_00145F30(screen,screen.widgets[0],[](const FeWidget&){return WidgetMetrics{690,260};});
     check(rect.valid&&rect.x0==24&&rect.x1==710&&rect.y0==73&&rect.y1==333);
@@ -28,7 +28,7 @@ int main(){try{
     check(screen.widgets[12].visible==1&&screen.widgets[13].visible==1);
     // Rapid retarget must preserve position and normalized velocity, not restart at rest.
     auto retarget_screen=authored;
-    Type_00249DE0 retarget;retarget.ConstructAudio_001EF3C8(retarget_screen);
+    Type_00249DE0 retarget;retarget.Sub_001EF3C8(retarget_screen);
     retarget.Handle_0024A480(4,0x52e039fa);retarget.Update_0024A1A8(0.25f);
     check(retarget_screen.widgets[0].y==51.5f);
     retarget.Handle_0024A480(4,0x52e039fb);retarget.Update_0024A1A8(0);
@@ -63,7 +63,7 @@ int main(){try{
     for(auto hash:{0x55cb09f2u,0x2e931f1bu,0x03d90172u,0x5610f2f4u,0x8fe4086bu,0x422313cbu}){
         FeWidget w;w.name_hash=hash;w.type=1;w.y=70;display.widgets.push_back(w);}
     display.widgets.push_back(left);display.widgets.push_back(right);
-    Type_00249DE0 display_viewport;display_viewport.ConstructDisplay_001F33B8(display);
+    Type_00249DE0 display_viewport;display_viewport.Sub_001F33B8(display);
     check(display_viewport.field_0x34==9);
     for(const auto&w:display.widgets)check(w.clip_hash_0x4c==0xc67cfb4a);
     display_viewport.Handle_0024A480(4,0x52e039fb);

@@ -276,7 +276,7 @@ void Sub_001EFB80(int message,MenuEvent_0016A458& event,Type_00249DE0& viewport,
     viewport.Handle_0024A480(message,event.field_0x00);
     if (message == 4) {
         selector.Bind_0024A860(event.field_0x00 == 0x52E039FA ? 0x2932DFCA : 0);
-        PlaceSelectionBars_001F4E68(screen,viewport.Sub_0024A368(),measure);
+        Sub_001F4E68(screen,viewport.Sub_0024A368(),measure);
     }
     if ((message == 8 && event.field_0x00 == 0x52E039F3) ||
         (message == 9 && event.field_0x00 == 0xAEE77884)) event.result_0x08 = 1;
@@ -293,9 +293,98 @@ void Sub_001F3A28(int message,MenuEvent_0016A458& event,Type_00249DE0& viewport,
             0x5610F2F4,0x422313CB,0x8FE4086B,0,0,0};
         const auto index = event.field_0x00 - 0x52E039F3u;
         selector.Bind_0024A860(index < 9 ? targets[index] : 0);
-        PlaceSelectionBars_001F4E68(screen,viewport.Sub_0024A368(),measure);
+        Sub_001F4E68(screen,viewport.Sub_0024A368(),measure);
     }
     if ((message == 8 && event.field_0x00 == 0x52E039F3) ||
         (message == 9 && event.field_0x00 == 0x52E039FB)) event.result_0x08 = 1;
 }
 }
+
+
+namespace hp2::frontend {
+// ELF 0x001EF3C8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001ef3c8.md.
+void AudioOptionsScreen::Sub_001EF3C8() {
+    hp2::not_implemented("0x001EF3C8", "AudioOptionsScreen::Sub_001EF3C8 (signature and full body unresolved)");
+}
+
+// ELF 0x001EFA00; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001efa00.md.
+void AudioOptionsScreen::Sub_001EFA00() {
+    hp2::not_implemented("0x001EFA00", "AudioOptionsScreen::Sub_001EFA00 (signature and full body unresolved)");
+}
+
+// ELF 0x001EFB78; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001efb78.md.
+void AudioOptionsScreen::Sub_001EFB78() {
+    hp2::not_implemented("0x001EFB78", "AudioOptionsScreen::Sub_001EFB78 (signature and full body unresolved)");
+}
+
+// ELF 0x001EFB80; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001efb80.md.
+void AudioOptionsScreen::Sub_001EFB80() {
+    hp2::not_implemented("0x001EFB80", "AudioOptionsScreen::Sub_001EFB80 (signature and full body unresolved)");
+}
+} // namespace hp2::frontend
+
+namespace hp2::frontend {
+// ELF 0x001F02D8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f02d8.md.
+void JukeBoxMusicScreen::Sub_001F02D8() {
+    hp2::not_implemented("0x001F02D8", "JukeBoxMusicScreen::Sub_001F02D8 (signature and full body unresolved)");
+}
+
+// ELF 0x001F0460; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001f0460.md.
+void JukeBoxMusicScreen::Sub_001F0460() {
+    hp2::not_implemented("0x001F0460", "JukeBoxMusicScreen::Sub_001F0460 (signature and full body unresolved)");
+}
+
+// ELF 0x001F0D10; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f0d10.md.
+void JukeBoxMusicScreen::Sub_001F0D10() {
+    hp2::not_implemented("0x001F0D10", "JukeBoxMusicScreen::Sub_001F0D10 (signature and full body unresolved)");
+}
+
+// ELF 0x001F4E68; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f4e68.md.
+void JukeBoxMusicScreen::Sub_001F4E68() {
+    hp2::not_implemented("0x001F4E68", "JukeBoxMusicScreen::Sub_001F4E68 (signature and full body unresolved)");
+}
+} // namespace hp2::frontend
+
+namespace hp2::frontend {
+// ELF 0x001F33B8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f33b8.md.
+void tDisplayOptionsScreen::Sub_001F33B8() {
+    hp2::not_implemented("0x001F33B8", "tDisplayOptionsScreen::Sub_001F33B8 (signature and full body unresolved)");
+}
+
+// ELF 0x001F3588; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001f3588.md.
+void tDisplayOptionsScreen::Sub_001F3588() {
+    hp2::not_implemented("0x001F3588", "tDisplayOptionsScreen::Sub_001F3588 (signature and full body unresolved)");
+}
+
+// ELF 0x001F35E0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001f35e0.md.
+void tDisplayOptionsScreen::Sub_001F35E0() {
+    hp2::not_implemented("0x001F35E0", "tDisplayOptionsScreen::Sub_001F35E0 (signature and full body unresolved)");
+}
+
+// ELF 0x001F3A28; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f3a28.md.
+void tDisplayOptionsScreen::Sub_001F3A28() {
+    hp2::not_implemented("0x001F3A28", "tDisplayOptionsScreen::Sub_001F3A28 (signature and full body unresolved)");
+}
+} // namespace hp2::frontend
+
+namespace hp2::frontend {
+// ELF 0x001EEBB8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001eebb8.md.
+void tOptionsScreen::Sub_001EEBB8() {
+    hp2::not_implemented("0x001EEBB8", "tOptionsScreen::Sub_001EEBB8 (signature and full body unresolved)");
+}
+
+// ELF 0x001EEC50; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001eec50.md.
+void tOptionsScreen::Sub_001EEC50() {
+    hp2::not_implemented("0x001EEC50", "tOptionsScreen::Sub_001EEC50 (signature and full body unresolved)");
+}
+
+// ELF 0x001EECA8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001eeca8.md.
+void tOptionsScreen::Sub_001EECA8() {
+    hp2::not_implemented("0x001EECA8", "tOptionsScreen::Sub_001EECA8 (signature and full body unresolved)");
+}
+
+// ELF 0x001F4E68; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f4e68.md.
+void tOptionsScreen::Sub_001F4E68() {
+    hp2::not_implemented("0x001F4E68", "tOptionsScreen::Sub_001F4E68 (signature and full body unresolved)");
+}
+} // namespace hp2::frontend

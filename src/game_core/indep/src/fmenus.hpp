@@ -525,8 +525,8 @@ public:
     void Construct_00249DE0(FeScreen& screen,std::uint32_t top_hash,std::uint32_t bottom_hash,
         std::uint32_t up_hash,std::uint32_t down_hash,std::uint32_t clip_hash);
     void Add_00249FF8(const std::vector<std::uint32_t>& widget_hashes);
-    void ConstructAudio_001EF3C8(FeScreen& screen);
-    void ConstructDisplay_001F33B8(FeScreen& screen);
+    void Sub_001EF3C8(FeScreen& screen);
+    void Sub_001F33B8(FeScreen& screen);
     void Handle_0024A480(int message, std::uint32_t item_hash);
     void Update_0024A1A8(float delta_seconds);
     std::uint32_t Sub_0024A368() const; // fixed viewport mask for selection bars
@@ -641,7 +641,7 @@ void PlaceSelectionBars_00216880(FeScreen& screen, std::uint32_t mask_hash,
                                  const WidgetMeasure& measure);
 // E-0017-S03 /001F4E68 common Options subclass selection: unlike main,
 // underline is exactly mask bottom, overscore is mask top-6.
-void PlaceSelectionBars_001F4E68(FeScreen& screen, std::uint32_t mask_hash,
+void Sub_001F4E68(FeScreen& screen, std::uint32_t mask_hash,
                                  const WidgetMeasure& measure);
 inline constexpr const char* kUnderscoreName = "MI_UNDERSCORE";  // hash 0x32C91DAE
 inline constexpr const char* kOverscoreName = "MI_OVERSCORE";    // hash 0xC671680C
@@ -705,23 +705,31 @@ private:
 int MenuItemIndexFromNameHash_0016A330(std::uint32_t name_hash);
 
 
-// Address-anchored projection of title instance fields. Actual hardware callbacks,
+// TitleScreen spelling confirmed by the named allocation in 0016F440 followed by
+// constructor 0016F000 (label 002B2F68); E-0028-C02. Original method names unknown.
+// Existing host projection of title instance fields. Actual hardware callbacks,
 // texture-widget binding, attract-mode/reset and input filtering stay host seams.
 // ELF SLUS_203.62 SHA256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-struct Type_0016F000 {
+struct TitleScreen {
     std::int32_t Field_0x08{}; // movie index
     std::int32_t Field_0x0c{}; // observed values 1 and 2
     std::uint32_t Field_0x10{}, Field_0x14{};
     bool port_demo{};
     int port_language{};
     // 0016F000 / E-0016-V01. Parameter skip_movies projects gp-0x59FC.
-    ::port::media::StartupResult Construct_0016F000(bool skip_movies, bool demo, int language, std::uint32_t ticks);
+    ::port::media::StartupResult Sub_0016F000(bool skip_movies, bool demo, int language, std::uint32_t ticks);
     // 0016F1F0 / E-0016-V01. movie_done comes from recovered 0016EE18's host playback seam.
-    ::port::media::StartupResult Update_0016F1F0(bool movie_done, std::uint32_t ticks);
+    ::port::media::StartupResult Sub_0016F1F0(bool movie_done, std::uint32_t ticks);
     // 0016EEF8 message 1 / E-0016-V01. caller must supply menu-select event only.
-    ::port::media::StartupResult Activate_0016EEF8(std::uint32_t ticks);
+    ::port::media::StartupResult Sub_0016EEF8(std::uint32_t ticks);
     // 0016F4F8 / E-0016-V01. Strict >4 seconds and the two original timestamp sentinels.
     bool Sub_0016F4F8(std::uint32_t ticks) const;
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x0016F190; E-0016-V01; E-0028-C02; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0016f190.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_0016F190();
 };
 // 0016EE90/0016EEE0 and table 002FB750/002FB7D0, E-0016-V01.
 const char* Sub_0016EE90(int language, int movie_index, bool demo);

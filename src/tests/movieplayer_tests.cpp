@@ -26,34 +26,34 @@ int main(int argc,char** argv) {
     try {
         const auto check=[](bool v){if(!v)throw std::runtime_error("movie/startup mismatch");};
         using port::media::StartupAction;
-        hp2::frontend::Type_0016F000 s;
-        auto result=s.Construct_0016F000(false,false,0,100);
+        hp2::frontend::TitleScreen s;
+        auto result=s.Sub_0016F000(false,false,0,100);
         check(result.action==StartupAction::PlayMovie&&std::string(result.filename)=="MOVIES/INTRO/EALOGO_EN.AVI");
         check(!result.start_music);
-        result=s.Activate_0016EEF8(101);
+        result=s.Sub_0016EEF8(101);
         check(result.action==StartupAction::None&&s.Field_0x08==0&&s.Field_0x0c==2&&!result.start_music); // first EA logo cannot be skipped
-        check(s.Update_0016F1F0(false,200).action==StartupAction::None);
-        result=s.Update_0016F1F0(true,201);
+        check(s.Sub_0016F1F0(false,200).action==StartupAction::None);
+        result=s.Sub_0016F1F0(true,201);
         check(result.action==StartupAction::PlayMovie&&std::string(result.filename)=="MOVIES/INTRO/NFSINTRO_EN.AVI");
-        result=s.Update_0016F1F0(true,202);
+        result=s.Sub_0016F1F0(true,202);
         check(result.action==StartupAction::ShowTitle&&result.start_music);
-        check(s.Activate_0016EEF8(16202).action==StartupAction::None); // exactly four seconds
-        check(s.Activate_0016EEF8(16203).action==StartupAction::RequestMainMenu);
-        s.Construct_0016F000(false,false,1,300);
-        s.Update_0016F1F0(true,300);
-        result=s.Activate_0016EEF8(301);
+        check(s.Sub_0016EEF8(16202).action==StartupAction::None); // exactly four seconds
+        check(s.Sub_0016EEF8(16203).action==StartupAction::RequestMainMenu);
+        s.Sub_0016F000(false,false,1,300);
+        s.Sub_0016F1F0(true,300);
+        result=s.Sub_0016EEF8(301);
         check(result.action==StartupAction::ShowTitle&&!result.start_music);
         check(s.Field_0x08==1); // second intro skip jumps to title; no music call in this handler
-        s.Update_0016F1F0(false,302);
-        check(s.Activate_0016EEF8(16303).action==StartupAction::RequestMainMenu);
-        s.Construct_0016F000(false,true,2,400);
-        check(s.Activate_0016EEF8(400).action==StartupAction::None);
-        result=s.Update_0016F1F0(true,401);
+        s.Sub_0016F1F0(false,302);
+        check(s.Sub_0016EEF8(16303).action==StartupAction::RequestMainMenu);
+        s.Sub_0016F000(false,true,2,400);
+        check(s.Sub_0016EEF8(400).action==StartupAction::None);
+        result=s.Sub_0016F1F0(true,401);
         check(result.action==StartupAction::ShowTitle&&!result.start_music);
-        check(s.Activate_0016EEF8(20000).action==StartupAction::None); // demo blocks main transition
-        result=s.Construct_0016F000(true,false,0,500);
+        check(s.Sub_0016EEF8(20000).action==StartupAction::None); // demo blocks main transition
+        result=s.Sub_0016F000(true,false,0,500);
         check(result.action==StartupAction::ShowTitle&&result.start_music);
-        result=s.Construct_0016F000(true,true,0,500);
+        result=s.Sub_0016F000(true,true,0,500);
         check(result.action==StartupAction::ShowTitle&&result.start_music); // ctor bypass calls music regardless demo flag
         s.Field_0x14=0;check(!s.Sub_0016F4F8(200000));
         s.Field_0x14=0x7fffffff;check(!s.Sub_0016F4F8(0x800fffff));

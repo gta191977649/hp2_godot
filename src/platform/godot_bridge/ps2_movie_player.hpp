@@ -39,6 +39,6 @@ private:
     bool loop_ = false, finished_ = false;
     double elapsed_ = 0, startup_elapsed_ = 0;
     godot::String filename_;
-    hp2::frontend::Type_0016F000 startup_;
+    hp2::frontend::TitleScreen startup_;
 };
 }

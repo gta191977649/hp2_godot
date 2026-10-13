@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "task": "TASK-0028",
+  "date": "2026-10-13 Australia/Sydney",
+  "binary_id": "sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2",
+  "version": "unknown executable revision; SYSTEM.CNF VER 1.00",
+  "program": "SLUS_203.62",
+  "provider": "existing Ghidra MCP via tools/ghidra.py Client; inspect and memory read only",
+  "observations": [
+    {"evidence_id": "E-0028-C01", "source": "reverse/classes.csv; reverse/classes/vtables.json; reverse/naming/task0019-original-name-mappings.csv", "finding": "Derived class/member attribution is materialized without inferring method signatures, object fields, inheritance or behaviour. Policy and inventory record shared targets and preserved projections."},
+    {"evidence_id": "E-0028-C02", "query": {"tool": "inspect", "action": "decompile", "address": "0x0016F440"}, "finding": "Message 0x0B passes allocation extent 0x38 and label address 0x002B2F68 (TitleScreen, earlier evidence E-0016-V01) to 0x002577C0, then directly passes the result to 0x0016F000. Router also targets 0x0016F1F0, 0x0016EEF8 and cleanup 0x0016F190. Existing title storage projection may use the confirmed class spelling; method spellings remain unknown."},
+    {"evidence_id": "E-0028-C03", "queries": [{"tool": "inspect", "action": "decompile", "address": "0x001F96B8"}, {"tool": "inspect", "action": "decompile", "address": "0x001F6FA0"}], "finding": "001F96B8 passes extent 0x60 and label 0x002BA878 (tEventLeaf) to 002577C0, then the result directly to 001F6FA0. It also allocates tEventGroup with extent 0x28 and label 002BA888. 001F6FA0 initializes the leaf object; existing leaf projection can be renamed, but its full constructor stays untranslated."},
+    {"evidence_id": "E-0028-C04", "queries": [{"tool": "inspect", "action": "decompile", "address": "0x002584B0"}, {"tool": "memory", "action": "read", "address": "0x002C04B0", "length": 96, "format": "auto"}], "finding": "The warning explicitly identifies NewSlotPool and says it was called before SlotPoolManager::SlotPoolManager(). Decompiled 002584B0 allocates a pool and conditionally links it to the manager, supporting E-0019-N03 and rejecting TASK-0027's constructor interpretation."},
+    {"evidence_id": "E-0028-C05", "queries": [{"tool": "inspect", "action": "references_to", "address": "0x002B9E00", "page_size": 100}, {"tool": "inspect", "action": "references_to", "address": "0x002BA9F8", "page_size": 100}, {"tool": "inspect", "action": "references_to", "address": "0x002BE300", "page_size": 100}], "finding": "options.cpp string has references 001F1A30 and 001F21F8; eventtree.cpp includes 001FFC84 among nine references; joystickconfiguration.cpp has 0023DF58. These are local source-path anchors, not proof of each new class's original file. Existing port module placement is explicitly retained without claiming more."},
+    {"evidence_id": "E-0028-C06", "query": {"tool": "inspect", "action": "decompile", "address": "0x001A1CE8"}, "finding": "CopDriver construction stores vtable 002B5998 and builds a subordinate allocation; this corroborates E-0008-02/E-0027-C01. Existing CopDriver/CopMover bodies and storage are preserved, and unknown helper names remain address-anchored."}
+  ],
+  "hypotheses": [],
+  "unresolved": ["Original signatures and calling conventions", "Original layouts and inheritance", "Exclusive ownership of shared targets", "Class-to-original-file bindings beyond existing evidence", "Original hardware or PCSX2 behavioural equivalence"]
+}

@@ -30,6 +30,8 @@ See [development](docs/DEVELOPMENT.md) for dependency checkout, Windows builds,
 and the Godot smoke command. See [progress](docs/PROGRESS.md) for actual checks.
 
 Start future sessions with [AGENTS.md](AGENTS.md) and the selected task.
+[Class templates](docs/CLASS_TEMPLATES.md) documents the compiled class/member shells,
+their evidence inventory and safe continuation workflow (TASK-0028).
 [Architecture](docs/ARCHITECTURE.md) describes layer ownership;
 [reverse notes](docs/REVERSE_NOTES.md) defines provenance and evidence records;
 [roadmap](docs/ROADMAP.md) defines milestone gates.

@@ -124,15 +124,15 @@ godot::Dictionary Ps2MoviePlayer::startup_result(const port::media::StartupResul
 }
 godot::Dictionary Ps2MoviePlayer::begin_startup(bool skip_movies) {
     startup_elapsed_ = 0;
-    return startup_result(startup_.Construct_0016F000(skip_movies, false, 0, 1));
+    return startup_result(startup_.Sub_0016F000(skip_movies, false, 0, 1));
 }
 godot::Dictionary Ps2MoviePlayer::tick_startup(bool movie_done, double delta) {
     startup_elapsed_ += delta;
     const auto ticks = static_cast<std::uint32_t>(std::fmod(startup_elapsed_ * 4000, 4294967296.0)) + 1u;
-    return startup_result(startup_.Update_0016F1F0(movie_done, ticks));
+    return startup_result(startup_.Sub_0016F1F0(movie_done, ticks));
 }
 godot::Dictionary Ps2MoviePlayer::select_startup() {
     const auto ticks = static_cast<std::uint32_t>(std::fmod(startup_elapsed_ * 4000, 4294967296.0)) + 1u;
-    return startup_result(startup_.Activate_0016EEF8(ticks));
+    return startup_result(startup_.Sub_0016EEF8(ticks));
 }
 }

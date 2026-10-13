@@ -21,6 +21,8 @@ add_library(game_core STATIC src/game_core/port/scaffold.cpp src/game_core/port/
   src/game_core/port/assets/elab_chunks.cpp src/game_core/port/assets/hp2_tpk_texture.cpp
   src/platform/ps2_asset_root.cpp src/platform/ps2_profile_store.cpp)
 target_include_directories(game_core PUBLIC src)
+include(reverse/classes/template_sources.cmake)
+target_sources(game_core PRIVATE ${HP2_CLASS_TEMPLATE_SOURCES})
 target_compile_features(game_core PUBLIC cxx_std_17)
 set_target_properties(game_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
@@ -86,6 +88,9 @@ if(BUILD_TESTING)
   add_executable(police_control_tests src/tests/police_control_tests.cpp)
   target_link_libraries(police_control_tests PRIVATE game_core)
   add_test(NAME police_control COMMAND police_control_tests)
+  add_executable(class_template_tests src/tests/class_template_tests.cpp)
+  target_link_libraries(class_template_tests PRIVATE game_core)
+  add_test(NAME class_template_gaps COMMAND class_template_tests)
   add_executable(engine_shell_tests src/tests/engine_shell_tests.cpp)
   target_link_libraries(engine_shell_tests PRIVATE game_core)
   add_test(NAME engine_shell COMMAND engine_shell_tests)
@@ -161,6 +166,8 @@ if(BUILD_TESTING)
   add_test(NAME hp2_tpk_texture COMMAND hp2_tpk_texture_tests
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  add_test(NAME class_template_coverage COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/reverse/scripts/generate_class_templates.py" --check)
+  add_test(NAME class_template_generator COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/tests" -p test_class_templates.py)
   add_test(NAME main_loop_catalog COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/reverse/scripts/validate_main_loop.py" --metadata-only)
   # docs/PROGRESS.md's tables are generated from reverse/symbols.csv, the task files and the
   # not_implemented call sites. A stale tracker is a tracker that misleads the next session,

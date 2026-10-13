@@ -1,4 +1,4 @@
-# CopMover — partial PS2 layout, TASK-0009
+# CopMover â€” partial PS2 layout, TASK-0009
 
 Binary SHA-256: 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 USA/NTSC inferred; executable revision unknown; boot VER 1.00.
@@ -21,10 +21,10 @@ unknown. Status Identified partial layout; no original-memory verification.
 | 0x38 | 4 | initialized to float 40, physical meaning unknown | E-0008-02 |
 | 0x3C | 4 | type-dependent coefficient bits | E-0009-01 |
 | 0x40 | 4 | zero-initialized word, purpose unknown | E-0008-02 |
-| 0x44–0x4F | unknown | unknown | none |
+| 0x44â€“0x4F | unknown | unknown | none |
 | 0x50, 0x60 | 16 each | copied/vector-operation blocks; component meaning uncertain | E-0008-02 |
 | 0x70, 0x74 | 4 each | zero-initialized words, purpose uncertain | E-0008-02/03 |
-| 0x78–0x7F | unknown | unknown | none |
+| 0x78â€“0x7F | unknown | unknown | none |
 
 Native `hp2::recovered::CopMover` is an existing-storage view. Its one recovered
 local method corresponds to 0x001A0EA0; exact coefficient bits and unknown-type
@@ -32,3 +32,11 @@ no-write behavior are supported by all disk jump-table entries and return paths.
 This does not implement constructor, Move, destructor, wheel or terrain behavior.
 Move 0x001A1030 has a one-byte body; vtable pointer 0x001A0E88 has no function.
 No original class hierarchy, method signature or physical coefficient units claimed.
+
+
+## TASK-0028 continuation
+
+The existing storage view is preserved. Its local method is now `Sub_001A0EA0`,
+per AGENT.md R2; the old descriptive helper spelling was port analysis wording.
+Missing attributed entries are throwing templates in the same class. See the template
+inventory for current source links. Original layout/equivalence remains unverified.

@@ -54,7 +54,7 @@ std::optional<std::vector<std::uint8_t>> read_whole_file(const fs::path& path) {
 
 std::string profile_store_path(const std::string& search_start_dir, int region) {
     const fs::path path = save_root(search_start_dir) /
-                          hp2::memorycard::SaveDirectoryName_0012DEE0(region) /
+                          hp2::memorycard::Sub_0012DEE0(region) /
                           hp2::memorycard::kProfileFileName_002BEBE0;
     return path.generic_string();
 }

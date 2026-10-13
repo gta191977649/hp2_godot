@@ -1,0 +1,3178 @@
+{
+  "schema_version": 1,
+  "evidence_id": "E-0029-S01",
+  "binary_id": "sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2",
+  "version": "unknown executable revision",
+  "program": "SLUS_203.62",
+  "search_range": [
+    "0x002AB000",
+    "0x003358F0"
+  ],
+  "paths": [
+    {
+      "address": "0x002AB000",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AB130",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AB180",
+      "path": "bWare/inc/bware.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002ABC80",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AC528",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AC5C0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AC608",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AC620",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AC638",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AC650",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AC690",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AC8D0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002ACC30",
+      "path": "src\\care.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0011E79C",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002AD0F8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AD140",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AD418",
+      "path": "src\\acidfxe.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00129A24",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00129AF8",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00129BB4",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002AD46F",
+      "path": "AbWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AD488",
+      "path": "src\\memorycard.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0012A634",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002AD558",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AD570",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AD878",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002ADFC8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AE1D0",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0012F72C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0012F754",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002AE1F8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AE210",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AE3B0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AE668",
+      "path": "..\\indep\\src\\car.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x001334B8",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002AE6E8",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0013621C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00136244",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002AE910",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AE958",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AEB10",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AEC28",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0013A754",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0013A77C",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002AED58",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AEE08",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0013C53C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0013C564",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002AEED8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AF040",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AF170",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AF2C8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AF5C0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002AF8F8",
+      "path": "..\\indep\\src\\racecoordinator.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0014A83C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0014AC28",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0014AD48",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0014BF38",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0014BFD0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0014C014",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0014C23C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0014C328",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0014C340",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0014C348",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002AFB88",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0014C734",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0014C75C",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002AFBB0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B0048",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B0100",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B01B0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B12F8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B1408",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B1440",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x001571A4",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001571CC",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B1470",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B1668",
+      "path": "..\\indep\\src\\cameramover.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0015E818",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0015E898",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B1760",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0015F2AC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0015F2D4",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B1ED0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B1F88",
+      "path": "..\\indep\\src\\zonecameras.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0016078C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00160944",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00160BA0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001623C0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00162674",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00162AC0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00162F0C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0016319C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00163320",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001634BC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00163714",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00164688",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B2018",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00166DF4",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00166E1C",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B2150",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B21B0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B26B0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B27F8",
+      "path": "..\\indep\\src\\fmenus.cpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B2D30",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0016E414",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0016E43C",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B2DC0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B3058",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0016FE5C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0016FE84",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B3080",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B34F0",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x001746CC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001746F4",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B3560",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B3998",
+      "path": "..\\indep\\src\\player.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00174F60",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00175794",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001757AC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00176A4C",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B4050",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00182DBC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00182DE4",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B4078",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B40B0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B4278",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B4528",
+      "path": "..\\indep\\src\\carinfo.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00188EE8",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B4548",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B4560",
+      "path": "..\\indep\\src\\spline.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x001891C8",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001894C4",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00189D9C",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B4578",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B4660",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B47B8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B4810",
+      "path": "..\\indep\\src\\carsounds.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0018D9E0",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B4870",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0018ECAC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0018ECD4",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B49F0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B4A08",
+      "path": "..\\indep\\src\\table.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0018FC1C",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B4A30",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B4E20",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B4E60",
+      "path": "..\\indep\\src\\frontendscreens\\selectcar.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00194438",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00194568",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001953C0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001954A8",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B5158",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B5180",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B5240",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0019BC14",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0019BC3C",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B5310",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B5408",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B5480",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B56D0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B5AD0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B5C28",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B5C88",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B5D58",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B5D70",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B5D88",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B5DD0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B5DE8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B5F40",
+      "path": "..\\indep\\src\\animateddriver.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x001A946C",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B5F80",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B5FF0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B6018",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B6168",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B6198",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B61B0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B62E8",
+      "path": "..\\indep\\src\\sound.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x001AE754",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B6380",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x001AFC94",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001AFCBC",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B63A8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B63F0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B6518",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x001B382C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001B3854",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B6540",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B6558",
+      "path": "..\\indep\\src\\lzcompress.cpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B6578",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B6590",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B65B8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B6600",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B6758",
+      "path": "..\\indep\\src\\frontendscreens\\racesetup.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x001B6BF4",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B6888",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x001B94A4",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001B94CC",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B6930",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B6948",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B6988",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B6B08",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B6B90",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B6BA8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B7200",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B7288",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B72B0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B73C8",
+      "path": "..\\indep\\src\\trackroute.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x001C2A70",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001C3048",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B73E8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B74D0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B7CE8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B7DD0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B7E00",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B7E40",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x001CF99C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001CF9C4",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B7E68",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B7ED0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B83B0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B83E8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B8BB8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B8BD0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B8C50",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B8C80",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B91A0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B9248",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B92A8",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x001E4244",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001E426C",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B92D0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B93E8",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x001E589C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001E58C4",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002B9420",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B9528",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B98F8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B9910",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B9940",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B9A50",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B9B00",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002B9E00",
+      "path": "..\\indep\\src\\frontendscreens\\options.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x001F1A30",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001F21F8",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BA470",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x001F516C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001F5194",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BA5C0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BA908",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x001FB3BC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001FB3E4",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BA950",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x001FDF44",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BA9F8",
+      "path": "..\\indep\\src\\eventtree.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x001FBD88",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001FD35C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001FD3BC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001FD738",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001FE4C0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001FE538",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001FE5AC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001FE620",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x001FFC84",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BAF18",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BAF50",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BAF68",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BAFB8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BB048",
+      "path": "..\\indep\\src\\beltmover.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00204114",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00204128",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00204148",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BB0B0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BB0D8",
+      "path": "..\\indep\\src\\speech\\sedwedge.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00205734",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00205B94",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00205D34",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BB100",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0020635C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00206384",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BB158",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BB1E8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BB200",
+      "path": "..\\indep\\src\\trackpath.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00207960",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BB298",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BB2F0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BB330",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0020990C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00209934",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BB3A0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BB3C8",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0020B9AC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0020B9D4",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BB430",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BB460",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BB478",
+      "path": "../indep/src/Speech/fragmentedVector.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0020C2CC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0020C300",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0020C320",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BB4C0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BB4E8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BBDF0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BBE08",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BBF58",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00211ECC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00211EF4",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BC018",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BC120",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0021442C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00214454",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BC238",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BC280",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00215184",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x002151AC",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BC2E8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BC3B0",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00215B04",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00215B2C",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BC3D8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BC3F0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BC5F8",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00217C34",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00217C5C",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BC630",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BC678",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BC770",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BC820",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BC970",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BC9B0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BCCC0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BCD18",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BCDE0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BCFE0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BD290",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BD480",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BD710",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BD7A0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BD998",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BD9E8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BDA00",
+      "path": "..\\indep\\src\\movieplayer\\cyclicbuffer.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x002321F0",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BDA30",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BDA48",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BDA60",
+      "path": "..\\indep\\src\\movieplayer\\dctimage.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0023462C",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BDB18",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BDC30",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BDC78",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BDD08",
+      "path": "..\\indep\\src\\movieplayer\\movieplayer.cpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BDD38",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x002389EC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00238A14",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BDD70",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BDDC0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BDDD8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BDDF0",
+      "path": "..\\indep\\src\\movieplayer\\ringbuffer.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00239434",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00239450",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00239468",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x002394A4",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BDE18",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BDEE8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BE040",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BE1E0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BE1F8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BE248",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0023C8C4",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0023C8EC",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BE270",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BE288",
+      "path": "..\\indep\\src\\quickspline.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0023D078",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BE2C0",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BE300",
+      "path": "..\\indep\\src\\frontendscreens\\joystickconfiguration.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0023DF58",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BE578",
+      "path": "bSound/include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00240CCC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00240CF4",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BE5D8",
+      "path": "bWare/inc/bware.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BE6A8",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BEA30",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BEF30",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BF088",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BF150",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BF220",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BF328",
+      "path": "bWare/inc/bware.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BF3E8",
+      "path": "bWare/inc/bware.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BF458",
+      "path": "bWare/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BF480",
+      "path": "bWare/inc/bware.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BF560",
+      "path": "inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BF570",
+      "path": "inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BF580",
+      "path": "inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BF590",
+      "path": "inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BF5C8",
+      "path": "inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BF5F0",
+      "path": "src\\bDebug.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x002509C8",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00250E94",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00250F0C",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BF6B0",
+      "path": "inc/bware.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BF918",
+      "path": "inc/bware.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BF928",
+      "path": "inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BF970",
+      "path": "src\\bFile.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00253880",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00253BD0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00253BFC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00253CA4",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00253CCC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00253D44",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x002541C0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00254674",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00254944",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002BFAA0",
+      "path": "inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002BFDA0",
+      "path": "src\\bFileE.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0025549C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x002554C4",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00255568",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00255ED0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x002562F4",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00256398",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x002569B4",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00256B1C",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002C0130",
+      "path": "inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C0178",
+      "path": "src\\bMemory.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00256E64",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00257124",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x002571A0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00257200",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x002573A0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x002573BC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x002573DC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x002573F4",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00257630",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x002576C0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00257928",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002C0410",
+      "path": "inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C07B0",
+      "path": "inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C07C0",
+      "path": "inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C07F0",
+      "path": "src\\EspClient.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0025B1B0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025B1FC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025B21C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025B2BC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025B3B8",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025B44C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025B504",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025B62C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025B6CC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025B76C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025B80C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025B8B8",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025BAAC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025BC14",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025BD7C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025BE64",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025BEF0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025BFB0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025C038",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025C0C0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025C1F4",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025C2A0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025C350",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025C408",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025C4B8",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025C570",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025C620",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025C6D8",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025C86C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025C938",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025CA00",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025CCF4",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025CE90",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025CF70",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002C0918",
+      "path": "inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C0940",
+      "path": "inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C0950",
+      "path": "../bware/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C0998",
+      "path": "include/bRegion.h",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C09B0",
+      "path": "include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0025D838",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025DA94",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025DD00",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025DDC0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025E0D0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0025E188",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002C0A60",
+      "path": "../bware/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C0B38",
+      "path": "src/bDriverPS2.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0025EC2C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00269DA4",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002C2AF8",
+      "path": "../bware/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C3628",
+      "path": "../bware/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C3670",
+      "path": "include/bRegion.h",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C3698",
+      "path": "src/bEffect.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x002703A0",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002C36A8",
+      "path": "include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x002708F0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00270B4C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00270DB8",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00270E78",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00271188",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00271240",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002C3758",
+      "path": "../bware/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C37A0",
+      "path": "include/bRegion.h",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00272C84",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002C37B8",
+      "path": "src/bRegion.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00271794",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002C3800",
+      "path": "include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00271CF8",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00271F54",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x002721C0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00272280",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00272590",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00272648",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002C38B0",
+      "path": "../bware/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C38F8",
+      "path": "include/bRegion.h",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C3940",
+      "path": "src/bSample.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00273400",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00273464",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x002734D8",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00273560",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00274228",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002C3B18",
+      "path": "include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00274E78",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x002750D4",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00275340",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00275400",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00275710",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x002757C8",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002C3BE8",
+      "path": "../bware/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C3C30",
+      "path": "include/bRegion.h",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C3C68",
+      "path": "src/bSegment.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00276224",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x002762EC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x002763C8",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002C3CE8",
+      "path": "include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00276888",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00276AE4",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00276D50",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00276E10",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00277120",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x002771D8",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002C3D98",
+      "path": "../bware/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C3DE0",
+      "path": "include/bRegion.h",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C3E30",
+      "path": "src/bSound.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00277B64",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00277BA8",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00277C48",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00277FA8",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002C3E50",
+      "path": "include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x00278700",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027895C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00278BC8",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00278C88",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00278F98",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00279050",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00279440",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027969C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x002798B8",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00279978",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00279B68",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x00279C20",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002C3F00",
+      "path": "../bware/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C3F48",
+      "path": "include/bRegion.h",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C3F80",
+      "path": "src/bVoice.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0027AB58",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027ADA4",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002C40D8",
+      "path": "include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0027B6D0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027B92C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027BB98",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027BC58",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027BF68",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027C020",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002C4188",
+      "path": "../bware/inc/bWare.hpp",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C41D0",
+      "path": "include/bRegion.h",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C4208",
+      "path": "include/bJukebox.h",
+      "nul_terminated": true,
+      "references": []
+    },
+    {
+      "address": "0x002C4220",
+      "path": "src/bJukebox.cpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0027C920",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027C96C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027CA40",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027CA8C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027CBC8",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027CC14",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027CCE8",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027CD34",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027CE08",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027CE54",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027CF28",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027CF74",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027D0CC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027D114",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027D1A0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027D30C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027D354",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027D398",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027DB28",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027DB5C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027DB74",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027DBA4",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027DBE8",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027DC14",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027DDA0",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027DDDC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027E214",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027E370",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027E41C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027E4C4",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027E570",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027E6F8",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027E818",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027E864",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027E940",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027E98C",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027EA68",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027EAB4",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027EBAC",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027EC4C",
+          "type": "PARAM"
+        }
+      ]
+    },
+    {
+      "address": "0x002C4740",
+      "path": "include/bFragmentedVector2.hpp",
+      "nul_terminated": true,
+      "references": [
+        {
+          "instruction": "0x0027F4C8",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027F724",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027F990",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027FA50",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027FD60",
+          "type": "PARAM"
+        },
+        {
+          "instruction": "0x0027FE18",
+          "type": "PARAM"
+        }
+      ]
+    }
+  ],
+  "search_pattern": "(?:(?:\\.{1,2}|[A-Za-z0-9_]+)[\\\\/])+[A-Za-z0-9_]+\\.(?:cpp|hpp|h)"
+}

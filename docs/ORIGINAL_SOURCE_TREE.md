@@ -1,5 +1,11 @@
 # The original source tree and class names (recovered directly from ELF strings)
 
+> **TASK-0029 update:** a fresh read-only Ghidra sweep again found 298 path occurrences / 54
+> distinct paths and confirmed directory bindings for nine standalone class pairs. The user
+> now requests unknown-path class pairs directly under game_core, superseding the old temporary
+> directory. These root locations/per-class filenames are port-side, not original-path claims.
+> See [CLASS_SOURCE_PATHS.md](CLASS_SOURCE_PATHS.md) for exact source strings and instruction proof.
+
 > **TASK-0020 update (2026-10-13).** The scan was repeated without Ghidra, by parsing the ELF's
 > PT_LOAD program headers directly and mapping every printable-ASCII run's file offset to its
 > virtual address (`reverse/naming/task0020-original-source-tree.csv`, E-0020-N01..N03). Result:

@@ -29,7 +29,7 @@ void store_u32(std::uint8_t* data, std::uint32_t value) {
 
 } // namespace
 
-std::string SaveDirectoryName_0012DEE0(int region) {
+std::string Sub_0012DEE0(int region) {
     // FUN_0012DEE0: FUN_001A3390() == 0 takes the PAL triple, anything else the NTSC one, and
     // the three pieces are joined with "%s%s%s". (E-0021-02)
     const bool pal = region == kRegionPal_001A3390;

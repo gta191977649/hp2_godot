@@ -1,0 +1,1561 @@
+{
+  "schema_version": 1,
+  "task": "TASK-0029",
+  "binary_id": "sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2",
+  "version": "unknown executable revision; SYSTEM.CNF VER 1.00",
+  "program": "SLUS_203.62",
+  "scope": "179 class pairs moved from port/class_templates; all source-path occurrences in canonical rodata/data range",
+  "search_range": [
+    "0x002AB000",
+    "0x003358F0"
+  ],
+  "source_path_occurrences": 298,
+  "distinct_paths": 54,
+  "classes": [
+    {
+      "class_name": "AIActionAccidentRecovery",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "AIActionAvoidCars",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "AIActionAvoidRoadBlock",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "AIActionBlock",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "AIActionDraft",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "AIActionGetUnstuck",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "AIActionIJustGotHit",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "AIActionJustDrive",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "AIActionNudgeCar",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "AIActionPass",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "AIActionPullOver",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "AICarController",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "AICarSound",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "AIDriver",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "AIEngineSound",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "AcidEffectSystem",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "AnimationGroup",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "Autosaver",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "AverageInRealController",
+      "status": "confirmed_directory",
+      "candidates": [],
+      "reason": "Named allocation feeds a0 to 0018FBF0; the entry initializes and returns that object, allocating internal storage with the path and source line 0xA7. This follow-up confirms a directory without extending the virtual-member-only API catalogue.",
+      "binding": {
+        "class_name": "AverageInRealController",
+        "evidence_id": "E-0029-P07",
+        "original_path": "..\\indep\\src\\table.cpp",
+        "path_address": "0x002B4A08",
+        "original_directory": "indep/src",
+        "member_entry": "0x0018FBF0",
+        "source_reference_instructions": [
+          "0x0018FC1C"
+        ],
+        "allocation_site": "0x0023A43C",
+        "constructor_call": "0x0023A448",
+        "object_argument_instruction": "0x0023A444",
+        "binding_kind": "direct named-object initialization call with source-file/line allocation arguments",
+        "observation": "Named allocation feeds a0 to 0018FBF0; the entry initializes and returns that object, allocating internal storage with the path and source line 0xA7. This follow-up confirms a directory without extending the virtual-member-only API catalogue."
+      },
+      "header": "src/game_core/indep/src/AverageInRealController.hpp",
+      "source": "src/game_core/indep/src/AverageInRealController.cpp"
+    },
+    {
+      "class_name": "BeACopChallengeSetup",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "BeACopResults1P",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "BeACopResults2P",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "BeTheCopSetup",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "BeltMover",
+      "status": "confirmed_directory",
+      "candidates": [
+        {
+          "original_path": "..\\indep\\src\\beltmover.cpp",
+          "path_address": "0x002BB048",
+          "reference_instruction": "0x00204114",
+          "reference_type": "PARAM",
+          "member_entry": "0x00204098",
+          "member_class_owners": [
+            "BeltMover"
+          ],
+          "instruction_function_owners": [
+            "0x00204098"
+          ],
+          "nul_terminated": true
+        },
+        {
+          "original_path": "..\\indep\\src\\beltmover.cpp",
+          "path_address": "0x002BB048",
+          "reference_instruction": "0x00204128",
+          "reference_type": "PARAM",
+          "member_entry": "0x00204098",
+          "member_class_owners": [
+            "BeltMover"
+          ],
+          "instruction_function_owners": [
+            "0x00204098"
+          ],
+          "nul_terminated": true
+        },
+        {
+          "original_path": "..\\indep\\src\\beltmover.cpp",
+          "path_address": "0x002BB048",
+          "reference_instruction": "0x00204148",
+          "reference_type": "PARAM",
+          "member_entry": "0x00204098",
+          "member_class_owners": [
+            "BeltMover"
+          ],
+          "instruction_function_owners": [
+            "0x00204098"
+          ],
+          "nul_terminated": true
+        }
+      ],
+      "reason": "Named allocation result v0 is moved to a0 before calling 00204098; that entry initializes the object and passes the source path with source lines 0x7C/0x7E/0x7F to internal allocations.",
+      "binding": {
+        "class_name": "BeltMover",
+        "evidence_id": "E-0029-P01",
+        "original_path": "..\\indep\\src\\beltmover.cpp",
+        "path_address": "0x002BB048",
+        "original_directory": "indep/src",
+        "member_entry": "0x00204098",
+        "source_reference_instructions": [
+          "0x00204114",
+          "0x00204128",
+          "0x00204148"
+        ],
+        "allocation_site": "0x001317B4",
+        "constructor_call": "0x001317C0",
+        "object_argument_instruction": "0x001317BC",
+        "binding_kind": "confirmed named constructor with source-file/line allocation arguments",
+        "observation": "Named allocation result v0 is moved to a0 before calling 00204098; that entry initializes the object and passes the source path with source lines 0x7C/0x7E/0x7F to internal allocations."
+      },
+      "header": "src/game_core/indep/src/BeltMover.hpp",
+      "source": "src/game_core/indep/src/BeltMover.cpp"
+    },
+    {
+      "class_name": "BestLapTimes",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "BestTotalTimes",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "BootMemcardLoader",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "BumperCameraMover",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "CDBFileSys",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "Car",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "CarCollisionBody",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "CarDamage",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "CarList",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "CarPartCuller",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "CarRenderInfo",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "ChangeableMenuItem",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "Chopper",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "ChopperSound",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "CollisionBodyNumberAllocator",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "CollisionBodyTable",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "CollisionBodyWitnessBitField",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "CopManager",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "CopsOffModeSelect",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "CopsOnModeSelect",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "CountdownCameraCoordinator",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "CreditsLine",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "CreditsScroller",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "CubicCameraMover",
+      "status": "confirmed_directory",
+      "candidates": [
+        {
+          "original_path": "..\\indep\\src\\cameramover.cpp",
+          "path_address": "0x002B1668",
+          "reference_instruction": "0x0015E818",
+          "reference_type": "PARAM",
+          "member_entry": "0x0015E7B0",
+          "member_class_owners": [
+            "CubicCameraMover"
+          ],
+          "instruction_function_owners": [
+            "0x0015E7B0"
+          ],
+          "nul_terminated": true
+        },
+        {
+          "original_path": "..\\indep\\src\\cameramover.cpp",
+          "path_address": "0x002B1668",
+          "reference_instruction": "0x0015E898",
+          "reference_type": "PARAM",
+          "member_entry": "0x0015E7B0",
+          "member_class_owners": [
+            "CubicCameraMover"
+          ],
+          "instruction_function_owners": [
+            "0x0015E7B0"
+          ],
+          "nul_terminated": true
+        }
+      ],
+      "reason": "Named allocation feeds a0 to 0015E7B0; that entry stores vtable 002B17D0 and allocates internal objects with this source path and lines 0x10F6/0x10F7.",
+      "binding": {
+        "class_name": "CubicCameraMover",
+        "evidence_id": "E-0029-P02",
+        "original_path": "..\\indep\\src\\cameramover.cpp",
+        "path_address": "0x002B1668",
+        "original_directory": "indep/src",
+        "member_entry": "0x0015E7B0",
+        "source_reference_instructions": [
+          "0x0015E818",
+          "0x0015E898"
+        ],
+        "allocation_site": "0x00176DBC",
+        "constructor_call": "0x00176DCC",
+        "object_argument_instruction": "0x00176DC8",
+        "binding_kind": "confirmed named constructor with source-file/line allocation arguments",
+        "observation": "Named allocation feeds a0 to 0015E7B0; that entry stores vtable 002B17D0 and allocates internal objects with this source path and lines 0x10F6/0x10F7."
+      },
+      "header": "src/game_core/indep/src/CubicCameraMover.hpp",
+      "source": "src/game_core/indep/src/CubicCameraMover.cpp"
+    },
+    {
+      "class_name": "DebugPauseMenu",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "DebugWorldCameraMover",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "DeliveryMover",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "DemoCameraCoordinator",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "DemoDiscManager",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "DriveCameraMover",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "DrivingChoice",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "DuplicatedSolid",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "DuplicatedStripEntryData",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "DuplicatedStripEntryTable",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "DynamicCollisionBody",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "EndGameMenu",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "EndGameMenuItem",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "EndGameScreens",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "EventRewardScreen",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "FernShakerInfoTable",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "FlailerRenderManager",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "FlailerScreenList",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "FreeRunSetup",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "FuturePoints",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "GlobalBackgroundAnimation",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "GrandSceneryCullInfo",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "HeliSheet",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "HelpAlphaAnimation",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "HornSound3d",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "HudTexturePack",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "JoystickCalibrationScreen",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "LanguageBuffer",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "LapKnockoutSetup",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "LapTimesDisplay",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "LoadedTextureData",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "MaxCameraMover",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "MellowMover",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "MumboJumboScreen",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "MunitionEffectsHandler",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "NameEntry",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "NearbyCarList",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "NewMainMenu",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "NisCameraCoordinator",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "NisManager",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "NullController",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "NullDriver",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "NumberAllocator",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "OrbitCarCameraMover",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "PauseAudioOpts",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "PauseDisplayOpts",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "PauseMenu",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "PauseOptions",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "PauseRaceObjective",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "PauseViewControls",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "PhysicsCar",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "PhysicsSystem",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "PlayerCarSound",
+      "status": "confirmed_directory",
+      "candidates": [
+        {
+          "original_path": "..\\indep\\src\\carsounds.cpp",
+          "path_address": "0x002B4810",
+          "reference_instruction": "0x0018D9E0",
+          "reference_type": "PARAM",
+          "member_entry": "0x0018D9A0",
+          "member_class_owners": [
+            "PlayerCarSound"
+          ],
+          "instruction_function_owners": [
+            "0x0018D9A0"
+          ],
+          "nul_terminated": true
+        }
+      ],
+      "reason": "The constructor call's delay slot moves named allocation result v0 into a0; 0018D9A0 stores vtable 002B4920 and passes this path plus source line 0x305 to an internal allocation.",
+      "binding": {
+        "class_name": "PlayerCarSound",
+        "evidence_id": "E-0029-P03",
+        "original_path": "..\\indep\\src\\carsounds.cpp",
+        "path_address": "0x002B4810",
+        "original_directory": "indep/src",
+        "member_entry": "0x0018D9A0",
+        "source_reference_instructions": [
+          "0x0018D9E0"
+        ],
+        "allocation_site": "0x0018EB48",
+        "constructor_call": "0x0018EB54",
+        "object_argument_instruction": "0x0018EB58",
+        "binding_kind": "confirmed named constructor with source-file/line allocation arguments",
+        "observation": "The constructor call's delay slot moves named allocation result v0 into a0; 0018D9A0 stores vtable 002B4920 and passes this path plus source line 0x305 to an internal allocation."
+      },
+      "header": "src/game_core/indep/src/PlayerCarSound.hpp",
+      "source": "src/game_core/indep/src/PlayerCarSound.cpp"
+    },
+    {
+      "class_name": "PlayerEngineSound",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "PlayerTireSound",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "PreRace2PBeACop",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "PreRaceBlurb",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "PreRaceStats",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "PreviewPause",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "PreviewPausePoint",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "PsychoDriver",
+      "status": "unknown",
+      "candidates": [
+        {
+          "original_path": "bSound/include/bFragmentedVector2.hpp",
+          "path_address": "0x002AEC28",
+          "reference_instruction": "0x0013A754",
+          "reference_type": "PARAM",
+          "member_entry": "0x0013A658",
+          "member_class_owners": [
+            "PsychoDriver"
+          ],
+          "instruction_function_owners": [
+            "0x0013A658",
+            "0x0013A700"
+          ],
+          "nul_terminated": true
+        },
+        {
+          "original_path": "bSound/include/bFragmentedVector2.hpp",
+          "path_address": "0x002AEC28",
+          "reference_instruction": "0x0013A77C",
+          "reference_type": "PARAM",
+          "member_entry": "0x0013A658",
+          "member_class_owners": [
+            "PsychoDriver"
+          ],
+          "instruction_function_owners": [
+            "0x0013A658",
+            "0x0013A700"
+          ],
+          "nul_terminated": true
+        }
+      ],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "QuickSplineInRealController",
+      "status": "confirmed_directory",
+      "candidates": [],
+      "reason": "Named allocation feeds a0 to 0023D048; the entry initializes and returns that object, allocating internal storage with this path and source line 0x4D.",
+      "binding": {
+        "class_name": "QuickSplineInRealController",
+        "evidence_id": "E-0029-P08",
+        "original_path": "..\\indep\\src\\quickspline.cpp",
+        "path_address": "0x002BE288",
+        "original_directory": "indep/src",
+        "member_entry": "0x0023D048",
+        "source_reference_instructions": [
+          "0x0023D078"
+        ],
+        "allocation_site": "0x0023A464",
+        "constructor_call": "0x0023A478",
+        "object_argument_instruction": "0x0023A46C",
+        "binding_kind": "direct named-object initialization call with source-file/line allocation arguments",
+        "observation": "Named allocation feeds a0 to 0023D048; the entry initializes and returns that object, allocating internal storage with this path and source line 0x4D."
+      },
+      "header": "src/game_core/indep/src/QuickSplineInRealController.hpp",
+      "source": "src/game_core/indep/src/QuickSplineInRealController.cpp"
+    },
+    {
+      "class_name": "Race",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "RaceCoordinator",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "RaceResultsScreen",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "RealController",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "RealDriver",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "RearViewMirrorCameraMover",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "ReplayLogBuffer",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "ReplayManager",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "ReplayScreen",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "ReplaySnapshot",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "ResourceFile",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "RewardTrackModel",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "SelectTrackScreen",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "SelectableTrack",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "SelectionSet",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "SingleRaceSetup",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "SirenSound",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "SlotPool",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "SlotPoolManager",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "Smokeable",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "StillCameraMover",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "TerrainEffectEmitters",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "TextureTable",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "TimeAroundTrackTable",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "TimeOfDayTrack",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "TourneyPoints",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "TourneyStandingsScreen",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "TrackCarCameraMover",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "TrackFlyCameraMover",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "TrackKnockoutSetup",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "TrackMap",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "TrackMarkerFile",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "TrackPathCoordinate",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "TrackPolygonCollisionBody",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "TrackRoute",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "TrackRouteEditor",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "TrackRouteEditorCameraMover",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "TrafficCar",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "TrafficDriver",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "TrafficTeleporter",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "VisibleDrivingLine",
+      "status": "confirmed_directory",
+      "candidates": [],
+      "reason": "Listing passes the named allocation result in a0 to 00174EC0 and stores its returned object; the entry allocates internal storage with this source path and line 0x109. Decompiler parameter/register presentation is not an original ABI claim.",
+      "binding": {
+        "class_name": "VisibleDrivingLine",
+        "evidence_id": "E-0029-P06",
+        "original_path": "..\\indep\\src\\player.cpp",
+        "path_address": "0x002B3998",
+        "original_directory": "indep/src",
+        "member_entry": "0x00174EC0",
+        "source_reference_instructions": [
+          "0x00174F60"
+        ],
+        "allocation_site": "0x00180BF0",
+        "constructor_call": "0x00180C04",
+        "object_argument_instruction": "0x00180BF8",
+        "binding_kind": "direct named-object initialization call with source-file/line allocation arguments",
+        "observation": "Listing passes the named allocation result in a0 to 00174EC0 and stores its returned object; the entry allocates internal storage with this source path and line 0x109. Decompiler parameter/register presentation is not an original ABI claim."
+      },
+      "header": "src/game_core/indep/src/VisibleDrivingLine.hpp",
+      "source": "src/game_core/indep/src/VisibleDrivingLine.cpp"
+    },
+    {
+      "class_name": "World",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "ZoneFreezeCameraMover",
+      "status": "confirmed_directory",
+      "candidates": [
+        {
+          "original_path": "..\\indep\\src\\zonecameras.cpp",
+          "path_address": "0x002B1F88",
+          "reference_instruction": "0x0016078C",
+          "reference_type": "PARAM",
+          "member_entry": "0x00160298",
+          "member_class_owners": [
+            "ZoneFreezeCameraMover"
+          ],
+          "instruction_function_owners": [
+            "0x00160298"
+          ],
+          "nul_terminated": true
+        },
+        {
+          "original_path": "..\\indep\\src\\zonecameras.cpp",
+          "path_address": "0x002B1F88",
+          "reference_instruction": "0x00160944",
+          "reference_type": "PARAM",
+          "member_entry": "0x00160298",
+          "member_class_owners": [
+            "ZoneFreezeCameraMover"
+          ],
+          "instruction_function_owners": [
+            "0x00160298"
+          ],
+          "nul_terminated": true
+        },
+        {
+          "original_path": "..\\indep\\src\\zonecameras.cpp",
+          "path_address": "0x002B1F88",
+          "reference_instruction": "0x00160BA0",
+          "reference_type": "PARAM",
+          "member_entry": "0x00160298",
+          "member_class_owners": [
+            "ZoneFreezeCameraMover"
+          ],
+          "instruction_function_owners": [
+            "0x00160298"
+          ],
+          "nul_terminated": true
+        }
+      ],
+      "reason": "Named allocation feeds a0 to 00160298; its internal allocations pass the source path with lines 0x23D/0x24E/0x262/0x272/0x27B.",
+      "binding": {
+        "class_name": "ZoneFreezeCameraMover",
+        "evidence_id": "E-0029-P04",
+        "original_path": "..\\indep\\src\\zonecameras.cpp",
+        "path_address": "0x002B1F88",
+        "original_directory": "indep/src",
+        "member_entry": "0x00160298",
+        "source_reference_instructions": [
+          "0x0016078C",
+          "0x00160944",
+          "0x00160BA0"
+        ],
+        "allocation_site": "0x00176D40",
+        "constructor_call": "0x00176D54",
+        "object_argument_instruction": "0x00176D4C",
+        "binding_kind": "confirmed named constructor with source-file/line allocation arguments",
+        "observation": "Named allocation feeds a0 to 00160298; its internal allocations pass the source path with lines 0x23D/0x24E/0x262/0x272/0x27B."
+      },
+      "header": "src/game_core/indep/src/ZoneFreezeCameraMover.hpp",
+      "source": "src/game_core/indep/src/ZoneFreezeCameraMover.cpp"
+    },
+    {
+      "class_name": "ZonePreviewCameraMover",
+      "status": "confirmed_directory",
+      "candidates": [
+        {
+          "original_path": "..\\indep\\src\\zonecameras.cpp",
+          "path_address": "0x002B1F88",
+          "reference_instruction": "0x001623C0",
+          "reference_type": "PARAM",
+          "member_entry": "0x00161F98",
+          "member_class_owners": [
+            "ZonePreviewCameraMover"
+          ],
+          "instruction_function_owners": [
+            "0x00161F98"
+          ],
+          "nul_terminated": true
+        },
+        {
+          "original_path": "..\\indep\\src\\zonecameras.cpp",
+          "path_address": "0x002B1F88",
+          "reference_instruction": "0x00162674",
+          "reference_type": "PARAM",
+          "member_entry": "0x00161F98",
+          "member_class_owners": [
+            "ZonePreviewCameraMover"
+          ],
+          "instruction_function_owners": [
+            "0x00161F98"
+          ],
+          "nul_terminated": true
+        },
+        {
+          "original_path": "..\\indep\\src\\zonecameras.cpp",
+          "path_address": "0x002B1F88",
+          "reference_instruction": "0x00162AC0",
+          "reference_type": "PARAM",
+          "member_entry": "0x00161F98",
+          "member_class_owners": [
+            "ZonePreviewCameraMover"
+          ],
+          "instruction_function_owners": [
+            "0x00161F98"
+          ],
+          "nul_terminated": true
+        },
+        {
+          "original_path": "..\\indep\\src\\zonecameras.cpp",
+          "path_address": "0x002B1F88",
+          "reference_instruction": "0x00162F0C",
+          "reference_type": "PARAM",
+          "member_entry": "0x00161F98",
+          "member_class_owners": [
+            "ZonePreviewCameraMover"
+          ],
+          "instruction_function_owners": [
+            "0x00161F98"
+          ],
+          "nul_terminated": true
+        },
+        {
+          "original_path": "..\\indep\\src\\zonecameras.cpp",
+          "path_address": "0x002B1F88",
+          "reference_instruction": "0x0016319C",
+          "reference_type": "PARAM",
+          "member_entry": "0x00161F98",
+          "member_class_owners": [
+            "ZonePreviewCameraMover"
+          ],
+          "instruction_function_owners": [
+            "0x00161F98"
+          ],
+          "nul_terminated": true
+        },
+        {
+          "original_path": "..\\indep\\src\\zonecameras.cpp",
+          "path_address": "0x002B1F88",
+          "reference_instruction": "0x00163320",
+          "reference_type": "PARAM",
+          "member_entry": "0x00161F98",
+          "member_class_owners": [
+            "ZonePreviewCameraMover"
+          ],
+          "instruction_function_owners": [
+            "0x00161F98"
+          ],
+          "nul_terminated": true
+        },
+        {
+          "original_path": "..\\indep\\src\\zonecameras.cpp",
+          "path_address": "0x002B1F88",
+          "reference_instruction": "0x001634BC",
+          "reference_type": "PARAM",
+          "member_entry": "0x00161F98",
+          "member_class_owners": [
+            "ZonePreviewCameraMover"
+          ],
+          "instruction_function_owners": [
+            "0x00161F98"
+          ],
+          "nul_terminated": true
+        }
+      ],
+      "reason": "Named allocation feeds a0 to 00161F98; internal allocations pass this path and source lines 0x419/0x429/0x442/0x457/0x46B/0x47B/0x485.",
+      "binding": {
+        "class_name": "ZonePreviewCameraMover",
+        "evidence_id": "E-0029-P05",
+        "original_path": "..\\indep\\src\\zonecameras.cpp",
+        "path_address": "0x002B1F88",
+        "original_directory": "indep/src",
+        "member_entry": "0x00161F98",
+        "source_reference_instructions": [
+          "0x001623C0",
+          "0x00162674",
+          "0x00162AC0",
+          "0x00162F0C",
+          "0x0016319C",
+          "0x00163320",
+          "0x001634BC"
+        ],
+        "allocation_site": "0x00176D74",
+        "constructor_call": "0x00176D88",
+        "object_argument_instruction": "0x00176D80",
+        "binding_kind": "confirmed named constructor with source-file/line allocation arguments",
+        "observation": "Named allocation feeds a0 to 00161F98; internal allocations pass this path and source lines 0x419/0x429/0x442/0x457/0x46B/0x47B/0x485."
+      },
+      "header": "src/game_core/indep/src/ZonePreviewCameraMover.hpp",
+      "source": "src/game_core/indep/src/ZonePreviewCameraMover.cpp"
+    },
+    {
+      "class_name": "bFile",
+      "status": "confirmed_directory",
+      "candidates": [],
+      "reason": "The expression bStrLen(filename)+1 < sizeof(bFile::Filename) and src\\bFile.cpp are passed to 00250AC0 together, source line 0x2B. Filename remains a field expression, not an adopted method name. The prefix before src\\ and original declaration header are unknown.",
+      "binding": {
+        "class_name": "bFile",
+        "evidence_id": "E-0029-P09",
+        "original_path": "src\\bFile.cpp",
+        "path_address": "0x002BF970",
+        "original_directory": "src",
+        "member_entry": "0x00253828",
+        "source_reference_instructions": [
+          "0x00253880"
+        ],
+        "diagnostic_address": "0x002BF938",
+        "diagnostic_instruction": "0x0025387C",
+        "assert_call": "0x00253884",
+        "source_line_instruction": "0x00253888",
+        "binding_kind": "class-qualified field assertion and source-path argument in the same assertion call",
+        "observation": "The expression bStrLen(filename)+1 < sizeof(bFile::Filename) and src\\bFile.cpp are passed to 00250AC0 together, source line 0x2B. Filename remains a field expression, not an adopted method name. The prefix before src\\ and original declaration header are unknown."
+      },
+      "header": "src/game_core/src/bFile.hpp",
+      "source": "src/game_core/src/bFile.cpp"
+    },
+    {
+      "class_name": "eAnimation",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "eFrameMallocBuffer0",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "eFrameMallocBuffer1",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "feAnimAlphaElement",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "kAITireSound",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "mExitScreenAnimation",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "m_ptr_SOUND_Memory_EE",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "pCarTexturePack",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "pDynamicTexturePack",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "pInitialSpotlightAlphas",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "pInitialSpotlightColours",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "pTrackSelectTexturePack",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "tCubic1D",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "tCustomizeHUDScreen",
+      "status": "unknown",
+      "candidates": [
+        {
+          "original_path": "bSound/include/bFragmentedVector2.hpp",
+          "path_address": "0x002BA470",
+          "reference_instruction": "0x001F516C",
+          "reference_type": "PARAM",
+          "member_entry": "0x001F4E68",
+          "member_class_owners": [
+            "JoystickPreconfig",
+            "JukeBoxMusicScreen",
+            "tCustomizeHUDScreen",
+            "tOptionsScreen"
+          ],
+          "instruction_function_owners": [
+            "0x001F4E68",
+            "0x001F5118"
+          ],
+          "nul_terminated": true
+        },
+        {
+          "original_path": "bSound/include/bFragmentedVector2.hpp",
+          "path_address": "0x002BA470",
+          "reference_instruction": "0x001F5194",
+          "reference_type": "PARAM",
+          "member_entry": "0x001F4E68",
+          "member_class_owners": [
+            "JoystickPreconfig",
+            "JukeBoxMusicScreen",
+            "tCustomizeHUDScreen",
+            "tOptionsScreen"
+          ],
+          "instruction_function_owners": [
+            "0x001F4E68",
+            "0x001F5118"
+          ],
+          "nul_terminated": true
+        }
+      ],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "tExitScreenAnimation",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "tHelpMenu",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "tLineSegment",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "tMainMenuTrackDesc",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "tMenuAnimElement",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "tPointsThingy",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "tPopupMenu",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "tRandomlyPickableTrackInfo",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "tStatsColumn",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "tTotalTimeRecord",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    }
+  ]
+}

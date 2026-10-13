@@ -1,5 +1,26 @@
 # Decision log
 
+## TASK-0029 — Root defaults and confirmed source directories (2026-10-13)
+
+The user explicitly superseded TASK-0028's unknown-path directory. All former standalone
+template pairs now live at the game_core root unless class-specific read-only Ghidra evidence
+confirms an original directory. Existing module classes stay in place. Exact original source
+filenames remain in the evidence ledger; generated per-class basenames/header extensions are
+port-side partitions inside the confirmed directory. Proximity, shared virtual targets and
+generic inline-header strings do not move an otherwise unknown class. No middleware root is
+invented for the recovered `src\bFile.cpp` path. See CLASS_SOURCE_PATHS.md, E-0029-S01/P01..P09.
+
+## TASK-0028 — Editable class shells with explicit unknown ABI (2026-10-13)
+
+Use confirmed class spellings and address-anchored unknown member names. New entry templates
+have explicitly port-side void/no-argument signatures and throw at the original address.
+Unknown paths use `port/class_templates`, while existing module placements and bodies are
+preserved. Labels that cannot be C++ identifiers remain a verbatim catalogue, per user choice.
+Class allocation sizes do not define native layout; shared vtable entries do not define
+inheritance. Existing partial helpers may coexist with a throwing full-entry template, with
+both linked in the inventory. Generator runs append missing code and never replace edited
+bodies or existing records. No behaviour status is promoted by template contract tests.
+
 > Numbering note (TASK-0021): this file carries **two** entries numbered D008 — the one below,
 > from TASK-0016, and "One render contract" from TASK-0018 further down. Neither is renumbered,
 > because both are referenced elsewhere by number. The next free number is D009.

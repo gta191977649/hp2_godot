@@ -21,9 +21,9 @@ void check(bool value, const char* reason) {
 
 // FUN_0012DEE0's "%s%s%s", both regions. (E-0021-02)
 void directory_name_matches_both_regions() {
-    check(SaveDirectoryName_0012DEE0(kRegionNtsc_001A3390) == "BASLUS-20362HP2",
+    check(Sub_0012DEE0(kRegionNtsc_001A3390) == "BASLUS-20362HP2",
           "NTSC save directory name");
-    check(SaveDirectoryName_0012DEE0(kRegionPal_001A3390) == "BESLES-50731HP2",
+    check(Sub_0012DEE0(kRegionPal_001A3390) == "BESLES-50731HP2",
           "PAL save directory name");
 }
 

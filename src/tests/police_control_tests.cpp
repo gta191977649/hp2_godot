@@ -49,14 +49,14 @@ void mover_tests() {
         auto want=storage;
         const auto found=expected.find(type);
         if (found!=expected.end()) put(want,0x3c,found->second);
-        CopMover(storage).select_type_coefficient(memory);
+        CopMover(storage).Sub_001A0EA0(memory);
         require(storage==want,"coefficient writes/unknown preservation differ");
         require(memory.reads==std::vector<std::uint32_t>{0x100c,0x2534},"coefficient read order differs");
     }
     // PS2 address arithmetic is 32-bit, including wraparound.
     CopMoverStorage storage{};put(storage,8,0xfffffffc);
     Memory memory;memory.words={{8,0xfffffff0},{0x524,4}};
-    CopMover(storage).select_type_coefficient(memory);
+    CopMover(storage).Sub_001A0EA0(memory);
     require(get(storage,0x3c)==0x41340000,"address wrap differs");
 }
 void driver_tests() {
@@ -72,7 +72,7 @@ void driver_tests() {
             if (timing_state && speed<2.0f) {put(want,0x30,bits(1.25f));want_result=true;}
             else put(want,0x30,0);
         }
-        const bool result=CopDriver(storage).check_low_speed_timeout(0.75f,memory);
+        const bool result=CopDriver(storage).Sub_001A2A90(0.75f,memory);
         require(result==want_result && storage==want,"timeout state/output writes differ");
         require(memory.calls==1,"external predicate call count differs");
         require(memory.reads.size()==unsigned(eligible&&timing_state),"unexpected speed read");
@@ -80,9 +80,9 @@ void driver_tests() {
     CopDriverStorage storage{};put(storage,0,0x1000);put(storage,0x24,2);put(storage,0x30,bits(0.5f));
     Memory memory;memory.words={{0x13c4,bits(1.0f)}};
     CopDriver driver(storage);
-    require(!driver.check_low_speed_timeout(0.5f,memory),"threshold must be strictly greater than one");
+    require(!driver.Sub_001A2A90(0.5f,memory),"threshold must be strictly greater than one");
     require(get(storage,0x30)==bits(1.0f),"timer bits at threshold differ");
-    require(driver.check_low_speed_timeout(0.25f,memory),"increment across threshold differs");
+    require(driver.Sub_001A2A90(0.25f,memory),"increment across threshold differs");
     require(get(storage,0x30)==bits(1.25f),"timer stored as integer rather than float");
 }
 } // namespace

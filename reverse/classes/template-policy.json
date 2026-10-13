@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "binary_id": "sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2",
+  "default_directory": "src/game_core",
+  "original_directory_placements": {
+    "BeltMover": {
+      "header": "src/game_core/indep/src/BeltMover.hpp",
+      "source": "src/game_core/indep/src/BeltMover.cpp",
+      "namespace": "hp2::recovered",
+      "placement_provenance": "confirmed original directory (E-0029-P01); per-class file basename/header extension port-side; original TU ..\\indep\\src\\beltmover.cpp",
+      "original_path": "..\\indep\\src\\beltmover.cpp",
+      "path_address": "0x002BB048",
+      "evidence": "E-0029-P01"
+    },
+    "CubicCameraMover": {
+      "header": "src/game_core/indep/src/CubicCameraMover.hpp",
+      "source": "src/game_core/indep/src/CubicCameraMover.cpp",
+      "namespace": "hp2::recovered",
+      "placement_provenance": "confirmed original directory (E-0029-P02); per-class file basename/header extension port-side; original TU ..\\indep\\src\\cameramover.cpp",
+      "original_path": "..\\indep\\src\\cameramover.cpp",
+      "path_address": "0x002B1668",
+      "evidence": "E-0029-P02"
+    },
+    "PlayerCarSound": {
+      "header": "src/game_core/indep/src/PlayerCarSound.hpp",
+      "source": "src/game_core/indep/src/PlayerCarSound.cpp",
+      "namespace": "hp2::recovered",
+      "placement_provenance": "confirmed original directory (E-0029-P03); per-class file basename/header extension port-side; original TU ..\\indep\\src\\carsounds.cpp",
+      "original_path": "..\\indep\\src\\carsounds.cpp",
+      "path_address": "0x002B4810",
+      "evidence": "E-0029-P03"
+    },
+    "ZoneFreezeCameraMover": {
+      "header": "src/game_core/indep/src/ZoneFreezeCameraMover.hpp",
+      "source": "src/game_core/indep/src/ZoneFreezeCameraMover.cpp",
+      "namespace": "hp2::recovered",
+      "placement_provenance": "confirmed original directory (E-0029-P04); per-class file basename/header extension port-side; original TU ..\\indep\\src\\zonecameras.cpp",
+      "original_path": "..\\indep\\src\\zonecameras.cpp",
+      "path_address": "0x002B1F88",
+      "evidence": "E-0029-P04"
+    },
+    "ZonePreviewCameraMover": {
+      "header": "src/game_core/indep/src/ZonePreviewCameraMover.hpp",
+      "source": "src/game_core/indep/src/ZonePreviewCameraMover.cpp",
+      "namespace": "hp2::recovered",
+      "placement_provenance": "confirmed original directory (E-0029-P05); per-class file basename/header extension port-side; original TU ..\\indep\\src\\zonecameras.cpp",
+      "original_path": "..\\indep\\src\\zonecameras.cpp",
+      "path_address": "0x002B1F88",
+      "evidence": "E-0029-P05"
+    },
+    "VisibleDrivingLine": {
+      "header": "src/game_core/indep/src/VisibleDrivingLine.hpp",
+      "source": "src/game_core/indep/src/VisibleDrivingLine.cpp",
+      "namespace": "hp2::recovered",
+      "placement_provenance": "confirmed original directory (E-0029-P06); per-class file basename/header extension port-side; original TU ..\\indep\\src\\player.cpp",
+      "original_path": "..\\indep\\src\\player.cpp",
+      "path_address": "0x002B3998",
+      "evidence": "E-0029-P06"
+    },
+    "AverageInRealController": {
+      "header": "src/game_core/indep/src/AverageInRealController.hpp",
+      "source": "src/game_core/indep/src/AverageInRealController.cpp",
+      "namespace": "hp2::recovered",
+      "placement_provenance": "confirmed original directory (E-0029-P07); per-class file basename/header extension port-side; original TU ..\\indep\\src\\table.cpp",
+      "original_path": "..\\indep\\src\\table.cpp",
+      "path_address": "0x002B4A08",
+      "evidence": "E-0029-P07"
+    },
+    "QuickSplineInRealController": {
+      "header": "src/game_core/indep/src/QuickSplineInRealController.hpp",
+      "source": "src/game_core/indep/src/QuickSplineInRealController.cpp",
+      "namespace": "hp2::recovered",
+      "placement_provenance": "confirmed original directory (E-0029-P08); per-class file basename/header extension port-side; original TU ..\\indep\\src\\quickspline.cpp",
+      "original_path": "..\\indep\\src\\quickspline.cpp",
+      "path_address": "0x002BE288",
+      "evidence": "E-0029-P08"
+    },
+    "bFile": {
+      "header": "src/game_core/src/bFile.hpp",
+      "source": "src/game_core/src/bFile.cpp",
+      "namespace": "hp2::recovered",
+      "placement_provenance": "confirmed original directory (E-0029-P09); per-class file basename/header extension port-side; original TU src\\bFile.cpp",
+      "original_path": "src\\bFile.cpp",
+      "path_address": "0x002BF970",
+      "evidence": "E-0029-P09"
+    }
+  },
+  "existing_classes": {
+    "CopDriver": {
+      "header": "src/game_core/port/police/cop_control.hpp",
+      "source": "src/game_core/port/police/cop_control.cpp",
+      "namespace": "hp2::recovered",
+      "evidence": "E-0008-02; E-0009-02; E-0027-C01",
+      "additional_functions": [
+        "0x001A2A90"
+      ]
+    },
+    "CopMover": {
+      "header": "src/game_core/port/police/cop_control.hpp",
+      "source": "src/game_core/port/police/cop_control.cpp",
+      "namespace": "hp2::recovered",
+      "evidence": "E-0008-02; E-0009-01; E-0027-C01",
+      "additional_functions": [
+        "0x001A0EA0"
+      ]
+    },
+    "TitleScreen": {
+      "header": "src/game_core/indep/src/fmenus.hpp",
+      "source": "src/game_core/indep/src/fmenus.cpp",
+      "namespace": "hp2::frontend",
+      "evidence": "E-0016-V01; E-0028-C02",
+      "additional_functions": [
+        "0x0016F000",
+        "0x0016F190",
+        "0x0016F1F0",
+        "0x0016EEF8",
+        "0x0016F4F8"
+      ]
+    },
+    "tEventLeaf": {
+      "header": "src/game_core/indep/src/eventtree.hpp",
+      "source": "src/game_core/indep/src/eventtree.cpp",
+      "namespace": "hp2::frontend",
+      "evidence": "E-0018-02; E-0028-C03",
+      "additional_functions": [
+        "0x001F6FA0"
+      ]
+    }
+  },
+  "module_placements": {
+    "AudioOptionsScreen": {
+      "header": "src/game_core/indep/src/frontendscreens/options.hpp",
+      "source": "src/game_core/indep/src/frontendscreens/options.cpp",
+      "namespace": "hp2::frontend"
+    },
+    "tDisplayOptionsScreen": {
+      "header": "src/game_core/indep/src/frontendscreens/options.hpp",
+      "source": "src/game_core/indep/src/frontendscreens/options.cpp",
+      "namespace": "hp2::frontend"
+    },
+    "tOptionsScreen": {
+      "header": "src/game_core/indep/src/frontendscreens/options.hpp",
+      "source": "src/game_core/indep/src/frontendscreens/options.cpp",
+      "namespace": "hp2::frontend"
+    },
+    "JukeBoxMusicScreen": {
+      "header": "src/game_core/indep/src/frontendscreens/options.hpp",
+      "source": "src/game_core/indep/src/frontendscreens/options.cpp",
+      "namespace": "hp2::frontend"
+    },
+    "JoystickPreconfig": {
+      "header": "src/game_core/indep/src/frontendscreens/joystickconfiguration.hpp",
+      "source": "src/game_core/indep/src/frontendscreens/joystickconfiguration.cpp",
+      "namespace": "hp2::frontend"
+    },
+    "tEventGroup": {
+      "header": "src/game_core/indep/src/eventtree.hpp",
+      "source": "src/game_core/indep/src/eventtree.cpp",
+      "namespace": "hp2::frontend"
+    },
+    "tEventTreeView": {
+      "header": "src/game_core/indep/src/eventtree.hpp",
+      "source": "src/game_core/indep/src/eventtree.cpp",
+      "namespace": "hp2::frontend"
+    }
+  },
+  "placement_note": "TASK-0029 user instruction supersedes TASK-0028: unknown-path class pairs live directly under game_core. Existing modules remain. Original directories are used only with class/member source-path evidence; per-class file basenames remain port-side partitions.",
+  "signature_note": "No raw Ghidra undefined/undefined8 or analysis-purpose signature is a confirmed C++ ABI. New methods have port-side void/no-argument placeholders. Existing typed host projections are preserved."
+}

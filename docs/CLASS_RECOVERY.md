@@ -1,5 +1,12 @@
 # TASK-0027 — Recovering the binary's classes and their member functions
 
+> TASK-0028 correction: the same diagnostic can name a prerequisite constructor or a field
+> expression. The detailed E-0019-N03 mapping, freshly checked in E-0028-C04, identifies
+> 002584B0 as `SlotPoolManager::NewSlotPool`, not `SlotPoolManager::SlotPoolManager`;
+> `bFile::Filename` is not a method. The historical label-binding table below lists text
+> references, not all adoptable method identities. C++ coverage and limits are documented in
+> [CLASS_TEMPLATES.md](CLASS_TEMPLATES.md).
+
 2026-10-13. US PS2 `SLUS_203.62`, revision unknown, SHA-256
 `7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2`. Ghidra MCP read-only
 (`tools/ghidra.py`); the rest is offline over the local disassembly corpus. No Ghidra edits

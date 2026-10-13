@@ -1,0 +1,97 @@
+// PORT-SIDE template file; destination/header extension is not original-file evidence.
+#pragma once
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: allocator_label; evidence: E-0027-C01.
+// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::recovered {
+class RealDriver {
+public:
+    // ELF 0x00130958; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00130958.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_00130958();
+    // ELF 0x00136C00; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c00.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_00136C00();
+    // ELF 0x00136C08; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c08.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_00136C08();
+    // ELF 0x00136C10; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c10.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_00136C10();
+    // ELF 0x00136C20; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c20.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_00136C20();
+    // ELF 0x00136C30; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c30.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_00136C30();
+    // ELF 0x00136C38; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c38.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_00136C38();
+    // ELF 0x00136C40; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c40.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_00136C40();
+    // ELF 0x00136C50; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c50.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_00136C50();
+    // ELF 0x00136C58; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c58.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_00136C58();
+    // ELF 0x00136C60; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c60.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_00136C60();
+    // ELF 0x00136C68; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c68.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_00136C68();
+    // ELF 0x00136C70; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c70.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_00136C70();
+    // ELF 0x00136CE8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136ce8.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_00136CE8();
+    // ELF 0x00136CF0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136cf0.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_00136CF0();
+    // ELF 0x00136D00; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136d00.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_00136D00();
+    // ELF 0x0013AD90; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013ad90.md. Constructor entry; NOT a C++ constructor.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_0013AD90();
+    // ELF 0x0013AE58; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013ae58.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_0013AE58();
+    // ELF 0x0013AEB8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013aeb8.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_0013AEB8();
+    // ELF 0x0013B080; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b080.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_0013B080();
+    // ELF 0x0013B250; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b250.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_0013B250();
+    // ELF 0x0013B3D0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b3d0.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_0013B3D0();
+    // ELF 0x0013B3F8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b3f8.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_0013B3F8();
+    // ELF 0x0013C420; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013c420.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_0013C420();
+    // ELF 0x0013C460; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013c460.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_0013C460();
+    // ELF 0x0013CAE0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013cae0.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_0013CAE0();
+    // ELF 0x0013CAF0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013caf0.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_0013CAF0();
+    // ELF 0x002A0550; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002a0550.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_002A0550();
+};
+} // namespace hp2::recovered

@@ -44,6 +44,14 @@ but are `string_only` — a string's presence is not proof of which function it 
 
 ## B: Platform abstraction
 
+TASK-0028 adds compiled class shells and unresolved member entries to `game_core`, with
+explicit port-side signatures and throwing bodies. Unknown original paths use
+the game_core root per the user's TASK-0029 instruction (superseding `port/class_templates`);
+classes with confirmed paths use original directories. Existing class bodies/storage remain
+in their current modules. See [CLASS_SOURCE_PATHS.md](CLASS_SOURCE_PATHS.md) for the evidence.
+See [CLASS_TEMPLATES.md](CLASS_TEMPLATES.md) for coverage and preservation rules. These shells
+do not create runtime state or establish original layouts/ABI and are not wired into gameplay.
+
 Deleted in TASK-0018 (D008). `platform_api` / `src/platform/services.hpp` held
 provisional scaffold contracts no recovered caller justified; nothing included
 them for a symbol. What replaced them is narrower and real: `port::render::Backend`

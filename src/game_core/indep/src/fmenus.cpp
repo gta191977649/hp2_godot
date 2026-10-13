@@ -908,7 +908,7 @@ WidgetRect_00144280 GetWidgetClip_00145F30(FeScreen& screen, const FeWidget& wid
     return {mask->x,mask->y,mask->x+size.width,mask->y+size.height,true};
 }
 
-void PlaceSelectionBars_001F4E68(FeScreen& screen, std::uint32_t mask_hash,
+void Sub_001F4E68(FeScreen& screen, std::uint32_t mask_hash,
                                const WidgetMeasure& measure) {
     const auto rect=GetWidgetRect_00144280(screen,mask_hash,measure);
     if(!rect.valid)return;
@@ -926,7 +926,7 @@ void Type_00249DE0::Construct_00249DE0(FeScreen& screen,std::uint32_t top_hash,
     for (auto hash : {field_0x28,field_0x2c})
         if(auto* arrow=FindWidget_00143D50(screen,hash,0))SetWidgetAlpha_00140ED0(*arrow,64);
 }
-void Type_00249DE0::ConstructAudio_001EF3C8(FeScreen& screen) {
+void Type_00249DE0::Sub_001EF3C8(FeScreen& screen) {
     Construct_00249DE0(screen,0x52e039f3,0x52e039f9,0xedf2e4ee,0x20d73d01,0xc67cfb4a);
     // ELF initialized data002B9C30..002B9C97, copied by001EF3C8.
     constexpr std::uint32_t hashes[]{
@@ -938,7 +938,7 @@ void Type_00249DE0::ConstructAudio_001EF3C8(FeScreen& screen) {
     Add_00249FF8(std::vector<std::uint32_t>(std::begin(hashes),std::end(hashes)));
     field_0x34=11;
 }
-void Type_00249DE0::ConstructDisplay_001F33B8(FeScreen& screen) {
+void Type_00249DE0::Sub_001F33B8(FeScreen& screen) {
     Construct_00249DE0(screen,0x52e039f3,0x52e039f9,0xedf2e4ee,0x20d73d01,0xc67cfb4a);
     // Exact15-element initialized list002BA178, passed by001F33B8.
     Add_00249FF8({0x52e039f3,0x52e039f4,0x52e039f5,0x52e039f6,0x52e039f7,
@@ -1227,12 +1227,12 @@ const char* Sub_0016EE90(int language,int index,bool demo) {
     if(language<0||language>=6||index<0||index>=(demo?1:2)) throw std::out_of_range("0016EE90 movie table bounds");
     return index==0 ? logos[language] : language==1 ? "MOVIES/INTRO/NFSINTRO_FR.AVI" : "MOVIES/INTRO/NFSINTRO_EN.AVI";
 }
-::port::media::StartupResult Type_0016F000::Construct_0016F000(bool skip,bool demo,int language,std::uint32_t ticks) {
+::port::media::StartupResult TitleScreen::Sub_0016F000(bool skip,bool demo,int language,std::uint32_t ticks) {
     port_demo=demo;port_language=language;Field_0x08=0;Field_0x10=ticks;Field_0x14=0;Field_0x0c=skip?1:2;
     if(skip)return {::port::media::StartupAction::ShowTitle,nullptr,true};
     return {::port::media::StartupAction::PlayMovie,Sub_0016EE90(language,0,demo)};
 }
-::port::media::StartupResult Type_0016F000::Update_0016F1F0(bool done,std::uint32_t ticks) {
+::port::media::StartupResult TitleScreen::Sub_0016F1F0(bool done,std::uint32_t ticks) {
     ::port::media::StartupResult result;
     if(Field_0x0c==2 && done) {
         if(++Field_0x08==(port_demo?1:2)){Field_0x0c=1;Field_0x10=ticks;result.action=::port::media::StartupAction::ShowTitle;result.start_music=!port_demo;}
@@ -1241,10 +1241,10 @@ const char* Sub_0016EE90(int language,int index,bool demo) {
     if(Field_0x0c!=2&&(Field_0x14==0||Field_0x14==0x7fffffffu))Field_0x14=ticks;
     return result;
 }
-bool Type_0016F000::Sub_0016F4F8(std::uint32_t ticks) const {
+bool TitleScreen::Sub_0016F4F8(std::uint32_t ticks) const {
     return Field_0x14!=0&&Field_0x14!=0x7fffffffu&&4.0f<static_cast<float>(static_cast<std::int32_t>(ticks-Field_0x14))*0.00025f;
 }
-::port::media::StartupResult Type_0016F000::Activate_0016EEF8(std::uint32_t ticks) {
+::port::media::StartupResult TitleScreen::Sub_0016EEF8(std::uint32_t ticks) {
     if(Field_0x0c==2){
         if(Field_0x08==0)return {};
         Field_0x0c=1;Field_0x10=ticks;return {::port::media::StartupAction::ShowTitle,nullptr};
@@ -1253,4 +1253,12 @@ bool Type_0016F000::Sub_0016F4F8(std::uint32_t ticks) const {
     return {};
 }
 
+} // namespace hp2::frontend
+
+
+namespace hp2::frontend {
+// ELF 0x0016F190; E-0016-V01; E-0028-C02; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0016f190.md.
+void TitleScreen::Sub_0016F190() {
+    hp2::not_implemented("0x0016F190", "TitleScreen::Sub_0016F190 (signature and full body unresolved)");
+}
 } // namespace hp2::frontend

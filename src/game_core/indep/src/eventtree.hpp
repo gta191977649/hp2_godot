@@ -144,15 +144,23 @@ struct EventLink_002008B8 {
     std::uint32_t goal_threshold_0x04 = 0;
 };
 
-// `tEventLeaf` (0x60 bytes in the original). The port keeps the fields it needs plus the graph
+// `tEventLeaf`: named allocation at 001F96B8 followed by constructor 001F6FA0,
+// label 002BA878; E-0028-C03. Allocation extent 0x60 is not native sizeof.
+// The port keeps the fields it needs plus the graph
 // edges the view builds in FUN_001F96B8.
-struct EventLeaf_001F6FA0 {
+struct tEventLeaf {
     int record_index = 0;            // position in the record array, leaf+0x08
     int depth_0x1C = 0;              // FUN_001F7FA8
     float x = 0.0f, y = 0.0f;        // FUN_001F7710 / FUN_001F7730
     std::vector<int> incoming;       // record indices; built from link_index_0x7C
     std::vector<int> outgoing;       // the reverse edges the view also threads (leaf+0x2C list)
     int group = -1;                  // `tEventGroup` index; connected component
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x001F6FA0; E-0018-02; E-0028-C03; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001f6fa0.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_001F6FA0();
 };
 
 class EventTree_001FFC40 {
@@ -164,7 +172,7 @@ public:
     std::vector<std::uint32_t> Field_0x1C; // chunk 34A02, 002008F8
     std::vector<std::uint32_t> Field_0x14; // chunk 34A01, 00200878
     std::vector<std::array<std::uint8_t, 8>> Field_0x2C; // chunk 34A04, 00200938
-    std::vector<EventLeaf_001F6FA0> leaves;
+    std::vector<tEventLeaf> leaves;
 
     const char* layout_map() const;
     // FUN_001FA840(view, number): the leaf whose record+0x28 matches, or -1.
@@ -386,4 +394,28 @@ struct EventProfileLayout_001FE988 {
 };
 EventProfileLayout_001FE988 build_profile_layout_001FE988(const EventTree_001FFC40& tree);
 
+} // namespace hp2::frontend
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: allocator_label; evidence: E-0027-C01.
+// Placement: preserved_existing_module; class-to-original-file binding not asserted.
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::frontend {
+class tEventGroup {
+public:
+    // No member address is confirmed; no speculative members are declared.
+};
+} // namespace hp2::frontend
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: allocator_label; evidence: E-0027-C01.
+// Placement: preserved_existing_module; class-to-original-file binding not asserted.
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::frontend {
+class tEventTreeView {
+public:
+    // No member address is confirmed; no speculative members are declared.
+};
 } // namespace hp2::frontend

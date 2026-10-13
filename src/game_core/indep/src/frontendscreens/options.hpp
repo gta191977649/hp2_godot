@@ -132,3 +132,95 @@ namespace port::frontend {
 // Port-side reuse seam for the recovered 001DA780/001DAEC8 zero-velocity path.
 bool advance_zero_velocity_path(hp2::frontend::Type_00248568& path, float delta_seconds);
 }
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: allocator_label; evidence: E-0027-C01.
+// Placement: preserved_existing_module; class-to-original-file binding not asserted.
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::frontend {
+class AudioOptionsScreen {
+public:
+    // ELF 0x001EF3C8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001ef3c8.md. Constructor entry; NOT a C++ constructor.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_001EF3C8();
+    // ELF 0x001EFA00; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001efa00.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_001EFA00();
+    // ELF 0x001EFB78; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001efb78.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_001EFB78();
+    // ELF 0x001EFB80; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001efb80.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_001EFB80();
+};
+} // namespace hp2::frontend
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: allocator_label; evidence: E-0027-C01.
+// Placement: preserved_existing_module; class-to-original-file binding not asserted.
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::frontend {
+class JukeBoxMusicScreen {
+public:
+    // ELF 0x001F02D8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f02d8.md. Constructor entry; NOT a C++ constructor.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_001F02D8();
+    // ELF 0x001F0460; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001f0460.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_001F0460();
+    // ELF 0x001F0D10; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f0d10.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_001F0D10();
+    // ELF 0x001F4E68; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f4e68.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_001F4E68();
+};
+} // namespace hp2::frontend
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: allocator_label; evidence: E-0027-C01.
+// Placement: preserved_existing_module; class-to-original-file binding not asserted.
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::frontend {
+class tDisplayOptionsScreen {
+public:
+    // ELF 0x001F33B8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f33b8.md. Constructor entry; NOT a C++ constructor.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_001F33B8();
+    // ELF 0x001F3588; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001f3588.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_001F3588();
+    // ELF 0x001F35E0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001f35e0.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_001F35E0();
+    // ELF 0x001F3A28; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f3a28.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_001F3A28();
+};
+} // namespace hp2::frontend
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: allocator_label; evidence: E-0027-C01.
+// Placement: preserved_existing_module; class-to-original-file binding not asserted.
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::frontend {
+class tOptionsScreen {
+public:
+    // ELF 0x001EEBB8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001eebb8.md. Constructor entry; NOT a C++ constructor.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_001EEBB8();
+    // ELF 0x001EEC50; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001eec50.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_001EEC50();
+    // ELF 0x001EECA8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001eeca8.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_001EECA8();
+    // ELF 0x001F4E68; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f4e68.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_001F4E68();
+};
+} // namespace hp2::frontend

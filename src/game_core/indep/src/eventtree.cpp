@@ -833,3 +833,10 @@ void Type_001F90F0::Sub_001F91D0() { if (Field_0x00) Field_0x00->visible = 1; }
 void Type_001F90F0::Sub_001F91E0() { if (Field_0x00) Field_0x00->visible = 0; }
 
 } // namespace hp2::frontend
+
+namespace hp2::frontend {
+// ELF 0x001F6FA0; E-0018-02; E-0028-C03; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001f6fa0.md.
+void tEventLeaf::Sub_001F6FA0() {
+    hp2::not_implemented("0x001F6FA0", "tEventLeaf::Sub_001F6FA0 (signature and full body unresolved)");
+}
+} // namespace hp2::frontend

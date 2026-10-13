@@ -293,9 +293,9 @@ MenuState FrontEndRuntime::menu_open(int screen_index) {
         if (active_class_name_ == "Audio Options" || active_class_name_ == "Display Options") {
             menu_viewport_ = std::make_unique<hp2::frontend::Type_00249DE0>();
             if (active_class_name_ == "Audio Options")
-                menu_viewport_->ConstructAudio_001EF3C8(*menu_group_->screen_0x14);
+                menu_viewport_->Sub_001EF3C8(*menu_group_->screen_0x14);
             else
-                menu_viewport_->ConstructDisplay_001F33B8(*menu_group_->screen_0x14);
+                menu_viewport_->Sub_001F33B8(*menu_group_->screen_0x14);
             menu_selector_ = std::make_unique<hp2::frontend::Type_0024A690>();
             menu_selector_->Construct_0024A690(*menu_group_->screen_0x14, 0xD1CDA594, 0x9345E4A7);
         }
