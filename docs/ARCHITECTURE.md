@@ -184,3 +184,28 @@ semantics and expose incomplete paths. Observers may stay separate debug wrapper
 Local pinned4.4.1 RenderingServer bindings expose canvas_item_create,
 canvas_item_add_texture_rect_region,texture_2d_create/update,mesh_create,
 instance_set_transform andfree_rid; this confirms available API, not current use.
+
+## Port-side debug overlay (TASK-0031)
+
+`game_core/extensions/debug_console` owns a bounded thread-safe incoming log queue,
+csys command registration, native host snapshots, ImGui lifetime and triangle conversion.
+It has no Godot dependency and does not represent recovered PS2 behavior. Ps2RenderHost
+owns the font texture and clip-parent/triangle-child RIDs, clipboard and input conversion.
+The frontend routes input there first and continues updating game state. Debug FPS remains
+a separate host label anchored at the viewport's top right. See D010 and DEVELOPMENT.md.
+
+## Debug viewer scaffolds (TASK-0032)
+
+The persistent DebugTools CanvasLayer owns a separate Ps2RenderHost for console/FPS,
+so scene changes do not destroy the debug session. Frontend and viewers route input to
+it before their own handling. Commands enqueue native ViewerRequests; the overlay drains
+one after drawing and dispatches scene transitions on a deferred call. Per-scene exit only
+releases that scene's resources. Application exit releases the persistent host.
+
+Godot-free `port::extensions::ViewerSession` owns viewer kind, requested relative source,
+explicit unavailable-loader status, fixture flag, camera description and pending actions.
+Optional csys registration is separate from that library; console-off Debug uses the same
+state/actions through host bindings and buttons. Release rejects viewer actions and direct
+scene entry. Synthetic Godot MeshInstances, camera controls and lighting live only in the
+platform scene layer; they do not alter the recovered Frame/quad format or implement physics.
+No original asset is opened, inspected, decoded or substituted by the fixtures.

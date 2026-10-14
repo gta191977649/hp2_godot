@@ -8,6 +8,13 @@
 #include <godot_cpp/variant/packed_byte_array.hpp>
 #include <godot_cpp/variant/transform2d.hpp>
 #include <cstring>
+#include <godot_cpp/classes/input_event_key.hpp>
+#include <godot_cpp/classes/input_event_mouse_button.hpp>
+#include <godot_cpp/classes/input_event_mouse_motion.hpp>
+#include <godot_cpp/classes/display_server.hpp>
+#include <godot_cpp/variant/packed_vector2_array.hpp>
+#include <godot_cpp/variant/packed_color_array.hpp>
+#include <godot_cpp/variant/packed_int32_array.hpp>
 
 namespace port::godot_bridge {
 namespace {
@@ -38,6 +45,23 @@ std::shared_ptr<const port::render::Bitmap> LiveResources::texture(port::render:
 }
 
 void Ps2RenderHost::_bind_methods() {
+    godot::ClassDB::bind_method(godot::D_METHOD("console_visible"), &Ps2RenderHost::console_visible);
+    godot::ClassDB::bind_method(godot::D_METHOD("viewer_request", "action", "source"), &Ps2RenderHost::viewer_request);
+    godot::ClassDB::bind_method(godot::D_METHOD("viewer_next"), &Ps2RenderHost::viewer_next);
+    godot::ClassDB::bind_method(godot::D_METHOD("viewer_activate", "kind"), &Ps2RenderHost::viewer_activate);
+    godot::ClassDB::bind_method(godot::D_METHOD("viewer_apply", "action", "source"), &Ps2RenderHost::viewer_apply);
+    godot::ClassDB::bind_method(godot::D_METHOD("viewer_state"), &Ps2RenderHost::viewer_state);
+    godot::ClassDB::bind_method(godot::D_METHOD("viewer_camera", "description"), &Ps2RenderHost::viewer_camera);
+    godot::ClassDB::bind_method(godot::D_METHOD("viewer_loaded", "success", "diagnostic", "rendering"), &Ps2RenderHost::viewer_loaded);
+    godot::ClassDB::bind_method(godot::D_METHOD("viewer_rendering", "description"), &Ps2RenderHost::viewer_rendering);
+    godot::ClassDB::bind_method(godot::D_METHOD("is_debug_build"), &Ps2RenderHost::is_debug_build);
+    godot::ClassDB::bind_method(godot::D_METHOD("console_available"), &Ps2RenderHost::console_available);
+    godot::ClassDB::bind_method(godot::D_METHOD("console_init", "settings", "info"), &Ps2RenderHost::console_init);
+    godot::ClassDB::bind_method(godot::D_METHOD("console_input", "event"), &Ps2RenderHost::console_input);
+    godot::ClassDB::bind_method(godot::D_METHOD("console_frame", "width", "height", "delta", "status"), &Ps2RenderHost::console_frame);
+    godot::ClassDB::bind_method(godot::D_METHOD("console_log", "text", "error"), &Ps2RenderHost::console_log);
+    godot::ClassDB::bind_method(godot::D_METHOD("console_execute", "command"), &Ps2RenderHost::console_execute);
+    godot::ClassDB::bind_method(godot::D_METHOD("console_focus_lost"), &Ps2RenderHost::console_focus_lost);
     godot::ClassDB::bind_method(godot::D_METHOD("attach", "parent_canvas_item"),
                                 &Ps2RenderHost::attach);
     godot::ClassDB::bind_method(godot::D_METHOD("set_output_scale", "scale"),
@@ -63,6 +87,9 @@ void Ps2RenderHost::attach(const godot::RID& parent_canvas_item) {
     }
     if (!item_.is_valid()) item_ = server->canvas_item_create();
     server->canvas_item_set_parent(item_, parent_canvas_item);
+    if (!console_parent_.is_valid()) console_parent_ = server->canvas_item_create();
+    server->canvas_item_set_parent(console_parent_, parent_canvas_item);
+    server->canvas_item_set_z_index(console_parent_, 100);
     last_error_ = "";
 }
 
@@ -71,7 +98,17 @@ void Ps2RenderHost::set_output_scale(double scale) {
 }
 
 void Ps2RenderHost::release() {
+#if HP2_ENABLE_DEBUG_CONSOLE
+    console_.reset();
+#endif
     auto* server = godot::RenderingServer::get_singleton();
+    if (server != nullptr) {
+        for (auto rid : console_draw_items_) if(rid.is_valid()) server->free_rid(rid);
+        for (auto rid : console_items_) if(rid.is_valid()) server->free_rid(rid);
+        if(console_font_.is_valid()) server->free_rid(console_font_);
+        if(console_parent_.is_valid()) server->free_rid(console_parent_);
+    }
+    console_items_.clear(); console_draw_items_.clear(); console_font_={};console_parent_={};
     if (server == nullptr) { textures_.clear(); item_ = godot::RID(); return; }
     for (auto& entry : textures_)
         if (entry.second.rid.is_valid()) server->free_rid(entry.second.rid);
@@ -187,6 +224,213 @@ godot::Dictionary Ps2RenderHost::draw(godot::Object* runtime, godot::Object* int
     result["movie_quads"] = movie_quads;
     result["error"] = "";
     return result;
+}
+
+
+void Ps2RenderHost::console_init(const godot::String& settings, bool info) {
+    const auto failure=catch_all([&] {
+#if HP2_ENABLE_DEBUG_CONSOLE
+        console_=std::make_unique<extensions::DebugConsole>(settings.utf8().get_data());
+        extensions::register_viewer_commands(console_->commands(),viewers_);
+        console_->set_info(info);
+        console_->clipboard([](void* user)->const char* {
+            auto* self=static_cast<Ps2RenderHost*>(user);
+            self->clipboard_text_=godot::DisplayServer::get_singleton()->clipboard_get().utf8().get_data();
+            return self->clipboard_text_.c_str();
+        },[](void*,const char* text) {
+            godot::DisplayServer::get_singleton()->clipboard_set(godot::String::utf8(text));
+        },this);
+        auto* server=godot::RenderingServer::get_singleton();
+        if(console_font_.is_valid())server->free_rid(console_font_);
+        console_font_=server->texture_2d_create(to_image(console_->font()));
+#else
+        (void)settings;(void)info;
+#endif
+    });
+    if(!failure.empty())last_error_=godot::String::utf8(failure.c_str());
+}
+void Ps2RenderHost::console_log(const godot::String& text,bool error) {
+    const auto failure=catch_all([&] {
+#if HP2_ENABLE_DEBUG_CONSOLE
+        if(console_)console_->log(text.utf8().get_data(),error);
+#else
+        (void)text;(void)error;
+#endif
+    });
+    if(!failure.empty())last_error_=godot::String::utf8(failure.c_str());
+}
+void Ps2RenderHost::console_execute(const godot::String& command) {
+    const auto failure=catch_all([&] {
+#if HP2_ENABLE_DEBUG_CONSOLE
+        if(console_)console_->execute(command.utf8().get_data());
+#else
+        (void)command;
+#endif
+    });
+    if(!failure.empty())last_error_=godot::String::utf8(failure.c_str());
+}
+void Ps2RenderHost::console_focus_lost() {
+    const auto failure=catch_all([&] {
+#if HP2_ENABLE_DEBUG_CONSOLE
+        if(console_)console_->input({extensions::Input::Kind::FocusLost});
+#endif
+    });
+    if(!failure.empty())last_error_=godot::String::utf8(failure.c_str());
+}
+bool Ps2RenderHost::console_input(const godot::Ref<godot::InputEvent>& event) {
+    bool consumed=false;
+    const auto failure=catch_all([&] {
+#if HP2_ENABLE_DEBUG_CONSOLE
+        if(!console_||event.is_null())return;
+        using extensions::Input;using extensions::Key;
+        godot::Ref<godot::InputEventKey> key=event;
+        if(key.is_valid()) {
+            Input e{Input::Kind::Key};e.pressed=key->is_pressed();e.repeat=key->is_echo();
+            e.ctrl=key->is_ctrl_pressed();e.shift=key->is_shift_pressed();
+            e.alt=key->is_alt_pressed();e.super=key->is_meta_pressed();
+            auto code=key->get_keycode();
+            if(code==godot::KEY_F8)e.kind=Input::Kind::Toggle;
+            const std::pair<godot::Key,Key> keys[]={
+                {godot::KEY_TAB,Key::Tab},{godot::KEY_LEFT,Key::Left},{godot::KEY_RIGHT,Key::Right},
+                {godot::KEY_UP,Key::Up},{godot::KEY_DOWN,Key::Down},{godot::KEY_PAGEUP,Key::PageUp},
+                {godot::KEY_PAGEDOWN,Key::PageDown},{godot::KEY_HOME,Key::Home},{godot::KEY_END,Key::End},
+                {godot::KEY_INSERT,Key::Insert},{godot::KEY_DELETE,Key::Delete},{godot::KEY_BACKSPACE,Key::Backspace},
+                {godot::KEY_SPACE,Key::Space},{godot::KEY_ENTER,Key::Enter},{godot::KEY_ESCAPE,Key::Escape},
+                {godot::KEY_KP_ENTER,Key::KeyPadEnter},{godot::KEY_A,Key::A},{godot::KEY_C,Key::C},
+                {godot::KEY_V,Key::V},{godot::KEY_X,Key::X},{godot::KEY_Y,Key::Y},{godot::KEY_Z,Key::Z}};
+            e.code=-1;for(auto pair:keys)if(pair.first==code)e.code=static_cast<int>(pair.second);
+            consumed=console_->input(e);
+            if(consumed&&e.kind!=Input::Kind::Toggle&&e.pressed&&key->get_unicode()>=32&&!e.ctrl&&!e.super) {
+                e.kind=Input::Kind::Text;e.unicode=key->get_unicode();console_->input(e);
+            }
+        } else {
+            godot::Ref<godot::InputEventMouseMotion> motion=event;
+            godot::Ref<godot::InputEventMouseButton> button=event;
+            if(motion.is_valid()) {
+                Input e{Input::Kind::Mouse};e.x=motion->get_position().x;e.y=motion->get_position().y;
+                consumed=console_->input(e);
+            } else if(button.is_valid()) {
+                Input e{Input::Kind::Mouse};e.x=button->get_position().x;e.y=button->get_position().y;
+                consumed=console_->input(e);e.kind=Input::Kind::Button;e.pressed=button->is_pressed();
+                const auto b=button->get_button_index();
+                e.code=b==godot::MOUSE_BUTTON_LEFT?0:b==godot::MOUSE_BUTTON_RIGHT?1:b==godot::MOUSE_BUTTON_MIDDLE?2:-1;
+                if(b>=godot::MOUSE_BUTTON_WHEEL_UP&&b<=godot::MOUSE_BUTTON_WHEEL_RIGHT) {
+                    e.kind=Input::Kind::Wheel;
+                    e.x=0;e.y=0;
+                    if(e.pressed) {
+                        if(b==godot::MOUSE_BUTTON_WHEEL_UP)e.y=button->get_factor();
+                        if(b==godot::MOUSE_BUTTON_WHEEL_DOWN)e.y=-button->get_factor();
+                        if(b==godot::MOUSE_BUTTON_WHEEL_LEFT)e.x=-button->get_factor();
+                        if(b==godot::MOUSE_BUTTON_WHEEL_RIGHT)e.x=button->get_factor();
+                    }
+                }
+                console_->input(e);
+            } else consumed=console_->visible();
+        }
+#else
+        (void)event;
+#endif
+    });
+    if(!failure.empty()) {last_error_=godot::String::utf8(failure.c_str());return true;}
+    return consumed;
+}
+godot::Dictionary Ps2RenderHost::console_frame(double width,double height,double delta,const godot::Dictionary& status) {
+    godot::Dictionary result;result["available"]=console_available();result["visible"]=false;result["batches"]=0;
+    const auto failure=catch_all([&] {
+#if HP2_ENABLE_DEBUG_CONSOLE
+        if(!console_)return;
+        extensions::Snapshot state;
+        state.screen=godot::String(status.get("screen",godot::String("unknown"))).utf8().get_data();
+        state.fps=status.get("fps",0.0);state.milliseconds=status.get("ms",0.0);
+        state.quads=status.get("quads",0);state.glyphs=status.get("glyphs",0);
+        state.textures=status.get("textures",0);state.missing=status.get("missing",0);state.clipped=status.get("clipped_out",0);
+        console_->snapshot(std::move(state));
+        const auto batches=console_->frame(width,height,delta);
+        result["visible"]=console_->visible();result["info"]=console_->info();result["batches"]=static_cast<int>(batches.size());
+        result["logs"]=static_cast<int>(console_->log_count());
+        auto* server=godot::RenderingServer::get_singleton();
+        for(auto rid:console_draw_items_)server->canvas_item_clear(rid);
+        if(!console_parent_.is_valid())return;
+        while(console_items_.size()<batches.size()) {
+            auto rid=server->canvas_item_create();server->canvas_item_set_parent(rid,console_parent_);console_items_.push_back(rid);
+            auto child=server->canvas_item_create();server->canvas_item_set_parent(child,rid);console_draw_items_.push_back(child);
+        }
+        for(std::size_t i=0;i<batches.size();++i) {
+            const auto& b=batches[i];auto rid=console_items_[i];
+            server->canvas_item_set_custom_rect(rid,true,to_rect(b.clip));server->canvas_item_set_clip(rid,true);
+            godot::PackedVector2Array points,uvs;godot::PackedColorArray colors;godot::PackedInt32Array indices;
+            for(auto& v:b.vertices) {points.append({v.position.x,v.position.y});uvs.append({v.uv.x,v.uv.y});colors.append(to_color(v.color));}
+            for(auto index:b.indices)indices.append(index);
+            // RenderingServer clipping applies to children, so geometry belongs to a child.
+            server->canvas_item_add_triangle_array(console_draw_items_[i],indices,points,colors,uvs,{}, {},console_font_);
+        }
+#else
+        (void)width;(void)height;(void)delta;(void)status;
+#endif
+    });
+    result["ok"]=failure.empty();
+    if(!failure.empty()) {last_error_=godot::String::utf8(failure.c_str());result["error"]=last_error_;}
+    return result;
+}
+
+
+bool Ps2RenderHost::console_visible() const {
+#if HP2_ENABLE_DEBUG_CONSOLE
+    return console_ && console_->visible();
+#else
+    return false;
+#endif
+}
+godot::Dictionary Ps2RenderHost::viewer_request(const godot::String& action,const godot::String& source) {
+    godot::Dictionary result;
+    const auto failure=catch_all([&] {
+        viewers_.request(extensions::parse_viewer_action(action.utf8().get_data()),source.utf8().get_data());
+    });
+    result["ok"]=failure.empty();result["error"]=godot::String::utf8(failure.c_str());return result;
+}
+godot::Dictionary Ps2RenderHost::viewer_next() {
+    godot::Dictionary result;
+    const auto failure=catch_all([&] {
+        const auto request=viewers_.next();
+        if(request) {result["action"]=extensions::action_name(request->action);result["source"]=godot::String::utf8(request->source.c_str());}
+    });
+    result["ok"]=failure.empty();result["error"]=godot::String::utf8(failure.c_str());return result;
+}
+godot::Dictionary Ps2RenderHost::viewer_activate(const godot::String& kind) {
+    godot::Dictionary result;
+    const auto failure=catch_all([&] {viewers_.activate(extensions::parse_viewer_kind(kind.utf8().get_data()));});
+    result["ok"]=failure.empty();result["error"]=godot::String::utf8(failure.c_str());return result;
+}
+godot::Dictionary Ps2RenderHost::viewer_apply(const godot::String& action,const godot::String& source) {
+    godot::Dictionary result;
+    const auto failure=catch_all([&] {
+        viewers_.apply({extensions::parse_viewer_action(action.utf8().get_data()),source.utf8().get_data()});
+    });
+    result["ok"]=failure.empty();result["error"]=godot::String::utf8(failure.c_str());return result;
+}
+godot::Dictionary Ps2RenderHost::viewer_state() const {
+    godot::Dictionary result;
+    const auto failure=catch_all([&] {
+        const auto& state=viewers_.state();result["enabled"]=viewers_.enabled();
+        result["kind"]=extensions::viewer_name(state.kind);result["source"]=godot::String::utf8(state.source.c_str());
+        result["status"]=godot::String::utf8(state.status.c_str());result["diagnostic"]=godot::String::utf8(state.diagnostic.c_str());
+        result["fixture"]=state.fixture;result["camera"]=godot::String::utf8(state.camera.c_str());
+        result["rendering"]=godot::String::utf8(state.rendering.c_str());
+    });
+    result["ok"]=failure.empty();result["error"]=godot::String::utf8(failure.c_str());return result;
+}
+void Ps2RenderHost::viewer_camera(const godot::String& description) {
+    const auto failure=catch_all([&] {viewers_.camera(description.utf8().get_data());});
+    if(!failure.empty())last_error_=godot::String::utf8(failure.c_str());
+}
+godot::Dictionary Ps2RenderHost::viewer_loaded(bool success,const godot::String& diagnostic,const godot::String& rendering) {
+    godot::Dictionary result;
+    const auto failure=catch_all([&] { viewers_.loaded(success,diagnostic.utf8().get_data(),rendering.utf8().get_data()); });
+    result["ok"]=failure.empty();result["error"]=godot::String::utf8(failure.c_str());return result;
+}
+void Ps2RenderHost::viewer_rendering(const godot::String& description) {
+    const auto failure=catch_all([&] { viewers_.rendering(description.utf8().get_data()); });
+    if(!failure.empty())last_error_=godot::String::utf8(failure.c_str());
 }
 
 } // namespace port::godot_bridge

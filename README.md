@@ -49,6 +49,18 @@ ctest --preset native-debug
 
 Close a running frontend before rebuilding its DLL. Some integration tests require the configured original assets; see the development guide for details.
 
+Debug builds show FPS / frame milliseconds at the top right. **F8** toggles the debug
+console (when enabled); TAB completes commands and Up/Down recall history. Commands:
+`help`, `clear`, `filter <text>`, `status`, `info on/off`. The console captures input while
+the game continues updating. TAB no longer toggles information; Page Up/Down and brackets
+no longer browse screens. `--info` enables only the detailed information panel.
+
+Debug also includes asset-free **CarViewer** and **TrackViewer** scaffolds. Open them
+with `carviewer` / `trackviewer` in the F8 console; `viewer.close` returns to a fresh
+frontend. `viewer.load "<ZZDATA-relative-path>"` records a request and reports
+`Loader not implemented`; no original car or track is loaded. See the
+[viewer guide](docs/DEBUG_VIEWERS.md) for camera controls, commands and direct launch.
+
 ## 5. Docs & Help
 
 - [Development](docs/DEVELOPMENT.md) — setup, build, launch and troubleshooting.

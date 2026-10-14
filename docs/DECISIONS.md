@@ -181,3 +181,35 @@ Recovered slices stay free of Godot types and of the runtime's own headers.
 Consequence: a new activation slice that only switches screens keeps using `request` /
 `exit_animation`; one that changes global game state uses `invoke` and names the address. See
 `docs/FRONTEND_MENU_LANGUAGE.md`.
+
+## D010 — Port debug console renders through the existing Godot host (TASK-0031, 2026-10-14)
+
+The pinned imgui-console and its bundled csys/ImGui are development tooling. Owned code
+lives in `src/game_core/extensions` under `port::extensions`, free of Godot types. Its
+triangle batches are separate from recovered game render commands. Ps2RenderHost uploads
+the font atlas, translates input and clipboard, and owns pooled RenderingServer clipping
+parents and geometry children. There is no OpenGL backend or additional window.
+
+F8 toggles once per press; open-console input is consumed before menu dispatch without
+pausing updates. Debug FPS is independent of both the console build option and detailed
+information panel. Frontend errors are mirrored rather than intercepted globally. No
+recovery confidence or original-game behavior changes. See the vendor provenance document
+for the focus/history patches to the pinned source and retained MIT licenses.
+
+## D011 — Persistent debug session and explicit viewer loader gap (TASK-0032, 2026-10-14)
+
+CarViewer and TrackViewer are complete port-side viewing environments with synthetic
+geometry, not partial reconstructions of unknown game loaders. Their native session records
+requests and returns an explicit unavailable-loader diagnostic. No ELF address is fabricated,
+so this port-side result is not an address-bearing hp2::NotImplemented recovered path.
+Future recovered loading must use the existing asset-root resolver and preserve evidence.
+
+The console/FPS host moves to a persistent DebugTools autoload, separate from the frontend's
+frame renderer. csys callbacks only queue operations. Scene replacement occurs deferred,
+after ImGui drawing, keeping logs/settings/history alive and avoiding callback destruction.
+Returning to the frontend creates a new frontend scene and reruns its normal startup path.
+Debug console-off builds can use direct viewer launch and buttons; Release disables entry.
+
+The upstream LogWindow paired EndChild only when BeginChild returned true. Restored window
+settings/small viewports exposed an unbalanced ImGui window stack. The documented vendor
+patch pairs it unconditionally; native small-viewport and host transition tests cover it.

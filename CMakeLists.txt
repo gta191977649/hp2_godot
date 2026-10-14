@@ -3,6 +3,28 @@ project(PS2PCPort VERSION 0.1.0 LANGUAGES CXX)
 
 include(CTest)
 option(PORT_BUILD_GODOT "Build the optional Godot 4.4 bridge" OFF)
+set(_console_default OFF)
+if(PORT_BUILD_GODOT AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set(_console_default ON)
+endif()
+option(HP2_ENABLE_DEBUG_CONSOLE "Enable the port-side F8 debug console" ${_console_default})
+add_library(port_debug_viewers STATIC src/game_core/extensions/viewer_session.cpp)
+target_include_directories(port_debug_viewers PUBLIC src)
+target_compile_features(port_debug_viewers PUBLIC cxx_std_17)
+set_target_properties(port_debug_viewers PROPERTIES POSITION_INDEPENDENT_CODE ON)
+if(HP2_ENABLE_DEBUG_CONSOLE OR BUILD_TESTING)
+  set(_console_vendor "${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui-console")
+  set(_imgui "${_console_vendor}/example/thirdparty/imgui")
+  add_library(port_debug_console STATIC src/game_core/extensions/debug_console.cpp
+    src/game_core/extensions/viewer_commands.cpp
+    "${_console_vendor}/src/imgui_console.cpp" "${_imgui}/imgui.cpp"
+    "${_imgui}/imgui_draw.cpp" "${_imgui}/imgui_widgets.cpp")
+  target_include_directories(port_debug_console PUBLIC src "${_console_vendor}/include"
+    "${_console_vendor}/include/imgui_console" "${_imgui}")
+  target_compile_features(port_debug_console PUBLIC cxx_std_17)
+  target_link_libraries(port_debug_console PUBLIC port_debug_viewers)
+  set_target_properties(port_debug_console PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()
 set(PORT_GODOT_CPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/godot-cpp" CACHE PATH "Pinned godot-cpp checkout")
 
 add_library(game_core STATIC src/game_core/port/scaffold.cpp src/game_core/port/police/cop_control.cpp
@@ -80,6 +102,12 @@ else()
 endif()
 
 if(BUILD_TESTING)
+  add_executable(viewer_session_tests src/tests/viewer_session_tests.cpp)
+  target_link_libraries(viewer_session_tests PRIVATE port_debug_viewers)
+  add_test(NAME viewer_session COMMAND viewer_session_tests)
+  add_executable(debug_console_tests src/tests/debug_console_tests.cpp)
+  target_link_libraries(debug_console_tests PRIVATE port_debug_console)
+  add_test(NAME debug_console COMMAND debug_console_tests)
   add_executable(demo_runner src/tests/demo_runner.cpp)
   target_link_libraries(demo_runner PRIVATE game_core)
   add_executable(core_tests src/tests/core_tests.cpp)
@@ -203,6 +231,11 @@ if(PORT_BUILD_GODOT)
     src/platform/godot_bridge/ps2_texture_loader.cpp src/platform/godot_bridge/ps2_frontend_layout.cpp
     src/platform/godot_bridge/ps2_render_host.cpp src/platform/not_implemented_dialog.cpp)
   target_sources(ps2_port PRIVATE src/platform/godot_bridge/ps2_movie_player.cpp)
+  target_compile_definitions(ps2_port PRIVATE HP2_DEBUG_BUILD=$<IF:$<CONFIG:Debug>,1,0>
+    HP2_ENABLE_DEBUG_CONSOLE=$<BOOL:${HP2_ENABLE_DEBUG_CONSOLE}>)
+  if(HP2_ENABLE_DEBUG_CONSOLE)
+    target_link_libraries(ps2_port PRIVATE port_debug_console)
+  endif()
   # Godot-cpp 4.4 propagates -fno-exceptions. Port adapters catch recovered NotImplemented
   # locally; enable exceptions in these source files without changing Godot's own code.
   get_target_property(PORT_BRIDGE_SOURCES ps2_port SOURCES)
@@ -212,6 +245,7 @@ if(PORT_BUILD_GODOT)
     set_source_files_properties(${PORT_BRIDGE_SOURCES} PROPERTIES COMPILE_OPTIONS "-fexceptions")
   endif()
   target_link_libraries(ps2_port PRIVATE game_core port_runtime godot-cpp port_media)
+  target_link_libraries(ps2_port PRIVATE port_debug_viewers)
   if(WIN32)
     add_custom_command(TARGET ps2_port POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PORT_FFMPEG_DLLS} "$<TARGET_FILE_DIR:ps2_port>")
   endif()
@@ -225,5 +259,21 @@ if(PORT_BUILD_GODOT)
   # Keep the smoke scene self-contained on Windows with MinGW runtime DLLs.
   if(MINGW)
     target_link_options(ps2_port PRIVATE -static -static-libgcc -static-libstdc++)
+  endif()
+  set(PORT_GODOT_EXECUTABLE "${CMAKE_CURRENT_SOURCE_DIR}/local/tools/godot-4.4.1/Godot_v4.4.1-stable_win64_console.exe"
+      CACHE FILEPATH "Godot 4.4.1 executable for asset-free host smoke tests")
+  if(BUILD_TESTING AND EXISTS "${PORT_GODOT_EXECUTABLE}")
+    add_test(NAME debug_console_host COMMAND "${PORT_GODOT_EXECUTABLE}" --headless
+      --path "${CMAKE_CURRENT_SOURCE_DIR}/godot" res://scenes/debug_console_smoke.tscn --
+      --expect-debug=$<IF:$<CONFIG:Debug>,true,false>
+      --expect-console=$<IF:$<BOOL:${HP2_ENABLE_DEBUG_CONSOLE}>,true,false>)
+    set_tests_properties(debug_console_host PROPERTIES TIMEOUT 30
+      PASS_REGULAR_EXPRESSION "DEBUG_CONSOLE_SMOKE_OK" FAIL_REGULAR_EXPRESSION "SCRIPT ERROR;ERROR:")
+    add_test(NAME debug_viewers_host COMMAND "${PORT_GODOT_EXECUTABLE}" --headless
+      --path "${CMAKE_CURRENT_SOURCE_DIR}/godot" res://scenes/debug/viewer_frontend_fixture.tscn --
+      --viewer-smoke --expect-debug=$<IF:$<CONFIG:Debug>,true,false>
+      --expect-console=$<IF:$<BOOL:${HP2_ENABLE_DEBUG_CONSOLE}>,true,false>)
+    set_tests_properties(debug_viewers_host PROPERTIES TIMEOUT 30
+      PASS_REGULAR_EXPRESSION "VIEWER_SMOKE_OK" FAIL_REGULAR_EXPRESSION "SCRIPT ERROR;ERROR:")
   endif()
 endif()

@@ -86,12 +86,6 @@ var screen_count := 0
 var last_stats: Dictionary = {}
 var info_label: Label
 var show_info := false
-# Frame-rate readout. The window title carries it at all times so the two render paths can be
-# compared without turning the overlay on; the on-screen line follows Tab like the rest.
-var fps_label: Label
-var frame_ms := 0.0
-var title_cooldown := 0.0
-const RENDER_PATH_NAME := "native frame + RenderingServer"
 
 func _ready() -> void:
 	for required in ["Ps2FrontEndLayout", "Ps2RenderHost", "Ps2MoviePlayer"]:
@@ -101,6 +95,8 @@ func _ready() -> void:
 			return
 	layout = ClassDB.instantiate("Ps2FrontEndLayout")
 	render_host = ClassDB.instantiate("Ps2RenderHost")
+	DebugTools.register_scene(self, "frontend")
+	show_info = DebugTools.info_enabled
 	intro_movie = ClassDB.instantiate("Ps2MoviePlayer")
 	background_movie = ClassDB.instantiate("Ps2MoviePlayer")
 	movie_audio = AudioStreamPlayer.new()
@@ -146,7 +142,7 @@ func _ready() -> void:
 	render_host.attach(get_canvas_item())
 	render_host.set_output_scale(float(view_scale))
 
-	fps_label = _make_label(Vector2(8, 4), Color(0.6, 0.9, 1))
+	DebugTools.set_info(show_info)
 	info_label = _make_label(Vector2(8, 22), Color(1, 1, 0.55))
 
 	if not manual_screen:
@@ -185,31 +181,22 @@ func _make_label(position_px: Vector2, colour: Color) -> Label:
 	add_child(label)
 	return label
 
-# Engine.get_frames_per_second() is the engine's own once-a-second count; the millisecond figure
-# is a smoothed frame time, which reacts faster and is the useful number when comparing paths.
-func _update_fps(delta: float) -> void:
-	frame_ms = delta * 1000.0 if frame_ms == 0.0 else frame_ms + (delta * 1000.0 - frame_ms) * 0.1
-	var text := "%d FPS  %.2f ms  [%s]" % [Engine.get_frames_per_second(), frame_ms, RENDER_PATH_NAME]
-	if fps_label != null:
-		fps_label.text = text
-	title_cooldown -= delta
-	if title_cooldown <= 0.0 and DisplayServer.get_name() != "headless":
-		title_cooldown = 0.25
-		get_window().title = "HP2 PS2 Native Port - %s" % text
+func _report(message: String, error: bool = false) -> void:
+	DebugTools.write_log(message, error)
+	if error:
+		push_error(message)
 
 func _fatal(message: String) -> void:
-	push_error(message)
-	print("FRONTEND_ERROR: ", message)
+	_report("FRONTEND_ERROR: " + message, true)
 	get_tree().quit(1)
 
 func _open_screen(open_menu: bool = true) -> void:
 	_configure_background()
 	var opened: Dictionary = layout.menu_open(screen_index) if open_menu else layout.menu_state()
 	if opened.has("not_implemented"):
-		print("NOT_IMPLEMENTED: ", str(opened["not_implemented"]))
+		_report("NOT_IMPLEMENTED: " + str(opened["not_implemented"]), true)
 
 func _process(delta: float) -> void:
-	_update_fps(delta)
 	if layout == null:
 		return
 	if startup_active:
@@ -229,12 +216,20 @@ func _process(delta: float) -> void:
 		_open_screen(false)
 	_play_menu_audio()
 	_draw_frame()
+	_draw_console(delta)
+
+func _draw_console(_delta: float) -> void:
+	DebugTools.statistics = last_stats.duplicate()
+	DebugTools.statistics["screen"] = "frontend:%d" % screen_index
+	show_info = DebugTools.info_enabled
+	if info_label != null:
+		info_label.visible = show_info
 
 # The whole render step: one native frame, one backend submission. No widget crosses this call.
 func _draw_frame() -> void:
 	last_stats = render_host.draw(layout, intro_movie, background_movie)
 	if not bool(last_stats.get("ok", false)):
-		push_error(str(last_stats.get("error", "render host draw failed")))
+		_report(str(last_stats.get("error", "render host draw failed")), true)
 		return
 	if show_info and info_label != null:
 		info_label.text = "screen %d/%d  quads=%d glyphs=%d missing=%d clipped=%d textures=%d" % [
@@ -250,16 +245,18 @@ func _send_joy_event(joy_event: int) -> void:
 	# One native dispatch also reports untranslated event-tree paths and queues their audio.
 	var state: Dictionary = layout.menu_joy_event(0, joy_event, true)
 	if not bool(state.get("ok", false)):
-		push_error(str(state.get("error", "menu event failed")))
+		_report(str(state.get("error", "menu event failed")), true)
 		return
 	if state.has("not_implemented"):
-		print("NOT_IMPLEMENTED: ", str(state["not_implemented"]))
+		_report("NOT_IMPLEMENTED: " + str(state["not_implemented"]), true)
 	if int(state.get("screen", screen_index)) != screen_index:
 		screen_index = int(state["screen"])
 		_open_screen(false)
 	_play_menu_audio()
 
 func _input(event: InputEvent) -> void:
+	if DebugTools.handle_input(event):
+		return
 	if not (event is InputEventKey) or not event.pressed or event.echo:
 		return
 	var map := _key_map()
@@ -267,16 +264,6 @@ func _input(event: InputEvent) -> void:
 		_send_joy_event(int(map[event.keycode]))
 		return
 	match event.keycode:
-		KEY_PAGEDOWN, KEY_BRACKETRIGHT:
-			screen_index = (screen_index + 1) % screen_count
-			_open_screen()
-		KEY_PAGEUP, KEY_BRACKETLEFT:
-			screen_index = (screen_index - 1 + screen_count) % screen_count
-			_open_screen()
-		KEY_TAB:
-			show_info = not show_info
-			fps_label.visible = show_info
-			info_label.visible = show_info
 		KEY_ESCAPE:
 			get_tree().quit(0)
 
@@ -343,7 +330,7 @@ func _configure_background() -> void:
 func _play_menu_audio() -> void:
 	for request in layout.drain_menu_audio():
 		if request.has("not_implemented"):
-			print("NOT_IMPLEMENTED: ", str(request["not_implemented"]))
+			_report("NOT_IMPLEMENTED: " + str(request["not_implemented"]), true)
 			continue
 		if DisplayServer.get_name() == "headless":
 			continue
@@ -374,6 +361,7 @@ func _play_music_request(request: Dictionary) -> void:
 		music_audio.play()
 
 func _exit_tree() -> void:
+	DebugTools.unregister_scene(self)
 	for child in get_children():
 		if child is AudioStreamPlayer:
 			child.stop()

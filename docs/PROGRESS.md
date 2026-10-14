@@ -1065,14 +1065,17 @@ Ordered by how much they hold up. Each is a real dependency, not a decision wait
 
 ## Validation snapshot
 
-Last run 2026-10-13. Host tests only; see the disclaimers above for what that does and does not
+Last run 2026-10-14 (TASK-0032). Host tests only; see the disclaimers above for what that does and does not
 establish.
 
 | Check | Command | Result |
 |---|---|---|
 | Native build | `cmake --build --preset native-debug --parallel 4` | passed |
-| Native tests | `ctest --preset native-debug --output-on-failure` | **24/24 passed** |
+| Native tests | `ctest --preset native-debug --output-on-failure` | **30/30 passed** |
 | Godot extension | `cmake --build --preset godot-debug --parallel 4` | passed; relinks `godot/bin/ps2_port.dll` |
+| Godot Debug tests | `ctest --preset godot-debug` | **32/32 passed** |
+| Console-off Debug / Release | configure feature OFF, build ps2_port, run console/viewer host tests (see TASK-0032) | passed; FPS follows Debug independently |
+| Console visuals | asset-free console and CarViewer/TrackViewer captures | inspected on D3D12 Forward+ and Compatibility |
 | Generated tables | `py -3 reverse/scripts/generate_progress.py --check` | passed |
 | Original comparison | — | **not performed** |
 
@@ -1148,3 +1151,13 @@ Four that are easy to violate by accident, each one the subject of a real correc
 4. **Ghidra access is read-only, and no proprietary material enters Git.** No annotations or
    renames in the database; no ELF, ISO, asset, save file or Ghidra project in the repository
    (AGENT.md R5, R7).
+
+TASK-0031 debug tooling is complete. To recheck it: `cmake --preset godot-debug
+-DHP2_ENABLE_DEBUG_CONSOLE=ON`, build that preset, then `ctest --preset godot-debug`.
+Run the asset-free `res://scenes/debug_console_smoke.tscn` for a window check.
+Build Godot configurations sequentially because they share the extension output path.
+
+TASK-0032 is complete: open F8, run `carviewer` or `trackviewer`; `viewer.close` returns
+to a fresh frontend. `viewer.load` is an explicit unavailable-loader request, not recovered
+loading. See DEBUG_VIEWERS.md and tasks/completed/TASK-0032-debug-viewers.md. Recheck
+with `ctest --preset godot-debug -R 'debug_viewers_host|debug_console_host'`.

@@ -6,6 +6,11 @@
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/rid.hpp>
 #include <map>
+#include <godot_cpp/classes/input_event.hpp>
+#include "game_core/extensions/viewer_session.hpp"
+#if HP2_ENABLE_DEBUG_CONSOLE
+#include "game_core/extensions/debug_console.hpp"
+#endif
 
 // TASK-0018 / D008: the Godot rendering backend. This is the only place in the port that knows
 // about a graphics device: it owns the RenderingServer RIDs (one canvas item, one 2D texture per
@@ -37,6 +42,24 @@ protected:
 
 public:
     ~Ps2RenderHost() override;
+    bool is_debug_build() const { return HP2_DEBUG_BUILD != 0; }
+    bool console_available() const { return HP2_ENABLE_DEBUG_CONSOLE != 0; }
+    bool console_input(const godot::Ref<godot::InputEvent>& event);
+    godot::Dictionary console_frame(double width, double height, double delta,
+                                    const godot::Dictionary& status);
+    void console_init(const godot::String& settings, bool info);
+    void console_log(const godot::String& text, bool error);
+    void console_execute(const godot::String& command);
+    void console_focus_lost();
+    bool console_visible() const;
+    godot::Dictionary viewer_request(const godot::String& action, const godot::String& source);
+    godot::Dictionary viewer_next();
+    godot::Dictionary viewer_activate(const godot::String& kind);
+    godot::Dictionary viewer_apply(const godot::String& action, const godot::String& source);
+    godot::Dictionary viewer_state() const;
+    void viewer_camera(const godot::String& description);
+    godot::Dictionary viewer_loaded(bool success, const godot::String& diagnostic, const godot::String& rendering);
+    void viewer_rendering(const godot::String& description);
 
     // Creates the canvas item under an existing CanvasItem RID, i.e. a Node2D's or Control's
     // get_canvas_item(). Godot keeps owning the window, viewport and canvas; this owns the item.
@@ -63,6 +86,14 @@ public:
     godot::String get_last_error() const { return last_error_; }
 
 private:
+    port::extensions::ViewerSession viewers_{HP2_DEBUG_BUILD != 0};
+#if HP2_ENABLE_DEBUG_CONSOLE
+    std::unique_ptr<port::extensions::DebugConsole> console_;
+    std::string clipboard_text_;
+#endif
+    godot::RID console_parent_, console_font_;
+    std::vector<godot::RID> console_items_;
+    std::vector<godot::RID> console_draw_items_;
     // One device texture per drawn original entry, re-uploaded only when the bitmap revision
     // changes, which is what makes the per-frame movie surfaces cheap.
     struct Uploaded {

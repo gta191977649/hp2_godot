@@ -15,6 +15,9 @@ boot_splash/fullsize=false
 boot_splash/use_filter=true
 boot_splash/bg_color=Color(0, 0, 0, 1)
 
+[autoload]
+DebugTools="*res://scripts/debug/debug_tools.gd"
+
 [rendering]
 ; TASK-0016 user-requested host backdrop for uncovered movie/title pixels.
 environment/defaults/default_clear_color=Color(0, 0, 0, 1)

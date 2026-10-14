@@ -147,10 +147,46 @@ $portGodot = Join-Path $PWD 'local/tools/godot-4.4.1/Godot_v4.4.1-stable_win64_c
 & $portGodot --path godot res://scenes/frontend_native.tscn -- --screen=0
 ```
 
-Both scenes show `<n> FPS  <ms>  [<render path>]` in the window title at all times and on
-the first overlay line under Tab (or `--info`). With vsync on, both read the refresh rate;
-to compare the paths, run uncapped with `--disable-vsync --max-fps 0 --print-fps` placed
-before the scene path.
+The native frontend shows `FPS / ms` at the top right in C++ Debug builds, independently
+of `--info` and the console. Release hides the readout. F8 toggles the debug console;
+TAB completes commands and Up/Down recall history. Old TAB, Page Up/Down and bracket
+menu shortcuts are removed from the native frontend. The legacy comparison scene
+retains its old overlay and is not the supported entry point.
+
+## Port debug console (TASK-0031)
+
+`HP2_ENABLE_DEBUG_CONSOLE` defaults ON for Godot Debug and OFF for Release/native.
+CMake cache values persist; pass `-DHP2_ENABLE_DEBUG_CONSOLE=ON` or `OFF` explicitly
+when changing an existing build directory. FPS uses `HP2_DEBUG_BUILD`, independently.
+Native tests build the same ImGui console library without Godot, even with the feature OFF.
+No upstream example or graphics backend is linked.
+
+The console starts hidden; F8 ignores key repeat. While open, keyboard/text/mouse input
+is consumed before game dispatch, but frame updates continue. It provides `help`, `clear`,
+`filter <text>`, `status`, `info on/off`; info controls only the detailed panel. Frontend
+errors and untranslated-path notices are mirrored into the console and still printed.
+Logs are collected while hidden and bounded to 2,048 displayed items and 2,048 pending
+entries. Command history uses the upstream bounded ring. Settings are stored in
+`user://debug/imgui.ini`, not the source directory. Clipboard uses Godot DisplayServer.
+Native command/state/frame access is in `src/game_core/extensions/debug_console.hpp`;
+only `log()` is thread-safe. All other console operations belong to the host thread.
+
+Asset-free smoke (with the extension built):
+
+```powershell
+& $portGodot --headless --path godot res://scenes/debug_console_smoke.tscn
+& $portGodot --path godot --rendering-method gl_compatibility res://scenes/debug_console_smoke.tscn -- --capture=D:/temp/console.png
+cmake --preset godot-debug -DHP2_ENABLE_DEBUG_CONSOLE=OFF
+cmake --build --preset godot-debug --target ps2_port
+# Run smoke again: Debug FPS remains visible with the console unavailable.
+cmake --preset godot-debug -DHP2_ENABLE_DEBUG_CONSOLE=ON
+cmake --build --preset godot-debug --target ps2_port
+```
+
+The synthetic scene needs no proprietary data. It checks input routing, F8 repeat,
+old shortcuts, commands, continued updates and resize positioning. Native `debug_console`
+tests exercise log capacity, completion, history, clipping and vertex/index offsets.
+
 
 `--native-render-smoke` must print `NATIVE_RENDER_SMOKE_OK` and exit 0; it builds and
 submits a frame for every screen. `./tools/run_frontend.ps1` drives the scene: `-Build`,
@@ -162,3 +198,28 @@ export templates are required. The GDExtension dependency table copies shared co
 DLLs alongside the extension. Keep the FFmpeg license and exact source/build reference
 with distributions and retain replaceable DLLs. Original assets are read externally.
 macOS/Linux renderer defaults are configured but builds are not validated here.
+
+## Debug asset viewers (TASK-0032)
+
+See [DEBUG_VIEWERS.md](DEBUG_VIEWERS.md). The shared DebugTools autoload now owns the
+console host, logs and FPS across frontend/viewer scene changes. Native frontend rendering
+retains its own Ps2RenderHost, independent of the overlay. The viewer scenes need no
+original assets. They are Debug-only; console-off Debug still supports their panels.
+
+```powershell
+& $portGodot --path godot res://scenes/debug/car_viewer.tscn
+& $portGodot --path godot res://scenes/debug/track_viewer.tscn
+ctest --preset godot-debug -R 'viewer|debug_console'
+```
+
+`debug_viewers_host` uses a clearly named asset-free frontend fixture for return-path tests;
+the application default still returns to frontend_native.tscn and its normal asset setup.
+`--viewer-smoke` starts a persistent test driver; `--viewer-capture=<absolute.png>` captures
+a directly launched viewer and exits. These flags are test tools, not loader features.
+The viewer smoke checks command queueing, repeated transitions, synthetic geometry,
+camera motion/reset, unavailable loading, input isolation, continued updates and log/session
+persistence. Existing debug_console_host checks TAB/history routing, FPS and resize behavior.
+
+Build configurations sequentially: their DLL output path is shared. Restore
+`cmake --preset godot-debug -DHP2_ENABLE_DEBUG_CONSOLE=ON` and rebuild after testing
+Release or console-off Debug. An existing process must be closed before replacing its DLL.
