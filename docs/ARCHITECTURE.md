@@ -191,8 +191,7 @@ instance_set_transform andfree_rid; this confirms available API, not current use
 csys command registration, native host snapshots, ImGui lifetime and triangle conversion.
 It has no Godot dependency and does not represent recovered PS2 behavior. Ps2RenderHost
 owns the font texture and clip-parent/triangle-child RIDs, clipboard and input conversion.
-The frontend routes input there first and continues updating game state. Debug FPS remains
-a separate host label anchored at the viewport's top right. See D010 and DEVELOPMENT.md.
+The frontend routes input there first and continues updating game state. Debug FPS shares the native ImGui frame anchored at the viewport's top right. See D010 and DEVELOPMENT.md.
 
 ## Debug viewer scaffolds (TASK-0032)
 
@@ -209,3 +208,70 @@ state/actions through host bindings and buttons. Release rejects viewer actions 
 scene entry. Synthetic Godot MeshInstances, camera controls and lighting live only in the
 platform scene layer; they do not alter the recovered Frame/quad format or implement physics.
 No original asset is opened, inspected, decoded or substituted by the fixtures.
+
+## Native vehicle inspection (TASK-0033)
+
+CarViewer now loads original vehicle BIN resources through Godot-free
+`port::vehicle::Model`, the bounds-checked geometry reader, requested shared textures and
+typed CarRenderInfo slices. Native values own parts, UVs, topology, static attachments and
+LOD decisions; `Ps2CarViewer` owns only uploaded meshes, images and debug overlays.
+This separate 3D presentation contract does not change frontend Frame/quad semantics.
+Host code uses the single asset-root resolver; no proprietary pre-export is required.
+
+The model exposes the complete original car/skin catalog and ID-based loading/rebinding,
+with explicit lights-off, zero-steering/zero-spin inputs. The default shader projects original
+material blocks, frontend lights and VU base RGBA; raw texture inspection is an explicit
+debug override. Original whole-entry methods remain throwing. General GS alpha above128 requires
+ordered destination access and fails explicitly; corpus evidence bounds current static
+source-over alpha to127. The full GS material pipeline
+and partial-frustum cone/clip behavior remain recovery work.
+
+One DebugUiSession owns native ImGui context, atlas, input and batches. ViewerUi and
+console draw into the same frame; scene/model actions are queued until frame completion.
+Godot controls are not used by either viewer or FPS. Console-off Debug still runs the
+viewer UI; Release disables it. See the TASK-0033 decision in DECISIONS.md.
+Viewer load completion updates Loading to Loaded or Failed; failure removes stale content.
+Clear/Fixture and scene destruction release native/Godot resources without discarding the
+persistent debug session. See VEHICLE_RENDERING.md and D012.
+
+## TASK-0033 compact viewer and loading ownership
+
+ViewerUi remains a Godot-free snapshot/action model. DebugUiSession contains root windows
+before NewFrame and repairs first-frame draw positions/hit rectangles before Render.
+port::vehicle::Loader serializes file IO, parsing, skin binding and representative paint
+previews on one native worker. Models are independent snapshots; ModelCache/TextureCache are
+single-worker services. DirectorySource::probe uses filesystem metadata; injected Sources may
+retain the read-based default for fixtures. Geometry decoding accepts an explicit solid-hash
+filter before VIF work. The near viewer requests only body/tire level zero and static attachments.
+
+Ps2CarViewer request_car/pump_load/set_show_lods provide the asynchronous scene boundary.
+Tickets carry cancellation tokens; dropped futures cannot mutate scene objects. GPU upload
+is cooperative, staged and hidden until commit. Godot resources never enter the worker.
+Immutable meshes/images and shaders are reused; per-instance lighting/camera materials remain
+separate, including LOD attachment copies. Renderer termination explicitly joins the worker.
+
+## Shared vehicle rendering backend (TASK-0034)
+
+Ps2VehicleRenderer owns GPU upload, material variants and native-selected part submission
+for both future runtime consumers and CarViewer. Ps2CarViewer is now a thin debug request-policy wrapper.
+The backend is not Debug-gated; debug scene access remains gated separately. Native Model
+uses CarRenderInfo's bounded binding/LOD/pose and lighting-delegation slices. Untranslated
+whole render entries continue to throw. Viewer preview rotation is port-side camera policy.
+
+Shader authoring and specialization are centralized in src/platform/shaders. CMake embeds
+those text sources into a generated header under the build directory and tracks shader-file
+changes. Bridge code binds native parameters without owning inline GLSL. Existing GS domain,
+alpha/depth and backend limitations are retained; no original reflection pipeline is invented.
+
+TASK-0035 adds an original frontend environment pass to the shared vehicle renderer. Native
+address helpers publish tire/blur matrices, strength and environment orientation/ST math.
+The host uploads CARSELECTENVMAP and the second original material block as an additive
+next pass with depth writes disabled. It does not use a Godot environment/PBR substitute.
+Viewer wheel speed is explicit port input in extensions/UI and model orchestration;
+recovered math remains Godot-free. Runtime game environment capture is an explicit gap.
+
+TASK-0036: a native vehicle part can own multiple Godot ArrayMesh batches. Preserve one
+part transform/visibility root; additional MeshInstance3D children inherit it. Draw records
+keep original part/strip identity plus host batch/local surface coordinates. The GPU cache
+stores complete ordered batch vectors. Bounds, material/reflection uniforms, wireframe,
+LOD copies and cleanup include every child. No native resource or recovered logic changes.

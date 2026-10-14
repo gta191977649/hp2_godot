@@ -1,0 +1,73 @@
+#pragma once
+#include "port/render/vehicle.hpp"
+#include "port/vehicle/textures.hpp"
+#include "port/vehicle/catalog.hpp"
+#include "game_core/CarRenderInfo.hpp"
+#include <map>
+
+namespace port::vehicle {
+// Port-side runtime ownership and explicit viewer controls, not an original class.
+struct Part {
+    std::string name;
+    std::size_t solid{};
+    std::array<float,16> transform{};
+    int lod = -1;
+    enum class Group { Body, Tire, Brake, Mirror, Plate, WheelBlur } group = Group::Body;
+    bool enabled = true;
+    bool selected = false;
+    std::array<float,28> lights{};
+    int wheel=-1;
+};
+// Single-worker cache; snapshots own their model data and do not read this on the render thread.
+struct ModelCache {
+    std::string root;
+    std::vector<std::uint8_t> global;
+    std::vector<CarChoice> catalog;
+    std::shared_ptr<TextureCache> textures=std::make_shared<TextureCache>();
+    struct Geometry {render::VehicleGeometry data;std::uint64_t age=0;std::size_t bytes=0;};
+    std::map<std::string,Geometry> geometry;
+    std::size_t bytes=0;std::uint64_t clock=0,hits=0,reads=0;double geometry_decode_ms=0,binding_ms=0;
+};
+class Model {
+public:
+    explicit Model(std::shared_ptr<ModelCache> cache=std::make_shared<ModelCache>()):cache_(std::move(cache)){}
+    void include_lods(bool enabled){include_lods_=enabled;}
+    bool includes_lods()const{return include_lods_;}
+    // Debug force-on of the original blur resource; not a recovered speed threshold.
+    void include_wheel_blur(bool enabled){wheel_blur_=enabled;}
+    void set_wheel_blur(bool enabled);
+    void set_wheel_speed(double radians_per_second);
+    void advance_wheels(double delta);
+    double wheel_phase()const{return phase_;}
+    std::shared_ptr<ModelCache> cache()const{return cache_;}
+    std::array<float,3> preview_color()const;
+    void load(assets::Source& source,const std::string& geometry_path,const std::string& code={},int skin=1);
+    void load_id(assets::Source& source,int car_id,int skin_id);
+    port::CarLodSelection select(int projected_size,int forced_lod);
+    void set_part_visible(const std::string& name,bool visible);
+    const render::VehicleGeometry& geometry()const{return geometry_;}
+    const std::vector<Texture>& textures()const{return textures_;}
+    const std::vector<Part>& parts()const{return parts_;}
+    const std::string& diagnostic()const{return diagnostic_;}
+    const std::map<std::uint32_t,port::CarMaterial>& materials()const{return materials_;}
+    int car_id()const{return car_id_;}
+    int skin_id()const{return skin_id_;}
+    const std::string& path()const{return path_;}
+private:
+    std::shared_ptr<ModelCache> cache_;
+    bool include_lods_=true;
+    bool wheel_blur_=false;
+    CarRenderConfig config_;
+    double phase_=0;
+    double wheel_speed_=80; // Port-side preview input, not original vehicle physics.
+    render::VehicleGeometry geometry_;
+    std::vector<Texture> textures_;
+    std::vector<Part> parts_;
+    std::map<std::uint32_t,port::CarMaterial> materials_;
+    std::array<bool,4> presence_{};
+    std::string diagnostic_;
+    std::vector<CarChoice> catalog_;
+    std::string path_;
+    int car_id_=-1,skin_id_=-1;
+};
+}

@@ -79,6 +79,16 @@ def definitions() -> dict[str, list[dict]]:
     return result
 
 
+def entry_definitions(cls: dict, address: str, method: str, candidates: list[dict]) -> list[dict]:
+    """Explicitly separate a whole entry from typed overloads implementing bounded slices."""
+    own = [d for d in candidates if d["path"] == cls["source"]
+           and d["name"] == cls["name"] + "::" + method]
+    signature = cls.get("entry_signatures", {}).get(address)
+    if signature:
+        own = [d for d in own if d["signature"] == signature]
+    return own
+
+
 def model() -> tuple[list[dict], list[dict], dict[str, dict], dict]:
     policy = json.loads((ROOT / "reverse/classes/template-policy.json").read_text())
     assert policy["binary_id"] == BINARY
@@ -115,6 +125,9 @@ def model() -> tuple[list[dict], list[dict], dict[str, dict], dict]:
         originals[row["elf_address"].upper().replace("0X", "0x")] = row
     for name, placement in policy["existing_classes"].items():
         classes[name]["functions"].update(placement["additional_functions"])
+    for name, attribution in policy.get("member_attributions", {}).items():
+        classes[name]["functions"].update(attribution["additional_functions"])
+        classes[name]["entry_signatures"] = attribution.get("entry_signatures", {})
     symbols = {r["elf_address"].upper().replace("0X", "0x"): r for r in read_csv("reverse/symbols.csv")}
     for cls in classes.values():
         name = cls["name"]
@@ -139,6 +152,9 @@ def model() -> tuple[list[dict], list[dict], dict[str, dict], dict]:
             evidence = "E-0019-N03" if original else "E-0027-C01; E-0028-C01"
             if placement and address in placement.get("additional_functions", []):
                 evidence = placement["evidence"] + "; E-0028-C01"
+            attribution = policy.get("member_attributions", {}).get(name, {})
+            if address in attribution.get("additional_functions", []):
+                evidence = attribution["evidence"]
             cls["methods"][address] = {"name": method, "record": record, "evidence": evidence}
     return sorted(classes.values(), key=lambda c: c["name"]), labels, symbols, policy
 
@@ -186,8 +202,7 @@ def fill_code(classes: list[dict], check: bool) -> None:
         missing = []
         for address in cls["functions"]:
             method = cls["methods"][address]["name"]
-            own = [d for d in defs.get(address, []) if d["path"] == cls["source"]
-                   and d["name"] == cls["name"] + "::" + method]
+            own = entry_definitions(cls, address, method, defs.get(address, []))
             if len(own) > 1:
                 raise ValueError(f"Duplicate member definition: {cls['name']}::{method}")
             declaration_found = bounds and re.search(r"\b" + re.escape(method) + r"\s*\(",
@@ -319,8 +334,7 @@ def artifacts(classes: list[dict], labels: list[dict], symbols: dict[str, dict])
         for address in cls["functions"]:
             method = cls["methods"][address]
             candidates = defs.get(address, [])
-            own = next(d for d in candidates if d["path"] == cls["source"]
-                       and d["name"] == cls["name"] + "::" + method["name"])
+            own, = entry_definitions(cls, address, method["name"], candidates)
             entry = {"elf_address": address, "method": method["name"], "record": method["record"],
                      "knowledge_status": symbols[address]["status"],
                      "coverage": "throwing_template" if own["stub"] else "existing_native_projection",

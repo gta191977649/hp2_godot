@@ -8,8 +8,9 @@
 #include <map>
 #include <godot_cpp/classes/input_event.hpp>
 #include "game_core/extensions/viewer_session.hpp"
-#if HP2_ENABLE_DEBUG_CONSOLE
+#if HP2_DEBUG_BUILD
 #include "game_core/extensions/debug_console.hpp"
+#include "game_core/extensions/viewer_ui.hpp"
 #endif
 
 // TASK-0018 / D008: the Godot rendering backend. This is the only place in the port that knows
@@ -60,6 +61,9 @@ public:
     void viewer_camera(const godot::String& description);
     godot::Dictionary viewer_loaded(bool success, const godot::String& diagnostic, const godot::String& rendering);
     void viewer_rendering(const godot::String& description);
+    void viewer_ui_snapshot(const godot::Dictionary& snapshot);
+    godot::Dictionary viewer_ui_next();
+    bool viewer_ui_capture()const;
 
     // Creates the canvas item under an existing CanvasItem RID, i.e. a Node2D's or Control's
     // get_canvas_item(). Godot keeps owning the window, viewport and canvas; this owns the item.
@@ -87,8 +91,9 @@ public:
 
 private:
     port::extensions::ViewerSession viewers_{HP2_DEBUG_BUILD != 0};
-#if HP2_ENABLE_DEBUG_CONSOLE
+#if HP2_DEBUG_BUILD
     std::unique_ptr<port::extensions::DebugConsole> console_;
+    port::extensions::ViewerUi viewer_ui_;
     std::string clipboard_text_;
 #endif
     godot::RID console_parent_, console_font_;

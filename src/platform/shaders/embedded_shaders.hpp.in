@@ -1,0 +1,7 @@
+#pragma once
+// Build-generated embedding; edit the shader source files under src/platform/shaders.
+namespace port::godot_bridge::embedded_shaders {
+inline constexpr char car_base[] = R"HP2SHADER(@HP2_CAR_BASE@)HP2SHADER";
+inline constexpr char car_modulate[] = R"HP2SHADER(@HP2_CAR_MODULATE@)HP2SHADER";
+inline constexpr char wireframe[] = R"HP2SHADER(@HP2_CAR_WIREFRAME@)HP2SHADER";
+}

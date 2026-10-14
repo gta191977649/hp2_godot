@@ -1,11 +1,17 @@
 #include "catalog.hpp"
 #include <fstream>
+#include <filesystem>
 #include <stdexcept>
 namespace port::assets {
 std::vector<std::uint8_t> DirectorySource::read(const std::string& path){
  if(path.empty()||path.front()=='/'||path.find("..")!=std::string::npos||path.find(':')!=std::string::npos||path.find('\\')!=std::string::npos)throw std::runtime_error("asset path must be relative to configured root");
  std::ifstream f(root_+"/"+path,std::ios::binary);if(!f)throw std::runtime_error("could not open original asset: "+path);
  return {(std::istreambuf_iterator<char>(f)),{}};
+}
+bool DirectorySource::probe(const std::string& path){
+ if(path.empty()||path.front()=='/'||path.find("..")!=std::string::npos||path.find(':')!=std::string::npos||path.find('\\')!=std::string::npos)throw std::runtime_error("asset path must be relative to configured root");
+ std::error_code error;const auto file=std::filesystem::path(root_)/path;
+ return std::filesystem::is_regular_file(file,error)&&std::filesystem::file_size(file,error)>0&&!error;
 }
 std::shared_ptr<const render::Bitmap> Catalog::texture(render::TextureId id){
  auto cached=textures_.find(id);if(cached!=textures_.end())return cached->second;

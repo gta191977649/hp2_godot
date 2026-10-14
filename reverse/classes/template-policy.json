@@ -85,6 +85,20 @@
       "evidence": "E-0029-P09"
     }
   },
+  "member_attributions": {
+    "CarRenderInfo": {
+      "header": "src/game_core/CarRenderInfo.hpp",
+      "source": "src/game_core/CarRenderInfo.cpp",
+      "namespace": "hp2::recovered",
+      "evidence": "E-0033-B01; E-0033-B02",
+      "placement_provenance": "user_requested_root; port-side placement; original path unknown",
+      "additional_functions": ["0x0011E860", "0x00120EF8"],
+      "entry_signatures": {
+        "0x0011E860": "void CarRenderInfo::Sub_0011E860()",
+        "0x00120EF8": "void CarRenderInfo::Sub_00120EF8()"
+      }
+    }
+  },
   "existing_classes": {
     "CopDriver": {
       "header": "src/game_core/port/police/cop_control.hpp",

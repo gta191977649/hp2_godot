@@ -39,8 +39,19 @@ struct TpkTextureHeader {
     std::int32_t image_size = 0, palette_size = 0;
     std::uint8_t shift_width = 0, shift_height = 0;
     std::uint8_t pixel_storage_mode = 0, clut_pixel_storage_mode = 0;
+    std::uint8_t Field_0x4c = 0; // 00108CC0 derives CLAMP.WMS/WMT; E-0033-T06.
+    // Raw signed-byte zero/nonzero partition tested by 0010DED0 and 00104DF0.
+    // E-0033-T06. Kept separate from the unrelated +0x4F metadata.
+    std::uint8_t Field_0x4d = 0;
     std::uint8_t texture_fx = 0, is_any_semitransparency = 0;
+    std::uint8_t Field_0x50 = 0; // Queue state-index bit1; 0010BB20/0010B838, E-0033-T07.
     bool is_swizzled = false;
+    // Raw byte; 0010DEBC loads it with lb and gates render bit 4 on nonzero.
+    // E-0033-T05. Original name and full meaning remain unknown.
+    std::uint8_t Field_0x74 = 0;
+    // Raw TEX1 inputs emitted by 00108CC0; E-0033-T06.
+    std::uint8_t Field_0x6e = 0, Field_0x6f = 0, Field_0x70 = 0, Field_0x71 = 0;
+    std::int16_t Field_0x72 = 0;
     std::uint8_t alpha_bits = 0, alpha_fix = 0;
 };
 
@@ -63,8 +74,15 @@ public:
     // Decodes one entry. flip_vertical matches the Python tool's frontend_textures.py
     // convention (true) for standalone/UI display; pass false to match the 3D-mesh UV
     // convention used by map_tools_ps2's track texture path.
-    std::optional<DecodedTexture> decode(const TpkTextureHeader& header, bool flip_vertical = true) const;
-    std::optional<DecodedTexture> decode_by_name(const std::string& name, bool flip_vertical = true) const;
+    // preserve_gs_alpha keeps the original CLUT alpha byte (0..255, unity=128).
+    // Default false retains the established frontend RGBA expansion byte-for-byte.
+    std::optional<DecodedTexture> decode(const TpkTextureHeader& header, bool flip_vertical = true,
+                                         bool preserve_gs_alpha = false) const;
+    std::optional<DecodedTexture> decode_by_name(const std::string& name, bool flip_vertical = true,
+                                                 bool preserve_gs_alpha = false) const;
+    // E-0035-R01: original 00109510 PSMCT32 host->local linear RGBA transfer.
+    // Row zero retained; separate from the legacy indexed frontend flip convention.
+    std::optional<DecodedTexture> decode_linear32(const TpkTextureHeader& header) const;
 
 private:
     std::vector<std::uint8_t> buffer_;

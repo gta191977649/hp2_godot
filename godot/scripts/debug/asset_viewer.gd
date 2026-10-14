@@ -1,11 +1,8 @@
 extends Node3D
-# Port-side viewing environment only. All geometry, units and colors here are synthetic.
+# Port-side viewing environment. Original car content is loaded by the native bridge.
 @export_enum("car", "track") var viewer_kind := "car"
 var camera: Camera3D
 var fixture: Node3D
-var state_label: Label
-var source_edit: LineEdit
-var content_label: Label
 var orbit_center := Vector3(0, 1, 0)
 var orbit_yaw := 0.6
 var orbit_pitch := 0.35
@@ -17,6 +14,24 @@ var looking := false
 var held: Dictionary = {}
 var updates := 0
 var fixture_meshes := 0
+var car_model: Node3D
+var car_state: Dictionary = {}
+var last_rendering := ""
+var forced_lod := 0
+var show_lods := false
+var pending_load := false
+var frame_on_load := true
+var load_generation := -1
+var max_load_frame_ms := 0.0
+var wireframe := false
+var show_bounds := false
+var inspection := false
+var preview_mode := false
+# Port-side presentation speed, not an asserted original PS2 camera constant.
+const PREVIEW_ORBIT_SPEED := 0.2094395102
+var grid_node: MeshInstance3D
+var floor_node: MeshInstance3D
+var car_catalog: Array = []
 
 func _ready() -> void:
 	if DebugTools.host == null or not DebugTools.host.is_debug_build():
@@ -28,18 +43,51 @@ func _ready() -> void:
 		get_window().size = Vector2i(1280, 800)
 	_build_environment()
 	_build_fixture()
-	_build_panel()
+	if viewer_kind == "car":
+		car_model = ClassDB.instantiate("Ps2CarViewer")
+		add_child(car_model)
+		car_catalog = car_model.get_catalog()
 	reset_camera()
 	refresh_state()
-	DebugTools.write_log("%sViewer: synthetic fixture only; original resource loader is not implemented" % viewer_kind.capitalize())
+	DebugTools.write_log("CarViewer: ready for CARS/<model>/GEOMETRY.BIN" if viewer_kind == "car" else "TrackViewer: synthetic fixture; loader not implemented")
+	var explicit_load := false
 	for argument in OS.get_cmdline_user_args():
+		if argument == "--wheel-blur" and car_model != null:
+			car_model.set_wheel_blur(true)
+		if argument == "--car-lods" and car_model != null:
+			show_lods = true
+			car_model.set_show_lods(true)
+		if argument == "--car-inspection" and car_model != null:
+			inspection = true
+			car_model.set_inspection(true)
+		if argument.begins_with("--car-load=") and viewer_kind == "car":
+			explicit_load = true
+			DebugTools.request("load", argument.trim_prefix("--car-load="))
+		if argument == "--preview" and viewer_kind == "car":
+			set_preview_mode(true)
 		if argument.begins_with("--viewer-capture="):
 			_capture.call_deferred(argument.trim_prefix("--viewer-capture="))
+	if viewer_kind == "car" and not explicit_load and "--viewer-smoke" not in OS.get_cmdline_user_args():
+		_select_initial_car.call_deferred()
+
+func _select_initial_car() -> void:
+	for car in car_catalog:
+		if not bool(car.available):
+			continue
+		for skin in car.skins:
+			if int(skin.id) >= 0:
+				viewer_ui_action({"action": "select_car", "car_id": int(car.id), "skin_id": int(skin.id)})
+				return
 
 func _capture(path: String) -> void:
 	await get_tree().create_timer(0.5).timeout
-	await RenderingServer.frame_post_draw
-	await RenderingServer.frame_post_draw
+	while pending_load:
+		await get_tree().process_frame
+	# Explicit capture also works while the OS has occluded/minimized this debug window.
+	RenderingServer.viewport_set_update_mode(get_viewport().get_viewport_rid(), RenderingServer.VIEWPORT_UPDATE_ALWAYS)
+	RenderingServer.force_draw(false)
+	await get_tree().process_frame
+	RenderingServer.force_draw(false)
 	var result := get_viewport().get_texture().get_image().save_png(path)
 	print("VIEWER_CAPTURE_OK: ", path, " result=", result)
 	get_tree().quit(0 if result == OK else 1)
@@ -84,7 +132,7 @@ func _build_environment() -> void:
 	var plane := PlaneMesh.new()
 	var extent := 20 if viewer_kind == "car" else 100
 	plane.size = Vector2(extent, extent)
-	_mesh(self, plane, Vector3(0, -0.04, 0), Color(0.09, 0.12, 0.16))
+	floor_node = _mesh(self, plane, Vector3(0, -0.04, 0), Color(0.09, 0.12, 0.16))
 	var lines := ImmediateMesh.new()
 	var line_material := _material(Color.WHITE, true)
 	line_material.vertex_color_use_as_albedo = true
@@ -102,6 +150,7 @@ func _build_environment() -> void:
 		lines.surface_add_vertex(Vector3(0, 0.02, 0) + axis * 3)
 	lines.surface_end()
 	var grid := MeshInstance3D.new()
+	grid_node = grid
 	grid.mesh = lines
 	add_child(grid)
 	camera = Camera3D.new()
@@ -138,94 +187,133 @@ func _build_fixture() -> void:
 		for x in [-6, 6]:
 			_box(Vector3(0.5, 5, 0.5), Vector3(x, 2.5, 10), Color(0.12, 0.65, 0.9))
 
-func _label(text: String, font_size: int = 14) -> Label:
-	var label := Label.new()
-	label.text = text
-	label.add_theme_font_size_override("font_size", font_size)
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	return label
-
-func _button(row: HBoxContainer, text: String, action: String) -> void:
-	var button := Button.new()
-	button.text = text
-	button.pressed.connect(func() -> void: DebugTools.request(action))
-	row.add_child(button)
-
-func _build_panel() -> void:
-	var hud := CanvasLayer.new()
-	hud.layer = 5
-	add_child(hud)
-	var panel := PanelContainer.new()
-	panel.position = Vector2(16, 44)
-	panel.custom_minimum_size.x = 350
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.025, 0.04, 0.065, 0.94)
-	style.set_content_margin_all(14)
-	style.set_corner_radius_all(6)
-	panel.add_theme_stylebox_override("panel", style)
-	hud.add_child(panel)
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 10)
-	panel.add_child(column)
-	column.add_child(_label("%sViewer" % viewer_kind.capitalize(), 24))
-	var notice := _label("Port-side debug scaffold\nNo original game resource is loaded.")
-	notice.modulate = Color(1, 0.8, 0.4)
-	column.add_child(notice)
-	content_label = _label("Synthetic fixture")
-	column.add_child(content_label)
-	source_edit = LineEdit.new()
-	source_edit.placeholder_text = "ZZDATA-relative resource path"
-	source_edit.tooltip_text = "Request only: the original resource loader is not implemented."
-	source_edit.text_submitted.connect(_request_load)
-	column.add_child(source_edit)
-	var load_row := HBoxContainer.new()
-	column.add_child(load_row)
-	var load_button := Button.new()
-	load_button.text = "Load request"
-	load_button.pressed.connect(func() -> void: _request_load(source_edit.text))
-	load_row.add_child(load_button)
-	_button(load_row, "Clear", "clear")
-	_button(load_row, "Fixture", "fixture")
-	var camera_row := HBoxContainer.new()
-	column.add_child(camera_row)
-	_button(camera_row, "Reset Camera", "reset")
-	_button(camera_row, "Back to Frontend", "close")
-	var switch_row := HBoxContainer.new()
-	column.add_child(switch_row)
-	_button(switch_row, "CarViewer", "car")
-	_button(switch_row, "TrackViewer", "track")
-	state_label = _label("")
-	column.add_child(state_label)
-	var controls := "LMB drag: orbit | RMB drag: pan\nWheel: zoom | F: frame | R: reset" if viewer_kind == "car" else "Hold RMB: look + WASD / Q E move\nShift: faster | Wheel: speed\nF: frame | R: reset"
-	column.add_child(_label(controls + "\nF8: console | TAB: console completion"))
-
-func _request_load(source: String) -> void:
-	DebugTools.request("load", source)
-	source_edit.release_focus()
-
 func refresh_state() -> void:
-	if fixture == null:
-		return
-	var state: Dictionary = DebugTools.host.viewer_state()
-	fixture.visible = bool(state.fixture)
-	content_label.text = "Synthetic fixture (%d meshes)" % fixture_meshes if fixture.visible else "Empty viewer"
-	state_label.text = "State: %s\nRequest: %s" % [state.status, state.source if not str(state.source).is_empty() else "(none)"]
-	if not str(state.diagnostic).is_empty():
-		state_label.text += "\n" + str(state.diagnostic)
-	state_label.text += "\nCamera: %s" % camera.position.snapped(Vector3.ONE * 0.01)
-	if viewer_kind == "track":
-		state_label.text += "\nSpeed: %.1f port units/s" % move_speed
+	if fixture != null:
+		fixture.visible = bool(DebugTools.host.viewer_state().fixture)
+
+func viewer_ui_snapshot() -> Dictionary:
+	var state: Dictionary = DebugTools.host.viewer_state().duplicate()
+	state["kind"] = viewer_kind
+	state["camera"] = "%s | speed %.1f" % [camera.position.snapped(Vector3.ONE * 0.01), move_speed]
+	state["cars"] = car_catalog
+	state["lod"] = forced_lod
+	state["wireframe"] = wireframe
+	state["bounds"] = show_bounds
+	state["inspection"] = inspection
+	state["show_lods"] = show_lods
+	state["preview"] = preview_mode
+	if car_model != null:
+		var native: Dictionary = car_model.get_state()
+		state["wheel_speed"] = float(native.get("wheel_speed", 80.0))
+		state["wheel_blur"] = bool(native.get("wheel_blur", false))
+		if bool(native.get("loading", false)):
+			state["status"] = "%s... (previous car retained)" % str(native.get("phase", "Loading"))
+		state["parts"] = native.get("parts", [])
+		state["rendering"] = str(native.get("rendering", ""))
+		if not str(native.get("summary", "")).is_empty():
+			state["rendering"] += "\n" + str(native.summary)
+		state["rendering"] += "\nCPU %.1f ms | upload %.1f ms | max slice %.1f ms\nGeometry reads %d / hits %d | texture decodes %d / hits %d" % [float(native.get("cpu_ms", 0)), float(native.get("upload_ms", 0)), float(native.get("max_upload_slice_ms", 0)), int(native.get("geometry_reads", 0)), int(native.get("geometry_hits", 0)), int(native.get("texture_decodes", 0)), int(native.get("texture_hits", 0))]
+		state["rendering"] += "\nRead %.1f ms | geometry decode %.1f ms | pixels %.1f ms | binding %.1f ms" % [float(native.get("read_ms", 0)), float(native.get("geometry_decode_ms", 0)), float(native.get("texture_decode_ms", 0)), float(native.get("binding_ms", 0))]
+		state["car_id"] = native.get("car_id", -1)
+		state["skin_id"] = native.get("skin_id", -1)
+		state["inspection"] = native.get("inspection", inspection)
+		if not str(native.get("error", "")).is_empty():
+			state["diagnostic"] = str(state.get("diagnostic", "")) + "\n" + str(native.error)
+			if str(state.get("status", "")) == "Loaded":
+				state["status"] = "Render failed"
+	return state
+
+func _queue_car(result: Dictionary, frame: bool = true) -> void:
+	pending_load = bool(result.get("loading", false))
+	max_load_frame_ms = 0
+	frame_on_load = frame
+	load_generation = int(result.get("generation", -1))
+	if not pending_load:
+		_publish_car_result(result, frame)
+
+func _publish_car_result(result: Dictionary, frame: bool = true) -> void:
+	car_state = result
+	if bool(result.get("ok", false)):
+		car_model.set_wireframe(wireframe)
+		car_model.set_bounds(show_bounds)
+		car_model.set_inspection(inspection)
+		car_state = car_model.get_state()
+	var detail := str(car_state.get("diagnostic", "")) if car_state.get("ok", false) else str(result.get("error", "Vehicle load failed"))
+	DebugTools.host.viewer_loaded(bool(car_state.get("ok", false)), detail, str(car_state.get("summary", "")))
+	if car_state.get("ok", false) and frame:
+		frame_target()
+	refresh_state()
 
 func viewer_action(action: String) -> void:
+	if car_model != null:
+		if action in ["clear", "fixture"]:
+			pending_load = false
+			car_model.clear_car()
+			car_state.clear()
+			last_rendering = ""
+		if action == "load":
+			_queue_car(car_model.request_car(str(DebugTools.host.viewer_state().source), -1, 1))
 	if action == "reset":
 		reset_camera()
+		if car_state.get("ok", false):
+			frame_target()
+	refresh_state()
+
+func viewer_ui_action(action: Dictionary) -> void:
+	# Called deferred, after native ImGui drawing has completed.
+	if car_model == null:
+		return
+	match str(action.get("action", "")):
+		"preview":
+			set_preview_mode(bool(action.get("enabled", false)))
+		"select_car":
+			var selected_id := int(action.get("car_id", -1))
+			var selected_path := ""
+			for car in car_catalog:
+				if int(car.id) == selected_id:
+					selected_path = str(car.path)
+					break
+			var applied: Dictionary = DebugTools.host.viewer_apply("load", selected_path)
+			if applied.get("ok", false):
+				last_rendering = ""
+				_queue_car(car_model.request_car(selected_path, selected_id, int(action.get("skin_id", -1))))
+			else:
+				DebugTools.write_log(str(applied.get("error", "Invalid catalog selection")), true)
+		"select_skin":
+			var applied: Dictionary = DebugTools.host.viewer_apply("load", str(DebugTools.host.viewer_state().source))
+			if applied.get("ok", false):
+				last_rendering = ""
+				_queue_car(car_model.request_car(str(DebugTools.host.viewer_state().source), int(car_model.get_state().car_id), int(action.get("skin_id", -1))), false)
+		"show_lods":
+			show_lods = bool(action.get("enabled", false))
+			_queue_car(car_model.set_show_lods(show_lods))
+		"wheel_speed":
+			car_state = car_model.set_wheel_speed(float(action.get("value", 80.0)))
+		"wheel_blur":
+			car_state = car_model.set_wheel_blur(bool(action.get("enabled", false)))
+		"lod":
+			forced_lod = int(action.get("lod", 0))
+		"wireframe":
+			wireframe = bool(action.get("enabled", false))
+			car_model.set_wireframe(wireframe)
+		"bounds":
+			show_bounds = bool(action.get("enabled", false))
+			car_model.set_bounds(show_bounds)
+		"inspection":
+			inspection = bool(action.get("enabled", false))
+			car_model.set_inspection(inspection)
+			car_state = car_model.get_state()
+			if bool(car_state.get("loading", false)):
+				_queue_car(car_state, frame_on_load)
+		"part":
+			car_model.set_part_visible(str(action.get("name", "")), bool(action.get("enabled", false)))
 	refresh_state()
 
 func reset_camera() -> void:
 	release_camera()
 	orbit_center = Vector3(0, 1, 0)
 	orbit_yaw = 0.6
-	orbit_pitch = 0.35
+	orbit_pitch = 0.12 if preview_mode else 0.35
 	orbit_distance = 8
 	move_speed = 16
 	if viewer_kind == "car":
@@ -238,9 +326,23 @@ func _update_orbit() -> void:
 	camera.position = orbit_center + Vector3(sin(orbit_yaw) * cos(orbit_pitch), sin(orbit_pitch), cos(orbit_yaw) * cos(orbit_pitch)) * orbit_distance
 	camera.look_at(orbit_center)
 
+func set_preview_mode(enabled: bool) -> void:
+	preview_mode = enabled and viewer_kind == "car"
+	if grid_node != null:
+		grid_node.visible = not preview_mode
+	if floor_node != null:
+		floor_node.visible = not preview_mode
+	if camera != null:
+		camera.fov = 35 if preview_mode else 75
+		frame_target()
+
 func frame_target() -> void:
-	# Only the synthetic fixture bounds are known in this scaffold.
 	reset_camera()
+	if car_state.get("ok", false):
+		var bounds: AABB = car_state.bounds
+		orbit_center = bounds.get_center()
+		orbit_distance = maxf(2, bounds.size.length() * 1.3)
+		_update_orbit()
 	if viewer_kind == "track":
 		camera.position = Vector3(26, 25, 32)
 		camera.look_at(Vector3(3, 0, -2))
@@ -266,7 +368,7 @@ func _input(event: InputEvent) -> void:
 		held.erase(event.keycode)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if DebugTools.is_console_open() or camera == null:
+	if DebugTools.input_captured() or camera == null:
 		return
 	if event is InputEventKey:
 		if event.pressed:
@@ -308,15 +410,48 @@ func _process(delta: float) -> void:
 	if camera == null:
 		return
 	updates += 1
-	if DebugTools.is_console_open():
+	if car_model != null and pending_load:
+		max_load_frame_ms = maxf(max_load_frame_ms, delta * 1000)
+		var loaded: Dictionary = car_model.pump_load()
+		if not bool(loaded.get("loading", false)) and int(loaded.get("completed", -2)) == load_generation:
+			pending_load = false
+			var previews: Dictionary = loaded.get("previews", {})
+			var preview_errors: Dictionary = loaded.get("preview_errors", {})
+			for entry in car_catalog:
+				if int(entry.id) == int(loaded.get("car_id", -1)):
+					for skin in entry.skins:
+						if previews.has(int(skin.id)):
+							skin["preview"] = previews[int(skin.id)]
+						elif preview_errors.has(int(skin.id)):
+							skin["preview_error"] = preview_errors[int(skin.id)]
+			_publish_car_result(loaded, frame_on_load)
+	if DebugTools.input_captured():
 		release_camera()
 	elif looking:
 		var direction := Vector3(float(held.has(KEY_D)) - float(held.has(KEY_A)), float(held.has(KEY_E)) - float(held.has(KEY_Q)), float(held.has(KEY_S)) - float(held.has(KEY_W)))
 		camera.position += camera.basis * direction.normalized() * move_speed * (4 if held.has(KEY_SHIFT) else 1) * delta
+	# Auto orbit is independent of dragging and UI/console capture; mouse offsets
+	# adjust the same camera without suspending the presentation rotation.
+	if viewer_kind == "car" and preview_mode:
+		orbit_yaw = fposmod(orbit_yaw + PREVIEW_ORBIT_SPEED * delta, TAU)
+		_update_orbit()
 	DebugTools.host.viewer_camera("position=%s rotation=%s speed=%.1f" % [camera.position, camera.rotation_degrees, move_speed])
 	DebugTools.statistics = {"screen": "%sViewer" % viewer_kind.capitalize()}
+	if car_model != null and car_state.get("ok", false):
+		car_model.advance_wheels(delta)
+		# Port-side mapping of Godot vertical FOV to pixel projection scale.
+		var scale: float = get_viewport().get_visible_rect().size.y * 0.5 / tan(deg_to_rad(camera.fov) * 0.5)
+		var rendered: Dictionary = car_model.update_view(camera.position, -camera.basis.z, scale, forced_lod)
+		var description := str(rendered.get("summary", ""))
+		if not rendered.get("ok", false):
+			description += " error=" + str(rendered.get("error", "Rendering failed"))
+		if description != last_rendering:
+			DebugTools.host.viewer_rendering(description)
+			last_rendering = description
 	refresh_state()
 
 func _exit_tree() -> void:
 	release_camera()
+	if car_model != null:
+		car_model.clear_car()
 	DebugTools.unregister_scene(self)

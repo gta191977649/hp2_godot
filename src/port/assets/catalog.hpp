@@ -5,13 +5,14 @@
 #include <string>
 namespace port::assets {
 // File access is injected; render resources have no Godot objects or GPU handles.
-class Source { public: virtual ~Source()=default; virtual std::vector<std::uint8_t> read(const std::string& path)=0; virtual const std::string& root()const=0; };
+class Source { public: virtual ~Source()=default; virtual std::vector<std::uint8_t> read(const std::string& path)=0; virtual const std::string& root()const=0; virtual bool probe(const std::string& path){return !read(path).empty();} };
 class DirectorySource final:public Source {
  std::string root_;
 public:
  explicit DirectorySource(std::string root):root_(std::move(root)){}
  std::vector<std::uint8_t> read(const std::string& path)override;
  const std::string& root()const override{return root_;}
+ bool probe(const std::string& path)override;
 };
 class Catalog:public render::Resources {
  Source& source_;

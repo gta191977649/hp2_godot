@@ -5,6 +5,7 @@
 #include "ps2_frontend_layout.hpp"
 #include "ps2_movie_player.hpp"
 #include "ps2_render_host.hpp"
+#include "ps2_car_viewer.hpp"
 #include "platform/not_implemented_dialog.hpp"
 #include <godot_cpp/godot.hpp>
 
@@ -19,9 +20,13 @@ void initialize_port(godot::ModuleInitializationLevel level) {
         godot::ClassDB::register_class<port::godot_bridge::Ps2FrontEndLayout>();
         godot::ClassDB::register_class<port::godot_bridge::Ps2MoviePlayer>();
         godot::ClassDB::register_class<port::godot_bridge::Ps2RenderHost>();
+        godot::ClassDB::register_class<port::godot_bridge::Ps2VehicleRenderer>();
+        godot::ClassDB::register_class<port::godot_bridge::Ps2CarViewer>();
     }
 }
-void terminate_port(godot::ModuleInitializationLevel) {}
+void terminate_port(godot::ModuleInitializationLevel level) {
+    if(level==godot::MODULE_INITIALIZATION_LEVEL_SCENE)port::godot_bridge::Ps2VehicleRenderer::shutdown_loader();
+}
 
 extern "C" {
 GDExtensionBool GDE_EXPORT ps2_port_library_init(GDExtensionInterfaceGetProcAddress get_proc_address,

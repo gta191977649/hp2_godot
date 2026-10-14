@@ -3,6 +3,7 @@ project(PS2PCPort VERSION 0.1.0 LANGUAGES CXX)
 
 include(CTest)
 option(PORT_BUILD_GODOT "Build the optional Godot 4.4 bridge" OFF)
+option(PORT_ENABLE_GPU_TESTS "Run windowed vehicle shader RGB checks with configured original assets" OFF)
 set(_console_default OFF)
 if(PORT_BUILD_GODOT AND CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(_console_default ON)
@@ -12,10 +13,11 @@ add_library(port_debug_viewers STATIC src/game_core/extensions/viewer_session.cp
 target_include_directories(port_debug_viewers PUBLIC src)
 target_compile_features(port_debug_viewers PUBLIC cxx_std_17)
 set_target_properties(port_debug_viewers PROPERTIES POSITION_INDEPENDENT_CODE ON)
-if(HP2_ENABLE_DEBUG_CONSOLE OR BUILD_TESTING)
+if(HP2_ENABLE_DEBUG_CONSOLE OR BUILD_TESTING OR CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(_console_vendor "${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui-console")
   set(_imgui "${_console_vendor}/example/thirdparty/imgui")
   add_library(port_debug_console STATIC src/game_core/extensions/debug_console.cpp
+    src/game_core/extensions/debug_ui.cpp src/game_core/extensions/viewer_ui.cpp
     src/game_core/extensions/viewer_commands.cpp
     "${_console_vendor}/src/imgui_console.cpp" "${_imgui}/imgui.cpp"
     "${_imgui}/imgui_draw.cpp" "${_imgui}/imgui_widgets.cpp")
@@ -41,6 +43,7 @@ add_library(game_core STATIC src/game_core/port/scaffold.cpp src/game_core/port/
   src/game_core/memorycard/src/memorycard.cpp
   src/game_core/port/movieplayer/movie_audio.cpp
   src/game_core/port/assets/elab_chunks.cpp src/game_core/port/assets/hp2_tpk_texture.cpp
+  src/game_core/Type_0011BF98.cpp
   src/platform/ps2_asset_root.cpp src/platform/ps2_profile_store.cpp)
 target_include_directories(game_core PUBLIC src)
 include(reverse/classes/template_sources.cmake)
@@ -51,11 +54,15 @@ set_target_properties(game_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # TASK-0018 / D008: platform-independent port runtime. Produces render::Frame and owns the
 # original-asset texture catalog. Links game_core only; never godot-cpp or a backend.
 add_library(port_runtime STATIC src/port/render/frame.cpp src/port/assets/catalog.cpp
+  src/port/vehicle/textures.cpp
+  src/port/vehicle/catalog.cpp
+  src/port/assets/vehicle_geometry.cpp src/port/vehicle/model.cpp
   src/port/runtime/frame_builder.cpp src/port/runtime/frontend_runtime.cpp
   src/port/runtime/event_tree_view.cpp)
 target_include_directories(port_runtime PUBLIC src)
 target_compile_features(port_runtime PUBLIC cxx_std_17)
-target_link_libraries(port_runtime PUBLIC game_core)
+find_package(Threads REQUIRED)
+target_link_libraries(port_runtime PUBLIC game_core Threads::Threads)
 set_target_properties(port_runtime PROPERTIES POSITION_INDEPENDENT_CODE ON)
 if(MSVC)
   target_compile_options(port_runtime PRIVATE /W4)
@@ -102,6 +109,26 @@ else()
 endif()
 
 if(BUILD_TESTING)
+  add_executable(vehicle_catalog_tests src/tests/vehicle_catalog_tests.cpp)
+  target_link_libraries(vehicle_catalog_tests PRIVATE port_runtime)
+  add_test(NAME vehicle_catalog COMMAND vehicle_catalog_tests WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  set_tests_properties(vehicle_catalog PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(vehicle_base_material_tests src/tests/vehicle_base_material_tests.cpp)
+  target_link_libraries(vehicle_base_material_tests PRIVATE game_core)
+  add_test(NAME vehicle_base_material COMMAND vehicle_base_material_tests)
+  add_executable(vehicle_model_tests src/tests/vehicle_model_tests.cpp)
+  target_link_libraries(vehicle_model_tests PRIVATE port_runtime)
+  add_test(NAME vehicle_model COMMAND vehicle_model_tests WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  set_tests_properties(vehicle_model PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(vehicle_geometry_tests src/tests/vehicle_geometry_tests.cpp)
+  target_link_libraries(vehicle_geometry_tests PRIVATE port_runtime)
+  add_test(NAME vehicle_geometry COMMAND vehicle_geometry_tests WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  add_executable(car_render_binding_tests src/tests/car_render_binding_tests.cpp)
+  target_link_libraries(car_render_binding_tests PRIVATE game_core)
+  add_test(NAME car_render_bindings COMMAND car_render_binding_tests WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  add_executable(vehicle_texture_tests src/tests/vehicle_texture_tests.cpp)
+  target_link_libraries(vehicle_texture_tests PRIVATE port_runtime)
+  add_test(NAME vehicle_textures COMMAND vehicle_texture_tests WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
   add_executable(viewer_session_tests src/tests/viewer_session_tests.cpp)
   target_link_libraries(viewer_session_tests PRIVATE port_debug_viewers)
   add_test(NAME viewer_session COMMAND viewer_session_tests)
@@ -221,6 +248,16 @@ if(BUILD_TESTING)
 endif()
 
 if(PORT_BUILD_GODOT)
+  # Ship shader text in the binary; exports do not depend on source-tree paths.
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/car_base.gdshader"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/car_modulate.glsl"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/car_wireframe.gdshader")
+  file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/car_base.gdshader" HP2_CAR_BASE)
+  file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/car_modulate.glsl" HP2_CAR_MODULATE)
+  file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/car_wireframe.gdshader" HP2_CAR_WIREFRAME)
+  configure_file(src/platform/shaders/embedded_shaders.hpp.in
+    "${CMAKE_CURRENT_BINARY_DIR}/generated/hp2_embedded_shaders.hpp" @ONLY)
   if(NOT EXISTS "${PORT_GODOT_CPP_DIR}/CMakeLists.txt")
     message(FATAL_ERROR "Missing godot-cpp. Follow docs/DEVELOPMENT.md to fetch the pinned checkout.")
   endif()
@@ -229,11 +266,13 @@ if(PORT_BUILD_GODOT)
   add_library(ps2_port SHARED src/platform/godot_bridge/port_core.cpp src/platform/godot_bridge/register_types.cpp
     src/platform/godot_bridge/main_loop_observer.cpp src/platform/godot_bridge/frontend_menu_observer.cpp
     src/platform/godot_bridge/ps2_texture_loader.cpp src/platform/godot_bridge/ps2_frontend_layout.cpp
+    src/platform/godot_bridge/ps2_car_viewer.cpp src/platform/godot_bridge/ps2_vehicle_renderer.cpp
     src/platform/godot_bridge/ps2_render_host.cpp src/platform/not_implemented_dialog.cpp)
   target_sources(ps2_port PRIVATE src/platform/godot_bridge/ps2_movie_player.cpp)
+  target_include_directories(ps2_port PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
   target_compile_definitions(ps2_port PRIVATE HP2_DEBUG_BUILD=$<IF:$<CONFIG:Debug>,1,0>
     HP2_ENABLE_DEBUG_CONSOLE=$<BOOL:${HP2_ENABLE_DEBUG_CONSOLE}>)
-  if(HP2_ENABLE_DEBUG_CONSOLE)
+  if(TARGET port_debug_console)
     target_link_libraries(ps2_port PRIVATE port_debug_console)
   endif()
   # Godot-cpp 4.4 propagates -fno-exceptions. Port adapters catch recovered NotImplemented
@@ -263,6 +302,21 @@ if(PORT_BUILD_GODOT)
   set(PORT_GODOT_EXECUTABLE "${CMAKE_CURRENT_SOURCE_DIR}/local/tools/godot-4.4.1/Godot_v4.4.1-stable_win64_console.exe"
       CACHE FILEPATH "Godot 4.4.1 executable for asset-free host smoke tests")
   if(BUILD_TESTING AND EXISTS "${PORT_GODOT_EXECUTABLE}")
+    if(PORT_ENABLE_GPU_TESTS AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+      add_test(NAME car_material_gpu COMMAND "${PORT_GODOT_EXECUTABLE}"
+        --path "${CMAKE_CURRENT_SOURCE_DIR}/godot" res://scenes/debug/car_material_gpu_smoke.tscn --quit-after 300 -- --material-gpu-smoke)
+      set_tests_properties(car_material_gpu PROPERTIES TIMEOUT 60
+        PASS_REGULAR_EXPRESSION "CAR_MATERIAL_GPU_OK" FAIL_REGULAR_EXPRESSION "SCRIPT ERROR;ERROR:")
+    endif()
+    add_test(NAME car_surface_batches COMMAND "${PORT_GODOT_EXECUTABLE}" --headless
+      --path "${CMAKE_CURRENT_SOURCE_DIR}/godot" res://scenes/debug/car_surface_batch_smoke.tscn)
+    set_tests_properties(car_surface_batches PROPERTIES TIMEOUT 180 SKIP_RETURN_CODE 77
+      PASS_REGULAR_EXPRESSION "CAR_SURFACE_BATCH_OK" FAIL_REGULAR_EXPRESSION "SCRIPT ERROR;ERROR:")
+    add_test(NAME car_render_host COMMAND "${PORT_GODOT_EXECUTABLE}" --headless
+      --path "${CMAKE_CURRENT_SOURCE_DIR}/godot" res://scenes/debug/viewer_frontend_fixture.tscn -- --car-render-smoke
+      --expect-debug=$<IF:$<CONFIG:Debug>,true,false>)
+    set_tests_properties(car_render_host PROPERTIES TIMEOUT 60 SKIP_RETURN_CODE 77
+      PASS_REGULAR_EXPRESSION "CAR_RENDER_SMOKE_OK" FAIL_REGULAR_EXPRESSION "SCRIPT ERROR;ERROR:")
     add_test(NAME debug_console_host COMMAND "${PORT_GODOT_EXECUTABLE}" --headless
       --path "${CMAKE_CURRENT_SOURCE_DIR}/godot" res://scenes/debug_console_smoke.tscn --
       --expect-debug=$<IF:$<CONFIG:Debug>,true,false>

@@ -46,6 +46,9 @@ std::shared_ptr<const port::render::Bitmap> LiveResources::texture(port::render:
 
 void Ps2RenderHost::_bind_methods() {
     godot::ClassDB::bind_method(godot::D_METHOD("console_visible"), &Ps2RenderHost::console_visible);
+    godot::ClassDB::bind_method(godot::D_METHOD("viewer_ui_snapshot","snapshot"),&Ps2RenderHost::viewer_ui_snapshot);
+    godot::ClassDB::bind_method(godot::D_METHOD("viewer_ui_next"),&Ps2RenderHost::viewer_ui_next);
+    godot::ClassDB::bind_method(godot::D_METHOD("viewer_ui_capture"),&Ps2RenderHost::viewer_ui_capture);
     godot::ClassDB::bind_method(godot::D_METHOD("viewer_request", "action", "source"), &Ps2RenderHost::viewer_request);
     godot::ClassDB::bind_method(godot::D_METHOD("viewer_next"), &Ps2RenderHost::viewer_next);
     godot::ClassDB::bind_method(godot::D_METHOD("viewer_activate", "kind"), &Ps2RenderHost::viewer_activate);
@@ -98,7 +101,7 @@ void Ps2RenderHost::set_output_scale(double scale) {
 }
 
 void Ps2RenderHost::release() {
-#if HP2_ENABLE_DEBUG_CONSOLE
+#if HP2_DEBUG_BUILD
     console_.reset();
 #endif
     auto* server = godot::RenderingServer::get_singleton();
@@ -229,8 +232,9 @@ godot::Dictionary Ps2RenderHost::draw(godot::Object* runtime, godot::Object* int
 
 void Ps2RenderHost::console_init(const godot::String& settings, bool info) {
     const auto failure=catch_all([&] {
-#if HP2_ENABLE_DEBUG_CONSOLE
+#if HP2_DEBUG_BUILD
         console_=std::make_unique<extensions::DebugConsole>(settings.utf8().get_data());
+        console_->enable_console(HP2_ENABLE_DEBUG_CONSOLE!=0);
         extensions::register_viewer_commands(console_->commands(),viewers_);
         console_->set_info(info);
         console_->clipboard([](void* user)->const char* {
@@ -251,7 +255,7 @@ void Ps2RenderHost::console_init(const godot::String& settings, bool info) {
 }
 void Ps2RenderHost::console_log(const godot::String& text,bool error) {
     const auto failure=catch_all([&] {
-#if HP2_ENABLE_DEBUG_CONSOLE
+#if HP2_DEBUG_BUILD
         if(console_)console_->log(text.utf8().get_data(),error);
 #else
         (void)text;(void)error;
@@ -261,7 +265,7 @@ void Ps2RenderHost::console_log(const godot::String& text,bool error) {
 }
 void Ps2RenderHost::console_execute(const godot::String& command) {
     const auto failure=catch_all([&] {
-#if HP2_ENABLE_DEBUG_CONSOLE
+#if HP2_DEBUG_BUILD && HP2_ENABLE_DEBUG_CONSOLE
         if(console_)console_->execute(command.utf8().get_data());
 #else
         (void)command;
@@ -271,7 +275,7 @@ void Ps2RenderHost::console_execute(const godot::String& command) {
 }
 void Ps2RenderHost::console_focus_lost() {
     const auto failure=catch_all([&] {
-#if HP2_ENABLE_DEBUG_CONSOLE
+#if HP2_DEBUG_BUILD
         if(console_)console_->input({extensions::Input::Kind::FocusLost});
 #endif
     });
@@ -280,7 +284,7 @@ void Ps2RenderHost::console_focus_lost() {
 bool Ps2RenderHost::console_input(const godot::Ref<godot::InputEvent>& event) {
     bool consumed=false;
     const auto failure=catch_all([&] {
-#if HP2_ENABLE_DEBUG_CONSOLE
+#if HP2_DEBUG_BUILD
         if(!console_||event.is_null())return;
         using extensions::Input;using extensions::Key;
         godot::Ref<godot::InputEventKey> key=event;
@@ -324,7 +328,7 @@ bool Ps2RenderHost::console_input(const godot::Ref<godot::InputEvent>& event) {
                         if(b==godot::MOUSE_BUTTON_WHEEL_RIGHT)e.x=button->get_factor();
                     }
                 }
-                console_->input(e);
+                consumed=console_->input(e)||consumed;
             } else consumed=console_->visible();
         }
 #else
@@ -335,9 +339,9 @@ bool Ps2RenderHost::console_input(const godot::Ref<godot::InputEvent>& event) {
     return consumed;
 }
 godot::Dictionary Ps2RenderHost::console_frame(double width,double height,double delta,const godot::Dictionary& status) {
-    godot::Dictionary result;result["available"]=console_available();result["visible"]=false;result["batches"]=0;
+    godot::Dictionary result;result["available"]=console_available();result["visible"]=false;result["batches"]=0;result["fps_visible"]=false;
     const auto failure=catch_all([&] {
-#if HP2_ENABLE_DEBUG_CONSOLE
+#if HP2_DEBUG_BUILD
         if(!console_)return;
         extensions::Snapshot state;
         state.screen=godot::String(status.get("screen",godot::String("unknown"))).utf8().get_data();
@@ -345,7 +349,12 @@ godot::Dictionary Ps2RenderHost::console_frame(double width,double height,double
         state.quads=status.get("quads",0);state.glyphs=status.get("glyphs",0);
         state.textures=status.get("textures",0);state.missing=status.get("missing",0);state.clipped=status.get("clipped_out",0);
         console_->snapshot(std::move(state));
-        const auto batches=console_->frame(width,height,delta);
+        const auto batches=console_->frame(width,height,delta,[&] {
+            extensions::ViewerUi::fps(float(width),double(status.get("fps",0.0)),double(status.get("ms",0.0)));
+            viewer_ui_.draw(float(width),float(height));
+        });
+        result["fps_visible"]=true;result["fps_right"]=width-8;
+        result["capture_mouse"]=console_->capture_mouse();result["capture_keyboard"]=console_->capture_keyboard();
         result["visible"]=console_->visible();result["info"]=console_->info();result["batches"]=static_cast<int>(batches.size());
         result["logs"]=static_cast<int>(console_->log_count());
         auto* server=godot::RenderingServer::get_singleton();
@@ -375,8 +384,56 @@ godot::Dictionary Ps2RenderHost::console_frame(double width,double height,double
 
 
 bool Ps2RenderHost::console_visible() const {
-#if HP2_ENABLE_DEBUG_CONSOLE
+#if HP2_DEBUG_BUILD
     return console_ && console_->visible();
+#else
+    return false;
+#endif
+}
+void Ps2RenderHost::viewer_ui_snapshot(const godot::Dictionary& snapshot) {
+    const auto failure=catch_all([&] {
+#if HP2_DEBUG_BUILD
+        extensions::ViewerUiState state;
+        const auto text=[&](const char* key){return std::string(godot::String(snapshot.get(key,"")).utf8().get_data());};
+        state.kind=text("kind");if(state.kind.empty())state.kind="frontend";
+        state.source=text("source");state.status=text("status");state.diagnostic=text("diagnostic");
+        state.rendering=text("rendering");state.camera=text("camera");
+        state.wheel_speed=snapshot.get("wheel_speed",80.0);
+        state.car_id=snapshot.get("car_id",-1);state.skin_id=snapshot.get("skin_id",-1);state.lod=snapshot.get("lod",-1);
+        state.wireframe=snapshot.get("wireframe",false);state.bounds=snapshot.get("bounds",false);state.inspection=snapshot.get("inspection",false);state.show_lods=snapshot.get("show_lods",false);state.preview=snapshot.get("preview",false);state.wheel_blur=snapshot.get("wheel_blur",false);
+        const godot::Array cars=snapshot.get("cars",godot::Array());
+        for(int i=0;i<cars.size();++i){
+            const godot::Dictionary car=cars[i];extensions::UiCar c;
+            c.id=car.get("id",-1);c.code=godot::String(car.get("code","")).utf8().get_data();
+            c.path=godot::String(car.get("path","")).utf8().get_data();c.error=godot::String(car.get("error","")).utf8().get_data();
+            c.available=car.get("available",false);const godot::Array skins=car.get("skins",godot::Array());
+            for(int j=0;j<skins.size();++j){const godot::Dictionary skin=skins[j];extensions::UiSkin color;color.id=skin.get("id",-1);color.name=godot::String(skin.get("name","")).utf8().get_data();color.preview_ready=skin.has("preview");color.preview_error=godot::String(skin.get("preview_error","")).utf8().get_data();if(color.preview_ready){const godot::Color rgb=skin["preview"];color.preview={{rgb.r,rgb.g,rgb.b}};}c.skins.push_back(std::move(color));}
+            state.cars.push_back(std::move(c));
+        }
+        const godot::Array parts=snapshot.get("parts",godot::Array());
+        for(int i=0;i<parts.size();++i){const godot::Dictionary part=parts[i];state.parts.push_back({godot::String(part.get("name","")).utf8().get_data(),bool(part.get("enabled",true))});}
+        viewer_ui_.update(std::move(state));if(console_)console_->enable_viewer_input(viewer_ui_.state().kind!="frontend");
+#else
+        (void)snapshot;
+#endif
+    });
+    if(!failure.empty())last_error_=godot::String::utf8(failure.c_str());
+}
+godot::Dictionary Ps2RenderHost::viewer_ui_next() {
+    godot::Dictionary result;
+    const auto failure=catch_all([&] {
+#if HP2_DEBUG_BUILD
+        const auto action=viewer_ui_.next();if(!action)return;
+        result["action"]=godot::String::utf8(action->action.c_str());result["source"]=godot::String::utf8(action->source.c_str());
+        result["name"]=godot::String::utf8(action->name.c_str());result["car_id"]=action->car_id;result["skin_id"]=action->skin_id;
+        result["value"]=action->value;result["lod"]=action->lod;result["enabled"]=action->enabled;
+#endif
+    });
+    result["ok"]=failure.empty();if(!failure.empty())result["error"]=godot::String::utf8(failure.c_str());return result;
+}
+bool Ps2RenderHost::viewer_ui_capture()const {
+#if HP2_DEBUG_BUILD
+    return console_&&(console_->capture_mouse()||console_->capture_keyboard());
 #else
     return false;
 #endif

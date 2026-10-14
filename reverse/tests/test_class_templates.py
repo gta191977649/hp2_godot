@@ -13,6 +13,14 @@ SPEC.loader.exec_module(MODULE)
 
 
 class ClassTemplateTests(unittest.TestCase):
+    def test_whole_entry_is_not_promoted_by_typed_slice_overload(self):
+        cls = {"name": "Fixture", "source": "fixture.cpp", "entry_signatures": {
+            "0x00100000": "void Fixture::Sub_00100000()"}}
+        whole = {"path": "fixture.cpp", "name": "Fixture::Sub_00100000",
+                 "signature": "void Fixture::Sub_00100000()", "stub": True}
+        slice_ = dict(whole, signature="int Fixture::Sub_00100000(int x)", stub=False)
+        self.assertEqual(MODULE.entry_definitions(cls, "0x00100000", "Sub_00100000", [slice_, whole]), [whole])
+
     def test_unknown_paths_stay_at_root_and_confirmed_directories_have_evidence(self):
         classes, _, _, policy = MODULE.model()
         decisions = json.loads((ROOT / "reverse/classes/source-path-decisions.json").read_text())

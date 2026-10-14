@@ -284,14 +284,16 @@ int unswizzle_palette_index(int index) {
     return block + pos;
 }
 
-std::vector<std::array<std::uint8_t, 4>> decode_palette(const std::uint8_t* palette, std::size_t palette_size, bool swizzle) {
+std::vector<std::array<std::uint8_t, 4>> decode_palette(const std::uint8_t* palette, std::size_t palette_size,
+                                                       bool swizzle, bool preserve_gs_alpha) {
     std::vector<std::array<std::uint8_t, 4>> colors;
     std::size_t count = palette_size / 4;
     colors.reserve(count);
     for (std::size_t index = 0; index < count; ++index) {
         int source_index = swizzle ? unswizzle_palette_index(static_cast<int>(index)) : static_cast<int>(index);
         std::size_t off = static_cast<std::size_t>(source_index) * 4;
-        colors.push_back({palette[off], palette[off + 1], palette[off + 2], decode_ps2_alpha(palette[off + 3])});
+        colors.push_back({palette[off], palette[off + 1], palette[off + 2],
+                          preserve_gs_alpha ? palette[off + 3] : decode_ps2_alpha(palette[off + 3])});
     }
     return colors;
 }
@@ -308,14 +310,15 @@ std::vector<std::uint32_t> u32_words(const std::uint8_t* data, std::size_t size)
 std::optional<std::vector<std::uint8_t>> decode_modelulator_indexed_texture(
     int width, int height, const std::uint8_t* image, std::size_t image_size,
     const std::uint8_t* palette, std::size_t palette_size, std::uint8_t bit_depth,
-    std::uint8_t shift_width, std::uint8_t shift_height, std::uint8_t pixel_storage_mode, bool is_swizzled) {
+    std::uint8_t shift_width, std::uint8_t shift_height, std::uint8_t pixel_storage_mode,
+    bool is_swizzled, bool preserve_gs_alpha) {
 
     int depth = indexed_bit_depth(bit_depth, pixel_storage_mode, palette_size);
     if (depth != 4 && depth != 8) return std::nullopt;
 
     std::size_t color_count = palette_size / 4;
     if (color_count == 0) return std::nullopt;
-    auto colors = decode_palette(palette, palette_size, psm_type_index(pixel_storage_mode) == 3);
+    auto colors = decode_palette(palette, palette_size, psm_type_index(pixel_storage_mode) == 3, preserve_gs_alpha);
 
     int buffer_width = 1 << shift_width;
     int buffer_height = 1 << shift_height;
@@ -417,9 +420,18 @@ TpkTextureHeader parse_header(const std::uint8_t* entry) {
     header.shift_height = entry[0x49];
     header.pixel_storage_mode = entry[0x4A];
     header.clut_pixel_storage_mode = entry[0x4B];
+    header.Field_0x4c = entry[0x4C];
+    header.Field_0x4d = entry[0x4D]; // 0010DED0 lb; E-0033-T06.
     header.texture_fx = entry[0x4E];
     header.is_any_semitransparency = entry[0x4F];
+    header.Field_0x50 = entry[0x50];
     header.is_swizzled = entry[0x55] != 0;
+    header.Field_0x74 = entry[0x74]; // 0010DEBC signed-byte nonzero test; E-0033-T05.
+    header.Field_0x6e = entry[0x6E];
+    header.Field_0x6f = entry[0x6F];
+    header.Field_0x70 = entry[0x70];
+    header.Field_0x71 = entry[0x71];
+    header.Field_0x72 = static_cast<std::int16_t>(read_u16(entry, 0x72));
     header.alpha_bits = entry[0x76];
     header.alpha_fix = entry[0x77];
     return header;
@@ -462,7 +474,8 @@ const TpkTextureHeader* Hp2TpkArchive::find(const std::string& name) const {
     return nullptr;
 }
 
-std::optional<DecodedTexture> Hp2TpkArchive::decode(const TpkTextureHeader& header, bool flip_vertical) const {
+std::optional<DecodedTexture> Hp2TpkArchive::decode(const TpkTextureHeader& header, bool flip_vertical,
+                                                 bool preserve_gs_alpha) const {
     if (header.name.empty() || header.width == 0 || header.height == 0) return std::nullopt;
     if (header.image_placement < 0 || header.palette_placement < 0 || header.image_size < 0 || header.palette_size < 0)
         return std::nullopt;
@@ -476,7 +489,7 @@ std::optional<DecodedTexture> Hp2TpkArchive::decode(const TpkTextureHeader& head
     auto rgba = decode_modelulator_indexed_texture(
         header.width, header.height, buffer_.data() + image_start, static_cast<std::size_t>(header.image_size),
         buffer_.data() + palette_start, static_cast<std::size_t>(header.palette_size), header.bit_depth,
-        header.shift_width, header.shift_height, header.pixel_storage_mode, header.is_swizzled);
+        header.shift_width, header.shift_height, header.pixel_storage_mode, header.is_swizzled, preserve_gs_alpha);
     if (!rgba) return std::nullopt;
 
     DecodedTexture texture;
@@ -487,10 +500,18 @@ std::optional<DecodedTexture> Hp2TpkArchive::decode(const TpkTextureHeader& head
     return texture;
 }
 
-std::optional<DecodedTexture> Hp2TpkArchive::decode_by_name(const std::string& name, bool flip_vertical) const {
+std::optional<DecodedTexture> Hp2TpkArchive::decode_linear32(const TpkTextureHeader& h) const {
+    if(h.bit_depth!=32||h.pixel_storage_mode!=0||h.is_swizzled||h.palette_size!=0||!h.width||!h.height||h.image_placement<0||h.image_size<0)return {};
+    const auto count=std::size_t(h.width)*h.height*4;
+    const auto start=data_base_+std::size_t(h.image_placement);
+    if(count>std::size_t(h.image_size)||start>buffer_.size()||count>buffer_.size()-start)return {};
+    return DecodedTexture{h.width,h.height,std::vector<std::uint8_t>(buffer_.begin()+start,buffer_.begin()+start+count)};
+}
+std::optional<DecodedTexture> Hp2TpkArchive::decode_by_name(const std::string& name, bool flip_vertical,
+                                                         bool preserve_gs_alpha) const {
     const TpkTextureHeader* header = find(name);
     if (!header) return std::nullopt;
-    return decode(*header, flip_vertical);
+    return decode(*header, flip_vertical, preserve_gs_alpha);
 }
 
 } // namespace hp2::assets

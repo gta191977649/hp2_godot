@@ -6,6 +6,10 @@ func _ready() -> void:
 func _wait_frames(count: int = 4) -> void:
 	for _step in count:
 		await get_tree().process_frame
+	var deadline := Time.get_ticks_msec() + 10000
+	while is_instance_valid(DebugTools.scene_owner) and DebugTools.scene_owner.get("pending_load") == true:
+		_check(Time.get_ticks_msec() < deadline, "Async viewer timeout")
+		await get_tree().create_timer(0.001).timeout
 
 func _check(value: bool, message: String) -> void:
 	if not value:
@@ -34,6 +38,8 @@ func _run() -> void:
 		get_tree().quit(0)
 		return
 	# Default application path remains the real frontend. Only this harness substitutes it.
+	get_window().size = Vector2i(960, 600)
+	await _wait_frames()
 	_check(DebugTools.frontend_scene == "res://scenes/frontend_native.tscn", "Frontend return target")
 	DebugTools.frontend_scene = "res://scenes/debug/viewer_frontend_fixture.tscn"
 	var original_host := host
@@ -48,6 +54,36 @@ func _run() -> void:
 		_check(is_instance_valid(viewer) and viewer.get("viewer_kind") == kind, "Scene transition to " + kind)
 		_check(host == DebugTools.host, "Console host identity must persist")
 		_check(viewer.fixture.visible and viewer.fixture_meshes > 0, "Synthetic fixture")
+		# A first mouse event over the native panel must not reach the camera.
+		var hover := InputEventMouseMotion.new()
+		hover.position = Vector2(40, 55)
+		_check(DebugTools.handle_input(hover), "ImGui first hover capture")
+		var panel_camera: Vector3 = viewer.camera.position
+		var panel_click := InputEventMouseButton.new()
+		panel_click.position = hover.position
+		panel_click.button_index = MOUSE_BUTTON_LEFT
+		panel_click.pressed = true
+		_check(DebugTools.handle_input(panel_click), "ImGui first click capture")
+		viewer._unhandled_input(panel_click)
+		panel_click.pressed = false
+		DebugTools.handle_input(panel_click)
+		viewer._unhandled_input(panel_click)
+		var wheel := InputEventMouseButton.new()
+		wheel.position = hover.position
+		wheel.button_index = MOUSE_BUTTON_WHEEL_DOWN
+		wheel.pressed = true
+		_check(DebugTools.handle_input(wheel), "ImGui wheel capture")
+		viewer._unhandled_input(wheel)
+		_check(viewer.camera.position.is_equal_approx(panel_camera), "Panel wheel isolates camera")
+		hover.position = get_viewport().get_visible_rect().size - Vector2(20, 20)
+		DebugTools.handle_input(hover)
+		panel_click.position = hover.position
+		panel_click.pressed = true
+		DebugTools.handle_input(panel_click)
+		await _wait_frames(2)
+		panel_click.pressed = false
+		DebugTools.handle_input(panel_click)
+		await _wait_frames(2)
 		var initial: Vector3 = viewer.camera.position
 		# Feed camera handlers through their normal input path.
 		var button := InputEventMouseButton.new()
@@ -70,8 +106,8 @@ func _run() -> void:
 		DebugTools.request("load", "synthetic path/request.bin")
 		await _wait_frames()
 		var state: Dictionary = host.viewer_state()
-		_check(state.status == "Not implemented" and state.source == "synthetic path/request.bin", "Unavailable loader state")
-		_check(viewer.fixture.visible, "Requested asset is not substituted by a loaded fixture")
+		_check(state.status == ("Failed" if kind == "car" else "Not implemented") and state.source == "synthetic path/request.bin", "Unavailable resource state")
+		_check(viewer.fixture.visible == (kind == "track"), "Failed car load clears content; track keeps labeled fixture")
 		DebugTools.request("clear")
 		await _wait_frames()
 		_check(not viewer.fixture.visible and str(host.viewer_state().source).is_empty(), "Clear")
@@ -98,7 +134,35 @@ func _run() -> void:
 			await _wait_frames()
 			_check(not DebugTools.is_console_open(), "Console close")
 			_check(int(DebugTools.last_frame.logs) > 0, "Retained logs")
-	_check(DebugTools.fps_label.visible, "Debug FPS")
+		if kind == "car":
+			viewer.viewer_ui_action({"action": "preview", "enabled": true})
+			var yaw_before: float = viewer.orbit_yaw
+			await _wait_frames()
+			_check(viewer.preview_mode and viewer.orbit_yaw != yaw_before, "Preview continuously orbits")
+			_check(not viewer.grid_node.visible and not viewer.floor_node.visible, "Preview hides debug stage")
+			var pitch_before: float = viewer.orbit_pitch
+			viewer._unhandled_input(button)
+			viewer._unhandled_input(motion)
+			_check(viewer.orbit_pitch != pitch_before, "Preview mouse adjusts view")
+			yaw_before = viewer.orbit_yaw
+			await _wait_frames()
+			_check(viewer.orbit_yaw != yaw_before, "Dragging does not stop preview orbit")
+			viewer.release_camera()
+			if host.console_available():
+				DebugTools.handle_input(_key(KEY_F8))
+				DebugTools.handle_input(_key(KEY_F8, false))
+				yaw_before = viewer.orbit_yaw
+				await _wait_frames()
+				_check(viewer.orbit_yaw != yaw_before, "Console capture does not stop preview orbit")
+				DebugTools.handle_input(_key(KEY_F8))
+				DebugTools.handle_input(_key(KEY_F8, false))
+			viewer.viewer_ui_action({"action": "preview", "enabled": false})
+			_check(viewer.grid_node.visible, "Normal debug stage restored")
+	get_window().size = Vector2i(1100, 700)
+	await _wait_frames()
+	_check(bool(DebugTools.last_frame.get("fps_visible", false)), "Shared ImGui Debug FPS")
+	_check(float(DebugTools.last_frame.get("fps_right", 0)) == get_viewport().get_visible_rect().size.x - 8, "ImGui FPS right alignment")
+	_check(not _has_controls(DebugTools.scene_owner), "Viewer uses native ImGui controls")
 	DebugTools.request("close")
 	await _wait_frames(6)
 	_check(host.viewer_state().kind == "frontend" and DebugTools.scene_owner.name == "ViewerFrontendFixture", "Return to fresh frontend")
@@ -113,3 +177,11 @@ func _run() -> void:
 	_check(host.viewer_state().source == "queued-after-switch.bin", "Load queued immediately after scene switch")
 	print("VIEWER_SMOKE_OK: scenes, queue, cameras, load stub, input isolation, persistent overlay")
 	get_tree().quit(0)
+
+func _has_controls(node: Node) -> bool:
+	if node is Control:
+		return true
+	for child in node.get_children():
+		if _has_controls(child):
+			return true
+	return false

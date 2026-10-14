@@ -2,7 +2,6 @@ extends CanvasLayer
 # Port-side session overlay. Survives scene changes; never owns recovered game state.
 signal console_toggled(open: bool)
 var host: Object
-var fps_label: Label
 var info_enabled := false
 var frame_ms := 0.0
 var statistics: Dictionary = {"screen": "frontend"}
@@ -24,16 +23,17 @@ func _ready() -> void:
 	host.attach(surface.get_canvas_item())
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("user://debug"))
 	info_enabled = "--info" in OS.get_cmdline_user_args()
-	host.console_init(ProjectSettings.globalize_path("user://debug/imgui.ini"), info_enabled)
-	fps_label = Label.new()
-	fps_label.add_theme_color_override("font_color", Color(0.6, 0.9, 1))
-	fps_label.add_theme_font_size_override("font_size", 13)
-	fps_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	fps_label.visible = host.is_debug_build()
-	fps_label.z_index = 101
-	add_child(fps_label)
+	var test_session := false
+	for argument in OS.get_cmdline_user_args():
+		test_session = test_session or argument in ["--viewer-smoke", "--car-render-smoke", "--material-gpu-smoke"] or argument.begins_with("--expect-debug=")
+	# Headless test viewport constraints must not overwrite the user's viewer layout/history.
+	var settings := "user://debug/smoke-imgui.ini" if test_session else "user://debug/imgui.ini"
+	host.console_init(ProjectSettings.globalize_path(settings), info_enabled)
 	if "--viewer-smoke" in OS.get_cmdline_user_args():
 		var runner := load("res://scripts/debug/viewer_smoke.gd").new() as Node
+		add_child(runner)
+	if "--car-render-smoke" in OS.get_cmdline_user_args():
+		var runner := load("res://scripts/debug/car_render_smoke.gd").new() as Node
 		add_child(runner)
 
 func register_scene(owner: Node, kind: String) -> void:
@@ -93,23 +93,42 @@ func _process(delta: float) -> void:
 		return
 	frame_ms = delta * 1000 if frame_ms == 0 else lerpf(frame_ms, delta * 1000, 0.1)
 	var size := get_viewport().get_visible_rect().size
-	fps_label.text = "%d FPS / %.2f ms" % [Engine.get_frames_per_second(), frame_ms]
-	fps_label.position = Vector2(maxf(8, size.x - fps_label.get_minimum_size().x - 8), 4)
 	title_cooldown -= delta
 	if title_cooldown <= 0 and DisplayServer.get_name() != "headless":
 		title_cooldown = 0.25
-		get_window().title = "HP2 PS2 Native Port - " + fps_label.text if host.is_debug_build() else "HP2 PS2 Native Port"
+		get_window().title = "HP2 PS2 Native Port - %d FPS / %.2f ms" % [Engine.get_frames_per_second(), frame_ms] if host.is_debug_build() else "HP2 PS2 Native Port"
 	statistics["fps"] = Engine.get_frames_per_second()
 	statistics["ms"] = frame_ms
+	var snapshot: Dictionary = {"kind": "frontend"}
+	if is_instance_valid(scene_owner) and scene_owner.has_method("viewer_ui_snapshot"):
+		snapshot = scene_owner.viewer_ui_snapshot()
+	host.viewer_ui_snapshot(snapshot)
+	# This shared ImGui frame owns FPS, console and viewer controls in every Debug build.
 	last_frame = host.console_frame(size.x, size.y, delta, statistics)
 	info_enabled = bool(last_frame.get("info", info_enabled))
 	if not last_frame.get("ok", false):
 		push_error(str(last_frame.get("error", "Debug overlay failed")))
 	if not operation_pending:
-		var pending: Dictionary = host.viewer_next()
-		if pending.has("action"):
+		var ui_action: Dictionary = host.viewer_ui_next()
+		if ui_action.has("action"):
 			operation_pending = true
-			_dispatch_request.call_deferred(pending)
+			_dispatch_ui_action.call_deferred(ui_action)
+		else:
+			var pending: Dictionary = host.viewer_next()
+			if pending.has("action"):
+				operation_pending = true
+				_dispatch_request.call_deferred(pending)
+
+func input_captured() -> bool:
+	return is_console_open() or (host != null and host.viewer_ui_capture())
+
+func _dispatch_ui_action(action: Dictionary) -> void:
+	operation_pending = false
+	var name := str(action.get("action", ""))
+	if name in ["car", "track", "close", "load", "clear", "fixture", "reset"]:
+		request(name, str(action.get("source", "")))
+	elif is_instance_valid(scene_owner) and scene_owner.has_method("viewer_ui_action"):
+		scene_owner.viewer_ui_action(action)
 
 func _dispatch_request(pending: Dictionary) -> void:
 	operation_pending = false

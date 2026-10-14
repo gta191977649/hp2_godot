@@ -11,14 +11,16 @@ The inventory covers **190 class spellings**: 152 valid identifiers from TASK-00
 The other **23 allocation labels** contain spaces/parentheses and remain catalogue-only,
 as requested. They are not sanitized into invented C++ names.
 
-There are **609 member attributions over 370 distinct addresses** in this coverage:
+There are **611 member attributions over 372 distinct addresses** in this coverage:
 596 attributions from valid allocator-labelled classes, five confirmed original-method
-mappings, and six additional title/leaf entries plus two existing police helpers.
+mappings, and six additional title/leaf entries plus two existing police helpers. TASK-0033
+adds two explicitly attributed CarRenderInfo entries, with typed static-rendering slices.
 Shared vtable targets appear in multiple classes without asserting inheritance or exclusive
-ownership. Of the 609 attributions, **603 are throwing templates** and six preserve existing
+ownership. Of the 611 attributions, **605 are throwing whole-entry templates** and six preserve existing
 native projections (two police local bodies and four title slices). Twelve templates have
-separate existing partial projections which remain available to their current callers.
-**134 classes have no bound members** and therefore contain no speculative functions.
+separate existing partial projections which remain available to their current callers. Two
+additional CarRenderInfo whole entries retain their new bounded projections as overloads.
+**133 classes have no bound members** and therefore contain no speculative functions.
 
 This is narrower than all 702 allocator-label attributions: the 23 catalogue-only labels are
 excluded from C++ generation. The additional diagnostic classes are outside `classes.csv`'s
@@ -96,9 +98,11 @@ read-only in Ghidra. Replace the placeholder signature/body **in place**, preser
 and update evidence/tests. Run `--write` to refresh coverage. The generator stops including a
 changed body in the stub exception tests and does not promote its recovery status. Behavioural
 tests and status decisions must be documented separately. The generator recognizes current
-address-named out-of-line methods and the five explicitly bound original methods; new original
+address-named out-of-line methods and the five explicitly bound original methods. TASK-0033
+uses explicit whole-entry signatures in member policy to distinguish throwing entries from
+typed slice overloads. New original
 spellings or inline definitions require updating the evidence/tooling explicitly.
 
-Class templates introduce no Godot dependency or runtime integration. They are compiled into
-`game_core`; current runtime callers continue to use their preserved host projections.
+Class templates introduce no Godot dependency. They are compiled into `game_core`; the
+CarViewer runtime calls the explicitly bounded CarRenderInfo projections through a port adapter.
 Native tests validate compilation, coverage, preservation and exceptions, not PS2 equivalence.

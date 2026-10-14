@@ -20,7 +20,7 @@ Unimplemented recovered paths throw `hp2::NotImplemented` with their original EL
 **Early development: this is not yet a playable reconstruction of the full game.**
 
 - Partial frontend recovery includes startup/title flow, menu navigation, several options screens, localization, event-tree logic, media playback and profile/save handling using the player's original data.
-- Class scaffolding covers 190 class names and 609 member attributions, including 603 throwing templates. These counts describe structure and missing work, not completed game behavior.
+- Class scaffolding covers 190 class names and 611 member attributions, including 605 throwing whole-entry templates. Typed vehicle-rendering slices coexist with untranslated whole entries; these counts describe missing work, not completed game behavior.
 - Racing, vehicle physics, AI and other gameplay systems remain largely untranslated. Native builds and tests pass, but no behavior has been verified against original hardware or PCSX2.
 
 See the generated [progress tracker](docs/PROGRESS.md) for current recovery status, blockers and the next task.
@@ -55,10 +55,13 @@ console (when enabled); TAB completes commands and Up/Down recall history. Comma
 the game continues updating. TAB no longer toggles information; Page Up/Down and brackets
 no longer browse screens. `--info` enables only the detailed information panel.
 
-Debug also includes asset-free **CarViewer** and **TrackViewer** scaffolds. Open them
+Debug also includes **CarViewer** and **TrackViewer**. Open them
 with `carviewer` / `trackviewer` in the F8 console; `viewer.close` returns to a fresh
-frontend. `viewer.load "<ZZDATA-relative-path>"` records a request and reports
-`Loader not implemented`; no original car or track is loaded. See the
+frontend. In CarViewer, `viewer.load "CARS/911TURBO/GEOMETRY.BIN"` loads original
+geometry, shared textures and static parts, with recovered LOD selection. Its material
+uses the recovered VU base material slice; full original GS materials remain incomplete.
+Viewer controls/FPS are native ImGui, with all 64 original cars and 235 skin records.
+TrackViewer still reports `Loader not implemented`. Both start with asset-free fixtures. See the
 [viewer guide](docs/DEBUG_VIEWERS.md) for camera controls, commands and direct launch.
 
 ## 5. Docs & Help
@@ -69,3 +72,18 @@ frontend. `viewer.load "<ZZDATA-relative-path>"` records a request and reports
 - [Class templates](docs/CLASS_TEMPLATES.md) and [source paths](docs/CLASS_SOURCE_PATHS.md) — existing scaffolding and how to continue recovery.
 
 Before contributing, read [AGENTS.md](AGENTS.md), the binding [AGENT.md](AGENT.md) rules and the selected file under `tasks/`. Record evidence and limitations, preserve existing implementations, and keep proprietary inputs outside Git.
+
+CarViewer's **Preview Mode** continuously orbits while retaining mouse control; launch with
+`--preview` to enable it immediately. Vehicle shader sources are centralized in
+`src/platform/shaders/` and shared by the runtime backend. See [vehicle rendering](docs/VEHICLE_RENDERING.md)
+for recovered material/light scope and remaining reflection limitations.
+
+CarViewer's **Wheel Blur (high speed)** enables tire rotation and the original `WHEEL_BLUR`
+overlay. The **Wheel speed (rad/s)** slider underneath adjusts preview angular velocity
+from -150 to150: negative reverses, zero stops. Default80 rad/s is a port-side demonstration
+input, not an original vehicle physics constant. Original per-wheel strength is
+clamp(abs(velocity)*0.02,0,1), with alpha scale90; the blur layer has its own original
+non-spinning matrix. Changes update existing resources and continue while F8 is open.
+Disabling resets the static pose; selected speed and switch survive car changes.
+`--wheel-blur` enables it on direct launch. Original contact/damage gates and physics remain
+untranslated. Missing resources fail explicitly; no synthetic blur texture is generated.

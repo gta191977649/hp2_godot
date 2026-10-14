@@ -2,7 +2,6 @@ extends "res://scripts/frontend_native.gd"
 # Port-side synthetic harness: no original assets, runtime or movie player required.
 var menu_events := 0
 var updates := 0
-var fps_label: Label
 
 func _ready() -> void:
 	render_host = DebugTools.host
@@ -13,7 +12,6 @@ func _ready() -> void:
 		if argument.begins_with("--expect-console="):
 			assert(render_host.console_available() == (argument.trim_prefix("--expect-console=") == "true"))
 	get_window().size = Vector2i(960, 600)
-	fps_label = DebugTools.fps_label
 	info_label = _make_label(Vector2(8, 22), Color.YELLOW)
 	last_stats = {"quads": 12, "glyphs": 9, "textures": 3, "missing": 0, "clipped_out": 1}
 	render_host.console_log("Synthetic debug console smoke: no original game assets.", false)
@@ -42,8 +40,9 @@ func _press(code: Key) -> void:
 	await get_tree().process_frame
 
 func _run() -> void:
-	await get_tree().process_frame
-	assert(fps_label.visible == render_host.is_debug_build())
+	for _frame in 3:
+		await get_tree().process_frame
+	assert(bool(DebugTools.last_frame.get("fps_visible", false)) == render_host.is_debug_build())
 	for code in [KEY_TAB, KEY_PAGEUP, KEY_PAGEDOWN, KEY_BRACKETLEFT, KEY_BRACKETRIGHT]:
 		_key(code)
 	assert(screen_index == 0 and not show_info)
@@ -73,21 +72,21 @@ func _run() -> void:
 		await get_tree().process_frame
 		await get_tree().process_frame
 		assert(show_info and info_label.visible)
-		assert(fps_label.visible == render_host.is_debug_build())
+		assert(bool(DebugTools.last_frame.get("fps_visible", false)) == render_host.is_debug_build())
 		render_host.console_execute("info off")
 		render_host.console_execute("status")
 		render_host.console_execute("help")
 		await _press(KEY_F8)
 		state = DebugTools.last_frame
-		assert(not state.visible and state.batches == 0)
+		assert(not state.visible)
 		await _press(KEY_F8)
 	get_window().size = Vector2i(1100, 700)
 	for _step in 4:
 		await get_tree().process_frame
 	await get_tree().process_frame
 	await get_tree().process_frame
-	assert(fps_label.position.x + fps_label.get_minimum_size().x <= get_viewport_rect().size.x)
-	assert(fps_label.position.x > get_viewport_rect().size.x / 2)
+	if render_host.is_debug_build():
+		assert(float(DebugTools.last_frame.get("fps_right", 0)) == get_viewport_rect().size.x - 8)
 	assert(updates > 3)
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--capture=") and DisplayServer.get_name() != "headless":

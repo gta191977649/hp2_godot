@@ -213,3 +213,97 @@ Debug console-off builds can use direct viewer launch and buttons; Release disab
 The upstream LogWindow paired EndChild only when BeginChild returned true. Restored window
 settings/small viewports exposed an unbalanced ImGui window stack. The documented vendor
 patch pairs it unconditionally; native small-viewport and host transition tests cover it.
+
+## D012 — Native vehicle slices with an explicit inspection display (TASK-0033, 2026-10-14)
+
+Original geometry, texture rebinding, static attachments and LOD selection run in C++
+without Godot types. CarRenderInfo ownership comes from allocator/receiver flow, not
+diagnostic-string proximity. Typed recovered slices coexist with throwing whole entries;
+template policy identifies the latter explicitly so regeneration cannot promote a partial
+overload. Unbound shared helpers retain address names and port-side signatures.
+
+The host uploads original data and offers development overrides for LOD/part visibility,
+wireframe and bounds. It changes coordinate basis without changing scale. Material display
+is labeled unlit inspection, retaining raw original material/vertex metadata instead of
+guessing shader effects. The fully-in-view path supports retaining both faces; partial-view
+normal-cone behavior is still untranslated. Successful loading is not material equivalence.
+
+Texture requests are restricted to the two evidenced car/shared packs. Because original
+lookup is move-to-front rather than fixed priority, this bounded service rejects duplicate
+hashes instead of inventing precedence. Missing/unsupported resources fail explicitly.
+The three sample models have no colliding hash between those packs.
+
+
+## TASK-0033 native ImGui and GS byte-domain viewer adapter (2026-10-14)
+
+Share a single native ImGui context/font/input/frame between console, FPS and viewer
+controls. Debug viewer availability does not depend on HP2_ENABLE_DEBUG_CONSOLE;
+Release has no viewer UI. UI queues requests, executed after frame rendering.
+
+The recovered VU/base material path uses original parameters/lights and raw GS alpha,
+not Godot lighting. Compatibility is the default host backend for encoded RGB blending;
+Forward+/Mobile source-over is rejected for this pass. Preserve the existing explicit
+RenderingDevice driver settings for manually selected backends. This is a port-side
+backend decision, not original platform behavior.
+
+GS ALPHA44 may require a factor above1. Ordinary spatial blending and a single screen
+snapshot do not implement the general overlapping case. Conservatively bound supported
+alpha per selected draw and explicitly fail unsupported views. Keep TASK-0033 active
+while remaining render scope is audited. All228 observed static exterior associations
+are proven within the supported alpha range; the general branch remains explicit.
+No silent approximate fallback.
+
+## D014 — Compact viewer, lazy LOD comparison and cancellable uploads (2026-10-14)
+
+The viewer defaults to the highest-detail exterior. Show LODs is an explicit side-by-side
+comparison, per user choice, not distance-based automatic switching. Each level uses original
+body/attachment selection; display offsets and labels are host tooling. Geometry VIF filtering
+happens before decoding and material/texture binding. A single native worker and bounded caches
+remove blocking IO/decoding from the interactive path; Godot uploads run on the main thread
+with a cooperative 2 ms slice. Only the latest request may commit. Retain the previous car while
+loading, then atomically replace it; latest-request failure clears all vehicle display resources.
+Paint tiles are representative samples of the recovered material pipeline, explicitly labeled
+as a viewer preview; unknown original catalog fields remain offset-named.
+
+## D012 — Shared vehicle backend and centralized shader sources (TASK-0034, 2026-10-14)
+
+Keep original resource, part, material and lighting decisions in recovered native class/shared
+slices. Extract the former viewer renderer as Ps2VehicleRenderer, with a thin debug request-policy wrapper;
+future runtime scenes use the same backend, without Debug gating. This is a host boundary,
+not a claim that the complete PS2 renderer is reconstructed.
+
+All shader text belongs under src/platform/shaders, as requested. Build-time embedding avoids
+source-path/runtime resource dependencies; CMake watches the shader files. Preview Mode is
+explicit port-side camera/presentation behavior and does not supply invented original lights,
+environment maps or floor-reflection passes. Correct legacy image-row origin at the vehicle
+texture boundary rather than corrupting recovered vertex coordinates or frontend consumers.
+
+The authorized wheel-blur follow-up uses original constructor resources and the same
+native model/common backend. The debug checkbox forces an alpha90 overlay; unknown
+original speed/time/per-wheel gates are not replaced with fabricated thresholds.
+Rigid world placement transforms camera/light inputs through the original class slice.
+
+## TASK-0035 - Original frontend reflection and adjustable wheel preview
+
+Use original CARSELECTENVMAP and VU context2 coordinates/materials/blending in the common
+vehicle backend. Keep base and reflection material instances separate per part/LOD so
+camera, lighting and animation uniforms cannot leak between copies. Only the known static
+frontend environment is supplied; game capture/composition remains untranslated. Do not
+replace it with host reflection probes or Fresnel. Shaders stay under platform/shaders.
+
+The user's later request adds a speed slider beneath the single Wheel Blur switch.
+Its default80 and range-150..150 rad/s are port choices; the original strength/matrix
+calculations consume that explicit input. Preserve phase during speed adjustments, reset
+on switch changes, preserve chosen speed/switch across asynchronous car loads.
+
+## TASK-0036 - Partition original strips at the host mesh limit
+
+Do not discard strips, merge unrelated materials or raise a private Godot engine limit.
+Split each vehicle solid's drawable strips in original list order into ArrayMeshes bounded
+by RenderingServer::MAX_MESH_SURFACES. Use identity child batches beneath one native part
+root so existing part transforms, wheel animation and visibility remain authoritative.
+Cache the whole batch sequence; keep original strip addresses/indices in draw records.
+Use union bounds for framing/LOD spacing, clone each batch in LOD comparisons and bind
+wireframe to every draw node. Multi-batch nodes are atomically replaced on async commit
+rather than reusing only a parent and leaving stale children. Original PS2 behavior and
+Verified status are unchanged by this host-only capacity fix.

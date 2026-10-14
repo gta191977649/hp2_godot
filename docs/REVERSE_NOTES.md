@@ -382,3 +382,17 @@ E-0016-N01 fresh path/name audit is in NAMING_AUDIT.md. E-0016-A06/A07 correct
 JBC interleave, movie ADPCM/hardware pitch and160-msvideo lead. E-0016-V06
 anchors vertical rows to original negative-height/stride. Symbols index retains
 combined evidence IDs without claiming Verified.
+
+## TASK-0035 - Vehicle follow-up evidence
+
+Read-only Ghidra E-0035-W01/W02: wheel writer001C0D78 separates tire self-spin from blur
+pose;00120EA8 uses float abs/angular velocity times0.02, not decompiler integer casts.
+E-0035-R01/R02/R03: original frontend CARSELECTENVMAP source/upload,0011B520 environment
+orientation, VU002A8AD8 ST/alpha and context2 additive/depth state are recorded under the
+binary SHA vehicle directory. VU LOI latency counterevidence is preserved. Native/GPU
+fixtures are not hardware equivalence. E-0035-M01: mirror objects+0x1C0/+0x1D8 require
+the same two selected-skin patch pairs as near body, via constructor table+0x528; omitting
+them left SKIN1 red mirrors on silver paint. Shared native bindings now cover this.
+
+Continue TASK-0035 original runtime comparison and required live environment inputs; do
+not infer whole game physics or six-face capture from the bounded frontend demonstration.

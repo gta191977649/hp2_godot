@@ -333,6 +333,8 @@ int main() {
     failures += !expect_gap("0x0012E2C0", "CDBFileSys::Sub_0012E2C0", [] { hp2::recovered::CDBFileSys instance; instance.Sub_0012E2C0(); });
     failures += !expect_gap("0x0012E2C8", "CDBFileSys::Sub_0012E2C8", [] { hp2::recovered::CDBFileSys instance; instance.Sub_0012E2C8(); });
     failures += !expect_gap("0x0012E2D0", "CDBFileSys::Sub_0012E2D0", [] { hp2::recovered::CDBFileSys instance; instance.Sub_0012E2D0(); });
+    failures += !expect_gap("0x0011E860", "CarRenderInfo::Sub_0011E860", [] { hp2::recovered::CarRenderInfo instance; instance.Sub_0011E860(); });
+    failures += !expect_gap("0x00120EF8", "CarRenderInfo::Sub_00120EF8", [] { hp2::recovered::CarRenderInfo instance; instance.Sub_00120EF8(); });
     failures += !expect_gap("0x00208B28", "ChopperSound::Sub_00208B28", [] { hp2::recovered::ChopperSound instance; instance.Sub_00208B28(); });
     failures += !expect_gap("0x00208C78", "ChopperSound::Sub_00208C78", [] { hp2::recovered::ChopperSound instance; instance.Sub_00208C78(); });
     failures += !expect_gap("0x00214D68", "ChopperSound::Sub_00214D68", [] { hp2::recovered::ChopperSound instance; instance.Sub_00214D68(); });
@@ -806,6 +808,6 @@ int main() {
     failures += !expect_gap("0x001EEC50", "tOptionsScreen::Sub_001EEC50", [] { hp2::frontend::tOptionsScreen instance; instance.Sub_001EEC50(); });
     failures += !expect_gap("0x001EECA8", "tOptionsScreen::Sub_001EECA8", [] { hp2::frontend::tOptionsScreen instance; instance.Sub_001EECA8(); });
     failures += !expect_gap("0x001F4E68", "tOptionsScreen::Sub_001F4E68", [] { hp2::frontend::tOptionsScreen instance; instance.Sub_001F4E68(); });
-    std::cout << "CLASS_TEMPLATE_GAPS_CHECKED: 603\n";
+    std::cout << "CLASS_TEMPLATE_GAPS_CHECKED: 605\n";
     return failures ? 1 : 0;
 }

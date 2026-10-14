@@ -1969,8 +1969,55 @@
           "address": "0x002ACE48"
         }
       ],
-      "members": [],
-      "coverage": "unbound_class_name"
+      "members": [
+        {
+          "elf_address": "0x0011E860",
+          "method": "Sub_0011E860",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/vehicle/0011e860.md",
+          "knowledge_status": "Decompiled",
+          "coverage": "throwing_template_with_preserved_partial_projection",
+          "signature": "void CarRenderInfo::Sub_0011E860()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": [
+            {
+              "path": "src/game_core/CarRenderInfo.cpp",
+              "name": "CarRenderInfo::Sub_0011E860",
+              "signature": "port::CarRenderBindings CarRenderInfo::Sub_0011E860(const std::string& prefix, std::int32_t Field_0x538, std::uint8_t skin)",
+              "stub": false
+            }
+          ]
+        },
+        {
+          "elf_address": "0x00120EF8",
+          "method": "Sub_00120EF8",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/vehicle/00120ef8.md",
+          "knowledge_status": "Decompiled",
+          "coverage": "throwing_template_with_preserved_partial_projection",
+          "signature": "void CarRenderInfo::Sub_00120EF8()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": [
+            {
+              "path": "src/game_core/CarRenderInfo.cpp",
+              "name": "CarRenderInfo::Sub_00120EF8",
+              "signature": "std::array<float,28> CarRenderInfo::Sub_00120EF8(const std::array<float,16>& source_part_transform)",
+              "stub": false
+            },
+            {
+              "path": "src/game_core/CarRenderInfo.cpp",
+              "name": "CarRenderInfo::Sub_00120EF8",
+              "signature": "port::CarLodSelection CarRenderInfo::Sub_00120EF8(int projected_size, const std::array<bool, 4>& presence)",
+              "stub": false
+            },
+            {
+              "path": "src/game_core/CarRenderInfo.cpp",
+              "name": "CarRenderInfo::Sub_00120EF8",
+              "signature": "port::CarAttachmentMatrices CarRenderInfo::Sub_00120EF8(const port::CarRenderConfig& config, std::uint16_t steering)",
+              "stub": false
+            }
+          ]
+        }
+      ],
+      "coverage": "members_catalogued"
     },
     {
       "name": "ChangeableMenuItem",

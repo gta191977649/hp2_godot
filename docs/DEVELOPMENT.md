@@ -223,3 +223,65 @@ persistence. Existing debug_console_host checks TAB/history routing, FPS and res
 Build configurations sequentially: their DLL output path is shared. Restore
 `cmake --preset godot-debug -DHP2_ENABLE_DEBUG_CONSOLE=ON` and rebuild after testing
 Release or console-off Debug. An existing process must be closed before replacing its DLL.
+
+### Original vehicle checks
+
+With the normal original-asset configuration, CarViewer supports
+`viewer.load "CARS/911TURBO/GEOMETRY.BIN"` and the equivalent BMWM5COP/4DR_SEDAN paths.
+See DEBUG_VIEWERS.md for LOD, part, wireframe and bounds controls, and VEHICLE_RENDERING.md
+for the recovered base-material scope, explicit inspection mode and remaining GS
+destination-access blending work. Viewer UI and FPS use a shared native ImGui frame;
+console-off Debug retains viewer input. The default backend is Compatibility to preserve
+the encoded GS RGB blend domain.
+
+```powershell
+ctest --preset native-debug -R 'vehicle_|car_render_'
+ctest --preset godot-debug -R 'vehicle_|car_render_|debug_viewers_host'
+& $portGodot --path godot res://scenes/debug/car_viewer.tscn -- --car-load=CARS/911TURBO/GEOMETRY.BIN
+```
+
+The native tests always run synthetic malformed-data checks. Configured assets enable
+three original geometry/model/texture checks; invalid configured roots fail. The dedicated
+car host smoke exercises real loading and resource cleanup, and rejects native loading in
+Release. All configurations share the DLL path and must be built/tested sequentially.
+
+
+TASK-0033 validation adds an optional windowed RGB/alpha/depth oracle. See DEBUG_VIEWERS.md
+for PORT_ENABLE_GPU_TESTS; the default remains OFF for headless CTest. Smoke ImGui settings
+use a separate profile, preserving normal viewer layout and console history. Default
+working configuration is Debug with the console enabled.
+
+## Vehicle shader sources (TASK-0034)
+
+Edit shader text only under src/platform/shaders. CMake reconfigures and embeds the text
+into generated/hp2_embedded_shaders.hpp; rebuild ps2_port after shader edits. No shader
+source file needs copying into the Godot project or exports. Ps2VehicleRenderer is the
+shared runtime backend; Ps2CarViewer inherits it. Preview uses `--preview` or its checkbox.
+Run the optional real Compatibility numeric GPU oracle with PORT_ENABLE_GPU_TESTS=ON;
+restore OFF for the default headless-friendly test preset after validation.
+
+## TASK-0035 validation and preview controls
+
+Wheel speed is a port-side angular-velocity slider beneath Wheel Blur, in rad/s. It updates
+existing tire/blur transforms and shader intensity; it does not reload resources. Native
+`vehicle_model` covers zero/reverse speed, phase wrapping, opacity and all McLaren mirror
+skins; `debug_console` drags the actual ImGui slider. `car_render_host` checks live updates
+and console coexistence. Enable `PORT_ENABLE_GPU_TESTS=ON` for real Compatibility framebuffer
+ST/additive/material checks. `car_material_gpu_smoke.tscn` uses Ps2VehicleRenderer and can
+also run against Release; Debug-only viewer loading remains disabled there.
+
+Run `cmake --preset godot-debug -DHP2_ENABLE_DEBUG_CONSOLE=ON -DPORT_ENABLE_GPU_TESTS=ON`,
+then build and CTest. Repeat console OFF host tests and the Release preset sequentially.
+Delete the generated `godot/bin/ps2_port.dll` before switching build trees to force relink;
+close test windows first. An existing user window may keep an older mapped DLL alive.
+Restore Debug/console ON/GPU tests OFF before delivery. No PS2 equivalence follows from
+these checks; active TASK-0035 tracks original comparison and remaining game environment work.
+
+## Vehicle surface capacity regression (TASK-0036)
+
+Run `ctest --test-dir build/godot-debug -R car_surface_batches --output-on-failure`. The
+asset-dependent test skips with77 when no original root is configured. It scans all
+available catalog IDs and verifies every drawable native surface survives the per-mesh
+256-surface capacity split. The same scene can run windowed with Compatibility, or on
+Release through the common Ps2VehicleRenderer backend. It also checks async/warm cache,
+part visibility, wireframe, LOD copies and complete cleanup. No Godot engine limit is raised.
