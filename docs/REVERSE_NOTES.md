@@ -396,3 +396,15 @@ them left SKIN1 red mirrors on silver paint. Shared native bindings now cover th
 
 Continue TASK-0035 original runtime comparison and required live environment inputs; do
 not infer whole game physics or six-face capture from the bounded frontend demonstration.
+
+## TASK-0037 - Type_0011BF98 is not an original class symbol
+
+The packet accessor grouping is port-created around address0011BF98. Read-only Ghidra
+E-0037-N01/N02 confirms the original six helper names are still DEFAULT-generated FUN
+labels; roles and call sites are known, but original class/function spelling and source
+path are not.0011BF98 calculates component addresses, not a confirmed constructor.
+eStripEntry (002AC298) and DuplicatedStripEntryData allocation labels do not establish
+membership/name ownership. Keep Type_/Sub_ addresses until an actual naming bridge exists.
+Detailed results: reverse/functions/<binary-sha>/vehicle/task0037-packet-symbol-provenance.md;
+compact ledger: reverse/naming/task0037-packet-symbol-provenance.csv. No behavior/Verified
+changes; header now explicitly distinguishes the port grouping from original C++ identity.

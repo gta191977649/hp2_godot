@@ -1055,7 +1055,7 @@ leaves this table by being reversed, never by being given a default.
 | | |
 |---|---|
 | **Focus** | TASK-0035: original wheel animation and frontend glass/body reflection; speed slider and mirror skin fix delivered. Original comparison remains open. |
-| **Last session** | TASK-0036 completed: vehicle solids exceeding Godot256 surfaces are partitioned into complete cached child batches. ELISE/ELISEHP fixed;62 available catalog IDs checked. Active original wheel/reflection comparison remains TASK-0035. |
+| **Last session** | TASK-0037 completed: read-only packet helper naming audit; original spellings remain unknown, retain address names and clarify Type_0011BF98 is a port-created grouping. TASK-0036 capacity fix remains delivered. Active original wheel/reflection comparison stays TASK-0035. |
 | **Exact next action** | TASK-0035: obtain matching PS2/PCSX2 car/skin/camera and angular-velocity/time samples; compare wheel phase, blur alpha and glass/body reflection. Live game environment capture and whole render-entry coverage remain under TASK-0033/0035. Preserve original address evidence and NotImplemented boundaries. |
 | **Tooling note** | Ghidra MCP was registered and usable in TASK-0028. The same service is reachable through the read-only client `tools/ghidra.py` (`from ghidra import Client`, `http://127.0.0.1:8080/mcp`, program `SLUS_203.62`). Inspect/read only; do not mutate the database. Probe actual availability each session. |
 

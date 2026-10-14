@@ -57,6 +57,7 @@ place and kept, because the fact that a session believed it, and why, is itself 
 - [TASK-0034 UV, continuous preview and shared materials — 2026-10-14](#task-0034-uv-continuous-preview-and-shared-materials--2026-10-14)
 - [2026-10-14 - TASK-0035 wheels, glass environment and mirror binding](#2026-10-14---task-0035-wheels-glass-environment-and-mirror-binding)
 - [TASK-0036 - Complete vehicle upload beyond host surface capacity](#task-0036---complete-vehicle-upload-beyond-host-surface-capacity)
+- [2026-10-15 - TASK-0037 packet helper naming traceback](#2026-10-15---task-0037-packet-helper-naming-traceback)
 
 <!-- generated:contents:end -->
 
@@ -1347,3 +1348,20 @@ and no surface rejection. Proprietary capture remains ignored local/task0036. No
 mutation, no new original behavior assertions and no Verified promotion. Restored Debug/on
 GPU-off and forced relink; focused host/generated checks6/6 passed10.58s, whitespace and
 generated checks passed. Restricted untracked binary candidates: none. No commit created.
+
+## 2026-10-15 - TASK-0037 packet helper naming traceback
+
+Read-only Ghidra checked six original accessor symbols/source, the nearby getter/setter
+cluster, direct consumers and upstream callback/duplication contexts. Confirmed packet
+count, component-address and value-access roles. No recovered original class/function
+spelling or source file was found: all six queried names are DEFAULT FUN labels.
+eStripEntry text and duplicated-buffer allocation labels were investigated and explicitly
+rejected as sufficient ownership/name evidence. No invented descriptive rename was made.
+
+Clarified Type_0011BF98.hpp as a port-created address grouping, with0011BF98 not a confirmed
+constructor and native container signatures not original ABI. Added detailed binary-specific
+naming record, six-address provenance CSV, per-function cross-links and symbol evidence IDs.
+TASK-0037 is complete as a naming audit; original spellings remain unresolved. No behavior
+or verification status changed, no Ghidra mutation and no proprietary evidence committed.
+Native geometry target rebuilt; existing geometry/metadata checks3/3 passed0.84s;
+generated checks and git diff --check passed.
