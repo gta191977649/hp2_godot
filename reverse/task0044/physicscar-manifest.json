@@ -1,0 +1,380 @@
+{
+  "target": "NFSHP2.ELF",
+  "sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "evidence": "E-0044-P01..P06",
+  "functions": [
+    {
+      "calling_convention": "__stdcall",
+      "end_address": "0013740b",
+      "entry_point": "001370c0",
+      "name": "__10PhysicsCarP11CarTypeInfoP9CarDriverP3Car",
+      "namespace": "Global",
+      "signature": "PhysicsCar * __10PhysicsCarP11CarTypeInfoP9CarDriverP3Car(PhysicsCar * this, CarTypeInfo * info, CarDriver * driver, Car * car)",
+      "start_address": "001370c0"
+    },
+    {
+      "calling_convention": "__stdcall",
+      "end_address": "001375ab",
+      "entry_point": "00137410",
+      "name": "DoSnapshot__10PhysicsCarP14ReplaySnapshot",
+      "namespace": "Global",
+      "signature": "void DoSnapshot__10PhysicsCarP14ReplaySnapshot(PhysicsCar * this, ReplaySnapshot * snapshot)",
+      "start_address": "00137410"
+    },
+    {
+      "calling_convention": "__stdcall",
+      "end_address": "001376c7",
+      "entry_point": "001375b0",
+      "name": "Calibrate__10PhysicsCar",
+      "namespace": "Global",
+      "signature": "void Calibrate__10PhysicsCar(PhysicsCar * this)",
+      "start_address": "001375b0"
+    },
+    {
+      "calling_convention": "__stdcall",
+      "end_address": "00137747",
+      "entry_point": "001376c8",
+      "name": "_$_10PhysicsCar",
+      "namespace": "Global",
+      "signature": "void _$_10PhysicsCar(PhysicsCar * this, int __in_chrg)",
+      "start_address": "001376c8"
+    },
+    {
+      "calling_convention": "__stdcall",
+      "end_address": "00137797",
+      "entry_point": "00137748",
+      "name": "ComputeAuxiliaries__10PhysicsCar",
+      "namespace": "Global",
+      "signature": "void ComputeAuxiliaries__10PhysicsCar(PhysicsCar * this)",
+      "start_address": "00137748"
+    },
+    {
+      "calling_convention": "__stdcall",
+      "end_address": "001378bf",
+      "entry_point": "00137798",
+      "name": "CheckDampingSuitability__10PhysicsCar",
+      "namespace": "Global",
+      "signature": "DampingSuitability CheckDampingSuitability__10PhysicsCar(PhysicsCar * this)",
+      "start_address": "00137798"
+    },
+    {
+      "calling_convention": "__stdcall",
+      "end_address": "00137c0b",
+      "entry_point": "001378c0",
+      "name": "BottomOut__10PhysicsCar",
+      "namespace": "Global",
+      "signature": "void BottomOut__10PhysicsCar(PhysicsCar * this)",
+      "start_address": "001378c0"
+    },
+    {
+      "calling_convention": "__stdcall",
+      "end_address": "00137d17",
+      "entry_point": "00137cc0",
+      "name": "GetBrakeSettings__10PhysicsCari",
+      "namespace": "Global",
+      "signature": "float GetBrakeSettings__10PhysicsCari(PhysicsCar * this, int wheelpos)",
+      "start_address": "00137cc0"
+    },
+    {
+      "calling_convention": "__stdcall",
+      "end_address": "00138c7f",
+      "entry_point": "00137d18",
+      "name": "Move__10PhysicsCarf",
+      "namespace": "Global",
+      "signature": "float Move__10PhysicsCarf(PhysicsCar * this, float t)",
+      "start_address": "00137d18"
+    },
+    {
+      "calling_convention": "__stdcall",
+      "end_address": "00138d8b",
+      "entry_point": "00138c80",
+      "name": "InitializeStateFromCar__10PhysicsCar",
+      "namespace": "Global",
+      "signature": "void InitializeStateFromCar__10PhysicsCar(PhysicsCar * this)",
+      "start_address": "00138c80"
+    },
+    {
+      "calling_convention": "__stdcall",
+      "end_address": "00138ebb",
+      "entry_point": "00138d90",
+      "name": "ResolveForces__10PhysicsCar",
+      "namespace": "Global",
+      "signature": "void ResolveForces__10PhysicsCar(PhysicsCar * this)",
+      "start_address": "00138d90"
+    },
+    {
+      "calling_convention": "__stdcall",
+      "end_address": "0013910b",
+      "entry_point": "00138ec0",
+      "name": "IterateForces__10PhysicsCar",
+      "namespace": "Global",
+      "signature": "void IterateForces__10PhysicsCar(PhysicsCar * this)",
+      "start_address": "00138ec0"
+    },
+    {
+      "calling_convention": "__stdcall",
+      "end_address": "00139417",
+      "entry_point": "00139110",
+      "name": "UpdateCar__10PhysicsCarf",
+      "namespace": "Global",
+      "signature": "void UpdateCar__10PhysicsCarf(PhysicsCar * this, float t)",
+      "start_address": "00139110"
+    },
+    {
+      "calling_convention": "__stdcall",
+      "end_address": "00139473",
+      "entry_point": "00139418",
+      "name": "SetBoost__10PhysicsCarf",
+      "namespace": "Global",
+      "signature": "void SetBoost__10PhysicsCarf(PhysicsCar * this, float fBoost)",
+      "start_address": "00139418"
+    },
+    {
+      "calling_convention": "__stdcall",
+      "end_address": "0013950b",
+      "entry_point": "00139478",
+      "name": "JumpStabilizer__10PhysicsCar",
+      "namespace": "Global",
+      "signature": "void JumpStabilizer__10PhysicsCar(PhysicsCar * this)",
+      "start_address": "00139478"
+    },
+    {
+      "calling_convention": "__stdcall",
+      "end_address": "001395d7",
+      "entry_point": "001395d0",
+      "name": "SetFrictionBoost__10PhysicsCarf",
+      "namespace": "Global",
+      "signature": "void SetFrictionBoost__10PhysicsCarf(PhysicsCar * this, float boost)",
+      "start_address": "001395d0"
+    }
+  ],
+  "members": [
+    {
+      "name": "Driver",
+      "type": "CarDriver *",
+      "offset": 0,
+      "length": 4,
+      "comment": "Inherited from CarMover",
+      "ordinal": 0
+    },
+    {
+      "name": "__vtable",
+      "type": "PhysicsCar__vtable *",
+      "offset": 4,
+      "length": 4,
+      "comment": "Inherited from CarMover",
+      "ordinal": 1
+    },
+    {
+      "name": "pBody",
+      "type": "RigidBody *",
+      "offset": 24,
+      "length": 4,
+      "comment": "",
+      "ordinal": 18
+    },
+    {
+      "name": "pSteering",
+      "type": "Steering *",
+      "offset": 28,
+      "length": 4,
+      "comment": "",
+      "ordinal": 19
+    },
+    {
+      "name": "pSuspension",
+      "type": "Suspension *[4]",
+      "offset": 32,
+      "length": 16,
+      "comment": "",
+      "ordinal": 20
+    },
+    {
+      "name": "pWheel",
+      "type": "Wheel *[4]",
+      "offset": 48,
+      "length": 16,
+      "comment": "",
+      "ordinal": 21
+    },
+    {
+      "name": "pEngine",
+      "type": "Engine *",
+      "offset": 64,
+      "length": 4,
+      "comment": "",
+      "ordinal": 22
+    },
+    {
+      "name": "pDriveTrain",
+      "type": "DriveTrain *",
+      "offset": 68,
+      "length": 4,
+      "comment": "",
+      "ordinal": 23
+    },
+    {
+      "name": "pAerodynamics",
+      "type": "Aerodynamics *",
+      "offset": 72,
+      "length": 4,
+      "ordinal": 24
+    },
+    {
+      "name": "CTI",
+      "type": "CarTypeInfo *",
+      "offset": 76,
+      "length": 4,
+      "ordinal": 25
+    },
+    {
+      "name": "State",
+      "type": "CarState *",
+      "offset": 80,
+      "length": 4,
+      "comment": "",
+      "ordinal": 26
+    },
+    {
+      "name": "pCar",
+      "type": "Car *",
+      "offset": 84,
+      "length": 4,
+      "comment": "",
+      "ordinal": 27
+    },
+    {
+      "name": "BrakeStandTimer",
+      "type": "Timer",
+      "offset": 88,
+      "length": 4,
+      "comment": "",
+      "ordinal": 28
+    },
+    {
+      "name": "BrakeStandTimerStart",
+      "type": "Timer",
+      "offset": 92,
+      "length": 4,
+      "comment": "",
+      "ordinal": 29
+    },
+    {
+      "name": "BrakeStanding",
+      "type": "bool",
+      "offset": 96,
+      "length": 1,
+      "comment": "",
+      "ordinal": 30
+    },
+    {
+      "name": "ThrottleReleased",
+      "type": "bool",
+      "offset": 100,
+      "length": 1,
+      "comment": "",
+      "ordinal": 34
+    },
+    {
+      "name": "LurchsLeft",
+      "type": "int",
+      "offset": 104,
+      "length": 4,
+      "comment": "",
+      "ordinal": 38
+    },
+    {
+      "name": "RoofResetTimer",
+      "type": "Timer",
+      "offset": 108,
+      "length": 4,
+      "comment": "",
+      "ordinal": 39
+    },
+    {
+      "name": "FrictionBoost",
+      "type": "float",
+      "offset": 112,
+      "length": 4,
+      "comment": "",
+      "ordinal": 40
+    },
+    {
+      "name": "YawControlMultiplier",
+      "type": "float",
+      "offset": 116,
+      "length": 4,
+      "comment": "",
+      "ordinal": 41
+    }
+  ],
+  "status": "static_audited_not_verified",
+  "canonical_instance_implementations": [
+    "PhysicsCar::Initialize(port-side constructor seam)",
+    "PhysicsCar::Calibrate",
+    "PhysicsCar::ComputeAuxiliaries",
+    "PhysicsCar::CheckDampingSuitability",
+    "PhysicsCar::BottomOut",
+    "PhysicsCar::GetBrakeSettings",
+    "PhysicsCar::Move",
+    "PhysicsCar::InitializeStateFromCar",
+    "PhysicsCar::ResolveForces",
+    "PhysicsCar::IterateForces",
+    "PhysicsCar::UpdateCar",
+    "PhysicsCar::SetBoost",
+    "PhysicsCar::SetFrictionBoost",
+    "PhysicsCar::JumpStabilizer",
+    "Car::IsBlinking",
+    "Car::PleaseResetMeLater",
+    "Car::GetPostCollisionYawControlBoost",
+    "Car::ShouldVisualEffectsBeGenerated",
+    "CarState::GetYaw",
+    "CarState::GetYawAlways",
+    "CarState::CalculateWheelMatrices(int)",
+    "CarState::CalculateWheelMatrices()",
+    "CarState::SetWheelTouchingGround",
+    "CarState::SetWheelTerrain"
+  ],
+  "canonical_free_implementations": [
+    "YawFrictionBoost(Memory&,original parameters)",
+    "GetRealTimeElapsedFromQuantized",
+    "GetQuantizedRealTimeElapsed",
+    "PrepareRealTimestep",
+    "AdvanceRealTime",
+    "ResetWorldTime",
+    "PrepareWorldTimestep",
+    "AdvanceWorldTime"
+  ],
+  "retired_composites": [
+    {
+      "entry": "port::driving::IterateForces(SolverBodyProjection&,...SolverDependencies&)",
+      "reason": "duplicate five-iteration solver composite removed; canonical PhysicsCar::IterateForces(Memory-bound instance) owns algorithm; actual backend coverage plus canonical body leaf fixtures"
+    }
+  ],
+  "validation": {
+    "compiled_objects": [
+      "physicscar.cpp",
+      "car.cpp",
+      "carstate.cpp",
+      "timer.cpp",
+      "unresolved_entries.cpp"
+    ],
+    "passed_before_latest_regression_add": [
+      "driving_mover",
+      "driving_lab"
+    ],
+    "latest_tests_pending": "Root serialized build requested; latest regression source compiles but archive conflicted with concurrent root build; no final pass claimed",
+    "new_timing_test": "src/tests/driving_debug_timing_tests.cpp (root adds target)"
+  },
+  "function_records": {
+    "root": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving",
+    "count": 40,
+    "implemented": 32,
+    "decompiled_not_implemented": 8,
+    "candidate_symbols": "reverse/task0044/physicscar-symbols.csv"
+  },
+  "fixture_migrations": [
+    "driving_schedule_tests.cpp: canonical Debug body/graph initializers, exact table pointer/count/range/lane checks and canonical clocks",
+    "driving_constructor_tests.cpp: Debug vtables/member/globals/roughness operands, explicit audited GetSize leaf instructions, canonical PhysicsCar/PhysicsSystem/Car calls"
+  ]
+}

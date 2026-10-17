@@ -10,6 +10,14 @@
 #include "game_core/indep/src/trackrouteeditor.hpp"
 
 #include "game_core/port/not_implemented.hpp"
+#include "game_core/port/driving/memory.hpp"
+
+namespace hp2::recovered {
+// Debug001C2ED0; E-0046-C01. Host car binding supplies original position/velocity.
+void MaybeAddTrackRoutePoint(port::driving::Memory& m,std::uint32_t){
+    if(m.word(0x3281d4)!=0)hp2::not_implemented("0x001C24A8","TrackRouteEditor recording is not recovered");
+}
+}
 
 namespace hp2::recovered {
 // ELF 0x001C3718; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c3718.md.

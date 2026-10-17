@@ -1,3 +1,4 @@
+// TASK-0044: Debug globals, vtables and4C/70 shift-array regression fixtures.
 #include "game_core/port/driving/projections.hpp"
 #include "game_core/port/not_implemented.hpp"
 #include <cmath>
@@ -11,7 +12,7 @@ struct Fixture {
     Memory m;
     std::uint32_t ec,tc,engine,transmission,car,wheels,out;
     Fixture() {
-        m.map(0x310000,0x30000);
+        m.map(0x300000,0x30000);
         ec=m.allocate(0x60);tc=m.allocate(0x50);engine=m.allocate(0x60);
         transmission=m.allocate(0xa0);car=m.allocate(0x400);wheels=m.allocate(16);out=m.allocate(4);
         m.scalar(ec,100);m.scalar(ec+4,500);m.scalar(ec+8,900);m.scalar(ec+0xc,2);
@@ -24,14 +25,14 @@ struct Fixture {
             auto wheel=m.allocate(0x190);m.word(wheels+4*i,wheel);
             m.scalar(wheel+0x20,4);m.scalar(wheel+0x164,8);m.byte(wheel+0x155,1);
         }
-        m.scalar(0x3308ac,0.75f);m.scalar(0x3308b0,0.5f);m.word(0x3308b4,0);
-        m.scalar(0x32e328,1);m.scalar(0x32e32c,1);m.scalar(0x32e330,1);m.scalar(0x32e334,0.5f);
-        m.scalar(0x3308a0,0.5f);m.scalar(0x3308a4,2);
-        for(auto a:{0x32e33cu,0x32e344u,0x32e350u})m.scalar(a,0.25f);
-        for(auto a:{0x32e340u,0x32e348u,0x32e354u})m.scalar(a,0.75f);
-        m.scalar(0x32e34c,1);m.scalar(0x32e360,0.25f);m.scalar(0x32e364,0.5f);
-        m.scalar(0x32e368,0.25f);m.scalar(0x32e36c,0.25f);
-        m.scalar(0x32e37c,0.25f);m.scalar(0x32e380,1);m.scalar(0x32e384,0);m.scalar(0x3308c0,1);
+        m.scalar(0x327924,0.75f);m.scalar(0x327928,0.5f);m.word(0x32792c,0);
+        m.scalar(0x325420,1);m.scalar(0x325424,1);m.scalar(0x325428,1);m.scalar(0x32542c,0.5f);
+        m.scalar(0x327918,0.5f);m.scalar(0x32791c,2);
+        for(auto a:{0x325434u,0x32543cu,0x325448u})m.scalar(a,0.25f);
+        for(auto a:{0x325438u,0x325440u,0x32544cu})m.scalar(a,0.75f);
+        m.scalar(0x325444,1);m.scalar(0x325458,0.25f);m.scalar(0x32545c,0.5f);
+        m.scalar(0x325460,0.25f);m.scalar(0x325464,0.25f);
+        m.scalar(0x325470,0.25f);m.scalar(0x325474,1);m.scalar(0x325478,0);m.scalar(0x327938,1);
         Sub_0018A7E8(m,engine,ec,car);Sub_0018AE70(m,transmission,tc,engine,wheels,car);
     }
 };
@@ -43,7 +44,7 @@ int main() {
         check(caught,"Exceptional conversion must not silently produce an index");
     }
     Fixture f;auto& m=f.m;
-    check(m.word(f.engine+8)==0x2b4618 && m.word(f.engine+0x18)==f.ec+0x10,"Engine constructor pointers");
+    check(m.word(f.engine+8)==0x2ac3f8 && m.word(f.engine+0x18)==f.ec+0x10,"Engine constructor pointers");
     check(m.scalar(f.engine+0x58)==1 && m.scalar(f.engine+0x4c)==1,"Constructor trailing and multiplier stores");
     check(m.scalar(f.engine+0x28)==0.01f,"Nine sample scale");
     check(Table::GetValue(m,f.engine+0x18,-1)==10,"Uniform lower clamp");
@@ -53,23 +54,23 @@ int main() {
     const auto table=m.allocate(20),samples=m.allocate(24);
     m.word(table,samples);m.word(table+4,3);
     m.scalar(samples,0);m.scalar(samples+4,10);m.scalar(samples+8,2);m.scalar(samples+12,20);
-    m.scalar(samples+16,6);m.scalar(samples+20,0);m.scalar(0x32e3f0,0.01f);
+    m.scalar(samples+16,6);m.scalar(samples+20,0);m.scalar(0x3254e0,0.01f);
     check(Graph::GetValue(m,table,-10)==10 && Graph::GetValue(m,table,9)==0,"Irregular endpoint clamps");
     check(Graph::GetValue(m,table,4)==10,"Irregular second interval");
-    m.scalar(0x32e3f0,5);
+    m.scalar(0x3254e0,5);
     check(Graph::GetValue(m,table,2.5f)==10,"Irregular tiny width midpoint branch");
     m.word(table+4,1);check(Graph::GetValue(m,table,50)==10,"Irregular single sample");
-    check(m.scalar(f.transmission+0x50+2*4)==300 && m.scalar(f.transmission+0x50+6*4)==900,"Static table generator and terminal slot");
-    check(m.scalar(f.transmission+0x74+3*4)==150,"Down table writes index current plus one");
+    check(m.scalar(f.transmission+0x4c+2*4)==300 && m.scalar(f.transmission+0x4c+6*4)==900,"Static table generator and terminal slot");
+    check(m.scalar(f.transmission+0x70+3*4)==150,"Down table writes index current plus one");
     check(m.word(f.transmission+0x18)==m.word(f.wheels) && m.word(f.transmission+0x24)==m.word(f.wheels+12),"Constructor four original pointer stores");
     // Dynamic scan constant torque: next ratio double produces a crossover at midpoint500.
     for(unsigned i=0;i<9;++i)m.scalar(f.ec+0x10+i*4,10);
-    m.word(f.tc+0x18,2);m.scalar(f.tc+0x2c,4);m.word(0x3308b4,1);
-    Sub_0018AC38(m,f.tc,f.ec,f.transmission+0x50,f.transmission+0x74,0.75f);
-    check(m.scalar(f.transmission+0x58)==375 && m.scalar(f.transmission+0x80)==375,"Dynamic scan first crossover and ratios");
+    m.word(f.tc+0x18,2);m.scalar(f.tc+0x2c,4);m.word(0x32792c,1);
+    Sub_0018AC38(m,f.tc,f.ec,f.transmission+0x4c,f.transmission+0x70,0.75f);
+    check(m.scalar(f.transmission+0x54)==375 && m.scalar(f.transmission+0x7c)==375,"Dynamic scan first crossover and ratios");
     m.scalar(f.tc+0x2c,2);
-    Sub_0018AC38(m,f.tc,f.ec,f.transmission+0x50,f.transmission+0x74,0.75f);
-    check(m.scalar(f.transmission+0x58)==525,"Dynamic scan no crossover falls back upper minus200");
+    Sub_0018AC38(m,f.tc,f.ec,f.transmission+0x4c,f.transmission+0x70,0.75f);
+    check(m.scalar(f.transmission+0x54)==525,"Dynamic scan no crossover falls back upper minus200");
     Fixture e;auto& em=e.m;em.scalar(e.engine+0xc,200);em.scalar(e.engine+0x44,0.5f);
     check(GetTorque(em,e.engine)==20,"Engine curve evaluation");
     check(GetTotalEngineTorque(em,e.engine)==8.75f,"Engine power and drag grouping");
@@ -94,7 +95,7 @@ int main() {
     Sub_0018B4A0(em,e.transmission);check(em.word(e.transmission+0x38)==0 && em.word(e.transmission+0x3c)==1,"Requested value mismatch enters state0");
     Sub_0018B4A0(em,e.transmission);check(em.word(e.transmission+0x38)==1 && em.scalar(e.engine+0x4c)==0,"State0 waits for coupling zero");
     Sub_0018B4A0(em,e.transmission);check(em.word(e.transmission+0x38)==2 && em.word(e.transmission+0x30)==3 && em.word(e.transmission+0x3c)==0,"State1 copies desired and consumes pending");
-    em.scalar(0x310050+2*4,4);check(Sub_0018B698(em,e.transmission,e.out)==0 && em.scalar(e.out)==1,"State table derivative grouping");
+    em.scalar(0x3077c8+2*4,4);check(Sub_0018B698(em,e.transmission,e.out)==0 && em.scalar(e.out)==1,"State table derivative grouping");
     check(Sub_0018C368()==1 && Sub_0018C1C8()==1,"Exact scalar count leaves");
     std::cout<<"DRIVING_ENGINE_OK: bounded instruction fixtures, original validation deferred\n";
 }

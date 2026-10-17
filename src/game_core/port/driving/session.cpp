@@ -2,6 +2,7 @@
 #include "game_core/indep/inc/PhysicsCar.hpp"
 #include "game_core/port/not_implemented.hpp"
 #include "game_core/port/assets/elab_chunks.hpp"
+#include "track_environment.hpp"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -41,17 +42,36 @@ Config read_config(const std::vector<std::uint8_t>& bytes,const std::string& cod
     }
     throw std::runtime_error("Original car config not found: "+code);
 }
+std::string base_model_name(const Config& config){
+    const auto first=config.raw.begin()+0x20,last=first+32,zero=std::find(first,last,0);
+    if(zero==first||zero==last)throw std::runtime_error("Original car BaseModelName is empty or unterminated");
+    return std::string(first,zero);
+}
 Session::Session(Step backend):backend_(std::move(backend)){}
 Session::Session(std::shared_ptr<Simulation> backend):simulation_(std::move(backend)){}
-void Session::configure(Config config){config_=std::move(config);tape_.clear();elapsed_tape_.clear();recording_=false;reset();}
+void Simulation::track(std::shared_ptr<const TrackEnvironment> value){if(value)throw std::logic_error("Simulation backend does not support original tracks");}
+void Session::track(std::shared_ptr<const TrackEnvironment> value){
+    if(!simulation_&&value)throw std::logic_error("Original track driving requires the native simulation backend");
+    if(simulation_)simulation_->track(value);
+    track_label_=value?value->label:std::string{};
+    tape_.clear();elapsed_tape_.clear();surface_tape_.clear();recording_=false;reset();
+}
+void Session::configure(Config config){config_=std::move(config);tape_.clear();elapsed_tape_.clear();surface_tape_.clear();recording_=false;reset();}
 void Session::fail(std::string reason){pause();status_="Failed";diagnostic_=std::move(reason);}
-void Session::input(Input value){
-    if(!std::isfinite(value.throttle)||!std::isfinite(value.brake)||!std::isfinite(value.steering)
-       ||value.throttle<0||value.throttle>1||value.brake<0||value.brake>1||std::abs(value.steering)>1)
+void validate_input(const Input& value){
+    if(!std::isfinite(value.throttle)||!std::isfinite(value.brake)||!std::isfinite(value.steering)||!std::isfinite(value.handbrake)
+       ||value.throttle<0||value.throttle>1||value.brake<0||value.brake>1||std::abs(value.steering)>1
+       ||value.handbrake<0||value.handbrake>1||value.transmission< -1||value.transmission>1||value.shift< -1||value.shift>1)
         throw std::invalid_argument("Driving input must be finite: pedals 0..1, steering -1..1");
+}
+void Session::input(Input value){
+    validate_input(value);
+    // The semantic adapter retains unconsumed commands while pacing. Replacing
+    // the whole frame also lets focus/UI capture cancel pending commands.
     if(!replay_)input_=value;
 }
 void Session::pause(){paused_=true;input_={};pending_elapsed_=0;if(status_=="Running")status_="Paused";}
+void Session::surface(SurfaceSettings value){validate_surface(value);if(!replay_)surface_=value;}
 void Session::run(){
     if(!config_){fail("Load an original vehicle config first");return;}
     paused_=false;status_="Running";diagnostic_.clear();
@@ -63,7 +83,7 @@ void Session::reset(){
 }
 void Session::recording(bool enabled){
     pause();replay_=false;recording_=enabled;
-    if(enabled){tape_.clear();elapsed_tape_.clear();reset();}
+    if(enabled){tape_.clear();elapsed_tape_.clear();surface_tape_.clear();reset();}
 }
 void Session::replay(){
     if(tape_.empty())throw std::logic_error("No completed simulation steps recorded");
@@ -74,16 +94,14 @@ bool Session::advance(float elapsed){
     if(replay_&&cursor_==tape_.size()){pause();replay_=false;status_="Replay complete";return false;}
     const auto value=replay_?tape_[cursor_]:input_;
     const float clock=replay_?elapsed_tape_.at(cursor_):elapsed;
+    const auto environment=replay_?surface_tape_.at(cursor_):surface_;
     Snapshot next;
     try{
         const auto gap=hp2::guard([&]{
             if(!backend_&&!simulation_){
-                // ELF 00137100; E-0038-001. Existing whole-entry template remains
-                // untranslated. No fabricated initial state or host timestep.
-                hp2::recovered::PhysicsCar car;car.Sub_00137100();
-                throw std::logic_error("PhysicsCar backend is not connected");
+                hp2::not_implemented("0x001370C0", "Debug PhysicsCar initialization requires an attached simulation backend");
             }
-            next=simulation_?simulation_->advance(*config_,value,clock):backend_(*config_,value,snapshot_);
+            next=simulation_?simulation_->advance(*config_,value,clock,environment):backend_(*config_,value,snapshot_);
             if(!next.dt||!std::isfinite(*next.dt)||*next.dt<=0)
                 throw std::logic_error("Backend did not supply a valid evidenced timestep");
             if(next.body)validate_matrix(*next.body);
@@ -94,11 +112,21 @@ bool Session::advance(float elapsed){
         if(!gap.empty()){pause();status_="Blocked";diagnostic_=gap;return false;}
     }catch(const std::exception& error){fail(error.what());return false;}
     next.step=snapshot_.step+1;snapshot_=std::move(next);
-    if(recording_){tape_.push_back(value);elapsed_tape_.push_back(clock);}
+    if(recording_){tape_.push_back(value);elapsed_tape_.push_back(clock);surface_tape_.push_back(environment);}
     if(replay_)++cursor_;
+    else{input_.transmission=-1;input_.shift=0;input_.neutral=false;}
     return true;
 }
 bool Session::single_step(){paused_=true;pending_elapsed_=0;const bool ok=advance();if(ok)status_="Paused";return ok;}
+std::vector<SkidQuad> Session::render_skids(const SkidView& view){
+    if(!simulation_||snapshot_.step==0)return {};
+    std::vector<SkidQuad> commands;
+    try{
+        const auto gap=hp2::guard([&]{commands=simulation_->render_skids(view);});
+        if(!gap.empty()){fail(gap);return {};}
+    }catch(const std::exception& error){fail(error.what());return {};}
+    return commands;
+}
 bool Session::tick(float elapsed){
     if(paused_)return false;
     if(!std::isfinite(elapsed)||elapsed<0){fail("Invalid elapsed simulation clock input");return false;}

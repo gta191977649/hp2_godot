@@ -55,6 +55,7 @@ render::VehicleSolid solid(const Reader& r,const Chunk& parent) {
     if(!header||!entries||!stream||!textures) throw std::runtime_error("Vehicle solid lacks required chunks");
     render::VehicleSolid result;result.hash=r.u32(header+8);
     for(std::size_t i=0;i<0x20 && r.data[header+0x10+i];++i)result.name.push_back(char(r.data[header+0x10+i]));
+    result.strip_flags=r.u16(header+0x32);
     for(std::size_t i=0;i<3;++i){result.bounds_min[i]=r.f32(header+0x40+i*4);result.bounds_max[i]=r.f32(header+0x50+i*4);}
     for(std::size_t i=0;i<16;++i)result.transform[i]=r.f32(header+0x60+i*4);
     const auto count=r.u16(header+0x34);

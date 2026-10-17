@@ -21,7 +21,7 @@ public:
     std::optional<ViewerRequest> next();
     void activate(ViewerKind kind);
     void apply(const ViewerRequest& request);
-    // Port-side completion from the car loader; never reports a fixture as loaded content.
+    // Port-side completion from an original asset loader; never reports a fixture as loaded content.
     void loaded(bool success, std::string diagnostic, std::string rendering);
     void rendering(std::string description) { state_.rendering = std::move(description); }
     void camera(std::string description) { state_.camera = std::move(description); }

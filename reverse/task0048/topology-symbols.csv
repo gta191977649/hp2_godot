@@ -1,0 +1,29 @@
+address,name,evidence,status
+0x002132c8,WaferPolyhedron::Init,E-0048-T03,Reconstructed
+0x00212eb0,RectPolyhedron constructor,E-0048-T03,Reconstructed
+0x001cf6a8,VCVertex::SetVoronoiPlanes,E-0048-T03,Reconstructed
+0x001cf8f0,VCEdge::SetVoronoiPlanes,E-0048-T03,Reconstructed
+0x001cfc68,VCFace::SetVoronoiPlanes,E-0048-T03,Reconstructed
+0x00213a30,LoaderCollisionVolumes,E-0048-T04,Reconstructed
+0x001d01c8,VCPolyhedron::MemoryImageLoad,E-0048-T04,Reconstructed
+0x001d0d10,VCPolyhedron::ConvertToPointers,E-0048-T04,Reconstructed
+0x00213c98,FindPipelinePolyhedron,E-0048-T04,Reconstructed
+0x00213d00,PipelinePolyhedron::MoveCenterOfGravity,E-0048-T04,Reconstructed
+0x001ccf28,VCTransform constructor,E-0048-T05,Reconstructed
+0x001cd0c8,VCTransformedFeature::TransformVertex,E-0048-T05,Reconstructed
+0x001cd138,VCTransformedFeature::TransformEdge,E-0048-T05,Reconstructed
+0x001cd220,VCVoronoiClip::ClipPlanes,E-0048-T05,Reconstructed
+0x001cd388,VCVoronoiClip::ClipVertexPlanes,E-0048-T05,Reconstructed
+0x001cd590,VCVoronoiClip::ClipFacePlanes,E-0048-T05,Reconstructed
+0x001cda08,VCWitness::CheckVertexVertex,E-0048-T05,Reconstructed
+0x001cdd00,VCWitness::CheckVertexEdge,E-0048-T05,Reconstructed
+0x001ce038,VCWitness::CheckVertexFace,E-0048-T05,Reconstructed
+0x001ce5f8,VCWitness::SubCheckEdgeEdge,E-0048-T05,Reconstructed
+0x001ce6d8,VCWitness::CheckEdgeEdge,E-0048-T05,Reconstructed
+0x001cec10,VCWitness::CheckEdgeFace,E-0048-T05,Reconstructed
+0x001cf360,VCWitness::VClip,E-0048-T05,Reconstructed
+0x001d3d90,DynamicCollisionBody::BuildBoundingVolumes,E-0048-T06,Reconstructed
+0x001d3fa0,DynamicCollisionBody::BeginMove,E-0048-T06,Reconstructed
+0x001d4040,DynamicCollisionBody::Interpolate,E-0048-T06,Reconstructed
+0x001d4298,DynamicCollisionBody::Backup,E-0048-T06,Reconstructed
+0x0014d630,World::DoTimestepCollisions,E-0048-T06,Reconstructed

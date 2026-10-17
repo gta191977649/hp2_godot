@@ -2,6 +2,7 @@
 import json
 from pathlib import Path
 import re
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -13,6 +14,9 @@ import reorganize_driving_projections as migration
 import generate_class_templates as generator
 import adopt_debug_reference_names as legacy
 
+
+def historical_source(path):
+    return subprocess.check_output(['git','show','8c7efde:'+path],cwd=ROOT).decode('utf-8-sig')
 
 def current_ledger():
     path = ROOT / 'reverse/naming/task0043-projection-bindings.json'
@@ -27,7 +31,7 @@ class ProjectionPartitionTests(unittest.TestCase):
         parsed = {}
         for row in ledger['functions']:
             if row['source'] not in parsed:
-                text = (ROOT / row['source']).read_text()
+                text = historical_source(row['source'])
                 parsed[row['source']] = (text, migration.functions(text)[0])
             text, functions = parsed[row['source']]
             matched = [function for function in functions
@@ -44,7 +48,7 @@ class ProjectionPartitionTests(unittest.TestCase):
 
     def test_every_anonymous_chunk_preserves_helpers_constants_and_literal_values(self):
         ledger = current_ledger()
-        support = (ROOT / 'src/game_core/port/driving/projection_support.hpp').read_text()
+        support = historical_source('src/game_core/port/driving/projection_support.hpp')
         _, namespaces = migration.functions(support)
         for row in ledger['helper_chunks']:
             matches = [namespace for namespace in namespaces if namespace[3] == row['scope'] and
@@ -96,13 +100,25 @@ class ProjectionPartitionTests(unittest.TestCase):
     def test_all_recovered_partition_signatures_have_their_own_generator_address(self):
         ledger = current_ledger()
         definitions = generator.definitions()
+        review_path=ROOT/'reverse/task0044/projection-retirements.json'
+        review=json.loads(review_path.read_text()) if review_path.exists() else {'before':[]}
+        import audit_task0043_preservation as body_audit
+        import audit_task0044_migration as migration_audit
         for row in ledger['functions']:
             if not row['elf_address']:
                 continue
             matches = [definition for definition in definitions.get(row['elf_address'], [])
                        if definition['path'] == row['source'] and
                        definition['signature'] == ' '.join(row['source_signature'].split())]
-            self.assertEqual(len(matches), 1, (row['elf_address'], row['source_signature']))
+            if len(matches)==1:
+                continue
+            expected_signature=body_audit.extract(row['source_signature']+'{}')[0]['signature_tokens']
+            historical=[function for function in body_audit.extract(historical_source(row['source']),row['source'])
+                if function['signature_tokens'] == expected_signature]
+            self.assertEqual(len(historical),1,(row['elf_address'],row['source_signature']))
+            expected=migration_audit.identity(historical[0])
+            self.assertTrue(any(all(permission.get(k)==v for k,v in expected.items()) for permission in review['before']),
+                ('Unreviewed retired projection signature',row['elf_address'],row['source_signature']))
 
     def test_legacy_writer_refuses_later_registry_before_any_write(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -51,10 +51,11 @@ std::vector<std::uint8_t> fixture() {
 }
 }
 int main() {
-    auto direct=fixture();direct[16+0x28]=32;direct[16+0x4a]=0;
+    auto direct=fixture();direct[16+0x29]=0xfe;direct[16+0x28]=32;direct[16+0x4a]=0;
     u32(direct,16+0x30,0);u32(direct,16+0x38,16);u32(direct,16+0x3c,0);
     for(int i=0;i<16;++i)direct[256+i]=std::uint8_t(i+1);
     auto archive=hp2::assets::Hp2TpkArchive::load(direct);
+    require(archive->headers().front().RenderingOrder==-2,"Debug signed RenderingOrder+0x29 metadata was not retained");
     const auto direct_image=archive->decode_linear32(archive->headers().front());
     require(direct_image&&direct_image->rgba.front()==1&&direct_image->rgba[8]==9&&direct_image->rgba[3]==4,"PSMCT32 row/byte/alpha ordering");
     auto bad_header=archive->headers().front();bad_header.image_size=15;

@@ -1,0 +1,97 @@
+{
+  "task": "TASK-0046",
+  "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "superseded_template_binary_id": "sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2",
+  "policy": "Separate successor owner registry; historical Retail evidence retained. Debug ObjectView is an explicit logical memory binding, never a host ABI claim.",
+  "classes": {
+    "RealDriver": {
+      "header": "src/game_core/indep/inc/RealDriver.hpp",
+      "namespace": "hp2::recovered",
+      "binding": "port::driving::ObjectView",
+      "status": "Debug canonical implementation owner; historical Retail template attribution superseded",
+      "evidence_id": "E-0046-C01",
+      "debug_addresses": [
+        "0x0013AB98",
+        "0x0013B168",
+        "0x0013B198",
+        "0x0013B1D8",
+        "0x0013B200",
+        "0x0013B368",
+        "0x0013B438",
+        "0x0013B948",
+        "0x0013BC90",
+        "0x0013BD70"
+      ]
+    },
+    "CarDriver": {
+      "header": "src/game_core/indep/inc/CarDriver.hpp",
+      "namespace": "hp2::recovered",
+      "binding": "port::driving::ObjectView",
+      "status": "Debug canonical implementation owner; historical Retail template attribution superseded",
+      "evidence_id": "E-0046-C01",
+      "debug_addresses": [
+        "0x00136C58",
+        "0x00136C30"
+      ]
+    },
+    "SkidSegment": {
+      "header": "src/game_core/indep/src/skids.hpp",
+      "namespace": "hp2::recovered",
+      "binding": "Explicit logical Memory or host draw-command binding; not PS2 ABI",
+      "status": "Debug canonical implementation owner; historical Retail template attribution superseded",
+      "evidence_id": "E-0046-S01",
+      "debug_addresses": [
+        "0x001A7E98",
+        "0x001A7F08",
+        "0x001A7F80"
+      ]
+    },
+    "SkidSet": {
+      "header": "src/game_core/indep/src/skids.hpp",
+      "namespace": "hp2::recovered",
+      "binding": "Explicit logical Memory or host draw-command binding; not PS2 ABI",
+      "status": "Debug canonical implementation owner; historical Retail template attribution superseded",
+      "evidence_id": "E-0046-S01",
+      "debug_addresses": [
+        "0x001A8008",
+        "0x001A80D8",
+        "0x001A8150",
+        "0x001A8398",
+        "0x001A83B8",
+        "0x001A8B68"
+      ]
+    },
+    "SkidMaker": {
+      "header": "src/game_core/indep/src/skids.hpp",
+      "namespace": "hp2::recovered",
+      "binding": "Explicit logical Memory or host draw-command binding; not PS2 ABI",
+      "status": "Debug canonical implementation owner; historical Retail template attribution superseded",
+      "evidence_id": "E-0046-S01",
+      "debug_addresses": [
+        "0x001A8648",
+        "0x001A8778"
+      ]
+    },
+    "ePoly": {
+      "header": "src/game_core/src/ecstasy/ecstasye.hpp",
+      "namespace": "hp2::recovered",
+      "binding": "Explicit logical Memory or host draw-command binding; not PS2 ABI",
+      "status": "Debug canonical implementation owner; historical Retail template attribution superseded",
+      "evidence_id": "E-0046-S02",
+      "debug_addresses": [
+        "0x0010FD48",
+        "0x00110368"
+      ]
+    },
+    "ReplayManager": {
+      "header": "src/game_core/ReplayManager.hpp",
+      "namespace": "hp2::recovered",
+      "binding": "port::driving::ObjectView",
+      "status": "Debug canonical implementation owner; historical Retail template attribution superseded",
+      "evidence_id": "E-0046-C01",
+      "debug_addresses": [
+        "0x0013E070"
+      ]
+    }
+  }
+}

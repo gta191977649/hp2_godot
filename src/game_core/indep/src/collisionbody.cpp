@@ -353,3 +353,64 @@ void TrackPolygonCollisionBody::GetTerrainType() {
     hp2::not_implemented("0x001D8B28", "TrackPolygonCollisionBody::GetTerrainType (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+#include <cmath>
+// TASK-0048 E-0048-T02. Debug NFSHP2.ELF SHA-256
+// 815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
+namespace hp2::recovered {
+// Debug 0x001D4920; original DynamicCollisionBody::TrackPolygonCheck.
+bool DynamicCollisionBody::TrackPolygonCheck(const port::track::CollisionCylinder& body,const port::track::Polygon& polygon){
+    const auto& n=polygon.plane;
+    const float axis_dot=(body.axis[0]*n[0]+body.axis[1]*n[1])+body.axis[2]*n[2];
+    const float radial=std::sqrt(1.0f-axis_dot*axis_dot);
+    const float distance=((body.center[0]*n[0]+body.center[1]*n[1])+body.center[2]*n[2])-n[3];
+    const float height=axis_dot*distance<0?body.top_height:body.base_height;
+    return std::abs(distance)<std::abs(axis_dot)*height+radial*body.radius;
+}
+}
+
+#include "game_core/indep/src/rigidbody.hpp"
+#include <cmath>
+namespace hp2::recovered {
+// Debug001D4ED0; E-0048-D04.
+float CarCollisionBody::GetMassInverse(port::driving::Memory& m,std::uint32_t body){return body?std::min(m.scalar(body+0x11c),m.scalar(0x00325afc)):0;}
+// Debug001D4F08; E-0048-D04. Original scales I_body_inv rows0..2 and copies row3.
+std::array<float,16> CarCollisionBody::GetInertiaTensorInverse(port::driving::Memory& m,std::uint32_t body){auto result=m.matrix(body+0x120);for(unsigned i=0;i<12;++i)result[i]*=m.scalar(0x00325b00);return result;}
+// Debug001D4F50; E-0048-D04. Native playerless/no-damage fixture branch of side effects only.
+void CarCollisionBody::ApplyImpulse(port::driving::Memory& m,std::uint32_t body,std::uint32_t car,const std::array<float,4>& impulse,const std::array<float,4>& arm){
+    float factor=1;const float mass_inverse=m.scalar(body+0x11c);if(m.scalar(0x00325b04)<mass_inverse)factor=m.scalar(0x00325b04)/mass_inverse;
+    auto scaled=impulse;for(auto& f:scaled)f*=factor;
+    RigidBody(m,body).ApplyImpulseWithScaledInverseInertiaTensor(scaled,arm,m.scalar(0x00325b08));
+    // Debug001D5008 AddDamage and001D5188 AnimateCollisionReaction: exact null branches.
+    if(m.word(car+0x844)||m.word(car+0x18)||m.word(0x00328c1c))hp2::not_implemented("0x001D5008","collision damage/player/police effects are outside the native playerless fixture");
+    if(m.word(car+0x4b4))hp2::not_implemented("0x001D5188","animated collision reaction is outside the native playerless fixture");
+}
+}
+#include "game_core/port/driving/static_collisions.hpp"
+// TASK-0048 E-0048-T06. Debug original backup/broad-phase member bindings.
+namespace hp2::recovered {
+// Debug001D3D90. Original cylinder extent construction from the loaded collision vertices.
+port::track::CollisionCylinder DynamicCollisionBody::BuildBoundingVolumes(port::driving::Memory& m,const port::track::VoronoiPolyhedron& shape){
+    port::track::CollisionCylinder cylinder;float radius=0,low=0,high=0;
+    for(const auto& v:shape.vertices){const float radial=std::sqrt(v.position[0]*v.position[0]+v.position[1]*v.position[1]);if(radius<radial)radius=radial;
+        if(high<v.position[2])high=v.position[2];else if(v.position[2]<low)low=v.position[2];}
+    const float margin=m.scalar(0x00325ad8);cylinder.radius=radius+margin;cylinder.base_height=margin-low;cylinder.top_height=high+margin;return cylinder;
+}
+// Debug001D3FA0.
+port::driving::CollisionMotion DynamicCollisionBody::BeginMove(const port::driving::Memory& m,std::uint32_t body,float timestep){
+    port::driving::CollisionMotion frame;frame.previous=port::driving::collision_pose(m,body);const auto v=m.vector(body+0x90);frame.velocity={{v[0],v[1],v[2]}};frame.timestep=timestep;return frame;
+}
+// Debug001D4040. Rotation is interpolated componentwise, without normalization.
+port::track::VoronoiPose DynamicCollisionBody::Interpolate(const port::driving::Memory& m,std::uint32_t body,const port::driving::CollisionMotion& frame,float backup){
+    const auto current=port::driving::collision_pose(m,body);if(frame.timestep<m.scalar(0x00325adc))return current;
+    const float fraction=(frame.timestep-backup)/frame.timestep;auto result=frame.previous;
+    for(unsigned j=0;j<3;++j){result.position[j]+=(current.position[j]-result.position[j])*fraction;for(unsigned i=0;i<3;++i)result.basis[i][j]+=(current.basis[i][j]-result.basis[i][j])*fraction;}return result;
+}
+// Debug001D4298/001D41E8. Only X/R/P are restored; angular momentum remains current.
+void DynamicCollisionBody::Backup(port::driving::Memory& m,std::uint32_t body,const port::driving::CollisionMotion& frame,float backup){
+    const auto pose=Interpolate(m,body,frame,backup);const auto current=m.vector(body+0x90);std::array<float,4> velocity=current;
+    if(!(frame.timestep<m.scalar(0x00325ae0))){const float fraction=(frame.timestep-backup)/frame.timestep;for(unsigned j=0;j<3;++j)velocity[j]=frame.velocity[j]+(current[j]-frame.velocity[j])*fraction;}
+    auto position=m.vector(body+0x10);auto matrix=m.matrix(body+0x20);for(unsigned j=0;j<3;++j){position[j]=pose.position[j];for(unsigned i=0;i<3;++i)matrix[i*4+j]=pose.basis[i][j];}
+    m.vector(body+0x10,position);m.matrix(body+0x20,matrix);for(unsigned j=0;j<4;++j)velocity[j]*=m.scalar(body+0x118);m.vector(body+0x60,velocity);
+}
+}

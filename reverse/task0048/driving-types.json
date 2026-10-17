@@ -1,0 +1,244 @@
+{
+  "evidence": "E-0048-D02",
+  "program": "NFSHP2.ELF",
+  "types": [
+    {
+      "name": "TrackPositionMarker",
+      "size": 24,
+      "components": [
+        {
+          "name": "Next",
+          "offset": 0,
+          "length": 4,
+          "type": "bNode *"
+        },
+        {
+          "name": "Prev",
+          "offset": 4,
+          "length": 4,
+          "type": "bNode *"
+        },
+        {
+          "name": "NameHash",
+          "offset": 8,
+          "length": 4,
+          "type": "uint32"
+        },
+        {
+          "name": "Param",
+          "offset": 12,
+          "length": 4,
+          "type": "int"
+        },
+        {
+          "name": "Position",
+          "offset": 16,
+          "length": 8,
+          "type": "bVector2"
+        }
+      ],
+      "raw_response_sha256": "7709c211772cf63c8e3ec8d9e2fb3f241d0174e95a550e458240d16a5894612e"
+    },
+    {
+      "name": "TrackPath",
+      "size": 40,
+      "components": [
+        {
+          "name": "PathNumber",
+          "offset": 0,
+          "length": 1,
+          "type": "int8"
+        },
+        {
+          "name": "Looping",
+          "offset": 1,
+          "length": 1,
+          "type": "int8"
+        },
+        {
+          "name": "BeginPointNumber",
+          "offset": 2,
+          "length": 2,
+          "type": "int16"
+        },
+        {
+          "name": "EndPointNumber",
+          "offset": 4,
+          "length": 2,
+          "type": "int16"
+        },
+        {
+          "name": "NumPoints",
+          "offset": 6,
+          "length": 2,
+          "type": "int16"
+        },
+        {
+          "name": "BeginDistance",
+          "offset": 8,
+          "length": 4,
+          "type": "float"
+        },
+        {
+          "name": "EndDistance",
+          "offset": 12,
+          "length": 4,
+          "type": "float"
+        },
+        {
+          "name": "DistanceRatio",
+          "offset": 16,
+          "length": 4,
+          "type": "float"
+        },
+        {
+          "name": "BeginPosition",
+          "offset": 20,
+          "length": 8,
+          "type": "bVector2"
+        },
+        {
+          "name": "EndPosition",
+          "offset": 28,
+          "length": 8,
+          "type": "bVector2"
+        },
+        {
+          "name": "pQuickSpline",
+          "offset": 36,
+          "length": 4,
+          "type": "QuickSpline *"
+        }
+      ],
+      "raw_response_sha256": "df497e61ac85a4a0a9efa900454f047edf16da2a6592df6ad2acad67fc272d02"
+    },
+    {
+      "name": "TrackPathPoint",
+      "size": 20,
+      "components": [
+        {
+          "name": "Position",
+          "offset": 0,
+          "length": 8,
+          "type": "bVector2"
+        },
+        {
+          "name": "PathNumber",
+          "offset": 8,
+          "length": 1,
+          "type": "int8"
+        },
+        {
+          "name": "DontSwitch",
+          "offset": 9,
+          "length": 1,
+          "type": "int8"
+        },
+        {
+          "name": "NeighbourNumbers",
+          "offset": 10,
+          "length": 6,
+          "type": "short int[3]"
+        },
+        {
+          "name": "Distance",
+          "offset": 16,
+          "length": 4,
+          "type": "float"
+        }
+      ],
+      "raw_response_sha256": "5fbfd2010ca3c23783a46d4dd425799a6a81099e40d3af3817ba9de0229cd00b"
+    },
+    {
+      "name": "QuickSpline",
+      "size": 40,
+      "components": [
+        {
+          "name": "EndPointType",
+          "offset": 0,
+          "length": 4,
+          "type": "QuickSplineEndPointType"
+        },
+        {
+          "name": "BasisType",
+          "offset": 4,
+          "length": 4,
+          "type": "QuickSplineBasisType"
+        },
+        {
+          "name": "MaxParam",
+          "offset": 8,
+          "length": 4,
+          "type": "float"
+        },
+        {
+          "name": "MinParam",
+          "offset": 12,
+          "length": 4,
+          "type": "float"
+        },
+        {
+          "name": "Length",
+          "offset": 16,
+          "length": 4,
+          "type": "float"
+        },
+        {
+          "name": "ControlPointsDirty",
+          "offset": 20,
+          "length": 1,
+          "type": "int8"
+        },
+        {
+          "name": "BufferWasAllocated",
+          "offset": 21,
+          "length": 1,
+          "type": "int8"
+        },
+        {
+          "name": "MinControlPoints",
+          "offset": 22,
+          "length": 1,
+          "type": "int8"
+        },
+        {
+          "name": "",
+          "offset": 23,
+          "length": 1,
+          "type": "undefined"
+        },
+        {
+          "name": "MaxControlPoints",
+          "offset": 24,
+          "length": 2,
+          "type": "uint16"
+        },
+        {
+          "name": "NumControlPoints",
+          "offset": 26,
+          "length": 2,
+          "type": "uint16"
+        },
+        {
+          "name": "pControlPointBuffer",
+          "offset": 28,
+          "length": 4,
+          "type": "bVector4 *"
+        },
+        {
+          "name": "pControlPoints",
+          "offset": 32,
+          "length": 4,
+          "type": "bVector4 *"
+        },
+        {
+          "name": "pBasisMatricies",
+          "offset": 36,
+          "length": 4,
+          "type": "bMatrix4 *"
+        }
+      ],
+      "raw_response_sha256": "039990e0a2a3d2f77058e5c7680e0de9fde942f8421c19fc40bd1fb56185eb25"
+    }
+  ]
+}

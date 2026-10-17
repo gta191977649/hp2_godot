@@ -1,0 +1,80 @@
+{
+  "task": "TASK-0048",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_source_review_lf_sha256": "d156e2a9a349870ad8a4b2ccf802fb87c91b66cc23c635c32cc52f9d8384a1a0",
+  "policy": "Explicit E-0048-D05 BaseModelName and catalogue resource-path correction. Initial TASK0048 review and all historical baselines remain immutable.",
+  "before": [
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::advance",
+      "signature_sha256": "4b3b67ca000d00c4cfc26033669039b9ac1a8c4990327486dbfa5a4ee70d6e66",
+      "body_sha256": "ff07144c283bb6c8feb0bff333daa2f12ec0fa61047cc35561d41ff7912ab3c3",
+      "stub": false,
+      "evidence_id": "E-0048-D05",
+      "reason": "Read original bounded Config.raw BaseModelName field0x20 rather than display/config code, and select its _CV hash; preserve original fallback only for actual absent base-model volume.",
+      "evidence_record": "reverse/task0048/model-alias-correction.md"
+    },
+    {
+      "path": "src/game_core/port/driving/static_collisions.cpp",
+      "name": "StaticCollisions::configure",
+      "signature_sha256": "3e3f0f77dad845f978ceccdb17a64208c56ffeeb1b759da9573bd68874a53bdd",
+      "body_sha256": "ab19eaec5e9fcd745a6f89d63d65688e19cddfecb22abc46c53ae8133a37d416",
+      "stub": false,
+      "evidence_id": "E-0048-D05",
+      "reason": "Read original bounded Config.raw BaseModelName field0x20 rather than display/config code, and select its _CV hash; preserve original fallback only for actual absent base-model volume.",
+      "evidence_record": "reverse/task0048/model-alias-correction.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::set_track",
+      "signature_sha256": "25c4433f15a30333c1926ba9022de42d49a9ee0f2c55522f6dae93a7751ce51d",
+      "body_sha256": "76a2e4a1fec0416185ec212f5162b45e0fb5cc6be4515b8f950958289b9e7880",
+      "stub": false,
+      "evidence_id": "E-0048-D05",
+      "reason": "Resolve the selected original vehicle catalogue row by code and read its validated resource_path; HP aliases cannot assume CARS/<code>/GEOMETRY.BIN.",
+      "evidence_record": "reverse/task0048/model-alias-correction.md"
+    }
+  ],
+  "after": [
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::advance",
+      "signature_sha256": "4b3b67ca000d00c4cfc26033669039b9ac1a8c4990327486dbfa5a4ee70d6e66",
+      "body_sha256": "e2af6fda20882fc21f345b2c3bfbf28352c1741006b63af2acd338f74e5557c1",
+      "stub": false,
+      "evidence_id": "E-0048-D05",
+      "reason": "Read original bounded Config.raw BaseModelName field0x20 rather than display/config code, and select its _CV hash; preserve original fallback only for actual absent base-model volume.",
+      "evidence_record": "reverse/task0048/model-alias-correction.md"
+    },
+    {
+      "path": "src/game_core/port/driving/session.cpp",
+      "name": "base_model_name",
+      "signature_sha256": "a3e1c3abb26406e9e11e33a146d1ee2fb902997586ba3395a315e6684905e128",
+      "body_sha256": "fead5c4c9220b0f7836db96e877a97be90a200b63112105ac9dec06c5c94ba98",
+      "stub": false,
+      "evidence_id": "E-0048-D05",
+      "reason": "Read original bounded Config.raw BaseModelName field0x20 rather than display/config code, and select its _CV hash; preserve original fallback only for actual absent base-model volume.",
+      "evidence_record": "reverse/task0048/model-alias-correction.md"
+    },
+    {
+      "path": "src/game_core/port/driving/static_collisions.cpp",
+      "name": "StaticCollisions::configure",
+      "signature_sha256": "4c5387dc3968511dc272a601c47ea68bff002202ab76808197ea329fb7187748",
+      "body_sha256": "6dc38ad1d425df990e0cda7b7944468069dfc05bb5093f8af32a2f5d9a19096e",
+      "stub": false,
+      "evidence_id": "E-0048-D05",
+      "reason": "Read original bounded Config.raw BaseModelName field0x20 rather than display/config code, and select its _CV hash; preserve original fallback only for actual absent base-model volume.",
+      "evidence_record": "reverse/task0048/model-alias-correction.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::set_track",
+      "signature_sha256": "25c4433f15a30333c1926ba9022de42d49a9ee0f2c55522f6dae93a7751ce51d",
+      "body_sha256": "e85e89e3cbb2d55e84c79d54602e550f5f00685a13939ea289289749a25adc60",
+      "stub": false,
+      "evidence_id": "E-0048-D05",
+      "reason": "Resolve the selected original vehicle catalogue row by code and read its validated resource_path; HP aliases cannot assume CARS/<code>/GEOMETRY.BIN.",
+      "evidence_record": "reverse/task0048/model-alias-correction.md"
+    }
+  ]
+}

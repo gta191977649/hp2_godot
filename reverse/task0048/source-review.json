@@ -1,0 +1,1742 @@
+{
+  "task": "TASK-0048",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "additional_target_binary_sha256": "7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2",
+  "baseline_inventory_sha256": "0c782ccd13ae38018406c7ad9cdb9388a2c8dc3dbbb3a632dbe3721987587dc7",
+  "predecessor_review_lf_sha256": "c93f5f8eedf077e0205c55eafcff6da98cdb1381b207539fbaa3896f885ebeab",
+  "policy": "Explicit root-reviewed successor; immutable historical inventories/reviews. No accept-current mode. Scope and evidence source-review.md; not original numerical verification.",
+  "before": [
+    {
+      "path": "src/game_core/extensions/viewer_session.cpp",
+      "name": "ViewerSession::apply",
+      "signature_sha256": "1dd0ee11c2996249f2fdd7ccb7bcc90e8b606265b32425b1b748f9b4dc1b2f86",
+      "body_sha256": "3b78c05da97f6d71df615891f7efc7e1dd36681c790d95dcfd4305d8ab1a484a",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/extensions/viewer_session.cpp",
+      "name": "ViewerSession::loaded",
+      "signature_sha256": "3b5c1add440d1c7e020dbcf2118b51812b31bd24ac8dbd3593af3972448ae624",
+      "body_sha256": "2a4788e7d46f2be00a76efcf6a31f8f6a93913a6daabe8d5eb4beef733223612",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw",
+      "signature_sha256": "af5c4109ffb88c769db23520815cad4706cfef9cd312c96a3eb3cbd7b1f54a9d",
+      "body_sha256": "a9ed8aabc4bcc7dcb0e490c2d95c37f7e2ae5ff3869975e62b9d7df7452ced9e",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02",
+      "reason": "Requested TrackViewer catalogue/driving/return UI and read-only stored contact/material diagnostics; original physics is observed rather than rewritten.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/assets/hp2_tpk_texture.cpp",
+      "name": "parse_header",
+      "signature_sha256": "4c8c6896324508d235bff1d202fa6adfe2f6be52f5325d3429dee43a4ae17df4",
+      "body_sha256": "43faf75f66a25bddc80045123e4c5e08e6af6ec68b95e7da40519caebfa7a9c5",
+      "stub": false,
+      "evidence_id": "E-0048-A04",
+      "reason": "Read original BaseImageSize+44 and per-level ImageInfos swizzle fields used by the confirmed mip texture producer; no generated mip approximation.",
+      "evidence_record": "reverse/task0048/assets.md"
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::advance",
+      "signature_sha256": "4b3b67ca000d00c4cfc26033669039b9ac1a8c4990327486dbfa5a4ee70d6e66",
+      "body_sha256": "0e229fe8dfec92a6930c216fde9ab4b73ce2206566269378646a67f5fcf450c8",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::driving_services",
+      "signature_sha256": "a168c5c48819c8be5ae1f38addace6bff91832f77eeb1266841b0e553c79cf09",
+      "body_sha256": "61187d7faa1aeef9e718ee58ef493030ac9ba47de474744647f6395c1229c7c8",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::init_services",
+      "signature_sha256": "e50c7114386469d8021f184e1a96b7569a57e44590976eb8e31d9337c7dfade6",
+      "body_sha256": "1938047d9de5e2e56c2d2c2e5ee53902e2686318619b0783c0fdeb90df6df738",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::initialize",
+      "signature_sha256": "e1f47b42d27ab9bb931bf00fb41dbaf39aa163dbec98ea6dfee70b83ad433ccc",
+      "body_sha256": "a117196475c59d0427f0f9ba8dacd426ab30d22cf8580844ad11074430a5efad",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::publish",
+      "signature_sha256": "61f3484f22491de2fa7e4e0eb0110adda94cac031d21d1b66b30fb853b9398b7",
+      "body_sha256": "2c08532476f6a38ccb81e8adb839668776c0f6ec200b15ef7d449705b0f34146",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::render_skids",
+      "signature_sha256": "513fbc90321ac20e415dc09f88b569326d801644a310bee74f15badd7f4958b3",
+      "body_sha256": "a9fd513bbd5d7fe7973c1a4cf773b63702ce02e2c8fdf16cd1c759b6edf4b195",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::reset",
+      "signature_sha256": "72473a2dedd76871aea38250fdda48bad108b6e5eef4fb49edf61f905b055ce7",
+      "body_sha256": "6e1d397380dc136c90d56983cefc34d369b860e725d20667b99fa00e106dc715",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/surface.cpp",
+      "name": "observe_grip",
+      "signature_sha256": "6b869c2bb4ad34ec1db360d2dcf76ba099ee3a1501f1b5a644b7aa1347315077",
+      "body_sha256": "b08f803658ad3282482105bd2af415ba06f652c47a03d1b6aadf63513d7fb27b",
+      "stub": false,
+      "evidence_id": "E-0048-H02",
+      "reason": "Read-only observation of stored Wheel contact point130 and plane140; no topology requery, guessed face identity or physics calculation.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::_bind_methods",
+      "signature_sha256": "6f835c47a5b8f896ec3cdcc2603a4c630a789a048db2d8e60f1efaa269779161",
+      "body_sha256": "fca5d66d28a8599940becc7f5270c86fca9d59bb0793393c84f186371b262607",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::get_state",
+      "signature_sha256": "fa158aa06d9f842263ca5c01f35cd602f02520c5e5c9b10161d6f92557a8768a",
+      "body_sha256": "d2583fe0bed7978c4e51f604942b18d2a9c60b369e6ea5107fa469b5842d94ef",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::load_config",
+      "signature_sha256": "bd0115a2b0d0526235242202b1236ffa45e292580e7f432a51cdf3d9348749c5",
+      "body_sha256": "8dc6188f1c465e57b769686f1a8361ab94875cd35eee671ef8b7a50191198039",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_snapshot",
+      "signature_sha256": "ef5026d842bd185acad14f92379c944f1db983a3f42547c13e2d150baa0f1c1e",
+      "body_sha256": "0664aef20590da3fe41c88c48ec7650caac4d8cc68f54af1a9f417c9b2ffec26",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/register_types.cpp",
+      "name": "initialize_port",
+      "signature_sha256": "45ede2b425587656ec323d59c9621e655d6d78e9260800a91eb9f7a274713a53",
+      "body_sha256": "cc370904b3b8f9e5ed7293522351518aabc76452f49dc6327a6241caf5b983b3",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    }
+  ],
+  "after": [
+    {
+      "path": "src/game_core/extensions/viewer_session.cpp",
+      "name": "ViewerSession::apply",
+      "signature_sha256": "1dd0ee11c2996249f2fdd7ccb7bcc90e8b606265b32425b1b748f9b4dc1b2f86",
+      "body_sha256": "014120da68b67af884b023a05d9ed98cd928a81b17319503ef28ef1cee97e096",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/extensions/viewer_session.cpp",
+      "name": "ViewerSession::loaded",
+      "signature_sha256": "3b5c1add440d1c7e020dbcf2118b51812b31bd24ac8dbd3593af3972448ae624",
+      "body_sha256": "160f08890ffd82131153ad112dca1e8c7de40fcdb46a8698db2f553df95b9dd1",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw",
+      "signature_sha256": "af5c4109ffb88c769db23520815cad4706cfef9cd312c96a3eb3cbd7b1f54a9d",
+      "body_sha256": "788d940647e2e6833bc226c936cc35d3cc5189235ff0ee1e1febc65765d433bf",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02",
+      "reason": "Requested TrackViewer catalogue/driving/return UI and read-only stored contact/material diagnostics; original physics is observed rather than rewritten.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/indep/inc/Contact.hpp",
+      "name": "CollisionImpulse",
+      "signature_sha256": "460d469d184d4f8bfec1ad1763c19fb5092b800025fc26bb0bc4194f2606f17f",
+      "body_sha256": "e38b1c13e0b2a9250cf1aeec82662dc2dd673f4318af5fce49aae6b800328d01",
+      "stub": false,
+      "evidence_id": "E-0048-D04",
+      "reason": "Recovered original static/car contact time, point, impulse and Resolve callback branch; exact original momentum scaling, no alternate collision model.",
+      "evidence_record": "reverse/task0048/collision-impulse.md"
+    },
+    {
+      "path": "src/game_core/indep/inc/Contact.hpp",
+      "name": "Crowbar",
+      "signature_sha256": "84c9c7b1a9e5b0824e72c7e0202baa061e5c70ff52d19d4cf9148ff06f831d0d",
+      "body_sha256": "da039e9143f4254130b85f236fa6f7f4cf76926eee4cf82e2a8ce8b9b131a31c",
+      "stub": false,
+      "evidence_id": "E-0048-D04",
+      "reason": "Recovered original static/car contact time, point, impulse and Resolve callback branch; exact original momentum scaling, no alternate collision model.",
+      "evidence_record": "reverse/task0048/collision-impulse.md"
+    },
+    {
+      "path": "src/game_core/indep/inc/Contact.hpp",
+      "name": "DenominatorTerm",
+      "signature_sha256": "97dff4746ef02f9d4dbf0ca7fed93cdcaf640dfd589627e1cb5f66a97db6b349",
+      "body_sha256": "16e6c35bea39a4d78fdb0376cdc125ca762eb8e52dba4cc29db844a2a9d5681b",
+      "stub": false,
+      "evidence_id": "E-0048-D04",
+      "reason": "Recovered original static/car contact time, point, impulse and Resolve callback branch; exact original momentum scaling, no alternate collision model.",
+      "evidence_record": "reverse/task0048/collision-impulse.md"
+    },
+    {
+      "path": "src/game_core/indep/inc/Contact.hpp",
+      "name": "FindContactPointAndNormal",
+      "signature_sha256": "0c22dc635d2e602433c50037d4147d28c4145cb166d3bd77c8debe8429a28a43",
+      "body_sha256": "c67b74e3a4810b19ca6cc3d3b37139dd9fd96e0ad695a87300f4ff8c6f1cb3e2",
+      "stub": false,
+      "evidence_id": "E-0048-D04",
+      "reason": "Recovered original static/car contact time, point, impulse and Resolve callback branch; exact original momentum scaling, no alternate collision model.",
+      "evidence_record": "reverse/task0048/collision-impulse.md"
+    },
+    {
+      "path": "src/game_core/indep/inc/Contact.hpp",
+      "name": "FindContactTime",
+      "signature_sha256": "676aea05f4173b283fea3ed958c8535c69b5aba9368033beeb0e4ee8612bb3b6",
+      "body_sha256": "05983d3907947266ad9dbdd82a112b0990822460a562cdc137e5f40414160ca1",
+      "stub": false,
+      "evidence_id": "E-0048-D04",
+      "reason": "Recovered original static/car contact time, point, impulse and Resolve callback branch; exact original momentum scaling, no alternate collision model.",
+      "evidence_record": "reverse/task0048/collision-impulse.md"
+    },
+    {
+      "path": "src/game_core/indep/inc/Contact.hpp",
+      "name": "FindWaferNormal",
+      "signature_sha256": "8302c0cd7dcd80c86ebae2a7322154e4622064415751f0f9da46a97c6521fe45",
+      "body_sha256": "62d3f81b0c3c7403f1f67e44b817ff7b3c5d76cacd734bded27f8d98bc501655",
+      "stub": false,
+      "evidence_id": "E-0048-D04",
+      "reason": "Recovered original static/car contact time, point, impulse and Resolve callback branch; exact original momentum scaling, no alternate collision model.",
+      "evidence_record": "reverse/task0048/collision-impulse.md"
+    },
+    {
+      "path": "src/game_core/indep/inc/Contact.hpp",
+      "name": "GetContactPointVelocity",
+      "signature_sha256": "232f9a42ffd06d7ebb671ca92acb0dec6bb937a07acd1ec5795ef64e57416b22",
+      "body_sha256": "d6342691c40d5a9bf8673ae0aea2c860c828196c956572d653a7fe739aa1c3b7",
+      "stub": false,
+      "evidence_id": "E-0048-D04",
+      "reason": "Recovered original static/car contact time, point, impulse and Resolve callback branch; exact original momentum scaling, no alternate collision model.",
+      "evidence_record": "reverse/task0048/collision-impulse.md"
+    },
+    {
+      "path": "src/game_core/indep/inc/Contact.hpp",
+      "name": "Resolve",
+      "signature_sha256": "8aea747dac5fea975c1d0099e3b096cd6398bc9d0e4ae20d84b6e9c380e0c991",
+      "body_sha256": "09c2887adaeebd2639a46990cd11ba7d1c7c9bc61bbc6f8a4aea912a6f50376a",
+      "stub": false,
+      "evidence_id": "E-0048-D04",
+      "reason": "Recovered original static/car contact time, point, impulse and Resolve callback branch; exact original momentum scaling, no alternate collision model.",
+      "evidence_record": "reverse/task0048/collision-impulse.md"
+    },
+    {
+      "path": "src/game_core/indep/inc/Polyhedra.hpp",
+      "name": "FindPipelinePolyhedron",
+      "signature_sha256": "9c30d8ba15df29f98827a18740157120bc25aee244637b98142fef30ad9d5578",
+      "body_sha256": "f44801dd744ec2a255fde28c870d5434bb5617b2717aa7c326d0de37667cf53e",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/inc/Polyhedra.hpp",
+      "name": "Init",
+      "signature_sha256": "5039a283f33d2766e90e384903bd24e4ec1afc98ed3ee5aef14df715fa669af3",
+      "body_sha256": "82e28c2a049b1bcc40792b0ab180b1aa98bb68b5d52975990b4c3fe80420f7f0",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/inc/Polyhedra.hpp",
+      "name": "LoaderCollisionVolumes",
+      "signature_sha256": "9cd1312d49d41192ef5f57d89df2029bb207b8e71d7bbdb29f82c1bdf4638dad",
+      "body_sha256": "60d598d758da77f3f1a068ef921917e732f4d5dc2d8aa255001e2aa0d775fa20",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/inc/Polyhedra.hpp",
+      "name": "MoveCenterOfGravity",
+      "signature_sha256": "99b4885e1d24c0d100f7e1514ef8bd4d022c46439c35b2fe34add209d02a3177",
+      "body_sha256": "e62d610af2bbff8b7e1896929d76d55b7bc15b5d299ff2f683c59d99b9ea4e58",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/inc/Polyhedra.hpp",
+      "name": "Sub_00212EB0",
+      "signature_sha256": "28f9d35a5a4047e15b950f0b0869ac6b9166e71cdc3db21ffc052a2d72bc91ee",
+      "body_sha256": "fa40b8a2e6dd6e1f6f491629d338e8d8c8bdce5acc3fd72d1c3f6183b3e82d49",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/inc/Polyhedra.hpp",
+      "name": "load_collision_volumes",
+      "signature_sha256": "bc7b5455f901f88e1ba15ddef348fa0ebe145870a2d582726574224cb90c44a8",
+      "body_sha256": "9318a4d75272be6beafef2dc0cc4cdebc98952d3a8defacacb02ab24ee9db6c5",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/car.cpp",
+      "name": "Car::FindFlatOnTrackPosition",
+      "signature_sha256": "07b9fd68abb5dc3ddefa68e6e04f5ff4043cb1228a800310665aefbe65c849d9",
+      "body_sha256": "3584971bd13a00b3cd5dbb0cf82563f2dc3b260178d5b64a1ebfb4b428cc9e3b",
+      "stub": false,
+      "evidence_id": "E-0048-D03",
+      "reason": "Original quantized Car flat-on-track five-point placement and eRotateX mathematics, retaining original constants and existing angle/sine helpers.",
+      "evidence_record": "reverse/task0048/driving-integration.md"
+    },
+    {
+      "path": "src/game_core/indep/src/collisionbody.cpp",
+      "name": "CarCollisionBody::ApplyImpulse",
+      "signature_sha256": "46ac67ff39b27c42589da8d09d47b70aebf65c03a4d8ca9a1e7b8c0103cdfb5e",
+      "body_sha256": "44d130a7a4f37952de8fee8399849de6202c2c29def492a084a204e16a66cc81",
+      "stub": false,
+      "evidence_id": "E-0048-D04",
+      "reason": "Recovered CarCollisionBody mass/inertia getters and impulse dispatch into original scaled RigidBody leaf; excluded non-null effect dependencies fail.",
+      "evidence_record": "reverse/task0048/collision-impulse.md"
+    },
+    {
+      "path": "src/game_core/indep/src/collisionbody.cpp",
+      "name": "CarCollisionBody::GetInertiaTensorInverse",
+      "signature_sha256": "491da11474341f7a52ac56594b1951412b794ef307a20491a8612575cd636cca",
+      "body_sha256": "6c0aeb833280381f8dcc16cc283b04a2d100d6a40f54611ffb6a5bdef1f5679a",
+      "stub": false,
+      "evidence_id": "E-0048-D04",
+      "reason": "Recovered CarCollisionBody mass/inertia getters and impulse dispatch into original scaled RigidBody leaf; excluded non-null effect dependencies fail.",
+      "evidence_record": "reverse/task0048/collision-impulse.md"
+    },
+    {
+      "path": "src/game_core/indep/src/collisionbody.cpp",
+      "name": "CarCollisionBody::GetMassInverse",
+      "signature_sha256": "15883966267e9436e1bd532065ac3f69b87b68ba109ef8b72160b739c064bdd4",
+      "body_sha256": "650819d7c4feec90ee00e3e4956bb7d0a3731a44c6fff82a54da75b8e9e832b2",
+      "stub": false,
+      "evidence_id": "E-0048-D04",
+      "reason": "Recovered CarCollisionBody mass/inertia getters and impulse dispatch into original scaled RigidBody leaf; excluded non-null effect dependencies fail.",
+      "evidence_record": "reverse/task0048/collision-impulse.md"
+    },
+    {
+      "path": "src/game_core/indep/src/collisionbody.cpp",
+      "name": "DynamicCollisionBody::Backup",
+      "signature_sha256": "c1ea1eb56cd497e6f67d200f142e91940b2f9146c6cba90415d829634342bd5e",
+      "body_sha256": "1af67b324373268df1593cee406cb0ba57ff6b84dfd474105d7c2ae1f50c4f01",
+      "stub": false,
+      "evidence_id": "E-0048-T02;E-0048-T06",
+      "reason": "Recovered original cylinder/bounding and dynamic backup/interpolation services for static track collision closure.",
+      "evidence_record": "reverse/task0048/static-collision-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/collisionbody.cpp",
+      "name": "DynamicCollisionBody::BeginMove",
+      "signature_sha256": "5febd222e51d67eaf0d9d4437823cbf622223560fb435daebe3196810546d98c",
+      "body_sha256": "f5f3e4be625b7f9e0d70a6c293613cbbd178716f3533ed865f0859bc5981b1e4",
+      "stub": false,
+      "evidence_id": "E-0048-T02;E-0048-T06",
+      "reason": "Recovered original cylinder/bounding and dynamic backup/interpolation services for static track collision closure.",
+      "evidence_record": "reverse/task0048/static-collision-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/collisionbody.cpp",
+      "name": "DynamicCollisionBody::BuildBoundingVolumes",
+      "signature_sha256": "84d3758c901c6261d44716a2c852bc5f46c0427237339719407ef92f5aded9bc",
+      "body_sha256": "1aba5b13c9f1c4b77a91f68732998356042072d19207b45631543750f3f7ee03",
+      "stub": false,
+      "evidence_id": "E-0048-T02;E-0048-T06",
+      "reason": "Recovered original cylinder/bounding and dynamic backup/interpolation services for static track collision closure.",
+      "evidence_record": "reverse/task0048/static-collision-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/collisionbody.cpp",
+      "name": "DynamicCollisionBody::Interpolate",
+      "signature_sha256": "6a71b0da2e09d53079f1b13dfc25d2e91539f4a65cfd85a668c5e4eb492cf8f2",
+      "body_sha256": "f24037f19e62b1581d8e0139a03dfb1923fc37b18b6b9039be0f1dcf9798158d",
+      "stub": false,
+      "evidence_id": "E-0048-T02;E-0048-T06",
+      "reason": "Recovered original cylinder/bounding and dynamic backup/interpolation services for static track collision closure.",
+      "evidence_record": "reverse/task0048/static-collision-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/collisionbody.cpp",
+      "name": "DynamicCollisionBody::TrackPolygonCheck",
+      "signature_sha256": "f261df00c1b4f8d8c43d0e36540eb6e362714fbb74f3d21169aba4cda93ce0e0",
+      "body_sha256": "144404bffbd8bc87af5854c4321bbe68aea999ec71c892a71f170c43e7e14b08",
+      "stub": false,
+      "evidence_id": "E-0048-T02;E-0048-T06",
+      "reason": "Recovered original cylinder/bounding and dynamic backup/interpolation services for static track collision closure.",
+      "evidence_record": "reverse/task0048/static-collision-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/quickspline.cpp",
+      "name": "QuickSpline::ClampParam",
+      "signature_sha256": "fcb0b7b5e820bc2243fbfc4ff32767bd9e7489de150498089c1a7148b3dca8fa",
+      "body_sha256": "421db8c14b2f9347d3fb1d174a06ee2daaa075dd20781017a6640a4a62926f15",
+      "stub": false,
+      "evidence_id": "E-0048-D02",
+      "reason": "Original bounded first-position path direction and OVERHAUSER spline/math, with native XY host storage and original-class ownership.",
+      "evidence_record": "reverse/task0048/driving-integration.md"
+    },
+    {
+      "path": "src/game_core/indep/src/quickspline.cpp",
+      "name": "QuickSpline::EvaluateSpline",
+      "signature_sha256": "70d5ac1467840577e4ae9898a3f5f706e2a8a95de69d800410e2fa15e4e81b01",
+      "body_sha256": "b8582f1fc0740fa25272c4b4c0ac220e8842331aae77802523700715fae21eb5",
+      "stub": false,
+      "evidence_id": "E-0048-D02",
+      "reason": "Original bounded first-position path direction and OVERHAUSER spline/math, with native XY host storage and original-class ownership.",
+      "evidence_record": "reverse/task0048/driving-integration.md"
+    },
+    {
+      "path": "src/game_core/indep/src/quickspline.cpp",
+      "name": "QuickSpline::FindClosestParam",
+      "signature_sha256": "fd12489d0c683c4ad09fe9d30893b2343aee2f7c9a9bbd692bd326e3807dbd75",
+      "body_sha256": "9e93acb2d7298b445885b710708912b6ad23fc2df91d5b3b5ed6ec10bb298876",
+      "stub": false,
+      "evidence_id": "E-0048-D02",
+      "reason": "Original bounded first-position path direction and OVERHAUSER spline/math, with native XY host storage and original-class ownership.",
+      "evidence_record": "reverse/task0048/driving-integration.md"
+    },
+    {
+      "path": "src/game_core/indep/src/quickspline.cpp",
+      "name": "QuickSpline::GetPoint",
+      "signature_sha256": "bd402483c27f5fa3e8a2a6107ba4162c3317aaa344e5f2eeec18aa6d5c911645",
+      "body_sha256": "80895c99b4b20ac9fe3d9e49ef73aadc86fbbc097af9ce8373de4688337a73b4",
+      "stub": false,
+      "evidence_id": "E-0048-D02",
+      "reason": "Original bounded first-position path direction and OVERHAUSER spline/math, with native XY host storage and original-class ownership.",
+      "evidence_record": "reverse/task0048/driving-integration.md"
+    },
+    {
+      "path": "src/game_core/indep/src/rigidbody.cpp",
+      "name": "RigidBody::ApplyImpulseWithScaledInverseInertiaTensor",
+      "signature_sha256": "817d2d8292bd558e3ad0d979f86b89c05e8531fbdd05cfc5d42390442de7a33a",
+      "body_sha256": "b0ccc8e4cff48c685c79df113efb4702fdc9ee07566b7d1fb965cdbec96022af",
+      "stub": false,
+      "evidence_id": "E-0048-D04",
+      "reason": "Recovered original static/car contact time, point, impulse and Resolve callback branch; exact original momentum scaling, no alternate collision model.",
+      "evidence_record": "reverse/task0048/collision-impulse.md"
+    },
+    {
+      "path": "src/game_core/indep/src/scenery.cpp",
+      "name": "CreateFacadeMatrix",
+      "signature_sha256": "1c52367ed63f460ac7df0561279d1c24cf1674013b2a9ea241aea07611bc52f8",
+      "body_sha256": "11bc1e0f99ee9e04565a32de436aad5c87ce05e72d11076762a92b9d8159979c",
+      "stub": false,
+      "evidence_id": "E-0048-A05;E-0048-A06",
+      "reason": "Recovered original facade matrices, world-light volume containment/query and lighting identity in original owning classes/functions.",
+      "evidence_record": "reverse/task0048/render-review.md"
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "Topology::clear",
+      "signature_sha256": "9c28b60f00c1284d7da27aed84316b3bd391b4b8337bbd161e4a1453222588fb",
+      "body_sha256": "2657cd0d5ebcd7b3e9dca20e25551e5931932c942476dab224521fa14ead8363",
+      "stub": false,
+      "evidence_id": "E-0048-T01;E-0048-T02",
+      "reason": "Recovered original packed track polygons, tree traversal, elevation, segment and broad-phase query; host storage remains explicit.",
+      "evidence_record": "reverse/task0048/topology-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "Topology::collision_candidates",
+      "signature_sha256": "775da5f577568938c25daab1edf1e46e7286aa0c33d478dda9887f01fceaf8f5",
+      "body_sha256": "3f31bef2e2fcb4199285c9a5150bc259a09db9095ecd5b03f55507b3811d694d",
+      "stub": false,
+      "evidence_id": "E-0048-T01;E-0048-T02",
+      "reason": "Recovered original packed track polygons, tree traversal, elevation, segment and broad-phase query; host storage remains explicit.",
+      "evidence_record": "reverse/task0048/topology-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "Topology::elevation",
+      "signature_sha256": "c89d024ba199f21c82fced09875ca075222c671c2f6c10269ca0c3548543d2c3",
+      "body_sha256": "85cf01c3356c7a54cd53532bea190c3bcbea76fd5fa755dbe9f191582bffa548",
+      "stub": false,
+      "evidence_id": "E-0048-T01;E-0048-T02",
+      "reason": "Recovered original packed track polygons, tree traversal, elevation, segment and broad-phase query; host storage remains explicit.",
+      "evidence_record": "reverse/task0048/topology-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "Topology::intersecting",
+      "signature_sha256": "508e20b7a8f865da881c38ab73f6ba29417fee11265face3f1a69141cc58e90e",
+      "body_sha256": "63783c99f3dafc4fe6b313a1b5e999d904dc4964641003cf76dc1307bda873bb",
+      "stub": false,
+      "evidence_id": "E-0048-T01;E-0048-T02",
+      "reason": "Recovered original packed track polygons, tree traversal, elevation, segment and broad-phase query; host storage remains explicit.",
+      "evidence_record": "reverse/task0048/topology-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "Topology::load",
+      "signature_sha256": "b53fc555f7817a21944855fa239135af36ffa70c777dc37a3a3223371148ba7c",
+      "body_sha256": "03b6a6df1cefc5d58a3cf3bae8995c968b461e70393d918bcad4437892c7827a",
+      "stub": false,
+      "evidence_id": "E-0048-T01;E-0048-T02",
+      "reason": "Recovered original packed track polygons, tree traversal, elevation, segment and broad-phase query; host storage remains explicit.",
+      "evidence_record": "reverse/task0048/topology-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "TopologyCoordinate::GetElevation",
+      "signature_sha256": "30552e9fb551ef6f49d7fd0a52287ec8c9084bb35247e24b5e30cd3486111229",
+      "body_sha256": "aeb09b40405ad27497a49d15142266aa3a7b1f075f1ea09716c4fbb60e092f40",
+      "stub": false,
+      "evidence_id": "E-0048-T01;E-0048-T02",
+      "reason": "Recovered original packed track polygons, tree traversal, elevation, segment and broad-phase query; host storage remains explicit.",
+      "evidence_record": "reverse/task0048/topology-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "TopologyTree::BuildTrackPolygons",
+      "signature_sha256": "d1855fa76c42a04d94d44887dc78e255d53a8d54c12f978ab23353866a5eeb90",
+      "body_sha256": "0fb2e92fc84bdb57a90d6a2368a749bb0eb83fa4f5cf12a2a73cbfd9001ad4ba",
+      "stub": false,
+      "evidence_id": "E-0048-T01;E-0048-T02",
+      "reason": "Recovered original packed track polygons, tree traversal, elevation, segment and broad-phase query; host storage remains explicit.",
+      "evidence_record": "reverse/task0048/topology-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "TopologyTree::GetSquare",
+      "signature_sha256": "d064586c2503da63a6f06372d92d272114c59701261809909316e7ff96885df3",
+      "body_sha256": "b27e6a6eeedb3aa4e9f61ed6932a7366f94929aeb3187b2d70ee49d80723786e",
+      "stub": false,
+      "evidence_id": "E-0048-T01;E-0048-T02",
+      "reason": "Recovered original packed track polygons, tree traversal, elevation, segment and broad-phase query; host storage remains explicit.",
+      "evidence_record": "reverse/task0048/topology-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "TopologyTree::GetSquareCorner",
+      "signature_sha256": "6b45fefd2d5605aca5cb4a481cf4c733772a72e2e79abb4d92214b1b2b862014",
+      "body_sha256": "ced2b197e08a5c661fc2a4ce543849f718717e812ae3040efbadf7a13bada8e4",
+      "stub": false,
+      "evidence_id": "E-0048-T01;E-0048-T02",
+      "reason": "Recovered original packed track polygons, tree traversal, elevation, segment and broad-phase query; host storage remains explicit.",
+      "evidence_record": "reverse/task0048/topology-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "TopologyTree::Loader",
+      "signature_sha256": "e3797722765a5dbba58ff324f6f8a1fa2fba7bf2606e627032d20d86d0df0d9d",
+      "body_sha256": "690fa30b229c5e4b8a7eb11259fe988afc4240b28608d6f8cbdfe1daa7a82c17",
+      "stub": false,
+      "evidence_id": "E-0048-T01;E-0048-T02",
+      "reason": "Recovered original packed track polygons, tree traversal, elevation, segment and broad-phase query; host storage remains explicit.",
+      "evidence_record": "reverse/task0048/topology-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "TopologyTree::Unloader",
+      "signature_sha256": "e5071fc8ca14d007db8f1ec0ee23cd69ace442e1d20d223dcc2908089112df49",
+      "body_sha256": "f8f80aee74ee1191b6fe4d87f036ef9fcd1b00d6aae74634ddfca735b0bc3ef3",
+      "stub": false,
+      "evidence_id": "E-0048-T01;E-0048-T02",
+      "reason": "Recovered original packed track polygons, tree traversal, elevation, segment and broad-phase query; host storage remains explicit.",
+      "evidence_record": "reverse/task0048/topology-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "TrackPolygon::PointInShaft",
+      "signature_sha256": "d9cfd4d74fd905f31b852fbb13059097c7348e663bcf86c46736ad68162e7e66",
+      "body_sha256": "ac3fad143b36dd589ac7aecf6f202b1ef8ddbc43ec6a402ba9768586e6d5cf98",
+      "stub": false,
+      "evidence_id": "E-0048-T01;E-0048-T02",
+      "reason": "Recovered original packed track polygons, tree traversal, elevation, segment and broad-phase query; host storage remains explicit.",
+      "evidence_record": "reverse/task0048/topology-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "TrackPolygon::SegmentIntersects",
+      "signature_sha256": "e59c155d79108bd8f790cc2bd0abeb45ea870b70196441fe36b19afa3600caf6",
+      "body_sha256": "f09498861739ea31f8d5150697feeb21f368e981b3ab46f92aaabc829d777168",
+      "stub": false,
+      "evidence_id": "E-0048-T01;E-0048-T02",
+      "reason": "Recovered original packed track polygons, tree traversal, elevation, segment and broad-phase query; host storage remains explicit.",
+      "evidence_record": "reverse/task0048/topology-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "TrackPolygon::Sub_001514A8",
+      "signature_sha256": "4b0ceb4f5280e51eb2b738d5d38d82a154c291ab1232ea7d5d9cbb14254efbee",
+      "body_sha256": "61a75449a831f0d90215dd36a10730a523199181188232d887c93411f7b30f6f",
+      "stub": false,
+      "evidence_id": "E-0048-T01;E-0048-T02",
+      "reason": "Recovered original packed track polygons, tree traversal, elevation, segment and broad-phase query; host storage remains explicit.",
+      "evidence_record": "reverse/task0048/topology-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "track_cross",
+      "signature_sha256": "ffa7b9da57fb46af57bb957eddb34da333d5580e302ddf5525951d1950254770",
+      "body_sha256": "2acf414266996136cc23375a21ae2000b79405ea37e13dd70b2e505a4694a14b",
+      "stub": false,
+      "evidence_id": "E-0048-T01;E-0048-T02",
+      "reason": "Recovered original packed track polygons, tree traversal, elevation, segment and broad-phase query; host storage remains explicit.",
+      "evidence_record": "reverse/task0048/topology-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "track_dot",
+      "signature_sha256": "201efb7d40739e6b2ea98022c0e216c4c8934c11032b49529180c7694740de6c",
+      "body_sha256": "4d08e2b119771bff7919ca884285dcb13d3feef0779d016e62672a071d8b5bdd",
+      "stub": false,
+      "evidence_id": "E-0048-T01;E-0048-T02",
+      "reason": "Recovered original packed track polygons, tree traversal, elevation, segment and broad-phase query; host storage remains explicit.",
+      "evidence_record": "reverse/task0048/topology-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "track_i16",
+      "signature_sha256": "4ab1355d78d2d5bfd4e24601e481668bbeba863f79fd1b76521a7111cdf3a47d",
+      "body_sha256": "183adf499f099dd65f310d8d247dbb9ab66fe3aff0b831c848331a0220f6868b",
+      "stub": false,
+      "evidence_id": "E-0048-T01;E-0048-T02",
+      "reason": "Recovered original packed track polygons, tree traversal, elevation, segment and broad-phase query; host storage remains explicit.",
+      "evidence_record": "reverse/task0048/topology-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "track_inside",
+      "signature_sha256": "eabe08ae3f619a8cd6612ecb932dff6e0ac2bfca55042d156f988be7a93dc7be",
+      "body_sha256": "4b05eaba65c839fa246b7942ec210ddc9081d2f629005da27c9a355eb51851ac",
+      "stub": false,
+      "evidence_id": "E-0048-T01;E-0048-T02",
+      "reason": "Recovered original packed track polygons, tree traversal, elevation, segment and broad-phase query; host storage remains explicit.",
+      "evidence_record": "reverse/task0048/topology-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "track_u16",
+      "signature_sha256": "f3279bc42472ed9f79823a003ac288d114b005d266805a3126752485b067579c",
+      "body_sha256": "0dde6bb0d0d12682b7d3f145b87c7f480a4827e2416f0cbed5af3c857d57bcac",
+      "stub": false,
+      "evidence_id": "E-0048-T01;E-0048-T02",
+      "reason": "Recovered original packed track polygons, tree traversal, elevation, segment and broad-phase query; host storage remains explicit.",
+      "evidence_record": "reverse/task0048/topology-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/trackpath.cpp",
+      "name": "TrackPathManager::UpdatePosition",
+      "signature_sha256": "0c25edf14a0aac234307aa59852bcf36edd00ce463fbc7af9aca8b7f5f6bd602",
+      "body_sha256": "5a7060f35a5750b1932aa7f5248ed2029c92a814d64c9a8b238bfdc67176d2ac",
+      "stub": false,
+      "evidence_id": "E-0048-D02",
+      "reason": "Original bounded first-position path direction and OVERHAUSER spline/math, with native XY host storage and original-class ownership.",
+      "evidence_record": "reverse/task0048/driving-integration.md"
+    },
+    {
+      "path": "src/game_core/indep/src/volumetree.cpp",
+      "name": "vAABB::Contains",
+      "signature_sha256": "c10c457e000c2ee4605302ef7db9eba094591416c8ea7875be2b513fc1953b17",
+      "body_sha256": "071f53a6b1db364a938b4775dcf38ac7d7ce178c5d115b34651fe01406531981",
+      "stub": false,
+      "evidence_id": "E-0048-A05;E-0048-A06",
+      "reason": "Recovered original facade matrices, world-light volume containment/query and lighting identity in original owning classes/functions.",
+      "evidence_record": "reverse/task0048/render-review.md"
+    },
+    {
+      "path": "src/game_core/indep/src/volumetree.cpp",
+      "name": "vAABBTree::QueryLeaf",
+      "signature_sha256": "07c7b357c9d27af47c7e376f7c244479465e838fe60d4b097f52ddd525dbc9fd",
+      "body_sha256": "36ef9ddad5afbe738d99a0a39aa3b4028117783edcdf4e50633dfc0135b5f939",
+      "stub": false,
+      "evidence_id": "E-0048-A05;E-0048-A06",
+      "reason": "Recovered original facade matrices, world-light volume containment/query and lighting identity in original owning classes/functions.",
+      "evidence_record": "reverse/task0048/render-review.md"
+    },
+    {
+      "path": "src/game_core/indep/src/volumetree.cpp",
+      "name": "vAABBTree::QueryLeafHelper",
+      "signature_sha256": "247d51508630e41e8aaa406542e89124f5b32079a8ad1f3597014ecb6dee366d",
+      "body_sha256": "693a54fde2fb2d047e9a150f1ae43076ee97a720ee700884b22f2af635bca96c",
+      "stub": false,
+      "evidence_id": "E-0048-A05;E-0048-A06",
+      "reason": "Recovered original facade matrices, world-light volume containment/query and lighting identity in original owning classes/functions.",
+      "evidence_record": "reverse/task0048/render-review.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "VCEdge::SetVoronoiPlanes",
+      "signature_sha256": "b9e561c0550c9c112fe30b9cffe2a8f28fe485f37c1de6d7a38b8652987531fc",
+      "body_sha256": "79e3830d40f9c575699076fe3f7f288159957a687743e4b9b29891f8d80d45bc",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "VCFace::SetVoronoiPlanes",
+      "signature_sha256": "349ec8ca98522362ea5cd12480ebe307ba8b0b43bbcc3f39690d102bf4438221",
+      "body_sha256": "4754112e8f07c6e687d73a12433b001830769956218f1d316ab5b93e6c75e8e7",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "VCPolyhedron::MemoryImageLoad",
+      "signature_sha256": "657c3ca5cbdf969e63a5b86b06619b8c3c5eb9cb13ee35f44beb2cce0af801d9",
+      "body_sha256": "598e54e883742d344d77e4356ab88d9004757d40f6478a691ab4140752749bde",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "VCTransform::Sub_001CCF28",
+      "signature_sha256": "f79ad3a26d55ef7b569a242b23e4d1a54fc54f8ff1a7712a4b508ecae11a75e0",
+      "body_sha256": "9da900b9670a2a2ba43ff0df1ab74c71f3d945c6059117c46fb7594c596e4f1d",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "VCTransformedFeature::TransformEdge",
+      "signature_sha256": "18b437e997cb2b9ef8d1742c1a58f5ea1afe1f8250df4a503f031f5287cad5ac",
+      "body_sha256": "188786c84a6c059fa3f6bf6cf319974abc07a327d2e2de96f70424b3d8a54400",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "VCTransformedFeature::TransformVertex",
+      "signature_sha256": "656f9d92f03d2761f7c416340103f33d717a453090849de7bfde149c4b9b3992",
+      "body_sha256": "11bf06a7a670ed62f616a1ac2a566f820fd00bbd2437fafddaf6d084e9ccdfa9",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "VCVertex::SetVoronoiPlanes",
+      "signature_sha256": "6a617978a8c0cdf7fdf54c45493c8a05eb26f6797c453dcf1e87adb21c6e3c82",
+      "body_sha256": "bb05068c3bd2ac40033b308f919787afaee34207ae2a00628dd427fdefc9b09a",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "VCVoronoiClip::ClipFacePlanes",
+      "signature_sha256": "0bb17a65dd7004ccd1bb6d1b7864467b2df63dfbc8be45386651406b0788d9c2",
+      "body_sha256": "c651ab64fbb711396ca0635ba7fd0b9f31ca9063be04c34ab4e48a5bc05b8f5b",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "VCVoronoiClip::ClipPlanes",
+      "signature_sha256": "6b60236a8405b8fde38de4a5e1d4dae975f8f8e570d7b8289c37157e2f11e10b",
+      "body_sha256": "6a442c519de641bb8767905bac86006063634b37f96eb42a93f792e965d485fe",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "VCVoronoiClip::ClipVertexPlanes",
+      "signature_sha256": "fdc5f2a056899ac134342952168a1bb9af4312fdc7892bdf51fc1433a17e9038",
+      "body_sha256": "f3839d84fe6992b17922aaceb8ebcbcc4eb73b140786e7da76a51acb2ba571c6",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "VCWitness::CheckEdgeEdge",
+      "signature_sha256": "a63a68ad5c10c8809c6cf3d49d30a9575683698fb3dd5f330ccd1e56ae0a470c",
+      "body_sha256": "8d7697eb6e7b72d96f52a298a8e89fcf55d09bcca26ed5dc2df750a3c257c2e6",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "VCWitness::CheckEdgeFace",
+      "signature_sha256": "f94ac514b472064bc30ce0b675e87a5ba814945072a29833d95c4fd35b0bd82a",
+      "body_sha256": "b58eb2bca299f3089bb99eab26a5fe7c660756827ce19a4755a7988a38d3fbfe",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "VCWitness::CheckVertexEdge",
+      "signature_sha256": "edc0518c7253f117988f6020b97d37fe082f7892a7de3f029c57d2cde20e592a",
+      "body_sha256": "81d1ec6e2d32fd73688a7d69f6faa08c90642ab7b033e9d439cb883ef7efbbbb",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "VCWitness::CheckVertexFace",
+      "signature_sha256": "13f18511eb28537a19135b5ff4e11f889b893ccdfc8d79d577c5b5ab33381848",
+      "body_sha256": "31d8650b2127d4c61a7aa4af6a323e620717b1cbb41d219b532756812c31d30e",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "VCWitness::CheckVertexVertex",
+      "signature_sha256": "e7b11f02ce07f853b4dc300fd0b3ea465bb6a43d8156cd0b3ae43a9faba5256a",
+      "body_sha256": "24af7027eb0fba4bde662c65103c9811ef719894e9701a1957906fa5e86a9f1c",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "VCWitness::SubCheckEdgeEdge",
+      "signature_sha256": "40eea7d79c8681e10dcafb887b26a7a6f36a3eb44de323b400ac05cd3a2dafdd",
+      "body_sha256": "a2049dc9f94481c0b06f0bc25e5252587172ae171fdeb6496ad830f8825d00c3",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "VCWitness::VClip",
+      "signature_sha256": "f30db4b407600dff65bb188e18270c84f4b87b9ae75c3499ad2ee9d03304e614",
+      "body_sha256": "339d0fc24cd30ba43ef588d9d92a5ff7bab79164a9d4714de526b106e1f32514",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "vc_add",
+      "signature_sha256": "7215e55efc211b8a21440323402e66c35262e5634bd3ddcf3bd46537cc71525c",
+      "body_sha256": "42976b103f822e7a0b1e043ccbbcfa357ceb45509436a2213fab73b6e572554b",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "vc_edge_points",
+      "signature_sha256": "8c195a06e9337d2de3b1bd733c16cb5139e5234b2d23e918c6e2ff001de9d8cf",
+      "body_sha256": "ffcf12de56dfeb9ea7588669502829650c3c369c315802d19e3a77849d870598",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "vc_first",
+      "signature_sha256": "3a189558dd8ac5b689205268d750c37250868e58831e69973fec4e9ceb808043",
+      "body_sha256": "a4329949e96d98940f4f246eb7596b555e985d11335342c305b1882487d13c0a",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "vc_plane",
+      "signature_sha256": "d159b9f86da79f0bc3896bfc9d6119c1bfa56b49ed9d80dc8837379bea388d65",
+      "body_sha256": "25f27b20af8d2faed9aedd5d2784acd7cc1592db144548580265b190df0eb76b",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "vc_planes",
+      "signature_sha256": "21a8d6e01d9cf5df392e6d0e77c9d494c73c9e6f854aba28b46bbf9da0beaeb0",
+      "body_sha256": "2bc9aaad9d580b655623eef9acb6aa1a51847428196cfb3db29e6ba151cdb7eb",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "vc_point1",
+      "signature_sha256": "3c4794958afddf166813129d20d6ee0ca9979bca26c90ed300d03d06b3a9850e",
+      "body_sha256": "f232cbe462bbb1890e9e554a0febb724743b2dac065f7f76db1061a81529e49e",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "vc_point2",
+      "signature_sha256": "0086e4f9ce96e68598f18c01ae3e6dbbcaeb34de30f0133445b13efba586c1c7",
+      "body_sha256": "c39c03e49fce136ee95bebb5fb49fe59993aae346b249926f3c2140ecc92d24c",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "vc_scale",
+      "signature_sha256": "96d9b1dc15282a32d267de2ea7a609dab233554cf65328d8d90d05886d8ba2b6",
+      "body_sha256": "b547fc622543940e2b295db5df1622340cabb8fe81cdec07b49c1fa1060676e3",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "vc_second",
+      "signature_sha256": "70e1e8e6285c605e81f18f37f228b52ea88a791bd10f700d22557dfffd0d319d",
+      "body_sha256": "97a4b721e7594a8e794165c95402810b048376041f69164a78a7d9d0eac01ca1",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "vc_sub",
+      "signature_sha256": "0eb21160812fc6677e5f3e05c4c040c7d4d83c2f8602e6f9d8052c495f7464d8",
+      "body_sha256": "2cd485cc99e6d209bda9fc5923ece92ba90a1155fdbf31c7cbf5022b4da40ed0",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "vc_transform",
+      "signature_sha256": "efe0f95e81eba147669c37faf22af2a93b2429397c392dd88855bee018dcd5e0",
+      "body_sha256": "1073f20228f6b86e9f9e9e696d6ec4ca2d7389183d97c6bd41e3688c4475ef41",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "vcfloat",
+      "signature_sha256": "f9dcc9e28ae966864ad12e26fec565c02b1c1b70282eff71bf6c42402b333135",
+      "body_sha256": "60a63e8b74f5b2d6a26cc742cf15fce15c9fafa7bb24cb9caabe9da7b220c3ed",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "vcneighbor",
+      "signature_sha256": "3b2ac5f9d80957ab5c94df5c0dd124c9055e8a883eb9066fbbf7a1e97839aba8",
+      "body_sha256": "79fcda88fa3337b80c29e9cdfa8a3ea51eacbe0d12424169e6a0931065fd3d2d",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "vcword",
+      "signature_sha256": "ecf90d3f73f7cf72001be5f33128d16951907384d12ce71c0606a17f8a9b6ab4",
+      "body_sha256": "e5816579881acab8ae947e53842b23d98bfe20eedd885969e2bae8ea2bccb261",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "voronoi_cross",
+      "signature_sha256": "3824d426f7da15bdb32cfc7176cf17714c466aa98ef386aa5f1fc7d43f3d8c88",
+      "body_sha256": "2acf414266996136cc23375a21ae2000b79405ea37e13dd70b2e505a4694a14b",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "voronoi_direction",
+      "signature_sha256": "fc4a83fa2b1bdec0fac9c0fc1c6c77ba84de79cf9fda4c64a4e56dd633c49c78",
+      "body_sha256": "4cbfae62fd589614fb26745c47019cbd1e4ab092fb27b6a708a015dc4dca5da6",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "voronoi_dot",
+      "signature_sha256": "6c463d65e5d0ed7b42ebcfd440636e074f65ae6419d15fa0beef090fd09dd88e",
+      "body_sha256": "4d08e2b119771bff7919ca884285dcb13d3feef0779d016e62672a071d8b5bdd",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/voronoiclip.cpp",
+      "name": "voronoi_negative",
+      "signature_sha256": "6fe78343ceb600fc382f8f182415c2110748013587481368048057d6d3d85408",
+      "body_sha256": "604a2c69074efcc3379c49d649bb503a182ce105f0c019e8a0f60da7bde16bbf",
+      "stub": false,
+      "evidence_id": "E-0048-T03;E-0048-T04;E-0048-T05",
+      "reason": "Recovered original collision volume/wafer/Voronoi feature geometry and witnesses with explicit host storage; no engine collision replacement.",
+      "evidence_record": "reverse/task0048/collision-geometry-evidence.md"
+    },
+    {
+      "path": "src/game_core/indep/src/world.cpp",
+      "name": "World::DoTimestepCollisions",
+      "signature_sha256": "160755798ab7481900ca77663e868121b8a92c60305ddf6006337e0b5a6bf90f",
+      "body_sha256": "bae545a6427010da3af6dd4ef27d6c34127c780d44fd4a4e0e95a9a283923d9d",
+      "stub": false,
+      "evidence_id": "E-0048-T06;E-0048-D04",
+      "reason": "Original World collision loop/order and static/car witness lifetime callbacks; transactional native state, canonical Contact Resolve and no approximated wall response.",
+      "evidence_record": "reverse/task0048/static-collision-evidence.md"
+    },
+    {
+      "path": "src/game_core/port/assets/hp2_tpk_texture.cpp",
+      "name": "parse_header",
+      "signature_sha256": "4c8c6896324508d235bff1d202fa6adfe2f6be52f5325d3429dee43a4ae17df4",
+      "body_sha256": "6d69d38bb5ad11be2bfcd52257d267bbcd853d0ef33153a5a96843f227ef60b0",
+      "stub": false,
+      "evidence_id": "E-0048-A04",
+      "reason": "Read original BaseImageSize+44 and per-level ImageInfos swizzle fields used by the confirmed mip texture producer; no generated mip approximation.",
+      "evidence_record": "reverse/task0048/assets.md"
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::advance",
+      "signature_sha256": "4b3b67ca000d00c4cfc26033669039b9ac1a8c4990327486dbfa5a4ee70d6e66",
+      "body_sha256": "ff07144c283bb6c8feb0bff333daa2f12ec0fa61047cc35561d41ff7912ab3c3",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::driving_services",
+      "signature_sha256": "a168c5c48819c8be5ae1f38addace6bff91832f77eeb1266841b0e553c79cf09",
+      "body_sha256": "01cd71f2b646fbdc0574924efdcf63826e7655e3fe5cb53eadab3c4147d50775",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::init_services",
+      "signature_sha256": "e50c7114386469d8021f184e1a96b7569a57e44590976eb8e31d9337c7dfade6",
+      "body_sha256": "d988ca3fcf919818635309d6332a6ec74349817074823a595dd00b9dbef2a792",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::initialize",
+      "signature_sha256": "e1f47b42d27ab9bb931bf00fb41dbaf39aa163dbec98ea6dfee70b83ad433ccc",
+      "body_sha256": "12b63008ee4f1d6845407debbdebfb362a998eecc3619852e5f2ca2bb6e2b4c2",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::publish",
+      "signature_sha256": "61f3484f22491de2fa7e4e0eb0110adda94cac031d21d1b66b30fb853b9398b7",
+      "body_sha256": "76bc305492b90c92f7fd1fe6dc86ca1bd696141920139a901f8005ccf2a9fe0d",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::render_skids",
+      "signature_sha256": "513fbc90321ac20e415dc09f88b569326d801644a310bee74f15badd7f4958b3",
+      "body_sha256": "a6aa975bcebb075a254bf6e31b7aeca3200f780dd79659a2ffbc52dfaa5ef4e5",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::reset",
+      "signature_sha256": "72473a2dedd76871aea38250fdda48bad108b6e5eef4fb49edf61f905b055ce7",
+      "body_sha256": "274b2461ed7d29bd03b9383d2e4402b057a14b93c963b0547a302bef3ac436a8",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::track",
+      "signature_sha256": "cbf9cdbd041f13740f0c0a0987b24a8f855b7e0dad382f38c88fb31d4f45514b",
+      "body_sha256": "00f40a2971bbca703d0005c49cc0256a5d94752bc3062ba777dbc6c031d99276",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.hpp",
+      "name": "collision_geometry",
+      "signature_sha256": "bb8c14185f3631ea175da7c1ac95100314380c47d19832519f57ab7570ba338b",
+      "body_sha256": "cedee88f839fae15709141b54c155679215131001f198a1c3913167e64559d3f",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.hpp",
+      "name": "contact",
+      "signature_sha256": "1a40dc159d53b0f54489fbd1eba78b2b56d43e4fb42fbfa9cc1f2f4a7d3466c1",
+      "body_sha256": "4db30b37f83dd5c9ce1de3c5e87c6162b590aefb3624dbbb06b346821956580f",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.hpp",
+      "name": "static_collisions",
+      "signature_sha256": "2005502bcc00d8ba77a57e5b3423f27c7d01c7f16373496764badb090375a984",
+      "body_sha256": "0a0d3330fbd6070169cd86f1ce7ba4cdd854a46f96638511324d11cb7d3207b6",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/session.cpp",
+      "name": "Session::track",
+      "signature_sha256": "2bf1ffd66448865539c434cf9b490d511a9b93b8fbe2d6ee920d3835734ca146",
+      "body_sha256": "31faf50235032580e78ceb639029eee18ab6a57201d124332c00a502d5f37def",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/session.cpp",
+      "name": "Simulation::track",
+      "signature_sha256": "f92fbce35d8a6c5e42619b56a4e51de1f8230d1f49a7fa1418dc8d0eeb40ee94",
+      "body_sha256": "d39ee00518be17f24be497d9de566fcac523fd5e21cf7e5bc6f13de8556bae84",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/session.hpp",
+      "name": "track_label",
+      "signature_sha256": "72f6b4ccbb26b9713af1c43d9aa62c836c86ec3107b9ff86d988e83d87bc5cdc",
+      "body_sha256": "86d596a68ad27e224602dfc4944310506c703056bfb64b44492ac4fa7b618164",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/static_collisions.cpp",
+      "name": "StaticCollisions::clear",
+      "signature_sha256": "e55249dd0bee2533384c3ccc7e50b51b42b368fb8f9b01b13ec952083c51bbd4",
+      "body_sha256": "74700fe705b45a838f7a974db18dd5b4e669c9e89da63714c5d680e42b8f6fd8",
+      "stub": false,
+      "evidence_id": "E-0048-T06;E-0048-D04",
+      "reason": "Original World collision loop/order and static/car witness lifetime callbacks; transactional native state, canonical Contact Resolve and no approximated wall response.",
+      "evidence_record": "reverse/task0048/static-collision-evidence.md"
+    },
+    {
+      "path": "src/game_core/port/driving/static_collisions.cpp",
+      "name": "StaticCollisions::configure",
+      "signature_sha256": "3e3f0f77dad845f978ceccdb17a64208c56ffeeb1b759da9573bd68874a53bdd",
+      "body_sha256": "ab19eaec5e9fcd745a6f89d63d65688e19cddfecb22abc46c53ae8133a37d416",
+      "stub": false,
+      "evidence_id": "E-0048-T06;E-0048-D04",
+      "reason": "Original World collision loop/order and static/car witness lifetime callbacks; transactional native state, canonical Contact Resolve and no approximated wall response.",
+      "evidence_record": "reverse/task0048/static-collision-evidence.md"
+    },
+    {
+      "path": "src/game_core/port/driving/static_collisions.cpp",
+      "name": "StaticCollisions::contacts",
+      "signature_sha256": "bff8ea7f425c5ca6334cdedeb0a065e31e2a3adfa7c2213037ed200d631a0484",
+      "body_sha256": "d26200be640aefaa12ee023871edcdf5993844ac37b0afa9441cc91acbf15b13",
+      "stub": false,
+      "evidence_id": "E-0048-T06;E-0048-D04",
+      "reason": "Original World collision loop/order and static/car witness lifetime callbacks; transactional native state, canonical Contact Resolve and no approximated wall response.",
+      "evidence_record": "reverse/task0048/static-collision-evidence.md"
+    },
+    {
+      "path": "src/game_core/port/driving/static_collisions.cpp",
+      "name": "StaticCollisions::process",
+      "signature_sha256": "1d283126a8621c42f9b5fed320b7463607e68416d4a96a402d1165638f8a2288",
+      "body_sha256": "6df64da840736eb77c04673ce3a9cf72d1ae489e5ff2de3722496cd20a551604",
+      "stub": false,
+      "evidence_id": "E-0048-T06;E-0048-D04",
+      "reason": "Original World collision loop/order and static/car witness lifetime callbacks; transactional native state, canonical Contact Resolve and no approximated wall response.",
+      "evidence_record": "reverse/task0048/static-collision-evidence.md"
+    },
+    {
+      "path": "src/game_core/port/driving/static_collisions.cpp",
+      "name": "StaticCollisions::resolve",
+      "signature_sha256": "a4990ed8911d121a82a431176f8d7ad20d9b468347ccc79be6e1e7b0e0b8b8e6",
+      "body_sha256": "5e2e4f75bb0b9b775508d9763606c2c2df9362631e41a7cd1acc57bcb4b40e96",
+      "stub": false,
+      "evidence_id": "E-0048-T06;E-0048-D04",
+      "reason": "Original World collision loop/order and static/car witness lifetime callbacks; transactional native state, canonical Contact Resolve and no approximated wall response.",
+      "evidence_record": "reverse/task0048/static-collision-evidence.md"
+    },
+    {
+      "path": "src/game_core/port/driving/static_collisions.cpp",
+      "name": "collision_pose",
+      "signature_sha256": "2b5938709278ed5e8bf3c59dde11225d05017064ed6bd1f610abe03ab93cf321",
+      "body_sha256": "0a2539dc24feb7eed6ce997033c02bcfc32d994e18fb17fb562b1c3506035e57",
+      "stub": false,
+      "evidence_id": "E-0048-T06;E-0048-D04",
+      "reason": "Original World collision loop/order and static/car witness lifetime callbacks; transactional native state, canonical Contact Resolve and no approximated wall response.",
+      "evidence_record": "reverse/task0048/static-collision-evidence.md"
+    },
+    {
+      "path": "src/game_core/port/driving/static_collisions.hpp",
+      "name": "ready",
+      "signature_sha256": "50e7e86d70d97f223bd629ccc864e8501cb2ead4542deff220573d3a0c3631b6",
+      "body_sha256": "d9aee50b808d9198b7a975e621766797d407c59e0c955951e49ae77015a3bd20",
+      "stub": false,
+      "evidence_id": "E-0048-T06;E-0048-D04",
+      "reason": "Original World collision loop/order and static/car witness lifetime callbacks; transactional native state, canonical Contact Resolve and no approximated wall response.",
+      "evidence_record": "reverse/task0048/static-collision-evidence.md"
+    },
+    {
+      "path": "src/game_core/port/driving/surface.cpp",
+      "name": "observe_grip",
+      "signature_sha256": "6b869c2bb4ad34ec1db360d2dcf76ba099ee3a1501f1b5a644b7aa1347315077",
+      "body_sha256": "d9e5b8301fada0451d44edd460faedfe81e915f8eaa8354236fdf8568c9900d5",
+      "stub": false,
+      "evidence_id": "E-0048-H02",
+      "reason": "Read-only observation of stored Wheel contact point130 and plane140; no topology requery, guessed face identity or physics calculation.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/surface.cpp",
+      "name": "read_track_material_catalog",
+      "signature_sha256": "392dc768a3739dd75614c1005c0a7ca2b5a25117b2f5a604190adc6e1ffd7d65",
+      "body_sha256": "c74e4f656fd41e17dc8574cb4546c88d65a00c3482b531e9fc26eedec8fe7ecc",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/track_contact.cpp",
+      "name": "TrackContact::GetElevation",
+      "signature_sha256": "5a6f650ef18dbba22e49d4aa380240bc477684c90dc536c8a9862749b1c1e69b",
+      "body_sha256": "91a42961813de22acda830f8f79dd35eeb21907e9c15679fdcfc318d1b7be18c",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/track_contact.cpp",
+      "name": "debug_terrain_from_retail",
+      "signature_sha256": "c2813551e38eaa11b6947363c75ca1ddb5e1e5a119da488905f7226861b85dd9",
+      "body_sha256": "32b454087297e113f1d1d25a204ad32141caf48015bb9489acd03e417c406155",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/track_environment.cpp",
+      "name": "half",
+      "signature_sha256": "d3aa77dd51f525446dfa7c5640d2822d4e2a435537a9446f2f964c71e873c8ab",
+      "body_sha256": "b3b7e511492ab8ec8f76ccac4bb2727395e100a5f1cdc924e1efc2e047a74d04",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/track_environment.cpp",
+      "name": "hash",
+      "signature_sha256": "54fc366c6ae95c254956cafc66fc2a669ad0515faba447875746687413103e5c",
+      "body_sha256": "51cb30d15daa48144d9351084abcd282925a91475596a5f082d3ac6860f15bf0",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/track_environment.cpp",
+      "name": "load_track_environment",
+      "signature_sha256": "5a4ef45d10df0d6d60020693a0d5a5eff30da8fc9e10ba0743a3d3ac841ea1ed",
+      "body_sha256": "06fa1af91e887819861c2149342ac92ab059d3a369131be4fd74a866799afc14",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/track_environment.cpp",
+      "name": "load_track_environment",
+      "signature_sha256": "632ede5e4f5daa66fa02517a0ccdc44a52e34e9308477de3106d7339bb113723",
+      "body_sha256": "b26625b2c94d734bc9c731ff804556a32165d7caa75e7f2e116cd55bf1ae86d7",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/track_environment.cpp",
+      "name": "scalar",
+      "signature_sha256": "98ebea1d9a2146ff4e413c713917e90f0aeb90e31a5b505d3a0190b318e9b4c8",
+      "body_sha256": "023f8956bd9e445c8c9caede400f1bc9c4f4ef0c7267dd8c9b130743270fd92d",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/driving/track_environment.cpp",
+      "name": "word",
+      "signature_sha256": "9361fdaea6a109d9054fdd60f5d19b9974aa124ab2db19711bdef0fa53d3fbfe",
+      "body_sha256": "d84f71c0fa5d0a940790bcf06ffd8ea3511422a4534c14a39a468ba9ea7ca9f4",
+      "stub": false,
+      "evidence_id": "E-0048-D01;E-0048-D02;E-0048-D03;E-0048-D04;E-0048-T06",
+      "reason": "Port environment ownership and replay/contact/catalogue plumbing; native candidate Memory and collision witnesses commit atomically, synthetic scenario remains available.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/game_core/port/track/assets.cpp",
+      "name": "chunks",
+      "signature_sha256": "79d2b90891c4d1c92e424bf7e5175b3ea27eb213b4b963fb237f44466f7b8a60",
+      "body_sha256": "f6781de7909988e9201865375322c788b939c2fc433757ee1352f5df31b146c8",
+      "stub": false,
+      "evidence_id": "E-0048-A01;E-0048-A02;E-0048-A03;E-0048-A04;E-0048-A05;E-0048-A06",
+      "reason": "Port-owned catalogue, resource/decompression/geometry/scenery/texture ownership and presentation adaptation backed by original loader/render evidence.",
+      "evidence_record": "reverse/task0048/assets.md"
+    },
+    {
+      "path": "src/game_core/port/track/assets.cpp",
+      "name": "decompress_bundle",
+      "signature_sha256": "835fe176ee7bcb4a572c83e5c34f3a12c1515631e9de91d65ca27d8c3ea2e1c5",
+      "body_sha256": "54bde7733c9da2ed9abe5b9053ded2234ebfd434d6c66048682c332e043151ec",
+      "stub": false,
+      "evidence_id": "E-0048-A01;E-0048-A02;E-0048-A03;E-0048-A04;E-0048-A05;E-0048-A06",
+      "reason": "Port-owned catalogue, resource/decompression/geometry/scenery/texture ownership and presentation adaptation backed by original loader/render evidence.",
+      "evidence_record": "reverse/task0048/assets.md"
+    },
+    {
+      "path": "src/game_core/port/track/assets.cpp",
+      "name": "load_catalog",
+      "signature_sha256": "32235885cb2d30be38a50d880db2e8ed1756ee32156e33df27ea4dd0457909b5",
+      "body_sha256": "14d032dff8d9ea0eafddb17914609aff7b0b5425e5a26323f18f82d514ad8b7d",
+      "stub": false,
+      "evidence_id": "E-0048-A01;E-0048-A02;E-0048-A03;E-0048-A04;E-0048-A05;E-0048-A06",
+      "reason": "Port-owned catalogue, resource/decompression/geometry/scenery/texture ownership and presentation adaptation backed by original loader/render evidence.",
+      "evidence_record": "reverse/task0048/assets.md"
+    },
+    {
+      "path": "src/game_core/port/track/assets.cpp",
+      "name": "load_scene",
+      "signature_sha256": "7ed8152bd064b5ed45b5e7df94a4d61d54aa6b82dfe3998000e57af1a38f97d8",
+      "body_sha256": "eb14f7f3dc4706eec90e6d705b3857ddc4e21b9597a560bf82349517dad686c0",
+      "stub": false,
+      "evidence_id": "E-0048-A01;E-0048-A02;E-0048-A03;E-0048-A04;E-0048-A05;E-0048-A06",
+      "reason": "Port-owned catalogue, resource/decompression/geometry/scenery/texture ownership and presentation adaptation backed by original loader/render evidence.",
+      "evidence_record": "reverse/task0048/assets.md"
+    },
+    {
+      "path": "src/game_core/port/track/assets.cpp",
+      "name": "text",
+      "signature_sha256": "a8c12c3ad7b6e567fec7d40b9d4db995ecc9bd916b9b38e51b1a079142c22a7c",
+      "body_sha256": "b9d36d985976eab71a5f7e03dc5bd8c0b7c6fe8fc6e114e3083cd2a11ab35d99",
+      "stub": false,
+      "evidence_id": "E-0048-A01;E-0048-A02;E-0048-A03;E-0048-A04;E-0048-A05;E-0048-A06",
+      "reason": "Port-owned catalogue, resource/decompression/geometry/scenery/texture ownership and presentation adaptation backed by original loader/render evidence.",
+      "evidence_record": "reverse/task0048/assets.md"
+    },
+    {
+      "path": "src/game_core/port/track/assets.cpp",
+      "name": "word",
+      "signature_sha256": "9361fdaea6a109d9054fdd60f5d19b9974aa124ab2db19711bdef0fa53d3fbfe",
+      "body_sha256": "717fbb6ccff050abcf6c55c5317451991ebe5ae2d3222644e562e618d16f4960",
+      "stub": false,
+      "evidence_id": "E-0048-A01;E-0048-A02;E-0048-A03;E-0048-A04;E-0048-A05;E-0048-A06",
+      "reason": "Port-owned catalogue, resource/decompression/geometry/scenery/texture ownership and presentation adaptation backed by original loader/render evidence.",
+      "evidence_record": "reverse/task0048/assets.md"
+    },
+    {
+      "path": "src/game_core/port/track/assets.cpp",
+      "name": "world_context",
+      "signature_sha256": "13ac4cd0a0eb4217e53bae8f0892b51da61723fc4a631eed2632737c0e415f58",
+      "body_sha256": "ae9ddd614734d371f6486d882c30fd91f3ca8e7c62afb42b0b9f3c36fddcf401",
+      "stub": false,
+      "evidence_id": "E-0048-A01;E-0048-A02;E-0048-A03;E-0048-A04;E-0048-A05;E-0048-A06",
+      "reason": "Port-owned catalogue, resource/decompression/geometry/scenery/texture ownership and presentation adaptation backed by original loader/render evidence.",
+      "evidence_record": "reverse/task0048/assets.md"
+    },
+    {
+      "path": "src/game_core/port/track/texture_state.hpp",
+      "name": "texture_state_00108CC0",
+      "signature_sha256": "6b0c91e747b11efa3c82f0d101fd3fe3527708543666dc5fc2b8d7cc4f9d9ac7",
+      "body_sha256": "7bbb8cc273286e82dfcf251ce3414473a38c3b9243e6df2a05ae43c9a2420abd",
+      "stub": false,
+      "evidence_id": "E-0048-A01;E-0048-A02;E-0048-A03;E-0048-A04;E-0048-A05;E-0048-A06",
+      "reason": "Port-owned catalogue, resource/decompression/geometry/scenery/texture ownership and presentation adaptation backed by original loader/render evidence.",
+      "evidence_record": "reverse/task0048/assets.md"
+    },
+    {
+      "path": "src/game_core/port/track/topology.hpp",
+      "name": "ready",
+      "signature_sha256": "50e7e86d70d97f223bd629ccc864e8501cb2ead4542deff220573d3a0c3631b6",
+      "body_sha256": "788debe5bbabc92e1f0906a065a639a62a6c8d326b807f2cc32c3e0283d85a80",
+      "stub": false,
+      "evidence_id": "E-0048-T01;E-0048-T02",
+      "reason": "Recovered original packed track polygons, tree traversal, elevation, segment and broad-phase query; host storage remains explicit.",
+      "evidence_record": "reverse/task0048/topology-evidence.md"
+    },
+    {
+      "path": "src/game_core/src/ecstasy/elighte.cpp",
+      "name": "QueryLightDatabase",
+      "signature_sha256": "048f363721de4c192c4648c136713a9173fe52a33b5530b0df477473b1075790",
+      "body_sha256": "6515597eed60f05569073ea0fc97cc3b622177603ea4a3590448c70cbd8cf5aa",
+      "stub": false,
+      "evidence_id": "E-0048-A05;E-0048-A06",
+      "reason": "Recovered original facade matrices, world-light volume containment/query and lighting identity in original owning classes/functions.",
+      "evidence_record": "reverse/task0048/render-review.md"
+    },
+    {
+      "path": "src/game_core/src/ecstasy/elighte.cpp",
+      "name": "elSetupLightContext",
+      "signature_sha256": "c8fc44d0a8cc2ad054ac8e90788ab83e5518c5c8198755b0198a0e8dbd460873",
+      "body_sha256": "df792e8bd0a82d3d2ea88862d3dbe9227ddb428507d0f89948e9ca42df7c4bf2",
+      "stub": false,
+      "evidence_id": "E-0048-A05;E-0048-A06",
+      "reason": "Recovered original facade matrices, world-light volume containment/query and lighting identity in original owning classes/functions.",
+      "evidence_record": "reverse/task0048/render-review.md"
+    },
+    {
+      "path": "src/game_core/src/ecstasy/emathe.cpp",
+      "name": "eRotateX",
+      "signature_sha256": "67e334bdeded81b64ce6c84f3ecd729c568e2222409c850b89387f6385d846c7",
+      "body_sha256": "9e289d8cfcaed25a496c534c863e0ec775c4195cdaadeecfaeb38f4cb78c892a",
+      "stub": false,
+      "evidence_id": "E-0048-D03",
+      "reason": "Original quantized Car flat-on-track five-point placement and eRotateX mathematics, retaining original constants and existing angle/sine helpers.",
+      "evidence_record": "reverse/task0048/driving-integration.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::_bind_methods",
+      "signature_sha256": "6f835c47a5b8f896ec3cdcc2603a4c630a789a048db2d8e60f1efaa269779161",
+      "body_sha256": "b9a0b09e8e21aa8a7939c0bbad4abc37654a3ec774bdfcbfb07dc96d999ea488",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::get_state",
+      "signature_sha256": "fa158aa06d9f842263ca5c01f35cd602f02520c5e5c9b10161d6f92557a8768a",
+      "body_sha256": "2c7e456cb8404c8d42ee47ecb03bda1215e14dfeb9d8491ea56a5ca02ea5967d",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::load_config",
+      "signature_sha256": "bd0115a2b0d0526235242202b1236ffa45e292580e7f432a51cdf3d9348749c5",
+      "body_sha256": "9e014404d379b5cc8b768cbed7770b48e63b9d85138d9edd67b2a3abf3593499",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::set_track",
+      "signature_sha256": "25c4433f15a30333c1926ba9022de42d49a9ee0f2c55522f6dae93a7751ce51d",
+      "body_sha256": "76a2e4a1fec0416185ec212f5162b45e0fb5cc6be4515b8f950958289b9e7880",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_snapshot",
+      "signature_sha256": "ef5026d842bd185acad14f92379c944f1db983a3f42547c13e2d150baa0f1c1e",
+      "body_sha256": "5b377abe2d9a742cea7fbb2c8333b7fc9461432b352076f63401dd21c717d3c0",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::_bind_methods",
+      "signature_sha256": "72391c04c06de44a0228c868e62bf51bb836c6be403f1ada5efca806f97049e7",
+      "body_sha256": "94237cba7908c0069e12a82b8f490c3205e2eaff070560afee36e66cfb8814dd",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::clear_track",
+      "signature_sha256": "8a55c0ede76df9b3d482830d769b45ff4dcf2ee63b05206760d0e46a37eb5aae",
+      "body_sha256": "3db5b69d61f0e7022a10b472e5d6a2ae1981ee69c5aac0faa2025ffe5204c1a3",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::get_catalog",
+      "signature_sha256": "559a9d48f46edad2926cd7f17414f341641df48dcc9d846933e87012b8911b7c",
+      "body_sha256": "81b5d1fda8feb28232d024f41e13881fe84ec264852853090a748629e1f6733c",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::get_state",
+      "signature_sha256": "4c0a0dc085a15e0b9eaa715b9c258a20109ce3f08e86a549d1d22c757447611f",
+      "body_sha256": "d6d6f4022b6deeb60b7780eb608337d4d3e7c331de99dc373dd5a7f170fa0c3e",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::load_track",
+      "signature_sha256": "b1b05f7209f8ced937914a8426dfb9fa5338209c35ead317d6b7c0969108e495",
+      "body_sha256": "87a19177b7fc5c775ffafc5911df7cf604171200ce7d9a2a1d0afd3b5fbaf0ea",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::pump_load",
+      "signature_sha256": "ba18509a99ec5f2a11ab42423ccf922398e08c1e95d5e1cb947a429d616d12b1",
+      "body_sha256": "09d6d434fc9cd88c07a2b905cdbbdc1a591859a20eafc68e2592d098f24c3d53",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::release_display",
+      "signature_sha256": "8f3e108db8b858fa672be11c137d6568429464f869a1096b4e51110cee49b757",
+      "body_sha256": "98c3710d469936efe4d2474294f91a6b1603850f5bafaab5b5c96cfa7d94e74e",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::request_track",
+      "signature_sha256": "b45428238cf73e40e9cd22881fe2e227c467221c3f3b6543ff7a49414f49115e",
+      "body_sha256": "ee889e83162471565593408a3b5559555decb4590e792c7209c557fb9b22b7e0",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::update_view",
+      "signature_sha256": "b7f07dcb78cc2a9c8ec5731e9d17882ef73bf08e0512d690089c54cc29d448ac",
+      "body_sha256": "ad6d6b6cb0d50b3c34b784fcac9424b1efd82a1515fa4f88fd20f0123f547e9c",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "host",
+      "signature_sha256": "e3f7815bf3350e9e9810ff44e8919fdc343560e066eb810f3af8678cf9142de5",
+      "body_sha256": "c32d0a919071131de0d5408db50fe83f3ea6db988b30fb2c6f6df7626515940f",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "host_matrix",
+      "signature_sha256": "dd999216ef8f27f37969e1b41878c71b385e8a068b72b555048a3b24f7927e36",
+      "body_sha256": "d24cdd04823a8faebc8d621a906bad86a8e819e20fec01d1c672864fcc782eed",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "impl_",
+      "signature_sha256": "830e61f01445fb097bdb3587d52c9f11e9b7b97c828c3a54d0eb241c8917cc43",
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "require_debug",
+      "signature_sha256": "1febc32566f2ace7f0ed8c91d07138ed60f5c8455163ed7a327ae5e0e67a6cb0",
+      "body_sha256": "6768c92d41f53cf3162dda8f4ae9921ca8e25cb9db2510e29ee58ecee04c0013",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "source",
+      "signature_sha256": "da3ae2fa453dff51bf2fc8bacedf2194a81cc8fff5e782a34b646e44aa19bb07",
+      "body_sha256": "b1fd893702fd8ca7527fe84d01b7071b73475066ef8dad720352b5c552757e5a",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "text",
+      "signature_sha256": "bfb28793e3a89fd86e59c698570bd26a9cdbc5ad45eae0302d0dc8b7f316cccc",
+      "body_sha256": "202f9c10ec70ac88ff846ced7f24938e27c25aff7ec84257446223713d94669b",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    },
+    {
+      "path": "src/platform/godot_bridge/register_types.cpp",
+      "name": "initialize_port",
+      "signature_sha256": "45ede2b425587656ec323d59c9621e655d6d78e9260800a91eb9f7a274713a53",
+      "body_sha256": "24f7f50ca96a43c203ecbb886914fb987cf619814b31d9692ad27fa48936c8f7",
+      "stub": false,
+      "evidence_id": "E-0048-R01;E-0048-H02;E-0048-A01;E-0048-T06",
+      "reason": "Port host registration, async resource lifecycle, opaque-instance batching, native drive entry/return and read-only diagnostics; existing ABI exception boundary retained.",
+      "evidence_record": "reverse/task0048/source-review.md"
+    }
+  ]
+}

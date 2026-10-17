@@ -39,6 +39,8 @@ add_library(game_core STATIC
   src/game_core/indep/src/table.cpp
   src/game_core/indep/src/timer.cpp
   src/game_core/indep/src/track.cpp
+  src/game_core/indep/src/volumetree.cpp
+  src/game_core/src/ecstasy/elighte.cpp
   src/game_core/indep/src/wheel.cpp
   src/game_core/port/driving/adapters.cpp
   src/game_core/port/driving/byte_view.cpp
@@ -53,6 +55,10 @@ add_library(game_core STATIC
 
 
   src/game_core/port/driving/native_backend.cpp
+  src/game_core/port/driving/surface.cpp
+  src/game_core/port/driving/track_contact.cpp
+  src/game_core/port/driving/static_collisions.cpp
+  src/game_core/port/driving/skid_services.cpp
 
   src/game_core/port/scaffold.cpp src/game_core/port/police/cop_control.cpp
   src/game_core/port/engine/engine_shell.cpp src/game_core/port/engine/world_connections.cpp
@@ -79,6 +85,7 @@ set_target_properties(game_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # TASK-0018 / D008: platform-independent port runtime. Produces render::Frame and owns the
 # original-asset texture catalog. Links game_core only; never godot-cpp or a backend.
 add_library(port_runtime STATIC src/port/render/frame.cpp src/port/assets/catalog.cpp
+  src/game_core/port/track/assets.cpp src/game_core/port/track/runtime.cpp src/game_core/port/driving/track_environment.cpp
   src/port/vehicle/textures.cpp
   src/port/vehicle/catalog.cpp
   src/port/assets/vehicle_geometry.cpp src/port/vehicle/model.cpp
@@ -134,6 +141,27 @@ else()
 endif()
 
 if(BUILD_TESTING)
+  add_executable(track_collision_geometry_tests src/tests/track_collision_geometry_tests.cpp)
+  target_link_libraries(track_collision_geometry_tests PRIVATE game_core)
+  add_test(NAME track_collision_geometry COMMAND track_collision_geometry_tests)
+  add_executable(static_collision_tests src/tests/static_collision_tests.cpp)
+  target_link_libraries(static_collision_tests PRIVATE port_runtime)
+  add_test(NAME static_collisions COMMAND static_collision_tests)
+  set_tests_properties(static_collisions PROPERTIES WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" SKIP_RETURN_CODE 77 TIMEOUT 180)
+  add_executable(driving_contact_tests src/tests/driving_contact_tests.cpp)
+  target_link_libraries(driving_contact_tests PRIVATE game_core)
+  add_test(NAME driving_contacts COMMAND driving_contact_tests)
+  set_tests_properties(driving_contacts PROPERTIES WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" SKIP_RETURN_CODE 77)
+  add_executable(driving_track_tests src/tests/driving_track_tests.cpp)
+  target_link_libraries(driving_track_tests PRIVATE port_runtime)
+  add_test(NAME driving_tracks COMMAND driving_track_tests)
+  set_tests_properties(driving_tracks PROPERTIES WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" SKIP_RETURN_CODE 77 TIMEOUT 240)
+  add_executable(track_asset_tests src/tests/track_asset_tests.cpp)
+  target_link_libraries(track_asset_tests PRIVATE port_runtime)
+  add_test(NAME track_assets COMMAND track_asset_tests)
+  add_executable(track_topology_tests src/tests/track_topology_tests.cpp)
+  target_link_libraries(track_topology_tests PRIVATE game_core)
+  add_test(NAME track_topology COMMAND track_topology_tests)
   add_executable(driving_engine_tests src/tests/driving_engine_tests.cpp)
   target_link_libraries(driving_engine_tests PRIVATE game_core)
   add_test(NAME driving_engine COMMAND driving_engine_tests)
@@ -146,12 +174,27 @@ if(BUILD_TESTING)
   add_executable(driving_schedule_tests src/tests/driving_schedule_tests.cpp)
   target_link_libraries(driving_schedule_tests PRIVATE game_core)
   add_test(NAME driving_schedule COMMAND driving_schedule_tests)
+  add_executable(driving_debug_timing_tests src/tests/driving_debug_timing_tests.cpp)
+  target_link_libraries(driving_debug_timing_tests PRIVATE game_core)
+  add_test(NAME driving_debug_timing COMMAND driving_debug_timing_tests)
+  add_executable(driving_surface_tests src/tests/driving_surface_tests.cpp)
+  target_link_libraries(driving_surface_tests PRIVATE port_runtime)
+  add_test(NAME driving_surfaces COMMAND driving_surface_tests)
+  set_tests_properties(driving_surfaces PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 180
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
   add_executable(driving_body_tests src/tests/driving_body_tests.cpp)
   target_link_libraries(driving_body_tests PRIVATE game_core)
   add_test(NAME driving_body COMMAND driving_body_tests)
   add_executable(driving_mover_tests src/tests/driving_mover_tests.cpp)
   target_link_libraries(driving_mover_tests PRIVATE game_core)
   add_test(NAME driving_mover COMMAND driving_mover_tests)
+  add_executable(driving_player_tests src/tests/driving_player_tests.cpp)
+  target_link_libraries(driving_player_tests PRIVATE port_runtime)
+  add_test(NAME driving_player COMMAND driving_player_tests WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  set_tests_properties(driving_player PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(driving_skid_tests src/tests/driving_skid_tests.cpp)
+  target_link_libraries(driving_skid_tests PRIVATE game_core)
+  add_test(NAME driving_skids COMMAND driving_skid_tests)
   add_executable(driving_backend_tests src/tests/driving_backend_tests.cpp)
   target_link_libraries(driving_backend_tests PRIVATE port_runtime)
   add_test(NAME driving_backend COMMAND driving_backend_tests WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -278,11 +321,29 @@ if(BUILD_TESTING)
   add_executable(frontend_quad_tests src/tests/frontend_quad_tests.cpp)
   target_link_libraries(frontend_quad_tests PRIVATE port_runtime)
   add_test(NAME frontend_quad COMMAND frontend_quad_tests)
+  add_executable(track_effects_tests src/tests/track_effects_tests.cpp)
+  target_link_libraries(track_effects_tests PRIVATE game_core)
+  add_test(NAME track_effects COMMAND track_effects_tests)
+  add_executable(track_runtime_tests src/tests/track_runtime_tests.cpp)
+  target_link_libraries(track_runtime_tests PRIVATE port_runtime)
+  add_test(NAME track_runtime COMMAND track_runtime_tests)
+  add_test(NAME track_runtime_assets COMMAND track_runtime_tests --assets)
+  set_tests_properties(track_runtime_assets PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 180
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  add_executable(track_debug_geometry_tests src/tests/track_debug_geometry_tests.cpp)
+  target_link_libraries(track_debug_geometry_tests PRIVATE game_core)
+  add_test(NAME track_debug_geometry COMMAND track_debug_geometry_tests)
+  add_executable(track_texture_tests src/tests/track_texture_tests.cpp)
+  target_link_libraries(track_texture_tests PRIVATE game_core)
+  add_test(NAME track_texture_orientation COMMAND track_texture_tests)
   add_executable(hp2_tpk_texture_tests src/tests/hp2_tpk_texture_tests.cpp)
   target_link_libraries(hp2_tpk_texture_tests PRIVATE game_core)
   add_test(NAME hp2_tpk_texture COMMAND hp2_tpk_texture_tests
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  add_test(NAME track_runtime_source_review_rules COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/tests" -p test_task0051_source_review.py)
+  add_test(NAME track_debug_source_review_rules COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/tests" -p test_task0049_source_review.py)
+  add_test(NAME track_source_review_rules COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/tests" -p test_task0048_source_review.py)
   add_test(NAME class_template_coverage COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/reverse/scripts/generate_class_templates.py" --check)
   add_test(NAME class_template_generator COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/tests" -p test_class_templates.py)
   add_test(NAME debug_reference_matching COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/scripts" -p test_debug_reference_matching.py)
@@ -297,6 +358,10 @@ if(BUILD_TESTING)
   add_test(NAME identifier_entity_rules COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/tests" -p test_task0043_identifiers.py)
   add_test(NAME existing_body_preservation COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/reverse/scripts/audit_task0043_preservation.py" --renames "${CMAKE_CURRENT_SOURCE_DIR}/reverse/naming/task0043-identifier-renames.json")
   add_test(NAME existing_body_audit_rules COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/tests" -p test_task0043_preservation.py)
+  add_test(NAME debug_driving_migration_rules COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/tests" -p test_task0044_migration.py)
+  add_test(NAME debug_driving_single_chain COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/tests" -p test_debug_driving_chain.py)
+  add_test(NAME grip_source_review_rules COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/tests" -p test_task0045_source_review.py)
+  add_test(NAME player_source_review_rules COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/tests" -p test_task0046_source_review.py)
   add_test(NAME current_projection_bindings COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/reverse/scripts/refresh_task0043_projection_bindings.py")
   add_test(NAME main_loop_catalog COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/reverse/scripts/validate_main_loop.py" --metadata-only)
   # docs/PROGRESS.md's tables are generated from reverse/symbols.csv, the task files and the
@@ -323,6 +388,9 @@ if(BUILD_TESTING)
 endif()
 
 if(PORT_BUILD_GODOT)
+  # Port test staging allows validation while another process holds the live DLL.
+  set(PORT_GODOT_PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/godot" CACHE PATH "Godot host project for builds and tests")
+  set(PORT_GODOT_BIN_DIR "${PORT_GODOT_PROJECT_DIR}/bin" CACHE PATH "Godot extension output directory")
   # Ship shader text in the binary; exports do not depend on source-tree paths.
   set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/car_base.gdshader"
@@ -331,6 +399,20 @@ if(PORT_BUILD_GODOT)
   file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/car_base.gdshader" HP2_CAR_BASE)
   file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/car_modulate.glsl" HP2_CAR_MODULATE)
   file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/car_wireframe.gdshader" HP2_CAR_WIREFRAME)
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/track_sampling.glsl")
+  file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/track_sampling.glsl" HP2_TRACK_SAMPLING)
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/track_fragment.glsl")
+  file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/track_fragment.glsl" HP2_TRACK_FRAGMENT)
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/track_alpha_vertex.glsl")
+  file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/track_alpha_vertex.glsl" HP2_TRACK_ALPHA_VERTEX)
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/track_depth.glsl")
+  file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/track_depth.glsl" HP2_TRACK_DEPTH)
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/track_effects.glsl")
+  file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/track_effects.glsl" HP2_TRACK_EFFECTS)
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/track_debug_fill.gdshader")
+  file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/track_debug_fill.gdshader" HP2_TRACK_DEBUG_FILL)
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/track_debug_edges.gdshader")
+  file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/shaders/track_debug_edges.gdshader" HP2_TRACK_DEBUG_EDGES)
   configure_file(src/platform/shaders/embedded_shaders.hpp.in
     "${CMAKE_CURRENT_BINARY_DIR}/generated/hp2_embedded_shaders.hpp" @ONLY)
   if(NOT EXISTS "${PORT_GODOT_CPP_DIR}/CMakeLists.txt")
@@ -342,6 +424,10 @@ if(PORT_BUILD_GODOT)
     src/platform/godot_bridge/main_loop_observer.cpp src/platform/godot_bridge/frontend_menu_observer.cpp
     src/platform/godot_bridge/ps2_texture_loader.cpp src/platform/godot_bridge/ps2_frontend_layout.cpp
     src/platform/godot_bridge/ps2_car_viewer.cpp src/platform/godot_bridge/ps2_vehicle_renderer.cpp
+    src/platform/godot_bridge/ps2_track_renderer.cpp
+    src/platform/shaders/track_shader.cpp
+    src/platform/godot_bridge/ps2_track_viewer.cpp
+    src/platform/godot_bridge/ps2_driving_runtime.cpp
     src/platform/godot_bridge/ps2_driving_lab.cpp
     src/platform/godot_bridge/ps2_render_host.cpp src/platform/not_implemented_dialog.cpp)
   target_sources(ps2_port PRIVATE src/platform/godot_bridge/ps2_movie_player.cpp)
@@ -365,11 +451,11 @@ if(PORT_BUILD_GODOT)
     add_custom_command(TARGET ps2_port POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PORT_FFMPEG_DLLS} "$<TARGET_FILE_DIR:ps2_port>")
   endif()
   set_target_properties(ps2_port PROPERTIES PREFIX "" OUTPUT_NAME "ps2_port"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/godot/bin"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/godot/bin")
+    RUNTIME_OUTPUT_DIRECTORY "${PORT_GODOT_BIN_DIR}"
+    LIBRARY_OUTPUT_DIRECTORY "${PORT_GODOT_BIN_DIR}")
   foreach(config DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
-    set_target_properties(ps2_port PROPERTIES RUNTIME_OUTPUT_DIRECTORY_${config} "${CMAKE_CURRENT_SOURCE_DIR}/godot/bin"
-      LIBRARY_OUTPUT_DIRECTORY_${config} "${CMAKE_CURRENT_SOURCE_DIR}/godot/bin")
+    set_target_properties(ps2_port PROPERTIES RUNTIME_OUTPUT_DIRECTORY_${config} "${PORT_GODOT_BIN_DIR}"
+      LIBRARY_OUTPUT_DIRECTORY_${config} "${PORT_GODOT_BIN_DIR}")
   endforeach()
   # Keep the smoke scene self-contained on Windows with MinGW runtime DLLs.
   if(MINGW)
@@ -379,38 +465,70 @@ if(PORT_BUILD_GODOT)
       CACHE FILEPATH "Godot 4.4.1 executable for asset-free host smoke tests")
   if(BUILD_TESTING AND EXISTS "${PORT_GODOT_EXECUTABLE}")
     if(PORT_ENABLE_GPU_TESTS AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+      add_test(NAME race_runtime_gpu COMMAND "${PORT_GODOT_EXECUTABLE}"
+        --path "${PORT_GODOT_PROJECT_DIR}" res://scenes/race_scene.tscn -- --track=11 --car=ELISE --race-runtime-smoke)
+      set_tests_properties(race_runtime_gpu PROPERTIES TIMEOUT 180 SKIP_RETURN_CODE 77
+        PASS_REGULAR_EXPRESSION "RACE_RUNTIME_SMOKE_OK" FAIL_REGULAR_EXPRESSION "SCRIPT ERROR;ERROR:")
+      add_test(NAME track_mask_gpu COMMAND "${PORT_GODOT_EXECUTABLE}"
+        --path "${PORT_GODOT_PROJECT_DIR}" res://scenes/track_mask_smoke.tscn)
+      set_tests_properties(track_mask_gpu PROPERTIES TIMEOUT 180 SKIP_RETURN_CODE 77
+        PASS_REGULAR_EXPRESSION "TRACK_MASK_GPU_OK" FAIL_REGULAR_EXPRESSION "SCRIPT ERROR;ERROR:")
+      add_test(NAME track_fusion_gpu COMMAND "${PORT_GODOT_EXECUTABLE}"
+        --path "${PORT_GODOT_PROJECT_DIR}" res://scenes/track_fusion_gpu_smoke.tscn)
+      set_tests_properties(track_fusion_gpu PROPERTIES TIMEOUT 60 SKIP_RETURN_CODE 77
+        PASS_REGULAR_EXPRESSION "TRACK_FUSION_GPU_OK" FAIL_REGULAR_EXPRESSION "SCRIPT ERROR;ERROR:")
+      add_test(NAME track_pipeline_gpu COMMAND "${PORT_GODOT_EXECUTABLE}"
+        --path "${PORT_GODOT_PROJECT_DIR}" res://scenes/track_pipeline_smoke.tscn -- --track-parity-gpu)
+      set_tests_properties(track_pipeline_gpu PROPERTIES TIMEOUT 180 SKIP_RETURN_CODE 77
+        PASS_REGULAR_EXPRESSION "TRACK_PIPELINE_GPU_OK" FAIL_REGULAR_EXPRESSION "SCRIPT ERROR;ERROR:")
       add_test(NAME car_material_gpu COMMAND "${PORT_GODOT_EXECUTABLE}"
-        --path "${CMAKE_CURRENT_SOURCE_DIR}/godot" res://scenes/debug/car_material_gpu_smoke.tscn --quit-after 300 -- --material-gpu-smoke)
+        --path "${PORT_GODOT_PROJECT_DIR}" res://scenes/debug/car_material_gpu_smoke.tscn --quit-after 300 -- --material-gpu-smoke)
       set_tests_properties(car_material_gpu PROPERTIES TIMEOUT 60
         PASS_REGULAR_EXPRESSION "CAR_MATERIAL_GPU_OK" FAIL_REGULAR_EXPRESSION "SCRIPT ERROR;ERROR:")
     endif()
+    add_test(NAME race_runtime_host COMMAND "${PORT_GODOT_EXECUTABLE}" --headless
+      --path "${PORT_GODOT_PROJECT_DIR}" res://scenes/race_scene.tscn -- --track=11 --car=ELISE --race-runtime-smoke)
+    set_tests_properties(race_runtime_host PROPERTIES TIMEOUT 180 SKIP_RETURN_CODE 77
+      PASS_REGULAR_EXPRESSION "RACE_RUNTIME_SMOKE_OK" FAIL_REGULAR_EXPRESSION "SCRIPT ERROR;ERROR:")
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+      add_test(NAME track_pipeline_parity COMMAND "${PORT_GODOT_EXECUTABLE}" --headless
+        --path "${PORT_GODOT_PROJECT_DIR}" res://scenes/track_pipeline_smoke.tscn)
+      set_tests_properties(track_pipeline_parity PROPERTIES TIMEOUT 180 SKIP_RETURN_CODE 77
+        PASS_REGULAR_EXPRESSION "TRACK_PIPELINE_PARITY_OK" FAIL_REGULAR_EXPRESSION "SCRIPT ERROR;ERROR:")
+      add_test(NAME track_viewer_host COMMAND "${PORT_GODOT_EXECUTABLE}" --headless
+        --path "${PORT_GODOT_PROJECT_DIR}" res://scenes/debug/track_viewer.tscn -- --track-load=11 --track-smoke)
+      set_tests_properties(track_viewer_host PROPERTIES TIMEOUT 180 SKIP_RETURN_CODE 77
+        PASS_REGULAR_EXPRESSION "TRACK_VIEWER_SMOKE_OK" FAIL_REGULAR_EXPRESSION "SCRIPT ERROR;ERROR:")
+      add_test(NAME driving_input_host COMMAND "${PORT_GODOT_EXECUTABLE}" --headless
+        --path "${PORT_GODOT_PROJECT_DIR}" --script res://scripts/debug/driving_input_smoke.gd)
+      set_tests_properties(driving_input_host PROPERTIES TIMEOUT 30
+        PASS_REGULAR_EXPRESSION "DRIVING_INPUT_SMOKE_OK" FAIL_REGULAR_EXPRESSION "SCRIPT ERROR;ERROR:")
       add_test(NAME driving_asset_host COMMAND "${PORT_GODOT_EXECUTABLE}" --headless
-        --path "${CMAKE_CURRENT_SOURCE_DIR}/godot" res://scenes/debug/car_viewer.tscn --quit-after 600 -- --driving-asset-smoke)
+        --path "${PORT_GODOT_PROJECT_DIR}" res://scenes/debug/car_viewer.tscn --quit-after 600 -- --driving-asset-smoke)
       set_tests_properties(driving_asset_host PROPERTIES TIMEOUT 60 SKIP_RETURN_CODE 77
         PASS_REGULAR_EXPRESSION "DRIVING_ASSET_SMOKE_OK" FAIL_REGULAR_EXPRESSION "SCRIPT ERROR;ERROR:")
       add_test(NAME driving_lab_host COMMAND "${PORT_GODOT_EXECUTABLE}" --headless
-        --path "${CMAKE_CURRENT_SOURCE_DIR}/godot" res://scenes/debug/car_viewer.tscn --quit-after 600 -- --driving-smoke)
+        --path "${PORT_GODOT_PROJECT_DIR}" res://scenes/debug/car_viewer.tscn --quit-after 600 -- --driving-smoke)
       set_tests_properties(driving_lab_host PROPERTIES TIMEOUT 30
         PASS_REGULAR_EXPRESSION "DRIVING_LAB_SMOKE_OK" FAIL_REGULAR_EXPRESSION "SCRIPT ERROR;ERROR:")
     endif()
     add_test(NAME car_surface_batches COMMAND "${PORT_GODOT_EXECUTABLE}" --headless
-      --path "${CMAKE_CURRENT_SOURCE_DIR}/godot" res://scenes/debug/car_surface_batch_smoke.tscn)
+      --path "${PORT_GODOT_PROJECT_DIR}" res://scenes/debug/car_surface_batch_smoke.tscn)
     set_tests_properties(car_surface_batches PROPERTIES TIMEOUT 180 SKIP_RETURN_CODE 77
       PASS_REGULAR_EXPRESSION "CAR_SURFACE_BATCH_OK" FAIL_REGULAR_EXPRESSION "SCRIPT ERROR;ERROR:")
     add_test(NAME car_render_host COMMAND "${PORT_GODOT_EXECUTABLE}" --headless
-      --path "${CMAKE_CURRENT_SOURCE_DIR}/godot" res://scenes/debug/viewer_frontend_fixture.tscn -- --car-render-smoke
+      --path "${PORT_GODOT_PROJECT_DIR}" res://scenes/debug/viewer_frontend_fixture.tscn -- --car-render-smoke
       --expect-debug=$<IF:$<CONFIG:Debug>,true,false>)
     set_tests_properties(car_render_host PROPERTIES TIMEOUT 60 SKIP_RETURN_CODE 77
       PASS_REGULAR_EXPRESSION "CAR_RENDER_SMOKE_OK" FAIL_REGULAR_EXPRESSION "SCRIPT ERROR;ERROR:")
     add_test(NAME debug_console_host COMMAND "${PORT_GODOT_EXECUTABLE}" --headless
-      --path "${CMAKE_CURRENT_SOURCE_DIR}/godot" res://scenes/debug_console_smoke.tscn --
+      --path "${PORT_GODOT_PROJECT_DIR}" res://scenes/debug_console_smoke.tscn --
       --expect-debug=$<IF:$<CONFIG:Debug>,true,false>
       --expect-console=$<IF:$<BOOL:${HP2_ENABLE_DEBUG_CONSOLE}>,true,false>)
     set_tests_properties(debug_console_host PROPERTIES TIMEOUT 30
       PASS_REGULAR_EXPRESSION "DEBUG_CONSOLE_SMOKE_OK" FAIL_REGULAR_EXPRESSION "SCRIPT ERROR;ERROR:")
     add_test(NAME debug_viewers_host COMMAND "${PORT_GODOT_EXECUTABLE}" --headless
-      --path "${CMAKE_CURRENT_SOURCE_DIR}/godot" res://scenes/debug/viewer_frontend_fixture.tscn --
+      --path "${PORT_GODOT_PROJECT_DIR}" res://scenes/debug/viewer_frontend_fixture.tscn --
       --viewer-smoke --expect-debug=$<IF:$<CONFIG:Debug>,true,false>
       --expect-console=$<IF:$<BOOL:${HP2_ENABLE_DEBUG_CONSOLE}>,true,false>)
     set_tests_properties(debug_viewers_host PROPERTIES TIMEOUT 30

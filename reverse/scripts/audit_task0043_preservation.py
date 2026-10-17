@@ -222,7 +222,20 @@ def main() -> int:
         if isinstance(ledger, dict):
             aliases = ledger.get('normalized_aliases', {})
     permissions = json.loads(args.permitted_removals.read_text()) if args.permitted_removals.exists() else []
-    report = compare(baseline, collect_current(), load_renames(args.renames), aliases, permissions)
+    # TASK-0043 remains a historical preservation claim at its fixed final commit.
+    # TASK-0044 intentionally changes algorithms against a different executable;
+    # those edits require a separate, exact before/after review, not rename credit.
+    migration_review = ROOT / 'reverse/task0044/source-migration-review.json'
+    if migration_review.exists() and args.baseline == '19a8de9':
+        historical_after = collect_revision('8c7efde')
+        report = compare(baseline, historical_after, load_renames(args.renames), aliases, permissions)
+        import audit_task0051_review
+        migration = audit_task0051_review.check_current()
+        report['task0044_source_migration_review'] = migration
+        report['historical_preservation_target'] = git('rev-parse', '8c7efde').strip()
+        report['passed'] = report['passed'] and migration['passed']
+    else:
+        report = compare(baseline, collect_current(), load_renames(args.renames), aliases, permissions)
     report['baseline_commit'] = git('rev-parse', args.baseline).strip()
     report['scope'] = 'All recognized outer C++ function bodies under src, including headers and Godot bindings; comments/whitespace ignored; test-body changes reported separately and do not fail production preservation.'
     text = json.dumps(report, indent=2) + '\n'

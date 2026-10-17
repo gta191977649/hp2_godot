@@ -11,6 +11,13 @@ The repository is a reverse-engineering port of *Need for Speed: Hot Pursuit 2* 
 identical to the original game. Anything that is not traceable to the original binary or the
 original game data is a liability, not a feature.
 
+TASK-0044 records an explicit user-authorized exception to the Retail target for the
+vehicle-driving closure: use Debug `NFSHP2.ELF`, SHA-256
+`815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b`, as the behavior
+authority for Test drive. Keep its addresses, layouts, records and implementation status
+separate from Retail; this does not change the target of unrelated systems. See
+`docs/DEBUG_DRIVING_AUDIT.md`. All evidence, naming and read-only rules below still apply.
+
 ## R0. Two sources of truth, and nothing else
 
 Code and documentation in this repository may only assert something about the original game when

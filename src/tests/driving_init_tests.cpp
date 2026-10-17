@@ -1,3 +1,4 @@
+// TASK-0044: fixtures now target Debug addresses; historical API adapters forward canonical classes.
 #include "game_core/port/driving/projections.hpp"
 #include <algorithm>
 #include <array>
@@ -17,7 +18,7 @@ int main(){
     // E-0038-I05: independent 001A3F24..58 instruction-store schedule.
     std::array<std::uint8_t,0x190> wheel;wheel.fill(0xa5);auto expected=wheel;
     Sub_001A3F10(wheel,0x12345678,0x23456789,0x3456789a,0x456789ab);
-    sw(expected,8,0x002b5c40);sw(expected,0x18,0x456789ab);sw(expected,0xc,0x12345678);
+    sw(expected,8,0x002ada00);sw(expected,0x18,0x456789ab);sw(expected,0xc,0x12345678);
     sw(expected,0x10,0x23456789);sw(expected,0x14,0x3456789a);sw(expected,0x110,1);
     sw(expected,0x17c,0x3f800000);sw(expected,0x180,0);sw(expected,0x178,0x3f800000);
     expected[0x156]=0;expected[0x157]=0;sw(expected,0x164,0);sw(expected,0x15c,0);
@@ -26,7 +27,7 @@ int main(){
     std::array<std::uint8_t,0xb0> controller;controller.fill(0x5a);auto controller_expected=controller;
     Sub_001A5EA0(controller,3,0x01020304,0x05060708,0x090a0b0c,0x0d0e0f10);
     sw(controller_expected,0x9c,3);sw(controller_expected,0x94,0x01020304);
-    sw(controller_expected,8,0x002b5cd0);sw(controller_expected,0x90,0x05060708);
+    sw(controller_expected,8,0x002ada90);sw(controller_expected,0x90,0x05060708);
     sw(controller_expected,0x98,0x090a0b0c);sw(controller_expected,0xc,0x0d0e0f10);sw(controller_expected,0x10,0);
     check(controller==controller_expected,"001A5EA0 exact argument/register mapping");
     const auto identity=bIdentity();
@@ -49,7 +50,7 @@ int main(){
     // E-0038-I04 listing's zero-store offsets, including untouched fourth vector lanes.
     for(auto offset:{0x10,0x14,0x18,0x60,0x64,0x68,0x70,0x74,0x78,0x80,0x90,0x94,0x98,0xa0,
                     0xa4,0xa8,0xf0,0xf4,0xf8,0x100,0x104,0x108,0x170,0x174,0x114})sw(body_expected,offset,0);
-    sw(body_expected,8,0x002b5430);sw(body_expected,0xc,0x11223344);
+    sw(body_expected,8,0x002ad1f0);sw(body_expected,0xc,0x11223344);
     for(std::size_t i=0;i<16;++i)sw(body_expected,0x20+4*i,i%5==0?0x3f800000:0);
     sw(body_expected,0x178,0x3f800000);sw(body_expected,0x110,1);
     sw(body_expected,0x118,0x40800000);sw(body_expected,0x11c,0x3e800000);
@@ -68,7 +69,7 @@ int main(){
     Sub_001A5FB0(controller);check(c.word(0x14)==0&&c.word(0x18)==0,"001A5FB0 clears exactly two fields");
     std::array<std::uint8_t,20> head;head.fill(0xa5);auto head_expected=head;
     Sub_0019C170(head,0x12345678);sw(head_expected,0,0x12345678);sw(head_expected,4,0x12345678);
-    sw(head_expected,8,0);sw(head_expected,12,0x002b53a0);check(head==head_expected,"0019C170 encoded self pointers and table");
+    sw(head_expected,8,0);sw(head_expected,12,0x002ad160);check(head==head_expected,"0019C170 encoded self pointers and table");
     std::array<std::uint8_t,8> truncated{};bool rejected=false;
     try{Sub_001A3F10(truncated,0,0,0,0);}catch(const std::out_of_range&){rejected=true;}
     check(rejected&&std::all_of(truncated.begin(),truncated.end(),[](auto v){return v==0;}),"Port bounds reject before writes");

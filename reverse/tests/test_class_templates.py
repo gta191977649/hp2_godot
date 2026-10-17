@@ -107,7 +107,10 @@ class ClassTemplateTests(unittest.TestCase):
         self.assertNotIn('0x0012E1B8', by_name['cDBFileSys']['functions'])
         for name in ('PhysicsCar', 'PsychoDriver', 'cDBFileSys'):
             header = (ROOT / by_name[name]['header']).read_text()
-            self.assertNotRegex(header, r'class\s+' + name + r'\s*:')
+            if name in MODULE.debug_canonical_owners():
+                self.assertRegex(header, r'class\s+' + name + r'\s*:\s*public port::driving::ObjectView')
+            else:
+                self.assertNotRegex(header, r'class\s+' + name + r'\s*:')
 
     def test_task0042_supported_methods_keep_ctor_dtor_entries_address_named(self):
         classes, _, _, _ = MODULE.model()
@@ -187,7 +190,7 @@ class ClassTemplateTests(unittest.TestCase):
             self.assertEqual(MODULE.definitions(), {})
 
     def test_existing_unindexed_knowledge_record_is_preserved(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(MODULE, "ROOT", Path(directory)):
+        with tempfile.TemporaryDirectory() as directory, patch.object(MODULE, "ROOT", Path(directory)), patch.object(MODULE, "BINARY", "synthetic"):
             root = Path(directory)
             record = root / "reverse/functions/synthetic/unknown/00100000.md"
             record.parent.mkdir(parents=True)
@@ -198,6 +201,7 @@ class ClassTemplateTests(unittest.TestCase):
                       "pc_implementation", "evidence_ids")
             symbols = {"0x00100004": dict.fromkeys(fields, "unknown")}
             symbols["0x00100004"]["elf_address"] = "0x00100004"
+            symbols["0x00100004"]["binary_id"] = "synthetic"
             import csv
             prior_rows = [dict(symbols["0x00100004"], status="Tested"),
                           dict(symbols["0x00100004"], status="Identified")]
@@ -216,7 +220,7 @@ class ClassTemplateTests(unittest.TestCase):
             self.assertEqual(len(actual_rows), 3)
 
     def test_coverage_link_updates_do_not_retain_stale_generated_paths(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(MODULE, "ROOT", Path(directory)):
+        with tempfile.TemporaryDirectory() as directory, patch.object(MODULE, "ROOT", Path(directory)), patch.object(MODULE, "BINARY", "synthetic"):
             root = Path(directory)
             record = root / "reverse/functions/synthetic/unknown/00100000.md"
             record.parent.mkdir(parents=True)

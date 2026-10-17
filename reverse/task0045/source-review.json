@@ -1,0 +1,293 @@
+{
+  "task": "TASK-0045",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "baseline_inventory": "reverse/task0045/pre-source-identities.json",
+  "baseline_inventory_sha256": "423f0738818d3be6467627a1185dfa9d8a05c1c800a79ef5675ea44512070ec9",
+  "predecessor_review": "reverse/task0044/source-migration-review.json",
+  "predecessor_review_lf_sha256": "8d5ed24700c986fe51d464c56380a27a40fcc66bf2359e412b4a2f941cbbab1e",
+  "policy": "Append-only successor review. TASK-0044 pins remain immutable. All changed signatures/bodies, removals and additions require exact before/after identities with evidence/reason. No numerical verification credit.",
+  "before": [
+    {
+      "path": "src/game_core/indep/src/wheel.cpp",
+      "name": "Wheel::FinalizeGroundForce",
+      "signature_sha256": "2fc532c43b5d8d6ee51c68485695b610a5f7fd1fe1f6e7f80929bf7d5b8e970d",
+      "body_sha256": "43b3606c2ff1afbc52a865f90a68e00209c9b9b33cad3764c3304911c63adc28",
+      "signature": "Wheel :: FinalizeGroundForce ( std :: int32_t wheel )",
+      "evidence_id": "E-0045-T02",
+      "evidence_record": "reverse/task0045/tire-audit.md",
+      "reason": "Root-approved diagnostic-only anchor correction in canonical Wheel::FinalizeGroundForce: Retail001A52EC to actual Debug VRSQRT001A2AC4. Body-token comparison confirms only that string literal changed; no algorithm/arithmetic change."
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "PlaneContact::GetElevation",
+      "signature_sha256": "80a6b94811fa524166d8ac33db1e332b5d7b3d709b2f686ca16b1b9c4319d060",
+      "body_sha256": "a4bb58274868c1396837a8437dfa0d15954073c0f8c48b6eb14f57d09f903740",
+      "signature": "PlaneContact :: GetElevation ( Memory & m , std :: uint32_t , std :: uint32_t point , std :: uint32_t material , std :: uint32_t plane , std :: uint32_t found )",
+      "evidence_id": "E-0045-U01;E-0045-T01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved TASK-0045 source change. Port synthetic-plane material selection from each wheel query native X; original plane height/normal and canonical contact/tire algorithms remain unchanged."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::publish",
+      "signature_sha256": "61f3484f22491de2fa7e4e0eb0110adda94cac031d21d1b66b30fb853b9398b7",
+      "body_sha256": "cca48a7b1dffc300a23faff53a506c76cc46c77e61d98e5f2903e9df260362f4",
+      "signature": "NativeBackend :: publish ( Memory & m , float dt ) const",
+      "evidence_id": "E-0045-W01;E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved TASK-0045 source change. Read-only publication of committed original Wheel/TireInfo fields and the selected tool surface/catalogue; no additional force calculation."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::advance",
+      "signature_sha256": "82ef93f42c80876524cb2a044281441e2f5e26c1fb0697c67ef2f88ad1c68c9e",
+      "body_sha256": "65781e6a292d8158add3a1087d2d51d2cffd5874d4948214fafb964c97bbebe5",
+      "signature": "NativeBackend :: advance ( const Config & config , const Input & input , float elapsed )",
+      "evidence_id": "E-0045-T01;E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved TASK-0045 source change. Fourth SurfaceSettings input, validation and supported original terrain catalogue loading; settings and diagnostics commit with the existing completed canonical step."
+    },
+    {
+      "path": "src/game_core/port/driving/session.cpp",
+      "name": "Session::configure",
+      "signature_sha256": "8e46495ed1988221dad9390d29223e991828119ad4183bd99e6a0bcc1a1fe995",
+      "body_sha256": "c024fa96d2b43e4e04f51de68e7da840595c81f34f65776962db839bd49f6f38",
+      "signature": "Session :: configure ( Config config )",
+      "evidence_id": "E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved TASK-0045 source change. Clear the surface recording tape with the existing input/time tapes when configuring a new tool session."
+    },
+    {
+      "path": "src/game_core/port/driving/session.cpp",
+      "name": "Session::recording",
+      "signature_sha256": "34258423890b17bbff625dfc56762dedbfc4b9be7af790bdee347fb3e435275e",
+      "body_sha256": "1b4ba047d5b586103a2be51a20c94e5c896bc865c595473f72fe8151f99d582c",
+      "signature": "Session :: recording ( bool enabled )",
+      "evidence_id": "E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved TASK-0045 source change. Clear the surface tape together with existing input/time tapes when starting a new recording."
+    },
+    {
+      "path": "src/game_core/port/driving/session.cpp",
+      "name": "Session::advance",
+      "signature_sha256": "0967019808c43528c6b68191d3a7b4a514e21674ed7ea6177171805c90aae1f7",
+      "body_sha256": "a8ab1017ebbfa13e7f5a6796f8afe0bf04d4260d9b5623d6f3d6c6a9617bbb53",
+      "signature": "Session :: advance ( float elapsed )",
+      "evidence_id": "E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved TASK-0045 source change. Pass requested or replayed settings to the backend and record them only after a successful complete step; retain the last complete snapshot on failure."
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw",
+      "signature_sha256": "af5c4109ffb88c769db23520815cad4706cfef9cd312c96a3eb3cbd7b1f54a9d",
+      "body_sha256": "9171679d4118f53f6e77e57a11878a68de82853419a49262a37571b9d356c311",
+      "signature": "ViewerUi :: draw ( float width , float height )",
+      "evidence_id": "E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved final C++ UI integration after Godot compile, driving_asset and31 real-window surface checks. Tool-only surface selectors and legacy 19-column stored-value diagnostics. Fixed parent title/Return controls and a borderless scroll child retain accessible return/navigation when diagnostics expand."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::_bind_methods",
+      "signature_sha256": "6f835c47a5b8f896ec3cdcc2603a4c630a789a048db2d8e60f1efaa269779161",
+      "body_sha256": "77e1155e4822f7bf1b6b7240b0a1ae374bfc10cd459a6d7e8fe7b9e2dfe2a92a",
+      "signature": "Ps2DrivingLab :: _bind_methods ( )",
+      "evidence_id": "E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved final C++ UI integration after Godot compile, driving_asset and31 real-window surface checks. Expose the validated tool surface-selection bridge method alongside the existing bindings."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::get_state",
+      "signature_sha256": "fa158aa06d9f842263ca5c01f35cd602f02520c5e5c9b10161d6f92557a8768a",
+      "body_sha256": "15a31159240736bf86e1796c2d32f88f8b71349e57825a2815471b65d042ecae",
+      "signature": "Ps2DrivingLab :: get_state ( ) const",
+      "evidence_id": "E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved final C++ UI integration after Godot compile, driving_asset and31 real-window surface checks. Read-only Godot publication of committed surface/catalogue and stored four-wheel diagnostics; no grip or force recomputation."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_snapshot",
+      "signature_sha256": "ef5026d842bd185acad14f92379c944f1db983a3f42547c13e2d150baa0f1c1e",
+      "body_sha256": "97664c4a2203c8defa1d249dd124a9cba757e182c81cafb727f4c9ff00bd23d8",
+      "signature": "Ps2RenderHost :: viewer_ui_snapshot ( const godot :: Dictionary & snapshot )",
+      "evidence_id": "E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved final C++ UI integration after Godot compile, driving_asset and31 real-window surface checks. Map committed surface/catalogue and stored grip values into tool presentation state without calculating physics."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/game_core/indep/src/wheel.cpp",
+      "name": "Wheel::FinalizeGroundForce",
+      "signature_sha256": "2fc532c43b5d8d6ee51c68485695b610a5f7fd1fe1f6e7f80929bf7d5b8e970d",
+      "body_sha256": "3ddb0e7931b1144132444ff3b3516a23dca58b35c6a901f13e7d1dcfc625ba4c",
+      "signature": "Wheel :: FinalizeGroundForce ( std :: int32_t wheel )",
+      "evidence_id": "E-0045-T02",
+      "evidence_record": "reverse/task0045/tire-audit.md",
+      "reason": "Root-approved diagnostic-only anchor correction in canonical Wheel::FinalizeGroundForce: Retail001A52EC to actual Debug VRSQRT001A2AC4. Body-token comparison confirms only that string literal changed; no algorithm/arithmetic change."
+    },
+    {
+      "path": "src/game_core/indep/src/track.cpp",
+      "name": "PlaneContact::GetElevation",
+      "signature_sha256": "80a6b94811fa524166d8ac33db1e332b5d7b3d709b2f686ca16b1b9c4319d060",
+      "body_sha256": "62ee5f5e7245a898593f7c33132503184e626c80779cba81a88bde9c17c539eb",
+      "signature": "PlaneContact :: GetElevation ( Memory & m , std :: uint32_t , std :: uint32_t point , std :: uint32_t material , std :: uint32_t plane , std :: uint32_t found )",
+      "evidence_id": "E-0045-U01;E-0045-T01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved TASK-0045 source change. Port synthetic-plane material selection from each wheel query native X; original plane height/normal and canonical contact/tire algorithms remain unchanged."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::publish",
+      "signature_sha256": "61f3484f22491de2fa7e4e0eb0110adda94cac031d21d1b66b30fb853b9398b7",
+      "body_sha256": "832cd5f09d2a4d2a305bfb8e85366ad317db3671112470f889b3e28d5eb1d2c4",
+      "signature": "NativeBackend :: publish ( Memory & m , float dt ) const",
+      "evidence_id": "E-0045-W01;E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved TASK-0045 source change. Read-only publication of committed original Wheel/TireInfo fields and the selected tool surface/catalogue; no additional force calculation."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::advance",
+      "signature_sha256": "4b3b67ca000d00c4cfc26033669039b9ac1a8c4990327486dbfa5a4ee70d6e66",
+      "body_sha256": "4d5be91bacaffc430ff306fa998ffb5cbefdbdabf8d9f463b148a4e6d5e74fdb",
+      "signature": "NativeBackend :: advance ( const Config & config , const Input & input , float elapsed , const SurfaceSettings & surface )",
+      "evidence_id": "E-0045-T01;E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved TASK-0045 source change. Fourth SurfaceSettings input, validation and supported original terrain catalogue loading; settings and diagnostics commit with the existing completed canonical step."
+    },
+    {
+      "path": "src/game_core/port/driving/session.cpp",
+      "name": "Session::configure",
+      "signature_sha256": "8e46495ed1988221dad9390d29223e991828119ad4183bd99e6a0bcc1a1fe995",
+      "body_sha256": "1f3dda399a04506714b4f5261488018bcc7a8900241782e7d05388e9f0971949",
+      "signature": "Session :: configure ( Config config )",
+      "evidence_id": "E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved TASK-0045 source change. Clear the surface recording tape with the existing input/time tapes when configuring a new tool session."
+    },
+    {
+      "path": "src/game_core/port/driving/session.cpp",
+      "name": "Session::surface",
+      "signature_sha256": "7cb26bef4e6abab687b7fad5842f31d169ea0160f57c6e77379be9fff75dce1c",
+      "body_sha256": "19e45529ceddd39c467ebb01ddedb13ef34ada1274eb736561396aa0df2919b3",
+      "signature": "Session :: surface ( SurfaceSettings value )",
+      "evidence_id": "E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved TASK-0045 source change. Validate the requested port test-surface settings and queue them outside replay without resetting simulation state."
+    },
+    {
+      "path": "src/game_core/port/driving/session.cpp",
+      "name": "Session::recording",
+      "signature_sha256": "34258423890b17bbff625dfc56762dedbfc4b9be7af790bdee347fb3e435275e",
+      "body_sha256": "fee7439fb14d737ea87906f863deb74b037e3cf3c4d1ac5b3c385fb3eba545f7",
+      "signature": "Session :: recording ( bool enabled )",
+      "evidence_id": "E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved TASK-0045 source change. Clear the surface tape together with existing input/time tapes when starting a new recording."
+    },
+    {
+      "path": "src/game_core/port/driving/session.cpp",
+      "name": "Session::advance",
+      "signature_sha256": "0967019808c43528c6b68191d3a7b4a514e21674ed7ea6177171805c90aae1f7",
+      "body_sha256": "a6865897611296e61e5f09efcb3d87b5485dee83df48cae4e5dc22b39e10b9b6",
+      "signature": "Session :: advance ( float elapsed )",
+      "evidence_id": "E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved TASK-0045 source change. Pass requested or replayed settings to the backend and record them only after a successful complete step; retain the last complete snapshot on failure."
+    },
+    {
+      "path": "src/game_core/port/driving/surface.cpp",
+      "name": "validate_surface",
+      "signature_sha256": "270b336bf0ce86afb415d249986ea088faaa839c91f13bec4494aeba6a03ed6c",
+      "body_sha256": "fbbb493f43c157e0a8d628dae3a3441bd337d731ddacd8aa9217526e1478a896",
+      "signature": "validate_surface ( const SurfaceSettings & value )",
+      "evidence_id": "E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved TASK-0045 source change. Validate the two tool modes and five explicitly supported terrain IDs; not a recovered game control."
+    },
+    {
+      "path": "src/game_core/port/driving/surface.cpp",
+      "name": "surface_material_at",
+      "signature_sha256": "86f006c3d50455d727bcfe2850af27a6804d70488d80530071d7b327eb37968b",
+      "body_sha256": "19c9d66e88e187e268309739898b7569385ded0578b6cc5a2233c4f5017641ee",
+      "signature": "surface_material_at ( const SurfaceSettings & value , float x )",
+      "evidence_id": "E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved TASK-0045 source change. Port uniform/five-zone geometry selection at approved native X boundaries25/50/75/100; no physics force or grip calculation."
+    },
+    {
+      "path": "src/game_core/port/driving/surface.cpp",
+      "name": "read_surface_catalog",
+      "signature_sha256": "02a488c6c6d8def83a9f9671dfad5ec456c9259640d14400281ee4769cc80ef6",
+      "body_sha256": "a68d6ef52e6b77907724d349df70a261d884820522642f898be1db4c7e396309",
+      "signature": "read_surface_catalog ( const Memory & m )",
+      "evidence_id": "E-0045-T01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved TASK-0045 source change. Validate all33 original Debug terrain row IDs and read the five supported material names and original coefficients for read-only publication."
+    },
+    {
+      "path": "src/game_core/port/driving/surface.cpp",
+      "name": "observe_grip",
+      "signature_sha256": "6b869c2bb4ad34ec1db360d2dcf76ba099ee3a1501f1b5a644b7aa1347315077",
+      "body_sha256": "b08f803658ad3282482105bd2af415ba06f652c47a03d1b6aadf63513d7fb27b",
+      "signature": "observe_grip ( const Memory & m , std :: uint32_t a )",
+      "evidence_id": "E-0045-W01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved TASK-0045 source change. Read stored original Wheel/TireInfo fields from the completed canonical step, validate finite publication, and perform no grip recomputation."
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw",
+      "signature_sha256": "af5c4109ffb88c769db23520815cad4706cfef9cd312c96a3eb3cbd7b1f54a9d",
+      "body_sha256": "68828d12cc8077eadaf30cbf0a80e83b29b0cc9c68c8a4f21b6de5955bbf2050",
+      "signature": "ViewerUi :: draw ( float width , float height )",
+      "evidence_id": "E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved final C++ UI integration after Godot compile, driving_asset and31 real-window surface checks. Tool-only surface selectors and legacy 19-column stored-value diagnostics. Fixed parent title/Return controls and a borderless scroll child retain accessible return/navigation when diagnostics expand."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::_bind_methods",
+      "signature_sha256": "6f835c47a5b8f896ec3cdcc2603a4c630a789a048db2d8e60f1efaa269779161",
+      "body_sha256": "f82946be84ce436ce121f82e5252cd97e353c9bf7df7598cbb8b23f249f7cd9f",
+      "signature": "Ps2DrivingLab :: _bind_methods ( )",
+      "evidence_id": "E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved final C++ UI integration after Godot compile, driving_asset and31 real-window surface checks. Expose the validated tool surface-selection bridge method alongside the existing bindings."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::set_surface",
+      "signature_sha256": "8d4e41ad2613b6dfedda25b3a517be1835ab7a65aeb2ba3fa39985e04181be8d",
+      "body_sha256": "33143d8e1b0e1ed3aaba4220c495b7af05b6ae7858a667f7ac24b775e9ed564e",
+      "signature": "Ps2DrivingLab :: set_surface ( int mode , int terrain )",
+      "evidence_id": "E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved final C++ UI integration after Godot compile, driving_asset and31 real-window surface checks. Convert and validate tool surface inputs, forwarding to Session without a second simulation path."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::get_state",
+      "signature_sha256": "fa158aa06d9f842263ca5c01f35cd602f02520c5e5c9b10161d6f92557a8768a",
+      "body_sha256": "06b461b6a425945077aa43a0e31a398950ac7866df9b95ece84987d4169724ac",
+      "signature": "Ps2DrivingLab :: get_state ( ) const",
+      "evidence_id": "E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved final C++ UI integration after Godot compile, driving_asset and31 real-window surface checks. Read-only Godot publication of committed surface/catalogue and stored four-wheel diagnostics; no grip or force recomputation."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_snapshot",
+      "signature_sha256": "ef5026d842bd185acad14f92379c944f1db983a3f42547c13e2d150baa0f1c1e",
+      "body_sha256": "02c17559eee702ce9105093b63cc2b9acc57997c6fc3d400a8f16eddace646c9",
+      "signature": "Ps2RenderHost :: viewer_ui_snapshot ( const godot :: Dictionary & snapshot )",
+      "evidence_id": "E-0045-U01",
+      "evidence_record": "docs/DRIVING_GRIP.md",
+      "reason": "Root-approved final C++ UI integration after Godot compile, driving_asset and31 real-window surface checks. Map committed surface/catalogue and stored grip values into tool presentation state without calculating physics."
+    }
+  ]
+}

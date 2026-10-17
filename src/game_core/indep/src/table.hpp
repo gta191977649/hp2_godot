@@ -1,5 +1,6 @@
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
+#include "game_core/port/driving/object_view.hpp"
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
@@ -30,12 +31,12 @@ public:
 // No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
 // Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
 namespace hp2::recovered {
-class Graph {
+class Graph : public port::driving::ObjectView {
 public:
-    // ELF 0x0018F9F0; E-0042-C077; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018f9f0.md.
-    // Original Debug reference: Graph::GetValue(float); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void GetValue();
+    using ObjectView::ObjectView;
+    void Sub_0018D9E8(std::uint32_t points,std::uint32_t count);
+    float GetValue(float value); // Debug0018D9F8, E-0044-E01
+    float GetInverse(float value); // Debug0018DAF8
 };
 } // namespace hp2::recovered
 

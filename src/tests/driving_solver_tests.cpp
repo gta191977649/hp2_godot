@@ -1,3 +1,4 @@
+#include "game_core/indep/src/rigidbody.hpp"
 #include "game_core/port/driving/projections.hpp"
 #include "game_core/port/not_implemented.hpp"
 #include <cmath>
@@ -10,18 +11,7 @@ namespace {
 void check(bool value, const char* message) { if (!value) throw std::runtime_error(message); }
 bool near(float a, float b) { return std::abs(a - b) < 0.00001f; }
 SolverMatrix identity() { SolverMatrix m{}; m[0] = m[5] = m[10] = m[15] = 1; return m; }
-// Port-side fixture dependency implementations. They make no claim about the
-// untranslated original dependencies, and are never installed in production.
-struct FixtureDependencies : SolverDependencies {
-    std::vector<int> calls;
-    void GuessClutchTorque() override { calls.push_back(1); }
-    void GuessGroundForce(SolverWheelProjection&, int a1, std::int8_t a2) override {
-        check(a1 == 0 && a2 == -2, "Solver must forward zero and signed byte"); calls.push_back(2);
-    }
-    void ModifyClutchTorque() override { calls.push_back(3); }
-    void FinalizeGroundForce(SolverWheelProjection&, int i) override { calls.push_back(10 + i); }
-    void FinalizeClutchTorque() override { calls.push_back(4); }
-};
+
 }
 int main() {
     // E-0038-S01: transpose is a raw permutation, including in-place use.
@@ -97,26 +87,17 @@ int main() {
     check(body.Field_0xf0[0]==0,"Global suppression");
     ResolveMoreForces(suspension,0);
     check(body.Field_0xf0[0]==10 && body.Field_0x100[2]==-10,"Contact offset accumulation");
-    // E-0038-S10: scalar listing gives wheel 0 iterations 4,-4,12,-20,44.
-    body={};body.Field_0x20=identity();body.Field_0xf0={{4,0,0,0}};
-    body.Field_0x118=2;body.Field_0x148=0.5f;
-    std::array<SolverWheelProjection,4> wheels{};
-    std::array<SolverSuspensionProjection,4> suspensions{};
-    wheels[0].config_Field_0xc=2;wheels[0].Field_0x24=4;
-    wheels[0].Field_0xb0=1;wheels[0].Field_0x108=8;
-    wheels[1].Field_0x154=1;wheels[1].Field_0x114=3;
-    wheels[2].Field_0x10c=1;wheels[2].Field_0x114=5;
-    wheels[3].Field_0x154=1;wheels[3].Field_0x114=7;
-    FixtureDependencies dependencies;
-    IterateForces(body,wheels,suspensions,-2,dependencies,{{{0,0,0,0}}});
-    check(wheels[0].Field_0x114==44,"Exactly five original arithmetic iterations");
-    check(wheels[1].Field_0x114==3 && wheels[2].Field_0x114==5 && wheels[3].Field_0x114==7,
-          "Both original exclusion fields prevent wheel adjustment");
-    check(dependencies.calls==std::vector<int>{1,2,2,2,2,3,3,3,3,3,10,11,12,13,4},
-          "Original dependency order and final wheel indices");
-    SolverDependencies missing;bool thrown=false;
-    try { IterateForces(body,wheels,suspensions,0,missing,{{{0,0,0,0}}}); }
-    catch (const hp2::NotImplemented& e) { thrown=std::string(e.what()).find("0018B948")!=std::string::npos; }
-    check(thrown,"Untranslated solver dependency fails at original address");
+    // TASK-0044 E-0044-S01: canonical Memory bindings share the leaf implementation.
+    // Full force-loop acceptance lives in driving_backend_tests with the identity-bound Debug ELF.
+    Memory memory;const auto object=memory.allocate(0x180);
+    hp2::recovered::RigidBody canonical_body(memory,object);
+    canonical_body.ApplyForce({{2400,0,0,8}},{{0,0.02f,0,9}});
+    check(memory.vector(object+0xf0)==SolverVector{{1200,0,0,4}},"Canonical body force accumulation");
+    check(near(memory.scalar(object+0x108),-48),"Canonical body uses uncapped force for moment");
+    const auto state=memory.allocate(0x80),copy=memory.allocate(0x80);
+    for(unsigned i=0;i<32;++i)memory.word(state+4*i,0x80000000u+i);
+    canonical_body.SetState(state);canonical_body.GetState(copy);
+    check(canonical_body.GetState()==object+0x10 && canonical_body.GetSize()==32,"Canonical body state contract");
+    for(unsigned i=0;i<32;++i)check(memory.word(copy+4*i)==0x80000000u+i,"Canonical state transfer preserves all bits");
     std::cout << "driving_solver_tests passed (bounded host fixtures, not original equivalence)\n";
 }

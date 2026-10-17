@@ -1,0 +1,308 @@
+[
+  {
+    "address": "0x00149E80",
+    "name": "CalculateRacerPositions",
+    "status": "Decompiled supporting evidence",
+    "evidence": "E-0048-D02",
+    "response_sha256": "f120912b671965ece89fe14619ee25daf9ff801340ed1eed38bae0c7a8f1e76b",
+    "original_identifier": "CalculateRacerPositions__FiP18RacerStartLocation",
+    "original_signature": "void CalculateRacerPositions__FiP18RacerStartLocation(int num_racers, RacerStartLocation * locs)"
+  },
+  {
+    "address": "0x00149D78",
+    "name": "AddRacingCar",
+    "status": "Decompiled supporting evidence",
+    "evidence": "E-0048-D02",
+    "response_sha256": "3e5817d5a9e58f82de6d9c21b58404cc2d376eb19450d82d487bea6235cf5a5b",
+    "original_identifier": "AddRacingCar__FP10DriverInfoP18RacerStartLocation11ControlMode",
+    "original_signature": "void AddRacingCar__FP10DriverInfoP18RacerStartLocation11ControlMode(DriverInfo * driver, RacerStartLocation * start_pos, ControlMode control_mode)"
+  },
+  {
+    "address": "0x00153258",
+    "name": "LoaderTrackGeometry",
+    "status": "Decompiled supporting evidence",
+    "evidence": "E-0048-D02",
+    "response_sha256": "c8989186ba588956173d85dfb34237c9d6385451e5e7a8d5cf4860d47bbf97f5",
+    "original_identifier": "LoaderTrackGeometry__FP6bChunk",
+    "original_signature": "int LoaderTrackGeometry__FP6bChunk(bChunk * chunk)"
+  },
+  {
+    "address": "0x002029C0",
+    "name": "TrackPathManager::Loader",
+    "status": "Decompiled supporting evidence",
+    "evidence": "E-0048-D02",
+    "response_sha256": "3ffca5c51aa76e1c994be570eb8a6934424f5fa73b936a368cebd16bf4718865",
+    "original_identifier": "Loader__16TrackPathManagerP6bChunk",
+    "original_signature": "int Loader__16TrackPathManagerP6bChunk(TrackPathManager * this, bChunk * chunk)"
+  },
+  {
+    "address": "0x00202780",
+    "name": "TrackPathManager::Init",
+    "status": "Decompiled supporting evidence",
+    "evidence": "E-0048-D02",
+    "response_sha256": "b0499dfc487459678be9e2d7d1ff1ab37b60bfd25fd86f59baf59a720137ad17",
+    "original_identifier": "Init__16TrackPathManager",
+    "original_signature": "void Init__16TrackPathManager(TrackPathManager * this)"
+  },
+  {
+    "address": "0x00202B00",
+    "name": "TrackPathManager::FindClosestPoint",
+    "status": "Decompiled supporting evidence",
+    "evidence": "E-0048-D02",
+    "response_sha256": "d6d1a5b69e84e73ab591b37d339968d2ea5589ff4f7f859c580b4f03f8b0dc2b",
+    "original_identifier": "FindClosestPoint__16TrackPathManagerPC8bVector2",
+    "original_signature": "TrackPathPoint * FindClosestPoint__16TrackPathManagerPC8bVector2(TrackPathManager * this, bVector2 * position)"
+  },
+  {
+    "address": "0x00202D58",
+    "name": "TrackPathManager::FindClosestAdjacentPointOnSamePath",
+    "status": "Decompiled supporting evidence",
+    "evidence": "E-0048-D02",
+    "response_sha256": "70276826b2f653a2d8b2225f162e3c69b3e87f059acc7c7593f019a8c2d85acb",
+    "original_identifier": "FindClosestAdjacentPointOnSamePath__16TrackPathManagerPC8bVector2P14TrackPathPoint",
+    "original_signature": "TrackPathPoint * FindClosestAdjacentPointOnSamePath__16TrackPathManagerPC8bVector2P14TrackPathPoint(TrackPathManager * this, bVector2 * position, TrackPathPoint * point)"
+  },
+  {
+    "address": "0x00202F30",
+    "name": "TrackPathManager::UpdatePosition",
+    "status": "Implemented bounded host projection",
+    "evidence": "E-0048-D02",
+    "response_sha256": "0466617f782d51ab4fb256c50497db4a350fba7dc24d130b2c099381c2905c58",
+    "original_identifier": "UpdatePosition__16TrackPathManagerP19TrackPathCoordinatePC8bVector2",
+    "original_signature": "void UpdatePosition__16TrackPathManagerP19TrackPathCoordinatePC8bVector2(TrackPathManager * this, TrackPathCoordinate * tpc, bVector2 * position)"
+  },
+  {
+    "address": "0x00236B10",
+    "name": "InitBasisMatricies",
+    "status": "Decompiled supporting evidence",
+    "evidence": "E-0048-D02",
+    "response_sha256": "0e49a6ad5fbd918ee17b111305ab3368fde06f25bde6e8afe24b6240de606ec2",
+    "original_identifier": "InitBasisMatricies__Fv",
+    "original_signature": "void InitBasisMatricies__Fv(void)"
+  },
+  {
+    "address": "0x00237268",
+    "name": "QuickSpline::EvaluateSpline",
+    "status": "Implemented bounded host projection",
+    "evidence": "E-0048-D02",
+    "response_sha256": "ab35a5785d75924b7ba9c676f213d114a8fa1ea965f82ac149d6aad61e14a7f7",
+    "original_identifier": "EvaluateSpline__11QuickSplineP8bVector4fiPC8bVector4",
+    "original_signature": "void EvaluateSpline__11QuickSplineP8bVector4fiPC8bVector4(QuickSpline * this, bVector4 * point, float t, int deriv, bVector4 * control_points)"
+  },
+  {
+    "address": "0x002372E8",
+    "name": "QuickSpline::ClampParam",
+    "status": "Implemented bounded host projection",
+    "evidence": "E-0048-D02",
+    "response_sha256": "39def78e9c69d5d5a14b38d15d894c3c55fe84ada1ed69154d17c5bc12d9b0c1",
+    "original_identifier": "ClampParam__11QuickSplinef",
+    "original_signature": "float ClampParam__11QuickSplinef(QuickSpline * this, float param)"
+  },
+  {
+    "address": "0x00237340",
+    "name": "QuickSpline::GenerateExtrapolatedControlPoints",
+    "status": "Decompiled supporting evidence",
+    "evidence": "E-0048-D02",
+    "response_sha256": "6877b164b0ea71339f0d968b6a8ad9bd8d4b2c87c24bcc0895e6c873e67c6aef",
+    "original_identifier": "GenerateExtrapolatedControlPoints__11QuickSplineP8bVector4i",
+    "original_signature": "void GenerateExtrapolatedControlPoints__11QuickSplineP8bVector4i(QuickSpline * this, bVector4 * extrapolated_control_points, int control_point_num)"
+  },
+  {
+    "address": "0x00237448",
+    "name": "QuickSpline::GetPoint",
+    "status": "Implemented bounded host projection",
+    "evidence": "E-0048-D02",
+    "response_sha256": "d387d9113c054f4f4be713e6c5deaef643b6600578503ae61e3ac88f0a2db021",
+    "original_identifier": "GetPoint__11QuickSplineP8bVector4fi",
+    "original_signature": "bVector4 * GetPoint__11QuickSplineP8bVector4fi(QuickSpline * this, bVector4 * point, float param, int deriv)"
+  },
+  {
+    "address": "0x00237748",
+    "name": "QuickSpline::FindClosestParam",
+    "status": "Implemented bounded host projection",
+    "evidence": "E-0048-D02",
+    "response_sha256": "67334f5b09c13553acc297a9c3580b0925214f566b5c88477cca62a235bf8924",
+    "original_identifier": "FindClosestParam__11QuickSplineRC8bVector3ff",
+    "original_signature": "float FindClosestParam__11QuickSplineRC8bVector3ff(QuickSpline * this, bVector3 * point, float initial_param, float error_tolerance)"
+  },
+  {
+    "address": "0x00132788",
+    "name": "Car::FindFlatOnTrackPosition",
+    "status": "Implemented bounded host projection",
+    "evidence": "E-0048-D03",
+    "response_sha256": "cc53b60b4e8b3f027f4a85f05d32de2b33b04a22102009fb0c4aec45677a0d63",
+    "original_identifier": "FindFlatOnTrackPosition__3CarP8bMatrix4P8bVector3UsP18TopologyCoordinate",
+    "original_signature": "void FindFlatOnTrackPosition__3CarP8bMatrix4P8bVector3UsP18TopologyCoordinate(Car * this, bMatrix4 * rot, bVector3 * pos, bAngle angle, TopologyCoordinate * tc)"
+  },
+  {
+    "address": "0x001329C0",
+    "name": "Car::PutFlatOnTrack",
+    "status": "Decompiled supporting evidence",
+    "evidence": "E-0048-D03",
+    "response_sha256": "3fd6340c8c6eb2f6d7ed0eadf90f3ed54e327cc216d713e8a098eaacf25f0574",
+    "original_identifier": "PutFlatOnTrack__3Car",
+    "original_signature": "void PutFlatOnTrack__3Car(Car * this)"
+  },
+  {
+    "address": "0x0011BB80",
+    "name": "eRotateX",
+    "status": "Implemented bounded host projection",
+    "evidence": "E-0048-D03",
+    "response_sha256": "08c14eb1b3491934586709ef000d03ee55f33adeea374e2c2842e3660b096b01",
+    "original_identifier": "eRotateX__FP8bMatrix4T0Us",
+    "original_signature": "void eRotateX__FP8bMatrix4T0Us(bMatrix4 * dest, bMatrix4 * a, bAngle angle)"
+  },
+  {
+    "address": "0x00253898",
+    "name": "bFMod",
+    "status": "Decompiled supporting evidence",
+    "evidence": "E-0048-D02",
+    "response_sha256": "618f833ae66ecd2649af9be552d8d7721c71ed69a55c023f29a988c885cdb043",
+    "original_identifier": "bFMod__Fff",
+    "original_signature": "float bFMod__Fff(float a, float b)"
+  },
+  {
+    "address": "0x001D1408",
+    "name": "Contact::FindContactTime",
+    "status": "Implemented bounded static/car projection",
+    "evidence": "E-0048-D04",
+    "original_identifier": "FindContactTime__7Contact",
+    "original_signature": "float FindContactTime__7Contact(Contact * this)",
+    "response_sha256": "d86d8f8da3d1d6b80607f83a6cf9b769e386c4a88455a847880474f63a7ca1da"
+  },
+  {
+    "address": "0x001D1698",
+    "name": "Contact::Crowbar",
+    "status": "Implemented bounded static/car projection",
+    "evidence": "E-0048-D04",
+    "original_identifier": "Crowbar__7Contactf",
+    "original_signature": "void Crowbar__7Contactf(Contact * this, float backup_time)",
+    "response_sha256": "fbb9c6da960aa04b53223c688ebabb719ef25285639b6b179f93b6e348016faa"
+  },
+  {
+    "address": "0x001D1AE0",
+    "name": "Contact::FindContactPointAndNormal",
+    "status": "Implemented bounded static/car projection",
+    "evidence": "E-0048-D04",
+    "original_identifier": "FindContactPointAndNormal__7ContactP8bVector3T1",
+    "original_signature": "void FindContactPointAndNormal__7ContactP8bVector3T1(Contact * this, bVector3 * cp, bVector3 * norm)",
+    "response_sha256": "ea2e3da3b6b588a5549fc7c7008e519f547b8671967be345b4cb9f7979ab5a86"
+  },
+  {
+    "address": "0x001D1F58",
+    "name": "Contact::CollisionImpulse",
+    "status": "Implemented bounded static/car projection",
+    "evidence": "E-0048-D04",
+    "original_identifier": "CollisionImpulse__7Contact",
+    "original_signature": "void CollisionImpulse__7Contact(Contact * this)",
+    "response_sha256": "f8c67d4c9513685e029df7d26528cad9bf477047430854e5cc3d26a3fa6d041a"
+  },
+  {
+    "address": "0x001D15C0",
+    "name": "FindWaferNormal",
+    "status": "Implemented bounded static/car projection",
+    "evidence": "E-0048-D04",
+    "original_identifier": "FindWaferNormal__FP8bVector3P25TrackPolygonCollisionBodyP20DynamicCollisionBody",
+    "original_signature": "void FindWaferNormal__FP8bVector3P25TrackPolygonCollisionBodyP20DynamicCollisionBody(bVector3 * norm, TrackPolygonCollisionBody * tpbody, DynamicCollisionBody * dbody)",
+    "response_sha256": "e0bad9779dd1a62264c219464d6d5c43a11cf88599f997b3bbad717f5e9a6bbd"
+  },
+  {
+    "address": "0x001D1EA8",
+    "name": "GetContactPointVelocity",
+    "status": "Implemented bounded static/car projection",
+    "evidence": "E-0048-D04",
+    "original_identifier": "GetContactPointVelocity__FP8bVector3T0T0T0",
+    "original_signature": "void GetContactPointVelocity__FP8bVector3T0T0T0(bVector3 * destvel, bVector3 * objvel, bVector3 * w, bVector3 * arm)",
+    "response_sha256": "a20075cc4a08273164ba8b607fe93916b4d1363169b922b03cdadf25643b884d"
+  },
+  {
+    "address": "0x001D1ED8",
+    "name": "DenominatorTerm",
+    "status": "Implemented bounded static/car projection",
+    "evidence": "E-0048-D04",
+    "original_identifier": "DenominatorTerm__FP8bMatrix4P8bVector3T1",
+    "original_signature": "float DenominatorTerm__FP8bMatrix4P8bVector3T1(bMatrix4 * I_inv, bVector3 * r, bVector3 * n)",
+    "response_sha256": "5267b747c85e7db573731ddf08b7261e7c24449220eb9ff1a52fc12f42288d1a"
+  },
+  {
+    "address": "0x0019A920",
+    "name": "RigidBody::ApplyImpulseWithScaledInverseInertiaTensor",
+    "status": "Implemented bounded static/car projection",
+    "evidence": "E-0048-D04",
+    "original_identifier": "ApplyImpulseWithScaledInverseInertiaTensor__9RigidBodyP8bVector3T1f",
+    "original_signature": "void ApplyImpulseWithScaledInverseInertiaTensor__9RigidBodyP8bVector3T1f(RigidBody * this, bVector3 * impulse, bVector3 * r, float scale)",
+    "response_sha256": "e8c647284c821b4d87502d26d34a75a38e032bf2e5eb4f048e4c54ae014d1287"
+  },
+  {
+    "address": "0x001D4ED0",
+    "name": "CarCollisionBody::GetMassInverse",
+    "status": "Implemented bounded static/car projection",
+    "evidence": "E-0048-D04",
+    "original_identifier": "GetMassInverse__16CarCollisionBody",
+    "original_signature": "float GetMassInverse__16CarCollisionBody(CarCollisionBody * this)",
+    "response_sha256": "35f880d23733d1090da8328f6590d44422d2586784103b3091a0e5432767c0b9"
+  },
+  {
+    "address": "0x001D4F08",
+    "name": "CarCollisionBody::GetInertiaTensorInverse",
+    "status": "Implemented bounded static/car projection",
+    "evidence": "E-0048-D04",
+    "original_identifier": "GetInertiaTensorInverse__16CarCollisionBody",
+    "original_signature": "bMatrix4 * GetInertiaTensorInverse__16CarCollisionBody(CarCollisionBody * this)",
+    "response_sha256": "0b936b49214f051e3db960debf1610a11004e9556dd7b6f7b4a695e574ba33c6"
+  },
+  {
+    "address": "0x001D4F50",
+    "name": "CarCollisionBody::ApplyImpulse",
+    "status": "Implemented bounded static/car projection",
+    "evidence": "E-0048-D04",
+    "original_identifier": "ApplyImpulse__16CarCollisionBodyP8bVector3T1",
+    "original_signature": "void ApplyImpulse__16CarCollisionBodyP8bVector3T1(CarCollisionBody * this, bVector3 * impulse, bVector3 * arm)",
+    "response_sha256": "286ec5dd50c38104c94713d8f75873378bcff6f60003e8e11a2488017a992cd2"
+  },
+  {
+    "address": "0x001D5008",
+    "name": "CarCollisionBody::AddDamage",
+    "status": "Decompiled",
+    "evidence": "E-0048-D04",
+    "original_identifier": "AddDamage__16CarCollisionBodyP8bVector3f",
+    "original_signature": "void AddDamage__16CarCollisionBodyP8bVector3f(CarCollisionBody * this, bVector3 * r, float impact_magnitude)",
+    "response_sha256": "97bd88aecff402998ea4ee355a56e59ecaa5fad6e028d0bcb69651fa29a1b765"
+  },
+  {
+    "address": "0x001D5188",
+    "name": "CarCollisionBody::AnimateCollisionReaction",
+    "status": "Decompiled",
+    "evidence": "E-0048-D04",
+    "original_identifier": "AnimateCollisionReaction__16CarCollisionBodyP8bVector3f",
+    "original_signature": "void AnimateCollisionReaction__16CarCollisionBodyP8bVector3f(CarCollisionBody * this, bVector3 * impulse, float impulse_magnitude)",
+    "response_sha256": "225e854cc8b8a1baf072e24029ebe201e928af2d988db74425e52a0dce60e429"
+  },
+  {
+    "address": "0x001D18D8",
+    "name": "Contact::Resolve",
+    "status": "Implemented already-physics static/car callback binding",
+    "evidence": "E-0048-D04",
+    "original_identifier": "Resolve__7Contact",
+    "original_signature": "void Resolve__7Contact(Contact * this)",
+    "response_sha256": "96bdc55679ed541ffe3aecd655fba5014da1bf797c2ce4da5100ad1ebf176f0a"
+  },
+  {
+    "address": "0x0014D9A8",
+    "name": "World::DoTimestep",
+    "status": "Decompiled",
+    "evidence": "E-0048-D04",
+    "original_identifier": "DoTimestep__5Worldf",
+    "original_signature": "void DoTimestep__5Worldf(World * this, float timestep)",
+    "response_sha256": "bab155f652aa4354e33b6419f6027bb0cf725e8a6f664571c8a999750d37176d"
+  },
+  {
+    "address": "0x00131B90",
+    "name": "Car::Move",
+    "status": "Decompiled",
+    "evidence": "E-0048-D04",
+    "original_identifier": "Move__3Carf",
+    "original_signature": "float Move__3Carf(Car * this, float t)",
+    "response_sha256": "3a1870a3ffb8dbdd9a17bdde36904030cb32cb1a4b5665a961280bf2e6b33d8e"
+  }
+]

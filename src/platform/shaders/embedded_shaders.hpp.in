@@ -4,4 +4,11 @@ namespace port::godot_bridge::embedded_shaders {
 inline constexpr char car_base[] = R"HP2SHADER(@HP2_CAR_BASE@)HP2SHADER";
 inline constexpr char car_modulate[] = R"HP2SHADER(@HP2_CAR_MODULATE@)HP2SHADER";
 inline constexpr char wireframe[] = R"HP2SHADER(@HP2_CAR_WIREFRAME@)HP2SHADER";
+inline constexpr char track_sampling[] = R"HP2SHADER(@HP2_TRACK_SAMPLING@)HP2SHADER";
+inline constexpr char track_fragment[] = R"HP2SHADER(@HP2_TRACK_FRAGMENT@)HP2SHADER";
+inline constexpr char track_alpha_vertex[] = R"HP2SHADER(@HP2_TRACK_ALPHA_VERTEX@)HP2SHADER";
+inline constexpr char track_depth[] = R"HP2SHADER(@HP2_TRACK_DEPTH@)HP2SHADER";
+inline constexpr char track_effects[] = R"HP2SHADER(@HP2_TRACK_EFFECTS@)HP2SHADER";
+inline constexpr char track_debug_fill[] = R"HP2SHADER(@HP2_TRACK_DEBUG_FILL@)HP2SHADER";
+inline constexpr char track_debug_edges[] = R"HP2SHADER(@HP2_TRACK_DEBUG_EDGES@)HP2SHADER";
 }

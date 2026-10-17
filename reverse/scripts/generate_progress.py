@@ -88,7 +88,11 @@ def structure_records() -> tuple[int, int]:
 
 
 def render_stats() -> str:
-    symbols = read_csv(SYMBOLS)
+    all_symbols = read_csv(SYMBOLS)
+    # TASK-0044: the inventory denominator is Retail. Debug entries must never
+    # inflate that percentage or overwrite records sharing a numeric address.
+    primary_binary = "sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2"
+    symbols = [row for row in all_symbols if row["binary_id"] == primary_binary]
     inventory = read_csv(INVENTORY)
     binaries = {row["binary_id"]: row for row in read_csv(BINARIES)}
 
@@ -162,6 +166,16 @@ def render_stats() -> str:
         note += (f" {loose} of them still sit directly in `reverse/structures/` rather than the "
                  "`<binary-id>/<subsystem>/` layout AGENT.md R6 specifies.")
     lines += wrap(note)
+    other_binaries = sorted({row["binary_id"] for row in all_symbols if row["binary_id"] != primary_binary})
+    if other_binaries:
+        lines += ["", "#### Other binary records (separate denominators)", "",
+                  "| Binary SHA-256 | Records | " + " | ".join(reversed(LADDER)) + " |",
+                  "|---" * (len(LADDER) + 2) + "|"]
+        for binary in other_binaries:
+            rows = [row for row in all_symbols if row["binary_id"] == binary]
+            counts = [str(sum(row["status"] == status for row in rows)) for status in reversed(LADDER)]
+            lines.append(f"| `{binary.removeprefix('sha256-')[:12]}…` | {len(rows)} | " + " | ".join(counts) + " |")
+        lines += ["", "Debug driving records are counted separately. They do not establish Retail equivalence or original-runtime verification."]
     return "\n".join(lines)
 
 

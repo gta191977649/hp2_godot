@@ -1,0 +1,243 @@
+{
+  "binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "evidence_id": "E-0046-C01",
+  "verification": "not_tested",
+  "captures": [
+    {
+      "address": "0x0013AB98",
+      "signature": "RealDriver::RealDriver(Car*)",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "decompile",
+        "address": "0013ab98"
+      },
+      "sha256": "d204032b7b227a390bf41d45599dc12479795ba2eb04488ab780c195fae132fb",
+      "evidence_id": "E-0046-C01"
+    },
+    {
+      "address": "0x0013B168",
+      "signature": "RealDriver::DisableStartLineState()",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "decompile",
+        "address": "0013b168"
+      },
+      "sha256": "ca18a64f347e02dbb12b17633488699952fcfaba82e29a4dd7732caa6f0aa885",
+      "evidence_id": "E-0046-C01"
+    },
+    {
+      "address": "0x0013B198",
+      "signature": "RealDriver::SetManualTransmission(int)",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "decompile",
+        "address": "0013b198"
+      },
+      "sha256": "ee9aa45b64197c823f4a1f297c8a5892febfbccf4c4c7d95383771a89d2bb387",
+      "evidence_id": "E-0046-C01"
+    },
+    {
+      "address": "0x0013B1D8",
+      "signature": "RealDriver::SetLowGear()",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "decompile",
+        "address": "0013b1d8"
+      },
+      "sha256": "b34f31248887512b8979f1541fc450b56c324a2754eb29e8dd94ce2c8ff66413",
+      "evidence_id": "E-0046-C01"
+    },
+    {
+      "address": "0x0013B200",
+      "signature": "RealDriver::Drive(float)",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "decompile",
+        "address": "0013b200"
+      },
+      "sha256": "559c3d5efc072b3258d56e04596f5004934982d55e0f534d5ebe0bad96d118ab",
+      "evidence_id": "E-0046-C01"
+    },
+    {
+      "address": "0x0013B368",
+      "signature": "RealDriver::ResetJoyValues()",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "decompile",
+        "address": "0013b368"
+      },
+      "sha256": "5afffb17d6abdd1b85113d81b62570d4923a287fce46d14a0db9acb2c1fc6e81",
+      "evidence_id": "E-0046-C01"
+    },
+    {
+      "address": "0x0013B438",
+      "signature": "RealDriver::DoSteering(float,JoystickPort)",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "decompile",
+        "address": "0013b438"
+      },
+      "sha256": "23c647b4b16bddfe91f5ece4bf67d867ecebbbb9f8ec5edbbddf14a91763b049",
+      "evidence_id": "E-0046-C01"
+    },
+    {
+      "address": "0x0013B948",
+      "signature": "RealDriver::DoThrottleBrakeReverse(float)",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "decompile",
+        "address": "0013b948"
+      },
+      "sha256": "234446cec0af8b288ee25f64ab3ca8e43c425fb907312e01756445410a9c8718",
+      "evidence_id": "E-0046-C01"
+    },
+    {
+      "address": "0x0013BC90",
+      "signature": "RealDriver::JoyHandler_ShiftUp(JoystickPort,JoyEvent,uint8,void*)",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "decompile",
+        "address": "0013bc90"
+      },
+      "sha256": "f94eaf38a21cdabaee96e669118d41274ac4ecba482e9f7f58a0630622bbdba2",
+      "evidence_id": "E-0046-C01"
+    },
+    {
+      "address": "0x0013BD70",
+      "signature": "RealDriver::JoyHandler_ShiftDown(JoystickPort,JoyEvent,uint8,void*)",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "decompile",
+        "address": "0013bd70"
+      },
+      "sha256": "4f7ef4d809dd7e620e47c985740888e8cba4b821cad80ced3516f6a77cddbe05",
+      "evidence_id": "E-0046-C01"
+    },
+    {
+      "address": "0x0013C750",
+      "signature": "_GLOBAL__I_PowerSlideYawCoef",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "decompile",
+        "address": "0013c750"
+      },
+      "sha256": "8502a642c4df747ef80e5bd52fea77ba189a0a10b55dcda96b23bf6c48a12044",
+      "evidence_id": "E-0046-C01"
+    },
+    {
+      "address": "0x00136C30",
+      "signature": "CarDriver::SetEBrake(float)",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "decompile",
+        "address": "00136c30"
+      },
+      "sha256": "5f007d212788a95dc52507bede77c453b0dcfc2211e23894190a2861facb6fcd",
+      "evidence_id": "E-0046-C01"
+    },
+    {
+      "address": "0x00136C58",
+      "signature": "CarDriver::SetDesiredGear(Gear)",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "decompile",
+        "address": "00136c58"
+      },
+      "sha256": "b9c77412ebdcbe2f6f44ce548e28288f626c22e172b44e37151f2281f8279102",
+      "evidence_id": "E-0046-C01"
+    },
+    {
+      "address": "0x0013E070",
+      "signature": "ReplayManager::RegisterInterestingEvent(float,char const*)",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "decompile",
+        "address": "0013e070"
+      },
+      "sha256": "86251c1c53867b93e972c99fb042a1615dd2b4156776f27b49461318dc84174f",
+      "evidence_id": "E-0046-C01"
+    },
+    {
+      "address": "0x001C2ED0",
+      "signature": "MaybeAddTrackRoutePoint(bVector2 const*,bVector3 const*,float,int,int)",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "decompile",
+        "address": "001c2ed0"
+      },
+      "sha256": "0f33b12c0db37fa8acf2af901e1dcbc54dc58e6970614f9ef5b43a01b091f4a8",
+      "evidence_id": "E-0046-C01"
+    },
+    {
+      "address": "0x001FEE80",
+      "signature": "RealDriverAddNearbyDebugTopology(TopologyCoordinate*,bVector3 const*)",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "decompile",
+        "address": "001fee80"
+      },
+      "sha256": "8a0534c5f6b59fddb24e8932f6dd5348a3514699d21de68f43f37b799d70bc43",
+      "evidence_id": "E-0046-C01"
+    },
+    {
+      "address": "0x0013B438",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "0013b438",
+        "end_address": "0013b7b0",
+        "max_lines": 1000
+      },
+      "sha256": "0cc4f43f0099dfa36b0826fcd228d71d9215faa46f1deb3be1f22d68109cd131",
+      "evidence_id": "E-0046-C01"
+    },
+    {
+      "address": "0x0013B948",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "0013b948",
+        "end_address": "0013bb48",
+        "max_lines": 1000
+      },
+      "sha256": "64305e27e53b02986088ab94c2486b6101f266062878b2bda39169fc9d1cdb4c",
+      "evidence_id": "E-0046-C01"
+    },
+    {
+      "address": "0x0013AB98",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "0013ab98",
+        "end_address": "0013ac60",
+        "max_lines": 1000
+      },
+      "sha256": "99e953daa2693e5ed9858f1bd82b914cd2fbdeeca45b23ddfd3aaf0968b79fea",
+      "evidence_id": "E-0046-C01"
+    },
+    {
+      "address": "0x0013C750",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "0013c750",
+        "end_address": "0013c870",
+        "max_lines": 1000
+      },
+      "sha256": "714aef5eb2c479a314e0c65e716fff3c0ed44ec65f92424a1af60edbb561a6b8",
+      "evidence_id": "E-0046-C01"
+    },
+    {
+      "address": "0x0013E070",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "0013e070",
+        "end_address": "0013e108",
+        "max_lines": 1000
+      },
+      "sha256": "a1e3dd6da2907d91c3ef7cc2cd38c76b81b09b16296b57364fd4d8794fcbfee4",
+      "evidence_id": "E-0046-C01"
+    }
+  ]
+}

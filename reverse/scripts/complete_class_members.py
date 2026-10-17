@@ -117,10 +117,17 @@ def derive():
 def coverage(registry):
     definitions = g.definitions()
     classes = {c['name']: c for c in g.model()[0]}
+    debug_owners = g.debug_canonical_owners()
     rows = []
     for member in registry['members']:
         if member['exclusion_reason']:
             state, signature = 'explicit_unrepresentable_entry', ''
+        elif member['owner'] in debug_owners:
+            # Keep the Retail attribution as historical evidence. Its old noarg
+            # shell is deliberately absent from the canonical Debug owner, and
+            # the Debug body is not a Retail implementation/signature claim.
+            state = 'historical_retail_entry_superseded_by_debug_owner'
+            signature = 'historical Retail attribution; no current Debug signature inference'
         else:
             hits = g.entry_definitions(classes[member['owner']], member['elf_address'], member['method'], definitions.get(member['elf_address'], []))
             if len(hits) != 1:
@@ -130,7 +137,9 @@ def coverage(registry):
         rows.append(dict(elf_address=member['elf_address'], debug_address=member['debug_address'],
             owner=member['owner'], reference_name=member['reference_name'], method=member['method'],
             status=state, source=member['source'], signature=signature,
-            reason=member['exclusion_reason'] or member['name_limit'], evidence_id=member['evidence_id']))
+            reason=('Explicit Debug owner supersession; see ' + debug_owners[member['owner']].get('registry_source', 'reverse/classes/task0044-debug-canonical-owners.json') + '. ' + member['name_limit']
+                    if state == 'historical_retail_entry_superseded_by_debug_owner'
+                    else member['exclusion_reason'] or member['name_limit']), evidence_id=member['evidence_id']))
     return rows
 
 def main():

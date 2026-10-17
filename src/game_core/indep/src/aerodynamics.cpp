@@ -1,52 +1,32 @@
-
-// TASK-0042: bounded host projections; original member ABI remains unverified.
+// TASK-0044 E-0044-E01, full Debug001AB3F0/001AB638 listings.
+#include "game_core/indep/src/aerodynamics.hpp"
 #include "game_core/port/driving/projection_support.hpp"
-// Retail 0x001ADFB8; E-0041-M01; E-0042-S001; exact Debug TU ..\indep\src\aerodynamics.cpp
-namespace port::driving::native {
-float GetDownforceAtSpeed(Memory& m,std::uint32_t object,float f12){
-    using namespace detail_group_00137100_runtime;
-    const auto config=m.word(object);return std::max(0.0f,f12)*(m.scalar(config+4)+m.scalar(config+8));
-}
-}
-
-// Retail 0x001ADD70; E-0042-C131; E-0042-S001; exact Debug TU ..\indep\src\aerodynamics.cpp
-namespace port::driving::native {
-void Aerodynamics::ResolveForces(Memory& m,std::uint32_t a,std::uint32_t output){
-    using namespace detail_group_00138e08;
+namespace hp2::recovered {
+void Aerodynamics::ResolveForces(std::uint32_t output) {
+    using namespace port::driving::native;
+    using namespace port::driving::native::detail_group_00138e08;
+    auto& m=m_;const auto a=address_;
     const auto body=m.word(a+4),config=m.word(a);const auto velocity=m.vector(body+0x90);
     const float speed=len(velocity)/m.scalar(a+8);float value=speed*m.scalar(a+0xc);value=value*m.scalar(config);
-    float extra=value*(g(m,0xb568)-1.0f);extra=extra*(1.0f-m.scalar(a+0x10));value=-(value+extra);
-    Vector point{{0,0,0,0}};if(0.5f<=m.scalar(a+0x14))point[2]=g(m,0xb56c)*(1.0f-m.scalar(a+0x10));
+    float extra=value*(m.scalar(0x327ed0)-1.0f);extra=extra*(1.0f-m.scalar(a+0x10));value=-(value+extra);
+    Vector point{{0,0,0,0}};if(0.5f<=m.scalar(a+0x14))point[2]=m.scalar(0x327ed4)*(1.0f-m.scalar(a+0x10));
     ApplyForce(m,body,mul(velocity,value),point);
     float f=m.scalar(body+0x48);if(f<0)f=0;if(0.5f<=m.scalar(a+0x14))f=1;
-    Vector direction{{1,0,0,0}};if(g(m,0x8e2c)<speed)direction=mul(m.vector(body+0x90),1.0f/speed);
+    Vector direction{{1,0,0,0}};if(m.scalar(0x3257e0)<speed)direction=mul(m.vector(body+0x90),1.0f/speed);
     float projection=dot(direction,m.vector(body+0x20));if(projection<0)projection=0;
     projection=projection*projection;projection=projection*projection;
     float front,rear;
-    if(m.scalar(a+0x14)==0){projection=projection*f;const float sum=m.scalar(config+4)+m.scalar(config+8);front=speed*g(m,0x8e30);front=front*projection;front=front*sum;rear=speed*g(m,0x8e34);rear=rear*projection;rear=rear*sum;}
+    if(m.scalar(a+0x14)==0){projection=projection*f;const float sum=m.scalar(config+4)+m.scalar(config+8);front=speed*m.scalar(0x3257e4);front=front*projection;front=front*sum;rear=speed*m.scalar(0x3257e8);rear=rear*projection;rear=rear*sum;}
     else{projection=projection*f;front=speed*m.scalar(config+4);front=front*projection;rear=speed*m.scalar(config+8);rear=rear*projection;}
-    ApplyForceInFrame(m,body,{{0,0,-front,0}},m.vector(0x003115b0));ApplyForceInFrame(m,body,{{0,0,-rear,0}},m.vector(0x003115c0));
+    ApplyForceInFrame(m,body,{{0,0,-front,0}},m.vector(0x00308cc0));ApplyForceInFrame(m,body,{{0,0,-rear,0}},m.vector(0x00308cd0));
     if(output)m.scalar(output,front+rear);
 }
+float Aerodynamics::GetDownforceAtSpeed(float speed) {
+ const auto config=m_.word(address_);return std::max(0.0f,speed)*(m_.scalar(config+4)+m_.scalar(config+8));
 }
-
-#include "game_core/indep/src/aerodynamics.hpp"
-
-#include "game_core/port/not_implemented.hpp"
-
-namespace hp2::recovered {
-// ELF 0x001ADD48; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001add48.md.
-void Aerodynamics::DoSnapshot() {
-    hp2::not_implemented("0x001ADD48", "Aerodynamics::DoSnapshot (signature and full body unresolved)");
+void Aerodynamics::DoSnapshot(){hp2::not_implemented("0x001AB3C8","replay snapshot outside driving scope");}
 }
-
-// ELF 0x001ADD70; E-0042-C131; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001add70.md.
-void Aerodynamics::ResolveForces() {
-    hp2::not_implemented("0x001ADD70", "Aerodynamics::ResolveForces (signature and full body unresolved)");
+namespace port::driving::native {
+float GetDownforceAtSpeed(Memory&m,std::uint32_t a,float speed){return hp2::recovered::Aerodynamics(m,a).GetDownforceAtSpeed(speed);}
+void Aerodynamics::ResolveForces(Memory&m,std::uint32_t a,std::uint32_t out){hp2::recovered::Aerodynamics(m,a).ResolveForces(out);}
 }
-
-// ELF 0x001ADFB8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001adfb8.md.
-void Aerodynamics::GetDownforceAtSpeed() {
-    hp2::not_implemented("0x001ADFB8", "Aerodynamics::GetDownforceAtSpeed (signature and full body unresolved)");
-}
-} // namespace hp2::recovered

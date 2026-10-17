@@ -1,0 +1,2615 @@
+{
+  "task": "TASK-0045",
+  "binary": "NFSHP2.ELF",
+  "sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "functions": [
+    {
+      "debug_address": "0x001316d8",
+      "mangled_name": "SetFrictionBoost__3Carf",
+      "original_signature": "Car::SetFrictionBoost(float)",
+      "source_path": "..\\indep\\src\\car.cpp",
+      "evidence_id": "E-0045-T03",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001316d8",
+        "end_address": "001316f7"
+      },
+      "instruction_count": 8,
+      "listing_utf8_sha256": "24b384c2fcea06f81d1a637cfec3052931b72e95a3f2a25414910575b3edaa83",
+      "actual_direct_call_targets": [],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001316d8.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x00135f10",
+      "mangled_name": "GetPostCollisionYawControlBoost__3Car",
+      "original_signature": "Car::GetPostCollisionYawControlBoost(void)",
+      "source_path": "..\\indep\\src\\car.cpp",
+      "evidence_id": "E-0045-T03",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "00135f10",
+        "end_address": "00135f93"
+      },
+      "instruction_count": 33,
+      "listing_utf8_sha256": "b2f92d78eb32f12b6fd0007a5b2bd965711a8ca49710ba3deafe73389e01eb80",
+      "actual_direct_call_targets": [
+        "0x0018d9f8"
+      ],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00135f10.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x001375b0",
+      "mangled_name": "Calibrate__10PhysicsCar",
+      "original_signature": "PhysicsCar::Calibrate(void)",
+      "source_path": "..\\indep\\src\\physicscar.cpp",
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001375b0",
+        "end_address": "001376c7"
+      },
+      "instruction_count": 70,
+      "listing_utf8_sha256": "3bf1b407e49c1996547305a6e2fa78a5804701a7d9a79f72ccadcc82c6585dd7",
+      "actual_direct_call_targets": [
+        "0x0019a568",
+        "0x0019a580",
+        "0x001ab638",
+        "0x001a3768",
+        "0x001a1b20"
+      ],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001375b0.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x00137c10",
+      "mangled_name": "YawFrictionBoost__FfffffiRff",
+      "original_signature": "YawFrictionBoost(float, float, float, float, float, int, float &, float)",
+      "source_path": "..\\indep\\src\\physicscar.cpp",
+      "evidence_id": "E-0045-T03",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "00137c10",
+        "end_address": "00137cbf"
+      },
+      "instruction_count": 44,
+      "listing_utf8_sha256": "d662d383ac7b2c159154e455f43158ec4625bbb3a5bcc30c95ca1462a36e3d1b",
+      "actual_direct_call_targets": [],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00137c10.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x00137d18",
+      "mangled_name": "Move__10PhysicsCarf",
+      "original_signature": "PhysicsCar::Move(float)",
+      "source_path": "..\\indep\\src\\physicscar.cpp",
+      "evidence_id": "E-0045-T03",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "00137d18",
+        "end_address": "00138c7f"
+      },
+      "instruction_count": 986,
+      "listing_utf8_sha256": "a1722ad3649d327de3e64366d1f6f213520e5722d30ef57de01fa06e2190f00b",
+      "actual_direct_call_targets": [
+        "0x0024a340",
+        "0x00139418",
+        "0x001375b0",
+        "0x00189dd0",
+        "0x00188da0",
+        "0x00189e10",
+        "0x0011d720",
+        "0x001bd970",
+        "0x00133198",
+        "0x00135f10",
+        "0x00137c10",
+        "0x001b2558",
+        "0x00199bb8",
+        "0x0011c108",
+        "0x0024a350",
+        "0x0019b2a8",
+        "0x0018a160",
+        "0x00253878",
+        "0x00139110",
+        "0x00135e70",
+        "0x001a2cf8"
+      ],
+      "indirect_call_instructions": [
+        "00137e24"
+      ],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00137d18.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x00138d90",
+      "mangled_name": "ResolveForces__10PhysicsCar",
+      "original_signature": "PhysicsCar::ResolveForces(void)",
+      "source_path": "..\\indep\\src\\physicscar.cpp",
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "00138d90",
+        "end_address": "00138ebb"
+      },
+      "instruction_count": 75,
+      "listing_utf8_sha256": "ead42c44c955fd653d63e047e6ec72a37e7073aea598629db39fdbb8b56227ef",
+      "actual_direct_call_targets": [
+        "0x0024a340",
+        "0x001ab3f0",
+        "0x001a3b10",
+        "0x00138ec0",
+        "0x0024a350",
+        "0x001a3b50",
+        "0x00139478"
+      ],
+      "indirect_call_instructions": [
+        "00138dd4"
+      ],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00138d90.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x00138ec0",
+      "mangled_name": "IterateForces__10PhysicsCar",
+      "original_signature": "PhysicsCar::IterateForces(void)",
+      "source_path": "..\\indep\\src\\physicscar.cpp",
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "00138ec0",
+        "end_address": "0013910b"
+      },
+      "instruction_count": 147,
+      "listing_utf8_sha256": "41212461e7b42effd3420ffcc673251cba6406448b4f5366a7533b9491571323",
+      "actual_direct_call_targets": [
+        "0x00189af0",
+        "0x001a2108",
+        "0x002542c8",
+        "0x0019ac90",
+        "0x001a2c00",
+        "0x001a2660",
+        "0x00189bd0",
+        "0x001a26b8",
+        "0x00189d40"
+      ],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00138ec0.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x00139418",
+      "mangled_name": "SetBoost__10PhysicsCarf",
+      "original_signature": "PhysicsCar::SetBoost(float)",
+      "source_path": "..\\indep\\src\\physicscar.cpp",
+      "evidence_id": "E-0045-T03",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "00139418",
+        "end_address": "00139473"
+      },
+      "instruction_count": 23,
+      "listing_utf8_sha256": "b32fcd7038ced59ec453a941fb72fdb86e0b384e6e6e83140e86928306ec9893",
+      "actual_direct_call_targets": [],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00139418.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x001395d0",
+      "mangled_name": "SetFrictionBoost__10PhysicsCarf",
+      "original_signature": "SetFrictionBoost__10PhysicsCarf",
+      "source_path": null,
+      "evidence_id": "E-0045-T03",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001395d0",
+        "end_address": "001395d7"
+      },
+      "instruction_count": 2,
+      "listing_utf8_sha256": "ea5ae4689b85fa0d54d65609215a81b6e8e33ce7e673a6c8011fa738eb2f7f86",
+      "actual_direct_call_targets": [],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001395d0.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x00151cc0",
+      "mangled_name": "GetElevation__18TopologyCoordinatePC8bVector3P11TerrainTypeP8bVector3Pb",
+      "original_signature": "TopologyCoordinate::GetElevation(bVector3 const *, TerrainType *, bVector3 *, bool *)",
+      "source_path": "..\\indep\\src\\track.cpp",
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "00151cc0",
+        "end_address": "001521a3"
+      },
+      "instruction_count": 313,
+      "listing_utf8_sha256": "5cc8fbbb29eac0e6878f64605552fcbfa06d1694ea1d3220f4c0dcddfe3692c2",
+      "actual_direct_call_targets": [
+        "0x002528b0",
+        "0x00151980"
+      ],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00151cc0.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x001530a8",
+      "mangled_name": "GetRoadNoiseGridValue__Fii",
+      "original_signature": "GetRoadNoiseGridValue__Fii",
+      "source_path": null,
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001530a8",
+        "end_address": "001530e7"
+      },
+      "instruction_count": 16,
+      "listing_utf8_sha256": "aa41c30d729ed667a404af66718846087cee7b40a47fecaed94c6be7cf6455ec",
+      "actual_direct_call_targets": [],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001530a8.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x001530e8",
+      "mangled_name": "GetRoadNoise__FP8bVector211TerrainType",
+      "original_signature": "GetRoadNoise__FP8bVector211TerrainType",
+      "source_path": null,
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001530e8",
+        "end_address": "00153257"
+      },
+      "instruction_count": 92,
+      "listing_utf8_sha256": "b0e0b9d76c96f5791fd214065385dead3025762d10243863f3ccf549536e3687",
+      "actual_direct_call_targets": [
+        "0x001530a8"
+      ],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001530e8.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x001a16e8",
+      "mangled_name": "__5WheelP9WheelInfoP8TireInfoP11ControlInfoP8CarState",
+      "original_signature": "Wheel::Wheel(WheelInfo *, TireInfo *, ControlInfo *, CarState *)",
+      "source_path": "..\\indep\\src\\wheel.cpp",
+      "evidence_id": "E-0045-T03",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001a16e8",
+        "end_address": "001a1733"
+      },
+      "instruction_count": 19,
+      "listing_utf8_sha256": "397a48aacdddaeb9f4a428eaede1f263ed60dae14309b381fd36e2104c12c962",
+      "actual_direct_call_targets": [],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a16e8.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x001a1948",
+      "mangled_name": "SetState__5WheelP8CarStateP11CarTypeInfoffUsf",
+      "original_signature": "Wheel::SetState(CarState *, CarTypeInfo *, float, float, unsigned short, float)",
+      "source_path": "..\\indep\\src\\wheel.cpp",
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001a1948",
+        "end_address": "001a1b1f"
+      },
+      "instruction_count": 118,
+      "listing_utf8_sha256": "14ab9e86161aa1121aa86de32dfeaaf79ccda7cf4a4cc35b48ef0daedda5a8f5",
+      "actual_direct_call_targets": [
+        "0x001a1930",
+        "0x001bde60",
+        "0x0011b5f0",
+        "0x00151cc0",
+        "0x001bdde0",
+        "0x001bde30"
+      ],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a1948.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x001a1b30",
+      "mangled_name": "ComputeAuxiliaries__5Wheel",
+      "original_signature": "Wheel::ComputeAuxiliaries(void)",
+      "source_path": "..\\indep\\src\\wheel.cpp",
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001a1b30",
+        "end_address": "001a1c7f"
+      },
+      "instruction_count": 84,
+      "listing_utf8_sha256": "90b7ebf98ac30f2294491388002a87b6bd83ceb9cf442f4f55d912691a20c920",
+      "actual_direct_call_targets": [
+        "0x00254010",
+        "0x002539b0"
+      ],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a1b30.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x001a1c80",
+      "mangled_name": "ExchangeZForces__5Wheelif",
+      "original_signature": "Wheel::ExchangeZForces(int, float)",
+      "source_path": "..\\indep\\src\\wheel.cpp",
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001a1c80",
+        "end_address": "001a1d53"
+      },
+      "instruction_count": 53,
+      "listing_utf8_sha256": "c7948a29d834d9ca2604b62d9fd91df8e01c21afb6211b235b99c174f8ab5fc5",
+      "actual_direct_call_targets": [],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a1c80.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x001a1d58",
+      "mangled_name": "FindDrivingSurface__5WheelP8bVector3P8bMatrix4",
+      "original_signature": "FindDrivingSurface__5WheelP8bVector3P8bMatrix4",
+      "source_path": null,
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001a1d58",
+        "end_address": "001a1d7f"
+      },
+      "instruction_count": 10,
+      "listing_utf8_sha256": "58894195767fb8c451a4d80b6ef39af3168a1ef447e5ebe9c4e2cfe9f83d0f97",
+      "actual_direct_call_targets": [
+        "0x001a1d80"
+      ],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a1d58.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x001a1d80",
+      "mangled_name": "CheckTerrain__5WheelP8bVector3P11TerrainTypeT1P8bMatrix4",
+      "original_signature": "CheckTerrain__5WheelP8bVector3P11TerrainTypeT1P8bMatrix4",
+      "source_path": null,
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001a1d80",
+        "end_address": "001a1e87"
+      },
+      "instruction_count": 66,
+      "listing_utf8_sha256": "c02d0a07e033894b35f1b8aaea2b07754ca646704709a8083c59e81672c6efc5",
+      "actual_direct_call_targets": [
+        "0x00151cc0",
+        "0x001530e8"
+      ],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a1d80.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x001a1e88",
+      "mangled_name": "GetDerivative__5WheelPf",
+      "original_signature": "Wheel::GetDerivative(float *)",
+      "source_path": "..\\indep\\src\\wheel.cpp",
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001a1e88",
+        "end_address": "001a1f4b"
+      },
+      "instruction_count": 49,
+      "listing_utf8_sha256": "6a16d96bb76c47800b5499dc71de904b90feb986111e24900391a310a829b70e",
+      "actual_direct_call_targets": [],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a1e88.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x001a1f50",
+      "mangled_name": "CheckForBrakeLock__5Wheelf",
+      "original_signature": "Wheel::CheckForBrakeLock(float)",
+      "source_path": "..\\indep\\src\\wheel.cpp",
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001a1f50",
+        "end_address": "001a1fef"
+      },
+      "instruction_count": 40,
+      "listing_utf8_sha256": "39714c1e82d6cf4bf7d8fc775fb52b6b506b5b7040b5f1141dd56ca35195d129",
+      "actual_direct_call_targets": [],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a1f50.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x001a1ff0",
+      "mangled_name": "GetPilotFactor__5Wheel",
+      "original_signature": "Wheel::GetPilotFactor(void)",
+      "source_path": "..\\indep\\src\\wheel.cpp",
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001a1ff0",
+        "end_address": "001a2107"
+      },
+      "instruction_count": 70,
+      "listing_utf8_sha256": "2436da998a299add878180dcfb6b8c344ec26097a80ebf1115b798d6151f0cbd",
+      "actual_direct_call_targets": [
+        "0x0029afa0",
+        "0x00299418",
+        "0x00299480",
+        "0x002993c0",
+        "0x00299c50"
+      ],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a1ff0.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x001a2108",
+      "mangled_name": "GuessGroundForce__5WheelP8bVector2i",
+      "original_signature": "Wheel::GuessGroundForce(bVector2 *, int)",
+      "source_path": "..\\indep\\src\\wheel.cpp",
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001a2108",
+        "end_address": "001a24ff"
+      },
+      "instruction_count": 254,
+      "listing_utf8_sha256": "5e938adde6c0a9674656d84650971eb7490a6f7b53faf2c55372d8aa46e4bb7a",
+      "actual_direct_call_targets": [
+        "0x002542c8",
+        "0x0019ac90",
+        "0x00253c60",
+        "0x001a1ff0",
+        "0x001a1f50",
+        "0x001a2500"
+      ],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a2108.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x001a2500",
+      "mangled_name": "GetLateralForce__5Wheelff",
+      "original_signature": "Wheel::GetLateralForce(float, float)",
+      "source_path": "..\\indep\\src\\wheel.cpp",
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001a2500",
+        "end_address": "001a265f"
+      },
+      "instruction_count": 88,
+      "listing_utf8_sha256": "f5ef6abbb5f0a9d7d62a136f1cf3c65bd2e0ce08b3f579299237ff347213e00d",
+      "actual_direct_call_targets": [
+        "0x0018d840"
+      ],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a2500.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x001a2660",
+      "mangled_name": "ModifyGroundForce__5WheelP8bVector2",
+      "original_signature": "Wheel::ModifyGroundForce(bVector2 *)",
+      "source_path": "..\\indep\\src\\wheel.cpp",
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001a2660",
+        "end_address": "001a26b7"
+      },
+      "instruction_count": 22,
+      "listing_utf8_sha256": "47cf3b4e645c454437c6640960a2a1b5ba0bc7afb042561abb835c90755b09c5",
+      "actual_direct_call_targets": [],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a2660.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x001a26b8",
+      "mangled_name": "FinalizeGroundForce__5Wheeli",
+      "original_signature": "Wheel::FinalizeGroundForce(int)",
+      "source_path": "..\\indep\\src\\wheel.cpp",
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001a26b8",
+        "end_address": "001a2b77"
+      },
+      "instruction_count": 304,
+      "listing_utf8_sha256": "f61efb14416bfe995e3533a93035896cd51fa7b9d0d86c68d9e931bae4a708a9",
+      "actual_direct_call_targets": [
+        "0x001a1ff0",
+        "0x002542c8",
+        "0x0019ac90",
+        "0x00253c60",
+        "0x002539b0",
+        "0x001a16d8",
+        "0x00254010"
+      ],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a26b8.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x001a3368",
+      "mangled_name": "SetCatchupFrictionMultiplier__5Wheelf",
+      "original_signature": "Wheel::SetCatchupFrictionMultiplier(float)",
+      "source_path": null,
+      "evidence_id": "E-0045-T03",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001a3368",
+        "end_address": "001a336f"
+      },
+      "instruction_count": 2,
+      "listing_utf8_sha256": "1d7d2504fc9066d7f275369b9dcad4cab4f894d707b734cde63ca87757ec6553",
+      "actual_direct_call_targets": [],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a3368.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence",
+      "signature_provenance": "Live imported mangled-name parameter code f plus typed decompilation; host ABI unclaimed."
+    },
+    {
+      "debug_address": "0x001a3370",
+      "mangled_name": "AdjustTractionBoost__5Wheelf",
+      "original_signature": "Wheel::AdjustTractionBoost(float)",
+      "source_path": null,
+      "evidence_id": "E-0045-T03",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001a3370",
+        "end_address": "001a337f"
+      },
+      "instruction_count": 4,
+      "listing_utf8_sha256": "274573d3f108df39a93902e6ddb792aab1884ad04b5e22c7c61ae577d014a8e3",
+      "actual_direct_call_targets": [],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a3370.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence",
+      "signature_provenance": "Live imported mangled-name parameter code f plus typed decompilation; host ABI unclaimed."
+    },
+    {
+      "debug_address": "0x001a3380",
+      "mangled_name": "SetTractionBoost__5Wheelf",
+      "original_signature": "Wheel::SetTractionBoost(float)",
+      "source_path": null,
+      "evidence_id": "E-0045-T03",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001a3380",
+        "end_address": "001a3387"
+      },
+      "instruction_count": 2,
+      "listing_utf8_sha256": "41acdb32a02f706343a4c7f82e6e2a27a8b8b54f123e7d93a91e8c5fbe64754e",
+      "actual_direct_call_targets": [],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a3380.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence",
+      "signature_provenance": "Live imported mangled-name parameter code f plus typed decompilation; host ABI unclaimed."
+    },
+    {
+      "debug_address": "0x001a37a0",
+      "mangled_name": "ComputeAuxiliaries__10Suspension",
+      "original_signature": "ComputeAuxiliaries__10Suspension",
+      "source_path": null,
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001a37a0",
+        "end_address": "001a3b0f"
+      },
+      "instruction_count": 220,
+      "listing_utf8_sha256": "aa23bf3d6455d08a84b8cd3aff95c128ac8ad3c18d2305280f9e0a3c7b50214a",
+      "actual_direct_call_targets": [
+        "0x0019ac90",
+        "0x001a1d58",
+        "0x00254010",
+        "0x002539b0",
+        "0x002541c0"
+      ],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a37a0.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x001a3b10",
+      "mangled_name": "ResolveForces__10Suspensionf",
+      "original_signature": "Suspension::ResolveForces(float)",
+      "source_path": "..\\indep\\src\\suspension.cpp",
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001a3b10",
+        "end_address": "001a3b4f"
+      },
+      "instruction_count": 16,
+      "listing_utf8_sha256": "472235ee3d47391208a5bc6579419ad2806f008c3f123031b7fc660a3981e565",
+      "actual_direct_call_targets": [
+        "0x001a1c80"
+      ],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a3b10.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    },
+    {
+      "debug_address": "0x001a3b50",
+      "mangled_name": "ResolveMoreForces__10Suspension",
+      "original_signature": "Suspension::ResolveMoreForces(void)",
+      "source_path": "..\\indep\\src\\suspension.cpp",
+      "evidence_id": "E-0045-T02",
+      "query": {
+        "file_name": "NFSHP2.ELF",
+        "action": "listing",
+        "address": "001a3b50",
+        "end_address": "001a3b9f"
+      },
+      "instruction_count": 20,
+      "listing_utf8_sha256": "4544f87478eeb5b4ccfc337f02ad884ddc8bff45d8ba9c34ec641675a201de8b",
+      "actual_direct_call_targets": [
+        "0x0019a6b8"
+      ],
+      "indirect_call_instructions": [],
+      "source_record": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a3b50.md",
+      "status": "Fresh bounded static audit, no original runtime equivalence"
+    }
+  ],
+  "types": {
+    "TerrainType": {
+      "size": 4,
+      "kind": "enum",
+      "enum_values": [
+        {
+          "name": "TERRAIN_TYPE_NONE",
+          "value": 0
+        },
+        {
+          "name": "TERRAIN_TYPE_ROAD",
+          "value": 1
+        },
+        {
+          "name": "TERRAIN_TYPE_DIRT",
+          "value": 2
+        },
+        {
+          "name": "TERRAIN_TYPE_DIRTROAD",
+          "value": 3
+        },
+        {
+          "name": "TERRAIN_TYPE_PUDDLE",
+          "value": 4
+        },
+        {
+          "name": "TERRAIN_TYPE_DEEP_WATER",
+          "value": 5
+        },
+        {
+          "name": "TERRAIN_TYPE_GRASS",
+          "value": 6
+        },
+        {
+          "name": "TERRAIN_TYPE_SAND",
+          "value": 7
+        },
+        {
+          "name": "TERRAIN_TYPE_SNOW",
+          "value": 8
+        },
+        {
+          "name": "TERRAIN_TYPE_DIRT_SHOULDER",
+          "value": 9
+        },
+        {
+          "name": "TERRAIN_TYPE_SAND_SHOULDER",
+          "value": 10
+        },
+        {
+          "name": "TERRAIN_TYPE_SNOW_SHOULDER",
+          "value": 11
+        },
+        {
+          "name": "TERRAIN_TYPE_SIDEWALK",
+          "value": 12
+        },
+        {
+          "name": "TERRAIN_TYPE_SNOW_SIDEWALK",
+          "value": 13
+        },
+        {
+          "name": "TERRAIN_TYPE_ROCK",
+          "value": 14
+        },
+        {
+          "name": "TERRAIN_TYPE_WOOD_WALL",
+          "value": 15
+        },
+        {
+          "name": "TERRAIN_TYPE_CACTUS_WALL",
+          "value": 16
+        },
+        {
+          "name": "TERRAIN_TYPE_SOLID_WALL",
+          "value": 17
+        },
+        {
+          "name": "TERRAIN_TYPE_BOARDWALK",
+          "value": 18
+        },
+        {
+          "name": "TERRAIN_TYPE_COBBLESTONE",
+          "value": 19
+        },
+        {
+          "name": "TERRAIN_TYPE_MUD_PUDDLE",
+          "value": 20
+        },
+        {
+          "name": "TERRAIN_TYPE_ROUGH_ROAD",
+          "value": 21
+        },
+        {
+          "name": "TERRAIN_TYPE_GRASS_SHOULDER",
+          "value": 22
+        },
+        {
+          "name": "TERRAIN_TYPE_AUTUMN_LEAVES",
+          "value": 23
+        },
+        {
+          "name": "TERRAIN_TYPE_AUTUMN_LEAVES_SHOULDER",
+          "value": 24
+        },
+        {
+          "name": "TERRAIN_TYPE_MULCH",
+          "value": 25
+        },
+        {
+          "name": "TERRAIN_TYPE_MULCH_SHOULDER",
+          "value": 26
+        },
+        {
+          "name": "TERRAIN_TYPE_ROAD_AUTUMN",
+          "value": 27
+        },
+        {
+          "name": "TERRAIN_TYPE_PLANT",
+          "value": 28
+        },
+        {
+          "name": "TERRAIN_TYPE_POST",
+          "value": 29
+        },
+        {
+          "name": "TERRAIN_TYPE_METAL_GRATE",
+          "value": 30
+        },
+        {
+          "name": "TERRAIN_TYPE_POTHOLE",
+          "value": 31
+        },
+        {
+          "name": "TERRAIN_TYPE_CAR",
+          "value": 32
+        },
+        {
+          "name": "NUM_TERRAIN_TYPES",
+          "value": 33
+        }
+      ],
+      "fields": [],
+      "evidence_id": "E-0045-T01"
+    },
+    "TerrainTypeInfo": {
+      "size": 144,
+      "kind": "struct",
+      "enum_values": null,
+      "fields": [
+        {
+          "name": "Name",
+          "type": "char *",
+          "offset": 0,
+          "length": 4
+        },
+        {
+          "name": "NameHash",
+          "type": "uint32",
+          "offset": 4,
+          "length": 4
+        },
+        {
+          "name": "Type",
+          "type": "TerrainType",
+          "offset": 8,
+          "length": 4
+        },
+        {
+          "name": "ShouldTireMakeRoadSound",
+          "type": "char",
+          "offset": 12,
+          "length": 1
+        },
+        {
+          "name": "ShouldCameraGoThroughIt",
+          "type": "char",
+          "offset": 13,
+          "length": 1
+        },
+        {
+          "name": "SkidTextureName",
+          "type": "char *",
+          "offset": 16,
+          "length": 4
+        },
+        {
+          "name": "SkidWidthMultiplier",
+          "type": "float",
+          "offset": 20,
+          "length": 4
+        },
+        {
+          "name": "RoadNoiseGridSpacingInverse",
+          "type": "float",
+          "offset": 24,
+          "length": 4
+        },
+        {
+          "name": "RoadNoiseScale",
+          "type": "float",
+          "offset": 28,
+          "length": 4
+        },
+        {
+          "name": "StaticFrictionMultiplier",
+          "type": "float",
+          "offset": 32,
+          "length": 4
+        },
+        {
+          "name": "DynamicFrictionMultiplier",
+          "type": "float",
+          "offset": 36,
+          "length": 4
+        },
+        {
+          "name": "RollingFrictionMultiplier",
+          "type": "float",
+          "offset": 40,
+          "length": 4
+        },
+        {
+          "name": "CollisionPriority",
+          "type": "float",
+          "offset": 44,
+          "length": 4
+        },
+        {
+          "name": "ForceMagnitude",
+          "type": "float",
+          "offset": 48,
+          "length": 4
+        },
+        {
+          "name": "ForceFrequency",
+          "type": "float",
+          "offset": 52,
+          "length": 4
+        },
+        {
+          "name": "DebugTopologyColour",
+          "type": "uint32",
+          "offset": 56,
+          "length": 4
+        },
+        {
+          "name": "DriveOverEmitterGroup",
+          "type": "char *",
+          "offset": 60,
+          "length": 4
+        },
+        {
+          "name": "DriveOverMinSpeed",
+          "type": "float",
+          "offset": 64,
+          "length": 4
+        },
+        {
+          "name": "DriveOverMaxSpeed",
+          "type": "float",
+          "offset": 68,
+          "length": 4
+        },
+        {
+          "name": "DriveOver2EmitterGroup",
+          "type": "char *",
+          "offset": 72,
+          "length": 4
+        },
+        {
+          "name": "DriveOver2MinSpeed",
+          "type": "float",
+          "offset": 76,
+          "length": 4
+        },
+        {
+          "name": "DriveOver2MaxSpeed",
+          "type": "float",
+          "offset": 80,
+          "length": 4
+        },
+        {
+          "name": "SkidSmokeEmitterGroup",
+          "type": "char *",
+          "offset": 84,
+          "length": 4
+        },
+        {
+          "name": "SkidSmokeMinSpeed",
+          "type": "float",
+          "offset": 88,
+          "length": 4
+        },
+        {
+          "name": "SkidSmokeMaxSpeed",
+          "type": "float",
+          "offset": 92,
+          "length": 4
+        },
+        {
+          "name": "TireSpewEmitterGroup",
+          "type": "char *",
+          "offset": 96,
+          "length": 4
+        },
+        {
+          "name": "TireSpewMinSpeed",
+          "type": "float",
+          "offset": 100,
+          "length": 4
+        },
+        {
+          "name": "TireSpewMaxSpeed",
+          "type": "float",
+          "offset": 104,
+          "length": 4
+        },
+        {
+          "name": "BottomOutEmitterGroup",
+          "type": "char *",
+          "offset": 108,
+          "length": 4
+        },
+        {
+          "name": "BottomOutMinImpact",
+          "type": "float",
+          "offset": 112,
+          "length": 4
+        },
+        {
+          "name": "BottomOutMaxImpact",
+          "type": "float",
+          "offset": 116,
+          "length": 4
+        },
+        {
+          "name": "CollisionImpactEmitterGroup",
+          "type": "char *",
+          "offset": 120,
+          "length": 4
+        },
+        {
+          "name": "CollisionImpactMinForce",
+          "type": "float",
+          "offset": 124,
+          "length": 4
+        },
+        {
+          "name": "CollisionImpactMaxForce",
+          "type": "float",
+          "offset": 128,
+          "length": 4
+        },
+        {
+          "name": "CollisionScrapeEmitterGroup",
+          "type": "char *",
+          "offset": 132,
+          "length": 4
+        },
+        {
+          "name": "CollisionScrapeMinSpeed",
+          "type": "float",
+          "offset": 136,
+          "length": 4
+        },
+        {
+          "name": "CollisionScrapeMaxSpeed",
+          "type": "float",
+          "offset": 140,
+          "length": 4
+        }
+      ],
+      "evidence_id": "E-0045-T01"
+    },
+    "TireInfo": {
+      "size": 32,
+      "kind": "struct",
+      "enum_values": null,
+      "fields": [
+        {
+          "name": "MaxSlipAngle",
+          "type": "float",
+          "offset": 0,
+          "length": 4
+        },
+        {
+          "name": "MaxLoad",
+          "type": "float",
+          "offset": 4,
+          "length": 4
+        },
+        {
+          "name": "ForceScale",
+          "type": "float",
+          "offset": 8,
+          "length": 4
+        },
+        {
+          "name": "StaticFrictionCoefficient",
+          "type": "float",
+          "offset": 12,
+          "length": 4
+        },
+        {
+          "name": "DynamicFrictionCoefficient",
+          "type": "float",
+          "offset": 16,
+          "length": 4
+        },
+        {
+          "name": "dummy",
+          "type": "float[3]",
+          "offset": 20,
+          "length": 12
+        }
+      ],
+      "evidence_id": "E-0045-T01"
+    },
+    "Wheel": {
+      "size": 400,
+      "kind": "struct",
+      "enum_values": null,
+      "fields": [
+        {
+          "name": "Next",
+          "type": "bNode *",
+          "offset": 0,
+          "length": 4
+        },
+        {
+          "name": "Prev",
+          "type": "bNode *",
+          "offset": 4,
+          "length": 4
+        },
+        {
+          "name": "__vtable",
+          "type": "Wheel__vtable *",
+          "offset": 8,
+          "length": 4
+        },
+        {
+          "name": "WI",
+          "type": "WheelInfo *",
+          "offset": 12,
+          "length": 4
+        },
+        {
+          "name": "TI",
+          "type": "TireInfo *",
+          "offset": 16,
+          "length": 4
+        },
+        {
+          "name": "CI",
+          "type": "ControlInfo *",
+          "offset": 20,
+          "length": 4
+        },
+        {
+          "name": "CS",
+          "type": "CarState *",
+          "offset": 24,
+          "length": 4
+        },
+        {
+          "name": "State",
+          "type": "WheelState",
+          "offset": 28,
+          "length": 8
+        },
+        {
+          "name": "MomentOfInertia",
+          "type": "float",
+          "offset": 36,
+          "length": 4
+        },
+        {
+          "name": "Matrix",
+          "type": "bMatrix4",
+          "offset": 48,
+          "length": 64
+        },
+        {
+          "name": "WorldMatrix",
+          "type": "bMatrix4",
+          "offset": 112,
+          "length": 64
+        },
+        {
+          "name": "CarMatrix",
+          "type": "bMatrix4",
+          "offset": 176,
+          "length": 64
+        },
+        {
+          "name": "Velocity",
+          "type": "bVector3",
+          "offset": 240,
+          "length": 16
+        },
+        {
+          "name": "Slip",
+          "type": "bVector2",
+          "offset": 256,
+          "length": 8
+        },
+        {
+          "name": "AppliedTorque",
+          "type": "float",
+          "offset": 264,
+          "length": 4
+        },
+        {
+          "name": "BrakeLocked",
+          "type": "int",
+          "offset": 268,
+          "length": 4
+        },
+        {
+          "name": "LastSign",
+          "type": "int",
+          "offset": 272,
+          "length": 4
+        },
+        {
+          "name": "GroundForce",
+          "type": "bVector2",
+          "offset": 276,
+          "length": 8
+        },
+        {
+          "name": "WorldGroundForce",
+          "type": "bVector3",
+          "offset": 288,
+          "length": 16
+        },
+        {
+          "name": "ContactPoint",
+          "type": "bVector3",
+          "offset": 304,
+          "length": 16
+        },
+        {
+          "name": "ContactNormal",
+          "type": "bVector3",
+          "offset": 320,
+          "length": 16
+        },
+        {
+          "name": "Terrain",
+          "type": "TerrainType",
+          "offset": 336,
+          "length": 4
+        },
+        {
+          "name": "Slipping",
+          "type": "char",
+          "offset": 340,
+          "length": 1
+        },
+        {
+          "name": "TouchingGround",
+          "type": "char",
+          "offset": 341,
+          "length": 1
+        },
+        {
+          "name": "NumTimesSkidding",
+          "type": "short int",
+          "offset": 342,
+          "length": 2
+        },
+        {
+          "name": "ZForce",
+          "type": "float",
+          "offset": 344,
+          "length": 4
+        },
+        {
+          "name": "RoadNoise",
+          "type": "float",
+          "offset": 348,
+          "length": 4
+        },
+        {
+          "name": "CurrentSlip",
+          "type": "float",
+          "offset": 352,
+          "length": 4
+        },
+        {
+          "name": "OldSlip",
+          "type": "float",
+          "offset": 356,
+          "length": 4
+        },
+        {
+          "name": "TractionUsage",
+          "type": "float",
+          "offset": 360,
+          "length": 4
+        },
+        {
+          "name": "Damage",
+          "type": "float",
+          "offset": 364,
+          "length": 4
+        },
+        {
+          "name": "Brake",
+          "type": "float",
+          "offset": 368,
+          "length": 4
+        },
+        {
+          "name": "EBrake",
+          "type": "float",
+          "offset": 372,
+          "length": 4
+        },
+        {
+          "name": "TractionBoost",
+          "type": "float",
+          "offset": 376,
+          "length": 4
+        },
+        {
+          "name": "CatchupFrictionMultiplier",
+          "type": "float",
+          "offset": 380,
+          "length": 4
+        },
+        {
+          "name": "TheSkidMaker",
+          "type": "SkidMaker",
+          "offset": 384,
+          "length": 4
+        }
+      ],
+      "evidence_id": "E-0045-T01"
+    },
+    "ControlInfo": {
+      "size": 48,
+      "kind": "struct",
+      "enum_values": null,
+      "fields": [
+        {
+          "name": "Steering",
+          "type": "float",
+          "offset": 0,
+          "length": 4
+        },
+        {
+          "name": "Brake",
+          "type": "float",
+          "offset": 4,
+          "length": 4
+        },
+        {
+          "name": "EBrake",
+          "type": "float",
+          "offset": 8,
+          "length": 4
+        },
+        {
+          "name": "BrakeBias",
+          "type": "float",
+          "offset": 12,
+          "length": 4
+        },
+        {
+          "name": "YawControl",
+          "type": "float",
+          "offset": 16,
+          "length": 4
+        },
+        {
+          "name": "YawControlNFS",
+          "type": "float",
+          "offset": 20,
+          "length": 4
+        },
+        {
+          "name": "MaxZMomentAcc",
+          "type": "float",
+          "offset": 24,
+          "length": 4
+        },
+        {
+          "name": "MaxZMomentAccExtreme",
+          "type": "float",
+          "offset": 28,
+          "length": 4
+        },
+        {
+          "name": "SpeedLimiter",
+          "type": "float",
+          "offset": 32,
+          "length": 4
+        },
+        {
+          "name": "dummy",
+          "type": "float[3]",
+          "offset": 36,
+          "length": 12
+        }
+      ],
+      "evidence_id": "E-0045-T01"
+    },
+    "Car": {
+      "size": 2192,
+      "kind": "struct",
+      "enum_values": null,
+      "fields": [
+        {
+          "name": "Next",
+          "type": "bNode *",
+          "offset": 0,
+          "length": 4
+        },
+        {
+          "name": "Prev",
+          "type": "bNode *",
+          "offset": 4,
+          "length": 4
+        },
+        {
+          "name": "CarIndex",
+          "type": "short int",
+          "offset": 8,
+          "length": 2
+        },
+        {
+          "name": "DriverNumber",
+          "type": "short int",
+          "offset": 10,
+          "length": 2
+        },
+        {
+          "name": "pCarTypeInfo",
+          "type": "CarTypeInfo *",
+          "offset": 12,
+          "length": 4
+        },
+        {
+          "name": "pRideInfo",
+          "type": "RideInfo *",
+          "offset": 16,
+          "length": 4
+        },
+        {
+          "name": "MyDriver",
+          "type": "DriverInfo *",
+          "offset": 20,
+          "length": 4
+        },
+        {
+          "name": "pPlayer",
+          "type": "Player *",
+          "offset": 24,
+          "length": 4
+        },
+        {
+          "name": "pRacingCar",
+          "type": "RacingCar *",
+          "offset": 28,
+          "length": 4
+        },
+        {
+          "name": "TheControlMode",
+          "type": "ControlMode",
+          "offset": 32,
+          "length": 4
+        },
+        {
+          "name": "TheMovementMode",
+          "type": "MovementMode",
+          "offset": 36,
+          "length": 4
+        },
+        {
+          "name": "pCarController",
+          "type": "CarController *",
+          "offset": 40,
+          "length": 4
+        },
+        {
+          "name": "pCarDriver",
+          "type": "CarDriver *",
+          "offset": 44,
+          "length": 4
+        },
+        {
+          "name": "pCarMover",
+          "type": "CarMover *",
+          "offset": 48,
+          "length": 4
+        },
+        {
+          "name": "pDynamicCollisionBody",
+          "type": "CarCollisionBody *",
+          "offset": 52,
+          "length": 4
+        },
+        {
+          "name": "State",
+          "type": "CarState",
+          "offset": 64,
+          "length": 1040
+        },
+        {
+          "name": "DispGear",
+          "type": "Gear",
+          "offset": 1104,
+          "length": 4
+        },
+        {
+          "name": "FrictionBoost",
+          "type": "float",
+          "offset": 1108,
+          "length": 4
+        },
+        {
+          "name": "DraftFactor",
+          "type": "float",
+          "offset": 1112,
+          "length": 4
+        },
+        {
+          "name": "fTractionBoostOverride",
+          "type": "float",
+          "offset": 1116,
+          "length": 4
+        },
+        {
+          "name": "fDamageBoostOverride",
+          "type": "float",
+          "offset": 1120,
+          "length": 4
+        },
+        {
+          "name": "vOldPosition",
+          "type": "bVector3",
+          "offset": 1136,
+          "length": 16
+        },
+        {
+          "name": "vOldVel",
+          "type": "bVector3",
+          "offset": 1152,
+          "length": 16
+        },
+        {
+          "name": "vOldAngVel",
+          "type": "bVector3",
+          "offset": 1168,
+          "length": 16
+        },
+        {
+          "name": "OldSpeed",
+          "type": "float",
+          "offset": 1184,
+          "length": 4
+        },
+        {
+          "name": "AirTimeSwitch",
+          "type": "float",
+          "offset": 1188,
+          "length": 4
+        },
+        {
+          "name": "RenderingEnabled",
+          "type": "char",
+          "offset": 1192,
+          "length": 1
+        },
+        {
+          "name": "DriverRenderingEnabled",
+          "type": "bool",
+          "offset": 1196,
+          "length": 1
+        },
+        {
+          "name": "pRenderInfo",
+          "type": "CarRenderInfo *",
+          "offset": 1200,
+          "length": 4
+        },
+        {
+          "name": "pAnimatedDriver",
+          "type": "AnimatedDriver *",
+          "offset": 1204,
+          "length": 4
+        },
+        {
+          "name": "TheOverrideRenderingPosition",
+          "type": "OverrideRenderingPosition",
+          "offset": 1216,
+          "length": 96
+        },
+        {
+          "name": "TheTopologyCoordinate",
+          "type": "TopologyCoordinate",
+          "offset": 1312,
+          "length": 704
+        },
+        {
+          "name": "TheTrackPathCoordinate",
+          "type": "TrackPathCoordinate",
+          "offset": 2016,
+          "length": 40
+        },
+        {
+          "name": "CopLights",
+          "type": "CopLightState",
+          "offset": 2056,
+          "length": 4
+        },
+        {
+          "name": "SignalLightState",
+          "type": "SignalLightStateEnum",
+          "offset": 2060,
+          "length": 4
+        },
+        {
+          "name": "NitroEffectFlag",
+          "type": "bool",
+          "offset": 2064,
+          "length": 1
+        },
+        {
+          "name": "WantToBlinkHeadlights",
+          "type": "bool",
+          "offset": 2068,
+          "length": 1
+        },
+        {
+          "name": "WantToHonkHorn",
+          "type": "bool",
+          "offset": 2072,
+          "length": 1
+        },
+        {
+          "name": "WantTwoHonksAndOrBlinks",
+          "type": "bool",
+          "offset": 2076,
+          "length": 1
+        },
+        {
+          "name": "HeadlightsAndHornStartTime",
+          "type": "Timer",
+          "offset": 2080,
+          "length": 4
+        },
+        {
+          "name": "HeadlightsAndHornOnDuration",
+          "type": "float",
+          "offset": 2084,
+          "length": 4
+        },
+        {
+          "name": "HeadlightsAndHornOffDuration",
+          "type": "float",
+          "offset": 2088,
+          "length": 4
+        },
+        {
+          "name": "ForceHeadlightsOn",
+          "type": "bool",
+          "offset": 2092,
+          "length": 1
+        },
+        {
+          "name": "HeadlightsState",
+          "type": "bool",
+          "offset": 2096,
+          "length": 1
+        },
+        {
+          "name": "TheSirenMode",
+          "type": "SirenMode",
+          "offset": 2100,
+          "length": 4
+        },
+        {
+          "name": "WiperOnTime",
+          "type": "int32",
+          "offset": 2104,
+          "length": 4
+        },
+        {
+          "name": "WiperOffTime",
+          "type": "int32",
+          "offset": 2108,
+          "length": 4
+        },
+        {
+          "name": "WiperState",
+          "type": "int",
+          "offset": 2112,
+          "length": 4
+        },
+        {
+          "name": "pCarDamage",
+          "type": "CarDamage *",
+          "offset": 2116,
+          "length": 4
+        },
+        {
+          "name": "BlownTireBits",
+          "type": "int8",
+          "offset": 2120,
+          "length": 1
+        },
+        {
+          "name": "NumBlownTires",
+          "type": "int8",
+          "offset": 2121,
+          "length": 1
+        },
+        {
+          "name": "BlownTireControllerRumbleTimer",
+          "type": "Timer",
+          "offset": 2124,
+          "length": 4
+        },
+        {
+          "name": "pBaseCarSound",
+          "type": "BaseCarSound *",
+          "offset": 2128,
+          "length": 4
+        },
+        {
+          "name": "ResetMe",
+          "type": "int",
+          "offset": 2132,
+          "length": 4
+        },
+        {
+          "name": "BlinkTimer",
+          "type": "Timer",
+          "offset": 2136,
+          "length": 4
+        },
+        {
+          "name": "BlinkDuration",
+          "type": "float",
+          "offset": 2140,
+          "length": 4
+        },
+        {
+          "name": "LastInTroughPosition",
+          "type": "bVector2",
+          "offset": 2144,
+          "length": 8
+        },
+        {
+          "name": "bPoofed",
+          "type": "bool",
+          "offset": 2152,
+          "length": 1
+        },
+        {
+          "name": "bVisibleOnTrackMap",
+          "type": "bool",
+          "offset": 2156,
+          "length": 1
+        },
+        {
+          "name": "NumTimesSkidding",
+          "type": "unsigned char[4]",
+          "offset": 2160,
+          "length": 4
+        },
+        {
+          "name": "RoadBumpBits",
+          "type": "uint8",
+          "offset": 2164,
+          "length": 1
+        },
+        {
+          "name": "pCaffeineObj",
+          "type": "unsigned int",
+          "offset": 2168,
+          "length": 4
+        },
+        {
+          "name": "pLastCarTrailObj",
+          "type": "unsigned int",
+          "offset": 2172,
+          "length": 4
+        },
+        {
+          "name": "LeaveCarTrails",
+          "type": "int",
+          "offset": 2176,
+          "length": 4
+        },
+        {
+          "name": "ForceBuzzTime",
+          "type": "Timer",
+          "offset": 2180,
+          "length": 4
+        },
+        {
+          "name": "fAngleToCamera",
+          "type": "float",
+          "offset": 2184,
+          "length": 4
+        },
+        {
+          "name": "bInDeepWater",
+          "type": "bool",
+          "offset": 2188,
+          "length": 1
+        }
+      ],
+      "evidence_id": "E-0045-T01"
+    },
+    "PhysicsCar": {
+      "size": 120,
+      "kind": "struct",
+      "enum_values": null,
+      "fields": [
+        {
+          "name": "Driver",
+          "type": "CarDriver *",
+          "offset": 0,
+          "length": 4
+        },
+        {
+          "name": "__vtable",
+          "type": "PhysicsCar__vtable *",
+          "offset": 4,
+          "length": 4
+        },
+        {
+          "name": "pBody",
+          "type": "RigidBody *",
+          "offset": 24,
+          "length": 4
+        },
+        {
+          "name": "pSteering",
+          "type": "Steering *",
+          "offset": 28,
+          "length": 4
+        },
+        {
+          "name": "pSuspension",
+          "type": "Suspension *[4]",
+          "offset": 32,
+          "length": 16
+        },
+        {
+          "name": "pWheel",
+          "type": "Wheel *[4]",
+          "offset": 48,
+          "length": 16
+        },
+        {
+          "name": "pEngine",
+          "type": "Engine *",
+          "offset": 64,
+          "length": 4
+        },
+        {
+          "name": "pDriveTrain",
+          "type": "DriveTrain *",
+          "offset": 68,
+          "length": 4
+        },
+        {
+          "name": "pAerodynamics",
+          "type": "Aerodynamics *",
+          "offset": 72,
+          "length": 4
+        },
+        {
+          "name": "CTI",
+          "type": "CarTypeInfo *",
+          "offset": 76,
+          "length": 4
+        },
+        {
+          "name": "State",
+          "type": "CarState *",
+          "offset": 80,
+          "length": 4
+        },
+        {
+          "name": "pCar",
+          "type": "Car *",
+          "offset": 84,
+          "length": 4
+        },
+        {
+          "name": "BrakeStandTimer",
+          "type": "Timer",
+          "offset": 88,
+          "length": 4
+        },
+        {
+          "name": "BrakeStandTimerStart",
+          "type": "Timer",
+          "offset": 92,
+          "length": 4
+        },
+        {
+          "name": "BrakeStanding",
+          "type": "bool",
+          "offset": 96,
+          "length": 1
+        },
+        {
+          "name": "ThrottleReleased",
+          "type": "bool",
+          "offset": 100,
+          "length": 1
+        },
+        {
+          "name": "LurchsLeft",
+          "type": "int",
+          "offset": 104,
+          "length": 4
+        },
+        {
+          "name": "RoofResetTimer",
+          "type": "Timer",
+          "offset": 108,
+          "length": 4
+        },
+        {
+          "name": "FrictionBoost",
+          "type": "float",
+          "offset": 112,
+          "length": 4
+        },
+        {
+          "name": "YawControlMultiplier",
+          "type": "float",
+          "offset": 116,
+          "length": 4
+        }
+      ],
+      "evidence_id": "E-0045-T01"
+    },
+    "CarState": {
+      "size": 1040,
+      "kind": "struct",
+      "enum_values": null,
+      "fields": [
+        {
+          "name": "pCarInfo",
+          "type": "CarTypeInfo *",
+          "offset": 0,
+          "length": 4
+        },
+        {
+          "name": "pTopologyCoordinate",
+          "type": "TopologyCoordinate *",
+          "offset": 4,
+          "length": 4
+        },
+        {
+          "name": "GeometryPosition",
+          "type": "bVector3",
+          "offset": 16,
+          "length": 16
+        },
+        {
+          "name": "Position",
+          "type": "bVector3",
+          "offset": 32,
+          "length": 16
+        },
+        {
+          "name": "Velocity",
+          "type": "bVector3",
+          "offset": 48,
+          "length": 16
+        },
+        {
+          "name": "Acceleration",
+          "type": "bVector3",
+          "offset": 64,
+          "length": 16
+        },
+        {
+          "name": "BodyMatrix",
+          "type": "bMatrix4",
+          "offset": 80,
+          "length": 64
+        },
+        {
+          "name": "AngularVelocity",
+          "type": "bVector3",
+          "offset": 144,
+          "length": 16
+        },
+        {
+          "name": "AngularAcceleration",
+          "type": "bVector3",
+          "offset": 160,
+          "length": 16
+        },
+        {
+          "name": "WheelMatrix",
+          "type": "bMatrix4[4]",
+          "offset": 176,
+          "length": 256
+        },
+        {
+          "name": "BrakeMatrix",
+          "type": "bMatrix4[4]",
+          "offset": 432,
+          "length": 256
+        },
+        {
+          "name": "WheelAngularVelocity",
+          "type": "float[4]",
+          "offset": 688,
+          "length": 16
+        },
+        {
+          "name": "WheelAngle",
+          "type": "float[4]",
+          "offset": 704,
+          "length": 16
+        },
+        {
+          "name": "WheelZForce",
+          "type": "float[4]",
+          "offset": 720,
+          "length": 16
+        },
+        {
+          "name": "WheelRoadNoise",
+          "type": "float[4]",
+          "offset": 736,
+          "length": 16
+        },
+        {
+          "name": "WheelBottomOutMagnitude",
+          "type": "float[4]",
+          "offset": 752,
+          "length": 16
+        },
+        {
+          "name": "WheelSuspensionHeight",
+          "type": "float[4]",
+          "offset": 768,
+          "length": 16
+        },
+        {
+          "name": "WheelTouchingGround",
+          "type": "char[4]",
+          "offset": 784,
+          "length": 4
+        },
+        {
+          "name": "WheelTerrain",
+          "type": "TerrainType[4]",
+          "offset": 788,
+          "length": 16
+        },
+        {
+          "name": "CrossedWheelTerrain",
+          "type": "TerrainType[4]",
+          "offset": 804,
+          "length": 16
+        },
+        {
+          "name": "WheelSlip",
+          "type": "bVector2[4]",
+          "offset": 820,
+          "length": 32
+        },
+        {
+          "name": "WheelTractionUsage",
+          "type": "float[4]",
+          "offset": 852,
+          "length": 16
+        },
+        {
+          "name": "Angle",
+          "type": "bAngle",
+          "offset": 868,
+          "length": 2
+        },
+        {
+          "name": "SteeringAngle",
+          "type": "bAngle",
+          "offset": 870,
+          "length": 2
+        },
+        {
+          "name": "Odometer",
+          "type": "float",
+          "offset": 872,
+          "length": 4
+        },
+        {
+          "name": "DistanceTraveled",
+          "type": "float",
+          "offset": 876,
+          "length": 4
+        },
+        {
+          "name": "TractionUsage",
+          "type": "float",
+          "offset": 880,
+          "length": 4
+        },
+        {
+          "name": "SkidLeft",
+          "type": "float",
+          "offset": 884,
+          "length": 4
+        },
+        {
+          "name": "SkidRight",
+          "type": "float",
+          "offset": 888,
+          "length": 4
+        },
+        {
+          "name": "nWheelsTouchingGround",
+          "type": "int",
+          "offset": 892,
+          "length": 4
+        },
+        {
+          "name": "ForwardSpeed",
+          "type": "float",
+          "offset": 896,
+          "length": 4
+        },
+        {
+          "name": "VelocityMagnitude",
+          "type": "float",
+          "offset": 900,
+          "length": 4
+        },
+        {
+          "name": "CurrentGear",
+          "type": "Gear",
+          "offset": 904,
+          "length": 4
+        },
+        {
+          "name": "Throttle",
+          "type": "float",
+          "offset": 908,
+          "length": 4
+        },
+        {
+          "name": "RPM",
+          "type": "float",
+          "offset": 912,
+          "length": 4
+        },
+        {
+          "name": "RedLineSyncRPM",
+          "type": "float",
+          "offset": 916,
+          "length": 4
+        },
+        {
+          "name": "ClutchEngaged",
+          "type": "int",
+          "offset": 920,
+          "length": 4
+        },
+        {
+          "name": "DriverMode",
+          "type": "int",
+          "offset": 924,
+          "length": 4
+        },
+        {
+          "name": "BoostFactor",
+          "type": "float",
+          "offset": 928,
+          "length": 4
+        },
+        {
+          "name": "BurnOutState",
+          "type": "int",
+          "offset": 932,
+          "length": 4
+        },
+        {
+          "name": "BurnOutTime",
+          "type": "float",
+          "offset": 936,
+          "length": 4
+        },
+        {
+          "name": "BurnOutTraction",
+          "type": "float",
+          "offset": 940,
+          "length": 4
+        },
+        {
+          "name": "BurnOutAllow",
+          "type": "float",
+          "offset": 944,
+          "length": 4
+        },
+        {
+          "name": "RelCoordMatrix",
+          "type": "bMatrix4",
+          "offset": 960,
+          "length": 64
+        },
+        {
+          "name": "MatrixValid",
+          "type": "bool",
+          "offset": 1024,
+          "length": 1
+        }
+      ],
+      "evidence_id": "E-0045-T01"
+    },
+    "CarTypeInfo": {
+      "size": 1376,
+      "kind": "struct",
+      "enum_values": null,
+      "fields": [
+        {
+          "name": "CarTypeName",
+          "type": "char[32]",
+          "offset": 0,
+          "length": 32
+        },
+        {
+          "name": "BaseModelName",
+          "type": "char[32]",
+          "offset": 32,
+          "length": 32
+        },
+        {
+          "name": "GeometryFilename",
+          "type": "char[32]",
+          "offset": 64,
+          "length": 32
+        },
+        {
+          "name": "CompressedGeometryFilename",
+          "type": "char[32]",
+          "offset": 96,
+          "length": 32
+        },
+        {
+          "name": "DashGeometryFilename",
+          "type": "char[32]",
+          "offset": 128,
+          "length": 32
+        },
+        {
+          "name": "CompressedDashGeometryFilename",
+          "type": "char[32]",
+          "offset": 160,
+          "length": 32
+        },
+        {
+          "name": "ManufacturerName",
+          "type": "char[16]",
+          "offset": 192,
+          "length": 16
+        },
+        {
+          "name": "HeadlightPosition",
+          "type": "float[4]",
+          "offset": 208,
+          "length": 16
+        },
+        {
+          "name": "HeadlightFOV",
+          "type": "float",
+          "offset": 224,
+          "length": 4
+        },
+        {
+          "name": "HighPerformance",
+          "type": "int8",
+          "offset": 228,
+          "length": 1
+        },
+        {
+          "name": "NumAvailableSkinNumbers",
+          "type": "int8",
+          "offset": 229,
+          "length": 1
+        },
+        {
+          "name": "CarClass",
+          "type": "int8",
+          "offset": 230,
+          "length": 1
+        },
+        {
+          "name": "ConvertableFlag",
+          "type": "int8",
+          "offset": 231,
+          "length": 1
+        },
+        {
+          "name": "Padding1",
+          "type": "int32",
+          "offset": 232,
+          "length": 4
+        },
+        {
+          "name": "Padding2",
+          "type": "int32",
+          "offset": 236,
+          "length": 4
+        },
+        {
+          "name": "DriverRenderingOffset",
+          "type": "float[4]",
+          "offset": 240,
+          "length": 16
+        },
+        {
+          "name": "InCarSteeringWheelRenderingOffset",
+          "type": "float[4]",
+          "offset": 256,
+          "length": 16
+        },
+        {
+          "name": "CenterOfGravity",
+          "type": "float[4]",
+          "offset": 272,
+          "length": 16
+        },
+        {
+          "name": "Wheels",
+          "type": "WheelInfo[4]",
+          "offset": 288,
+          "length": 128
+        },
+        {
+          "name": "Tires",
+          "type": "TireInfo[2]",
+          "offset": 416,
+          "length": 64
+        },
+        {
+          "name": "Body",
+          "type": "RigidBodyInfo",
+          "offset": 480,
+          "length": 80
+        },
+        {
+          "name": "Suspension",
+          "type": "SuspensionInfo[2]",
+          "offset": 560,
+          "length": 64
+        },
+        {
+          "name": "DriveTrain",
+          "type": "DriveTrainInfo",
+          "offset": 624,
+          "length": 64
+        },
+        {
+          "name": "Engine",
+          "type": "EngineInfo",
+          "offset": 688,
+          "length": 64
+        },
+        {
+          "name": "Aero",
+          "type": "AeroInfo",
+          "offset": 752,
+          "length": 16
+        },
+        {
+          "name": "Control",
+          "type": "ControlInfo",
+          "offset": 768,
+          "length": 48
+        },
+        {
+          "name": "Sound",
+          "type": "SoundInfo",
+          "offset": 816,
+          "length": 144
+        },
+        {
+          "name": "Camera",
+          "type": "CameraInfo",
+          "offset": 960,
+          "length": 272
+        },
+        {
+          "name": "HudInfo",
+          "type": "CarHudInfo",
+          "offset": 1232,
+          "length": 80
+        },
+        {
+          "name": "LocationProb",
+          "type": "float[5]",
+          "offset": 1312,
+          "length": 20
+        },
+        {
+          "name": "Type",
+          "type": "CarType",
+          "offset": 1332,
+          "length": 4
+        },
+        {
+          "name": "UsageType",
+          "type": "CarUsageType",
+          "offset": 1336,
+          "length": 4
+        },
+        {
+          "name": "InitialLockStatus",
+          "type": "eCarStatus",
+          "offset": 1340,
+          "length": 4
+        },
+        {
+          "name": "BeACopLockStatus",
+          "type": "eCarStatus",
+          "offset": 1344,
+          "length": 4
+        },
+        {
+          "name": "AvailableSkinNumbers",
+          "type": "char[10]",
+          "offset": 1348,
+          "length": 10
+        },
+        {
+          "name": "Dummy",
+          "type": "char[6]",
+          "offset": 1358,
+          "length": 6
+        },
+        {
+          "name": "DefaultSkinNumber",
+          "type": "int",
+          "offset": 1364,
+          "length": 4
+        },
+        {
+          "name": "pLanguageInfo",
+          "type": "CarLanguageInfo *",
+          "offset": 1368,
+          "length": 4
+        },
+        {
+          "name": "Pad1",
+          "type": "int",
+          "offset": 1372,
+          "length": 4
+        }
+      ],
+      "evidence_id": "E-0045-T01"
+    }
+  },
+  "globals": [
+    {
+      "address": "0x0032571c",
+      "bits": "0x3a83126f",
+      "float": 0.0010000000474974513
+    },
+    {
+      "address": "0x00325718",
+      "bits": "0x3e99999a",
+      "float": 0.30000001192092896
+    },
+    {
+      "address": "0x00325720",
+      "bits": "0x3b03126f",
+      "float": 0.0020000000949949026
+    },
+    {
+      "address": "0x00325724",
+      "bits": "0x3dcccccd",
+      "float": 0.10000000149011612
+    },
+    {
+      "address": "0x00325728",
+      "bits": "0x3a83126f",
+      "float": 0.0010000000474974513
+    },
+    {
+      "address": "0x0032572c",
+      "bits": "0x415692b6",
+      "float": 13.410818099975586
+    },
+    {
+      "address": "0x00325730",
+      "bits": "0x3de5119d",
+      "float": 0.11185000091791153
+    },
+    {
+      "address": "0x00325750",
+      "bits": "0x42652ee0",
+      "float": 57.2957763671875
+    },
+    {
+      "address": "0x00327d3c",
+      "bits": "0x3f000000",
+      "float": 0.5
+    },
+    {
+      "address": "0x00327d50",
+      "bits": "0x3f800000",
+      "float": 1.0
+    },
+    {
+      "address": "0x00327d54",
+      "bits": "0x3f59999a",
+      "float": 0.8500000238418579
+    },
+    {
+      "address": "0x00327d5c",
+      "bits": "0x3f800000",
+      "float": 1.0
+    },
+    {
+      "address": "0x00327d60",
+      "bits": "0x00000001",
+      "name": "UseNewTireForces",
+      "kind": "int32",
+      "integer": 1
+    },
+    {
+      "address": "0x00327d64",
+      "bits": "0x40200000",
+      "float": 2.5
+    },
+    {
+      "address": "0x00327d68",
+      "bits": "0x3f4ccccd",
+      "float": 0.800000011920929
+    },
+    {
+      "address": "0x00327d6c",
+      "bits": "0x00000001",
+      "name": "WheelForceFrame",
+      "kind": "int32",
+      "integer": 1
+    },
+    {
+      "address": "0x00327d70",
+      "bits": "0x3fc00000",
+      "float": 1.5
+    },
+    {
+      "address": "0x00324dd0",
+      "bits": "0x3eb2b8c4",
+      "float": 0.349065899848938
+    },
+    {
+      "address": "0x00327060",
+      "bits": "0x00000000",
+      "float": 0.0
+    },
+    {
+      "address": "0x00327064",
+      "bits": "0x3f800000",
+      "float": 1.0
+    },
+    {
+      "address": "0x00327068",
+      "bits": "0x00000000",
+      "float": 0.0
+    },
+    {
+      "address": "0x0032706c",
+      "bits": "0x41f00000",
+      "float": 30.0
+    },
+    {
+      "address": "0x00327070",
+      "bits": "0x3f333333",
+      "float": 0.699999988079071
+    }
+  ],
+  "test_evidence": "E-0045-T04",
+  "publication_evidence": "E-0045-W01",
+  "known_mismatches": [
+    {
+      "kind": "provenance-only, corrected by root",
+      "function": "0x001a26b8",
+      "old_throw_address": "0x001a52ec",
+      "debug_instruction": "0x001a2ac4",
+      "evidence": "E-0045-T02",
+      "arithmetic_changed": false
+    },
+    {
+      "kind": "excluded original enum case remains a port guard gap",
+      "function": "0x001530e8",
+      "original_valid_enum": "TERRAIN_TYPE_CAR=32; NUM_TERRAIN_TYPES=33",
+      "current_port_guard": "material>=32 rejected",
+      "scope": "Outside the five supported tool surfaces; no source change",
+      "evidence": "E-0045-T01;E-0045-T02"
+    }
+  ]
+}

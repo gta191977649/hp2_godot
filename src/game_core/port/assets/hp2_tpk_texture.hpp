@@ -3,6 +3,7 @@
 // read this path as evidence of where the original kept this code.
 #pragma once
 #include <cstdint>
+#include <array>
 #include <optional>
 #include <string>
 #include <vector>
@@ -35,8 +36,12 @@ struct TpkTextureHeader {
     std::uint32_t tex_hash = 0;
     std::uint16_t width = 0, height = 0;
     std::uint8_t bit_depth = 0;
+    std::int8_t RenderingOrder = 0; // E-0046-S01, Debug TextureInfo+0x29, AttachSolidPolys0010BEF0.
     std::int32_t image_placement = 0, palette_placement = 0;
     std::int32_t image_size = 0, palette_size = 0;
+    std::int32_t BaseImageSize = 0; // Debug TextureInfo+44; E-0048-A04.
+    std::uint32_t ImageParentHash = 0; // Original +40; TASK0051 texture-chain grouping.
+    std::array<bool,7> mip_is_swizzled{}; // ImageInfos[level].Is32BitSwizzelled.
     std::uint8_t shift_width = 0, shift_height = 0;
     std::uint8_t pixel_storage_mode = 0, clut_pixel_storage_mode = 0;
     std::uint8_t Field_0x4c = 0; // 00108CC0 derives CLAMP.WMS/WMT; E-0033-T06.
@@ -49,6 +54,7 @@ struct TpkTextureHeader {
     // Raw byte; 0010DEBC loads it with lb and gates render bit 4 on nonzero.
     // E-0033-T05. Original name and full meaning remain unknown.
     std::uint8_t Field_0x74 = 0;
+    std::uint8_t BiasLevel = 0; // Original +0x75; Retail Attach*Polys matrix-pack selector.
     // Raw TEX1 inputs emitted by 00108CC0; E-0033-T06.
     std::uint8_t Field_0x6e = 0, Field_0x6f = 0, Field_0x70 = 0, Field_0x71 = 0;
     std::int16_t Field_0x72 = 0;
@@ -71,9 +77,9 @@ public:
     const std::vector<TpkTextureHeader>& headers() const { return headers_; }
     const TpkTextureHeader* find(const std::string& name) const;
 
-    // Decodes one entry. flip_vertical matches the Python tool's frontend_textures.py
-    // convention (true) for standalone/UI display; pass false to match the 3D-mesh UV
-    // convention used by map_tools_ps2's track texture path.
+    // Legacy indexed decoding first reverses rows; flip_vertical=true reverses that
+    // conversion again. Track raw-ST display uses the dedicated orientation adapter
+    // in port/track/texture_decode.hpp (E-0049-T01); other callers retain their policy.
     // preserve_gs_alpha keeps the original CLUT alpha byte (0..255, unity=128).
     // Default false retains the established frontend RGBA expansion byte-for-byte.
     std::optional<DecodedTexture> decode(const TpkTextureHeader& header, bool flip_vertical = true,

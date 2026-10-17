@@ -30,6 +30,11 @@ def read_csv(path: str) -> list[dict[str, str]]:
         return list(csv.DictReader(handle))
 
 
+def symbols_for_binary(rows: list[dict], binary_id: str) -> dict[str, dict]:
+    """An address alone never identifies a symbol across executable versions."""
+    return {r['elf_address'].upper().replace('0X','0x'): r for r in rows if r['binary_id'] == binary_id}
+
+
 def mask_comments_strings(text: str) -> str:
     # Preserve offsets and newlines for brace matching; strings can contain braces too.
     return re.sub(r'//[^\n]*|/\*[\s\S]*?\*/|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'',
@@ -51,7 +56,7 @@ def class_range(text: str, name: str, namespace: str | None = None) -> tuple[int
     if namespace:
         for scope in re.finditer(r"\bnamespace\s+([A-Za-z_]\w*(?:::[A-Za-z_]\w*)*)\s*\{", masked):
             namespaces.append((scope.start(), closing_brace(masked, scope.end()-1), scope[1]))
-    for match in re.finditer(r"\b(?:class|struct)\s+" + re.escape(name) + r"\s*\{", masked):
+    for match in re.finditer(r"\b(?:class|struct)\s+" + re.escape(name) + r"\s*(?::[^{};]+)?\{", masked):
         if namespace:
             enclosing = [n for a,b,n in namespaces if a < match.start() < b]
             if '::'.join(enclosing) != namespace:
@@ -60,8 +65,34 @@ def class_range(text: str, name: str, namespace: str | None = None) -> tuple[int
     return None
 
 
+def debug_canonical_owners() -> dict:
+    """Version-scoped opt-out of historical Retail shell generation.
+
+    A Debug implementation is never evidence for a Retail body or signature.
+    This explicit registry replaces neither historical attribution nor evidence.
+    """
+    path = ROOT / 'reverse/classes/task0044-debug-canonical-owners.json'
+    if not path.exists():
+        return {}
+    registry = json.loads(path.read_text())
+    assert registry['binary_id'] == 'sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b'
+    assert registry['superseded_template_binary_id'] == BINARY
+    owners = dict(registry['classes'])
+    successor = ROOT / 'reverse/classes/task0046-debug-canonical-owners.json'
+    if successor.exists():
+        amendment = json.loads(successor.read_text())
+        assert amendment['binary_id'] == registry['binary_id']
+        assert amendment['superseded_template_binary_id'] == BINARY
+        for name, owner in amendment['classes'].items():
+            if name in owners:
+                raise ValueError('Successor must not silently replace a canonical owner: ' + name)
+            owners[name] = dict(owner, registry_source='reverse/classes/task0046-debug-canonical-owners.json')
+    return owners
+
+
 def definitions() -> dict[str, list[dict]]:
     result: dict[str, list[dict]] = defaultdict(list)
+    debug_owners = debug_canonical_owners()
     originals = {r['original_identifier']: r['elf_address'] for r in
                  read_csv('reverse/naming/task0019-original-name-mappings.csv')}
     overrides_path = ROOT / 'reverse/naming/task0041-adopted-source-names.csv'
@@ -117,6 +148,10 @@ def definitions() -> dict[str, list[dict]]:
             # Recover the complete declarator token from the signature instead.
             name = re.search(r"([A-Za-z_]\w*(?:::[A-Za-z_]\w*)*)\s*$", match[1].split("(", 1)[0])[1]
             signature = ' '.join(text[match.start():match.end()-1].split())
+            scope = "::".join(scope[1] for scope in re.finditer(r"\bnamespace\s+([A-Za-z_]\w*(?:::[A-Za-z_]\w*)*)\s*\{", masked) if scope.start() < match.start() < closing_brace(masked, scope.end()-1))
+            if scope == 'hp2::recovered' and name.split('::')[0] in debug_owners:
+                continue  # Do not bind Debug class bodies to the Retail address catalogue.
+
             projected_address = projection_bindings.get((path.relative_to(ROOT).as_posix(), signature))
             address = re.search(r"_([0-9A-Fa-f]{8})$", name)
             if not address and not projected_address and name not in originals:
@@ -195,7 +230,7 @@ def model(include_complete: bool = True) -> tuple[list[dict], list[dict], dict[s
     for name, attribution in policy.get("member_attributions", {}).items():
         classes[name]["functions"].update(attribution["additional_functions"])
         classes[name]["entry_signatures"] = attribution.get("entry_signatures", {})
-    symbols = {r["elf_address"].upper().replace("0X", "0x"): r for r in read_csv("reverse/symbols.csv")}
+    symbols = symbols_for_binary(read_csv("reverse/symbols.csv"), BINARY)
     for cls in classes.values():
         name = cls["name"]
         placement = (policy["existing_classes"].get(name) or policy["module_placements"].get(name)
@@ -251,6 +286,10 @@ def model(include_complete: bool = True) -> tuple[list[dict], list[dict], dict[s
         complete = ROOT / "reverse/classes/task0043-member-registry.json"
         if complete.exists():
             result = apply_complete_members(result, json.loads(complete.read_text()))
+    migrated = debug_canonical_owners()
+    for cls in result:
+        if cls['name'] in migrated:
+            cls['superseded_by_debug'] = migrated[cls['name']]
     return result, labels, symbols, policy
 
 
@@ -356,6 +395,11 @@ def write_text(path: str, text: str) -> None:
 def fill_code(classes: list[dict], check: bool) -> None:
     defs = definitions()
     for cls in classes:
+        if cls.get('superseded_by_debug'):
+            path = ROOT / cls['superseded_by_debug']['header']
+            if not path.is_file() or not class_range(path.read_text(), cls['name'], cls['namespace']):
+                raise ValueError('Missing canonical Debug owner: ' + cls['name'])
+            continue
         path = ROOT / cls["header"]
         text = path.read_text(encoding="utf-8") if path.exists() else ""
         bounds = class_range(text, cls["name"], cls["namespace"])
@@ -421,6 +465,8 @@ def fill_code(classes: list[dict], check: bool) -> None:
 def synchronize_records(classes: list[dict], symbols: dict[str, dict], check: bool) -> None:
     owners: dict[str, list[dict]] = defaultdict(list)
     for cls in classes:
+        if cls.get('superseded_by_debug'):
+            continue  # Historical Retail records are preserved without current-code annotations.
         for address in cls["functions"]:
             owners[address].append(cls)
     fields = list(next(iter(symbols.values())))
@@ -477,6 +523,8 @@ def synchronize_records(classes: list[dict], symbols: dict[str, dict], check: bo
         present = set()
         for row in existing:
             address = row['elf_address'].upper().replace('0X', '0x')
+            if row['binary_id'] != BINARY:
+                continue  # Preserve same-address foreign-executable rows verbatim.
             present.add(address)
             if address in owners:
                 tail = symbols[address]['pc_implementation'].split('TASK-0028 class entry coverage:', 1)[1]
@@ -502,6 +550,17 @@ def artifacts(classes: list[dict], labels: list[dict], symbols: dict[str, dict])
                     diagnostic_labels=cls["labels"], members=[])
         for address in cls["functions"]:
             method = cls["methods"][address]
+            if cls.get('superseded_by_debug'):
+                item['members'].append({
+                    'elf_address': address, 'method': method['name'], 'record': method['record'],
+                    'source': method.get('source', cls['source']),
+                    'knowledge_status': symbols[address]['status'],
+                    'coverage': 'historical_retail_template_superseded_by_debug_owner',
+                    'signature': 'historical Retail attribution; no current Debug signature inference',
+                    'signature_provenance': 'No cross-version behavior or ABI credit',
+                    'preserved_projections': [],
+                    'debug_owner_registry': cls['superseded_by_debug'].get('registry_source', 'reverse/classes/task0044-debug-canonical-owners.json')})
+                continue
             candidates = defs.get(address, [])
             own, = entry_definitions(cls, address, method["name"], candidates)
             entry = {"elf_address": address, "method": method["name"], "record": method["record"], "source": own["path"],

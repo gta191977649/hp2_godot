@@ -1,0 +1,270 @@
+{
+  "evidence_id": "E-0044-M01",
+  "binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "functions": [
+    {
+      "retail_address": "0x0025A3D0",
+      "debug_address": "0x002537A0",
+      "reference_name": "bRandom(int, unsigned int *)",
+      "source": "src/game_core/src/bMath.cpp",
+      "signature": "std::uint32_t bRandom(Memory& m,std::uint32_t state,std::uint32_t divisor)",
+      "raw": "local/task0044/math/002537a0",
+      "status": "instruction_and_decompilation_reviewed",
+      "changes": "Debug static-data operands; bATan removes Retail small-magnitude guard"
+    },
+    {
+      "retail_address": "0x0025A410",
+      "debug_address": "0x002537E0",
+      "reference_name": "bRandom(float, unsigned int *)",
+      "source": "src/game_core/src/bMath.cpp",
+      "signature": "float bRandom(Memory& m,std::uint32_t state,float value)",
+      "raw": "local/task0044/math/002537e0",
+      "status": "instruction_and_decompilation_reviewed",
+      "changes": "Debug static-data operands; bATan removes Retail small-magnitude guard"
+    },
+    {
+      "retail_address": "0x0025A4A8",
+      "debug_address": "0x00253878",
+      "reference_name": "bRandom(float)",
+      "source": "src/game_core/src/bMath.cpp",
+      "signature": "float bRandom(Memory& m,float value)",
+      "raw": "local/task0044/math/00253878",
+      "status": "instruction_and_decompilation_reviewed",
+      "changes": "Debug static-data operands; bATan removes Retail small-magnitude guard"
+    },
+    {
+      "retail_address": "0x0025A540",
+      "debug_address": "0x00253910",
+      "reference_name": "bSin(unsigned short)",
+      "source": "src/game_core/src/bMath.cpp",
+      "signature": "float bSin(Memory&m,std::uint16_t a)",
+      "raw": "local/task0044/math/00253910",
+      "status": "instruction_and_decompilation_reviewed",
+      "changes": "Debug static-data operands; bATan removes Retail small-magnitude guard"
+    },
+    {
+      "retail_address": "0x0025A5E0",
+      "debug_address": "0x002539B0",
+      "reference_name": "bSin(float)",
+      "source": "src/game_core/src/bMath.cpp",
+      "signature": "float bSin(Memory&m,float f)",
+      "raw": "local/task0044/math/002539b0",
+      "status": "instruction_and_decompilation_reviewed",
+      "changes": "Debug static-data operands; bATan removes Retail small-magnitude guard"
+    },
+    {
+      "retail_address": "0x0025A748",
+      "debug_address": "0x00253B18",
+      "reference_name": "bASin(float)",
+      "source": "src/game_core/src/bMath.cpp",
+      "signature": "std::uint16_t bASin(Memory&m,float f)",
+      "raw": "local/task0044/math/00253b18",
+      "status": "instruction_and_decompilation_reviewed",
+      "changes": "Debug static-data operands; bATan removes Retail small-magnitude guard"
+    },
+    {
+      "retail_address": "0x0025A890",
+      "debug_address": "0x00253C60",
+      "reference_name": "bATan(float, float)",
+      "source": "src/game_core/src/bMath.cpp",
+      "signature": "std::int16_t bATan(Memory&m,float x,float y)",
+      "raw": "local/task0044/math/00253c60",
+      "status": "instruction_and_decompilation_reviewed",
+      "changes": "Debug static-data operands; bATan removes Retail small-magnitude guard"
+    },
+    {
+      "retail_address": "0x0025A300",
+      "debug_address": "0x002536D0",
+      "reference_name": "bDiv(int, int)",
+      "source": "src/game_core/src/bMath.cpp",
+      "signature": "std::int32_t bDiv(std::int32_t numerator,std::int32_t denominator)",
+      "raw": "local/task0044/math/002536d0",
+      "status": "instruction_and_decompilation_reviewed",
+      "changes": "Debug static-data operands; bATan removes Retail small-magnitude guard"
+    },
+    {
+      "retail_address": "0x0025AA78",
+      "debug_address": "0x00253E20",
+      "reference_name": "bFixATan(int)",
+      "source": "src/game_core/src/bMath.cpp",
+      "signature": "std::uint16_t bFixATan(Memory&m,std::int32_t value)",
+      "raw": "local/task0044/math/00253e20",
+      "status": "instruction_and_decompilation_reviewed",
+      "changes": "Debug static-data operands; bATan removes Retail small-magnitude guard"
+    },
+    {
+      "retail_address": "0x0025AB50",
+      "debug_address": "0x00253EF8",
+      "reference_name": "bFixATan(int, int)",
+      "source": "src/game_core/src/bMath.cpp",
+      "signature": "std::int16_t bFixATan(Memory&m,std::int32_t x,std::int32_t y)",
+      "raw": "local/task0044/math/00253ef8",
+      "status": "instruction_and_decompilation_reviewed",
+      "changes": "Debug static-data operands; bATan removes Retail small-magnitude guard"
+    },
+    {
+      "retail_address": "0x0025AC68",
+      "debug_address": "0x00254010",
+      "reference_name": "bIdentity(bMatrix4 *)",
+      "source": "src/game_core/src/bMatrix.cpp",
+      "signature": "std::array<float,16> bIdentity()",
+      "raw": "local/task0044/math/00254010",
+      "status": "instruction_and_decompilation_reviewed",
+      "changes": "same bounded arithmetic; canonical original namespace"
+    },
+    {
+      "retail_address": "0x0025AC98",
+      "debug_address": "0x00254040",
+      "reference_name": "bInvertMatrix(bMatrix4 *, bMatrix4 const *)",
+      "source": "src/game_core/src/bMatrix.cpp",
+      "signature": "std::array<float,16> bInvertMatrix(const std::array<float,16>& a)",
+      "raw": "local/task0044/math/00254040",
+      "status": "instruction_and_decompilation_reviewed",
+      "changes": "same bounded arithmetic; canonical original namespace"
+    },
+    {
+      "retail_address": "0x0025AF20",
+      "debug_address": "0x002542C8",
+      "reference_name": "bTransposeMatrix(bMatrix4 *, bMatrix4 const *)",
+      "source": "src/game_core/src/bMatrix.cpp",
+      "signature": "void bTransposeMatrix(SolverMatrix& out, const SolverMatrix& in)",
+      "raw": "local/task0044/math/002542c8",
+      "status": "instruction_and_decompilation_reviewed",
+      "changes": "same bounded arithmetic; canonical original namespace"
+    },
+    {
+      "retail_address": "0x0025AED0",
+      "debug_address": "0x00254278",
+      "reference_name": "bMulMatrix(bVector3 *, bMatrix4 const *, bVector3 const *)",
+      "source": "src/game_core/src/bMatrix.cpp",
+      "signature": "void bMulMatrix(SolverVector& out, const SolverMatrix& matrix,\n                 const SolverVector& in, const SolverMathContext& context)",
+      "raw": "local/task0044/math/00254278",
+      "status": "instruction_and_decompilation_reviewed",
+      "changes": "same bounded arithmetic; canonical original namespace"
+    },
+    {
+      "retail_address": "0x0025AE18",
+      "debug_address": "0x002541C0",
+      "reference_name": "bMulMatrix(bMatrix4 *, bMatrix4 const *, bMatrix4 const *)",
+      "source": "src/game_core/src/bMatrix.cpp",
+      "signature": "Matrix bMulMatrix(const Matrix& a,const Matrix& b)",
+      "raw": "local/task0044/math/002541c0",
+      "status": "instruction_and_decompilation_reviewed",
+      "changes": "same bounded arithmetic; canonical original namespace"
+    },
+    {
+      "retail_address": "0x0011BD90",
+      "debug_address": "0x0011C108",
+      "reference_name": "eOrthonormalizeMatrix(bMatrix4 *, bMatrix4 *)",
+      "source": "src/game_core/src/ecstasy/emathe.cpp",
+      "signature": "void eOrthonormalizeMatrix(Memory& m,std::uint32_t a)",
+      "raw": "local/task0044/math/0011c108",
+      "status": "instruction_and_decompilation_reviewed",
+      "changes": "same bounded arithmetic; canonical original namespace"
+    },
+    {
+      "retail_address": "0x0011B248",
+      "debug_address": "0x0011B5F0",
+      "reference_name": "eMulMatrix(bMatrix4 *, bMatrix4 *, bMatrix4 *)",
+      "source": "src/game_core/src/ecstasy/emathe.cpp",
+      "signature": "void eMulMatrix(SolverMatrix&out,const SolverMatrix&a,const SolverMatrix&b)",
+      "raw": "local/task0044/math/0011b5f0",
+      "status": "instruction_and_decompilation_reviewed",
+      "changes": "same bounded arithmetic; canonical original namespace"
+    }
+  ],
+  "additional_functions": [
+    {
+      "retail_projection": "Sub_00153458",
+      "debug_address": "0x001530A8",
+      "identifier": "GetRoadNoiseGridValue",
+      "source": "src/game_core/indep/src/track.cpp",
+      "signature": "float GetRoadNoiseGridValue(Memory& m,std::int32_t x,std::int32_t y)",
+      "evidence_id": "E-0044-M02"
+    },
+    {
+      "retail_projection": "Sub_00153498",
+      "debug_address": "0x001530E8",
+      "identifier": "GetRoadNoise",
+      "source": "src/game_core/indep/src/track.cpp",
+      "signature": "float GetRoadNoise(Memory& m,std::uint32_t point,std::int32_t material)",
+      "evidence_id": "E-0044-M02"
+    },
+    {
+      "retail_projection": "Sub_0019DA30",
+      "debug_address": "0x0019B358",
+      "identifier": "Sub_0019B358",
+      "source": "src/game_core/indep/src/rigidbody.cpp",
+      "signature": "void Sub_0019B358(Memory& m)",
+      "evidence_id": "E-0044-M02"
+    },
+    {
+      "retail_projection": "Sub_001395B0",
+      "debug_address": "0x00139510",
+      "identifier": "Sub_00139510",
+      "source": "src/game_core/indep/src/physicscar.cpp",
+      "signature": "void Sub_00139510(Memory& m)",
+      "evidence_id": "E-0044-M02"
+    },
+    {
+      "retail_projection": "Sub_0011B6E0",
+      "debug_address": "0x0011BA88",
+      "identifier": "eSin",
+      "source": "src/game_core/src/ecstasy/emathe.cpp",
+      "signature": "float eSin(Memory&m,float f12)",
+      "evidence_id": "E-0044-M02"
+    },
+    {
+      "retail_projection": "Sub_001A57E0",
+      "debug_address": "0x001A2FC0",
+      "identifier": "Sub_001A2FC0",
+      "source": "src/game_core/indep/src/wheel.cpp",
+      "signature": "void Sub_001A2FC0(Memory&m)",
+      "evidence_id": "E-0044-M02"
+    },
+    {
+      "retail_projection": "Sub_0025AFA8",
+      "debug_address": "0x00254350",
+      "identifier": "Sub_00254350",
+      "source": "src/game_core/src/bMatrix.cpp",
+      "signature": "void Sub_00254350(Memory&m)",
+      "evidence_id": "E-0044-M02"
+    },
+    {
+      "debug_address": "0x0011BC48",
+      "identifier": "eRotateY",
+      "source": "src/game_core/src/ecstasy/emathe.cpp",
+      "signature": "void eRotateY(Memory&,SolverMatrix&,const SolverMatrix&,std::uint16_t)",
+      "evidence_id": "E-0044-M02",
+      "review": "Full original rotation including exactly one matrix multiplication; CarState directly invokes it.",
+      "private_captures": {
+        "decompile": {
+          "path": "local/task0044/root-extra/0011bc48.decompile.json",
+          "sha256": "20522ae815223bf85d53f94c38bdd2eb0d3678b28bf4fa67b5e57f5999fafdcd"
+        },
+        "listing": {
+          "path": "local/task0044/root-extra/0011bc48.listing.json",
+          "sha256": "78aa853ed562a83f0b1c62333b1cfac8e188fce929c2f8d3c2fa863111437796"
+        }
+      }
+    },
+    {
+      "debug_address": "0x0011BD10",
+      "identifier": "eRotateZ",
+      "source": "src/game_core/src/ecstasy/emathe.cpp",
+      "signature": "void eRotateZ(Memory&,SolverMatrix&,const SolverMatrix&,std::uint16_t)",
+      "evidence_id": "E-0044-M02",
+      "review": "Full original rotation including exactly one matrix multiplication; CarState directly invokes it.",
+      "private_captures": {
+        "decompile": {
+          "path": "local/task0044/root-extra/0011bd10.decompile.json",
+          "sha256": "b519b0c2621c6caa07b9574a839e16d33c572a6fdf2e5fae668038bb25c3b693"
+        },
+        "listing": {
+          "path": "local/task0044/root-extra/0011bd10.listing.json",
+          "sha256": "10726f367372ecd8541c73a586df1596f53cddb90b11a3f2562651096775044e"
+        }
+      }
+    }
+  ]
+}

@@ -483,3 +483,37 @@ and symbol-recovery edits are preserved. No commit created; no Verified promotio
 Continuation: open CarViewer and use its Test drive button directly. Remaining TASK-0038
 work is the previously deferred synchronized original numerical comparison, with original
 active-scene/paused/owned entry-return prerequisites above. This redesign is complete.
+
+
+### TASK-0044 continuation, 2026-10-17
+
+The user approved Debug behavior as the driving authority. TASK-0044 supersedes the Retail
+backend implementation with the canonical original-class chain and dedicated Debug image
+loader; historical evidence above is retained, not relabeled. See
+[Debug audit](../../docs/DEBUG_DRIVING_AUDIT.md). Native-image driving and real owned-window
+23-check interaction acceptance passed in local/task0044/window-idle. Original synchronized
+Debug numerical certification remains blocked by PINE probe timeout/no runnable original
+state. Retail oracle hooks cannot certify Debug. No Verified promotion. Continue numerical
+work with TASK-0044's Debug addresses, matching initial state/input/time/contact conditions.
+
+
+### TASK-0045 continuation - grip and materials
+
+Test drive now supports Uniform ROAD/DIRT/GRASS/SAND/SNOW and per-wheel Zones from original
+Debug material data, plus a collapsed read-only grip panel. Same canonical PhysicsCar/Wheel
+implementation; geometry/labels are tools, not recovered track topology. See
+[DRIVING_GRIP.md](../../docs/DRIVING_GRIP.md) and TASK-0045 for evidence, checks and remaining
+original certification boundary. No new physics tuning controls or function keys. The new
+world-recapture -> Escape -> Return test also corrected forwarding of mouse-button releases
+to ImGui during capture; the formerly hidden stuck-button case no longer needs F8 to clear.
+
+
+## E-0038-TM01 - Test-track search supporting original comparison
+
+Read reverse/structures/debug-test-track-search.md. Read-only Debug Ghidra and
+separate configured Retail asset inspection did not confirm a dedicated vehicle
+handling map. Debug table34201 is external strideA0; available Retail table is
+strideA4, so its30 normal routes cannot establish Debug map availability. Debug
+loader explicitly clears track54, but its purpose is unknown. Supplied DEBUG_VER
+has ELF/MAP only. Next prerequisite: matching Debug GLOBAL/track resources; no
+track algorithm or certification status changed.

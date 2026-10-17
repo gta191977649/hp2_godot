@@ -534,3 +534,71 @@ behavior is transplanted, and whole-entry gaps continue to throw.
 ## TASK-0043 names versus containing functions
 
 E-0043-T01 retains TitleStringId_001F96B8: its title block appears inside the Debug tEventTreeView constructor and is not a separately named call. E-0043-F01 identifies EventInfo and 11 fields using independently adopted getters plus live memory/type evidence. E-0043-M01 accounts for all 822 supported class-method rows; details and bounded unknowns are in CLASS_MAPPING_COMPLETION.md.
+
+
+## TASK-0044 Debug driving audit, 2026-10-17
+
+Behavior authority for driving is now the user-authorized Debug NFSHP2.ELF, SHA-256
+815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b. Read-only Ghidra
+queries established original methods, source markers, field accesses, vtables/adjustments,
+static initializer/table arguments and scheduling. The 151-entry legacy ledger and 207
+Debug records retain per-function scope and exclusions. See DEBUG_DRIVING_AUDIT.md and
+reverse/task0044 for findings, counterevidence and canonical call chain. Debug date/revision
+remains unknown; no record was promoted to Verified.
+
+Important counterevidence: symbol-named damping samples are not Table headers; Debug
+AngularMomentumDamping is 00308518, its samples 00308500. DriveTrain derivative must read
+003077C8, not Retail 00310050u. Homogeneous transform addend is 00317B20. Tests caught
+first-step rejection, low-speed throttle override and nonzero-W publication respectively.
+Debug clutch/history, shift-table layout and bATan behavior differ from Retail; migrations
+are audited algorithm changes, not names or uniform address shifts. Arbitrary stack W and
+EE exceptional domains remain explicit projection limits.
+
+Original numerical comparison is blocked by PINE/MCP probe timeout with no active runnable
+Debug scenario. The existing Retail driving oracle is not valid for this target. Required
+continuation is an explicitly Debug-addressed, same-state/input/time/contact trace at Move
+00137D18 and component entries, then per-field errors/coverage. PC fixtures, deterministic
+replay and real-window usability cannot replace that evidence.
+
+
+## TASK-0045 grip and terrain audit, 2026-10-17
+
+Read-only Debug Ghidra audit covers all33 TerrainTypeInfo rows, 31 bounded functions,
+original types, load/slip/force/rolling/noise and traction/catchup/yaw sources. Exact bits,
+addresses, source ownership, instructions and exclusions are in reverse/task0045/tire-audit.md,
+tire-audit.json and terrain-rows.json. Five new address records are Decompiled only; original
+numerical equivalence remains unknown. No new supported-path arithmetic mismatch was found
+for the approved five surfaces. The sole original-body change corrects the exceptional mode3
+VRSQRT diagnostic anchor from Retail001A52EC to Debug001A2AC4. CAR32 is original and valid for
+diagnostics; the older noise projection guard still excludes it, outside this selector's scope.
+
+The surface observer reads stored Wheel fields, not simultaneous recomputed force budgets:
+TractionUsage is capped before later force correction, and Slip differs from CurrentSlip.
+Road noise is an original sampled perturbation. Static/dynamic multipliers are modest
+(e.g. SNOW .95/.938125), while SAND rolling multiplier is2; these are not replaced with
+hypothetical ice handling. The native scenario tests preserve exact data and record resulting
+trajectories without prescribing a relative braking/sliding distance. Full track/environment,
+water/walls/effects/AI and exceptional EE domains remain explicit boundaries. PINE probe for
+original certification again returned blocked/timed out; Retail oracle hooks cannot certify
+Debug. See DRIVING_GRIP.md for usage and continuation.
+
+## TASK-0046 - original player and skid chain, 2026-10-17
+
+E-0046-C01/P01/S01..S04/U01 retain read-only Debug815b60c7...332f1b evidence.
+RealDriver initialization, gear handlers, throttle/brake/reverse, steering tables and
+Drive now precede the canonical PhysicsCar.Move. Important instruction details:
+BrakeInput264 drives reverse, not ReverseInput26c; steering CVT.W.S precedes INTEGER
+DIV360; burnout uses WorldTimeElapsed and strict allow-time cancellation. Records
+and counterevidence are in reverse/task0046 and the per-function Debug namespace.
+
+Wheel/SkidMaker/SkidSet/SkidSegment preserve the original compressed geometry,
+capacity, material width, two heights, intensity lower bound, pixel fade and render
+LRU. AddSegment bounding expansion surprisingly uses travel distance, not tire width.
+Debug AttachSolidPolys/AttachAlphaPolys select context from signed RenderingOrder29
+and GlossMapInAlpha74, disproving reuse of Retail bWriteZ50. Godot consumes original
+commands and decoded textures through an explicit bounded render adapter; it does not
+generate stripes. Original game replay/editor/player paths retain evidenced gates.
+
+Native/Godot regression and69 OS checks establish supported tool functionality only.
+PCSX2 probe again timed out. One synthetic clan, host device/camera/raster services,
+zero-length VRSQRT and unsupported domains remain explicit limits; no Verified claim.

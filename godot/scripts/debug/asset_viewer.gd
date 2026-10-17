@@ -35,6 +35,13 @@ var car_catalog: Array = []
 var driving: RefCounted
 var focused := true
 var test_drive_pending := false
+var track_model: Node3D
+var track_catalog: Array = []
+var track_state: Dictionary = {}
+var track_pending := false
+var render_collision := false
+var render_material := false
+var track_debug_driving := false
 
 func _ready() -> void:
 	if DebugTools.host == null or not DebugTools.host.is_debug_build():
@@ -46,14 +53,21 @@ func _ready() -> void:
 		get_window().size = Vector2i(1280, 800)
 	_build_environment()
 	_build_fixture()
-	if viewer_kind == "car":
-		car_model = ClassDB.instantiate("Ps2CarViewer")
-		add_child(car_model)
-		car_catalog = car_model.get_catalog()
-		driving = preload("res://scripts/debug/driving_lab.gd").new(self)
+	car_model = ClassDB.instantiate("Ps2CarViewer")
+	add_child(car_model)
+	car_catalog = car_model.get_catalog()
+	driving = preload("res://scripts/debug/driving_lab.gd").new(self)
+	if viewer_kind == "track":
+		track_model = ClassDB.instantiate("Ps2TrackViewer")
+		add_child(track_model)
+		track_catalog = track_model.get_catalog()
+		car_model.visible = false
+		camera.far = 20000
 	reset_camera()
 	refresh_state()
-	DebugTools.write_log("CarViewer: ready for CARS/<model>/GEOMETRY.BIN" if viewer_kind == "car" else "TrackViewer: synthetic fixture; loader not implemented")
+	DebugTools.write_log("CarViewer: ready for CARS/<model>/GEOMETRY.BIN" if viewer_kind == "car" else "TrackViewer: ready for original track catalogue")
+	if "--track-smoke" in OS.get_cmdline_user_args():
+		add_child(preload("res://scripts/debug/track_smoke.gd").new())
 	var explicit_load := false
 	if "--driving-smoke" in OS.get_cmdline_user_args() or "--driving-asset-smoke" in OS.get_cmdline_user_args() or "--driving-os-smoke" in OS.get_cmdline_user_args():
 		explicit_load = true
@@ -76,10 +90,24 @@ func _ready() -> void:
 			DebugTools.request("load", argument.trim_prefix("--car-load="))
 		if argument == "--preview" and viewer_kind == "car":
 			set_preview_mode(true)
+		if argument == "--track-render-collision" and viewer_kind == "track":
+			render_collision = true
+		if argument == "--track-render-material" and viewer_kind == "track":
+			render_material = true
+		if argument == "--track-drive" and viewer_kind == "track":
+			test_drive_pending = true
+		if argument.begins_with("--track-load=") and viewer_kind == "track":
+			explicit_load = true
+			DebugTools.request("load", "TRACKS/TRACKB%s.LZC" % argument.trim_prefix("--track-load="))
 		if argument.begins_with("--viewer-capture="):
 			_capture.call_deferred(argument.trim_prefix("--viewer-capture="))
-	if viewer_kind == "car" and not explicit_load and "--viewer-smoke" not in OS.get_cmdline_user_args():
-		_select_initial_car.call_deferred()
+	if "--viewer-smoke" not in OS.get_cmdline_user_args():
+		if viewer_kind == "car" and not explicit_load:
+			_select_initial_car.call_deferred()
+		elif viewer_kind == "track":
+			_select_initial_car.call_deferred()
+			if not explicit_load and not track_catalog.is_empty():
+				DebugTools.request("load", str(track_catalog[0].path))
 
 func _select_initial_car() -> void:
 	for car in car_catalog:
@@ -92,14 +120,18 @@ func _select_initial_car() -> void:
 
 func _capture(path: String) -> void:
 	await get_tree().create_timer(0.5).timeout
-	while pending_load:
+	while pending_load or track_pending or test_drive_pending:
 		await get_tree().process_frame
+	await get_tree().create_timer(1.0).timeout
 	# Explicit capture also works while the OS has occluded/minimized this debug window.
 	RenderingServer.viewport_set_update_mode(get_viewport().get_viewport_rid(), RenderingServer.VIEWPORT_UPDATE_ALWAYS)
 	RenderingServer.force_draw(false)
 	await get_tree().process_frame
 	RenderingServer.force_draw(false)
 	var result := get_viewport().get_texture().get_image().save_png(path)
+	if track_model != null:
+		print("TRACK_RENDER_STATS: ", track_model.get_state())
+		print("TRACK_FRAME_STATS: fps=", Engine.get_frames_per_second(), " smoothed_ms=", DebugTools.frame_ms)
 	print("VIEWER_CAPTURE_OK: ", path, " result=", result)
 	get_tree().quit(0 if result == OK else 1)
 
@@ -236,6 +268,18 @@ func viewer_ui_snapshot() -> Dictionary:
 			state["diagnostic"] = str(state.get("diagnostic", "")) + "\n" + str(native.error)
 			if str(state.get("status", "")) == "Loaded":
 				state["status"] = "Render failed"
+	if track_model != null:
+		state["tracks"] = track_catalog
+		state["render_collision"] = render_collision
+		state["render_material"] = render_material
+		state["debug_ready"] = bool(track_state.get("debug_ready", false)) and not track_pending
+		state["debug_diagnostic"] = str(track_state.get("debug_diagnostic", ""))
+		state["material_legend"] = track_state.get("material_legend", [])
+		state["track_id"] = track_state.get("track_id", -1)
+		state["rendering"] = str(track_state.get("summary", ""))
+		state["diagnostic"] = str(track_state.get("diagnostic", "")) + str(track_state.get("error", "")) + ("\n" + driving.error if not driving.error.is_empty() else "")
+		if track_pending:
+			state["status"] = str(track_state.get("phase", "Loading"))
 	return state
 
 func _queue_car(result: Dictionary, frame: bool = true) -> void:
@@ -254,8 +298,9 @@ func _publish_car_result(result: Dictionary, frame: bool = true) -> void:
 		car_model.set_inspection(inspection)
 		car_state = car_model.get_state()
 	var detail := str(car_state.get("diagnostic", "")) if car_state.get("ok", false) else str(result.get("error", "Vehicle load failed"))
-	DebugTools.host.viewer_loaded(bool(car_state.get("ok", false)), detail, str(car_state.get("summary", "")))
-	if car_state.get("ok", false) and frame:
+	if viewer_kind == "car":
+		DebugTools.host.viewer_loaded(bool(car_state.get("ok", false)), detail, str(car_state.get("summary", "")))
+	if viewer_kind == "car" and car_state.get("ok", false) and frame:
 		frame_target()
 	refresh_state()
 
@@ -264,7 +309,17 @@ func viewer_action(action: String) -> void:
 		var requested_source := str(DebugTools.host.viewer_state().source)
 		driving.stop()
 		DebugTools.host.viewer_apply(action, requested_source)
-	if car_model != null:
+	if track_model != null:
+		if action in ["clear", "fixture"]:
+			track_model.clear_track()
+			track_state = track_model.get_state()
+			track_pending = false
+		if action == "load":
+			track_state = track_model.load_track(str(DebugTools.host.viewer_state().source))
+			track_pending = bool(track_state.get("loading", false))
+			if not track_pending:
+				_publish_track_result()
+	if car_model != null and viewer_kind == "car":
 		if action in ["clear", "fixture"]:
 			pending_load = false
 			car_model.clear_car()
@@ -283,14 +338,29 @@ func viewer_ui_action(action: Dictionary) -> void:
 	if car_model == null:
 		return
 	var command := str(action.get("action", ""))
-	if command == "test_drive":
+	if command in ["test_drive", "track_drive"]:
+		if viewer_kind == "track" and not track_state.get("ok", false):
+			driving.error = "Load an original track before driving"
+			return
 		driving.start()
+		_sync_track_debug()
 		return
 	if driving.engaged():
 		if command.begins_with("drive_"):
 			driving.action(action)
 		return
 	match command:
+		"render_collision", "render_material":
+			if viewer_kind != "track" or not track_state.get("debug_ready", false) or track_pending:
+				return
+			if command == "render_collision":
+				render_collision = bool(action.get("enabled", false))
+			else:
+				render_material = bool(action.get("enabled", false))
+			_sync_track_debug()
+			refresh_state()
+		"select_track":
+			DebugTools.request("load", str(action.get("source", "")))
 		"preview":
 			set_preview_mode(bool(action.get("enabled", false)))
 		"select_car":
@@ -300,6 +370,9 @@ func viewer_ui_action(action: Dictionary) -> void:
 				if int(car.id) == selected_id:
 					selected_path = str(car.path)
 					break
+			if viewer_kind == "track":
+				_queue_car(car_model.request_car(selected_path, selected_id, int(action.get("skin_id", -1))), false)
+				return
 			var applied: Dictionary = DebugTools.host.viewer_apply("load", selected_path)
 			if applied.get("ok", false):
 				last_rendering = ""
@@ -371,8 +444,21 @@ func frame_target() -> void:
 		orbit_distance = maxf(2, bounds.size.length() * 1.3)
 		_update_orbit()
 	if viewer_kind == "track":
-		camera.position = Vector3(26, 25, 32)
-		camera.look_at(Vector3(3, 0, -2))
+		if track_state.get("ok", false):
+			if track_state.has("start_position"):
+				var position: Vector3 = track_state.start_position
+				var forward: Vector3 = track_state.start_forward
+				camera.position = position - forward * 20 + Vector3.UP * 10
+				camera.look_at(position + forward * 20 + Vector3.UP * 2)
+				move_speed = 40
+			else:
+				var bounds: AABB = track_state.bounds
+				var center := bounds.get_center()
+				camera.position = center + Vector3(100, 100, 100)
+				camera.look_at(center)
+		else:
+			camera.position = Vector3(26, 25, 32)
+			camera.look_at(Vector3(3, 0, -2))
 
 func release_camera() -> void:
 	orbit_drag = false
@@ -385,6 +471,10 @@ func _input(event: InputEvent) -> void:
 	var in_drive: bool = driving != null and driving.engaged()
 	# Relative camera motion belongs to the captured tool camera, not ImGui.
 	if in_drive and driving.captures_pointer() and (event is InputEventMouseMotion or event is InputEventMouseButton):
+		# A world press can capture the pointer before its release arrives. ImGui
+		# saw that press, so it must see releases even while camera input is captured.
+		if event is InputEventMouseButton and not event.pressed:
+			DebugTools.handle_input(event)
 		driving.handle_input(event)
 		get_viewport().set_input_as_handled()
 		return
@@ -454,6 +544,13 @@ func _process(delta: float) -> void:
 	if camera == null:
 		return
 	updates += 1
+	if track_model != null and track_debug_driving != (driving != null and driving.engaged()):
+		_sync_track_debug()
+	if track_pending:
+		track_state = track_model.pump_load()
+		if not track_state.get("loading", false):
+			track_pending = false
+			_publish_track_result()
 	if car_model != null and pending_load:
 		max_load_frame_ms = maxf(max_load_frame_ms, delta * 1000)
 		var loaded: Dictionary = car_model.pump_load()
@@ -469,9 +566,10 @@ func _process(delta: float) -> void:
 						elif preview_errors.has(int(skin.id)):
 							skin["preview_error"] = preview_errors[int(skin.id)]
 			_publish_car_result(loaded, frame_on_load)
-	if test_drive_pending and not pending_load and car_state.get("ok", false):
+	if test_drive_pending and not pending_load and not track_pending and car_state.get("ok", false) and (viewer_kind == "car" or track_state.get("ok", false)):
 		test_drive_pending = false
 		driving.start()
+		_sync_track_debug()
 	if driving != null and driving.engaged():
 		driving.process(delta)
 	elif DebugTools.input_captured():
@@ -484,6 +582,11 @@ func _process(delta: float) -> void:
 	if viewer_kind == "car" and preview_mode and not (driving != null and driving.engaged()):
 		orbit_yaw = fposmod(orbit_yaw + PREVIEW_ORBIT_SPEED * delta, TAU)
 		_update_orbit()
+	if track_model != null and track_state.get("ok", false):
+		var track_frame: Dictionary = track_model.update_view(camera.position)
+		track_state = track_frame
+		if not track_frame.get("ok", false):
+			_publish_track_result()
 	DebugTools.host.viewer_camera("position=%s rotation=%s speed=%.1f" % [camera.position, camera.rotation_degrees, move_speed])
 	DebugTools.statistics = {"screen": "%sViewer" % viewer_kind.capitalize()}
 	if car_model != null and car_state.get("ok", false):
@@ -513,4 +616,34 @@ func _exit_tree() -> void:
 	release_camera()
 	if car_model != null:
 		car_model.clear_car()
+	if track_model != null:
+		track_model.clear_track()
 	DebugTools.unregister_scene(self)
+
+func _publish_track_result() -> void:
+	_sync_track_debug()
+	var ok := bool(track_state.get("ok", false))
+	DebugTools.host.viewer_loaded(ok, str(track_state.get("diagnostic", "")) if ok else str(track_state.get("error", "Track load failed")), str(track_state.get("summary", "")))
+	floor_node.visible = not ok
+	grid_node.visible = not ok
+	if ok:
+		frame_target()
+	refresh_state()
+
+func _sync_track_debug() -> void:
+	if track_model == null:
+		return
+	track_debug_driving = driving != null and driving.engaged()
+	var collision := render_collision and not track_debug_driving
+	var material := render_material and not track_debug_driving
+	var native: Dictionary = track_model.get_state()
+	if not native.get("debug_ready", false):
+		track_state = native
+		return
+	if bool(native.get("render_collision", false)) != collision:
+		track_model.set_render_collision(collision)
+		native = track_model.get_state()
+	if bool(native.get("render_material", false)) != material:
+		track_model.set_render_material(material)
+		native = track_model.get_state()
+	track_state = native

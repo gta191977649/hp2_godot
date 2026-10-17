@@ -2,16 +2,23 @@
 
 A native C++ reconstruction of *Need for Speed: Hot Pursuit 2* (PS2), with Godot as the host and rendering backend. The current target is the US PS2 release, `SLUS_203.62`, on Windows x86-64.
 
+The CarViewer **Test drive** closure now targets the user-supplied symbol-rich Debug
+`NFSHP2.ELF` separately (TASK-0044). Its canonical original-class implementation,
+version binding and remaining limits are documented in [DEBUG_DRIVING_AUDIT.md](docs/DEBUG_DRIVING_AUDIT.md).
+
+Player transmission controls, the centralized driving InputMap and original skid
+rendering are described in [PLAYER_DRIVING.md](docs/PLAYER_DRIVING.md) (TASK-0046).
+
 ## 1. Project Goals
 
 Reconstruct the original game's behavior from binary and asset evidence and run it natively on modern PC hardware. Preserve original logic, names and function addresses where recovered; keep unknown behavior explicit rather than replacing it with guesses or Godot physics.
 
 ## 2. Architecture
 
-- **`src/game_core/`** — independent C++17 game logic and class/function templates, without Godot dependencies. Confirmed original directories are preserved; classes with unknown paths remain at this directory's root.
-- **`src/port/`** — native frontend runtime, asset handling and render-command generation.
-- **`src/platform/` + `godot/`** — platform services, GDExtension adapters and the Godot host. Godot currently handles rendering, windowing, input, audio and frame scheduling; some frontend orchestration also remains in GDScript.
-- **`reverse/`, `docs/`, `tasks/`** — evidence, recovery records, progress and scoped work items.
+- **`src/game_core/`** â€” independent C++17 game logic and class/function templates, without Godot dependencies. Confirmed original directories are preserved; classes with unknown paths remain at this directory's root.
+- **`src/port/`** â€” native frontend runtime, asset handling and render-command generation.
+- **`src/platform/` + `godot/`** â€” platform services, GDExtension adapters and the Godot host. Godot currently handles rendering, windowing, input, audio and frame scheduling; some frontend orchestration also remains in GDScript.
+- **`reverse/`, `docs/`, `tasks/`** â€” evidence, recovery records, progress and scoped work items.
 
 Unimplemented recovered paths throw `hp2::NotImplemented` with their original ELF address.
 
@@ -61,15 +68,18 @@ frontend. In CarViewer, `viewer.load "CARS/911TURBO/GEOMETRY.BIN"` loads origina
 geometry, shared textures and static parts, with recovered LOD selection. Its material
 uses the recovered VU base material slice; full original GS materials remain incomplete.
 Viewer controls/FPS are native ImGui, with all 64 original cars and 235 skin records.
-TrackViewer still reports `Loader not implemented`. Both start with asset-free fixtures. See the
+TrackViewer loads all 30 shipped tracks, original textures/mips and scenery, and can enter
+real-track driving with topology-based wheel materials and static track collision. See
+[the track guide](docs/TRACK_VIEWER.md) for version boundaries and remaining render limits.
+Both retain explicit asset-free fixtures. See the
 [viewer guide](docs/DEBUG_VIEWERS.md) for camera controls, commands and direct launch.
 
 ## 5. Docs & Help
 
-- [Development](docs/DEVELOPMENT.md) — setup, build, launch and troubleshooting.
-- [Architecture](docs/ARCHITECTURE.md) and [decisions](docs/DECISIONS.md) — layer ownership and recorded design choices.
-- [Progress](docs/PROGRESS.md) and [session log](docs/PROGRESS_LOG.md) — current state and its evidence/history.
-- [Class templates](docs/CLASS_TEMPLATES.md) and [source paths](docs/CLASS_SOURCE_PATHS.md) — existing scaffolding and how to continue recovery.
+- [Development](docs/DEVELOPMENT.md) â€” setup, build, launch and troubleshooting.
+- [Architecture](docs/ARCHITECTURE.md) and [decisions](docs/DECISIONS.md) â€” layer ownership and recorded design choices.
+- [Progress](docs/PROGRESS.md) and [session log](docs/PROGRESS_LOG.md) â€” current state and its evidence/history.
+- [Class templates](docs/CLASS_TEMPLATES.md) and [source paths](docs/CLASS_SOURCE_PATHS.md) â€” existing scaffolding and how to continue recovery.
 
 Before contributing, read [AGENTS.md](AGENTS.md), the binding [AGENT.md](AGENT.md) rules and the selected file under `tasks/`. Record evidence and limitations, preserve existing implementations, and keep proprietary inputs outside Git.
 
@@ -87,3 +97,11 @@ non-spinning matrix. Changes update existing resources and continue while F8 is 
 Disabling resets the static pose; selected speed and switch survive car changes.
 `--wheel-blur` enables it on direct launch. Original contact/damage gates and physics remain
 untranslated. Missing resources fail explicitly; no synthetic blur texture is generated.
+
+Grip/material test controls and original-data boundaries: [DRIVING_GRIP.md](docs/DRIVING_GRIP.md).
+
+
+Independent single-car runtime (TASK-0051): launch `godot/scenes/race_scene.tscn`
+with `--track=11 --car=ELISE`. It uses the same native frame packets and GPU host as
+TrackViewer in Debug and Release. See [Track rendering](docs/TRACK_VIEWER.md) for
+controls, tests and remaining dynamic environment-capture limitations.

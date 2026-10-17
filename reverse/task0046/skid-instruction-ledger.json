@@ -1,0 +1,333 @@
+{
+  "schema_version": 1,
+  "task": "TASK-0046",
+  "binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "evidence_ids": [
+    "E-0046-S01",
+    "E-0046-S02",
+    "E-0046-S03",
+    "E-0046-S04"
+  ],
+  "functions": [
+    {
+      "debug_address": "0x001A7E98",
+      "size": "108",
+      "mangled_name": "SetPoints__11SkidSegmentP8bVector3T1",
+      "reference_name": "SkidSegment::SetPoints(bVector3 *, bVector3 *)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x001A7F03",
+      "listing_sha256": "3db1dd93ad329e35e2d43cdea3180903525b8d0debaf4ce5a05552d7bddb288b",
+      "listing_private": "local\\task0046\\skids\\001a7e98-listing.txt"
+    },
+    {
+      "debug_address": "0x001A7F08",
+      "size": "116",
+      "mangled_name": "GetPoints__11SkidSegmentP8bVector3T1",
+      "reference_name": "SkidSegment::GetPoints(bVector3 *, bVector3 *)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x001A7F7B",
+      "listing_sha256": "9b6ae94a2975ef41a58d3209b2ab6a856b7ecf88433ac26250badf021efdafe7",
+      "listing_private": "local\\task0046\\skids\\001a7f08-listing.txt"
+    },
+    {
+      "debug_address": "0x001A7F80",
+      "size": "132",
+      "mangled_name": "GetEndPoints__11SkidSegmentP8bVector3T1",
+      "reference_name": "SkidSegment::GetEndPoints(bVector3 *, bVector3 *)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x001A8003",
+      "listing_sha256": "9224c50d3429f1e0fb291b6acff115ac6dd7dc6d5d163b2ba5e4d356983793d5",
+      "listing_private": "local\\task0046\\skids\\001a7f80-listing.txt"
+    },
+    {
+      "debug_address": "0x001A8008",
+      "size": "204",
+      "mangled_name": "__7SkidSetP9SkidMakerP3CarP8bVector3T3if",
+      "reference_name": "SkidSet::SkidSet(SkidMaker *, Car *, bVector3 *, bVector3 *, int, float)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x001A80D3",
+      "listing_sha256": "8538f2d1daa0ffa47ce1d035f8da9d0dabd2f97f8ab32c69d562b1123b3ed382",
+      "listing_private": "local\\task0046\\skids\\001a8008-listing.txt"
+    },
+    {
+      "debug_address": "0x001A80D8",
+      "size": "116",
+      "mangled_name": "_$_7SkidSet",
+      "reference_name": "SkidSet::~SkidSet(void)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x001A814B",
+      "listing_sha256": "812583b337405fb0c2fa2834ba188c329f5d6771e99f2f021035d03b5929a1c8",
+      "listing_private": "local\\task0046\\skids\\001a80d8-listing.txt"
+    },
+    {
+      "debug_address": "0x001A8150",
+      "size": "580",
+      "mangled_name": "AddSegment__7SkidSetP8bVector3T1f",
+      "reference_name": "SkidSet::AddSegment(bVector3 *, bVector3 *, float)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x001A8393",
+      "listing_sha256": "df34b9adbabf778d4d1af75c562738996253cdd1a46ef9a5d7725f16bc494958",
+      "listing_private": "local\\task0046\\skids\\001a8150-listing.txt"
+    },
+    {
+      "debug_address": "0x001A8398",
+      "size": "32",
+      "mangled_name": "FinishedAddingSkids__7SkidSet",
+      "reference_name": "SkidSet::FinishedAddingSkids(void)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x001A83B7",
+      "listing_sha256": "75c74fb5b0ae6f14db3566bf10836b4ff76adf1960f823d4967906e2b9c5d569",
+      "listing_private": "local\\task0046\\skids\\001a8398-listing.txt"
+    },
+    {
+      "debug_address": "0x001A83B8",
+      "size": "444",
+      "mangled_name": "Render__7SkidSetUc",
+      "reference_name": "SkidSet::Render(unsigned char)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x001A8573",
+      "listing_sha256": "624dbbeaf7552c925845c31f16615efa0c49440a3e41a2867e6c546171f19bfa",
+      "listing_private": "local\\task0046\\skids\\001a83b8-listing.txt"
+    },
+    {
+      "debug_address": "0x001A8578",
+      "size": "204",
+      "mangled_name": "CreateNewSkidSet__FP9SkidMakerP3CarP8bVector3T2if",
+      "reference_name": "CreateNewSkidSet(SkidMaker *, Car *, bVector3 *, bVector3 *, int, float)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x001A8643",
+      "listing_sha256": "8f43d59587c39abb2cf104b0bd9a70bf627a6d6246a7703c0d65bcc8b2d7bef8",
+      "listing_private": "local\\task0046\\skids\\001a8578-listing.txt"
+    },
+    {
+      "debug_address": "0x001A8648",
+      "size": "300",
+      "mangled_name": "MakeSkid__9SkidMakerP3CarP8bVector3T2if",
+      "reference_name": "SkidMaker::MakeSkid(Car *, bVector3 *, bVector3 *, int, float)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x001A8773",
+      "listing_sha256": "59032d68a28e4a7f1cc2b5a251fc71362384cd225b0cc99c8d3cb803d4eed465",
+      "listing_private": "local\\task0046\\skids\\001a8648-listing.txt"
+    },
+    {
+      "debug_address": "0x001A8778",
+      "size": "28",
+      "mangled_name": "MakeNoSkid__9SkidMaker",
+      "reference_name": "SkidMaker::MakeNoSkid(void)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x001A8793",
+      "listing_sha256": "ae11b660e9e83fb08c555eb8184c77d8f7068d40422f35c9784e1ebc8d4ffa63",
+      "listing_private": "local\\task0046\\skids\\001a8778-listing.txt"
+    },
+    {
+      "debug_address": "0x001A8798",
+      "size": "184",
+      "mangled_name": "InitSkids__Fv",
+      "reference_name": "InitSkids(void)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x001A884F",
+      "listing_sha256": "4db1a17fd797ce77f9af5a5df745e1699ff83061645c3d1b2c0f7b3e71a1e67f",
+      "listing_private": "local\\task0046\\skids\\001a8798-listing.txt"
+    },
+    {
+      "debug_address": "0x001A8850",
+      "size": "88",
+      "mangled_name": "CloseSkids__Fv",
+      "reference_name": "CloseSkids(void)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x001A88A7",
+      "listing_sha256": "ee0d2ceae21cc922afb836df31552d0b2d761d0cbdc0dbcfc3cbb9a1dda052b7",
+      "listing_private": "local\\task0046\\skids\\001a8850-listing.txt"
+    },
+    {
+      "debug_address": "0x001A88A8",
+      "size": "28",
+      "mangled_name": "DeleteThisSkid__FP7SkidSet",
+      "reference_name": "DeleteThisSkid(SkidSet *)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x001A88C3",
+      "listing_sha256": "f53e4429ac34854505e06875d8478ce95fdddbed5eea8972edc281e213217977",
+      "listing_private": "local\\task0046\\skids\\001a88a8-listing.txt"
+    },
+    {
+      "debug_address": "0x001A88C8",
+      "size": "408",
+      "mangled_name": "RenderSkids__FP4ClanP8bMatrix4P5eView",
+      "reference_name": "RenderSkids(Clan *, bMatrix4 *, eView *)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x001A8A5F",
+      "listing_sha256": "180140aa070a0578d3531feb62d1e960d111af6f82cc2f2651e3ec27a0e6c0b0",
+      "listing_private": "local\\task0046\\skids\\001a88c8-listing.txt"
+    },
+    {
+      "debug_address": "0x001A8B68",
+      "size": "20",
+      "mangled_name": "GetLastPoints__7SkidSetP8bVector3T1",
+      "reference_name": "SkidSet::GetLastPoints(bVector3 *, bVector3 *)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x001A8B7B",
+      "listing_sha256": "21cb03cdf7957be1b7c4e2afb08ab7c02a7c922b68d58727588bfce0f557a9c3",
+      "listing_private": "local\\task0046\\skids\\001a8b68-listing.txt"
+    },
+    {
+      "debug_address": "0x001A2CF8",
+      "size": "712",
+      "mangled_name": "MaybeMakeSkids__5WheelfP3Car",
+      "reference_name": "Wheel::MaybeMakeSkids(float, Car *)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x001A2FBF",
+      "listing_sha256": "1fd8f01c7d50f3bc12a8a00a3923c2cbe6c7358fed362676a5e77746e0d85fa8",
+      "listing_private": "local\\task0046\\skids\\001a2cf8-listing.txt"
+    },
+    {
+      "debug_address": "0x0010FD48",
+      "size": "252",
+      "mangled_name": "__5ePoly",
+      "reference_name": "ePoly::ePoly(void)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x0010FE43",
+      "listing_sha256": "a086d78d2d43859033cd8adb7023d3d93fe65dcd907849b6a0b10c769564dd7b",
+      "listing_private": "local\\task0046\\skids\\0010fd48-listing.txt"
+    },
+    {
+      "debug_address": "0x00110368",
+      "size": "704",
+      "mangled_name": "Render3D__5ePolyP11TextureInfoP8bMatrix4i",
+      "reference_name": "ePoly::Render3D(TextureInfo *, bMatrix4 *, int)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x00110627",
+      "listing_sha256": "6913f5def0e2e2d032965fcb4c3245c115ae84957fb6f6cc71dfefe8a90a0c6f",
+      "listing_private": "local\\task0046\\skids\\00110368-listing.txt"
+    },
+    {
+      "debug_address": "0x00107410",
+      "size": "68",
+      "mangled_name": "GetPixelSize__5eViewff",
+      "reference_name": "eView::GetPixelSize(float, float)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x00107453",
+      "listing_sha256": "d84bc2c8621f3b38aca6edac33642154122c3c24c0e94611cd3561632b25ebe1",
+      "listing_private": "local\\task0046\\skids\\00107410-listing.txt"
+    },
+    {
+      "debug_address": "0x0010D0A8",
+      "size": "292",
+      "mangled_name": "ClassifyAABB__FPC8bVector4T0PC8bMatrix4",
+      "reference_name": "ClassifyAABB(bVector4 const *, bVector4 const *, bMatrix4 const *)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x0010D1CB",
+      "listing_sha256": "ed17e9a0ebd052697e5beda800cb72fdbcb52ee5c3f1bc1fa75b146b8df76eeb",
+      "listing_private": "local\\task0046\\skids\\0010d0a8-listing.txt"
+    },
+    {
+      "debug_address": "0x0010D278",
+      "size": "32",
+      "mangled_name": "IsBoundingBoxVisible__FP8bVector3T0P8bMatrix4",
+      "reference_name": "IsBoundingBoxVisible(bVector3 *, bVector3 *, bMatrix4 *)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x0010D297",
+      "listing_sha256": "8440f2561235c4daed2399116909e030a5224c896712ddd90ffc49e5a1ba8e2c",
+      "listing_private": "local\\task0046\\skids\\0010d278-listing.txt"
+    },
+    {
+      "debug_address": "0x00251D28",
+      "size": "128",
+      "mangled_name": "bNormalize__FP8bVector3PC8bVector3f",
+      "reference_name": "bNormalize(bVector3 *, bVector3 const *, float)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x00251DA7",
+      "listing_sha256": "b3044027fb9f9731602b6d70bcb16b8a933ee262ee7fd428acab2cdd68b679d1",
+      "listing_private": "local\\task0046\\skids\\00251d28-listing.txt"
+    },
+    {
+      "debug_address": "0x00108AE0",
+      "size": "1016",
+      "mangled_name": "CreateTextureContext__FP11TextureInfo",
+      "reference_name": "CreateTextureContext(TextureInfo *)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x00108ED7",
+      "listing_sha256": "d6541bd9c93174207ba17ff77d169e52169e11bb48f20ec56100df6b7c7ad97f",
+      "listing_private": "local\\task0046\\skids\\00108ae0-listing.txt"
+    },
+    {
+      "debug_address": "0x001058D8",
+      "size": "2632",
+      "mangled_name": "UpdateGifTags__13eRenderTargetiiii",
+      "reference_name": "eRenderTarget::UpdateGifTags(int, int, int, int)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x0010631F",
+      "listing_sha256": "5065a03d6e70dd88232b616ad6b9981b986212fd169db42e7f586cf0d3add600",
+      "listing_private": "local\\task0046\\skids\\001058d8-listing.txt"
+    },
+    {
+      "debug_address": "0x0010A2D0",
+      "size": "1720",
+      "mangled_name": "AttachDmaDataListMain__FP9eDmaChainP12eDmaDataListP8DMAState",
+      "reference_name": "AttachDmaDataListMain(eDmaChain *, eDmaDataList *, DMAState *)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x0010A987",
+      "listing_sha256": "02432b97815f3ab960a97fcad60b85e562ec7433b47954017bcb35ff8a66b121",
+      "listing_private": "local\\task0046\\skids\\0010a2d0-listing.txt"
+    },
+    {
+      "debug_address": "0x0010BEF0",
+      "size": "572",
+      "mangled_name": "AttachSolidPolys__FP9eDmaChainT0",
+      "reference_name": "AttachSolidPolys(eDmaChain *, eDmaChain *)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x0010C12B",
+      "listing_sha256": "f674db67e6ef1ea48d9a495becdc986718ff83f514f90370be2933422b56716b",
+      "listing_private": "local\\task0046\\skids\\0010bef0-listing.txt"
+    },
+    {
+      "debug_address": "0x0010BBF8",
+      "size": "756",
+      "mangled_name": "AttachAlphaPolys__FP9eDmaChainT0",
+      "reference_name": "AttachAlphaPolys(eDmaChain *, eDmaChain *)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x0010BEEB",
+      "listing_sha256": "d2ab77759429d0cc27595ef347010e0421b90a0b030583cedc9346d66f76b7b5",
+      "listing_private": "local\\task0046\\skids\\0010bbf8-listing.txt"
+    },
+    {
+      "debug_address": "0x00106320",
+      "size": "2888",
+      "mangled_name": "SetScreenBuffers__Fv",
+      "reference_name": "SetScreenBuffers(void)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x00106E67",
+      "listing_sha256": "3fe53e69b76db1011af4b2dbd66b27ed5c246542667b4026f99d5be2160aec7b",
+      "listing_private": "local\\task0046\\skids\\00106320-listing.txt"
+    },
+    {
+      "debug_address": "0x001042E8",
+      "size": "124",
+      "mangled_name": "CalculateH__FUs",
+      "reference_name": "CalculateH(unsigned short)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x00104363",
+      "listing_sha256": "27983e38785c8b3d93dd5db0b6386403308aa42ce8b8895baaf2eae48f408a3f",
+      "listing_private": "local\\task0046\\skids\\001042e8-listing.txt"
+    },
+    {
+      "debug_address": "0x0010EA18",
+      "size": "1568",
+      "mangled_name": "CreateViewMatricies__FP5eViewP8bMatrix4T1T1T1T1T1fff",
+      "reference_name": "CreateViewMatricies(eView *, bMatrix4 *, bMatrix4 *, bMatrix4 *, bMatrix4 *, bMatrix4 *, bMatrix4 *, float, float, float)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x0010F037",
+      "listing_sha256": "4181aa5e30680a14d198204e91358ff731c6bdad5189ef845d15dd20bbe425c0",
+      "listing_private": "local\\task0046\\skids\\0010ea18-listing.txt"
+    },
+    {
+      "debug_address": "0x0024C8B0",
+      "size": "64",
+      "mangled_name": "bStringHash__FPCc",
+      "reference_name": "bStringHash(char const *)",
+      "evidence_id": "E-0041-I01",
+      "range_end": "0x0024C8EF",
+      "listing_sha256": "6c9887939d444d13855e0890915319f1a31b5c0086fd25fd2dba6da1458f52a5",
+      "listing_private": "local\\task0046\\skids\\0024c8b0-listing.txt"
+    }
+  ]
+}

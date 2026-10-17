@@ -35,9 +35,10 @@ std::string image_sha256(const std::vector<std::uint8_t>& source) {
     }
     std::ostringstream out;out<<std::hex<<std::setfill('0');for(auto v:h)out<<std::setw(8)<<v;return out.str();
 }
-Memory read_original_image(const std::filesystem::path& path) {
+namespace {
+Memory read_image(const std::filesystem::path& path,const std::string& expected_sha) {
     const auto data=bytes(path);
-    if(image_sha256(data)!="7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2")throw std::runtime_error("Original ELF SHA-256 does not match SLUS_203.62 recovery evidence");
+    if(image_sha256(data)!=expected_sha)throw std::runtime_error("Original ELF SHA-256 does not match the selected recovery evidence: "+expected_sha);
     const auto word=[&](std::size_t p){if(p>data.size()||4>data.size()-p)throw std::runtime_error("Truncated ELF field");return std::uint32_t(data[p])|(std::uint32_t(data[p+1])<<8)|(std::uint32_t(data[p+2])<<16)|(std::uint32_t(data[p+3])<<24);};
     const auto half=[&](std::size_t p){return word(p)&0xffffu;};
     if(word(0)!=0x464c457f||data[4]!=1||data[5]!=1||half(18)!=8)throw std::runtime_error("Expected original ELF32 little-endian MIPS image");
@@ -48,15 +49,13 @@ Memory read_original_image(const std::filesystem::path& path) {
       if(filesize>size||offset>data.size()||filesize>data.size()-offset||size>0x2000000u||address<0x100000u||std::uint64_t(address)+size>0x2000000u)throw std::runtime_error("Original ELF segment is out of bounded EE memory");
       std::vector<std::uint8_t> region(size);std::copy_n(data.begin()+offset,filesize,region.begin());memory.map(address,region);
     }
-    // Ghidra memory-block audit E-0038-B08 corroborates these data anchors.
-    if(memory.word(0x002b5430+0x3c)!=0x0019d4d0u || memory.word(0x002aeaa8+0x1c)!=0x00138e08u)throw std::runtime_error("Original data anchors disagree with Ghidra evidence");
     return memory;
 }
-std::filesystem::path original_image_path(const std::filesystem::path& root) {
-    if(const auto value=std::getenv("HP2_PS2_ELF"))if(*value)return value;
+std::filesystem::path image_path(const std::filesystem::path& root,const char* environment,const char* filename) {
+    if(const auto value=std::getenv(environment))if(*value)return value;
     auto directory=std::filesystem::absolute(root);
     for(unsigned depth=0;depth<8;++depth){
-    const auto config=directory/"config/ps2_elf.local.json";std::ifstream file(config);
+    const auto config=directory/"config"/filename;std::ifstream file(config);
     const std::string text{std::istreambuf_iterator<char>(file),{}};std::smatch match;
     if(std::regex_search(text,match,std::regex("\"elf\"\\s*:\\s*\"([^\"]+)\""))) {
       auto value=match[1].str();std::string decoded;for(std::size_t i=0;i<value.size();++i){if(value[i]=='\\'&&i+1<value.size()&&(value[i+1]=='\\'||value[i+1]=='/'))++i;decoded+=value[i];}
@@ -65,6 +64,16 @@ std::filesystem::path original_image_path(const std::filesystem::path& root) {
     if(directory==directory.parent_path())break;
     directory=directory.parent_path();
     }
-    throw std::runtime_error("Configure HP2_PS2_ELF or config/ps2_elf.local.json for original numeric tables");
+    throw std::runtime_error(std::string("Configure ")+environment+" or config/"+filename+" for the selected original ELF");
 }
+}
+Memory read_original_image(const std::filesystem::path& path) {
+    auto memory=read_image(path,"7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2");
+    // Historical Retail identity check E-0038-B08; not used by Debug driving.
+    if(memory.word(0x002b5430+0x3c)!=0x0019d4d0u || memory.word(0x002aeaa8+0x1c)!=0x00138e08u)throw std::runtime_error("Original data anchors disagree with Ghidra evidence");
+    return memory;
+}
+Memory read_debug_image(const std::filesystem::path& path) { return read_image(path,debug_elf_sha256); }
+std::filesystem::path original_image_path(const std::filesystem::path& root) { return image_path(root,"HP2_PS2_ELF","ps2_elf.local.json"); }
+std::filesystem::path debug_image_path(const std::filesystem::path& root) { return image_path(root,"HP2_PS2_DEBUG_ELF","ps2_debug_elf.local.json"); }
 }

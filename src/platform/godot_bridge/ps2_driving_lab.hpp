@@ -1,19 +1,11 @@
 #pragma once
-#include "game_core/port/driving/session.hpp"
-#include <godot_cpp/classes/ref_counted.hpp>
-#include <godot_cpp/variant/dictionary.hpp>
+#include "ps2_driving_runtime.hpp"
 namespace port::godot_bridge {
-// Port-side Debug entry. Never implements game physics in the host.
-class Ps2DrivingLab : public godot::RefCounted {
-    GDCLASS(Ps2DrivingLab,godot::RefCounted)
-    port::driving::Session session_;
+// Debug entry only; the runtime boundary owns the native Session and all behavior.
+class Ps2DrivingLab : public Ps2DrivingRuntime {
+    GDCLASS(Ps2DrivingLab, Ps2DrivingRuntime)
 protected:
     static void _bind_methods();
-public:
-    godot::Dictionary load_config(const godot::String& code);
-    godot::Dictionary action(const godot::String& name);
-    godot::Dictionary set_input(double throttle,double brake,double steering);
-    godot::Dictionary tick(double elapsed=0);
-    godot::Dictionary get_state()const;
+    bool requests_enabled() const override { return HP2_DEBUG_BUILD != 0; }
 };
 }

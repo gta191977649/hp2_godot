@@ -323,3 +323,67 @@ behavior is transplanted, and whole-entry gaps continue to throw.
 ## TASK-0043 class mapping interfaces
 
 Confirmed class methods now have whole-entry gap interfaces independently of typed host projections. Static port carriers preserve distinct original declaring scopes when flattened host signatures would collide. They copy neither native object storage nor lifetime semantics. See CLASS_MAPPING_COMPLETION.md.
+
+
+## TASK-0044: Debug driving has one canonical implementation
+
+The user-selected driving baseline is Debug NFSHP2.ELF SHA-256
+815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
+This explicitly supersedes the earlier Retail-only driving ownership paragraphs above;
+unrelated systems and historical Retail records keep their original version identity.
+CarViewer -> Session/NativeBackend -> hp2::recovered::PhysicsCar::Move is the production
+chain. Original component algorithms now reside in their evidenced original class/source;
+legacy projections forward only. ObjectView is explicit host storage binding, not a PS2 ABI
+claim. Debug vtable dispatch, per-operand global mapping and SHA-bound data loading prevent
+Retail/Debug address mixing. Synthetic plane, raw input, fixture startup, scheduling services,
+snapshot validation, camera and display remain port boundaries. Whole-game World/RealDriver,
+track scene and excluded effects/damage paths remain untranslated and throw when reached.
+See [DEBUG_DRIVING_AUDIT.md](DEBUG_DRIVING_AUDIT.md) for the complete ledger and limits.
+
+
+## TASK-0045: surface input and read-only grip publication
+
+Test geometry now resolves supported original terrain IDs at each wheel's native world
+query point. Uniform/five-zone settings enter the same Debug PhysicsCar/Wheel chain; no
+physics implementation exists in the surface module or Godot. SurfaceSettings are per-step
+inputs recorded with Session controls/time. The successful candidate snapshot publishes its
+committed settings, SHA-bound material catalogue and stored Wheel/TireInfo diagnostics.
+Presentation consumes shared boundaries/IDs/colors (nativeX to hostZ), not separate collision
+logic. Unknown units remain raw. The captured-input route still reserves motion for the
+camera, but forwards mouse-button releases to ImGui so a world recapture cannot leave its
+button held. See DRIVING_GRIP.md and reverse/task0045 for audit and provenance.
+
+## TASK-0046: player input and skid rendering
+
+Driving actions are centralized in project.godot InputMap and driving_input.gd.
+The adapter owns continuous device states and queued edge requests; a completed
+native step acknowledges one queued request. Session accepts a complete semantic
+frame, so zero input cancels pending edges during keyboard capture. Preview and
+frontend input contexts are outside this driving-only migration.
+
+NativeBackend supplies fixture state and platform services, calls original
+RealDriver input/mode handlers and Drive, then PhysicsCar::Move. It no longer
+writes player control outputs or supplies a fixed steering angle. Required player
+burnout logic belongs to PhysicsCar. Read-only powertrain fields are published
+with the same completed physics snapshot. Full World/Player startup is not implied.
+
+Original Wheel/SkidMaker/SkidSet/SkidSegment code owns eligibility, geometry and
+lifetimes; RenderSkids/ePoly owns visibility, intensity and draw-command generation.
+The port provides a bounded logical pool, one synthetic clan, elevation service,
+original-resource lookup and a Godot upload boundary. RenderSkids runs per view,
+separately from physics, and commits its original LRU mutations transactionally.
+The renderer does not calculate tire stripes or modify physics. See PLAYER_DRIVING.md.
+
+
+### TASK-0051 shared track frame and renderer
+
+Track ownership is port::track::Runtime -> native eDisplayFrame/scenery/eModel
+commands -> non-Debug Ps2TrackRenderer. Ps2TrackViewer derives from the common
+host and only restricts requests in Release. Independent race_scene uses that
+same host and the common vehicle/driving runtime. Per-command matrices, local
+light contexts, LOD, texture/material/pass and sorting/depth state remain native
+values until GPU adaptation. Immutable scene resources outlive frame packets;
+unload joins any owned load worker before deleting GPU resources and frame caches.
+GPU nodes cache by instance/solid/surface and visibility changes per prepared frame;
+normal rendering never reads debug collision overlays. No Godot physics is added.
+See docs/TRACK_VIEWER.md and reverse/task0051 for scope and explicit capture gaps.

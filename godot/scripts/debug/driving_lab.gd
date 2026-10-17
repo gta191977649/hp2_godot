@@ -1,8 +1,16 @@
 extends RefCounted
 # TASK-0038. Port-side third-person tool, not a recovered original game camera.
 enum Phase { OFF, STARTING, DRIVING, SUSPENDED, ERROR }
+# E-0050-U02: Debug DriveCameraMover::Update0015C2B0 OUTSIDE FieldOfView.
+# CalculateH001042E8 uses screen width, so preserve the horizontal FOV across aspect ratios.
+# This port projection adapter does not implement the original follow/spring camera.
+const OUTSIDE_FOV_BANGLE := 0x32DC
 const DEFAULT_PITCH := 15.0
 const MOUSE_DEGREES := 0.15
+var input_adapter := preload("res://scripts/debug/driving_input.gd").new()
+var skid_renderer: RefCounted
+var skid_quad_count := 0
+var last_input_frame: Dictionary = {}
 var viewer: Node3D
 var lab: Object
 var phase := Phase.OFF
@@ -18,6 +26,9 @@ var mouse_idle := 0.0
 var distance := 4.0
 var local_target := Vector3.ZERO
 var heading := Vector3.FORWARD
+var surface_visuals: Node3D
+var surface_material: ShaderMaterial
+var surface_key := ""
 
 func _init(owner: Node3D) -> void:
 	viewer = owner
@@ -36,10 +47,10 @@ func _remember(native: Dictionary) -> void:
 	saved = {"preview": viewer.preview_mode, "show_lods": viewer.show_lods,
 		"source": str(DebugTools.host.viewer_state().source), "car_id": int(native.car_id), "skin_id": int(native.skin_id),
 		"transform": viewer.car_model.transform, "floor_position": viewer.floor_node.position,
-		"floor_size": viewer.floor_node.mesh.size, "grid_position": viewer.grid_node.position,
+		"floor_size": viewer.floor_node.mesh.size, "floor_material": viewer.floor_node.material_override, "grid_position": viewer.grid_node.position,
 		"floor_visible": viewer.floor_node.visible, "grid_visible": viewer.grid_node.visible,
 		"orbit_yaw": viewer.orbit_yaw, "orbit_pitch": viewer.orbit_pitch, "orbit_distance": viewer.orbit_distance,
-		"orbit_center": viewer.orbit_center, "camera_transform": viewer.camera.transform, "fov": viewer.camera.fov}
+		"orbit_center": viewer.orbit_center, "camera_transform": viewer.camera.transform, "fov": viewer.camera.fov, "keep_aspect": viewer.camera.keep_aspect}
 
 func start() -> bool:
 	if engaged() or viewer.pending_load:
@@ -58,6 +69,11 @@ func start() -> bool:
 	if not state.get("configured", false):
 		error = _reason(state)
 		return false
+	if viewer.viewer_kind == "track":
+		state = lab.set_track(int(viewer.track_state.get("track_id", -1)))
+		if not state.get("ok", false) or not state.get("real_track", false):
+			error = _reason(state)
+			return false
 	state = lab.action("run")
 	state = lab.tick()
 	if not _valid_step(state):
@@ -72,8 +88,9 @@ func start() -> bool:
 	mouse_idle = 0
 	viewer.release_camera()
 	viewer.preview_mode = false
-	viewer.grid_node.visible = true
-	viewer.floor_node.visible = true
+	viewer.car_model.visible = true
+	viewer.grid_node.visible = viewer.viewer_kind != "track"
+	viewer.floor_node.visible = viewer.viewer_kind != "track"
 	viewer.floor_node.mesh.size = Vector2(4000, 4000)
 	viewer.floor_node.position.y = 0
 	phase = Phase.STARTING
@@ -92,10 +109,13 @@ func _finish_start() -> void:
 	if not result.get("ok", false):
 		_start_failed(str(result.get("error", "Initial driving pose failed")))
 		return
+	_present_surface()
+	skid_renderer = preload("res://scripts/debug/driving_skids.gd").new(viewer)
 	active = true
 	phase = Phase.DRIVING
 	capture_wanted = true
-	viewer.camera.fov = 60
+	viewer.camera.keep_aspect = Camera3D.KEEP_WIDTH
+	viewer.camera.fov = float(OUTSIDE_FOV_BANGLE) * 360.0 / 65536.0
 	_update_camera(0)
 	sync_lifecycle()
 	_sync_pointer()
@@ -113,23 +133,34 @@ func stop() -> void:
 	phase = Phase.OFF
 	capture_wanted = false
 	viewer.release_camera()
+	input_adapter.clear()
 	lab.action("restart")
 	viewer.car_model.transform = saved.transform
 	viewer.floor_node.position = saved.floor_position
+	_clear_surface()
+	if skid_renderer != null:
+		skid_renderer.clear()
+		skid_renderer = null
+	skid_quad_count = 0
 	viewer.floor_node.mesh.size = saved.floor_size
+	viewer.floor_node.material_override = saved.floor_material
 	viewer.floor_node.visible = saved.floor_visible
 	viewer.grid_node.visible = saved.grid_visible
 	viewer.grid_node.position = saved.grid_position
 	viewer.show_lods = bool(saved.show_lods)
 	# The same cached renderer restores preview attachment bindings on commit.
-	DebugTools.host.viewer_apply("load", saved.source)
-	viewer.car_model.set_show_lods(viewer.show_lods)
-	viewer._queue_car(viewer.car_model.request_car(saved.source, saved.car_id, saved.skin_id), false)
+	if viewer.viewer_kind == "car":
+		DebugTools.host.viewer_apply("load", saved.source)
+		viewer.car_model.set_show_lods(viewer.show_lods)
+		viewer._queue_car(viewer.car_model.request_car(saved.source, saved.car_id, saved.skin_id), false)
+	else:
+		viewer.car_model.visible = false
 	viewer.preview_mode = bool(saved.preview)
 	viewer.orbit_yaw = saved.orbit_yaw
 	viewer.orbit_pitch = saved.orbit_pitch
 	viewer.orbit_distance = saved.orbit_distance
 	viewer.orbit_center = saved.orbit_center
+	viewer.camera.keep_aspect = saved.keep_aspect
 	viewer.camera.fov = saved.fov
 	viewer.camera.transform = saved.camera_transform
 	error = ""
@@ -137,6 +168,7 @@ func stop() -> void:
 func _fail(reason: String) -> void:
 	if phase == Phase.ERROR:
 		return
+	input_adapter.clear()
 	error = reason if not reason.is_empty() else "Native driving stopped unexpectedly"
 	lab.action("pause")
 	phase = Phase.ERROR
@@ -160,12 +192,14 @@ func sync_lifecycle() -> bool:
 	var suspend: bool = not viewer.focused or DebugTools.is_console_open()
 	if suspend and phase == Phase.DRIVING:
 		state = lab.action("pause")
+		input_adapter.clear()
 		viewer.release_camera()
 		phase = Phase.SUSPENDED
 		discard_elapsed = true
 		return true
 	if not suspend and phase == Phase.SUSPENDED:
 		viewer.held.clear()
+		input_adapter.clear()
 		discard_elapsed = true
 		state = lab.action("run")
 		if state.get("paused", true) or str(state.get("status", "")) in ["Failed", "Blocked"]:
@@ -177,39 +211,24 @@ func sync_lifecycle() -> bool:
 	return false
 
 func controls() -> Vector3:
-	# E-0038-U01: positive native steering is source+Y / driver's left.
-	var value := Vector3(float(viewer.held.has(KEY_W)), float(viewer.held.has(KEY_S)), float(viewer.held.has(KEY_A)) - float(viewer.held.has(KEY_D)))
-	var devices := Input.get_connected_joypads()
-	if not devices.is_empty():
-		var device: int = devices[0]
-		value.x = maxf(value.x, clampf(Input.get_joy_axis(device, JOY_AXIS_TRIGGER_RIGHT), 0, 1))
-		value.y = maxf(value.y, clampf(Input.get_joy_axis(device, JOY_AXIS_TRIGGER_LEFT), 0, 1))
-		var steering := Input.get_joy_axis(device, JOY_AXIS_LEFT_X)
-		if absf(steering) > 0.1 and value.z == 0:
-			value.z = -steering
-	return value
+	var value: Dictionary = input_adapter.frame()
+	return Vector3(value.throttle, value.brake, value.steering)
 
 func handle_input(event: InputEvent, consumed: bool = false) -> void:
-	if event is InputEventKey:
-		var code: int = event.physical_keycode if event.physical_keycode != 0 else event.keycode
-		if not event.pressed:
-			viewer.held.erase(code)
-		if consumed or phase != Phase.DRIVING or not viewer.focused:
-			viewer.held.clear()
-			return
-		if code == KEY_ESCAPE and event.pressed and not event.echo:
-			capture_wanted = false
-			viewer.release_camera()
-		elif code in [KEY_W, KEY_A, KEY_S, KEY_D] and event.pressed:
-			viewer.held[code] = true
-	elif not consumed and phase == Phase.DRIVING:
-		if event is InputEventMouseMotion and captures_pointer():
-			yaw_offset = wrapf(yaw_offset - deg_to_rad(event.relative.x * MOUSE_DEGREES), -PI, PI)
-			pitch = clampf(pitch + deg_to_rad(event.relative.y * MOUSE_DEGREES), deg_to_rad(5), deg_to_rad(65))
-			mouse_idle = 0
-		elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-			capture_wanted = true
-			_sync_pointer()
+	var keyboard_consumed := consumed and (event is InputEventKey or event is InputEventAction)
+	input_adapter.handle_input(event, keyboard_consumed or phase != Phase.DRIVING or not viewer.focused)
+	if consumed or phase != Phase.DRIVING or not viewer.focused:
+		return
+	if event.is_action_pressed("hp2_drive_release_cursor", false):
+		capture_wanted = false
+		viewer.release_camera()
+	elif event is InputEventMouseMotion and captures_pointer():
+		yaw_offset = wrapf(yaw_offset - deg_to_rad(event.relative.x * MOUSE_DEGREES), -PI, PI)
+		pitch = clampf(pitch + deg_to_rad(event.relative.y * MOUSE_DEGREES), deg_to_rad(5), deg_to_rad(65))
+		mouse_idle = 0
+	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		capture_wanted = true
+		_sync_pointer()
 
 func _update_camera(delta: float) -> void:
 	# Original source+X forward becomes host basis+Z in Ps2DrivingLab. This is
@@ -246,16 +265,22 @@ func process(delta: float) -> void:
 	if discard_elapsed:
 		discard_elapsed = false
 		return
-	var value := Vector3.ZERO
 	if DebugTools.host.viewer_keyboard_capture():
 		viewer.held.clear()
-	else:
-		value = controls()
-	var next: Dictionary = lab.set_input(value.x, value.y, value.z)
+		# Intentional GUI commands survive the widget's keyboard capture. Physical
+		# held/edge inputs do not. Lifecycle suspension still clears both sources.
+		input_adapter.clear(true)
+	var value: Dictionary = input_adapter.frame()
+	last_input_frame = value.duplicate()
+	var next: Dictionary = lab.set_driving_input(value.throttle, value.brake, value.steering,
+		value.handbrake, value.transmission, value.shift, value.neutral)
 	if not next.get("ok", false):
 		_fail(_reason(next))
 		return
+	var previous_step := int(state.get("step", 0))
 	state = lab.tick(delta)
+	if int(state.get("step", 0)) > previous_step:
+		input_adapter.committed()
 	if not _valid_step(state):
 		_fail(_reason(state))
 		return
@@ -263,12 +288,123 @@ func process(delta: float) -> void:
 	if not result.get("ok", false):
 		_fail(str(result.get("error", "Driving pose publication failed")))
 		return
+	_present_surface()
 	_update_camera(delta)
+	_present_skids()
+
+func _present_skids() -> void:
+	if skid_renderer == null:
+		return
+	var camera: Camera3D = viewer.camera
+	var clip: Projection = camera.get_camera_projection() * Projection(camera.global_transform.affine_inverse())
+	# H belongs to the explicit tool camera, not a recovered HP2 camera setup.
+	var H := viewer.get_viewport().get_visible_rect().size.y * 0.5 / tan(deg_to_rad(camera.fov) * 0.5)
+	var rendered: Dictionary = lab.render_skids(camera.global_transform, clip, H)
+	if not rendered.get("ok", false):
+		_fail(str(rendered.get("error", "Original skid rendering failed")))
+		return
+	skid_renderer.publish(rendered.get("commands", []))
+	skid_quad_count = skid_renderer.count
+
+# TASK-0045: shared native descriptor drives presentation. The shader's world Z is
+# native X; following the camera/floor never moves the material boundaries.
+func _clear_surface() -> void:
+	if is_instance_valid(surface_visuals):
+		surface_visuals.queue_free()
+	surface_visuals = null
+	surface_material = null
+	surface_key = ""
+
+func _present_surface() -> void:
+	if viewer.viewer_kind == "track":
+		return
+	if not bool(state.get("surface_known", false)):
+		return
+	var settings: Dictionary = state.surface
+	var catalog: Array = state.get("surface_catalog", [])
+	var bounds: Array = state.get("surface_boundaries", [])
+	var ids: Array = state.get("surface_terrain_ids", [])
+	var colors: Array = state.get("surface_colors", [])
+	if catalog.size() != 5 or bounds.size() != 4 or ids.size() != 5 or colors.size() != 5:
+		return
+	var key := "%d:%d" % [int(settings.mode), int(settings.terrain)]
+	if key == surface_key:
+		return
+	_clear_surface()
+	surface_key = key
+	var shader := Shader.new()
+	shader.code = """shader_type spatial;
+render_mode unshaded;
+varying float world_z;
+uniform bool zones = false;
+uniform int uniform_index = 0;
+uniform vec4 boundaries;
+uniform vec4 color0 : source_color;
+uniform vec4 color1 : source_color;
+uniform vec4 color2 : source_color;
+uniform vec4 color3 : source_color;
+uniform vec4 color4 : source_color;
+void vertex(){world_z=(MODEL_MATRIX*vec4(VERTEX,1.0)).z;}
+void fragment(){
+ int zone=uniform_index;
+ if(zones){zone=0;if(world_z>=boundaries.x)zone=1;if(world_z>=boundaries.y)zone=2;if(world_z>=boundaries.z)zone=3;if(world_z>=boundaries.w)zone=4;}
+ vec4 chosen=color0;if(zone==1)chosen=color1;if(zone==2)chosen=color2;if(zone==3)chosen=color3;if(zone==4)chosen=color4;
+ ALBEDO=chosen.rgb;
+}
+"""
+	surface_material = ShaderMaterial.new()
+	surface_material.shader = shader
+	surface_material.set_shader_parameter("zones", int(settings.mode) == 1)
+	surface_material.set_shader_parameter("uniform_index", ids.find(int(settings.terrain)))
+	surface_material.set_shader_parameter("boundaries", Vector4(float(bounds[0]), float(bounds[1]), float(bounds[2]), float(bounds[3])))
+	for i in 5:
+		surface_material.set_shader_parameter("color%d" % i, colors[i])
+	viewer.floor_node.material_override = surface_material
+	surface_visuals = Node3D.new()
+	surface_visuals.name = "ToolSurfaceLabels"
+	viewer.add_child(surface_visuals)
+	surface_visuals.top_level = true
+	surface_visuals.global_transform = Transform3D.IDENTITY
+	for i in 5:
+		if int(settings.mode) == 0 and int(ids[i]) != int(settings.terrain):
+			continue
+		var label := Label3D.new()
+		var material_name := ""
+		for entry in catalog:
+			if int(entry.id) == int(ids[i]):
+				material_name = str(entry.name)
+		label.text = "%s #%d\nTool surface" % [material_name, int(ids[i])]
+		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		label.no_depth_test = false
+		label.font_size = 24
+		label.pixel_size = 0.005
+		label.modulate = colors[i]
+		var z := 0.0
+		if int(settings.mode) == 1:
+			var lower := 0.0 if i == 0 else float(bounds[i - 1])
+			var upper := float(bounds[i]) if i < 4 else float(bounds[3]) + (float(bounds[3]) - float(bounds[2]))
+			z = (lower + upper) * 0.5
+		label.position = Vector3(-5, 0.4, z)
+		surface_visuals.add_child(label)
 
 func action(request: Dictionary) -> void:
-	if str(request.get("action", "")) == "drive_exit":
+	var command := str(request.get("action", ""))
+	if command == "drive_exit":
 		stop()
+	elif command == "drive_transmission" and engaged():
+		input_adapter.request({"transmission": int(request.get("lod", 0))}, true)
+	elif command == "drive_neutral" and engaged():
+		input_adapter.request({"neutral": true}, true)
+	elif command == "drive_surface" and engaged():
+		# UiAction lod/car_id carry this explicit port-side mode/material payload.
+		var result: Dictionary = lab.set_surface(int(request.get("lod", 0)), int(request.get("car_id", 1)))
+		if not result.get("ok", false):
+			DebugTools.write_log(_reason(result), true)
+		else:
+			state = result # Still the last committed surface until the next successful tick.
 
 func snapshot() -> Dictionary:
-	return {"kind": "driving", "status": "Preparing Test drive" if phase == Phase.STARTING else "",
-		"diagnostic": error, "driving_telemetry": "", "driving_recording": false}
+	return {"kind": "driving", "real_track": viewer.viewer_kind == "track", "track_name": viewer.track_state.get("track_name", ""), "status": "Preparing Test drive" if phase == Phase.STARTING else "",
+		"diagnostic": error, "driving_hints": input_adapter.hints(), "powertrain": state.get("powertrain", {}), "powertrain_known": state.get("powertrain_known", false), "driving_telemetry": "", "driving_recording": false,
+		"surface_known": state.get("surface_known", false), "surface": state.get("surface", {}),
+		"surface_catalog": state.get("surface_catalog", []), "wheels": state.get("wheels", [])}

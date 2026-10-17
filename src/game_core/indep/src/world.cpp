@@ -56,3 +56,10 @@ void World::Sub_0014E440() {
     hp2::not_implemented("0x0014E440", "World::Sub_0014E440 (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+// TASK-0048 E-0048-T06. Debug0014D630, single active dynamic car against immutable track bodies.
+#include "game_core/port/driving/static_collisions.hpp"
+namespace hp2::recovered {
+void World::DoTimestepCollisions(port::driving::Memory& m,port::driving::StaticCollisions& collisions,std::uint32_t body,std::uint32_t car,const port::track::Topology& topology,port::driving::CollisionMotion& motion,const std::function<void(float)>& move,const std::function<void()>& recompute){
+    for(unsigned iteration=0;iteration<20;++iteration){const auto contacts=collisions.contacts(m,body,topology,motion);if(contacts.empty())return;collisions.resolve(m,body,car,contacts.front(),motion,move,recompute);}
+}
+}

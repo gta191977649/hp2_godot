@@ -1,5 +1,8 @@
 #pragma once
-// TASK-0042: host projection interfaces; no original header/ABI claim.
+#include "surface.hpp"
+// TASK-0044: historical host interfaces now forward to canonical Debug class methods.
+// Retail address spellings below are compatibility/provenance indices, not active
+// memory addresses or a second simulation. No original host header/ABI claim.
 #include "game_core/port/driving/byte_view.hpp"
 #include "game_core/port/driving/memory.hpp"
 
@@ -7,7 +10,7 @@ namespace port::driving { struct ContactProvider; }
 
 // Host declarations formerly partitioned in Sub_00137100.hpp
 // Port-side byte views of initialization dependencies; original source path unknown.
-// Not an implementation of the whole 00137100 entry, which still throws.
+// The active constructor body belongs to Debug PhysicsCar, not this interface.
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -97,7 +100,7 @@ namespace port::driving {
 // ELF 00137C88; E-0038-003; SLUS_203.62 revision unknown;
 // SHA256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Explicit arguments replace f12..f17, a0 and *a1. Ordinary finite float scope.
-float YawFrictionBoost(float, float, float, float, float, float, int, float&);
+float YawFrictionBoost(Memory&, float, float, float, float, float, float, int, float&);
 }
 
 // Host declarations formerly partitioned in Sub_00137D90.hpp
@@ -109,6 +112,9 @@ float YawFrictionBoost(float, float, float, float, float, float, int, float&);
 namespace port::driving::native {
 // Explicit port-side services for external calls; missing required callbacks throw.
 struct DrivingServices {
+    // Debug0011D720 platform query. The host supplies the device classification;
+    // absence is an explicit untranslated boundary when REAL_CONTROL is reached.
+    std::function<bool(std::int32_t)> IsJoystickTypeWheel;
     std::function<std::uint64_t()> Sub_00250F38;
     std::function<std::uint32_t(std::uint64_t,std::uint64_t)> Sub_00250F48;
     std::function<void(Memory&,std::uint32_t,float)> IntegrateEuler;
@@ -116,7 +122,8 @@ struct DrivingServices {
     std::function<void(Memory&,std::uint32_t)> Sub_0019D980;
     std::function<void(Memory&,std::uint32_t)> Sub_0018C030;
     std::function<void(Memory&,std::uint32_t,float)> UpdateCar;
-    std::function<void(Memory&,std::uint32_t,std::uint32_t,float)> Sub_001A5520;
+    // Debug001A2CF8; E-0046-S03. Explicit original Wheel effect dispatch.
+    std::function<void(Memory&,std::uint32_t,std::uint32_t,float)> MaybeMakeSkids;
     std::function<float(Memory&,std::uint32_t)> Sub_001B50C8;
     std::optional<std::uint32_t> Field_001389A4_stack_w;
 };
@@ -261,21 +268,9 @@ float ExchangeZForces(float, SolverWheelProjection&, std::int32_t);
 // Declaration grouped below in the Suspension host carrier.
 void ResolveMoreForces(SolverSuspensionProjection&, std::int32_t Field_00330D10);
 
-// Port-side dependency interface, not a recovered original class. Untranslated
-// whole dependencies throw at their ELF address; fixtures may override them.
-struct SolverDependencies {
-    virtual ~SolverDependencies() = default;
-    virtual void GuessClutchTorque();
-    virtual void GuessGroundForce(SolverWheelProjection&, int, std::int8_t);
-    virtual void ModifyClutchTorque();
-    virtual void FinalizeGroundForce(SolverWheelProjection&, int);
-    virtual void FinalizeClutchTorque();
-};
-// ELF 00138F38..00139183; E-0038-S10. Exact five-iteration orchestration
-// with explicit dependency seams. This does not implement the driving closure.
-void IterateForces(SolverBodyProjection&, std::array<SolverWheelProjection, 4>&,
-                 const std::array<SolverSuspensionProjection, 4>&, std::int8_t,
-                 SolverDependencies&, const SolverMathContext&);
+// TASK-0044: obsolete typed solver composite and dependency interface removed.
+// Production and tests use canonical PhysicsCar::IterateForces.
+
 }
 
 // Host declarations formerly partitioned in Sub_00152070.hpp
@@ -287,9 +282,10 @@ struct ContactProvider {
         std::uint32_t material,std::uint32_t plane,std::uint32_t found)=0;
 };
 // Explicit synthetic environment geometry, not a recovered original road query.
-// Material1 is the ELF table row with SKID_ROAD at00318CB0 (E-0038-C01).
+// TASK-0045: defaults to ROAD1; selectable Debug terrain rows are input data (E-0045-T01).
 struct PlaneContact final:ContactProvider {
     float height=0;
+    SurfaceSettings settings;
     float GetElevation(Memory&,std::uint32_t,std::uint32_t,std::uint32_t,std::uint32_t,std::uint32_t)override;
 };
 // ELF00153458/00153498; E-0038-C02; native offsets/data, not host random noise.

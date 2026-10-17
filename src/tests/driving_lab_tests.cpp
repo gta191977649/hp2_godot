@@ -25,7 +25,7 @@ int main(){
     unavailable.input({1,0,-1});unavailable.recording(true);unavailable.run();
     check(!unavailable.tick(),"Untranslated constructor must block");
     check(unavailable.paused()&&unavailable.status()=="Blocked","Gap must pause");
-    check(unavailable.diagnostic().find("0x00137100")!=std::string::npos,"Gap address is required");
+    check(unavailable.diagnostic().find("0x001370C0")!=std::string::npos,"Gap address is required");
     check(unavailable.snapshot().step==0&&unavailable.tape().empty(),"Failed step must not publish or record");
     check(unavailable.controls().throttle==0,"Gap must release controls");
     Session session(tool_backend);session.configure({"synthetic contract config"});
@@ -52,11 +52,13 @@ int main(){
     check(!invalid_pose.snapshot().body&&invalid_pose.snapshot().step==0,"Invalid pose retains the last completed state");
     // Independent instruction-derived finite fixtures: E-0038-003.
     // 00137C90..9C: abs(*a1)+1; C8..EC strict comparisons and early return.
-    float a1=-2;check(YawFrictionBoost(0,1,15,4,2,0,0,a1)==3&&a1==2,"Absolute writeback / early return");
-    a1=0;check(YawFrictionBoost(1,0,15,0.25f,0.25f,2,0,a1)==1.25f,"Unscaled coefficient path");
-    a1=0;check(YawFrictionBoost(1,0,15,0.25f,0.25f,2,1,a1)==1.375f,"Branch-likely scaled coefficient path");
-    a1=0;check(std::abs(YawFrictionBoost(2,0,30,1,0,0,0,a1)-1.7f)<1e-7f,"Upper cap 0x3f333333");
-    a1=0;check(YawFrictionBoost(1,0,-30,1,0,0,0,a1)==0,"No invented lower clamp");
+    Memory yaw_globals;yaw_globals.map(0x00324000,0x4000);yaw_globals.scalar(0x00324dd0,0.34906584f);yaw_globals.scalar(0x00327060,0);yaw_globals.scalar(0x00327064,1);yaw_globals.scalar(0x00327068,0);yaw_globals.scalar(0x0032706c,30);yaw_globals.scalar(0x00327070,0.7f);
+    float a1=-2;check(YawFrictionBoost(yaw_globals,0,1,15,4,2,0,0,a1)==3&&a1==2,"Absolute writeback / early return");
+    a1=0;check(YawFrictionBoost(yaw_globals,1,0,15,0.25f,0.25f,2,0,a1)==1.25f,"Unscaled coefficient path");
+    a1=0;check(YawFrictionBoost(yaw_globals,1,0,15,0.25f,0.25f,2,1,a1)==1.375f,"Branch-likely scaled coefficient path");
+    a1=0;check(std::abs(YawFrictionBoost(yaw_globals,2,0,30,1,0,0,0,a1)-1.7f)<1e-7f,"Upper cap 0x3f333333");
+    a1=0;check(YawFrictionBoost(yaw_globals,1,0,-30,1,0,0,0,a1)==0,"No invented lower clamp");
+    yaw_globals.scalar(0x00327070,0.2f);a1=0;check(YawFrictionBoost(yaw_globals,2,0,30,1,0,0,0,a1)==1.2f,"Debug yaw cap is read from mutable global memory");
     // E-0038-005 instruction fixtures: f1=2*4=8; f0=(20-8)/2=6;
     // f2=3*1+5*2=13; f0=((6*4-13)*2)/4=5.5; result=7.5.
     WheelIterationProjection iteration{4,2,3,5,20,2};

@@ -18,6 +18,42 @@ boot_splash/bg_color=Color(0, 0, 0, 1)
 [autoload]
 DebugTools="*res://scripts/debug/debug_tools.gd"
 
+[input]
+; TASK-0046 port-side driving bindings, shared by keyboard/gamepad/GUI adapter.
+hp2_drive_throttle={
+"deadzone": 0.1,
+"events": [Object(InputEventKey,"physical_keycode":87), Object(InputEventJoypadMotion,"axis":5,"axis_value":1.0)]
+}
+hp2_drive_brake={
+"deadzone": 0.1,
+"events": [Object(InputEventKey,"physical_keycode":83), Object(InputEventJoypadMotion,"axis":4,"axis_value":1.0)]
+}
+hp2_drive_left={
+"deadzone": 0.1,
+"events": [Object(InputEventKey,"physical_keycode":65), Object(InputEventJoypadMotion,"axis":0,"axis_value":-1.0)]
+}
+hp2_drive_right={
+"deadzone": 0.1,
+"events": [Object(InputEventKey,"physical_keycode":68), Object(InputEventJoypadMotion,"axis":0,"axis_value":1.0)]
+}
+hp2_drive_handbrake={
+"deadzone": 0.1,
+"events": [Object(InputEventKey,"physical_keycode":32)]
+}
+hp2_drive_shift_down={
+"deadzone": 0.1,
+"events": [Object(InputEventKey,"physical_keycode":81)]
+}
+hp2_drive_shift_up={
+"deadzone": 0.1,
+"events": [Object(InputEventKey,"physical_keycode":69)]
+}
+
+hp2_drive_release_cursor={
+"deadzone": 0.1,
+"events": [Object(InputEventKey,"physical_keycode":4194305)]
+}
+
 [rendering]
 ; TASK-0016 user-requested host backdrop for uncovered movie/title pixels.
 environment/defaults/default_clear_color=Color(0, 0, 0, 1)

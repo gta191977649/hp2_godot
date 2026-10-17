@@ -1,0 +1,252 @@
+{
+  "task": "TASK-0049",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_initial_review_lf_sha256": "d156e2a9a349870ad8a4b2ccf802fb87c91b66cc23c635c32cc52f9d8384a1a0",
+  "predecessor_alias_review_lf_sha256": "6388d724875d826a24bf329d06b78246c2bb45290b1f89163914d12d7fd6be69",
+  "baseline_inventory_sha256": "fcb4c4257073eb6b9332f01ca8c45e7f1eb482d99e31215445ac69b171539c3a",
+  "policy": "Exact port display-only changes; derive predecessor identities from immutable TASK0048 initial and D05 reviews. No recovered driving, topology or collision algorithm changes.",
+  "before": [
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw",
+      "signature_sha256": "af5c4109ffb88c769db23520815cad4706cfef9cd312c96a3eb3cbd7b1f54a9d",
+      "body_sha256": "788d940647e2e6833bc226c936cc35d3cc5189235ff0ee1e1febc65765d433bf",
+      "stub": false,
+      "evidence_id": "E-0049-U01",
+      "evidence_record": "reverse/task0049/viewer-ui.md",
+      "reason": "Track browse debug UI/state and native cached overlay lifecycle only: independent collision/material flags, readiness, legend, diagnostics, restore across load and return; no driving algorithm changes."
+    },
+    {
+      "path": "src/game_core/port/track/assets.cpp",
+      "name": "load_scene",
+      "signature_sha256": "7ed8152bd064b5ed45b5e7df94a4d61d54aa6b82dfe3998000e57af1a38f97d8",
+      "body_sha256": "eb14f7f3dc4706eec90e6d705b3857ddc4e21b9597a560bf82349517dad686c0",
+      "stub": false,
+      "evidence_id": "E-0049-T01",
+      "evidence_record": "reverse/task0049/texture-direction.md",
+      "reason": "Track texture adapter preserves original ST source-row direction using a private decode projection for base and mip levels; shared car decoder remains unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_snapshot",
+      "signature_sha256": "ef5026d842bd185acad14f92379c944f1db983a3f42547c13e2d150baa0f1c1e",
+      "body_sha256": "5b377abe2d9a742cea7fbb2c8333b7fc9461432b352076f63401dd21c717d3c0",
+      "stub": false,
+      "evidence_id": "E-0049-U01",
+      "evidence_record": "reverse/task0049/viewer-ui.md",
+      "reason": "Track browse debug UI/state and native cached overlay lifecycle only: independent collision/material flags, readiness, legend, diagnostics, restore across load and return; no driving algorithm changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::_bind_methods",
+      "signature_sha256": "72391c04c06de44a0228c868e62bf51bb836c6be403f1ada5efca806f97049e7",
+      "body_sha256": "94237cba7908c0069e12a82b8f490c3205e2eaff070560afee36e66cfb8814dd",
+      "stub": false,
+      "evidence_id": "E-0049-U01",
+      "evidence_record": "reverse/task0049/viewer-ui.md",
+      "reason": "Track browse debug UI/state and native cached overlay lifecycle only: independent collision/material flags, readiness, legend, diagnostics, restore across load and return; no driving algorithm changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::get_state",
+      "signature_sha256": "4c0a0dc085a15e0b9eaa715b9c258a20109ce3f08e86a549d1d22c757447611f",
+      "body_sha256": "d6d6f4022b6deeb60b7780eb608337d4d3e7c331de99dc373dd5a7f170fa0c3e",
+      "stub": false,
+      "evidence_id": "E-0049-U01",
+      "evidence_record": "reverse/task0049/viewer-ui.md",
+      "reason": "Track browse debug UI/state and native cached overlay lifecycle only: independent collision/material flags, readiness, legend, diagnostics, restore across load and return; no driving algorithm changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::pump_load",
+      "signature_sha256": "ba18509a99ec5f2a11ab42423ccf922398e08c1e95d5e1cb947a429d616d12b1",
+      "body_sha256": "09d6d434fc9cd88c07a2b905cdbbdc1a591859a20eafc68e2592d098f24c3d53",
+      "stub": false,
+      "evidence_id": "E-0049-U01",
+      "evidence_record": "reverse/task0049/viewer-ui.md",
+      "reason": "Track browse debug UI/state and native cached overlay lifecycle only: independent collision/material flags, readiness, legend, diagnostics, restore across load and return; no driving algorithm changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::release_display",
+      "signature_sha256": "8f3e108db8b858fa672be11c137d6568429464f869a1096b4e51110cee49b757",
+      "body_sha256": "98c3710d469936efe4d2474294f91a6b1603850f5bafaab5b5c96cfa7d94e74e",
+      "stub": false,
+      "evidence_id": "E-0049-U01",
+      "evidence_record": "reverse/task0049/viewer-ui.md",
+      "reason": "Track browse debug UI/state and native cached overlay lifecycle only: independent collision/material flags, readiness, legend, diagnostics, restore across load and return; no driving algorithm changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::request_track",
+      "signature_sha256": "b45428238cf73e40e9cd22881fe2e227c467221c3f3b6543ff7a49414f49115e",
+      "body_sha256": "ee889e83162471565593408a3b5559555decb4590e792c7209c557fb9b22b7e0",
+      "stub": false,
+      "evidence_id": "E-0049-U01",
+      "evidence_record": "reverse/task0049/viewer-ui.md",
+      "reason": "Track browse debug UI/state and native cached overlay lifecycle only: independent collision/material flags, readiness, legend, diagnostics, restore across load and return; no driving algorithm changes."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw",
+      "signature_sha256": "af5c4109ffb88c769db23520815cad4706cfef9cd312c96a3eb3cbd7b1f54a9d",
+      "body_sha256": "8e9e76bb7c468c151b33ea07bfe01be8adabc6fc440b67611683fccfe3edd958",
+      "stub": false,
+      "evidence_id": "E-0049-U01",
+      "evidence_record": "reverse/task0049/viewer-ui.md",
+      "reason": "Track browse debug UI/state and native cached overlay lifecycle only: independent collision/material flags, readiness, legend, diagnostics, restore across load and return; no driving algorithm changes."
+    },
+    {
+      "path": "src/game_core/port/track/assets.cpp",
+      "name": "load_scene",
+      "signature_sha256": "7ed8152bd064b5ed45b5e7df94a4d61d54aa6b82dfe3998000e57af1a38f97d8",
+      "body_sha256": "8f56a41c13357f5b1575e5eb1d1b64bb10b4b7be6d24bb0d85205b471a06a46b",
+      "stub": false,
+      "evidence_id": "E-0049-T01",
+      "evidence_record": "reverse/task0049/texture-direction.md",
+      "reason": "Track texture adapter preserves original ST source-row direction using a private decode projection for base and mip levels; shared car decoder remains unchanged."
+    },
+    {
+      "path": "src/game_core/port/track/debug_geometry.hpp",
+      "name": "debug_material_color",
+      "signature_sha256": "402de1cee00b3c5bf910924cab61cd6eadc7b77fc5a8c3eab3f02aa1ec2923d9",
+      "body_sha256": "bbf754f662adb1ee8dd6897c46a6575bc4415f3bb2cd8293a6750a7cb2244881",
+      "stub": false,
+      "evidence_id": "E-0049-G01",
+      "evidence_record": "reverse/task0049/debug-geometry.md",
+      "reason": "Port-owned read-only contact topology visualization with exact road eligibility, finite contact-plane projection, separate edges and deterministic material legend; no mutation of topology or physics."
+    },
+    {
+      "path": "src/game_core/port/track/debug_geometry.hpp",
+      "name": "debug_road_eligible",
+      "signature_sha256": "d7e765cb2f2ae4a4446bae97179029384b4ae52f24ed10689d43f4ad9bbe3007",
+      "body_sha256": "c7e0e0ea7add9412ad4b22327ba4e100b9fb75e5a9ee6327dcb8d90ef3a3ddfa",
+      "stub": false,
+      "evidence_id": "E-0049-G01",
+      "evidence_record": "reverse/task0049/debug-geometry.md",
+      "reason": "Port-owned read-only contact topology visualization with exact road eligibility, finite contact-plane projection, separate edges and deterministic material legend; no mutation of topology or physics."
+    },
+    {
+      "path": "src/game_core/port/track/debug_geometry.hpp",
+      "name": "build_debug_geometry",
+      "signature_sha256": "5105c1dcc1536d3d0d51ba2e7df8072341d95fc420e61efa170f15beac4f945a",
+      "body_sha256": "bfe9275e8405af330aa19bd5cd4c8b0b2fb1c5129ed410961bdd8c739611fa45",
+      "stub": false,
+      "evidence_id": "E-0049-G01",
+      "evidence_record": "reverse/task0049/debug-geometry.md",
+      "reason": "Port-owned read-only contact topology visualization with exact road eligibility, finite contact-plane projection, separate edges and deterministic material legend; no mutation of topology or physics."
+    },
+    {
+      "path": "src/game_core/port/track/texture_decode.hpp",
+      "name": "decode_texture_level",
+      "signature_sha256": "5d2b52a1c0e9f98372d02be11177c9f929f9ef1bbaacda35edef3ce8fb15ff05",
+      "body_sha256": "0a305a99f2565dc45df2efa09ae207f7c005189507932ee08b24c572a93bc29f",
+      "stub": false,
+      "evidence_id": "E-0049-T01",
+      "evidence_record": "reverse/task0049/texture-direction.md",
+      "reason": "Track texture adapter preserves original ST source-row direction using a private decode projection for base and mip levels; shared car decoder remains unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_snapshot",
+      "signature_sha256": "ef5026d842bd185acad14f92379c944f1db983a3f42547c13e2d150baa0f1c1e",
+      "body_sha256": "82f1ec0f6d7da29aab79718ea1aa5ffb33bec86e09dfa73c6720ec7be756108d",
+      "stub": false,
+      "evidence_id": "E-0049-U01",
+      "evidence_record": "reverse/task0049/viewer-ui.md",
+      "reason": "Track browse debug UI/state and native cached overlay lifecycle only: independent collision/material flags, readiness, legend, diagnostics, restore across load and return; no driving algorithm changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::_bind_methods",
+      "signature_sha256": "72391c04c06de44a0228c868e62bf51bb836c6be403f1ada5efca806f97049e7",
+      "body_sha256": "9b8fb99223188a187fbca9b1676b90a8a0afc75f109782a3b4afcec7004e10e5",
+      "stub": false,
+      "evidence_id": "E-0049-U01",
+      "evidence_record": "reverse/task0049/viewer-ui.md",
+      "reason": "Track browse debug UI/state and native cached overlay lifecycle only: independent collision/material flags, readiness, legend, diagnostics, restore across load and return; no driving algorithm changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::release_display",
+      "signature_sha256": "8f3e108db8b858fa672be11c137d6568429464f869a1096b4e51110cee49b757",
+      "body_sha256": "7bd9a41b1e299c91abaceb27a08283ae20400ad7d2536667bcb8c0910180daf2",
+      "stub": false,
+      "evidence_id": "E-0049-U01",
+      "evidence_record": "reverse/task0049/viewer-ui.md",
+      "reason": "Track browse debug UI/state and native cached overlay lifecycle only: independent collision/material flags, readiness, legend, diagnostics, restore across load and return; no driving algorithm changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::request_track",
+      "signature_sha256": "b45428238cf73e40e9cd22881fe2e227c467221c3f3b6543ff7a49414f49115e",
+      "body_sha256": "a4553c2233e22bd322d65ca11a11b0cb4e10be3bdfac05ce513ccba9decfafd8",
+      "stub": false,
+      "evidence_id": "E-0049-U01",
+      "evidence_record": "reverse/task0049/viewer-ui.md",
+      "reason": "Track browse debug UI/state and native cached overlay lifecycle only: independent collision/material flags, readiness, legend, diagnostics, restore across load and return; no driving algorithm changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::pump_load",
+      "signature_sha256": "ba18509a99ec5f2a11ab42423ccf922398e08c1e95d5e1cb947a429d616d12b1",
+      "body_sha256": "1adce5e17fd53831508e17f7a415e0cc018abdd6926dc6cb33fba748278693a1",
+      "stub": false,
+      "evidence_id": "E-0049-U01",
+      "evidence_record": "reverse/task0049/viewer-ui.md",
+      "reason": "Track browse debug UI/state and native cached overlay lifecycle only: independent collision/material flags, readiness, legend, diagnostics, restore across load and return; no driving algorithm changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::build_debug_display",
+      "signature_sha256": "a03a0a1d01e895e78b8401fd6ad632f5b6b2649404041f68ff869d765d4c8d57",
+      "body_sha256": "17aac50dd62d0aa6d9b60c4304da50a0c0145e1f2b1a840855e58edb6757d669",
+      "stub": false,
+      "evidence_id": "E-0049-U01",
+      "evidence_record": "reverse/task0049/viewer-ui.md",
+      "reason": "Track browse debug UI/state and native cached overlay lifecycle only: independent collision/material flags, readiness, legend, diagnostics, restore across load and return; no driving algorithm changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::apply_debug_display",
+      "signature_sha256": "61fbaa926f7d2fe9bc83a652612d746b5728b19a01ed4c4cff15d5077e2117a6",
+      "body_sha256": "7337b3b349cf27aaa6bd41167972d072f79f80f15a77435fff81af615353ccd0",
+      "stub": false,
+      "evidence_id": "E-0049-U01",
+      "evidence_record": "reverse/task0049/viewer-ui.md",
+      "reason": "Track browse debug UI/state and native cached overlay lifecycle only: independent collision/material flags, readiness, legend, diagnostics, restore across load and return; no driving algorithm changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::set_render_collision",
+      "signature_sha256": "f7e93a69a49cfb30cbbbe57a64802304a752319577fd2880b5d3a5b35c234c3e",
+      "body_sha256": "972b4324b53076daee1b2a1c3ef14a62190758b0bbb458cafe2cbe1888617c55",
+      "stub": false,
+      "evidence_id": "E-0049-U01",
+      "evidence_record": "reverse/task0049/viewer-ui.md",
+      "reason": "Track browse debug UI/state and native cached overlay lifecycle only: independent collision/material flags, readiness, legend, diagnostics, restore across load and return; no driving algorithm changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::set_render_material",
+      "signature_sha256": "4f468775b89298b62140aea5bf0b142dd0630ea293505584c79c0bfc890afe3e",
+      "body_sha256": "605846adf1315621259422707c352293d3f58e86abf27bffb024dcabbfba049a",
+      "stub": false,
+      "evidence_id": "E-0049-U01",
+      "evidence_record": "reverse/task0049/viewer-ui.md",
+      "reason": "Track browse debug UI/state and native cached overlay lifecycle only: independent collision/material flags, readiness, legend, diagnostics, restore across load and return; no driving algorithm changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::get_state",
+      "signature_sha256": "4c0a0dc085a15e0b9eaa715b9c258a20109ce3f08e86a549d1d22c757447611f",
+      "body_sha256": "b9d04571a193d6786bd20a479da545200814ccc92188dea2909c2a028bfdc4d3",
+      "stub": false,
+      "evidence_id": "E-0049-U01",
+      "evidence_record": "reverse/task0049/viewer-ui.md",
+      "reason": "Track browse debug UI/state and native cached overlay lifecycle only: independent collision/material flags, readiness, legend, diagnostics, restore across load and return; no driving algorithm changes."
+    }
+  ]
+}

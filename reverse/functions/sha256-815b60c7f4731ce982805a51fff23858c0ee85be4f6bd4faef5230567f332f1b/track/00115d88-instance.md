@@ -1,0 +1,3 @@
+# 00115d88: elSetupLightContext per-instance in-game branch
+
+ELF SHA-256 `815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b`. Evidence E-0051-L01, `reverse/task0051/scenery.md`; declaring free function in original `src/ecstasy/elighte.cpp`. New typed overload queries local ambient/point lights at object translation, uses inverse rotation and normalizes local light directions, preserves original initialized sunlight and colour rules. Returns existing28-float VU colour/direction upload slice only; eye/environment fields are separate downstream inputs. Existing audited world-identity overload is unchanged. Native per-instance and identity-regression tests passed; Reconstructed, not Verified.

@@ -63,6 +63,7 @@ public:
     void viewer_rendering(const godot::String& description);
     void viewer_ui_snapshot(const godot::Dictionary& snapshot);
     godot::Dictionary viewer_ui_next();
+    godot::Dictionary viewer_ui_targets()const;
     bool viewer_ui_capture()const;
     bool viewer_keyboard_capture()const;
 

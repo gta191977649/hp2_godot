@@ -648,10 +648,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001add48.md",
           "source": "src/game_core/indep/src/aerodynamics.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void Aerodynamics::DoSnapshot()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001ADD70",
@@ -659,18 +660,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001add70.md",
           "source": "src/game_core/indep/src/aerodynamics.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Aerodynamics::ResolveForces()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/aerodynamics.cpp",
-              "name": "Aerodynamics::ResolveForces",
-              "namespace": "port::driving::native",
-              "signature": "void Aerodynamics::ResolveForces(Memory& m,std::uint32_t a,std::uint32_t output)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001ADFB8",
@@ -678,18 +672,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001adfb8.md",
           "source": "src/game_core/indep/src/aerodynamics.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Aerodynamics::GetDownforceAtSpeed()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/aerodynamics.cpp",
-              "name": "GetDownforceAtSpeed",
-              "namespace": "port::driving::native",
-              "signature": "float GetDownforceAtSpeed(Memory& m,std::uint32_t object,float f12)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         }
       ],
       "coverage": "members_catalogued"
@@ -1875,10 +1862,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001315f8.md",
           "source": "src/game_core/indep/src/car.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void Car::SetFrictionBoost()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00132960",
@@ -1886,10 +1874,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00132960.md",
           "source": "src/game_core/indep/src/car.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void Car::CalculateDebugChecksum()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00133070",
@@ -1897,18 +1886,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/00133070.md",
           "source": "src/game_core/indep/src/car.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Car::PleaseResetMeLater()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/car.cpp",
-              "name": "PleaseResetMeLater",
-              "namespace": "port::driving::native",
-              "signature": "void PleaseResetMeLater(Memory& m,std::uint32_t object,InitServices& services)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00133130",
@@ -1916,18 +1898,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/00133130.md",
           "source": "src/game_core/indep/src/car.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Car::IsBlinking()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/car.cpp",
-              "name": "IsBlinking",
-              "namespace": "port::driving::native",
-              "signature": "bool IsBlinking(Memory& m,std::uint32_t object)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00134DB8",
@@ -1935,10 +1910,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00134db8.md",
           "source": "src/game_core/indep/src/car.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void Car::GetWheelTraction()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00134E00",
@@ -1946,10 +1922,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00134e00.md",
           "source": "src/game_core/indep/src/car.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void Car::GetWheelsOnGround()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00135E18",
@@ -1957,18 +1934,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/00135e18.md",
           "source": "src/game_core/indep/src/car.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Car::ShouldVisualEffectsBeGenerated()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/car.cpp",
-              "name": "ShouldVisualEffectsBeGenerated",
-              "namespace": "port::driving::native",
-              "signature": "bool ShouldVisualEffectsBeGenerated(Memory& m,std::uint32_t car)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00135EB8",
@@ -1976,18 +1946,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/00135eb8.md",
           "source": "src/game_core/indep/src/car.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Car::GetPostCollisionYawControlBoost()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/car.cpp",
-              "name": "GetPostCollisionYawControlBoost",
-              "namespace": "port::driving::native",
-              "signature": "float GetPostCollisionYawControlBoost(Memory& m,std::uint32_t car)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         }
       ],
       "coverage": "members_catalogued"
@@ -2080,10 +2043,18 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d8298.md",
           "source": "src/game_core/indep/src/collisionbody.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
+          "coverage": "throwing_template_with_preserved_partial_projection",
           "signature": "void CarCollisionBody::GetMassInverse()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/indep/src/collisionbody.cpp",
+              "name": "CarCollisionBody::GetMassInverse",
+              "namespace": "hp2::recovered",
+              "signature": "float CarCollisionBody::GetMassInverse(port::driving::Memory& m,std::uint32_t body)",
+              "stub": false
+            }
+          ]
         },
         {
           "elf_address": "0x001D82D0",
@@ -2091,10 +2062,18 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d82d0.md",
           "source": "src/game_core/indep/src/collisionbody.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
+          "coverage": "throwing_template_with_preserved_partial_projection",
           "signature": "void CarCollisionBody::GetInertiaTensorInverse()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/indep/src/collisionbody.cpp",
+              "name": "CarCollisionBody::GetInertiaTensorInverse",
+              "namespace": "hp2::recovered",
+              "signature": "std::array<float,16> CarCollisionBody::GetInertiaTensorInverse(port::driving::Memory& m,std::uint32_t body)",
+              "stub": false
+            }
+          ]
         },
         {
           "elf_address": "0x001D8318",
@@ -2102,10 +2081,18 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d8318.md",
           "source": "src/game_core/indep/src/collisionbody.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
+          "coverage": "throwing_template_with_preserved_partial_projection",
           "signature": "void CarCollisionBody::ApplyImpulse()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/indep/src/collisionbody.cpp",
+              "name": "CarCollisionBody::ApplyImpulse",
+              "namespace": "hp2::recovered",
+              "signature": "void CarCollisionBody::ApplyImpulse(port::driving::Memory& m,std::uint32_t body,std::uint32_t car,const std::array<float,4>& impulse,const std::array<float,4>& arm)",
+              "stub": false
+            }
+          ]
         },
         {
           "elf_address": "0x001D8E58",
@@ -2338,10 +2325,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c00.md",
           "source": "src/game_core/indep/src/car.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CarDriver::GetSteerToPoint()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00136C08",
@@ -2349,10 +2337,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c08.md",
           "source": "src/game_core/indep/src/car.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CarDriver::SetPhysicsMode()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00136C10",
@@ -2360,10 +2349,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c10.md",
           "source": "src/game_core/indep/src/car.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CarDriver::GetDesiredTimeToSpeed()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00136C20",
@@ -2371,10 +2361,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c20.md",
           "source": "src/game_core/indep/src/car.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CarDriver::GetDesiredSpeed()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00136C30",
@@ -2382,10 +2373,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c30.md",
           "source": "src/game_core/indep/src/car.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CarDriver::ClearSteeringMemory()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00136C38",
@@ -2393,10 +2385,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c38.md",
           "source": "src/game_core/indep/src/car.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CarDriver::ZeroSteeringMemory()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00136C40",
@@ -2404,10 +2397,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c40.md",
           "source": "src/game_core/indep/src/car.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CarDriver::MaxSpeedToTarget()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00136C50",
@@ -2415,10 +2409,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c50.md",
           "source": "src/game_core/indep/src/car.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CarDriver::IsHonking()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00136C68",
@@ -2426,10 +2421,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c68.md",
           "source": "src/game_core/indep/src/car.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CarDriver::SetSteerToPoint()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00136C70",
@@ -2437,10 +2433,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c70.md",
           "source": "src/game_core/indep/src/car.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CarDriver::SetTarget()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00136D00",
@@ -2448,10 +2445,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136d00.md",
           "source": "src/game_core/indep/src/car.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CarDriver::Sub_00136D00()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         }
       ],
       "coverage": "members_catalogued"
@@ -2677,10 +2675,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c0780.md",
           "source": "src/game_core/indep/src/carstate.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CarState::ResetCarForSound()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001C0850",
@@ -2688,10 +2687,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c0850.md",
           "source": "src/game_core/indep/src/carstate.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CarState::BeginTimestep()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001C0888",
@@ -2699,18 +2699,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001c0888.md",
           "source": "src/game_core/indep/src/carstate.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void CarState::GetYaw()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/carstate.cpp",
-              "name": "GetYaw",
-              "namespace": "port::driving::native",
-              "signature": "float GetYaw(Memory& m,std::uint32_t s)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001C08D0",
@@ -2718,18 +2711,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001c08d0.md",
           "source": "src/game_core/indep/src/carstate.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void CarState::GetYawAlways()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/carstate.cpp",
-              "name": "GetYawAlways",
-              "namespace": "port::driving::native",
-              "signature": "float GetYawAlways(Memory& m,std::uint32_t s)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001C0CF8",
@@ -2737,10 +2723,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001c0cf8.md",
           "source": "src/game_core/indep/src/carstate.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template",
-          "signature": "void CarState::SetWheelTouchingGround()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001C0D48",
@@ -2748,10 +2735,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001c0d48.md",
           "source": "src/game_core/indep/src/carstate.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template",
-          "signature": "void CarState::SetWheelTerrain()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001C0D78",
@@ -2759,25 +2747,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/vehicle/001c0d78.md",
           "source": "src/game_core/indep/src/carstate.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void CarState::CalculateWheelMatrices()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/carstate.cpp",
-              "name": "CalculateWheelMatrices",
-              "namespace": "port::driving",
-              "signature": "void CalculateWheelMatrices(Memory&m,std::uint32_t car,std::int32_t index)",
-              "stub": false
-            },
-            {
-              "path": "src/game_core/src/care.cpp",
-              "name": "CalculateWheelMatrices",
-              "namespace": "port",
-              "signature": "CarAttachmentMatrices CalculateWheelMatrices(const CarRenderConfig& config,const std::array<float,4>& phases, std::uint16_t steering)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         }
       ],
       "coverage": "members_catalogued"
@@ -4913,18 +4887,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018ae70.md",
           "source": "src/game_core/indep/src/engine.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void DriveTrain::Sub_0018AE70()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "Sub_0018AE70",
-              "namespace": "port::driving",
-              "signature": "void Sub_0018AE70(Memory& m,std::uint32_t s,std::uint32_t config,std::uint32_t engine, std::uint32_t wheels,std::uint32_t car)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0018B360",
@@ -4932,18 +4899,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018b360.md",
           "source": "src/game_core/indep/src/engine.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void DriveTrain::GetDifferentialAngularAcceleration()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "GetDifferentialAngularAcceleration",
-              "namespace": "port::driving",
-              "signature": "float GetDifferentialAngularAcceleration(const DrivetrainProjection& s,const DrivetrainGlobals& g)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0018B6C8",
@@ -4951,18 +4911,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018b6c8.md",
           "source": "src/game_core/indep/src/engine.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void DriveTrain::ApplyClutchTorque()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "ApplyClutchTorque",
-              "namespace": "port::driving",
-              "signature": "void ApplyClutchTorque(float value,DrivetrainProjection& s,const DrivetrainGlobals& g)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0018B948",
@@ -4970,32 +4923,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018b948.md",
           "source": "src/game_core/indep/src/engine.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void DriveTrain::GuessClutchTorque()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "SolverDependencies::GuessClutchTorque",
-              "namespace": "port::driving",
-              "signature": "void SolverDependencies::GuessClutchTorque()",
-              "stub": false
-            },
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "GuessClutchTorque",
-              "namespace": "port::driving",
-              "signature": "void GuessClutchTorque(DrivetrainProjection& s,const DrivetrainGlobals& g,const EngineEvaluation& engine)",
-              "stub": false
-            },
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "GuessClutchTorque",
-              "namespace": "port::driving::native",
-              "signature": "void GuessClutchTorque(Memory& m,std::uint32_t a)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0018BAA0",
@@ -5003,32 +4935,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018baa0.md",
           "source": "src/game_core/indep/src/engine.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void DriveTrain::ModifyClutchTorque()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "SolverDependencies::ModifyClutchTorque",
-              "namespace": "port::driving",
-              "signature": "void SolverDependencies::ModifyClutchTorque()",
-              "stub": false
-            },
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "ModifyClutchTorque",
-              "namespace": "port::driving",
-              "signature": "void ModifyClutchTorque(DrivetrainProjection& s,const DrivetrainGlobals& g,const EngineEvaluation& engine)",
-              "stub": false
-            },
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "ModifyClutchTorque",
-              "namespace": "port::driving::native",
-              "signature": "void ModifyClutchTorque(Memory& m,std::uint32_t a)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0018BC10",
@@ -5036,25 +4947,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018bc10.md",
           "source": "src/game_core/indep/src/engine.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void DriveTrain::FinalizeClutchTorque()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "SolverDependencies::FinalizeClutchTorque",
-              "namespace": "port::driving",
-              "signature": "void SolverDependencies::FinalizeClutchTorque()",
-              "stub": false
-            },
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "FinalizeClutchTorque",
-              "namespace": "port::driving",
-              "signature": "void FinalizeClutchTorque()",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0018BCA0",
@@ -5062,25 +4959,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018bca0.md",
           "source": "src/game_core/indep/src/engine.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void DriveTrain::SetSportGear()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "SetSportGear",
-              "namespace": "port::driving",
-              "signature": "std::int32_t SetSportGear(DrivetrainProjection& s,std::int32_t value)",
-              "stub": false
-            },
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "SetSportGear",
-              "namespace": "port::driving::native",
-              "signature": "std::int32_t SetSportGear(Memory& m,std::uint32_t a,std::int32_t request)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0018BCE0",
@@ -5088,25 +4971,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018bce0.md",
           "source": "src/game_core/indep/src/engine.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void DriveTrain::SetDesiredGear()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "SetDesiredGear",
-              "namespace": "port::driving",
-              "signature": "std::int32_t SetDesiredGear(DrivetrainProjection& s,std::int32_t request,const DrivetrainGlobals& g)",
-              "stub": false
-            },
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "SetDesiredGear",
-              "namespace": "port::driving::native",
-              "signature": "std::int32_t SetDesiredGear(Memory& m,std::uint32_t a,std::int32_t request)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0018C030",
@@ -5114,10 +4983,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0018c030.md",
           "source": "src/game_core/indep/src/engine.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void DriveTrain::PrintCurrentState()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         }
       ],
       "coverage": "members_catalogued"
@@ -5427,10 +5297,18 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d7408.md",
           "source": "src/game_core/indep/src/collisionbody.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
+          "coverage": "throwing_template_with_preserved_partial_projection",
           "signature": "void DynamicCollisionBody::Interpolate()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/indep/src/collisionbody.cpp",
+              "name": "DynamicCollisionBody::Interpolate",
+              "namespace": "hp2::recovered",
+              "signature": "port::track::VoronoiPose DynamicCollisionBody::Interpolate(const port::driving::Memory& m,std::uint32_t body,const port::driving::CollisionMotion& frame,float backup)",
+              "stub": false
+            }
+          ]
         },
         {
           "elf_address": "0x001D7660",
@@ -5438,10 +5316,18 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d7660.md",
           "source": "src/game_core/indep/src/collisionbody.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
+          "coverage": "throwing_template_with_preserved_partial_projection",
           "signature": "void DynamicCollisionBody::Backup()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/indep/src/collisionbody.cpp",
+              "name": "DynamicCollisionBody::Backup",
+              "namespace": "hp2::recovered",
+              "signature": "void DynamicCollisionBody::Backup(port::driving::Memory& m,std::uint32_t body,const port::driving::CollisionMotion& frame,float backup)",
+              "stub": false
+            }
+          ]
         },
         {
           "elf_address": "0x001D7710",
@@ -5742,18 +5628,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018a7e8.md",
           "source": "src/game_core/indep/src/engine.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Engine::Sub_0018A7E8()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "Sub_0018A7E8",
-              "namespace": "port::driving",
-              "signature": "void Sub_0018A7E8(Memory& m,std::uint32_t s,std::uint32_t config,std::uint32_t car)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0018A9D8",
@@ -5761,18 +5640,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018a9d8.md",
           "source": "src/game_core/indep/src/engine.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Engine::GetDerivative()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "Engine::GetDerivative",
-              "namespace": "port::driving",
-              "signature": "std::uint32_t Engine::GetDerivative(Memory& m,std::uint32_t s,std::uint32_t out)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0018AA28",
@@ -5780,18 +5652,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018aa28.md",
           "source": "src/game_core/indep/src/engine.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Engine::GetTorque()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "GetTorque",
-              "namespace": "port::driving",
-              "signature": "float GetTorque(Memory& m,std::uint32_t s)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0018AAB0",
@@ -5799,18 +5664,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018aab0.md",
           "source": "src/game_core/indep/src/engine.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Engine::GetTotalEngineTorque()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "GetTotalEngineTorque",
-              "namespace": "port::driving",
-              "signature": "float GetTotalEngineTorque(Memory& m,std::uint32_t s)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0018ABF0",
@@ -5818,25 +5676,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018abf0.md",
           "source": "src/game_core/indep/src/engine.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Engine::DecrementNitro()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "DecrementNitro",
-              "namespace": "port::driving",
-              "signature": "void DecrementNitro(EngineTimerProjection& s,std::int32_t ticks,float scale)",
-              "stub": false
-            },
-            {
-              "path": "src/game_core/indep/src/engine.cpp",
-              "name": "DecrementNitro",
-              "namespace": "port::driving::native",
-              "signature": "void DecrementNitro(Memory& m,std::uint32_t a)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         }
       ],
       "coverage": "members_catalogued"
@@ -6878,18 +6722,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018f9f0.md",
           "source": "src/game_core/indep/src/table.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Graph::GetValue()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/table.cpp",
-              "name": "Graph::GetValue",
-              "namespace": "port::driving",
-              "signature": "float Graph::GetValue(Memory& m,std::uint32_t s,float value)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         }
       ],
       "coverage": "members_catalogued"
@@ -8736,18 +8573,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00137100.md",
           "source": "src/game_core/indep/src/physicscar.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void PhysicsCar::Sub_00137100()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/physicscar.cpp",
-              "name": "Sub_00137100",
-              "namespace": "port::driving::native",
-              "signature": "std::uint32_t Sub_00137100(Memory& m,std::uint32_t object,std::uint32_t config,std::uint32_t controls,std::uint32_t car,InitServices& services)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00137450",
@@ -8755,10 +8585,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00137450.md",
           "source": "src/game_core/indep/src/physicscar.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void PhysicsCar::DoSnapshot()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001375F0",
@@ -8766,18 +8597,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001375f0.md",
           "source": "src/game_core/indep/src/physicscar.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void PhysicsCar::Calibrate()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/physicscar.cpp",
-              "name": "Calibrate",
-              "namespace": "port::driving::native",
-              "signature": "void Calibrate(Memory& m,std::uint32_t object)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00137708",
@@ -8785,10 +8609,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00137708.md",
           "source": "src/game_core/indep/src/physicscar.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void PhysicsCar::Sub_00137708()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00137788",
@@ -8796,18 +8621,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00137788.md",
           "source": "src/game_core/indep/src/physicscar.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void PhysicsCar::ComputeAuxiliaries()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/physicscar.cpp",
-              "name": "PhysicsCar::ComputeAuxiliaries",
-              "namespace": "port::driving::native",
-              "signature": "void PhysicsCar::ComputeAuxiliaries(Memory& m,std::uint32_t object,InitServices& services)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001377D8",
@@ -8815,18 +8633,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001377d8.md",
           "source": "src/game_core/indep/src/physicscar.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void PhysicsCar::CheckDampingSuitability()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/physicscar.cpp",
-              "name": "CheckDampingSuitability",
-              "namespace": "port::driving::native",
-              "signature": "std::uint32_t CheckDampingSuitability(Memory& m,std::uint32_t object)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00137938",
@@ -8834,18 +8645,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/00137938.md",
           "source": "src/game_core/indep/src/physicscar.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void PhysicsCar::BottomOut()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/physicscar.cpp",
-              "name": "BottomOut",
-              "namespace": "port::driving::native",
-              "signature": "void BottomOut(Memory& m,std::uint32_t object,InitServices& services)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00137D90",
@@ -8853,18 +8657,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00137d90.md",
           "source": "src/game_core/indep/src/physicscar.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void PhysicsCar::Move()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/physicscar.cpp",
-              "name": "Move",
-              "namespace": "port::driving::native",
-              "signature": "float Move(Memory& m,std::uint32_t s,float dt,DrivingServices& hooks)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00138CF8",
@@ -8872,18 +8669,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/00138cf8.md",
           "source": "src/game_core/indep/src/physicscar.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void PhysicsCar::InitializeStateFromCar()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/physicscar.cpp",
-              "name": "InitializeStateFromCar",
-              "namespace": "port::driving::native",
-              "signature": "void InitializeStateFromCar(Memory& m,std::uint32_t object)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00138E08",
@@ -8891,18 +8681,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00138e08.md",
           "source": "src/game_core/indep/src/physicscar.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void PhysicsCar::ResolveForces()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/physicscar.cpp",
-              "name": "ResolveForces",
-              "namespace": "port::driving::native",
-              "signature": "void ResolveForces(Memory& m,std::uint32_t mover)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00138F38",
@@ -8910,25 +8693,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/00138f38.md",
           "source": "src/game_core/indep/src/physicscar.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void PhysicsCar::IterateForces()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/physicscar.cpp",
-              "name": "IterateForces",
-              "namespace": "port::driving::native",
-              "signature": "void IterateForces(Memory& m,std::uint32_t mover)",
-              "stub": false
-            },
-            {
-              "path": "src/game_core/indep/src/physicscar.cpp",
-              "name": "IterateForces",
-              "namespace": "port::driving",
-              "signature": "void IterateForces(SolverBodyProjection& body, std::array<SolverWheelProjection, 4>& wheels, const std::array<SolverSuspensionProjection, 4>& suspensions, std::int8_t a2, SolverDependencies& dependencies, const SolverMathContext& context)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00139188",
@@ -8936,18 +8705,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/00139188.md",
           "source": "src/game_core/indep/src/physicscar.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void PhysicsCar::UpdateCar()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/physicscar.cpp",
-              "name": "UpdateCar",
-              "namespace": "port::driving::native",
-              "signature": "void UpdateCar(Memory& m,std::uint32_t mover,float)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00139490",
@@ -8955,18 +8717,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/00139490.md",
           "source": "src/game_core/indep/src/physicscar.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void PhysicsCar::SetBoost()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/physicscar.cpp",
-              "name": "SetBoost",
-              "namespace": "port::driving::native",
-              "signature": "void SetBoost(Memory& m,std::uint32_t s,float value)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00139518",
@@ -8974,18 +8729,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/00139518.md",
           "source": "src/game_core/indep/src/physicscar.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void PhysicsCar::JumpStabilizer()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/physicscar.cpp",
-              "name": "JumpStabilizer",
-              "namespace": "port::driving::native",
-              "signature": "void JumpStabilizer(Memory& m,std::uint32_t mover)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A5D10",
@@ -8993,10 +8741,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001a5d10.md",
           "source": "src/game_core/indep/src/physicscar.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void PhysicsCar::Sub_001A5D10()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A5D60",
@@ -9004,18 +8753,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001a5d60.md",
           "source": "src/game_core/indep/src/physicscar.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void PhysicsCar::Sub_001A5D60()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/port/driving/unresolved_entries.cpp",
-              "name": "Sub_001A5D60",
-              "namespace": "port::driving::native",
-              "signature": "void Sub_001A5D60(Memory& m,std::uint32_t s,std::uint16_t value)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A66F0",
@@ -9023,10 +8765,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001a66f0.md",
           "source": "src/game_core/indep/src/physicscar.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void PhysicsCar::Sub_001A66F0()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x002A0550",
@@ -9034,10 +8777,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002a0550.md",
           "source": "src/game_core/indep/src/physicscar.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void PhysicsCar::Sub_002A0550()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         }
       ],
       "coverage": "members_catalogued"
@@ -9059,10 +8803,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0019c910.md",
           "source": "src/game_core/indep/src/componentphysics.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void PhysicsComponent::ResolveForces()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         }
       ],
       "coverage": "members_catalogued"
@@ -9099,18 +8844,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019c170.md",
           "source": "src/game_core/indep/src/componentphysics.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void PhysicsSystem::Sub_0019C170()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/componentphysics.cpp",
-              "name": "Sub_0019C170",
-              "namespace": "port::driving::init",
-              "signature": "void Sub_0019C170(ByteView out,std::uint32_t address)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0019C190",
@@ -9118,10 +8856,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0019c190.md",
           "source": "src/game_core/indep/src/componentphysics.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void PhysicsSystem::Sub_0019C190()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0019C238",
@@ -9129,18 +8868,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019c238.md",
           "source": "src/game_core/indep/src/componentphysics.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void PhysicsSystem::AddComponent()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/componentphysics.cpp",
-              "name": "AddComponent",
-              "namespace": "port::driving::native",
-              "signature": "void AddComponent(Memory& m,std::uint32_t head,std::uint32_t object)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0019C290",
@@ -9148,18 +8880,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019c290.md",
           "source": "src/game_core/indep/src/componentphysics.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void PhysicsSystem::IntegrateEuler()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/componentphysics.cpp",
-              "name": "IntegrateEuler",
-              "namespace": "port::driving::native",
-              "signature": "void IntegrateEuler(Memory& m,float dt,std::uint32_t head,const IntegrationCalls& calls)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0019C670",
@@ -9167,18 +8892,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019c670.md",
           "source": "src/game_core/indep/src/componentphysics.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void PhysicsSystem::GetDerivative()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/componentphysics.cpp",
-              "name": "PhysicsSystem::GetDerivative",
-              "namespace": "port::driving::native",
-              "signature": "void PhysicsSystem::GetDerivative(Memory& m,std::uint32_t head,std::uint32_t output,const IntegrationCalls& calls)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0019C808",
@@ -9186,18 +8904,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0019c808.md",
           "source": "src/game_core/indep/src/componentphysics.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void PhysicsSystem::ComputeAuxiliaries()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/componentphysics.cpp",
-              "name": "PhysicsSystem::ComputeAuxiliaries",
-              "namespace": "port::driving::native",
-              "signature": "void PhysicsSystem::ComputeAuxiliaries(Memory& m,std::uint32_t head,InitServices& services)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0019C8F8",
@@ -9205,10 +8916,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0019c8f8.md",
           "source": "src/game_core/indep/src/componentphysics.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void PhysicsSystem::ResolveForces()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         }
       ],
       "coverage": "members_catalogued"
@@ -10370,10 +10082,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00130958.md",
           "source": "src/game_core/indep/src/realdriver.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RealDriver::Sub_00130958()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00136C58",
@@ -10381,10 +10094,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c58.md",
           "source": "src/game_core/indep/src/realdriver.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RealDriver::Sub_00136C58()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00136C60",
@@ -10392,10 +10106,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c60.md",
           "source": "src/game_core/indep/src/realdriver.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RealDriver::Sub_00136C60()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00136CE8",
@@ -10403,10 +10118,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136ce8.md",
           "source": "src/game_core/indep/src/realdriver.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RealDriver::Sub_00136CE8()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00136CF0",
@@ -10414,10 +10130,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136cf0.md",
           "source": "src/game_core/indep/src/realdriver.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RealDriver::Sub_00136CF0()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0013AD90",
@@ -10425,10 +10142,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013ad90.md",
           "source": "src/game_core/indep/src/realdriver.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RealDriver::Sub_0013AD90()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0013AE58",
@@ -10436,10 +10154,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013ae58.md",
           "source": "src/game_core/indep/src/realdriver.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RealDriver::Sub_0013AE58()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0013AEB8",
@@ -10447,10 +10166,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013aeb8.md",
           "source": "src/game_core/indep/src/realdriver.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RealDriver::DoSnapshot()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0013B080",
@@ -10458,10 +10178,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b080.md",
           "source": "src/game_core/indep/src/realdriver.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RealDriver::AddJoyHandlers()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0013B250",
@@ -10469,10 +10190,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b250.md",
           "source": "src/game_core/indep/src/realdriver.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RealDriver::RemoveJoyHandlers()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0013B390",
@@ -10480,10 +10202,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0013b390.md",
           "source": "src/game_core/indep/src/realdriver.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RealDriver::SetManualTransmission()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0013B3D0",
@@ -10491,10 +10214,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b3d0.md",
           "source": "src/game_core/indep/src/realdriver.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RealDriver::SetLowGear()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0013B3F8",
@@ -10502,10 +10226,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b3f8.md",
           "source": "src/game_core/indep/src/realdriver.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RealDriver::Drive()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0013B560",
@@ -10513,10 +10238,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0013b560.md",
           "source": "src/game_core/indep/src/realdriver.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RealDriver::ResetJoyValues()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0013C420",
@@ -10524,10 +10250,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013c420.md",
           "source": "src/game_core/indep/src/realdriver.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RealDriver::StartHonkHorn()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0013C460",
@@ -10535,10 +10262,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013c460.md",
           "source": "src/game_core/indep/src/realdriver.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RealDriver::StopHonkHorn()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0013CAE0",
@@ -10546,10 +10274,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013cae0.md",
           "source": "src/game_core/indep/src/realdriver.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RealDriver::GetDriverNumber()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0013CAF0",
@@ -10557,10 +10286,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013caf0.md",
           "source": "src/game_core/indep/src/realdriver.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RealDriver::SetDesiredSpeed()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x002A0550",
@@ -10568,10 +10298,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002a0550.md",
           "source": "src/game_core/indep/src/realdriver.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RealDriver::Sub_002A0550()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         }
       ],
       "coverage": "members_catalogued"
@@ -10937,18 +10668,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019c9b0.md",
           "source": "src/game_core/indep/src/rigidbody.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void RigidBody::Sub_0019C9B0()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/rigidbody.cpp",
-              "name": "Sub_0019C9B0",
-              "namespace": "port::driving::init",
-              "signature": "void Sub_0019C9B0(ByteView out,std::uint32_t config_address,ByteView config)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0019CC40",
@@ -10956,18 +10680,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019cc40.md",
           "source": "src/game_core/indep/src/rigidbody.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void RigidBody::Calibrate()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/rigidbody.cpp",
-              "name": "Calibrate",
-              "namespace": "port::driving::init",
-              "signature": "void Calibrate(ByteView out,const std::array<std::uint32_t,4>* a1)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0019CC58",
@@ -10975,18 +10692,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019cc58.md",
           "source": "src/game_core/indep/src/rigidbody.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void RigidBody::CalculateInertiaTensor()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/rigidbody.cpp",
-              "name": "CalculateInertiaTensor",
-              "namespace": "port::driving::init",
-              "signature": "void CalculateInertiaTensor(ByteView out,ByteView config)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0019CD90",
@@ -10994,25 +10704,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019cd90.md",
           "source": "src/game_core/indep/src/rigidbody.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void RigidBody::ApplyForce()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/rigidbody.cpp",
-              "name": "ApplyForce",
-              "namespace": "port::driving",
-              "signature": "void ApplyForce(SolverBodyProjection& body, const SolverVector& a1, const SolverVector& a2)",
-              "stub": false
-            },
-            {
-              "path": "src/game_core/indep/src/rigidbody.cpp",
-              "name": "ApplyForce",
-              "namespace": "port::driving::native",
-              "signature": "void ApplyForce(Memory& m,std::uint32_t body,const Vector& force,const Vector& point)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0019CE80",
@@ -11020,25 +10716,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019ce80.md",
           "source": "src/game_core/indep/src/rigidbody.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void RigidBody::ApplyForceInFrame()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/rigidbody.cpp",
-              "name": "ApplyForceInFrame",
-              "namespace": "port::driving",
-              "signature": "void ApplyForceInFrame(SolverBodyProjection& body, const SolverVector& a1, const SolverVector& a2, const SolverMathContext& context)",
-              "stub": false
-            },
-            {
-              "path": "src/game_core/indep/src/rigidbody.cpp",
-              "name": "ApplyForceInFrame",
-              "namespace": "port::driving::native",
-              "signature": "void ApplyForceInFrame(Memory& m,std::uint32_t body,const Vector& force,const Vector& point)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0019CEF8",
@@ -11046,18 +10728,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019cef8.md",
           "source": "src/game_core/indep/src/rigidbody.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void RigidBody::ApplyMoment()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/rigidbody.cpp",
-              "name": "ApplyMoment",
-              "namespace": "port::driving",
-              "signature": "void ApplyMoment(SolverBodyProjection& body, const SolverVector& a1)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0019CF10",
@@ -11065,18 +10740,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019cf10.md",
           "source": "src/game_core/indep/src/rigidbody.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void RigidBody::ApplyImpulse()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/rigidbody.cpp",
-              "name": "ApplyImpulse",
-              "namespace": "port::driving::native",
-              "signature": "void ApplyImpulse(Memory& m,std::uint32_t body,const std::array<float,4>& input,const std::array<float,4>& point)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0019CFF8",
@@ -11084,10 +10752,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0019cff8.md",
           "source": "src/game_core/indep/src/rigidbody.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RigidBody::ApplyImpulseWithScaledInverseInertiaTensor()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0019D1F0",
@@ -11095,10 +10764,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0019d1f0.md",
           "source": "src/game_core/indep/src/rigidbody.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RigidBody::GetEnergy()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0019D4D0",
@@ -11106,18 +10776,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019d4d0.md",
           "source": "src/game_core/indep/src/rigidbody.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void RigidBody::GetDerivative()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/rigidbody.cpp",
-              "name": "GetDerivative",
-              "namespace": "port::driving::native",
-              "signature": "void GetDerivative(Memory& m,std::uint32_t body,std::uint32_t output)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0019D980",
@@ -11125,10 +10788,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0019d980.md",
           "source": "src/game_core/indep/src/rigidbody.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void RigidBody::PrintCurrentState()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         }
       ],
       "coverage": "members_catalogued"
@@ -11558,10 +11222,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001aa788.md",
           "source": "src/game_core/indep/src/skids.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void SkidSegment::SetPoints()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001AA7F8",
@@ -11569,10 +11234,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001aa7f8.md",
           "source": "src/game_core/indep/src/skids.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void SkidSegment::GetPoints()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001AA870",
@@ -11580,10 +11246,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001aa870.md",
           "source": "src/game_core/indep/src/skids.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void SkidSegment::GetEndPoints()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         }
       ],
       "coverage": "members_catalogued"
@@ -12608,18 +12275,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a5ea0.md",
           "source": "src/game_core/indep/src/suspension.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Suspension::Sub_001A5EA0()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/suspension.cpp",
-              "name": "Sub_001A5EA0",
-              "namespace": "port::driving::init",
-              "signature": "void Sub_001A5EA0(ByteView out,std::uint32_t a1,std::uint32_t a2,std::uint32_t a3,std::uint32_t t0,std::uint32_t t1)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A5F88",
@@ -12627,18 +12287,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a5f88.md",
           "source": "src/game_core/indep/src/suspension.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Suspension::Calibrate()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/suspension.cpp",
-              "name": "Calibrate",
-              "namespace": "port::driving::init",
-              "signature": "void Calibrate(ByteView out,float f12,const std::array<float,4>& a,const std::array<float,4>& b)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A6330",
@@ -12646,18 +12299,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a6330.md",
           "source": "src/game_core/indep/src/suspension.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Suspension::ResolveForces()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/suspension.cpp",
-              "name": "Suspension::ResolveForces",
-              "namespace": "port::driving",
-              "signature": "void Suspension::ResolveForces(float f12, SolverSuspensionProjection& suspension)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A6370",
@@ -12665,18 +12311,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a6370.md",
           "source": "src/game_core/indep/src/suspension.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Suspension::ResolveMoreForces()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/suspension.cpp",
-              "name": "ResolveMoreForces",
-              "namespace": "port::driving",
-              "signature": "void ResolveMoreForces(SolverSuspensionProjection& suspension, std::int32_t Field_00330D10)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A6408",
@@ -12684,18 +12323,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a6408.md",
           "source": "src/game_core/indep/src/suspension.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Suspension::ApplyGroundPenaltyImpulse()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/suspension.cpp",
-              "name": "ApplyGroundPenaltyImpulse",
-              "namespace": "port::driving::native",
-              "signature": "float ApplyGroundPenaltyImpulse(Memory& m,std::uint32_t object)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         }
       ],
       "coverage": "members_catalogued"
@@ -12717,18 +12349,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/00189120.md",
           "source": "src/game_core/indep/src/carinfo.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Table::SetMinMax()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/carinfo.cpp",
-              "name": "SetMinMax",
-              "namespace": "port::driving",
-              "signature": "void SetMinMax(Memory& m,std::uint32_t s,float f12,float f13)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x00189168",
@@ -12736,18 +12361,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/00189168.md",
           "source": "src/game_core/indep/src/carinfo.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Table::CalcIndexMultiplier()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/carinfo.cpp",
-              "name": "CalcIndexMultiplier",
-              "namespace": "port::driving",
-              "signature": "void CalcIndexMultiplier(Memory& m,std::uint32_t s)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0018F808",
@@ -12755,18 +12373,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018f808.md",
           "source": "src/game_core/indep/src/table.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Table::Sub_0018F808()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/table.cpp",
-              "name": "Sub_0018F808",
-              "namespace": "port::driving",
-              "signature": "void Sub_0018F808(Memory& m,std::uint32_t s,std::uint32_t values,std::uint32_t count,float f12,float f13)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x0018F838",
@@ -12774,18 +12385,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018f838.md",
           "source": "src/game_core/indep/src/table.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Table::GetValue()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/table.cpp",
-              "name": "Table::GetValue",
-              "namespace": "port::driving",
-              "signature": "float Table::GetValue(Memory& m,std::uint32_t s,float value)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         }
       ],
       "coverage": "members_catalogued"
@@ -13124,6 +12728,13 @@
               "namespace": "port::driving",
               "signature": "float PlaneContact::GetElevation(Memory& m,std::uint32_t,std::uint32_t point, std::uint32_t material,std::uint32_t plane,std::uint32_t found)",
               "stub": false
+            },
+            {
+              "path": "src/game_core/indep/src/track.cpp",
+              "name": "TopologyCoordinate::GetElevation",
+              "namespace": "hp2::recovered",
+              "signature": "port::track::Contact TopologyCoordinate::GetElevation(const port::track::Topology& t,const std::array<float,3>& q)",
+              "stub": false
             }
           ]
         }
@@ -13158,10 +12769,18 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00152c10.md",
           "source": "src/game_core/indep/src/track.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
+          "coverage": "throwing_template_with_preserved_partial_projection",
           "signature": "void TopologyTree::Loader()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/indep/src/track.cpp",
+              "name": "TopologyTree::Loader",
+              "namespace": "hp2::recovered",
+              "signature": "bool TopologyTree::Loader(port::track::Topology& t,std::uint32_t tag,const std::vector<std::uint8_t>& data,std::size_t header,std::size_t size)",
+              "stub": false
+            }
+          ]
         },
         {
           "elf_address": "0x00152D30",
@@ -13169,10 +12788,18 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00152d30.md",
           "source": "src/game_core/indep/src/track.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
+          "coverage": "throwing_template_with_preserved_partial_projection",
           "signature": "void TopologyTree::Unloader()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/indep/src/track.cpp",
+              "name": "TopologyTree::Unloader",
+              "namespace": "hp2::recovered",
+              "signature": "bool TopologyTree::Unloader(port::track::Topology& t,std::uint32_t tag)",
+              "stub": false
+            }
+          ]
         },
         {
           "elf_address": "0x00152DB0",
@@ -13180,10 +12807,18 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00152db0.md",
           "source": "src/game_core/indep/src/track.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
+          "coverage": "throwing_template_with_preserved_partial_projection",
           "signature": "void TopologyTree::GetSquareCorner()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/indep/src/track.cpp",
+              "name": "TopologyTree::GetSquareCorner",
+              "namespace": "hp2::recovered",
+              "signature": "float TopologyTree::GetSquareCorner(float v)",
+              "stub": false
+            }
+          ]
         },
         {
           "elf_address": "0x00152E08",
@@ -13191,10 +12826,18 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00152e08.md",
           "source": "src/game_core/indep/src/track.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
+          "coverage": "throwing_template_with_preserved_partial_projection",
           "signature": "void TopologyTree::GetSquare()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/indep/src/track.cpp",
+              "name": "TopologyTree::GetSquare",
+              "namespace": "hp2::recovered",
+              "signature": "std::optional<std::size_t> TopologyTree::GetSquare(const port::track::Topology& t,float x,float y)",
+              "stub": false
+            }
+          ]
         },
         {
           "elf_address": "0x00152F38",
@@ -13863,10 +13506,18 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001517d8.md",
           "source": "src/game_core/indep/src/track.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
+          "coverage": "throwing_template_with_preserved_partial_projection",
           "signature": "void TrackPolygon::PointInShaft()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/indep/src/track.cpp",
+              "name": "TrackPolygon::PointInShaft",
+              "namespace": "hp2::recovered",
+              "signature": "bool TrackPolygon::PointInShaft(const port::track::Polygon& p,const std::array<float,3>& point,float* distance)",
+              "stub": false
+            }
+          ]
         }
       ],
       "coverage": "members_catalogued"
@@ -14761,10 +14412,18 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d2a48.md",
           "source": "src/game_core/indep/src/voronoiclip.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
+          "coverage": "throwing_template_with_preserved_partial_projection",
           "signature": "void VCEdge::SetVoronoiPlanes()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/indep/src/voronoiclip.cpp",
+              "name": "VCEdge::SetVoronoiPlanes",
+              "namespace": "hp2::recovered",
+              "signature": "void VCEdge::SetVoronoiPlanes(port::track::VoronoiPolyhedron& poly,unsigned index)",
+              "stub": false
+            }
+          ]
         }
       ],
       "coverage": "members_catalogued"
@@ -14949,10 +14608,18 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d00f8.md",
           "source": "src/game_core/indep/src/voronoiclip.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
+          "coverage": "throwing_template_with_preserved_partial_projection",
           "signature": "void VCTransformedFeature::TransformVertex()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/indep/src/voronoiclip.cpp",
+              "name": "VCTransformedFeature::TransformVertex",
+              "namespace": "hp2::recovered",
+              "signature": "port::track::VoronoiTransformedFeature VCTransformedFeature::TransformVertex(const port::track::VoronoiPolyhedron& p,std::uint32_t code,const port::track::VoronoiTransform& t)",
+              "stub": false
+            }
+          ]
         },
         {
           "elf_address": "0x001D0168",
@@ -14960,10 +14627,18 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d0168.md",
           "source": "src/game_core/indep/src/voronoiclip.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
+          "coverage": "throwing_template_with_preserved_partial_projection",
           "signature": "void VCTransformedFeature::TransformEdge()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/indep/src/voronoiclip.cpp",
+              "name": "VCTransformedFeature::TransformEdge",
+              "namespace": "hp2::recovered",
+              "signature": "port::track::VoronoiTransformedFeature VCTransformedFeature::TransformEdge(const port::track::VoronoiPolyhedron& p,std::uint32_t code,const port::track::VoronoiTransform& t)",
+              "stub": false
+            }
+          ]
         }
       ],
       "coverage": "members_catalogued"
@@ -14985,10 +14660,18 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d2800.md",
           "source": "src/game_core/indep/src/voronoiclip.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
+          "coverage": "throwing_template_with_preserved_partial_projection",
           "signature": "void VCVertex::SetVoronoiPlanes()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/indep/src/voronoiclip.cpp",
+              "name": "VCVertex::SetVoronoiPlanes",
+              "namespace": "hp2::recovered",
+              "signature": "void VCVertex::SetVoronoiPlanes(port::track::VoronoiPolyhedron& poly,unsigned index)",
+              "stub": false
+            }
+          ]
         },
         {
           "elf_address": "0x001D2950",
@@ -15043,10 +14726,18 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d0250.md",
           "source": "src/game_core/indep/src/voronoiclip.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
+          "coverage": "throwing_template_with_preserved_partial_projection",
           "signature": "void VCVoronoiClip::ClipPlanes()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/indep/src/voronoiclip.cpp",
+              "name": "VCVoronoiClip::ClipPlanes",
+              "namespace": "hp2::recovered",
+              "signature": "bool VCVoronoiClip::ClipPlanes(port::track::VoronoiClip& clip,const port::track::VoronoiTransformedFeature& edge,const std::vector<port::track::VoronoiPlaneNeighbor>& planes)",
+              "stub": false
+            }
+          ]
         }
       ],
       "coverage": "members_catalogued"
@@ -15203,18 +14894,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a3f10.md",
           "source": "src/game_core/indep/src/wheel.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Wheel::Sub_001A3F10()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/wheel.cpp",
-              "name": "Sub_001A3F10",
-              "namespace": "port::driving::init",
-              "signature": "void Sub_001A3F10(ByteView out,std::uint32_t a1,std::uint32_t a2,std::uint32_t a3,std::uint32_t t0)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A4158",
@@ -15222,18 +14906,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a4158.md",
           "source": "src/game_core/indep/src/wheel.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Wheel::Sub_001A4158()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/wheel.cpp",
-              "name": "SetState",
-              "namespace": "port::driving::init",
-              "signature": "void SetState(ByteView out,float f12,float f13)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A4170",
@@ -15241,18 +14918,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a4170.md",
           "source": "src/game_core/indep/src/wheel.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Wheel::Sub_001A4170()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/wheel.cpp",
-              "name": "SetState",
-              "namespace": "port::driving",
-              "signature": "void SetState(Memory&m,float f12,float f13,float f14,std::uint32_t a, std::uint32_t car,std::uint32_t,std::uint16_t steering,ContactProvider&provider)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A4348",
@@ -15260,18 +14930,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a4348.md",
           "source": "src/game_core/indep/src/wheel.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Wheel::Calibrate()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/wheel.cpp",
-              "name": "Calibrate",
-              "namespace": "port::driving::init",
-              "signature": "void Calibrate(ByteView out,std::uint32_t global)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A4358",
@@ -15279,18 +14942,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a4358.md",
           "source": "src/game_core/indep/src/wheel.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Wheel::ComputeAuxiliaries()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/wheel.cpp",
-              "name": "Wheel::ComputeAuxiliaries",
-              "namespace": "port::driving::native",
-              "signature": "void Wheel::ComputeAuxiliaries(Memory& m,std::uint32_t object)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A44A8",
@@ -15298,18 +14954,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a44a8.md",
           "source": "src/game_core/indep/src/wheel.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Wheel::ExchangeZForces()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/wheel.cpp",
-              "name": "ExchangeZForces",
-              "namespace": "port::driving",
-              "signature": "float ExchangeZForces(float f12, SolverWheelProjection& wheel, std::int32_t a1)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A46B0",
@@ -15317,18 +14966,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a46b0.md",
           "source": "src/game_core/indep/src/wheel.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Wheel::GetDerivative()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/wheel.cpp",
-              "name": "Wheel::GetDerivative",
-              "namespace": "port::driving",
-              "signature": "std::uint32_t Wheel::GetDerivative(Memory&m,std::uint32_t a,std::uint32_t out)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A4778",
@@ -15336,18 +14978,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a4778.md",
           "source": "src/game_core/indep/src/wheel.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Wheel::CheckForBrakeLock()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/wheel.cpp",
-              "name": "CheckForBrakeLock",
-              "namespace": "port::driving",
-              "signature": "void CheckForBrakeLock(float f12, SolverWheelProjection& wheel, const SolverWheelGlobals& globals)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A4818",
@@ -15355,18 +14990,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a4818.md",
           "source": "src/game_core/indep/src/wheel.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Wheel::GetPilotFactor()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/wheel.cpp",
-              "name": "GetPilotFactor",
-              "namespace": "port::driving",
-              "signature": "float GetPilotFactor(Memory&m,std::uint32_t a)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A4930",
@@ -15374,25 +15002,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a4930.md",
           "source": "src/game_core/indep/src/wheel.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Wheel::GuessGroundForce()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/wheel.cpp",
-              "name": "SolverDependencies::GuessGroundForce",
-              "namespace": "port::driving",
-              "signature": "void SolverDependencies::GuessGroundForce(SolverWheelProjection&, int, std::int8_t)",
-              "stub": false
-            },
-            {
-              "path": "src/game_core/indep/src/wheel.cpp",
-              "name": "GuessGroundForce",
-              "namespace": "port::driving",
-              "signature": "void GuessGroundForce(Memory&m,std::uint32_t a,std::int32_t,std::int32_t a2)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A4D28",
@@ -15400,18 +15014,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a4d28.md",
           "source": "src/game_core/indep/src/wheel.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Wheel::GetLateralForce()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/wheel.cpp",
-              "name": "GetLateralForce",
-              "namespace": "port::driving",
-              "signature": "float GetLateralForce(Memory&m,float request,float argument,std::uint32_t a)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A4E88",
@@ -15419,18 +15026,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a4e88.md",
           "source": "src/game_core/indep/src/wheel.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Wheel::ModifyGroundForce()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/wheel.cpp",
-              "name": "ModifyGroundForce",
-              "namespace": "port::driving",
-              "signature": "void ModifyGroundForce(WheelIterationProjection& a0,const std::array<float,2>& a1)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A4EE0",
@@ -15438,25 +15038,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a4ee0.md",
           "source": "src/game_core/indep/src/wheel.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Wheel::FinalizeGroundForce()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/wheel.cpp",
-              "name": "SolverDependencies::FinalizeGroundForce",
-              "namespace": "port::driving",
-              "signature": "void SolverDependencies::FinalizeGroundForce(SolverWheelProjection&, int)",
-              "stub": false
-            },
-            {
-              "path": "src/game_core/indep/src/wheel.cpp",
-              "name": "FinalizeGroundForce",
-              "namespace": "port::driving",
-              "signature": "void FinalizeGroundForce(Memory&m,std::uint32_t a,std::int32_t)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A5428",
@@ -15464,18 +15050,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a5428.md",
           "source": "src/game_core/indep/src/wheel.cpp",
           "knowledge_status": "Tested",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void Wheel::GetHorizontalGroundForceInCarFrame()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/indep/src/wheel.cpp",
-              "name": "GetHorizontalGroundForceInCarFrame",
-              "namespace": "port::driving",
-              "signature": "void GetHorizontalGroundForceInCarFrame(const SolverWheelProjection& wheel, SolverVector& out)",
-              "stub": false
-            }
-          ]
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A5520",
@@ -15483,10 +15062,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001a5520.md",
           "source": "src/game_core/indep/src/wheel.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void Wheel::MaybeMakeSkids()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A5BF0",
@@ -15494,10 +15074,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001a5bf0.md",
           "source": "src/game_core/indep/src/wheel.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void Wheel::Sub_001A5BF0()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A5C08",
@@ -15505,10 +15086,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001a5c08.md",
           "source": "src/game_core/indep/src/wheel.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void Wheel::Sub_001A5C08()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A5C20",
@@ -15516,10 +15098,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a5c20.md",
           "source": "src/game_core/indep/src/wheel.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template",
-          "signature": "void Wheel::Sub_001A5C20()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A5C28",
@@ -15527,10 +15110,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a5c28.md",
           "source": "src/game_core/indep/src/wheel.cpp",
           "knowledge_status": "Implemented",
-          "coverage": "throwing_template",
-          "signature": "void Wheel::GetSize()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         },
         {
           "elf_address": "0x001A5C30",
@@ -15538,10 +15122,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001a5c30.md",
           "source": "src/game_core/indep/src/wheel.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void Wheel::Sub_001A5C30()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0044-debug-canonical-owners.json"
         }
       ],
       "coverage": "members_catalogued"
@@ -17819,10 +17404,11 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0010f968.md",
           "source": "src/game_core/src/ecstasy/ecstasye.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void ePoly::Sub_0010F968()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "coverage": "historical_retail_template_superseded_by_debug_owner",
+          "signature": "historical Retail attribution; no current Debug signature inference",
+          "signature_provenance": "No cross-version behavior or ABI credit",
+          "preserved_projections": [],
+          "debug_owner_registry": "reverse/classes/task0046-debug-canonical-owners.json"
         }
       ],
       "coverage": "members_catalogued"
@@ -20071,10 +19657,18 @@
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001b9cd0.md",
           "source": "src/game_core/indep/src/volumetree.cpp",
           "knowledge_status": "Identified",
-          "coverage": "throwing_template",
+          "coverage": "throwing_template_with_preserved_partial_projection",
           "signature": "void vAABB::Contains()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/indep/src/volumetree.cpp",
+              "name": "vAABB::Contains",
+              "namespace": "hp2::recovered",
+              "signature": "bool vAABB::Contains(float x,float y,float z)const",
+              "stub": false
+            }
+          ]
         },
         {
           "elf_address": "0x001B9D40",

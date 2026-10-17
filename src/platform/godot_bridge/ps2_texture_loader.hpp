@@ -35,6 +35,10 @@ public:
     // the hash is not present in any searched bundle.
     godot::Ref<godot::ImageTexture> load_texture_by_hash(std::int64_t texture_hash);
 
+    // TASK-0046 port-side 3D upload: preserve raw GS alpha and unflipped mesh UVs.
+    // Does not change the established frontend loader's expanded-alpha convention.
+    godot::Ref<godot::ImageTexture> load_texture_for_3d(std::int64_t texture_hash,hp2::assets::TpkTextureHeader& header);
+
     // Same lookup keyed on the texture's name, hashed with the recovered front-end string hash
     // (hp2::frontend::StringHash_002534A8, ELF 0x002534A8) so callers never have to reimplement
     // it. Used for the names the recovered code carries as strings, e.g. the event tree's
@@ -56,6 +60,7 @@ private:
     std::map<std::string, hp2::assets::Hp2TpkArchive> archive_cache_;
     std::map<std::uint32_t, godot::Ref<godot::ImageTexture>> texture_cache_;
     godot::PackedStringArray search_bundles_;
+    std::map<std::uint32_t,std::pair<godot::Ref<godot::ImageTexture>,hp2::assets::TpkTextureHeader>> raw_3d_cache_;
 };
 
 } // namespace port::godot_bridge

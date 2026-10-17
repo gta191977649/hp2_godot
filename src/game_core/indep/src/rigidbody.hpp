@@ -1,57 +1,38 @@
-// PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
-
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
-// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+// TASK-0044 E-0044-S01/S02; Debug SHA256815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
+// Exact owner/source RigidBody, indep/src/rigidbody.cpp. Host storage binds explicit PS2 Memory.
+#include "game_core/port/driving/object_view.hpp"
+#include "game_core/port/driving/projections.hpp"
 namespace hp2::recovered {
-class RigidBody {
+// Debug0019ac98; E-0044-S01. Bounded vector/matrix host values.
+port::driving::SolverMatrix VectorStarMatrix(const port::driving::SolverVector&,const port::driving::SolverMatrix&);
+class RigidBody : public port::driving::ObjectView {
 public:
-    // ELF 0x0019C9B0; E-0042-C093; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019c9b0.md.
-    // Original Debug reference: RigidBody::RigidBody(RigidBodyInfo *); constructor/destructor entry is not a native C++ lifetime operation.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0019C9B0();
-    // ELF 0x0019CC40; E-0042-C094; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019cc40.md.
-    // Original Debug reference: RigidBody::Calibrate(bVector3 *); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Calibrate();
-    // ELF 0x0019CC58; E-0042-C095; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019cc58.md.
-    // Original Debug reference: RigidBody::CalculateInertiaTensor(void); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void CalculateInertiaTensor();
-    // ELF 0x0019CD90; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019cd90.md.
-    // Original Debug reference: RigidBody::ApplyForce(bVector3 *, bVector3 *); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void ApplyForce();
-    // ELF 0x0019CE80; E-0042-C097; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019ce80.md.
-    // Original Debug reference: RigidBody::ApplyForceInFrame(bVector3 *, bVector3 *); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void ApplyForceInFrame();
-    // ELF 0x0019CEF8; E-0042-C098; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019cef8.md.
-    // Original Debug reference: RigidBody::ApplyMoment(bVector3 *); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void ApplyMoment();
-    // ELF 0x0019CF10; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019cf10.md.
-    // Original Debug reference: RigidBody::ApplyImpulse(bVector3 *, bVector3 *); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void ApplyImpulse();
-    // ELF 0x0019CFF8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0019cff8.md.
-    // Original Debug reference: RigidBody::ApplyImpulseWithScaledInverseInertiaTensor(bVector3 *, bVector3 *, float); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void ApplyImpulseWithScaledInverseInertiaTensor();
-    // ELF 0x0019D1F0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0019d1f0.md.
-    // Original Debug reference: RigidBody::GetEnergy(void); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void GetEnergy();
-    // ELF 0x0019D4D0; E-0041-R03; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019d4d0.md.
-    // Original Debug reference: RigidBody::GetDerivative(float *); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void GetDerivative();
-    // ELF 0x0019D980; E-0042-C100; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0019d980.md.
-    // Original Debug reference: RigidBody::PrintCurrentState(void); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void PrintCurrentState();
+ using ObjectView::ObjectView;
+ // Debug0019a2d8 constructor body; original allocation separate from host lifetime.
+ void port_initialize(std::uint32_t config);
+ // Debug0019a568/0019a580.
+ void SetState(std::uint32_t position,std::uint32_t matrix,std::uint32_t velocity,std::uint32_t angular);
+ void Calibrate(std::uint32_t cog);void CalculateInertiaTensor();
+ // Debug0019a6b8/0019a7a8/0019a820/0019a838.
+ void ApplyForce(const port::driving::SolverVector&,const port::driving::SolverVector&);
+ void ApplyForceInFrame(const port::driving::SolverVector&,const port::driving::SolverVector&);
+ void ApplyMoment(const port::driving::SolverVector&);
+ void ApplyImpulse(const port::driving::SolverVector&,const port::driving::SolverVector&);
+ // Debug0019A920; E-0048-D04. Original capped momentum and scaled angular impulse.
+ void ApplyImpulseWithScaledInverseInertiaTensor(const port::driving::SolverVector&,const port::driving::SolverVector&,float);
+ // Debug0019adf8/0019b170/0019b2a0. Last float explicitly supplies original uninitialized stack W.
+ void GetDerivative(std::uint32_t output);void ComputeAuxiliaries(float unused_stack_w=0);void ResolveForces();
+ // Debug0019b558/0019b5a0/0019b5e8/0019b5f0.
+ void SetState(std::uint32_t state);void GetState(std::uint32_t state);std::uint32_t GetState();int GetSize();
+ // Debug0019b2a8 explicit untranslated printing service.
+ void PrintCurrentState();
+ static void port_initialize(port::driving::init::ByteView,std::uint32_t,port::driving::init::ByteView);
+ static void CalculateInertiaTensor(port::driving::init::ByteView,port::driving::init::ByteView);
+ static void Calibrate(port::driving::init::ByteView,const std::array<std::uint32_t,4>*);
+ // Port-side bounded leaf bindings, one canonical algorithm body.
+ static void ApplyForce(port::driving::SolverBodyProjection&,const port::driving::SolverVector&,const port::driving::SolverVector&);
+ static void ApplyForceInFrame(port::driving::SolverBodyProjection&,const port::driving::SolverVector&,const port::driving::SolverVector&,const port::driving::SolverMathContext&);
+ static void ApplyMoment(port::driving::SolverBodyProjection&,const port::driving::SolverVector&);
 };
-} // namespace hp2::recovered
+}

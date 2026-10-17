@@ -2,6 +2,7 @@
 // Older placement comments below describe the historical host partitions; no retail ABI is asserted.
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
+#include "game_core/port/driving/static_collisions.hpp"
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: qualified_string; evidence: E-0019-N03.
@@ -32,6 +33,8 @@
 namespace hp2::recovered {
 class World {
 public:
+    // Debug0014D630; E-0048-T06. Single dynamic car / immutable track branch.
+    static void DoTimestepCollisions(port::driving::Memory&,port::driving::StaticCollisions&,std::uint32_t,std::uint32_t,const port::track::Topology&,port::driving::CollisionMotion&,const std::function<void(float)>&,const std::function<void()>&);
     // No member address is confirmed; no speculative members are declared.
 
 public:

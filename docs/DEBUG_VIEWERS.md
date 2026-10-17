@@ -6,7 +6,8 @@ no original model, unit, coordinate convention, road semantics or physics behavi
 TASK-0033 adds original vehicle BIN decoding and static exterior assembly to CarViewer.
 The default display uses the recovered VU base material and initialized frontend light
 slice. Full GS material behavior remains incomplete; raw texture inspection is a labeled
-debug override. Track loading remains unimplemented. See
+debug override. TrackViewer now loads the original catalogue, scenery, texture/mip and topology data, and
+provides a real-track driving entry. See [TRACK_VIEWER.md](TRACK_VIEWER.md). See
 [vehicle rendering](VEHICLE_RENDERING.md) for evidence and remaining work.
 
 ## Launch and commands
@@ -31,7 +32,7 @@ absolute paths and parent traversal are rejected. CarViewer accepts exactly
 Successful loading removes the fixture and frames original mesh bounds. A failed car load
 clears old car content and the fixture, retains the error and does not report success.
 All viewer windows, lists, inputs, buttons, status and FPS are native ImGui in the same
-frame as the console. Requests execute after that frame. TrackViewer still retains its labeled fixture and reports an unavailable loader. Buttons use the
+frame as the console. Requests execute after that frame. TrackViewer uses the same deferred loading state and clears content on failure. Buttons use the
 same request queue as commands. Viewer-specific actions outside a viewer report that it must
 be opened first. `viewer.status` can also describe the frontend.
 

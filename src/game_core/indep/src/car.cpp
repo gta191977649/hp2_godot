@@ -1,3 +1,4 @@
+#include "game_core/indep/inc/Car.hpp"
 // TASK-0042 E-0042-S001: exact Debug source marker(s): ..\indep\src\car.cpp.
 // Older placement comments below describe the historical host partitions; no retail ABI is asserted.
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
@@ -8,6 +9,25 @@
 #include "game_core/NullController.hpp"
 
 #include "game_core/port/not_implemented.hpp"
+#include "game_core/src/bMath.hpp"
+
+namespace hp2::recovered {
+// Debug00132788; E-0048-D03. Exact five-point flat placement and wheel3 config selection.
+void Car::FindFlatOnTrackPosition(std::array<float,16>& rotation,std::array<float,4>& position,std::uint16_t angle,port::driving::ContactProvider& contact){
+    auto& m=m_;
+    const std::array<std::array<float,2>,5> relative{{{{0,0}},{{1,0}},{{-1,0}},{{0,1}},{{0,-1}}}};
+    port::driving::Memory::Scratch scratch(m);
+    std::array<float,5> heights{};const auto temporary=m.allocate(0x10);
+    for(unsigned i=0;i<5;++i){auto probe=position;probe[0]+=relative[i][0];probe[1]+=relative[i][1];m.vector(temporary,probe);heights[i]=contact.GetElevation(m,0,temporary,0,0,0);}
+    const auto cfg=m.word(address()+0xc);const auto wheel=cfg+0x120+3*0x20;
+    const float x=((heights[1]-heights[0])-(heights[2]-heights[0]))*0.5f*m.scalar(0x00324d14);
+    const float y=((heights[3]-heights[0])-(heights[4]-heights[0]))*0.5f*m.scalar(0x00324d14);
+    position[2]=((heights[0]+m.scalar(wheel+0xc))-m.scalar(wheel+8))+m.scalar(cfg+0x118);
+    rotation=hp2::recovered::bIdentity();hp2::recovered::eRotateZ(m,rotation,rotation,angle);
+    hp2::recovered::eRotateX(m,rotation,rotation,static_cast<std::uint16_t>(static_cast<int>(y)));
+    hp2::recovered::eRotateY(m,rotation,rotation,static_cast<std::uint16_t>(-static_cast<std::int16_t>(static_cast<int>(x))));
+}
+}
 
 namespace hp2::recovered {
 // ELF 0x001C0090; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001c0090.md.
@@ -104,45 +124,22 @@ void CarMover::DoSnapshot() {
 #include "game_core/port/driving/projection_support.hpp"
 // Retail 0x00133130; E-0042-U014; E-0042-S001; exact Debug TU ..\indep\src\car.cpp
 namespace port::driving::native {
-bool IsBlinking(Memory& m,std::uint32_t object){
-    using namespace detail_group_00137100_runtime;
-    const auto start=m.word(object+0x860);
-    return start&&start!=0x7fffffffu&&float(signed_bits(m.word(global_address(0xb388))-start))*global(m,0x8344)<m.scalar(object+0x864);
-}
+bool IsBlinking(Memory& m,std::uint32_t object){return hp2::recovered::Car(m,object).IsBlinking();}
 }
 
 // Retail 0x00133070; E-0042-U013; E-0042-S001; exact Debug TU ..\indep\src\car.cpp
 namespace port::driving::native {
-void PleaseResetMeLater(Memory& m,std::uint32_t object,InitServices& services){
-    using namespace detail_group_00137100_runtime;
-    bool set=true;
-    if(m.word(0x0031ab0c)&&m.signed_word(0x0031aaf4)>=1&&m.word(m.word(object+0x14)+8)==2){
-        if(!services.Sub_00227438)hp2::not_implemented("0x00227438","External predicate service is absent");
-        set=services.Sub_00227438(m.word(global_address(0xc2fc)),object)==0;
-    }
-    if(set)m.word(object+0x858,1);
-}
+void PleaseResetMeLater(Memory& m,std::uint32_t object,InitServices& services){hp2::recovered::Car(m,object).PleaseResetMeLater(services);}
 }
 
 // Retail 0x00135EB8; E-0042-C009; E-0042-S001; exact Debug TU ..\indep\src\car.cpp
 namespace port::driving::native {
-float GetPostCollisionYawControlBoost(Memory& m,std::uint32_t car) {
-    using namespace detail_group_00137d90;
-    const auto start=m.word(m.word(car+0x34)+0x10c);
-    if(start==0 || start==0x7fffffffu)return 0;
-    const float elapsed=static_cast<float>(sb(m.word(ga(0xb388))-start))*g(m,0x83bc);
-    if(!(elapsed<4.0f))return 0;
-    return port::driving::Graph::GetValue(m,ga(0xa6c8),elapsed);
-}
+float GetPostCollisionYawControlBoost(Memory& m,std::uint32_t car){return hp2::recovered::Car(m,car).GetPostCollisionYawControlBoost();}
 }
 
 // Retail 0x00135E18; E-0042-C008; E-0042-S001; exact Debug TU ..\indep\src\car.cpp
 namespace port::driving::native {
-bool ShouldVisualEffectsBeGenerated(Memory& m,std::uint32_t car) {
-    using namespace detail_group_00137d90;
-    if(m.word(m.word(car+0x14)+8)==3)return false;
-    return m.word(car+0x870)==0 && m.signed_byte(car+0x4a8)!=0;
-}
+bool ShouldVisualEffectsBeGenerated(Memory& m,std::uint32_t car){return hp2::recovered::Car(m,car).ShouldVisualEffectsBeGenerated();}
 }
 
 namespace hp2::recovered {
@@ -174,24 +171,16 @@ void CarMover::Sub_00136B78() {
 
 namespace hp2::recovered {
 // ELF 0x00133070; E-0042-U013; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/00133070.md.
-void Car::PleaseResetMeLater() {
-    hp2::not_implemented("0x00133070", "Car::PleaseResetMeLater (signature and full body unresolved)");
-}
+
 
 // ELF 0x00133130; E-0042-U014; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/00133130.md.
-void Car::IsBlinking() {
-    hp2::not_implemented("0x00133130", "Car::IsBlinking (signature and full body unresolved)");
-}
+
 
 // ELF 0x00135E18; E-0042-C008; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/00135e18.md.
-void Car::ShouldVisualEffectsBeGenerated() {
-    hp2::not_implemented("0x00135E18", "Car::ShouldVisualEffectsBeGenerated (signature and full body unresolved)");
-}
+
 
 // ELF 0x00135EB8; E-0042-C009; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/00135eb8.md.
-void Car::GetPostCollisionYawControlBoost() {
-    hp2::not_implemented("0x00135EB8", "Car::GetPostCollisionYawControlBoost (signature and full body unresolved)");
-}
+
 } // namespace hp2::recovered
 
 namespace hp2::recovered {
@@ -229,3 +218,15 @@ void NullMover::Sub_00136AF8() {
     hp2::not_implemented("0x00136AF8", "NullMover::Sub_00136AF8 (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+// TASK-0044 E-0044-P02, Debug Car instance methods. Original source ../indep/src/car.cpp.
+namespace hp2::recovered {
+// Debug00133198; BlinkTimer858/BlinkDuration85c are version-specific.
+bool Car::IsBlinking(){const auto start=m_.word(address_+0x858);if(!start||start==0x7fffffffu)return false;const auto dt=static_cast<std::int32_t>(m_.word(0x00327cf8)-start);return static_cast<float>(dt)*m_.scalar(0x00324d24)<m_.scalar(address_+0x85c);}
+// Debug00135F10, packed-time collision yaw graph.
+float Car::GetPostCollisionYawControlBoost(){const auto start=m_.word(m_.word(address_+0x34)+0x10c);if(!start||start==0x7fffffffu)return 0;const float elapsed=static_cast<float>(static_cast<std::int32_t>(m_.word(0x00327cf8)-start))*m_.scalar(0x00324d9c);if(!(elapsed<4.0f))return 0;return port::driving::Graph::GetValue(m_,0x00327018,elapsed);}
+// Debug00135E70.
+bool Car::ShouldVisualEffectsBeGenerated(){if(m_.word(m_.word(address_+0x14)+8)==3)return false;return m_.word(address_+0x868)==0&&m_.signed_byte(address_+0x4a8)!=0;}
+// Debug001330D8, original external pursuit predicate remains an explicit service.
+void Car::PleaseResetMeLater(port::driving::native::InitServices& services){bool set=true;if(m_.word(0x003121ec)&&m_.signed_word(0x003121d4)>=1&&m_.word(m_.word(address_+0x14)+8)==2){if(!services.Sub_00227438)hp2::not_implemented("0x00221C78","IsBeingPursued service absent");set=services.Sub_00227438(m_.word(0x00328c1c),address_)==0;}if(set)m_.word(address_+0x854,1);}
+}

@@ -2,6 +2,10 @@
 // Older placement comments below describe the historical host partitions; no retail ABI is asserted.
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
+#include "game_core/port/track/topology.hpp"
+#include "game_core/port/track/voronoi.hpp"
+namespace port::driving {struct CollisionMotion;class Memory;}
+#include "game_core/port/driving/memory.hpp"
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: qualified_string; evidence: E-0019-N03.
@@ -12,6 +16,10 @@
 namespace hp2::recovered {
 class CarCollisionBody {
 public:
+    // Debug001D4ED0/001D4F08/001D4F50; E-0048-D04. Explicit native-object bindings.
+    static float GetMassInverse(port::driving::Memory&,std::uint32_t rigid_body);
+    static std::array<float,16> GetInertiaTensorInverse(port::driving::Memory&,std::uint32_t rigid_body);
+    static void ApplyImpulse(port::driving::Memory&,std::uint32_t rigid_body,std::uint32_t car,const std::array<float,4>& impulse,const std::array<float,4>& arm);
     // No member address is confirmed; no speculative members are declared.
 
 public:
@@ -105,6 +113,14 @@ public:
 namespace hp2::recovered {
 class DynamicCollisionBody {
 public:
+    // Debug001D3D90/001D3FA0/001D4040/001D4298; E-0048-T06; host value bindings.
+    static port::track::CollisionCylinder BuildBoundingVolumes(port::driving::Memory&,const port::track::VoronoiPolyhedron&);
+    static port::driving::CollisionMotion BeginMove(const port::driving::Memory&,std::uint32_t,float);
+    static port::track::VoronoiPose Interpolate(const port::driving::Memory&,std::uint32_t,const port::driving::CollisionMotion&,float);
+    static void Backup(port::driving::Memory&,std::uint32_t,const port::driving::CollisionMotion&,float);
+
+    // Debug 0x001D4920; E-0048-T02; host-owned cylinder/polygon binding.
+    static bool TrackPolygonCheck(const port::track::CollisionCylinder&,const port::track::Polygon&);
     // No member address is confirmed; no speculative members are declared.
 
 public:

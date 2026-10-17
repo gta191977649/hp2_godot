@@ -1,3 +1,6 @@
+#include "game_core/indep/src/engine.hpp"
+#include "game_core/indep/inc/Table.hpp"
+#include "game_core/indep/src/table.hpp"
 #include "game_core/port/driving/projections.hpp"
 #include "game_core/port/not_implemented.hpp"
 #include "game_core/port/driving/ee_scalar.hpp"
@@ -119,10 +122,10 @@ int main() {
     check(s.wheels[0].Field_0x108==14 && s.wheels[1].Field_0x108==2 && s.wheels[2].Field_0x108==14 && s.wheels[3].Field_0x108==2,"Front/rear ratio numerator asymmetry");
     s=fixture(); s.Field_0x38=0; s.Field_0xc=1; s.config_Field_0x14=1;
     s.engine_Field_0xc=4000; s.Field_0x40=0; s.Field_0x4c=4000;
-    GuessClutchTorque(s,g); check(s.Field_0x4c==-8000 && s.engine_Field_0x48==-1500,"Clamped direction reversal halves coupling");
+    GuessClutchTorque(s,g); check(s.Field_0x4c==4000 && s.engine_Field_0x48==-3000,"Debug clamps torque without Retail history or halving");
     s=fixture(); s.Field_0x38=2; s.Field_0xc=1; s.config_Field_0x14=1;
     s.engine_Field_0xc=1000; s.Field_0x40=0; s.Field_0x4c=4000;
-    GuessClutchTorque(s,g); check(s.Field_0x4c==-2000 && s.engine_Field_0x48==-1000,"Exact2000 does not halve coupling");
+    GuessClutchTorque(s,g); check(s.Field_0x4c==4000 && s.engine_Field_0x48==-1000,"Debug does not write legacy history projection field");
     s=fixture(); s.Field_0x38=1; GuessClutchTorque(s,g); ModifyClutchTorque(s,g);
     check(s.engine_Field_0x48==0,"Nonactive branch does not require engine evaluation");
     s=fixture(); bool threw=false;
@@ -132,6 +135,68 @@ int main() {
     // .5 + .25*(4*.5)*4 + .25*(4*.5)*4 =4.5; transfer4/4.5.
     s=fixture(); ModifyClutchTorque(s,g,[]{return 8.0f;});
     check(s.engine_Field_0x48== -(4.0f/4.5f),"Coupling instruction multiply grouping fixture");
+    // E-0044-E01: actual Debug layout. Independent listing fixtures use deliberately
+    // different neighboring shift entries, making a +4 displacement observable.
+    Memory memory;
+    std::vector<std::uint8_t> literals(0x1000),globalsBytes(0x2000);
+    memory.map(0x325000,literals);memory.map(0x327000,globalsBytes);
+    std::vector<std::uint8_t> clutchStates(16);memory.map(0x3077c8,clutchStates);
+    const auto config=memory.allocate(0x50),engineConfig=memory.allocate(0x40);
+    const auto engineAddress=memory.allocate(0x5c),drive=memory.allocate(0x94);
+    const auto car=memory.allocate(0x400),wheels=memory.allocate(16);
+    for(unsigned i=0;i<4;++i) {
+      const auto wheel=memory.allocate(0x180),wi=memory.allocate(0x20);
+      memory.word(wheels+i*4,wheel);memory.word(wheel+0xc,wi);
+      memory.scalar(wheel+0x24,2);memory.byte(wheel+0x155,1);
+    }
+    memory.scalar(engineConfig,50);memory.scalar(engineConfig+4,900);memory.scalar(engineConfig+8,1000);memory.scalar(engineConfig+0xc,2);
+    for(unsigned i=0;i<9;++i)memory.scalar(engineConfig+0x10+i*4,200);
+    for(unsigned i=0;i<3;++i)memory.scalar(engineConfig+0x34+i*4,20);
+    memory.word(config+0x18,3);memory.scalar(config,0.5f);
+    for(unsigned i=0;i<8;++i)memory.scalar(config+0x20+i*4,2);
+    memory.scalar(0x327924,0.75f);memory.scalar(0x327928,0.5f);
+    hp2::recovered::Engine actualEngine(memory,engineAddress);
+    actualEngine.Sub_00188998(engineConfig,car);
+    hp2::recovered::DriveTrain actualDrive(memory,drive);
+    actualDrive.Sub_00189020(config,engineAddress,wheels,car);
+    check(memory.word(engineAddress+8)==0x2ac3f8 && memory.word(drive+8)==0x2ac3b0,"Debug constructor vtables");
+    check(memory.scalar(drive+0x4c+2*4)==475 && memory.scalar(drive+0x70+3*4)==237.5f,"Debug +4C/+70 shift arrays from constructor");
+    check(memory.scalar(drive+0x4c+4*4)==1000,"Terminal ShiftUpRPM entry uses maximum RPM");
+    memory.scalar(config+0x1c,4);memory.scalar(0x3077c8+2*4,0.5f);
+    const auto clutchDerivative=memory.allocate(4);actualDrive.GetDerivative(clutchDerivative);
+    check(memory.scalar(clutchDerivative)==2,"Debug drivetrain derivative indexes actual3077C8 clutch-state table");
+    memory.word(drive+0x30,3);memory.word(drive+0x38,3);memory.word(drive+0x2c,8);
+    memory.scalar(engineAddress+0xc,300);memory.scalar(0x32547c,1);memory.scalar(0x325480,0.25f);
+    memory.scalar(drive+0x4c+3*4,250);memory.scalar(drive+0x70+3*4,100);
+    actualDrive.SetDesiredGear(-1);check(memory.word(drive+0x2c)==4,"Instance reads actual Debug upshift array offset");
+    memory.word(drive+0x38,0);memory.scalar(drive+0xc,1);memory.scalar(drive+0x40,0);
+    memory.scalar(config+0x14,2);memory.scalar(config+0x10,0.5f);memory.scalar(0x327934,100);
+    memory.scalar(engineAddress+0x48,0);memory.scalar(drive+0x4c,777);
+    actualDrive.GuessClutchTorque();
+    check(memory.scalar(engineAddress+0x48)==-200 && memory.scalar(drive+0x4c)==777,"Debug clutch never aliases ShiftUpRPM[0] as torque history");
+    memory.scalar(0x325424,1);memory.scalar(0x325428,1);memory.scalar(engineAddress+0xc,300);
+    memory.scalar(engineAddress+0x44,0.5f);memory.scalar(engineAddress+0x4c,0.5f);
+    check(actualEngine.GetTotalEngineTorque()==35,"Canonical engine torque plus off-throttle braking");
+    const auto tableAddress=memory.allocate(20),samples=memory.allocate(12);
+    memory.scalar(samples,10);memory.scalar(samples+4,20);memory.scalar(samples+8,30);
+    hp2::recovered::Table actualTable(memory,tableAddress);actualTable.Sub_0018D810(samples,3,100,300);
+    check(actualTable.GetValue(150)==15,"Canonical bounded Table interpolation");
+    memory.scalar(0x3254d8,0.01f);memory.scalar(0x3254dc,0.01f);
+    check(actualTable.InverseLookup(10)==10 && actualTable.InverseLookup(25)==250,"Debug inverse unusual exact-first return retained");
+    memory.scalar(0x325420,2);actualEngine.SetState(10.0f);actualEngine.ApplyTorque(7);
+    actualEngine.ComputeAuxiliaries();
+    check(actualEngine.GetState()==100 && memory.scalar(engineAddress+0x48)==0,"Debug engine clamps idle and clears road torque");
+    actualEngine.SetState(3000.0f);actualEngine.ComputeAuxiliaries();check(actualEngine.GetState()==2000,"Debug engine maximum clamp");
+    actualEngine.SetState(300.0f);actualEngine.SetThrottle(0.5f);actualEngine.SetThrottleOverride(0.5f);
+    const auto derivative=memory.allocate(4);actualEngine.GetDerivative(derivative);
+    check(memory.scalar(derivative)==17.5f,"Canonical engine derivative divides total plus road torque by inertia");
+    const auto graphAddress=memory.allocate(8),points=memory.allocate(24);
+    memory.scalar(points,10);memory.scalar(points+4,100);memory.scalar(points+8,20);memory.scalar(points+12,200);memory.scalar(points+16,30);memory.scalar(points+20,300);
+    memory.scalar(0x3254e0,0.01f);memory.scalar(0x3254e4,0.01f);
+    hp2::recovered::Graph graph(memory,graphAddress);graph.Sub_0018D9E8(points,3);
+    check(graph.GetValue(15)==150 && graph.GetValue(-1)==100 && graph.GetValue(31)==300,"Canonical Graph forward interpolation and clamps");
+    check(graph.GetInverse(150)==15 && graph.GetInverse(0)==10 && graph.GetInverse(400)==30,"Canonical Graph inverse interpolation and clamps");
+    graph.Sub_0018D9E8(points,1);check(graph.GetInverse(150)==100,"Debug one-point inverse fallback returns first y");
     FinalizeClutchTorque();
     std::cout<<"DRIVING_DRIVETRAIN_OK: instruction fixtures, no original equivalence claim\n";
 }

@@ -1,0 +1,1230 @@
+{
+  "task": "TASK-0051",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "a43d436751eab677d66c69c9ae53c1f6e24d36e7bfd9433f7ed33a9f377ed131",
+  "baseline_inventory_sha256": "eebad6fad944ef098800386c3589dafe8941da5d51b6229c785715b36783b5b5",
+  "policy": "Exact reviewed shared-runtime and bounded original-render owner delta; derive all prior state from immutable TASK0049 and earlier reviews. No blanket acceptance or baseline refresh. Native vehicle physics bodies are unchanged.",
+  "before": [
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::action",
+      "signature_sha256": "d37feb4516f10a18a3c994c3e6becf801e341493dcbf32917a2dd0f9f330d13c",
+      "body_sha256": "cfe54de8eaffbfbd995647896fb379249dffdf834382e70375d8fcfa91205d83",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::render_skids",
+      "signature_sha256": "01f2598253df97c5fd9692e74d8ab69152ffbe721da27d58e53a76b92e352c91",
+      "body_sha256": "345014c4cc3b1335b7e77761daa4003f750b4003bc5c629850e29504b70910c6",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::set_driving_input",
+      "signature_sha256": "24e52a6e3c80704c6fa518201e921367bcc1831d3ee8c95d6b4234396852513c",
+      "body_sha256": "ee001ef4e99e3a560ea56dea3e400522d94411c775db6d6eeb0b93c06ad7b3ce",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::set_input",
+      "signature_sha256": "48ac0286d0481ca43402f35b71b4ee2a82f2a0161540fd54d85eea4e5119ff21",
+      "body_sha256": "d980b6ed0da8ba115375ada84a8c2d30fb5adc7c45a54e1b702ebc4390558d01",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::set_surface",
+      "signature_sha256": "8d4e41ad2613b6dfedda25b3a517be1835ab7a65aeb2ba3fa39985e04181be8d",
+      "body_sha256": "33143d8e1b0e1ed3aaba4220c495b7af05b6ae7858a667f7ac24b775e9ed564e",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::tick",
+      "signature_sha256": "53bb9fbe372b7947a1b5403da2a50847ece578c2b73c21df1b6fb61b5cccc1f3",
+      "body_sha256": "a5e8da495884ca2b8839e551ca824242315a60a39234823207c9a7d2295f1187",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "host",
+      "signature_sha256": "fe301670e8a9374501360cd46037f97e9384e79e48cfb0e219ad977daf5ba161",
+      "body_sha256": "00ecee55376b98451f36fdb33b322e5617b2689b76e4681212daaf4d827d47ee",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "host_matrix",
+      "signature_sha256": "80c675e9101d3c6f53127f90b9097c1e732beb723c1a1112d69c96c6f6b06219",
+      "body_sha256": "d24cdd04823a8faebc8d621a906bad86a8e819e20fec01d1c672864fcc782eed",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "require_debug",
+      "signature_sha256": "1febc32566f2ace7f0ed8c91d07138ed60f5c8455163ed7a327ae5e0e67a6cb0",
+      "body_sha256": "d5d0973857cd685d97021269ea1c9716e82302b4706369f6f3478b999670869d",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/port/assets/vehicle_geometry.cpp",
+      "name": "solid",
+      "signature_sha256": "9e1c5c56b489282893c5c13e29708ee82e2db1f61a860cfedeb5908a26bd763f",
+      "body_sha256": "b89c789f4c1ca474a58dacc5a5030276f40c2c27a89217af4a97f391cbfb575e",
+      "stub": false,
+      "evidence_id": "E-0051-B01",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Retain original aggregate solid strip flags required by eModel::IsLit; existing vertex/UV/topology decoding remains unchanged."
+    },
+    {
+      "path": "src/game_core/port/assets/hp2_tpk_texture.cpp",
+      "name": "parse_header",
+      "signature_sha256": "4c8c6896324508d235bff1d202fa6adfe2f6be52f5325d3429dee43a4ae17df4",
+      "body_sha256": "6d69d38bb5ad11be2bfcd52257d267bbcd853d0ef33153a5a96843f227ef60b0",
+      "stub": false,
+      "evidence_id": "E-0051-B01",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Decode original BiasLevel and ImageParentHash fields for frame matrix-pack selection and texture-chain ordering; retain all existing texture parsing."
+    },
+    {
+      "path": "src/game_core/port/track/assets.cpp",
+      "name": "world_context",
+      "signature_sha256": "13ac4cd0a0eb4217e53bae8f0892b51da61723fc4a631eed2632737c0e415f58",
+      "body_sha256": "ae9ddd614734d371f6486d882c30fd91f3ca8e7c62afb42b0b9f3c36fddcf401",
+      "stub": false,
+      "evidence_id": "E-0051-S01;E-0051-L01",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Decode all original scenery LOD/tree/zone/light dependencies and delegate original world light-context setup; retain immutable owning Scene values and explicit missing dependencies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::_bind_methods",
+      "signature_sha256": "6f835c47a5b8f896ec3cdcc2603a4c630a789a048db2d8e60f1efaa269779161",
+      "body_sha256": "b9a0b09e8e21aa8a7939c0bbad4abc37654a3ec774bdfcbfb07dc96d999ea488",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::get_state",
+      "signature_sha256": "fa158aa06d9f842263ca5c01f35cd602f02520c5e5c9b10161d6f92557a8768a",
+      "body_sha256": "2c7e456cb8404c8d42ee47ecb03bda1215e14dfeb9d8491ea56a5ca02ea5967d",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::load_config",
+      "signature_sha256": "bd0115a2b0d0526235242202b1236ffa45e292580e7f432a51cdf3d9348749c5",
+      "body_sha256": "9e014404d379b5cc8b768cbed7770b48e63b9d85138d9edd67b2a3abf3593499",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::clear_track",
+      "signature_sha256": "8a55c0ede76df9b3d482830d769b45ff4dcf2ee63b05206760d0e46a37eb5aae",
+      "body_sha256": "3db5b69d61f0e7022a10b472e5d6a2ae1981ee69c5aac0faa2025ffe5204c1a3",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::get_catalog",
+      "signature_sha256": "559a9d48f46edad2926cd7f17414f341641df48dcc9d846933e87012b8911b7c",
+      "body_sha256": "81b5d1fda8feb28232d024f41e13881fe84ec264852853090a748629e1f6733c",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::load_track",
+      "signature_sha256": "b1b05f7209f8ced937914a8426dfb9fa5338209c35ead317d6b7c0969108e495",
+      "body_sha256": "87a19177b7fc5c775ffafc5911df7cf604171200ce7d9a2a1d0afd3b5fbaf0ea",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::update_view",
+      "signature_sha256": "b7f07dcb78cc2a9c8ec5731e9d17882ef73bf08e0512d690089c54cc29d448ac",
+      "body_sha256": "ad6d6b6cb0d50b3c34b784fcac9424b1efd82a1515fa4f88fd20f0123f547e9c",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "host",
+      "signature_sha256": "e3f7815bf3350e9e9810ff44e8919fdc343560e066eb810f3af8678cf9142de5",
+      "body_sha256": "c32d0a919071131de0d5408db50fe83f3ea6db988b30fb2c6f6df7626515940f",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "host_matrix",
+      "signature_sha256": "dd999216ef8f27f37969e1b41878c71b385e8a068b72b555048a3b24f7927e36",
+      "body_sha256": "d24cdd04823a8faebc8d621a906bad86a8e819e20fec01d1c672864fcc782eed",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "impl_",
+      "signature_sha256": "830e61f01445fb097bdb3587d52c9f11e9b7b97c828c3a54d0eb241c8917cc43",
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "require_debug",
+      "signature_sha256": "1febc32566f2ace7f0ed8c91d07138ed60f5c8455163ed7a327ae5e0e67a6cb0",
+      "body_sha256": "6768c92d41f53cf3162dda8f4ae9921ca8e25cb9db2510e29ee58ecee04c0013",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "source",
+      "signature_sha256": "da3ae2fa453dff51bf2fc8bacedf2194a81cc8fff5e782a34b646e44aa19bb07",
+      "body_sha256": "b1fd893702fd8ca7527fe84d01b7071b73475066ef8dad720352b5c552757e5a",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "text",
+      "signature_sha256": "bfb28793e3a89fd86e59c698570bd26a9cdbc5ad45eae0302d0dc8b7f316cccc",
+      "body_sha256": "202f9c10ec70ac88ff846ced7f24938e27c25aff7ec84257446223713d94669b",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/register_types.cpp",
+      "name": "initialize_port",
+      "signature_sha256": "45ede2b425587656ec323d59c9621e655d6d78e9260800a91eb9f7a274713a53",
+      "body_sha256": "24f7f50ca96a43c203ecbb886914fb987cf619814b31d9692ad27fa48936c8f7",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Register common track renderer and driving runtime before thin debug subclasses, exposing the same runtime services in Debug and Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::set_track",
+      "signature_sha256": "25c4433f15a30333c1926ba9022de42d49a9ee0f2c55522f6dae93a7751ce51d",
+      "body_sha256": "e85e89e3cbb2d55e84c79d54602e550f5f00685a13939ea289289749a25adc60",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/game_core/port/track/assets.cpp",
+      "name": "load_scene",
+      "signature_sha256": "7ed8152bd064b5ed45b5e7df94a4d61d54aa6b82dfe3998000e57af1a38f97d8",
+      "body_sha256": "8f56a41c13357f5b1575e5eb1d1b64bb10b4b7be6d24bb0d85205b471a06a46b",
+      "stub": false,
+      "evidence_id": "E-0051-S01;E-0051-L01",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Decode all original scenery LOD/tree/zone/light dependencies and delegate original world light-context setup; retain immutable owning Scene values and explicit missing dependencies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::_bind_methods",
+      "signature_sha256": "72391c04c06de44a0228c868e62bf51bb836c6be403f1ada5efca806f97049e7",
+      "body_sha256": "9b8fb99223188a187fbca9b1676b90a8a0afc75f109782a3b4afcec7004e10e5",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::release_display",
+      "signature_sha256": "8f3e108db8b858fa672be11c137d6568429464f869a1096b4e51110cee49b757",
+      "body_sha256": "7bd9a41b1e299c91abaceb27a08283ae20400ad7d2536667bcb8c0910180daf2",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::request_track",
+      "signature_sha256": "b45428238cf73e40e9cd22881fe2e227c467221c3f3b6543ff7a49414f49115e",
+      "body_sha256": "a4553c2233e22bd322d65ca11a11b0cb4e10be3bdfac05ce513ccba9decfafd8",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::pump_load",
+      "signature_sha256": "ba18509a99ec5f2a11ab42423ccf922398e08c1e95d5e1cb947a429d616d12b1",
+      "body_sha256": "1adce5e17fd53831508e17f7a415e0cc018abdd6926dc6cb33fba748278693a1",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::build_debug_display",
+      "signature_sha256": "a03a0a1d01e895e78b8401fd6ad632f5b6b2649404041f68ff869d765d4c8d57",
+      "body_sha256": "17aac50dd62d0aa6d9b60c4304da50a0c0145e1f2b1a840855e58edb6757d669",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::apply_debug_display",
+      "signature_sha256": "61fbaa926f7d2fe9bc83a652612d746b5728b19a01ed4c4cff15d5077e2117a6",
+      "body_sha256": "7337b3b349cf27aaa6bd41167972d072f79f80f15a77435fff81af615353ccd0",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::set_render_collision",
+      "signature_sha256": "f7e93a69a49cfb30cbbbe57a64802304a752319577fd2880b5d3a5b35c234c3e",
+      "body_sha256": "972b4324b53076daee1b2a1c3ef14a62190758b0bbb458cafe2cbe1888617c55",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::set_render_material",
+      "signature_sha256": "4f468775b89298b62140aea5bf0b142dd0630ea293505584c79c0bfc890afe3e",
+      "body_sha256": "605846adf1315621259422707c352293d3f58e86abf27bffb024dcabbfba049a",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::get_state",
+      "signature_sha256": "4c0a0dc085a15e0b9eaa715b9c258a20109ce3f08e86a549d1d22c757447611f",
+      "body_sha256": "b9d04571a193d6786bd20a479da545200814ccc92188dea2909c2a028bfdc4d3",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/game_core/indep/src/scenery.cpp",
+      "name": "IsPointInPoly",
+      "signature_sha256": "7f0363e44cd8657138bc3f8db99bdd7c7aaf593453b09a40a42ccb3d9e86ae28",
+      "body_sha256": "61bbd1e8bafce7b92c0415b41cf55a389a2f78b13f770b19643426e62b1092dc",
+      "stub": false,
+      "evidence_id": "E-0051-S01",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Restore bounded original scenery free functions and declaring-owner methods, including StuffScenery under GrandSceneryCullInfo; retain source traversal, visibility, LOD, matrix and submission ordering in explicit host value carriers."
+    },
+    {
+      "path": "src/game_core/indep/src/scenery.cpp",
+      "name": "FindVisibleZone",
+      "signature_sha256": "21c6ef768e602dfc58ffafd2181f199326259b73204351bca0a7b8531a13c8b9",
+      "body_sha256": "a49f06a1cffba694b2d598c183f1157dfeca15ae700047db1a7338ca7d633c11",
+      "stub": false,
+      "evidence_id": "E-0051-S01",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Restore bounded original scenery free functions and declaring-owner methods, including StuffScenery under GrandSceneryCullInfo; retain source traversal, visibility, LOD, matrix and submission ordering in explicit host value carriers."
+    },
+    {
+      "path": "src/game_core/indep/src/scenery.cpp",
+      "name": "ScenerySectionHeader::DrawAScenery",
+      "signature_sha256": "2cca3d7ac8f3bec1977410b862530113cb84074bb6f8d31cb41f7701f27ec67c",
+      "body_sha256": "71d2d99c2581c1785d49f612f8d18b4196271b36e1b37f9a66b801a557dc6c08",
+      "stub": false,
+      "evidence_id": "E-0051-S01",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Restore bounded original scenery free functions and declaring-owner methods, including StuffScenery under GrandSceneryCullInfo; retain source traversal, visibility, LOD, matrix and submission ordering in explicit host value carriers."
+    },
+    {
+      "path": "src/game_core/indep/src/scenery.cpp",
+      "name": "GrandSceneryCullInfo::StuffScenery",
+      "signature_sha256": "644317057fa8cd5fbacdbcac57613e5c52f2f7a5ec20286a8e7a9a06417d75fd",
+      "body_sha256": "a28b3c169bcabf339de18b5884ad7b89fe8b8ee3ac258a55248202f633a0c39a",
+      "stub": false,
+      "evidence_id": "E-0051-S01",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Restore bounded original scenery free functions and declaring-owner methods, including StuffScenery under GrandSceneryCullInfo; retain source traversal, visibility, LOD, matrix and submission ordering in explicit host value carriers."
+    },
+    {
+      "path": "src/game_core/indep/src/scenery.cpp",
+      "name": "ScenerySectionHeader::TreeCull",
+      "signature_sha256": "f2f6521b5b76ded3069f74256381cbab3dbc6f9b84b5c28a1abf2ed10bd54214",
+      "body_sha256": "439916896f5821fd84fc4173f305d15708fe02af4210f35bf29aaa2b45e60adf",
+      "stub": false,
+      "evidence_id": "E-0051-S01",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Restore bounded original scenery free functions and declaring-owner methods, including StuffScenery under GrandSceneryCullInfo; retain source traversal, visibility, LOD, matrix and submission ordering in explicit host value carriers."
+    },
+    {
+      "path": "src/game_core/indep/src/scenery.cpp",
+      "name": "GrandSceneryCullInfo::WhatSectionsShouldWeDraw",
+      "signature_sha256": "936675dbc2e61c506b0b3ba10e0167589e81fe7e04e15d61bbc38da7341069ce",
+      "body_sha256": "292d1d8a0432149fb1f8cbd3fa4852ea78590d0cc1c8397fb63849c3a7fa6b03",
+      "stub": false,
+      "evidence_id": "E-0051-S01",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Restore bounded original scenery free functions and declaring-owner methods, including StuffScenery under GrandSceneryCullInfo; retain source traversal, visibility, LOD, matrix and submission ordering in explicit host value carriers."
+    },
+    {
+      "path": "src/game_core/indep/src/scenery.cpp",
+      "name": "GrandSceneryCullInfo::CullView",
+      "signature_sha256": "f2f201374b1ac28297d67ee82f9ddf835ebc59a5da5a5dd32184cc59980f794c",
+      "body_sha256": "5c68fe129594d4e3055c2b4df1bc5ab2f4714612755d967a4ec31d9f8a4f070a",
+      "stub": false,
+      "evidence_id": "E-0051-S01",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Restore bounded original scenery free functions and declaring-owner methods, including StuffScenery under GrandSceneryCullInfo; retain source traversal, visibility, LOD, matrix and submission ordering in explicit host value carriers."
+    },
+    {
+      "path": "src/game_core/indep/src/scenery.cpp",
+      "name": "GrandSceneryCullInfo::DoCulling",
+      "signature_sha256": "b4ad40b95dc724236ff122227920252d78d50d7354e7cdbcf5acf3f81d429021",
+      "body_sha256": "e1a589302d1bf1a9972a67121a4d63c0368d4d9f39ae9336c06189a646bf07b6",
+      "stub": false,
+      "evidence_id": "E-0051-S01",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Restore bounded original scenery free functions and declaring-owner methods, including StuffScenery under GrandSceneryCullInfo; retain source traversal, visibility, LOD, matrix and submission ordering in explicit host value carriers."
+    },
+    {
+      "path": "src/game_core/port/assets/hp2_tpk_texture.cpp",
+      "name": "parse_header",
+      "signature_sha256": "4c8c6896324508d235bff1d202fa6adfe2f6be52f5325d3429dee43a4ae17df4",
+      "body_sha256": "9d552e250ed99fbfc3a10b9056964d56bf0b00dcf625b864ec6b815d329d127c",
+      "stub": false,
+      "evidence_id": "E-0051-B01",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Decode original BiasLevel and ImageParentHash fields for frame matrix-pack selection and texture-chain ordering; retain all existing texture parsing."
+    },
+    {
+      "path": "src/game_core/port/track/assets.cpp",
+      "name": "world_context",
+      "signature_sha256": "13ac4cd0a0eb4217e53bae8f0892b51da61723fc4a631eed2632737c0e415f58",
+      "body_sha256": "63a5b642bc78052637b824dc7b9dbac8ccc673953bbcaf767b5fcd7f7dc325e4",
+      "stub": false,
+      "evidence_id": "E-0051-S01;E-0051-L01",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Decode all original scenery LOD/tree/zone/light dependencies and delegate original world light-context setup; retain immutable owning Scene values and explicit missing dependencies."
+    },
+    {
+      "path": "src/game_core/port/track/assets.cpp",
+      "name": "load_scene",
+      "signature_sha256": "7ed8152bd064b5ed45b5e7df94a4d61d54aa6b82dfe3998000e57af1a38f97d8",
+      "body_sha256": "53f4b3424ae08965380582a021c2d0d017b2bec15543af674c3eee13f5fdddda",
+      "stub": false,
+      "evidence_id": "E-0051-S01;E-0051-L01",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Decode all original scenery LOD/tree/zone/light dependencies and delegate original world light-context setup; retain immutable owning Scene values and explicit missing dependencies."
+    },
+    {
+      "path": "src/game_core/port/track/effects.hpp",
+      "name": "screen_depth_range",
+      "signature_sha256": "9f718ba7936725f9e09c66604a1f586e752a4b29c2e05f9be594c48fd38153c0",
+      "body_sha256": "f25ff21e2c9e325e78688831f23cbbede1637194c48aa5ca0281bcd2a47ecef9",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Add bounded GS equation, matrix-pack depth, alpha40 and proven two-pass fusion scalar references; preserve original byte-domain arithmetic and reject unsupported paths."
+    },
+    {
+      "path": "src/game_core/port/track/effects.hpp",
+      "name": "screen_depth_coefficients",
+      "signature_sha256": "ab812ffa09d3e1a898aad7ebb3fb17683ae921486ca776d552276cd1c1ee2324",
+      "body_sha256": "2e329dee5fc7577fe81e45696e9a5d6d8a368ec0b61824d0d51b58becaad7583",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Add bounded GS equation, matrix-pack depth, alpha40 and proven two-pass fusion scalar references; preserve original byte-domain arithmetic and reject unsupported paths."
+    },
+    {
+      "path": "src/game_core/port/track/effects.hpp",
+      "name": "screen_depth",
+      "signature_sha256": "4b17e2081a747b6b6b686aac63ebec1506f1f63360456592bd0e8c7b053f5fb1",
+      "body_sha256": "905db483851dac402549a1af91815f6c00fa158a5a0e9da97eab7da1c608d7fa",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Add bounded GS equation, matrix-pack depth, alpha40 and proven two-pass fusion scalar references; preserve original byte-domain arithmetic and reject unsupported paths."
+    },
+    {
+      "path": "src/game_core/port/track/effects.hpp",
+      "name": "screen_depth_to_gs",
+      "signature_sha256": "b5e29f016fbde9966d28808f92733f05b1ab728cb270564d1c87b82ef1b24cf0",
+      "body_sha256": "a8971cf2cdf087b1d6494522f04bfb524f701c816b5dc54ccccfa0401faad6a0",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Add bounded GS equation, matrix-pack depth, alpha40 and proven two-pass fusion scalar references; preserve original byte-domain arithmetic and reject unsupported paths."
+    },
+    {
+      "path": "src/game_core/port/track/effects.hpp",
+      "name": "normalized_gpu_depth",
+      "signature_sha256": "13cc53121ccaa4d5ab7028100c5b540029663277132b2e6650a8ef332e1e63cb",
+      "body_sha256": "4f1c20ede11d7d01b777789d362d03d96a4dc22ba5f411846cce8666de7dab0c",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Add bounded GS equation, matrix-pack depth, alpha40 and proven two-pass fusion scalar references; preserve original byte-domain arithmetic and reject unsupported paths."
+    },
+    {
+      "path": "src/game_core/port/track/effects.hpp",
+      "name": "effective_inverse_view_z",
+      "signature_sha256": "a20d253b8423accd5d2862641eae0ac6ea36a4a8b4e2844923f2629d55570a49",
+      "body_sha256": "c952a2e704e747ede139c8e691f55ff205119c47d7281a84f48f23bd91f25403",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Add bounded GS equation, matrix-pack depth, alpha40 and proven two-pass fusion scalar references; preserve original byte-domain arithmetic and reject unsupported paths."
+    },
+    {
+      "path": "src/game_core/port/track/effects.hpp",
+      "name": "host_depth_from_screen",
+      "signature_sha256": "eae956f2d8150d779172864293f7df2f224fa0b470dc70149363f8a6d8f1d98a",
+      "body_sha256": "0e4fcb17e33031de85f9b05c2e0a9f50fadb1d14b1755dd02bdc1780d664cb37",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Add bounded GS equation, matrix-pack depth, alpha40 and proven two-pass fusion scalar references; preserve original byte-domain arithmetic and reject unsupported paths."
+    },
+    {
+      "path": "src/game_core/port/track/effects.hpp",
+      "name": "standard_host_depth",
+      "signature_sha256": "6dab6ec38bcd90e3be67efb98cc0525ed8c6235095ea3295c843c9ba66a36ce7",
+      "body_sha256": "05ee08e894ecd33a08300cd7d574ca2c24bf89661ef58018046fa7aec77df38e",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Add bounded GS equation, matrix-pack depth, alpha40 and proven two-pass fusion scalar references; preserve original byte-domain arithmetic and reject unsupported paths."
+    },
+    {
+      "path": "src/game_core/port/track/effects.hpp",
+      "name": "alpha_002A6F78",
+      "signature_sha256": "6e1801b9159965966071fff3672cf1303dfe2ad5d6c6bfead521f9c553ee9280",
+      "body_sha256": "495af8967251fa392091fd6e89be19b5f64b6c7eb0fabf91b954fc306b5660c5",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Add bounded GS equation, matrix-pack depth, alpha40 and proven two-pass fusion scalar references; preserve original byte-domain arithmetic and reject unsupported paths."
+    },
+    {
+      "path": "src/game_core/port/track/effects.hpp",
+      "name": "pass_sequence",
+      "signature_sha256": "4a6bf1aa9fd4754430f467dc001b892f75ba7ed886f1454f836591d637780226",
+      "body_sha256": "2718772e609145edb33ff65b3c0a25b1328a59fb764a3ccd722a0e78a8b0eb7c",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Add bounded GS equation, matrix-pack depth, alpha40 and proven two-pass fusion scalar references; preserve original byte-domain arithmetic and reject unsupported paths."
+    },
+    {
+      "path": "src/game_core/port/track/effects.hpp",
+      "name": "effect_state",
+      "signature_sha256": "7a247b3d36d8a9243fb54d0d43aa70ca1d1469848ad233ec8acd74fccdd41a0c",
+      "body_sha256": "58c3c61731e06600adb1ac165fe8f756151712ce21d58001aecdc9d2d4f9a329",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Add bounded GS equation, matrix-pack depth, alpha40 and proven two-pass fusion scalar references; preserve original byte-domain arithmetic and reject unsupported paths."
+    },
+    {
+      "path": "src/game_core/port/track/effects.hpp",
+      "name": "alpha_order_001055B0",
+      "signature_sha256": "0bbfa360abd837dcc576d2b769ab95730c14e28c3cd52e6a54d7ea36c793ee33",
+      "body_sha256": "6f277bf8bc353888c7db71f89d483a1c1e17baba1151a11bdb0680b3ebbb8038",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Add bounded GS equation, matrix-pack depth, alpha40 and proven two-pass fusion scalar references; preserve original byte-domain arithmetic and reject unsupported paths."
+    },
+    {
+      "path": "src/game_core/port/track/effects.hpp",
+      "name": "blend_channel",
+      "signature_sha256": "60d700ee3cf2f4826573c5fb5a3e77ca3c5748a1eb62b442ef3d832a20989042",
+      "body_sha256": "29efdb52c59db41a9280de6784e978f8aeadec88d01e2527d9f81bcda455034b",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Add bounded GS equation, matrix-pack depth, alpha40 and proven two-pass fusion scalar references; preserve original byte-domain arithmetic and reject unsupported paths."
+    },
+    {
+      "path": "src/game_core/port/track/effects.hpp",
+      "name": "blend_channel_gs",
+      "signature_sha256": "bfe8067365c7c1d4c69f2f858d05269d9db6f64c74503b70173c76b26901bf25",
+      "body_sha256": "c0707efb8e85e23594e4eaaee03c926a97c345292a2ced79bda97637ba102b3c",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Add bounded GS equation, matrix-pack depth, alpha40 and proven two-pass fusion scalar references; preserve original byte-domain arithmetic and reject unsupported paths."
+    },
+    {
+      "path": "src/game_core/port/track/effects.hpp",
+      "name": "can_fuse_additive_40",
+      "signature_sha256": "722e0b5556be3200f47b1ad44bdfd6b104303ad892b873386de7b817669a4c60",
+      "body_sha256": "47aaf71e0e3145130a94ee8a501cb8d99b8685378b64da7d51d7ef61e5cef9aa",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Add bounded GS equation, matrix-pack depth, alpha40 and proven two-pass fusion scalar references; preserve original byte-domain arithmetic and reject unsupported paths."
+    },
+    {
+      "path": "src/game_core/port/track/effects.hpp",
+      "name": "fused_additive_40_increment",
+      "signature_sha256": "825dfd8022435348c7a92ce2d542c4a6dfaeadef9ab9fe9e6bc9163cdfa7d318",
+      "body_sha256": "dbb571d512a503df2359aa1eadea1b80e9ebfa0f35c45cf4f189d4ef1c6c8668",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Add bounded GS equation, matrix-pack depth, alpha40 and proven two-pass fusion scalar references; preserve original byte-domain arithmetic and reject unsupported paths."
+    },
+    {
+      "path": "src/game_core/port/track/effects.hpp",
+      "name": "fusion_40",
+      "signature_sha256": "7b4b5d8541dc51e6005842dbfdf2cad8df23042b72df1e1b0530cac95a1bf252",
+      "body_sha256": "7d0fbe829d67d6f5c50abdc62669709f31df28a6092c95296fc49b0ab6660818",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Add bounded GS equation, matrix-pack depth, alpha40 and proven two-pass fusion scalar references; preserve original byte-domain arithmetic and reject unsupported paths."
+    },
+    {
+      "path": "src/game_core/port/track/effects.hpp",
+      "name": "fused_copy_40_source",
+      "signature_sha256": "4d77cfbf4ce4655767f66ad5316b42b2c769ee37f38e8b86599bf870fb271a78",
+      "body_sha256": "1e4e95d79f79d50ac929a03a0aa0cb5da02abb4f11f0008682e6c0b089169f3b",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Add bounded GS equation, matrix-pack depth, alpha40 and proven two-pass fusion scalar references; preserve original byte-domain arithmetic and reject unsupported paths."
+    },
+    {
+      "path": "src/game_core/port/track/runtime.cpp",
+      "name": "Runtime::load",
+      "signature_sha256": "2c42fa148293d78800d2e92693c24ae1de4a36ef338cd5e6936c5e3db339f8ff",
+      "body_sha256": "279b6180f16796205fadad749180fec474d3c879f11891f7137d7745e521d86c",
+      "stub": false,
+      "evidence_id": "E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Introduce shared Godot-independent immutable scene lifetime and native per-view frame preparation; preserve zone and texture chain state transactionally and expose explicit gaps."
+    },
+    {
+      "path": "src/game_core/port/track/runtime.cpp",
+      "name": "Runtime::load",
+      "signature_sha256": "f4b742aac850aab20668b4af89922d0dcbe29f3b49d2773aa09972452dca397b",
+      "body_sha256": "6777526d87e442c8e9b7822cd6599247860ab32ac0f16f2c6b1b0c194d45dd55",
+      "stub": false,
+      "evidence_id": "E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Introduce shared Godot-independent immutable scene lifetime and native per-view frame preparation; preserve zone and texture chain state transactionally and expose explicit gaps."
+    },
+    {
+      "path": "src/game_core/port/track/runtime.cpp",
+      "name": "Runtime::unload",
+      "signature_sha256": "2b2a839639aa20cbcd7ec562bda40bae92aca052f8856cac2e4cffd0b2fc6e7f",
+      "body_sha256": "d868071b23312f036d242aca6299b105d8747452164f2c218119b24127384d4f",
+      "stub": false,
+      "evidence_id": "E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Introduce shared Godot-independent immutable scene lifetime and native per-view frame preparation; preserve zone and texture chain state transactionally and expose explicit gaps."
+    },
+    {
+      "path": "src/game_core/port/track/runtime.cpp",
+      "name": "Runtime::prepare_frame",
+      "signature_sha256": "8b38234e717e30c12f8d20ee888efb843d6477715c79dcb755fc498079167b29",
+      "body_sha256": "8bc5eb9309e74bd74d5b7cae3133b0b8fe3bf520fea7752ddbd6270f61479e97",
+      "stub": false,
+      "evidence_id": "E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Introduce shared Godot-independent immutable scene lifetime and native per-view frame preparation; preserve zone and texture chain state transactionally and expose explicit gaps."
+    },
+    {
+      "path": "src/game_core/port/track/runtime.cpp",
+      "name": "Runtime::diagnostics",
+      "signature_sha256": "41934ebe1a0f24b6030b1def22604c8cfa43c0e09e39be32f5e1c02527f413bc",
+      "body_sha256": "4b31ec7de0b6fcbcb0f56c9c1e05d39562cdf36c1b05abd46b38c6c7c3fdb84c",
+      "stub": false,
+      "evidence_id": "E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Introduce shared Godot-independent immutable scene lifetime and native per-view frame preparation; preserve zone and texture chain state transactionally and expose explicit gaps."
+    },
+    {
+      "path": "src/game_core/port/track/runtime.hpp",
+      "name": "poll_load",
+      "signature_sha256": "a7a047807320a653c8a26372a2a542ad09c2a26dbbaf5b2e9e0b74bb7684ee92",
+      "body_sha256": "4a25add3ba8971445745e0e74fac1f94c7010c0b9c5e0db8defd13d3f91b7bb3",
+      "stub": false,
+      "evidence_id": "E-0051-S01",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Expose read-only common track runtime resource/readiness adapters; host owns async scheduling."
+    },
+    {
+      "path": "src/game_core/port/track/runtime.hpp",
+      "name": "ready",
+      "signature_sha256": "50e7e86d70d97f223bd629ccc864e8501cb2ead4542deff220573d3a0c3631b6",
+      "body_sha256": "0c13d5c65beb60c50fe69eaa02deb7824531552057cf4e71f41c546a6ead2d08",
+      "stub": false,
+      "evidence_id": "E-0051-S01",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Expose read-only common track runtime resource/readiness adapters; host owns async scheduling."
+    },
+    {
+      "path": "src/game_core/port/track/runtime.hpp",
+      "name": "resources",
+      "signature_sha256": "9d3f217f9fcab2867533e6c37d6bb4fd9f5b271a8e6695120a30caf08d0483bc",
+      "body_sha256": "efc946b27345c3a56c90d43de845d837d35a686a03900daa66c748d9895d245e",
+      "stub": false,
+      "evidence_id": "E-0051-S01",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Expose read-only common track runtime resource/readiness adapters; host owns async scheduling."
+    },
+    {
+      "path": "src/game_core/src/ecstasy/ecstasye.cpp",
+      "name": "hp2::recovered::eModel::IsLit",
+      "signature_sha256": "237c4ae7b74f9775eb93010bcc14c94dcdd85661d6fecafe70760e399f2bb050",
+      "body_sha256": "97e573e7d64a947cc774488242279802c2dbf2fb5b6789a8af3c4f13faf24199",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Restore typed bounded original eModel and free eDisplayFrame owners for static surface expansion, effect dispatch and attachment ordering; original no-argument gaps remain untouched."
+    },
+    {
+      "path": "src/game_core/src/ecstasy/ecstasye.cpp",
+      "name": "hp2::recovered::eModel::RenderStrips",
+      "signature_sha256": "6275cc6270237695302f5807e23718df0b1aaa3e27ddf7daa14c49e1a74e7782",
+      "body_sha256": "98e6774395e09c9bd23ba8ae755b794a18e41b953014156950e2d78e898590fe",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Restore typed bounded original eModel and free eDisplayFrame owners for static surface expansion, effect dispatch and attachment ordering; original no-argument gaps remain untouched."
+    },
+    {
+      "path": "src/game_core/src/ecstasy/ecstasye.cpp",
+      "name": "hp2::recovered::eModel::Render",
+      "signature_sha256": "914e967787039472feddf31fb39d0f7b8b1103a35c51452e67a9c8952683ef72",
+      "body_sha256": "c485ff11763e7fb9b9a1455fef6bd877c4b62f248534ad0c0027e27556071eef",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Restore typed bounded original eModel and free eDisplayFrame owners for static surface expansion, effect dispatch and attachment ordering; original no-argument gaps remain untouched."
+    },
+    {
+      "path": "src/game_core/src/ecstasy/ecstasye.cpp",
+      "name": "hp2::recovered::eDisplayFrame",
+      "signature_sha256": "d6547de80132a31fe1034ef12d7801c4d38b9dc3d896fb2ff593cd633b33ea92",
+      "body_sha256": "a06ee5905b6cdd8cc9ff6441415f782e3c637b2e35d0a85a5690f6be5c779f55",
+      "stub": false,
+      "evidence_id": "E-0051-B01;E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Restore typed bounded original eModel and free eDisplayFrame owners for static surface expansion, effect dispatch and attachment ordering; original no-argument gaps remain untouched."
+    },
+    {
+      "path": "src/game_core/src/ecstasy/elighte.cpp",
+      "name": "elSetupLightContext",
+      "signature_sha256": "0ed2106a0e49a703d0f7d37013cef19c05ba1eb1648d9a8cc8d79483104c98d8",
+      "body_sha256": "1951fc32cab3741bb4cf3f47a45f84195d93e70261fe1d5a615c0edf1010f01e",
+      "stub": false,
+      "evidence_id": "E-0051-L01",
+      "evidence_record": "reverse/task0051/scenery.md",
+      "reason": "Add bounded original per-instance light-context overload using translated world position and local directions; preserve prior audited world-identity overload."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.cpp",
+      "name": "Ps2DrivingLab::_bind_methods",
+      "signature_sha256": "6f835c47a5b8f896ec3cdcc2603a4c630a789a048db2d8e60f1efaa269779161",
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_lab.hpp",
+      "name": "requests_enabled",
+      "signature_sha256": "3491fe94f6e48d9da20d83460292f413fd783bd4ddc2dad9682111bce4a299a6",
+      "body_sha256": "b0f408907dabdceaa50a2b101007a096f7895b97bc3954b47901b74a1bff309b",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Use a virtual request gate: common runtime enabled and debug-only subclass governed by build flag; no physics behavior is duplicated."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "host",
+      "signature_sha256": "fe301670e8a9374501360cd46037f97e9384e79e48cfb0e219ad977daf5ba161",
+      "body_sha256": "00ecee55376b98451f36fdb33b322e5617b2689b76e4681212daaf4d827d47ee",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "host_matrix",
+      "signature_sha256": "80c675e9101d3c6f53127f90b9097c1e732beb723c1a1112d69c96c6f6b06219",
+      "body_sha256": "d24cdd04823a8faebc8d621a906bad86a8e819e20fec01d1c672864fcc782eed",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::require_requests",
+      "signature_sha256": "df9dee34e0bf2cf6f6bcf6e0eea01b98059228ddad3533ef148a9f06101b604c",
+      "body_sha256": "5bb76b3a14076204d5413e66ea0db8545868ec791a8c6ae14c04178e862a9e77",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::_bind_methods",
+      "signature_sha256": "536b0ee77af7622e05aadb1350ad9e811ea3af39bb65011327131a1ce50adc59",
+      "body_sha256": "32497ec914f228a230544315f7fb96d26a3f964045411abf52209358da76c4bd",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::load_config",
+      "signature_sha256": "bb174e3f294a621387ae16f0d510d53eab5fef5c036620744fbb5bd468a74f24",
+      "body_sha256": "e7843b1cbf2f77d639a361184528230438eb2b8f384c06a972739cada33f6033",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::action",
+      "signature_sha256": "a830cb7db16939fe05f8d36d382534804197f34bbaf185880c015d9459228975",
+      "body_sha256": "c9401b99ff5725d8b3759d6e0cd140249b0ac6bf0b3d5489ffc1c7fe9d801077",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::set_input",
+      "signature_sha256": "1f4d2c5c21428ca79419462d5e526fa0ff23cd8e911d6543ea46373b93bd968d",
+      "body_sha256": "b059be292fee31dff9c548381f1f90dab8ddc0dac9db812ab86841d9349eb304",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::set_driving_input",
+      "signature_sha256": "997ebf2b2f9f10abc348f3cd03aebdf3743cd2a046855b5793dbda8c7231a910",
+      "body_sha256": "c19a900214969d806cbd83117e64aeaee0cb35c9b2280175443623cbd02cbb9d",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::set_surface",
+      "signature_sha256": "f26a58b8f8f058ea368cda49cf37843ba1381a28e3fa850c99fd7a1840a18c99",
+      "body_sha256": "36200a777b4900e679429173b0d409cc5a685949cde397cebd9a59be1fb0c294",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::set_track",
+      "signature_sha256": "b6c2711cf1d690adf91fb8b07e7047f9434e083d9e3d6d19c131608b36d33aef",
+      "body_sha256": "92eb61e236fbdd29fda8f8dbe80efb543b57880fc4a1c7018066df8be949d70b",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::tick",
+      "signature_sha256": "648049a3bfca7f2adfb1628b29beb57c33321ee8298fb0b01feb55d556853d33",
+      "body_sha256": "3a8332d83e55043a05d53a306f83b97c4d83e78b66f499c29c798d0f7680cb42",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::render_skids",
+      "signature_sha256": "2eb8afe3260f96babef7bcab1a09e3f3c65d62e17a75769612dc2a260858ce21",
+      "body_sha256": "0e04b4ec6485d4f8080bfda7d5d735027dc483674b16cd94ef84bbaf5a958213",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::get_state",
+      "signature_sha256": "668b58a7f813678c1c0e0c2eb7659258f516524cd55e7c1c8d645565b57070f4",
+      "body_sha256": "8589a065b3f54f928c06232e84dec3d7861cbaaa3ecbff75f36bf1235df76199",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract existing native Session/backend/skid boundary into shared Ps2DrivingRuntime; Ps2DrivingLab becomes a debug-gated thin subclass. Preserve native algorithms and inputs; runtime is available in Release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.hpp",
+      "name": "requests_enabled",
+      "signature_sha256": "ba2e7f81e5cbdd7fc1e8856cbc6f42438f2e94083d1829c527fba5921b0f4c94",
+      "body_sha256": "a292155051e6195d23c4e06a5595421d92d39785e5ec29f9a8d24ed981c301ed",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Use a virtual request gate: common runtime enabled and debug-only subclass governed by build flag; no physics behavior is duplicated."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "text",
+      "signature_sha256": "bfb28793e3a89fd86e59c698570bd26a9cdbc5ad45eae0302d0dc8b7f316cccc",
+      "body_sha256": "202f9c10ec70ac88ff846ced7f24938e27c25aff7ec84257446223713d94669b",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "host",
+      "signature_sha256": "e3f7815bf3350e9e9810ff44e8919fdc343560e066eb810f3af8678cf9142de5",
+      "body_sha256": "c32d0a919071131de0d5408db50fe83f3ea6db988b30fb2c6f6df7626515940f",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "source",
+      "signature_sha256": "da3ae2fa453dff51bf2fc8bacedf2194a81cc8fff5e782a34b646e44aa19bb07",
+      "body_sha256": "b1fd893702fd8ca7527fe84d01b7071b73475066ef8dad720352b5c552757e5a",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "host_matrix",
+      "signature_sha256": "dd999216ef8f27f37969e1b41878c71b385e8a068b72b555048a3b24f7927e36",
+      "body_sha256": "d24cdd04823a8faebc8d621a906bad86a8e819e20fec01d1c672864fcc782eed",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "impl_",
+      "signature_sha256": "830e61f01445fb097bdb3587d52c9f11e9b7b97c828c3a54d0eb241c8917cc43",
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::_bind_methods",
+      "signature_sha256": "45286c8e1c10882711eff28d62291073a8f49e6823c258fbbe9681b28e082daf",
+      "body_sha256": "82080c68182f6bba4d1db4eb97770c243a9371bd84d050c7838851a46e080c34",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::release_display",
+      "signature_sha256": "7603e14a91c1950cf5f8bb5d5e81b4c193b650446720fda40a4862fa061832ef",
+      "body_sha256": "d737dae19996674fbd56876fc4de198771ae3c52404e6f5f5b6489c00d686a4e",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::clear_track",
+      "signature_sha256": "97b8b44a19f5a0672860083dd9aefad79aab135cc2a3c7f54db0993b2a2a2286",
+      "body_sha256": "3db5b69d61f0e7022a10b472e5d6a2ae1981ee69c5aac0faa2025ffe5204c1a3",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_catalog",
+      "signature_sha256": "0618eb4569e82d7e748dda004499768b02bda06b3b5c049eef6e3fa6283bf032",
+      "body_sha256": "0e8a5c45ff7f7da111b521b25994344f98715c5a8b6f79ff7269c4bcba1c58ac",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::load_track",
+      "signature_sha256": "3fac1dd134d640fca3accc488e1b436e0a007bd365f9eec0ac1c8b5e45e8715e",
+      "body_sha256": "87a19177b7fc5c775ffafc5911df7cf604171200ce7d9a2a1d0afd3b5fbaf0ea",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::request_track",
+      "signature_sha256": "3b6851c98faef81fc520bbd06b974cebab232057f41524ebef39dfb6e5a0c7d3",
+      "body_sha256": "4d2d24185b7676d05df9d6312abc68cf2f35ff9a2ff10915ad22d1d7d6e8d2cc",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::pump_load",
+      "signature_sha256": "f13c74f0139bfcff4edd21f3d7396d8e82d1672c2d1bbe6b037016c26fae7790",
+      "body_sha256": "3a6357bd7b64731fdb690929afa36f290838d754c76ae37b6a8af36b937bee17",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::build_debug_display",
+      "signature_sha256": "b1b75507132861b82ad2a3c83575268135127bdfa876615e773ad0330bef16f0",
+      "body_sha256": "7742545902c9dfd26004d28c0264f4d174ffabf5ec0c8a4db4630c62269a1af5",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::apply_debug_display",
+      "signature_sha256": "45ff00ebebe66efcabf3a3ff4adff5c366a26e4b7086a641090af6a70669ce4d",
+      "body_sha256": "7337b3b349cf27aaa6bd41167972d072f79f80f15a77435fff81af615353ccd0",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::set_render_collision",
+      "signature_sha256": "e0794887c4f8136b3d6bd27b53ada7626ae4b011d4d7ac1a2a74e1a5e4c1c548",
+      "body_sha256": "71f999a8bed6d1a229bb5e8947b1e2bc9cb13d4c4305b8b5b4a6afba9f3ba38f",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::set_render_material",
+      "signature_sha256": "c027284bdd185dc8a223e68d789ddb1657b4f1fd0f049dc5911ec8ca1db50a80",
+      "body_sha256": "c32cc52feb7f916d47d258269535ded76b712a91d2e1997a906c6fa63f3af407",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::update_view",
+      "signature_sha256": "af3656c2e22b307f305268073c180924b394cd8fabf3d8173144d28a6cb68113",
+      "body_sha256": "727b8bb4c2c5088a0ae474070d9d03cf72b04e3dd61be8359c9b48ee5c862b7f",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/host.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics. Final digest includes native raw submission ordinal and alpha pass/rewrite classification for parity diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_state",
+      "signature_sha256": "20cd6a56f4f5bd8582c1004e5b9c14e05054e8556771a8bc0d337c1afb48c56a",
+      "body_sha256": "cb63ac129a6c9a281e5aafdf1e8f008112548890bb9221d306dc4e6a370be686",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.hpp",
+      "name": "requests_enabled",
+      "signature_sha256": "ba2e7f81e5cbdd7fc1e8856cbc6f42438f2e94083d1829c527fba5921b0f4c94",
+      "body_sha256": "a292155051e6195d23c4e06a5595421d92d39785e5ec29f9a8d24ed981c301ed",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Expose common runtime request gate and read-only frame summary for shared-consumer parity checks."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.hpp",
+      "name": "frame_summary",
+      "signature_sha256": "e890db37ee1a740b9e2157dcf6b09d44b4507e6752711fa0e823c1eaacbc570a",
+      "body_sha256": "554bbb4aa9c34c4944dc26cb65dc6a9ac9f294fe38a6c78895eb091344ff2de3",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Expose common runtime request gate and read-only frame summary for shared-consumer parity checks."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.cpp",
+      "name": "Ps2TrackViewer::_bind_methods",
+      "signature_sha256": "72391c04c06de44a0228c868e62bf51bb836c6be403f1ada5efca806f97049e7",
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stub": false,
+      "evidence_id": "E-0051-U01;E-0051-S01;E-0051-B04",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Extract shared track resource/upload/material/display lifecycle into runtime renderer, consume the native Frame packet with explicit ordered host adaptation, and retain viewer as thin debug entry with unchanged browse diagnostics."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_viewer.hpp",
+      "name": "requests_enabled",
+      "signature_sha256": "3491fe94f6e48d9da20d83460292f413fd783bd4ddc2dad9682111bce4a299a6",
+      "body_sha256": "b0f408907dabdceaa50a2b101007a096f7895b97bc3954b47901b74a1bff309b",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Keep TrackViewer debug-only while inheriting the common runtime renderer implementation."
+    },
+    {
+      "path": "src/platform/godot_bridge/register_types.cpp",
+      "name": "initialize_port",
+      "signature_sha256": "45ede2b425587656ec323d59c9621e655d6d78e9260800a91eb9f7a274713a53",
+      "body_sha256": "fa0eb7d344d63c09987ddcfaa6877843cd29e757e8ea792ea5516e9b020a2239",
+      "stub": false,
+      "evidence_id": "E-0051-U01",
+      "evidence_record": "reverse/task0051/runtime-entry.md",
+      "reason": "Register common track renderer and driving runtime before thin debug subclasses, exposing the same runtime services in Debug and Release."
+    },
+    {
+      "path": "src/platform/shaders/track_shader.cpp",
+      "name": "sample_case",
+      "signature_sha256": "20f0c783faf43a6e4fc11974c9649e81a9395552ab47c4d6c5ba1bb5b382ad3c",
+      "body_sha256": "25625c0dd1c3ea655626dcb3f979b4f91123c04d96337eda611026890e1f24da",
+      "stub": false,
+      "evidence_id": "E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Generate shared track shaders from maintained snippets, original texture/mip/effect state and proven byte-domain fusion; retain explicit unsupported destination-read gaps."
+    },
+    {
+      "path": "src/platform/shaders/track_shader.cpp",
+      "name": "track_shader_source",
+      "signature_sha256": "c12848ca4bd6e0f6f052e776ca1b8bf1ac8bb92993c956e2992918cc6271fc21",
+      "body_sha256": "99376624c783b906db7cd0af651a078e99df7074febb10060bf0d5af928af9fc",
+      "stub": false,
+      "evidence_id": "E-0051-B04",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Generate shared track shaders from maintained snippets, original texture/mip/effect state and proven byte-domain fusion; retain explicit unsupported destination-read gaps."
+    },
+    {
+      "path": "src/port/assets/vehicle_geometry.cpp",
+      "name": "solid",
+      "signature_sha256": "9e1c5c56b489282893c5c13e29708ee82e2db1f61a860cfedeb5908a26bd763f",
+      "body_sha256": "7d96fecbca51ba27ffaeeafe652ed563f7cc319f208a57250a82219dc25acd0a",
+      "stub": false,
+      "evidence_id": "E-0051-B01",
+      "evidence_record": "reverse/task0051/blend.md",
+      "reason": "Retain original aggregate solid strip flags required by eModel::IsLit; existing vertex/UV/topology decoding remains unchanged."
+    }
+  ],
+  "finalization_notes": [
+    {
+      "function": "Ps2TrackRenderer::update_view",
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "draft_body_sha256": "2f1a127ccb54a0f35d4a1a252bdd7275895d3739fb1caef695fe098e546e8ea2",
+      "final_body_sha256": "727b8bb4c2c5088a0ae474070d9d03cf72b04e3dd61be8359c9b48ee5c862b7f",
+      "reason": "Root explicitly finalized read-only packet digest coverage for command.original_order and effect alpha_pass/rewrite_alpha before TASK0051 review closure; no native algorithm or draw behavior changed."
+    }
+  ]
+}

@@ -1,0 +1,2360 @@
+{
+  "task": "TASK-0044",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "baseline_commit": "8c7efdeade2e53cc9408dd16b9af6ecfdccca6d3",
+  "scope": "All 151 pre-existing driving projection entries, plus canonical Debug dependency audit records. A projected slice is not asserted to be a whole original function.",
+  "evidence": [
+    "E-0044-P01..P08",
+    "E-0044-E01/E02",
+    "E-0044-S01..S04",
+    "E-0044-M01/M02",
+    "E-0044-G01"
+  ],
+  "counts": {
+    "port_memory_or_dispatch_adapter": 9,
+    "canonical_forwarding_adapter": 130,
+    "transitive_forwarding_adapter": 1,
+    "retired_duplicate_composite_or_test_dispatch": 6,
+    "synthetic_environment_boundary": 1,
+    "constant_or_empty_leaf_compatibility": 3,
+    "bounded_scalar_host_projection": 1
+  },
+  "functions": [
+    {
+      "legacy_address": "",
+      "legacy_source": "src/game_core/port/driving/byte_view.cpp",
+      "legacy_scope": "port::driving::init",
+      "legacy_signature": "void ByteView::require(std::size_t offset,std::size_t length) const",
+      "disposition": "port_memory_or_dispatch_adapter",
+      "reason": "Host endian/bounds checks or explicit target dispatch, not an original-game physics implementation.",
+      "canonical_targets": [],
+      "current_signatures": [
+        "void ByteView::require(std::size_t offset,std::size_t length) const"
+      ],
+      "historical_token_hash": "b30ac1f7aaf05c29ea5f140d61483ec872efc317f0645981bbe3bd0e796115ae"
+    },
+    {
+      "legacy_address": "",
+      "legacy_source": "src/game_core/port/driving/byte_view.cpp",
+      "legacy_scope": "port::driving::init",
+      "legacy_signature": "std::uint32_t ByteView::word(std::size_t offset) const",
+      "disposition": "port_memory_or_dispatch_adapter",
+      "reason": "Host endian/bounds checks or explicit target dispatch, not an original-game physics implementation.",
+      "canonical_targets": [],
+      "current_signatures": [
+        "std::uint32_t ByteView::word(std::size_t offset) const"
+      ],
+      "historical_token_hash": "859c247e1412948cffcf06761748b7dc81b3f551905603a03f11d634b8ab309a"
+    },
+    {
+      "legacy_address": "",
+      "legacy_source": "src/game_core/port/driving/byte_view.cpp",
+      "legacy_scope": "port::driving::init",
+      "legacy_signature": "void ByteView::word(std::size_t offset,std::uint32_t value) const",
+      "disposition": "port_memory_or_dispatch_adapter",
+      "reason": "Host endian/bounds checks or explicit target dispatch, not an original-game physics implementation.",
+      "canonical_targets": [],
+      "current_signatures": [
+        "void ByteView::word(std::size_t offset,std::uint32_t value) const"
+      ],
+      "historical_token_hash": "5a5ccb9d661151664ff0156b42366b4b013529550e9e9c7b8f29a321e6128d7b"
+    },
+    {
+      "legacy_address": "",
+      "legacy_source": "src/game_core/port/driving/byte_view.cpp",
+      "legacy_scope": "port::driving::init",
+      "legacy_signature": "float ByteView::scalar(std::size_t offset) const",
+      "disposition": "port_memory_or_dispatch_adapter",
+      "reason": "Host endian/bounds checks or explicit target dispatch, not an original-game physics implementation.",
+      "canonical_targets": [],
+      "current_signatures": [
+        "float ByteView::scalar(std::size_t offset) const"
+      ],
+      "historical_token_hash": "48394545d08973e82b45fdcd3947eaa42fc7848908ed4dc07d8aa76054d7a98a"
+    },
+    {
+      "legacy_address": "",
+      "legacy_source": "src/game_core/port/driving/byte_view.cpp",
+      "legacy_scope": "port::driving::init",
+      "legacy_signature": "void ByteView::scalar(std::size_t offset,float value) const",
+      "disposition": "port_memory_or_dispatch_adapter",
+      "reason": "Host endian/bounds checks or explicit target dispatch, not an original-game physics implementation.",
+      "canonical_targets": [],
+      "current_signatures": [
+        "void ByteView::scalar(std::size_t offset,float value) const"
+      ],
+      "historical_token_hash": "c57e7ff75f3f69405ef606b6317f3e51c68c3ed41a7ca2eae4a6e68942cec17c"
+    },
+    {
+      "legacy_address": "0x0025AC68",
+      "legacy_source": "src/game_core/src/bMatrix.cpp",
+      "legacy_scope": "port::driving::init",
+      "legacy_signature": "std::array<float,16> bIdentity()",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "bIdentity"
+      ],
+      "current_signatures": [
+        "std::array<float,16> bIdentity()"
+      ],
+      "historical_token_hash": "8d1941e0f135f3a3821ebd04a5b73728b73785e89da6cdb6321e673012b68e3c",
+      "debug_address": "0x00254010"
+    },
+    {
+      "legacy_address": "0x0025AC98",
+      "legacy_source": "src/game_core/src/bMatrix.cpp",
+      "legacy_scope": "port::driving::init",
+      "legacy_signature": "std::array<float,16> bInvertMatrix(const std::array<float,16>& a)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "bInvertMatrix"
+      ],
+      "current_signatures": [
+        "std::array<float,16> bInvertMatrix(const std::array<float,16>& a)"
+      ],
+      "historical_token_hash": "6ef22305e57ce85198b17820ce2761220c29e6c219e44b0a5f6fa01bd1e5cbfa",
+      "debug_address": "0x00254040"
+    },
+    {
+      "legacy_address": "0x0019CC58",
+      "legacy_source": "src/game_core/indep/src/rigidbody.cpp",
+      "legacy_scope": "port::driving::init",
+      "legacy_signature": "void CalculateInertiaTensor(ByteView out,ByteView config)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "RigidBody::CalculateInertiaTensor"
+      ],
+      "current_signatures": [
+        "void CalculateInertiaTensor(ByteView out,ByteView config)"
+      ],
+      "historical_token_hash": "9967c15dbfb804317bdabdf238de2e02df8838212df2c304b90e0ad209144380",
+      "debug_address": "0x0019a580"
+    },
+    {
+      "legacy_address": "0x0019C9B0",
+      "legacy_source": "src/game_core/indep/src/rigidbody.cpp",
+      "legacy_scope": "port::driving::init",
+      "legacy_signature": "void Sub_0019C9B0(ByteView out,std::uint32_t config_address,ByteView config)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "RigidBody::port_initialize"
+      ],
+      "current_signatures": [
+        "void Sub_0019C9B0(ByteView out,std::uint32_t config_address,ByteView config)"
+      ],
+      "historical_token_hash": "fbc5f4d98e4350ef2a579579e39e73cfc02b4fd557a43244840c2fab4ee05ace",
+      "debug_address": "0x0019a2d8"
+    },
+    {
+      "legacy_address": "0x001A3F10",
+      "legacy_source": "src/game_core/indep/src/wheel.cpp",
+      "legacy_scope": "port::driving::init",
+      "legacy_signature": "void Sub_001A3F10(ByteView out,std::uint32_t a1,std::uint32_t a2,std::uint32_t a3,std::uint32_t t0)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Wheel"
+      ],
+      "current_signatures": [
+        "void Sub_001A3F10(ByteView out,std::uint32_t a1,std::uint32_t a2,std::uint32_t a3,std::uint32_t t0)"
+      ],
+      "historical_token_hash": "90b057f1aa03e67a14b2490e35b258f0e6e511980150b0baf894da3b876b449d",
+      "debug_address": "0x001a16e8"
+    },
+    {
+      "legacy_address": "0x001A5EA0",
+      "legacy_source": "src/game_core/indep/src/suspension.cpp",
+      "legacy_scope": "port::driving::init",
+      "legacy_signature": "void Sub_001A5EA0(ByteView out,std::uint32_t a1,std::uint32_t a2,std::uint32_t a3,std::uint32_t t0,std::uint32_t t1)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Suspension::port_initialize"
+      ],
+      "current_signatures": [
+        "void Sub_001A5EA0(ByteView out,std::uint32_t a1,std::uint32_t a2,std::uint32_t a3,std::uint32_t t0,std::uint32_t t1)"
+      ],
+      "historical_token_hash": "a6c3256096591038bc9904ba0171d0dc80be90fb577b8f60ebd06a415f525578",
+      "debug_address": "0x001a3680"
+    },
+    {
+      "legacy_address": "0x0019C170",
+      "legacy_source": "src/game_core/indep/src/componentphysics.cpp",
+      "legacy_scope": "port::driving::init",
+      "legacy_signature": "void Sub_0019C170(ByteView out,std::uint32_t address)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "PhysicsSystem::port_initialize"
+      ],
+      "current_signatures": [
+        "void Sub_0019C170(ByteView out,std::uint32_t address)"
+      ],
+      "historical_token_hash": "ccf6b3dc42dcc10c070080aff33bdf8423ca7dcd19467a3dbdc02509ba5026fd",
+      "debug_address": "0x00199a98"
+    },
+    {
+      "legacy_address": "0x0019CC40",
+      "legacy_source": "src/game_core/indep/src/rigidbody.cpp",
+      "legacy_scope": "port::driving::init",
+      "legacy_signature": "void Calibrate(ByteView out,const std::array<std::uint32_t,4>* a1)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "RigidBody::Calibrate"
+      ],
+      "current_signatures": [
+        "void Calibrate(ByteView out,const std::array<std::uint32_t,4>* a1)"
+      ],
+      "historical_token_hash": "4a9166080a5536fc922e23e69d9de2b782e27077ba245fd8651af4339a844b0a",
+      "debug_address": "0x0019a568"
+    },
+    {
+      "legacy_address": "0x001A5F88",
+      "legacy_source": "src/game_core/indep/src/suspension.cpp",
+      "legacy_scope": "port::driving::init",
+      "legacy_signature": "void Calibrate(ByteView out,float f12,const std::array<float,4>& a,const std::array<float,4>& b)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Suspension::Calibrate"
+      ],
+      "current_signatures": [
+        "void Calibrate(ByteView out,float f12,const std::array<float,4>& a,const std::array<float,4>& b)"
+      ],
+      "historical_token_hash": "e780fe773482304e5c3d03185628d4c89341f5ab1f274315a3692c576d29351e",
+      "debug_address": "0x001a3768"
+    },
+    {
+      "legacy_address": "0x001A4348",
+      "legacy_source": "src/game_core/indep/src/wheel.cpp",
+      "legacy_scope": "port::driving::init",
+      "legacy_signature": "void Calibrate(ByteView out,std::uint32_t global)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Wheel::Calibrate"
+      ],
+      "current_signatures": [
+        "void Calibrate(ByteView out,std::uint32_t global)"
+      ],
+      "historical_token_hash": "beb469a98d1becb5d2512bcdbb3f490ee6dbd680faf6754ed9fb909514604710",
+      "debug_address": "0x001a1b20"
+    },
+    {
+      "legacy_address": "0x001A4158",
+      "legacy_source": "src/game_core/indep/src/wheel.cpp",
+      "legacy_scope": "port::driving::init",
+      "legacy_signature": "void SetState(ByteView out,float f12,float f13)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Wheel::SetState"
+      ],
+      "current_signatures": [
+        "void SetState(ByteView out,float f12,float f13)"
+      ],
+      "historical_token_hash": "f6223a92b8537819b2427cf17bf800265b61168fd3f0707d2b2a2d1c90ac2049",
+      "debug_address": "0x001a1930"
+    },
+    {
+      "legacy_address": "0x001A5FB0",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving::init",
+      "legacy_signature": "void Sub_001A5FB0(ByteView out)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Suspension::SetState"
+      ],
+      "current_signatures": [
+        "void Sub_001A5FB0(ByteView out)"
+      ],
+      "historical_token_hash": "3396911e13b221b7c2b0bd190b025a0c1c3f6b6ff8fe5ffa407892ae2d4abde3",
+      "debug_address": "0x001a3790"
+    },
+    {
+      "legacy_address": "0x0019CF10",
+      "legacy_source": "src/game_core/indep/src/rigidbody.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void ApplyImpulse(Memory& m,std::uint32_t body,const std::array<float,4>& input,const std::array<float,4>& point)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "RigidBody"
+      ],
+      "current_signatures": [
+        "void ApplyImpulse(Memory& m,std::uint32_t body,const std::array<float,4>& input,const std::array<float,4>& point)"
+      ],
+      "historical_token_hash": "15b881efbc38fdbda92c02873f55d2ff857cac3dd4e819cd854a8cc5d1eb9d01",
+      "debug_address": "0x0019a838"
+    },
+    {
+      "legacy_address": "0x0019C238",
+      "legacy_source": "src/game_core/indep/src/componentphysics.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void AddComponent(Memory& m,std::uint32_t head,std::uint32_t object)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "PhysicsSystem"
+      ],
+      "current_signatures": [
+        "void AddComponent(Memory& m,std::uint32_t head,std::uint32_t object)"
+      ],
+      "historical_token_hash": "8fa7bd4d6c13dd2214e52cceff5fa2e2ce7d92ed71b50d1ec93749f671b1fb5a",
+      "debug_address": "0x00199b60"
+    },
+    {
+      "legacy_address": "0x0019C808",
+      "legacy_source": "src/game_core/indep/src/componentphysics.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void PhysicsSystem::ComputeAuxiliaries(Memory& m,std::uint32_t head,InitServices& services)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "PhysicsSystem"
+      ],
+      "current_signatures": [
+        "void PhysicsSystem::ComputeAuxiliaries(Memory& m,std::uint32_t head,InitServices& services)"
+      ],
+      "historical_token_hash": "1a67faab40ccfa2141d1344411c6fe96401da375e69e1ecb3636d4e824dbed89",
+      "debug_address": "0x0019a130"
+    },
+    {
+      "legacy_address": "0x001ADFB8",
+      "legacy_source": "src/game_core/indep/src/aerodynamics.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "float GetDownforceAtSpeed(Memory& m,std::uint32_t object,float f12)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Aerodynamics"
+      ],
+      "current_signatures": [
+        "float GetDownforceAtSpeed(Memory&m,std::uint32_t a,float speed)"
+      ],
+      "historical_token_hash": "f8be21bb07dbee8451cb84bb7a0f15a3255191fb1e27bb64cecad643bccd871a",
+      "debug_address": "0x001AB638"
+    },
+    {
+      "legacy_address": "0x001375F0",
+      "legacy_source": "src/game_core/indep/src/physicscar.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void Calibrate(Memory& m,std::uint32_t object)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "PhysicsCar"
+      ],
+      "current_signatures": [
+        "void Calibrate(Memory& m,std::uint32_t object)"
+      ],
+      "historical_token_hash": "0fa3e0c5e1bbf6709f295ba962d5aefc637a4b3c40e9f3c7c20cbad13ba85e4d",
+      "debug_address": "0x001375B0"
+    },
+    {
+      "legacy_address": "0x00138CF8",
+      "legacy_source": "src/game_core/indep/src/physicscar.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void InitializeStateFromCar(Memory& m,std::uint32_t object)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "PhysicsCar"
+      ],
+      "current_signatures": [
+        "void InitializeStateFromCar(Memory& m,std::uint32_t object)"
+      ],
+      "historical_token_hash": "91abca3859d696f369e3958569a0025f8df239ea012ad89c31996125386c65d9",
+      "debug_address": "0x00138C80"
+    },
+    {
+      "legacy_address": "0x001A4358",
+      "legacy_source": "src/game_core/indep/src/wheel.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void Wheel::ComputeAuxiliaries(Memory& m,std::uint32_t object)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Wheel"
+      ],
+      "current_signatures": [
+        "void Wheel::ComputeAuxiliaries(Memory& m,std::uint32_t object)"
+      ],
+      "historical_token_hash": "099a1396b36119b55ecafa9f8c97845972e0b0800a1e19dd5a8443a522ba9010",
+      "debug_address": "0x001a1b30"
+    },
+    {
+      "legacy_address": "0x001A5FC0",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void Sub_001A5FC0(Memory& m,std::uint32_t object,ContactProvider& contact)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Suspension"
+      ],
+      "current_signatures": [
+        "void Sub_001A5FC0(Memory& m,std::uint32_t object,ContactProvider& contact)"
+      ],
+      "historical_token_hash": "94a6abbd3b905fc06152fe23e2b36634030f9e685bd75800b48e6f1dd2d5f7bd",
+      "debug_address": "0x001a37a0"
+    },
+    {
+      "legacy_address": "0x001A63D0",
+      "legacy_source": "src/game_core/indep/src/suspension.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "std::array<float,4> GetPointVelocity(const std::array<float,4>& linear,const std::array<float,4>& angular,const std::array<float,4>& point)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "GetPointVelocity"
+      ],
+      "current_signatures": [
+        "std::array<float,4> GetPointVelocity(const std::array<float,4>& linear,const std::array<float,4>& angular,const std::array<float,4>& point)"
+      ],
+      "historical_token_hash": "12fbf4b07525a154fad03a940de638833f0322388dc773415c40f521242f5563",
+      "debug_address": "0x001a3bb0"
+    },
+    {
+      "legacy_address": "0x001A6408",
+      "legacy_source": "src/game_core/indep/src/suspension.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "float ApplyGroundPenaltyImpulse(Memory& m,std::uint32_t object)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Suspension"
+      ],
+      "current_signatures": [
+        "float ApplyGroundPenaltyImpulse(Memory& m,std::uint32_t object)"
+      ],
+      "historical_token_hash": "fba05782cd33d6be4ff6ae77e065f84beeb77c916efce17017486a4263514389",
+      "debug_address": "0x001a3be8"
+    },
+    {
+      "legacy_address": "0x00133130",
+      "legacy_source": "src/game_core/indep/src/car.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "bool IsBlinking(Memory& m,std::uint32_t object)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Car"
+      ],
+      "current_signatures": [
+        "bool IsBlinking(Memory& m,std::uint32_t object)"
+      ],
+      "historical_token_hash": "de79a030aa1e66c0e1626f0e542213981a3ecf5103b3d02affe663d91099524f",
+      "debug_address": "0x00133198"
+    },
+    {
+      "legacy_address": "0x00133070",
+      "legacy_source": "src/game_core/indep/src/car.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void PleaseResetMeLater(Memory& m,std::uint32_t object,InitServices& services)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Car"
+      ],
+      "current_signatures": [
+        "void PleaseResetMeLater(Memory& m,std::uint32_t object,InitServices& services)"
+      ],
+      "historical_token_hash": "3fc0eea311763e2cb2bffd43ef8a1ecc6c2bccde097463201aefc0bbb5050ff1",
+      "debug_address": "0x001330D8"
+    },
+    {
+      "legacy_address": "0x001377D8",
+      "legacy_source": "src/game_core/indep/src/physicscar.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "std::uint32_t CheckDampingSuitability(Memory& m,std::uint32_t object)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "PhysicsCar"
+      ],
+      "current_signatures": [
+        "std::uint32_t CheckDampingSuitability(Memory& m,std::uint32_t object)"
+      ],
+      "historical_token_hash": "f6edb3eddab8437bd909e8908b8a8ba014df839ca0545b8b6c6241c5ad9f92e5",
+      "debug_address": "0x00137798"
+    },
+    {
+      "legacy_address": "0x00137938",
+      "legacy_source": "src/game_core/indep/src/physicscar.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void BottomOut(Memory& m,std::uint32_t object,InitServices& services)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "PhysicsCar"
+      ],
+      "current_signatures": [
+        "void BottomOut(Memory& m,std::uint32_t object,InitServices& services)"
+      ],
+      "historical_token_hash": "0a68f2a1e3bb57a15f319b77e65e3238a9d24c1ffb72b2caab1174dce60a86f3",
+      "debug_address": "0x001378C0"
+    },
+    {
+      "legacy_address": "0x00137788",
+      "legacy_source": "src/game_core/indep/src/physicscar.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void PhysicsCar::ComputeAuxiliaries(Memory& m,std::uint32_t object,InitServices& services)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "PhysicsCar"
+      ],
+      "current_signatures": [
+        "void PhysicsCar::ComputeAuxiliaries(Memory& m,std::uint32_t object,InitServices& services)"
+      ],
+      "historical_token_hash": "991af81419b8d9ee9b727e2a70aca7c24244da36a5e804e98906cce75fbb16d4",
+      "debug_address": "0x00137748"
+    },
+    {
+      "legacy_address": "0x00137100",
+      "legacy_source": "src/game_core/indep/src/physicscar.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "std::uint32_t Sub_00137100(Memory& m,std::uint32_t object,std::uint32_t config,std::uint32_t controls,std::uint32_t car,InitServices& services)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "PhysicsCar"
+      ],
+      "current_signatures": [
+        "std::uint32_t Sub_00137100(Memory& m,std::uint32_t object,std::uint32_t config,std::uint32_t controls,std::uint32_t car,InitServices& services)"
+      ],
+      "historical_token_hash": "0742fb628c7d055dbe13be66d3a74e634312cb90a1e6adda9c39c0781f5c85f8",
+      "debug_address": "0x001370C0"
+    },
+    {
+      "legacy_address": "0x00137C88",
+      "legacy_source": "src/game_core/indep/src/physicscar.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "float YawFrictionBoost(float f12,float f13,float f14,float f15,float f16,float f17,int a0,float& a1)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "YawFrictionBoost"
+      ],
+      "current_signatures": [
+        "float YawFrictionBoost(Memory& m,float a,float b,float c,float d,float e,float post,int mode,float& grade)"
+      ],
+      "historical_token_hash": "24dc5be898b5d9512f897f3d88e4252905466855002df1f59362dfdba19c4749",
+      "debug_address": "0x00137C10"
+    },
+    {
+      "legacy_address": "0x001A5D60",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void Sub_001A5D60(Memory& m,std::uint32_t s,std::uint16_t value)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "TwoWheelAckermanSteering"
+      ],
+      "current_signatures": [
+        "void Sub_001A5D60(Memory& m,std::uint32_t s,std::uint16_t value)"
+      ],
+      "historical_token_hash": "c849523105c1ad66b17f8e45509bdb0cf02e971a63a3ebb7e895a47d85d99f33"
+    },
+    {
+      "legacy_address": "0x00139490",
+      "legacy_source": "src/game_core/indep/src/physicscar.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void SetBoost(Memory& m,std::uint32_t s,float value)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "PhysicsCar"
+      ],
+      "current_signatures": [
+        "void SetBoost(Memory& m,std::uint32_t s,float value)"
+      ],
+      "historical_token_hash": "48f9c1843d7a87dd962ac20a9e3c1afd3c54fda5551ca339261f1bb312b8601e",
+      "debug_address": "0x00139418"
+    },
+    {
+      "legacy_address": "0x001C08D0",
+      "legacy_source": "src/game_core/indep/src/carstate.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "float GetYawAlways(Memory& m,std::uint32_t s)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "CarState"
+      ],
+      "current_signatures": [
+        "float GetYawAlways(Memory& m,std::uint32_t s)"
+      ],
+      "historical_token_hash": "6156b6a40cf14c5c37078c702e86a58ac3064eab84487f3487cfd46fadcdf4ea",
+      "debug_address": "0x001BD9B8"
+    },
+    {
+      "legacy_address": "0x001C0888",
+      "legacy_source": "src/game_core/indep/src/carstate.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "float GetYaw(Memory& m,std::uint32_t s)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "CarState"
+      ],
+      "current_signatures": [
+        "float GetYaw(Memory& m,std::uint32_t s)"
+      ],
+      "historical_token_hash": "4b9dab2d8ff16fd191678a6c4282d95e3439fe1d522d2ff50667748f02957760",
+      "debug_address": "0x001BD970"
+    },
+    {
+      "legacy_address": "0x00135EB8",
+      "legacy_source": "src/game_core/indep/src/car.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "float GetPostCollisionYawControlBoost(Memory& m,std::uint32_t car)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Car"
+      ],
+      "current_signatures": [
+        "float GetPostCollisionYawControlBoost(Memory& m,std::uint32_t car)"
+      ],
+      "historical_token_hash": "114ef646b1b1b476a8c36e21d37cfdb81487a359313f3eb3283f360c6c6a613c",
+      "debug_address": "0x00135F10"
+    },
+    {
+      "legacy_address": "0x00135E18",
+      "legacy_source": "src/game_core/indep/src/car.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "bool ShouldVisualEffectsBeGenerated(Memory& m,std::uint32_t car)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Car"
+      ],
+      "current_signatures": [
+        "bool ShouldVisualEffectsBeGenerated(Memory& m,std::uint32_t car)"
+      ],
+      "historical_token_hash": "a5ef03c1fd5bc35e1554a79b4c36bf9642f68e49a6da0fc4286f05f8425383bc",
+      "debug_address": "0x00135E70"
+    },
+    {
+      "legacy_address": "0x0025A3D0",
+      "legacy_source": "src/game_core/src/bMath.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "std::uint32_t bRandom(Memory& m,std::uint32_t state,std::uint32_t divisor)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "bRandom"
+      ],
+      "current_signatures": [
+        "std::uint32_t bRandom(Memory& m,std::uint32_t state,std::uint32_t divisor)"
+      ],
+      "historical_token_hash": "cd6dc0a26cf81d8066f270f1e074c16f4692b5efb4211dde2182f2958257b14d",
+      "debug_address": "0x002537A0"
+    },
+    {
+      "legacy_address": "0x0025A410",
+      "legacy_source": "src/game_core/src/bMath.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "float bRandom(Memory& m,std::uint32_t state,float value)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "bRandom"
+      ],
+      "current_signatures": [
+        "float bRandom(Memory& m,std::uint32_t state,float value)"
+      ],
+      "historical_token_hash": "d4423369eb4c175a6491d07009fb2590d3b2fa47b1d0f535fdb300d02fbd4f78",
+      "debug_address": "0x002537E0"
+    },
+    {
+      "legacy_address": "0x0025A4A8",
+      "legacy_source": "src/game_core/src/bMath.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "float bRandom(Memory& m,float value)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "bRandom"
+      ],
+      "current_signatures": [
+        "float bRandom(Memory& m,float value)"
+      ],
+      "historical_token_hash": "3e922a97cf8f647a97fccb1180b5f045656d720ec4c06d7aee05f55427b8f370",
+      "debug_address": "0x00253878"
+    },
+    {
+      "legacy_address": "0x00137D90",
+      "legacy_source": "src/game_core/indep/src/physicscar.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "float Move(Memory& m,std::uint32_t s,float dt,DrivingServices& hooks)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "PhysicsCar"
+      ],
+      "current_signatures": [
+        "float Move(Memory& m,std::uint32_t s,float dt,DrivingServices& hooks)"
+      ],
+      "historical_token_hash": "3a46b5ad47d2160b8694e1b59a26ee1d2c39791454e31dfc8ba58359ce98e489",
+      "debug_address": "0x00137D18"
+    },
+    {
+      "legacy_address": "0x0011BD90",
+      "legacy_source": "src/game_core/src/ecstasy/emathe.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void eOrthonormalizeMatrix(Memory& m,std::uint32_t a)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "eOrthonormalizeMatrix"
+      ],
+      "current_signatures": [
+        "void eOrthonormalizeMatrix(Memory& m,std::uint32_t a)"
+      ],
+      "historical_token_hash": "61ed8fe5e24b9570307d5d05167c1747f22a47189a3976599e247ee2fc2b2cea",
+      "debug_address": "0x0011C108"
+    },
+    {
+      "legacy_address": "0x001ADD70",
+      "legacy_source": "src/game_core/indep/src/aerodynamics.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void Aerodynamics::ResolveForces(Memory& m,std::uint32_t a,std::uint32_t output)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Aerodynamics"
+      ],
+      "current_signatures": [
+        "void Aerodynamics::ResolveForces(Memory&m,std::uint32_t a,std::uint32_t out)"
+      ],
+      "historical_token_hash": "542dfd7e2bbcee213f4e32b16a52989d4eacdfb317c6f09b71cf9950082bd18e",
+      "debug_address": "0x001AB3F0"
+    },
+    {
+      "legacy_address": "0x00139518",
+      "legacy_source": "src/game_core/indep/src/physicscar.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void JumpStabilizer(Memory& m,std::uint32_t mover)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "PhysicsCar"
+      ],
+      "current_signatures": [
+        "void JumpStabilizer(Memory& m,std::uint32_t mover)"
+      ],
+      "historical_token_hash": "91b59cbf514e16d5a4aa8cd2a2c86ad5441b9f7fb5e59460a0ace5f0be712d1f",
+      "debug_address": "0x00139478"
+    },
+    {
+      "legacy_address": "0x00138F38",
+      "legacy_source": "src/game_core/indep/src/physicscar.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void IterateForces(Memory& m,std::uint32_t mover)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "PhysicsCar"
+      ],
+      "current_signatures": [
+        "void IterateForces(Memory& m,std::uint32_t mover)"
+      ],
+      "historical_token_hash": "a2f087d0774f54552de4fbe7c1a9ec071c6c16686db7f29129204d5ee92a1ed8",
+      "debug_address": "0x00138ec0"
+    },
+    {
+      "legacy_address": "0x00138E08",
+      "legacy_source": "src/game_core/indep/src/physicscar.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void ResolveForces(Memory& m,std::uint32_t mover)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "PhysicsCar"
+      ],
+      "current_signatures": [
+        "void ResolveForces(Memory& m,std::uint32_t mover)"
+      ],
+      "historical_token_hash": "b7aba1ba7cdf19dc2c286b35d7be4072e76cbc73b6d7615f1b4092cf0fed3db2",
+      "debug_address": "0x00138d90"
+    },
+    {
+      "legacy_address": "",
+      "legacy_source": "src/game_core/port/driving/adapters.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void integrate(Memory& m,std::uint32_t list,float dt,InitServices& services)",
+      "disposition": "port_memory_or_dispatch_adapter",
+      "reason": "Host endian/bounds checks or explicit target dispatch, not an original-game physics implementation.",
+      "canonical_targets": [],
+      "current_signatures": [
+        "void integrate(Memory& m,std::uint32_t list,float dt,InitServices& services)"
+      ],
+      "historical_token_hash": "6b5016dba330b65ebd84a01678be3c4ff90c9be655d2e07d8f060cc045de00ec"
+    },
+    {
+      "legacy_address": "0x00139188",
+      "legacy_source": "src/game_core/indep/src/physicscar.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void UpdateCar(Memory& m,std::uint32_t mover,float)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "PhysicsCar"
+      ],
+      "current_signatures": [
+        "void UpdateCar(Memory& m,std::uint32_t mover,float dt)"
+      ],
+      "historical_token_hash": "5f34d094be4581ca0952823ebe620491b4a3adc553980331440ef87eb311a04b",
+      "debug_address": "0x00139110"
+    },
+    {
+      "legacy_address": "0x0025AF20",
+      "legacy_source": "src/game_core/src/bMatrix.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void bTransposeMatrix(SolverMatrix& out, const SolverMatrix& in)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "bTransposeMatrix"
+      ],
+      "current_signatures": [
+        "void bTransposeMatrix(SolverMatrix& out, const SolverMatrix& in)"
+      ],
+      "historical_token_hash": "dff58d59264b21549577002632e98e58c29f3de1f4bc095d0e316ed503a2ad17",
+      "debug_address": "0x002542C8"
+    },
+    {
+      "legacy_address": "0x0025AED0",
+      "legacy_source": "src/game_core/src/bMatrix.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void bMulMatrix(SolverVector& out, const SolverMatrix& matrix,\n                 const SolverVector& in, const SolverMathContext& context)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "bMulMatrix"
+      ],
+      "current_signatures": [
+        "void bMulMatrix(SolverVector& out, const SolverMatrix& matrix,\n                 const SolverVector& in, const SolverMathContext& context)"
+      ],
+      "historical_token_hash": "75da44ef2f19bdd2474e0429d6744ed04bcbc31800d8dfd3cc94711f86c43d56",
+      "debug_address": "0x00254278"
+    },
+    {
+      "legacy_address": "0x0019D368",
+      "legacy_source": "src/game_core/indep/src/rigidbody.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void bMulMatrixVector(SolverVector& out, const SolverMatrix& matrix,\n                 const SolverVector& in, const SolverMathContext& context)",
+      "disposition": "transitive_forwarding_adapter",
+      "reason": "Delegates through the compatibility math surface to the canonical algorithm.",
+      "canonical_targets": [],
+      "current_signatures": [
+        "void bMulMatrixVector(SolverVector& out, const SolverMatrix& matrix,\n                 const SolverVector& in, const SolverMathContext& context)"
+      ],
+      "historical_token_hash": "681494e65d2eb16d9fa21f98620e4e08d05367e10c33eda5bc263d0d3ebd0a36",
+      "debug_address": "0x0019AC90"
+    },
+    {
+      "legacy_address": "0x0019CD90",
+      "legacy_source": "src/game_core/indep/src/rigidbody.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void ApplyForce(SolverBodyProjection& body, const SolverVector& a1, const SolverVector& a2)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "RigidBody::ApplyForce"
+      ],
+      "current_signatures": [
+        "void ApplyForce(SolverBodyProjection& body, const SolverVector& a1, const SolverVector& a2)"
+      ],
+      "historical_token_hash": "91eefb3e4fcf4ddd68c3642bce9836f48563d15e8041f5fa2cdf52cfd6a57d24",
+      "debug_address": "0x0019a6b8"
+    },
+    {
+      "legacy_address": "0x0019CE80",
+      "legacy_source": "src/game_core/indep/src/rigidbody.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void ApplyForceInFrame(SolverBodyProjection& body, const SolverVector& a1,\n                 const SolverVector& a2, const SolverMathContext& context)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "RigidBody::ApplyForceInFrame"
+      ],
+      "current_signatures": [
+        "void ApplyForceInFrame(SolverBodyProjection& body, const SolverVector& a1,\n                 const SolverVector& a2, const SolverMathContext& context)"
+      ],
+      "historical_token_hash": "5052aaedfe413bda2eb1961183cdfcbbd9a5b2a6789958f67e18fc6a996b8c41",
+      "debug_address": "0x0019a7a8"
+    },
+    {
+      "legacy_address": "0x0019CEF8",
+      "legacy_source": "src/game_core/indep/src/rigidbody.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void ApplyMoment(SolverBodyProjection& body, const SolverVector& a1)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "RigidBody::ApplyMoment"
+      ],
+      "current_signatures": [
+        "void ApplyMoment(SolverBodyProjection& body, const SolverVector& a1)"
+      ],
+      "historical_token_hash": "5cb8f8294910717dadb1778b14665ea534efbfade2bac3b13e1e55789717f4e5",
+      "debug_address": "0x0019a820"
+    },
+    {
+      "legacy_address": "0x001A5428",
+      "legacy_source": "src/game_core/indep/src/wheel.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void GetHorizontalGroundForceInCarFrame(const SolverWheelProjection& wheel, SolverVector& out)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Wheel::GetHorizontalGroundForceInCarFrame"
+      ],
+      "current_signatures": [
+        "void GetHorizontalGroundForceInCarFrame(const SolverWheelProjection& wheel, SolverVector& out)"
+      ],
+      "historical_token_hash": "e5a4b64c86a6810e3057cc37132dd0084f1da9340b315b41e72bef37742b21f5",
+      "debug_address": "0x001a2c00"
+    },
+    {
+      "legacy_address": "0x001A4778",
+      "legacy_source": "src/game_core/indep/src/wheel.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void CheckForBrakeLock(float f12, SolverWheelProjection& wheel, const SolverWheelGlobals& globals)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Wheel::CheckForBrakeLock"
+      ],
+      "current_signatures": [
+        "void CheckForBrakeLock(float f12, SolverWheelProjection& wheel, const SolverWheelGlobals& globals)"
+      ],
+      "historical_token_hash": "f3102e4ba50a1fbd8e1324e45bad7afcc2fcfedc944351580c6276a093a03506",
+      "debug_address": "0x001a1f50"
+    },
+    {
+      "legacy_address": "0x001A44A8",
+      "legacy_source": "src/game_core/indep/src/wheel.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "float ExchangeZForces(float f12, SolverWheelProjection& wheel, std::int32_t a1)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Wheel::ExchangeZForces"
+      ],
+      "current_signatures": [
+        "float ExchangeZForces(float f12, SolverWheelProjection& wheel, std::int32_t a1)"
+      ],
+      "historical_token_hash": "22875f60a745e49aaa80c94a24c0c226ffbd8a6443e4ac03caa8bc2feabb399a",
+      "debug_address": "0x001a1c80"
+    },
+    {
+      "legacy_address": "0x001A6330",
+      "legacy_source": "src/game_core/indep/src/suspension.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void Suspension::ResolveForces(float f12, SolverSuspensionProjection& suspension)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Suspension::ResolveForces"
+      ],
+      "current_signatures": [
+        "void Suspension::ResolveForces(float f12, SolverSuspensionProjection& suspension)"
+      ],
+      "historical_token_hash": "715d236689787bacbabd8bf1d93b9ab8f5d989d28c1a7788adc66054a8779428",
+      "debug_address": "0x001a3b10"
+    },
+    {
+      "legacy_address": "0x001A6370",
+      "legacy_source": "src/game_core/indep/src/suspension.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void ResolveMoreForces(SolverSuspensionProjection& suspension, std::int32_t Field_00330D10)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Suspension::ResolveMoreForces"
+      ],
+      "current_signatures": [
+        "void ResolveMoreForces(SolverSuspensionProjection& suspension, std::int32_t Field_00330D10)"
+      ],
+      "historical_token_hash": "193cb124b65ec76f5122df307585f11e0c7d1e4882cc83d8f7dcd414112737aa",
+      "debug_address": "0x001a3b50"
+    },
+    {
+      "legacy_address": "0x0018B948",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void SolverDependencies::GuessClutchTorque()",
+      "disposition": "retired_duplicate_composite_or_test_dispatch",
+      "reason": "Removed the second composite solver and its unused dependency shims; only canonical PhysicsCar::IterateForces remains.",
+      "canonical_targets": [],
+      "current_signatures": [],
+      "historical_token_hash": "b087a738530c554a1c4e14f9144adde2cabfd5fd70ecdb1bcb2e5a3346a625bc",
+      "debug_address": "0x00189AF0"
+    },
+    {
+      "legacy_address": "0x001A4930",
+      "legacy_source": "src/game_core/indep/src/wheel.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void SolverDependencies::GuessGroundForce(SolverWheelProjection&, int, std::int8_t)",
+      "disposition": "retired_duplicate_composite_or_test_dispatch",
+      "reason": "Removed the second composite solver and its unused dependency shims; only canonical PhysicsCar::IterateForces remains.",
+      "canonical_targets": [],
+      "current_signatures": [],
+      "historical_token_hash": "6e820c86dc655583510d0c6f34bd13f3c85ee26682a170b0e3868f8c1e48da06",
+      "debug_address": "0x001a2108"
+    },
+    {
+      "legacy_address": "0x0018BAA0",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void SolverDependencies::ModifyClutchTorque()",
+      "disposition": "retired_duplicate_composite_or_test_dispatch",
+      "reason": "Removed the second composite solver and its unused dependency shims; only canonical PhysicsCar::IterateForces remains.",
+      "canonical_targets": [],
+      "current_signatures": [],
+      "historical_token_hash": "9f2e63cf184184267b192bf2ddf71c84431f3d06ca9692c4c705a50f404324ff",
+      "debug_address": "0x00189BD0"
+    },
+    {
+      "legacy_address": "0x001A4EE0",
+      "legacy_source": "src/game_core/indep/src/wheel.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void SolverDependencies::FinalizeGroundForce(SolverWheelProjection&, int)",
+      "disposition": "retired_duplicate_composite_or_test_dispatch",
+      "reason": "Removed the second composite solver and its unused dependency shims; only canonical PhysicsCar::IterateForces remains.",
+      "canonical_targets": [],
+      "current_signatures": [],
+      "historical_token_hash": "aec0e4e85d8ebb82b03fe7083bcd4b6db278f4e0ed515e2c125cd0896ffa2f67",
+      "debug_address": "0x001a26b8"
+    },
+    {
+      "legacy_address": "0x0018BC10",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void SolverDependencies::FinalizeClutchTorque()",
+      "disposition": "retired_duplicate_composite_or_test_dispatch",
+      "reason": "Removed the second composite solver and its unused dependency shims; only canonical PhysicsCar::IterateForces remains.",
+      "canonical_targets": [],
+      "current_signatures": [],
+      "historical_token_hash": "6a8871d5e9b045ec293dbf327057017dee1776d1925658268579a21b218983d8",
+      "debug_address": "0x00189D40"
+    },
+    {
+      "legacy_address": "0x00138F38",
+      "legacy_source": "src/game_core/indep/src/physicscar.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void IterateForces(SolverBodyProjection& body, std::array<SolverWheelProjection, 4>& wheels,\n                 const std::array<SolverSuspensionProjection, 4>& suspensions, std::int8_t a2,\n                 SolverDependencies& dependencies, const SolverMathContext& context)",
+      "disposition": "retired_duplicate_composite_or_test_dispatch",
+      "reason": "Removed the second composite solver and its unused dependency shims; only canonical PhysicsCar::IterateForces remains.",
+      "canonical_targets": [],
+      "current_signatures": [],
+      "historical_token_hash": "2223750c849e473e3e9d2bbae41f3f201c02dcc4180fb5a9d59396271932a7ec",
+      "debug_address": "0x00138ec0"
+    },
+    {
+      "legacy_address": "0x00152070",
+      "legacy_source": "src/game_core/indep/src/track.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "float PlaneContact::GetElevation(Memory& m,std::uint32_t,std::uint32_t point,\n    std::uint32_t material,std::uint32_t plane,std::uint32_t found)",
+      "disposition": "synthetic_environment_boundary",
+      "reason": "Explicit horizontal-plane test provider; original Track broadphase not implemented by this fixture.",
+      "canonical_targets": [],
+      "current_signatures": [
+        "float PlaneContact::GetElevation(Memory& m,std::uint32_t,std::uint32_t point,\n    std::uint32_t material,std::uint32_t plane,std::uint32_t found)"
+      ],
+      "historical_token_hash": "abdce4201203c2c4b1e3d5378d92359d33db2ccdcfe8343b85417fe5dc034c1b",
+      "debug_address": "0x00151CC0"
+    },
+    {
+      "legacy_address": "0x00153458",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "float Sub_00153458(Memory& m,std::int32_t x,std::int32_t y)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "GetRoadNoiseGridValue"
+      ],
+      "current_signatures": [
+        "float Sub_00153458(Memory& m,std::int32_t x,std::int32_t y)"
+      ],
+      "historical_token_hash": "0dbf6a16963b3a59be4347ea6bad1bd53c8ef8c39e62f3d86ea9ab88f5e9d37d",
+      "debug_address": "0x001530a8"
+    },
+    {
+      "legacy_address": "0x00153498",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "float Sub_00153498(Memory& m,std::uint32_t point,std::int32_t material)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "GetRoadNoise"
+      ],
+      "current_signatures": [
+        "float Sub_00153498(Memory& m,std::uint32_t point,std::int32_t material)"
+      ],
+      "historical_token_hash": "617bb8354c422a44196145354c5d8a05986546bf62cd0b285ae1f3a577610f7e",
+      "debug_address": "0x001530e8"
+    },
+    {
+      "legacy_address": "0x0018ABF0",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void DecrementNitro(EngineTimerProjection& s,std::int32_t ticks,float scale)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Engine::DecrementNitro"
+      ],
+      "current_signatures": [
+        "void DecrementNitro(EngineTimerProjection&s,std::int32_t ticks,float scale)"
+      ],
+      "historical_token_hash": "24e2746e2a8148ec9dd4dc8f7f09b94f364c2b0c75d51bc65d9aa8560c884f35",
+      "debug_address": "0x00188DA0"
+    },
+    {
+      "legacy_address": "0x0018BCA0",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "std::int32_t SetSportGear(DrivetrainProjection& s,std::int32_t value)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "DriveTrain::SetSportGear"
+      ],
+      "current_signatures": [
+        "std::int32_t SetSportGear(DrivetrainProjection& s,std::int32_t value)"
+      ],
+      "historical_token_hash": "55de1b638fa121145c86ca9ec2da6d095c107e8429fd2fd3c0996a08f045e59b",
+      "debug_address": "0x00189DD0"
+    },
+    {
+      "legacy_address": "0x0018BCE0",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "std::int32_t SetDesiredGear(DrivetrainProjection& s,std::int32_t request,const DrivetrainGlobals& g)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "DriveTrain::SetDesiredGear"
+      ],
+      "current_signatures": [
+        "std::int32_t SetDesiredGear(DrivetrainProjection& s,std::int32_t request,const DrivetrainGlobals& g)"
+      ],
+      "historical_token_hash": "d88c5446e88917a50da8ec76458f05b78e61188392317ac2ae86c0bd1c12062a",
+      "debug_address": "0x00189E10"
+    },
+    {
+      "legacy_address": "0x0018B360",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "float GetDifferentialAngularAcceleration(const DrivetrainProjection& s,const DrivetrainGlobals& g)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "DriveTrain::GetDifferentialAngularAcceleration"
+      ],
+      "current_signatures": [
+        "float GetDifferentialAngularAcceleration(const DrivetrainProjection& s,const DrivetrainGlobals& g)"
+      ],
+      "historical_token_hash": "ab8aad1b6106a35869d507e8503b268e6941792ce7773d68252f38784625c1fc",
+      "debug_address": "0x00189508"
+    },
+    {
+      "legacy_address": "0x0018B6C8",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void ApplyClutchTorque(float value,DrivetrainProjection& s,const DrivetrainGlobals& g)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "DriveTrain::ApplyClutchTorque"
+      ],
+      "current_signatures": [
+        "void ApplyClutchTorque(float value,DrivetrainProjection& s,const DrivetrainGlobals& g)"
+      ],
+      "historical_token_hash": "15def1338ce1bc390a36ad9bc64d10baec2d653565a3f7adee6f75b7a221c93b",
+      "debug_address": "0x00189870"
+    },
+    {
+      "legacy_address": "0x0018B948",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void GuessClutchTorque(DrivetrainProjection& s,const DrivetrainGlobals& g,const EngineEvaluation& engine)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "DriveTrain::GuessClutchTorque"
+      ],
+      "current_signatures": [
+        "void GuessClutchTorque(DrivetrainProjection& s,const DrivetrainGlobals& g,const EngineEvaluation& engine)"
+      ],
+      "historical_token_hash": "331183be29904a8dcceac72071789391245fb6d75054dfcba20652c49755e951",
+      "debug_address": "0x00189AF0"
+    },
+    {
+      "legacy_address": "0x0018BAA0",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void ModifyClutchTorque(DrivetrainProjection& s,const DrivetrainGlobals& g,const EngineEvaluation& engine)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "DriveTrain::ModifyClutchTorque"
+      ],
+      "current_signatures": [
+        "void ModifyClutchTorque(DrivetrainProjection& s,const DrivetrainGlobals& g,const EngineEvaluation& engine)"
+      ],
+      "historical_token_hash": "1132395e4fafc3942dc548637d2445b98cf94c8443b47954da590225ca76f735",
+      "debug_address": "0x00189BD0"
+    },
+    {
+      "legacy_address": "0x0018BC10",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void FinalizeClutchTorque()",
+      "disposition": "constant_or_empty_leaf_compatibility",
+      "reason": "Historical trivial leaf; production resolves the original class method or actual Debug virtual-table leaf.",
+      "canonical_targets": [],
+      "current_signatures": [
+        "void FinalizeClutchTorque()"
+      ],
+      "historical_token_hash": "3ecefef906d003446d87ba642f7fb980b612f35692a53b2b6866e4bd08e64f0a",
+      "debug_address": "0x00189D40"
+    },
+    {
+      "legacy_address": "0x0018BCA0",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "std::int32_t SetSportGear(Memory& m,std::uint32_t a,std::int32_t request)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "DriveTrain"
+      ],
+      "current_signatures": [
+        "std::int32_t SetSportGear(Memory&m,std::uint32_t a,std::int32_t value)"
+      ],
+      "historical_token_hash": "5f7578699c436dfe6be40c572dc76c404ab6e5a2aa112893e8037c876f3a5b12",
+      "debug_address": "0x00189DD0"
+    },
+    {
+      "legacy_address": "0x0018BCE0",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "std::int32_t SetDesiredGear(Memory& m,std::uint32_t a,std::int32_t request)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "DriveTrain"
+      ],
+      "current_signatures": [
+        "std::int32_t SetDesiredGear(Memory&m,std::uint32_t a,std::int32_t value)"
+      ],
+      "historical_token_hash": "42bcdc8f6b1380c07a1b5bf8b185fa5da8351b7301cf9d9adc99c40364199257",
+      "debug_address": "0x00189E10"
+    },
+    {
+      "legacy_address": "0x0018ABF0",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void DecrementNitro(Memory& m,std::uint32_t a)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Engine"
+      ],
+      "current_signatures": [
+        "void DecrementNitro(Memory&m,std::uint32_t a)"
+      ],
+      "historical_token_hash": "79b786f184e2fac33d2a2bd6e902d805e0dabb8506cef14844a897e847282334",
+      "debug_address": "0x00188DA0"
+    },
+    {
+      "legacy_address": "0x0018B948",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void GuessClutchTorque(Memory& m,std::uint32_t a)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "DriveTrain"
+      ],
+      "current_signatures": [
+        "void GuessClutchTorque(Memory&m,std::uint32_t a)"
+      ],
+      "historical_token_hash": "105fcd15ef0648b226bf0ad0fb7e75702b329cad9b88eca7d91f663679a34852",
+      "debug_address": "0x00189AF0"
+    },
+    {
+      "legacy_address": "0x0018BAA0",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void ModifyClutchTorque(Memory& m,std::uint32_t a)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "DriveTrain"
+      ],
+      "current_signatures": [
+        "void ModifyClutchTorque(Memory&m,std::uint32_t a)"
+      ],
+      "historical_token_hash": "ce4d851a4d9826973ad7ea8f94889960fe2e4fef1e95e55bcee84bf6ffd6000f",
+      "debug_address": "0x00189BD0"
+    },
+    {
+      "legacy_address": "",
+      "legacy_source": "src/game_core/port/driving/adapters.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "std::int32_t cvt_w_s(float f)",
+      "disposition": "port_memory_or_dispatch_adapter",
+      "reason": "Host endian/bounds checks or explicit target dispatch, not an original-game physics implementation.",
+      "canonical_targets": [],
+      "current_signatures": [
+        "std::int32_t cvt_w_s(float f)"
+      ],
+      "historical_token_hash": "f3e733e42656640d577a844e4a9dc8a7da990939d2fc25a6ff4ff9d453de2eed"
+    },
+    {
+      "legacy_address": "0x00189168",
+      "legacy_source": "src/game_core/indep/src/carinfo.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void CalcIndexMultiplier(Memory& m,std::uint32_t s)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Table"
+      ],
+      "current_signatures": [
+        "void CalcIndexMultiplier(Memory& m,std::uint32_t s)"
+      ],
+      "historical_token_hash": "04984fe6ceb2a35123e02e7b96940925f2626e3e2dd7b01cc989d3dec5933db4",
+      "debug_address": "0x00187318"
+    },
+    {
+      "legacy_address": "0x00189120",
+      "legacy_source": "src/game_core/indep/src/carinfo.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void SetMinMax(Memory& m,std::uint32_t s,float f12,float f13)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Table"
+      ],
+      "current_signatures": [
+        "void SetMinMax(Memory& m,std::uint32_t s,float lower,float upper)"
+      ],
+      "historical_token_hash": "63e1b86d2ab876414d52e99c31cec2fa8ef785fe45f07870182c31f64f7036fc",
+      "debug_address": "0x001872D0"
+    },
+    {
+      "legacy_address": "0x0018F808",
+      "legacy_source": "src/game_core/indep/src/table.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void Sub_0018F808(Memory& m,std::uint32_t s,std::uint32_t values,std::uint32_t count,float f12,float f13)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Table"
+      ],
+      "current_signatures": [
+        "void Sub_0018F808(Memory& m,std::uint32_t s,std::uint32_t data,std::uint32_t count,float lo,float hi)"
+      ],
+      "historical_token_hash": "a1e887be6ffbaee8f4e2658c5ca9226763b709e5c07bea52767ea132ad1ae703",
+      "debug_address": "0x0018D810"
+    },
+    {
+      "legacy_address": "0x0018F838",
+      "legacy_source": "src/game_core/indep/src/table.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "float Table::GetValue(Memory& m,std::uint32_t s,float value)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Table"
+      ],
+      "current_signatures": [
+        "float Table::GetValue(Memory& m,std::uint32_t s,float x)"
+      ],
+      "historical_token_hash": "90c1a10b9554520af219e458025d51764776152bbd96d2c2c4d01da3e36b7812",
+      "debug_address": "0x0018D840"
+    },
+    {
+      "legacy_address": "0x0018F9F0",
+      "legacy_source": "src/game_core/indep/src/table.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "float Graph::GetValue(Memory& m,std::uint32_t s,float value)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Graph"
+      ],
+      "current_signatures": [
+        "float Graph::GetValue(Memory& m,std::uint32_t s,float x)"
+      ],
+      "historical_token_hash": "da05812f91f2ff6fde1dd4d195e4ad93d2df92e672be3b2c6502e574707c7ec7",
+      "debug_address": "0x0018D9F8"
+    },
+    {
+      "legacy_address": "0x0018AC38",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void Sub_0018AC38(Memory& m,std::uint32_t config,std::uint32_t engineconfig,\n                  std::uint32_t out50,std::uint32_t out74,float f26)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "CalculateShiftPoints"
+      ],
+      "current_signatures": [
+        "void Sub_0018AC38(Memory& m,std::uint32_t config,std::uint32_t engineconfig,\n                  std::uint32_t out50,std::uint32_t out74,float f26)"
+      ],
+      "historical_token_hash": "f3b3f5f923df00eb4749b1039b9a2c8d734e0fd97ff4d6a7476da238ff0a7b13"
+    },
+    {
+      "legacy_address": "0x0018A7E8",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void Sub_0018A7E8(Memory& m,std::uint32_t s,std::uint32_t config,std::uint32_t car)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Engine"
+      ],
+      "current_signatures": [
+        "void Sub_0018A7E8(Memory&m,std::uint32_t a,std::uint32_t c,std::uint32_t car)"
+      ],
+      "historical_token_hash": "980d54565fa9fb42a61cac06f08b50790a53874880cd9b6c04a25a2eee9e9703",
+      "debug_address": "0x00188998"
+    },
+    {
+      "legacy_address": "0x0018AE70",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void Sub_0018AE70(Memory& m,std::uint32_t s,std::uint32_t config,std::uint32_t engine,\n                  std::uint32_t wheels,std::uint32_t car)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "DriveTrain"
+      ],
+      "current_signatures": [
+        "void Sub_0018AE70(Memory&m,std::uint32_t a,std::uint32_t c,std::uint32_t e,std::uint32_t w,std::uint32_t car)"
+      ],
+      "historical_token_hash": "9cc84729d72c729164fbe79de695e8fdfefa601f779529808e870b1044dc220c",
+      "debug_address": "0x00189020"
+    },
+    {
+      "legacy_address": "0x0018AA28",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "float GetTorque(Memory& m,std::uint32_t s)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Engine"
+      ],
+      "current_signatures": [
+        "float GetTorque(Memory&m,std::uint32_t a)"
+      ],
+      "historical_token_hash": "b2423ad498ecbe256cee9711f35c00f265304b72865ff45b3a34f1a6713b4b07",
+      "debug_address": "0x00188BD8"
+    },
+    {
+      "legacy_address": "0x0018AAB0",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "float GetTotalEngineTorque(Memory& m,std::uint32_t s)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Engine"
+      ],
+      "current_signatures": [
+        "float GetTotalEngineTorque(Memory&m,std::uint32_t a)"
+      ],
+      "historical_token_hash": "bc16b0dfd57ed8d97cb0a47505e7be5f88ea6714227ae12e4f13eca8433f57cc",
+      "debug_address": "0x00188C60"
+    },
+    {
+      "legacy_address": "0x0018A988",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void Sub_0018A988(Memory& m,std::uint32_t s)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Engine"
+      ],
+      "current_signatures": [
+        "void Sub_0018A988(Memory& m,std::uint32_t s)"
+      ],
+      "historical_token_hash": "fb05302eeaa50023c9191471c8d57ab5c7ec3cef03130a101c1394b6851e6388"
+    },
+    {
+      "legacy_address": "0x0018A9D8",
+      "legacy_source": "src/game_core/indep/src/engine.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "std::uint32_t Engine::GetDerivative(Memory& m,std::uint32_t s,std::uint32_t out)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Engine"
+      ],
+      "current_signatures": [
+        "std::uint32_t Engine::GetDerivative(Memory&m,std::uint32_t a,std::uint32_t out)"
+      ],
+      "historical_token_hash": "c904c1d8a3ac752ad88499de03f6cde163c04f4298d518b82b22c4d54e3d5282",
+      "debug_address": "0x00188B88"
+    },
+    {
+      "legacy_address": "0x0018B008",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "float Sub_0018B008(Memory& m,std::uint32_t s)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "DriveTrain"
+      ],
+      "current_signatures": [
+        "float Sub_0018B008(Memory& m,std::uint32_t s)"
+      ],
+      "historical_token_hash": "443ea3552e89215d1e59e9873e9f495263e13442e08332dfad3eac932d7c6bf5"
+    },
+    {
+      "legacy_address": "0x0018B0D8",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "float Sub_0018B0D8(Memory& m,std::uint32_t s)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "DriveTrain"
+      ],
+      "current_signatures": [
+        "float Sub_0018B0D8(Memory& m,std::uint32_t s)"
+      ],
+      "historical_token_hash": "f84f6e9eb221bdc1d3c7df3f08b757744ef28f81076ff89479d1b77afea8d7a6"
+    },
+    {
+      "legacy_address": "0x0018B178",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void Sub_0018B178(Memory& m,std::uint32_t s,float value)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "DriveTrain"
+      ],
+      "current_signatures": [
+        "void Sub_0018B178(Memory& m,std::uint32_t s,float value)"
+      ],
+      "historical_token_hash": "de7affc01530f491c410b3662572df2ebaca7f98b9f4da1e95454b19bb1ed928"
+    },
+    {
+      "legacy_address": "0x0018BC18",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "std::uint32_t Sub_0018BC18(Memory& m,std::uint32_t s)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "DriveTrain"
+      ],
+      "current_signatures": [
+        "std::uint32_t Sub_0018BC18(Memory& m,std::uint32_t s)"
+      ],
+      "historical_token_hash": "3b6a6c15f6548b0e2952391cf295fc05f9f3fbd7e342a3d8f0f8a4125581abcc"
+    },
+    {
+      "legacy_address": "0x0018BC68",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "std::uint32_t Sub_0018BC68(Memory& m,std::uint32_t s)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "DriveTrain"
+      ],
+      "current_signatures": [
+        "std::uint32_t Sub_0018BC68(Memory& m,std::uint32_t s)"
+      ],
+      "historical_token_hash": "d3fe9551ff1e1beaae733f59633ada8da4072e0ff9e30c565b5a78d36a347ef5"
+    },
+    {
+      "legacy_address": "0x0018B4A0",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void Sub_0018B4A0(Memory& m,std::uint32_t s)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "DriveTrain"
+      ],
+      "current_signatures": [
+        "void Sub_0018B4A0(Memory& m,std::uint32_t s)"
+      ],
+      "historical_token_hash": "3b6c5088d431192d1f56e715050062e93b1f238c14da270e49b62f7680e6550b"
+    },
+    {
+      "legacy_address": "0x0018B698",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "std::uint32_t Sub_0018B698(Memory& m,std::uint32_t s,std::uint32_t out)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "DriveTrain"
+      ],
+      "current_signatures": [
+        "std::uint32_t Sub_0018B698(Memory& m,std::uint32_t s,std::uint32_t out)"
+      ],
+      "historical_token_hash": "8b5137344da46801b6cda00b886e4b615a8cc0cb2d8cc3aea4d849498276ba6f"
+    },
+    {
+      "legacy_address": "0x0018C368",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "std::uint32_t Sub_0018C368()",
+      "disposition": "constant_or_empty_leaf_compatibility",
+      "reason": "Historical trivial leaf; production resolves the original class method or actual Debug virtual-table leaf.",
+      "canonical_targets": [],
+      "current_signatures": [
+        "std::uint32_t Sub_0018C368()"
+      ],
+      "historical_token_hash": "5f915abd3628aeac1a297f039ba839ced7c851173bb755898b619573d4ecfb4a"
+    },
+    {
+      "legacy_address": "0x0018C1C8",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "std::uint32_t Sub_0018C1C8()",
+      "disposition": "constant_or_empty_leaf_compatibility",
+      "reason": "Historical trivial leaf; production resolves the original class method or actual Debug virtual-table leaf.",
+      "canonical_targets": [],
+      "current_signatures": [
+        "std::uint32_t Sub_0018C1C8()"
+      ],
+      "historical_token_hash": "cf3f99baa273c45fe00627cc1e4870975bedfd82a8045e8e3fc1ec0b37a09891"
+    },
+    {
+      "legacy_address": "0x0025AE18",
+      "legacy_source": "src/game_core/src/bMatrix.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "Matrix bMulMatrix(const Matrix& a,const Matrix& b)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "bMulMatrix"
+      ],
+      "current_signatures": [
+        "Matrix bMulMatrix(const Matrix& a,const Matrix& b)"
+      ],
+      "historical_token_hash": "365909a183c6dacaf35289efa0a38ff093004a10b30e34c7ec2d6796c0aad243",
+      "debug_address": "0x002541C0"
+    },
+    {
+      "legacy_address": "",
+      "legacy_source": "src/game_core/port/driving/adapters.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "Matrix transpose(const Matrix& a)",
+      "disposition": "port_memory_or_dispatch_adapter",
+      "reason": "Host endian/bounds checks or explicit target dispatch, not an original-game physics implementation.",
+      "canonical_targets": [],
+      "current_signatures": [
+        "Matrix transpose(const Matrix& a)"
+      ],
+      "historical_token_hash": "09b7bedb431bbfac0d0dc947058ea80dbfe8cb734f23102c70164552968da635"
+    },
+    {
+      "legacy_address": "",
+      "legacy_source": "src/game_core/port/driving/adapters.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "Vector transform(Memory& m,const Matrix& a,const Vector& b)",
+      "disposition": "port_memory_or_dispatch_adapter",
+      "reason": "Host endian/bounds checks or explicit target dispatch, not an original-game physics implementation.",
+      "canonical_targets": [],
+      "current_signatures": [
+        "Vector transform(Memory& m,const Matrix& a,const Vector& b)"
+      ],
+      "historical_token_hash": "2818784e5ac2263870d73e28bc0efa0224082030c37efa23d5d4d1804e8ccb38"
+    },
+    {
+      "legacy_address": "0x0019CD90",
+      "legacy_source": "src/game_core/indep/src/rigidbody.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void ApplyForce(Memory& m,std::uint32_t body,const Vector& force,const Vector& point)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "RigidBody"
+      ],
+      "current_signatures": [
+        "void ApplyForce(Memory& m,std::uint32_t body,const Vector& force,const Vector& point)"
+      ],
+      "historical_token_hash": "306c47a7338864c2cf6cd5e305cb8d208ce18844385c8edcfb2985bd554aacf2",
+      "debug_address": "0x0019a6b8"
+    },
+    {
+      "legacy_address": "0x0019CE80",
+      "legacy_source": "src/game_core/indep/src/rigidbody.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void ApplyForceInFrame(Memory& m,std::uint32_t body,const Vector& force,const Vector& point)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "RigidBody"
+      ],
+      "current_signatures": [
+        "void ApplyForceInFrame(Memory& m,std::uint32_t body,const Vector& force,const Vector& point)"
+      ],
+      "historical_token_hash": "770da988f0cbb45db18edbc76c00b819b00dacd4f9c661431dd662e089951bea",
+      "debug_address": "0x0019a7a8"
+    },
+    {
+      "legacy_address": "0x0019D370",
+      "legacy_source": "src/game_core/indep/src/rigidbody.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "Matrix VectorStarMatrix(const Vector& a,const Matrix& b)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "VectorStarMatrix"
+      ],
+      "current_signatures": [
+        "Matrix VectorStarMatrix(const Vector& a,const Matrix& b)"
+      ],
+      "historical_token_hash": "d0a5928ebab59508d34750177cea106c6009918aa4392677a01eea3ed6dfd29f",
+      "debug_address": "0x0019ac98"
+    },
+    {
+      "legacy_address": "0x0019CC88",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void Sub_0019CC88(Memory& m,std::uint32_t body,std::uint32_t position,std::uint32_t matrix,std::uint32_t velocity,std::uint32_t angular)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "RigidBody"
+      ],
+      "current_signatures": [
+        "void Sub_0019CC88(Memory& m,std::uint32_t body,std::uint32_t position,std::uint32_t matrix,std::uint32_t velocity,std::uint32_t angular)"
+      ],
+      "historical_token_hash": "3e263ec7ad5a5ac31c4505f1ba0c7a460684ed81926ba4e2b2bf9df41e12493a",
+      "debug_address": "0x0019a5b0"
+    },
+    {
+      "legacy_address": "0x0019D848",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void Sub_0019D848(Memory& m,std::uint32_t body,float unused_stack_w)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "RigidBody"
+      ],
+      "current_signatures": [
+        "void Sub_0019D848(Memory& m,std::uint32_t body,float unused_stack_w)"
+      ],
+      "historical_token_hash": "3ed76406e9cb472a11f123c46a4250e0ed26e0d9aa9fdbbb7b8c1b82ce5d597d",
+      "debug_address": "0x0019b170"
+    },
+    {
+      "legacy_address": "0x0019D4D0",
+      "legacy_source": "src/game_core/indep/src/rigidbody.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void GetDerivative(Memory& m,std::uint32_t body,std::uint32_t output)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "RigidBody"
+      ],
+      "current_signatures": [
+        "void GetDerivative(Memory& m,std::uint32_t body,std::uint32_t output)"
+      ],
+      "historical_token_hash": "d3cb3989b1b3cb420099a8be1bac507de6c1bfddb4252d0b279a50945efbbc66",
+      "debug_address": "0x0019adf8"
+    },
+    {
+      "legacy_address": "0x0019C670",
+      "legacy_source": "src/game_core/indep/src/componentphysics.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void PhysicsSystem::GetDerivative(Memory& m,std::uint32_t head,std::uint32_t output,const IntegrationCalls& calls)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "PhysicsSystem"
+      ],
+      "current_signatures": [
+        "void PhysicsSystem::GetDerivative(Memory& m,std::uint32_t head,std::uint32_t output,const IntegrationCalls& calls)"
+      ],
+      "historical_token_hash": "0fb91fd00aa121bc4d9c1098d07334f05122c8917130d071452332a8258c0abf",
+      "debug_address": "0x00199f98"
+    },
+    {
+      "legacy_address": "0x0019C290",
+      "legacy_source": "src/game_core/indep/src/componentphysics.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void IntegrateEuler(Memory& m,float dt,std::uint32_t head,const IntegrationCalls& calls)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "PhysicsSystem"
+      ],
+      "current_signatures": [
+        "void IntegrateEuler(Memory& m,float dt,std::uint32_t head,const IntegrationCalls& calls)"
+      ],
+      "historical_token_hash": "1097c8023ce92cc21283e5aa1b48e40d7829fa052d177333a981314700838f91",
+      "debug_address": "0x00199bb8"
+    },
+    {
+      "legacy_address": "0x0019DA30",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void Sub_0019DA30(Memory& m)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Sub_0019B358"
+      ],
+      "current_signatures": [
+        "void Sub_0019DA30(Memory& m)"
+      ],
+      "historical_token_hash": "bbeae40a9a5d9a2c8a236e520ec73766b2c402cbe72558a21ccdf3647e4b6ea1",
+      "debug_address": "0x0019b358"
+    },
+    {
+      "legacy_address": "0x001395B0",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void Sub_001395B0(Memory& m)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Sub_00139510"
+      ],
+      "current_signatures": [
+        "void Sub_001395B0(Memory& m)"
+      ],
+      "historical_token_hash": "62fa92a28e34317c0bf4f098da052145f9b02a58c1e19db58f5886abb8c064d6",
+      "debug_address": "0x00139510"
+    },
+    {
+      "legacy_address": "0x001A33A8",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "float Sub_001A33A8(Memory& m,std::uint32_t value)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "GetRealTimeElapsedFromQuantized"
+      ],
+      "current_signatures": [
+        "float Sub_001A33A8(Memory& m,std::uint32_t value)"
+      ],
+      "historical_token_hash": "6738b7eea0230985ee61a5380d24ef759555f0762fbd82fbf0de973596993546"
+    },
+    {
+      "legacy_address": "0x001A33C0",
+      "legacy_source": "src/game_core/indep/src/timer.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "std::uint32_t GetQuantizedRealTimeElapsed(float f12)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "GetQuantizedRealTimeElapsed"
+      ],
+      "current_signatures": [
+        "std::uint32_t GetQuantizedRealTimeElapsed(float value)"
+      ],
+      "historical_token_hash": "5bc257633bd2e286f089a318f980c42cdce8b6df2544a9a165c199db3af87923",
+      "debug_address": "0x001A0C20"
+    },
+    {
+      "legacy_address": "0x00136DD0",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "std::uint32_t Sub_00136DD0(float f12)",
+      "disposition": "bounded_scalar_host_projection",
+      "reason": "Explicit packed-time/ISA carrier helper, not an independent simulation.",
+      "canonical_targets": [],
+      "current_signatures": [
+        "std::uint32_t Sub_00136DD0(float f12)"
+      ],
+      "historical_token_hash": "a5e5f38e91635831a0cbae633f942cd416f612cb6e7f74b279cfe25003f7fa08"
+    },
+    {
+      "legacy_address": "0x001A33F0",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void Sub_001A33F0(Memory& m,float f12,ScheduleServices& services)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "PrepareRealTimestep"
+      ],
+      "current_signatures": [
+        "void Sub_001A33F0(Memory& m,float f12,ScheduleServices& services)"
+      ],
+      "historical_token_hash": "9a655bc43f6381cf8728416ffd76edc2319fc1399a5089ada4c8e23bff44ce3a"
+    },
+    {
+      "legacy_address": "0x001A3500",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void Sub_001A3500(Memory& m)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "AdvanceRealTime"
+      ],
+      "current_signatures": [
+        "void Sub_001A3500(Memory& m)"
+      ],
+      "historical_token_hash": "7301cd86fe26de224234dd69be8097a6ec34846fb42d855e8e56d3a9d307bd9f"
+    },
+    {
+      "legacy_address": "0x001A3598",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void Sub_001A3598(Memory& m)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "ResetWorldTime"
+      ],
+      "current_signatures": [
+        "void Sub_001A3598(Memory& m)"
+      ],
+      "historical_token_hash": "c58548919cf67473df1e3f90be16ee1ebcf7a8ff30348f24816dfda853869978"
+    },
+    {
+      "legacy_address": "0x001A35E0",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void Sub_001A35E0(Memory& m,float f12)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "PrepareWorldTimestep"
+      ],
+      "current_signatures": [
+        "void Sub_001A35E0(Memory& m,float f12)"
+      ],
+      "historical_token_hash": "a68939ac517e77e25b4b18d740da237d2cf9807cb0c247034bc0058ac5142b0f"
+    },
+    {
+      "legacy_address": "0x001A35F0",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving::native",
+      "legacy_signature": "void Sub_001A35F0(Memory& m)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "AdvanceWorldTime"
+      ],
+      "current_signatures": [
+        "void Sub_001A35F0(Memory& m)"
+      ],
+      "historical_token_hash": "f8ad3410c6758c81c0bf3a6d29ad41648d683939197608a2f0ca1c34c43612d5"
+    },
+    {
+      "legacy_address": "0x0025A540",
+      "legacy_source": "src/game_core/src/bMath.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "float bSin(Memory&m,std::uint16_t a)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "bSin"
+      ],
+      "current_signatures": [
+        "float bSin(Memory&m,std::uint16_t a)"
+      ],
+      "historical_token_hash": "ab8abbaef2625b34c6eb2134d3eb94ee54715c7e1106eeecb127dd765bf99606",
+      "debug_address": "0x00253910"
+    },
+    {
+      "legacy_address": "0x0025A5E0",
+      "legacy_source": "src/game_core/src/bMath.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "float bSin(Memory&m,float f)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "bSin"
+      ],
+      "current_signatures": [
+        "float bSin(Memory&m,float f)"
+      ],
+      "historical_token_hash": "7da13c83fdcf6d1828378d1355e4bcffebea66976657fcebc486436e3bb4c877",
+      "debug_address": "0x002539B0"
+    },
+    {
+      "legacy_address": "0x0025A748",
+      "legacy_source": "src/game_core/src/bMath.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "std::uint16_t bASin(Memory&m,float f)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "bASin"
+      ],
+      "current_signatures": [
+        "std::uint16_t bASin(Memory&m,float f)"
+      ],
+      "historical_token_hash": "5edcc2fdf6d6b77a106cd932da6e2ddce9e0fa7feb0ff649cf9926b388e73309",
+      "debug_address": "0x00253B18"
+    },
+    {
+      "legacy_address": "0x0025A890",
+      "legacy_source": "src/game_core/src/bMath.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "std::int16_t bATan(Memory&m,float x,float y)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "bATan"
+      ],
+      "current_signatures": [
+        "std::int16_t bATan(Memory&m,float x,float y)"
+      ],
+      "historical_token_hash": "2245309a5ab07b10777f99aaa26d78ff66342da8a88488eed8a418a6292ea470",
+      "debug_address": "0x00253C60"
+    },
+    {
+      "legacy_address": "0x001A4818",
+      "legacy_source": "src/game_core/indep/src/wheel.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "float GetPilotFactor(Memory&m,std::uint32_t a)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Wheel"
+      ],
+      "current_signatures": [
+        "float GetPilotFactor(Memory&m,std::uint32_t a)"
+      ],
+      "historical_token_hash": "e8cdf4f8f89abf8e7118bfb69c41a3d475dc9ffd85dfb6c7832359cd400869b9",
+      "debug_address": "0x001a1ff0"
+    },
+    {
+      "legacy_address": "0x001A4D28",
+      "legacy_source": "src/game_core/indep/src/wheel.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "float GetLateralForce(Memory&m,float request,float argument,std::uint32_t a)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Wheel"
+      ],
+      "current_signatures": [
+        "float GetLateralForce(Memory&m,float request,float argument,std::uint32_t a)"
+      ],
+      "historical_token_hash": "31692d19e245966339050100b3853d750109400d4cd04dd5d5f94910b1903a83",
+      "debug_address": "0x001a2500"
+    },
+    {
+      "legacy_address": "0x001A4930",
+      "legacy_source": "src/game_core/indep/src/wheel.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void GuessGroundForce(Memory&m,std::uint32_t a,std::int32_t,std::int32_t a2)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Wheel"
+      ],
+      "current_signatures": [
+        "void GuessGroundForce(Memory&m,std::uint32_t a,std::int32_t gf,std::int32_t collision)"
+      ],
+      "historical_token_hash": "74418506c5a6c30e2baab4d2e35ea090f4df35f60a236edb3eba1313ff20ff65",
+      "debug_address": "0x001a2108"
+    },
+    {
+      "legacy_address": "0x001A4EE0",
+      "legacy_source": "src/game_core/indep/src/wheel.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void FinalizeGroundForce(Memory&m,std::uint32_t a,std::int32_t)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Wheel"
+      ],
+      "current_signatures": [
+        "void FinalizeGroundForce(Memory&m,std::uint32_t a,std::int32_t wheel)"
+      ],
+      "historical_token_hash": "a5903bf366f0071c14e9aa38f8be095a7941340860986a2a78835fba6d23f4af",
+      "debug_address": "0x001a26b8"
+    },
+    {
+      "legacy_address": "0x0011B248",
+      "legacy_source": "src/game_core/src/ecstasy/emathe.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void eMulMatrix(SolverMatrix&out,const SolverMatrix&a,const SolverMatrix&b)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "eMulMatrix"
+      ],
+      "current_signatures": [
+        "void eMulMatrix(SolverMatrix&out,const SolverMatrix&a,const SolverMatrix&b)"
+      ],
+      "historical_token_hash": "c3b26a9773b08e2a69aea7f47c3072f34421711aafa7a64475818ffe502a3086",
+      "debug_address": "0x0011B5F0"
+    },
+    {
+      "legacy_address": "0x0011B6E0",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "float Sub_0011B6E0(Memory&m,float f12)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "eSin"
+      ],
+      "current_signatures": [
+        "float Sub_0011B6E0(Memory&m,float f12)"
+      ],
+      "historical_token_hash": "ca48fbbc8b192d1de988affa37c018682f22b5d0c92d058b0f8a074cdd7f5443",
+      "debug_address": "0x0011ba88"
+    },
+    {
+      "legacy_address": "0x0011B7D8",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "SolverMatrix Sub_0011B7D8(Memory&m,std::uint16_t angle)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "bIdentity",
+        "eRotateZ"
+      ],
+      "current_signatures": [
+        "SolverMatrix Sub_0011B7D8(Memory&m,std::uint16_t angle)"
+      ],
+      "historical_token_hash": "df7b3a2f343108ff7c28ae91d86045f206830ded32ebd315c96cff2b9c605d94",
+      "debug_address": "0x0011bd10"
+    },
+    {
+      "legacy_address": "0x0011B950",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "SolverMatrix Sub_0011B950(Memory&m,std::uint16_t angle)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "bIdentity",
+        "eRotateY"
+      ],
+      "current_signatures": [
+        "SolverMatrix Sub_0011B950(Memory&m,std::uint16_t angle)"
+      ],
+      "historical_token_hash": "fe8a0b1c3529540b2469f0d2ecb9c56e26ebf5bb6bcca13233a92d79a9292c9f",
+      "debug_address": "0x0011bc48"
+    },
+    {
+      "legacy_address": "0x001C0D78",
+      "legacy_source": "src/game_core/indep/src/carstate.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void CalculateWheelMatrices(Memory&m,std::uint32_t car,std::int32_t index)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "CarState"
+      ],
+      "current_signatures": [
+        "void CalculateWheelMatrices(Memory&m,std::uint32_t car,std::int32_t index)"
+      ],
+      "historical_token_hash": "48833848063104bc6c297cf721b885d3e96f4f146b6a0eb9577f22594462b0a9",
+      "debug_address": "0x001BDE60"
+    },
+    {
+      "legacy_address": "0x001A4170",
+      "legacy_source": "src/game_core/indep/src/wheel.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void SetState(Memory&m,float f12,float f13,float f14,std::uint32_t a,\n                 std::uint32_t car,std::uint32_t,std::uint16_t steering,ContactProvider&provider)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Wheel"
+      ],
+      "current_signatures": [
+        "void SetState(Memory&m,float f12,float f13,float f14,std::uint32_t a,std::uint32_t car,std::uint32_t info,std::uint16_t steering,ContactProvider&provider)"
+      ],
+      "historical_token_hash": "7524313420bf66a9005acb1f3ebe7534a4683d18a96aea4593c2f30bb2fc8962",
+      "debug_address": "0x001a1948"
+    },
+    {
+      "legacy_address": "0x001A45A8",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "float Sub_001A45A8(Memory&m,std::uint32_t wheel,std::uint32_t normal_out,\n                  std::uint32_t material_out,std::uint32_t point,std::uint32_t body,ContactProvider&provider)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Wheel"
+      ],
+      "current_signatures": [
+        "float Sub_001A45A8(Memory&m,std::uint32_t wheel,std::uint32_t normal_out,\n                  std::uint32_t material_out,std::uint32_t point,std::uint32_t body,ContactProvider&provider)"
+      ],
+      "historical_token_hash": "61a0cf93a441a72f18d03d3da850a7b9c079c0a6e4fd86233746991001be37ae",
+      "debug_address": "0x001a1d80"
+    },
+    {
+      "legacy_address": "0x001A4580",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "float Sub_001A4580(Memory&m,std::uint32_t wheel,std::uint32_t point,std::uint32_t body,ContactProvider&provider)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Wheel"
+      ],
+      "current_signatures": [
+        "float Sub_001A4580(Memory&m,std::uint32_t wheel,std::uint32_t point,std::uint32_t body,ContactProvider&provider)"
+      ],
+      "historical_token_hash": "d1be589b21cfd159d607826749d8444772fabe5ae75746ad78d2a87d56c0601c",
+      "debug_address": "0x001a1d58"
+    },
+    {
+      "legacy_address": "0x0025A300",
+      "legacy_source": "src/game_core/src/bMath.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "std::int32_t bDiv(std::int32_t numerator,std::int32_t denominator)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "bDiv"
+      ],
+      "current_signatures": [
+        "std::int32_t bDiv(std::int32_t numerator,std::int32_t denominator)"
+      ],
+      "historical_token_hash": "f642df84b2f6263a6f14ccdc45487b7184064681f0100d4c997bc7958ed7bd0b",
+      "debug_address": "0x002536D0"
+    },
+    {
+      "legacy_address": "0x0025AA78",
+      "legacy_source": "src/game_core/src/bMath.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "std::uint16_t bFixATan(Memory&m,std::int32_t value)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "bFixATan"
+      ],
+      "current_signatures": [
+        "std::uint16_t bFixATan(Memory&m,std::int32_t value)"
+      ],
+      "historical_token_hash": "0ecbe9abd82792d08e1a3e5de5397800ea97ad0081ff8a6df6c25b6cfc9b97b8",
+      "debug_address": "0x00253E20"
+    },
+    {
+      "legacy_address": "0x0025AB50",
+      "legacy_source": "src/game_core/src/bMath.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "std::int16_t bFixATan(Memory&m,std::int32_t x,std::int32_t y)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "bFixATan"
+      ],
+      "current_signatures": [
+        "std::int16_t bFixATan(Memory&m,std::int32_t x,std::int32_t y)"
+      ],
+      "historical_token_hash": "638a583e3f185786b3c43f4709a0375eb4dc70bbd8d179d5b9690641b15925ef",
+      "debug_address": "0x00253EF8"
+    },
+    {
+      "legacy_address": "0x001A46B0",
+      "legacy_source": "src/game_core/indep/src/wheel.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "std::uint32_t Wheel::GetDerivative(Memory&m,std::uint32_t a,std::uint32_t out)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Wheel"
+      ],
+      "current_signatures": [
+        "std::uint32_t Wheel::GetDerivative(Memory&m,std::uint32_t a,std::uint32_t out)"
+      ],
+      "historical_token_hash": "ae8a41a8a2c315c1a7ba7f4ae912c6dbebc80fe109484d332ec1dbbb0e1f01e8",
+      "debug_address": "0x001a1e88"
+    },
+    {
+      "legacy_address": "0x001A63C0",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "std::uint32_t Sub_001A63C0(Memory&m,std::uint32_t,std::uint32_t out)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Suspension"
+      ],
+      "current_signatures": [
+        "std::uint32_t Sub_001A63C0(Memory&m,std::uint32_t,std::uint32_t out)"
+      ],
+      "historical_token_hash": "a19787db387a1dde387ba23dfb51782c8c31dff6f68f269bfac77995155e4711",
+      "debug_address": "0x001a3ba0"
+    },
+    {
+      "legacy_address": "0x001A57E0",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void Sub_001A57E0(Memory&m)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Sub_001A2FC0"
+      ],
+      "current_signatures": [
+        "void Sub_001A57E0(Memory&m)"
+      ],
+      "historical_token_hash": "d48719ee489e7ba50cf8d12e874cd1bc1210fb6ed8b2d388815a56e40e53ca1f",
+      "debug_address": "0x001a2fc0"
+    },
+    {
+      "legacy_address": "0x0025AFA8",
+      "legacy_source": "src/game_core/port/driving/unresolved_entries.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void Sub_0025AFA8(Memory&m)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Sub_00254350"
+      ],
+      "current_signatures": [
+        "void Sub_0025AFA8(Memory&m)"
+      ],
+      "historical_token_hash": "f720464546f1c5680f36d2b977b333e3c1aa236adc418935d779309142818090",
+      "debug_address": "0x00254350"
+    },
+    {
+      "legacy_address": "0x001A4E88",
+      "legacy_source": "src/game_core/indep/src/wheel.cpp",
+      "legacy_scope": "port::driving",
+      "legacy_signature": "void ModifyGroundForce(WheelIterationProjection& a0,const std::array<float,2>& a1)",
+      "disposition": "canonical_forwarding_adapter",
+      "reason": "Legacy host signature delegates to the original-class/namespace implementation; no standalone driving algorithm.",
+      "canonical_targets": [
+        "Wheel::ModifyGroundForce"
+      ],
+      "current_signatures": [
+        "void ModifyGroundForce(WheelIterationProjection& a0,const std::array<float,2>& a1)"
+      ],
+      "historical_token_hash": "38f3316675611b27198876244a3d3d0807012ded155d94e1079110e566eec57c",
+      "debug_address": "0x001a2660"
+    }
+  ]
+}

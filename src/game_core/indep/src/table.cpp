@@ -1,51 +1,41 @@
-
-// TASK-0042: bounded host projections; original member ABI remains unverified.
+// TASK-0044 E-0044-E01: Debug tables; full query manifest in local/task0044/engine.
 #include "game_core/port/driving/projection_support.hpp"
-// Retail 0x0018F808; E-0041-R04; E-0042-S001; exact Debug TU ..\indep\src\table.cpp
+#include "game_core/indep/inc/Table.hpp"
+#include "game_core/indep/src/table.hpp"
 namespace port::driving {
-void Sub_0018F808(Memory& m,std::uint32_t s,std::uint32_t values,std::uint32_t count,float f12,float f13) {
-    using namespace detail_group_0018f808;
-    m.word(s,values);m.word(s+4,count);SetMinMax(m,s,f12,f13);
+void Sub_0018F808(Memory& m,std::uint32_t s,std::uint32_t data,std::uint32_t count,float lo,float hi) {hp2::recovered::Table(m,s).Sub_0018D810(data,count,lo,hi);}
+float Table::GetValue(Memory& m,std::uint32_t s,float x) {return hp2::recovered::Table(m,s).GetValue(x);}
+float Graph::GetValue(Memory& m,std::uint32_t s,float x) {return hp2::recovered::Graph(m,s).GetValue(x);}
 }
+namespace hp2::recovered {
+void Table::Sub_0018D810(std::uint32_t values,std::uint32_t count,float lower,float upper) {
+    m_.word(address_,values);m_.word(address_+4,count);SetMinMax(lower,upper);
 }
-
-// Retail 0x0018F838; E-0041-M01; E-0042-S001; exact Debug TU ..\indep\src\table.cpp
-namespace port::driving {
-float Table::GetValue(Memory& m,std::uint32_t s,float value) {
-    using namespace detail_group_0018f808;
-    const auto data=m.word(s), count=m.word(s+4);
-    return interpolate(value,m.scalar(s+8),m.scalar(s+0xc),m.scalar(s+0x10),count,
-        [&](std::int32_t i){
-            if(i<0 || static_cast<std::uint32_t>(i)>=count)
-                throw std::out_of_range("Interpolation index outside mapped table");
-            return m.scalar(data+static_cast<std::uint32_t>(i)*4);
-        });
+float Table::GetValue(float value) {
+    using namespace port::driving::detail_group_0018f808;
+    const auto data=m_.word(address_),count=m_.word(address_+4);
+    return interpolate(value,m_.scalar(address_+8),m_.scalar(address_+0xc),m_.scalar(address_+0x10),count,
+      [&](std::int32_t i){if(i<0 || static_cast<std::uint32_t>(i)>=count) throw std::out_of_range("Interpolation index outside mapped table");return m_.scalar(data+static_cast<std::uint32_t>(i)*4);});
 }
-}
-
-// Retail 0x0018F9F0; E-0042-C077; E-0042-S001; exact Debug TU ..\indep\src\table.cpp
-namespace port::driving {
-float Graph::GetValue(Memory& m,std::uint32_t s,float value) {
-    using namespace detail_group_0018f808;
-    const auto count=m.signed_word(s+4);const auto data=m.word(s);
-    if(count<2) return m.scalar(data+4);
-    if(value<=m.scalar(data)) return m.scalar(data+4);
+void Graph::Sub_0018D9E8(std::uint32_t points,std::uint32_t count) {m_.word(address_,points);m_.word(address_+4,count);}
+float Graph::GetValue(float value) {
+    const auto count=m_.signed_word(address_+4);const auto data=m_.word(address_);
+    if(count<2 || value<=m_.scalar(data)) return m_.scalar(data+4);
     const auto last=data+static_cast<std::uint32_t>(count)*8;
-    if(m.scalar(last-8)<=value) return m.scalar(last-4);
-    const float epsilon=m.scalar(0x32e3f0);
+    if(m_.scalar(last-8)<=value) return m_.scalar(last-4);
+    const float epsilon=m_.scalar(0x3254e0);
     for(std::int32_t i=0;i<count-1;++i) {
         const auto at=data+static_cast<std::uint32_t>(i)*8;
-        const float f4=m.scalar(at),next=m.scalar(at+8);
-        if(f4<=value && value<next) {
-            const float width=next-f4,base=m.scalar(at+4),delta=m.scalar(at+12)-base;
+        const float start=m_.scalar(at),next=m_.scalar(at+8);
+        if(start<=value && value<next) {
+            const float width=next-start,base=m_.scalar(at+4),delta=m_.scalar(at+12)-base;
             if(!(epsilon<std::fabs(width))) return base+delta*0.5f;
-            float f0=value-f4;f0=f0/width;f0=f0*delta;return base+f0;
+            float fraction=value-start;fraction=fraction/width;fraction=fraction*delta;return base+fraction;
         }
     }
-    return m.scalar(data+4);
+    return m_.scalar(data+4);
 }
 }
-
 #include "game_core/indep/src/table.hpp"
 
 #include "game_core/port/not_implemented.hpp"
@@ -69,9 +59,7 @@ void Average::Flush() {
 
 namespace hp2::recovered {
 // ELF 0x0018F9F0; E-0042-C077; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018f9f0.md.
-void Graph::GetValue() {
-    hp2::not_implemented("0x0018F9F0", "Graph::GetValue (signature and full body unresolved)");
-}
+
 } // namespace hp2::recovered
 
 namespace hp2::recovered {
@@ -83,14 +71,38 @@ void Linear::Init() {
 
 #include "game_core/indep/inc/Table.hpp"
 
-namespace hp2::recovered {
-// ELF 0x0018F808; E-0041-R04; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018f808.md.
-void Table::Sub_0018F808() {
-    hp2::not_implemented("0x0018F808", "Table::Sub_0018F808 (signature and full body unresolved)");
-}
 
-// ELF 0x0018F838; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018f838.md.
-void Table::GetValue() {
-    hp2::not_implemented("0x0018F838", "Table::GetValue (signature and full body unresolved)");
+namespace hp2::recovered {
+float Table::InverseLookup(float value) {
+ const auto data=m_.word(address_);const auto count=m_.signed_word(address_+4);
+ float previous=m_.scalar(data);
+ if(std::fabs(value-previous)<m_.scalar(0x3254d8)) return previous;
+ bool side=previous<value;
+ for(std::int32_t i=1;i<count;++i) {
+  const float current=m_.scalar(data+static_cast<std::uint32_t>(i)*4);
+  float index;
+  if(std::fabs(value-current)<m_.scalar(0x3254dc)) index=static_cast<float>(i);
+  else if((current<value)!=side) index=static_cast<float>(i-1)+(value-previous)/(current-previous);
+  else {previous=current;side=current<value;continue;}
+  return m_.scalar(address_+8)+index/m_.scalar(address_+0x10);
+ }
+ return m_.scalar(address_+8)+static_cast<float>(count-1)/m_.scalar(address_+0x10);
 }
-} // namespace hp2::recovered
+float Graph::GetInverse(float value) {
+ const auto data=m_.word(address_);const auto count=m_.signed_word(address_+4);
+ if(count<2) return m_.scalar(data+4);
+ if(value<=m_.scalar(data+4)) return m_.scalar(data);
+ const auto last=data+static_cast<std::uint32_t>(count-1)*8;
+ if(m_.scalar(last+4)<=value) return m_.scalar(last);
+ for(std::int32_t i=0;i<count-1;++i) {
+  const auto at=data+static_cast<std::uint32_t>(i)*8;
+  const float start=m_.scalar(at+4),next=m_.scalar(at+12);
+  if(start<=value && value<next) {
+   const float width=next-start,base=m_.scalar(at),delta=m_.scalar(at+8)-base;
+   if(std::fabs(width)<=m_.scalar(0x3254e4)) return base+delta*0.5f;
+   return base+((value-start)/width)*delta;
+  }
+ }
+ return m_.scalar(data+4);
+}
+}

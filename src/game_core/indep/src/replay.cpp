@@ -9,6 +9,19 @@
 // Diagnostic text (not a callable signature): ReplayManager::HandleSnapshot() [0x002AEFF8]
 #include "game_core/ReplayManager.hpp"
 
+namespace hp2::recovered {
+// Debug0013E070; E-0046-C01. Name is intentionally unused by the original.
+void ReplayManager::RegisterInterestingEvent(float value,const char*){
+    if(m_.word(address_+4)==0)return;
+    const auto head=address_+0x6c;
+    for(auto node=m_.word(head);node!=head;node=m_.word(node)){
+        const char expected[]="INSTANT_REPLAY";unsigned i=0;
+        while(expected[i]!=0&&m_.byte(node+8+i)==static_cast<unsigned char>(expected[i]))++i;
+        if(expected[i]==0&&m_.byte(node+8+i)==0)m_.scalar(node+0x14c,m_.scalar(node+0x14c)+value);
+    }
+}
+}
+
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: allocator_label; evidence: E-0027-C01.
 // Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).

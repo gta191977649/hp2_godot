@@ -140,5 +140,29 @@ int main() {
         constrained(800,600);
     }
     constrained(160,100);constrained(32,32);constrained(800,600);
+    // Track debug controls remain visible outside Advanced and queue independent actions.
+    state.kind="track";state.track_id=11;state.debug_ready=false;ui.update(state);
+    auto tick_track=[&]{viewer_console.frame(800,600,1.f/60,draw);};
+    tick_track();tick_track();
+    auto click_target=[&](const char* name){
+        const auto found=ui.targets().find(name);check(found!=ui.targets().end());
+        move.x=found->second[0];move.y=found->second[1];viewer_console.input(move);
+        button.pressed=true;viewer_console.input(button);tick_track();
+        button.pressed=false;viewer_console.input(button);tick_track();
+    };
+    check(!state.render_collision&&!state.render_material);
+    click_target("render_collision");check(!ui.next());
+    click_target("render_material");check(!ui.next());
+    state.debug_ready=true;ui.update(state);tick_track();
+    click_target("render_collision");auto collision_action=ui.next();
+    check(collision_action&&collision_action->action=="render_collision"&&collision_action->enabled&&!ui.next());
+    state.render_collision=true;ui.update(state);tick_track();
+    click_target("render_material");auto material_action=ui.next();
+    check(material_action&&material_action->action=="render_material"&&material_action->enabled&&!ui.next());
+    state.render_material=true;state.material_legend.push_back({4,"Grass",{{0,1,0,1}},12});ui.update(state);tick_track();
+    click_target("render_collision");collision_action=ui.next();
+    check(collision_action&&collision_action->action=="render_collision"&&!collision_action->enabled);
+    state.kind="driving";ui.update(state);tick_track();
+    check(!ui.targets().count("render_collision")&&!ui.targets().count("render_material"));
     std::cout << "DEBUG_CONSOLE_OK\n";
 }

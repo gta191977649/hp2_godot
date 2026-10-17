@@ -470,3 +470,134 @@ are preserved; constructor/destructor callable placeholders retain addresses.
 ## TASK-0043: complete gap coverage and scoped name adoption
 
 Emit confirmed Retail methods only; catalogue unmapped Debug methods without invented addresses. Keep constructor/destructor/operator and ambiguous overload gap entries address-named when original signatures are unconfirmed. Use typed static host carriers to distinguish projected functions whose original owners differ. Never infer a struct or field name from a containing function address or matching Debug offset alone. The 25 removed aliases are only pinned sole-throw duplicates with canonical same-address gaps. Existing implementations remain intact.
+
+
+## TASK-0044: user-authorized Debug behavior and canonical driving owners
+
+The approved plan selects Debug NFSHP2.ELF (full hash in DEBUG_DRIVING_AUDIT.md) as behavior,
+layout, vtable and static-data authority for the supported driving closure. Debug symbols
+alone are insufficient: decompilation was checked against instructions, adjustments, source
+markers and operands. Preserve Retail evidence instead of relabeling it. No build date or
+binary equivalence is inferred. The dedicated loader/config rejects other hashes without
+Retail fallback; an explicit mapping replaces each historical global operand, never a delta.
+
+Original-class bodies are the only algorithm source. An instance ObjectView carries Memory
+and a logical PS2 address; factories/services explicitly bridge host lifetime and external
+world queries. Compatibility adapters may forward; a second composite solver is removed.
+Class generation preserves historical attribution and marks these owners superseded rather
+than emitting duplicate gap stubs. Cross-binary symbol rows survive generation/address
+collisions. Reviewed before/after token pins distinguish intentional reconstruction from
+historical body-preservation claims. Host correctness and source integrity do not establish
+EE arithmetic equivalence. Retain explicit unsupported-path throws and separate original
+numerical certification from migration/tool acceptance.
+
+
+## TASK-0045: original material data, port geometry and raw diagnostics
+
+The approved first selector exposes ROAD1/DIRT2/GRASS6/SAND7/SNOW8 only. All33 original
+terrain records are classified; water/wall/object responses and full topology are not inferred
+from friction values. Preserve exact original coefficients and noise; do not exaggerate their
+differences. Native+X boundaries25/50/75/100 and tool colors/labels are synthetic test policy.
+Each wheel queries independently; no pose/gear reset accompanies material selection. Settings
+commit with a complete candidate and are recorded/replayed with controls/time.
+
+Read stored original Wheel values after Move/UpdateCar, including distinct traction/catchup,
+slip/usage/force phases, and separate tire/material coefficients. Do not recompute a combined
+grip score or assert SI units. Godot remains input/presentation only, the panel is read-only,
+expanded diagnostics scroll independently of Return, and preview material/labels restore on
+exit. Retain existing immediate WASD/camera/lifecycle without new function keys or Run/Pause.
+Successor source review appends strict TASK0045 pins to a frozen fingerprint of the unchanged
+TASK0044 state. A diagnostic-only VRSQRT address correction is separately evidenced; source
+checks are not numerical verification.
+
+## TASK-0046: original player controls and semantic driving actions
+
+The approved task supersedes the earlier S-brake-only tool policy: use Debug
+RealDriver's brake/reverse state machine, original shift/mode handlers and handbrake.
+Default automatic, Q down/E up and Space held are tool InputMap bindings, not PS2
+button claims. Manual GUI N calls the original desired-gear setter. No direct R
+shortcut or invented speed threshold is added. Speed remains explicitly raw until
+a unit conversion is evidenced; gear/RPM are read from original completed state.
+
+Device mappings live in one InputMap and one semantic adapter, with queued presses
+retained until a successful native step. C++ receives actions rather than key codes.
+This is the reusable driving seam for later unified input, without changing unrelated
+preview/frontend contexts or introducing a remapping settings screen now.
+
+Skids use the original Wheel -> SkidMaker -> SkidSet/Segment -> RenderSkids/ePoly
+chain. Keep original capacity, compression, material behavior, distance fade and
+render-driven LRU; do not add timed fade or Godot decals. Pool/one-clan topology and
+camera remain explicit synthetic-world boundaries. Debug drawing-context selection
+must be recovered separately from Retail rather than reusing Retail texture flags.
+
+Append a strict TASK-0046 source review to frozen TASK-0044/0045 states; never refresh
+their accepted pins. PC tests and real-window usability are separate from original
+numerical certification, which still requires a synchronized matching Debug scene.
+
+
+## TASK-0048: Retail track assets with explicit Debug driving adaptation
+
+Track catalogue, geometry, topology and texture bytes remain Retail-owned. Recovered
+operations live in original declaring classes; port adapters own host buffers and
+Godot resources. Debug driving accepts an immutable track contact provider and an
+explicit 33-row terrain mapping, proven by independent table identities and scalar
+bits. It never reinterprets Retail structures or selects friction from texture names.
+
+Static track-polygon collision uses original vehicle CV/fallback geometry, wafer
+witnesses, VClip, contact-time backup and impulse response. BaseModelName selects the
+CV; catalogue resource_path handles aliased car directories. Candidate collision state
+commits with candidate vehicle memory, preserving exact retry after failure. Anchored
+Smokeable objects belong to the excluded breakaway/dynamic lifecycle. Unsupported
+water, ownership, damage or effect branches fail with specific diagnostics.
+
+Track rendering retains original mip images and register fields; host derivative LOD
+is a documented projection. Environment reflection and original camera world LOD are
+not claimed. PC acceptance never promotes functions to Verified. Historical source
+review pins remain immutable, with separately scoped TASK-0048 successor reviews.
+
+
+## TASK-0049: display the queried contact plane, not a substitute mesh
+
+Track debug rendering is port-side presentation of original Topology polygons. Eligible
+XY footprints use the exact stored elevation plane and terrain identity; a raw quad's
+fourth corner can be off that plane. Preserve all road layers and original perimeter
+edges, excluding original flags2/8 and exact zero-Z planes. Do not impose a slope cutoff
+or modify physics. Debug colors, transparency and0.015 host-up display offset are tool
+choices. Five colors share the synthetic Test drive palette, other IDs use deterministic
+colors, missing catalogue names are magenta/Unknown. Overlay geometry is cached once per
+track; controls remain independent and browsing-only.
+
+Track texture orientation belongs in its adapter: indexed legacy decode's internal row
+reversal is undone with its existing flip option; original linear32 row order stays
+unchanged. Apply this to base and every original mip, never based on alpha or asset names.
+Historical source-review JSON remains immutable; TASK0049 is an explicit successor.
+
+
+## TASK-0050: retain original units and correct the outside projection axis
+
+The track/car scale investigation found consistent original units across geometry,
+topology, wheel configuration, vehicle CVs and original scenery culling bounds. Do not
+apply guessed global scale factors. Runtime Godot roots also report unit scale.
+
+The shared tool camera's60-degree vertical FOV differs from Debug DriveCameraMover
+Update0015C2B0 OUTSIDE FieldOfView0x32DC. Original CalculateH001042E8 uses screen width,
+so the port projection adapter now uses KEEP_WIDTH and converts that exact angle to
+71.52099609375 degrees. Save/restore aspect policy with FOV on leaving driving.
+This bounded correction does not recover the original follow/spring/obstruction camera
+or establish the sole cause of a screenshot's perceived size differences. No C++body
+identity changes, historical review-pin updates, physics or asset scale changes.
+
+
+## TASK-0051: one track frame pipeline, bounded GPU state adaptation
+
+Use one native Runtime and non-Debug Ps2TrackRenderer for browsing and the independent
+single-car runtime scene. Original functions retain their declaring owners. Viewer
+controls/debug overlays remain host concerns. Native commands retain original base
+and packet320 passes; GPU fusion is permitted only after all sampled mip alpha bounds
+prove identical coverage and the original positive GS blend equations prove the same
+RGB result. Do not clamp original alpha to128. Compatibility GPU probes check byte-domain
+copy/add composition and the observed depth-minus-sorting_offset order; the host cancels
+origin depth to submit strict native order. Original normal target Z24 chooses the
+Bias0/1 projection; unsupported Bias2 fails. Dynamic context2 six-view reflection remains
+an explicitly reported dependency gap for two static model families, with base-pass
+presentation identified. This does not recover frontend race start or full game flow.

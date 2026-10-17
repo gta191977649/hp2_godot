@@ -23,7 +23,13 @@ int main() {
     session.apply({ViewerAction::Fixture,{}});check(session.state().fixture);
     session.activate(ViewerKind::Track);check(session.state().source.empty());
     session.apply({ViewerAction::Load,"TRACKS/missing.bin"});
-    check(session.state().status=="Not implemented"&&session.state().fixture);
+    check(session.state().status=="Loading"&&!session.state().fixture);
+    session.loaded(false,"Missing track resource", "ignored");
+    check(session.state().status=="Failed"&&!session.state().fixture&&session.state().rendering.empty());
+    session.apply({ViewerAction::Load,"TRACKS/TRACKA11.BUN"});
+    session.loaded(true,"", "original track");
+    check(session.state().status=="Loaded"&&session.state().source=="TRACKS/TRACKA11.BUN");
+    session.apply({ViewerAction::Clear,{}});check(session.state().source.empty());
     session.activate(ViewerKind::Frontend);rejects([&]{session.apply({ViewerAction::Reset,{}});});
     rejects([&]{session.request(ViewerAction::Load,"../invalid");});
     rejects([&]{session.request(ViewerAction::Load,"D:/invalid");});

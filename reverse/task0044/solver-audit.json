@@ -1,0 +1,2012 @@
+{
+  "schema_version": 1,
+  "task": "TASK-0044",
+  "debug_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "retail_sha256": "7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2",
+  "functions": [
+    {
+      "debug_address": "0x001a16e8",
+      "retail_address": "0x001a3f10",
+      "mangled_name": "__5WheelP9WheelInfoP8TireInfoP11ControlInfoP8CarState",
+      "original_signature": "Wheel::Wheel(WheelInfo *, TireInfo *, ControlInfo *, CarState *)",
+      "definition_path": "..\\indep\\src\\wheel.cpp",
+      "translation_unit": "..\\indep\\src\\wheel.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 76,
+      "captured_instructions": 19,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "397a48aacdddaeb9f4a428eaede1f263ed60dae14309b381fd36e2104c12c962",
+      "listing_query_range": {
+        "address": "0x001a16e8",
+        "end_address": "0x001a1733"
+      }
+    },
+    {
+      "debug_address": "0x001a1930",
+      "retail_address": "0x001a4158",
+      "mangled_name": "SetState__5Wheelff",
+      "original_signature": "Wheel::SetState(float, float)",
+      "definition_path": "..\\indep\\src\\wheel.cpp",
+      "translation_unit": "..\\indep\\src\\wheel.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 12,
+      "captured_instructions": 3,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "0f809f17b2d65ee26e9310b1765d5942b9259df3977967a2569d42dd1867bb35",
+      "listing_query_range": {
+        "address": "0x001a1930",
+        "end_address": "0x001a193b"
+      }
+    },
+    {
+      "debug_address": "0x001a1948",
+      "retail_address": "0x001a4170",
+      "mangled_name": "SetState__5WheelP8CarStateP11CarTypeInfoffUsf",
+      "original_signature": "Wheel::SetState(CarState *, CarTypeInfo *, float, float, unsigned short, float)",
+      "definition_path": "..\\indep\\src\\wheel.cpp",
+      "translation_unit": "..\\indep\\src\\wheel.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 472,
+      "captured_instructions": 118,
+      "direct_call_targets": [
+        "0x001a1930",
+        "0x001bde60",
+        "0x0011b5f0",
+        "0x00151cc0",
+        "0x001bdde0",
+        "0x001bde30"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "14ab9e86161aa1121aa86de32dfeaaf79ccda7cf4a4cc35b48ef0daedda5a8f5",
+      "listing_query_range": {
+        "address": "0x001a1948",
+        "end_address": "0x001a1b1f"
+      }
+    },
+    {
+      "debug_address": "0x001a1b20",
+      "retail_address": "0x001a4348",
+      "mangled_name": "Calibrate__5Wheel",
+      "original_signature": "Wheel::Calibrate(void)",
+      "definition_path": "..\\indep\\src\\wheel.cpp",
+      "translation_unit": "..\\indep\\src\\wheel.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 12,
+      "captured_instructions": 3,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "1771ca6c63bbd9ec65ef9f35442a97dcd67083f8859caea5079486f33fd57a86",
+      "listing_query_range": {
+        "address": "0x001a1b20",
+        "end_address": "0x001a1b2b"
+      }
+    },
+    {
+      "debug_address": "0x001a1b30",
+      "retail_address": "0x001a4358",
+      "mangled_name": "ComputeAuxiliaries__5Wheel",
+      "original_signature": "Wheel::ComputeAuxiliaries(void)",
+      "definition_path": "..\\indep\\src\\wheel.cpp",
+      "translation_unit": "..\\indep\\src\\wheel.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 336,
+      "captured_instructions": 84,
+      "direct_call_targets": [
+        "0x00254010",
+        "0x002539b0"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "90b7ebf98ac30f2294491388002a87b6bd83ceb9cf442f4f55d912691a20c920",
+      "listing_query_range": {
+        "address": "0x001a1b30",
+        "end_address": "0x001a1c7f"
+      }
+    },
+    {
+      "debug_address": "0x001a1c80",
+      "retail_address": "0x001a44a8",
+      "mangled_name": "ExchangeZForces__5Wheelif",
+      "original_signature": "Wheel::ExchangeZForces(int, float)",
+      "definition_path": "..\\indep\\src\\wheel.cpp",
+      "translation_unit": "..\\indep\\src\\wheel.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 212,
+      "captured_instructions": 53,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "c7948a29d834d9ca2604b62d9fd91df8e01c21afb6211b235b99c174f8ab5fc5",
+      "listing_query_range": {
+        "address": "0x001a1c80",
+        "end_address": "0x001a1d53"
+      }
+    },
+    {
+      "debug_address": "0x001a1d58",
+      "retail_address": "0x001a4580",
+      "mangled_name": "FindDrivingSurface__5WheelP8bVector3P8bMatrix4",
+      "original_signature": null,
+      "definition_path": null,
+      "translation_unit": null,
+      "ownership_evidence": null,
+      "debug_body_size": 40,
+      "captured_instructions": 10,
+      "direct_call_targets": [
+        "0x001a1d80"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "58894195767fb8c451a4d80b6ef39af3168a1ef447e5ebe9c4e2cfe9f83d0f97",
+      "listing_query_range": {
+        "address": "0x001a1d58",
+        "end_address": "0x001a1d7f"
+      }
+    },
+    {
+      "debug_address": "0x001a1d80",
+      "retail_address": "0x001a45a8",
+      "mangled_name": "CheckTerrain__5WheelP8bVector3P11TerrainTypeT1P8bMatrix4",
+      "original_signature": null,
+      "definition_path": null,
+      "translation_unit": null,
+      "ownership_evidence": null,
+      "debug_body_size": 264,
+      "captured_instructions": 66,
+      "direct_call_targets": [
+        "0x00151cc0",
+        "0x001530e8"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "c02d0a07e033894b35f1b8aaea2b07754ca646704709a8083c59e81672c6efc5",
+      "listing_query_range": {
+        "address": "0x001a1d80",
+        "end_address": "0x001a1e87"
+      }
+    },
+    {
+      "debug_address": "0x001a1e88",
+      "retail_address": "0x001a46b0",
+      "mangled_name": "GetDerivative__5WheelPf",
+      "original_signature": "Wheel::GetDerivative(float *)",
+      "definition_path": "..\\indep\\src\\wheel.cpp",
+      "translation_unit": "..\\indep\\src\\wheel.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 196,
+      "captured_instructions": 49,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": null,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "6a16d96bb76c47800b5499dc71de904b90feb986111e24900391a310a829b70e",
+      "listing_query_range": {
+        "address": "0x001a1e88",
+        "end_address": "0x001a1f4b"
+      }
+    },
+    {
+      "debug_address": "0x001a1f50",
+      "retail_address": "0x001a4778",
+      "mangled_name": "CheckForBrakeLock__5Wheelf",
+      "original_signature": "Wheel::CheckForBrakeLock(float)",
+      "definition_path": "..\\indep\\src\\wheel.cpp",
+      "translation_unit": "..\\indep\\src\\wheel.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 160,
+      "captured_instructions": 40,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "39714c1e82d6cf4bf7d8fc775fb52b6b506b5b7040b5f1141dd56ca35195d129",
+      "listing_query_range": {
+        "address": "0x001a1f50",
+        "end_address": "0x001a1fef"
+      }
+    },
+    {
+      "debug_address": "0x001a1ff0",
+      "retail_address": "0x001a4818",
+      "mangled_name": "GetPilotFactor__5Wheel",
+      "original_signature": "Wheel::GetPilotFactor(void)",
+      "definition_path": "..\\indep\\src\\wheel.cpp",
+      "translation_unit": "..\\indep\\src\\wheel.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 280,
+      "captured_instructions": 70,
+      "direct_call_targets": [
+        "0x0029afa0",
+        "0x00299418",
+        "0x00299480",
+        "0x002993c0",
+        "0x00299c50"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "2436da998a299add878180dcfb6b8c344ec26097a80ebf1115b798d6151f0cbd",
+      "listing_query_range": {
+        "address": "0x001a1ff0",
+        "end_address": "0x001a2107"
+      }
+    },
+    {
+      "debug_address": "0x001a2108",
+      "retail_address": "0x001a4930",
+      "mangled_name": "GuessGroundForce__5WheelP8bVector2i",
+      "original_signature": "Wheel::GuessGroundForce(bVector2 *, int)",
+      "definition_path": "..\\indep\\src\\wheel.cpp",
+      "translation_unit": "..\\indep\\src\\wheel.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 1016,
+      "captured_instructions": 254,
+      "direct_call_targets": [
+        "0x002542c8",
+        "0x0019ac90",
+        "0x00253c60",
+        "0x001a1ff0",
+        "0x001a1f50",
+        "0x001a2500"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "5e938adde6c0a9674656d84650971eb7490a6f7b53faf2c55372d8aa46e4bb7a",
+      "listing_query_range": {
+        "address": "0x001a2108",
+        "end_address": "0x001a24ff"
+      }
+    },
+    {
+      "debug_address": "0x001a2500",
+      "retail_address": "0x001a4d28",
+      "mangled_name": "GetLateralForce__5Wheelff",
+      "original_signature": "Wheel::GetLateralForce(float, float)",
+      "definition_path": "..\\indep\\src\\wheel.cpp",
+      "translation_unit": "..\\indep\\src\\wheel.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 352,
+      "captured_instructions": 88,
+      "direct_call_targets": [
+        "0x0018d840"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "f5ef6abbb5f0a9d7d62a136f1cf3c65bd2e0ce08b3f579299237ff347213e00d",
+      "listing_query_range": {
+        "address": "0x001a2500",
+        "end_address": "0x001a265f"
+      }
+    },
+    {
+      "debug_address": "0x001a2660",
+      "retail_address": "0x001a4e88",
+      "mangled_name": "ModifyGroundForce__5WheelP8bVector2",
+      "original_signature": "Wheel::ModifyGroundForce(bVector2 *)",
+      "definition_path": "..\\indep\\src\\wheel.cpp",
+      "translation_unit": "..\\indep\\src\\wheel.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 88,
+      "captured_instructions": 22,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "47cf3b4e645c454437c6640960a2a1b5ba0bc7afb042561abb835c90755b09c5",
+      "listing_query_range": {
+        "address": "0x001a2660",
+        "end_address": "0x001a26b7"
+      }
+    },
+    {
+      "debug_address": "0x001a26b8",
+      "retail_address": "0x001a4ee0",
+      "mangled_name": "FinalizeGroundForce__5Wheeli",
+      "original_signature": "Wheel::FinalizeGroundForce(int)",
+      "definition_path": "..\\indep\\src\\wheel.cpp",
+      "translation_unit": "..\\indep\\src\\wheel.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 1216,
+      "captured_instructions": 304,
+      "direct_call_targets": [
+        "0x001a1ff0",
+        "0x002542c8",
+        "0x0019ac90",
+        "0x00253c60",
+        "0x002539b0",
+        "0x001a16d8",
+        "0x00254010"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "f61efb14416bfe995e3533a93035896cd51fa7b9d0d86c68d9e931bae4a708a9",
+      "listing_query_range": {
+        "address": "0x001a26b8",
+        "end_address": "0x001a2b77"
+      }
+    },
+    {
+      "debug_address": "0x001a2c00",
+      "retail_address": "0x001a5428",
+      "mangled_name": "GetHorizontalGroundForceInCarFrame__5WheelP8bVector3",
+      "original_signature": "Wheel::GetHorizontalGroundForceInCarFrame(bVector3 *)",
+      "definition_path": "..\\indep\\src\\wheel.cpp",
+      "translation_unit": "..\\indep\\src\\wheel.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 92,
+      "captured_instructions": 23,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "fa829d7d3398e526ad4af5d8cdee0b9da4d7c3ac0a5df3ce93a294def258e8ce",
+      "listing_query_range": {
+        "address": "0x001a2c00",
+        "end_address": "0x001a2c5b"
+      }
+    },
+    {
+      "debug_address": "0x001a3680",
+      "retail_address": "0x001a5ea0",
+      "mangled_name": "__10SuspensioniP9RigidBodyP5WheelP8SteeringP14SuspensionInfo",
+      "original_signature": "Suspension::Suspension(int, RigidBody *, Wheel *, Steering *, SuspensionInfo *)",
+      "definition_path": "..\\indep\\src\\suspension.cpp",
+      "translation_unit": "..\\indep\\src\\suspension.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 44,
+      "captured_instructions": 11,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "30dcf36764558cb1551622647d06ccd794645ca267b6db9b5bbf46f7fffa222d",
+      "listing_query_range": {
+        "address": "0x001a3680",
+        "end_address": "0x001a36ab"
+      }
+    },
+    {
+      "debug_address": "0x001a3768",
+      "retail_address": "0x001a5f88",
+      "mangled_name": "Calibrate__10Suspensionf",
+      "original_signature": "Suspension::Calibrate(float)",
+      "definition_path": "..\\indep\\src\\suspension.cpp",
+      "translation_unit": "..\\indep\\src\\suspension.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 40,
+      "captured_instructions": 10,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "64803d8539118958b448b25f034f37bf19720d45e7ff35fab53a7ed0117a4884",
+      "listing_query_range": {
+        "address": "0x001a3768",
+        "end_address": "0x001a378f"
+      }
+    },
+    {
+      "debug_address": "0x001a3790",
+      "retail_address": "0x001a5fb0",
+      "mangled_name": "SetState__10Suspension",
+      "original_signature": null,
+      "definition_path": null,
+      "translation_unit": null,
+      "ownership_evidence": null,
+      "debug_body_size": 12,
+      "captured_instructions": 3,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "0c96fb766503830b4166f5677581c6fe2ef1c42269b5890eafbb938b3c467b79",
+      "listing_query_range": {
+        "address": "0x001a3790",
+        "end_address": "0x001a379b"
+      }
+    },
+    {
+      "debug_address": "0x001a37a0",
+      "retail_address": "0x001a5fc0",
+      "mangled_name": "ComputeAuxiliaries__10Suspension",
+      "original_signature": null,
+      "definition_path": null,
+      "translation_unit": null,
+      "ownership_evidence": null,
+      "debug_body_size": 880,
+      "captured_instructions": 220,
+      "direct_call_targets": [
+        "0x0019ac90",
+        "0x001a1d58",
+        "0x00254010",
+        "0x002539b0",
+        "0x002541c0"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "aa23bf3d6455d08a84b8cd3aff95c128ac8ad3c18d2305280f9e0a3c7b50214a",
+      "listing_query_range": {
+        "address": "0x001a37a0",
+        "end_address": "0x001a3b0f"
+      }
+    },
+    {
+      "debug_address": "0x001a3b10",
+      "retail_address": "0x001a6330",
+      "mangled_name": "ResolveForces__10Suspensionf",
+      "original_signature": "Suspension::ResolveForces(float)",
+      "definition_path": "..\\indep\\src\\suspension.cpp",
+      "translation_unit": "..\\indep\\src\\suspension.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 64,
+      "captured_instructions": 16,
+      "direct_call_targets": [
+        "0x001a1c80"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "472235ee3d47391208a5bc6579419ad2806f008c3f123031b7fc660a3981e565",
+      "listing_query_range": {
+        "address": "0x001a3b10",
+        "end_address": "0x001a3b4f"
+      }
+    },
+    {
+      "debug_address": "0x001a3b50",
+      "retail_address": "0x001a6370",
+      "mangled_name": "ResolveMoreForces__10Suspension",
+      "original_signature": "Suspension::ResolveMoreForces(void)",
+      "definition_path": "..\\indep\\src\\suspension.cpp",
+      "translation_unit": "..\\indep\\src\\suspension.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 80,
+      "captured_instructions": 20,
+      "direct_call_targets": [
+        "0x0019a6b8"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "4544f87478eeb5b4ccfc337f02ad884ddc8bff45d8ba9c34ec641675a201de8b",
+      "listing_query_range": {
+        "address": "0x001a3b50",
+        "end_address": "0x001a3b9f"
+      }
+    },
+    {
+      "debug_address": "0x001a3ba0",
+      "retail_address": "0x001a63c0",
+      "mangled_name": "GetDerivative__10SuspensionPf",
+      "original_signature": null,
+      "definition_path": null,
+      "translation_unit": null,
+      "ownership_evidence": null,
+      "debug_body_size": 16,
+      "captured_instructions": 4,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": null,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": "GetDerivative wrapper is bounded001a3ba0..001a3baf; separately captured GetPointVelocity starts001a3bb0.",
+      "listing_sha256": "0f61f6fcc0a72f8369256c10e78518a3dcb6b4e1b7d324623c9193855774e106",
+      "listing_query_range": {
+        "address": "0x001a3ba0",
+        "end_address": "0x001a3baf"
+      }
+    },
+    {
+      "debug_address": "0x001a3be8",
+      "retail_address": "0x001a6408",
+      "mangled_name": "ApplyGroundPenaltyImpulse__10Suspension",
+      "original_signature": "Suspension::ApplyGroundPenaltyImpulse(void)",
+      "definition_path": "..\\indep\\src\\suspension.cpp",
+      "translation_unit": "..\\indep\\src\\suspension.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 216,
+      "captured_instructions": 54,
+      "direct_call_targets": [
+        "0x0019ac90",
+        "0x001a3bb0",
+        "0x0019a838"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "6ffc6d764abf5982ae7f28574adc5e4fe6e0891bf84635c0e83ad1fc3459b3f9",
+      "listing_query_range": {
+        "address": "0x001a3be8",
+        "end_address": "0x001a3cbf"
+      }
+    },
+    {
+      "debug_address": "0x0019a2d8",
+      "retail_address": "0x0019c9b0",
+      "mangled_name": "__9RigidBodyP13RigidBodyInfo",
+      "original_signature": "RigidBody::RigidBody(RigidBodyInfo *)",
+      "definition_path": "..\\indep\\src\\rigidbody.cpp",
+      "translation_unit": "..\\indep\\src\\rigidbody.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 188,
+      "captured_instructions": 47,
+      "direct_call_targets": [
+        "0x00254010",
+        "0x0019a580"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "6b421251ebeceef6c46876bcc8b911c001f06156bc28c74bcf795a8c9c7243b4",
+      "listing_query_range": {
+        "address": "0x0019a2d8",
+        "end_address": "0x0019a393"
+      }
+    },
+    {
+      "debug_address": "0x0019a568",
+      "retail_address": "0x0019cc40",
+      "mangled_name": "Calibrate__9RigidBodyP8bVector3",
+      "original_signature": "RigidBody::Calibrate(bVector3 *)",
+      "definition_path": "..\\indep\\src\\rigidbody.cpp",
+      "translation_unit": "..\\indep\\src\\rigidbody.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 24,
+      "captured_instructions": 6,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "fa00e94d5835e4c6682ef9fdf65d50716451f6559c44cf353170ab72b9616428",
+      "listing_query_range": {
+        "address": "0x0019a568",
+        "end_address": "0x0019a57f"
+      }
+    },
+    {
+      "debug_address": "0x0019a580",
+      "retail_address": "0x0019cc58",
+      "mangled_name": "CalculateInertiaTensor__9RigidBody",
+      "original_signature": "RigidBody::CalculateInertiaTensor(void)",
+      "definition_path": "..\\indep\\src\\rigidbody.cpp",
+      "translation_unit": "..\\indep\\src\\rigidbody.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 44,
+      "captured_instructions": 11,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "f4ed6107f358e03786a3071b121cbeff6a77a22c072860b9bf56085167aa7c2b",
+      "listing_query_range": {
+        "address": "0x0019a580",
+        "end_address": "0x0019a5ab"
+      }
+    },
+    {
+      "debug_address": "0x0019a5b0",
+      "retail_address": "0x0019cc88",
+      "mangled_name": "SetState__9RigidBodyP8bVector3P8bMatrix4T1T1",
+      "original_signature": null,
+      "definition_path": null,
+      "translation_unit": null,
+      "ownership_evidence": null,
+      "debug_body_size": 264,
+      "captured_instructions": 66,
+      "direct_call_targets": [
+        "0x00254010",
+        "0x002542c8",
+        "0x002541c0",
+        "0x0019ac90"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "aef69a4ed5f830ac096454b622fb74b72ac5db2801bf1d0cb6d3504cc1fdfbe2",
+      "listing_query_range": {
+        "address": "0x0019a5b0",
+        "end_address": "0x0019a6b7"
+      }
+    },
+    {
+      "debug_address": "0x0019a6b8",
+      "retail_address": "0x0019cd90",
+      "mangled_name": "ApplyForce__9RigidBodyP8bVector3T1",
+      "original_signature": "RigidBody::ApplyForce(bVector3 *, bVector3 *)",
+      "definition_path": "..\\indep\\src\\rigidbody.cpp",
+      "translation_unit": "..\\indep\\src\\rigidbody.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 236,
+      "captured_instructions": 59,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "cd21906e2c730e6b770b91ffcca20ec91b423096cac4dd375eedd4bc66676920",
+      "listing_query_range": {
+        "address": "0x0019a6b8",
+        "end_address": "0x0019a7a3"
+      }
+    },
+    {
+      "debug_address": "0x0019a7a8",
+      "retail_address": "0x0019ce80",
+      "mangled_name": "ApplyForceInFrame__9RigidBodyP8bVector3T1",
+      "original_signature": "RigidBody::ApplyForceInFrame(bVector3 *, bVector3 *)",
+      "definition_path": "..\\indep\\src\\rigidbody.cpp",
+      "translation_unit": "..\\indep\\src\\rigidbody.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 116,
+      "captured_instructions": 29,
+      "direct_call_targets": [
+        "0x0019ac90",
+        "0x0019a6b8"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "fa4bdb7427eb5b70e7f06fee4eaef6bce88030b519ad8414fb651e6d5e9dedf3",
+      "listing_query_range": {
+        "address": "0x0019a7a8",
+        "end_address": "0x0019a81b"
+      }
+    },
+    {
+      "debug_address": "0x0019a820",
+      "retail_address": "0x0019cef8",
+      "mangled_name": "ApplyMoment__9RigidBodyP8bVector3",
+      "original_signature": "RigidBody::ApplyMoment(bVector3 *)",
+      "definition_path": "..\\indep\\src\\rigidbody.cpp",
+      "translation_unit": "..\\indep\\src\\rigidbody.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 24,
+      "captured_instructions": 6,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "96637a64e3e9147ac133167415c5472c4fddf36b162f43ae9aef299d65807359",
+      "listing_query_range": {
+        "address": "0x0019a820",
+        "end_address": "0x0019a837"
+      }
+    },
+    {
+      "debug_address": "0x0019a838",
+      "retail_address": "0x0019cf10",
+      "mangled_name": "ApplyImpulse__9RigidBodyP8bVector3T1",
+      "original_signature": "RigidBody::ApplyImpulse(bVector3 *, bVector3 *)",
+      "definition_path": "..\\indep\\src\\rigidbody.cpp",
+      "translation_unit": "..\\indep\\src\\rigidbody.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 232,
+      "captured_instructions": 58,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "fbde27f877d3f8d45e787c1646b986d87c5fe513aced784e3087893c67cd3d8d",
+      "listing_query_range": {
+        "address": "0x0019a838",
+        "end_address": "0x0019a91f"
+      }
+    },
+    {
+      "debug_address": "0x0019adf8",
+      "retail_address": "0x0019d4d0",
+      "mangled_name": "GetDerivative__9RigidBodyPf",
+      "original_signature": "RigidBody::GetDerivative(float *)",
+      "definition_path": "..\\indep\\src\\rigidbody.cpp",
+      "translation_unit": "..\\indep\\src\\rigidbody.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 888,
+      "captured_instructions": 222,
+      "direct_call_targets": [
+        "0x002542c8",
+        "0x0019ac90",
+        "0x0019ac98",
+        "0x0018d840"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "45fa1f7e4ce96653c28f75663ccfdb02bce127e37246916b34ffd5791a78ffaf",
+      "listing_query_range": {
+        "address": "0x0019adf8",
+        "end_address": "0x0019b16f"
+      }
+    },
+    {
+      "debug_address": "0x0019b170",
+      "retail_address": "0x0019d848",
+      "mangled_name": "ComputeAuxiliaries__9RigidBody",
+      "original_signature": null,
+      "definition_path": null,
+      "translation_unit": null,
+      "ownership_evidence": null,
+      "debug_body_size": 304,
+      "captured_instructions": 76,
+      "direct_call_targets": [
+        "0x002542c8",
+        "0x002541c0",
+        "0x0019ac90",
+        "0x0019a6b8"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "c7793ab000c5c9cde7d601820b2ff9905735ba8e96e086c7cb0837cd8949001e",
+      "listing_query_range": {
+        "address": "0x0019b170",
+        "end_address": "0x0019b29f"
+      }
+    },
+    {
+      "debug_address": "0x0019b358",
+      "retail_address": "0x0019da30",
+      "mangled_name": "_GLOBAL_$I$__9RigidBodyP13RigidBodyInfo",
+      "original_signature": null,
+      "definition_path": null,
+      "translation_unit": null,
+      "ownership_evidence": null,
+      "debug_body_size": 140,
+      "captured_instructions": 35,
+      "direct_call_targets": [
+        "0x0018d810"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "d6fa86b46cd49f8ee2da6c46b2be3733baa47de54beb091fa4ce53c7c62053b5",
+      "listing_query_range": {
+        "address": "0x0019b358",
+        "end_address": "0x0019b3e3"
+      }
+    },
+    {
+      "debug_address": "0x00199a98",
+      "retail_address": "0x0019c170",
+      "mangled_name": "__13PhysicsSystem",
+      "original_signature": "PhysicsSystem::PhysicsSystem(void)",
+      "definition_path": "..\\indep\\src\\componentphysics.cpp",
+      "translation_unit": "..\\indep\\src\\componentphysics.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 32,
+      "captured_instructions": 8,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "4b1bd730682264f92e1add3247ea03d6869fee744714673abad3b2f1b84fdf5a",
+      "listing_query_range": {
+        "address": "0x00199a98",
+        "end_address": "0x00199ab7"
+      }
+    },
+    {
+      "debug_address": "0x00199b60",
+      "retail_address": "0x0019c238",
+      "mangled_name": "AddComponent__13PhysicsSystemP16PhysicsComponent",
+      "original_signature": "PhysicsSystem::AddComponent(PhysicsComponent *)",
+      "definition_path": "..\\indep\\src\\componentphysics.cpp",
+      "translation_unit": "..\\indep\\src\\componentphysics.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 84,
+      "captured_instructions": 21,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "d5f6d3ab6cc80c4421075914d5f656fd90daedecc8d785118abfa59856f0e9dd",
+      "listing_query_range": {
+        "address": "0x00199b60",
+        "end_address": "0x00199bb3"
+      }
+    },
+    {
+      "debug_address": "0x00199bb8",
+      "retail_address": "0x0019c290",
+      "mangled_name": "IntegrateEuler__13PhysicsSystemf",
+      "original_signature": "PhysicsSystem::IntegrateEuler(float)",
+      "definition_path": "..\\indep\\src\\componentphysics.cpp",
+      "translation_unit": "..\\indep\\src\\componentphysics.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 260,
+      "captured_instructions": 65,
+      "direct_call_targets": [
+        "0x00199f98"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "5fbc9f0dae8250ddef1c74bb765d1f2265a0fc9b4e1c325da7748e3594ac0f86",
+      "listing_query_range": {
+        "address": "0x00199bb8",
+        "end_address": "0x00199cbb"
+      }
+    },
+    {
+      "debug_address": "0x00199f98",
+      "retail_address": "0x0019c670",
+      "mangled_name": "GetDerivative__13PhysicsSystemPf",
+      "original_signature": "PhysicsSystem::GetDerivative(float *)",
+      "definition_path": "..\\indep\\src\\componentphysics.cpp",
+      "translation_unit": "..\\indep\\src\\componentphysics.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 136,
+      "captured_instructions": 34,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "9832d994d24eaf42721eff0a133dd789dbb43ee6533462dd095bacb3e5162681",
+      "listing_query_range": {
+        "address": "0x00199f98",
+        "end_address": "0x0019a01f"
+      }
+    },
+    {
+      "debug_address": "0x0019a130",
+      "retail_address": "0x0019c808",
+      "mangled_name": "ComputeAuxiliaries__13PhysicsSystem",
+      "original_signature": "PhysicsSystem::ComputeAuxiliaries(void)",
+      "definition_path": "..\\indep\\src\\componentphysics.cpp",
+      "translation_unit": "..\\indep\\src\\componentphysics.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 124,
+      "captured_instructions": 31,
+      "direct_call_targets": [
+        "0x0024a340",
+        "0x0024a350"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "186f0477fec243f3d7872fce04a549bd3f12138b1b04cc6edcf1703caff733dc",
+      "listing_query_range": {
+        "address": "0x0019a130",
+        "end_address": "0x0019a1ab"
+      }
+    },
+    {
+      "debug_address": "0x0019a220",
+      "retail_address": "0x0019c8f8",
+      "mangled_name": "ResolveForces__13PhysicsSystem",
+      "original_signature": "PhysicsSystem::ResolveForces(void)",
+      "definition_path": "../indep/inc/ComponentPhysics.hpp",
+      "translation_unit": "..\\indep\\src\\componentphysics.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 8,
+      "captured_instructions": 2,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": null,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "3a91bb7077133c00ec7826b5abc0a216d34aa65dc43c5683f6243973e8a9ebf8",
+      "listing_query_range": {
+        "address": "0x0019a220",
+        "end_address": "0x0019a227"
+      }
+    },
+    {
+      "debug_address": "0x00138d90",
+      "retail_address": "0x00138e08",
+      "mangled_name": "ResolveForces__10PhysicsCar",
+      "original_signature": "PhysicsCar::ResolveForces(void)",
+      "definition_path": "..\\indep\\src\\physicscar.cpp",
+      "translation_unit": "..\\indep\\src\\physicscar.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 300,
+      "captured_instructions": 75,
+      "direct_call_targets": [
+        "0x0024a340",
+        "0x001ab3f0",
+        "0x001a3b10",
+        "0x0024a340",
+        "0x00138ec0",
+        "0x0024a340",
+        "0x0024a350",
+        "0x001a3b50",
+        "0x00139478",
+        "0x0024a340",
+        "0x0024a350"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null
+    },
+    {
+      "debug_address": "0x00138ec0",
+      "retail_address": "0x00138f38",
+      "mangled_name": "IterateForces__10PhysicsCar",
+      "original_signature": "PhysicsCar::IterateForces(void)",
+      "definition_path": "..\\indep\\src\\physicscar.cpp",
+      "translation_unit": "..\\indep\\src\\physicscar.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 588,
+      "captured_instructions": 147,
+      "direct_call_targets": [
+        "0x00189af0",
+        "0x001a2108",
+        "0x002542c8",
+        "0x0019ac90",
+        "0x001a2c00",
+        "0x001a2660",
+        "0x00189bd0",
+        "0x001a26b8",
+        "0x00189d40"
+      ],
+      "numeric_operand_normalized_instruction_stream_equal": true,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null
+    },
+    {
+      "debug_address": "0x0019ac98",
+      "retail_address": "0x0019d370",
+      "mangled_name": "VectorStarMatrix__FP8bMatrix4P8bVector3T0",
+      "original_signature": "VectorStarMatrix(bMatrix4 *, bVector3 *, bMatrix4 *)",
+      "definition_path": "..\\indep\\src\\rigidbody.cpp",
+      "translation_unit": "..\\indep\\src\\rigidbody.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 352,
+      "captured_instructions": 88,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": null,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "7eab7a4fd2a641f6670194fad2686bbd80e0cd644bdc8391d43a4d18e4546705",
+      "listing_query_range": {
+        "address": "0x0019ac98",
+        "end_address": "0x0019adf7"
+      }
+    },
+    {
+      "debug_address": "0x001a3bb0",
+      "retail_address": "0x001a63d0",
+      "mangled_name": "GetPointVelocity__FP8bVector3T0T0T0",
+      "original_signature": "GetPointVelocity(bVector3 *, bVector3 *, bVector3 *, bVector3 *)",
+      "definition_path": "..\\indep\\src\\suspension.cpp",
+      "translation_unit": "..\\indep\\src\\suspension.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 52,
+      "captured_instructions": 13,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": null,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "0da40531ed7c69be698f53c10d2f38caec7f1c7efde957564886a04dab8cf660",
+      "listing_query_range": {
+        "address": "0x001a3bb0",
+        "end_address": "0x001a3be3"
+      }
+    },
+    {
+      "debug_address": "0x001a16d8",
+      "retail_address": "0x001a3f00",
+      "mangled_name": "SetSliderValue__Fifff",
+      "original_signature": null,
+      "definition_path": null,
+      "translation_unit": null,
+      "ownership_evidence": null,
+      "debug_body_size": 12,
+      "captured_instructions": 3,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": null,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "7a6c3ceea0ce30aa68ea59d1a801f64ee4a344c5cac4aa41a6594dfadf6d9252",
+      "listing_query_range": {
+        "address": "0x001a16d8",
+        "end_address": "0x001a16e3"
+      }
+    },
+    {
+      "debug_address": "0x0019b2a0",
+      "retail_address": "0x0019d978",
+      "mangled_name": "ResolveForces__9RigidBody",
+      "original_signature": null,
+      "definition_path": null,
+      "translation_unit": null,
+      "ownership_evidence": null,
+      "debug_body_size": 8,
+      "captured_instructions": 2,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": null,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "9ae67ae78f75be9908f999d5b4b98a7e4fafbea1845d5f299f366dcb2608e982",
+      "listing_query_range": {
+        "address": "0x0019b2a0",
+        "end_address": "0x0019b2a7"
+      }
+    },
+    {
+      "debug_address": "0x0019a230",
+      "retail_address": null,
+      "mangled_name": "ComputeAuxiliaries__16PhysicsComponent",
+      "original_signature": null,
+      "definition_path": null,
+      "translation_unit": null,
+      "ownership_evidence": null,
+      "debug_body_size": 8,
+      "captured_instructions": 2,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": null,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "47aea96122bb149a3f038e33b7151e3107e192178c41febc672a827f8d0c1ee8",
+      "listing_query_range": {
+        "address": "0x0019a230",
+        "end_address": "0x0019a237"
+      }
+    },
+    {
+      "debug_address": "0x001a3400",
+      "retail_address": "0x001a5c20",
+      "mangled_name": "GetState__5Wheel",
+      "original_signature": "Wheel::GetState(void)",
+      "definition_path": "../indep/inc/Wheel.hpp",
+      "translation_unit": "..\\indep\\src\\wheel.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 8,
+      "captured_instructions": 2,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": null,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "8a34a3cfd523f7dccda1e5588a2cbdb7066fd5c2d4e06557a4acae8e027c7561",
+      "listing_query_range": {
+        "address": "0x001a3400",
+        "end_address": "0x001a3407"
+      }
+    },
+    {
+      "debug_address": "0x001a33d0",
+      "retail_address": "0x001a5bf0",
+      "mangled_name": "SetState__5WheelPf",
+      "original_signature": "Wheel::SetState(float *)",
+      "definition_path": "../indep/inc/Wheel.hpp",
+      "translation_unit": "..\\indep\\src\\wheel.cpp",
+      "ownership_evidence": "E-0042-S001",
+      "debug_body_size": 24,
+      "captured_instructions": 6,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": null,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "ae34f6aa0286e9762283b197624ee51519219d0bb796aeaab3ddab1a9bd2df82",
+      "listing_query_range": {
+        "address": "0x001a33d0",
+        "end_address": "0x001a33e7"
+      }
+    },
+    {
+      "debug_address": "0x001a3e08",
+      "retail_address": "0x001a6628",
+      "mangled_name": "SetState__10SuspensionPf",
+      "original_signature": null,
+      "definition_path": null,
+      "translation_unit": null,
+      "ownership_evidence": null,
+      "debug_body_size": 24,
+      "captured_instructions": 6,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": null,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "110cfab18cfb5f46b099ee9d89b77caebf9ae4ddb9cb6e1532d5c96165690443",
+      "listing_query_range": {
+        "address": "0x001a3e08",
+        "end_address": "0x001a3e1f"
+      }
+    },
+    {
+      "debug_address": "0x0019b558",
+      "retail_address": "0x0019dc30",
+      "mangled_name": "SetState__9RigidBodyPf",
+      "original_signature": null,
+      "definition_path": null,
+      "translation_unit": null,
+      "ownership_evidence": null,
+      "debug_body_size": 72,
+      "captured_instructions": 18,
+      "direct_call_targets": [],
+      "numeric_operand_normalized_instruction_stream_equal": null,
+      "evidence_id": "E-0044-S01",
+      "status": "StaticRecovered; not Verified",
+      "boundary_note": null,
+      "listing_sha256": "743ab8a1faa4bb289963f4514be788b4b44d143e92b0f47f4c558cb70390df38",
+      "listing_query_range": {
+        "address": "0x0019b558",
+        "end_address": "0x0019b59f"
+      }
+    }
+  ],
+  "types": {
+    "Wheel": {
+      "size": 400,
+      "fields": [
+        {
+          "name": "Next",
+          "type": "bNode *",
+          "offset": 0,
+          "length": 4
+        },
+        {
+          "name": "Prev",
+          "type": "bNode *",
+          "offset": 4,
+          "length": 4
+        },
+        {
+          "name": "__vtable",
+          "type": "Wheel__vtable *",
+          "offset": 8,
+          "length": 4
+        },
+        {
+          "name": "WI",
+          "type": "WheelInfo *",
+          "offset": 12,
+          "length": 4
+        },
+        {
+          "name": "TI",
+          "type": "TireInfo *",
+          "offset": 16,
+          "length": 4
+        },
+        {
+          "name": "CI",
+          "type": "ControlInfo *",
+          "offset": 20,
+          "length": 4
+        },
+        {
+          "name": "CS",
+          "type": "CarState *",
+          "offset": 24,
+          "length": 4
+        },
+        {
+          "name": "State",
+          "type": "WheelState",
+          "offset": 28,
+          "length": 8
+        },
+        {
+          "name": "MomentOfInertia",
+          "type": "float",
+          "offset": 36,
+          "length": 4
+        },
+        {
+          "name": "Matrix",
+          "type": "bMatrix4",
+          "offset": 48,
+          "length": 64
+        },
+        {
+          "name": "WorldMatrix",
+          "type": "bMatrix4",
+          "offset": 112,
+          "length": 64
+        },
+        {
+          "name": "CarMatrix",
+          "type": "bMatrix4",
+          "offset": 176,
+          "length": 64
+        },
+        {
+          "name": "Velocity",
+          "type": "bVector3",
+          "offset": 240,
+          "length": 16
+        },
+        {
+          "name": "Slip",
+          "type": "bVector2",
+          "offset": 256,
+          "length": 8
+        },
+        {
+          "name": "AppliedTorque",
+          "type": "float",
+          "offset": 264,
+          "length": 4
+        },
+        {
+          "name": "BrakeLocked",
+          "type": "int",
+          "offset": 268,
+          "length": 4
+        },
+        {
+          "name": "LastSign",
+          "type": "int",
+          "offset": 272,
+          "length": 4
+        },
+        {
+          "name": "GroundForce",
+          "type": "bVector2",
+          "offset": 276,
+          "length": 8
+        },
+        {
+          "name": "WorldGroundForce",
+          "type": "bVector3",
+          "offset": 288,
+          "length": 16
+        },
+        {
+          "name": "ContactPoint",
+          "type": "bVector3",
+          "offset": 304,
+          "length": 16
+        },
+        {
+          "name": "ContactNormal",
+          "type": "bVector3",
+          "offset": 320,
+          "length": 16
+        },
+        {
+          "name": "Terrain",
+          "type": "TerrainType",
+          "offset": 336,
+          "length": 4
+        },
+        {
+          "name": "Slipping",
+          "type": "char",
+          "offset": 340,
+          "length": 1
+        },
+        {
+          "name": "TouchingGround",
+          "type": "char",
+          "offset": 341,
+          "length": 1
+        },
+        {
+          "name": "NumTimesSkidding",
+          "type": "short int",
+          "offset": 342,
+          "length": 2
+        },
+        {
+          "name": "ZForce",
+          "type": "float",
+          "offset": 344,
+          "length": 4
+        },
+        {
+          "name": "RoadNoise",
+          "type": "float",
+          "offset": 348,
+          "length": 4
+        },
+        {
+          "name": "CurrentSlip",
+          "type": "float",
+          "offset": 352,
+          "length": 4
+        },
+        {
+          "name": "OldSlip",
+          "type": "float",
+          "offset": 356,
+          "length": 4
+        },
+        {
+          "name": "TractionUsage",
+          "type": "float",
+          "offset": 360,
+          "length": 4
+        },
+        {
+          "name": "Damage",
+          "type": "float",
+          "offset": 364,
+          "length": 4
+        },
+        {
+          "name": "Brake",
+          "type": "float",
+          "offset": 368,
+          "length": 4
+        },
+        {
+          "name": "EBrake",
+          "type": "float",
+          "offset": 372,
+          "length": 4
+        },
+        {
+          "name": "TractionBoost",
+          "type": "float",
+          "offset": 376,
+          "length": 4
+        },
+        {
+          "name": "CatchupFrictionMultiplier",
+          "type": "float",
+          "offset": 380,
+          "length": 4
+        },
+        {
+          "name": "TheSkidMaker",
+          "type": "SkidMaker",
+          "offset": 384,
+          "length": 4
+        }
+      ],
+      "evidence_id": "E-0044-S03"
+    },
+    "Suspension": {
+      "size": 176,
+      "fields": [
+        {
+          "name": "Next",
+          "type": "bNode *",
+          "offset": 0,
+          "length": 4
+        },
+        {
+          "name": "Prev",
+          "type": "bNode *",
+          "offset": 4,
+          "length": 4
+        },
+        {
+          "name": "__vtable",
+          "type": "Suspension__vtable *",
+          "offset": 8,
+          "length": 4
+        },
+        {
+          "name": "SI",
+          "type": "SuspensionInfo *",
+          "offset": 12,
+          "length": 4
+        },
+        {
+          "name": "pSwayBar",
+          "type": "Suspension *",
+          "offset": 16,
+          "length": 4
+        },
+        {
+          "name": "State",
+          "type": "SuspensionState",
+          "offset": 20,
+          "length": 8
+        },
+        {
+          "name": "Force",
+          "type": "float",
+          "offset": 28,
+          "length": 4
+        },
+        {
+          "name": "Position",
+          "type": "bVector3",
+          "offset": 32,
+          "length": 16
+        },
+        {
+          "name": "Matrix",
+          "type": "bMatrix4",
+          "offset": 48,
+          "length": 64
+        },
+        {
+          "name": "TouchingGround",
+          "type": "int",
+          "offset": 112,
+          "length": 4
+        },
+        {
+          "name": "MagicForce",
+          "type": "float",
+          "offset": 116,
+          "length": 4
+        },
+        {
+          "name": "RestLoad",
+          "type": "float",
+          "offset": 120,
+          "length": 4
+        },
+        {
+          "name": "RestPosition",
+          "type": "bVector3",
+          "offset": 128,
+          "length": 16
+        },
+        {
+          "name": "pWheel",
+          "type": "Wheel *",
+          "offset": 144,
+          "length": 4
+        },
+        {
+          "name": "pBody",
+          "type": "RigidBody *",
+          "offset": 148,
+          "length": 4
+        },
+        {
+          "name": "pSteering",
+          "type": "Steering *",
+          "offset": 152,
+          "length": 4
+        },
+        {
+          "name": "WheelPosition",
+          "type": "int",
+          "offset": 156,
+          "length": 4
+        },
+        {
+          "name": "GroundForce",
+          "type": "float",
+          "offset": 160,
+          "length": 4
+        }
+      ],
+      "evidence_id": "E-0044-S03"
+    },
+    "RigidBody": {
+      "size": 384,
+      "fields": [
+        {
+          "name": "Next",
+          "type": "bNode *",
+          "offset": 0,
+          "length": 4
+        },
+        {
+          "name": "Prev",
+          "type": "bNode *",
+          "offset": 4,
+          "length": 4
+        },
+        {
+          "name": "__vtable",
+          "type": "RigidBody__vtable *",
+          "offset": 8,
+          "length": 4
+        },
+        {
+          "name": "RBI",
+          "type": "RigidBodyInfo *",
+          "offset": 12,
+          "length": 4
+        },
+        {
+          "name": "State",
+          "type": "RigidBodyState",
+          "offset": 16,
+          "length": 128
+        },
+        {
+          "name": "Velocity",
+          "type": "bVector3",
+          "offset": 144,
+          "length": 16
+        },
+        {
+          "name": "AngularVelocity",
+          "type": "bVector3",
+          "offset": 160,
+          "length": 16
+        },
+        {
+          "name": "Matrix",
+          "type": "bMatrix4",
+          "offset": 176,
+          "length": 64
+        },
+        {
+          "name": "ForceAccumulator",
+          "type": "bVector3",
+          "offset": 240,
+          "length": 16
+        },
+        {
+          "name": "MomentAccumulator",
+          "type": "bVector3",
+          "offset": 256,
+          "length": 16
+        },
+        {
+          "name": "MotionDamping",
+          "type": "int",
+          "offset": 272,
+          "length": 4
+        },
+        {
+          "name": "IsHP",
+          "type": "bool",
+          "offset": 276,
+          "length": 1
+        },
+        {
+          "name": "Mass",
+          "type": "float",
+          "offset": 280,
+          "length": 4
+        },
+        {
+          "name": "Mass_inv",
+          "type": "float",
+          "offset": 284,
+          "length": 4
+        },
+        {
+          "name": "I_body_inv",
+          "type": "bMatrix4",
+          "offset": 288,
+          "length": 64
+        },
+        {
+          "name": "CenterOfGravity",
+          "type": "bVector3",
+          "offset": 352,
+          "length": 16
+        },
+        {
+          "name": "MaxMomentZ",
+          "type": "float",
+          "offset": 368,
+          "length": 4
+        },
+        {
+          "name": "SpeedLimiter",
+          "type": "float",
+          "offset": 372,
+          "length": 4
+        },
+        {
+          "name": "CatchUpMultiplier",
+          "type": "float",
+          "offset": 376,
+          "length": 4
+        }
+      ],
+      "evidence_id": "E-0044-S03"
+    },
+    "PhysicsSystem": {
+      "size": 16,
+      "fields": [
+        {
+          "name": "ComponentList",
+          "type": "bTList<PhysicsComponent>",
+          "offset": 0,
+          "length": 8
+        },
+        {
+          "name": "Size",
+          "type": "int",
+          "offset": 8,
+          "length": 4
+        },
+        {
+          "name": "__vtable",
+          "type": "PhysicsSystem__vtable *",
+          "offset": 12,
+          "length": 4
+        }
+      ],
+      "evidence_id": "E-0044-S03"
+    },
+    "PhysicsComponent": {
+      "size": 12,
+      "fields": [
+        {
+          "name": "Next",
+          "type": "bNode *",
+          "offset": 0,
+          "length": 4
+        },
+        {
+          "name": "Prev",
+          "type": "bNode *",
+          "offset": 4,
+          "length": 4
+        },
+        {
+          "name": "__vtable",
+          "type": "PhysicsComponent__vtable *",
+          "offset": 8,
+          "length": 4
+        }
+      ],
+      "evidence_id": "E-0044-S03"
+    },
+    "WheelInfo": {
+      "size": 32,
+      "fields": [
+        {
+          "name": "Position",
+          "type": "float[3]",
+          "offset": 0,
+          "length": 12
+        },
+        {
+          "name": "Radius",
+          "type": "float",
+          "offset": 12,
+          "length": 4
+        },
+        {
+          "name": "Width",
+          "type": "float",
+          "offset": 16,
+          "length": 4
+        },
+        {
+          "name": "WheelNumber",
+          "type": "int",
+          "offset": 20,
+          "length": 4
+        },
+        {
+          "name": "YRenderOffset",
+          "type": "float",
+          "offset": 24,
+          "length": 4
+        },
+        {
+          "name": "Padding",
+          "type": "float[1]",
+          "offset": 28,
+          "length": 4
+        }
+      ],
+      "evidence_id": "E-0044-S03"
+    },
+    "TireInfo": {
+      "size": 32,
+      "fields": [
+        {
+          "name": "MaxSlipAngle",
+          "type": "float",
+          "offset": 0,
+          "length": 4
+        },
+        {
+          "name": "MaxLoad",
+          "type": "float",
+          "offset": 4,
+          "length": 4
+        },
+        {
+          "name": "ForceScale",
+          "type": "float",
+          "offset": 8,
+          "length": 4
+        },
+        {
+          "name": "StaticFrictionCoefficient",
+          "type": "float",
+          "offset": 12,
+          "length": 4
+        },
+        {
+          "name": "DynamicFrictionCoefficient",
+          "type": "float",
+          "offset": 16,
+          "length": 4
+        },
+        {
+          "name": "dummy",
+          "type": "float[3]",
+          "offset": 20,
+          "length": 12
+        }
+      ],
+      "evidence_id": "E-0044-S03"
+    },
+    "SuspensionInfo": {
+      "size": 32,
+      "fields": [
+        {
+          "name": "Progression",
+          "type": "float",
+          "offset": 0,
+          "length": 4
+        },
+        {
+          "name": "Stiffness",
+          "type": "float",
+          "offset": 4,
+          "length": 4
+        },
+        {
+          "name": "Damping",
+          "type": "float[2]",
+          "offset": 8,
+          "length": 8
+        },
+        {
+          "name": "SwayBarStiffness",
+          "type": "float",
+          "offset": 16,
+          "length": 4
+        },
+        {
+          "name": "BumpStop",
+          "type": "float[2]",
+          "offset": 20,
+          "length": 8
+        },
+        {
+          "name": "MaxRenderingCompression",
+          "type": "float",
+          "offset": 28,
+          "length": 4
+        }
+      ],
+      "evidence_id": "E-0044-S03"
+    }
+  },
+  "vtables": [
+    {
+      "class": "Wheel",
+      "address": "0x002ada00",
+      "slots": [
+        {
+          "offset": "0x10",
+          "adjustor": 0,
+          "target": "0x001a3408"
+        },
+        {
+          "offset": "0x18",
+          "adjustor": 0,
+          "target": "0x001a3400"
+        },
+        {
+          "offset": "0x20",
+          "adjustor": 0,
+          "target": "0x001a33e8"
+        },
+        {
+          "offset": "0x28",
+          "adjustor": 0,
+          "target": "0x001a33d0"
+        },
+        {
+          "offset": "0x30",
+          "adjustor": 0,
+          "target": "0x0019a238"
+        },
+        {
+          "offset": "0x38",
+          "adjustor": 0,
+          "target": "0x001a1e88"
+        },
+        {
+          "offset": "0x40",
+          "adjustor": 0,
+          "target": "0x001a1b30"
+        }
+      ],
+      "evidence_id": "E-0044-S04"
+    },
+    {
+      "class": "Suspension",
+      "address": "0x002ada90",
+      "slots": [
+        {
+          "offset": "0x10",
+          "adjustor": 0,
+          "target": "0x001a3e40"
+        },
+        {
+          "offset": "0x18",
+          "adjustor": 0,
+          "target": "0x001a3e38"
+        },
+        {
+          "offset": "0x20",
+          "adjustor": 0,
+          "target": "0x001a3e20"
+        },
+        {
+          "offset": "0x28",
+          "adjustor": 0,
+          "target": "0x001a3e08"
+        },
+        {
+          "offset": "0x30",
+          "adjustor": 0,
+          "target": "0x0019a238"
+        },
+        {
+          "offset": "0x38",
+          "adjustor": 0,
+          "target": "0x001a3ba0"
+        },
+        {
+          "offset": "0x40",
+          "adjustor": 0,
+          "target": "0x001a37a0"
+        }
+      ],
+      "evidence_id": "E-0044-S04"
+    },
+    {
+      "class": "RigidBody",
+      "address": "0x002ad1f0",
+      "slots": [
+        {
+          "offset": "0x10",
+          "adjustor": 0,
+          "target": "0x0019b5f0"
+        },
+        {
+          "offset": "0x18",
+          "adjustor": 0,
+          "target": "0x0019b5e8"
+        },
+        {
+          "offset": "0x20",
+          "adjustor": 0,
+          "target": "0x0019b5a0"
+        },
+        {
+          "offset": "0x28",
+          "adjustor": 0,
+          "target": "0x0019b558"
+        },
+        {
+          "offset": "0x30",
+          "adjustor": 0,
+          "target": "0x0019b2a0"
+        },
+        {
+          "offset": "0x38",
+          "adjustor": 0,
+          "target": "0x0019adf8"
+        },
+        {
+          "offset": "0x40",
+          "adjustor": 0,
+          "target": "0x0019b170"
+        }
+      ],
+      "evidence_id": "E-0044-S04"
+    },
+    {
+      "class": "PhysicsSystem",
+      "address": "0x002ad160",
+      "slots": [
+        {
+          "offset": "0x10",
+          "adjustor": 0,
+          "target": "0x0019a130"
+        },
+        {
+          "offset": "0x18",
+          "adjustor": 0,
+          "target": "0x0019a220"
+        },
+        {
+          "offset": "0x20",
+          "adjustor": 0,
+          "target": "0x00000000"
+        }
+      ],
+      "evidence_id": "E-0044-S04"
+    }
+  ],
+  "table_bindings": [
+    {
+      "name": "AngularMomentumDamping",
+      "header": "0x00308518",
+      "samples": "0x00308500",
+      "call_instructions": [
+        "0x0019afec",
+        "0x0019aff8"
+      ]
+    },
+    {
+      "name": "MotionDampingTable",
+      "header": "0x00308550",
+      "samples": "0x00308530",
+      "call_instructions": [
+        "0x0019b064",
+        "0x0019b06c"
+      ]
+    },
+    {
+      "name": "CorneringForce",
+      "header": "0x00308658",
+      "samples": "0x00308638",
+      "call_instructions": [
+        "0x001a2534",
+        "0x001a253c"
+      ]
+    },
+    {
+      "name": "LoadSensitivityTable",
+      "pointer_array": "0x003087c0",
+      "last_pointer": "0x003087d8",
+      "call_instructions": [
+        "0x001a25c8",
+        "0x001a25ec"
+      ]
+    }
+  ]
+}

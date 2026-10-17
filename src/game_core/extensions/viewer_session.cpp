@@ -64,7 +64,7 @@ void ViewerSession::apply(const ViewerRequest& request) {
     switch(request.action) {
     case ViewerAction::Load:
         state_.rendering.clear();
-        if(state_.kind==ViewerKind::Car) {
+        if(state_.kind==ViewerKind::Car||state_.kind==ViewerKind::Track) {
             state_.source=request.source;state_.status="Loading";
             state_.diagnostic.clear();state_.fixture=false;break;
         }
@@ -82,8 +82,8 @@ void ViewerSession::apply(const ViewerRequest& request) {
     }
 }
 void ViewerSession::loaded(bool success,std::string diagnostic,std::string rendering) {
-    if(!enabled_||state_.kind!=ViewerKind::Car||state_.status!="Loading")
-        throw std::logic_error("No car load is pending");
+    if(!enabled_||(state_.kind!=ViewerKind::Car&&state_.kind!=ViewerKind::Track)||state_.status!="Loading")
+        throw std::logic_error("No asset load is pending");
     state_.status=success?"Loaded":"Failed";state_.fixture=false;
     state_.diagnostic=std::move(diagnostic);
     state_.rendering=success?std::move(rendering):std::string{};

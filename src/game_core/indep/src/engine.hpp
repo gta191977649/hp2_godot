@@ -1,80 +1,67 @@
-// PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
-
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
-// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+#include "game_core/port/driving/object_view.hpp"
+#include "game_core/port/driving/projections.hpp"
+// TASK-0044 E-0044-E01. Behavior: NFSHP2.ELF Debug SHA-256
+// 815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
+// ObjectView is a port binding, not original host ABI/layout.
 namespace hp2::recovered {
-class DriveTrain {
+using port::driving::Memory;
+using port::driving::DrivetrainProjection;
+using port::driving::DrivetrainGlobals;
+using port::driving::EngineEvaluation;
+using port::driving::EngineTimerProjection;
+void CalculateShiftPoints(Memory&,std::uint32_t config,std::uint32_t engineConfig,std::uint32_t up,std::uint32_t down,float detune); // 00188DE8
+class Engine : public port::driving::ObjectView {
 public:
-    // ELF 0x0018AE70; E-0042-U109; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018ae70.md.
-    // Original Debug reference: DriveTrain::DriveTrain(DriveTrainInfo *, Engine *, Wheel **, CarState *); constructor/destructor entry is not a native C++ lifetime operation.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0018AE70();
-    // ELF 0x0018B360; E-0042-C068; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018b360.md.
-    // Original Debug reference: DriveTrain::GetDifferentialAngularAcceleration(void); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void GetDifferentialAngularAcceleration();
-    // ELF 0x0018B6C8; E-0042-C070; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018b6c8.md.
-    // Original Debug reference: DriveTrain::ApplyClutchTorque(float); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void ApplyClutchTorque();
-    // ELF 0x0018B948; E-0042-U111; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018b948.md.
-    // Original Debug reference: DriveTrain::GuessClutchTorque(void); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void GuessClutchTorque();
-    // ELF 0x0018BAA0; E-0042-C071; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018baa0.md.
-    // Original Debug reference: DriveTrain::ModifyClutchTorque(void); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void ModifyClutchTorque();
-    // ELF 0x0018BC10; E-0042-U112; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018bc10.md.
-    // Original Debug reference: DriveTrain::FinalizeClutchTorque(void); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void FinalizeClutchTorque();
-    // ELF 0x0018BCA0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018bca0.md.
-    // Original Debug reference: DriveTrain::SetSportGear(Gear); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void SetSportGear();
-    // ELF 0x0018BCE0; E-0041-R02; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018bce0.md.
-    // Original Debug reference: DriveTrain::SetDesiredGear(Gear); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void SetDesiredGear();
-    // ELF 0x0018C030; E-0042-U113; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0018c030.md.
-    // Original Debug reference: DriveTrain::PrintCurrentState(void); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void PrintCurrentState();
+ using ObjectView::ObjectView;
+ void Sub_00188998(std::uint32_t config,std::uint32_t car);
+ void ComputeAuxiliaries(); //00188B38
+ std::uint32_t GetDerivative(std::uint32_t out); //00188B88
+ float GetTorque(); //00188BD8
+ float GetEngineTorque(float rpm); //00188D20
+ float GetTotalEngineTorque(); //00188C60
+ void DecrementNitro(); //00188DA0
+ // Debug0018A348..0018A4A0; E-0044-E01 full entry listings.
+ void SetThrottleOverride(float value);void ApplyTorque(float value);
+ float GetNitroBoostTimer();void SetNitroBoostTimer(float value);
+ void SetNitroFlag(std::int32_t value);std::int32_t GetNitroFlag();std::uint32_t GetEI();
+ float GetMaxRPM();float GetRedLineRPM();float GetIdleRPM();float GetEffectiveThrottle();float GetThrottle();
+ float GetTorqueResponse();float GetAngularAcceleration();float GetAngularVelocity();
+ void SetIsHP(std::int32_t value);void SetState(float value);void SetState(std::uint32_t input);
+ void GetState(std::uint32_t out);float GetState();std::int32_t GetSize();
+ void SetCatchupTorqueMultiplier(float value);void SetThrottle(float value);
+ static void DecrementNitro(EngineTimerProjection&,std::int32_t ticks,float scale);
 };
-} // namespace hp2::recovered
-
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
-// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-namespace hp2::recovered {
-class Engine {
+class DriveTrain : public port::driving::ObjectView {
 public:
-    // ELF 0x0018A7E8; E-0042-C059; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018a7e8.md.
-    // Original Debug reference: Engine::Engine(EngineInfo *, CarState *); constructor/destructor entry is not a native C++ lifetime operation.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0018A7E8();
-    // ELF 0x0018A9D8; E-0042-C060; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018a9d8.md.
-    // Original Debug reference: Engine::GetDerivative(float *); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void GetDerivative();
-    // ELF 0x0018AA28; E-0042-C061; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018aa28.md.
-    // Original Debug reference: Engine::GetTorque(void); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void GetTorque();
-    // ELF 0x0018AAB0; E-0042-C062; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018aab0.md.
-    // Original Debug reference: Engine::GetTotalEngineTorque(void); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void GetTotalEngineTorque();
-    // ELF 0x0018ABF0; E-0042-C063; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018abf0.md.
-    // Original Debug reference: Engine::DecrementNitro(void); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void DecrementNitro();
+ using ObjectView::ObjectView;
+ void Sub_00189020(std::uint32_t config,std::uint32_t engine,std::uint32_t wheels,std::uint32_t car);
+ float GetDifferentialAngularVelocity(); //001891B0
+ float GetDriveWheelSlippage(); //00189280
+ void SetDifferentialAngularVelocity(float); //00189320
+ float GetDifferentialAngularAcceleration(); //00189508
+ void ComputeAuxiliaries(); //00189648
+ std::uint32_t GetDerivative(std::uint32_t out); //00189840
+ void ApplyClutchTorque(float); //00189870
+ void GuessClutchTorque(); //00189AF0
+ void ModifyClutchTorque(); //00189BD0
+ void FinalizeClutchTorque(); //00189D40
+ std::uint32_t Idling(); //00189D48
+ std::uint32_t ClutchMatched(); //00189D98
+ std::int32_t SetSportGear(std::int32_t); //00189DD0
+ std::int32_t SetDesiredGear(std::int32_t); //00189E10
+ void PrintCurrentState(); //0018A160, original empty entry
+ // Debug0018A1B0..0018A2F0; E-0044-E01.
+ std::int32_t RearWheelDrive();std::int32_t FrontWheelDrive();std::int32_t GetTopGear();
+ std::int32_t GetDesiredGear();std::int32_t GetPreviousGear();std::int32_t GetSportGear();std::int32_t GetCurrentGear();
+ std::int32_t IsClutchEngaged();std::uint32_t GetEngine();std::uint32_t GetDriveTrainInfo();
+ float GetShiftDownRPM(std::int32_t gear);float GetShiftUpRPM(std::int32_t gear);std::int32_t GetCurrentClutchState();
+ void SetState(std::int32_t gear);void SetState(std::uint32_t input);void GetState(std::uint32_t out);float GetState();std::int32_t GetSize();
+ static std::int32_t SetSportGear(DrivetrainProjection&,std::int32_t);
+ static std::int32_t SetDesiredGear(DrivetrainProjection&,std::int32_t,const DrivetrainGlobals&);
+ static float GetDifferentialAngularAcceleration(const DrivetrainProjection&,const DrivetrainGlobals&);
+ static void ApplyClutchTorque(float,DrivetrainProjection&,const DrivetrainGlobals&);
+ static void GuessClutchTorque(DrivetrainProjection&,const DrivetrainGlobals&,const EngineEvaluation&);
+ static void ModifyClutchTorque(DrivetrainProjection&,const DrivetrainGlobals&,const EngineEvaluation&);
 };
-} // namespace hp2::recovered
+}

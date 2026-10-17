@@ -28,6 +28,7 @@ struct VehicleSurface {
 struct VehicleSolid {
     std::string name;
     std::uint32_t hash{};
+    std::uint16_t strip_flags{}; // Original eSolid aggregate StripFlags+0x32.
     std::array<float, 3> bounds_min{};
     std::array<float, 3> bounds_max{};
     std::array<float, 16> transform{};

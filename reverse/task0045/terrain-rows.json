@@ -1,0 +1,2090 @@
+{
+  "task": "TASK-0045",
+  "program": "NFSHP2.ELF",
+  "sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "base": "0x003102e8",
+  "row_stride": 144,
+  "row_count": 33,
+  "type_size": 144,
+  "rows": [
+    {
+      "index": 0,
+      "enum_name": "TERRAIN_TYPE_NONE",
+      "row_address": "0x003102e8",
+      "row_sha256": "fcf12ef313c63b355b4b6ff3bd3ebd93f245fed3ddb7be8af06048644c1fa1a5",
+      "embedded_type": 0,
+      "names": {
+        "Name": "NONE",
+        "SkidTextureName": null,
+        "DriveOverEmitterGroup": "",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "",
+        "TireSpewEmitterGroup": "",
+        "BottomOutEmitterGroup": "",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x00000000",
+          "value": 0.0
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3dcccccd",
+          "value": 0.10000000149011612
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x00000000",
+          "value": 0.0
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x00000000",
+          "value": 0.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "No-contact/sentinel row, not a selectable driving surface.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 1,
+      "enum_name": "TERRAIN_TYPE_ROAD",
+      "row_address": "0x00310378",
+      "row_sha256": "aa5ebd9d059d0f2e5d7d6e9079bff94a6e62615cb4489393692f75d8af2cb5ee",
+      "embedded_type": 1,
+      "names": {
+        "Name": "ROAD",
+        "SkidTextureName": "SKID_ROAD",
+        "DriveOverEmitterGroup": "XETT_ROAD_DR",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "XETT_ROAD_SK",
+        "TireSpewEmitterGroup": "XETT_ROAD_SP",
+        "BottomOutEmitterGroup": "XEBO_ROAD",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x00000000",
+          "value": 0.0
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3dcccccd",
+          "value": 0.10000000149011612
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x00000000",
+          "value": 0.0
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x00000000",
+          "value": 0.0
+        }
+      },
+      "supported_in_initial_tool": true,
+      "exclusion_reason": null,
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 2,
+      "enum_name": "TERRAIN_TYPE_DIRT",
+      "row_address": "0x00310408",
+      "row_sha256": "0b6c88207101a9af941e3a9becce4aa2165e6d55ee6e9a3013c46d5bff59dbcb",
+      "embedded_type": 2,
+      "names": {
+        "Name": "DIRT",
+        "SkidTextureName": "SKID_DIRT",
+        "DriveOverEmitterGroup": "XETT_DIRTRD_DR",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "XETT_DIRTRD_SK",
+        "TireSpewEmitterGroup": "XETT_DIRTRD_SP",
+        "BottomOutEmitterGroup": "XEBO_ROAD",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3d4ccccd",
+          "value": 0.05000000074505806
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f7851ec",
+          "value": 0.9700000286102295
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f75374c",
+          "value": 0.9578750133514404
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3f000000",
+          "value": 0.5
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3ee66666",
+          "value": 0.44999998807907104
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x43020000",
+          "value": 130.0
+        }
+      },
+      "supported_in_initial_tool": true,
+      "exclusion_reason": null,
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 3,
+      "enum_name": "TERRAIN_TYPE_DIRTROAD",
+      "row_address": "0x00310498",
+      "row_sha256": "3c24a50f7137665147465a4cdc6fa327238dab071bf2ca8e93ad5d109abe99cd",
+      "embedded_type": 3,
+      "names": {
+        "Name": "DIRTROAD",
+        "SkidTextureName": "SKID_DIRT",
+        "DriveOverEmitterGroup": "XETT_DIRTRD_DR",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "XETT_DIRTRD_SK",
+        "TireSpewEmitterGroup": "XETT_DIRTRD_SP",
+        "BottomOutEmitterGroup": "XEBO_ROAD",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3ca3d70a",
+          "value": 0.019999999552965164
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f7d70a4",
+          "value": 0.9900000095367432
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f7b367a",
+          "value": 0.9812999963760376
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3e4ccccd",
+          "value": 0.20000000298023224
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3e3851ec",
+          "value": 0.18000000715255737
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x42aa0000",
+          "value": 85.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 4,
+      "enum_name": "TERRAIN_TYPE_PUDDLE",
+      "row_address": "0x00310528",
+      "row_sha256": "d62be51af41c1009a451edaa29baf46294de45f466865c58e5d551b512b3d7f3",
+      "embedded_type": 4,
+      "names": {
+        "Name": "PUDDLE",
+        "SkidTextureName": "SKID_ROAD",
+        "DriveOverEmitterGroup": "XETT_PUDDLE_DRSL",
+        "DriveOver2EmitterGroup": "XETT_PUDDLE_DR",
+        "SkidSmokeEmitterGroup": "XETT_PUDDLE_SK",
+        "TireSpewEmitterGroup": "XETT_PUDDLE_SP",
+        "BottomOutEmitterGroup": "",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3c23d70a",
+          "value": 0.009999999776482582
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f75c28f",
+          "value": 0.9599999785423279
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f738866",
+          "value": 0.9513000249862671
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f8ccccd",
+          "value": 1.100000023841858
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x00000000",
+          "value": 0.0
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x00000000",
+          "value": 0.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 5,
+      "enum_name": "TERRAIN_TYPE_DEEP_WATER",
+      "row_address": "0x003105b8",
+      "row_sha256": "0216d738053d563902879f35bec1a6080e6c7ac534353a0346633b9aa3a8d30f",
+      "embedded_type": 5,
+      "names": {
+        "Name": "DEEP_WATER",
+        "SkidTextureName": null,
+        "DriveOverEmitterGroup": "XETT_DEEPWATER_DRSL",
+        "DriveOver2EmitterGroup": "XETT_DEEPWATER_DR",
+        "SkidSmokeEmitterGroup": "XETT_DEEPWATER_SK",
+        "TireSpewEmitterGroup": "XETT_DEEPWATER_SP",
+        "BottomOutEmitterGroup": "",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3cf5c28f",
+          "value": 0.029999999329447746
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f75c28f",
+          "value": 0.9599999785423279
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f72b021",
+          "value": 0.9480000138282776
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3fc00000",
+          "value": 1.5
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x00000000",
+          "value": 0.0
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x00000000",
+          "value": 0.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 6,
+      "enum_name": "TERRAIN_TYPE_GRASS",
+      "row_address": "0x00310648",
+      "row_sha256": "ec0d81e4799f604ff7d9cd0d6153f6de7a3e168ed111283e7179aa9052d464ce",
+      "embedded_type": 6,
+      "names": {
+        "Name": "GRASS",
+        "SkidTextureName": "SKID_GRASS",
+        "DriveOverEmitterGroup": "XETT_GRASS_DR",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "XETT_GRASS_SK",
+        "TireSpewEmitterGroup": "XETT_GRASS_SP",
+        "BottomOutEmitterGroup": "XEBO_ROAD",
+        "CollisionImpactEmitterGroup": "XECS_GRASS",
+        "CollisionScrapeEmitterGroup": "XECS_GRASS"
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3d4ccccd",
+          "value": 0.05000000074505806
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f75c28f",
+          "value": 0.9599999785423279
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f72b021",
+          "value": 0.9480000138282776
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f866666",
+          "value": 1.0499999523162842
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3e800000",
+          "value": 0.25
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x42600000",
+          "value": 56.0
+        }
+      },
+      "supported_in_initial_tool": true,
+      "exclusion_reason": null,
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 7,
+      "enum_name": "TERRAIN_TYPE_SAND",
+      "row_address": "0x003106d8",
+      "row_sha256": "a135a9aa3f17cee5f49f3243a3ac276747883a637e280bd9256646524a39b22a",
+      "embedded_type": 7,
+      "names": {
+        "Name": "SAND",
+        "SkidTextureName": "SKID_SAND",
+        "DriveOverEmitterGroup": "XETT_SAND_DR",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "XETT_SAND_SK",
+        "TireSpewEmitterGroup": "XETT_SAND_SP",
+        "BottomOutEmitterGroup": "",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3d4ccccd",
+          "value": 0.05000000074505806
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f75c28f",
+          "value": 0.9599999785423279
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f733333",
+          "value": 0.949999988079071
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x40000000",
+          "value": 2.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3e800000",
+          "value": 0.25
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x42200000",
+          "value": 40.0
+        }
+      },
+      "supported_in_initial_tool": true,
+      "exclusion_reason": null,
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 8,
+      "enum_name": "TERRAIN_TYPE_SNOW",
+      "row_address": "0x00310768",
+      "row_sha256": "8c90c7edc9ca57193665522bd362f395eb723f11a3a04445542a042693998b4d",
+      "embedded_type": 8,
+      "names": {
+        "Name": "SNOW",
+        "SkidTextureName": "SKID_DIRT",
+        "DriveOverEmitterGroup": "",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "",
+        "TireSpewEmitterGroup": "",
+        "BottomOutEmitterGroup": "",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3c23d70a",
+          "value": 0.009999999776482582
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f733333",
+          "value": 0.949999988079071
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f7028f6",
+          "value": 0.9381250143051147
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3e4ccccd",
+          "value": 0.20000000298023224
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x42c80000",
+          "value": 100.0
+        }
+      },
+      "supported_in_initial_tool": true,
+      "exclusion_reason": null,
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 9,
+      "enum_name": "TERRAIN_TYPE_DIRT_SHOULDER",
+      "row_address": "0x003107f8",
+      "row_sha256": "0976c9f17faebdb1cb25ab213d564a72c81b65b8fb8cef3d76e652d45dace4e2",
+      "embedded_type": 9,
+      "names": {
+        "Name": "DIRT_SHOULDER",
+        "SkidTextureName": "SKID_DIRT",
+        "DriveOverEmitterGroup": "XETT_DIRTRD_DR",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "XETT_DIRTRD_SK",
+        "TireSpewEmitterGroup": "XETT_DIRTRD_SP",
+        "BottomOutEmitterGroup": "XEBO_ROAD",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3ca3d70a",
+          "value": 0.019999999552965164
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f7ae148",
+          "value": 0.9800000190734863
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f78a71e",
+          "value": 0.9713000059127808
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3e4ccccd",
+          "value": 0.20000000298023224
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3de147ae",
+          "value": 0.10999999940395355
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x42340000",
+          "value": 45.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 10,
+      "enum_name": "TERRAIN_TYPE_SAND_SHOULDER",
+      "row_address": "0x00310888",
+      "row_sha256": "e6e340ec6e6ff133dabb1f27abaf606bb60907dd5de3ce19b57fab0480125e76",
+      "embedded_type": 10,
+      "names": {
+        "Name": "SAND_SHOULDER",
+        "SkidTextureName": "SKID_SAND",
+        "DriveOverEmitterGroup": "XETT_SAND_DR",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "XETT_SAND_SK",
+        "TireSpewEmitterGroup": "XETT_SAND_SP",
+        "BottomOutEmitterGroup": "",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3c75c28f",
+          "value": 0.014999999664723873
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f7851ec",
+          "value": 0.9700000286102295
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f7617c2",
+          "value": 0.9613000154495239
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f99999a",
+          "value": 1.2000000476837158
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3f000000",
+          "value": 0.5
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3d4ccccd",
+          "value": 0.05000000074505806
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x42000000",
+          "value": 32.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 11,
+      "enum_name": "TERRAIN_TYPE_SNOW_SHOULDER",
+      "row_address": "0x00310918",
+      "row_sha256": "51c0474d671180b10accc9c2970f9483153cbd25602346d8a82ce9d001df4001",
+      "embedded_type": 11,
+      "names": {
+        "Name": "SNOW_SHOULDER",
+        "SkidTextureName": "SKID_DIRT",
+        "DriveOverEmitterGroup": "",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "",
+        "TireSpewEmitterGroup": "",
+        "BottomOutEmitterGroup": "",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3c23d70a",
+          "value": 0.009999999776482582
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f7851ec",
+          "value": 0.9700000286102295
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f75374c",
+          "value": 0.9578750133514404
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3f000000",
+          "value": 0.5
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3e4ccccd",
+          "value": 0.20000000298023224
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x42c80000",
+          "value": 100.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 12,
+      "enum_name": "TERRAIN_TYPE_SIDEWALK",
+      "row_address": "0x003109a8",
+      "row_sha256": "7b469aeb0a9dde7c9e4557c66ad6c5e156a18c10e490da859a5007cbd69e63b6",
+      "embedded_type": 12,
+      "names": {
+        "Name": "SIDEWALK",
+        "SkidTextureName": "SKID_ROAD",
+        "DriveOverEmitterGroup": "XETT_RRCSSW_DR",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "XETT_RRCSSW_SK",
+        "TireSpewEmitterGroup": "XETT_RRCSSW_SP",
+        "BottomOutEmitterGroup": "XEBO_ROAD",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f8ccccd",
+          "value": 1.100000023841858
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3cf5c28f",
+          "value": 0.029999999329447746
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3dcccccd",
+          "value": 0.10000000149011612
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3dcccccd",
+          "value": 0.10000000149011612
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x43a00000",
+          "value": 320.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 13,
+      "enum_name": "TERRAIN_TYPE_SNOW_SIDEWALK",
+      "row_address": "0x00310a38",
+      "row_sha256": "ba60d32eef7d0c2680ad536197cd3903354ca43398cdc15c70590703a0e31dc7",
+      "embedded_type": 13,
+      "names": {
+        "Name": "SNOW_SIDEWALK",
+        "SkidTextureName": "SKID_DIRT",
+        "DriveOverEmitterGroup": "",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "",
+        "TireSpewEmitterGroup": "",
+        "BottomOutEmitterGroup": "",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3cf5c28f",
+          "value": 0.029999999329447746
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f7851ec",
+          "value": 0.9700000286102295
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f75374c",
+          "value": 0.9578750133514404
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3f000000",
+          "value": 0.5
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3dcccccd",
+          "value": 0.10000000149011612
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x43a00000",
+          "value": 320.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 14,
+      "enum_name": "TERRAIN_TYPE_ROCK",
+      "row_address": "0x00310ac8",
+      "row_sha256": "86c34115a66fcc364fa257421d397750b42de4bf88a913be124ea7aba434f393",
+      "embedded_type": 14,
+      "names": {
+        "Name": "ROCK",
+        "SkidTextureName": null,
+        "DriveOverEmitterGroup": "XETT_ROCK_DR",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "XETT_ROCK_SK",
+        "TireSpewEmitterGroup": "XETT_ROCK_SP",
+        "BottomOutEmitterGroup": "XEBO_ROAD",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3ca3d70a",
+          "value": 0.019999999552965164
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f8147ae",
+          "value": 1.0099999904632568
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3dcccccd",
+          "value": 0.10000000149011612
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3e4ccccd",
+          "value": 0.20000000298023224
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x42c80000",
+          "value": 100.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 15,
+      "enum_name": "TERRAIN_TYPE_WOOD_WALL",
+      "row_address": "0x00310b58",
+      "row_sha256": "2e6a82ce0e05e430747c457a387c78ff93744ba3c07e2fb3bf123bf4c51251af",
+      "embedded_type": 15,
+      "names": {
+        "Name": "WOOD_WALL",
+        "SkidTextureName": "SKID_ROAD",
+        "DriveOverEmitterGroup": "",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "",
+        "TireSpewEmitterGroup": "",
+        "BottomOutEmitterGroup": "",
+        "CollisionImpactEmitterGroup": "XECS_WOOD_WALL",
+        "CollisionScrapeEmitterGroup": "XECS_WOOD_WALL"
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3c23d70a",
+          "value": 0.009999999776482582
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3f000000",
+          "value": 0.5
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3e4ccccd",
+          "value": 0.20000000298023224
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x42c80000",
+          "value": 100.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 16,
+      "enum_name": "TERRAIN_TYPE_CACTUS_WALL",
+      "row_address": "0x00310be8",
+      "row_sha256": "a77624e5e92d48fd40dc7271cb54753ee7cfa7b0fc9c01506ec851381a953146",
+      "embedded_type": 16,
+      "names": {
+        "Name": "CACTUS_WALL",
+        "SkidTextureName": null,
+        "DriveOverEmitterGroup": "",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "",
+        "TireSpewEmitterGroup": "",
+        "BottomOutEmitterGroup": "",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3c23d70a",
+          "value": 0.009999999776482582
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3e4ccccd",
+          "value": 0.20000000298023224
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x42c80000",
+          "value": 100.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 17,
+      "enum_name": "TERRAIN_TYPE_SOLID_WALL",
+      "row_address": "0x00310c78",
+      "row_sha256": "6f4fedc3bfb6a81abd56eb1a065cfc6caf7b2e083aa0b76e90469eaab4fded82",
+      "embedded_type": 17,
+      "names": {
+        "Name": "SOLID_WALL",
+        "SkidTextureName": null,
+        "DriveOverEmitterGroup": "",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "",
+        "TireSpewEmitterGroup": "",
+        "BottomOutEmitterGroup": "",
+        "CollisionImpactEmitterGroup": "XECS_SOLID_WALL",
+        "CollisionScrapeEmitterGroup": "XECS_SOLID_WALL"
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3c23d70a",
+          "value": 0.009999999776482582
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3dcccccd",
+          "value": 0.10000000149011612
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3e4ccccd",
+          "value": 0.20000000298023224
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x42c80000",
+          "value": 100.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 18,
+      "enum_name": "TERRAIN_TYPE_BOARDWALK",
+      "row_address": "0x00310d08",
+      "row_sha256": "b2a68d9c6050e4f76e18e4d35ac69b6cdd8342c03e9732db94ff89cf0500a026",
+      "embedded_type": 18,
+      "names": {
+        "Name": "BOARDWALK",
+        "SkidTextureName": "SKID_ROAD",
+        "DriveOverEmitterGroup": "XETT_BOARDWALK_DR",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "XETT_BOARDWALK_SK",
+        "TireSpewEmitterGroup": "XETT_BOARDWALK_SP",
+        "BottomOutEmitterGroup": "XEBO_ROAD",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x41200000",
+          "value": 10.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3d2c0831",
+          "value": 0.041999999433755875
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f828f5c",
+          "value": 1.0199999809265137
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3dcccccd",
+          "value": 0.10000000149011612
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3ecccccd",
+          "value": 0.4000000059604645
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x42c80000",
+          "value": 100.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 19,
+      "enum_name": "TERRAIN_TYPE_COBBLESTONE",
+      "row_address": "0x00310d98",
+      "row_sha256": "e62e27c9ef8e59317d637d6e68281a4ee32ede84dd991a29a1e726104032ea11",
+      "embedded_type": 19,
+      "names": {
+        "Name": "COBBLESTONE",
+        "SkidTextureName": "SKID_ROAD",
+        "DriveOverEmitterGroup": "XETT_RRCSSW_DR",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "XETT_RRCSSW_SK",
+        "TireSpewEmitterGroup": "XETT_RRCSSW_SP",
+        "BottomOutEmitterGroup": "XEBO_ROAD",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x40400000",
+          "value": 3.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3d449ba6",
+          "value": 0.04800000041723251
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f828f5c",
+          "value": 1.0199999809265137
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3dcccccd",
+          "value": 0.10000000149011612
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3e4ccccd",
+          "value": 0.20000000298023224
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x42b40000",
+          "value": 90.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 20,
+      "enum_name": "TERRAIN_TYPE_MUD_PUDDLE",
+      "row_address": "0x00310e28",
+      "row_sha256": "709c6e9a2bd10206b1e13a7a08b19b0b515998a30ce087a63f0f186bb3807ab3",
+      "embedded_type": 20,
+      "names": {
+        "Name": "MUD_PUDDLE",
+        "SkidTextureName": "SKID_ROAD",
+        "DriveOverEmitterGroup": "XETT_MUDPUDDLE_DR",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "XETT_MUDPUDDLE_SK",
+        "TireSpewEmitterGroup": "XETT_MUDPUDDLE_SP",
+        "BottomOutEmitterGroup": "",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3c23d70a",
+          "value": 0.009999999776482582
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f75c28f",
+          "value": 0.9599999785423279
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f738866",
+          "value": 0.9513000249862671
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f8ccccd",
+          "value": 1.100000023841858
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x00000000",
+          "value": 0.0
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x00000000",
+          "value": 0.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 21,
+      "enum_name": "TERRAIN_TYPE_ROUGH_ROAD",
+      "row_address": "0x00310eb8",
+      "row_sha256": "78816651101b8c2d1f0b7e96e9f0d554845a6e19217985b1edbf5bafe46ecdd8",
+      "embedded_type": 21,
+      "names": {
+        "Name": "ROUGH_ROAD",
+        "SkidTextureName": "SKID_ROAD",
+        "DriveOverEmitterGroup": "XETT_RRCSSW_DR",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "XETT_RRCSSW_SK",
+        "TireSpewEmitterGroup": "XETT_RRCSSW_SP",
+        "BottomOutEmitterGroup": "XEBO_ROAD",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3ca3d70a",
+          "value": 0.019999999552965164
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f8147ae",
+          "value": 1.0099999904632568
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3dcccccd",
+          "value": 0.10000000149011612
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3e4ccccd",
+          "value": 0.20000000298023224
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x42280000",
+          "value": 42.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 22,
+      "enum_name": "TERRAIN_TYPE_GRASS_SHOULDER",
+      "row_address": "0x00310f48",
+      "row_sha256": "2cdb98889b270786bbdd5e3f00491caf771ebff30372eb1f56606d5d59558388",
+      "embedded_type": 22,
+      "names": {
+        "Name": "GRASS_SHOULDER",
+        "SkidTextureName": "SKID_ROAD",
+        "DriveOverEmitterGroup": "XETT_GRASS_DR",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "XETT_GRASS_SK",
+        "TireSpewEmitterGroup": "XETT_GRASS_SP",
+        "BottomOutEmitterGroup": "XEBO_ROAD",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3c23d70a",
+          "value": 0.009999999776482582
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f7ae148",
+          "value": 0.9800000190734863
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f78a71e",
+          "value": 0.9713000059127808
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f828f5c",
+          "value": 1.0199999809265137
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3f000000",
+          "value": 0.5
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3e800000",
+          "value": 0.25
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x42540000",
+          "value": 53.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 23,
+      "enum_name": "TERRAIN_TYPE_AUTUMN_LEAVES",
+      "row_address": "0x00310fd8",
+      "row_sha256": "ade65bc5a0786db88dfcbab7c77a397422576da44b47dae0d5053d9355550e7b",
+      "embedded_type": 23,
+      "names": {
+        "Name": "AUTUMN_LEAVES",
+        "SkidTextureName": "SKID_ROAD",
+        "DriveOverEmitterGroup": "XETT_AUTLV_DR",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "XETT_AUTLV_SK",
+        "TireSpewEmitterGroup": "XETT_AUTLV_SP",
+        "BottomOutEmitterGroup": "XEBO_ROAD",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3ca3d70a",
+          "value": 0.019999999552965164
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f7851ec",
+          "value": 0.9700000286102295
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f75c28f",
+          "value": 0.9599999785423279
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3dcccccd",
+          "value": 0.10000000149011612
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3da3d70a",
+          "value": 0.07999999821186066
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x432d0000",
+          "value": 173.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 24,
+      "enum_name": "TERRAIN_TYPE_AUTUMN_LEAVES_SHOULDER",
+      "row_address": "0x00311068",
+      "row_sha256": "f870783d8f1b1e5086e95720eac0f3685bdaca9dfe5c5da54b1e2baf3b53b9cc",
+      "embedded_type": 24,
+      "names": {
+        "Name": "AUTUMN_LEAVES_SHOULDER",
+        "SkidTextureName": "SKID_ROAD",
+        "DriveOverEmitterGroup": "XETT_AUTLV_DR",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "XETT_AUTLV_SK",
+        "TireSpewEmitterGroup": "XETT_AUTLV_SP",
+        "BottomOutEmitterGroup": "XEBO_ROAD",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3c23d70a",
+          "value": 0.009999999776482582
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f7ae148",
+          "value": 0.9800000190734863
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f78a71e",
+          "value": 0.9713000059127808
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3dcccccd",
+          "value": 0.10000000149011612
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3da3d70a",
+          "value": 0.07999999821186066
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x43170000",
+          "value": 151.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 25,
+      "enum_name": "TERRAIN_TYPE_MULCH",
+      "row_address": "0x003110f8",
+      "row_sha256": "9217be9f51cead1395d232fd8e5e2d52406c68b4b23f3dc1846feddaf0fbb9fa",
+      "embedded_type": 25,
+      "names": {
+        "Name": "MULCH",
+        "SkidTextureName": "SKID_DIRT",
+        "DriveOverEmitterGroup": "XETT_MULCH_DR",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "XETT_MULCH_SK",
+        "TireSpewEmitterGroup": "XETT_MULCH_SP",
+        "BottomOutEmitterGroup": "XEBO_ROAD",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3cf5c28f",
+          "value": 0.029999999329447746
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f7851ec",
+          "value": 0.9700000286102295
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f75374c",
+          "value": 0.9578750133514404
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f866666",
+          "value": 1.0499999523162842
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3f000000",
+          "value": 0.5
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3da3d70a",
+          "value": 0.07999999821186066
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x42c40000",
+          "value": 98.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 26,
+      "enum_name": "TERRAIN_TYPE_MULCH_SHOULDER",
+      "row_address": "0x00311188",
+      "row_sha256": "dd3462c5e0485143e96bb4cfc65ca7d5a066bfd9de70e253b7defce22d07a7d5",
+      "embedded_type": 26,
+      "names": {
+        "Name": "MULCH_SHOULDER",
+        "SkidTextureName": "SKID_DIRT",
+        "DriveOverEmitterGroup": "XETT_MULCH_DR",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "XETT_MULCH_SK",
+        "TireSpewEmitterGroup": "XETT_MULCH_SP",
+        "BottomOutEmitterGroup": "XEBO_ROAD",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x3c75c28f",
+          "value": 0.014999999664723873
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f7ae148",
+          "value": 0.9800000190734863
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f78a71e",
+          "value": 0.9713000059127808
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f866666",
+          "value": 1.0499999523162842
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3f000000",
+          "value": 0.5
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3da3d70a",
+          "value": 0.07999999821186066
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x42b80000",
+          "value": 92.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 27,
+      "enum_name": "TERRAIN_TYPE_ROAD_AUTUMN",
+      "row_address": "0x00311218",
+      "row_sha256": "887770fdd2cbcf4482ab1a299510225381d55c3cce59ab69e5b9961c4b574095",
+      "embedded_type": 27,
+      "names": {
+        "Name": "ROAD_AUTUMN",
+        "SkidTextureName": "SKID_ROAD",
+        "DriveOverEmitterGroup": "XETT_ROADAUT_DR",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "XETT_ROAD_SP",
+        "TireSpewEmitterGroup": "XETT_ROAD_SK",
+        "BottomOutEmitterGroup": "XEBO_ROAD",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x00000000",
+          "value": 0.0
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f7d70a4",
+          "value": 0.9900000095367432
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f7b367a",
+          "value": 0.9812999963760376
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3dcccccd",
+          "value": 0.10000000149011612
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x00000000",
+          "value": 0.0
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x00000000",
+          "value": 0.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 28,
+      "enum_name": "TERRAIN_TYPE_PLANT",
+      "row_address": "0x003112a8",
+      "row_sha256": "8247aa37f0861463e82c4d95c0199b5370de199b729d32021808f1e1ebeeb4f4",
+      "embedded_type": 28,
+      "names": {
+        "Name": "PLANT",
+        "SkidTextureName": null,
+        "DriveOverEmitterGroup": "",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "",
+        "TireSpewEmitterGroup": "",
+        "BottomOutEmitterGroup": "",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x00000000",
+          "value": 0.0
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f7d70a4",
+          "value": 0.9900000095367432
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f7b22d1",
+          "value": 0.9810000061988831
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x00000000",
+          "value": 0.0
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x00000000",
+          "value": 0.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 29,
+      "enum_name": "TERRAIN_TYPE_POST",
+      "row_address": "0x00311338",
+      "row_sha256": "e28e4ea24ef16dff78400ebf748fe8fdc287e80853390cf7c8ba4dbcdd2c835c",
+      "embedded_type": 29,
+      "names": {
+        "Name": "POST",
+        "SkidTextureName": null,
+        "DriveOverEmitterGroup": "",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "",
+        "TireSpewEmitterGroup": "",
+        "BottomOutEmitterGroup": "",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x00000000",
+          "value": 0.0
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f7d70a4",
+          "value": 0.9900000095367432
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f7b22d1",
+          "value": 0.9810000061988831
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3e4ccccd",
+          "value": 0.20000000298023224
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x00000000",
+          "value": 0.0
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x00000000",
+          "value": 0.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 30,
+      "enum_name": "TERRAIN_TYPE_METAL_GRATE",
+      "row_address": "0x003113c8",
+      "row_sha256": "40fa79bff3ed01c8454eaf81cbb104492d25afb7059936542b73b6cc975b3b72",
+      "embedded_type": 30,
+      "names": {
+        "Name": "METAL_GRATE",
+        "SkidTextureName": null,
+        "DriveOverEmitterGroup": "",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "",
+        "TireSpewEmitterGroup": "",
+        "BottomOutEmitterGroup": "",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x00000000",
+          "value": 0.0
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f7d70a4",
+          "value": 0.9900000095367432
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f7b367a",
+          "value": 0.9812999963760376
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x00000000",
+          "value": 0.0
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3e4ccccd",
+          "value": 0.20000000298023224
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x42b40000",
+          "value": 90.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 31,
+      "enum_name": "TERRAIN_TYPE_POTHOLE",
+      "row_address": "0x00311458",
+      "row_sha256": "e38553de26a1308accd821b0c6e2a35bdb9c7c7a84aadcd678e994b9ed9101aa",
+      "embedded_type": 31,
+      "names": {
+        "Name": "POTHOLE",
+        "SkidTextureName": "SKID_ROAD",
+        "DriveOverEmitterGroup": "XETT_ROAD_DR",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "XETT_ROAD_SK",
+        "TireSpewEmitterGroup": "XETT_ROAD_SP",
+        "BottomOutEmitterGroup": "",
+        "CollisionImpactEmitterGroup": "",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x00000000",
+          "value": 0.0
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x3dcccccd",
+          "value": 0.10000000149011612
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x3e4ccccd",
+          "value": 0.20000000298023224
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x42b40000",
+          "value": 90.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    },
+    {
+      "index": 32,
+      "enum_name": "TERRAIN_TYPE_CAR",
+      "row_address": "0x003114e8",
+      "row_sha256": "47319696d5462ee74e32b835245c7b1e58b4be0bd3f837c9516958cbd54dbfcc",
+      "embedded_type": 32,
+      "names": {
+        "Name": "CAR",
+        "SkidTextureName": null,
+        "DriveOverEmitterGroup": "",
+        "DriveOver2EmitterGroup": "",
+        "SkidSmokeEmitterGroup": "",
+        "TireSpewEmitterGroup": "",
+        "BottomOutEmitterGroup": "",
+        "CollisionImpactEmitterGroup": "XECI_CAR",
+        "CollisionScrapeEmitterGroup": ""
+      },
+      "physics": {
+        "RoadNoiseGridSpacingInverse": {
+          "offset": 24,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "RoadNoiseScale": {
+          "offset": 28,
+          "bits": "0x00000000",
+          "value": 0.0
+        },
+        "StaticFrictionMultiplier": {
+          "offset": 32,
+          "bits": "0x3f7d70a4",
+          "value": 0.9900000095367432
+        },
+        "DynamicFrictionMultiplier": {
+          "offset": 36,
+          "bits": "0x3f7b367a",
+          "value": 0.9812999963760376
+        },
+        "RollingFrictionMultiplier": {
+          "offset": 40,
+          "bits": "0x3f800000",
+          "value": 1.0
+        },
+        "CollisionPriority": {
+          "offset": 44,
+          "bits": "0x00000000",
+          "value": 0.0
+        },
+        "ForceMagnitude": {
+          "offset": 48,
+          "bits": "0x00000000",
+          "value": 0.0
+        },
+        "ForceFrequency": {
+          "offset": 52,
+          "bits": "0x00000000",
+          "value": 0.0
+        }
+      },
+      "supported_in_initial_tool": false,
+      "exclusion_reason": "Outside the explicitly approved initial synthetic surface set; no contact/physics approximation is inferred.",
+      "evidence_id": "E-0045-T01"
+    }
+  ]
+}

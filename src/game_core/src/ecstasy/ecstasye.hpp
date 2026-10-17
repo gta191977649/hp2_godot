@@ -1,5 +1,15 @@
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
+#include "game_core/port/driving/skid_services.hpp"
+#include "game_core/port/track/effects.hpp"
+#include "game_core/port/track/runtime.hpp"
+
+namespace hp2::recovered {
+// TASK0051 bounded track command stage of original eDisplayFrame, excluding
+// vehicles/frontend/screen effects and hardware DMA ownership.
+port::track::Frame eDisplayFrame(const port::track::Scene&,const port::track::FrameView&,
+    std::vector<std::size_t>&,port::driving::Memory&,std::vector<std::uint32_t>* texture_chain_order=nullptr);
+}
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
@@ -24,6 +34,18 @@ public:
 namespace hp2::recovered {
 class eModel {
 public:
+    // Retail0010DC80 / Debug0010E048, supported static nonanimated branch.
+    static void Render(const port::track::Scene&,const port::track::FrameView&,
+        const port::track::DrawCommand& model_draw,port::track::Frame&);
+    // Retail0010CB00 / Debug0010CEF8, explicit eSolid::StripFlags carrier.
+    static bool IsLit(std::uint16_t solid_strip_flags);
+    // TASK0051 bounded static strip selection slice of Retail0010DD58.
+    // Caller flags and visibility are original values, not Godot flags. DMA,
+    // animation/replacement tables and allocation remain outside this slice.
+    static std::optional<port::track::EffectState> RenderStrips(
+        const hp2::assets::TpkTextureHeader&,std::uint16_t strip_flags,
+        std::uint32_t caller_flags,bool has_light_context,bool enable_environment,
+        bool target_suppresses_alpha,bool partially_visible,bool depth_route_enabled=true);
     // ELF 0x0010C5B0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0010c5b0.md.
     // Original Debug reference: eModel::UnInit(void); exact original method spelling; void/no-argument host gap interface only.
     // Port-side void/no-argument placeholder; original signature unknown.
@@ -47,10 +69,17 @@ public:
 namespace hp2::recovered {
 class ePoly {
 public:
-    // ELF 0x0010F968; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0010f968.md.
-    // Original Debug reference: ePoly::ePoly(void); constructor/destructor entry is not a native C++ lifetime operation.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0010F968();
+    // Debug0010FD48/00110368; E-0046-S02. Host projection of original fields,
+    // not a PS2 layout. Render3D stops at explicit DMA submission boundary.
+    std::array<port::driving::SkidVector,4> Vertices{};
+    std::array<std::array<std::uint8_t,4>,4> Colours{};
+    std::array<std::array<float,3>,4> UVs{};
+    std::uint8_t AlphaA=0,AlphaB=0,AlphaC=0,AlphaD=0,AlphaFix=0;
+    bool AlphaEnabled=false,ApplyAspectRatio=false,SunPoly=false,Flailer=false;
+    void Sub_0010FD48();
+    void Render3D(const port::driving::SkidTexture&,int terrain,port::driving::SkidServices&);
+
+
 };
 } // namespace hp2::recovered
 
@@ -131,6 +160,9 @@ public:
 namespace hp2::recovered {
 class eView {
 public:
+    // Debug00107410; E-0046-S02. Explicit original H field argument, host binding.
+    static int GetPixelSize(float radius,float distance,float H);
+
     // ELF 0x001075B8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001075b8.md.
     // Original Debug reference: eView::GetPixelSize(float, float); multiple original overloads cannot share a void/no-argument placeholder.
     // Port-side void/no-argument placeholder; original signature unknown.
@@ -145,3 +177,16 @@ public:
     void Sub_001076F8();
 };
 } // namespace hp2::recovered
+
+namespace hp2::recovered {
+// Debug0010D0A8/0010D278; E-0046-S02, original TU src/ecstasy/ecstasye.cpp.
+std::uint32_t ClassifyAABB(const port::driving::SkidVector&,const port::driving::SkidVector&,const std::array<float,16>&);
+bool IsBoundingBoxVisible(const port::driving::SkidVector&,const port::driving::SkidVector&,const std::array<float,16>&);
+}
+
+namespace hp2::recovered {
+// Debug0010BEF0/0010BBF8; E-0046-S04. Finite texture-to-normal-target selection
+// slice only; explicit host fields replace TextureInfo/target and eGetZWriteState.
+port::driving::SkidDrawState AttachSolidPolys(const port::driving::SkidTexture&,bool depth_route_enabled);
+port::driving::SkidDrawState AttachAlphaPolys(const port::driving::SkidTexture&,bool depth_route_enabled);
+}

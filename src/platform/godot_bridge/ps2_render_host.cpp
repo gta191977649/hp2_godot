@@ -8,6 +8,7 @@
 #include <godot_cpp/variant/packed_byte_array.hpp>
 #include <godot_cpp/variant/transform2d.hpp>
 #include <cstring>
+#include <algorithm>
 #include <godot_cpp/classes/input_event_key.hpp>
 #include <godot_cpp/classes/input_event_mouse_button.hpp>
 #include <godot_cpp/classes/input_event_mouse_motion.hpp>
@@ -48,6 +49,7 @@ void Ps2RenderHost::_bind_methods() {
     godot::ClassDB::bind_method(godot::D_METHOD("console_visible"), &Ps2RenderHost::console_visible);
     godot::ClassDB::bind_method(godot::D_METHOD("viewer_keyboard_capture"),&Ps2RenderHost::viewer_keyboard_capture);
     godot::ClassDB::bind_method(godot::D_METHOD("viewer_ui_snapshot","snapshot"),&Ps2RenderHost::viewer_ui_snapshot);
+    godot::ClassDB::bind_method(godot::D_METHOD("viewer_ui_targets"),&Ps2RenderHost::viewer_ui_targets);
     godot::ClassDB::bind_method(godot::D_METHOD("viewer_ui_next"),&Ps2RenderHost::viewer_ui_next);
     godot::ClassDB::bind_method(godot::D_METHOD("viewer_ui_capture"),&Ps2RenderHost::viewer_ui_capture);
     godot::ClassDB::bind_method(godot::D_METHOD("viewer_request", "action", "source"), &Ps2RenderHost::viewer_request);
@@ -429,7 +431,38 @@ void Ps2RenderHost::viewer_ui_snapshot(const godot::Dictionary& snapshot) {
         state.kind=text("kind");if(state.kind.empty())state.kind="frontend";
         state.source=text("source");state.status=text("status");state.diagnostic=text("diagnostic");
         state.rendering=text("rendering");state.camera=text("camera");
+        state.real_track=snapshot.get("real_track",false);state.track_name=text("track_name");state.track_id=snapshot.get("track_id",-1);
+        state.render_collision=snapshot.get("render_collision",false);state.render_material=snapshot.get("render_material",false);
+        state.debug_ready=snapshot.get("debug_ready",false);state.debug_diagnostic=text("debug_diagnostic");
+        const godot::Array legend=snapshot.get("material_legend",godot::Array());
+        for(int i=0;i<legend.size();++i){const godot::Dictionary row=legend[i];extensions::UiTrackMaterial entry;
+            entry.id=row.get("id",0);entry.name=godot::String(row.get("name","")).utf8().get_data();entry.polygon_count=row.get("polygon_count",0);
+            const godot::Color color=row.get("color",godot::Color(1,1,1,1));entry.color={{color.r,color.g,color.b,color.a}};state.material_legend.push_back(std::move(entry));}
+        const godot::Array tracks=snapshot.get("tracks",godot::Array());
+        for(int i=0;i<tracks.size();++i){const godot::Dictionary t=tracks[i];extensions::UiTrack entry;
+            entry.id=t.get("id",-1);entry.name=godot::String(t.get("name","")).utf8().get_data();entry.location=godot::String(t.get("location","")).utf8().get_data();
+            entry.path=godot::String(t.get("path","")).utf8().get_data();entry.error=godot::String(t.get("error","")).utf8().get_data();entry.available=t.get("available",false);state.tracks.push_back(std::move(entry));}
+
         state.driving_telemetry=text("driving_telemetry");state.driving_recording=snapshot.get("driving_recording",false);
+        const godot::Array hints=snapshot.get("driving_hints",godot::Array());for(int i=0;i<hints.size();++i){const godot::String hint=hints[i];state.driving_hints.emplace_back(hint.utf8().get_data());}
+        state.driving_powertrain_known=snapshot.get("powertrain_known",false);
+        if(state.driving_powertrain_known){const godot::Dictionary p=snapshot.get("powertrain",godot::Dictionary());
+            state.driving_speed=p.get("speed",0.f);state.driving_rpm=p.get("rpm",0.f);state.driving_gear=p.get("gear",1);
+            state.driving_transmission=p.get("manual_transmission",0);state.driving_handbrake=p.get("handbrake",false);
+        }
+        state.driving_surface_known=snapshot.get("surface_known",false);
+        if(state.driving_surface_known){const godot::Dictionary surface=snapshot.get("surface",godot::Dictionary());state.driving_surface_mode=surface.get("mode",0);state.driving_surface_terrain=surface.get("terrain",1);}
+        const godot::Array materials=snapshot.get("surface_catalog",godot::Array());
+        for(int i=0;i<materials.size();++i){const godot::Dictionary entry=materials[i];state.driving_materials.push_back({int(entry.get("id",1)),godot::String(entry.get("name","")).utf8().get_data(),float(entry.get("static_friction",0.0)),float(entry.get("dynamic_friction",0.0)),float(entry.get("rolling_friction",0.0))});}
+        const godot::Array driving_wheels=snapshot.get("wheels",godot::Array());
+        for(int i=0;i<std::min(4,int(driving_wheels.size()));++i){const godot::Dictionary wheel=driving_wheels[i];auto& g=state.driving_grip[static_cast<std::size_t>(i)];g.contact_known=wheel.has("contact");g.contact=wheel.get("contact",false);if(!wheel.has("grip"))continue;
+            const godot::Dictionary raw=wheel["grip"];g.known=true;g.terrain=raw.get("terrain",0);
+            const godot::Vector3 point=raw.get("ground_point",godot::Vector3());const godot::Vector4 plane=raw.get("ground_plane",godot::Vector4());
+            g.ground_point={{float(point.z),float(point.x),float(point.y)}};g.ground_plane={{float(plane.x),float(plane.y),float(plane.z),float(plane.w)}};g.slipping=raw.get("slipping",false);
+            g.z_force=raw.get("z_force",0.0);g.current_slip=raw.get("current_slip",0.0);g.traction_usage=raw.get("traction_usage",0.0);g.traction_boost=raw.get("traction_boost",0.0);
+            g.catchup_friction=raw.get("catchup_friction",0.0);g.road_noise=raw.get("road_noise",0.0);g.static_coefficient=raw.get("static_coefficient",0.0);g.dynamic_coefficient=raw.get("dynamic_coefficient",0.0);
+            const godot::Vector2 slip=raw.get("slip",godot::Vector2()),force=raw.get("ground_force",godot::Vector2());g.slip={{slip.x,slip.y}};g.ground_force={{force.x,force.y}};
+        }
         state.wheel_speed=snapshot.get("wheel_speed",80.0);
         state.car_id=snapshot.get("car_id",-1);state.skin_id=snapshot.get("skin_id",-1);state.lod=snapshot.get("lod",-1);
         state.wireframe=snapshot.get("wireframe",false);state.bounds=snapshot.get("bounds",false);state.inspection=snapshot.get("inspection",false);state.show_lods=snapshot.get("show_lods",false);state.preview=snapshot.get("preview",false);state.wheel_blur=snapshot.get("wheel_blur",false);
@@ -462,6 +495,13 @@ godot::Dictionary Ps2RenderHost::viewer_ui_next() {
 #endif
     });
     result["ok"]=failure.empty();if(!failure.empty())result["error"]=godot::String::utf8(failure.c_str());return result;
+}
+godot::Dictionary Ps2RenderHost::viewer_ui_targets()const {
+    godot::Dictionary result;
+#if HP2_DEBUG_BUILD
+    for(const auto& [name,point]:viewer_ui_.targets())result[godot::String::utf8(name.c_str())]=godot::Vector2(point[0],point[1]);
+#endif
+    return result;
 }
 bool Ps2RenderHost::viewer_ui_capture()const {
 #if HP2_DEBUG_BUILD

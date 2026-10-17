@@ -1,0 +1,338 @@
+{
+  "evidence": "E-0048-D01",
+  "retail_base": "00318c00",
+  "debug_base": "003102e8",
+  "rows": [
+    {
+      "retail_id": 0,
+      "debug_id": 0,
+      "name": "NONE",
+      "debug_name": "NONE",
+      "retail_embedded_type": 0,
+      "retail_physics_bits": "0000803f000000000000803f0000803f0000803f",
+      "debug_physics_bits": "0000803f000000000000803f0000803f0000803f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 1,
+      "debug_id": 1,
+      "name": "ROAD",
+      "debug_name": "ROAD",
+      "retail_embedded_type": 1,
+      "retail_physics_bits": "0000803f000000000000803f0000803f0000803f",
+      "debug_physics_bits": "0000803f000000000000803f0000803f0000803f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 2,
+      "debug_id": 2,
+      "name": "DIRT",
+      "debug_name": "DIRT",
+      "retail_embedded_type": 2,
+      "retail_physics_bits": "0000803fcdcc4c3dec51783f4c37753f0000803f",
+      "debug_physics_bits": "0000803fcdcc4c3dec51783f4c37753f0000803f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 3,
+      "debug_id": 3,
+      "name": "DIRTROAD",
+      "debug_name": "DIRTROAD",
+      "retail_embedded_type": 3,
+      "retail_physics_bits": "0000803f0ad7a33ca4707d3f7a367b3f0000803f",
+      "debug_physics_bits": "0000803f0ad7a33ca4707d3f7a367b3f0000803f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 4,
+      "debug_id": 4,
+      "name": "PUDDLE",
+      "debug_name": "PUDDLE",
+      "retail_embedded_type": 4,
+      "retail_physics_bits": "0000803f0ad7233c8fc2753f6688733fcdcc8c3f",
+      "debug_physics_bits": "0000803f0ad7233c8fc2753f6688733fcdcc8c3f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 5,
+      "debug_id": 5,
+      "name": "DEEP_WATER",
+      "debug_name": "DEEP_WATER",
+      "retail_embedded_type": 5,
+      "retail_physics_bits": "0000803f8fc2f53c8fc2753f21b0723f0000c03f",
+      "debug_physics_bits": "0000803f8fc2f53c8fc2753f21b0723f0000c03f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 6,
+      "debug_id": 6,
+      "name": "GRASS",
+      "debug_name": "GRASS",
+      "retail_embedded_type": 6,
+      "retail_physics_bits": "0000803fcdcc4c3d8fc2753f21b0723f6666863f",
+      "debug_physics_bits": "0000803fcdcc4c3d8fc2753f21b0723f6666863f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 7,
+      "debug_id": 7,
+      "name": "SAND",
+      "debug_name": "SAND",
+      "retail_embedded_type": 7,
+      "retail_physics_bits": "0000803fcdcc4c3d8fc2753f3333733f00000040",
+      "debug_physics_bits": "0000803fcdcc4c3d8fc2753f3333733f00000040",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 8,
+      "debug_id": 8,
+      "name": "SNOW",
+      "debug_name": "SNOW",
+      "retail_embedded_type": 8,
+      "retail_physics_bits": "0000803f0ad7233c3333733ff628703f0000803f",
+      "debug_physics_bits": "0000803f0ad7233c3333733ff628703f0000803f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 9,
+      "debug_id": 9,
+      "name": "DIRT_SHOULDER",
+      "debug_name": "DIRT_SHOULDER",
+      "retail_embedded_type": 9,
+      "retail_physics_bits": "0000803f0ad7a33c48e17a3f1ea7783f0000803f",
+      "debug_physics_bits": "0000803f0ad7a33c48e17a3f1ea7783f0000803f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 10,
+      "debug_id": 10,
+      "name": "SAND_SHOULDER",
+      "debug_name": "SAND_SHOULDER",
+      "retail_embedded_type": 10,
+      "retail_physics_bits": "0000803f8fc2753cec51783fc217763f9a99993f",
+      "debug_physics_bits": "0000803f8fc2753cec51783fc217763f9a99993f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 11,
+      "debug_id": 11,
+      "name": "SNOW_SHOULDER",
+      "debug_name": "SNOW_SHOULDER",
+      "retail_embedded_type": 11,
+      "retail_physics_bits": "0000803f0ad7233cec51783f4c37753f0000803f",
+      "debug_physics_bits": "0000803f0ad7233cec51783f4c37753f0000803f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 12,
+      "debug_id": 12,
+      "name": "SIDEWALK",
+      "debug_name": "SIDEWALK",
+      "retail_embedded_type": 12,
+      "retail_physics_bits": "cdcc8c3f8fc2f53c0000803f0000803f0000803f",
+      "debug_physics_bits": "cdcc8c3f8fc2f53c0000803f0000803f0000803f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 13,
+      "debug_id": 13,
+      "name": "SNOW_SIDEWALK",
+      "debug_name": "SNOW_SIDEWALK",
+      "retail_embedded_type": 13,
+      "retail_physics_bits": "0000803f8fc2f53cec51783f4c37753f0000803f",
+      "debug_physics_bits": "0000803f8fc2f53cec51783f4c37753f0000803f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 14,
+      "debug_id": 14,
+      "name": "ROCK",
+      "debug_name": "ROCK",
+      "retail_embedded_type": 14,
+      "retail_physics_bits": "0000803f0ad7a33c0000803f0000803fae47813f",
+      "debug_physics_bits": "0000803f0ad7a33c0000803f0000803fae47813f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 15,
+      "debug_id": 15,
+      "name": "WOOD_WALL",
+      "debug_name": "WOOD_WALL",
+      "retail_embedded_type": 15,
+      "retail_physics_bits": "0000803f0ad7233c0000803f0000803f0000803f",
+      "debug_physics_bits": "0000803f0ad7233c0000803f0000803f0000803f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 16,
+      "debug_id": 16,
+      "name": "CACTUS_WALL",
+      "debug_name": "CACTUS_WALL",
+      "retail_embedded_type": 16,
+      "retail_physics_bits": "0000803f0ad7233c0000803f0000803f0000803f",
+      "debug_physics_bits": "0000803f0ad7233c0000803f0000803f0000803f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 17,
+      "debug_id": 17,
+      "name": "SOLID_WALL",
+      "debug_name": "SOLID_WALL",
+      "retail_embedded_type": 17,
+      "retail_physics_bits": "0000803f0ad7233c0000803f0000803f0000803f",
+      "debug_physics_bits": "0000803f0ad7233c0000803f0000803f0000803f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 18,
+      "debug_id": 18,
+      "name": "BOARDWALK",
+      "debug_name": "BOARDWALK",
+      "retail_embedded_type": 18,
+      "retail_physics_bits": "0000204131082c3d0000803f0000803f5c8f823f",
+      "debug_physics_bits": "0000204131082c3d0000803f0000803f5c8f823f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 19,
+      "debug_id": 19,
+      "name": "COBBLESTONE",
+      "debug_name": "COBBLESTONE",
+      "retail_embedded_type": 19,
+      "retail_physics_bits": "00004040a69b443d0000803f0000803f5c8f823f",
+      "debug_physics_bits": "00004040a69b443d0000803f0000803f5c8f823f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 20,
+      "debug_id": 20,
+      "name": "MUD_PUDDLE",
+      "debug_name": "MUD_PUDDLE",
+      "retail_embedded_type": 20,
+      "retail_physics_bits": "0000803f0ad7233c8fc2753f6688733fcdcc8c3f",
+      "debug_physics_bits": "0000803f0ad7233c8fc2753f6688733fcdcc8c3f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 21,
+      "debug_id": 21,
+      "name": "ROUGH_ROAD",
+      "debug_name": "ROUGH_ROAD",
+      "retail_embedded_type": 21,
+      "retail_physics_bits": "0000803f0ad7a33c0000803f0000803fae47813f",
+      "debug_physics_bits": "0000803f0ad7a33c0000803f0000803fae47813f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 22,
+      "debug_id": 22,
+      "name": "GRASS_SHOULDER",
+      "debug_name": "GRASS_SHOULDER",
+      "retail_embedded_type": 22,
+      "retail_physics_bits": "0000803f0ad7233c48e17a3f1ea7783f5c8f823f",
+      "debug_physics_bits": "0000803f0ad7233c48e17a3f1ea7783f5c8f823f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 23,
+      "debug_id": 23,
+      "name": "AUTUMN_LEAVES",
+      "debug_name": "AUTUMN_LEAVES",
+      "retail_embedded_type": 23,
+      "retail_physics_bits": "0000803f0ad7a33cec51783f8fc2753f0000803f",
+      "debug_physics_bits": "0000803f0ad7a33cec51783f8fc2753f0000803f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 24,
+      "debug_id": 24,
+      "name": "AUTUMN_LEAVES_SHOULDER",
+      "debug_name": "AUTUMN_LEAVES_SHOULDER",
+      "retail_embedded_type": 24,
+      "retail_physics_bits": "0000803f0ad7233c48e17a3f1ea7783f0000803f",
+      "debug_physics_bits": "0000803f0ad7233c48e17a3f1ea7783f0000803f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 25,
+      "debug_id": 25,
+      "name": "MULCH",
+      "debug_name": "MULCH",
+      "retail_embedded_type": 25,
+      "retail_physics_bits": "0000803f8fc2f53cec51783f4c37753f6666863f",
+      "debug_physics_bits": "0000803f8fc2f53cec51783f4c37753f6666863f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 26,
+      "debug_id": 26,
+      "name": "MULCH_SHOULDER",
+      "debug_name": "MULCH_SHOULDER",
+      "retail_embedded_type": 26,
+      "retail_physics_bits": "0000803f8fc2753c48e17a3f1ea7783f6666863f",
+      "debug_physics_bits": "0000803f8fc2753c48e17a3f1ea7783f6666863f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 27,
+      "debug_id": 27,
+      "name": "ROAD_AUTUMN",
+      "debug_name": "ROAD_AUTUMN",
+      "retail_embedded_type": 27,
+      "retail_physics_bits": "0000803f00000000a4707d3f7a367b3f0000803f",
+      "debug_physics_bits": "0000803f00000000a4707d3f7a367b3f0000803f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 28,
+      "debug_id": 28,
+      "name": "PLANT",
+      "debug_name": "PLANT",
+      "retail_embedded_type": 28,
+      "retail_physics_bits": "0000803f00000000a4707d3fd1227b3f0000803f",
+      "debug_physics_bits": "0000803f00000000a4707d3fd1227b3f0000803f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 29,
+      "debug_id": 29,
+      "name": "POST",
+      "debug_name": "POST",
+      "retail_embedded_type": 29,
+      "retail_physics_bits": "0000803f00000000a4707d3fd1227b3f0000803f",
+      "debug_physics_bits": "0000803f00000000a4707d3fd1227b3f0000803f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 30,
+      "debug_id": 30,
+      "name": "METAL_GRATE",
+      "debug_name": "METAL_GRATE",
+      "retail_embedded_type": 30,
+      "retail_physics_bits": "0000803f00000000a4707d3f7a367b3f0000803f",
+      "debug_physics_bits": "0000803f00000000a4707d3f7a367b3f0000803f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 31,
+      "debug_id": 31,
+      "name": "POTHOLE",
+      "debug_name": "POTHOLE",
+      "retail_embedded_type": 31,
+      "retail_physics_bits": "0000803f000000000000803f0000803f0000803f",
+      "debug_physics_bits": "0000803f000000000000803f0000803f0000803f",
+      "noise_friction_bits_equal": true
+    },
+    {
+      "retail_id": 32,
+      "debug_id": 32,
+      "name": "CAR",
+      "debug_name": "CAR",
+      "retail_embedded_type": 32,
+      "retail_physics_bits": "0000803f00000000a4707d3f7a367b3f0000803f",
+      "debug_physics_bits": "0000803f00000000a4707d3f7a367b3f0000803f",
+      "noise_friction_bits_equal": true
+    }
+  ],
+  "physics_byte_range": "+0x18..+0x2b (noise spacing, noise scale, static, dynamic, rolling)"
+}

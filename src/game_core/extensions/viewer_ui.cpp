@@ -1,5 +1,6 @@
 #include "viewer_ui.hpp"
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <algorithm>
 #include <cctype>
 #include <cstring>
@@ -21,17 +22,22 @@ std::optional<UiAction> ViewerUi::next(){
     if(pending_.empty())return {};auto action=std::move(pending_.front());pending_.pop_front();return action;
 }
 void ViewerUi::draw(float width,float height){
+    targets_.clear();
     if(state_.kind=="frontend")return;
     const ImVec2 available{std::max(1.f,width),std::max(1.f,height)};
     ImGui::SetNextWindowPos({16,36},ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize({std::min(340.f,available.x),std::min(300.f,available.y)},ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize({std::min(340.f,available.x),std::min(state_.kind=="track"?440.f:300.f,available.y)},ImGuiCond_FirstUseEver);
+    if(state_.kind=="track"&&state_.track_id<0){
+        ImGui::SetNextWindowPos({16,36},ImGuiCond_Always);
+        ImGui::SetNextWindowSize({std::min(340.f,available.x),std::min(440.f,available.y)},ImGuiCond_Always);
+    }
     if(state_.preview&&!was_preview_){
         ImGui::SetNextWindowPos({16,36},ImGuiCond_Always);
         ImGui::SetNextWindowSize({std::min(340.f,available.x),std::min(280.f,available.y)},ImGuiCond_Always);
     }
     if(driving_entered_){
         ImGui::SetNextWindowPos({16,36},ImGuiCond_Always);
-        ImGui::SetNextWindowSize({std::min(320.f,available.x),std::min(170.f,available.y-36)},ImGuiCond_Always);
+        ImGui::SetNextWindowSize({std::min(320.f,available.x),std::min(310.f,available.y-36)},ImGuiCond_Always);
         driving_entered_=false;
     }
     if(driving_left_){
@@ -39,32 +45,141 @@ void ViewerUi::draw(float width,float height){
         driving_left_=false;
     }
     was_preview_=state_.preview;
-    ImGui::SetNextWindowSizeConstraints({std::min(180.f,available.x),std::min(100.f,available.y)},{std::min(420.f,available.x),(advanced_open_||state_.kind=="driving")?available.y:std::min(320.f,available.y)});
-    const bool visible=ImGui::Begin((state_.kind=="driving"||state_.kind=="car")?"CarViewer###CarViewerCompact":"TrackViewer###TrackViewerCompact");
+    ImGui::SetNextWindowSizeConstraints({std::min(180.f,available.x),std::min(100.f,available.y)},{std::min(420.f,available.x),(advanced_open_||state_.kind=="driving"||state_.kind=="track")?available.y:std::min(320.f,available.y)});
+    const auto window_flags=state_.kind=="driving"?ImGuiWindowFlags_NoScrollbar|ImGuiWindowFlags_NoScrollWithMouse:ImGuiWindowFlags_None;
+    const bool visible=ImGui::Begin((state_.kind=="car"||(state_.kind=="driving"&&!state_.real_track))?"CarViewer###CarViewerCompact":"TrackViewer###TrackViewerCompact",nullptr,window_flags);
     if(visible){
         const auto tooltip=[&](const std::string& text){
             ImGui::SetNextWindowSizeConstraints({0,0},available);ImGui::BeginTooltip();
             ImGui::PushTextWrapPos(ImGui::GetCursorPosX()+std::max(1.f,std::min(320.f,width-24)));
             ImGui::TextUnformatted(text.c_str());ImGui::PopTextWrapPos();ImGui::EndTooltip();
         };
-        const auto button=[&](const char* label,const char* action){if(ImGui::Button(label))enqueue({action});};
+        const auto target=[&](const std::string& name){const auto a=ImGui::GetItemRectMin(),b=ImGui::GetItemRectMax();targets_[name]={{(a.x+b.x)*.5f,(a.y+b.y)*.5f}};};
+        const auto button=[&](const char* label,const char* action){if(ImGui::Button(label))enqueue({action});target(action);};
         const auto beside=[&](const char* label){
             const float right=ImGui::GetItemRectMax().x+ImGui::GetStyle().ItemSpacing.x+
                 ImGui::CalcTextSize(label).x+2*ImGui::GetStyle().FramePadding.x;
             if(right<=ImGui::GetWindowPos().x+ImGui::GetWindowContentRegionMax().x)ImGui::SameLine();
         };
         if(state_.kind=="driving"){
-            ImGui::TextWrapped("Test drive / synthetic plane");
-            button("Return to CarViewer","drive_exit");
-            ImGui::TextWrapped("W/S: accelerate/brake | A/D: steer");
-            ImGui::TextWrapped("Mouse: look | Esc: release cursor | Click world: capture");
+            // Keep the exit header outside the independently scrolling diagnostics.
+            // A focused grip child must never scroll Return out of reach.
+            ImGui::SetScrollY(0);
+            ImGui::TextWrapped("%s",state_.real_track?("Test drive / "+state_.track_name).c_str():"Test drive / synthetic plane");
+            button(state_.real_track?"Return to TrackViewer":"Return to CarViewer","drive_exit");
+            const bool body=ImGui::BeginChild("DrivingBody",{0,0},false);
+            if(body){
+            if(state_.driving_powertrain_known){
+                const auto gear=state_.driving_gear==0?std::string("R"):state_.driving_gear==1?std::string("N"):std::to_string(state_.driving_gear-1);
+                ImGui::Text("Speed %.2f (native units) | Gear %s",double(state_.driving_speed),gear.c_str());
+                ImGui::Text("RPM %.0f | Handbrake %s",double(state_.driving_rpm),state_.driving_handbrake?"ON":"off");
+                const char* transmissions[]{"Automatic","Manual"};int transmission=state_.driving_transmission==1?1:0;
+                ImGui::SetNextItemWidth(120);
+                if(ImGui::BeginCombo("Mode",transmissions[transmission])){
+                    for(int i=0;i<2;++i){if(ImGui::Selectable(transmissions[i],i==transmission)){UiAction a{"drive_transmission"};a.lod=i;enqueue(std::move(a));}target("drive_transmission_"+std::to_string(i));}
+                    ImGui::EndCombo();
+                }target("drive_transmission");
+                ImGui::SameLine();
+                if(state_.driving_transmission==1){button("N (neutral)","drive_neutral");}else ImGui::TextDisabled("N: manual only");
+            }
+            // TASK-0045: these choices queue a setting; only committed snapshots feed this model.
+            if(state_.driving_surface_known||state_.real_track){
+                if(!state_.real_track){
+                const auto request_surface=[&](int mode,int terrain){UiAction a{"drive_surface"};a.lod=mode;a.car_id=terrain;enqueue(std::move(a));};
+                const char* modes[]{"Uniform","Zones"};int mode=state_.driving_surface_mode;
+                ImGui::SetNextItemWidth(155);
+                if(ImGui::BeginCombo("Surface mode",modes[mode])){
+                    for(int i=0;i<2;++i){if(ImGui::Selectable(modes[i],i==mode))request_surface(i,state_.driving_surface_terrain);target("drive_surface_mode_"+std::to_string(i));}
+                    ImGui::EndCombo();
+                }target("drive_surface_mode");
+                const auto selected=std::find_if(state_.driving_materials.begin(),state_.driving_materials.end(),[&](const auto& m){return m.id==state_.driving_surface_terrain;});
+                const auto name=selected==state_.driving_materials.end()?std::string("Unknown"):selected->name+" (#"+std::to_string(selected->id)+")";
+                const float material_row_y=ImGui::GetCursorPosY();ImGui::SetNextItemWidth(155);
+                if(mode==0 && ImGui::BeginCombo("Material",name.c_str())){
+                    for(const auto& material:state_.driving_materials){const auto label=material.name+" (#"+std::to_string(material.id)+")";
+                        if(ImGui::Selectable(label.c_str(),material.id==state_.driving_surface_terrain))request_surface(0,material.id);target("drive_material_"+std::to_string(material.id));
+                        if(material.id==state_.driving_surface_terrain)ImGui::SetItemDefaultFocus();
+                    }ImGui::EndCombo();
+                }
+                if(mode==0)target("drive_material");
+                if(mode!=0){ImGui::TextDisabled("Material: per-wheel zones");ImGui::SetCursorPosY(material_row_y+ImGui::GetFrameHeightWithSpacing());}
+                if(mode==1)ImGui::TextWrapped("World zones: ROAD / DIRT / GRASS / SAND / SNOW");
+                }
+                const bool show_grip=ImGui::CollapsingHeader("Wheel grip (stored values)");target("drive_grip");
+                if(show_grip){
+                    ImGui::TextWrapped("Read-only original fields; units not established. Tool colors identify surfaces.");
+                    // Pinned ImGui1.77 uses legacy Columns, not the later Tables API.
+                    constexpr int columns=23;ImGui::SetNextWindowContentSize({columns*90.f,0});
+                    const bool child=ImGui::BeginChild("DrivingGrip",{0,120},true,ImGuiWindowFlags_HorizontalScrollbar);
+                    if(child){
+                        ImGui::Columns(columns,"GripColumns",true);
+                        for(int j=0;j<columns;++j)ImGui::SetColumnWidth(j,90);
+                        for(const auto* label:{"Wheel","Contact","Terrain","Terrain S","Terrain D","Terrain roll","Slipping","Z force","Current slip","Usage","Boost","Catchup","Road noise","Slip X","Slip Y","Force X","Force Y","Tire static","Tire dynamic","Height","Normal X","Normal Y","Normal Z"}){ImGui::TextUnformatted(label);ImGui::NextColumn();}
+                        ImGui::Separator();
+                        for(unsigned i=0;i<state_.driving_grip.size();++i){const auto& g=state_.driving_grip[i];
+                            ImGui::Text("%u",i);ImGui::NextColumn();ImGui::TextUnformatted(g.contact_known?(g.contact?"yes":"no"):"Unknown");ImGui::NextColumn();
+                            const auto material=std::find_if(state_.driving_materials.begin(),state_.driving_materials.end(),[&](const auto& m){return m.id==g.terrain;});
+                            if(g.known){if(material!=state_.driving_materials.end())ImGui::Text("%s #%d",material->name.c_str(),g.terrain);else ImGui::Text("Unknown #%d",g.terrain);}else ImGui::TextUnformatted("Unknown");ImGui::NextColumn();
+                            for(int j=0;j<3;++j){if(g.known&&material!=state_.driving_materials.end()){const float values[]{material->static_friction,material->dynamic_friction,material->rolling_friction};ImGui::Text("%.4g",double(values[j]));}else ImGui::TextUnformatted("Unknown");ImGui::NextColumn();}
+                            ImGui::TextUnformatted(g.known?(g.slipping?"yes":"no"):"Unknown");ImGui::NextColumn();
+                            const float values[]{g.z_force,g.current_slip,g.traction_usage,g.traction_boost,g.catchup_friction,g.road_noise,g.slip[0],g.slip[1],g.ground_force[0],g.ground_force[1],g.static_coefficient,g.dynamic_coefficient};
+                            for(float value:values){if(g.known)ImGui::Text("%.4g",double(value));else ImGui::TextUnformatted("Unknown");ImGui::NextColumn();}
+                            const float contact_values[]{g.ground_point[2],g.ground_plane[0],g.ground_plane[1],g.ground_plane[2]};
+                            for(float value:contact_values){if(g.known&&g.contact)ImGui::Text("%.4g",double(value));else ImGui::TextUnformatted("Unknown");ImGui::NextColumn();}
+                        }
+                        ImGui::Columns(1);
+                    }
+                    ImGui::EndChild();
+                }
+            }
+            for(const auto& hint:state_.driving_hints)ImGui::TextWrapped("%s",hint.c_str());
             if(!state_.status.empty())ImGui::TextWrapped("%s",state_.status.c_str());
             if(!state_.diagnostic.empty())ImGui::TextWrapped("%s",state_.diagnostic.c_str());
             ImGui::TextWrapped("Original equivalence not verified.");
+            }
+            ImGui::EndChild();
         }
         if(state_.kind!="car"&&state_.kind!="driving") {
             button("CarViewer","car");beside("Back to Frontend");button("Back to Frontend","close");
             ImGui::Separator();
+        }
+        if(state_.kind=="track"){
+            const auto selected=std::find_if(state_.tracks.begin(),state_.tracks.end(),[&](const auto& t){return t.id==state_.track_id;});
+            const auto title=selected==state_.tracks.end()?std::string("Select track"):selected->name+" #"+std::to_string(selected->id);
+            ImGui::SetNextItemWidth(-1);
+            if(ImGui::BeginCombo("##Track",title.c_str())){
+                for(const auto& track:state_.tracks){
+                    const auto label=track.name+" #"+std::to_string(track.id)+(track.available?"":" [missing]");
+                    if(ImGui::Selectable(label.c_str(),track.id==state_.track_id)){UiAction a{"select_track"};a.car_id=track.id;a.source=track.path;enqueue(std::move(a));}
+                    if(!track.error.empty()&&ImGui::IsItemHovered())tooltip(track.error);
+                }ImGui::EndCombo();
+            }
+            const auto car=std::find_if(state_.cars.begin(),state_.cars.end(),[&](const auto& c){return c.id==state_.car_id;});
+            const auto car_title=car==state_.cars.end()?std::string("Select vehicle"):car->code;
+            ImGui::SetNextItemWidth(-1);
+            if(ImGui::BeginCombo("##TrackCar",car_title.c_str())){
+                for(const auto& c:state_.cars)if(c.available){if(ImGui::Selectable(c.code.c_str(),c.id==state_.car_id)){UiAction a{"select_car"};a.car_id=c.id;a.skin_id=c.skins.empty()?-1:c.skins.front().id;enqueue(std::move(a));}}
+                ImGui::EndCombo();
+            }
+            button("Drive on track","track_drive");beside("Reset Camera");button("Reset Camera","reset");
+            // Pinned ImGui1.77 exposes disabled item flags through its internal API.
+            // These independent tool flags affect browsing presentation only.
+            if(!state_.debug_ready){ImGui::PushItemFlag(ImGuiItemFlags_Disabled,true);ImGui::PushStyleVar(ImGuiStyleVar_Alpha,ImGui::GetStyle().Alpha*0.5f);}
+            bool collision=state_.render_collision,material=state_.render_material;
+            if(ImGui::Checkbox("Render Collision",&collision)){UiAction a{"render_collision"};a.enabled=collision;enqueue(std::move(a));}target("render_collision");
+            if(ImGui::Checkbox("Render Material",&material)){UiAction a{"render_material"};a.enabled=material;enqueue(std::move(a));}target("render_material");
+            if(!state_.debug_ready){ImGui::PopStyleVar();ImGui::PopItemFlag();}
+            if(!state_.debug_diagnostic.empty())ImGui::TextWrapped("%s",state_.debug_diagnostic.c_str());
+            if(state_.render_material&&state_.debug_ready){
+                ImGui::TextUnformatted("Terrain materials (polygons)");
+                ImGui::BeginChild("TrackMaterialLegend",{0,std::min(120.f,std::max(40.f,height*0.2f))},true);
+                for(const auto& entry:state_.material_legend){ImGui::PushID(entry.id);
+                    ImGui::ColorButton("##TerrainColor",{entry.color[0],entry.color[1],entry.color[2],entry.color[3]},ImGuiColorEditFlags_NoTooltip,{14,14});ImGui::SameLine();
+                    ImGui::Text("#%d %s (%d)",entry.id,entry.name.c_str(),entry.polygon_count);ImGui::PopID();}
+                ImGui::EndChild();
+            }
+            if(!state_.diagnostic.empty()&&ImGui::CollapsingHeader("Recovery details"))ImGui::TextWrapped("%s",state_.diagnostic.c_str());
+            if(!state_.rendering.empty())ImGui::TextWrapped("%s",state_.rendering.c_str());
         }
         if(state_.kind=="car"){
             bool preview=state_.preview;

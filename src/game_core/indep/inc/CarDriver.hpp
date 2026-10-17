@@ -1,7 +1,10 @@
+// TASK-0046: typed setters target Debug815b60c7...332f1b, E-0046-C01.
+// Remaining Retail template provenance/gaps are historical, not Debug ABI claims.
 // TASK-0042 E-0042-S001: exact Debug source marker(s): ../indep/inc/CarDriver.hpp.
 // Older placement comments below describe the historical host partitions; no retail ABI is asserted.
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
+#include "game_core/port/driving/object_view.hpp"
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: allocator_label; evidence: E-0027-C01.
@@ -21,8 +24,13 @@ public:
 // No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
 // Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
 namespace hp2::recovered {
-class CarDriver {
+class CarDriver : public port::driving::ObjectView {
 public:
+    using ObjectView::ObjectView;
+    // Debug00136C58; E-0046-C01; original inline ../indep/inc/CarDriver.hpp.
+    void SetDesiredGear(int gear){m_.word(address_+0x220,gear);}
+    // Debug00136C30; E-0046-C01.
+    void SetEBrake(float value){m_.scalar(address_+0x21c,value);}
     // ELF 0x00136C00; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c00.md.
     // Port-side void/no-argument placeholder; original signature unknown.
     void GetSteerToPoint();

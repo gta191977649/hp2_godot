@@ -41,14 +41,18 @@ void driving_sequence(NativeBackend& backend,const Config& config){
     check(contacts>=2,"Settled laboratory car should retain supporting wheel contacts");
     const auto early=frames(backend,config,{1,0,0},60);
     const auto accelerated=frames(backend,config,{1,0,0},180);
+    std::cerr<<"Debug acceptance rest/early/late "<<horizontal_speed(resting)<<' '<<horizontal_speed(early)<<' '<<horizontal_speed(accelerated)<<" travel "<<horizontal_distance(accelerated,resting)<<'\n';
+    const auto& mem=backend.memory();const auto mover=backend.physics_car_address(),eng=mem.word(mover+0x40),drive=mem.word(mover+0x44),body=mem.word(mover+0x18),wheel=mem.word(mover+0x30);
+    std::cerr<<"Debug engine W/throttle/torque "<<mem.scalar(eng+0xc)<<' '<<mem.scalar(eng+0x44)<<' '<<mem.scalar(eng+0x48)<<" gear/clutch/diff "<<mem.word(drive+0x30)<<' '<<mem.scalar(drive+0xc)<<' '<<mem.scalar(drive+0x40)<<" wheelW/moment/zforce "<<mem.scalar(wheel+0x20)<<' '<<mem.scalar(wheel+0x108)<<' '<<mem.scalar(wheel+0x158)<<" speedlimit "<<mem.scalar(body+0x174)<<'\n';
+    const auto table=eng+0x18;std::cerr<<"Debug torqueTable "<<std::hex<<mem.word(table)<<std::dec<<" count/range/mult "<<mem.word(table+4)<<' '<<mem.scalar(table+8)<<' '<<mem.scalar(table+0xc)<<' '<<mem.scalar(table+0x10)<<" points ";for(unsigned i=0;i<9;++i)std::cerr<<mem.scalar(mem.word(table)+4*i)<<' ';std::cerr<<" throttleOverride "<<mem.scalar(eng+0x4c)<<" boost "<<mem.scalar(eng+0x58)<<'\n';
     check(horizontal_speed(accelerated)>horizontal_speed(early)+1,"Sustained throttle must accelerate beyond the first second");
     check(horizontal_distance(accelerated,resting)>1,"Sustained throttle must produce horizontal travel");
-    const auto braking=frames(backend,config,{0,1,0},240);
-    check(horizontal_speed(braking)<0.1f && horizontal_speed(braking)<horizontal_speed(accelerated)*0.05f,
-          "Footbrake must bring a moving laboratory car close to horizontal rest");
-    const auto held=frames(backend,config,{0,1,0},60);
-    check(horizontal_speed(held)<0.1f && horizontal_distance(held,braking)<0.1f,
-          "Held footbrake should preserve near rest after stopping");
+    const auto braking=frames(backend,config,{0,1,0},30);
+    check(horizontal_speed(braking)<horizontal_speed(accelerated),
+          "Original S routing must initially brake a forward-moving car");
+    const auto held=frames(backend,config,{0,1,0},270);
+    check(held.powertrain&&held.powertrain->gear==0&&held.powertrain->forward_speed<0,
+          "Held S must eventually select original reverse and travel backward");
     std::cout<<"native acceptance speeds rest/early/late/braked "<<horizontal_speed(resting)<<' '<<horizontal_speed(early)<<' '<<horizontal_speed(accelerated)<<' '<<horizontal_speed(braking)<<'\n';
 }
 void steering_and_reset(NativeBackend& backend,const Config& config){
@@ -87,7 +91,7 @@ void wrong_image_sha(){
     check(!temporary.path.empty(),"Synthetic SHA fixture must have a unique temporary path");
     {std::ofstream output(temporary.path,std::ios::binary);output<<"Synthetic TASK-0038 wrong-SHA fixture; no original bytes.";check(bool(output),"Synthetic SHA fixture write must succeed");}
     bool rejected=false;
-    try{(void)read_original_image(temporary.path);}
+    try{(void)read_debug_image(temporary.path);}
     catch(const std::exception& error){rejected=std::string(error.what()).find("SHA-256")!=std::string::npos;}
     check(rejected,"A synthetic file must fail the original ELF SHA binding before mapping");
     std::error_code error;check(std::filesystem::remove(temporary.path,error)&&!error,"Synthetic SHA fixture must be removed");
@@ -101,12 +105,12 @@ void rejected_step_preserves_state(const std::filesystem::path& elf,const Config
         bool rejected=false;std::string diagnostic;
         // These published scheduling fields are already mapped by a successful
         // native step; a failed candidate must not commit their partial updates.
-        const auto before_dt=tested.memory().word(0x00330c64);
-        const auto before_math=tested.memory().vector(0x00320a60);
+        const auto before_dt=tested.memory().word(0x00327ce4);
+        const auto before_math=tested.memory().vector(0x00317b20);
         try{(void)tested.advance(config,input,elapsed);}
         catch(const std::exception& error){rejected=true;diagnostic=error.what();}
         check(rejected,"Pathological or invalid backend arguments must reject the step");
-        check(tested.memory().word(0x00330c64)==before_dt && tested.memory().vector(0x00320a60)==before_math,
+        check(tested.memory().word(0x00327ce4)==before_dt && tested.memory().vector(0x00317b20)==before_math,
               "Rejected candidates must preserve committed scheduling/math state");
         const Input valid{0.6f,0,0.1f};
         const auto actual=tested.advance(config,valid,1.0f/60.0f);
@@ -154,14 +158,33 @@ void session_replay(const std::filesystem::path& elf,const Config& config){
     const auto final=session.snapshot();check(!session.tick(1)&&same_snapshot(final,session.snapshot()),"Completed replay must retain the final publication while paused");
     std::cout<<"native Session recorded/replayed "<<replayed<<" complete snapshots; paced deferrals "<<paced_waits<<'\n';
 }
+void player_transmission(NativeBackend& backend,const Config& config){
+    backend.reset();frames(backend,config,{},120);
+    Input manual;manual.transmission=1;
+    auto s=backend.advance(config,manual,1.f/60);
+    check(s.powertrain&&s.powertrain->manual_transmission==1&&s.powertrain->gear==2,"Manual mode begins in actual first gear");
+    Input neutral;neutral.neutral=true;backend.advance(config,neutral,1.f/60);
+    s=frames(backend,config,{.7f,0,0},90);
+    check(s.powertrain&&s.powertrain->gear==1,"Neutral request survives throttle without invented automatic engagement");
+    const auto& mem=backend.memory();const auto mover=backend.physics_car_address(),engine=mem.word(mover+0x40),st=mem.word(mover+0x50);
+    check(s.powertrain->rpm==mem.scalar(st+0x390)&&s.powertrain->rpm>0&&mem.scalar(engine+0x44)>0,"HUD RPM is completed original state, engine receives neutral throttle");
+    Input up;up.shift=1;backend.advance(config,up,1.f/60);s=frames(backend,config,{.7f,0,0},90);
+    check(s.powertrain&&s.powertrain->gear==2&&s.powertrain->forward_speed>0,"One upshift from neutral engages first and travels forward");
+    Input handbrake;handbrake.handbrake=1;s=frames(backend,config,handbrake,15);
+    check(s.powertrain&&s.powertrain->handbrake,"Handbrake publication follows original driver output");
+    s=frames(backend,config,{},1);check(!s.powertrain->handbrake,"Releasing handbrake clears original driver input");
+    Input automatic;automatic.transmission=0;backend.advance(config,automatic,1.f/60);s=frames(backend,config,{1,0,0},360);
+    check(s.powertrain&&s.powertrain->manual_transmission==0&&s.powertrain->gear>2,"Original automatic chain shifts beyond first under sustained throttle");
 }
-int main(){
+}
+int main(){try{
     check(image_sha256({})=="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","Empty SHA256 vector");
     check(image_sha256({'a','b','c'})=="ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad","ABC SHA256 vector");
     wrong_image_sha();
     const auto root=hp2::platform::resolve_zzdata_root(".");if(!root){std::cout<<"Original resources unavailable\n";return 77;}
-    std::filesystem::path elf;try{elf=original_image_path(".");}catch(const std::exception& e){std::cout<<e.what()<<'\n';return 77;}
+    std::filesystem::path elf;try{elf=debug_image_path(".");}catch(const std::exception& e){std::cout<<e.what()<<'\n';return 77;}
     port::assets::DirectorySource source(*root);const auto config=read_config(source.read("GLOBAL/GLOBALB.BUN"),"911TURBO");
-    NativeBackend backend(elf);driving_sequence(backend,config);steering_and_reset(backend,config);rejected_step_preserves_state(elf,config);session_replay(elf,config);
+    NativeBackend backend(elf);driving_sequence(backend,config);steering_and_reset(backend,config);rejected_step_preserves_state(elf,config);session_replay(elf,config);player_transmission(backend,config);
     std::cout<<"DRIVING_BACKEND_SEQUENCE_OK: original data and native algorithms, qualitative port acceptance, not original equivalence\n";
+}catch(const std::exception& error){std::cerr<<"DRIVING_BACKEND_FAILED: "<<error.what()<<'\n';return 1;}
 }

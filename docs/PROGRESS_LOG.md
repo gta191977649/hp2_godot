@@ -69,6 +69,13 @@ place and kept, because the fact that a session believed it, and why, is itself 
 - [TASK-0041 - Symbol-rich PS2 reference recovery (2026-10-17)](#task-0041---symbol-rich-ps2-reference-recovery-2026-10-17)
 - [TASK-0042 - Debug call chains and original source ownership (2026-10-17)](#task-0042---debug-call-chains-and-original-source-ownership-2026-10-17)
 - [TASK-0043 - Full member mapping and identifier cleanup (2026-10-17)](#task-0043---full-member-mapping-and-identifier-cleanup-2026-10-17)
+- [2026-10-17 - TASK-0044 Debug driving audit and canonical implementation](#2026-10-17---task-0044-debug-driving-audit-and-canonical-implementation)
+- [2026-10-17 - TASK-0045 grip, terrain and Test drive material tests](#2026-10-17---task-0045-grip-terrain-and-test-drive-material-tests)
+- [TASK-0046 - player transmission controls and original skids (2026-10-17)](#task-0046---player-transmission-controls-and-original-skids-2026-10-17)
+- [TASK-0047 - Alpha archive extraction, 2026-10-17](#task-0047---alpha-archive-extraction-2026-10-17)
+- [TASK-0048 - Real TrackViewer and track physics](#task-0048---real-trackviewer-and-track-physics)
+- [TASK-0049 - Track orientation and contact debug display](#task-0049---track-orientation-and-contact-debug-display)
+- [TASK-0050 - Track/car proportions and outside-camera projection](#task-0050---trackcar-proportions-and-outside-camera-projection)
 
 <!-- generated:contents:end -->
 
@@ -1762,3 +1769,245 @@ Whole-production-body preservation passed, including pinned removal of 25
 duplicate throwing gaps; generated test changes are separate. Repeated normal
 generation left all 2,637 checked files byte-identical. Final checks passed;
 no raw/restricted artifacts or commit were added.
+
+
+## 2026-10-17 - TASK-0044 Debug driving audit and canonical implementation
+
+The user approved Debug NFSHP2.ELF behavior as the driving target, independently hashed
+815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b. This explicitly
+supersedes Retail-only driving authority; other systems and historical evidence remain
+Retail. Followed REA and project evidence/naming rules with read-only Ghidra. Initial Git
+status was clean. No database edits, proprietary files, emulator/save/settings changes or
+commit were made. Debug date/revision remains independently unknown.
+
+Audited all 151 pre-existing driving projections with complete dispositions and 207 unique
+Debug address records (185 Implemented, 22 Decompiled, none Verified). Canonical original
+PhysicsCar, Car/CarState, Engine/DriveTrain, suspension/steering, wheel, body, component,
+timer, table/aero and math source bodies now own the supported algorithms. Test drive
+enters PhysicsCar::Move directly; compatibility interfaces forward, and the old composite
+solver is removed. Host Memory/ObjectView, encoded dispatch, synthetic plane, raw input and
+snapshot/camera/display policies remain explicit external boundaries. Full World/RealDriver,
+tracks/collision, damage/effects and other excluded original branches are not claimed recovered.
+
+Important corrections were substantive Debug differences: shift-table offsets/history-free
+clutch, derivative table 003077C8, damping headers distinct from samples, Car field offsets,
+mutable yaw globals, Debug math guards/homogeneous addend and full wheel rotation helpers.
+Initial incorrect table-header and retained Retail derivative operands caused actual backend
+failures and were corrected from instructions, with regressions. Final native Debug trajectory
+reached 11.7256 then 32.307 m/s and braked to zero; opposite steering and 132-snapshot exact
+replay passed. See DEBUG_DRIVING_AUDIT.md and reverse/task0044 for per-function details,
+provenance, counterevidence and limitations.
+
+Generator changes preserve foreign binary symbol rows on address collisions, retain historical
+Retail attributions while suppressing superseded owner gaps, and do not overwrite canonical
+bodies. The fixed historical TASK-0043 preservation scope remains intact. A separate reviewed
+249-before/383-after migration pin set rejects unreviewed body/signature changes without an
+accept-current mode. Negative mutation/collision tests passed. Progress separates Debug counts
+from the Retail whole-image denominator. New records are UTF-8, no restricted files in the
+untracked inventory; seven old Retail duplicate-address index rows are preserved unchanged.
+
+Validation, exact commands: `cmake --preset native-debug`,
+`cmake --build --preset native-debug -j6`, `ctest --preset native-debug --output-on-failure`
+passed **64/64 in 142.26 seconds**. `cmake --preset godot-debug` and
+`cmake --build --preset godot-debug -j6` passed.
+`ctest --preset godot-debug -R 'driving_.*host|debug_console$|debug_viewers_host|car_render_host' --output-on-failure`
+passed **5/5 in 12.17 seconds**; `ctest --preset godot-debug -R 'debug_console_host$' --output-on-failure`
+passed **1/1 in 0.54 seconds**. `py -3 reverse/scripts/generate_class_templates.py --check`,
+`py -3 reverse/scripts/complete_class_members.py`,
+`py -3 reverse/scripts/audit_task0044_migration.py` and `git diff --check` passed.
+`py -3 reverse/scripts/generate_progress.py` refreshed the tracker; its CTest passed.
+Earlier failures in class-fixture binary identity/historical supersession and stale progress
+were fixed before the final full pass. Complete-members uses default checking, not --check.
+
+`py -3 tools/test_drive_window.py --output local/task0044/window-idle` passed **23** owned
+Win32 SendInput checks. Actual Test drive click, W movement, A/D/S/releases, rear/orbit/idle
+camera, Esc/capture, F8 and real focus suspend/resume, exit and repeated entry all passed.
+The rear-view screenshot was inspected. Earlier desktop activity changed foreground/pointer
+and caused guarded failures; user provided an idle desktop and the unchanged camera behavior
+passed. A tentative capture-frame camera change was withdrawn after insufficient causal
+evidence. Only harness diagnostics, actual focus readiness and target-PID guards remain.
+No UI/native acceptance assertion was relaxed. Runtime reports/screenshots stay ignored.
+
+Tool versions: GCC13.2.0/MinGW, CMake3.29.2, Ninja1.12.0, Python3.14.4, Godot4.4.1
+49a5bc7b6; existing pinned godot-cpp. Window: Intel Arc B390/OpenGL driver32.0.101.9150.
+Original certification command `py -3 -m tools.oracle probe --output local/task0044/pcsx2-probe.json`
+returned blocked/timed out, with no active runnable Debug scene/process. Supplied PCSX2
+package presence is not a runnable synchronized scenario. Its README requires launching
+PCSX2/loading a game; the Debug directory contains ELF/MAP only. No original trace comparison
+was performed. Existing Retail oracle hooks are invalid for Debug. The approved plan permits
+this explicit blocker report while closing migration; numerical certification stays separate
+and no Verified status changes. Continue with exact Debug ELF, live owned Move00137D18 /
+component hooks and explicit Debug oracle mapping, equal initial/input/time/contact state,
+then per-field errors and coverage. Full reproducible continuation is in the audit and task.
+
+
+## 2026-10-17 - TASK-0045 grip, terrain and Test drive material tests
+
+Implemented the approved Debug driving continuation without changing ordinary supported tire
+arithmetic. The exact NFSHP2.ELF SHA815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b
+was rehashed. REA independent scopes covered tire/data evidence, source review and tool UI;
+root integrated native settings/session/tests. All existing dirty TASK0044 work was preserved.
+Read-only Ghidra audit covers33 terrain rows,31 bounded functions and original types/globals,
+load/slip/friction/rolling/noise and boost/catchup/yaw sources. See reverse/task0045 and
+DRIVING_GRIP.md. Five new functions are Decompiled only; Debug index212=185Implemented+
+27Decompiled, none Verified. The sole original-body change corrects a diagnostic literal to
+Debug VRSQRT001A2AC4. CAR32 noise projection guard is a known excluded-case issue, not original
+behavior; full topology/water/walls/effects/EE exceptions remain outside the five-surface scope.
+
+ROAD/DIRT/GRASS/SAND/SNOW feed the same original Wheel chain via per-wheel synthetic world
+queries. Uniform and nativeX25/50/75/100 Zones use original coefficients/noise without tuning.
+Surface choices commit with complete candidate snapshots and record/replay with inputs/time.
+Read-only stored diagnostics preserve their original production phases and raw units; no grip
+score/recomputed force is added. World-anchored color/label descriptors are explicitly tools.
+The expanded panel uses supported pinned ImGui1.77 Columns, with fixed Return and independently
+scrolling body. An actual recapture bug was fixed: ImGui now receives mouse-button releases
+even when the world press captured the pointer; camera motion remains separate. Test failures
+were retained until this root cause was established, not resolved by removing assertions.
+Screenshot review corrected the actual expand coordinate and reduced/moved labels off the car.
+
+Validation: `cmake --preset native-debug`; `cmake --build --preset native-debug --target
+ driving_surface_tests driving_backend_tests -j6`; direct `build/native-debug/driving_surface_tests.exe`
+passed. `cmake --build --preset native-debug --target driving_tire_tests -j6` and
+`ctest --preset native-debug -R '^driving_tire$' --output-on-failure` passed1/1 in0.27s.
+`cmake --preset godot-debug`; `cmake --build --preset godot-debug -j6` passed after correcting
+legacy ImGui API use. `ctest --preset godot-debug --output-on-failure` ran72 checks in141.93s:
+70passed, one old exact-assignment source assertion failed and new surface test skipped on
+working directory. Corrected the assertion to require the SHA-bound load/catalogue/commit,
+and registered repository working directory. Then `cmake --preset godot-debug` and
+`ctest --preset godot-debug -R '^(driving_surfaces|debug_driving_single_chain)$' --output-on-failure`
+passed2/2 in16.51s, including surface16.28s. Thus every distinct check has a passing final
+result; a single uninterrupted72/72 run is not claimed. All six Godot host/batch tests and
+other native/template/evidence tests passed in the full run. No production change was needed
+for those two registration/assertion corrections.
+
+`py -3 tools/test_drive_window.py --surfaces --output local/task0045/window-final` passed31
+actual Win32 checks. Root inspected surfaces.png: expanded four contact/terrain rows, small
+lane-side label, usable Return header and complete car; other columns scroll horizontally.
+Uniform five selectors and all-zone/mixed-wheel traversal, WASD, camera, Esc/F8/focus recovery,
+Return/re-entry/cleanup passed. Private screenshots/JSON/logs remain ignored. Earlier focus
+interference was blocked by owned-window guards; user supplied an idle desktop.
+
+`py -3 reverse/scripts/generate_class_templates.py --check`,
+`py -3 reverse/scripts/complete_class_members.py`, chained source review and negative tests
+passed. Frozen TASK0044 review was not refreshed; strict TASK0045 amendment pins11-before/
+17-after identities and rejects deletion/baseline refresh/unreviewed changes. Source checks
+are not original equivalence. `py -3 reverse/scripts/generate_progress.py` refreshes tables/
+log contents. Final diff/link/UTF-8/restricted-extension checks passed; no proprietary binary,
+raw captures, assets or runtime screenshots enter Git; no commit created.
+
+Versions: GCC13.2.0 MinGW, CMake3.29.2, Ninja1.12.0, Python3.14.4, Godot4.4.1
+49a5bc7b6; pinned godot-cpp/ImGui retained. Window OpenGL Intel Arc B390 driver32.0.101.9150.
+`py -3 -m tools.oracle probe --output local/task0045/pcsx2-probe.json` returned blocked /
+timed out, no runnable live Debug scenario/process. No emulator/save/settings changed.
+The approved explicit-blocker alternative closes implementation acceptance only; numerical
+certification remains separate. Next: runnable exact Debug scene, explicit Debug oracle hooks
+at Move00137D18/components, equal initial/input/time/material/contact, then per-field errors
+and coverage. Retail hooks cannot certify Debug and no Verified status was assigned.
+
+## TASK-0046 - player transmission controls and original skids (2026-10-17)
+
+REA independent scopes recovered original RealDriver control and required services,
+the skid/update/render chain, and the Godot semantic input/render boundary. Root
+integrated original REAL_CONTROL burnout, appended strict source reviews and performed
+builds, regressions and owned-window verification. Existing TASK0044/45 dirty work and
+frozen pins were preserved. No Ghidra database edits or commit.
+
+Implemented default automatic/manual Q/E, manual neutral, original S brake/reverse,
+Space handbrake, actual gear/RPM/native speed HUD and original textured skid rendering.
+Godot actions and hints resolve one project InputMap; queued requests are acknowledged
+by completed steps. No independent physics/skid algorithm or new function keys.
+
+Counterevidence drove concrete corrections: REAL_CONTROL was a required burnout
+branch; steering conversion performs integer DIV after CVT; skid intensity is a lower
+bound; skid bbox expansion uses segment travel; Debug RenderingOrder/GlossMap choose
+draw contexts instead of Retail bWriteZ. Independent U/V clamp/repeat was needed by
+the actual original skid textures. Native pointer/layout/ABI boundaries remain explicit.
+
+Native builds passed. Final targeted native mover/player/skid3/3 passed0.55s; integrated
+surface/player/skid/backend4/4 previously passed41.52s. Full Godot suite75/76 passed
+118.25s; old14-owner assertion was updated to check exact14 originals plus a disjoint
+7-owner successor and its1/1 CTest passed3.78s. All76 distinct checks passed, not a
+single uninterrupted76/76 run. A late DLL lock from a separate same-project frontend
+was resolved by graceful closure of that exact runtime, then successful rebuild.
+
+Actual OS second and final runs each passed69 checks. The first popup sample moved
+after ImGui auto-fit; stable observed widget centers fixed the harness. A screenshot
+rerun also encountered a partial JSON observer read, now retried. Neither correction
+changed physics. Final local/task0046/window-final contains reports and privately held
+controls-skids.png, visually inspected by root for original textured wheel trails and
+Gear1/RPM1250/HandbrakeON. Full material/zone/camera/focus/F8/return acceptance passed.
+
+The chained source review approves25 old/81 new identities without refreshing any
+TASK0044/45 pins. Generator/version/identifier/evidence/progress checks pass. Debug
+index258 unique (226 Implemented/32 Decompiled); no Verified entries. The original
+probe `py -3 -m tools.oracle probe --output local/task0046/pcsx2-probe.json` remains
+blocked/timed out. Continue TASK0038 with a runnable exact Debug scene and synchronized
+equal-state/input/time/contact component traces. Whole race/world, full DMA/GS and
+degenerate numerical domains remain unclaimed. Usage and exact limits: PLAYER_DRIVING.md
+and completed TASK0046. No proprietary captures/assets entered tracked sources.
+
+
+## TASK-0047 - Alpha archive extraction, 2026-10-17
+
+Extracted all 405 records into the user-selected external GAME directory, decoded 81 COMP members and reread every output for SHA-256 validation (3251095824 bytes). Reference-tree hash candidates name 313 records; 92 unresolved paths and 3 repeated paths are retained explicitly. See reverse/structures/alpha-zzdata-task0047.md and tasks/completed/TASK-0047-alpha-zzdata-extraction.md. Two synthetic tests pass on Python 3.14.4; no game implementation, proprietary Git additions, commit or Verified promotion.
+
+
+## TASK-0048 - Real TrackViewer and track physics
+
+Recovered all 30 Retail catalogue entries, original resource reuse, geometry, textures,
+mips, world lights, topology and forward starting markers. TrackViewer supports
+asynchronous load/switch/clear, free camera, vehicle selection and real-track driving.
+Four native wheel contacts publish elevation, normal, terrain and existing grip fields;
+render materials and physics terrain are separate bindings. Synthetic driving remains.
+
+Original class-owned topology, path, VClip, collision-body and contact operations feed
+the existing Debug simulation. Full NativeBackend wall/corner impacts, unsupported-step
+rollback, all real starts and replay passed. Actual Compatibility renderer windows were
+inspected. Evidence and scoped source reviews are in reverse/task0048; use
+TRACK_VIEWER.md for setup and explicit rendering/physics boundaries. No original
+hardware numerical/visual comparison was available, so no Verified promotion.
+
+Final TASK-0048 regression:84/84 registered tests PASS in124.21 seconds, all30 external
+asset scenes PASS, strict successor audits and generated-document checks PASS.
+
+
+## TASK-0049 - Track orientation and contact debug display
+
+The indexed legacy decoder reverses rows before its optional flip; the new track-only
+adapter cancels that conversion to retain raw-ST row order, matching linear32. Base
+textures and original mip slices share that adapter; shared decoder and cars stay intact.
+Asymmetric4/8/32-bit tests preserve raw RGBA together.
+
+TrackViewer now provides independent, default-off Render Collision and Render Material
+controls. Cached native diagnostic geometry uses actual wheel-contact polygon planes,
+original XY perimeters and terrain IDs, preserving all road layers. Noncoplanar fourth
+quad vertices are projected only in the diagnostic output. Five tool colors match Test
+drive; other known IDs use stable hues and unknowns use magenta. Both modes share one fill.
+The ImGui legend reports names/IDs and polygon counts. Loading/failure disables controls;
+preferences survive scene replacement, and driving hides/restores effective overlays.
+
+All30 contact-geometry scans and four Compatibility-window views passed. Initial test
+expectations were corrected for original flags1 height ordering and collision-only fill;
+clear now publishes an explicit empty native snapshot. TASK0049 successor audit reviews
+8before/16after identities while preserving every historical JSON pin. See completed
+TASK0049 for final build/regression results; no original numerical certification claimed.
+
+TASK0049 final: native/GDExtension build PASS;87/87 full regression PASS in187.51sec;
+all30 asset scenes and contact-geometry scans PASS; five actual-window views inspected.
+
+
+## TASK-0050 - Track/car proportions and outside-camera projection
+
+Investigated the all-track proportion report with independent Retail geometry,
+scenery transform/culling bounds, Debug driving and actual Godot world matrices.
+Elise mesh/CV/wheel dimensions agree; raw road vertices match packed topology and
+all1388 inspected ordinary curve-sign instances across30 tracks fit original scene
+bounds. Runtime car and track scale are both unit. No asset rescaling justified.
+
+Found a confirmed shared projection-policy discrepancy: the tool used60-degree
+vertical FOV, while original DriveCameraMover OUTSIDE uses0x32DC horizontal.
+Corrected the projection and restore both FOV/aspect policy onreturn. Actual engine
+matrix tests cover4:3,16:9 and portrait, failed entry and driving return. The original
+follow/spring/obstruction camera remains unrecovered; no claim that this projection
+alone explains all reported visual differences. See reverse/task0050 and TASK0050
+for exact checks and final regression. No C++body changes or historical pin changes.

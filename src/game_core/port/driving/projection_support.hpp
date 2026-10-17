@@ -1,5 +1,7 @@
 #pragma once
-// TASK-0042: shared host utilities; partitions prevent helper name collisions.
+// TASK-0044: shared host utilities; historical GP offsets are lookup keys only.
+// debug_global_address resolves every such key to individually audited Debug data.
+// No Retail GP or data image is mapped by this compatibility layer.
 #include "game_core/port/driving/ee_scalar.hpp"
 #include "game_core/port/not_implemented.hpp"
 #include <algorithm>
@@ -10,25 +12,26 @@
 #include <stdexcept>
 #include <utility>
 #include "game_core/port/driving/projections.hpp"
+#include "game_core/port/driving/debug_globals.hpp"
 
 namespace port::driving::native::detail_group_00137100_runtime {
 
 constexpr std::uint32_t gp=0x003358f0;
-inline float global(Memory& m,std::uint16_t offset){return m.scalar(gp+static_cast<std::int16_t>(offset));}
-inline std::uint32_t global_address(std::uint16_t offset){return gp+static_cast<std::int16_t>(offset);}
+inline float global(Memory& m,std::uint16_t offset){return m.scalar(debug_global_address(gp+static_cast<std::int16_t>(offset)));}
+inline std::uint32_t global_address(std::uint16_t offset){return debug_global_address(gp+static_cast<std::int16_t>(offset));}
 inline float length(const std::array<float,4>& v){return std::sqrt((v[0]*v[0]+v[1]*v[1])+v[2]*v[2]);}
 inline std::array<float,4> cross(const std::array<float,4>& a,const std::array<float,4>& b){return {{a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0],a[3]}};}
 inline std::int32_t signed_bits(std::uint32_t bits){std::int32_t result;std::memcpy(&result,&bits,4);return result;}
 
 inline void reset_dispatch(Memory& m,std::uint32_t code,std::uint32_t object,InitServices& services){
     switch(code){
-    case 0x0019d848:Sub_0019D848(m,object);return;
-    case 0x001a4358:Wheel::ComputeAuxiliaries(m,object);return;
-    case 0x001a5fc0:
+    case 0x0019b170:Sub_0019D848(m,object);return;
+    case 0x001a1b30:Wheel::ComputeAuxiliaries(m,object);return;
+    case 0x001a37a0:
         if(!services.contact)hp2::not_implemented("0x001A5FC0","Contact provider is absent");
         Sub_001A5FC0(m,object,*services.contact);return;
-    case 0x0018a988:port::driving::Sub_0018A988(m,object);return;
-    case 0x0018b4a0:port::driving::Sub_0018B4A0(m,object);return;
+    case 0x00188b38:port::driving::Sub_0018A988(m,object);return;
+    case 0x00189648:port::driving::Sub_0018B4A0(m,object);return;
     default:hp2::not_implemented("0x0019C808","Unknown component virtual target at slot +0x44");
     }
 }
@@ -41,7 +44,7 @@ inline void refresh(Memory& m,std::uint32_t object){
 
 namespace port::driving::native::detail_group_00137d90 {
 
-inline std::uint32_t ga(std::uint16_t off){return 0x3358f0u+static_cast<std::int16_t>(off);}
+inline std::uint32_t ga(std::uint16_t off){return debug_global_address(0x3358f0u+static_cast<std::int16_t>(off));}
 inline float g(Memory& m,std::uint16_t off){return m.scalar(ga(off));}
 inline std::int32_t sb(std::uint32_t v){std::int32_t out;std::memcpy(&out,&v,4);return out;}
 template<class F,class... A> auto invoke(F& f,const char* address,A&&... a) {
@@ -53,7 +56,7 @@ template<class F,class... A> auto invoke(F& f,const char* address,A&&... a) {
 
 namespace port::driving::native::detail_group_00138e08 {
 
-inline float g(Memory& m,std::uint16_t off){return m.scalar(0x003358f0u+static_cast<std::int16_t>(off));}
+inline float g(Memory& m,std::uint16_t off){return m.scalar(debug_global_address(0x003358f0u+static_cast<std::int16_t>(off)));}
 inline float len(const Vector& a){const float x=a[0]*a[0],y=a[1]*a[1],z=a[2]*a[2];return std::sqrt((x+y)+z);}
 inline float dot(const Vector& a,const Vector& b){const float x=a[0]*b[0],y=a[1]*b[1],z=a[2]*b[2];return (x+y)+z;}
 inline Vector mul(Vector a,float f){for(auto& v:a)v=v*f;return a;}
@@ -114,20 +117,20 @@ namespace port::driving::native::detail_group_0018bce0_memory {
 
 inline DrivetrainGlobals globals(Memory& m) {
     DrivetrainGlobals g;
-    g.Field_0032e358=m.scalar(0x0032e358);g.Field_0032e35c=m.scalar(0x0032e35c);g.Field_0032e370=m.scalar(0x0032e370);
-    g.Field_0032e374=m.scalar(0x0032e374);g.Field_0032e378=m.scalar(0x0032e378);g.Field_0032e388=m.scalar(0x0032e388);
-    g.Field_0032e38c=m.scalar(0x0032e38c);g.Field_0032e390=m.scalar(0x0032e390);g.Field_0032e394=m.scalar(0x0032e394);
-    g.Field_003308b8=m.scalar(0x003308b8);g.Field_003308bc=m.scalar(0x003308bc);g.Field_003308c4=m.scalar(0x003308c4);
-    g.Field_00330c88=m.scalar(0x00330c88);return g;
+    g.Field_0032e358=m.scalar(0x325450);g.Field_0032e35c=m.scalar(0x325454);g.Field_0032e370=m.scalar(0x32546c);
+    g.Field_0032e374=m.scalar(0x325468);g.Field_0032e378=m.scalar(0x32546c);g.Field_0032e388=m.scalar(0x32547c);
+    g.Field_0032e38c=m.scalar(0x325480);g.Field_0032e390=m.scalar(0x325484);g.Field_0032e394=m.scalar(0x325488);
+    g.Field_003308b8=m.scalar(0x327930);g.Field_003308bc=m.scalar(0x327934);g.Field_003308c4=m.scalar(0x32793c);
+    g.Field_00330c88=m.scalar(0x327d08);return g;
 }
 inline DrivetrainProjection load(Memory& m,std::uint32_t a) {
     DrivetrainProjection s;
     s.Field_0xc=m.scalar(a+0xc);s.Field_0x2c=m.signed_word(a+0x2c);s.Field_0x30=m.signed_word(a+0x30);
     s.Field_0x34=m.signed_word(a+0x34);s.Field_0x38=m.signed_word(a+0x38);s.Field_0x40=m.scalar(a+0x40);
-    s.Field_0x44=m.scalar(a+0x44);s.Field_0x48=m.signed_word(a+0x48);s.Field_0x4c=m.scalar(a+0x4c);
+    s.Field_0x44=m.scalar(a+0x44);s.Field_0x48=m.signed_word(a+0x48);
     const auto config=m.word(a+0x10),engine=m.word(a+0x14),ec=m.word(engine+0x10),car=m.word(a+0x28);
     s.config_Field_0x8=m.scalar(config+8);s.config_Field_0xc=m.scalar(config+0xc);s.config_Field_0x10=m.scalar(config+0x10);s.config_Field_0x14=m.scalar(config+0x14);s.config_Field_0x18=m.signed_word(config+0x18);
-    for(unsigned i=0;i<9;++i){s.config_Field_0x20[i]=m.scalar(config+0x20+i*4);s.Field_0x50[i]=m.scalar(a+0x50+i*4);s.Field_0x74[i]=m.scalar(a+0x74+i*4);}
+    for(unsigned i=0;i<9;++i){s.config_Field_0x20[i]=m.scalar(config+0x20+i*4);s.Field_0x50[i]=m.scalar(a+0x4c+i*4);s.Field_0x74[i]=m.scalar(a+0x70+i*4);}
     s.engine_Field_0xc=m.scalar(engine+0xc);s.engine_Field_0x44=m.scalar(engine+0x44);s.engine_Field_0x48=m.scalar(engine+0x48);
     s.engine_config_Field_0x0=m.scalar(ec);s.engine_config_Field_0x8=m.scalar(ec+8);s.engine_config_Field_0xc=m.scalar(ec+0xc);s.car_Field_0x3a4=m.signed_word(car+0x3a4);
     for(unsigned i=0;i<4;++i){const auto w=m.word(a+0x18+i*4);auto& p=s.wheels[i];p.Field_0x20=m.scalar(w+0x20);p.Field_0x24=m.scalar(w+0x24);p.Field_0x108=m.scalar(w+0x108);p.Field_0x114=m.scalar(w+0x114);p.Field_0x10c=m.signed_word(w+0x10c);p.Field_0x155=m.signed_byte(w+0x155);p.Field_0x160=m.scalar(w+0x160);p.config_Field_0xc=m.scalar(m.word(w+0xc)+0xc);}
@@ -135,7 +138,7 @@ inline DrivetrainProjection load(Memory& m,std::uint32_t a) {
 }
 inline void store(Memory& m,std::uint32_t a,const DrivetrainProjection& s) {
     m.word(a+0x2c,static_cast<std::uint32_t>(s.Field_0x2c));m.word(a+0x34,static_cast<std::uint32_t>(s.Field_0x34));
-    m.scalar(a+0x44,s.Field_0x44);m.word(a+0x48,static_cast<std::uint32_t>(s.Field_0x48));m.scalar(a+0x4c,s.Field_0x4c);
+    m.scalar(a+0x44,s.Field_0x44);m.word(a+0x48,static_cast<std::uint32_t>(s.Field_0x48));
     m.scalar(m.word(a+0x14)+0x48,s.engine_Field_0x48);
     for(unsigned i=0;i<4;++i)m.scalar(m.word(a+0x18+i*4)+0x108,s.wheels[i].Field_0x108);
 }
@@ -166,7 +169,7 @@ inline float ratio(Memory& m,std::uint32_t s) {
 
 namespace port::driving::native::detail_group_0019d4d0 {
 
-inline float g(Memory& m,std::uint16_t offset) { return m.scalar(0x003358f0u+static_cast<std::int16_t>(offset)); }
+inline float g(Memory& m,std::uint16_t offset) { return m.scalar(debug_global_address(0x003358f0u+static_cast<std::int16_t>(offset))); }
 inline float length(const Vector& a) { const float x=a[0]*a[0],y=a[1]*a[1],z=a[2]*a[2];return std::sqrt((x+y)+z); }
 inline float dot(const Vector& a,const Vector& b) {const float x=a[0]*b[0],y=a[1]*b[1],z=a[2]*b[2];return (x+y)+z;}
 inline Vector scale(Vector a,float f) {for(auto& v:a)v=v*f;return a;}
@@ -174,7 +177,7 @@ inline void add(Memory& m,std::uint32_t address,const Vector& a) {auto b=m.vecto
 inline std::uint32_t count(Memory& m,std::uint32_t object) {
     const auto table=m.word(object+8),target=m.word(table+0x14);
     switch(target) {
-    case 0x0019dcc8:return 32;
+    case 0x0019b5f0:return 32;
     default:break;
     }
     // Slot+14 leaves all return LI v0,<count>. Read only known audited addresses.
@@ -188,7 +191,7 @@ inline std::uint32_t count(Memory& m,std::uint32_t object) {
 namespace port::driving::native::detail_group_0019da30 {
 
 constexpr std::uint32_t gp=0x003358f0;
-inline std::uint32_t address(std::uint16_t offset){return gp+static_cast<std::int16_t>(offset);}
+inline std::uint32_t address(std::uint16_t offset){return debug_global_address(gp+static_cast<std::int16_t>(offset));}
 inline float g(Memory& m,std::uint16_t offset){return m.scalar(address(offset));}
 inline std::int32_t signed_bits(std::uint32_t bits){std::int32_t value;std::memcpy(&value,&bits,4);return value;}
 
@@ -197,9 +200,9 @@ inline std::int32_t signed_bits(std::uint32_t bits){std::int32_t value;std::memc
 namespace port::driving::detail_group_001a4930 {
 
 constexpr std::uint32_t gp=0x003358f0;
-inline float g(Memory& m,std::int32_t off){return m.scalar(gp+static_cast<std::uint32_t>(off));}
-inline std::uint32_t gw(Memory& m,std::int32_t off){return m.word(gp+static_cast<std::uint32_t>(off));}
-inline SolverMathContext context(Memory& m){return {m.vector(0x00320a60)};}
+inline float g(Memory& m,std::int32_t off){return m.scalar(debug_global_address(gp+static_cast<std::uint32_t>(off)));}
+inline std::uint32_t gw(Memory& m,std::int32_t off){return m.word(debug_global_address(gp+static_cast<std::uint32_t>(off)));}
+inline SolverMathContext context(Memory& m){return {m.vector(0x00317b20)};}
 inline SolverVector transform(Memory& m,const SolverMatrix& mat,const SolverVector& v){
     SolverVector out{};bMulMatrix(out,mat,v,context(m));return out;
 }

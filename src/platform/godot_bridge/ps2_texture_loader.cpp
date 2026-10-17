@@ -122,6 +122,7 @@ godot::Array Ps2TextureLoader::list_textures(const godot::String& relative_path)
 void Ps2TextureLoader::set_search_bundles(const godot::PackedStringArray& bundles) {
     search_bundles_ = bundles;
     texture_cache_.clear();
+    raw_3d_cache_.clear();
 }
 
 godot::PackedStringArray Ps2TextureLoader::get_search_bundles() const {
@@ -178,6 +179,28 @@ godot::Ref<godot::ImageTexture> Ps2TextureLoader::load_texture_by_hash(std::int6
     godot::Ref<godot::ImageTexture> empty;
     texture_cache_[hash] = empty;
     return empty;
+}
+
+godot::Ref<godot::ImageTexture> Ps2TextureLoader::load_texture_for_3d(std::int64_t texture_hash,hp2::assets::TpkTextureHeader& result_header) {
+    const auto hash=static_cast<std::uint32_t>(texture_hash);
+    const auto cached=raw_3d_cache_.find(hash);
+    if(cached!=raw_3d_cache_.end()){result_header=cached->second.second;return cached->second.first;}
+    const auto bundles=get_search_bundles();
+    for(int i=0;i<bundles.size();++i){
+        const auto* archive=cached_archive(bundles[i]);if(!archive)continue;
+        for(const auto& header:archive->headers()){
+            if(header.tex_hash!=hash)continue;
+            const auto decoded=archive->decode(header,false,true);
+            if(!decoded){last_error_="Original skid texture uses an unsupported decoder format";return {};}
+            godot::PackedByteArray bytes;bytes.resize(decoded->rgba.size());
+            if(!decoded->rgba.empty())std::memcpy(bytes.ptrw(),decoded->rgba.data(),decoded->rgba.size());
+            const auto image=godot::Image::create_from_data(decoded->width,decoded->height,false,godot::Image::FORMAT_RGBA8,bytes);
+            if(image.is_null()){last_error_="Original skid texture image upload failed";return {};}
+            auto texture=godot::ImageTexture::create_from_image(image);
+            result_header=header;raw_3d_cache_.emplace(hash,std::make_pair(texture,header));last_error_="";return texture;
+        }
+    }
+    last_error_=godot::String("Original skid texture hash is absent: 0x")+godot::String::num_int64(hash,16);return {};
 }
 
 godot::Ref<godot::ImageTexture> Ps2TextureLoader::load_texture_by_name(

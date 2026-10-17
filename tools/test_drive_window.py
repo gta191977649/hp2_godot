@@ -21,6 +21,8 @@ def main() -> int:
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=root / "local/task0038/third-person-os")
+    parser.add_argument("--surfaces", action="store_true", help="Also exercise five material choices and world-zone grip diagnostics through OS input")
+    parser.add_argument("--controls", action="store_true", help="Exercise manual/automatic GUI, Q/E/N, reverse, handbrake and original skid rendering")
     args = parser.parse_args()
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
@@ -39,6 +41,9 @@ def main() -> int:
     kernel.GetCurrentThreadId.restype = w.DWORD
     user.GetWindowThreadProcessId.argtypes = [w.HWND, c.POINTER(w.DWORD)]
     user.GetClientRect.argtypes = [w.HWND, c.POINTER(w.RECT)]
+    user.SetCursorPos.argtypes = [c.c_int, c.c_int]
+    user.WindowFromPoint.argtypes = [w.POINT]
+    user.WindowFromPoint.restype = w.HWND
     user.ClientToScreen.argtypes = [w.HWND, c.POINTER(w.POINT)]
     user.GetWindowRect.argtypes = [w.HWND, c.POINTER(w.RECT)]
     user.PostMessageW.argtypes = [w.HWND, w.UINT, w.WPARAM, w.LPARAM]
@@ -135,11 +140,19 @@ def main() -> int:
         key(scan, False)
 
     def click(x: int, y: int) -> None:
-        foreground()
+        # Repeated entry/focus tests can change foreground ownership.
+        # Re-activate only our PID-bound test window, then retain every send guard.
+        activate_owned()
         rect, point = w.RECT(), w.POINT()
         user.GetClientRect(hwnd, c.byref(rect))
         point.x, point.y = round(x * rect.right / 1280), round(y * rect.bottom / 800)
         user.ClientToScreen(hwnd, c.byref(point))
+        target = user.WindowFromPoint(point)
+        target_pid = w.DWORD()
+        user.GetWindowThreadProcessId(target, c.byref(target_pid))
+        if target_pid.value != process.pid:
+            raise RuntimeError(f"Refusing click: client target ({point.x},{point.y}) belongs to PID {target_pid.value}, expected {process.pid}")
+        print(f"OS_CLICK: client {x},{y} / {rect.right},{rect.bottom}; screen {point.x},{point.y}", flush=True)
         user.SetCursorPos(point.x, point.y)
         time.sleep(0.12)
         for flag in (2, 4):
@@ -148,6 +161,36 @@ def main() -> int:
             event.mouse = Mouse(0, 0, 0, flag, 0, 0)
             send(event)
             time.sleep(0.08)
+
+    def widget(name: str) -> None:
+        current = wait(lambda row: name in row.get("ui_targets", {}), f"visible ImGui target {name}")
+        point = current["ui_targets"][name]
+        # ImGui popup auto-fit can reposition after its first measured frame.
+        # Observe a stable rendered target before sending an actual mouse click.
+        stable_since = time.monotonic()
+        deadline = stable_since + 5
+        while time.monotonic() - stable_since < 0.25:
+            if time.monotonic() > deadline:
+                raise AssertionError(f"ImGui target did not settle: {name}")
+            time.sleep(0.04)
+            current = state()
+            if not current:
+                # The observer file can be between writes. No valid frame has
+                # established a disappeared widget; wait for another full read.
+                stable_since = time.monotonic()
+                continue
+            next_point = current.get("ui_targets", {}).get(name)
+            if next_point is None:
+                raise AssertionError(f"ImGui target disappeared before click: {name}")
+            if next_point != point:
+                point = next_point
+                stable_since = time.monotonic()
+        if name == "drive_transmission_1":
+            from PIL import ImageGrab
+            rect = w.RECT()
+            user.GetWindowRect(hwnd, c.byref(rect))
+            ImageGrab.grab(bbox=(rect.left, rect.top, rect.right, rect.bottom)).save(output / "manual-popup-before-click.png")
+        click(round(point[0]), round(point[1]))
 
     def release_all() -> None:
         if hwnd and process.poll() is None:
@@ -171,11 +214,8 @@ def main() -> int:
         hwnd = windows[0]
         activate_owned()
         time.sleep(0.3)
-        from PIL import ImageGrab
-        initial_rect = w.RECT()
-        user.GetWindowRect(hwnd, c.byref(initial_rect))
-        ImageGrab.grab(bbox=(initial_rect.left, initial_rect.top, initial_rect.right, initial_rect.bottom)).save(output / "preview.png")
-        click(55, 238)
+        wait(lambda row: row["focused"] and row["window_focus"], "owned window focused")
+        widget("test_drive")
         initial = wait(lambda row: row["phase"] == 2 and row["mouse"] == 2 and row["capture"], "click enters captured driving")
         assert initial["camera_behind"] < -0.9
         key(0x11, True)  # physical W
@@ -231,18 +271,101 @@ def main() -> int:
         ImageGrab.grab(bbox=(rect.left, rect.top, rect.right, rect.bottom)).save(output / "driving.png")
         tap(0x01)
         wait(lambda row: row["mouse"] == 0, "release before return")
-        click(85, 90)
+        widget("drive_exit")
         wait(lambda row: row["phase"] == 0 and row["ready"] and row["car"] == initial["car"], "return restores selected CarViewer model")
         time.sleep(0.3)
-        click(55, 238)
+        widget("test_drive")
         wait(lambda row: row["phase"] == 2 and row["mouse"] == 2, "re-entry is immediately drivable")
         key(0x11, True)
         wait(lambda row: row["throttle"] == 1, "W works after re-entry")
         key(0x11, False)
         tap(0x01)
         wait(lambda row: row["mouse"] == 0, "release on second exit")
-        click(85, 90)
-        wait(lambda row: row["phase"] == 0 and row["ready"], "second return succeeds")
+        if args.controls:
+            widget("drive_transmission")
+            widget("drive_transmission_1")
+            wait(lambda row: row.get("powertrain", {}).get("manual_transmission") == 1, "OS GUI selects original manual transmission")
+            tap(0x12)  # E upshift
+            up = wait(lambda row: row.get("powertrain", {}).get("gear", -1) >= 3, "OS E upshifts actual forward gear")
+            tap(0x10)  # Q downshift
+            wait(lambda row: row.get("powertrain", {}).get("gear") == up["powertrain"]["gear"] - 1, "OS Q downshifts actual gear")
+            widget("drive_neutral")
+            neutral = wait(lambda row: row.get("powertrain", {}).get("gear") == 1, "OS GUI N selects original neutral")
+            assert math.isfinite(neutral["powertrain"]["rpm"]) and math.isfinite(neutral["powertrain"]["speed"])
+            key(0x11, True)
+            time.sleep(0.4)
+            neutral_throttle = state()
+            assert neutral_throttle["powertrain"]["gear"] == 1
+            key(0x11, False)
+            key(0x1F, True)
+            wait(lambda row: row.get("powertrain", {}).get("gear") == 0 and row["powertrain"].get("forward_speed", 0) < -0.1,
+                 "OS S follows original braking into reverse motion", 15)
+            key(0x1F, False)
+            key(0x11, True)
+            wait(lambda row: row.get("powertrain", {}).get("gear", 0) >= 2 and row["powertrain"].get("forward_speed", 0) > 0.1,
+                 "OS W returns through original reverse-to-forward logic", 15)
+            wait(lambda row: row["speed"] > 4, "OS forward acceleration before handbrake", 15)
+            key(0x39, True)  # Space held handbrake
+            wait(lambda row: row.get("handbrake", 0) == 1 and row.get("powertrain", {}).get("handbrake", False), "OS Space applies original handbrake")
+            key(0x1E, True)
+            wait(lambda row: row.get("skid_quads", 0) > 0, "Original skid commands reach visible mesh", 10)
+            # Retain an actual rendered trail/HUD artifact while the same OS
+            # W/Space/A inputs remain held; no control-state injection.
+            time.sleep(0.3)
+            rect = w.RECT()
+            user.GetWindowRect(hwnd, c.byref(rect))
+            ImageGrab.grab(bbox=(rect.left, rect.top, rect.right, rect.bottom)).save(output / "controls-skids.png")
+            key(0x1E, False)
+            key(0x39, False)
+            key(0x11, False)
+            wait(lambda row: row.get("handbrake", 0) == 0 and not row.get("powertrain", {}).get("handbrake", True), "OS Space release clears handbrake")
+            widget("drive_transmission")
+            widget("drive_transmission_0")
+            wait(lambda row: row.get("powertrain", {}).get("manual_transmission") == 0, "OS GUI restores automatic transmission")
+            # A new entry gives the zone run its own unchanged initial position/heading.
+            widget("drive_exit")
+            wait(lambda row: row["phase"] == 0 and row["ready"], "control test return")
+            widget("test_drive")
+            wait(lambda row: row["phase"] == 2 and row["mouse"] == 2, "control test clean re-entry")
+            tap(0x01)
+            wait(lambda row: row["mouse"] == 0, "release for surface controls")
+        if args.surfaces:
+            # TASK-0045: newly re-entered car is near the initial world origin.
+            # Selector positions follow the pinned ImGui layout below Return.
+            for index, terrain in enumerate((1, 2, 6, 7, 8)):
+                widget("drive_material")
+                widget(f"drive_material_{terrain}")
+                selected = wait(lambda row: row.get("surface", {}).get("mode") == 0
+                    and row.get("surface", {}).get("terrain") == terrain
+                    and len(row.get("grip", [])) == 4
+                    and all(g.get("terrain") == terrain for g in row["grip"]), f"OS uniform material {terrain} commits with four-wheel diagnostics")
+                assert selected["surface_visual"] == f"0:{terrain}" and selected["surface_labels"] == 1
+                for grip in selected["grip"]:
+                    for field in ("static_coefficient", "dynamic_coefficient", "z_force", "current_slip", "road_noise"):
+                        assert math.isfinite(grip[field])
+            widget("drive_surface_mode")
+            widget("drive_surface_mode_1")
+            wait(lambda row: row.get("surface", {}).get("mode") == 1 and row["surface_labels"] == 5, "OS zones selection commits world-anchored presentation")
+            widget("drive_grip")  # Open the read-only diagnostics child.
+            click(900, 600)
+            key(0x11, True)
+            seen = set()
+            mixed = False
+            def crossed(row):
+                nonlocal mixed
+                materials = {g.get("terrain") for g in row.get("grip", [])}
+                seen.update(materials)
+                mixed = mixed or len(materials) > 1
+                return row["position"][2] > 110 and {1, 2, 6, 7, 8}.issubset(seen) and mixed
+            wait(crossed, "OS acceleration traverses all five world zones with mixed front/rear grip", 30)
+            key(0x11, False)
+            rect = w.RECT()
+            user.GetWindowRect(hwnd, c.byref(rect))
+            ImageGrab.grab(bbox=(rect.left, rect.top, rect.right, rect.bottom)).save(output / "surfaces.png")
+            tap(0x01)
+            wait(lambda row: row["mouse"] == 0 and not row["capture"], "release after surface traversal")
+        widget("drive_exit")
+        wait(lambda row: row["phase"] == 0 and row["ready"] and row.get("surface_labels", 0) == 0, "second return succeeds and surface labels are removed")
         (output / "report.json").write_text(json.dumps({"result": "passed", "owned_pid": process.pid,
             "checks": trace}, indent=2), encoding="utf-8")
         print(f"DRIVING_OS_INPUT_OK: {len(trace)} checks; {output}")

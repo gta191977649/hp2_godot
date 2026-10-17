@@ -412,9 +412,13 @@ TpkTextureHeader parse_header(const std::uint8_t* entry) {
     header.width = read_u16(entry, 0x24);
     header.height = read_u16(entry, 0x26);
     header.bit_depth = entry[0x28];
+    header.RenderingOrder = static_cast<std::int8_t>(entry[0x29]);
     header.image_placement = static_cast<std::int32_t>(read_u32(entry, 0x30));
     header.palette_placement = static_cast<std::int32_t>(read_u32(entry, 0x34));
     header.image_size = static_cast<std::int32_t>(read_u32(entry, 0x38));
+    header.BaseImageSize = static_cast<std::int32_t>(read_u32(entry, 0x44));
+    header.ImageParentHash = read_u32(entry,0x40);
+    for(std::size_t level=0;level<7;++level)header.mip_is_swizzled[level]=entry[0x55+level*4]!=0;
     header.palette_size = static_cast<std::int32_t>(read_u32(entry, 0x3C));
     header.shift_width = entry[0x48];
     header.shift_height = entry[0x49];
@@ -427,6 +431,7 @@ TpkTextureHeader parse_header(const std::uint8_t* entry) {
     header.Field_0x50 = entry[0x50];
     header.is_swizzled = entry[0x55] != 0;
     header.Field_0x74 = entry[0x74]; // 0010DEBC signed-byte nonzero test; E-0033-T05.
+    header.BiasLevel = entry[0x75]; // Retail0010B838/0010BB20, TASK0051.
     header.Field_0x6e = entry[0x6E];
     header.Field_0x6f = entry[0x6F];
     header.Field_0x70 = entry[0x70];
