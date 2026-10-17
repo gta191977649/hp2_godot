@@ -27,7 +27,7 @@ FeScreen make_menu_screen(int count) {
     for (int i = 1; i <= count; ++i) {
         FeWidget widget;
         widget.name = "MENUITEM_" + std::to_string(i);
-        widget.name_hash = StringHash_002534A8(widget.name.c_str());
+        widget.name_hash = bStringHash(widget.name.c_str());
         widget.type = 1;
         widget.r = static_cast<std::uint8_t>(0x10 + i);
         widget.g = 0x7f;
@@ -37,7 +37,7 @@ FeScreen make_menu_screen(int count) {
     }
     FeWidget other;
     other.name = "GRID";
-    other.name_hash = StringHash_002534A8("GRID");
+    other.name_hash = bStringHash("GRID");
     other.type = 2;
     screen.widgets.push_back(other);
     return screen;
@@ -56,22 +56,22 @@ MenuGroup_0016AA00 make_group(FeScreen& screen, MenuCallback callback = {}) {
 
 // FUN_0016B478 passes these four hashes as literal immediates; FUN_00169F78 passes 0x27C5F4AB.
 void string_hash_matches_elf_immediates() {
-    require(StringHash_002534A8("POPUP_1") == 0xe0105663u, "POPUP_1 hash");
-    require(StringHash_002534A8("POPUP_2") == 0xe0105664u, "POPUP_2 hash");
-    require(StringHash_002534A8("POPUP_3") == 0xe0105665u, "POPUP_3 hash");
-    require(StringHash_002534A8("ANIMATING_MENUITEM") == 0xab671c9au, "ANIMATING_MENUITEM hash");
-    require(StringHash_002534A8(kHighlightBarName) == kHighlightBarNameHash_00169F78,
+    require(bStringHash("POPUP_1") == 0xe0105663u, "POPUP_1 hash");
+    require(bStringHash("POPUP_2") == 0xe0105664u, "POPUP_2 hash");
+    require(bStringHash("POPUP_3") == 0xe0105665u, "POPUP_3 hash");
+    require(bStringHash("ANIMATING_MENUITEM") == 0xab671c9au, "ANIMATING_MENUITEM hash");
+    require(bStringHash(kHighlightBarName) == kHighlightBarNameHash_00169F78,
             "HIGHLIGHT_BAR must hash to the constant FUN_00169F78 looks up");
 }
 
 void menu_item_index_reverse_lookup() {
     for (int i = 0; i < kMenuItemIndexLimit_0016A330; ++i) {
         const std::string name = "MENUITEM_" + std::to_string(i);
-        require(MenuItemIndexFromNameHash_0016A330(StringHash_002534A8(name.c_str())) == i,
+        require(MenuItemIndexFromNameHash_0016A330(bStringHash(name.c_str())) == i,
                 "FUN_0016A330 must round-trip every index it scans");
     }
     // The original's own fallback for an unknown hash is 0, not an error.
-    require(MenuItemIndexFromNameHash_0016A330(StringHash_002534A8("GRID")) == 0,
+    require(MenuItemIndexFromNameHash_0016A330(bStringHash("GRID")) == 0,
             "unknown hash must fall back to 0");
 }
 
@@ -132,10 +132,10 @@ void item_lookup_and_disable_helper() {
     group.EnsureMenu_0016A858();
     MenuList_00169F78& list = *group.child_0x08;
 
-    const auto third = StringHash_002534A8("MENUITEM_3");
-    MenuThing_00169740* item = list.FindByHash_0016A5B0(third);
+    const auto third = bStringHash("MENUITEM_3");
+    MenuThing_00169740* item = list.FindItem(third);
     require(item != nullptr && item->name_hash_0x0C == third, "FUN_0016A5B0 must match on +0x0C");
-    require(list.FindByHash_0016A5B0(StringHash_002534A8("MENUITEM_7")) == nullptr,
+    require(list.FindItem(bStringHash("MENUITEM_7")) == nullptr,
             "an undeclared item must come back as 0");
 
     Sub_0016D2A8(&list, screen, third, 2);
@@ -143,10 +143,10 @@ void item_lookup_and_disable_helper() {
     require(FindWidget_00143D50(screen, third, 0)->visible == 0, "mode 2 must hide the widget");
 
     // The item the Language screen hides is usually absent entirely; nothing may change.
-    const auto seventh = StringHash_002534A8("MENUITEM_7");
+    const auto seventh = bStringHash("MENUITEM_7");
     Sub_0016D2A8(&list, screen, seventh, 2);
     Sub_0016D2A8(nullptr, screen, third, 2);
-    require(FindWidget_00143D50(screen, StringHash_002534A8("MENUITEM_1"), 0)->visible == 1,
+    require(FindWidget_00143D50(screen, bStringHash("MENUITEM_1"), 0)->visible == 1,
             "a miss must leave the other widgets alone");
 
     // Mode 1 is the inverse pair, and mode 0 clears without touching visibility.
@@ -165,12 +165,12 @@ void colour_write_preserves_alpha_and_stamps_dirty() {
     widget.g = 2;
     widget.b = 3;
     widget.a = 0x44;
-    SetWidgetColour_00140CA0(widget, kHighlightColour_gp_0x5330);
+    SetColor(widget, kHighlightColour_gp_0x5330);
     require(widget.a == 0x44, "FUN_00140CA0 must not touch the alpha byte");
     require(widget.r == 0x80 && widget.g == 0x40 && widget.b == 0x00, "rgb must be replaced");
     require(widget.dirty_0x2b == 7, "a real change must stamp +0x2b with 7");
     widget.dirty_0x2b = 0;
-    SetWidgetColour_00140CA0(widget, kHighlightColour_gp_0x5330);
+    SetColor(widget, kHighlightColour_gp_0x5330);
     require(widget.dirty_0x2b == 0, "an unchanged write must not stamp +0x2b");
 }
 
@@ -181,15 +181,15 @@ void navigation_wraps_in_both_directions() {
     group.EnsureMenu_0016A858();
     MenuList_00169F78& list = *group.child_0x08;
 
-    require(list.CurrentIndex_0016A130() == 0, "refresh must land on the first item");
+    require(list.GetCurrentItemNumber() == 0, "refresh must land on the first item");
     list.Next_0016A5E0();
-    require(list.CurrentIndex_0016A130() == 1, "next moves forward");
+    require(list.GetCurrentItemNumber() == 1, "next moves forward");
     list.Next_0016A5E0();
-    require(list.CurrentIndex_0016A130() == 2, "next moves forward");
+    require(list.GetCurrentItemNumber() == 2, "next moves forward");
     list.Next_0016A5E0();
-    require(list.CurrentIndex_0016A130() == 0, "next past the tail wraps to the head");
+    require(list.GetCurrentItemNumber() == 0, "next past the tail wraps to the head");
     list.Previous_0016A6C8();
-    require(list.CurrentIndex_0016A130() == 2, "previous past the head wraps to the tail");
+    require(list.GetCurrentItemNumber() == 2, "previous past the head wraps to the tail");
 }
 
 // The same traversal must step over items whose enabled bit is clear.
@@ -201,11 +201,11 @@ void navigation_skips_disabled_items() {
     auto items = list.items();
     items[1]->ClearStateBits_00169CB0(kMenuThingStateEnabled_bit0);
 
-    require(list.CurrentIndex_0016A130() == 0, "start on the first item");
+    require(list.GetCurrentItemNumber() == 0, "start on the first item");
     list.Next_0016A5E0();
-    require(list.CurrentIndex_0016A130() == 2, "the disabled middle item must be skipped");
+    require(list.GetCurrentItemNumber() == 2, "the disabled middle item must be skipped");
     list.Previous_0016A6C8();
-    require(list.CurrentIndex_0016A130() == 0, "previous must skip it as well");
+    require(list.GetCurrentItemNumber() == 0, "previous must skip it as well");
 }
 
 // A single enabled item must not move, and must not fire a highlight change.
@@ -216,7 +216,7 @@ void single_item_list_does_not_move() {
     MenuList_00169F78& list = *group.child_0x08;
     list.Next_0016A5E0();
     list.Previous_0016A6C8();
-    require(list.CurrentIndex_0016A130() == 0, "a one-item list stays put");
+    require(list.GetCurrentItemNumber() == 0, "a one-item list stays put");
 }
 
 // FUN_0016A458 maps SCROLL_UP/DOWN and the analog equivalents onto the list moves, with the
@@ -231,20 +231,20 @@ void joy_events_drive_the_list_with_recovered_sounds() {
     MenuList_00169F78& list = *group.child_0x08;
 
     group.HandleJoyEvent_0016AA00(0, hp2::input::JOY_EVENT_SCROLL_DOWN, true);
-    require(list.CurrentIndex_0016A130() == 1, "SCROLL_DOWN moves to the next item");
+    require(list.GetCurrentItemNumber() == 1, "SCROLL_DOWN moves to the next item");
     require(last_menu_sound_request().sound_id == kMenuSoundMenuUpDown_4,
             "SCROLL_DOWN must request sound id 4");
     require(std::string(last_menu_sound_request().name) == "MenuUpDown",
             "sound id 4 is the original MenuUpDown event");
 
     group.HandleJoyEvent_0016AA00(0, hp2::input::JOY_EVENT_MENU_ANALOG_UP, true);
-    require(list.CurrentIndex_0016A130() == 0, "MENU_ANALOG_UP is grouped with SCROLL_UP");
+    require(list.GetCurrentItemNumber() == 0, "MENU_ANALOG_UP is grouped with SCROLL_UP");
     require(last_menu_sound_request().sound_id == kMenuSoundMenuUpDown_3,
             "SCROLL_UP must request sound id 3");
 
     // A released event is dropped by the original's `param_4 == 0` gate.
     group.HandleJoyEvent_0016AA00(0, hp2::input::JOY_EVENT_SCROLL_DOWN, false);
-    require(list.CurrentIndex_0016A130() == 0, "a released event must not move the selection");
+    require(list.GetCurrentItemNumber() == 0, "a released event must not move the selection");
 
     require(!messages.empty(), "the callback must see messages");
 }
@@ -256,7 +256,7 @@ void callback_can_veto_a_move() {
     });
     group.EnsureMenu_0016A858();
     group.HandleJoyEvent_0016AA00(0, hp2::input::JOY_EVENT_SCROLL_DOWN, true);
-    require(group.child_0x08->CurrentIndex_0016A130() == 0,
+    require(group.child_0x08->GetCurrentItemNumber() == 0,
             "a non-zero result_0x08 must suppress the move");
 }
 
@@ -272,7 +272,7 @@ void select_activates_the_current_item() {
     group.HandleJoyEvent_0016AA00(0, hp2::input::JOY_EVENT_MENU_SELECT, true);
 
     require(activations.size() == 1, "MENU_SELECT must activate exactly once");
-    require(activations[0].second == StringHash_002534A8("MENUITEM_2"),
+    require(activations[0].second == bStringHash("MENUITEM_2"),
             "the activated item must be the highlighted one");
     require(last_menu_sound_request().sound_id == kMenuSoundMenuSelect_5,
             "activation must request sound id 5");
@@ -299,7 +299,7 @@ void creation_message_can_override_the_initial_index() {
         if (message == kMenuMessage0x0B) event.result_0x08 = 3; // selects index 2
     });
     group.EnsureMenu_0016A858();
-    require(group.child_0x08->CurrentIndex_0016A130() == 2,
+    require(group.child_0x08->GetCurrentItemNumber() == 2,
             "result 3 must select list position 3 - 1 = 2, i.e. MENUITEM_3");
 }
 
@@ -309,9 +309,9 @@ void pad_filter_is_honoured() {
     group.pad_index_0x10 = 1;
     group.EnsureMenu_0016A858();
     group.HandleJoyEvent_0016AA00(0, hp2::input::JOY_EVENT_SCROLL_DOWN, true);
-    require(group.child_0x08->CurrentIndex_0016A130() == 0, "pad 0 must not drive a pad-1 group");
+    require(group.child_0x08->GetCurrentItemNumber() == 0, "pad 0 must not drive a pad-1 group");
     group.HandleJoyEvent_0016AA00(1, hp2::input::JOY_EVENT_SCROLL_DOWN, true);
-    require(group.child_0x08->CurrentIndex_0016A130() == 1, "pad 1 must drive it");
+    require(group.child_0x08->GetCurrentItemNumber() == 1, "pad 1 must drive it");
 }
 
 void recovered_names_are_verbatim() {
@@ -335,9 +335,9 @@ void screen_names_resolve_by_hash() {
     std::size_t count = 0;
     const RecoveredScreenName* names = recovered_screen_names(count);
     require(count == 21, "21 of the 41 screen names are recovered");
-    require(StringHash_002534A8("NEW_EVENT_TREE") == 0x147f8a59 &&
-            StringHash_002534A8("TREE_DETAIL_VIEW") == 0xa744ba7b &&
-            StringHash_002534A8("TREE_REWARD_VIEW") == 0xf1eed4cd,
+    require(bStringHash("NEW_EVENT_TREE") == 0x147f8a59 &&
+            bStringHash("TREE_DETAIL_VIEW") == 0xa744ba7b &&
+            bStringHash("TREE_REWARD_VIEW") == 0xf1eed4cd,
             "event documents match their original asset hashes");
 
     std::vector<FeScreen> screens;
@@ -348,7 +348,7 @@ void screen_names_resolve_by_hash() {
     }
     for (std::size_t i = 0; i < count; ++i) {
         screens[static_cast<std::size_t>(names[i].screen_index)].name_hash_0x08 =
-            StringHash_002534A8(names[i].name);
+            bStringHash(names[i].name);
     }
     require(screen_index_for_screen_name(screens, "NEW_MAIN_MENU") == 0,
             "NEW_MAIN_MENU must resolve to screen 0");

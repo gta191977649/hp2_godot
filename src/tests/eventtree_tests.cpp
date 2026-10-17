@@ -69,23 +69,23 @@ void recovered_detail_text_and_multirace_slices() {
     record.number_0x28 = 1;
     record.goal_type_0x29 = 3;
     record.Field_0x3F = 3;
-    record.Field_0x3C = 3;
-    record.Field_0x6C = {0, 0, 0};
-    tree.Field_0x1C = {5u << 14};
-    record.Field_0x3E = 1;
-    record.Field_0x8C = {0};
-    tree.Field_0x2C.push_back({1, 7, 1});
+    record.nTracks = 3;
+    record.aTracks = {0, 0, 0};
+    tree.pTracks = {5u << 14};
+    record.nRewards = 1;
+    record.aRewards = {0};
+    tree.pRewards.push_back({1, 7, 1});
     tree.links.push_back({1, 0, 2});
     hp2::memorycard::Profile_002FC050 profile;
     const auto layout = build_profile_layout_001FE988(tree);
     auto* slice = profile.EventBlock_001FE988(0) + layout.offsets[0];
-    check(tree.Sub_002008F8(0, -1) == nullptr && tree.Sub_002008F8(0, 3) == nullptr,
+    check(tree.GetTrack(0, -1) == nullptr && tree.GetTrack(0, 3) == nullptr,
           "original track accessor rejects indices outside record count");
-    check(tree.Sub_002008F8(0, 0) && *tree.Sub_002008F8(0, 0) == 5u << 14,
+    check(tree.GetTrack(0, 0) && *tree.GetTrack(0, 0) == 5u << 14,
           "track accessor selects record signed index into chunk34A02");
-    check(tree.Sub_00200938(0, -1) == nullptr && tree.Sub_00200938(0, 1) == nullptr,
+    check(tree.GetReward(0, -1) == nullptr && tree.GetReward(0, 1) == nullptr,
           "original reward accessor rejects indices outside record count");
-    check(tree.Sub_00200938(0, 0) && (*tree.Sub_00200938(0, 0))[1] == 7,
+    check(tree.GetReward(0, 0) && (*tree.GetReward(0, 0))[1] == 7,
           "reward accessor selects eight-byte row chunk34A04");
     check(tree.Status_002010B8(profile, 0) == 1, "empty multirace event is unlocked");
     slice[0] = 0x20;
@@ -222,8 +222,8 @@ void trees_parse_from_the_shipped_bundle(const std::string& root) {
                   "records are in event-number order");
             check(!tree.records[i].name_0x08.empty(), "every event carries a name");
         }
-        check(tree.FindLeafByNumber_001FA840(1) == 0, "FUN_001FA840 finds event 1");
-        check(tree.FindLeafByNumber_001FA840(99) == -1, "an unknown number is not found");
+        check(tree.FindLeafByEventNumber(1) == 0, "FUN_001FA840 finds event 1");
+        check(tree.FindLeafByEventNumber(99) == -1, "an unknown number is not found");
 
         // Event 1 is the root: no incoming links, depth 0, and the only event that can report a
         // status above Locked without a profile.
@@ -252,7 +252,7 @@ void trees_parse_from_the_shipped_bundle(const std::string& root) {
         // same column as the root.
         check(tree.leaves[0].x == 8.0f * kColumnSpacing_gp_0x41B0, "event 1 is in column 8");
         for (int number : {30, 31, 32}) {
-            const int leaf = tree.FindLeafByNumber_001FA840(static_cast<std::uint8_t>(number));
+            const int leaf = tree.FindLeafByEventNumber(static_cast<std::uint8_t>(number));
             check(leaf >= 0, "late events exist");
             check(tree.leaves[static_cast<std::size_t>(leaf)].x ==
                       8.0f * kColumnSpacing_gp_0x41B0,

@@ -1,0 +1,227 @@
+[
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x00136C00",
+    "method": "Sub_00136C00",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_00136C00()"
+  },
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x00136C08",
+    "method": "Sub_00136C08",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_00136C08()"
+  },
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x00136C10",
+    "method": "Sub_00136C10",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_00136C10()"
+  },
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x00136C20",
+    "method": "Sub_00136C20",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_00136C20()"
+  },
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x00136C30",
+    "method": "Sub_00136C30",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_00136C30()"
+  },
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x00136C38",
+    "method": "Sub_00136C38",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_00136C38()"
+  },
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x00136C40",
+    "method": "Sub_00136C40",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_00136C40()"
+  },
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x00136C50",
+    "method": "Sub_00136C50",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_00136C50()"
+  },
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x00136C68",
+    "method": "Sub_00136C68",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_00136C68()"
+  },
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x00136C70",
+    "method": "Sub_00136C70",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_00136C70()"
+  },
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x00136D00",
+    "method": "Sub_00136D00",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_00136D00()"
+  },
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x001C0100",
+    "method": "Sub_001C0100",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_001C0100()"
+  },
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x001C0140",
+    "method": "Sub_001C0140",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_001C0140()"
+  },
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x001C0160",
+    "method": "Sub_001C0160",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_001C0160()"
+  },
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x001C0198",
+    "method": "Sub_001C0198",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_001C0198()"
+  },
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x0023A178",
+    "method": "Sub_0023A178",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_0023A178()"
+  },
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x0023A198",
+    "method": "Sub_0023A198",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_0023A198()"
+  },
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x0023A1C8",
+    "method": "Sub_0023A1C8",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_0023A1C8()"
+  },
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x0023A2F8",
+    "method": "Sub_0023A2F8",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_0023A2F8()"
+  },
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x0023A300",
+    "method": "Sub_0023A300",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_0023A300()"
+  },
+  {
+    "owner": "CopDriver",
+    "elf_address": "0x0023A3D0",
+    "method": "Sub_0023A3D0",
+    "source": "src/game_core/port/police/cop_control.cpp",
+    "header": "src/game_core/port/police/cop_control.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void CopDriver::Sub_0023A3D0()"
+  },
+  {
+    "owner": "JoystickPreconfig",
+    "elf_address": "0x001F4E68",
+    "method": "Sub_001F4E68",
+    "source": "src/game_core/indep/src/frontendscreens/joystickconfiguration.cpp",
+    "header": "src/game_core/indep/src/frontendscreens/joystickconfiguration.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void JoystickPreconfig::Sub_001F4E68()"
+  },
+  {
+    "owner": "JukeBoxMusicScreen",
+    "elf_address": "0x001F4E68",
+    "method": "Sub_001F4E68",
+    "source": "src/game_core/indep/src/frontendscreens/options.cpp",
+    "header": "src/game_core/indep/src/frontendscreens/options.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void JukeBoxMusicScreen::Sub_001F4E68()"
+  },
+  {
+    "owner": "tCustomizeHUDScreen",
+    "elf_address": "0x001F4E68",
+    "method": "Sub_001F4E68",
+    "source": "src/game_core/tCustomizeHUDScreen.cpp",
+    "header": "src/game_core/tCustomizeHUDScreen.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void tCustomizeHUDScreen::Sub_001F4E68()"
+  },
+  {
+    "owner": "tOptionsScreen",
+    "elf_address": "0x001F4E68",
+    "method": "Sub_001F4E68",
+    "source": "src/game_core/indep/src/frontendscreens/options.cpp",
+    "header": "src/game_core/indep/src/frontendscreens/options.hpp",
+    "reason": "sole throwing shared-target template removed after confirmed exact declaring-owner mapping",
+    "signature": "void tOptionsScreen::Sub_001F4E68()"
+  }
+]

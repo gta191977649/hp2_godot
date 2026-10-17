@@ -12,7 +12,7 @@ void Sub_001A5EA0(ByteView out,std::uint32_t a1,std::uint32_t a2,std::uint32_t a
 
 // Retail 0x001A5F88; E-0041-M01; E-0042-S001; exact Debug TU ..\indep\src\suspension.cpp
 namespace port::driving::init {
-void Sub_001A5F88(ByteView out,float f12,const std::array<float,4>& a,const std::array<float,4>& b){
+void Calibrate(ByteView out,float f12,const std::array<float,4>& a,const std::array<float,4>& b){
     out.require(0x78,0x18);out.scalar(0x78,f12);
     for(std::size_t i=0;i<4;++i)out.scalar(0x80+4*i,a[i]-b[i]);
 }
@@ -42,7 +42,7 @@ float ApplyGroundPenaltyImpulse(Memory& m,std::uint32_t object){
 
 // Retail 0x001A6330; E-0042-C128; E-0042-S001; exact Debug TU ..\indep\src\suspension.cpp
 namespace port::driving {
-void Sub_001A6330(float f12, SolverSuspensionProjection& suspension) {
+void Suspension::ResolveForces(float f12, SolverSuspensionProjection& suspension) {
     using namespace detail_group_00138f38;
     float f0 = suspension.Field_0x1c;
     if (suspension.Field_0x70 != 0) f0 = f0 + f12;
@@ -65,3 +65,34 @@ void ResolveMoreForces(SolverSuspensionProjection& suspension, std::int32_t Fiel
         ApplyForce(*suspension.Field_0x94, suspension.Field_0x90->Field_0x120, delta);
 }
 }
+
+#include "game_core/indep/src/suspension.hpp"
+
+#include "game_core/port/not_implemented.hpp"
+
+namespace hp2::recovered {
+// ELF 0x001A5EA0; E-0042-C125; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a5ea0.md.
+void Suspension::Sub_001A5EA0() {
+    hp2::not_implemented("0x001A5EA0", "Suspension::Sub_001A5EA0 (signature and full body unresolved)");
+}
+
+// ELF 0x001A5F88; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a5f88.md.
+void Suspension::Calibrate() {
+    hp2::not_implemented("0x001A5F88", "Suspension::Calibrate (signature and full body unresolved)");
+}
+
+// ELF 0x001A6330; E-0042-C128; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a6330.md.
+void Suspension::ResolveForces() {
+    hp2::not_implemented("0x001A6330", "Suspension::ResolveForces (signature and full body unresolved)");
+}
+
+// ELF 0x001A6370; E-0042-C129; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a6370.md.
+void Suspension::ResolveMoreForces() {
+    hp2::not_implemented("0x001A6370", "Suspension::ResolveMoreForces (signature and full body unresolved)");
+}
+
+// ELF 0x001A6408; E-0042-C130; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a6408.md.
+void Suspension::ApplyGroundPenaltyImpulse() {
+    hp2::not_implemented("0x001A6408", "Suspension::ApplyGroundPenaltyImpulse (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

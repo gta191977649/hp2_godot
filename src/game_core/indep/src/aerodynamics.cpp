@@ -11,7 +11,7 @@ float GetDownforceAtSpeed(Memory& m,std::uint32_t object,float f12){
 
 // Retail 0x001ADD70; E-0042-C131; E-0042-S001; exact Debug TU ..\indep\src\aerodynamics.cpp
 namespace port::driving::native {
-void Sub_001ADD70(Memory& m,std::uint32_t a,std::uint32_t output){
+void Aerodynamics::ResolveForces(Memory& m,std::uint32_t a,std::uint32_t output){
     using namespace detail_group_00138e08;
     const auto body=m.word(a+4),config=m.word(a);const auto velocity=m.vector(body+0x90);
     const float speed=len(velocity)/m.scalar(a+8);float value=speed*m.scalar(a+0xc);value=value*m.scalar(config);
@@ -29,3 +29,24 @@ void Sub_001ADD70(Memory& m,std::uint32_t a,std::uint32_t output){
     if(output)m.scalar(output,front+rear);
 }
 }
+
+#include "game_core/indep/src/aerodynamics.hpp"
+
+#include "game_core/port/not_implemented.hpp"
+
+namespace hp2::recovered {
+// ELF 0x001ADD48; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001add48.md.
+void Aerodynamics::DoSnapshot() {
+    hp2::not_implemented("0x001ADD48", "Aerodynamics::DoSnapshot (signature and full body unresolved)");
+}
+
+// ELF 0x001ADD70; E-0042-C131; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001add70.md.
+void Aerodynamics::ResolveForces() {
+    hp2::not_implemented("0x001ADD70", "Aerodynamics::ResolveForces (signature and full body unresolved)");
+}
+
+// ELF 0x001ADFB8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001adfb8.md.
+void Aerodynamics::GetDownforceAtSpeed() {
+    hp2::not_implemented("0x001ADFB8", "Aerodynamics::GetDownforceAtSpeed (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

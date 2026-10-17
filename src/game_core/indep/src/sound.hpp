@@ -29,7 +29,7 @@ PcmSound decode_vag(const std::vector<std::uint8_t>& bytes, std::size_t interlea
 // Zero requested pitch projection: ELF00273850 table[129]=4140 at00327B82,
 // then0026D258 converts frequency to SPU pitch at hardware48000 Hz. E-0016-A07.
 std::uint32_t Sub_00273850(std::uint32_t base_rate);
-std::uint16_t Sub_0026D258(std::uint32_t frequency);
+std::uint16_t SOUND_HzToSPU(std::uint32_t frequency);
 // Host playback factor relative to decoded metadata; does not alter PCM or sample_rate.
 float neutral_playback_pitch_scale(std::uint32_t decoded_rate);
 

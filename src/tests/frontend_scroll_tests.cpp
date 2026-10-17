@@ -38,13 +38,13 @@ int main() {
         check(port::frontend::hint_binding("Language Options",0).attachment_known);
         check(!port::frontend::hint_binding("Credits",0).attached);
         rng=0xffffffff;check(bRandom(10000,rng)==7295);
-        FeWidget fading;fading.type=2;fading.name_hash=StringHash_002534A8("FADING_BP_OBJECT");
-        FeWidget master;master.type=2;master.name_hash=StringHash_002534A8("MASTER_BP_OBJECT");
+        FeWidget fading;fading.type=2;fading.name_hash=bStringHash("FADING_BP_OBJECT");
+        FeWidget master;master.type=2;master.name_hash=bStringHash("MASTER_BP_OBJECT");
         screen.widgets={fading,master};tGlobalBackgroundAnimation background;
         background.Construct_002495F0();auto random=[](std::int32_t){return 0;};
         background.Bind_00249A40(&screen,random,[](const FeWidget&){return WidgetMetrics{20,40};});
         check(screen.widgets[0].x==150&&screen.widgets[0].y==160&&screen.widgets[0].a==0);
-        check(screen.widgets[0].texture_hash==StringHash_002534A8("GRID_BLUEPRINT1"));
+        check(screen.widgets[0].texture_hash==bStringHash("GRID_BLUEPRINT1"));
         background.Update_00249AE8(0.5f,random);check(screen.widgets[0].a==64);
         background.Update_00249AE8(24.5f,random);check(screen.widgets[0].x==220);
         background.Update_00249AE8(24.5f,random);check(screen.widgets[0].a==64);

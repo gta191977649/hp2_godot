@@ -31,5 +31,12 @@ public:
     // Port-side void/no-argument placeholder; original signature unknown.
     // Debug reference: PlayerEngineSound::Update(float, unsigned short, float); E-0041-V01; retail ABI unconfirmed.
     void Update();
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x002105D0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/002105d0.md.
+    // Original Debug reference: PlayerEngineSound::ResolveTables(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void ResolveTables();
 };
 } // namespace hp2::recovered

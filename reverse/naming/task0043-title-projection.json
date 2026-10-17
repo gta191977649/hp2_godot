@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "evidence_id": "E-0043-T01",
+  "retail_sha256": "7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2",
+  "debug_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "identifier": "TitleStringId_001F96B8",
+  "entity_kind": "extracted_projection",
+  "retail_containing_entry": "0x001F96B8",
+  "decision": "retain_existing_address_anchored_identifier",
+  "confirmed": [
+    "Current host function contains only the selected-mode title ID branch from the larger Retail entry.",
+    "Live Debug imported symbol at 0x001F5060 is __14tEventTreeViewiP9EventTree.",
+    "Live Debug constructor decompilation contains the 0x272A / 0x272D / 0 title-selection block directly, rather than calling a separately named title-selection function.",
+    "Live Retail decompilation at 0x001F96B8 contains the same title constants and three-way branch directly."
+  ],
+  "inferences": [
+    "The Debug constructor is a useful lead for the containing Retail entry; this report does not promote an independent whole-entry bridge."
+  ],
+  "unknowns": [
+    "No exact original identifier for the extracted host selector was recovered.",
+    "The bounded EventTree/TitleString symbol query is not proof that no helper symbol exists anywhere."
+  ],
+  "counterevidence": [
+    "A confirmed containing-function name would not name an extracted branch; renaming the host selector to the constructor would misidentify its entity."
+  ],
+  "raw_directory": "local/task0043/title",
+  "reproduce": "py -3 reverse/scripts/audit_title_projection.py",
+  "source_location": "src/game_core/indep/src/eventtree.cpp",
+  "verification_status": "not_tested"
+}

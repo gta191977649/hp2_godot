@@ -33,5 +33,28 @@ namespace hp2::recovered {
 class Chopper {
 public:
     // No member address is confirmed; no speculative members are declared.
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x001E8560; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001e8560.md.
+    // Original Debug reference: Chopper::GetMaxDeceleration(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetMaxDeceleration();
+    // ELF 0x001E9AE8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001e9ae8.md.
+    // Original Debug reference: Chopper::SetRotateTarget(float, float); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void SetRotateTarget();
+    // ELF 0x001E9E40; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001e9e40.md.
+    // Original Debug reference: Chopper::CalcChopperRotation(float *, float *, float); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void CalcChopperRotation();
+    // ELF 0x001E9E80; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001e9e80.md.
+    // Original Debug reference: Chopper::SubtractFromYaw(float); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void SubtractFromYaw();
+    // ELF 0x001EA578; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001ea578.md.
+    // Original Debug reference: Chopper::RenderChopper(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void RenderChopper();
 };
 } // namespace hp2::recovered

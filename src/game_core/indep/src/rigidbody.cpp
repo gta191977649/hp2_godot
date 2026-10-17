@@ -31,7 +31,7 @@ void Sub_0019C9B0(ByteView out,std::uint32_t config_address,ByteView config){
 
 // Retail 0x0019CC40; E-0042-C094; E-0042-S001; exact Debug TU ..\indep\src\rigidbody.cpp
 namespace port::driving::init {
-void Sub_0019CC40(ByteView out,const std::array<std::uint32_t,4>* a1){
+void Calibrate(ByteView out,const std::array<std::uint32_t,4>* a1){
     if(a1){out.require(0x160,16);for(std::size_t i=0;i<4;++i)out.word(0x160+4*i,(*a1)[i]);}
 }
 }
@@ -155,10 +155,10 @@ void GetDerivative(Memory& m,std::uint32_t body,std::uint32_t output) {
     m.vector(output,m.vector(body+0x90));m.matrix(output+0x10,VectorStarMatrix(m.vector(body+0xa0),m.matrix(body+0x20)));
     m.vector(output+0x50,m.vector(body+0xf0));m.vector(output+0x60,m.vector(body+0x100));
     const float angular_length=length(m.vector(body+0xa0));
-    const float f=port::driving::Sub_0018F838(m,0x00310df8,angular_length);
+    const float f=port::driving::Table::GetValue(m,0x00310df8,angular_length);
     add(m,output+0x60,scale(m.vector(body+0x70),-f));
     float f12=length(m.vector(body+0x90))/g(m,0xb258);const float f20=angular_length/g(m,0xb25c);if(f12<f20)f12=f20;
-    const float limit=port::driving::Sub_0018F838(m,0x00310e30,f12);
+    const float limit=port::driving::Table::GetValue(m,0x00310e30,f12);
     m.scalar(output+0x70,m.scalar(body+0x80)<limit ? g(m,0xb268) : -g(m,0xb26c));
     if(m.word(body+0x110)!=0) {
         add(m,output+0x60,scale(m.vector(body+0x70),-g(m,0xb264)*m.scalar(body+0x80)));
@@ -168,3 +168,64 @@ void GetDerivative(Memory& m,std::uint32_t body,std::uint32_t output) {
     if(f1!=0) {if(f1<f2)m.scalar(output+0x68,f1);else if(f2< -f1)m.scalar(output+0x68,-f1);}
 }
 }
+
+#include "game_core/indep/src/rigidbody.hpp"
+
+#include "game_core/port/not_implemented.hpp"
+
+namespace hp2::recovered {
+// ELF 0x0019C9B0; E-0042-C093; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019c9b0.md.
+void RigidBody::Sub_0019C9B0() {
+    hp2::not_implemented("0x0019C9B0", "RigidBody::Sub_0019C9B0 (signature and full body unresolved)");
+}
+
+// ELF 0x0019CC40; E-0042-C094; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019cc40.md.
+void RigidBody::Calibrate() {
+    hp2::not_implemented("0x0019CC40", "RigidBody::Calibrate (signature and full body unresolved)");
+}
+
+// ELF 0x0019CC58; E-0042-C095; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019cc58.md.
+void RigidBody::CalculateInertiaTensor() {
+    hp2::not_implemented("0x0019CC58", "RigidBody::CalculateInertiaTensor (signature and full body unresolved)");
+}
+
+// ELF 0x0019CD90; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019cd90.md.
+void RigidBody::ApplyForce() {
+    hp2::not_implemented("0x0019CD90", "RigidBody::ApplyForce (signature and full body unresolved)");
+}
+
+// ELF 0x0019CE80; E-0042-C097; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019ce80.md.
+void RigidBody::ApplyForceInFrame() {
+    hp2::not_implemented("0x0019CE80", "RigidBody::ApplyForceInFrame (signature and full body unresolved)");
+}
+
+// ELF 0x0019CEF8; E-0042-C098; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019cef8.md.
+void RigidBody::ApplyMoment() {
+    hp2::not_implemented("0x0019CEF8", "RigidBody::ApplyMoment (signature and full body unresolved)");
+}
+
+// ELF 0x0019CF10; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019cf10.md.
+void RigidBody::ApplyImpulse() {
+    hp2::not_implemented("0x0019CF10", "RigidBody::ApplyImpulse (signature and full body unresolved)");
+}
+
+// ELF 0x0019CFF8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0019cff8.md.
+void RigidBody::ApplyImpulseWithScaledInverseInertiaTensor() {
+    hp2::not_implemented("0x0019CFF8", "RigidBody::ApplyImpulseWithScaledInverseInertiaTensor (signature and full body unresolved)");
+}
+
+// ELF 0x0019D1F0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0019d1f0.md.
+void RigidBody::GetEnergy() {
+    hp2::not_implemented("0x0019D1F0", "RigidBody::GetEnergy (signature and full body unresolved)");
+}
+
+// ELF 0x0019D4D0; E-0041-R03; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019d4d0.md.
+void RigidBody::GetDerivative() {
+    hp2::not_implemented("0x0019D4D0", "RigidBody::GetDerivative (signature and full body unresolved)");
+}
+
+// ELF 0x0019D980; E-0042-C100; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0019d980.md.
+void RigidBody::PrintCurrentState() {
+    hp2::not_implemented("0x0019D980", "RigidBody::PrintCurrentState (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

@@ -58,7 +58,7 @@ hp2::frontend::FeWidget quad_widget(const char* name, float x, float y, std::uin
     w.visible = 1;
     w.layer = layer;
     w.name = name;
-    w.name_hash = hp2::frontend::StringHash_002534A8(name);
+    w.name_hash = hp2::frontend::bStringHash(name);
     w.x = x;
     w.y = y;
     w.texture_hash = texture;
@@ -73,7 +73,7 @@ hp2::frontend::FeWidget text_widget(const char* name, float x, float y, std::uin
     w.visible = 1;
     w.layer = 0;
     w.name = name;
-    w.name_hash = hp2::frontend::StringHash_002534A8(name);
+    w.name_hash = hp2::frontend::bStringHash(name);
     w.x = x;
     w.y = y;
     w.texture_hash = font_texture;
@@ -151,7 +151,7 @@ int main() {
               "four independent corner colours retained");
         check(corners.source_points[0].x==16.5f && corners.source_points[1].x==47.5f &&
               corners.source_points[2].y==31.5f,"authored UVs and half-texel inset retained");
-        hp2::frontend::SetWidgetAlpha_00140ED0(screen.widgets[0],64);
+        hp2::frontend::SetAlpha(screen.widgets[0],64);
         runtime::build_frame(screen,sizes,{},frame);
         for (const auto& c : frame.quads[1].colors) check(c.a==0.5f,"001411D8 quad alpha updates all corners");
         screen.widgets[0].visible=2;
@@ -239,7 +239,7 @@ int main() {
               "zero-pair font does not dereference its unused serialized offset");
 
         //00141DD8: embedded byte80 draws BUTTONSOUT 'a', returns its unscaled advance.
-        auto icon_font = make_font(hp2::frontend::StringHash_002534A8("BUTTONSOUT"));
+        auto icon_font = make_font(hp2::frontend::bStringHash("BUTTONSOUT"));
         icon_font.glyphs[0].code = 'a'; icon_font.glyphs[0].advance = 7;
         std::vector<hp2::frontend::FeFont> icon_fonts{make_font(kFont),icon_font};
         runtime::WidgetSizes icon_sizes(resources,icon_fonts);

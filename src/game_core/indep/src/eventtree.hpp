@@ -110,20 +110,24 @@ int EventSaveSize_00200DE8(std::uint8_t goal_type);
 // ------------------------------------------------------------------- records and links
 // Only the fields this port reads are modelled; the record is 188 bytes and most of it was not
 // identified. Every offset below was read from the code that uses it.
-struct EventRecord_001FFF60 {
+// TASK-0043 E-0043-F01: original EventInfo record identity from SetEvents and
+// independently mapped getters. Host storage is not the native 188-byte layout.
+// Recovered fields: nCars +0x3B, nTracks +0x3C, nGoals +0x3D,
+// nRewards +0x3E, aCars +0x44, aTracks +0x6C, aGoals +0x7C, aRewards +0x8C.
+struct EventInfo {
     std::string name_0x08;          // 32-byte field; the authored English event name
     std::uint8_t number_0x28 = 0;   // 1-based event number; FUN_001FA840 looks nodes up by it
     std::uint8_t goal_type_0x29 = 0;// FUN_00200DE8's switch
     std::uint16_t index_0x42 = 0;   // row index into the 0x34A03 link table for this event
-    std::uint8_t link_count_0x3D = 0;      // number of incoming links (FUN_002008B8's bound)
-    std::vector<std::int16_t> link_index_0x7C; // s16 rows into the 0x34A03 table, link_count long
+    std::uint8_t nGoals = 0;      // number of incoming links (FUN_002008B8's bound)
+    std::vector<std::int16_t> aGoals; // s16 rows into the 0x34A03 table, link_count long
     std::uint32_t string_id_0xB0 = 0;      // localised description, fed to the scrolling text
     // E-0022-D01: 001F6770 / 002008F8 / 00200938 and text-token consumers.
-    std::uint8_t Field_0x3C = 0, Field_0x3E = 0, Field_0x3F = 0;
-    std::vector<std::int16_t> Field_0x6C, Field_0x8C;
+    std::uint8_t nTracks = 0, nRewards = 0, Field_0x3F = 0;
+    std::vector<std::int16_t> aTracks, aRewards;
     std::uint32_t string_id_0xB4 = 0;
-    std::uint8_t Field_0x3B = 0; // E-0022-D08, 00200878 car list bound
-    std::vector<std::int16_t> Field_0x44;
+    std::uint8_t nCars = 0; // E-0022-D08, 00200878 car list bound
+    std::vector<std::int16_t> aCars;
 };
 
 // One 8-byte row of chunk 0x34A03. TASK-0021 corrected what this table is: it is a
@@ -161,26 +165,35 @@ public:
     // ELF 0x001F6FA0; E-0018-02; E-0028-C03; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001f6fa0.md.
     // Port-side void/no-argument placeholder; original signature unknown.
     void Sub_001F6FA0();
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x001F7FA8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001f7fa8.md.
+    // Original Debug reference: tEventLeaf::CalculateGeneration(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void CalculateGeneration();
 };
 
 class EventTree_001FFC40 {
 public:
     std::string name;            // from the 0x00000001 chunk
     int type_0x08 = -1;          // 0 = "Championship", 1 = "Hot Pursuit" (FUN_001FDEF8)
-    std::vector<EventRecord_001FFF60> records;
+    std::vector<EventInfo> records;
     std::vector<EventLink_002008B8> links;
-    std::vector<std::uint32_t> Field_0x1C; // chunk 34A02, 002008F8
-    std::vector<std::uint32_t> Field_0x14; // chunk 34A01, 00200878
-    std::vector<std::array<std::uint8_t, 8>> Field_0x2C; // chunk 34A04, 00200938
+    // E-0043-F01: original EventTree table names at +0x1C/+0x14/+0x2C.
+    // These vectors project original pointers; no native pointer layout is implied.
+    std::vector<std::uint32_t> pTracks; // chunk 34A02, 002008F8
+    std::vector<std::uint32_t> pCars; // chunk 34A01, 00200878
+    std::vector<std::array<std::uint8_t, 8>> pRewards; // chunk 34A04, 00200938
     std::vector<tEventLeaf> leaves;
 
     const char* layout_map() const;
     // FUN_001FA840(view, number): the leaf whose record+0x28 matches, or -1.
-    int FindLeafByNumber_001FA840(std::uint8_t number) const;
+    int FindLeafByEventNumber(std::uint8_t number) const;
 
     // FUN_002008B8(leaf, i): the i-th requirement row of a record, or nullptr when `i` is
     // outside `record+0x3D`. (E-0021-12)
-    const EventLink_002008B8* Requirement_002008B8(int record_index, int i) const;
+    const EventLink_002008B8* GetGoal(int record_index, int i) const;
 
     // FUN_002010B8, translated against a real profile. `row` is the requirement row whose
     // threshold the slice is judged against; pass nullptr for the original's `param_2 == 0`
@@ -217,10 +230,10 @@ public:
     // WalkAdjacent_001FA978, anything else answers -1.
     int MoveCursor_001FA9C8(int record_index, int direction) const;
     // ELF 002008F8 / 00200938, E-0022-D01. Null for original index-bound failure.
-    const std::uint32_t* Sub_002008F8(int record_index, int i) const;
+    const std::uint32_t* GetTrack(int record_index, int i) const;
     // ELF 00200878, E-0022-D08: car list row, bound +3B and signed indices +44.
-    const std::uint32_t* Sub_00200878(int record_index, int i) const;
-    const std::array<std::uint8_t, 8>* Sub_00200938(int record_index, int i) const;
+    const std::uint32_t* GetCar(int record_index, int i) const;
+    const std::array<std::uint8_t, 8>* GetReward(int record_index, int i) const;
     // ELF 002012D8, E-0022-D02. Number of completed subevents from profile slice.
     int Sub_002012D8(const hp2::memorycard::Profile_002FC050& profile, int record_index) const;
 };
@@ -257,13 +270,13 @@ public:
     void Sub_001F91F0(const std::vector<std::uint32_t>& logos, std::uint32_t now_ticks);
     void Sub_001F9318(std::uint32_t now_ticks);
     // E-0022-D09, ELF 001F91D0 / 001F91E0: show/hide the bound track-logo widget.
-    void Sub_001F91D0();
+    void Show();
     void Sub_001F91E0();
 };
 // Both animators reuse fmenus.hpp's Sub_0025A3D0 and the caller's shared RNG seed.
 
 // ELF 00201350, E-0022-D02: goal 3 -> +3F, goal 4 -> +3C, otherwise 1.
-int Sub_00201350(const EventRecord_001FFF60& record);
+int GetRaceCount(const EventInfo& record);
 // ELF 001A3B98/001A3B28/001A3838/001A37B8, E-0022-D07. Timer formatter,
 // colocated here as a port-side dependency aggregation; source path not recovered.
 // locale is DAT_0031C1C8, flags are original 001A3838 bits (0 in event callers).
@@ -407,6 +420,13 @@ namespace hp2::frontend {
 class tEventGroup {
 public:
     // No member address is confirmed; no speculative members are declared.
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x001F7FE8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001f7fe8.md.
+    // Original Debug reference: tEventGroup::IsMember(tEventLeaf *); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void IsMember();
 };
 } // namespace hp2::frontend
 
@@ -419,5 +439,212 @@ namespace hp2::frontend {
 class tEventTreeView {
 public:
     // No member address is confirmed; no speculative members are declared.
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x001FA840; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001fa840.md.
+    // Original Debug reference: tEventTreeView::FindLeafByEventNumber(int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void FindLeafByEventNumber();
 };
 } // namespace hp2::frontend
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
+// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::recovered {
+class EventInfo {
+public:
+    // ELF 0x00200878; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/00200878.md.
+    // Original Debug reference: EventInfo::GetCar(int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetCar();
+    // ELF 0x002008B8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/002008b8.md.
+    // Original Debug reference: EventInfo::GetGoal(int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetGoal();
+    // ELF 0x002008F8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/002008f8.md.
+    // Original Debug reference: EventInfo::GetTrack(int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetTrack();
+    // ELF 0x00200938; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/00200938.md.
+    // Original Debug reference: EventInfo::GetReward(int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetReward();
+    // ELF 0x00200978; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00200978.md.
+    // Original Debug reference: EventInfo::GetOpponent(int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetOpponent();
+    // ELF 0x00200D48; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00200d48.md.
+    // Original Debug reference: EventInfo::GetRankState(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetRankState();
+    // ELF 0x00200D70; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00200d70.md.
+    // Original Debug reference: EventInfo::GetTournamentState(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetTournamentState();
+    // ELF 0x00200D90; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00200d90.md.
+    // Original Debug reference: EventInfo::GetKoState(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetKoState();
+    // ELF 0x00200DB0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00200db0.md.
+    // Original Debug reference: EventInfo::GetTimeState(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetTimeState();
+    // ELF 0x00201350; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/00201350.md.
+    // Original Debug reference: EventInfo::GetRaceCount(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetRaceCount();
+};
+} // namespace hp2::recovered
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
+// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::recovered {
+class EventKoState {
+public:
+    // ELF 0x002001A8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/002001a8.md.
+    // Original Debug reference: EventKoState::GetRaceIndex(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetRaceIndex();
+};
+} // namespace hp2::recovered
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
+// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::recovered {
+class EventLeaf {
+public:
+    // ELF 0x001FC580; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001fc580.md.
+    // Original Debug reference: EventLeaf::SetScrollNotch(int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void SetScrollNotch();
+    // ELF 0x001FCC88; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001fcc88.md.
+    // Original Debug reference: EventLeaf::FillVerts(bVector3 *, bVector4 *, int, int, int, int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void FillVerts();
+    // ELF 0x001FD050; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001fd050.md.
+    // Original Debug reference: EventLeaf::GetNeighbour(unsigned short); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetNeighbour();
+    // ELF 0x001FD0B0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001fd0b0.md.
+    // Original Debug reference: EventLeaf::GetReward(int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetReward();
+};
+} // namespace hp2::recovered
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
+// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::recovered {
+class EventRankState {
+public:
+    // ELF 0x00200018; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00200018.md.
+    // Original Debug reference: EventRankState::GetStatus(EventGoal *); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetStatus();
+};
+} // namespace hp2::recovered
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
+// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::recovered {
+class EventTimeState {
+public:
+    // ELF 0x00200068; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00200068.md.
+    // Original Debug reference: EventTimeState::GetStatus(EventGoal *); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetStatus();
+};
+} // namespace hp2::recovered
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
+// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::recovered {
+class EventTournamentState {
+public:
+    // ELF 0x00200638; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00200638.md.
+    // Original Debug reference: EventTournamentState::Reset(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Reset();
+    // ELF 0x00200710; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/00200710.md.
+    // Original Debug reference: EventTournamentState::RacerRank(int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void RacerRank();
+};
+} // namespace hp2::recovered
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
+// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::recovered {
+class EventTree {
+public:
+    // ELF 0x001FDFE8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001fdfe8.md.
+    // Original Debug reference: EventTree::GetEventNumber(int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetEventNumber();
+    // ELF 0x001FFF60; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001fff60.md.
+    // Original Debug reference: EventTree::SetEvents(void *, int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void SetEvents();
+};
+} // namespace hp2::recovered
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
+// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::recovered {
+class RaceEvent {
+public:
+    // ELF 0x00201558; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00201558.md.
+    // Original Debug reference: RaceEvent::RacerIndexFromDriverNumber(int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void RacerIndexFromDriverNumber();
+    // ELF 0x00201578; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00201578.md.
+    // Original Debug reference: RaceEvent::DriverNumberFromRacerIndex(int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void DriverNumberFromRacerIndex();
+    // ELF 0x00201858; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00201858.md.
+    // Original Debug reference: RaceEvent::GetRankState(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetRankState();
+    // ELF 0x00201880; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00201880.md.
+    // Original Debug reference: RaceEvent::GetTournamentState(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetTournamentState();
+    // ELF 0x002018A0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/002018a0.md.
+    // Original Debug reference: RaceEvent::GetKoState(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetKoState();
+    // ELF 0x002018C0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/002018c0.md.
+    // Original Debug reference: RaceEvent::GetTimeState(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetTimeState();
+    // ELF 0x00202088; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00202088.md.
+    // Original Debug reference: RaceEvent::GetRaceCount(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetRaceCount();
+};
+} // namespace hp2::recovered

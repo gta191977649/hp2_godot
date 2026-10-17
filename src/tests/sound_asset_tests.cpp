@@ -12,8 +12,8 @@ void big(std::vector<std::uint8_t>& b,std::size_t o,std::uint32_t value) {
 }
 }
 int main() {
-    require(Sub_00273850(0xaa66)==44090 && Sub_0026D258(44090)==3762,"movie zero-pitch lookup or SPU quantization differs");
-    require(Sub_00273850(32000)==32343 && Sub_0026D258(32343)==2759,"music zero-pitch lookup or SPU quantization differs");
+    require(Sub_00273850(0xaa66)==44090 && SOUND_HzToSPU(44090)==3762,"movie zero-pitch lookup or SPU quantization differs");
+    require(Sub_00273850(32000)==32343 && SOUND_HzToSPU(32343)==2759,"music zero-pitch lookup or SPU quantization differs");
     require(neutral_playback_pitch_scale(32000)==1.0103759765625f,"music playback factor differs");
     std::vector<std::uint8_t> fixture(80,0);
     big(fixture,0,0x56414770);big(fixture,12,32);big(fixture,16,22050);

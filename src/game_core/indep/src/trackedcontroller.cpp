@@ -40,3 +40,20 @@ void TrackedController::GetCurrentRoutePoint() {
     hp2::not_implemented("0x0023A3D0", "TrackedController::GetCurrentRoutePoint (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x0023A070; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0023a070.md.
+void TrackedController::Sub_0023A070() {
+    hp2::not_implemented("0x0023A070", "TrackedController::Sub_0023A070 (signature and full body unresolved)");
+}
+
+// ELF 0x0023A088; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0023a088.md.
+void TrackedController::Think() {
+    hp2::not_implemented("0x0023A088", "TrackedController::Think (signature and full body unresolved)");
+}
+
+// ELF 0x0023A0F0; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0023a0f0.md.
+void TrackedController::DoSnapshot() {
+    hp2::not_implemented("0x0023A0F0", "TrackedController::DoSnapshot (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

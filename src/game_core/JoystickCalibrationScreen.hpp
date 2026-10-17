@@ -10,5 +10,12 @@ namespace hp2::recovered {
 class JoystickCalibrationScreen {
 public:
     // No member address is confirmed; no speculative members are declared.
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x0023F300; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0023f300.md.
+    // Original Debug reference: JoystickCalibrationScreen::ResetJoystickCalibration(JoystickCalibration *); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void ResetJoystickCalibration();
 };
 } // namespace hp2::recovered

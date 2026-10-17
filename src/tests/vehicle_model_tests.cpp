@@ -73,8 +73,8 @@ void check_skin_bindings(const port::vehicle::Model& model,const port::vehicle::
     check(model.path()==car.resource_path,"Model did not use the original catalog resource mapping");
     const auto body=body_snapshot(model);
     const std::string selected=car.prefix+"_SKIN"+std::to_string(skin.id);
-    const auto primary=hp2::frontend::StringHash_002534A8(selected.c_str());
-    const auto secondary=hp2::frontend::StringHash_002534A8((selected+"B").c_str());
+    const auto primary=hp2::frontend::bStringHash(selected.c_str());
+    const auto secondary=hp2::frontend::bStringHash((selected+"B").c_str());
     check(std::find(body.textures.begin(),body.textures.end(),primary)!=body.textures.end() ||
           std::find(body.textures.begin(),body.textures.end(),secondary)!=body.textures.end(),
           "Selected original skin hash is absent from bound body surfaces");

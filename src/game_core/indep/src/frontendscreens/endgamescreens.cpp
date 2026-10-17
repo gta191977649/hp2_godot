@@ -336,3 +336,22 @@ void EndGameMenusBase::Render() {
     hp2::not_implemented("0x001E2580", "EndGameMenusBase::Render (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x001E1918; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001e1918.md.
+void EndGameMenu::FindEndGameMenuItem() {
+    hp2::not_implemented("0x001E1918", "EndGameMenu::FindEndGameMenuItem (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x001DCE18; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001dce18.md.
+void EndGameScreens::GetNextScreen() {
+    hp2::not_implemented("0x001DCE18", "EndGameScreens::GetNextScreen (signature and full body unresolved)");
+}
+
+// ELF 0x001DCF00; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001dcf00.md.
+void EndGameScreens::MoveBackScreen() {
+    hp2::not_implemented("0x001DCF00", "EndGameScreens::MoveBackScreen (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

@@ -13,17 +13,17 @@ void Sub_001A3F10(ByteView out,std::uint32_t a1,std::uint32_t a2,std::uint32_t a
 
 // Retail 0x001A4348; E-0042-C116; E-0042-S001; exact Debug TU ..\indep\src\wheel.cpp
 namespace port::driving::init {
-void Sub_001A4348(ByteView out,std::uint32_t global){out.word(0x24,global);}
+void Calibrate(ByteView out,std::uint32_t global){out.word(0x24,global);}
 }
 
 // Retail 0x001A4158; E-0042-C114; E-0042-S001; exact Debug TU ..\indep\src\wheel.cpp
 namespace port::driving::init {
-void Sub_001A4158(ByteView out,float f12,float f13){out.require(0x1c,8);out.scalar(0x20,f13);out.scalar(0x1c,f12);}
+void SetState(ByteView out,float f12,float f13){out.require(0x1c,8);out.scalar(0x20,f13);out.scalar(0x1c,f12);}
 }
 
 // Retail 0x001A4358; E-0041-V01; E-0042-S001; exact Debug TU ..\indep\src\wheel.cpp
 namespace port::driving::native {
-void Sub_001A4358(Memory& m,std::uint32_t object){
+void Wheel::ComputeAuxiliaries(Memory& m,std::uint32_t object){
     using namespace detail_group_00137100_runtime;
     m.matrix(object+0x30,init::bIdentity());
     const auto angle=m.scalar(object+0x1c);
@@ -142,7 +142,7 @@ namespace port::driving {
 float GetLateralForce(Memory&m,float request,float argument,std::uint32_t a){
     using namespace detail_group_001a4930;
     if(gw(m,-0x4c10)==0){
-        const float lookup=Sub_0018F838(m,0x00310f48,argument);
+        const float lookup=Table::GetValue(m,0x00310f48,argument);
         float f1=g(m,-0x4c14)*lookup;float f2=m.scalar(a+0x158)*g(m,-0x4c20);
         return f1*f2;
     }
@@ -153,10 +153,10 @@ float GetLateralForce(Memory&m,float request,float argument,std::uint32_t a){
     float value;
     if(index<6){
         const auto p=0x003110b0u+static_cast<std::uint32_t>(index)*4;
-        float first=Sub_0018F838(m,m.word(p),request);
-        float second=Sub_0018F838(m,m.word(p+4),request);
+        float first=Table::GetValue(m,m.word(p),request);
+        float second=Table::GetValue(m,m.word(p+4),request);
         second=second-first;second=fraction*second;value=first+second;
-    }else value=Sub_0018F838(m,m.word(0x003110c8),request);
+    }else value=Table::GetValue(m,m.word(0x003110c8),request);
     const float factor=m.scalar(c+8)*g(m,-0x4c0c);return factor*value;
 }
 }
@@ -256,7 +256,7 @@ void FinalizeGroundForce(Memory&m,std::uint32_t a,std::int32_t){
 
 // Retail 0x001A4170; E-0042-C115; E-0042-S001; exact Debug TU ..\indep\src\wheel.cpp
 namespace port::driving {
-void Sub_001A4170(Memory&m,float f12,float f13,float f14,std::uint32_t a,
+void SetState(Memory&m,float f12,float f13,float f14,std::uint32_t a,
                  std::uint32_t car,std::uint32_t,std::uint16_t steering,ContactProvider&provider){
     using namespace detail_group_001a4930;
     const auto index=m.signed_word(m.word(a+0xc)+0x14);
@@ -289,7 +289,7 @@ void Sub_001A4170(Memory&m,float f12,float f13,float f14,std::uint32_t a,
 
 // Retail 0x001A46B0; E-0041-V01; E-0042-S001; exact Debug TU ..\indep\src\wheel.cpp
 namespace port::driving {
-std::uint32_t Sub_001A46B0(Memory&m,std::uint32_t a,std::uint32_t out){
+std::uint32_t Wheel::GetDerivative(Memory&m,std::uint32_t a,std::uint32_t out){
     using namespace detail_group_001a4930;
     m.scalar(out,m.scalar(a+0x20));
     const auto c=m.word(a+0xc);float f4=m.scalar(a+0x20);
@@ -323,3 +323,109 @@ void ModifyGroundForce(WheelIterationProjection& a0,const std::array<float,2>& a
     a0.Field_0x114=f3;
 }
 }
+
+#include "game_core/indep/src/wheel.hpp"
+
+#include "game_core/port/not_implemented.hpp"
+
+namespace hp2::recovered {
+// ELF 0x001A3F10; E-0042-C113; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a3f10.md.
+void Wheel::Sub_001A3F10() {
+    hp2::not_implemented("0x001A3F10", "Wheel::Sub_001A3F10 (signature and full body unresolved)");
+}
+
+// ELF 0x001A4158; E-0042-C114; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a4158.md.
+void Wheel::Sub_001A4158() {
+    hp2::not_implemented("0x001A4158", "Wheel::Sub_001A4158 (signature and full body unresolved)");
+}
+
+// ELF 0x001A4170; E-0042-C115; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a4170.md.
+void Wheel::Sub_001A4170() {
+    hp2::not_implemented("0x001A4170", "Wheel::Sub_001A4170 (signature and full body unresolved)");
+}
+
+// ELF 0x001A4348; E-0042-C116; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a4348.md.
+void Wheel::Calibrate() {
+    hp2::not_implemented("0x001A4348", "Wheel::Calibrate (signature and full body unresolved)");
+}
+
+// ELF 0x001A4358; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a4358.md.
+void Wheel::ComputeAuxiliaries() {
+    hp2::not_implemented("0x001A4358", "Wheel::ComputeAuxiliaries (signature and full body unresolved)");
+}
+
+// ELF 0x001A44A8; E-0042-C117; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a44a8.md.
+void Wheel::ExchangeZForces() {
+    hp2::not_implemented("0x001A44A8", "Wheel::ExchangeZForces (signature and full body unresolved)");
+}
+
+// ELF 0x001A46B0; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a46b0.md.
+void Wheel::GetDerivative() {
+    hp2::not_implemented("0x001A46B0", "Wheel::GetDerivative (signature and full body unresolved)");
+}
+
+// ELF 0x001A4778; E-0042-C120; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a4778.md.
+void Wheel::CheckForBrakeLock() {
+    hp2::not_implemented("0x001A4778", "Wheel::CheckForBrakeLock (signature and full body unresolved)");
+}
+
+// ELF 0x001A4818; E-0042-C121; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a4818.md.
+void Wheel::GetPilotFactor() {
+    hp2::not_implemented("0x001A4818", "Wheel::GetPilotFactor (signature and full body unresolved)");
+}
+
+// ELF 0x001A4930; E-0042-C122; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a4930.md.
+void Wheel::GuessGroundForce() {
+    hp2::not_implemented("0x001A4930", "Wheel::GuessGroundForce (signature and full body unresolved)");
+}
+
+// ELF 0x001A4D28; E-0042-U136; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a4d28.md.
+void Wheel::GetLateralForce() {
+    hp2::not_implemented("0x001A4D28", "Wheel::GetLateralForce (signature and full body unresolved)");
+}
+
+// ELF 0x001A4E88; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a4e88.md.
+void Wheel::ModifyGroundForce() {
+    hp2::not_implemented("0x001A4E88", "Wheel::ModifyGroundForce (signature and full body unresolved)");
+}
+
+// ELF 0x001A4EE0; E-0042-C123; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a4ee0.md.
+void Wheel::FinalizeGroundForce() {
+    hp2::not_implemented("0x001A4EE0", "Wheel::FinalizeGroundForce (signature and full body unresolved)");
+}
+
+// ELF 0x001A5428; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a5428.md.
+void Wheel::GetHorizontalGroundForceInCarFrame() {
+    hp2::not_implemented("0x001A5428", "Wheel::GetHorizontalGroundForceInCarFrame (signature and full body unresolved)");
+}
+
+// ELF 0x001A5520; E-0042-U137; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001a5520.md.
+void Wheel::MaybeMakeSkids() {
+    hp2::not_implemented("0x001A5520", "Wheel::MaybeMakeSkids (signature and full body unresolved)");
+}
+
+// ELF 0x001A5BF0; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001a5bf0.md.
+void Wheel::Sub_001A5BF0() {
+    hp2::not_implemented("0x001A5BF0", "Wheel::Sub_001A5BF0 (signature and full body unresolved)");
+}
+
+// ELF 0x001A5C08; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001a5c08.md.
+void Wheel::Sub_001A5C08() {
+    hp2::not_implemented("0x001A5C08", "Wheel::Sub_001A5C08 (signature and full body unresolved)");
+}
+
+// ELF 0x001A5C20; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a5c20.md.
+void Wheel::Sub_001A5C20() {
+    hp2::not_implemented("0x001A5C20", "Wheel::Sub_001A5C20 (signature and full body unresolved)");
+}
+
+// ELF 0x001A5C28; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001a5c28.md.
+void Wheel::GetSize() {
+    hp2::not_implemented("0x001A5C28", "Wheel::GetSize (signature and full body unresolved)");
+}
+
+// ELF 0x001A5C30; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001a5c30.md.
+void Wheel::Sub_001A5C30() {
+    hp2::not_implemented("0x001A5C30", "Wheel::Sub_001A5C30 (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

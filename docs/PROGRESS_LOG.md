@@ -68,6 +68,7 @@ place and kept, because the fact that a session believed it, and why, is itself 
 - [2026-10-17 - TASK-0038 direct third-person Test drive redesign completed](#2026-10-17---task-0038-direct-third-person-test-drive-redesign-completed)
 - [TASK-0041 - Symbol-rich PS2 reference recovery (2026-10-17)](#task-0041---symbol-rich-ps2-reference-recovery-2026-10-17)
 - [TASK-0042 - Debug call chains and original source ownership (2026-10-17)](#task-0042---debug-call-chains-and-original-source-ownership-2026-10-17)
+- [TASK-0043 - Full member mapping and identifier cleanup (2026-10-17)](#task-0043---full-member-mapping-and-identifier-cleanup-2026-10-17)
 
 <!-- generated:contents:end -->
 
@@ -1727,3 +1728,37 @@ passed59.91s. Native initial52/54passed48.06s, with two stale generated-metadata
 checks refreshed and rerun2/2passed0.78s. Python discovery37/37passed. Source
 bodies and original1597symbol-row statuses preserved;5newIdentifiedrows only.
 Class/progress/diff checks passed. No restricted raw files or commit added.
+
+
+## TASK-0043 - Full member mapping and identifier cleanup (2026-10-17)
+
+Rechecked all 1,025 supported Retail correspondences: 822 class-method rows now
+have complete dispositions, with 650 added whole-entry throwing templates, 169
+existing throwing entries and three explicitly unrepresentable nested/template
+entries. The generator represents 372 classes and 1,203 member attributions.
+4,999 unmapped Debug methods are listed per declaring class without invented
+Retail addresses. Removed 25 duplicate derived-class sole-throw aliases only
+after pinning the original body and confirming the canonical same-address gap.
+
+Restored 42 projected callable identifiers, one EventInfo struct name and 11
+field names. Field identity is independently anchored by live both-version
+getters and SHA-bound Debug STABS; identical offsets elsewhere were preserved.
+Static host carriers separate conflicting original scopes without copying ABI.
+Constructors/destructors/operators and unknown overload gap signatures retain
+address-callable placeholders. TitleStringId_001F96B8 remains an extracted host
+selector: the Debug constructor contains its branch inline, so the containing
+constructor cannot supply a name for the extracted helper.
+
+All 1,602 previous symbol rows/statuses remain. Existing production bodies are
+checked against fixed Git revision 19a8de9 with only approved identifier changes;
+projection hashes derive from that baseline, not the working code. See
+CLASS_MAPPING_COMPLETION.md, TASK-0043 coverage/entity catalogues and the task
+record for exact validation and remaining constraints. No behavior or Verified
+status is promoted.
+
+TASK-0043 final validation: native CTest 61/61 passed (57.82s); Godot CTest
+67/67 passed (73.58s); both builds passed. Python tests 54 + 7 passed.
+Whole-production-body preservation passed, including pinned removal of 25
+duplicate throwing gaps; generated test changes are separate. Repeated normal
+generation left all 2,637 checked files byte-identical. Final checks passed;
+no raw/restricted artifacts or commit were added.

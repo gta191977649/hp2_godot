@@ -77,3 +77,29 @@ void NisCameraCoordinator::Sub_0019B658() {
     hp2::not_implemented("0x0019B658", "NisCameraCoordinator::Sub_0019B658 (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+#include "game_core/indep/src/cameracoordinator.hpp"
+
+namespace hp2::recovered {
+// ELF 0x0019B6B0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0019b6b0.md.
+void CameraDataItems::Sub_0019B6B0() {
+    hp2::not_implemented("0x0019B6B0", "CameraDataItems::Sub_0019B6B0 (signature and full body unresolved)");
+}
+
+// ELF 0x0019BAB8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0019bab8.md.
+void CameraDataItems::Sub_0019BAB8() {
+    hp2::not_implemented("0x0019BAB8", "CameraDataItems::Sub_0019BAB8 (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x0019B660; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0019b660.md.
+void NisCameraCoordinator::NumCameraKeys() {
+    hp2::not_implemented("0x0019B660", "NisCameraCoordinator::NumCameraKeys (signature and full body unresolved)");
+}
+
+// ELF 0x0019B688; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0019b688.md.
+void NisCameraCoordinator::GetCameraKeys() {
+    hp2::not_implemented("0x0019B688", "NisCameraCoordinator::GetCameraKeys (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

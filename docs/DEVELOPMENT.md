@@ -297,3 +297,8 @@ migration scripts are audit tools for the original source layout and must not
 be rerun on the current tree. See DEBUG_CALLCHAIN_RECOVERY.md for evidence and
 exact binary prerequisites. CTest includes finite naming-proof, adoption-section
 preservation and projection-body/overload-address regression checks.
+
+
+## TASK-0043 current regeneration
+
+Use the ordered commands in CLASS_MAPPING_COMPLETION.md. New canonical-member and current projection-binding registries extend historical TASK-0042 evidence; do not run one-time migration scripts. Normal generators preserve edited bodies and explicit throwing gaps. CTest now checks complete member coverage, scoped identifier adoption, whole-project function-body preservation and its pinned duplicate-stub removals. Existing TASK-0041/0042 naming catalogues remain historical baselines.

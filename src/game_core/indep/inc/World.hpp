@@ -33,5 +33,28 @@ namespace hp2::recovered {
 class World {
 public:
     // No member address is confirmed; no speculative members are declared.
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x0014D338; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0014d338.md.
+    // Original Debug reference: World::BuildCarTable(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void BuildCarTable();
+    // ELF 0x0014D508; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0014d508.md.
+    // Original Debug reference: World::GetCarByNumber(int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetCarByNumber();
+    // ELF 0x0014D638; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0014d638.md.
+    // Original Debug reference: World::ResetTimeScale(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void ResetTimeScale();
+    // ELF 0x0014E3E8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0014e3e8.md.
+    // Original Debug reference: World::GetDistanceToClosestPlayer(bVector2 const *); multiple original overloads cannot share a void/no-argument placeholder.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_0014E3E8();
+    // ELF 0x0014E440; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0014e440.md.
+    // Original Debug reference: World::GetDistanceToClosestPlayer(bVector3 const *); multiple original overloads cannot share a void/no-argument placeholder.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_0014E440();
 };
 } // namespace hp2::recovered

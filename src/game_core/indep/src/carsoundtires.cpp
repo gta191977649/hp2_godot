@@ -117,3 +117,30 @@ void BaseTireSound::Sub_00214A78() {
     hp2::not_implemented("0x00214A78", "BaseTireSound::Sub_00214A78 (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x00214890; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00214890.md.
+void kAITireSound::ActivateSound() {
+    hp2::not_implemented("0x00214890", "kAITireSound::ActivateSound (signature and full body unresolved)");
+}
+
+// ELF 0x00214898; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00214898.md.
+void kAITireSound::DeactivateSound() {
+    hp2::not_implemented("0x00214898", "kAITireSound::DeactivateSound (signature and full body unresolved)");
+}
+
+// ELF 0x002148E0; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/002148e0.md.
+void kAITireSound::Mute() {
+    hp2::not_implemented("0x002148E0", "kAITireSound::Mute (signature and full body unresolved)");
+}
+
+// ELF 0x00214928; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00214928.md.
+void kAITireSound::Update() {
+    hp2::not_implemented("0x00214928", "kAITireSound::Update (signature and full body unresolved)");
+}
+
+// ELF 0x002149A0; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/002149a0.md.
+void kAITireSound::Sub_002149A0() {
+    hp2::not_implemented("0x002149A0", "kAITireSound::Sub_002149A0 (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

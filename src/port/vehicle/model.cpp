@@ -42,7 +42,7 @@ void Model::load(assets::Source& source,const std::string& geometry_path,const s
     const auto attachments=hp2::recovered::CarRenderInfo::Sub_00120EF8(config,0);
     const auto binding_start=std::chrono::steady_clock::now();double geometry_phase_ms=0;
     std::set<std::uint32_t> wanted;
-    auto want=[&](const port::CarGeometryBinding& b){for(const auto& name:{b.name,b.fallback})if(!name.empty())wanted.insert(hp2::frontend::StringHash_002534A8(name.c_str()));};
+    auto want=[&](const port::CarGeometryBinding& b){for(const auto& name:{b.name,b.fallback})if(!name.empty())wanted.insert(hp2::frontend::bStringHash(name.c_str()));};
     if(!include_lods_){want(bindings.body[0]);want(bindings.tire_front[0]);want(bindings.tire_rear[0]);for(const auto& b:bindings.accessories)if(b.object_offset!=0x190&&b.object_offset!=0x1a8)want(b);}
     if(!include_lods_)for(const auto& binding:bindings.wheel_blur)want(binding);
     const auto key=geometry_path+(include_lods_?":all":":near");
@@ -63,7 +63,7 @@ void Model::load(assets::Source& source,const std::string& geometry_path,const s
     auto find=[&](const port::CarGeometryBinding& binding)->std::size_t {
         for(const auto& name:{binding.name,binding.fallback}) {
             if(name.empty())continue;
-            const auto hash=hp2::frontend::StringHash_002534A8(name.c_str());
+            const auto hash=hp2::frontend::bStringHash(name.c_str());
             for(std::size_t i=0;i<geometry_.solids.size();++i)if(geometry_.solids[i].hash==hash)return i;
         }
         return geometry_.solids.size();
@@ -122,7 +122,7 @@ void Model::load(assets::Source& source,const std::string& geometry_path,const s
             const auto& entry=surface.strip_entry;
             const auto sx=std::uint16_t(entry[4])|(std::uint16_t(entry[5])<<8);
             const auto sy=std::uint16_t(entry[6])|(std::uint16_t(entry[7])<<8);
-            const auto factors=port::Sub_0010C158(texture->header.width,texture->header.height,sx,sy);
+            const auto factors=port::FixStripSTs(texture->header.width,texture->header.height,sx,sy);
             for(auto& vertex:surface.vertices)for(int axis=0;axis<2;++axis)vertex.uv[axis]*=factors.cropped_image[axis];
         }
     for(const auto& gap:geometry_.gaps)diagnostic_+=gap+"; ";

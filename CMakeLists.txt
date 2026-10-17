@@ -291,6 +291,13 @@ if(BUILD_TESTING)
   add_test(NAME debug_callchain_evidence COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/tests" -p test_debug_callchain_evidence.py)
   add_test(NAME projection_partition_preservation COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/tests" -p test_projection_partitions.py)
   add_test(NAME debug_callchain_adoption COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/tests" -p test_task0042_adoption.py)
+  add_test(NAME complete_class_members COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/reverse/scripts/complete_class_members.py")
+  add_test(NAME complete_member_rules COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/scripts/tests" -p test_complete_members.py)
+  add_test(NAME confirmed_identifier_adoption COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/reverse/scripts/adopt_task0043_identifiers.py" --check)
+  add_test(NAME identifier_entity_rules COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/tests" -p test_task0043_identifiers.py)
+  add_test(NAME existing_body_preservation COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/reverse/scripts/audit_task0043_preservation.py" --renames "${CMAKE_CURRENT_SOURCE_DIR}/reverse/naming/task0043-identifier-renames.json")
+  add_test(NAME existing_body_audit_rules COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/tests" -p test_task0043_preservation.py)
+  add_test(NAME current_projection_bindings COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/reverse/scripts/refresh_task0043_projection_bindings.py")
   add_test(NAME main_loop_catalog COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/reverse/scripts/validate_main_loop.py" --metadata-only)
   # docs/PROGRESS.md's tables are generated from reverse/symbols.csv, the task files and the
   # not_implemented call sites. A stale tracker is a tracker that misleads the next session,

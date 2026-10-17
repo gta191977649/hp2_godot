@@ -69,7 +69,7 @@ private:
     // E-0019-N01: original name unknown. Shared by entrance/exit lists initialized
     // at 00248BE8; membership in this port projection is not original class evidence.
     void Sub_00248C60(float x, float duration, std::uint32_t group, std::uint32_t mask);
-    void Sub_002486E8(AnimationGroup& path);
+    void SetupToAnimate(AnimationGroup& path);
 };
 // ELF 0x00216638; E-0015-11, reverse/functions/<binary-id>/frontend/00216638.md.
 // Only message 1 is translated here; visuals are separately driven by the port adapter.
@@ -102,6 +102,7 @@ struct LanguageOptionsScreenBase {
     // +0x08: the constructor's third argument. 0 for "Language Options Pre FE", 1 for
     // "Language Options". Only 0 reaches the 00183830 full profile reset.
     std::int32_t field_0x08 = 0;
+
 };
 // ELF 0x001F1A78 / 0x001F1D70, message 0x0B of 001F1DD8. `list` and `screen` are what the
 // original resolves from the current class name inside 0016D2A8.
@@ -156,6 +157,13 @@ public:
     // ELF 0x001EFB80; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001efb80.md.
     // Port-side void/no-argument placeholder; original signature unknown.
     void Sub_001EFB80();
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x001EFA68; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001efa68.md.
+    // Original Debug reference: AudioOptionsScreen::FindSlider(int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void FindSlider();
 };
 } // namespace hp2::frontend
 
@@ -176,9 +184,6 @@ public:
     // ELF 0x001F0D10; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f0d10.md.
     // Port-side void/no-argument placeholder; original signature unknown.
     void Sub_001F0D10();
-    // ELF 0x001F4E68; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f4e68.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_001F4E68();
 };
 } // namespace hp2::frontend
 
@@ -222,8 +227,58 @@ public:
     // ELF 0x001EECA8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001eeca8.md.
     // Port-side void/no-argument placeholder; original signature unknown.
     void Sub_001EECA8();
-    // ELF 0x001F4E68; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f4e68.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_001F4E68();
 };
 } // namespace hp2::frontend
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
+// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::recovered {
+class OptionsScreenBase {
+public:
+    // ELF 0x001F4DC8; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001f4dc8.md.
+    // Original Debug reference: OptionsScreenBase::~OptionsScreenBase(void); constructor/destructor entry is not a native C++ lifetime operation.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_001F4DC8();
+    // ELF 0x001F4E68; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f4e68.md.
+    // Original Debug reference: OptionsScreenBase::HandleHighlight(int, ScreenCallbackData *, int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void HandleHighlight();
+    // ELF 0x001F5B80; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001f5b80.md.
+    // Original Debug reference: OptionsScreenBase::HandleEvent(int, ScreenCallbackData *); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void HandleEvent();
+};
+} // namespace hp2::recovered
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
+// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::recovered {
+class UserNameOptionsScreen {
+public:
+    // ELF 0x001F1528; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001f1528.md.
+    // Original Debug reference: UserNameOptionsScreen::DisplayGender(int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void DisplayGender();
+};
+} // namespace hp2::recovered
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
+// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::recovered {
+class LanguageOptionsScreenBase {
+public:
+    // ELF 0x001F1A78; E-0041-R20; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f1a78.md.
+    // Original Debug reference: LanguageOptionsScreenBase::LanguageOptionsScreenBase(int, LanguageOptionsScreenBase::eLanguageSelectMode); constructor/destructor entry is not a native C++ lifetime operation.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_001F1A78();
+};
+} // namespace hp2::recovered

@@ -30,5 +30,24 @@ public:
     // ELF 0x00135EB8; E-0042-C009; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/00135eb8.md.
     // Port-side void/no-argument placeholder; original signature unknown.
     void GetPostCollisionYawControlBoost();
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x001315F8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001315f8.md.
+    // Original Debug reference: Car::SetFrictionBoost(float); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void SetFrictionBoost();
+    // ELF 0x00132960; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00132960.md.
+    // Original Debug reference: Car::CalculateDebugChecksum(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void CalculateDebugChecksum();
+    // ELF 0x00134DB8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00134db8.md.
+    // Original Debug reference: Car::GetWheelTraction(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetWheelTraction();
+    // ELF 0x00134E00; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00134e00.md.
+    // Original Debug reference: Car::GetWheelsOnGround(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetWheelsOnGround();
 };
 } // namespace hp2::recovered

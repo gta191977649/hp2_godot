@@ -27,7 +27,7 @@ const std::uint8_t* profile_slice(const EventTree_001FFC40& tree,
 }
 } // namespace port
 
-int Sub_002001A8(std::uint32_t value) { // E-0022-D02, ELF 002001A8
+int GetRaceIndex(std::uint32_t value) { // E-0022-D02, ELF 002001A8
     int count = 0;
     for (int i = 0; i < 8; ++i) count += ((value >> (i * 4)) & 15) != 0;
     return count;
@@ -41,7 +41,7 @@ int Sub_002006A0(const std::uint8_t* bytes, int count) { // E-0022-D02, ELF 0020
     for (int i = 0; i < 8; ++i) sum += bytes[i];
     return sum / divisor;
 }
-int Sub_00200710(const std::uint8_t* bytes, int index) { // E-0022-D02, ELF 00200710
+int RacerRank(const std::uint8_t* bytes, int index) { // E-0022-D02, ELF 00200710
     int rank = 1;
     for (int i = 0; i < 8; ++i)
         if (i != index && (bytes[i] > bytes[index] || (bytes[i] == bytes[index] && i < index)))
@@ -144,7 +144,7 @@ const char* EventTree_001FFC40::layout_map() const {
     return nullptr;
 }
 
-int EventTree_001FFC40::FindLeafByNumber_001FA840(std::uint8_t number) const {
+int EventTree_001FFC40::FindLeafByEventNumber(std::uint8_t number) const {
     for (std::size_t i = 0; i < records.size(); ++i) {
         if (records[i].number_0x28 == number) return static_cast<int>(i);
     }
@@ -159,18 +159,18 @@ int EventTree_001FFC40::StatusWithoutProfile_002010B8(int record_index) const {
     // requirement rows reports Unlocked, everything else Locked.
     const auto& record = records[static_cast<std::size_t>(record_index)];
     if (record.number_0x28 == 0x1f || record.number_0x28 == 0x20) return kEventStatusLocked;
-    if (record.link_count_0x3D < 1) return kEventStatusUnlocked;
+    if (record.nGoals < 1) return kEventStatusUnlocked;
     return kEventStatusLocked;
 }
 
-const EventLink_002008B8* EventTree_001FFC40::Requirement_002008B8(int record_index, int i) const {
+const EventLink_002008B8* EventTree_001FFC40::GetGoal(int record_index, int i) const {
     // FUN_002008B8, verbatim: the bound is record+0x3D and the row index comes from the s16
     // array at record+0x7C. The original returns 0 for an out-of-range `i`.
     if (record_index < 0 || record_index >= static_cast<int>(records.size())) return nullptr;
     const auto& record = records[static_cast<std::size_t>(record_index)];
-    if (i < 0 || i >= static_cast<int>(record.link_count_0x3D)) return nullptr;
-    if (static_cast<std::size_t>(i) >= record.link_index_0x7C.size()) return nullptr;
-    const std::int16_t row = record.link_index_0x7C[static_cast<std::size_t>(i)];
+    if (i < 0 || i >= static_cast<int>(record.nGoals)) return nullptr;
+    if (static_cast<std::size_t>(i) >= record.aGoals.size()) return nullptr;
+    const std::int16_t row = record.aGoals[static_cast<std::size_t>(i)];
     if (row < 0 || static_cast<std::size_t>(row) >= links.size()) return nullptr;
     return &links[static_cast<std::size_t>(row)];
 }
@@ -205,14 +205,14 @@ int EventTree_001FFC40::Status_002010B8(const hp2::memorycard::Profile_002FC050&
                                  "event 32 requires events 1..31 of BOTH trees to be Won, which "
                                  "needs the other tree's view; not translated");
         }
-        if (record.link_count_0x3D >= 1) {
+        if (record.nGoals >= 1) {
             bool satisfied = false;
-            for (int i = 0; i < static_cast<int>(record.link_count_0x3D); ++i) {
-                const EventLink_002008B8* requirement = Requirement_002008B8(record_index, i);
+            for (int i = 0; i < static_cast<int>(record.nGoals); ++i) {
+                const EventLink_002008B8* requirement = GetGoal(record_index, i);
                 if (requirement == nullptr) continue;
                 // FUN_001FFFB0(row, tree): look the prerequisite up by number and ask for its
                 // status judged against THIS row's threshold.
-                const int prerequisite = FindLeafByNumber_001FA840(
+                const int prerequisite = FindLeafByEventNumber(
                     static_cast<std::uint8_t>(requirement->prerequisite_number_0x02));
                 if (prerequisite < 0) continue;
                 if (Status_002010B8(profile, prerequisite, requirement) == kEventStatusWon) {
@@ -243,16 +243,16 @@ int EventTree_001FFC40::Status_002010B8(const hp2::memorycard::Profile_002FC050&
     switch (record.goal_type_0x29) {
     case 0:
     case 2:
-        return hp2::memorycard::SliceStatusByte_00200018(slice[0], row->goal_threshold_0x04);
+        return hp2::memorycard::EventRankState::GetStatus(slice[0], row->goal_threshold_0x04);
     case 1:
     case 5:
     case 6:
-        return hp2::memorycard::SliceStatusWord_00200068(
+        return hp2::memorycard::EventTimeState::GetStatus(
             static_cast<std::int32_t>(read_u32(slice, 0)),
             static_cast<std::int32_t>(row->goal_threshold_0x04));
     case 3:
         // E-0022-D02, 002003F8: any nonzero nibble means progress; low nibble is result.
-        if (Sub_002001A8(read_u32(slice, 0)) == 0) return 1;
+        if (GetRaceIndex(read_u32(slice, 0)) == 0) return 1;
         if ((slice[0] & 15) == 0) return 2;
         return (slice[0] & 15) <= row->goal_threshold_0x04 ? 4 : 3;
     case 4:
@@ -260,8 +260,8 @@ int EventTree_001FFC40::Status_002010B8(const hp2::memorycard::Profile_002FC050&
         {
             const int progress = Sub_002006A0(slice, record.Field_0x3F);
             if (progress == 0) return 1;
-            if (progress < record.Field_0x3C) return 2;
-            return static_cast<std::uint32_t>(Sub_00200710(slice, 0)) <= row->goal_threshold_0x04 ? 4 : 3;
+            if (progress < record.nTracks) return 2;
+            return static_cast<std::uint32_t>(RacerRank(slice, 0)) <= row->goal_threshold_0x04 ? 4 : 3;
         }
     default:
         // The original's switch has no default arm, so `uVar7` keeps its initialiser, 1.
@@ -360,20 +360,20 @@ std::vector<EventTree_001FFC40> parse_event_trees(const std::vector<std::uint8_t
         if (const auto* rows = child(*container, kEventTreeChunk_00034A01)) {
             const auto* d = buffer.data() + rows->payload_offset();
             for (std::size_t off = 0; off + 4 <= rows->size; off += 4)
-                tree.Field_0x14.push_back(read_u32(d, off));
+                tree.pCars.push_back(read_u32(d, off));
         }
 
         if (const auto* rows = child(*container, kEventTreeChunk_00034A02)) {
             const auto* d = buffer.data() + rows->payload_offset();
             for (std::size_t off = 0; off + 4 <= rows->size; off += 4)
-                tree.Field_0x1C.push_back(read_u32(d, off));
+                tree.pTracks.push_back(read_u32(d, off));
         }
         if (const auto* rows = child(*container, kEventTreeChunk_00034A04)) {
             const auto* d = buffer.data() + rows->payload_offset();
             for (std::size_t off = 0; off + 8 <= rows->size; off += 8) {
                 std::array<std::uint8_t, 8> row{};
                 std::memcpy(row.data(), d + off, 8);
-                tree.Field_0x2C.push_back(row);
+                tree.pRewards.push_back(row);
             }
         }
 
@@ -398,37 +398,37 @@ std::vector<EventTree_001FFC40> parse_event_trees(const std::vector<std::uint8_t
         tree.records.reserve(count);
         for (std::size_t i = 0; i < count; ++i) {
             const std::size_t off = i * kEventRecordSize_001FFF60;
-            EventRecord_001FFF60 record;
+            EventInfo record;
             record.name_0x08 = read_fixed_string(d, off + 0x08, 0x20);
             record.number_0x28 = d[off + 0x28];
             record.goal_type_0x29 = d[off + 0x29];
-            record.link_count_0x3D = d[off + 0x3d];
+            record.nGoals = d[off + 0x3d];
             record.index_0x42 = read_u16(d, off + 0x42);
             record.string_id_0xB0 = read_u32(d, off + 0xb0);
             record.string_id_0xB4 = read_u32(d, off + 0xb4);
-            record.Field_0x3B = d[off + 0x3b];
-            for (int k = 0; k < record.Field_0x3B; ++k) {
+            record.nCars = d[off + 0x3b];
+            for (int k = 0; k < record.nCars; ++k) {
                 if (0x44 + k * 2 + 2 > static_cast<int>(kEventRecordSize_001FFF60))
                     throw std::runtime_error("event car indices exceed record bounds");
-                record.Field_0x44.push_back(static_cast<std::int16_t>(read_u16(d, off + 0x44 + k * 2)));
+                record.aCars.push_back(static_cast<std::int16_t>(read_u16(d, off + 0x44 + k * 2)));
             }
-            record.Field_0x3C = d[off + 0x3c];
-            record.Field_0x3E = d[off + 0x3e];
+            record.nTracks = d[off + 0x3c];
+            record.nRewards = d[off + 0x3e];
             record.Field_0x3F = d[off + 0x3f];
-            for (int k = 0; k < record.Field_0x3C; ++k) {
+            for (int k = 0; k < record.nTracks; ++k) {
                 if (k >= 8) throw std::runtime_error("event track indices overlap requirement indices");
-                record.Field_0x6C.push_back(static_cast<std::int16_t>(read_u16(d, off + 0x6c + k * 2)));
+                record.aTracks.push_back(static_cast<std::int16_t>(read_u16(d, off + 0x6c + k * 2)));
             }
-            for (int k = 0; k < record.Field_0x3E; ++k) {
+            for (int k = 0; k < record.nRewards; ++k) {
                 if (0x8c + k * 2 + 2 > static_cast<int>(kEventRecordSize_001FFF60))
                     throw std::runtime_error("event reward indices exceed record bounds");
-                record.Field_0x8C.push_back(static_cast<std::int16_t>(read_u16(d, off + 0x8c + k * 2)));
+                record.aRewards.push_back(static_cast<std::int16_t>(read_u16(d, off + 0x8c + k * 2)));
             }
-            for (int k = 0; k < static_cast<int>(record.link_count_0x3D); ++k) {
+            for (int k = 0; k < static_cast<int>(record.nGoals); ++k) {
                 // FUN_002008B8 indexes a s16 array at record+0x7C and multiplies by the 8-byte
                 // link row size.
                 const std::size_t slot = off + 0x7c + static_cast<std::size_t>(k) * 2;
-                record.link_index_0x7C.push_back(
+                record.aGoals.push_back(
                     static_cast<std::int16_t>(read_u16(d, slot)));
             }
             tree.records.push_back(std::move(record));
@@ -440,9 +440,9 @@ std::vector<EventTree_001FFC40> parse_event_trees(const std::vector<std::uint8_t
             tree.leaves[i].record_index = static_cast<int>(i);
         }
         for (std::size_t i = 0; i < tree.records.size(); ++i) {
-            for (std::int16_t row : tree.records[i].link_index_0x7C) {
+            for (std::int16_t row : tree.records[i].aGoals) {
                 if (row < 0 || static_cast<std::size_t>(row) >= tree.links.size()) continue;
-                const int other = tree.FindLeafByNumber_001FA840(
+                const int other = tree.FindLeafByEventNumber(
                     static_cast<std::uint8_t>(tree.links[static_cast<std::size_t>(row)]
                                                   .prerequisite_number_0x02));
                 if (other < 0) continue;
@@ -552,42 +552,42 @@ EventProfileLayout_001FE988 build_profile_layout_001FE988(const EventTree_001FFC
     return layout;
 }
 
-const std::uint32_t* EventTree_001FFC40::Sub_002008F8(int record_index, int i) const {
+const std::uint32_t* EventTree_001FFC40::GetTrack(int record_index, int i) const {
     const auto& record = records.at(static_cast<std::size_t>(record_index));
-    if (i < 0 || i >= record.Field_0x3C) return nullptr;
-    const auto row = record.Field_0x6C.at(static_cast<std::size_t>(i));
-    if (row < 0 || static_cast<std::size_t>(row) >= Field_0x1C.size())
+    if (i < 0 || i >= record.nTracks) return nullptr;
+    const auto row = record.aTracks.at(static_cast<std::size_t>(i));
+    if (row < 0 || static_cast<std::size_t>(row) >= pTracks.size())
         throw std::out_of_range("event track row outside table");
-    return &Field_0x1C[static_cast<std::size_t>(row)];
+    return &pTracks[static_cast<std::size_t>(row)];
 }
-const std::uint32_t* EventTree_001FFC40::Sub_00200878(int record_index, int i) const {
+const std::uint32_t* EventTree_001FFC40::GetCar(int record_index, int i) const {
     const auto& record = records.at(static_cast<std::size_t>(record_index));
-    if (i < 0 || i >= record.Field_0x3B) return nullptr;
-    const auto row = record.Field_0x44.at(static_cast<std::size_t>(i));
-    if (row < 0 || static_cast<std::size_t>(row) >= Field_0x14.size())
+    if (i < 0 || i >= record.nCars) return nullptr;
+    const auto row = record.aCars.at(static_cast<std::size_t>(i));
+    if (row < 0 || static_cast<std::size_t>(row) >= pCars.size())
         throw std::out_of_range("event car row outside table");
-    return &Field_0x14[static_cast<std::size_t>(row)];
+    return &pCars[static_cast<std::size_t>(row)];
 }
-const std::array<std::uint8_t, 8>* EventTree_001FFC40::Sub_00200938(int record_index, int i) const {
+const std::array<std::uint8_t, 8>* EventTree_001FFC40::GetReward(int record_index, int i) const {
     const auto& record = records.at(static_cast<std::size_t>(record_index));
-    if (i < 0 || i >= record.Field_0x3E) return nullptr;
-    const auto row = record.Field_0x8C.at(static_cast<std::size_t>(i));
-    if (row < 0 || static_cast<std::size_t>(row) >= Field_0x2C.size())
+    if (i < 0 || i >= record.nRewards) return nullptr;
+    const auto row = record.aRewards.at(static_cast<std::size_t>(i));
+    if (row < 0 || static_cast<std::size_t>(row) >= pRewards.size())
         throw std::out_of_range("event reward row outside table");
-    return &Field_0x2C[static_cast<std::size_t>(row)];
+    return &pRewards[static_cast<std::size_t>(row)];
 }
 int EventTree_001FFC40::Sub_002012D8(const hp2::memorycard::Profile_002FC050& profile,
                                   int record_index) const {
     const auto& record = records.at(static_cast<std::size_t>(record_index));
     if (record.goal_type_0x29 == 3)
-        return Sub_002001A8(read_u32(port::profile_slice(*this, profile, record_index), 0));
+        return GetRaceIndex(read_u32(port::profile_slice(*this, profile, record_index), 0));
     if (record.goal_type_0x29 == 4)
         return Sub_002006A0(port::profile_slice(*this, profile, record_index), record.Field_0x3F);
     return 0;
 }
-int Sub_00201350(const EventRecord_001FFF60& record) {
+int GetRaceCount(const EventInfo& record) {
     if (record.goal_type_0x29 == 3) return record.Field_0x3F;
-    if (record.goal_type_0x29 == 4) return record.Field_0x3C;
+    if (record.goal_type_0x29 == 4) return record.nTracks;
     return 1;
 }
 std::string Sub_001A3B98(std::int32_t value, int locale, unsigned flags) {
@@ -687,12 +687,12 @@ std::string Sub_001F5F88(const EventTree_001FFC40& tree, int record_index,
             break;
         }
         case 1: {
-            const auto* row = tree.Sub_002008F8(record_index, 0);
+            const auto* row = tree.GetTrack(record_index, 0);
             if (!row) hp2::not_implemented("0x001F5DD0", "NUM_LAPS requires first track row");
             substitution = std::to_string((*row >> 14) & 15); break;
         }
         case 2: substitution = std::to_string(record.Field_0x3F); break;
-        case 3: substitution = std::to_string(Sub_00201350(record)); break;
+        case 3: substitution = std::to_string(GetRaceCount(record)); break;
         case 4: substitution = "events x,y,z are Unlocked!"; break;
         case 5: substitution = "ff:ggg"; break;
         case 6: substitution = "event x is unlocked"; break;
@@ -716,7 +716,7 @@ std::string Sub_00200E78(const EventTree_001FFC40& tree,
         if (!timer) hp2::not_implemented("0x001A3B98", "original timer formatter missing");
         return timer(static_cast<std::int32_t>(read_u32(slice, 0)));
     case 3: result = slice[0] & 15; break; // 00200220 case 0, listing 00200248..250
-    case 4: result = Sub_00200710(slice, 0); break; // 00200768 delegates with index 0
+    case 4: result = RacerRank(slice, 0); break; // 00200768 delegates with index 0
     default: hp2::not_implemented("0x00200E78", "goal type has no result-text arm in original");
     }
     // The table is nine words in the original: placing 0..8.
@@ -829,7 +829,7 @@ void tTrackLogoAnimation::Sub_001F9318(std::uint32_t now_ticks) {
     }
     Field_0x00->dirty_0x2b = 1;
 }
-void tTrackLogoAnimation::Sub_001F91D0() { if (Field_0x00) Field_0x00->visible = 1; }
+void tTrackLogoAnimation::Show() { if (Field_0x00) Field_0x00->visible = 1; }
 void tTrackLogoAnimation::Sub_001F91E0() { if (Field_0x00) Field_0x00->visible = 0; }
 
 } // namespace hp2::frontend
@@ -840,3 +840,159 @@ void tEventLeaf::Sub_001F6FA0() {
     hp2::not_implemented("0x001F6FA0", "tEventLeaf::Sub_001F6FA0 (signature and full body unresolved)");
 }
 } // namespace hp2::frontend
+
+namespace hp2::recovered {
+// ELF 0x00200878; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/00200878.md.
+void EventInfo::GetCar() {
+    hp2::not_implemented("0x00200878", "EventInfo::GetCar (signature and full body unresolved)");
+}
+
+// ELF 0x002008B8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/002008b8.md.
+void EventInfo::GetGoal() {
+    hp2::not_implemented("0x002008B8", "EventInfo::GetGoal (signature and full body unresolved)");
+}
+
+// ELF 0x002008F8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/002008f8.md.
+void EventInfo::GetTrack() {
+    hp2::not_implemented("0x002008F8", "EventInfo::GetTrack (signature and full body unresolved)");
+}
+
+// ELF 0x00200938; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/00200938.md.
+void EventInfo::GetReward() {
+    hp2::not_implemented("0x00200938", "EventInfo::GetReward (signature and full body unresolved)");
+}
+
+// ELF 0x00200978; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00200978.md.
+void EventInfo::GetOpponent() {
+    hp2::not_implemented("0x00200978", "EventInfo::GetOpponent (signature and full body unresolved)");
+}
+
+// ELF 0x00200D48; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00200d48.md.
+void EventInfo::GetRankState() {
+    hp2::not_implemented("0x00200D48", "EventInfo::GetRankState (signature and full body unresolved)");
+}
+
+// ELF 0x00200D70; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00200d70.md.
+void EventInfo::GetTournamentState() {
+    hp2::not_implemented("0x00200D70", "EventInfo::GetTournamentState (signature and full body unresolved)");
+}
+
+// ELF 0x00200D90; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00200d90.md.
+void EventInfo::GetKoState() {
+    hp2::not_implemented("0x00200D90", "EventInfo::GetKoState (signature and full body unresolved)");
+}
+
+// ELF 0x00200DB0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00200db0.md.
+void EventInfo::GetTimeState() {
+    hp2::not_implemented("0x00200DB0", "EventInfo::GetTimeState (signature and full body unresolved)");
+}
+
+// ELF 0x00201350; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/00201350.md.
+void EventInfo::GetRaceCount() {
+    hp2::not_implemented("0x00201350", "EventInfo::GetRaceCount (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x002001A8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/002001a8.md.
+void EventKoState::GetRaceIndex() {
+    hp2::not_implemented("0x002001A8", "EventKoState::GetRaceIndex (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x001FC580; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001fc580.md.
+void EventLeaf::SetScrollNotch() {
+    hp2::not_implemented("0x001FC580", "EventLeaf::SetScrollNotch (signature and full body unresolved)");
+}
+
+// ELF 0x001FCC88; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001fcc88.md.
+void EventLeaf::FillVerts() {
+    hp2::not_implemented("0x001FCC88", "EventLeaf::FillVerts (signature and full body unresolved)");
+}
+
+// ELF 0x001FD050; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001fd050.md.
+void EventLeaf::GetNeighbour() {
+    hp2::not_implemented("0x001FD050", "EventLeaf::GetNeighbour (signature and full body unresolved)");
+}
+
+// ELF 0x001FD0B0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001fd0b0.md.
+void EventLeaf::GetReward() {
+    hp2::not_implemented("0x001FD0B0", "EventLeaf::GetReward (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x00200018; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00200018.md.
+void EventRankState::GetStatus() {
+    hp2::not_implemented("0x00200018", "EventRankState::GetStatus (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x00200068; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00200068.md.
+void EventTimeState::GetStatus() {
+    hp2::not_implemented("0x00200068", "EventTimeState::GetStatus (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x00200638; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00200638.md.
+void EventTournamentState::Reset() {
+    hp2::not_implemented("0x00200638", "EventTournamentState::Reset (signature and full body unresolved)");
+}
+
+// ELF 0x00200710; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/00200710.md.
+void EventTournamentState::RacerRank() {
+    hp2::not_implemented("0x00200710", "EventTournamentState::RacerRank (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x001FDFE8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001fdfe8.md.
+void EventTree::GetEventNumber() {
+    hp2::not_implemented("0x001FDFE8", "EventTree::GetEventNumber (signature and full body unresolved)");
+}
+
+// ELF 0x001FFF60; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001fff60.md.
+void EventTree::SetEvents() {
+    hp2::not_implemented("0x001FFF60", "EventTree::SetEvents (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x00201558; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00201558.md.
+void RaceEvent::RacerIndexFromDriverNumber() {
+    hp2::not_implemented("0x00201558", "RaceEvent::RacerIndexFromDriverNumber (signature and full body unresolved)");
+}
+
+// ELF 0x00201578; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00201578.md.
+void RaceEvent::DriverNumberFromRacerIndex() {
+    hp2::not_implemented("0x00201578", "RaceEvent::DriverNumberFromRacerIndex (signature and full body unresolved)");
+}
+
+// ELF 0x00201858; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00201858.md.
+void RaceEvent::GetRankState() {
+    hp2::not_implemented("0x00201858", "RaceEvent::GetRankState (signature and full body unresolved)");
+}
+
+// ELF 0x00201880; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00201880.md.
+void RaceEvent::GetTournamentState() {
+    hp2::not_implemented("0x00201880", "RaceEvent::GetTournamentState (signature and full body unresolved)");
+}
+
+// ELF 0x002018A0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/002018a0.md.
+void RaceEvent::GetKoState() {
+    hp2::not_implemented("0x002018A0", "RaceEvent::GetKoState (signature and full body unresolved)");
+}
+
+// ELF 0x002018C0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/002018c0.md.
+void RaceEvent::GetTimeState() {
+    hp2::not_implemented("0x002018C0", "RaceEvent::GetTimeState (signature and full body unresolved)");
+}
+
+// ELF 0x00202088; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00202088.md.
+void RaceEvent::GetRaceCount() {
+    hp2::not_implemented("0x00202088", "RaceEvent::GetRaceCount (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

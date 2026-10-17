@@ -102,6 +102,8 @@ def report() -> None:
     retained_modules = set(policy["existing_classes"]) | set(policy["module_placements"])
     moved = [c for c in all_classes if c["name"] not in retained_modules]
     decisions = {d['class_name']: d for d in json.loads((ROOT / 'reverse/classes/source-path-decisions.json').read_text())['decisions']}
+    complete_path = ROOT / 'reverse/classes/task0043-member-registry.json'
+    complete = json.loads(complete_path.read_text()) if complete_path.exists() else {'classes': {}, 'members': []}
     owners: dict[str, set[str]] = defaultdict(set)
     for cls in all_classes:
         for member in cls["members"]:
@@ -141,6 +143,12 @@ def report() -> None:
                 raise ValueError('Reviewed path not present in fresh scan: ' + cls['name'])
             row.update(status='confirmed_directory', binding=decision, header=cls['header'], source=cls['source'])
             row['reason'] = decision['observation']
+        if cls['name'] in complete['classes']:
+            row.update(status='confirmed_debug_translation_unit', header=cls['header'], source=cls['source'],
+                evidence_id='E-0042-S001; E-0043-M01',
+                definition_evidence=[{k:m[k] for k in ('elf_address','debug_address','original_definition_path','original_translation_unit')}
+                    for m in complete['members'] if m['owner']==cls['name'] and not m['exclusion_reason']],
+                reason='Independently adopted Retail member identity joined to exact Debug ECOFF definition/TU markers. Companion header is port-side unless separately established; no ABI or layout inference.')
         result["classes"].append(row)
     PUBLIC.write_text(json.dumps(result, indent=2) + "\n")
     definite = []

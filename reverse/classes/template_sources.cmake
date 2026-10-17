@@ -34,29 +34,46 @@ set(HP2_CLASS_TEMPLATE_SOURCES
   src/game_core/indep/src/AverageInRealController.cpp
   src/game_core/indep/src/PlayerCarSound.cpp
   src/game_core/indep/src/QuickSplineInRealController.cpp
+  src/game_core/indep/src/aerodynamics.cpp
   src/game_core/indep/src/aicarcontroller.cpp
   src/game_core/indep/src/aidriver.cpp
   src/game_core/indep/src/aiplan.cpp
+  src/game_core/indep/src/aiutil.cpp
   src/game_core/indep/src/beltmover.cpp
+  src/game_core/indep/src/bodydamage.cpp
+  src/game_core/indep/src/brepeat.cpp
   src/game_core/indep/src/cameracoordinator.cpp
   src/game_core/indep/src/cameramover.cpp
   src/game_core/indep/src/car.cpp
+  src/game_core/indep/src/carcollisiondetect.cpp
   src/game_core/indep/src/carcontroller.cpp
   src/game_core/indep/src/cardamage.cpp
+  src/game_core/indep/src/carinfo.cpp
+  src/game_core/indep/src/carloader.cpp
   src/game_core/indep/src/carsoundengine.cpp
   src/game_core/indep/src/carsounds.cpp
   src/game_core/indep/src/carsoundtires.cpp
+  src/game_core/indep/src/carstate.cpp
   src/game_core/indep/src/chopper.cpp
   src/game_core/indep/src/choppersound.cpp
+  src/game_core/indep/src/collision.cpp
   src/game_core/indep/src/collisionbody.cpp
   src/game_core/indep/src/componentphysics.cpp
+  src/game_core/indep/src/cop.cpp
+  src/game_core/indep/src/copmgr.cpp
   src/game_core/indep/src/deliverymover.cpp
+  src/game_core/indep/src/demomodereplay.cpp
+  src/game_core/indep/src/drivetarget.cpp
   src/game_core/indep/src/drivingchoice.cpp
+  src/game_core/indep/src/drivinglocation.cpp
   src/game_core/indep/src/eanimations.cpp
+  src/game_core/indep/src/eanimationsolid.cpp
+  src/game_core/indep/src/engine.cpp
   src/game_core/indep/src/eventtree.cpp
   src/game_core/indep/src/flailerdb.cpp
   src/game_core/indep/src/fmenus.cpp
   src/game_core/indep/src/fred.cpp
+  src/game_core/indep/src/frontendscreens/campaigntrees.cpp
   src/game_core/indep/src/frontendscreens/endgamescreens.cpp
   src/game_core/indep/src/frontendscreens/feanim.cpp
   src/game_core/indep/src/frontendscreens/frontend.cpp
@@ -69,27 +86,60 @@ set(HP2_CLASS_TEMPLATE_SOURCES
   src/game_core/indep/src/frontendscreens/pausemenu.cpp
   src/game_core/indep/src/frontendscreens/racesetup.cpp
   src/game_core/indep/src/frontendscreens/replayscreen.cpp
+  src/game_core/indep/src/frontendscreens/selectcar.cpp
   src/game_core/indep/src/frontendscreens/selecttrack.cpp
   src/game_core/indep/src/frontendscreens/startracescreens.cpp
   src/game_core/indep/src/helisheet.cpp
+  src/game_core/indep/src/hudanim.cpp
+  src/game_core/indep/src/joystick.cpp
+  src/game_core/indep/src/language.cpp
   src/game_core/indep/src/mellowmover.cpp
+  src/game_core/indep/src/movieplayer/cyclicbuffer.cpp
+  src/game_core/indep/src/movieplayer/dctblock.cpp
+  src/game_core/indep/src/movieplayer/dctimage.cpp
+  src/game_core/indep/src/movieplayer/dcttable.cpp
+  src/game_core/indep/src/movieplayer/huffman2.cpp
+  src/game_core/indep/src/movieplayer/mv3codec.cpp
+  src/game_core/indep/src/movieplayer/mv3codecdecomp.cpp
+  src/game_core/indep/src/movieplayer/ringbuffer.cpp
   src/game_core/indep/src/munitions.cpp
   src/game_core/indep/src/physicscar.cpp
   src/game_core/indep/src/player.cpp
   src/game_core/indep/src/point.cpp
   src/game_core/indep/src/psychodriver.cpp
+  src/game_core/indep/src/pursuit.cpp
+  src/game_core/indep/src/quickspline.cpp
   src/game_core/indep/src/race.cpp
   src/game_core/indep/src/racecoordinator.cpp
+  src/game_core/indep/src/raceparameters.cpp
   src/game_core/indep/src/realcontroller.cpp
   src/game_core/indep/src/realdriver.cpp
   src/game_core/indep/src/replay.cpp
   src/game_core/indep/src/resourceloader.cpp
+  src/game_core/indep/src/rigidbody.cpp
+  src/game_core/indep/src/roadblock.cpp
+  src/game_core/indep/src/rumble.cpp
   src/game_core/indep/src/scenery.cpp
+  src/game_core/indep/src/skids.cpp
   src/game_core/indep/src/smokeable.cpp
   src/game_core/indep/src/sound3d.cpp
+  src/game_core/indep/src/sound3dsample.cpp
+  src/game_core/indep/src/soundscape.cpp
+  src/game_core/indep/src/spacefiller.cpp
+  src/game_core/indep/src/speech/action.cpp
+  src/game_core/indep/src/speech/fsm.cpp
+  src/game_core/indep/src/speech/nfsfsm.cpp
+  src/game_core/indep/src/speech/sedwedge.cpp
+  src/game_core/indep/src/spikestrip.cpp
+  src/game_core/indep/src/spline.cpp
+  src/game_core/indep/src/suspension.cpp
+  src/game_core/indep/src/table.cpp
   src/game_core/indep/src/terraineffects.cpp
   src/game_core/indep/src/texture.cpp
+  src/game_core/indep/src/timer.cpp
+  src/game_core/indep/src/track.cpp
   src/game_core/indep/src/trackedcontroller.cpp
+  src/game_core/indep/src/trackgraph.cpp
   src/game_core/indep/src/trackmap.cpp
   src/game_core/indep/src/trackmarkers.cpp
   src/game_core/indep/src/trackpath.cpp
@@ -98,6 +148,9 @@ set(HP2_CLASS_TEMPLATE_SOURCES
   src/game_core/indep/src/trafficcar.cpp
   src/game_core/indep/src/trafficdriver.cpp
   src/game_core/indep/src/trafficteleporter.cpp
+  src/game_core/indep/src/volumetree.cpp
+  src/game_core/indep/src/voronoiclip.cpp
+  src/game_core/indep/src/wheel.cpp
   src/game_core/indep/src/world.cpp
   src/game_core/indep/src/zonecameras.cpp
   src/game_core/mExitScreenAnimation.cpp
@@ -109,11 +162,25 @@ set(HP2_CLASS_TEMPLATE_SOURCES
   src/game_core/pTrackSelectTexturePack.cpp
   src/game_core/port/police/cop_control.cpp
   src/game_core/src/acidfxe.cpp
+  src/game_core/src/bEffect.cpp
   src/game_core/src/bFile.cpp
+  src/game_core/src/bJukebox.cpp
+  src/game_core/src/bList.cpp
+  src/game_core/src/bMemory.cpp
+  src/game_core/src/bSample.cpp
+  src/game_core/src/bSegment.cpp
   src/game_core/src/bSlotPool.cpp
+  src/game_core/src/bSound.cpp
+  src/game_core/src/bVoice.cpp
   src/game_core/src/care.cpp
   src/game_core/src/dbfiles.cpp
   src/game_core/src/demodisc.cpp
+  src/game_core/src/dmadump.cpp
+  src/game_core/src/ecstasy/ecstasye.cpp
+  src/game_core/src/ecstasy/estripdatae.cpp
+  src/game_core/src/logitechwheel.cpp
+  src/game_core/src/memorycard.cpp
+  src/game_core/src/texturee.cpp
   src/game_core/tCustomizeHUDScreen.cpp
   src/game_core/tLineSegment.cpp
   src/game_core/tPointsThingy.cpp

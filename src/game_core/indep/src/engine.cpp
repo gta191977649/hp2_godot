@@ -255,7 +255,7 @@ namespace port::driving {
 float GetTorque(Memory& m,std::uint32_t s) {
     using namespace detail_group_0018f808;
     const float f20=m.scalar(s+0xc)*m.scalar(0x32e32c);
-    float result=Sub_0018F838(m,s+0x18,f20)*m.scalar(s+0x58);
+    float result=Table::GetValue(m,s+0x18,f20)*m.scalar(s+0x58);
     if(m.word(s+0x40)!=0) result=result*m.scalar(0x3308a4);
     const float f0=m.scalar(m.word(s+0x10)+8)-100.0f;
     if(!(f20<f0)) result=(-m.scalar(0x3308a0))*result;
@@ -271,7 +271,7 @@ float GetTotalEngineTorque(Memory& m,std::uint32_t s) {
     float f1=m.scalar(s+0x44)*m.scalar(s+0x4c);f20=f20*f1;
     if(m.word(s+0x50)!=0) f20=f20*3.0f;
     float f0=m.scalar(s+0xc)*m.scalar(0x32e330);
-    f0= -Sub_0018F838(m,s+0x2c,f0);
+    f0= -Table::GetValue(m,s+0x2c,f0);
     float f2=m.scalar(s+0x44)*m.scalar(s+0x4c);
     f1=1.0f-f2;f0=f0*f1;f1=f20+f0;
     if(m.word(m.word(s+0x14)+0x39c)==1 && f1<0.0f) f1=f1*m.scalar(0x32e334);
@@ -281,9 +281,87 @@ float GetTotalEngineTorque(Memory& m,std::uint32_t s) {
 
 // Retail 0x0018A9D8; E-0042-C060; E-0042-S001; exact Debug TU ..\indep\src\engine.cpp
 namespace port::driving {
-std::uint32_t Sub_0018A9D8(Memory& m,std::uint32_t s,std::uint32_t out) {
+std::uint32_t Engine::GetDerivative(Memory& m,std::uint32_t s,std::uint32_t out) {
     using namespace detail_group_0018f808;
     float f0=GetTotalEngineTorque(m,s);f0=f0+m.scalar(s+0x48);
     f0=f0/m.scalar(m.word(s+0x10)+0xc);m.scalar(out,f0);return 0;
 }
 }
+
+#include "game_core/indep/src/engine.hpp"
+
+#include "game_core/port/not_implemented.hpp"
+
+namespace hp2::recovered {
+// ELF 0x0018AE70; E-0042-U109; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018ae70.md.
+void DriveTrain::Sub_0018AE70() {
+    hp2::not_implemented("0x0018AE70", "DriveTrain::Sub_0018AE70 (signature and full body unresolved)");
+}
+
+// ELF 0x0018B360; E-0042-C068; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018b360.md.
+void DriveTrain::GetDifferentialAngularAcceleration() {
+    hp2::not_implemented("0x0018B360", "DriveTrain::GetDifferentialAngularAcceleration (signature and full body unresolved)");
+}
+
+// ELF 0x0018B6C8; E-0042-C070; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018b6c8.md.
+void DriveTrain::ApplyClutchTorque() {
+    hp2::not_implemented("0x0018B6C8", "DriveTrain::ApplyClutchTorque (signature and full body unresolved)");
+}
+
+// ELF 0x0018B948; E-0042-U111; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018b948.md.
+void DriveTrain::GuessClutchTorque() {
+    hp2::not_implemented("0x0018B948", "DriveTrain::GuessClutchTorque (signature and full body unresolved)");
+}
+
+// ELF 0x0018BAA0; E-0042-C071; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018baa0.md.
+void DriveTrain::ModifyClutchTorque() {
+    hp2::not_implemented("0x0018BAA0", "DriveTrain::ModifyClutchTorque (signature and full body unresolved)");
+}
+
+// ELF 0x0018BC10; E-0042-U112; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018bc10.md.
+void DriveTrain::FinalizeClutchTorque() {
+    hp2::not_implemented("0x0018BC10", "DriveTrain::FinalizeClutchTorque (signature and full body unresolved)");
+}
+
+// ELF 0x0018BCA0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018bca0.md.
+void DriveTrain::SetSportGear() {
+    hp2::not_implemented("0x0018BCA0", "DriveTrain::SetSportGear (signature and full body unresolved)");
+}
+
+// ELF 0x0018BCE0; E-0041-R02; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018bce0.md.
+void DriveTrain::SetDesiredGear() {
+    hp2::not_implemented("0x0018BCE0", "DriveTrain::SetDesiredGear (signature and full body unresolved)");
+}
+
+// ELF 0x0018C030; E-0042-U113; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0018c030.md.
+void DriveTrain::PrintCurrentState() {
+    hp2::not_implemented("0x0018C030", "DriveTrain::PrintCurrentState (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x0018A7E8; E-0042-C059; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018a7e8.md.
+void Engine::Sub_0018A7E8() {
+    hp2::not_implemented("0x0018A7E8", "Engine::Sub_0018A7E8 (signature and full body unresolved)");
+}
+
+// ELF 0x0018A9D8; E-0042-C060; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018a9d8.md.
+void Engine::GetDerivative() {
+    hp2::not_implemented("0x0018A9D8", "Engine::GetDerivative (signature and full body unresolved)");
+}
+
+// ELF 0x0018AA28; E-0042-C061; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018aa28.md.
+void Engine::GetTorque() {
+    hp2::not_implemented("0x0018AA28", "Engine::GetTorque (signature and full body unresolved)");
+}
+
+// ELF 0x0018AAB0; E-0042-C062; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018aab0.md.
+void Engine::GetTotalEngineTorque() {
+    hp2::not_implemented("0x0018AAB0", "Engine::GetTotalEngineTorque (signature and full body unresolved)");
+}
+
+// ELF 0x0018ABF0; E-0042-C063; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018abf0.md.
+void Engine::DecrementNitro() {
+    hp2::not_implemented("0x0018ABF0", "Engine::DecrementNitro (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

@@ -186,6 +186,13 @@ public:
     // ELF 0x0015FD40; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0015fd40.md.
     // Port-side void/no-argument placeholder; original signature unknown.
     void Sub_0015FD40();
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x0015C1D0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0015c1d0.md.
+    // Original Debug reference: DriveCameraMover::GetCorrectionPitch(unsigned short); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetCorrectionPitch();
 };
 } // namespace hp2::recovered
 
@@ -325,6 +332,13 @@ namespace hp2::recovered {
 class PreviewPause {
 public:
     // No member address is confirmed; no speculative members are declared.
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x001657A0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001657a0.md.
+    // Original Debug reference: PreviewPause::GetPoint(bVector3 *); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetPoint();
 };
 } // namespace hp2::recovered
 
@@ -526,6 +540,13 @@ public:
     // ELF 0x0015FD40; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0015fd40.md.
     // Port-side void/no-argument placeholder; original signature unknown.
     void Sub_0015FD40();
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x00159540; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00159540.md.
+    // Original Debug reference: TrackCarCameraMover::CalcSpringForce(bVector3 *, bVector3 *, bVector3 *); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void CalcSpringForce();
 };
 } // namespace hp2::recovered
 
@@ -588,5 +609,12 @@ public:
     // ELF 0x0015FD40; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0015fd40.md.
     // Port-side void/no-argument placeholder; original signature unknown.
     void Sub_0015FD40();
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x0015A2A0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0015a2a0.md.
+    // Original Debug reference: TrackFlyCameraMover::IsFinished(void) const; exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void IsFinished();
 };
 } // namespace hp2::recovered

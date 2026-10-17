@@ -1003,3 +1003,38 @@ void TrackRouteEditorCameraMover::Sub_0015FD40() {
     hp2::not_implemented("0x0015FD40", "TrackRouteEditorCameraMover::Sub_0015FD40 (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x0015C1D0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0015c1d0.md.
+void DriveCameraMover::GetCorrectionPitch() {
+    hp2::not_implemented("0x0015C1D0", "DriveCameraMover::GetCorrectionPitch (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+#include "game_core/indep/src/cameramover.hpp"
+
+namespace hp2::recovered {
+// ELF 0x0015E5E8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0015e5e8.md.
+void GarageCameraMover::PrevTrack() {
+    hp2::not_implemented("0x0015E5E8", "GarageCameraMover::PrevTrack (signature and full body unresolved)");
+}
+
+// ELF 0x0015E610; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0015e610.md.
+void GarageCameraMover::NextTrack() {
+    hp2::not_implemented("0x0015E610", "GarageCameraMover::NextTrack (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x00159540; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00159540.md.
+void TrackCarCameraMover::CalcSpringForce() {
+    hp2::not_implemented("0x00159540", "TrackCarCameraMover::CalcSpringForce (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x0015A2A0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0015a2a0.md.
+void TrackFlyCameraMover::IsFinished() {
+    hp2::not_implemented("0x0015A2A0", "TrackFlyCameraMover::IsFinished (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

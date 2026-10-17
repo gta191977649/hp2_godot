@@ -12,5 +12,12 @@ namespace hp2::recovered {
 class tExitScreenAnimation {
 public:
     // No member address is confirmed; no speculative members are declared.
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x002490D8; E-0041-R12; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/002490d8.md.
+    // Original Debug reference: tExitScreenAnimation::tExitScreenAnimation(int, char const *, int); constructor/destructor entry is not a native C++ lifetime operation.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_002490D8();
 };
 } // namespace hp2::recovered

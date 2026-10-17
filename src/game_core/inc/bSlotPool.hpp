@@ -15,5 +15,16 @@ public:
     // ELF 0x00257F28; E-0019-N03; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/memory/00257f28.md.
     // Port-side void/no-argument placeholder; original signature unknown.
     void CleanupExpandedSlotPools();
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x00257DF8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00257df8.md.
+    // Original Debug reference: SlotPool::FlushSlotPool(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void FlushSlotPool();
+    // ELF 0x00258200; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00258200.md.
+    // Original Debug reference: SlotPool::FastMalloc(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void FastMalloc();
 };
 } // namespace hp2::recovered

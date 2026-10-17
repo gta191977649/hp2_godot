@@ -58,13 +58,13 @@ int main(){
         sw(body_expected,0x120+4*i,b.word(0x120+4*i));}
     check(body==body_expected,"0019C9B0 exact store coverage without zeroing unknown bytes");
     check(b.word(0x6c)==0xcdcdcdcd&&b.word(0x7c)==0xcdcdcdcd,"Untouched vector W lanes remain unknown");
-    auto before=body;Sub_0019CC40(body,nullptr);check(body==before,"0019CC40 null skips all reads and writes");
+    auto before=body;Calibrate(body,nullptr);check(body==before,"0019CC40 null skips all reads and writes");
     const std::array<std::uint32_t,4> lanes{{0x7fc12345,0x80000000,0x12345678,0xffffffff}};
-    Sub_0019CC40(body,&lanes);for(std::size_t i=0;i<4;++i)check(b.word(0x160+4*i)==lanes[i],"0019CC40 bit-preserving XYZW copy");
-    Sub_001A5F88(controller,17,{{1,2,3,4}},{{5,4,3,2}});ByteView c(controller);
+    Calibrate(body,&lanes);for(std::size_t i=0;i<4;++i)check(b.word(0x160+4*i)==lanes[i],"0019CC40 bit-preserving XYZW copy");
+    Calibrate(controller,17,{{1,2,3,4}},{{5,4,3,2}});ByteView c(controller);
     check(c.scalar(0x78)==17&&c.scalar(0x80)==-4&&c.scalar(0x84)==-2&&c.scalar(0x88)==0&&c.scalar(0x8c)==2,"001A5F88 subtracts all four lanes");
-    Sub_001A4158(wheel,-3,7);ByteView w(wheel);check(w.scalar(0x1c)==-3&&w.scalar(0x20)==7,"001A4158 f12/f13 stores");
-    Sub_001A4348(wheel,0x7fc12345);check(w.word(0x24)==0x7fc12345,"001A4348 copies global raw bits");
+    SetState(wheel,-3,7);ByteView w(wheel);check(w.scalar(0x1c)==-3&&w.scalar(0x20)==7,"001A4158 f12/f13 stores");
+    Calibrate(wheel,0x7fc12345);check(w.word(0x24)==0x7fc12345,"001A4348 copies global raw bits");
     Sub_001A5FB0(controller);check(c.word(0x14)==0&&c.word(0x18)==0,"001A5FB0 clears exactly two fields");
     std::array<std::uint8_t,20> head;head.fill(0xa5);auto head_expected=head;
     Sub_0019C170(head,0x12345678);sw(head_expected,0,0x12345678);sw(head_expected,4,0x12345678);

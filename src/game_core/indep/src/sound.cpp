@@ -74,12 +74,12 @@ PcmSound decode_vag(const std::vector<std::uint8_t>& b, std::size_t interleave_b
 std::uint32_t Sub_00273850(std::uint32_t base_rate) {
     return static_cast<std::uint32_t>(static_cast<float>(base_rate)*(4140.0f/4096.0f));
 }
-std::uint16_t Sub_0026D258(std::uint32_t frequency) {
+std::uint16_t SOUND_HzToSPU(std::uint32_t frequency) {
     return static_cast<std::uint16_t>((frequency<<12)/48000u);
 }
 float neutral_playback_pitch_scale(std::uint32_t decoded_rate) {
     if(!decoded_rate) throw std::runtime_error("zero decoded sample rate");
-    return (48000.0f*Sub_0026D258(Sub_00273850(decoded_rate))/4096.0f)/decoded_rate;
+    return (48000.0f*SOUND_HzToSPU(Sub_00273850(decoded_rate))/4096.0f)/decoded_rate;
 }
 
 GuestSampleBank GuestSampleBank::from_bytes(std::vector<std::uint8_t> bytes) {

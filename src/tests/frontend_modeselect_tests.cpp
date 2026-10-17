@@ -160,9 +160,9 @@ void highlight_tables_match_the_elf_immediates() {
     check(!HighlightTarget_002179F0(0x52E039F7u).valid, "cops-off has no fifth branch");
 
     // The mask hashes are the names, not opaque constants.
-    check(StringHash_002534A8("MI_1_MASK") == kMask1Hash, "MI_1_MASK");
-    check(StringHash_002534A8("MI_4_MASK") == kMask4Hash, "MI_4_MASK");
-    check(StringHash_002534A8("MI_5_MASK") == kMask5Hash, "MI_5_MASK");
+    check(bStringHash("MI_1_MASK") == kMask1Hash, "MI_1_MASK");
+    check(bStringHash("MI_4_MASK") == kMask4Hash, "MI_4_MASK");
+    check(bStringHash("MI_5_MASK") == kMask5Hash, "MI_5_MASK");
 }
 
 // The highlight tail must retarget the ghost and snap the two selection bars onto the item's mask.
@@ -171,7 +171,7 @@ void highlight_places_the_selection_bars() {
     auto add = [&screen](const char* name, std::uint8_t type, float x, float y) {
         FeWidget widget;
         widget.name = name;
-        widget.name_hash = StringHash_002534A8(name);
+        widget.name_hash = bStringHash(name);
         widget.type = type;
         widget.x = x;
         widget.y = y;
@@ -185,14 +185,14 @@ void highlight_places_the_selection_bars() {
 
     const WidgetMeasure measure = [](const FeWidget&) { return WidgetMetrics{200.0f, 28.0f}; };
     MenuHighlightAnim_00248870 anim;
-    anim.Construct_00248870(&screen, StringHash_002534A8("ANIMATING_MENUITEM"),
+    anim.Construct_00248870(&screen, bStringHash("ANIMATING_MENUITEM"),
                             static_cast<std::int32_t>(kAnimGhostColour_gp_0x3F08), 0.0f);
-    ApplyHighlight_00217380(screen, anim, StringHash_002534A8("MENUITEM_1"),
+    ApplyHighlight_00217380(screen, anim, bStringHash("MENUITEM_1"),
                             HighlightTarget_00217380(0x52E039F3u), 0.0f, measure);
 
-    check(anim.target_hash_0x04 == StringHash_002534A8("MENUITEM_1"), "ghost must retarget");
-    const FeWidget* under = FindWidget_00143D50(screen, StringHash_002534A8("MI_UNDERSCORE"), 0);
-    const FeWidget* over = FindWidget_00143D50(screen, StringHash_002534A8("MI_OVERSCORE"), 0);
+    check(anim.target_hash_0x04 == bStringHash("MENUITEM_1"), "ghost must retarget");
+    const FeWidget* under = FindWidget_00143D50(screen, bStringHash("MI_UNDERSCORE"), 0);
+    const FeWidget* over = FindWidget_00143D50(screen, bStringHash("MI_OVERSCORE"), 0);
     // mask y0 = 100, y1 = 100 + 28 = 128; underscore = y1 - 3, overscore = y0 - 6.
     check(under != nullptr && under->y == 125.0f, "MI_UNDERSCORE lands 3 above the mask bottom");
     check(over != nullptr && over->y == 94.0f, "MI_OVERSCORE lands 6 above the mask top");

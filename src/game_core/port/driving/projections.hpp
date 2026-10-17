@@ -33,13 +33,13 @@ void Sub_001A5EA0(ByteView,std::uint32_t,std::uint32_t,std::uint32_t,std::uint32
 // E-0038-I07: ELF 0019C170; argument is encoded address of list head.
 void Sub_0019C170(ByteView,std::uint32_t);
 // E-0038-I08: ELF 0019CC40; null second argument leaves +0x160 unchanged.
-void Sub_0019CC40(ByteView,const std::array<std::uint32_t,4>*);
+void Calibrate(ByteView,const std::array<std::uint32_t,4>*);
 // E-0038-I09: ELF 001A5F88; explicit resolved vectors replace pointer walks.
-void Sub_001A5F88(ByteView,float,const std::array<float,4>&,const std::array<float,4>&);
+void Calibrate(ByteView,float,const std::array<float,4>&,const std::array<float,4>&);
 // E-0038-I10: ELF 001A4348; explicit word replaces global DAT_00330CA0.
-void Sub_001A4348(ByteView,std::uint32_t);
+void Calibrate(ByteView,std::uint32_t);
 // E-0038-I11: ELF 001A4158; f12/f13 are stored to +0x1c/+0x20.
-void Sub_001A4158(ByteView,float,float);
+void SetState(ByteView,float,float);
 // E-0038-I12: ELF 001A5FB0, two zero stores.
 void Sub_001A5FB0(ByteView);
 }
@@ -65,14 +65,14 @@ struct InitServices {
 // E-0038-I14: full list append, signed virtual adjustor, known component counts.
 void AddComponent(Memory&,std::uint32_t,std::uint32_t);
 // E-0038-I15: list reset dispatch and exact performance-counter call order.
-void Sub_0019C808(Memory&,std::uint32_t,InitServices&);
+// Declaration grouped below in the PhysicsSystem host carrier.
 // E-0038-I16: max.S f12,0 (decompiler int-cast is incorrect).
 float GetDownforceAtSpeed(Memory&,std::uint32_t,float);
 // E-0038-I17/I18: complete late constructor field/config synchronization.
-void Sub_001375F0(Memory&,std::uint32_t);
+void Calibrate(Memory&,std::uint32_t);
 void InitializeStateFromCar(Memory&,std::uint32_t);
 // E-0038-I19/I20: complete wheel/controller reset paths.
-void Sub_001A4358(Memory&,std::uint32_t);
+// Declaration grouped below in the Wheel host carrier.
 void Sub_001A5FC0(Memory&,std::uint32_t,ContactProvider&);
 // E-0038-I21/I22: vector velocity helper and contact response.
 std::array<float,4> GetPointVelocity(const std::array<float,4>&,const std::array<float,4>&,const std::array<float,4>&);
@@ -84,7 +84,7 @@ void PleaseResetMeLater(Memory&,std::uint32_t,InitServices&);
 std::uint32_t CheckDampingSuitability(Memory&,std::uint32_t);
 // E-0038-I25/I26: post-reset state routes and final adjusted virtual dispatch.
 void BottomOut(Memory&,std::uint32_t,InitServices&);
-void Sub_00137788(Memory&,std::uint32_t,InitServices&);
+// Declaration grouped below in the PhysicsCar host carrier.
 // E-0038-I27: complete initialization call/store graph. Memory allocation is a
 // port-owned logical arena; original pool allocator implementation is not claimed.
 // All object/config/global/table dependencies must be mapped before entry.
@@ -170,7 +170,7 @@ struct IntegrationCalls {
     std::function<void(Memory&,std::uint32_t)> after;
 };
 // ELF0019C670/0019C290, E-0038-B06/B07.
-void Sub_0019C670(Memory&,std::uint32_t,std::uint32_t,const IntegrationCalls&);
+// Declaration grouped below in the PhysicsSystem host carrier.
 void IntegrateEuler(Memory&,float,std::uint32_t,const IntegrationCalls&);
 }
 
@@ -180,7 +180,7 @@ void IntegrateEuler(Memory&,float,std::uint32_t,const IntegrationCalls&);
 // TASK-0038 E-0038-B09..B13: native adapters over one authoritative logical state.
 namespace port::driving::native {
 void eOrthonormalizeMatrix(Memory&,std::uint32_t);
-void Sub_001ADD70(Memory&,std::uint32_t,std::uint32_t);
+// Declaration grouped below in the Aerodynamics host carrier.
 void JumpStabilizer(Memory&,std::uint32_t);
 void IterateForces(Memory&,std::uint32_t);
 void ResolveForces(Memory&,std::uint32_t);
@@ -258,7 +258,7 @@ struct SolverWheelGlobals {
 void CheckForBrakeLock(float, SolverWheelProjection&, const SolverWheelGlobals&);
 // ELF 001A44A8/001A6330/001A6370; E-0038-S07/S08/S09.
 float ExchangeZForces(float, SolverWheelProjection&, std::int32_t);
-void Sub_001A6330(float, SolverSuspensionProjection&);
+// Declaration grouped below in the Suspension host carrier.
 void ResolveMoreForces(SolverSuspensionProjection&, std::int32_t Field_00330D10);
 
 // Port-side dependency interface, not a recovered original class. Untranslated
@@ -377,9 +377,9 @@ void CalcIndexMultiplier(Memory&,std::uint32_t);
 void SetMinMax(Memory&,std::uint32_t,float,float);
 void Sub_0018F808(Memory&,std::uint32_t,std::uint32_t,std::uint32_t,float,float);
 // ELF0018F838; E-0038-E01, bounded ordinary finite scalar interpolation.
-float Sub_0018F838(Memory&,std::uint32_t,float);
+// Declaration grouped below in the Table host carrier.
 // ELF0018F9F0; E-0038-E01, irregular x/y pairs.
-float Sub_0018F9F0(Memory&,std::uint32_t,float);
+// Declaration grouped below in the Graph host carrier.
 // ELF0018AC38; E-0038-E02, direct logical addresses replace stack table carrier.
 void Sub_0018AC38(Memory&,std::uint32_t,std::uint32_t,std::uint32_t,std::uint32_t,float);
 // ELF0018A7E8/0018AE70; E-0038-E03, preserve fields not written by constructors.
@@ -389,7 +389,7 @@ void Sub_0018AE70(Memory&,std::uint32_t,std::uint32_t,std::uint32_t,std::uint32_
 float GetTorque(Memory&,std::uint32_t);
 float GetTotalEngineTorque(Memory&,std::uint32_t);
 void Sub_0018A988(Memory&,std::uint32_t);
-std::uint32_t Sub_0018A9D8(Memory&,std::uint32_t,std::uint32_t);
+// Declaration grouped below in the Engine host carrier.
 // ELF0018B008/0018B0D8/0018B178/0018BC18/0018BC68/0018B4A0; E-0038-E05.
 float Sub_0018B008(Memory&,std::uint32_t);
 float Sub_0018B0D8(Memory&,std::uint32_t);
@@ -450,7 +450,7 @@ std::int32_t bDiv(std::int32_t,std::int32_t);
 std::uint16_t bFixATan(Memory&,std::int32_t);
 std::int16_t bFixATan(Memory&,std::int32_t,std::int32_t);
 // ELF001A46B0/001A63C0; E-0038-T15. Derivative buffer callbacks.
-std::uint32_t Sub_001A46B0(Memory&,std::uint32_t,std::uint32_t);
+// Declaration grouped below in the Wheel host carrier.
 std::uint32_t Sub_001A63C0(Memory&,std::uint32_t,std::uint32_t);
 // ELF0025AFA8; E-0038-T17. Original mutable math-global initializer.
 void Sub_0025AFA8(Memory&);
@@ -469,7 +469,7 @@ void CalculateWheelMatrices(Memory&,std::uint32_t,std::int32_t);
 float Sub_001A4580(Memory&,std::uint32_t,std::uint32_t,std::uint32_t,ContactProvider&);
 float Sub_001A45A8(Memory&,std::uint32_t,std::uint32_t,std::uint32_t,std::uint32_t,std::uint32_t,ContactProvider&);
 // ELF001A4170; E-0038-T12. f12/f13/f14, A0/A1/A2/A3 actual ABI.
-void Sub_001A4170(Memory&,float,float,float,std::uint32_t,std::uint32_t,
+void SetState(Memory&,float,float,float,std::uint32_t,std::uint32_t,
                  std::uint32_t,std::uint16_t,ContactProvider&);
 }
 
@@ -483,4 +483,68 @@ SolverMatrix Sub_0011B7D8(Memory&m,std::uint16_t angle);
 
 namespace port::driving {
 SolverMatrix Sub_0011B950(Memory&m,std::uint16_t angle);
+}
+
+namespace port::driving::native {
+// E-0043-N01: typed static host projection carrier; no native layout/ABI claim.
+struct PhysicsSystem {
+    static void  ComputeAuxiliaries(Memory&,std::uint32_t,InitServices&);
+    static void  GetDerivative(Memory&,std::uint32_t,std::uint32_t,const IntegrationCalls&);
+};
+}
+
+namespace port::driving::native {
+// E-0043-N01: typed static host projection carrier; no native layout/ABI claim.
+struct PhysicsCar {
+    static void  ComputeAuxiliaries(Memory&,std::uint32_t,InitServices&);
+};
+}
+
+namespace port::driving::native {
+// E-0043-N01: typed static host projection carrier; no native layout/ABI claim.
+struct Wheel {
+    static void  ComputeAuxiliaries(Memory&,std::uint32_t);
+};
+}
+
+namespace port::driving {
+// E-0043-N01: typed static host projection carrier; no native layout/ABI claim.
+struct Engine {
+    static std::uint32_t  GetDerivative(Memory&,std::uint32_t,std::uint32_t);
+};
+}
+
+namespace port::driving {
+// E-0043-N01: typed static host projection carrier; no native layout/ABI claim.
+struct Wheel {
+    static std::uint32_t  GetDerivative(Memory&,std::uint32_t,std::uint32_t);
+};
+}
+
+namespace port::driving {
+// E-0043-N01: typed static host projection carrier; no native layout/ABI claim.
+struct Table {
+    static float  GetValue(Memory&,std::uint32_t,float);
+};
+}
+
+namespace port::driving {
+// E-0043-N01: typed static host projection carrier; no native layout/ABI claim.
+struct Graph {
+    static float  GetValue(Memory&,std::uint32_t,float);
+};
+}
+
+namespace port::driving::native {
+// E-0043-N01: typed static host projection carrier; no native layout/ABI claim.
+struct Aerodynamics {
+    static void  ResolveForces(Memory&,std::uint32_t,std::uint32_t);
+};
+}
+
+namespace port::driving {
+// E-0043-N01: typed static host projection carrier; no native layout/ABI claim.
+struct Suspension {
+    static void  ResolveForces(float, SolverSuspensionProjection&);
+};
 }

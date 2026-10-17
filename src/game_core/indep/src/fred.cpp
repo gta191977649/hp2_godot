@@ -6,3 +6,33 @@
 // No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
 // Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
 #include "game_core/tRandomlyPickableTrackInfo.hpp"
+
+#include "game_core/indep/src/fred.hpp"
+
+#include "game_core/port/not_implemented.hpp"
+
+namespace hp2::recovered {
+// ELF 0x001841A8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001841a8.md.
+void FrontendDatabase::UseTheRaceEvent() {
+    hp2::not_implemented("0x001841A8", "FrontendDatabase::UseTheRaceEvent (signature and full body unresolved)");
+}
+
+// ELF 0x001855F0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001855f0.md.
+void FrontendDatabase::IsChallengeGame() {
+    hp2::not_implemented("0x001855F0", "FrontendDatabase::IsChallengeGame (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x00187928; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00187928.md.
+void FrontendPlayerInfo::FlushAvailableCars() {
+    hp2::not_implemented("0x00187928", "FrontendPlayerInfo::FlushAvailableCars (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x00187080; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00187080.md.
+void TransientStats::GetDriver() {
+    hp2::not_implemented("0x00187080", "TransientStats::GetDriver (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

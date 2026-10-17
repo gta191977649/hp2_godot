@@ -84,10 +84,10 @@ int main() {
     check(near(wheel.Field_0x158,3), "ELF 0x3e99999a lower bound");
     SolverSuspensionProjection suspension{};suspension.Field_0x90=&wheel;
     suspension.Field_0x1c=-1;suspension.Field_0x70=1;
-    Sub_001A6330(3,suspension);
+    Suspension::ResolveForces(3,suspension);
     check(near(wheel.Field_0x158,0.6f) && suspension.Field_0xa0==0,
           "Suspension forwards +0x70 and conditionally adds request");
-    suspension.Field_0x70=0;Sub_001A6330(3,suspension);
+    suspension.Field_0x70=0;Suspension::ResolveForces(3,suspension);
     check(wheel.Field_0x158==0 && wheel.Field_0x155==0, "Zero flag omits added request");
     // E-0038-S09: no-contact and explicit suppression perform no accumulation.
     body={};suspension.Field_0x94=&body;wheel.Field_0x120={{10,0,0,0}};

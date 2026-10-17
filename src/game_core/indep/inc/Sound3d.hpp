@@ -17,5 +17,16 @@ public:
     // ELF 0x00208C78; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00208c78.md.
     // Port-side void/no-argument placeholder; original signature unknown.
     void UpdateCamRelativeDistAndVelocity();
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x00208FE0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00208fe0.md.
+    // Original Debug reference: Sound3d::AzimuthToPan(unsigned short); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void AzimuthToPan();
+    // ELF 0x002091A0; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/002091a0.md.
+    // Original Debug reference: Sound3d::~Sound3d(void); constructor/destructor entry is not a native C++ lifetime operation.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_002091A0();
 };
 } // namespace hp2::recovered

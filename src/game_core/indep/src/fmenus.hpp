@@ -171,7 +171,7 @@ inline constexpr const char* kHighlightBarName = "HIGHLIGHT_BAR";
 // reproduces 1531 of the 1549 widget name hashes stored in FRONTB.BUN; the 18 that differ are
 // exactly the records whose stored name is 23 characters long, i.e. truncated by the 24-byte
 // on-disk name field, which is itself evidence that the hash was computed before truncation.
-std::uint32_t StringHash_002534A8(const char* text);
+std::uint32_t bStringHash(const char* text);
 
 // Item state bits, held in item +0x08. FUN_00169740 initialises the field to 1;
 // FUN_00169968/FUN_001699F8 set and clear bit 1; FUN_0016A5E0/FUN_0016A6C8/FUN_0016A160 skip
@@ -271,7 +271,7 @@ void SetClassVisible_001454E8(FeScreen& screen, std::uint32_t class_hash, bool v
 
 // FUN_00140CA0(widget, rgb): replaces the low 24 bits of widget +0x5C and leaves the top byte
 // (PS2 alpha) alone, then stamps +0x2b = 7 when the value actually changed. (E-0014-05)
-void SetWidgetColour_00140CA0(FeWidget& widget, const MenuColour_00169BD0& colour);
+void SetColor(FeWidget& widget, const MenuColour_00169BD0& colour);
 
 // ---------------------------------------------------------------------- menu callback protocol
 // The 16-byte structure every menu callback receives (memset to 0, then filled). Field 0 carries
@@ -372,16 +372,16 @@ public:
                             const char* name_format = kMenuItemNameFormat_002B2760);
 
     // FUN_002503F8(list, index): the n-th item, or the sentinel when index is out of range.
-    MenuThing_00169740* Nth_002503F8(std::int32_t index);
+    MenuThing_00169740* GetNode(std::int32_t index);
     // FUN_0016A5B0(list, name_hash): walk the circular list from the head comparing item +0x0C,
     // returning the first match or 0. The head is the sentinel, so an empty list returns 0
     // without a comparison. (E-0025-L05)
-    MenuThing_00169740* FindByHash_0016A5B0(std::uint32_t name_hash);
+    MenuThing_00169740* FindItem(std::uint32_t name_hash);
     // FUN_0016A0F0(list, index).
     void SetCurrentIndex_0016A0F0(std::int32_t index);
     // FUN_0016A130(list): position of the current item; 0 when the list is empty or the current
     // item is not reachable from the head (the original returns 0 in both cases).
-    std::int32_t CurrentIndex_0016A130() const;
+    std::int32_t GetCurrentItemNumber() const;
     // FUN_0016A160(list): message 0x02 to every item, then move the current pointer to the first
     // enabled item at or after it and highlight that.
     void RefreshAll_0016A160();
@@ -578,7 +578,7 @@ WidgetRect_00144280 GetWidgetRect_00144280(FeScreen& screen, std::uint32_t name_
 void SetWidgetY_00144458(FeScreen& screen, std::uint32_t name_hash, int y);
 
 // FUN_00140ED0(widget, alpha): replace the top byte of +0x5C, stamp +0x2b = 6. (E-0015-05)
-void SetWidgetAlpha_00140ED0(FeWidget& widget, int alpha);
+void SetAlpha(FeWidget& widget, int alpha);
 
 // FUN_001410A0(dst, src): copy 0x40 bytes from src+0x28 over dst+0x28, preserving dst+0x2C, then
 // stamp dst+0x2b = 8. That range covers type, visible, layer, x, y, scale, the texture hash, the
@@ -654,7 +654,7 @@ void PlaceSelectionBars_00216880(FeScreen& screen, std::uint32_t mask_hash,
                                  const WidgetMeasure& measure);
 // E-0017-S03 /001F4E68 common Options subclass selection: unlike main,
 // underline is exactly mask bottom, overscore is mask top-6.
-void Sub_001F4E68(FeScreen& screen, std::uint32_t mask_hash,
+void HandleHighlight(FeScreen& screen, std::uint32_t mask_hash,
                                  const WidgetMeasure& measure);
 inline constexpr const char* kUnderscoreName = "MI_UNDERSCORE";  // hash 0x32C91DAE
 inline constexpr const char* kOverscoreName = "MI_OVERSCORE";    // hash 0xC671680C
@@ -703,7 +703,7 @@ public:
     void Bind_00249A40(FeScreen* screen, const Random_0025A488& random,
                        const WidgetMeasure& measure);
     void Add_00249730(std::uint32_t texture_hash);
-    void Remove_00249790(std::uint32_t texture_hash);
+    void RemoveTextureHash(std::uint32_t texture_hash);
     void Reset_00249888(const Random_0025A488& random);
     void Update_00249AE8(float delta_seconds, const Random_0025A488& random);
 private:
@@ -793,3 +793,60 @@ inline HintBinding hint_binding(std::string_view class_name, std::uint32_t item_
     return {};
 }
 }
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
+// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::recovered {
+class FlailerMenu {
+public:
+    // ELF 0x0016A130; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/0016a130.md.
+    // Original Debug reference: FlailerMenu::GetCurrentItemNumber(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetCurrentItemNumber();
+    // ELF 0x0016A5B0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/0016a5b0.md.
+    // Original Debug reference: FlailerMenu::FindItem(unsigned int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void FindItem();
+};
+} // namespace hp2::recovered
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
+// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::recovered {
+class FlailerScreenNode {
+public:
+    // ELF 0x0016B340; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0016b340.md.
+    // Original Debug reference: FlailerScreenNode::FindFlailerScreen(int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void FindFlailerScreen();
+    // ELF 0x0016B378; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0016b378.md.
+    // Original Debug reference: FlailerScreenNode::SetFilterPort(JoystickPort); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void SetFilterPort();
+    // ELF 0x0016B3B0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/0016b3b0.md.
+    // Original Debug reference: FlailerScreenNode::IsPortFiltered(JoystickPort); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void IsPortFiltered();
+};
+} // namespace hp2::recovered
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
+// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+namespace hp2::recovered {
+class ScreenStack {
+public:
+    // ELF 0x0016B438; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/0016b438.md.
+    // Original Debug reference: ScreenStack::Pop(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Pop();
+};
+} // namespace hp2::recovered

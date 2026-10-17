@@ -318,3 +318,8 @@ shared source files merge class implementations without inferring inheritance.
 Typed driving projections retain port namespaces and shared port interfaces;
 unknown owners remain in port/driving/unresolved_entries.cpp. No Debug ABI or
 behavior is transplanted, and whole-entry gaps continue to throw.
+
+
+## TASK-0043 class mapping interfaces
+
+Confirmed class methods now have whole-entry gap interfaces independently of typed host projections. Static port carriers preserve distinct original declaring scopes when flattened host signatures would collide. They copy neither native object storage nor lifetime semantics. See CLASS_MAPPING_COMPLETION.md.

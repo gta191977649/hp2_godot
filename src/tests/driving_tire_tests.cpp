@@ -102,7 +102,7 @@ int main(){
     PlaneContact provider;provider.height=0.5f;m.word(config+0x14,0);m.matrix(car+0x50,identity());
     m.vector(car+0x20,{{1,2,3,1}});m.vector(car+0x30,{{4,5,6,0}});m.vector(car+0x90,{{0,0,0,0}});
     m.vector(carconfig+0x120,{{0,0,0,1}});m.scalar(carconfig+0x138,0);
-    Sub_001A4170(m,0,0,0.1f,wheel,car,0,0,provider);
+    SetState(m,0,0,0.1f,wheel,car,0,0,provider);
     check(close(m.scalar(wheel+0xa0),1) && close(m.scalar(wheel+0xa4),2) && close(m.scalar(wheel+0xa8),3.1f),"Wheel world point derived by recovered matrices");
     check(m.word(wheel+0x150)==1 && m.byte(wheel+0x155)==1 && m.word(car+0x37c)==1,"Plane query publishes original material/contact stores");
     check(m.scalar(wheel+0x138)==0.5f && m.vector(wheel+0xf0)==SolverVector{{4,5,6,0}},"Contact height and velocity lanes");
@@ -116,10 +116,10 @@ int main(){
     m.scalar(wheel+0x114,3);m.scalar(wheel+0x108,20);m.scalar(wheel+0x16c,0.25f);
     m.word(wheel+0x150,0);m.scalar(0x318c28,0.5f);m.scalar(0x32e64c,0.2f);m.scalar(0x32e650,0.4f);
     m.byte(wheel+0x154,1);m.word(wheel+0x10c,0);
-    check(Sub_001A46B0(m,wheel,derivative)==0 && m.scalar(derivative)==2 && close(m.scalar(derivative+4),3.4f),"Wheel derivative operation grouping");
+    check(Wheel::GetDerivative(m,wheel,derivative)==0 && m.scalar(derivative)==2 && close(m.scalar(derivative+4),3.4f),"Wheel derivative operation grouping");
     m.byte(wheel+0x154,0);m.word(wheel+0x10c,1);m.scalar(wheel+0x160,4);
     m.scalar(0x32e654,0.001f);m.scalar(0x330cf8,0.01f);
-    Sub_001A46B0(m,wheel,derivative);check(close(m.scalar(derivative+4),-200),"Correction follows lock zero store");
+    Wheel::GetDerivative(m,wheel,derivative);check(close(m.scalar(derivative+4),-200),"Correction follows lock zero store");
     check(Sub_001A63C0(m,wheel,derivative)==derivative && m.word(derivative)==0 && m.word(derivative+4)==0,"Controller derivative empty two-float state");
     std::cout<<"driving_tire_tests passed (instruction fixtures, no original equivalence)\n";
 }

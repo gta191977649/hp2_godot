@@ -29,5 +29,20 @@ public:
     // ELF 0x0023A3D0; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0023a3d0.md.
     // Port-side void/no-argument placeholder; original signature unknown.
     void GetCurrentRoutePoint();
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x0023A070; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0023a070.md.
+    // Original Debug reference: TrackedController::~TrackedController(void); constructor/destructor entry is not a native C++ lifetime operation.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_0023A070();
+    // ELF 0x0023A088; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0023a088.md.
+    // Original Debug reference: TrackedController::Think(float); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Think();
+    // ELF 0x0023A0F0; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0023a0f0.md.
+    // Original Debug reference: TrackedController::DoSnapshot(ReplaySnapshot *); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void DoSnapshot();
 };
 } // namespace hp2::recovered

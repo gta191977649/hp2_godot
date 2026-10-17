@@ -10,5 +10,16 @@ namespace hp2::recovered {
 class FlailerScreenList {
 public:
     // No member address is confirmed; no speculative members are declared.
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x0016C888; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0016c888.md.
+    // Original Debug reference: FlailerScreenList::FindScreen(int); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void FindScreen();
+    // ELF 0x0016CA08; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0016ca08.md.
+    // Original Debug reference: FlailerScreenList::IsAnyPopupActive(void); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void IsAnyPopupActive();
 };
 } // namespace hp2::recovered

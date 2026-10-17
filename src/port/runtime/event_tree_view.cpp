@@ -82,10 +82,10 @@ EventTreeLoadResult EventTreeView::load(assets::Source& source, const std::strin
     // supplies the last node the player was on; FUN_001F5D00's own fallback is event 1, and an
     // all-zero profile stores 0, which FUN_001FA840 does not match -- so the port falls back to
     // event 1 the same way it did before, but now for a recovered reason. (E-0021-09)
-    const int stored_start = profile_.StartNode_001F5D00(selected->type_0x08);
-    cursor_ = selected->FindLeafByNumber_001FA840(static_cast<std::uint8_t>(stored_start));
+    const int stored_start = profile_.GetSelectedEvent(selected->type_0x08);
+    cursor_ = selected->FindLeafByEventNumber(static_cast<std::uint8_t>(stored_start));
     if (cursor_ < 0) {
-        cursor_ = selected->FindLeafByNumber_001FA840(
+        cursor_ = selected->FindLeafByEventNumber(
             static_cast<std::uint8_t>(hp2::memorycard::kDefaultStartNode_001F5D00));
     }
     // FUN_001F96B8: `piVar16[0x1d] = DAT_002FC1C0`, i.e. the view state comes from the profile,
@@ -102,14 +102,14 @@ EventTreeLoadResult EventTreeView::load(assets::Source& source, const std::strin
     camera_y_.field_0x1c = camera_y_.field_0x24; camera_y_.field_0x48 = 0;
     if (state_ == 2) { state_ = 0; confirm(); }
     // FUN_001F9F10: event 32 positive but not Won starts intro state 7.
-    const int intro = selected->FindLeafByNumber_001FA840(32);
+    const int intro = selected->FindLeafByEventNumber(32);
     if (intro >= 0) {
         // FUN_002010B8 event32 first requires events1..31 in BOTH trees Won.
         // Resolve that dependency here, where both parsed trees are available.
         bool completion = true;
         for (const auto& candidate : trees_) {
             for (int number = 1; number <= 31; ++number) {
-                const int index = candidate.FindLeafByNumber_001FA840(number);
+                const int index = candidate.FindLeafByEventNumber(number);
                 if (index < 0) hp2::not_implemented("0x002010B8", "event32 completion event unavailable");
                 if (candidate.Status_002010B8(profile_, index) != 4) { completion = false; break; }
             }
@@ -146,7 +146,7 @@ EventTreeNode EventTreeView::node_at(std::size_t index) const {
         int visibility = 0;
         const auto gap = hp2::guard([&] {
             for (const auto& candidate : trees_) {
-                const int row = candidate.FindLeafByNumber_001FA840(31);
+                const int row = candidate.FindLeafByEventNumber(31);
                 if (row < 0) hp2::not_implemented("0x001F77F0", "event31 tree gate unavailable");
                 if (candidate.Status_002010B8(profile_, row) == 4) { visibility = 1; return; }
             }
@@ -188,7 +188,7 @@ int EventTreeView::status_of(std::size_t index) const {
         if (selected->records[index].number_0x28 == 32) {
             // Resolve event32's other-tree dependency where both parsed trees exist.
             for (const auto& candidate : trees_) for (int number = 1; number <= 31; ++number) {
-                const int record = candidate.FindLeafByNumber_001FA840(number);
+                const int record = candidate.FindLeafByEventNumber(number);
                 if (record < 0) hp2::not_implemented("0x002010B8", "event32 completion event unavailable");
                 if (candidate.Status_002010B8(profile_, record) != 4) { status = 0; return; }
             }
@@ -279,7 +279,7 @@ int EventTreeView::confirm() {
     const auto* selected = tree();
     if (selected == nullptr) return hp2::frontend::kSoundSilent_001FAF60;
     const auto& record = selected->records[static_cast<std::size_t>(cursor_)];
-    profile_.SetStartNode_001F5D28(selected->type_0x08, record.number_0x28);
+    profile_.SetSelectedEvent(selected->type_0x08, record.number_0x28);
     state_ = 1; // FUN_001FAC78, E-0022-T01: detail zoom is 3.0, not level 1.
     target(alpha_path_, 0.0f);
     target_camera(3.0f);
@@ -393,10 +393,10 @@ EventTreeOverlayStats append_event_tree(const EventTreeView& view, const WidgetS
             for (int child : group) {
                 if (nodes[child].y != high_y || nodes[child].status < 1) continue;
                 const auto& record = tree->records[child];
-                for (int row_index = 0; row_index < record.link_count_0x3D; ++row_index) {
-                    const auto* row = tree->Requirement_002008B8(child, row_index);
+                for (int row_index = 0; row_index < record.nGoals; ++row_index) {
+                    const auto* row = tree->GetGoal(child, row_index);
                     if (!row) continue;
-                    const int parent = tree->FindLeafByNumber_001FA840(row->prerequisite_number_0x02);
+                    const int parent = tree->FindLeafByEventNumber(row->prerequisite_number_0x02);
                     if (parent < 0) continue;
                     if (tree->Status_002010B8(view.profile(), parent, row) >= 2 &&
                         midpoint >= std::min(nodes[child].x, nodes[parent].x) &&
@@ -430,11 +430,11 @@ EventTreeOverlayStats append_event_tree(const EventTreeView& view, const WidgetS
     }
 
     // FUN_001F7978: authored panel size through the current matrix.
-    const auto* numbers = sizes.font(hp2::frontend::StringHash_002534A8("FONT_EVENTNUMBERS"));
+    const auto* numbers = sizes.font(hp2::frontend::bStringHash("FONT_EVENTNUMBERS"));
     for (const auto& node : nodes) {
         const auto at = place(node.x, node.y);
         const auto panel_hash = node.panel_texture.empty()
-            ? 0u : hp2::frontend::StringHash_002534A8(node.panel_texture.c_str());
+            ? 0u : hp2::frontend::bStringHash(node.panel_texture.c_str());
         if (node.status < 0 || node.visibility != 1) continue; // Reported in status_gaps; no invented panel/state.
         const auto bitmap = panel_hash == 0 ? nullptr : resources.texture(panel_hash);
         if (bitmap && bitmap->width > 0 && bitmap->height > 0) {

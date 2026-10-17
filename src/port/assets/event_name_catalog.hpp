@@ -65,7 +65,7 @@ public:
     std::uint32_t car_logo_hash(int car_id) const {
         if (car_id < 0 || static_cast<std::size_t>(car_id) >= car_codes_.size())
             hp2::not_implemented("0x001F8E18", "car logo index outside catalog");
-        return hp2::frontend::StringHash_002534A8((std::string("CARLOGO_") + car_codes_[car_id]).c_str());
+        return hp2::frontend::bStringHash((std::string("CARLOGO_") + car_codes_[car_id]).c_str());
     }
     // 001F91F0 /0019FB00: LOGOTRACK%2d with R direction and _FR locale1 suffix.
     std::uint32_t track_logo_hash(int one_based_id, bool alternate, int locale) const {
@@ -76,7 +76,7 @@ public:
         texture += std::to_string(number);
         if (alternate) texture += 'R';
         if (locale == 1) texture += "_FR";
-        return hp2::frontend::StringHash_002534A8(texture.c_str());
+        return hp2::frontend::bStringHash(texture.c_str());
     }
     // 0x00188D08 -> 0x00187E80 binds car+0x558 to the first matching
     // row at 0x0030D578. 0x00187EB8 localizes row+0x14. These are IDs,

@@ -54,7 +54,7 @@ void AddComponent(Memory& m,std::uint32_t head,std::uint32_t object){
 
 // Retail 0x0019C808; E-0041-V01; E-0042-S001; exact Debug TU ..\indep\src\componentphysics.cpp
 namespace port::driving::native {
-void Sub_0019C808(Memory& m,std::uint32_t head,InitServices& services){
+void PhysicsSystem::ComputeAuxiliaries(Memory& m,std::uint32_t head,InitServices& services){
     using namespace detail_group_00137100_runtime;
     if(!services.Sub_00250F38)hp2::not_implemented("0x00250F38","Original performance-counter service is absent");
     const auto start=services.Sub_00250F38();auto object=m.word(head);
@@ -71,7 +71,7 @@ void Sub_0019C808(Memory& m,std::uint32_t head,InitServices& services){
 
 // Retail 0x0019C670; E-0042-C092; E-0042-S001; exact Debug TU ..\indep\src\componentphysics.cpp
 namespace port::driving::native {
-void Sub_0019C670(Memory& m,std::uint32_t head,std::uint32_t output,const IntegrationCalls& calls) {
+void PhysicsSystem::GetDerivative(Memory& m,std::uint32_t head,std::uint32_t output,const IntegrationCalls& calls) {
     using namespace detail_group_0019d4d0;
     if(!calls.derivative)hp2::not_implemented("0x0019C670","component derivative dispatch");
     std::uint32_t i=0;
@@ -92,7 +92,7 @@ void IntegrateEuler(Memory& m,float dt,std::uint32_t head,const IntegrationCalls
         if(n>140-total)throw std::out_of_range("Original derivative stack capacity exceeded");
         total+=n;
     }
-    Memory::Scratch frame(m);const auto scratch=m.allocate(140*4);Sub_0019C670(m,head,scratch,calls);std::uint32_t i=0;
+    Memory::Scratch frame(m);const auto scratch=m.allocate(140*4);PhysicsSystem::GetDerivative(m,head,scratch,calls);std::uint32_t i=0;
     for(auto node=m.word(head);node!=head;node=m.word(node)) {
         const auto n=count(m,node);if(n>140-i)throw std::out_of_range("Original derivative stack capacity exceeded");
         const auto table=m.word(node+8),target=m.word(table+0x1c);
@@ -126,5 +126,19 @@ void PhysicsSystem::IntegrateEuler() {
 // ELF 0x0019C670; E-0042-C092; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0019c670.md.
 void PhysicsSystem::GetDerivative() {
     hp2::not_implemented("0x0019C670", "PhysicsSystem::GetDerivative (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x0019C910; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0019c910.md.
+void PhysicsComponent::ResolveForces() {
+    hp2::not_implemented("0x0019C910", "PhysicsComponent::ResolveForces (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x0019C190; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0019c190.md.
+void PhysicsSystem::Sub_0019C190() {
+    hp2::not_implemented("0x0019C190", "PhysicsSystem::Sub_0019C190 (signature and full body unresolved)");
 }
 } // namespace hp2::recovered

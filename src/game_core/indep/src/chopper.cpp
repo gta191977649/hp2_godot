@@ -29,3 +29,32 @@
 // Diagnostic text (not a callable signature): Chopper::FireSalvo() [0x002B98B0]
 // Diagnostic text (not a callable signature): Chopper::FireWeapon() [0x002B98C8]
 #include "game_core/Chopper.hpp"
+
+#include "game_core/port/not_implemented.hpp"
+
+namespace hp2::recovered {
+// ELF 0x001E8560; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001e8560.md.
+void Chopper::GetMaxDeceleration() {
+    hp2::not_implemented("0x001E8560", "Chopper::GetMaxDeceleration (signature and full body unresolved)");
+}
+
+// ELF 0x001E9AE8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001e9ae8.md.
+void Chopper::SetRotateTarget() {
+    hp2::not_implemented("0x001E9AE8", "Chopper::SetRotateTarget (signature and full body unresolved)");
+}
+
+// ELF 0x001E9E40; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001e9e40.md.
+void Chopper::CalcChopperRotation() {
+    hp2::not_implemented("0x001E9E40", "Chopper::CalcChopperRotation (signature and full body unresolved)");
+}
+
+// ELF 0x001E9E80; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001e9e80.md.
+void Chopper::SubtractFromYaw() {
+    hp2::not_implemented("0x001E9E80", "Chopper::SubtractFromYaw (signature and full body unresolved)");
+}
+
+// ELF 0x001EA578; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001ea578.md.
+void Chopper::RenderChopper() {
+    hp2::not_implemented("0x001EA578", "Chopper::RenderChopper (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

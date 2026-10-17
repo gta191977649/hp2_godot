@@ -529,3 +529,8 @@ shared source files merge class implementations without inferring inheritance.
 Typed driving projections retain port namespaces and shared port interfaces;
 unknown owners remain in port/driving/unresolved_entries.cpp. No Debug ABI or
 behavior is transplanted, and whole-entry gaps continue to throw.
+
+
+## TASK-0043 names versus containing functions
+
+E-0043-T01 retains TitleStringId_001F96B8: its title block appears inside the Debug tEventTreeView constructor and is not a separately named call. E-0043-F01 identifies EventInfo and 11 fields using independently adopted getters plus live memory/type evidence. E-0043-M01 accounts for all 822 supported class-method rows; details and bounded unknowns are in CLASS_MAPPING_COMPLETION.md.

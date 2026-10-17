@@ -24,10 +24,7 @@ void Sub_002402C0(::port::frontend::BackContext& context,::port::frontend::BackE
 #include "game_core/indep/src/frontendscreens/joystickconfiguration.hpp"
 
 namespace hp2::frontend {
-// ELF 0x001F4E68; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f4e68.md.
-void JoystickPreconfig::Sub_001F4E68() {
-    hp2::not_implemented("0x001F4E68", "JoystickPreconfig::Sub_001F4E68 (signature and full body unresolved)");
-}
+
 
 // ELF 0x002400C0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/002400c0.md.
 void JoystickPreconfig::Sub_002400C0() {
@@ -51,3 +48,10 @@ void JoystickPreconfig::Sub_002402C0() {
 // No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
 // Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
 #include "game_core/JoystickCalibrationScreen.hpp"
+
+namespace hp2::recovered {
+// ELF 0x0023F300; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0023f300.md.
+void JoystickCalibrationScreen::ResetJoystickCalibration() {
+    hp2::not_implemented("0x0023F300", "JoystickCalibrationScreen::ResetJoystickCalibration (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

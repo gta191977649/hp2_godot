@@ -50,7 +50,7 @@ int run(){
     std::array<std::uint32_t,4> controller{};
     for(unsigned i=0;i<4;++i){controller[i]=memory.allocate(0xa0);const auto w=memory.allocate(0x184);const auto cfg=memory.allocate(16);memory.vector(cfg,{{float(i+3),5,7,9}});
         memory.word(mover+0x20+4*i,controller[i]);memory.word(mover+0x30+4*i,w);memory.word(controller[i]+0x90,w);memory.word(controller[i]+0x94,body);memory.word(w+0xc,cfg);}
-    Sub_001375F0(memory,mover);
+    Calibrate(memory,mover);
     check(memory.scalar(controller[0]+0x78)==5.75f&&memory.scalar(controller[1]+0x78)==5.75f&&memory.scalar(controller[2]+0x78)==17.25f&&memory.scalar(controller[3]+0x78)==17.25f,"Recovered unequal first/second axle split");
     check(memory.vector(controller[0]+0x80)==std::array<float,4>{{3,4,5,6}},"Offset-vector difference includes fourth lane");
     for(unsigned i=0;i<4;++i)check(memory.word(memory.word(mover+0x30+4*i)+0x24)==0x7fc12345,"Four raw global publications preserve payload bits");

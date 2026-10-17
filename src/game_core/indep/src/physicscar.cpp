@@ -83,7 +83,7 @@ void PhysicsCar::Sub_002A0550() {
 #include "game_core/port/driving/projection_support.hpp"
 // Retail 0x001375F0; E-0042-C013; E-0042-S001; exact Debug TU ..\indep\src\physicscar.cpp
 namespace port::driving::native {
-void Sub_001375F0(Memory& m,std::uint32_t object){
+void Calibrate(Memory& m,std::uint32_t object){
     using namespace detail_group_00137100_runtime;
     const auto config=m.word(object+0x4c),body=m.word(object+0x18);
     m.copy(body+0x160,config+0x110,16);
@@ -108,7 +108,7 @@ void InitializeStateFromCar(Memory& m,std::uint32_t object){
     Sub_0019CC88(m,m.word(object+0x18),car+0x20,car+0x50,car+0x30,car+0x90);
     for(unsigned i=0;i<4;++i){
         init::Sub_001A5FB0(m.view(m.word(object+0x20+4*i),0xa0));
-        init::Sub_001A4158(m.view(m.word(object+0x30+4*i),0x184),m.scalar(car+0x2c0+4*i),m.scalar(car+0x2b0+4*i));
+        init::SetState(m.view(m.word(object+0x30+4*i),0x184),m.scalar(car+0x2c0+4*i),m.scalar(car+0x2b0+4*i));
     }
     float value=global(m,0xb834);if(value==100.0f)value=m.scalar(car+0x390);
     m.scalar(m.word(object+0x40)+0xc,value*global(m,0x844c));
@@ -159,15 +159,15 @@ void BottomOut(Memory& m,std::uint32_t object,InitServices& services){
         auto input=point;input[2]=25;
         m.word(global_address(0xa708),0);ApplyImpulse(m,body,input,point);changed=true;
     }
-    if(changed){m.word(global_address(0xb408),0);Sub_0019C808(m,object+8,services);}
+    if(changed){m.word(global_address(0xb408),0);PhysicsSystem::ComputeAuxiliaries(m,object+8,services);}
 }
 }
 
 // Retail 0x00137788; E-0041-V01; E-0042-S001; exact Debug TU ..\indep\src\physicscar.cpp
 namespace port::driving::native {
-void Sub_00137788(Memory& m,std::uint32_t object,InitServices& services){
+void PhysicsCar::ComputeAuxiliaries(Memory& m,std::uint32_t object,InitServices& services){
     using namespace detail_group_00137100_runtime;
-    Sub_0019C808(m,object+8,services);BottomOut(m,object,services);
+    PhysicsSystem::ComputeAuxiliaries(m,object+8,services);BottomOut(m,object,services);
     const auto table=m.word(object+0x14),target=m.word(table+0x1c),adjusted=object+8+static_cast<std::int32_t>(m.signed_half(table+0x18));
     if(target!=0x00138e08)hp2::not_implemented("0x00137788","Unknown final virtual target");
     if(!services.ResolveForces)hp2::not_implemented("0x00138E08","Final constructor synchronization service is absent");
@@ -194,7 +194,7 @@ std::uint32_t Sub_00137100(Memory& m,std::uint32_t object,std::uint32_t config,s
     const auto engine=m.allocate(0x60);port::driving::Sub_0018A7E8(m,engine,config+0x2b0,car+0x40);m.word(object+0x40,engine);AddComponent(m,object+8,engine);m.word(engine+0x40,m.byte(config+0xe4)!=0);
     const auto drive=m.allocate(0xa0);port::driving::Sub_0018AE70(m,drive,config+0x270,engine,object+0x30,car+0x40);m.word(object+0x44,drive);AddComponent(m,object+8,drive);
     const auto helper=m.allocate(0x18);m.scalar(helper+8,1);m.scalar(helper+0xc,1);m.word(helper+0x10,0);m.word(helper+0x14,0);m.word(object+0x48,helper);m.word(helper+4,body);m.word(helper,config+0x2f0);
-    m.word(global_address(0xb408),0);Sub_001375F0(m,object);InitializeStateFromCar(m,object);Sub_00137788(m,object,services);
+    m.word(global_address(0xb408),0);Calibrate(m,object);InitializeStateFromCar(m,object);PhysicsCar::ComputeAuxiliaries(m,object,services);
     m.scalar(object+0x74,1);m.word(object+0x64,1);m.word(object+0x68,2);m.word(object+0x60,1);return object;
 }
 }
@@ -239,7 +239,7 @@ float Move(Memory& m,std::uint32_t s,float dt,DrivingServices& hooks) {
     const auto mode_address=m.word(ga(0xa900));
     if(m.signed_word(mode_address)==4 && m.word(ga(0xa758))!=0)hp2::not_implemented("0x001389BC","Excluded original Race4 diagnostic position-restore branch");
     const auto start=invoke(hooks.Sub_00250F38,"0x00250F38");
-    SetBoost(m,s,m.scalar(car+0x3e0));Sub_001375F0(m,s);
+    SetBoost(m,s,m.scalar(car+0x3e0));Calibrate(m,s);
     const auto controls=m.word(s),body=m.word(s+0x18),state=m.word(s+0x50),config=m.word(s+0x4c);
     const auto engine=m.word(s+0x40),drive=m.word(s+0x44);
     if(m.scalar(controls+0x218)<m.scalar(controls+0x214) && m.scalar(controls+0x21c)<m.scalar(controls+0x214)) {
@@ -356,7 +356,7 @@ void JumpStabilizer(Memory& m,std::uint32_t mover){
     using namespace detail_group_00138e08;
     if(m.signed_word(m.word(mover+0x54)+0x3bc)>=2)return;
     const auto body=m.word(mover+0x18);const auto v=m.vector(body+0xa0);const float mass=m.scalar(body+0x118);
-    const float f=port::driving::Sub_0018F9F0(m,0x00330060,len(v));
+    const float f=port::driving::Graph::GetValue(m,0x00330060,len(v));
     const auto damping=mul(v,-(mass*f));auto old=m.vector(body+0x100);for(unsigned i=0;i<4;++i)old[i]=old[i]+damping[i];m.vector(body+0x100,old);
 }
 }
@@ -389,7 +389,7 @@ void ResolveForces(Memory& m,std::uint32_t mover){
     using namespace detail_group_00138e08;
     Memory::Scratch frame(m);const auto scratch=m.allocate(16);const auto body=m.word(mover+0x18);
     const auto table=m.word(body+8);if(m.word(table+0x34)!=0x0019d978)hp2::not_implemented("0x00138E08","unknown body pre-force virtual entry");
-    m.word(0x00330058,m.word(0x00330058)+1u);Sub_001ADD70(m,m.word(mover+0x48),scratch);
+    m.word(0x00330058,m.word(0x00330058)+1u);Aerodynamics::ResolveForces(m,m.word(mover+0x48),scratch);
     const float request=m.word(0x00330054)==0 ? 0 : m.scalar(scratch)*0.25f;
     for(unsigned i=0;i<4;++i)suspension_request(m,m.word(mover+0x20+4*i),request);
     IterateForces(m,mover);

@@ -132,7 +132,7 @@ float GetPostCollisionYawControlBoost(Memory& m,std::uint32_t car) {
     if(start==0 || start==0x7fffffffu)return 0;
     const float elapsed=static_cast<float>(sb(m.word(ga(0xb388))-start))*g(m,0x83bc);
     if(!(elapsed<4.0f))return 0;
-    return port::driving::Sub_0018F9F0(m,ga(0xa6c8),elapsed);
+    return port::driving::Graph::GetValue(m,ga(0xa6c8),elapsed);
 }
 }
 
@@ -191,5 +191,41 @@ void Car::ShouldVisualEffectsBeGenerated() {
 // ELF 0x00135EB8; E-0042-C009; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/00135eb8.md.
 void Car::GetPostCollisionYawControlBoost() {
     hp2::not_implemented("0x00135EB8", "Car::GetPostCollisionYawControlBoost (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x001315F8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001315f8.md.
+void Car::SetFrictionBoost() {
+    hp2::not_implemented("0x001315F8", "Car::SetFrictionBoost (signature and full body unresolved)");
+}
+
+// ELF 0x00132960; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00132960.md.
+void Car::CalculateDebugChecksum() {
+    hp2::not_implemented("0x00132960", "Car::CalculateDebugChecksum (signature and full body unresolved)");
+}
+
+// ELF 0x00134DB8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00134db8.md.
+void Car::GetWheelTraction() {
+    hp2::not_implemented("0x00134DB8", "Car::GetWheelTraction (signature and full body unresolved)");
+}
+
+// ELF 0x00134E00; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00134e00.md.
+void Car::GetWheelsOnGround() {
+    hp2::not_implemented("0x00134E00", "Car::GetWheelsOnGround (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+#include "game_core/indep/src/car.hpp"
+
+namespace hp2::recovered {
+// ELF 0x001309F8; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001309f8.md.
+void NullMover::Move() {
+    hp2::not_implemented("0x001309F8", "NullMover::Move (signature and full body unresolved)");
+}
+
+// ELF 0x00136AF8; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00136af8.md.
+void NullMover::Sub_00136AF8() {
+    hp2::not_implemented("0x00136AF8", "NullMover::Sub_00136AF8 (signature and full body unresolved)");
 }
 } // namespace hp2::recovered

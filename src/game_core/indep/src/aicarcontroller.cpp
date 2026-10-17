@@ -29,3 +29,31 @@ void AICarController::ReleaseBoost() {
     hp2::not_implemented("0x00193780", "AICarController::ReleaseBoost (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x00191D10; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00191d10.md.
+void AICarController::ClearStickyDecisions() {
+    hp2::not_implemented("0x00191D10", "AICarController::ClearStickyDecisions (signature and full body unresolved)");
+}
+
+// ELF 0x00191D90; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00191d90.md.
+void AICarController::GetStickyIndex() {
+    hp2::not_implemented("0x00191D90", "AICarController::GetStickyIndex (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+#include "game_core/indep/src/aicarcontroller.hpp"
+
+namespace hp2::recovered {
+// ELF 0x00193E68; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00193e68.md.
+void DrivingInformation::Clear() {
+    hp2::not_implemented("0x00193E68", "DrivingInformation::Clear (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x00193D90; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00193d90.md.
+void NearbyCarList::GetCarsIndexInArray() {
+    hp2::not_implemented("0x00193D90", "NearbyCarList::GetCarsIndexInArray (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

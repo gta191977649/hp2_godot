@@ -131,10 +131,10 @@ public:
     void SetEventTreeType_001F5D50(int tree_type);
     int EventTreeType_001F5D50() const;
     // FUN_001F5D00(0x2FC1B4, type): type 0 -> +0x16C, type 1 -> +0x168, otherwise 1.
-    int StartNode_001F5D00(int tree_type) const;
+    int GetSelectedEvent(int tree_type) const;
     // FUN_001F5D28(0x2FC1B4, type, number). Selects on the stored type at +0x164, **not** on
     // its own `tree_type` argument, which the original ignores. Preserved deliberately.
-    void SetStartNode_001F5D28(int tree_type, int event_number);
+    void SetSelectedEvent(int tree_type, int event_number);
     // DAT_002FC1C0.
     int EventTreeViewState_001FAF60() const;
 
@@ -180,9 +180,15 @@ enum EventSliceStatus_002010B8 : int {
 };
 
 // FUN_00200018, GoalTypes 0 and 2: one byte against the requirement row's u32 threshold.
-int SliceStatusByte_00200018(std::uint8_t slice_value, std::uint32_t goal_threshold);
+// E-0043-N01; typed host carrier, not a recovered native class layout.
+struct EventRankState {
+    static int GetStatus(std::uint8_t slice_value, std::uint32_t goal_threshold);
+};
 // FUN_00200068, GoalTypes 1, 5 and 6: a signed 32-bit value; 0 and 0x7FFFFFFF mean
 // "not attempted".
-int SliceStatusWord_00200068(std::int32_t slice_value, std::int32_t goal_threshold);
+// E-0043-N01; typed host carrier, not a recovered native class layout.
+struct EventTimeState {
+    static int GetStatus(std::int32_t slice_value, std::int32_t goal_threshold);
+};
 
 } // namespace hp2::memorycard

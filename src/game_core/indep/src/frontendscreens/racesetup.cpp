@@ -41,3 +41,47 @@
 // No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
 // Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
 #include "game_core/TrackKnockoutSetup.hpp"
+
+#include "game_core/indep/src/frontendscreens/racesetup.hpp"
+
+#include "game_core/port/not_implemented.hpp"
+
+namespace hp2::recovered {
+// ELF 0x001B93E0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001b93e0.md.
+void DataBeTheCopSetup::InitWithDefaults() {
+    hp2::not_implemented("0x001B93E0", "DataBeTheCopSetup::InitWithDefaults (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x001B8F38; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001b8f38.md.
+void DataLapKnockoutSetup::InitWithDefaults() {
+    hp2::not_implemented("0x001B8F38", "DataLapKnockoutSetup::InitWithDefaults (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x001B9218; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001b9218.md.
+void DataRaceKnockoutSetup::InitWithDefaults() {
+    hp2::not_implemented("0x001B9218", "DataRaceKnockoutSetup::InitWithDefaults (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x001B8AF0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001b8af0.md.
+void DataSingleRaceSetup::InitWithDefaults() {
+    hp2::not_implemented("0x001B8AF0", "DataSingleRaceSetup::InitWithDefaults (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x001B7AB0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001b7ab0.md.
+void RaceSetupBaseClass::FindChangeable() {
+    hp2::not_implemented("0x001B7AB0", "RaceSetupBaseClass::FindChangeable (signature and full body unresolved)");
+}
+
+// ELF 0x001B7AE8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001b7ae8.md.
+void RaceSetupBaseClass::FindChangeableByLanguageID() {
+    hp2::not_implemented("0x001B7AE8", "RaceSetupBaseClass::FindChangeableByLanguageID (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

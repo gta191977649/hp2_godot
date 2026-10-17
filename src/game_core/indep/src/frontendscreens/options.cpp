@@ -31,7 +31,7 @@ bool ::port::frontend::advance_zero_velocity_path(hp2::frontend::AnimationGroup&
 }
 
 namespace hp2::frontend {
-void tExitScreenAnimation::Sub_002486E8(AnimationGroup& path) {
+void tExitScreenAnimation::SetupToAnimate(AnimationGroup& path) {
     FeWidget* mask = FindWidget_00143D50(*field_0x00, path.field_0x10, 0);
     if (!mask) return; // FUN_00144398 / FUN_00145308 return for absent anchors
     const float x = static_cast<float>(static_cast<int>(path.field_0x1c));
@@ -55,7 +55,7 @@ void tExitScreenAnimation::Sub_00248C60(float x, float duration, std::uint32_t g
     if (FeWidget* mask = FindWidget_00143D50(*field_0x00, mask_hash, 0))
         path.field_0x18 = static_cast<float>(static_cast<int>(mask->y)); // FUN_001440D8
     path.field_0x48 = x == path.field_0x24 ? 0 : 2;
-    Sub_002486E8(path);
+    SetupToAnimate(path);
     field_0x04.push_back(path);
 }
 
@@ -64,12 +64,12 @@ void tExitScreenAnimation::Construct_002490D8(FeScreen& screen) {
     float maximum = 0;
     for (int i = 0; i < 16; ++i) {
         char text[32]; std::snprintf(text, sizeof(text), "MENUITEM_%d_GROUP", i);
-        const auto group = StringHash_002534A8(text);
+        const auto group = bStringHash(text);
         bool present = false;
         for (const FeWidget& widget : screen.widgets) if (widget.class_hash == group) present = true;
         if (!present) continue;
         std::snprintf(text, sizeof(text), "MI_%d_MASK", i);
-        const auto mask = StringHash_002534A8(text);
+        const auto mask = bStringHash(text);
         const FeWidget* widget = FindWidget_00143D50(screen, mask, 0);
         const float duration = 0.05f + static_cast<float>(i) * 0.05f; // gp-0x3AB4/-0x3AB0
         if (maximum < duration) maximum = duration;
@@ -84,7 +84,7 @@ bool tExitScreenAnimation::Update_00249128(float delta_seconds) {
     for (AnimationGroup& path : field_0x04) {
         if (path.field_0x48 == 0) continue;
         ::port::frontend::advance_zero_velocity_path(path, delta_seconds);
-        Sub_002486E8(path);
+        SetupToAnimate(path);
     }
     for (const AnimationGroup& path : field_0x04) if (path.field_0x48 != 0) return false;
     return true;
@@ -276,7 +276,7 @@ void Sub_001EFB80(int message,MenuEvent_0016A458& event,tScrollingMenuList& view
     viewport.Handle_0024A480(message,event.field_0x00);
     if (message == 4) {
         selector.Bind_0024A860(event.field_0x00 == 0x52E039FA ? 0x2932DFCA : 0);
-        Sub_001F4E68(screen,viewport.Sub_0024A368(),measure);
+        HandleHighlight(screen,viewport.Sub_0024A368(),measure);
     }
     if ((message == 8 && event.field_0x00 == 0x52E039F3) ||
         (message == 9 && event.field_0x00 == 0xAEE77884)) event.result_0x08 = 1;
@@ -293,7 +293,7 @@ void Sub_001F3A28(int message,MenuEvent_0016A458& event,tScrollingMenuList& view
             0x5610F2F4,0x422313CB,0x8FE4086B,0,0,0};
         const auto index = event.field_0x00 - 0x52E039F3u;
         selector.Bind_0024A860(index < 9 ? targets[index] : 0);
-        Sub_001F4E68(screen,viewport.Sub_0024A368(),measure);
+        HandleHighlight(screen,viewport.Sub_0024A368(),measure);
     }
     if ((message == 8 && event.field_0x00 == 0x52E039F3) ||
         (message == 9 && event.field_0x00 == 0x52E039FB)) event.result_0x08 = 1;
@@ -339,10 +339,7 @@ void JukeBoxMusicScreen::Sub_001F0D10() {
     hp2::not_implemented("0x001F0D10", "JukeBoxMusicScreen::Sub_001F0D10 (signature and full body unresolved)");
 }
 
-// ELF 0x001F4E68; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f4e68.md.
-void JukeBoxMusicScreen::Sub_001F4E68() {
-    hp2::not_implemented("0x001F4E68", "JukeBoxMusicScreen::Sub_001F4E68 (signature and full body unresolved)");
-}
+
 } // namespace hp2::frontend
 
 namespace hp2::frontend {
@@ -383,8 +380,43 @@ void tOptionsScreen::Sub_001EECA8() {
     hp2::not_implemented("0x001EECA8", "tOptionsScreen::Sub_001EECA8 (signature and full body unresolved)");
 }
 
-// ELF 0x001F4E68; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f4e68.md.
-void tOptionsScreen::Sub_001F4E68() {
-    hp2::not_implemented("0x001F4E68", "tOptionsScreen::Sub_001F4E68 (signature and full body unresolved)");
+
+} // namespace hp2::frontend
+
+namespace hp2::frontend {
+// ELF 0x001EFA68; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001efa68.md.
+void AudioOptionsScreen::FindSlider() {
+    hp2::not_implemented("0x001EFA68", "AudioOptionsScreen::FindSlider (signature and full body unresolved)");
 }
 } // namespace hp2::frontend
+
+namespace hp2::recovered {
+// ELF 0x001F1A78; E-0041-R20; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f1a78.md.
+void LanguageOptionsScreenBase::Sub_001F1A78() {
+    hp2::not_implemented("0x001F1A78", "LanguageOptionsScreenBase::Sub_001F1A78 (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x001F4DC8; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001f4dc8.md.
+void OptionsScreenBase::Sub_001F4DC8() {
+    hp2::not_implemented("0x001F4DC8", "OptionsScreenBase::Sub_001F4DC8 (signature and full body unresolved)");
+}
+
+// ELF 0x001F4E68; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f4e68.md.
+void OptionsScreenBase::HandleHighlight() {
+    hp2::not_implemented("0x001F4E68", "OptionsScreenBase::HandleHighlight (signature and full body unresolved)");
+}
+
+// ELF 0x001F5B80; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001f5b80.md.
+void OptionsScreenBase::HandleEvent() {
+    hp2::not_implemented("0x001F5B80", "OptionsScreenBase::HandleEvent (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x001F1528; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001f1528.md.
+void UserNameOptionsScreen::DisplayGender() {
+    hp2::not_implemented("0x001F1528", "UserNameOptionsScreen::DisplayGender (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

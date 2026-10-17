@@ -470,11 +470,11 @@ godot::Dictionary Ps2VehicleRenderer::update_view(const godot::Vector3& position
     if(impl_->model&&!impl_->display_ready)return get_state();
     const auto error=catch_all([&] {
         if(!impl_->model)return;
-        impl_->projected_size=port::Sub_00107600(3.0f,float(projection_scale),source(get_global_position()),source(position),source(forward));
+        impl_->projected_size=port::GetPixelSize(3.0f,float(projection_scale),source(get_global_position()),source(position),source(forward));
         const auto selection=impl_->model->select(impl_->projected_size,impl_->show_lods?0:0);impl_->lod=selection.body;impl_->triangles=0;
         layout_lods();
         // Original 00123BA0/001175C8 environment orientation, bounded zero-offset viewer.
-        const auto environment=port::Sub_0011B520(source(position),source(get_global_position()),{{0,0,1}});
+        const auto environment=port::eCreateLookAtMatrix(source(position),source(get_global_position()),{{0,0,1}});
         for(auto& draw:impl_->draws) {
             const auto& part=impl_->model->parts()[draw.part];if(!draw.node||!draw.node->is_visible_in_tree())continue;
             const auto world=draw.node->get_global_transform();

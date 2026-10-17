@@ -10,3 +10,21 @@
 // Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
 // Diagnostic text (not a callable signature): bFile::Filename [0x002BF938]
 #include "game_core/inc/bFile.hpp"
+
+#include "game_core/src/bFile.hpp"
+
+#include "game_core/port/not_implemented.hpp"
+
+namespace hp2::recovered {
+// ELF 0x00253A40; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00253a40.md.
+void AsyncChunkPri::Sub_00253A40() {
+    hp2::not_implemented("0x00253A40", "AsyncChunkPri::Sub_00253A40 (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x002538B8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/002538b8.md.
+void AsyncEntry::Sub_002538B8() {
+    hp2::not_implemented("0x002538B8", "AsyncEntry::Sub_002538B8 (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

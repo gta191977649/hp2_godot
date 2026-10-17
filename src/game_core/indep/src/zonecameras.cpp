@@ -194,3 +194,10 @@ void ZonePreviewCameraMover::Sub_001639D0() {
     hp2::not_implemented("0x001639D0", "ZonePreviewCameraMover::Sub_001639D0 (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x001657A0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001657a0.md.
+void PreviewPause::GetPoint() {
+    hp2::not_implemented("0x001657A0", "PreviewPause::GetPoint (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

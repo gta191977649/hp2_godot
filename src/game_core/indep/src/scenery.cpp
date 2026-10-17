@@ -8,3 +8,14 @@
 // Diagnostic text (not a callable signature): GrandSceneryCullInfo::CullView [0x002B00A8]
 // Diagnostic text (not a callable signature): GrandSceneryCullInfo::DoCulling() [0x002B00C8]
 #include "game_core/indep/inc/Scenery.hpp"
+
+#include "game_core/indep/src/scenery.hpp"
+
+#include "game_core/port/not_implemented.hpp"
+
+namespace hp2::recovered {
+// ELF 0x0014F340; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0014f340.md.
+void VisibleZone::FindIndexTo() {
+    hp2::not_implemented("0x0014F340", "VisibleZone::FindIndexTo (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

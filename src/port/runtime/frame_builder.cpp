@@ -192,7 +192,7 @@ FrameStats build_frame(hp2::frontend::FeScreen& screen, const WidgetSizes& sizes
                     }
                 }
                 if (!fixed && inline_button(code)) {
-                    const auto* buttons = sizes.font(hp2::frontend::StringHash_002534A8("BUTTONSOUT"));
+                    const auto* buttons = sizes.font(hp2::frontend::bStringHash("BUTTONSOUT"));
                     if (buttons == nullptr) { ++stats.missing; continue; }
                     const auto mapped = kSub_00141DD8_002F09C0[code-0x80];
                     for (const auto& icon : buttons->glyphs) if (icon.code == mapped) {

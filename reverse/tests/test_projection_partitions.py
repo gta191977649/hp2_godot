@@ -14,9 +14,16 @@ import generate_class_templates as generator
 import adopt_debug_reference_names as legacy
 
 
+def current_ledger():
+    path = ROOT / 'reverse/naming/task0043-projection-bindings.json'
+    if not path.exists():
+        path = ROOT / 'reverse/naming/task0042-projection-partitions.json'
+    return json.loads(path.read_text())
+
+
 class ProjectionPartitionTests(unittest.TestCase):
     def test_every_migrated_entry_preserves_all_tokens_except_documented_renames(self):
-        ledger = json.loads((ROOT / 'reverse/naming/task0042-projection-partitions.json').read_text())
+        ledger = current_ledger()
         parsed = {}
         for row in ledger['functions']:
             if row['source'] not in parsed:
@@ -36,7 +43,7 @@ class ProjectionPartitionTests(unittest.TestCase):
         self.assertEqual(len({row['old_source'] for row in ledger['functions']}), 14)
 
     def test_every_anonymous_chunk_preserves_helpers_constants_and_literal_values(self):
-        ledger = json.loads((ROOT / 'reverse/naming/task0042-projection-partitions.json').read_text())
+        ledger = current_ledger()
         support = (ROOT / 'src/game_core/port/driving/projection_support.hpp').read_text()
         _, namespaces = migration.functions(support)
         for row in ledger['helper_chunks']:
@@ -87,7 +94,7 @@ class ProjectionPartitionTests(unittest.TestCase):
                 self.assertEqual([definition['signature'] for definition in definitions[address]], [signature])
 
     def test_all_recovered_partition_signatures_have_their_own_generator_address(self):
-        ledger = json.loads((ROOT / 'reverse/naming/task0042-projection-partitions.json').read_text())
+        ledger = current_ledger()
         definitions = generator.definitions()
         for row in ledger['functions']:
             if not row['elf_address']:

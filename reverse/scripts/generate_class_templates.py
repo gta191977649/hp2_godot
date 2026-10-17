@@ -45,10 +45,19 @@ def closing_brace(masked: str, opening: int) -> int:
     raise ValueError("Unbalanced C++ braces")
 
 
-def class_range(text: str, name: str) -> tuple[int, int] | None:
+def class_range(text: str, name: str, namespace: str | None = None) -> tuple[int, int] | None:
     masked = mask_comments_strings(text)
-    match = re.search(r"\b(?:class|struct)\s+" + re.escape(name) + r"\s*\{", masked)
-    return (match.end() - 1, closing_brace(masked, match.end() - 1)) if match else None
+    namespaces = []
+    if namespace:
+        for scope in re.finditer(r"\bnamespace\s+([A-Za-z_]\w*(?:::[A-Za-z_]\w*)*)\s*\{", masked):
+            namespaces.append((scope.start(), closing_brace(masked, scope.end()-1), scope[1]))
+    for match in re.finditer(r"\b(?:class|struct)\s+" + re.escape(name) + r"\s*\{", masked):
+        if namespace:
+            enclosing = [n for a,b,n in namespaces if a < match.start() < b]
+            if '::'.join(enclosing) != namespace:
+                continue
+        return match.end()-1, closing_brace(masked, match.end()-1)
+    return None
 
 
 def definitions() -> dict[str, list[dict]]:
@@ -68,12 +77,23 @@ def definitions() -> dict[str, list[dict]]:
     # records below distinguish every projected overload without last-row wins.
     originals.update({name: next(iter(addresses)) for name, addresses in projection_names.items()
                       if len(addresses) == 1})
+    rename_path = ROOT / 'reverse/naming/task0043-identifier-renames.json'
+    renamed = json.loads(rename_path.read_text())['renames'] if rename_path.exists() else []
+    function_renames = {r['old_identifier']: r['new_identifier'] for r in renamed if r['entity_kind'] == 'function'}
+    for row in renamed:
+        if row['entity_kind'] == 'function':
+            originals[row['new_identifier']] = row['elf_address']
     projection_bindings = {}
-    partition_path = ROOT / 'reverse/naming/task0042-projection-partitions.json'
+    partition_path = ROOT / 'reverse/naming/task0043-projection-bindings.json'
+    if not partition_path.exists():
+        partition_path = ROOT / 'reverse/naming/task0042-projection-partitions.json'
     if partition_path.exists():
         for row in json.loads(partition_path.read_text())['functions']:
             if row['elf_address'] and row.get('source_signature'):
-                binding = (row['source'], ' '.join(row['source_signature'].split()))
+                projected_signature = row['source_signature']
+                for before, after in function_renames.items():
+                    projected_signature = re.sub(r'\b' + re.escape(before) + r'\b', after, projected_signature)
+                binding = (row['source'], ' '.join(projected_signature.split()))
                 if binding in projection_bindings and projection_bindings[binding] != row['elf_address']:
                     raise ValueError('Conflicting projection address/signature binding: ' + repr(binding))
                 projection_bindings[binding] = row['elf_address']
@@ -84,6 +104,11 @@ def definitions() -> dict[str, list[dict]]:
     if (ROOT / 'reverse/naming/task0042-adopted-source-names.csv').exists():
         originals.update({r['source_identifier']: r['elf_address'] for r in
                           read_csv('reverse/naming/task0042-adopted-source-names.csv')})
+    complete = ROOT / 'reverse/classes/task0043-member-registry.json'
+    if complete.exists():
+        for row in json.loads(complete.read_text())['members']:
+            if not row.get('exclusion_reason'):
+                originals[row['owner'] + '::' + row['method']] = row['elf_address']
     for path in sorted((ROOT / "src/game_core").rglob("*.cpp")):
         text = path.read_text(encoding="utf-8")
         masked = mask_comments_strings(text)
@@ -104,6 +129,7 @@ def definitions() -> dict[str, list[dict]]:
             key = projected_address or ("0x" + address[1].upper() if address else originals[name])
             result[key].append({
                 "path": path.relative_to(ROOT).as_posix(), "name": name,
+                "namespace": "::".join(scope[1] for scope in re.finditer(r"\bnamespace\s+([A-Za-z_]\w*(?:::[A-Za-z_]\w*)*)\s*\{", masked) if scope.start() < match.start() < closing_brace(masked, scope.end()-1)),
                 "signature": signature,
                 "stub": stub,
             })
@@ -112,8 +138,9 @@ def definitions() -> dict[str, list[dict]]:
 
 def entry_definitions(cls: dict, address: str, method: str, candidates: list[dict]) -> list[dict]:
     """Explicitly separate a whole entry from typed overloads implementing bounded slices."""
-    own = [d for d in candidates if d["path"] == cls["source"]
-           and d["name"] == cls["name"] + "::" + method]
+    own = [d for d in candidates if d["path"] == cls.get("methods", {}).get(address, {}).get("source", cls["source"])
+           and d["name"] == cls["name"] + "::" + method
+           and ("namespace" not in cls or d.get("namespace", cls["namespace"]) == cls["namespace"])]
     signature = cls.get("entry_signatures", {}).get(address)
     if signature:
         signature = signature.replace('Sub_' + address[2:], method)
@@ -121,7 +148,7 @@ def entry_definitions(cls: dict, address: str, method: str, candidates: list[dic
     return own
 
 
-def model() -> tuple[list[dict], list[dict], dict[str, dict], dict]:
+def model(include_complete: bool = True) -> tuple[list[dict], list[dict], dict[str, dict], dict]:
     policy = json.loads((ROOT / "reverse/classes/template-policy.json").read_text())
     assert policy["binary_id"] == BINARY
     classes: dict[str, dict] = {}
@@ -220,6 +247,10 @@ def model() -> tuple[list[dict], list[dict], dict[str, dict], dict]:
                 cls['functions'].sort()
             cls['methods'][address] = dict(name=override['method'], record=override['record'],
                 evidence=override['evidence_id'])
+    if include_complete:
+        complete = ROOT / "reverse/classes/task0043-member-registry.json"
+        if complete.exists():
+            result = apply_complete_members(result, json.loads(complete.read_text()))
     return result, labels, symbols, policy
 
 
@@ -256,6 +287,36 @@ def apply_canonical_layout(classes: list[dict], layout: dict) -> list[dict]:
     return sorted(by_name.values(), key=lambda cls: cls['name'])
 
 
+def apply_complete_members(classes: list[dict], registry: dict) -> list[dict]:
+    assert registry['binary_id'] == BINARY
+    by_name = {c['name']: c for c in classes}
+    for name, placement in registry['classes'].items():
+        if name not in by_name:
+            by_name[name] = dict(name=name, namespace='hp2::recovered', functions=[],
+                constructors=[], vtables=[], labels=[], evidence=['E-0043-M01'],
+                origin='exact Debug declaring owner with adopted Retail correspondence', methods={})
+            by_name[name].update(placement)
+    for row in registry['members']:
+        if row.get('exclusion_reason'):
+            continue
+        address, owner = row['elf_address'], row['owner']
+        for old in by_name.values():
+            if old['name'] != owner and address in old['functions']:
+                old['functions'].remove(address)
+                old['methods'].pop(address, None)
+        cls = by_name[owner]
+        if address not in cls['functions']:
+            cls['functions'].append(address)
+        if row.get('template_action') == 'added_whole_entry':
+            cls.setdefault('entry_signatures', {})[address] = 'void ' + owner + '::' + row['method'] + '()'
+        cls['methods'][address] = dict(name=row['method'], record=row['record'],
+            evidence=row['evidence_id'], reference_name=row['reference_name'],
+            name_limit=row['name_limit'], source=row['source'])
+    for cls in by_name.values():
+        cls['functions'].sort()
+    return sorted(by_name.values(), key=lambda c: c['name'])
+
+
 def provenance(cls: dict) -> str:
     labels = "\n".join(f"// Diagnostic text (not a callable signature): {r['text']} [{r['address']}]"
                        for r in cls["labels"])
@@ -269,9 +330,11 @@ def provenance(cls: dict) -> str:
 
 def declaration(cls: dict, address: str) -> str:
     method = cls["methods"][address]
+    original = (f"    // Original Debug reference: {method['reference_name']}; {method['name_limit']}.\n"
+                if method.get('reference_name') else '')
     ctor = " Constructor entry; NOT a C++ constructor." if address in cls["constructors"] else ""
     return (f"    // ELF {address}; {method['evidence']}; {method['record']}.{ctor}\n"
-            "    // Port-side void/no-argument placeholder; original signature unknown.\n"
+            + original + "    // Port-side void/no-argument placeholder; original signature unknown.\n"
             f"    void {method['name']}();\n")
 
 
@@ -295,14 +358,17 @@ def fill_code(classes: list[dict], check: bool) -> None:
     for cls in classes:
         path = ROOT / cls["header"]
         text = path.read_text(encoding="utf-8") if path.exists() else ""
-        bounds = class_range(text, cls["name"])
+        bounds = class_range(text, cls["name"], cls["namespace"])
         missing = []
         for address in cls["functions"]:
             method = cls["methods"][address]["name"]
             own = entry_definitions(cls, address, method, defs.get(address, []))
             if len(own) > 1:
                 raise ValueError(f"Duplicate member definition: {cls['name']}::{method}")
-            declaration_found = bounds and re.search(r"\b" + re.escape(method) + r"\s*\(",
+            declaration_pattern = (r"\bvoid\s+" + re.escape(method) + r"\s*\(\s*\)"
+                if cls.get('entry_signatures', {}).get(address) == 'void ' + cls['name'] + '::' + method + '()'
+                else r"\b" + re.escape(method) + r"\s*\(")
+            declaration_found = bounds and re.search(declaration_pattern,
                                                     mask_comments_strings(text[bounds[0]:bounds[1]]))
             if own and not declaration_found:
                 raise ValueError(f"Definition without class declaration: {cls['name']}::{method}")
@@ -329,21 +395,27 @@ def fill_code(classes: list[dict], check: bool) -> None:
             insert += "".join(declaration(cls, a) for a in missing)
             text = text[:bounds[1]] + insert + text[bounds[1]:]
         write_text(cls["header"], text)
-        source_path = ROOT / cls["source"]
-        source = source_path.read_text(encoding="utf-8") if source_path.exists() else ""
-        header_include = cls["header"][len("src/"):]
-        if not source:
-            source = provenance(cls) + f'#include "{header_include}"\n'
-        if missing:
-            if (f'#include "{header_include}"' not in source and
-                    f'#include "{Path(header_include).name}"' not in source):
-                source += f'\n#include "{header_include}"\n'
-            if '#include "game_core/port/not_implemented.hpp"' not in source:
-                source += '\n#include "game_core/port/not_implemented.hpp"\n'
-            source += f"\nnamespace {cls['namespace']} {{\n"
-            source += "\n".join(cpp_body(cls, a) for a in missing)
-            source += f"}} // namespace {cls['namespace']}\n"
-        write_text(cls["source"], source)
+        groups = defaultdict(list)
+        for address in missing:
+            groups[cls['methods'][address].get('source', cls['source'])].append(address)
+        if not groups:
+            groups[cls['source']] = []
+        for source_name, addresses in groups.items():
+            source_path = ROOT / source_name
+            source = source_path.read_text(encoding="utf-8") if source_path.exists() else ""
+            header_include = cls["header"][len("src/"):]
+            if not source:
+                source = provenance(cls) + f'#include "{header_include}"\n'
+            if addresses:
+                if (f'#include "{header_include}"' not in source and
+                        f'#include "{Path(header_include).name}"' not in source):
+                    source += f'\n#include "{header_include}"\n'
+                if '#include "game_core/port/not_implemented.hpp"' not in source:
+                    source += '\n#include "game_core/port/not_implemented.hpp"\n'
+                source += f"\nnamespace {cls['namespace']} {{\n"
+                source += "\n".join(cpp_body(cls, a) for a in addresses)
+                source += f"}} // namespace {cls['namespace']}\n"
+            write_text(source_name, source)
 
 
 def synchronize_records(classes: list[dict], symbols: dict[str, dict], check: bool) -> None:
@@ -432,7 +504,7 @@ def artifacts(classes: list[dict], labels: list[dict], symbols: dict[str, dict])
             method = cls["methods"][address]
             candidates = defs.get(address, [])
             own, = entry_definitions(cls, address, method["name"], candidates)
-            entry = {"elf_address": address, "method": method["name"], "record": method["record"],
+            entry = {"elf_address": address, "method": method["name"], "record": method["record"], "source": own["path"],
                      "knowledge_status": symbols[address]["status"],
                      "coverage": "throwing_template" if own["stub"] else "existing_native_projection",
                      "signature": own["signature"], "signature_provenance": "port-side; original ABI unconfirmed",
@@ -444,7 +516,7 @@ def artifacts(classes: list[dict], labels: list[dict], symbols: dict[str, dict])
                 calls.append((cls, address, method["name"]))
         item["coverage"] = "members_catalogued" if item["members"] else "unbound_class_name"
         inventory["classes"].append(item)
-    sources = sorted({c["source"] for c in classes})
+    sources = sorted({c["source"] for c in classes} | {m.get("source", c["source"]) for c in classes for m in c["methods"].values()})
     cmake = "# TASK-0028. Explicit source list; includes empty shells to compile-check their headers.\n"
     cmake += "set(HP2_CLASS_TEMPLATE_SOURCES\n" + "".join(f"  {p}\n" for p in sources) + ")\n"
     test = "// TASK-0028 generated exception contract tests. No original-behaviour equivalence claim.\n"

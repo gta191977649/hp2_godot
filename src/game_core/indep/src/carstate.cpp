@@ -37,3 +37,44 @@ void CalculateWheelMatrices(Memory&m,std::uint32_t car,std::int32_t index){
     m.matrix(car+static_cast<std::uint32_t>(index)*0x40+0x1b0,second);
 }
 }
+
+#include "game_core/indep/src/carstate.hpp"
+
+#include "game_core/port/not_implemented.hpp"
+
+namespace hp2::recovered {
+// ELF 0x001C0780; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c0780.md.
+void CarState::ResetCarForSound() {
+    hp2::not_implemented("0x001C0780", "CarState::ResetCarForSound (signature and full body unresolved)");
+}
+
+// ELF 0x001C0850; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c0850.md.
+void CarState::BeginTimestep() {
+    hp2::not_implemented("0x001C0850", "CarState::BeginTimestep (signature and full body unresolved)");
+}
+
+// ELF 0x001C0888; E-0042-C135; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001c0888.md.
+void CarState::GetYaw() {
+    hp2::not_implemented("0x001C0888", "CarState::GetYaw (signature and full body unresolved)");
+}
+
+// ELF 0x001C08D0; E-0042-C136; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001c08d0.md.
+void CarState::GetYawAlways() {
+    hp2::not_implemented("0x001C08D0", "CarState::GetYawAlways (signature and full body unresolved)");
+}
+
+// ELF 0x001C0CF8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001c0cf8.md.
+void CarState::SetWheelTouchingGround() {
+    hp2::not_implemented("0x001C0CF8", "CarState::SetWheelTouchingGround (signature and full body unresolved)");
+}
+
+// ELF 0x001C0D48; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001c0d48.md.
+void CarState::SetWheelTerrain() {
+    hp2::not_implemented("0x001C0D48", "CarState::SetWheelTerrain (signature and full body unresolved)");
+}
+
+// ELF 0x001C0D78; E-0042-U144; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/vehicle/001c0d78.md.
+void CarState::CalculateWheelMatrices() {
+    hp2::not_implemented("0x001C0D78", "CarState::CalculateWheelMatrices (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

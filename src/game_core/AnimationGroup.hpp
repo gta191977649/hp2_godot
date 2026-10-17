@@ -16,5 +16,12 @@ public:
     // ELF 0x002486E8; E-0042-C163; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/002486e8.md.
     // Port-side void/no-argument placeholder; original signature unknown.
     void SetupToAnimate();
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x00248568; E-0041-R11; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/00248568.md.
+    // Original Debug reference: AnimationGroup::AnimationGroup(int, int, int, float, float, float); constructor/destructor entry is not a native C++ lifetime operation.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void Sub_00248568();
 };
 } // namespace hp2::recovered

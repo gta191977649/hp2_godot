@@ -49,7 +49,7 @@ struct CarAttachmentMatrices {
 // ELF 001C0D78 radians->16-bit angle, 0011B950 Y rotation, 00120EA8 strength.
 std::array<float,16> Sub_0011B950(std::uint16_t angle);
 // E-0035-R02: original look-at matrix (negative up cross forward), source row vectors.
-std::array<float,16> Sub_0011B520(const std::array<float,3>& eye,const std::array<float,3>& target,
+std::array<float,16> eCreateLookAtMatrix(const std::array<float,3>& eye,const std::array<float,3>& target,
                                const std::array<float,3>& up);
 float Sub_00120EA8(float angular_velocity);
 CarAttachmentMatrices CalculateWheelMatrices(const CarRenderConfig& config,
@@ -78,14 +78,14 @@ struct CarUvFactors {
     std::array<float,2> cropped_image;
 };
 // E-0033-B11, original 0010C158 resize/rebind factors and explicit host crop mapping.
-CarUvFactors Sub_0010C158(std::uint16_t width, std::uint16_t height,
+CarUvFactors FixStripSTs(std::uint16_t width, std::uint16_t height,
                           std::uint16_t Field_0x4, std::uint16_t Field_0x6);
 // Shared original trig/rotation functions, E-0033-B05; no class ownership.
 float Sub_0011B6E0(float angle);
 std::array<float,16> Sub_0011B7D8(std::uint16_t angle);
 // ELF 0x00107600, E-0033-B03. Shared function; class ownership unknown.
 // Explicit inputs replace PS2 view fields +0x8 / camera +0x40 / +0x50.
-int Sub_00107600(float radius, float projection_scale,
+int GetPixelSize(float radius, float projection_scale,
                  const std::array<float, 3>& position,
                  const std::array<float, 3>& camera_position,
                  const std::array<float, 3>& camera_forward);

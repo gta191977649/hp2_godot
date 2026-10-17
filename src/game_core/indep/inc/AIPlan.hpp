@@ -93,6 +93,13 @@ namespace hp2::recovered {
 class AIActionGetUnstuck {
 public:
     // No member address is confirmed; no speculative members are declared.
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x001C9018; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c9018.md.
+    // Original Debug reference: AIActionGetUnstuck::GetGoalTrackRoutePoint(DrivingLocation *); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetGoalTrackRoutePoint();
 };
 } // namespace hp2::recovered
 
@@ -173,5 +180,12 @@ namespace hp2::recovered {
 class AIActionPullOver {
 public:
     // No member address is confirmed; no speculative members are declared.
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x001C8660; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c8660.md.
+    // Original Debug reference: AIActionPullOver::GetDistanceToRightEdgeOfRoute(NearbyCarList *, TrackRoutePoint *); exact original method spelling; void/no-argument host gap interface only.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void GetDistanceToRightEdgeOfRoute();
 };
 } // namespace hp2::recovered

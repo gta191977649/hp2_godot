@@ -208,7 +208,7 @@ std::uint32_t pack_rgb(const MenuColour_00169BD0& colour) {
 
 } // namespace
 
-std::uint32_t StringHash_002534A8(const char* text) {
+std::uint32_t bStringHash(const char* text) {
     // FUN_002534A8: h starts at -1 and folds each byte with h = h * 0x21 + byte.
     std::uint32_t hash = 0xffffffffu;
     for (const unsigned char* p = reinterpret_cast<const unsigned char*>(text); *p != 0; ++p) {
@@ -280,7 +280,7 @@ void SetClassVisible_001454E8(FeScreen& screen, std::uint32_t class_hash, bool v
     }
 }
 
-void SetWidgetColour_00140CA0(FeWidget& widget, const MenuColour_00169BD0& colour) {
+void SetColor(FeWidget& widget, const MenuColour_00169BD0& colour) {
     // FUN_00140CA0: keep the stored alpha byte, replace the low 24 bits, stamp +0x2b on change.
     const std::uint32_t current = pack_widget_colour(widget);
     const std::uint32_t updated = (current & 0xff000000u) | (pack_rgb(colour) & 0x00ffffffu);
@@ -295,7 +295,7 @@ int MenuItemIndexFromNameHash_0016A330(std::uint32_t name_hash) {
     for (int index = 0; index < kMenuItemIndexLimit_0016A330; ++index) {
         char name[32];
         std::snprintf(name, sizeof(name), kMenuItemNameFormat_002B2760, index);
-        if (StringHash_002534A8(name) == name_hash) return index;
+        if (bStringHash(name) == name_hash) return index;
     }
     return 0;
 }
@@ -350,7 +350,7 @@ void MenuThing_00169740::ApplyStateColour_00169BD0() {
     if (screen_0x24 == nullptr) return;
     FeWidget* widget = FindWidget_00143D50(*screen_0x24, name_hash_0x0C, 1);
     if (widget == nullptr) return;
-    SetWidgetColour_00140CA0(*widget,
+    SetColor(*widget,
                              MenuColour_00169BD0{static_cast<std::uint8_t>(packed & 0xffu),
                                                  static_cast<std::uint8_t>((packed >> 8) & 0xffu),
                                                  static_cast<std::uint8_t>((packed >> 16) & 0xffu)});
@@ -445,7 +445,7 @@ void MenuList_00169F78::Construct_00169F78(MenuGroup_0016AA00* owner, MenuCallba
     for (int index = 0; index < kMenuItemIndexLimit_0016A330; ++index) {
         char name[32];
         std::snprintf(name, sizeof(name), name_format, index);
-        const std::uint32_t name_hash = StringHash_002534A8(name);
+        const std::uint32_t name_hash = bStringHash(name);
         if (screen_0x14 == nullptr) continue;
         if (FindWidget_00143D50(*screen_0x14, name_hash, 1) == nullptr) continue;
 
@@ -478,7 +478,7 @@ std::vector<MenuThing_00169740*> MenuList_00169F78::items() {
     return out;
 }
 
-MenuThing_00169740* MenuList_00169F78::Nth_002503F8(std::int32_t index) {
+MenuThing_00169740* MenuList_00169F78::GetNode(std::int32_t index) {
     // FUN_002503F8: walk `index` links forward from the head; the sentinel comes back when the
     // list is shorter than `index`.
     if (index < 0) return sentinel();
@@ -488,7 +488,7 @@ MenuThing_00169740* MenuList_00169F78::Nth_002503F8(std::int32_t index) {
     return node;
 }
 
-MenuThing_00169740* MenuList_00169F78::FindByHash_0016A5B0(std::uint32_t name_hash) {
+MenuThing_00169740* MenuList_00169F78::FindItem(std::uint32_t name_hash) {
     // FUN_0016A5B0: the head is compared against the list address itself, so an empty list
     // returns 0 before any field is read.
     for (MenuThing_00169740* node = next_0x00; node != nullptr && node != sentinel();
@@ -502,7 +502,7 @@ void Sub_0016D2A8(MenuList_00169F78* list, FeScreen& screen, std::uint32_t name_
     // FUN_0016D2A8. The two lookups the port is handed the results of (FUN_0016C8C8 on the
     // class name, FUN_0016B340 on the group) both return 0 silently when they miss, and the
     // original then returns; so does this.
-    MenuThing_00169740* item = list == nullptr ? nullptr : list->FindByHash_0016A5B0(name_hash);
+    MenuThing_00169740* item = list == nullptr ? nullptr : list->FindItem(name_hash);
     if (item == nullptr) return;
     if (mode == 0 || mode == 2) item->ClearStateBits_00169CB0(kMenuThingStateEnabled_bit0);
     else item->SetStateBits_00169BD0(kMenuThingStateEnabled_bit0);
@@ -513,7 +513,7 @@ void Sub_0016D2A8(MenuList_00169F78* list, FeScreen& screen, std::uint32_t name_
 void MenuList_00169F78::SetCurrentIndex_0016A0F0(std::int32_t index) {
     // FUN_0016A0F0: store the n-th node; when that is the sentinel, fall back to the first item,
     // and when the list is empty leave the current pointer null.
-    MenuThing_00169740* node = Nth_002503F8(index);
+    MenuThing_00169740* node = GetNode(index);
     current_0x08 = node;
     if (node != sentinel()) return;
     MenuThing_00169740* head = node->next_0x00;
@@ -521,7 +521,7 @@ void MenuList_00169F78::SetCurrentIndex_0016A0F0(std::int32_t index) {
     if (head == node) current_0x08 = nullptr;
 }
 
-std::int32_t MenuList_00169F78::CurrentIndex_0016A130() const {
+std::int32_t MenuList_00169F78::GetCurrentItemNumber() const {
     // FUN_0016A130: count forward from the head to the current item; 0 for an empty list or an
     // unreachable current pointer.
     const MenuThing_00169740* node = next_0x00;
@@ -758,7 +758,7 @@ int screen_index_for_name_hash(const std::vector<FeScreen>& screens, std::uint32
 }
 
 int screen_index_for_screen_name(const std::vector<FeScreen>& screens, const char* screen_name) {
-    return screen_index_for_name_hash(screens, StringHash_002534A8(screen_name));
+    return screen_index_for_name_hash(screens, bStringHash(screen_name));
 }
 
 
@@ -785,7 +785,7 @@ void SetWidgetY_00144458(FeScreen& screen, std::uint32_t name_hash, int y) {
     widget->dirty_0x2b = 3;
 }
 
-void SetWidgetAlpha_00140ED0(FeWidget& widget, int alpha) {
+void SetAlpha(FeWidget& widget, int alpha) {
     const std::uint8_t value = static_cast<std::uint8_t>(alpha & 0xff);
     // Port dispatch for existing generic callers: quad alpha is001411D8(-1), E-0039-Q09.
     // Text00140ED0 touches only its one colour; quad setter preserves all four RGB words.
@@ -901,9 +901,9 @@ void MenuHighlightAnim_00248870::Update_00248970(float now_seconds, const Widget
             CopyWidgetTransform_001410A0(*ghost, *target);
             const WidgetMetrics metrics = measure ? measure(*ghost) : WidgetMetrics{};
             SetWidgetScale_00140FA8(*ghost, scale, metrics);
-            SetWidgetAlpha_00140ED0(*ghost, static_cast<int>(alpha));
+            SetAlpha(*ghost, static_cast<int>(alpha));
             if (colour_0x10 != -1) {
-                SetWidgetColour_00140CA0(
+                SetColor(
                     *ghost, MenuColour_00169BD0{
                                 static_cast<std::uint8_t>(colour_0x10 & 0xff),
                                 static_cast<std::uint8_t>((colour_0x10 >> 8) & 0xff),
@@ -918,9 +918,9 @@ void PlaceSelectionBars_00216880(FeScreen& screen, std::uint32_t mask_hash,
                                  const WidgetMeasure& measure) {
     const WidgetRect_00144280 rect = GetWidgetRect_00144280(screen, mask_hash, measure);
     if (!rect.valid) return;
-    SetWidgetY_00144458(screen, StringHash_002534A8(kUnderscoreName),
+    SetWidgetY_00144458(screen, bStringHash(kUnderscoreName),
                         static_cast<int>(rect.y1 + kUnderscoreOffset_gp_0x3EF0));
-    SetWidgetY_00144458(screen, StringHash_002534A8(kOverscoreName),
+    SetWidgetY_00144458(screen, bStringHash(kOverscoreName),
                         static_cast<int>(rect.y0 - kOverscoreOffset_gp_0x3EF4));
 }
 
@@ -937,7 +937,7 @@ WidgetRect_00144280 GetWidgetClip_00145F30(FeScreen& screen, const FeWidget& wid
     return {mask->x,mask->y,mask->x+size.width,mask->y+size.height,true};
 }
 
-void Sub_001F4E68(FeScreen& screen, std::uint32_t mask_hash,
+void HandleHighlight(FeScreen& screen, std::uint32_t mask_hash,
                                const WidgetMeasure& measure) {
     const auto rect=GetWidgetRect_00144280(screen,mask_hash,measure);
     if(!rect.valid)return;
@@ -953,7 +953,7 @@ void tScrollingMenuList::Construct_00249DE0(FeScreen& screen,std::uint32_t top_h
     auto* bottom = FindWidget_00143D50(screen, bottom_hash, 0);
     field_0x0c = top ? top->y : 0; field_0x10 = bottom ? bottom->y : 0;
     for (auto hash : {field_0x28,field_0x2c})
-        if(auto* arrow=FindWidget_00143D50(screen,hash,0))SetWidgetAlpha_00140ED0(*arrow,64);
+        if(auto* arrow=FindWidget_00143D50(screen,hash,0))SetAlpha(*arrow,64);
 }
 void tScrollingMenuList::Sub_001EF3C8(FeScreen& screen) {
     Construct_00249DE0(screen,0x52e039f3,0x52e039f9,0xedf2e4ee,0x20d73d01,0xc67cfb4a);
@@ -1056,7 +1056,7 @@ void tScrollingMenuList::Update_0024A1A8(float delta) {
     // FUN0025A5E0 table quantization remains the existing port std::sin limitation.
     const int alpha=static_cast<int>(128*(std::sin(field_0x24)+1)*0.5f);
     for(auto hash:{field_0x28,field_0x2c})
-        if(auto* a=FindWidget_00143D50(*field_0x00,hash,0))SetWidgetAlpha_00140ED0(*a,alpha);
+        if(auto* a=FindWidget_00143D50(*field_0x00,hash,0))SetAlpha(*a,alpha);
 }
 std::uint32_t tScrollingMenuList::Sub_0024A368() const {
     if(field_0x14<0 || field_0x14>6)hp2::not_implemented("0x0024A368", "uninitialized viewport slot");
@@ -1088,7 +1088,7 @@ void tLeftRightArrowScroll::Update_0024A730(float delta,const WidgetMeasure& mea
         const int alpha=static_cast<int>(128*(std::sin(field_0x1c)+1)*0.5f);
         for(auto hash:{field_0x04,field_0x08})if(auto*w=FindWidget_00143D50(*field_0x00,hash,2)){
             const auto size=measure(*w);
-            SetWidgetAlpha_00140ED0(*w,alpha);
+            SetAlpha(*w,alpha);
             const float y=static_cast<float>(centre)-size.height*0.5f;
             if(w->y!=y){w->y=y;w->dirty_0x2b=4;}
         }
@@ -1134,13 +1134,13 @@ void tAnimatedBlurb::Update_00249348(float delta_seconds) {
     auto* bar = FindWidget_00143D50(*field_0x00, port_bar_hash, 0);
     if (field_0x19c == 1) {
         const float t = field_0x08 < 0.6f ? field_0x08 / 0.6f : 1;
-        if (alpha) SetWidgetAlpha_00140ED0(*alpha, static_cast<int>(field_0x5c_alpha * (1-t)));
-        if (bar) SetWidgetAlpha_00140ED0(*bar, static_cast<int>(field_0x78_alpha * t));
+        if (alpha) SetAlpha(*alpha, static_cast<int>(field_0x5c_alpha * (1-t)));
+        if (bar) SetAlpha(*bar, static_cast<int>(field_0x78_alpha * t));
         if (field_0x198 > 0.5f) { field_0x0c = 0; field_0x19c = 2; }
     }
     if (field_0x19c != 0 && field_0x19c != 2) return;
-    if (alpha) SetWidgetAlpha_00140ED0(*alpha, field_0x5c_alpha);
-    if (bar) SetWidgetAlpha_00140ED0(*bar, 0);
+    if (alpha) SetAlpha(*alpha, field_0x5c_alpha);
+    if (bar) SetAlpha(*bar, 0);
     if (field_0x0c == 0) {
         if (text) {
             text->string_id_0x60 = 0;
@@ -1172,14 +1172,14 @@ void tGlobalBackgroundAnimation::Construct_002495F0() {
     field_0x00 = nullptr; field_0x70 = field_0x78 = field_0x30 = 0;
     field_0x10 = field_0x18 = 320; field_0x40 = field_0x48 = 240;
     for (auto& hash : field_0x7c) hash = 0;
-    Add_00249730(StringHash_002534A8("GRID_BLUEPRINT1"));
-    Add_00249730(StringHash_002534A8("GRID_BLUEPRINT2"));
+    Add_00249730(bStringHash("GRID_BLUEPRINT1"));
+    Add_00249730(bStringHash("GRID_BLUEPRINT2"));
 }
-void tGlobalBackgroundAnimation::Remove_00249790(std::uint32_t hash) {
+void tGlobalBackgroundAnimation::RemoveTextureHash(std::uint32_t hash) {
     for (auto& slot : field_0x7c) if (slot == hash) slot = 0;
 }
 void tGlobalBackgroundAnimation::Add_00249730(std::uint32_t hash) {
-    Remove_00249790(hash);
+    RemoveTextureHash(hash);
     for (auto& slot : field_0x7c) if (slot == 0) { slot = hash; return; }
 }
 void tGlobalBackgroundAnimation::Bind_00249A40(FeScreen* screen, const Random_0025A488& random,
@@ -1189,9 +1189,9 @@ void tGlobalBackgroundAnimation::Bind_00249A40(FeScreen* screen, const Random_00
 }
 void tGlobalBackgroundAnimation::Reset_00249888(const Random_0025A488& random) {
     auto* fading = field_0x00 ? FindWidget_00143D50(*field_0x00,
-        StringHash_002534A8("FADING_BP_OBJECT"), 2) : nullptr;
+        bStringHash("FADING_BP_OBJECT"), 2) : nullptr;
     auto* master = field_0x00 ? FindWidget_00143D50(*field_0x00,
-        StringHash_002534A8("MASTER_BP_OBJECT"), 2) : nullptr;
+        bStringHash("MASTER_BP_OBJECT"), 2) : nullptr;
     if (fading && master) {
         if (!random) hp2::not_implemented("0x0025A488", "missing shared RNG input");
         auto range = [&](float lo, float hi) { return lo + static_cast<float>(random(10000))*0.0001f*(hi-lo); };
@@ -1202,7 +1202,7 @@ void tGlobalBackgroundAnimation::Reset_00249888(const Random_0025A488& random) {
         const auto metrics = port_measure_(*fading);
         fading->x = field_0x10 - metrics.width*0.5f;
         fading->y = field_0x40 - metrics.height*0.5f;
-        SetWidgetAlpha_00140ED0(*fading, 0); SetWidgetAlpha_00140ED0(*master, 0);
+        SetAlpha(*fading, 0); SetAlpha(*master, 0);
         int count = 0; for (auto hash : field_0x7c) if (hash) ++count;
         int index = random(count);
         std::uint32_t hash = 0;
@@ -1217,11 +1217,11 @@ void tGlobalBackgroundAnimation::Update_00249AE8(float delta_seconds, const Rand
     if (field_0x78 >= 6.283f) field_0x78 -= 6.283f;
     field_0x70 += delta_seconds;
     auto* fading = field_0x00 ? FindWidget_00143D50(*field_0x00,
-        StringHash_002534A8("FADING_BP_OBJECT"), 2) : nullptr;
+        bStringHash("FADING_BP_OBJECT"), 2) : nullptr;
     auto* master = field_0x00 ? FindWidget_00143D50(*field_0x00,
-        StringHash_002534A8("MASTER_BP_OBJECT"), 2) : nullptr;
+        bStringHash("MASTER_BP_OBJECT"), 2) : nullptr;
     if (!fading || !master) return;
-    if (field_0x70 < 1) SetWidgetAlpha_00140ED0(*fading, static_cast<int>(field_0x70*128));
+    if (field_0x70 < 1) SetAlpha(*fading, static_cast<int>(field_0x70*128));
     if (field_0x70 < 50) {
         field_0x30 += delta_seconds/50;
         const float t = field_0x30;
@@ -1234,7 +1234,7 @@ void tGlobalBackgroundAnimation::Update_00249AE8(float delta_seconds, const Rand
         fading->dirty_0x2b = 4;
     }
     if (field_0x70 > 49 && field_0x70 < 50)
-        SetWidgetAlpha_00140ED0(*fading, static_cast<int>((1-(field_0x70-49))*128));
+        SetAlpha(*fading, static_cast<int>((1-(field_0x70-49))*128));
     if (field_0x70 > 50) Reset_00249888(random);
 }
 
@@ -1291,3 +1291,62 @@ void TitleScreen::Sub_0016F190() {
     hp2::not_implemented("0x0016F190", "TitleScreen::Sub_0016F190 (signature and full body unresolved)");
 }
 } // namespace hp2::frontend
+
+namespace hp2::recovered {
+// ELF 0x0016A130; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/0016a130.md.
+void FlailerMenu::GetCurrentItemNumber() {
+    hp2::not_implemented("0x0016A130", "FlailerMenu::GetCurrentItemNumber (signature and full body unresolved)");
+}
+
+// ELF 0x0016A5B0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/0016a5b0.md.
+void FlailerMenu::FindItem() {
+    hp2::not_implemented("0x0016A5B0", "FlailerMenu::FindItem (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+#include "game_core/FlailerScreenList.hpp"
+
+namespace hp2::recovered {
+// ELF 0x0016C888; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0016c888.md.
+void FlailerScreenList::FindScreen() {
+    hp2::not_implemented("0x0016C888", "FlailerScreenList::FindScreen (signature and full body unresolved)");
+}
+
+// ELF 0x0016CA08; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0016ca08.md.
+void FlailerScreenList::IsAnyPopupActive() {
+    hp2::not_implemented("0x0016CA08", "FlailerScreenList::IsAnyPopupActive (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x0016B340; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0016b340.md.
+void FlailerScreenNode::FindFlailerScreen() {
+    hp2::not_implemented("0x0016B340", "FlailerScreenNode::FindFlailerScreen (signature and full body unresolved)");
+}
+
+// ELF 0x0016B378; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0016b378.md.
+void FlailerScreenNode::SetFilterPort() {
+    hp2::not_implemented("0x0016B378", "FlailerScreenNode::SetFilterPort (signature and full body unresolved)");
+}
+
+// ELF 0x0016B3B0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/0016b3b0.md.
+void FlailerScreenNode::IsPortFiltered() {
+    hp2::not_implemented("0x0016B3B0", "FlailerScreenNode::IsPortFiltered (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x0016B438; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/0016b438.md.
+void ScreenStack::Pop() {
+    hp2::not_implemented("0x0016B438", "ScreenStack::Pop (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+#include "game_core/tPopupMenu.hpp"
+
+namespace hp2::recovered {
+// ELF 0x0016B5A8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0016b5a8.md.
+void tPopupMenu::GetCurrentMenuItem() {
+    hp2::not_implemented("0x0016B5A8", "tPopupMenu::GetCurrentMenuItem (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

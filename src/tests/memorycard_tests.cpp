@@ -61,7 +61,7 @@ void store_stamps_and_load_verifies() {
     Profile_002FC050 written;
     written.write_u32(kSelectedModeField_00185568, 9);
     written.SetEventTreeType_001F5D50(1);
-    written.SetStartNode_001F5D28(1, 15);
+    written.SetSelectedEvent(1, 15);
 
     const std::vector<std::uint8_t> payload = Store_00245738(written);
     check(payload.size() == kProfileSize_00245B00, "stored payload is 0x114E0 bytes");
@@ -75,7 +75,7 @@ void store_stamps_and_load_verifies() {
     check(Load_00245D30(payload, restored) == LoadResult_00245780::kOk, "a stored payload loads");
     check(restored.SelectedMode_00185568() == 9, "the mode survives the round trip");
     check(restored.EventTreeType_001F5D50() == 1, "the tree type survives");
-    check(restored.StartNode_001F5D00(1) == 15, "the start node survives");
+    check(restored.GetSelectedEvent(1) == 15, "the start node survives");
 
     // Storing the restored profile must reproduce the same bytes, which also proves the stamp
     // is idempotent: the size word and the checksum are already correct.
@@ -105,26 +105,26 @@ void load_rejects_a_damaged_payload() {
 // the block's stored type rather than on its own argument. (E-0021-09)
 void start_node_accessors_match_the_listing() {
     Profile_002FC050 profile;
-    check(profile.StartNode_001F5D00(0) == 0 && profile.StartNode_001F5D00(1) == 0,
+    check(profile.GetSelectedEvent(0) == 0 && profile.GetSelectedEvent(1) == 0,
           "an empty profile reports node 0 for both known tree types");
-    check(profile.StartNode_001F5D00(2) == kDefaultStartNode_001F5D00 &&
+    check(profile.GetSelectedEvent(2) == kDefaultStartNode_001F5D00 &&
               kDefaultStartNode_001F5D00 == 1,
           "an unknown tree type takes FUN_001F5D00's `li v0,0x1` arm");
 
     profile.SetEventTreeType_001F5D50(0);
-    profile.SetStartNode_001F5D28(1, 7); // the `1` argument is ignored by the original
-    check(profile.StartNode_001F5D00(0) == 7,
+    profile.SetSelectedEvent(1, 7); // the `1` argument is ignored by the original
+    check(profile.GetSelectedEvent(0) == 7,
           "the writer stored against the block's type, not its argument");
-    check(profile.StartNode_001F5D00(1) == 0, "the other tree's slot is untouched");
+    check(profile.GetSelectedEvent(1) == 0, "the other tree's slot is untouched");
 
     profile.SetEventTreeType_001F5D50(1);
-    profile.SetStartNode_001F5D28(0, 23);
-    check(profile.StartNode_001F5D00(1) == 23, "and again for tree type 1");
-    check(profile.StartNode_001F5D00(0) == 7, "tree type 0 kept its value");
+    profile.SetSelectedEvent(0, 23);
+    check(profile.GetSelectedEvent(1) == 23, "and again for tree type 1");
+    check(profile.GetSelectedEvent(0) == 7, "tree type 0 kept its value");
 
     profile.SetEventTreeType_001F5D50(5);
-    profile.SetStartNode_001F5D28(0, 31);
-    check(profile.StartNode_001F5D00(0) == 7 && profile.StartNode_001F5D00(1) == 23,
+    profile.SetSelectedEvent(0, 31);
+    check(profile.GetSelectedEvent(0) == 7 && profile.GetSelectedEvent(1) == 23,
           "a stored type the writer's two arms do not cover writes nothing");
 }
 
@@ -147,21 +147,21 @@ void event_blocks_sit_where_the_loader_puts_them() {
 // FUN_00200018 and FUN_00200068, both switch arms, against the decompiled truth table.
 // (E-0021-11)
 void slice_decoders_match_the_decompiled_switches() {
-    check(SliceStatusByte_00200018(0, 3) == kSliceStatusNotAttempted, "byte 0 is not attempted");
-    check(SliceStatusByte_00200018(1, 3) == kSliceStatusWon, "byte at or under the goal wins");
-    check(SliceStatusByte_00200018(3, 3) == kSliceStatusWon, "byte exactly at the goal wins");
-    check(SliceStatusByte_00200018(4, 3) == kSliceStatusGoalMissed, "byte over the goal misses");
+    check(EventRankState::GetStatus(0, 3) == kSliceStatusNotAttempted, "byte 0 is not attempted");
+    check(EventRankState::GetStatus(1, 3) == kSliceStatusWon, "byte at or under the goal wins");
+    check(EventRankState::GetStatus(3, 3) == kSliceStatusWon, "byte exactly at the goal wins");
+    check(EventRankState::GetStatus(4, 3) == kSliceStatusGoalMissed, "byte over the goal misses");
     // The original compares unsigned, so a 0xFF byte is 255, never -1.
-    check(SliceStatusByte_00200018(0xff, 0x80) == kSliceStatusGoalMissed,
+    check(EventRankState::GetStatus(0xff, 0x80) == kSliceStatusGoalMissed,
           "the byte comparison is unsigned");
 
-    check(SliceStatusWord_00200068(0, 100) == kSliceStatusNotAttempted, "word 0 is not attempted");
-    check(SliceStatusWord_00200068(0x7fffffff, 100) == kSliceStatusNotAttempted,
+    check(EventTimeState::GetStatus(0, 100) == kSliceStatusNotAttempted, "word 0 is not attempted");
+    check(EventTimeState::GetStatus(0x7fffffff, 100) == kSliceStatusNotAttempted,
           "0x7FFFFFFF is the second not-attempted sentinel");
-    check(SliceStatusWord_00200068(100, 100) == kSliceStatusWon, "word exactly at the goal wins");
-    check(SliceStatusWord_00200068(101, 100) == kSliceStatusGoalMissed, "word over the goal misses");
+    check(EventTimeState::GetStatus(100, 100) == kSliceStatusWon, "word exactly at the goal wins");
+    check(EventTimeState::GetStatus(101, 100) == kSliceStatusGoalMissed, "word over the goal misses");
     // The original compares signed, so a negative stored value beats any positive goal.
-    check(SliceStatusWord_00200068(-5, 100) == kSliceStatusWon,
+    check(EventTimeState::GetStatus(-5, 100) == kSliceStatusWon,
           "the word comparison is signed");
 }
 
@@ -192,7 +192,7 @@ void host_store_and_load_round_trip() {
     Profile_002FC050 written;
     written.write_u32(kSelectedModeField_00185568, 8);
     written.SetEventTreeType_001F5D50(0);
-    written.SetStartNode_001F5D28(0, 12);
+    written.SetSelectedEvent(0, 12);
     const std::string store_error = hp2::platform::store_profile(".", region, written);
     check(store_error.empty(), store_error.empty() ? "stored" : store_error.c_str());
     check(fs::file_size(fs::path(expected), ec) == kProfileSize_00245B00,
@@ -206,7 +206,7 @@ void host_store_and_load_round_trip() {
     const hp2::platform::ProfileLoad load = hp2::platform::load_profile(".", region, restored);
     check(load.loaded, load.error.empty() ? "loaded" : load.error.c_str());
     check(restored.SelectedMode_00185568() == 8, "the mode survives the host round trip");
-    check(restored.StartNode_001F5D00(0) == 12, "the start node survives");
+    check(restored.GetSelectedEvent(0) == 12, "the start node survives");
 
     // A corrupted file is reported, not thrown, and leaves the profile alone.
     {

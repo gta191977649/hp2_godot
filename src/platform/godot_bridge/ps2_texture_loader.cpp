@@ -183,7 +183,7 @@ godot::Ref<godot::ImageTexture> Ps2TextureLoader::load_texture_by_hash(std::int6
 godot::Ref<godot::ImageTexture> Ps2TextureLoader::load_texture_by_name(
     const godot::String& texture_name) {
     const std::uint32_t hash =
-        hp2::frontend::StringHash_002534A8(texture_name.utf8().get_data());
+        hp2::frontend::bStringHash(texture_name.utf8().get_data());
     return load_texture_by_hash(static_cast<std::int64_t>(hash));
 }
 

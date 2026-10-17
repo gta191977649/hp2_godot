@@ -20,3 +20,21 @@
 // No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
 // Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
 #include "game_core/PreRaceStats.hpp"
+
+#include "game_core/port/not_implemented.hpp"
+
+namespace hp2::recovered {
+// ELF 0x001E2D00; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001e2d00.md.
+void PreRaceStats::GetStatsForRacePosition() {
+    hp2::not_implemented("0x001E2D00", "PreRaceStats::GetStatsForRacePosition (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+#include "game_core/indep/src/frontendscreens/startracescreens.hpp"
+
+namespace hp2::recovered {
+// ELF 0x001E2848; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001e2848.md.
+void tStartRaceScreenManager::AddScreen() {
+    hp2::not_implemented("0x001E2848", "tStartRaceScreenManager::AddScreen (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

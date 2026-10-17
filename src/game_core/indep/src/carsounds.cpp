@@ -126,3 +126,20 @@ void SirenSound3d::Sub_0018F710() {
     hp2::not_implemented("0x0018F710", "SirenSound3d::Sub_0018F710 (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x0018D258; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0018d258.md.
+void BaseCarSound::Sub_0018D258() {
+    hp2::not_implemented("0x0018D258", "BaseCarSound::Sub_0018D258 (signature and full body unresolved)");
+}
+
+// ELF 0x0018D340; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0018d340.md.
+void BaseCarSound::Update() {
+    hp2::not_implemented("0x0018D340", "BaseCarSound::Update (signature and full body unresolved)");
+}
+
+// ELF 0x0018D750; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0018d750.md.
+void BaseCarSound::InSoundSphere() {
+    hp2::not_implemented("0x0018D750", "BaseCarSound::InSoundSphere (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

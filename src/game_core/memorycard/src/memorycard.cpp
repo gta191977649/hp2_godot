@@ -83,7 +83,7 @@ int Profile_002FC050::EventTreeType_001F5D50() const {
     return read_i32(kEventTreeTypeField_001F5D50);
 }
 
-int Profile_002FC050::StartNode_001F5D00(int tree_type) const {
+int Profile_002FC050::GetSelectedEvent(int tree_type) const {
     // FUN_001F5D00, from the listing at 0x001F5D00: `bne a1,zero` then `lw v0,0x8(a0)`;
     // `bne a1,v0(==1)` then `lw v0,0x4(a0)`; otherwise `li v0,0x1`. (E-0021-09)
     if (tree_type == 0) return read_i32(kEventTreeStartNodeType0_001F5D00);
@@ -91,7 +91,7 @@ int Profile_002FC050::StartNode_001F5D00(int tree_type) const {
     return kDefaultStartNode_001F5D00;
 }
 
-void Profile_002FC050::SetStartNode_001F5D28(int tree_type, int event_number) {
+void Profile_002FC050::SetSelectedEvent(int tree_type, int event_number) {
     // FUN_001F5D28, from the listing at 0x001F5D28. The first instruction is
     // `lw v1,0x0(a0)` -- the selector is the block's own stored tree type at +0x164, and the
     // function's `a1` argument is never read, even though its only caller passes the tree's
@@ -152,14 +152,14 @@ std::vector<std::uint8_t> Store_00245738(Profile_002FC050& profile) {
     return std::vector<std::uint8_t>(profile.bytes(), profile.bytes() + profile.size());
 }
 
-int SliceStatusByte_00200018(std::uint8_t slice_value, std::uint32_t goal_threshold) {
+int EventRankState::GetStatus(std::uint8_t slice_value, std::uint32_t goal_threshold) {
     // FUN_00200018, verbatim. The comparison is unsigned in the original.
     if (slice_value == 0) return kSliceStatusNotAttempted;
     return static_cast<std::uint32_t>(slice_value) <= goal_threshold ? kSliceStatusWon
                                                                      : kSliceStatusGoalMissed;
 }
 
-int SliceStatusWord_00200068(std::int32_t slice_value, std::int32_t goal_threshold) {
+int EventTimeState::GetStatus(std::int32_t slice_value, std::int32_t goal_threshold) {
     // FUN_00200068, verbatim, including both "not set" sentinels and the signed comparison.
     if (slice_value == 0 || slice_value == 0x7fffffff) return kSliceStatusNotAttempted;
     return slice_value <= goal_threshold ? kSliceStatusWon : kSliceStatusGoalMissed;

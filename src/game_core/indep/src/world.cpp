@@ -27,3 +27,32 @@
 // Diagnostic text (not a callable signature): World::DoTimestep [0x002AFFF0]
 // Diagnostic text (not a callable signature): World::DoTimestep [0x002B0020]
 #include "game_core/indep/inc/World.hpp"
+
+#include "game_core/port/not_implemented.hpp"
+
+namespace hp2::recovered {
+// ELF 0x0014D338; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0014d338.md.
+void World::BuildCarTable() {
+    hp2::not_implemented("0x0014D338", "World::BuildCarTable (signature and full body unresolved)");
+}
+
+// ELF 0x0014D508; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0014d508.md.
+void World::GetCarByNumber() {
+    hp2::not_implemented("0x0014D508", "World::GetCarByNumber (signature and full body unresolved)");
+}
+
+// ELF 0x0014D638; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0014d638.md.
+void World::ResetTimeScale() {
+    hp2::not_implemented("0x0014D638", "World::ResetTimeScale (signature and full body unresolved)");
+}
+
+// ELF 0x0014E3E8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0014e3e8.md.
+void World::Sub_0014E3E8() {
+    hp2::not_implemented("0x0014E3E8", "World::Sub_0014E3E8 (signature and full body unresolved)");
+}
+
+// ELF 0x0014E440; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0014e440.md.
+void World::Sub_0014E440() {
+    hp2::not_implemented("0x0014E440", "World::Sub_0014E440 (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

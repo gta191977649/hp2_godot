@@ -11,7 +11,7 @@ void Sub_0018F808(Memory& m,std::uint32_t s,std::uint32_t values,std::uint32_t c
 
 // Retail 0x0018F838; E-0041-M01; E-0042-S001; exact Debug TU ..\indep\src\table.cpp
 namespace port::driving {
-float Sub_0018F838(Memory& m,std::uint32_t s,float value) {
+float Table::GetValue(Memory& m,std::uint32_t s,float value) {
     using namespace detail_group_0018f808;
     const auto data=m.word(s), count=m.word(s+4);
     return interpolate(value,m.scalar(s+8),m.scalar(s+0xc),m.scalar(s+0x10),count,
@@ -25,7 +25,7 @@ float Sub_0018F838(Memory& m,std::uint32_t s,float value) {
 
 // Retail 0x0018F9F0; E-0042-C077; E-0042-S001; exact Debug TU ..\indep\src\table.cpp
 namespace port::driving {
-float Sub_0018F9F0(Memory& m,std::uint32_t s,float value) {
+float Graph::GetValue(Memory& m,std::uint32_t s,float value) {
     using namespace detail_group_0018f808;
     const auto count=m.signed_word(s+4);const auto data=m.word(s);
     if(count<2) return m.scalar(data+4);
@@ -45,3 +45,52 @@ float Sub_0018F9F0(Memory& m,std::uint32_t s,float value) {
     return m.scalar(data+4);
 }
 }
+
+#include "game_core/indep/src/table.hpp"
+
+#include "game_core/port/not_implemented.hpp"
+
+namespace hp2::recovered {
+// ELF 0x0018FCB8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0018fcb8.md.
+void Average::Record() {
+    hp2::not_implemented("0x0018FCB8", "Average::Record (signature and full body unresolved)");
+}
+
+// ELF 0x0018FD50; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0018fd50.md.
+void Average::Reset() {
+    hp2::not_implemented("0x0018FD50", "Average::Reset (signature and full body unresolved)");
+}
+
+// ELF 0x0018FDA0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0018fda0.md.
+void Average::Flush() {
+    hp2::not_implemented("0x0018FDA0", "Average::Flush (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x0018F9F0; E-0042-C077; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018f9f0.md.
+void Graph::GetValue() {
+    hp2::not_implemented("0x0018F9F0", "Graph::GetValue (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x00190050; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00190050.md.
+void Linear::Init() {
+    hp2::not_implemented("0x00190050", "Linear::Init (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
+
+#include "game_core/indep/inc/Table.hpp"
+
+namespace hp2::recovered {
+// ELF 0x0018F808; E-0041-R04; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018f808.md.
+void Table::Sub_0018F808() {
+    hp2::not_implemented("0x0018F808", "Table::Sub_0018F808 (signature and full body unresolved)");
+}
+
+// ELF 0x0018F838; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018f838.md.
+void Table::GetValue() {
+    hp2::not_implemented("0x0018F838", "Table::GetValue (signature and full body unresolved)");
+}
+} // namespace hp2::recovered

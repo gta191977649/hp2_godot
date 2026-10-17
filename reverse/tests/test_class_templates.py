@@ -43,6 +43,7 @@ class ClassTemplateTests(unittest.TestCase):
     def test_unknown_paths_stay_at_root_and_confirmed_directories_have_evidence(self):
         classes, _, _, policy = MODULE.model()
         layout = json.loads((ROOT / 'reverse/classes/task0042-class-layout.json').read_text())
+        complete = json.loads((ROOT / 'reverse/classes/task0043-member-registry.json').read_text())
         decisions = json.loads((ROOT / "reverse/classes/source-path-decisions.json").read_text())
         decisions = {d["class_name"]: d for d in decisions["decisions"]}
         report = json.loads((ROOT / "reverse/classes/source-path-bindings.json").read_text())
@@ -52,6 +53,15 @@ class ClassTemplateTests(unittest.TestCase):
         self.assertEqual(set(report), {c["name"] for c in scoped})
         for cls in scoped:
             name = cls["name"]
+            if name in complete['classes']:
+                placement = complete['classes'][name]
+                self.assertEqual(cls['source'], placement['source'])
+                self.assertEqual(cls['header'], placement['header'])
+                self.assertEqual(report[name]['status'], 'confirmed_debug_translation_unit')
+                self.assertTrue(report[name]['definition_evidence'])
+                for key in ('source', 'header'):
+                    self.assertTrue((ROOT / cls[key]).is_file(), cls[key])
+                continue
             if name in layout['classes']:
                 placement = layout['classes'][name]
                 self.assertEqual(cls['source'], placement['source'])

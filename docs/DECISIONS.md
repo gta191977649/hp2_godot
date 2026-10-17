@@ -465,3 +465,8 @@ headers and unresolved entries as explicitly port-side partitions. Shared host
 projection headers and private helper namespaces avoid claiming an invented
 original header layout. Existing arithmetic bodies and throwing whole entries
 are preserved; constructor/destructor callable placeholders retain addresses.
+
+
+## TASK-0043: complete gap coverage and scoped name adoption
+
+Emit confirmed Retail methods only; catalogue unmapped Debug methods without invented addresses. Keep constructor/destructor/operator and ambiguous overload gap entries address-named when original signatures are unconfirmed. Use typed static host carriers to distinguish projected functions whose original owners differ. Never infer a struct or field name from a containing function address or matching Debug offset alone. The 25 removed aliases are only pinned sole-throw duplicates with canonical same-address gaps. Existing implementations remain intact.

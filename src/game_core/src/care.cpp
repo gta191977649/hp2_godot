@@ -113,7 +113,7 @@ std::array<float,28> Sub_00115978(const std::array<float,16>& matrix) {
     }
     return output;
 }
-CarUvFactors Sub_0010C158(std::uint16_t width, std::uint16_t height,
+CarUvFactors FixStripSTs(std::uint16_t width, std::uint16_t height,
                          std::uint16_t Field_0x4, std::uint16_t Field_0x6) {
     if(!width || !height || !Field_0x4 || !Field_0x6)
         throw std::invalid_argument("Invalid original texture UV scale");
@@ -201,7 +201,7 @@ CarRenderConfig read_car_render_config(const std::vector<std::uint8_t>& bytes,
     }
     throw std::runtime_error("Requested car code absent from original car config");
 }
-int Sub_00107600(float radius, float projection_scale,
+int GetPixelSize(float radius, float projection_scale,
                  const std::array<float, 3>& position,
                  const std::array<float, 3>& camera_position,
                  const std::array<float, 3>& camera_forward) {
@@ -235,7 +235,7 @@ port::CarRenderBindings CarRenderInfo::Sub_0011E860(const std::string& prefix,
     for (std::uint32_t i = 0; i < 4; ++i) {
         const auto letter = static_cast<char>('A' + (Field_0x538 == 2 && i > 0 ? i-1 : i));
         result.body[i] = {0x40u + i*24u, prefix + "_" + letter, {}, {}};
-        const auto hash=[](const std::string& value){return hp2::frontend::StringHash_002534A8(value.c_str());};
+        const auto hash=[](const std::string& value){return hp2::frontend::bStringHash(value.c_str());};
         const auto skin_name=prefix+"_SKIN"+std::to_string(skin);
         const bool use_b=i>1 && Field_0x538!=2;
         auto& replacements=result.body[i].texture_replacements;
@@ -308,7 +308,7 @@ std::array<float,16> Sub_0011B950(std::uint16_t angle){
     const auto z=Sub_0011B7D8(angle);
     return {{z[0],0,-z[1],0, 0,1,0,0, z[1],0,z[0],0, 0,0,0,1}};
 }
-std::array<float,16> Sub_0011B520(const std::array<float,3>& eye,const std::array<float,3>& target,const std::array<float,3>& up){
+std::array<float,16> eCreateLookAtMatrix(const std::array<float,3>& eye,const std::array<float,3>& target,const std::array<float,3>& up){
     const auto normalize=[](std::array<float,3> a){float square=a[0]*a[0];square+=a[1]*a[1];square+=a[2]*a[2];if(!(square>0)||!std::isfinite(square))throw std::invalid_argument("Degenerate original environment view");const float inverse=1.f/std::sqrt(square);for(auto& v:a)v*=inverse;return a;};
     const auto cross=[](const std::array<float,3>& a,const std::array<float,3>& b){return std::array<float,3>{{a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]}};};
     auto forward=normalize({{target[0]-eye[0],target[1]-eye[1],target[2]-eye[2]}});

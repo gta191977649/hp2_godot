@@ -58,7 +58,7 @@ void check_asset_resolution(FrontEndRuntime& runtime) {
         }
     }
     require(runtime.screen_count() >= 40, "unexpected screen count");
-    require(runtime.font(hp2::frontend::StringHash_002534A8("BUTTONSOUT")) != nullptr,
+    require(runtime.font(hp2::frontend::bStringHash("BUTTONSOUT")) != nullptr,
             "original zero-pair button font must remain available");
     require(resolved >= 500, "too few authored textures resolved: " + std::to_string(resolved));
     std::printf("  asset resolution: screens=%d resolved=%d missing=%d\n",
@@ -470,7 +470,7 @@ void check_event_tree(FrontEndRuntime& runtime) {
             "detail template expands original operands");
     require(start.number == 1, "an empty profile starts on event 1 (FUN_001F5D00's fallback)");
     // E-0039-F01/N01: original asset decode and event digit geometry, not a pixel oracle.
-    const auto number_hash = hp2::frontend::StringHash_002534A8("FONT_EVENTNUMBERS");
+    const auto number_hash = hp2::frontend::bStringHash("FONT_EVENTNUMBERS");
     const auto* number_font = runtime.font(number_hash);
     require(number_font && number_font->line_height == 98, "event font height is98, not offset28");
     const auto* number_template = widget_named(runtime,39,"EVENT_NUMBER");

@@ -23,7 +23,7 @@ inline std::int32_t signed_bits(std::uint32_t bits){std::int32_t result;std::mem
 inline void reset_dispatch(Memory& m,std::uint32_t code,std::uint32_t object,InitServices& services){
     switch(code){
     case 0x0019d848:Sub_0019D848(m,object);return;
-    case 0x001a4358:Sub_001A4358(m,object);return;
+    case 0x001a4358:Wheel::ComputeAuxiliaries(m,object);return;
     case 0x001a5fc0:
         if(!services.contact)hp2::not_implemented("0x001A5FC0","Contact provider is absent");
         Sub_001A5FC0(m,object,*services.contact);return;
@@ -34,7 +34,7 @@ inline void reset_dispatch(Memory& m,std::uint32_t code,std::uint32_t object,Ini
 }
 inline void refresh(Memory& m,std::uint32_t object){
     const auto body=m.word(object+0x94),wheel=m.word(object+0x90);
-    init::Sub_001A5F88(m.view(object,0xa0),m.scalar(object+0x78),m.vector(m.word(wheel+0xc)),m.vector(body+0x160));
+    init::Calibrate(m.view(object,0xa0),m.scalar(object+0x78),m.vector(m.word(wheel+0xc)),m.vector(body+0x160));
 }
 
 }

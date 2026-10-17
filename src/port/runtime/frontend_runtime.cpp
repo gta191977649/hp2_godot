@@ -391,13 +391,13 @@ bool FrontEndRuntime::event_tree_joy_event(int joy_event) {
                 if (intro) sound = 5; // FUN_001F9598's returned sound survives the restore.
             }
             if (event_tree_.state() == 1) {
-                profile_.SetStartNode_001F5D28(event_tree_.tree_type(), event_tree_.cursor_info().number);
+                profile_.SetSelectedEvent(event_tree_.tree_type(), event_tree_.cursor_info().number);
             }
             break;
         case hp2::input::JOY_EVENT_MENU_SQUARE:
             if (event_tree_.state() == 2) {
                 const auto& record = event_tree_.selected_tree()->records.at(event_tree_.cursor());
-                if (record.Field_0x3E < 1) sound = 8;
+                if (record.nRewards < 1) sound = 8;
                 else {
                     event_tree_.show_preview();
                     event_car_logos_.Sub_001F8D08();
@@ -407,7 +407,7 @@ bool FrontEndRuntime::event_tree_joy_event(int joy_event) {
                 }
             } else if (event_tree_.state() == 5) {
                 event_tree_.close_preview(); sound = 0x18;
-                event_car_logos_.Sub_001F8CF0(); event_track_logos_.Sub_001F91D0();
+                event_car_logos_.Sub_001F8CF0(); event_track_logos_.Show();
             }
             break;
         case hp2::input::JOY_EVENT_MENU_BACK:
@@ -418,7 +418,7 @@ bool FrontEndRuntime::event_tree_joy_event(int joy_event) {
             }
             sound = event_tree_.back();
             if (event_tree_.state() == 6) {
-                event_car_logos_.Sub_001F8CF0(); event_track_logos_.Sub_001F91D0();
+                event_car_logos_.Sub_001F8CF0(); event_track_logos_.Show();
             }
             break;
         default: return false;
@@ -495,7 +495,7 @@ void FrontEndRuntime::apply_event_tree_widgets() {
     // placeholder, which is the literal string "This Will Change" -- the title the port was
     // showing.
     const std::uint32_t title_hash =
-        hp2::frontend::StringHash_002534A8(hp2::frontend::kWidgetEventTree_A01F24F0);
+        hp2::frontend::bStringHash(hp2::frontend::kWidgetEventTree_A01F24F0);
     hp2::frontend::SetWidgetStringId_001449A8(screen, title_hash, event_tree_.title_string_id());
     // FUN_00140EA8 clears the authored placeholder and leaves the text system to resolve the
     // new id at draw time (FUN_0021E560). The port resolves string ids once at load, so an id
@@ -519,10 +519,10 @@ void FrontEndRuntime::apply_event_tree_widgets() {
     // FUN_001F9F50 / E-0022-T: only state 7 hides help.
     const bool browsing = event_tree_.state() != 7;
     hp2::frontend::SetWidgetVisible_00144968(
-        screen, hp2::frontend::StringHash_002534A8(hp2::frontend::kWidgetHelpText_0880AC4C),
+        screen, hp2::frontend::bStringHash(hp2::frontend::kWidgetHelpText_0880AC4C),
         browsing);
     hp2::frontend::SetWidgetVisible_00144968(
-        screen, hp2::frontend::StringHash_002534A8(hp2::frontend::kWidgetHelpButton_027F7503),
+        screen, hp2::frontend::bStringHash(hp2::frontend::kWidgetHelpButton_027F7503),
         browsing);
     // FUN_001F96B8 hides the authored leaf templates; leaf draw emits instances.
     hp2::frontend::SetClassVisible_001454E8(screen, 0xa01bcdc6, false);
@@ -543,7 +543,7 @@ std::string FrontEndRuntime::event_car_name(int index) const {
     // FUN_001F6220 passes the resolved car name through FUN_0021E508. Absent
     // hash translation returns the original text, as that function explicitly does.
     std::string translated;
-    if (language_->lookup_hash(hp2::frontend::StringHash_002534A8(text.c_str()), translated))
+    if (language_->lookup_hash(hp2::frontend::bStringHash(text.c_str()), translated))
         return translated;
     return text;
 }
@@ -561,11 +561,11 @@ void FrontEndRuntime::bind_event_tree_text() {
     const auto localize = [this](std::uint32_t id) { return event_localize(id); };
     const auto ticks = static_cast<std::uint32_t>(std::fmod(menu_clock_seconds_ * 4000, 4294967296.0));
     std::vector<std::uint32_t> car_logos, track_logos;
-    for (int i = 0; i < record.Field_0x3B && i < 8; ++i)
-        if (const auto* row = tree.Sub_00200878(index, i))
+    for (int i = 0; i < record.nCars && i < 8; ++i)
+        if (const auto* row = tree.GetCar(index, i))
             car_logos.push_back(event_names_.car_logo_hash((*row >> 16) & 0xff));
-    for (int i = 0; i < record.Field_0x3C && i < 12; ++i)
-        if (const auto* row = tree.Sub_002008F8(index, i))
+    for (int i = 0; i < record.nTracks && i < 12; ++i)
+        if (const auto* row = tree.GetTrack(index, i))
             track_logos.push_back(event_names_.track_logo_hash(*row & 0xff, (*row >> 9) & 1, port_language_));
     event_car_logos_.Sub_001F8E18(car_logos, ticks);
     event_track_logos_.Sub_001F91F0(track_logos, ticks);
@@ -585,8 +585,8 @@ void FrontEndRuntime::bind_event_tree_text() {
         ? hp2::frontend::Sub_00200E78(tree, profile, index, status, localize, timer) : std::string{};
     event_pending_status_ = hp2::frontend::Sub_001F60E8(
         status, event_localize(hp2::frontend::Sub_001F60E8(status)),
-        tree.Sub_002012D8(profile, index), hp2::frontend::Sub_00201350(record), result);
-    const auto reward = hp2::frontend::Sub_001F6220(tree.Sub_00200938(index, 0),
+        tree.Sub_002012D8(profile, index), hp2::frontend::GetRaceCount(record), result);
+    const auto reward = hp2::frontend::Sub_001F6220(tree.GetReward(index, 0),
         event_localize(0x101d8), [this](int car) { return event_car_name(car); },
         [this](int track, int direction) { return event_track_name(track, direction); });
     event_pending_reward_ = reward;
@@ -598,8 +598,8 @@ void FrontEndRuntime::bind_event_tree_text() {
     event_overlay_pending_ = true;
     if (scrolling_text_) scrolling_text_->Bind_00249518(event_localize(record.string_id_0xB0));
     // FUN_001F6770: choose completed-track ordinal, then fall back to row zero.
-    const auto* track = tree.Sub_002008F8(index, tree.Sub_002012D8(profile, index));
-    if (!track) track = tree.Sub_002008F8(index, 0);
+    const auto* track = tree.GetTrack(index, tree.Sub_002012D8(profile, index));
+    if (!track) track = tree.GetTrack(index, 0);
     if (track) set_text(screens_[17], 0xf601f2d4,
                         event_track_name(*track & 0xff, (*track >> 9) & 1));
     set_text(screens_[17], 0x7a31036b, hp2::frontend::Sub_001F5F88(
@@ -643,7 +643,7 @@ void FrontEndRuntime::update_event_tree_overlay(float delta) {
         if (widget.class_hash != 0xa2a16ea1) continue;
         const auto* authored = hp2::frontend::FindWidget_00143D50(authored_screens_[39], widget.name_hash, 0);
         if (authored) widget.x = authored->x + x - 382;
-        hp2::frontend::SetWidgetAlpha_00140ED0(widget, static_cast<int>(alpha));
+        hp2::frontend::SetAlpha(widget, static_cast<int>(alpha));
     }
 }
 
@@ -757,7 +757,7 @@ MenuState FrontEndRuntime::menu_joy_event(int pad_index, int joy_event, bool pre
                 if (menu_screen_index_ == kEventTreeScreen && event_tree_.loaded() &&
                     event_tree_.state() == hp2::frontend::kViewStateBrowsing_001FAF60) {
                     const auto node = event_tree_.cursor_info();
-                    profile_.SetStartNode_001F5D28(event_tree_.tree_type(), node.number);
+                    profile_.SetSelectedEvent(event_tree_.tree_type(), node.number);
                 }
                 const auto event = port::frontend::query_back(registration->handler_address, context, services);
                 hp2::frontend::PlayMenuSound_0016E038(event.sound);
@@ -786,7 +786,7 @@ MenuState FrontEndRuntime::menu_state() const {
 
     auto* list = menu_group_->child_0x08;
     state.item_count = static_cast<int>(list->count());
-    state.current = static_cast<int>(list->CurrentIndex_0016A130());
+    state.current = static_cast<int>(list->GetCurrentItemNumber());
 
     const hp2::frontend::MenuThing_00169740* current = list->current_0x08;
     for (hp2::frontend::MenuThing_00169740* item : list->items()) {
@@ -842,7 +842,7 @@ void FrontEndRuntime::open_menu_animation(int screen_index) {
     // FUN_00248870(instance+0x23C, document, ANIMATING_MENUITEM, gp-0x3F08). (E-0016-08)
     if (screen_index != 0 && screen_index != 1 && screen_index != 2 && screen_index != 22) return;
     highlight_animation_.Construct_00248870(&screens_[static_cast<std::size_t>(screen_index)],
-        hp2::frontend::StringHash_002534A8("ANIMATING_MENUITEM"),
+        hp2::frontend::bStringHash("ANIMATING_MENUITEM"),
         hp2::frontend::kAnimGhostColour_gp_0x3F08, 0);
     // Correction (E-0016-08): the 2 s period belongs to the manager-level object FUN_0016FBB0
     // builds at manager+0x1B8, which binds GLOBAL_ANIMATING_MENUITEM against the LOADING_TRACK
@@ -859,7 +859,7 @@ void FrontEndRuntime::bind_menu_animation(std::uint32_t name_hash) {
     std::snprintf(mask, sizeof(mask), hp2::frontend::kMaskNameFormat_002BEFA0,
                   hp2::frontend::MenuItemIndexFromNameHash_0016A330(name_hash));
     hp2::frontend::PlaceSelectionBars_00216880(*highlight_animation_.screen_0x00,
-        hp2::frontend::StringHash_002534A8(mask), [this](const auto& w) { return measure_widget(w); });
+        hp2::frontend::bStringHash(mask), [this](const auto& w) { return measure_widget(w); });
 }
 
 void FrontEndRuntime::bind_scrolling_text(std::uint32_t name_hash) {
@@ -964,7 +964,7 @@ void FrontEndRuntime::title_visual_state(bool movie_state, bool can_start) {
     // controls PRESS_START_1 with the strict 0016F4F8 time gate. Movie widget slots are stopped.
     for (auto& widget : screens_[22].widgets) {
         if (widget.class_hash == 0xB73C8D23) widget.visible = movie_state ? 0 : 1;
-        if (widget.name_hash == hp2::frontend::StringHash_002534A8("PRESS_START_1"))
+        if (widget.name_hash == hp2::frontend::bStringHash("PRESS_START_1"))
             widget.visible = !movie_state && can_start ? 1 : 0;
         if (!movie_state && (widget.name_hash == 0x3ACF2D73 || widget.name_hash == 0xBFAEBF79))
             widget.visible = 0;
@@ -1007,9 +1007,9 @@ FrameStats FrontEndRuntime::build_frame(render::Resources& resources, render::Fr
         // widget, so hand the authored record over instead of inventing a size.
         const hp2::frontend::FeWidget* panel = hp2::frontend::FindWidget_00143D50(
             screens_[static_cast<std::size_t>(menu_screen_index_)],
-            hp2::frontend::StringHash_002534A8(hp2::frontend::kWidgetEventPanel_A3B23510), 0);
+            hp2::frontend::bStringHash(hp2::frontend::kWidgetEventPanel_A3B23510), 0);
         const auto* number = hp2::frontend::FindWidget_00143D50(
-            screens_[39], hp2::frontend::StringHash_002534A8("EVENT_NUMBER"), 1);
+            screens_[39], hp2::frontend::bStringHash("EVENT_NUMBER"), 1);
         const auto overlay = append_event_tree(event_tree_, sizes, resources, frame, panel, number,
                                                &screens_[39]);
         stats.quads += overlay.panels + overlay.connectors * 3 + overlay.missing_panels * 4;

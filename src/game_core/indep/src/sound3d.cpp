@@ -20,3 +20,15 @@ void Sound3d::UpdateCamRelativeDistAndVelocity() {
     hp2::not_implemented("0x00208C78", "Sound3d::UpdateCamRelativeDistAndVelocity (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+namespace hp2::recovered {
+// ELF 0x00208FE0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00208fe0.md.
+void Sound3d::AzimuthToPan() {
+    hp2::not_implemented("0x00208FE0", "Sound3d::AzimuthToPan (signature and full body unresolved)");
+}
+
+// ELF 0x002091A0; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/002091a0.md.
+void Sound3d::Sub_002091A0() {
+    hp2::not_implemented("0x002091A0", "Sound3d::Sub_002091A0 (signature and full body unresolved)");
+}
+} // namespace hp2::recovered
