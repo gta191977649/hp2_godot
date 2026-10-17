@@ -145,6 +145,30 @@
       "source": "src/game_core/indep/src/AverageInRealController.cpp"
     },
     {
+      "class_name": "BaseAICarSound",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "BaseCarSound",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "BasePlayerCarSound",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "BaseTireSound",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
       "class_name": "BeACopChallengeSetup",
       "status": "unknown",
       "candidates": [],
@@ -235,7 +259,7 @@
         "observation": "Named allocation result v0 is moved to a0 before calling 00204098; that entry initializes the object and passes the source path with source lines 0x7C/0x7E/0x7F to internal allocations."
       },
       "header": "src/game_core/indep/src/BeltMover.hpp",
-      "source": "src/game_core/indep/src/BeltMover.cpp"
+      "source": "src/game_core/indep/src/beltmover.cpp"
     },
     {
       "class_name": "BestLapTimes",
@@ -274,13 +298,31 @@
       "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
     },
     {
+      "class_name": "CarController",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
       "class_name": "CarDamage",
       "status": "unknown",
       "candidates": [],
       "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
     },
     {
+      "class_name": "CarDriver",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
       "class_name": "CarList",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "CarMover",
       "status": "unknown",
       "candidates": [],
       "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
@@ -420,8 +462,8 @@
         "binding_kind": "confirmed named constructor with source-file/line allocation arguments",
         "observation": "Named allocation feeds a0 to 0015E7B0; that entry stores vtable 002B17D0 and allocates internal objects with this source path and lines 0x10F6/0x10F7."
       },
-      "header": "src/game_core/indep/src/CubicCameraMover.hpp",
-      "source": "src/game_core/indep/src/CubicCameraMover.cpp"
+      "header": "src/game_core/indep/inc/CameraMover.hpp",
+      "source": "src/game_core/indep/src/cameramover.cpp"
     },
     {
       "class_name": "DebugPauseMenu",
@@ -497,6 +539,12 @@
     },
     {
       "class_name": "EndGameMenuItem",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "EndGameMenusBase",
       "status": "unknown",
       "candidates": [],
       "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
@@ -731,6 +779,12 @@
     },
     {
       "class_name": "PhysicsSystem",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "PhysicsVehicle",
       "status": "unknown",
       "candidates": [],
       "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
@@ -980,6 +1034,12 @@
       "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
     },
     {
+      "class_name": "SirenSound3d",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
       "class_name": "SlotPool",
       "status": "unknown",
       "candidates": [],
@@ -993,6 +1053,12 @@
     },
     {
       "class_name": "Smokeable",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "Sound3d",
       "status": "unknown",
       "candidates": [],
       "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
@@ -1100,6 +1166,12 @@
       "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
     },
     {
+      "class_name": "TrackedController",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
       "class_name": "TrafficCar",
       "status": "unknown",
       "candidates": [],
@@ -1139,7 +1211,7 @@
         "observation": "Listing passes the named allocation result in a0 to 00174EC0 and stores its returned object; the entry allocates internal storage with this source path and line 0x109. Decompiler parameter/register presentation is not an original ABI claim."
       },
       "header": "src/game_core/indep/src/VisibleDrivingLine.hpp",
-      "source": "src/game_core/indep/src/VisibleDrivingLine.cpp"
+      "source": "src/game_core/indep/src/player.cpp"
     },
     {
       "class_name": "World",
@@ -1214,7 +1286,7 @@
         "observation": "Named allocation feeds a0 to 00160298; its internal allocations pass the source path with lines 0x23D/0x24E/0x262/0x272/0x27B."
       },
       "header": "src/game_core/indep/src/ZoneFreezeCameraMover.hpp",
-      "source": "src/game_core/indep/src/ZoneFreezeCameraMover.cpp"
+      "source": "src/game_core/indep/src/zonecameras.cpp"
     },
     {
       "class_name": "ZonePreviewCameraMover",
@@ -1343,7 +1415,7 @@
         "observation": "Named allocation feeds a0 to 00161F98; internal allocations pass this path and source lines 0x419/0x429/0x442/0x457/0x46B/0x47B/0x485."
       },
       "header": "src/game_core/indep/src/ZonePreviewCameraMover.hpp",
-      "source": "src/game_core/indep/src/ZonePreviewCameraMover.cpp"
+      "source": "src/game_core/indep/src/zonecameras.cpp"
     },
     {
       "class_name": "bFile",
@@ -1367,11 +1439,17 @@
         "binding_kind": "class-qualified field assertion and source-path argument in the same assertion call",
         "observation": "The expression bStrLen(filename)+1 < sizeof(bFile::Filename) and src\\bFile.cpp are passed to 00250AC0 together, source line 0x2B. Filename remains a field expression, not an adopted method name. The prefix before src\\ and original declaration header are unknown."
       },
-      "header": "src/game_core/src/bFile.hpp",
+      "header": "src/game_core/inc/bFile.hpp",
       "source": "src/game_core/src/bFile.cpp"
     },
     {
       "class_name": "cDBFileSys",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
+    },
+    {
+      "class_name": "cDBFilesBase",
       "status": "unknown",
       "candidates": [],
       "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."

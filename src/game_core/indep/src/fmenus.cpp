@@ -1159,7 +1159,7 @@ void tAnimatedBlurb::Update_00249348(float delta_seconds) {
     }
 }
 
-std::int32_t Sub_0025A3D0(std::int32_t bound, std::uint32_t& state) {
+std::int32_t bRandom(std::int32_t bound, std::uint32_t& state) {
     if (bound == 0) hp2::not_implemented("0x0025A3D0", "original zero-bound trap");
     const std::uint32_t old = state;
     const std::uint32_t a = old ^ 0x1d872b41u;

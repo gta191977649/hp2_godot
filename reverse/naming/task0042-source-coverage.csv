@@ -1,0 +1,563 @@
+original_identifier,retail_address,adopted_original_name,candidate_reference_name,status,address_token_remains_in_code,evidence_id
+Sub_00107600,0x00107600,"eView::GetPixelSize(bVector3 const *, float)",,adopted_static_name,True,E-0042-C001
+Sub_0010C158,0x0010C158,eSolid::FixStripSTs(void),,adopted_static_name,True,E-0042-C002
+Sub_00115978,0x00115978,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00116828,0x00116828,,"eLightMaterial::BuildDmaData(unsigned int *, eLightMaterialData *)",candidate_only,True,E-0041-M01
+Sub_0011B248,0x0011B248,"eMulMatrix(bMatrix4 *, bMatrix4 *, bMatrix4 *)",,adopted_static_name,False,E-0041-M01
+Sub_0011B520,0x0011B520,"eCreateLookAtMatrix(bMatrix4 *, bVector3 &, bVector3 &, bVector3 &)",,adopted_static_name,True,E-0042-C004
+Sub_0011B6E0,0x0011B6E0,,eSin(float),candidate_only,True,E-0041-M01
+Sub_0011B7D8,0x0011B7D8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0011B950,0x0011B950,,"eRotateY(bMatrix4 *, bMatrix4 *, unsigned short)",candidate_only,True,E-0041-M01
+Sub_0011BD90,0x0011BD90,"eOrthonormalizeMatrix(bMatrix4 *, bMatrix4 *)",,adopted_static_name,False,E-0041-M01
+Sub_0011C180,0x0011C180,"eStripDataE::GetElementRGBA(int, unsigned short **)",,adopted_static_name,False,E-0041-R15
+Sub_0011C248,0x0011C248,eStripData::GetNumVerts(void),,adopted_static_name,False,E-0041-R16
+Sub_0011C268,0x0011C268,"eStripData::GetST0(int, float *, float *)",,adopted_static_name,False,E-0041-R17
+Sub_0011C2B8,0x0011C2B8,"eStripData::GetXYZ(int, float *, float *, float *)",,adopted_static_name,False,E-0041-R18
+Sub_0011E860,0x0011E860,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00120EA8,0x00120EA8,,CarRenderInfo::CalculateTireBlur(int),candidate_only,True,E-0041-M01
+Sub_00120EF8,0x00120EF8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0012C938,0x0012C938,"cDBFileSys::Service(int, int)",,adopted_static_name,False,E-0041-V01
+Sub_0012CCA8,0x0012CCA8,"cDBFileSys::SetState(eFILE_SYS_STATES, void (*)(void *), void *)",,adopted_static_name,False,E-0041-V01
+Sub_0012CD00,0x0012CD00,"cDBFileSys::Format(int, int)",,adopted_static_name,False,E-0041-V01
+Sub_0012CD78,0x0012CD78,"cDBFileSys::Unformat(int, int)",,adopted_static_name,False,E-0041-V01
+Sub_0012D1A0,0x0012D1A0,cDBFileSys::CalculateFreeSpaceRequired(int),,adopted_static_name,True,E-0041-V01
+Sub_0012D1E0,0x0012D1E0,cDBFileSys::CalculateFreeSpaceRequired(eFILE_TYPE),,adopted_static_name,True,E-0041-V01
+Sub_0012D220,0x0012D220,"cDBFileSys::CheckFreeSpace(int, int)",,adopted_static_name,False,E-0041-V01
+Sub_0012D2A8,0x0012D2A8,cDBFileSys::GetFreeSpaceOnDevice(void),,adopted_static_name,False,E-0041-V01
+Sub_0012D2E8,0x0012D2E8,"cDBFileSys::GetFileListing(int, int)",,adopted_static_name,False,E-0041-V01
+Sub_0012D3D8,0x0012D3D8,cDBFileSys::CheckDevice(void),,adopted_static_name,False,E-0041-V01
+Sub_0012D518,0x0012D518,cDBFileSys::IsDevicePresent(unsigned int),,adopted_static_name,False,E-0041-V01
+Sub_0012D560,0x0012D560,cDBFileSys::GetCurrentDevice(void),,adopted_static_name,False,E-0041-V01
+Sub_0012D5F8,0x0012D5F8,cDBFileSys::GetNextDevice(void),,adopted_static_name,False,E-0041-V01
+Sub_0012D690,0x0012D690,cDBFileSys::GetPrevDevice(void),,adopted_static_name,False,E-0041-V01
+Sub_0012DDC0,0x0012DDC0,cDBFileSys::SetLastError(void),,adopted_static_name,False,E-0041-V01
+Sub_0012DEE0,0x0012DEE0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0012E0F0,0x0012E0F0,cDBFileSys::~cDBFileSys(void),,adopted_static_name,True,E-0041-V01
+Sub_0012E190,0x0012E190,cDBFileSys::GetFileName(int),,adopted_static_name,False,E-0041-V01
+Sub_0012E1A8,0x0012E1A8,cDBFileSys::GetFileCount(void),,adopted_static_name,False,E-0041-V01
+Sub_0012E1B8,0x0012E1B8,cDBFilesBase::SetLastError(void),,adopted_static_name,False,E-0041-V01
+Sub_0012E1C0,0x0012E1C0,cDBFilesBase::GetState(void),,adopted_static_name,False,E-0041-V01
+Sub_0012E1C8,0x0012E1C8,"cDBFilesBase::SetState(eFILE_SYS_STATES, void (*)(void *), void *)",,adopted_static_name,False,E-0041-V01
+Sub_0012E1F0,0x0012E1F0,cDBFilesBase::GetFreeSpaceOnDevice(void),,adopted_static_name,False,E-0041-V01
+Sub_0012E1F8,0x0012E1F8,cDBFilesBase::GetMaxDeviceSupported(void),,adopted_static_name,False,E-0041-V01
+Sub_0012E200,0x0012E200,cDBFilesBase::GetPrevDevice(void),,adopted_static_name,False,E-0041-V01
+Sub_0012E208,0x0012E208,cDBFilesBase::GetNextDevice(void),,adopted_static_name,False,E-0041-V01
+Sub_0012E210,0x0012E210,cDBFilesBase::GetCurrentDevice(void),,adopted_static_name,False,E-0041-V01
+Sub_0012E218,0x0012E218,cDBFilesBase::IsDevicePresent(unsigned int),,adopted_static_name,False,E-0041-V01
+Sub_0012E220,0x0012E220,cDBFilesBase::CheckDevice(void),,adopted_static_name,False,E-0041-V01
+Sub_0012E228,0x0012E228,"cDBFilesBase::GetFileName(char *, unsigned int)",,adopted_static_name,False,E-0041-V01
+Sub_0012E230,0x0012E230,cDBFilesBase::GetFileName(int),,adopted_static_name,True,E-0041-V01
+Sub_0012E238,0x0012E238,cDBFilesBase::GetFileCount(void),,adopted_static_name,False,E-0041-V01
+Sub_0012E240,0x0012E240,"cDBFilesBase::GetFileListing(int, int)",,adopted_static_name,False,E-0041-V01
+Sub_0012E248,0x0012E248,"cDBFilesBase::GetDeviceName(unsigned int, char *)",,adopted_static_name,False,E-0041-V01
+Sub_0012E250,0x0012E250,"cDBFilesBase::CheckFreeSpace(int, int)",,adopted_static_name,False,E-0041-V01
+Sub_0012E258,0x0012E258,cDBFilesBase::CalculateFreeSpaceRequired(int),,adopted_static_name,False,E-0041-V01
+Sub_0012E260,0x0012E260,cDBFilesBase::CalculateFreeSpaceRequired(eFILE_TYPE),,adopted_static_name,True,E-0041-V01
+Sub_0012E268,0x0012E268,cDBFilesBase::SetFileIndex(unsigned int),,adopted_static_name,False,E-0041-V01
+Sub_0012E270,0x0012E270,"cDBFilesBase::SetFileData(char *, void *, int)",,adopted_static_name,False,E-0041-V01
+Sub_0012E2B8,0x0012E2B8,"cDBFilesBase::Unformat(int, int)",,adopted_static_name,False,E-0041-V01
+Sub_0012E2C0,0x0012E2C0,"cDBFilesBase::Format(int, int)",,adopted_static_name,False,E-0041-V01
+Sub_0012E2C8,0x0012E2C8,"cDBFilesBase::Service(int, int)",,adopted_static_name,False,E-0041-V01
+Sub_0012E2D0,0x0012E2D0,cDBFilesBase::~cDBFilesBase(void),,adopted_static_name,True,E-0041-V01
+Sub_0012FFC8,0x0012FFC8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00130090,0x00130090,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00130108,0x00130108,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00130188,0x00130188,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00130238,0x00130238,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00130890,0x00130890,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00130958,0x00130958,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001309F0,0x001309F0,CarMover::DoSnapshot(ReplaySnapshot *),,adopted_static_name,False,E-0041-V01
+Sub_00133070,0x00133070,Car::PleaseResetMeLater(void),,adopted_static_name,False,E-0042-U013
+Sub_00133130,0x00133130,Car::IsBlinking(void),,adopted_static_name,False,E-0042-U014
+Sub_00135E18,0x00135E18,Car::ShouldVisualEffectsBeGenerated(void),,adopted_static_name,False,E-0042-C008
+Sub_00135EB8,0x00135EB8,Car::GetPostCollisionYawControlBoost(void),,adopted_static_name,False,E-0042-C009
+Sub_00136B78,0x00136B78,CarMover::~CarMover(void),,adopted_static_name,True,E-0042-U015
+Sub_00136BB8,0x00136BB8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00136BC0,0x00136BC0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00136BD0,0x00136BD0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00136BD8,0x00136BD8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00136BE0,0x00136BE0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00136BE8,0x00136BE8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00136C00,0x00136C00,CarDriver::GetSteerToPoint(void),,adopted_static_name,True,E-0041-V01
+Sub_00136C08,0x00136C08,CarDriver::SetPhysicsMode(int),,adopted_static_name,True,E-0041-V01
+Sub_00136C10,0x00136C10,CarDriver::GetDesiredTimeToSpeed(void),,adopted_static_name,True,E-0041-V01
+Sub_00136C20,0x00136C20,CarDriver::GetDesiredSpeed(void),,adopted_static_name,True,E-0041-V01
+Sub_00136C30,0x00136C30,CarDriver::ClearSteeringMemory(void),,adopted_static_name,True,E-0041-V01
+Sub_00136C38,0x00136C38,CarDriver::ZeroSteeringMemory(void),,adopted_static_name,True,E-0041-V01
+Sub_00136C40,0x00136C40,CarDriver::MaxSpeedToTarget(DriveTarget *),,adopted_static_name,True,E-0041-V01
+Sub_00136C50,0x00136C50,CarDriver::IsHonking(void),,adopted_static_name,True,E-0041-V01
+Sub_00136C58,0x00136C58,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00136C60,0x00136C60,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00136C68,0x00136C68,CarDriver::SetSteerToPoint(bVector2 *),,adopted_static_name,True,E-0041-V01
+Sub_00136C70,0x00136C70,CarDriver::SetTarget(DriveTarget *),,adopted_static_name,True,E-0041-V01
+Sub_00136CE8,0x00136CE8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00136CF0,0x00136CF0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00136D00,0x00136D00,CarDriver::~CarDriver(void),,adopted_static_name,True,E-0042-C010
+Sub_00136DD0,0x00136DD0,,Timer::SetTime(float),candidate_only,True,E-0041-M01
+Sub_00137100,0x00137100,"PhysicsCar::PhysicsCar(CarTypeInfo *, CarDriver *, Car *)",,adopted_static_name,True,E-0042-C012
+Sub_00137450,0x00137450,PhysicsCar::DoSnapshot(ReplaySnapshot *),,adopted_static_name,False,E-0041-V01
+Sub_001375F0,0x001375F0,PhysicsCar::Calibrate(void),,adopted_static_name,True,E-0042-C013
+Sub_00137708,0x00137708,PhysicsCar::~PhysicsCar(void),,adopted_static_name,True,E-0041-V01
+Sub_00137788,0x00137788,PhysicsCar::ComputeAuxiliaries(void),,adopted_static_name,True,E-0041-V01
+Sub_001377D8,0x001377D8,PhysicsCar::CheckDampingSuitability(void),,adopted_static_name,False,E-0042-U026
+Sub_00137938,0x00137938,PhysicsCar::BottomOut(void),,adopted_static_name,False,E-0042-C014
+Sub_00137C88,0x00137C88,"YawFrictionBoost(float, float, float, float, float, int, float &, float)",,adopted_static_name,False,E-0042-C015
+Sub_00137D90,0x00137D90,PhysicsCar::Move(float),,adopted_static_name,False,E-0041-R01
+Sub_00138CF8,0x00138CF8,PhysicsCar::InitializeStateFromCar(void),,adopted_static_name,False,E-0042-U027
+Sub_00138E08,0x00138E08,PhysicsCar::ResolveForces(void),,adopted_static_name,False,E-0041-V01
+Sub_00138F38,0x00138F38,PhysicsCar::IterateForces(void),,adopted_static_name,False,E-0042-C016
+Sub_00139188,0x00139188,PhysicsCar::UpdateCar(float),,adopted_static_name,False,E-0042-C017
+Sub_00139490,0x00139490,PhysicsCar::SetBoost(float),,adopted_static_name,False,E-0042-U028
+Sub_00139518,0x00139518,PhysicsCar::JumpStabilizer(void),,adopted_static_name,False,E-0042-C018
+Sub_001395B0,0x001395B0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00139678,0x00139678,PhysicsVehicle::~PhysicsVehicle(void),,adopted_static_name,True,E-0042-U030
+Sub_00139760,0x00139760,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001398E8,0x001398E8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00139968,0x00139968,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00139980,0x00139980,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00139B28,0x00139B28,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00139B68,0x00139B68,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00139C48,0x00139C48,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0013A3E0,0x0013A3E0,PsychoDriver::SetTarget(DriveTarget *),,adopted_static_name,False,E-0042-C019
+Sub_0013A638,0x0013A638,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0013A658,0x0013A658,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0013A678,0x0013A678,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0013AC80,0x0013AC80,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0013ACD8,0x0013ACD8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0013ACE8,0x0013ACE8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0013ACF0,0x0013ACF0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0013AD00,0x0013AD00,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0013AD10,0x0013AD10,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0013AD90,0x0013AD90,,RealDriver::RealDriver(Car *),candidate_only,True,E-0041-M01
+Sub_0013AE58,0x0013AE58,RealDriver::~RealDriver(void),,adopted_static_name,True,E-0041-V01
+Sub_0013AEB8,0x0013AEB8,RealDriver::DoSnapshot(ReplaySnapshot *),,adopted_static_name,False,E-0041-V01
+Sub_0013B080,0x0013B080,RealDriver::AddJoyHandlers(void),,adopted_static_name,False,E-0041-V01
+Sub_0013B250,0x0013B250,RealDriver::RemoveJoyHandlers(void),,adopted_static_name,False,E-0041-V01
+Sub_0013B3D0,0x0013B3D0,RealDriver::SetLowGear(void),,adopted_static_name,False,E-0041-V01
+Sub_0013B3F8,0x0013B3F8,RealDriver::Drive(float),,adopted_static_name,False,E-0041-V01
+Sub_0013C420,0x0013C420,RealDriver::StartHonkHorn(void),,adopted_static_name,False,E-0041-V01
+Sub_0013C460,0x0013C460,RealDriver::StopHonkHorn(void),,adopted_static_name,False,E-0041-V01
+Sub_0013CAE0,0x0013CAE0,RealDriver::GetDriverNumber(void),,adopted_static_name,False,E-0041-V01
+Sub_0013CAF0,0x0013CAF0,"RealDriver::SetDesiredSpeed(float, float, bool)",,adopted_static_name,False,E-0041-V01
+Sub_00152070,0x00152070,"TopologyCoordinate::GetElevation(bVector3 const *, TerrainType *, bVector3 *, bool *)",,adopted_static_name,False,E-0042-C021
+Sub_00153458,0x00153458,,"GetRoadNoiseGridValue(int, int)",candidate_only,True,E-0041-M01
+Sub_00153498,0x00153498,,"GetRoadNoise(bVector2 *, TerrainType)",candidate_only,True,E-0041-M01
+Sub_001577D0,0x001577D0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001577D8,0x001577D8,,CameraMover::Enable(void),candidate_only,True,E-0041-M01
+Sub_00157850,0x00157850,,CameraMover::Disable(void),candidate_only,True,E-0041-M01
+Sub_00157920,0x00157920,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00157E48,0x00157E48,,"OrbitCarCameraMover::OrbitCarCameraMover(int, Car *, JoystickPort)",candidate_only,True,E-0041-M01
+Sub_00158080,0x00158080,,OrbitCarCameraMover::~OrbitCarCameraMover(void),candidate_only,True,E-0041-M01
+Sub_001580E0,0x001580E0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00158100,0x00158100,,OrbitCarCameraMover::AddJoyHandlers(void),candidate_only,True,E-0041-M01
+Sub_001581F8,0x001581F8,,OrbitCarCameraMover::RemoveJoyHandlers(void),candidate_only,True,E-0041-M01
+Sub_00158298,0x00158298,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00158800,0x00158800,,"BumperCameraMover::BumperCameraMover(int, Car *, CameraDataItems &)",candidate_only,True,E-0041-M01
+Sub_00158910,0x00158910,,BumperCameraMover::~BumperCameraMover(void),candidate_only,True,E-0041-M01
+Sub_001589A8,0x001589A8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00158A68,0x00158A68,,BumperCameraMover::Update(void),candidate_only,True,E-0041-M01
+Sub_00158F78,0x00158F78,,"RearViewMirrorCameraMover::RearViewMirrorCameraMover(int, Car *)",candidate_only,True,E-0041-M01
+Sub_00158FE0,0x00158FE0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00158FF8,0x00158FF8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00159130,0x00159130,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00159490,0x00159490,,TrackCarCameraMover::~TrackCarCameraMover(void),candidate_only,True,E-0041-M01
+Sub_00159520,0x00159520,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00159588,0x00159588,,TrackCarCameraMover::Update(void),candidate_only,True,E-0041-M01
+Sub_00159D08,0x00159D08,,"TrackFlyCameraMover::TrackFlyCameraMover(int, CameraDataItems &, Car *)",candidate_only,True,E-0041-M01
+Sub_00159DE8,0x00159DE8,,TrackFlyCameraMover::~TrackFlyCameraMover(void),candidate_only,True,E-0041-M01
+Sub_00159E78,0x00159E78,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00159E98,0x00159E98,,TrackFlyCameraMover::Update(void),candidate_only,True,E-0041-M01
+Sub_0015A340,0x0015A340,,"MaxCameraMover::MaxCameraMover(int, Car *, char *, float, int)",candidate_only,True,E-0041-M01
+Sub_0015A3F8,0x0015A3F8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015A410,0x0015A410,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015B268,0x0015B268,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015B318,0x0015B318,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015B360,0x0015B360,,DebugWorldCameraMover::AddJoyHandlers(void),candidate_only,True,E-0041-M01
+Sub_0015B4D0,0x0015B4D0,,DebugWorldCameraMover::RemoveJoyHandlers(void),candidate_only,True,E-0041-M01
+Sub_0015B878,0x0015B878,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015C010,0x0015C010,,"TrackRouteEditorCameraMover::TrackRouteEditorCameraMover(int, JoystickPort)",candidate_only,True,E-0041-M01
+Sub_0015C058,0x0015C058,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015C0A0,0x0015C0A0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015C138,0x0015C138,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015C258,0x0015C258,,"DriveCameraMover::DriveCameraMover(int, Car *, int, float, int, int, int)",candidate_only,True,E-0041-M01
+Sub_0015C400,0x0015C400,,DriveCameraMover::~DriveCameraMover(void),candidate_only,True,E-0041-M01
+Sub_0015C470,0x0015C470,,DriveCameraMover::ResetState(void),candidate_only,True,E-0041-M01
+Sub_0015C528,0x0015C528,,DriveCameraMover::GetPOV(int),candidate_only,True,E-0041-M01
+Sub_0015C760,0x0015C760,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015C7A0,0x0015C7A0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015C838,0x0015C838,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015C880,0x0015C880,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015E6A0,0x0015E6A0,,StillCameraMover::StillCameraMover(int),candidate_only,True,E-0041-M01
+Sub_0015E718,0x0015E718,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015E730,0x0015E730,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015E7B0,0x0015E7B0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015EA30,0x0015EA30,,CubicCameraMover::~CubicCameraMover(void),candidate_only,True,E-0041-M01
+Sub_0015ECE0,0x0015ECE0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015FA78,0x0015FA78,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015FAF0,0x0015FAF0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015FAF8,0x0015FAF8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015FB00,0x0015FB00,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015FB08,0x0015FB08,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015FB10,0x0015FB10,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015FB18,0x0015FB18,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015FBF0,0x0015FBF0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015FC20,0x0015FC20,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015FCB0,0x0015FCB0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015FCF8,0x0015FCF8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015FD10,0x0015FD10,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015FD18,0x0015FD18,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015FD20,0x0015FD20,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015FD28,0x0015FD28,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015FD30,0x0015FD30,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015FD38,0x0015FD38,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0015FD40,0x0015FD40,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00160298,0x00160298,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00161000,0x00161000,,ZoneFreezeCameraMover::~ZoneFreezeCameraMover(void),candidate_only,True,E-0041-M01
+Sub_001610A8,0x001610A8,,ZoneFreezeCameraMover::Update(void),candidate_only,True,E-0041-M01
+Sub_00161F98,0x00161F98,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00163620,0x00163620,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00163790,0x00163790,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00163978,0x00163978,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001639A0,0x001639A0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001639D0,0x001639D0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00167A08,0x00167A08,,TrafficCar::TrafficCar(Car *),candidate_only,True,E-0041-M01
+Sub_00167A60,0x00167A60,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00167AF8,0x00167AF8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00168088,0x00168088,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00169D98,0x00169D98,,"FlailerMenuItem::JoyHandler(JoystickPort, JoyEvent, int, void (*)(ScreenMessage, ScreenCallbackData *))",candidate_only,True,E-0041-M01
+Sub_0016BAC0,0x0016BAC0,,"tPopupMenu::HandleJoy(JoystickPort, JoyEvent, int)",candidate_only,True,E-0041-M01
+Sub_0016D2A8,0x0016D2A8,,"GrayMenuItem(char *, int, int, int)",candidate_only,True,E-0041-M01
+Sub_0016EE90,0x0016EE90,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0016EEF8,0x0016EEF8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0016F000,0x0016F000,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0016F190,0x0016F190,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0016F1F0,0x0016F1F0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0016F4F8,0x0016F4F8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0016FBB0,0x0016FBB0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00183358,0x00183358,,"Joylog::GetData(int, JoylogChannel)",candidate_only,True,E-0041-M01
+Sub_00183498,0x00183498,,"Joylog::AddData(int, int, JoylogChannel)",candidate_only,True,E-0041-M01
+Sub_00189120,0x00189120,"Table::SetMinMax(float, float)",,adopted_static_name,False,E-0042-C057
+Sub_00189168,0x00189168,Table::CalcIndexMultiplier(void),,adopted_static_name,False,E-0042-C058
+Sub_0018A7E8,0x0018A7E8,"Engine::Engine(EngineInfo *, CarState *)",,adopted_static_name,True,E-0042-C059
+Sub_0018A988,0x0018A988,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0018A9D8,0x0018A9D8,Engine::GetDerivative(float *),,adopted_static_name,True,E-0042-C060
+Sub_0018AA28,0x0018AA28,Engine::GetTorque(void),,adopted_static_name,False,E-0042-C061
+Sub_0018AAB0,0x0018AAB0,Engine::GetTotalEngineTorque(void),,adopted_static_name,False,E-0042-C062
+Sub_0018ABF0,0x0018ABF0,Engine::DecrementNitro(void),,adopted_static_name,False,E-0042-C063
+Sub_0018AC38,0x0018AC38,,"CalculateShiftPoints(DriveTrainInfo *, EngineInfo *, float *, float *, float)",candidate_only,True,E-0041-M01
+Sub_0018AE70,0x0018AE70,"DriveTrain::DriveTrain(DriveTrainInfo *, Engine *, Wheel **, CarState *)",,adopted_static_name,True,E-0042-U109
+Sub_0018B008,0x0018B008,,DriveTrain::GetDifferentialAngularVelocity(void),candidate_only,True,E-0041-M01
+Sub_0018B0D8,0x0018B0D8,,DriveTrain::GetDriveWheelSlippage(void),candidate_only,True,E-0041-M01
+Sub_0018B178,0x0018B178,,DriveTrain::SetDifferentialAngularVelocity(float),candidate_only,True,E-0041-M01
+Sub_0018B360,0x0018B360,DriveTrain::GetDifferentialAngularAcceleration(void),,adopted_static_name,False,E-0042-C068
+Sub_0018B4A0,0x0018B4A0,,DriveTrain::ComputeAuxiliaries(void),candidate_only,True,E-0041-M01
+Sub_0018B698,0x0018B698,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0018B6C8,0x0018B6C8,DriveTrain::ApplyClutchTorque(float),,adopted_static_name,False,E-0042-C070
+Sub_0018B948,0x0018B948,DriveTrain::GuessClutchTorque(void),,adopted_static_name,False,E-0042-U111
+Sub_0018BAA0,0x0018BAA0,DriveTrain::ModifyClutchTorque(void),,adopted_static_name,False,E-0042-C071
+Sub_0018BC10,0x0018BC10,DriveTrain::FinalizeClutchTorque(void),,adopted_static_name,False,E-0042-U112
+Sub_0018BC18,0x0018BC18,,DriveTrain::Idling(void),candidate_only,True,E-0041-M01
+Sub_0018BC68,0x0018BC68,,DriveTrain::ClutchMatched(void),candidate_only,True,E-0041-M01
+Sub_0018BCA0,0x0018BCA0,DriveTrain::SetSportGear(Gear),,adopted_static_name,False,E-0041-M01
+Sub_0018BCE0,0x0018BCE0,DriveTrain::SetDesiredGear(Gear),,adopted_static_name,False,E-0041-R02
+Sub_0018C030,0x0018C030,DriveTrain::PrintCurrentState(void),,adopted_static_name,True,E-0042-U113
+Sub_0018C1C8,0x0018C1C8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0018C368,0x0018C368,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0018C380,0x0018C380,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0018C418,0x0018C418,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0018C478,0x0018C478,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0018C4D8,0x0018C4D8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0018CAE8,0x0018CAE8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0018CB10,0x0018CB10,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0018D480,0x0018D480,BaseCarSound::GetHornSample(void),,adopted_static_name,False,E-0041-V01
+Sub_0018D550,0x0018D550,BaseCarSound::Mute(int),,adopted_static_name,False,E-0041-V01
+Sub_0018D830,0x0018D830,BaseCarSound::DeactivateSound(void),,adopted_static_name,False,E-0041-V01
+Sub_0018D8D8,0x0018D8D8,BaseCarSound::ActivateSound(void),,adopted_static_name,False,E-0041-V01
+Sub_0018D9A0,0x0018D9A0,,BasePlayerCarSound::BasePlayerCarSound(Car *),candidate_only,True,E-0041-M01
+Sub_0018DB78,0x0018DB78,BasePlayerCarSound::~BasePlayerCarSound(void),,adopted_static_name,True,E-0041-V01
+Sub_0018DBF0,0x0018DBF0,"BasePlayerCarSound::Update(float, unsigned short, float)",,adopted_static_name,False,E-0041-V01
+Sub_0018DD10,0x0018DD10,BasePlayerCarSound::Mute(int),,adopted_static_name,False,E-0041-V01
+Sub_0018DDA0,0x0018DDA0,BasePlayerCarSound::GetHornSample(void),,adopted_static_name,False,E-0041-V01
+Sub_0018E6E8,0x0018E6E8,,BaseAICarSound::BaseAICarSound(Car *),candidate_only,True,E-0041-M01
+Sub_0018E7E8,0x0018E7E8,BaseAICarSound::~BaseAICarSound(void),,adopted_static_name,True,E-0041-V01
+Sub_0018E800,0x0018E800,"BaseAICarSound::Update(float, unsigned short, float)",,adopted_static_name,False,E-0041-V01
+Sub_0018F160,0x0018F160,HornSound3d::ActivateSound(void),,adopted_static_name,False,E-0041-V01
+Sub_0018F188,0x0018F188,HornSound3d::DeactivateSound(void),,adopted_static_name,False,E-0041-V01
+Sub_0018F208,0x0018F208,HornSound3d::Mute(int),,adopted_static_name,False,E-0041-V01
+Sub_0018F218,0x0018F218,"HornSound3d::Update(float, unsigned short, float)",,adopted_static_name,False,E-0041-V01
+Sub_0018F2B0,0x0018F2B0,HornSound3d::~HornSound3d(void),,adopted_static_name,True,E-0041-V01
+Sub_0018F388,0x0018F388,,SirenSound3d::SirenSound3d(void),candidate_only,True,E-0041-M01
+Sub_0018F4D0,0x0018F4D0,SirenSound3d::ActivateSound(void),,adopted_static_name,False,E-0041-V01
+Sub_0018F508,0x0018F508,SirenSound3d::DeactivateSound(void),,adopted_static_name,False,E-0041-V01
+Sub_0018F528,0x0018F528,SirenSound3d::Mute(int),,adopted_static_name,False,E-0041-V01
+Sub_0018F548,0x0018F548,"SirenSound3d::Update(float, unsigned short, float)",,adopted_static_name,False,E-0041-V01
+Sub_0018F710,0x0018F710,SirenSound3d::~SirenSound3d(void),,adopted_static_name,True,E-0041-V01
+Sub_0018F808,0x0018F808,"Table::Table(float *, int, float, float)",,adopted_static_name,True,E-0041-R04
+Sub_0018F838,0x0018F838,Table::GetValue(float),,adopted_static_name,True,E-0041-M01
+Sub_0018F9F0,0x0018F9F0,Graph::GetValue(float),,adopted_static_name,True,E-0042-C077
+Sub_00190670,0x00190670,,"AICarController::SetCurrentRoute(TrackRoute *, TrackRoutePoint *)",candidate_only,True,E-0041-M01
+Sub_00190708,0x00190708,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00190760,0x00190760,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001907B8,0x001907B8,,AICarController::GetAmountOutOfBounds(void),candidate_only,True,E-0041-M01
+Sub_00190850,0x00190850,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00191138,0x00191138,,AICarController::DebugDisplay(void),candidate_only,True,E-0041-M01
+Sub_00192668,0x00192668,,AICarController::GeneratePointsToFulfillAction(AIAction *),candidate_only,True,E-0041-M01
+Sub_00192780,0x00192780,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00192F10,0x00192F10,,AICarController::FindWhereIAm(void),candidate_only,True,E-0041-M01
+Sub_00193650,0x00193650,,AICarController::SetToPhysicsMode(Car *),candidate_only,True,E-0041-M01
+Sub_00193758,0x00193758,AICarController::ForceBoost(float),,adopted_static_name,False,E-0042-C084
+Sub_00193780,0x00193780,AICarController::ReleaseBoost(void),,adopted_static_name,False,E-0042-C085
+Sub_0019A440,0x0019A440,,"DemoCameraCoordinator::DemoCameraCoordinator(int, Car *)",candidate_only,True,E-0041-M01
+Sub_0019A4A0,0x0019A4A0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0019A4B8,0x0019A4B8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0019B130,0x0019B130,,"CountdownCameraCoordinator::CountdownCameraCoordinator(int, Player *)",candidate_only,True,E-0041-M01
+Sub_0019B188,0x0019B188,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0019B1A0,0x0019B1A0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0019B4B0,0x0019B4B0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0019B5F0,0x0019B5F0,,NisCameraCoordinator::~NisCameraCoordinator(void),candidate_only,True,E-0041-M01
+Sub_0019B658,0x0019B658,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0019C170,0x0019C170,PhysicsSystem::PhysicsSystem(void),,adopted_static_name,True,E-0042-C089
+Sub_0019C238,0x0019C238,PhysicsSystem::AddComponent(PhysicsComponent *),,adopted_static_name,False,E-0042-C090
+Sub_0019C290,0x0019C290,PhysicsSystem::IntegrateEuler(float),,adopted_static_name,False,E-0042-C091
+Sub_0019C670,0x0019C670,PhysicsSystem::GetDerivative(float *),,adopted_static_name,True,E-0042-C092
+Sub_0019C808,0x0019C808,PhysicsSystem::ComputeAuxiliaries(void),,adopted_static_name,True,E-0041-V01
+Sub_0019C8F8,0x0019C8F8,PhysicsSystem::ResolveForces(void),,adopted_static_name,False,E-0041-V01
+Sub_0019C9B0,0x0019C9B0,RigidBody::RigidBody(RigidBodyInfo *),,adopted_static_name,True,E-0042-C093
+Sub_0019CC40,0x0019CC40,RigidBody::Calibrate(bVector3 *),,adopted_static_name,True,E-0042-C094
+Sub_0019CC58,0x0019CC58,RigidBody::CalculateInertiaTensor(void),,adopted_static_name,False,E-0042-C095
+Sub_0019CC88,0x0019CC88,,"RigidBody::SetState(bVector3 *, bMatrix4 *, bVector3 *, bVector3 *)",candidate_only,True,E-0041-M01
+Sub_0019CD90,0x0019CD90,"RigidBody::ApplyForce(bVector3 *, bVector3 *)",,adopted_static_name,False,E-0041-M01
+Sub_0019CE80,0x0019CE80,"RigidBody::ApplyForceInFrame(bVector3 *, bVector3 *)",,adopted_static_name,False,E-0042-C097
+Sub_0019CEF8,0x0019CEF8,RigidBody::ApplyMoment(bVector3 *),,adopted_static_name,False,E-0042-C098
+Sub_0019CF10,0x0019CF10,"RigidBody::ApplyImpulse(bVector3 *, bVector3 *)",,adopted_static_name,False,E-0041-M01
+Sub_0019D368,0x0019D368,"bMulMatrixVector(bVector3 *, bMatrix4 *, bVector3 *)",,adopted_static_name,False,E-0042-U132
+Sub_0019D370,0x0019D370,"VectorStarMatrix(bMatrix4 *, bVector3 *, bMatrix4 *)",,adopted_static_name,False,E-0041-M01
+Sub_0019D4D0,0x0019D4D0,RigidBody::GetDerivative(float *),,adopted_static_name,False,E-0041-R03
+Sub_0019D848,0x0019D848,,RigidBody::ComputeAuxiliaries(void),candidate_only,True,E-0041-M01
+Sub_0019D980,0x0019D980,RigidBody::PrintCurrentState(void),,adopted_static_name,True,E-0042-C100
+Sub_0019DA30,0x0019DA30,,global constructors keyed to RigidBody::RigidBody(RigidBodyInfo *),candidate_only,True,E-0041-M01
+Sub_001A0DD8,0x001A0DD8,,CopMover::CopMover(Car *),candidate_only,True,E-0041-M01
+Sub_001A0E88,0x001A0E88,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001A0EA0,0x001A0EA0,,CopMover::ResetMaxThrottleAccel(void),candidate_only,True,E-0041-M01
+Sub_001A0F20,0x001A0F20,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001A1030,0x001A1030,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001A1CE8,0x001A1CE8,,CopDriver::CopDriver(Car *),candidate_only,True,E-0041-M01
+Sub_001A1E30,0x001A1E30,CopDriver::~CopDriver(void),,adopted_static_name,True,E-0041-V01
+Sub_001A2110,0x001A2110,CopDriver::Think(float),,adopted_static_name,False,E-0041-V01
+Sub_001A2A90,0x001A2A90,,CopDriver::AreWeStuck(float),candidate_only,True,E-0041-M01
+Sub_001A2B58,0x001A2B58,CopDriver::DoSnapshot(ReplaySnapshot *),,adopted_static_name,False,E-0041-V01
+Sub_001A33A8,0x001A33A8,,GetRealTimeElapsedFromQuantized(int),candidate_only,True,E-0041-M01
+Sub_001A33C0,0x001A33C0,GetQuantizedRealTimeElapsed(float),,adopted_static_name,False,E-0041-M01
+Sub_001A33F0,0x001A33F0,,PrepareRealTimestep(float),candidate_only,True,E-0041-M01
+Sub_001A3500,0x001A3500,,AdvanceRealTime(void),candidate_only,True,E-0041-M01
+Sub_001A3598,0x001A3598,,ResetWorldTime(void),candidate_only,True,E-0041-M01
+Sub_001A35E0,0x001A35E0,,PrepareWorldTimestep(float),candidate_only,True,E-0041-M01
+Sub_001A35F0,0x001A35F0,,AdvanceWorldTime(void),candidate_only,True,E-0041-M01
+Sub_001A3B98,0x001A3B98,,"Timer::PrintToString(char *, int)",candidate_only,True,E-0041-M01
+Sub_001A3F10,0x001A3F10,"Wheel::Wheel(WheelInfo *, TireInfo *, ControlInfo *, CarState *)",,adopted_static_name,True,E-0042-C113
+Sub_001A4158,0x001A4158,"Wheel::SetState(float, float)",,adopted_static_name,True,E-0042-C114
+Sub_001A4170,0x001A4170,"Wheel::SetState(CarState *, CarTypeInfo *, float, float, unsigned short, float)",,adopted_static_name,True,E-0042-C115
+Sub_001A4348,0x001A4348,Wheel::Calibrate(void),,adopted_static_name,True,E-0042-C116
+Sub_001A4358,0x001A4358,Wheel::ComputeAuxiliaries(void),,adopted_static_name,True,E-0041-V01
+Sub_001A44A8,0x001A44A8,"Wheel::ExchangeZForces(int, float)",,adopted_static_name,False,E-0042-C117
+Sub_001A4580,0x001A4580,,"Wheel::FindDrivingSurface(bVector3 *, bMatrix4 *)",candidate_only,True,E-0041-M01
+Sub_001A45A8,0x001A45A8,,"Wheel::CheckTerrain(bVector3 *, TerrainType *, bVector3 *, bMatrix4 *)",candidate_only,True,E-0041-M01
+Sub_001A46B0,0x001A46B0,Wheel::GetDerivative(float *),,adopted_static_name,True,E-0041-V01
+Sub_001A4778,0x001A4778,Wheel::CheckForBrakeLock(float),,adopted_static_name,False,E-0042-C120
+Sub_001A4818,0x001A4818,Wheel::GetPilotFactor(void),,adopted_static_name,False,E-0042-C121
+Sub_001A4930,0x001A4930,"Wheel::GuessGroundForce(bVector2 *, int)",,adopted_static_name,False,E-0042-C122
+Sub_001A4D28,0x001A4D28,"Wheel::GetLateralForce(float, float)",,adopted_static_name,False,E-0042-U136
+Sub_001A4E88,0x001A4E88,Wheel::ModifyGroundForce(bVector2 *),,adopted_static_name,False,E-0041-M01
+Sub_001A4EE0,0x001A4EE0,Wheel::FinalizeGroundForce(int),,adopted_static_name,False,E-0042-C123
+Sub_001A5428,0x001A5428,Wheel::GetHorizontalGroundForceInCarFrame(bVector3 *),,adopted_static_name,False,E-0041-M01
+Sub_001A5520,0x001A5520,"Wheel::MaybeMakeSkids(float, Car *)",,adopted_static_name,True,E-0042-U137
+Sub_001A57E0,0x001A57E0,,global constructors keyed to SliderPositionsX,candidate_only,True,E-0041-M01
+Sub_001A5D10,0x001A5D10,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001A5D60,0x001A5D60,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001A5EA0,0x001A5EA0,"Suspension::Suspension(int, RigidBody *, Wheel *, Steering *, SuspensionInfo *)",,adopted_static_name,True,E-0042-C125
+Sub_001A5F88,0x001A5F88,Suspension::Calibrate(float),,adopted_static_name,True,E-0041-M01
+Sub_001A5FB0,0x001A5FB0,,Suspension::SetState(void),candidate_only,True,E-0041-M01
+Sub_001A5FC0,0x001A5FC0,,Suspension::ComputeAuxiliaries(void),candidate_only,True,E-0041-M01
+Sub_001A6330,0x001A6330,Suspension::ResolveForces(float),,adopted_static_name,True,E-0042-C128
+Sub_001A6370,0x001A6370,Suspension::ResolveMoreForces(void),,adopted_static_name,False,E-0042-C129
+Sub_001A63C0,0x001A63C0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001A63D0,0x001A63D0,"GetPointVelocity(bVector3 *, bVector3 *, bVector3 *, bVector3 *)",,adopted_static_name,False,E-0041-M01
+Sub_001A6408,0x001A6408,Suspension::ApplyGroundPenaltyImpulse(void),,adopted_static_name,False,E-0042-C130
+Sub_001A66F0,0x001A66F0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001ADD70,0x001ADD70,Aerodynamics::ResolveForces(float *),,adopted_static_name,True,E-0042-C131
+Sub_001ADFB8,0x001ADFB8,Aerodynamics::GetDownforceAtSpeed(float),,adopted_static_name,False,E-0041-M01
+Sub_001AF050,0x001AF050,,sound::jukebox::SetSelection(int),candidate_only,True,E-0041-M01
+Sub_001B50C8,0x001B50C8,BodyDamage::GetVisibleTotalDamage(void),,adopted_static_name,True,E-0042-C133
+Sub_001C0090,0x001C0090,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001C00A8,0x001C00A8,CarController::~CarController(void),,adopted_static_name,True,E-0042-U143
+Sub_001C00D0,0x001C00D0,,CarController::DoSnapshot(ReplaySnapshot *),candidate_only,True,E-0041-M01
+Sub_001C0100,0x001C0100,CarController::SetToPhysicsMode(Car *),,adopted_static_name,True,E-0041-V01
+Sub_001C0140,0x001C0140,CarController::ForceBoost(float),,adopted_static_name,True,E-0041-V01
+Sub_001C0160,0x001C0160,CarController::ReleaseBoost(void),,adopted_static_name,True,E-0041-V01
+Sub_001C0198,0x001C0198,CarController::DebugDisplay(void),,adopted_static_name,True,E-0041-V01
+Sub_001C0888,0x001C0888,CarState::GetYaw(void),,adopted_static_name,False,E-0042-C135
+Sub_001C08D0,0x001C08D0,CarState::GetYawAlways(void),,adopted_static_name,False,E-0042-C136
+Sub_001C0D78,0x001C0D78,CarState::CalculateWheelMatrices(int),,adopted_static_name,False,E-0042-U144
+Sub_001DD0F0,0x001DD0F0,"EndGameMenusBase::HandleEvent(ScreenMessage, ScreenCallbackData *)",,adopted_static_name,False,E-0041-V01
+Sub_001DD5D0,0x001DD5D0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001DDC10,0x001DDC10,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001DDFD0,0x001DDFD0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001DEF38,0x001DEF38,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001DFFE8,0x001DFFE8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001E0838,0x001E0838,"RaceResultsScreen::Scroll(ScreenMessage, ScreenCallbackData *)",,adopted_static_name,False,E-0041-V01
+Sub_001E0868,0x001E0868,"RaceResultsScreen::Tick(ScreenMessage, ScreenCallbackData *)",,adopted_static_name,False,E-0041-V01
+Sub_001E0898,0x001E0898,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001E0A10,0x001E0A10,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001E0BC8,0x001E0BC8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001E12B8,0x001E12B8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001E19E0,0x001E19E0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001E2270,0x001E2270,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001E2340,0x001E2340,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001E2358,0x001E2358,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001E2370,0x001E2370,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001E2388,0x001E2388,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001E23A0,0x001E23A0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001E23B8,0x001E23B8,RaceResultsScreen::~RaceResultsScreen(void),,adopted_static_name,True,E-0041-V01
+Sub_001E24F8,0x001E24F8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001E2580,0x001E2580,"EndGameMenusBase::Render(ScreenMessage, ScreenCallbackData *)",,adopted_static_name,False,E-0041-V01
+Sub_001E2588,0x001E2588,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001E2590,0x001E2590,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001EEBB8,0x001EEBB8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001EEC50,0x001EEC50,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001EECA8,0x001EECA8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001EF3C8,0x001EF3C8,,AudioOptionsScreen::AudioOptionsScreen(int),candidate_only,True,E-0041-M01
+Sub_001EFA00,0x001EFA00,,AudioOptionsScreen::~AudioOptionsScreen(void),candidate_only,True,E-0041-M01
+Sub_001EFB78,0x001EFB78,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001EFB80,0x001EFB80,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001F02D8,0x001F02D8,,JukeBoxMusicScreen::JukeBoxMusicScreen(int),candidate_only,True,E-0041-M01
+Sub_001F0460,0x001F0460,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001F0D10,0x001F0D10,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001F1568,0x001F1568,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001F1B08,0x001F1B08,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001F33B8,0x001F33B8,,tDisplayOptionsScreen::tDisplayOptionsScreen(int),candidate_only,True,E-0041-M01
+Sub_001F3588,0x001F3588,,tDisplayOptionsScreen::~tDisplayOptionsScreen(void),candidate_only,True,E-0041-M01
+Sub_001F35E0,0x001F35E0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001F3A28,0x001F3A28,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001F3F20,0x001F3F20,,"tCustomizeHUDScreen::tCustomizeHUDScreen(int, int)",candidate_only,True,E-0041-M01
+Sub_001F4178,0x001F4178,tCustomizeHUDScreen::~tCustomizeHUDScreen(void),,adopted_static_name,True,E-0041-V01
+Sub_001F46D8,0x001F46D8,"tCustomizeHUDScreen::HandleEvent(int, ScreenCallbackData *)",,adopted_static_name,False,E-0041-V01
+Sub_001F4E68,0x001F4E68,"OptionsScreenBase::HandleHighlight(int, ScreenCallbackData *, int)",,adopted_static_name,True,E-0041-V01
+Sub_001F5F88,0x001F5F88,,"FormatEventDescription(EventTree *, EventInfo *, char *, char *, int)",candidate_only,True,E-0041-M01
+Sub_001F60E8,0x001F60E8,,"FormatStatus(char *, int, EventInfo *)",candidate_only,True,E-0041-M01
+Sub_001F6220,0x001F6220,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_001F6FA0,0x001F6FA0,,"tEventLeaf::tEventLeaf(int, EventInfo *, EventTree *)",candidate_only,True,E-0041-M01
+Sub_001F8CF0,0x001F8CF0,,tCarLogoAnimation::Show(void),candidate_only,True,E-0041-M01
+Sub_001F8D08,0x001F8D08,,tCarLogoAnimation::Hide(void),candidate_only,True,E-0041-M01
+Sub_001F8D20,0x001F8D20,,tCarLogoAnimation::StartTexture(bool),candidate_only,True,E-0041-M01
+Sub_001F8E18,0x001F8E18,,tCarLogoAnimation::SetEvent(EventInfo *),candidate_only,True,E-0041-M01
+Sub_001F8FB0,0x001F8FB0,,tCarLogoAnimation::Animate(void),candidate_only,True,E-0041-M01
+Sub_001F91D0,0x001F91D0,tTrackLogoAnimation::Show(void),,adopted_static_name,True,E-0042-C151
+Sub_001F91E0,0x001F91E0,,tTrackLogoAnimation::Hide(void),candidate_only,True,E-0041-M01
+Sub_001F91F0,0x001F91F0,,tTrackLogoAnimation::SetEvent(EventInfo *),candidate_only,True,E-0041-M01
+Sub_001F9318,0x001F9318,,tTrackLogoAnimation::Animate(void),candidate_only,True,E-0041-M01
+Sub_002001A8,0x002001A8,EventKoState::GetRaceIndex(void),,adopted_static_name,True,E-0041-M01
+Sub_002006A0,0x002006A0,,EventTournamentState::GetRaceIndex(int),candidate_only,True,E-0041-M01
+Sub_00200710,0x00200710,EventTournamentState::RacerRank(int),,adopted_static_name,True,E-0041-M01
+Sub_00200878,0x00200878,EventInfo::GetCar(int),,adopted_static_name,True,E-0041-M01
+Sub_002008F8,0x002008F8,EventInfo::GetTrack(int),,adopted_static_name,True,E-0041-M01
+Sub_00200938,0x00200938,EventInfo::GetReward(int),,adopted_static_name,True,E-0041-M01
+Sub_00200E78,0x00200E78,,EventInfo::GetFinishString(void),candidate_only,True,E-0041-M01
+Sub_002012D8,0x002012D8,,EventInfo::GetRaceIndex(void),candidate_only,True,E-0041-M01
+Sub_00201350,0x00201350,EventInfo::GetRaceCount(void),,adopted_static_name,True,E-0041-M01
+Sub_00202F60,0x00202F60,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00202F78,0x00202F78,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_002030C0,0x002030C0,,DeliveryMover::Move(float),candidate_only,True,E-0041-M01
+Sub_002033D8,0x002033D8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00204098,0x00204098,,BeltMover::BeltMover(Car *),candidate_only,True,E-0041-M01
+Sub_002043A0,0x002043A0,BeltMover::~BeltMover(void),,adopted_static_name,True,E-0041-V01
+Sub_00204468,0x00204468,BeltMover::DoSnapshot(ReplaySnapshot *),,adopted_static_name,False,E-0041-V01
+Sub_00204D78,0x00204D78,BeltMover::Move(float),,adopted_static_name,False,E-0041-V01
+Sub_00208B28,0x00208B28,Sound3d::Activate(bool),,adopted_static_name,False,E-0041-V01
+Sub_00208C78,0x00208C78,Sound3d::UpdateCamRelativeDistAndVelocity(bVector3 *),,adopted_static_name,False,E-0041-V01
+Sub_0020FC70,0x0020FC70,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0020FE70,0x0020FE70,PlayerEngineSound::~PlayerEngineSound(void),,adopted_static_name,True,E-0041-V01
+Sub_00210400,0x00210400,PlayerEngineSound::DeactivateSound(void),,adopted_static_name,False,E-0041-V01
+Sub_00210408,0x00210408,PlayerEngineSound::ActivateSound(void),,adopted_static_name,False,E-0041-V01
+Sub_00210410,0x00210410,PlayerEngineSound::Mute(int),,adopted_static_name,False,E-0041-V01
+Sub_00211390,0x00211390,"PlayerEngineSound::Update(float, unsigned short, float)",,adopted_static_name,False,E-0041-V01
+Sub_002117C8,0x002117C8,,AIEngineSound::AIEngineSound(Car *),candidate_only,True,E-0041-M01
+Sub_002118A0,0x002118A0,"AIEngineSound::Update(float, unsigned short, float)",,adopted_static_name,False,E-0041-V01
+Sub_00211A80,0x00211A80,AIEngineSound::Mute(int),,adopted_static_name,False,E-0041-V01
+Sub_00211D58,0x00211D58,AIEngineSound::DeactivateSound(void),,adopted_static_name,False,E-0041-V01
+Sub_00211D60,0x00211D60,AIEngineSound::ActivateSound(void),,adopted_static_name,False,E-0041-V01
+Sub_00212418,0x00212418,AIEngineSound::~AIEngineSound(void),,adopted_static_name,True,E-0041-V01
+Sub_002124F0,0x002124F0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_002125A0,0x002125A0,BaseTireSound::Mute(int),,adopted_static_name,False,E-0041-V01
+Sub_00212950,0x00212950,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00212CF0,0x00212CF0,PlayerTireSound::~PlayerTireSound(void),,adopted_static_name,True,E-0041-V01
+Sub_00212E88,0x00212E88,PlayerTireSound::DeactivateSound(void),,adopted_static_name,False,E-0041-V01
+Sub_00212E90,0x00212E90,PlayerTireSound::ActivateSound(void),,adopted_static_name,False,E-0041-V01
+Sub_002134D8,0x002134D8,PlayerTireSound::Mute(int),,adopted_static_name,False,E-0041-V01
+Sub_002135A0,0x002135A0,"PlayerTireSound::Update(float, unsigned short, float)",,adopted_static_name,False,E-0041-V01
+Sub_002149F8,0x002149F8,PlayerTireSound::ScaleRoadNoise(float),,adopted_static_name,False,E-0041-V01
+Sub_00214A00,0x00214A00,PlayerTireSound::TriggerTireBlowOut(void),,adopted_static_name,False,E-0041-V01
+Sub_00214A68,0x00214A68,BaseTireSound::ScaleRoadNoise(float),,adopted_static_name,False,E-0041-V01
+Sub_00214A70,0x00214A70,BaseTireSound::TriggerTireBlowOut(void),,adopted_static_name,False,E-0041-V01
+Sub_00214A78,0x00214A78,BaseTireSound::~BaseTireSound(void),,adopted_static_name,True,E-0041-V01
+Sub_00214D68,0x00214D68,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00214DF0,0x00214DF0,ChopperSound::~ChopperSound(void),,adopted_static_name,True,E-0041-V01
+Sub_00214F30,0x00214F30,"ChopperSound::Update(float, unsigned short, float)",,adopted_static_name,False,E-0041-V01
+Sub_00215000,0x00215000,ChopperSound::Mute(int),,adopted_static_name,False,E-0041-V01
+Sub_00215028,0x00215028,ChopperSound::DeactivateSound(void),,adopted_static_name,False,E-0041-V01
+Sub_00215050,0x00215050,ChopperSound::ActivateSound(void),,adopted_static_name,False,E-0041-V01
+Sub_00216638,0x00216638,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00216C18,0x00216C18,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_002174A0,0x002174A0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00217AF8,0x00217AF8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_00227438,0x00227438,tCopManager::IsBeingPursued(Car *),,adopted_static_name,True,E-0041-M01
+Sub_0023A178,0x0023A178,"TrackedController::SetCurrentRoute(TrackRoute *, TrackRoutePoint *)",,adopted_static_name,True,E-0041-V01
+Sub_0023A198,0x0023A198,TrackedController::GetCurrentRoute(void),,adopted_static_name,True,E-0041-V01
+Sub_0023A1C8,0x0023A1C8,TrackedController::FindWhereIAm(void),,adopted_static_name,True,E-0041-V01
+Sub_0023A2F8,0x0023A2F8,TrackedController::JustReset(void),,adopted_static_name,True,E-0041-V01
+Sub_0023A300,0x0023A300,TrackedController::GetAmountOutOfBounds(void),,adopted_static_name,True,E-0041-V01
+Sub_0023A3D0,0x0023A3D0,TrackedController::GetCurrentRoutePoint(void),,adopted_static_name,True,E-0041-V01
+Sub_0023A3D8,0x0023A3D8,,RealController::RealController(Car *),candidate_only,True,E-0041-M01
+Sub_0023A4D8,0x0023A4D8,RealController::~RealController(void),,adopted_static_name,True,E-0041-V01
+Sub_0023A560,0x0023A560,RealController::DoSnapshot(ReplaySnapshot *),,adopted_static_name,False,E-0041-V01
+Sub_0023AA50,0x0023AA50,RealController::Think(float),,adopted_static_name,False,E-0041-V01
+Sub_002400C0,0x002400C0,,JoystickPreConfig::JoystickPreConfig(int),candidate_only,True,E-0041-M01
+Sub_00240230,0x00240230,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_002402C0,0x002402C0,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_002486E8,0x002486E8,"AnimationGroup::SetupToAnimate(float, float)",,adopted_static_name,True,E-0042-C163
+Sub_00248C60,0x00248C60,,"tSlideAnimation::AddGroup(int, int, float, float, float)",candidate_only,True,E-0041-M01
+Sub_00249348,0x00249348,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0024A368,0x0024A368,,tScrollingMenuList::GetCurrentMenuMask(void),candidate_only,True,E-0041-M01
+Sub_0024D870,0x0024D870,,"NameEntry::HandleEvent(ScreenMessage, ScreenCallbackData *)",candidate_only,True,E-0041-M01
+Sub_00250F38,0x00250F38,bGetTicker(void),,adopted_static_name,True,E-0042-C167
+Sub_00250F48,0x00250F48,"bGetTickerDifference(unsigned int, unsigned int)",,adopted_static_name,True,E-0042-C168
+Sub_0025A300,0x0025A300,"bDiv(int, int)",,adopted_static_name,False,E-0041-M01
+Sub_0025A3D0,0x0025A3D0,"bRandom(int, unsigned int *)",,adopted_static_name,False,E-0041-M01
+Sub_0025A410,0x0025A410,"bRandom(float, unsigned int *)",,adopted_static_name,False,E-0042-C169
+Sub_0025A4A8,0x0025A4A8,bRandom(float),,adopted_static_name,False,E-0042-U190
+Sub_0025A540,0x0025A540,bSin(unsigned short),,adopted_static_name,False,E-0042-C170
+Sub_0025A5E0,0x0025A5E0,bSin(float),,adopted_static_name,False,E-0042-C171
+Sub_0025A748,0x0025A748,bASin(float),,adopted_static_name,False,E-0042-U191
+Sub_0025A890,0x0025A890,"bATan(float, float)",,adopted_static_name,False,E-0042-U192
+Sub_0025AA78,0x0025AA78,bFixATan(int),,adopted_static_name,False,E-0042-C172
+Sub_0025AB50,0x0025AB50,"bFixATan(int, int)",,adopted_static_name,False,E-0042-C173
+Sub_0025AC68,0x0025AC68,bIdentity(bMatrix4 *),,adopted_static_name,False,E-0041-M01
+Sub_0025AC98,0x0025AC98,"bInvertMatrix(bMatrix4 *, bMatrix4 const *)",,adopted_static_name,False,E-0041-M01
+Sub_0025AE18,0x0025AE18,"bMulMatrix(bMatrix4 *, bMatrix4 const *, bMatrix4 const *)",,adopted_static_name,False,E-0041-M01
+Sub_0025AED0,0x0025AED0,"bMulMatrix(bVector3 *, bMatrix4 const *, bVector3 const *)",,adopted_static_name,False,E-0042-U193
+Sub_0025AF20,0x0025AF20,"bTransposeMatrix(bMatrix4 *, bMatrix4 const *)",,adopted_static_name,False,E-0042-U194
+Sub_0025AFA8,0x0025AFA8,,,unresolved_or_ambiguous,True,E-0041-M01
+Sub_0026D258,0x0026D258,SOUND_HzToSPU(unsigned int),,adopted_static_name,True,E-0041-M01
+Sub_00273850,0x00273850,,bSample::CalcPitch(float),candidate_only,True,E-0041-M01
+Sub_0027ECA8,0x0027ECA8,,"cJukeboxPlayer::PickNextTune(unsigned int &, unsigned int &)",candidate_only,True,E-0041-M01
+Sub_002A0550,0x002A0550,,,unresolved_or_ambiguous,True,E-0041-M01
+Type_0011BF98,0x0011BF98,"eStripDataE::GetElementXYZ(int, float **, float **, float **)",,adopted_static_name,False,E-0041-R13
+Type_001F1A78,0x001F1A78,"LanguageOptionsScreenBase::LanguageOptionsScreenBase(int, LanguageOptionsScreenBase::eLanguageSelectMode)",,adopted_static_name,False,E-0041-R20
+Type_001F8C10,0x001F8C10,tCarLogoAnimation::tCarLogoAnimation(int),,adopted_static_name,False,E-0041-R05
+Type_001F90F0,0x001F90F0,tTrackLogoAnimation::tTrackLogoAnimation(int),,adopted_static_name,False,E-0041-R06
+Type_00248568,0x00248568,"AnimationGroup::AnimationGroup(int, int, int, float, float, float)",,adopted_static_name,False,E-0041-R11
+Type_002490D8,0x002490D8,"tExitScreenAnimation::tExitScreenAnimation(int, char const *, int)",,adopted_static_name,False,E-0041-R12
+Type_002491B0,0x002491B0,"tAnimatedBlurb::tAnimatedBlurb(int, int, int, int)",,adopted_static_name,False,E-0041-R19
+Type_002495F0,0x002495F0,tGlobalBackgroundAnimation::tGlobalBackgroundAnimation(void),,adopted_static_name,False,E-0041-R10
+Type_00249C78,0x00249C78,tMenuAnimElement::tMenuAnimElement(FlailerObjectChunk *),,adopted_static_name,False,E-0041-R08
+Type_00249DE0,0x00249DE0,"tScrollingMenuList::tScrollingMenuList(int, int, int, int, int, int)",,adopted_static_name,False,E-0041-R07
+Type_0024A690,0x0024A690,"tLeftRightArrowScroll::tLeftRightArrowScroll(int, int, int)",,adopted_static_name,False,E-0041-R09

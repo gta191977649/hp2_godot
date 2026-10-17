@@ -1,4 +1,4 @@
-#include "game_core/Type_0011BF98.hpp"
+#include "game_core/src/ecstasy/estripdatae.hpp"
 #include "port/assets/vehicle_geometry.hpp"
 #include "platform/ps2_asset_root.hpp"
 #include <algorithm>

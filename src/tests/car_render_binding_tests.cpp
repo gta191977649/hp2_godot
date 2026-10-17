@@ -59,7 +59,7 @@ int main() {
     port::CarRenderConfig config;
     config.Field_0x120_0x180[0]={{1,2,3,4}};
     const auto matrices=CarRenderInfo::Sub_00120EF8(config,0);
-    const auto rolling=port::Sub_001C0D78(config,{{1.57079637f,1.57079637f,1.57079637f,1.57079637f}},0);
+    const auto rolling=port::CalculateWheelMatrices(config,{{1.57079637f,1.57079637f,1.57079637f,1.57079637f}},0);
     check(rolling.tire[1][2]<-.999f && rolling.tire[1][8]>.999f);
     check(rolling.tire[0][2]>.999f && rolling.tire[0][8]>.999f);
     check(rolling.blur[1][0]==1 && rolling.blur[1][2]==0);

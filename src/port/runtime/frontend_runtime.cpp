@@ -283,7 +283,7 @@ MenuState FrontEndRuntime::menu_open(int screen_index) {
     result.not_implemented = hp2::guard([&] {
         open_menu_animation(screen_index);
         background_animation_.Bind_00249A40(&screens_[slot],
-            [this](int bound) { return hp2::frontend::Sub_0025A3D0(bound, random_state_); },
+            [this](int bound) { return hp2::frontend::bRandom(bound, random_state_); },
             [this](const auto& widget) { return measure_widget(widget); });
         const auto hint = port::frontend::hint_binding(active_class_name_, 0);
         if (hint.attachment_known && hint.attached) {

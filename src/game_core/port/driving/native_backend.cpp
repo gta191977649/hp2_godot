@@ -1,7 +1,7 @@
 #include "native_backend.hpp"
-#include "game_core/Sub_0018F808.hpp"
-#include "game_core/Sub_001A4930.hpp"
-#include "game_core/Sub_0019DA30.hpp"
+#include "game_core/port/driving/projections.hpp"
+#include "game_core/port/driving/projections.hpp"
+#include "game_core/port/driving/projections.hpp"
 #include "game_core/port/not_implemented.hpp"
 #include <algorithm>
 #include <cmath>
@@ -18,9 +18,9 @@ native::InitServices NativeBackend::init_services(){
 }
 native::DrivingServices NativeBackend::driving_services(native::InitServices& init){
     native::DrivingServices s;s.Sub_00250F38=init.Sub_00250F38;s.Sub_00250F48=init.Sub_00250F48;s.Field_001389A4_stack_w=0;
-    s.Sub_0019C290=[&init](Memory& m,std::uint32_t a,float dt){native::integrate(m,a,dt,init);};
-    s.Sub_0011BD90=[](Memory& m,std::uint32_t a){native::Sub_0011BD90(m,a);};
-    s.Sub_00139188=[](Memory& m,std::uint32_t a,float dt){native::Sub_00139188(m,a,dt);};
+    s.IntegrateEuler=[&init](Memory& m,std::uint32_t a,float dt){native::integrate(m,a,dt,init);};
+    s.eOrthonormalizeMatrix=[](Memory& m,std::uint32_t a){native::eOrthonormalizeMatrix(m,a);};
+    s.UpdateCar=[](Memory& m,std::uint32_t a,float dt){native::UpdateCar(m,a,dt);};
     return s;
 }
 void NativeBackend::reset(){initialized_=false;step_=0;if(loaded_)state_=image_;}
@@ -41,10 +41,10 @@ void NativeBackend::initialize(Memory& m,const Config& config){
     m.word(car_+0x3bc,1);m.word(car_+0x3dc,1);
     float center_height=std::numeric_limits<float>::infinity();
     for(unsigned i=0;i<4;++i){const auto row=cfg+0x120+i*0x20;const float local_z=m.scalar(row+8)-m.scalar(cfg+0x118);center_height=std::min(center_height,plane_.height+m.scalar(row+0xc)-local_z);}
-    const auto st=car_+0x40;m.matrix(st+0x50,init::Sub_0025AC68());m.vector(st+0x20,{{0,0,center_height,1}});
+    const auto st=car_+0x40;m.matrix(st+0x50,init::bIdentity());m.vector(st+0x20,{{0,0,center_height,1}});
     m.word(st+0x388,2);m.word(controls_+0x220,0xffffffffu);m.word(controls_+0x224,1);
     // Refresh published wheel matrices before first force/reset traversal.
-    for(std::int32_t i=0;i<4;++i)Sub_001C0D78(m,st,i);
+    for(std::int32_t i=0;i<4;++i)CalculateWheelMatrices(m,st,i);
     auto services=init_services();native::Sub_00137100(m,mover_,cfg,controls_,car_,services);
 }
 Snapshot NativeBackend::publish(Memory& m,float dt)const{

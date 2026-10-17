@@ -52,7 +52,7 @@ std::array<float,16> Sub_0011B950(std::uint16_t angle);
 std::array<float,16> Sub_0011B520(const std::array<float,3>& eye,const std::array<float,3>& target,
                                const std::array<float,3>& up);
 float Sub_00120EA8(float angular_velocity);
-CarAttachmentMatrices Sub_001C0D78(const CarRenderConfig& config,
+CarAttachmentMatrices CalculateWheelMatrices(const CarRenderConfig& config,
                                   const std::array<float,4>& phases,std::uint16_t steering);
 struct CarLodSelection {
     int body{};

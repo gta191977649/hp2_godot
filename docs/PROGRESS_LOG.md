@@ -67,6 +67,7 @@ place and kept, because the fact that a session believed it, and why, is itself 
 - [TASK-0040 - Global symbol provenance audit (2026-10-17)](#task-0040---global-symbol-provenance-audit-2026-10-17)
 - [2026-10-17 - TASK-0038 direct third-person Test drive redesign completed](#2026-10-17---task-0038-direct-third-person-test-drive-redesign-completed)
 - [TASK-0041 - Symbol-rich PS2 reference recovery (2026-10-17)](#task-0041---symbol-rich-ps2-reference-recovery-2026-10-17)
+- [TASK-0042 - Debug call chains and original source ownership (2026-10-17)](#task-0042---debug-call-chains-and-original-source-ownership-2026-10-17)
 
 <!-- generated:contents:end -->
 
@@ -1687,3 +1688,42 @@ passed43.10s and targeted Godot15/15 passed3.87s. Matcher/type/table tests13+4+3
 class-generator tests8 and generated/diff checks passed. Earlier source-path ledger
 class spelling mismatch was regenerated and retested. No original equivalence or
 commit claimed. Exact commands and continuation are in completed TASK-0041.
+
+
+## TASK-0042 - Debug call chains and original source ownership (2026-10-17)
+
+Reviewed the full remaining 175 candidate +196 unresolved audit using the
+SHA-bound Debug ELF, live Ghidra imported symbols/decompilation/references and
+retail caller/table context. Captured live Debug .text matches every authorized
+ELF byte. Finite independent proof chains confirm64+21 additional names; total
+adopted retail names1025. Historical562-source denominator now276adopted,
+111candidate-only,175unresolved/ambiguous (including8folded cases). Changed
+bodies and layout differences remain explicit counterevidence to Debug copying.
+
+Exact ECOFF procedure/file markers recover original CPP ownership and selected
+HPP spellings.193file mappings include same-TU merging and Car's final4method
+merge into indep/src/car.cpp. Derived-shell attributions were corrected into
+CarMover/CarDriver/PhysicsVehicle/CarController/cDBFilesBase and other actual
+declaring scopes.203classes/578member attributions are now generated. Exact
+source evidence places DriveTrain in engine.cpp, PhysicsSystem in
+componentphysics.cpp and both packet classes in ecstasy/estripdatae.cpp. Unknown
+companion headers stay explicitly port-side. No inferred native inheritance.
+
+The14address-grouped driving CPPs were split into19partitions;151exported
+functions and12anonymous helper chunks/47helpers were checked against original
+snapshots. Token/hash tests preserve arithmetic, literals and throwing paths
+while allowing68proved identifier replacements and local helper lookup. Original
+constructors/destructors retain address-callable placeholders where native
+lifetime semantics are unknown. Corrected overload binding uses path+signature
+instead of one short-name-to-address dictionary. Legacy0041write is guarded.
+
+Validation and exact commands are recorded in TASK-0042. No PS2 comparison,
+Verified promotion, database mutation or commit is claimed. Continue with the
+remaining bounded disposition rows and an additional independent caller/table
+anchor; do not adopt normalized uniqueness by itself.
+
+TASK-0042 final validation: native/Godot builds passed; Godot CTest60/60
+passed59.91s. Native initial52/54passed48.06s, with two stale generated-metadata
+checks refreshed and rerun2/2passed0.78s. Python discovery37/37passed. Source
+bodies and original1597symbol-row statuses preserved;5newIdentifiedrows only.
+Class/progress/diff checks passed. No restricted raw files or commit added.

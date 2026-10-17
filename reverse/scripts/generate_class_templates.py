@@ -59,10 +59,31 @@ def definitions() -> dict[str, list[dict]]:
     if overrides_path.exists():
         originals.update({r['source_identifier']: r['elf_address'] for r in
                           read_csv('reverse/naming/task0041-adopted-source-names.csv')})
-    projection_path = ROOT / 'reverse/naming/task0041-adopted-projection-names.csv'
-    if projection_path.exists():
+    projection_names: dict[str, set[str]] = defaultdict(set)
+    for filename in ('task0041-adopted-projection-names.csv', 'task0042-adopted-projection-names.csv'):
+        if (ROOT / 'reverse/naming' / filename).exists():
+            for row in read_csv('reverse/naming/' + filename):
+                projection_names[row['source_identifier']].add(row['elf_address'])
+    # An overloaded short name is not an address binding. Exact path/signature
+    # records below distinguish every projected overload without last-row wins.
+    originals.update({name: next(iter(addresses)) for name, addresses in projection_names.items()
+                      if len(addresses) == 1})
+    projection_bindings = {}
+    partition_path = ROOT / 'reverse/naming/task0042-projection-partitions.json'
+    if partition_path.exists():
+        for row in json.loads(partition_path.read_text())['functions']:
+            if row['elf_address'] and row.get('source_signature'):
+                binding = (row['source'], ' '.join(row['source_signature'].split()))
+                if binding in projection_bindings and projection_bindings[binding] != row['elf_address']:
+                    raise ValueError('Conflicting projection address/signature binding: ' + repr(binding))
+                projection_bindings[binding] = row['elf_address']
+    layout_path = ROOT / 'reverse/classes/task0042-class-layout.json'
+    if layout_path.exists():
+        originals.update({r['owner'] + '::' + r['method']: r['elf_address']
+                          for r in json.loads(layout_path.read_text())['canonical_members']})
+    if (ROOT / 'reverse/naming/task0042-adopted-source-names.csv').exists():
         originals.update({r['source_identifier']: r['elf_address'] for r in
-                          read_csv('reverse/naming/task0041-adopted-projection-names.csv')})
+                          read_csv('reverse/naming/task0042-adopted-source-names.csv')})
     for path in sorted((ROOT / "src/game_core").rglob("*.cpp")):
         text = path.read_text(encoding="utf-8")
         masked = mask_comments_strings(text)
@@ -70,18 +91,20 @@ def definitions() -> dict[str, list[dict]]:
             # The greedy return-type prefix may consume Class:: in METHOD's group 2.
             # Recover the complete declarator token from the signature instead.
             name = re.search(r"([A-Za-z_]\w*(?:::[A-Za-z_]\w*)*)\s*$", match[1].split("(", 1)[0])[1]
+            signature = ' '.join(text[match.start():match.end()-1].split())
+            projected_address = projection_bindings.get((path.relative_to(ROOT).as_posix(), signature))
             address = re.search(r"_([0-9A-Fa-f]{8})$", name)
-            if not address and name not in originals:
+            if not address and not projected_address and name not in originals:
                 continue
             end = closing_brace(masked, match.end() - 1)
             body = text[match.end():end]
             # Only a sole throwing call is classified as a template. Partial bodies can throw.
             clean = re.sub(r"//[^\n]*|/\*[\s\S]*?\*/", "", body).strip()
             stub = bool(re.fullmatch(r'hp2::not_implemented\("0x[0-9A-Fa-f]{8}",\s*"[^"\n]*"\);', clean))
-            key = "0x" + address[1].upper() if address else originals[name]
+            key = projected_address or ("0x" + address[1].upper() if address else originals[name])
             result[key].append({
                 "path": path.relative_to(ROOT).as_posix(), "name": name,
-                "signature": " ".join(text[match.start():match.end()-1].split()),
+                "signature": signature,
                 "stub": stub,
             })
     return result
@@ -183,7 +206,54 @@ def model() -> tuple[list[dict], list[dict], dict[str, dict], dict]:
                 method = override['method']
                 evidence += '; ' + override['evidence_id']
             cls["methods"][address] = {"name": method, "record": record, "evidence": evidence}
-    return sorted(classes.values(), key=lambda c: c["name"]), labels, symbols, policy
+    result = sorted(classes.values(), key=lambda c: c["name"])
+    layout_path = ROOT / policy.get('canonical_layout_registry', 'reverse/classes/task0042-class-layout.json')
+    if layout_path.exists():
+        result = apply_canonical_layout(result, json.loads(layout_path.read_text()))
+    if (ROOT / 'reverse/naming/task0042-adopted-source-names.csv').exists():
+        by_name = {cls['name']: cls for cls in result}
+        for override in read_csv('reverse/naming/task0042-adopted-source-names.csv'):
+            cls = by_name[override['class_name']]
+            address = override['elf_address']
+            if address not in cls['functions']:
+                cls['functions'].append(address)
+                cls['functions'].sort()
+            cls['methods'][address] = dict(name=override['method'], record=override['record'],
+                evidence=override['evidence_id'])
+    return result, labels, symbols, policy
+
+
+def apply_canonical_layout(classes: list[dict], layout: dict) -> list[dict]:
+    """Exact Debug declaring scope supersedes nonexclusive allocator/vtable attribution.
+
+    This changes host shell organization only; it does not create native inheritance.
+    The durable registry is derived from independently adopted retail/name matches.
+    """
+    assert layout['binary_id'] == BINARY
+    by_name = {cls['name']: cls for cls in classes}
+    for name, placement in layout['classes'].items():
+        if name not in by_name:
+            by_name[name] = dict(name=name, namespace='hp2::recovered', functions=[],
+                constructors=[], vtables=[], labels=[], evidence=['E-0042-S001'],
+                origin='exact Debug declaring class with adopted retail correspondence', methods={})
+        cls = by_name[name]
+        cls.update({key: placement[key] for key in ('source', 'header', 'namespace', 'placement_provenance')})
+        cls['constructors'] = sorted(set(cls['constructors']) | set(placement.get('additional_constructor_entries', [])))
+    for transfer in layout['canonical_members']:
+        address, owner = transfer['elf_address'], transfer['owner']
+        for old_name in transfer['remove_from']:
+            old = by_name[old_name]
+            if address in old['functions']:
+                old['functions'].remove(address)
+                old['methods'].pop(address, None)
+        cls = by_name[owner]
+        if address not in cls['functions']:
+            cls['functions'].append(address)
+        cls['methods'][address] = dict(name=transfer['method'], record=transfer['record'],
+            evidence=transfer['evidence_id'])
+    for cls in by_name.values():
+        cls['functions'] = sorted(cls['functions'])
+    return sorted(by_name.values(), key=lambda cls: cls['name'])
 
 
 def provenance(cls: dict) -> str:

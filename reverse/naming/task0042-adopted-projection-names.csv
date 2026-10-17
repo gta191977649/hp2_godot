@@ -1,0 +1,69 @@
+old_identifier,source_identifier,elf_address,reference_name,evidence_id
+Sub_0011B248,eMulMatrix,0x0011B248,"eMulMatrix(bMatrix4 *, bMatrix4 *, bMatrix4 *)",E-0041-M01
+Sub_0011BD90,eOrthonormalizeMatrix,0x0011BD90,"eOrthonormalizeMatrix(bMatrix4 *, bMatrix4 *)",E-0041-M01
+Sub_00133070,PleaseResetMeLater,0x00133070,Car::PleaseResetMeLater(void),E-0042-U013
+Sub_00133130,IsBlinking,0x00133130,Car::IsBlinking(void),E-0042-U014
+Sub_00135E18,ShouldVisualEffectsBeGenerated,0x00135E18,Car::ShouldVisualEffectsBeGenerated(void),E-0042-C008
+Sub_00135EB8,GetPostCollisionYawControlBoost,0x00135EB8,Car::GetPostCollisionYawControlBoost(void),E-0042-C009
+Sub_001377D8,CheckDampingSuitability,0x001377D8,PhysicsCar::CheckDampingSuitability(void),E-0042-U026
+Sub_00137938,BottomOut,0x00137938,PhysicsCar::BottomOut(void),E-0042-C014
+Sub_00137C88,YawFrictionBoost,0x00137C88,"YawFrictionBoost(float, float, float, float, float, int, float &, float)",E-0042-C015
+Sub_00137D90,Move,0x00137D90,PhysicsCar::Move(float),E-0041-R01
+Sub_00138CF8,InitializeStateFromCar,0x00138CF8,PhysicsCar::InitializeStateFromCar(void),E-0042-U027
+Sub_00138F38,IterateForces,0x00138F38,PhysicsCar::IterateForces(void),E-0042-C016
+Sub_00139188,UpdateCar,0x00139188,PhysicsCar::UpdateCar(float),E-0042-C017
+Sub_00139490,SetBoost,0x00139490,PhysicsCar::SetBoost(float),E-0042-U028
+Sub_00139518,JumpStabilizer,0x00139518,PhysicsCar::JumpStabilizer(void),E-0042-C018
+Sub_00152070,GetElevation,0x00152070,"TopologyCoordinate::GetElevation(bVector3 const *, TerrainType *, bVector3 *, bool *)",E-0042-C021
+Sub_00189120,SetMinMax,0x00189120,"Table::SetMinMax(float, float)",E-0042-C057
+Sub_00189168,CalcIndexMultiplier,0x00189168,Table::CalcIndexMultiplier(void),E-0042-C058
+Sub_0018AA28,GetTorque,0x0018AA28,Engine::GetTorque(void),E-0042-C061
+Sub_0018AAB0,GetTotalEngineTorque,0x0018AAB0,Engine::GetTotalEngineTorque(void),E-0042-C062
+Sub_0018ABF0,DecrementNitro,0x0018ABF0,Engine::DecrementNitro(void),E-0042-C063
+Sub_0018B360,GetDifferentialAngularAcceleration,0x0018B360,DriveTrain::GetDifferentialAngularAcceleration(void),E-0042-C068
+Sub_0018B6C8,ApplyClutchTorque,0x0018B6C8,DriveTrain::ApplyClutchTorque(float),E-0042-C070
+Sub_0018B948,GuessClutchTorque,0x0018B948,DriveTrain::GuessClutchTorque(void),E-0042-U111
+Sub_0018BAA0,ModifyClutchTorque,0x0018BAA0,DriveTrain::ModifyClutchTorque(void),E-0042-C071
+Sub_0018BC10,FinalizeClutchTorque,0x0018BC10,DriveTrain::FinalizeClutchTorque(void),E-0042-U112
+Sub_0018BCA0,SetSportGear,0x0018BCA0,DriveTrain::SetSportGear(Gear),E-0041-M01
+Sub_0018BCE0,SetDesiredGear,0x0018BCE0,DriveTrain::SetDesiredGear(Gear),E-0041-R02
+Sub_0019C238,AddComponent,0x0019C238,PhysicsSystem::AddComponent(PhysicsComponent *),E-0042-C090
+Sub_0019C290,IntegrateEuler,0x0019C290,PhysicsSystem::IntegrateEuler(float),E-0042-C091
+Sub_0019CC58,CalculateInertiaTensor,0x0019CC58,RigidBody::CalculateInertiaTensor(void),E-0042-C095
+Sub_0019CD90,ApplyForce,0x0019CD90,"RigidBody::ApplyForce(bVector3 *, bVector3 *)",E-0041-M01
+Sub_0019CE80,ApplyForceInFrame,0x0019CE80,"RigidBody::ApplyForceInFrame(bVector3 *, bVector3 *)",E-0042-C097
+Sub_0019CEF8,ApplyMoment,0x0019CEF8,RigidBody::ApplyMoment(bVector3 *),E-0042-C098
+Sub_0019CF10,ApplyImpulse,0x0019CF10,"RigidBody::ApplyImpulse(bVector3 *, bVector3 *)",E-0041-M01
+Sub_0019D368,bMulMatrixVector,0x0019D368,"bMulMatrixVector(bVector3 *, bMatrix4 *, bVector3 *)",E-0042-U132
+Sub_0019D370,VectorStarMatrix,0x0019D370,"VectorStarMatrix(bMatrix4 *, bVector3 *, bMatrix4 *)",E-0041-M01
+Sub_001A33C0,GetQuantizedRealTimeElapsed,0x001A33C0,GetQuantizedRealTimeElapsed(float),E-0041-M01
+Sub_001A44A8,ExchangeZForces,0x001A44A8,"Wheel::ExchangeZForces(int, float)",E-0042-C117
+Sub_001A4778,CheckForBrakeLock,0x001A4778,Wheel::CheckForBrakeLock(float),E-0042-C120
+Sub_001A4818,GetPilotFactor,0x001A4818,Wheel::GetPilotFactor(void),E-0042-C121
+Sub_001A4930,GuessGroundForce,0x001A4930,"Wheel::GuessGroundForce(bVector2 *, int)",E-0042-C122
+Sub_001A4D28,GetLateralForce,0x001A4D28,"Wheel::GetLateralForce(float, float)",E-0042-U136
+Sub_001A4E88,ModifyGroundForce,0x001A4E88,Wheel::ModifyGroundForce(bVector2 *),E-0041-M01
+Sub_001A4EE0,FinalizeGroundForce,0x001A4EE0,Wheel::FinalizeGroundForce(int),E-0042-C123
+Sub_001A5428,GetHorizontalGroundForceInCarFrame,0x001A5428,Wheel::GetHorizontalGroundForceInCarFrame(bVector3 *),E-0041-M01
+Sub_001A6370,ResolveMoreForces,0x001A6370,Suspension::ResolveMoreForces(void),E-0042-C129
+Sub_001A63D0,GetPointVelocity,0x001A63D0,"GetPointVelocity(bVector3 *, bVector3 *, bVector3 *, bVector3 *)",E-0041-M01
+Sub_001A6408,ApplyGroundPenaltyImpulse,0x001A6408,Suspension::ApplyGroundPenaltyImpulse(void),E-0042-C130
+Sub_001ADFB8,GetDownforceAtSpeed,0x001ADFB8,Aerodynamics::GetDownforceAtSpeed(float),E-0041-M01
+Sub_001C0888,GetYaw,0x001C0888,CarState::GetYaw(void),E-0042-C135
+Sub_001C08D0,GetYawAlways,0x001C08D0,CarState::GetYawAlways(void),E-0042-C136
+Sub_001C0D78,CalculateWheelMatrices,0x001C0D78,CarState::CalculateWheelMatrices(int),E-0042-U144
+Sub_0025A300,bDiv,0x0025A300,"bDiv(int, int)",E-0041-M01
+Sub_0025A748,bASin,0x0025A748,bASin(float),E-0042-U191
+Sub_0025A890,bATan,0x0025A890,"bATan(float, float)",E-0042-U192
+Sub_0025AC68,bIdentity,0x0025AC68,bIdentity(bMatrix4 *),E-0041-M01
+Sub_0025AC98,bInvertMatrix,0x0025AC98,"bInvertMatrix(bMatrix4 *, bMatrix4 const *)",E-0041-M01
+Sub_0025AF20,bTransposeMatrix,0x0025AF20,"bTransposeMatrix(bMatrix4 *, bMatrix4 const *)",E-0042-U194
+Sub_0025A3D0,bRandom,0x0025A3D0,"bRandom(int, unsigned int *)",E-0041-M01
+Sub_0025A410,bRandom,0x0025A410,"bRandom(float, unsigned int *)",E-0042-C169
+Sub_0025A4A8,bRandom,0x0025A4A8,bRandom(float),E-0042-U190
+Sub_0025AED0,bMulMatrix,0x0025AED0,"bMulMatrix(bVector3 *, bMatrix4 const *, bVector3 const *)",E-0042-U193
+Sub_0025AE18,bMulMatrix,0x0025AE18,"bMulMatrix(bMatrix4 *, bMatrix4 const *, bMatrix4 const *)",E-0041-M01
+Sub_0025A540,bSin,0x0025A540,bSin(unsigned short),E-0042-C170
+Sub_0025A5E0,bSin,0x0025A5E0,bSin(float),E-0042-C171
+Sub_0025AA78,bFixATan,0x0025AA78,bFixATan(int),E-0042-C172
+Sub_0025AB50,bFixATan,0x0025AB50,"bFixATan(int, int)",E-0042-C173

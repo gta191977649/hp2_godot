@@ -148,7 +148,7 @@ void Model::advance_wheels(double delta){
     if(wheel_blur_)phase_=std::fmod(phase_+delta*preview_velocity,turn);
     if(phase_<0)phase_+=turn;
     const auto phase=wheel_blur_?float(phase_):0.f;
-    const auto matrices=wheel_blur_?Sub_001C0D78(config_,{{phase,phase,phase,phase}},0):hp2::recovered::CarRenderInfo::Sub_00120EF8(config_,0);
+    const auto matrices=wheel_blur_?CalculateWheelMatrices(config_,{{phase,phase,phase,phase}},0):hp2::recovered::CarRenderInfo::Sub_00120EF8(config_,0);
     for(auto& part:parts_)if(part.wheel>=0){
         if(part.group==Part::Group::Tire)part.transform=matrices.tire[part.wheel];
         else if(part.group==Part::Group::Brake)part.transform=matrices.brake[part.wheel];

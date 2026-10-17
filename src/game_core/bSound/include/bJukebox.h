@@ -34,7 +34,7 @@ bool Sub_001AF050(int type, bool genre_enabled);
 // wraps in authored order and leaves the cursor unchanged if no enabled tune exists.
 std::optional<std::size_t> Sub_0027ECA8(const std::vector<bool>& enabled, std::size_t& cursor);
 // FUN0025A3D0 counter-seeded integer transform, source frame counter supplied by host.
-int Sub_0025A3D0(int count, std::uint32_t& seed);
+int bRandom(int count, std::uint32_t& seed);
 
 // Frontend-only projection of003115D0/001AEAB0. Fresh original AudioOptions permits
 // all genres (001EF1C8 +0xaf=0xff). User saves and race scheduling are not represented.

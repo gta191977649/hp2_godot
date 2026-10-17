@@ -1,4 +1,4 @@
-#include "game_core/Sub_00137100_runtime.hpp"
+#include "game_core/port/driving/projections.hpp"
 #include <iostream>
 #include <stdexcept>
 using port::driving::Memory;
@@ -31,17 +31,17 @@ int run(){
     port::driving::init::Sub_0019C170(memory.view(head,16),head);
     memory.word(body+8,0x002b5430);memory.word(0x002b5444,0x0019dcc8);memory.half(0x002b5440,0xfff8);
     memory.word(wheel+8,0x002b5c40);memory.word(0x002b5c54,0x001a5c28);
-    Sub_0019C238(memory,head,body);Sub_0019C238(memory,head,wheel);
+    AddComponent(memory,head,body);AddComponent(memory,head,wheel);
     check(memory.word(head)==body&&memory.word(head+4)==wheel&&memory.word(body)==wheel&&memory.word(body+4)==head&&memory.word(wheel)==head&&memory.word(wheel+4)==body,"Intrusive append exact forward/back links");
     check(memory.word(head+8)==34,"Body count32 plus wheel count2 from original return-delay bytes");
     const auto helper=memory.allocate(0x18),helper_config=memory.allocate(16);
     memory.word(helper,helper_config);memory.scalar(helper_config+4,2);memory.scalar(helper_config+8,3);
-    check(Sub_001ADFB8(memory,helper,0.25f)==1.25f&&Sub_001ADFB8(memory,helper,-2)==0,"001ADFB8 max.S has no integer truncation");
+    check(GetDownforceAtSpeed(memory,helper,0.25f)==1.25f&&GetDownforceAtSpeed(memory,helper,-2)==0,"001ADFB8 max.S has no integer truncation");
     // E-0038-I17 instruction-derived unequal axle split and all-four-lane projection.
     const auto mover=memory.allocate(0x80),config=memory.allocate(0x560),car=memory.allocate(0x900),controls=memory.allocate(0x240),flags=memory.allocate(0x20);
     memory.word(mover+0x18,body);memory.word(mover+0x4c,config);memory.word(mover+0x54,car);memory.word(mover+0x48,helper);
     memory.word(body+0xc,config+0x1e0);memory.scalar(config+0x1e0,4);
-    memory.matrix(config+0x1f0,port::driving::init::Sub_0025AC68());
+    memory.matrix(config+0x1f0,port::driving::init::bIdentity());
     memory.vector(config+0x110,{{0,1,2,3}});memory.vector(config+0x120,{{3,5,7,9}});memory.scalar(config+0x180,-1);
     memory.word(helper,config+0x2f0);memory.scalar(config+0x2f4,0.25f);memory.scalar(config+0x2f8,0.75f);memory.scalar(config+0x2fc,3);memory.scalar(car+0x3c0,2);
     memory.word(0x0032fff4,1); // gp-0x58FC, enable config+0x110 subtraction.
@@ -58,13 +58,13 @@ int run(){
     memory.word(mover,controls);memory.word(car+0x34,flags);memory.word(car+0x3bc,1);
     memory.scalar(0x0032dcc4,0.5f);memory.scalar(0x0032dcc8,2);
     memory.scalar(controls+0x214,0.5f);memory.vector(body+0x90,{{0.25f,0,0,77}});memory.vector(body+0xa0,{{0,0,0,88}});
-    check(Sub_001377D8(memory,mover)==2,"Equality at throttle and0.25 vector length admits state2");
-    memory.vector(body+0x90,{{0.5f,0,0,77}});check(Sub_001377D8(memory,mover)==1,"Bounded nonzero motion admits state1");
-    memory.scalar(controls+0x214,0.5001f);check(Sub_001377D8(memory,mover)==0,"Strict throttle threshold gate");
-    memory.word(car+0x860,0x7fffffff);memory.scalar(car+0x864,100);check(!Sub_00133130(memory,car),"Time sentinel suppresses predicate");
+    check(CheckDampingSuitability(memory,mover)==2,"Equality at throttle and0.25 vector length admits state2");
+    memory.vector(body+0x90,{{0.5f,0,0,77}});check(CheckDampingSuitability(memory,mover)==1,"Bounded nonzero motion admits state1");
+    memory.scalar(controls+0x214,0.5001f);check(CheckDampingSuitability(memory,mover)==0,"Strict throttle threshold gate");
+    memory.word(car+0x860,0x7fffffff);memory.scalar(car+0x864,100);check(!IsBlinking(memory,car),"Time sentinel suppresses predicate");
     memory.word(car+0x860,0xfffffff0);memory.word(0x00330c78,0x10);memory.scalar(0x0032dc34,0.5f);memory.scalar(car+0x864,17);
-    check(Sub_00133130(memory,car),"32bit clock subtraction wraps before signed float conversion");
-    check(Sub_001A63D0({{1,2,3,4}},{{0,0,2,5}},{{3,0,0,7}})==std::array<float,4>{{1,8,3,9}},"Velocity helper cross retains angular W then adds all linear lanes");
+    check(IsBlinking(memory,car),"32bit clock subtraction wraps before signed float conversion");
+    check(GetPointVelocity({{1,2,3,4}},{{0,0,2,5}},{{3,0,0,7}})==std::array<float,4>{{1,8,3,9}},"Velocity helper cross retains angular W then adds all linear lanes");
     // Full call/store-graph fixture. The synthetic table/config values are only
     // an ownership/order test; they are not a replacement vehicle setup.
     memory.map(0x002ae000,0x1000);
@@ -79,7 +79,7 @@ int run(){
     for(unsigned i=0;i<12;++i)memory.scalar(config+0x2c0+4*i,12);
     memory.word(config+0x288,2);for(unsigned i=0;i<4;++i)memory.scalar(config+0x290+4*i,1);
     memory.scalar(config+0x244,0.5f);memory.scalar(config+0x248,-0.5f);memory.scalar(config+0x264,0.5f);memory.scalar(config+0x268,-0.5f);
-    memory.matrix(car+0x90,port::driving::init::Sub_0025AC68());memory.word(car+0x3c8,2);memory.scalar(car+0x3d0,3);
+    memory.matrix(car+0x90,port::driving::init::bIdentity());memory.word(car+0x3c8,2);memory.scalar(car+0x3d0,3);
     memory.scalar(0x00331124,100);memory.scalar(0x0032dd3c,1);memory.scalar(0x0032e328,1);
     memory.vector(0x00320a60,{{0,0,0,0}});memory.scalar(controls+0x214,0);
     port::driving::PlaneContact plane;InitServices services;services.contact=&plane;services.Field_00137938_stack_w=0;

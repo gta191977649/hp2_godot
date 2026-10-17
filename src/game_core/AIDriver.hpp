@@ -54,11 +54,5 @@ public:
     // ELF 0x00193650; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00193650.md.
     // Port-side void/no-argument placeholder; original signature unknown.
     void Sub_00193650();
-    // ELF 0x00193758; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00193758.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00193758();
-    // ELF 0x00193780; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00193780.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00193780();
 };
 } // namespace hp2::recovered

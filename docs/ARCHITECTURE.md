@@ -306,3 +306,15 @@ permanently pausing. Pointer intent/capture and camera release are separate from
 pause. The rear/orbit/recenter camera is an explicit tool with confirmed body+Z host forward;
 physics and original wheel render-basis contracts are unchanged. The mode UI exposes only
 return/hints/error; Session instrumentation remains test-side. See DRIVING_LAB.md.
+
+
+## TASK-0042 source ownership and names
+
+Debug-reference call chains confirm additional retail symbol names; exact ECOFF
+markers establish CPP ownership and selected declaration headers. See
+[DEBUG_CALLCHAIN_RECOVERY.md](DEBUG_CALLCHAIN_RECOVERY.md) and the durable TASK-0042
+class/projection registries. Class shells use established declaring scopes;
+shared source files merge class implementations without inferring inheritance.
+Typed driving projections retain port namespaces and shared port interfaces;
+unknown owners remain in port/driving/unresolved_entries.cpp. No Debug ABI or
+behavior is transplanted, and whole-entry gaps continue to throw.

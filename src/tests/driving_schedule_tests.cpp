@@ -1,4 +1,4 @@
-#include "game_core/Sub_0019DA30.hpp"
+#include "game_core/port/driving/projections.hpp"
 #include <array>
 #include <iostream>
 #include <stdexcept>
@@ -30,7 +30,7 @@ int run(){
     Sub_001A33F0(memory,0,services);
     check(observations==std::vector<std::array<std::uint32_t,3>>{{{60,8,2}},{{0,4,4}}},"Default mode clamps then records quantized60, independent of guessed frame rate");
     check(memory.word(0x00330c68)==60&&memory.word(0x00330c64)==0x3c888889,"Quantized delta is60 times exact original reciprocal3600");
-    check(Sub_001A33C0(1)==3600&&Sub_00136DD0(1)==4000,"Distinct timing conversion scales are preserved");
+    check(GetQuantizedRealTimeElapsed(1)==3600&&Sub_00136DD0(1)==4000,"Distinct timing conversion scales are preserved");
     Sub_001A3598(memory);check(memory.word(0x00330c78)==4000&&memory.scalar(0x00330c7c)==1&&memory.word(0x00330c88)==0,"Clock constructor truncates original4000.5 constant");
     Sub_001A35E0(memory,memory.scalar(0x00330c64));check(memory.word(0x00330c94)==0,"Delta publication clears end-frame marker");
     Sub_001A35F0(memory);check(memory.word(0x00330c78)==4067&&memory.word(0x00330c88)==0&&memory.word(0x00330c90)==1&&memory.word(0x00330c94)==1,"End-frame advances4000Hz integer counter, clears delta and sets marker");

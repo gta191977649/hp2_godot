@@ -1,3 +1,5 @@
+// TASK-0042 E-0042-S001: exact Debug source marker(s): ..\indep\src\frontendscreens\joystickconfiguration.cpp.
+// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
 // Original source path, recovered verbatim from the authorized ELF: `..\indep\src\frontendscreens\joystickconfiguration.cpp`
 // (string at 0x002BE300, SLUS_203.62 sha256 7335b8ed...facc2; TASK-0020, E-0020-N01).
 // This file sits at that path. The path is original; what the file holds is a
@@ -42,3 +44,10 @@ void JoystickPreconfig::Sub_002402C0() {
     hp2::not_implemented("0x002402C0", "JoystickPreconfig::Sub_002402C0 (signature and full body unresolved)");
 }
 } // namespace hp2::frontend
+
+// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
+// Class spelling: allocator_label; evidence: E-0027-C01.
+// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
+// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
+// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
+#include "game_core/JoystickCalibrationScreen.hpp"

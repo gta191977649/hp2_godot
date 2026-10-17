@@ -1,6 +1,6 @@
 #pragma once
 // Port-side bounded logical address space. No original allocator or native ABI is claimed.
-#include "game_core/Sub_00137100.hpp"
+#include "game_core/port/driving/byte_view.hpp"
 #include <array>
 #include <cstdint>
 #include <map>

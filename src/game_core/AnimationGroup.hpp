@@ -10,5 +10,11 @@ namespace hp2::recovered {
 class AnimationGroup {
 public:
     // No member address is confirmed; no speculative members are declared.
+
+public:
+    // TASK-0028: missing entries; existing storage and bodies are preserved.
+    // ELF 0x002486E8; E-0042-C163; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/002486e8.md.
+    // Port-side void/no-argument placeholder; original signature unknown.
+    void SetupToAnimate();
 };
 } // namespace hp2::recovered

@@ -29,15 +29,31 @@ if(HP2_ENABLE_DEBUG_CONSOLE OR BUILD_TESTING OR CMAKE_BUILD_TYPE STREQUAL "Debug
 endif()
 set(PORT_GODOT_CPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/godot-cpp" CACHE PATH "Pinned godot-cpp checkout")
 
-add_library(game_core STATIC src/game_core/port/driving/session.cpp src/game_core/Sub_00137C88.cpp src/game_core/Sub_001A4E88.cpp
-  src/game_core/Sub_0018BCE0.cpp
-  src/game_core/Sub_00137100.cpp src/game_core/Sub_00138F38.cpp
+add_library(game_core STATIC
+  src/game_core/indep/src/aerodynamics.cpp
+  src/game_core/indep/src/carinfo.cpp
+  src/game_core/indep/src/carstate.cpp
+  src/game_core/indep/src/engine.cpp
+  src/game_core/indep/src/rigidbody.cpp
+  src/game_core/indep/src/suspension.cpp
+  src/game_core/indep/src/table.cpp
+  src/game_core/indep/src/timer.cpp
+  src/game_core/indep/src/track.cpp
+  src/game_core/indep/src/wheel.cpp
+  src/game_core/port/driving/adapters.cpp
+  src/game_core/port/driving/byte_view.cpp
+  src/game_core/port/driving/unresolved_entries.cpp
+  src/game_core/src/bMath.cpp
+  src/game_core/src/bMatrix.cpp
+  src/game_core/src/ecstasy/emathe.cpp src/game_core/port/driving/session.cpp
+
+
   src/game_core/port/driving/memory.cpp src/game_core/port/driving/original_image.cpp
-  src/game_core/Sub_0018F808.cpp src/game_core/Sub_001A4930.cpp
-  src/game_core/Sub_00137100_runtime.cpp src/game_core/Sub_0019D4D0.cpp src/game_core/Sub_00152070.cpp
-  src/game_core/Sub_0018BCE0_memory.cpp src/game_core/Sub_00138E08.cpp src/game_core/Sub_00137D90.cpp
+
+
+
   src/game_core/port/driving/native_backend.cpp
-  src/game_core/Sub_0019DA30.cpp
+
   src/game_core/port/scaffold.cpp src/game_core/port/police/cop_control.cpp
   src/game_core/port/engine/engine_shell.cpp src/game_core/port/engine/world_connections.cpp
   src/game_core/port/frontend/screen_manager.cpp src/game_core/indep/src/fmenus.cpp
@@ -52,7 +68,7 @@ add_library(game_core STATIC src/game_core/port/driving/session.cpp src/game_cor
   src/game_core/memorycard/src/memorycard.cpp
   src/game_core/port/movieplayer/movie_audio.cpp
   src/game_core/port/assets/elab_chunks.cpp src/game_core/port/assets/hp2_tpk_texture.cpp
-  src/game_core/Type_0011BF98.cpp
+  src/game_core/src/ecstasy/estripdatae.cpp
   src/platform/ps2_asset_root.cpp src/platform/ps2_profile_store.cpp)
 target_include_directories(game_core PUBLIC src)
 include(reverse/classes/template_sources.cmake)
@@ -272,6 +288,9 @@ if(BUILD_TESTING)
   add_test(NAME debug_reference_matching COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/scripts" -p test_debug_reference_matching.py)
   add_test(NAME debug_reference_types COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/reverse/scripts/extract_debug_reference_types.py" --self-test)
   add_test(NAME debug_reference_vtables COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/reverse/scripts/match_debug_vtables.py" --self-test)
+  add_test(NAME debug_callchain_evidence COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/tests" -p test_debug_callchain_evidence.py)
+  add_test(NAME projection_partition_preservation COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/tests" -p test_projection_partitions.py)
+  add_test(NAME debug_callchain_adoption COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/reverse/tests" -p test_task0042_adoption.py)
   add_test(NAME main_loop_catalog COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/reverse/scripts/validate_main_loop.py" --metadata-only)
   # docs/PROGRESS.md's tables are generated from reverse/symbols.csv, the task files and the
   # not_implemented call sites. A stale tracker is a tracker that misleads the next session,

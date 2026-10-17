@@ -451,3 +451,17 @@ Headless DisplayServer does not establish actual OS mouse capture: the controlle
 capture intent separately and applies it to Input.mouse_mode. Headless input/camera tests
 are supplemented by an owned-window SendInput acceptance driver with foreground-PID checks,
 a separate owned focus probe and22 real interactions. Test data/screenshots remain ignored.
+
+
+## TASK-0042: source ownership follows exact Debug markers
+
+Adopt original CPP and unambiguous HPP spellings only after independently binding
+a retail entry to the reference symbol and reading the exact ECOFF file marker.
+Merge same-TU class shells; separate proven base/other declaring owners. Source
+ownership does not establish inheritance, original ABI or behavioral equivalence.
+For inline definitions, an out-of-line host projection may use its recorded
+compilation TU with that distinction documented. Retain unknown companion
+headers and unresolved entries as explicitly port-side partitions. Shared host
+projection headers and private helper namespaces avoid claiming an invented
+original header layout. Existing arithmetic bodies and throwing whole entries
+are preserved; constructor/destructor callable placeholders retain addresses.

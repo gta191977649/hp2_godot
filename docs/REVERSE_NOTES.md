@@ -517,3 +517,15 @@ The former packet group is TWO original scopes: eStripData and eStripDataE. The 
 other Type_ declarations now use reviewed constructor class spellings. cDBFileSys
 corrects an allocator-label spelling. Normalized-only candidates and shared/folded
 name conflicts remain unresolved; no behavior or Verified promotion.
+
+
+## TASK-0042 source ownership and names
+
+Debug-reference call chains confirm additional retail symbol names; exact ECOFF
+markers establish CPP ownership and selected declaration headers. See
+[DEBUG_CALLCHAIN_RECOVERY.md](DEBUG_CALLCHAIN_RECOVERY.md) and the durable TASK-0042
+class/projection registries. Class shells use established declaring scopes;
+shared source files merge class implementations without inferring inheritance.
+Typed driving projections retain port namespaces and shared port interfaces;
+unknown owners remain in port/driving/unresolved_entries.cpp. No Debug ABI or
+behavior is transplanted, and whole-entry gaps continue to throw.

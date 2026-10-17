@@ -285,3 +285,15 @@ available catalog IDs and verifies every drawable native surface survives the pe
 256-surface capacity split. The same scene can run windowed with Compatibility, or on
 Release through the common Ps2VehicleRenderer backend. It also checks async/warm cache,
 part visibility, wireframe, LOD copies and complete cleanup. No Godot engine limit is raised.
+
+
+## TASK-0042 naming/layout regeneration
+
+Use `py -3 reverse/scripts/adopt_task0042_names.py --write`, then
+`py -3 reverse/scripts/generate_class_templates.py --write` and
+`py -3 reverse/scripts/generate_progress.py`. TASK-0041 adoption is historical;
+its write command now refuses to overwrite migrated TASK-0042 layout. One-time
+migration scripts are audit tools for the original source layout and must not
+be rerun on the current tree. See DEBUG_CALLCHAIN_RECOVERY.md for evidence and
+exact binary prerequisites. CTest includes finite naming-proof, adoption-section
+preservation and projection-body/overload-address regression checks.

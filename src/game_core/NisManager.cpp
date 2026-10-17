@@ -3,4 +3,4 @@
 // Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
 // No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
 // Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/NisManager.hpp"
+#include "game_core/indep/inc/NIS.hpp"

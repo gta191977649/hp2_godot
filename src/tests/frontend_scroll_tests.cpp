@@ -29,7 +29,7 @@ int main() {
         state.Update_00249348(0.21f);check(screen.widgets[0].text=="Second"&&screen.widgets[0].x==650);
         check(screen.widgets[0].y==400&&screen.widgets[0].string_id_0x60==0);
         std::uint32_t rng=0x12345678;
-        check(Sub_0025A3D0(10000,rng)==9896); // unsigned DIVU old state
+        check(bRandom(10000,rng)==9896); // unsigned DIVU old state
         check(port::frontend::hint_binding("Audio Options",0x52e039fbu).string_id==0x24bec);
         check(port::frontend::hint_binding("Audio Options",0xaee77883u).string_id==0x24bed);
         check(port::frontend::hint_binding("Joystick PreConfig",0x52e039f8u).string_id==0x24c4d);
@@ -37,7 +37,7 @@ int main() {
         check(!port::frontend::hint_binding("Username Options",0x52e039f3u).attachment_known);
         check(port::frontend::hint_binding("Language Options",0).attachment_known);
         check(!port::frontend::hint_binding("Credits",0).attached);
-        rng=0xffffffff;check(Sub_0025A3D0(10000,rng)==7295);
+        rng=0xffffffff;check(bRandom(10000,rng)==7295);
         FeWidget fading;fading.type=2;fading.name_hash=StringHash_002534A8("FADING_BP_OBJECT");
         FeWidget master;master.type=2;master.name_hash=StringHash_002534A8("MASTER_BP_OBJECT");
         screen.widgets={fading,master};tGlobalBackgroundAnimation background;

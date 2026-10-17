@@ -2,8 +2,8 @@
 // Port-owned laboratory vehicle/environment state. Original algorithms live in Sub_* files.
 #include "session.hpp"
 #include "original_image.hpp"
-#include "game_core/Sub_00152070.hpp"
-#include "game_core/Sub_00138E08.hpp"
+#include "game_core/port/driving/projections.hpp"
+#include "game_core/port/driving/projections.hpp"
 namespace port::driving {
 class NativeBackend final:public Simulation {
 public:

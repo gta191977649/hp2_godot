@@ -1,0 +1,1707 @@
+{
+  "task_id": "TASK-0042",
+  "debug_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "retail_sha256": "7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2",
+  "map_sha256": "20baece850349d26f95a5da1c1f6e9eacd6c3f5574e560b8ff2f4e536f9f19d1",
+  "independently_adopted_aligned_parents": 815,
+  "vtable_search": {
+    "scope": "All initialized retail .data/.rodata/.sdata sections; every named Debug _vt$ table with complete two-anchor policy",
+    "compatible_pairs": 67,
+    "unique_pairs": 47,
+    "new_scoped_names": 0,
+    "limitation": "Single-anchor and changed-size tables intentionally remain unsupported; no inferred exclusive owner."
+  },
+  "summary": {
+    "unresolved_no_supported_caller_path": 167,
+    "supported_reviewed_caller_and_code": 2,
+    "supported_reviewed_caller_and_field_offsets": 1,
+    "supported_caller_and_child_shape": 9,
+    "supported_reviewed_changed_body": 9,
+    "unresolved_folded_signature_without_context": 8
+  },
+  "bridges": [
+    {
+      "evidence_id": "E-0042-U013",
+      "retail_address": "0x00133070",
+      "debug_address": "0x001330D8",
+      "reference_name": "Car::PleaseResetMeLater(void)",
+      "mangled_name": "PleaseResetMeLater__3Car",
+      "status": "supported_reviewed_caller_and_code",
+      "size": 108,
+      "caller_paths": [
+        {
+          "debug_address": "0x001330D8",
+          "parent_debug_address": "0x001378C0",
+          "parent_retail_address": "0x00137938",
+          "parent_reference_name": "PhysicsCar::BottomOut(void)",
+          "parent_evidence_id": "E-0042-C014",
+          "call_offset": "0x29C",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "reviewed_changes": [
+        {
+          "offset": "0x4",
+          "changed_bit_mask": "0x00000003"
+        },
+        {
+          "offset": "0xC",
+          "changed_bit_mask": "0x0000B7E0"
+        },
+        {
+          "offset": "0x40",
+          "changed_bit_mask": "0x000000D0"
+        },
+        {
+          "offset": "0x44",
+          "changed_bit_mask": "0x00001A10"
+        },
+        {
+          "offset": "0x58",
+          "changed_bit_mask": "0x0000000C"
+        }
+      ],
+      "rationale": "Car::PleaseResetMeLater: named BottomOut parent +0x29C; complete control/dataflow; store offset +0x854 becomes +0x858; one direct call and three relocated address words.",
+      "limitation": "Static name correspondence only; actual data and object layout must remain retail.",
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-001330D8.json",
+      "debug_instruction_sha256": "8cb1c1ec5a4c643059e08b582f1609f2fdb3d819b684453a3fd82eda1e4f3564",
+      "retail_instruction_sha256": "f174b68070c1f86c85cab1a8ed5bfb039a147d1e9eac29e18c798f0ec9e2bcf2"
+    },
+    {
+      "evidence_id": "E-0042-U014",
+      "retail_address": "0x00133130",
+      "debug_address": "0x00133198",
+      "reference_name": "Car::IsBlinking(void)",
+      "mangled_name": "IsBlinking__3Car",
+      "status": "supported_reviewed_caller_and_field_offsets",
+      "size": 92,
+      "caller_paths": [
+        {
+          "debug_address": "0x00133198",
+          "parent_debug_address": "0x00137D18",
+          "parent_retail_address": "0x00137D90",
+          "parent_reference_name": "PhysicsCar::Move(float)",
+          "parent_evidence_id": "E-0041-R01",
+          "call_offset": "0x488",
+          "parent_shape_equal": false,
+          "parent_reviewed_layout_evidence": "E-0041-R01",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x00133198",
+          "parent_debug_address": "0x001D5AB8",
+          "parent_retail_address": "0x001D8E80",
+          "parent_reference_name": "CarCollisionBody::IsBlinking(void)",
+          "parent_evidence_id": "E-0041-V01",
+          "call_offset": "0x18",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "reviewed_changes": [
+        {
+          "offset": "0x0",
+          "changed_bit_mask": "0x00000038"
+        },
+        {
+          "offset": "0x24",
+          "changed_bit_mask": "0x00000080"
+        },
+        {
+          "offset": "0x28",
+          "changed_bit_mask": "0x00000070"
+        },
+        {
+          "offset": "0x30",
+          "changed_bit_mask": "0x00000038"
+        }
+      ],
+      "limitation": "Car layout differs; name only, no field/layout adoption.",
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-00133198.json",
+      "debug_instruction_sha256": "8d4d3fd34dd7008295ecee05fd5352dca1c2445a23ef85ec2bc3bac1e026cd88",
+      "retail_instruction_sha256": "dee59dc94e522ef59e21b3f733f9e737e9d67e7c0002477b795f83f3a0500230"
+    },
+    {
+      "evidence_id": "E-0042-U015",
+      "retail_address": "0x00136B78",
+      "debug_address": "0x00136B28",
+      "reference_name": "CarMover::~CarMover(void)",
+      "mangled_name": "_$_8CarMover",
+      "status": "supported_caller_and_child_shape",
+      "size": 36,
+      "byte_identical": false,
+      "caller_paths": [
+        {
+          "debug_address": "0x00136B28",
+          "parent_debug_address": "0x00136AA8",
+          "parent_retail_address": "0x00136AF8",
+          "parent_reference_name": "NullMover::~NullMover(void)",
+          "parent_evidence_id": "E-0041-V01",
+          "call_offset": "0x24",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x00136B28",
+          "parent_debug_address": "0x001376C8",
+          "parent_retail_address": "0x00137708",
+          "parent_reference_name": "PhysicsCar::~PhysicsCar(void)",
+          "parent_evidence_id": "E-0041-V01",
+          "call_offset": "0x78",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x00136B28",
+          "parent_debug_address": "0x001FF410",
+          "parent_retail_address": "0x002043A0",
+          "parent_reference_name": "BeltMover::~BeltMover(void)",
+          "parent_evidence_id": "E-0041-V01",
+          "call_offset": "0xB8",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x00136B28",
+          "parent_debug_address": "0x00214410",
+          "parent_retail_address": "0x002197F0",
+          "parent_reference_name": "MellowMover::~MellowMover(void)",
+          "parent_evidence_id": "E-0041-V01",
+          "call_offset": "0x8C",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "limitation": "Static name correspondence only; layout, host ABI and behavior equivalence unverified.",
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-00136B28.json",
+      "debug_instruction_sha256": "da45885c1710b855a750296588665b132d5e4115dd32705eaede46568d0fe4c7",
+      "retail_instruction_sha256": "6ed913c5ff6a5226c6e1a7c7ad081051740e87e0daa16c443976e4bde628ed74"
+    },
+    {
+      "evidence_id": "E-0042-U026",
+      "retail_address": "0x001377D8",
+      "debug_address": "0x00137798",
+      "reference_name": "PhysicsCar::CheckDampingSuitability(void)",
+      "mangled_name": "CheckDampingSuitability__10PhysicsCar",
+      "status": "supported_reviewed_changed_body",
+      "size": 352,
+      "debug_size": 296,
+      "caller_paths": [
+        {
+          "debug_address": "0x00137798",
+          "parent_debug_address": "0x001378C0",
+          "parent_retail_address": "0x00137938",
+          "parent_reference_name": "PhysicsCar::BottomOut(void)",
+          "parent_evidence_id": "E-0042-C014",
+          "call_offset": "0x90",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "rationale": "Named BottomOut caller at +0x90; both bodies read wheel-ground count, driver throttle and body linear/angular velocity; identical vector squared-length reductions, orientation-z absolute checks and 0/1/2 return classification. Retail inserts Car::IsBlinking veto before damping classification (independently recovered 00133130).",
+      "raw_instruction_difference_spans": [
+        {
+          "kind": "replace",
+          "debug_start": "0x0",
+          "debug_end": "0x8",
+          "retail_start": "0x0",
+          "retail_end": "0x28"
+        },
+        {
+          "kind": "delete",
+          "debug_start": "0xC",
+          "debug_end": "0x10",
+          "retail_start": "0x2C",
+          "retail_end": "0x2C"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x18",
+          "debug_end": "0x2C",
+          "retail_start": "0x34",
+          "retail_end": "0x40"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x30",
+          "debug_end": "0x34",
+          "retail_start": "0x44",
+          "retail_end": "0x48"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x44",
+          "debug_end": "0x4C",
+          "retail_start": "0x58",
+          "retail_end": "0x60"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x50",
+          "debug_end": "0x54",
+          "retail_start": "0x64",
+          "retail_end": "0x68"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x64",
+          "debug_end": "0x6C",
+          "retail_start": "0x78",
+          "retail_end": "0x80"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x70",
+          "debug_end": "0x7C",
+          "retail_start": "0x84",
+          "retail_end": "0x90"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x80",
+          "debug_end": "0x84",
+          "retail_start": "0x94",
+          "retail_end": "0xA0"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x88",
+          "debug_end": "0x94",
+          "retail_start": "0xA4",
+          "retail_end": "0xAC"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0xB4",
+          "debug_end": "0xBC",
+          "retail_start": "0xCC",
+          "retail_end": "0xD4"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0xCC",
+          "debug_end": "0xD0",
+          "retail_start": "0xE4",
+          "retail_end": "0x100"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0xD4",
+          "debug_end": "0xEC",
+          "retail_start": "0x104",
+          "retail_end": "0x118"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0xF8",
+          "debug_end": "0xFC",
+          "retail_start": "0x124",
+          "retail_end": "0x128"
+        },
+        {
+          "kind": "insert",
+          "debug_start": "0x104",
+          "debug_end": "0x104",
+          "retail_start": "0x130",
+          "retail_end": "0x138"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x108",
+          "debug_end": "0x118",
+          "retail_start": "0x13C",
+          "retail_end": "0x158"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x11C",
+          "debug_end": "0x128",
+          "retail_start": "0x15C",
+          "retail_end": "0x160"
+        }
+      ],
+      "retail_raw_evidence_path": "local/task0042/unresolved/retail-001377D8.json",
+      "limitation": "Original identity/name only; explicit changed behavior and layouts remain retail-authoritative, not equivalent or Verified.",
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-00137798.json",
+      "live_retail_decompilation_reviewed": true,
+      "debug_instruction_sha256": "5e205e470ca0a659e624dcbe65afcfba024921f36367b6670bd1346a539bdb0c",
+      "retail_instruction_sha256": "7b1639c3270b67070b24523b6675f4dbbb5d056798f15f6b7292a96e5085d69e"
+    },
+    {
+      "evidence_id": "E-0042-U027",
+      "retail_address": "0x00138CF8",
+      "debug_address": "0x00138C80",
+      "reference_name": "PhysicsCar::InitializeStateFromCar(void)",
+      "mangled_name": "InitializeStateFromCar__10PhysicsCar",
+      "status": "supported_reviewed_changed_body",
+      "size": 272,
+      "debug_size": 268,
+      "caller_paths": [
+        {
+          "debug_address": "0x00138C80",
+          "parent_debug_address": "0x001370C0",
+          "parent_retail_address": "0x00137100",
+          "parent_reference_name": "PhysicsCar::PhysicsCar(CarTypeInfo *, CarDriver *, Car *)",
+          "parent_evidence_id": "E-0042-C012",
+          "call_offset": "0x2EC",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "rationale": "Named PhysicsCar constructor caller; both bodies call RigidBody::SetState once, then Suspension::SetState and Wheel::SetState in four-wheel loop; RPM sentinel 100.0 and gear/clutch synchronization tail agree. Retail additionally clears drivetrain +0x4C history; shifting array layout differs as already established E-0041-R02.",
+      "raw_instruction_difference_spans": [
+        {
+          "kind": "replace",
+          "debug_start": "0x40",
+          "debug_end": "0x44",
+          "retail_start": "0x40",
+          "retail_end": "0x44"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x58",
+          "debug_end": "0x5C",
+          "retail_start": "0x58",
+          "retail_end": "0x5C"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x78",
+          "debug_end": "0x7C",
+          "retail_start": "0x78",
+          "retail_end": "0x7C"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x8C",
+          "debug_end": "0x90",
+          "retail_start": "0x8C",
+          "retail_end": "0x90"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0xB4",
+          "debug_end": "0xB8",
+          "retail_start": "0xB4",
+          "retail_end": "0xB8"
+        },
+        {
+          "kind": "delete",
+          "debug_start": "0xF4",
+          "debug_end": "0xF8",
+          "retail_start": "0xF4",
+          "retail_end": "0xF4"
+        },
+        {
+          "kind": "insert",
+          "debug_start": "0x100",
+          "debug_end": "0x100",
+          "retail_start": "0xFC",
+          "retail_end": "0x104"
+        }
+      ],
+      "retail_raw_evidence_path": "local/task0042/unresolved/retail-00138CF8.json",
+      "limitation": "Original identity/name only; explicit changed behavior and layouts remain retail-authoritative, not equivalent or Verified.",
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-00138C80.json",
+      "live_retail_decompilation_reviewed": true,
+      "debug_instruction_sha256": "1a830e4419278ba3af5dd336e9700dd3304c22ebf3efce8e001780ebfc1a6f8b",
+      "retail_instruction_sha256": "7969b7b527a0e97a2fa9bfb26a19a6d833b5e7817e340c7fb239b0de3c6a7c2b"
+    },
+    {
+      "evidence_id": "E-0042-U028",
+      "retail_address": "0x00139490",
+      "debug_address": "0x00139418",
+      "reference_name": "PhysicsCar::SetBoost(float)",
+      "mangled_name": "SetBoost__10PhysicsCarf",
+      "status": "supported_reviewed_changed_body",
+      "size": 132,
+      "debug_size": 92,
+      "caller_paths": [
+        {
+          "debug_address": "0x00139418",
+          "parent_debug_address": "0x00137D18",
+          "parent_retail_address": "0x00137D90",
+          "parent_reference_name": "PhysicsCar::Move(float)",
+          "parent_evidence_id": "E-0041-R01",
+          "call_offset": "0x60",
+          "parent_shape_equal": false,
+          "parent_reviewed_layout_evidence": "E-0041-R01",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x00139418",
+          "parent_debug_address": "0x00137D18",
+          "parent_retail_address": "0x00137D90",
+          "parent_reference_name": "PhysicsCar::Move(float)",
+          "parent_evidence_id": "E-0041-R01",
+          "call_offset": "0x8A8",
+          "parent_shape_equal": false,
+          "parent_reviewed_layout_evidence": "E-0041-R01",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "rationale": "Named Move caller at unchanged call position; complete common tail writes engine/body/aerodynamics boost and 1.0-minus-draft, then four-wheel friction loop. Retail adds car blown-tire/driver condition and scales engine boost only; remaining body agrees including wheel bound 3 and field stores.",
+      "raw_instruction_difference_spans": [
+        {
+          "kind": "insert",
+          "debug_start": "0x0",
+          "debug_end": "0x0",
+          "retail_start": "0x0",
+          "retail_end": "0x1C"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x4",
+          "debug_end": "0x8",
+          "retail_start": "0x20",
+          "retail_end": "0x30"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0xC",
+          "debug_end": "0x18",
+          "retail_start": "0x34",
+          "retail_end": "0x40"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x1C",
+          "debug_end": "0x24",
+          "retail_start": "0x44",
+          "retail_end": "0x48"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x2C",
+          "debug_end": "0x30",
+          "retail_start": "0x50",
+          "retail_end": "0x54"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x34",
+          "debug_end": "0x44",
+          "retail_start": "0x58",
+          "retail_end": "0x6C"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x4C",
+          "debug_end": "0x50",
+          "retail_start": "0x74",
+          "retail_end": "0x78"
+        }
+      ],
+      "retail_raw_evidence_path": "local/task0042/unresolved/retail-00139490.json",
+      "limitation": "Original identity/name only; explicit changed behavior and layouts remain retail-authoritative, not equivalent or Verified.",
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-00139418.json",
+      "live_retail_decompilation_reviewed": true,
+      "debug_instruction_sha256": "2be950ccbe41125ee68c634ed96eef25d7b8e879963539beeeeefdc036521e27",
+      "retail_instruction_sha256": "2cb9cdaa0821dad70d50ca91ef8c3b330f0f887db609c31c5fc7ae6161d81361"
+    },
+    {
+      "evidence_id": "E-0042-U030",
+      "retail_address": "0x00139678",
+      "debug_address": "0x001395D8",
+      "reference_name": "PhysicsVehicle::~PhysicsVehicle(void)",
+      "mangled_name": "_$_14PhysicsVehicle",
+      "status": "supported_caller_and_child_shape",
+      "size": 8,
+      "byte_identical": false,
+      "caller_paths": [
+        {
+          "debug_address": "0x001395D8",
+          "parent_debug_address": "0x001376C8",
+          "parent_retail_address": "0x00137708",
+          "parent_reference_name": "PhysicsCar::~PhysicsCar(void)",
+          "parent_evidence_id": "E-0041-V01",
+          "call_offset": "0x5C",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x001395D8",
+          "parent_debug_address": "0x00214410",
+          "parent_retail_address": "0x002197F0",
+          "parent_reference_name": "MellowMover::~MellowMover(void)",
+          "parent_evidence_id": "E-0041-V01",
+          "call_offset": "0x80",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "limitation": "Static name correspondence only; layout, host ABI and behavior equivalence unverified.",
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-001395D8.json",
+      "debug_instruction_sha256": "acfec9194b798215ce05f575fc8e069842228a084835d95fd46065f9fbbe3d21",
+      "retail_instruction_sha256": "c94525ca42f964299da7e8f169bd2383ff9e0acb8667ca2a4dbd8d8265c24587"
+    },
+    {
+      "evidence_id": "E-0042-U109",
+      "retail_address": "0x0018AE70",
+      "debug_address": "0x00189020",
+      "reference_name": "DriveTrain::DriveTrain(DriveTrainInfo *, Engine *, Wheel **, CarState *)",
+      "mangled_name": "__10DriveTrainP14DriveTrainInfoP6EnginePP5WheelP8CarState",
+      "status": "supported_reviewed_changed_body",
+      "size": 160,
+      "debug_size": 156,
+      "caller_paths": [
+        {
+          "debug_address": "0x00189020",
+          "parent_debug_address": "0x001370C0",
+          "parent_retail_address": "0x00137100",
+          "parent_reference_name": "PhysicsCar::PhysicsCar(CarTypeInfo *, CarDriver *, Car *)",
+          "parent_evidence_id": "E-0042-C012",
+          "call_offset": "0x298",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "rationale": "Named PhysicsCar constructor caller +0x298; same argument storage, four-drive-wheel copy loop, named DriveTrain vtable store, CalculateShiftPoints call and FIRST_GEAR/clutch-state initialization sequence. Retail inserts zero initialization +0x4C and moves shift arrays by four bytes, consistent with E-0041-R02.",
+      "raw_instruction_difference_spans": [
+        {
+          "kind": "replace",
+          "debug_start": "0xC",
+          "debug_end": "0x10",
+          "retail_start": "0xC",
+          "retail_end": "0x10"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x24",
+          "debug_end": "0x28",
+          "retail_start": "0x24",
+          "retail_end": "0x28"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x2C",
+          "debug_end": "0x30",
+          "retail_start": "0x2C",
+          "retail_end": "0x30"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x5C",
+          "debug_end": "0x64",
+          "retail_start": "0x5C",
+          "retail_end": "0x64"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x68",
+          "debug_end": "0x70",
+          "retail_start": "0x68",
+          "retail_end": "0x70"
+        },
+        {
+          "kind": "insert",
+          "debug_start": "0x8C",
+          "debug_end": "0x8C",
+          "retail_start": "0x8C",
+          "retail_end": "0x90"
+        }
+      ],
+      "retail_raw_evidence_path": "local/task0042/unresolved/retail-0018AE70.json",
+      "limitation": "Original identity/name only; explicit changed behavior and layouts remain retail-authoritative, not equivalent or Verified.",
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-00189020.json",
+      "live_retail_decompilation_reviewed": true,
+      "debug_instruction_sha256": "1654985949963e339309ceaa97b7343247f3b48fda23347535660a1d110d0e39",
+      "retail_instruction_sha256": "167702d5b1b7905c9af4c6474097f872a531a1de26f73489f45a5f2d69d13477"
+    },
+    {
+      "evidence_id": "E-0042-U111",
+      "retail_address": "0x0018B948",
+      "debug_address": "0x00189AF0",
+      "reference_name": "DriveTrain::GuessClutchTorque(void)",
+      "mangled_name": "GuessClutchTorque__10DriveTrain",
+      "status": "supported_reviewed_changed_body",
+      "size": 344,
+      "debug_size": 220,
+      "caller_paths": [
+        {
+          "debug_address": "0x00189AF0",
+          "parent_debug_address": "0x00138EC0",
+          "parent_retail_address": "0x00138F38",
+          "parent_reference_name": "PhysicsCar::IterateForces(void)",
+          "parent_evidence_id": "E-0042-C016",
+          "call_offset": "0x48",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "rationale": "Named IterateForces caller +0x48; both bodies dispatch same four clutch states, clamp angular-speed difference by signed ClutchLimiter, call GetTotalEngineTorque in engaged case and ApplyClutchTorque for engaged/transitional cases. Retail inserts previous-slip-history sign/2000.0 checks and optional half stiffness, with +0x4C history write.",
+      "raw_instruction_difference_spans": [
+        {
+          "kind": "replace",
+          "debug_start": "0x18",
+          "debug_end": "0x1C",
+          "retail_start": "0x18",
+          "retail_end": "0x1C"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x30",
+          "debug_end": "0x34",
+          "retail_start": "0x30",
+          "retail_end": "0x34"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x40",
+          "debug_end": "0x44",
+          "retail_start": "0x40",
+          "retail_end": "0x44"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x48",
+          "debug_end": "0x4C",
+          "retail_start": "0x48",
+          "retail_end": "0x4C"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x60",
+          "debug_end": "0x64",
+          "retail_start": "0x60",
+          "retail_end": "0x64"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x6C",
+          "debug_end": "0x70",
+          "retail_start": "0x6C",
+          "retail_end": "0x70"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x74",
+          "debug_end": "0x80",
+          "retail_start": "0x74",
+          "retail_end": "0x80"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x88",
+          "debug_end": "0x98",
+          "retail_start": "0x88",
+          "retail_end": "0x98"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0xA0",
+          "debug_end": "0xA4",
+          "retail_start": "0xA0",
+          "retail_end": "0xB4"
+        },
+        {
+          "kind": "insert",
+          "debug_start": "0xA8",
+          "debug_end": "0xA8",
+          "retail_start": "0xB8",
+          "retail_end": "0x130"
+        },
+        {
+          "kind": "delete",
+          "debug_start": "0xAC",
+          "debug_end": "0xB4",
+          "retail_start": "0x134",
+          "retail_end": "0x134"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0xB8",
+          "debug_end": "0xBC",
+          "retail_start": "0x138",
+          "retail_end": "0x13C"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0xC0",
+          "debug_end": "0xC8",
+          "retail_start": "0x140",
+          "retail_end": "0x144"
+        }
+      ],
+      "retail_raw_evidence_path": "local/task0042/unresolved/retail-0018B948.json",
+      "limitation": "Original identity/name only; explicit changed behavior and layouts remain retail-authoritative, not equivalent or Verified.",
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-00189AF0.json",
+      "live_retail_decompilation_reviewed": true,
+      "debug_instruction_sha256": "e7409f3f10388c936fcc05e31a7e090237485bf6106f53afc5670b430e8f45cf",
+      "retail_instruction_sha256": "53f509a623af26288e1f900c9311a3ee8e5890fb040c61c23313bc13f63c0cd2"
+    },
+    {
+      "evidence_id": "E-0042-U112",
+      "retail_address": "0x0018BC10",
+      "debug_address": "0x00189D40",
+      "reference_name": "DriveTrain::FinalizeClutchTorque(void)",
+      "mangled_name": "FinalizeClutchTorque__10DriveTrain",
+      "status": "supported_caller_and_child_shape",
+      "size": 8,
+      "byte_identical": true,
+      "caller_paths": [
+        {
+          "debug_address": "0x00189D40",
+          "parent_debug_address": "0x00138EC0",
+          "parent_retail_address": "0x00138F38",
+          "parent_reference_name": "PhysicsCar::IterateForces(void)",
+          "parent_evidence_id": "E-0042-C016",
+          "call_offset": "0x20C",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "limitation": "Static name correspondence only; layout, host ABI and behavior equivalence unverified.",
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-00189D40.json",
+      "debug_instruction_sha256": "6d64edf91449c1b17746c1ef18afa2eb25c70bdf1322ab3df5a2630993b7e2f1",
+      "retail_instruction_sha256": "6d64edf91449c1b17746c1ef18afa2eb25c70bdf1322ab3df5a2630993b7e2f1"
+    },
+    {
+      "evidence_id": "E-0042-U113",
+      "retail_address": "0x0018C030",
+      "debug_address": "0x0018A160",
+      "reference_name": "DriveTrain::PrintCurrentState(void)",
+      "mangled_name": "PrintCurrentState__10DriveTrain",
+      "status": "supported_caller_and_child_shape",
+      "size": 8,
+      "byte_identical": true,
+      "caller_paths": [
+        {
+          "debug_address": "0x0018A160",
+          "parent_debug_address": "0x00137D18",
+          "parent_retail_address": "0x00137D90",
+          "parent_reference_name": "PhysicsCar::Move(float)",
+          "parent_evidence_id": "E-0041-R01",
+          "call_offset": "0xAD0",
+          "parent_shape_equal": false,
+          "parent_reviewed_layout_evidence": "E-0041-R01",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "limitation": "Static name correspondence only; layout, host ABI and behavior equivalence unverified.",
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-0018A160.json",
+      "debug_instruction_sha256": "6d64edf91449c1b17746c1ef18afa2eb25c70bdf1322ab3df5a2630993b7e2f1",
+      "retail_instruction_sha256": "6d64edf91449c1b17746c1ef18afa2eb25c70bdf1322ab3df5a2630993b7e2f1"
+    },
+    {
+      "evidence_id": "E-0042-U132",
+      "retail_address": "0x0019D368",
+      "debug_address": "0x0019AC90",
+      "reference_name": "bMulMatrixVector(bVector3 *, bMatrix4 *, bVector3 *)",
+      "mangled_name": "bMulMatrixVector__FP8bVector3P8bMatrix4T0",
+      "status": "supported_caller_and_child_shape",
+      "size": 8,
+      "byte_identical": false,
+      "caller_paths": [
+        {
+          "debug_address": "0x0019AC90",
+          "parent_debug_address": "0x00138EC0",
+          "parent_retail_address": "0x00138F38",
+          "parent_reference_name": "PhysicsCar::IterateForces(void)",
+          "parent_evidence_id": "E-0042-C016",
+          "call_offset": "0xA8",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x0019AC90",
+          "parent_debug_address": "0x0019A7A8",
+          "parent_retail_address": "0x0019CE80",
+          "parent_reference_name": "RigidBody::ApplyForceInFrame(bVector3 *, bVector3 *)",
+          "parent_evidence_id": "E-0042-C097",
+          "call_offset": "0x2C",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x0019AC90",
+          "parent_debug_address": "0x0019A7A8",
+          "parent_retail_address": "0x0019CE80",
+          "parent_reference_name": "RigidBody::ApplyForceInFrame(bVector3 *, bVector3 *)",
+          "parent_evidence_id": "E-0042-C097",
+          "call_offset": "0x40",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x0019AC90",
+          "parent_debug_address": "0x0019B2A8",
+          "parent_retail_address": "0x0019D980",
+          "parent_reference_name": "RigidBody::PrintCurrentState(void)",
+          "parent_evidence_id": "E-0042-C100",
+          "call_offset": "0x24",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x0019AC90",
+          "parent_debug_address": "0x0019B2A8",
+          "parent_retail_address": "0x0019D980",
+          "parent_reference_name": "RigidBody::PrintCurrentState(void)",
+          "parent_evidence_id": "E-0042-C100",
+          "call_offset": "0x34",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x0019AC90",
+          "parent_debug_address": "0x001A2108",
+          "parent_retail_address": "0x001A4930",
+          "parent_reference_name": "Wheel::GuessGroundForce(bVector2 *, int)",
+          "parent_evidence_id": "E-0042-C122",
+          "call_offset": "0xD0",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x0019AC90",
+          "parent_debug_address": "0x001A26B8",
+          "parent_retail_address": "0x001A4EE0",
+          "parent_reference_name": "Wheel::FinalizeGroundForce(int)",
+          "parent_evidence_id": "E-0042-C123",
+          "call_offset": "0x1E0",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x0019AC90",
+          "parent_debug_address": "0x001A26B8",
+          "parent_retail_address": "0x001A4EE0",
+          "parent_reference_name": "Wheel::FinalizeGroundForce(int)",
+          "parent_evidence_id": "E-0042-C123",
+          "call_offset": "0x494",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x0019AC90",
+          "parent_debug_address": "0x001A3BE8",
+          "parent_retail_address": "0x001A6408",
+          "parent_reference_name": "Suspension::ApplyGroundPenaltyImpulse(void)",
+          "parent_evidence_id": "E-0042-C130",
+          "call_offset": "0x20",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "limitation": "Static name correspondence only; layout, host ABI and behavior equivalence unverified.",
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-0019AC90.json",
+      "debug_instruction_sha256": "e6ef159ca1e899c9504df4ca40c5472c58131bccbd5e23e156f84bcf383daba2",
+      "retail_instruction_sha256": "88d5e88e4900e44911a2c5cfc545e6da4b54a43d39f377e3157022edadeb83ea"
+    },
+    {
+      "evidence_id": "E-0042-U136",
+      "retail_address": "0x001A4D28",
+      "debug_address": "0x001A2500",
+      "reference_name": "Wheel::GetLateralForce(float, float)",
+      "mangled_name": "GetLateralForce__5Wheelff",
+      "status": "supported_reviewed_caller_and_code",
+      "size": 352,
+      "caller_paths": [
+        {
+          "debug_address": "0x001A2500",
+          "parent_debug_address": "0x001A2108",
+          "parent_retail_address": "0x001A4930",
+          "parent_reference_name": "Wheel::GuessGroundForce(bVector2 *, int)",
+          "parent_evidence_id": "E-0042-C122",
+          "call_offset": "0x3A4",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "reviewed_changes": [
+        {
+          "offset": "0x4",
+          "changed_bit_mask": "0x00000080"
+        },
+        {
+          "offset": "0x38",
+          "changed_bit_mask": "0x0000081E"
+        },
+        {
+          "offset": "0x3C",
+          "changed_bit_mask": "0x00008910"
+        },
+        {
+          "offset": "0x44",
+          "changed_bit_mask": "0x00000080"
+        },
+        {
+          "offset": "0x48",
+          "changed_bit_mask": "0x00000080"
+        },
+        {
+          "offset": "0x6C",
+          "changed_bit_mask": "0x000000EC"
+        },
+        {
+          "offset": "0x80",
+          "changed_bit_mask": "0x00000080"
+        },
+        {
+          "offset": "0xC4",
+          "changed_bit_mask": "0x0000081E"
+        },
+        {
+          "offset": "0xC8",
+          "changed_bit_mask": "0x00009710"
+        },
+        {
+          "offset": "0xD0",
+          "changed_bit_mask": "0x00000080"
+        },
+        {
+          "offset": "0xEC",
+          "changed_bit_mask": "0x00009770"
+        },
+        {
+          "offset": "0xF8",
+          "changed_bit_mask": "0x0000081E"
+        },
+        {
+          "offset": "0x114",
+          "changed_bit_mask": "0x0000081E"
+        },
+        {
+          "offset": "0x124",
+          "changed_bit_mask": "0x00000080"
+        }
+      ],
+      "rationale": "Wheel::GetLateralForce: named GuessGroundForce parent +0x3A4; complete control/dataflow and constants unchanged; four Table::GetValue direct targets, seven GP relocations, three absolute low address operands outside normalizer pairing.",
+      "limitation": "Static name correspondence only; actual data and object layout must remain retail.",
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-001A2500.json",
+      "debug_instruction_sha256": "f022f7cd35d955db73081cb30b16fac5c6e90b40f6c6f2211bae255057bedd86",
+      "retail_instruction_sha256": "c931d6ee53c3001322f5f6891c87ecbd1968eb09943cf83fe23310798563cdcd"
+    },
+    {
+      "evidence_id": "E-0042-U137",
+      "retail_address": "0x001A5520",
+      "debug_address": "0x001A2CF8",
+      "reference_name": "Wheel::MaybeMakeSkids(float, Car *)",
+      "mangled_name": "MaybeMakeSkids__5WheelfP3Car",
+      "status": "supported_reviewed_changed_body",
+      "size": 700,
+      "debug_size": 712,
+      "caller_paths": [
+        {
+          "debug_address": "0x001A2CF8",
+          "parent_debug_address": "0x00137D18",
+          "parent_retail_address": "0x00137D90",
+          "parent_reference_name": "PhysicsCar::Move(float)",
+          "parent_evidence_id": "E-0041-R01",
+          "call_offset": "0xEF4",
+          "parent_shape_equal": false,
+          "parent_reviewed_layout_evidence": "E-0041-R01",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x001A2CF8",
+          "parent_debug_address": "0x001FFDE0",
+          "parent_retail_address": "0x00204D78",
+          "parent_reference_name": "BeltMover::Move(float)",
+          "parent_evidence_id": "E-0041-V01",
+          "call_offset": "0x5C4",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "rationale": "Named BeltMover::Move caller +0x5C4; long common body retains slip/contact/8.0/1.0 gates, blown-tire bit extraction, identical vector normalization and tire-direction dot sequence, width/terrain scaling, two elevation calls, second normalization and skid/no-skid tail. Retail removes VisibleViewBits-based nullable-car selection and passes terrain directly; blown-tire field offset changes +0x848 to +0x84C.",
+      "raw_instruction_difference_spans": [
+        {
+          "kind": "replace",
+          "debug_start": "0x48",
+          "debug_end": "0x4C",
+          "retail_start": "0x48",
+          "retail_end": "0x4C"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x70",
+          "debug_end": "0x74",
+          "retail_start": "0x70",
+          "retail_end": "0x74"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x7C",
+          "debug_end": "0x80",
+          "retail_start": "0x7C",
+          "retail_end": "0x80"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x84",
+          "debug_end": "0x88",
+          "retail_start": "0x84",
+          "retail_end": "0x88"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0xB8",
+          "debug_end": "0xBC",
+          "retail_start": "0xB8",
+          "retail_end": "0xBC"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x110",
+          "debug_end": "0x114",
+          "retail_start": "0x110",
+          "retail_end": "0x114"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x144",
+          "debug_end": "0x148",
+          "retail_start": "0x144",
+          "retail_end": "0x148"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x154",
+          "debug_end": "0x158",
+          "retail_start": "0x154",
+          "retail_end": "0x158"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x18C",
+          "debug_end": "0x190",
+          "retail_start": "0x18C",
+          "retail_end": "0x190"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x1C8",
+          "debug_end": "0x1CC",
+          "retail_start": "0x1C8",
+          "retail_end": "0x1CC"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x1E8",
+          "debug_end": "0x1EC",
+          "retail_start": "0x1E8",
+          "retail_end": "0x1EC"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x224",
+          "debug_end": "0x228",
+          "retail_start": "0x224",
+          "retail_end": "0x228"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x238",
+          "debug_end": "0x23C",
+          "retail_start": "0x238",
+          "retail_end": "0x23C"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x258",
+          "debug_end": "0x260",
+          "retail_start": "0x258",
+          "retail_end": "0x260"
+        },
+        {
+          "kind": "delete",
+          "debug_start": "0x270",
+          "debug_end": "0x278",
+          "retail_start": "0x270",
+          "retail_end": "0x270"
+        },
+        {
+          "kind": "insert",
+          "debug_start": "0x27C",
+          "debug_end": "0x27C",
+          "retail_start": "0x274",
+          "retail_end": "0x278"
+        },
+        {
+          "kind": "delete",
+          "debug_start": "0x280",
+          "debug_end": "0x284",
+          "retail_start": "0x27C",
+          "retail_end": "0x27C"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x288",
+          "debug_end": "0x290",
+          "retail_start": "0x280",
+          "retail_end": "0x284"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x29C",
+          "debug_end": "0x2A0",
+          "retail_start": "0x290",
+          "retail_end": "0x294"
+        }
+      ],
+      "retail_raw_evidence_path": "local/task0042/unresolved/retail-001A5520.json",
+      "limitation": "Original identity/name only; explicit changed behavior and layouts remain retail-authoritative, not equivalent or Verified.",
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-001A2CF8.json",
+      "live_retail_decompilation_reviewed": true,
+      "debug_instruction_sha256": "b00ba7bd7d9b76d3c85c9eb8ea33dd23c934c0310c8fc7cae9a4ad102d363894",
+      "retail_instruction_sha256": "ca078e59115e28e8ef1fffccab27ff03ff70205295a18b31b5c03c58190e1ffd"
+    },
+    {
+      "evidence_id": "E-0042-U143",
+      "retail_address": "0x001C00A8",
+      "debug_address": "0x001BD1C0",
+      "reference_name": "CarController::~CarController(void)",
+      "mangled_name": "_$_13CarController",
+      "status": "supported_caller_and_child_shape",
+      "size": 36,
+      "byte_identical": false,
+      "caller_paths": [
+        {
+          "debug_address": "0x001BD1C0",
+          "parent_debug_address": "0x00233DB8",
+          "parent_retail_address": "0x0023A070",
+          "parent_reference_name": "TrackedController::~TrackedController(void)",
+          "parent_evidence_id": "E-0041-V01",
+          "call_offset": "0xC",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "limitation": "Static name correspondence only; layout, host ABI and behavior equivalence unverified.",
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-001BD1C0.json",
+      "debug_instruction_sha256": "6f9a6b1bf084d23044352db3a6bf0c9c1b692a26e1d008ce1a62dfdf10e378c3",
+      "retail_instruction_sha256": "d47aa8f5dda0159d0d09e25dabd8c6dcde4d3fea05b7d0bf6334db55ee810b2a"
+    },
+    {
+      "evidence_id": "E-0042-U144",
+      "retail_address": "0x001C0D78",
+      "debug_address": "0x001BDE60",
+      "reference_name": "CarState::CalculateWheelMatrices(int)",
+      "mangled_name": "CalculateWheelMatrices__8CarStatei",
+      "status": "supported_reviewed_changed_body",
+      "size": 376,
+      "debug_size": 344,
+      "caller_paths": [
+        {
+          "debug_address": "0x001BDE60",
+          "parent_debug_address": "0x001A1948",
+          "parent_retail_address": "0x001A4170",
+          "parent_reference_name": "Wheel::SetState(CarState *, CarTypeInfo *, float, float, unsigned short, float)",
+          "parent_evidence_id": "E-0042-C115",
+          "call_offset": "0x6C",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "rationale": "Named Wheel::SetState caller +0x6C; both bodies have two eIdentity calls, eRotateY wheel-angle conversion and conditional two eRotateZ calls for wheel index <2, then two four-row matrix writes into distinct indexed output arrays. Retail additionally applies suspension height and YRenderOffset to brake translation, matching existing wheel translation computation.",
+      "raw_instruction_difference_spans": [
+        {
+          "kind": "replace",
+          "debug_start": "0x24",
+          "debug_end": "0x28",
+          "retail_start": "0x24",
+          "retail_end": "0x28"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x30",
+          "debug_end": "0x34",
+          "retail_start": "0x30",
+          "retail_end": "0x34"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x3C",
+          "debug_end": "0x40",
+          "retail_start": "0x3C",
+          "retail_end": "0x40"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x58",
+          "debug_end": "0x5C",
+          "retail_start": "0x58",
+          "retail_end": "0x5C"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x70",
+          "debug_end": "0x74",
+          "retail_start": "0x70",
+          "retail_end": "0x74"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x80",
+          "debug_end": "0x84",
+          "retail_start": "0x80",
+          "retail_end": "0x84"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x88",
+          "debug_end": "0x94",
+          "retail_start": "0x88",
+          "retail_end": "0x94"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x98",
+          "debug_end": "0xB0",
+          "retail_start": "0x98",
+          "retail_end": "0xB8"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0xB4",
+          "debug_end": "0xC8",
+          "retail_start": "0xBC",
+          "retail_end": "0xCC"
+        },
+        {
+          "kind": "insert",
+          "debug_start": "0xCC",
+          "debug_end": "0xCC",
+          "retail_start": "0xD0",
+          "retail_end": "0xE0"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0xD0",
+          "debug_end": "0xDC",
+          "retail_start": "0xE4",
+          "retail_end": "0xF4"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0xE0",
+          "debug_end": "0xEC",
+          "retail_start": "0xF8",
+          "retail_end": "0x10C"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x100",
+          "debug_end": "0x104",
+          "retail_start": "0x120",
+          "retail_end": "0x124"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x108",
+          "debug_end": "0x10C",
+          "retail_start": "0x128",
+          "retail_end": "0x12C"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x110",
+          "debug_end": "0x118",
+          "retail_start": "0x130",
+          "retail_end": "0x138"
+        }
+      ],
+      "retail_raw_evidence_path": "local/task0042/unresolved/retail-001C0D78.json",
+      "limitation": "Original identity/name only; explicit changed behavior and layouts remain retail-authoritative, not equivalent or Verified.",
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-001BDE60.json",
+      "live_retail_decompilation_reviewed": true,
+      "debug_instruction_sha256": "e99b8f3be3e068331c2714615ec0ebf688208c7b646e7add21d5644c46444bb9",
+      "retail_instruction_sha256": "a9eebb5fe613a6dd66e307c3262aea311bcbec1430fef3ef8b3e7ad2964a1ccc"
+    },
+    {
+      "evidence_id": "E-0042-U190",
+      "retail_address": "0x0025A4A8",
+      "debug_address": "0x00253878",
+      "reference_name": "bRandom(float)",
+      "mangled_name": "bRandom__Ff",
+      "status": "supported_caller_and_child_shape",
+      "size": 32,
+      "byte_identical": false,
+      "caller_paths": [
+        {
+          "debug_address": "0x00253878",
+          "parent_debug_address": "0x00137D18",
+          "parent_retail_address": "0x00137D90",
+          "parent_reference_name": "PhysicsCar::Move(float)",
+          "parent_evidence_id": "E-0041-R01",
+          "call_offset": "0xB7C",
+          "parent_shape_equal": false,
+          "parent_reviewed_layout_evidence": "E-0041-R01",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "limitation": "Static name correspondence only; layout, host ABI and behavior equivalence unverified.",
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-00253878.json",
+      "debug_instruction_sha256": "dc953d9fb2b66ebf0111d030951fd9068f3537db240cfb397a0e132da6ccbc08",
+      "retail_instruction_sha256": "26cafe35d8cb9cc6c84b02b698dc5bdc4191d09c25c47fece73c92e33c8eec99"
+    },
+    {
+      "evidence_id": "E-0042-U191",
+      "retail_address": "0x0025A748",
+      "debug_address": "0x00253B18",
+      "reference_name": "bASin(float)",
+      "mangled_name": "bASin__Ff",
+      "status": "supported_reviewed_changed_body",
+      "size": 324,
+      "debug_size": 324,
+      "caller_paths": [
+        {
+          "debug_address": "0x00253B18",
+          "parent_debug_address": "0x00253C60",
+          "parent_retail_address": "0x0025A890",
+          "parent_reference_name": "bATan(float, float)",
+          "parent_evidence_id": "E-0042-U192",
+          "call_offset": "0x70",
+          "retail_call_offset": "0x84",
+          "parent_shape_equal": false,
+          "parent_reviewed_layout_evidence": "E-0042-U192: explicitly reviewed corresponding inverse-sine arms",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x00253B18",
+          "parent_debug_address": "0x00253C60",
+          "parent_retail_address": "0x0025A890",
+          "parent_reference_name": "bATan(float, float)",
+          "parent_evidence_id": "E-0042-U192",
+          "call_offset": "0xAC",
+          "retail_call_offset": "0xD0",
+          "parent_shape_equal": false,
+          "parent_reviewed_layout_evidence": "E-0042-U192: explicitly reviewed corresponding inverse-sine arms",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "rationale": "Both explicitly reviewed inverse-sine arms of independently rooted bATan call this pair, despite shifted call offsets. Complete common body has sign folding, unit saturation to 0x4000, 65536 scaling, 11-step halving search and interpolated angle/slope table. All 1672 bytes of named Debug bASinTable equal retail table at 0x0031FDC0; signed short versus masked 16-bit return presentation is not adopted as ABI equivalence.",
+      "raw_instruction_difference_spans": [
+        {
+          "kind": "replace",
+          "debug_start": "0x74",
+          "debug_end": "0x78",
+          "retail_start": "0x74",
+          "retail_end": "0x78"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0xA4",
+          "debug_end": "0xA8",
+          "retail_start": "0xA4",
+          "retail_end": "0xA8"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0xEC",
+          "debug_end": "0xF0",
+          "retail_start": "0xEC",
+          "retail_end": "0xF0"
+        }
+      ],
+      "retail_raw_evidence_path": "local/task0042/unresolved/retail-0025A748.json",
+      "limitation": "Original identity/name only; explicit changed behavior and layouts remain retail-authoritative, not equivalent or Verified.",
+      "independent_named_data_anchor": {
+        "name": "bASinTable",
+        "debug_address": "0x00316E80",
+        "retail_address": "0x0031FDC0",
+        "size": 1672,
+        "byte_identical": true,
+        "sha256": "fa4765365c2027b0ec6805ab05d28511dffb9305f8ff03541f2f2f72ab07d72a"
+      },
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-00253B18.json",
+      "live_retail_decompilation_reviewed": true,
+      "debug_instruction_sha256": "ce47d3072f87264281768dad34c5e02c4a36db42ba57822a98f5b279667c3a20",
+      "retail_instruction_sha256": "76e4fb4e1dfbc5d9f8461e09293c3fc6b0773622915e5e224da74e9695045bdc"
+    },
+    {
+      "evidence_id": "E-0042-U192",
+      "retail_address": "0x0025A890",
+      "debug_address": "0x00253C60",
+      "reference_name": "bATan(float, float)",
+      "mangled_name": "bATan__Fff",
+      "status": "supported_reviewed_changed_body",
+      "size": 324,
+      "debug_size": 288,
+      "caller_paths": [
+        {
+          "debug_address": "0x00253C60",
+          "parent_debug_address": "0x001FFDE0",
+          "parent_retail_address": "0x00204D78",
+          "parent_reference_name": "BeltMover::Move(float)",
+          "parent_evidence_id": "E-0041-V01",
+          "call_offset": "0x258",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x00253C60",
+          "parent_debug_address": "0x00215AE8",
+          "parent_retail_address": "0x0021AED8",
+          "parent_reference_name": "Mellovator::ResolveForces(void)",
+          "parent_evidence_id": "E-0041-V01",
+          "call_offset": "0x16C",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x00253C60",
+          "parent_debug_address": "0x001A2108",
+          "parent_retail_address": "0x001A4930",
+          "parent_reference_name": "Wheel::GuessGroundForce(bVector2 *, int)",
+          "parent_evidence_id": "E-0042-C122",
+          "call_offset": "0xDC",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x00253C60",
+          "parent_debug_address": "0x001A26B8",
+          "parent_retail_address": "0x001A4EE0",
+          "parent_reference_name": "Wheel::FinalizeGroundForce(int)",
+          "parent_evidence_id": "E-0042-C123",
+          "call_offset": "0x1EC",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x00253C60",
+          "parent_debug_address": "0x001BD9B8",
+          "parent_retail_address": "0x001C08D0",
+          "parent_reference_name": "CarState::GetYawAlways(void)",
+          "parent_evidence_id": "E-0042-C136",
+          "call_offset": "0x14",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "rationale": "Four independently named caller contexts BeltMover::Move, Mellovator::ResolveForces, Wheel::GuessGroundForce and Wheel::FinalizeGroundForce; both bodies have x/y sign quadrant XOR 3, absolute-coordinate ordering, two bASin call arms and identical 0x4000/0x8000 quadrant correction tail. Retail adds squared-length threshold guards before each normalization; this is behavior counterevidence, not an identity contradiction.",
+      "raw_instruction_difference_spans": [
+        {
+          "kind": "replace",
+          "debug_start": "0x0",
+          "debug_end": "0x4",
+          "retail_start": "0x0",
+          "retail_end": "0x4"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0xC",
+          "debug_end": "0x10",
+          "retail_start": "0xC",
+          "retail_end": "0x10"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x20",
+          "debug_end": "0x24",
+          "retail_start": "0x20",
+          "retail_end": "0x24"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x40",
+          "debug_end": "0x44",
+          "retail_start": "0x40",
+          "retail_end": "0x5C"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x48",
+          "debug_end": "0x4C",
+          "retail_start": "0x60",
+          "retail_end": "0x6C"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x50",
+          "debug_end": "0x74",
+          "retail_start": "0x70",
+          "retail_end": "0x88"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x7C",
+          "debug_end": "0x80",
+          "retail_start": "0x90",
+          "retail_end": "0x94"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x84",
+          "debug_end": "0x88",
+          "retail_start": "0x98",
+          "retail_end": "0xA8"
+        },
+        {
+          "kind": "replace",
+          "debug_start": "0x8C",
+          "debug_end": "0xB0",
+          "retail_start": "0xAC",
+          "retail_end": "0xB8"
+        },
+        {
+          "kind": "insert",
+          "debug_start": "0xB4",
+          "debug_end": "0xB4",
+          "retail_start": "0xBC",
+          "retail_end": "0xD8"
+        }
+      ],
+      "retail_raw_evidence_path": "local/task0042/unresolved/retail-0025A890.json",
+      "limitation": "Original identity/name only; explicit changed behavior and layouts remain retail-authoritative, not equivalent or Verified.",
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-00253C60.json",
+      "live_retail_decompilation_reviewed": true,
+      "debug_instruction_sha256": "11712c810ce3d5cc9d7993f73433d2a7d9b435e6a429b806055e6d5bc421a006",
+      "retail_instruction_sha256": "91510bd702fe6fe15e091c6f5373c1cee70990aa415bf6fad355484aa11f7169"
+    },
+    {
+      "evidence_id": "E-0042-U193",
+      "retail_address": "0x0025AED0",
+      "debug_address": "0x00254278",
+      "reference_name": "bMulMatrix(bVector3 *, bMatrix4 const *, bVector3 const *)",
+      "mangled_name": "bMulMatrix__FP8bVector3PC8bMatrix4PC8bVector3",
+      "status": "supported_caller_and_child_shape",
+      "size": 76,
+      "byte_identical": false,
+      "caller_paths": [
+        {
+          "debug_address": "0x00254278",
+          "parent_debug_address": "0x00215AE8",
+          "parent_retail_address": "0x0021AED8",
+          "parent_reference_name": "Mellovator::ResolveForces(void)",
+          "parent_evidence_id": "E-0041-V01",
+          "call_offset": "0x104",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x00254278",
+          "parent_debug_address": "0x00215AE8",
+          "parent_retail_address": "0x0021AED8",
+          "parent_reference_name": "Mellovator::ResolveForces(void)",
+          "parent_evidence_id": "E-0041-V01",
+          "call_offset": "0x360",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "limitation": "Static name correspondence only; layout, host ABI and behavior equivalence unverified.",
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-00254278.json",
+      "debug_instruction_sha256": "1f744d8259e4790dfbf54ec2a3ae990b7f7f9f911770065188b368cd136a82d6",
+      "retail_instruction_sha256": "e54da83b223a15ed1ec14cd23480833aab92df5a65eb59941f579ee00271a7fb"
+    },
+    {
+      "evidence_id": "E-0042-U194",
+      "retail_address": "0x0025AF20",
+      "debug_address": "0x002542C8",
+      "reference_name": "bTransposeMatrix(bMatrix4 *, bMatrix4 const *)",
+      "mangled_name": "bTransposeMatrix__FP8bMatrix4PC8bMatrix4",
+      "status": "supported_caller_and_child_shape",
+      "size": 136,
+      "byte_identical": true,
+      "caller_paths": [
+        {
+          "debug_address": "0x002542C8",
+          "parent_debug_address": "0x00138EC0",
+          "parent_retail_address": "0x00138F38",
+          "parent_reference_name": "PhysicsCar::IterateForces(void)",
+          "parent_evidence_id": "E-0042-C016",
+          "call_offset": "0x94",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x002542C8",
+          "parent_debug_address": "0x0019B2A8",
+          "parent_retail_address": "0x0019D980",
+          "parent_reference_name": "RigidBody::PrintCurrentState(void)",
+          "parent_evidence_id": "E-0042-C100",
+          "call_offset": "0x14",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x002542C8",
+          "parent_debug_address": "0x001A2108",
+          "parent_retail_address": "0x001A4930",
+          "parent_reference_name": "Wheel::GuessGroundForce(bVector2 *, int)",
+          "parent_evidence_id": "E-0042-C122",
+          "call_offset": "0xB4",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        },
+        {
+          "debug_address": "0x002542C8",
+          "parent_debug_address": "0x001A26B8",
+          "parent_retail_address": "0x001A4EE0",
+          "parent_reference_name": "Wheel::FinalizeGroundForce(int)",
+          "parent_evidence_id": "E-0042-C123",
+          "call_offset": "0x1C4",
+          "parent_shape_equal": true,
+          "parent_reviewed_layout_evidence": "",
+          "live_debug_reference_confirmed": true
+        }
+      ],
+      "limitation": "Static name correspondence only; layout, host ABI and behavior equivalence unverified.",
+      "live_debug_symbol_confirmed": true,
+      "raw_evidence_path": "local/task0042/unresolved/debug-002542C8.json",
+      "debug_instruction_sha256": "5b8d764e09aba95bb180ccd1ce9452cbce5e67c59a98d397c45d981f6646b2d6",
+      "retail_instruction_sha256": "5b8d764e09aba95bb180ccd1ce9452cbce5e67c59a98d397c45d981f6646b2d6"
+    }
+  ]
+}

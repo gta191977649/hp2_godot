@@ -1,4 +1,4 @@
-#include "game_core/Sub_00137100.hpp"
+#include "game_core/port/driving/projections.hpp"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -29,15 +29,15 @@ int main(){
     sw(controller_expected,8,0x002b5cd0);sw(controller_expected,0x90,0x05060708);
     sw(controller_expected,0x98,0x090a0b0c);sw(controller_expected,0xc,0x0d0e0f10);sw(controller_expected,0x10,0);
     check(controller==controller_expected,"001A5EA0 exact argument/register mapping");
-    const auto identity=Sub_0025AC68();
+    const auto identity=bIdentity();
     for(std::size_t i=0;i<16;++i)check(identity[i]==(i%5==0?1.0f:0.0f),"0025AC68 quadword lane permutations");
     // Non-orthonormal upper triangular affine input. Unused fourth lanes are sentinels.
     const std::array<float,16> matrix{{2,0,0,99, 1,4,0,98, 0,2,8,97, 6,12,24,96}};
     const std::array<float,16> inverse{{0.5f,0,0,0, -0.125f,0.25f,0,0, 0.03125f,-0.0625f,0.125f,0, -2.25f,-1.5f,-3,1}};
-    check(Sub_0025AC98(matrix)==inverse,"0025AC98 determinant/cofactor/translation fixture");
+    check(bInvertMatrix(matrix)==inverse,"0025AC98 determinant/cofactor/translation fixture");
     // Independently multiply column-major affine matrices after normalizing ignored lanes.
     auto normalized=matrix;normalized[3]=0;normalized[7]=0;normalized[11]=0;normalized[15]=1;
-    const auto actual_inverse=Sub_0025AC98(matrix);
+    const auto actual_inverse=bInvertMatrix(matrix);
     for(int row=0;row<4;++row)for(int col=0;col<4;++col){
         double sum=0;for(int k=0;k<4;++k)sum+=double(normalized[k*4+row])*actual_inverse[col*4+k];
         check(sum==(row==col?1.0:0.0),"0025AC98 independent affine multiplication oracle");

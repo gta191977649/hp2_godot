@@ -12,24 +12,9 @@ public:
     // ELF 0x001C0090; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001c0090.md. Constructor entry; NOT a C++ constructor.
     // Port-side void/no-argument placeholder; original signature unknown.
     void Sub_001C0090();
-    // ELF 0x001C00A8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001c00a8.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_001C00A8();
     // ELF 0x001C00D0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001c00d0.md.
     // Port-side void/no-argument placeholder; original signature unknown.
     void Sub_001C00D0();
-    // ELF 0x001C0100; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001c0100.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_001C0100();
-    // ELF 0x001C0140; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001c0140.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_001C0140();
-    // ELF 0x001C0160; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001c0160.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_001C0160();
-    // ELF 0x001C0198; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001c0198.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_001C0198();
     // ELF 0x002A0550; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002a0550.md.
     // Port-side void/no-argument placeholder; original signature unknown.
     void Sub_002A0550();

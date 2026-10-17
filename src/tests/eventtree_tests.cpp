@@ -200,7 +200,7 @@ void recovered_event_logo_animation_phases() {
     check(track.x == 640, "track navigation before fade completion resets right-edge placement");
 
     std::uint32_t unsigned_seed = 0xffffffffu;
-    check(Sub_0025A3D0(3, unsigned_seed) == 0,
+    check(bRandom(3, unsigned_seed) == 0,
           "original RNG uses unsigned divu even for high-bit state");
 }
 

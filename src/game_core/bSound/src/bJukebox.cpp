@@ -83,7 +83,7 @@ std::optional<std::size_t> Sub_0027ECA8(const std::vector<bool>& enabled,std::si
     }
     return std::nullopt;
 }
-int Sub_0025A3D0(int count,std::uint32_t& seed) {
+int bRandom(int count,std::uint32_t& seed) {
     if(count<=0) throw std::runtime_error("RNG modulo count must be positive");
     const auto old=seed,a=old^0x1d872b41u,b=a^(a>>5);
     seed=b^a^(b<<27);
@@ -102,7 +102,7 @@ std::optional<std::size_t> FrontendMusic::enter(std::uint32_t frame_counter) {
     if(first_random_ && !enabled_.empty()) {
         first_random_=false;
         auto seed=frame_counter;
-        const auto count=Sub_0025A3D0(static_cast<int>(enabled_.size()),seed);
+        const auto count=bRandom(static_cast<int>(enabled_.size()),seed);
         for(int i=0;i<count;++i) Sub_0027ECA8(enabled_,cursor_);
     }
     const auto result=Sub_0027ECA8(enabled_,cursor_);

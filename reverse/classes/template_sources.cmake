@@ -1,168 +1,105 @@
 # TASK-0028. Explicit source list; includes empty shells to compile-check their headers.
 set(HP2_CLASS_TEMPLATE_SOURCES
-  src/game_core/AIActionAccidentRecovery.cpp
-  src/game_core/AIActionAvoidCars.cpp
-  src/game_core/AIActionAvoidRoadBlock.cpp
-  src/game_core/AIActionBlock.cpp
-  src/game_core/AIActionDraft.cpp
-  src/game_core/AIActionGetUnstuck.cpp
-  src/game_core/AIActionIJustGotHit.cpp
-  src/game_core/AIActionJustDrive.cpp
-  src/game_core/AIActionNudgeCar.cpp
-  src/game_core/AIActionPass.cpp
-  src/game_core/AIActionPullOver.cpp
-  src/game_core/AICarController.cpp
   src/game_core/AICarSound.cpp
-  src/game_core/AIDriver.cpp
-  src/game_core/AIEngineSound.cpp
-  src/game_core/AcidEffectSystem.cpp
-  src/game_core/AnimationGroup.cpp
-  src/game_core/Autosaver.cpp
-  src/game_core/BeACopChallengeSetup.cpp
-  src/game_core/BeACopResults1P.cpp
-  src/game_core/BeACopResults2P.cpp
-  src/game_core/BeTheCopSetup.cpp
-  src/game_core/BestLapTimes.cpp
-  src/game_core/BestTotalTimes.cpp
   src/game_core/BootMemcardLoader.cpp
-  src/game_core/BumperCameraMover.cpp
-  src/game_core/CDBFileSys.cpp
-  src/game_core/Car.cpp
-  src/game_core/CarCollisionBody.cpp
-  src/game_core/CarDamage.cpp
   src/game_core/CarList.cpp
-  src/game_core/CarPartCuller.cpp
-  src/game_core/CarRenderInfo.cpp
   src/game_core/ChangeableMenuItem.cpp
-  src/game_core/Chopper.cpp
-  src/game_core/ChopperSound.cpp
   src/game_core/CollisionBodyNumberAllocator.cpp
   src/game_core/CollisionBodyTable.cpp
   src/game_core/CollisionBodyWitnessBitField.cpp
   src/game_core/CopManager.cpp
-  src/game_core/CopsOffModeSelect.cpp
-  src/game_core/CopsOnModeSelect.cpp
-  src/game_core/CountdownCameraCoordinator.cpp
   src/game_core/CreditsLine.cpp
   src/game_core/CreditsScroller.cpp
   src/game_core/DebugPauseMenu.cpp
-  src/game_core/DebugWorldCameraMover.cpp
-  src/game_core/DeliveryMover.cpp
-  src/game_core/DemoCameraCoordinator.cpp
-  src/game_core/DemoDiscManager.cpp
-  src/game_core/DriveCameraMover.cpp
-  src/game_core/DrivingChoice.cpp
   src/game_core/DuplicatedSolid.cpp
   src/game_core/DuplicatedStripEntryData.cpp
   src/game_core/DuplicatedStripEntryTable.cpp
-  src/game_core/DynamicCollisionBody.cpp
-  src/game_core/EndGameMenu.cpp
-  src/game_core/EndGameMenuItem.cpp
-  src/game_core/EndGameScreens.cpp
-  src/game_core/EventRewardScreen.cpp
   src/game_core/FernShakerInfoTable.cpp
-  src/game_core/FlailerRenderManager.cpp
   src/game_core/FlailerScreenList.cpp
-  src/game_core/FreeRunSetup.cpp
-  src/game_core/FuturePoints.cpp
   src/game_core/GlobalBackgroundAnimation.cpp
-  src/game_core/GrandSceneryCullInfo.cpp
-  src/game_core/HeliSheet.cpp
   src/game_core/HelpAlphaAnimation.cpp
-  src/game_core/HornSound3d.cpp
   src/game_core/HudTexturePack.cpp
-  src/game_core/JoystickCalibrationScreen.cpp
   src/game_core/LanguageBuffer.cpp
-  src/game_core/LapKnockoutSetup.cpp
-  src/game_core/LapTimesDisplay.cpp
-  src/game_core/LoadedTextureData.cpp
-  src/game_core/MaxCameraMover.cpp
-  src/game_core/MellowMover.cpp
-  src/game_core/MumboJumboScreen.cpp
-  src/game_core/MunitionEffectsHandler.cpp
-  src/game_core/NameEntry.cpp
-  src/game_core/NearbyCarList.cpp
-  src/game_core/NewMainMenu.cpp
-  src/game_core/NisCameraCoordinator.cpp
   src/game_core/NisManager.cpp
-  src/game_core/NullController.cpp
   src/game_core/NullDriver.cpp
-  src/game_core/NumberAllocator.cpp
-  src/game_core/OrbitCarCameraMover.cpp
-  src/game_core/PauseAudioOpts.cpp
-  src/game_core/PauseDisplayOpts.cpp
-  src/game_core/PauseMenu.cpp
-  src/game_core/PauseOptions.cpp
-  src/game_core/PauseRaceObjective.cpp
   src/game_core/PauseViewControls.cpp
-  src/game_core/PhysicsCar.cpp
-  src/game_core/PhysicsSystem.cpp
-  src/game_core/PlayerEngineSound.cpp
-  src/game_core/PlayerTireSound.cpp
-  src/game_core/PreRace2PBeACop.cpp
-  src/game_core/PreRaceBlurb.cpp
-  src/game_core/PreRaceStats.cpp
-  src/game_core/PreviewPause.cpp
   src/game_core/PreviewPausePoint.cpp
-  src/game_core/PsychoDriver.cpp
-  src/game_core/Race.cpp
-  src/game_core/RaceCoordinator.cpp
-  src/game_core/RaceResultsScreen.cpp
-  src/game_core/RealController.cpp
-  src/game_core/RealDriver.cpp
-  src/game_core/RearViewMirrorCameraMover.cpp
   src/game_core/ReplayLogBuffer.cpp
-  src/game_core/ReplayManager.cpp
-  src/game_core/ReplayScreen.cpp
-  src/game_core/ReplaySnapshot.cpp
-  src/game_core/ResourceFile.cpp
   src/game_core/RewardTrackModel.cpp
-  src/game_core/SelectTrackScreen.cpp
-  src/game_core/SelectableTrack.cpp
   src/game_core/SelectionSet.cpp
-  src/game_core/SingleRaceSetup.cpp
   src/game_core/SirenSound.cpp
-  src/game_core/SlotPool.cpp
-  src/game_core/SlotPoolManager.cpp
-  src/game_core/Smokeable.cpp
-  src/game_core/StillCameraMover.cpp
-  src/game_core/TerrainEffectEmitters.cpp
   src/game_core/TextureTable.cpp
-  src/game_core/TimeAroundTrackTable.cpp
-  src/game_core/TimeOfDayTrack.cpp
-  src/game_core/TourneyPoints.cpp
-  src/game_core/TourneyStandingsScreen.cpp
-  src/game_core/TrackCarCameraMover.cpp
-  src/game_core/TrackFlyCameraMover.cpp
-  src/game_core/TrackKnockoutSetup.cpp
-  src/game_core/TrackMap.cpp
-  src/game_core/TrackMarkerFile.cpp
-  src/game_core/TrackPathCoordinate.cpp
-  src/game_core/TrackPolygonCollisionBody.cpp
-  src/game_core/TrackRoute.cpp
-  src/game_core/TrackRouteEditor.cpp
-  src/game_core/TrackRouteEditorCameraMover.cpp
-  src/game_core/TrafficCar.cpp
-  src/game_core/TrafficDriver.cpp
-  src/game_core/TrafficTeleporter.cpp
-  src/game_core/World.cpp
-  src/game_core/eAnimation.cpp
   src/game_core/eFrameMallocBuffer0.cpp
   src/game_core/eFrameMallocBuffer1.cpp
-  src/game_core/feAnimAlphaElement.cpp
   src/game_core/indep/src/AverageInRealController.cpp
-  src/game_core/indep/src/BeltMover.cpp
-  src/game_core/indep/src/CubicCameraMover.cpp
   src/game_core/indep/src/PlayerCarSound.cpp
   src/game_core/indep/src/QuickSplineInRealController.cpp
-  src/game_core/indep/src/VisibleDrivingLine.cpp
-  src/game_core/indep/src/ZoneFreezeCameraMover.cpp
-  src/game_core/indep/src/ZonePreviewCameraMover.cpp
+  src/game_core/indep/src/aicarcontroller.cpp
+  src/game_core/indep/src/aidriver.cpp
+  src/game_core/indep/src/aiplan.cpp
+  src/game_core/indep/src/beltmover.cpp
+  src/game_core/indep/src/cameracoordinator.cpp
+  src/game_core/indep/src/cameramover.cpp
+  src/game_core/indep/src/car.cpp
+  src/game_core/indep/src/carcontroller.cpp
+  src/game_core/indep/src/cardamage.cpp
+  src/game_core/indep/src/carsoundengine.cpp
+  src/game_core/indep/src/carsounds.cpp
+  src/game_core/indep/src/carsoundtires.cpp
+  src/game_core/indep/src/chopper.cpp
+  src/game_core/indep/src/choppersound.cpp
+  src/game_core/indep/src/collisionbody.cpp
+  src/game_core/indep/src/componentphysics.cpp
+  src/game_core/indep/src/deliverymover.cpp
+  src/game_core/indep/src/drivingchoice.cpp
+  src/game_core/indep/src/eanimations.cpp
   src/game_core/indep/src/eventtree.cpp
+  src/game_core/indep/src/flailerdb.cpp
   src/game_core/indep/src/fmenus.cpp
+  src/game_core/indep/src/fred.cpp
+  src/game_core/indep/src/frontendscreens/endgamescreens.cpp
+  src/game_core/indep/src/frontendscreens/feanim.cpp
+  src/game_core/indep/src/frontendscreens/frontend.cpp
+  src/game_core/indep/src/frontendscreens/helpmenu.cpp
   src/game_core/indep/src/frontendscreens/joystickconfiguration.cpp
+  src/game_core/indep/src/frontendscreens/mainmenu.cpp
+  src/game_core/indep/src/frontendscreens/memcardscreens.cpp
+  src/game_core/indep/src/frontendscreens/nameentry.cpp
   src/game_core/indep/src/frontendscreens/options.cpp
-  src/game_core/kAITireSound.cpp
+  src/game_core/indep/src/frontendscreens/pausemenu.cpp
+  src/game_core/indep/src/frontendscreens/racesetup.cpp
+  src/game_core/indep/src/frontendscreens/replayscreen.cpp
+  src/game_core/indep/src/frontendscreens/selecttrack.cpp
+  src/game_core/indep/src/frontendscreens/startracescreens.cpp
+  src/game_core/indep/src/helisheet.cpp
+  src/game_core/indep/src/mellowmover.cpp
+  src/game_core/indep/src/munitions.cpp
+  src/game_core/indep/src/physicscar.cpp
+  src/game_core/indep/src/player.cpp
+  src/game_core/indep/src/point.cpp
+  src/game_core/indep/src/psychodriver.cpp
+  src/game_core/indep/src/race.cpp
+  src/game_core/indep/src/racecoordinator.cpp
+  src/game_core/indep/src/realcontroller.cpp
+  src/game_core/indep/src/realdriver.cpp
+  src/game_core/indep/src/replay.cpp
+  src/game_core/indep/src/resourceloader.cpp
+  src/game_core/indep/src/scenery.cpp
+  src/game_core/indep/src/smokeable.cpp
+  src/game_core/indep/src/sound3d.cpp
+  src/game_core/indep/src/terraineffects.cpp
+  src/game_core/indep/src/texture.cpp
+  src/game_core/indep/src/trackedcontroller.cpp
+  src/game_core/indep/src/trackmap.cpp
+  src/game_core/indep/src/trackmarkers.cpp
+  src/game_core/indep/src/trackpath.cpp
+  src/game_core/indep/src/trackroute.cpp
+  src/game_core/indep/src/trackrouteeditor.cpp
+  src/game_core/indep/src/trafficcar.cpp
+  src/game_core/indep/src/trafficdriver.cpp
+  src/game_core/indep/src/trafficteleporter.cpp
+  src/game_core/indep/src/world.cpp
+  src/game_core/indep/src/zonecameras.cpp
   src/game_core/mExitScreenAnimation.cpp
   src/game_core/m_ptr_SOUND_Memory_EE.cpp
   src/game_core/pCarTexturePack.cpp
@@ -171,17 +108,14 @@ set(HP2_CLASS_TEMPLATE_SOURCES
   src/game_core/pInitialSpotlightColours.cpp
   src/game_core/pTrackSelectTexturePack.cpp
   src/game_core/port/police/cop_control.cpp
+  src/game_core/src/acidfxe.cpp
   src/game_core/src/bFile.cpp
-  src/game_core/tCubic1D.cpp
+  src/game_core/src/bSlotPool.cpp
+  src/game_core/src/care.cpp
+  src/game_core/src/dbfiles.cpp
+  src/game_core/src/demodisc.cpp
   src/game_core/tCustomizeHUDScreen.cpp
-  src/game_core/tExitScreenAnimation.cpp
-  src/game_core/tHelpMenu.cpp
   src/game_core/tLineSegment.cpp
-  src/game_core/tMainMenuTrackDesc.cpp
-  src/game_core/tMenuAnimElement.cpp
   src/game_core/tPointsThingy.cpp
   src/game_core/tPopupMenu.cpp
-  src/game_core/tRandomlyPickableTrackInfo.cpp
-  src/game_core/tStatsColumn.cpp
-  src/game_core/tTotalTimeRecord.cpp
 )

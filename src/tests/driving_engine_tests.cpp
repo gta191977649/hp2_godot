@@ -1,4 +1,4 @@
-#include "game_core/Sub_0018F808.hpp"
+#include "game_core/port/driving/projections.hpp"
 #include "game_core/port/not_implemented.hpp"
 #include <cmath>
 #include <iostream>
@@ -71,12 +71,12 @@ int main() {
     Sub_0018AC38(m,f.tc,f.ec,f.transmission+0x50,f.transmission+0x74,0.75f);
     check(m.scalar(f.transmission+0x58)==525,"Dynamic scan no crossover falls back upper minus200");
     Fixture e;auto& em=e.m;em.scalar(e.engine+0xc,200);em.scalar(e.engine+0x44,0.5f);
-    check(Sub_0018AA28(em,e.engine)==20,"Engine curve evaluation");
-    check(Sub_0018AAB0(em,e.engine)==8.75f,"Engine power and drag grouping");
-    em.word(e.engine+0x50,1);check(Sub_0018AAB0(em,e.engine)==28.75f,"Engine triple multiplier branch");
+    check(GetTorque(em,e.engine)==20,"Engine curve evaluation");
+    check(GetTotalEngineTorque(em,e.engine)==8.75f,"Engine power and drag grouping");
+    em.word(e.engine+0x50,1);check(GetTotalEngineTorque(em,e.engine)==28.75f,"Engine triple multiplier branch");
     em.word(e.engine+0x50,0);em.scalar(e.engine+0x44,0);em.word(e.car+0x39c,1);
-    check(Sub_0018AAB0(em,e.engine)==-1.25f,"Negative result car flag scales");
-    em.scalar(e.engine+0xc,800);check(Sub_0018AA28(em,e.engine)==-40,"Rev threshold equality triggers negative scale");
+    check(GetTotalEngineTorque(em,e.engine)==-1.25f,"Negative result car flag scales");
+    em.scalar(e.engine+0xc,800);check(GetTorque(em,e.engine)==-40,"Rev threshold equality triggers negative scale");
     em.scalar(e.engine+0xc,50);em.scalar(e.engine+0x48,99);Sub_0018A988(em,e.engine);
     check(em.scalar(e.engine+0xc)==100 && em.word(e.engine+0x48)==0,"Engine lower clamp and accumulator clear");
     em.scalar(e.engine+0xc,1000);Sub_0018A988(em,e.engine);check(em.scalar(e.engine+0xc)==900,"Engine upper clamp");

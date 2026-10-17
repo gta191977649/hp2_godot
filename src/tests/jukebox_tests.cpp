@@ -10,8 +10,8 @@ int main(int argc,char** argv) {
     std::size_t cursor=0;std::vector<bool> enabled={false,true,false,true};
     require(Sub_0027ECA8(enabled,cursor)==1 && Sub_0027ECA8(enabled,cursor)==3 && Sub_0027ECA8(enabled,cursor)==1,"authored wrap/skip differs");
     const auto prior=cursor;require(!Sub_0027ECA8({false,false},cursor) && cursor==prior,"disabled selection mutates cursor");
-    std::uint32_t seed=24;require(Sub_0025A3D0(23,seed)==1 && seed!=24,"RNG return/state differs");
-    seed=0xffffffffu;require(Sub_0025A3D0(23,seed)==static_cast<int>(0xffffffffu%23u),"RNG must use DIVU for high-bit seeds");
+    std::uint32_t seed=24;require(bRandom(23,seed)==1 && seed!=24,"RNG return/state differs");
+    seed=0xffffffffu;require(bRandom(23,seed)==static_cast<int>(0xffffffffu%23u),"RNG must use DIVU for high-bit seeds");
     const auto root=hp2::platform::resolve_zzdata_root(".");
     if(!root){std::puts("PASS selector; SKIPPED original JBC (root not configured)");return 0;}
     const auto archive=JukeboxCartridge::load_from_zzdata(*root);

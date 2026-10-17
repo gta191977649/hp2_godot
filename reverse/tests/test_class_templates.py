@@ -42,6 +42,7 @@ class ClassTemplateTests(unittest.TestCase):
 
     def test_unknown_paths_stay_at_root_and_confirmed_directories_have_evidence(self):
         classes, _, _, policy = MODULE.model()
+        layout = json.loads((ROOT / 'reverse/classes/task0042-class-layout.json').read_text())
         decisions = json.loads((ROOT / "reverse/classes/source-path-decisions.json").read_text())
         decisions = {d["class_name"]: d for d in decisions["decisions"]}
         report = json.loads((ROOT / "reverse/classes/source-path-bindings.json").read_text())
@@ -51,6 +52,15 @@ class ClassTemplateTests(unittest.TestCase):
         self.assertEqual(set(report), {c["name"] for c in scoped})
         for cls in scoped:
             name = cls["name"]
+            if name in layout['classes']:
+                placement = layout['classes'][name]
+                self.assertEqual(cls['source'], placement['source'])
+                self.assertEqual(cls['header'], placement['header'])
+                self.assertTrue(placement['debug_member_evidence'], name)
+                self.assertEqual(placement['evidence_id'], 'E-0042-S001')
+                for key in ('source', 'header'):
+                    self.assertTrue((ROOT / cls[key]).is_file(), cls[key])
+                continue
             expected = Path("src/game_core")
             if name in decisions:
                 d = decisions[name]
@@ -65,9 +75,47 @@ class ClassTemplateTests(unittest.TestCase):
             self.assertEqual(Path(cls["source"]).parent, expected, name)
             self.assertTrue((ROOT / cls["header"]).is_file())
             self.assertTrue((ROOT / cls["source"]).is_file())
-        self.assertEqual(Path(next(c['header'] for c in scoped if c['name']=='PsychoDriver')).parent, Path('src/game_core'))
+        self.assertEqual(next(c['header'] for c in scoped if c['name']=='PsychoDriver'),
+                         'src/game_core/indep/inc/PsychoDriver.hpp')
         self.assertEqual(Path(next(c['header'] for c in scoped if c['name']=='tCustomizeHUDScreen')).parent, Path('src/game_core'))
         self.assertFalse(list((ROOT / "src/game_core/port/class_templates").glob("*")))
+
+    def test_exact_declaring_scope_has_one_canonical_entry_without_native_inheritance(self):
+        classes, _, _, _ = MODULE.model()
+        by_name = {c['name']: c for c in classes}
+        layout = json.loads((ROOT / 'reverse/classes/task0042-class-layout.json').read_text())
+        for transfer in layout['canonical_members']:
+            address = transfer['elf_address']
+            owner = by_name[transfer['owner']]
+            self.assertIn(address, owner['functions'])
+            self.assertEqual(owner['methods'][address]['name'], transfer['method'])
+            for name in transfer['remove_from']:
+                self.assertNotIn(address, by_name[name]['functions'])
+        self.assertIn('0x0019C808', by_name['PhysicsSystem']['functions'])
+        self.assertNotIn('0x0019C808', by_name['PhysicsCar']['functions'])
+        self.assertIn('0x0012E1B8', by_name['cDBFilesBase']['functions'])
+        self.assertNotIn('0x0012E1B8', by_name['cDBFileSys']['functions'])
+        for name in ('PhysicsCar', 'PsychoDriver', 'cDBFileSys'):
+            header = (ROOT / by_name[name]['header']).read_text()
+            self.assertNotRegex(header, r'class\s+' + name + r'\s*:')
+
+    def test_task0042_supported_methods_keep_ctor_dtor_entries_address_named(self):
+        classes, _, _, _ = MODULE.model()
+        by_name = {cls['name']: cls for cls in classes}
+        supported = {}
+        for family in ('candidate', 'unresolved'):
+            for bridge in json.loads((ROOT / f'reverse/naming/task0042-{family}-bridges.json').read_text())['bridges']:
+                if bridge['status'].startswith('supported'):
+                    supported[bridge['retail_address']] = bridge
+        for row in MODULE.read_csv('reverse/naming/task0042-adopted-source-names.csv'):
+            bridge = supported[row['elf_address']]
+            self.assertEqual(row['reference_name'], bridge['reference_name'])
+            self.assertTrue(bridge['reference_name'].startswith(row['class_name'] + '::' + row['method'] + '('))
+            self.assertEqual(by_name[row['class_name']]['methods'][row['elf_address']]['name'], row['method'])
+        for name, address in [('CarDriver', '0x00136D00'), ('CarMover', '0x00136B78'),
+                              ('PhysicsVehicle', '0x00139678'), ('CarController', '0x001C00A8'),
+                              ('PhysicsSystem', '0x0019C170')]:
+            self.assertEqual(by_name[name]['methods'][address]['name'], 'Sub_' + address[2:])
 
     def test_evidence_coverage_and_names(self):
         classes, labels, _, _ = MODULE.model()

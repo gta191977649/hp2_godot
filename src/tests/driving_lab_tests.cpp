@@ -1,6 +1,6 @@
 #include "game_core/port/driving/session.hpp"
-#include "game_core/Sub_00137C88.hpp"
-#include "game_core/Sub_001A4E88.hpp"
+#include "game_core/port/driving/projections.hpp"
+#include "game_core/port/driving/projections.hpp"
 #include "game_core/port/not_implemented.hpp"
 #include "platform/ps2_asset_root.hpp"
 #include "port/assets/catalog.hpp"
@@ -52,11 +52,11 @@ int main(){
     check(!invalid_pose.snapshot().body&&invalid_pose.snapshot().step==0,"Invalid pose retains the last completed state");
     // Independent instruction-derived finite fixtures: E-0038-003.
     // 00137C90..9C: abs(*a1)+1; C8..EC strict comparisons and early return.
-    float a1=-2;check(Sub_00137C88(0,1,15,4,2,0,0,a1)==3&&a1==2,"Absolute writeback / early return");
-    a1=0;check(Sub_00137C88(1,0,15,0.25f,0.25f,2,0,a1)==1.25f,"Unscaled coefficient path");
-    a1=0;check(Sub_00137C88(1,0,15,0.25f,0.25f,2,1,a1)==1.375f,"Branch-likely scaled coefficient path");
-    a1=0;check(std::abs(Sub_00137C88(2,0,30,1,0,0,0,a1)-1.7f)<1e-7f,"Upper cap 0x3f333333");
-    a1=0;check(Sub_00137C88(1,0,-30,1,0,0,0,a1)==0,"No invented lower clamp");
+    float a1=-2;check(YawFrictionBoost(0,1,15,4,2,0,0,a1)==3&&a1==2,"Absolute writeback / early return");
+    a1=0;check(YawFrictionBoost(1,0,15,0.25f,0.25f,2,0,a1)==1.25f,"Unscaled coefficient path");
+    a1=0;check(YawFrictionBoost(1,0,15,0.25f,0.25f,2,1,a1)==1.375f,"Branch-likely scaled coefficient path");
+    a1=0;check(std::abs(YawFrictionBoost(2,0,30,1,0,0,0,a1)-1.7f)<1e-7f,"Upper cap 0x3f333333");
+    a1=0;check(YawFrictionBoost(1,0,-30,1,0,0,0,a1)==0,"No invented lower clamp");
     // E-0038-005 instruction fixtures: f1=2*4=8; f0=(20-8)/2=6;
     // f2=3*1+5*2=13; f0=((6*4-13)*2)/4=5.5; result=7.5.
     WheelIterationProjection iteration{4,2,3,5,20,2};

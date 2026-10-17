@@ -1,3 +1,5 @@
+// TASK-0042 E-0042-S001: exact Debug source marker(s): ..\indep\src\beltmover.cpp.
+// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
 // Original translation unit: `..\indep\src\beltmover.cpp` (ELF 0x002BB048; E-0029-P01).
 // Directory binding through 0x00204098; see reverse/classes/source-path-bindings.json.
 // This per-class file is a port-side partition, not the original translation unit or header.

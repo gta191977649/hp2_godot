@@ -740,8 +740,8 @@ void tCarLogoAnimation::Sub_001F8D20(bool randomize, std::uint32_t& rng) {
     if (Field_0x2C < static_cast<int>(Field_0x08.size()))
         Field_0x00->texture_hash = Field_0x08[static_cast<std::size_t>(Field_0x2C)];
     if (randomize) {
-        Field_0x38 = (Field_0x38 + static_cast<int>(Sub_0025A3D0(3, rng)) + 1) % 4;
-        Field_0x3C = (Field_0x3C + static_cast<int>(Sub_0025A3D0(2, rng))) & 1;
+        Field_0x38 = (Field_0x38 + static_cast<int>(bRandom(3, rng)) + 1) % 4;
+        Field_0x3C = (Field_0x3C + static_cast<int>(bRandom(2, rng))) & 1;
     }
     constexpr float x_0031B5B0[4] = {70, 150, 210, 260};
     constexpr float y_00331760[2] = {140, 280};

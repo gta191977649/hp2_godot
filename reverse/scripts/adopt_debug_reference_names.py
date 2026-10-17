@@ -37,10 +37,21 @@ def save(path, text):
         path.write_text(text,encoding='utf-8')
 
 
+def ensure_legacy_write_allowed(root):
+    """Historical adoption must never overwrite later evidence or resurrect old files."""
+    if (root / 'reverse/classes/task0042-class-layout.json').exists() or (
+            root / 'reverse/naming/task0042-projection-partitions.json').exists():
+        raise ValueError('TASK-0041 --write is superseded by TASK-0042 source/class partition registries; '
+                         'refusing to replace later name records or recreate legacy files. '
+                         'Use TASK-0042 registries and generate_class_templates.py --write.')
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--write', action='store_true')
     args = p.parse_args()
+    if args.write:
+        ensure_legacy_write_allowed(ROOT)
     mappings = {}
     for r in read_csv(NAMING/'task0041-debug-retail-matches.csv'):
         if r['status'] == 'supported_exact_leaf':

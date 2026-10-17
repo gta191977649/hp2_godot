@@ -1,5 +1,5 @@
 #include "vehicle_geometry.hpp"
-#include "game_core/Type_0011BF98.hpp"
+#include "game_core/src/ecstasy/estripdatae.hpp"
 #include "port/vehicle/topology.hpp"
 #include <algorithm>
 #include <cmath>

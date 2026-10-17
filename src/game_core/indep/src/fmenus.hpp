@@ -694,7 +694,7 @@ private:
 
 // E-0016-S03. Original global RNG seed's initialized word is 0x12345678
 // at 00332068; other original callers advance it. Host owns the shared state.
-std::int32_t Sub_0025A3D0(std::int32_t bound, std::uint32_t& state);
+std::int32_t bRandom(std::int32_t bound, std::uint32_t& state);
 // TASK-0041 E-0041-R10; original class spelling; retail 0x002495F0, debug 0x00242C40. Native interface/layout remain port projections.
 class tGlobalBackgroundAnimation {
 public:

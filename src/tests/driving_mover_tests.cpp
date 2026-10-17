@@ -1,5 +1,5 @@
-#include "game_core/Sub_00137D90.hpp"
-#include "game_core/Sub_00137100.hpp"
+#include "game_core/port/driving/projections.hpp"
+#include "game_core/port/driving/projections.hpp"
 #include "game_core/port/not_implemented.hpp"
 #include <cmath>
 #include <iostream>
@@ -20,8 +20,8 @@ struct Fixture {
         helper=m.allocate(0x18);steering=m.allocate(0x90);mode=m.allocate(4);
         m.word(s,controls);m.word(s+0x18,body);m.word(s+0x1c,steering);m.word(s+0x40,engine);
         m.word(s+0x44,drive);m.word(s+0x48,helper);m.word(s+0x4c,config);m.word(s+0x50,state);m.word(s+0x54,car);
-        m.word(body+0xc,config+0x1e0);m.scalar(config+0x1e0,1);m.matrix(config+0x1f0,init::Sub_0025AC68());
-        m.matrix(body+0x20,init::Sub_0025AC68());m.matrix(body+0xb0,init::Sub_0025AC68());
+        m.word(body+0xc,config+0x1e0);m.scalar(config+0x1e0,1);m.matrix(config+0x1f0,init::bIdentity());
+        m.matrix(body+0x20,init::bIdentity());m.matrix(body+0xb0,init::bIdentity());
         m.scalar(config+0x120,1);m.scalar(config+0x180,-1);
         const auto steer_table=m.allocate(0x20);m.word(steering,config);m.word(steering+8,steer_table);m.word(steer_table+0x14,0x1a5d60);
         m.word(engine+0x10,config+0x2b0);m.word(engine+0x14,state);m.scalar(engine+0xc,100);
@@ -46,12 +46,12 @@ struct Fixture {
         services.Field_001389A4_stack_w=123;
         services.Sub_00250F38=[&](){return std::uint64_t(++clocks);};
         services.Sub_00250F48=[&](std::uint64_t a,std::uint64_t b){check(a<b,"Performance callbacks ordered");++deltas;return std::uint32_t(b-a);};
-        services.Sub_0019C290=[&](Memory& target,std::uint32_t list,float dt){
+        services.IntegrateEuler=[&](Memory& target,std::uint32_t list,float dt){
             check(&target==&m && list==s+8,"Integrator uses original component-list address");
             ++integrated;total_dt+=dt;m.vector(body+0x60,{{8,4,2,99}});
         };
-        services.Sub_0011BD90=[&](Memory&,std::uint32_t matrix){check(matrix==body+0x20,"Normalization matrix address");++normalized;};
-        services.Sub_00139188=[&](Memory&,std::uint32_t mover,float dt){check(mover==s && dt==0.25f,"Final original publication arguments");++published;};
+        services.eOrthonormalizeMatrix=[&](Memory&,std::uint32_t matrix){check(matrix==body+0x20,"Normalization matrix address");++normalized;};
+        services.UpdateCar=[&](Memory&,std::uint32_t mover,float dt){check(mover==s && dt==0.25f,"Final original publication arguments");++published;};
     }
 };
 }
@@ -62,14 +62,14 @@ int main(){
     check(f.m.word(f.s+0x60)==0 && f.m.word(f.s+0x64)==0 && f.m.word(f.s+0x68)==1,"Throttle launch consumes one original RNG counter");
     check(f.m.word(f.s+0x58)==1000 && f.m.word(f.s+0x5c)==0,"Launch timing CVT.W.S ordering");
     check(f.m.scalar(f.body+0x60)==8 && f.m.scalar(f.engine+0x44)==1,"Launch keeps integrator output and copies normalized control");
-    check(f.m.matrix(f.steering+0x10)==init::Sub_0025AC68() && f.m.matrix(f.steering+0x50)==init::Sub_0025AC68(),"Zero steering creates two matrices with synthetic exact nodes");
+    check(f.m.matrix(f.steering+0x10)==init::bIdentity() && f.m.matrix(f.steering+0x50)==init::bIdentity(),"Zero steering creates two matrices with synthetic exact nodes");
     const auto old_seed=0u;const auto mix=old_seed^0x1d872b41u;const auto x=mix^(mix>>5);
     check(f.m.word(ga(0xc778))==(x^mix^(x<<27)),"RNG update uses original unsigned bit operations");
     Fixture stopped;stopped.m.scalar(stopped.controls+0x214,0);
     Move(stopped.m,stopped.s,0.25f,stopped.services);
     check(stopped.m.scalar(stopped.body+0x60)==0 && stopped.m.scalar(stopped.body+0x64)==0 && stopped.m.scalar(stopped.body+0x68)==0,"Freeze XYZ and explicit W bits");
     check(stopped.m.word(stopped.body+0x6c)==123,"Freeze explicit original uninitialized W projection");
-    Fixture missing;missing.services.Sub_0019C290={};bool caught=false;
+    Fixture missing;missing.services.IntegrateEuler={};bool caught=false;
     try{Move(missing.m,missing.s,0.25f,missing.services);}catch(const hp2::NotImplemented&){caught=true;}
     check(caught,"Missing integration does not silently succeed");
     Fixture running;running.m.word(running.mode,4);running.m.scalar(ga(0x8448),0.25f);
@@ -82,6 +82,6 @@ int main(){
     try{Move(unsupported.m,unsupported.s,0.25f,unsupported.services);}catch(const hp2::NotImplemented&){caught=true;}
     check(caught && unsupported.clocks==0,"Excluded Race4 diagnostic flag rejected before original mutation");
     Memory rng;rng.map(0x1000,4);rng.word(0x1000,0xffffffffu);
-    check(Sub_0025A3D0(rng,0x1000,0x7fffffffu)==1,"RNG uses DIVU counterevidence over signed decompile");
+    check(bRandom(rng,0x1000,0x7fffffffu)==1,"RNG uses DIVU counterevidence over signed decompile");
     std::cout<<"DRIVING_MOVER_OK: control and service instruction fixtures, original validation deferred\n";
 }

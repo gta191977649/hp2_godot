@@ -180,3 +180,13 @@ The source-path report was regenerated after the CDBFileSys/cDBFileSys correctio
 Generation checks and diff whitespace checks passed. No full Godot suite, visual
 comparison, original gameplay comparison or commit is claimed. Repeated adoption
 is stable and preserves named entry versus typed projection coverage.
+
+
+## TASK-0042 continuation
+
+The counts and legacy filename statements above describe the completed TASK-0041
+snapshot. TASK-0042 confirms 85 further names and extracts exact ECOFF source
+ownership, replacing legacy packet/address-group file placement where supported.
+Current evidence, CPP/HPP reorganization rules and reproduction steps are in
+[DEBUG_CALLCHAIN_RECOVERY.md](DEBUG_CALLCHAIN_RECOVERY.md). Historic CSVs are retained;
+use TASK-0042 adopted/coverage ledgers for the current bounded review.

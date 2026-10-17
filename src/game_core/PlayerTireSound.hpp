@@ -9,12 +9,6 @@
 namespace hp2::recovered {
 class PlayerTireSound {
 public:
-    // ELF 0x00208B28; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00208b28.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00208B28();
-    // ELF 0x00208C78; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00208c78.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00208C78();
     // ELF 0x00212950; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00212950.md. Constructor entry; NOT a C++ constructor.
     // Port-side void/no-argument placeholder; original signature unknown.
     void Sub_00212950();

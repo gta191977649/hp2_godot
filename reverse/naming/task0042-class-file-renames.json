@@ -1,0 +1,1163 @@
+{
+  "task": "TASK-0042",
+  "file_mappings": [
+    {
+      "old": "src/game_core/AIActionAccidentRecovery.cpp",
+      "new": "src/game_core/indep/src/aiplan.cpp",
+      "class_name": "AIActionAccidentRecovery",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/AIActionAccidentRecovery.hpp",
+      "new": "src/game_core/indep/inc/AIPlan.hpp",
+      "class_name": "AIActionAccidentRecovery",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/AIActionAvoidCars.cpp",
+      "new": "src/game_core/indep/src/aiplan.cpp",
+      "class_name": "AIActionAvoidCars",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/AIActionAvoidCars.hpp",
+      "new": "src/game_core/indep/inc/AIPlan.hpp",
+      "class_name": "AIActionAvoidCars",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/AIActionAvoidRoadBlock.cpp",
+      "new": "src/game_core/indep/src/aiplan.cpp",
+      "class_name": "AIActionAvoidRoadBlock",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/AIActionAvoidRoadBlock.hpp",
+      "new": "src/game_core/indep/inc/AIPlan.hpp",
+      "class_name": "AIActionAvoidRoadBlock",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/AIActionBlock.cpp",
+      "new": "src/game_core/indep/src/aiplan.cpp",
+      "class_name": "AIActionBlock",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/AIActionBlock.hpp",
+      "new": "src/game_core/indep/inc/AIPlan.hpp",
+      "class_name": "AIActionBlock",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/AIActionDraft.cpp",
+      "new": "src/game_core/indep/src/aiplan.cpp",
+      "class_name": "AIActionDraft",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/AIActionDraft.hpp",
+      "new": "src/game_core/indep/inc/AIPlan.hpp",
+      "class_name": "AIActionDraft",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/AIActionGetUnstuck.cpp",
+      "new": "src/game_core/indep/src/aiplan.cpp",
+      "class_name": "AIActionGetUnstuck",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/AIActionGetUnstuck.hpp",
+      "new": "src/game_core/indep/inc/AIPlan.hpp",
+      "class_name": "AIActionGetUnstuck",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/AIActionIJustGotHit.cpp",
+      "new": "src/game_core/indep/src/aiplan.cpp",
+      "class_name": "AIActionIJustGotHit",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/AIActionIJustGotHit.hpp",
+      "new": "src/game_core/indep/inc/AIPlan.hpp",
+      "class_name": "AIActionIJustGotHit",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/AIActionJustDrive.cpp",
+      "new": "src/game_core/indep/src/aiplan.cpp",
+      "class_name": "AIActionJustDrive",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/AIActionJustDrive.hpp",
+      "new": "src/game_core/indep/inc/AIPlan.hpp",
+      "class_name": "AIActionJustDrive",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/AIActionNudgeCar.cpp",
+      "new": "src/game_core/indep/src/aiplan.cpp",
+      "class_name": "AIActionNudgeCar",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/AIActionNudgeCar.hpp",
+      "new": "src/game_core/indep/inc/AIPlan.hpp",
+      "class_name": "AIActionNudgeCar",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/AIActionPass.cpp",
+      "new": "src/game_core/indep/src/aiplan.cpp",
+      "class_name": "AIActionPass",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/AIActionPass.hpp",
+      "new": "src/game_core/indep/inc/AIPlan.hpp",
+      "class_name": "AIActionPass",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/AIActionPullOver.cpp",
+      "new": "src/game_core/indep/src/aiplan.cpp",
+      "class_name": "AIActionPullOver",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/AIActionPullOver.hpp",
+      "new": "src/game_core/indep/inc/AIPlan.hpp",
+      "class_name": "AIActionPullOver",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/AICarController.cpp",
+      "new": "src/game_core/indep/src/aicarcontroller.cpp",
+      "class_name": "AICarController",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/AICarController.hpp",
+      "new": "src/game_core/indep/inc/AICarController.hpp",
+      "class_name": "AICarController",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/AIDriver.cpp",
+      "new": "src/game_core/indep/src/aidriver.cpp",
+      "class_name": "AIDriver",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/AIEngineSound.cpp",
+      "new": "src/game_core/indep/src/carsoundengine.cpp",
+      "class_name": "AIEngineSound",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/AcidEffectSystem.cpp",
+      "new": "src/game_core/src/acidfxe.cpp",
+      "class_name": "AcidEffectSystem",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/AcidEffectSystem.hpp",
+      "new": "src/game_core/indep/inc/AcidFX.hpp",
+      "class_name": "AcidEffectSystem",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/AnimationGroup.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/feanim.cpp",
+      "class_name": "AnimationGroup",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/Autosaver.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/memcardscreens.cpp",
+      "class_name": "Autosaver",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/BeACopChallengeSetup.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/racesetup.cpp",
+      "class_name": "BeACopChallengeSetup",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/BeACopResults1P.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/endgamescreens.cpp",
+      "class_name": "BeACopResults1P",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/BeACopResults2P.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/endgamescreens.cpp",
+      "class_name": "BeACopResults2P",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/BeTheCopSetup.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/racesetup.cpp",
+      "class_name": "BeTheCopSetup",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/indep/src/BeltMover.cpp",
+      "new": "src/game_core/indep/src/beltmover.cpp",
+      "class_name": "BeltMover",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/BestLapTimes.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/endgamescreens.cpp",
+      "class_name": "BestLapTimes",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/BestTotalTimes.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/endgamescreens.cpp",
+      "class_name": "BestTotalTimes",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/BumperCameraMover.cpp",
+      "new": "src/game_core/indep/src/cameramover.cpp",
+      "class_name": "BumperCameraMover",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/BumperCameraMover.hpp",
+      "new": "src/game_core/indep/inc/CameraMover.hpp",
+      "class_name": "BumperCameraMover",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/Car.hpp",
+      "new": "src/game_core/indep/inc/Car.hpp",
+      "class_name": "Car",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/CarCollisionBody.cpp",
+      "new": "src/game_core/indep/src/collisionbody.cpp",
+      "class_name": "CarCollisionBody",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/CarCollisionBody.hpp",
+      "new": "src/game_core/indep/inc/CollisionBody.hpp",
+      "class_name": "CarCollisionBody",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/CarDamage.cpp",
+      "new": "src/game_core/indep/src/cardamage.cpp",
+      "class_name": "CarDamage",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/CarDamage.hpp",
+      "new": "src/game_core/indep/inc/CarDamage.hpp",
+      "class_name": "CarDamage",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/CarPartCuller.cpp",
+      "new": "src/game_core/src/care.cpp",
+      "class_name": "CarPartCuller",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/CarRenderInfo.cpp",
+      "new": "src/game_core/src/care.cpp",
+      "class_name": "CarRenderInfo",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/Chopper.cpp",
+      "new": "src/game_core/indep/src/chopper.cpp",
+      "class_name": "Chopper",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/ChopperSound.cpp",
+      "new": "src/game_core/indep/src/choppersound.cpp",
+      "class_name": "ChopperSound",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/CopsOffModeSelect.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/mainmenu.cpp",
+      "class_name": "CopsOffModeSelect",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/CopsOnModeSelect.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/mainmenu.cpp",
+      "class_name": "CopsOnModeSelect",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/CountdownCameraCoordinator.cpp",
+      "new": "src/game_core/indep/src/cameracoordinator.cpp",
+      "class_name": "CountdownCameraCoordinator",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/indep/src/CubicCameraMover.cpp",
+      "new": "src/game_core/indep/src/cameramover.cpp",
+      "class_name": "CubicCameraMover",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/indep/src/CubicCameraMover.hpp",
+      "new": "src/game_core/indep/inc/CameraMover.hpp",
+      "class_name": "CubicCameraMover",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/DebugWorldCameraMover.cpp",
+      "new": "src/game_core/indep/src/cameramover.cpp",
+      "class_name": "DebugWorldCameraMover",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/DeliveryMover.cpp",
+      "new": "src/game_core/indep/src/deliverymover.cpp",
+      "class_name": "DeliveryMover",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/DeliveryMover.hpp",
+      "new": "src/game_core/indep/inc/DeliveryMover.hpp",
+      "class_name": "DeliveryMover",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/DemoCameraCoordinator.cpp",
+      "new": "src/game_core/indep/src/cameracoordinator.cpp",
+      "class_name": "DemoCameraCoordinator",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/DemoDiscManager.cpp",
+      "new": "src/game_core/src/demodisc.cpp",
+      "class_name": "DemoDiscManager",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/DemoDiscManager.hpp",
+      "new": "src/game_core/indep/inc/DemoDisc.hpp",
+      "class_name": "DemoDiscManager",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/DriveCameraMover.cpp",
+      "new": "src/game_core/indep/src/cameramover.cpp",
+      "class_name": "DriveCameraMover",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/DriveCameraMover.hpp",
+      "new": "src/game_core/indep/inc/CameraMover.hpp",
+      "class_name": "DriveCameraMover",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/DrivingChoice.cpp",
+      "new": "src/game_core/indep/src/drivingchoice.cpp",
+      "class_name": "DrivingChoice",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/DrivingChoice.hpp",
+      "new": "src/game_core/indep/inc/DrivingChoice.hpp",
+      "class_name": "DrivingChoice",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/DynamicCollisionBody.cpp",
+      "new": "src/game_core/indep/src/collisionbody.cpp",
+      "class_name": "DynamicCollisionBody",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/DynamicCollisionBody.hpp",
+      "new": "src/game_core/indep/inc/CollisionBody.hpp",
+      "class_name": "DynamicCollisionBody",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/EndGameMenu.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/endgamescreens.cpp",
+      "class_name": "EndGameMenu",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/EndGameMenuItem.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/endgamescreens.cpp",
+      "class_name": "EndGameMenuItem",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/EndGameScreens.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/endgamescreens.cpp",
+      "class_name": "EndGameScreens",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/EndGameScreens.hpp",
+      "new": "src/game_core/indep/inc/EndGameScreens.hpp",
+      "class_name": "EndGameScreens",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/EventRewardScreen.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/endgamescreens.cpp",
+      "class_name": "EventRewardScreen",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/FlailerRenderManager.cpp",
+      "new": "src/game_core/indep/src/flailerdb.cpp",
+      "class_name": "FlailerRenderManager",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/FlailerRenderManager.hpp",
+      "new": "src/game_core/indep/inc/FlailerDB.hpp",
+      "class_name": "FlailerRenderManager",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/FreeRunSetup.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/racesetup.cpp",
+      "class_name": "FreeRunSetup",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/FuturePoints.cpp",
+      "new": "src/game_core/indep/src/drivingchoice.cpp",
+      "class_name": "FuturePoints",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/FuturePoints.hpp",
+      "new": "src/game_core/indep/inc/DrivingChoice.hpp",
+      "class_name": "FuturePoints",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/GrandSceneryCullInfo.cpp",
+      "new": "src/game_core/indep/src/scenery.cpp",
+      "class_name": "GrandSceneryCullInfo",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/GrandSceneryCullInfo.hpp",
+      "new": "src/game_core/indep/inc/Scenery.hpp",
+      "class_name": "GrandSceneryCullInfo",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/HeliSheet.cpp",
+      "new": "src/game_core/indep/src/helisheet.cpp",
+      "class_name": "HeliSheet",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/HornSound3d.cpp",
+      "new": "src/game_core/indep/src/carsounds.cpp",
+      "class_name": "HornSound3d",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/JoystickCalibrationScreen.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/joystickconfiguration.cpp",
+      "class_name": "JoystickCalibrationScreen",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/LapKnockoutSetup.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/racesetup.cpp",
+      "class_name": "LapKnockoutSetup",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/LapTimesDisplay.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/endgamescreens.cpp",
+      "class_name": "LapTimesDisplay",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/LoadedTextureData.cpp",
+      "new": "src/game_core/indep/src/texture.cpp",
+      "class_name": "LoadedTextureData",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/LoadedTextureData.hpp",
+      "new": "src/game_core/indep/inc/Texture.hpp",
+      "class_name": "LoadedTextureData",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/MaxCameraMover.cpp",
+      "new": "src/game_core/indep/src/cameramover.cpp",
+      "class_name": "MaxCameraMover",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/MaxCameraMover.hpp",
+      "new": "src/game_core/indep/inc/CameraMover.hpp",
+      "class_name": "MaxCameraMover",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/MellowMover.cpp",
+      "new": "src/game_core/indep/src/mellowmover.cpp",
+      "class_name": "MellowMover",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/MellowMover.hpp",
+      "new": "src/game_core/indep/inc/MellowMover.hpp",
+      "class_name": "MellowMover",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/MumboJumboScreen.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/frontend.cpp",
+      "class_name": "MumboJumboScreen",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/MunitionEffectsHandler.cpp",
+      "new": "src/game_core/indep/src/munitions.cpp",
+      "class_name": "MunitionEffectsHandler",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/NameEntry.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/nameentry.cpp",
+      "class_name": "NameEntry",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/NearbyCarList.cpp",
+      "new": "src/game_core/indep/src/aicarcontroller.cpp",
+      "class_name": "NearbyCarList",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/NearbyCarList.hpp",
+      "new": "src/game_core/indep/inc/AICarController.hpp",
+      "class_name": "NearbyCarList",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/NewMainMenu.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/mainmenu.cpp",
+      "class_name": "NewMainMenu",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/NisCameraCoordinator.cpp",
+      "new": "src/game_core/indep/src/cameracoordinator.cpp",
+      "class_name": "NisCameraCoordinator",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/NisCameraCoordinator.hpp",
+      "new": "src/game_core/indep/inc/CameraCoordinator.hpp",
+      "class_name": "NisCameraCoordinator",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/NisManager.hpp",
+      "new": "src/game_core/indep/inc/NIS.hpp",
+      "class_name": "NisManager",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/NullController.cpp",
+      "new": "src/game_core/indep/src/car.cpp",
+      "class_name": "NullController",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/NullDriver.hpp",
+      "new": "src/game_core/indep/inc/CarDriver.hpp",
+      "class_name": "NullDriver",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/NumberAllocator.cpp",
+      "new": "src/game_core/indep/src/collisionbody.cpp",
+      "class_name": "NumberAllocator",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/OrbitCarCameraMover.cpp",
+      "new": "src/game_core/indep/src/cameramover.cpp",
+      "class_name": "OrbitCarCameraMover",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/OrbitCarCameraMover.hpp",
+      "new": "src/game_core/indep/inc/CameraMover.hpp",
+      "class_name": "OrbitCarCameraMover",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/PauseAudioOpts.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/pausemenu.cpp",
+      "class_name": "PauseAudioOpts",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/PauseDisplayOpts.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/pausemenu.cpp",
+      "class_name": "PauseDisplayOpts",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/PauseMenu.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/pausemenu.cpp",
+      "class_name": "PauseMenu",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/PauseOptions.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/pausemenu.cpp",
+      "class_name": "PauseOptions",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/PauseRaceObjective.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/pausemenu.cpp",
+      "class_name": "PauseRaceObjective",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/PhysicsCar.cpp",
+      "new": "src/game_core/indep/src/physicscar.cpp",
+      "class_name": "PhysicsCar",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/PhysicsCar.hpp",
+      "new": "src/game_core/indep/inc/PhysicsCar.hpp",
+      "class_name": "PhysicsCar",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/PhysicsSystem.cpp",
+      "new": "src/game_core/indep/src/componentphysics.cpp",
+      "class_name": "PhysicsSystem",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/PhysicsSystem.hpp",
+      "new": "src/game_core/indep/inc/ComponentPhysics.hpp",
+      "class_name": "PhysicsSystem",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/PlayerEngineSound.cpp",
+      "new": "src/game_core/indep/src/carsoundengine.cpp",
+      "class_name": "PlayerEngineSound",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/PlayerTireSound.cpp",
+      "new": "src/game_core/indep/src/carsoundtires.cpp",
+      "class_name": "PlayerTireSound",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/PreRace2PBeACop.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/startracescreens.cpp",
+      "class_name": "PreRace2PBeACop",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/PreRaceBlurb.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/startracescreens.cpp",
+      "class_name": "PreRaceBlurb",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/PreRaceStats.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/startracescreens.cpp",
+      "class_name": "PreRaceStats",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/PreviewPause.cpp",
+      "new": "src/game_core/indep/src/zonecameras.cpp",
+      "class_name": "PreviewPause",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/PreviewPause.hpp",
+      "new": "src/game_core/indep/inc/CameraMover.hpp",
+      "class_name": "PreviewPause",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/PreviewPausePoint.hpp",
+      "new": "src/game_core/indep/inc/CameraMover.hpp",
+      "class_name": "PreviewPausePoint",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/PsychoDriver.cpp",
+      "new": "src/game_core/indep/src/psychodriver.cpp",
+      "class_name": "PsychoDriver",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/PsychoDriver.hpp",
+      "new": "src/game_core/indep/inc/PsychoDriver.hpp",
+      "class_name": "PsychoDriver",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/Race.cpp",
+      "new": "src/game_core/indep/src/race.cpp",
+      "class_name": "Race",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/RaceCoordinator.cpp",
+      "new": "src/game_core/indep/src/racecoordinator.cpp",
+      "class_name": "RaceCoordinator",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/RaceCoordinator.hpp",
+      "new": "src/game_core/indep/inc/RaceCoordinator.hpp",
+      "class_name": "RaceCoordinator",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/RaceResultsScreen.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/endgamescreens.cpp",
+      "class_name": "RaceResultsScreen",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/RealController.cpp",
+      "new": "src/game_core/indep/src/realcontroller.cpp",
+      "class_name": "RealController",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/RealDriver.cpp",
+      "new": "src/game_core/indep/src/realdriver.cpp",
+      "class_name": "RealDriver",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/RealDriver.hpp",
+      "new": "src/game_core/indep/inc/RealDriver.hpp",
+      "class_name": "RealDriver",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/RearViewMirrorCameraMover.cpp",
+      "new": "src/game_core/indep/src/cameramover.cpp",
+      "class_name": "RearViewMirrorCameraMover",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/RearViewMirrorCameraMover.hpp",
+      "new": "src/game_core/indep/inc/CameraMover.hpp",
+      "class_name": "RearViewMirrorCameraMover",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/ReplayManager.cpp",
+      "new": "src/game_core/indep/src/replay.cpp",
+      "class_name": "ReplayManager",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/ReplayScreen.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/replayscreen.cpp",
+      "class_name": "ReplayScreen",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/ReplayScreen.hpp",
+      "new": "src/game_core/indep/inc/ReplayScreen.hpp",
+      "class_name": "ReplayScreen",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/ReplaySnapshot.cpp",
+      "new": "src/game_core/indep/src/replay.cpp",
+      "class_name": "ReplaySnapshot",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/ReplaySnapshot.hpp",
+      "new": "src/game_core/indep/inc/Replay.hpp",
+      "class_name": "ReplaySnapshot",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/ResourceFile.cpp",
+      "new": "src/game_core/indep/src/resourceloader.cpp",
+      "class_name": "ResourceFile",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/SelectTrackScreen.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/selecttrack.cpp",
+      "class_name": "SelectTrackScreen",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/SelectableTrack.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/selecttrack.cpp",
+      "class_name": "SelectableTrack",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/SingleRaceSetup.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/racesetup.cpp",
+      "class_name": "SingleRaceSetup",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/SlotPool.cpp",
+      "new": "src/game_core/src/bSlotPool.cpp",
+      "class_name": "SlotPool",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/SlotPool.hpp",
+      "new": "src/game_core/inc/bSlotPool.hpp",
+      "class_name": "SlotPool",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/SlotPoolManager.cpp",
+      "new": "src/game_core/src/bSlotPool.cpp",
+      "class_name": "SlotPoolManager",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/Smokeable.cpp",
+      "new": "src/game_core/indep/src/smokeable.cpp",
+      "class_name": "Smokeable",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/Smokeable.hpp",
+      "new": "src/game_core/indep/inc/Smokeable.hpp",
+      "class_name": "Smokeable",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/StillCameraMover.cpp",
+      "new": "src/game_core/indep/src/cameramover.cpp",
+      "class_name": "StillCameraMover",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/StillCameraMover.hpp",
+      "new": "src/game_core/indep/inc/CameraMover.hpp",
+      "class_name": "StillCameraMover",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/TerrainEffectEmitters.cpp",
+      "new": "src/game_core/indep/src/terraineffects.cpp",
+      "class_name": "TerrainEffectEmitters",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/TimeAroundTrackTable.cpp",
+      "new": "src/game_core/indep/src/race.cpp",
+      "class_name": "TimeAroundTrackTable",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/TimeAroundTrackTable.hpp",
+      "new": "src/game_core/indep/inc/Race.hpp",
+      "class_name": "TimeAroundTrackTable",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/TimeOfDayTrack.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/selecttrack.cpp",
+      "class_name": "TimeOfDayTrack",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/TourneyPoints.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/endgamescreens.cpp",
+      "class_name": "TourneyPoints",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/TourneyStandingsScreen.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/endgamescreens.cpp",
+      "class_name": "TourneyStandingsScreen",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/TrackCarCameraMover.cpp",
+      "new": "src/game_core/indep/src/cameramover.cpp",
+      "class_name": "TrackCarCameraMover",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/TrackCarCameraMover.hpp",
+      "new": "src/game_core/indep/inc/CameraMover.hpp",
+      "class_name": "TrackCarCameraMover",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/TrackFlyCameraMover.cpp",
+      "new": "src/game_core/indep/src/cameramover.cpp",
+      "class_name": "TrackFlyCameraMover",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/TrackFlyCameraMover.hpp",
+      "new": "src/game_core/indep/inc/CameraMover.hpp",
+      "class_name": "TrackFlyCameraMover",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/TrackKnockoutSetup.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/racesetup.cpp",
+      "class_name": "TrackKnockoutSetup",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/TrackMap.cpp",
+      "new": "src/game_core/indep/src/trackmap.cpp",
+      "class_name": "TrackMap",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/TrackMarkerFile.cpp",
+      "new": "src/game_core/indep/src/trackmarkers.cpp",
+      "class_name": "TrackMarkerFile",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/TrackPathCoordinate.cpp",
+      "new": "src/game_core/indep/src/trackpath.cpp",
+      "class_name": "TrackPathCoordinate",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/TrackPathCoordinate.hpp",
+      "new": "src/game_core/indep/inc/TrackPath.hpp",
+      "class_name": "TrackPathCoordinate",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/TrackPolygonCollisionBody.cpp",
+      "new": "src/game_core/indep/src/collisionbody.cpp",
+      "class_name": "TrackPolygonCollisionBody",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/TrackPolygonCollisionBody.hpp",
+      "new": "src/game_core/indep/inc/CollisionBody.hpp",
+      "class_name": "TrackPolygonCollisionBody",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/TrackRoute.cpp",
+      "new": "src/game_core/indep/src/trackroute.cpp",
+      "class_name": "TrackRoute",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/TrackRoute.hpp",
+      "new": "src/game_core/indep/inc/TrackRoute.hpp",
+      "class_name": "TrackRoute",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/TrackRouteEditor.cpp",
+      "new": "src/game_core/indep/src/trackrouteeditor.cpp",
+      "class_name": "TrackRouteEditor",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/TrackRouteEditorCameraMover.cpp",
+      "new": "src/game_core/indep/src/cameramover.cpp",
+      "class_name": "TrackRouteEditorCameraMover",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/TrafficCar.cpp",
+      "new": "src/game_core/indep/src/trafficcar.cpp",
+      "class_name": "TrafficCar",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/TrafficCar.hpp",
+      "new": "src/game_core/indep/inc/TrafficCar.hpp",
+      "class_name": "TrafficCar",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/TrafficDriver.cpp",
+      "new": "src/game_core/indep/src/trafficdriver.cpp",
+      "class_name": "TrafficDriver",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/TrafficDriver.hpp",
+      "new": "src/game_core/indep/inc/TrafficDriver.hpp",
+      "class_name": "TrafficDriver",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/TrafficTeleporter.cpp",
+      "new": "src/game_core/indep/src/trafficteleporter.cpp",
+      "class_name": "TrafficTeleporter",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/indep/src/VisibleDrivingLine.cpp",
+      "new": "src/game_core/indep/src/player.cpp",
+      "class_name": "VisibleDrivingLine",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/World.cpp",
+      "new": "src/game_core/indep/src/world.cpp",
+      "class_name": "World",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/World.hpp",
+      "new": "src/game_core/indep/inc/World.hpp",
+      "class_name": "World",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/indep/src/ZoneFreezeCameraMover.cpp",
+      "new": "src/game_core/indep/src/zonecameras.cpp",
+      "class_name": "ZoneFreezeCameraMover",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/indep/src/ZonePreviewCameraMover.cpp",
+      "new": "src/game_core/indep/src/zonecameras.cpp",
+      "class_name": "ZonePreviewCameraMover",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/src/bFile.hpp",
+      "new": "src/game_core/inc/bFile.hpp",
+      "class_name": "bFile",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/CDBFileSys.cpp",
+      "new": "src/game_core/src/dbfiles.cpp",
+      "class_name": "cDBFileSys",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/CDBFileSys.hpp",
+      "new": "src/game_core/inc/dbFiles.hpp",
+      "class_name": "cDBFileSys",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/eAnimation.cpp",
+      "new": "src/game_core/indep/src/eanimations.cpp",
+      "class_name": "eAnimation",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/feAnimAlphaElement.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/feanim.cpp",
+      "class_name": "feAnimAlphaElement",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/kAITireSound.cpp",
+      "new": "src/game_core/indep/src/carsoundtires.cpp",
+      "class_name": "kAITireSound",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/tCubic1D.cpp",
+      "new": "src/game_core/indep/src/point.cpp",
+      "class_name": "tCubic1D",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/tExitScreenAnimation.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/feanim.cpp",
+      "class_name": "tExitScreenAnimation",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/tExitScreenAnimation.hpp",
+      "new": "src/game_core/indep/inc/feAnim.hpp",
+      "class_name": "tExitScreenAnimation",
+      "kind": "header"
+    },
+    {
+      "old": "src/game_core/tHelpMenu.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/helpmenu.cpp",
+      "class_name": "tHelpMenu",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/tMainMenuTrackDesc.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/mainmenu.cpp",
+      "class_name": "tMainMenuTrackDesc",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/tMenuAnimElement.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/feanim.cpp",
+      "class_name": "tMenuAnimElement",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/tRandomlyPickableTrackInfo.cpp",
+      "new": "src/game_core/indep/src/fred.cpp",
+      "class_name": "tRandomlyPickableTrackInfo",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/tStatsColumn.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/endgamescreens.cpp",
+      "class_name": "tStatsColumn",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/tTotalTimeRecord.cpp",
+      "new": "src/game_core/indep/src/frontendscreens/selecttrack.cpp",
+      "class_name": "tTotalTimeRecord",
+      "kind": "source"
+    },
+    {
+      "old": "src/game_core/Car.cpp",
+      "new": "src/game_core/indep/src/car.cpp",
+      "class_name": "Car",
+      "kind": "source"
+    }
+  ]
+}

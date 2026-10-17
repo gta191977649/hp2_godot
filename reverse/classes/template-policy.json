@@ -2,10 +2,11 @@
   "schema_version": 1,
   "binary_id": "sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2",
   "default_directory": "src/game_core",
+  "canonical_layout_registry": "reverse/classes/task0042-class-layout.json",
   "original_directory_placements": {
     "BeltMover": {
       "header": "src/game_core/indep/src/BeltMover.hpp",
-      "source": "src/game_core/indep/src/BeltMover.cpp",
+      "source": "src/game_core/indep/src/beltmover.cpp",
       "namespace": "hp2::recovered",
       "placement_provenance": "confirmed original directory (E-0029-P01); per-class file basename/header extension port-side; original TU ..\\indep\\src\\beltmover.cpp",
       "original_path": "..\\indep\\src\\beltmover.cpp",
@@ -13,8 +14,8 @@
       "evidence": "E-0029-P01"
     },
     "CubicCameraMover": {
-      "header": "src/game_core/indep/src/CubicCameraMover.hpp",
-      "source": "src/game_core/indep/src/CubicCameraMover.cpp",
+      "header": "src/game_core/indep/inc/CameraMover.hpp",
+      "source": "src/game_core/indep/src/cameramover.cpp",
       "namespace": "hp2::recovered",
       "placement_provenance": "confirmed original directory (E-0029-P02); per-class file basename/header extension port-side; original TU ..\\indep\\src\\cameramover.cpp",
       "original_path": "..\\indep\\src\\cameramover.cpp",
@@ -32,7 +33,7 @@
     },
     "ZoneFreezeCameraMover": {
       "header": "src/game_core/indep/src/ZoneFreezeCameraMover.hpp",
-      "source": "src/game_core/indep/src/ZoneFreezeCameraMover.cpp",
+      "source": "src/game_core/indep/src/zonecameras.cpp",
       "namespace": "hp2::recovered",
       "placement_provenance": "confirmed original directory (E-0029-P04); per-class file basename/header extension port-side; original TU ..\\indep\\src\\zonecameras.cpp",
       "original_path": "..\\indep\\src\\zonecameras.cpp",
@@ -41,7 +42,7 @@
     },
     "ZonePreviewCameraMover": {
       "header": "src/game_core/indep/src/ZonePreviewCameraMover.hpp",
-      "source": "src/game_core/indep/src/ZonePreviewCameraMover.cpp",
+      "source": "src/game_core/indep/src/zonecameras.cpp",
       "namespace": "hp2::recovered",
       "placement_provenance": "confirmed original directory (E-0029-P05); per-class file basename/header extension port-side; original TU ..\\indep\\src\\zonecameras.cpp",
       "original_path": "..\\indep\\src\\zonecameras.cpp",
@@ -50,7 +51,7 @@
     },
     "VisibleDrivingLine": {
       "header": "src/game_core/indep/src/VisibleDrivingLine.hpp",
-      "source": "src/game_core/indep/src/VisibleDrivingLine.cpp",
+      "source": "src/game_core/indep/src/player.cpp",
       "namespace": "hp2::recovered",
       "placement_provenance": "confirmed original directory (E-0029-P06); per-class file basename/header extension port-side; original TU ..\\indep\\src\\player.cpp",
       "original_path": "..\\indep\\src\\player.cpp",
@@ -76,7 +77,7 @@
       "evidence": "E-0029-P08"
     },
     "bFile": {
-      "header": "src/game_core/src/bFile.hpp",
+      "header": "src/game_core/inc/bFile.hpp",
       "source": "src/game_core/src/bFile.cpp",
       "namespace": "hp2::recovered",
       "placement_provenance": "confirmed original directory (E-0029-P09); per-class file basename/header extension port-side; original TU src\\bFile.cpp",
@@ -88,7 +89,7 @@
   "member_attributions": {
     "CarRenderInfo": {
       "header": "src/game_core/CarRenderInfo.hpp",
-      "source": "src/game_core/CarRenderInfo.cpp",
+      "source": "src/game_core/src/care.cpp",
       "namespace": "hp2::recovered",
       "evidence": "E-0033-B01; E-0033-B02",
       "placement_provenance": "user_requested_root; port-side placement; original path unknown",
