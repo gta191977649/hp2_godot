@@ -1,0 +1,18 @@
+{
+  "debug_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "map_sha256": "20baece850349d26f95a5da1c1f6e9eacd6c3f5574e560b8ff2f4e536f9f19d1",
+  "retail_sha256": "7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2",
+  "debug_functions": 8715,
+  "retail_functions": 7517,
+  "unique_matches": 4410,
+  "counts": {
+    "relocation_equivalent_candidate": 2332,
+    "candidate_instruction_calls_data": 1260,
+    "supported_exact_leaf": 614,
+    "candidate_instruction_data_leaf": 200,
+    "conflicting_call_targets": 4
+  },
+  "ambiguous_signature_groups": 283,
+  "matched_retail_entries": 4410,
+  "coverage_limit": "Contiguous existing Ghidra function ranges only; no missing-function creation or changed-code similarity assignment."
+}

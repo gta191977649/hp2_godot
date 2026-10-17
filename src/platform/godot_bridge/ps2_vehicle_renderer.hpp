@@ -28,6 +28,7 @@ public:
     godot::Dictionary set_wheel_blur(bool enabled);
     godot::Dictionary set_wheel_speed(double radians_per_second);
     void advance_wheels(double delta);
+    godot::Dictionary apply_driving_snapshot(const godot::Dictionary& snapshot);
     godot::Dictionary load_car(const godot::String& relative_path);
     godot::Array get_catalog();
     godot::Dictionary load_car_id(int car_id, int skin_id);

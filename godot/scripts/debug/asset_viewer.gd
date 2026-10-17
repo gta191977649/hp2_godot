@@ -32,6 +32,9 @@ const PREVIEW_ORBIT_SPEED := 0.2094395102
 var grid_node: MeshInstance3D
 var floor_node: MeshInstance3D
 var car_catalog: Array = []
+var driving: RefCounted
+var focused := true
+var test_drive_pending := false
 
 func _ready() -> void:
 	if DebugTools.host == null or not DebugTools.host.is_debug_build():
@@ -47,10 +50,18 @@ func _ready() -> void:
 		car_model = ClassDB.instantiate("Ps2CarViewer")
 		add_child(car_model)
 		car_catalog = car_model.get_catalog()
+		driving = preload("res://scripts/debug/driving_lab.gd").new(self)
 	reset_camera()
 	refresh_state()
 	DebugTools.write_log("CarViewer: ready for CARS/<model>/GEOMETRY.BIN" if viewer_kind == "car" else "TrackViewer: synthetic fixture; loader not implemented")
 	var explicit_load := false
+	if "--driving-smoke" in OS.get_cmdline_user_args() or "--driving-asset-smoke" in OS.get_cmdline_user_args() or "--driving-os-smoke" in OS.get_cmdline_user_args():
+		explicit_load = true
+		var smoke_runner := preload("res://scripts/debug/driving_smoke.gd").new()
+		add_child(smoke_runner)
+	if DebugTools.test_drive_requested:
+		DebugTools.test_drive_requested = false
+		test_drive_pending = true
 	for argument in OS.get_cmdline_user_args():
 		if argument == "--wheel-blur" and car_model != null:
 			car_model.set_wheel_blur(true)
@@ -192,6 +203,8 @@ func refresh_state() -> void:
 		fixture.visible = bool(DebugTools.host.viewer_state().fixture)
 
 func viewer_ui_snapshot() -> Dictionary:
+	if driving != null and driving.engaged():
+		return driving.snapshot()
 	var state: Dictionary = DebugTools.host.viewer_state().duplicate()
 	state["kind"] = viewer_kind
 	state["camera"] = "%s | speed %.1f" % [camera.position.snapped(Vector3.ONE * 0.01), move_speed]
@@ -202,6 +215,8 @@ func viewer_ui_snapshot() -> Dictionary:
 	state["inspection"] = inspection
 	state["show_lods"] = show_lods
 	state["preview"] = preview_mode
+	if driving != null and not driving.error.is_empty():
+		state["diagnostic"] = str(state.get("diagnostic", "")) + "\n" + driving.error
 	if car_model != null:
 		var native: Dictionary = car_model.get_state()
 		state["wheel_speed"] = float(native.get("wheel_speed", 80.0))
@@ -245,6 +260,10 @@ func _publish_car_result(result: Dictionary, frame: bool = true) -> void:
 	refresh_state()
 
 func viewer_action(action: String) -> void:
+	if driving != null and driving.engaged() and action in ["load", "clear", "fixture"]:
+		var requested_source := str(DebugTools.host.viewer_state().source)
+		driving.stop()
+		DebugTools.host.viewer_apply(action, requested_source)
 	if car_model != null:
 		if action in ["clear", "fixture"]:
 			pending_load = false
@@ -263,7 +282,15 @@ func viewer_ui_action(action: Dictionary) -> void:
 	# Called deferred, after native ImGui drawing has completed.
 	if car_model == null:
 		return
-	match str(action.get("action", "")):
+	var command := str(action.get("action", ""))
+	if command == "test_drive":
+		driving.start()
+		return
+	if driving.engaged():
+		if command.begins_with("drive_"):
+			driving.action(action)
+		return
+	match command:
 		"preview":
 			set_preview_mode(bool(action.get("enabled", false)))
 		"select_car":
@@ -355,7 +382,18 @@ func release_camera() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 func _input(event: InputEvent) -> void:
-	DebugTools.handle_input(event)
+	var in_drive: bool = driving != null and driving.engaged()
+	# Relative camera motion belongs to the captured tool camera, not ImGui.
+	if in_drive and driving.captures_pointer() and (event is InputEventMouseMotion or event is InputEventMouseButton):
+		driving.handle_input(event)
+		get_viewport().set_input_as_handled()
+		return
+	var consumed: bool = DebugTools.handle_input(event)
+	if in_drive:
+		driving.sync_lifecycle()
+		driving.handle_input(event, consumed)
+		get_viewport().set_input_as_handled()
+		return
 	# Release even when the pointer ends over a GUI control.
 	if event is InputEventMouseButton and not event.pressed:
 		if event.button_index == MOUSE_BUTTON_RIGHT:
@@ -368,7 +406,13 @@ func _input(event: InputEvent) -> void:
 		held.erase(event.keycode)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if DebugTools.input_captured() or camera == null:
+	if driving != null and driving.engaged():
+		return
+	# Mouse hover must isolate camera/mouse events without swallowing driving keys.
+	var captured: bool = DebugTools.input_captured()
+	if event is InputEventKey:
+		captured = DebugTools.is_console_open() or DebugTools.host.viewer_keyboard_capture()
+	if captured or not focused or camera == null:
 		return
 	if event is InputEventKey:
 		if event.pressed:
@@ -425,20 +469,26 @@ func _process(delta: float) -> void:
 						elif preview_errors.has(int(skin.id)):
 							skin["preview_error"] = preview_errors[int(skin.id)]
 			_publish_car_result(loaded, frame_on_load)
-	if DebugTools.input_captured():
+	if test_drive_pending and not pending_load and car_state.get("ok", false):
+		test_drive_pending = false
+		driving.start()
+	if driving != null and driving.engaged():
+		driving.process(delta)
+	elif DebugTools.input_captured():
 		release_camera()
 	elif looking:
 		var direction := Vector3(float(held.has(KEY_D)) - float(held.has(KEY_A)), float(held.has(KEY_E)) - float(held.has(KEY_Q)), float(held.has(KEY_S)) - float(held.has(KEY_W)))
 		camera.position += camera.basis * direction.normalized() * move_speed * (4 if held.has(KEY_SHIFT) else 1) * delta
 	# Auto orbit is independent of dragging and UI/console capture; mouse offsets
 	# adjust the same camera without suspending the presentation rotation.
-	if viewer_kind == "car" and preview_mode:
+	if viewer_kind == "car" and preview_mode and not (driving != null and driving.engaged()):
 		orbit_yaw = fposmod(orbit_yaw + PREVIEW_ORBIT_SPEED * delta, TAU)
 		_update_orbit()
 	DebugTools.host.viewer_camera("position=%s rotation=%s speed=%.1f" % [camera.position, camera.rotation_degrees, move_speed])
 	DebugTools.statistics = {"screen": "%sViewer" % viewer_kind.capitalize()}
 	if car_model != null and car_state.get("ok", false):
-		car_model.advance_wheels(delta)
+		if not pending_load and (driving == null or not driving.engaged()):
+			car_model.advance_wheels(delta)
 		# Port-side mapping of Godot vertical FOV to pixel projection scale.
 		var scale: float = get_viewport().get_visible_rect().size.y * 0.5 / tan(deg_to_rad(camera.fov) * 0.5)
 		var rendered: Dictionary = car_model.update_view(camera.position, -camera.basis.z, scale, forced_lod)
@@ -449,6 +499,15 @@ func _process(delta: float) -> void:
 			DebugTools.host.viewer_rendering(description)
 			last_rendering = description
 	refresh_state()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		focused = false
+		release_camera()
+	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
+		focused = true
+	if driving != null and driving.engaged():
+		driving.sync_lifecycle()
 
 func _exit_tree() -> void:
 	release_camera()

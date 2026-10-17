@@ -12,6 +12,8 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <utility>
+#include <array>
 
 // TASK-0013: FrontEnd screen/widget layout records from FRONTEND/FRONTB.BUN.
 //
@@ -53,9 +55,14 @@ struct FeWidget {
     std::uint8_t layer = 0;         // +0x2a; draw order candidate (see docs open items)
     float x = 0, y = 0;             // +0x30, +0x34 (top-left, 640x480 space)
     float scale_x = 1, scale_y = 1; // +0x38, +0x3c (multiplies the texture's native size)
+    std::int32_t field_0x40 = 0;
+    std::uint32_t field_0x44 = 0;
     std::uint32_t clip_hash_0x4c = 0; // E-0017-S02, clip-widget name hash; zero disables
     std::uint32_t texture_hash = 0; // +0x50 (TexturePack entry hash; 0 = untextured)
     std::uint8_t r = 128, g = 128, b = 128, a = 128; // RGBA bytes; PS2 alpha (0x80 = opaque)
+    // E-0039-Q02/Q03, quad-only remaining TR/BR/BL packed colours and TL/TR/BR/BL UVs.
+    std::array<std::uint32_t, 3> field_0x5c{0x80808080u,0x80808080u,0x80808080u};
+    std::array<float, 8> field_0x70{0,0,1,0,1,1,0,1};
     std::uint32_t text_capacity = 0; // +0x54 (text widgets): authored buffer length
     std::uint32_t text_align = 0;    // +0x58 (text widgets): a bitfield, not an enum --
                                      // FUN_00140FA8 tests bits 1, 2 and 4 of it when it rescales
@@ -77,19 +84,22 @@ struct FeWidget {
 };
 
 // Bitmap font table (chunk 0x00015010). Header: u32 texture hash, u32 glyph count, u32 kerning
-// pair count, u32 line height, u32 byte offset of the kerning table, then `glyph count` 32-byte
+// pair count, u32 glyph-table offset, u32 byte offset of the kerning table, then 32-byte
 // glyph records. Glyph codes are sparse (e.g. '$' is absent from the Impact fonts), so look up by
-// code rather than by index. Kerning pairs are parsed but not yet applied -- see docs open items.
+// code rather than by index. E-0039-F01/F02: offsets include the chunk header; runtime height
+// is the maximum glyph height (0013FFA8), not the serialized glyph-table offset of28.
 struct FeGlyph {
     std::uint16_t code = 0;
-    std::uint16_t flags = 0;
+    std::uint16_t flags = 0; // glyph+0x02: pair count, read signed by00140098
     float u = 0, v = 0, w = 0, h = 0, advance = 0; // atlas pixels
+    std::uint32_t field_0x1c = 0; // first pair index, E-0039-F02
 };
 
 struct FeFont {
     std::uint32_t texture_hash = 0; // matches a TexturePack entry (FONT_IMPACTSMALL, BUTTONSOUT, ...)
     std::uint32_t line_height = 0;
     std::vector<FeGlyph> glyphs;
+    std::vector<std::pair<std::uint8_t, float>> field_0x410; // runtime font pair table
 };
 
 struct FeScreen {
@@ -520,7 +530,8 @@ WidgetRect_00144280 GetWidgetClip_00145F30(FeScreen& screen, const FeWidget& wid
 
 // 00249DE0 with Audio ctor001EF3C8's exact 26-element widget list.
 // Per-widget 00249C78 paths retain velocity and use duration0.5, no group guess.
-class Type_00249DE0 {
+// TASK-0041 E-0041-R07; original class spelling; retail 0x00249DE0, debug 0x00243430. Native interface/layout remain port projections.
+class tScrollingMenuList {
 public:
     void Construct_00249DE0(FeScreen& screen,std::uint32_t top_hash,std::uint32_t bottom_hash,
         std::uint32_t up_hash,std::uint32_t down_hash,std::uint32_t clip_hash);
@@ -532,7 +543,8 @@ public:
     std::uint32_t Sub_0024A368() const; // fixed viewport mask for selection bars
     int field_0x34 = 0; // original total-row count, assigned by each screen constructor
 private:
-    struct Type_00249C78 {
+    // TASK-0041 E-0041-R08; original class spelling; retail 0x00249C78, debug 0x002432C8. Native interface/layout remain port projections.
+    struct tMenuAnimElement {
         std::size_t field_0x3c = 0;
         float field_0x0c = 0, field_0x10 = 0, field_0x14 = 0;
         float field_0x1c = 0, field_0x20 = 0, field_0x24 = 0, field_0x28 = 0;
@@ -540,14 +552,15 @@ private:
         int field_0x38 = 0;
     };
     FeScreen* field_0x00 = nullptr;
-    std::vector<Type_00249C78> field_0x04;
+    std::vector<tMenuAnimElement> field_0x04;
     float field_0x0c = 0, field_0x10 = 0, field_0x24 = 0;
     int field_0x14 = -1;
     std::uint32_t field_0x28=0,field_0x2c=0,field_0x30=0;
 };
 // E-0017-S04: selector arrows follow the bound VALUE widget's integer
 // bounding-box vertical centre. Zero target hides both arrows immediately.
-class Type_0024A690 {
+// TASK-0041 E-0041-R09; original class spelling; retail 0x0024A690, debug 0x00243CE0. Native interface/layout remain port projections.
+class tLeftRightArrowScroll {
 public:
     void Construct_0024A690(FeScreen& screen, std::uint32_t left_hash, std::uint32_t right_hash);
     void Bind_0024A860(std::uint32_t target_hash);
@@ -652,13 +665,14 @@ inline constexpr const char* kItemGroupNameFormat_002BEF88 = "MENUITEM_%d_GROUP"
 // per-frame message 0x12. Decompiled: states 0..3, cross-fading SCROLLING_TEXT against
 // WHITEOUT_BAR over 0.6 s and holding for 0.5 s. The former claim '650 px/s'
 // is disproved by E-0016-S02: 650 is initial X, duration is 0.25 s.
-// Legacy unbound boundary remains a throw. The bound state is Type_002491B0 below.
+// Legacy unbound boundary remains a throw. The bound state is tAnimatedBlurb below.
 [[noreturn]] void Sub_00249348();
 
 // E-0016-S02: FUN_002491B0/00249518/00249348. Host delta replaces PS2
 // clock production. The path is zero-velocity Hermite from X=650 to authored X
 // in 0.25 seconds; 650 is a position, not a scrolling speed.
-class Type_002491B0 {
+// TASK-0041 E-0041-R19; original class spelling; retail 0x002491B0, debug 0x00242880. Native interface/layout remain port projections.
+class tAnimatedBlurb {
 public:
     void Construct_002491B0(FeScreen& screen);
     // ELF 0x002491B0; E-0022-R01. Screen-owned hashes are constructor operands,
@@ -681,7 +695,8 @@ private:
 // E-0016-S03. Original global RNG seed's initialized word is 0x12345678
 // at 00332068; other original callers advance it. Host owns the shared state.
 std::int32_t Sub_0025A3D0(std::int32_t bound, std::uint32_t& state);
-class Type_002495F0 {
+// TASK-0041 E-0041-R10; original class spelling; retail 0x002495F0, debug 0x00242C40. Native interface/layout remain port projections.
+class tGlobalBackgroundAnimation {
 public:
     using Random_0025A488 = std::function<std::int32_t(std::int32_t)>;
     void Construct_002495F0();

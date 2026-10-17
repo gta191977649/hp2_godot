@@ -23,15 +23,19 @@ public:
     void Sub_0020FE70();
     // ELF 0x00210400; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00210400.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00210400();
+    // Debug reference: PlayerEngineSound::DeactivateSound(void); E-0041-V01; retail ABI unconfirmed.
+    void DeactivateSound();
     // ELF 0x00210408; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00210408.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00210408();
+    // Debug reference: PlayerEngineSound::ActivateSound(void); E-0041-V01; retail ABI unconfirmed.
+    void ActivateSound();
     // ELF 0x00210410; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00210410.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00210410();
+    // Debug reference: PlayerEngineSound::Mute(int); E-0041-V01; retail ABI unconfirmed.
+    void Mute();
     // ELF 0x00211390; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00211390.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00211390();
+    // Debug reference: PlayerEngineSound::Update(float, unsigned short, float); E-0041-V01; retail ABI unconfirmed.
+    void Update();
 };
 } // namespace hp2::recovered

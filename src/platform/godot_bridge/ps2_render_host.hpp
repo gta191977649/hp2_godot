@@ -64,6 +64,7 @@ public:
     void viewer_ui_snapshot(const godot::Dictionary& snapshot);
     godot::Dictionary viewer_ui_next();
     bool viewer_ui_capture()const;
+    bool viewer_keyboard_capture()const;
 
     // Creates the canvas item under an existing CanvasItem RID, i.e. a Node2D's or Control's
     // get_canvas_item(). Godot keeps owning the window, viewport and canvas; this owns the item.

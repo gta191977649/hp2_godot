@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <array>
 #include <memory>
 #include <vector>
 
@@ -13,7 +14,15 @@ struct Bitmap { int width=0,height=0; std::vector<std::uint8_t> rgba; std::uint6
 // texture==0 is a solid-colour rect: `color` fills `destination` and `source` is unused. The
 // recovered event-tree connectors (tLineSegment) are axis-aligned, so they need no other
 // primitive. Every other quad samples `source` from `texture`.
-struct Quad { TextureId texture=0; Rect destination,source; Color color; };
+struct Quad {
+ TextureId texture=0; Rect destination,source; Color color;
+ // Port-side packet corners TL, TR, BR, BL. UVs are bitmap pixel coordinates.
+ // E-0039-Q02/Q03/Q05: optional independent original packet data; rectangle callers remain valid.
+ bool has_vertex_data=false;
+ std::array<Vec2,4> positions{}, source_points{};
+ std::array<Color,4> colors{};
+ bool bypass_clip=false; // E-0039-Q05: original rotated quads skip CPU rectangle clipping.
+};
 struct Frame { Vec2 logical_size{640,480}; Color clear{0,0,0,1}; std::vector<Quad> quads; std::uint64_t sequence=0; };
 class Resources {
 public:

@@ -70,6 +70,26 @@ int main() {
     check(matrices.tire[0][0]<-0.9999f && matrices.tire[1][0]>0.9999f);
     check(matrices.brake[0][5]<-0.9999f && matrices.brake[3][5]==-1);
     check(matrices.brake[1][5]>0.9999f && matrices.brake[2][5]==1);
+    // E-0038-W01: raw native wheel matrices need the original render-only
+    // basis once. A nonzero spin catches a wrong multiplication side.
+    port::CarAttachmentMatrices raw_wheels;
+    for(unsigned i=0;i<4;++i){
+        raw_wheels.tire[i]={{0,0,-1,0,0,1,0,0,1,0,0,0,float(i+1),2,3,1}};
+        raw_wheels.blur[i]=basis;raw_wheels.blur[i][12]=float(i+1);
+        raw_wheels.brake[i]={{0,1,0,0,-1,0,0,0,0,0,1,0,float(i+1),2,3,1}};
+    }
+    const auto raw_before=raw_wheels;
+    const auto submitted=CarRenderInfo::Sub_00120EF8(raw_wheels);
+    for(unsigned i=0;i<4;++i){
+        check(raw_wheels.tire[i]==raw_before.tire[i] && raw_wheels.brake[i]==raw_before.brake[i] && raw_wheels.blur[i]==raw_before.blur[i]);
+        if(i==0||i==3){
+            check(submitted.tire[i][2]>.9999f && submitted.tire[i][8]>.9999f && submitted.tire[i][5]<-.9999f);
+            check(submitted.blur[i][0]<-.9999f && submitted.blur[i][5]<-.9999f);
+            check(submitted.brake[i][1]==1 && submitted.brake[i][4]==1);
+        }else check(submitted.tire[i]==raw_wheels.tire[i] && submitted.brake[i]==raw_wheels.brake[i] && submitted.blur[i]==raw_wheels.blur[i]);
+        check(submitted.tire[i][12]==float(i+1) && submitted.tire[i][13]==2 && submitted.tire[i][14]==3);
+        check(submitted.brake[i][12]==float(i+1) && submitted.brake[i][13]==2 && submitted.brake[i][14]==3);
+    }
     std::vector<std::uint8_t> catalog(16+64*0x560,0);
     const auto write32=[&](std::size_t at,std::uint32_t value) {
         for(unsigned lane=0;lane<4;++lane)catalog[at+lane]=static_cast<std::uint8_t>(value>>(lane*8));

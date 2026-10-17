@@ -6,7 +6,7 @@
 #include "game_core/port/not_implemented.hpp"
 #include <cstdio>
 
-bool ::port::frontend::advance_zero_velocity_path(hp2::frontend::Type_00248568& path, float delta_seconds) {
+bool ::port::frontend::advance_zero_velocity_path(hp2::frontend::AnimationGroup& path, float delta_seconds) {
         if (path.field_0x48 == 0) return true;
         if (path.field_0x48 == 2) {
             path.field_0x28 = 0;
@@ -31,7 +31,7 @@ bool ::port::frontend::advance_zero_velocity_path(hp2::frontend::Type_00248568& 
 }
 
 namespace hp2::frontend {
-void Type_002490D8::Sub_002486E8(Type_00248568& path) {
+void tExitScreenAnimation::Sub_002486E8(AnimationGroup& path) {
     FeWidget* mask = FindWidget_00143D50(*field_0x00, path.field_0x10, 0);
     if (!mask) return; // FUN_00144398 / FUN_00145308 return for absent anchors
     const float x = static_cast<float>(static_cast<int>(path.field_0x1c));
@@ -47,9 +47,9 @@ void Type_002490D8::Sub_002486E8(Type_00248568& path) {
         if (widget.class_hash == path.field_0x0c) write(widget, widget.x + dx, widget.y + dy);
 }
 
-void Type_002490D8::Sub_00248C60(float x, float duration, std::uint32_t group,
+void tExitScreenAnimation::Sub_00248C60(float x, float duration, std::uint32_t group,
                                std::uint32_t mask_hash) {
-    Type_00248568 path;
+    AnimationGroup path;
     path.field_0x0c = group; path.field_0x10 = mask_hash;
     path.field_0x1c = x; path.field_0x40 = duration;
     if (FeWidget* mask = FindWidget_00143D50(*field_0x00, mask_hash, 0))
@@ -59,7 +59,7 @@ void Type_002490D8::Sub_00248C60(float x, float duration, std::uint32_t group,
     field_0x04.push_back(path);
 }
 
-void Type_002490D8::Construct_002490D8(FeScreen& screen) {
+void tExitScreenAnimation::Construct_002490D8(FeScreen& screen) {
     field_0x00 = &screen; field_0x04.clear();
     float maximum = 0;
     for (int i = 0; i < 16; ++i) {
@@ -80,13 +80,13 @@ void Type_002490D8::Construct_002490D8(FeScreen& screen) {
     Sub_00248C60(widget ? widget->x : 0.0f, maximum, 0x97BF4B25, mask);
 }
 
-bool Type_002490D8::Update_00249128(float delta_seconds) {
-    for (Type_00248568& path : field_0x04) {
+bool tExitScreenAnimation::Update_00249128(float delta_seconds) {
+    for (AnimationGroup& path : field_0x04) {
         if (path.field_0x48 == 0) continue;
         ::port::frontend::advance_zero_velocity_path(path, delta_seconds);
         Sub_002486E8(path);
     }
-    for (const Type_00248568& path : field_0x04) if (path.field_0x48 != 0) return false;
+    for (const AnimationGroup& path : field_0x04) if (path.field_0x48 != 0) return false;
     return true;
 }
 
@@ -108,7 +108,7 @@ void Sub_001EECA8(int message, std::uint32_t item_hash,
     }
 }
 
-void Construct_001F1A78(Type_001F1A78& instance, FeScreen& screen, MenuList_00169F78* list,
+void Construct_001F1A78(LanguageOptionsScreenBase& instance, FeScreen& screen, MenuList_00169F78* list,
                         std::int32_t dat_0031C1C8, std::int32_t field_0x08) {
     // FUN_001F1A78: instance+4 is the screen from the message-0x0B payload, +8 the flag, and
     // +0 the current language clamped to 0 when it is still the -1 "unset" value. The vtable
@@ -122,7 +122,7 @@ void Construct_001F1A78(Type_001F1A78& instance, FeScreen& screen, MenuList_0016
     Sub_0016D2A8(list, screen, kWidgetMenuItem7_52E039F9, 2);
 }
 
-void Sub_001F1B08(int message, std::uint32_t item_hash, Type_001F1A78& instance,
+void Sub_001F1B08(int message, std::uint32_t item_hash, LanguageOptionsScreenBase& instance,
                   std::int32_t& dat_0031C1C8, std::int32_t& dat_00331A60,
                   const ::port::frontend::ScreenActionServices& services) {
     if (message != 1) return; // the 0x11/0x12 arms are elsewhere; every other message returns
@@ -271,8 +271,8 @@ BackEvent query_back(std::uint32_t handler,BackContext& c,const BackServices& s)
 
 namespace hp2::frontend {
 // ELF001EFB80 messages4/8/9; E-0017-S04, read-only handler listing/decompile.
-void Sub_001EFB80(int message,MenuEvent_0016A458& event,Type_00249DE0& viewport,
-                  Type_0024A690& selector,FeScreen& screen,const WidgetMeasure& measure) {
+void Sub_001EFB80(int message,MenuEvent_0016A458& event,tScrollingMenuList& viewport,
+                  tLeftRightArrowScroll& selector,FeScreen& screen,const WidgetMeasure& measure) {
     viewport.Handle_0024A480(message,event.field_0x00);
     if (message == 4) {
         selector.Bind_0024A860(event.field_0x00 == 0x52E039FA ? 0x2932DFCA : 0);
@@ -285,8 +285,8 @@ void Sub_001EFB80(int message,MenuEvent_0016A458& event,Type_00249DE0& viewport,
 
 namespace hp2::frontend {
 // ELF001F3A28 case4/8/9; E-0017-S05. No settings writes are implied by this slice.
-void Sub_001F3A28(int message,MenuEvent_0016A458& event,Type_00249DE0& viewport,
-                  Type_0024A690& selector,FeScreen& screen,const WidgetMeasure& measure) {
+void Sub_001F3A28(int message,MenuEvent_0016A458& event,tScrollingMenuList& viewport,
+                  tLeftRightArrowScroll& selector,FeScreen& screen,const WidgetMeasure& measure) {
     viewport.Handle_0024A480(message,event.field_0x00);
     if (message == 4) {
         constexpr std::uint32_t targets[]{0x55CB09F2,0x2E931F1B,0x03D90172,

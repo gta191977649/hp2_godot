@@ -1,5 +1,7 @@
 # C++ class templates and continuation — TASK-0028 / TASK-0029
 
+> TASK-0041 adds supported debug-reference method and class identifier overrides. The template generator preserves these exact names and retains throwing host signatures. See [DEBUG_REFERENCE_SYMBOLS.md](DEBUG_REFERENCE_SYMBOLS.md); original reference signatures do not establish a retail ABI.
+
 Target: US PS2 `SLUS_203.62`, executable revision unknown (SYSTEM.CNF VER 1.00),
 SHA-256 `7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2`.
 No class layout, behaviour or original equivalence is established by these templates.

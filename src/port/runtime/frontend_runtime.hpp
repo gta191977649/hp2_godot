@@ -181,17 +181,17 @@ private:
     std::vector<std::string> pending_sound_names_;
     std::string last_sound_name_;
     double sound_clock_seconds_ = 0, last_sound_seconds_ = -1;
-    std::unique_ptr<hp2::frontend::Type_002491B0> scrolling_text_;
-    std::unique_ptr<hp2::frontend::Type_00249DE0> menu_viewport_;
-    std::unique_ptr<hp2::frontend::Type_0024A690> menu_selector_;
+    std::unique_ptr<hp2::frontend::tAnimatedBlurb> scrolling_text_;
+    std::unique_ptr<hp2::frontend::tScrollingMenuList> menu_viewport_;
+    std::unique_ptr<hp2::frontend::tLeftRightArrowScroll> menu_selector_;
     std::int32_t port_language_ = 0; // Explicit host initial locale, English. DAT_0031C1C8.
     // The Language Options instance 001F1DD8's message 0x0B allocates. It lives here because
     // the runtime owns screen lifetime; it is only valid while a Language class is open.
-    hp2::frontend::Type_001F1A78 language_screen_;
+    hp2::frontend::LanguageOptionsScreenBase language_screen_;
     // DAT_00331A60. Written by the MENUITEM_7 arm of 001F1B08 and by 001740C0; no reader was
     // located (TASK-0025). Kept so the recovered write is not silently dropped.
     std::int32_t dat_00331A60_ = 0;
-    hp2::frontend::Type_002495F0 background_animation_;
+    hp2::frontend::tGlobalBackgroundAnimation background_animation_;
     std::uint32_t random_state_ = 0x12345678; // Original initialized seed; prior boot draws unresolved.
     hp2::frontend::MenuHighlightAnim_00248870 highlight_animation_;
     bool title_movie_state_ = false;
@@ -211,7 +211,7 @@ private:
     std::string requested_class_for_open_;
     std::string pending_class_name_;
     bool pending_push_history_ = false;
-    std::unique_ptr<hp2::frontend::Type_002490D8> exit_animation_;
+    std::unique_ptr<hp2::frontend::tExitScreenAnimation> exit_animation_;
     std::string exit_class_name_;
     std::vector<std::string> navigation_history_; // 0016B418 stores class-name strings, not layout indices.
     std::vector<std::string> message_log_;
@@ -244,8 +244,8 @@ private:
     float event_overlay_alpha_ = 0;
     std::string event_pending_status_, event_pending_reward_, event_pending_number_;
     bool event_overlay_pending_ = false;
-    hp2::frontend::Type_001F8C10 event_car_logos_;
-    hp2::frontend::Type_001F90F0 event_track_logos_;
+    hp2::frontend::tCarLogoAnimation event_car_logos_;
+    hp2::frontend::tTrackLogoAnimation event_track_logos_;
 };
 
 } // namespace port::runtime

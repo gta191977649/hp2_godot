@@ -6,6 +6,7 @@ var info_enabled := false
 var frame_ms := 0.0
 var statistics: Dictionary = {"screen": "frontend"}
 var last_frame: Dictionary = {}
+var test_drive_requested := false
 var scene_owner: Node
 var operation_pending := false
 var title_cooldown := 0.0
@@ -25,7 +26,7 @@ func _ready() -> void:
 	info_enabled = "--info" in OS.get_cmdline_user_args()
 	var test_session := false
 	for argument in OS.get_cmdline_user_args():
-		test_session = test_session or argument in ["--viewer-smoke", "--car-render-smoke", "--material-gpu-smoke"] or argument.begins_with("--expect-debug=")
+		test_session = test_session or argument in ["--viewer-smoke", "--car-render-smoke", "--material-gpu-smoke", "--driving-smoke", "--driving-asset-smoke", "--driving-os-smoke"] or argument.begins_with("--expect-debug=")
 	# Headless test viewport constraints must not overwrite the user's viewer layout/history.
 	var settings := "user://debug/smoke-imgui.ini" if test_session else "user://debug/imgui.ini"
 	host.console_init(ProjectSettings.globalize_path(settings), info_enabled)
@@ -125,7 +126,7 @@ func input_captured() -> bool:
 func _dispatch_ui_action(action: Dictionary) -> void:
 	operation_pending = false
 	var name := str(action.get("action", ""))
-	if name in ["car", "track", "close", "load", "clear", "fixture", "reset"]:
+	if name in ["car", "track", "driving", "close", "load", "clear", "fixture", "reset"]:
 		request(name, str(action.get("source", "")))
 	elif is_instance_valid(scene_owner) and scene_owner.has_method("viewer_ui_action"):
 		scene_owner.viewer_ui_action(action)
@@ -133,13 +134,20 @@ func _dispatch_ui_action(action: Dictionary) -> void:
 func _dispatch_request(pending: Dictionary) -> void:
 	operation_pending = false
 	var action := str(pending.action)
-	if action in ["car", "track", "close"]:
+	if action in ["car", "track", "driving", "close"]:
 		if action == "close" and str(host.viewer_state().kind) == "frontend":
 			write_log("Already in the frontend")
 			return
 		_release_camera()
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		var scene := frontend_scene if action == "close" else "res://scenes/debug/%s_viewer.tscn" % action
+		if action == "driving":
+			# Compatibility command: one CarViewer scene with an embedded drive mode.
+			if is_instance_valid(scene_owner) and scene_owner.get("viewer_kind") == "car":
+				scene_owner.viewer_ui_action({"action": "test_drive"})
+				return
+			test_drive_requested = true
+			scene = "res://scenes/debug/car_viewer.tscn"
 		var error := get_tree().change_scene_to_file(scene)
 		if error != OK:
 			write_log("Scene transition failed: %s (%d)" % [scene, error], true)

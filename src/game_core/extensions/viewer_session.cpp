@@ -8,12 +8,14 @@ const char* viewer_name(ViewerKind kind) {
     case ViewerKind::Frontend: return "frontend";
     case ViewerKind::Car: return "car";
     case ViewerKind::Track: return "track";
+    case ViewerKind::Driving: return "driving";
     }
     throw std::invalid_argument("Unknown viewer kind");
 }
 const char* action_name(ViewerAction action) {
     switch(action) {
     case ViewerAction::Car:return "car"; case ViewerAction::Track:return "track";
+    case ViewerAction::Driving:return "driving";
     case ViewerAction::Close:return "close";case ViewerAction::Load:return "load";
     case ViewerAction::Clear:return "clear";case ViewerAction::Fixture:return "fixture";
     case ViewerAction::Reset:return "reset";
@@ -21,13 +23,13 @@ const char* action_name(ViewerAction action) {
     throw std::invalid_argument("Unknown viewer action");
 }
 ViewerAction parse_viewer_action(const std::string& action) {
-    for(auto value:{ViewerAction::Car,ViewerAction::Track,ViewerAction::Close,ViewerAction::Load,
+    for(auto value:{ViewerAction::Car,ViewerAction::Track,ViewerAction::Driving,ViewerAction::Close,ViewerAction::Load,
                    ViewerAction::Clear,ViewerAction::Fixture,ViewerAction::Reset})
         if(action==action_name(value))return value;
     throw std::invalid_argument("Unknown viewer action: "+action);
 }
 ViewerKind parse_viewer_kind(const std::string& kind) {
-    for(auto value:{ViewerKind::Frontend,ViewerKind::Car,ViewerKind::Track})
+    for(auto value:{ViewerKind::Frontend,ViewerKind::Car,ViewerKind::Track,ViewerKind::Driving})
         if(kind==viewer_name(value))return value;
     throw std::invalid_argument("Unknown viewer kind: "+kind);
 }

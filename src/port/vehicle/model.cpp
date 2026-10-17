@@ -37,7 +37,7 @@ void Model::load(assets::Source& source,const std::string& geometry_path,const s
     if(cache_->global.empty())cache_->global=source.read("GLOBAL/GLOBALB.BUN");
     const auto& global=cache_->global;
     const auto config=port::read_car_render_config(global,code,std::uint8_t(skin));
-    config_=config;phase_=0;
+    config_=config;phase_=0;driving_pose_=false;
     const auto bindings=hp2::recovered::CarRenderInfo::Sub_0011E860(config.prefix,config.Field_0x538,std::uint8_t(skin));
     const auto attachments=hp2::recovered::CarRenderInfo::Sub_00120EF8(config,0);
     const auto binding_start=std::chrono::steady_clock::now();double geometry_phase_ms=0;
@@ -91,7 +91,7 @@ void Model::load(assets::Source& source,const std::string& geometry_path,const s
         const auto& matrix=attachments.tire[wheel];
         const auto& variants=wheel<2?bindings.tire_front:bindings.tire_rear;
         for(int lod=0;lod<(include_lods_?3:1);++lod)if(append(variants[lod],lod,Part::Group::Tire,matrix," [wheel "+std::to_string(wheel)+"]"))parts_.back().wheel=wheel;
-        append(bindings.accessories[wheel<2?0:1],-1,Part::Group::Brake,attachments.brake[wheel]," [wheel "+std::to_string(wheel)+"]");
+        if(append(bindings.accessories[wheel<2?0:1],-1,Part::Group::Brake,attachments.brake[wheel]," [wheel "+std::to_string(wheel)+"]"))parts_.back().wheel=wheel;
         if(append(bindings.wheel_blur[wheel<2?0:1],-1,Part::Group::WheelBlur,attachments.blur[wheel]," [blur wheel "+std::to_string(wheel)+"]")){
             parts_.back().wheel=wheel;parts_.back().lights[15]=90*Sub_00120EA8(80);
         }
@@ -132,11 +132,13 @@ void Model::load(assets::Source& source,const std::string& geometry_path,const s
     cache_->binding_ms+=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-binding_start).count()-geometry_phase_ms-textures_ms;
 }
 void Model::set_wheel_blur(bool enabled){
+    if(driving_pose_)throw std::logic_error("Preview controls are disabled for driving snapshots");
     if(enabled&&std::count_if(parts_.begin(),parts_.end(),[](const auto& part){return part.group==Part::Group::WheelBlur;})!=4)
         throw std::runtime_error("Original four-wheel blur geometry is not available");
     wheel_blur_=enabled;phase_=0;advance_wheels(0);
 }
 void Model::advance_wheels(double delta){
+    if(driving_pose_)throw std::logic_error("Preview integration is disabled for driving snapshots");
     if(!std::isfinite(delta)||delta<0)throw std::invalid_argument("Invalid vehicle animation delta");
     if(!wheel_blur_&&delta>0)return;
     // Port-side demonstration input, NOT recovered vehicle speed or simulation.
@@ -148,11 +150,14 @@ void Model::advance_wheels(double delta){
     const auto phase=wheel_blur_?float(phase_):0.f;
     const auto matrices=wheel_blur_?Sub_001C0D78(config_,{{phase,phase,phase,phase}},0):hp2::recovered::CarRenderInfo::Sub_00120EF8(config_,0);
     for(auto& part:parts_)if(part.wheel>=0){
-        part.transform=part.group==Part::Group::Tire?matrices.tire[part.wheel]:matrices.blur[part.wheel];
+        if(part.group==Part::Group::Tire)part.transform=matrices.tire[part.wheel];
+        else if(part.group==Part::Group::Brake)part.transform=matrices.brake[part.wheel];
+        else part.transform=matrices.blur[part.wheel];
         if(part.group==Part::Group::WheelBlur)part.lights[15]=90*Sub_00120EA8(wheel_blur_?preview_velocity:0);
     }
 }
 void Model::set_wheel_speed(double radians_per_second){
+    if(driving_pose_)throw std::logic_error("Preview controls are disabled for driving snapshots");
     if(!std::isfinite(radians_per_second)||std::abs(radians_per_second)>150)
         throw std::invalid_argument("Preview wheel speed must be within -150..150 rad/s");
     wheel_speed_=radians_per_second;advance_wheels(0);
@@ -207,7 +212,7 @@ port::CarLodSelection Model::select(int projected_size,int forced_lod) {
         case Part::Group::Brake:selected=selection.body<2;break;
         case Part::Group::Mirror:selected=selection.mirrors;break;
         case Part::Group::Plate:selected=selection.license_plates;break;
-        case Part::Group::WheelBlur:selected=wheel_blur_&&part.lights[15]>.1f&&selection.body<2&&selection.tire<2;break;
+        case Part::Group::WheelBlur:selected=(wheel_blur_||driving_pose_)&&part.lights[15]>.1f&&selection.body<2&&selection.tire<2;break;
         }
         part.selected=selection.visible&&selected&&part.enabled;
     }
@@ -217,5 +222,29 @@ void Model::set_part_visible(const std::string& name,bool visible) {
     const auto it=std::find_if(parts_.begin(),parts_.end(),[&](const auto& part){return part.name==name;});
     if(it==parts_.end())throw std::invalid_argument("Unknown vehicle part: "+name);
     it->enabled=visible;
+}
+}
+
+namespace port::vehicle {
+void Model::apply_driving_pose(const std::array<driving::WheelSnapshot,4>& wheels){
+    // Validate the whole publication before changing the last completed display.
+    driving::validate_wheels(wheels);
+    for(std::size_t i=0;i<4;++i)if(wheels[i].blur_alpha>0){
+        const auto found=std::find_if(parts_.begin(),parts_.end(),[&](const auto& part){
+            return part.wheel==int(i)&&part.group==Part::Group::WheelBlur;});
+        if(found==parts_.end())throw std::runtime_error("Driving blur resource is unavailable");
+    }
+    // E-0038-W01: snapshots contain physics publication matrices, while mesh
+    // instances need the same render-only basis composition used by preview.
+    port::CarAttachmentMatrices source;
+    for(std::size_t i=0;i<4;++i){source.tire[i]=wheels[i].tire;source.brake[i]=wheels[i].brake;source.blur[i]=wheels[i].blur;}
+    const auto rendered=hp2::recovered::CarRenderInfo::Sub_00120EF8(source);
+    driving_pose_=true;
+    for(auto& part:parts_)if(part.wheel>=0){
+        const auto& wheel=wheels.at(std::size_t(part.wheel));
+        if(part.group==Part::Group::Tire)part.transform=rendered.tire[part.wheel];
+        else if(part.group==Part::Group::Brake)part.transform=rendered.brake[part.wheel];
+        else if(part.group==Part::Group::WheelBlur){part.transform=rendered.blur[part.wheel];part.lights[15]=wheel.blur_alpha;}
+    }
 }
 }

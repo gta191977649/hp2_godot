@@ -1,5 +1,6 @@
 #pragma once
 #include "port/render/vehicle.hpp"
+#include "game_core/port/driving/session.hpp"
 #include "port/vehicle/textures.hpp"
 #include "port/vehicle/catalog.hpp"
 #include "game_core/CarRenderInfo.hpp"
@@ -38,6 +39,9 @@ public:
     void set_wheel_blur(bool enabled);
     void set_wheel_speed(double radians_per_second);
     void advance_wheels(double delta);
+    // Raw original001C0D78 absolute wheel poses; applies recovered00120EF8
+    // render basis once. Does not integrate preview phase.
+    void apply_driving_pose(const std::array<driving::WheelSnapshot,4>& wheels);
     double wheel_phase()const{return phase_;}
     std::shared_ptr<ModelCache> cache()const{return cache_;}
     std::array<float,3> preview_color()const;
@@ -57,6 +61,7 @@ private:
     std::shared_ptr<ModelCache> cache_;
     bool include_lods_=true;
     bool wheel_blur_=false;
+    bool driving_pose_=false;
     CarRenderConfig config_;
     double phase_=0;
     double wheel_speed_=80; // Port-side preview input, not original vehicle physics.

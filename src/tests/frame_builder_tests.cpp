@@ -5,6 +5,7 @@
 #include <iostream>
 #include <map>
 #include <stdexcept>
+#include <cstring>
 
 namespace {
 
@@ -140,12 +141,30 @@ int main() {
         // PS2 colour bytes: 0x80 is opaque, so 64/128/0/128 is (0.5, 1, 0, 1).
         check(drawn.color.r == 0.5f && drawn.color.g == 1.0f && drawn.color.b == 0.0f &&
                   drawn.color.a == 1.0f, "0x80-is-opaque colour");
+        // E-0039-Q02/Q03: distinct authored corners survive the presentation boundary.
+        screen.widgets[0].field_0x5c = {0x40008000u,0x20800000u,0x10808000u};
+        screen.widgets[0].field_0x70 = {0.25f,0,0.75f,0,0.75f,1,0.25f,1};
+        runtime::build_frame(screen,sizes,{},frame);
+        const auto& corners = frame.quads[1];
+        check(corners.has_vertex_data && corners.colors[1].g==1 && corners.colors[1].a==0.5f &&
+              corners.colors[2].b==1 && corners.colors[3].a==0.125f,
+              "four independent corner colours retained");
+        check(corners.source_points[0].x==16.5f && corners.source_points[1].x==47.5f &&
+              corners.source_points[2].y==31.5f,"authored UVs and half-texel inset retained");
+        hp2::frontend::SetWidgetAlpha_00140ED0(screen.widgets[0],64);
+        runtime::build_frame(screen,sizes,{},frame);
+        for (const auto& c : frame.quads[1].colors) check(c.a==0.5f,"001411D8 quad alpha updates all corners");
+        screen.widgets[0].visible=2;
+        runtime::build_frame(screen,sizes,{},frame);
+        check(frame.quads.size()==1,"00145F30 visibility must equal1");
+        screen.widgets[0]=panel;
 
         // Invisible widgets are not drawn, and a frame is a fresh list each time.
+        const auto previous_sequence = frame.sequence;
         screen.widgets[0].visible = 0;
         stats = runtime::build_frame(screen, sizes, {}, frame);
         check(stats.quads == 1 && frame.quads.size() == 1, "invisible widget skipped");
-        check(frame.sequence == 2, "sequence advances per frame");
+        check(frame.sequence == previous_sequence + 1, "sequence advances per frame");
         screen.widgets[0].visible = 1;
 
         // A widget whose texture is absent from the original data is reported, never faked.
@@ -161,7 +180,8 @@ int main() {
         check(stats.glyphs == 3 && stats.texts == 1, "glyph count");
         check(frame.quads[0].destination.x == 10 && frame.quads[1].destination.x == 20 &&
                   frame.quads[2].destination.x == 30, "glyph advance");
-        check(frame.quads[0].source.x == 0 && frame.quads[2].source.x == 20, "glyph atlas uv");
+        check(frame.quads[0].source.x == 0.5f && frame.quads[2].source.x == 20.5f,
+              "001422F0 half-texel glyph UVs");
         check(frame.quads[0].destination.height == 12, "glyph height");
         check(frame.quads[0].texture == kFont, "glyphs sample the font atlas");
 
@@ -169,6 +189,81 @@ int main() {
         text_screen.widgets = {text_widget("CENTRED", 320, 20, kFont, "ABC", 4)};
         runtime::build_frame(text_screen, sizes, {}, frame);
         check(frame.quads[0].destination.x == 305, "centred text origin");
+
+        text_screen.widgets[0].text_align = 5; // right must win over centre
+        runtime::build_frame(text_screen, sizes, {}, frame);
+        check(frame.quads[0].destination.x == 290, "001424F4 right alignment takes precedence");
+
+        // E-0039-F01/F02: synthetic serialized font with header-relative table offsets,
+        // current-glyph pair slices, a nonzero first pair index and a misleading offset28.
+        std::vector<std::uint8_t> font_bytes(28 + 3 * 32 + 2 * 8);
+        const auto put = [&](std::size_t off, std::uint32_t value) {
+            for (int i = 0; i < 4; ++i) font_bytes[off + i] = static_cast<std::uint8_t>(value >> (8*i));
+        };
+        const auto put_float = [&](std::size_t off, float value) {
+            std::uint32_t bits; std::memcpy(&bits, &value, 4); put(off, bits);
+        };
+        put(0, hp2::frontend::kFontChunkId); put(4, static_cast<std::uint32_t>(font_bytes.size()-8));
+        put(8, kFont); put(12, 3); put(16, 2); put(20, 28); put(24, 124);
+        for (int i = 0; i < 3; ++i) {
+            const auto off = 28 + i*32;
+            put(off, static_cast<std::uint32_t>(65+i) | (i==1 ? 0x10000u : 0));
+            put_float(off+12, 10); put_float(off+16, 98); put_float(off+20, 10);
+            put(off+28, i==1 ? 1 : 0);
+        }
+        put(124, 'Z'); put_float(128, -7); put(132, 'A'); put_float(136, -2);
+        auto decoded = hp2::frontend::parse_fonts(font_bytes);
+        check(decoded.size()==1 && decoded[0].line_height==98,
+              "0013FFA8 derives maximum height rather than using table offset28");
+        check(decoded[0].glyphs[1].field_0x1c==1 && decoded[0].field_0x410.size()==2,
+              "font pair slices and table offsets retained");
+        runtime::WidgetSizes kern_sizes(resources, decoded);
+        text_screen.widgets = {text_widget("PAIR", 100, 0, kFont, "ABC", 4)};
+        text_screen.widgets[0].scale_x = 2;
+        runtime::build_frame(text_screen, kern_sizes, {}, frame);
+        check(frame.quads[0].destination.x==70 && frame.quads[1].destination.x==86 &&
+              frame.quads[2].destination.x==102,
+              "measure excludes kerning; current glyph shifts then scaled adjustment advances pen");
+        decoded[0].field_0x410[1].second = 41;
+        runtime::build_frame(text_screen, kern_sizes, {}, frame);
+        check(frame.quads[1].destination.x==90 && frame.quads[2].destination.x==110,
+              "scaled kerning over80 is discarded");
+        decoded[0].field_0x410[1].second = 40;
+        runtime::build_frame(text_screen, kern_sizes, {}, frame);
+        check(frame.quads[1].destination.x==170 && frame.quads[2].destination.x==270,
+              "scaled kerning exactly80 is retained");
+        put(24, 0xfffffff0u);
+        check(hp2::frontend::parse_fonts(font_bytes).empty(), "invalid pair offset rejected");
+        put(16,0); // shipped BUTTONSOUT has an out-of-bounds offset but zero pair count
+        check(hp2::frontend::parse_fonts(font_bytes).size()==1,
+              "zero-pair font does not dereference its unused serialized offset");
+
+        //00141DD8: embedded byte80 draws BUTTONSOUT 'a', returns its unscaled advance.
+        auto icon_font = make_font(hp2::frontend::StringHash_002534A8("BUTTONSOUT"));
+        icon_font.glyphs[0].code = 'a'; icon_font.glyphs[0].advance = 7;
+        std::vector<hp2::frontend::FeFont> icon_fonts{make_font(kFont),icon_font};
+        runtime::WidgetSizes icon_sizes(resources,icon_fonts);
+        auto hint = text_widget("HINT",0,0,kFont,"",2);
+        hint.text = std::string(1,static_cast<char>(0x80))+"A";
+        hint.scale_x=2;
+        text_screen.widgets={hint};
+        runtime::build_frame(text_screen,icon_sizes,{},frame);
+        check(frame.quads.size()==2 && frame.quads[0].texture==icon_font.texture_hash &&
+              frame.quads[0].destination.width==40 && frame.quads[1].destination.x==7,
+              "embedded button font, squared helper scale and unscaled advance");
+
+        //00141F70: fixed-cell origin correction is unscaled, unlike the cell advance.
+        auto fixed_font=make_font(kFont);
+        fixed_font.glyphs[0].code='1'; fixed_font.glyphs[0].advance=6;
+        fixed_font.glyphs[1].code='2'; fixed_font.glyphs[1].advance=10;
+        std::vector<hp2::frontend::FeFont> fixed_fonts{fixed_font};
+        runtime::WidgetSizes fixed_sizes(resources,fixed_fonts);
+        auto digits=text_widget("DIGITS",100,0,kFont,"12",0x44);
+        digits.scale_x=2;
+        text_screen.widgets={digits};
+        runtime::build_frame(text_screen,fixed_sizes,{},frame);
+        check(frame.quads[0].destination.x==82 && frame.quads[1].destination.x==100 &&
+              frame.quads[0].destination.width==40,"fixed-cell draw uses numeral max and helper scaling");
 
         // Scale multiplies both the advance and the glyph cell.
         auto scaled = text_widget("SCALED", 0, 0, kFont, "AB", 2);

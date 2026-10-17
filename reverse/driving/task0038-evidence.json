@@ -1,0 +1,377 @@
+{
+  "binary_sha256": "7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2",
+  "program": "SLUS_203.62",
+  "revision": "unknown",
+  "queries": [
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "decompile",
+        "address": "00131410"
+      },
+      "file": "00131410.json",
+      "sha256": "9b958f0dc4dd6530a132599f9d75e88245c4f9ffeac7f589f71271f43f04738c"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "listing",
+        "address": "00131410",
+        "end_address": "0x1315f3",
+        "max_lines": 1000
+      },
+      "file": "00131410.listing.json",
+      "sha256": "9101ea25a1f32c09000d372882b679aa55d6118ecdf6d9427b173d9b0f8c6e1a"
+    },
+    {
+      "tool": "functions",
+      "arguments": {
+        "action": "get",
+        "address": "00131410"
+      },
+      "file": "00131410.function.json",
+      "sha256": "ef7b472e611a977a2d1278d7fca3f67f8646eb258902164e31e6cc2dffadb21a"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "decompile",
+        "address": "00131618"
+      },
+      "file": "00131618.json",
+      "sha256": "20fe5d30426c8f6b815c6f398fab27d1c699b0a999e62aec515fe0080ad35dd0"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "listing",
+        "address": "00131618",
+        "end_address": "0x1317fb",
+        "max_lines": 1000
+      },
+      "file": "00131618.listing.json",
+      "sha256": "6be86a44544d63ae2910a639be7d2455f62627981665af3d42ba14c730e30c08"
+    },
+    {
+      "tool": "functions",
+      "arguments": {
+        "action": "get",
+        "address": "00131618"
+      },
+      "file": "00131618.function.json",
+      "sha256": "b6c8643d3b9fd632caa9cf7e07b5e00ea41857e952bdb353e83b8ab0a3285f46"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "decompile",
+        "address": "00137100"
+      },
+      "file": "00137100.json",
+      "sha256": "7f23235258b657c002c688d6b4b5aec76190bf02b522db4470b80a1304b2850a"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "listing",
+        "address": "00137100",
+        "end_address": "0x13744b",
+        "max_lines": 1000
+      },
+      "file": "00137100.listing.json",
+      "sha256": "8ded2b1e2ebd22e5517ccc26b66ec3fbb264ab05568f6f9b6e159476dad9416e"
+    },
+    {
+      "tool": "functions",
+      "arguments": {
+        "action": "get",
+        "address": "00137100"
+      },
+      "file": "00137100.function.json",
+      "sha256": "b203af306c40504ffba48bbee74b8ae4330b5653bc956973c61794977178dd86"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "decompile",
+        "address": "00137c88"
+      },
+      "file": "00137c88.json",
+      "sha256": "0edb71fc12fab4d625fdbc28a71896b9e1354eb4ddd8a28daf91810867788379"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "listing",
+        "address": "00137c88",
+        "end_address": "0x137d37",
+        "max_lines": 1000
+      },
+      "file": "00137c88.listing.json",
+      "sha256": "ed64277cd3a910834114a7b46d060f4f700c1eb0e9f9d09a3a8db2d1b125bc60"
+    },
+    {
+      "tool": "functions",
+      "arguments": {
+        "action": "get",
+        "address": "00137c88"
+      },
+      "file": "00137c88.function.json",
+      "sha256": "8ba34a1273991900bc6b430215857c94e17ae3ce3dff6aa97fd5f0a631203b75"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "decompile",
+        "address": "00137d90"
+      },
+      "file": "00137d90.json",
+      "sha256": "62cc664c4f45c7e8fedb6b5784c7d017b68343cf91c65d3ee5b4a0687fcccf00"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "listing",
+        "address": "00137d90",
+        "end_address": "0x138cf7",
+        "max_lines": 1000
+      },
+      "file": "00137d90.listing.json",
+      "sha256": "0e71b506e9642d5161ccd3b986aab5e67d921908670cab24504f67dea9fe11b9"
+    },
+    {
+      "tool": "functions",
+      "arguments": {
+        "action": "get",
+        "address": "00137d90"
+      },
+      "file": "00137d90.function.json",
+      "sha256": "61e65f682e61c062f796b4019c0bb7e696a67dc9c5f360997ae0ac49724d81ab"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "decompile",
+        "address": "00138e08"
+      },
+      "file": "00138e08.json",
+      "sha256": "74b68fefb5c49f6a4578cd57ba9d2c03b8aa547bc475b7cc846c3b72c14bbbbf"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "listing",
+        "address": "00138e08",
+        "end_address": "0x138f33",
+        "max_lines": 1000
+      },
+      "file": "00138e08.listing.json",
+      "sha256": "8aa1c145539a8a408b51eead05abff33c511aba22904097a4eda552c31b18941"
+    },
+    {
+      "tool": "functions",
+      "arguments": {
+        "action": "get",
+        "address": "00138e08"
+      },
+      "file": "00138e08.function.json",
+      "sha256": "d7065cbcb05fcf9418ce98a949f8992e1cb6e1eb0bb15fe96e211580695a79e1"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "decompile",
+        "address": "00138f38"
+      },
+      "file": "00138f38.json",
+      "sha256": "6f64752b48d0eddc19b78ad800b38d81d80410b7a4e9f20260e7814b65727af0"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "listing",
+        "address": "00138f38",
+        "end_address": "0x139183",
+        "max_lines": 1000
+      },
+      "file": "00138f38.listing.json",
+      "sha256": "46ca23d6470383b4910ac53729dcf92a7c664e78d4fb09b7e7368fa2a6a86d0d"
+    },
+    {
+      "tool": "functions",
+      "arguments": {
+        "action": "get",
+        "address": "00138f38"
+      },
+      "file": "00138f38.function.json",
+      "sha256": "1d7eb20fce079637b54a6bc0fe3d04ba424901c272f0181530c505ac4e06786e"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "decompile",
+        "address": "00139188"
+      },
+      "file": "00139188.json",
+      "sha256": "c27269b5d069ba0222d563df4bf34904d8ac9d7b6ee56b708c29cabb93818a58"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "listing",
+        "address": "00139188",
+        "end_address": "0x13948f",
+        "max_lines": 1000
+      },
+      "file": "00139188.listing.json",
+      "sha256": "f0a4a850cdabff2074553d341d72445b0e4ae3bb76a6b9c292dd80de4f8448f0"
+    },
+    {
+      "tool": "functions",
+      "arguments": {
+        "action": "get",
+        "address": "00139188"
+      },
+      "file": "00139188.function.json",
+      "sha256": "86331390fce8ae33f605fd671a8b80aeebd9366273b7f74cd2be217d2c7e0d39"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "decompile",
+        "address": "00152070"
+      },
+      "file": "00152070.json",
+      "sha256": "dd5c31a133877062b3bde825d6e2a499fa854abe9b2edf0f7714b768fdef59b3"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "listing",
+        "address": "00152070",
+        "end_address": "0x152553",
+        "max_lines": 1000
+      },
+      "file": "00152070.listing.json",
+      "sha256": "ebd30757fab9405bc4849c5738c7b6b930d804988ce7018845478e1d9cd3debe"
+    },
+    {
+      "tool": "functions",
+      "arguments": {
+        "action": "get",
+        "address": "00152070"
+      },
+      "file": "00152070.function.json",
+      "sha256": "9c1fdfe5a597f26aff80ddf5fc7db31b7a8628c45058c4e7a914ffd8ed5e373a"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "decompile",
+        "address": "001a4e88"
+      },
+      "file": "001a4e88.json",
+      "sha256": "5f75455429c1a9ac36db67be4073f40010dac940f3b7fb27a47419e4d9042ca7"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "listing",
+        "address": "001a4e88",
+        "end_address": "0x1a4edf",
+        "max_lines": 1000
+      },
+      "file": "001a4e88.listing.json",
+      "sha256": "4094bd000992000361738280aad363fb65f67d0be541592af3cd64dfcc5b696d"
+    },
+    {
+      "tool": "functions",
+      "arguments": {
+        "action": "get",
+        "address": "001a4e88"
+      },
+      "file": "001a4e88.function.json",
+      "sha256": "53645c5d530e00e51fa90f09e899caf689296b2ebaad9fd4c65e59da58666964"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "decompile",
+        "address": "0023a3d8"
+      },
+      "file": "0023a3d8.json",
+      "sha256": "908863e53c66700e5d6fc6250419f9cc67bfdb617854efaf2c606668a467bb71"
+    },
+    {
+      "tool": "inspect",
+      "arguments": {
+        "action": "listing",
+        "address": "0023a3d8",
+        "end_address": "0x23a4d3",
+        "max_lines": 1000
+      },
+      "file": "0023a3d8.listing.json",
+      "sha256": "274cf7e57385fce96a3a1fc65edba8b6dceb2a7639ff7ac6df6329ae3a57ac45"
+    },
+    {
+      "tool": "functions",
+      "arguments": {
+        "action": "get",
+        "address": "0023a3d8"
+      },
+      "file": "0023a3d8.function.json",
+      "sha256": "82a9842beb131d7d5100e13f6c4e2add110b061f671fc425faee91dc5b49cb41"
+    },
+    {
+      "tool": "memory",
+      "arguments": {
+        "action": "read",
+        "address": "0032dce0",
+        "length": 4,
+        "format": "hex"
+      },
+      "file": "0032dce0.memory.json",
+      "sha256": "d54fb7ad5dea6534c840da937e7a4b513094f752bba6c77895c32fcd2133b4c7"
+    },
+    {
+      "tool": "memory",
+      "arguments": {
+        "action": "read",
+        "address": "00330000",
+        "length": 20,
+        "format": "hex"
+      },
+      "file": "00330000.memory.json",
+      "sha256": "26c9c61fc741b5c6157ae46f282b87234ab47ce99b1908df506aebe38ddf7ee7"
+    },
+    {
+      "tool": "memory",
+      "arguments": {
+        "action": "read",
+        "address": "002aeac8",
+        "length": 40,
+        "format": "hex"
+      },
+      "file": "002aeac8.memory.json",
+      "sha256": "d982bc248cf1260ed64f0190527f567f9ac8efbea5056458ca253061f2e072d3"
+    },
+    {
+      "tool": "memory",
+      "arguments": {
+        "action": "read",
+        "address": "002be170",
+        "length": 56,
+        "format": "hex"
+      },
+      "file": "002be170.memory.json",
+      "sha256": "d406645d39d09b8f3b42dfb29eaad481f9eb6592c6399db423ce3a54db5c1b32"
+    }
+  ],
+  "evidence_ids": [
+    "E-0038-001",
+    "E-0038-003",
+    "E-0038-005",
+    "E-0038-006"
+  ],
+  "scope": "Read-only Ghidra metadata, static instructions and constants; private output hashes"
+}

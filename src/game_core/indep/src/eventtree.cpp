@@ -725,7 +725,7 @@ std::string Sub_00200E78(const EventTree_001FFC40& tree,
     return localize(0xee48u + static_cast<std::uint32_t>(result));
 }
 
-void Type_001F8C10::Bind_001F8C10(FeScreen& screen, std::uint32_t now_ticks) {
+void tCarLogoAnimation::Bind_001F8C10(FeScreen& screen, std::uint32_t now_ticks) {
     Field_0x00 = nullptr;
     for (auto& widget : screen.widgets)
         if (widget.name_hash == 0xc6398c48u) { Field_0x00 = &widget; break; }
@@ -735,7 +735,7 @@ void Type_001F8C10::Bind_001F8C10(FeScreen& screen, std::uint32_t now_ticks) {
     Field_0x2C = Field_0x30 = Field_0x38 = Field_0x3C = 0;
     Field_0x34 = Field_0x00->a;
 }
-void Type_001F8C10::Sub_001F8D20(bool randomize, std::uint32_t& rng) {
+void tCarLogoAnimation::Sub_001F8D20(bool randomize, std::uint32_t& rng) {
     if (!Field_0x00) hp2::not_implemented("0x001F8D20", "car logo animator not bound");
     if (Field_0x2C < static_cast<int>(Field_0x08.size()))
         Field_0x00->texture_hash = Field_0x08[static_cast<std::size_t>(Field_0x2C)];
@@ -749,7 +749,7 @@ void Type_001F8C10::Sub_001F8D20(bool randomize, std::uint32_t& rng) {
     Field_0x00->y = y_00331760[Field_0x3C];
     Field_0x00->dirty_0x2b = 1;
 }
-void Type_001F8C10::Sub_001F8E18(const std::vector<std::uint32_t>& logos,
+void tCarLogoAnimation::Sub_001F8E18(const std::vector<std::uint32_t>& logos,
                                std::uint32_t now_ticks) {
     Field_0x08.assign(logos.begin(), logos.begin() + static_cast<std::ptrdiff_t>(std::min<std::size_t>(8, logos.size())));
     Field_0x2C = Field_0x38 = Field_0x3C = 0;
@@ -759,7 +759,7 @@ void Type_001F8C10::Sub_001F8E18(const std::vector<std::uint32_t>& logos,
     Field_0x04 = now_ticks - 22000u; // 00136DD0(5.5) at 4000 ticks/second
     Field_0x00->visible = 1; // 001F8CF0
 }
-void Type_001F8C10::Sub_001F8FB0(std::uint32_t now_ticks, std::uint32_t& rng) {
+void tCarLogoAnimation::Sub_001F8FB0(std::uint32_t now_ticks, std::uint32_t& rng) {
     if (!Field_0x00) hp2::not_implemented("0x001F8FB0", "car logo animator not bound");
     const float elapsed = static_cast<float>(static_cast<std::int32_t>(now_ticks - Field_0x04)) * 0.00025f;
     if (elapsed > 5.0f) {
@@ -779,9 +779,9 @@ void Type_001F8C10::Sub_001F8FB0(std::uint32_t now_ticks, std::uint32_t& rng) {
         Field_0x00->dirty_0x2b = 1;
     }
 }
-void Type_001F8C10::Sub_001F8CF0() { if (Field_0x00) Field_0x00->visible = 1; }
-void Type_001F8C10::Sub_001F8D08() { if (Field_0x00) Field_0x00->visible = 0; }
-void Type_001F90F0::Bind_001F90F0(FeScreen& screen, std::uint32_t now_ticks) {
+void tCarLogoAnimation::Sub_001F8CF0() { if (Field_0x00) Field_0x00->visible = 1; }
+void tCarLogoAnimation::Sub_001F8D08() { if (Field_0x00) Field_0x00->visible = 0; }
+void tTrackLogoAnimation::Bind_001F90F0(FeScreen& screen, std::uint32_t now_ticks) {
     Field_0x00 = nullptr;
     for (auto& widget : screen.widgets)
         if (widget.name_hash == 0xf60114e4u) { Field_0x00 = &widget; break; }
@@ -795,7 +795,7 @@ void Type_001F90F0::Bind_001F90F0(FeScreen& screen, std::uint32_t now_ticks) {
     Field_0x00->visible = 1; // 001F91D0
     (void)now_ticks;
 }
-void Type_001F90F0::Sub_001F91F0(const std::vector<std::uint32_t>& logos,
+void tTrackLogoAnimation::Sub_001F91F0(const std::vector<std::uint32_t>& logos,
                                std::uint32_t now_ticks) {
     if (!Field_0x00) hp2::not_implemented("0x001F91F0", "track logo animator not bound");
     Field_0x04.assign(logos.begin(), logos.begin() + static_cast<std::ptrdiff_t>(std::min<std::size_t>(12, logos.size())));
@@ -806,7 +806,7 @@ void Type_001F90F0::Sub_001F91F0(const std::vector<std::uint32_t>& logos,
     Field_0x00->visible = 1;
     Field_0x00->dirty_0x2b = 1;
 }
-void Type_001F90F0::Sub_001F9318(std::uint32_t now_ticks) {
+void tTrackLogoAnimation::Sub_001F9318(std::uint32_t now_ticks) {
     if (!Field_0x00) hp2::not_implemented("0x001F9318", "track logo animator not bound");
     const float elapsed = static_cast<float>(static_cast<std::int32_t>(now_ticks - Field_0x44)) * 0.00025f;
     constexpr float fade_end = 0.35f; // 0032EC30
@@ -829,8 +829,8 @@ void Type_001F90F0::Sub_001F9318(std::uint32_t now_ticks) {
     }
     Field_0x00->dirty_0x2b = 1;
 }
-void Type_001F90F0::Sub_001F91D0() { if (Field_0x00) Field_0x00->visible = 1; }
-void Type_001F90F0::Sub_001F91E0() { if (Field_0x00) Field_0x00->visible = 0; }
+void tTrackLogoAnimation::Sub_001F91D0() { if (Field_0x00) Field_0x00->visible = 1; }
+void tTrackLogoAnimation::Sub_001F91E0() { if (Field_0x00) Field_0x00->visible = 0; }
 
 } // namespace hp2::frontend
 

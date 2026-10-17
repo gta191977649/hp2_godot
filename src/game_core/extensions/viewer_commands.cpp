@@ -7,6 +7,7 @@ void register_viewer_commands(csys::System& system,ViewerSession& session) {
         try {session.request(action,std::move(source));}
         catch(const std::exception& error) {system.Log(csys::ERROR)<<error.what()<<csys::endl;}
     };
+    system.RegisterCommand("drivinglab","Open the single-car driving recovery laboratory",[enqueue] {enqueue(ViewerAction::Driving);});
     system.RegisterCommand("carviewer","Open CarViewer for original vehicle BIN resources",[enqueue] {enqueue(ViewerAction::Car);});
     system.RegisterCommand("trackviewer","Open the synthetic TrackViewer scaffold",[enqueue] {enqueue(ViewerAction::Track);});
     system.RegisterCommand("viewer.close","Return to a newly initialized frontend",[enqueue] {enqueue(ViewerAction::Close);});

@@ -5,8 +5,8 @@
 #include <string>
 namespace csys { class System; }
 namespace port::extensions {
-enum class ViewerKind { Frontend, Car, Track };
-enum class ViewerAction { Car, Track, Close, Load, Clear, Fixture, Reset };
+enum class ViewerKind { Frontend, Car, Track, Driving };
+enum class ViewerAction { Car, Track, Driving, Close, Load, Clear, Fixture, Reset };
 struct ViewerRequest { ViewerAction action; std::string source; };
 struct ViewerState {
     ViewerKind kind = ViewerKind::Frontend;

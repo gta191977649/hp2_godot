@@ -58,6 +58,8 @@ void check_asset_resolution(FrontEndRuntime& runtime) {
         }
     }
     require(runtime.screen_count() >= 40, "unexpected screen count");
+    require(runtime.font(hp2::frontend::StringHash_002534A8("BUTTONSOUT")) != nullptr,
+            "original zero-pair button font must remain available");
     require(resolved >= 500, "too few authored textures resolved: " + std::to_string(resolved));
     std::printf("  asset resolution: screens=%d resolved=%d missing=%d\n",
                 runtime.screen_count(), resolved, missing);
@@ -467,6 +469,24 @@ void check_event_tree(FrontEndRuntime& runtime) {
     require(text_of(17, "TRACK_LINE_1").find('$') == std::string::npos,
             "detail template expands original operands");
     require(start.number == 1, "an empty profile starts on event 1 (FUN_001F5D00's fallback)");
+    // E-0039-F01/N01: original asset decode and event digit geometry, not a pixel oracle.
+    const auto number_hash = hp2::frontend::StringHash_002534A8("FONT_EVENTNUMBERS");
+    const auto* number_font = runtime.font(number_hash);
+    require(number_font && number_font->line_height == 98, "event font height is98, not offset28");
+    const auto* number_template = widget_named(runtime,39,"EVENT_NUMBER");
+    const auto* panel_template = widget_named(runtime,39,"EVENT_PANEL");
+    require(number_template && panel_template, "original event templates available");
+    WidgetSizes number_sizes(*runtime.catalog(),runtime.fonts());
+    port::render::Frame number_frame;
+    append_event_tree(runtime.event_tree(),number_sizes,*runtime.catalog(),number_frame,
+                      panel_template,number_template,runtime.screen(39));
+    const auto camera = runtime.event_tree().camera_offset();
+    const float expected_y = camera.y + start.y*runtime.event_tree().zoom() -
+        98.0f*number_template->scale_y*runtime.event_tree().zoom()*0.5f;
+    bool centred_number = false;
+    for (const auto& quad : number_frame.quads) if (quad.texture == number_hash &&
+        std::abs(quad.destination.y-expected_y)<0.001f) centred_number = true;
+    require(centred_number,"001F7BF0 vertically centres the event digit using scaled maximum glyph height");
     require(runtime.event_tree().state() == hp2::frontend::kViewStateBrowsing_001FAF60,
             "an empty profile opens the tree in state 0");
     require(runtime.event_tree().zoom() == hp2::frontend::kZoomLevels_gp_0x4178[0],

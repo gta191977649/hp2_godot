@@ -16,7 +16,7 @@ int main() {
         underline.class_hash = 0x97BF4B25; underline.x = 10; underline.y = 30.75f;
         FeWidget unrelated; unrelated.x = 99; unrelated.y = 88;
         screen.widgets = {mask, text, underline, unrelated};
-        Type_002490D8 exit;
+        tExitScreenAnimation exit;
         exit.Construct_002490D8(screen);
         check(screen.widgets[0].y == 20 && screen.widgets[1].y == 22);
         check(!exit.Update_00249128(0.05f)); // item 1 duration=0.1; Hermite midpoint

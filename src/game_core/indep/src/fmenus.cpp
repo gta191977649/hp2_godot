@@ -73,6 +73,12 @@ std::vector<FeScreen> parse_screens(const std::vector<std::uint8_t>& buffer) {
             w.scale_x = read_f32(d, 0x38);
             w.clip_hash_0x4c = read_u32(d, 0x4c);
             w.scale_y = read_f32(d, 0x3c);
+            if (is_quad && child.size >= 0x90) {
+                w.field_0x40 = static_cast<std::int32_t>(read_u32(d, 0x40));
+                w.field_0x44 = read_u32(d, 0x44);
+                for (std::size_t i = 0; i < 3; ++i) w.field_0x5c[i] = read_u32(d, 0x5c + i*4);
+                for (std::size_t i = 0; i < 8; ++i) w.field_0x70[i] = read_f32(d, 0x70 + i*4);
+            }
             w.texture_hash = read_u32(d, 0x50);
 
             // Colour bytes are stored R,G,B,A with PS2 alpha (0x80 == opaque). Quads carry a
@@ -119,12 +125,18 @@ std::vector<FeFont> parse_fonts(const std::vector<std::uint8_t>& buffer) {
         FeFont font;
         font.texture_hash = read_u32(d, 0x00);
         const std::uint32_t glyph_count = read_u32(d, 0x04);
-        font.line_height = read_u32(d, 0x0c);
+        const auto glyph_offset = read_u32(d, 0x0c);
+        const auto pair_offset = read_u32(d, 0x10);
+        const auto pair_count = read_u32(d, 0x08);
         const std::size_t table_bytes = static_cast<std::size_t>(glyph_count) * 32;
-        if (glyph_count == 0 || 0x14 + table_bytes > chunk->size) continue;
+        if (glyph_count == 0 || glyph_offset < 8 || (pair_count != 0 && pair_offset < 8)) continue;
+        const std::size_t glyph_start = glyph_offset - 8;
+        const std::size_t pair_start = pair_count == 0 ? 0 : pair_offset - 8;
+        if (glyph_start > chunk->size || table_bytes > chunk->size - glyph_start ||
+            pair_start > chunk->size || pair_count > (chunk->size - pair_start) / 8) continue;
         font.glyphs.reserve(glyph_count);
         for (std::uint32_t i = 0; i < glyph_count; ++i) {
-            const std::size_t off = 0x14 + static_cast<std::size_t>(i) * 32;
+            const std::size_t off = glyph_start + static_cast<std::size_t>(i) * 32;
             FeGlyph g;
             g.code = static_cast<std::uint16_t>(d[off] | (d[off + 1] << 8));
             g.flags = static_cast<std::uint16_t>(d[off + 2] | (d[off + 3] << 8));
@@ -133,7 +145,14 @@ std::vector<FeFont> parse_fonts(const std::vector<std::uint8_t>& buffer) {
             g.w = read_f32(d, off + 0x0c);
             g.h = read_f32(d, off + 0x10);
             g.advance = read_f32(d, off + 0x14);
+            g.field_0x1c = read_u32(d, off + 0x1c);
+            // 0013FFA8 stores max glyph height at runtime font+0x420;00140CD8 converts to int.
+            if (g.h > static_cast<float>(font.line_height)) font.line_height = static_cast<std::uint32_t>(g.h);
             font.glyphs.push_back(g);
+        }
+        for (std::uint32_t i = 0; i < pair_count; ++i) {
+            const auto off = pair_start + static_cast<std::size_t>(i) * 8;
+            font.field_0x410.emplace_back(d[off], read_f32(d, off + 4));
         }
         fonts.push_back(std::move(font));
     }
@@ -768,6 +787,13 @@ void SetWidgetY_00144458(FeScreen& screen, std::uint32_t name_hash, int y) {
 
 void SetWidgetAlpha_00140ED0(FeWidget& widget, int alpha) {
     const std::uint8_t value = static_cast<std::uint8_t>(alpha & 0xff);
+    // Port dispatch for existing generic callers: quad alpha is001411D8(-1), E-0039-Q09.
+    // Text00140ED0 touches only its one colour; quad setter preserves all four RGB words.
+    if (widget.type == 2) {
+        for (auto& corner : widget.field_0x5c)
+            corner = (corner & 0xffffffu) | (static_cast<std::uint32_t>(value) << 24);
+        widget.dirty_0x2b = 6;
+    }
     if (widget.a != value) {
         widget.a = value;
         widget.dirty_0x2b = 6;
@@ -786,6 +812,9 @@ void CopyWidgetTransform_001410A0(FeWidget& dst, const FeWidget& src) {
     dst.y = src.y;
     dst.scale_x = src.scale_x;
     dst.scale_y = src.scale_y;
+    dst.field_0x40 = src.field_0x40;
+    dst.field_0x44 = src.field_0x44;
+    dst.field_0x5c = src.field_0x5c; // within the recovered +28..+67 copy window
     dst.texture_hash = src.texture_hash;
     dst.r = src.r;
     dst.g = src.g;
@@ -916,7 +945,7 @@ void Sub_001F4E68(FeScreen& screen, std::uint32_t mask_hash,
     SetWidgetY_00144458(screen,0xc671680c,static_cast<int>(rect.y0)-6);
 }
 
-void Type_00249DE0::Construct_00249DE0(FeScreen& screen,std::uint32_t top_hash,
+void tScrollingMenuList::Construct_00249DE0(FeScreen& screen,std::uint32_t top_hash,
     std::uint32_t bottom_hash,std::uint32_t up_hash,std::uint32_t down_hash,std::uint32_t clip_hash) {
     field_0x00 = &screen; field_0x04.clear(); field_0x14 = -1; field_0x24 = 0;
     field_0x28=up_hash;field_0x2c=down_hash;field_0x30=clip_hash;field_0x34=0;
@@ -926,7 +955,7 @@ void Type_00249DE0::Construct_00249DE0(FeScreen& screen,std::uint32_t top_hash,
     for (auto hash : {field_0x28,field_0x2c})
         if(auto* arrow=FindWidget_00143D50(screen,hash,0))SetWidgetAlpha_00140ED0(*arrow,64);
 }
-void Type_00249DE0::Sub_001EF3C8(FeScreen& screen) {
+void tScrollingMenuList::Sub_001EF3C8(FeScreen& screen) {
     Construct_00249DE0(screen,0x52e039f3,0x52e039f9,0xedf2e4ee,0x20d73d01,0xc67cfb4a);
     // ELF initialized data002B9C30..002B9C97, copied by001EF3C8.
     constexpr std::uint32_t hashes[]{
@@ -938,7 +967,7 @@ void Type_00249DE0::Sub_001EF3C8(FeScreen& screen) {
     Add_00249FF8(std::vector<std::uint32_t>(std::begin(hashes),std::end(hashes)));
     field_0x34=11;
 }
-void Type_00249DE0::Sub_001F33B8(FeScreen& screen) {
+void tScrollingMenuList::Sub_001F33B8(FeScreen& screen) {
     Construct_00249DE0(screen,0x52e039f3,0x52e039f9,0xedf2e4ee,0x20d73d01,0xc67cfb4a);
     // Exact15-element initialized list002BA178, passed by001F33B8.
     Add_00249FF8({0x52e039f3,0x52e039f4,0x52e039f5,0x52e039f6,0x52e039f7,
@@ -949,7 +978,7 @@ void Type_00249DE0::Sub_001F33B8(FeScreen& screen) {
         w->clip_hash_0x4c=field_0x30;if(w->type==1)w->text_align|=0x10;
     }
 }
-void Type_00249DE0::Add_00249FF8(const std::vector<std::uint32_t>& hashes) {
+void tScrollingMenuList::Add_00249FF8(const std::vector<std::uint32_t>& hashes) {
     if(!field_0x00)hp2::not_implemented("0x00249FF8","scrolling screen not bound");
     auto& screen=*field_0x00;
     for (auto hash : hashes) {
@@ -958,14 +987,14 @@ void Type_00249DE0::Add_00249FF8(const std::vector<std::uint32_t>& hashes) {
         widget->clip_hash_0x4c = field_0x30;
         if (widget->type == 1) widget->text_align |= 0x10;
         widget->dirty_0x2b = widget->type == 1 ? 5 : 4;
-        Type_00249C78 node;
+        tMenuAnimElement node;
         node.field_0x3c = static_cast<std::size_t>(widget-screen.widgets.data());
         node.field_0x0c = node.field_0x14 = widget->y;
         field_0x04.push_back(node);
     }
 }
 
-void Type_00249DE0::Handle_0024A480(int message, std::uint32_t item_hash) {
+void tScrollingMenuList::Handle_0024A480(int message, std::uint32_t item_hash) {
     if (!field_0x00) return;
     if (message == 8) { if (--field_0x14 < 0) field_0x14 = 0; return; }
     if (message == 9) {
@@ -1001,7 +1030,7 @@ void Type_00249DE0::Handle_0024A480(int message, std::uint32_t item_hash) {
     if(auto* a=FindWidget_00143D50(*field_0x00,field_0x2c,0))a->visible=below?1:0;
 }
 
-void Type_00249DE0::Update_0024A1A8(float delta) {
+void tScrollingMenuList::Update_0024A1A8(float delta) {
     if (!field_0x00) return;
     for(auto& node:field_0x04) {
         if(node.field_0x38==2) {
@@ -1029,24 +1058,24 @@ void Type_00249DE0::Update_0024A1A8(float delta) {
     for(auto hash:{field_0x28,field_0x2c})
         if(auto* a=FindWidget_00143D50(*field_0x00,hash,0))SetWidgetAlpha_00140ED0(*a,alpha);
 }
-std::uint32_t Type_00249DE0::Sub_0024A368() const {
+std::uint32_t tScrollingMenuList::Sub_0024A368() const {
     if(field_0x14<0 || field_0x14>6)hp2::not_implemented("0x0024A368", "uninitialized viewport slot");
     constexpr std::uint32_t masks[]{0x6e34e350,0x708a0bf1,0x72df3492,0x75345d33,
         0x778985d4,0x79deae75,0x7c33d716};
     return masks[field_0x14];
 }
 
-void Type_0024A690::Construct_0024A690(FeScreen& screen,std::uint32_t left,std::uint32_t right){
+void tLeftRightArrowScroll::Construct_0024A690(FeScreen& screen,std::uint32_t left,std::uint32_t right){
     field_0x00=&screen;field_0x04=left;field_0x08=right;field_0x1c=0;
     Bind_0024A860(0);
 }
-void Type_0024A690::Bind_0024A860(std::uint32_t target){
+void tLeftRightArrowScroll::Bind_0024A860(std::uint32_t target){
     field_0x0c=target;
     if(!field_0x00)return;
     for(auto hash:{field_0x04,field_0x08})
         if(auto*w=FindWidget_00143D50(*field_0x00,hash,2))w->visible=target?1:0;
 }
-void Type_0024A690::Update_0024A730(float delta,const WidgetMeasure& measure){
+void tLeftRightArrowScroll::Update_0024A730(float delta,const WidgetMeasure& measure){
     if(!field_0x00)return;
     field_0x1c+=delta*10;
     if(field_0x1c>6.283f)field_0x1c-=6.283f;
@@ -1069,14 +1098,14 @@ void Type_0024A690::Update_0024A730(float delta,const WidgetMeasure& measure){
 
 void Sub_00249348() {
     hp2::not_implemented("0x00249348",
-                        "scrolling-text update requires the bound Type_002491B0 screen state");
+                        "scrolling-text update requires the bound tAnimatedBlurb screen state");
 }
 
-void Type_002491B0::Construct_002491B0(FeScreen& screen) {
+void tAnimatedBlurb::Construct_002491B0(FeScreen& screen) {
     Construct_002491B0(screen, 0x75980cf0, 0x75980cf0, 0x70a404ec);
 }
 
-void Type_002491B0::Construct_002491B0(FeScreen& screen, std::uint32_t text_hash,
+void tAnimatedBlurb::Construct_002491B0(FeScreen& screen, std::uint32_t text_hash,
                                      std::uint32_t alpha_hash, std::uint32_t bar_hash) {
     field_0x04 = text_hash; port_alpha_hash = alpha_hash; port_bar_hash = bar_hash;
     field_0x00 = &screen; field_0x08 = field_0x198 = field_0x28 = 0;
@@ -1090,14 +1119,14 @@ void Type_002491B0::Construct_002491B0(FeScreen& screen, std::uint32_t text_hash
     if (text) { text->x = 650; text->dirty_0x2b = 4; }
 }
 
-void Type_002491B0::Bind_00249518(const std::string& text) {
+void tAnimatedBlurb::Bind_00249518(const std::string& text) {
     if (field_0x19c == 2 || field_0x19c == 3) {
         field_0x19c = 1; field_0x08 = 0; field_0x0c = 0;
     }
     field_0x198 = 0; field_0x94 = text;
 }
 
-void Type_002491B0::Update_00249348(float delta_seconds) {
+void tAnimatedBlurb::Update_00249348(float delta_seconds) {
     if (!field_0x00) return;
     field_0x08 += delta_seconds; field_0x198 += delta_seconds;
     auto* text = FindWidget_00143D50(*field_0x00, field_0x04, 1);
@@ -1139,26 +1168,26 @@ std::int32_t Sub_0025A3D0(std::int32_t bound, std::uint32_t& state) {
     // Listing 0025A3E4 is DIVU, disproving Ghidra's signed modulo cast.
     return static_cast<std::int32_t>(old % static_cast<std::uint32_t>(bound));
 }
-void Type_002495F0::Construct_002495F0() {
+void tGlobalBackgroundAnimation::Construct_002495F0() {
     field_0x00 = nullptr; field_0x70 = field_0x78 = field_0x30 = 0;
     field_0x10 = field_0x18 = 320; field_0x40 = field_0x48 = 240;
     for (auto& hash : field_0x7c) hash = 0;
     Add_00249730(StringHash_002534A8("GRID_BLUEPRINT1"));
     Add_00249730(StringHash_002534A8("GRID_BLUEPRINT2"));
 }
-void Type_002495F0::Remove_00249790(std::uint32_t hash) {
+void tGlobalBackgroundAnimation::Remove_00249790(std::uint32_t hash) {
     for (auto& slot : field_0x7c) if (slot == hash) slot = 0;
 }
-void Type_002495F0::Add_00249730(std::uint32_t hash) {
+void tGlobalBackgroundAnimation::Add_00249730(std::uint32_t hash) {
     Remove_00249790(hash);
     for (auto& slot : field_0x7c) if (slot == 0) { slot = hash; return; }
 }
-void Type_002495F0::Bind_00249A40(FeScreen* screen, const Random_0025A488& random,
+void tGlobalBackgroundAnimation::Bind_00249A40(FeScreen* screen, const Random_0025A488& random,
                                const WidgetMeasure& measure) {
     field_0x00 = screen; port_measure_ = measure;
     if (screen) Reset_00249888(random);
 }
-void Type_002495F0::Reset_00249888(const Random_0025A488& random) {
+void tGlobalBackgroundAnimation::Reset_00249888(const Random_0025A488& random) {
     auto* fading = field_0x00 ? FindWidget_00143D50(*field_0x00,
         StringHash_002534A8("FADING_BP_OBJECT"), 2) : nullptr;
     auto* master = field_0x00 ? FindWidget_00143D50(*field_0x00,
@@ -1182,7 +1211,7 @@ void Type_002495F0::Reset_00249888(const Random_0025A488& random) {
     }
     field_0x70 = 0;
 }
-void Type_002495F0::Update_00249AE8(float delta_seconds, const Random_0025A488& random) {
+void tGlobalBackgroundAnimation::Update_00249AE8(float delta_seconds, const Random_0025A488& random) {
     field_0x78 += delta_seconds;
     // gp-0x676C at 0032F184 = 6.283 radians. GRID angle consumption is unknown.
     if (field_0x78 >= 6.283f) field_0x78 -= 6.283f;

@@ -227,7 +227,8 @@ public:
 
 // E-0022-D08, ELF 001F8C10/8E18/8D20/8FB0. Original type name unknown.
 // Widget pointer is a port-side representation of original document/hash lookups.
-class Type_001F8C10 {
+// TASK-0041 E-0041-R05; original class spelling; retail 0x001F8C10, debug 0x001F47F0. Native interface/layout remain port projections.
+class tCarLogoAnimation {
     FeWidget* Field_0x00 = nullptr;
     std::uint32_t Field_0x04 = 0;
     std::vector<std::uint32_t> Field_0x08;
@@ -243,7 +244,8 @@ public:
     void Sub_001F8D08();
 };
 // E-0022-D09, ELF 001F90F0/91F0/9318. Original type name unknown.
-class Type_001F90F0 {
+// TASK-0041 E-0041-R06; original class spelling; retail 0x001F90F0, debug 0x001F4CD0. Native interface/layout remain port projections.
+class tTrackLogoAnimation {
     FeWidget* Field_0x00 = nullptr;
     std::vector<std::uint32_t> Field_0x04;
     int Field_0x38 = 0;

@@ -13,6 +13,25 @@ SPEC.loader.exec_module(MODULE)
 
 
 class ClassTemplateTests(unittest.TestCase):
+    def test_recovered_name_keeps_whole_entry_separate_from_typed_projection(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(MODULE, "ROOT", Path(directory)):
+            root = Path(directory)
+            naming = root / "reverse/naming"
+            naming.mkdir(parents=True)
+            (naming / "task0019-original-name-mappings.csv").write_text("original_identifier,elf_address\n")
+            (naming / "task0041-adopted-source-names.csv").write_text(
+                "source_identifier,elf_address\nFixture::Tick,0x00100000\n")
+            source = root / "src/game_core/fixture.cpp"
+            source.parent.mkdir(parents=True)
+            source.write_text('void Fixture::Tick() { hp2::not_implemented("0x00100000", "Fixture::Tick"); }\n'
+                              'int Fixture::Tick(int value) { return value; }\n')
+            definitions = MODULE.definitions()["0x00100000"]
+            cls = {"name": "Fixture", "source": "src/game_core/fixture.cpp", "entry_signatures": {
+                "0x00100000": "void Fixture::Sub_00100000()"}}
+            whole, = MODULE.entry_definitions(cls, "0x00100000", "Tick", definitions)
+            self.assertTrue(whole["stub"])
+            self.assertEqual(len(definitions), 2)
+
     def test_whole_entry_is_not_promoted_by_typed_slice_overload(self):
         cls = {"name": "Fixture", "source": "fixture.cpp", "entry_signatures": {
             "0x00100000": "void Fixture::Sub_00100000()"}}

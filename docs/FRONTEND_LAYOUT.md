@@ -1,5 +1,10 @@
 # TASK-0013: the original front-end screen layout format (really rendered, not a debug view)
 
+TASK-0039 correction (2026-10-17): the historical completion wording below does not establish
+original equivalence. Read [FRONTEND_RENDER_AUDIT.md](FRONTEND_RENDER_AUDIT.md) for the current
+Ghidra MCP-backed rules and remaining gaps. Font height, pair lookup, right alignment and
+four-corner quad rendering were incomplete or misidentified in this initial recovery.
+
 Completed 2026-10-12, Australia/Sydney.
 
 The user pointed out that what had been delivered was a **debug/inspection view**, and that what
@@ -67,7 +72,7 @@ is the alignment (**2 = left, 4 = centred**), and the variable-length default st
 0x00  u32  font texture hash (FONT_IMPACTSMALL / FONT_IMPACTBIG / BUTTONSOUT / ...)
 0x04  u32  glyph count
 0x08  u32  kerning pair count
-0x0c  u32  line height (28 in every font)
+0x0c  u32  glyph-table byte offset including chunk header (28 in observed fonts)
 0x10  u32  byte offset of the kerning table (including the chunk's own 8-byte header)
 0x14  ..   glyph records, 32 bytes each:
            u16 code, u16 flags, float u, v, w, h, advance (all in atlas pixels)
@@ -75,8 +80,9 @@ then       the kerning table, 8 bytes per pair
 ```
 
 The sizes check out exactly: `FONT_IMPACTSMALL` has 130 glyphs, and 130 x 32 + 20 + 8 = 4188,
-which is the kerning offset the header states; the chunk is 10412 bytes long and 10412 - 4180 =
-6232 = 779 pairs x 8 bytes, to the byte. `FONT_EVENTNUMBERS` (10 glyphs, 50 pairs, 348 bytes) is
+which is the kerning offset the header states; the payload is 10412 bytes long and 10412 - 4180 =
+6232 = 779 pairs x 8 bytes, to the byte. `FONT_EVENTNUMBERS` (10 glyphs, 50 pairs, 740-byte payload,
+pair-table offset348 including the chunk header) is
 equally exact. Glyph codes are **sparse** — the Impact fonts have no `$` — so lookups must go by
 character code, never by index.
 
@@ -144,9 +150,10 @@ confirmed as **binding, by name, the background grid and blueprint layer widgets
 
 ## 6. Open questions
 
-1. **Kerning is parsed but not applied.** The table is decoded (8 bytes per pair) but the pairing
-   semantics are not settled — the second u16 of most observed entries is 0 — so letter spacing
-   runs a pixel or two wider than the PS2's.
+1. **Superseded by TASK-0039:** the previous parser actually discarded the pair table.
+   Ghidra00140098 now establishes glyph+02 pair count and glyph+1C first index, previous-byte
+   matching and pair float adjustment. Actual draw applies pairs; width measurement deliberately
+   does not.0013FFA8 derives line height as maximum glyph height, rather than header value28.
 2. ~~**No interaction or animation**~~ — **the interaction half was solved by TASK-0014** (see
    [docs/FRONTEND_MENU_INTERACTION.md](FRONTEND_MENU_INTERACTION.md)): the item list, selection
    movement, highlight colouring, activation callbacks and sound events were all reversed out of

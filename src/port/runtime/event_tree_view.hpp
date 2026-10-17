@@ -103,7 +103,7 @@ private:
     EventTreeNode node_at(std::size_t index) const;
     int status_of(std::size_t index) const;
     void target_camera(float zoom);
-    static void target(hp2::frontend::Type_00248568& path, float value);
+    static void target(hp2::frontend::AnimationGroup& path, float value);
 
     std::vector<hp2::frontend::EventTree_001FFC40> trees_;
     hp2::memorycard::Profile_002FC050 profile_;
@@ -112,7 +112,7 @@ private:
     int mode_id_ = 0;
     int state_ = hp2::frontend::kViewStateBrowsing_001FAF60;
     int zoom_level_ = hp2::frontend::kZoomLevelMin_001FAB50;
-    hp2::frontend::Type_00248568 zoom_path_, alpha_path_, camera_x_, camera_y_;
+    hp2::frontend::AnimationGroup zoom_path_, alpha_path_, camera_x_, camera_y_;
     mutable std::vector<std::string> status_gaps_;
     mutable float border_phase_ = 0;
 };

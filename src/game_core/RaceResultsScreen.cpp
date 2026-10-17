@@ -19,13 +19,15 @@ void RaceResultsScreen::Sub_001DFFE8() {
 }
 
 // ELF 0x001E0838; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001e0838.md.
-void RaceResultsScreen::Sub_001E0838() {
-    hp2::not_implemented("0x001E0838", "RaceResultsScreen::Sub_001E0838 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x001DCFD0: RaceResultsScreen::Scroll(ScreenMessage, ScreenCallbackData *); retail 0x001E0838.
+void RaceResultsScreen::Scroll() {
+    hp2::not_implemented("0x001E0838", "RaceResultsScreen::Scroll (signature and full body unresolved)");
 }
 
 // ELF 0x001E0868; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001e0868.md.
-void RaceResultsScreen::Sub_001E0868() {
-    hp2::not_implemented("0x001E0868", "RaceResultsScreen::Sub_001E0868 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x001DD000: RaceResultsScreen::Tick(ScreenMessage, ScreenCallbackData *); retail 0x001E0868.
+void RaceResultsScreen::Tick() {
+    hp2::not_implemented("0x001E0868", "RaceResultsScreen::Tick (signature and full body unresolved)");
 }
 
 // ELF 0x001E23B8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001e23b8.md.

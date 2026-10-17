@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cmath>
 #include <map>
+#include <limits>
 #include <set>
 
 namespace {
@@ -158,6 +159,45 @@ void check_catalog_changes(port::assets::Source& original) {
     rejects([&]{blurred.set_wheel_speed(151);});
     blurred.set_wheel_blur(false);check(blurred.wheel_phase()==0,"Off resets phase");
     blurred.advance_wheels(.01);check(blurred.wheel_phase()==0,"Off stops animation");
+    // E-0038-W01: raw zero-spin native matrices and the known-correct static
+    // preview must give the same four mesh bases, including wheels0/3.
+    const auto static_preview=blurred.parts();
+    const auto render_config=port::read_car_render_config(blurred.cache()->global,"911TURBO");
+    std::array<port::driving::WheelSnapshot,4> static_native;
+    for(unsigned i=0;i<4;++i){
+        auto raw_pose=std::array<float,16>{{1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1}};
+        for(unsigned lane=0;lane<3;++lane)raw_pose[12+lane]=render_config.Field_0x120_0x180[i][lane];
+        static_native[i].tire=static_native[i].brake=static_native[i].blur=raw_pose;
+    }
+    blurred.apply_driving_pose(static_native);
+    for(std::size_t i=0;i<static_preview.size();++i)if(static_preview[i].wheel>=0)
+        for(unsigned lane=0;lane<16;++lane)check(std::abs(static_preview[i].transform[lane]-blurred.parts()[i].transform[lane])<1e-5f,
+                                               "Driving raw wheel bases must match the static preview render bases");
+    // TASK-0038: absolute independent poses, no preview integration or asset reload.
+    std::array<port::driving::WheelSnapshot,4> poses;
+    for(int i=0;i<4;++i){
+        auto identity=std::array<float,16>{{1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1}};
+        identity[12]=float(i+1);
+        poses[i].tire=identity;identity[13]=2;poses[i].brake=identity;
+        identity[14]=3;poses[i].blur=identity;poses[i].blur_alpha=float(i*15);
+    }
+    port::CarAttachmentMatrices raw_poses;
+    for(unsigned i=0;i<4;++i){raw_poses.tire[i]=poses[i].tire;raw_poses.brake[i]=poses[i].brake;raw_poses.blur[i]=poses[i].blur;}
+    const auto rendered=hp2::recovered::CarRenderInfo::Sub_00120EF8(raw_poses);
+    blurred.apply_driving_pose(poses);blurred.select(120,0);
+    for(const auto& part:blurred.parts())if(part.wheel>=0){
+        if(part.group==port::vehicle::Part::Group::Tire)check(part.transform==rendered.tire[part.wheel],"Independent driving tire pose");
+        if(part.group==port::vehicle::Part::Group::Brake)check(part.transform==rendered.brake[part.wheel],"Independent driving brake pose");
+        if(part.group==port::vehicle::Part::Group::WheelBlur){check(part.transform==rendered.blur[part.wheel],"Independent driving blur pose");check(part.selected==(part.wheel>0),"Driving per-wheel opacity selection");}
+    }
+    const auto first_driving=blurred.parts();blurred.apply_driving_pose(poses);
+    for(std::size_t i=0;i<first_driving.size();++i)check(first_driving[i].transform==blurred.parts()[i].transform,
+                                                      "Repeated driving poses must not accumulate render basis correction");
+    const auto before_bad=blurred.parts();poses[3].tire[0]=std::numeric_limits<float>::quiet_NaN();
+    rejects([&]{blurred.apply_driving_pose(poses);});
+    for(std::size_t i=0;i<before_bad.size();++i)check(before_bad[i].transform==blurred.parts()[i].transform,"Invalid snapshot cannot partially publish");
+    rejects([&]{blurred.advance_wheels(.01);});rejects([&]{blurred.set_wheel_speed(10);});
+    check(blurred.cache()->reads==cached_reads,"Driving publications do not load assets");
     model.load_id(source,int(player.id),int(first.id));check_skin_bindings(model,player,first);
     const auto baseline=body_snapshot(model);
     const auto raw=port::assets::decode_vehicle_geometry(source.geometry_bytes);

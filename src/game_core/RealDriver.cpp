@@ -99,48 +99,57 @@ void RealDriver::Sub_0013AE58() {
 }
 
 // ELF 0x0013AEB8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013aeb8.md.
-void RealDriver::Sub_0013AEB8() {
-    hp2::not_implemented("0x0013AEB8", "RealDriver::Sub_0013AEB8 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x0013ACC0: RealDriver::DoSnapshot(ReplaySnapshot *); retail 0x0013AEB8.
+void RealDriver::DoSnapshot() {
+    hp2::not_implemented("0x0013AEB8", "RealDriver::DoSnapshot (signature and full body unresolved)");
 }
 
 // ELF 0x0013B080; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b080.md.
-void RealDriver::Sub_0013B080() {
-    hp2::not_implemented("0x0013B080", "RealDriver::Sub_0013B080 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x0013AE88: RealDriver::AddJoyHandlers(void); retail 0x0013B080.
+void RealDriver::AddJoyHandlers() {
+    hp2::not_implemented("0x0013B080", "RealDriver::AddJoyHandlers (signature and full body unresolved)");
 }
 
 // ELF 0x0013B250; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b250.md.
-void RealDriver::Sub_0013B250() {
-    hp2::not_implemented("0x0013B250", "RealDriver::Sub_0013B250 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x0013B058: RealDriver::RemoveJoyHandlers(void); retail 0x0013B250.
+void RealDriver::RemoveJoyHandlers() {
+    hp2::not_implemented("0x0013B250", "RealDriver::RemoveJoyHandlers (signature and full body unresolved)");
 }
 
 // ELF 0x0013B3D0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b3d0.md.
-void RealDriver::Sub_0013B3D0() {
-    hp2::not_implemented("0x0013B3D0", "RealDriver::Sub_0013B3D0 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x0013B1D8: RealDriver::SetLowGear(void); retail 0x0013B3D0.
+void RealDriver::SetLowGear() {
+    hp2::not_implemented("0x0013B3D0", "RealDriver::SetLowGear (signature and full body unresolved)");
 }
 
 // ELF 0x0013B3F8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b3f8.md.
-void RealDriver::Sub_0013B3F8() {
-    hp2::not_implemented("0x0013B3F8", "RealDriver::Sub_0013B3F8 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x0013B200: RealDriver::Drive(float); retail 0x0013B3F8.
+void RealDriver::Drive() {
+    hp2::not_implemented("0x0013B3F8", "RealDriver::Drive (signature and full body unresolved)");
 }
 
 // ELF 0x0013C420; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013c420.md.
-void RealDriver::Sub_0013C420() {
-    hp2::not_implemented("0x0013C420", "RealDriver::Sub_0013C420 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x0013C220: RealDriver::StartHonkHorn(void); retail 0x0013C420.
+void RealDriver::StartHonkHorn() {
+    hp2::not_implemented("0x0013C420", "RealDriver::StartHonkHorn (signature and full body unresolved)");
 }
 
 // ELF 0x0013C460; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013c460.md.
-void RealDriver::Sub_0013C460() {
-    hp2::not_implemented("0x0013C460", "RealDriver::Sub_0013C460 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x0013C260: RealDriver::StopHonkHorn(void); retail 0x0013C460.
+void RealDriver::StopHonkHorn() {
+    hp2::not_implemented("0x0013C460", "RealDriver::StopHonkHorn (signature and full body unresolved)");
 }
 
 // ELF 0x0013CAE0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013cae0.md.
-void RealDriver::Sub_0013CAE0() {
-    hp2::not_implemented("0x0013CAE0", "RealDriver::Sub_0013CAE0 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x0013C8E0: RealDriver::GetDriverNumber(void); retail 0x0013CAE0.
+void RealDriver::GetDriverNumber() {
+    hp2::not_implemented("0x0013CAE0", "RealDriver::GetDriverNumber (signature and full body unresolved)");
 }
 
 // ELF 0x0013CAF0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013caf0.md.
-void RealDriver::Sub_0013CAF0() {
-    hp2::not_implemented("0x0013CAF0", "RealDriver::Sub_0013CAF0 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x0013C8F0: RealDriver::SetDesiredSpeed(float, float, bool); retail 0x0013CAF0.
+void RealDriver::SetDesiredSpeed() {
+    hp2::not_implemented("0x0013CAF0", "RealDriver::SetDesiredSpeed (signature and full body unresolved)");
 }
 
 // ELF 0x002A0550; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002a0550.md.

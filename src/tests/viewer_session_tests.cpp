@@ -30,5 +30,11 @@ int main() {
     rejects([&]{parse_viewer_action("unknown");});
     ViewerSession release(false);rejects([&]{release.request(ViewerAction::Car);});
     rejects([&]{release.activate(ViewerKind::Track);});
+    check(parse_viewer_action("driving")==ViewerAction::Driving);
+    check(parse_viewer_kind("driving")==ViewerKind::Driving);
+    session.request(ViewerAction::Driving);check(session.next()->action==ViewerAction::Driving);
+    session.activate(ViewerKind::Driving);check(session.state().kind==ViewerKind::Driving);
+    rejects([&]{release.request(ViewerAction::Driving);});
+    rejects([&]{release.activate(ViewerKind::Driving);});
     std::cout<<"VIEWER_SESSION_OK\n";
 }

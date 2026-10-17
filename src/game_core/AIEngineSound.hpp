@@ -20,16 +20,20 @@ public:
     void Sub_002117C8();
     // ELF 0x002118A0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002118a0.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_002118A0();
+    // Debug reference: AIEngineSound::Update(float, unsigned short, float); E-0041-V01; retail ABI unconfirmed.
+    void Update();
     // ELF 0x00211A80; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00211a80.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00211A80();
+    // Debug reference: AIEngineSound::Mute(int); E-0041-V01; retail ABI unconfirmed.
+    void Mute();
     // ELF 0x00211D58; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00211d58.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00211D58();
+    // Debug reference: AIEngineSound::DeactivateSound(void); E-0041-V01; retail ABI unconfirmed.
+    void DeactivateSound();
     // ELF 0x00211D60; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00211d60.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00211D60();
+    // Debug reference: AIEngineSound::ActivateSound(void); E-0041-V01; retail ABI unconfirmed.
+    void ActivateSound();
     // ELF 0x00212418; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00212418.md.
     // Port-side void/no-argument placeholder; original signature unknown.
     void Sub_00212418();

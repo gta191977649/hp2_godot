@@ -1,0 +1,1579 @@
+{
+  "summary": {
+    "evidence_id": "E-0041-V01",
+    "debug_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+    "retail_sha256": "7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2",
+    "map_sha256": "20baece850349d26f95a5da1c1f6e9eacd6c3f5574e560b8ff2f4e536f9f19d1",
+    "normalized_unique_anchors": 4406,
+    "debug_tables": 283,
+    "retail_confirmed_tables": 252,
+    "candidate_pairs": 66,
+    "unique_pairs": 49,
+    "slot_status_counts": {
+      "ambiguous_vtable": 304,
+      "supported_vtable_slot": 494
+    },
+    "shared_or_folded_name_conflicts": {
+      "0x002A0550": [
+        "Sound3d::ActivateSound(void)",
+        "Sound3d::DeactivateSound(void)",
+        "__pure_virtual"
+      ]
+    },
+    "unmatched_debug_symbols": [
+      "_vt$23tacticHitFormalAction_t",
+      "_vt$16__attr_type_info",
+      "_vt$17JoystickPreConfig",
+      "_vt$12AIActionPass",
+      "_vt$23standByForSuperAction_t",
+      "_vt$17__class_type_info",
+      "_vt$12PauseOptions",
+      "_vt$10TrafficCar",
+      "_vt$32dispatchAmbulanceConfirmAction_t",
+      "_vt$24roadBlockSettingAction_t",
+      "_vt$14EventNeighbour",
+      "_vt$22ChopperMiscFillerClass",
+      "_vt$18carStoppedAction_t",
+      "_vt$25LanguageOptionsScreenBase",
+      "_vt$22updateRecklessAction_t",
+      "_vt$8bad_cast",
+      "_vt$14MaxCameraMover",
+      "_vt$34dispatchBeginPursuitRacingAction_t",
+      "_vt$16__ptmf_type_info",
+      "_vt$22superTerminateAction_t",
+      "_vt$16AIActionNudgeCar",
+      "_vt$10Controller",
+      "_vt$27isCopLocationSetCondition_t",
+      "_vt$31roadBlockFailureThroughAction_t",
+      "_vt$21pursuitCopHitAction_t",
+      "_vt$10Suspension",
+      "_vt$10Integrable",
+      "_vt$13bad_exception",
+      "_vt$15BeACopResults2P",
+      "_vt$19TrackFlyCameraMover",
+      "_vt$22chatterTrafficAction_t",
+      "_vt$14PhysicsVehicle",
+      "_vt$22CopRecklessFillerClass",
+      "_vt$19AIActionIJustGotHit",
+      "_vt$27copPursuitAvoidanceAction_t",
+      "_vt$25dispatchTerminateAction_t",
+      "_vt$29isSupervisorActiveCondition_t",
+      "_vt$8CarMover",
+      "_vt$19racerCaughtAction_t",
+      "_vt$16AIActionPullOver",
+      "_vt$8Munition$13PhysicsSystem",
+      "_vt$6tAICop",
+      "_vt$19StaticCollisionBody",
+      "_vt$24TwoWheelAckermanSteering",
+      "_vt$24AIActionAccidentRecovery",
+      "_vt$15PauseScreenBase",
+      "_vt$25beginPursuitSpeedAction_t",
+      "_vt$29roadBlockFailureAvoidAction_t",
+      "_vt$30beginPursuitIdSpecificAction_t",
+      "_vt$28dispatchHelicopterNAAction_t",
+      "_vt$16TaskRewardScreen",
+      "_vt$25beginPursuitAgainAction_t",
+      "_vt$20tacticCutoffAction_t",
+      "_vt$12PsychoDriver",
+      "_vt$23CopDirectionFillerClass",
+      "_vt$10DriveTrain",
+      "_vt$15SingleRaceSetup",
+      "_vt$17__array_type_info",
+      "_vt$18PointsRewardScreen",
+      "_vt$13LinController",
+      "_vt$17AIActionJustDrive",
+      "_vt$10bad_typeid",
+      "_vt$15CollisionSample",
+      "_vt$18RaceSetupBaseClass",
+      "_vt$24roadblockRequestAction_t",
+      "_vt$16PauseDisplayOpts",
+      "_vt$17tBarricadeManager",
+      "_vt$6Engine",
+      "_vt$26pursuitUpdateSpeedAction_t",
+      "_vt$11tSpikeStrip",
+      "_vt$20tacticDivertAction_t",
+      "_vt$24tSpikeStripRenderElement",
+      "_vt$16crashTowAction_t",
+      "_vt$16__user_type_info",
+      "_vt$17randomCondition_t",
+      "_vt$16PhysicsComponent",
+      "_vt$13bSampleStream",
+      "_vt$37dispatchBeginPursuitHitRunCopAction_t",
+      "_vt$20TacticHitFillerClass",
+      "_vt$25supervisorConfirmAction_t",
+      "_vt$25tacticHitInformalAction_t",
+      "_vt$22TourneyStandingsScreen",
+      "_vt$17directionAction_t",
+      "_vt$20currentSpeedAction_t",
+      "_vt$29supervisorRoadBlockOKAction_t",
+      "_vt$26beginPursuitRacingAction_t",
+      "_vt$13crashAction_t",
+      "_vt$16StillCameraMover",
+      "_vt$19suspectLostAction_t",
+      "_vt$11condition_t",
+      "_vt$16__func_type_info",
+      "_vt$27isCopTargetIdSetCondition_t",
+      "_vt$19__builtin_type_info",
+      "_vt$13DeliveryMover",
+      "_vt$6cPoint",
+      "_vt$18AudioOptionsScreen",
+      "_vt$13DroppedSpikes$13PhysicsSystem",
+      "_vt$19__pointer_type_info",
+      "_vt$10transition",
+      "_vt$14BestTotalTimes",
+      "_vt$41dispatchBeginPursuitHitRunTrafficAction_t",
+      "_vt$8tPursuit",
+      "_vt$21ZoneFreezeCameraMover",
+      "_vt$10NullDriver",
+      "_vt$25PostRaceCameraCoordinator",
+      "_vt$11tTrackGraph",
+      "_vt$12BestLapTimes",
+      "_vt$26spikeStripTireBlowAction_t",
+      "_vt$19TrackCarCameraMover",
+      "_vt$20superBackOffAction_t",
+      "_vt$20SelectCarCameraMover",
+      "_vt$8AIAction",
+      "_vt$21DebugWorldCameraMover",
+      "_vt$23dispatchConfirmAction_t",
+      "_vt$26dispatchTowConfirmAction_t",
+      "_vt$29dispatchRotorDeployedAction_t",
+      "_vt$30supervisorSpikeStripOKAction_t",
+      "_vt$27TrackRouteEditorCameraMover",
+      "_vt$16EndGameMenusBase",
+      "_vt$29backupRequestLocationAction_t",
+      "_vt$25RearViewMirrorCameraMover",
+      "_vt$16airborneAction_t",
+      "_vt$38dispatchBeginVehicleIdSpecificAction_t",
+      "_vt$10EasterEggs",
+      "_vt$11EndGameMenu",
+      "_vt$36pursuitUpdateSubjectLocationAction_t",
+      "_vt$20suspectFoundAction_t",
+      "_vt$28beginPursuitRecklessAction_t",
+      "_vt$21backupConfirmAction_t",
+      "_vt$27beginPursuitGeneralAction_t",
+      "_vt$22ZonePreviewCameraMover",
+      "_vt$13AIActionDraft",
+      "_vt$14__si_type_info",
+      "_vt$14PauseAudioOpts",
+      "_vt$12nullAction_t",
+      "_vt$16__ptmd_type_info",
+      "_vt$33dispatchBeginPursuitSpeedAction_t",
+      "_vt$29beginPursuitIdGeneralAction_t",
+      "_vt$9exception",
+      "_vt$13SinController",
+      "_vt$25ChopperTrafficFillerClass",
+      "_vt$22crashAmbulanceAction_t",
+      "_vt$18actionHelicopter_t",
+      "_vt$16DriveCameraMover",
+      "_vt$38pursuitUpdateVehicleIdSpecificAction_t",
+      "_vt$10tPlayerCop",
+      "_vt$12FreeRunSetup",
+      "_vt$33beginPursuitHitRunTrafficAction_t",
+      "_vt$9SmokeBomb$13PhysicsSystem",
+      "_vt$26ChopperLocationFillerClass",
+      "_vt$19OrbitCarCameraMover",
+      "_vt$7bSample",
+      "_vt$11DroppedBomb$13PhysicsSystem",
+      "_vt$22FlyByCameraCoordinator",
+      "_vt$17EventRewardScreen",
+      "_vt$8CopMover",
+      "_vt$25dispatchIdRequestAction_t",
+      "_vt$13BeTheCopSetup",
+      "_vt$15VirginSmokeable",
+      "_vt$14tOptionsScreen",
+      "_vt$15nullCondition_t",
+      "_vt$18JukeBoxMusicScreen",
+      "_vt$20rotorRequestAction_t",
+      "_vt$9cSEDWedge",
+      "_vt$21tDisplayOptionsScreen",
+      "_vt$20suspectCrashAction_t",
+      "_vt$20NisCameraCoordinator",
+      "_vt$9CarDriver",
+      "_vt$16flatTireAction_t",
+      "_vt$29beginPursuitCopHitRunAction_t",
+      "_vt$6AIPlan",
+      "_vt$6Rocket$13PhysicsSystem",
+      "_vt$20EventsUnlockedScreen",
+      "_vt$24beginPursuitNoIdAction_t",
+      "_vt$19radioArrestAction_t",
+      "_vt$16LapKnockoutSetup",
+      "_vt$3fsm",
+      "_vt$18AIActionGetUnstuck",
+      "_vt$Q26speech5mgr_t",
+      "_vt$20breakPursuitAction_t",
+      "_vt$4tCop",
+      "_vt$25spikeStripRequestAction_t",
+      "_vt$8action_t",
+      "_vt$11CameraMover",
+      "_vt$21LanguageOptionsScreen",
+      "_vt$5Codec",
+      "_vt$27supervisorInitiatesAction_t",
+      "_vt$13AIActionBlock",
+      "_vt$16CubicCameraMover",
+      "_vt$18TrackKnockoutSetup",
+      "_vt$12bSampleChain",
+      "_vt$26spikeStripSetRightAction_t",
+      "_vt$27suspectCrashTrafficAction_t",
+      "_vt$18copBackOffAction_t",
+      "_vt$25supervisorRotorOKAction_t",
+      "_vt$9type_info",
+      "_vt$9RigidBody",
+      "_vt$17BumperCameraMover",
+      "_vt$8Steering",
+      "_vt$24PreRaceCameraCoordinator",
+      "_vt$27dispatchBeOnLookoutAction_t",
+      "_vt$17GarageCameraMover",
+      "_vt$17tNearFollowTarget",
+      "_vt$31requestAnotherRoadBlockAction_t",
+      "_vt$21backupRequestAction_t",
+      "_vt$32isSupervisorNotActiveCondition_t",
+      "_vt$15BeACopResults1P",
+      "_vt$25spikeStripFailureAction_t",
+      "_vt$21DemoCameraCoordinator",
+      "_vt$26CountdownCameraCoordinator",
+      "_vt$31dispatchRoadBlockUpdateAction_t",
+      "_vt$20roadBlockSetAction_t",
+      "_vt$9Smokeable$13PhysicsSystem",
+      "_vt$27dispatchRoadBlockNAAction_t",
+      "_vt$29dispatchSpikeStripSetAction_t",
+      "_vt$22chatterGeneralAction_t",
+      "_vt$20superRequestAction_t",
+      "_vt$11tCopManager",
+      "_vt$21spikeStripSetAction_t",
+      "_vt$10tWordQueue",
+      "_vt$17AIActionAvoidCars",
+      "_vt$25spikeStripSetLeftAction_t",
+      "_vt$22AIActionAvoidRoadBlock",
+      "_vt$36dispatchBeginPursuitRecklessAction_t",
+      "_vt$19crashBackupAction_t",
+      "_vt$21BaseCameraCoordinator",
+      "_vt$27beginPursuitErraticAction_t"
+    ],
+    "unmatched_retail_tables": [
+      "0x002AE7A0",
+      "0x002AE7C0",
+      "0x002AE868",
+      "0x002AEAE8",
+      "0x002AEC50",
+      "0x002B1788",
+      "0x002B17A0",
+      "0x002B17B8",
+      "0x002B17D0",
+      "0x002B1850",
+      "0x002B18D0",
+      "0x002B1950",
+      "0x002B19D0",
+      "0x002B1A50",
+      "0x002B1AD0",
+      "0x002B1B50",
+      "0x002B1BD0",
+      "0x002B1C50",
+      "0x002B1CD0",
+      "0x002B1D50",
+      "0x002B1DD0",
+      "0x002B1E50",
+      "0x002B2050",
+      "0x002B20D0",
+      "0x002B2190",
+      "0x002B45D0",
+      "0x002B4618",
+      "0x002B5268",
+      "0x002B5280",
+      "0x002B5298",
+      "0x002B52B0",
+      "0x002B52C8",
+      "0x002B52E0",
+      "0x002B52F8",
+      "0x002B53C0",
+      "0x002B5430",
+      "0x002B5A08",
+      "0x002B5CD0",
+      "0x002B5D18",
+      "0x002B5D38",
+      "0x002B6D00",
+      "0x002B6E00",
+      "0x002B6F00",
+      "0x002B7000",
+      "0x002B7100",
+      "0x002B79D0",
+      "0x002B7A10",
+      "0x002B7A50",
+      "0x002B7A90",
+      "0x002B7AD0",
+      "0x002B7B10",
+      "0x002B7B50",
+      "0x002B7B90",
+      "0x002B7BD0",
+      "0x002B7C10",
+      "0x002B7C50",
+      "0x002B7C90",
+      "0x002B7CD0",
+      "0x002B8A18",
+      "0x002B8C68",
+      "0x002B8F38",
+      "0x002B8F68",
+      "0x002B8F98",
+      "0x002B8FC8",
+      "0x002B8FF8",
+      "0x002B9028",
+      "0x002B9088",
+      "0x002B90B8",
+      "0x002B90E8",
+      "0x002B9118",
+      "0x002B9148",
+      "0x002BA4E8",
+      "0x002BA508",
+      "0x002BA520",
+      "0x002BA538",
+      "0x002BA558",
+      "0x002BA578",
+      "0x002BAF30",
+      "0x002BB448",
+      "0x002BB518",
+      "0x002BB530",
+      "0x002BB548",
+      "0x002BB560",
+      "0x002BB578",
+      "0x002BB590",
+      "0x002BB5A8",
+      "0x002BB5C0",
+      "0x002BB5D8",
+      "0x002BB5F0",
+      "0x002BB608",
+      "0x002BB620",
+      "0x002BB638",
+      "0x002BB650",
+      "0x002BB668",
+      "0x002BB680",
+      "0x002BB698",
+      "0x002BB6B0",
+      "0x002BB6C8",
+      "0x002BB6E0",
+      "0x002BB6F8",
+      "0x002BB710",
+      "0x002BB728",
+      "0x002BB740",
+      "0x002BB758",
+      "0x002BB770",
+      "0x002BB788",
+      "0x002BB800",
+      "0x002BB818",
+      "0x002BB830",
+      "0x002BB848",
+      "0x002BB860",
+      "0x002BB878",
+      "0x002BB890",
+      "0x002BB8A8",
+      "0x002BB8C0",
+      "0x002BB8D8",
+      "0x002BB8F0",
+      "0x002BB908",
+      "0x002BB920",
+      "0x002BB938",
+      "0x002BB950",
+      "0x002BB968",
+      "0x002BB980",
+      "0x002BB998",
+      "0x002BB9B0",
+      "0x002BB9C8",
+      "0x002BB9E0",
+      "0x002BB9F8",
+      "0x002BBA10",
+      "0x002BBA28",
+      "0x002BBA40",
+      "0x002BBA58",
+      "0x002BBA70",
+      "0x002BBA88",
+      "0x002BBAA0",
+      "0x002BBAB8",
+      "0x002BBAD0",
+      "0x002BBAE8",
+      "0x002BBB00",
+      "0x002BBB18",
+      "0x002BBB30",
+      "0x002BBB48",
+      "0x002BBB60",
+      "0x002BBB78",
+      "0x002BBB90",
+      "0x002BBBA8",
+      "0x002BBBC0",
+      "0x002BBBD8",
+      "0x002BBBF0",
+      "0x002BBC08",
+      "0x002BBC20",
+      "0x002BBC38",
+      "0x002BBC50",
+      "0x002BBC68",
+      "0x002BBC80",
+      "0x002BBC98",
+      "0x002BBCB0",
+      "0x002BBCC8",
+      "0x002BBCE0",
+      "0x002BBCF8",
+      "0x002BBD10",
+      "0x002BBD28",
+      "0x002BBD48",
+      "0x002BBD60",
+      "0x002BBD78",
+      "0x002BBD90",
+      "0x002BBDA8",
+      "0x002BBDC0",
+      "0x002BBDD8",
+      "0x002BCAF0",
+      "0x002BCBF0",
+      "0x002BD698",
+      "0x002BD6C0",
+      "0x002BD6E8",
+      "0x002BD830",
+      "0x002BD858",
+      "0x002BD880",
+      "0x002BD920",
+      "0x002BD948",
+      "0x002BD970",
+      "0x002BD9B0",
+      "0x002BE5B8",
+      "0x002C6ED8",
+      "0x002C6EF0",
+      "0x002C7010",
+      "0x002C7028",
+      "0x002C7040",
+      "0x002C7058",
+      "0x002C7070",
+      "0x002C71A0",
+      "0x002C71A8",
+      "0x002C71B8",
+      "0x002C71C8",
+      "0x002C71D8",
+      "0x002C71E8",
+      "0x002C71F8"
+    ],
+    "limitations": [
+      "Only existing 252 confirmed retail tables; no new table detection",
+      "At least two distinct normalized unique function anchors; known contradictions rejected",
+      "Full size/header/this-delta/zero-slot shape must agree; RTTI pointer headers not normalized",
+      "Pair uniqueness measured over eligible debug symbols and existing confirmed retail tables",
+      "Slot implementation name does not imply exclusive ownership by table class",
+      "Allocator label spelling difference does not prove type equivalence",
+      "Names are debug reference names; table correspondence does not verify behavior"
+    ]
+  },
+  "pairs": [
+    {
+      "debug_vtable": "0x002ACB70",
+      "retail_vtable": "0x002AE328",
+      "debug_symbol": "_vt$15AICarController",
+      "debug_table_designations": [
+        "AICarController"
+      ],
+      "retail_allocator_labels": [
+        "AIDriver"
+      ],
+      "label_text_comparison": "different_text_not_equivalence",
+      "slots": 16,
+      "distinct_anchored_targets": 8,
+      "debug_pair_candidates": 3,
+      "retail_pair_candidates": 3,
+      "status": "ambiguous_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002ACB70",
+      "retail_vtable": "0x002B4730",
+      "debug_symbol": "_vt$15AICarController",
+      "debug_table_designations": [
+        "AICarController"
+      ],
+      "retail_allocator_labels": [
+        "TrafficDriver"
+      ],
+      "label_text_comparison": "different_text_not_equivalence",
+      "slots": 16,
+      "distinct_anchored_targets": 8,
+      "debug_pair_candidates": 3,
+      "retail_pair_candidates": 3,
+      "status": "ambiguous_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002ACB70",
+      "retail_vtable": "0x002B4D90",
+      "debug_symbol": "_vt$15AICarController",
+      "debug_table_designations": [
+        "AICarController"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 16,
+      "distinct_anchored_targets": 8,
+      "debug_pair_candidates": 3,
+      "retail_pair_candidates": 3,
+      "status": "ambiguous_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002A5718",
+      "retail_vtable": "0x002AD6E8",
+      "debug_symbol": "_vt$10cDBFileSys",
+      "debug_table_designations": [
+        "cDBFileSys"
+      ],
+      "retail_allocator_labels": [
+        "CDBFileSys"
+      ],
+      "label_text_comparison": "different_text_not_equivalence",
+      "slots": 24,
+      "distinct_anchored_targets": 10,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002AC6B8",
+      "retail_vtable": "0x002B48D8",
+      "debug_symbol": "_vt$14BaseAICarSound",
+      "debug_table_designations": [
+        "BaseAICarSound"
+      ],
+      "retail_allocator_labels": [
+        "AICarSound"
+      ],
+      "label_text_comparison": "different_text_not_equivalence",
+      "slots": 8,
+      "distinct_anchored_targets": 5,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B42F0",
+      "retail_vtable": "0x002BC730",
+      "debug_symbol": "_vt$11MellowMover",
+      "debug_table_designations": [
+        "MellowMover"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 3,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B53A0",
+      "retail_vtable": "0x002BD8D0",
+      "debug_symbol": "_vt$24CopTacticMiscFillerClass",
+      "debug_table_designations": [
+        "CopTacticMiscFillerClass"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 4,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002AC790",
+      "retail_vtable": "0x002B49B0",
+      "debug_symbol": "_vt$12SirenSound3d",
+      "debug_table_designations": [
+        "SirenSound3d"
+      ],
+      "retail_allocator_labels": [
+        "SirenSound"
+      ],
+      "label_text_comparison": "different_text_not_equivalence",
+      "slots": 7,
+      "distinct_anchored_targets": 3,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002AC678",
+      "retail_vtable": "0x002B4898",
+      "debug_symbol": "_vt$11HornSound3d",
+      "debug_table_designations": [
+        "HornSound3d"
+      ],
+      "retail_allocator_labels": [
+        "AICarSound",
+        "PlayerCarSound"
+      ],
+      "label_text_comparison": "different_text_not_equivalence",
+      "slots": 7,
+      "distinct_anchored_targets": 3,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B4288",
+      "retail_vtable": "0x002BC6C8",
+      "debug_symbol": "_vt$10Mellovator",
+      "debug_table_designations": [
+        "Mellovator"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 8,
+      "distinct_anchored_targets": 3,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B5378",
+      "retail_vtable": "0x002BD8A8",
+      "debug_symbol": "_vt$19CopSpeedFillerClass",
+      "debug_table_designations": [
+        "CopSpeedFillerClass"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 4,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002ADA00",
+      "retail_vtable": "0x002B5C40",
+      "debug_symbol": "_vt$5Wheel",
+      "debug_table_designations": [
+        "Wheel"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 8,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002A67B0",
+      "retail_vtable": "0x002AE780",
+      "debug_symbol": "_vt$9NullMover",
+      "debug_table_designations": [
+        "NullMover"
+      ],
+      "retail_allocator_labels": [
+        "Car (cop)"
+      ],
+      "label_text_comparison": "different_text_not_equivalence",
+      "slots": 3,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B5858",
+      "retail_vtable": "0x002BDD88",
+      "debug_symbol": "_vt$8MV3Codec",
+      "debug_table_designations": [
+        "MV3Codec"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 6,
+      "distinct_anchored_targets": 4,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B0830",
+      "retail_vtable": "0x002B8AE8",
+      "debug_symbol": "_vt$13CollisionBody",
+      "debug_table_designations": [
+        "CollisionBody"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 25,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002A57E0",
+      "retail_vtable": "0x002AD7B0",
+      "debug_symbol": "_vt$12cDBFilesBase",
+      "debug_table_designations": [
+        "cDBFilesBase"
+      ],
+      "retail_allocator_labels": [
+        "CDBFileSys"
+      ],
+      "label_text_comparison": "different_text_not_equivalence",
+      "slots": 24,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B33E8",
+      "retail_vtable": "0x002BB7E8",
+      "debug_symbol": "_vt$20rotorChatterAction_t",
+      "debug_table_designations": [
+        "rotorChatterAction_t"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 2,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B0690",
+      "retail_vtable": "0x002B8948",
+      "debug_symbol": "_vt$25TrackPolygonCollisionBody",
+      "debug_table_designations": [
+        "TrackPolygonCollisionBody"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 25,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B21B8",
+      "retail_vtable": "0x002BA4C8",
+      "debug_symbol": "_vt$19tCustomizeHUDScreen",
+      "debug_table_designations": [
+        "tCustomizeHUDScreen"
+      ],
+      "retail_allocator_labels": [
+        "tCustomizeHUDScreen"
+      ],
+      "label_text_comparison": "exact_text_present",
+      "slots": 3,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B04F0",
+      "retail_vtable": "0x002B87A8",
+      "debug_symbol": "_vt$16CarCollisionBody",
+      "debug_table_designations": [
+        "CarCollisionBody"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 25,
+      "distinct_anchored_targets": 11,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B3D88",
+      "retail_vtable": "0x002BC1E8",
+      "debug_symbol": "_vt$13BaseTireSound",
+      "debug_table_designations": [
+        "BaseTireSound"
+      ],
+      "retail_allocator_labels": [
+        "kAITireSound"
+      ],
+      "label_text_comparison": "different_text_not_equivalence",
+      "slots": 9,
+      "distinct_anchored_targets": 4,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B2EB0",
+      "retail_vtable": "0x002BB2B0",
+      "debug_symbol": "_vt$7Sound3d",
+      "debug_table_designations": [
+        "Sound3d"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 7,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B3E48",
+      "retail_vtable": "0x002BC2A8",
+      "debug_symbol": "_vt$12ChopperSound",
+      "debug_table_designations": [
+        "ChopperSound"
+      ],
+      "retail_allocator_labels": [
+        "ChopperSound"
+      ],
+      "label_text_comparison": "exact_text_present",
+      "slots": 7,
+      "distinct_anchored_targets": 3,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002AEFC8",
+      "retail_vtable": "0x002AE710",
+      "debug_symbol": "_vt$13CarController",
+      "debug_table_designations": [
+        "CarController"
+      ],
+      "retail_allocator_labels": [
+        "Car (cop)"
+      ],
+      "label_text_comparison": "different_text_not_equivalence",
+      "slots": 13,
+      "distinct_anchored_targets": 3,
+      "debug_pair_candidates": 2,
+      "retail_pair_candidates": 2,
+      "status": "ambiguous_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002AEFC8",
+      "retail_vtable": "0x002B7218",
+      "debug_symbol": "_vt$13CarController",
+      "debug_table_designations": [
+        "CarController"
+      ],
+      "retail_allocator_labels": [
+        "NullController"
+      ],
+      "label_text_comparison": "different_text_not_equivalence",
+      "slots": 13,
+      "distinct_anchored_targets": 3,
+      "debug_pair_candidates": 2,
+      "retail_pair_candidates": 2,
+      "status": "ambiguous_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002AD758",
+      "retail_vtable": "0x002B5998",
+      "debug_symbol": "_vt$9CopDriver",
+      "debug_table_designations": [
+        "CopDriver"
+      ],
+      "retail_allocator_labels": [
+        "CopDriver"
+      ],
+      "label_text_comparison": "exact_text_present",
+      "slots": 13,
+      "distinct_anchored_targets": 4,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B30A8",
+      "retail_vtable": "0x002BB4A8",
+      "debug_symbol": "_vt$Q26speech7state_t",
+      "debug_table_designations": [
+        "speech::state_t"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 2,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B33D0",
+      "retail_vtable": "0x002BB7D0",
+      "debug_symbol": "_vt$20rotorTrafficAction_t",
+      "debug_table_designations": [
+        "rotorTrafficAction_t"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 2,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002AD160",
+      "retail_vtable": "0x002B53A0",
+      "debug_symbol": "_vt$13PhysicsSystem",
+      "debug_table_designations": [
+        "PhysicsSystem"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 3,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B05C0",
+      "retail_vtable": "0x002B8878",
+      "debug_symbol": "_vt$20DynamicCollisionBody",
+      "debug_table_designations": [
+        "DynamicCollisionBody"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 25,
+      "distinct_anchored_targets": 7,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002AEAD0",
+      "retail_vtable": "0x002B6D20",
+      "debug_symbol": "_vt$6Rocket",
+      "debug_table_designations": [
+        "Rocket"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 27,
+      "distinct_anchored_targets": 5,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B53C8",
+      "retail_vtable": "0x002BD8F8",
+      "debug_symbol": "_vt$22CopLocationFillerClass",
+      "debug_table_designations": [
+        "CopLocationFillerClass"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 4,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B2F58",
+      "retail_vtable": "0x002BB358",
+      "debug_symbol": "_vt$13Sound3dSample",
+      "debug_table_designations": [
+        "Sound3dSample"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 8,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B5C40",
+      "retail_vtable": "0x002BE170",
+      "debug_symbol": "_vt$14RealController",
+      "debug_table_designations": [
+        "RealController"
+      ],
+      "retail_allocator_labels": [
+        "RealController"
+      ],
+      "label_text_comparison": "exact_text_present",
+      "slots": 13,
+      "distinct_anchored_targets": 5,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B33B8",
+      "retail_vtable": "0x002BB7B8",
+      "debug_symbol": "_vt$21rotorLocationAction_t",
+      "debug_table_designations": [
+        "rotorLocationAction_t"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 2,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B0DA8",
+      "retail_vtable": "0x002B9058",
+      "debug_symbol": "_vt$17RaceResultsScreen",
+      "debug_table_designations": [
+        "RaceResultsScreen"
+      ],
+      "retail_allocator_labels": [
+        "RaceResultsScreen"
+      ],
+      "label_text_comparison": "exact_text_present",
+      "slots": 5,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B3CE8",
+      "retail_vtable": "0x002BC148",
+      "debug_symbol": "_vt$12kAITireSound",
+      "debug_table_designations": [
+        "kAITireSound"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 9,
+      "distinct_anchored_targets": 5,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B3B20",
+      "retail_vtable": "0x002BBF80",
+      "debug_symbol": "_vt$13AIEngineSound",
+      "debug_table_designations": [
+        "AIEngineSound"
+      ],
+      "retail_allocator_labels": [
+        "AIEngineSound"
+      ],
+      "label_text_comparison": "exact_text_present",
+      "slots": 7,
+      "distinct_anchored_targets": 4,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B2288",
+      "retail_vtable": "0x002BA598",
+      "debug_symbol": "_vt$17OptionsScreenBase",
+      "debug_table_designations": [
+        "OptionsScreenBase"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 3,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B42D0",
+      "retail_vtable": "0x002BC710",
+      "debug_symbol": "_vt$11MellowMover$14PhysicsVehicle",
+      "debug_table_designations": [
+        "MellowMover::PhysicsVehicle"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 3,
+      "distinct_anchored_targets": 3,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002AEDD0",
+      "retail_vtable": "0x002B7020",
+      "debug_symbol": "_vt$11DroppedBomb",
+      "debug_table_designations": [
+        "DroppedBomb"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 27,
+      "distinct_anchored_targets": 5,
+      "debug_pair_candidates": 2,
+      "retail_pair_candidates": 2,
+      "status": "ambiguous_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002AEDD0",
+      "retail_vtable": "0x002B7120",
+      "debug_symbol": "_vt$11DroppedBomb",
+      "debug_table_designations": [
+        "DroppedBomb"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 27,
+      "distinct_anchored_targets": 5,
+      "debug_pair_candidates": 2,
+      "retail_pair_candidates": 2,
+      "status": "ambiguous_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002AEED0",
+      "retail_vtable": "0x002B7020",
+      "debug_symbol": "_vt$8Munition",
+      "debug_table_designations": [
+        "Munition"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 27,
+      "distinct_anchored_targets": 5,
+      "debug_pair_candidates": 2,
+      "retail_pair_candidates": 2,
+      "status": "ambiguous_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002AEED0",
+      "retail_vtable": "0x002B7120",
+      "debug_symbol": "_vt$8Munition",
+      "debug_table_designations": [
+        "Munition"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 27,
+      "distinct_anchored_targets": 5,
+      "debug_pair_candidates": 2,
+      "retail_pair_candidates": 2,
+      "status": "ambiguous_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B2C90",
+      "retail_vtable": "0x002BB090",
+      "debug_symbol": "_vt$9BeltMover",
+      "debug_table_designations": [
+        "BeltMover"
+      ],
+      "retail_allocator_labels": [
+        "BeltMover"
+      ],
+      "label_text_comparison": "exact_text_present",
+      "slots": 3,
+      "distinct_anchored_targets": 3,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002A6740",
+      "retail_vtable": "0x002AE710",
+      "debug_symbol": "_vt$14NullController",
+      "debug_table_designations": [
+        "NullController"
+      ],
+      "retail_allocator_labels": [
+        "Car (cop)"
+      ],
+      "label_text_comparison": "different_text_not_equivalence",
+      "slots": 13,
+      "distinct_anchored_targets": 3,
+      "debug_pair_candidates": 2,
+      "retail_pair_candidates": 2,
+      "status": "ambiguous_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002A6740",
+      "retail_vtable": "0x002B7218",
+      "debug_symbol": "_vt$14NullController",
+      "debug_table_designations": [
+        "NullController"
+      ],
+      "retail_allocator_labels": [
+        "NullController"
+      ],
+      "label_text_comparison": "exact_text_present",
+      "slots": 13,
+      "distinct_anchored_targets": 3,
+      "debug_pair_candidates": 2,
+      "retail_pair_candidates": 2,
+      "status": "ambiguous_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002A6358",
+      "retail_vtable": "0x002AE328",
+      "debug_symbol": "_vt$8AIDriver",
+      "debug_table_designations": [
+        "AIDriver"
+      ],
+      "retail_allocator_labels": [
+        "AIDriver"
+      ],
+      "label_text_comparison": "exact_text_present",
+      "slots": 16,
+      "distinct_anchored_targets": 8,
+      "debug_pair_candidates": 3,
+      "retail_pair_candidates": 3,
+      "status": "ambiguous_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002A6358",
+      "retail_vtable": "0x002B4730",
+      "debug_symbol": "_vt$8AIDriver",
+      "debug_table_designations": [
+        "AIDriver"
+      ],
+      "retail_allocator_labels": [
+        "TrafficDriver"
+      ],
+      "label_text_comparison": "different_text_not_equivalence",
+      "slots": 16,
+      "distinct_anchored_targets": 8,
+      "debug_pair_candidates": 3,
+      "retail_pair_candidates": 3,
+      "status": "ambiguous_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002A6358",
+      "retail_vtable": "0x002B4D90",
+      "debug_symbol": "_vt$8AIDriver",
+      "debug_table_designations": [
+        "AIDriver"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 16,
+      "distinct_anchored_targets": 8,
+      "debug_pair_candidates": 3,
+      "retail_pair_candidates": 3,
+      "status": "ambiguous_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002AC748",
+      "retail_vtable": "0x002B4968",
+      "debug_symbol": "_vt$12BaseCarSound",
+      "debug_table_designations": [
+        "BaseCarSound"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 8,
+      "distinct_anchored_targets": 7,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002AC510",
+      "retail_vtable": "0x002AE328",
+      "debug_symbol": "_vt$13TrafficDriver",
+      "debug_table_designations": [
+        "TrafficDriver"
+      ],
+      "retail_allocator_labels": [
+        "AIDriver"
+      ],
+      "label_text_comparison": "different_text_not_equivalence",
+      "slots": 16,
+      "distinct_anchored_targets": 8,
+      "debug_pair_candidates": 3,
+      "retail_pair_candidates": 3,
+      "status": "ambiguous_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002AC510",
+      "retail_vtable": "0x002B4730",
+      "debug_symbol": "_vt$13TrafficDriver",
+      "debug_table_designations": [
+        "TrafficDriver"
+      ],
+      "retail_allocator_labels": [
+        "TrafficDriver"
+      ],
+      "label_text_comparison": "exact_text_present",
+      "slots": 16,
+      "distinct_anchored_targets": 8,
+      "debug_pair_candidates": 3,
+      "retail_pair_candidates": 3,
+      "status": "ambiguous_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002AC510",
+      "retail_vtable": "0x002B4D90",
+      "debug_symbol": "_vt$13TrafficDriver",
+      "debug_table_designations": [
+        "TrafficDriver"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 16,
+      "distinct_anchored_targets": 8,
+      "debug_pair_candidates": 3,
+      "retail_pair_candidates": 3,
+      "status": "ambiguous_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B4670",
+      "retail_vtable": "0x002BCB10",
+      "debug_symbol": "_vt$9Smokeable",
+      "debug_table_designations": [
+        "Smokeable"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 27,
+      "distinct_anchored_targets": 6,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002AEBD0",
+      "retail_vtable": "0x002B6E20",
+      "debug_symbol": "_vt$13DroppedSpikes",
+      "debug_table_designations": [
+        "DroppedSpikes"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 27,
+      "distinct_anchored_targets": 6,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B33A0",
+      "retail_vtable": "0x002BB7A0",
+      "debug_symbol": "_vt$24rotorSpikeFailedAction_t",
+      "debug_table_designations": [
+        "rotorSpikeFailedAction_t"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 2,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002A6AF8",
+      "retail_vtable": "0x002AEAC8",
+      "debug_symbol": "_vt$10PhysicsCar",
+      "debug_table_designations": [
+        "PhysicsCar"
+      ],
+      "retail_allocator_labels": [
+        "PhysicsCar"
+      ],
+      "label_text_comparison": "exact_text_present",
+      "slots": 3,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002AC700",
+      "retail_vtable": "0x002B4920",
+      "debug_symbol": "_vt$18BasePlayerCarSound",
+      "debug_table_designations": [
+        "BasePlayerCarSound"
+      ],
+      "retail_allocator_labels": [
+        "PlayerCarSound"
+      ],
+      "label_text_comparison": "different_text_not_equivalence",
+      "slots": 8,
+      "distinct_anchored_targets": 6,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B3100",
+      "retail_vtable": "0x002BB500",
+      "debug_symbol": "_vt$6nfsFsm",
+      "debug_table_designations": [
+        "nfsFsm"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 2,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002AECD0",
+      "retail_vtable": "0x002B6F20",
+      "debug_symbol": "_vt$9SmokeBomb",
+      "debug_table_designations": [
+        "SmokeBomb"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 27,
+      "distinct_anchored_targets": 6,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B3D38",
+      "retail_vtable": "0x002BC198",
+      "debug_symbol": "_vt$15PlayerTireSound",
+      "debug_table_designations": [
+        "PlayerTireSound"
+      ],
+      "retail_allocator_labels": [
+        "PlayerTireSound"
+      ],
+      "label_text_comparison": "exact_text_present",
+      "slots": 9,
+      "distinct_anchored_targets": 2,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B5AA0",
+      "retail_vtable": "0x002BDFD0",
+      "debug_symbol": "_vt$17TrackedController",
+      "debug_table_designations": [
+        "TrackedController"
+      ],
+      "retail_allocator_labels": [],
+      "label_text_comparison": "no_allocator_label",
+      "slots": 13,
+      "distinct_anchored_targets": 4,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002A6E60",
+      "retail_vtable": "0x002AEE30",
+      "debug_symbol": "_vt$10RealDriver",
+      "debug_table_designations": [
+        "RealDriver"
+      ],
+      "retail_allocator_labels": [
+        "RealDriver"
+      ],
+      "label_text_comparison": "exact_text_present",
+      "slots": 20,
+      "distinct_anchored_targets": 4,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002A6AD8",
+      "retail_vtable": "0x002AEAA8",
+      "debug_symbol": "_vt$10PhysicsCar$14PhysicsVehicle",
+      "debug_table_designations": [
+        "PhysicsCar::PhysicsVehicle"
+      ],
+      "retail_allocator_labels": [
+        "PhysicsCar"
+      ],
+      "label_text_comparison": "different_text_not_equivalence",
+      "slots": 3,
+      "distinct_anchored_targets": 3,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    },
+    {
+      "debug_vtable": "0x002B3B60",
+      "retail_vtable": "0x002BBFC0",
+      "debug_symbol": "_vt$17PlayerEngineSound",
+      "debug_table_designations": [
+        "PlayerEngineSound"
+      ],
+      "retail_allocator_labels": [
+        "PlayerEngineSound"
+      ],
+      "label_text_comparison": "exact_text_present",
+      "slots": 7,
+      "distinct_anchored_targets": 3,
+      "debug_pair_candidates": 1,
+      "retail_pair_candidates": 1,
+      "status": "supported_unique_vtable",
+      "evidence_id": "E-0041-V01"
+    }
+  ]
+}

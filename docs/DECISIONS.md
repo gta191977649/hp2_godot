@@ -1,5 +1,27 @@
 # Decision log
 
+## TASK-0041 - Authorized debug reference naming (2026-10-17)
+
+The user supplied a symbol-rich PS2 ELF and MAP as reference evidence. Record both
+binary hashes and separate addresses. Adopt retail names only with raw exact code,
+independently constrained virtual-table correspondence, or reviewed caller/code
+bridges. Keep normalized-only matches as candidates. Reference layouts and signatures
+do not replace retail behavior or native projection interfaces. Correct allocator
+label versus exact C++ spelling explicitly. Read DEBUG_REFERENCE_SYMBOLS.md for
+criteria, changed-layout counterevidence and reproduction. No Verified promotion.
+
+
+## TASK-0039 - Preserve frontend packet corners and distinct text paths (2026-10-17)
+
+Extend the port-side render contract with optional four positions, UVs and colours. The host
+submits this data directly; it does not reconstruct layout. Retain ordinary rectangle callers.
+Original clipping changes UVs/positions but leaves corner colours unchanged. Keep advance-only
+measurement separate from kerned draw and preserve the helper path's scale-squared glyph width
+and unscaled button advance, even though these differ from conventional typography. Nonzero
+rotated authored quads throw until original matrix/trig is translated. Fractional destination
+sizes remain inherited port projection pending FCR31 and GS/host sampling comparison. This is
+a presentation adapter decision, not a claim that Godot rasterization equals the GS.
+
 ## TASK-0029 — Root defaults and confirmed source directories (2026-10-13)
 
 The user explicitly superseded TASK-0028's unknown-path directory. All former standalone
@@ -307,3 +329,125 @@ Use union bounds for framing/LOD spacing, clone each batch in LOD comparisons an
 wireframe to every draw node. Multi-batch nodes are atomically replaced on async commit
 rather than reusing only a parent and leaving stale children. Original PS2 behavior and
 Verified status are unchanged by this host-only capacity fix.
+
+## D015 - DrivingLab and explicit recovery boundaries (TASK-0038, 2026-10-17)
+
+Add an independent Debug scene using existing deferred viewer/ImGui/F8 routing and the
+shared vehicle renderer. Native session ownership, recording/replay and normalized tool
+input live outside Godot. Keep the floor/camera port-side; no contact force, rest state or
+fixed60-Hz timing is inferred from the fixture. Full native driving remains unavailable
+until its original constructor/control/force/contact/scheduling closure is recovered.
+
+Absolute body/four-wheel publications are separate from the CarViewer preview animator.
+Validate before publishing and reject preview integration in driving-pose mode. Failures
+retain the last completed snapshot and do not advance recording or counters. Input capture,
+F8 and lost focus pause and release controls; resuming is explicit. Existing frontend
+lighting is a bounded visualization context, not claimed race lighting.
+
+Original paused RAM captures may corroborate layouts but cannot establish instruction/frame
+synchronization or native equivalence. Keep raw data ignored, distinguish non-atomic
+wall-clock samples, and leave Verified untouched. The PINE capture tool is read-only.
+
+### D015 continuation: bounded native projections and custom debugger
+
+Keep constructor byte images, drivetrain field projections and solver projections
+explicitly port-side until the original allocation/dispatch graph is complete.
+Preserve untouched bytes and dynamic global inputs rather than inventing object
+defaults. Bind unresolved solver dependencies through throwing interfaces; fixture
+hooks never enter production. Do not install the partial projections as whole-entry
+implementations. In particular, the exact five iterations alone are not a tire model.
+
+The supplied custom PCSX2 debugger permits controlled original execution to owned
+breakpoints. Always pause and remove only owned breakpoints on timeout/failure.
+Do not rely on its PC+4 step implementation for branch/delay-slot equivalence.
+This tooling decision does not replace R0's original ELF/game-data evidence rules
+or promote any function to Verified.
+
+
+### D015 continuation: drivable native fixture and transactional replay
+
+The user accepted completing the synthetic-plane minimum driving loop before original
+numerical equivalence. NativeBackend maps only the authorized SHA-bound ELF load segments
+and original config into port-owned logical memory; it does not execute PS2 machine code.
+Recovered constructor/reset, engine/transmission, tire/contact forces, body derivatives,
+component integration and scheduling now close the supported single-car path. Existing
+whole-class templates remain throwing for untranslated callers; DrivingLab explicitly uses
+the recovered logical-address implementation. No class-wide completeness is implied.
+
+The fixture chooses identity orientation, zero motion, original forward automatic operation,
+geometric wheel/radius ground placement and original Race4 withA758 zero. E-0038-E13 retires
+an earlier erroneous blanket mode4 exclusion: this is the running context; the excluded
+mode4+A758 diagnostic path is distinct. E-0038-E14 anchors footbrake+218 versus handbrake+21C
+to original event strings and writers. Synthetic material1 is the original SKID_ROAD row.
+Plane geometry/camera/input scaling are explicit tool choices, not recovered world behavior.
+
+Each native step uses a candidate Memory copy and commits only finite complete publications.
+Session records elapsed clock values with input, so replay reproduces original scheduling
+quantization independently of render pacing. Host pacing accumulates render intervals to the
+recovered lower bound; recovered001A33F0 still selects/clamps/quantizes dt and the mover
+subdivides. No Godot physics timestep or invented force is introduced.
+
+At unavoidable original drivetrain0/0 DIV.S sites a narrowly scoped port ISA adapter returns
+the signed finite EE saturation bit pattern (E-0038-E12). Host IEEE NaN is not silently fed
+into the original branch. Normal finite divisions retain source operation order. This does
+not claim general EE exceptional arithmetic/flag equivalence. Instruction evidence and
+PC tests establish reconstruction only; nothing is promoted to Verified.
+
+
+### D015 user correction: Test drive is a CarViewer mode
+
+The user explicitly superseded the separate DrivingLab scene: CarViewer now exposes
+Test drive / Return to preview in its existing ImGui window. The same selected car/skin,
+renderer, camera and viewing environment are reused. An embedded RefCounted controller
+owns native session orchestration; there is no second driving scene or renderer. Cached
+reload restores original preview attachment bindings on exit. Preview wheel integration
+is suspended while driving and while restoring the cached model. Existing camera keys
+remain; newly introduced simulation F5/F6/F7 bindings are removed. Run/Pause/Step/Reset
+are panel actions. The legacy drivinglab console command is only a compatibility alias
+for this same CarViewer mode.
+
+E-0038-U01 corrects the host steering sign (A-D and negative stickX) against original
+001A5D60 basis writes and0013B5B0 axis inversion; recovered force/matrix code is unchanged.
+E-0038-W01 corrects the missing render-basis projection after raw001C0D78 wheel publication.
+Preview and driving share the recovered00120EF8 attachment composition, including its
+separate tire/blur versus brake handling. The simulation pose is not patched by a guessed
+half-turn. User-facing controls and visualization remain explicitly port-side.
+
+
+### D015 follow-up: immediate drive entry and per-event input capture
+
+Test drive now starts the native Session immediately on entry. The prior mode entered
+paused and required a second Run click despite presenting itself as a driving entry.
+After explicit Pause/F8/focus loss, resume still requires Run. No new key bindings.
+
+CarViewer keyboard events use console-visible/keyboard-capture checks; mouse events
+retain combined mouse capture for camera isolation. Reusing the mouse-hover predicate
+for keyboard gating had discarded WASD whenever the cursor remained over ImGui. The
+normal Godot Input.parse_input_event path is now covered with W/A/S/D press/release,
+panel hover, actual native process/motion and existing F8/focus/preview restoration tests.
+This correction changes only port-side lifecycle/input, never recovered driving physics.
+
+
+### D015 accepted redesign: direct third-person driving, no manual debug workflow
+
+The user explicitly replaces the earlier Run/Pause/Step/record UI and manual resume rule.
+Test drive validates its first complete native step before activating a rear third-person
+camera and relative mouse capture. Only return/hints/error remain in the mode panel. S is
+footbrake only; Session instrumentation stays internal. Native algorithms and raw/render
+wheel contracts remain untouched. Camera constants are explicit port policy: max(4,1.5L)
+distance, bounds-center target,15degree pitch,60degree FOV,0.15degree/pixel sensitivity,
+5..65degree pitch clamp,1second idle and4/s exponential shortest-angle recenter.
+
+Temporary focus/F8 suspension and terminal native/render errors are distinct states.
+Closing F8/regaining focus auto-resumes with cleared keys and the first elapsed interval
+discarded, including notification-triggered resume. Explicit errors retain the last full
+pose, show the reason and never auto-retry. Mouse intent survives temporary suspension,
+Esc explicitly releases it and world click recaptures. Actual keyboard capture supplies
+zero controls while stepping; mouse capture alone does not own WASD. Camera release no
+longer calls native pause. Preview selection/settings/camera return through the same cached
+renderer. This supersedes all earlier instructions to click Run after focus/F8.
+
+Headless DisplayServer does not establish actual OS mouse capture: the controller tracks
+capture intent separately and applies it to Input.mouse_mode. Headless input/camera tests
+are supplemented by an owned-window SendInput acceptance driver with foreground-PID checks,
+a separate owned focus probe and22 real interactions. Test data/screenshots remain ignored.

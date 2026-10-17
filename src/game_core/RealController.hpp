@@ -49,9 +49,11 @@ public:
     void Sub_0023A4D8();
     // ELF 0x0023A560; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0023a560.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0023A560();
+    // Debug reference: RealController::DoSnapshot(ReplaySnapshot *); E-0041-V01; retail ABI unconfirmed.
+    void DoSnapshot();
     // ELF 0x0023AA50; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0023aa50.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0023AA50();
+    // Debug reference: RealController::Think(float); E-0041-V01; retail ABI unconfirmed.
+    void Think();
 };
 } // namespace hp2::recovered

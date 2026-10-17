@@ -189,3 +189,13 @@ non-spinning matrix. Changes update existing resources and continue while F8 is 
 Disabling resets the static pose; selected speed and switch survive car changes.
 `--wheel-blur` enables it on direct launch. Original contact/damage gates and physics remain
 untranslated. Missing resources fail explicitly; no synthetic blur texture is generated.
+
+## CarViewer Test drive (TASK-0038)
+
+Click **Test drive** to drive the selected car/skin immediately from a rear follow camera.
+W/S accelerate/brake, A/D steer, mouse movement orbits; the camera returns behind after
+idle. Esc releases the cursor, clicking the world recaptures. F8/focus temporarily suspends
+and resumes automatically. The only mode button is **Return to CarViewer**; no Run/Pause
+or simulation function keys. Original native driving stays independent of the tool camera.
+The flat plane uses original material1; original numerical equivalence remains unverified.
+See [DRIVING_LAB.md](DRIVING_LAB.md) for configuration, scope and input/window tests.

@@ -1,0 +1,56 @@
+class_name,elf_address,method,source_identifier,header,source,debug_address,reference_name,evidence_id
+AIEngineSound,0x002118A0,Update,AIEngineSound::Update,src/game_core/AIEngineSound.hpp,src/game_core/AIEngineSound.cpp,0x0020C5B0,"AIEngineSound::Update(float, unsigned short, float)",E-0041-V01
+AIEngineSound,0x00211A80,Mute,AIEngineSound::Mute,src/game_core/AIEngineSound.hpp,src/game_core/AIEngineSound.cpp,0x0020C790,AIEngineSound::Mute(int),E-0041-V01
+AIEngineSound,0x00211D58,DeactivateSound,AIEngineSound::DeactivateSound,src/game_core/AIEngineSound.hpp,src/game_core/AIEngineSound.cpp,0x0020CA68,AIEngineSound::DeactivateSound(void),E-0041-V01
+AIEngineSound,0x00211D60,ActivateSound,AIEngineSound::ActivateSound,src/game_core/AIEngineSound.hpp,src/game_core/AIEngineSound.cpp,0x0020CA70,AIEngineSound::ActivateSound(void),E-0041-V01
+BeltMover,0x00204468,DoSnapshot,BeltMover::DoSnapshot,src/game_core/indep/src/BeltMover.hpp,src/game_core/indep/src/BeltMover.cpp,0x001FF4D8,BeltMover::DoSnapshot(ReplaySnapshot *),E-0041-V01
+BeltMover,0x00204D78,Move,BeltMover::Move,src/game_core/indep/src/BeltMover.hpp,src/game_core/indep/src/BeltMover.cpp,0x001FFDE0,BeltMover::Move(float),E-0041-V01
+ChopperSound,0x00214F30,Update,ChopperSound::Update,src/game_core/ChopperSound.hpp,src/game_core/ChopperSound.cpp,0x0020FB28,"ChopperSound::Update(float, unsigned short, float)",E-0041-V01
+ChopperSound,0x00215000,Mute,ChopperSound::Mute,src/game_core/ChopperSound.hpp,src/game_core/ChopperSound.cpp,0x0020FBF8,ChopperSound::Mute(int),E-0041-V01
+ChopperSound,0x00215028,DeactivateSound,ChopperSound::DeactivateSound,src/game_core/ChopperSound.hpp,src/game_core/ChopperSound.cpp,0x0020FC20,ChopperSound::DeactivateSound(void),E-0041-V01
+ChopperSound,0x00215050,ActivateSound,ChopperSound::ActivateSound,src/game_core/ChopperSound.hpp,src/game_core/ChopperSound.cpp,0x0020FC48,ChopperSound::ActivateSound(void),E-0041-V01
+CopDriver,0x001A2110,Think,CopDriver::Think,src/game_core/port/police/cop_control.hpp,src/game_core/port/police/cop_control.cpp,0x0019F980,CopDriver::Think(float),E-0041-V01
+CopDriver,0x001A2B58,DoSnapshot,CopDriver::DoSnapshot,src/game_core/port/police/cop_control.hpp,src/game_core/port/police/cop_control.cpp,0x001A03B8,CopDriver::DoSnapshot(ReplaySnapshot *),E-0041-V01
+PhysicsCar,0x00137450,DoSnapshot,PhysicsCar::DoSnapshot,src/game_core/PhysicsCar.hpp,src/game_core/PhysicsCar.cpp,0x00137410,PhysicsCar::DoSnapshot(ReplaySnapshot *),E-0041-V01
+PhysicsCar,0x00137788,ComputeAuxiliaries,PhysicsCar::ComputeAuxiliaries,src/game_core/PhysicsCar.hpp,src/game_core/PhysicsCar.cpp,0x00137748,PhysicsCar::ComputeAuxiliaries(void),E-0041-V01
+PhysicsCar,0x00137D90,Move,PhysicsCar::Move,src/game_core/PhysicsCar.hpp,src/game_core/PhysicsCar.cpp,0x00137D18,PhysicsCar::Move(float),E-0041-R01
+PhysicsCar,0x00138E08,ResolveForces,PhysicsCar::ResolveForces,src/game_core/PhysicsCar.hpp,src/game_core/PhysicsCar.cpp,0x00138D90,PhysicsCar::ResolveForces(void),E-0041-V01
+PlayerEngineSound,0x00210400,DeactivateSound,PlayerEngineSound::DeactivateSound,src/game_core/PlayerEngineSound.hpp,src/game_core/PlayerEngineSound.cpp,0x0020B110,PlayerEngineSound::DeactivateSound(void),E-0041-V01
+PlayerEngineSound,0x00210408,ActivateSound,PlayerEngineSound::ActivateSound,src/game_core/PlayerEngineSound.hpp,src/game_core/PlayerEngineSound.cpp,0x0020B118,PlayerEngineSound::ActivateSound(void),E-0041-V01
+PlayerEngineSound,0x00210410,Mute,PlayerEngineSound::Mute,src/game_core/PlayerEngineSound.hpp,src/game_core/PlayerEngineSound.cpp,0x0020B120,PlayerEngineSound::Mute(int),E-0041-V01
+PlayerEngineSound,0x00211390,Update,PlayerEngineSound::Update,src/game_core/PlayerEngineSound.hpp,src/game_core/PlayerEngineSound.cpp,0x0020C0A0,"PlayerEngineSound::Update(float, unsigned short, float)",E-0041-V01
+PlayerTireSound,0x00212E88,DeactivateSound,PlayerTireSound::DeactivateSound,src/game_core/PlayerTireSound.hpp,src/game_core/PlayerTireSound.cpp,0x0020DAD0,PlayerTireSound::DeactivateSound(void),E-0041-V01
+PlayerTireSound,0x00212E90,ActivateSound,PlayerTireSound::ActivateSound,src/game_core/PlayerTireSound.hpp,src/game_core/PlayerTireSound.cpp,0x0020DAD8,PlayerTireSound::ActivateSound(void),E-0041-V01
+PlayerTireSound,0x002134D8,Mute,PlayerTireSound::Mute,src/game_core/PlayerTireSound.hpp,src/game_core/PlayerTireSound.cpp,0x0020E120,PlayerTireSound::Mute(int),E-0041-V01
+PlayerTireSound,0x002135A0,Update,PlayerTireSound::Update,src/game_core/PlayerTireSound.hpp,src/game_core/PlayerTireSound.cpp,0x0020E1E8,"PlayerTireSound::Update(float, unsigned short, float)",E-0041-V01
+PlayerTireSound,0x002149F8,ScaleRoadNoise,PlayerTireSound::ScaleRoadNoise,src/game_core/PlayerTireSound.hpp,src/game_core/PlayerTireSound.cpp,0x0020F600,PlayerTireSound::ScaleRoadNoise(float),E-0041-V01
+PlayerTireSound,0x00214A00,TriggerTireBlowOut,PlayerTireSound::TriggerTireBlowOut,src/game_core/PlayerTireSound.hpp,src/game_core/PlayerTireSound.cpp,0x0020F608,PlayerTireSound::TriggerTireBlowOut(void),E-0041-V01
+RaceResultsScreen,0x001E0838,Scroll,RaceResultsScreen::Scroll,src/game_core/RaceResultsScreen.hpp,src/game_core/RaceResultsScreen.cpp,0x001DCFD0,"RaceResultsScreen::Scroll(ScreenMessage, ScreenCallbackData *)",E-0041-V01
+RaceResultsScreen,0x001E0868,Tick,RaceResultsScreen::Tick,src/game_core/RaceResultsScreen.hpp,src/game_core/RaceResultsScreen.cpp,0x001DD000,"RaceResultsScreen::Tick(ScreenMessage, ScreenCallbackData *)",E-0041-V01
+RealController,0x0023A560,DoSnapshot,RealController::DoSnapshot,src/game_core/RealController.hpp,src/game_core/RealController.cpp,0x002342A8,RealController::DoSnapshot(ReplaySnapshot *),E-0041-V01
+RealController,0x0023AA50,Think,RealController::Think,src/game_core/RealController.hpp,src/game_core/RealController.cpp,0x00234798,RealController::Think(float),E-0041-V01
+RealDriver,0x0013AEB8,DoSnapshot,RealDriver::DoSnapshot,src/game_core/RealDriver.hpp,src/game_core/RealDriver.cpp,0x0013ACC0,RealDriver::DoSnapshot(ReplaySnapshot *),E-0041-V01
+RealDriver,0x0013B080,AddJoyHandlers,RealDriver::AddJoyHandlers,src/game_core/RealDriver.hpp,src/game_core/RealDriver.cpp,0x0013AE88,RealDriver::AddJoyHandlers(void),E-0041-V01
+RealDriver,0x0013B250,RemoveJoyHandlers,RealDriver::RemoveJoyHandlers,src/game_core/RealDriver.hpp,src/game_core/RealDriver.cpp,0x0013B058,RealDriver::RemoveJoyHandlers(void),E-0041-V01
+RealDriver,0x0013B3D0,SetLowGear,RealDriver::SetLowGear,src/game_core/RealDriver.hpp,src/game_core/RealDriver.cpp,0x0013B1D8,RealDriver::SetLowGear(void),E-0041-V01
+RealDriver,0x0013B3F8,Drive,RealDriver::Drive,src/game_core/RealDriver.hpp,src/game_core/RealDriver.cpp,0x0013B200,RealDriver::Drive(float),E-0041-V01
+RealDriver,0x0013C420,StartHonkHorn,RealDriver::StartHonkHorn,src/game_core/RealDriver.hpp,src/game_core/RealDriver.cpp,0x0013C220,RealDriver::StartHonkHorn(void),E-0041-V01
+RealDriver,0x0013C460,StopHonkHorn,RealDriver::StopHonkHorn,src/game_core/RealDriver.hpp,src/game_core/RealDriver.cpp,0x0013C260,RealDriver::StopHonkHorn(void),E-0041-V01
+RealDriver,0x0013CAE0,GetDriverNumber,RealDriver::GetDriverNumber,src/game_core/RealDriver.hpp,src/game_core/RealDriver.cpp,0x0013C8E0,RealDriver::GetDriverNumber(void),E-0041-V01
+RealDriver,0x0013CAF0,SetDesiredSpeed,RealDriver::SetDesiredSpeed,src/game_core/RealDriver.hpp,src/game_core/RealDriver.cpp,0x0013C8F0,"RealDriver::SetDesiredSpeed(float, float, bool)",E-0041-V01
+cDBFileSys,0x0012C938,Service,cDBFileSys::Service,src/game_core/CDBFileSys.hpp,src/game_core/CDBFileSys.cpp,0x0012CA90,"cDBFileSys::Service(int, int)",E-0041-V01
+cDBFileSys,0x0012CCA8,SetState,cDBFileSys::SetState,src/game_core/CDBFileSys.hpp,src/game_core/CDBFileSys.cpp,0x0012CE00,"cDBFileSys::SetState(eFILE_SYS_STATES, void (*)(void *), void *)",E-0041-V01
+cDBFileSys,0x0012CD00,Format,cDBFileSys::Format,src/game_core/CDBFileSys.hpp,src/game_core/CDBFileSys.cpp,0x0012CE58,"cDBFileSys::Format(int, int)",E-0041-V01
+cDBFileSys,0x0012CD78,Unformat,cDBFileSys::Unformat,src/game_core/CDBFileSys.hpp,src/game_core/CDBFileSys.cpp,0x0012CED0,"cDBFileSys::Unformat(int, int)",E-0041-V01
+cDBFileSys,0x0012D220,CheckFreeSpace,cDBFileSys::CheckFreeSpace,src/game_core/CDBFileSys.hpp,src/game_core/CDBFileSys.cpp,0x0012D378,"cDBFileSys::CheckFreeSpace(int, int)",E-0041-V01
+cDBFileSys,0x0012D2A8,GetFreeSpaceOnDevice,cDBFileSys::GetFreeSpaceOnDevice,src/game_core/CDBFileSys.hpp,src/game_core/CDBFileSys.cpp,0x0012D400,cDBFileSys::GetFreeSpaceOnDevice(void),E-0041-V01
+cDBFileSys,0x0012D2E8,GetFileListing,cDBFileSys::GetFileListing,src/game_core/CDBFileSys.hpp,src/game_core/CDBFileSys.cpp,0x0012D440,"cDBFileSys::GetFileListing(int, int)",E-0041-V01
+cDBFileSys,0x0012D3D8,CheckDevice,cDBFileSys::CheckDevice,src/game_core/CDBFileSys.hpp,src/game_core/CDBFileSys.cpp,0x0012D530,cDBFileSys::CheckDevice(void),E-0041-V01
+cDBFileSys,0x0012D518,IsDevicePresent,cDBFileSys::IsDevicePresent,src/game_core/CDBFileSys.hpp,src/game_core/CDBFileSys.cpp,0x0012D670,cDBFileSys::IsDevicePresent(unsigned int),E-0041-V01
+cDBFileSys,0x0012D560,GetCurrentDevice,cDBFileSys::GetCurrentDevice,src/game_core/CDBFileSys.hpp,src/game_core/CDBFileSys.cpp,0x0012D6B8,cDBFileSys::GetCurrentDevice(void),E-0041-V01
+cDBFileSys,0x0012D5F8,GetNextDevice,cDBFileSys::GetNextDevice,src/game_core/CDBFileSys.hpp,src/game_core/CDBFileSys.cpp,0x0012D750,cDBFileSys::GetNextDevice(void),E-0041-V01
+cDBFileSys,0x0012D690,GetPrevDevice,cDBFileSys::GetPrevDevice,src/game_core/CDBFileSys.hpp,src/game_core/CDBFileSys.cpp,0x0012D7E8,cDBFileSys::GetPrevDevice(void),E-0041-V01
+cDBFileSys,0x0012DDC0,SetLastError,cDBFileSys::SetLastError,src/game_core/CDBFileSys.hpp,src/game_core/CDBFileSys.cpp,0x0012DF10,cDBFileSys::SetLastError(void),E-0041-V01
+cDBFileSys,0x0012E190,GetFileName,cDBFileSys::GetFileName,src/game_core/CDBFileSys.hpp,src/game_core/CDBFileSys.cpp,0x0012E2E0,cDBFileSys::GetFileName(int),E-0041-V01
+cDBFileSys,0x0012E1A8,GetFileCount,cDBFileSys::GetFileCount,src/game_core/CDBFileSys.hpp,src/game_core/CDBFileSys.cpp,0x0012E2F8,cDBFileSys::GetFileCount(void),E-0041-V01
+tCustomizeHUDScreen,0x001F46D8,HandleEvent,tCustomizeHUDScreen::HandleEvent,src/game_core/tCustomizeHUDScreen.hpp,src/game_core/tCustomizeHUDScreen.cpp,0x001F08E0,"tCustomizeHUDScreen::HandleEvent(int, ScreenCallbackData *)",E-0041-V01

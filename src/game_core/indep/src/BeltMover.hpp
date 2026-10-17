@@ -21,9 +21,11 @@ public:
     void Sub_002043A0();
     // ELF 0x00204468; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00204468.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00204468();
+    // Debug reference: BeltMover::DoSnapshot(ReplaySnapshot *); E-0041-V01; retail ABI unconfirmed.
+    void DoSnapshot();
     // ELF 0x00204D78; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00204d78.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00204D78();
+    // Debug reference: BeltMover::Move(float); E-0041-V01; retail ABI unconfirmed.
+    void Move();
 };
 } // namespace hp2::recovered

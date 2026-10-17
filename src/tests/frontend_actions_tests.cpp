@@ -71,7 +71,7 @@ int main() {
         // "Language Options": +0x08 == 1, so no 00183830 reset. MENUITEM_1..6 -> 0..5, and each
         // one applies the locale before the manager pop.
         for (std::uint32_t i = 0; i < 6; ++i) {
-            hp2::frontend::Type_001F1A78 instance; instance.field_0x08 = 1;
+            hp2::frontend::LanguageOptionsScreenBase instance; instance.field_0x08 = 1;
             std::int32_t language_global = 0, dat_00331A60 = 0;
             calls.clear(); loader_target = &language_global;
             hp2::frontend::Sub_001F1B08(1, 0x52E039F3 + i, instance, language_global,
@@ -83,7 +83,7 @@ int main() {
                               {0x0021E0D0, i}, {0x00170320, 1}});
         }
         {   // "Language Options Pre FE": +0x08 == 0 reaches the untranslated 00183830 reset.
-            hp2::frontend::Type_001F1A78 instance; instance.field_0x08 = 0;
+            hp2::frontend::LanguageOptionsScreenBase instance; instance.field_0x08 = 0;
             std::int32_t language_global = 0, dat_00331A60 = 0;
             calls.clear(); threw = false; loader_target = &language_global;
             try {
@@ -94,7 +94,7 @@ int main() {
                                         {0x0021E0D0, 1}});
         }
         {   // MENUITEM_7: writes DAT_00331A60 and pops, with no locale change.
-            hp2::frontend::Type_001F1A78 instance; instance.field_0x08 = 1;
+            hp2::frontend::LanguageOptionsScreenBase instance; instance.field_0x08 = 1;
             std::int32_t language_global = 3, dat_00331A60 = 0;
             calls.clear(); loader_target = nullptr;
             hp2::frontend::Sub_001F1B08(1, 0x52E039F9, instance, language_global,
@@ -104,7 +104,7 @@ int main() {
         }
         {   // Out-of-range hashes and non-activation messages leave everything alone, and an
             // unset language (-1) blocks the pop after the loader ran.
-            hp2::frontend::Type_001F1A78 instance; instance.field_0x08 = 1;
+            hp2::frontend::LanguageOptionsScreenBase instance; instance.field_0x08 = 1;
             std::int32_t language_global = 0, dat_00331A60 = 0;
             calls.clear(); loader_target = nullptr;
             hp2::frontend::Sub_001F1B08(1, 0x52E039F2, instance, language_global,
@@ -124,7 +124,7 @@ int main() {
             check(calls == std::vector<std::pair<std::uint32_t, std::uint32_t>>{{0x0021E0D0, 2}});
         }
         {   // A missing service is a loud failure, never a dropped locale change.
-            hp2::frontend::Type_001F1A78 instance;
+            hp2::frontend::LanguageOptionsScreenBase instance;
             std::int32_t language_global = 0, dat_00331A60 = 0;
             threw = false;
             try {
@@ -136,7 +136,7 @@ int main() {
         // 001F1A78 construction: +0x00 seeded from DAT_0031C1C8, -1 clamped to 0.
         {
             hp2::frontend::FeScreen screen;
-            hp2::frontend::Type_001F1A78 instance;
+            hp2::frontend::LanguageOptionsScreenBase instance;
             hp2::frontend::Construct_001F1A78(instance, screen, nullptr, 4, 1);
             check(instance.field_0x00 == 4 && instance.field_0x08 == 1);
             hp2::frontend::Construct_001F1A78(instance, screen, nullptr, -1, 0);

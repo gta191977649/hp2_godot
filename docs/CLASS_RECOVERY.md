@@ -1,5 +1,7 @@
 # TASK-0027 — Recovering the binary's classes and their member functions
 
+> TASK-0041 adds an authorized symbol-rich PS2 reference. Its original type names and retail table/code correspondence supersede the retail-only naming limit below. Allocation labels are not always exact C++ class spellings: CDBFileSys is cDBFileSys in the named reference primary table. See [DEBUG_REFERENCE_SYMBOLS.md](DEBUG_REFERENCE_SYMBOLS.md).
+
 > TASK-0028 correction: the same diagnostic can name a prerequisite constructor or a field
 > expression. The detailed E-0019-N03 mapping, freshly checked in E-0028-C04, identifies
 > 002584B0 as `SlotPoolManager::NewSlotPool`, not `SlotPoolManager::SlotPoolManager`;

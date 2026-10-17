@@ -19,8 +19,9 @@ void tCustomizeHUDScreen::Sub_001F4178() {
 }
 
 // ELF 0x001F46D8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001f46d8.md.
-void tCustomizeHUDScreen::Sub_001F46D8() {
-    hp2::not_implemented("0x001F46D8", "tCustomizeHUDScreen::Sub_001F46D8 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x001F08E0: tCustomizeHUDScreen::HandleEvent(int, ScreenCallbackData *); retail 0x001F46D8.
+void tCustomizeHUDScreen::HandleEvent() {
+    hp2::not_implemented("0x001F46D8", "tCustomizeHUDScreen::HandleEvent (signature and full body unresolved)");
 }
 
 // ELF 0x001F4E68; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f4e68.md.

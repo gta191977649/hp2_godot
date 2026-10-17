@@ -1,0 +1,941 @@
+retail_address,debug_address,reference_name,mangled_name,basis,evidence_id
+0x00100A50,0x00100A60,"TextureInfo::GetScroll(float, float, int, float)",GetScroll__11TextureInfoffif,supported_exact_leaf,E-0041-M01
+0x00100AF8,0x00100B08,TextureInfo::GetAlphaChannel(unsigned char *),GetAlphaChannel__11TextureInfoPUc,supported_exact_leaf,E-0041-M01
+0x00100B98,0x00100BA8,TextureInfo::GetColourChannel(unsigned char *),GetColourChannel__11TextureInfoPUc,supported_exact_leaf,E-0041-M01
+0x00100BF0,0x00100C00,TextureInfo::Print(void),Print__11TextureInfo,supported_exact_leaf,E-0041-M01
+0x001010A0,0x001010A0,VifController::Reset(void),Reset__13VifController,supported_exact_leaf,E-0041-M01
+0x00101508,0x00101508,GetDmaTransferAddress(DmaTag *),GetDmaTransferAddress__FP6DmaTag,supported_exact_leaf,E-0041-M01
+0x00101670,0x00101670,GetNextDmaTag(DmaTag *),GetNextDmaTag__FP6DmaTag,supported_exact_leaf,E-0041-M01
+0x00101948,0x00101948,DMAC::DumpGifTag(void *),DumpGifTag__4DMACPv,supported_exact_leaf,E-0041-M01
+0x00101BB8,0x00101BB8,DMAC::dmaTransferAddress(sDmaSrcTag *),dmaTransferAddress__4DMACP10sDmaSrcTag,supported_exact_leaf,E-0041-M01
+0x00102028,0x00102028,"DMAC::FastSync(DmaChannel volatile *, unsigned int)",FastSync__4DMACPV10DmaChannelUi,supported_exact_leaf,E-0041-M01
+0x00103520,0x001033E0,"bDataHash(char const *, int)",bDataHash__FPCci,supported_exact_leaf,E-0041-M01
+0x00103FF0,0x00103E90,"eSolid::FixStripEntryTable(unsigned char *, int, unsigned char *)",FixStripEntryTable__6eSolidPUciT1,supported_exact_leaf,E-0041-M01
+0x00104070,0x00103F10,"eSolid::SetEnvironmentMapping(unsigned int, int)",SetEnvironmentMapping__6eSolidUii,supported_exact_leaf,E-0041-M01
+0x001047E0,0x00104680,eDmaChain::Init(void),Init__9eDmaChain,supported_exact_leaf,E-0041-M01
+0x001075B8,0x00107410,"eView::GetPixelSize(float, float)",GetPixelSize__5eViewff,supported_exact_leaf,E-0041-M01
+0x001076F8,0x00107550,"eView::GetPixelSize(bVector3 const *, bVector3 const *)",GetPixelSize__5eViewPC8bVector3T1,supported_exact_leaf,E-0041-M01
+0x00109260,0x00109080,"eTextureDownloader::Init(int, int)",Init__18eTextureDownloaderii,supported_exact_leaf,E-0041-M01
+0x0010BD38,0x0010C130,"eSolid::GetBoundingBox(bVector3 *, bVector3 *)",GetBoundingBox__6eSolidP8bVector3T1,supported_exact_leaf,E-0041-M01
+0x0010BE88,0x0010C280,Log2(float),Log2__Ff,supported_exact_leaf,E-0041-M01
+0x0010C4B0,0x0010C8A8,"eSolid::ReplaceLightMaterial(unsigned int, eLightMaterial *)",ReplaceLightMaterial__6eSolidUiP14eLightMaterial,supported_exact_leaf,E-0041-M01
+0x0010C5B0,0x0010C9A8,eModel::UnInit(void),UnInit__6eModel,supported_exact_leaf,E-0041-M01
+0x0010C878,0x0010CC70,eModel::ApplyReplacementTextureTable(void),ApplyReplacementTextureTable__6eModel,supported_exact_leaf,E-0041-M01
+0x0010CB00,0x0010CEF8,eModel::IsLit(void),IsLit__6eModel,supported_exact_leaf,E-0041-M01
+0x0010CCB0,0x0010D0A8,"ClassifyAABB(bVector4 const *, bVector4 const *, bMatrix4 const *)",ClassifyAABB__FPC8bVector4T0PC8bMatrix4,supported_exact_leaf,E-0041-M01
+0x0010F968,0x0010FD48,ePoly::ePoly(void),__5ePoly,supported_exact_leaf,E-0041-M01
+0x00110C60,0x00111068,eTransferRectQueue::eTransferRectQueue(void),__18eTransferRectQueue,supported_exact_leaf,E-0041-M01
+0x00110CD8,0x001110E0,eTransferRectQueue::GetTransferRect(void),GetTransferRect__18eTransferRectQueue,supported_exact_leaf,E-0041-M01
+0x00114BB0,0x00114FC0,eSolid::eSolid(eSolid const &),__6eSolidRC6eSolid,supported_exact_leaf,E-0041-M01
+0x001179B0,0x00117D78,"ComputeReflectionST(bVector3 *, bVector2 *)",ComputeReflectionST__FP8bVector3P8bVector2,supported_exact_leaf,E-0041-M01
+0x001189F8,0x00118DC0,"RemapLinearIntoClut8(unsigned int *, unsigned int *)",RemapLinearIntoClut8__FPUiT0,supported_exact_leaf,E-0041-M01
+0x0011B1B0,0x0011B558,eIdentity(bMatrix4 *),eIdentity__FP8bMatrix4,supported_exact_leaf,E-0041-M01
+0x0011B248,0x0011B5F0,"eMulMatrix(bMatrix4 *, bMatrix4 *, bMatrix4 *)",eMulMatrix__FP8bMatrix4T0T0,supported_exact_leaf,E-0041-M01
+0x0011B350,0x0011B6F8,"eRotTransPers(bVector4 *, bMatrix4 *, bVector4 *)",eRotTransPers__FP8bVector4P8bMatrix4T0,supported_exact_leaf,E-0041-M01
+0x0011B3B8,0x0011B760,"eGetClipFlags(bVector4 *, bMatrix4 *)",eGetClipFlags__FP8bVector4P8bMatrix4,supported_exact_leaf,E-0041-M01
+0x0011BAD0,0x0011BE48,"eCreateTranslationMatrix(bMatrix4 *, bVector3 &)",eCreateTranslationMatrix__FP8bMatrix4R8bVector3,supported_exact_leaf,E-0041-M01
+0x0011BCA8,0x0011C020,"eVectorStarMatrix(bMatrix4 *, bVector3 *, bMatrix4 *)",eVectorStarMatrix__FP8bMatrix4P8bVector3T0,supported_exact_leaf,E-0041-M01
+0x0011BD90,0x0011C108,"eOrthonormalizeMatrix(bMatrix4 *, bMatrix4 *)",eOrthonormalizeMatrix__FP8bMatrix4T0,supported_exact_leaf,E-0041-M01
+0x0011BF98,0x0011C310,"eStripDataE::GetElementXYZ(int, float **, float **, float **)",GetElementXYZ__11eStripDataEiPPfT2T2,independently_reviewed_bridge,E-0041-R13
+0x0011C090,0x0011C408,"eStripDataE::GetElementST0(int, float **, float **)",GetElementST0__11eStripDataEiPPfT2,independently_reviewed_bridge,E-0041-R14
+0x0011C180,0x0011C4F8,"eStripDataE::GetElementRGBA(int, unsigned short **)",GetElementRGBA__11eStripDataEiPPUs,independently_reviewed_bridge,E-0041-R15
+0x0011C248,0x0011C5C0,eStripData::GetNumVerts(void),GetNumVerts__10eStripData,independently_reviewed_bridge,E-0041-R16
+0x0011C268,0x0011C5E0,"eStripData::GetST0(int, float *, float *)",GetST0__10eStripDataiPfT2,independently_reviewed_bridge,E-0041-R17
+0x0011C2B8,0x0011C630,"eStripData::GetXYZ(int, float *, float *, float *)",GetXYZ__10eStripDataiPfT2T2,independently_reviewed_bridge,E-0041-R18
+0x0011D3B0,0x0011D618,CanRumble(unsigned char),CanRumble__FUc,supported_exact_leaf,E-0041-M01
+0x0011D430,0x0011D658,CanJoystickBeCalibrated(unsigned char),CanJoystickBeCalibrated__FUc,supported_exact_leaf,E-0041-M01
+0x001207A8,0x001209A0,"cmpl(void const *, void const *)",cmpl__FPCvT0,supported_exact_leaf,E-0041-M01
+0x00126088,0x001261E0,fDeterminant(bMatrix4 *),fDeterminant__FP8bMatrix4,supported_exact_leaf,E-0041-M01
+0x00127418,0x00127570,AcidEffectSystem::AcidEffectSystem(void),__16AcidEffectSystem,supported_exact_leaf,E-0041-M01
+0x00127688,0x001277E0,AcidEffectSystem::RemoveAutoEmitter(AcidEmitter *),RemoveAutoEmitter__16AcidEffectSystemP11AcidEmitter,supported_exact_leaf,E-0041-M01
+0x00129880,0x001299D8,"RainSplash::Recalc(float, bVector3 *)",Recalc__10RainSplashfP8bVector3,supported_exact_leaf,E-0041-M01
+0x00129F70,0x0012A0C8,_Translate__FR8bMatrix4RC8bMatrix4RC8bVector3,_Translate__FR8bMatrix4RC8bMatrix4RC8bVector3,supported_exact_leaf,E-0041-M01
+0x0012AE28,0x0012AF80,cMC::MCCloseResult(int),MCCloseResult__3cMCi,supported_exact_leaf,E-0041-M01
+0x0012B0F0,0x0012B248,cMC::MCMakeDirResult(int),MCMakeDirResult__3cMCi,supported_exact_leaf,E-0041-M01
+0x0012B3B8,0x0012B510,WheelDevice::WheelDevice(int),__11WheelDevicei,supported_exact_leaf,E-0041-M01
+0x0012BC68,0x0012BDC0,WheelDevice::RecalculateDeviceNumber(void),RecalculateDeviceNumber__11WheelDevice,supported_exact_leaf,E-0041-M01
+0x0012C138,0x0012C290,CanDoForce(unsigned char),CanDoForce__FUc,supported_exact_leaf,E-0041-M01
+0x0012C938,0x0012CA90,"cDBFileSys::Service(int, int)",Service__10cDBFileSysii,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012CCA8,0x0012CE00,"cDBFileSys::SetState(eFILE_SYS_STATES, void (*)(void *), void *)",SetState__10cDBFileSys16eFILE_SYS_STATESPFPv_vPv,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012CD00,0x0012CE58,"cDBFileSys::Format(int, int)",Format__10cDBFileSysii,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012CD78,0x0012CED0,"cDBFileSys::Unformat(int, int)",Unformat__10cDBFileSysii,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012D1A0,0x0012D2F8,cDBFileSys::CalculateFreeSpaceRequired(int),CalculateFreeSpaceRequired__10cDBFileSysi,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012D1E0,0x0012D338,cDBFileSys::CalculateFreeSpaceRequired(eFILE_TYPE),CalculateFreeSpaceRequired__10cDBFileSys10eFILE_TYPE,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012D220,0x0012D378,"cDBFileSys::CheckFreeSpace(int, int)",CheckFreeSpace__10cDBFileSysii,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012D2A8,0x0012D400,cDBFileSys::GetFreeSpaceOnDevice(void),GetFreeSpaceOnDevice__10cDBFileSys,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012D2E8,0x0012D440,"cDBFileSys::GetFileListing(int, int)",GetFileListing__10cDBFileSysii,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012D3D8,0x0012D530,cDBFileSys::CheckDevice(void),CheckDevice__10cDBFileSys,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012D518,0x0012D670,cDBFileSys::IsDevicePresent(unsigned int),IsDevicePresent__10cDBFileSysUi,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012D560,0x0012D6B8,cDBFileSys::GetCurrentDevice(void),GetCurrentDevice__10cDBFileSys,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012D5F8,0x0012D750,cDBFileSys::GetNextDevice(void),GetNextDevice__10cDBFileSys,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012D690,0x0012D7E8,cDBFileSys::GetPrevDevice(void),GetPrevDevice__10cDBFileSys,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012DDC0,0x0012DF10,cDBFileSys::SetLastError(void),SetLastError__10cDBFileSys,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E0F0,0x0012E240,cDBFileSys::~cDBFileSys(void),_$_10cDBFileSys,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E190,0x0012E2E0,cDBFileSys::GetFileName(int),GetFileName__10cDBFileSysi,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E1A8,0x0012E2F8,cDBFileSys::GetFileCount(void),GetFileCount__10cDBFileSys,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E1B8,0x0012E308,cDBFilesBase::SetLastError(void),SetLastError__12cDBFilesBase,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E1C0,0x0012E310,cDBFilesBase::GetState(void),GetState__12cDBFilesBase,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E1C8,0x0012E318,"cDBFilesBase::SetState(eFILE_SYS_STATES, void (*)(void *), void *)",SetState__12cDBFilesBase16eFILE_SYS_STATESPFPv_vPv,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E1F0,0x0012E340,cDBFilesBase::GetFreeSpaceOnDevice(void),GetFreeSpaceOnDevice__12cDBFilesBase,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E1F8,0x0012E348,cDBFilesBase::GetMaxDeviceSupported(void),GetMaxDeviceSupported__12cDBFilesBase,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E200,0x0012E350,cDBFilesBase::GetPrevDevice(void),GetPrevDevice__12cDBFilesBase,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E208,0x0012E358,cDBFilesBase::GetNextDevice(void),GetNextDevice__12cDBFilesBase,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E210,0x0012E360,cDBFilesBase::GetCurrentDevice(void),GetCurrentDevice__12cDBFilesBase,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E218,0x0012E368,cDBFilesBase::IsDevicePresent(unsigned int),IsDevicePresent__12cDBFilesBaseUi,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E220,0x0012E370,cDBFilesBase::CheckDevice(void),CheckDevice__12cDBFilesBase,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E228,0x0012E378,"cDBFilesBase::GetFileName(char *, unsigned int)",GetFileName__12cDBFilesBasePcUi,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E230,0x0012E380,cDBFilesBase::GetFileName(int),GetFileName__12cDBFilesBasei,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E238,0x0012E388,cDBFilesBase::GetFileCount(void),GetFileCount__12cDBFilesBase,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E240,0x0012E390,"cDBFilesBase::GetFileListing(int, int)",GetFileListing__12cDBFilesBaseii,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E248,0x0012E398,"cDBFilesBase::GetDeviceName(unsigned int, char *)",GetDeviceName__12cDBFilesBaseUiPc,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E250,0x0012E3A0,"cDBFilesBase::CheckFreeSpace(int, int)",CheckFreeSpace__12cDBFilesBaseii,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E258,0x0012E3A8,cDBFilesBase::CalculateFreeSpaceRequired(int),CalculateFreeSpaceRequired__12cDBFilesBasei,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E260,0x0012E3B0,cDBFilesBase::CalculateFreeSpaceRequired(eFILE_TYPE),CalculateFreeSpaceRequired__12cDBFilesBase10eFILE_TYPE,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E268,0x0012E3B8,cDBFilesBase::SetFileIndex(unsigned int),SetFileIndex__12cDBFilesBaseUi,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E270,0x0012E3C0,"cDBFilesBase::SetFileData(char *, void *, int)",SetFileData__12cDBFilesBasePcPvi,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E2B8,0x0012E408,"cDBFilesBase::Unformat(int, int)",Unformat__12cDBFilesBaseii,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E2C0,0x0012E410,"cDBFilesBase::Format(int, int)",Format__12cDBFilesBaseii,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E2C8,0x0012E418,"cDBFilesBase::Service(int, int)",Service__12cDBFilesBaseii,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0012E2D0,0x0012E420,cDBFilesBase::~cDBFilesBase(void),_$_12cDBFilesBase,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001309F0,0x00130B38,CarMover::DoSnapshot(ReplaySnapshot *),DoSnapshot__8CarMoverP14ReplaySnapshot,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001309F8,0x00130B40,NullMover::Move(float),Move__9NullMoverf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001315F8,0x001316D8,Car::SetFrictionBoost(float),SetFrictionBoost__3Carf,supported_exact_leaf,E-0041-M01
+0x00132960,0x00132A10,Car::CalculateDebugChecksum(void),CalculateDebugChecksum__3Car,supported_exact_leaf,E-0041-M01
+0x00134DB8,0x00134E10,Car::GetWheelTraction(void),GetWheelTraction__3Car,supported_exact_leaf,E-0041-M01
+0x00134E00,0x00134E58,Car::GetWheelsOnGround(void),GetWheelsOnGround__3Car,supported_exact_leaf,E-0041-M01
+0x00136AF8,0x00136AA8,NullMover::~NullMover(void),_$_9NullMover,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00136C00,0x00136BB0,CarDriver::GetSteerToPoint(void),GetSteerToPoint__9CarDriver,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00136C08,0x00136BB8,CarDriver::SetPhysicsMode(int),SetPhysicsMode__9CarDriveri,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00136C10,0x00136BC0,CarDriver::GetDesiredTimeToSpeed(void),GetDesiredTimeToSpeed__9CarDriver,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00136C20,0x00136BD0,CarDriver::GetDesiredSpeed(void),GetDesiredSpeed__9CarDriver,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00136C30,0x00136BE0,CarDriver::ClearSteeringMemory(void),ClearSteeringMemory__9CarDriver,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00136C38,0x00136BE8,CarDriver::ZeroSteeringMemory(void),ZeroSteeringMemory__9CarDriver,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00136C40,0x00136BF0,CarDriver::MaxSpeedToTarget(DriveTarget *),MaxSpeedToTarget__9CarDriverP11DriveTarget,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00136C50,0x00136C00,CarDriver::IsHonking(void),IsHonking__9CarDriver,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00136C68,0x00136C18,CarDriver::SetSteerToPoint(bVector2 *),SetSteerToPoint__9CarDriverP8bVector2,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00136C70,0x00136C20,CarDriver::SetTarget(DriveTarget *),SetTarget__9CarDriverP11DriveTarget,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00137450,0x00137410,PhysicsCar::DoSnapshot(ReplaySnapshot *),DoSnapshot__10PhysicsCarP14ReplaySnapshot,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00137708,0x001376C8,PhysicsCar::~PhysicsCar(void),_$_10PhysicsCar,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00137788,0x00137748,PhysicsCar::ComputeAuxiliaries(void),ComputeAuxiliaries__10PhysicsCar,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00137D90,0x00137D18,PhysicsCar::Move(float),Move__10PhysicsCarf,independently_reviewed_bridge,E-0041-R01
+0x00138E08,0x00138D90,PhysicsCar::ResolveForces(void),ResolveForces__10PhysicsCar,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0013AE58,0x0013AC60,RealDriver::~RealDriver(void),_$_10RealDriver,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0013AEB8,0x0013ACC0,RealDriver::DoSnapshot(ReplaySnapshot *),DoSnapshot__10RealDriverP14ReplaySnapshot,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0013B080,0x0013AE88,RealDriver::AddJoyHandlers(void),AddJoyHandlers__10RealDriver,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0013B250,0x0013B058,RealDriver::RemoveJoyHandlers(void),RemoveJoyHandlers__10RealDriver,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0013B390,0x0013B198,RealDriver::SetManualTransmission(int),SetManualTransmission__10RealDriveri,supported_exact_leaf,E-0041-M01
+0x0013B3D0,0x0013B1D8,RealDriver::SetLowGear(void),SetLowGear__10RealDriver,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0013B3F8,0x0013B200,RealDriver::Drive(float),Drive__10RealDriverf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0013B560,0x0013B368,RealDriver::ResetJoyValues(void),ResetJoyValues__10RealDriver,supported_exact_leaf,E-0041-M01
+0x0013C420,0x0013C220,RealDriver::StartHonkHorn(void),StartHonkHorn__10RealDriver,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0013C460,0x0013C260,RealDriver::StopHonkHorn(void),StopHonkHorn__10RealDriver,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0013CAE0,0x0013C8E0,RealDriver::GetDriverNumber(void),GetDriverNumber__10RealDriver,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0013CAF0,0x0013C8F0,"RealDriver::SetDesiredSpeed(float, float, bool)",SetDesiredSpeed__10RealDriverffb,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0013CD68,0x0013CB68,"ReplaySnapshot::GetChecksum(void *, int, int)",GetChecksum__14ReplaySnapshotPvii,supported_exact_leaf,E-0041-M01
+0x0013CE78,0x0013CC78,"ReplaySnapshot::ReadData(void *, int, int, int)",ReadData__14ReplaySnapshotPviii,supported_exact_leaf,E-0041-M01
+0x0013EE08,0x0013EBF8,DemoModeReplay::DemoModeReplay(void),__14DemoModeReplay,supported_exact_leaf,E-0041-M01
+0x0013EE58,0x0013EC48,DemoModeReplay::Loader(bChunk *),Loader__14DemoModeReplayP6bChunk,supported_exact_leaf,E-0041-M01
+0x0013FF60,0x0013FD50,next_power_of_2(unsigned int),next_power_of_2__FUi,supported_exact_leaf,E-0041-M01
+0x00140098,0x0013FE88,"Font::GetKerning(int, tTTGlyph *)",GetKerning__4FontiP8tTTGlyph,supported_exact_leaf,E-0041-M01
+0x001401D8,0x0013FFC8,Font::GetWidestCharacter(char const *),GetWidestCharacter__4FontPCc,supported_exact_leaf,E-0041-M01
+0x001407D0,0x001405C0,FlailerObjectChunk::SetScaleX(float),SetScaleX__18FlailerObjectChunkf,supported_exact_leaf,E-0041-M01
+0x001407F8,0x001405E8,FlailerObjectChunk::SetScaleY(float),SetScaleY__18FlailerObjectChunkf,supported_exact_leaf,E-0041-M01
+0x00140A20,0x00140810,FlailerObjectChunk::SetTopLeftX(float),SetTopLeftX__18FlailerObjectChunkf,supported_exact_leaf,E-0041-M01
+0x00140A48,0x00140838,FlailerObjectChunk::SetTopLeftY(float),SetTopLeftY__18FlailerObjectChunkf,supported_exact_leaf,E-0041-M01
+0x00140CA0,0x00140A90,FlailerTextChunk::SetColor(unsigned int),SetColor__16FlailerTextChunkUi,supported_exact_leaf,E-0041-M01
+0x00140ED0,0x00140CC0,FlailerTextChunk::SetAlpha(int),SetAlpha__16FlailerTextChunki,supported_exact_leaf,E-0041-M01
+0x001411D8,0x00140FC8,"FlailerBitmapChunk::SetAlpha(int, int)",SetAlpha__18FlailerBitmapChunkii,supported_exact_leaf,E-0041-M01
+0x00141258,0x00141048,FlailerBitmapChunk::SetRotation(float),SetRotation__18FlailerBitmapChunkf,supported_exact_leaf,E-0041-M01
+0x00141288,0x00141078,FlailerBitmapChunk::SetColor(unsigned int),SetColor__18FlailerBitmapChunkUi,supported_exact_leaf,E-0041-M01
+0x00141808,0x001415F8,"MaybeClipPoly(ePoly *, bVector2 *, bVector2 *)",MaybeClipPoly__FP5ePolyP8bVector2T1,supported_exact_leaf,E-0041-M01
+0x00141A10,0x00141800,"FlailerTextDistanceToNextChar(char *, char, Font *)",FlailerTextDistanceToNextChar__FPccP4Font,supported_exact_leaf,E-0041-M01
+0x00141DB0,0x00141BA0,IsHelpCharacter(unsigned char),IsHelpCharacter__FUc,supported_exact_leaf,E-0041-M01
+0x00143470,0x00143260,"FindFlailerObject(bTList<FlailerObjectChunk> *, unsigned int)",FindFlailerObject__FPt6bTList1Z18FlailerObjectChunkUi,supported_exact_leaf,E-0041-M01
+0x00144E28,0x00144C18,GetStringWidth__FPcP4Fontf,GetStringWidth__FPcP4Fontf,supported_exact_leaf,E-0041-M01
+0x001459E8,0x001457D8,GetEPolyChecksum(ePoly *),GetEPolyChecksum__FP5ePoly,supported_exact_leaf,E-0041-M01
+0x00145AF0,0x001458E0,FlailerRenderManager::FlailerRenderManager(void),__20FlailerRenderManager,supported_exact_leaf,E-0041-M01
+0x00145CF8,0x00145AE8,FlailerRenderManager::IsScreenVisible(unsigned int),IsScreenVisible__20FlailerRenderManagerUi,supported_exact_leaf,E-0041-M01
+0x00146AE8,0x001468D8,"TimeAroundTrackTable::GetTimeTableEntry(float, float *)",GetTimeTableEntry__20TimeAroundTrackTablefPf,supported_exact_leaf,E-0041-M01
+0x00148218,0x00148020,Race::SortRacingCarsByLeadership(void),SortRacingCarsByLeadership__4Race,supported_exact_leaf,E-0041-M01
+0x001491C0,0x00148F98,Race::GetFinisher(int),GetFinisher__4Racei,supported_exact_leaf,E-0041-M01
+0x001493B8,0x00149230,RacingCar::RacingCar(void),__9RacingCar,supported_exact_leaf,E-0041-M01
+0x0014D338,0x0014D028,World::BuildCarTable(void),BuildCarTable__5World,supported_exact_leaf,E-0041-M01
+0x0014D508,0x0014D1F8,World::GetCarByNumber(int),GetCarByNumber__5Worldi,supported_exact_leaf,E-0041-M01
+0x0014D638,0x0014D328,World::ResetTimeScale(void),ResetTimeScale__5World,supported_exact_leaf,E-0041-M01
+0x0014E3E8,0x0014E0D0,World::GetDistanceToClosestPlayer(bVector2 const *),GetDistanceToClosestPlayer__5WorldPC8bVector2,supported_exact_leaf,E-0041-M01
+0x0014E440,0x0014E128,World::GetDistanceToClosestPlayer(bVector3 const *),GetDistanceToClosestPlayer__5WorldPC8bVector3,supported_exact_leaf,E-0041-M01
+0x0014F340,0x0014EF90,VisibleZone::FindIndexTo(int),FindIndexTo__11VisibleZonei,supported_exact_leaf,E-0041-M01
+0x0014F8E8,0x0014F538,"IsInTable(short *, int, int)",IsInTable__FPsii,supported_exact_leaf,E-0041-M01
+0x001517D8,0x00151428,"TrackPolygon::PointInShaft(bVector3 *, float *)",PointInShaft__12TrackPolygonP8bVector3Pf,supported_exact_leaf,E-0041-M01
+0x00152B10,0x00152760,TopologyTree::TopologyTree(void),__12TopologyTree,supported_exact_leaf,E-0041-M01
+0x00152C10,0x00152860,TopologyTree::Loader(bChunk *),Loader__12TopologyTreeP6bChunk,supported_exact_leaf,E-0041-M01
+0x00152D30,0x00152980,TopologyTree::Unloader(bChunk *),Unloader__12TopologyTreeP6bChunk,supported_exact_leaf,E-0041-M01
+0x00152DB0,0x00152A00,TopologyTree::GetSquareCorner(float),GetSquareCorner__12TopologyTreef,supported_exact_leaf,E-0041-M01
+0x00152E08,0x00152A58,"TopologyTree::GetSquare(float, float, int)",GetSquare__12TopologyTreeffi,supported_exact_leaf,E-0041-M01
+0x00152F38,0x00152B88,"TopologyTree::GetIntersectingPolygons(TopologyTreePolygon **, int, TopologyTreeSquare *, bVector2 const *, bVector2 const *)",GetIntersectingPolygons__12TopologyTreePP19TopologyTreePolygoniP18TopologyTreeSquarePC8bVector2T4,supported_exact_leaf,E-0041-M01
+0x00153A00,0x00153650,"QueuedJoystickEvents::AddEvent(int, unsigned short, EventNode *)",AddEvent__20QueuedJoystickEventsiUsP9EventNode,supported_exact_leaf,E-0041-M01
+0x00153A50,0x001536A0,"QueuedJoystickEvents::RemoveEvent(int, JoyEvent)",RemoveEvent__20QueuedJoystickEventsi8JoyEvent,supported_exact_leaf,E-0041-M01
+0x00153C20,0x00153870,Joystick::FindEventNode(JoyEvent),FindEventNode__8Joystick8JoyEvent,supported_exact_leaf,E-0041-M01
+0x00153E20,0x00153A70,"GetLoggedJoystickEvent(int, QueuedJoystickEvents &)",GetLoggedJoystickEvent__FiR20QueuedJoystickEvents,supported_exact_leaf,E-0041-M01
+0x001546B0,0x00154268,"Scanner_DigitalDown(EventNode *, unsigned int *, unsigned int *, ScannerConfig *, Joystick *)",Scanner_DigitalDown__FP9EventNodePUiT1P13ScannerConfigP8Joystick,supported_exact_leaf,E-0041-M01
+0x001547E8,0x001543A0,"Scanner_DigitalUpOrDown(EventNode *, unsigned int *, unsigned int *, ScannerConfig *, Joystick *)",Scanner_DigitalUpOrDown__FP9EventNodePUiT1P13ScannerConfigP8Joystick,supported_exact_leaf,E-0041-M01
+0x00155948,0x00155500,tEnvelope::GetIndex(float),GetIndex__9tEnvelopef,supported_exact_leaf,E-0041-M01
+0x001559A8,0x00155560,tEnvelope::OutOfRange(float),OutOfRange__9tEnvelopef,supported_exact_leaf,E-0041-M01
+0x001559F0,0x001555A8,tEnvelope::GetSlope(int),GetSlope__9tEnvelopei,supported_exact_leaf,E-0041-M01
+0x00159540,0x00158FF8,"TrackCarCameraMover::CalcSpringForce(bVector3 *, bVector3 *, bVector3 *)",CalcSpringForce__19TrackCarCameraMoverP8bVector3T1T1,supported_exact_leaf,E-0041-M01
+0x0015A2A0,0x00159D58,TrackFlyCameraMover::IsFinished(void) const,IsFinished__C19TrackFlyCameraMover,supported_exact_leaf,E-0041-M01
+0x0015AAB0,0x0015A568,"MyQuaternionMultiply(bQuaternion *, bQuaternion *, bQuaternion *)",MyQuaternionMultiply__FP11bQuaternionT0T0,supported_exact_leaf,E-0041-M01
+0x0015AB58,0x0015A610,NormalizeQuaternion(bQuaternion *),NormalizeQuaternion__FP11bQuaternion,supported_exact_leaf,E-0041-M01
+0x0015C1D0,0x0015BC88,DriveCameraMover::GetCorrectionPitch(unsigned short),GetCorrectionPitch__16DriveCameraMoverUs,supported_exact_leaf,E-0041-M01
+0x0015E5E8,0x0015E010,GarageCameraMover::PrevTrack(void),PrevTrack__17GarageCameraMover,supported_exact_leaf,E-0041-M01
+0x0015E610,0x0015E038,GarageCameraMover::NextTrack(void),NextTrack__17GarageCameraMover,supported_exact_leaf,E-0041-M01
+0x00164E58,0x00164800,"LinearSeek(float, float, float)",LinearSeek__Ffff,supported_exact_leaf,E-0041-M01
+0x001656B0,0x00164F68,"EnforceMaximumSlope(Spline *, float)",EnforceMaximumSlope__FP6Splinef,supported_exact_leaf,E-0041-M01
+0x001657A0,0x00165058,PreviewPause::GetPoint(bVector3 *),GetPoint__12PreviewPauseP8bVector3,supported_exact_leaf,E-0041-M01
+0x0016A130,0x00169560,FlailerMenu::GetCurrentItemNumber(void),GetCurrentItemNumber__11FlailerMenu,supported_exact_leaf,E-0041-M01
+0x0016A5B0,0x001699E0,FlailerMenu::FindItem(unsigned int),FindItem__11FlailerMenuUi,supported_exact_leaf,E-0041-M01
+0x0016B340,0x0016A7B8,FlailerScreenNode::FindFlailerScreen(int),FindFlailerScreen__17FlailerScreenNodei,supported_exact_leaf,E-0041-M01
+0x0016B378,0x0016A7F0,FlailerScreenNode::SetFilterPort(JoystickPort),SetFilterPort__17FlailerScreenNode12JoystickPort,supported_exact_leaf,E-0041-M01
+0x0016B3B0,0x0016A828,FlailerScreenNode::IsPortFiltered(JoystickPort),IsPortFiltered__17FlailerScreenNode12JoystickPort,supported_exact_leaf,E-0041-M01
+0x0016B438,0x0016A8B0,ScreenStack::Pop(void),Pop__11ScreenStack,supported_exact_leaf,E-0041-M01
+0x0016B5A8,0x0016AA20,tPopupMenu::GetCurrentMenuItem(void),GetCurrentMenuItem__10tPopupMenu,supported_exact_leaf,E-0041-M01
+0x0016C888,0x0016BB48,FlailerScreenList::FindScreen(int),FindScreen__17FlailerScreenListi,supported_exact_leaf,E-0041-M01
+0x0016CA08,0x0016BCC8,FlailerScreenList::IsAnyPopupActive(void),IsAnyPopupActive__17FlailerScreenList,supported_exact_leaf,E-0041-M01
+0x001715C0,0x001705D0,PauseAudioOpts::FindSlider(int),FindSlider__14PauseAudioOptsi,supported_exact_leaf,E-0041-M01
+0x001841A8,0x00182718,FrontendDatabase::UseTheRaceEvent(void),UseTheRaceEvent__16FrontendDatabase,supported_exact_leaf,E-0041-M01
+0x001855F0,0x001839B8,FrontendDatabase::IsChallengeGame(void),IsChallengeGame__16FrontendDatabase,supported_exact_leaf,E-0041-M01
+0x00187080,0x001853B0,TransientStats::GetDriver(int),GetDriver__14TransientStatsi,supported_exact_leaf,E-0041-M01
+0x00187928,0x00185AF8,FrontendPlayerInfo::FlushAvailableCars(void),FlushAvailableCars__18FrontendPlayerInfo,supported_exact_leaf,E-0041-M01
+0x001884B8,0x00186668,CarTypeInfo::GetNumAvailableSkins(void),GetNumAvailableSkins__11CarTypeInfo,supported_exact_leaf,E-0041-M01
+0x00189238,0x001873E8,"Spline::Spline(SplineType, int, bVector3 *, int)",__6Spline10SplineTypeiP8bVector3i,supported_exact_leaf,E-0041-M01
+0x0018A030,0x001881E0,Spline::LinearEstimateLength(void),LinearEstimateLength__6Spline,supported_exact_leaf,E-0041-M01
+0x0018BCA0,0x00189DD0,DriveTrain::SetSportGear(Gear),SetSportGear__10DriveTrain4Gear,supported_exact_leaf,E-0041-M01
+0x0018BCE0,0x00189E10,DriveTrain::SetDesiredGear(Gear),SetDesiredGear__10DriveTrain4Gear,independently_reviewed_bridge,E-0041-R02
+0x0018D258,0x0018B260,BaseCarSound::~BaseCarSound(void),_$_12BaseCarSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018D340,0x0018B348,"BaseCarSound::Update(float, unsigned short, float)",Update__12BaseCarSoundfUsf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018D480,0x0018B488,BaseCarSound::GetHornSample(void),GetHornSample__12BaseCarSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018D550,0x0018B558,BaseCarSound::Mute(int),Mute__12BaseCarSoundi,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018D750,0x0018B758,BaseCarSound::InSoundSphere(void),InSoundSphere__12BaseCarSound,supported_exact_leaf,E-0041-M01
+0x0018D830,0x0018B838,BaseCarSound::DeactivateSound(void),DeactivateSound__12BaseCarSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018D8D8,0x0018B8E0,BaseCarSound::ActivateSound(void),ActivateSound__12BaseCarSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018DB78,0x0018BB80,BasePlayerCarSound::~BasePlayerCarSound(void),_$_18BasePlayerCarSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018DBF0,0x0018BBF8,"BasePlayerCarSound::Update(float, unsigned short, float)",Update__18BasePlayerCarSoundfUsf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018DD10,0x0018BD18,BasePlayerCarSound::Mute(int),Mute__18BasePlayerCarSoundi,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018DDA0,0x0018BDA8,BasePlayerCarSound::GetHornSample(void),GetHornSample__18BasePlayerCarSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018E7E8,0x0018C7F0,BaseAICarSound::~BaseAICarSound(void),_$_14BaseAICarSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018E800,0x0018C808,"BaseAICarSound::Update(float, unsigned short, float)",Update__14BaseAICarSoundfUsf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018F160,0x0018D168,HornSound3d::ActivateSound(void),ActivateSound__11HornSound3d,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018F188,0x0018D190,HornSound3d::DeactivateSound(void),DeactivateSound__11HornSound3d,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018F208,0x0018D210,HornSound3d::Mute(int),Mute__11HornSound3di,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018F218,0x0018D220,"HornSound3d::Update(float, unsigned short, float)",Update__11HornSound3dfUsf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018F2B0,0x0018D2B8,HornSound3d::~HornSound3d(void),_$_11HornSound3d,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018F4D0,0x0018D4D8,SirenSound3d::ActivateSound(void),ActivateSound__12SirenSound3d,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018F508,0x0018D510,SirenSound3d::DeactivateSound(void),DeactivateSound__12SirenSound3d,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018F528,0x0018D530,SirenSound3d::Mute(int),Mute__12SirenSound3di,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018F548,0x0018D550,"SirenSound3d::Update(float, unsigned short, float)",Update__12SirenSound3dfUsf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018F710,0x0018D718,SirenSound3d::~SirenSound3d(void),_$_12SirenSound3d,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0018F808,0x0018D810,"Table::Table(float *, int, float, float)",__5TablePfiff,independently_reviewed_bridge,E-0041-R04
+0x0018F838,0x0018D840,Table::GetValue(float),GetValue__5Tablef,supported_exact_leaf,E-0041-M01
+0x0018FCB8,0x0018DCC0,Average::Record(float),Record__7Averagef,supported_exact_leaf,E-0041-M01
+0x0018FD50,0x0018DD58,Average::Reset(float),Reset__7Averagef,supported_exact_leaf,E-0041-M01
+0x0018FDA0,0x0018DDA8,Average::Flush(float),Flush__7Averagef,supported_exact_leaf,E-0041-M01
+0x00190050,0x0018E058,"Linear::Init(float, float, float, float)",Init__6Linearffff,supported_exact_leaf,E-0041-M01
+0x00191D10,0x0018FC58,AICarController::ClearStickyDecisions(void),ClearStickyDecisions__15AICarController,supported_exact_leaf,E-0041-M01
+0x00191D90,0x0018FCD0,AICarController::GetStickyIndex(void),GetStickyIndex__15AICarController,supported_exact_leaf,E-0041-M01
+0x00193D90,0x00191A68,NearbyCarList::GetCarsIndexInArray(Car *),GetCarsIndexInArray__13NearbyCarListP3Car,supported_exact_leaf,E-0041-M01
+0x00193E68,0x00191B40,DrivingInformation::Clear(void),Clear__18DrivingInformation,supported_exact_leaf,E-0041-M01
+0x001942D0,0x00191FB8,VisibleCar::SetCurrentSkinNumber(int),SetCurrentSkinNumber__10VisibleCari,supported_exact_leaf,E-0041-M01
+0x00194350,0x00192038,VisibleCar::NextSkin(void),NextSkin__10VisibleCar,supported_exact_leaf,E-0041-M01
+0x00194380,0x00192068,VisibleCar::PrevSkin(void),PrevSkin__10VisibleCar,supported_exact_leaf,E-0041-M01
+0x00195C40,0x001936E8,CarSelector::SetupCarOverrideModel(void),SetupCarOverrideModel__11CarSelector,supported_exact_leaf,E-0041-M01
+0x00198878,0x00196348,SelectCarScreen::AreAllSelectorsReady(void),AreAllSelectorsReady__15SelectCarScreen,supported_exact_leaf,E-0041-M01
+0x001995E0,0x001970A0,"ResourceFile::GetSize(int, int *)",GetSize__12ResourceFileiPi,supported_exact_leaf,E-0041-M01
+0x0019B660,0x00198F88,NisCameraCoordinator::NumCameraKeys(void),NumCameraKeys__20NisCameraCoordinator,supported_exact_leaf,E-0041-M01
+0x0019B688,0x00198FB0,NisCameraCoordinator::GetCameraKeys(void),GetCameraKeys__20NisCameraCoordinator,supported_exact_leaf,E-0041-M01
+0x0019B6B0,0x00198FD8,CameraDataItems::CameraDataItems(char *),__15CameraDataItemsPc,supported_exact_leaf,E-0041-M01
+0x0019BAB8,0x001993E0,CameraDataItems::CameraDataItems(CameraDataItems const &),__15CameraDataItemsRC15CameraDataItems,supported_exact_leaf,E-0041-M01
+0x0019C190,0x00199AB8,PhysicsSystem::~PhysicsSystem(void),_$_13PhysicsSystem,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0019C398,0x00199CC0,"ArrayMultiply(float *, float *, float, int)",ArrayMultiply__FPfT0fi,supported_exact_leaf,E-0041-M01
+0x0019C3C8,0x00199CF0,"ArrayAdd(float *, float *, float *, int)",ArrayAdd__FPfT0T0i,supported_exact_leaf,E-0041-M01
+0x0019C400,0x00199D28,"ArrayMultiplyAndAdd(float *, float *, float *, float, int)",ArrayMultiplyAndAdd__FPfT0T0fi,supported_exact_leaf,E-0041-M01
+0x0019C808,0x0019A130,PhysicsSystem::ComputeAuxiliaries(void),ComputeAuxiliaries__13PhysicsSystem,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0019C8F8,0x0019A220,PhysicsSystem::ResolveForces(void),ResolveForces__13PhysicsSystem,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0019C910,0x0019A238,PhysicsComponent::ResolveForces(void),ResolveForces__16PhysicsComponent,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0019CD90,0x0019A6B8,"RigidBody::ApplyForce(bVector3 *, bVector3 *)",ApplyForce__9RigidBodyP8bVector3T1,supported_exact_leaf,E-0041-M01
+0x0019CF10,0x0019A838,"RigidBody::ApplyImpulse(bVector3 *, bVector3 *)",ApplyImpulse__9RigidBodyP8bVector3T1,supported_exact_leaf,E-0041-M01
+0x0019CFF8,0x0019A920,"RigidBody::ApplyImpulseWithScaledInverseInertiaTensor(bVector3 *, bVector3 *, float)",ApplyImpulseWithScaledInverseInertiaTensor__9RigidBodyP8bVector3T1f,supported_exact_leaf,E-0041-M01
+0x0019D1F0,0x0019AB18,RigidBody::GetEnergy(void),GetEnergy__9RigidBody,supported_exact_leaf,E-0041-M01
+0x0019D370,0x0019AC98,"VectorStarMatrix(bMatrix4 *, bVector3 *, bMatrix4 *)",VectorStarMatrix__FP8bMatrix4P8bVector3T0,supported_exact_leaf,E-0041-M01
+0x0019D4D0,0x0019ADF8,RigidBody::GetDerivative(float *),GetDerivative__9RigidBodyPf,independently_reviewed_bridge,E-0041-R03
+0x0019E048,0x0019B970,SelectableTrack::GetTimeOfDay(eTrackInfoTimeOfDay),GetTimeOfDay__15SelectableTrack19eTrackInfoTimeOfDay,supported_exact_leaf,E-0041-M01
+0x0019E0A8,0x0019B9D0,SelectableTrack::ScrollTimeOfDay(int),ScrollTimeOfDay__15SelectableTracki,supported_exact_leaf,E-0041-M01
+0x0019E7B0,0x0019C0D8,SelectableTrackManager::GetNextTrack(void),GetNextTrack__22SelectableTrackManager,supported_exact_leaf,E-0041-M01
+0x0019E7D0,0x0019C0F8,SelectableTrackManager::GetPrevTrack(void),GetPrevTrack__22SelectableTrackManager,supported_exact_leaf,E-0041-M01
+0x0019EF00,0x0019C828,TrackRecordDisplayer::TrackRecordDisplayer(int),__20TrackRecordDisplayeri,supported_exact_leaf,E-0041-M01
+0x001A1E30,0x0019F6A8,CopDriver::~CopDriver(void),_$_9CopDriver,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001A2110,0x0019F980,CopDriver::Think(float),Think__9CopDriverf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001A2B58,0x001A03B8,CopDriver::DoSnapshot(ReplaySnapshot *),DoSnapshot__9CopDriverP14ReplaySnapshot,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001A2C30,0x001A0490,"FindDriveTargetPointByDistance(bVector2 *, float *, DriveTarget &, bVector2 const &, float, DLOffset const &)",FindDriveTargetPointByDistance__FP8bVector2PfR11DriveTargetRC8bVector2fRC8DLOffset,supported_exact_leaf,E-0041-M01
+0x001A2EF0,0x001A0750,"GetDriveTargetPointByDLOffsetFromStart(bVector2 *, DriveTarget &, DLOffset const &)",GetDriveTargetPointByDLOffsetFromStart__FP8bVector2R11DriveTargetRC8DLOffset,supported_exact_leaf,E-0041-M01
+0x001A33C0,0x001A0C20,GetQuantizedRealTimeElapsed(float),GetQuantizedRealTimeElapsed__Ff,supported_exact_leaf,E-0041-M01
+0x001A37B8,0x001A1018,IntToString2__FPciib,IntToString2__FPciib,supported_exact_leaf,E-0041-M01
+0x001A3B28,0x001A1300,"Timer::GetHoursMinsSeconds(int *, int *, int *, int *)",GetHoursMinsSeconds__5TimerPiT1T1T1,supported_exact_leaf,E-0041-M01
+0x001A3CF0,0x001A14C8,Timer::CountDown(float),CountDown__5Timerf,supported_exact_leaf,E-0041-M01
+0x001A4358,0x001A1B30,Wheel::ComputeAuxiliaries(void),ComputeAuxiliaries__5Wheel,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001A46B0,0x001A1E88,Wheel::GetDerivative(float *),GetDerivative__5WheelPf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001A4E88,0x001A2660,Wheel::ModifyGroundForce(bVector2 *),ModifyGroundForce__5WheelP8bVector2,supported_exact_leaf,E-0041-M01
+0x001A5428,0x001A2C00,Wheel::GetHorizontalGroundForceInCarFrame(bVector3 *),GetHorizontalGroundForceInCarFrame__5WheelP8bVector3,supported_exact_leaf,E-0041-M01
+0x001A5488,0x001A2C60,"bRotateVector(bVector3 *, bMatrix4 *, bVector3 *)",bRotateVector__FP8bVector3P8bMatrix4T0,supported_exact_leaf,E-0041-M01
+0x001A5BF0,0x001A33D0,Wheel::SetState(float *),SetState__5WheelPf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001A5C08,0x001A33E8,Wheel::GetState(float *),GetState__5WheelPf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001A5C20,0x001A3400,Wheel::GetState(void),GetState__5Wheel,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001A5C28,0x001A3408,Wheel::GetSize(void),GetSize__5Wheel,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001A5C30,0x001A3410,Wheel::~Wheel(void),_$_5Wheel,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001A5F88,0x001A3768,Suspension::Calibrate(float),Calibrate__10Suspensionf,supported_exact_leaf,E-0041-M01
+0x001A63D0,0x001A3BB0,"GetPointVelocity(bVector3 *, bVector3 *, bVector3 *, bVector3 *)",GetPointVelocity__FP8bVector3T0T0T0,supported_exact_leaf,E-0041-M01
+0x001A74C8,0x001A4CA8,"eRigidAnimation::GetMatrixAtFrame(bMatrix4 *, int)",GetMatrixAtFrame__15eRigidAnimationP8bMatrix4i,supported_exact_leaf,E-0041-M01
+0x001A7518,0x001A4CF8,"eRigidAnimation::GetMatrixAtTime(bMatrix4 *, int)",GetMatrixAtTime__15eRigidAnimationP8bMatrix4i,supported_exact_leaf,E-0041-M01
+0x001A78E0,0x001A50C0,"eAnimationSolid::GetTranslation(bVector3 *, float)",GetTranslation__15eAnimationSolidP8bVector3f,supported_exact_leaf,E-0041-M01
+0x001AA788,0x001A7E98,"SkidSegment::SetPoints(bVector3 *, bVector3 *)",SetPoints__11SkidSegmentP8bVector3T1,supported_exact_leaf,E-0041-M01
+0x001AA7F8,0x001A7F08,"SkidSegment::GetPoints(bVector3 *, bVector3 *)",GetPoints__11SkidSegmentP8bVector3T1,supported_exact_leaf,E-0041-M01
+0x001AA870,0x001A7F80,"SkidSegment::GetEndPoints(bVector3 *, bVector3 *)",GetEndPoints__11SkidSegmentP8bVector3T1,supported_exact_leaf,E-0041-M01
+0x001AC3F0,0x001A9A70,TexturePack::GetLoadedTexture(unsigned int),GetLoadedTexture__11TexturePackUi,supported_exact_leaf,E-0041-M01
+0x001AC468,0x001A9AE8,TexturePack::GetTexture(unsigned int),GetTexture__11TexturePackUi,supported_exact_leaf,E-0041-M01
+0x001AC4B0,0x001A9B30,TexturePack::GetNthTexture(int),GetNthTexture__11TexturePacki,supported_exact_leaf,E-0041-M01
+0x001AC780,0x001A9E00,"TexturePack::FindLoadedTextureData(int, int)",FindLoadedTextureData__11TexturePackii,supported_exact_leaf,E-0041-M01
+0x001AC7D0,0x001A9E50,"TexturePack::FindNotYetLoadedNeighbourTextureData(int, int, int)",FindNotYetLoadedNeighbourTextureData__11TexturePackiii,supported_exact_leaf,E-0041-M01
+0x001AD008,0x001AA688,TexturePack::GetLoadedSize(void),GetLoadedSize__11TexturePack,supported_exact_leaf,E-0041-M01
+0x001ADD48,0x001AB3C8,Aerodynamics::DoSnapshot(ReplaySnapshot *),DoSnapshot__12AerodynamicsP14ReplaySnapshot,supported_exact_leaf,E-0041-M01
+0x001ADFB8,0x001AB638,Aerodynamics::GetDownforceAtSpeed(float),GetDownforceAtSpeed__12Aerodynamicsf,supported_exact_leaf,E-0041-M01
+0x001B02B8,0x001AD898,LoadedSkin::LoadedSkin(RideInfo *),__10LoadedSkinP8RideInfo,supported_exact_leaf,E-0041-M01
+0x001B0518,0x001ADAF8,"CarLoader::FindLoadedSkin(int, int)",FindLoadedSkin__9CarLoaderii,supported_exact_leaf,E-0041-M01
+0x001B4D48,0x001B21D8,"BodyDamage::SetDamage(int, float)",SetDamage__10BodyDamageif,supported_exact_leaf,E-0041-M01
+0x001B4E10,0x001B22A0,BodyDamage::GetSectorNumber(bVector2 const *),GetSectorNumber__10BodyDamagePC8bVector2,supported_exact_leaf,E-0041-M01
+0x001B4F10,0x001B23A0,BodyDamage::GetDamageAmount(bVector2 const *),GetDamageAmount__10BodyDamagePC8bVector2,supported_exact_leaf,E-0041-M01
+0x001B7AB0,0x001B4E58,RaceSetupBaseClass::FindChangeable(int),FindChangeable__18RaceSetupBaseClassi,supported_exact_leaf,E-0041-M01
+0x001B7AE8,0x001B4E90,RaceSetupBaseClass::FindChangeableByLanguageID(int),FindChangeableByLanguageID__18RaceSetupBaseClassi,supported_exact_leaf,E-0041-M01
+0x001B8AF0,0x001B5E98,DataSingleRaceSetup::InitWithDefaults(void),InitWithDefaults__19DataSingleRaceSetup,supported_exact_leaf,E-0041-M01
+0x001B8F38,0x001B6318,DataLapKnockoutSetup::InitWithDefaults(void),InitWithDefaults__20DataLapKnockoutSetup,supported_exact_leaf,E-0041-M01
+0x001B9218,0x001B6630,DataRaceKnockoutSetup::InitWithDefaults(void),InitWithDefaults__21DataRaceKnockoutSetup,supported_exact_leaf,E-0041-M01
+0x001B93E0,0x001B67F8,DataBeTheCopSetup::InitWithDefaults(void),InitWithDefaults__17DataBeTheCopSetup,supported_exact_leaf,E-0041-M01
+0x001B9CD0,0x001B70E8,"vAABB::Contains(float, float, float)",Contains__5vAABBfff,supported_exact_leaf,E-0041-M01
+0x001B9D40,0x001B7158,vAABB::Encloses(vAABB *),Encloses__5vAABBP5vAABB,supported_exact_leaf,E-0041-M01
+0x001BCA08,0x001B9E20,"TrackMap::EmitPoint(bVector2 *, bVector3 *, unsigned char, bVector2 *, bVector3 *, unsigned char *, int *)",EmitPoint__8TrackMapP8bVector2P8bVector3UcT1T2PUcPi,supported_exact_leaf,E-0041-M01
+0x001BDAD0,0x001BAC38,"EvalCubic(float *, float *, float, float)",EvalCubic__FPfT0ff,supported_exact_leaf,E-0041-M01
+0x001BDE60,0x001BAFC8,TrackMarkerFile::GetTargetedMarker(bVector3 const *),GetTargetedMarker__15TrackMarkerFilePC8bVector3,supported_exact_leaf,E-0041-M01
+0x001BEAD0,0x001BBBE8,Munition::Backup(float),Backup__8Munitionf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001BEC28,0x001BBD40,SmokeBomb::~SmokeBomb(void),_$_9SmokeBomb,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001BED20,0x001BBE38,SmokeBomb::MaybeExplodeWarhead(void),MaybeExplodeWarhead__9SmokeBomb,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001BED78,0x001BBE90,SmokeBomb::Move(float),Move__9SmokeBombf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001BEF20,0x001BC038,DroppedSpikes::~DroppedSpikes(void),_$_13DroppedSpikes,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001BEF90,0x001BC0A8,DroppedSpikes::DoSnapshot(ReplaySnapshot *),DoSnapshot__13DroppedSpikesP14ReplaySnapshot,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001BF078,0x001BC190,DroppedSpikes::MaybeExplodeWarhead(void),MaybeExplodeWarhead__13DroppedSpikes,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001BF0D8,0x001BC1F0,DroppedSpikes::Move(float),Move__13DroppedSpikesf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001BF160,0x001BC278,"DroppedSpikes::ConsiderImpulse(bVector3 *, bVector3 *)",ConsiderImpulse__13DroppedSpikesP8bVector3T1,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001BF178,0x001BC290,"DroppedSpikes::ApplyImpulse(bVector3 *, bVector3 *)",ApplyImpulse__13DroppedSpikesP8bVector3T1,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001BF3D8,0x001BC4F0,Rocket::~Rocket(void),_$_6Rocket,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001BF4D0,0x001BC5E8,Rocket::MaybeExplodeWarhead(void),MaybeExplodeWarhead__6Rocket,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001BF598,0x001BC6B0,Rocket::Move(float),Move__6Rocketf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001BF8F8,0x001BCA10,"Rocket::ConsiderImpulse(bVector3 *, bVector3 *)",ConsiderImpulse__6RocketP8bVector3T1,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001BF908,0x001BCA20,"Rocket::ApplyImpulse(bVector3 *, bVector3 *)",ApplyImpulse__6RocketP8bVector3T1,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001BF910,0x001BCA28,Rocket::DoSnapshot(ReplaySnapshot *),DoSnapshot__6RocketP14ReplaySnapshot,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001BFD10,0x001BCE28,Rocket::GetSmokeType(void),GetSmokeType__6Rocket,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001BFD90,0x001BCEA8,DroppedSpikes::GetSmokeType(void),GetSmokeType__13DroppedSpikes,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001BFE10,0x001BCF28,SmokeBomb::GetSmokeType(void),GetSmokeType__9SmokeBomb,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001C0100,0x001BD218,CarController::SetToPhysicsMode(Car *),SetToPhysicsMode__13CarControllerP3Car,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001C0140,0x001BD258,CarController::ForceBoost(float),ForceBoost__13CarControllerf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001C0160,0x001BD278,CarController::ReleaseBoost(void),ReleaseBoost__13CarController,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001C0198,0x001BD2B0,CarController::DebugDisplay(void),DebugDisplay__13CarController,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001C0780,0x001BD868,CarState::ResetCarForSound(void),ResetCarForSound__8CarState,supported_exact_leaf,E-0041-M01
+0x001C0850,0x001BD938,CarState::BeginTimestep(void),BeginTimestep__8CarState,supported_exact_leaf,E-0041-M01
+0x001C0CF8,0x001BDDE0,"CarState::SetWheelTouchingGround(int, char)",SetWheelTouchingGround__8CarStateic,supported_exact_leaf,E-0041-M01
+0x001C0D48,0x001BDE30,"CarState::SetWheelTerrain(int, TerrainType)",SetWheelTerrain__8CarStatei11TerrainType,supported_exact_leaf,E-0041-M01
+0x001C1340,0x001BE3F0,TrackRoutePoint::TrackRoutePoint(void),__15TrackRoutePoint,supported_exact_leaf,E-0041-M01
+0x001C1408,0x001BE4B8,"TrackRoutePoint::GetPosition(bVector3 *, float, float)",GetPosition__15TrackRoutePointP8bVector3ff,supported_exact_leaf,E-0041-M01
+0x001C1490,0x001BE540,"TrackRoutePoint::SetWidth(float, float)",SetWidth__15TrackRoutePointff,supported_exact_leaf,E-0041-M01
+0x001C1910,0x001BE9C0,"TrackRoute::GetRelativePoint(TrackRoutePoint *, bool)",GetRelativePoint__10TrackRouteP15TrackRoutePointb,supported_exact_leaf,E-0041-M01
+0x001C1D30,0x001BEDE0,"TrackRoute::FindClosestPointAhead(bVector2 const *, TrackRoutePoint *)",FindClosestPointAhead__10TrackRoutePC8bVector2P15TrackRoutePoint,supported_exact_leaf,E-0041-M01
+0x001C2780,0x001BF830,TrackRoute::DistanceIsWithinRoute(float),DistanceIsWithinRoute__10TrackRoutef,supported_exact_leaf,E-0041-M01
+0x001C28A0,0x001BF950,TrackRouteManager::AddRouteToRightList(TrackRoute *),AddRouteToRightList__17TrackRouteManagerP10TrackRoute,supported_exact_leaf,E-0041-M01
+0x001C3718,0x001C07A8,"FancyJoyEventHandler::IsButtonPressedRepeat(float, float, float)",IsButtonPressedRepeat__20FancyJoyEventHandlerfff,supported_exact_leaf,E-0041-M01
+0x001C4188,0x001C1218,"TrackRouteEditor::GetCameraPosition(bVector3 *, bVector3 *)",GetCameraPosition__16TrackRouteEditorP8bVector3T1,supported_exact_leaf,E-0041-M01
+0x001C5600,0x001C2690,"InterpolatePoints(bVector3 *, bVector3 const *, bVector3 const *, float)",InterpolatePoints__FP8bVector3PC8bVector3T1f,supported_exact_leaf,E-0041-M01
+0x001C8660,0x001C56C8,"AIActionPullOver::GetDistanceToRightEdgeOfRoute(NearbyCarList *, TrackRoutePoint *)",GetDistanceToRightEdgeOfRoute__16AIActionPullOverP13NearbyCarListP15TrackRoutePoint,supported_exact_leaf,E-0041-M01
+0x001C9018,0x001C6070,AIActionGetUnstuck::GetGoalTrackRoutePoint(DrivingLocation *),GetGoalTrackRoutePoint__18AIActionGetUnstuckP15DrivingLocation,supported_exact_leaf,E-0041-M01
+0x001CAD80,0x001C7D98,GetNumWheelsOnGround(Car *),GetNumWheelsOnGround__FP3Car,supported_exact_leaf,E-0041-M01
+0x001CADE0,0x001C7DF8,"ClosestPointToLineSegment(bVector2 *, ManeuverPoint, ManeuverPoint, bVector2)",ClosestPointToLineSegment__FP8bVector2G13ManeuverPointT1G8bVector2,supported_exact_leaf,E-0041-M01
+0x001CB010,0x001C8028,"IsFarawayPoint(bVector2 *, Car *)",IsFarawayPoint__FP8bVector2P3Car,supported_exact_leaf,E-0041-M01
+0x001CB138,0x001C8150,"GetSideOfLine(bVector2 &, bVector2 &, bVector2 &)",GetSideOfLine__FR8bVector2T0T0,supported_exact_leaf,E-0041-M01
+0x001CB1F0,0x001C8208,"IsPointInPoly(bVector2 *, bVector2 *, long)",IsPointInPoly__FP8bVector2T0l,supported_exact_leaf,E-0041-M01
+0x001CB2F0,0x001C8308,"GetDistanceBetweenCars(Car *, Car *)",GetDistanceBetweenCars__FP3CarT0,supported_exact_leaf,E-0041-M01
+0x001CC130,0x001C9100,"ReturnToLastBranch(NearestRoutePointInfo *, Deque<NearestRoutePointInfo, 20> *, Deque<TrackRoute *, 20> *)",ReturnToLastBranch__FP21NearestRoutePointInfoPt5Deque2Z21NearestRoutePointInfoUi20Pt5Deque2ZP10TrackRouteUi20,supported_exact_leaf,E-0041-M01
+0x001CCDE8,0x001C9DB8,"DoWeCareAboutThisCar(NearbyCar *, NearbyCarList *)",DoWeCareAboutThisCar__FP9NearbyCarP13NearbyCarList,supported_exact_leaf,E-0041-M01
+0x001CD408,0x001CA3D8,NearestRoutePointInfo::IsValid(void),IsValid__21NearestRoutePointInfo,supported_exact_leaf,E-0041-M01
+0x001CDDE0,0x001CADB0,SoundArea::Initialize(char *),Initialize__9SoundAreaPc,supported_exact_leaf,E-0041-M01
+0x001CFF20,0x001CCEF0,"fDistBetween(fVector3, fVector3)",fDistBetween__FG8fVector3T0,supported_exact_leaf,E-0041-M01
+0x001D0058,0x001CD028,VCTransform::TransformVector(fVector3),TransformVector__11VCTransformG8fVector3,supported_exact_leaf,E-0041-M01
+0x001D00B0,0x001CD080,VCTransform::TransformPoint(fVector3),TransformPoint__11VCTransformG8fVector3,supported_exact_leaf,E-0041-M01
+0x001D00F8,0x001CD0C8,"VCTransformedFeature::TransformVertex(VCTransform *, VCVertex *)",TransformVertex__20VCTransformedFeatureP11VCTransformP8VCVertex,supported_exact_leaf,E-0041-M01
+0x001D0168,0x001CD138,"VCTransformedFeature::TransformEdge(VCTransform *, VCEdge *)",TransformEdge__20VCTransformedFeatureP11VCTransformP6VCEdge,supported_exact_leaf,E-0041-M01
+0x001D0228,0x001CD1F8,VCVoronoiClip::VCVoronoiClip(void),__13VCVoronoiClip,supported_exact_leaf,E-0041-M01
+0x001D0250,0x001CD220,"VCVoronoiClip::ClipPlanes(VCTransformedFeature *, VCVoronoiPlane *, int)",ClipPlanes__13VCVoronoiClipP20VCTransformedFeatureP14VCVoronoiPlanei,supported_exact_leaf,E-0041-M01
+0x001D0890,0x001CD860,"VCWitness::VCWitness(VCPolyhedron *, VCPolyhedron *)",__9VCWitnessP12VCPolyhedronT1,supported_exact_leaf,E-0041-M01
+0x001D2800,0x001CF6A8,VCVertex::SetVoronoiPlanes(void),SetVoronoiPlanes__8VCVertex,supported_exact_leaf,E-0041-M01
+0x001D2950,0x001CF7F8,"VCVertex::GetNextEdgeInFace(VCEdge *, VCFace *)",GetNextEdgeInFace__8VCVertexP6VCEdgeP6VCFace,supported_exact_leaf,E-0041-M01
+0x001D29E8,0x001CF890,VCVertex::Move(bVector3 *),Move__8VCVertexP8bVector3,supported_exact_leaf,E-0041-M01
+0x001D2A48,0x001CF8F0,VCEdge::SetVoronoiPlanes(void),SetVoronoiPlanes__6VCEdge,supported_exact_leaf,E-0041-M01
+0x001D30A8,0x001CFF50,VCFace::Move(bVector3 *),Move__6VCFaceP8bVector3,supported_exact_leaf,E-0041-M01
+0x001D3100,0x001CFFA8,VCPolyhedron::VCPolyhedron(void),__12VCPolyhedron,supported_exact_leaf,E-0041-M01
+0x001D3200,0x001D00A8,"VCPolyhedron::Init(VCVertex *, int, VCEdge *, int, VCFace *, int, VCVoronoiPlane *, int)",Init__12VCPolyhedronP8VCVertexiP6VCEdgeiP6VCFaceiP14VCVoronoiPlanei,supported_exact_leaf,E-0041-M01
+0x001D3398,0x001D0240,VCPolyhedron::NewVoronoiPlanes(int),NewVoronoiPlanes__12VCPolyhedroni,supported_exact_leaf,E-0041-M01
+0x001D3430,0x001D02D8,"VCPolyhedron::NewVertex(bVector3 *, int, VCVoronoiPlane *)",NewVertex__12VCPolyhedronP8bVector3iP14VCVoronoiPlane,supported_exact_leaf,E-0041-M01
+0x001D3498,0x001D0340,"VCPolyhedron::NewEdge(bVector3 *, int, VCVoronoiPlane *)",NewEdge__12VCPolyhedronP8bVector3iP14VCVoronoiPlane,supported_exact_leaf,E-0041-M01
+0x001D3540,0x001D03E8,"VCPolyhedron::NewFace(bVector3 *, float, int, VCVoronoiPlane *)",NewFace__12VCPolyhedronP8bVector3fiP14VCVoronoiPlane,supported_exact_leaf,E-0041-M01
+0x001D3BA8,0x001D0A50,VCPolyhedron::GetFeatureCode(VCFeature *),GetFeatureCode__12VCPolyhedronP9VCFeature,supported_exact_leaf,E-0041-M01
+0x001D3C60,0x001D0B08,VCPolyhedron::GetFeature(unsigned int),GetFeature__12VCPolyhedronUi,supported_exact_leaf,E-0041-M01
+0x001D5270,0x001D1EA8,"GetContactPointVelocity(bVector3 *, bVector3 *, bVector3 *, bVector3 *)",GetContactPointVelocity__FP8bVector3T0T0T0,supported_exact_leaf,E-0041-M01
+0x001D5BF8,0x001D2830,NumberAllocator::AllocateNumber(int),AllocateNumber__15NumberAllocatori,supported_exact_leaf,E-0041-M01
+0x001D5CB8,0x001D28F0,NumberAllocator::FreeNumber(int),FreeNumber__15NumberAllocatori,supported_exact_leaf,E-0041-M01
+0x001D65B0,0x001D31E8,IsYawControlInducingCollisionBody(CollisionBody *),IsYawControlInducingCollisionBody__FP13CollisionBody,supported_exact_leaf,E-0041-M01
+0x001D69B0,0x001D35E8,CollisionBody::~CollisionBody(void),_$_13CollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D6A98,0x001D36D0,CollisionBody::DoSnapshot(ReplaySnapshot *),DoSnapshot__13CollisionBodyP14ReplaySnapshot,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D6B50,0x001D3788,"CollisionBodyFlipFunction(bNode *, bNode *)",CollisionBodyFlipFunction__FP5bNodeT0,supported_exact_leaf,E-0041-M01
+0x001D7028,0x001D3C60,DynamicCollisionBody::~DynamicCollisionBody(void),_$_20DynamicCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D7050,0x001D3C88,DynamicCollisionBody::DoSnapshot(ReplaySnapshot *),DoSnapshot__20DynamicCollisionBodyP14ReplaySnapshot,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D7408,0x001D4040,"DynamicCollisionBody::Interpolate(bVector3 *, bMatrix4 *, float)",Interpolate__20DynamicCollisionBodyP8bVector3P8bMatrix4f,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D7660,0x001D4298,DynamicCollisionBody::Backup(float),Backup__20DynamicCollisionBodyf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D7710,0x001D4348,DynamicCollisionBody::RecomputeAuxilliaries(void),RecomputeAuxilliaries__20DynamicCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D7740,0x001D4378,"DynamicCollisionBody::GetCurrentVelocities(bVector3 &, bVector3 &)",GetCurrentVelocities__20DynamicCollisionBodyR8bVector3T1,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D7760,0x001D4398,"DynamicCollisionBody::GetTestImpulseVelocities(bVector3 &, bVector3 &, bVector3 &, bVector3 &)",GetTestImpulseVelocities__20DynamicCollisionBodyR8bVector3T1T1T1,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D7E08,0x001D4A40,"DynamicCollisionBody::ChangeInEnergy(bVector3 *, bVector3 *)",ChangeInEnergy__20DynamicCollisionBodyP8bVector3T1,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D7FA0,0x001D4BD8,CarCollisionBody::~CarCollisionBody(void),_$_16CarCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8058,0x001D4C90,CarCollisionBody::DoSnapshot(ReplaySnapshot *),DoSnapshot__16CarCollisionBodyP14ReplaySnapshot,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8138,0x001D4D70,CarCollisionBody::SetupPhysicsPointers(void),SetupPhysicsPointers__16CarCollisionBody,supported_exact_leaf,E-0041-M01
+0x001D8198,0x001D4DD0,CarCollisionBody::SetToPhysicsMode(CollisionBody *),SetToPhysicsMode__16CarCollisionBodyP13CollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D81F0,0x001D4E28,CarCollisionBody::Move(float),Move__16CarCollisionBodyf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8270,0x001D4EA8,CarCollisionBody::AreCollisionsEnabled(void),AreCollisionsEnabled__16CarCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8298,0x001D4ED0,CarCollisionBody::GetMassInverse(void),GetMassInverse__16CarCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D82D0,0x001D4F08,CarCollisionBody::GetInertiaTensorInverse(void),GetInertiaTensorInverse__16CarCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8318,0x001D4F50,"CarCollisionBody::ApplyImpulse(bVector3 *, bVector3 *)",ApplyImpulse__16CarCollisionBodyP8bVector3T1,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8880,0x001D54B8,TrackPolygonCollisionBody::~TrackPolygonCollisionBody(void),_$_25TrackPolygonCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8918,0x001D5550,TrackPolygonCollisionBody::DoSnapshot(ReplaySnapshot *),DoSnapshot__25TrackPolygonCollisionBodyP14ReplaySnapshot,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8B18,0x001D5750,TrackPolygonCollisionBody::GetPosition(void),GetPosition__25TrackPolygonCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8B28,0x001D5760,TrackPolygonCollisionBody::GetTerrainType(void),GetTerrainType__25TrackPolygonCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8E58,0x001D5A90,CarCollisionBody::GetFriction(void),GetFriction__16CarCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8E68,0x001D5AA0,CarCollisionBody::GetBounciness(void),GetBounciness__16CarCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8E78,0x001D5AB0,CarCollisionBody::GetTerrainType(void),GetTerrainType__16CarCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8E80,0x001D5AB8,CarCollisionBody::IsBlinking(void),IsBlinking__16CarCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8ED8,0x001D5B10,CarCollisionBody::IsMoveable(void),IsMoveable__16CarCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8EE0,0x001D5B18,"CarCollisionBody::ConsiderImpulse(bVector3 *, bVector3 *)",ConsiderImpulse__16CarCollisionBodyP8bVector3T1,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8EF0,0x001D5B28,CarCollisionBody::GetRotation(void),GetRotation__16CarCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8F10,0x001D5B48,CarCollisionBody::GetVelocity(void),GetVelocity__16CarCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8F30,0x001D5B68,CarCollisionBody::GetPosition(void),GetPosition__16CarCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8F98,0x001D5BD0,"DynamicCollisionBody::ApplyImpulse(bVector3 *, bVector3 *)",ApplyImpulse__20DynamicCollisionBodyP8bVector3T1,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8FA0,0x001D5BD8,DynamicCollisionBody::GetInertiaTensorInverse(void),GetInertiaTensorInverse__20DynamicCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8FB0,0x001D5BE8,DynamicCollisionBody::GetMassInverse(void),GetMassInverse__20DynamicCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8FC0,0x001D5BF8,DynamicCollisionBody::SetToPhysicsMode(CollisionBody *),SetToPhysicsMode__20DynamicCollisionBodyP13CollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8FC8,0x001D5C00,DynamicCollisionBody::GetMaxBackupTime(void),GetMaxBackupTime__20DynamicCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D8FD0,0x001D5C08,DynamicCollisionBody::SetPosition(bVector3 *),SetPosition__20DynamicCollisionBodyP8bVector3,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D9048,0x001D5C80,"StaticCollisionBody::ChangeInEnergy(bVector3 *, bVector3 *)",ChangeInEnergy__19StaticCollisionBodyP8bVector3T1,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D9058,0x001D5C90,StaticCollisionBody::IsMoveable(void),IsMoveable__19StaticCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D9060,0x001D5C98,StaticCollisionBody::AreCollisionsEnabled(void),AreCollisionsEnabled__19StaticCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D9070,0x001D5CA8,"StaticCollisionBody::ApplyImpulse(bVector3 *, bVector3 *)",ApplyImpulse__19StaticCollisionBodyP8bVector3T1,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D9078,0x001D5CB0,"StaticCollisionBody::ConsiderImpulse(bVector3 *, bVector3 *)",ConsiderImpulse__19StaticCollisionBodyP8bVector3T1,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D9088,0x001D5CC0,StaticCollisionBody::SetToPhysicsMode(CollisionBody *),SetToPhysicsMode__19StaticCollisionBodyP13CollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D9090,0x001D5CC8,StaticCollisionBody::GetFriction(void),GetFriction__19StaticCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D90A0,0x001D5CD8,StaticCollisionBody::GetBounciness(void),GetBounciness__19StaticCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D90B0,0x001D5CE8,StaticCollisionBody::GetInertiaTensorInverse(void),GetInertiaTensorInverse__19StaticCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D90C0,0x001D5CF8,StaticCollisionBody::GetMassInverse(void),GetMassInverse__19StaticCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D90D0,0x001D5D08,"StaticCollisionBody::GetTestImpulseVelocities(bVector3 &, bVector3 &, bVector3 &, bVector3 &)",GetTestImpulseVelocities__19StaticCollisionBodyR8bVector3T1T1T1,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D90F0,0x001D5D28,"StaticCollisionBody::GetCurrentVelocities(bVector3 &, bVector3 &)",GetCurrentVelocities__19StaticCollisionBodyR8bVector3T1,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D9110,0x001D5D48,StaticCollisionBody::RecomputeAuxilliaries(void),RecomputeAuxilliaries__19StaticCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D9118,0x001D5D50,"StaticCollisionBody::Interpolate(bVector3 *, bMatrix4 *, float)",Interpolate__19StaticCollisionBodyP8bVector3P8bMatrix4f,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D9158,0x001D5D90,StaticCollisionBody::Backup(float),Backup__19StaticCollisionBodyf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D9160,0x001D5D98,StaticCollisionBody::Move(float),Move__19StaticCollisionBodyf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D9168,0x001D5DA0,StaticCollisionBody::GetMaxBackupTime(void),GetMaxBackupTime__19StaticCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D9178,0x001D5DB0,StaticCollisionBody::SetPosition(bVector3 *),SetPosition__19StaticCollisionBodyP8bVector3,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D9180,0x001D5DB8,StaticCollisionBody::GetRotation(void),GetRotation__19StaticCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D9190,0x001D5DC8,StaticCollisionBody::GetVelocity(void),GetVelocity__19StaticCollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001D91D0,0x001D5E08,CollisionBody::IsBlinking(void),IsBlinking__13CollisionBody,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001DA780,0x001D73B8,tCubic1D::MakeCoeffs(void),MakeCoeffs__8tCubic1D,supported_exact_leaf,E-0041-M01
+0x001DA7D0,0x001D7408,tCubic1D::GetVal(float),GetVal__8tCubic1Df,supported_exact_leaf,E-0041-M01
+0x001DA800,0x001D7438,tCubic1D::GetdVal(float),GetdVal__8tCubic1Df,supported_exact_leaf,E-0041-M01
+0x001DA830,0x001D7468,tCubic1D::GetddVal(float),GetddVal__8tCubic1Df,supported_exact_leaf,E-0041-M01
+0x001DAA00,0x001D7638,tCubic2D::SetVal(bVector2 const *),SetVal__8tCubic2DPC8bVector2,supported_exact_leaf,E-0041-M01
+0x001DAA50,0x001D7688,tCubic2D::SetdVal(bVector2 *),SetdVal__8tCubic2DP8bVector2,supported_exact_leaf,E-0041-M01
+0x001DAAA0,0x001D76D8,tCubic2D::SetValDesired(bVector2 *),SetValDesired__8tCubic2DP8bVector2,supported_exact_leaf,E-0041-M01
+0x001DABF8,0x001D7830,tCubic3D::SetVal(bVector3 const *),SetVal__8tCubic3DPC8bVector3,supported_exact_leaf,E-0041-M01
+0x001DAC68,0x001D78A0,tCubic3D::SetdVal(bVector3 *),SetdVal__8tCubic3DP8bVector3,supported_exact_leaf,E-0041-M01
+0x001DACD8,0x001D7910,tCubic3D::SetValDesired(bVector3 *),SetValDesired__8tCubic3DP8bVector3,supported_exact_leaf,E-0041-M01
+0x001DB3D0,0x001D8008,"cPoint::PointVelocity(cPoint *, float)",PointVelocity__6cPointP6cPointf,supported_exact_leaf,E-0041-M01
+0x001DB810,0x001D8448,cPoint::SetPosX(float),SetPosX__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DB870,0x001D84A8,cPoint::SetPosZ(float),SetPosZ__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DB940,0x001D8578,cPoint::SetPosDesiredX(float),SetPosDesiredX__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DB9A0,0x001D85D8,cPoint::SetPosDesiredZ(float),SetPosDesiredZ__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DBAB8,0x001D86F0,cPoint::SetdPosZ(float),SetdPosZ__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DBC28,0x001D8860,cPoint::SetRotX(float),SetRotX__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DBC50,0x001D8888,cPoint::SetRotY(float),SetRotY__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DBC78,0x001D88B0,cPoint::SetRotZ(float),SetRotZ__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DBD38,0x001D8970,cPoint::SetRotDesiredX(float),SetRotDesiredX__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DBD60,0x001D8998,cPoint::SetRotDesiredY(float),SetRotDesiredY__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DBD88,0x001D89C0,cPoint::SetRotDesiredZ(float),SetRotDesiredZ__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DBE48,0x001D8A80,cPoint::SetdRotX(float),SetdRotX__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DBE70,0x001D8AA8,cPoint::SetdRotY(float),SetdRotY__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DBE98,0x001D8AD0,cPoint::SetdRotZ(float),SetdRotZ__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DBF70,0x001D8BA8,cPoint::SetScale(float),SetScale__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DBF98,0x001D8BD0,cPoint::SetdScale(float),SetdScale__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DBFC0,0x001D8BF8,cPoint::SetYScale(float),SetYScale__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DBFE8,0x001D8C20,cPoint::SetdYScale(float),SetdYScale__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DC010,0x001D8C48,cPoint::SetScaleDesired(float),SetScaleDesired__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DC040,0x001D8C78,cPoint::SetYScaleDesired(float),SetYScaleDesired__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DC070,0x001D8CA8,cPoint::SetDuration(float),SetDuration__6cPointf,supported_exact_leaf,E-0041-M01
+0x001DC580,0x001D9FF0,"GetTheRightTrackLanguageID(TrackInfo *, eTrackDirection)",GetTheRightTrackLanguageID__FP9TrackInfo15eTrackDirection,supported_exact_leaf,E-0041-M01
+0x001DCE18,0x001D98B8,EndGameScreens::GetNextScreen(void),GetNextScreen__14EndGameScreens,supported_exact_leaf,E-0041-M01
+0x001DCF00,0x001D99A0,EndGameScreens::MoveBackScreen(void),MoveBackScreen__14EndGameScreens,supported_exact_leaf,E-0041-M01
+0x001DD0F0,0x001D9B20,"EndGameMenusBase::HandleEvent(ScreenMessage, ScreenCallbackData *)",HandleEvent__16EndGameMenusBase13ScreenMessageP18ScreenCallbackData,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001E0838,0x001DCFD0,"RaceResultsScreen::Scroll(ScreenMessage, ScreenCallbackData *)",Scroll__17RaceResultsScreen13ScreenMessageP18ScreenCallbackData,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001E0868,0x001DD000,"RaceResultsScreen::Tick(ScreenMessage, ScreenCallbackData *)",Tick__17RaceResultsScreen13ScreenMessageP18ScreenCallbackData,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001E1918,0x001DE0D8,EndGameMenu::FindEndGameMenuItem(int),FindEndGameMenuItem__11EndGameMenui,supported_exact_leaf,E-0041-M01
+0x001E23B8,0x001DEAA0,RaceResultsScreen::~RaceResultsScreen(void),_$_17RaceResultsScreen,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001E2580,0x001DEC80,"EndGameMenusBase::Render(ScreenMessage, ScreenCallbackData *)",Render__16EndGameMenusBase13ScreenMessageP18ScreenCallbackData,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001E2848,0x001DEF48,tStartRaceScreenManager::AddScreen(char const *),AddScreen__23tStartRaceScreenManagerPCc,supported_exact_leaf,E-0041-M01
+0x001E2D00,0x001DF3C0,PreRaceStats::GetStatsForRacePosition(int),GetStatsForRacePosition__12PreRaceStatsi,supported_exact_leaf,E-0041-M01
+0x001E4170,0x001E0730,tHelpMenu::IsActive(void),IsActive__9tHelpMenu,supported_exact_leaf,E-0041-M01
+0x001E6010,0x001E25C0,"CarCollisionPredict::IsThisCarStoppedDirectlyInFrontOfMe(NearbyCar *, NearbyCarList *)",IsThisCarStoppedDirectlyInFrontOfMe__19CarCollisionPredictP9NearbyCarP13NearbyCarList,supported_exact_leaf,E-0041-M01
+0x001E6AC0,0x001E3048,"IntervalOverlap(float, float, float, float, float &, float &)",IntervalOverlap__FffffRfT4,supported_exact_leaf,E-0041-M01
+0x001E6BA8,0x001E3130,"SeparatingAxisTest(OBB &, OBB &, bVector4 &, bVector4 &)",SeparatingAxisTest__FR3OBBT0R8bVector4T2,supported_exact_leaf,E-0041-M01
+0x001E8560,0x001E4A50,Chopper::GetMaxDeceleration(void),GetMaxDeceleration__7Chopper,supported_exact_leaf,E-0041-M01
+0x001E9AE8,0x001E5FC8,"Chopper::SetRotateTarget(float, float)",SetRotateTarget__7Chopperff,supported_exact_leaf,E-0041-M01
+0x001E9E40,0x001E6320,"Chopper::CalcChopperRotation(float *, float *, float)",CalcChopperRotation__7ChopperPfT1f,supported_exact_leaf,E-0041-M01
+0x001E9E80,0x001E6360,Chopper::SubtractFromYaw(float),SubtractFromYaw__7Chopperf,supported_exact_leaf,E-0041-M01
+0x001EA578,0x001E6A48,Chopper::RenderChopper(void),RenderChopper__7Chopper,supported_exact_leaf,E-0041-M01
+0x001EB050,0x001E7480,"bRepeat::WriteToLocation(int, int, int)",WriteToLocation__7bRepeatiii,supported_exact_leaf,E-0041-M01
+0x001EB0C0,0x001E74F0,"bRepeat::ReadFromLocation(int, int)",ReadFromLocation__7bRepeatii,supported_exact_leaf,E-0041-M01
+0x001EB498,0x001E78C8,bRepeat::PrepareToRemoveData(void),PrepareToRemoveData__7bRepeat,supported_exact_leaf,E-0041-M01
+0x001EB6A8,0x001E7AD8,HeliPoly::IsPointInPoly(bVector2 const *),IsPointInPoly__8HeliPolyPC8bVector2,supported_exact_leaf,E-0041-M01
+0x001EB840,0x001E7C70,HeliPoly::GetZValue(bVector2 const *),GetZValue__8HeliPolyPC8bVector2,supported_exact_leaf,E-0041-M01
+0x001EC510,0x001E8940,ReplayScreen::HasCameraMover(void),HasCameraMover__12ReplayScreen,supported_exact_leaf,E-0041-M01
+0x001ED410,0x001E97B0,ReplayScreen::GetTimelinePositionX(float),GetTimelinePositionX__12ReplayScreenf,supported_exact_leaf,E-0041-M01
+0x001EDC50,0x001E9FF0,RaceParameters::ClearEliminatedDrivers(void),ClearEliminatedDrivers__14RaceParameters,supported_exact_leaf,E-0041-M01
+0x001EDCD0,0x001EA070,RaceParameters::GetNumEliminated(void),GetNumEliminated__14RaceParameters,supported_exact_leaf,E-0041-M01
+0x001EDDB8,0x001EA158,RaceParameters::GetLocationNumber(void),GetLocationNumber__14RaceParameters,supported_exact_leaf,E-0041-M01
+0x001EE120,0x001EA4C0,tGlobalDisplaySettings::CycleLeaderboardMode(int),CycleLeaderboardMode__22tGlobalDisplaySettingsi,supported_exact_leaf,E-0041-M01
+0x001EE1F8,0x001EA610,cPlayerSettings::ToggleGauges(void),ToggleGauges__15cPlayerSettings,supported_exact_leaf,E-0041-M01
+0x001EE230,0x001EA648,cPlayerSettings::ToggleLapInfo(void),ToggleLapInfo__15cPlayerSettings,supported_exact_leaf,E-0041-M01
+0x001EE258,0x001EA670,cPlayerSettings::CycleSplitTime(int),CycleSplitTime__15cPlayerSettingsi,supported_exact_leaf,E-0041-M01
+0x001EE2B0,0x001EA6C8,cPlayerSettings::ToggleRacePosition(void),ToggleRacePosition__15cPlayerSettings,supported_exact_leaf,E-0041-M01
+0x001EE2D8,0x001EA6F0,cPlayerSettings::ToggleLookback(void),ToggleLookback__15cPlayerSettings,supported_exact_leaf,E-0041-M01
+0x001EE300,0x001EA718,cPlayerSettings::CycleAlternateCamera(void),CycleAlternateCamera__15cPlayerSettings,supported_exact_leaf,E-0041-M01
+0x001EE390,0x001EA7A8,RaceParameters::IsFreeRun(void),IsFreeRun__14RaceParameters,supported_exact_leaf,E-0041-M01
+0x001EE688,0x001EAAA0,"DifferentData(void const *, void const *, int)",DifferentData__FPCvT0i,supported_exact_leaf,E-0041-M01
+0x001EFA68,0x001EBF70,AudioOptionsScreen::FindSlider(int),FindSlider__18AudioOptionsScreeni,supported_exact_leaf,E-0041-M01
+0x001F1528,0x001ED948,UserNameOptionsScreen::DisplayGender(int),DisplayGender__21UserNameOptionsScreeni,supported_exact_leaf,E-0041-M01
+0x001F1A78,0x001EDE98,"LanguageOptionsScreenBase::LanguageOptionsScreenBase(int, LanguageOptionsScreenBase::eLanguageSelectMode)",__25LanguageOptionsScreenBaseiQ225LanguageOptionsScreenBase19eLanguageSelectMode,independently_reviewed_bridge,E-0041-R20
+0x001F25C8,0x001EE810,CopyUntil__FPcT0c,CopyUntil__FPcT0c,supported_exact_leaf,E-0041-M01
+0x001F2618,0x001EE860,isalpha__Fi,isalpha__Fi,supported_exact_leaf,E-0041-M01
+0x001F4178,0x001F0380,tCustomizeHUDScreen::~tCustomizeHUDScreen(void),_$_19tCustomizeHUDScreen,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001F46D8,0x001F08E0,"tCustomizeHUDScreen::HandleEvent(int, ScreenCallbackData *)",HandleEvent__19tCustomizeHUDScreeniP18ScreenCallbackData,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001F4DC8,0x001F0FD0,OptionsScreenBase::~OptionsScreenBase(void),_$_17OptionsScreenBase,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001F4E68,0x001F1070,"OptionsScreenBase::HandleHighlight(int, ScreenCallbackData *, int)",HandleHighlight__17OptionsScreenBaseiP18ScreenCallbackDatai,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001F5B80,0x001F1D80,"OptionsScreenBase::HandleEvent(int, ScreenCallbackData *)",HandleEvent__17OptionsScreenBaseiP18ScreenCallbackData,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x001F5D00,0x001F1F00,DataEventSelectScreen::GetSelectedEvent(int),GetSelectedEvent__21DataEventSelectScreeni,supported_exact_leaf,E-0041-M01
+0x001F5D28,0x001F1F28,"DataEventSelectScreen::SetSelectedEvent(int, int)",SetSelectedEvent__21DataEventSelectScreenii,supported_exact_leaf,E-0041-M01
+0x001F65C8,0x001F2790,"tTreeReward::HandleMessages(ScreenMessage, ScreenCallbackData *)",HandleMessages__11tTreeReward13ScreenMessageP18ScreenCallbackData,supported_exact_leaf,E-0041-M01
+0x001F6F10,0x001F30C0,"InflateRect(bVector2 *, bVector2 *, float)",InflateRect__FP8bVector2T0f,supported_exact_leaf,E-0041-M01
+0x001F72B0,0x001F3460,"tUnlockMap::AddGoal(EventGoal *, int)",AddGoal__10tUnlockMapP9EventGoali,supported_exact_leaf,E-0041-M01
+0x001F7FA8,0x001F40F8,tEventLeaf::CalculateGeneration(void),CalculateGeneration__10tEventLeaf,supported_exact_leaf,E-0041-M01
+0x001F7FE8,0x001F4138,tEventGroup::IsMember(tEventLeaf *),IsMember__11tEventGroupP10tEventLeaf,supported_exact_leaf,E-0041-M01
+0x001F8AD8,0x001F46B8,tParallaxer::tParallaxer(int),__11tParallaxeri,supported_exact_leaf,E-0041-M01
+0x001F8C10,0x001F47F0,tCarLogoAnimation::tCarLogoAnimation(int),__17tCarLogoAnimationi,independently_reviewed_bridge,E-0041-R05
+0x001F8F68,0x001F4B48,"fe_GetFraction(float, float, float)",fe_GetFraction__Ffff,supported_exact_leaf,E-0041-M01
+0x001F90F0,0x001F4CD0,tTrackLogoAnimation::tTrackLogoAnimation(int),__19tTrackLogoAnimationi,independently_reviewed_bridge,E-0041-R06
+0x001FA840,0x001F5FD0,tEventTreeView::FindLeafByEventNumber(int),FindLeafByEventNumber__14tEventTreeViewi,supported_exact_leaf,E-0041-M01
+0x001FC580,0x001F7AD8,EventLeaf::SetScrollNotch(int),SetScrollNotch__9EventLeafi,supported_exact_leaf,E-0041-M01
+0x001FCC88,0x001F81E0,"EventLeaf::FillVerts(bVector3 *, bVector4 *, int, int, int, int)",FillVerts__9EventLeafP8bVector3P8bVector4iiii,supported_exact_leaf,E-0041-M01
+0x001FD050,0x001F85A8,EventLeaf::GetNeighbour(unsigned short),GetNeighbour__9EventLeafUs,supported_exact_leaf,E-0041-M01
+0x001FD0B0,0x001F8608,EventLeaf::GetReward(int),GetReward__9EventLeafi,supported_exact_leaf,E-0041-M01
+0x001FDFE8,0x001F9540,EventTree::GetEventNumber(int),GetEventNumber__9EventTreei,supported_exact_leaf,E-0041-M01
+0x001FFF60,0x001FB458,"EventTree::SetEvents(void *, int)",SetEvents__9EventTreePvi,supported_exact_leaf,E-0041-M01
+0x00200018,0x001FB510,EventRankState::GetStatus(EventGoal *),GetStatus__14EventRankStateP9EventGoal,supported_exact_leaf,E-0041-M01
+0x00200068,0x001FB560,EventTimeState::GetStatus(EventGoal *),GetStatus__14EventTimeStateP9EventGoal,supported_exact_leaf,E-0041-M01
+0x002001A8,0x001FB698,EventKoState::GetRaceIndex(void),GetRaceIndex__12EventKoState,supported_exact_leaf,E-0041-M01
+0x00200638,0x001FB988,EventTournamentState::Reset(void),Reset__20EventTournamentState,supported_exact_leaf,E-0041-M01
+0x00200710,0x001FBA60,EventTournamentState::RacerRank(int),RacerRank__20EventTournamentStatei,supported_exact_leaf,E-0041-M01
+0x00200878,0x001FBBC8,EventInfo::GetCar(int),GetCar__9EventInfoi,supported_exact_leaf,E-0041-M01
+0x002008B8,0x001FBC08,EventInfo::GetGoal(int),GetGoal__9EventInfoi,supported_exact_leaf,E-0041-M01
+0x002008F8,0x001FBC48,EventInfo::GetTrack(int),GetTrack__9EventInfoi,supported_exact_leaf,E-0041-M01
+0x00200938,0x001FBC88,EventInfo::GetReward(int),GetReward__9EventInfoi,supported_exact_leaf,E-0041-M01
+0x00200978,0x001FBCC8,EventInfo::GetOpponent(int),GetOpponent__9EventInfoi,supported_exact_leaf,E-0041-M01
+0x00200D48,0x001FBF88,EventInfo::GetRankState(void),GetRankState__9EventInfo,supported_exact_leaf,E-0041-M01
+0x00200D70,0x001FBFB0,EventInfo::GetTournamentState(void),GetTournamentState__9EventInfo,supported_exact_leaf,E-0041-M01
+0x00200D90,0x001FBFD0,EventInfo::GetKoState(void),GetKoState__9EventInfo,supported_exact_leaf,E-0041-M01
+0x00200DB0,0x001FBFF0,EventInfo::GetTimeState(void),GetTimeState__9EventInfo,supported_exact_leaf,E-0041-M01
+0x00201350,0x001FC4B0,EventInfo::GetRaceCount(void),GetRaceCount__9EventInfo,supported_exact_leaf,E-0041-M01
+0x00201558,0x001FC6B8,RaceEvent::RacerIndexFromDriverNumber(int),RacerIndexFromDriverNumber__9RaceEventi,supported_exact_leaf,E-0041-M01
+0x00201578,0x001FC6D8,RaceEvent::DriverNumberFromRacerIndex(int),DriverNumberFromRacerIndex__9RaceEventi,supported_exact_leaf,E-0041-M01
+0x00201858,0x001FC990,RaceEvent::GetRankState(void),GetRankState__9RaceEvent,supported_exact_leaf,E-0041-M01
+0x00201880,0x001FC9B8,RaceEvent::GetTournamentState(void),GetTournamentState__9RaceEvent,supported_exact_leaf,E-0041-M01
+0x002018A0,0x001FC9D8,RaceEvent::GetKoState(void),GetKoState__9RaceEvent,supported_exact_leaf,E-0041-M01
+0x002018C0,0x001FC9F8,RaceEvent::GetTimeState(void),GetTimeState__9RaceEvent,supported_exact_leaf,E-0041-M01
+0x00202088,0x001FD190,RaceEvent::GetRaceCount(void),GetRaceCount__9RaceEvent,supported_exact_leaf,E-0041-M01
+0x002043A0,0x001FF410,BeltMover::~BeltMover(void),_$_9BeltMover,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00204468,0x001FF4D8,BeltMover::DoSnapshot(ReplaySnapshot *),DoSnapshot__9BeltMoverP14ReplaySnapshot,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00204D78,0x001FFDE0,BeltMover::Move(float),Move__9BeltMoverf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002059D0,0x002009E0,"cSEDWedge::S_DebugPrint(char const *,...)",S_DebugPrint__9cSEDWedgePCce,supported_exact_leaf,E-0041-M01
+0x00207C68,0x00202B00,TrackPathManager::FindClosestPoint(bVector2 const *),FindClosestPoint__16TrackPathManagerPC8bVector2,supported_exact_leaf,E-0041-M01
+0x00207ED0,0x00202D58,"TrackPathManager::FindClosestAdjacentPointOnSamePath(bVector2 const *, TrackPathPoint *)",FindClosestAdjacentPointOnSamePath__16TrackPathManagerPC8bVector2P14TrackPathPoint,supported_exact_leaf,E-0041-M01
+0x00208598,0x00203480,"TrackPathManager::CompareDistances(float, float)",CompareDistances__16TrackPathManagerff,supported_exact_leaf,E-0041-M01
+0x002085E8,0x002034D0,"TrackPathManager::ComparePercentDistances(float, float)",ComparePercentDistances__16TrackPathManagerff,supported_exact_leaf,E-0041-M01
+0x002086B8,0x002035A0,TrackPathCoordinate::TrackPathCoordinate(void),__19TrackPathCoordinate,supported_exact_leaf,E-0041-M01
+0x00208B28,0x002039C0,Sound3d::Activate(bool),Activate__7Sound3db,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00208C78,0x00203B10,Sound3d::UpdateCamRelativeDistAndVelocity(bVector3 *),UpdateCamRelativeDistAndVelocity__7Sound3dP8bVector3,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00208FE0,0x00203E90,Sound3d::AzimuthToPan(unsigned short),AzimuthToPan__7Sound3dUs,supported_exact_leaf,E-0041-M01
+0x002091A0,0x00204060,Sound3d::~Sound3d(void),_$_7Sound3d,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002095D0,0x00204490,Sound3dSample::~Sound3dSample(void),_$_13Sound3dSample,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002096A0,0x00204548,"Sound3dSample::Update(bVector3 *, float, unsigned short, float)",Update__13Sound3dSampleP8bVector3fUsf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002096F8,0x002045A0,"Sound3dSample::Update(float, unsigned short, float)",Update__13Sound3dSamplefUsf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00209DC0,0x00204C58,Sound3dSample::ActivateSound(void),ActivateSound__13Sound3dSample,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00209E18,0x00204CB0,Sound3dSample::DeactivateSound(void),DeactivateSound__13Sound3dSample,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00209E98,0x00204D68,Sound3dSample::Mute(int),Mute__13Sound3dSamplei,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0020BE48,0x00206D08,actionHelicopter_t::execute(speechContext_t &),execute__18actionHelicopter_tR15speechContext_t,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0020BFB0,0x00206E70,"fsm::handleEvent(int, speechContext_t &)",handleEvent__3fsmiR15speechContext_t,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0020C060,0x00206F20,speech::state_t::~state_t(void),_$_Q26speech7state_t,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0020C100,0x00206FC0,"speech::state_t::handleEvent(int, speechContext_t &)",handleEvent__Q26speech7state_tiR15speechContext_t,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0020C3C8,0x00207288,fragmentedVector<transition>::operator[](long),__vc__t16fragmentedVector1Z10transitionl,supported_exact_leaf,E-0041-M01
+0x0020D8C0,0x00208780,nfsFsm::~nfsFsm(void),_$_6nfsFsm,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0020E3C8,0x00209288,rotorSpikeFailedAction_t::executeAction(speechContext_t &),executeAction__24rotorSpikeFailedAction_tR15speechContext_t,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0020E3E8,0x002092A8,rotorLocationAction_t::executeAction(speechContext_t &),executeAction__21rotorLocationAction_tR15speechContext_t,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0020E410,0x002092D0,rotorTrafficAction_t::executeAction(speechContext_t &),executeAction__20rotorTrafficAction_tR15speechContext_t,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0020E438,0x002092F8,rotorChatterAction_t::executeAction(speechContext_t &),executeAction__20rotorChatterAction_tR15speechContext_t,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0020FE70,0x0020AD30,PlayerEngineSound::~PlayerEngineSound(void),_$_17PlayerEngineSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00210400,0x0020B110,PlayerEngineSound::DeactivateSound(void),DeactivateSound__17PlayerEngineSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00210408,0x0020B118,PlayerEngineSound::ActivateSound(void),ActivateSound__17PlayerEngineSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00210410,0x0020B120,PlayerEngineSound::Mute(int),Mute__17PlayerEngineSoundi,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002105D0,0x0020B2E0,PlayerEngineSound::ResolveTables(void),ResolveTables__17PlayerEngineSound,supported_exact_leaf,E-0041-M01
+0x00211390,0x0020C0A0,"PlayerEngineSound::Update(float, unsigned short, float)",Update__17PlayerEngineSoundfUsf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002118A0,0x0020C5B0,"AIEngineSound::Update(float, unsigned short, float)",Update__13AIEngineSoundfUsf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00211A80,0x0020C790,AIEngineSound::Mute(int),Mute__13AIEngineSoundi,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00211D58,0x0020CA68,AIEngineSound::DeactivateSound(void),DeactivateSound__13AIEngineSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00211D60,0x0020CA70,AIEngineSound::ActivateSound(void),ActivateSound__13AIEngineSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002122E0,0x0020CFF0,"short smooth<short>(short, short, short)",smooth__H1Zs_X01X01X01_X01,supported_exact_leaf,E-0041-M01
+0x002123B8,0x0020D0C8,"float smooth<float>(float, float, float, float)",smooth__H1Zf_X01X01X01X01_X01,supported_exact_leaf,E-0041-M01
+0x002123F0,0x0020D100,"char min<char>(char, char)",min__H1Zc_X01X01_X01,supported_exact_leaf,E-0041-M01
+0x00212418,0x0020D128,AIEngineSound::~AIEngineSound(void),_$_13AIEngineSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002125A0,0x0020D2B0,BaseTireSound::Mute(int),Mute__13BaseTireSoundi,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00212CF0,0x0020DA00,PlayerTireSound::~PlayerTireSound(void),_$_15PlayerTireSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00212E88,0x0020DAD0,PlayerTireSound::DeactivateSound(void),DeactivateSound__15PlayerTireSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00212E90,0x0020DAD8,PlayerTireSound::ActivateSound(void),ActivateSound__15PlayerTireSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002134D8,0x0020E120,PlayerTireSound::Mute(int),Mute__15PlayerTireSoundi,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002135A0,0x0020E1E8,"PlayerTireSound::Update(float, unsigned short, float)",Update__15PlayerTireSoundfUsf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00214890,0x0020F4B0,kAITireSound::ActivateSound(void),ActivateSound__12kAITireSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00214898,0x0020F4B8,kAITireSound::DeactivateSound(void),DeactivateSound__12kAITireSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002148E0,0x0020F4E8,kAITireSound::Mute(int),Mute__12kAITireSoundi,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00214928,0x0020F530,"kAITireSound::Update(float, unsigned short, float)",Update__12kAITireSoundfUsf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002149A0,0x0020F5A8,kAITireSound::~kAITireSound(void),_$_12kAITireSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002149F8,0x0020F600,PlayerTireSound::ScaleRoadNoise(float),ScaleRoadNoise__15PlayerTireSoundf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00214A00,0x0020F608,PlayerTireSound::TriggerTireBlowOut(void),TriggerTireBlowOut__15PlayerTireSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00214A68,0x0020F670,BaseTireSound::ScaleRoadNoise(float),ScaleRoadNoise__13BaseTireSoundf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00214A70,0x0020F678,BaseTireSound::TriggerTireBlowOut(void),TriggerTireBlowOut__13BaseTireSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00214A78,0x0020F680,BaseTireSound::~BaseTireSound(void),_$_13BaseTireSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00214DF0,0x0020F9E8,ChopperSound::~ChopperSound(void),_$_12ChopperSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00214F30,0x0020FB28,"ChopperSound::Update(float, unsigned short, float)",Update__12ChopperSoundfUsf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00215000,0x0020FBF8,ChopperSound::Mute(int),Mute__12ChopperSoundi,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00215028,0x0020FC20,ChopperSound::DeactivateSound(void),DeactivateSound__12ChopperSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00215050,0x0020FC48,ChopperSound::ActivateSound(void),ActivateSound__12ChopperSound,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002197F0,0x00214410,MellowMover::~MellowMover(void),_$_11MellowMover,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002198C8,0x002144E8,MellowMover::DoSnapshot(ReplaySnapshot *),DoSnapshot__11MellowMoverP14ReplaySnapshot,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00219D38,0x00214958,MellowMover::Move(float),Move__11MellowMoverf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00219ED8,0x00214AE8,MellowMover::ComputeAuxiliaries(void),ComputeAuxiliaries__11MellowMover,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00219F50,0x00214B60,MellowMover::ResolveForces(void),ResolveForces__11MellowMover,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0021A638,0x00215248,"Mellovator::SetState(float, float, float, float)",SetState__10Mellovatorffff,supported_exact_leaf,E-0041-M01
+0x0021A680,0x00215290,Mellovator::GetDerivative(float *),GetDerivative__10MellovatorPf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0021A8C8,0x002154D8,Mellovator::ComputeAuxiliaries(void),ComputeAuxiliaries__10Mellovator,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0021AED8,0x00215AE8,Mellovator::ResolveForces(void),ResolveForces__10Mellovator,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0021B7F0,0x00216400,Mellovator::~Mellovator(void),_$_10Mellovator,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0021B880,0x00216490,Mellovator::SetState(float *),SetState__10MellovatorPf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0021B8A8,0x002164B8,Mellovator::GetState(float *),GetState__10MellovatorPf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0021B8D0,0x002164E0,Mellovator::GetState(void),GetState__10Mellovator,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0021B8D8,0x002164E8,Mellovator::GetSize(void),GetSize__10Mellovator,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0021BDC8,0x002169D8,DriveTarget::GetLastIndexToCheckForDrivability(void),GetLastIndexToCheckForDrivability__11DriveTarget,supported_exact_leaf,E-0041-M01
+0x0021DAC8,0x002186D8,DriveTarget::RecalculateLength(void),RecalculateLength__11DriveTarget,supported_exact_leaf,E-0041-M01
+0x0021E2E8,0x00218EF8,"LanguageManager::GetString(int, e_Languages, bool)",GetString__15LanguageManageri11e_Languagesb,supported_exact_leaf,E-0041-M01
+0x0021E3D0,0x00218FE0,LanguageManager::Loader(bChunk *),Loader__15LanguageManagerP6bChunk,supported_exact_leaf,E-0041-M01
+0x0021E428,0x00219038,LanguageManager::Unloader(bChunk *),Unloader__15LanguageManagerP6bChunk,supported_exact_leaf,E-0041-M01
+0x0021EB20,0x00219730,Collision::IsTwoCarCollision(void),IsTwoCarCollision__9Collision,supported_exact_leaf,E-0041-M01
+0x0021EB48,0x00219758,"Collision::GetCollidingCars(Car **, Car **)",GetCollidingCars__9CollisionPP3CarT1,supported_exact_leaf,E-0041-M01
+0x0021EBD8,0x002197E8,Collision::IsSmokeableInvolved(void),IsSmokeableInvolved__9Collision,supported_exact_leaf,E-0041-M01
+0x00220690,0x0021B0D0,Smokeable::~Smokeable(void),_$_9Smokeable,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002208A0,0x0021B2E0,Smokeable::DoSnapshot(ReplaySnapshot *),DoSnapshot__9SmokeableP14ReplaySnapshot,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00220CE8,0x0021B688,Smokeable::Move(float),Move__9Smokeablef,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002212D0,0x0021BBD8,Smokeable::MaybeExplodeWarhead(void),MaybeExplodeWarhead__9Smokeable,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00221340,0x0021BC48,"Smokeable::ConsiderImpulse(bVector3 *, bVector3 *)",ConsiderImpulse__9SmokeableP8bVector3T1,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00221F00,0x0021C7F8,Smokeable::GetFriction(void),GetFriction__9Smokeable,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00221F10,0x0021C808,Smokeable::GetBounciness(void),GetBounciness__9Smokeable,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00221F20,0x0021C818,Smokeable::GetTerrainType(void),GetTerrainType__9Smokeable,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00221F30,0x0021C828,Smokeable::IsMoveable(void),IsMoveable__9Smokeable,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00221F58,0x0021C850,Smokeable::GetInertiaTensorInverse(void),GetInertiaTensorInverse__9Smokeable,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00221F88,0x0021C880,Smokeable::GetMassInverse(void),GetMassInverse__9Smokeable,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00221FB8,0x0021C8B0,Smokeable::AreCollisionsEnabled(void),AreCollisionsEnabled__9Smokeable,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00221FD8,0x0021C8D0,Smokeable::IsBlinking(void),IsBlinking__9Smokeable,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00221FF0,0x0021C8E8,"Smokeable::ApplyImpulse(bVector3 *, bVector3 *)",ApplyImpulse__9SmokeableP8bVector3T1,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00222010,0x0021C908,Smokeable::GetRotation(void),GetRotation__9Smokeable,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00222020,0x0021C918,Smokeable::GetVelocity(void),GetVelocity__9Smokeable,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00222030,0x0021C928,Smokeable::GetPosition(void),GetPosition__9Smokeable,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00222050,0x0021C948,Smokeable::GetSmokeType(void),GetSmokeType__9Smokeable,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002244A0,0x0021ED28,tCopManager::GetNextPursuitID(void),GetNextPursuitID__11tCopManager,supported_exact_leaf,E-0041-M01
+0x00224F70,0x0021F7E8,tCopManager::GetCopByCar(Car *),GetCopByCar__11tCopManagerP3Car,supported_exact_leaf,E-0041-M01
+0x002254E8,0x0021FD60,tCopManager::GetCurrentCopSpeaker(void),GetCurrentCopSpeaker__11tCopManager,supported_exact_leaf,E-0041-M01
+0x002255B8,0x0021FE30,tCopManager::ReserveCopSpeaker(void),ReserveCopSpeaker__11tCopManager,supported_exact_leaf,E-0041-M01
+0x00225610,0x0021FE88,tCopManager::ReleaseCopSpeaker(unsigned int),ReleaseCopSpeaker__11tCopManagerUi,supported_exact_leaf,E-0041-M01
+0x00225C40,0x002204B0,tCopManager::GetArrestingOfficer(tPursuit *),GetArrestingOfficer__11tCopManagerP8tPursuit,supported_exact_leaf,E-0041-M01
+0x00226238,0x00220AA8,tCopManager::GetActiveRoadBlock(int),GetActiveRoadBlock__11tCopManageri,supported_exact_leaf,E-0041-M01
+0x00226448,0x00220CB8,tCopManager::GetRoadBlockFromLoadedDataIndex(int),GetRoadBlockFromLoadedDataIndex__11tCopManageri,supported_exact_leaf,E-0041-M01
+0x00226968,0x002211D8,tCopManager::GetNumActiveRoadBlocks(void),GetNumActiveRoadBlocks__11tCopManager,supported_exact_leaf,E-0041-M01
+0x00226BB0,0x00221420,tCopManager::GetSpeedTrapFromLoadedDataIndex(int),GetSpeedTrapFromLoadedDataIndex__11tCopManageri,supported_exact_leaf,E-0041-M01
+0x00227438,0x00221C78,tCopManager::IsBeingPursued(Car *),IsBeingPursued__11tCopManagerP3Car,supported_exact_leaf,E-0041-M01
+0x002289F8,0x00223280,tCopManager::ShouldDisplayBustedText(void),ShouldDisplayBustedText__11tCopManager,supported_exact_leaf,E-0041-M01
+0x00229ED0,0x00224730,tPursuit::SelectPrimaryCop(void),SelectPrimaryCop__8tPursuit,supported_exact_leaf,E-0041-M01
+0x0022BB28,0x002262A8,tPursuit::IsCopNearChasedCar(float),IsCopNearChasedCar__8tPursuitf,supported_exact_leaf,E-0041-M01
+0x0022BC08,0x00226388,tPursuit::IsRacingWithMe(Car *),IsRacingWithMe__8tPursuitP3Car,supported_exact_leaf,E-0041-M01
+0x0022C920,0x00226FA8,tPursuit::HasThisCop(tCop *),HasThisCop__8tPursuitP4tCop,supported_exact_leaf,E-0041-M01
+0x0022D080,0x00227708,tNearFollowTarget::GetVelocity(float),GetVelocity__17tNearFollowTargetf,supported_exact_leaf,E-0041-M01
+0x0022ED68,0x002293B0,tAICop::CanPatrollerSeeThisCar(Car *),CanPatrollerSeeThisCar__6tAICopP3Car,supported_exact_leaf,E-0041-M01
+0x00230BF8,0x0022B268,tAICop::IsNearPursuitTarget(void),IsNearPursuitTarget__6tAICop,supported_exact_leaf,E-0041-M01
+0x00230F00,0x0022B520,"DoSegmentsIntersect(bVector2 const &, bVector2 const &, bVector2 const &, bVector2 const &)",DoSegmentsIntersect__FRC8bVector2T0T0T0,supported_exact_leaf,E-0041-M01
+0x00231478,0x0022BA98,MakeRelativeAngle(float),MakeRelativeAngle__Ff,supported_exact_leaf,E-0041-M01
+0x002319D8,0x0022BFF8,CopSpeedFillerClass::Speak(tPursuit *),Speak__19CopSpeedFillerClassP8tPursuit,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00231A20,0x0022C040,CopSpeedFillerClass::IsAppropriate(tPursuit *),IsAppropriate__19CopSpeedFillerClassP8tPursuit,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00231AA0,0x0022C0C0,CopSpeedFillerClass::GetBank(void),GetBank__19CopSpeedFillerClass,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00231AA8,0x0022C0C8,CopTacticMiscFillerClass::Speak(tPursuit *),Speak__24CopTacticMiscFillerClassP8tPursuit,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00231B08,0x0022C128,CopTacticMiscFillerClass::IsAppropriate(tPursuit *),IsAppropriate__24CopTacticMiscFillerClassP8tPursuit,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00231B60,0x0022C180,CopTacticMiscFillerClass::GetBank(void),GetBank__24CopTacticMiscFillerClass,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00231B68,0x0022C188,CopLocationFillerClass::Speak(tPursuit *),Speak__22CopLocationFillerClassP8tPursuit,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00231BA0,0x0022C1C0,CopLocationFillerClass::IsAppropriate(tPursuit *),IsAppropriate__22CopLocationFillerClassP8tPursuit,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00231C00,0x0022C220,CopLocationFillerClass::GetBank(void),GetBank__22CopLocationFillerClass,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00231C08,0x0022C228,CopFillerSpeech::GetWeight(void),GetWeight__15CopFillerSpeech,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00231DD0,0x0022C3A8,GetU16(void *),GetU16__FPv,supported_exact_leaf,E-0041-M01
+0x00231DF0,0x0022C3C8,GetI16(void *),GetI16__FPv,supported_exact_leaf,E-0041-M01
+0x00232268,0x0022C840,CyclicBuffer::DataAvail(void),DataAvail__12CyclicBuffer,supported_exact_leaf,E-0041-M01
+0x00232498,0x0022CA70,"DCTImage::IDCTRowReference(short *, short *)",IDCTRowReference__8DCTImagePsT1,supported_exact_leaf,E-0041-M01
+0x00234A68,0x0022F028,"DCTImage::IDCTZero(unsigned char *, int)",IDCTZero__8DCTImagePUci,supported_exact_leaf,E-0041-M01
+0x00236D90,0x00230C30,"DCTTable::ScaleTable(int, short *)",ScaleTable__8DCTTableiPs,supported_exact_leaf,E-0041-M01
+0x00236DF8,0x00230C98,DCTTable::ConvertQualityToScale(int),ConvertQualityToScale__8DCTTablei,supported_exact_leaf,E-0041-M01
+0x00236EE8,0x00230D88,Huffman::NumBits(unsigned int),NumBits__7HuffmanUi,supported_exact_leaf,E-0041-M01
+0x00236F18,0x00230DB8,"Huffman::STORE(int, int)",STORE__7Huffmanii,supported_exact_leaf,E-0041-M01
+0x00237228,0x002310C8,Huffman::GetBits(unsigned int),GetBits__7HuffmanUi,supported_exact_leaf,E-0041-M01
+0x00237660,0x00231500,Huffman::GETBITS(unsigned int),GETBITS__7HuffmanUi,supported_exact_leaf,E-0041-M01
+0x00238E68,0x00232BB8,MV3Codec::~MV3Codec(void),_$_8MV3Codec,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00238FB0,0x00232D00,"MV3Codec::QueryDecompressEx(ICDecompressEx *, int)",QueryDecompressEx__8MV3CodecP14ICDecompressExi,supported_exact_leaf,E-0041-M01
+0x00239050,0x00232DA0,"MV3Codec::BeginDecompress(BitmapInfo *, BitmapInfo *)",BeginDecompress__8MV3CodecP10BitmapInfoT1,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002390B8,0x00232E08,"MV3Codec::BeginDecompressEx(ICDecompressEx *, int)",BeginDecompressEx__8MV3CodecP14ICDecompressExi,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002390E8,0x00232E38,"MV3Codec::DecompressFrame(ICDecompress *, int)",DecompressFrame__8MV3CodecP12ICDecompressi,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00239118,0x00232E68,"MV3Codec::DecompressFrameEx(ICDecompressEx *, int)",DecompressFrameEx__8MV3CodecP14ICDecompressExi,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x00239200,0x00232F50,MV3Codec::EndDecompress(void),EndDecompress__8MV3Codec,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x002393A0,0x002330F0,RingBuffer::GetLastFrame(void),GetLastFrame__10RingBuffer,supported_exact_leaf,E-0041-M01
+0x002395A0,0x002332F0,RingBuffer::ContinuousAvail(void),ContinuousAvail__10RingBuffer,supported_exact_leaf,E-0041-M01
+0x00239A58,0x002337A0,RingBuffer::GetFrame(void),GetFrame__10RingBuffer,supported_exact_leaf,E-0041-M01
+0x00239B48,0x00233890,RingBuffer::ReleaseFrame(void),ReleaseFrame__10RingBuffer,supported_exact_leaf,E-0041-M01
+0x00239C90,0x002339D8,"DrivingLocation::DoesThisRoutePointMatchThisRoute(TrackRoute *, TrackRoutePoint *)",DoesThisRoutePointMatchThisRoute__15DrivingLocationP10TrackRouteP15TrackRoutePoint,supported_exact_leaf,E-0041-M01
+0x0023A070,0x00233DB8,TrackedController::~TrackedController(void),_$_17TrackedController,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0023A088,0x00233DD0,TrackedController::Think(float),Think__17TrackedControllerf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0023A0F0,0x00233E38,TrackedController::DoSnapshot(ReplaySnapshot *),DoSnapshot__17TrackedControllerP14ReplaySnapshot,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0023A178,0x00233EC0,"TrackedController::SetCurrentRoute(TrackRoute *, TrackRoutePoint *)",SetCurrentRoute__17TrackedControllerP10TrackRouteP15TrackRoutePoint,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0023A198,0x00233EE0,TrackedController::GetCurrentRoute(void),GetCurrentRoute__17TrackedController,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0023A1C8,0x00233F10,TrackedController::FindWhereIAm(void),FindWhereIAm__17TrackedController,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0023A2F8,0x00234040,TrackedController::JustReset(void),JustReset__17TrackedController,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0023A300,0x00234048,TrackedController::GetAmountOutOfBounds(void),GetAmountOutOfBounds__17TrackedController,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0023A3D0,0x00234118,TrackedController::GetCurrentRoutePoint(void),GetCurrentRoutePoint__17TrackedController,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0023A4D8,0x00234220,RealController::~RealController(void),_$_14RealController,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0023A560,0x002342A8,RealController::DoSnapshot(ReplaySnapshot *),DoSnapshot__14RealControllerP14ReplaySnapshot,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0023AA50,0x00234798,RealController::Think(float),Think__14RealControllerf,unique_complete_vtable_slot_correspondence,E-0041-V01
+0x0023B0F8,0x00234E38,HudAnimator::HudAnimator(void),__11HudAnimator,supported_exact_leaf,E-0041-M01
+0x0023D368,0x002370A8,QuickSpline::FixupEndpoints(void),FixupEndpoints__11QuickSpline,supported_exact_leaf,E-0041-M01
+0x0023D600,0x00237340,"QuickSpline::GenerateExtrapolatedControlPoints(bVector4 *, int)",GenerateExtrapolatedControlPoints__11QuickSplineP8bVector4i,supported_exact_leaf,E-0041-M01
+0x0023D868,0x002375A8,"QuickSpline::FindClosestControlPoint(bVector3 const &, int)",FindClosestControlPoint__11QuickSplineRC8bVector3i,supported_exact_leaf,E-0041-M01
+0x0023F300,0x00238F38,JoystickCalibrationScreen::ResetJoystickCalibration(JoystickCalibration *),ResetJoystickCalibration__25JoystickCalibrationScreenP19JoystickCalibration,supported_exact_leaf,E-0041-M01
+0x00241960,0x0023B518,tSpikeStrip::GetRenderOrigin(bVector3 *),GetRenderOrigin__11tSpikeStripP8bVector3,supported_exact_leaf,E-0041-M01
+0x00241CF8,0x0023B8B0,"DrivingChoice::SetChoice(DrivingChoiceType, Car *, bool)",SetChoice__13DrivingChoice17DrivingChoiceTypeP3Carb,supported_exact_leaf,E-0041-M01
+0x00243988,0x0023D4B8,"DrivingChoice::ReduceCurrentL(float *, float, MovementWithRespectToLine, TrackRoutePoint *, int, float, bool)",ReduceCurrentL__13DrivingChoicePff25MovementWithRespectToLineP15TrackRoutePointifb,supported_exact_leaf,E-0041-M01
+0x00244768,0x0023E130,"FuturePoints::AddPoint(int, int, int, float, bool)",AddPoint__12FuturePointsiiifb,supported_exact_leaf,E-0041-M01
+0x002452B0,0x0023EC70,FuturePoints::Dump(Car *),Dump__12FuturePointsP3Car,supported_exact_leaf,E-0041-M01
+0x002455B0,0x0023EF70,TrackRoutePoint::GetAmountOutOfBounds(float),GetAmountOutOfBounds__15TrackRoutePointf,supported_exact_leaf,E-0041-M01
+0x00246BD8,0x002403D8,"MemcardLoader::MemcardLoader(int, MemcardLoaderModes)",__13MemcardLoaderi18MemcardLoaderModes,supported_exact_leaf,E-0041-M01
+0x00248568,0x00241C38,"AnimationGroup::AnimationGroup(int, int, int, float, float, float)",__14AnimationGroupiiifff,independently_reviewed_bridge,E-0041-R11
+0x00248BE8,0x002422B8,tSlideAnimation::tSlideAnimation(int),__15tSlideAnimationi,supported_exact_leaf,E-0041-M01
+0x002490D8,0x002427A8,"tExitScreenAnimation::tExitScreenAnimation(int, char const *, int)",__20tExitScreenAnimationiPCci,independently_reviewed_bridge,E-0041-R12
+0x002491B0,0x00242880,"tAnimatedBlurb::tAnimatedBlurb(int, int, int, int)",__14tAnimatedBlurbiiii,independently_reviewed_bridge,E-0041-R19
+0x002495F0,0x00242C40,tGlobalBackgroundAnimation::tGlobalBackgroundAnimation(void),__26tGlobalBackgroundAnimation,independently_reviewed_bridge,E-0041-R10
+0x00249790,0x00242DE0,tGlobalBackgroundAnimation::RemoveTextureHash(int),RemoveTextureHash__26tGlobalBackgroundAnimationi,supported_exact_leaf,E-0041-M01
+0x002497B8,0x00242E08,tGlobalBackgroundAnimation::GetNumTextures(void),GetNumTextures__26tGlobalBackgroundAnimation,supported_exact_leaf,E-0041-M01
+0x002497F0,0x00242E40,tGlobalBackgroundAnimation::GetNthTexture(int),GetNthTexture__26tGlobalBackgroundAnimationi,supported_exact_leaf,E-0041-M01
+0x00249C78,0x002432C8,tMenuAnimElement::tMenuAnimElement(FlailerObjectChunk *),__16tMenuAnimElementP18FlailerObjectChunk,independently_reviewed_bridge,E-0041-R08
+0x00249D70,0x002433C0,tMenuAnimElement::ApplyDeltaY(float),ApplyDeltaY__16tMenuAnimElementf,supported_exact_leaf,E-0041-M01
+0x00249DE0,0x00243430,"tScrollingMenuList::tScrollingMenuList(int, int, int, int, int, int)",__18tScrollingMenuListiiiiii,independently_reviewed_bridge,E-0041-R07
+0x0024A050,0x002436A0,tScrollingMenuList::FindMenuElement(int),FindMenuElement__18tScrollingMenuListi,supported_exact_leaf,E-0041-M01
+0x0024A248,0x00243898,tScrollingMenuList::Highlight(int),Highlight__18tScrollingMenuListi,supported_exact_leaf,E-0041-M01
+0x0024A3E0,0x00243A30,tScrollingMenuList::ShowUpArrow(void),ShowUpArrow__18tScrollingMenuList,supported_exact_leaf,E-0041-M01
+0x0024A430,0x00243A80,tScrollingMenuList::ShowDownArrow(void),ShowDownArrow__18tScrollingMenuList,supported_exact_leaf,E-0041-M01
+0x0024A690,0x00243CE0,"tLeftRightArrowScroll::tLeftRightArrowScroll(int, int, int)",__21tLeftRightArrowScrolliii,independently_reviewed_bridge,E-0041-R09
+0x0024D048,0x00246508,tKeyboard::PlayerRight(int),PlayerRight__9tKeyboardi,supported_exact_leaf,E-0041-M01
+0x0024E4D0,0x00247990,"tTrackGraph::GetVertexNumber(int, int)",GetVertexNumber__11tTrackGraphii,supported_exact_leaf,E-0041-M01
+0x002500B0,0x002494B8,tWordQueue::Store(void *),Store__10tWordQueuePv,supported_exact_leaf,E-0041-M01
+0x00250100,0x00249508,tWordQueue::Remove(void *),Remove__10tWordQueuePv,supported_exact_leaf,E-0041-M01
+0x00250288,0x00249690,bMemCpy,bMemCpy,supported_exact_leaf,E-0041-M01
+0x00250340,0x00249748,bMemSet,bMemSet,supported_exact_leaf,E-0041-M01
+0x002503F8,0x00249800,bList::GetNode(int),GetNode__5bListi,supported_exact_leaf,E-0041-M01
+0x00250428,0x00249830,bList::TraversebList(bNode *),TraversebList__5bListP5bNode,supported_exact_leaf,E-0041-M01
+0x00250458,0x00249860,bList::AddTail(bList *),AddTail__5bListP5bList,supported_exact_leaf,E-0041-M01
+0x002534A8,0x0024C8B0,bStringHash(char const *),bStringHash__FPCc,supported_exact_leaf,E-0041-M01
+0x002534E8,0x0024C8F0,"bStringHash(char const *, int)",bStringHash__FPCci,supported_exact_leaf,E-0041-M01
+0x00253520,0x0024C928,bStrLen(char const *),bStrLen__FPCc,supported_exact_leaf,E-0041-M01
+0x00253560,0x0024C968,"bStrCpy(char *, char const *)",bStrCpy__FPcPCc,supported_exact_leaf,E-0041-M01
+0x002535A0,0x0024C9A8,"bStrNCpy(char *, char const *, int)",bStrNCpy__FPcPCci,supported_exact_leaf,E-0041-M01
+0x002535F8,0x0024CA00,"bStrCmp(char const *, char const *)",bStrCmp__FPCcT0,supported_exact_leaf,E-0041-M01
+0x00253628,0x0024CA30,"bStrNCmp(char const *, char const *, int)",bStrNCmp__FPCcT0i,supported_exact_leaf,E-0041-M01
+0x00253718,0x0024CB20,"bStrCat(char *, char const *, char const *)",bStrCat__FPcPCcT1,supported_exact_leaf,E-0041-M01
+0x00253790,0x0024CB98,bToUpper(char),bToUpper__Fc,supported_exact_leaf,E-0041-M01
+0x002537D0,0x0024CBD8,bStrToLong(char const *),bStrToLong__FPCc,supported_exact_leaf,E-0041-M01
+0x002538B8,0x0024CCC0,"AsyncEntry::AsyncEntry(bFile *, int (*)(bFile *, AsyncEntry *))",__10AsyncEntryP5bFilePFP5bFileP10AsyncEntry_i,supported_exact_leaf,E-0041-M01
+0x00253A40,0x0024CE48,AsyncChunkPri::AsyncChunkPri(int),__13AsyncChunkPrii,supported_exact_leaf,E-0041-M01
+0x00255610,0x0024E9E0,ReadMemoryLong(unsigned char const *),ReadMemoryLong__FPCUc,supported_exact_leaf,E-0041-M01
+0x002572D8,0x002506A8,MemoryPool::GetAmountFree(void),GetAmountFree__10MemoryPool,supported_exact_leaf,E-0041-M01
+0x00257310,0x002506E0,MemoryPool::GetLargestFreeBlock(void),GetLargestFreeBlock__10MemoryPool,supported_exact_leaf,E-0041-M01
+0x00257CD0,0x002510A0,"bGetSlotNumber(SlotPool *, void *)",bGetSlotNumber__FP8SlotPoolPv,supported_exact_leaf,E-0041-M01
+0x00257DF8,0x002511C8,SlotPool::FlushSlotPool(void),FlushSlotPool__8SlotPool,supported_exact_leaf,E-0041-M01
+0x00258200,0x002515D0,SlotPool::FastMalloc(void),FastMalloc__8SlotPool,supported_exact_leaf,E-0041-M01
+0x002588A0,0x00251C70,"bNormalize(bVector2 *, bVector2 const *)",bNormalize__FP8bVector2PC8bVector2,supported_exact_leaf,E-0041-M01
+0x002588F8,0x00251CC8,"bNormalize(bVector2 *, bVector2 const *, float)",bNormalize__FP8bVector2PC8bVector2f,supported_exact_leaf,E-0041-M01
+0x00258958,0x00251D28,"bNormalize(bVector3 *, bVector3 const *, float)",bNormalize__FP8bVector3PC8bVector3f,supported_exact_leaf,E-0041-M01
+0x002589D8,0x00251DA8,"bScaleAdd(bVector2 *, bVector2 const *, bVector2 const *, float)",bScaleAdd__FP8bVector2PC8bVector2T1f,supported_exact_leaf,E-0041-M01
+0x00258A08,0x00251DD8,"bEqual(bVector2 const *, bVector2 const *, float)",bEqual__FPC8bVector2T0f,supported_exact_leaf,E-0041-M01
+0x00258A58,0x00251E28,"bEqual(bVector3 const *, bVector3 const *, float)",bEqual__FPC8bVector3T0f,supported_exact_leaf,E-0041-M01
+0x00259408,0x002527D8,"bExpandBoundingBox(bVector2 *, bVector2 *, bVector2 const *)",bExpandBoundingBox__FP8bVector2T0PC8bVector2,supported_exact_leaf,E-0041-M01
+0x00259448,0x00252818,"bExpandBoundingBox(bVector2 *, bVector2 *, bVector2 const *, float)",bExpandBoundingBox__FP8bVector2T0PC8bVector2f,supported_exact_leaf,E-0041-M01
+0x002594E0,0x002528B0,"bBoundingBoxIsInside(bVector2 *, bVector2 *, bVector2 const *, float)",bBoundingBoxIsInside__FP8bVector2T0PC8bVector2f,supported_exact_leaf,E-0041-M01
+0x00259558,0x00252928,"bBoundingBoxIsInside(bVector2 *, bVector2 *, bVector2 *, bVector2 *)",bBoundingBoxIsInside__FP8bVector2T0T0T0,supported_exact_leaf,E-0041-M01
+0x002595C0,0x00252990,"bBoundingBoxOverlapping(bVector2 *, bVector2 *, bVector2 *, bVector2 *)",bBoundingBoxOverlapping__FP8bVector2T0T0T0,supported_exact_leaf,E-0041-M01
+0x00259660,0x00252A30,"bExpandBoundingBox(bVector3 *, bVector3 *, bVector3 const *)",bExpandBoundingBox__FP8bVector3T0PC8bVector3,supported_exact_leaf,E-0041-M01
+0x00259688,0x00252A58,"bExpandBoundingBox(bVector3 *, bVector3 *, bVector3 const *, float)",bExpandBoundingBox__FP8bVector3T0PC8bVector3f,supported_exact_leaf,E-0041-M01
+0x002596D0,0x00252AA0,"bExpandBoundingBox(bVector3 *, bVector3 *, bVector3 const *, bVector3 const *)",bExpandBoundingBox__FP8bVector3T0PC8bVector3T2,supported_exact_leaf,E-0041-M01
+0x002596F8,0x00252AC8,"bBoundingBoxIsInside(bVector3 *, bVector3 *, bVector3 const *, float)",bBoundingBoxIsInside__FP8bVector3T0PC8bVector3f,supported_exact_leaf,E-0041-M01
+0x00259840,0x00252C10,"bBoundingBoxOverlapping(bVector3 *, bVector3 *, bVector3 *, bVector3 *)",bBoundingBoxOverlapping__FP8bVector3T0T0T0,supported_exact_leaf,E-0041-M01
+0x00259DF8,0x002531C8,"bConjugate(bQuaternion *, bQuaternion const *)",bConjugate__FP11bQuaternionPC11bQuaternion,supported_exact_leaf,E-0041-M01
+0x00259E60,0x00253230,"bNormalize(bQuaternion *, bQuaternion const *)",bNormalize__FP11bQuaternionPC11bQuaternion,supported_exact_leaf,E-0041-M01
+0x00259EA0,0x00253270,"bMult(bQuaternion *, bQuaternion const *, bQuaternion const *)",bMult__FP11bQuaternionPC11bQuaternionT1,supported_exact_leaf,E-0041-M01
+0x00259F08,0x002532D8,"bQuaternionToMatrix(bMatrix4 *, bQuaternion const *)",bQuaternionToMatrix__FP8bMatrix4PC11bQuaternion,supported_exact_leaf,E-0041-M01
+0x0025A2D0,0x002536A0,bInverse(int),bInverse__Fi,supported_exact_leaf,E-0041-M01
+0x0025A300,0x002536D0,"bDiv(int, int)",bDiv__Fii,supported_exact_leaf,E-0041-M01
+0x0025A370,0x00253740,bSqrt32(unsigned int),bSqrt32__FUi,supported_exact_leaf,E-0041-M01
+0x0025A3D0,0x002537A0,"bRandom(int, unsigned int *)",bRandom__FiPUi,supported_exact_leaf,E-0041-M01
+0x0025A4C8,0x00253898,"bFMod(float, float)",bFMod__Fff,supported_exact_leaf,E-0041-M01
+0x0025AC68,0x00254010,bIdentity(bMatrix4 *),bIdentity__FP8bMatrix4,supported_exact_leaf,E-0041-M01
+0x0025AC98,0x00254040,"bInvertMatrix(bMatrix4 *, bMatrix4 const *)",bInvertMatrix__FP8bMatrix4PC8bMatrix4,supported_exact_leaf,E-0041-M01
+0x0025AE18,0x002541C0,"bMulMatrix(bMatrix4 *, bMatrix4 const *, bMatrix4 const *)",bMulMatrix__FP8bMatrix4PC8bMatrix4T1,supported_exact_leaf,E-0041-M01
+0x00266F08,0x0025FBB0,GetAttack(unsigned int),GetAttack__FUi,supported_exact_leaf,E-0041-M01
+0x00266F60,0x0025FC08,GetRelease(unsigned int),GetRelease__FUi,supported_exact_leaf,E-0041-M01
+0x00267F58,0x00260BE0,GetChannelNum(unsigned char),GetChannelNum__FUc,supported_exact_leaf,E-0041-M01
+0x00267FA8,0x00260C30,GetLoop(unsigned char),GetLoop__FUc,supported_exact_leaf,E-0041-M01
+0x002697E0,0x00261B30,GetPanFromAzimuth(unsigned short),GetPanFromAzimuth__FUs,supported_exact_leaf,E-0041-M01
+0x0026D258,0x00265508,SOUND_HzToSPU(unsigned int),SOUND_HzToSPU__FUi,supported_exact_leaf,E-0041-M01
+0x0026D9D8,0x00265C88,SOUND_GetMSHSampleCount(unsigned int),SOUND_GetMSHSampleCount__FUi,supported_exact_leaf,E-0041-M01
+0x0026FB80,0x00267E30,"SOUND_ScaleVol(int, int)",SOUND_ScaleVol__Fii,supported_exact_leaf,E-0041-M01
+0x002702B0,0x00268560,"DTS_RPC(unsigned int, void *, int)",DTS_RPC__FUiPvi,supported_exact_leaf,E-0041-M01
+0x002705C0,0x00268870,"bEffect::SetParameter(unsigned int, unsigned int, float)",SetParameter__7bEffectUiUif,supported_exact_leaf,E-0041-M01
+0x00273280,0x0026B530,"bSample::Initialize(void (*)(unsigned int, unsigned int, unsigned int), unsigned int)",Initialize__7bSamplePFUiUiUi_vUi,supported_exact_leaf,E-0041-M01
+0x002735A8,0x0026B828,bSample::GetName(void),GetName__7bSample,supported_exact_leaf,E-0041-M01
+0x002735E0,0x0026B860,bSample::GetBankName(void),GetBankName__7bSample,supported_exact_leaf,E-0041-M01
+0x00273618,0x0026B898,bSample::SetCategory(unsigned int),SetCategory__7bSampleUi,supported_exact_leaf,E-0041-M01
+0x00275B70,0x0026DC18,bSample::GetType(void),GetType__7bSample,supported_exact_leaf,E-0041-M01
+0x00275BA8,0x0026DC50,bSample::IsVoiceLockedPlaying(void),IsVoiceLockedPlaying__7bSample,supported_exact_leaf,E-0041-M01
+0x00275BE0,0x0026DC88,bSample::IsVoiceLocked(void),IsVoiceLocked__7bSample,supported_exact_leaf,E-0041-M01
+0x00275C18,0x0026DCC0,bSample::ReleaseVoice(void),ReleaseVoice__7bSample,supported_exact_leaf,E-0041-M01
+0x00275D40,0x0026DDE8,bSample::GetFlags(void),GetFlags__7bSample,supported_exact_leaf,E-0041-M01
+0x00275D70,0x0026DE18,bSample::GetPitch(void),GetPitch__7bSample,supported_exact_leaf,E-0041-M01
+0x00275DA8,0x0026DE50,bSample::GetPan(void),GetPan__7bSample,supported_exact_leaf,E-0041-M01
+0x00275DE0,0x0026DE88,bSample::GetSampleVolume(void),GetSampleVolume__7bSample,supported_exact_leaf,E-0041-M01
+0x00275E50,0x0026DEF8,bSample::GetCallback(void),GetCallback__7bSample,supported_exact_leaf,E-0041-M01
+0x00275E88,0x0026DF30,"bSample::SetCallback(void (*)(unsigned int, unsigned int, unsigned int), unsigned int)",SetCallback__7bSamplePFUiUiUi_vUi,supported_exact_leaf,E-0041-M01
+0x00275EB8,0x0026DF60,bSample::GetCategory(void),GetCategory__7bSample,supported_exact_leaf,E-0041-M01
+0x00275EF0,0x0026DF98,bSample::IsPaused(void),IsPaused__7bSample,supported_exact_leaf,E-0041-M01
+0x00276500,0x0026E5A8,bSegment::GetOffset(void),GetOffset__8bSegment,supported_exact_leaf,E-0041-M01
+0x00276538,0x0026E5E0,bSegment::GetSize(void),GetSize__8bSegment,supported_exact_leaf,E-0041-M01
+0x00276570,0x0026E618,"bSegment::GetSize(bFile *, unsigned int, unsigned int, unsigned int)",GetSize__8bSegmentP5bFileUiUiUi,supported_exact_leaf,E-0041-M01
+0x002765B0,0x0026E658,bSegment::GetDataSize(void),GetDataSize__8bSegment,supported_exact_leaf,E-0041-M01
+0x002765E8,0x0026E690,bSegment::GetHeaderSize(void),GetHeaderSize__8bSegment,supported_exact_leaf,E-0041-M01
+0x00277DC0,0x0026FE38,bSound::GetCategoryVolume(unsigned int),GetCategoryVolume__6bSoundUi,supported_exact_leaf,E-0041-M01
+0x00277EA0,0x0026FF18,bSound::GetStatus(void),GetStatus__6bSound,supported_exact_leaf,E-0041-M01
+0x00278320,0x00270398,bSound::EnablePrintf(unsigned int),EnablePrintf__6bSoundUi,supported_exact_leaf,E-0041-M01
+0x00278368,0x002703E0,bSound::DisablePrintf(void),DisablePrintf__6bSound,supported_exact_leaf,E-0041-M01
+0x0027A6D8,0x002726E8,bSound::getPendingRegion(int),getPendingRegion__6bSoundi,supported_exact_leaf,E-0041-M01
+0x0027A720,0x00272730,bSound::getPendingRegionsCount(void),getPendingRegionsCount__6bSound,supported_exact_leaf,E-0041-M01
+0x0027C5C0,0x00274550,bVoice::Release(void),Release__6bVoice,supported_exact_leaf,E-0041-M01
+0x0027C5E8,0x00274578,"bVoice::Set(unsigned short, bSample *)",Set__6bVoiceUsP7bSample,supported_exact_leaf,E-0041-M01
+0x0027C6F8,0x00274688,bVoice::bVoice(void),__6bVoice,supported_exact_leaf,E-0041-M01
+0x002800E0,0x00278070,cJukeboxPlayer::IsDonePlaying(void),IsDonePlaying__14cJukeboxPlayer,supported_exact_leaf,E-0041-M01
+0x00280130,0x002780C0,cJukeboxPlayer::IsDoneFading(void),IsDoneFading__14cJukeboxPlayer,supported_exact_leaf,E-0041-M01
+0x00280260,0x002781F0,cJukeboxPlayer::GetSampleRate(void),GetSampleRate__14cJukeboxPlayer,supported_exact_leaf,E-0041-M01
+0x00280298,0x00278228,bSound::GetPath(void),GetPath__6bSound,supported_exact_leaf,E-0041-M01
+0x00280340,0x002782D0,bSampleStream::SetSampleRate(unsigned int),SetSampleRate__13bSampleStreamUi,supported_exact_leaf,E-0041-M01
+0x00280B50,0x002789C0,memclr,memclr,supported_exact_leaf,E-0041-M01
+0x002813D8,0x002795F0,sceDevVu0Sync,sceDevVu0Sync,supported_exact_leaf,E-0041-M01
+0x00281688,0x002798A0,sceVuCheckBusy,sceVuCheckBusy,supported_exact_leaf,E-0041-M01
+0x002816B8,0x002798D0,sceVu0MemWriteQ,sceVu0MemWriteQ,supported_exact_leaf,E-0041-M01
+0x002816F8,0x00279910,sceVu0MemReadQ,sceVu0MemReadQ,supported_exact_leaf,E-0041-M01
+0x00281888,0x00279AA0,sceDevVu1Sync,sceDevVu1Sync,supported_exact_leaf,E-0041-M01
+0x00283820,0x0027BA60,_sceSDC,_sceSDC,supported_exact_leaf,E-0041-M01
+0x00283960,0x0027BBA0,_sceIDC,_sceIDC,supported_exact_leaf,E-0041-M01
+0x00284030,0x0027C3B0,kputchar,kputchar,supported_exact_leaf,E-0041-M01
+0x00284150,0x0027C4D0,ftoi,ftoi,supported_exact_leaf,E-0041-M01
+0x002853A8,0x0027D700,_sceRpcGetFPacket,_sceRpcGetFPacket,supported_exact_leaf,E-0041-M01
+0x00285688,0x0027D9E0,_search_svdata,_search_svdata,supported_exact_leaf,E-0041-M01
+0x00285B48,0x0027DEA0,sceSifCheckStatRpc,sceSifCheckStatRpc,supported_exact_leaf,E-0041-M01
+0x0028AFA0,0x002832E0,DIntr,DIntr,supported_exact_leaf,E-0041-M01
+0x0028BDA0,0x00283CE8,QueuePeekWriteDone,QueuePeekWriteDone,supported_exact_leaf,E-0041-M01
+0x0028BDE0,0x00283D28,QueuePeekReadDone,QueuePeekReadDone,supported_exact_leaf,E-0041-M01
+0x002903E8,0x00288330,simpleatoi.0,simpleatoi.0,supported_exact_leaf,E-0041-M01
+0x002905D0,0x00288518,simpleatoi.3,simpleatoi.3,supported_exact_leaf,E-0041-M01
+0x00290920,0x00288868,SPCH_GetSampleDataRate,SPCH_GetSampleDataRate,supported_exact_leaf,E-0041-M01
+0x00290F58,0x00288EA0,iSPCHBank_GetSampleTimeInQueue,iSPCHBank_GetSampleTimeInQueue,supported_exact_leaf,E-0041-M01
+0x00291250,0x00289198,iSPCH_SearchEventDat,iSPCH_SearchEventDat,supported_exact_leaf,E-0041-M01
+0x00292A08,0x0028A950,iSPCH_ClearCycleBit,iSPCH_ClearCycleBit,supported_exact_leaf,E-0041-M01
+0x00292A70,0x0028A9B8,iSPCH_TestBit,iSPCH_TestBit,supported_exact_leaf,E-0041-M01
+0x002930F8,0x0028B040,iSPCH_ShortRuleStatus,iSPCH_ShortRuleStatus,supported_exact_leaf,E-0041-M01
+0x00293520,0x0028B468,iSPCH_IterateChoice,iSPCH_IterateChoice,supported_exact_leaf,E-0041-M01
+0x00294128,0x0028C070,iSPCH_TestValidParm,iSPCH_TestValidParm,supported_exact_leaf,E-0041-M01
+0x00294768,0x0028C6B0,SPCHMEM_blockmove,SPCHMEM_blockmove,supported_exact_leaf,E-0041-M01
+0x002950A0,0x0028CFE8,iSPCH_SentenceUsesParm,iSPCH_SentenceUsesParm,supported_exact_leaf,E-0041-M01
+0x002954F8,0x0028D440,iSPCH_CheckSentenceRules,iSPCH_CheckSentenceRules,supported_exact_leaf,E-0041-M01
+0x002958C8,0x0028D810,iSPCH_InitSample,iSPCH_InitSample,supported_exact_leaf,E-0041-M01
+0x00295E68,0x0028DDB0,tobcd,tobcd,supported_exact_leaf,E-0041-M01
+0x00295E98,0x0028DDE0,frombcd,frombcd,supported_exact_leaf,E-0041-M01
+0x00296D80,0x0028ECC8,memcmp,memcmp,supported_exact_leaf,E-0041-M01
+0x00296E14,0x0028ED5C,memcpy,memcpy,supported_exact_leaf,E-0041-M01
+0x00296EC4,0x0028EE0C,memset,memset,supported_exact_leaf,E-0041-M01
+0x00297BB0,0x0028FAF8,strcpy,strcpy,supported_exact_leaf,E-0041-M01
+0x00297CC4,0x0028FC0C,strlen,strlen,supported_exact_leaf,E-0041-M01
+0x00297E00,0x0028FD48,strncpy,strncpy,supported_exact_leaf,E-0041-M01
+0x00299800,0x00291748,exponent,exponent,supported_exact_leaf,E-0041-M01
+0x0029C068,0x00293FB0,_mbtowc_r,_mbtowc_r,supported_exact_leaf,E-0041-M01
+0x0029C0A4,0x00293FEC,memchr,memchr,supported_exact_leaf,E-0041-M01
+0x0029C184,0x002940CC,memmove,memmove,supported_exact_leaf,E-0041-M01
+0x0029C330,0x00294278,_Bfree,_Bfree,supported_exact_leaf,E-0041-M01
+0x0029C5C0,0x00294508,_hi0bits,_hi0bits,supported_exact_leaf,E-0041-M01
+0x0029C648,0x00294590,_lo0bits,_lo0bits,supported_exact_leaf,E-0041-M01
+0x0029CBE8,0x00294B30,__mcmp,__mcmp,supported_exact_leaf,E-0041-M01
+0x0029D2A8,0x002951F0,isinf,isinf,supported_exact_leaf,E-0041-M01
+0x0029D2F0,0x00295238,isnan,isnan,supported_exact_leaf,E-0041-M01
+0x0029D498,0x002953E0,strcmp,strcmp,supported_exact_leaf,E-0041-M01
+0x0029F168,0x002970B0,old_find_exception_handler,old_find_exception_handler,supported_exact_leaf,E-0041-M01
+0x002A04F0,0x00298438,__muldi3,__muldi3,supported_exact_leaf,E-0041-M01
+0x002A1068,0x00298FB0,__pack_d,__pack_d,supported_exact_leaf,E-0041-M01
+0x002A1198,0x002990E0,__unpack_d,__unpack_d,supported_exact_leaf,E-0041-M01
+0x002A1948,0x00299890,__fpcmp_parts_d,__fpcmp_parts_d,supported_exact_leaf,E-0041-M01
+0x002A24B8,0x0029A400,__pack_f,__pack_f,supported_exact_leaf,E-0041-M01
+0x002A25C8,0x0029A510,__unpack_f,__unpack_f,supported_exact_leaf,E-0041-M01
+0x002A2CA8,0x0029ABF0,__fpcmp_parts_f,__fpcmp_parts_f,supported_exact_leaf,E-0041-M01
+0x002A3098,0x0029AFE0,decode_uleb128,decode_uleb128,supported_exact_leaf,E-0041-M01
+0x002A30E0,0x0029B028,decode_sleb128,decode_sleb128,supported_exact_leaf,E-0041-M01
+0x002A3130,0x0029B078,fde_merge,fde_merge,supported_exact_leaf,E-0041-M01
+0x002A3498,0x0029B3E0,count_fdes,count_fdes,supported_exact_leaf,E-0041-M01
+0x002A34E0,0x0029B428,add_fdes,add_fdes,supported_exact_leaf,E-0041-M01
+0x002A3F50,0x0029BE98,fde_split,fde_split,supported_exact_leaf,E-0041-M01

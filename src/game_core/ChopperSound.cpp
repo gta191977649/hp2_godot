@@ -29,22 +29,26 @@ void ChopperSound::Sub_00214DF0() {
 }
 
 // ELF 0x00214F30; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00214f30.md.
-void ChopperSound::Sub_00214F30() {
-    hp2::not_implemented("0x00214F30", "ChopperSound::Sub_00214F30 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x0020FB28: ChopperSound::Update(float, unsigned short, float); retail 0x00214F30.
+void ChopperSound::Update() {
+    hp2::not_implemented("0x00214F30", "ChopperSound::Update (signature and full body unresolved)");
 }
 
 // ELF 0x00215000; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00215000.md.
-void ChopperSound::Sub_00215000() {
-    hp2::not_implemented("0x00215000", "ChopperSound::Sub_00215000 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x0020FBF8: ChopperSound::Mute(int); retail 0x00215000.
+void ChopperSound::Mute() {
+    hp2::not_implemented("0x00215000", "ChopperSound::Mute (signature and full body unresolved)");
 }
 
 // ELF 0x00215028; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00215028.md.
-void ChopperSound::Sub_00215028() {
-    hp2::not_implemented("0x00215028", "ChopperSound::Sub_00215028 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x0020FC20: ChopperSound::DeactivateSound(void); retail 0x00215028.
+void ChopperSound::DeactivateSound() {
+    hp2::not_implemented("0x00215028", "ChopperSound::DeactivateSound (signature and full body unresolved)");
 }
 
 // ELF 0x00215050; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00215050.md.
-void ChopperSound::Sub_00215050() {
-    hp2::not_implemented("0x00215050", "ChopperSound::Sub_00215050 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x0020FC48: ChopperSound::ActivateSound(void); retail 0x00215050.
+void ChopperSound::ActivateSound() {
+    hp2::not_implemented("0x00215050", "ChopperSound::ActivateSound (signature and full body unresolved)");
 }
 } // namespace hp2::recovered

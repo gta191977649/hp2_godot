@@ -1,6 +1,8 @@
 #include "port/runtime/frame_builder.hpp"
 #include <algorithm>
 #include <numeric>
+#include <cmath>
+#include "game_core/port/not_implemented.hpp"
 
 namespace port::runtime {
 namespace {
@@ -25,6 +27,36 @@ bool emit(render::Frame& out, render::Quad quad, const render::Rect& clip) {
     if (!render::crop(quad, clip)) return false;
     out.quads.push_back(quad);
     return true;
+}
+
+// Port projection of00140098, E-0039-F02: pairs belong to the CURRENT glyph,
+// and their byte identifies the PREVIOUS character. This is deliberately not measurement.
+float pair_adjustment(const hp2::frontend::FeFont& font,
+                      const hp2::frontend::FeGlyph& glyph, unsigned char previous) {
+    const auto count = static_cast<std::int16_t>(glyph.flags);
+    for (int i = 0; i < count; ++i) {
+        const auto index = static_cast<std::size_t>(glyph.field_0x1c) + i;
+        if (index >= font.field_0x410.size())
+            hp2::not_implemented("0x00140098", "font pair range outside original table");
+        const auto& pair = font.field_0x410[index];
+        if (pair.first == previous) return pair.second;
+    }
+    return 0;
+}
+
+// E-0039-F04,00141DB0/00141DD8 and table002F09C0. Byte92 remains ordinary text.
+constexpr unsigned char kSub_00141DD8_002F09C0[] = {
+    'a','b','d','e','f','g','i','j','h','k','n','o','l','m','3','w',
+    'p','v',0x92,'u','q','r','t','s','c','x','2','y','z','1'};
+bool inline_button(unsigned char code) { return code >= 0x80 && code <= 0x9d && code != 0x92; }
+
+float fixed_cell(const hp2::frontend::FeFont& font) {
+    //0013FFA8 ->001401D8 over the verbatim string at002AF1A0.
+    float width = 0;
+    for (const unsigned char code : std::string("1234567890:- "))
+        for (const auto& glyph : font.glyphs)
+            if (glyph.code == code && width < glyph.advance) width = glyph.advance;
+    return width;
 }
 
 } // namespace
@@ -101,13 +133,14 @@ FrameStats build_frame(hp2::frontend::FeScreen& screen, const WidgetSizes& sizes
     std::vector<std::size_t> order(screen.widgets.size());
     std::iota(order.begin(), order.end(), std::size_t{0});
     std::stable_sort(order.begin(), order.end(), [&screen](std::size_t a, std::size_t b) {
-        return screen.widgets[a].layer > screen.widgets[b].layer;
+        return static_cast<std::int8_t>(screen.widgets[a].layer) >
+               static_cast<std::int8_t>(screen.widgets[b].layer);
     });
 
     const auto measure = sizes.measure();
     for (const std::size_t slot : order) {
         const auto& w = screen.widgets[slot];
-        if (w.visible == 0) continue;
+        if (w.visible != 1) continue; //00145F30, E-0039-Q08
         if (!options.suppressed_widget.empty() && w.name == options.suppressed_widget) continue;
 
         auto clip = clip_of(screen, w, measure);
@@ -119,11 +152,21 @@ FrameStats build_frame(hp2::frontend::FeScreen& screen, const WidgetSizes& sizes
             const auto* font = sizes.font(w.texture_hash);
             if (font == nullptr) { ++stats.missing; continue; }
             if (w.text.empty()) continue;
+            const bool fixed = !wrapped && (w.text_align & 0x40) != 0;
+            const float cell = fixed ? fixed_cell(*font) : 0;
+            float align_width = WidgetSizes::text_advance(*font, w.text);
+            if (fixed) {
+                align_width = 0;
+                for (const unsigned char code : w.text)
+                    for (const auto& glyph : font->glyphs) if (glyph.code == code) { align_width += cell; break; }
+            }
             float pen_x = w.x;
-            // align bit 0x04 centres the string on the authored x (verified against
-            // PRESS_START_1 at x=320 and the right-hand stat column at x=494).
-            if ((w.text_align & 4) != 0)
-                pen_x -= WidgetSizes::text_advance(*font, w.text) * w.scale_x * 0.5f;
+            //001424F4..00142524: right(bit1) takes precedence over centre(bit4).
+            //00140D30 measures advances WITHOUT kerning, unlike the subsequent draw walk.
+            if ((w.text_align & 1) != 0)
+                pen_x -= align_width * w.scale_x;
+            else if ((w.text_align & 4) != 0)
+                pen_x -= align_width * w.scale_x * 0.5f;
             int emitted = 0;
             float pen_y = w.y;
             for (std::size_t character = 0; character < w.text.size(); ++character) {
@@ -148,18 +191,44 @@ FrameStats build_frame(hp2::frontend::FeScreen& screen, const WidgetSizes& sizes
                         continue;
                     }
                 }
+                if (!fixed && inline_button(code)) {
+                    const auto* buttons = sizes.font(hp2::frontend::StringHash_002534A8("BUTTONSOUT"));
+                    if (buttons == nullptr) { ++stats.missing; continue; }
+                    const auto mapped = kSub_00141DD8_002F09C0[code-0x80];
+                    for (const auto& icon : buttons->glyphs) if (icon.code == mapped) {
+                        render::Quad quad;
+                        quad.texture = buttons->texture_hash;
+                        //00141A98 helper width uses scale twice;00141DD8 returns UNSCALED advance.
+                        quad.destination = {pen_x,pen_y,icon.w*w.scale_x*w.scale_x,icon.h*w.scale_y};
+                        quad.source = {icon.u+0.5f,icon.v+0.5f,icon.w,icon.h};
+                        quad.color = colour;
+                        if (emit(out,quad,clip)) { ++stats.glyphs; ++emitted; }
+                        pen_x += icon.advance;
+                        break;
+                    }
+                    continue;
+                }
                 const hp2::frontend::FeGlyph* glyph = nullptr;
                 for (const auto& candidate : font->glyphs) {
                     if (candidate.code == code) { glyph = &candidate; break; }
                 }
                 if (glyph == nullptr) continue;
+                float adjustment = fixed || character == 0 ? 0 : pair_adjustment(*font, *glyph,
+                    static_cast<unsigned char>(w.text[character - 1])) * w.scale_x;
+                //0014261C..00142640 clamps the SCALED offset; wrapped00144ED0 has no clamp.
+                if (!wrapped && std::abs(adjustment) > 80.0f) adjustment = 0;
                 render::Quad quad;
                 quad.texture = w.texture_hash;
-                quad.destination = {pen_x, pen_y, glyph->w * w.scale_x, glyph->h * w.scale_y};
-                quad.source = {glyph->u, glyph->v, glyph->w, glyph->h};
+                //00141A98 (wrapped helper) multiplies X scale twice; normal001422F0 once.
+                quad.destination = {pen_x + adjustment + (fixed ? (cell-glyph->advance)*0.5f : 0), pen_y,
+                    glyph->w * w.scale_x * (wrapped || fixed ? w.scale_x : 1.0f), glyph->h * w.scale_y};
+                //00142694..001426D4: equal half-texel offsets at both UV edges, same extent.
+                quad.source = {glyph->u + 0.5f, glyph->v + 0.5f, glyph->w, glyph->h};
                 quad.color = colour;
                 if (emit(out, quad, clip)) { ++stats.glyphs; ++emitted; }
-                pen_x += glyph->advance * w.scale_x;
+                // Preserve the original double application of scale to kerning.00142844..54.
+                const float step = (fixed ? cell : glyph->advance + adjustment) * w.scale_x;
+                pen_x += wrapped ? std::nearbyint(step) : step;
             }
             if (emitted > 0) ++stats.texts;
             else if (!w.text.empty()) ++stats.clipped_out;
@@ -174,6 +243,23 @@ FrameStats build_frame(hp2::frontend::FeScreen& screen, const WidgetSizes& sizes
         quad.destination = {w.x, w.y, bitmap.width * w.scale_x, bitmap.height * w.scale_y};
         quad.source = {0, 0, bitmap.width, bitmap.height};
         quad.color = colour;
+        //001428F0, E-0039-Q02/Q03: preserve all four authored UVs and colours.
+        // Original FCR31 conversion is unresolved; retain existing fractional dimensions.
+        if (w.field_0x44 == 2 && w.field_0x40 != 0)
+            hp2::not_implemented("0x001428F0", "frontend rotated quad matrix not translated");
+        quad.has_vertex_data = true;
+        const auto& d = quad.destination;
+        quad.positions = {render::Vec2{d.x,d.y}, render::Vec2{d.x+d.width,d.y},
+            render::Vec2{d.x+d.width,d.y+d.height}, render::Vec2{d.x,d.y+d.height}};
+        quad.colors[0] = colour;
+        for (std::size_t i = 0; i < 4; ++i) {
+            quad.source_points[i] = {bitmap.width*w.field_0x70[i*2] + (i==0 || i==3 ? 0.5f : -0.5f),
+                bitmap.height*w.field_0x70[i*2+1] + (i<2 ? 0.5f : -0.5f)};
+            if (i==0) continue;
+            const auto c = w.field_0x5c[i-1];
+            quad.colors[i] = {static_cast<float>(c&255)/128, static_cast<float>((c>>8)&255)/128,
+                static_cast<float>((c>>16)&255)/128, static_cast<float>(c>>24)/128};
+        }
         if (emit(out, quad, clip)) ++stats.quads;
         else ++stats.clipped_out;
     }

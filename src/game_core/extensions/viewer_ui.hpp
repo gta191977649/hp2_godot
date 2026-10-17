@@ -11,6 +11,8 @@ struct UiCar {int id=-1;std::string code,path,error;bool available=false;std::ve
 struct UiPart {std::string name;bool enabled=true;};
 struct ViewerUiState {
     std::string kind="frontend",source,status,diagnostic,rendering,camera;
+    std::string driving_telemetry;
+    bool driving_recording=false;
     int car_id=-1,skin_id=-1,lod=-1;
     float wheel_speed=80;
     bool wireframe=false,bounds=false,inspection=false,show_lods=false,preview=false,wheel_blur=false;
@@ -22,6 +24,8 @@ class ViewerUi {
     ViewerUiState state_;
     bool advanced_open_=false;
     bool was_preview_=false;
+    bool driving_entered_=false;
+    bool driving_left_=false;
     std::deque<UiAction> pending_;
     char source_[512]{},filter_[128]{};
 public:

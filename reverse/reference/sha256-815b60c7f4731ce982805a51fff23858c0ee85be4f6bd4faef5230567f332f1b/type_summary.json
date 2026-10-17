@@ -1,0 +1,23 @@
+{
+  "evidence_id": "E-0041-T01",
+  "debug_elf_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "scope": "Debug reference only; no retail equivalence or Verified behavior",
+  "local_string_table_file_offset": "0x98e738",
+  "local_string_table_size": 17661332,
+  "declaration_variants": 1353,
+  "raw_declaration_variants": 17110,
+  "variant_identity": "declaration_sha256 hashes extracted name/kind/size/fields/methods/coverage; first_raw_declaration_sha256 hashes original STABS declaration",
+  "unique_type_names": 1284,
+  "declaration_occurrences": 17110,
+  "field_rows": 7357,
+  "method_token_rows": 13273,
+  "limitations": [
+    "Only named :T / :Tt s/u declarations; enums, typedefs and anonymous types excluded",
+    "STABS IDs are compilation-unit-local; derived-shape identity excludes type IDs and full type expressions",
+    "Distinct source types can share one extracted shape; first raw declaration is representative only",
+    "Nested inline aggregates skipped; partial fields explicitly marked",
+    "Inheritance offsets, field types, signatures and method addresses not resolved",
+    "Method tokens retain compiler encodings; not all overloads are enumerated",
+    "Debug layout does not establish retail layout; no automatic retail rename"
+  ]
+}

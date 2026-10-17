@@ -23,12 +23,14 @@ void BeltMover::Sub_002043A0() {
 }
 
 // ELF 0x00204468; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00204468.md.
-void BeltMover::Sub_00204468() {
-    hp2::not_implemented("0x00204468", "BeltMover::Sub_00204468 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x001FF4D8: BeltMover::DoSnapshot(ReplaySnapshot *); retail 0x00204468.
+void BeltMover::DoSnapshot() {
+    hp2::not_implemented("0x00204468", "BeltMover::DoSnapshot (signature and full body unresolved)");
 }
 
 // ELF 0x00204D78; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00204d78.md.
-void BeltMover::Sub_00204D78() {
-    hp2::not_implemented("0x00204D78", "BeltMover::Sub_00204D78 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x001FFDE0: BeltMover::Move(float); retail 0x00204D78.
+void BeltMover::Move() {
+    hp2::not_implemented("0x00204D78", "BeltMover::Move (signature and full body unresolved)");
 }
 } // namespace hp2::recovered

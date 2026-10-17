@@ -23,15 +23,19 @@ public:
     void Sub_00214DF0();
     // ELF 0x00214F30; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00214f30.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00214F30();
+    // Debug reference: ChopperSound::Update(float, unsigned short, float); E-0041-V01; retail ABI unconfirmed.
+    void Update();
     // ELF 0x00215000; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00215000.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00215000();
+    // Debug reference: ChopperSound::Mute(int); E-0041-V01; retail ABI unconfirmed.
+    void Mute();
     // ELF 0x00215028; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00215028.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00215028();
+    // Debug reference: ChopperSound::DeactivateSound(void); E-0041-V01; retail ABI unconfirmed.
+    void DeactivateSound();
     // ELF 0x00215050; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00215050.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00215050();
+    // Debug reference: ChopperSound::ActivateSound(void); E-0041-V01; retail ABI unconfirmed.
+    void ActivateSound();
 };
 } // namespace hp2::recovered

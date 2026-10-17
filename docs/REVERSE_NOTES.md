@@ -1,5 +1,14 @@
 # Reverse engineering knowledge base
 
+## TASK-0039 - Frontend font/digit/quad corrections (2026-10-17)
+
+Read-only Ghidra MCP confirms that font header28 is the glyph-table offset, not height;
+0013FFA8 derives max glyph height (event digits98).001F7BF0 centres digits through00140930.
+00140098 uses current-glyph pair slices matched against previous byte;00140D30 measurement
+omits kerning while001422F0 draw applies it. Four colours/eight UVs in001428F0 explain shared
+gradient/crop loss in the earlier port. E-0039-N01/F01..F06/Q01..Q09/A01 and per-function
+records retain details. See FRONTEND_RENDER_AUDIT.md; original pixel equivalence is unresolved.
+
 
 
 No game binary has been imported or analyzed for this initialization. No real
@@ -408,3 +417,103 @@ membership/name ownership. Keep Type_/Sub_ addresses until an actual naming brid
 Detailed results: reverse/functions/<binary-sha>/vehicle/task0037-packet-symbol-provenance.md;
 compact ledger: reverse/naming/task0037-packet-symbol-provenance.csv. No behavior/Verified
 changes; header now explicitly distinguishes the port grouping from original C++ identity.
+
+## TASK-0038 - Driving dependency and original-runtime observations (2026-10-17)
+
+Read-only constructor/mover/force dispatch audit and two bounded finite-float leaves are
+recorded under reverse/functions/<binary-sha>/driving and unknown. E-0038-003 retains the
+branch-likely/cap/no-lower-clamp behavior of00137C88; E-0038-005 preserves001A4E88's scalar
+operation order. PC fixtures establish no PS2 FPU equivalence. The primary three whole-entry
+templates remain untranslated.
+
+E-0038-004 captures a live JAGUAR replay-context mode1 mover with table002AEAC8 and target
+00137D90 through PCSX2 v2.8.2/PINE. Two repeated paused reads per capture were identical.
+A Cross input changed controls+0x214 to1.0 and wheel/motion fields changed during subsequent
+wall-clock samples; those samples are non-atomic and are not native trajectory comparisons.
+Full pointer/layout and unresolved query information is in the driving structure record.
+No Verified promotion. The original SDL input mappings were restored after temporary
+keyboard testing, and no emulator save slot was overwritten.
+
+TASK-0038 continuation adds32 bounded address projections and three native test
+suites:12 initialization/store/matrix dependencies,8 drivetrain/selector entries
+and 12 solver/math/suspension entries. E-0038-I01..I13, D01..D07 and S01..S11 preserve
+instruction evidence and open dependencies. Important corrections: constructor
+vector W lanes remain untouched;0025AED0 consumes mutable global W;0019CD90 crosses
+uncapped input;0018BAA0 multiply grouping follows listing rather than decompiler;
+selector bounds preserve ADDIU32 wrap. Whole production driving remains unavailable.
+
+E-0038-007 audits supplied custom PCSX2 build d75a0ad. JSON/TCP21512 supports paused
+register captures and owned breakpoints, but step is a PC+4 temporary breakpoint.
+Current World/replay pointers are zero; a bounded00137C88 entry attempt timed out.
+No original numerical equivalence is claimed. Exact continuation maps are linked
+from DRIVING_LAB.md; proprietary captures/listings remain ignored.
+
+
+## TASK-0038 - minimum native driving closure (2026-10-17)
+
+The supported911TURBO synthetic-plane fixture now uses complete logical-address
+constructor/reset/component graph, engine/transmission, steering/tire/suspension,
+five-pass force solve, aero/body derivatives, integration, publication and recovered
+scheduler. NativeBackend owns one SHA-bound original ELF/data memory image, copies
+it transactionally and publishes complete validated poses. Read DRIVING_LAB.md for
+scope and ledgers. No Godot physics, invented grip or acceleration is used.
+
+Counterevidence corrected two integration assumptions: original controller+218 is
+footbrake, +21C handbrake (JOY_EVENT strings/writers E-0038-E14); Race4+A758zero is
+the running context (E-0038-E13), not the separate diagnostic 4+A758nonzero branch.
+Mode2 launch/freeze was inappropriate for this tool fixture. The native controller
+allocation requires a port bound0xB0 because001A6330 writes+A0; its previous0xA0
+allocation overlapped the following list and is guarded by a regression. Resting
+wheel torque-ratio0/0 uses a narrow EE signed-finite saturation adapter at original
+DIV.S sites (E-0038-E12), rather than host NaN. General PS2 exceptional arithmetic
+and hardware equivalence remain unresolved.
+
+Real-data acceptance now exercises sustained acceleration, opposite steering,
+footbrake stop/rest, exact reset,132 recorded/replayed complete snapshots and
+render pacing. Godot exercises540 production steps and exact pose replay. These
+are port usability/regression results, never original equivalence. Current original
+World is absent; next work is matching paused original entry/return snapshots under
+identical inputs/contact conditions. TASK-0038 remains active only for that deferred
+comparison. No Verified promotion or commit.
+
+
+## TASK-0038 user corrections - steering sign and wheel render stage
+
+E-0038-U01: positive001A5D60 steering maps forward toward source+Y (left); original
+0013B5B0 inverts the controller byte axis before filtering. Host keys now mapA-D and
+stickX is negated; recovered steering/force code is unchanged.
+
+E-0038-W01: physics001C0D78 publishes raw attachment matrices;00120EF8 subsequently
+composes render bases for wheels0/3, with distinct tire/blur versus brake rules. The
+DrivingLab renderer path had skipped that known stage. Preview and driving now share
+one recovered composition and per-layer group selection. All-four-wheel zero/nonzero
+spin fixtures preserve raw physics input, hub translation and nonaccumulating display
+updates. Read task0038-wheel-render-basis.md and task0038-steering-direction.md for exact
+listing ranges, hashes and counterevidence; not Verified. CarViewer now owns Test drive
+as a tool mode, not an independent scene, and new simulation shortcuts were removed.
+
+
+## TASK-0040 - Global Sub_/Type_ naming audit
+
+E-0040-N01..N03 inventories 562 source identifiers with live PS2 symbol provenance.
+357 have existing class attribution (51 constructor associations); exact new method
+spellings remain unresolved. 392 symbols are DEFAULT, one USER_DEFINED, and 169
+addresses return no symbol object. No speculative rename or status promotion.
+Read reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/task0040-global-symbol-provenance.md
+and reverse/naming/task0040-global-symbol-provenance.csv. Root Sub_ headers mostly
+contain free functions and port projections, not original class declarations.
+A bounded RTTI runtime-region check found no game-class spelling; this is not
+proof of global absence. Continue with a concrete naming bridge, not semantic guesses.
+
+
+## TASK-0041 - Authorized reference supersedes prior unknown-name results
+
+E-0041-I01/T01/M01/V01/R01..R20: the supplied PS2 reference ELF retains 8715
+function symbols and 1284 named aggregate types.940 static retail name correspondences
+are adopted with separate addresses/hashes; full methods and fields are not transplanted.
+Read docs/DEBUG_REFERENCE_SYMBOLS.md and reverse/naming/task0041-adopted-retail-names.csv.
+This supersedes earlier unknown-name conclusions only where the new bridge is recorded.
+The former packet group is TWO original scopes: eStripData and eStripDataE. The 10
+other Type_ declarations now use reviewed constructor class spellings. cDBFileSys
+corrects an allocator-label spelling. Normalized-only candidates and shared/folded
+name conflicts remain unresolved; no behavior or Verified promotion.

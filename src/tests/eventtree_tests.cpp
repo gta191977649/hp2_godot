@@ -151,7 +151,7 @@ void recovered_event_logo_animation_phases() {
     auto& track = screen.widgets[1];
     car.name_hash = 0xc6398c48u; car.a = 128; car.texture_hash = 99;
     track.name_hash = 0xf60114e4u; track.a = 128; track.x = 470; track.texture_hash = 98;
-    Type_001F8C10 cars;
+    tCarLogoAnimation cars;
     cars.Bind_001F8C10(screen, 0);
     cars.Sub_001F8E18({11, 22}, 0);
     check(car.visible && car.texture_hash == 11 && car.x == 70 && car.y == 140,
@@ -178,7 +178,7 @@ void recovered_event_logo_animation_phases() {
     check((car.x == 70 || car.x == 150 || car.x == 210 || car.x == 260) &&
           (car.y == 140 || car.y == 280), "car positions are the original finite coordinate tables");
 
-    Type_001F90F0 tracks;
+    tTrackLogoAnimation tracks;
     tracks.Bind_001F90F0(screen, 0);
     tracks.Sub_001F91F0({33, 44}, 0);
     check(track.x == 640 && track.visible, "rapid track change moves logo offscreen");

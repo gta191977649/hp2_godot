@@ -29,22 +29,26 @@ void PlayerEngineSound::Sub_0020FE70() {
 }
 
 // ELF 0x00210400; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00210400.md.
-void PlayerEngineSound::Sub_00210400() {
-    hp2::not_implemented("0x00210400", "PlayerEngineSound::Sub_00210400 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x0020B110: PlayerEngineSound::DeactivateSound(void); retail 0x00210400.
+void PlayerEngineSound::DeactivateSound() {
+    hp2::not_implemented("0x00210400", "PlayerEngineSound::DeactivateSound (signature and full body unresolved)");
 }
 
 // ELF 0x00210408; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00210408.md.
-void PlayerEngineSound::Sub_00210408() {
-    hp2::not_implemented("0x00210408", "PlayerEngineSound::Sub_00210408 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x0020B118: PlayerEngineSound::ActivateSound(void); retail 0x00210408.
+void PlayerEngineSound::ActivateSound() {
+    hp2::not_implemented("0x00210408", "PlayerEngineSound::ActivateSound (signature and full body unresolved)");
 }
 
 // ELF 0x00210410; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00210410.md.
-void PlayerEngineSound::Sub_00210410() {
-    hp2::not_implemented("0x00210410", "PlayerEngineSound::Sub_00210410 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x0020B120: PlayerEngineSound::Mute(int); retail 0x00210410.
+void PlayerEngineSound::Mute() {
+    hp2::not_implemented("0x00210410", "PlayerEngineSound::Mute (signature and full body unresolved)");
 }
 
 // ELF 0x00211390; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00211390.md.
-void PlayerEngineSound::Sub_00211390() {
-    hp2::not_implemented("0x00211390", "PlayerEngineSound::Sub_00211390 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x0020C0A0: PlayerEngineSound::Update(float, unsigned short, float); retail 0x00211390.
+void PlayerEngineSound::Update() {
+    hp2::not_implemented("0x00211390", "PlayerEngineSound::Update (signature and full body unresolved)");
 }
 } // namespace hp2::recovered

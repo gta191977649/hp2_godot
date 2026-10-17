@@ -16,29 +16,29 @@ void floating(std::vector<std::uint8_t>& data,std::size_t offset,float value){st
 template<class F> void rejects(F f){bool rejected=false;try{f();}catch(const std::exception&){rejected=true;}check(rejected);}
 }
 int main(int argc,char** argv){
-    using Packet=hp2::recovered::Type_0011BF98;
+    using Packet=hp2::recovered::eStripData;
     // A one-vertex packet and a four-vertex packet exercise distinct packed tails.
     std::vector<std::uint8_t> single(96);single[4]=1;
     floating(single,32,1);floating(single,36,2);floating(single,40,3);floating(single,48,.25f);floating(single,52,.75f);
-    check(Packet::Sub_0011C2B8(single,0,0)==std::array<float,3>{1,2,3});
-    check(Packet::Sub_0011C268(single,0,0)==std::array<float,2>{.25f,.75f});
+    check(Packet::GetXYZ(single,0,0)==std::array<float,3>{1,2,3});
+    check(Packet::GetST0(single,0,0)==std::array<float,2>{.25f,.75f});
     std::vector<std::uint8_t> quad(160);quad[4]=4;
     for(std::size_t i=0;i<4;++i){floating(quad,32+i*4,float(i));floating(quad,48+i*4,float(i+10));floating(quad,64+i*4,float(i+20));}
     floating(quad,84,.1f);floating(quad,88,.2f);floating(quad,92,.4f);floating(quad,96,.3f);
-    check(Packet::Sub_0011C2B8(quad,0,3)==std::array<float,3>{3,13,23});
-    check(Packet::Sub_0011C268(quad,0,0)==std::array<float,2>{.1f,.2f});
-    check(Packet::Sub_0011C268(quad,0,1)==std::array<float,2>{.3f,.4f});
+    check(Packet::GetXYZ(quad,0,3)==std::array<float,3>{3,13,23});
+    check(Packet::GetST0(quad,0,0)==std::array<float,2>{.1f,.2f});
+    check(Packet::GetST0(quad,0,1)==std::array<float,2>{.3f,.4f});
     auto five=quad;five[4]=5;
     floating(five,84,4);floating(five,88,14);floating(five,92,24);
     floating(five,136,.125f);floating(five,140,.875f);
-    check(Packet::Sub_0011C2B8(five,0,4)==std::array<float,3>{4,14,24});
-    check(Packet::Sub_0011C268(five,0,4)==std::array<float,2>{.125f,.875f});
+    check(Packet::GetXYZ(five,0,4)==std::array<float,3>{4,14,24});
+    check(Packet::GetST0(five,0,4)==std::array<float,2>{.125f,.875f});
     single[60]=0x1f;single[61]=0x80;
     word(single,64,0x6e03805c);single[76]=127;
     single[68]=128;
-    check(Packet::Sub_0011C180(single,0,0)==0x801f);
-    rejects([&]{Packet::Sub_0011C2B8(single,0,1);});
-    rejects([&]{Packet::Sub_0011C268({},0,0);});
+    check(hp2::recovered::eStripDataE::GetElementRGBA(single,0,0)==0x801f);
+    rejects([&]{Packet::GetXYZ(single,0,1);});
+    rejects([&]{Packet::GetST0({},0,0);});
     rejects([&]{port::assets::decode_vehicle_geometry({});});
     std::vector<std::uint8_t> truncated(8);word(truncated,0,0x80034000);word(truncated,4,100);
     rejects([&]{port::assets::decode_vehicle_geometry(truncated);});

@@ -6,6 +6,7 @@
 #include "ps2_movie_player.hpp"
 #include "ps2_render_host.hpp"
 #include "ps2_car_viewer.hpp"
+#include "ps2_driving_lab.hpp"
 #include "platform/not_implemented_dialog.hpp"
 #include <godot_cpp/godot.hpp>
 
@@ -22,6 +23,7 @@ void initialize_port(godot::ModuleInitializationLevel level) {
         godot::ClassDB::register_class<port::godot_bridge::Ps2RenderHost>();
         godot::ClassDB::register_class<port::godot_bridge::Ps2VehicleRenderer>();
         godot::ClassDB::register_class<port::godot_bridge::Ps2CarViewer>();
+        godot::ClassDB::register_class<port::godot_bridge::Ps2DrivingLab>();
     }
 }
 void terminate_port(godot::ModuleInitializationLevel level) {

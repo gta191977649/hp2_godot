@@ -55,6 +55,14 @@ def definitions() -> dict[str, list[dict]]:
     result: dict[str, list[dict]] = defaultdict(list)
     originals = {r['original_identifier']: r['elf_address'] for r in
                  read_csv('reverse/naming/task0019-original-name-mappings.csv')}
+    overrides_path = ROOT / 'reverse/naming/task0041-adopted-source-names.csv'
+    if overrides_path.exists():
+        originals.update({r['source_identifier']: r['elf_address'] for r in
+                          read_csv('reverse/naming/task0041-adopted-source-names.csv')})
+    projection_path = ROOT / 'reverse/naming/task0041-adopted-projection-names.csv'
+    if projection_path.exists():
+        originals.update({r['source_identifier']: r['elf_address'] for r in
+                          read_csv('reverse/naming/task0041-adopted-projection-names.csv')})
     for path in sorted((ROOT / "src/game_core").rglob("*.cpp")):
         text = path.read_text(encoding="utf-8")
         masked = mask_comments_strings(text)
@@ -85,6 +93,7 @@ def entry_definitions(cls: dict, address: str, method: str, candidates: list[dic
            and d["name"] == cls["name"] + "::" + method]
     signature = cls.get("entry_signatures", {}).get(address)
     if signature:
+        signature = signature.replace('Sub_' + address[2:], method)
         own = [d for d in own if d["signature"] == signature]
     return own
 
@@ -117,6 +126,14 @@ def model() -> tuple[list[dict], list[dict], dict[str, dict], dict]:
                                        "evidence": ["E-0019-N03"], "origin": "qualified_string"})
         cls["labels"].append({"text": row["qualified_text"], "address": row["full_string_start"]})
     originals = {}
+    debug_overrides = {}
+    class_identifier_overrides = {}
+    alias_path = ROOT / 'reverse/naming/task0041-class-identifier-overrides.json'
+    if alias_path.exists():
+        class_identifier_overrides = json.loads(alias_path.read_text())
+    if (ROOT / 'reverse/naming/task0041-adopted-source-names.csv').exists():
+        debug_overrides = {(r['class_name'], r['elf_address']): r for r in
+                           read_csv('reverse/naming/task0041-adopted-source-names.csv')}
     for row in read_csv("reverse/naming/task0019-original-name-mappings.csv"):
         name, method = row["original_identifier"].split("::")
         if not VALID_NAME.fullmatch(method):
@@ -141,6 +158,12 @@ def model() -> tuple[list[dict], list[dict], dict[str, dict], dict]:
             cls.update(header=base + ".hpp", source=base + ".cpp", namespace="hp2::recovered")
             cls["placement_provenance"] = "user_requested_root; port-side placement; original path unknown"
         cls["functions"] = sorted(cls["functions"])
+        if name in class_identifier_overrides:
+            alias = class_identifier_overrides[name]
+            cls['name'] = alias['name']
+            cls['origin'] = 'debug named vtable; allocator label ' + name
+            cls['evidence'].append(alias['evidence_id'])
+            name = cls['name']
         cls["methods"] = {}
         for address in cls["functions"]:
             original = originals.get(address)
@@ -155,6 +178,10 @@ def model() -> tuple[list[dict], list[dict], dict[str, dict], dict]:
             attribution = policy.get("member_attributions", {}).get(name, {})
             if address in attribution.get("additional_functions", []):
                 evidence = attribution["evidence"]
+            override = debug_overrides.get((name, address))
+            if override:
+                method = override['method']
+                evidence += '; ' + override['evidence_id']
             cls["methods"][address] = {"name": method, "record": record, "evidence": evidence}
     return sorted(classes.values(), key=lambda c: c["name"]), labels, symbols, policy
 

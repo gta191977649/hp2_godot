@@ -69,7 +69,7 @@ render::VehicleSolid solid(const Reader& r,const Chunk& parent) {
         const auto packet_end=packet+(r.u32(entry+12)&0xffffu)*16;
         if(packet_end>stream_end || packet_end<packet+32)throw std::runtime_error("Vehicle packet length exceeds stream");
         const std::vector<std::uint8_t> packet_data(r.data.begin()+packet,r.data.begin()+packet_end);
-        const auto vertex_count=hp2::recovered::Type_0011BF98::Sub_0011C248(packet_data,0);
+        const auto vertex_count=hp2::recovered::eStripData::GetNumVerts(packet_data,0);
         if(vertex_count!=r.data[entry+0x1d])throw std::runtime_error("Vehicle packet vertex count mismatch");
         render::VehicleSurface surface;
         surface.render_flags=r.u16(entry+0xe);
@@ -99,9 +99,9 @@ render::VehicleSolid solid(const Reader& r,const Chunk& parent) {
         std::memcpy(&normal_scale,&normal_scale_bits,4);
         for(std::size_t j=0;j<vertex_count;++j) {
             render::VehicleVertex vertex;
-            vertex.position=hp2::recovered::Type_0011BF98::Sub_0011C2B8(packet_data,0,j);
-            vertex.uv=hp2::recovered::Type_0011BF98::Sub_0011C268(packet_data,0,j);
-            vertex.raw_color=hp2::recovered::Type_0011BF98::Sub_0011C180(packet_data,0,j);
+            vertex.position=hp2::recovered::eStripData::GetXYZ(packet_data,0,j);
+            vertex.uv=hp2::recovered::eStripData::GetST0(packet_data,0,j);
+            vertex.raw_color=hp2::recovered::eStripDataE::GetElementRGBA(packet_data,0,j);
             vertex.has_color=true;
             for(std::size_t component=0;has_normals&&component<3;++component){
                 const auto raw=packet_data[normal_command+4+(j/4)*12+component*4+j%4];

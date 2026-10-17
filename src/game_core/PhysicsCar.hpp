@@ -22,19 +22,23 @@ public:
     void Sub_00137100();
     // ELF 0x00137450; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00137450.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00137450();
+    // Debug reference: PhysicsCar::DoSnapshot(ReplaySnapshot *); E-0041-V01; retail ABI unconfirmed.
+    void DoSnapshot();
     // ELF 0x00137708; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00137708.md.
     // Port-side void/no-argument placeholder; original signature unknown.
     void Sub_00137708();
     // ELF 0x00137788; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00137788.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00137788();
+    // Debug reference: PhysicsCar::ComputeAuxiliaries(void); E-0041-V01; retail ABI unconfirmed.
+    void ComputeAuxiliaries();
     // ELF 0x00137D90; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00137d90.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00137D90();
+    // Debug reference: PhysicsCar::Move(float); E-0041-R01; retail ABI unconfirmed.
+    void Move();
     // ELF 0x00138E08; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00138e08.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00138E08();
+    // Debug reference: PhysicsCar::ResolveForces(void); E-0041-V01; retail ABI unconfirmed.
+    void ResolveForces();
     // ELF 0x00139678; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00139678.md.
     // Port-side void/no-argument placeholder; original signature unknown.
     void Sub_00139678();

@@ -23,21 +23,27 @@ public:
     void Sub_00212CF0();
     // ELF 0x00212E88; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00212e88.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00212E88();
+    // Debug reference: PlayerTireSound::DeactivateSound(void); E-0041-V01; retail ABI unconfirmed.
+    void DeactivateSound();
     // ELF 0x00212E90; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00212e90.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00212E90();
+    // Debug reference: PlayerTireSound::ActivateSound(void); E-0041-V01; retail ABI unconfirmed.
+    void ActivateSound();
     // ELF 0x002134D8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002134d8.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_002134D8();
+    // Debug reference: PlayerTireSound::Mute(int); E-0041-V01; retail ABI unconfirmed.
+    void Mute();
     // ELF 0x002135A0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002135a0.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_002135A0();
+    // Debug reference: PlayerTireSound::Update(float, unsigned short, float); E-0041-V01; retail ABI unconfirmed.
+    void Update();
     // ELF 0x002149F8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002149f8.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_002149F8();
+    // Debug reference: PlayerTireSound::ScaleRoadNoise(float); E-0041-V01; retail ABI unconfirmed.
+    void ScaleRoadNoise();
     // ELF 0x00214A00; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00214a00.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00214A00();
+    // Debug reference: PlayerTireSound::TriggerTireBlowOut(void); E-0041-V01; retail ABI unconfirmed.
+    void TriggerTireBlowOut();
 };
 } // namespace hp2::recovered

@@ -1,0 +1,734 @@
+{
+  "task_id": "TASK-0041",
+  "debug_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "retail_sha256": "7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2",
+  "map_sha256": "20baece850349d26f95a5da1c1f6e9eacd6c3f5574e560b8ff2f4e536f9f19d1",
+  "evidence_source": "Authorized debug ELF/MAP and retail SHA-bound bytes checked equal to Ghidra cached sections; independent read-only audit.",
+  "bridges": [
+    {
+      "evidence_id": "E-0041-R01",
+      "retail_address": "0x00137D90",
+      "debug_address": "0x00137D18",
+      "reference_name": "PhysicsCar::Move(float)",
+      "mangled_name": "Move__10PhysicsCarf",
+      "size": 3944,
+      "status": "supported_reviewed_vtable_and_code",
+      "differing_instruction_words": 152,
+      "total_instruction_words": 986,
+      "difference_categories": {
+        "direct_call_relocations": 30,
+        "gp_relative_operands": 101,
+        "absolute_address_high_operands": 8,
+        "absolute_address_other_operands": 9,
+        "changed_structure_offsets": 4
+      },
+      "structure_offset_changes": [
+        {
+          "function_offset": "0x838",
+          "debug_field_offset": "0x848",
+          "retail_field_offset": "0x84C",
+          "instruction": "lb"
+        },
+        {
+          "function_offset": "0x89C",
+          "debug_field_offset": "0x848",
+          "retail_field_offset": "0x84C",
+          "instruction": "lb"
+        },
+        {
+          "function_offset": "0x978",
+          "debug_field_offset": "0x844",
+          "retail_field_offset": "0x848",
+          "instruction": "lw"
+        },
+        {
+          "function_offset": "0x9B4",
+          "debug_field_offset": "0x848",
+          "retail_field_offset": "0x84C",
+          "instruction": "lb"
+        }
+      ],
+      "retail_instruction_sha256": "a0b46ee2c0abf6b820eed9bee03ac505800bc487c3b78816d2b0dcd44ee048de",
+      "debug_instruction_sha256": "a215bd55fdaf4555c003d5fece766c4678158ca0a3d6457c1160d8b6359e8cd5",
+      "rationale": "PhysicsCar debug _vt$10PhysicsCar at 0x002A6AF8 corresponds to retail 0x002AEAC8. Slot +0x14 is bounded by destructor +0x0C and DoSnapshot +0x1C, each independently normalized-matched. Equal 3944-byte function length and identical instruction layout corroborate identity despite relocated data and changed object offsets.",
+      "limitations": "Identity/name correspondence only; debug code and structure layout must not replace retail behavior; no Verified equivalence claim."
+    },
+    {
+      "evidence_id": "E-0041-R02",
+      "retail_address": "0x0018BCE0",
+      "debug_address": "0x00189E10",
+      "reference_name": "DriveTrain::SetDesiredGear(Gear)",
+      "mangled_name": "SetDesiredGear__10DriveTrain4Gear",
+      "size": 844,
+      "status": "supported_reviewed_caller_neighbors_code",
+      "differing_instruction_words": 8,
+      "total_instruction_words": 211,
+      "difference_categories": {
+        "gp_relative_operands": 6,
+        "changed_structure_offsets": 2
+      },
+      "structure_offset_changes": [
+        {
+          "function_offset": "0x60",
+          "debug_field_offset": "0x70",
+          "retail_field_offset": "0x74",
+          "instruction": "lwc1"
+        },
+        {
+          "function_offset": "0xA0",
+          "debug_field_offset": "0x4C",
+          "retail_field_offset": "0x50",
+          "instruction": "lwc1"
+        }
+      ],
+      "retail_instruction_sha256": "8a6dee10d82740428a52bb82a074a0c1dc9d9fa296a2d03864cf3cafe1292eef",
+      "debug_instruction_sha256": "04426469e7408868f013292afc62cb03fa357a10e4963760c74c537c3b363da9",
+      "rationale": "PhysicsCar::Move calls these entries at the identical caller offset +0x170. Immediately preceding SetSportGear(Gear), debug 0x00189DD0 / retail 0x0018BCA0, is a supported exact leaf. 203 of 211 instruction words match; six changes are GP-relative LWC1 operands and two are structure-field offsets.",
+      "limitations": "Identity/name correspondence only; debug code and structure layout must not replace retail behavior; no Verified equivalence claim."
+    },
+    {
+      "evidence_id": "E-0041-R03",
+      "retail_address": "0x0019D4D0",
+      "debug_address": "0x0019ADF8",
+      "reference_name": "RigidBody::GetDerivative(float *)",
+      "mangled_name": "GetDerivative__9RigidBodyPf",
+      "size": 888,
+      "status": "supported_reviewed_vtable_and_code",
+      "differing_instruction_words": 23,
+      "total_instruction_words": 222,
+      "difference_categories": {
+        "direct_call_relocations": 6,
+        "gp_relative_operands": 15,
+        "absolute_address_low_operands": 2
+      },
+      "structure_offset_changes": [],
+      "retail_instruction_sha256": "924ecb85be91ea0d18d4f7530363c1b67827c92c73cc59b1a3277dfa09a2855a",
+      "debug_instruction_sha256": "0a467002b128887164b44ffaaa05975eb7c5af17c09fa4a3cb329270b8a6c3a7",
+      "rationale": "Named debug _vt$9RigidBody at 0x002AD1F0 corresponds to retail 0x002B5430. GetDerivative occupies +0x3C, preceding ComputeAuxiliaries at +0x44 (debug 0x0019B170 / retail 0x0019D848). Nearby exact leaf VectorStarMatrix debug 0x0019AC98 / retail 0x0019D370 supports code-region identity. All 23 differing instruction words concern direct calls or data-address operands; no changed structure offsets observed.",
+      "limitations": "Identity/name correspondence only; debug code and structure layout must not replace retail behavior; no Verified equivalence claim."
+    },
+    {
+      "evidence_id": "E-0041-R04",
+      "retail_address": "0x0018F808",
+      "debug_address": "0x0018D810",
+      "reference_name": "Table::Table(float *, int, float, float)",
+      "mangled_name": "__5TablePfiff",
+      "size": 48,
+      "status": "supported_reviewed_call_chain",
+      "differing_instruction_words": 1,
+      "total_instruction_words": 12,
+      "difference_categories": {
+        "direct_call_relocations": 1
+      },
+      "structure_offset_changes": [],
+      "retail_instruction_sha256": "4170777843e00ef8e4664c3a1601cbd067d209bb099ada3deb70faa8b8779840",
+      "debug_instruction_sha256": "97232ac238f65004e2f7bd0f5b7b1ee26b16ef8fba0301743c1509d3f8d395f3",
+      "rationale": "Eleven of twelve instruction words are byte-identical. The sole change is JAL at +0x14 to the uniquely normalized-matched Table::SetMinMax(float,float), debug 0x001872D0 / retail 0x00189120. Its helper Table::CalcIndexMultiplier(void), debug 0x00187318 / retail 0x00189168, is a supported exact leaf. Function size falls below the automatic matcher 64-byte promotion threshold; this record captures the manual call-chain review.",
+      "limitations": "Identity/name correspondence only; debug code and structure layout must not replace retail behavior; no Verified equivalence claim."
+    },
+    {
+      "evidence_id": "E-0041-R05",
+      "retail_address": "0x001F8C10",
+      "debug_address": "0x001F47F0",
+      "reference_name": "tCarLogoAnimation::tCarLogoAnimation(int)",
+      "mangled_name": "__17tCarLogoAnimationi",
+      "class_identifier": "tCarLogoAnimation",
+      "retail_size": 120,
+      "debug_size": 120,
+      "status": "supported_reviewed_instruction_and_class_binding",
+      "debug_instruction_sha256": "1f2515df395a05220eecd4fbc05cc855ab1b6ac397c984a8ae6c4846aab554d9",
+      "retail_instruction_sha256": "d2a08378be2176456751aac783d8e83277db50d0016c5e4906a0cda866681c98",
+      "class_binding_kind": "named_constructor_correspondence",
+      "limitations": "Original identifier and membership correspondence only; host fields, static interfaces, signatures and container projections do not establish original layout or ABI. No Verified behavior claim.",
+      "differing_instruction_words": 3,
+      "instruction_differences": [
+        {
+          "function_offset": "0x24",
+          "category": "gp_relative_operand"
+        },
+        {
+          "function_offset": "0x28",
+          "category": "direct_call_relocation"
+        },
+        {
+          "function_offset": "0x44",
+          "category": "direct_call_relocation"
+        }
+      ],
+      "rationale": "Named debug constructor/method with globally unique same-length normalized instruction stream. Independent raw instruction audit shows only direct call targets and GP-relative operands differ; no changed object offsets, scalar constants, branch displacements or register allocation.",
+      "reviewed_calls": [
+        {
+          "function_offset": "0x28",
+          "debug_target": "0x00249748",
+          "retail_target": "0x00250340"
+        },
+        {
+          "function_offset": "0x44",
+          "debug_target": "0x001446A0",
+          "retail_target": "0x001448B0"
+        }
+      ],
+      "helper_review": "FlailerGetAlpha debug001446A0/retail001448B0 (52B) independently normalized-compares equal despite no Ghidra function match."
+    },
+    {
+      "evidence_id": "E-0041-R06",
+      "retail_address": "0x001F90F0",
+      "debug_address": "0x001F4CD0",
+      "reference_name": "tTrackLogoAnimation::tTrackLogoAnimation(int)",
+      "mangled_name": "__19tTrackLogoAnimationi",
+      "class_identifier": "tTrackLogoAnimation",
+      "retail_size": 120,
+      "debug_size": 120,
+      "status": "supported_reviewed_instruction_and_class_binding",
+      "debug_instruction_sha256": "24ee2716315cbe59f9407925a115e4c126c1e376cdc52afe87e546d2dd9d02d6",
+      "retail_instruction_sha256": "0ab8da176505bf855d3d68ed71bf0da5fe2e6f111877f17a8ddaf3c14f3ebb4b",
+      "class_binding_kind": "named_constructor_correspondence",
+      "limitations": "Original identifier and membership correspondence only; host fields, static interfaces, signatures and container projections do not establish original layout or ABI. No Verified behavior claim.",
+      "differing_instruction_words": 3,
+      "instruction_differences": [
+        {
+          "function_offset": "0x30",
+          "category": "direct_call_relocation"
+        },
+        {
+          "function_offset": "0x40",
+          "category": "direct_call_relocation"
+        },
+        {
+          "function_offset": "0x5C",
+          "category": "direct_call_relocation"
+        }
+      ],
+      "rationale": "Named debug constructor/method with globally unique same-length normalized instruction stream. Independent raw instruction audit shows only direct call targets and GP-relative operands differ; no changed object offsets, scalar constants, branch displacements or register allocation.",
+      "reviewed_calls": [
+        {
+          "function_offset": "0x30",
+          "debug_target": "0x00143F30",
+          "retail_target": "0x00144140"
+        },
+        {
+          "function_offset": "0x40",
+          "debug_target": "0x001446A0",
+          "retail_target": "0x001448B0"
+        },
+        {
+          "function_offset": "0x5C",
+          "debug_target": "0x001F4DB0",
+          "retail_target": "0x001F91D0"
+        }
+      ],
+      "helper_review": "FlailerGetAlpha debug001446A0/retail001448B0 (52B) independently normalized-compares equal despite no Ghidra function match."
+    },
+    {
+      "evidence_id": "E-0041-R07",
+      "retail_address": "0x00249DE0",
+      "debug_address": "0x00243430",
+      "reference_name": "tScrollingMenuList::tScrollingMenuList(int, int, int, int, int, int)",
+      "mangled_name": "__18tScrollingMenuListiiiiii",
+      "class_identifier": "tScrollingMenuList",
+      "retail_size": 240,
+      "debug_size": 240,
+      "status": "supported_reviewed_instruction_and_class_binding",
+      "debug_instruction_sha256": "be6322a6e8f66ed7c5e0526598fffeedd18b0443f5aac32e7bdf0dabd6de84cd",
+      "retail_instruction_sha256": "63157f9ff40aa1bf80f3753d109ebf75a1783828b32908887106e92940765510",
+      "class_binding_kind": "named_constructor_correspondence",
+      "limitations": "Original identifier and membership correspondence only; host fields, static interfaces, signatures and container projections do not establish original layout or ABI. No Verified behavior claim.",
+      "differing_instruction_words": 6,
+      "instruction_differences": [
+        {
+          "function_offset": "0x64",
+          "category": "direct_call_relocation"
+        },
+        {
+          "function_offset": "0x74",
+          "category": "direct_call_relocation"
+        },
+        {
+          "function_offset": "0x90",
+          "category": "direct_call_relocation"
+        },
+        {
+          "function_offset": "0xA0",
+          "category": "direct_call_relocation"
+        },
+        {
+          "function_offset": "0xA8",
+          "category": "direct_call_relocation"
+        },
+        {
+          "function_offset": "0xB8",
+          "category": "direct_call_relocation"
+        }
+      ],
+      "rationale": "Named debug constructor/method with globally unique same-length normalized instruction stream. Independent raw instruction audit shows only direct call targets and GP-relative operands differ; no changed object offsets, scalar constants, branch displacements or register allocation.",
+      "reviewed_calls": [
+        {
+          "function_offset": "0x64",
+          "debug_target": "0x00243C10",
+          "retail_target": "0x0024A5C0"
+        },
+        {
+          "function_offset": "0x74",
+          "debug_target": "0x00243578",
+          "retail_target": "0x00249F28"
+        },
+        {
+          "function_offset": "0x90",
+          "debug_target": "0x00243CB8",
+          "retail_target": "0x0024A668"
+        },
+        {
+          "function_offset": "0xA0",
+          "debug_target": "0x001446D8",
+          "retail_target": "0x001448E8"
+        },
+        {
+          "function_offset": "0xA8",
+          "debug_target": "0x00243CB8",
+          "retail_target": "0x0024A668"
+        },
+        {
+          "function_offset": "0xB8",
+          "debug_target": "0x001446D8",
+          "retail_target": "0x001448E8"
+        }
+      ],
+      "helper_review": "GetValInt debug00243CB8/retail0024A668 (40B) and FlailerSetAlpha debug001446D8/retail001448E8 (64B) independently normalized-compare equal despite no Ghidra function matches."
+    },
+    {
+      "evidence_id": "E-0041-R08",
+      "retail_address": "0x00249C78",
+      "debug_address": "0x002432C8",
+      "reference_name": "tMenuAnimElement::tMenuAnimElement(FlailerObjectChunk *)",
+      "mangled_name": "__16tMenuAnimElementP18FlailerObjectChunk",
+      "class_identifier": "tMenuAnimElement",
+      "retail_size": 180,
+      "debug_size": 180,
+      "status": "supported_reviewed_instruction_and_class_binding",
+      "debug_instruction_sha256": "97457e7230a14bc967fec4acab7a53f966b3d877cfa0e26ba09c1678ea1c6082",
+      "retail_instruction_sha256": "81255a46db4b7b7fe2b118dce220ee2bba27a955eb09bdfc4a217e334fbc216f",
+      "class_binding_kind": "named_constructor_correspondence",
+      "limitations": "Original identifier and membership correspondence only; host fields, static interfaces, signatures and container projections do not establish original layout or ABI. No Verified behavior claim.",
+      "differing_instruction_words": 1,
+      "instruction_differences": [
+        {
+          "function_offset": "0x58",
+          "category": "direct_call_relocation"
+        }
+      ],
+      "rationale": "Named debug constructor/method with globally unique same-length normalized instruction stream. Independent raw instruction audit shows only direct call targets and GP-relative operands differ; no changed object offsets, scalar constants, branch displacements or register allocation.",
+      "reviewed_calls": [
+        {
+          "function_offset": "0x58",
+          "debug_target": "0x00140768",
+          "retail_target": "0x00140978"
+        }
+      ]
+    },
+    {
+      "evidence_id": "E-0041-R09",
+      "retail_address": "0x0024A690",
+      "debug_address": "0x00243CE0",
+      "reference_name": "tLeftRightArrowScroll::tLeftRightArrowScroll(int, int, int)",
+      "mangled_name": "__21tLeftRightArrowScrolliii",
+      "class_identifier": "tLeftRightArrowScroll",
+      "retail_size": 156,
+      "debug_size": 156,
+      "status": "supported_reviewed_instruction_and_class_binding",
+      "debug_instruction_sha256": "00ceb75f3a1484d764fdc428505edc7159ac8f9edc7e1de8f4e7e8fa0f3bbf40",
+      "retail_instruction_sha256": "d786053ceea14b37ab7f04d97312fc8e2501c70577a74f1f880df0dbda6153aa",
+      "class_binding_kind": "named_constructor_correspondence",
+      "limitations": "Original identifier and membership correspondence only; host fields, static interfaces, signatures and container projections do not establish original layout or ABI. No Verified behavior claim.",
+      "differing_instruction_words": 4,
+      "instruction_differences": [
+        {
+          "function_offset": "0x3C",
+          "category": "direct_call_relocation"
+        },
+        {
+          "function_offset": "0x50",
+          "category": "direct_call_relocation"
+        },
+        {
+          "function_offset": "0x64",
+          "category": "direct_call_relocation"
+        },
+        {
+          "function_offset": "0x74",
+          "category": "direct_call_relocation"
+        }
+      ],
+      "rationale": "Named debug constructor/method with globally unique same-length normalized instruction stream. Independent raw instruction audit shows only direct call targets and GP-relative operands differ; no changed object offsets, scalar constants, branch displacements or register allocation.",
+      "reviewed_calls": [
+        {
+          "function_offset": "0x3C",
+          "debug_target": "0x00243C10",
+          "retail_target": "0x0024A5C0"
+        },
+        {
+          "function_offset": "0x50",
+          "debug_target": "0x00143B40",
+          "retail_target": "0x00143D50"
+        },
+        {
+          "function_offset": "0x64",
+          "debug_target": "0x00143B40",
+          "retail_target": "0x00143D50"
+        },
+        {
+          "function_offset": "0x74",
+          "debug_target": "0x00243EB0",
+          "retail_target": "0x0024A860"
+        }
+      ]
+    },
+    {
+      "evidence_id": "E-0041-R10",
+      "retail_address": "0x002495F0",
+      "debug_address": "0x00242C40",
+      "reference_name": "tGlobalBackgroundAnimation::tGlobalBackgroundAnimation(void)",
+      "mangled_name": "__26tGlobalBackgroundAnimation",
+      "class_identifier": "tGlobalBackgroundAnimation",
+      "retail_size": 284,
+      "debug_size": 284,
+      "status": "supported_reviewed_instruction_and_class_binding",
+      "debug_instruction_sha256": "f9cb2566f7c43e38ee48adf1cba7edfbd8c3cd239fd5280e282d9184f0ea9999",
+      "retail_instruction_sha256": "ff93a153645e52e4b80a106ae59ac51e983066f9e8c7123f5909b90a3f0dffe3",
+      "class_binding_kind": "named_constructor_correspondence",
+      "limitations": "Original identifier and membership correspondence only; host fields, static interfaces, signatures and container projections do not establish original layout or ABI. No Verified behavior claim.",
+      "differing_instruction_words": 2,
+      "instruction_differences": [
+        {
+          "function_offset": "0x40",
+          "category": "gp_relative_operand"
+        },
+        {
+          "function_offset": "0x100",
+          "category": "direct_call_relocation"
+        }
+      ],
+      "rationale": "Named debug constructor/method with globally unique same-length normalized instruction stream. Independent raw instruction audit shows only direct call targets and GP-relative operands differ; no changed object offsets, scalar constants, branch displacements or register allocation.",
+      "reviewed_calls": [
+        {
+          "function_offset": "0x100",
+          "debug_target": "0x00242E78",
+          "retail_target": "0x00249828"
+        }
+      ],
+      "helper_review": "DefaultTextureList debug00242E78/retail00249828 (92B) independently audited: 5 direct jump/call changes,2 LUI highs,2 ADDIU absolute lows. Two LUI/ADDIU pairs span call delay slots and explain automatic normalization omission."
+    },
+    {
+      "evidence_id": "E-0041-R11",
+      "retail_address": "0x00248568",
+      "debug_address": "0x00241C38",
+      "reference_name": "AnimationGroup::AnimationGroup(int, int, int, float, float, float)",
+      "mangled_name": "__14AnimationGroupiiifff",
+      "class_identifier": "AnimationGroup",
+      "retail_size": 188,
+      "debug_size": 188,
+      "status": "supported_reviewed_instruction_and_class_binding",
+      "debug_instruction_sha256": "aa66288eaf1c14c109e9e24d6acd2acc0c49d445940da7670d491341f61af727",
+      "retail_instruction_sha256": "9def2aa2e3df5e4ed39f9b31981548a17a641180ed13c1048b242cb7c4db86fb",
+      "class_binding_kind": "named_constructor_correspondence",
+      "limitations": "Original identifier and membership correspondence only; host fields, static interfaces, signatures and container projections do not establish original layout or ABI. No Verified behavior claim.",
+      "differing_instruction_words": 2,
+      "instruction_differences": [
+        {
+          "function_offset": "0x7C",
+          "category": "direct_call_relocation"
+        },
+        {
+          "function_offset": "0x90",
+          "category": "direct_call_relocation"
+        }
+      ],
+      "rationale": "Named debug constructor/method with globally unique same-length normalized instruction stream. Independent raw instruction audit shows only direct call targets and GP-relative operands differ; no changed object offsets, scalar constants, branch displacements or register allocation.",
+      "reviewed_calls": [
+        {
+          "function_offset": "0x7C",
+          "debug_target": "0x00143EC8",
+          "retail_target": "0x001440D8"
+        },
+        {
+          "function_offset": "0x90",
+          "debug_target": "0x00241DB8",
+          "retail_target": "0x002486E8"
+        }
+      ]
+    },
+    {
+      "evidence_id": "E-0041-R12",
+      "retail_address": "0x002490D8",
+      "debug_address": "0x002427A8",
+      "reference_name": "tExitScreenAnimation::tExitScreenAnimation(int, char const *, int)",
+      "mangled_name": "__20tExitScreenAnimationiPCci",
+      "class_identifier": "tExitScreenAnimation",
+      "retail_size": 80,
+      "debug_size": 80,
+      "status": "supported_reviewed_instruction_and_class_binding",
+      "debug_instruction_sha256": "3f471ab9e91ce6315b13af3391d06a635e537542fc1ed47f88e172634b19b0fd",
+      "retail_instruction_sha256": "1105a9c597f8f44980ccc5ff691e54e660122b7812610ea79194ffd6ea2bfd93",
+      "class_binding_kind": "named_constructor_correspondence",
+      "limitations": "Original identifier and membership correspondence only; host fields, static interfaces, signatures and container projections do not establish original layout or ABI. No Verified behavior claim.",
+      "differing_instruction_words": 2,
+      "instruction_differences": [
+        {
+          "function_offset": "0x1C",
+          "category": "direct_call_relocation"
+        },
+        {
+          "function_offset": "0x28",
+          "category": "direct_call_relocation"
+        }
+      ],
+      "rationale": "Named debug constructor/method with globally unique same-length normalized instruction stream. Independent raw instruction audit shows only direct call targets and GP-relative operands differ; no changed object offsets, scalar constants, branch displacements or register allocation.",
+      "reviewed_calls": [
+        {
+          "function_offset": "0x1C",
+          "debug_target": "0x002425B0",
+          "retail_target": "0x00248EE0"
+        },
+        {
+          "function_offset": "0x28",
+          "debug_target": "0x00242470",
+          "retail_target": "0x00248DA0"
+        }
+      ]
+    },
+    {
+      "evidence_id": "E-0041-R13",
+      "retail_address": "0x0011BF98",
+      "debug_address": "0x0011C310",
+      "reference_name": "eStripDataE::GetElementXYZ(int, float **, float **, float **)",
+      "mangled_name": "GetElementXYZ__11eStripDataEiPPfT2T2",
+      "class_identifier": "eStripDataE",
+      "retail_size": 248,
+      "debug_size": 248,
+      "status": "supported_reviewed_instruction_and_class_binding",
+      "debug_instruction_sha256": "f681dacc71e5c386a77ed17564a73f9bc22ad42e7cd66aac47e95eaf738882f3",
+      "retail_instruction_sha256": "ce50ae2e901d77de8b466c11dd36433ace14d4ca8c2fda87a015fd96ab51538c",
+      "class_binding_kind": "original_function_membership_only",
+      "limitations": "Original identifier and membership correspondence only; host fields, static interfaces, signatures and container projections do not establish original layout or ABI. No Verified behavior claim.",
+      "differing_instruction_words": 1,
+      "instruction_differences": [
+        {
+          "function_offset": "0x30",
+          "category": "direct_call_relocation"
+        }
+      ],
+      "rationale": "Named debug constructor/method with globally unique same-length normalized instruction stream. Independent raw instruction audit shows only direct call targets and GP-relative operands differ; no changed object offsets, scalar constants, branch displacements or register allocation.",
+      "reviewed_calls": [
+        {
+          "function_offset": "0x30",
+          "debug_target": "0x0011C5C0",
+          "retail_target": "0x0011C248"
+        }
+      ],
+      "port_grouping_limit": "Type_0011BF98 combines original eStripData and eStripDataE methods. Class_identifier names this method owner, not the entire port grouping. Debug eStripDataE size1 is not a packet extent. GetNumVerts exact8-byte leaf is independently anchored by calls from GetElementXYZ/ST0/RGBA."
+    },
+    {
+      "evidence_id": "E-0041-R14",
+      "retail_address": "0x0011C090",
+      "debug_address": "0x0011C408",
+      "reference_name": "eStripDataE::GetElementST0(int, float **, float **)",
+      "mangled_name": "GetElementST0__11eStripDataEiPPfT2",
+      "class_identifier": "eStripDataE",
+      "retail_size": 240,
+      "debug_size": 240,
+      "status": "supported_reviewed_instruction_and_class_binding",
+      "debug_instruction_sha256": "343f0e7c171926786a998b09c8f577955fdd081b292eedd8109add9d6d585949",
+      "retail_instruction_sha256": "a3d994fc347ccf08ff83ab2b08934c2609009fd56f29c33ad937ec6dc0132ebc",
+      "class_binding_kind": "original_function_membership_only",
+      "limitations": "Original identifier and membership correspondence only; host fields, static interfaces, signatures and container projections do not establish original layout or ABI. No Verified behavior claim.",
+      "differing_instruction_words": 2,
+      "instruction_differences": [
+        {
+          "function_offset": "0x28",
+          "category": "direct_call_relocation"
+        },
+        {
+          "function_offset": "0x68",
+          "category": "direct_call_relocation"
+        }
+      ],
+      "rationale": "Named debug constructor/method with globally unique same-length normalized instruction stream. Independent raw instruction audit shows only direct call targets and GP-relative operands differ; no changed object offsets, scalar constants, branch displacements or register allocation.",
+      "reviewed_calls": [
+        {
+          "function_offset": "0x28",
+          "debug_target": "0x0011C5C0",
+          "retail_target": "0x0011C248"
+        },
+        {
+          "function_offset": "0x68",
+          "debug_target": "0x0011C5C0",
+          "retail_target": "0x0011C248"
+        }
+      ],
+      "port_grouping_limit": "Type_0011BF98 combines original eStripData and eStripDataE methods. Class_identifier names this method owner, not the entire port grouping. Debug eStripDataE size1 is not a packet extent. GetNumVerts exact8-byte leaf is independently anchored by calls from GetElementXYZ/ST0/RGBA."
+    },
+    {
+      "evidence_id": "E-0041-R15",
+      "retail_address": "0x0011C180",
+      "debug_address": "0x0011C4F8",
+      "reference_name": "eStripDataE::GetElementRGBA(int, unsigned short **)",
+      "mangled_name": "GetElementRGBA__11eStripDataEiPPUs",
+      "class_identifier": "eStripDataE",
+      "retail_size": 196,
+      "debug_size": 196,
+      "status": "supported_reviewed_instruction_and_class_binding",
+      "debug_instruction_sha256": "1830aca71ae43109ffbfae80fdbca403f2ce9dd1f72b2fd6e9e6832d4d8b5416",
+      "retail_instruction_sha256": "e2b067119a190d1623d67b2cada9153f5efafe49f43e32290e4f7286589c947f",
+      "class_binding_kind": "original_function_membership_only",
+      "limitations": "Original identifier and membership correspondence only; host fields, static interfaces, signatures and container projections do not establish original layout or ABI. No Verified behavior claim.",
+      "differing_instruction_words": 2,
+      "instruction_differences": [
+        {
+          "function_offset": "0x20",
+          "category": "direct_call_relocation"
+        },
+        {
+          "function_offset": "0x60",
+          "category": "direct_call_relocation"
+        }
+      ],
+      "rationale": "Named debug constructor/method with globally unique same-length normalized instruction stream. Independent raw instruction audit shows only direct call targets and GP-relative operands differ; no changed object offsets, scalar constants, branch displacements or register allocation.",
+      "reviewed_calls": [
+        {
+          "function_offset": "0x20",
+          "debug_target": "0x0011C5C0",
+          "retail_target": "0x0011C248"
+        },
+        {
+          "function_offset": "0x60",
+          "debug_target": "0x0011C5C0",
+          "retail_target": "0x0011C248"
+        }
+      ],
+      "port_grouping_limit": "Type_0011BF98 combines original eStripData and eStripDataE methods. Class_identifier names this method owner, not the entire port grouping. Debug eStripDataE size1 is not a packet extent. GetNumVerts exact8-byte leaf is independently anchored by calls from GetElementXYZ/ST0/RGBA."
+    },
+    {
+      "evidence_id": "E-0041-R16",
+      "retail_address": "0x0011C248",
+      "debug_address": "0x0011C5C0",
+      "reference_name": "eStripData::GetNumVerts(void)",
+      "mangled_name": "GetNumVerts__10eStripData",
+      "class_identifier": "eStripData",
+      "retail_size": 8,
+      "debug_size": 8,
+      "status": "supported_reviewed_instruction_and_class_binding",
+      "debug_instruction_sha256": "350a9a95d98328113e2baa8d9d339ae3709aadedf74e7d95cede013206320577",
+      "retail_instruction_sha256": "350a9a95d98328113e2baa8d9d339ae3709aadedf74e7d95cede013206320577",
+      "class_binding_kind": "original_function_membership_only",
+      "limitations": "Original identifier and membership correspondence only; host fields, static interfaces, signatures and container projections do not establish original layout or ABI. No Verified behavior claim.",
+      "differing_instruction_words": 0,
+      "instruction_differences": [],
+      "rationale": "Named debug constructor/method with globally unique same-length normalized instruction stream. Independent raw instruction audit shows only direct call targets and GP-relative operands differ; no changed object offsets, scalar constants, branch displacements or register allocation.",
+      "reviewed_calls": [],
+      "port_grouping_limit": "Type_0011BF98 combines original eStripData and eStripDataE methods. Class_identifier names this method owner, not the entire port grouping. Debug eStripDataE size1 is not a packet extent. GetNumVerts exact8-byte leaf is independently anchored by calls from GetElementXYZ/ST0/RGBA."
+    },
+    {
+      "evidence_id": "E-0041-R17",
+      "retail_address": "0x0011C268",
+      "debug_address": "0x0011C5E0",
+      "reference_name": "eStripData::GetST0(int, float *, float *)",
+      "mangled_name": "GetST0__10eStripDataiPfT2",
+      "class_identifier": "eStripData",
+      "retail_size": 80,
+      "debug_size": 80,
+      "status": "supported_reviewed_instruction_and_class_binding",
+      "debug_instruction_sha256": "7f549ca76d7db34e7046e67ceb8726db3db5ba55461240b751d8b412bedaafd8",
+      "retail_instruction_sha256": "e85578c1074de9d6d1eccf8b8cd035bab100c1094a03fcf627c4cb2af4de2835",
+      "class_binding_kind": "original_function_membership_only",
+      "limitations": "Original identifier and membership correspondence only; host fields, static interfaces, signatures and container projections do not establish original layout or ABI. No Verified behavior claim.",
+      "differing_instruction_words": 1,
+      "instruction_differences": [
+        {
+          "function_offset": "0x1C",
+          "category": "direct_call_relocation"
+        }
+      ],
+      "rationale": "Named debug constructor/method with globally unique same-length normalized instruction stream. Independent raw instruction audit shows only direct call targets and GP-relative operands differ; no changed object offsets, scalar constants, branch displacements or register allocation.",
+      "reviewed_calls": [
+        {
+          "function_offset": "0x1C",
+          "debug_target": "0x0011C408",
+          "retail_target": "0x0011C090"
+        }
+      ],
+      "port_grouping_limit": "Type_0011BF98 combines original eStripData and eStripDataE methods. Class_identifier names this method owner, not the entire port grouping. Debug eStripDataE size1 is not a packet extent. GetNumVerts exact8-byte leaf is independently anchored by calls from GetElementXYZ/ST0/RGBA."
+    },
+    {
+      "evidence_id": "E-0041-R18",
+      "retail_address": "0x0011C2B8",
+      "debug_address": "0x0011C630",
+      "reference_name": "eStripData::GetXYZ(int, float *, float *, float *)",
+      "mangled_name": "GetXYZ__10eStripDataiPfT2T2",
+      "class_identifier": "eStripData",
+      "retail_size": 108,
+      "debug_size": 108,
+      "status": "supported_reviewed_instruction_and_class_binding",
+      "debug_instruction_sha256": "12c8d328086240f5a5a3587b8657bcb675cb8595acac164136cd5665ac0e7444",
+      "retail_instruction_sha256": "74c2ac8b94d47206a827c403080dd27d941e76a7fa639ce159b8bea857e1a6eb",
+      "class_binding_kind": "original_function_membership_only",
+      "limitations": "Original identifier and membership correspondence only; host fields, static interfaces, signatures and container projections do not establish original layout or ABI. No Verified behavior claim.",
+      "differing_instruction_words": 1,
+      "instruction_differences": [
+        {
+          "function_offset": "0x28",
+          "category": "direct_call_relocation"
+        }
+      ],
+      "rationale": "Named debug constructor/method with globally unique same-length normalized instruction stream. Independent raw instruction audit shows only direct call targets and GP-relative operands differ; no changed object offsets, scalar constants, branch displacements or register allocation.",
+      "reviewed_calls": [
+        {
+          "function_offset": "0x28",
+          "debug_target": "0x0011C310",
+          "retail_target": "0x0011BF98"
+        }
+      ],
+      "port_grouping_limit": "Type_0011BF98 combines original eStripData and eStripDataE methods. Class_identifier names this method owner, not the entire port grouping. Debug eStripDataE size1 is not a packet extent. GetNumVerts exact8-byte leaf is independently anchored by calls from GetElementXYZ/ST0/RGBA."
+    },
+    {
+      "evidence_id": "E-0041-R19",
+      "retail_address": "0x002491B0",
+      "debug_address": "0x00242880",
+      "reference_name": "tAnimatedBlurb::tAnimatedBlurb(int, int, int, int)",
+      "mangled_name": "__14tAnimatedBlurbiiii",
+      "class_identifier": "tAnimatedBlurb",
+      "retail_size": 208,
+      "debug_size": 204,
+      "status": "supported_reviewed_changed_constructor",
+      "debug_instruction_sha256": "c5571b8da4c661723e333989b447fbafc0f569c1a24e477e34e580d303ffa809",
+      "retail_instruction_sha256": "d9f7d681dae0bcdef0b3bda93544091ab316fc7af4b6b2c22b3272f784a50dc3",
+      "class_binding_kind": "named_constructor_correspondence",
+      "limitations": "Original identifier and membership correspondence only; host fields, static interfaces, signatures and container projections do not establish original layout or ABI. No Verified behavior claim.",
+      "rationale": "Entire normalized debug204-byte constructor equals retail208-byte constructor after removing exactly one retail-added sw zero,0x1A0(s0) at+0xA8. Remaining differences: four JAL targets and one GP read. Immediately following tAnimatedBlurb destructor debug00242950/retail00249280 is independently normalized-matched.",
+      "retail_added_instruction": {
+        "function_offset": "0xA8",
+        "operation": "sw zero,0x1A0(s0)"
+      }
+    },
+    {
+      "evidence_id": "E-0041-R20",
+      "retail_address": "0x001F1A78",
+      "debug_address": "0x001EDE98",
+      "reference_name": "LanguageOptionsScreenBase::LanguageOptionsScreenBase(int, LanguageOptionsScreenBase::eLanguageSelectMode)",
+      "mangled_name": "__25LanguageOptionsScreenBaseiQ225LanguageOptionsScreenBase19eLanguageSelectMode",
+      "class_identifier": "LanguageOptionsScreenBase",
+      "retail_size": 140,
+      "debug_size": 52,
+      "status": "supported_reviewed_changed_constructor_via_derived_caller",
+      "debug_instruction_sha256": "f34971c184e5b3853f9146fd0fb3fb996e95bc5d7dc83732008706c5fe0a5716",
+      "retail_instruction_sha256": "e9ac222a40b1e4d83cbe7dd8615588ccdc17af37f94c9af873895c888b452464",
+      "class_binding_kind": "named_constructor_correspondence",
+      "limitations": "Original identifier and membership correspondence only; host fields, static interfaces, signatures and container projections do not establish original layout or ABI. No Verified behavior claim.",
+      "rationale": "Globally unique normalized derived LanguageOptionsScreen ctor debug001EE068/retail001F1D70 calls these base ctors at same+0x14 offset. Base ctors retain stores at +0/+4/+8/+0xC and identical conditional sentinel handling. They install base vtables debug002B2210/retail002BA520. Base destructor debug001F1CB8/retail001F5AB8 differs only in vtable LUI/ADDIU pair and tail jump; Tick is empty8B in both tables. Retail adds stack frame and new call/branch logic; no behavior equivalence asserted.",
+      "caller_bridge": {
+        "debug_address": "0x001EE068",
+        "retail_address": "0x001F1D70",
+        "call_offset": "0x14",
+        "reference_name": "LanguageOptionsScreen::LanguageOptionsScreen(int, LanguageOptionsScreenBase::eLanguageSelectMode)"
+      }
+    }
+  ]
+}

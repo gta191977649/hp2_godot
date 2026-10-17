@@ -117,6 +117,11 @@ public:
     // Source row-vector matrices; translation occupies lanes12..14.
     static port::CarAttachmentMatrices Sub_00120EF8(const port::CarRenderConfig& config,
                                                    std::uint16_t steering);
+    // ELF00120EF8, E-0033-B02/E-0035-W01/E-0038-W01. Render-side basis
+    // composition for raw001C0D78 tire/second-group matrices. Wheels0/3 use
+    // the original source-Z half turn (tire/blur) or source-Y reflection(brake).
+    // Inputs are source row-vector matrices, before this render-only composition.
+    static port::CarAttachmentMatrices Sub_00120EF8(const port::CarAttachmentMatrices& source);
     // Whole-function entry points remain untranslated; overloads above are slices.
     void Sub_0011E860();
     void Sub_00120EF8();

@@ -26,6 +26,7 @@ __pycache__/
 /tools/asset_converter/output/
 # Machine-local PS2 asset root pointer (real path + nothing else); see config/ps2_assets.example.json.
 /config/ps2_assets.local.json
+/config/ps2_elf.local.json
 *.iso
 *.cso
 *.bin

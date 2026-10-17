@@ -262,12 +262,6 @@
       "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
     },
     {
-      "class_name": "CDBFileSys",
-      "status": "unknown",
-      "candidates": [],
-      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
-    },
-    {
       "class_name": "Car",
       "status": "unknown",
       "candidates": [],
@@ -1375,6 +1369,12 @@
       },
       "header": "src/game_core/src/bFile.hpp",
       "source": "src/game_core/src/bFile.cpp"
+    },
+    {
+      "class_name": "cDBFileSys",
+      "status": "unknown",
+      "candidates": [],
+      "reason": "No confirmed class-specific source translation-unit binding; shared targets/header diagnostics are not ownership proof."
     },
     {
       "class_name": "eAnimation",

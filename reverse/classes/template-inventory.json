@@ -614,41 +614,41 @@
         },
         {
           "elf_address": "0x002118A0",
-          "method": "Sub_002118A0",
+          "method": "Update",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002118a0.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void AIEngineSound::Sub_002118A0()",
+          "signature": "void AIEngineSound::Update()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x00211A80",
-          "method": "Sub_00211A80",
+          "method": "Mute",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00211a80.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void AIEngineSound::Sub_00211A80()",
+          "signature": "void AIEngineSound::Mute()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x00211D58",
-          "method": "Sub_00211D58",
+          "method": "DeactivateSound",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00211d58.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void AIEngineSound::Sub_00211D58()",
+          "signature": "void AIEngineSound::DeactivateSound()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x00211D60",
-          "method": "Sub_00211D60",
+          "method": "ActivateSound",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00211d60.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void AIEngineSound::Sub_00211D60()",
+          "signature": "void AIEngineSound::ActivateSound()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
@@ -726,8 +726,8 @@
           "preserved_projections": [
             {
               "path": "src/game_core/indep/src/fmenus.cpp",
-              "name": "Type_00249DE0::Sub_001EF3C8",
-              "signature": "void Type_00249DE0::Sub_001EF3C8(FeScreen& screen)",
+              "name": "tScrollingMenuList::Sub_001EF3C8",
+              "signature": "void tScrollingMenuList::Sub_001EF3C8(FeScreen& screen)",
               "stub": false
             }
           ]
@@ -770,7 +770,7 @@
             {
               "path": "src/game_core/indep/src/frontendscreens/options.cpp",
               "name": "Sub_001EFB80",
-              "signature": "void Sub_001EFB80(int message,MenuEvent_0016A458& event,Type_00249DE0& viewport, Type_0024A690& selector,FeScreen& screen,const WidgetMeasure& measure)",
+              "signature": "void Sub_001EFB80(int message,MenuEvent_0016A458& event,tScrollingMenuList& viewport, tLeftRightArrowScroll& selector,FeScreen& screen,const WidgetMeasure& measure)",
               "stub": false
             }
           ]
@@ -1028,21 +1028,21 @@
         },
         {
           "elf_address": "0x00204468",
-          "method": "Sub_00204468",
+          "method": "DoSnapshot",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00204468.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void BeltMover::Sub_00204468()",
+          "signature": "void BeltMover::DoSnapshot()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x00204D78",
-          "method": "Sub_00204D78",
+          "method": "Move",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00204d78.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void BeltMover::Sub_00204D78()",
+          "signature": "void BeltMover::Move()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         }
@@ -1397,462 +1397,6 @@
       "coverage": "members_catalogued"
     },
     {
-      "name": "CDBFileSys",
-      "namespace": "hp2::recovered",
-      "header": "src/game_core/CDBFileSys.hpp",
-      "source": "src/game_core/CDBFileSys.cpp",
-      "origin": "allocator_label",
-      "placement_provenance": "user_requested_root; port-side placement; original path unknown",
-      "constructors": [
-        "0x0012DEE0"
-      ],
-      "vtables": [
-        "0x002AD6E8",
-        "0x002AD7B0"
-      ],
-      "diagnostic_labels": [],
-      "members": [
-        {
-          "elf_address": "0x0012C938",
-          "method": "Sub_0012C938",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012c938.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012C938()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012CCA8",
-          "method": "Sub_0012CCA8",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012cca8.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012CCA8()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012CD00",
-          "method": "Sub_0012CD00",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012cd00.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012CD00()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012CD78",
-          "method": "Sub_0012CD78",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012cd78.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012CD78()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012D1A0",
-          "method": "Sub_0012D1A0",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012d1a0.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012D1A0()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012D1E0",
-          "method": "Sub_0012D1E0",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012d1e0.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012D1E0()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012D220",
-          "method": "Sub_0012D220",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012d220.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012D220()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012D2A8",
-          "method": "Sub_0012D2A8",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012d2a8.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012D2A8()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012D2E8",
-          "method": "Sub_0012D2E8",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012d2e8.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012D2E8()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012D3D8",
-          "method": "Sub_0012D3D8",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012d3d8.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012D3D8()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012D518",
-          "method": "Sub_0012D518",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012d518.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012D518()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012D560",
-          "method": "Sub_0012D560",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012d560.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012D560()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012D5F8",
-          "method": "Sub_0012D5F8",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012d5f8.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012D5F8()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012D690",
-          "method": "Sub_0012D690",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012d690.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012D690()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012DDC0",
-          "method": "Sub_0012DDC0",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012ddc0.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012DDC0()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012DEE0",
-          "method": "Sub_0012DEE0",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/memorycard/0012dee0.md",
-          "knowledge_status": "Decompiled",
-          "coverage": "throwing_template_with_preserved_partial_projection",
-          "signature": "void CDBFileSys::Sub_0012DEE0()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": [
-            {
-              "path": "src/game_core/memorycard/src/memorycard.cpp",
-              "name": "Sub_0012DEE0",
-              "signature": "std::string Sub_0012DEE0(int region)",
-              "stub": false
-            }
-          ]
-        },
-        {
-          "elf_address": "0x0012E0F0",
-          "method": "Sub_0012E0F0",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e0f0.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E0F0()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E190",
-          "method": "Sub_0012E190",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e190.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E190()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E1A8",
-          "method": "Sub_0012E1A8",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e1a8.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E1A8()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E1B8",
-          "method": "Sub_0012E1B8",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e1b8.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E1B8()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E1C0",
-          "method": "Sub_0012E1C0",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e1c0.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E1C0()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E1C8",
-          "method": "Sub_0012E1C8",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e1c8.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E1C8()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E1F0",
-          "method": "Sub_0012E1F0",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e1f0.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E1F0()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E1F8",
-          "method": "Sub_0012E1F8",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e1f8.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E1F8()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E200",
-          "method": "Sub_0012E200",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e200.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E200()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E208",
-          "method": "Sub_0012E208",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e208.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E208()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E210",
-          "method": "Sub_0012E210",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e210.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E210()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E218",
-          "method": "Sub_0012E218",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e218.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E218()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E220",
-          "method": "Sub_0012E220",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e220.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E220()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E228",
-          "method": "Sub_0012E228",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e228.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E228()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E230",
-          "method": "Sub_0012E230",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e230.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E230()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E238",
-          "method": "Sub_0012E238",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e238.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E238()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E240",
-          "method": "Sub_0012E240",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e240.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E240()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E248",
-          "method": "Sub_0012E248",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e248.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E248()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E250",
-          "method": "Sub_0012E250",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e250.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E250()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E258",
-          "method": "Sub_0012E258",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e258.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E258()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E260",
-          "method": "Sub_0012E260",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e260.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E260()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E268",
-          "method": "Sub_0012E268",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e268.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E268()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E270",
-          "method": "Sub_0012E270",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e270.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E270()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E2B8",
-          "method": "Sub_0012E2B8",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e2b8.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E2B8()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E2C0",
-          "method": "Sub_0012E2C0",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e2c0.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E2C0()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E2C8",
-          "method": "Sub_0012E2C8",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e2c8.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E2C8()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        },
-        {
-          "elf_address": "0x0012E2D0",
-          "method": "Sub_0012E2D0",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e2d0.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void CDBFileSys::Sub_0012E2D0()",
-          "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
-        }
-      ],
-      "coverage": "members_catalogued"
-    },
-    {
       "name": "Car",
       "namespace": "hp2::recovered",
       "header": "src/game_core/Car.hpp",
@@ -2012,6 +1556,12 @@
               "path": "src/game_core/CarRenderInfo.cpp",
               "name": "CarRenderInfo::Sub_00120EF8",
               "signature": "port::CarAttachmentMatrices CarRenderInfo::Sub_00120EF8(const port::CarRenderConfig& config, std::uint16_t steering)",
+              "stub": false
+            },
+            {
+              "path": "src/game_core/CarRenderInfo.cpp",
+              "name": "CarRenderInfo::Sub_00120EF8",
+              "signature": "port::CarAttachmentMatrices CarRenderInfo::Sub_00120EF8(const port::CarAttachmentMatrices& source)",
               "stub": false
             }
           ]
@@ -2195,41 +1745,41 @@
         },
         {
           "elf_address": "0x00214F30",
-          "method": "Sub_00214F30",
+          "method": "Update",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00214f30.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void ChopperSound::Sub_00214F30()",
+          "signature": "void ChopperSound::Update()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x00215000",
-          "method": "Sub_00215000",
+          "method": "Mute",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00215000.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void ChopperSound::Sub_00215000()",
+          "signature": "void ChopperSound::Mute()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x00215028",
-          "method": "Sub_00215028",
+          "method": "DeactivateSound",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00215028.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void ChopperSound::Sub_00215028()",
+          "signature": "void ChopperSound::DeactivateSound()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x00215050",
-          "method": "Sub_00215050",
+          "method": "ActivateSound",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00215050.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void ChopperSound::Sub_00215050()",
+          "signature": "void ChopperSound::ActivateSound()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         }
@@ -2539,11 +2089,11 @@
         },
         {
           "elf_address": "0x001A2110",
-          "method": "Sub_001A2110",
+          "method": "Think",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/police/001a2110.md",
           "knowledge_status": "Decompiled",
           "coverage": "throwing_template",
-          "signature": "void CopDriver::Sub_001A2110()",
+          "signature": "void CopDriver::Think()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
@@ -2559,11 +2109,11 @@
         },
         {
           "elf_address": "0x001A2B58",
-          "method": "Sub_001A2B58",
+          "method": "DoSnapshot",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001a2b58.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void CopDriver::Sub_001A2B58()",
+          "signature": "void CopDriver::DoSnapshot()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
@@ -5015,19 +4565,26 @@
           "elf_address": "0x00137100",
           "method": "Sub_00137100",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00137100.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
+          "knowledge_status": "Tested",
+          "coverage": "throwing_template_with_preserved_partial_projection",
           "signature": "void PhysicsCar::Sub_00137100()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/Sub_00137100_runtime.cpp",
+              "name": "Sub_00137100",
+              "signature": "std::uint32_t Sub_00137100(Memory& m,std::uint32_t object,std::uint32_t config,std::uint32_t controls,std::uint32_t car,InitServices& services)",
+              "stub": false
+            }
+          ]
         },
         {
           "elf_address": "0x00137450",
-          "method": "Sub_00137450",
+          "method": "DoSnapshot",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00137450.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void PhysicsCar::Sub_00137450()",
+          "signature": "void PhysicsCar::DoSnapshot()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
@@ -5043,33 +4600,54 @@
         },
         {
           "elf_address": "0x00137788",
-          "method": "Sub_00137788",
+          "method": "ComputeAuxiliaries",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00137788.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void PhysicsCar::Sub_00137788()",
+          "knowledge_status": "Implemented",
+          "coverage": "throwing_template_with_preserved_partial_projection",
+          "signature": "void PhysicsCar::ComputeAuxiliaries()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/Sub_00137100_runtime.cpp",
+              "name": "Sub_00137788",
+              "signature": "void Sub_00137788(Memory& m,std::uint32_t object,InitServices& services)",
+              "stub": false
+            }
+          ]
         },
         {
           "elf_address": "0x00137D90",
-          "method": "Sub_00137D90",
+          "method": "Move",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00137d90.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void PhysicsCar::Sub_00137D90()",
+          "knowledge_status": "Tested",
+          "coverage": "throwing_template_with_preserved_partial_projection",
+          "signature": "void PhysicsCar::Move()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/Sub_00137D90.cpp",
+              "name": "Move",
+              "signature": "float Move(Memory& m,std::uint32_t s,float dt,DrivingServices& hooks)",
+              "stub": false
+            }
+          ]
         },
         {
           "elf_address": "0x00138E08",
-          "method": "Sub_00138E08",
+          "method": "ResolveForces",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00138e08.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
-          "signature": "void PhysicsCar::Sub_00138E08()",
+          "knowledge_status": "Implemented",
+          "coverage": "throwing_template_with_preserved_partial_projection",
+          "signature": "void PhysicsCar::ResolveForces()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/Sub_00138E08.cpp",
+              "name": "ResolveForces",
+              "signature": "void ResolveForces(Memory& m,std::uint32_t mover)",
+              "stub": false
+            }
+          ]
         },
         {
           "elf_address": "0x00139678",
@@ -5085,11 +4663,18 @@
           "elf_address": "0x0019C808",
           "method": "Sub_0019C808",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0019c808.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
+          "knowledge_status": "Implemented",
+          "coverage": "throwing_template_with_preserved_partial_projection",
           "signature": "void PhysicsCar::Sub_0019C808()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/Sub_00137100_runtime.cpp",
+              "name": "Sub_0019C808",
+              "signature": "void Sub_0019C808(Memory& m,std::uint32_t head,InitServices& services)",
+              "stub": false
+            }
+          ]
         },
         {
           "elf_address": "0x0019C8F8",
@@ -5115,11 +4700,18 @@
           "elf_address": "0x001A5D60",
           "method": "Sub_001A5D60",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001a5d60.md",
-          "knowledge_status": "Identified",
-          "coverage": "throwing_template",
+          "knowledge_status": "Tested",
+          "coverage": "throwing_template_with_preserved_partial_projection",
           "signature": "void PhysicsCar::Sub_001A5D60()",
           "signature_provenance": "port-side; original ABI unconfirmed",
-          "preserved_projections": []
+          "preserved_projections": [
+            {
+              "path": "src/game_core/Sub_00137D90.cpp",
+              "name": "Sub_001A5D60",
+              "signature": "void Sub_001A5D60(Memory& m,std::uint32_t s,std::uint16_t value)",
+              "stub": false
+            }
+          ]
         },
         {
           "elf_address": "0x001A66F0",
@@ -5386,41 +4978,41 @@
         },
         {
           "elf_address": "0x00210400",
-          "method": "Sub_00210400",
+          "method": "DeactivateSound",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00210400.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void PlayerEngineSound::Sub_00210400()",
+          "signature": "void PlayerEngineSound::DeactivateSound()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x00210408",
-          "method": "Sub_00210408",
+          "method": "ActivateSound",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00210408.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void PlayerEngineSound::Sub_00210408()",
+          "signature": "void PlayerEngineSound::ActivateSound()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x00210410",
-          "method": "Sub_00210410",
+          "method": "Mute",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00210410.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void PlayerEngineSound::Sub_00210410()",
+          "signature": "void PlayerEngineSound::Mute()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x00211390",
-          "method": "Sub_00211390",
+          "method": "Update",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00211390.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void PlayerEngineSound::Sub_00211390()",
+          "signature": "void PlayerEngineSound::Update()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         }
@@ -5484,61 +5076,61 @@
         },
         {
           "elf_address": "0x00212E88",
-          "method": "Sub_00212E88",
+          "method": "DeactivateSound",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00212e88.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void PlayerTireSound::Sub_00212E88()",
+          "signature": "void PlayerTireSound::DeactivateSound()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x00212E90",
-          "method": "Sub_00212E90",
+          "method": "ActivateSound",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00212e90.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void PlayerTireSound::Sub_00212E90()",
+          "signature": "void PlayerTireSound::ActivateSound()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x002134D8",
-          "method": "Sub_002134D8",
+          "method": "Mute",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002134d8.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void PlayerTireSound::Sub_002134D8()",
+          "signature": "void PlayerTireSound::Mute()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x002135A0",
-          "method": "Sub_002135A0",
+          "method": "Update",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002135a0.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void PlayerTireSound::Sub_002135A0()",
+          "signature": "void PlayerTireSound::Update()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x002149F8",
-          "method": "Sub_002149F8",
+          "method": "ScaleRoadNoise",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002149f8.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void PlayerTireSound::Sub_002149F8()",
+          "signature": "void PlayerTireSound::ScaleRoadNoise()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x00214A00",
-          "method": "Sub_00214A00",
+          "method": "TriggerTireBlowOut",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00214a00.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void PlayerTireSound::Sub_00214A00()",
+          "signature": "void PlayerTireSound::TriggerTireBlowOut()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         }
@@ -6050,21 +5642,21 @@
         },
         {
           "elf_address": "0x001E0838",
-          "method": "Sub_001E0838",
+          "method": "Scroll",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001e0838.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void RaceResultsScreen::Sub_001E0838()",
+          "signature": "void RaceResultsScreen::Scroll()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x001E0868",
-          "method": "Sub_001E0868",
+          "method": "Tick",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001e0868.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void RaceResultsScreen::Sub_001E0868()",
+          "signature": "void RaceResultsScreen::Tick()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
@@ -6237,21 +5829,21 @@
         },
         {
           "elf_address": "0x0023A560",
-          "method": "Sub_0023A560",
+          "method": "DoSnapshot",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0023a560.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void RealController::Sub_0023A560()",
+          "signature": "void RealController::DoSnapshot()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x0023AA50",
-          "method": "Sub_0023AA50",
+          "method": "Think",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0023aa50.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void RealController::Sub_0023AA50()",
+          "signature": "void RealController::Think()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         }
@@ -6456,91 +6048,91 @@
         },
         {
           "elf_address": "0x0013AEB8",
-          "method": "Sub_0013AEB8",
+          "method": "DoSnapshot",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013aeb8.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void RealDriver::Sub_0013AEB8()",
+          "signature": "void RealDriver::DoSnapshot()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x0013B080",
-          "method": "Sub_0013B080",
+          "method": "AddJoyHandlers",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b080.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void RealDriver::Sub_0013B080()",
+          "signature": "void RealDriver::AddJoyHandlers()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x0013B250",
-          "method": "Sub_0013B250",
+          "method": "RemoveJoyHandlers",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b250.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void RealDriver::Sub_0013B250()",
+          "signature": "void RealDriver::RemoveJoyHandlers()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x0013B3D0",
-          "method": "Sub_0013B3D0",
+          "method": "SetLowGear",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b3d0.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void RealDriver::Sub_0013B3D0()",
+          "signature": "void RealDriver::SetLowGear()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x0013B3F8",
-          "method": "Sub_0013B3F8",
+          "method": "Drive",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b3f8.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void RealDriver::Sub_0013B3F8()",
+          "signature": "void RealDriver::Drive()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x0013C420",
-          "method": "Sub_0013C420",
+          "method": "StartHonkHorn",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013c420.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void RealDriver::Sub_0013C420()",
+          "signature": "void RealDriver::StartHonkHorn()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x0013C460",
-          "method": "Sub_0013C460",
+          "method": "StopHonkHorn",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013c460.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void RealDriver::Sub_0013C460()",
+          "signature": "void RealDriver::StopHonkHorn()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x0013CAE0",
-          "method": "Sub_0013CAE0",
+          "method": "GetDriverNumber",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013cae0.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void RealDriver::Sub_0013CAE0()",
+          "signature": "void RealDriver::GetDriverNumber()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
         {
           "elf_address": "0x0013CAF0",
-          "method": "Sub_0013CAF0",
+          "method": "SetDesiredSpeed",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013caf0.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void RealDriver::Sub_0013CAF0()",
+          "signature": "void RealDriver::SetDesiredSpeed()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
@@ -8851,6 +8443,462 @@
       "coverage": "unbound_class_name"
     },
     {
+      "name": "cDBFileSys",
+      "namespace": "hp2::recovered",
+      "header": "src/game_core/CDBFileSys.hpp",
+      "source": "src/game_core/CDBFileSys.cpp",
+      "origin": "debug named vtable; allocator label CDBFileSys",
+      "placement_provenance": "user_requested_root; port-side placement; original path unknown",
+      "constructors": [
+        "0x0012DEE0"
+      ],
+      "vtables": [
+        "0x002AD6E8",
+        "0x002AD7B0"
+      ],
+      "diagnostic_labels": [],
+      "members": [
+        {
+          "elf_address": "0x0012C938",
+          "method": "Service",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012c938.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Service()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012CCA8",
+          "method": "SetState",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012cca8.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::SetState()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012CD00",
+          "method": "Format",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012cd00.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Format()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012CD78",
+          "method": "Unformat",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012cd78.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Unformat()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012D1A0",
+          "method": "Sub_0012D1A0",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012d1a0.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012D1A0()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012D1E0",
+          "method": "Sub_0012D1E0",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012d1e0.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012D1E0()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012D220",
+          "method": "CheckFreeSpace",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012d220.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::CheckFreeSpace()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012D2A8",
+          "method": "GetFreeSpaceOnDevice",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012d2a8.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::GetFreeSpaceOnDevice()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012D2E8",
+          "method": "GetFileListing",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012d2e8.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::GetFileListing()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012D3D8",
+          "method": "CheckDevice",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012d3d8.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::CheckDevice()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012D518",
+          "method": "IsDevicePresent",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012d518.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::IsDevicePresent()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012D560",
+          "method": "GetCurrentDevice",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012d560.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::GetCurrentDevice()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012D5F8",
+          "method": "GetNextDevice",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012d5f8.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::GetNextDevice()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012D690",
+          "method": "GetPrevDevice",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012d690.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::GetPrevDevice()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012DDC0",
+          "method": "SetLastError",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012ddc0.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::SetLastError()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012DEE0",
+          "method": "Sub_0012DEE0",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/memorycard/0012dee0.md",
+          "knowledge_status": "Decompiled",
+          "coverage": "throwing_template_with_preserved_partial_projection",
+          "signature": "void cDBFileSys::Sub_0012DEE0()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": [
+            {
+              "path": "src/game_core/memorycard/src/memorycard.cpp",
+              "name": "Sub_0012DEE0",
+              "signature": "std::string Sub_0012DEE0(int region)",
+              "stub": false
+            }
+          ]
+        },
+        {
+          "elf_address": "0x0012E0F0",
+          "method": "Sub_0012E0F0",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e0f0.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E0F0()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E190",
+          "method": "GetFileName",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e190.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::GetFileName()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E1A8",
+          "method": "GetFileCount",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e1a8.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::GetFileCount()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E1B8",
+          "method": "Sub_0012E1B8",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e1b8.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E1B8()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E1C0",
+          "method": "Sub_0012E1C0",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e1c0.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E1C0()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E1C8",
+          "method": "Sub_0012E1C8",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e1c8.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E1C8()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E1F0",
+          "method": "Sub_0012E1F0",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e1f0.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E1F0()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E1F8",
+          "method": "Sub_0012E1F8",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e1f8.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E1F8()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E200",
+          "method": "Sub_0012E200",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e200.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E200()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E208",
+          "method": "Sub_0012E208",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e208.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E208()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E210",
+          "method": "Sub_0012E210",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e210.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E210()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E218",
+          "method": "Sub_0012E218",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e218.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E218()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E220",
+          "method": "Sub_0012E220",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e220.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E220()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E228",
+          "method": "Sub_0012E228",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e228.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E228()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E230",
+          "method": "Sub_0012E230",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e230.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E230()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E238",
+          "method": "Sub_0012E238",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e238.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E238()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E240",
+          "method": "Sub_0012E240",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e240.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E240()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E248",
+          "method": "Sub_0012E248",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e248.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E248()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E250",
+          "method": "Sub_0012E250",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e250.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E250()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E258",
+          "method": "Sub_0012E258",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e258.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E258()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E260",
+          "method": "Sub_0012E260",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e260.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E260()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E268",
+          "method": "Sub_0012E268",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e268.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E268()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E270",
+          "method": "Sub_0012E270",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e270.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E270()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E2B8",
+          "method": "Sub_0012E2B8",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e2b8.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E2B8()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E2C0",
+          "method": "Sub_0012E2C0",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e2c0.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E2C0()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E2C8",
+          "method": "Sub_0012E2C8",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e2c8.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E2C8()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        },
+        {
+          "elf_address": "0x0012E2D0",
+          "method": "Sub_0012E2D0",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0012e2d0.md",
+          "knowledge_status": "Identified",
+          "coverage": "throwing_template",
+          "signature": "void cDBFileSys::Sub_0012E2D0()",
+          "signature_provenance": "port-side; original ABI unconfirmed",
+          "preserved_projections": []
+        }
+      ],
+      "coverage": "members_catalogued"
+    },
+    {
       "name": "eAnimation",
       "namespace": "hp2::recovered",
       "header": "src/game_core/eAnimation.hpp",
@@ -9141,11 +9189,11 @@
         },
         {
           "elf_address": "0x001F46D8",
-          "method": "Sub_001F46D8",
+          "method": "HandleEvent",
           "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001f46d8.md",
           "knowledge_status": "Identified",
           "coverage": "throwing_template",
-          "signature": "void tCustomizeHUDScreen::Sub_001F46D8()",
+          "signature": "void tCustomizeHUDScreen::HandleEvent()",
           "signature_provenance": "port-side; original ABI unconfirmed",
           "preserved_projections": []
         },
@@ -9195,8 +9243,8 @@
           "preserved_projections": [
             {
               "path": "src/game_core/indep/src/fmenus.cpp",
-              "name": "Type_00249DE0::Sub_001F33B8",
-              "signature": "void Type_00249DE0::Sub_001F33B8(FeScreen& screen)",
+              "name": "tScrollingMenuList::Sub_001F33B8",
+              "signature": "void tScrollingMenuList::Sub_001F33B8(FeScreen& screen)",
               "stub": false
             }
           ]
@@ -9239,7 +9287,7 @@
             {
               "path": "src/game_core/indep/src/frontendscreens/options.cpp",
               "name": "Sub_001F3A28",
-              "signature": "void Sub_001F3A28(int message,MenuEvent_0016A458& event,Type_00249DE0& viewport, Type_0024A690& selector,FeScreen& screen,const WidgetMeasure& measure)",
+              "signature": "void Sub_001F3A28(int message,MenuEvent_0016A458& event,tScrollingMenuList& viewport, tLeftRightArrowScroll& selector,FeScreen& screen,const WidgetMeasure& measure)",
               "stub": false
             }
           ]

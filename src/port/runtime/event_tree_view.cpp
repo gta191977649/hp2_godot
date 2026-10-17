@@ -243,7 +243,7 @@ int EventTreeView::move_cursor_sound(int direction) {
     return hp2::frontend::kSoundTreeUpDown_001FAF60;
 }
 
-void EventTreeView::target(hp2::frontend::Type_00248568& path, float value) {
+void EventTreeView::target(hp2::frontend::AnimationGroup& path, float value) {
     path.field_0x24 = value;
     if (value != path.field_0x1c) path.field_0x48 = 2;
 }
@@ -475,6 +475,9 @@ EventTreeOverlayStats append_event_tree(const EventTreeView& view, const WidgetS
         widget.visible = 1;
         widget.x = at.x; widget.y = at.y;
         widget.scale_x *= zoom; widget.scale_y *= zoom;
+        // 001F7BF0 ->00140930 ->00140CD8: centre Y using scaled maximum glyph height.
+        // E-0039-N01/F01; the original ignores the template's authored text position.
+        widget.y -= static_cast<float>(numbers->line_height) * widget.scale_y * 0.5f;
         widget.string_id_0x60 = 0;
         widget.text = node.number < 10 ? " " + std::to_string(node.number) : std::to_string(node.number);
         // FUN_001F7748: dim when this node and all prerequisites report locked.

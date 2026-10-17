@@ -105,6 +105,7 @@ struct Ps2VehicleRenderer::Impl {
     std::vector<godot::Ref<godot::ArrayMesh>> building_meshes;
     std::vector<godot::Ref<godot::ShaderMaterial>> building_materials;
     std::string building_key;bool cached_mesh=false,first_bounds=true;
+    bool driving_pose=false;
     double wheel_speed=80;
     bool show_lods=false,wheel_blur=false,loading=false;std::uint64_t generation=0,completed=0;
     std::optional<port::vehicle::Loader::Ticket> ticket;
@@ -132,6 +133,7 @@ void Ps2VehicleRenderer::shutdown_loader(){loader_slot().reset();}
 Ps2VehicleRenderer::Ps2VehicleRenderer():impl_(std::make_unique<Impl>()){}
 Ps2VehicleRenderer::~Ps2VehicleRenderer(){cancel_load();}
 void Ps2VehicleRenderer::_bind_methods() {
+    godot::ClassDB::bind_method(godot::D_METHOD("apply_driving_snapshot","snapshot"),&Ps2VehicleRenderer::apply_driving_snapshot);
     godot::ClassDB::bind_method(godot::D_METHOD("request_car","relative_path","car_id","skin_id"),&Ps2VehicleRenderer::request_car);
     godot::ClassDB::bind_method(godot::D_METHOD("pump_load"),&Ps2VehicleRenderer::pump_load);
     godot::ClassDB::bind_method(godot::D_METHOD("set_show_lods","enabled"),&Ps2VehicleRenderer::set_show_lods);
@@ -151,7 +153,7 @@ void Ps2VehicleRenderer::_bind_methods() {
     godot::ClassDB::bind_method(godot::D_METHOD("set_bounds","enabled"),&Ps2VehicleRenderer::set_bounds);
 }
 void Ps2VehicleRenderer::release_display() {
-    impl_->display_ready=false;
+    impl_->display_ready=false;impl_->driving_pose=false;
     for(auto* node:impl_->nodes){remove_child(node);memdelete(node);}
     impl_->nodes.clear();impl_->draws.clear();
     for(auto* tag:impl_->tags){remove_child(tag);memdelete(tag);}impl_->tags.clear();
@@ -306,7 +308,7 @@ void Ps2VehicleRenderer::rebuild_display(bool incremental) {
         }
         if(!impl_->cached_mesh){const auto bytes=impl_->building_key.size();gpu.bytes+=bytes;gpu.meshes.emplace(impl_->building_key,GpuCache::Mesh{impl_->building_meshes,bytes,++gpu.clock});gpu.trim();}
         auto* node=memnew(godot::MeshInstance3D);add_child(node);
-        node->set_name(string(part.name));node->set_meta("hp2_part_name",string(part.name));node->set_transform(host_matrix(part.transform));
+        node->set_name(string(part.name));node->set_meta("hp2_part_name",string(part.name));node->set_meta("hp2_wheel_index",part.wheel);node->set_meta("hp2_part_group",int(part.group));node->set_transform(host_matrix(part.transform));
         // One native part still owns one transform/visibility root. Extra batches inherit it.
         for(std::size_t batch=0;batch<impl_->building_meshes.size();++batch){
             auto* chunk=batch==0?node:memnew(godot::MeshInstance3D);
@@ -422,7 +424,7 @@ godot::Dictionary Ps2VehicleRenderer::set_wheel_speed(double speed){
     if(!error.empty())impl_->error=error;return get_state();
 }
 void Ps2VehicleRenderer::advance_wheels(double delta){
-    const auto error=catch_all([&]{if(impl_->model)impl_->model->advance_wheels(delta);});
+    const auto error=catch_all([&]{if(impl_->driving_pose)throw std::logic_error("Preview integration is disabled for driving snapshots");if(impl_->model)impl_->model->advance_wheels(delta);});
     if(!error.empty())impl_->error=error;
 }
 
@@ -560,4 +562,38 @@ void Ps2VehicleRenderer::set_inspection(bool enabled){
 void Ps2VehicleRenderer::set_part_visible(const godot::String& name,bool visible){const auto error=catch_all([&]{if(impl_->model)impl_->model->set_part_visible(name.utf8().get_data(),visible);});if(!error.empty())impl_->error=error;}
 void Ps2VehicleRenderer::set_wireframe(bool enabled){const auto error=catch_all([&]{impl_->wireframe=enabled;for(const auto& draw:impl_->draws)if(draw.node)draw.node->set_material_overlay(enabled?impl_->wire:godot::Ref<godot::ShaderMaterial>());});if(!error.empty())impl_->error=error;}
 void Ps2VehicleRenderer::set_bounds(bool enabled){const auto error=catch_all([&]{impl_->show_bounds=enabled;if(impl_->bounds_node)impl_->bounds_node->set_visible(enabled);});if(!error.empty())impl_->error=error;}
+}
+
+namespace port::godot_bridge {
+godot::Dictionary Ps2VehicleRenderer::apply_driving_snapshot(const godot::Dictionary& snapshot){
+    const auto error=catch_all([&]{
+        if(!impl_->model||impl_->loading)throw std::logic_error("No completed vehicle load for driving publication");
+        if(impl_->show_lods)throw std::logic_error("Driving pose requires a single vehicle");
+        if(!snapshot.has("body")||!snapshot.has("wheels"))throw std::invalid_argument("Driving snapshot requires body and four wheels");
+        if(snapshot["body"].get_type()!=godot::Variant::TRANSFORM3D||snapshot["wheels"].get_type()!=godot::Variant::ARRAY)
+            throw std::invalid_argument("Invalid driving body/wheel types");
+        const godot::Transform3D body=snapshot["body"];
+        if(!std::isfinite(body.basis.determinant())||body.basis.determinant()==0)throw std::invalid_argument("Singular driving body basis");
+        port::driving::validate_matrix(source_matrix(body));
+        const godot::Array values=snapshot["wheels"];
+        if(values.size()!=4)throw std::invalid_argument("Driving snapshot requires exactly four wheels");
+        std::array<port::driving::WheelSnapshot,4> wheels;
+        for(int i=0;i<4;++i){
+            if(values[i].get_type()!=godot::Variant::DICTIONARY)throw std::invalid_argument("Invalid driving wheel type");
+            const godot::Dictionary value=values[i];auto& wheel=wheels[i];
+            for(const char* key:{"tire","brake","blur","phase","angular_velocity","blur_alpha"})
+                if(!value.has(key))throw std::invalid_argument("Incomplete driving wheel publication");
+            for(const char* key:{"tire","brake","blur"})if(value[key].get_type()!=godot::Variant::TRANSFORM3D)
+                throw std::invalid_argument("Invalid driving wheel transform");
+            for(const char* key:{"phase","angular_velocity","blur_alpha"})if(value[key].get_type()!=godot::Variant::INT&&value[key].get_type()!=godot::Variant::FLOAT)
+                throw std::invalid_argument("Invalid driving wheel numeric field");
+            wheel.tire=source_matrix(value["tire"]);wheel.brake=source_matrix(value["brake"]);wheel.blur=source_matrix(value["blur"]);
+            wheel.phase=value["phase"];wheel.angular_velocity=value["angular_velocity"];wheel.blur_alpha=value["blur_alpha"];
+        }
+        impl_->model->apply_driving_pose(wheels);set_transform(body);impl_->driving_pose=true;impl_->error.clear();layout_lods();
+    });
+    if(!error.empty())impl_->error=error;
+    auto result=get_state();result["ok"]=error.empty();result["driving_pose"]=impl_->driving_pose;
+    if(!error.empty())result["error"]=string(error);return result;
+}
 }

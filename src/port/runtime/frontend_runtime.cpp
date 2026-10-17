@@ -287,16 +287,16 @@ MenuState FrontEndRuntime::menu_open(int screen_index) {
             [this](const auto& widget) { return measure_widget(widget); });
         const auto hint = port::frontend::hint_binding(active_class_name_, 0);
         if (hint.attachment_known && hint.attached) {
-            scrolling_text_ = std::make_unique<hp2::frontend::Type_002491B0>();
+            scrolling_text_ = std::make_unique<hp2::frontend::tAnimatedBlurb>();
             scrolling_text_->Construct_002491B0(screens_[slot]);
         }
         if (active_class_name_ == "Audio Options" || active_class_name_ == "Display Options") {
-            menu_viewport_ = std::make_unique<hp2::frontend::Type_00249DE0>();
+            menu_viewport_ = std::make_unique<hp2::frontend::tScrollingMenuList>();
             if (active_class_name_ == "Audio Options")
                 menu_viewport_->Sub_001EF3C8(*menu_group_->screen_0x14);
             else
                 menu_viewport_->Sub_001F33B8(*menu_group_->screen_0x14);
-            menu_selector_ = std::make_unique<hp2::frontend::Type_0024A690>();
+            menu_selector_ = std::make_unique<hp2::frontend::tLeftRightArrowScroll>();
             menu_selector_->Construct_0024A690(*menu_group_->screen_0x14, 0xD1CDA594, 0x9345E4A7);
         }
         menu_group_->EnsureMenu_0016A858();
@@ -326,7 +326,7 @@ MenuState FrontEndRuntime::menu_open(int screen_index) {
         if (!loaded.ok) event_tree_error_ = loaded.error;
         for (int sibling : {17, 18, 19}) screens_[sibling] = authored_screens_[sibling];
         result.not_implemented = hp2::guard([&] {
-            scrolling_text_ = std::make_unique<hp2::frontend::Type_002491B0>();
+            scrolling_text_ = std::make_unique<hp2::frontend::tAnimatedBlurb>();
             scrolling_text_->Construct_002491B0(screens_[slot], 0xfecebef6, 0xfecebef6, 0x70a404ec);
             event_car_logos_.Bind_001F8C10(screens_[slot], 0);
             event_track_logos_.Bind_001F90F0(screens_[slot], 0);
@@ -442,7 +442,7 @@ void FrontEndRuntime::dispatch_activation(hp2::frontend::MenuEvent_0016A458& eve
             pending_push_history_ = push;
         },
         [this](const char* name) {
-            exit_animation_ = std::make_unique<hp2::frontend::Type_002490D8>();
+            exit_animation_ = std::make_unique<hp2::frontend::tExitScreenAnimation>();
             exit_animation_->Construct_002490D8(screens_[static_cast<std::size_t>(menu_screen_index_)]);
             exit_class_name_ = name;
         },
@@ -1018,7 +1018,12 @@ FrameStats FrontEndRuntime::build_frame(render::Resources& resources, render::Fr
         const int state = event_tree_.state();
         auto sibling = [&](int index, float alpha, bool wrapped) {
             auto document = screens_[static_cast<std::size_t>(index)];
-            for (auto& widget : document.widgets) widget.a = static_cast<std::uint8_t>(widget.a * alpha);
+            for (auto& widget : document.widgets) {
+                widget.a = static_cast<std::uint8_t>(widget.a * alpha);
+                if (widget.type == 2) for (auto& corner : widget.field_0x5c)
+                    corner = (corner & 0xffffffu) |
+                        (static_cast<std::uint32_t>(static_cast<std::uint8_t>((corner >> 24) * alpha)) << 24);
+            }
             FrameOptions sibling_options;
             if (wrapped) {
                 // 001451E0 explicitly draws this template even when authored visibility is 0.

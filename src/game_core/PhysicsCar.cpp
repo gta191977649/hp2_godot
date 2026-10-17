@@ -26,8 +26,9 @@ void PhysicsCar::Sub_00137100() {
 }
 
 // ELF 0x00137450; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00137450.md.
-void PhysicsCar::Sub_00137450() {
-    hp2::not_implemented("0x00137450", "PhysicsCar::Sub_00137450 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x00137410: PhysicsCar::DoSnapshot(ReplaySnapshot *); retail 0x00137450.
+void PhysicsCar::DoSnapshot() {
+    hp2::not_implemented("0x00137450", "PhysicsCar::DoSnapshot (signature and full body unresolved)");
 }
 
 // ELF 0x00137708; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00137708.md.
@@ -36,18 +37,21 @@ void PhysicsCar::Sub_00137708() {
 }
 
 // ELF 0x00137788; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00137788.md.
-void PhysicsCar::Sub_00137788() {
-    hp2::not_implemented("0x00137788", "PhysicsCar::Sub_00137788 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x00137748: PhysicsCar::ComputeAuxiliaries(void); retail 0x00137788.
+void PhysicsCar::ComputeAuxiliaries() {
+    hp2::not_implemented("0x00137788", "PhysicsCar::ComputeAuxiliaries (signature and full body unresolved)");
 }
 
 // ELF 0x00137D90; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00137d90.md.
-void PhysicsCar::Sub_00137D90() {
-    hp2::not_implemented("0x00137D90", "PhysicsCar::Sub_00137D90 (signature and full body unresolved)");
+// TASK-0041 E-0041-R01; debug 0x00137D18: PhysicsCar::Move(float); retail 0x00137D90.
+void PhysicsCar::Move() {
+    hp2::not_implemented("0x00137D90", "PhysicsCar::Move (signature and full body unresolved)");
 }
 
 // ELF 0x00138E08; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00138e08.md.
-void PhysicsCar::Sub_00138E08() {
-    hp2::not_implemented("0x00138E08", "PhysicsCar::Sub_00138E08 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x00138D90: PhysicsCar::ResolveForces(void); retail 0x00138E08.
+void PhysicsCar::ResolveForces() {
+    hp2::not_implemented("0x00138E08", "PhysicsCar::ResolveForces (signature and full body unresolved)");
 }
 
 // ELF 0x00139678; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00139678.md.

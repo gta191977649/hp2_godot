@@ -1,0 +1,9 @@
+{
+  "CDBFileSys": {
+    "name": "cDBFileSys",
+    "evidence_id": "E-0041-V01",
+    "retail_vtable": "0x002AD6E8",
+    "debug_vtable": "0x002A5718",
+    "basis": "Named primary vtable correspondence; CDBFileSys is the allocator label, not the exact C++ spelling. cDBFilesBase table remains separate base/subobject evidence. No native layout or inheritance claim."
+  }
+}

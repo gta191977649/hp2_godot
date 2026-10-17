@@ -16,7 +16,7 @@ int main(){try{
     FeWidget below;below.name_hash=0x20d73d01;screen.widgets.push_back(below);
     FeWidget unrelated;unrelated.y=999;screen.widgets.push_back(unrelated);
     const auto authored=screen;
-    Type_00249DE0 state;state.Sub_001EF3C8(screen);
+    tScrollingMenuList state;state.Sub_001EF3C8(screen);
     check(screen.widgets[0].clip_hash_0x4c==0xc67cfb4a&&(screen.widgets[0].text_align&0x10));
     auto rect=GetWidgetClip_00145F30(screen,screen.widgets[0],[](const FeWidget&){return WidgetMetrics{690,260};});
     check(rect.valid&&rect.x0==24&&rect.x1==710&&rect.y0==73&&rect.y1==333);
@@ -28,14 +28,14 @@ int main(){try{
     check(screen.widgets[12].visible==1&&screen.widgets[13].visible==1);
     // Rapid retarget must preserve position and normalized velocity, not restart at rest.
     auto retarget_screen=authored;
-    Type_00249DE0 retarget;retarget.Sub_001EF3C8(retarget_screen);
+    tScrollingMenuList retarget;retarget.Sub_001EF3C8(retarget_screen);
     retarget.Handle_0024A480(4,0x52e039fa);retarget.Update_0024A1A8(0.25f);
     check(retarget_screen.widgets[0].y==51.5f);
     retarget.Handle_0024A480(4,0x52e039fb);retarget.Update_0024A1A8(0);
     check(retarget_screen.widgets[0].y==51.5f);
     retarget.Update_0024A1A8(0.25f);check(retarget_screen.widgets[0].y==16.8125f);
     retarget.Update_0024A1A8(0.25f);check(retarget_screen.widgets[0].y==-4);
-    Type_0024A690 edge_selector;edge_selector.Construct_0024A690(retarget_screen,0xd1cda594,0x9345e4a7);
+    tLeftRightArrowScroll edge_selector;edge_selector.Construct_0024A690(retarget_screen,0xd1cda594,0x9345e4a7);
     MenuEvent_0016A458 edge;edge.field_0x00=0x52e039f3;
     Sub_001EFB80(8,edge,retarget,edge_selector,retarget_screen,{});check(edge.result_0x08==1);
     edge={};edge.field_0x00=0xaee77884;
@@ -47,7 +47,7 @@ int main(){try{
     FeWidget left;left.type=2;left.name_hash=0xd1cda594;left.x=410;left.visible=1;
     FeWidget right=left;right.name_hash=0x9345e4a7;right.x=609;
     FeScreen selector_screen;selector_screen.widgets={mono,left,right};
-    Type_0024A690 selector;selector.Construct_0024A690(selector_screen,0xd1cda594,0x9345e4a7);
+    tLeftRightArrowScroll selector;selector.Construct_0024A690(selector_screen,0xd1cda594,0x9345e4a7);
     check(selector_screen.widgets[1].visible==0&&selector_screen.widgets[2].visible==0);
     selector.Bind_0024A860(0x2932dfca);
     auto measure=[](const FeWidget&w){return WidgetMetrics{10,w.type==1?28.0f:16.0f};};
@@ -63,7 +63,7 @@ int main(){try{
     for(auto hash:{0x55cb09f2u,0x2e931f1bu,0x03d90172u,0x5610f2f4u,0x8fe4086bu,0x422313cbu}){
         FeWidget w;w.name_hash=hash;w.type=1;w.y=70;display.widgets.push_back(w);}
     display.widgets.push_back(left);display.widgets.push_back(right);
-    Type_00249DE0 display_viewport;display_viewport.Sub_001F33B8(display);
+    tScrollingMenuList display_viewport;display_viewport.Sub_001F33B8(display);
     check(display_viewport.field_0x34==9);
     for(const auto&w:display.widgets)check(w.clip_hash_0x4c==0xc67cfb4a);
     display_viewport.Handle_0024A480(4,0x52e039fb);

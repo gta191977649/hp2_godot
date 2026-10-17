@@ -52,6 +52,7 @@ int main() {
     check(console.log_count()>before);
     ViewerSession viewers(true);
     register_viewer_commands(console.commands(),viewers);
+    console.execute("drivinglab");check(viewers.next()->action==ViewerAction::Driving);
     console.execute("carviewer");check(viewers.next()->action==ViewerAction::Car);
     viewers.activate(ViewerKind::Car);
     console.execute("viewer.load \"CARS/synthetic test.bin\"");
@@ -95,8 +96,35 @@ int main() {
     button.pressed=false;viewer_console.input(button);viewer_console.frame(800,600,1.f/60,draw);
     bool speed_changed=false;while(auto speed=ui.next())if(speed->action=="wheel_speed")speed_changed=speed->value>0&&speed->value<=150;
     check(speed_changed);
+    // Both modes belong to the same CarViewer window. Actual ImGui pointer
+    // input queues their transitions on release, preserving the selected car.
+    auto* car_window=ImGui::FindWindowByName("CarViewer###CarViewerCompact");check(car_window);
+    move.x=55;move.y=231;viewer_console.input(move);button.pressed=true;viewer_console.input(button);viewer_console.frame(800,600,1.f/60,draw);
+    check(!ui.next());
+    button.pressed=false;viewer_console.input(button);viewer_console.frame(800,600,1.f/60,draw);
+    const auto drive=ui.next();check(drive&&drive->action=="test_drive"&&!ui.next());
+    check(state.kind=="car"&&state.car_id==39&&state.skin_id==1);
+    state.kind="driving";state.driving_telemetry="Synthetic test / unknown body";ui.update(state);
+    viewer_console.frame(800,600,1.f/60,draw);viewer_console.frame(800,600,1.f/60,draw);
+    check(ImGui::FindWindowByName("CarViewer###CarViewerCompact")==car_window);
+    // The driving surface has only the return button: former simulation
+    // toolbar locations cannot queue manual start/pause/step/record actions.
+    for(const auto point:{ImVec2{35,130},ImVec2{190,130},ImVec2{40,155}}){
+        move.x=point.x;move.y=point.y;viewer_console.input(move);
+        button.pressed=true;viewer_console.input(button);viewer_console.frame(800,600,1.f/60,draw);
+        button.pressed=false;viewer_console.input(button);viewer_console.frame(800,600,1.f/60,draw);
+        check(!ui.next());
+    }
+    move.x=85;move.y=91;viewer_console.input(move);button.pressed=true;viewer_console.input(button);viewer_console.frame(800,600,1.f/60,draw);
+    check(!ui.next());
+    button.pressed=false;viewer_console.input(button);viewer_console.frame(800,600,1.f/60,draw);
+    const auto preview=ui.next();check(preview&&preview->action=="drive_exit"&&!ui.next());
+    check(state.kind=="driving"&&state.car_id==39&&state.skin_id==1);
+    state.kind="car";ui.update(state);viewer_console.frame(800,600,1.f/60,draw);
+    check(ImGui::FindWindowByName("CarViewer###CarViewerCompact")==car_window);
     toggle.pressed=true;check(!viewer_console.input(toggle)&&!viewer_console.visible());
     move.x=700;move.y=500;check(!viewer_console.input(move));
+    state.kind="driving";state.driving_telemetry="Synthetic test / unknown body";ui.update(state);check(!viewer_console.frame(800,600,1.f/60,draw).empty());
     state.kind="track";ui.update(state);check(!viewer_console.frame(320,240,1.f/60,draw).empty());
     // Repaired persisted/dragged positions and resized viewports, including tiny screens.
     auto constrained=[&](float width,float height){

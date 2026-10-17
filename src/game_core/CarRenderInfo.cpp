@@ -18,6 +18,14 @@
 
 namespace port {
 namespace {
+// Port-side matrix value carrier for original0011B248 multiplication order.
+std::array<float,16> attachment_product(const std::array<float,16>& left,const std::array<float,16>& right) {
+    std::array<float,16> out{};
+    for(std::size_t row=0;row<4;++row)for(std::size_t col=0;col<4;++col)
+        out[row*4+col]=left[row*4]*right[col]+left[row*4+1]*right[4+col]+
+            left[row*4+2]*right[8+col]+left[row*4+3]*right[12+col];
+    return out;
+}
 float float_bits(std::uint32_t bits) {
     float result;
     std::memcpy(&result,&bits,4);
@@ -309,38 +317,40 @@ CarAttachmentMatrices Sub_001C0D78(const CarRenderConfig& config,const std::arra
                                   std::uint16_t steering) {
     // Port containers of exact source matrices; not a reconstruction of frontend animation.
     const std::array<float,16> identity{{1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1}};
-    const auto multiply=[](const std::array<float,16>& left,const std::array<float,16>& right) {
-        std::array<float,16> out{};
-        for(std::size_t row=0;row<4;++row)for(std::size_t col=0;col<4;++col) {
-            out[row*4+col]=left[row*4]*right[col]+left[row*4+1]*right[4+col]+
-                left[row*4+2]*right[8+col]+left[row*4+3]*right[12+col];
-        }
-        return out;
-    };
-    auto mirror=identity;mirror[5]=-1;
-    const auto reverse=port::Sub_0011B7D8(0x8000);
     port::CarAttachmentMatrices result;
     for(std::size_t i=0;i<4;++i) {
         const float scaled=phases[i]*float_bits(0x4622f983);
         if(!std::isfinite(scaled)||double(scaled)<=std::numeric_limits<int>::min()||double(scaled)>=std::numeric_limits<int>::max())throw std::invalid_argument("Original wheel phase outside conversion range");
         auto tire=Sub_0011B950(static_cast<std::uint16_t>(static_cast<int>(scaled)));
         auto brake=identity;
-        if(i<2) {const auto turn=port::Sub_0011B7D8(steering);tire=multiply(tire,turn);brake=multiply(brake,turn);}
+        if(i<2) {const auto turn=port::Sub_0011B7D8(steering);tire=attachment_product(tire,turn);brake=attachment_product(brake,turn);}
         for(std::size_t lane=0;lane<3;++lane) {
             const auto value=config.Field_0x120_0x180[i][lane];
             if(!std::isfinite(value))throw std::invalid_argument("Non-finite original attachment translation");
             tire[12+lane]=value;brake[12+lane]=value;
         }
         tire[13]+=config.Field_0x138_0x198[i];brake[13]+=config.Field_0x138_0x198[i];
-        result.tire[i]=(i==0 || i==3)?multiply(reverse,tire):tire;
+        result.tire[i]=tire;
         // Original second matrix group has steering/translation but no wheel spin.
-        result.blur[i]=(i==0 || i==3)?multiply(reverse,brake):brake;
-        result.brake[i]=(i==0 || i==3)?multiply(mirror,brake):brake;
+        result.blur[i]=brake;
+        result.brake[i]=brake;
     }
-    return result;
+    return hp2::recovered::CarRenderInfo::Sub_00120EF8(result);
 }
 } // namespace port
 namespace hp2::recovered {
+// ELF00122E88..00122FE8 and00123294..001233D4; E-0038-W01.
+port::CarAttachmentMatrices CarRenderInfo::Sub_00120EF8(const port::CarAttachmentMatrices& source) {
+    auto result=source;
+    const auto reverse=port::Sub_0011B7D8(0x8000);
+    const std::array<float,16> mirror{{1,0,0,0,0,-1,0,0,0,0,1,0,0,0,0,1}};
+    for(const std::size_t i:{std::size_t(0),std::size_t(3)}) {
+        result.tire[i]=port::attachment_product(reverse,source.tire[i]);
+        result.blur[i]=port::attachment_product(reverse,source.blur[i]);
+        result.brake[i]=port::attachment_product(mirror,source.brake[i]);
+    }
+    return result;
+}
 void CarRenderInfo::Sub_0011E860() {
     hp2::not_implemented("0x0011E860", "CarRenderInfo::Sub_0011E860 full constructor: allocation, materials, markers and state");
 }

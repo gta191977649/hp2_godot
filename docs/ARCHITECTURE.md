@@ -44,6 +44,12 @@ but are `string_only` — a string's presence is not proof of which function it 
 
 ## B: Platform abstraction
 
+TASK-0039 extends frontend render packets with optional TL/TR/BR/BL positions, pixel UVs and
+independent colours, submitted as RenderingServer polygons. Ordinary rectangle callers remain
+valid. Font measurement stays advance-only, while draw consumes recovered pair slices; font
+height is derived from glyphs. All shared layout/draw decisions remain native and Godot-free.
+See FRONTEND_RENDER_AUDIT.md for coverage and unresolved original sampling/rounding.
+
 TASK-0028 adds compiled class shells and unresolved member entries to `game_core`, with
 explicit port-side signatures and throwing bodies. Unknown original paths use
 the game_core root per the user's TASK-0029 instruction (superseding `port/class_templates`);
@@ -275,3 +281,28 @@ part transform/visibility root; additional MeshInstance3D children inherit it. D
 keep original part/strip identity plus host batch/local surface coordinates. The GPU cache
 stores complete ordered batch vectors. Bounds, material/reflection uniforms, wireframe,
 LOD copies and cleanup include every child. No native resource or recovered logic changes.
+
+## Driving laboratory (TASK-0038)
+
+CarViewer embeds Test drive as a mode in its existing scene and ImGui panel, using
+port::driving::Session (Godot-free tool state),
+Ps2DrivingLab (boundary/copy adapter) and the common Ps2VehicleRenderer absolute-pose entry.
+One renderer/car selection/camera survives mode changes; returning restores preview
+bindings through the cached loader. No additional simulation function-key bindings exist.
+NativeBackend now owns an SHA-bound logical ELF/data image and the recovered component
+construction/update/force/integration graph. It commits a complete validated next state or
+throws, retaining scheduler/RNG state on failure. Original config rows feed the native
+algorithms; an explicit synthetic horizontal-plane provider supplies query geometry and
+original material1. No Godot physics is used. Session records both inputs and elapsed clock
+values; render pacing respects the recovered scheduler minimum. See DRIVING_LAB.md and
+D015 continuations for the supported Race4 fixture and unverified equivalence limits.
+
+
+TASK-0038 third-person redesign replaces the earlier manual debug workflow. The embedded
+controller separates Starting/Driving/Suspended/Error; only complete successful native
+initialization activates driving. Focus/F8 suspension resumes automatically and discards
+the first resumed frame's elapsed time. Keyboard capture zeroes controls rather than
+permanently pausing. Pointer intent/capture and camera release are separate from Session
+pause. The rear/orbit/recenter camera is an explicit tool with confirmed body+Z host forward;
+physics and original wheel render-basis contracts are unchanged. The mode UI exposes only
+return/hints/error; Session instrumentation remains test-side. See DRIVING_LAB.md.

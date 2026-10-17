@@ -46,6 +46,7 @@ std::shared_ptr<const port::render::Bitmap> LiveResources::texture(port::render:
 
 void Ps2RenderHost::_bind_methods() {
     godot::ClassDB::bind_method(godot::D_METHOD("console_visible"), &Ps2RenderHost::console_visible);
+    godot::ClassDB::bind_method(godot::D_METHOD("viewer_keyboard_capture"),&Ps2RenderHost::viewer_keyboard_capture);
     godot::ClassDB::bind_method(godot::D_METHOD("viewer_ui_snapshot","snapshot"),&Ps2RenderHost::viewer_ui_snapshot);
     godot::ClassDB::bind_method(godot::D_METHOD("viewer_ui_next"),&Ps2RenderHost::viewer_ui_next);
     godot::ClassDB::bind_method(godot::D_METHOD("viewer_ui_capture"),&Ps2RenderHost::viewer_ui_capture);
@@ -155,6 +156,29 @@ int Ps2RenderHost::submit(const port::render::Frame& frame, port::render::Resour
             to_color(frame.clear));
     }
     for (const auto& quad : frame.quads) {
+        if (quad.has_vertex_data) {
+            godot::RID rid;
+            float width = 1, height = 1;
+            if (quad.texture != 0) {
+                rid = texture_for(quad.texture, resources);
+                if (!rid.is_valid()) continue;
+                const auto& texture = textures_.at(quad.texture);
+                width = static_cast<float>(texture.width);
+                height = static_cast<float>(texture.height);
+                if (quad.texture == port::runtime::kIntroMovieTexture ||
+                    quad.texture == port::runtime::kBackgroundMovieTexture) ++movie_quads;
+            }
+            godot::PackedVector2Array points, uvs;
+            godot::PackedColorArray colors;
+            for (std::size_t corner = 0; corner < 4; ++corner) {
+                points.push_back(godot::Vector2(quad.positions[corner].x, quad.positions[corner].y));
+                uvs.push_back(godot::Vector2(quad.source_points[corner].x / width,
+                                            quad.source_points[corner].y / height));
+                colors.push_back(to_color(quad.colors[corner]));
+            }
+            server->canvas_item_add_polygon(item_, points, colors, uvs, rid);
+            continue;
+        }
         if (quad.texture == 0) { // solid-colour rect; see render::Quad
             server->canvas_item_add_rect(item_, to_rect(quad.destination), to_color(quad.color));
             continue;
@@ -390,6 +414,13 @@ bool Ps2RenderHost::console_visible() const {
     return false;
 #endif
 }
+bool Ps2RenderHost::viewer_keyboard_capture()const {
+#if HP2_DEBUG_BUILD
+    return console_&&console_->capture_keyboard();
+#else
+    return false;
+#endif
+}
 void Ps2RenderHost::viewer_ui_snapshot(const godot::Dictionary& snapshot) {
     const auto failure=catch_all([&] {
 #if HP2_DEBUG_BUILD
@@ -398,6 +429,7 @@ void Ps2RenderHost::viewer_ui_snapshot(const godot::Dictionary& snapshot) {
         state.kind=text("kind");if(state.kind.empty())state.kind="frontend";
         state.source=text("source");state.status=text("status");state.diagnostic=text("diagnostic");
         state.rendering=text("rendering");state.camera=text("camera");
+        state.driving_telemetry=text("driving_telemetry");state.driving_recording=snapshot.get("driving_recording",false);
         state.wheel_speed=snapshot.get("wheel_speed",80.0);
         state.car_id=snapshot.get("car_id",-1);state.skin_id=snapshot.get("skin_id",-1);state.lod=snapshot.get("lod",-1);
         state.wireframe=snapshot.get("wireframe",false);state.bounds=snapshot.get("bounds",false);state.inspection=snapshot.get("inspection",false);state.show_lods=snapshot.get("show_lods",false);state.preview=snapshot.get("preview",false);state.wheel_blur=snapshot.get("wheel_blur",false);

@@ -6,6 +6,8 @@
 #include <stdexcept>
 namespace port::extensions {
 void ViewerUi::update(ViewerUiState state){
+    if(state.kind=="driving"&&state_.kind!="driving")driving_entered_=true;
+    if(state.kind=="car"&&state_.kind=="driving")driving_left_=true;
     if(state.source!=state_.source||state.kind!=state_.kind){
         std::strncpy(source_,state.source.c_str(),sizeof(source_)-1);source_[sizeof(source_)-1]=0;
     }
@@ -25,11 +27,20 @@ void ViewerUi::draw(float width,float height){
     ImGui::SetNextWindowSize({std::min(340.f,available.x),std::min(300.f,available.y)},ImGuiCond_FirstUseEver);
     if(state_.preview&&!was_preview_){
         ImGui::SetNextWindowPos({16,36},ImGuiCond_Always);
-        ImGui::SetNextWindowSize({std::min(340.f,available.x),std::min(250.f,available.y)},ImGuiCond_Always);
+        ImGui::SetNextWindowSize({std::min(340.f,available.x),std::min(280.f,available.y)},ImGuiCond_Always);
+    }
+    if(driving_entered_){
+        ImGui::SetNextWindowPos({16,36},ImGuiCond_Always);
+        ImGui::SetNextWindowSize({std::min(320.f,available.x),std::min(170.f,available.y-36)},ImGuiCond_Always);
+        driving_entered_=false;
+    }
+    if(driving_left_){
+        ImGui::SetNextWindowSize({std::min(340.f,available.x),std::min(300.f,available.y)},ImGuiCond_Always);
+        driving_left_=false;
     }
     was_preview_=state_.preview;
-    ImGui::SetNextWindowSizeConstraints({std::min(180.f,available.x),std::min(100.f,available.y)},{std::min(420.f,available.x),advanced_open_?available.y:std::min(320.f,available.y)});
-    const bool visible=ImGui::Begin(state_.kind=="car"?"CarViewer###CarViewerCompact":"TrackViewer###TrackViewerCompact");
+    ImGui::SetNextWindowSizeConstraints({std::min(180.f,available.x),std::min(100.f,available.y)},{std::min(420.f,available.x),(advanced_open_||state_.kind=="driving")?available.y:std::min(320.f,available.y)});
+    const bool visible=ImGui::Begin((state_.kind=="driving"||state_.kind=="car")?"CarViewer###CarViewerCompact":"TrackViewer###TrackViewerCompact");
     if(visible){
         const auto tooltip=[&](const std::string& text){
             ImGui::SetNextWindowSizeConstraints({0,0},available);ImGui::BeginTooltip();
@@ -42,7 +53,16 @@ void ViewerUi::draw(float width,float height){
                 ImGui::CalcTextSize(label).x+2*ImGui::GetStyle().FramePadding.x;
             if(right<=ImGui::GetWindowPos().x+ImGui::GetWindowContentRegionMax().x)ImGui::SameLine();
         };
-        if(state_.kind!="car") {
+        if(state_.kind=="driving"){
+            ImGui::TextWrapped("Test drive / synthetic plane");
+            button("Return to CarViewer","drive_exit");
+            ImGui::TextWrapped("W/S: accelerate/brake | A/D: steer");
+            ImGui::TextWrapped("Mouse: look | Esc: release cursor | Click world: capture");
+            if(!state_.status.empty())ImGui::TextWrapped("%s",state_.status.c_str());
+            if(!state_.diagnostic.empty())ImGui::TextWrapped("%s",state_.diagnostic.c_str());
+            ImGui::TextWrapped("Original equivalence not verified.");
+        }
+        if(state_.kind!="car"&&state_.kind!="driving") {
             button("CarViewer","car");beside("Back to Frontend");button("Back to Frontend","close");
             ImGui::Separator();
         }
@@ -98,9 +118,11 @@ void ViewerUi::draw(float width,float height){
             ImGui::SetNextItemWidth(150);
             if(ImGui::SliderFloat("Wheel speed (rad/s)",&speed,-150.f,150.f,"%.1f")){UiAction a{"wheel_speed"};a.value=speed;enqueue(std::move(a));}
             if(ImGui::IsItemHovered())tooltip("Port-side preview angular velocity. Negative reverses rotation; zero stops it. Default 80 rad/s is a viewer choice, not an original physics constant.");
+            button("Test drive","test_drive");
         }
-        ImGui::TextWrapped("%s",state_.status.c_str());
-        advanced_open_=ImGui::CollapsingHeader("Advanced");
+        if(state_.kind!="driving")ImGui::TextWrapped("%s",state_.status.c_str());
+        if(state_.kind=="car"&&!state_.diagnostic.empty())ImGui::TextWrapped("%s",state_.diagnostic.c_str());
+        advanced_open_=state_.kind!="driving"&&ImGui::CollapsingHeader("Advanced");
         if(advanced_open_){
         ImGui::InputText("Resource",source_,sizeof(source_));
         if(ImGui::Button("Load")){UiAction action{"load"};action.source=source_;enqueue(std::move(action));}

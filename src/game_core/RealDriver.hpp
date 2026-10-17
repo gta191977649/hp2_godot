@@ -65,31 +65,40 @@ public:
     void Sub_0013AE58();
     // ELF 0x0013AEB8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013aeb8.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0013AEB8();
+    // Debug reference: RealDriver::DoSnapshot(ReplaySnapshot *); E-0041-V01; retail ABI unconfirmed.
+    void DoSnapshot();
     // ELF 0x0013B080; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b080.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0013B080();
+    // Debug reference: RealDriver::AddJoyHandlers(void); E-0041-V01; retail ABI unconfirmed.
+    void AddJoyHandlers();
     // ELF 0x0013B250; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b250.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0013B250();
+    // Debug reference: RealDriver::RemoveJoyHandlers(void); E-0041-V01; retail ABI unconfirmed.
+    void RemoveJoyHandlers();
     // ELF 0x0013B3D0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b3d0.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0013B3D0();
+    // Debug reference: RealDriver::SetLowGear(void); E-0041-V01; retail ABI unconfirmed.
+    void SetLowGear();
     // ELF 0x0013B3F8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b3f8.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0013B3F8();
+    // Debug reference: RealDriver::Drive(float); E-0041-V01; retail ABI unconfirmed.
+    void Drive();
     // ELF 0x0013C420; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013c420.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0013C420();
+    // Debug reference: RealDriver::StartHonkHorn(void); E-0041-V01; retail ABI unconfirmed.
+    void StartHonkHorn();
     // ELF 0x0013C460; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013c460.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0013C460();
+    // Debug reference: RealDriver::StopHonkHorn(void); E-0041-V01; retail ABI unconfirmed.
+    void StopHonkHorn();
     // ELF 0x0013CAE0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013cae0.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0013CAE0();
+    // Debug reference: RealDriver::GetDriverNumber(void); E-0041-V01; retail ABI unconfirmed.
+    void GetDriverNumber();
     // ELF 0x0013CAF0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013caf0.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0013CAF0();
+    // Debug reference: RealDriver::SetDesiredSpeed(float, float, bool); E-0041-V01; retail ABI unconfirmed.
+    void SetDesiredSpeed();
     // ELF 0x002A0550; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002a0550.md.
     // Port-side void/no-argument placeholder; original signature unknown.
     void Sub_002A0550();

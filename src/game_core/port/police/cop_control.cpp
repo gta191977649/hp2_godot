@@ -199,13 +199,15 @@ void CopDriver::Sub_001A1E30() {
 }
 
 // ELF 0x001A2110; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/police/001a2110.md.
-void CopDriver::Sub_001A2110() {
-    hp2::not_implemented("0x001A2110", "CopDriver::Sub_001A2110 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x0019F980: CopDriver::Think(float); retail 0x001A2110.
+void CopDriver::Think() {
+    hp2::not_implemented("0x001A2110", "CopDriver::Think (signature and full body unresolved)");
 }
 
 // ELF 0x001A2B58; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001a2b58.md.
-void CopDriver::Sub_001A2B58() {
-    hp2::not_implemented("0x001A2B58", "CopDriver::Sub_001A2B58 (signature and full body unresolved)");
+// TASK-0041 E-0041-V01; debug 0x001A03B8: CopDriver::DoSnapshot(ReplaySnapshot *); retail 0x001A2B58.
+void CopDriver::DoSnapshot() {
+    hp2::not_implemented("0x001A2B58", "CopDriver::DoSnapshot (signature and full body unresolved)");
 }
 
 // ELF 0x001C0100; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001c0100.md.

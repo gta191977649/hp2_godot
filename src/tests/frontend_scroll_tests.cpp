@@ -19,7 +19,7 @@ int main() {
         FeScreen screen;FeWidget scroll;scroll.type=1;scroll.name_hash=0x75980cf0;
         scroll.x=10;scroll.y=400;scroll.a=128;scroll.text="This text will scroll";
         FeWidget bar;bar.name_hash=0x70a404ec;bar.a=128;screen.widgets={scroll,bar};
-        Type_002491B0 state;state.Construct_002491B0(screen);check(screen.widgets[0].x==650);
+        tAnimatedBlurb state;state.Construct_002491B0(screen);check(screen.widgets[0].x==650);
         state.Bind_00249518("First");state.Update_00249348(0.01f);
         check(screen.widgets[0].text=="First"&&screen.widgets[0].x==650&&screen.widgets[1].a==0);
         state.Update_00249348(0.125f);check(screen.widgets[0].x==330);
@@ -40,7 +40,7 @@ int main() {
         rng=0xffffffff;check(Sub_0025A3D0(10000,rng)==7295);
         FeWidget fading;fading.type=2;fading.name_hash=StringHash_002534A8("FADING_BP_OBJECT");
         FeWidget master;master.type=2;master.name_hash=StringHash_002534A8("MASTER_BP_OBJECT");
-        screen.widgets={fading,master};Type_002495F0 background;
+        screen.widgets={fading,master};tGlobalBackgroundAnimation background;
         background.Construct_002495F0();auto random=[](std::int32_t){return 0;};
         background.Bind_00249A40(&screen,random,[](const FeWidget&){return WidgetMetrics{20,40};});
         check(screen.widgets[0].x==150&&screen.widgets[0].y==160&&screen.widgets[0].a==0);
