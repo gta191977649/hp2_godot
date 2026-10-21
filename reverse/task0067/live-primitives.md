@@ -1,0 +1,3 @@
+# E0067U01 - Live triangle/primitive overlay
+
+User requested the realtime rendered triangle count beside draw calls. Read Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME in the same UI snapshot as RENDER_TOTAL_DRAW_CALLS_IN_FRAME and render both on one row beneath coordinates. Label Triangles/primitives because this engine monitor includes triangle, line and point primitives. Counts have the same global last-rendered-frame scope; no GPU readback, scene traversal, native behavior or rendering changes. Preserve unavailable-counter fallback and existing auto-sized header. Frozen earlier reviews are unchanged and inherited auxiliary pins remain live in this successor.

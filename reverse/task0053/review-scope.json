@@ -1,0 +1,130 @@
+{
+  "task": "TASK-0053",
+  "status": "draft-scope-intent-not-body-approval",
+  "entries": [
+    {
+      "path": "src/game_core/indep/src/skids.cpp",
+      "name": "SkidSet::AddSegment",
+      "kind": "recovered",
+      "original_name": "SkidSet::AddSegment",
+      "evidence_id": "E0053D01",
+      "evidence_record": "reverse/task0053/skid-zero.md",
+      "reason": "Restore only the evidenced exact-zero VRSQRT finite carrier at Debug001A81C8/001A81DC; preserve nonzero arithmetic and all other physics.",
+      "function_records": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a8150.md"
+      ]
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw_render_controls",
+      "kind": "port_adapter",
+      "evidence_id": "E-0053-H02",
+      "evidence_record": "reverse/task0053/host-visibility.md",
+      "reason": "Expose read-only loaded/considered/visible instance and section diagnostics for original visibility chain."
+    },
+    {
+      "path": "src/platform/godot_bridge/camera_visibility_bounds.hpp",
+      "name": "camera_visibility_corners",
+      "kind": "port_adapter",
+      "evidence_id": "E-0053-H01",
+      "evidence_record": "reverse/task0053/host-visibility.md",
+      "reason": "Replace layer-bypassing ignore_culling with per-camera local custom bounds; preserve projected geometry and copy bounds into native-depth proxies."
+    },
+    {
+      "path": "src/platform/godot_bridge/camera_visibility_bounds.hpp",
+      "name": "apply_camera_visibility_bounds",
+      "kind": "port_adapter",
+      "evidence_id": "E-0053-H01",
+      "evidence_record": "reverse/task0053/host-visibility.md",
+      "reason": "Replace layer-bypassing ignore_culling with per-camera local custom bounds; preserve projected geometry and copy bounds into native-depth proxies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_snapshot",
+      "kind": "port_adapter",
+      "evidence_id": "E-0053-H02",
+      "evidence_record": "reverse/task0053/host-visibility.md",
+      "reason": "Expose read-only loaded/considered/visible instance and section diagnostics for original visibility chain."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::update_view",
+      "kind": "port_adapter",
+      "evidence_id": "E-0053-H01",
+      "evidence_record": "reverse/task0053/host-visibility.md",
+      "reason": "Replace layer-bypassing ignore_culling with per-camera local custom bounds; preserve projected geometry and copy bounds into native-depth proxies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_render_controls",
+      "kind": "port_adapter",
+      "evidence_id": "E-0053-H02",
+      "evidence_record": "reverse/task0053/host-visibility.md",
+      "reason": "Expose read-only loaded/considered/visible instance and section diagnostics for original visibility chain."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_state",
+      "kind": "port_adapter",
+      "evidence_id": "E-0053-H02",
+      "evidence_record": "reverse/task0053/host-visibility.md",
+      "reason": "Expose read-only loaded/considered/visible instance and section diagnostics for original visibility chain."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::release_display",
+      "kind": "port_adapter",
+      "evidence_id": "E0053P03",
+      "evidence_record": "reverse/task0053/roadshine-cost.md",
+      "reason": "Cache validated environment binding by generation/readiness/texture identity; preserve live HackMan updates and invalidate on release."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::set_environment_capture",
+      "kind": "port_adapter",
+      "evidence_id": "E0053P03",
+      "evidence_record": "reverse/task0053/roadshine-cost.md",
+      "reason": "Cache validated environment binding by generation/readiness/texture identity; preserve live HackMan updates and invalidate on release."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_environment_renderer.cpp",
+      "name": "TrackEnvironmentRenderer::update",
+      "kind": "port_adapter",
+      "evidence_id": "E-0053-H01",
+      "evidence_record": "reverse/task0053/host-visibility.md",
+      "reason": "Replace layer-bypassing ignore_culling with per-camera local custom bounds; preserve projected geometry and copy bounds into native-depth proxies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::update",
+      "kind": "port_adapter",
+      "evidence_id": "E-0053-H01",
+      "evidence_record": "reverse/task0053/host-visibility.md",
+      "reason": "Replace layer-bypassing ignore_culling with per-camera local custom bounds; preserve projected geometry and copy bounds into native-depth proxies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::update",
+      "kind": "port_adapter",
+      "evidence_id": "E-0053-H01",
+      "evidence_record": "reverse/task0053/host-visibility.md",
+      "reason": "Replace layer-bypassing ignore_culling with per-camera local custom bounds; preserve projected geometry and copy bounds into native-depth proxies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::update",
+      "kind": "port_adapter",
+      "evidence_id": "E-0053-H01",
+      "evidence_record": "reverse/task0053/host-visibility.md",
+      "reason": "Replace layer-bypassing ignore_culling with per-camera local custom bounds; preserve projected geometry and copy bounds into native-depth proxies."
+    },
+    {
+      "path": "src/platform/shaders/track_shader.cpp",
+      "name": "track_shader_source",
+      "kind": "port_adapter",
+      "evidence_id": "E-0053-H03",
+      "evidence_record": "reverse/task0053/host-visibility.md",
+      "reason": "Branch Roadshine permission before extra specular sampling while preserving base strip40 alpha and enabled arithmetic."
+    }
+  ]
+}

@@ -144,3 +144,79 @@ void kAITireSound::Sub_002149A0() {
     hp2::not_implemented("0x002149A0", "kAITireSound::Sub_002149A0 (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+#include "game_core/port/driving/tire_audio_state.hpp"
+#include <algorithm>
+#include <cmath>
+namespace port::driving {
+// Debug0020DBC8/DAF8/DF80/E088/E1E8/E860; E-0083-T01.
+// Supported skid, squall and burnout slices only. This port-side producer does
+// not claim the full original Update (road noise/leaves/one-shots/damaged tires).
+TireAudioFrame TireAudioMixer::update(const Memory& m,std::uint32_t car,float distance){
+    if(!std::isfinite(distance)||distance<0||distance>1)
+        hp2::not_implemented("0x0020E1E8","Unsupported tire audio distance volume");
+    const auto state=car+0x40;
+    const bool enabled=m.word(0x326f40)!=0&&m.word(0x327980)!=0;
+    const auto slip=[&](unsigned wheel){
+        if(!m.byte(state+0x310+wheel))return 0.f;
+        const float x=m.scalar(state+0x334+wheel*8),y=m.scalar(state+0x338+wheel*8);
+        const float value=std::sqrt(x*x+y*y);return value<0.25f?0.f:value;
+    };
+    const auto smooth=[](float current,float target,float delta){float value=current+delta;if(target<=value){value=current-delta;if(value<=target)value=target;}return value;};
+    for(unsigned side=0;side<2;++side){
+        auto* v=voices_.data()+5*side;
+        const auto terrain0=m.word(state+0x314+4*(side?0:1)),terrain1=m.word(state+0x314+4*(side?3:2));
+        if(terrain0>=33||terrain1>=33)hp2::not_implemented("0x0020E1E8","Tire terrain outside original table");
+        const auto row0=0x3102e8+terrain0*0x90,row1=0x3102e8+terrain1*0x90;
+        bool road=m.byte(row0+12)&&m.byte(row1+12);
+        if(m.word(row0+8)==4||m.word(row1+8)==4)road=previous_road_[side];else previous_road_[side]=road;
+        float skid_volume=0,skid_pitch=1;
+        const unsigned first=side?2:0;
+        const float skid=(slip(first)+slip(first+1))*0.5f;
+        if(side){
+            if(skid<m.scalar(0x325e4c))locked_rear_pitch_[side]=-1;
+            else{
+                skid_volume=skid*m.scalar(0x325e50);
+                if(locked_rear_pitch_[side]==-1)locked_rear_pitch_[side]=std::clamp(m.scalar(0x325e54)*skid,1.f,m.scalar(0x325e58));
+                skid_pitch=locked_rear_pitch_[side];
+            }
+        }else{skid_volume=skid*m.scalar(0x325e5c);skid_pitch=std::clamp(m.scalar(0x325e60)*skid,1.f,1.25f);}
+        const float offset=side?0.f:m.scalar(0x325e8c);
+        if(!road)skid_pitch=offset+1.f;
+        skid_volume=std::clamp(skid_volume*distance,0.f,road?3.5f:2.75f);
+        const unsigned active_skid=road?0:1,other_skid=road?1:0;
+        v[0].sample_index=0;v[1].sample_index=1;
+        if(enabled){if(!v[active_skid].playing&&skid_volume>0)v[active_skid].playing=true;else if(v[active_skid].playing&&skid_volume<=0)v[active_skid].playing=false;}
+        v[other_skid].playing=false;
+        if(skid_volume>0){v[active_skid].volume=skid_volume;v[active_skid].pitch_octaves=skid_pitch-1.f;}
+        // Original squall traction pairs differ from longitudinal skid pairs.
+        const unsigned a=side?1:0,b=side?2:3;
+        const float traction_a=m.byte(state+0x310+a)?std::abs(m.scalar(state+0x354+4*a)):0;
+        const float traction_b=m.byte(state+0x310+b)?std::abs(m.scalar(state+0x354+4*b)):0;
+        const float traction=(traction_a+traction_b)*0.5f;
+        float target=0;
+        const float speed=m.scalar(state+0x384);
+        if(std::abs(speed)>=11.f&&m.scalar(0x325e74)<traction)target=std::min(traction*m.scalar(0x325e78),1.f);
+        float& current=squall_volume_[side];
+        current=smooth(current,target,current>target?m.scalar(0x325e44):m.scalar(0x325e48));
+        const float squall=current*distance;
+        const float squall_pitch=speed*m.scalar(0x325e7c)+(side?0.f:m.scalar(0x325e80));
+        const unsigned active_squall=road?2:3,other_squall=road?3:2;
+        v[2].sample_index=2;v[3].sample_index=1;
+        if(m.word(0x326f40))v[other_squall].playing=false;
+        if(enabled){
+            if(!v[active_squall].playing&&squall>0){v[active_squall].playing=true;v[active_squall].volume=squall;}
+            else if(v[active_squall].playing&&squall<=0)v[active_squall].playing=false;
+        }
+        if(squall>0){v[active_squall].volume=smooth(v[active_squall].volume,squall,m.scalar(0x325e98));v[active_squall].pitch_octaves=squall_pitch-1.f;}
+        const float longitudinal=(m.scalar(state+0x344)+m.scalar(state+0x34c))*0.5f+(m.scalar(state+0x334)+m.scalar(state+0x33c))*0.5f;
+        v[4].sample_index=3;
+        if(!road||m.scalar(state+0x38c)<=m.scalar(0x325e90)||longitudinal<=3.f||30.f<=speed)v[4].playing=false;
+        else{
+            if(enabled&&!v[4].playing){v[4].playing=true;v[4].pitch_octaves=side?0.f:m.scalar(0x325e94);}
+            v[4].volume=std::min(longitudinal*0.0625f,3.f)*distance;
+        }
+    }
+    return {voices_};
+}
+}

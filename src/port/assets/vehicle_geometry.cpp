@@ -5,6 +5,9 @@
 #include <cmath>
 #include <cstring>
 #include <stdexcept>
+#include <map>
+#include <functional>
+#include "game_core/port/not_implemented.hpp"
 
 namespace port::assets {
 namespace {
@@ -40,6 +43,45 @@ std::size_t aligned_payload(const Chunk& c) {
     if(offset>c.end) throw std::runtime_error("Invalid vehicle chunk padding");
     return offset;
 }
+void position_markers(const Reader& r,std::size_t begin,std::size_t end,
+                      std::vector<render::VehiclePositionMarker>& result) {
+    // Debug001A5670: aligned chunk0x34013,32-byte records; retain file/list order.
+    for(const auto& c:chunks(r,begin,end)) {
+        if(c.id==0x34013) {
+            const auto first=aligned_payload(c);
+            const auto count=(c.end-first)/32;
+            for(std::size_t i=0;i<count;++i) {
+                const auto at=first+i*32;render::VehiclePositionMarker marker;
+                marker.name_hash=r.u32(at+8);marker.type_hash=r.u32(at+12);
+                for(unsigned axis=0;axis<3;++axis)marker.position[axis]=r.f32(at+16+axis*4);
+                const auto bits=r.u32(at+28);std::memcpy(&marker.param,&bits,4);
+                result.push_back(marker);
+            }
+        }else if(c.id&0x80000000u)position_markers(r,c.offset+8,c.end,result);
+    }
+}
+std::optional<render::VehicleRigidAnimation> rigid_animation(const Reader& r,const Chunk& parent) {
+    // Debug LoaderSolidList00103588: aligned34012; eRigidAnimation header48.
+    for(const auto& c:chunks(r,parent.offset+8,parent.end))if(c.id==0x34012) {
+        const auto at=aligned_payload(c);
+        if(c.end-at<48)throw std::runtime_error("Short rigid animation header");
+        render::VehicleRigidAnimation result;
+        result.num_frames=static_cast<std::int16_t>(r.u16(at));
+        result.triggerable_flag=static_cast<std::int8_t>(r.data[at+2]);
+        result.frame_rate_scale=static_cast<std::int8_t>(r.data[at+3]);
+        result.name_hash=r.u32(at+4);
+        for(unsigned i=0;i<32&&r.data[at+16+i];++i)result.name.push_back(char(r.data[at+16+i]));
+        if(result.num_frames<=0||result.frame_rate_scale<=0)
+            hp2::not_implemented("0x001A4CF8","Invalid original rigid animation count/rate divisor");
+        if(std::size_t(result.num_frames)>(c.end-at-48)/64)throw std::runtime_error("Rigid animation frames exceed chunk");
+        for(int frame=0;frame<result.num_frames;++frame){std::array<float,16> matrix{};
+            for(unsigned i=0;i<16;++i)matrix[i]=r.f32(at+48+std::size_t(frame)*64+i*4);
+            result.matrices.push_back(matrix);
+        }
+        return result;
+    }
+    return {};
+}
 render::VehicleSolid solid(const Reader& r,const Chunk& parent) {
     std::size_t header=0,entries=0,stream=0,textures=0,materials=0,entry_end=0,stream_end=0,texture_end=0,material_end=0;
     for(const auto& c:chunks(r,parent.offset+8,parent.end)) {
@@ -54,7 +96,8 @@ render::VehicleSolid solid(const Reader& r,const Chunk& parent) {
     }
     if(!header||!entries||!stream||!textures) throw std::runtime_error("Vehicle solid lacks required chunks");
     render::VehicleSolid result;result.hash=r.u32(header+8);
-    for(std::size_t i=0;i<0x20 && r.data[header+0x10+i];++i)result.name.push_back(char(r.data[header+0x10+i]));
+    for(std::size_t i=0;i<24 && r.data[header+0x10+i];++i)result.name.push_back(char(r.data[header+0x10+i]));
+    result.external_rigid_animation_hash=r.u32(header+0x28);
     result.strip_flags=r.u16(header+0x32);
     for(std::size_t i=0;i<3;++i){result.bounds_min[i]=r.f32(header+0x40+i*4);result.bounds_max[i]=r.f32(header+0x50+i*4);}
     for(std::size_t i=0;i<16;++i)result.transform[i]=r.f32(header+0x60+i*4);
@@ -130,8 +173,31 @@ render::VehicleSolid solid(const Reader& r,const Chunk& parent) {
     return result;
 }
 }
+std::vector<render::VehiclePositionMarker> decode_vehicle_position_markers(const std::vector<std::uint8_t>& data) {
+    Reader reader{data};std::vector<render::VehiclePositionMarker> result;
+    position_markers(reader,0,data.size(),result);return result;
+}
 render::VehicleGeometry decode_vehicle_geometry(const std::vector<std::uint8_t>& data,const std::set<std::uint32_t>& hashes) {
     Reader reader{data};render::VehicleGeometry result;bool found=false;
+    position_markers(reader,0,data.size(),result.position_markers);
+    struct AnimationEntry {std::uint32_t external{};std::optional<render::VehicleRigidAnimation> animation;};
+    std::map<std::uint32_t,AnimationEntry> animations;
+    for(const auto& root:chunks(reader,0,data.size()))if(root.id==0x80034000)
+        for(const auto& child:chunks(reader,root.offset+8,root.end))if(child.id==0x80034002)
+            for(const auto& entry:chunks(reader,child.offset+8,child.end))if(entry.id==0x34003){
+                const auto at=aligned_payload(entry);if(entry.end-at<0xc0)throw std::runtime_error("Short vehicle solid header");
+                animations.emplace(reader.u32(at+8),AnimationEntry{reader.u32(at+0x28),rigid_animation(reader,child)});
+            }
+    std::set<std::uint32_t> resolving;bool unresolved=false;
+    std::function<std::optional<render::VehicleRigidAnimation>(std::uint32_t)> resolve=[&](std::uint32_t hash){
+        const auto it=animations.find(hash);
+        if(it==animations.end()){unresolved=true;return std::optional<render::VehicleRigidAnimation>{};}
+        if(!resolving.insert(hash).second){unresolved=true;return std::optional<render::VehicleRigidAnimation>{};}
+        auto animation=it->second.animation;
+        if(it->second.external)animation=resolve(it->second.external);
+        resolving.erase(hash);return animation;
+    };
+
     for(const auto& c:chunks(reader,0,data.size())) {
         if(c.id!=0x80034000)continue;
         found=true;
@@ -142,7 +208,7 @@ render::VehicleGeometry decode_vehicle_geometry(const std::vector<std::uint8_t>&
                 if(at+12>entry.end)throw std::runtime_error("Short vehicle solid identity");
                 wanted=wanted||hashes.count(reader.u32(at+8));
             }
-            if(wanted)result.solids.push_back(solid(reader,child));
+            if(wanted){auto decoded=solid(reader,child);unresolved=false;decoded.rigid_animation=resolve(decoded.hash);decoded.rigid_animation_unresolved=unresolved;if(unresolved)result.gaps.push_back("Unresolved original external rigid animation for passive solid "+decoded.name+"; active animation requires bound external resources");result.solids.push_back(std::move(decoded));}
         }
     }
     if(!found||result.solids.empty())throw std::runtime_error("Vehicle geometry container not found");

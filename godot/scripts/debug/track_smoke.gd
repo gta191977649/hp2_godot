@@ -15,12 +15,64 @@ func _wait(viewer: Node) -> bool:
 
 func _run() -> void:
 	var viewer: Node = get_parent()
+	if viewer.camera.fov != 75.0 or viewer.camera.keep_aspect != Camera3D.KEEP_HEIGHT:
+		_fail("TrackViewer did not start with Camera3D default projection")
+		return
+	viewer.reset_camera()
+	if viewer.camera.fov != 75.0 or viewer.camera.keep_aspect != Camera3D.KEEP_HEIGHT:
+		_fail("Reset Camera changed TrackViewer default projection")
+		return
+	# A sentinel detects writes that would be invisible when assigning 75 again.
+	viewer.camera.fov = 81.0
+	viewer.set_preview_mode(true)
+	viewer.set_preview_mode(false)
+	if viewer.preview_mode or viewer.camera.fov != 81.0 or viewer.camera.keep_aspect != Camera3D.KEEP_HEIGHT:
+		_fail("CarViewer preview controls changed TrackViewer projection")
+		return
+	viewer.camera.fov = 75.0
+	for size in [Vector2i(800, 600), Vector2i(1280, 720), Vector2i(600, 800)]:
+		var viewport := SubViewport.new()
+		viewport.size = size
+		get_tree().root.add_child(viewport)
+		var sample := Camera3D.new()
+		sample.fov = viewer.camera.fov
+		sample.keep_aspect = viewer.camera.keep_aspect
+		viewport.add_child(sample)
+		sample.current = true
+		await get_tree().process_frame
+		var projection: Projection = sample.get_camera_projection()
+		var vertical := rad_to_deg(2.0 * atan(1.0 / projection.y.y))
+		if absf(vertical - 75.0) > 0.0001 or absf(projection.x.x * float(size.x) / float(size.y) - projection.y.y) > 0.0001:
+			_fail("TrackViewer default projection does not retain vertical FOV: " + str(size))
+			return
+		viewport.queue_free()
+		await get_tree().process_frame
+	print("TRACK_BROWSE_PROJECTION_OK: defaults, reset, preview controls, 4:3, 16:9 and portrait")
 	if viewer.track_catalog.is_empty() and str(viewer.track_model.get_state().get("error", "")).contains("not configured"):
 		print("Original track asset root is not configured")
 		get_tree().quit(77)
 		return
 	if not await _wait(viewer):
 		_fail("Initial load timed out")
+		return
+	if "--track-projection-only" in OS.get_cmdline_user_args():
+		var browse_projection: Projection = viewer.camera.get_camera_projection()
+		if not viewer.driving.start():
+			_fail("Projection fixture could not enter driving: " + viewer.driving.error)
+			return
+		if not await _wait(viewer):
+			_fail("Projection fixture drive preparation timed out")
+			return
+		await get_tree().process_frame
+		await preload("res://scripts/debug/driving_projection_checks.gd").check(viewer.camera, get_tree())
+		viewer.driving.stop()
+		await get_tree().process_frame
+		var restored: Projection = viewer.camera.get_camera_projection()
+		if viewer.camera.fov != 75.0 or viewer.camera.keep_aspect != Camera3D.KEEP_HEIGHT or not is_equal_approx(restored.x.x, browse_projection.x.x) or not is_equal_approx(restored.y.y, browse_projection.y.y):
+			_fail("Drive return did not restore default browsing projection")
+			return
+		print("TRACK_DEFAULT_PROJECTION_OK: initial, reset, aspect ratios and drive return")
+		get_tree().quit(0)
 		return
 	print("TRACK_SMOKE_STATE: ", viewer.track_state)
 	if not viewer.track_state.get("ok", false) or int(viewer.track_state.get("triangles", 0)) <= 0 or viewer.fixture.visible:

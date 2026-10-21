@@ -1,0 +1,345 @@
+{
+  "task": "TASK-0063",
+  "entries": [
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::step",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/game_core/port/track/settings.hpp",
+      "name": "restore",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "TASK0062 user-requested default-enabled Render props presentation control and snapshot; no original visibility algorithm change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::complete_visual_readback",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::set_effect_enabled",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::restore_render_defaults",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::set_visibility_override",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "impl_",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "impl_",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "impl_",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::clear",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::complete_readback",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw_render_controls",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "TASK0062 user-requested default-enabled Render props presentation control and snapshot; no original visibility algorithm change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_render_controls",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::update",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/particle_mesh_stream.hpp",
+      "name": "update",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_optimization_state",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::stats",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::test_mesh_reuse",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "parameter",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::release",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::scheduled_viewports",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::update",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::clear",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::update",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::_bind_methods",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::submit_frame",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::update_view",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_state",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::stats",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_snapshot",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "TASK0062 user-requested default-enabled Render props presentation control and snapshot; no original visibility algorithm change."
+    },
+    {
+      "path": "src/game_core/port/track/particles.hpp",
+      "name": "set_state_cache",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/game_core/port/track/props_visibility.hpp",
+      "name": "apply_props_visibility",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "TASK0062 user-requested default-enabled Render props presentation control and snapshot; no original visibility algorithm change."
+    },
+    {
+      "path": "src/game_core/port/track/settings.hpp",
+      "name": "set_props",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "TASK0062 user-requested default-enabled Render props presentation control and snapshot; no original visibility algorithm change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "performance_controls",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::set_render_props",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "create_sun_target",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "sun_target_bytes",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "sun_reference_count",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::stats",
+      "kind": "port_adapter",
+      "evidence_id": "E0063H01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized TASK0063 port rendering transport/cache and measurement; retained reference behavior and unchanged recovered game bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_command_batches.hpp",
+      "name": "eligible_track_opaque_queue",
+      "kind": "port_adapter",
+      "evidence_id": "E0063O01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "User-authorized experimental opaque queue: Copy blending, writing GEQUAL depth, alpha-test ALWAYS or GREATER; all original cutout/discard rules retained. Independent candidate remains off pending exact GPU colour/depth parity. Occluder eligibility is unchanged and unreviewed for modification."
+    }
+  ],
+  "auxiliary_sources": [
+    {
+      "path": "src/tests/track_command_batches_tests.cpp",
+      "evidence_id": "E0063O01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "Exact host opaque-queue eligibility fixture: Copy cutout accepted and source-over, alpha sorting, environment, no depth writing, matrix packing and unsupported test modes rejected. Port test only; no original implementation authority."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "evidence_id": "E0063D01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "Exact full-file coverage of independently reversible cache defaults after bounded state/buffer/image parity; removes redundant host operations, with no FPS gain or broad performance acceptance claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "evidence_id": "E0063D01",
+      "evidence_record": "reverse/task0063/host-preservation.md",
+      "reason": "Exact full-file coverage of independently reversible cache defaults after bounded state/buffer/image parity; removes redundant host operations, with no FPS gain or broad performance acceptance claim."
+    }
+  ]
+}

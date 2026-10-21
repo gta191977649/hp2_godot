@@ -1,5 +1,16 @@
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
+#include <cstdint>
+#include <optional>
+#include <set>
+
+namespace hp2::recovered {
+// Retail001ABF48 / Debug001A95C8; E0056T01. Bounded resident-name resolution
+// projection: returned hash identifies the original TextureInfo, not a PS2 pointer.
+// Pack LRU/UsedFlag ownership stays with the port resource owner.
+std::optional<std::uint32_t> GetTextureInfo(std::uint32_t,bool return_default,
+    const std::set<std::uint32_t>& loaded,const std::set<std::uint32_t>& render_targets);
+}
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.

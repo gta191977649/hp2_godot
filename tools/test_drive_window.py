@@ -27,7 +27,7 @@ def main() -> int:
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     state_path = output / f"state-{time.time_ns()}.json"
-    engine = root / "local/tools/godot-4.4.1/Godot_v4.4.1-stable_win64.exe"
+    engine = root / "local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64.exe"
     if not engine.is_file():
         raise RuntimeError(f"Pinned Godot executable missing: {engine}")
     user = c.WinDLL("user32", use_last_error=True)

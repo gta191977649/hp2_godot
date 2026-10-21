@@ -1,4 +1,5 @@
 #pragma once
+#include "profile_debug_ui.hpp"
 #include "ps2_frontend_layout.hpp"
 #include "ps2_movie_player.hpp"
 #include "port/render/frame.hpp"
@@ -48,6 +49,7 @@ public:
     bool console_input(const godot::Ref<godot::InputEvent>& event);
     godot::Dictionary console_frame(double width, double height, double delta,
                                     const godot::Dictionary& status);
+    double get_ui_scale()const;
     void console_init(const godot::String& settings, bool info);
     void console_log(const godot::String& text, bool error);
     void console_execute(const godot::String& command);
@@ -96,9 +98,11 @@ private:
 #if HP2_DEBUG_BUILD
     std::unique_ptr<port::extensions::DebugConsole> console_;
     port::extensions::ViewerUi viewer_ui_;
+    ProfileDebugUi profile_debug_ui_;
     std::string clipboard_text_;
 #endif
     godot::RID console_parent_, console_font_;
+    std::uint64_t console_font_revision_=0;
     std::vector<godot::RID> console_items_;
     std::vector<godot::RID> console_draw_items_;
     // One device texture per drawn original entry, re-uploaded only when the bitmap revision

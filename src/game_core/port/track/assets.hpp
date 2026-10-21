@@ -4,6 +4,8 @@
 #include "port/vehicle/textures.hpp"
 #include "game_core/CarRenderInfo.hpp"
 #include "game_core/src/ecstasy/elighte.hpp"
+#include "environment.hpp"
+#include "particles.hpp"
 
 // Port-side ownership and presentation adapter, not PS2 ABI storage.
 namespace port::track {
@@ -40,9 +42,13 @@ struct Zone {
 };
 struct Scene {
     Entry entry;
+    EnvironmentResources environment;
+    ParticleResources particles;
     render::VehicleGeometry geometry;
     std::vector<vehicle::Texture> textures;
     std::vector<std::string> gaps;
+    // E0056T01: original NameHash -> bound TextureInfo hash; raw bundle unchanged.
+    std::map<std::uint32_t,std::uint32_t> texture_fixups;
     std::vector<std::uint8_t> bundle;
     std::vector<Instance> instances;
     std::vector<Section> sections;
@@ -56,4 +62,7 @@ struct Scene {
 std::vector<Entry> load_catalog(assets::Source& source);
 std::vector<std::uint8_t> decompress_bundle(const std::vector<std::uint8_t>& bytes);
 Scene load_scene(assets::Source& source, const Entry& entry);
+// E-0075-R01: original shared AcidFX library and original texture/mip resources.
+// Also supports the port-owned flat Test drive scene without track scenery.
+void append_particle_library(Scene&,assets::Source&);
 }

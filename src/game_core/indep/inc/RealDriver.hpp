@@ -29,6 +29,8 @@ public:
     // Debug0013BC90/0013BD70; original static handler bound to this PS2 address.
     void JoyHandler_ShiftUp(int port,int event,std::uint8_t param);
     void JoyHandler_ShiftDown(int port,int event,std::uint8_t param);
+    // Debug0013BF58; E-0082-H01. Host-bound original press/release callback.
+    void JoyHandler_HonkHorn(int port,int event,std::uint8_t param);
     void DisableStartLineState(); // Debug0013B168
     // ELF 0x00130958; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00130958.md.
     // Port-side void/no-argument placeholder; original signature unknown.
@@ -67,11 +69,11 @@ public:
     void SetLowGear();
     // ELF 0x0013C420; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013c420.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    // Debug reference: RealDriver::StartHonkHorn(void); E-0041-V01; retail ABI unconfirmed.
+    // Debug0013C220; E-0082-H01; canonical driving/host-audio activation binding.
     void StartHonkHorn();
     // ELF 0x0013C460; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013c460.md.
     // Port-side void/no-argument placeholder; original signature unknown.
-    // Debug reference: RealDriver::StopHonkHorn(void); E-0041-V01; retail ABI unconfirmed.
+    // Debug0013C260; E-0082-H01; canonical driving/host-audio activation binding.
     void StopHonkHorn();
     // ELF 0x0013CAE0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013cae0.md.
     // Port-side void/no-argument placeholder; original signature unknown.

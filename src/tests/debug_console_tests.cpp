@@ -7,7 +7,8 @@
 #include <stdexcept>
 #include <iostream>
 using namespace port::extensions;
-static void check(bool value) {if(!value)throw std::runtime_error("Console assertion failed");}
+static void check_impl(bool value,int line) {if(!value)throw std::runtime_error("Console assertion failed at line "+std::to_string(line));}
+#define check(...) check_impl((__VA_ARGS__),__LINE__)
 int main() {
     DebugConsole console;
     check(!console.visible());
@@ -151,9 +152,15 @@ int main() {
         button.pressed=false;viewer_console.input(button);tick_track();
     };
     check(!state.render_collision&&!state.render_material);
+    click_target("show_lod");check(!ui.next());
     click_target("render_collision");check(!ui.next());
     click_target("render_material");check(!ui.next());
     state.debug_ready=true;ui.update(state);tick_track();
+    click_target("show_lod");auto lod_action=ui.next();
+    check(lod_action&&lod_action->action=="show_lod"&&lod_action->enabled&&!ui.next());
+    state.show_lod=true;ui.update(state);tick_track();
+    click_target("show_lod");lod_action=ui.next();
+    check(lod_action&&lod_action->action=="show_lod"&&!lod_action->enabled&&!ui.next());
     click_target("render_collision");auto collision_action=ui.next();
     check(collision_action&&collision_action->action=="render_collision"&&collision_action->enabled&&!ui.next());
     state.render_collision=true;ui.update(state);tick_track();
@@ -164,5 +171,24 @@ int main() {
     check(collision_action&&collision_action->action=="render_collision"&&!collision_action->enabled);
     state.kind="driving";ui.update(state);tick_track();
     check(!ui.targets().count("render_collision")&&!ui.targets().count("render_material"));
+    // Physical framebuffer and input scale together; all widget dimensions stay
+    // logical. Repeated frames do not rebuild the font atlas or compound scale.
+    state.kind="track";state.camera_known=true;state.camera_host={{12,34,56}};ui.update(state);
+    for(float scale:{1.f,1.5f,2.f,1.f}){
+        viewer_console.set_ui_scale(scale);const auto revision=viewer_console.font().revision;
+        for(int repeat=0;repeat<3;++repeat){
+            const auto batches=viewer_console.frame(1280,800,1.f/60,[&]{ViewerUi::fps(1280/scale,60,16.7);ui.draw(1280/scale,800/scale);});
+            check(viewer_console.font().revision==revision&&ImGui::GetIO().DisplayFramebufferScale.x==scale);
+            check(std::abs(ImGui::GetIO().DisplaySize.x-1280/scale)<.01f);
+            for(const auto& batch:batches)check(batch.clip.x>=0&&batch.clip.y>=0&&batch.clip.x+batch.clip.width<=1280.01f&&batch.clip.y+batch.clip.height<=800.01f);
+        }
+        auto* coordinates=ImGui::FindWindowByName("Track coordinates");check(coordinates&&coordinates->Active);
+        const auto point=ui.targets().at("render_collision");move.x=point[0]*scale;move.y=point[1]*scale;
+        viewer_console.input(move);button.pressed=true;viewer_console.input(button);
+        viewer_console.frame(1280,800,1.f/60,[&]{ui.draw(1280/scale,800/scale);});
+        button.pressed=false;viewer_console.input(button);
+        viewer_console.frame(1280,800,1.f/60,[&]{ui.draw(1280/scale,800/scale);});
+        auto action=ui.next();if(!action)std::cerr<<"DPI click scale="<<scale<<" target="<<point[0]<<","<<point[1]<<" mouse="<<ImGui::GetIO().MousePos.x<<","<<ImGui::GetIO().MousePos.y<<"\n";check(action&&action->action=="render_collision");
+    }
     std::cout << "DEBUG_CONSOLE_OK\n";
 }

@@ -1,0 +1,2645 @@
+{
+  "task": "TASK-0072",
+  "status": "approved",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "9201d3e01f7dfce22be05eef3f024f355103aa24be3f1d22e44e8d7cee49f2d0",
+  "baseline_inventory_sha256": "829a09fbc6a785d4c184540ed84a93fdddec1727455e6fe828c0cff57ad0b885",
+  "scope_lf_sha256": "f4962e123d616fc6cd241c092abe53b18e75f13a3ad4d23ea4c2fa0aaf405443",
+  "before": [
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::pump_load",
+      "signature_sha256": "9341df8c88331c544e3b4f72f86e4c5d406ff9d75f3ce0a8d39a46994639b83f",
+      "body_sha256": "a6ceac38b213b5f0093987838a8d92c207ac5cbd6b39acc0dedbbce136ea5cc0",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "impl_",
+      "signature_sha256": "830e61f01445fb097bdb3587d52c9f11e9b7b97c828c3a54d0eb241c8917cc43",
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::_notification",
+      "signature_sha256": "5be5cccc232c1b14490ba8ed3058fec25683f3f229f510401b4e1e7ed8485542",
+      "body_sha256": "757e49e7095729a9274b0df808337a33335432ddf3288ce5f14b74c996530b00",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::update_view",
+      "signature_sha256": "74a9af13462008ba830a8391673a8d26cd32c9c40c5c94ed99af933e948aabaf",
+      "body_sha256": "0900860846ff3dc8d408c8f2d0e05d32e183bbc6453d56b298edb3ac42f59e6b",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "limit",
+      "signature_sha256": "7047b9d6fb1949351e9d05d0221347e599f4b9a9e9a84eb3e0215c62e7a359db",
+      "body_sha256": "9141460781445be3120e2c1ec9917d87e7b19ed19285b565cea3cba087687aa0",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::clear",
+      "signature_sha256": "1bd838983406853ec10df661d90c7d57f28d9edb55c4792bd74ef7c1accd625d",
+      "body_sha256": "65b58ed06fe7a690c3de16d8cc840c6e164b62a89c50cea1d93ac1acc37ed4a9",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::mark_mesh_changed",
+      "signature_sha256": "edf9d54ba2162e5662a28922beee31f0ef5555209d3baf91c78d8fb4824977a5",
+      "body_sha256": "a01f26bf99bbf57111e44dfba2e0f7504579c31fee3736c3898a05677d7e3a0e",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::mark_material_dirty",
+      "signature_sha256": "ec067f10201012dedec10dee8492a97470e06720b95f9be39ffea427691a6d50",
+      "body_sha256": "09592e64db2ea1aea676d3641c6d6ddadfaf43a0fa9419c9f0e79234b9ae6730",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::layout_lods",
+      "signature_sha256": "68af07040c2f9228e6d4407b0b73e7f676099a2712a5061f517d43c4b9a91a60",
+      "body_sha256": "f4983220ca36a16b9ed19bf115e8a408f72e69fc9e5a800ec272aa012194aeee",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::Impl::depth_material",
+      "signature_sha256": "f0179d66653e1cce809f799575cc56e3dcad7564f118ddc32732aadf977c94d8",
+      "body_sha256": "811e7949689b15f6f9dbe6cc5287ebc9f77f92edfbb78b226c20dfd5f04f8028",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::trim_draw_cache",
+      "signature_sha256": "6ba33f4d39d92a54d09a6c99d6c8101d33e0d30fbd0361b46d7697ee604c5e84",
+      "body_sha256": "c476ca714a1b37b474f5a027c9e745518427f4f93b55494736f51c120d3a6914",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::acquire_source_mesh",
+      "signature_sha256": "d9aa1872f5a2d3a56c050bdf96040541452e8c4bb05de6ca7e8b3305ac0732f2",
+      "body_sha256": "91f72c1c801eb33ff885aa7d91c0459b3a1cd0b826051516d6605bfda0f5952d",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_memory_state",
+      "signature_sha256": "52c64457426af619a1f8643811b98c46a974330ba00a1462f864b6087e6935f8",
+      "body_sha256": "7b33387d4e943982de16cef9f0a62bf326aa6bd8e130c79f78fd9cd8fa6b8f44",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::forget_mesh",
+      "signature_sha256": "9f68bea318f714ecd3863ba1305fadb65dcb772a704c49f10b0556cd9b16403d",
+      "body_sha256": "933c05c9935ebbb418b88ef94a2a2d6dceac6aa5b92ce028c16780454ff1eca6",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::forget_material",
+      "signature_sha256": "aba28b5391441b4b9bf6d16873d34babc560279167490b27a433eb57d07a847b",
+      "body_sha256": "fcc78530b00d48f9629ef9ba402236dfc943c4e119389e1b49d692c3df889677",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_render_controls",
+      "signature_sha256": "faecdc5974f0bbadaacb11b9f8bd2179d50d97c2ce5f7195d5562b51559510e4",
+      "body_sha256": "fbaa8a562a6fff81f87ca77f786e95b43e8ce286738edf2c07f3c1dc8cad0ea5",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "impl_",
+      "signature_sha256": "02ba5c05cd010f0b72ae60ced54a1144aacd8c726934e4a058df1580b886b4fc",
+      "body_sha256": "59036aa8e2d37f0d1c4cbb8a8f04376ea63fc42703977e3321b765476802a4c4",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::clear",
+      "signature_sha256": "a95e1a1fb90fd5424f8009c57f71736179a7949963dc8d732bb14c7d2f62fd15",
+      "body_sha256": "9dfc5db7a7a915a60e14a4a5d982b2b88ddb1d82e310ccaa95539b5a814b22e8",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::complete_readback",
+      "signature_sha256": "7cc773f84a47adf746e14154d25cf7efdfce2c2ca3d591e62a41741ed12c631f",
+      "body_sha256": "b560fe82010b3e997f872bbce92cca957bdee6be522dfa148ff7c20b7ae63d54",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::scheduled_viewports",
+      "signature_sha256": "ab11d50f7a16bcc8648bc0bd02edec5bcb2e1003b4ce3613e0f4c3f9b529c030",
+      "body_sha256": "3091ca099ed1e802423eaddfdea0ce211ae19a201a498a3104c04779b2946393",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::stats",
+      "signature_sha256": "0a0b07fd47f8e9fc9de3cb64e0845d670c75f9f2c6b5b67e0ccbea86cc98a9ff",
+      "body_sha256": "2b73a32928110b0b56191bab2894ffc911cce4e08232225cbacb0d5d0d6b2486",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::update",
+      "signature_sha256": "53a1ea86751fa5e87875ea2a4c15167cbfb7fce013246df5cb7bf4230fd72ea7",
+      "body_sha256": "2fe6d829e632b98f44d9557e47f285d48b6aaf5bdc753b7d2ffee4b6c5c68f21",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::acquire",
+      "signature_sha256": "06ef987b7eff738a9a3586e234783df6704de0a34a7411a005c4c4e2fe4f037f",
+      "body_sha256": "03884afe70fdba023fa0f1fd3fdee567244e9a21ecbcc943e33098f764ba2690",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches_tests.cpp",
+      "name": "test_track_mesh_batch_cache",
+      "signature_sha256": "dff0b198f09223e11a4fb88e66308e54ac33750c9e13bff7b62397c79c6ca3d5",
+      "body_sha256": "d2e599a269827c7cb976048a42ab95e20fcef18845abd38d8879fc8f7b59798c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "impl_",
+      "signature_sha256": "830e61f01445fb097bdb3587d52c9f11e9b7b97c828c3a54d0eb241c8917cc43",
+      "body_sha256": "2e0439cdca88dbd50f3891218cec76478763102cf39ecfe0e1d7c9e12948750c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::release_display",
+      "signature_sha256": "7603e14a91c1950cf5f8bb5d5e81b4c193b650446720fda40a4862fa061832ef",
+      "body_sha256": "dda876b1cab0849d413b9b9478c73e08e7249e583f3db66df92a9db5c1acb78c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_optimization_state",
+      "signature_sha256": "24a616fd0067ca95a31de9c7efeb453ffe887be49021f8e3d4a0e0688dd16e1f",
+      "body_sha256": "64630269c0e8cbb5847732f753ab7480edc0fd8cf320b1e41c0f61037de6a87b",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::submit_frame",
+      "signature_sha256": "f88cc7cc040672c5074b7faa44e3a579eedfa98216a917bf68c4cf67623d9ec7",
+      "body_sha256": "f18ada793b461b47b7ad5e628b08729e15da7382bc0c9ffc1c4448b451f85e53",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_state",
+      "signature_sha256": "20cd6a56f4f5bd8582c1004e5b9c14e05054e8556771a8bc0d337c1afb48c56a",
+      "body_sha256": "bc4f02924d0f0d51d891fbfe0c6725e05b371f84f2b5b90c0885cbed2a8e93cd",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_cache.hpp",
+      "name": "clear",
+      "signature_sha256": "d67acd33c2249e2b344dc9cfaea2fb6dbcfd5aba6a36dfd8fce206120bf98fd2",
+      "body_sha256": "a883016da1d024d2079b7545a5d0cff357aa6310e0cb55c6521d0ea3a72bd5da",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_cache.hpp",
+      "name": "acquire",
+      "signature_sha256": "cb4d59ea6869fcd863a5d3791383cad13c465fb4076a9db85627545b5ea8a79b",
+      "body_sha256": "bdb16a7e41363d1e9bb78de7eb04f9439374e663558496d1014aac1428bd0257",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/profile_debug_ui.cpp",
+      "name": "ProfileDebugUi::draw",
+      "signature_sha256": "fa930f233a1c9a3a5a34eaebf9cf505892d8daa29a6b63baa4267dab6c15c8c2",
+      "body_sha256": "bd0c6da132166810e1a739f226f2b9b52aac970d206c461d32437fcd5e514484",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::console_frame",
+      "signature_sha256": "86cbdd096fa58e58653cb4d97f8dbbb735c443b2de53aedd08416f3c258878f3",
+      "body_sha256": "7671327aa562fb7945d4a8192e13cf140645d4453f93b0f6c706ee11696a1790",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::update_view",
+      "signature_sha256": "af3656c2e22b307f305268073c180924b394cd8fabf3d8173144d28a6cb68113",
+      "body_sha256": "0478691f2f9a0d534fe719e9f856cc5ebfe1a6d475849cf82bd491292d82092c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::rebuild_display",
+      "signature_sha256": "628664de20d8972238fe1dc37aba6818795c63a05893e22eb39b42b8bdabd458",
+      "body_sha256": "2796b799b29be191c611c81287dd0da6f62dc2c7d2d1a04b697098c49ee84201",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::stats",
+      "signature_sha256": "12cd816c5c35341269d897381a424a5466c6aa9dea385b18da84825e3c44c623",
+      "body_sha256": "9f44590e139ddc38b4b89c5e3fdc1f8759e6f2be9937978fc7a18d76f00e3dfb",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "impl_",
+      "signature_sha256": "830e61f01445fb097bdb3587d52c9f11e9b7b97c828c3a54d0eb241c8917cc43",
+      "body_sha256": "2e9bc8967f61c4975f638e3f867bded6ec2d4f8a6a4eb474084a3003b10e13c6",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::release",
+      "signature_sha256": "9370e57b3df967999cb6c4f20b5aeae93e89e7a2e57547cbe47a62c4fbbc6761",
+      "body_sha256": "c9424f40b5f814e6444846597e33efa50c7be057c6b790e15eb3eaa43a3e4f83",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::update",
+      "signature_sha256": "efa2952af1b093f6ddea21eff66ab802d91f27ceb06c0fbc955bca17ff25b9ea",
+      "body_sha256": "7527156e65c3f04922d956582923d5fa92822dac400fe2fb20504c8678e3af1c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/platform/godot_bridge/parameter_staging_registry.hpp",
+      "name": "create",
+      "signature_sha256": "8d15c0a625645b462841d24ec91561d12ae68306f63ebf90277f623542d2ccd1",
+      "body_sha256": "28d16ff7273a75661e409784f3aeda14ff44638e562305c02bce9c55334925de",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/parameter_staging_registry.hpp",
+      "name": "publish",
+      "signature_sha256": "a287cebb498e9d9e0ef166c98563af1c1af7cbacfc5b6fc0be3724a4e5b63874",
+      "body_sha256": "35e36874786d145c6038428711ae0af46e3afb52cb550e30ec3864f7659c6092",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/parameter_staging_registry.hpp",
+      "name": "read_snapshot",
+      "signature_sha256": "fdcc1e68ff3be27347918eacc64cc5dd882d5e3d55c09dfdaf7998eaa2fdac08",
+      "body_sha256": "b2d609f4debe9d72450a21364271cf189e93bffd144de560b4dfe085146c7743",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/parameter_staging_registry.hpp",
+      "name": "lookup",
+      "signature_sha256": "c50ef82ad9367c5e39fef3de6a63dfd0941a419e1f385b378956ab6b55d3f289",
+      "body_sha256": "cd3865d76e31dc1982eb7ec62a08f04fc5b20618ce570c40d74dd7f16ca15aaf",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/parameter_staging_registry.hpp",
+      "name": "invalidate",
+      "signature_sha256": "e5cca8a7dfd9b35a239b8ff403bf140b9f392faf642d0de54ef7722a983ed623",
+      "body_sha256": "0f47fda3127f866ad7fef6c0865db71eac6d468302bd569278254fcf23abdab3",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/parameter_staging_registry.hpp",
+      "name": "stats",
+      "signature_sha256": "6dc0dd12248ca54197895e93bd32f280afe5dda159461b807ec487b12745fcab",
+      "body_sha256": "b0b54a35978bb34175ad9bc99a25b9aa38ae9c174cb25d50b6d3c0488c0edfb3",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/profile_debug_ui.cpp",
+      "name": "compact_graph",
+      "signature_sha256": "0e4ae70ccc671e3a8fbdba6718264154cc5114b9f0625d2deb064bce63d40a46",
+      "body_sha256": "e4b605aa6210c1c6bb7892c1e3c75a001fa9530c744f081cb4f99f048f7f8c21",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/profile_debug_ui.cpp",
+      "name": "compact_sample",
+      "signature_sha256": "667748c752b9b161679066a7759843ad3c9b082a9951e6e92f751aa62c952c9f",
+      "body_sha256": "09bde83a289596141df48ff70448fd096f356308ab03373748d543a8a8e23dfc",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/profile_debug_ui.cpp",
+      "name": "ProfileDebugUi::draw",
+      "signature_sha256": "fa930f233a1c9a3a5a34eaebf9cf505892d8daa29a6b63baa4267dab6c15c8c2",
+      "body_sha256": "b9b27b821c2dccb5651606d2710e00e6f495131f67fe2905305127daed43cd2d",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::console_frame",
+      "signature_sha256": "86cbdd096fa58e58653cb4d97f8dbbb735c443b2de53aedd08416f3c258878f3",
+      "body_sha256": "17898e50c1ff95e9355bdc3a42340e0ac1f2457fb20d4037aae7bf27a2ae5b95",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "requested_render_thread",
+      "signature_sha256": "e08b9491c72f7e1974f8ab51d1a760a7e644a6c0b280fb611a69e0ff32405a99",
+      "body_sha256": "ea3f7164a47ac26e6fec0fdf576a4e8f4475416f3562f96c589b28221a0c0a62",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "submit_transform",
+      "signature_sha256": "0c7c380b5eba3433b28a788e44cb34bd3a37943f0ec95d9368719bc3755287a7",
+      "body_sha256": "befcda3ac0b55227232f9bd4981fa6d8b7eb6954ecfde57b3047a4c1e1d4cdae",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "impl_",
+      "signature_sha256": "830e61f01445fb097bdb3587d52c9f11e9b7b97c828c3a54d0eb241c8917cc43",
+      "body_sha256": "35a6aa1689ed88a16ae6a37326c01243e56dce7bea0f0e94d1817e27ec9e4581",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::_notification",
+      "signature_sha256": "5be5cccc232c1b14490ba8ed3058fec25683f3f229f510401b4e1e7ed8485542",
+      "body_sha256": "19f7735bb5289725c8c95f11ead9ed08b9b5be5ff7e74baaadff068324dc4e84",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::release_display",
+      "signature_sha256": "7603e14a91c1950cf5f8bb5d5e81b4c193b650446720fda40a4862fa061832ef",
+      "body_sha256": "46712565384fad52451482c021f800164add22c3eaf4f267908511b75c3e3933",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_optimization_state",
+      "signature_sha256": "24a616fd0067ca95a31de9c7efeb453ffe887be49021f8e3d4a0e0688dd16e1f",
+      "body_sha256": "fbadd176249fa73f76879ecf9bd1e20ff53f9aa74ee243acbd4097ebf728a722",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::trim_draw_cache",
+      "signature_sha256": "6ba33f4d39d92a54d09a6c99d6c8101d33e0d30fbd0361b46d7697ee604c5e84",
+      "body_sha256": "0cfd35f8f894d69ae4286a3b63fd0e782574010bcf3809bd7d923d9ea460efe9",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::acquire_source_mesh",
+      "signature_sha256": "d9aa1872f5a2d3a56c050bdf96040541452e8c4bb05de6ca7e8b3305ac0732f2",
+      "body_sha256": "59c91ae06d0031b2e571ec22c538f35b564ff3d107f0616483a945aa37a8aa8e",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::submit_frame",
+      "signature_sha256": "f88cc7cc040672c5074b7faa44e3a579eedfa98216a917bf68c4cf67623d9ec7",
+      "body_sha256": "904082e13297997ce26338d0c4591071a296360d5685e652f601602ff1103fe5",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::update_view",
+      "signature_sha256": "af3656c2e22b307f305268073c180924b394cd8fabf3d8173144d28a6cb68113",
+      "body_sha256": "9a72cdd7ed305118e79c11b45e3c69da13471bca14296939b4bc7776bf07f0c6",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::depth_source_order_changed",
+      "signature_sha256": "bbad1c98033a0bb6e8c6e49a1d4eefd9c6b1f7c562c15a0499d2a37c4ff37e49",
+      "body_sha256": "ab857efcfc10687a47e1f475a76f898e5625b6e1196217a8e41043a378ba4960",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::depth_source_structure_changed",
+      "signature_sha256": "2c8a49964740a6c765d8b4461f2a215fc20f69eb818f69c5586cd1872d0092f8",
+      "body_sha256": "ae098d9a59b4f10bdbeb5736db9b5d7f19266b125d140319339d12796d29a8a9",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_render_controls",
+      "signature_sha256": "faecdc5974f0bbadaacb11b9f8bd2179d50d97c2ce5f7195d5562b51559510e4",
+      "body_sha256": "e7f9775f0e14243be05a859250b4fdf614c8213072766b7a62eedbe1b15f8731",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_memory_state",
+      "signature_sha256": "52c64457426af619a1f8643811b98c46a974330ba00a1462f864b6087e6935f8",
+      "body_sha256": "cb17ec76dba4c564bb1d630d53981b409f0203081753cbcf3496980817a60a7f",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_state",
+      "signature_sha256": "20cd6a56f4f5bd8582c1004e5b9c14e05054e8556771a8bc0d337c1afb48c56a",
+      "body_sha256": "e537f5287dbbf9d8c1a4f135fed50b172f9259982466c1268fec385781ede4a3",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "impl_",
+      "signature_sha256": "830e61f01445fb097bdb3587d52c9f11e9b7b97c828c3a54d0eb241c8917cc43",
+      "body_sha256": "d136501cd0455f9744a0a9b26c37e76d0aa36fe2d5b18208f5f825c8924101c9",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::rebuild_display",
+      "signature_sha256": "628664de20d8972238fe1dc37aba6818795c63a05893e22eb39b42b8bdabd458",
+      "body_sha256": "1e70ef8c72224d190cffd7360163090995af43a9ec32168c443de9749ac016b1",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::layout_lods",
+      "signature_sha256": "68af07040c2f9228e6d4407b0b73e7f676099a2712a5061f517d43c4b9a91a60",
+      "body_sha256": "835c0191a58ba988d1f68eb60e99e008308f816300d6b3c58037187223dea134",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::pump_load",
+      "signature_sha256": "9341df8c88331c544e3b4f72f86e4c5d406ff9d75f3ce0a8d39a46994639b83f",
+      "body_sha256": "533d562eba80430f9de2d3538dec430611cea9730a8b4292600fb0e3e3faa6db",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::update_view",
+      "signature_sha256": "74a9af13462008ba830a8391673a8d26cd32c9c40c5c94ed99af933e948aabaf",
+      "body_sha256": "58152bbea59a5dded27bfc1f6078ae1e875cec70dc77c8a3db2dd11f565ea97c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "ms",
+      "signature_sha256": "83dba1c761986e8101eb611e7c7419bd29a7ff275804084d922a7cd0eec8676e",
+      "body_sha256": "55a32d346389c95bb73f79cfd53e2b7e93d89bdbf344e9a8cd4b3a53504ad097",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "key_of",
+      "signature_sha256": "794f7887fac64545fad203c56aa9652b98e5df8b7036cca50822ced8d00e60c6",
+      "body_sha256": "ddc9795a3339cc74ce91d8ffb167b1b41a05b9d154f6232ad7fb4b817516a4c8",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "snapshot_arrays",
+      "signature_sha256": "b5b1d820f31be75ad4def02f9aca92e23b504c1abc596e8b540deff54d0da302",
+      "body_sha256": "a20594da146ba5b97293b10cc1ca8dfc2885db8a5745f99274689bd09096aaca",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "pack",
+      "signature_sha256": "f84ac465f8ba32a08bf76d8069c7e86ac141b440e9728adcf0fa36421d402e03",
+      "body_sha256": "016f8f3678df9a0517be5fb2f078f75aafc8ca6d6bdff4c32c964e77524f57c0",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "limit",
+      "signature_sha256": "7047b9d6fb1949351e9d05d0221347e599f4b9a9e9a84eb3e0215c62e7a359db",
+      "body_sha256": "34a2812891ba9aea9617c193793900111aa68aaa79e95b931b18e307d9e36e44",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "snapshot",
+      "signature_sha256": "747bf0c0ecd47f4a1a5c679e596708d519fe0bc7b35cb56c72ec895b4f9b1bd2",
+      "body_sha256": "7e7caddcd076564c2ef8d5c9c3594872dd80e9b793f5321e22b851443391c2cc",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::set_cpu_source",
+      "signature_sha256": "12efbb596275bce7107dcd13ac42edfb81e4dd9e85410da9fdd9ba199407c483",
+      "body_sha256": "f0aa66ce202a3ba4b20b59571ed5387e5f8c0fc2860baa8cb50db0aca3f9b2c9",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::prepare_view",
+      "signature_sha256": "0300df364776b9381b0b1fd492e831deddd7a293f8d402b8364207ec044a5dfc",
+      "body_sha256": "f98c54c5c8dfa50e8a9354ddbc04e258105fad751dc6f90a8f0c7ca9ca6149d1",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::source_arrays",
+      "signature_sha256": "42520ad12da7cab9fe4749f367c049c352868ecb2c62ece844c3329769754368",
+      "body_sha256": "43e731b653b0dd4ab8321ebffe56acae619ae5bbb0d68bf3c3674e2e3392832a",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::acquire",
+      "signature_sha256": "06ef987b7eff738a9a3586e234783df6704de0a34a7411a005c4c4e2fe4f037f",
+      "body_sha256": "838ebcdb9c7c85d362a5c420abc3ee6166f7476630348f7dce3edec69b87fb5a",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::note_source_upload",
+      "signature_sha256": "a24b8bc359cdfacc352a0370090b6430790adeef551eec4c3faa866b6b3d25bf",
+      "body_sha256": "ff833ead2d4c8a1a79e48b808db66a5d79f38bfc3d60f2fabd86b0e0915ad3ff",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::submit_math",
+      "signature_sha256": "ec11683d23f3ba57a39be63d668956c63e4f629daf3ebe13afba8de67836f612",
+      "body_sha256": "abb58c1b3daf124f5b283d5aaaf40f437a86ca1580695ac63bf3258c2843f664",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::finish_view",
+      "signature_sha256": "46a5ed3f0e5aa74f8315d55ae1fdea281413634d2ab1855006d21f59355c3672",
+      "body_sha256": "c538368b2960af67523bbdf54545a4a05c726ce1c9225dc6956ab1ef9fd7314c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::preparation_stats",
+      "signature_sha256": "c7814c9baa8b9c79e464fce980b934366ac6d87c69bf92a04739acb899fd2978",
+      "body_sha256": "2731115e456416b4236d109cfa132c530b61d8569605fc6e6e653cbbdf74e1b3",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::clear",
+      "signature_sha256": "1bd838983406853ec10df661d90c7d57f28d9edb55c4792bd74ef7c1accd625d",
+      "body_sha256": "dbc3ce59cfacd9b7214549feecf4dfecf1e5576b5b6fb2588ae49df1489c402a",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::uploaded_payload_bytes",
+      "signature_sha256": "320c9ffe13d6cd627c8a0937227b62972167c26633ff2731e4f95fbd3748b9de",
+      "body_sha256": "d4511fa8da750a9c03dda0b8f2b15cc67e591a0d2a4f97f9784adde18cbf0e9f",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches_tests.cpp",
+      "name": "test_track_mesh_batch_cache",
+      "signature_sha256": "dff0b198f09223e11a4fb88e66308e54ac33750c9e13bff7b62397c79c6ca3d5",
+      "body_sha256": "b1cbf08560739dd5cef7aff89d0b6989542fc828295373d38a771f23f21ac468",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::Impl::depth_material",
+      "signature_sha256": "f0179d66653e1cce809f799575cc56e3dcad7564f118ddc32732aadf977c94d8",
+      "body_sha256": "318ad422956c752b3b3058df53aaab8d61e4ff7772c0f19d35b7592290c04d47",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::stats",
+      "signature_sha256": "12cd816c5c35341269d897381a424a5466c6aa9dea385b18da84825e3c44c623",
+      "body_sha256": "d764d95ffc1be0a784ae513316b3dc276673fd1cf1d950d9308ade32174202bb",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "impl_",
+      "signature_sha256": "830e61f01445fb097bdb3587d52c9f11e9b7b97c828c3a54d0eb241c8917cc43",
+      "body_sha256": "f45c37f755a4a093b8d44dffa56121870747cee5b2e10e2460aa19ef3c6e72fb",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::forget_mesh",
+      "signature_sha256": "9f68bea318f714ecd3863ba1305fadb65dcb772a704c49f10b0556cd9b16403d",
+      "body_sha256": "c4d7fa646c1d5afe9341ed57fbbf2b5dd6a462032fbb21424c3f29ab73020102",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::forget_material",
+      "signature_sha256": "aba28b5391441b4b9bf6d16873d34babc560279167490b27a433eb57d07a847b",
+      "body_sha256": "97508b9b2cb27495b6a305043f930376d6fa9d22d476d346946ddce38d1c0047",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::mark_mesh_changed",
+      "signature_sha256": "378cae5a516d1b064e00aa233591604e8eb7b04f8264af0bff5ebda95998d351",
+      "body_sha256": "b5dc634ff74c8157f1414416cc3b9ef426bc0164050243ac0e109d56b618dd70",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::needs_structure_observer",
+      "signature_sha256": "d29f7f2b41e0a89da9519d6a3da0df33de8bc02bfca7ff38de1b8b4ef47c3b63",
+      "body_sha256": "54c7f68adcd8ae0eaed45a00d4c5d9e64d2b0922655e346ee64d2adb5536dc7b",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::notify_source_order",
+      "signature_sha256": "01a529daedae3085daf7c1d3d4b638ef73c39c721f9d7ebf91f30272848d13f7",
+      "body_sha256": "5afb30783e0858aa729bf374941a1b1a78b283192ded018db1e4fb87aa00709b",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::set_structure_observer",
+      "signature_sha256": "c1b22acbdd3c1c440d5d996f04d78de086bf7de395f57570672decec7a429089",
+      "body_sha256": "2285c6c23d24887c7726324f93b034a3d34ddc9965926f9eb6ce0b3b97157b06",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::notify_scene_node",
+      "signature_sha256": "4c1d056fd87b7269b0b4341dfe09d117fca197e023d702e7261485d50a89784c",
+      "body_sha256": "2dcf449f2ac631506b26a389b7c08549e5599731dc274d1c0ae1cf225e8c76a3",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::mark_material_dirty",
+      "signature_sha256": "ec067f10201012dedec10dee8492a97470e06720b95f9be39ffea427691a6d50",
+      "body_sha256": "97d17c6220455945ac72801cd49b98030c467622af874693ad7cbdd7a81bcdfa",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::release",
+      "signature_sha256": "9370e57b3df967999cb6c4f20b5aeae93e89e7a2e57547cbe47a62c4fbbc6761",
+      "body_sha256": "4737a42acc0bf728a736c7cdb570527840f6b4ea3b341d75d220c43ef48e141a",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::update",
+      "signature_sha256": "efa2952af1b093f6ddea21eff66ab802d91f27ceb06c0fbc955bca17ff25b9ea",
+      "body_sha256": "710a94d8b09246782141bdfd270ac5326ecf171a8fd15346e729243cf0a84885",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_cache.hpp",
+      "name": "same_submission_plan_input",
+      "signature_sha256": "114735c074f848165374ed14d812655dcc7ce8649af6e5b067277f6caa741797",
+      "body_sha256": "f9f3f38eb7f4e6dde50c90e7ebf25ce3d417cffe3126cc82defa4ca0921722ad",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_cache.hpp",
+      "name": "surface",
+      "signature_sha256": "52772ea1cdc3c7e2af529deccb824896cd3dd7790300c7157aecd287276ff158",
+      "body_sha256": "7915bd2d5bedad3fab64d6f97c5755fab0877514ba71a040e302a2b73078d350",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_cache.hpp",
+      "name": "same_state",
+      "signature_sha256": "cd4bc4bffbb8d479006f937d631a7c23550dbceae2d989d8da1b0e02d1a4876f",
+      "body_sha256": "7959edb8d7815797c2dd3e3c4a7478ae80ab46966c4ea0eae5b3a96b31ec07c9",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_cache.hpp",
+      "name": "dynamic_plan",
+      "signature_sha256": "06be92888ef774adff3d9bfce5ae2d9db826030a8b4b5ec7b82cbbf80a5709c8",
+      "body_sha256": "2cc0a322e35513fe79c39adf5429e084111a9f4d4248937fc25ef347295b2c5e",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_cache.hpp",
+      "name": "cached_surfaces",
+      "signature_sha256": "1846f54c5dc24c44d28b5a01e2f03bced77ceb0190d52a996355bd540e1de217",
+      "body_sha256": "0879f7195ef624c5bb725119d4c3acb1fbd1211f00f809daf690cdbe09f95c67",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_cache.hpp",
+      "name": "clear",
+      "signature_sha256": "d67acd33c2249e2b344dc9cfaea2fb6dbcfd5aba6a36dfd8fce206120bf98fd2",
+      "body_sha256": "c4e77eca2d3a37982c7932e696284efaac868ca80d9c1e1867798edc0a1f820a",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_cache.hpp",
+      "name": "acquire",
+      "signature_sha256": "098999aadc56ea29dd7cd4be30da06c035ebfaa756fb6480cb534d53ce58961c",
+      "body_sha256": "b963121978cba7164635d41044786e6746392d0f45009b675695a4c36a4ba428",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_digest.hpp",
+      "name": "integer",
+      "signature_sha256": "363ebbbcc64b668471ff3267565cbfe6eb74f19e810b98a7316380af396b9186",
+      "body_sha256": "f23b14e32ef08272046af2aa652f51faf3966f6fd5f6c135cbbd65221a4f7158",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_digest.hpp",
+      "name": "flag",
+      "signature_sha256": "a8fb291296be7085616704b7a19f9f657dc47626f25c54fa645fa73007feb34b",
+      "body_sha256": "f5b789102ef593762224f6edf27e892295142de2ec73e8f89dee3f679ef8a2dc",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_digest.hpp",
+      "name": "scalar",
+      "signature_sha256": "dfd35cb4e1781290106becbb83a2012193caf2209b59000740c27366971b31ca",
+      "body_sha256": "53227354b21c6fb99069e24ea8c2c28b2b43aa47f73622cf9a4839549c9bbcd6",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_digest.hpp",
+      "name": "track_submission_digest",
+      "signature_sha256": "74daee32c46681a1cd9e6d6f6d9099ebce5e4066ca5e13cc5649c331d0657cb2",
+      "body_sha256": "b64286a417c5021d2aba0409ecddfac06c4d085d31ca0c08a3d1fea47bb51756",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "impl_",
+      "signature_sha256": "02ba5c05cd010f0b72ae60ced54a1144aacd8c726934e4a058df1580b886b4fc",
+      "body_sha256": "be7fa9ae69737e2fc406913c90991ee37734b5a7c16576d8cf32dd2708dd0bd8",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::clear",
+      "signature_sha256": "a95e1a1fb90fd5424f8009c57f71736179a7949963dc8d732bb14c7d2f62fd15",
+      "body_sha256": "b734819f4086021667ae320fcdd2cd0874fd49eae7526577b301d77e141cf8c0",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::complete_readback",
+      "signature_sha256": "7cc773f84a47adf746e14154d25cf7efdfce2c2ca3d591e62a41741ed12c631f",
+      "body_sha256": "8552185c07b0f5719fcfdd4e288047858b377d76b218fcbeae434b4cf8662255",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::scheduled_viewports",
+      "signature_sha256": "ab11d50f7a16bcc8648bc0bd02edec5bcb2e1003b4ce3613e0f4c3f9b529c030",
+      "body_sha256": "16671b6b674a1eb86db1affd24945325577e352cb603456f5c13785ef2748a1c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::stats",
+      "signature_sha256": "0a0b07fd47f8e9fc9de3cb64e0845d670c75f9f2c6b5b67e0ccbea86cc98a9ff",
+      "body_sha256": "f42e27add6059336c33a98535df4f69a064f77fd421d890c4fd4f29bea1d3114",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::update",
+      "signature_sha256": "53a1ea86751fa5e87875ea2a4c15167cbfb7fce013246df5cb7bf4230fd72ea7",
+      "body_sha256": "140c903863ce5e07b7e1c31b69e2b28d3f10b7fc7b2dc23aabb7149e0b9b09e1",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/vehicle_depth_staging.hpp",
+      "name": "registry",
+      "signature_sha256": "9be762142943f252cf0dbad5d5eb0ddc516dba14cfb4b36f0db4fe6e125b4abb",
+      "body_sha256": "84e81ac301b1e21ff9646ae76c5cdabc8074ce4500fc58c66013e1fbae16f9a9",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/vehicle_depth_staging.hpp",
+      "name": "create",
+      "signature_sha256": "8cdaacb217b93d03085211d538d65a794b537ff2825663b10d264461548dcc38",
+      "body_sha256": "8ca8e573297a741c92d33d3af31c7069a04581de301ce07254e8fe308cb38ae6",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/vehicle_depth_staging.hpp",
+      "name": "publish",
+      "signature_sha256": "946f33b7838074fc97beebba874b9b0bb06415cfae1b953fc8656cfc81a6f580",
+      "body_sha256": "e585eb5b577361890f6cc2b150514f7a777783618d3fee0d9ee56639d499bb52",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/vehicle_depth_staging.hpp",
+      "name": "lookup",
+      "signature_sha256": "555d99475b5d245cc2934d2cfaa08cf1fbae6591cbfa52b804ebc52d5c99dcdf",
+      "body_sha256": "2c56475ed91c37e1822220353786086b117455e60f4ffa771ec5c45215ffa0ab",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/vehicle_depth_staging.hpp",
+      "name": "read_snapshot",
+      "signature_sha256": "417688aae6ebfee7a940ef4869170b481c019afffedf764a02a85ab67d6e8ca3",
+      "body_sha256": "a4e84ad57698f945470a866c70ce280bb5918c6ebff1962c0ad778813565e7e3",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/vehicle_depth_staging.hpp",
+      "name": "invalidate",
+      "signature_sha256": "5c2f9bd12fb48872d657856c659ee72761f74d56d0a75c51572045c3571140cc",
+      "body_sha256": "8fa800d77cac474656de6f574366ba58f6d084492d2235da97676dcf6b31ca06",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/vehicle_depth_staging.hpp",
+      "name": "stats",
+      "signature_sha256": "708e87f9e3ba4597cd65312bee4b3d10db049b667998133e55c78901abae6bb8",
+      "body_sha256": "ebe5e5050d0db7f6642d326fb610e5a9e99a29bbed34f14f5bdafd4c3cde2f74",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/depth_sync.hpp",
+      "name": "mark",
+      "signature_sha256": "8ebcb4e39f2890ce8eaa23b14ee3afdf9a8817c02e8a0410bd5ac98c1d9c3ad2",
+      "body_sha256": "6cd92c832468b3663baf9cef3a93efab928037a98b2ff5da238cc4dc531c3c26",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/depth_sync.hpp",
+      "name": "forget",
+      "signature_sha256": "bfcd68fd0efbd10eba95e90c093dd65c1f3c0509aff80fe63586c30830bcafa1",
+      "body_sha256": "11ffd9d23fa1cd49d50c01dff693030ea42c13d46b8c494f7ef4223ed8444915",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/depth_sync.hpp",
+      "name": "changes",
+      "signature_sha256": "2e679ccc006d40a8f3ebf7113ff1e3304653117d806d878c0a5478406672cf60",
+      "body_sha256": "bf2cb5c3c3983a6ed8f3dd5896354d4f799ba0583788c2355342fde21a34823c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/depth_sync.hpp",
+      "name": "observe_structure",
+      "signature_sha256": "e2d5fd4d62474b4b2469bec71ee10b9f932c3924f3fae10f6cf6209c15aaf710",
+      "body_sha256": "97f91479756c956a5902274b5d1cb1861961604de480e8f4126f454e3d4e7cc6",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/depth_sync.hpp",
+      "name": "structure_changed",
+      "signature_sha256": "c3ae258cb12e66f6d3e5645a3d49c85fe4af394ecedf8da786dba7a3b1a4f362",
+      "body_sha256": "2dbe21670ea6214337c115b42c94c94cf15a18e41dc6c4404fb09abd7710bb8e",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/depth_sync.hpp",
+      "name": "discovered",
+      "signature_sha256": "78fefec6b6238457d2985bab8d7df7d1cd159ee6afd7b99b7954b0d21a60b9de",
+      "body_sha256": "0d3b8f29244934d0231eff179ec5f03719e6acffe94e161437ad18d165de255a",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/depth_sync.hpp",
+      "name": "consumed",
+      "signature_sha256": "e29bda043f9cd71fbb0e4790419026a7cb6fb0df965f6ef7fe70fb17c8393167",
+      "body_sha256": "c0c9607e7401c3d0b698242a44855eefe79bbf079bd74db47db8eea34bf8763f",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/mesh_prepare.hpp",
+      "name": "prepare_mesh",
+      "signature_sha256": "63b6bc2b9fbc2b1367c62ea2642b55184e2216e72a7534df87cab19d762932fd",
+      "body_sha256": "35b89fa97292f01371f39bc48638b11f9e57f81c2b9ee3f2066fc81537e75ca5",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/preparation_work.hpp",
+      "name": "configure_math",
+      "signature_sha256": "01b2ba94815afae69f4867cafa5f1a28cc4dcf5a9536b9a590c25b8b3848c256",
+      "body_sha256": "d69388457e8c2f821d9328b451f83823965a55e85838c34e34ce5563b9e7e341",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/preparation_work.hpp",
+      "name": "tasks",
+      "signature_sha256": "1955923acb5af527884903e3a20e797c5109af5f3563839f612c267de20b38b5",
+      "body_sha256": "f555a2c7f1fd657fd75703bff44015a43d20b3902acecba41acc865fe6f3ffbb",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/preparation_work.hpp",
+      "name": "run",
+      "signature_sha256": "28106e57edf848f7b2cc85c9f732c2c1e136e5fa39837e863d4f2cf8dff5cc24",
+      "body_sha256": "3feb1045393e17d6ccfbe474e0bdd6741b06530444e1bfa8f136eb0ffd1eb8fd",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/preparation_work.hpp",
+      "name": "rethrow_errors",
+      "signature_sha256": "c6d0e18f0b7b4d5308af3bc4e3381ef8517bc30a72af2927aa025fd2027481b5",
+      "body_sha256": "a7896a9ae6dd542e9ffd7fea1826d0492558099b5b4e6e2e2766a821e5045e24",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/submit_math.hpp",
+      "name": "submit_dot",
+      "signature_sha256": "9a075d15b5e370596a7eaa5597ea874bc98990f55aec746b8997dca365f753e5",
+      "body_sha256": "ac6fec66b4f2171c00eb6fe9012abb2086d349752a046d03320081af75181211",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/submit_math.hpp",
+      "name": "submit_xform_basis",
+      "signature_sha256": "6c0691149631b62664212ce6ca51d45140462ebc91a0d53332edce8a64c86af4",
+      "body_sha256": "ba63116035394e2c112ce1f8e6d2e7b4d747c3800b5d48f41ea4fa8ecc8bc390",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/submit_math.hpp",
+      "name": "submit_xform",
+      "signature_sha256": "8a6663ae27ccd51bd01f28556f8e581f313f4c7110b0a7056d1456bb54ed8a11",
+      "body_sha256": "0e2d395b7980dba3e81e9c7ebc54e73a24fabea3fc9d572518e20458f2cd086c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/submit_math.hpp",
+      "name": "same_submit_transform",
+      "signature_sha256": "b1ab6aeda139f3bfca1d17c8fc6ded61dd5cf6b2e17e04ba096f088a214b7613",
+      "body_sha256": "99cd2952098a4bd2ee7b14879db57118029b53c3f4da2c688e7e43cd6001db43",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/submit_math.hpp",
+      "name": "submit_inverse",
+      "signature_sha256": "564f456c3f0afa4c43c8e40ec6912ab792bec3376e646b0b0ca7c21e8e3e9f01",
+      "body_sha256": "90603a653a21a969321bfae116c359d3e58ecf2a3c5d0e82a8cd902c8627e861",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/submit_math.hpp",
+      "name": "prepare_submit_math",
+      "signature_sha256": "a8de617884039cd5ac479f5afba25e1da11b4d8b3c045bfd131c4b76e55e27d3",
+      "body_sha256": "40dc3e8b7f37aad4fe90e3e63d9b9d979fe798e58beec2cc40a8b1415671850f",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    }
+  ],
+  "auxiliary_sources": [
+    {
+      "path": "CMakeLists.txt",
+      "lf_sha256": "699a6d22759b04c7fdee393e67ca891869031f12d92330976aa6bec8f082a935",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "CMakePresets.json",
+      "lf_sha256": "aa10de12ddbdf3fc67384d4aa7d20d834e759c12cf6832cb9f1b970e6b3af8b7",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "build.ps1",
+      "lf_sha256": "161ec81b4d0677711474d82f9010fc9f281d223327ae408bc71fb8f128211b05",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/project.godot",
+      "lf_sha256": "efda29c11e02df3e019ee5b5450118824497a45ba4c562a360beb06e6a242e5c",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scenes/encoded_transport_gpu_smoke.tscn",
+      "lf_sha256": "664ac3cd87efdcbaccfeeac9636ca2ce487dc414e88058a4e03800fb3d66ab02",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scenes/task0072_profile_upload_smoke.tscn",
+      "lf_sha256": "b6681d5036dade6b5b9972e41f304614116a6cf272302cc9bc09a7d845cb74e6",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scenes/task0072_sun_counter_smoke.tscn",
+      "lf_sha256": "68b5639e15fa8a5badfc881f91e8aa78307af463d1d54f831eb98d28a3ed4dbf",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scenes/task0072_sun_telemetry_smoke.tscn",
+      "lf_sha256": "307e90f7dab252599d426543fa3a077f645fd64097158e018f6a7567c76fc8cd",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scenes/task0072_sun_transport_smoke.tscn",
+      "lf_sha256": "2c4b63db85fd26ec48f9b194037be5dde89625ae7749c544acd0745c74e00475",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/asset_viewer.gd",
+      "lf_sha256": "fe4b03631e69dd638b741ad04acb0f622fa0a974a4978a2297d04a5be21086ee",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/car_material_gpu_smoke.gd",
+      "lf_sha256": "cbed5614b768253d6c928fe69908275dc6a2e45e00f61ee8eb7691d32b7841d0",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/debug_tools.gd",
+      "lf_sha256": "e8098e7c407237b10e309fcbdfaacbb9c57ec04c4d05beaba2ad66d6691fbe74",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/encoded_view.gd",
+      "lf_sha256": "3ece6987029244f68026e2b01384b4451d63b1c287b03323a007b2739f1421f5",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/profile_debug.gd",
+      "lf_sha256": "93457456785463e37f7c8f0daa11d3822d718f41df8d64e11362e7979a40797d",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/profile_debug_contract_smoke.gd",
+      "lf_sha256": "b38f5a7c7c081d0040515d1137e2eaf4e22cb197db848c686c57f03cd58b625c",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/profile_debug_game_smoke.gd",
+      "lf_sha256": "9db8422937c723d31cf3a4309cef451ce4b566a02429faa9eaed65690adb94e6",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/render_api.gd",
+      "lf_sha256": "2d53951b82b9ffbcfc814ac6f690c3ff37cb125e09adbb2ba05f46c519cce9ef",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/task0072_driving_harness_smoke.gd",
+      "lf_sha256": "bfe451b67a45677dcdad136bc16cf73bcdd06a74af7c1522243eb4e2da1f5f7a",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/task0072_profile_cache_smoke.gd",
+      "lf_sha256": "d97b9847430f8d253a87b844c02b63cc490fe542a039647686f6494956c9f1f3",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/task0072_profile_export_smoke.gd",
+      "lf_sha256": "fc673ff4cea996a0836216184e5696565a6d622eb818ba9ced61d627cbe8013b",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/task0072_profile_upload_smoke.gd",
+      "lf_sha256": "3622c9e8ffbf5f743b226ffda1ffffbabb571855186ee3fb05dba8a904c150eb",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/task0072_worker_config_smoke.gd",
+      "lf_sha256": "d31034fa63d8113b281aba6b373bdc390d2bddb22de9ba9e704e4e31f60e4f5b",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/track_profiler_hud_smoke.gd",
+      "lf_sha256": "23f57e1a1a9fd14bdc9bbd9942bd8a080864f4ad842dfea17a53af76b51d9fc0",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/track_profiler_smoke.gd",
+      "lf_sha256": "3c4a3b6ba904dcce092922dde95e165606b594c12166ff3766a17101a2421c71",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics.gd",
+      "lf_sha256": "c04dec9b91e0fb25805ca9e164f3a9b51a1a8f9aa7f2288ca02e3558bc0b05d5",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics_smoke.gd",
+      "lf_sha256": "c272436d6c7931dab6174063829bc3504455f8fbe7d9906dabf2ed0bb5837a54",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/frontend_native.gd",
+      "lf_sha256": "1043982ae64e950e99bcbb78368b3b272284b836a4fa13cf31f997a64ede6651",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/encoded_transport_gpu_smoke.gd",
+      "lf_sha256": "2650d9d5612c46f8c461f8c7ff717c8d213be0f051ac51cacf84b71eebd771cf",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/race_scene.gd",
+      "lf_sha256": "4c304c0d2408a9ccc6db671711f00df34bbaeeafb0babc5d057b237cfcafbfd8",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/render_contract.gd",
+      "lf_sha256": "3e1229d4b78968686b1851014682b7d5022130f7f03d93107bd04e0636b457c1",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/sky_depth_gpu_smoke.gd",
+      "lf_sha256": "439ee9b38d54908712f621baf8bf7e01f0d29a08a4b4ec6dafc69e604b8375b4",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/task0072_driving_parity.gd",
+      "lf_sha256": "ed158a388bcdc99d53c9c068e861435c4dfcf1f8b7c92c2e25cfe2f47b39a795",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/task0072_sun_counter_smoke.gd",
+      "lf_sha256": "05cbf0586a1fd2a4244978309e51501ad396bb3ca84c001bba9a13b218c4731a",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/task0072_sun_telemetry_smoke.gd",
+      "lf_sha256": "36b5bed24ea751f18f19c3c335393e54c41ac6e18a6aece2183c2343de964e69",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/task0072_sun_transport_smoke.gd",
+      "lf_sha256": "d252431ef28e0757e70a996b68e53869bce67e8fcd1247b0fb4e853c107d69b3",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_fusion_gpu_smoke.gd",
+      "lf_sha256": "16956ce4739a40a0efbbf00aa8c6b0553c4e7c45d93f6564f956521dd949014c",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_reflection_smoke.gd",
+      "lf_sha256": "0b8f8723f0bbb6556a7aee6729b689fa6cb12729e3fc8d6803bc2795c2a5058c",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_smoke.gd",
+      "lf_sha256": "23d754b5f7322c24d8189b1d3b97218fa40f066563d63ab838cefd93ceba7de5",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_particles_gpu_smoke.gd",
+      "lf_sha256": "9a39422e17c2edd27922244d1167f6f77f23e8934f04b1f18e79fb4501642008",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_performance.gd",
+      "lf_sha256": "0f98621a59ed29c2cbde8458db49d5cab30ea80fe908cd3e8ace8736b33fffaa",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_performance_scene.gd",
+      "lf_sha256": "82963d0bbb029467508b1f13a905d9fce7e47cab1cd5b41752ad179e2bfbd009",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_performance_viewer.gd",
+      "lf_sha256": "dc3d1625539de9995617a5cbdb9d2f0cd868a7a2148375120e4ad4d07e83e1eb",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_pipeline_smoke.gd",
+      "lf_sha256": "b0379a424daba309ef1d156a6f99eedb3b1d3a708f7d8837d58b0e8279cf987b",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_postprocess_gpu_smoke.gd",
+      "lf_sha256": "290dd6f852a0be76f2e2d52b42255cb886a86632488f04ef987ead69d3ab6208",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_postprocess_lifecycle_gpu_smoke.gd",
+      "lf_sha256": "64b33048a7a72fd55e23a901148febafe04120c8c81fd5de7c2520a92a5a2f17",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_sun_gpu_smoke.gd",
+      "lf_sha256": "6d10102c1e843afe617916c7f3a96447481c6558b2e39d8c20f2969eb9be01c4",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_transport_capture.gd",
+      "lf_sha256": "2d1c97af813427c5f8ff821720c557cb7adb634eac7bef99468023c7ece966fd",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "godot/shaders/sun_counter.gdshaderinc",
+      "lf_sha256": "c521f0fbe93fbfc046148c6eef45b83df96daa539899449efd0fa76ee03f7869",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0063_review.py",
+      "lf_sha256": "57689dc29af97d0b88a96bdea415c8c9a3479a9a1506fb13143122e5bb8ca805",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0064_review.py",
+      "lf_sha256": "705c735307cd2354caee731903dafebeff8284d75d75f9b2c7ae3c2426d29634",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0065_review.py",
+      "lf_sha256": "b2d48e884581a2f0642d433e16265111ebd471e51345ff0272d6087360c8df3a",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0066_review.py",
+      "lf_sha256": "fdba517a826a3e3914e0029077ad082e3d600ab6dd0635590b0dc3426896922f",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0067_review.py",
+      "lf_sha256": "21b2d97bb8b71416d370f00efec4c5c46d40a8b98646e14e678119f394353cc5",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0069_review.py",
+      "lf_sha256": "154bf99eba803ec46818b12948a9a3f6edf53e833fd4e092cf8c7e23bd8cf099",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0070_review.py",
+      "lf_sha256": "9256afce63b585fcc012a75646646914ab8e41b8c20284dfc6fa30b814375d78",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0071_review.py",
+      "lf_sha256": "83bdbfc104194e315b10f9f8650ca345a50163128b552e3088882491e665cdf1",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0072_review.py",
+      "lf_sha256": "e08f5e9283df5b747d667fa1487c1a35333e9b16050213f0ae2d3e0e426b5771",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "reverse/task0072/host-rendering.md",
+      "lf_sha256": "b4c86d157f89f241e0cbc67b313aa22d5b96b8b61cb71dde9207e4fd37a94d92",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "reverse/task0072/residency.md",
+      "lf_sha256": "bcc487d1d01388f01b54d5d0ec10674d01761585cc4f3751291480ab57d0fdcc",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "reverse/task0072/sun.md",
+      "lf_sha256": "d52f22b11a63b43e88af18261e220f4aee9f05c1373e4c628c692601dc640499",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "reverse/tests/test_cpu_submission_analysis.py",
+      "lf_sha256": "645695ad983c2ef690a255eb6b288025c2415623a00a4a0efb22d564f14fc4aa",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "reverse/tests/test_task0065_source_review.py",
+      "lf_sha256": "f8a4547dd5573eba191942676fa3004776d214a9e88b5ce38447ee3f2c7a360e",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "reverse/tests/test_task0072_performance.py",
+      "lf_sha256": "47467ada46fe6981bcf216e59dce257ce861939439e08e29dbfce8bbdf2c1e0c",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "reverse/tests/test_task0072_source_review.py",
+      "lf_sha256": "1d144a1c5cdad43e51dd025a334f98fdabeb7451179813b689add78c125fd0a6",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "reverse/tests/test_task0072_workers.py",
+      "lf_sha256": "46cfa44c77e51e44ab5aab0974deb74aa49293449d2fa92189fa196d9c0661f1",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.hpp",
+      "lf_sha256": "38c59f1a7c3791e765c2404a006ffadd284eee85c6e004810277f508f30870ca",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/parameter_staging_registry.hpp",
+      "lf_sha256": "2f41622ab74828effdc57e3743da73792a5b8c3d73a2c15b8a960dc13a696c0c",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/profile_debug_ui.cpp",
+      "lf_sha256": "fcaa0282a932631fb34b2a2461c359afa11320b22124c75d5adcb494b728fee6",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/profile_debug_ui.hpp",
+      "lf_sha256": "a12c9757cf6ccff45a6f06755686e4e55737203f3cd9bbc08830a0f6835aca46",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "lf_sha256": "cb03866df3ba11731671ffa850728ebe9b22e64bfa8e530fc24a61ab7a78d2f6",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.hpp",
+      "lf_sha256": "520ecb85c6a60c7bda21f63bcdd2d1b61c4cfab94577314abf675ad0523a996c",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "lf_sha256": "6327fbd3978f21a26da9926695694f17371359d326ab79ed5cc3018543651baf",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.hpp",
+      "lf_sha256": "a512be82da93add0916aa2c0bf78b763dfc2e72bbf9b5570850f9f2092b72a65",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "lf_sha256": "843288f81469241ce82a9f3405b2a02db13260c1ecf2a29e3194d043d3b8aa70",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_command_batches.hpp",
+      "lf_sha256": "136d79fee8cf1bf60df4de958f9186d3f619f1e3f83a7e7880e3f548b28fc73c",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "lf_sha256": "894dce360a75c0da10a64c9721417c4a8fd1965d0b8752633eaa4ea1fd430874",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.hpp",
+      "lf_sha256": "9054f7fc40c76247f1625dd2d921ae4531871bd57dd8cb2bbbe6c335dfadf36c",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "lf_sha256": "609bccc54905187d675c727692439852918476bbd4f5b98a5f42323d1d4f533b",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "lf_sha256": "807239cfcb7da6c630c0eecbe9e3ba4965ab9b631ba14868abe99cc13f8086cf",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.hpp",
+      "lf_sha256": "093f8817c1f29db390cd4feaf7f50cd1cb2de69570a575ae07102f580b595358",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "lf_sha256": "4195514f96bebd514ccc2456e5e5536cd3a34f2c1ced684a33420923f4e1cc9b",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.hpp",
+      "lf_sha256": "7e30ccc98c89580465cadc1b95d0d0e4cff78714875a4ce03ea694e9034ac106",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "lf_sha256": "50cc107cf94de019bc81c66600026f05a9f3d797b2b37006d4c49be8dba4d1df",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_cache.hpp",
+      "lf_sha256": "3e4c06254a29b82696b9a725747a318ab1b7ead8421056b1ad71444bda98c5e3",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_digest.hpp",
+      "lf_sha256": "62ae1b29122373b48b6f40060fdbd7f61af09839b8c1d98aae91e7f8e1ff7ca2",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "lf_sha256": "75f487c480de21284b4f7417dffa7af92650318068ba248821d86b28828b51d9",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.hpp",
+      "lf_sha256": "be0003672f150ec0f5ab767d8f95c6fde36310a4f798b79cca84756ae9e1d24a",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_world_batches.hpp",
+      "lf_sha256": "d4e0b4f5a4d78463657e14bc04c3151ca7768b170473a68df785f81e957fa853",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/vehicle_depth_staging.hpp",
+      "lf_sha256": "844f2c9420965c6b916fe45e972aa7cb10ff756f7462f9d53537e009771b735c",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/depth_sync.hpp",
+      "lf_sha256": "43c7164613a37916ea40c1bde29ae3dd0a11ad5d5df28fb26c53f05316f9c2e9",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/mesh_prepare.hpp",
+      "lf_sha256": "7353d2698ef475e108b1c021c348aca969901dc3282684410a7c894fa310db21",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/preparation_work.hpp",
+      "lf_sha256": "ff8e2448fee7532cd38c4c06f99a7058b667edf1175f54bd1ca8093c6acf5980",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/submit_math.hpp",
+      "lf_sha256": "9d1c074e6fea4ebc8189107f3267365ad2f7162ead0f323e00fc4401ff46b57e",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/car_base.gdshader",
+      "lf_sha256": "582742fe990c39938b354a2314c450f819b10e3083bbdb7b0ff81ff372f3c70c",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/car_base_shader.hpp",
+      "lf_sha256": "170486698de5d73f8a39c4650b2edc95a49cf87ba863f25b9630a92c4ea9c34e",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/car_modulate.glsl",
+      "lf_sha256": "6ac4d0c5dd10a1bd230ae51309a348db19bb5b939e8c68d5f8b772e225c300f0",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/car_wireframe.gdshader",
+      "lf_sha256": "51db003d9b4f13f6d52442f4d95e938d453c1b012c4b6e8702bf40e0ebca8a65",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/embedded_shaders.hpp.in",
+      "lf_sha256": "f58556b1150ba85b1c3aafc770552230a9e653a93b234aa24a5bb523498f2ae2",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/postprocess.glsl",
+      "lf_sha256": "a10645fe7ddb48c3f0b88c7e104b816410ed48618ba2bb2e4a3d7f6f1f9e96ee",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/postprocess_composite.glsl.inc",
+      "lf_sha256": "406891131fc553fec4b6007fa5511ed89997c3e05fa95ddabf13e2154af833f4",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/screen_projection.hpp",
+      "lf_sha256": "db5a1158f70c6855d5435a205564881053de9437a74f437c727b3215955049c9",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/sky_depth.hpp",
+      "lf_sha256": "f96bdeb25cd3c3125451ca5fdb34d538b16b06a19d47f77c69ec19aec1917302",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_alpha_vertex.glsl",
+      "lf_sha256": "88d901c4ce32cdad8a206ebda981bee689ae9a23878865de98bb9f7842fcfd9d",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_debug_edges.gdshader",
+      "lf_sha256": "3c07b18ec4f2196a4c48ef64b2ad25d2ae07b5f6f113febef1df054d5c44e012",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_debug_fill.gdshader",
+      "lf_sha256": "e737bb064780dfe29b339676b1d1e68e59d2350620b695bf6f48dbbcdaede81f",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_depth.glsl",
+      "lf_sha256": "764cfc16166e732c8a2f01882a153ff60b917fbdb52c30a04194f251200589ac",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_effects.glsl",
+      "lf_sha256": "0c5c174a410920e86cfadf6b815852427c3f96582e5b3c62752307278dfd6c10",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_fragment.glsl",
+      "lf_sha256": "27a62a4fafc7aec99fbb9e940112961759df940d26e642676242a484f383f3e6",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_sampling.glsl",
+      "lf_sha256": "af6b3267b72de1e5c36cfd386797a58df0f7f84eda555936a37fb2dba2e16c12",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_shader.cpp",
+      "lf_sha256": "87220a813e68132af9977af8ed72017a81dcd55af37f7ec62682c4f5e3435bb6",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_shader.hpp",
+      "lf_sha256": "f3fffc9ecaa99b0c74890353242c74dfbd3e7a85705c56f4089b92e9e0434bc2",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/depth_sync_tests.cpp",
+      "lf_sha256": "8e60d370506df279b38166889a49db5566f56816047f4939eb68fea33200b0b9",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/mesh_prepare_tests.cpp",
+      "lf_sha256": "5ec0482625fa78e22ec28ca022b19a8eab4bd852a5832bddd19cdf1a2ed6faaa",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/parameter_staging_registry_tests.cpp",
+      "lf_sha256": "21e348224416c7ee065129e522c4aa9dc7f86fea1ab99e91e74a8943d70b85ab",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/submit_math_tests.cpp",
+      "lf_sha256": "6131b3ac989bb0c7c4a025aa8efbc1cc3a99f5c154d799536fc3af975aa5c6b2",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/track_command_batches_tests.cpp",
+      "lf_sha256": "cf4102752a294198eff0a737f0d40140fd32d5fef23588e6b846b8bc3780a9c6",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/track_draw_inventory.cpp",
+      "lf_sha256": "ea54ac27a7fa309b900aa235c665f69d5d403c259c6ced712ce442af025a9954",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/track_runtime_tests.cpp",
+      "lf_sha256": "f900da833d3debb9ef3ae9272fb2acb09b5e397159954639b140cd67f2f89b5a",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/track_submission_cache_tests.cpp",
+      "lf_sha256": "b523276a22b60c5117b36057177587882626364fe0b0dbe2203b424bbd3f3f7d",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/track_submission_digest_tests.cpp",
+      "lf_sha256": "19e742114446ddc4156fc1de66ed3ae97e1d26a9a2e4c4dadb90f5bde8be780a",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/track_world_batches_tests.cpp",
+      "lf_sha256": "7dcf3cb5231a44bafae5b1b464f553d70645c62a726711dec250de776c1f3689",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "tools/analyze_cpu_submission.py",
+      "lf_sha256": "346a090b644b276b9feb0f59f6a1d73170d37619951aa2eedc387a6ddb363a07",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "tools/pipeline.py",
+      "lf_sha256": "61f9ef81b7e22955e821415f02fbb3624e599536021691216f7b8938dce705c2",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "tools/run_frontend.ps1",
+      "lf_sha256": "d40e3d50ec6974af088d3836601015013d750b942336816d6ea63155853f4c2d",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "tools/run_frontend_menu_observer.ps1",
+      "lf_sha256": "d752227378daada9107642a0eaaee6b5a02ad26a2510ce3c04ead0314bba7337",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "tools/run_main_loop_observer.ps1",
+      "lf_sha256": "509a9a27fe112d31d6a4f226a2e686b80fba5b0aa26481b9a5cc997c8179d474",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "tools/run_task0072_worker_matrix.ps1",
+      "lf_sha256": "76e208329a507372375b78a425dde8b534b435c00c607c7f584c9033c0b5cfeb",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "tools/run_task0072_worker_parity.ps1",
+      "lf_sha256": "cbbc34498f3ff54cfd2d76296502ba0487abfa2422b6f83bc5e147a4b7922aba",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "tools/run_track_costs.ps1",
+      "lf_sha256": "072a820742c98a0f1fd1bdd6b668a06e8f48c7904c62a87b1d95b65fc1ae595f",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "tools/task0071_performance.py",
+      "lf_sha256": "7c5f0e559d259b09aadafc92ed4ee43ef862db9c4fbcdf86bb900064c4381197",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "tools/task0071_pixels.py",
+      "lf_sha256": "86e1282583bcb8eb1a1c3822b35b728197aa389fe998657ebc019f62afafe80c",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "tools/task0072_driving_compare.py",
+      "lf_sha256": "477ca762075d892cbfe0df3ecd5c5ac726f562826817323c0ac4703db180ca2a",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "tools/task0072_performance.py",
+      "lf_sha256": "bf92a839b0e8aacb3a08706adce6936878a995fe9e2f0b8625994fc76f7737f9",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "tools/task0072_sun_compare.py",
+      "lf_sha256": "4da9731001a3496ed215bd36fef4ac9e5bfbba661b289026818e4c0854dd7194",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    },
+    {
+      "path": "tools/test_drive_window.py",
+      "lf_sha256": "0316e60d8f05c3fe06b71a1fd63804a3af0fa3d1b42a2682cbe5cb72abaf72d4",
+      "kind": "port_adapter",
+      "evidence_id": "E0072H01",
+      "evidence_record": "reverse/task0072/host-rendering.md",
+      "reason": "Port-side Sun GPU transport, profiler/export/UI transport, Debug host compilation, independently switched submission/depth/staging/capture/residency candidates and visibility/payload diagnostics; recovered algorithms remain unchanged; runtime equivalence remains unverified."
+    }
+  ]
+}

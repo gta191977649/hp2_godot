@@ -74,3 +74,29 @@ Original comparison probe: py -3 -m tools.oracle probe --output
 local/task0046/pcsx2-probe.json. The 2026-10-17 attempt timed out. A running,
 synchronizable matching Debug scene and Debug-addressed oracle mapping remain
 required before a bounded numerical comparison can establish Verified status.
+
+## TASK-0083 collision and tire sound
+
+Both driving hosts now play original impact, static wall/wood scrape and tire
+skid/squall/burnout samples. No separate drift key is required: recovered slip,
+traction, terrain and throttle state select the native voices; skid-mark geometry
+is independent. H remains the port-side horn/flash binding. Pause and restart
+silence/release audio. See reverse/task0083 for scope, tests and original runtime
+comparison limits; rolling/damaged-tire and spatial services are not complete.
+
+## TASK-0084 Test drive camera
+
+Test drive defaults to the recovered fullscreen exterior camera (player
+settings POV1), with the original normal/look-back transition. TASK0088 corrects
+V to cycle the available original driving POVs, including forward-facing bumper.
+Hold B to look back; release B to return to the selected POV. These keys are
+port-side bindings of separate original actions. Mouse movement temporarily orbits the
+current native target; after1.5seconds idle it smoothly returns to the selected
+original view. Focus/UI suspension clears the temporary mouse override.
+
+The latest user request supersedes TASK0084's Godot-default projection exception:
+each selected POV uses original horizontal FOV (bumper/in-car90 degrees,
+outside71.52099609375 degrees) and recovered near plane. Exiting restores the
+viewer's prior projection and pose. Evidence and limitations: reverse/task0088
+and reverse/task0084/camera.md and modes.md. Mouse
+sensitivity, idle delay and return rate are host policy, not recovered PS2 tuning.

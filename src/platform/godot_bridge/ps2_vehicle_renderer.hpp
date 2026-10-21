@@ -1,5 +1,6 @@
 #pragma once
 #include <godot_cpp/classes/node3d.hpp>
+#include <godot_cpp/classes/texture2d.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
 #include <memory>
 
@@ -38,6 +39,9 @@ public:
     godot::Dictionary update_view(const godot::Vector3& position, const godot::Vector3& forward,
                                   double projection_scale, int forced_lod);
     godot::Dictionary get_state() const;
+    godot::Dictionary get_visual_state() const;
+    void set_environment_capture(const godot::Dictionary& capture);
+    godot::Ref<godot::Texture2D> get_visual_texture(std::int64_t hash) const;
     void set_part_visible(const godot::String& name, bool visible);
     void set_wireframe(bool enabled);
     void set_bounds(bool enabled);

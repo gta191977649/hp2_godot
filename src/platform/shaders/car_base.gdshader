@@ -36,9 +36,11 @@ vec3 hp2_framebuffer_rgb(vec3 encoded){
         }
         return mix(value, vec3(0.0), equal(encoded, vec3(0.0)));
     }
-    vec3 low = encoded / 12.92;
-    vec3 high = pow((encoded + vec3(0.055)) / 1.055, vec3(2.4));
-    return mix(high, low, lessThanEqual(encoded, vec3(0.04045)));
+    // TASK0071: RenderingDevice targets keep numeric GS RGB in linear HDR
+    // storage (use_hdr_2d). Blend in that domain; no per-fragment gamma decode.
+    // HDR does not COLCLAMP after each primitive. Consumers clamp on resolve;
+    // overlapping saturation followed by blending remains an explicit host gap.
+    return encoded;
 }
 
 float vu_bit_affine(float value, float scale, float bias){

@@ -1,0 +1,276 @@
+{
+  "engine": "Godot4.4.1 official49a5bc7b6, headless Compatibility; no GPU performance measurement",
+  "track": 11,
+  "source": "Authorized external ZZDATA, existing port renderer mesh snapshots",
+  "samples": [
+    {
+      "base_indices": 111,
+      "errors": [],
+      "lod_count": 0,
+      "lod_indices": [],
+      "ms": 0.053,
+      "name": "TRN_SECTION20_CHOP3",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 564,
+      "errors": [],
+      "lod_count": 0,
+      "lod_indices": [],
+      "ms": 0.096,
+      "name": "RD_SECTION60_CHOP5",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 558,
+      "errors": [],
+      "lod_count": 0,
+      "lod_indices": [],
+      "ms": 0.125,
+      "name": "RD_SECTION70_CHOP1",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 255,
+      "errors": [],
+      "lod_count": 0,
+      "lod_indices": [],
+      "ms": 0.052,
+      "name": "RD_SECTION70_CHOP2",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 414,
+      "errors": [],
+      "lod_count": 0,
+      "lod_indices": [],
+      "ms": 0.061,
+      "name": "RD_SECTION80_CHOP1",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 288,
+      "errors": [],
+      "lod_count": 0,
+      "lod_indices": [],
+      "ms": 0.058,
+      "name": "RD_SECTION60_CHOP4",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 915,
+      "errors": [],
+      "lod_count": 0,
+      "lod_indices": [],
+      "ms": 0.214,
+      "name": "TRN_SECTION20_CHOP3",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 153,
+      "errors": [],
+      "lod_count": 0,
+      "lod_indices": [],
+      "ms": 0.043,
+      "name": "RD_SECTION20_CHOP3",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 306,
+      "errors": [],
+      "lod_count": 0,
+      "lod_indices": [],
+      "ms": 0.086,
+      "name": "TRN_SECTION60_CHOP5",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 768,
+      "errors": [],
+      "lod_count": 0,
+      "lod_indices": [],
+      "ms": 0.158,
+      "name": "TRN_SECTION70_CHOP1",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 762,
+      "errors": [],
+      "lod_count": 0,
+      "lod_indices": [],
+      "ms": 0.198,
+      "name": "TRN_SECTION70_CHOP2",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 408,
+      "errors": [],
+      "lod_count": 0,
+      "lod_indices": [],
+      "ms": 0.07,
+      "name": "TRN_SECTION80_CHOP1",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 930,
+      "errors": [],
+      "lod_count": 0,
+      "lod_indices": [],
+      "ms": 0.142,
+      "name": "TRN_SECTION60_CHOP2",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 654,
+      "errors": [],
+      "lod_count": 0,
+      "lod_indices": [],
+      "ms": 0.099,
+      "name": "TRN_SECTION60_CHOP4",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 393,
+      "errors": [],
+      "lod_count": 0,
+      "lod_indices": [],
+      "ms": 0.063,
+      "name": "TRN_SECTION60_CHOP1",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 354,
+      "errors": [],
+      "lod_count": 0,
+      "lod_indices": [],
+      "ms": 0.061,
+      "name": "TRN_SECTION80_CHOP2",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 213,
+      "errors": [
+        5.70894479751587
+      ],
+      "lod_count": 1,
+      "lod_indices": [
+        141
+      ],
+      "ms": 0.061,
+      "name": "TRN_SECTION20_CHOP3",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 447,
+      "errors": [],
+      "lod_count": 0,
+      "lod_indices": [],
+      "ms": 0.068,
+      "name": "TRN_SECTION60_CHOP5",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 972,
+      "errors": [
+        7.41259670257568
+      ],
+      "lod_count": 1,
+      "lod_indices": [
+        702
+      ],
+      "ms": 0.128,
+      "name": "TRN_SECTION70_CHOP1",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 699,
+      "errors": [
+        7.68399667739868
+      ],
+      "lod_count": 1,
+      "lod_indices": [
+        483
+      ],
+      "ms": 0.097,
+      "name": "TRN_SECTION70_CHOP2",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 267,
+      "errors": [
+        4.4144344329834
+      ],
+      "lod_count": 1,
+      "lod_indices": [
+        195
+      ],
+      "ms": 0.042,
+      "name": "TRN_SECTION80_CHOP1",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 648,
+      "errors": [],
+      "lod_count": 0,
+      "lod_indices": [],
+      "ms": 0.089,
+      "name": "TRN_SECTION60_CHOP2",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 666,
+      "errors": [
+        13.7909803390503
+      ],
+      "lod_count": 1,
+      "lod_indices": [
+        396
+      ],
+      "ms": 0.231,
+      "name": "TRN_SECTION60_CHOP4",
+      "same_color": true,
+      "same_custom0": true
+    },
+    {
+      "base_indices": 306,
+      "errors": [],
+      "lod_count": 0,
+      "lod_indices": [],
+      "ms": 0.066,
+      "name": "TRN_SECTION60_CHOP1",
+      "same_color": true,
+      "same_custom0": true
+    }
+  ],
+  "base_triangles": 4017,
+  "coarsest_available_triangles": 3717,
+  "generated_samples": 5,
+  "synthetic_reference_lods": 1,
+  "limitations": [
+    "First24 qualifying visible RD_SECTION/TRN_SECTION batches with>=90 indices; not random or catalogue representative.",
+    "Same raw color/custom0 arrays does not establish interpolation, seams or pixel equivalence.",
+    "No live mesh replacement, no FPS claim, no original Verified status."
+  ]
+}

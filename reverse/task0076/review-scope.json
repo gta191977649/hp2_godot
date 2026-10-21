@@ -1,0 +1,1168 @@
+{
+  "task": "TASK-0076",
+  "entries": [
+    {
+      "path": "src/game_core/port/track/settings.hpp",
+      "name": "RenderSettings",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/game_core/port/track/settings.hpp",
+      "name": "restore",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::complete_visual_readback",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_state",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::release_display",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::update_view",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    }
+  ],
+  "auxiliary_sources": [
+    {
+      "path": "CMakeLists.txt",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "CMakePresets.json",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "build.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/project.godot",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scenes/encoded_transport_gpu_smoke.tscn",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scenes/task0072_profile_upload_smoke.tscn",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scenes/task0072_sun_counter_smoke.tscn",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scenes/task0072_sun_telemetry_smoke.tscn",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scenes/task0072_sun_transport_smoke.tscn",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/asset_viewer.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/car_material_gpu_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/debug_tools.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/driving_particles_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/encoded_view.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/profile_debug.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/profile_debug_contract_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/profile_debug_game_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/render_api.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/task0072_driving_harness_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/task0072_profile_cache_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/task0072_profile_export_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/task0072_profile_upload_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/task0072_worker_config_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/track_profiler_hud_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/track_profiler_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/track_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/frontend_native.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/encoded_transport_gpu_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/race_scene.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/render_contract.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/sky_depth_gpu_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/task0072_driving_parity.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/task0072_sun_counter_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/task0072_sun_telemetry_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/task0072_sun_transport_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_controls_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_fusion_gpu_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_reflection_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_particles_gpu_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_performance.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_performance_scene.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_performance_viewer.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_pipeline_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_postprocess_gpu_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_postprocess_lifecycle_gpu_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_retention_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_sun_gpu_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_transport_capture.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "godot/shaders/sun_counter.gdshaderinc",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/scripts/audit_task0063_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/scripts/audit_task0064_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/scripts/audit_task0065_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/scripts/audit_task0066_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/scripts/audit_task0067_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/scripts/audit_task0069_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/scripts/audit_task0070_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/scripts/audit_task0071_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/scripts/audit_task0072_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/scripts/audit_task0075_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/scripts/audit_task0076_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/task0072/host-rendering.md",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/task0072/residency.md",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/task0072/sun.md",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/task0075/dynamic-particles.md",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/task0075/positions-scheduling.md",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/task0075/source-review.md",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/task0075/terrain-producer.md",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/task0076/source-review.md",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/tests/test_cpu_submission_analysis.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/tests/test_task0065_source_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/tests/test_task0072_performance.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/tests/test_task0072_source_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/tests/test_task0072_workers.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "reverse/tests/test_task0075_source_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/game_core/indep/inc/Car.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/game_core/port/driving/car_effects.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/game_core/port/driving/terrain_effects.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/game_core/port/track/assets.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/game_core/port/track/particles.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/game_core/port/track/settings.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/driving_particle_display.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/parameter_staging_registry.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/profile_debug_ui.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/profile_debug_ui.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_command_batches.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_cache.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_digest.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_world_batches.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/vehicle_depth_staging.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/render/depth_sync.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/render/mesh_prepare.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/render/preparation_work.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/render/submit_math.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/shaders/car_base.gdshader",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/shaders/car_base_shader.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/shaders/car_modulate.glsl",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/shaders/car_wireframe.gdshader",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/shaders/embedded_shaders.hpp.in",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/shaders/postprocess.glsl",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/shaders/postprocess_composite.glsl.inc",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/shaders/screen_projection.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/shaders/sky_depth.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/shaders/track_alpha_vertex.glsl",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/shaders/track_debug_edges.gdshader",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/shaders/track_debug_fill.gdshader",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/shaders/track_depth.glsl",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/shaders/track_effects.glsl",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/shaders/track_fragment.glsl",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/shaders/track_sampling.glsl",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/shaders/track_shader.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/platform/shaders/track_shader.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/tests/depth_sync_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/tests/driving_particle_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/tests/driving_terrain_effects_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/tests/mesh_prepare_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/tests/parameter_staging_registry_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/tests/submit_math_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/tests/track_command_batches_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/tests/track_draw_inventory.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/tests/track_effects_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/tests/track_runtime_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/tests/track_submission_cache_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/tests/track_submission_digest_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "src/tests/track_world_batches_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "tools/analyze_cpu_submission.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "tools/pipeline.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "tools/run_frontend.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "tools/run_frontend_menu_observer.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "tools/run_main_loop_observer.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "tools/run_task0072_worker_matrix.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "tools/run_task0072_worker_parity.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "tools/run_track_costs.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "tools/task0071_performance.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "tools/task0071_pixels.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "tools/task0072_driving_compare.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "tools/task0072_performance.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "tools/task0072_sun_compare.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    },
+    {
+      "path": "tools/test_drive_window.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0076-R01",
+      "evidence_record": "reverse/task0076/source-review.md",
+      "reason": "User-authorized default-off dynamic reflection capture and non-destructive host render-gap lifetime/report/retry policy; recovered algorithms unchanged."
+    }
+  ]
+}

@@ -1,6 +1,9 @@
 #include "game_core/port/driving/native_backend.hpp"
 #include "platform/ps2_asset_root.hpp"
 #include "port/assets/catalog.hpp"
+#include "game_core/indep/src/carstate.hpp"
+#include "game_core/src/bMath.hpp"
+#include "game_core/port/not_implemented.hpp"
 #include <algorithm>
 #include <chrono>
 #include <fstream>
@@ -12,6 +15,31 @@
 using namespace port::driving;
 namespace {
 void check(bool value,const char* text){if(!value)throw std::runtime_error(text);}
+void reset_state_leaf(const std::filesystem::path& elf){
+    auto m=read_debug_image(elf);const auto state=m.allocate(0x420),config=m.allocate(0x560);
+    for(unsigned i=0;i<0x420;++i)m.byte(state+i,0xa5);
+    m.word(state,config);
+    for(unsigned i=0;i<4;++i){m.vector(config+0x120+0x20*i,{{float(i+1),float(i+2),float(i+3),1}});m.scalar(config+0x138+0x20*i,.25f);}
+    for(auto off:{0x3cu,0x4cu,0x9cu,0xacu})m.word(state+off,0x7fc12345);
+    std::array<std::uint8_t,0x420> before{};for(unsigned i=0;i<before.size();++i)before[i]=m.byte(state+i);
+    hp2::recovered::CarState(m,state).ResetCar();
+    const auto changed=[](unsigned i){
+        for(auto off:{0x30u,0x40u,0x90u,0xa0u})if(i>=off&&i<off+12)return true;
+        return (i>=0x50&&i<0x90)||(i>=0xb0&&i<0x368)||(i>=0x370&&i<0x39c)
+            ||(i>=0x3a0&&i<0x3b0)||(i>=0x3c0&&i<0x404);
+    };
+    for(unsigned i=0;i<before.size();++i)if(!changed(i))check(m.byte(state+i)==before[i],"ResetCar preserves bytes outside original write extent");
+    for(auto off:{0x30u,0x40u,0x90u,0xa0u})for(unsigned i=0;i<3;++i)check(m.word(state+off+4*i)==0,"ResetCar zeros motion XYZ");
+    check(m.matrix(state+0x50)==hp2::recovered::bIdentity(),"ResetCar restores body identity");
+    check(m.word(state+0x37c)==4&&m.word(state+0x388)==1&&m.word(state+0x398)==1,"ResetCar restores ground count, neutral and clutch");
+    check(m.scalar(state+0x390)==1000&&m.scalar(state+0x394)==-1&&m.scalar(state+0x3a0)==1&&m.scalar(state+0x3ac)==1,"ResetCar restores original engine/boost/traction scalars");
+    for(unsigned i=0;i<4;++i){
+        check(m.byte(state+0x310+i)==1&&m.word(state+0x314+4*i)==1&&m.word(state+0x324+4*i)==1,"ResetCar restores four ROAD contacts");
+        const auto tire=m.matrix(state+0xb0+0x40*i),brake=m.matrix(state+0x1b0+0x40*i);
+        check(tire[12]==float(i+1)&&tire[13]==float(i+2)+.25f&&tire[14]==float(i+3)&&brake[13]==float(i+2),"ResetCar recomputes original tire/brake translations");
+    }
+    for(unsigned i=0x3c0;i<0x404;++i)check(m.byte(state+i)==0,"ResetCar clears relative matrix and complete validity word");
+}
 float horizontal_speed(const Snapshot& s){const auto& v=*s.velocity;return std::sqrt(v[0]*v[0]+v[1]*v[1]);}
 float horizontal_distance(const Snapshot& a,const Snapshot& b){const float x=(*a.body)[12]-(*b.body)[12],y=(*a.body)[13]-(*b.body)[13];return std::sqrt(x*x+y*y);}
 void complete(const Snapshot& s){
@@ -176,6 +204,55 @@ void player_transmission(NativeBackend& backend,const Config& config){
     Input automatic;automatic.transmission=0;backend.advance(config,automatic,1.f/60);s=frames(backend,config,{1,0,0},360);
     check(s.powertrain&&s.powertrain->manual_transmission==0&&s.powertrain->gear>2,"Original automatic chain shifts beyond first under sustained throttle");
 }
+void terrain_transition(NativeBackend& backend,const Config& config){
+    backend.reset();
+    for(unsigned i=0;i<120;++i)backend.advance(config,{},1.f/60,{SurfaceMode::Uniform,8});
+    const auto state=backend.memory().word(backend.physics_car_address()+0x50);
+    for(unsigned i=0;i<4;++i)check(backend.memory().word(state+0x324+4*i)==8,"Snow frame records crossed terrain");
+    // Preserve old cumulative terrain through a rejected frame, then clear it on
+    // the next successful frame. This checks the production reset and transaction.
+    bool rejected=false;
+    try{backend.advance(config,{.5f,0,1.e30f},1.f/60);}catch(const std::exception&){rejected=true;}
+    check(rejected,"Pathological steering must reject the candidate frame");
+    for(unsigned i=0;i<4;++i)check(backend.memory().word(state+0x324+4*i)==8,"Rejected frame preserves crossed terrain");
+    backend.advance(config,{},1.f/60);
+    for(unsigned i=0;i<4;++i)check(backend.memory().word(state+0x324+4*i)==1,"Successful road frame clears previous snow terrain");
+}
+void frame_state_and_recovery(NativeBackend& backend,const Config& config){
+    backend.reset();auto previous=frames(backend,config,{},120);
+    auto state=backend.memory().word(backend.physics_car_address()+0x50);
+    float distance=backend.memory().scalar(state+0x36c),odometer=backend.memory().scalar(state+0x368);
+    for(unsigned frame=0;frame<60;++frame){
+        const auto before=backend.memory().vector(state+0x30);
+        const auto old_position=backend.memory().vector(state+0x20);
+        const auto result=backend.advance(config,{.6f,0,.1f},1.f/60);
+        const auto& m=backend.memory();const auto current=m.vector(state+0x30),position=m.vector(state+0x20);
+        const float inverse=1.f/ *result.dt;
+        for(unsigned i=0;i<4;++i)check(m.scalar(state+0x40+4*i)==(current[i]-before[i])*inverse,"Backend acceleration is computed once from completed frame state");
+        float squared=0;for(unsigned i=0;i<3;++i){const float delta=old_position[i]-position[i];squared+=delta*delta;}
+        distance+=std::sqrt(squared);odometer+=m.scalar(state+0x384)* *result.dt;
+        check(m.scalar(state+0x36c)==distance&&m.scalar(state+0x368)==odometer,"Backend accumulates completed frame distance and odometer");
+        previous=result;
+    }
+    backend.visual_effects([](Memory& m,std::uint32_t car){m.word(car+0x854,1);});
+    const auto saved=backend.memory().vector(state+0x40);const auto count=backend.memory().word(0x327d10);
+    const auto failure=hp2::guard([&]{backend.advance(config,{},1.f/60);});
+    check(failure.find("0x00132FB0")!=std::string::npos,"Deferred reset reports original missing route dependency");
+    check(backend.memory().vector(state+0x40)==saved&&backend.memory().word(0x327d10)==count&&backend.memory().word(state-0x40+0x854)==1,"Rejected route recovery preserves committed state and request");
+    backend.reset();complete(backend.advance(config,{},1.f/60));
+}
+void horn_and_lamps(NativeBackend& backend,const Config& config){
+    backend.reset();frames(backend,config,{},60);Input horn;horn.horn=true;
+    auto state=backend.advance(config,horn,1.f/60);
+    check(state.powertrain&&state.powertrain->horn&&state.lights&&state.lights->headlight_left&&state.lights->headlight_right,"Committed horn input drives original audio/flash state");
+    const auto before=backend.memory().word(0x327d10);
+    backend.visual_effects([](Memory& m,std::uint32_t car){m.word(car+0x854,1);});
+    check(!hp2::guard([&]{backend.advance(config,{},1.f/60);}).empty(),"Untranslated route recovery rejects release candidate");
+    check(backend.memory().word(0x327d10)==before,"Rejected horn edge does not advance committed clock");
+    backend.visual_effects([](Memory& m,std::uint32_t car){m.word(car+0x854,0);});
+    state=backend.advance(config,{},1.f/60);
+    check(!state.powertrain->horn&&!state.lights->headlight_left&&!state.lights->headlight_right,"Successful release clears horn/flash transactionally");
+}
 }
 int main(){try{
     check(image_sha256({})=="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","Empty SHA256 vector");
@@ -184,7 +261,8 @@ int main(){try{
     const auto root=hp2::platform::resolve_zzdata_root(".");if(!root){std::cout<<"Original resources unavailable\n";return 77;}
     std::filesystem::path elf;try{elf=debug_image_path(".");}catch(const std::exception& e){std::cout<<e.what()<<'\n';return 77;}
     port::assets::DirectorySource source(*root);const auto config=read_config(source.read("GLOBAL/GLOBALB.BUN"),"911TURBO");
-    NativeBackend backend(elf);driving_sequence(backend,config);steering_and_reset(backend,config);rejected_step_preserves_state(elf,config);session_replay(elf,config);player_transmission(backend,config);
+    reset_state_leaf(elf);
+    NativeBackend backend(elf);driving_sequence(backend,config);steering_and_reset(backend,config);rejected_step_preserves_state(elf,config);session_replay(elf,config);player_transmission(backend,config);terrain_transition(backend,config);frame_state_and_recovery(backend,config);horn_and_lamps(backend,config);
     std::cout<<"DRIVING_BACKEND_SEQUENCE_OK: original data and native algorithms, qualitative port acceptance, not original equivalence\n";
 }catch(const std::exception& error){std::cerr<<"DRIVING_BACKEND_FAILED: "<<error.what()<<'\n';return 1;}
 }

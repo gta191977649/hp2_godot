@@ -1,6 +1,6 @@
 extends RefCounted
 # TASK-0046: port-side semantic adapter. Bindings live only in project InputMap.
-const CONTINUOUS := ["throttle", "brake", "left", "right", "handbrake"]
+const CONTINUOUS := ["throttle", "brake", "left", "right", "handbrake", "horn"]
 var held: Dictionary = {}
 var sources: Dictionary = {}
 var commands: Array[Dictionary] = []
@@ -59,7 +59,8 @@ func request(command: Dictionary, from_gui: bool = false) -> void:
 func frame() -> Dictionary:
 	var result := {"throttle": float(held.get("throttle", 0)), "brake": float(held.get("brake", 0)),
 		"steering": float(held.get("left", 0)) - float(held.get("right", 0)),
-		"handbrake": float(held.get("handbrake", 0)), "transmission": -1, "shift": 0, "neutral": false}
+		"handbrake": float(held.get("handbrake", 0)), "transmission": -1, "shift": 0, "neutral": false,
+		"horn": float(held.get("horn", 0)) > 0}
 	if not commands.is_empty():
 		result.merge(commands.front(), true)
 	return result
@@ -78,4 +79,6 @@ func binding(name: String) -> String:
 func hints() -> Array[String]:
 	return ["%s/%s: throttle / brake-reverse | %s/%s: steer" % [binding("throttle"), binding("brake"), binding("left"), binding("right")],
 		"%s/%s: shift down/up | %s: handbrake" % [binding("shift_down"), binding("shift_up"), binding("handbrake")],
-		"Mouse: look | %s: release cursor | Click world: capture" % binding("release_cursor")]
+		"%s: horn / flash headlights" % binding("horn"),
+		"%s: cycle original POV | Hold %s: look back | Mouse: temporary look; idle: HP2 camera" % [binding("camera_view"), binding("camera_lookback")],
+		"%s: release cursor | Click world: capture" % binding("release_cursor")]

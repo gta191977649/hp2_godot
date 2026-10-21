@@ -11,6 +11,8 @@
 #include "game_core/indep/src/timer.hpp"
 #include "game_core/src/bMath.hpp"
 #include "game_core/port/driving/projections.hpp"
+#include "game_core/port/driving/frame_lifecycle.hpp"
+#include "game_core/port/driving/horn.hpp"
 #include "game_core/port/not_implemented.hpp"
 #include <algorithm>
 #include <cmath>
@@ -37,7 +39,7 @@ native::DrivingServices NativeBackend::driving_services(native::InitServices& in
     };
     return s;
 }
-void NativeBackend::reset(){initialized_=false;step_=0;skid_arena_={};collisions_.clear();if(loaded_)state_=image_;}
+void NativeBackend::reset(){initialized_=false;horn_input_=false;step_=0;skid_arena_={};collisions_.clear();collision_sound_selector_.reset();tire_audio_mixer_.reset();splash_audio_mixer_.reset();if(loaded_)state_=image_;}
 void NativeBackend::track(std::shared_ptr<const TrackEnvironment> value){
     if(value&&!value->topology.ready())throw std::invalid_argument("Track environment has no loaded topology");
     track_contact_.environment=std::move(value);reset();
@@ -59,7 +61,9 @@ void NativeBackend::initialize(Memory& m,const Config& config){
     m.word(car_+0x3bc,1);m.word(car_+0x3dc,1);
     float center_height=std::numeric_limits<float>::infinity();
     for(unsigned i=0;i<4;++i){const auto row=cfg+0x120+i*0x20;const float local_z=m.scalar(row+8)-m.scalar(cfg+0x118);center_height=std::min(center_height,plane_.height+m.scalar(row+0xc)-local_z);}
-    const auto st=car_+0x40;auto orientation=init::bIdentity();std::array<float,4> position{{0,0,center_height,1}};
+    const auto st=car_+0x40;
+    hp2::recovered::CarState(m,st).ResetCar();
+    auto orientation=init::bIdentity();std::array<float,4> position{{0,0,center_height,1}};
     if(const auto& track=track_contact_.environment){
         // Debug AddRacingCar00149D78 and Car::FindFlatOnTrackPosition00132788.
         const auto angle=static_cast<std::uint16_t>(hp2::recovered::bATan(m,track->direction[0],track->direction[1]));
@@ -84,6 +88,10 @@ void NativeBackend::initialize(Memory& m,const Config& config){
     SkidServices skids{&skid_arena_,contact(),{}};
     hp2::recovered::InitSkids(m,skids,skid_lookup_?skid_lookup_:SkidTextureLookup{[](const std::string& name,std::uint32_t hash){return SkidTexture{name,hash,false,false,false};}});
     m.byte(car_+0x4a8,1);m.word(car_+0x514,0xffffffffu);
+    // Explicit host-audio activation proxies, not original audio constructors.
+    // BaseCarSound+34 -> HornSound3d Activated word0 (E-0082-H01).
+    const auto sound=m.allocate(0x50),horn=m.allocate(4);
+    m.word(sound+0x20,car_);m.word(sound+0x34,horn);m.word(car_+0x850,sound);
 }
 Snapshot NativeBackend::publish(Memory& m,float dt)const{
     const auto body=m.word(mover_+0x18),st=car_+0x40;Snapshot out;out.dt=dt;out.surface=plane_.settings;out.surface_catalog=catalog_;
@@ -101,9 +109,12 @@ Snapshot NativeBackend::publish(Memory& m,float dt)const{
     // Debug UpdateCar publishes EngineRPM at State+390 (E-0044-P01).
     power.rpm=m.scalar(st+0x390);power.speed=m.scalar(st+0x384);power.forward_speed=m.scalar(st+0x380);
     power.gear=m.signed_word(st+0x388);power.manual_transmission=m.signed_word(controls_+0x24c);power.handbrake=m.scalar(controls_+0x21c)>0;
+    power.horn=horn_activation(m,m.word(car_+0x850));
     if(!std::isfinite(power.rpm)||!std::isfinite(power.speed)||!std::isfinite(power.forward_speed))
         throw std::runtime_error("Non-finite native powertrain publication");
     out.powertrain=power;
+    out.lights=vehicle_light_state(m,car_,track_contact_.environment?track_contact_.environment->time_of_day:-1);
+    out.flares=vehicle_flare_state(m,car_,track_contact_.environment?track_contact_.environment->time_of_day:-1);
     for(const auto* values:{&*out.velocity,&*out.angular_velocity})
         for(float value:*values)if(!std::isfinite(value))throw std::runtime_error("Non-finite native motion publication");
     if(!std::isfinite(dt)||dt<=0)throw std::runtime_error("Invalid native timestep publication");
@@ -125,6 +136,9 @@ Snapshot NativeBackend::advance(const Config& config,const Input& input,float el
     // A failed constructor/step cannot commit partial memory or random state.
     Memory next=state_;
     StaticCollisions next_collisions=collisions_;
+    auto next_sound_selector=collision_sound_selector_;
+    auto next_tire_mixer=tire_audio_mixer_;
+    auto next_splash_mixer=splash_audio_mixer_;
     if(!initialized_){
         hp2::recovered::Sub_0019B358(next);hp2::recovered::Sub_00139510(next);hp2::recovered::ResetWorldTime(next);hp2::recovered::Sub_001A2FC0(next);
         // Debug00254350 stores the homogeneous identity addend (E-0044-M02).
@@ -138,6 +152,7 @@ Snapshot NativeBackend::advance(const Config& config,const Input& input,float el
     hp2::recovered::PrepareRealTimestep(next,elapsed,schedule);const float dt=next.scalar(0x00327ce4);
     hp2::recovered::AdvanceRealTime(next);hp2::recovered::PrepareWorldTimestep(next,dt);
     hp2::recovered::RealDriver driver(next,controls_);
+    if(input.horn!=horn_input_)driver.JoyHandler_HonkHorn(0,0,input.horn?1:0);
     if(input.transmission>=0)driver.SetManualTransmission(input.transmission);
     if(input.shift>0)driver.JoyHandler_ShiftUp(0,0,1);
     if(input.shift<0)driver.JoyHandler_ShiftDown(0,0,1);
@@ -155,12 +170,49 @@ Snapshot NativeBackend::advance(const Config& config,const Input& input,float el
     // this fixture. Session recording is separate port input recording.
     player.RegisterInterestingEvent=[](Memory& m,float value,const char* name){hp2::recovered::ReplayManager(m,m.word(0x3271a8)).RegisterInterestingEvent(value,name);};
     driver.Drive(dt,player);
+    // E-0081-L01: one frame history/terrain window around all collision retries.
+    // Full topology/path/Player lifecycle is outside this explicit state slice.
+    begin_movement_state(next,car_,dt);
     auto init=init_services();auto services=driving_services(init);const auto body=next.word(mover_+0x18);
     CollisionMotion motion;
-    const auto move=[&](float timestep){motion=hp2::recovered::DynamicCollisionBody::BeginMove(next,body,timestep);hp2::recovered::PhysicsCar(next,mover_).Move(timestep,services);};
+    const auto move=[&](float timestep){
+        motion=hp2::recovered::DynamicCollisionBody::BeginMove(next,body,timestep);
+        hp2::recovered::PhysicsCar(next,mover_).Move(timestep,services);
+        // Car::Move00131B90 consumes ResetMe after each mover call. Route-point
+        // ownership is not yet bound; never silently ignore a recovery request.
+        if(next.word(car_+0x854)!=0)
+            hp2::not_implemented("0x00132FB0","Deferred route reset requires TrackedController and distance-aware route ownership");
+    };
     move(dt);
     if(const auto& track=track_contact_.environment){const auto recompute=[&]{hp2::recovered::PhysicsCar(next,mover_).ComputeAuxiliaries(init);};next_collisions.process(next,body,car_,track->topology,motion,move,recompute);}
-    auto snapshot=publish(next,dt);hp2::recovered::AdvanceWorldTime(next);snapshot.step=step_+1;state_=std::move(next);collisions_=std::move(next_collisions);initialized_=true;++step_;arena_transaction.committed=true;return snapshot;
+    finish_movement_state(next,car_,dt);
+    // E0089W01/W03: once per candidate native frame; retries and visual captures
+    // cannot publish sound/RNG/timed-wiper state until this candidate commits.
+    trigger_water_terrain_state(next,car_,0,next_splash_mixer,[&](float value,const char* name){player.RegisterInterestingEvent(next,value,name);});
+    auto snapshot=publish(next,dt);
+    snapshot.wipers=wiper_snapshot(next,car_);
+    snapshot.splash_audio=next_splash_mixer.update(next);
+    snapshot.tire_audio=next_tire_mixer.update(next,car_);
+    // Port own-car listener binding, not original camera/world ownership.
+    const auto listener=next.vector(body+0x10);
+    // CollisionList appends at construction00219230; polygon map order is unrelated.
+    std::vector<CollisionAudioContact*> audio_order;
+    for(auto& entry:next_collisions.audio_contacts)audio_order.push_back(&entry.second);
+    std::sort(audio_order.begin(),audio_order.end(),[](const auto* left,const auto* right){return left->id<right->id;});
+    for(auto* entry:audio_order){
+        if(auto scrape=update_collision_scrape(*entry,next,{{listener[0],listener[1],listener[2]}}))snapshot.collision_scrapes.push_back(*scrape);
+        auto request=update_collision_audio(*entry,next_sound_selector,next,{{listener[0],listener[1],listener[2]}});if(request)snapshot.collision_sounds.push_back(*request);}
+    for(auto it=next_collisions.fading_scrapes.begin();it!=next_collisions.fading_scrapes.end();){
+        it->voice.volume=collision_scrape_fade_step(it->voice.volume,it->adjust);
+        if(collision_scrape_fade_finished(next,it->voice.volume))it=next_collisions.fading_scrapes.erase(it);
+        else{snapshot.collision_scrapes.push_back(it->voice);++it;}
+    }
+    hp2::recovered::AdvanceWorldTime(next);collision_sound_selector_=next_sound_selector;tire_audio_mixer_=next_tire_mixer;splash_audio_mixer_=next_splash_mixer;snapshot.step=step_+1;state_=std::move(next);collisions_=std::move(next_collisions);initialized_=true;horn_input_=input.horn;++step_;arena_transaction.committed=true;return snapshot;
+}
+unsigned NativeBackend::terrain_at_body(Memory& m,std::uint32_t car){
+ Memory::Scratch scratch(m);const auto terrain=m.allocate(4);
+ contact()->GetElevation(m,car,car+0x60,terrain,0,0);
+ return m.word(terrain);
 }
 std::vector<SkidQuad> NativeBackend::render_skids(const SkidView& view){
     if(!initialized_)return {};

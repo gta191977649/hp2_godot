@@ -11,8 +11,10 @@ class FaultLab extends RefCounted:
 		return real.action(name)
 	func set_input(throttle: float, brake: float, steering: float) -> Dictionary:
 		return real.set_input(throttle, brake, steering)
-	func set_driving_input(throttle: float, brake: float, steering: float, handbrake: float, transmission: int, shift: int, neutral: bool) -> Dictionary:
-		return real.set_driving_input(throttle, brake, steering, handbrake, transmission, shift, neutral)
+	func set_driving_input(throttle: float, brake: float, steering: float, handbrake: float, transmission: int, shift: int, neutral: bool, horn: bool = false) -> Dictionary:
+		return real.set_driving_input(throttle, brake, steering, handbrake, transmission, shift, neutral, horn)
+	func clear_particles() -> void:
+		real.clear_particles()
 	func set_surface(mode: int, terrain: int) -> Dictionary:
 		return real.set_surface(mode, terrain)
 	func tick(_elapsed: float = 0) -> Dictionary:
@@ -77,10 +79,9 @@ func _click(position: Vector2) -> void:
 	await _frames(3)
 
 func _assert_rear() -> void:
-	var target: Vector3 = viewer.car_model.transform * drive.local_target
-	var offset: Vector3 = viewer.camera.position - target
-	assert(offset.y > 0 and offset.normalized().dot(drive.heading) < -0.9, "Initial/recentered camera must be above and behind confirmed vehicle forward")
-	assert(absf(offset.length() - drive.distance) < 0.001)
+	assert(not drive.driving_camera.manual and not drive.driving_camera.look_back)
+	assert(viewer.camera.position.distance_to(drive.camera_state.position) < 0.0001, "Default/recentered pose must equal recovered native camera")
+	assert((-viewer.camera.basis.z).dot((drive.camera_state.target - viewer.camera.position).normalized()) > 0.9999)
 
 func _process(delta: float) -> void:
 	if os_output.is_empty() or viewer == null:
@@ -92,7 +93,7 @@ func _process(delta: float) -> void:
 	var snapshot: Dictionary = drive.lab.get_state()
 	var body: Transform3D = snapshot.get("body", Transform3D.IDENTITY)
 	var velocity: Vector3 = snapshot.get("velocity", Vector3.ZERO)
-	var target: Vector3 = viewer.car_model.transform * drive.local_target
+	var target: Vector3 = drive.camera_state.get("target", body.origin)
 	var ui_targets: Dictionary = {}
 	for name in DebugTools.host.viewer_ui_targets():
 		var point: Vector2 = DebugTools.host.viewer_ui_targets()[name]
@@ -107,9 +108,9 @@ func _process(delta: float) -> void:
 		"console": DebugTools.is_console_open(), "mouse": Input.mouse_mode, "capture": drive.captures_pointer(),
 		"step": snapshot.step, "throttle": snapshot.throttle, "brake": snapshot.brake,
 		"steering": snapshot.steering, "position": [body.origin.x, body.origin.y, body.origin.z],
-		"speed": velocity.length(), "yaw": drive.yaw_offset, "pitch": drive.pitch,
+		"speed": velocity.length(), "yaw": drive.driving_camera.yaw, "pitch": drive.driving_camera.pitch,
 		"camera": [viewer.camera.position.x, viewer.camera.position.y, viewer.camera.position.z],
-		"camera_behind": (viewer.camera.position-target).normalized().dot(drive.heading),
+		"camera_behind": (viewer.camera.position-target).normalized().dot(viewer.car_model.transform.basis.z.normalized()),
 		"error": drive.error, "car": viewer.car_model.get_state().get("car_id", -1),
 		"surface": snapshot.get("surface", {}), "grip": snapshot.get("wheels", []).map(func(wheel: Dictionary) -> Dictionary: return wheel.get("grip", {})),
 		"surface_visual": drive.surface_key, "surface_labels": drive.surface_visuals.get_child_count() if is_instance_valid(drive.surface_visuals) else 0}
@@ -211,10 +212,11 @@ func _run() -> void:
 	var preview_pose: Transform3D = viewer.camera.transform
 	var preview_aspect: int = viewer.camera.keep_aspect
 	var preview_fov: float = viewer.camera.fov
+	var preview_near: float = viewer.camera.near
 	var preview_projection: Projection = viewer.camera.get_camera_projection()
 	assert(not drive.start() and not drive.engaged() and not drive.error.is_empty())
 	assert(viewer.preview_mode and viewer.camera.transform == preview_pose)
-	assert(viewer.camera.keep_aspect == preview_aspect and viewer.camera.fov == preview_fov)
+	assert(viewer.camera.keep_aspect == preview_aspect and viewer.camera.fov == preview_fov and viewer.camera.near == preview_near)
 	assert(is_equal_approx(viewer.camera.get_camera_projection().x.x, preview_projection.x.x) and is_equal_approx(viewer.camera.get_camera_projection().y.y, preview_projection.y.y), "Failed start changed projection")
 	drive.lab = original_lab
 	# Actual ImGui pointer input, not a direct mode action call.
@@ -238,14 +240,14 @@ func _run() -> void:
 	drive.process(1.0 / 60.0)
 	assert(drive.state.throttle == 0 and drive.state.brake == 0 and drive.state.steering == 0)
 	# A sustained real-input turn must move the vehicle heading and its rear camera.
-	var old_heading: Vector3 = drive.heading
+	var old_heading: Vector3 = viewer.car_model.transform.basis.z.normalized()
 	await _send(_key(KEY_W))
 	await _send(_key(KEY_A))
 	for frame in 75:
 		drive.process(1.0 / 60.0)
 	await _send(_key(KEY_W, false))
 	await _send(_key(KEY_A, false))
-	assert(absf(old_heading.signed_angle_to(drive.heading, Vector3.UP)) > 0.02)
+	assert(absf(old_heading.signed_angle_to(viewer.car_model.transform.basis.z.normalized(), Vector3.UP)) > 0.02)
 	_assert_rear()
 	# Keyboard capture zeroes controls while physics continues, rather than
 	# permanently entering Session pause. Swap only the UI query seam synchronously.
@@ -258,20 +260,21 @@ func _run() -> void:
 	var look := InputEventMouseMotion.new()
 	look.relative = Vector2(150, -30)
 	await _send(look)
-	assert(absf(drive.yaw_offset) > 0.2 and drive.pitch >= deg_to_rad(5))
-	var turned: float = drive.yaw_offset
-	drive._update_camera(0.3)
-	assert(drive.yaw_offset == turned, "No early recenter before mouse idle threshold")
+	assert(absf(drive.driving_camera.yaw) > 0.2 and absf(drive.driving_camera.pitch) > 0.01 and drive.driving_camera.manual)
+	var turned: float = drive.driving_camera.yaw
+	drive.driving_camera.apply(viewer.camera, drive.camera_state, 0.3)
+	assert(drive.driving_camera.yaw == turned, "No early recenter before mouse idle threshold")
 	for frame in 240:
 		drive._update_camera(1.0 / 60.0)
-	assert(absf(drive.yaw_offset) < 0.001 and absf(drive.pitch-deg_to_rad(15)) < 0.001)
+	assert(absf(drive.driving_camera.yaw) < 0.001 and absf(drive.driving_camera.pitch) < 0.001)
 	_assert_rear()
 	for degrees in [-179, 179]:
-		drive.yaw_offset = deg_to_rad(degrees)
-		drive.mouse_idle = 2
-		drive._update_camera(0.1)
-		assert(absf(drive.yaw_offset) < deg_to_rad(179), "Recenter uses wrapped shortest angle")
-	drive.yaw_offset = 0
+		drive.driving_camera.yaw = deg_to_rad(degrees)
+		drive.driving_camera.idle = 2
+		drive.driving_camera.manual = true
+		drive.driving_camera.apply(viewer.camera, drive.camera_state, 0.1)
+		assert(absf(drive.driving_camera.yaw) < deg_to_rad(179), "Recenter uses wrapped shortest angle")
+	drive.driving_camera.clear_mouse()
 	await _send(_key(KEY_ESCAPE))
 	await _send(_key(KEY_ESCAPE, false))
 	assert(not drive.captures_pointer() and drive.phase == drive.Phase.DRIVING)
@@ -309,12 +312,19 @@ func _run() -> void:
 	viewer.release_camera()
 	drive.process(1.0 / 60.0)
 	assert(drive.phase == drive.Phase.DRIVING and not drive.state.paused)
+	# Enter the real bumper view before the terminal/Return path. The same
+	# renderer must become visible again when the preview is restored.
+	drive.handle_input(_key(KEY_V))
+	drive.handle_input(_key(KEY_V))
+	assert(drive.camera_state.pov_type == 0 and not viewer.car_model.visible)
+	drive.handle_input(_key(KEY_B))
+	assert(drive.driving_camera.look_back)
 	# A true backend gap is terminal and cannot auto-resume after focus/console.
 	var last_pose: Transform3D = viewer.car_model.transform
 	fault = FaultLab.new(original_lab)
 	drive.lab = fault
 	drive.process(1.0 / 60.0)
-	assert(drive.phase == drive.Phase.ERROR and viewer.car_model.transform == last_pose)
+	assert(drive.phase == drive.Phase.ERROR and viewer.car_model.transform == last_pose and not drive.driving_camera.look_back)
 	var failed_calls := fault.calls
 	viewer._notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
 	viewer._notification(NOTIFICATION_APPLICATION_FOCUS_IN)
@@ -324,9 +334,9 @@ func _run() -> void:
 	await _click(Vector2(85, 90))
 	assert(not drive.engaged())
 	await _wait_load()
-	assert(viewer.preview_mode and viewer.car_model.get_instance_id() == model_id)
+	assert(viewer.preview_mode and viewer.car_model.get_instance_id() == model_id and viewer.car_model.visible == bool(drive.saved.car_visible))
 	assert(viewer.floor_node.material_override == original_floor_material and not is_instance_valid(drive.surface_visuals), "Stopping restores preview material and removes surface labels")
-	assert(viewer.camera.keep_aspect == preview_aspect and viewer.camera.fov == preview_fov)
+	assert(viewer.camera.keep_aspect == preview_aspect and viewer.camera.fov == preview_fov and viewer.camera.near == preview_near)
 	assert(is_equal_approx(viewer.camera.get_camera_projection().x.x, preview_projection.x.x) and is_equal_approx(viewer.camera.get_camera_projection().y.y, preview_projection.y.y), "Return changed preview projection")
 	assert(viewer.camera.fov == drive.saved.fov and viewer.orbit_distance == drive.saved.orbit_distance and viewer.orbit_pitch == drive.saved.orbit_pitch)
 	assert(viewer.car_model.get_state().car_id == car_id and viewer.car_model.get_state().skin_id == skin_id)

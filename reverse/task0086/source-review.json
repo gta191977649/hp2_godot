@@ -1,0 +1,371 @@
+{
+  "task": "TASK-0086",
+  "evidence": "E-0086-S01",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "01c86cb0f7030eb8055c773e307e26134832995ad2a19d3ac1d3ff79538a4f47",
+  "baseline_inventory_sha256": "cd1d21d9f2c30ddfe8c1fd7e2f37b9d6b595ef5a640e5cbaec5c4eaaf695ca9c",
+  "before": [
+    {
+      "path": "src/port/assets/vehicle_geometry.cpp",
+      "name": "decode_vehicle_geometry",
+      "signature_sha256": "836291001467025f88ccc7d41d7408e74099f07da9bd4a08fc7b93b91c371d5f",
+      "body_sha256": "cbb70c16dabd4dcb412a2a9b5eaaa67eb44f491a5ada34dd9efcbfdcacf1bfbd",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::publish",
+      "signature_sha256": "61f3484f22491de2fa7e4e0eb0110adda94cac031d21d1b66b30fb853b9398b7",
+      "body_sha256": "91c055c5dd610cd416feb66ee463ddd9b46730617e77bf8176b97d3c7397cb43",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::get_state",
+      "signature_sha256": "668b58a7f813678c1c0e0c2eb7659258f516524cd55e7c1c8d645565b57070f4",
+      "body_sha256": "e5969c9a517decdf68866c52ec9e23a56f40dba1ea38768e60ba228db076f3b1",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::apply_driving_snapshot",
+      "signature_sha256": "2997cff17ef224daa050e497a04670d20622235038a431e913e50e50bd8fc953",
+      "body_sha256": "346c37402352097947a217b4abca2941bda767eaadc7dcce5bbf115018c24785",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::get_visual_state",
+      "signature_sha256": "f913337314cf4f4198e64cc304441d04ebdfea1c7eb06d18a8f02c40bab12354",
+      "body_sha256": "c55fb1ef0a81f8f7899308d9876c77cadef16e7b6991555dbea0dc141e330cd7",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::release_display",
+      "signature_sha256": "2de33ee990f65e23c5b266ef7fa09ccfd93018ea8af9bbd873a8b5f9b970abd0",
+      "body_sha256": "85858a1cac2e11cca1cd923c7650a5c30d4e6253d685382b197dd9c8c7a71ba9",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::update_view",
+      "signature_sha256": "74a9af13462008ba830a8391673a8d26cd32c9c40c5c94ed99af933e948aabaf",
+      "body_sha256": "5aa2241341986cd06d3e391efdb2b1d6682dad9b7a2eb5511002f7c6b8082308",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/port/vehicle/model.cpp",
+      "name": "Model::load",
+      "signature_sha256": "0c118d9ac450f3080042a2baf37354f3844b29bbe2a8bd2c269ab6014f9bbea9",
+      "body_sha256": "7af541d54d87092fa38c37ffbff2d3eda3dd19e0ef467531a47b0c8d10f738c4",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::publish",
+      "signature_sha256": "61f3484f22491de2fa7e4e0eb0110adda94cac031d21d1b66b30fb853b9398b7",
+      "body_sha256": "c4b3a01e01e039fdf78a990c759f9a2cbbcf043f1e4160587371cde29b5e516b",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/game_core/port/driving/vehicle_flares.cpp",
+      "name": "transform",
+      "signature_sha256": "b25d10ba0b2a51eff952999b0016cb2e1c6515ebd0dbaa18fa0fca82a1ec9fbd",
+      "body_sha256": "091b653fcba80839670ae71909cbf53693b8900d4e5040588614b966f48f72a2",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/game_core/port/driving/vehicle_flares.cpp",
+      "name": "xyz",
+      "signature_sha256": "d2c7f54d6c20698f28b0138304f8e8e1613cc20c423e8bb4745bac4bdfcdcd45",
+      "body_sha256": "de9c96163f1301c7e03b9899c0b3ccefdff5f2546519f14b0d8d163cfe3e238c",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/game_core/port/driving/vehicle_flares.cpp",
+      "name": "read_vehicle_flare_resources",
+      "signature_sha256": "a3da39e8435ff89accd67555d1b7d5f597f8990db3efec3ffc911d6020ec96d1",
+      "body_sha256": "2932e46c72d6505df30ca8710b486c12332e53bfa315f6f7314a60f688897305",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/game_core/port/driving/vehicle_flares.cpp",
+      "name": "create_vehicle_flare_marker",
+      "signature_sha256": "1965f6240a7aa7e172b05e1f5c58898beccc61b1af7bedc4ccb8d5e72df99c78",
+      "body_sha256": "f243b184be1fe45c93870344a0de0eee438ad22bba4e0a890c4ab28b31d9548a",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/game_core/port/driving/vehicle_flares.cpp",
+      "name": "vehicle_flare_state",
+      "signature_sha256": "c92800d9ee164ee2c3ae9aa48f3b16d339f22d02afb8eaa16b035c32dffb95eb",
+      "body_sha256": "149dbf2c8b772535a69ee6a8cdf0c607efc1c8c95c54e19baa441a3d44b000ef",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/game_core/port/driving/vehicle_flares.cpp",
+      "name": "vehicle_flare_intensity",
+      "signature_sha256": "f14b9b586e3203d25bd3897c64d84b6c7a6c01e7d6f1881573b67c9bf71d73eb",
+      "body_sha256": "546cdbd37ab093f76f1f9baa8872f525df404efcfbed1e60783abb2c5bb6c1a9",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/game_core/port/driving/vehicle_flares.cpp",
+      "name": "vehicle_flare_angle_power",
+      "signature_sha256": "28738a89f22df6eae144305d47f42334a54c31ba781c4133f57fea9e44dd5022",
+      "body_sha256": "16d59ab60a276c319d980133dddac44d805aa64e08de4e09e970880dad1881fc",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/game_core/port/driving/vehicle_flares.cpp",
+      "name": "vehicle_flare_billboards",
+      "signature_sha256": "12153cef1d826e0e8026573eac4dcdb2317ffbeac04b75f59bc5bd84473bba94",
+      "body_sha256": "be3878272e3ece68587f9d0f6a80278b93e0affd6e55d7abfa5004e98bb5337a",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/platform/godot_bridge/particle_billboard_renderer.cpp",
+      "name": "billboard_host",
+      "signature_sha256": "863d63f25bd9d8df1eb535457495d1b1d6f4b1cf59c8c84b7f4bed76a70619a3",
+      "body_sha256": "00ecee55376b98451f36fdb33b322e5617b2689b76e4681212daaf4d827d47ee",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/platform/godot_bridge/particle_billboard_renderer.cpp",
+      "name": "texture",
+      "signature_sha256": "ea8ea43aed47c524c3dc762902c50312f3e779a95b76aed16ac510649ff6d878",
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/platform/godot_bridge/particle_billboard_renderer.cpp",
+      "name": "impl_",
+      "signature_sha256": "c518c9d09966e31aa32db1131d68f4c9db63f7276d3540684f278447cda66abc",
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/platform/godot_bridge/particle_billboard_renderer.cpp",
+      "name": "~ParticleBillboardRenderer",
+      "signature_sha256": "7f87c995781a5ddb6fa088696acffb6d96ec09fe279c4edbcc133de75787ab0c",
+      "body_sha256": "2bfc07a567c9a10ee939da4feac9b4e7201abea4b35040d3d749901306e22add",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/platform/godot_bridge/particle_billboard_renderer.cpp",
+      "name": "ParticleBillboardRenderer::clear",
+      "signature_sha256": "f10b601f5bf7f161a9eb2aa6f2dcbe06bc1c61b970e6c1ed655363fa52064a99",
+      "body_sha256": "aabc196a65c0edab3cb92d766662966fbb3813f1245c225e637da73dd93e12e0",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/platform/godot_bridge/particle_billboard_renderer.cpp",
+      "name": "ParticleBillboardRenderer::update",
+      "signature_sha256": "8d38d385e973a24ad63927210db1b5a19c3849d187ef25d7a0575206d51ea919",
+      "body_sha256": "608e1949f618f8bcb90982676c9d48fc5e0b416010b2a89a06d8d1a7aa73695d",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/platform/godot_bridge/particle_billboard_renderer.cpp",
+      "name": "ParticleBillboardRenderer::stats",
+      "signature_sha256": "061ca5d706d3a10572b06e8eca90b8f41b2d929c99a583ee1a345fd9c1574919",
+      "body_sha256": "40ce6552b145822c456b8c07b2a77c05cb2f3c0b91601c0a6f9d3efd78440c33",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::get_state",
+      "signature_sha256": "668b58a7f813678c1c0e0c2eb7659258f516524cd55e7c1c8d645565b57070f4",
+      "body_sha256": "6ddbca8442c7479d12eac068830387f728a0d2ee349565752f6e99c8519d9b7f",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::release_display",
+      "signature_sha256": "2de33ee990f65e23c5b266ef7fa09ccfd93018ea8af9bbd873a8b5f9b970abd0",
+      "body_sha256": "931b347c3f195218528027cf59ef276f52def8b5c444f4f17a3d103beae540fe",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::update_view",
+      "signature_sha256": "74a9af13462008ba830a8391673a8d26cd32c9c40c5c94ed99af933e948aabaf",
+      "body_sha256": "0553dfedf03125c552ad689ac7cad5dbeb8d0a598d541bd81f0e8c0bb7c1b329",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::get_visual_state",
+      "signature_sha256": "f913337314cf4f4198e64cc304441d04ebdfea1c7eb06d18a8f02c40bab12354",
+      "body_sha256": "e4b7585ec60e02c5c3e0038b3dd488375aa078114e1827369af33ce15e3adfbe",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::apply_driving_snapshot",
+      "signature_sha256": "2997cff17ef224daa050e497a04670d20622235038a431e913e50e50bd8fc953",
+      "body_sha256": "57fc6c4d0bfa274c67effcc08c3682b132eeae67d02c35af820c16cbdd34b4d8",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/port/assets/vehicle_geometry.cpp",
+      "name": "position_markers",
+      "signature_sha256": "b9f4b22c474e97e2e6c2e153f5eb191c5879d3df9127e36a7fb8a13c2cc1b624",
+      "body_sha256": "f22e37b36f867bb4a2aac9c3b12a85f36573c66539d010d92b17078f30c14b27",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/port/assets/vehicle_geometry.cpp",
+      "name": "decode_vehicle_position_markers",
+      "signature_sha256": "9976d9bdc9209c299e4adbc079d25187e06dd9cd1ad048de8ab6832ba4a4546a",
+      "body_sha256": "76c493be108e3dc44faf8017ec81e93614f39e106414f5a1243f140809bd8139",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/port/assets/vehicle_geometry.cpp",
+      "name": "decode_vehicle_geometry",
+      "signature_sha256": "836291001467025f88ccc7d41d7408e74099f07da9bd4a08fc7b93b91c371d5f",
+      "body_sha256": "be2c8eda1b51e6f08b8531efa72b53c2efbd9fe15475de5da16184c19db48f6c",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/port/vehicle/model.cpp",
+      "name": "Model::load",
+      "signature_sha256": "0c118d9ac450f3080042a2baf37354f3844b29bbe2a8bd2c269ab6014f9bbea9",
+      "body_sha256": "79e053a908df5e1c0a0cedfdc4728756bd416a7f62a56dfd6f876eed07d1da18",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/port/vehicle/model.hpp",
+      "name": "position_markers",
+      "signature_sha256": "7914cd638e79aa3d9d463f8d7563b60ff48119420d5ddf11aef23b5b5671f58a",
+      "body_sha256": "4839418e17062e7d4bfb4ee3c2874482442891f96bcdad3f870a202395b89c28",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    },
+    {
+      "path": "src/port/vehicle/model.hpp",
+      "name": "marker_pivot",
+      "signature_sha256": "232d06f4ff0cc81fb673a29c4e5acee34ce691c896e3d51859d8571953a51973",
+      "body_sha256": "5c34789bd8d8c705eb14370dcf3e75aa76ad735fcb9a6109c975a3a28ee0dadf",
+      "stub": false,
+      "evidence_id": "E-0086-S01",
+      "reason": "Recover original marker/resource/intensity flare slices and geometry data, connect committed driving state to persistent billboard host and native/GPU fixtures; E-0086-F01 remains separate behavior evidence."
+    }
+  ],
+  "replacements": {
+    "CMakeLists.txt": {
+      "before": "f0c67d65f750a53ee409a5b6d81a99f507968d6e24ecc49cc95e8ef34d7bd1a7",
+      "after": "b99fe4ab87aa4cbee8a5a792d7668e19ec96451fb7eca32d44eed3dd71394229"
+    },
+    "reverse/scripts/audit_task0085_review.py": {
+      "before": "99ecaf535317a0e200e6099af5087993d9b8bff99d03bf81cf0d39a946e5a62c",
+      "after": "f1ddbc0e27b49bf630347027da1b3f2fdf0742e5d778feb3af37b8e2aac34a8b"
+    },
+    "reverse/tests/test_task0085_source_review.py": {
+      "before": "c01bed2e17452a91f5d3f4c8dd4802d32aac16844c8bdb66c2b9ead9cf68e4d4",
+      "after": "d67a37e539dff862974e1ad921a3cad48250e1f1c73d5c0529e5b8f969aa0ba0"
+    },
+    "src/game_core/port/driving/session.hpp": {
+      "before": "445c167bbacd2b7bb8aa17e6902f57de7ccc3e4b68ba02c328daad474eebb1d9",
+      "after": "8b949f8823c3b836b96d6bd81d8b64108ff12e07f7e6c7526bbb451aece78c15"
+    },
+    "src/platform/godot_bridge/ps2_driving_runtime.cpp": {
+      "before": "8202460f5a6b5b9398c613a8022da36e29b84be6e06eb2f234fea5bab9004ec3",
+      "after": "b8631c5d5581b68d66594a6ef42cc8572c0364fd3453b6a3d917eaec23637e59"
+    },
+    "src/platform/godot_bridge/ps2_vehicle_renderer.cpp": {
+      "before": "e3c0a9b118fddcae1eb60392f2ccf1e5ad12ba232ccab44c5a2bec50ac7a73fc",
+      "after": "cca27bd98b54352a1524e8d7080d0e73cc5668bee7ec671398261e70b6347681"
+    },
+    "src/port/vehicle/model.hpp": {
+      "before": "9cee98b8e35d152f9d12d87d04aa75dd5e96c90e0e660f209f90b099842f2366",
+      "after": "3179e499c229d394e82a3b00d2af56bdff9750d83544dbdb4c1813801e69a607"
+    }
+  },
+  "additions": {
+    "godot/scripts/debug/vehicle_flares_smoke.gd": "6628cb721f844d610a8e88bb04b655b13b5b88eb29e769e895a869a80341b4c1",
+    "reverse/scripts/audit_task0086_review.py": "545eaa714b5d22b5aa8fce81a6492307e0efa096fdace8e4efc06aeb6aae0ba1",
+    "reverse/task0086/source-review.md": "43d28e356a6320c7fdfe21e03d1e49c8a66c2fc06d8239ee10e12cd34de30582",
+    "reverse/tests/test_task0086_source_review.py": "98c5a9dda903cb22eb501ded874fee668f688f215307935446441a6a054a8a04",
+    "src/game_core/port/driving/vehicle_flares.cpp": "d41a45a2c1345dbcd2a6dd65a1896fd74005dcdc8e1538b5dc2fffc67399621a",
+    "src/game_core/port/driving/vehicle_flares.hpp": "5fd1d38017771e87c7725e4b15c27a942e512c4c0efe537d377ad9b61f7efb8c",
+    "src/platform/godot_bridge/particle_billboard_renderer.cpp": "1052110f3dfe4a4950c3f546cf21efcca4635d13d150c8a7e3d1be458a892c52",
+    "src/platform/godot_bridge/particle_billboard_renderer.hpp": "b467ced43544aea07d6aff7693b7802889d70d595499743dcc7f0e6286f47756",
+    "src/port/assets/vehicle_geometry.hpp": "ca5acdd817c177d1ee776a08983c41d076f9a9c95aa7dd5f74f155c5a962b2ba",
+    "src/port/render/vehicle.hpp": "7514e1b493b950cf79501d08b6cf48b09438d4b55ea1e6e1f833555d804fc976",
+    "src/tests/vehicle_flare_tests.cpp": "22e1a70d3d01ad5487d2f2f957b80a0c79ef84b1d194db0b6869c08848cf2cf8",
+    "src/tests/vehicle_marker_tests.cpp": "806a477f9fb1223244a12c26f7ab0574bd123f3daf7db1ef30e3a06304a25174",
+    "godot/scripts/runtime/race_scene_smoke.gd": "e0ef232d4dbb2bc37d77e3bc94460cb2c2d11440e14e6dc176c990375412171b"
+  }
+}

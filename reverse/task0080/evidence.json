@@ -1,0 +1,442 @@
+{
+  "task": "TASK-0080",
+  "binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "version": "User-labelled 2002-07-08; independently unconfirmed",
+  "policy": "Read-only static captures; existing statuses unchanged; new records Decompiled only; not original equivalence",
+  "captures": [
+    {
+      "evidence": "E-0080-L01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x001316F8"
+      },
+      "original_identifier": "SetMovementMode__3Car12MovementMode",
+      "private_capture": "local/task0080/lifecycle/001316f8.json",
+      "response_sha256": "5c1c87ece56de53bd207c7385e6da2a9d5f97dd442b3d0b96d3c43a9646003da",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001316f8.md"
+    },
+    {
+      "evidence": "E-0080-L01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x00131958"
+      },
+      "original_identifier": "CalculateDraftFactor__3CarP3Car",
+      "private_capture": "local/task0080/lifecycle/00131958.json",
+      "response_sha256": "56b91b35c75947bb1c403d63ecd008f29889d850dbc8b3b57c1b73aeb9a37506",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00131958.md"
+    },
+    {
+      "evidence": "E-0080-L01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x00131A80"
+      },
+      "original_identifier": "CalculateDraftFactor__3Car",
+      "private_capture": "local/task0080/lifecycle/00131a80.json",
+      "response_sha256": "f2c75be5b3c769135b820eac56d3df6ad99168c43915da14417cd9016bba17e1",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00131a80.md"
+    },
+    {
+      "evidence": "E-0080-L01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x00131B10"
+      },
+      "original_identifier": "Think__3Carf",
+      "private_capture": "local/task0080/lifecycle/00131b10.json",
+      "response_sha256": "89f8465420be689115d2ec4427eeb987363b2547d5504f0473ac38b05a8dcfc9",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00131b10.md"
+    },
+    {
+      "evidence": "E-0080-L01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x00131B60"
+      },
+      "original_identifier": "Drive__3Carf",
+      "private_capture": "local/task0080/lifecycle/00131b60.json",
+      "response_sha256": "64a5904b9c6e578459c26cbec3cacc1691b66bca460feb05a797075ce9c19268",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00131b60.md"
+    },
+    {
+      "evidence": "E-0080-L01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x00131B90"
+      },
+      "original_identifier": "Move__3Carf",
+      "private_capture": "local/task0080/lifecycle/00131b90.json",
+      "response_sha256": "3a1870a3ffb8dbdd9a17bdde36904030cb32cb1a4b5665a961280bf2e6b33d8e",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/00131b90.md"
+    },
+    {
+      "evidence": "E-0080-L01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x00131D78"
+      },
+      "original_identifier": "BeginMovement__3Carf",
+      "private_capture": "local/task0080/lifecycle/00131d78.json",
+      "response_sha256": "172dbe656290812a59e5f5dfd25b6984fe63f00bd6158b02d07d77e220f095af",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00131d78.md"
+    },
+    {
+      "evidence": "E-0080-L01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x00131E58"
+      },
+      "original_identifier": "FinishMovement__3Carf",
+      "private_capture": "local/task0080/lifecycle/00131e58.json",
+      "response_sha256": "96e468e9b37e3211b4716a2f975c7d33f8adfab8ba9a353f0a66c5afc978115f",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00131e58.md"
+    },
+    {
+      "evidence": "E-0080-L01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x00132B28"
+      },
+      "original_identifier": "ChangeGear__3Car4Gear",
+      "private_capture": "local/task0080/lifecycle/00132b28.json",
+      "response_sha256": "11b0ed92623c770c064e2dcc6c0600f6905625604fb322cc1345f46a82a13ae6",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00132b28.md"
+    },
+    {
+      "evidence": "E-0080-L01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x00132DF0"
+      },
+      "original_identifier": "ResetCore__3CarP8bVector3fUs",
+      "private_capture": "local/task0080/lifecycle/00132df0.json",
+      "response_sha256": "6a62398ed12aca431af9ac68e619acd411dfa3151cb18b1132b2991d85d54420",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00132df0.md"
+    },
+    {
+      "evidence": "E-0080-L01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x00132F48"
+      },
+      "original_identifier": "ResetToPosition__3CarP8bVector3fUs",
+      "private_capture": "local/task0080/lifecycle/00132f48.json",
+      "response_sha256": "0fc00d2d536030ed9f94766155c7f2de3b4a2aae9498cdec1be6ac2b3d4f93d6",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00132f48.md"
+    },
+    {
+      "evidence": "E-0080-L01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x00132FB0"
+      },
+      "original_identifier": "ResetToRoutePoint__3CarP10TrackRouteP15TrackRoutePointfbf",
+      "private_capture": "local/task0080/lifecycle/00132fb0.json",
+      "response_sha256": "12f7990552848ba038d0c7c060159b9f17edd5169b86ddb5d3cd915f83a65bdb",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00132fb0.md"
+    },
+    {
+      "evidence": "E-0080-L01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x001330D8"
+      },
+      "original_identifier": "PleaseResetMeLater__3Car",
+      "private_capture": "local/task0080/lifecycle/001330d8.json",
+      "response_sha256": "24634d255f96b9b3fc6bf2dfaf080434bd0df38c9810b43995a63af29aeb3b55",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001330d8.md"
+    },
+    {
+      "evidence": "E-0080-L01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x00133628"
+      },
+      "original_identifier": "TriggerEvents__3Car",
+      "private_capture": "local/task0080/lifecycle/00133628.json",
+      "response_sha256": "f7646c0edf569397162dd45d3596a182163ab607c191cfa49f208173d478a891",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00133628.md"
+    },
+    {
+      "evidence": "E-0080-L01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x00134730"
+      },
+      "original_identifier": "DoWheelForces__3Car",
+      "private_capture": "local/task0080/lifecycle/00134730.json",
+      "response_sha256": "8de4d02507a346fa4ddbdb0a5f49208aec28d6b522cf4d9744bcc2d90e371a6b",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00134730.md"
+    },
+    {
+      "evidence": "E-0080-L01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x001351F8"
+      },
+      "original_identifier": "CalculateNewCatchupMultipliers__3Car",
+      "private_capture": "local/task0080/lifecycle/001351f8.json",
+      "response_sha256": "0bdc43c9025d62d683f09f8639d87cf87424da35cc180ed1229dba7c7e1257df",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001351f8.md"
+    },
+    {
+      "evidence": "E-0080-L01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x0013BE30"
+      },
+      "original_identifier": "JoyHandler_ResetCar__10RealDriver12JoystickPort8JoyEventUcPv",
+      "private_capture": "local/task0080/lifecycle/0013be30.json",
+      "response_sha256": "0860b2b8f1b18963914809f73cba5182c69a4915a82aa64b20b4daeec21f83a2",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/0013be30.md"
+    },
+    {
+      "evidence": "E-0080-L01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x0014D588"
+      },
+      "original_identifier": "DoTimestepMove__5Worldf",
+      "private_capture": "local/task0080/lifecycle/0014d588.json",
+      "response_sha256": "54d401b64a538b83bb5f3da2f0833ee1184508f5122e14c766f9568e4493c04e",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/0014d588.md"
+    },
+    {
+      "evidence": "E-0080-L01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x0014D9A8"
+      },
+      "original_identifier": "DoTimestep__5Worldf",
+      "private_capture": "local/task0080/lifecycle/0014d9a8.json",
+      "response_sha256": "bab155f652aa4354e33b6419f6027bb0cf725e8a6f664571c8a999750d37176d",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/0014d9a8.md"
+    },
+    {
+      "evidence": "E-0080-I01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x0013AE88"
+      },
+      "original_identifier": "AddJoyHandlers__10RealDriver",
+      "private_capture": "local/task0080/input/0013ae88.json",
+      "response_sha256": "4451038124d6c7ccbf8e27182d5c403952c112e4fa6b671411a980de4248f13a",
+      "record_path": ""
+    },
+    {
+      "evidence": "E-0080-I01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x0013B200"
+      },
+      "original_identifier": "Drive__10RealDriverf",
+      "private_capture": "local/task0080/input/0013b200.json",
+      "response_sha256": "343dd04cd9891d7c0b1ad8a46c2b146122f8f1c6fe8caca637a1a357158ce20b",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/0013b200.md"
+    },
+    {
+      "evidence": "E-0080-I01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x0013B3B8"
+      },
+      "original_identifier": "JoyHandler_Steer__10RealDriver12JoystickPort8JoyEventUcPv",
+      "private_capture": "local/task0080/input/0013b3b8.json",
+      "response_sha256": "634cb3af95ed3b1fb40e45b0a7c1d93e4f8f5adc5518dbc8db0a223bc38db841",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/0013b3b8.md"
+    },
+    {
+      "evidence": "E-0080-I01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x0013B7B0"
+      },
+      "original_identifier": "JoyHandler_Throttle__10RealDriver12JoystickPort8JoyEventUcPv",
+      "private_capture": "local/task0080/input/0013b7b0.json",
+      "response_sha256": "07a26288cd2ffbebcdfd0393eb66b4fe3cbe0d6f0fef8976672c26d602a024e8",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/0013b7b0.md"
+    },
+    {
+      "evidence": "E-0080-I01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x0013BB48"
+      },
+      "original_identifier": "JoyHandler_Brake__10RealDriver12JoystickPort8JoyEventUcPv",
+      "private_capture": "local/task0080/input/0013bb48.json",
+      "response_sha256": "935780362f34966d614f8558a54de88625331d19467e0aeabe4004c2710e0321",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/0013bb48.md"
+    },
+    {
+      "evidence": "E-0080-I01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x0013BBC8"
+      },
+      "original_identifier": "JoyHandler_EBrake__10RealDriver12JoystickPort8JoyEventUcPv",
+      "private_capture": "local/task0080/input/0013bbc8.json",
+      "response_sha256": "5a0a4b52a8f577692f69a804571428a03c3be5f853092d70fbd6eeca73946f0e",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/0013bbc8.md"
+    },
+    {
+      "evidence": "E-0080-I01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x0013BE30"
+      },
+      "original_identifier": "JoyHandler_ResetCar__10RealDriver12JoystickPort8JoyEventUcPv",
+      "private_capture": "local/task0080/input/0013be30.json",
+      "response_sha256": "0860b2b8f1b18963914809f73cba5182c69a4915a82aa64b20b4daeec21f83a2",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/0013be30.md"
+    },
+    {
+      "evidence": "E-0080-I01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x0013BF58"
+      },
+      "original_identifier": "JoyHandler_HonkHorn__10RealDriver12JoystickPort8JoyEventUcPv",
+      "private_capture": "local/task0080/input/0013bf58.json",
+      "response_sha256": "1085179074ec62eedb9724fde44570a4fc8e7589c522d3fca5e7345b3b791ef4",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/0013bf58.md"
+    },
+    {
+      "evidence": "E-0080-I01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x0013C028"
+      },
+      "original_identifier": "JoyHandler_NitroBoost__10RealDriver12JoystickPort8JoyEventUcPv",
+      "private_capture": "local/task0080/input/0013c028.json",
+      "response_sha256": "6609590d3c15629a771aa0b0a7ea42c34886e159d22ed41cdc01d2dd1f921c84",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/0013c028.md"
+    },
+    {
+      "evidence": "E-0080-I01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x0013C098"
+      },
+      "original_identifier": "NitroWasActive__10RealDriver",
+      "private_capture": "local/task0080/input/0013c098.json",
+      "response_sha256": "1de893d3e507809b21d09b9c76ba7402ce4596ef9863098dfc5feb977d0d2730",
+      "record_path": ""
+    },
+    {
+      "evidence": "E-0080-I01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x0013C118"
+      },
+      "original_identifier": "NitroActive__10RealDriver",
+      "private_capture": "local/task0080/input/0013c118.json",
+      "response_sha256": "8dbff6c949c2858a6be6b7c0e8752a9fc1c6faaf9fce2777e74348e49c883c6b",
+      "record_path": ""
+    },
+    {
+      "evidence": "E-0080-P01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x00137D18"
+      },
+      "original_identifier": "Move__10PhysicsCarf",
+      "private_capture": "local/task0080/physics/00137d18.json",
+      "response_sha256": "f2920dd135f282a066bdadb4b3c74b19aefab8119d8b3aa89899090539150fb1",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00137d18.md"
+    },
+    {
+      "evidence": "E-0080-P01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x00138D90"
+      },
+      "original_identifier": "ResolveForces__10PhysicsCar",
+      "private_capture": "local/task0080/physics/00138d90.json",
+      "response_sha256": "d183f1ec5e11c936dc8d9905d16e4b1893b5f8aea3b03cac1c762bde3a382507",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00138d90.md"
+    },
+    {
+      "evidence": "E-0080-P01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x00138EC0"
+      },
+      "original_identifier": "IterateForces__10PhysicsCar",
+      "private_capture": "local/task0080/physics/00138ec0.json",
+      "response_sha256": "4904612a5d8e9e58d89dce4864c28239051d4320e4b0b8865b98f2dc24ef552c",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00138ec0.md"
+    },
+    {
+      "evidence": "E-0080-P01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x00139110"
+      },
+      "original_identifier": "UpdateCar__10PhysicsCarf",
+      "private_capture": "local/task0080/physics/00139110.json",
+      "response_sha256": "696815ed1762b22d94ef3b16c4077a81f0dc5d4c48a53b406ec4b003682434a9",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/00139110.md"
+    },
+    {
+      "evidence": "E-0080-P01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x001A1D80"
+      },
+      "original_identifier": "CheckTerrain__5WheelP8bVector3P11TerrainTypeT1P8bMatrix4",
+      "private_capture": "local/task0080/physics/001a1d80.json",
+      "response_sha256": "f8dc9643a59ef1d8f46ab2545539a7fc58a172f59e74593a28e8f414d3be430d",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a1d80.md"
+    },
+    {
+      "evidence": "E-0080-P01",
+      "query": {
+        "action": "decompile",
+        "file_name": "NFSHP2.ELF",
+        "address": "0x001A37A0"
+      },
+      "original_identifier": "ComputeAuxiliaries__10Suspension",
+      "private_capture": "local/task0080/physics/001a37a0.json",
+      "response_sha256": "370098e7e34c90537ad33d6a68bd29e063cccdeb4f01053ac39f35ab0e86dee7",
+      "record_path": "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/driving/001a37a0.md"
+    }
+  ],
+  "synthetic_probe": "reverse/task0080/input-device-probe.gd",
+  "synthetic_probe_engine": "Godot 4.7.2.stable.official.ed1daf0bf"
+}

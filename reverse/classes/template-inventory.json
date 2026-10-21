@@ -2593,7 +2593,7 @@
         {
           "elf_address": "0x00120EF8",
           "method": "Sub_00120EF8",
-          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/vehicle/00120ef8.md",
+          "record": "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/00120ef8.md",
           "source": "src/game_core/src/care.cpp",
           "knowledge_status": "Decompiled",
           "coverage": "throwing_template_with_preserved_partial_projection",

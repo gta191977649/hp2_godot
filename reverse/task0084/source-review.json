@@ -1,0 +1,304 @@
+{
+  "task": "TASK-0084",
+  "evidence": "E-0084-S01",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "42c543a80e59d31ff8101abff7ba51d198c5b41ddef8cb479d5054516a9fc688",
+  "baseline_inventory_sha256": "d2a87bf0616456181cae9b0604155351b77c55eb89c487050fa0b5e6e1917402",
+  "before": [
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::action",
+      "signature_sha256": "a830cb7db16939fe05f8d36d382534804197f34bbaf185880c015d9459228975",
+      "body_sha256": "ce280f4523886ecbbf45ee04bb373e1fb9cda920ec3e1dfc4542ff455fe70bf5",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::set_track",
+      "signature_sha256": "b6c2711cf1d690adf91fb8b07e7047f9434e083d9e3d6d19c131608b36d33aef",
+      "body_sha256": "8703bac98fce9f9734ac0af9fb40d8d64da99a969205e43b3442b53bb8b171b5",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::_bind_methods",
+      "signature_sha256": "536b0ee77af7622e05aadb1350ad9e811ea3af39bb65011327131a1ce50adc59",
+      "body_sha256": "cc52a7982afdc570a48f7b602c3bc14a389f56a5628b09d63e6777c1014d3e01",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::load_config",
+      "signature_sha256": "bb174e3f294a621387ae16f0d510d53eab5fef5c036620744fbb5bd468a74f24",
+      "body_sha256": "4b0a387515543f26d0976bb61b8ece2d6ab282bed1b087c28243c2cb0b58e109",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/game_core/indep/src/cameramover.cpp",
+      "name": "camera_dot",
+      "signature_sha256": "ef7bc188b7716ab698c90d9e358875bbd71e6d62188d85a3b718d0535f492692",
+      "body_sha256": "4d08e2b119771bff7919ca884285dcb13d3feef0779d016e62672a071d8b5bdd",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/indep/src/cameramover.cpp",
+      "name": "camera_sub",
+      "signature_sha256": "5765a243f3644c2def89365e98cec0b60464b3d5d943f7a78f0dbb3b9d41cea5",
+      "body_sha256": "2cd485cc99e6d209bda9fc5923ece92ba90a1155fdbf31c7cbf5022b4da40ed0",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/indep/src/cameramover.cpp",
+      "name": "camera_add",
+      "signature_sha256": "0a6ee7e8d9c3e4565fe3d7522ea8cc1b06ec3ddfc2d3de8ed477cb24ae57e28f",
+      "body_sha256": "42976b103f822e7a0b1e043ccbbcfa357ceb45509436a2213fab73b6e572554b",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/indep/src/cameramover.cpp",
+      "name": "camera_normalize2",
+      "signature_sha256": "921b443df19abf63f22dded988745ca376d33b0d1859fe4dcd22cd53841e01be",
+      "body_sha256": "208fac58fd3bc9c724512750218328eaa6e1a4a5f20c1102fb92999ddd0d2260",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/indep/src/cameramover.cpp",
+      "name": "camera_scale",
+      "signature_sha256": "ec060d69c3f79a1c4186bbaf75c7c3c587b4e124bd91f7998d3b9e59aa413c70",
+      "body_sha256": "b547fc622543940e2b295db5df1622340cabb8fe81cdec07b49c1fa1060676e3",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/indep/src/cameramover.cpp",
+      "name": "camera_length",
+      "signature_sha256": "2ae72daf0542f19d3445d1727020fc48385f7267e8d1ffbe8ba600f3fb89921a",
+      "body_sha256": "98a1142d14f2e1c53b19a1332811276f0e2ddaaf907b6d9d8a4604388a2dc639",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/indep/src/cameramover.cpp",
+      "name": "camera_cross",
+      "signature_sha256": "f602eb8226e0a6175ed9923a75152104bce0475a5f3e5a8c9cdda2a0407aad51",
+      "body_sha256": "2acf414266996136cc23375a21ae2000b79405ea37e13dd70b2e505a4694a14b",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/indep/src/cameramover.cpp",
+      "name": "camera_vector",
+      "signature_sha256": "a77d09675f075fcdbe012007419bfa68ace4632a11ac4615d94e12d139841cfa",
+      "body_sha256": "0556efbc33b1bc4b3d9af23c108be56425c9238f19010e364cc994e18417f3c2",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/indep/src/cameramover.cpp",
+      "name": "camera_translate",
+      "signature_sha256": "f44b5e6f1d10b7a1262d44df17f74e2155c16fdfba77a0761cf63753237234db",
+      "body_sha256": "dd9924b710761afa1fdf0d5d5a97ce4392702862ce38259136f9e62f97fd716e",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/indep/src/cameramover.cpp",
+      "name": "camera_transform",
+      "signature_sha256": "5ee1ae2281fa68bfcd0330c5e87c19a5942d51c1c09bb08f1d440bd14a7d2f06",
+      "body_sha256": "bc225306852570d43472990a87d3f11d912d95ebb98d82a520f6d57c29a6306a",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/indep/src/cameramover.cpp",
+      "name": "camera_inverse",
+      "signature_sha256": "2b0e0cc90fe49fb26d4d21f1b540f70acba3de0d41757314ebd54532528f94c2",
+      "body_sha256": "47ce7e093591b59c2214b3daffe150d1cdab8b69b0cf4a0918ef2bc6c40800fc",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/indep/src/cameramover.cpp",
+      "name": "camera_test_segment",
+      "signature_sha256": "5a424c31425ecbdb03cf0ff8ed85e01f72c4862b7f9a314405706a9525b4e215",
+      "body_sha256": "daec5162581e3e76b2a901ffdc5deafc741d10a195f09b6a8604482c63aa78e4",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/indep/src/cameramover.cpp",
+      "name": "camera_wall_adjust",
+      "signature_sha256": "8b821f39a40d9b449d68551c65d7dc1b4846166ea1a441a88ac5aaa56b818ec8",
+      "body_sha256": "fc943fcd4332cfc50c081564fe9f7df6ea92dda5d09a58b5ed66d483fdb35100",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/indep/src/cameramover.cpp",
+      "name": "camera_yaw_correction",
+      "signature_sha256": "8a17403a7f232cd2a120ac3c6c351273ba1b173558dc00948e070cec3994f6ce",
+      "body_sha256": "5fbb030bf66fa0cc1333f8a02f2502098bc10428ad6a05a00391df35a9418490",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/indep/src/cameramover.cpp",
+      "name": "camera_pitch_correction",
+      "signature_sha256": "2555cb06f221e0c20d093c9882d0d9c4d2f3877971688609de7aa7a993af3877",
+      "body_sha256": "3b14b561064efd661fcecd6c92e24bd49c2e92ff3150ac08b116e90c48b6732c",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/indep/src/cameramover.cpp",
+      "name": "DrivingCamera::update",
+      "signature_sha256": "7239dcdecbb65a0bd8ff910a36de80112102b2c92e2ca8ab6338a33e875bf8c1",
+      "body_sha256": "add0b5cdfff7576b5924d313f776591fbd71f66273d258476b3f37bea5016ccb",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/camera.hpp",
+      "name": "reset",
+      "signature_sha256": "9ff976f8fad5585cc849b888aad4393a57c9bbc7c42ba3d86f20bb2287f8e7dd",
+      "body_sha256": "6d7b4c302c7d000c4bc893c8ca34c4f7a07c44641938cae27467b130dcf265b0",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.hpp",
+      "name": "track_environment",
+      "signature_sha256": "cedf38c8262d338270bbe70806b03127c701e876317f0ceb7c1d57b37730a442",
+      "body_sha256": "8cdc87673f796a3bab5478e713aab026d9b90fe0a31c8f7ece1d32bfb7b0b742",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::_bind_methods",
+      "signature_sha256": "536b0ee77af7622e05aadb1350ad9e811ea3af39bb65011327131a1ce50adc59",
+      "body_sha256": "af79310f7806580c0f033646fc69b342ab682fc5d18d0b1193abec2ee39690d8",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::load_config",
+      "signature_sha256": "bb174e3f294a621387ae16f0d510d53eab5fef5c036620744fbb5bd468a74f24",
+      "body_sha256": "a595ef8717705ba6cf2a9926f48de83991638db2d5aa916c27d95b74feed85c6",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::action",
+      "signature_sha256": "a830cb7db16939fe05f8d36d382534804197f34bbaf185880c015d9459228975",
+      "body_sha256": "7448ecfa91a96ef4b3da8c08b9fe56a5c1ef296eb3622061400a140dcdd4a7e5",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::set_track",
+      "signature_sha256": "b6c2711cf1d690adf91fb8b07e7047f9434e083d9e3d6d19c131608b36d33aef",
+      "body_sha256": "d6ac15c5794d1cfb20dca42a2f5ab08ce2df18401f4e505069a6fcd370442c85",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::update_driving_camera",
+      "signature_sha256": "6404b9127be0389cad045e15d0333cd5c8a5e1d50714d0223748dd16c6bf4c52",
+      "body_sha256": "5675610fc9bfb2f687d37b780f33b4ad383ca448b1c6e24f7135239023048963",
+      "stub": false,
+      "evidence_id": "E-0084-S01",
+      "reason": "Recover bounded native camera pose and topology clearance; connect explicit user-authorized host projection/orbit/view bindings and lifecycle. E-0084-C01 behavior evidence remains separate."
+    }
+  ],
+  "replacements": {
+    "CMakeLists.txt": {
+      "before": "c7cfe5c0467499961751f47cc701054e928788d825d1131e51826db23de6f3d4",
+      "after": "b632b2bfdb4a8acf824175bdcbf824669a641578e17c896af214a5fcf23d9ce1"
+    },
+    "godot/project.godot": {
+      "before": "7140d6d85f9ec6c87363117058d1c19348834410174d7f5c84eaeda003289589",
+      "after": "a654b249c60eb91c9b64cbbe3a9dea7ab5dafdac15c93fa339bf7dd5e0352618"
+    },
+    "godot/scripts/debug/driving_input.gd": {
+      "before": "8bab4c75638b5f30cff6e29bbc5bb7ebb22e6f1457084daaa287d092d80ca517",
+      "after": "1526999987bb6b790e2138a27799dea345cd95d9e8a3dbeb8431b1f24fddb186"
+    },
+    "godot/scripts/debug/driving_lab.gd": {
+      "before": "6e41b04357a090161ac8a6a240d3b04fc5d36a67d47da51bef23193bdc033847",
+      "after": "d6af1fbcd2e3e39cf8fe8c2357cfe35a006901baee0fcf91263276882135a7af"
+    },
+    "reverse/scripts/audit_task0083_review.py": {
+      "before": "6a0a3c615a37523e0351941236b3580851a5dbaa97637fbd7e937058812abc03",
+      "after": "d0bcee57a8e006a96245a530c9617dc1a7928dc6ce10407c263e9b350073b16b"
+    },
+    "reverse/tests/test_task0083_source_review.py": {
+      "before": "9c5a831e3f336afc3084fc21238c84abe94c96a395b51f2e1c49f5279cc181a3",
+      "after": "23a0295b1dc90803a3c52aebc259eed86aa4352d8cd1df686931cfb3e407e71f"
+    },
+    "src/game_core/port/driving/native_backend.hpp": {
+      "before": "733d89036d7be862d252f2972726b9837c5cbf4b361daaf5075b926a6af03830",
+      "after": "aabadae38dfeb398bdfdf3fb25c751fc2735f65cb856f307dd45c12d5aedea3e"
+    },
+    "src/platform/godot_bridge/ps2_driving_runtime.cpp": {
+      "before": "f1e9669c575800bce036d1ee0b5e23ed097218fbcc6798eb3d7c4debf0e40769",
+      "after": "8202460f5a6b5b9398c613a8022da36e29b84be6e06eb2f234fea5bab9004ec3"
+    },
+    "src/platform/godot_bridge/ps2_driving_runtime.hpp": {
+      "before": "2a4adf1df4e4fb30924f63d472dd42a5e47e3e4de4b2aad44c8b0d7eee91b78d",
+      "after": "fe0121ee0909580df742e92c144a9296b83e3e212ea114afca8a02dd544aaa8b"
+    }
+  },
+  "additions": {
+    "godot/scripts/debug/driving_camera.gd": "384dd10fc7cb06fe33ac6d264a2baac28708c8a777c6e31433c7169e8fd0b70d",
+    "godot/scripts/debug/driving_camera_smoke.gd": "bd3d3e9c7880258ac1409c9095bdb32d689e4c6068b653ab61acbca4319333fb",
+    "godot/scripts/debug/driving_projection_checks.gd": "438c0cb9e4ba46c84d74d9c50c87162a0159c4e9a1eba76e53c0b0c564cb8fce",
+    "godot/scripts/debug/driving_smoke.gd": "857a12d3e534f79b192af53580c882957a94206fd0d00938f58c75541bc16ecf",
+    "reverse/scripts/audit_task0084_review.py": "02767d5c07db8f1fd147f5fe2991234db8443cd1c0ca6e45db559c637c187f11",
+    "reverse/task0084/source-review.md": "98b431a1e1f26d3d150476f812320b21e2926f2680843aa6ea029ecdefc024a7",
+    "reverse/tests/test_task0084_source_review.py": "4b7dda540a58cc04fb18d53cfceddb19e9b43411bacb280790daabf97fea2b05",
+    "src/game_core/port/driving/camera.cpp": "7b89402eb9b4cd1e530491f7ba83ae267044b0f7e4541b819240d168e6e0f9dd",
+    "src/game_core/port/driving/camera.hpp": "971692ae98e6e6f7d8379c1c62b2e6f08863fb0cc28192250d7e9ef12762b70e",
+    "src/tests/driving_camera_tests.cpp": "43b6692d9017687665bb2c368079950b52847fd364e7efd29694de75f0b11031"
+  }
+}

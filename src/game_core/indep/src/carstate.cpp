@@ -29,9 +29,12 @@ void CarState::ResetCarForSound() {
     hp2::not_implemented("0x001C0780", "CarState::ResetCarForSound (signature and full body unresolved)");
 }
 
-// ELF 0x001C0850; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c0850.md.
+// Debug001BD938; E-0079-S01; reverse/task0079/driving-chain.md.
+// NFSHP2.ELF SHA-256 815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
 void CarState::BeginTimestep() {
-    hp2::not_implemented("0x001C0850", "CarState::BeginTimestep (signature and full body unresolved)");
+    // Original descending stores: CrossedWheelTerrain[3..0] = ROAD (1).
+    for (std::int32_t i=3;i>=0;--i)
+        m_.word(address_+0x324+static_cast<std::uint32_t>(i)*4,1);
 }
 
 // ELF 0x001C0888; E-0042-C135; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001c0888.md.
@@ -52,6 +55,32 @@ void CarState::BeginTimestep() {
 
 // TASK-0044 E-0044-P02, canonical Debug CarState members; source ../indep/src/carstate.cpp.
 namespace hp2::recovered {
+// Debug001BD6C0; E-0081-L01; reverse/task0081/lifecycle.md. Full reset leaf.
+void CarState::ResetCar(){
+    const auto s=address_;auto& m=m_;
+    for(auto offset:{0x30u,0x40u})
+        for(auto lane:{0u,2u,1u})m.word(s+offset+4*lane,0);
+    m.matrix(s+0x50,hp2::recovered::bIdentity());
+    for(auto lane:{0u,2u,1u})m.word(s+0x90+4*lane,0);
+    for(unsigned lane=0;lane<3;++lane)m.word(s+0xa0+4*lane,0);
+    m.half(s+0x364,0);m.half(s+0x366,0);
+    for(unsigned i=0;i<4;++i){
+        for(auto offset:{0x2b0u,0x2c0u,0x2d0u,0x2e0u,0x2f0u})
+            m.word(s+offset+4*i,0);
+        m.byte(s+0x310+i,1);
+        m.word(s+0x334+8*i,0);m.word(s+0x338+8*i,0);
+        m.word(s+0x314+4*i,1);m.word(s+0x354+4*i,0);
+        m.word(s+0x324+4*i,1);m.word(s+0x300+4*i,0);
+    }
+    m.word(s+0x37c,4);
+    CalculateWheelMatrices();
+    for(auto offset:{0x370u,0x374u,0x378u,0x380u,0x384u,0x38cu,0x3a4u,0x3a8u})
+        m.word(s+offset,0);
+    m.scalar(s+0x390,1000);m.scalar(s+0x394,-1);m.word(s+0x398,1);
+    m.scalar(s+0x3ac,1);m.word(s+0x388,1);m.scalar(s+0x3a0,1);
+    for(unsigned offset=0x3c0;offset<0x400;++offset)m.byte(s+offset,0);
+    m.word(s+0x400,0);
+}
 // Debug001BD970.
 float CarState::GetYaw(){return m_.scalar(address_+0x380)<5.0f?0.0f:GetYawAlways();}
 // Debug001BD9B8.

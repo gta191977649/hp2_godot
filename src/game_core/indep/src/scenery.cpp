@@ -54,6 +54,7 @@ const port::track::Zone* FindVisibleZone(const port::track::Scene& scene,const s
 // Retail0014FE18 / Debug0014FA68. Radius+4 pixel-size policy and first eligible LOD.
 void ScenerySectionHeader::DrawAScenery(const port::track::Scene& scene,std::size_t index,const port::track::FrameView& view,unsigned visibility,port::driving::Memory& math,port::track::Frame& frame){
     const auto& object=scene.instances.at(index);++frame.considered_instances;
+    if(std::find(scene.environment.sky_instances.begin(),scene.environment.sky_instances.end(),index)!=scene.environment.sky_instances.end())return;
     if(visibility==1){visibility=ClassifyAABB(object.bbox_min,object.bbox_max,view.clip_matrix);if(!visibility)return;}
     if(object.flags&view.exclude_flags&0xff)return;
     std::array<float,3> delta{};float forward=0,squared=0;for(unsigned k=0;k<3;++k){delta[k]=object.position[k]-view.position[k];forward+=delta[k]*view.direction[k];squared+=delta[k]*delta[k];}
@@ -61,7 +62,7 @@ void ScenerySectionHeader::DrawAScenery(const port::track::Scene& scene,std::siz
     if(-radius<=forward){const float distance=std::sqrt(squared)-radius;float size=view.focal_h;if(radius<distance)size=radius*size/distance;if(!std::isfinite(size)||size>=2147483648.f||size< -2147483648.f)throw std::runtime_error("Invalid original scenery pixel-size conversion");pixels=static_cast<int>(size);}
     if(pixels<2)return;
     std::size_t solid=scene.geometry.solids.size();unsigned lod=0;
-    for(;lod<3;++lod){if(pixels<object.far_clip_sizes[lod]||!object.lod_hashes[lod])continue;const auto found=std::find_if(scene.geometry.solids.begin(),scene.geometry.solids.end(),[&](const auto& s){return s.hash==object.lod_hashes[lod];});if(found==scene.geometry.solids.end())return;solid=std::size_t(found-scene.geometry.solids.begin());break;}
+    for(;lod<3;++lod){if(pixels<object.far_clip_sizes[lod]||!object.lod_hashes[lod])continue;if(frame.resource_index){const auto found=frame.resource_index->solids.find(object.lod_hashes[lod]);if(found==frame.resource_index->solids.end()||scene.geometry.solids.at(found->second).hash!=object.lod_hashes[lod])return;solid=found->second;}else{const auto found=std::find_if(scene.geometry.solids.begin(),scene.geometry.solids.end(),[&](const auto& s){return s.hash==object.lod_hashes[lod];});if(found==scene.geometry.solids.end())return;solid=std::size_t(found-scene.geometry.solids.begin());}break;}
     if(solid==scene.geometry.solids.size())return;
     auto matrix=object.transform;const bool identity=object.flags&0x200;
     if(!identity){if(object.facades[lod])matrix=CreateFacadeMatrix(math,object.position,view.position);if(object.flags&view.exclude_flags&0x100)matrix[14]+=2;}
@@ -78,21 +79,26 @@ void GrandSceneryCullInfo::StuffScenery(const port::track::Scene& scene,std::siz
 }
 // Retail00150378 / Debug0014FFC8. Original 64-entry LIFO; leaf calls remain in child order.
 void ScenerySectionHeader::TreeCull(const port::track::Scene& scene,const port::track::Section& section,const port::track::FrameView& view,port::driving::Memory& math,port::track::Frame& frame){
-    if(section.nodes.empty())return;std::vector<std::pair<std::size_t,unsigned>> stack{{0,1}};std::size_t visits=0;
-    while(!stack.empty()){const auto work=stack.back();stack.pop_back();if(++visits>section.nodes.size())throw std::runtime_error("Cyclic or shared original scenery tree");const auto& node=section.nodes.at(work.first);auto visibility=work.second;if(visibility==1)visibility=ClassifyAABB(node.minimum,node.maximum,view.clip_matrix);if(!visibility)continue;
-        for(auto code:node.children)if(code<0){if(stack.size()==64)throw std::runtime_error("Original scenery stack capacity exceeded");stack.emplace_back(std::size_t(-int(code)),visibility);}else DrawAScenery(scene,section.instance_begin+std::size_t(code),view,visibility,math,frame);
+    if(section.nodes.empty())return;std::array<std::pair<std::size_t,unsigned>,64> stack{};stack[0]={0,1};std::size_t pending=1,visits=0;
+    while(pending){const auto work=stack[--pending];if(++visits>section.nodes.size())throw std::runtime_error("Cyclic or shared original scenery tree");const auto& node=section.nodes.at(work.first);auto visibility=work.second;if(visibility==1)visibility=ClassifyAABB(node.minimum,node.maximum,view.clip_matrix);if(!visibility)continue;
+        for(auto code:node.children)if(code<0){if(pending==stack.size())throw std::runtime_error("Original scenery stack capacity exceeded");stack[pending++]={std::size_t(-int(code)),visibility};}else DrawAScenery(scene,section.instance_begin+std::size_t(code),view,visibility,math,frame);
     }
 }
 // Retail00150950/00150B10/00150D98; Debug001505A0/00150760/001509E8.
 void GrandSceneryCullInfo::WhatSectionsShouldWeDraw(const port::track::Scene& scene,const port::track::FrameView& view,std::vector<std::size_t>& order,port::track::Frame& frame){
     const auto* zone=FindVisibleZone(scene,view.position,order);
     if(zone)frame.zone=zone->number;
-    const auto append=[&](int number){if(frame.sections.size()==128)return;const auto found=std::find_if(scene.sections.begin(),scene.sections.end(),[&](const auto& s){return s.number==number;});if(number>=0&&found!=scene.sections.end())frame.sections.push_back(number);};
+    const auto append=[&](int number){if(frame.sections.size()==128||number<0)return;
+        if(frame.resource_index){const auto found=frame.resource_index->sections.find(number);if(found!=frame.resource_index->sections.end()&&found->second<scene.sections.size()&&scene.sections[found->second].number==number)frame.sections.push_back(number);}
+        else if(std::find_if(scene.sections.begin(),scene.sections.end(),[&](const auto& s){return s.number==number;})!=scene.sections.end())frame.sections.push_back(number);};
     if(zone){for(int number=90;number<100;++number)append(number);for(auto number:zone->sections)append(number);}else {for(auto it=scene.sections.rbegin();it!=scene.sections.rend();++it)if(it->number>=90&&it->number<100)append(it->number);for(const auto& section:scene.sections)if(section.number<90)append(section.number);}
 }
 // Retail00150B10 / Debug00150760. Section selection precedes tree traversal.
 void GrandSceneryCullInfo::CullView(const port::track::Scene& scene,const port::track::FrameView& view,port::driving::Memory& math,port::track::Frame& frame){
-    for(auto number:frame.sections){const auto found=std::find_if(scene.sections.begin(),scene.sections.end(),[&](const auto& s){return s.number==number;});ScenerySectionHeader::TreeCull(scene,*found,view,math,frame);}
+    for(auto number:frame.sections){
+        if(frame.resource_index){const auto found=frame.resource_index->sections.find(number);if(found==frame.resource_index->sections.end()||found->second>=scene.sections.size()||scene.sections[found->second].number!=number)throw std::runtime_error("Track section index no longer matches immutable scene");ScenerySectionHeader::TreeCull(scene,scene.sections[found->second],view,math,frame);}
+        else {const auto found=std::find_if(scene.sections.begin(),scene.sections.end(),[&](const auto& s){return s.number==number;});ScenerySectionHeader::TreeCull(scene,*found,view,math,frame);}
+    }
 }
 }
 

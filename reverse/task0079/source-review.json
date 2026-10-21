@@ -1,0 +1,61 @@
+{
+  "task": "TASK-0079",
+  "evidence": "E-0079-S01",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "b7047efee6288382169b3026293872cbefb3a14e85f42a97261b363d99b409f2",
+  "baseline_inventory_sha256": "89d4f6ef99a9e617598398602ce42dc12e5eb338b8cd73d9e0a40e7f5d267d7d",
+  "before": [
+    {
+      "path": "src/game_core/indep/src/carstate.cpp",
+      "name": "CarState::BeginTimestep",
+      "signature_sha256": "223350a29c9bf7c4cf3f583b236076d5c6fc82da76224a85c175d12fe741383f",
+      "body_sha256": "c5c079c4de135d61ba3a88d3cb12d8051eb54ea260499c979d43abd1aed19d5c",
+      "stub": true,
+      "evidence_id": "E-0079-S01",
+      "reason": "Debug001BD938 four-terrain frame reset and once-per-frame native adapter call; original equivalence not verified."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::advance",
+      "signature_sha256": "4b3b67ca000d00c4cfc26033669039b9ac1a8c4990327486dbfa5a4ee70d6e66",
+      "body_sha256": "e2af6fda20882fc21f345b2c3bfbf28352c1741006b63af2acd338f74e5557c1",
+      "stub": false,
+      "evidence_id": "E-0079-S01",
+      "reason": "Debug001BD938 four-terrain frame reset and once-per-frame native adapter call; original equivalence not verified."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/game_core/indep/src/carstate.cpp",
+      "name": "CarState::BeginTimestep",
+      "signature_sha256": "223350a29c9bf7c4cf3f583b236076d5c6fc82da76224a85c175d12fe741383f",
+      "body_sha256": "bd35f59ac8838ce45d041003db570509f4ba92be13015517116bd97674f71fc2",
+      "stub": false,
+      "evidence_id": "E-0079-S01",
+      "reason": "Debug001BD938 four-terrain frame reset and once-per-frame native adapter call; original equivalence not verified."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::advance",
+      "signature_sha256": "4b3b67ca000d00c4cfc26033669039b9ac1a8c4990327486dbfa5a4ee70d6e66",
+      "body_sha256": "d5e1989b00928a25028ffc3e635aed9f5d0e84f8c66ab3118d7371af8e7b041c",
+      "stub": false,
+      "evidence_id": "E-0079-S01",
+      "reason": "Debug001BD938 four-terrain frame reset and once-per-frame native adapter call; original equivalence not verified."
+    }
+  ],
+  "replacements": {
+    "reverse/scripts/audit_task0077_review.py": {
+      "before": "d0f23a3a53358c12bec5562c09eb58a88b94a2adbb42902e1c573e3b04bae5da",
+      "after": "2d27ee6a3f0f13be2caafd633f69c6190036a8a077075f51e9b84b3938e52cf6"
+    }
+  },
+  "additions": {
+    "reverse/scripts/audit_task0079_review.py": "a3ae5d23deaa2aa298b4693607ddf5b3027285b7e9dd90045ec38e662dd9a5d1",
+    "reverse/task0079/driving-chain.md": "0e5de0fb0fa03a4cc815b892865eede1ca3fc42c5062cc950f217ac3c40b66f1",
+    "reverse/task0079/source-review.md": "2fd5bb8b181a9d5f84f7564b21504819f70671c4f87becf398a3cc08431f6aa8",
+    "reverse/tests/test_task0079_source_review.py": "6ec0f6ceaadbf6589954e31508226ae4fe3c4e98c906ceb7d8e53580267ae40b",
+    "src/game_core/indep/src/carstate.hpp": "2ecc6a4ecc10762c169b73cf14f3492f966da6422e0950296f6c997df1e1a795",
+    "src/tests/driving_backend_tests.cpp": "3fcb9758061f46a3a0190ea4f05b43240db1c029f7f269b5a33a5cf2ae1c3392"
+  }
+}

@@ -197,6 +197,7 @@ func _open_screen(open_menu: bool = true) -> void:
 		_report("NOT_IMPLEMENTED: " + str(opened["not_implemented"]), true)
 
 func _process(delta: float) -> void:
+	var _profile_scope := ProfileDebug.scope("FrontendNative._process")
 	if layout == null:
 		return
 	if startup_active:
@@ -227,6 +228,7 @@ func _draw_console(_delta: float) -> void:
 
 # The whole render step: one native frame, one backend submission. No widget crosses this call.
 func _draw_frame() -> void:
+	var _profile_scope := ProfileDebug.scope("FrontendNative._draw_frame")
 	last_stats = render_host.draw(layout, intro_movie, background_movie)
 	if not bool(last_stats.get("ok", false)):
 		_report(str(last_stats.get("error", "render host draw failed")), true)

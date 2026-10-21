@@ -1,6 +1,7 @@
 #pragma once
 // TASK-0048. Port-owned static-track collision lifetime and callback wiring.
 #include "game_core/port/driving/collision.hpp"
+#include "collision_events.hpp"
 #include "game_core/port/driving/memory.hpp"
 #include "game_core/port/track/topology.hpp"
 #include <map>
@@ -13,7 +14,7 @@ struct CollisionMotion {
     float timestep=0;
 };
 struct StaticCollisionWitness {port::track::VoronoiPolyhedron wafer;port::track::VoronoiWitness witness;};
-struct StaticCollisionEvent {std::size_t polygon=0;ContactTime time;};
+struct StaticCollisionEvent {std::size_t polygon=0;ContactTime time;int terrain=0;};
 class StaticCollisions {
 public:
     void configure(Memory&,const Config&,const std::array<float,3>& center_of_gravity,const std::vector<std::uint8_t>& geometry);
@@ -25,6 +26,9 @@ public:
     std::vector<StaticCollisionEvent> contacts(Memory&,std::uint32_t,const port::track::Topology&,const CollisionMotion&);
     void resolve(Memory&,std::uint32_t,std::uint32_t,const StaticCollisionEvent&,CollisionMotion&,
         const std::function<void(float)>&,const std::function<void()>&);
+    std::map<std::size_t,CollisionAudioContact> audio_contacts;
+    std::vector<CollisionScrapeFade> fading_scrapes;
+    std::uint64_t next_audio_id=1;
     port::track::VoronoiPolyhedron shape;
     port::track::CollisionCylinder cylinder;
     std::map<std::size_t,StaticCollisionWitness> witnesses;

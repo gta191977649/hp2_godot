@@ -41,7 +41,11 @@ var track_state: Dictionary = {}
 var track_pending := false
 var render_collision := false
 var render_material := false
+var show_lod := false
 var track_debug_driving := false
+var diagnostic_restore_path := ""
+var render_diagnostics = preload("res://scripts/debug/track_render_diagnostics.gd").new()
+var encoded_view = preload("res://scripts/debug/encoded_view.gd").new()
 
 func _ready() -> void:
 	if DebugTools.host == null or not DebugTools.host.is_debug_build():
@@ -51,7 +55,10 @@ func _ready() -> void:
 	DebugTools.register_scene(self, viewer_kind)
 	if DisplayServer.get_name() != "headless":
 		get_window().size = Vector2i(1280, 800)
+	RenderingServer.frame_post_draw.connect(_sample_render_diagnostics)
 	_build_environment()
+	if viewer_kind == "car":
+		encoded_view.attach(self, camera)
 	_build_fixture()
 	car_model = ClassDB.instantiate("Ps2CarViewer")
 	add_child(car_model)
@@ -66,6 +73,8 @@ func _ready() -> void:
 	reset_camera()
 	refresh_state()
 	DebugTools.write_log("CarViewer: ready for CARS/<model>/GEOMETRY.BIN" if viewer_kind == "car" else "TrackViewer: ready for original track catalogue")
+	if "--native-track-smoke" in OS.get_cmdline_user_args():
+		add_child(preload("res://scripts/debug/track_native_smoke.gd").new())
 	if "--track-smoke" in OS.get_cmdline_user_args():
 		add_child(preload("res://scripts/debug/track_smoke.gd").new())
 	var explicit_load := false
@@ -96,6 +105,14 @@ func _ready() -> void:
 			render_material = true
 		if argument == "--track-drive" and viewer_kind == "track":
 			test_drive_pending = true
+		if argument.begins_with("--track-diagnostic=") and viewer_kind == "track":
+			diagnostic_restore_path = argument.trim_prefix("--track-diagnostic=")
+			var diagnostic = JSON.parse_string(FileAccess.get_file_as_string(diagnostic_restore_path))
+			if diagnostic is Dictionary and int(diagnostic.get("track", -1)) > 0:
+				explicit_load = true
+				DebugTools.request("load", "TRACKS/TRACKB%d.LZC" % int(diagnostic.track))
+			else:
+				DebugTools.write_log("Invalid track diagnostic: " + diagnostic_restore_path, true)
 		if argument.begins_with("--track-load=") and viewer_kind == "track":
 			explicit_load = true
 			DebugTools.request("load", "TRACKS/TRACKB%s.LZC" % argument.trim_prefix("--track-load="))
@@ -234,11 +251,24 @@ func refresh_state() -> void:
 	if fixture != null:
 		fixture.visible = bool(DebugTools.host.viewer_state().fixture)
 
+func _sample_render_diagnostics() -> void:
+	if is_instance_valid(camera):
+		render_diagnostics.sample(self,camera,track_model)
+
 func viewer_ui_snapshot() -> Dictionary:
 	if driving != null and driving.engaged():
-		return driving.snapshot()
+		var driving_ui: Dictionary = driving.snapshot()
+		driving_ui["render_statistics_enabled"] = render_diagnostics.enabled
+		driving_ui["render_statistics"] = render_diagnostics.lines()
+		driving_ui["camera_position"] = camera.global_position
+		if track_model != null:
+			driving_ui.merge(preload("res://scripts/runtime/track_controls.gd").snapshot(track_model), true)
+		return driving_ui
 	var state: Dictionary = DebugTools.host.viewer_state().duplicate()
 	state["kind"] = viewer_kind
+	state["render_statistics_enabled"] = render_diagnostics.enabled
+	state["render_statistics"] = render_diagnostics.lines()
+	state["camera_position"] = camera.global_position
 	state["camera"] = "%s | speed %.1f" % [camera.position.snapped(Vector3.ONE * 0.01), move_speed]
 	state["cars"] = car_catalog
 	state["lod"] = forced_lod
@@ -269,11 +299,16 @@ func viewer_ui_snapshot() -> Dictionary:
 			if str(state.get("status", "")) == "Loaded":
 				state["status"] = "Render failed"
 	if track_model != null:
+		state.merge(preload("res://scripts/runtime/track_controls.gd").snapshot(track_model), true)
 		state["tracks"] = track_catalog
 		state["render_collision"] = render_collision
 		state["render_material"] = render_material
+		state["show_lod"] = show_lod
 		state["debug_ready"] = bool(track_state.get("debug_ready", false)) and not track_pending
 		state["debug_diagnostic"] = str(track_state.get("debug_diagnostic", ""))
+		if int(track_state.get("particles_unsupported_quads", 0)) > 0:
+			state["debug_diagnostic"] += "\nParticle recovery gap: %d unsupported quads; track rendering continues. %s" % [int(track_state.particles_unsupported_quads), str(track_state.get("particle_recovery_gaps", []))]
+
 		state["material_legend"] = track_state.get("material_legend", [])
 		state["track_id"] = track_state.get("track_id", -1)
 		state["rendering"] = str(track_state.get("summary", ""))
@@ -334,6 +369,22 @@ func viewer_action(action: String) -> void:
 	refresh_state()
 
 func viewer_ui_action(action: Dictionary) -> void:
+	if action.get("action", "") == "render_statistics":
+		render_diagnostics.enabled = bool(action.get("enabled", false))
+		if is_instance_valid(track_model) and track_model.has_method("set_diagnostics_level"):
+			track_model.set_diagnostics_level("summary" if render_diagnostics.enabled else "off")
+		return
+	if action.get("action", "") == "export_render_statistics":
+		if is_instance_valid(track_model) and track_model.has_method("set_diagnostics_level"):
+			track_model.set_diagnostics_level("detailed")
+			await get_tree().process_frame
+			await get_tree().process_frame
+		DebugTools.write_log(render_diagnostics.export_snapshot(self,camera,track_model))
+		if is_instance_valid(track_model) and track_model.has_method("set_diagnostics_level"):
+			track_model.set_diagnostics_level("summary" if render_diagnostics.enabled else "off")
+		return
+	if preload("res://scripts/runtime/track_controls.gd").action(track_model, action):
+		return
 	# Called deferred, after native ImGui drawing has completed.
 	if car_model == null:
 		return
@@ -350,10 +401,12 @@ func viewer_ui_action(action: Dictionary) -> void:
 			driving.action(action)
 		return
 	match command:
-		"render_collision", "render_material":
+		"render_collision", "render_material", "show_lod":
 			if viewer_kind != "track" or not track_state.get("debug_ready", false) or track_pending:
 				return
-			if command == "render_collision":
+			if command == "show_lod":
+				show_lod = bool(action.get("enabled", false))
+			elif command == "render_collision":
 				render_collision = bool(action.get("enabled", false))
 			else:
 				render_material = bool(action.get("enabled", false))
@@ -419,6 +472,13 @@ func reset_camera() -> void:
 	if viewer_kind == "car":
 		_update_orbit()
 	else:
+		if track_state.get("ok", false) and track_state.has("start_position"):
+			var start: Vector3 = track_state.start_position
+			var forward: Vector3 = track_state.start_forward
+			camera.position = start - forward * 20 + Vector3.UP * 10
+			camera.look_at(start + forward * 20 + Vector3.UP * 2)
+			move_speed = 40
+			return
 		camera.position = Vector3(18, 14, 22)
 		camera.look_at(Vector3.ZERO)
 
@@ -433,7 +493,9 @@ func set_preview_mode(enabled: bool) -> void:
 	if floor_node != null:
 		floor_node.visible = not preview_mode
 	if camera != null:
-		camera.fov = 35 if preview_mode else 75
+		# Port-side CarViewer framing; TrackViewer retains Camera3D defaults.
+		if viewer_kind == "car":
+			camera.fov = 35 if preview_mode else 75
 		frame_target()
 
 func frame_target() -> void:
@@ -541,6 +603,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			camera.rotation.x = clampf(camera.rotation.x - event.relative.y * 0.003, deg_to_rad(-85), deg_to_rad(85))
 
 func _process(delta: float) -> void:
+	var _profile_scope := ProfileDebug.scope("AssetViewer._process")
 	if camera == null:
 		return
 	updates += 1
@@ -583,8 +646,14 @@ func _process(delta: float) -> void:
 		orbit_yaw = fposmod(orbit_yaw + PREVIEW_ORBIT_SPEED * delta, TAU)
 		_update_orbit()
 	if track_model != null and track_state.get("ok", false):
+		track_model.set_camera_mode(1 if driving != null and driving.engaged() else 2)
+		track_model.set_visual_state(car_model.get_visual_state() if car_model != null and car_state.get("ok", false) and driving != null and driving.engaged() else {})
+		track_model.set_driving_effect_source(driving.lab if driving != null and driving.engaged() else null)
+		track_model.set_visual_timestep(delta)
 		var track_frame: Dictionary = track_model.update_view(camera.position)
 		track_state = track_frame
+		if car_model != null and driving != null and driving.engaged():
+			car_model.set_environment_capture(track_model.get_environment_capture())
 		if not track_frame.get("ok", false):
 			_publish_track_result()
 	DebugTools.host.viewer_camera("position=%s rotation=%s speed=%.1f" % [camera.position, camera.rotation_degrees, move_speed])
@@ -594,6 +663,8 @@ func _process(delta: float) -> void:
 			car_model.advance_wheels(delta)
 		# Port-side mapping of Godot vertical FOV to pixel projection scale.
 		var scale: float = get_viewport().get_visible_rect().size.y * 0.5 / tan(deg_to_rad(camera.fov) * 0.5)
+		if driving != null and driving.engaged() and track_state.get("ok", false):
+			scale = float(track_state.original_focal_h)
 		var rendered: Dictionary = car_model.update_view(camera.position, -camera.basis.z, scale, forced_lod)
 		var description := str(rendered.get("summary", ""))
 		if not rendered.get("ok", false):
@@ -601,9 +672,14 @@ func _process(delta: float) -> void:
 		if description != last_rendering:
 			DebugTools.host.viewer_rendering(description)
 			last_rendering = description
+	encoded_view.update()
 	refresh_state()
 
 func _notification(what: int) -> void:
+	_viewer_notification(what)
+
+# Port-side hook: deterministic fixtures override lifecycle delivery, not physics.
+func _viewer_notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		focused = false
 		release_camera()
@@ -614,6 +690,8 @@ func _notification(what: int) -> void:
 
 func _exit_tree() -> void:
 	release_camera()
+	if driving != null:
+		driving.lab.clear_particles()
 	if car_model != null:
 		car_model.clear_car()
 	if track_model != null:
@@ -628,6 +706,9 @@ func _publish_track_result() -> void:
 	grid_node.visible = not ok
 	if ok:
 		frame_target()
+		if not diagnostic_restore_path.is_empty():
+			DebugTools.write_log(render_diagnostics.restore_snapshot(camera,track_model,diagnostic_restore_path))
+			diagnostic_restore_path = ""
 	refresh_state()
 
 func _sync_track_debug() -> void:
@@ -640,6 +721,9 @@ func _sync_track_debug() -> void:
 	if not native.get("debug_ready", false):
 		track_state = native
 		return
+	if bool(native.get("show_lod", false)) != (show_lod and not track_debug_driving):
+		track_model.set_show_lod(show_lod and not track_debug_driving)
+		native = track_model.get_state()
 	if bool(native.get("render_collision", false)) != collision:
 		track_model.set_render_collision(collision)
 		native = track_model.get_state()

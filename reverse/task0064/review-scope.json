@@ -1,0 +1,21 @@
+{
+  "task": "TASK-0064",
+  "entries": [
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw",
+      "kind": "port_adapter",
+      "evidence_id": "E0064U01",
+      "evidence_record": "reverse/task0064/live-draw-count.md",
+      "reason": "User requested a realtime engine draw count below TrackViewer coordinates; presentation only."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_snapshot",
+      "kind": "port_adapter",
+      "evidence_id": "E0064U01",
+      "evidence_record": "reverse/task0064/live-draw-count.md",
+      "reason": "User requested a realtime engine draw count below TrackViewer coordinates; presentation only."
+    }
+  ]
+}

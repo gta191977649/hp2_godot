@@ -6,8 +6,9 @@ from pathlib import Path
 import urllib.request
 
 class Client:
-    def __init__(self, endpoint='http://127.0.0.1:8080/mcp'):
+    def __init__(self, endpoint='http://127.0.0.1:8080/mcp', timeout=90):
         self.endpoint, self.session, self.sequence = endpoint, None, 0
+        self.timeout = timeout
         self.call('initialize', {'protocolVersion': '2024-11-05', 'capabilities': {}, 'clientInfo': {'name': 'hp2-infrastructure', 'version': '1'}})
         self.call('notifications/initialized', {}, notification=True)
 
@@ -18,7 +19,7 @@ class Client:
         headers = {'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream', 'MCP-Protocol-Version': '2024-11-05'}
         if self.session: headers['Mcp-Session-Id'] = self.session
         request = urllib.request.Request(self.endpoint, data=json.dumps(body).encode(), headers=headers)
-        with urllib.request.urlopen(request, timeout=90) as response:
+        with urllib.request.urlopen(request, timeout=self.timeout) as response:
             self.session = response.headers.get('Mcp-Session-Id', self.session)
             raw = response.read().decode()
         if not raw: return {}

@@ -1,0 +1,89 @@
+{
+  "task": "TASK-0059",
+  "status": "approved",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "a4ce743f363bfe3d79c880530a9433add1e100b6a0cf40cd8c173e3b5b4270e6",
+  "baseline_inventory_sha256": "8b9acad1a5bb185af14ec70f01315721c91679b89ec18ad3820fb18688d3ebe5",
+  "scope_lf_sha256": "5b25a2b7eb8f5e6a94175d23ee002bb9882a920f51c8b58a89bb5e776ff3ddac",
+  "before": [
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::clear",
+      "signature_sha256": "107591a211cc80a4f3f8d0ffe837b1d72881cfd9dd83079c8f5243540760f2c3",
+      "body_sha256": "80fe931027539dd3644352326423e5e3a74e144c3edd5b2068c1b373424a7bce",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0059P01",
+      "evidence_record": "reverse/task0059/particle-boundary.md",
+      "reason": "Host particle alpha footprint validation and explicit per-quad recovery-gap boundary; preserve native simulation/culling and physics bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::update",
+      "signature_sha256": "a4dad115078d2b9d5fcc437727610f596ec53b11cfd8941e1b115156f9c4e3a4",
+      "body_sha256": "1c5b436cd99ca38edc852a3546ff13aacacae66ac3cfb38f47cae6f147836d8a",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0059P01",
+      "evidence_record": "reverse/task0059/particle-boundary.md",
+      "reason": "Host particle alpha footprint validation and explicit per-quad recovery-gap boundary; preserve native simulation/culling and physics bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_state",
+      "signature_sha256": "20cd6a56f4f5bd8582c1004e5b9c14e05054e8556771a8bc0d337c1afb48c56a",
+      "body_sha256": "a44545dfbb0c389c91ed97e3a84d9a0af2d16e5f78f64c8339b9bff30e912bf8",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0059P01",
+      "evidence_record": "reverse/task0059/particle-boundary.md",
+      "reason": "Host particle alpha footprint validation and explicit per-quad recovery-gap boundary; preserve native simulation/culling and physics bodies."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/platform/godot_bridge/particle_alpha_bounds.hpp",
+      "name": "particle_uv_alpha_max",
+      "signature_sha256": "fee2bf6d000bacf9441c7ad1a8f1712d122de3811ee8a8f0a8a48d08fc0ebc73",
+      "body_sha256": "6a7a36a22606bff0ca2327822428cdf77a1ee93aa2a4560907b7e2cb489faae5",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0059P01",
+      "evidence_record": "reverse/task0059/particle-boundary.md",
+      "reason": "Host particle alpha footprint validation and explicit per-quad recovery-gap boundary; preserve native simulation/culling and physics bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_state",
+      "signature_sha256": "20cd6a56f4f5bd8582c1004e5b9c14e05054e8556771a8bc0d337c1afb48c56a",
+      "body_sha256": "5aff288d7ae119750ad186357a42437b43e0a166c3fcae09064990f339cba0c7",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0059P01",
+      "evidence_record": "reverse/task0059/particle-boundary.md",
+      "reason": "Host particle alpha footprint validation and explicit per-quad recovery-gap boundary; preserve native simulation/culling and physics bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::clear",
+      "signature_sha256": "107591a211cc80a4f3f8d0ffe837b1d72881cfd9dd83079c8f5243540760f2c3",
+      "body_sha256": "66e83a276eb2c9fac134a395eaf21d7c264e670d49c8dd5235f2a2682b36b371",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0059P01",
+      "evidence_record": "reverse/task0059/particle-boundary.md",
+      "reason": "Host particle alpha footprint validation and explicit per-quad recovery-gap boundary; preserve native simulation/culling and physics bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::update",
+      "signature_sha256": "a4dad115078d2b9d5fcc437727610f596ec53b11cfd8941e1b115156f9c4e3a4",
+      "body_sha256": "e75b92ccf9632dd2e4d7bf56d6f4a460efbb5fd53efb397045abe1671438e1c7",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0059P01",
+      "evidence_record": "reverse/task0059/particle-boundary.md",
+      "reason": "Host particle alpha footprint validation and explicit per-quad recovery-gap boundary; preserve native simulation/culling and physics bodies."
+    }
+  ]
+}

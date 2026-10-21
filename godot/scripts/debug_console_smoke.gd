@@ -86,7 +86,7 @@ func _run() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	if render_host.is_debug_build():
-		assert(float(DebugTools.last_frame.get("fps_right", 0)) == get_viewport_rect().size.x - 8)
+		assert(float(DebugTools.last_frame.get("fps_right", 0)) == get_viewport_rect().size.x - 8 * float(DebugTools.last_frame.get("ui_scale", 1.0)))
 	assert(updates > 3)
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--capture=") and DisplayServer.get_name() != "headless":

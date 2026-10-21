@@ -4,8 +4,8 @@ class FaultRuntime extends RefCounted:
 	var real: RefCounted
 	func _init(runtime: RefCounted) -> void:
 		real = runtime
-	func set_driving_input(throttle: float, brake: float, steering: float, handbrake: float, transmission: int, shift: int, neutral: bool) -> Dictionary:
-		return real.set_driving_input(throttle, brake, steering, handbrake, transmission, shift, neutral)
+	func set_driving_input(throttle: float, brake: float, steering: float, handbrake: float, transmission: int, shift: int, neutral: bool, horn: bool = false) -> Dictionary:
+		return real.set_driving_input(throttle, brake, steering, handbrake, transmission, shift, neutral, horn)
 	func tick(_delta: float) -> Dictionary:
 		var result: Dictionary = real.get_state().duplicate(true)
 		result.status = "Blocked"
@@ -48,8 +48,14 @@ func _run() -> void:
 	if scene.vehicle_renderer.transform != scene.state.body or int(scene.track_state.get("triangles", 0)) <= 0:
 		_fail("Runtime did not display the published car and original track")
 		return
-	# Prepare an actual shared native frame even if loading completed this tick.
+	# Rendering must remain ready even when this test window has no focus.
+	var committed_step := int(scene.state.step)
+	scene._notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
 	scene._process(0.0)
+	if int(scene.state.step) != committed_step:
+		_fail("Paused initial presentation advanced native physics")
+		return
+	scene._notification(NOTIFICATION_APPLICATION_FOCUS_IN)
 	var initial_frame: Dictionary = scene.track_renderer.frame_summary()
 	if int(initial_frame.get("commands", 0)) <= 0 or not scene.vehicle_renderer.visible or not scene.state.get("body_known", false):
 		_fail("Independent runtime did not submit track and body rendering")
@@ -65,7 +71,14 @@ func _run() -> void:
 			return
 		image.save_png(ProjectSettings.globalize_path("res://../local/task0051/race-runtime-gpu.png"))
 		print("RACE_RUNTIME_GPU_FRAME commands=", initial_frame.commands, " body=", scene.state.body)
-	await preload("res://scripts/debug/driving_projection_checks.gd").check(scene.camera, get_tree())
+	# TASK0084 default75 applies to Test drive; this separate runtime retains its
+	# existing original horizontal-FOV projection policy.
+	var projection: Projection=scene.camera.get_camera_projection()
+	var horizontal := rad_to_deg(2.0*atan(1.0/projection.x.x))
+	var expected := float(scene.OUTSIDE_FOV_BANGLE)*360.0/65536.0
+	if scene.camera.keep_aspect!=Camera3D.KEEP_WIDTH or absf(horizontal-expected)>0.0001:
+		_fail("Independent runtime original horizontal projection changed")
+		return
 	var key := InputEventKey.new()
 	key.physical_keycode = KEY_W
 	key.pressed = true
@@ -81,6 +94,20 @@ func _run() -> void:
 		return
 	key.pressed = false
 	scene._unhandled_input(key)
+	if scene.track_renderer.has_method("get_lod_state"):
+		var lod: Dictionary=scene.track_renderer.get_lod_state()
+		if lod.backend!="original" or lod.host_lod_selection:
+			_fail("Race still uses host LOD management: "+str(lod))
+			return
+		if DisplayServer.get_name()!="headless":
+			if lod.native_culling_views.size()!=7 or not scene.track_state.get("environment_capture_ready",false):
+				_fail("Native driving did not prepare main and six independent capture views: "+str(lod))
+				return
+			for view in lod.native_culling_views:
+				if not lod.native_culling_views[view].native_selection:
+					_fail("Capture bypassed original selection")
+					return
+			print("RACE_NATIVE_CAPTURE_VIEWS_OK ",lod.native_culling_views)
 	scene._notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
 	if scene.focused or not scene.simulation.get_state().get("paused", false):
 		_fail("Focus loss did not pause runtime")

@@ -11,8 +11,11 @@ var scene_owner: Node
 var operation_pending := false
 var title_cooldown := 0.0
 var frontend_scene := "res://scenes/frontend_native.tscn"
+var rendering_api := ""
 
 func _ready() -> void:
+	rendering_api = preload("res://scripts/debug/render_api.gd").current()
+	get_window().title = "HP2 PS2 Native Port (%s)" % rendering_api
 	layer = 100
 	process_priority = 100
 	if not ClassDB.class_exists("Ps2RenderHost"):
@@ -90,6 +93,7 @@ func _release_camera() -> void:
 		scene_owner.release_camera()
 
 func _process(delta: float) -> void:
+	var _profile_scope := ProfileDebug.scope("DebugTools._process")
 	if host == null:
 		return
 	frame_ms = delta * 1000 if frame_ms == 0 else lerpf(frame_ms, delta * 1000, 0.1)
@@ -97,7 +101,8 @@ func _process(delta: float) -> void:
 	title_cooldown -= delta
 	if title_cooldown <= 0 and DisplayServer.get_name() != "headless":
 		title_cooldown = 0.25
-		get_window().title = "HP2 PS2 Native Port - %d FPS / %.2f ms" % [Engine.get_frames_per_second(), frame_ms] if host.is_debug_build() else "HP2 PS2 Native Port"
+		var caption := "HP2 PS2 Native Port - %d FPS / %.2f ms" % [Engine.get_frames_per_second(), frame_ms] if host.is_debug_build() else "HP2 PS2 Native Port"
+		get_window().title = "%s (%s)" % [caption, rendering_api]
 	statistics["fps"] = Engine.get_frames_per_second()
 	statistics["ms"] = frame_ms
 	var snapshot: Dictionary = {"kind": "frontend"}
@@ -105,7 +110,12 @@ func _process(delta: float) -> void:
 		snapshot = scene_owner.viewer_ui_snapshot()
 	host.viewer_ui_snapshot(snapshot)
 	# This shared ImGui frame owns FPS, console and viewer controls in every Debug build.
+	var ui_display := get_node_or_null("/root/UiDisplay")
+	statistics["ui_scale"] = float(ui_display.scale_factor) if ui_display != null else (float(host.get_ui_scale()) if host.has_method("get_ui_scale") else 1.0)
+	statistics["profile_debug"] = ProfileDebug.ui_state()
 	last_frame = host.console_frame(size.x, size.y, delta, statistics)
+	if str(last_frame.get("profile_debug",{}).get("action",""))=="capture":
+		ProfileDebug.capture_next_frames()
 	info_enabled = bool(last_frame.get("info", info_enabled))
 	if not last_frame.get("ok", false):
 		push_error(str(last_frame.get("error", "Debug overlay failed")))

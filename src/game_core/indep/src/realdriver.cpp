@@ -14,6 +14,20 @@
 #include "game_core/indep/src/carstate.hpp"
 #include "game_core/port/driving/projections.hpp"
 #include <cmath>
+#include "game_core/port/driving/horn.hpp"
+
+namespace port::driving {
+// Debug0018B788/0018B7C8/002039C0; E-0082-H01. Explicit native-to-host
+// activation projection; does not emulate guest voice allocation or SPU hardware.
+void set_horn_activation(Memory& m,std::uint32_t sound,bool active){
+ if(m.word(0x326f40)==0||m.word(0x327980)==0)return;
+ m.word(m.word(sound+0x34),active?1u:0u);
+}
+// Debug0018B808; E-0082-H01.
+bool horn_activation(const Memory& m,std::uint32_t sound){
+ return m.word(0x326f40)!=0&&m.word(0x327980)!=0&&m.word(m.word(sound+0x34))!=0;
+}
+}
 
 namespace hp2::recovered {
 // Debug001FEE80; E-0046-C01. Listing is an unconditional return, no side effects.
@@ -208,16 +222,22 @@ void RealDriver::SetLowGear() {
 }
 
 
-// ELF 0x0013C420; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013c420.md.
-// TASK-0041 E-0041-V01; debug 0x0013C220: RealDriver::StartHonkHorn(void); retail 0x0013C420.
+// Debug0013C220; E-0082-H01; reverse/task0082/horn.md. Historical Retail
+// template0013C420 is superseded in this canonical Debug owner.
 void RealDriver::StartHonkHorn() {
-    hp2::not_implemented("0x0013C420", "RealDriver::StartHonkHorn (signature and full body unresolved)");
+    // Debug0013C220; E-0082-H01. HandyDebuggingFunction001E7198 is empty.
+    const auto car=m_.word(address_+0x230),sound=m_.word(car+0x850);
+    if(m_.word(m_.word(car+0xc)+0x538)!=1&&sound)
+        port::driving::set_horn_activation(m_,sound,true);
 }
 
-// ELF 0x0013C460; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013c460.md.
-// TASK-0041 E-0041-V01; debug 0x0013C260: RealDriver::StopHonkHorn(void); retail 0x0013C460.
+// Debug0013C260; E-0082-H01; reverse/task0082/horn.md. Historical Retail
+// template0013C460 is superseded in this canonical Debug owner.
 void RealDriver::StopHonkHorn() {
-    hp2::not_implemented("0x0013C460", "RealDriver::StopHonkHorn (signature and full body unresolved)");
+    // Debug0013C260; E-0082-H01.
+    const auto car=m_.word(address_+0x230),sound=m_.word(car+0x850);
+    if(m_.word(m_.word(car+0xc)+0x538)!=1&&sound)
+        port::driving::set_horn_activation(m_,sound,false);
 }
 
 // ELF 0x0013CAE0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013cae0.md.
@@ -240,6 +260,18 @@ void RealDriver::Sub_002A0550() {
 
 namespace hp2::recovered {
 
+// Debug0013BF58; E-0082-H01; reverse/task0082/horn.md.
+void RealDriver::JoyHandler_HonkHorn(int,int,std::uint8_t param){
+ const auto car=m_.word(address_+0x230),config=m_.word(car+0xc);
+ if(!param){StopHonkHorn();if(m_.word(config+0x538)!=1)m_.word(car+0x830,0);return;}
+ StartHonkHorn();
+ // Original001C2F48 null editor branch. No editor is installed by this fixture.
+ if(m_.word(0x3281d4)!=0)hp2::not_implemented("0x001C2088","TrackRouteEditor::CancelTuningDrivingLines");
+ if(m_.word(config+0x538)==1){
+  if(m_.word(0x3121ec)!=0)hp2::not_implemented("0x0013BF58","BeACopToggleSirenAndLights requires police ownership");
+  const bool on=m_.word(car+0x808)==0;m_.word(car+0x834,on?1:0);m_.word(car+0x808,on?2:0);
+ }else m_.word(car+0x830,1);
+}
 // Debug0013B368; E-0046-C01; ResetJoyValues.
 void RealDriver::ResetJoyValues() {
     // Debug0013B368; E-0046-C01. Byte stores preserve original padding.

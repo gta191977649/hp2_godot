@@ -61,3 +61,22 @@ Parent shared Godot validation after the stage-builtin and helper-name correctio
 
 
 Final owner audit: original DrawAScenery constructs the selected identity/null, rotation or facade matrix and applies flag100 height adjustment. Original GrandSceneryCullInfo::StuffScenery owns the subsequent shared-world/per-instance/null light-context selection and eModel submission. The typed projection is now split accordingly in the original class/header/TU. StuffScenery submits one selected model to the typed eModel::Render slice; that method owns per-surface expansion and RenderStrips dispatch, while eDisplayFrame owns attachment ordering. No matrix, lighting or selection algorithm is changed by the ownership split. Original static draw-list storage and allocation are represented by explicit host values; full PS2 object ABI and animated model submission are not asserted.
+
+## E-0051-S02 - original asset LOD spot/count recheck, 2026-10-19
+
+Read-only raw chunk scan of the configured authorized ZZDATA tree found38
+TRACKB BUN/LZC files (including duplicate uncompressed/compressed variants).
+All30 LZC packages contain SceneryInfo rows with multiple distinct nonzero
+model hashes. Counts are per-section40-byte info rows, NOT unique models,
+instances or triangles. TRACKB11:1895 rows with one distinct model and398
+with two; TRACKB21:725 with one,277 with two,130 with three.
+TRACKB11 decompressed offset0x6FC3A8: hashes D1BDA271/6071D212/0,
+FarClipSize150/16/0. TRACKB21 offset0x719218: E75A365F/0ECE784F/0ECF04B0,
+thresholds20/10/3. These are original logical projected-size thresholds, not meters.
+Reproduce: py -3 local/task0055/scan_original_lod.py; ignored detailed output
+local/task0055/original-lod-resource-scan.json. Existing E-0051-S01 Retail
+0014FE18 confirms selection executes on projected size (cutoff2, three slots).
+This establishes actual multi-model scenery LOD resource use, not that every
+road/tunnel/terrain surface has simplified versions. Asset names and per-LOD
+triangle reduction were not classified by this scan. No runtime equivalence or
+Verified promotion; no source/binary changes needed for this read-only check.

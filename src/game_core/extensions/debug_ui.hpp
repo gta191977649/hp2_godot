@@ -24,6 +24,8 @@ public:
     explicit DebugUiSession(const std::string& settings);
     ~DebugUiSession();
     void current();
+    void set_scale(float scale);
+    float scale()const;
     void begin(float width,float height,float delta);
     std::vector<Batch> finish(float width,float height);
     bool input(const Input& input);

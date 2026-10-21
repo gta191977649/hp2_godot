@@ -1,0 +1,265 @@
+{
+  "task": "TASK-0061",
+  "status": "approved",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "041f5c16f75cb00c96d7611ef2fed33de398667f0b3f8646949515b34399ff2d",
+  "baseline_inventory_sha256": "ab94e69b2cd3087819b73d36b90d125382dac5ec93afd6792a09d13fcf3f6169",
+  "scope_lf_sha256": "25dbaf892a66fdb243bba611b044dbe647273ba1e7ccb2395c8ccf9348a0e947",
+  "before": [
+    {
+      "path": "src/game_core/extensions/debug_console.cpp",
+      "name": "DebugConsole::frame",
+      "signature_sha256": "98c8d91b02e0431bef8eceff465f251f6cd2384aec56cf0276a699b1a3cc8b3f",
+      "body_sha256": "5083552a4544dbb325b05cd90b46783a8b78d61849fe6d799d8ace471ea911f7",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/game_core/extensions/debug_ui.cpp",
+      "name": "DebugUiSession::begin",
+      "signature_sha256": "2bf74361f3a3340155066e68c26ac9a3f06e5aacc0fb9f5dd285d9baa60db9bc",
+      "body_sha256": "95844f1472df12cf82282e699d62ac1561c5180bc2ee7f88898af7c8748a6936",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/game_core/extensions/debug_ui.cpp",
+      "name": "DebugUiSession::input",
+      "signature_sha256": "f49e5443482e5fa3674d766521540a2900b9988ddda206a0ed54a5100e0e5ec0",
+      "body_sha256": "148c2a5f2bfeb7834213d27729a29588617e5c040e9e2c28848ff787f67f8dc1",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::_bind_methods",
+      "signature_sha256": "999becf63850c093553a1a1056ff1eee617b12f93c5003684976baf0a1e115f1",
+      "body_sha256": "9172ff078b6fff09c7448ae9b4db1b0e15046d3d394543c6e7effa255a979cce",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::console_frame",
+      "signature_sha256": "86cbdd096fa58e58653cb4d97f8dbbb735c443b2de53aedd08416f3c258878f3",
+      "body_sha256": "058deffbc9159b6b30ac8214a38b83fc69dc996b16a6f9a177b211cf7d91174b",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::console_init",
+      "signature_sha256": "fdda1c7be4839b36c4cb4c45a631a9fac7917b9d9457e331ac463b53f065572a",
+      "body_sha256": "16bf2526b56fa7703fd22d7ab19736b00d42a50311e6f9134c6a86357da59e84",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_targets",
+      "signature_sha256": "aadad9a38af500dc43b4f9cb8ba175a5bd50d9c5d7aa26f911bbd7154bab7f5d",
+      "body_sha256": "bf04789d9cc666b452dada223c7b5436c58d72f35b7014b738f594f35a4d3d81",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw",
+      "signature_sha256": "af5c4109ffb88c769db23520815cad4706cfef9cd312c96a3eb3cbd7b1f54a9d",
+      "body_sha256": "9046ef53d0bd760ae0c874b4b3f432fc8caf7ecdec4760c95ed2f47b49888349",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_snapshot",
+      "signature_sha256": "ef5026d842bd185acad14f92379c944f1db983a3f42547c13e2d150baa0f1c1e",
+      "body_sha256": "e7f42c5a651ad3f1a64bd83ff374b36d2dd2598e3a49b31070bf39eb5d3431ff",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/game_core/extensions/debug_console.cpp",
+      "name": "DebugConsole::frame",
+      "signature_sha256": "98c8d91b02e0431bef8eceff465f251f6cd2384aec56cf0276a699b1a3cc8b3f",
+      "body_sha256": "ec64b15544e56350b7434cbaee530e30d9679b594f3446db0b89b085dbd2a17c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/game_core/extensions/debug_console.cpp",
+      "name": "DebugConsole::set_ui_scale",
+      "signature_sha256": "f162166aa12d080f84ca4b247248cb100991ac28d814b693632371986f2ecfbf",
+      "body_sha256": "a13dea014868edf80e2f57a73d13aca6922bcbddeb5ad76783c309fa97e129af",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/game_core/extensions/debug_console.cpp",
+      "name": "DebugConsole::ui_scale",
+      "signature_sha256": "7010acc3fde4f1a33efb29e47a9da21a63410103ec609159aef486594e1e6228",
+      "body_sha256": "9f3c1a11b9efb5a74b2650e4af91b156bc620739bbf22ecc82635b402c0cc78e",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/game_core/extensions/debug_ui.cpp",
+      "name": "DebugUiSession::scale",
+      "signature_sha256": "b1408b17b64d2b38f04c412bc46889385d70b2135a11ab87e3e82aafb4b14c9d",
+      "body_sha256": "292818ce793bbd1fb2e08ed8c36c80908843c4e0b8f13e37fca0dcb7130d16aa",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/game_core/extensions/debug_ui.cpp",
+      "name": "DebugUiSession::set_scale",
+      "signature_sha256": "93dba0b639cd791939d248d32cbc7206cfb117ef1ad7b22c6e47169562fe73c3",
+      "body_sha256": "e10c11e3bcb5aec0f32721fb0d351181626004a89b8065bf1203a17b16f9d7c9",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/game_core/extensions/debug_ui.cpp",
+      "name": "DebugUiSession::begin",
+      "signature_sha256": "2bf74361f3a3340155066e68c26ac9a3f06e5aacc0fb9f5dd285d9baa60db9bc",
+      "body_sha256": "f8bb91ee2a631b5a1b423475ce51aac0df10df8a372cdf7afef06a52b0ad6a5b",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/game_core/extensions/debug_ui.cpp",
+      "name": "DebugUiSession::input",
+      "signature_sha256": "f49e5443482e5fa3674d766521540a2900b9988ddda206a0ed54a5100e0e5ec0",
+      "body_sha256": "937437b34c9426ee20c63b22e80685da3ac63f921f41a1cf7f29e0cde9e30a3f",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw",
+      "signature_sha256": "af5c4109ffb88c769db23520815cad4706cfef9cd312c96a3eb3cbd7b1f54a9d",
+      "body_sha256": "ca49b70e29a6298df19bb5446724ad240b5882eb9fe182d371a8641ed270458c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::_bind_methods",
+      "signature_sha256": "999becf63850c093553a1a1056ff1eee617b12f93c5003684976baf0a1e115f1",
+      "body_sha256": "3e89a73c29fcd00eb44c6b1e1d3e37911ffdd8af304b748bb767439f37bb9235",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::console_init",
+      "signature_sha256": "fdda1c7be4839b36c4cb4c45a631a9fac7917b9d9457e331ac463b53f065572a",
+      "body_sha256": "002ccd4009d53ec8d4dc44691b85bd514a7018b13f8e44248c394c553329ea12",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::get_ui_scale",
+      "signature_sha256": "daf630e822c39dc536af290415dfb6725ec1d616463772fd771893b9aeeaf141",
+      "body_sha256": "03205421bacbd60cdde92f7196656a230ef936d7d7d4feec9923e68eb8b45660",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::console_frame",
+      "signature_sha256": "86cbdd096fa58e58653cb4d97f8dbbb735c443b2de53aedd08416f3c258878f3",
+      "body_sha256": "6df5d229312f24f652601c8a964e1dd549f797fc1c701e190243f4324ce44819",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_snapshot",
+      "signature_sha256": "ef5026d842bd185acad14f92379c944f1db983a3f42547c13e2d150baa0f1c1e",
+      "body_sha256": "521c55d0541c6ae09eba71509648eb0764da8f191737bee481bed93a18b8ab51",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_targets",
+      "signature_sha256": "aadad9a38af500dc43b4f9cb8ba175a5bd50d9c5d7aa26f911bbd7154bab7f5d",
+      "body_sha256": "1b7fb9994793c2d49ee98d1efba8cac7642c098120b2ed5b98c1fee4e3216ca8",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    }
+  ]
+}

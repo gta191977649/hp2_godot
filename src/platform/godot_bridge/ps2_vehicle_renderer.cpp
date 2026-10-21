@@ -1,4 +1,15 @@
+#include "game_core/port/track/environment.hpp"
+#include "game_core/indep/src/fmenus.hpp"
+#include <godot_cpp/variant/packed_vector3_array.hpp>
+#include <godot_cpp/variant/packed_float32_array.hpp>
 #include "ps2_vehicle_renderer.hpp"
+#include "particle_billboard_renderer.hpp"
+#include "game_core/port/driving/original_image.hpp"
+#include <godot_cpp/classes/camera3d.hpp>
+#include <godot_cpp/classes/viewport.hpp>
+#include "vehicle_depth_staging.hpp"
+#include <godot_cpp/classes/os.hpp>
+#include "game_core/port/track/reflection.hpp"
 #include "boundary.hpp"
 #include "platform/shaders/car_base_shader.hpp"
 #include "platform/ps2_asset_root.hpp"
@@ -23,9 +34,11 @@
 #include <godot_cpp/variant/packed_color_array.hpp>
 #include <godot_cpp/variant/packed_float32_array.hpp>
 #include <godot_cpp/variant/packed_int32_array.hpp>
+#include <godot_cpp/variant/packed_string_array.hpp>
 #include <cstring>
 #include <map>
 #include <sstream>
+#include <limits>
 #include <stdexcept>
 
 namespace port::godot_bridge {
@@ -97,15 +110,31 @@ struct Ps2VehicleRenderer::Impl {
         std::array<float,28> lights{};
         godot::Ref<godot::ShaderMaterial> reflection;
         std::size_t batch=0,batch_surface=0;
+        vehicle_depth_staging::Owner depth_parameters;
+        std::uint32_t bound_texture=0;
     };
     struct Texture {godot::Ref<godot::ImageTexture> image;const port::vehicle::Texture* data;unsigned max_alpha;};
     std::map<std::uint32_t,Texture> uploaded;
+    bool capture_requested=false,capture_ready=false,capture_enabled=false;
+    godot::Ref<godot::Texture2D> capture_texture;
+    std::array<float,16> capture_hack{};
+    std::string capture_diagnostic;
+    bool capture_binding_valid=false,capture_bound_ready=false,capture_bound_enabled=false;
+    std::uint64_t capture_bound_texture=0,capture_bound_generation=0;
+    std::size_t capture_bound_draw_count=0;
+    std::string capture_binding_error;
     std::shared_ptr<GpuCache> gpu=std::make_shared<GpuCache>();
     std::size_t texture_cursor=0,part_cursor=0,surface_cursor=0;
     std::vector<godot::Ref<godot::ArrayMesh>> building_meshes;
     std::vector<godot::Ref<godot::ShaderMaterial>> building_materials;
     std::string building_key;bool cached_mesh=false,first_bounds=true;
-    bool driving_pose=false;
+    bool driving_pose=false,vehicle_depth_staging=false;
+    port::driving::VehicleLightState lights;
+    port::driving::VehicleFlareState flare_state;bool flare_state_available=false;
+    std::optional<port::driving::VehicleFlareResources> flare_resources;
+    std::unique_ptr<ParticleBillboardRenderer> flare_renderer;
+    std::vector<port::driving::VehicleFlareBillboard> flare_billboards;
+    std::string flare_error;
     double wheel_speed=80;
     bool show_lods=false,wheel_blur=false,loading=false;std::uint64_t generation=0,completed=0;
     std::optional<port::vehicle::Loader::Ticket> ticket;
@@ -130,7 +159,15 @@ struct Ps2VehicleRenderer::Impl {
     std::string error,requested_path;
 };
 void Ps2VehicleRenderer::shutdown_loader(){loader_slot().reset();}
-Ps2VehicleRenderer::Ps2VehicleRenderer():impl_(std::make_unique<Impl>()){}
+Ps2VehicleRenderer::Ps2VehicleRenderer():impl_(std::make_unique<Impl>()){
+    const auto failure=catch_all([&]{const auto args=godot::OS::get_singleton()->get_cmdline_user_args();
+        for(int i=0;i<args.size();++i)if(args[i].begins_with("--track-vehicle-depth-staging=")){
+            const auto value=args[i].trim_prefix("--track-vehicle-depth-staging=");
+            if(value!="true"&&value!="false")throw std::invalid_argument("Vehicle depth staging requires true or false");
+            impl_->vehicle_depth_staging=value=="true";
+        }
+    });if(!failure.empty())impl_->error=failure;
+}
 Ps2VehicleRenderer::~Ps2VehicleRenderer(){cancel_load();}
 void Ps2VehicleRenderer::_bind_methods() {
     godot::ClassDB::bind_method(godot::D_METHOD("apply_driving_snapshot","snapshot"),&Ps2VehicleRenderer::apply_driving_snapshot);
@@ -148,12 +185,18 @@ void Ps2VehicleRenderer::_bind_methods() {
     godot::ClassDB::bind_method(godot::D_METHOD("clear_car"),&Ps2VehicleRenderer::clear_car);
     godot::ClassDB::bind_method(godot::D_METHOD("update_view","position","forward","projection_scale","forced_lod"),&Ps2VehicleRenderer::update_view);
     godot::ClassDB::bind_method(godot::D_METHOD("get_state"),&Ps2VehicleRenderer::get_state);
+    godot::ClassDB::bind_method(godot::D_METHOD("get_visual_state"),&Ps2VehicleRenderer::get_visual_state);
+    godot::ClassDB::bind_method(godot::D_METHOD("get_visual_texture","hash"),&Ps2VehicleRenderer::get_visual_texture);
+    godot::ClassDB::bind_method(godot::D_METHOD("set_environment_capture","capture"),&Ps2VehicleRenderer::set_environment_capture);
     godot::ClassDB::bind_method(godot::D_METHOD("set_part_visible","name","visible"),&Ps2VehicleRenderer::set_part_visible);
     godot::ClassDB::bind_method(godot::D_METHOD("set_wireframe","enabled"),&Ps2VehicleRenderer::set_wireframe);
     godot::ClassDB::bind_method(godot::D_METHOD("set_bounds","enabled"),&Ps2VehicleRenderer::set_bounds);
 }
 void Ps2VehicleRenderer::release_display() {
     impl_->display_ready=false;impl_->driving_pose=false;
+    impl_->lights={};impl_->flare_state={};impl_->flare_state_available=false;impl_->flare_renderer.reset();impl_->flare_billboards.clear();impl_->flare_error.clear();
+    impl_->capture_binding_valid=false;impl_->capture_binding_error.clear();
+    impl_->capture_ready=false;impl_->capture_texture.unref();impl_->capture_bound_texture=0;
     for(auto* node:impl_->nodes){remove_child(node);memdelete(node);}
     impl_->nodes.clear();impl_->draws.clear();
     for(auto* tag:impl_->tags){remove_child(tag);memdelete(tag);}impl_->tags.clear();
@@ -248,8 +291,6 @@ void Ps2VehicleRenderer::rebuild_display(bool incremental) {
             const auto state=port::vehicle::texture_state_00108CC0(texture.data->header);
             const auto test=port::vehicle::test_state_00105AC0(texture.data->header);
             const bool blend=state.blend==port::vehicle::BlendMode::SourceOver;
-            if(!impl_->inspection&&blend&&godot::RenderingServer::get_singleton()->get_current_rendering_method()!="gl_compatibility")
-                hp2::not_implemented("0x00108CC0","Encoded GS source-over requires the Compatibility viewer backend");
             std::string modes="fog_disabled, shadows_disabled, ";
             modes+=test.write_depth?"depth_draw_always":"depth_draw_never";
             if(blend||state.deferred)modes+=", blend_mix";
@@ -259,6 +300,15 @@ void Ps2VehicleRenderer::rebuild_display(bool incremental) {
             const auto code=car_base_shader_source(modes,fragment,"filter_linear, repeat_disable");
             auto shader=gpu.shaders.find(code);if(shader==gpu.shaders.end()){godot::Ref<godot::Shader> value;value.instantiate();value->set_code(string(code));shader=gpu.shaders.emplace(code,value).first;}
             godot::Ref<godot::ShaderMaterial> material;material.instantiate();material->set_shader(shader->second);
+            // E0055V01: closed BASE-material writer contract for the optional
+            // depth-proxy cache. Static parameters are initialized below;
+            // update_view also swaps original head/brake texture states. The two
+            // texture fields use the depth consumer's ordinary dynamic fallback;
+            // the eight camera/lighting parameters retain their staging contract.
+            godot::PackedStringArray depth_dynamic;
+            for(const char* name:{"source_camera","light_35c","light_35d","light_35e","light_35f","light_360","light_361","light_362","base_texture","flag_0x4"})depth_dynamic.push_back(name);
+            material->set_meta("hp2_depth_dynamic_uniforms",depth_dynamic);
+            material->set_meta("hp2_depth_uniform_contract",1);
             material->set_render_priority(state.deferred?2:0);
             material->set_shader_parameter("base_texture",texture.image);
             material->set_shader_parameter("base_lit",!impl_->inspection&&bool(surface.render_flags&0x80));
@@ -285,10 +335,10 @@ void Ps2VehicleRenderer::rebuild_display(bool incremental) {
             impl_->building_materials.push_back(material);
             impl_->draws.push_back({material,part_index,surface_index,blend,bool(surface.render_flags&4)||texture.data->header.Field_0x74!=0,texture.max_alpha});
             auto& draw=impl_->draws.back();
+            draw.bound_texture=surface.texture_hash;
+            if(impl_->vehicle_depth_staging)draw.depth_parameters=vehicle_depth_staging::create(material);
             draw.batch=batch;draw.batch_surface=(impl_->building_materials.size()-1)%godot::RenderingServer::MAX_MESH_SURFACES;
             if(!impl_->inspection&&(surface.render_flags&0x100)){
-                if(godot::RenderingServer::get_singleton()->get_current_rendering_method()!="gl_compatibility")
-                    hp2::not_implemented("0x0010AC50","Encoded additive environment pass requires Compatibility renderer");
                 const auto env_code=car_base_shader_source("fog_disabled, shadows_disabled, depth_draw_never, blend_add",car_fragment_source(false,5,true,false),"filter_linear, repeat_disable");
                 auto env_shader=gpu.shaders.find(env_code);
                 if(env_shader==gpu.shaders.end()){godot::Ref<godot::Shader> value;value.instantiate();value->set_code(string(env_code));env_shader=gpu.shaders.emplace(env_code,value).first;}
@@ -371,7 +421,18 @@ void Ps2VehicleRenderer::layout_lods(){
             const auto count=impl_->draws.size();
             for(std::size_t j=0;j<count;++j)if(impl_->draws[j].part==i&&
                 (impl_->draws[j].node==impl_->nodes[i]||impl_->nodes[i]->is_ancestor_of(impl_->draws[j].node))){
-                auto draw=impl_->draws[j];draw.material=draw.material->duplicate();if(draw.reflection.is_valid()){draw.reflection=draw.reflection->duplicate();draw.material->set_next_pass(draw.reflection);}
+                auto draw=impl_->draws[j];const auto original_material=draw.material;draw.material=draw.material->duplicate();
+                if(impl_->vehicle_depth_staging){
+                    const auto source_parameters=draw.depth_parameters;
+                    draw.depth_parameters=vehicle_depth_staging::create(draw.material);
+                    // duplicate() copied those exact source parameter values. Keep
+                    // independent storage; subsequent writes cannot alias another LOD.
+                    if(source_parameters&&draw.depth_parameters&&source_parameters->shader==draw.depth_parameters->shader){
+                        draw.depth_parameters->values=source_parameters->values;draw.depth_parameters->valid=source_parameters->valid;
+                    }
+                }
+                draw.material->set_meta("hp2_depth_dynamic_uniforms",original_material->get_meta("hp2_depth_dynamic_uniforms"));draw.material->set_meta("hp2_depth_uniform_contract",1);
+                if(draw.reflection.is_valid()){draw.reflection=draw.reflection->duplicate();draw.material->set_next_pass(draw.reflection);}
                 draw.node=batches.at(draw.batch);draw.node->set_surface_override_material(int(draw.batch_surface),draw.material);impl_->draws.push_back(std::move(draw));
             }
             auto transform=host_matrix(part.transform);transform.origin.x+=lod*spacing;node->set_transform(transform);node->set_cast_shadows_setting(godot::GeometryInstance3D::SHADOW_CASTING_SETTING_OFF);
@@ -435,7 +496,7 @@ godot::Dictionary Ps2VehicleRenderer::pump_load(){
             impl_->cpu_ms=result.cpu_ms;impl_->read_ms=result.read_ms;impl_->geometry_decode_ms=result.geometry_decode_ms;impl_->texture_decode_ms=result.texture_decode_ms;impl_->binding_ms=result.binding_ms;impl_->file_reads=result.file_reads;impl_->geometry_reads=result.geometry_reads;impl_->geometry_hits=result.geometry_hits;impl_->texture_decodes=result.texture_decodes;impl_->texture_hits=result.texture_hits;
             impl_->previews=std::move(result.previews);impl_->preview_errors=std::move(result.preview_errors);
             if(!result.error.empty()||!result.model){release_display();impl_->model.reset();impl_->error=result.error.empty()?"Vehicle request cancelled":result.error;impl_->loading=false;impl_->completed=impl_->generation;return;}
-            auto stage=std::make_unique<Impl>();stage->model=std::move(result.model);stage->gpu=impl_->gpu;stage->show_lods=impl_->show_lods;stage->wheel_blur=impl_->wheel_blur;stage->inspection=impl_->inspection;stage->wireframe=impl_->wireframe;stage->show_bounds=impl_->show_bounds;stage->upload_start=std::chrono::steady_clock::now();impl_->staging=std::move(stage);
+            auto stage=std::make_unique<Impl>();stage->vehicle_depth_staging=impl_->vehicle_depth_staging;stage->model=std::move(result.model);stage->gpu=impl_->gpu;stage->show_lods=impl_->show_lods;stage->wheel_blur=impl_->wheel_blur;stage->inspection=impl_->inspection;stage->wireframe=impl_->wireframe;stage->show_bounds=impl_->show_bounds;stage->upload_start=std::chrono::steady_clock::now();impl_->staging=std::move(stage);
         }
         if(impl_->staging){
             auto current=std::move(impl_);impl_=std::move(current->staging);const auto start=std::chrono::steady_clock::now();
@@ -457,6 +518,7 @@ godot::Dictionary Ps2VehicleRenderer::pump_load(){
                 }
                 release_display();
                 impl_->model=std::move(stage->model);impl_->nodes=std::move(stage->nodes);impl_->draws=std::move(stage->draws);impl_->bounds_node=stage->bounds_node;stage->bounds_node=nullptr;impl_->bounds=stage->bounds;impl_->wire=stage->wire;
+                impl_->uploaded=std::move(stage->uploaded); // Active light variants retain uploaded references.
                 impl_->compare_nodes=std::move(stage->compare_nodes);impl_->node_lods=std::move(stage->node_lods);impl_->node_parts=std::move(stage->node_parts);impl_->labels=stage->labels;impl_->tags=std::move(stage->tags);
                 impl_->model->set_wheel_speed(impl_->wheel_speed);impl_->model->set_wheel_blur(impl_->wheel_blur);impl_->display_ready=true;impl_->loading=false;impl_->completed=impl_->generation;layout_lods();set_bounds(impl_->show_bounds);set_wireframe(impl_->wireframe);
             }else impl_->staging=std::move(stage);
@@ -473,14 +535,26 @@ godot::Dictionary Ps2VehicleRenderer::update_view(const godot::Vector3& position
         impl_->projected_size=port::GetPixelSize(3.0f,float(projection_scale),source(get_global_position()),source(position),source(forward));
         const auto selection=impl_->model->select(impl_->projected_size,impl_->show_lods?0:0);impl_->lod=selection.body;impl_->triangles=0;
         layout_lods();
-        // Original 00123BA0/001175C8 environment orientation, bounded zero-offset viewer.
-        const auto environment=port::eCreateLookAtMatrix(source(position),source(get_global_position()),{{0,0,1}});
+        // Explicit race capture carries original eEnvMap face2 HackMan matrix.
+        // Standalone viewer retains its historical frontend-only orientation.
+        const auto environment=impl_->capture_requested?impl_->capture_hack:port::eCreateLookAtMatrix(source(position),source(get_global_position()),{{0,0,1}});
         for(auto& draw:impl_->draws) {
             const auto& part=impl_->model->parts()[draw.part];if(!draw.node||!draw.node->is_visible_in_tree())continue;
+            const auto light_texture=impl_->model->driving_texture(part.solid,draw.surface,impl_->lights);
+            if(draw.bound_texture!=light_texture){
+                const auto& texture=impl_->uploaded.at(light_texture);
+                draw.material->set_shader_parameter("base_texture",texture.image);
+                const auto& surface=impl_->model->geometry().solids[part.solid].surfaces[draw.surface];
+                draw.flag_0x4=bool(surface.render_flags&4)||texture.data->header.Field_0x74!=0;
+                draw.material->set_shader_parameter("flag_0x4",draw.flag_0x4);
+                draw.maximum_texture_alpha=texture.max_alpha;draw.bound_texture=light_texture;
+            }
             const auto world=draw.node->get_global_transform();
             const auto camera=source(world.affine_inverse().xform(position));
-            draw.material->set_shader_parameter("source_camera",godot::Vector3(camera[0],camera[1],camera[2]));
-            if(draw.reflection.is_valid()){
+            const godot::Vector3 source_camera_value(camera[0],camera[1],camera[2]);
+            draw.material->set_shader_parameter("source_camera",source_camera_value);
+            if(draw.depth_parameters)vehicle_depth_staging::publish(draw.depth_parameters,0,source_camera_value);
+            if(draw.reflection.is_valid()&&(!impl_->capture_requested||impl_->capture_ready)){
                 draw.reflection->set_shader_parameter("source_camera",godot::Vector3(camera[0],camera[1],camera[2]));
                 const auto part_matrix=source_matrix(world);
                 for(int row=0;row<3;++row){
@@ -493,7 +567,11 @@ godot::Dictionary Ps2VehicleRenderer::update_view(const godot::Vector3& position
                 draw.lights=hp2::recovered::CarRenderInfo::Sub_00120EF8(source_matrix(world));
                 draw.lights[15]=part.lights[15];
                 const std::string suffix[]={"35c","35d","35e","35f","360","361","362"};
-                for(int i=0;i<7;++i)draw.material->set_shader_parameter(string("light_"+suffix[i]),godot::Vector4(draw.lights[i*4],draw.lights[i*4+1],draw.lights[i*4+2],draw.lights[i*4+3]));
+                for(int i=0;i<7;++i){
+                    const godot::Vector4 value(draw.lights[i*4],draw.lights[i*4+1],draw.lights[i*4+2],draw.lights[i*4+3]);
+                    draw.material->set_shader_parameter(string("light_"+suffix[i]),value);
+                    if(draw.depth_parameters)vehicle_depth_staging::publish(draw.depth_parameters,std::size_t(i)+1,value);
+                }
                 if(draw.reflection.is_valid())for(int i=0;i<7;++i)draw.reflection->set_shader_parameter(string("light_"+suffix[i]),godot::Vector4(draw.lights[i*4],draw.lights[i*4+1],draw.lights[i*4+2],draw.lights[i*4+3]));
                 draw.lighting_basis=world.basis;draw.lighting_valid=true;
             }
@@ -519,9 +597,76 @@ godot::Dictionary Ps2VehicleRenderer::update_view(const godot::Vector3& position
             if(impl_->nodes[i]->is_visible())for(const auto& surface:impl_->model->geometry().solids[part.solid].surfaces)if(!(surface.render_flags&0x400))impl_->triangles+=int(surface.indices.size()/3);
         }
         for(std::size_t i=0;i<impl_->compare_nodes.size();++i)if(impl_->compare_nodes[i]->is_visible())for(const auto& surface:impl_->model->geometry().solids[impl_->model->parts()[impl_->node_parts[i]].solid].surfaces)if(!(surface.render_flags&0x400))impl_->triangles+=int(surface.indices.size()/3);
+        impl_->flare_billboards.clear();impl_->flare_error.clear();
+        if(impl_->driving_pose&&impl_->flare_state_available){
+            impl_->flare_error=catch_all([&]{
+                auto* camera=get_viewport()?get_viewport()->get_camera_3d():nullptr;
+                if(!camera)throw std::invalid_argument("Vehicle light flares require the actual view camera");
+                if(!impl_->flare_resources){const auto start=godot::ProjectSettings::get_singleton()->globalize_path("res://");auto image=port::driving::read_debug_image(port::driving::debug_image_path(start.utf8().get_data()));impl_->flare_resources=port::driving::read_vehicle_flare_resources(image);}
+                std::vector<port::driving::VehicleFlareMarker> markers;
+                for(const auto& raw:impl_->model->position_markers()){const auto marker=port::driving::create_vehicle_flare_marker(*impl_->flare_resources,raw.name_hash,raw.position,std::uint32_t(raw.param),impl_->model->marker_pivot());if(marker)markers.push_back(*marker);}
+                if(markers.empty())hp2::not_implemented("0x00120558","Original vehicle has no recognized light flare position markers");
+                port::driving::VehicleFlareFrame frame;frame.camera_position=source(camera->get_global_position());
+                const auto basis=camera->get_global_basis();const auto right=source(basis.get_column(0)),up=source(basis.get_column(1)),direction=source(-basis.get_column(2));
+                for(unsigned axis=0;axis<3;++axis){frame.world_view[axis*4]=right[axis];frame.world_view[axis*4+1]=up[axis];frame.world_view[axis*4+2]=direction[axis];frame.world_view[12]-=right[axis]*frame.camera_position[axis];frame.world_view[13]-=up[axis]*frame.camera_position[axis];frame.world_view[14]-=direction[axis]*frame.camera_position[axis];}frame.world_view[15]=1;frame.camera_matrix=frame.world_view;
+                const auto projection=camera->get_camera_projection();const auto clip=projection*godot::Projection(camera->get_global_transform().affine_inverse());constexpr unsigned columns[]{2,0,1,3};for(unsigned c=0;c<4;++c)for(unsigned r=0;r<4;++r)frame.world_clip[c*4+r]=float(clip.columns[columns[c]][r]);frame.h=float(projection.columns[0].x)*256.f;
+                impl_->flare_billboards=port::driving::vehicle_flare_billboards(*impl_->flare_resources,markers,impl_->flare_state,source_matrix(get_global_transform()),frame);
+                if(!impl_->flare_renderer)impl_->flare_renderer=std::make_unique<ParticleBillboardRenderer>(*this,[this](auto hash){return get_visual_texture(hash);});
+                impl_->flare_renderer->update(impl_->flare_billboards,impl_->model->textures(),camera->get_global_position(),-basis.get_column(2));
+            });
+        }
+        if((!impl_->flare_error.empty()||!impl_->driving_pose||!impl_->flare_state_available)&&impl_->flare_renderer)impl_->flare_renderer->clear();
     });
-    if(!error.empty()){for(auto* node:impl_->nodes)node->set_visible(false);for(auto* node:impl_->compare_nodes)node->set_visible(false);for(auto* tag:impl_->tags)tag->hide();}
+    if(!error.empty()){if(impl_->flare_renderer)impl_->flare_renderer->clear();for(auto* node:impl_->nodes)node->set_visible(false);for(auto* node:impl_->compare_nodes)node->set_visible(false);for(auto* tag:impl_->tags)tag->hide();}
     if(!error.empty()||!impl_->loading)impl_->error=error;return get_state();
+}
+void Ps2VehicleRenderer::set_environment_capture(const godot::Dictionary& capture){
+ impl_->capture_requested=true;impl_->capture_enabled=bool(capture.get("enabled",false));impl_->capture_ready=false;impl_->capture_diagnostic=godot::String(capture.get("diagnostic","")).utf8().get_data();
+ godot::Ref<godot::Texture2D> next_texture;
+ const auto error=catch_all([&]{
+ if(impl_->capture_enabled&&bool(capture.get("available",false))){
+ const godot::Ref<godot::Texture2D> texture=capture.get("texture",godot::Variant());const godot::PackedFloat32Array matrix=capture.get("hack_matrix_native",godot::PackedFloat32Array());
+ if(texture.is_null()||matrix.size()!=16)throw std::invalid_argument("Original environment capture requires texture and16-lane HackMan matrix");
+ for(int i=0;i<16;++i)if(!std::isfinite(matrix[i]))throw std::invalid_argument("Nonfinite native environment capture matrix");
+ for(int i=0;i<16;++i)impl_->capture_hack[i]=matrix[i];
+ next_texture=texture;impl_->capture_ready=true;
+ }
+ });
+ if(!error.empty())impl_->capture_diagnostic=error;
+ impl_->capture_texture=next_texture;
+ const std::uint64_t texture_id=next_texture.is_valid()?next_texture->get_instance_id():0;
+ const bool changed=!impl_->capture_binding_valid||impl_->capture_bound_ready!=impl_->capture_ready||impl_->capture_bound_enabled!=impl_->capture_enabled||impl_->capture_bound_texture!=texture_id||impl_->capture_bound_generation!=impl_->generation||impl_->capture_bound_draw_count!=impl_->draws.size();
+ if(!changed){if(!impl_->capture_binding_error.empty())impl_->capture_diagnostic=impl_->capture_binding_error;return;}
+ impl_->capture_binding_error.clear();
+ if(impl_->capture_ready&&std::any_of(impl_->draws.begin(),impl_->draws.end(),[](const auto& draw){return draw.reflection.is_valid()&&draw.flag_0x4;}))
+     impl_->capture_binding_error=catch_all([&]{port::track::require_environment_source_alpha(true,0);});
+ for(auto& draw:impl_->draws)if(draw.reflection.is_valid()){
+ const bool supported=impl_->capture_ready&&!draw.flag_0x4;
+ const godot::Ref<godot::Material> next=supported?godot::Ref<godot::Material>(draw.reflection):godot::Ref<godot::Material>();
+ if(draw.material->get_next_pass()!=next)draw.material->set_next_pass(next);
+ if(supported&&(!impl_->capture_binding_valid||impl_->capture_bound_texture!=texture_id||impl_->capture_bound_generation!=impl_->generation||impl_->capture_bound_draw_count!=impl_->draws.size()))draw.reflection->set_shader_parameter("base_texture",impl_->capture_texture);
+ }
+ impl_->capture_binding_valid=true;impl_->capture_bound_ready=impl_->capture_ready;impl_->capture_bound_enabled=impl_->capture_enabled;impl_->capture_bound_texture=texture_id;impl_->capture_bound_generation=impl_->generation;impl_->capture_bound_draw_count=impl_->draws.size();
+ if(!impl_->capture_binding_error.empty())impl_->capture_diagnostic=impl_->capture_binding_error;
+}
+godot::Ref<godot::Texture2D> Ps2VehicleRenderer::get_visual_texture(std::int64_t hash)const {
+ const auto found=impl_->uploaded.find(std::uint32_t(hash));return found==impl_->uploaded.end()?godot::Ref<godot::Texture2D>():godot::Ref<godot::Texture2D>(found->second.image);
+}
+godot::Dictionary Ps2VehicleRenderer::get_visual_state()const {
+ godot::Dictionary out;out["available"]=bool(impl_->model&&impl_->display_ready&&!impl_->loading);if(!impl_->model||!impl_->display_ready||impl_->loading)return out;
+ out["flare_diagnostic"]=string(impl_->flare_error);out["flare_state_available"]=impl_->flare_state_available;
+ if(impl_->flare_renderer)out["flare_stats"]=impl_->flare_renderer->stats();
+ godot::Array flare_rows;for(const auto& flare:impl_->flare_billboards){godot::Dictionary row;row["texture_hash"]=int64_t(flare.texture_hash);row["name_hash"]=int64_t(flare.name_hash);row["parameter_index"]=int64_t(flare.parameter_index);row["position_native"]=godot::Vector3(flare.centre[0],flare.centre[1],flare.centre[2]);row["half_size"]=flare.half_size;row["intensity"]=flare.intensity;row["colour"]=godot::Vector4(flare.colour[0],flare.colour[1],flare.colour[2],flare.colour[3]);flare_rows.push_back(row);}out["light_flares"]=flare_rows;
+ out["headlight_left"]=impl_->lights.headlight_left;out["headlight_right"]=impl_->lights.headlight_right;out["brakelights"]=impl_->lights.brakelights;
+ godot::Array light_bindings;for(const auto& draw:impl_->draws){const auto& part=impl_->model->parts()[draw.part];const auto off=impl_->model->geometry().solids[part.solid].surfaces[draw.surface].texture_hash;if(draw.bound_texture==off)continue;godot::Dictionary item;item["part"]=int64_t(draw.part);item["surface"]=int64_t(draw.surface);item["texture_hash"]=int64_t(draw.bound_texture);light_bindings.push_back(item);}out["active_light_textures"]=light_bindings;
+ auto native=source(get_global_position());const auto offset=port::track::environment_eye_offset();auto environment=native;for(unsigned i=0;i<3;++i)environment[i]+=offset[i];
+ out["geometry_position_native"]=godot::Vector3(native[0],native[1],native[2]);out["environment_position_native"]=godot::Vector3(environment[0],environment[1],environment[2]);out["geometry_transform"]=get_global_transform();
+ godot::PackedFloat32Array matrix;for(float v:source_matrix(get_global_transform()))matrix.push_back(v);out["geometry_matrix_native"]=matrix;
+ godot::PackedVector3Array cv;for(const auto& v:impl_->model->collision_vertices())cv.push_back(godot::Vector3(v[0],v[1],v[2]));out["collision_vertices_native"]=cv;out["collision_geometry_space"]=true;
+ godot::PackedVector3Array wheels;for(const auto& w:impl_->model->render_config().Field_0x120_0x180)wheels.push_back(godot::Vector3(w[0],w[1],w[2]));out["wheel_centers_native"]=wheels;
+ for(const auto& part:impl_->model->parts())if(part.group==port::vehicle::Part::Group::Body&&part.lod==0){const auto& solid=impl_->model->geometry().solids.at(part.solid);out["bounds_min_native"]=godot::Vector3(solid.bounds_min[0],solid.bounds_min[1],solid.bounds_min[2]);out["bounds_max_native"]=godot::Vector3(solid.bounds_max[0],solid.bounds_max[1],solid.bounds_max[2]);break;}
+ godot::Array shadow_textures;for(const auto& item:impl_->uploaded){const auto& texture=item.second;if(texture.data->header.tex_hash!=0xbadb4475&&texture.data->header.tex_hash!=hp2::frontend::bStringHash((impl_->model->render_config().prefix+"_SHADOWIG").c_str()))continue;const auto& h=texture.data->header;godot::Dictionary t;t["hash"]=int64_t(item.first);t["texture"]=godot::Ref<godot::Texture2D>(texture.image);t["width"]=h.width;t["height"]=h.height;t["alpha_bits"]=h.alpha_bits;t["alpha_fix"]=h.alpha_fix;t["texture_fx"]=h.texture_fx;t["repeat"]=h.Field_0x4c;t["sorting"]=h.Field_0x4d;t["write_depth"]=h.Field_0x50;t["mxl"]=h.Field_0x6e;t["mmag"]=h.Field_0x6f;t["mmin"]=h.Field_0x70;t["lod_l"]=h.Field_0x71;t["lod_k"]=h.Field_0x72;t["gloss"]=h.Field_0x74;t["semi"]=h.is_any_semitransparency;t["maximum_alpha"]=texture.max_alpha;shadow_textures.push_back(t);}out["shadow_textures"]=shadow_textures;
+ out["shadow_ramp_hash"]=int64_t(0xbadb4475);out["shadow_ig_hash"]=int64_t(hp2::frontend::bStringHash((impl_->model->render_config().prefix+"_SHADOWIG").c_str()));out["lod"]=impl_->lod;out["projected_size"]=impl_->projected_size;out["lod_swap1"]=45.f;out["lod_swap2"]=20.f;out["driving_pose"]=impl_->driving_pose;return out;
 }
 godot::Dictionary Ps2VehicleRenderer::get_state()const {
     godot::Dictionary result;
@@ -536,6 +681,7 @@ godot::Dictionary Ps2VehicleRenderer::get_state()const {
         result["bounds"]=impl_->bounds;result["lod"]=impl_->lod;result["triangles"]=impl_->triangles;
         result["wheel_phase"]=impl_->model?impl_->model->wheel_phase():0.0;result["projected_size"]=impl_->projected_size;result["inspection"]=impl_->inspection;
         result["draw_surfaces"]=int(impl_->draws.size());
+        result["environment_capture_requested"]=impl_->capture_requested;result["environment_capture_ready"]=impl_->capture_ready;result["environment_capture_enabled"]=impl_->capture_enabled;result["environment_capture_diagnostic"]=string(impl_->capture_diagnostic);
         result["reflection_surfaces"]=int(std::count_if(impl_->draws.begin(),impl_->draws.end(),[](const auto& draw){return draw.reflection.is_valid();}));
         result["car_id"]=impl_->requested_car;result["skin_id"]=impl_->requested_skin;
         result["rendering"]=impl_->inspection?"Unlit inspection (debug only)":"Original VU base material / GS static state (partial)";
@@ -590,7 +736,33 @@ godot::Dictionary Ps2VehicleRenderer::apply_driving_snapshot(const godot::Dictio
             wheel.tire=source_matrix(value["tire"]);wheel.brake=source_matrix(value["brake"]);wheel.blur=source_matrix(value["blur"]);
             wheel.phase=value["phase"];wheel.angular_velocity=value["angular_velocity"];wheel.blur_alpha=value["blur_alpha"];
         }
-        impl_->model->apply_driving_pose(wheels);set_transform(body);impl_->driving_pose=true;impl_->error.clear();layout_lods();
+        port::driving::VehicleLightState lights;
+        if(snapshot.has("lights")){
+            if(snapshot["lights"].get_type()!=godot::Variant::DICTIONARY)throw std::invalid_argument("Invalid driving light state");
+            const godot::Dictionary value=snapshot["lights"];
+            for(const char* key:{"headlight_left","headlight_right","brakelights"})
+                if(!value.has(key)||value[key].get_type()!=godot::Variant::BOOL)throw std::invalid_argument("Incomplete driving light publication");
+            lights={bool(value["headlight_left"]),bool(value["headlight_right"]),bool(value["brakelights"])};
+        }
+        port::driving::VehicleFlareState flares;const bool has_flares=snapshot.has("flare_intensities");
+        if(has_flares){if(snapshot["flare_intensities"].get_type()!=godot::Variant::PACKED_FLOAT32_ARRAY)throw std::invalid_argument("Invalid driving flare publication");const godot::PackedFloat32Array values=snapshot["flare_intensities"];if(values.size()!=12)throw std::invalid_argument("Driving flare publication requires twelve original lamp intensities");for(unsigned i=0;i<12;++i){if(!std::isfinite(values[i])||values[i]<0||values[i]>1)throw std::invalid_argument("Invalid original lamp intensity");flares.intensity[i]=values[i];}}
+        port::driving::WiperSnapshot wipers;
+        if(snapshot.has("wipers")){
+            if(snapshot["wipers"].get_type()!=godot::Variant::DICTIONARY)throw std::invalid_argument("Invalid driving wiper state");
+            const godot::Dictionary value=snapshot["wipers"];
+            for(const char* key:{"state","on_time","off_time","world_frame"})
+                if(!value.has(key)||value[key].get_type()!=godot::Variant::INT)throw std::invalid_argument("Incomplete driving wiper publication");
+            const auto signed_field=[&](const char* key){const int64_t v=value[key];
+                if(v<std::numeric_limits<std::int32_t>::min()||v>std::numeric_limits<std::int32_t>::max())throw std::invalid_argument("Driving wiper integer exceeds original width");return std::int32_t(v);};
+            wipers.state=signed_field("state");wipers.on_time=signed_field("on_time");wipers.off_time=signed_field("off_time");
+            const int64_t frame=value["world_frame"];
+            if(frame<0||std::uint64_t(frame)>std::numeric_limits<std::uint32_t>::max())throw std::invalid_argument("Driving wiper frame exceeds original width");
+            wipers.world_frame=std::uint32_t(frame);
+        }
+        port::driving::validate_wheels(wheels);
+        impl_->model->apply_wiper_state(wipers);
+        impl_->flare_state=flares;impl_->flare_state_available=has_flares;
+        impl_->model->apply_driving_pose(wheels);set_transform(body);impl_->driving_pose=true;impl_->lights=lights;impl_->error.clear();layout_lods();
     });
     if(!error.empty())impl_->error=error;
     auto result=get_state();result["ok"]=error.empty();result["driving_pose"]=impl_->driving_pose;

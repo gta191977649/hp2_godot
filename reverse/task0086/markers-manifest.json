@@ -1,0 +1,46 @@
+{
+  "task": "TASK-0086",
+  "evidence": "E-0086-M01",
+  "binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "operations": "read-only inspect.decompile, data_types.get",
+  "captures": [
+    {
+      "file": "local/task0086/marker-loader.json",
+      "sha256": "128d214babeef21dd58ef8bff0b7ab8dcac56cfca43384c8853937b048b8ca97"
+    },
+    {
+      "file": "local/task0086/marker-find.json",
+      "sha256": "f46a9ab7d58dfedbbe1851abaeab1cb8d6242d90462e2b7b2e9dfa1613fb2f4b"
+    },
+    {
+      "file": "local/task0086/marker-type.json",
+      "sha256": "3fae68ca067e242df037090f1eeb8558aed9077272550186cafef30ec1206c5f"
+    },
+    {
+      "file": "local/task0086/cartype-type.json",
+      "sha256": "66dbc4d3a19aaabea2be25f33660b33c12e25ca6bf88dbabef5fb50efaedf43d"
+    }
+  ],
+  "assets": [
+    {
+      "path": "CARS/911TURBO/GEOMETRY.BIN",
+      "bytes": 529472,
+      "sha256": "72d99dad3e95f6ba4d8e01e31d54cb8c6a1bf9a51198fb43090a10e571f86ddd"
+    },
+    {
+      "path": "CARS/BMWM5COP/GEOMETRY.BIN",
+      "bytes": 471696,
+      "sha256": "3deeb4d32d0ba9cc02de2385984738f8f74df7d2d50fe27cf1b1f7afd1b2b13b"
+    },
+    {
+      "path": "CARS/4DR_SEDAN/GEOMETRY.BIN",
+      "bytes": 52432,
+      "sha256": "9440ab4785c66dc9f7771fcf94a794d3b1af20dd1324800b185ee89981d4d066"
+    },
+    {
+      "path": "GLOBAL/GLOBALB.BUN",
+      "bytes": 773932,
+      "sha256": "6fad4bcf13ad8936b240596c5a7d782ccbc255f5d9fb202df785f2b6b76a2153"
+    }
+  ]
+}

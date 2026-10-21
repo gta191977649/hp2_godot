@@ -52,9 +52,15 @@ int SkidSet::AddSegment(const SkidVector&p,const SkidVector&d,float intensity,Sk
     validate_skid_services(s);const auto n=m_.signed_word(address_+0xf0);float extra=0;SkidVector normal{};
     if(n>0){const auto last=read(m_,address_+0x70+(n-1)*16);for(unsigned i=0;i<3;++i)normal[i]=p[i]-last[i];
         float sum=normal[0]*normal[0];sum=sum+normal[1]*normal[1];sum=sum+normal[2]*normal[2];extra=std::sqrt(sum);
-        // EE VRSQRT on a zero segment is an unsupported numerical corner, not host NaN data.
         if(extra!=0){const float inv=1.0f/extra;for(auto&v:normal)v=v*inv;}
-        else hp2::not_implemented("0x001A8150","zero-length VU reciprocal-square-root segment");
+        else if(std::all_of(normal.begin(),normal.end(),[](float v){return v==0.0f;})){
+            // TASK0053 E0053D01: 001A81C8 VRSQRT Q,vf0.w,vf1.x clamps
+            // 1/sqrt(0) to positive VU MAX, then001A81DC multiplies delta by Q.
+            // VU exponent255 is finite; double carries its exact maximal value.
+            // This handles only exact signed-zero components, not underflow.
+            const double reciprocal=std::ldexp(2.0-std::ldexp(1.0,-23),128);
+            for(auto&v:normal)v=static_cast<float>(static_cast<double>(v)*reciprocal);
+        }else hp2::not_implemented("0x001A8150","nonzero underflowed VU reciprocal-square-root segment");
     }
     bool merge=false;
     if(n>1){const auto prev=read(m_,address_+0x10);float dot=normal[0]*prev[0];dot=dot+normal[1]*prev[1];dot=dot+normal[2]*prev[2];

@@ -97,7 +97,27 @@ func _run() -> void:
 			_fail("Matching empty frames do not demonstrate track rendering")
 			return
 	if gpu:
+		# Return to the validated road pose; the final logical test pose is upstream.
+		camera.position = position - forward * 8.0 + Vector3.UP * 3.0
+		camera.look_at(position, Vector3.UP)
 		var first: Image = await _capture(runtime_renderer)
+		if get_viewport().get_render_info(Viewport.RENDER_INFO_TYPE_VISIBLE, Viewport.RENDER_INFO_DRAW_CALLS_IN_FRAME) != 0:
+			_fail("Postprocess source camera mask0 leaked 3D draws into the root viewport")
+			return
+		var targets: Dictionary = runtime_renderer.get_render_targets()
+		var depth_texture: Texture2D = targets.get("native_depth")
+		if depth_texture == null:
+			_fail("GPU parity did not capture a real native depth source")
+			return
+		var depth_image: Image = depth_texture.get_image()
+		var depth_bytes := depth_image.get_data()
+		var covered := 0
+		for index in range(0, depth_bytes.size(), 4):
+			if depth_bytes[index] != 0 or depth_bytes[index + 1] != 0 or depth_bytes[index + 2] != 0:
+				covered += 1
+		if covered < depth_image.get_width() * depth_image.get_height() / 4:
+			_fail("GPU parity has insufficient depth-writing road coverage")
+			return
 		var second: Image = await _capture(viewer_renderer)
 		first.save_png(ProjectSettings.globalize_path("res://../local/task0051/runtime-track-gpu.png"))
 		second.save_png(ProjectSettings.globalize_path("res://../local/task0051/viewer-track-gpu.png"))

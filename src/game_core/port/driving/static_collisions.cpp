@@ -11,7 +11,7 @@
 
 namespace port::driving {
 port::track::VoronoiPose collision_pose(const Memory& m,std::uint32_t body){port::track::VoronoiPose pose;const auto position=m.vector(body+0x10);const auto matrix=m.matrix(body+0x20);for(unsigned j=0;j<3;++j){pose.position[j]=position[j];for(unsigned i=0;i<3;++i)pose.basis[i][j]=matrix[i*4+j];}return pose;}
-void StaticCollisions::clear(){shape={};cylinder={};witnesses.clear();witness_order.clear();resolved_contacts=applied_impulses=0;last_impulse={};impulses_by_polygon.clear();}
+void StaticCollisions::clear(){shape={};cylinder={};witnesses.clear();witness_order.clear();resolved_contacts=applied_impulses=0;last_impulse={};impulses_by_polygon.clear();audio_contacts.clear();fading_scrapes.clear();next_audio_id=1;}
 void StaticCollisions::configure(Memory& m,const Config& config,const std::array<float,3>& cog,const std::vector<std::uint8_t>& geometry){
     // Debug001D4A80, E-0048-D05: code aliases share original BaseModelName collision volume.
     auto volumes=port::track::load_collision_volumes(geometry);const auto name=base_model_name(config)+"_CV";
@@ -26,7 +26,7 @@ std::vector<StaticCollisionEvent> StaticCollisions::contacts(Memory& m,std::uint
     if(!ready())throw std::logic_error("Original car collision shape is not installed");
     const auto pose=collision_pose(m,body);auto query=cylinder;query.center=pose.position;query.axis=pose.basis[2];
     const std::array<float,2> low{{pose.position[0]-query.radius,pose.position[1]-query.radius}},high{{pose.position[0]+query.radius,pose.position[1]+query.radius}};
-    for(auto it=witnesses.begin();it!=witnesses.end();){const auto& bounds=topology.polygons.at(it->first).bounds;if(bounds[0]>high[0]||bounds[1]>high[1]||bounds[2]<low[0]||bounds[3]<low[1])it=witnesses.erase(it);else ++it;}
+    for(auto it=witnesses.begin();it!=witnesses.end();){const auto& bounds=topology.polygons.at(it->first).bounds;if(!audio_contacts.count(it->first)&&(bounds[0]>high[0]||bounds[1]>high[1]||bounds[2]<low[0]||bounds[3]<low[1]))it=witnesses.erase(it);else ++it;}
     witness_order.erase(std::remove_if(witness_order.begin(),witness_order.end(),[&](auto index){return !witnesses.count(index);}),witness_order.end());
     // Original CreateTrackPolygonCollisionBodies001D46D8 caps new bodies48 then sorts original packed addresses.
     std::vector<std::size_t> create;for(auto index:topology.intersecting(low,high))if(!witnesses.count(index)&&hp2::recovered::DynamicCollisionBody::TrackPolygonCheck(query,topology.polygons[index])&&create.size()<48)create.push_back(index);
@@ -41,7 +41,7 @@ std::vector<StaticCollisionEvent> StaticCollisions::contacts(Memory& m,std::uint
         debug_terrain_from_retail(topology.polygons[index].terrain); // A detected unsupported physical interaction fails before response.
         const auto normal=hp2::recovered::FindWaferNormal(m,instance.wafer.faces[0].plane,pose.position);
         const ContactClip clip=[&](float backup,const std::array<float,3>& shift){auto sample=hp2::recovered::DynamicCollisionBody::Interpolate(m,body,motion,backup);for(unsigned j=0;j<3;++j)sample.position[j]+=shift[j];const auto status=hp2::recovered::VCWitness::VClip(witness,shape,sample,instance.wafer,fixed);return ContactQuery{status,witness.distance};};
-        result.push_back({index,hp2::recovered::Contact::FindContactTime(m,motion.timestep,clip,normal)});
+        result.push_back({index,hp2::recovered::Contact::FindContactTime(m,motion.timestep,clip,normal),debug_terrain_from_retail(topology.polygons[index].terrain)});
     }
     // Original ContactTimeSorting001D13A0 + bList::AddSorted002498C0, stable descending backup time.
     std::stable_sort(result.begin(),result.end(),[](const auto& a,const auto& b){return a.time.backup_time>b.time.backup_time;});return result;
@@ -53,11 +53,24 @@ void StaticCollisions::resolve(Memory& m,std::uint32_t body,std::uint32_t car,co
     services.recompute=recompute;
     services.impulse=[&]{auto& instance=witnesses.at(event.polygon);const port::track::VoronoiPose fixed;const auto pose=collision_pose(m,body);
         const auto contact=hp2::recovered::Contact::FindContactPointAndNormal(m,instance.witness,fixed,pose,instance.wafer.faces[0].plane);
-        return hp2::recovered::Contact::CollisionImpulse(m,body,car,contact);};
+        auto [entry,created]=audio_contacts.try_emplace(event.polygon);
+        auto& audio=entry->second;
+        if(created){audio.id=next_audio_id++;audio.start=audio.last=m.word(0x327cf8);audio.initial=contact.point;// Debug00219698: original body-order priority; car terrain32.
+        const auto priority=[&](int terrain){return m.scalar(0x3102e8+terrain*0x90+0x2c);};
+        audio.terrain=priority(event.terrain)<=priority(32)?32:event.terrain;}
+        const auto result=hp2::recovered::Contact::CollisionImpulse(m,body,car,contact);
+        if(result.applied){const auto listener=m.vector(body+0x10);accumulate_collision_audio(audio,m,contact.point,result.impulse,result.scrape_speed,{{listener[0],listener[1],listener[2]}});}
+        return result;};
     services.move=move;
     const auto impulse=hp2::recovered::Contact::Resolve(event.time,services);++resolved_contacts;
     if(impulse.applied){++applied_impulses;++impulses_by_polygon[event.polygon];last_impulse=impulse.impulse;}
 
 }
-void StaticCollisions::process(Memory& m,std::uint32_t body,std::uint32_t car,const port::track::Topology& topology,CollisionMotion& motion,const std::function<void(float)>& move,const std::function<void()>& recompute){hp2::recovered::World::DoTimestepCollisions(m,*this,body,car,topology,motion,move,recompute);}
+void StaticCollisions::process(Memory& m,std::uint32_t body,std::uint32_t car,const port::track::Topology& topology,CollisionMotion& motion,const std::function<void(float)>& move,const std::function<void()>& recompute){hp2::recovered::World::DoTimestepCollisions(m,*this,body,car,topology,motion,move,recompute);
+    // Debug0014D93C calls Collision::Update after resolving all contacts.
+    for(auto it=audio_contacts.begin();it!=audio_contacts.end();)if(!collision_audio_alive(it->second,m)){
+        const auto& state=it->second;if(state.scrape){const auto& sample=*state.scrape;
+            fading_scrapes.push_back({{state.id,sample.sample_index,sample.volume,sample.pitch_octaves},collision_scrape_fade_adjust(m,sample.volume)});}
+        it=audio_contacts.erase(it);
+    }else ++it;}
 }

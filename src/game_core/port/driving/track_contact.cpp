@@ -5,7 +5,10 @@ int debug_terrain_from_retail(int value){
     // E-0048-D01: all 33 embedded Type indices and exact Name strings independently read
     // from Retail318c00 and Debug3102e8. Identity is a proven semantic map, not an ABI cast.
     if(value<0||value>=33)throw std::runtime_error("Unmapped Retail terrain type");
-    if(value==4||value==5||value==20)throw std::runtime_error("Track water and puddle behavior is not recovered");
+    // E-0087-W01: original elevation/Wheel and static wafer/Contact paths admit
+    // PUDDLE4, DEEP_WATER5 and MUD_PUDDLE20. Wheel coefficients come from their
+    // original rows; static friction/bounciness are original terrain-independent
+    // CollisionBody constants (Debug001D5CC8/001D5CD8), not ROAD substitution.
     if(value==32)throw std::runtime_error("Track CAR terrain ownership is not recovered");
     return value;
 }

@@ -1,0 +1,128 @@
+{
+  "task": "TASK-0087",
+  "evidence": "E-0087-S01",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "5eb78631b86cd079c7074730ebf2cec463eb8f988d520bfa6224ac50f54b9b40",
+  "baseline_inventory_sha256": "5fc4a3fc57ff99901875ea048dde526734352dcc9d1c462d35427b3e5a0fa5dd",
+  "before": [
+    {
+      "path": "src/port/vehicle/model.cpp",
+      "name": "Model::apply_driving_pose",
+      "signature_sha256": "76f1159eeda3c2a869251e9aa3b180f484f3105ef4fc6b446d357c97576cef06",
+      "body_sha256": "638f3dc52b61911bee96236d9c66b80c3b0ad5b44a8e4420f7ded27759a76faa",
+      "stub": false,
+      "evidence_id": "E-0087-S01",
+      "reason": "E-0087-B01: preserve original optional null wheel-blur binding and publish port-side availability diagnostic; no fabricated solid."
+    },
+    {
+      "path": "src/game_core/port/driving/track_contact.cpp",
+      "name": "debug_terrain_from_retail",
+      "signature_sha256": "c2813551e38eaa11b6947363c75ca1ddb5e1e5a119da488905f7226861b85dd9",
+      "body_sha256": "32b454087297e113f1d1d25a204ad32141caf48015bb9489acd03e417c406155",
+      "stub": false,
+      "evidence_id": "E-0087-S01",
+      "reason": "E-0087-W01: admit evidenced original water/puddle indices in generic contact mapping; CAR32 ownership remains rejected."
+    },
+    {
+      "path": "src/game_core/src/acidfxe.cpp",
+      "name": "AcidEffectSystem::TriggerEmitter",
+      "signature_sha256": "b3e27256aa851158fc2a0950db7382b778b76dad932c9f7e6704006d56aabba1",
+      "body_sha256": "f3fc1b79d6c5c419286d8dd6e8cd2a62177f1b77168dca66b4304ab4b1fc8120",
+      "stub": false,
+      "evidence_id": "E-0087-S01",
+      "reason": "E-0087-P01: correct recovered Debug00127858/Retail00127700 zero-interval retries and original RNG consumption; exhausted explicit port budget throws rather than truncates."
+    },
+    {
+      "path": "src/port/vehicle/model.cpp",
+      "name": "Model::load",
+      "signature_sha256": "0c118d9ac450f3080042a2baf37354f3844b29bbe2a8bd2c269ab6014f9bbea9",
+      "body_sha256": "79e053a908df5e1c0a0cedfdc4728756bd416a7f62a56dfd6f876eed07d1da18",
+      "stub": false,
+      "evidence_id": "E-0087-S01",
+      "reason": "E-0087-B01: preserve original optional null wheel-blur binding and publish port-side availability diagnostic; no fabricated solid."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/game_core/port/driving/track_contact.cpp",
+      "name": "debug_terrain_from_retail",
+      "signature_sha256": "c2813551e38eaa11b6947363c75ca1ddb5e1e5a119da488905f7226861b85dd9",
+      "body_sha256": "307cc02197fcd4f4f0d8b5b0769ad48f5ee50dfef4b3cc08efd3126b5d481118",
+      "stub": false,
+      "evidence_id": "E-0087-S01",
+      "reason": "E-0087-W01: admit evidenced original water/puddle indices in generic contact mapping; CAR32 ownership remains rejected."
+    },
+    {
+      "path": "src/game_core/src/acidfxe.cpp",
+      "name": "AcidEffectSystem::TriggerEmitter",
+      "signature_sha256": "b3e27256aa851158fc2a0950db7382b778b76dad932c9f7e6704006d56aabba1",
+      "body_sha256": "eee99a57a44a477fd124e98121c5c0c95491ef6a6bcb2028bae3a69e60f69664",
+      "stub": false,
+      "evidence_id": "E-0087-S01",
+      "reason": "E-0087-P01: correct recovered Debug00127858/Retail00127700 zero-interval retries and original RNG consumption; exhausted explicit port budget throws rather than truncates."
+    },
+    {
+      "path": "src/port/vehicle/model.cpp",
+      "name": "Model::load",
+      "signature_sha256": "0c118d9ac450f3080042a2baf37354f3844b29bbe2a8bd2c269ab6014f9bbea9",
+      "body_sha256": "c828fc3c532cad1cc5f92925585602ca676c03f5399c13d6f80884c4cdeae1ee",
+      "stub": false,
+      "evidence_id": "E-0087-S01",
+      "reason": "E-0087-B01: preserve original optional null wheel-blur binding and publish port-side availability diagnostic; no fabricated solid."
+    },
+    {
+      "path": "src/port/vehicle/model.cpp",
+      "name": "Model::apply_driving_pose",
+      "signature_sha256": "76f1159eeda3c2a869251e9aa3b180f484f3105ef4fc6b446d357c97576cef06",
+      "body_sha256": "68b5bde03ba2a344b835d1b91f90e51909656c9c12d5afff6e04cbb2979356c8",
+      "stub": false,
+      "evidence_id": "E-0087-S01",
+      "reason": "E-0087-B01: preserve original optional null wheel-blur binding and publish port-side availability diagnostic; no fabricated solid."
+    },
+    {
+      "path": "src/port/vehicle/model.hpp",
+      "name": "wheel_blur_available",
+      "signature_sha256": "e53a1ec586f495e862524a920659c7a5fdb364526264387d6c09d456f5a7759f",
+      "body_sha256": "07564d07f04ca5f4df8a76e6043abd8b83d0824911c3e22ab93c1d819b2338a2",
+      "stub": false,
+      "evidence_id": "E-0087-S01",
+      "reason": "E-0087-B01: preserve original optional null wheel-blur binding and publish port-side availability diagnostic; no fabricated solid."
+    }
+  ],
+  "replacements": {
+    "CMakeLists.txt": {
+      "before": "b99fe4ab87aa4cbee8a5a792d7668e19ec96451fb7eca32d44eed3dd71394229",
+      "after": "a9ef0546a10096ec0a7189cf59b9768e8261c52d6d19a1f297a9f56d26a0942b"
+    },
+    "reverse/scripts/audit_task0086_review.py": {
+      "before": "545eaa714b5d22b5aa8fce81a6492307e0efa096fdace8e4efc06aeb6aae0ba1",
+      "after": "202d628ae399c2eb3ac5ed04dd5acbf4ec0710c096fd18862b097044f7e122ea"
+    },
+    "reverse/tests/test_task0086_source_review.py": {
+      "before": "98c5a9dda903cb22eb501ded874fee668f688f215307935446441a6a054a8a04",
+      "after": "18f1606358f3636c61475212a7f5f2685434ea050dbf5df34b28319c2be8f265"
+    },
+    "src/game_core/port/track/particles.hpp": {
+      "before": "5f2bf28b07e27fb5889c0728e1f310b51e41d67ace55a23056d3ee11d2ba6cb9",
+      "after": "36135a1143fce34d4dd9ea08d4cd128bf50a2e7d32420679956aa38ccbed511b"
+    },
+    "src/port/vehicle/model.hpp": {
+      "before": "3179e499c229d394e82a3b00d2af56bdff9750d83544dbdb4c1813801e69a607",
+      "after": "17c9934113cecfd49d79f6c2f588d7af5900ab918d527b673abf5cb920cad235"
+    },
+    "src/tests/static_collision_tests.cpp": {
+      "before": "c3b85fbbeb6228f8cf417a84782c32b374246ce73b183ff6f6d779fb6cc8e099",
+      "after": "9f578e2dd6b468277cea9ab0783f78059bb00ecfa53c3c97393107a0c5a84b82"
+    }
+  },
+  "additions": {
+    "godot/scripts/debug/track12_driving_gaps_smoke.gd": "15253135f2bd4a10c24059ad5ba1f2209f85056d502d3b08d3fcaf21d831d655",
+    "reverse/scripts/audit_task0087_review.py": "24e6a826f273b457af5bc0ae53d759fec4ad1c6062c282fe708917cb0541f4f1",
+    "reverse/task0087/source-review.md": "1906cc853d88c85a4ee6ab7dd73ebb000d7bc9a8d9b12f461b9ddcfe83107b52",
+    "reverse/tests/test_task0087_source_review.py": "241ee2745d824dd6344494998e7ceeed067bc34a45a8096049e77f23cbc80e30",
+    "src/tests/driving_track_tests.cpp": "74361527c744c5494fb3b1da470d78e4c35f865587fe13964c73ce59e415ecc6",
+    "src/tests/track12_particle_tests.cpp": "a792d0be0b4f9472334c978078ec8bef09020a47d60a09a80dfda749b79f937a",
+    "src/tests/vehicle_blur_absence_tests.cpp": "eb05d89be7400afece39a5d02855304c6afe5e9aabf345ca74848e222b962036",
+    "src/tests/water_contact_tests.cpp": "a9b1c5d670bbe2ceb2da8226a906415516aa1c4e91b36eaa914effcec5c6cca8"
+  }
+}

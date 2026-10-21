@@ -43,6 +43,21 @@ void maker_geometry(){Fixture f;const auto maker=f.maker();SkidMaker sm(f.m,make
     check(second!=first&&f.m.word(first+0x30)==0&&f.m.word(second+0xf0)==2,"terrain transition bridges/detaches original sets");
     sm.MakeNoSkid();check(!f.m.word(maker)&&!f.m.word(second+0x30),"no skid terminates maker");
 }
+void stationary_contacts(){
+    Fixture f;const auto maker=f.maker();SkidMaker sm(f.m,maker);const SkidVector delta{{0,0.25f,0}};
+    sm.MakeSkid(0,{{0,0,0}},delta,1,1,f.services);const auto first=f.m.word(maker);
+    sm.MakeSkid(0,{{-0.0f,0,0}},delta,1,0.5f,f.services);
+    check(f.m.word(first+0xf0)==2&&f.m.scalar(first+0x20)==0,"stationary contact retains original second segment");
+    check(f.m.word(first+0x10)==0x80000000u&&f.m.scalar(first+0x14)==0&&f.m.scalar(first+0x18)==0,"VU finite maximal reciprocal preserves signed-zero direction");
+    for(unsigned i=0;i<3;++i)check(std::isfinite(f.m.scalar(first+0x50+4*i))&&std::isfinite(f.m.scalar(first+0x60+4*i)),"stationary bounds remain finite");
+    sm.MakeSkid(0,{{0,0,0}},delta,1,1,f.services);
+    check(!f.m.word(maker)&&!f.m.word(first+0x30)&&f.m.word(first+0xf0)==2,"zero direction takes original angle/end branch without merging or skipping");
+    sm.MakeSkid(0,{{0,0,0}},delta,1,1,f.services);const auto restarted=f.m.word(maker);
+    sm.MakeSkid(0,{{1,0,0}},delta,1,1,f.services);
+    check(restarted!=first&&f.m.word(restarted+0xf0)==2&&f.m.scalar(restarted+0x10)==1&&f.m.scalar(restarted+0x20)==1,"nonzero movement after stationary termination retains original normalization");
+    bool rejected=false;try{SkidSet(f.m,restarted).AddSegment({{1,1.0e-30f,0}},delta,1,f.services);}catch(const hp2::NotImplemented&){rejected=true;}
+    check(rejected,"nonzero squared-length underflow remains an explicit unrecovered numerical path");
+}
 void limits_and_lru(){Fixture f;const auto maker=f.maker();SkidMaker sm(f.m,maker);const SkidVector d{{0,0.25f,0}};
     for(unsigned i=0;i<9;++i)sm.MakeSkid(0,{{4.0f*i,0,0}},d,1,1,f.services);
     const auto second=f.m.word(maker),first=f.m.word(f.arena.list+4);
@@ -74,6 +89,18 @@ void render_promotes_lru(){
     check(f.m.word(f.arena.list)==a&&f.quads.empty(),"NIS render does not advance LRU");
 }
 struct Elevation:ContactProvider{int count=0;std::array<SkidVector,2> points{};float GetElevation(Memory&m,std::uint32_t,std::uint32_t p,std::uint32_t,std::uint32_t,std::uint32_t)override{points[count%2]={{m.scalar(p),m.scalar(p+4),m.scalar(p+8)}};++count;return m.scalar(p+4)*0.1f;}};
+void stationary_wheel_contacts(){
+    Fixture f;Elevation provider;f.services.contact=&provider;auto w=f.m.allocate(0x190),wi=f.m.allocate(0x20),cs=f.m.allocate(0x410),car=f.m.allocate(0x900);
+    f.m.word(w+0xc,wi);f.m.word(w+0x18,cs);f.m.scalar(wi+0x10,0.5f);f.m.word(wi+0x14,2);f.m.word(car+0x514,0xffffffffu);
+    f.m.matrix(w+0x70,init::bIdentity());f.m.scalar(w+0xf0,2);f.m.byte(w+0x155,1);f.m.byte(w+0x154,1);f.m.word(w+0x150,1);f.m.scalar(0x3102e8+0x90+0x14,1);
+    hp2::recovered::Wheel wheel(f.m,w);
+    for(unsigned frame=0;frame<12;++frame)wheel.MaybeMakeSkids(0.016f,car,f.services);
+    check(provider.count==24,"stationary wheel retains both original terrain queries every frame");
+    for(unsigned i=0;i<128;++i)if(f.m.byte(f.arena.used+i)){
+        const auto set=f.arena.pool+i*0x110;check(f.m.word(set+0xf0)<=2,"stationary contacts retain original endpoint/end behavior");
+        for(unsigned axis=0;axis<3;++axis)check(std::isfinite(f.m.scalar(set+0x50+axis*4))&&std::isfinite(f.m.scalar(set+0x60+axis*4)),"stationary wheel produces finite original bounds");
+    }
+}
 void debug_draw_context(){
     SkidTexture t;t.present=true;
     auto state=hp2::recovered::AttachSolidPolys(t,true);check(state.draw_context==2&&state.write_depth&&state.alpha_test==6&&state.alpha_reference==48,"Debug opaque context");
@@ -94,4 +121,4 @@ void wheel_eligibility(){Fixture f;Elevation provider;f.services.contact=&provid
     f.m.byte(w+0x154,1);f.m.word(w+0x150,4);f.m.scalar(0x3102e8+4*0x90+0x14,1);wheel.MaybeMakeSkids(0.016f,car,f.services);check(f.m.byte(f.m.word(w+0x180)+0x7f)==0,"puddle intensity zero");
 }
 }
-int main(){try{segment_codec();maker_geometry();limits_and_lru();cull_fade();render_promotes_lru();debug_draw_context();wheel_eligibility();std::cout<<"DRIVING_SKID_TESTS_OK\n";return 0;}catch(const std::exception&e){std::cerr<<e.what()<<"\n";return 1;}}
+int main(){try{segment_codec();maker_geometry();stationary_contacts();limits_and_lru();cull_fade();render_promotes_lru();debug_draw_context();stationary_wheel_contacts();wheel_eligibility();std::cout<<"DRIVING_SKID_TESTS_OK\n";return 0;}catch(const std::exception&e){std::cerr<<e.what()<<"\n";return 1;}}

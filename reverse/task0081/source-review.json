@@ -1,0 +1,122 @@
+{
+  "task": "TASK-0081",
+  "evidence": "E-0081-L01",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "430cdcc93478a453dde8db3dcb443add442dd779ab8f49697b31e077c3104c43",
+  "baseline_inventory_sha256": "aed7d2c13612cd0f39d391129b576dbc601094bb04ccf42884b6fb16bcf1d24d",
+  "before": [
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::initialize",
+      "signature_sha256": "e1f47b42d27ab9bb931bf00fb41dbaf39aa163dbec98ea6dfee70b83ad433ccc",
+      "body_sha256": "12b63008ee4f1d6845407debbdebfb362a998eecc3619852e5f2ca2bb6e2b4c2",
+      "stub": false,
+      "evidence_id": "E-0081-L01",
+      "reason": "Bind original Debug CarState::ResetCar before fixture placement and original PhysicsCar construction."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::advance",
+      "signature_sha256": "4b3b67ca000d00c4cfc26033669039b9ac1a8c4990327486dbfa5a4ee70d6e66",
+      "body_sha256": "d5e1989b00928a25028ffc3e635aed9f5d0e84f8c66ab3118d7371af8e7b041c",
+      "stub": false,
+      "evidence_id": "E-0081-L01",
+      "reason": "Bind exact once-per-frame state slices around movement/collision retries; reject untranslated route reset rather than ignoring it."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/game_core/indep/src/car.cpp",
+      "name": "begin_movement_state",
+      "signature_sha256": "61520b053c8481f4b282321958adc320a8d51145b19ff2940dfd6c262be9300b",
+      "body_sha256": "ff085a9cd5f635b6b6d92c2580b94dff7f1fa1686390ae7c7d0536cb73d84055",
+      "stub": false,
+      "evidence_id": "E-0081-L01",
+      "reason": "Explicit port-side slice of Debug00131D78 motion capture and001BD938 crossed-terrain frame reset; topology remainder excluded."
+    },
+    {
+      "path": "src/game_core/indep/src/car.cpp",
+      "name": "finish_movement_state",
+      "signature_sha256": "331f3b0d284e3794de70145275f34baefb4f2b29e6319605596cf4566f7eb603",
+      "body_sha256": "ed7014423dd46601b2e142451b5a866c428eb825eced5b58c02c2b17696f7c87",
+      "stub": false,
+      "evidence_id": "E-0081-L01",
+      "reason": "Explicit port-side slice of Debug00131E58 full-lane acceleration and original odometer/distance bookkeeping; path/Player remainder excluded."
+    },
+    {
+      "path": "src/game_core/indep/src/car.cpp",
+      "name": "Car::BeginMovement",
+      "signature_sha256": "7fcb0bee4598774f66fbe864aa18ec011e3b9925cfdc9aa2f88547dc85b6825e",
+      "body_sha256": "f685a9bbb3caa08ec15e9064f2ea050a38637e96d4bd2a99a5d75cd7cbd1629e",
+      "stub": false,
+      "evidence_id": "E-0081-L01",
+      "reason": "Partial Debug00131D78 entry retains explicit failure for unrecovered topology interest and LastInTroughPosition services."
+    },
+    {
+      "path": "src/game_core/indep/src/car.cpp",
+      "name": "Car::FinishMovement",
+      "signature_sha256": "46619334efd4c64fde056b9031703490444395f8052236c7902174e1222d4809",
+      "body_sha256": "05640429cf59bf83164a87cb1a5145fc4935c51575b485e0894c362c6cb7c213",
+      "stub": false,
+      "evidence_id": "E-0081-L01",
+      "reason": "Partial Debug00131E58 entry retains explicit failure for unrecovered path/recovery/headlight/horn/Player consumers."
+    },
+    {
+      "path": "src/game_core/indep/src/carstate.cpp",
+      "name": "CarState::ResetCar",
+      "signature_sha256": "a0aa70deaa841873038f7b80746d787f2c4f3960a80d692de9582aaa2155bc5e",
+      "body_sha256": "fe346cfade9d4bdf67d8d109fb787a821dc5a0c6ce43c1e3fd51731ba3fdaf52",
+      "stub": false,
+      "evidence_id": "E-0081-L01",
+      "reason": "Recovered full Debug001BD6C0 reset leaf with original write extent and wheel-matrix ordering; original equivalence not verified."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::initialize",
+      "signature_sha256": "e1f47b42d27ab9bb931bf00fb41dbaf39aa163dbec98ea6dfee70b83ad433ccc",
+      "body_sha256": "49206b5cbdb696da03bb41277af25fd6efd38ce49bcc3e56a8ccdd240571d7d5",
+      "stub": false,
+      "evidence_id": "E-0081-L01",
+      "reason": "Bind original Debug CarState::ResetCar before fixture placement and original PhysicsCar construction."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::advance",
+      "signature_sha256": "4b3b67ca000d00c4cfc26033669039b9ac1a8c4990327486dbfa5a4ee70d6e66",
+      "body_sha256": "56fc0f15b4cc6724f7db122c106935cf82427f6bc84920c413f26c9538a0f800",
+      "stub": false,
+      "evidence_id": "E-0081-L01",
+      "reason": "Bind exact once-per-frame state slices around movement/collision retries; reject untranslated route reset rather than ignoring it."
+    }
+  ],
+  "replacements": {
+    "reverse/scripts/audit_task0079_review.py": {
+      "before": "a3ae5d23deaa2aa298b4693607ddf5b3027285b7e9dd90045ec38e662dd9a5d1",
+      "after": "63f1357cbea185be51bbb7824b71e32f742230afc4b10501e1104e448ffc9497"
+    },
+    "reverse/tests/test_task0079_source_review.py": {
+      "before": "6ec0f6ceaadbf6589954e31508226ae4fe3c4e98c906ceb7d8e53580267ae40b",
+      "after": "084c0d9498d663f2d07c0293c4967bfe4cb55e169c645327f128fc5b03aa270d"
+    },
+    "src/game_core/indep/inc/Car.hpp": {
+      "before": "e5a8fa067edf65ff4b8050941c0c628dab5db2b94f59ab49c34d7c65299a0540",
+      "after": "307d2a3f81217e33b33f76285dcae99ada7fbce96d228ea49ef915af856ff917"
+    },
+    "src/game_core/indep/src/carstate.hpp": {
+      "before": "2ecc6a4ecc10762c169b73cf14f3492f966da6422e0950296f6c997df1e1a795",
+      "after": "4e021e9bb2564c4b219e97fe48d5bb64b8619ddaab8c81a9aea4e64114c9bcb3"
+    },
+    "src/tests/driving_backend_tests.cpp": {
+      "before": "3fcb9758061f46a3a0190ea4f05b43240db1c029f7f269b5a33a5cf2ae1c3392",
+      "after": "4bf9429422a27a8195402cf1d1a1d285eeb8c140de925710df97361a292d177e"
+    }
+  },
+  "additions": {
+    "reverse/scripts/audit_task0081_review.py": "02ceddbfc3d04d69ba2c934e9e4d7099a64638002275a11960186353508d369d",
+    "reverse/task0081/lifecycle.md": "68fb170ca40a5fc22da8d1f095500b6e234f4c15ac798130c1884f8a85106881",
+    "reverse/task0081/source-review.md": "af2433463cf1a2f44fb8868438be798ecc589f2c999f1c1f4fce63bbe4b8e2e0",
+    "reverse/tests/test_task0081_source_review.py": "a1c4aeae9574c91bf7a7d1aafcddf853a4c72649ae354a53ac316ac5fbb22522",
+    "src/game_core/port/driving/frame_lifecycle.hpp": "b26da52f3481f56be8dff97925b721fdb8dc976c2185beb1da037926f6c0f098",
+    "src/tests/driving_player_tests.cpp": "583432169ced214ebc35ffae7971c9aa49984bcc434ff03a477f8d173bf04fb3"
+  }
+}

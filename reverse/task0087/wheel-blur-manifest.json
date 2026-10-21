@@ -1,0 +1,25 @@
+{
+  "task": "TASK-0087",
+  "evidence": "E-0087-B01",
+  "binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "read_only": true,
+  "queries": [
+    "inspect.decompile0010E048",
+    "inspect.decompile001210F0/read_tool_outputtail",
+    "existingconstructor0011EA88"
+  ],
+  "captures": [
+    {
+      "path": "local/task0087/wheel-blur-emodel-render.json",
+      "sha256": "852f6de3d990c380425fa650ab202578455a1316c8a7f9335ebdd0ad4a6acf8f"
+    },
+    {
+      "path": "local/task0087/wheel-blur-car-render-tail.txt",
+      "sha256": "e691adf3182b294c1c5fc417e03aabb92212167aaac9d6efd5c12852d8b9dbf6"
+    },
+    {
+      "path": "local/task0082/lights/0011ea88.json",
+      "sha256": "87c70d9432585ff58d0fc0fb3225d9a2c1121072795de0954c5169ca3dc92578"
+    }
+  ]
+}

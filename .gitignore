@@ -57,3 +57,5 @@ settings.db
 *.ps2
 *.mcd
 saves/
+/reverse/tests
+/src/tests

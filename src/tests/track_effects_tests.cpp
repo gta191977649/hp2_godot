@@ -1,9 +1,33 @@
 #include "game_core/port/track/effects.hpp"
+#include "game_core/port/track/reflection.hpp"
+#include "port/vehicle/environment_fusion.hpp"
+#include "game_core/port/track/props_visibility.hpp"
+#include "game_core/port/track/settings.hpp"
 #include <iostream>
 #include <stdexcept>
 namespace {void check(bool b){if(!b)throw std::runtime_error("Track effect reference mismatch");}}
 int main(){try{
     using namespace port::track;
+    // Port presentation only: mixed opaque/alpha, repeated surfaces and LODs.
+    RenderSettings settings;check(settings.render_props);
+    check(!settings.enabled(EffectId::Environment));
+    settings.set("environment",true);check(settings.enabled(EffectId::Environment));
+    const auto revision=settings.revision;settings.set_props(false);
+    check(!settings.render_props&&settings.revision==revision+1);
+    settings.set_props(false);check(settings.revision==revision+1);
+    Frame mixed;DrawCommand road,tree,prop;road.identity=true;road.instance=1;
+    tree.instance=2;tree.effect.alpha_pass=true;prop.instance=3;prop.lod=2;
+    mixed.commands={road,tree,road,prop};mixed.visible_instances=3;
+    apply_props_visibility(mixed,true);check(mixed.commands.size()==4);
+    auto hidden=mixed;apply_props_visibility(hidden,false);
+    check(hidden.commands.size()==2&&hidden.visible_instances==1);
+    check(hidden.commands[0].identity&&hidden.commands[1].identity);
+    Frame all_props;all_props.commands={tree,prop};apply_props_visibility(all_props,false);
+    check(all_props.commands.empty()&&all_props.visible_instances==0);
+    settings.restore();check(settings.render_props);
+    check(!settings.enabled(EffectId::Environment));
+    apply_props_visibility(mixed,settings.render_props);check(mixed.commands.size()==4);
+
     // GS equations exercise extrapolation above unity alpha and Ad/As distinction.
     check(blend_channel(100,40,192,64,0x44)==130);
     check(blend_channel(100,40,192,64,0x48)==190);
@@ -16,8 +40,32 @@ int main(){try{
     // Near/far endpoints and true source matrix-pack ranges, with no world shift.
     check(screen_depth(1,1,101,0)==screen_depth_range(0)[1]);
     check(std::abs(screen_depth(101,1,101,1)-screen_depth_range(1)[0])<1e-6f);
-    check(screen_depth_to_gs(screen_depth_range(0)[0])==0x40000010);
-    check(screen_depth_to_gs(screen_depth_range(1,true)[1],0x31)==0x802000);
+    check(screen_depth_to_gs(screen_depth_range(0)[0])==0x000001);
+    check(screen_depth_to_gs(screen_depth_range(1,true)[1],0x31)==0x080200);
+    // PACKED XYZF2 discards low4/high4 z-word bits before either storage path.
+    std::uint32_t packed_z_bits=0x4123456f;float packed_z;std::memcpy(&packed_z,&packed_z_bits,4);
+    check(screen_depth_to_gs(packed_z,0x30)==0x123456);
+    check(screen_depth_to_gs(packed_z,0x31)==0x123456);
+    check(environment_packet_0010AC50(false).alpha==0x1000000048ULL);
+    check(environment_packet_0010AC50(true).alpha==0x1000000058ULL);
+    check(environment_packet_0010AC50(true,3).alpha==0x4000000048ULL);
+    require_environment_source_alpha(false,1);
+    require_environment_source_alpha(true,3);
+    bool rejected_destination_alpha=false;
+    try{require_environment_source_alpha(true,1);}catch(const hp2::NotImplemented&){rejected_destination_alpha=true;}
+    check(rejected_destination_alpha);
+    // Packet31C RGB uses first-pass Ad, independently of second-pass source A.
+    check((port::vehicle::fused_environment_copy_31c_rgb({100,80,250,192},{40,20,100,7})==std::array<std::uint8_t,3>{160,110,255}));
+    check((port::vehicle::fused_environment_copy_31c_rgb({100,80,250,0},{40,20,100,255})==std::array<std::uint8_t,3>{100,80,250}));
+    hp2::assets::TpkTextureHeader candidate_header{};candidate_header.alpha_bits=0x0a;candidate_header.Field_0x74=1;candidate_header.Field_0x50=1;
+    check(port::vehicle::single_triangle_environment_fusion_rgb_candidate(candidate_header,3,true,true,1));
+    check(!port::vehicle::single_triangle_environment_fusion_rgb_candidate(candidate_header,6,true,true,1));
+    check(!port::vehicle::single_triangle_environment_fusion_rgb_candidate(candidate_header,3,true,true,3));
+    candidate_header.alpha_bits=0x44;
+    check(!port::vehicle::single_triangle_environment_fusion_rgb_candidate(candidate_header,3,true,true,1));
+    std::array<float,32> environment_material{};environment_material[23]=44.8000031f;environment_material[27]=-6.39999962f;
+    check(environment_alpha_bounds(environment_material)==std::optional<std::array<std::uint8_t,2>>({{38,51}}));
+    environment_material[23]=64;environment_material[27]=0;check(environment_alpha_bounds(environment_material)==std::optional<std::array<std::uint8_t,2>>({{64,64}}));
     check(normalized_gpu_depth(0xffffff,0x31)==1.0);
     check(std::abs(standard_host_depth(1,1,101,0)-1.0)<1e-6);
     check(std::abs(standard_host_depth(101,1,101,0))<1e-6);

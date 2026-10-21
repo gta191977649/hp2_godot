@@ -1,0 +1,487 @@
+{
+  "task": "TASK-0085",
+  "evidence": "E-0085-S01",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "4c9f10509d1ddadfbd329f85e1cbbca398cfc2202af40a8682e52daf1d2a6b96",
+  "baseline_inventory_sha256": "ea578c97781b6c647c70e7d742d2d40627f988fa628b37c08c1f6dca9ef9aba2",
+  "before": [
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::set_alpha_ranks",
+      "signature_sha256": "3016cd423d3401d508acfd4c776e716afac3b5059db076d916008059ef26dc49",
+      "body_sha256": "9e81ed3bd9b8d95159d94c7beb0a78a9527399f73ba1b8dc42dffbd66c5cb609",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "impl_",
+      "signature_sha256": "462a7c8d27d7c6c09f77e72049b1d0b26e4483f80cf64d024907b7452ca1d74f",
+      "body_sha256": "33d6ae907d3a8970fae98e4b0d575199f12b1fe38992b758be009486363d1d10",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::set_material_callbacks",
+      "signature_sha256": "3c3fa53b5bddb99346373618dd7ed943cd92504e3ae11da38ec8454571f50ff7",
+      "body_sha256": "b2ced9c1837d60432043488cef3d98e54268b55042cef3c29e57d0f75b7d745a",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::stats",
+      "signature_sha256": "643c6aa3ecbcea0725fa5f23aaed396d1709605df24ef2949f056b1fcc4ccaf3",
+      "body_sha256": "44bca6c086573dea2ced8099a6578e0cbaf673a058499317b12d57bb04c33bf8",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::clear_dynamic_emitters",
+      "signature_sha256": "b46b5b8140327c82393df13f3997f0a1f189f9c04651d715fc9e43e0d1ae8529",
+      "body_sha256": "699840a0c1cab19c83770da3dcdfbbe04210179fe7f992b8f93f0ecdb4b690ce",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::trigger_dynamic",
+      "signature_sha256": "0973f515c5f748d666191a48db6a9c3045b52722829ba0abcd341dc39b6020f1",
+      "body_sha256": "73dff62f0da3c0d110f37c05bc0c673aadec187ea30614b7a46f788683ef0b28",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::step",
+      "signature_sha256": "c192a33179f0d7564e6ab1ba569d929d3eb54ca8972090910ccf256d42eb0411",
+      "body_sha256": "16918a16d3579ce5c304f8f2c7971da3f1c2041d8a31ca4f2d8e78005ace0218",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/driving_particle_display.cpp",
+      "name": "DrivingParticleDisplay::present",
+      "signature_sha256": "a12da2e4fb63161cdb1935c7520e66a676b71075f3e7e73c054d4f819786086f",
+      "body_sha256": "9ca9f80864fbdb17b98b988cd1dc02a16ca71a491f4af0159f2091f644f27caa",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::clear",
+      "signature_sha256": "107591a211cc80a4f3f8d0ffe837b1d72881cfd9dd83079c8f5243540760f2c3",
+      "body_sha256": "f11f8ff6ecb24cf46c971bd7366fc579fe7da25f13a28a128f58fbe1d9c1c84f",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::update",
+      "signature_sha256": "a3c32e766c158c36aa6fd8952083380862f259f0962b08b49b46f34fde2f3e9a",
+      "body_sha256": "9c394cc8e490dabab196ddc33e57869b77598b4e84cfb1452e98cdd1eb38bc10",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::update_view",
+      "signature_sha256": "af3656c2e22b307f305268073c180924b394cd8fabf3d8173144d28a6cb68113",
+      "body_sha256": "58ed3ab6b6d18120579cbb03983d2f547fb4282c0fc688588bd17e9fc03290c9",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::set_gpu_emission",
+      "signature_sha256": "657dfb17138194191334535ea26adaa409e9e42684b01954041ae907409f0397",
+      "body_sha256": "67f82d235789edb43944bd88ad83507cc155b3c39840a3253d156ec5e79a34e4",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::take_gpu_commands",
+      "signature_sha256": "754ddd2fee169869972fba26f92839e66598157d192b5fd0664a617057bbb4c8",
+      "body_sha256": "606205034436829af66bc3612e9054199ebca927f097942b4337a77daa0cabeb",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::capture_spawn",
+      "signature_sha256": "f7eb615d45a66488993624dba3a3945185c0e75e28ad2c63bc86d0f17532ce49",
+      "body_sha256": "2f1ae3d1311925cc33fda43ba6b6d3dbdb5de250e600dba8c203678139b36d7d",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::clear_dynamic_emitters",
+      "signature_sha256": "b46b5b8140327c82393df13f3997f0a1f189f9c04651d715fc9e43e0d1ae8529",
+      "body_sha256": "4da1a6c70263a1a3f86dd6e6c693e168ddc349a3b8b9624801c4d79124254b9b",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::trigger_dynamic",
+      "signature_sha256": "0973f515c5f748d666191a48db6a9c3045b52722829ba0abcd341dc39b6020f1",
+      "body_sha256": "666ad831fd8f262f76b9c6b2bbd5ad4df05b173dc2d008bd195a8ccd97efe211",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::step",
+      "signature_sha256": "c192a33179f0d7564e6ab1ba569d929d3eb54ca8972090910ccf256d42eb0411",
+      "body_sha256": "37424edb54be8c4efd227423f857e02c0f9a263eb45f915c66d553d04c79c50c",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::trigger_gpu",
+      "signature_sha256": "fd5541fefb9522c78845af4a8ed67878ae0a6d40a7af4e3cc6c468b885071ef8",
+      "body_sha256": "7045d0cf90c5b4170aba247c2b3093212ea7a157a27041f5a8fda5e10f2f84ce",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::advance_gpu",
+      "signature_sha256": "24bfd3c24a60fd53196fe926d660109b941cf22f52ab6e7f1a74c841d95e166b",
+      "body_sha256": "b654724a3513f63f4b2ba23f0e1d6e82ae7ca549770122694b71ecdf2c76c345",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/game_core/port/track/particles.hpp",
+      "name": "gpu_emission",
+      "signature_sha256": "c543efcbf28d2710b837b43ed6997260266b8f8897c32a32455b4f42e043b51a",
+      "body_sha256": "93f6472d6a37a8635341f8af810685542f8220835a1e6135026da0566c5d250b",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/game_core/port/track/particles.hpp",
+      "name": "gpu_commands",
+      "signature_sha256": "2c7c795a2e13c477138d2053d5fd5565b2c33a73c3aa8b39345b374eb7409fa2",
+      "body_sha256": "d2bc17c4586f0e62017b956ef338b3a17bbe5985dca6036b312b5893b9035fbd",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/driving_particle_display.cpp",
+      "name": "DrivingParticleDisplay::present",
+      "signature_sha256": "a12da2e4fb63161cdb1935c7520e66a676b71075f3e7e73c054d4f819786086f",
+      "body_sha256": "4392e9fdae08b5a6677306e20fa3b18f301780b13ec4a0e6f63840a07e848d2b",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/gpu_particle_renderer.cpp",
+      "name": "shader_material",
+      "signature_sha256": "63098fd5e3beb36b8727743eb2e4399b911a173216a5efc7446ae63486ada5a4",
+      "body_sha256": "e3e99d9194fa8083f176a2a5fdb1c34ddc95192f7d066fe40dd028eb576e7d42",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/gpu_particle_renderer.cpp",
+      "name": "matrix",
+      "signature_sha256": "acd7732dc4b4268bb7c2e8347807c5f47f6bce2343e73c773e44e2750d8e56d4",
+      "body_sha256": "1d6538a96bc349796fd1850e8a636cfb41ae115e3905b85706c615e421980a0e",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/gpu_particle_renderer.cpp",
+      "name": "alpha_peak",
+      "signature_sha256": "d2ac205d57c101ca7fe7fe762293722515d9caab81540b7410e14d79465e3008",
+      "body_sha256": "a51c07e96ce97b3fcb16ec89694668a323996c36e7166a698c423adae0c51ee3",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/gpu_particle_renderer.cpp",
+      "name": "draw_source",
+      "signature_sha256": "841ab1f6cf8866d52d1fc0af5cdeef62daf064fd16a9c12803d1cdbe75394677",
+      "body_sha256": "d8a3d07423a9e7ab61e6794159d6ad4f2b46e32778671456b31f1c806b241c32",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/gpu_particle_renderer.cpp",
+      "name": "mip",
+      "signature_sha256": "8b2c0d1dc7c466083dcc652e64024d2cb7f9707979f8a33558ce8e0abb6a2e0a",
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/gpu_particle_renderer.cpp",
+      "name": "remove",
+      "signature_sha256": "40d346bbee756ce9c238b2f161fd61c0ce4d8936b6505f6aecb57947772ef421",
+      "body_sha256": "29920bdb88a463b0c141ec3453f101f37e4a2d16e77c22a788d0cc69f92fad08",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/gpu_particle_renderer.cpp",
+      "name": "impl_",
+      "signature_sha256": "78c09f32775f3b0371e3ba176807689aa029417392f1cdb62df7d1eefce6a875",
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/gpu_particle_renderer.cpp",
+      "name": "~GpuParticleRenderer",
+      "signature_sha256": "5053b061a0d18bfa3961b4e789c6fd98b8db09b3972c45a9dbce384d312da14f",
+      "body_sha256": "2bfc07a567c9a10ee939da4feac9b4e7201abea4b35040d3d749901306e22add",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/gpu_particle_renderer.cpp",
+      "name": "GpuParticleRenderer::clear",
+      "signature_sha256": "f62037bed594a48ae90f5ae4e38159a33f417298b1dd97b87104a3dd1a754abd",
+      "body_sha256": "bcac92d2c86ac097f91ac3721e3b14e748e64ee17802aea1dd20ef154233bb34",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/gpu_particle_renderer.cpp",
+      "name": "GpuParticleRenderer::set_material_callbacks",
+      "signature_sha256": "4e22af200514a99ac488a97edad190aa7860354f50b65b449773cbfb79a8f1c7",
+      "body_sha256": "b040199aace8047fb1280cd00e38484f0effa675e44b254063a63ad76c7fdf5e",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/gpu_particle_renderer.cpp",
+      "name": "GpuParticleRenderer::update",
+      "signature_sha256": "78be906fe38bec8c111cc02c1aa86e5ee27bf0e002a2f87cbede3ee407b486c4",
+      "body_sha256": "4c5781a362391781a82d4eefcb1d91a901afdd64ccdb6697b77844fd37aa37d4",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/gpu_particle_renderer.cpp",
+      "name": "GpuParticleRenderer::commit_frame",
+      "signature_sha256": "e1c774b2ce22ab861b9f17020574d0e91b78b018e5edf67cfbb047357752322e",
+      "body_sha256": "e72b3825908c770b01dd10e1c29377f10dcc3bfa62d81c255c137f12f7fe15a9",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/gpu_particle_renderer.cpp",
+      "name": "GpuParticleRenderer::abort_frame",
+      "signature_sha256": "18c9cfa7134363f6d51c81cb579aebb6d585eb76b7a2f7eb43cd39015c9b44c7",
+      "body_sha256": "4caa11dc90e8b368010404a27c71ff8eafb285eae1df3cbe9099c990058116c7",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/gpu_particle_renderer.cpp",
+      "name": "GpuParticleRenderer::set_alpha_ranks",
+      "signature_sha256": "84be1bd3d57766a4e48595b35ad1aec90062460b7d49fdeef384dbc032d7e313",
+      "body_sha256": "bcb11f6a9246a323001aa986e3b250224f26537f60314ce845ea39aadec36fcd",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/gpu_particle_renderer.cpp",
+      "name": "GpuParticleRenderer::stats",
+      "signature_sha256": "fc4b94a501b916f7c037863d528dfbe22b57cc4f48915d8800cab752d7693b00",
+      "body_sha256": "e2bf2aa0cf860f8339ff693d10ffeafb91213e787e0b85caebbc3874bb24213d",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::update_view",
+      "signature_sha256": "af3656c2e22b307f305268073c180924b394cd8fabf3d8173144d28a6cb68113",
+      "body_sha256": "9e83c8443225a76a1b38b1cf0e78fd5e8590a783e263c419d43b8ebb3c4d431f",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "impl_",
+      "signature_sha256": "462a7c8d27d7c6c09f77e72049b1d0b26e4483f80cf64d024907b7452ca1d74f",
+      "body_sha256": "acc0432eb1fd8bae312c9d515c81c88dc485472bc9077564c58765fab51221c9",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::commit_frame",
+      "signature_sha256": "05fbd3f0cb868b66e77a2171d732428200b1feb4dcbd564b95f920009ecb6bfd",
+      "body_sha256": "efaabc276ca02d1816d3cb8d9f77be1465782d3622f6cec6be3880213b58afbb",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::abort_frame",
+      "signature_sha256": "29ab486c2e544c1a843ec82b906e5c7756fa24df3771a2f65d1c796fb5eaaf20",
+      "body_sha256": "9492488f43806afcfe4f6e0ef55259df78d0e631e371e54c0da915eb4ba74369",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::set_material_callbacks",
+      "signature_sha256": "3c3fa53b5bddb99346373618dd7ed943cd92504e3ae11da38ec8454571f50ff7",
+      "body_sha256": "438abbe69fd6ea9ac09b6f3237f0272d09ba9a837e6d770d822121067f7899d2",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::stats",
+      "signature_sha256": "643c6aa3ecbcea0725fa5f23aaed396d1709605df24ef2949f056b1fcc4ccaf3",
+      "body_sha256": "e345df9f818b20d602b402664d2aec057a225cf668173dbbe9ee81bf1cdcad31",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::clear",
+      "signature_sha256": "107591a211cc80a4f3f8d0ffe837b1d72881cfd9dd83079c8f5243540760f2c3",
+      "body_sha256": "bb8ab43dbafd49aa2a8855fe7bd8bd024fe8a2f3ec6a0dbfbae28ddb60bb9458",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::update",
+      "signature_sha256": "a3c32e766c158c36aa6fd8952083380862f259f0962b08b49b46f34fde2f3e9a",
+      "body_sha256": "844aab7a6a3ae43094d9da9c3faf25b6f0f17b6b6172df4508f9173a54b2e487",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::set_alpha_ranks",
+      "signature_sha256": "3016cd423d3401d508acfd4c776e716afac3b5059db076d916008059ef26dc49",
+      "body_sha256": "aad9187cf4729b5a526303dd8dff617697d8835be3e4b24465a8267cdeda0eac",
+      "stub": false,
+      "evidence_id": "E-0085-S01",
+      "reason": "Bind original native particle emission transfer to user-authorized optional GPU simulation/drawing and committed lifecycle, plus fixture/measurement plumbing; no original-runtime equivalence claim."
+    }
+  ],
+  "replacements": {
+    "CMakeLists.txt": {
+      "before": "b632b2bfdb4a8acf824175bdcbf824669a641578e17c896af214a5fcf23d9ce1",
+      "after": "f0c67d65f750a53ee409a5b6d81a99f507968d6e24ecc49cc95e8ef34d7bd1a7"
+    },
+    "godot/project.godot": {
+      "before": "a654b249c60eb91c9b64cbbe3a9dea7ab5dafdac15c93fa339bf7dd5e0352618",
+      "after": "6f19bf042ad78923d4b179f96267553b99815880b56bea332e576661e4362332"
+    },
+    "godot/scripts/debug/driving_particles_smoke.gd": {
+      "before": "c2e88257c344b35cd28c808f2d514f60d0e0a7a7d3e9f320380266397f4fd6dc",
+      "after": "83a49ff29217e4cd678d39300ba18713c3f6d624aedaf55250dace13775c508c"
+    },
+    "godot/scripts/runtime/track_performance.gd": {
+      "before": "72460dc1535f3807474ef5746895b58c0925ce84e8043dab00f903dd86ac38b8",
+      "after": "53f885ec92fb7b0f084733bedc259822707d717a57b5c4eaf27e3f9d604f7c94"
+    },
+    "godot/scripts/runtime/track_performance_viewer.gd": {
+      "before": "dc3d1625539de9995617a5cbdb9d2f0cd868a7a2148375120e4ad4d07e83e1eb",
+      "after": "192b898b9832b7bbef50789a8c825148bf4d55377cf7adee7fd15dc96c802d73"
+    },
+    "reverse/scripts/audit_task0084_review.py": {
+      "before": "02767d5c07db8f1fd147f5fe2991234db8443cd1c0ca6e45db559c637c187f11",
+      "after": "4457587f778206ed4abf8f515f0c7dc43a09c31192a199552a1b9c3bac784b7f"
+    },
+    "reverse/tests/test_task0084_source_review.py": {
+      "before": "4b7dda540a58cc04fb18d53cfceddb19e9b43411bacb280790daabf97fea2b05",
+      "after": "838568711407ba3d50ed70ba4707bf38a633ddd3251bb553c3520b2245c3e199"
+    },
+    "src/game_core/port/track/particles.hpp": {
+      "before": "cfea26c308e887176d0078679d7285fce2bc34466e228b88d5ec8b85dc04d3cd",
+      "after": "5f2bf28b07e27fb5889c0728e1f310b51e41d67ace55a23056d3ee11d2ba6cb9"
+    },
+    "src/platform/godot_bridge/ps2_track_renderer.cpp": {
+      "before": "d3a3b3af9c5adf0f40a55ad7dd046b64f5cbf5cb4ccfc8eac371d4deee6282e6",
+      "after": "82b3e01fd2665922f564dca8bb75f926914826a9756cb30735b14f332c1d7921"
+    },
+    "src/platform/godot_bridge/track_particle_renderer.cpp": {
+      "before": "005d3469617b3c3dafc10a3d700d15d05021061065663e28670e161b238aca7e",
+      "after": "eaf1d358d2ed9bb445f77b640876f8eaa214b5676f9df4fc829dc923a088621c"
+    },
+    "src/platform/godot_bridge/track_particle_renderer.hpp": {
+      "before": "2e0d49c13f433a34d9b17b21657ceb49ca3cf7c7f00afacd73d773bf8f56073e",
+      "after": "6c1aba1161b3255aff4790bdf00ee75d3684781d5c0793b46993923d082f714c"
+    },
+    "tools/run_track_costs.ps1": {
+      "before": "c17d12523482eaf998d13bc54f93b819e5cb42a9fa39e7c96a604c549ae58d24",
+      "after": "72558939bd8efacd4c79d827b05b3763c364c247b02684763c241977827dc341"
+    }
+  },
+  "additions": {
+    "godot/scripts/debug/gpu_particle_lifecycle_smoke.gd": "eabba5dc3badb26ebd15bbeb3d739a6a7b41258775e133188e30da72b03bba4c",
+    "godot/scripts/debug/gpu_particle_state_smoke.gd": "bfbbac16e32487a6124830e2450faf192fa3a327637d47bfce2fa4cb8dcc7be3",
+    "godot/scripts/debug/gpu_particle_visual_smoke.gd": "be4d47ca1a6e54e6f9b0f91aaa80f2ee0a5ef520d26e10347b247610495afcd4",
+    "reverse/scripts/audit_task0085_review.py": "99ecaf535317a0e200e6099af5087993d9b8bff99d03bf81cf0d39a946e5a62c",
+    "reverse/task0085/source-review.md": "8b8016929fc1815838922d36dc7b7e04f9195e0f574c5c1cdccbffac43876052",
+    "reverse/tests/test_task0085_source_review.py": "c01bed2e17452a91f5d3f4c8dd4802d32aac16844c8bdb66c2b9ead9cf68e4d4",
+    "src/platform/godot_bridge/gpu_particle_renderer.cpp": "4f817327dbd521f86f1178bb4f46cc6ada60d65d4a22c64d053bd57bee35d02c",
+    "src/platform/godot_bridge/gpu_particle_renderer.hpp": "46a78890842e9c51674269066837fa1f816d58dec43f5f8c67af86b7e1f5d798",
+    "src/tests/gpu_particle_emission_tests.cpp": "7def665d201a80cd0098d83d2955a3491c5ae83a924eef1b0fbe5fa1bbc92076",
+    "tools/particle_backend_benchmark.py": "1955ff7c5ceb54079f068313a91c2a839c627eae7df86d2416c6898057f7dd38"
+  }
+}

@@ -9,6 +9,11 @@
 #include <vector>
 #include "surface.hpp"
 #include "skid_services.hpp"
+#include "vehicle_lights.hpp"
+#include "vehicle_flares.hpp"
+#include "collision_events.hpp"
+#include "tire_audio_state.hpp"
+#include "water_effects.hpp"
 namespace port::driving {
 struct TrackEnvironment;
 // Port semantic inputs. Discrete requests are consumed after one successful step.
@@ -17,12 +22,14 @@ struct Input {
     int transmission=-1; // unchanged / automatic0 / manual1
     int shift=0; // down-1 / none0 / up1
     bool neutral=false;
+    bool horn=false; // Host binding for original honk callback press/release.
 };
 void validate_input(const Input&);
 struct PowertrainSnapshot {
     float rpm=0,speed=0,forward_speed=0;
     int gear=1,manual_transmission=0;
     bool handbrake=false;
+    bool horn=false;
 };
 using Matrix = std::array<float,16>;
 struct WheelSnapshot {
@@ -40,6 +47,13 @@ struct Snapshot {
     std::optional<SurfaceSettings> surface;
     std::optional<std::array<SurfaceMaterial,5>> surface_catalog;
     std::optional<PowertrainSnapshot> powertrain;
+    std::optional<VehicleLightState> lights;
+    std::optional<VehicleFlareState> flares;
+    std::vector<CollisionSoundRequest> collision_sounds;
+    TireAudioFrame tire_audio;
+    std::optional<WiperSnapshot> wipers;
+    std::vector<SplashAudioRequest> splash_audio;
+    std::vector<CollisionScrapeVoice> collision_scrapes;
     std::string track_label;
     std::vector<SurfaceMaterial> track_material_catalog;
 };

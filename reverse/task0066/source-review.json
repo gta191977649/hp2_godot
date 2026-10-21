@@ -1,0 +1,184 @@
+{
+  "task": "TASK-0066",
+  "status": "approved",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "af0cc7f2e391471187383e72816cb910c0ca54e0c70addf8ea8a1da3b11170c2",
+  "baseline_inventory_sha256": "392c3831f9ee77eed213ec3dd9ae9b21cf4d8c385e412a8f1d3e1f87f30d5fb3",
+  "scope_lf_sha256": "afc2d00815ce117516e87778d28d8b2c433757dca3030418d2fc223d05105b69",
+  "before": [
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_optimization_state",
+      "signature_sha256": "24a616fd0067ca95a31de9c7efeb453ffe887be49021f8e3d4a0e0688dd16e1f",
+      "body_sha256": "322ce9b96de49ab2dce07459b433471a7541eed979085b34d14037739e4e8494",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::submit_frame",
+      "signature_sha256": "f88cc7cc040672c5074b7faa44e3a579eedfa98216a917bf68c4cf67623d9ec7",
+      "body_sha256": "7c3af80e737bac82a877c4d65a9ad47bc6a826c15c5a218f86c795adfe5d8f7a",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "name": "optimization_options_from_dictionary",
+      "signature_sha256": "4b602a919c9358f7afa6859062c67a56797edefac0477a354c9e5f3a9fe48fc4",
+      "body_sha256": "bc2ab808bb66d90abe077984299eb56d0a500952426e43e3ff87335eee90dd90",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_optimization_state",
+      "signature_sha256": "24a616fd0067ca95a31de9c7efeb453ffe887be49021f8e3d4a0e0688dd16e1f",
+      "body_sha256": "e4e834a290ce1f429dc19b8399aa674905c6638d13c73134b678c0d3904305d4",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::submit_frame",
+      "signature_sha256": "f88cc7cc040672c5074b7faa44e3a579eedfa98216a917bf68c4cf67623d9ec7",
+      "body_sha256": "1853c0a999d4fd700500619adee22a08e66fa9e1726e981ea9e824a88a7bf037",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "name": "optimization_options_from_dictionary",
+      "signature_sha256": "4b602a919c9358f7afa6859062c67a56797edefac0477a354c9e5f3a9fe48fc4",
+      "body_sha256": "ff421bdf1bc34fc66e4c438feee5743af9a93162b836051b478223c849e8d79b",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    }
+  ],
+  "auxiliary_sources": [
+    {
+      "path": "godot/scripts/debug/asset_viewer.gd",
+      "lf_sha256": "c468513b735e46df5654d4b097563f0156a6ac2d20145a007b8ef046298bd92c",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics.gd",
+      "lf_sha256": "c04dec9b91e0fb25805ca9e164f3a9b51a1a8f9aa7f2288ca02e3558bc0b05d5",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics_smoke.gd",
+      "lf_sha256": "c272436d6c7931dab6174063829bc3504455f8fbe7d9906dabf2ed0bb5837a54",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_reflection_smoke.gd",
+      "lf_sha256": "0b8f8723f0bbb6556a7aee6729b689fa6cb12729e3fc8d6803bc2795c2a5058c",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_smoke.gd",
+      "lf_sha256": "23d754b5f7322c24d8189b1d3b97218fa40f066563d63ab838cefd93ceba7de5",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "reverse/scripts/audit_task0065_review.py",
+      "lf_sha256": "b2d48e884581a2f0642d433e16265111ebd471e51345ff0272d6087360c8df3a",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "reverse/tests/test_task0065_source_review.py",
+      "lf_sha256": "f8a4547dd5573eba191942676fa3004776d214a9e88b5ce38447ee3f2c7a360e",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.hpp",
+      "lf_sha256": "fe9bea066622bd25ee8a7cc05d85bf3c00eb6207d5e1bec906e775653266b685",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_command_batches.hpp",
+      "lf_sha256": "136d79fee8cf1bf60df4de958f9186d3f619f1e3f83a7e7880e3f548b28fc73c",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "lf_sha256": "df2ca1d6ae65f8a53b88044b5efc2dbcaffe0cf2fe356b794cc2e196f9d98750",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "lf_sha256": "609bccc54905187d675c727692439852918476bbd4f5b98a5f42323d1d4f533b",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "src/tests/track_draw_inventory.cpp",
+      "lf_sha256": "ea54ac27a7fa309b900aa235c665f69d5d403c259c6ced712ce442af025a9954",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "src/tests/track_world_batches_tests.cpp",
+      "lf_sha256": "7dcf3cb5231a44bafae5b1b464f553d70645c62a726711dec250de776c1f3689",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    }
+  ]
+}

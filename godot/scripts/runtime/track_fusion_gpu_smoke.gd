@@ -43,7 +43,7 @@ func _run() -> void:
 		return
 	var helper := _function(base, "vec3 hp2_framebuffer_rgb")
 	var effects := _function(track, "int hp2_track_blend_channel") + "\n" + _function(track, "ivec3 hp2_track_fused40_increment") + "\n" + _function(track, "ivec3 hp2_track_fused40_copy")
-	var viewport := SubViewport.new()
+	var viewport := SubViewport.new();viewport.use_hdr_2d=RenderingServer.get_current_rendering_method()!="gl_compatibility"
 	viewport.size = Vector2i(16, 16)
 	viewport.own_world_3d = true
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
@@ -63,9 +63,75 @@ func _run() -> void:
 	var foreground := MeshInstance3D.new()
 	foreground.mesh = quad
 	viewport.add_child(foreground)
+	# Real Track11 road material/normal/light context, CPU original VU oracle.
+	var alpha_fixtures = JSON.parse_string(FileAccess.get_file_as_string(ProjectSettings.globalize_path("res://../reverse/task0052/roadshine-alpha-fixtures.json")))
+	if not alpha_fixtures is Array or alpha_fixtures.size() < 6:
+		_fail("Original road C3 fixtures unavailable")
+		return
+	var alpha_helpers := "uniform vec3 source_camera;\nuniform vec3 probe_position;\nuniform vec3 probe_normal;\nuniform vec4 probe_material0;\nuniform vec4 probe_material3;\nuniform vec3 light_direction;\n" + _function(base, "float vu_bit_affine") + "\n" + _function(base, "vec3 vu_reflection") + "\nfloat hp2_affine_bit_power(float v,float s,float b){return vu_bit_affine(v,s,b); }\n" + _function(track, "float hp2_track_alpha40")
+	for fixture in alpha_fixtures:
+		var material := _material(helper, alpha_helpers, "float alpha=hp2_track_alpha40(vu_reflection(probe_position,probe_normal),probe_material0,probe_material3,light_direction);ALBEDO=hp2_framebuffer_rgb(vec3(alpha/255.0));ALPHA=1.0;", false)
+		material.set_shader_parameter("source_camera", Vector3(fixture.camera[0],fixture.camera[1],fixture.camera[2]))
+		material.set_shader_parameter("probe_position", Vector3(fixture.position[0],fixture.position[1],fixture.position[2]))
+		material.set_shader_parameter("probe_normal", Vector3(fixture.normal[0],fixture.normal[1],fixture.normal[2]))
+		material.set_shader_parameter("probe_material0", Vector4(fixture.material[0],fixture.material[1],fixture.material[2],fixture.material[3]))
+		material.set_shader_parameter("probe_material3", Vector4(fixture.material[12],fixture.material[13],fixture.material[14],fixture.material[15]))
+		material.set_shader_parameter("light_direction", Vector3(fixture.light[16],fixture.light[20],fixture.light[24]))
+		foreground.material_override = material
+		await RenderingServer.frame_post_draw
+		await RenderingServer.frame_post_draw
+		var pixel := viewport.get_texture().get_image().get_pixel(8,8)
+		var observed := roundi(pixel.r*255.0)
+		print("TRACK_C3_GPU_SAMPLE solid=",fixture.solid," camera=",fixture.camera," expected=",fixture.alpha," observed=",observed)
+		if observed != int(fixture.alpha):
+			_fail("Shared C3 GPU alpha disagrees with original CPU arithmetic")
+			return
+	# Exercise production vertex C3, CUSTOM0 float4 normals and RGBA8 colour.
+	# A uniform supplies the original native point while a host quad provides coverage.
+	var vertex_code := base.replace("@RENDER_MODES@", "fog_disabled, shadows_disabled, depth_draw_never, blend_mix").replace("@SAMPLER_HINT@", "filter_linear")
+	vertex_code = vertex_code.replace("@FRAGMENT_SOURCE@", "ALBEDO=hp2_framebuffer_rgb(vec3(gs_rgba.a/255.0));ALPHA=1.0;")
+	var alpha_vertex := FileAccess.get_file_as_string(ProjectSettings.globalize_path("res://../src/platform/shaders/track_alpha_vertex.glsl"))
+	vertex_code = vertex_code.replace("    if(reflection_pass){", alpha_vertex + "\n    if(reflection_pass){")
+	vertex_code = vertex_code.replace("void vertex(){", "float hp2_affine_bit_power(float v,float s,float b){return vu_bit_affine(v,s,b); }\n" + _function(track, "float hp2_track_alpha40") + "\nvoid vertex(){")
+	vertex_code = vertex_code.replace("void vertex(){", "uniform vec3 fixture_native_position;\nvoid vertex(){").replace("vec3 source_position = vec3(VERTEX.z, VERTEX.x, VERTEX.y);", "vec3 source_position = fixture_native_position;")
+	var vertex_shader := Shader.new()
+	vertex_shader.code = vertex_code
+	for fixture in alpha_fixtures:
+		var arrays := []
+		arrays.resize(Mesh.ARRAY_MAX)
+		arrays[Mesh.ARRAY_VERTEX] = PackedVector3Array([Vector3(-1,-1,0),Vector3(1,-1,0),Vector3(1,1,0),Vector3(-1,1,0)])
+		arrays[Mesh.ARRAY_COLOR] = PackedColorArray([Color(248.0/255.0,120.0/255.0,16.0/255.0,128.0/255.0),Color.WHITE,Color.BLACK,Color.RED])
+		arrays[Mesh.ARRAY_CUSTOM0] = PackedFloat32Array([fixture.normal[0],fixture.normal[1],fixture.normal[2],0,fixture.normal[0],fixture.normal[1],fixture.normal[2],0,fixture.normal[0],fixture.normal[1],fixture.normal[2],0,fixture.normal[0],fixture.normal[1],fixture.normal[2],0])
+		arrays[Mesh.ARRAY_INDEX] = PackedInt32Array([0,1,2,0,2,3])
+		var original_mesh := ArrayMesh.new()
+		original_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arrays,[],{},Mesh.ARRAY_CUSTOM_RGBA_FLOAT<<Mesh.ARRAY_FORMAT_CUSTOM0_SHIFT)
+		foreground.mesh = original_mesh
+		foreground.custom_aabb = AABB(Vector3(-1,-1,-1),Vector3(2,2,2))
+		var material := ShaderMaterial.new()
+		material.shader = vertex_shader
+		material.set_shader_parameter("fixture_native_position",Vector3(fixture.position[0],fixture.position[1],fixture.position[2]))
+		material.render_priority = 100
+		material.render_priority = 100
+		material.set_shader_parameter("source_camera",Vector3(fixture.camera[0],fixture.camera[1],fixture.camera[2]))
+		for row in range(4):
+			material.set_shader_parameter("material_"+str(350+row),Vector4(fixture.material[row*4],fixture.material[row*4+1],fixture.material[row*4+2],fixture.material[row*4+3]))
+		for row in range(7):
+			var key: String = "light_"+(["35c","35d","35e","35f","360","361","362"][row])
+			material.set_shader_parameter(key,Vector4(fixture.light[row*4],fixture.light[row*4+1],fixture.light[row*4+2],fixture.light[row*4+3]))
+		foreground.material_override = material
+		await RenderingServer.frame_post_draw
+		await RenderingServer.frame_post_draw
+		var observed := roundi(viewport.get_texture().get_image().get_pixel(8,8).r*255.0)
+		print("TRACK_C3_VERTEX_GPU_SAMPLE expected=",fixture.alpha," observed=",observed)
+		if observed != int(fixture.alpha):
+			_fail("Production vertex C3 transport disagrees with original CPU arithmetic")
+			return
+	foreground.mesh = quad
 	var cases := [
 		{"base": 100, "specular": 40, "alpha": 192, "destination": 20, "additive": true, "expected": 230},
 		{"base": 100, "specular": 40, "alpha": 192, "destination": 20, "additive": false, "expected": 160},
+		{"base": 100, "specular": 40, "alpha": 192, "destination": 20, "additive": true, "roadshine": false, "expected": 170},
+		{"base": 100, "specular": 40, "alpha": 192, "destination": 20, "additive": false, "roadshine": false, "expected": 100},
 		{"base": 250, "specular": 40, "alpha": 192, "destination": 20, "additive": false, "expected": 255},
 		{"base": 200, "specular": 60, "alpha": 192, "destination": 20, "additive": true, "expected": 255},
 		{"base": 100, "specular": 40, "alpha": 64, "destination": 20, "additive": true, "expected": 90},
@@ -74,16 +140,18 @@ func _run() -> void:
 	for sample in cases:
 		background.material_override = _material(helper, "", "ALBEDO=hp2_framebuffer_rgb(vec3(%f/255.0));ALPHA=1.0;" % float(sample.destination), false)
 		var operation := "hp2_track_fused40_increment" if sample.additive else "hp2_track_fused40_copy"
-		var fragment := "ivec3 fused=%s(ivec3(%d),ivec3(%d),%d);ALBEDO=hp2_framebuffer_rgb(clamp(vec3(fused),vec3(0.0),vec3(255.0))/255.0);ALPHA=1.0;" % [operation, sample.base, sample.specular, sample.alpha]
+		var fragment := "ivec3 fused=%s(ivec3(%d),ivec3(effect_roadshine_enabled?%d:0),%d);ALBEDO=hp2_framebuffer_rgb(clamp(vec3(fused),vec3(0.0),vec3(255.0))/255.0);ALPHA=1.0;" % [operation, sample.base, sample.specular, sample.alpha]
 		if sample.get("plain_add", false):
 			fragment = "int increment=hp2_track_blend_channel(%d,0,%d,0,72);ALBEDO=hp2_framebuffer_rgb(vec3(clamp(float(increment),0.0,255.0)/255.0));ALPHA=1.0;" % [sample.base, sample.alpha]
-		foreground.material_override = _material(helper, effects, fragment, bool(sample.additive))
+		foreground.material_override = _material(helper, "uniform bool effect_roadshine_enabled=true;\n" + effects, fragment, bool(sample.additive))
+		foreground.material_override.set_shader_parameter("effect_roadshine_enabled", sample.get("roadshine", true))
 		foreground.material_override.render_priority = 1
 		await get_tree().process_frame
 		await RenderingServer.frame_post_draw
 		await get_tree().process_frame
 		await RenderingServer.frame_post_draw
 		var image := viewport.get_texture().get_image()
+		image.convert(Image.FORMAT_RGBA8)
 		var pixel := image.get_pixel(8, 8)
 		var observed := Vector3i(roundi(pixel.r * 255), roundi(pixel.g * 255), roundi(pixel.b * 255))
 		print("TRACK_FUSION_GPU_SAMPLE ", sample, " observed=", observed)

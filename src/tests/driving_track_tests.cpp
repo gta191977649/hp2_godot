@@ -13,8 +13,8 @@ void units(){
     auto p=hp2::recovered::QuickSpline::GetPoint(line,0.5f,0);check(p[0]==5&&p[1]==0,"Original spline midpoint");
     auto d=hp2::recovered::QuickSpline::GetPoint(line,-2,1);check(d[0]==10&&d[1]==0,"Original extrapolated derivative");
     check(std::abs(hp2::recovered::QuickSpline::FindClosestParam(line,{{7,3}},0,0.05f)-0.7f)<0.01f,"Original closest-param iteration");
-    for(int i=0;i<33;++i)if(i!=4&&i!=5&&i!=20&&i!=32)check(port::driving::debug_terrain_from_retail(i)==i,"Terrain semantic map");
-    for(int i:{-1,4,5,20,32,33})rejected([&]{port::driving::debug_terrain_from_retail(i);});
+    for(int i=0;i<33;++i)if(i!=32)check(port::driving::debug_terrain_from_retail(i)==i,"Terrain semantic map");
+    for(int i:{-1,32,33})rejected([&]{port::driving::debug_terrain_from_retail(i);});
     rejected([]{port::driving::load_track_environment(port::track::Scene{});});
 }
 void real_material_queries(std::shared_ptr<const port::driving::TrackEnvironment> environment){

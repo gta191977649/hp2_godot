@@ -1,0 +1,22 @@
+{
+  "task": "TASK-0054",
+  "status": "draft-scope-intent-not-body-approval",
+  "entries": [
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::update",
+      "kind": "port_adapter",
+      "evidence_id": "E-0054-P01",
+      "evidence_record": "reverse/task0054/projection.md",
+      "reason": "Correct only host screen projection Y sign using actual PROJECTION_MATRIX convention; retain original world anchors, native packet values, custom depth and layer-safe bounds."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::update",
+      "kind": "port_adapter",
+      "evidence_id": "E-0054-P01",
+      "evidence_record": "reverse/task0054/projection.md",
+      "reason": "Correct only host screen projection Y sign using actual PROJECTION_MATRIX convention; retain original world anchors, native packet values, custom depth and layer-safe bounds."
+    }
+  ]
+}

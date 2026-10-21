@@ -1,0 +1,77 @@
+{
+  "task": "TASK-0058",
+  "entries": [
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "impl_",
+      "kind": "port_adapter",
+      "evidence_id": "E0058R01",
+      "evidence_record": "reverse/task0058/native-culling.md",
+      "reason": "Retire user-revoked host HLOD selection; default native culling in every view, preserve Show LOD debug exception and original recovered/physics bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::release_display",
+      "kind": "port_adapter",
+      "evidence_id": "E0058R01",
+      "evidence_record": "reverse/task0058/native-culling.md",
+      "reason": "Retire user-revoked host HLOD selection; default native culling in every view, preserve Show LOD debug exception and original recovered/physics bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::configure_optimizations",
+      "kind": "port_adapter",
+      "evidence_id": "E0058R01",
+      "evidence_record": "reverse/task0058/native-culling.md",
+      "reason": "Retire user-revoked host HLOD selection; default native culling in every view, preserve Show LOD debug exception and original recovered/physics bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::configure_lod_backend",
+      "kind": "port_adapter",
+      "evidence_id": "E0058R01",
+      "evidence_record": "reverse/task0058/native-culling.md",
+      "reason": "Retire user-revoked host HLOD selection; default native culling in every view, preserve Show LOD debug exception and original recovered/physics bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_lod_state",
+      "kind": "port_adapter",
+      "evidence_id": "E0058R01",
+      "evidence_record": "reverse/task0058/native-culling.md",
+      "reason": "Retire user-revoked host HLOD selection; default native culling in every view, preserve Show LOD debug exception and original recovered/physics bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::pump_load",
+      "kind": "port_adapter",
+      "evidence_id": "E0058R01",
+      "evidence_record": "reverse/task0058/native-culling.md",
+      "reason": "Retire user-revoked host HLOD selection; default native culling in every view, preserve Show LOD debug exception and original recovered/physics bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::submit_frame",
+      "kind": "port_adapter",
+      "evidence_id": "E0058R01",
+      "evidence_record": "reverse/task0058/native-culling.md",
+      "reason": "Retire user-revoked host HLOD selection; default native culling in every view, preserve Show LOD debug exception and original recovered/physics bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::update_view",
+      "kind": "port_adapter",
+      "evidence_id": "E0058R01",
+      "evidence_record": "reverse/task0058/native-culling.md",
+      "reason": "Retire user-revoked host HLOD selection; default native culling in every view, preserve Show LOD debug exception and original recovered/physics bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_state",
+      "kind": "port_adapter",
+      "evidence_id": "E0058R01",
+      "evidence_record": "reverse/task0058/native-culling.md",
+      "reason": "Retire user-revoked host HLOD selection; default native culling in every view, preserve Show LOD debug exception and original recovered/physics bodies."
+    }
+  ]
+}

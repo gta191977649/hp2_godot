@@ -1,5 +1,61 @@
 # Architecture and ownership
 
+TASK0088 separates original POV selection from held lookback: native camera
+publishes pose/projection/own-car flags; the host binds V cycle, B hold/release
+and temporary mouse orbit. TASK0089 adds raw native timed-wiper state and splash
+requests to committed snapshots. The model decodes original rigid animation and
+selects discrete matrices; Godot validates/transports snapshots and original sound
+samples. DriveOver spray shares the existing native/GPU visual transaction and
+does not advance native audio or physics during environment captures. See
+reverse/task0088 and reverse/task0089 for exact boundaries and evidence.
+
+TASK0081 adds explicit port-side frame-state slice bindings in frame_lifecycle.hpp,
+implemented in the evidence-backed original car.cpp owner. NativeBackend runs them
+once around movement/collision retries. Full Car entries remain partial/throwing;
+unsupported route recovery fails transactionally at00132FB0. ResetCar's recovered
+leaf is shared by fixture initialization and future route recovery. No Godot
+physics or replacement reset policy. See reverse/task0081/lifecycle.md.
+
+TASK0077 P0 establishes an export-separated benchmark boundary: bounded Profile
+collection stops before snapshot/export, and the benchmark releases export only
+after its measured loop. Run manifests bind source/engine/DLL inputs, actual
+thread/effect settings and post-run identity checks; A/A deterministic controls
+precede candidate diagnostics. This is port-side tooling, not a new RHI or PS2
+behavior change. P1 submission, P2 resource lifetime and P3 build restructuring
+are deferred. See [baseline protocol and limits](PERFORMANCE_TASK0077.md).
+
+TASK0075 connects bounded original Car wheel-effect producers and terrain emitter
+copies to shared AcidFX storage. The visual adapter stages simulation, bindings
+and original terrain counters transactionally after existing particle updates;
+it never steps physics again. Dynamic/static groups share pools/RNG. Tracks use
+native depth; the flat fixture uses host depth for its synthetic floor. See
+[wheel effects and boundaries](DRIVING_EFFECTS.md).
+
+TASK0071 changes the Windows default to Vulkan/Forward+. Port-side numeric-GS
+colour transport uses HDR colour/depth/reflection targets and LDR presentation;
+the native command/state generator is unchanged. A startup autoload checks the
+actual backend. Global ProfileDebug exports the actual driver and rendering
+method. Per-primitive COLCLAMP and original-runtime parity remain explicit gaps.
+See [migration status](PERFORMANCE_TASK0071.md).
+
+TASK-0069 selects official Godot4.7.2 while retaining the existing minimum4.4
+GDExtension ABI. The opt-in TrackProfiler autoload publishes cached HP2 metrics
+to Performance and samples engine viewport timestamps; it does not own or step
+native game state. Render API title labels use the active runtime driver.
+CPU transport caches retain native command preparation and exact state/order
+boundaries. See [profiling and known limits](PERFORMANCE_TASK0069.md).
+
+TASK0070 replaces the track-specific collector name with global `ProfileDebug`
+(`profile_debug.gd`) and draws live graphs/function scopes in the shared native
+ImGui frame across all scenes. UI history is bounded and owns no game state;
+function scopes are inclusive wall timing, not native sampling. See
+[current profiler contract](PROFILE_DEBUG.md).
+
+TASK-0060 adds bounded common-track host residency: lazy source meshes, direct
+CPU-to-final batches, inactive draw LRU with coordinated depth/uniform release,
+and lazy debug overlays. Native visibility/material/physics logic is unchanged.
+See [ownership, diagnostics and tests](TRACK_MEMORY.md).
+
 ## A: Recovered game core
 
 `game_core` is a static C++17 library. It owns authoritative game state, recovered
@@ -387,3 +443,160 @@ unload joins any owned load worker before deleting GPU resources and frame cache
 GPU nodes cache by instance/solid/surface and visibility changes per prepared frame;
 normal rendering never reads debug collision overlays. No Godot physics is added.
 See docs/TRACK_VIEWER.md and reverse/task0051 for scope and explicit capture gaps.
+
+
+### TASK-0052 shared visual stages (in progress)
+
+The same `port::track::Runtime` prepares native main and environment-view packets.
+Original `CalculateH` consumes the ELF's global screen width (512), independently
+of the desktop viewport. Capture camera raster projection accounts for the actual
+64-pixel target; the original camera field remains the LOD input. Immutable resource
+indices and queue ranks replace repeated linear searches without changing native
+command order. Conservative host batches merge only adjacent commands with equal
+matrix, lighting, material and complete effect state; environment passes remain
+separate and ordered. Batch meshes retain source vertex attributes and indices.
+
+`Ps2TrackRenderer` owns the common sky, scheduled reflection targets/atlas, vehicle
+shadow submission, Sun occlusion transfer and postprocess adapters. Postprocess uses
+an explicit depth-writing proxy view because Godot Compatibility's depth texture
+excludes the transparent queue used to preserve original GS order. Cached variants
+retain each source shader's alpha test, projection and depth-write decision. Main
+color/history and native depth-to-alpha scratch are distinct resources. Sun consumes
+the previously completed 32x32 transfer before requesting the next one. These are
+bounded host adaptations; destination-alpha car reflections, per-draw PSMCT16
+precision and other recorded gaps still prevent a complete-equivalence claim.
+
+Settings are process-session permission gates shared by browsing, Test drive and
+the independent race scene. Original activation conditions decide whether an
+allowed effect actually runs. Release retains original defaults without ImGui.
+Host resources are released during tree exit, before Godot deletes owned children.
+TASK-0052 remains active; current Debug build is promoted for the requested bounded build delivery.
+
+
+## TASK-0055: host submission policy
+
+The shared Ps2TrackRenderer accepts immutable-before-load host optimization options.
+Native runtime/frame packets, original section/LOD/effect scheduling and physics
+remain independent of Godot. The optimized candidate retains distinct material identity, avoids
+unchanged parameter/batch/sort submissions and retains particle ArrayMesh buffers.
+TrackPostprocess receives explicit geometry/material invalidation and a closed
+vehicle BASE-uniform writer contract; unknown materials retain full polling.
+Baseline and candidate use the same renderer, including race/Test drive/viewer.
+
+Contiguous MultiMesh and exact submitted-triangle occluders are separate experimental
+policies. MultiMesh failed exact Track24 color parity and is excluded from the
+optimized profile. Opaque queue and occlusion stay off without their independent
+visual/performance gates. No original far clip, LOD or effect condition is reduced.
+
+
+TASK0055 material sharing was removed after actual Track11 capture-atlas changes
+with identical native inputs. Other caches do not alias material objects. The
+read-only render-target diagnostics are available in Release and do not alter
+effect permissions. Exact controlled1080p native-driving-pose/rotated-view
+comparisons include actual car reflection binding and all intermediate targets.
+Independent-process car-reflection raster repeatability remains a separate
+existing uncertainty; no pixel tolerance or speculative shader fix is used.
+
+
+TASK-0055 acceptance completed:30 tracks,120 route-warmup/600 measured frames,
+3 repeats in both frozen54/final55 Release1080p runs. Native packet/pose, original
+effect permissions and draw-call distributions match. Median-route improvements:
+wall10.03%, CPU prepare27.62%, host submission33.16%; no persistent>5% wall median/
+P95/P99 regression. GPU timers unavailable; loading stalls remain. The accepted
+resource/particle-reuse profile is now the common project default. Distinct
+material identity retained; MultiMesh/occlusion/opaque remain experimental/off.
+See [performance report](PERFORMANCE_TASK0055.md). Override at launch with
+--track-optimization-profile=baseline. No original-console Verified promotion.
+
+## TASK-0056 optional Godot HLOD policy
+
+The shared renderer can consume port::track::StaticLodScene and
+Runtime::prepare_hlod_frame instead of original projected-size selection. The core
+emits all original resource slots for original candidate sections; engine visibility
+ranges perform final LOD/frustum decisions. Main, depth and capture views share
+range/anchor policy and common resource ownership. Original mode remains default.
+See GODOT_HLOD.md for contracts, source evidence and explicit boundary differences.
+
+## TASK-0058 supersedes host HLOD
+
+User revoked Godot-managed LOD. Only original production section/tree/instance
+selection is accepted; main and independent capture views share the native runtime.
+Show LOD remains debug-only. Prior TASK0056 sections are historical. No generated
+low meshes or physics changes. See [native visibility integration](NATIVE_TRACK_CULLING.md)
+and E0058R01 for evidence, tests, counters and verification limits.
+
+## TASK-0059 visual recovery boundary
+
+The port validates particle alpha per active atlas UV footprint and isolates only
+its explicit NotImplemented packet failure. Unimplemented high-alpha quads are
+reported/omitted, not normalized or silently marked recovered; base scenery and
+supported packets remain alive. Emitted node/stream/alpha ranks compact together.
+Immutable alpha bounds cache clears on unload. No recovered simulation/culling or
+physics body changed. Evidence E0059P01; high-alpha compositor remains future work.
+
+
+## TASK-0072: port-side CPU render preparation
+
+Recovered serial commands feed a standard-C++ payload builder under platform/render;
+Godot owns native group scheduling and ordered resource commits. No WorkerThreadPool
+or engine types enter game_core. Same-view joins retain producer/consumer timing.
+See [integration contract](RENDER_PREPARATION_TASK0072.md).
+
+
+TASK0072 submission workers consume immutable selected-command snapshots through
+`platform/render/preparation_work.hpp` and `submit_math.hpp`; they cannot call
+Runtime, Godot APIs or mutate caches. The bridge owns main-thread snapshots,
+per-view joins and serial state comparisons/commits. Depth synchronization uses
+port-side version/dirty policy (`depth_sync.hpp`) with main-thread scene/resource
+observers. This seam does not add a recovered PS2 scheduler or replace sector
+selection. See RENDER_PREPARATION_TASK0072.md for failure/lifecycle boundaries.
+
+## TASK-0082 vehicle feedback transport
+
+Native engine/horn state and original sample decoding remain Godot independent.
+Ps2DrivingRuntime owns cached sample streams and updates the bounded mixer once
+per committed frame. driving_audio.gd transports the13 native voices in both lab
+and race scenes. Pause stops host voices; restart resets the mixer; resuming can
+restart sample phase. This host lifecycle policy is not original SPU emulation.
+Lamp material changes consume native light selectors and original ON/OFF textures.
+No replacement physics or fabricated projected-light geometry was introduced.
+
+## TASK-0083 collision and tire audio ownership
+
+StaticCollisions retains original collision-state projections beside its witnesses.
+NativeBackend copies their state, collision selector and tire mixer with candidate
+Memory and only publishes committed audio. Impact requests are buffered and drained
+once by the host; scrape voices use stable contact IDs plus native stepped fade;
+tire slots use original state and samples. driving_audio.gd owns only stream start,
+stop, gain, pitch and cleanup in both driving scenes. The own-car listener binding
+and one sound update per committed frame are explicit port-side services. Full
+original world/SPU/spatial cadence and omitted effects remain unbound.
+
+## TASK-0084 Test drive camera ownership
+
+DrivingCamera retains the recovered default exterior pose history and accepts
+original car state, elapsed time, lookback and optional original topology/shape
+services. Ps2DrivingRuntime updates a candidate camera against a private Memory
+copy so camera math cannot advance physics or publish partial state. The original
+row0 CarTypeInfo fallback is bound from the configured original catalogue when
+required. Native pose coordinates map through the existing source-to-host axis seam.
+
+driving_camera.gd owns only Godot default projection and the requested temporary
+mouse orbit. driving_lab.gd owns input/lifecycle and consumes the native position,
+target and up vector. V changes original lookback rather than renderer transforms.
+Idle return reaches the live native frame; viewer pose/projection are restored on
+exit. This changes Test drive only; race_scene's separate camera remains scoped
+future work. See reverse/task0084 for original camera services still unbound.
+
+
+## TASK-0085/86 particle presentation
+
+ParticleSimulation owns original emission/RNG and the shared allocation ledger.
+The optional GPU backend consumes ordered committed birth/advance/remove batches
+using custom shaders; native CPU integration/rendering remains the default.
+Host commit/abort isolates failed frames; capture faces do not advance simulation.
+Fixed vehicle light sprites use the same presentation layer's persistent attached
+billboards, independent of GPU simulation. VehicleFlareState is a Godot-free
+snapshot channel; Model retains original markers and textures. Runtime Debug
+resources supply original parameters. See PERFORMANCE_TASK0085.md and
+VEHICLE_LIGHT_FLARES.md for tested boundaries and the user-waived timing matrix.

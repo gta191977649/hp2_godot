@@ -13,7 +13,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 LOGS = ROOT / 'local/pipeline'
-GODOT = Path(os.environ.get('PORT_GODOT', ROOT / 'local/tools/godot-4.4.1/Godot_v4.4.1-stable_win64_console.exe'))
+GODOT = Path(os.environ.get('PORT_GODOT', ROOT / 'local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe'))
 
 def write_json(path, data):
     path = Path(path)
@@ -171,7 +171,7 @@ def controller(limit=2):
     return state
 
 def doctor():
-    result = {'python': sys.version, 'godot': str(GODOT), 'godot_exists': GODOT.is_file(), 'tools': {x: shutil.which(x) for x in ('cmake', 'ninja', 'g++', 'git', 'pcsx2-qt')}, 'templates': str(Path(os.environ['APPDATA']) / 'Godot/export_templates/4.4.1.stable'), 'original_oracle': 'not validated'}
+    result = {'python': sys.version, 'godot': str(GODOT), 'godot_exists': GODOT.is_file(), 'tools': {x: shutil.which(x) for x in ('cmake', 'ninja', 'g++', 'git', 'pcsx2-qt')}, 'templates': str(Path(os.environ['APPDATA']) / 'Godot/export_templates/4.7.2.stable'), 'original_oracle': 'not validated'}
     for tool in ('cmake', 'ninja', 'g++', 'git'):
         if result['tools'][tool]:
             result[tool] = run([result['tools'][tool], '--version'], 'doctor-' + tool, 10).splitlines()[0]
@@ -216,8 +216,8 @@ def main():
     parser.add_argument('--attempts', type=int, default=2)
     args = parser.parse_args()
     if args.command == 'setup':
-        archive = ROOT / 'local/templates/godot-4.4.1.tpz'
-        destination = Path(os.environ['APPDATA']) / 'Godot/export_templates/4.4.1.stable'
+        archive = ROOT / 'local/templates/godot-4.7.2.tpz'
+        destination = Path(os.environ['APPDATA']) / 'Godot/export_templates/4.7.2.stable'
         if archive.exists():
             destination.mkdir(parents=True, exist_ok=True)
             with zipfile.ZipFile(archive) as source:

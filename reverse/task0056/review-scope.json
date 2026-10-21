@@ -1,0 +1,191 @@
+{
+  "task": "TASK-0056",
+  "entries": [
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::pump_load",
+      "kind": "port_adapter",
+      "evidence_id": "E0056H01",
+      "evidence_record": "reverse/task0056/host.md",
+      "reason": "User-authorized independent Godot HLOD descriptor/submission/proxy policy; original LOD and physics bodies preserved."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "impl_",
+      "kind": "port_adapter",
+      "evidence_id": "E0056H01",
+      "evidence_record": "reverse/task0056/host.md",
+      "reason": "User-authorized independent Godot HLOD descriptor/submission/proxy policy; original LOD and physics bodies preserved."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::_bind_methods",
+      "kind": "port_adapter",
+      "evidence_id": "E0056H01",
+      "evidence_record": "reverse/task0056/host.md",
+      "reason": "User-authorized independent Godot HLOD descriptor/submission/proxy policy; original LOD and physics bodies preserved."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::release_display",
+      "kind": "port_adapter",
+      "evidence_id": "E0056H01",
+      "evidence_record": "reverse/task0056/host.md",
+      "reason": "User-authorized independent Godot HLOD descriptor/submission/proxy policy; original LOD and physics bodies preserved."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::configure_optimizations",
+      "kind": "port_adapter",
+      "evidence_id": "E0056H01",
+      "evidence_record": "reverse/task0056/host.md",
+      "reason": "User-authorized independent Godot HLOD descriptor/submission/proxy policy; original LOD and physics bodies preserved."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::request_track",
+      "kind": "port_adapter",
+      "evidence_id": "E0056H01",
+      "evidence_record": "reverse/task0056/host.md",
+      "reason": "User-authorized independent Godot HLOD descriptor/submission/proxy policy; original LOD and physics bodies preserved."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::submit_frame",
+      "kind": "port_adapter",
+      "evidence_id": "E0056H01",
+      "evidence_record": "reverse/task0056/host.md",
+      "reason": "User-authorized independent Godot HLOD descriptor/submission/proxy policy; original LOD and physics bodies preserved."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::update_view",
+      "kind": "port_adapter",
+      "evidence_id": "E0056H01",
+      "evidence_record": "reverse/task0056/host.md",
+      "reason": "User-authorized independent Godot HLOD descriptor/submission/proxy policy; original LOD and physics bodies preserved."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_state",
+      "kind": "port_adapter",
+      "evidence_id": "E0056H01",
+      "evidence_record": "reverse/task0056/host.md",
+      "reason": "User-authorized independent Godot HLOD descriptor/submission/proxy policy; original LOD and physics bodies preserved."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::update",
+      "kind": "port_adapter",
+      "evidence_id": "E0056H01",
+      "evidence_record": "reverse/task0056/host.md",
+      "reason": "User-authorized independent Godot HLOD descriptor/submission/proxy policy; original LOD and physics bodies preserved."
+    },
+    {
+      "path": "src/game_core/port/track/runtime.cpp",
+      "name": "Runtime::prepare_hlod_frame",
+      "kind": "port_adapter",
+      "evidence_id": "E0056H01",
+      "evidence_record": "reverse/task0056/host.md",
+      "reason": "User-authorized independent Godot HLOD descriptor/submission/proxy policy; original LOD and physics bodies preserved."
+    },
+    {
+      "path": "src/game_core/port/track/static_lods.hpp",
+      "name": "describe_static_lods",
+      "kind": "port_adapter",
+      "evidence_id": "E0056H01",
+      "evidence_record": "reverse/task0056/host.md",
+      "reason": "User-authorized independent Godot HLOD descriptor/submission/proxy policy; original LOD and physics bodies preserved."
+    },
+    {
+      "path": "src/game_core/port/track/static_lods.hpp",
+      "name": "lod_distance_ranges",
+      "kind": "port_adapter",
+      "evidence_id": "E0056H01",
+      "evidence_record": "reverse/task0056/host.md",
+      "reason": "User-authorized independent Godot HLOD descriptor/submission/proxy policy; original LOD and physics bodies preserved."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::configure_lod_backend",
+      "kind": "port_adapter",
+      "evidence_id": "E0056H01",
+      "evidence_record": "reverse/task0056/host.md",
+      "reason": "User-authorized independent Godot HLOD descriptor/submission/proxy policy; original LOD and physics bodies preserved."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_lod_state",
+      "kind": "port_adapter",
+      "evidence_id": "E0056H01",
+      "evidence_record": "reverse/task0056/host.md",
+      "reason": "User-authorized independent Godot HLOD descriptor/submission/proxy policy; original LOD and physics bodies preserved."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_lod_ranges",
+      "kind": "port_adapter",
+      "evidence_id": "E0056H01",
+      "evidence_record": "reverse/task0056/host.md",
+      "reason": "On-demand distance configuration diagnostics; no per-frame host selection."
+    },
+    {
+      "path": "src/game_core/port/track/assets.cpp",
+      "name": "load_scene",
+      "kind": "port_adapter",
+      "evidence_id": "E0056T01",
+      "evidence_record": "reverse/task0056/textures.md",
+      "reason": "Load/decode original DEFAULTTEXTURE only for original model-table fallback, retain source aliases, reject unknown render-target bindings."
+    },
+    {
+      "path": "src/game_core/src/ecstasy/ecstasye.cpp",
+      "name": "eSolid::FixTextureTable",
+      "kind": "recovered",
+      "original_name": "eSolid::FixTextureTable",
+      "evidence_id": "E0056T01",
+      "evidence_record": "reverse/task0056/textures.md",
+      "reason": "Restore bounded resident-name/default selection from fresh Retail and Debug decompilation; no texture-name heuristic, paging or physics change.",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/0010bdb8.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/0010c1b0.md"
+      ]
+    },
+    {
+      "path": "src/game_core/indep/src/texture.cpp",
+      "name": "GetTextureInfo",
+      "kind": "recovered",
+      "original_name": "GetTextureInfo",
+      "evidence_id": "E0056T01",
+      "evidence_record": "reverse/task0056/textures.md",
+      "reason": "Restore bounded resident-name/default selection from fresh Retail and Debug decompilation; no texture-name heuristic, paging or physics change.",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/001abf48.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/001a95c8.md"
+      ]
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw",
+      "kind": "port_adapter",
+      "evidence_id": "E0056H01",
+      "evidence_record": "reverse/task0056/host.md",
+      "reason": "User-requested Show LOD port-side debug checkbox and action/state forwarding; all authored levels, no recovered behavior changed."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_snapshot",
+      "kind": "port_adapter",
+      "evidence_id": "E0056H01",
+      "evidence_record": "reverse/task0056/host.md",
+      "reason": "User-requested Show LOD port-side debug checkbox and action/state forwarding; all authored levels, no recovered behavior changed."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::set_show_lod",
+      "kind": "port_adapter",
+      "evidence_id": "E0056H01",
+      "evidence_record": "reverse/task0056/host.md",
+      "reason": "User-requested Show LOD port-side debug checkbox and action/state forwarding; all authored levels, no recovered behavior changed."
+    }
+  ]
+}

@@ -3,6 +3,7 @@
 #include <imgui_internal.h>
 #include <algorithm>
 #include <stdexcept>
+#include <cmath>
 namespace port::extensions {
 Batch convert_batch(const std::vector<Vertex>& vertices, const std::vector<unsigned>& indices,
     std::size_t offset, std::size_t count, std::size_t base, render::Rect clip,
@@ -55,7 +56,7 @@ void contain_windows(ImGuiContext* context,bool drawn){
     }
 }
 }
-struct DebugUiSession::Impl { ImGuiContext* context=nullptr;render::Bitmap atlas;std::string settings;std::vector<ImRect> input_windows; };
+struct DebugUiSession::Impl { ImGuiContext* context=nullptr;render::Bitmap atlas;std::string settings;std::vector<ImRect> input_windows;float scale=1; };
 DebugUiSession::DebugUiSession(const std::string& settings):impl_(std::make_unique<Impl>()) {
     impl_->context=ImGui::CreateContext();current();impl_->settings=settings;
     auto& io=ImGui::GetIO();io.IniFilename=settings.empty()?nullptr:impl_->settings.c_str();
@@ -69,8 +70,26 @@ DebugUiSession::~DebugUiSession(){current();ImGui::GetIO().IniFilename=nullptr;I
 void DebugUiSession::current(){ImGui::SetCurrentContext(impl_->context);}
 void DebugUiSession::save_settings(){current();if(!impl_->settings.empty())ImGui::SaveIniSettingsToDisk(impl_->settings.c_str());}
 const render::Bitmap& DebugUiSession::font()const{return impl_->atlas;}
+float DebugUiSession::scale()const{return impl_->scale;}
+void DebugUiSession::set_scale(float scale){
+    if(!std::isfinite(scale)||scale<.5f||scale>8.f)throw std::invalid_argument("UI scale must be finite and within0.5..8");
+    if(std::abs(scale-impl_->scale)<.001f)return;
+    current();auto& io=ImGui::GetIO();const float ratio=impl_->scale/scale;
+    // Mouse state is logical too, including a held drag across a monitor move.
+    const auto rescale=[&](ImVec2& point){if(std::isfinite(point.x)&&std::isfinite(point.y)&&ImGui::IsMousePosValid(&point)){point.x*=ratio;point.y*=ratio;}};
+    rescale(io.MousePos);rescale(io.MousePosPrev);
+    for(auto& point:io.MouseClickedPos)rescale(point);
+    impl_->input_windows.clear();impl_->scale=scale;
+    io.Fonts->Clear();ImFontConfig config;config.SizePixels=13.f*scale;
+    io.Fonts->AddFontDefault(&config);io.FontGlobalScale=1.f/scale;
+    unsigned char* pixels=nullptr;int width=0,height=0;io.Fonts->GetTexDataAsRGBA32(&pixels,&width,&height);
+    impl_->atlas.width=width;impl_->atlas.height=height;impl_->atlas.rgba.assign(pixels,pixels+width*height*4);++impl_->atlas.revision;
+    io.Fonts->SetTexID(reinterpret_cast<void*>(1));
+    ImGui::SetCurrentFont(io.Fonts->Fonts[0]);
+}
 void DebugUiSession::begin(float width,float height,float delta){
-    current();auto& io=ImGui::GetIO();io.DisplaySize={std::max(1.f,width),std::max(1.f,height)};
+    current();auto& io=ImGui::GetIO();io.DisplaySize={std::max(1.f,width/impl_->scale),std::max(1.f,height/impl_->scale)};
+    io.DisplayFramebufferScale={impl_->scale,impl_->scale};
     ImGui::GetStyle().WindowMinSize={std::min(32.f,io.DisplaySize.x),std::min(32.f,io.DisplaySize.y)};
     io.DeltaTime=std::max(.00001f,delta);contain_windows(impl_->context,false);ImGui::NewFrame();
 }
@@ -124,7 +143,7 @@ bool DebugUiSession::input(const Input& e){
     switch(e.kind){
     case Input::Kind::Key:if(e.code>=0&&e.code<static_cast<int>(Key::Count))io.KeysDown[e.code]=e.pressed;return capture_keyboard();
     case Input::Kind::Text:if(e.unicode)io.AddInputCharacter(e.unicode);return capture_keyboard();
-    case Input::Kind::Mouse:io.MousePos={e.x,e.y};return capture_mouse();
+    case Input::Kind::Mouse:io.MousePos={e.x/impl_->scale,e.y/impl_->scale};return capture_mouse();
     case Input::Kind::Button:if(e.code>=0&&e.code<5)io.MouseDown[e.code]=e.pressed;return capture_mouse();
     case Input::Kind::Wheel:io.MouseWheelH+=e.x;io.MouseWheel+=e.y;return capture_mouse();
     default:return false;

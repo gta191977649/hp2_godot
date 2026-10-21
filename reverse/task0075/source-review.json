@@ -1,0 +1,1711 @@
+{
+  "task": "TASK-0075",
+  "status": "approved",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "d27b07fcb40a38d3d47720d1300f6dbfc17b321b7a95130de2bc7c30e9ce054d",
+  "baseline_inventory_sha256": "6aa84ec3d673b84689c8c6209ef8c3a2df792f36caadf95c4b1cb2777a7edbc5",
+  "scope_lf_sha256": "55f6152f380ddaa9558b318bae5a580158bc4a461ed08888f7c7d86f1ebdf9ae",
+  "before": [
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::_bind_methods",
+      "signature_sha256": "536b0ee77af7622e05aadb1350ad9e811ea3af39bb65011327131a1ce50adc59",
+      "body_sha256": "32497ec914f228a230544315f7fb96d26a3f964045411abf52209358da76c4bd",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::load_config",
+      "signature_sha256": "bb174e3f294a621387ae16f0d510d53eab5fef5c036620744fbb5bd468a74f24",
+      "body_sha256": "e7843b1cbf2f77d639a361184528230438eb2b8f384c06a972739cada33f6033",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::action",
+      "signature_sha256": "a830cb7db16939fe05f8d36d382534804197f34bbaf185880c015d9459228975",
+      "body_sha256": "c9401b99ff5725d8b3759d6e0cd140249b0ac6bf0b3d5489ffc1c7fe9d801077",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "seed_",
+      "signature_sha256": "f12ddbbe3c600bb90042d349b2dee03c2867f2814facba01063dedea05daf2d0",
+      "body_sha256": "2d0fa825bf8de5b3ad5c2911996b7120ce6c02e9db0bb6a32f9788abe5822ecf",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/assets.cpp",
+      "name": "load_scene",
+      "signature_sha256": "7ed8152bd064b5ed45b5e7df94a4d61d54aa6b82dfe3998000e57af1a38f97d8",
+      "body_sha256": "5fa56990360b395329eb163cd2c3c0f80b03451c632d18cb6a05b0460028de89",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::step",
+      "signature_sha256": "c192a33179f0d7564e6ab1ba569d929d3eb54ca8972090910ccf256d42eb0411",
+      "body_sha256": "c70b80939d62560b6f19d1629e57ea606c299815fda59550857ad521c4e3c121",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-D02",
+      "evidence_record": "reverse/task0075/dynamic-particles.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::_bind_methods",
+      "signature_sha256": "45286c8e1c10882711eff28d62291073a8f49e6823c258fbbe9681b28e082daf",
+      "body_sha256": "3931186a8aba0c436a398d85bda26a06e78ca5801942a2592ee1571d913b3a3e",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::clear",
+      "signature_sha256": "107591a211cc80a4f3f8d0ffe837b1d72881cfd9dd83079c8f5243540760f2c3",
+      "body_sha256": "cb6d4b3918306b0e6a8638bb725689543a34da2501b91b5b254cc82cac8591e0",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::update",
+      "signature_sha256": "a4dad115078d2b9d5fcc437727610f596ec53b11cfd8941e1b115156f9c4e3a4",
+      "body_sha256": "80d9085bf6ad78362598a24101f3b857a3dc4668c945a1d7f0bc7da13d4a5b19",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::update_view",
+      "signature_sha256": "af3656c2e22b307f305268073c180924b394cd8fabf3d8173144d28a6cb68113",
+      "body_sha256": "9a72cdd7ed305118e79c11b45e3c69da13471bca14296939b4bc7776bf07f0c6",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/game_core/indep/src/car.cpp",
+      "name": "trigger_wheel_terrain_effects",
+      "signature_sha256": "773b614dc888a712aded4e7bc125e86b562e98b018ae521063f8efb7edf4a2e5",
+      "body_sha256": "7144505de34dbf8164182296159f0e25c7e5e40e68564bbe914a19c9a11d0d2e",
+      "stub": false,
+      "kind": "bounded_recovery",
+      "evidence_id": "E-0075-T01",
+      "evidence_record": "reverse/task0075/terrain-producer.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/indep/src/car.cpp",
+      "name": "Car::TriggerCarTerrainEffects",
+      "signature_sha256": "fef7d9df7102e87afab2bbc53ec285df776b3174e2c9edaadca2f91e109cf4a9",
+      "body_sha256": "ba99bc20a9cc3489e969d668bd96b41e441e8de4492f2efbac5dc81933f3bdac",
+      "stub": false,
+      "kind": "partial_boundary",
+      "evidence_id": "E-0075-T01",
+      "evidence_record": "reverse/task0075/terrain-producer.md",
+      "reason": "Full entry remains incomplete and explicitly throws after the recovered wheel loop; no whole-entry implementation claim."
+    },
+    {
+      "path": "src/game_core/port/driving/car_effects.cpp",
+      "name": "original_text",
+      "signature_sha256": "fb91a575e78e047bcc42137540496c1e3a12a5ea5f902063b61645e01be3d3ca",
+      "body_sha256": "6d4695190c24cd5df2f8657c85bf02bb449ffacad29ba09ea81d0ba61839e141",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-C01",
+      "evidence_record": "reverse/task0075/terrain-producer.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/driving/car_effects.cpp",
+      "name": "WheelParticleEffects::prepare",
+      "signature_sha256": "cf7ec0f48bbe7a7da0569a32f35f3d70c9f8ec5b2c68dc8cc03a3261e06179af",
+      "body_sha256": "7e129d8d4dac3c97b2ca921399143421bd2f61673e2774390ec40ced22a05580",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-C01",
+      "evidence_record": "reverse/task0075/terrain-producer.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/driving/car_effects.cpp",
+      "name": "WheelParticleEffects::trigger",
+      "signature_sha256": "ecf7f6beb0c137177ad89ef4444c954b377aa2d6abadeca3be62bc1ec4e4e463",
+      "body_sha256": "0516306b1de9b6d7b6d2094c29379a957ec66b9a4f9bee028fb6cba21353d63e",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-C01",
+      "evidence_record": "reverse/task0075/terrain-producer.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.hpp",
+      "name": "visual_effects",
+      "signature_sha256": "5108b0e7df9d78eab14c7044916a68fb64aca220f4db22e3b51ca0159f8fb9d4",
+      "body_sha256": "e617169705030241a7fc3d5fff21521247475125acf5b4838603b498ff8eb683",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/assets.cpp",
+      "name": "load_scene",
+      "signature_sha256": "7ed8152bd064b5ed45b5e7df94a4d61d54aa6b82dfe3998000e57af1a38f97d8",
+      "body_sha256": "45775adac31844ac208f4b455c4905b9c449c70c99beb9f9123e1c96d8ed271a",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/assets.cpp",
+      "name": "append_particle_library",
+      "signature_sha256": "ef93d1b47196b177e16b734dd74fb49ac700d930b28bc75d74bf6770efd22b79",
+      "body_sha256": "0bd31b8dc352aab140121b8e73fafb0b1a2a8ed89b83a1f378ccaccbc7eea2ef",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "seed_",
+      "signature_sha256": "f12ddbbe3c600bb90042d349b2dee03c2867f2814facba01063dedea05daf2d0",
+      "body_sha256": "5a41ad71d5745b6654b92e57dcbc6736e5d01b5331655a2642c87dc68dc7f25a",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::clear_dynamic_emitters",
+      "signature_sha256": "b46b5b8140327c82393df13f3997f0a1f189f9c04651d715fc9e43e0d1ae8529",
+      "body_sha256": "699840a0c1cab19c83770da3dcdfbbe04210179fe7f992b8f93f0ecdb4b690ce",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::add_dynamic_emitter",
+      "signature_sha256": "d9663de26e3665a92e49c4de332d5f932d08f470d490451b0cbfb0649986c190",
+      "body_sha256": "5aec240f36bf02a4382366a2508ac983cb3cb918f5a3e0759e727ff31365cef3",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::trigger_dynamic",
+      "signature_sha256": "0973f515c5f748d666191a48db6a9c3045b52722829ba0abcd341dc39b6020f1",
+      "body_sha256": "73dff62f0da3c0d110f37c05bc0c673aadec187ea30614b7a46f788683ef0b28",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::step",
+      "signature_sha256": "c192a33179f0d7564e6ab1ba569d929d3eb54ca8972090910ccf256d42eb0411",
+      "body_sha256": "16918a16d3579ce5c304f8f2c7971da3f1c2041d8a31ca4f2d8e78005ace0218",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-D02",
+      "evidence_record": "reverse/task0075/dynamic-particles.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/particles.hpp",
+      "name": "auto_emitter_order",
+      "signature_sha256": "f906c10ecf799dc932e766826e375f4aabe706b81099e9f8590ef5e326f8cfe1",
+      "body_sha256": "a25102b61b3c68c7c74c279ff8edb276e900a4a629e0d36c0b5ec4003f81dfe6",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/particles.hpp",
+      "name": "set_car_velocity",
+      "signature_sha256": "5e93d1de955a976cbfbaa028bde633c57a759d08846eac0d469af18e866b24d3",
+      "body_sha256": "e8904f86b9439f70f0d830a3e964c8fa5d615c75d873f5c60856edfe860ba793",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-D02",
+      "evidence_record": "reverse/task0075/dynamic-particles.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/src/care.cpp",
+      "name": "Car::TriggerEffect",
+      "signature_sha256": "fc00fd25f162873d76c9bcf4f632c59d9dc3987510a8931dd0b842c1fb52b5d3",
+      "body_sha256": "1366c519e5796ad44033d0cc7f529f2125517a81cc864bcd4f51c03ad5da2bb6",
+      "stub": false,
+      "kind": "bounded_recovery",
+      "evidence_id": "E-0075-C01",
+      "evidence_record": "reverse/task0075/terrain-producer.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/driving_particle_display.cpp",
+      "name": "upload",
+      "signature_sha256": "e68dbcce29c8217a6959d0b2b1d98547889e552a08e4a2b5ca4ce30129da3903",
+      "body_sha256": "c137a1d84081c0fb97bafe1826bb1d2bdae99f557223febd24a39f496727e399",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/driving_particle_display.cpp",
+      "name": "DrivingParticleDisplay::present",
+      "signature_sha256": "a12da2e4fb63161cdb1935c7520e66a676b71075f3e7e73c054d4f819786086f",
+      "body_sha256": "9ca9f80864fbdb17b98b988cd1dc02a16ca71a491f4af0159f2091f644f27caa",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::clear_particles",
+      "signature_sha256": "ba19c11f9de6d4bcc6ceaf97200386cb9bb68d4934be8cd4750525b78283e707",
+      "body_sha256": "0e006cbbb91ca5df96f9f2ddb195090394334646bca5c68b7f5810837f814a3b",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::present_particles",
+      "signature_sha256": "44816cb20ea01bdb24a2417c746651771299358cf7073887e523e2896dc47109",
+      "body_sha256": "ff3ff5148b9064f473c58aba9152426ec638a69b6d33b8cf19d349717cd3f872",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::particle_timestep",
+      "signature_sha256": "015862c78fac7b4171c824bb74c9ba7c52c9a02a8cec66930010d472c9289c9e",
+      "body_sha256": "a2692e67f1242c6bc19483ca858e07f4e064cec6fa1a5cc589aeb27db5ef86db",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-P03",
+      "evidence_record": "reverse/task0075/positions-scheduling.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::emit_wheel_particles",
+      "signature_sha256": "0319612b959df29f5c2262e318003f06d292f7c3084a8e0c883e7bb91ab9248d",
+      "body_sha256": "fd4c506007e24bea2db16f4e41248bb955ef03e639038e2b2256dc789c715f2e",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::_bind_methods",
+      "signature_sha256": "536b0ee77af7622e05aadb1350ad9e811ea3af39bb65011327131a1ce50adc59",
+      "body_sha256": "09e7d08e6e283bf551fc6940c98566e12a8e483aa174b68867f87128460bb078",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::load_config",
+      "signature_sha256": "bb174e3f294a621387ae16f0d510d53eab5fef5c036620744fbb5bd468a74f24",
+      "body_sha256": "a9934c8e339d96b35701638a32fdbf86975eddd8e7559ab370e4e41dc694ba4e",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::action",
+      "signature_sha256": "a830cb7db16939fe05f8d36d382534804197f34bbaf185880c015d9459228975",
+      "body_sha256": "bde366f6a84112fa3b85532005a5014979e81b4e5502ca121ce69fa45efcd56c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.hpp",
+      "name": "particle_step",
+      "signature_sha256": "726e225d58a2d2cdafdbb56360327b81c7e0278ac088ac0c1c9d234aa68721fb",
+      "body_sha256": "2b4c8a9f892cf1cec22a06bf51a5fa9304febcf3a8332511328b9627966d6fec",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.hpp",
+      "name": "particle_velocity",
+      "signature_sha256": "52b731c34a2c86a628c2683298f18d0288130aefce700c3101ebedac7759402f",
+      "body_sha256": "666593947ffa2b0391c63c2cbe4a8af42909a6f514477c4119727471b22dc0d0",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::_bind_methods",
+      "signature_sha256": "45286c8e1c10882711eff28d62291073a8f49e6823c258fbbe9681b28e082daf",
+      "body_sha256": "c2c03f07bce923c4a297e16d6bd8919dde991eddf8967d882073f4b3b753b090",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::update_view",
+      "signature_sha256": "af3656c2e22b307f305268073c180924b394cd8fabf3d8173144d28a6cb68113",
+      "body_sha256": "802b747516ddbb1f64f89f04edab15a09e85746370cace78b901a0516f5e2eee",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::set_driving_effect_source",
+      "signature_sha256": "d181ee32d8cf39a46b19f759690fe6c9b551502d64882d1fbbd1d4899a532d04",
+      "body_sha256": "234ac07538f7cc32c2e0f6c2045da75efcd4fbb77d57bbb834b213f0f39395c8",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::set_driving_source",
+      "signature_sha256": "f362706ff932191af8f7e613153e3f4d8d7d6ca412f5e43954c7f96681f3ab87",
+      "body_sha256": "bb3cc8216eee8c1f97b8399b64cbf9e2eba86606d2a6eab74842d1f592d8f59a",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::clear",
+      "signature_sha256": "107591a211cc80a4f3f8d0ffe837b1d72881cfd9dd83079c8f5243540760f2c3",
+      "body_sha256": "f11f8ff6ecb24cf46c971bd7366fc579fe7da25f13a28a128f58fbe1d9c1c84f",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::update",
+      "signature_sha256": "a3c32e766c158c36aa6fd8952083380862f259f0962b08b49b46f34fde2f3e9a",
+      "body_sha256": "9c394cc8e490dabab196ddc33e57869b77598b4e84cfb1452e98cdd1eb38bc10",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    }
+  ],
+  "auxiliary_sources": [
+    {
+      "path": "CMakeLists.txt",
+      "lf_sha256": "1ddb639cb154288ceb37d253b469725e1c2122b26890fa7f53d1f3936642c249",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "CMakePresets.json",
+      "lf_sha256": "aa10de12ddbdf3fc67384d4aa7d20d834e759c12cf6832cb9f1b970e6b3af8b7",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "build.ps1",
+      "lf_sha256": "9ef7d3dacec2bd614425784c3fa95986283841b6103a0266692e0f5a766fb71e",
+      "kind": "preserved_prior_state",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Pre-existing working-tree build helper differed from TASK0072 at TASK0075 startup; preserved without modification, not a TASK0075 implementation."
+    },
+    {
+      "path": "godot/project.godot",
+      "lf_sha256": "efda29c11e02df3e019ee5b5450118824497a45ba4c562a360beb06e6a242e5c",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scenes/encoded_transport_gpu_smoke.tscn",
+      "lf_sha256": "664ac3cd87efdcbaccfeeac9636ca2ce487dc414e88058a4e03800fb3d66ab02",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scenes/task0072_profile_upload_smoke.tscn",
+      "lf_sha256": "b6681d5036dade6b5b9972e41f304614116a6cf272302cc9bc09a7d845cb74e6",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scenes/task0072_sun_counter_smoke.tscn",
+      "lf_sha256": "68b5639e15fa8a5badfc881f91e8aa78307af463d1d54f831eb98d28a3ed4dbf",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scenes/task0072_sun_telemetry_smoke.tscn",
+      "lf_sha256": "307e90f7dab252599d426543fa3a077f645fd64097158e018f6a7567c76fc8cd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scenes/task0072_sun_transport_smoke.tscn",
+      "lf_sha256": "2c4b63db85fd26ec48f9b194037be5dde89625ae7749c544acd0745c74e00475",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/asset_viewer.gd",
+      "lf_sha256": "545fc528489773eb75bfec21d7c7447572b1888dfa94cfb93cebe74971195d5c",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "TASK0075 browsing projection and wheel display glue share this whole-file pin with pre-existing TASK0074 wireframe controls; prior wireframe is not recovered physics evidence."
+    },
+    {
+      "path": "godot/scripts/debug/car_material_gpu_smoke.gd",
+      "lf_sha256": "cbed5614b768253d6c928fe69908275dc6a2e45e00f61ee8eb7691d32b7841d0",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/debug_tools.gd",
+      "lf_sha256": "e8098e7c407237b10e309fcbdfaacbb9c57ec04c4d05beaba2ad66d6691fbe74",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/driving_particles_smoke.gd",
+      "lf_sha256": "c2e88257c344b35cd28c808f2d514f60d0e0a7a7d3e9f320380266397f4fd6dc",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/encoded_view.gd",
+      "lf_sha256": "3ece6987029244f68026e2b01384b4451d63b1c287b03323a007b2739f1421f5",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/profile_debug.gd",
+      "lf_sha256": "93457456785463e37f7c8f0daa11d3822d718f41df8d64e11362e7979a40797d",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/profile_debug_contract_smoke.gd",
+      "lf_sha256": "b38f5a7c7c081d0040515d1137e2eaf4e22cb197db848c686c57f03cd58b625c",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/profile_debug_game_smoke.gd",
+      "lf_sha256": "9db8422937c723d31cf3a4309cef451ce4b566a02429faa9eaed65690adb94e6",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/render_api.gd",
+      "lf_sha256": "2d53951b82b9ffbcfc814ac6f690c3ff37cb125e09adbb2ba05f46c519cce9ef",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/task0072_driving_harness_smoke.gd",
+      "lf_sha256": "bfe451b67a45677dcdad136bc16cf73bcdd06a74af7c1522243eb4e2da1f5f7a",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/task0072_profile_cache_smoke.gd",
+      "lf_sha256": "d97b9847430f8d253a87b844c02b63cc490fe542a039647686f6494956c9f1f3",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/task0072_profile_export_smoke.gd",
+      "lf_sha256": "fc673ff4cea996a0836216184e5696565a6d622eb818ba9ced61d627cbe8013b",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/task0072_profile_upload_smoke.gd",
+      "lf_sha256": "3622c9e8ffbf5f743b226ffda1ffffbabb571855186ee3fb05dba8a904c150eb",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/task0072_worker_config_smoke.gd",
+      "lf_sha256": "d31034fa63d8113b281aba6b373bdc390d2bddb22de9ba9e704e4e31f60e4f5b",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/track_profiler_hud_smoke.gd",
+      "lf_sha256": "23f57e1a1a9fd14bdc9bbd9942bd8a080864f4ad842dfea17a53af76b51d9fc0",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/track_profiler_smoke.gd",
+      "lf_sha256": "3c4a3b6ba904dcce092922dde95e165606b594c12166ff3766a17101a2421c71",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics.gd",
+      "lf_sha256": "c04dec9b91e0fb25805ca9e164f3a9b51a1a8f9aa7f2288ca02e3558bc0b05d5",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics_smoke.gd",
+      "lf_sha256": "c272436d6c7931dab6174063829bc3504455f8fbe7d9906dabf2ed0bb5837a54",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/track_smoke.gd",
+      "lf_sha256": "85e004274a4c1c6f888d9139cf5616d281b1522725eaf1fc1f708642a4cb7fc2",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/frontend_native.gd",
+      "lf_sha256": "1043982ae64e950e99bcbb78368b3b272284b836a4fa13cf31f997a64ede6651",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/encoded_transport_gpu_smoke.gd",
+      "lf_sha256": "2650d9d5612c46f8c461f8c7ff717c8d213be0f051ac51cacf84b71eebd771cf",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/race_scene.gd",
+      "lf_sha256": "e5a75bfc4073fccadd43e51d3376d33700da8523b40be8098db49fb0a7dc7844",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/render_contract.gd",
+      "lf_sha256": "3e1229d4b78968686b1851014682b7d5022130f7f03d93107bd04e0636b457c1",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/sky_depth_gpu_smoke.gd",
+      "lf_sha256": "439ee9b38d54908712f621baf8bf7e01f0d29a08a4b4ec6dafc69e604b8375b4",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/task0072_driving_parity.gd",
+      "lf_sha256": "ed158a388bcdc99d53c9c068e861435c4dfcf1f8b7c92c2e25cfe2f47b39a795",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/task0072_sun_counter_smoke.gd",
+      "lf_sha256": "05cbf0586a1fd2a4244978309e51501ad396bb3ca84c001bba9a13b218c4731a",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/task0072_sun_telemetry_smoke.gd",
+      "lf_sha256": "36b5bed24ea751f18f19c3c335393e54c41ac6e18a6aece2183c2343de964e69",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/task0072_sun_transport_smoke.gd",
+      "lf_sha256": "d252431ef28e0757e70a996b68e53869bce67e8fcd1247b0fb4e853c107d69b3",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_fusion_gpu_smoke.gd",
+      "lf_sha256": "16956ce4739a40a0efbbf00aa8c6b0553c4e7c45d93f6564f956521dd949014c",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_reflection_smoke.gd",
+      "lf_sha256": "0b8f8723f0bbb6556a7aee6729b689fa6cb12729e3fc8d6803bc2795c2a5058c",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_smoke.gd",
+      "lf_sha256": "23d754b5f7322c24d8189b1d3b97218fa40f066563d63ab838cefd93ceba7de5",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_particles_gpu_smoke.gd",
+      "lf_sha256": "9a39422e17c2edd27922244d1167f6f77f23e8934f04b1f18e79fb4501642008",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_performance.gd",
+      "lf_sha256": "0f98621a59ed29c2cbde8458db49d5cab30ea80fe908cd3e8ace8736b33fffaa",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_performance_scene.gd",
+      "lf_sha256": "82963d0bbb029467508b1f13a905d9fce7e47cab1cd5b41752ad179e2bfbd009",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_performance_viewer.gd",
+      "lf_sha256": "dc3d1625539de9995617a5cbdb9d2f0cd868a7a2148375120e4ad4d07e83e1eb",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_pipeline_smoke.gd",
+      "lf_sha256": "b0379a424daba309ef1d156a6f99eedb3b1d3a708f7d8837d58b0e8279cf987b",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_postprocess_gpu_smoke.gd",
+      "lf_sha256": "290dd6f852a0be76f2e2d52b42255cb886a86632488f04ef987ead69d3ab6208",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_postprocess_lifecycle_gpu_smoke.gd",
+      "lf_sha256": "64b33048a7a72fd55e23a901148febafe04120c8c81fd5de7c2520a92a5a2f17",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_sun_gpu_smoke.gd",
+      "lf_sha256": "6d10102c1e843afe617916c7f3a96447481c6558b2e39d8c20f2969eb9be01c4",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_transport_capture.gd",
+      "lf_sha256": "2d1c97af813427c5f8ff821720c557cb7adb634eac7bef99468023c7ece966fd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/shaders/sun_counter.gdshaderinc",
+      "lf_sha256": "c521f0fbe93fbfc046148c6eef45b83df96daa539899449efd0fa76ee03f7869",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0063_review.py",
+      "lf_sha256": "57689dc29af97d0b88a96bdea415c8c9a3479a9a1506fb13143122e5bb8ca805",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0064_review.py",
+      "lf_sha256": "705c735307cd2354caee731903dafebeff8284d75d75f9b2c7ae3c2426d29634",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0065_review.py",
+      "lf_sha256": "b2d48e884581a2f0642d433e16265111ebd471e51345ff0272d6087360c8df3a",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0066_review.py",
+      "lf_sha256": "fdba517a826a3e3914e0029077ad082e3d600ab6dd0635590b0dc3426896922f",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0067_review.py",
+      "lf_sha256": "21b2d97bb8b71416d370f00efec4c5c46d40a8b98646e14e678119f394353cc5",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0069_review.py",
+      "lf_sha256": "154bf99eba803ec46818b12948a9a3f6edf53e833fd4e092cf8c7e23bd8cf099",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0070_review.py",
+      "lf_sha256": "9256afce63b585fcc012a75646646914ab8e41b8c20284dfc6fa30b814375d78",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0071_review.py",
+      "lf_sha256": "83bdbfc104194e315b10f9f8650ca345a50163128b552e3088882491e665cdf1",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0072_review.py",
+      "lf_sha256": "af96784b4ffd16d8e4d7dc83b3f2409b58734866ac60ad3195ecfc7bc596f678",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0075_review.py",
+      "lf_sha256": "1852edee7d1684e24679ab228b77f46b4348052c2b08e1a7a5bfde8775d98ac2",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/task0072/host-rendering.md",
+      "lf_sha256": "b4c86d157f89f241e0cbc67b313aa22d5b96b8b61cb71dde9207e4fd37a94d92",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/task0072/residency.md",
+      "lf_sha256": "bcc487d1d01388f01b54d5d0ec10674d01761585cc4f3751291480ab57d0fdcc",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/task0072/sun.md",
+      "lf_sha256": "d52f22b11a63b43e88af18261e220f4aee9f05c1373e4c628c692601dc640499",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/task0075/dynamic-particles.md",
+      "lf_sha256": "eb26b3372715b92c39322401b4965164a506e73664a505e08a623680c4b970cc",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/task0075/positions-scheduling.md",
+      "lf_sha256": "7fa5c5c14d09a6f29b4c6694024c4c857797d77e369e86174651ef9ced42560a",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/task0075/source-review.md",
+      "lf_sha256": "f45c81eb9a5ba16d5b071060e33bb1b96e4a0e3c3305eaedd4212c83568b0c29",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/task0075/terrain-producer.md",
+      "lf_sha256": "8d6580b52fc007778e846eba5774207bf08b5433234014d1cdfee4e21dab2bad",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/tests/test_cpu_submission_analysis.py",
+      "lf_sha256": "645695ad983c2ef690a255eb6b288025c2415623a00a4a0efb22d564f14fc4aa",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/tests/test_task0065_source_review.py",
+      "lf_sha256": "f8a4547dd5573eba191942676fa3004776d214a9e88b5ce38447ee3f2c7a360e",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/tests/test_task0072_performance.py",
+      "lf_sha256": "47467ada46fe6981bcf216e59dce257ce861939439e08e29dbfce8bbdf2c1e0c",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/tests/test_task0072_source_review.py",
+      "lf_sha256": "1d144a1c5cdad43e51dd025a334f98fdabeb7451179813b689add78c125fd0a6",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/tests/test_task0072_workers.py",
+      "lf_sha256": "46cfa44c77e51e44ab5aab0974deb74aa49293449d2fa92189fa196d9c0661f1",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/tests/test_task0075_source_review.py",
+      "lf_sha256": "047af0d27bff0362094101fdf2495608002c2537e66b31ef5f27dd517aa44b0c",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.hpp",
+      "lf_sha256": "38c59f1a7c3791e765c2404a006ffadd284eee85c6e004810277f508f30870ca",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/indep/inc/Car.hpp",
+      "lf_sha256": "e5a8fa067edf65ff4b8050941c0c628dab5db2b94f59ab49c34d7c65299a0540",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/driving/car_effects.hpp",
+      "lf_sha256": "28695ceae34d88ccf8b531c0150dca07adb5d39988a13a71724d0d4869a88266",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.hpp",
+      "lf_sha256": "02f414d78978e8358bd86cabca9e508852145fdb5b8cf61edfbc978bb3d6d21f",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/driving/terrain_effects.hpp",
+      "lf_sha256": "0778314b928827ba64246fbcf8a7c2a8904308d4df088d8074ebd60cd1adbe66",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/assets.hpp",
+      "lf_sha256": "a8632f491289c2239097b2550ef646de0e837efb44850ba64be4306dc499f5eb",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/particles.hpp",
+      "lf_sha256": "cfea26c308e887176d0078679d7285fce2bc34466e228b88d5ec8b85dc04d3cd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/driving_particle_display.hpp",
+      "lf_sha256": "285697fd8b3f83ff8ccba5805d29d6997925bb4db0d36c06017f50b822ba464e",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/parameter_staging_registry.hpp",
+      "lf_sha256": "2f41622ab74828effdc57e3743da73792a5b8c3d73a2c15b8a960dc13a696c0c",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/profile_debug_ui.cpp",
+      "lf_sha256": "fcaa0282a932631fb34b2a2461c359afa11320b22124c75d5adcb494b728fee6",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/profile_debug_ui.hpp",
+      "lf_sha256": "a12c9757cf6ccff45a6f06755686e4e55737203f3cd9bbc08830a0f6835aca46",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "lf_sha256": "b21ab4492eb164fbda973e8190b196051efd9bed4a3502a7f1d3c3379c34bb65",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.hpp",
+      "lf_sha256": "e6388977ff30f56a12ee08d11dc1538ecab14cfd3c4d7ab8dc670c4510f1fbca",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.hpp",
+      "lf_sha256": "520ecb85c6a60c7bda21f63bcdd2d1b61c4cfab94577314abf675ad0523a996c",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "lf_sha256": "606774eb6ba37b31a9896b57fc21faf988e077b730eea4a613ad251d1a6ea8cf",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.hpp",
+      "lf_sha256": "afaa4d5a74a48c58c29a39da09aab7e30f5ecffcc963775faa62c287d4118dd3",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "lf_sha256": "843288f81469241ce82a9f3405b2a02db13260c1ecf2a29e3194d043d3b8aa70",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_command_batches.hpp",
+      "lf_sha256": "136d79fee8cf1bf60df4de958f9186d3f619f1e3f83a7e7880e3f548b28fc73c",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "lf_sha256": "894dce360a75c0da10a64c9721417c4a8fd1965d0b8752633eaa4ea1fd430874",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.hpp",
+      "lf_sha256": "9054f7fc40c76247f1625dd2d921ae4531871bd57dd8cb2bbbe6c335dfadf36c",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "lf_sha256": "609bccc54905187d675c727692439852918476bbd4f5b98a5f42323d1d4f533b",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "lf_sha256": "005d3469617b3c3dafc10a3d700d15d05021061065663e28670e161b238aca7e",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.hpp",
+      "lf_sha256": "2e0d49c13f433a34d9b17b21657ceb49ca3cf7c7f00afacd73d773bf8f56073e",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "lf_sha256": "4195514f96bebd514ccc2456e5e5536cd3a34f2c1ced684a33420923f4e1cc9b",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.hpp",
+      "lf_sha256": "7e30ccc98c89580465cadc1b95d0d0e4cff78714875a4ce03ea694e9034ac106",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "lf_sha256": "50cc107cf94de019bc81c66600026f05a9f3d797b2b37006d4c49be8dba4d1df",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_cache.hpp",
+      "lf_sha256": "3e4c06254a29b82696b9a725747a318ab1b7ead8421056b1ad71444bda98c5e3",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_digest.hpp",
+      "lf_sha256": "62ae1b29122373b48b6f40060fdbd7f61af09839b8c1d98aae91e7f8e1ff7ca2",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "lf_sha256": "75f487c480de21284b4f7417dffa7af92650318068ba248821d86b28828b51d9",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.hpp",
+      "lf_sha256": "be0003672f150ec0f5ab767d8f95c6fde36310a4f798b79cca84756ae9e1d24a",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_world_batches.hpp",
+      "lf_sha256": "d4e0b4f5a4d78463657e14bc04c3151ca7768b170473a68df785f81e957fa853",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/vehicle_depth_staging.hpp",
+      "lf_sha256": "844f2c9420965c6b916fe45e972aa7cb10ff756f7462f9d53537e009771b735c",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/depth_sync.hpp",
+      "lf_sha256": "43c7164613a37916ea40c1bde29ae3dd0a11ad5d5df28fb26c53f05316f9c2e9",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/mesh_prepare.hpp",
+      "lf_sha256": "7353d2698ef475e108b1c021c348aca969901dc3282684410a7c894fa310db21",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/preparation_work.hpp",
+      "lf_sha256": "ff8e2448fee7532cd38c4c06f99a7058b667edf1175f54bd1ca8093c6acf5980",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/submit_math.hpp",
+      "lf_sha256": "9d1c074e6fea4ebc8189107f3267365ad2f7162ead0f323e00fc4401ff46b57e",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/car_base.gdshader",
+      "lf_sha256": "582742fe990c39938b354a2314c450f819b10e3083bbdb7b0ff81ff372f3c70c",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/car_base_shader.hpp",
+      "lf_sha256": "170486698de5d73f8a39c4650b2edc95a49cf87ba863f25b9630a92c4ea9c34e",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/car_modulate.glsl",
+      "lf_sha256": "6ac4d0c5dd10a1bd230ae51309a348db19bb5b939e8c68d5f8b772e225c300f0",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/car_wireframe.gdshader",
+      "lf_sha256": "51db003d9b4f13f6d52442f4d95e938d453c1b012c4b6e8702bf40e0ebca8a65",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/embedded_shaders.hpp.in",
+      "lf_sha256": "f58556b1150ba85b1c3aafc770552230a9e653a93b234aa24a5bb523498f2ae2",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/postprocess.glsl",
+      "lf_sha256": "a10645fe7ddb48c3f0b88c7e104b816410ed48618ba2bb2e4a3d7f6f1f9e96ee",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/postprocess_composite.glsl.inc",
+      "lf_sha256": "406891131fc553fec4b6007fa5511ed89997c3e05fa95ddabf13e2154af833f4",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/screen_projection.hpp",
+      "lf_sha256": "db5a1158f70c6855d5435a205564881053de9437a74f437c727b3215955049c9",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/sky_depth.hpp",
+      "lf_sha256": "f96bdeb25cd3c3125451ca5fdb34d538b16b06a19d47f77c69ec19aec1917302",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_alpha_vertex.glsl",
+      "lf_sha256": "88d901c4ce32cdad8a206ebda981bee689ae9a23878865de98bb9f7842fcfd9d",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_debug_edges.gdshader",
+      "lf_sha256": "3c07b18ec4f2196a4c48ef64b2ad25d2ae07b5f6f113febef1df054d5c44e012",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_debug_fill.gdshader",
+      "lf_sha256": "e737bb064780dfe29b339676b1d1e68e59d2350620b695bf6f48dbbcdaede81f",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_depth.glsl",
+      "lf_sha256": "764cfc16166e732c8a2f01882a153ff60b917fbdb52c30a04194f251200589ac",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_effects.glsl",
+      "lf_sha256": "0c5c174a410920e86cfadf6b815852427c3f96582e5b3c62752307278dfd6c10",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_fragment.glsl",
+      "lf_sha256": "27a62a4fafc7aec99fbb9e940112961759df940d26e642676242a484f383f3e6",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_sampling.glsl",
+      "lf_sha256": "af6b3267b72de1e5c36cfd386797a58df0f7f84eda555936a37fb2dba2e16c12",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_shader.cpp",
+      "lf_sha256": "87220a813e68132af9977af8ed72017a81dcd55af37f7ec62682c4f5e3435bb6",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_shader.hpp",
+      "lf_sha256": "f3fffc9ecaa99b0c74890353242c74dfbd3e7a85705c56f4089b92e9e0434bc2",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/depth_sync_tests.cpp",
+      "lf_sha256": "8e60d370506df279b38166889a49db5566f56816047f4939eb68fea33200b0b9",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/driving_particle_tests.cpp",
+      "lf_sha256": "55df70d0b8bcec9bd6a7a3af39923b750643e2a6fcd0a9d7467bc55dc0680b9e",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/driving_terrain_effects_tests.cpp",
+      "lf_sha256": "5d5ce3838bff13664ac4355aa2a0ffe0557d0ecaa4cfe8666189d3e6bcd5b036",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/mesh_prepare_tests.cpp",
+      "lf_sha256": "5ec0482625fa78e22ec28ca022b19a8eab4bd852a5832bddd19cdf1a2ed6faaa",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/parameter_staging_registry_tests.cpp",
+      "lf_sha256": "21e348224416c7ee065129e522c4aa9dc7f86fea1ab99e91e74a8943d70b85ab",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/submit_math_tests.cpp",
+      "lf_sha256": "6131b3ac989bb0c7c4a025aa8efbc1cc3a99f5c154d799536fc3af975aa5c6b2",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/track_command_batches_tests.cpp",
+      "lf_sha256": "cf4102752a294198eff0a737f0d40140fd32d5fef23588e6b846b8bc3780a9c6",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/track_draw_inventory.cpp",
+      "lf_sha256": "ea54ac27a7fa309b900aa235c665f69d5d403c259c6ced712ce442af025a9954",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/track_runtime_tests.cpp",
+      "lf_sha256": "f900da833d3debb9ef3ae9272fb2acb09b5e397159954639b140cd67f2f89b5a",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/track_submission_cache_tests.cpp",
+      "lf_sha256": "b523276a22b60c5117b36057177587882626364fe0b0dbe2203b424bbd3f3f7d",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/track_submission_digest_tests.cpp",
+      "lf_sha256": "19e742114446ddc4156fc1de66ed3ae97e1d26a9a2e4c4dadb90f5bde8be780a",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/track_world_batches_tests.cpp",
+      "lf_sha256": "7dcf3cb5231a44bafae5b1b464f553d70645c62a726711dec250de776c1f3689",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/analyze_cpu_submission.py",
+      "lf_sha256": "346a090b644b276b9feb0f59f6a1d73170d37619951aa2eedc387a6ddb363a07",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/pipeline.py",
+      "lf_sha256": "61f9ef81b7e22955e821415f02fbb3624e599536021691216f7b8938dce705c2",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/run_frontend.ps1",
+      "lf_sha256": "d40e3d50ec6974af088d3836601015013d750b942336816d6ea63155853f4c2d",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/run_frontend_menu_observer.ps1",
+      "lf_sha256": "d752227378daada9107642a0eaaee6b5a02ad26a2510ce3c04ead0314bba7337",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/run_main_loop_observer.ps1",
+      "lf_sha256": "509a9a27fe112d31d6a4f226a2e686b80fba5b0aa26481b9a5cc997c8179d474",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/run_task0072_worker_matrix.ps1",
+      "lf_sha256": "76e208329a507372375b78a425dde8b534b435c00c607c7f584c9033c0b5cfeb",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/run_task0072_worker_parity.ps1",
+      "lf_sha256": "cbbc34498f3ff54cfd2d76296502ba0487abfa2422b6f83bc5e147a4b7922aba",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/run_track_costs.ps1",
+      "lf_sha256": "072a820742c98a0f1fd1bdd6b668a06e8f48c7904c62a87b1d95b65fc1ae595f",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/task0071_performance.py",
+      "lf_sha256": "7c5f0e559d259b09aadafc92ed4ee43ef862db9c4fbcdf86bb900064c4381197",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/task0071_pixels.py",
+      "lf_sha256": "86e1282583bcb8eb1a1c3822b35b728197aa389fe998657ebc019f62afafe80c",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/task0072_driving_compare.py",
+      "lf_sha256": "477ca762075d892cbfe0df3ecd5c5ac726f562826817323c0ac4703db180ca2a",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/task0072_performance.py",
+      "lf_sha256": "bf92a839b0e8aacb3a08706adce6936878a995fe9e2f0b8625994fc76f7737f9",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/task0072_sun_compare.py",
+      "lf_sha256": "4da9731001a3496ed215bd36fef4ac9e5bfbba661b289026818e4c0854dd7194",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/test_drive_window.py",
+      "lf_sha256": "0316e60d8f05c3fe06b71a1fd63804a3af0fa3d1b42a2682cbe5cb72abaf72d4",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    }
+  ]
+}

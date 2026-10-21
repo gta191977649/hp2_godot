@@ -1,3 +1,4 @@
+#include <godot_cpp/classes/performance.hpp>
 #include "ps2_render_host.hpp"
 #include "boundary.hpp"
 #include "game_core/port/not_implemented.hpp"
@@ -16,6 +17,12 @@
 #include <godot_cpp/variant/packed_vector2_array.hpp>
 #include <godot_cpp/variant/packed_color_array.hpp>
 #include <godot_cpp/variant/packed_int32_array.hpp>
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
 
 namespace port::godot_bridge {
 namespace {
@@ -65,6 +72,7 @@ void Ps2RenderHost::_bind_methods() {
     godot::ClassDB::bind_method(godot::D_METHOD("console_init", "settings", "info"), &Ps2RenderHost::console_init);
     godot::ClassDB::bind_method(godot::D_METHOD("console_input", "event"), &Ps2RenderHost::console_input);
     godot::ClassDB::bind_method(godot::D_METHOD("console_frame", "width", "height", "delta", "status"), &Ps2RenderHost::console_frame);
+    godot::ClassDB::bind_method(godot::D_METHOD("get_ui_scale"),&Ps2RenderHost::get_ui_scale);
     godot::ClassDB::bind_method(godot::D_METHOD("console_log", "text", "error"), &Ps2RenderHost::console_log);
     godot::ClassDB::bind_method(godot::D_METHOD("console_execute", "command"), &Ps2RenderHost::console_execute);
     godot::ClassDB::bind_method(godot::D_METHOD("console_focus_lost"), &Ps2RenderHost::console_focus_lost);
@@ -273,6 +281,7 @@ void Ps2RenderHost::console_init(const godot::String& settings, bool info) {
         auto* server=godot::RenderingServer::get_singleton();
         if(console_font_.is_valid())server->free_rid(console_font_);
         console_font_=server->texture_2d_create(to_image(console_->font()));
+        console_font_revision_=console_->font().revision;
 #else
         (void)settings;(void)info;
 #endif
@@ -364,11 +373,30 @@ bool Ps2RenderHost::console_input(const godot::Ref<godot::InputEvent>& event) {
     if(!failure.empty()) {last_error_=godot::String::utf8(failure.c_str());return true;}
     return consumed;
 }
+double Ps2RenderHost::get_ui_scale()const{
+    auto* display=godot::DisplayServer::get_singleton();
+    if(display->get_name()=="headless")return 1;
+#ifdef _WIN32
+    // Effective per-window DPI follows the Windows scaling setting, not the
+    // panel's physical pixel density. No process DPI-awareness state is changed.
+    using QueryDpi=UINT(WINAPI*)(HWND);
+    static const auto query=reinterpret_cast<QueryDpi>(GetProcAddress(GetModuleHandleW(L"user32.dll"),"GetDpiForWindow"));
+    if(query){const auto hwnd=reinterpret_cast<HWND>(display->window_get_native_handle(godot::DisplayServer::WINDOW_HANDLE));
+        if(const auto dpi=query(hwnd))return std::clamp(double(dpi)/96.0,.5,8.0);}
+#endif
+    return std::clamp(double(display->screen_get_scale(display->window_get_current_screen())),.5,8.0);
+}
+
 godot::Dictionary Ps2RenderHost::console_frame(double width,double height,double delta,const godot::Dictionary& status) {
-    godot::Dictionary result;result["available"]=console_available();result["visible"]=false;result["batches"]=0;result["fps_visible"]=false;
+    godot::Dictionary result;result["available"]=console_available();result["visible"]=false;result["batches"]=0;result["fps_visible"]=false;result["ui_bulk_upload"]=false;
     const auto failure=catch_all([&] {
 #if HP2_DEBUG_BUILD
         if(!console_)return;
+        const double ui_scale=status.has("ui_scale")?double(status["ui_scale"]):get_ui_scale();
+        const godot::Dictionary profile_state=status.get("profile_debug",godot::Dictionary{});
+        const bool bulk=bool(profile_state.get("ui_bulk_upload",false));result["ui_bulk_upload"]=bulk;
+        console_->enable_viewer_input(viewer_ui_.state().kind!="frontend"||bool(profile_state.get("enabled",false)));
+        console_->set_ui_scale(float(ui_scale));
         extensions::Snapshot state;
         state.screen=godot::String(status.get("screen",godot::String("unknown"))).utf8().get_data();
         state.fps=status.get("fps",0.0);state.milliseconds=status.get("ms",0.0);
@@ -376,15 +404,25 @@ godot::Dictionary Ps2RenderHost::console_frame(double width,double height,double
         state.textures=status.get("textures",0);state.missing=status.get("missing",0);state.clipped=status.get("clipped_out",0);
         console_->snapshot(std::move(state));
         const auto batches=console_->frame(width,height,delta,[&] {
-            extensions::ViewerUi::fps(float(width),double(status.get("fps",0.0)),double(status.get("ms",0.0)));
-            viewer_ui_.draw(float(width),float(height));
+            const float scale=console_->ui_scale();
+            extensions::ViewerUi::fps(float(width)/scale,double(status.get("fps",0.0)),double(status.get("ms",0.0)));
+            viewer_ui_.draw(float(width)/scale,float(height)/scale);
+            result["profile_debug"]=profile_debug_ui_.draw(status.get("profile_debug",godot::Dictionary{}),float(width)/scale,float(height)/scale);
         });
-        result["fps_visible"]=true;result["fps_right"]=width-8;
+        result["ui_scale"]=console_->ui_scale();result["font_revision"]=int64_t(console_->font().revision);
+        result["font_width"]=console_->font().width;result["font_height"]=console_->font().height;
+        const auto& ui=viewer_ui_.state();result["coordinates_visible"]=ui.camera_known&&(ui.kind=="track"||ui.real_track);
+        if(ui.camera_known){const auto& p=ui.camera_host;result["camera_position_hp2"]=godot::Vector3(p[2],p[0],p[1]);result["camera_position_godot"]=godot::Vector3(p[0],p[1],p[2]);}
+        result["fps_visible"]=true;result["fps_right"]=width-8*console_->ui_scale();
         result["capture_mouse"]=console_->capture_mouse();result["capture_keyboard"]=console_->capture_keyboard();
         result["visible"]=console_->visible();result["info"]=console_->info();result["batches"]=static_cast<int>(batches.size());
         result["logs"]=static_cast<int>(console_->log_count());
         auto* server=godot::RenderingServer::get_singleton();
         for(auto rid:console_draw_items_)server->canvas_item_clear(rid);
+        if(console_font_revision_!=console_->font().revision){
+            if(console_font_.is_valid())server->free_rid(console_font_);
+            console_font_=server->texture_2d_create(to_image(console_->font()));console_font_revision_=console_->font().revision;
+        }
         if(!console_parent_.is_valid())return;
         while(console_items_.size()<batches.size()) {
             auto rid=server->canvas_item_create();server->canvas_item_set_parent(rid,console_parent_);console_items_.push_back(rid);
@@ -394,8 +432,16 @@ godot::Dictionary Ps2RenderHost::console_frame(double width,double height,double
             const auto& b=batches[i];auto rid=console_items_[i];
             server->canvas_item_set_custom_rect(rid,true,to_rect(b.clip));server->canvas_item_set_clip(rid,true);
             godot::PackedVector2Array points,uvs;godot::PackedColorArray colors;godot::PackedInt32Array indices;
-            for(auto& v:b.vertices) {points.append({v.position.x,v.position.y});uvs.append({v.uv.x,v.uv.y});colors.append(to_color(v.color));}
-            for(auto index:b.indices)indices.append(index);
+            if(bulk){
+                const auto count=static_cast<int64_t>(b.vertices.size());
+                points.resize(count);uvs.resize(count);colors.resize(count);indices.resize(static_cast<int64_t>(b.indices.size()));
+                auto* point_data=points.ptrw();auto* uv_data=uvs.ptrw();auto* color_data=colors.ptrw();auto* index_data=indices.ptrw();
+                for(std::size_t j=0;j<b.vertices.size();++j){const auto& v=b.vertices[j];point_data[j]={v.position.x,v.position.y};uv_data[j]={v.uv.x,v.uv.y};color_data[j]=to_color(v.color);}
+                for(std::size_t j=0;j<b.indices.size();++j)index_data[j]=b.indices[j];
+            }else{
+                for(auto& v:b.vertices) {points.append({v.position.x,v.position.y});uvs.append({v.uv.x,v.uv.y});colors.append(to_color(v.color));}
+                for(auto index:b.indices)indices.append(index);
+            }
             // RenderingServer clipping applies to children, so geometry belongs to a child.
             server->canvas_item_add_triangle_array(console_draw_items_[i],indices,points,colors,uvs,{}, {},console_font_);
         }
@@ -427,12 +473,21 @@ void Ps2RenderHost::viewer_ui_snapshot(const godot::Dictionary& snapshot) {
     const auto failure=catch_all([&] {
 #if HP2_DEBUG_BUILD
         extensions::ViewerUiState state;
+        if(auto* performance=godot::Performance::get_singleton()){state.draw_calls=std::int64_t(performance->get_monitor(godot::Performance::RENDER_TOTAL_DRAW_CALLS_IN_FRAME));state.rendered_primitives=std::int64_t(performance->get_monitor(godot::Performance::RENDER_TOTAL_PRIMITIVES_IN_FRAME));}
+        state.render_statistics_enabled=snapshot.get("render_statistics_enabled",false);
+        const godot::Array statistics=snapshot.get("render_statistics",godot::Array());for(int i=0;i<statistics.size();++i)state.render_statistics.emplace_back(godot::String(statistics[i]).utf8().get_data());
+        state.camera_known=snapshot.has("camera_position");if(state.camera_known){const godot::Vector3 p=snapshot["camera_position"];state.camera_host={{p.x,p.y,p.z}};}
         const auto text=[&](const char* key){return std::string(godot::String(snapshot.get(key,"")).utf8().get_data());};
         state.kind=text("kind");if(state.kind.empty())state.kind="frontend";
         state.source=text("source");state.status=text("status");state.diagnostic=text("diagnostic");
         state.rendering=text("rendering");state.camera=text("camera");
         state.real_track=snapshot.get("real_track",false);state.track_name=text("track_name");state.track_id=snapshot.get("track_id",-1);
-        state.render_collision=snapshot.get("render_collision",false);state.render_material=snapshot.get("render_material",false);
+        state.show_lod=snapshot.get("show_lod",false);state.render_collision=snapshot.get("render_collision",false);state.render_material=snapshot.get("render_material",false);
+        state.loaded_instances=snapshot.get("loaded_instances",0);state.considered_instances=snapshot.get("considered_instances",0);state.visible_instances=snapshot.get("visible_instances",0);
+        state.loaded_sections=snapshot.get("loaded_sections",0);state.selected_sections=snapshot.get("selected_sections",0);
+        state.render_props=snapshot.get("render_props",true);state.render_ready=snapshot.get("render_ready",false);state.distance_override=snapshot.get("distance_override",false);
+        state.draw_distance=snapshot.get("distance",10000.f);state.effective_near=snapshot.get("effective_near",.5f);state.effective_far=snapshot.get("effective_far",10000.f);state.original_far=snapshot.get("original_far",10000.f);state.native_frame_ms=snapshot.get("native_frame_ms",0.0);state.host_submit_ms=snapshot.get("host_submit_ms",0.0);
+        const godot::Array effects=snapshot.get("effects",godot::Array());for(int i=0;i<effects.size();++i){const godot::Dictionary row=effects[i];extensions::UiEffect item;item.id=godot::String(row.get("id","")).utf8().get_data();item.name=godot::String(row.get("name","")).utf8().get_data();item.category=godot::String(row.get("category","")).utf8().get_data();item.reason=godot::String(row.get("reason","")).utf8().get_data();item.enabled=row.get("enabled",false);item.available=row.get("available",false);item.active=row.get("active",false);state.effects.push_back(std::move(item));}
         state.debug_ready=snapshot.get("debug_ready",false);state.debug_diagnostic=text("debug_diagnostic");
         const godot::Array legend=snapshot.get("material_legend",godot::Array());
         for(int i=0;i<legend.size();++i){const godot::Dictionary row=legend[i];extensions::UiTrackMaterial entry;
@@ -499,7 +554,8 @@ godot::Dictionary Ps2RenderHost::viewer_ui_next() {
 godot::Dictionary Ps2RenderHost::viewer_ui_targets()const {
     godot::Dictionary result;
 #if HP2_DEBUG_BUILD
-    for(const auto& [name,point]:viewer_ui_.targets())result[godot::String::utf8(name.c_str())]=godot::Vector2(point[0],point[1]);
+    const float scale=console_?console_->ui_scale():1.f;
+    for(const auto& [name,point]:viewer_ui_.targets())result[godot::String::utf8(name.c_str())]=godot::Vector2(point[0]*scale,point[1]*scale);
 #endif
     return result;
 }

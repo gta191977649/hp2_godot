@@ -10,4 +10,6 @@ namespace port::godot_bridge {
 // depth_near/depth_far define the source depth projection; bind actual view values.
 std::string track_shader_source(const hp2::assets::TpkTextureHeader&,
     const port::track::EffectState&,port::track::Fusion40);
+// Separate original packet318 additive pass. Packet31C requires destination alpha.
+std::string track_environment_shader_source(const port::track::EffectState&);
 }

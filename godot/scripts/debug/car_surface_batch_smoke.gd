@@ -64,6 +64,57 @@ func _wait(car: Node3D) -> Dictionary:
         state = car.pump_load()
     _check(state.ok, str(state.error))
     return car.update_view(Vector3(5,4,9), Vector3.FORWARD, 1200.0, 0)
+func _capture_binding_lifecycle() -> void:
+    var car: Node3D = ClassDB.instantiate("Ps2VehicleRenderer")
+    add_child(car)
+    var image := Image.create(1,1,false,Image.FORMAT_RGBA8)
+    image.fill(Color(0.25,0.5,0.75,128.0/255.0))
+    var first_texture := ImageTexture.create_from_image(image)
+    var second_texture := ImageTexture.create_from_image(image)
+    var matrix := PackedFloat32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1])
+    for attempt in 2:
+        var loaded: Dictionary = car.load_car("CARS/ELISE/GEOMETRY.BIN")
+        _check(loaded.ok,"Capture fixture original Elise load")
+        var capture := {"enabled":true,"available":true,"texture":first_texture,"hack_matrix_native":matrix,"diagnostic":"binding fixture"}
+        car.set_environment_capture(capture)
+        car.update_view(Vector3(5,4,9),Vector3.FORWARD,1200.0,0)
+        var reflection: ShaderMaterial
+        var base: ShaderMaterial
+        var blocked := 0
+        for mesh in _meshes(car):
+            for index in mesh.mesh.get_surface_count():
+                var material: ShaderMaterial = mesh.get_active_material(index)
+                if material.get_shader_parameter("flag_0x4"):
+                    _check(material.next_pass==null,"Unsupported31C remains detached")
+                    blocked += 1
+                elif material.next_pass is ShaderMaterial and reflection==null:
+                    base=material;reflection=material.next_pass
+        _check(reflection!=null and blocked>0,"Both supported318 and guarded31C fixture routes")
+        _check(reflection.get_shader_parameter("base_texture")==first_texture,"New/reloaded draws receive unchanged capture texture identity")
+        var before: Vector3 = reflection.get_shader_parameter("environment_row0")
+        var changed := matrix.duplicate()
+        changed[0]=-1;changed[5]=-1
+        capture.hack_matrix_native=changed
+        for frame in 12:
+            car.set_environment_capture(capture)
+        car.update_view(Vector3(5,4,9),Vector3.FORWARD,1200.0,0)
+        var after: Vector3 = reflection.get_shader_parameter("environment_row0")
+        _check(not before.is_equal_approx(after),"HackMan matrix updates while binding identity stays cached")
+        _check(str(car.get_state().environment_capture_diagnostic).contains("31C"),"Unsupported route diagnostic survives cache hits")
+        _check(base.next_pass==reflection,"Repeated capture keeps same supported material")
+        capture.enabled=false;car.set_environment_capture(capture)
+        _check(base.next_pass==null,"Disabled capture detaches cached pass")
+        capture.enabled=true;car.set_environment_capture(capture)
+        _check(base.next_pass==reflection,"Reenabled capture restores same pass")
+        capture.texture=second_texture;car.set_environment_capture(capture)
+        _check(reflection.get_shader_parameter("base_texture")==second_texture,"Changed texture identity invalidates binding")
+        capture.hack_matrix_native=PackedFloat32Array([1])
+        car.set_environment_capture(capture)
+        _check(not car.get_state().environment_capture_ready and base.next_pass==null,"Invalid capture clears ready binding")
+        car.clear_car()
+        _check(not car.get_state().environment_capture_ready,"Release resets capture readiness")
+    car.queue_free()
+
 func _run() -> void:
     var resolver: Object = ClassDB.instantiate("Ps2TextureLoader")
     if not resolver.resolve_root().ok:
@@ -140,5 +191,6 @@ func _run() -> void:
     _check(car.get_child_count()==0,"All batch roots/children released")
     car.queue_free()
     await get_tree().process_frame
+    _capture_binding_lifecycle()
     print("CAR_SURFACE_BATCH_OK: models=", loaded," oversized=",oversized," sync/async/cache/visibility/LOD/cleanup")
     get_tree().quit(0)

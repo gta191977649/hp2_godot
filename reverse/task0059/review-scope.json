@@ -1,0 +1,37 @@
+{
+  "task": "TASK-0059",
+  "entries": [
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::clear",
+      "kind": "port_adapter",
+      "evidence_id": "E0059P01",
+      "evidence_record": "reverse/task0059/particle-boundary.md",
+      "reason": "Host particle alpha footprint validation and explicit per-quad recovery-gap boundary; preserve native simulation/culling and physics bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::update",
+      "kind": "port_adapter",
+      "evidence_id": "E0059P01",
+      "evidence_record": "reverse/task0059/particle-boundary.md",
+      "reason": "Host particle alpha footprint validation and explicit per-quad recovery-gap boundary; preserve native simulation/culling and physics bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_state",
+      "kind": "port_adapter",
+      "evidence_id": "E0059P01",
+      "evidence_record": "reverse/task0059/particle-boundary.md",
+      "reason": "Host particle alpha footprint validation and explicit per-quad recovery-gap boundary; preserve native simulation/culling and physics bodies."
+    },
+    {
+      "path": "src/platform/godot_bridge/particle_alpha_bounds.hpp",
+      "name": "particle_uv_alpha_max",
+      "kind": "port_adapter",
+      "evidence_id": "E0059P01",
+      "evidence_record": "reverse/task0059/particle-boundary.md",
+      "reason": "Host particle alpha footprint validation and explicit per-quad recovery-gap boundary; preserve native simulation/culling and physics bodies."
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <cstdint>
 #include <deque>
 #include <optional>
 #include <map>
@@ -11,6 +12,7 @@ struct UiSkin {int id=-1;std::string name;std::array<float,3> preview{{.35f,.35f
 struct UiCar {int id=-1;std::string code,path,error;bool available=false;std::vector<UiSkin> skins;};
 struct UiTrack {int id=-1;std::string name,location,path,error;bool available=false;};
 struct UiTrackMaterial {int id=0;std::string name;std::array<float,4> color{{1,1,1,1}};int polygon_count=0;};
+struct UiEffect {std::string id,name,category,reason;bool enabled=false,available=false,active=false;};
 struct UiPart {std::string name;bool enabled=true;};
 struct UiDrivingMaterial {int id=1;std::string name;float static_friction=0,dynamic_friction=0,rolling_friction=0;};
 struct UiDrivingGrip {
@@ -21,10 +23,21 @@ struct UiDrivingGrip {
 };
 struct ViewerUiState {
     std::string kind="frontend",source,status,diagnostic,rendering,camera;
+    bool camera_known=false;
+    bool render_statistics_enabled=false;
+    std::vector<std::string> render_statistics;
+    std::int64_t rendered_primitives=-1; // Godot triangle/line/point primitives, last rendered frame.
+    std::int64_t draw_calls=-1; // Godot total for the last rendered frame.
+    std::array<float,3> camera_host{}; // Port Godot XYZ; display also labels native XYZ.
     std::string driving_telemetry,track_name;
     bool real_track=false;int track_id=-1;std::vector<UiTrack> tracks;
-    bool render_collision=false,render_material=false,debug_ready=false;
+    bool render_collision=false,render_material=false,show_lod=false,debug_ready=false;
     std::string debug_diagnostic;
+    std::vector<UiEffect> effects;
+    bool render_ready=false,distance_override=false,render_props=true;
+    int loaded_instances=0,considered_instances=0,visible_instances=0,loaded_sections=0,selected_sections=0;
+    float draw_distance=10000,effective_near=.5f,effective_far=10000,original_far=10000;
+    double native_frame_ms=0,host_submit_ms=0;
     std::vector<UiTrackMaterial> material_legend;
     std::vector<std::string> driving_hints;
     bool driving_recording=false;
@@ -45,6 +58,7 @@ class ViewerUi {
     ViewerUiState state_;
     std::map<std::string,std::array<float,2>> targets_;
     bool advanced_open_=false;
+    void draw_render_controls();
     bool was_preview_=false;
     bool driving_entered_=false;
     bool driving_left_=false;

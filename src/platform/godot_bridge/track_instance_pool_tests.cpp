@@ -1,0 +1,14 @@
+#include "track_instance_pool_tests.hpp"
+#include "track_instance_pool.hpp"
+#include <godot_cpp/classes/array_mesh.hpp>
+#include <godot_cpp/classes/multi_mesh.hpp>
+#include <godot_cpp/classes/shader.hpp>
+#include <godot_cpp/variant/array.hpp>
+#include <stdexcept>
+namespace port::godot_bridge {
+namespace {void require(bool v,const char* reason){if(!v)throw std::runtime_error(reason);}}
+godot::Dictionary test_track_instance_pool(){godot::Dictionary result;auto* owner=memnew(godot::Node3D);
+try{{TrackInstancePool pool(*owner);godot::Ref<godot::ArrayMesh> mesh;mesh.instantiate();godot::Array arrays;arrays.resize(godot::Mesh::ARRAY_MAX);arrays[godot::Mesh::ARRAY_VERTEX]=godot::PackedVector3Array{{0,0,0},{1,0,0},{0,1,0}};arrays[godot::Mesh::ARRAY_CUSTOM0]=godot::PackedFloat32Array{.25f,-0.f,2,0,0,1,0,0,1,0,0,0};mesh->add_surface_from_arrays(godot::Mesh::PRIMITIVE_TRIANGLES,arrays,{},{},std::uint64_t(godot::Mesh::ARRAY_CUSTOM_RGBA_FLOAT)<<godot::Mesh::ARRAY_FORMAT_CUSTOM0_SHIFT);
+godot::Ref<godot::Shader> shader;shader.instantiate();shader->set_code("shader_type spatial;render_mode unshaded;void fragment(){ALBEDO=vec3(1.0);}");godot::Ref<godot::ShaderMaterial> material;material.instantiate();material->set_shader(shader);std::vector<godot::Transform3D> transforms(2);transforms[1].origin={3,4,5};transforms[1].basis=godot::Basis(godot::Vector3(0,0,1),.5f).scaled(godot::Vector3(2,3,4));auto* first=pool.submit(1,0,mesh,material,transforms,1);
+require(first->get_multimesh()->get_mesh()==mesh&&first->get_material_override()==material,"Instancing replaced original mesh/material");require(first->get_multimesh()->get_instance_transform(1)==transforms[1],"Instance transform changed");require(pool.allocations()==1&&pool.transform_uploads()==1,"Initial pool counters wrong");pool.begin_view(2);require(first->is_visible(),"Unrelated view hidden");pool.begin_view(1);pool.end_view(1);require(!first->is_visible(),"Stale group not hidden");require(pool.submit(1,0,mesh,material,transforms,1)==first&&pool.transform_uploads()==1,"Stable group rebuilt/reuploaded");transforms[0].origin.x=2;pool.submit(1,0,mesh,material,transforms,1);require(pool.transform_uploads()==2,"Dirty transform not uploaded");auto* other=pool.submit(2,0,mesh,material,transforms,2);require(other!=first&&other->get_layer_mask()==2&&pool.entries()==2,"View/layer isolation lost");transforms.push_back({});pool.submit(1,0,mesh,material,transforms,1);require(first->get_multimesh()->get_instance_count()==4&&first->get_multimesh()->get_visible_instance_count()==3&&pool.capacity()==6,"Instance count growth failed");pool.clear();require(pool.entries()==0&&owner->get_child_count()==0&&mesh->get_surface_count()==1,"Clear leaked nodes or source mesh");}result["ok"]=true;}catch(const std::exception&e){result["ok"]=false;result["error"]=e.what();}memdelete(owner);return result;}
+}

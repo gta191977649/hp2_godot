@@ -9,6 +9,7 @@ var vehicle_renderer: Node3D
 var simulation: RefCounted
 var input_adapter := preload("res://scripts/debug/driving_input.gd").new()
 var skid_renderer: RefCounted
+var audio_display: Node
 var camera: Camera3D
 var status_label: Label
 var state: Dictionary = {}
@@ -38,6 +39,7 @@ func _ready() -> void:
 	add_child(camera)
 	camera.current = true
 	var canvas := CanvasLayer.new()
+	canvas.layer = 10
 	add_child(canvas)
 	var panel := VBoxContainer.new()
 	panel.position = Vector2(16, 16)
@@ -58,10 +60,12 @@ func _ready() -> void:
 			return
 	track_renderer = ClassDB.instantiate("Ps2TrackRenderer")
 	vehicle_renderer = ClassDB.instantiate("Ps2VehicleRenderer")
+	track_renderer.set_camera_mode(1)
 	track_renderer.name = "SharedTrackRenderer"
 	vehicle_renderer.name = "SharedVehicleRenderer"
 	add_child(track_renderer)
 	add_child(vehicle_renderer)
+	DebugTools.scene_owner = self
 	begin_session()
 	if "--race-runtime-smoke" in OS.get_cmdline_user_args() and not get_tree().has_meta("race_runtime_smoke_started"):
 		get_tree().set_meta("race_runtime_smoke_started", true)
@@ -75,7 +79,13 @@ func _valid(result: Dictionary) -> bool:
 
 func _release() -> void:
 	generation += 1
+	if audio_display != null:
+		audio_display.silence()
+		audio_display.queue_free()
+		audio_display = null
 	input_adapter.clear()
+	if track_renderer != null:
+		track_renderer.set_driving_effect_source(null)
 	if simulation != null:
 		simulation.action("pause")
 		simulation = null
@@ -126,6 +136,12 @@ func _start_simulation() -> void:
 	if not _valid(state):
 		_fail(_reason(state))
 		return
+	audio_display = preload("res://scripts/runtime/driving_audio.gd").new()
+	add_child(audio_display)
+	var audio_result: Dictionary = audio_display.configure(simulation)
+	if not audio_result.get("ok", false):
+		_fail(_reason(audio_result))
+		return
 	var applied: Dictionary = vehicle_renderer.apply_driving_snapshot(state)
 	if not applied.get("ok", false):
 		_fail(_reason(applied))
@@ -136,7 +152,9 @@ func _start_simulation() -> void:
 	skid_renderer = preload("res://scripts/debug/driving_skids.gd").new(self)
 	phase = "Running"
 	discard_elapsed = true
-	_update_camera()
+	_present_frame()
+	if not focused:
+		simulation.action("pause")
 	_update_status()
 
 func _update_camera() -> void:
@@ -149,6 +167,7 @@ func _update_camera() -> void:
 	camera.look_at(target, Vector3.UP)
 
 func _process(delta: float) -> void:
+	var _profile_scope := ProfileDebug.scope("RaceScene._process")
 	if phase == "Loading":
 		track_state = track_renderer.pump_load()
 		car_state = vehicle_renderer.pump_load()
@@ -164,12 +183,14 @@ func _process(delta: float) -> void:
 			discard_elapsed = false
 		else:
 			var controls: Dictionary = input_adapter.frame()
-			var accepted: Dictionary = simulation.set_driving_input(controls.throttle, controls.brake, controls.steering, controls.handbrake, controls.transmission, controls.shift, controls.neutral)
+			var accepted: Dictionary = simulation.set_driving_input(controls.throttle, controls.brake, controls.steering, controls.handbrake, controls.transmission, controls.shift, controls.neutral, controls.horn)
 			if not accepted.get("ok", false):
 				_fail(_reason(accepted))
 				return
 			var previous := int(state.get("step", 0))
+			var tick_scope := ProfileDebug.scope("Ps2DrivingRuntime.tick")
 			state = simulation.tick(delta)
+			tick_scope = null
 			if not _valid(state):
 				_fail(_reason(state))
 				return
@@ -179,32 +200,40 @@ func _process(delta: float) -> void:
 			if not applied.get("ok", false):
 				_fail(_reason(applied))
 				return
-		_update_camera()
-		var view: Dictionary = track_renderer.update_view(camera.position)
-		if not view.get("ok", false):
-			_fail(_reason(view))
-			return
-		track_state = view
-		diagnostic = str(view.get("diagnostic", ""))
-		var extent: float = get_viewport().get_visible_rect().size.x
-		var projection_scale := extent * 0.5 / tan(deg_to_rad(camera.fov) * 0.5)
-		var car_view: Dictionary = vehicle_renderer.update_view(camera.position, -camera.basis.z, projection_scale, -1)
-		if not car_view.get("ok", false):
-			_fail(_reason(car_view))
-			return
-		var clip: Projection = camera.get_camera_projection() * Projection(camera.global_transform.affine_inverse())
-		var skids: Dictionary = simulation.render_skids(camera.global_transform, clip, get_viewport().get_visible_rect().size.y)
-		if not skids.get("ok", false):
-			_fail(_reason(skids))
-			return
-		var checked: Dictionary = simulation.get_state()
-		if not _valid(checked):
-			_fail(_reason(checked))
-			return
-		skid_renderer.publish(skids.get("commands", []))
-		_update_status()
+	if phase == "Running":
+		_present_frame(delta if focused else 0.0)
 
+func _present_frame(delta: float = 0.0) -> void:
+	var _profile_scope := ProfileDebug.scope("RaceScene._present_frame")
+	_update_camera()
+	track_renderer.set_visual_state(vehicle_renderer.get_visual_state())
+	track_renderer.set_driving_effect_source(simulation)
+	track_renderer.set_visual_timestep(delta)
+	var view: Dictionary = track_renderer.update_view(camera.position)
+	if not view.get("ok", false):
+		_fail(_reason(view))
+		return
+	track_state = view
+	vehicle_renderer.set_environment_capture(track_renderer.get_environment_capture())
+	diagnostic = str(view.get("diagnostic", ""))
+	var projection_scale: float = view.original_focal_h
+	var car_view: Dictionary = vehicle_renderer.update_view(camera.position, -camera.basis.z, projection_scale, -1)
+	if not car_view.get("ok", false):
+		_fail(_reason(car_view))
+		return
+	var clip: Projection = camera.get_camera_projection() * Projection(camera.global_transform.affine_inverse())
+	var skids: Dictionary = simulation.render_skids(camera.global_transform, clip, get_viewport().get_visible_rect().size.y)
+	if not skids.get("ok", false):
+		_fail(_reason(skids))
+		return
+	var checked: Dictionary = simulation.get_state()
+	if not checked.get("ok", false) or str(checked.get("status", "")) in ["Failed", "Blocked"]:
+		_fail(_reason(checked))
+		return
+	skid_renderer.publish(skids.get("commands", []))
+	_update_status()
 func _update_status() -> void:
+	var _profile_scope := ProfileDebug.scope("RaceScene._update_status")
 	if status_label == null:
 		return
 	status_label.text = "Runtime single-car session | Track %d | %s\n%s | Native step %d\nW/S throttle/brake | A/D steer | R restart | Esc frontend\n%s" % [track_id, car_code, phase, int(state.get("step", 0)), diagnostic]
@@ -218,6 +247,10 @@ func _fail(reason: String) -> void:
 	if simulation != null:
 		simulation.action("pause")
 	_update_status()
+
+func _input(event: InputEvent) -> void:
+	if DebugTools.handle_input(event):
+		input_adapter.clear()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -248,4 +281,16 @@ func exit_session() -> void:
 	get_tree().change_scene_to_file("res://scenes/frontend_native.tscn")
 
 func _exit_tree() -> void:
+	DebugTools.unregister_scene(self)
 	_release()
+
+func viewer_ui_snapshot() -> Dictionary:
+	var result: Dictionary = preload("res://scripts/runtime/track_controls.gd").snapshot(track_renderer)
+	result["kind"] = "track_runtime"
+	result["real_track"] = true
+	result["status"] = phase
+	result["diagnostic"] = diagnostic
+	return result
+
+func viewer_ui_action(request: Dictionary) -> void:
+	preload("res://scripts/runtime/track_controls.gd").action(track_renderer, request)

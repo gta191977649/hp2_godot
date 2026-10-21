@@ -1,0 +1,661 @@
+{
+  "task": "TASK-0082",
+  "evidence": "E-0082-S01",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "bd32ad9e6e044071ea0074f4bc8491f19df42e13edb39343b7030fa9931ed6f0",
+  "baseline_inventory_sha256": "1926a169a45094f1e614cef49805eedf54e4872a9f28075f4e5f4a239b3b2e49",
+  "before": [
+    {
+      "path": "src/game_core/indep/src/realdriver.cpp",
+      "name": "RealDriver::StartHonkHorn",
+      "signature_sha256": "0233029bb33476c11e8ce1cdcef78b2f669ca8fc57a68ac8bbeb13d120831611",
+      "body_sha256": "4f300db745c972749048d273a2934a78fbbf29aac511253448647353a63c115c",
+      "stub": true,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind the recovered Debug horn input and sound-enable gate to the explicit port voice activation callback; original SPU ownership remains unresolved."
+    },
+    {
+      "path": "src/game_core/indep/src/realdriver.cpp",
+      "name": "RealDriver::StopHonkHorn",
+      "signature_sha256": "e58d5ae270ed8e7981176dd9c3850a8f99f8c670e77321b39f9fd84809c8d5e9",
+      "body_sha256": "9f20c5ddb788894d761515a418e074704ad25e46e7fd4e9efbeaf318cdfb94d1",
+      "stub": true,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind the recovered Debug horn input and sound-enable gate to the explicit port voice activation callback; original SPU ownership remains unresolved."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::advance",
+      "signature_sha256": "4b3b67ca000d00c4cfc26033669039b9ac1a8c4990327486dbfa5a4ee70d6e66",
+      "body_sha256": "56fc0f15b4cc6724f7db122c106935cf82427f6bc84920c413f26c9538a0f800",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind transactional horn input and publish committed lamp/horn state through the native driving session."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::initialize",
+      "signature_sha256": "e1f47b42d27ab9bb931bf00fb41dbaf39aa163dbec98ea6dfee70b83ad433ccc",
+      "body_sha256": "49206b5cbdb696da03bb41277af25fd6efd38ce49bcc3e56a8ccdd240571d7d5",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind transactional horn input and publish committed lamp/horn state through the native driving session."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::publish",
+      "signature_sha256": "61f3484f22491de2fa7e4e0eb0110adda94cac031d21d1b66b30fb853b9398b7",
+      "body_sha256": "76bc305492b90c92f7fd1fe6dc86ca1bd696141920139a901f8005ccf2a9fe0d",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind transactional horn input and publish committed lamp/horn state through the native driving session."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::reset",
+      "signature_sha256": "72473a2dedd76871aea38250fdda48bad108b6e5eef4fb49edf61f905b055ce7",
+      "body_sha256": "274b2461ed7d29bd03b9383d2e4402b057a14b93c963b0547a302bef3ac436a8",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind transactional horn input and publish committed lamp/horn state through the native driving session."
+    },
+    {
+      "path": "src/game_core/port/driving/track_environment.cpp",
+      "name": "load_track_environment",
+      "signature_sha256": "5a4ef45d10df0d6d60020693a0d5a5eff30da8fc9e10ba0743a3d3ac841ea1ed",
+      "body_sha256": "06fa1af91e887819861c2149342ac92ab059d3a369131be4fd74a866799afc14",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Retain original track time-of-day configuration for the recovered vehicle night-light selector."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::_bind_methods",
+      "signature_sha256": "536b0ee77af7622e05aadb1350ad9e811ea3af39bb65011327131a1ce50adc59",
+      "body_sha256": "09e7d08e6e283bf551fc6940c98566e12a8e483aa174b68867f87128460bb078",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind horn input, committed lamp state and original decoded sound-bank voice frames to the Godot presentation transport."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::action",
+      "signature_sha256": "a830cb7db16939fe05f8d36d382534804197f34bbaf185880c015d9459228975",
+      "body_sha256": "bde366f6a84112fa3b85532005a5014979e81b4e5502ca121ce69fa45efcd56c",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind horn input, committed lamp state and original decoded sound-bank voice frames to the Godot presentation transport."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::get_state",
+      "signature_sha256": "668b58a7f813678c1c0e0c2eb7659258f516524cd55e7c1c8d645565b57070f4",
+      "body_sha256": "8589a065b3f54f928c06232e84dec3d7861cbaaa3ecbff75f36bf1235df76199",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind horn input, committed lamp state and original decoded sound-bank voice frames to the Godot presentation transport."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::load_config",
+      "signature_sha256": "bb174e3f294a621387ae16f0d510d53eab5fef5c036620744fbb5bd468a74f24",
+      "body_sha256": "a9934c8e339d96b35701638a32fdbf86975eddd8e7559ab370e4e41dc694ba4e",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind horn input, committed lamp state and original decoded sound-bank voice frames to the Godot presentation transport."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::set_driving_input",
+      "signature_sha256": "997ebf2b2f9f10abc348f3cd03aebdf3743cd2a046855b5793dbda8c7231a910",
+      "body_sha256": "c19a900214969d806cbd83117e64aeaee0cb35c9b2280175443623cbd02cbb9d",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind horn input, committed lamp state and original decoded sound-bank voice frames to the Godot presentation transport."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::set_track",
+      "signature_sha256": "b6c2711cf1d690adf91fb8b07e7047f9434e083d9e3d6d19c131608b36d33aef",
+      "body_sha256": "92eb61e236fbdd29fda8f8dbe80efb543b57880fc4a1c7018066df8be949d70b",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind horn input, committed lamp state and original decoded sound-bank voice frames to the Godot presentation transport."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::tick",
+      "signature_sha256": "648049a3bfca7f2adfb1628b29beb57c33321ee8298fb0b01feb55d556853d33",
+      "body_sha256": "3a8332d83e55043a05d53a306f83b97c4d83e78b66f499c29c798d0f7680cb42",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind horn input, committed lamp state and original decoded sound-bank voice frames to the Godot presentation transport."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::apply_driving_snapshot",
+      "signature_sha256": "2997cff17ef224daa050e497a04670d20622235038a431e913e50e50bd8fc953",
+      "body_sha256": "fe3a5169c468e5439ec39d7e26f48d201a0c0892c65cd79758cab0c25ea5859e",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Apply committed original lamp selector output to the host mesh texture and preserve the resident variant texture lifecycle."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::get_visual_state",
+      "signature_sha256": "f913337314cf4f4198e64cc304441d04ebdfea1c7eb06d18a8f02c40bab12354",
+      "body_sha256": "2aa0162e9ab377df4accef960856193560ee3ce8e11a1bc9b367a388de904f37",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Apply committed original lamp selector output to the host mesh texture and preserve the resident variant texture lifecycle."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::pump_load",
+      "signature_sha256": "9341df8c88331c544e3b4f72f86e4c5d406ff9d75f3ce0a8d39a46994639b83f",
+      "body_sha256": "533d562eba80430f9de2d3538dec430611cea9730a8b4292600fb0e3e3faa6db",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Apply committed original lamp selector output to the host mesh texture and preserve the resident variant texture lifecycle."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::rebuild_display",
+      "signature_sha256": "628664de20d8972238fe1dc37aba6818795c63a05893e22eb39b42b8bdabd458",
+      "body_sha256": "1e70ef8c72224d190cffd7360163090995af43a9ec32168c443de9749ac016b1",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Apply committed original lamp selector output to the host mesh texture and preserve the resident variant texture lifecycle."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::release_display",
+      "signature_sha256": "2de33ee990f65e23c5b266ef7fa09ccfd93018ea8af9bbd873a8b5f9b970abd0",
+      "body_sha256": "db89276708f4dd225440212773869fc88ba09a81b99f98ed34e828f1fc9b2c9b",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Apply committed original lamp selector output to the host mesh texture and preserve the resident variant texture lifecycle."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::update_view",
+      "signature_sha256": "74a9af13462008ba830a8391673a8d26cd32c9c40c5c94ed99af933e948aabaf",
+      "body_sha256": "58152bbea59a5dded27bfc1f6078ae1e875cec70dc77c8a3db2dd11f565ea97c",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Apply committed original lamp selector output to the host mesh texture and preserve the resident variant texture lifecycle."
+    },
+    {
+      "path": "src/port/vehicle/model.cpp",
+      "name": "Model::load",
+      "signature_sha256": "0c118d9ac450f3080042a2baf37354f3844b29bbe2a8bd2c269ab6014f9bbea9",
+      "body_sha256": "b2e2752c8a588ef0992aef98b6759eebd0c25eaeeff9c0919045f0dd9ca50a06",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Expose original resident headlight/brakelight texture variants selected by the recovered lamp state."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/game_core/indep/src/carsoundengine.cpp",
+      "name": "EngineAudioMixer::update",
+      "signature_sha256": "82d3d3d948f6afeb51dd9f12f3e95827a09022ff4c1f5d96e0f423bbba1f68c5",
+      "body_sha256": "1b27da79e4275cc9fc6919598fb79c894897b893fa16bd2966f8a68b28ffca11",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Translate the recorded bounded PlayerEngineSound RPM/throttle/definition voice-control slices; historical Retail ABI stubs remain unchanged."
+    },
+    {
+      "path": "src/game_core/indep/src/realdriver.cpp",
+      "name": "RealDriver::JoyHandler_HonkHorn",
+      "signature_sha256": "e047bc2227579634d02336b4ae0ebf761c799daebd5b7b7561aff3ba43762508",
+      "body_sha256": "c905452e6891c27c2c7c7ce44be05ab1069fea891b41149c1ab47fb10f902a8b",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind the recovered Debug horn input and sound-enable gate to the explicit port voice activation callback; original SPU ownership remains unresolved."
+    },
+    {
+      "path": "src/game_core/indep/src/realdriver.cpp",
+      "name": "RealDriver::StartHonkHorn",
+      "signature_sha256": "0233029bb33476c11e8ce1cdcef78b2f669ca8fc57a68ac8bbeb13d120831611",
+      "body_sha256": "1d80320861086467ac9708be4af7c2e7296a19d8b8e18080fc6f64e6c8a59181",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind the recovered Debug horn input and sound-enable gate to the explicit port voice activation callback; original SPU ownership remains unresolved."
+    },
+    {
+      "path": "src/game_core/indep/src/realdriver.cpp",
+      "name": "RealDriver::StopHonkHorn",
+      "signature_sha256": "e58d5ae270ed8e7981176dd9c3850a8f99f8c670e77321b39f9fd84809c8d5e9",
+      "body_sha256": "8a45a6561fecc0b2ef35465559d9304f5574bebd7e052077467a7b949d659736",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind the recovered Debug horn input and sound-enable gate to the explicit port voice activation callback; original SPU ownership remains unresolved."
+    },
+    {
+      "path": "src/game_core/indep/src/realdriver.cpp",
+      "name": "horn_activation",
+      "signature_sha256": "894c12215dbf713df8e7ffe14eb3d3d7fffe3f2dba980bc6c10ff7ab53f9720b",
+      "body_sha256": "84a00774035461c3aa794cd635b5079cf6bea7b077b7779082994dda6cf053e2",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind the recovered Debug horn input and sound-enable gate to the explicit port voice activation callback; original SPU ownership remains unresolved."
+    },
+    {
+      "path": "src/game_core/indep/src/realdriver.cpp",
+      "name": "set_horn_activation",
+      "signature_sha256": "a6f3a7a9fb164381fa25f9966207d3796bc7a39512ef9bfe0e7f2381912109be",
+      "body_sha256": "b83e3676ac7db2085043a63dceb091ae61a6c9075018b1cd92df8807fe3f0fb0",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind the recovered Debug horn input and sound-enable gate to the explicit port voice activation callback; original SPU ownership remains unresolved."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::advance",
+      "signature_sha256": "4b3b67ca000d00c4cfc26033669039b9ac1a8c4990327486dbfa5a4ee70d6e66",
+      "body_sha256": "7b06eb04336a1afd182a9a4ebf03321cdd8b1cad44602b680b6ede4cd6ff83bd",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind transactional horn input and publish committed lamp/horn state through the native driving session."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::initialize",
+      "signature_sha256": "e1f47b42d27ab9bb931bf00fb41dbaf39aa163dbec98ea6dfee70b83ad433ccc",
+      "body_sha256": "0b38ad5c09677cee4beee0d945bf2fe29b3b3f9b4f50815271665024fc9b30ba",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind transactional horn input and publish committed lamp/horn state through the native driving session."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::publish",
+      "signature_sha256": "61f3484f22491de2fa7e4e0eb0110adda94cac031d21d1b66b30fb853b9398b7",
+      "body_sha256": "91c055c5dd610cd416feb66ee463ddd9b46730617e77bf8176b97d3c7397cb43",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind transactional horn input and publish committed lamp/horn state through the native driving session."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::reset",
+      "signature_sha256": "72473a2dedd76871aea38250fdda48bad108b6e5eef4fb49edf61f905b055ce7",
+      "body_sha256": "248bca75949d474aa7e8d3d70d7ec8de487d30f25d3adb640acf9c3491946245",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind transactional horn input and publish committed lamp/horn state through the native driving session."
+    },
+    {
+      "path": "src/game_core/port/driving/track_environment.cpp",
+      "name": "load_track_environment",
+      "signature_sha256": "5a4ef45d10df0d6d60020693a0d5a5eff30da8fc9e10ba0743a3d3ac841ea1ed",
+      "body_sha256": "47c1e7a4d4b07272662ef9aaf673301c76b89c5dd9dd4957fd1d80dd6476ce80",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Retain original track time-of-day configuration for the recovered vehicle night-light selector."
+    },
+    {
+      "path": "src/game_core/port/driving/vehicle_audio.cpp",
+      "name": "decode_patch",
+      "signature_sha256": "f4502882f4a407d266dec2f7201b5a86f3868d074f89a6a08f0bc73795f3236a",
+      "body_sha256": "02c0db14bb32e3455eec81f151553a33f66f60b8870149273d92247158f1c44b",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Port adapter for original vehicle sound-bank parsing, ADPCM patch loops, pitch/gain quantization and persistent engine controller state."
+    },
+    {
+      "path": "src/game_core/port/driving/vehicle_audio.cpp",
+      "name": "half",
+      "signature_sha256": "d3aa77dd51f525446dfa7c5640d2822d4e2a435537a9446f2f964c71e873c8ab",
+      "body_sha256": "55d4b6efec3ea463efa340577bf9e0bff0d3d4773f7102b3703c32457ac487ea",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Port adapter for original vehicle sound-bank parsing, ADPCM patch loops, pitch/gain quantization and persistent engine controller state."
+    },
+    {
+      "path": "src/game_core/port/driving/vehicle_audio.cpp",
+      "name": "hashed_header",
+      "signature_sha256": "87c983828a11267b2a9444f783dc0a70b9262695425859549a675a28662c7a94",
+      "body_sha256": "413539e11b490318bceec3192697b64358b397f402caaf8d9e11f2565ef5a1fb",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Port adapter for original vehicle sound-bank parsing, ADPCM patch loops, pitch/gain quantization and persistent engine controller state."
+    },
+    {
+      "path": "src/game_core/port/driving/vehicle_audio.cpp",
+      "name": "load_vehicle_sound_bank",
+      "signature_sha256": "62418ecc0143ea6415eb14327a490b9e6964400cb45e193b43239ac90be49282",
+      "body_sha256": "02fa839126b35ac6fa0b509196f9be68c1f8d11218f4e94a38e9f8c947826a53",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Port adapter for original vehicle sound-bank parsing, ADPCM patch loops, pitch/gain quantization and persistent engine controller state."
+    },
+    {
+      "path": "src/game_core/port/driving/vehicle_audio.cpp",
+      "name": "put_big",
+      "signature_sha256": "334a60774305d89fc3993802250e8796fa43e4d37c28397c5cbc28d42e20e340",
+      "body_sha256": "b1925f5a0128bc4e86017d01ae6b83e63bf81d1cebb6c20558e76769cb103896",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Port adapter for original vehicle sound-bank parsing, ADPCM patch loops, pitch/gain quantization and persistent engine controller state."
+    },
+    {
+      "path": "src/game_core/port/driving/vehicle_audio.cpp",
+      "name": "scalar",
+      "signature_sha256": "98ebea1d9a2146ff4e413c713917e90f0aeb90e31a5b505d3a0190b318e9b4c8",
+      "body_sha256": "a8882f9ec413c9cbd9b0dfb4ca3759f325992d43029d7b71df831b50f11861a6",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Port adapter for original vehicle sound-bank parsing, ADPCM patch loops, pitch/gain quantization and persistent engine controller state."
+    },
+    {
+      "path": "src/game_core/port/driving/vehicle_audio.cpp",
+      "name": "text",
+      "signature_sha256": "a3b64709236dae6ce9c23052eb03276e5feb5c25f37368adeade8bfc08eee313",
+      "body_sha256": "f6a5814a71c9466c06b10216ba1942518ef9dbf8305ddac0cc698ee8b0818b34",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Port adapter for original vehicle sound-bank parsing, ADPCM patch loops, pitch/gain quantization and persistent engine controller state."
+    },
+    {
+      "path": "src/game_core/port/driving/vehicle_audio.cpp",
+      "name": "upper",
+      "signature_sha256": "0f5cf47d85b0e2fe425fb16961a30ed8080526de4b85680b67e2ac5b120b13be",
+      "body_sha256": "324d6ef4f6acaf6f104bc4af64ee1053095806e129eae9abea0a3199acd46bda",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Port adapter for original vehicle sound-bank parsing, ADPCM patch loops, pitch/gain quantization and persistent engine controller state."
+    },
+    {
+      "path": "src/game_core/port/driving/vehicle_audio.cpp",
+      "name": "vehicle_sample_gain_scale",
+      "signature_sha256": "0f94963421e008658cf75e5f399b2da126253af823663cc5cbfcfe1e336f550d",
+      "body_sha256": "c21ce8ee921e5ae4c6ae8fe61bee3d747f745747bc891f67d0986eb3fd689996",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Port adapter for original vehicle sound-bank parsing, ADPCM patch loops, pitch/gain quantization and persistent engine controller state."
+    },
+    {
+      "path": "src/game_core/port/driving/vehicle_audio.cpp",
+      "name": "vehicle_sample_pitch_scale",
+      "signature_sha256": "42fd5a108e001ff522ff2a34b91277fe8b4a3b96cd7ff10e95f59bdfe7032a81",
+      "body_sha256": "e12b85417b5d63532373df1f81b07733f3a51c92e048422ccf3e2fe348864b19",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Port adapter for original vehicle sound-bank parsing, ADPCM patch loops, pitch/gain quantization and persistent engine controller state."
+    },
+    {
+      "path": "src/game_core/port/driving/vehicle_audio.cpp",
+      "name": "word",
+      "signature_sha256": "9361fdaea6a109d9054fdd60f5d19b9974aa124ab2db19711bdef0fa53d3fbfe",
+      "body_sha256": "498cfb20d13856fe3a6677b091cd49d3fe474eb4537fc628eaa32b5c594edb52",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Port adapter for original vehicle sound-bank parsing, ADPCM patch loops, pitch/gain quantization and persistent engine controller state."
+    },
+    {
+      "path": "src/game_core/port/driving/vehicle_audio.hpp",
+      "name": "reset",
+      "signature_sha256": "9ff976f8fad5585cc849b888aad4393a57c9bbc7c42ba3d86f20bb2287f8e7dd",
+      "body_sha256": "54e836591503166bf47a8144d01051aa1d79f57fc0748eef2850cb0034811a34",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Port adapter for original vehicle sound-bank parsing, ADPCM patch loops, pitch/gain quantization and persistent engine controller state."
+    },
+    {
+      "path": "src/game_core/src/care.cpp",
+      "name": "vehicle_light_state",
+      "signature_sha256": "8804ed0c7ef8896ae56fb545af4fa272d28a11513bcf2409dc15b4f180c5e02f",
+      "body_sha256": "1436b5b0a7b7cb1dcf73d59c52e3ba9b62266a5634970c74e25020e57238ba15",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Translate the Debug UpdateHeadlightState night/brake/reverse texture selector slice; unsupported flare/police render paths remain excluded."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::_bind_methods",
+      "signature_sha256": "536b0ee77af7622e05aadb1350ad9e811ea3af39bb65011327131a1ce50adc59",
+      "body_sha256": "70171135eb1c5d55eb8beafb91e7e908f7655c04bf84b9654a85ef02fd18ba35",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind horn input, committed lamp state and original decoded sound-bank voice frames to the Godot presentation transport."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::action",
+      "signature_sha256": "a830cb7db16939fe05f8d36d382534804197f34bbaf185880c015d9459228975",
+      "body_sha256": "ce280f4523886ecbbf45ee04bb373e1fb9cda920ec3e1dfc4542ff455fe70bf5",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind horn input, committed lamp state and original decoded sound-bank voice frames to the Godot presentation transport."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::get_driving_audio_bank",
+      "signature_sha256": "dce6c6625c33a48143de7e63a70ffd62f94f6389e6c7620234050937d31eab07",
+      "body_sha256": "9a1978cc781236124ecf5fb089957bff0eadfc68d894f7210f733b381fd84d83",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind horn input, committed lamp state and original decoded sound-bank voice frames to the Godot presentation transport."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::get_driving_audio_state",
+      "signature_sha256": "e5e139f34b4a556c1d3932c098bdc7f18821547ea194e4603bfc7b4860b9af88",
+      "body_sha256": "2f65c57d48b91b2d786f254bbb680ff542ccaddf6cd05dc58ea7adb3b1668268",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind horn input, committed lamp state and original decoded sound-bank voice frames to the Godot presentation transport."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::get_state",
+      "signature_sha256": "668b58a7f813678c1c0e0c2eb7659258f516524cd55e7c1c8d645565b57070f4",
+      "body_sha256": "e5969c9a517decdf68866c52ec9e23a56f40dba1ea38768e60ba228db076f3b1",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind horn input, committed lamp state and original decoded sound-bank voice frames to the Godot presentation transport."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::load_config",
+      "signature_sha256": "bb174e3f294a621387ae16f0d510d53eab5fef5c036620744fbb5bd468a74f24",
+      "body_sha256": "f1913cf56551b968543844845ccd88d2d9f2cc6ef16922667aa5ca2d0342710d",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind horn input, committed lamp state and original decoded sound-bank voice frames to the Godot presentation transport."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::reset_audio",
+      "signature_sha256": "b758f83a31e50957f897d5d8fb94e119f3c93ffa759cf9670bfae07c76b9c975",
+      "body_sha256": "63b71b12e0f6b183b1c7cb6a94b18e8ac27d7780e503c794fdca279e5cea0393",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind horn input, committed lamp state and original decoded sound-bank voice frames to the Godot presentation transport."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::set_driving_input",
+      "signature_sha256": "3809abbc1485e7949cbfd43e98fe596cf3798a3ee18ad2bdb2475b2bdb5304b7",
+      "body_sha256": "1f2176be67ec179a52eb7010d28ed07fe5bfa1f94d04a8876e70c1bf6ea8e025",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind horn input, committed lamp state and original decoded sound-bank voice frames to the Godot presentation transport."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::set_track",
+      "signature_sha256": "b6c2711cf1d690adf91fb8b07e7047f9434e083d9e3d6d19c131608b36d33aef",
+      "body_sha256": "8703bac98fce9f9734ac0af9fb40d8d64da99a969205e43b3442b53bb8b171b5",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind horn input, committed lamp state and original decoded sound-bank voice frames to the Godot presentation transport."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::tick",
+      "signature_sha256": "648049a3bfca7f2adfb1628b29beb57c33321ee8298fb0b01feb55d556853d33",
+      "body_sha256": "52b7c1dabab7317327e05027117c2c29474b4c692c974f264c6424fe85bd9035",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind horn input, committed lamp state and original decoded sound-bank voice frames to the Godot presentation transport."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::update_audio",
+      "signature_sha256": "c7f2dec4c79b1b3c3762f7c8277883de5f338bc31eb0f08c8ff3927ead73f4a4",
+      "body_sha256": "f866cd22d5814da5b47d9f2ff318a4a92e8ae9222f8504fbab3221cc6acd5a0d",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind horn input, committed lamp state and original decoded sound-bank voice frames to the Godot presentation transport."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "vehicle_stream",
+      "signature_sha256": "fe149428989fd28f843480d7d653420662938ae8db2c8351675fe719b43c5f4a",
+      "body_sha256": "152bcf9c554d80c6e56c62da4a979e86a4df8c645584e50c3cbc29690e7b369f",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Bind horn input, committed lamp state and original decoded sound-bank voice frames to the Godot presentation transport."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::apply_driving_snapshot",
+      "signature_sha256": "2997cff17ef224daa050e497a04670d20622235038a431e913e50e50bd8fc953",
+      "body_sha256": "346c37402352097947a217b4abca2941bda767eaadc7dcce5bbf115018c24785",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Apply committed original lamp selector output to the host mesh texture and preserve the resident variant texture lifecycle."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::get_visual_state",
+      "signature_sha256": "f913337314cf4f4198e64cc304441d04ebdfea1c7eb06d18a8f02c40bab12354",
+      "body_sha256": "c55fb1ef0a81f8f7899308d9876c77cadef16e7b6991555dbea0dc141e330cd7",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Apply committed original lamp selector output to the host mesh texture and preserve the resident variant texture lifecycle."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::pump_load",
+      "signature_sha256": "9341df8c88331c544e3b4f72f86e4c5d406ff9d75f3ce0a8d39a46994639b83f",
+      "body_sha256": "843dac0cc9e6ef9285a8ced92a841f538e66ee7363cefb9f0d3013a1daba7e33",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Apply committed original lamp selector output to the host mesh texture and preserve the resident variant texture lifecycle."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::rebuild_display",
+      "signature_sha256": "628664de20d8972238fe1dc37aba6818795c63a05893e22eb39b42b8bdabd458",
+      "body_sha256": "8367425e221c266853a83a2f167a9183e4757d8cf24dfac22af2d4dc1e191581",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Apply committed original lamp selector output to the host mesh texture and preserve the resident variant texture lifecycle."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::release_display",
+      "signature_sha256": "2de33ee990f65e23c5b266ef7fa09ccfd93018ea8af9bbd873a8b5f9b970abd0",
+      "body_sha256": "85858a1cac2e11cca1cd923c7650a5c30d4e6253d685382b197dd9c8c7a71ba9",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Apply committed original lamp selector output to the host mesh texture and preserve the resident variant texture lifecycle."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::update_view",
+      "signature_sha256": "74a9af13462008ba830a8391673a8d26cd32c9c40c5c94ed99af933e948aabaf",
+      "body_sha256": "5aa2241341986cd06d3e391efdb2b1d6682dad9b7a2eb5511002f7c6b8082308",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Apply committed original lamp selector output to the host mesh texture and preserve the resident variant texture lifecycle."
+    },
+    {
+      "path": "src/port/vehicle/model.cpp",
+      "name": "Model::driving_texture",
+      "signature_sha256": "7f9c1ed2ca77d2365c321ab2eae55b3c85271c7d80011301f7595112f24a7a11",
+      "body_sha256": "c355cecb53f77d65d2c4261d32f60962839e5e563d04cb14a2e4f9923a01b9dd",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Expose original resident headlight/brakelight texture variants selected by the recovered lamp state."
+    },
+    {
+      "path": "src/port/vehicle/model.cpp",
+      "name": "Model::load",
+      "signature_sha256": "0c118d9ac450f3080042a2baf37354f3844b29bbe2a8bd2c269ab6014f9bbea9",
+      "body_sha256": "7af541d54d87092fa38c37ffbff2d3eda3dd19e0ef467531a47b0c8d10f738c4",
+      "stub": false,
+      "evidence_id": "E-0082-S01",
+      "reason": "Expose original resident headlight/brakelight texture variants selected by the recovered lamp state."
+    }
+  ],
+  "replacements": {
+    "CMakeLists.txt": {
+      "before": "ec112086b229d91ad3dd11297de0e690a31c6a61c78360a6fd2612ea0f2de05c",
+      "after": "4345070f45b1ffe05d58e3503a20bd9a865ff6b7b3a68b435489d838c3ccafd4"
+    },
+    "godot/project.godot": {
+      "before": "efda29c11e02df3e019ee5b5450118824497a45ba4c562a360beb06e6a242e5c",
+      "after": "7140d6d85f9ec6c87363117058d1c19348834410174d7f5c84eaeda003289589"
+    },
+    "godot/scripts/runtime/race_scene.gd": {
+      "before": "e5a75bfc4073fccadd43e51d3376d33700da8523b40be8098db49fb0a7dc7844",
+      "after": "9094ea9d070b17bdadf105c3a07b5a42315bd640c3b02bac134e7cf2e19d3341"
+    },
+    "reverse/scripts/audit_task0081_review.py": {
+      "before": "02ceddbfc3d04d69ba2c934e9e4d7099a64638002275a11960186353508d369d",
+      "after": "23f33c2aa68368125951dc643d07c8321a2fc6073ebf08162c96aac1b197af08"
+    },
+    "reverse/tests/test_task0081_source_review.py": {
+      "before": "a1c4aeae9574c91bf7a7d1aafcddf853a4c72649ae354a53ac316ac5fbb22522",
+      "after": "6404da5521c77f41701b23645a83a1d93b5a1faa44064cb045fa941f6f2be1b1"
+    },
+    "src/game_core/port/driving/native_backend.hpp": {
+      "before": "02f414d78978e8358bd86cabca9e508852145fdb5b8cf61edfbc978bb3d6d21f",
+      "after": "62f584cc19d3b6f4ef1491fa51df06f0db66e0abf8eca4d505e1087c0ef35486"
+    },
+    "src/platform/godot_bridge/ps2_driving_runtime.cpp": {
+      "before": "b21ab4492eb164fbda973e8190b196051efd9bed4a3502a7f1d3c3379c34bb65",
+      "after": "332ba0f69bbd4e2a3b81d085d3718bda4fcbe36d8d612ec418c600d3d5dad18b"
+    },
+    "src/platform/godot_bridge/ps2_driving_runtime.hpp": {
+      "before": "e6388977ff30f56a12ee08d11dc1538ecab14cfd3c4d7ab8dc670c4510f1fbca",
+      "after": "e7e534674ac392083670a7cf9a5a8e017e804e05ab0084cc2dbdd087f9d68ccb"
+    },
+    "src/platform/godot_bridge/ps2_vehicle_renderer.cpp": {
+      "before": "843288f81469241ce82a9f3405b2a02db13260c1ecf2a29e3194d043d3b8aa70",
+      "after": "e3c0a9b118fddcae1eb60392f2ccf1e5ad12ba232ccab44c5a2bec50ac7a73fc"
+    },
+    "src/tests/driving_backend_tests.cpp": {
+      "before": "4bf9429422a27a8195402cf1d1a1d285eeb8c140de925710df97361a292d177e",
+      "after": "df750d646ef0b9187d0a4d5082fed4258870fb3a99d5c81e6d780d7f1775f01b"
+    },
+    "src/tests/driving_player_tests.cpp": {
+      "before": "583432169ced214ebc35ffae7971c9aa49984bcc434ff03a477f8d173bf04fb3",
+      "after": "18d325f43da6c60b3b0dbc087168f89fa29971d9d369747c5ad6601b1632ccee"
+    }
+  },
+  "additions": {
+    "godot/scripts/debug/driving_input.gd": "8bab4c75638b5f30cff6e29bbc5bb7ebb22e6f1457084daaa287d092d80ca517",
+    "godot/scripts/debug/driving_lab.gd": "6e41b04357a090161ac8a6a240d3b04fc5d36a67d47da51bef23193bdc033847",
+    "godot/scripts/runtime/driving_audio.gd": "e2c17bf994503a296d7bac10306fb12158ee5b06e6efaaf4f1277b2b80114e4c",
+    "godot/scripts/runtime/driving_audio_smoke.gd": "82f56e63e20902b4bad0761c3e8fbd76aadc19207abb83760c034a40973a6b5b",
+    "reverse/scripts/audit_task0082_review.py": "674d16644aa2c9a2de9e5ea4c17a5c26fa41899edc867f327fce2f6367a1e0d8",
+    "reverse/task0082/source-review.md": "41f9b52d0ef91d3ff47423ffb3a127d29274f50f716fef0039de6e30e1c7430b",
+    "reverse/tests/test_task0082_source_review.py": "999a2c1fbcd2eddf16bc9ac964df3f0e4aaf5d0fb41661f70a11a21f69c2b32d",
+    "src/game_core/indep/inc/RealDriver.hpp": "2aee5633d78b37592f704f94ab6b0689f284a701cd68e1165eb9987923f47a14",
+    "src/game_core/port/driving/horn.hpp": "84d6713e9bf46ae17e3be7f04cf94ba940c594b4520a50bd4641e765086c4473",
+    "src/game_core/port/driving/session.hpp": "2b058483ba7d587fb0f0d477762a60eeb2ff0a501d769a4a3567bbe2044d2a6c",
+    "src/game_core/port/driving/track_environment.hpp": "e7953583ee8de97010235c80b614571e4e6c560ae28c1dc5cfb82fc6fae1d62e",
+    "src/game_core/port/driving/vehicle_audio.hpp": "709c16c8933ed854a4c7f477eff4140b4db6525c8453e52ef3f7ae13df92f5d7",
+    "src/game_core/port/driving/vehicle_lights.hpp": "3887020b39e2d5b1037c2cb2e557b1af9fe1de935e5696f6102f68b16018a8cc",
+    "src/platform/godot_bridge/ps2_vehicle_renderer.hpp": "4128a8a8e8dce5343fa920d7787add16a85204edc4b68a8b794156708017c743",
+    "src/port/vehicle/model.hpp": "9cee98b8e35d152f9d12d87d04aa75dd5e96c90e0e660f209f90b099842f2366",
+    "src/tests/driving_audio_tests.cpp": "41fa9dce994e224eccdd0140b75ffe015f1c70dca4a3cb001f7e7da958ac8193",
+    "src/tests/vehicle_model_tests.cpp": "67db9766c5ec92b67737eff7cd8d0bc12e53408e0860111eb8086d855a117737"
+  }
+}

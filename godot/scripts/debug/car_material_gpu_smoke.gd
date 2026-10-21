@@ -1,5 +1,5 @@
 extends Node
-# Port-side GPU numeric oracle. Run with the Compatibility backend and a real renderer.
+# Port-side GPU numeric oracle. Run with a real Compatibility or Forward+ renderer.
 # Uses the actual uploaded vehicle shader, with the independent native VU fixture inputs.
 func _ready() -> void:
 	_run.call_deferred()
@@ -11,7 +11,7 @@ func _check(value: bool, message: String) -> void:
 		assert(value, message)
 
 func _run() -> void:
-	_check(RenderingServer.get_current_rendering_method() == "gl_compatibility", "Compatibility required")
+	_check(RenderingServer.get_current_rendering_method() in ["gl_compatibility", "forward_plus"], "Supported backend required")
 	# Exercise the shared runtime backend, not the debug wrapper.
 	var car: Node3D = ClassDB.instantiate("Ps2VehicleRenderer")
 	add_child(car)
@@ -45,6 +45,7 @@ func _run() -> void:
 	paint.next_pass = null
 	var viewport := SubViewport.new()
 	viewport.size = Vector2i(64, 64)
+	viewport.use_hdr_2d = RenderingServer.get_current_rendering_method() != "gl_compatibility"
 	viewport.own_world_3d = true
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(viewport)

@@ -1,6 +1,8 @@
 #include "assets.hpp"
 #include "port/assets/vehicle_geometry.hpp"
 #include "game_core/src/ecstasy/elighte.hpp"
+#include "game_core/src/ecstasy/ecstasye.hpp"
+#include "game_core/port/not_implemented.hpp"
 #include "texture_decode.hpp"
 #include <algorithm>
 #include <cstring>
@@ -135,6 +137,8 @@ Scene load_scene(assets::Source& source,const Entry& entry) {
     result.bundle=decompress_bundle(source.read(entry.resources[1]));
     result.geometry=assets::decode_vehicle_geometry(result.bundle);
     world_context(result);
+    result.environment=decode_environment(result.bundle);
+    result.particles=decode_particles(result.bundle);
     // Explicit host projection of Debug Scenery layouts onto independently checked
     // Retail chunk spans; E-0048-A02. No pointer-layout reinterpretation.
     chunks(result.bundle,[&](auto id,auto p,auto size){
@@ -190,6 +194,9 @@ Scene load_scene(assets::Source& source,const Entry& entry) {
         for(auto& solid:shared.solids)if(wanted.count(solid.hash)){present.insert(solid.hash);result.geometry.solids.push_back(std::move(solid));}
     }
     std::set<std::uint32_t> requested,used;
+    if(result.environment.sun.available)for(auto hash:result.environment.sun_textures)requested.insert(hash);
+    // afxUpdateTextures resolves original TextureNameHash with GetTextureInfo(hash,0,0).
+    for(const auto& particle:result.particles.definitions)if(particle.texture_hash)requested.insert(particle.texture_hash);
     for(const auto& instance:result.instances)for(auto hash:instance.lod_hashes)if(hash)used.insert(hash);
     for(const auto& solid:result.geometry.solids)if(used.count(solid.hash))for(const auto& surface:solid.surfaces)requested.insert(surface.texture_hash);
     for(const auto& solid:result.geometry.solids)if(used.count(solid.hash))for(const auto& surface:solid.surfaces)if(surface.render_flags&0x40)requested.insert(0x0184d1f8); // Original pTextureInfoSpecularFalloff, eFixUpTables.
@@ -197,14 +204,8 @@ Scene load_scene(assets::Source& source,const Entry& entry) {
     for(const auto& solid:result.geometry.solids)if(used.count(solid.hash))for(const auto& surface:solid.surfaces)
         if((surface.render_flags&0x1c0)&&!result.materials.count(surface.material_hash))result.materials.emplace(surface.material_hash,port::read_car_material(global,surface.material_hash));
     const std::vector<std::string> texture_paths{entry.resources[2],entry.resources[3],"GLOBAL/GLOBALB.BUN","GLOBAL/INGAMEB.BUN","GLOBAL/DYNTEX.BIN"};
-    std::set<std::uint32_t> pack_hashes;
-    for(const auto& path:texture_paths){
-        auto archive=hp2::assets::Hp2TpkArchive::load(source.read(path));
-        if(!archive)throw std::runtime_error("Invalid track texture archive: "+path);
-        for(const auto& header:archive->headers()){
-            if(!pack_hashes.insert(header.tex_hash).second)throw std::runtime_error("Ambiguous track texture hash across original packs");
-            if(!requested.erase(header.tex_hash))continue;
-            auto bitmap=decode_texture_level(*archive,header);
+    const auto decode=[&](const hp2::assets::Hp2TpkArchive& pack,const hp2::assets::TpkTextureHeader& header,const std::string& path){
+            auto bitmap=decode_texture_level(pack,header);
             if(!bitmap)throw std::runtime_error("Cannot decode track texture: "+header.name);
             if(header.Field_0x6e){
                 if(header.Field_0x6e>6||header.BaseImageSize<=0)throw std::runtime_error("Invalid original mip chain header");
@@ -217,7 +218,7 @@ Scene load_scene(assets::Source& source,const Entry& entry) {
                         if(!mip.width||!mip.height||level>header.shift_width||level>header.shift_height)throw std::runtime_error("Invalid mip level dimensions");
                         mip.shift_width=header.shift_width-std::uint8_t(level);mip.shift_height=header.shift_height-std::uint8_t(level);
                         mip.image_placement+=static_cast<std::int32_t>(offset);mip.image_size=static_cast<std::int32_t>(size);mip.is_swizzled=header.mip_is_swizzled[level];
-                        auto pixels=decode_texture_level(*archive,mip);
+                        auto pixels=decode_texture_level(pack,mip);
                         if(!pixels)throw std::runtime_error("Cannot decode original mip level");
                         result.mipmaps[header.tex_hash].push_back(std::move(*pixels));
                     }
@@ -225,7 +226,43 @@ Scene load_scene(assets::Source& source,const Entry& entry) {
                 }
             }
             result.textures.push_back({header,std::move(*bitmap),path});
+    };
+    std::set<std::uint32_t> pack_hashes;
+    for(const auto& path:texture_paths){
+        auto archive=hp2::assets::Hp2TpkArchive::load(source.read(path));
+        if(!archive)throw std::runtime_error("Invalid track texture archive: "+path);
+        for(const auto& header:archive->headers()){
+            if(!pack_hashes.insert(header.tex_hash).second)throw std::runtime_error("Ambiguous track texture hash across original packs");
+            if(!requested.erase(header.tex_hash))continue;
+            decode(*archive,header,path);
         }
+    }
+    // E0056T01: original eSolid texture-table fix-up. The decoded surface carrier
+    // stores the bound TextureInfo hash; requested NameHash remains in texture_fixups
+    // and in the unchanged original bundle. No synthetic pixels or name heuristics.
+    const std::set<std::uint32_t> render_targets{
+        0x024ac102,0x024ac10e,0x024ac0fe,0x024ac108,0x024ac111,0x024ac100,0xbdd3acce,
+        0x7f3e2fba,0x7f3e2fbb,0x7f3e2fbc,0x1bb8d749,0x1bb8d74a,0x1bb8d74b,0x1bb8d74c,
+        0x39284ec8,0x5ff88783,0x5ff88784,0x305c1137,0x1ef0332d,0xd469017d,0xd469017e,0xd0147182};
+    bool needs_default=false;
+    for(auto& solid:result.geometry.solids)if(used.count(solid.hash)){
+        std::vector<std::uint32_t> names;std::set<std::uint32_t> seen;
+        for(const auto& surface:solid.surfaces)if(seen.insert(surface.texture_hash).second)names.push_back(surface.texture_hash);
+        const auto fixed=hp2::recovered::eSolid::FixTextureTable(names,pack_hashes,render_targets);
+        std::map<std::uint32_t,std::uint32_t> bindings;
+        for(std::size_t i=0;i<names.size();++i){
+            bindings.emplace(names[i],fixed[i]);
+            if(!pack_hashes.count(fixed[i]))hp2::not_implemented("0x001057D8","Scenery model references an original render-target texture; host binding not restored");
+            if(names[i]!=fixed[i]){result.texture_fixups[names[i]]=fixed[i];requested.erase(names[i]);needs_default|=fixed[i]==0x19006835;}
+        }
+        for(auto& surface:solid.surfaces)surface.texture_hash=bindings.at(surface.texture_hash);
+    }
+    if(needs_default&&std::none_of(result.textures.begin(),result.textures.end(),[](const auto& texture){return texture.header.tex_hash==0x19006835;})){
+        const auto archive=hp2::assets::Hp2TpkArchive::load(global);
+        if(!archive)throw std::runtime_error("Invalid original GLOBALB default texture archive");
+        const auto& headers=archive->headers();const auto header=std::find_if(headers.begin(),headers.end(),[](const auto& h){return h.tex_hash==0x19006835;});
+        if(header==headers.end())throw std::runtime_error("Original DEFAULTTEXTURE resource missing from GLOBALB");
+        decode(*archive,*header,"GLOBAL/GLOBALB.BUN");
     }
     if(!a.empty())result.gaps.push_back("Nonempty TRACKA resource is not decoded");
     if(!requested.empty()){
@@ -241,6 +278,40 @@ Scene load_scene(assets::Source& source,const Entry& entry) {
         result.gaps.push_back(message.str());
     }
 
+    append_particle_library(result,source);
     return result;
+}
+
+void append_particle_library(Scene& scene,assets::Source& source){
+    const auto bytes=source.read("GLOBAL/GLOBALB.BUN");
+    auto library=decode_particles(bytes);
+    // Global library precedes track load in the original loader. Library State3
+    // emitters remain non-auto; terrain lists receive independent runtime copies.
+    library.definitions.insert(library.definitions.end(),scene.particles.definitions.begin(),scene.particles.definitions.end());
+    library.emitters.insert(library.emitters.end(),scene.particles.emitters.begin(),scene.particles.emitters.end());
+    scene.particles=std::move(library);
+    std::set<std::uint32_t> wanted;
+    for(const auto& d:scene.particles.definitions)if(d.texture_hash)wanted.insert(d.texture_hash);
+    for(const auto& texture:scene.textures)wanted.erase(texture.header.tex_hash);
+    for(const std::string resource:{"GLOBAL/GLOBALB.BUN","GLOBAL/INGAMEB.BUN"}){
+    const auto archive=hp2::assets::Hp2TpkArchive::load(resource=="GLOBAL/GLOBALB.BUN"?bytes:source.read(resource));
+    if(!archive)throw std::runtime_error("Invalid original shared particle texture archive");
+    for(const auto& header:archive->headers())if(wanted.erase(header.tex_hash)){
+        auto bitmap=decode_texture_level(*archive,header);
+        if(!bitmap)throw std::runtime_error("Original particle texture decode failed: "+header.name);
+        if(header.Field_0x6e>6)throw std::runtime_error("Original particle mip count exceeds supported levels");
+        std::size_t offset=0;
+        for(unsigned level=0;level<=header.Field_0x6e;++level){
+            const auto size=std::size_t(header.BaseImageSize)>>(2*level);
+            if(!size||offset>std::size_t(header.image_size)||size>std::size_t(header.image_size)-offset)throw std::runtime_error("Original particle mip payload exceeds texture");
+            if(level){auto mip=header;mip.width>>=level;mip.height>>=level;
+                if(!mip.width||!mip.height||level>header.shift_width||level>header.shift_height)throw std::runtime_error("Invalid original particle mip dimensions");
+                mip.shift_width-=level;mip.shift_height-=level;mip.image_placement+=static_cast<std::int32_t>(offset);mip.image_size=static_cast<std::int32_t>(size);mip.is_swizzled=header.mip_is_swizzled[level];
+                auto decoded=decode_texture_level(*archive,mip);if(!decoded)throw std::runtime_error("Original particle mip decode failed");scene.mipmaps[header.tex_hash].push_back(std::move(*decoded));}
+            offset+=size;
+        }
+        scene.textures.push_back({header,std::move(*bitmap),resource});
+    }
+    }
 }
 }

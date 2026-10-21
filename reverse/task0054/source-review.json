@@ -1,0 +1,59 @@
+{
+  "task": "TASK-0054",
+  "status": "approved",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "8317c9f68313192bb38caff177c3deb1ad219cbb8dd191f2cd1a6f2b0ee7e6fb",
+  "baseline_inventory_sha256": "b0907e38afca383e024af094d814bda3c76eee9aa7fc24cf5b9adfa70006f5c4",
+  "scope_lf_sha256": "8640cd2a6110fa4041a9023de99cd3379ed030a5e42b88e8e6ba616bc6e35af7",
+  "before": [
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::update",
+      "signature_sha256": "a4dad115078d2b9d5fcc437727610f596ec53b11cfd8941e1b115156f9c4e3a4",
+      "body_sha256": "ac6b927700a46efd8bf5bdf74a49a66f8f372df70998a0d60c190fab640d1757",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0054-P01",
+      "evidence_record": "reverse/task0054/projection.md",
+      "reason": "Correct only host screen projection Y sign using actual PROJECTION_MATRIX convention; retain original world anchors, native packet values, custom depth and layer-safe bounds."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::update",
+      "signature_sha256": "53a1ea86751fa5e87875ea2a4c15167cbfb7fce013246df5cb7bf4230fd72ea7",
+      "body_sha256": "54652b7b4b0d7ce7c8f926e4e05ab6477116587af61d0026d1708c6ffc7166c1",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0054-P01",
+      "evidence_record": "reverse/task0054/projection.md",
+      "reason": "Correct only host screen projection Y sign using actual PROJECTION_MATRIX convention; retain original world anchors, native packet values, custom depth and layer-safe bounds."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::update",
+      "signature_sha256": "a4dad115078d2b9d5fcc437727610f596ec53b11cfd8941e1b115156f9c4e3a4",
+      "body_sha256": "6d4e5984d2ba7b8c7310af37cf1db6480e9772276ae2b4723d0f09ff2885eeda",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0054-P01",
+      "evidence_record": "reverse/task0054/projection.md",
+      "reason": "Correct only host screen projection Y sign using actual PROJECTION_MATRIX convention; retain original world anchors, native packet values, custom depth and layer-safe bounds."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::update",
+      "signature_sha256": "53a1ea86751fa5e87875ea2a4c15167cbfb7fce013246df5cb7bf4230fd72ea7",
+      "body_sha256": "12838819f470f101c6ec803a4458bf77d742bb771011854afbd67955c8108fbf",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E-0054-P01",
+      "evidence_record": "reverse/task0054/projection.md",
+      "reason": "Correct only host screen projection Y sign using actual PROJECTION_MATRIX convention; retain original world anchors, native packet values, custom depth and layer-safe bounds."
+    }
+  ],
+  "unmapped": [],
+  "validation_errors": [],
+  "review_note": "Root reviewed exact two host adapter body replacements: inject shared screen helper and pass GPU projectionY in vertex stage. Native source and physics unchanged. Header is string-only host shader code. E-0054-P01 / E-0054-T01; original-console equivalence not claimed."
+}

@@ -1,0 +1,10 @@
+{
+  "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "count": 10069,
+  "evidence_id": "E-0078-I01",
+  "source_catalog": "local/progress/NFSHP2.ELF.json",
+  "source_catalog_sha256": "bdb3806effcd617420d0030ac1a01cbe7a9aa962f33a36120853ef5f20c3ca67",
+  "source_catalog_identity_method": "configured_import_file_sha256; database memory not certified",
+  "provenance": "Address-only metadata from the retained complete, SHA-bound TASK0073 read-only Ghidra catalog. No new binary inspection, names or behavior claims.",
+  "limitation": "Catalog binds the configured original import file; database-memory identity and runtime equivalence are not certified."
+}

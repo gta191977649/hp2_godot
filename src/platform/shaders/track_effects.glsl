@@ -1,7 +1,8 @@
 // TASK0051 Retail VU PC0C3..138, ELF002A6F78. Requires original affine-bit
 // power helper (ITOF0/FTOI0 bit reinterpretation), not GLSL pow().
 uint hp2_track_gs_depth(float screen_z,int zbuffer_mode) {
-    return floatBitsToUint(screen_z)&(zbuffer_mode==49?0xffffffu:0xffffffffu);
+    // Normal geometry GIFtag0x412 writes PACKED XYZF2, z bits4..27.
+    return (floatBitsToUint(screen_z)>>4u)&0xffffffu;
 }
 // CPU supplies original selected and pack0 (A,B), plus actual host projection
 // (A,B), all in positive camera-forward coordinates. Pack0 keeps cars aligned.

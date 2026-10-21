@@ -1,0 +1,510 @@
+{
+  "task": "TASK-0055",
+  "status": "draft-scope-intent-not-body-approval",
+  "entries": [
+    {
+      "path": "src/platform/godot_bridge/particle_mesh_stream.hpp",
+      "name": "update",
+      "kind": "port_adapter",
+      "evidence_id": "E0055P01",
+      "evidence_record": "reverse/task0055/particles.md",
+      "reason": "Host-only persistent particle mesh stream/capacity and dirty callback, retaining original packet simulation, order, colors, UVs and depth."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "impl_",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata. This slot is the observed constructor-parser artifact name, not a recovered original-game identifier."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::_bind_methods",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::release_display",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::configure_optimizations",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_optimization_state",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::submit_frame",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::update_view",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_state",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_instance_batches.hpp",
+      "name": "valid_track_instance_matrix",
+      "kind": "port_adapter",
+      "evidence_id": "E-0055-I01",
+      "evidence_record": "reverse/task0055/instancing.md",
+      "reason": "Host-only conservative contiguous instance eligibility, per-view persistent MultiMesh pool, boundaries/counters and transport tests; native commands remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_instance_batches.hpp",
+      "name": "eligible_track_instance",
+      "kind": "port_adapter",
+      "evidence_id": "E-0055-I01",
+      "evidence_record": "reverse/task0055/instancing.md",
+      "reason": "Host-only conservative contiguous instance eligibility, per-view persistent MultiMesh pool, boundaries/counters and transport tests; native commands remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_instance_batches.hpp",
+      "name": "same_track_instance_state",
+      "kind": "port_adapter",
+      "evidence_id": "E-0055-I01",
+      "evidence_record": "reverse/task0055/instancing.md",
+      "reason": "Host-only conservative contiguous instance eligibility, per-view persistent MultiMesh pool, boundaries/counters and transport tests; native commands remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_instance_batches.hpp",
+      "name": "contiguous_track_instance_batches",
+      "kind": "port_adapter",
+      "evidence_id": "E-0055-I01",
+      "evidence_record": "reverse/task0055/instancing.md",
+      "reason": "Host-only conservative contiguous instance eligibility, per-view persistent MultiMesh pool, boundaries/counters and transport tests; native commands remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_instance_batches.hpp",
+      "name": "track_instance_boundaries",
+      "kind": "port_adapter",
+      "evidence_id": "E-0055-I01",
+      "evidence_record": "reverse/task0055/instancing.md",
+      "reason": "Host-only conservative contiguous instance eligibility, per-view persistent MultiMesh pool, boundaries/counters and transport tests; native commands remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_instance_batches.hpp",
+      "name": "track_instance_submissions",
+      "kind": "port_adapter",
+      "evidence_id": "E-0055-I01",
+      "evidence_record": "reverse/task0055/instancing.md",
+      "reason": "Host-only conservative contiguous instance eligibility, per-view persistent MultiMesh pool, boundaries/counters and transport tests; native commands remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_instance_pool.cpp",
+      "name": "owner",
+      "kind": "port_adapter",
+      "evidence_id": "E-0055-I01",
+      "evidence_record": "reverse/task0055/instancing.md",
+      "reason": "Host-only conservative contiguous instance eligibility, per-view persistent MultiMesh pool, boundaries/counters and transport tests; native commands remain unchanged. This slot is the observed constructor-parser artifact name, not a recovered original-game identifier."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_instance_pool.cpp",
+      "name": "impl_",
+      "kind": "port_adapter",
+      "evidence_id": "E-0055-I01",
+      "evidence_record": "reverse/task0055/instancing.md",
+      "reason": "Host-only conservative contiguous instance eligibility, per-view persistent MultiMesh pool, boundaries/counters and transport tests; native commands remain unchanged. This slot is the observed constructor-parser artifact name, not a recovered original-game identifier."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_instance_pool.cpp",
+      "name": "~TrackInstancePool",
+      "kind": "port_adapter",
+      "evidence_id": "E-0055-I01",
+      "evidence_record": "reverse/task0055/instancing.md",
+      "reason": "Host-only conservative contiguous instance eligibility, per-view persistent MultiMesh pool, boundaries/counters and transport tests; native commands remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_instance_pool.cpp",
+      "name": "TrackInstancePool::begin_view",
+      "kind": "port_adapter",
+      "evidence_id": "E-0055-I01",
+      "evidence_record": "reverse/task0055/instancing.md",
+      "reason": "Host-only conservative contiguous instance eligibility, per-view persistent MultiMesh pool, boundaries/counters and transport tests; native commands remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_instance_pool.cpp",
+      "name": "TrackInstancePool::end_view",
+      "kind": "port_adapter",
+      "evidence_id": "E-0055-I01",
+      "evidence_record": "reverse/task0055/instancing.md",
+      "reason": "Host-only conservative contiguous instance eligibility, per-view persistent MultiMesh pool, boundaries/counters and transport tests; native commands remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_instance_pool.cpp",
+      "name": "TrackInstancePool::submit",
+      "kind": "port_adapter",
+      "evidence_id": "E-0055-I01",
+      "evidence_record": "reverse/task0055/instancing.md",
+      "reason": "Host-only conservative contiguous instance eligibility, per-view persistent MultiMesh pool, boundaries/counters and transport tests; native commands remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_instance_pool.cpp",
+      "name": "TrackInstancePool::clear",
+      "kind": "port_adapter",
+      "evidence_id": "E-0055-I01",
+      "evidence_record": "reverse/task0055/instancing.md",
+      "reason": "Host-only conservative contiguous instance eligibility, per-view persistent MultiMesh pool, boundaries/counters and transport tests; native commands remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_instance_pool.cpp",
+      "name": "TrackInstancePool::entries",
+      "kind": "port_adapter",
+      "evidence_id": "E-0055-I01",
+      "evidence_record": "reverse/task0055/instancing.md",
+      "reason": "Host-only conservative contiguous instance eligibility, per-view persistent MultiMesh pool, boundaries/counters and transport tests; native commands remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_instance_pool.cpp",
+      "name": "TrackInstancePool::allocations",
+      "kind": "port_adapter",
+      "evidence_id": "E-0055-I01",
+      "evidence_record": "reverse/task0055/instancing.md",
+      "reason": "Host-only conservative contiguous instance eligibility, per-view persistent MultiMesh pool, boundaries/counters and transport tests; native commands remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_instance_pool.cpp",
+      "name": "TrackInstancePool::transform_uploads",
+      "kind": "port_adapter",
+      "evidence_id": "E-0055-I01",
+      "evidence_record": "reverse/task0055/instancing.md",
+      "reason": "Host-only conservative contiguous instance eligibility, per-view persistent MultiMesh pool, boundaries/counters and transport tests; native commands remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_instance_pool.cpp",
+      "name": "TrackInstancePool::capacity",
+      "kind": "port_adapter",
+      "evidence_id": "E-0055-I01",
+      "evidence_record": "reverse/task0055/instancing.md",
+      "reason": "Host-only conservative contiguous instance eligibility, per-view persistent MultiMesh pool, boundaries/counters and transport tests; native commands remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_instance_pool_tests.cpp",
+      "name": "require",
+      "kind": "port_adapter",
+      "evidence_id": "E-0055-I01",
+      "evidence_record": "reverse/task0055/instancing.md",
+      "reason": "Host-only conservative contiguous instance eligibility, per-view persistent MultiMesh pool, boundaries/counters and transport tests; native commands remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_instance_pool_tests.cpp",
+      "name": "test_track_instance_pool",
+      "kind": "port_adapter",
+      "evidence_id": "E-0055-I01",
+      "evidence_record": "reverse/task0055/instancing.md",
+      "reason": "Host-only conservative contiguous instance eligibility, per-view persistent MultiMesh pool, boundaries/counters and transport tests; native commands remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_occlusion.hpp",
+      "name": "eligible_track_opaque_geometry",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_occlusion.hpp",
+      "name": "owner_",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata. This slot is the observed constructor-parser artifact name, not a recovered original-game identifier."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_occlusion.hpp",
+      "name": "~TrackOcclusionPool",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_occlusion.hpp",
+      "name": "begin_frame",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_occlusion.hpp",
+      "name": "submit",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_occlusion.hpp",
+      "name": "end_frame",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_occlusion.hpp",
+      "name": "clear",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_occlusion.hpp",
+      "name": "stats",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "name": "optimization_options_dictionary",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "name": "optimization_options_from_dictionary",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "name": "startup_track_optimizations",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::set_mesh_reuse",
+      "kind": "port_adapter",
+      "evidence_id": "E0055P01",
+      "evidence_record": "reverse/task0055/particles.md",
+      "reason": "Host-only persistent particle mesh stream/capacity and dirty callback, retaining original packet simulation, order, colors, UVs and depth."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::set_mesh_change_callback",
+      "kind": "port_adapter",
+      "evidence_id": "E0055P01",
+      "evidence_record": "reverse/task0055/particles.md",
+      "reason": "Host-only persistent particle mesh stream/capacity and dirty callback, retaining original packet simulation, order, colors, UVs and depth."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::stats",
+      "kind": "port_adapter",
+      "evidence_id": "E0055P01",
+      "evidence_record": "reverse/task0055/particles.md",
+      "reason": "Host-only persistent particle mesh stream/capacity and dirty callback, retaining original packet simulation, order, colors, UVs and depth."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::clear",
+      "kind": "port_adapter",
+      "evidence_id": "E0055P01",
+      "evidence_record": "reverse/task0055/particles.md",
+      "reason": "Host-only persistent particle mesh stream/capacity and dirty callback, retaining original packet simulation, order, colors, UVs and depth."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::update",
+      "kind": "port_adapter",
+      "evidence_id": "E0055P01",
+      "evidence_record": "reverse/task0055/particles.md",
+      "reason": "Host-only persistent particle mesh stream/capacity and dirty callback, retaining original packet simulation, order, colors, UVs and depth."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::test_mesh_reuse",
+      "kind": "port_adapter",
+      "evidence_id": "E0055P01",
+      "evidence_record": "reverse/task0055/particles.md",
+      "reason": "Host-only persistent particle mesh stream/capacity and dirty callback, retaining original packet simulation, order, colors, UVs and depth."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "copy_camera",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "parameter",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::Impl::depth_material",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::set_resource_reuse",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::set_occlusion_enabled",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::mark_instance_batch",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::scheduled_viewports",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::stats",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::release",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::update",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "name": "TrackReflectionRenderer::clear",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "name": "TrackReflectionRenderer::update",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "name": "TrackReflectionRenderer::scheduled_viewports",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::scheduled_viewports",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Host-only load-time optimization options, shared cache/dirty submission, matching MultiMesh depth transport, conservative experimental occlusion/opaque gates, resource lifecycle and exact scheduled-viewport timing metadata."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::request_track",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Reject invalid startup host optimization policy explicitly before original track load; no silent configuration fallback."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::layout_lods",
+      "kind": "port_adapter",
+      "evidence_id": "E0055V01",
+      "evidence_record": "reverse/task0055/vehicle-depth.md",
+      "reason": "Declare closed host BASE-material dynamic-uniform writer contract on newly constructed and comparison-LOD materials; no shader math, native packet, physics or material values change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::rebuild_display",
+      "kind": "port_adapter",
+      "evidence_id": "E0055V01",
+      "evidence_record": "reverse/task0055/vehicle-depth.md",
+      "reason": "Declare closed host BASE-material dynamic-uniform writer contract on newly constructed and comparison-LOD materials; no shader math, native packet, physics or material values change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_render_targets",
+      "kind": "port_adapter",
+      "evidence_id": "E0055H01",
+      "evidence_record": "reverse/task0055/host.md",
+      "reason": "Expose existing color/raw-depth textures as read-only Release diagnostics for untimed cross-profile capture; no renderer, shader, effects override or native logic change."
+    }
+  ]
+}

@@ -8,6 +8,7 @@ namespace port::driving {
 struct TrackEnvironment {
     std::string label;
     int number=0;
+    int time_of_day=-1; // Explicit Retail catalog -> Debug light-state context.
     port::track::Topology topology;
     std::array<float,3> start{};
     std::array<float,2> direction{};

@@ -7,6 +7,33 @@
 // Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
 // Diagnostic text (not a callable signature): CarPartCuller::CullParts() [0x002AC920]
 #include "game_core/CarPartCuller.hpp"
+#include "game_core/indep/inc/Car.hpp"
+#include "game_core/port/driving/car_effects.hpp"
+#include "game_core/port/driving/vehicle_lights.hpp"
+#include "game_core/src/bMath.hpp"
+
+namespace port::driving {
+// Debug00120350; E-0082-L01, reverse/task0082/lights.md. NFSHP2.ELF SHA-256
+// 815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
+VehicleLightState vehicle_light_state(const Memory& m,std::uint32_t car,
+    int time_of_day,bool frontend,std::uint32_t car_timebase_start){
+    VehicleLightState result;
+    const bool night=std::uint32_t(std::int16_t(time_of_day))-2u<2u;
+    if(car){
+        if(m.word(car+0x830)!=0)result.headlight_left=result.headlight_right=true;
+        else if(m.word(car+0x808)!=0){
+            const auto phase=(car_timebase_start+m.word(0x00327d04))&15u;
+            result.headlight_left=m.byte(0x002d7ae8+phase)!=0;
+            result.headlight_right=!result.headlight_left;
+        }
+        const auto driver=m.word(car+0x28);
+        if(driver)result.brakelights=m.scalar(0x00324b68)<m.scalar(driver+0x218);
+    }
+    if(night||m.word(0x00326c80)!=0)result.headlight_left=result.headlight_right=true;
+    if(night||m.word(0x00326c84)!=0||frontend)result.brakelights=true;
+    return result;
+}
+}
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: allocator_label; evidence: E-0027-C01.
@@ -21,6 +48,44 @@
 #include <cmath>
 #include <algorithm>
 #include <cstring>
+
+namespace hp2::recovered {
+// Debug0011E4E0; E-0075-C01, reverse/task0075/terrain-producer.md.
+// Host service binding of wheel smoke/spew and TASK0089 DriveOver slices.
+// E0089W05, reverse/task0089/water-research.md; unsupported marker lists throw.
+void Car::TriggerEffect(int effect,float intensity,int parameter,const std::array<float,4>* override_velocity,port::driving::CarEffectServices& services){
+ if(!services.render_info_available||intensity==0||effect==0||services.override_view_bits!=0)return;
+ if(effect<1||effect>4)hp2::not_implemented("0x0011E4E0","Car::TriggerEffect unsupported effect binding");
+ const int position=parameter>>16;
+ if(effect>=3&&(position<5||position>8))hp2::not_implemented("0x0011E4E0","Car::TriggerEffect non-wheel emitter position");
+ if(!services.emitter_list||!services.wheel_position||!services.emit)hp2::not_implemented("0x0011E4E0","Car::TriggerEffect missing emitter services");
+ auto local_world=m_.matrix(address_+0x90);
+ const auto body_position=m_.vector(address_+(effect<=2?0x50:0x60));
+ for(unsigned i=0;i<3;++i)local_world[12+i]=body_position[i];
+ local_world[15]=1;
+ auto velocity=override_velocity?*override_velocity:m_.vector(address_+0x70);velocity[3]=0;
+ auto& emitters=services.emitter_list(effect,static_cast<unsigned>(parameter)&0xffffu);
+ for(auto& emitter:emitters){
+  auto orientation=emitter.local_world;
+  std::array<float,3> point{};
+  if(effect>=3)point=services.wheel_position(static_cast<unsigned>(position-5));
+  else if(emitter.car_position>=1&&emitter.car_position<=4){
+   // InitRenderInfo0011DEA8 exact pair table, E0089W05.
+   constexpr unsigned pairs[4][2]{{0,1},{3,2},{0,3},{1,2}};
+   const auto a=services.wheel_position(pairs[emitter.car_position-1][0]);
+   const auto b=services.wheel_position(pairs[emitter.car_position-1][1]);
+   for(unsigned i=0;i<3;++i)point[i]=(a[i]+b[i])*0.5f;
+  }else if(emitter.car_position>=5&&emitter.car_position<=8)
+   point=services.wheel_position(emitter.car_position-5);
+  else if(emitter.car_position!=0)hp2::not_implemented("0x0011E4E0","DriveOver CarPosition marker list not recovered");
+  for(unsigned i=0;i<3;++i)orientation[12+i]=point[i];
+  orientation[15]=1;
+  std::array<float,16> emitter_world{};hp2::recovered::eMulMatrix(emitter_world,orientation,local_world);
+  emitter.local_world=orientation;
+  services.emit(emitter,-intensity,emitter_world,velocity);
+ }
+}
+}
 #include "game_core/port/assets/elab_chunks.hpp"
 #include "game_core/indep/src/fmenus.hpp"
 #include <limits>
@@ -366,5 +431,86 @@ void CarRenderInfo::Sub_0011E860() {
 }
 void CarRenderInfo::Sub_00120EF8() {
     hp2::not_implemented("0x00120EF8", "CarRenderInfo::Sub_00120EF8 full render: PS2 submission, live-car state and effects");
+}
+}
+
+// TASK0052 E-0052-E06: original src/care.cpp free-function shadow island.
+#include "game_core/port/track/shadow.hpp"
+#include "game_core/src/bMath.hpp"
+#include "game_core/indep/src/track.hpp"
+#include <algorithm>
+#include <cmath>
+#include <stdexcept>
+namespace hp2::recovered {
+int cmpl(const port::track::EnvironmentVector* a,const port::track::EnvironmentVector* b){float difference=(*a)[0]-(*b)[0];if(difference>0)return 1;if(difference<0)return -1;difference=(*b)[1]-(*a)[1];return difference>0?1:difference<0?-1:0;}
+int cmph(const port::track::EnvironmentVector* a,const port::track::EnvironmentVector* b){return cmpl(b,a);}
+int make_chain(std::vector<const port::track::EnvironmentVector*>& points,std::size_t offset,int count,bool high){
+ if(count<1||offset+std::size_t(count)>points.size())throw std::invalid_argument("Invalid original hull chain span");
+ std::sort(points.begin()+offset,points.begin()+offset+count,[&](const auto* a,const auto* b){return (high?cmph(a,b):cmpl(a,b))<0;});
+ int current=1,last=1;for(int next=2;next<count;++next){if(current<1)++current;else{int previous=current;do{const int index=previous;--previous;const auto& v=*points[offset+index];const auto& before=*points[offset+previous];const auto& n=*points[offset+next];current=index+1;if((n[0]-v[0])*(before[1]-v[1])-(n[1]-v[1])*(before[0]-v[0])>0)break;current=index;}while(previous>0);}std::swap(points[offset+current],points[offset+next]);last=current;}return last;
+}
+std::vector<port::track::EnvironmentVector> ch2d(const std::vector<port::track::EnvironmentVector>& input){
+ if(input.size()<3)return input;if(input.size()>64)throw std::runtime_error("Original shadow hull capacity exceeded");
+ std::vector<const port::track::EnvironmentVector*> points;for(const auto& v:input)points.push_back(&v);points.push_back(nullptr);
+ const int first=make_chain(points,0,int(input.size()),false);points[input.size()]=points[0];const int second=make_chain(points,first,int(input.size())-first+1,true);
+ std::vector<port::track::EnvironmentVector> out;for(int i=0;i<first+second;++i)out.push_back(*points[i]);return out;
+}
+std::vector<port::track::EnvironmentVector> convex_hull(const std::vector<port::track::EnvironmentVector>& input,const port::track::Topology& topology,float z,float bias,const port::track::EnvironmentVector& origin,const port::track::EnvironmentVector& normal){
+ auto hull=ch2d(input);std::vector<port::track::EnvironmentVector> out;
+ for(auto point:hull){point[2]=z;const auto contact=TopologyCoordinate::GetElevation(topology,point);point[2]=contact.height+bias;if(!contact.found||std::abs(point[2]-z)>4.f)continue;const float distance=(point[0]-origin[0])*normal[0]+(point[1]-origin[1])*normal[1]+(point[2]-origin[2])*normal[2];if(std::abs(distance)>=1.5f)continue;out.push_back(point);}return out;
+}
+std::vector<port::track::EnvironmentVector> smooth_shadow_corners(const std::vector<port::track::EnvironmentVector>& input){
+ std::vector<port::track::EnvironmentVector> out;if(input.empty())return out;if(input.size()>64)throw std::runtime_error("Original shadow hull capacity exceeded");
+ constexpr float scale=0.3330000042915344f;port::track::EnvironmentVector previous{};
+ for(unsigned k=0;k<3;++k)previous[k]=(input[0][k]-input.back()[k])*scale;
+ for(std::size_t i=0;i<input.size();++i){port::track::EnvironmentVector current{},a{},b{},c{};for(unsigned k=0;k<3;++k){current[k]=(input[(i+1)%input.size()][k]-input[i][k])*scale;a[k]=input[i][k]-previous[k];b[k]=input[i][k]+(current[k]-previous[k])*scale;c[k]=input[i][k]+current[k];}out.push_back(a);out.push_back(b);out.push_back(c);previous=current;}return out;
+}
+port::track::ShadowLight sh_Setup(port::driving::Memory& math,const port::track::SunResources& sun,const port::track::EnvironmentVector& car){
+ const port::track::EnvironmentVector light=sun.available?sun.shadow_position:port::track::EnvironmentVector{{-16384,0,7000}};port::track::ShadowLight out;
+ for(unsigned k=0;k<3;++k)out.direction[k]=car[k]-light[k];auto& v=out.direction;
+ const auto angle=std::uint16_t(hp2::recovered::bATan(math,std::sqrt(v[0]*v[0]+v[1]*v[1]),-v[2]));
+ if(angle<0x11f8){const float length=std::sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]),denominator=std::abs(v[0])+std::abs(v[1]);if(denominator==0)throw std::runtime_error("Singular original shadow light direction");const float sine=hp2::recovered::bSin(math,std::uint16_t(0x11f8)),cosine=hp2::recovered::bSin(math,std::uint16_t(0x51f8));v[2]=-length*sine;v[1]=(v[1]/denominator)*length*cosine;v[0]=(v[0]/denominator)*length*cosine;}
+ if(v[2]!=0)out.inverse_z=1.f/v[2];return out;
+}
+}
+
+#include "game_core/port/track/assets.hpp"
+namespace hp2::recovered {
+// Retail00120EF8 / Debug001210F0, live-car static-track shadow branches.
+// Host input supplies original geometry-space CV, pose, body0 bounds, wheels and
+// selectedLOD. It deliberately does not recover damage/part-culler decisions.
+port::track::ShadowPacket CarRenderInfo::Render(port::driving::Memory& math,const port::track::Scene& scene,const port::track::ShadowInput& input){
+ using namespace port::track;ShadowPacket out;if(!input.topology)throw std::invalid_argument("Shadow requires original topology");
+ const auto& topology=*input.topology;const auto transform=[&](const EnvironmentVector& p){EnvironmentVector v{};for(unsigned k=0;k<3;++k)v[k]=input.local_world[k]*p[0]+input.local_world[4+k]*p[1]+input.local_world[8+k]*p[2]+input.local_world[12+k];return v;};
+ auto origin=input.car_position;const auto ground=TopologyCoordinate::GetElevation(topology,origin);if(!ground.found)return out;origin[2]=ground.height;EnvironmentVector normal{{ground.plane[0],ground.plane[1],ground.plane[2]}};
+ eLightQuery lights;QueryLightDatabase(lights,scene.light_packs,input.car_position);const float sunlight=std::clamp(lights.LightScale,0.f,1.f);
+ if(input.fancy&&input.car_lod<3&&!input.collision_vertices.empty()){
+ const auto light=sh_Setup(math,scene.environment.sun,input.car_position);std::vector<EnvironmentVector> projected;
+ for(auto p:input.collision_vertices){p[0]*=.85f;p[1]*=.85f;p[2]+=.2750000059604645f;p=transform(p);const float shift=(input.car_position[2]-p[2])*light.inverse_z;p[0]+=shift*light.direction[0];p[1]+=shift*light.direction[1];projected.push_back(p);}
+ // Retail uses the recovered ground height+bias as query reference Z.
+ const float bias=.05999999865889549f;auto hull=smooth_shadow_corners(convex_hull(projected,topology,origin[2]+bias,bias,origin,normal));
+ if(hull.size()>2){EnvironmentVector center{};for(unsigned k=0;k<3;++k)center[k]=(hull[0][k]+hull[hull.size()/2][k])*.5f;
+ float alpha=90,edge=1.1f;if(sunlight<.4f){alpha=0;edge=1.4f;}else if(sunlight<=1.f){const float scale=(sunlight-.4f)/.6f;alpha=scale*90;edge=scale*(-.2999999523162842f)+1.4f;}
+ if(input.car_lod==2){if(input.lod_swap1==input.lod_swap2)throw std::invalid_argument("Singular original shadow LOD interval");alpha*=std::clamp((input.projected_size-input.lod_swap2)/(input.lod_swap1-input.lod_swap2),0.f,1.f);}
+ const std::array<std::uint8_t,4> colour{{128,128,128,static_cast<std::uint8_t>(std::min(int(alpha),255))}};
+ auto vertex=[](const EnvironmentVector& p,float u){return ShadowVertex{p,{{u,0}}};};
+ const int n=int(hull.size()),limit=(n&~1)-1;for(int i=0;i<limit;i+=2){ShadowStrip strip;strip.colour=colour;strip.vertices={vertex(hull[i],.155f),vertex(center,0),vertex(hull[i+1],.155f),vertex(hull[(i+2)%n],.155f)};out.strips.push_back(std::move(strip));}
+ if(n&1){ShadowStrip strip;strip.colour=colour;strip.vertices={vertex(hull.back(),.155f),vertex(center,0),vertex(hull.front(),.155f)};out.strips.push_back(std::move(strip));}
+ const int third=n/3;int begin=0;for(int group=0;group<3;++group){const int count=group==2?n-begin:third;ShadowStrip strip;strip.colour=colour;for(int j=0;j<=count;++j){const auto& p=hull[(begin+j)%n];auto expanded=p;expanded[0]=edge*(p[0]-center[0])+center[0];expanded[1]=edge*(p[1]-center[1])+center[1];strip.vertices.push_back(vertex(p,.155f));strip.vertices.push_back(vertex(expanded,1));}out.strips.push_back(std::move(strip));begin+=third;}
+ }
+ }
+ if(input.fallback){
+ constexpr float step=.3333333432674408f;std::array<EnvironmentVector,16> points{};std::array<std::array<float,2>,16> uv{};std::array<unsigned,4> bad{};std::array<Contact,4> wheels{};std::array<EnvironmentVector,4> wheel_pos{};
+ for(unsigned i=0;i<4;++i){wheel_pos[i]=transform(input.wheels[i]);wheels[i]=TopologyCoordinate::GetElevation(topology,wheel_pos[i]);wheel_pos[i][2]=wheels[i].height;}
+ constexpr unsigned wheel_index[16]={2,2,1,1,2,2,1,1,3,3,0,0,3,3,0,0};const float xmin=input.bounds_min[0]*.95f,xmax=input.bounds_max[0]*.95f,ymin=input.bounds_min[1]*.95f,ymax=input.bounds_max[1]*.95f;float previous=transform({{0,0,0}})[2];
+ for(unsigned row=0;row<4;++row)for(unsigned col=0;col<4;++col){const unsigned i=row*4+col;auto p=transform({{xmin+float(col)*(xmax-xmin)*step,ymin+float(row)*(ymax-ymin)*step,0}});p[2]=input.car_position[2];auto contact=TopologyCoordinate::GetElevation(topology,p);p[2]=contact.height;
+ if(!contact.found){const unsigned wheel=wheel_index[i];if(wheels[wheel].found){const auto& plane=wheels[wheel].plane;if(plane[2]==0)throw std::runtime_error("Singular original shadow wheel plane");p[2]=wheel_pos[wheel][2]-(p[0]-wheel_pos[wheel][0])*plane[0]/plane[2]-(p[1]-wheel_pos[wheel][1])*plane[1]/plane[2];contact.found=true;}}
+ if(((i^(i>>1))&5)==5)p[2]+=.08f;float distance=(p[0]-origin[0])*normal[0]+(p[1]-origin[1])*normal[1]+(p[2]-origin[2])*normal[2];
+ if(!contact.found||std::abs(p[2]-origin[2])>4.f||std::abs(distance)>=1.5f){p[2]=previous+.04f;++bad[row];}else {previous=p[2];p[2]+=.04f;}
+ points[i]=p;uv[i]={{float(col)*step,float(row)*step}};}
+ float alpha=70;if(sunlight>=.4f)alpha=sunlight<=1.f?70+(140-70)*((sunlight-.4f)/.6f):140;
+ for(unsigned row=0;row<3;++row){if(bad[row]+bad[row+1]>=4)continue;ShadowStrip strip;strip.ramp=false;strip.colour={{128,128,128,static_cast<std::uint8_t>(std::min(unsigned(alpha),255u))}};for(unsigned col=0;col<4;++col)for(unsigned r=0;r<2;++r){const auto i=(row+r)*4+col;strip.vertices.push_back({points[i],uv[i]});}out.strips.push_back(std::move(strip));}
+ }
+ return out;
 }
 }

@@ -1,0 +1,894 @@
+{
+  "task": "TASK-0071",
+  "status": "approved",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "99eab2a39122a662915977e23f6a86eb20f831b879d1103e4c19ea0c324c7134",
+  "baseline_inventory_sha256": "bfcd0c4fb54b97b434ba37693f5b122b35b027214cbd19881db3bd6130df67fe",
+  "scope_lf_sha256": "5b4dd99c25bb1608cbaad06e9890a248459a57deac7860522cfd8cccc910d77d",
+  "before": [
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::render_skids",
+      "signature_sha256": "2eb8afe3260f96babef7bcab1a09e3f3c65d62e17a75769612dc2a260858ce21",
+      "body_sha256": "0e04b4ec6485d4f8080bfda7d5d735027dc483674b16cd94ef84bbaf5a958213",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::rebuild_display",
+      "signature_sha256": "628664de20d8972238fe1dc37aba6818795c63a05893e22eb39b42b8bdabd458",
+      "body_sha256": "929e66392c00f93272d997c0ab9f4a34e51c16f1ed02aadbf372a8095c5f2686",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "name": "submit",
+      "signature_sha256": "ee5a9a694ebb68684a0f69f442ce86d2e1fc38d41cf2f5e81f9576bc3150be70",
+      "body_sha256": "adf89bc0da4d4ecb93de9c94ad152f243a7636e75706711bf83cd91162750b3c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::update_view",
+      "signature_sha256": "af3656c2e22b307f305268073c180924b394cd8fabf3d8173144d28a6cb68113",
+      "body_sha256": "009457f5e2cf9def70be771f9c2bc513d602e8805fed639d7f6f28770c4ef80b",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::stats",
+      "signature_sha256": "12cd816c5c35341269d897381a424a5466c6aa9dea385b18da84825e3c44c623",
+      "body_sha256": "9b583de092a50576bb1fecbb34455dcad17da128f01ba8c3006ec8cc9970286d",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "impl_",
+      "signature_sha256": "830e61f01445fb097bdb3587d52c9f11e9b7b97c828c3a54d0eb241c8917cc43",
+      "body_sha256": "7832c1bdc0f624ce0ad356ad211017d5a91d10ee50e3e47ebb5b849d22a869fe",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::release",
+      "signature_sha256": "9370e57b3df967999cb6c4f20b5aeae93e89e7a2e57547cbe47a62c4fbbc6761",
+      "body_sha256": "67ae565c21eaf55afe76c291cc5bcdec31321a6563cb6d7c50ebd0bb11acd8c6",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::update",
+      "signature_sha256": "efa2952af1b093f6ddea21eff66ab802d91f27ceb06c0fbc955bca17ff25b9ea",
+      "body_sha256": "af80468b9c562cd633a2334915e9e1b173a9f73c868fec90aa5df82b2f96a5ee",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::render_skids",
+      "signature_sha256": "2eb8afe3260f96babef7bcab1a09e3f3c65d62e17a75769612dc2a260858ce21",
+      "body_sha256": "3a22225bf70de3d03eefd05b0e25b7f3bb45bf2ebcaacf39360c89ddb29ad93a",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::update_view",
+      "signature_sha256": "af3656c2e22b307f305268073c180924b394cd8fabf3d8173144d28a6cb68113",
+      "body_sha256": "0478691f2f9a0d534fe719e9f856cc5ebfe1a6d475849cf82bd491292d82092c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::rebuild_display",
+      "signature_sha256": "628664de20d8972238fe1dc37aba6818795c63a05893e22eb39b42b8bdabd458",
+      "body_sha256": "2796b799b29be191c611c81287dd0da6f62dc2c7d2d1a04b697098c49ee84201",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::stats",
+      "signature_sha256": "12cd816c5c35341269d897381a424a5466c6aa9dea385b18da84825e3c44c623",
+      "body_sha256": "9f44590e139ddc38b4b89c5e3fdc1f8759e6f2be9937978fc7a18d76f00e3dfb",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "impl_",
+      "signature_sha256": "830e61f01445fb097bdb3587d52c9f11e9b7b97c828c3a54d0eb241c8917cc43",
+      "body_sha256": "2e9bc8967f61c4975f638e3f867bded6ec2d4f8a6a4eb474084a3003b10e13c6",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::release",
+      "signature_sha256": "9370e57b3df967999cb6c4f20b5aeae93e89e7a2e57547cbe47a62c4fbbc6761",
+      "body_sha256": "c9424f40b5f814e6444846597e33efa50c7be057c6b790e15eb3eaa43a3e4f83",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::update",
+      "signature_sha256": "efa2952af1b093f6ddea21eff66ab802d91f27ceb06c0fbc955bca17ff25b9ea",
+      "body_sha256": "7527156e65c3f04922d956582923d5fa92822dac400fe2fb20504c8678e3af1c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "name": "submit",
+      "signature_sha256": "ee5a9a694ebb68684a0f69f442ce86d2e1fc38d41cf2f5e81f9576bc3150be70",
+      "body_sha256": "353fe1c5f9e5b8af3a406045965dc779ed02f6f5b6df4f939c0f9773da759a3c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    }
+  ],
+  "auxiliary_sources": [
+    {
+      "path": "CMakeLists.txt",
+      "lf_sha256": "719744ff88c4d5d4054bd23f6da76cd874c7c2b4bc707a72fe8ca2cb856e1d5e",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "build.ps1",
+      "lf_sha256": "47775bb4b24d423f67ddc20251fdd1b4071ae39b7616e5121e42a2991c4b9c3d",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/project.godot",
+      "lf_sha256": "28b6e9b3da7fbe208ae1a48a0c3cc171efbcff95890197b6277064b8d5e3ed62",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scenes/encoded_transport_gpu_smoke.tscn",
+      "lf_sha256": "664ac3cd87efdcbaccfeeac9636ca2ce487dc414e88058a4e03800fb3d66ab02",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/asset_viewer.gd",
+      "lf_sha256": "3ab22d4eeaa5e323d63e63574a9e782266e0d67d4264b5dc6c4358ee78a88612",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/car_material_gpu_smoke.gd",
+      "lf_sha256": "cbed5614b768253d6c928fe69908275dc6a2e45e00f61ee8eb7691d32b7841d0",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/debug_tools.gd",
+      "lf_sha256": "e8098e7c407237b10e309fcbdfaacbb9c57ec04c4d05beaba2ad66d6691fbe74",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/encoded_view.gd",
+      "lf_sha256": "3ece6987029244f68026e2b01384b4451d63b1c287b03323a007b2739f1421f5",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/profile_debug.gd",
+      "lf_sha256": "046dc846d89f9ee8923e44d668ffa8c3516448eab0478874cdafcc8700ddae4a",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/profile_debug_game_smoke.gd",
+      "lf_sha256": "9db8422937c723d31cf3a4309cef451ce4b566a02429faa9eaed65690adb94e6",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/render_api.gd",
+      "lf_sha256": "2d53951b82b9ffbcfc814ac6f690c3ff37cb125e09adbb2ba05f46c519cce9ef",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/track_profiler_hud_smoke.gd",
+      "lf_sha256": "23f57e1a1a9fd14bdc9bbd9942bd8a080864f4ad842dfea17a53af76b51d9fc0",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/track_profiler_smoke.gd",
+      "lf_sha256": "3c4a3b6ba904dcce092922dde95e165606b594c12166ff3766a17101a2421c71",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics.gd",
+      "lf_sha256": "c04dec9b91e0fb25805ca9e164f3a9b51a1a8f9aa7f2288ca02e3558bc0b05d5",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics_smoke.gd",
+      "lf_sha256": "c272436d6c7931dab6174063829bc3504455f8fbe7d9906dabf2ed0bb5837a54",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/frontend_native.gd",
+      "lf_sha256": "1043982ae64e950e99bcbb78368b3b272284b836a4fa13cf31f997a64ede6651",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/encoded_transport_gpu_smoke.gd",
+      "lf_sha256": "2650d9d5612c46f8c461f8c7ff717c8d213be0f051ac51cacf84b71eebd771cf",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/race_scene.gd",
+      "lf_sha256": "4c304c0d2408a9ccc6db671711f00df34bbaeeafb0babc5d057b237cfcafbfd8",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/render_contract.gd",
+      "lf_sha256": "3e1229d4b78968686b1851014682b7d5022130f7f03d93107bd04e0636b457c1",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/sky_depth_gpu_smoke.gd",
+      "lf_sha256": "439ee9b38d54908712f621baf8bf7e01f0d29a08a4b4ec6dafc69e604b8375b4",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_fusion_gpu_smoke.gd",
+      "lf_sha256": "16956ce4739a40a0efbbf00aa8c6b0553c4e7c45d93f6564f956521dd949014c",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_reflection_smoke.gd",
+      "lf_sha256": "0b8f8723f0bbb6556a7aee6729b689fa6cb12729e3fc8d6803bc2795c2a5058c",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_smoke.gd",
+      "lf_sha256": "23d754b5f7322c24d8189b1d3b97218fa40f066563d63ab838cefd93ceba7de5",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_particles_gpu_smoke.gd",
+      "lf_sha256": "9a39422e17c2edd27922244d1167f6f77f23e8934f04b1f18e79fb4501642008",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_performance.gd",
+      "lf_sha256": "018f86cec1ea18c264c61256b18dd30de223c959b07bd0694969d986520bb3e0",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_performance_scene.gd",
+      "lf_sha256": "82963d0bbb029467508b1f13a905d9fce7e47cab1cd5b41752ad179e2bfbd009",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_pipeline_smoke.gd",
+      "lf_sha256": "b0379a424daba309ef1d156a6f99eedb3b1d3a708f7d8837d58b0e8279cf987b",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_postprocess_gpu_smoke.gd",
+      "lf_sha256": "290dd6f852a0be76f2e2d52b42255cb886a86632488f04ef987ead69d3ab6208",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_postprocess_lifecycle_gpu_smoke.gd",
+      "lf_sha256": "64b33048a7a72fd55e23a901148febafe04120c8c81fd5de7c2520a92a5a2f17",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_sun_gpu_smoke.gd",
+      "lf_sha256": "6d10102c1e843afe617916c7f3a96447481c6558b2e39d8c20f2969eb9be01c4",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "godot/scripts/runtime/track_transport_capture.gd",
+      "lf_sha256": "2d1c97af813427c5f8ff821720c557cb7adb634eac7bef99468023c7ece966fd",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "reverse/scripts/audit_task0063_review.py",
+      "lf_sha256": "57689dc29af97d0b88a96bdea415c8c9a3479a9a1506fb13143122e5bb8ca805",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "reverse/scripts/audit_task0064_review.py",
+      "lf_sha256": "705c735307cd2354caee731903dafebeff8284d75d75f9b2c7ae3c2426d29634",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "reverse/scripts/audit_task0065_review.py",
+      "lf_sha256": "b2d48e884581a2f0642d433e16265111ebd471e51345ff0272d6087360c8df3a",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "reverse/scripts/audit_task0066_review.py",
+      "lf_sha256": "fdba517a826a3e3914e0029077ad082e3d600ab6dd0635590b0dc3426896922f",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "reverse/scripts/audit_task0067_review.py",
+      "lf_sha256": "21b2d97bb8b71416d370f00efec4c5c46d40a8b98646e14e678119f394353cc5",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "reverse/scripts/audit_task0069_review.py",
+      "lf_sha256": "154bf99eba803ec46818b12948a9a3f6edf53e833fd4e092cf8c7e23bd8cf099",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "reverse/scripts/audit_task0070_review.py",
+      "lf_sha256": "9256afce63b585fcc012a75646646914ab8e41b8c20284dfc6fa30b814375d78",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "reverse/tests/test_task0065_source_review.py",
+      "lf_sha256": "f8a4547dd5573eba191942676fa3004776d214a9e88b5ce38447ee3f2c7a360e",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.hpp",
+      "lf_sha256": "38c59f1a7c3791e765c2404a006ffadd284eee85c6e004810277f508f30870ca",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/profile_debug_ui.cpp",
+      "lf_sha256": "2080c3d81c78a86e12d23da650e7d22c52968427275b63d30f786a1e058b7d90",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/profile_debug_ui.hpp",
+      "lf_sha256": "a116b0ffb92608a5586a5131dff351be49dd3a468afbd9fa7b1a7a3715156ce1",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "lf_sha256": "cb03866df3ba11731671ffa850728ebe9b22e64bfa8e530fc24a61ab7a78d2f6",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.hpp",
+      "lf_sha256": "520ecb85c6a60c7bda21f63bcdd2d1b61c4cfab94577314abf675ad0523a996c",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "lf_sha256": "70a4e770132ca95bd4d67cbb6a704eee1ea252ccb11dc1069e6df89e135bc4a7",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.hpp",
+      "lf_sha256": "64faaf7df3732304c34910bf59bd42866afcf1d9e317b22df8d558d4fa0a3633",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "lf_sha256": "2df33ae757cf7a0c95d70b834c59ba270de48d9d0f098242f5f19eb3e197e804",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_command_batches.hpp",
+      "lf_sha256": "136d79fee8cf1bf60df4de958f9186d3f619f1e3f83a7e7880e3f548b28fc73c",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "lf_sha256": "df2ca1d6ae65f8a53b88044b5efc2dbcaffe0cf2fe356b794cc2e196f9d98750",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "lf_sha256": "609bccc54905187d675c727692439852918476bbd4f5b98a5f42323d1d4f533b",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "lf_sha256": "807239cfcb7da6c630c0eecbe9e3ba4965ab9b631ba14868abe99cc13f8086cf",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.hpp",
+      "lf_sha256": "093f8817c1f29db390cd4feaf7f50cd1cb2de69570a575ae07102f580b595358",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "lf_sha256": "cc7ce37a4cff8b4cefddb123be8f97d4a5ca94e541128daf1c26b4bed63de9b4",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "lf_sha256": "50cc107cf94de019bc81c66600026f05a9f3d797b2b37006d4c49be8dba4d1df",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_cache.hpp",
+      "lf_sha256": "66d837fac5d2905c449850a89cad616a3bf298d926df97f76a4a061f4952f274",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "lf_sha256": "60090d2be3942307d80061202c151a48d7ff270be19c4d7b59bd029193d3e7c9",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.hpp",
+      "lf_sha256": "3edbb3279de59f296835195c19bb5930af7cc3b820088c33f04363748d1f4787",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_world_batches.hpp",
+      "lf_sha256": "d4e0b4f5a4d78463657e14bc04c3151ca7768b170473a68df785f81e957fa853",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/shaders/car_base.gdshader",
+      "lf_sha256": "582742fe990c39938b354a2314c450f819b10e3083bbdb7b0ff81ff372f3c70c",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/shaders/car_base_shader.hpp",
+      "lf_sha256": "170486698de5d73f8a39c4650b2edc95a49cf87ba863f25b9630a92c4ea9c34e",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/shaders/car_modulate.glsl",
+      "lf_sha256": "6ac4d0c5dd10a1bd230ae51309a348db19bb5b939e8c68d5f8b772e225c300f0",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/shaders/car_wireframe.gdshader",
+      "lf_sha256": "51db003d9b4f13f6d52442f4d95e938d453c1b012c4b6e8702bf40e0ebca8a65",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/shaders/embedded_shaders.hpp.in",
+      "lf_sha256": "f58556b1150ba85b1c3aafc770552230a9e653a93b234aa24a5bb523498f2ae2",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/shaders/postprocess.glsl",
+      "lf_sha256": "a10645fe7ddb48c3f0b88c7e104b816410ed48618ba2bb2e4a3d7f6f1f9e96ee",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/shaders/postprocess_composite.glsl.inc",
+      "lf_sha256": "406891131fc553fec4b6007fa5511ed89997c3e05fa95ddabf13e2154af833f4",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/shaders/screen_projection.hpp",
+      "lf_sha256": "db5a1158f70c6855d5435a205564881053de9437a74f437c727b3215955049c9",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/shaders/sky_depth.hpp",
+      "lf_sha256": "f96bdeb25cd3c3125451ca5fdb34d538b16b06a19d47f77c69ec19aec1917302",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/shaders/track_alpha_vertex.glsl",
+      "lf_sha256": "88d901c4ce32cdad8a206ebda981bee689ae9a23878865de98bb9f7842fcfd9d",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/shaders/track_debug_edges.gdshader",
+      "lf_sha256": "3c07b18ec4f2196a4c48ef64b2ad25d2ae07b5f6f113febef1df054d5c44e012",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/shaders/track_debug_fill.gdshader",
+      "lf_sha256": "e737bb064780dfe29b339676b1d1e68e59d2350620b695bf6f48dbbcdaede81f",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/shaders/track_depth.glsl",
+      "lf_sha256": "764cfc16166e732c8a2f01882a153ff60b917fbdb52c30a04194f251200589ac",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/shaders/track_effects.glsl",
+      "lf_sha256": "0c5c174a410920e86cfadf6b815852427c3f96582e5b3c62752307278dfd6c10",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/shaders/track_fragment.glsl",
+      "lf_sha256": "27a62a4fafc7aec99fbb9e940112961759df940d26e642676242a484f383f3e6",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/shaders/track_sampling.glsl",
+      "lf_sha256": "af6b3267b72de1e5c36cfd386797a58df0f7f84eda555936a37fb2dba2e16c12",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/shaders/track_shader.cpp",
+      "lf_sha256": "87220a813e68132af9977af8ed72017a81dcd55af37f7ec62682c4f5e3435bb6",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/platform/shaders/track_shader.hpp",
+      "lf_sha256": "f3fffc9ecaa99b0c74890353242c74dfbd3e7a85705c56f4089b92e9e0434bc2",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/tests/track_command_batches_tests.cpp",
+      "lf_sha256": "cf4102752a294198eff0a737f0d40140fd32d5fef23588e6b846b8bc3780a9c6",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/tests/track_draw_inventory.cpp",
+      "lf_sha256": "ea54ac27a7fa309b900aa235c665f69d5d403c259c6ced712ce442af025a9954",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/tests/track_submission_cache_tests.cpp",
+      "lf_sha256": "cb3fe2d15be3a1a269f0fbd2929803a9372babd5527616ce130e21f330580005",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "src/tests/track_world_batches_tests.cpp",
+      "lf_sha256": "7dcf3cb5231a44bafae5b1b464f553d70645c62a726711dec250de776c1f3689",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "tools/pipeline.py",
+      "lf_sha256": "61f9ef81b7e22955e821415f02fbb3624e599536021691216f7b8938dce705c2",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "tools/run_frontend.ps1",
+      "lf_sha256": "b79ab1063d5da5bcfeb5166fcc39716a94cda8b2b05593ce98e1eb695987bed1",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "tools/run_frontend_menu_observer.ps1",
+      "lf_sha256": "d752227378daada9107642a0eaaee6b5a02ad26a2510ce3c04ead0314bba7337",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "tools/run_main_loop_observer.ps1",
+      "lf_sha256": "509a9a27fe112d31d6a4f226a2e686b80fba5b0aa26481b9a5cc997c8179d474",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "tools/run_track_costs.ps1",
+      "lf_sha256": "f58a9ce68981ccc7245c9e6677105da4455dad1c73670b4e7c1b59cea176716c",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "tools/task0071_performance.py",
+      "lf_sha256": "7c5f0e559d259b09aadafc92ed4ee43ef862db9c4fbcdf86bb900064c4381197",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "tools/task0071_pixels.py",
+      "lf_sha256": "86e1282583bcb8eb1a1c3822b35b728197aa389fe998657ebc019f62afafe80c",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    },
+    {
+      "path": "tools/test_drive_window.py",
+      "lf_sha256": "0316e60d8f05c3fe06b71a1fd63804a3af0fa3d1b42a2682cbe5cb72abaf72d4",
+      "kind": "port_adapter",
+      "evidence_id": "E0071H01",
+      "evidence_record": "reverse/task0071/host-rendering.md",
+      "reason": "Vulkan Forward+ host adaptation and measured resource/synchronization optimization; recovered algorithms and effect timing remain unchanged."
+    }
+  ]
+}

@@ -1,0 +1,361 @@
+{
+  "task": "TASK-0070",
+  "entries": [
+    {
+      "path": "src/platform/godot_bridge/profile_debug_ui.cpp",
+      "name": "ProfileDebugUi::draw",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::console_frame",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    }
+  ],
+  "auxiliary_sources": [
+    {
+      "path": "CMakeLists.txt",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "build.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "godot/project.godot",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "godot/scripts/debug/asset_viewer.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "godot/scripts/debug/debug_tools.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "godot/scripts/debug/profile_debug.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "godot/scripts/debug/profile_debug_game_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "godot/scripts/debug/render_api.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "godot/scripts/debug/track_profiler_hud_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "godot/scripts/debug/track_profiler_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "godot/scripts/frontend_native.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "godot/scripts/runtime/race_scene.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_reflection_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "godot/scripts/runtime/track_transport_capture.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "reverse/scripts/audit_task0063_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "reverse/scripts/audit_task0064_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "reverse/scripts/audit_task0065_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "reverse/scripts/audit_task0066_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "reverse/scripts/audit_task0067_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "reverse/scripts/audit_task0069_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "reverse/tests/test_task0065_source_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "src/platform/godot_bridge/profile_debug_ui.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "src/platform/godot_bridge/profile_debug_ui.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_command_batches.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_cache.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_world_batches.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "src/tests/track_command_batches_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "src/tests/track_draw_inventory.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "src/tests/track_submission_cache_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "src/tests/track_world_batches_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "tools/pipeline.py",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "tools/run_frontend.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "tools/run_frontend_menu_observer.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "tools/run_main_loop_observer.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "tools/run_track_costs.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    },
+    {
+      "path": "tools/test_drive_window.py",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    }
+  ],
+  "retired_auxiliary_sources": [
+    {
+      "path": "godot/scripts/debug/track_profiler.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0070U01",
+      "evidence_record": "reverse/task0070/live-profiler.md",
+      "reason": "User requested a global profile_debug.gd collector and realtime native ImGui graphs/function hotspots, preserving native game logic."
+    }
+  ]
+}

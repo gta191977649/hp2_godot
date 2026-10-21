@@ -229,8 +229,8 @@ def main() -> int:
     if migration_review.exists() and args.baseline == '19a8de9':
         historical_after = collect_revision('8c7efde')
         report = compare(baseline, historical_after, load_renames(args.renames), aliases, permissions)
-        import audit_task0051_review
-        migration = audit_task0051_review.check_current()
+        import audit_task0056_review
+        migration = audit_task0056_review.check_current()
         report['task0044_source_migration_review'] = migration
         report['historical_preservation_target'] = git('rev-parse', '8c7efde').strip()
         report['passed'] = report['passed'] and migration['passed']

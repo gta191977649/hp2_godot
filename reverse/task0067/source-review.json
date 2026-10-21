@@ -1,0 +1,170 @@
+{
+  "task": "TASK-0067",
+  "status": "approved",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "b98f2f74bbc734ecb2a30eb5270df109d8311befcf153d8babd8f14f2cb08004",
+  "baseline_inventory_sha256": "cd3a6a2c2b43933c103c4ea0dbace297195cc2a9cd8e22f1a3f0088b945d94b6",
+  "scope_lf_sha256": "595f5a47bc33c834dab1fb248c3e36fffba594d5e28c9f195ede1079d993b70b",
+  "before": [
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw",
+      "signature_sha256": "af5c4109ffb88c769db23520815cad4706cfef9cd312c96a3eb3cbd7b1f54a9d",
+      "body_sha256": "38b29e8a06a4f1456e057eeba54952a4dc4f8f4fdce7697af281302827d887a1",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0067U01",
+      "evidence_record": "reverse/task0067/live-primitives.md",
+      "reason": "User requested a realtime triangle/primitive counter beside draw calls; presentation and engine monitor reads only."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_snapshot",
+      "signature_sha256": "ef5026d842bd185acad14f92379c944f1db983a3f42547c13e2d150baa0f1c1e",
+      "body_sha256": "75d359bda0161065766143cc303a717f8547613068adbd3a4cd889d73e9f6b59",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0067U01",
+      "evidence_record": "reverse/task0067/live-primitives.md",
+      "reason": "User requested a realtime triangle/primitive counter beside draw calls; presentation and engine monitor reads only."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw",
+      "signature_sha256": "af5c4109ffb88c769db23520815cad4706cfef9cd312c96a3eb3cbd7b1f54a9d",
+      "body_sha256": "fd2e53a7da0e59c3c1d452ee60a92ccaa2199e2c8042b0bf844b2c636d4aeb8e",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0067U01",
+      "evidence_record": "reverse/task0067/live-primitives.md",
+      "reason": "User requested a realtime triangle/primitive counter beside draw calls; presentation and engine monitor reads only."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_snapshot",
+      "signature_sha256": "ef5026d842bd185acad14f92379c944f1db983a3f42547c13e2d150baa0f1c1e",
+      "body_sha256": "8a1195db602e3eee80adfef3205e0080d3fdcef54e693d3213a7d0e5d6abe25b",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0067U01",
+      "evidence_record": "reverse/task0067/live-primitives.md",
+      "reason": "User requested a realtime triangle/primitive counter beside draw calls; presentation and engine monitor reads only."
+    }
+  ],
+  "auxiliary_sources": [
+    {
+      "path": "godot/scripts/debug/asset_viewer.gd",
+      "lf_sha256": "c468513b735e46df5654d4b097563f0156a6ac2d20145a007b8ef046298bd92c",
+      "kind": "port_adapter",
+      "evidence_id": "E0067U01",
+      "evidence_record": "reverse/task0067/live-primitives.md",
+      "reason": "User requested a realtime triangle/primitive counter beside draw calls; presentation and engine monitor reads only."
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics.gd",
+      "lf_sha256": "c04dec9b91e0fb25805ca9e164f3a9b51a1a8f9aa7f2288ca02e3558bc0b05d5",
+      "kind": "port_adapter",
+      "evidence_id": "E0067U01",
+      "evidence_record": "reverse/task0067/live-primitives.md",
+      "reason": "User requested a realtime triangle/primitive counter beside draw calls; presentation and engine monitor reads only."
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics_smoke.gd",
+      "lf_sha256": "c272436d6c7931dab6174063829bc3504455f8fbe7d9906dabf2ed0bb5837a54",
+      "kind": "port_adapter",
+      "evidence_id": "E0067U01",
+      "evidence_record": "reverse/task0067/live-primitives.md",
+      "reason": "User requested a realtime triangle/primitive counter beside draw calls; presentation and engine monitor reads only."
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_reflection_smoke.gd",
+      "lf_sha256": "0b8f8723f0bbb6556a7aee6729b689fa6cb12729e3fc8d6803bc2795c2a5058c",
+      "kind": "port_adapter",
+      "evidence_id": "E0067U01",
+      "evidence_record": "reverse/task0067/live-primitives.md",
+      "reason": "User requested a realtime triangle/primitive counter beside draw calls; presentation and engine monitor reads only."
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_smoke.gd",
+      "lf_sha256": "23d754b5f7322c24d8189b1d3b97218fa40f066563d63ab838cefd93ceba7de5",
+      "kind": "port_adapter",
+      "evidence_id": "E0067U01",
+      "evidence_record": "reverse/task0067/live-primitives.md",
+      "reason": "User requested a realtime triangle/primitive counter beside draw calls; presentation and engine monitor reads only."
+    },
+    {
+      "path": "reverse/scripts/audit_task0065_review.py",
+      "lf_sha256": "b2d48e884581a2f0642d433e16265111ebd471e51345ff0272d6087360c8df3a",
+      "kind": "port_adapter",
+      "evidence_id": "E0067U01",
+      "evidence_record": "reverse/task0067/live-primitives.md",
+      "reason": "User requested a realtime triangle/primitive counter beside draw calls; presentation and engine monitor reads only."
+    },
+    {
+      "path": "reverse/scripts/audit_task0066_review.py",
+      "lf_sha256": "fdba517a826a3e3914e0029077ad082e3d600ab6dd0635590b0dc3426896922f",
+      "kind": "port_adapter",
+      "evidence_id": "E0067U01",
+      "evidence_record": "reverse/task0067/live-primitives.md",
+      "reason": "User requested a realtime triangle/primitive counter beside draw calls; presentation and engine monitor reads only."
+    },
+    {
+      "path": "reverse/tests/test_task0065_source_review.py",
+      "lf_sha256": "f8a4547dd5573eba191942676fa3004776d214a9e88b5ce38447ee3f2c7a360e",
+      "kind": "port_adapter",
+      "evidence_id": "E0067U01",
+      "evidence_record": "reverse/task0067/live-primitives.md",
+      "reason": "User requested a realtime triangle/primitive counter beside draw calls; presentation and engine monitor reads only."
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.hpp",
+      "lf_sha256": "38c59f1a7c3791e765c2404a006ffadd284eee85c6e004810277f508f30870ca",
+      "kind": "port_adapter",
+      "evidence_id": "E0067U01",
+      "evidence_record": "reverse/task0067/live-primitives.md",
+      "reason": "User requested a realtime triangle/primitive counter beside draw calls; presentation and engine monitor reads only."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_command_batches.hpp",
+      "lf_sha256": "136d79fee8cf1bf60df4de958f9186d3f619f1e3f83a7e7880e3f548b28fc73c",
+      "kind": "port_adapter",
+      "evidence_id": "E0067U01",
+      "evidence_record": "reverse/task0067/live-primitives.md",
+      "reason": "User requested a realtime triangle/primitive counter beside draw calls; presentation and engine monitor reads only."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "lf_sha256": "df2ca1d6ae65f8a53b88044b5efc2dbcaffe0cf2fe356b794cc2e196f9d98750",
+      "kind": "port_adapter",
+      "evidence_id": "E0067U01",
+      "evidence_record": "reverse/task0067/live-primitives.md",
+      "reason": "User requested a realtime triangle/primitive counter beside draw calls; presentation and engine monitor reads only."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "lf_sha256": "609bccc54905187d675c727692439852918476bbd4f5b98a5f42323d1d4f533b",
+      "kind": "port_adapter",
+      "evidence_id": "E0067U01",
+      "evidence_record": "reverse/task0067/live-primitives.md",
+      "reason": "User requested a realtime triangle/primitive counter beside draw calls; presentation and engine monitor reads only."
+    },
+    {
+      "path": "src/tests/track_draw_inventory.cpp",
+      "lf_sha256": "ea54ac27a7fa309b900aa235c665f69d5d403c259c6ced712ce442af025a9954",
+      "kind": "port_adapter",
+      "evidence_id": "E0067U01",
+      "evidence_record": "reverse/task0067/live-primitives.md",
+      "reason": "User requested a realtime triangle/primitive counter beside draw calls; presentation and engine monitor reads only."
+    },
+    {
+      "path": "src/tests/track_world_batches_tests.cpp",
+      "lf_sha256": "7dcf3cb5231a44bafae5b1b464f553d70645c62a726711dec250de776c1f3689",
+      "kind": "port_adapter",
+      "evidence_id": "E0067U01",
+      "evidence_record": "reverse/task0067/live-primitives.md",
+      "reason": "User requested a realtime triangle/primitive counter beside draw calls; presentation and engine monitor reads only."
+    }
+  ]
+}

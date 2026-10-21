@@ -41,7 +41,7 @@ def check_current(*, current_identities=None):
     return dict(passed=amendment['passed'], task0048_historical_passed=True, task0049_amendment=amendment)
 
 if __name__ == '__main__':
-    from audit_task0051_review import check_current as check_complete_chain
+    from audit_task0056_review import check_current as check_complete_chain
     result = check_complete_chain()
     print(json.dumps(result, indent=2))
     raise SystemExit(0 if result['passed'] else 1)

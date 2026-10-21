@@ -12,6 +12,15 @@
 #include "game_core/port/not_implemented.hpp"
 
 namespace hp2::recovered {
+// Retail001ABF48 / Debug001A95C8; E0056T01, reverse/task0056/textures.md.
+std::optional<std::uint32_t> GetTextureInfo(std::uint32_t name,bool return_default,
+    const std::set<std::uint32_t>& loaded,const std::set<std::uint32_t>& targets) {
+    if(loaded.count(name)||targets.count(name))return name;
+    if(!return_default)return std::nullopt;
+    auto fallback=GetTextureInfo(0x19006835,false,loaded,targets);
+    if(!fallback)hp2::not_implemented("0x001ABF48","GetTextureInfo: original DEFAULTTEXTURE absent, bBreak path");
+    return fallback;
+}
 // ELF 0x001AC3F0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/vehicle/001ac3f0.md.
 void TexturePack::GetLoadedTexture() {
     hp2::not_implemented("0x001AC3F0", "TexturePack::GetLoadedTexture (signature and full body unresolved)");

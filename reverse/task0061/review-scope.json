@@ -1,0 +1,117 @@
+{
+  "task": "TASK-0061",
+  "entries": [
+    {
+      "path": "src/game_core/extensions/debug_console.cpp",
+      "name": "DebugConsole::frame",
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/game_core/extensions/debug_ui.cpp",
+      "name": "DebugUiSession::begin",
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/game_core/extensions/debug_ui.cpp",
+      "name": "DebugUiSession::input",
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::_bind_methods",
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::console_frame",
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::console_init",
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_targets",
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw",
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_snapshot",
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/game_core/extensions/debug_console.cpp",
+      "name": "DebugConsole::set_ui_scale",
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/game_core/extensions/debug_console.cpp",
+      "name": "DebugConsole::ui_scale",
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/game_core/extensions/debug_ui.cpp",
+      "name": "DebugUiSession::scale",
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/game_core/extensions/debug_ui.cpp",
+      "name": "DebugUiSession::set_scale",
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::get_ui_scale",
+      "kind": "port_adapter",
+      "evidence_id": "E0061U01",
+      "evidence_record": "reverse/task0061/ui-dpi.md",
+      "reason": "User-requested host coordinates and DPI; logical UI/physical framebuffer-input conversion and revisioned fonts. No recovered rendering, selection or physics body change."
+    }
+  ]
+}

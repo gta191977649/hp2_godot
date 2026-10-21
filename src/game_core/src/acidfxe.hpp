@@ -15,3 +15,9 @@ public:
     void Recalc();
 };
 } // namespace hp2::recovered
+
+#include "game_core/port/driving/projections.hpp"
+namespace hp2::recovered {
+// Original src/acidfxe.cpp: Retail00126AF8 / Debug00126C50.
+port::driving::SolverVector hermite_parameter(const port::driving::SolverMatrix&,float);
+}

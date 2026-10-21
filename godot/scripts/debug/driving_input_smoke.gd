@@ -10,6 +10,9 @@ func key(code: Key, pressed: bool = true, echo: bool = false) -> InputEventKey:
 
 func _initialize() -> void:
 	var adapter = load("res://scripts/debug/driving_input.gd").new()
+	assert(InputMap.event_is_action(key(KEY_V), "hp2_drive_camera_view"), "V uses the centralized POV binding")
+	assert(InputMap.event_is_action(key(KEY_B), "hp2_drive_camera_lookback"), "B uses the centralized held-lookback binding")
+	assert(adapter.hints().any(func(text: String) -> bool: return text.contains("Hold B")), "Input hints expose hold semantics")
 	adapter.handle_input(key(KEY_W))
 	assert(adapter.frame().throttle == 1)
 	adapter.handle_input(key(KEY_W, false))

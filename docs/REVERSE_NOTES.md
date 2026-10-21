@@ -1,5 +1,51 @@
 # Reverse engineering knowledge base
 
+## TASK-0081 - Movement state and ResetCar leaf (2026-10-21)
+
+E-0081-L01 records exact Debug Begin/FinishMovement listings and Car/CarState
+types. The native fixture now captures frame motion, completes acceleration and
+distance after collision retries, and initializes through ResetCar001BD6C0.
+ResetCar preserves W/position/odometer/DriverMode and uses original matrix/store
+order. Whole Begin/FinishMovement still throw for topology/path/Player consumers.
+E-0081-R01 confirms route data framing exists in Track11 but closest-route search
+requires persistent wrapped DistanceAroundTrack; XY/spawn substitution is invalid.
+Pending reset requests now report00132FB0 without publishing partial frame state.
+See reverse/task0081/lifecycle.md and evidence.json. No Verified promotion.
+
+## TASK-0080 - Full driving-chain audit (2026-10-21)
+
+E-0080-L01/I01/P01 index36 fresh read-only Debug decompilation captures with
+per-response hashes in reverse/task0080/evidence.json. Car::Move00131B90
+consumes ResetMe and calls ResetToRoutePoint00132FB0; current PhysicsCar producer
+sets the request but NativeBackend never consumes it. Full Begin/FinishMovement
+path/acceleration/distance/recovery state remains absent. Device0-only input was
+confirmed by a synthetic Godot4.7.2 probe; no hardware-unplug claim. SPORT_SHIFT2
+exists below an input interface restricted to0/1. JoyHandler_NitroBoost0013C028
+requires police-car/BeACop gates, superseding the generic nitro-next priority.
+Ordinary force/integration chain remains connected. See
+reverse/task0080/driving-chain-audit.md for scope, counterevidence and priorities.
+New records are Decompiled only; no source implementation or Verified promotion.
+
+## TASK-0079 - Per-frame crossed terrain (2026-10-21)
+
+E-0079-S01 confirms Debug BeginTimestep001BD938 writes ROAD1 to State+330,
++32C, +328, +324. Car::BeginMovement00131D78 tail-jumps to it at00131E50.
+NativeBackend previously omitted this lifecycle reset despite SetWheelTerrain's
+per-contact maximum. The bounded fixture now calls it once before Move and
+collision retries, transactionally. Other BeginMovement topology/old-motion work
+is not claimed by this binding. See reverse/task0079/driving-chain.md. Existing
+Engine/DriveTrain bodies exceed conservative uniquely bound dashboard credit;
+no parser relaxation, new nitro approximation or Verified promotion.
+
+## TASK-0071 - Renderer transport boundary (2026-10-19)
+
+Read-only Ghidra MCP rereads Retail00108CC0/0010AC50 and Debug00108AE0 against
+their separately hash-checked ELFs corroborate existing texture/environment/skid
+records (E-0071-R01..R03). No recovered algorithm or verification status changed.
+Vulkan/Forward+ is a port-side transport choice; host HDR accumulation does not
+prove per-primitive GS COLCLAMP equivalence. See PERFORMANCE_TASK0071.md for
+numeric fixtures, pixel differences and the missing matched Track11 PS2 reference.
+
 ## TASK-0039 - Frontend font/digit/quad corrections (2026-10-17)
 
 Read-only Ghidra MCP confirms that font header28 is the glyph-table offset, not height;
@@ -602,3 +648,59 @@ generate stripes. Original game replay/editor/player paths retain evidenced gate
 Native/Godot regression and69 OS checks establish supported tool functionality only.
 PCSX2 probe again timed out. One synthetic clan, host device/camera/raster services,
 zero-length VRSQRT and unsupported domains remain explicit limits; no Verified claim.
+
+
+## TASK-0075 - Wheel particles are independent of skid-mark eligibility
+
+Debug00133988 wheel loop reads published WheelSlip, per-terrain smoke/spew
+thresholds and NumTimesSkidding, rather than using Wheel::MaybeMakeSkids gates.
+E-0075-T01/C01 and P01..P03 establish static config positions5..8, copied shared
+terrain emitters and WorldEffects update-before-emission order. TriggerEffect
+passes negative intensity, not a substituted frame timestep. D02 corrects live
+motion to current group car velocity; static null-car groups have no live motion.
+D03 admits the supported outside/all-view-mask render branch and preserves
+first-person/mirror/editor limits. Raw source/library data remain external or
+ignored; record links and reproducible tests are in DRIVING_EFFECTS.md.
+No original comparison or Verified promotion; PCSX2 probe timed out.
+
+
+## TASK-0085/86 presentation continuation
+
+E-0085-N01 preserves original emission/RNG/limits while exporting GPU batches.
+The optional GPU process is driven by visual epochs at zero engine delta; use
+RenderingServer::particles_request_process(baseRID), not extra process-time
+requests. The latter lost manual births on the pinned Vulkan engine. Extended
+benchmarking was explicitly cancelled; native remains default.
+
+E-0086-F01/M01 restores vehicle marker/pivot/Param normals, runtime original flare
+parameter/texture tables, bit-float angle power and per-lamp state. Existing
+JoyHandler_HonkHorn0x0013BF58 already toggles FAST cop state for originalCOPclass;
+head/brake/reverse/night/cop flares now have a fixed attached Godot consumer.
+See reverse/task0086/flares.md, markers.md and docs/VEHICLE_LIGHT_FLARES.md.
+No original runtime reference or Verified promotion. Full original DMA/global
+alpha-list equivalence remains under the wider rendering task.
+
+## TASK-0087 Track12 reported gaps
+
+E-0087-P01 corrects TriggerEmitter zero-interval handling: the original retries
+and consumes birth RNG even when the pool is full. An explicit port execution
+budget throws on exhaustion; it does not silently truncate emissions.
+E-0087-B01 establishes that missing original wheel-blur solids are optional;
+the original null-solid render guard permits those traffic models.
+E-0087-W01 admits original PUDDLE, DEEP_WATER and MUD_PUDDLE terrain rows through
+the recovered generic wheel/contact chain, without road remapping or Godot
+physics. Water-specific wipers/splash/replay in Car::TriggerCarTerrainEffects
+remain outside this recovered slice. See reverse/task0087. No Verified claim.
+
+## TASK-0088/89 camera and water continuation
+
+E-0088-C01/H01 correct V to the authored available POV cycle (including bumper),
+with original horizontal projection; B holds lookback and release restores the
+selected POV. This supersedes TASK0084's V latch/default-Godot-FOV policy.
+Camera records and tests retain dashboard/pursuit/split-screen boundaries.
+
+E0089W01..06 and E-0089-H01 extend the former water contact slice with original
+DriveOver spray, timed wiper state, Splash1/2/3 sound selection and original rigid
+animation matrices. Raw assets/captures remain ignored. Full terrain entry,
+world sound scheduling, original replay capture and separate RainSplash remain
+explicit limits. See reverse/task0089; PC tests do not establish original parity.

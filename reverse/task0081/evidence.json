@@ -1,0 +1,165 @@
+{
+  "task": "TASK-0081",
+  "binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "version": "User-labelled2002-07-08; independently unknown",
+  "policy": "Read-only Ghidra; bounded implementation, no original execution equivalence",
+  "manifests": [
+    {
+      "task": "TASK-0081",
+      "evidence": "E-0081-L01",
+      "binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+      "operations": "inspect.listing00131D78..00131E54; inspect.listing00131E58..00132000; inspect.decompile001BD6C0; inspect.listing001BD6C0..001BD867; data_types.get Car/CarState",
+      "captures": [
+        {
+          "file": "local/task0081/lifecycle/00131d78-listing.json",
+          "sha256": "792f2a7981021b80d2b4bf616a6fbde0e8c0a584d64673494e3d19ae706c4dd5"
+        },
+        {
+          "file": "local/task0081/lifecycle/00131e58-listing.json",
+          "sha256": "b5335e85a75f52fcf58b096c9947e0e6ea008f6364cdbf87811719d1f395c839"
+        },
+        {
+          "file": "local/task0081/lifecycle/001bd6c0-decompile.json",
+          "sha256": "b94e16e612bc464ccc40e13bda7ced5d311247c1affb3cef059fb6937a52c58b"
+        },
+        {
+          "file": "local/task0081/lifecycle/001bd6c0-listing.json",
+          "sha256": "569b7d5e72c904ce534010b0520342611336d1b121223e2edb7ae584c9244f38"
+        },
+        {
+          "file": "local/task0081/lifecycle/Car-type.json",
+          "sha256": "db09ac70f8e1d6dd5694fa74e88e8b65c6179652b14edbb89d010dcf637c6f89"
+        },
+        {
+          "file": "local/task0081/lifecycle/CarState-type.json",
+          "sha256": "c781877b799ef68bcd1ec28129f15544d24fe30b81e380feb6391fdd918bdbf6"
+        }
+      ]
+    },
+    {
+      "task": "TASK-0081",
+      "evidence": "E-0081-R01",
+      "binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+      "queries": "read-only inspect.decompile/listing/references_to, addresses in filenames, NFSHP2.ELF",
+      "captures": [
+        {
+          "file": "local/task0081/route/00133310.json",
+          "sha256": "8f87c4b3bd144b65e42fb5e52e441bda7b0da5fa9294477ca656f6b14f41015d"
+        },
+        {
+          "file": "local/task0081/route/00133340.json",
+          "sha256": "695815b98ac84accee20e7d5113d5e5acbf9db90ae3386a4780cee89fc34481a"
+        },
+        {
+          "file": "local/task0081/route/001368e8.json",
+          "sha256": "ace9bbcc81210d9d9043c014a999a45ce38c7e6c28ffcfd7751e8e8389aa4d8e"
+        },
+        {
+          "file": "local/task0081/route/001368f8.json",
+          "sha256": "df6b8df2b5b7ab5e7c390ea537e7adb0509dd561d1d602fae99640f9da6d7c48"
+        },
+        {
+          "file": "local/task0081/route/0018e650.json",
+          "sha256": "50bb96b7f90484084bbeddd6b7cf64745883542133a70105b46eef5fe43216b6"
+        },
+        {
+          "file": "local/task0081/route/0018e740.json",
+          "sha256": "9931f6afedf064d94e71817064f92d77445914a1abc81e4fb968f48aab483279"
+        },
+        {
+          "file": "local/task0081/route/00190d48.json",
+          "sha256": "958b9aa7eaa532d884a15543ac586960ff41882953d01407b36b7403ce9994f1"
+        },
+        {
+          "file": "local/task0081/route/001be750.json",
+          "sha256": "6825b4bc462e56e04328662dd6d6bae0dbdb21e574f547bb457223a0f0adfbb1"
+        },
+        {
+          "file": "local/task0081/route/001bebf8.json",
+          "sha256": "3d6deb272848082bcb88814ae93504b02efa7785b5d9a5db97a60e6cb9e0a1e0"
+        },
+        {
+          "file": "local/task0081/route/001bf8a0.json",
+          "sha256": "c894d1fdcbf99232379755389e0a687f6705a621826b042b6871a8e428ae8e1e"
+        },
+        {
+          "file": "local/task0081/route/001bf950-listing.json",
+          "sha256": "a4aca94928d6e55c50008fa91eb6e5baf4036513d32c8462a4784f957492d461"
+        },
+        {
+          "file": "local/task0081/route/001bf950.json",
+          "sha256": "e6feb87da0f66796128d508a66aa44c7cd61745e616f7b0b27e3234af845f098"
+        },
+        {
+          "file": "local/task0081/route/001bf9b0-listing.json",
+          "sha256": "c8afb860e4ecf33a8bb1a746317f8893cead175f90f82620bd95cecf6c1bc63a"
+        },
+        {
+          "file": "local/task0081/route/001bf9b0-xrefs.json",
+          "sha256": "7b6f3a95f6883d0003cffc06893afb45a9935caf405ef47e8c13d8bc6e091fbf"
+        },
+        {
+          "file": "local/task0081/route/001bf9b0.json",
+          "sha256": "18a8fca4f714ae623cb7409a987ffc501722a1fb788a41aad5acf16974519fa8"
+        },
+        {
+          "file": "local/task0081/route/001bf9f8-listing.json",
+          "sha256": "bff61e3fca658388f02a4fd24fde81740b0e4c3c0fbf796a3535d84a5b24f038"
+        },
+        {
+          "file": "local/task0081/route/001bffc8.json",
+          "sha256": "d72bade6ed609f47c23fc5347658629e4dcaeedbeb2580a15c07a3b064143518"
+        },
+        {
+          "file": "local/task0081/route/001c02f0.json",
+          "sha256": "a81078f3f0cb95b1f2cea058331d62140d9f1d2e04b4d38aa658fee8ae3b0469"
+        },
+        {
+          "file": "local/task0081/route/001c87b8.json",
+          "sha256": "a9c6e48655e4f1883bbae159afcad14364263d01434738067ab6e5b94c26f49c"
+        },
+        {
+          "file": "local/task0081/route/00233d68.json",
+          "sha256": "01e41ae44f124079eb84e0de4ac2099178457cc6ec0a0d2bf1443eb494d98226"
+        },
+        {
+          "file": "local/task0081/route/00233dd0.json",
+          "sha256": "fe8f3e423e32ee97befbf1a817127668de957baed425c8c7c14bc830f1e1e900"
+        },
+        {
+          "file": "local/task0081/route/00233ec0-listing.json",
+          "sha256": "5538ed42e6d90383dcb06374bca75c7cc99264ff79e6d26738f5edffaf425b55"
+        },
+        {
+          "file": "local/task0081/route/00233ec0.json",
+          "sha256": "81c2362d9440ee080bbff2af05bb8494ee822a37c8cd0f8b464dc0f963e52c59"
+        },
+        {
+          "file": "local/task0081/route/00233ee0.json",
+          "sha256": "1a9f21e699536b77bcd7e453ba08deef35c8b6a062d17f5923dd5c69bf57fe89"
+        },
+        {
+          "file": "local/task0081/route/00233f10.json",
+          "sha256": "8510b96f76b22d25070d35ae1c4ad73d7cd306318450507a3f9ce5b53e671b69"
+        },
+        {
+          "file": "local/task0081/route/00234040.json",
+          "sha256": "7f23d057c6b6ed13db2b51b8baab4816901e69c41b5a79e0f1f78b8339774000"
+        },
+        {
+          "file": "local/task0081/route/00234118.json",
+          "sha256": "87b0386a0c4178f0e76ad8b0d8d30779a8416f81bd495ee741bc9de4debf4505"
+        },
+        {
+          "file": "local/task0081/route/asset-route-chunks.json",
+          "sha256": "124716ac6710ac5c83fddac42cdca33ae6581f02c496d63535ff724e382a9663"
+        },
+        {
+          "file": "local/task0081/route/track11-route-rows.json",
+          "sha256": "ce8ba8290625da853d5433ac3a8fc31c01cf9cb88c5b5a0750efbb736b7141d5"
+        }
+      ],
+      "asset_probe": "Configured ZZDATA through tools.ps2_assets; Track11 route/signpost chunk framing only, no bytes exported"
+    }
+  ]
+}

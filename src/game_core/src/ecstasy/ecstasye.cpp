@@ -7,8 +7,28 @@
 
 #include "game_core/port/not_implemented.hpp"
 #include "game_core/indep/inc/Scenery.hpp"
+#include "game_core/indep/src/texture.hpp"
 
+#include "game_core/src/bMath.hpp"
 namespace hp2::recovered {
+// Retail0010BDB8 / Debug0010C1B0; E0056T01, reverse/task0056/textures.md.
+std::vector<std::uint32_t> eSolid::FixTextureTable(const std::vector<std::uint32_t>& names,
+    const std::set<std::uint32_t>& loaded,const std::set<std::uint32_t>& targets) {
+    std::vector<std::uint32_t> result;result.reserve(names.size());
+    for(auto name:names)result.push_back(*GetTextureInfo(name,true,loaded,targets));
+    return result;
+}
+// Retail00104448 / Debug001042E8. Debug memory binding supplies original globals;
+// the independently inspected Retail ScreenWidth is also512 in both video modes.
+float CalculateH(port::driving::Memory& math,std::uint16_t horizontal_fov){
+    const auto half=std::uint16_t(horizontal_fov>>1);
+    const float sine=hp2::recovered::bSin(math,half);
+    const float cosine=hp2::recovered::bSin(math,std::uint16_t(half+0x4000)); // original bCos tailcall
+    const float tangent=sine/cosine;
+    if(tangent==0.0f)return 10.0f;
+    return float(math.signed_word(0x00326760)>>1)/tangent;
+}
+
 // ELF 0x001047E0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001047e0.md.
 void eDmaChain::Init() {
     hp2::not_implemented("0x001047E0", "eDmaChain::Init (signature and full body unresolved)");
@@ -211,8 +231,9 @@ void hp2::recovered::eModel::Render(const port::track::Scene& scene,
         auto command=model_draw;command.surface=surface_index;
         command.original_order=frame.submitted_surfaces++;
         const auto& surface=solid.surfaces[surface_index];
-        const auto texture=std::find_if(scene.textures.begin(),scene.textures.end(),[&](const auto& t){return t.header.tex_hash==surface.texture_hash;});
-        if(texture==scene.textures.end())throw std::runtime_error("Track model has unresolved texture");
+        const auto* texture=frame.resource_index?&frame.resource_index->texture(scene,surface.texture_hash):nullptr;
+        const auto linear=texture?scene.textures.end():std::find_if(scene.textures.begin(),scene.textures.end(),[&](const auto& t){return t.header.tex_hash==surface.texture_hash;});
+        if(!texture){if(linear==scene.textures.end())throw std::runtime_error("Track model has unresolved texture");texture=&*linear;}
         auto state=eModel::RenderStrips(texture->header,surface.render_flags,
             command.visibility==2?4:0,command.has_light_context,true,false,command.visibility==1);
         if(!state)continue;
@@ -229,20 +250,22 @@ void hp2::recovered::eModel::Render(const port::track::Scene& scene,
 
 port::track::Frame hp2::recovered::eDisplayFrame(const port::track::Scene& scene,
     const port::track::FrameView& view,std::vector<std::size_t>& zones,port::driving::Memory& math,
-    std::vector<std::uint32_t>* texture_chain_order) {
-    port::track::Frame frame;
+    std::vector<std::uint32_t>* texture_chain_order,const port::track::ResourceIndex* resource_index) {
+    port::track::Frame frame;frame.resource_index=resource_index;
     GrandSceneryCullInfo::DoCulling(scene,view,zones,math,frame);
-    std::vector<port::track::DrawCommand> opaque,alpha;
+    // Sort references to immutable frame commands, not their large matrix/light payloads.
+    std::vector<std::size_t> opaque,alpha;
     std::vector<port::track::AlphaKey> keys;
+    opaque.reserve(frame.commands.size());alpha.reserve(frame.commands.size());keys.reserve(frame.commands.size());
     std::vector<std::uint32_t> temporary_chains;
     auto& chains=texture_chain_order?*texture_chain_order:temporary_chains;
-    for(auto command:frame.commands){
+    std::unordered_map<std::uint32_t,bool> seen_chains;seen_chains.reserve(chains.size()+64);for(auto hash:chains)seen_chains.emplace(hash,true);
+    for(std::size_t index=0;index<frame.commands.size();++index){
+        const auto& command=frame.commands[index];
         const auto& surface=scene.geometry.solids.at(command.solid).surfaces.at(command.surface);
-        const auto texture=std::find_if(scene.textures.begin(),scene.textures.end(),[&](const auto& t){return t.header.tex_hash==surface.texture_hash;});
-        if(texture==scene.textures.end())throw std::runtime_error("Track command has unresolved texture");
-        if(std::find(chains.begin(),chains.end(),surface.texture_hash)==chains.end())chains.push_back(surface.texture_hash);
-        if(command.effect.alpha_pass){keys.push_back({command.effect.rendering_order,command.depth});alpha.push_back(command);}
-        else opaque.push_back(command);
+        if(seen_chains.emplace(surface.texture_hash,true).second)chains.push_back(surface.texture_hash);
+        if(command.effect.alpha_pass){keys.push_back({command.effect.rendering_order,command.depth});alpha.push_back(index);}
+        else opaque.push_back(index);
     }
     // Retail00109358: non-deferred texture chains are bucketed by +29 too.
     // First-use texture chains and shared image-parent sibling grouping follow
@@ -250,18 +273,61 @@ port::track::Frame hp2::recovered::eDisplayFrame(const port::track::Scene& scene
     const auto hash=[&](const auto& c){return scene.geometry.solids[c.solid].surfaces[c.surface].texture_hash;};
     std::vector<std::uint32_t> grouped;
     std::map<std::pair<int,std::uint32_t>,std::uint32_t> first_parent;
+    // Preserve first-use and image-parent sibling reversal; index lookups only
+    // replace repeated linear searches, never the original logical ordering.
+    std::unordered_map<std::uint32_t,const hp2::assets::TpkTextureHeader*> headers;
+    headers.reserve(scene.textures.size());for(const auto& t:scene.textures)headers.emplace(t.header.tex_hash,&t.header);
     for(int bucket=0;bucket<8;++bucket)for(auto chain:chains){
-        const auto t=std::find_if(scene.textures.begin(),scene.textures.end(),[&](const auto& v){return v.header.tex_hash==chain;});
-        if(t==scene.textures.end()||t->header.RenderingOrder!=bucket||t->header.Field_0x4d!=0)continue;
-        const auto parent=t->header.ImageParentHash?t->header.ImageParentHash:chain;
-        const auto key=std::make_pair(bucket,parent);const auto found=first_parent.find(key);
-        if(found==first_parent.end()){first_parent.emplace(key,chain);grouped.push_back(chain);}
-        else grouped.insert(std::find(grouped.begin(),grouped.end(),found->second)+1,chain);
+        const auto found=headers.find(chain);if(found==headers.end())continue;const auto& t=*found->second;
+        if(t.RenderingOrder!=bucket||t.Field_0x4d!=0)continue;
+        const auto parent=t.ImageParentHash?t.ImageParentHash:chain;
+        const auto key=std::make_pair(bucket,parent);const auto prior=first_parent.find(key);
+        if(prior==first_parent.end()){first_parent.emplace(key,chain);grouped.push_back(chain);}
+        else grouped.insert(std::find(grouped.begin(),grouped.end(),prior->second)+1,chain);
     }
-    std::stable_sort(opaque.begin(),opaque.end(),[&](const auto& a,const auto& b){
+    std::unordered_map<std::uint32_t,std::size_t> ranks;ranks.reserve(grouped.size());for(std::size_t i=0;i<grouped.size();++i)ranks.emplace(grouped[i],i);
+    std::stable_sort(opaque.begin(),opaque.end(),[&](auto ai,auto bi){
+        const auto& a=frame.commands[ai];const auto& b=frame.commands[bi];
         if(a.effect.rendering_order!=b.effect.rendering_order)return a.effect.rendering_order<b.effect.rendering_order;
-        return std::find(grouped.begin(),grouped.end(),hash(a))<std::find(grouped.begin(),grouped.end(),hash(b));
+        const auto aa=ranks.find(hash(a)),bb=ranks.find(hash(b));
+        return (aa==ranks.end()?grouped.size():aa->second)<(bb==ranks.end()?grouped.size():bb->second);
     });
     for(auto index:port::track::alpha_order_001055B0(keys))opaque.push_back(alpha[index]);
-    frame.commands=std::move(opaque);return frame;
+    std::vector<port::track::DrawCommand> ordered;ordered.reserve(opaque.size());
+    for(auto index:opaque)ordered.push_back(std::move(frame.commands[index]));
+    frame.commands=std::move(ordered);frame.resource_index=nullptr;return frame;
+}
+// TASK0052 E-0052-P03. Retail0010F6A8 / Debug0010FA88.
+std::optional<port::track::postprocess::Quad> hp2::recovered::DisplayFilter(
+    const port::track::postprocess::View& v,const port::track::postprocess::ScreenControls& s){
+    using namespace port::track::postprocess;
+    if((v.id!=1&&v.id!=2)||!v.target_active||!s.filter.texture_available||!s.filter.bActive)return std::nullopt;
+    Quad q;q.vertices={{{{float(v.scissor_x),float(v.scissor_y)}},{{float(v.scissor_x+v.scissor_w),float(v.scissor_y)}},
+        {{float(v.scissor_x+v.scissor_w),float(v.scissor_y+v.scissor_h)}},{{float(v.scissor_x),float(v.scissor_y+v.scissor_h)}}}};
+    for(auto& colour:q.colours)colour=s.filter.aColour;
+    q.blend=s.filter.alpha;q.texture_hash=0x02c8711c;q.texture_fx=s.filter.nTextureFx;return q;
+}
+// Retail0010F280 / Debug0010F660. Four mirrored quarters write alpha.
+std::vector<port::track::postprocess::Quad> hp2::recovered::DisplayRadialBlur(
+    const port::track::postprocess::View& v,const port::track::postprocess::ScreenControls& s){
+    using namespace port::track::postprocess;std::vector<Quad> result;
+    if((v.id!=1&&v.id!=2)||!v.target_active||!s.blend_mask_available)return result;
+    const float left=float(v.scissor_x),right=float(v.scissor_x+v.scissor_w),top=float(v.scissor_y),bottom=float(v.scissor_y+v.scissor_h);
+    const float mx=float(v.scissor_x+v.scissor_w/2),my=float(v.scissor_y+v.scissor_h/2);
+    for(unsigned i=0;i<4;++i){Quad q;const float x=i==1||i==2?right:left,y=i<2?top:bottom;
+        q.vertices={{{{x,y}},{{mx,y}},{{mx,my}},{{x,my}}}};
+        for(unsigned j=0;j<4;++j)q.colours[j]={{128,128,128,j==2?s.nRadialAlphaCenter:s.nRadialAlphaEdge}};
+        q.blend={0,0,0,1,128};q.texture_hash=0xab9a6e21;result.push_back(q);}
+    return result;
+}
+// Retail0010F4F0 / Debug0010F8D0. Previous MainDisp0 uses512-square backing UVs.
+std::optional<port::track::postprocess::Quad> hp2::recovered::DisplayBlendPrevious(
+    const port::track::postprocess::View& v,const port::track::postprocess::ScreenControls& s){
+    using namespace port::track::postprocess;
+    if(!v.active||!v.target_active||!s.blend_mask_available||!s.previous_frame_available)return std::nullopt;
+    Quad q;q.vertices={{{{float(v.scissor_x),float(v.scissor_y)}},{{float(v.scissor_x+v.scissor_w),float(v.scissor_y)}},
+        {{float(v.scissor_x+v.scissor_w),float(v.scissor_y+v.scissor_h)}},{{float(v.scissor_x),float(v.scissor_y+v.scissor_h)}}}};
+    const float u0=(v.scissor_x+.5f)/512.f,v0=(v.scissor_y+.5f)/512.f,u1=(v.scissor_w-.5f)/512.f,v1=(v.scissor_h-.5f)/512.f;
+    q.uv={{{{u0,v0}},{{u1,v0}},{{u1,v1}},{{u0,v1}}}};for(auto& c:q.colours)c={{128,128,128,128}};
+    q.blend={0,1,1,1,128};q.previous_frame=true;return q;
 }

@@ -1,0 +1,503 @@
+{
+  "task": "TASK-0089",
+  "evidence": "E-0089-S01",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "583208d733c67735396dc33277e9445be9eb51755084374f84742885e9303123",
+  "baseline_inventory_sha256": "9ac040929653013204ab809c4161c597dd08121b3094abbd613309e1a75df752",
+  "before": [
+    {
+      "path": "src/port/vehicle/model.cpp",
+      "name": "Model::select",
+      "signature_sha256": "64fea580d7515934355f36a2434990be38fffc0852835e26a19596d22f0563bd",
+      "body_sha256": "a748a1a5471ff5f7219111bcab3d7036de4b769a345fc618a37e3dce09aa3798",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/port/assets/vehicle_geometry.cpp",
+      "name": "solid",
+      "signature_sha256": "9e1c5c56b489282893c5c13e29708ee82e2db1f61a860cfedeb5908a26bd763f",
+      "body_sha256": "7d96fecbca51ba27ffaeeafe652ed563f7cc319f208a57250a82219dc25acd0a",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/game_core/port/driving/car_effects.cpp",
+      "name": "WheelParticleEffects::prepare",
+      "signature_sha256": "cf7ec0f48bbe7a7da0569a32f35f3d70c9f8ec5b2c68dc8cc03a3261e06179af",
+      "body_sha256": "7e129d8d4dac3c97b2ca921399143421bd2f61673e2774390ec40ced22a05580",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/game_core/port/driving/car_effects.cpp",
+      "name": "WheelParticleEffects::trigger",
+      "signature_sha256": "ecf7f6beb0c137177ad89ef4444c954b377aa2d6abadeca3be62bc1ec4e4e463",
+      "body_sha256": "0516306b1de9b6d7b6d2094c29379a957ec66b9a4f9bee028fb6cba21353d63e",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/game_core/src/care.cpp",
+      "name": "Car::TriggerEffect",
+      "signature_sha256": "fc00fd25f162873d76c9bcf4f632c59d9dc3987510a8931dd0b842c1fb52b5d3",
+      "body_sha256": "1366c519e5796ad44033d0cc7f529f2125517a81cc864bcd4f51c03ad5da2bb6",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::emit_wheel_particles",
+      "signature_sha256": "0319612b959df29f5c2262e318003f06d292f7c3084a8e0c883e7bb91ab9248d",
+      "body_sha256": "fd4c506007e24bea2db16f4e41248bb955ef03e639038e2b2256dc789c715f2e",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::reset",
+      "signature_sha256": "72473a2dedd76871aea38250fdda48bad108b6e5eef4fb49edf61f905b055ce7",
+      "body_sha256": "7a185a0d34a4aadee55a4b84dc197ec498e988b67454feb97423b970cb075bb9",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::advance",
+      "signature_sha256": "4b3b67ca000d00c4cfc26033669039b9ac1a8c4990327486dbfa5a4ee70d6e66",
+      "body_sha256": "825eb08c01265d217539e079ce10a6d02693ac3ebae4eeeac1eae08639619275",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::reset_audio",
+      "signature_sha256": "b758f83a31e50957f897d5d8fb94e119f3c93ffa759cf9670bfae07c76b9c975",
+      "body_sha256": "19e595b628cd84722549090df21df58d646055f1a6ec48a845c1d0ea38db79e2",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::update_audio",
+      "signature_sha256": "c7f2dec4c79b1b3c3762f7c8277883de5f338bc31eb0f08c8ff3927ead73f4a4",
+      "body_sha256": "3f580208234f8ede8673c910a5335321ab0b14c168f280ec0e2ca1f50ed1c978",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::get_driving_audio_bank",
+      "signature_sha256": "dce6c6625c33a48143de7e63a70ffd62f94f6389e6c7620234050937d31eab07",
+      "body_sha256": "94397d22f530d30c2a93a7db5ce4ab7dcf78471d68e9a23efeb2b5b292ba279f",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::load_config",
+      "signature_sha256": "bb174e3f294a621387ae16f0d510d53eab5fef5c036620744fbb5bd468a74f24",
+      "body_sha256": "a595ef8717705ba6cf2a9926f48de83991638db2d5aa916c27d95b74feed85c6",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::get_state",
+      "signature_sha256": "668b58a7f813678c1c0e0c2eb7659258f516524cd55e7c1c8d645565b57070f4",
+      "body_sha256": "6ddbca8442c7479d12eac068830387f728a0d2ee349565752f6e99c8519d9b7f",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::apply_driving_snapshot",
+      "signature_sha256": "2997cff17ef224daa050e497a04670d20622235038a431e913e50e50bd8fc953",
+      "body_sha256": "57fc6c4d0bfa274c67effcc08c3682b132eeae67d02c35af820c16cbdd34b4d8",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/port/assets/vehicle_geometry.cpp",
+      "name": "decode_vehicle_geometry",
+      "signature_sha256": "836291001467025f88ccc7d41d7408e74099f07da9bd4a08fc7b93b91c371d5f",
+      "body_sha256": "be2c8eda1b51e6f08b8531efa72b53c2efbd9fe15475de5da16184c19db48f6c",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/port/vehicle/model.cpp",
+      "name": "Model::load",
+      "signature_sha256": "0c118d9ac450f3080042a2baf37354f3844b29bbe2a8bd2c269ab6014f9bbea9",
+      "body_sha256": "c828fc3c532cad1cc5f92925585602ca676c03f5399c13d6f80884c4cdeae1ee",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::_bind_methods",
+      "signature_sha256": "536b0ee77af7622e05aadb1350ad9e811ea3af39bb65011327131a1ce50adc59",
+      "body_sha256": "fa298fc0d6d8fa3ce2cc2e554813a3204e82bd9c7caa5f7bc1675e9a4f401aad",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/game_core/indep/src/car.cpp",
+      "name": "trigger_drive_over_effects",
+      "signature_sha256": "dd51d2ec168e991db866f5ec4fc6a88ca69cb5d030d822d15464e48269df5718",
+      "body_sha256": "29136d41de1532f3dc64c3716f890aea4a8b40bb7e6625eeba5177b4c76f4ef5",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/game_core/port/driving/car_effects.cpp",
+      "name": "WheelParticleEffects::prepare",
+      "signature_sha256": "cf7ec0f48bbe7a7da0569a32f35f3d70c9f8ec5b2c68dc8cc03a3261e06179af",
+      "body_sha256": "81affa2d72a00810219cff3bd32af15ea63cd40f8085d666bacb7a755cc741f5",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/game_core/port/driving/car_effects.cpp",
+      "name": "WheelParticleEffects::trigger",
+      "signature_sha256": "5ea498baa9326153ad2256322a2c70bfd08e63d41ee1f88c97cf1261e54187dc",
+      "body_sha256": "e308abdd99013bcf5ae5448fa68f670d74a3a1d69285561f2a77130ae4ea0460",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::reset",
+      "signature_sha256": "72473a2dedd76871aea38250fdda48bad108b6e5eef4fb49edf61f905b055ce7",
+      "body_sha256": "964c356a6ac256c3b1dc1fca3b296eea1af60eaf87fefa29484732198ce31c62",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::advance",
+      "signature_sha256": "4b3b67ca000d00c4cfc26033669039b9ac1a8c4990327486dbfa5a4ee70d6e66",
+      "body_sha256": "6d3838cbc7e19cfc86394e2c6a61a516899d2b3a492f5fb098732c2e64595c9a",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::terrain_at_body",
+      "signature_sha256": "a2bb0cbf00d266d4c0a3f9545d6129949613f73dee9d9cca89e2207424a73dac",
+      "body_sha256": "141a9c0b2684c8ba05e2e9f1e4b3257329492e55f8e1f176f54a660fc445871e",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/game_core/port/driving/splash_audio.cpp",
+      "name": "load_splash_sound_bank",
+      "signature_sha256": "fa3ee56afe8ef20381c164aa50abbd4ebb6fb8263def0267fa56029e9ecebc2a",
+      "body_sha256": "eeaecb1c2295dc12cd4794d106a8f2da0abc554b09c3e8695c74677b612dd80f",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/game_core/port/driving/water_effects.cpp",
+      "name": "turn_wipers_on_for_duration",
+      "signature_sha256": "7dc6f2761bec87dc02d31759cdc66eab0b4aca157f0d5b03e1d81c6251f46b6e",
+      "body_sha256": "250dd6277ffbb29326b161c091181928f3851b95f38fb8fb0c00a1015a2aa509",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/game_core/port/driving/water_effects.cpp",
+      "name": "wiper_snapshot",
+      "signature_sha256": "5b30ecd642ffc985c6d82bd4f3a7fe7e885a2610591b4ba4f1d0453cba38d24f",
+      "body_sha256": "f21c464b5b3b946b33aada359b397468fdf964751d896f4acccf176316f997ea",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/game_core/port/driving/water_effects.cpp",
+      "name": "trigger_water_terrain_state",
+      "signature_sha256": "759e02f50d66d06b633a175f105ddc14375634642dcf1feb8260db34d9a409fe",
+      "body_sha256": "3ac2d65bc41e9890e292a671b211bcc40712dfac113b1d0df5bbe0fd6a824a48",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/game_core/port/driving/water_effects.cpp",
+      "name": "SplashAudioMixer::update",
+      "signature_sha256": "1ecf66bbe375d4a6aed893433c3426c85cb4d2bdd7aad34c87ae1e3ca9d3e95d",
+      "body_sha256": "ec28bcc1fbe1e91ad2779203023c5246eed0d1e59491086e947687207be66b5e",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/game_core/port/driving/water_effects.hpp",
+      "name": "reset",
+      "signature_sha256": "9ff976f8fad5585cc849b888aad4393a57c9bbc7c42ba3d86f20bb2287f8e7dd",
+      "body_sha256": "5c50c460a49ea8b88b7dbaafb2c556e4ed60e70fabf1b5dcb3d3c22ad997ca52",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/game_core/port/driving/water_effects.hpp",
+      "name": "trigger",
+      "signature_sha256": "139b1d41216d81684be2d3f2b9579cc5cfd8ce9beb57c89961a482ca03466b46",
+      "body_sha256": "cc01f2677aff9b0295bd354b3a0c1b4a85bde07478c8d90625fdd3bab5c4047a",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/game_core/src/care.cpp",
+      "name": "Car::TriggerEffect",
+      "signature_sha256": "fc00fd25f162873d76c9bcf4f632c59d9dc3987510a8931dd0b842c1fb52b5d3",
+      "body_sha256": "ddcb1672314211a55426e0e059eab984de5aa003c0a0c4666d2c50413100c597",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::emit_wheel_particles",
+      "signature_sha256": "0319612b959df29f5c2262e318003f06d292f7c3084a8e0c883e7bb91ab9248d",
+      "body_sha256": "ff6dc1c044b45a2fa786ad88caee4e9c4886d4f8b7910f8ca14b1bed0c9d004b",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::_bind_methods",
+      "signature_sha256": "536b0ee77af7622e05aadb1350ad9e811ea3af39bb65011327131a1ce50adc59",
+      "body_sha256": "5351af8f83cef6e06900c0a40dc71a2e6f48494b24488c3cf9931f8c3556a1b7",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::load_config",
+      "signature_sha256": "bb174e3f294a621387ae16f0d510d53eab5fef5c036620744fbb5bd468a74f24",
+      "body_sha256": "c170ddb4b6723e90a7915cc9b2cbae13d728613fa008d0c1fef5ae0edb153d0d",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::reset_audio",
+      "signature_sha256": "b758f83a31e50957f897d5d8fb94e119f3c93ffa759cf9670bfae07c76b9c975",
+      "body_sha256": "6785bb2034ce78b2cf22ae33d9fce84765f917499a18760b8d425eb14881be6c",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::update_audio",
+      "signature_sha256": "c7f2dec4c79b1b3c3762f7c8277883de5f338bc31eb0f08c8ff3927ead73f4a4",
+      "body_sha256": "1ab18b997946014aeb95ef85c026246a94f73f6805ff88ea7c67007803b3525f",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::get_driving_audio_bank",
+      "signature_sha256": "dce6c6625c33a48143de7e63a70ffd62f94f6389e6c7620234050937d31eab07",
+      "body_sha256": "36abea655b85714a84e597316a69f75527096d874ed055f554c5bb9ee25aa17d",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::take_splash_audio_events",
+      "signature_sha256": "5d23f131a48a1c327de30c8dcb9135eda2b62f09d27c72938915945cbf66de46",
+      "body_sha256": "86c5b716e8e820fd084b9a9137cf9ac56dc1475b431e30153a72c5842d1cd81a",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::get_state",
+      "signature_sha256": "668b58a7f813678c1c0e0c2eb7659258f516524cd55e7c1c8d645565b57070f4",
+      "body_sha256": "f19a4654b695c33df2243f3c89a609f7d233f76f94862fc66fb8c12f273c21df",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::apply_driving_snapshot",
+      "signature_sha256": "2997cff17ef224daa050e497a04670d20622235038a431e913e50e50bd8fc953",
+      "body_sha256": "84e103791fa4aa2f38e0835e7010060f7f9b50671a34de6bc0d822c81bb777f4",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/port/assets/vehicle_geometry.cpp",
+      "name": "rigid_animation",
+      "signature_sha256": "6cab6052d7a39536de8e203ed4925bcb51ebbfdae2534dbbec71d47ab1d892f7",
+      "body_sha256": "ecfe533f4b5a6bc3af658e69b7c6412a2ec952db7c1d673c16d42c93acdd1c59",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/port/assets/vehicle_geometry.cpp",
+      "name": "solid",
+      "signature_sha256": "9e1c5c56b489282893c5c13e29708ee82e2db1f61a860cfedeb5908a26bd763f",
+      "body_sha256": "5138b2d1c1b7427fc36672f31c16e1a53e061c94e2277525dc011d4ca4e49976",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/port/assets/vehicle_geometry.cpp",
+      "name": "decode_vehicle_geometry",
+      "signature_sha256": "836291001467025f88ccc7d41d7408e74099f07da9bd4a08fc7b93b91c371d5f",
+      "body_sha256": "cfc160b227509225d8590797c9a1142f9f7ad615422b814e6fc7ab5e82a917be",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/port/vehicle/model.cpp",
+      "name": "Model::load",
+      "signature_sha256": "0c118d9ac450f3080042a2baf37354f3844b29bbe2a8bd2c269ab6014f9bbea9",
+      "body_sha256": "7589ff5e2783bb87f3a03364a9593dfe30e6e1e551b8cb6fcfbe584201638873",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/port/vehicle/model.cpp",
+      "name": "Model::select",
+      "signature_sha256": "64fea580d7515934355f36a2434990be38fffc0852835e26a19596d22f0563bd",
+      "body_sha256": "a9cf10ed09af71da69614de417678f7bc85efe165fa5ef1cc251c24298f466a4",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    },
+    {
+      "path": "src/port/vehicle/model.cpp",
+      "name": "Model::apply_wiper_state",
+      "signature_sha256": "537775fbf8a0848100189eceb29bd8042243596668aa70bd0eaed8f0d7b49e2e",
+      "body_sha256": "d4b881085fd0dcb69fee8a8136e473546dec91ad1d161a849dec136f096978cf",
+      "stub": false,
+      "evidence_id": "E-0089-S01",
+      "reason": "E0089W01..06: bounded native water/DriveOver, timed wiper and splash producers plus original animation/model and host transport; full original ABI/replay services remain unimplemented."
+    }
+  ],
+  "replacements": {
+    "CMakeLists.txt": {
+      "before": "a9ef0546a10096ec0a7189cf59b9768e8261c52d6d19a1f297a9f56d26a0942b",
+      "after": "3323bf5cac977738d61db2f15d3adbf424067e1442552e01914c1cceb3cbf659"
+    },
+    "godot/scripts/runtime/collision_audio_transport_smoke.gd": {
+      "before": "7290767320fc5a450e6085ecdbe28c9097a6eda6af3af54a28b87ded2cdbdd2d",
+      "after": "bb69ccbd6412022cb8d525822b1ba9fb82357d4006eed96c7f0cc8aa1ac22cbf"
+    },
+    "godot/scripts/runtime/driving_audio.gd": {
+      "before": "b4b33c9ea97d20149fba0c30468907a19941626712f7cea4c21a3d1531cd061a",
+      "after": "0ac27194e4192891f87f9094cea85dc29c014a6167f10f6f2e3305ad29daf200"
+    },
+    "reverse/scripts/audit_task0088_review.py": {
+      "before": "c3ca8693628106fd5305e7bb016f35dc575d69bbe22f285b779d4d61c925c32c",
+      "after": "640067f8c215489d1fd2358e3bb48f372ceee437ff727221e2694059d8669f0c"
+    },
+    "reverse/tests/test_task0088_source_review.py": {
+      "before": "0b86cbd27c28ac93cab18c63843d94d7d892bc5d6111bb4fc1412ffa94d252bc",
+      "after": "df87f5587ddc4ecc203760d4a8e498c049ef745bce031a721fd6fdf5219f22d6"
+    },
+    "src/game_core/port/driving/car_effects.hpp": {
+      "before": "28695ceae34d88ccf8b531c0150dca07adb5d39988a13a71724d0d4869a88266",
+      "after": "b73be8e33ab1a0d9bd9c65cc0e94ec18bf2a6f744717d7e5e7dc35554e938ecb"
+    },
+    "src/game_core/port/driving/native_backend.hpp": {
+      "before": "aabadae38dfeb398bdfdf3fb25c751fc2735f65cb856f307dd45c12d5aedea3e",
+      "after": "7b1db171a5a852e42a1ae661d0a57960a5644f1a8094b24583ee8e27b5f2cf0c"
+    },
+    "src/game_core/port/driving/session.hpp": {
+      "before": "8b949f8823c3b836b96d6bd81d8b64108ff12e07f7e6c7526bbb451aece78c15",
+      "after": "2aa1b7215d0e52b5ccb621ea4c18155f6955df408a9065c97782204449d3bdfa"
+    },
+    "src/game_core/port/driving/terrain_effects.hpp": {
+      "before": "0778314b928827ba64246fbcf8a7c2a8904308d4df088d8074ebd60cd1adbe66",
+      "after": "803ebea909f6b1e1ec2a0128786fab1c56c94d041524200bde75ae58e388aa48"
+    },
+    "src/platform/godot_bridge/ps2_driving_runtime.cpp": {
+      "before": "d54ae39d8d9f8525b344c3187cb7a17d5030b4f02d001f249d394bbe41daefe8",
+      "after": "04c11f1d8f7c8e9d0ad61ada0246d196307de8b8a8884b91ee8138cd2219c705"
+    },
+    "src/platform/godot_bridge/ps2_driving_runtime.hpp": {
+      "before": "449b632ead6ba4a861556ab4f53c92f8dcb106af902b05825ad096173d4d8dbc",
+      "after": "ea4fac2adca984fff5df020328e4e05c7277a5333aac34e3069aaa79bd365778"
+    },
+    "src/platform/godot_bridge/ps2_vehicle_renderer.cpp": {
+      "before": "cca27bd98b54352a1524e8d7080d0e73cc5668bee7ec671398261e70b6347681",
+      "after": "1dad2884be718480895c4327372fea342e6e8128f3bbecee99b5f9ca8ead1b25"
+    },
+    "src/port/render/vehicle.hpp": {
+      "before": "7514e1b493b950cf79501d08b6cf48b09438d4b55ea1e6e1f833555d804fc976",
+      "after": "79a1cf0c17a9f4df975c2bdce81ecd601af7c31d27e279922ec08b3b7713fba2"
+    },
+    "src/port/vehicle/model.hpp": {
+      "before": "17c9934113cecfd49d79f6c2f588d7af5900ab918d527b673abf5cb920cad235",
+      "after": "abf1bd55928d9d787c3bb9cc066447ac205d29bfd82045d4329d26b4923e487f"
+    },
+    "src/tests/driving_particle_tests.cpp": {
+      "before": "55df70d0b8bcec9bd6a7a3af39923b750643e2a6fcd0a9d7467bc55dc0680b9e",
+      "after": "e2df7764a1dcea31d947768c483d915092c74edfded3a293281af07e2e8203d8"
+    },
+    "src/tests/gpu_particle_emission_tests.cpp": {
+      "before": "7def665d201a80cd0098d83d2955a3491c5ae83a924eef1b0fbe5fa1bbc92076",
+      "after": "27c5c2f35dda59fad8ce08d35d73e46c90cd98f9a5e998a3b09d98f21bf47569"
+    }
+  },
+  "additions": {
+    "godot/scripts/debug/water_effects_smoke.gd": "f9da3aa744a77358afb9659c7f9dda0957d816bee2b36d468999a5d076534244",
+    "reverse/scripts/audit_task0089_review.py": "de0c2d36cf9e689298db7f45bd883f270fe491690b4164e229fcf52cebbca8ed",
+    "reverse/task0089/source-review.md": "a87b1af05d81d5d7f8015c81d89e671b5ed1c3937376f3c5b80bac93a737e5b7",
+    "reverse/tests/test_task0089_source_review.py": "f90fd99f62231e38051bf437930d6b5a1dcf63eb08fbbdb5a0671ef40bda67d6",
+    "src/game_core/port/driving/splash_audio.cpp": "b3df794822627c9b98f6fd5dc7735c9dd1cad943c1aa3cde262a1b51afbb3ffe",
+    "src/game_core/port/driving/splash_audio.hpp": "c2fec84015abc15fae1d4496d8f44b6eecef2612f0918dade473da31c06854d9",
+    "src/game_core/port/driving/water_effects.cpp": "0224b5d492d604a185b83d45aa6a9da1786a0d7ef0c60adfedb5c2b025747a44",
+    "src/game_core/port/driving/water_effects.hpp": "6a49441c723445b95f8e461fc57f693af25008f26de6910a7490b0c1de58b2e1",
+    "src/tests/vehicle_wiper_tests.cpp": "dff2f90229f4f3517117a3e7cd7406b9b2645d5aece84d513b9e98e0d005be9c",
+    "src/tests/water_effects_tests.cpp": "f007ddcfd5b6376a68496eac032e7757ad2419bfb497dc1b582b55ff9673e2a3"
+  }
+}

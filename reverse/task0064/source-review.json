@@ -1,0 +1,56 @@
+{
+  "task": "TASK-0064",
+  "status": "approved",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "beb7486eab15a531e0ccea7dc9b9ad9e8f18188fa051c4d9312aaac62964da16",
+  "baseline_inventory_sha256": "42764d3752f24613387d5dfcac9c90aca8c059e9595c94decd914fe20775d765",
+  "scope_lf_sha256": "08817efc72d7cb29ecc55eb7d9413c227997252ef9e64b9436cce69d1d913d38",
+  "before": [
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw",
+      "signature_sha256": "af5c4109ffb88c769db23520815cad4706cfef9cd312c96a3eb3cbd7b1f54a9d",
+      "body_sha256": "ca49b70e29a6298df19bb5446724ad240b5882eb9fe182d371a8641ed270458c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0064U01",
+      "evidence_record": "reverse/task0064/live-draw-count.md",
+      "reason": "User requested a realtime engine draw count below TrackViewer coordinates; presentation only."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_snapshot",
+      "signature_sha256": "ef5026d842bd185acad14f92379c944f1db983a3f42547c13e2d150baa0f1c1e",
+      "body_sha256": "1bc23a86cb87c35288c4397346ff125133b1814574daf1324f1449f433b197b7",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0064U01",
+      "evidence_record": "reverse/task0064/live-draw-count.md",
+      "reason": "User requested a realtime engine draw count below TrackViewer coordinates; presentation only."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw",
+      "signature_sha256": "af5c4109ffb88c769db23520815cad4706cfef9cd312c96a3eb3cbd7b1f54a9d",
+      "body_sha256": "7014a7ca46a303cea31b9648b6a98e358099478d79fb2a62ef39f034a398b1af",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0064U01",
+      "evidence_record": "reverse/task0064/live-draw-count.md",
+      "reason": "User requested a realtime engine draw count below TrackViewer coordinates; presentation only."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_snapshot",
+      "signature_sha256": "ef5026d842bd185acad14f92379c944f1db983a3f42547c13e2d150baa0f1c1e",
+      "body_sha256": "93836e8b7ab876b46b5ee8d1abfb57aebd6d5841383534ef4a776007d1da934e",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0064U01",
+      "evidence_record": "reverse/task0064/live-draw-count.md",
+      "reason": "User requested a realtime engine draw count below TrackViewer coordinates; presentation only."
+    }
+  ]
+}

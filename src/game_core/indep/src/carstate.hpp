@@ -11,14 +11,16 @@ namespace hp2::recovered {
 class CarState : public port::driving::ObjectView {
 public:
  using ObjectView::ObjectView;
+ // Debug001BD6C0; E-0081-L01; reverse/task0081/lifecycle.md. Full reset leaf;
+ // position, distance counters, DriverMode and configuration pointers survive.
+ void ResetCar();
 public:
     // ELF 0x001C0780; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c0780.md.
     // Original Debug reference: CarState::ResetCarForSound(void); exact original method spelling; void/no-argument host gap interface only.
     // Port-side void/no-argument placeholder; original signature unknown.
     void ResetCarForSound();
-    // ELF 0x001C0850; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c0850.md.
-    // Original Debug reference: CarState::BeginTimestep(void); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
+    // Debug001BD938; E-0079-S01; reverse/task0079/driving-chain.md.
+    // Debug ObjectView binding; resets crossed terrain at the frame boundary.
     void BeginTimestep();
     // ELF 0x001C0888; E-0042-C135; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001c0888.md.
     // Original Debug reference: CarState::GetYaw(void); exact original method spelling; void/no-argument host gap interface only.

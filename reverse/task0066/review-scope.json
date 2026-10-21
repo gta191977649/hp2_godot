@@ -1,0 +1,122 @@
+{
+  "task": "TASK-0066",
+  "entries": [
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_optimization_state",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::submit_frame",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "name": "optimization_options_from_dictionary",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    }
+  ],
+  "auxiliary_sources": [
+    {
+      "path": "godot/scripts/debug/asset_viewer.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_reflection_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "reverse/scripts/audit_task0065_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "reverse/tests/test_task0065_source_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_command_batches.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "src/tests/track_draw_inventory.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    },
+    {
+      "path": "src/tests/track_world_batches_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0066H01",
+      "evidence_record": "reverse/task0066/global-policy.md",
+      "reason": "User explicitly requested global optimization without hardcoded track IDs; retain common state eligibility and record known image differences."
+    }
+  ]
+}

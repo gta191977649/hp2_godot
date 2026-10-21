@@ -1,0 +1,161 @@
+{
+  "task": "TASK-0088",
+  "evidence": "E-0088-S01",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "65248eca7c5d4f621fc9c52cb838aec312ef7f5b974de3a2c27250c1c8ea68fc",
+  "baseline_inventory_sha256": "57342669f9128e680712c90286598da5cf8faa95aedb1d14770c687b0e5b8861",
+  "before": [
+    {
+      "path": "src/game_core/indep/src/cameramover.cpp",
+      "name": "DrivingCamera::update",
+      "signature_sha256": "7239dcdecbb65a0bd8ff910a36de80112102b2c92e2ca8ab6338a33e875bf8c1",
+      "body_sha256": "add0b5cdfff7576b5924d313f776591fbd71f66273d258476b3f37bea5016ccb",
+      "stub": false,
+      "evidence_id": "E-0088-S01",
+      "reason": "E-0088-C01: bounded original POV cycle/pose/projection with explicit no-dash fixture and held lookback; host transport/input lifecycle remains port-side, guest RenderDash remains unsupported."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::_bind_methods",
+      "signature_sha256": "536b0ee77af7622e05aadb1350ad9e811ea3af39bb65011327131a1ce50adc59",
+      "body_sha256": "af79310f7806580c0f033646fc69b342ab682fc5d18d0b1193abec2ee39690d8",
+      "stub": false,
+      "evidence_id": "E-0088-S01",
+      "reason": "E-0088-C01: bounded original POV cycle/pose/projection with explicit no-dash fixture and held lookback; host transport/input lifecycle remains port-side, guest RenderDash remains unsupported."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::update_driving_camera",
+      "signature_sha256": "6404b9127be0389cad045e15d0333cd5c8a5e1d50714d0223748dd16c6bf4c52",
+      "body_sha256": "5675610fc9bfb2f687d37b780f33b4ad383ca448b1c6e24f7135239023048963",
+      "stub": false,
+      "evidence_id": "E-0088-S01",
+      "reason": "E-0088-C01: bounded original POV cycle/pose/projection with explicit no-dash fixture and held lookback; host transport/input lifecycle remains port-side, guest RenderDash remains unsupported."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/game_core/indep/src/cameramover.cpp",
+      "name": "camera_info",
+      "signature_sha256": "6d48e49ef6ad28c2d0c0a1f4a028516f999a1f9b118b01888381a0e9bafccbc6",
+      "body_sha256": "95718955d0cb05a5854d51d673ff9a3a8c30f135de8380330cc466612a8adff2",
+      "stub": false,
+      "evidence_id": "E-0088-S01",
+      "reason": "E-0088-C01: bounded original POV cycle/pose/projection with explicit no-dash fixture and held lookback; host transport/input lifecycle remains port-side, guest RenderDash remains unsupported."
+    },
+    {
+      "path": "src/game_core/indep/src/cameramover.cpp",
+      "name": "DrivingCamera::cycle_pov",
+      "signature_sha256": "37ec887b6ffe1311c76f9f99bd29dc284abcf8565ee40b9166ee5b92281bdfff",
+      "body_sha256": "75c86a3026497bc567aa96a12b6cf0d8c6fdaaa348620e837a8740d03d996b98",
+      "stub": false,
+      "evidence_id": "E-0088-S01",
+      "reason": "E-0088-C01: bounded original POV cycle/pose/projection with explicit no-dash fixture and held lookback; host transport/input lifecycle remains port-side, guest RenderDash remains unsupported."
+    },
+    {
+      "path": "src/game_core/indep/src/cameramover.cpp",
+      "name": "DrivingCamera::update",
+      "signature_sha256": "7239dcdecbb65a0bd8ff910a36de80112102b2c92e2ca8ab6338a33e875bf8c1",
+      "body_sha256": "e2882d95ab191fa44904476b00a6a7b78f27a560c2bbfaa6051d68f9ba1ce4a6",
+      "stub": false,
+      "evidence_id": "E-0088-S01",
+      "reason": "E-0088-C01: bounded original POV cycle/pose/projection with explicit no-dash fixture and held lookback; host transport/input lifecycle remains port-side, guest RenderDash remains unsupported."
+    },
+    {
+      "path": "src/game_core/port/driving/camera.hpp",
+      "name": "pov_index",
+      "signature_sha256": "254525d52874d896d6eb8ab441f6e563856d2d4e76a32ba8233f43798b4bda5f",
+      "body_sha256": "196ba25b2c43ff86b900523b06b912c968115c493b6dc7d1e165a5a6f4986958",
+      "stub": false,
+      "evidence_id": "E-0088-S01",
+      "reason": "E-0088-C01: bounded original POV cycle/pose/projection with explicit no-dash fixture and held lookback; host transport/input lifecycle remains port-side, guest RenderDash remains unsupported."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::_bind_methods",
+      "signature_sha256": "536b0ee77af7622e05aadb1350ad9e811ea3af39bb65011327131a1ce50adc59",
+      "body_sha256": "fa298fc0d6d8fa3ce2cc2e554813a3204e82bd9c7caa5f7bc1675e9a4f401aad",
+      "stub": false,
+      "evidence_id": "E-0088-S01",
+      "reason": "E-0088-C01: bounded original POV cycle/pose/projection with explicit no-dash fixture and held lookback; host transport/input lifecycle remains port-side, guest RenderDash remains unsupported."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::update_driving_camera",
+      "signature_sha256": "6404b9127be0389cad045e15d0333cd5c8a5e1d50714d0223748dd16c6bf4c52",
+      "body_sha256": "9be493aad5255741b439c54e1ec082a0da720f8ad24044c567118773eea3407b",
+      "stub": false,
+      "evidence_id": "E-0088-S01",
+      "reason": "E-0088-C01: bounded original POV cycle/pose/projection with explicit no-dash fixture and held lookback; host transport/input lifecycle remains port-side, guest RenderDash remains unsupported."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::cycle_driving_camera_pov",
+      "signature_sha256": "8b62ac489cc1afeff08517d81911aadff10b7d3808e383db918705b36a8da463",
+      "body_sha256": "f075270518f0eeaa630beeb118527541aee8a6e6a58322b58bc48d7607a21f1a",
+      "stub": false,
+      "evidence_id": "E-0088-S01",
+      "reason": "E-0088-C01: bounded original POV cycle/pose/projection with explicit no-dash fixture and held lookback; host transport/input lifecycle remains port-side, guest RenderDash remains unsupported."
+    }
+  ],
+  "replacements": {
+    "godot/project.godot": {
+      "before": "6f19bf042ad78923d4b179f96267553b99815880b56bea332e576661e4362332",
+      "after": "8f98497f658bcb4103ed8e7e5f8e938ea5a27a2e8e6ff9401a5df181962e7cf3"
+    },
+    "godot/scripts/debug/driving_camera.gd": {
+      "before": "384dd10fc7cb06fe33ac6d264a2baac28708c8a777c6e31433c7169e8fd0b70d",
+      "after": "5ba9aef925b694e4d7baa7ca2b8270edf46972e48be1bd449966257aba7deb88"
+    },
+    "godot/scripts/debug/driving_camera_smoke.gd": {
+      "before": "bd3d3e9c7880258ac1409c9095bdb32d689e4c6068b653ab61acbca4319333fb",
+      "after": "42de35b303fe1d4718bb7717daf64b6c4946ba542eb29448448dbf2f23046138"
+    },
+    "godot/scripts/debug/driving_input.gd": {
+      "before": "1526999987bb6b790e2138a27799dea345cd95d9e8a3dbeb8431b1f24fddb186",
+      "after": "5e452598b954594cc033a7a3ce8027ab8d79b67a31e50fe44b7b80e9314b85a5"
+    },
+    "godot/scripts/debug/driving_lab.gd": {
+      "before": "d6af1fbcd2e3e39cf8fe8c2357cfe35a006901baee0fcf91263276882135a7af",
+      "after": "c39d954753aa49395626d888ed44a7839ffc6679bcb06afb868c977c01e8cdf2"
+    },
+    "godot/scripts/debug/driving_projection_checks.gd": {
+      "before": "438c0cb9e4ba46c84d74d9c50c87162a0159c4e9a1eba76e53c0b0c564cb8fce",
+      "after": "101458cd2663a92fe3cb4a5a99ef2e86b3fdf5e75ceb7888c2beb8c53aba4459"
+    },
+    "godot/scripts/debug/driving_smoke.gd": {
+      "before": "857a12d3e534f79b192af53580c882957a94206fd0d00938f58c75541bc16ecf",
+      "after": "0d98be516c1acfd5b4ab462903542e801cc848496d6f1ba63d039ae4b726422d"
+    },
+    "reverse/scripts/audit_task0087_review.py": {
+      "before": "24e6a826f273b457af5bc0ae53d759fec4ad1c6062c282fe708917cb0541f4f1",
+      "after": "bb9e3af04cd8edb8d8ffd19314c659bd5f1822b9b8530919bdd42a6db7f93acc"
+    },
+    "reverse/tests/test_task0087_source_review.py": {
+      "before": "241ee2745d824dd6344494998e7ceeed067bc34a45a8096049e77f23cbc80e30",
+      "after": "1b6458356220472d173359a3987b999d6d54378aaa2633551f7b9542699c1744"
+    },
+    "src/game_core/port/driving/camera.hpp": {
+      "before": "971692ae98e6e6f7d8379c1c62b2e6f08863fb0cc28192250d7e9ef12762b70e",
+      "after": "3c256c12b373f7a8c0e94773c871b4745d7d3df6641d6274ec06ddd25148b854"
+    },
+    "src/platform/godot_bridge/ps2_driving_runtime.cpp": {
+      "before": "b8631c5d5581b68d66594a6ef42cc8572c0364fd3453b6a3d917eaec23637e59",
+      "after": "d54ae39d8d9f8525b344c3187cb7a17d5030b4f02d001f249d394bbe41daefe8"
+    },
+    "src/platform/godot_bridge/ps2_driving_runtime.hpp": {
+      "before": "fe0121ee0909580df742e92c144a9296b83e3e212ea114afca8a02dd544aaa8b",
+      "after": "449b632ead6ba4a861556ab4f53c92f8dcb106af902b05825ad096173d4d8dbc"
+    },
+    "src/tests/driving_camera_tests.cpp": {
+      "before": "43b6692d9017687665bb2c368079950b52847fd364e7efd29694de75f0b11031",
+      "after": "f1a597aaada77476f4a10849854844e088101c45634de57d8061676f615dc185"
+    }
+  },
+  "additions": {
+    "godot/scripts/debug/driving_input_smoke.gd": "c080a308c6cb38567deab520d045bb738d99e326b2a8ef39bfa7d282cf25e341",
+    "reverse/scripts/audit_task0088_review.py": "c3ca8693628106fd5305e7bb016f35dc575d69bbe22f285b779d4d61c925c32c",
+    "reverse/task0088/source-review.md": "89b820e05119ff985c29b0fb3a528e15dbbca7a42d9ec81e7f86530063795623",
+    "reverse/tests/test_task0088_source_review.py": "0b86cbd27c28ac93cab18c63843d94d7d892bc5d6111bb4fc1412ffa94d252bc"
+  }
+}

@@ -1,0 +1,777 @@
+{
+  "task": "TASK-0069",
+  "status": "approved",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "797f37aba26a0c443cb5b5502341acc55496c54b9c8851ee7dca771db021727c",
+  "baseline_inventory_sha256": "de5b2976136f92047bdd7385d57a11debddb306e32a2ded995743737d18eb6dd",
+  "scope_lf_sha256": "e94b3c456c61615dba4da1cceabb852e1afe1e4cd2bb818e53ac5b421b85fe32",
+  "before": [
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::notify_material_parameter",
+      "signature_sha256": "bff908e241787ad95dc53d8828f8b954f25e134cdd41ec8a66332ffc52185717",
+      "body_sha256": "de0e62ce829863faca30b6ceb471462a9073def4343728cd1b089bba12797596",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "impl_",
+      "signature_sha256": "830e61f01445fb097bdb3587d52c9f11e9b7b97c828c3a54d0eb241c8917cc43",
+      "body_sha256": "450f98cfaadcce3b07abe27523e563c2003b22565cfd9faa2f74e886ededde55",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::release_display",
+      "signature_sha256": "7603e14a91c1950cf5f8bb5d5e81b4c193b650446720fda40a4862fa061832ef",
+      "body_sha256": "de80fcbd0c5928b779a66fcc744ae13d568a159ff045fe3c4d9199602a82faaf",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::_bind_methods",
+      "signature_sha256": "45286c8e1c10882711eff28d62291073a8f49e6823c258fbbe9681b28e082daf",
+      "body_sha256": "1b52871ea5262cc7908e9cca2941a458016d24fb5031b972872b001710445d2b",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::update_view",
+      "signature_sha256": "af3656c2e22b307f305268073c180924b394cd8fabf3d8173144d28a6cb68113",
+      "body_sha256": "fafe3440fdd9ba18c67e703316ec170d865ad0868a67a06eba3c6f6c7e4ab686",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_state",
+      "signature_sha256": "20cd6a56f4f5bd8582c1004e5b9c14e05054e8556771a8bc0d337c1afb48c56a",
+      "body_sha256": "4f00798332401437af97b6a269813f6d1b05686ca6b8fb95f2508f2f1ad51a5a",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "impl_",
+      "signature_sha256": "462a7c8d27d7c6c09f77e72049b1d0b26e4483f80cf64d024907b7452ca1d74f",
+      "body_sha256": "3eb6e03710090168ce113549775628e2369f8a5c4e21a335df3195094393fac8",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::stats",
+      "signature_sha256": "643c6aa3ecbcea0725fa5f23aaed396d1709605df24ef2949f056b1fcc4ccaf3",
+      "body_sha256": "d585e4f5abc50df2b701e9f4ee8a950be3e49f9f6e88159474c484fb9bad5c7d",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::clear",
+      "signature_sha256": "107591a211cc80a4f3f8d0ffe837b1d72881cfd9dd83079c8f5243540760f2c3",
+      "body_sha256": "acede6cea9ca2014207b06523a0461769a90d5863edd3682546b539d2b56d7f9",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::update",
+      "signature_sha256": "a4dad115078d2b9d5fcc437727610f596ec53b11cfd8941e1b115156f9c4e3a4",
+      "body_sha256": "3704f988aaf0bb32374e3cb52ff43552dc63882733d3203c9cce5979887a1535",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::stats",
+      "signature_sha256": "12cd816c5c35341269d897381a424a5466c6aa9dea385b18da84825e3c44c623",
+      "body_sha256": "2c4c0b6d36c8274671d03d218bc24694aea8a4c0bd4f8eb5cb2a14f062fb5397",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "impl_",
+      "signature_sha256": "830e61f01445fb097bdb3587d52c9f11e9b7b97c828c3a54d0eb241c8917cc43",
+      "body_sha256": "f14d8e7db90bbfe73e7be2fa9203ab997761f1ab9f5226c320b8277c550f0852",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::release",
+      "signature_sha256": "9370e57b3df967999cb6c4f20b5aeae93e89e7a2e57547cbe47a62c4fbbc6761",
+      "body_sha256": "f2cb2b5b3a490a372e7feb2175ecbb7303d7ee25884c84c74b59f6b74ea8c052",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::update",
+      "signature_sha256": "efa2952af1b093f6ddea21eff66ab802d91f27ceb06c0fbc955bca17ff25b9ea",
+      "body_sha256": "49716429b687f22fcbe2fd28416bf6c289cf4b5d9d7e1e33ab5250e52555190b",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_world_batches.hpp",
+      "name": "contiguous_track_world_batches",
+      "signature_sha256": "15849f5bf69337dfa3fb0f0fa58ae8b08ef955192354ae401862d089c7716b6f",
+      "body_sha256": "d7b1f581ebba17feace938e50ea1a7144cc4d1f64d3754d6100fe7f01c1cfd52",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_optimization_state",
+      "signature_sha256": "24a616fd0067ca95a31de9c7efeb453ffe887be49021f8e3d4a0e0688dd16e1f",
+      "body_sha256": "e4e834a290ce1f429dc19b8399aa674905c6638d13c73134b678c0d3904305d4",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::submit_frame",
+      "signature_sha256": "f88cc7cc040672c5074b7faa44e3a579eedfa98216a917bf68c4cf67623d9ec7",
+      "body_sha256": "1853c0a999d4fd700500619adee22a08e66fa9e1726e981ea9e824a88a7bf037",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "host_switch",
+      "signature_sha256": "290a113fce50aa4fbfeb67d3a523815c035ccc031bf59450e6583ee36f9967e4",
+      "body_sha256": "549beae95d45dd2816207815002456f5dd4363c3633153979989f5f93ad4e90a",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "impl_",
+      "signature_sha256": "830e61f01445fb097bdb3587d52c9f11e9b7b97c828c3a54d0eb241c8917cc43",
+      "body_sha256": "2e0439cdca88dbd50f3891218cec76478763102cf39ecfe0e1d7c9e12948750c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::_bind_methods",
+      "signature_sha256": "45286c8e1c10882711eff28d62291073a8f49e6823c258fbbe9681b28e082daf",
+      "body_sha256": "3931186a8aba0c436a398d85bda26a06e78ca5801942a2592ee1571d913b3a3e",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::release_display",
+      "signature_sha256": "7603e14a91c1950cf5f8bb5d5e81b4c193b650446720fda40a4862fa061832ef",
+      "body_sha256": "dda876b1cab0849d413b9b9478c73e08e7249e583f3db66df92a9db5c1acb78c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_optimization_state",
+      "signature_sha256": "24a616fd0067ca95a31de9c7efeb453ffe887be49021f8e3d4a0e0688dd16e1f",
+      "body_sha256": "64630269c0e8cbb5847732f753ab7480edc0fd8cf320b1e41c0f61037de6a87b",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::submit_frame",
+      "signature_sha256": "f88cc7cc040672c5074b7faa44e3a579eedfa98216a917bf68c4cf67623d9ec7",
+      "body_sha256": "f18ada793b461b47b7ad5e628b08729e15da7382bc0c9ffc1c4448b451f85e53",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::update_view",
+      "signature_sha256": "af3656c2e22b307f305268073c180924b394cd8fabf3d8173144d28a6cb68113",
+      "body_sha256": "009457f5e2cf9def70be771f9c2bc513d602e8805fed639d7f6f28770c4ef80b",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::set_diagnostics_level",
+      "signature_sha256": "1f837929f9f36044af2319f820aa5449520219b470e3625a6a363083d980ea92",
+      "body_sha256": "07ab947105eef9d02637a44076b51664c773aa26a3dba8e9ebf2865dfb1e5b5f",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_state",
+      "signature_sha256": "20cd6a56f4f5bd8582c1004e5b9c14e05054e8556771a8bc0d337c1afb48c56a",
+      "body_sha256": "bc4f02924d0f0d51d891fbfe0c6725e05b371f84f2b5b90c0885cbed2a8e93cd",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "impl_",
+      "signature_sha256": "462a7c8d27d7c6c09f77e72049b1d0b26e4483f80cf64d024907b7452ca1d74f",
+      "body_sha256": "33d6ae907d3a8970fae98e4b0d575199f12b1fe38992b758be009486363d1d10",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::set_material_callbacks",
+      "signature_sha256": "3c3fa53b5bddb99346373618dd7ed943cd92504e3ae11da38ec8454571f50ff7",
+      "body_sha256": "b2ced9c1837d60432043488cef3d98e54268b55042cef3c29e57d0f75b7d745a",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::stats",
+      "signature_sha256": "643c6aa3ecbcea0725fa5f23aaed396d1709605df24ef2949f056b1fcc4ccaf3",
+      "body_sha256": "44bca6c086573dea2ced8099a6578e0cbaf673a058499317b12d57bb04c33bf8",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::clear",
+      "signature_sha256": "107591a211cc80a4f3f8d0ffe837b1d72881cfd9dd83079c8f5243540760f2c3",
+      "body_sha256": "cb6d4b3918306b0e6a8638bb725689543a34da2501b91b5b254cc82cac8591e0",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::update",
+      "signature_sha256": "a4dad115078d2b9d5fcc437727610f596ec53b11cfd8941e1b115156f9c4e3a4",
+      "body_sha256": "80d9085bf6ad78362598a24101f3b857a3dc4668c945a1d7f0bc7da13d4a5b19",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::stats",
+      "signature_sha256": "12cd816c5c35341269d897381a424a5466c6aa9dea385b18da84825e3c44c623",
+      "body_sha256": "9b583de092a50576bb1fecbb34455dcad17da128f01ba8c3006ec8cc9970286d",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "impl_",
+      "signature_sha256": "830e61f01445fb097bdb3587d52c9f11e9b7b97c828c3a54d0eb241c8917cc43",
+      "body_sha256": "7832c1bdc0f624ce0ad356ad211017d5a91d10ee50e3e47ebb5b849d22a869fe",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::notify_material_parameter",
+      "signature_sha256": "bff908e241787ad95dc53d8828f8b954f25e134cdd41ec8a66332ffc52185717",
+      "body_sha256": "b82b3658e4db4b373d1d33ac890a09b4cb3c6a13b1f94e8b342db81e71e5d306",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::release",
+      "signature_sha256": "9370e57b3df967999cb6c4f20b5aeae93e89e7a2e57547cbe47a62c4fbbc6761",
+      "body_sha256": "67ae565c21eaf55afe76c291cc5bcdec31321a6563cb6d7c50ebd0bb11acd8c6",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::update",
+      "signature_sha256": "efa2952af1b093f6ddea21eff66ab802d91f27ceb06c0fbc955bca17ff25b9ea",
+      "body_sha256": "af80468b9c562cd633a2334915e9e1b173a9f73c868fec90aa5df82b2f96a5ee",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_cache.hpp",
+      "name": "same_submission_input",
+      "signature_sha256": "98ecd0608e1c8ef46dc25320bbb687f4fb7def0061cce9adf79e029c25ddf3f0",
+      "body_sha256": "45452f67e36f802e1184235c5ec0933d02404560de0fbd126b52b66fc2f6ceef",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_cache.hpp",
+      "name": "clear",
+      "signature_sha256": "d67acd33c2249e2b344dc9cfaea2fb6dbcfd5aba6a36dfd8fce206120bf98fd2",
+      "body_sha256": "a883016da1d024d2079b7545a5d0cff357aa6310e0cb55c6521d0ea3a72bd5da",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_cache.hpp",
+      "name": "acquire",
+      "signature_sha256": "cb4d59ea6869fcd863a5d3791383cad13c465fb4076a9db85627545b5ea8a79b",
+      "body_sha256": "bdb16a7e41363d1e9bb78de7eb04f9439374e663558496d1014aac1428bd0257",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_world_batches.hpp",
+      "name": "track_section_owners",
+      "signature_sha256": "b4b688557c636c259d0cef4acc99ff68f5544151624f253ba89fd95dff04609a",
+      "body_sha256": "9487d059e6f3ac81f7410b0d39b7f1fc22c1c0e480c4cefed002f93c8efb7786",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_world_batches.hpp",
+      "name": "contiguous_track_world_batches",
+      "signature_sha256": "5298dfa402c28a013bf553dd149b7deaeacc0f33881e6250132f3634b2013e8c",
+      "body_sha256": "0863465e5dec89a16926d29c110834a3c56cbaed0e3f14e35b3d27875c744884",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged."
+    }
+  ],
+  "auxiliary_sources": [
+    {
+      "path": "CMakeLists.txt",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "13c0a917e0988fa4d8ee7e99e9734cd12e676a49d53e692bfe273a72867f36cb"
+    },
+    {
+      "path": "build.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "ed0fe1a66c5eb1c9324e1facc3aee7d32a139b68061d6e4b361cf35b76e6789d"
+    },
+    {
+      "path": "godot/project.godot",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "877fffe33aa9ee6fc64db30672749a154f5aac27700fb248c539628141d70461"
+    },
+    {
+      "path": "godot/scripts/debug/asset_viewer.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "8db1e0fc8ac7817673321845fb9a6e5e935822e7ad0899a89adcabf04c4fea72"
+    },
+    {
+      "path": "godot/scripts/debug/debug_tools.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "7f7c30c8e6e72cc1db8983fa7a31f36411aac5effb15b5e8c2da9ffa78c47f03"
+    },
+    {
+      "path": "godot/scripts/debug/render_api.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "2d53951b82b9ffbcfc814ac6f690c3ff37cb125e09adbb2ba05f46c519cce9ef"
+    },
+    {
+      "path": "godot/scripts/debug/track_profiler.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "56d29f0c5e1b9618fdfd5f965d0a620db9bc34d870a5d215b3cdb4dc6261a7ff"
+    },
+    {
+      "path": "godot/scripts/debug/track_profiler_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "82d5c10c69cf2fd62c7820a492c0e1de30862e1e97f1f9b2c1f23f107eb0c045"
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "c04dec9b91e0fb25805ca9e164f3a9b51a1a8f9aa7f2288ca02e3558bc0b05d5"
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "c272436d6c7931dab6174063829bc3504455f8fbe7d9906dabf2ed0bb5837a54"
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_reflection_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "0b8f8723f0bbb6556a7aee6729b689fa6cb12729e3fc8d6803bc2795c2a5058c"
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "23d754b5f7322c24d8189b1d3b97218fa40f066563d63ab838cefd93ceba7de5"
+    },
+    {
+      "path": "godot/scripts/runtime/track_transport_capture.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "1db9f18f6b5df312229dd7bacd22ddb83394556a139db929c2325a7310cadec8"
+    },
+    {
+      "path": "reverse/scripts/audit_task0063_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "57689dc29af97d0b88a96bdea415c8c9a3479a9a1506fb13143122e5bb8ca805"
+    },
+    {
+      "path": "reverse/scripts/audit_task0064_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "705c735307cd2354caee731903dafebeff8284d75d75f9b2c7ae3c2426d29634"
+    },
+    {
+      "path": "reverse/scripts/audit_task0065_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "b2d48e884581a2f0642d433e16265111ebd471e51345ff0272d6087360c8df3a"
+    },
+    {
+      "path": "reverse/scripts/audit_task0066_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "fdba517a826a3e3914e0029077ad082e3d600ab6dd0635590b0dc3426896922f"
+    },
+    {
+      "path": "reverse/scripts/audit_task0067_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "21b2d97bb8b71416d370f00efec4c5c46d40a8b98646e14e678119f394353cc5"
+    },
+    {
+      "path": "reverse/tests/test_task0065_source_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "f8a4547dd5573eba191942676fa3004776d214a9e88b5ce38447ee3f2c7a360e"
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "38c59f1a7c3791e765c2404a006ffadd284eee85c6e004810277f508f30870ca"
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "64faaf7df3732304c34910bf59bd42866afcf1d9e317b22df8d558d4fa0a3633"
+    },
+    {
+      "path": "src/platform/godot_bridge/track_command_batches.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "136d79fee8cf1bf60df4de958f9186d3f619f1e3f83a7e7880e3f548b28fc73c"
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "df2ca1d6ae65f8a53b88044b5efc2dbcaffe0cf2fe356b794cc2e196f9d98750"
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "609bccc54905187d675c727692439852918476bbd4f5b98a5f42323d1d4f533b"
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "807239cfcb7da6c630c0eecbe9e3ba4965ab9b631ba14868abe99cc13f8086cf"
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "093f8817c1f29db390cd4feaf7f50cd1cb2de69570a575ae07102f580b595358"
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "2d6814f45cb800e296bd322564edd310e0e833f612853dd26c25119ffc4190df"
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_cache.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "66d837fac5d2905c449850a89cad616a3bf298d926df97f76a4a061f4952f274"
+    },
+    {
+      "path": "src/platform/godot_bridge/track_world_batches.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "d4e0b4f5a4d78463657e14bc04c3151ca7768b170473a68df785f81e957fa853"
+    },
+    {
+      "path": "src/tests/track_command_batches_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "cf4102752a294198eff0a737f0d40140fd32d5fef23588e6b846b8bc3780a9c6"
+    },
+    {
+      "path": "src/tests/track_draw_inventory.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "ea54ac27a7fa309b900aa235c665f69d5d403c259c6ced712ce442af025a9954"
+    },
+    {
+      "path": "src/tests/track_submission_cache_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "cb3fe2d15be3a1a269f0fbd2929803a9372babd5527616ce130e21f330580005"
+    },
+    {
+      "path": "src/tests/track_world_batches_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "7dcf3cb5231a44bafae5b1b464f553d70645c62a726711dec250de776c1f3689"
+    },
+    {
+      "path": "tools/pipeline.py",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "61f9ef81b7e22955e821415f02fbb3624e599536021691216f7b8938dce705c2"
+    },
+    {
+      "path": "tools/run_frontend.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "b79ab1063d5da5bcfeb5166fcc39716a94cda8b2b05593ce98e1eb695987bed1"
+    },
+    {
+      "path": "tools/run_frontend_menu_observer.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "d752227378daada9107642a0eaaee6b5a02ad26a2510ce3c04ead0314bba7337"
+    },
+    {
+      "path": "tools/run_main_loop_observer.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "509a9a27fe112d31d6a4f226a2e686b80fba5b0aa26481b9a5cc997c8179d474"
+    },
+    {
+      "path": "tools/run_track_costs.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "55d9290ec5f4ab7bb9aae4a3034cf9aa125d833a95aa4a2b2efe44b5a5d1c936"
+    },
+    {
+      "path": "tools/test_drive_window.py",
+      "kind": "port_adapter",
+      "evidence_id": "E0069H01",
+      "evidence_record": "reverse/task0069/profiling.md",
+      "reason": "User-authorized global port transport caches, Godot4.7.2 runtime and profiler/API presentation; native behavior is unchanged.",
+      "lf_sha256": "0316e60d8f05c3fe06b71a1fd63804a3af0fa3d1b42a2682cbe5cb72abaf72d4"
+    }
+  ]
+}

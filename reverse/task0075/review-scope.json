@@ -1,0 +1,1342 @@
+{
+  "task": "TASK-0075",
+  "entries": [
+    {
+      "path": "src/game_core/indep/src/car.cpp",
+      "name": "Car::TriggerCarTerrainEffects",
+      "kind": "partial_boundary",
+      "evidence_id": "E-0075-T01",
+      "evidence_record": "reverse/task0075/terrain-producer.md",
+      "reason": "Full entry remains incomplete and explicitly throws after the recovered wheel loop; no whole-entry implementation claim."
+    },
+    {
+      "path": "src/game_core/indep/src/car.cpp",
+      "name": "trigger_wheel_terrain_effects",
+      "kind": "bounded_recovery",
+      "evidence_id": "E-0075-T01",
+      "evidence_record": "reverse/task0075/terrain-producer.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/driving/car_effects.cpp",
+      "name": "WheelParticleEffects::prepare",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-C01",
+      "evidence_record": "reverse/task0075/terrain-producer.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/driving/car_effects.cpp",
+      "name": "WheelParticleEffects::trigger",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-C01",
+      "evidence_record": "reverse/task0075/terrain-producer.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/driving/car_effects.cpp",
+      "name": "original_text",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-C01",
+      "evidence_record": "reverse/task0075/terrain-producer.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.hpp",
+      "name": "visual_effects",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/assets.cpp",
+      "name": "append_particle_library",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/assets.cpp",
+      "name": "load_scene",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::add_dynamic_emitter",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::clear_dynamic_emitters",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::step",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-D02",
+      "evidence_record": "reverse/task0075/dynamic-particles.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::trigger_dynamic",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "seed_",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/particles.hpp",
+      "name": "auto_emitter_order",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/particles.hpp",
+      "name": "set_car_velocity",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-D02",
+      "evidence_record": "reverse/task0075/dynamic-particles.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/src/care.cpp",
+      "name": "Car::TriggerEffect",
+      "kind": "bounded_recovery",
+      "evidence_id": "E-0075-C01",
+      "evidence_record": "reverse/task0075/terrain-producer.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/driving_particle_display.cpp",
+      "name": "DrivingParticleDisplay::present",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/driving_particle_display.cpp",
+      "name": "upload",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::_bind_methods",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::action",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::clear_particles",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::emit_wheel_particles",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::load_config",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::particle_timestep",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-P03",
+      "evidence_record": "reverse/task0075/positions-scheduling.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::present_particles",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.hpp",
+      "name": "particle_step",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.hpp",
+      "name": "particle_velocity",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::_bind_methods",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::set_driving_effect_source",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::update_view",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::clear",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::set_driving_source",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::update",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    }
+  ],
+  "auxiliary_sources": [
+    {
+      "path": "CMakeLists.txt",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "CMakePresets.json",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "build.ps1",
+      "kind": "preserved_prior_state",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Pre-existing working-tree build helper differed from TASK0072 at TASK0075 startup; preserved without modification, not a TASK0075 implementation."
+    },
+    {
+      "path": "godot/project.godot",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scenes/encoded_transport_gpu_smoke.tscn",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scenes/task0072_profile_upload_smoke.tscn",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scenes/task0072_sun_counter_smoke.tscn",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scenes/task0072_sun_telemetry_smoke.tscn",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scenes/task0072_sun_transport_smoke.tscn",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/asset_viewer.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "TASK0075 browsing projection and wheel display glue share this whole-file pin with pre-existing TASK0074 wireframe controls; prior wireframe is not recovered physics evidence."
+    },
+    {
+      "path": "godot/scripts/debug/car_material_gpu_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/debug_tools.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/driving_particles_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/encoded_view.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/profile_debug.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/profile_debug_contract_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/profile_debug_game_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/render_api.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/task0072_driving_harness_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/task0072_profile_cache_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/task0072_profile_export_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/task0072_profile_upload_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/task0072_worker_config_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/track_profiler_hud_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/track_profiler_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/debug/track_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/frontend_native.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/encoded_transport_gpu_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/race_scene.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/render_contract.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/sky_depth_gpu_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/task0072_driving_parity.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/task0072_sun_counter_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/task0072_sun_telemetry_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/task0072_sun_transport_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_fusion_gpu_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_reflection_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_particles_gpu_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_performance.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_performance_scene.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_performance_viewer.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_pipeline_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_postprocess_gpu_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_postprocess_lifecycle_gpu_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_sun_gpu_smoke.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/scripts/runtime/track_transport_capture.gd",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "godot/shaders/sun_counter.gdshaderinc",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0063_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0064_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0065_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0066_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0067_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0069_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0070_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0071_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0072_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/scripts/audit_task0075_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/task0072/host-rendering.md",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/task0072/residency.md",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/task0072/sun.md",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/task0075/dynamic-particles.md",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/task0075/positions-scheduling.md",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/task0075/source-review.md",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/task0075/terrain-producer.md",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/tests/test_cpu_submission_analysis.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/tests/test_task0065_source_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/tests/test_task0072_performance.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/tests/test_task0072_source_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/tests/test_task0072_workers.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "reverse/tests/test_task0075_source_review.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/indep/inc/Car.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/driving/car_effects.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/driving/terrain_effects.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/assets.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/game_core/port/track/particles.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/driving_particle_display.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/parameter_staging_registry.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/profile_debug_ui.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/profile_debug_ui.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_command_batches.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_cache.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_submission_digest.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_world_batches.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/godot_bridge/vehicle_depth_staging.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/depth_sync.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/mesh_prepare.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/preparation_work.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/render/submit_math.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/car_base.gdshader",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/car_base_shader.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/car_modulate.glsl",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/car_wireframe.gdshader",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/embedded_shaders.hpp.in",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/postprocess.glsl",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/postprocess_composite.glsl.inc",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/screen_projection.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/sky_depth.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_alpha_vertex.glsl",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_debug_edges.gdshader",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_debug_fill.gdshader",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_depth.glsl",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_effects.glsl",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_fragment.glsl",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_sampling.glsl",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_shader.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/platform/shaders/track_shader.hpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/depth_sync_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/driving_particle_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/driving_terrain_effects_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/mesh_prepare_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/parameter_staging_registry_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/submit_math_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/track_command_batches_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/track_draw_inventory.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/track_runtime_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/track_submission_cache_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/track_submission_digest_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "src/tests/track_world_batches_tests.cpp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/analyze_cpu_submission.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/pipeline.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/run_frontend.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/run_frontend_menu_observer.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/run_main_loop_observer.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/run_task0072_worker_matrix.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/run_task0072_worker_parity.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/run_track_costs.ps1",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/task0071_performance.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/task0071_pixels.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/task0072_driving_compare.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/task0072_performance.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/task0072_sun_compare.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    },
+    {
+      "path": "tools/test_drive_window.py",
+      "kind": "port_adapter",
+      "evidence_id": "E-0075-R01",
+      "evidence_record": "reverse/task0075/source-review.md",
+      "reason": "Explicit TASK0075 wheel-effect recovery or host storage/render/scheduling adaptation; original equivalence remains unverified."
+    }
+  ]
+}

@@ -37,8 +37,8 @@ std::string track_shader_source(const hp2::assets::TpkTextureHeader& header,cons
     std::string fragment=embedded_shaders::track_fragment;
     replace_shader_token(fragment,"@TRACK_ALPHA_TEST@",effect.test.alpha_test==6?"if(combined.a<=48.0)discard;":"");
     std::string fusion_source;
-    if(fusion!=Fusion40::None){fusion_source="vec4 specular=clamp(floor(textureLod(specular_texture,UV,0.0)*255.0*gs_rgba/128.0),vec4(0.0),vec4(255.0));\n";
-        fusion_source+="combined.rgb=vec3("+std::string(fusion==Fusion40::Additive?"hp2_track_fused40_increment":"hp2_track_fused40_copy")+"(ivec3(combined.rgb),ivec3(specular.rgb),int(combined.a)));\ncombined.rgb=clamp(combined.rgb,vec3(0.0),vec3(255.0));\n";}
+    if(fusion!=Fusion40::None){fusion_source="vec3 roadshine_rgb=vec3(0.0);\nif(effect_roadshine_enabled){\nvec4 specular=clamp(floor(textureLod(specular_texture,UV,0.0)*255.0*gs_rgba/128.0),vec4(0.0),vec4(255.0));\nroadshine_rgb=specular.rgb;\n}\n";
+        fusion_source+="combined.rgb=vec3("+std::string(fusion==Fusion40::Additive?"hp2_track_fused40_increment":"hp2_track_fused40_copy")+"(ivec3(combined.rgb),ivec3(roadshine_rgb),int(combined.a)));\ncombined.rgb=clamp(combined.rgb,vec3(0.0),vec3(255.0));\n";}
     if(fusion==Fusion40::None&&state.additive)fusion_source="combined.rgb=clamp(floor(combined.rgb*combined.a/128.0),vec3(0.0),vec3(255.0));\n";
     replace_shader_token(fragment,"@TRACK_FUSION@",fusion_source);
     std::string alpha="ALPHA=1.0;";
@@ -48,7 +48,7 @@ std::string track_shader_source(const hp2::assets::TpkTextureHeader& header,cons
     auto code=car_base_shader_source(modes,fragment,"filter_linear, repeat_enable");
     replace_shader_token(code,"uniform bool base_lit = true;",std::string("uniform bool base_lit = ")+((effect.flags&0x80)?"true;":"false;"));
     replace_shader_token(code,"uniform bool flag_0x4 = false;",std::string("uniform bool flag_0x4 = ")+((effect.flags&4)?"true;":"false;"));
-    std::string helpers="float hp2_affine_bit_power(float v,float s,float b){return vu_bit_affine(v,s,b);}\n";
+    std::string helpers="uniform bool effect_roadshine_enabled = true;\nfloat hp2_affine_bit_power(float v,float s,float b){return vu_bit_affine(v,s,b);}\n";
     helpers+=embedded_shaders::track_effects;helpers+=sampling;
     if(fusion!=Fusion40::None)helpers+="uniform sampler2D specular_texture : filter_linear, repeat_enable;\n";
     if(effect.matrix_pack){auto depth=std::string(embedded_shaders::track_depth);const auto range=effect.matrix_pack==1?"vec2(intBitsToFloat(0x40000040),intBitsToFloat(0x40802000))":"vec2(intBitsToFloat(0x40900000),intBitsToFloat(0x40f00000))";replace_shader_token(depth,"@TRACK_DEPTH_RANGE@",range);helpers+=depth;}
@@ -57,4 +57,27 @@ std::string track_shader_source(const hp2::assets::TpkTextureHeader& header,cons
     if(effect.matrix_pack)replace_shader_token(code,"    gs_color_w =", "    track_host_depth_ab=vec2(-PROJECTION_MATRIX[2][2],PROJECTION_MATRIX[3][2]);\n    if(CLIP_SPACE_FAR<0.0){track_host_depth_ab.x=track_host_depth_ab.x*0.5+0.5;track_host_depth_ab.y*=0.5;}\n    gs_color_w =");
     return code;
 }
+std::string track_environment_shader_source(const port::track::EffectState& effect){
+    if(!effect.environment_pass)throw std::invalid_argument("Track environment shader requires original flag100");
+    if(effect.matrix_pack==2)throw std::invalid_argument("Track environment BiasLevel2 requires a separate host depth range");
+    if(effect.flags&4)throw std::invalid_argument("Original environment packet31C requires explicit destination alpha");
+    // Retail0010AC50 packet318: TEX0.TCC1/TFX0, ALPHA48. The dynamic atlas
+    // stores decoded GS RGB5 bytes and TEXA alpha128, not normalized alpha255.
+    const std::string fragment=
+        "vec4 combined=clamp(floor(texture(base_texture,UV)*255.0*gs_rgba/128.0),vec4(0.0),vec4(255.0));\n"
+        "vec3 increment=floor(combined.rgb*combined.a/128.0);\n"
+        "ALBEDO=hp2_framebuffer_rgb(effect_environment_enabled?increment/255.0:vec3(0.0));ALPHA=1.0;\n";
+    auto code=car_base_shader_source("fog_disabled, shadows_disabled, depth_draw_never, blend_add",fragment,"filter_linear, repeat_disable");
+    replace_shader_token(code,"uniform bool base_lit = true;","uniform bool base_lit = false;");
+    replace_shader_token(code,"uniform bool reflection_pass = false;","uniform bool reflection_pass = true;");
+    std::string helpers="uniform bool effect_environment_enabled = true;\n";
+    if(effect.matrix_pack){auto depth=std::string(embedded_shaders::track_depth);replace_shader_token(depth,"@TRACK_DEPTH_RANGE@","vec2(intBitsToFloat(0x40000040),intBitsToFloat(0x40802000))");helpers+=depth;}
+    code.insert(code.find("void vertex(){"),helpers);
+    if(effect.matrix_pack){
+        replace_shader_token(code,"    gs_color_w =", "    track_host_depth_ab=vec2(-PROJECTION_MATRIX[2][2],PROJECTION_MATRIX[3][2]);\n    if(CLIP_SPACE_FAR<0.0){track_host_depth_ab.x=track_host_depth_ab.x*0.5+0.5;track_host_depth_ab.y*=0.5;}\n    gs_color_w =");
+        replace_shader_token(code,"ALPHA=1.0;", "ALPHA=1.0;DEPTH=hp2_track_project_host_depth(-VERTEX.z,track_host_depth_ab);");
+    }
+    return code;
+}
+
 }

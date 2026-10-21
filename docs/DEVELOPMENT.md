@@ -1,9 +1,16 @@
 # Development guide
 
+TASK0071 selects Vulkan + Forward+ on Windows. Normal run/editor/profile paths
+share the project configuration; automatic D3D12/OpenGL fallback is disabled.
+Use explicit `--rendering-method gl_compatibility --rendering-driver opengl3`
+only for diagnostic comparisons. See [Track11 measurement commands and current
+visual limitations](PERFORMANCE_TASK0071.md). A successful launch does not prove
+PS2 equivalence or a performance gain.
+
 ## Prerequisites and pinned dependencies
 
 Windows x86-64: Git, CMake >=3.24, Ninja, and a C++17 compiler (MSVC developer
-shell or MinGW-w64). For the bridge add Python 3 and Godot 4.4.1.stable standard
+shell or MinGW-w64). For the bridge add Python 3 and Godot 4.7.2.stable standard
 edition. godot-cpp is pinned as documented in DECISIONS.md. Ghidra/Java, its R5900
 extension, GhidraMCP, and PCSX2 are needed for later analysis/comparison, not builds.
 See PROGRESS.md for tools actually detected. Python's WindowsApps alias may not
@@ -53,18 +60,18 @@ Download the pinned engine from the official archive linked in DECISIONS.md.
 Use an explicit local path, not a guessed system install:
 
 ```powershell
-$portGodot = 'C:\Tools\Godot-4.4.1\Godot_v4.4.1-stable_win64_console.exe'
+$portGodot = 'C:\Tools\Godot-4.7.2\Godot_v4.7.2-stable_win64_console.exe'
 & $portGodot --version
 & $portGodot --headless --path godot --editor --import
 & $portGodot --headless --path godot res://scenes/main.tscn -- --smoke-test
 & $portGodot --path godot --editor
 ```
 
-Initialization downloaded an isolated portable copy to
-`local/tools/godot-4.4.1/` (ignored). On this machine use:
+TASK-0069 downloaded the official checksum-checked portable runtime to
+`local/tools/godot-4.7.2/` (ignored). On this machine use:
 
 ```powershell
-$portGodot = Join-Path $PWD 'local/tools/godot-4.4.1/Godot_v4.4.1-stable_win64_console.exe'
+$portGodot = Join-Path $PWD 'local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe'
 & $portGodot --headless --path godot --editor --import
 & $portGodot --headless --path godot res://scenes/main.tscn -- --smoke-test
 ```
@@ -76,6 +83,18 @@ Running without `--smoke-test` keeps the sample label visible. Building just cor
 does not make the Godot scene runnable; the bridge DLL must exist.
 
 ## Normal workflow
+
+`./build.ps1 --run` now selects Godot4.7.2. Use `--profile` for built-in GPU
+profiling plus the global live ImGui panel and16 HP2 custom Performance monitors, or `--editor` and F5 for
+Debugger > Profiler / Visual Profiler / Monitors. The window title reports the
+active API. See [profiling results and limits](PERFORMANCE_TASK0069.md).
+The global script is `profile_debug.gd`; see [live graphs and function scopes](PROFILE_DEBUG.md).
+
+Official Windows archive SHA256:
+`731980f9608d61333e5baf54a2ef17210acc7a538446c0cb9969f002aca1e953`.
+The pinned godot-cpp4.4 minimum ABI remains compatible in the targeted4.7.2
+tests; the runtime upgrade does not change the submodule pin. Matching4.7.2
+export templates are required for packaging, not ordinary editor/runtime tests.
 
 ### Project-root build entry point (TASK-0024)
 
@@ -141,7 +160,7 @@ is not configured. Only two host checks remain in Godot, because only they need 
 (MV30 decode into a texture, PCM into AudioStreamWAV, the recovered title time gate).
 
 ```powershell
-$portGodot = Join-Path $PWD 'local/tools/godot-4.4.1/Godot_v4.4.1-stable_win64_console.exe'
+$portGodot = Join-Path $PWD 'local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe'
 & $portGodot --headless --path godot --editor --import
 & $portGodot --headless --path godot res://scenes/frontend_native.tscn -- --native-render-smoke
 & $portGodot --path godot res://scenes/frontend_native.tscn -- --screen=0
@@ -192,8 +211,8 @@ tests exercise log capacity, completion, history, clipping and vertex/index offs
 submits a frame for every screen. `./tools/run_frontend.ps1` drives the scene: `-Build`,
 `-RenderSmoke`, `-RuntimeSmoke`, `-Screen N`, `-Capture path`.
 
-Windows debug export: invoke the pinned Godot 4.4.1 console with `--headless --path
-godot --export-debug "Windows Debug" ../out/windows-debug/port.exe`. Matching 4.4.1
+Windows debug export: invoke the pinned Godot 4.7.2 console with `--headless --path
+godot --export-debug "Windows Debug" ../out/windows-debug/port.exe`. Matching 4.7.2
 export templates are required. The GDExtension dependency table copies shared codec
 DLLs alongside the extension. Keep the FFmpeg license and exact source/build reference
 with distributions and retain replaceable DLLs. Original assets are read externally.
@@ -302,3 +321,110 @@ preservation and projection-body/overload-address regression checks.
 ## TASK-0043 current regeneration
 
 Use the ordered commands in CLASS_MAPPING_COMPLETION.md. New canonical-member and current projection-binding registries extend historical TASK-0042 evidence; do not run one-time migration scripts. Normal generators preserve edited bodies and explicit throwing gaps. CTest now checks complete member coverage, scoped identifier adoption, whole-project function-body preservation and its pinned duplicate-stub removals. Existing TASK-0041/0042 naming catalogues remain historical baselines.
+
+
+## TASK-0052 rendering validation (in progress)
+
+Use separate `PORT_GODOT_PROJECT_DIR` and `PORT_GODOT_BIN_DIR` staging roots for
+Debug and Release to avoid replacing a DLL mapped by a live window. Staged scenes,
+scripts, source and numeric test fixtures must resolve to the current checkout.
+Run GPU tests sequentially; do not compile or run another renderer during timed
+performance acceptance. `track_performance.gd` launches the independent race scene,
+requires a real GPU window and records all catalog tracks unless restricted:
+
+```powershell
+& <Godot executable> --path <staged project> --script res://scripts/runtime/track_performance.gd -- --performance-track=11 --performance-samples=300 --performance-output=D:/dev/hp2_godot/local/task0052/performance.json
+ctest --test-dir build/godot-debug -R 'track_(command_batches|mesh_batch_host|postprocess_gpu|postprocess_lifecycle_gpu|pipeline_gpu)' --output-on-failure -j 1
+```
+
+The route holds the car at its recovered start and moves the camera continuously.
+It is a reproducible host performance probe, not an original-game comparison.
+Report wall-frame P95/P99, loading stalls, CPU submission, GPU timing limitations,
+draw calls and memory. Original effect permissions and automatic view distance
+must remain enabled during acceptance. Captures and reports stay under ignored
+`local/`; no original assets or ELF files belong in Git.
+
+
+TASK0055 deterministic comparison uses the same script for frozen TASK0054 baseline
+and current candidate; keep binaries in isolated projects. Use the real window,
+Compatibility,1920x1080,120 warm frames,600 samples,3 repeats and all30 tracks.
+No other GPU tests/builds may run during timed acceptance. Visual time is1/60,
+physics is paused at the original start and the camera follows a fixed route.
+GPU timing is unavailable without fresh scheduled-view metadata/valid timers.
+
+```powershell
+& <Godot executable> --audio-driver Dummy --path <project> --rendering-method gl_compatibility --script res://scripts/runtime/track_performance.gd -- --track-optimization-profile=optimized --performance-output=D:/dev/hp2_godot/local/task0055/optimized/all30.json
+py -3 reverse/scripts/compare_task0055_performance.py local/task0055/final-baseline/all30.json local/task0055/final-optimized/all30.json --output local/task0055/comparison.json
+```
+
+Runtime policy can be selected with --track-optimization-profile=baseline|optimized.
+Individual --track-opt-resource_reuse=true|false and the other dictionary keys
+particle_mesh_reuse/instancing/occlusion/opaque_queue are experimental overrides.
+Unknown names/non-Boolean values fail explicitly. Call configure_optimizations
+before request_track; loaded reconfiguration is rejected atomically. Inspect
+get_optimization_state for effective flags, cache/buffer counters and limitations.
+Do not enable MultiMesh by default: Track24 exact color mismatch remains unresolved.
+
+
+TASK-0055 acceptance completed:30 tracks,120 route-warmup/600 measured frames,
+3 repeats in both frozen54/final55 Release1080p runs. Native packet/pose, original
+effect permissions and draw-call distributions match. Median-route improvements:
+wall10.03%, CPU prepare27.62%, host submission33.16%; no persistent>5% wall median/
+P95/P99 regression. GPU timers unavailable; loading stalls remain. The accepted
+resource/particle-reuse profile is now the common project default. Distinct
+material identity retained; MultiMesh/occlusion/opaque remain experimental/off.
+See [performance report](PERFORMANCE_TASK0055.md). Override at launch with
+--track-optimization-profile=baseline. No original-console Verified promotion.
+
+TASK0056 validation: `ctest --test-dir build/godot-debug -R '^static_lods' --output-on-failure`
+and `py -3 reverse/scripts/audit_task0056_review.py`. Enable PORT_ENABLE_GPU_TESTS to
+register track_hlod_gpu/race_hlod_gpu. GPU checks must run sequentially. Performance
+script `track_hlod_performance.gd` additionally supports `--performance-driving`
+(native constant-throttle movement including full skid/render presentation), and
+records actual engine primitives and selected backend. Keep all original effects;
+compare the same final binary's original/godot_hlod modes in exclusive GPU runs.
+
+## TASK-0058 supersedes host HLOD
+
+User revoked Godot-managed LOD. Only original production section/tree/instance
+selection is accepted; main and independent capture views share the native runtime.
+Show LOD remains debug-only. Prior TASK0056 sections are historical. No generated
+low meshes or physics changes. See [native visibility integration](NATIVE_TRACK_CULLING.md)
+and E0058R01 for evidence, tests, counters and verification limits.
+
+Rendering optimization policy (TASK-0066, explicit user requirement): implement global rendering-state rules, not hardcoded track-ID allowlists. Track IDs are appropriate in test fixtures and measurements. Report unresolved image differences without silently disabling an individual track.
+
+
+TASK-0072 standalone threading experiments: ./build.ps1 --run --profile
+--render-prepare-workers=2 --render-thread=safe (or4/separate). Defaults0/Safe.
+The editor rejects Separate; no default promotion is implied. See
+[thread integration](RENDER_PREPARATION_TASK0072.md).
+
+
+TASK0072 CPU submission/depth experiments are explicit build entry-point flags:
+`./build.ps1 --run --profile --render-prepare-workers=2 --render-thread=safe
+--track-submit-math=true --track-vehicle-depth-staging=true
+--track-depth-discovery-cache=true` (one command line). All three candidates default
+false. This is an experimental configuration, not an accepted60FPS preset.
+For isolated visual checks use `tools/run_task0072_worker_parity.ps1` with
+`-SubmitRepair -PrepareWorkers 2 -RenderThread safe`. Preserve the workspace DLL while captures run.
+
+## Automatic progress tracking
+
+TASK-0073: run `./tools/track_progress.ps1` once to refresh generated progress after
+stable saves. Builds refresh once automatically. `./tools/track_progress.ps1 -Check`
+checks both the Markdown tables and `reverse/progress.json` offline. MCP refresh is
+read-only and optional for local statistics; see [usage and limits](AUTO_PROGRESS.md).
+
+
+TASK-0075 wheel particle tests and native/host/GPU reproduction commands are in
+[DRIVING_EFFECTS.md](DRIVING_EFFECTS.md). Original resources and the SHA-bound
+Debug ELF remain required for integration tests; no generated assets are supplied.
+
+
+TASK-0085 GPU particles remain opt-in: --particle-backend=godot_gpu (or
+hp2/rendering/particle_backend="godot_gpu"). Default is native; extended
+performance testing was stopped by the user. TASK-0086 original light flare
+attachments are independent of this switch. For targeted regression commands see
+PERFORMANCE_TASK0085.md and VEHICLE_LIGHT_FLARES.md. Do not infer PS2 equivalence
+from PC/GPU smoke results.

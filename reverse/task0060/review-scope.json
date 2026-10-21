@@ -1,0 +1,165 @@
+{
+  "task": "TASK-0060",
+  "entries": [
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::build_debug_display",
+      "kind": "port_adapter",
+      "evidence_id": "E0060M01",
+      "evidence_record": "reverse/task0060/memory-lifecycle.md",
+      "reason": "User-authorized bounded host resource residency, exact CPU mesh transport and on-demand accounting; no recovered culling, material equation or physics body changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::apply_debug_display",
+      "kind": "port_adapter",
+      "evidence_id": "E0060M01",
+      "evidence_record": "reverse/task0060/memory-lifecycle.md",
+      "reason": "User-authorized bounded host resource residency, exact CPU mesh transport and on-demand accounting; no recovered culling, material equation or physics body changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "impl_",
+      "kind": "port_adapter",
+      "evidence_id": "E0060M01",
+      "evidence_record": "reverse/task0060/memory-lifecycle.md",
+      "reason": "User-authorized bounded host resource residency, exact CPU mesh transport and on-demand accounting; no recovered culling, material equation or physics body changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::acquire",
+      "kind": "port_adapter",
+      "evidence_id": "E0060M01",
+      "evidence_record": "reverse/task0060/memory-lifecycle.md",
+      "reason": "User-authorized bounded host resource residency, exact CPU mesh transport and on-demand accounting; no recovered culling, material equation or physics body changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches_tests.cpp",
+      "name": "test_track_mesh_batch_cache",
+      "kind": "port_adapter",
+      "evidence_id": "E0060M01",
+      "evidence_record": "reverse/task0060/memory-lifecycle.md",
+      "reason": "User-authorized bounded host resource residency, exact CPU mesh transport and on-demand accounting; no recovered culling, material equation or physics body changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::stats",
+      "kind": "port_adapter",
+      "evidence_id": "E0060M01",
+      "evidence_record": "reverse/task0060/memory-lifecycle.md",
+      "reason": "User-authorized bounded host resource residency, exact CPU mesh transport and on-demand accounting; no recovered culling, material equation or physics body changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::_bind_methods",
+      "kind": "port_adapter",
+      "evidence_id": "E0060M01",
+      "evidence_record": "reverse/task0060/memory-lifecycle.md",
+      "reason": "User-authorized bounded host resource residency, exact CPU mesh transport and on-demand accounting; no recovered culling, material equation or physics body changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::request_track",
+      "kind": "port_adapter",
+      "evidence_id": "E0060M01",
+      "evidence_record": "reverse/task0060/memory-lifecycle.md",
+      "reason": "User-authorized bounded host resource residency, exact CPU mesh transport and on-demand accounting; no recovered culling, material equation or physics body changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::release_display",
+      "kind": "port_adapter",
+      "evidence_id": "E0060M01",
+      "evidence_record": "reverse/task0060/memory-lifecycle.md",
+      "reason": "User-authorized bounded host resource residency, exact CPU mesh transport and on-demand accounting; no recovered culling, material equation or physics body changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::pump_load",
+      "kind": "port_adapter",
+      "evidence_id": "E0060M01",
+      "evidence_record": "reverse/task0060/memory-lifecycle.md",
+      "reason": "User-authorized bounded host resource residency, exact CPU mesh transport and on-demand accounting; no recovered culling, material equation or physics body changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::submit_frame",
+      "kind": "port_adapter",
+      "evidence_id": "E0060M01",
+      "evidence_record": "reverse/task0060/memory-lifecycle.md",
+      "reason": "User-authorized bounded host resource residency, exact CPU mesh transport and on-demand accounting; no recovered culling, material equation or physics body changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::update_view",
+      "kind": "port_adapter",
+      "evidence_id": "E0060M01",
+      "evidence_record": "reverse/task0060/memory-lifecycle.md",
+      "reason": "User-authorized bounded host resource residency, exact CPU mesh transport and on-demand accounting; no recovered culling, material equation or physics body changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_state",
+      "kind": "port_adapter",
+      "evidence_id": "E0060M01",
+      "evidence_record": "reverse/task0060/memory-lifecycle.md",
+      "reason": "User-authorized bounded host resource residency, exact CPU mesh transport and on-demand accounting; no recovered culling, material equation or physics body changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "track_surface_arrays",
+      "kind": "port_adapter",
+      "evidence_id": "E0060M01",
+      "evidence_record": "reverse/task0060/memory-lifecycle.md",
+      "reason": "User-authorized bounded host resource residency, exact CPU mesh transport and on-demand accounting; no recovered culling, material equation or physics body changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::release_debug_display",
+      "kind": "port_adapter",
+      "evidence_id": "E0060M01",
+      "evidence_record": "reverse/task0060/memory-lifecycle.md",
+      "reason": "User-authorized bounded host resource residency, exact CPU mesh transport and on-demand accounting; no recovered culling, material equation or physics body changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::trim_draw_cache",
+      "kind": "port_adapter",
+      "evidence_id": "E0060M01",
+      "evidence_record": "reverse/task0060/memory-lifecycle.md",
+      "reason": "User-authorized bounded host resource residency, exact CPU mesh transport and on-demand accounting; no recovered culling, material equation or physics body changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::acquire_source_mesh",
+      "kind": "port_adapter",
+      "evidence_id": "E0060M01",
+      "evidence_record": "reverse/task0060/memory-lifecycle.md",
+      "reason": "User-authorized bounded host resource residency, exact CPU mesh transport and on-demand accounting; no recovered culling, material equation or physics body changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_memory_state",
+      "kind": "port_adapter",
+      "evidence_id": "E0060M01",
+      "evidence_record": "reverse/task0060/memory-lifecycle.md",
+      "reason": "User-authorized bounded host resource residency, exact CPU mesh transport and on-demand accounting; no recovered culling, material equation or physics body changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::forget_mesh",
+      "kind": "port_adapter",
+      "evidence_id": "E0060M01",
+      "evidence_record": "reverse/task0060/memory-lifecycle.md",
+      "reason": "User-authorized bounded host resource residency, exact CPU mesh transport and on-demand accounting; no recovered culling, material equation or physics body changes."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::forget_material",
+      "kind": "port_adapter",
+      "evidence_id": "E0060M01",
+      "evidence_record": "reverse/task0060/memory-lifecycle.md",
+      "reason": "User-authorized bounded host resource residency, exact CPU mesh transport and on-demand accounting; no recovered culling, material equation or physics body changes."
+    }
+  ]
+}

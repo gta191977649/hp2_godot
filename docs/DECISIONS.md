@@ -1,5 +1,112 @@
 # Decision log
 
+## TASK-0081 - Bind recovered frame slices without pretending full route recovery
+
+Use exact original motion/distance bookkeeping and ResetCar leaf in the existing
+Memory transaction. Keep explicit port-side slice entry points and throwing full
+Car methods until topology/path/Player ownership exists. A deferred reset request
+must fail visibly rather than be cleared, ignored or mapped to host session restart.
+Original route selection depends on wrapped track progress; available route bytes
+do not authorize nearest-XY or spawn substitutes. Recover that dependency next.
+
+## TASK-0075: original wheel effects through one shared AcidFX seam
+
+Recover Debug wheel smoke/spew separately from ground skid marks. Preserve
+original terrain lists, static configuration wheel positions, negative intensity,
+RNG/pool limits and World update-before-emission order. Effects cannot step or
+change recovered forces. The one-car port fixture supplies closest-player
+distance0 and the existing outside camera/all-view car mask; other original
+view/ownership branches remain explicit gaps. Track effects share native depth
+and WorldEffects; the synthetic flat fixture uses host depth with the same original
+particle packet. Clear copied emitters/groups on detach while preserving static
+effects and RNG. TrackViewer browsing uses Godot defaults75/KEEP_HEIGHT, with
+CarViewer/drive/race projection policies retained. See DRIVING_EFFECTS.md.
+
+## TASK-0073 - Automatic recovery accounting (2026-10-20)
+
+Keep evidence statuses authoritative and immutable to progress tooling. Join existing
+class/member and Debug-owner registries with SHA/address-bound source definitions;
+report shells, direct gaps, unconfirmed bodies and recorded implementation claims
+separately. Unknown method totals stay unknown, and shared targets count once per
+binary globally. Lexical source presence is not whole-entry or original equivalence.
+
+Save watching is an explicitly started local process; build startup performs an offline
+refresh. Read-only MCP directory checks use private complete caches, including oversized
+output pagination, and never alter Ghidra or promote recovery status. When MCP omits a
+SHA-256, require its import path to equal the configured original ELF and hash that file;
+this binds file provenance but does not certify database memory. See [usage](AUTO_PROGRESS.md).
+
+## TASK-0071 - Vulkan Forward+ default (2026-10-19)
+
+The user supersedes TASK0069's Compatibility default: select Windows Vulkan +
+Forward+, reject automatic D3D12/OpenGL fallback, preserve explicit diagnostic
+backend launches. Keep4.7.2 and the existing godot-cpp pin. FPS improvement is
+measured on Track11 at1080p without reducing original effects, visibility or LOD.
+Recovered core/physics and original command ordering remain independent of Godot.
+
+Host offscreen HDR transport retains numeric GS RGB through blending and resolves
+to the LDR canvas. It is not complete GS framebuffer emulation: per-primitive
+COLCLAMP and recorded cross-backend pixel differences remain acceptance gaps.
+Do not promote Verified or equate a faster backend with original equivalence.
+The source viewport's empty3D pass may be suppressed only behind an independent
+switch with exact ownership restoration, pixel checks and paired timing evidence.
+See [migration evidence and limits](PERFORMANCE_TASK0071.md).
+
+## TASK-0070 - Global native ImGui profiler (2026-10-19)
+
+User explicitly requested the global profile_debug.gd name, realtime function
+tracking throughout the game and native ImGui drawing. Reuse the existing ImGui
+frame/input/DPI backend instead of a parallel Control UI. Keep a bounded240-frame
+display history separate from bounded JSON recording. Unknown GPU values remain
+gaps/N/A; native/GPU totals are not inferred. Scoped script/native-boundary wall
+timing is labelled inclusive and does not pretend to be a full native call graph.
+
+## TASK-0069 - Official Godot4.7.2 and opt-in profiling (2026-10-19)
+
+The user explicitly superseded the4.4.1 runtime constraint and requested direct
+upgrade, without retaining an old-engine comparison workflow. Default build,
+test and launch tools now select official4.7.2.stable.ed1daf0bf. Download:
+[official archive](https://godotengine.org/download/archive/4.7.2-stable/).
+Keep Compatibility and the existing godot-cpp minimum4.4 ABI; actual4.7.2 host,
+GPU-layout, particle, Sun, composite and lifecycle tests support that choice.
+
+Display the active rendering API in the window title. Add opt-in Godot
+Performance monitors/viewport timing and bounded profiling, with unknown/disabled
+GPU measurements explicitly unavailable. Normal standalone runs incur no enabled
+collector. Preserve original gameplay/render semantics. Port CPU caches from
+TASK0068 pass same-engine exact native/image fallback checks; independent switches
+remain. GPU synchronization and transparency are priorities, not a promised FPS
+gain. Existing Sun reduction does not materially eliminate the wait and stays
+off. See [observations and limitations](PERFORMANCE_TASK0069.md).
+
+## TASK-0063 - Static render cost inspection (2026-10-19)
+
+User replaced long FPS benchmarking with static/native tests and drawcall census.
+Enable mutable-only particle transactions, cached particle transport layout/
+parameters and invariant postprocess texture parameters after bounded exact
+state/buffer/image parity. No FPS claim follows. Keep Sun reduction/opaque queue
+experimental off, encoded depth/history and native culling unchanged. See
+[results and limits](PERFORMANCE_TASK0063.md).
+
+
+## TASK-0052 - Shared visual frames and original resolution for LOD (2026-10-18)
+
+Main and scheduled reflection views submit through the same native Runtime and
+Ps2TrackRenderer implementation. Godot owns GPU resources, view targets and the
+presentation conversion; original palette, weather, culling, LOD, Sun/shadow and
+particle calculations stay in the original declaring TUs or explicit port carriers.
+Permission gates are shared for the process session and do not create an effect
+whose original activation condition is false. Release uses original default gates.
+
+Use recovered CalculateH with the original ScreenWidth512 for native pixel-size
+decisions, independent of desktop output resolution. Do not shorten original far
+distance or disable effects to meet performance targets. Preserve command order;
+contiguous batching is allowed only with an explicit state/primitive equivalence
+check. For the tested Godot Compatibility backend, transparent roads are absent
+from hint_depth_texture; matching source-mesh depth variants supply the native
+depth-alpha pass. This is a host adapter, not replacement gameplay physics.
+Per-draw GS precision and remaining original paths stay explicit gaps until closed.
+
 ## TASK-0041 - Authorized debug reference naming (2026-10-17)
 
 The user supplied a symbol-rich PS2 ELF and MAP as reference evidence. Record both
@@ -601,3 +708,277 @@ origin depth to submit strict native order. Original normal target Z24 chooses t
 Bias0/1 projection; unsupported Bias2 fails. Dynamic context2 six-view reflection remains
 an explicitly reported dependency gap for two static model families, with base-pass
 presentation identified. This does not recover frontend race start or full game flow.
+
+
+## TASK-0053: preserve per-view layers for custom projection
+
+Custom-projected sky, Sun and particles use camera-frustum custom CPU bounds.
+RenderingServer ignore_culling bypassed camera layer masks and is prohibited for
+these nodes. Source-depth proxies copy the custom bounds. This is host transport,
+not an original visibility-distance change. See E-0053-H01 and E-0053-S01.
+
+
+## TASK-0054: screen packet projection follows actual GPU target sign
+
+Top-origin CPU screen packets for Sun/particles use shared screen_projection.hpp.
+Custom POSITION bypasses the engine projection, so clipY follows the GPU
+PROJECTION_MATRIX[1][1] sign exactly once. Both color and depth proxies retain this
+vertex path. This fixes measured vertical mirroring without changing world anchors
+or original camera/simulation math. See E-0054-P01 and E-0054-T01.
+
+
+## TASK-0055: preserve original packets and gate host optimizations
+
+Keep Compatibility as the pinned backend. Before-load configuration controls only
+host resource/submission policy; Release needs no ImGui. Retain a frozen TASK0054
+DLL and baseline mode for reproducible comparisons. Pixel equality includes the
+intermediate color and encoded-depth targets, not just final appearance.
+MultiMesh is experimental/off after Track24 pose50 exact color counterevidence;
+no numerical tolerance or asset-name exception is introduced. Opaque queue and
+occlusion are independently opt-in experiments until proven. A project default
+may change only after all-route correctness and relative performance acceptance.
+
+
+Do not share world ShaderMaterial objects in TASK0055: controlled parameter
+eligibility was insufficient to preserve independent-process environment atlas
+output (107pixels differed in3/3 samples; disabling sharing restored exact atlas
+output3/3). Preserve distinct identity and cache immutable geometry/textures/
+shaders and redundant submissions instead. MultiMesh also remains experimental
+off. Occlusion/opaque probes found zero eligible work and provide no usefulness
+proof. Release target access is read-only, for untimed evidence capture.
+
+
+TASK-0055 acceptance completed:30 tracks,120 route-warmup/600 measured frames,
+3 repeats in both frozen54/final55 Release1080p runs. Native packet/pose, original
+effect permissions and draw-call distributions match. Median-route improvements:
+wall10.03%, CPU prepare27.62%, host submission33.16%; no persistent>5% wall median/
+P95/P99 regression. GPU timers unavailable; loading stalls remain. The accepted
+resource/particle-reuse profile is now the common project default. Distinct
+material identity retained; MultiMesh/occlusion/opaque remain experimental/off.
+See [performance report](PERFORMANCE_TASK0055.md). Override at launch with
+--track-optimization-profile=baseline. No original-console Verified promotion.
+
+## TASK-0056: user-authorized engine-selected scenery LOD
+
+User explicitly chose fully engine-controlled switching with original HP2 meshes,
+accepting different boundaries. Use Godot4.4.1 visibility ranges, not new simplified
+meshes or a replacement physical model. Original core LOD remains intact and default.
+The alternative is a named port-side backend, shared by every consumer. Keep original
+section constraints, shaders/materials/effects; do not batch across range anchors.
+Use transformed-AABB-center bounds and identical depth-proxy ranges. Keep experimental
+MultiMesh/occlusion/opaque combinations disabled and material identity distinct.
+Initial capture instances warm on first scheduled use; report this hitch and resident
+node/memory regressions. Promotion requires measurements, not an assumption that
+engine-managed LOD must improve FPS. See docs/GODOT_HLOD.md and E0056H01.
+
+TASK0056 necessary dependency E0056T01: all-level uploads exposed original model
+texture-table default lookup, previously omitted by the port. Fresh paired ELF
+analysis and original DEFAULTTEXTURE pixels justify restoring the bounded resident
+lookup in eSolid::FixTextureTable/GetTextureInfo. Apply it in the shared loader for
+both backends; retain source aliases and raw bytes, reject unknown target bindings.
+No original existing selection/physics function body is replaced. Prewarm/cancel
+must preserve the visual frame counter; allocation bookkeeping is not visual time.
+
+## TASK-0058 supersedes host HLOD
+
+User revoked Godot-managed LOD. Only original production section/tree/instance
+selection is accepted; main and independent capture views share the native runtime.
+Show LOD remains debug-only. Prior TASK0056 sections are historical. No generated
+low meshes or physics changes. See [native visibility integration](NATIVE_TRACK_CULLING.md)
+and E0058R01 for evidence, tests, counters and verification limits.
+
+## TASK-0059: isolate an explicitly reported particle gap from track lifetime
+
+A finite camera move must not cause a particle validation NotImplemented to unload
+all track resources. Catch only that per-quad alpha guard at the host boundary,
+record the gap, omit that unsupported packet, and retain supported scene work.
+Do not invent a blend or clamp original RGBA. Full signed high-alpha compositing
+remains incomplete. Reset Camera is a port UI action restoring current track start.
+
+## TASK-0060: bound host residency independently of native visibility
+
+Preserve original selection and selected passes. Upload source meshes on demand;
+merge exact decoded attributes without temporary GPU upload/readback. Pin active
+views; bound inactive caches and release proxy/uniform references with source
+eviction. Limits are host policies, not recovered PS2 thresholds. Debug overlays
+are lazy; release raw bundle storage after all decoders finish. Retain CPU data
+still used at runtime. Payload estimates and process memory are separate metrics;
+ownership zero alone is not proof of no leaks. See [memory notes](TRACK_MEMORY.md).
+
+## TASK-0061: one logical-to-physical host UI contract
+
+Keep ImGui layout/style logical; scale framebuffer geometry/clipping and invert
+physical mouse coordinates. Rebuild fonts only on DPI changes. Windows effective
+per-window DPI follows OS settings; a shared service handles host Control text in
+Debug/Release, preserving baseline sizes and lifecycle. Do not change original
+glyph metrics, world labels, render resolution or game units. TrackViewer labels
+live camera HP2/Godot axes explicitly. See [UI_DPI.md](UI_DPI.md) and E0061U01.
+
+## TASK-0065: preserve vertex arithmetic while reducing Track11 submissions
+
+Carry original matrices as per-vertex custom attributes for contiguous unlit Copy commands; keep local attributes/order and share the resulting mesh with encoded depth. CPU pretransformation failed exact depth parity. Accept the optimized default only on Track11 main views without car visual consumers; other tracks/captures retain baseline after observed pixel differences. Explicit option enables experiments elsewhere. Preserve Compatibility and current engine version; no unsupported FPS or PS2-equivalence claim. See E0065H01 and PERFORMANCE_TASK0065.md.
+
+## TASK-0066: global rendering optimization, no track allowlists
+
+The user explicitly requires global optimizations. Remove the Track11-only default guard and configuration flag; all tracks use the same matrix-batch eligibility. Keep generic material/order/lighting/capture/owner/LOD state constraints, without substituting a different ID list. Track24's known colour discrepancy remains recorded while globally enabled at the user's request; no claim of all-track pixel equivalence. Future optimizations must be state-based and global. Preserve immutable historical review bytes through explicit historical auxiliary snapshots, and carry inherited auxiliary pins into the successor's live scope.
+
+
+## TASK-0072: parallelize transport preparation after native selection
+
+Use existing Frame/DrawCommand output as the seam, rather than adding a speculative
+PS2 main-loop API. Immutable CPU geometry/matrices may be prepared by Godot native
+group tasks; cache/RID/material/node mutation remains ordered on the main thread.
+Keep original sector selection, physics and reflection scheduling serial. Worker
+limits0/2/4 are independent of Safe/Separate; defaults0/Safe pending measured image,
+lifecycle and tail-latency gates. See RENDER_PREPARATION_TASK0072.md.
+
+
+## TASK-0072: prepare desired submission values, commit serially
+
+Extend the existing transport worker seam to per-view pure CPU math, not recovered
+Runtime/Memory or Godot setters. Snapshot on main, compute fixed immutable slots,
+join locally and compare desired values against latest committed Draw state in
+original order. Keep Godot-free math/policy headers in platform/render; Godot
+registry, observer, cache and upload ownership stay in godot_bridge. Bulk staged
+versions and source-specific structure/field notifications reduce repeated engine
+reads. Unknown sources fall back; residency and Separate stay off. New candidate
+math is default-off pending independent visual/lifecycle/performance gates.
+
+
+## TASK-0074: keep wireframe debugging in the host UI adapter
+
+Append a clearly labelled port-only Debug effect descriptor in track_controls.gd
+and intercept that descriptor's action before reaching recovered effect controls.
+A lazily created renderer-owned helper switches the direct/root and compositor
+colour viewport debug modes, follows colour viewport recreation and restores
+previous root state on exit. Encoded depth/history/reflection passes and native
+commands are unchanged. Disabled mode has no helper process or mesh generation.
+
+## TASK-0076: preserve loaded assets across render gaps; capture is opt-in
+
+Per-frame render/readback exceptions no longer invalidate the loaded track or
+collision environment. Host diagnostics distinguish asset ok from render_ok;
+failed frames report and retry, while explicit unload/load failure retain their
+existing teardown. This addresses destructive exception lifetime, without claiming
+the exact user screenshot exception was identified. Dynamic Environment reflection
+capture defaults off (also on Restore defaults); explicit effect opt-in remains.
+This user-requested performance policy is port-side, not original PS2 behavior.
+# TASK-0077 P0 - Measured work owns the export boundary (2026-10-21)
+
+Keep Godot and the existing native frame contracts. Benchmark collection may
+stop at its bounded sample limit without exporting; only the benchmark releases
+the export hold after measurement, including long stress runs. Ordinary Profile
+capture retains automatic export. Snapshot, source hashing, IO and async dispatch
+are reported outside measured rendering; unavailable whole-frame GPU time stays
+unavailable. Explicit environment-capture pressure is separate from TASK0076's
+default-off policy. A/A controls and pre/post input hashes are prerequisites for
+candidate diagnostics. Configured build recipes do not attest a copied DLL.
+Fukami supplies engineering ideas only, never HP2 behavior evidence. P1-P3 remain
+separate follow-up work; no core/physics changes or optimization defaults here.
+
+
+## TASK-0078 - Compact generated progress dashboard (2026-10-21)
+
+The user's concise-layout request supersedes the old mixed manual/generated
+tracker format. PROGRESS.md contains only a large evidenced-body Retail count,
+a default-collapsed CLASS table and default-collapsed Functions grouped by explicit
+class. Nested groups also omit open. Preserve old prose in the archive and keep
+continuation in task files and PROGRESS_LOG.md. The full catalog is SHA-separated;
+unknown classes/names are never inferred. Class percentages cover bound methods
+only; the headline denominator covers the full Retail inventory, with shared
+entries deduplicated. Existing status/evidence classifications remain independent
+of presentation. No core, runtime or original-verification change.
+
+## TASK-0082: original sample transport (2026-10-21)
+
+Use original ADPCM samples/loop flags and recovered native pitch/gain/mixing rules
+with Godot only owning playback streams. Keep unsupported SPU/stereo/replay effects
+outside the bounded implementation and visible in evidence; never synthesize a
+replacement engine oscillator. Ordinary H input also selects the original horn
+headlight flash. Bind human input directly on the playerless host fixture rather
+than invoking the AI horn scheduler or constructing a fake original Player.
+
+## TASK-0083: collision and tire audio (2026-10-21)
+
+Retain original impact delay/variant/gain/pitch rules and collision lifetime using
+port-owned event state in the existing candidate-frame transaction. Preserve
+original scrape-before-impact RNG order, persistent sample ownership and stepped
+fade. Bind the single-car fixture listener to its car position; spatial camera,
+SPU and multi-player services remain outside this slice. Tire audio reads original
+slip/traction/terrain state independently of skid-mark generation. Use existing
+original-sample host transport, with native selectors/mixers free of Godot types.
+See reverse/task0083/collision-events.md for lifecycle and comparison limitations.
+
+## TASK-0084 recovered camera pose with host projection/controls
+
+Use the recovered Debug DriveCameraMover fullscreen outside/default lookback-mode1
+pose as Test drive's default. Native state and original topology clearance stay
+independent of Godot. The user's explicit request supersedes TASK0050 projection
+policy for Test drive: use Camera3D defaults (75vertical FOV/KEEP_HEIGHT). Preserve
+original-FOV evidence as historical fact; it does not justify overriding this user
+preference. Independent race-scene projection is outside the requested scope.
+
+V is a host toggle of original lookback0/1, distinct from original POV cycling.
+Mouse temporary orbit and1.5second idle return are an explicitly requested host
+overlay. The native camera continues updating beneath it; return reaches the exact
+current native pose. Do not insert invented camera pitch from authored Angle:
+the supported exterior path discards that final scratch rotation before calling
+IsoProjectionMatrix; E-0084-C01 includes disassembly counterevidence.
+
+## TASK-0085/86 approved GPU presentation policy
+
+The user explicitly authorizes Godot GPU particle simulation/rendering while
+preserving recovered emission rules, original assets/curves and physical driving
+behavior. GPU arithmetic/sorting differences must be measured and documented,
+not promoted as original equivalence. Preserve a native reference backend and
+switch default only after the accepted performance/visual gates. TASK0086 then
+restores original marker/parameter-driven light flare billboards, not road beams.
+
+
+## TASK-0086 attached light sprites
+
+Use original ePositionMarker/pivot/Param normals and Debug flare parameters, not
+Godot light presets or projected cones. Produce native fixed billboard descriptions
+and reuse static host quads/materials. Keep original GS texture/depth state and
+explicit gaps for unsupported routes. Read tables from the user's SHA-checked
+ELF; proprietary raw assets stay ignored. Existing original horn callback controls
+noncop flash or cop FAST state; no additional native state setter. The user's
+request to stop repeated benchmarks leaves GPU optional/native default with no
+P95/FPS acceptance claim. No Verified promotion without original runtime evidence.
+
+
+## TASK-0087 original zero-interval emission retries
+
+Allow original clamped-zero emission intervals to consume the next original RNG
+iteration; they are legitimate for variance greater than1. Replace premature zero
+rejection with an explicit port-only2^20iteration execution budget pertrigger.
+Budget exhaustion throws and rolls back, never silently truncates a frame. Keep
+original poollimits and original rates unchanged. This is a host hang policy, not
+an original game limit or Verified claim. No further performance matrix.
+
+## TASK-0088 requested camera controls and projection correction
+
+The user supersedes TASK0084's V/lookback and Godot-default projection policy:
+V selects original available driving POVs, including the forward-facing bumper
+view, with each recovered view's original projection. B holds original lookback
+and release restores the selected POV; it is not a latched toggle. Mouse temporary
+orbit/idle return remain host policy. Recover original bumper pose, POV admission
+and FOV before implementation; do not infer them from an exterior camera rotated
+by half a turn. Input cleanup on focus/UI/pause is host lifecycle policy.
+
+## TASK-0089 water visual/audio ownership
+
+Retain original DriveOver1/2 terrain groups, pair-midpoint emitter positions,
+intensity blending and raw timed wiper state. Water state and splash requests
+advance in the native candidate transaction; visual particles use the existing
+once-per-visual-epoch transaction. Keep sample RNG/cooldown and resets native.
+Godot only transports original InGame samples and original rigid-animation wiper
+matrices. Missing optional wiper geometry remains absent; unresolved required
+animation remains explicit. For newly bound wiper textures, original
+GetTextureInfo's evidenced default19006835 is a recovered resource lookup policy,
+not a generated replacement. No general material fallback is introduced.
+
+Original replay capture ownership, complete World sound scheduling and the
+separate rain-screen RainSplash system are not inferred from this water slice.
+Port input recording remains separate from original replay capture. No benchmark
+or original-runtime equivalence promotion.

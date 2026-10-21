@@ -31,6 +31,8 @@ public:
     csys::System& commands(); // main-thread only, as are input/frame/execute
     std::size_t log_count();
     const render::Bitmap& font() const;
+    void set_ui_scale(float scale);
+    float ui_scale()const;
     std::vector<Batch> frame(float width, float height, float delta, const std::function<void()>& draw = {});
     void enable_console(bool enabled);
     void enable_viewer_input(bool enabled);

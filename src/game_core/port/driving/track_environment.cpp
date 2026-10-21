@@ -20,7 +20,7 @@ std::shared_ptr<const TrackEnvironment> load_track_environment(assets::Source& s
     return load_track_environment(scene);
 }
 std::shared_ptr<const TrackEnvironment> load_track_environment(const port::track::Scene& scene){
-    auto result=std::make_shared<TrackEnvironment>();result->number=scene.entry.number;result->label=scene.entry.name;
+    auto result=std::make_shared<TrackEnvironment>();result->number=scene.entry.number;result->label=scene.entry.name;result->time_of_day=scene.entry.time_of_day;
     const auto& bytes=scene.bundle;result->topology.load(bytes);const auto chunks=hp2::assets::parse_chunks_top(bytes);
     const auto* markers=hp2::assets::find_first(chunks,0x34146);
     if(!markers||markers->size%24)throw std::runtime_error("Original forward starting-position markers are missing or malformed");

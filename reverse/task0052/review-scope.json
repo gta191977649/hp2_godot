@@ -1,0 +1,1967 @@
+{
+  "task": "TASK-0052",
+  "status": "draft-scope-intent-not-body-approval",
+  "entries": [
+    {
+      "path": "src/port/vehicle/model.cpp",
+      "name": "Model::load",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Cache/expose read-only original collision vertices and render configuration for original shadow/environment providers."
+    },
+    {
+      "path": "src/game_core/indep/src/scenery.cpp",
+      "name": "ScenerySectionHeader::DrawAScenery",
+      "kind": "recovered",
+      "evidence_id": "E0052D06",
+      "evidence_record": "reverse/task0052/cpu-preparation.md",
+      "reason": "Preserve original culling/traversal order while replacing repeated lookups and transient heap stack storage.",
+      "original_name": "ScenerySectionHeader::DrawAScenery",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/0014fe18.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/0014fa68.md"
+      ]
+    },
+    {
+      "path": "src/game_core/indep/src/scenery.cpp",
+      "name": "ScenerySectionHeader::TreeCull",
+      "kind": "recovered",
+      "evidence_id": "E0052D06",
+      "evidence_record": "reverse/task0052/cpu-preparation.md",
+      "reason": "Preserve original culling/traversal order while replacing repeated lookups and transient heap stack storage.",
+      "original_name": "ScenerySectionHeader::TreeCull",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/00150378.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/0014ffc8.md"
+      ]
+    },
+    {
+      "path": "src/game_core/indep/src/scenery.cpp",
+      "name": "GrandSceneryCullInfo::WhatSectionsShouldWeDraw",
+      "kind": "recovered",
+      "evidence_id": "E0052D06",
+      "evidence_record": "reverse/task0052/cpu-preparation.md",
+      "reason": "Preserve original culling/traversal order while replacing repeated lookups and transient heap stack storage.",
+      "original_name": "GrandSceneryCullInfo::WhatSectionsShouldWeDraw",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/00150950.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/001505a0.md"
+      ]
+    },
+    {
+      "path": "src/game_core/indep/src/scenery.cpp",
+      "name": "GrandSceneryCullInfo::CullView",
+      "kind": "recovered",
+      "evidence_id": "E0052D06",
+      "evidence_record": "reverse/task0052/cpu-preparation.md",
+      "reason": "Preserve original culling/traversal order while replacing repeated lookups and transient heap stack storage.",
+      "original_name": "GrandSceneryCullInfo::CullView",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/00150b10.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/00150760.md"
+      ]
+    },
+    {
+      "path": "src/game_core/port/track/assets.cpp",
+      "name": "load_scene",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E03",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Decode original environment resources and keep recovered sky instances out of ordinary scenery submissions."
+    },
+    {
+      "path": "src/game_core/port/track/effects.hpp",
+      "name": "screen_depth_to_gs",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D05",
+      "evidence_record": "reverse/task0052/roadshine.md",
+      "reason": "Correct PACKED XYZF2 depth extraction using original geometry GIF register evidence."
+    },
+    {
+      "path": "src/game_core/port/track/runtime.cpp",
+      "name": "Runtime::load",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D06",
+      "evidence_record": "reverse/task0052/cpu-preparation.md",
+      "reason": "Own immutable resource indices and transactional frame preparation while retaining original shared ordering state."
+    },
+    {
+      "path": "src/game_core/port/track/runtime.cpp",
+      "name": "Runtime::unload",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D06",
+      "evidence_record": "reverse/task0052/cpu-preparation.md",
+      "reason": "Own immutable resource indices and transactional frame preparation while retaining original shared ordering state."
+    },
+    {
+      "path": "src/game_core/port/track/runtime.cpp",
+      "name": "Runtime::prepare_frame",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D06",
+      "evidence_record": "reverse/task0052/cpu-preparation.md",
+      "reason": "Own immutable resource indices and transactional frame preparation while retaining original shared ordering state."
+    },
+    {
+      "path": "src/game_core/src/ecstasy/ecstasye.cpp",
+      "name": "hp2::recovered::eModel::Render",
+      "kind": "recovered",
+      "evidence_id": "E0052D06",
+      "evidence_record": "reverse/task0052/cpu-preparation.md",
+      "reason": "Preserve original command semantics while sorting lightweight references and integrating original frame inputs.",
+      "original_name": "eModel::Render",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/0010dc80.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/0010e048.md"
+      ]
+    },
+    {
+      "path": "src/game_core/src/ecstasy/ecstasye.cpp",
+      "name": "hp2::recovered::eDisplayFrame",
+      "kind": "recovered",
+      "evidence_id": "E0052D06",
+      "evidence_record": "reverse/task0052/cpu-preparation.md",
+      "reason": "Preserve original command semantics while sorting lightweight references and integrating original frame inputs.",
+      "original_name": "eDisplayFrame",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/00112858.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/00112c60.md"
+      ]
+    },
+    {
+      "path": "src/platform/shaders/track_shader.cpp",
+      "name": "track_shader_source",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D01",
+      "evidence_record": "reverse/task0052/roadshine.md",
+      "reason": "Bind original GS Roadshine/environment math with explicit feature gates and preserved base/depth semantics."
+    },
+    {
+      "path": "src/game_core/indep/src/weatherman.cpp",
+      "name": "WeatherManQuery",
+      "kind": "recovered",
+      "original_name": "WeatherManQuery",
+      "evidence_id": "E-0052-E02",
+      "evidence_record": "reverse/task0052/environment.md",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/001a84f0.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/001a5cd0.md"
+      ],
+      "reason": "Bounded original owner implementation and explicit host projection; record states Retail/Debug correspondence, represented branches and unresolved dependencies."
+    },
+    {
+      "path": "src/game_core/port/track/environment.cpp",
+      "name": "check",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Bounds-check original environment resources and expose typed native view/weather/reflection values without Godot dependencies."
+    },
+    {
+      "path": "src/game_core/port/track/environment.cpp",
+      "name": "u32",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Bounds-check original environment resources and expose typed native view/weather/reflection values without Godot dependencies."
+    },
+    {
+      "path": "src/game_core/port/track/environment.cpp",
+      "name": "i16",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Bounds-check original environment resources and expose typed native view/weather/reflection values without Godot dependencies."
+    },
+    {
+      "path": "src/game_core/port/track/environment.cpp",
+      "name": "f32",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Bounds-check original environment resources and expose typed native view/weather/reflection values without Godot dependencies."
+    },
+    {
+      "path": "src/game_core/port/track/environment.cpp",
+      "name": "text",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Bounds-check original environment resources and expose typed native view/weather/reflection values without Godot dependencies."
+    },
+    {
+      "path": "src/game_core/port/track/environment.cpp",
+      "name": "original_view_depth",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Bounds-check original environment resources and expose typed native view/weather/reflection values without Godot dependencies."
+    },
+    {
+      "path": "src/game_core/port/track/environment.cpp",
+      "name": "decode_environment",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Bounds-check original environment resources and expose typed native view/weather/reflection values without Godot dependencies."
+    },
+    {
+      "path": "src/game_core/port/track/environment.cpp",
+      "name": "SunOcclusion::uncovered",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Bounds-check original environment resources and expose typed native view/weather/reflection values without Godot dependencies."
+    },
+    {
+      "path": "src/game_core/port/track/environment.cpp",
+      "name": "sun_readback_rect",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Bounds-check original environment resources and expose typed native view/weather/reflection values without Godot dependencies."
+    },
+    {
+      "path": "src/game_core/port/track/environment.cpp",
+      "name": "sun_quads",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Bounds-check original environment resources and expose typed native view/weather/reflection values without Godot dependencies."
+    },
+    {
+      "path": "src/game_core/port/track/environment.cpp",
+      "name": "query_weather",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Bounds-check original environment resources and expose typed native view/weather/reflection values without Godot dependencies."
+    },
+    {
+      "path": "src/game_core/port/track/environment.cpp",
+      "name": "environment_eye_offset",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Bounds-check original environment resources and expose typed native view/weather/reflection values without Godot dependencies."
+    },
+    {
+      "path": "src/game_core/port/track/environment.cpp",
+      "name": "reflection_tables",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Bounds-check original environment resources and expose typed native view/weather/reflection values without Godot dependencies."
+    },
+    {
+      "path": "src/game_core/port/track/environment.cpp",
+      "name": "environment_warps",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Bounds-check original environment resources and expose typed native view/weather/reflection values without Godot dependencies."
+    },
+    {
+      "path": "src/game_core/port/track/environment.cpp",
+      "name": "environment_cameras",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Bounds-check original environment resources and expose typed native view/weather/reflection values without Godot dependencies."
+    },
+    {
+      "path": "src/game_core/port/track/postprocess.cpp",
+      "name": "depth_alpha_from_screen",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P03",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Provide explicit host-independent postprocess inputs/outputs and activation state; preserve unsupported gaps."
+    },
+    {
+      "path": "src/game_core/port/track/postprocess.cpp",
+      "name": "prepare_screen",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P03",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Provide explicit host-independent postprocess inputs/outputs and activation state; preserve unsupported gaps."
+    },
+    {
+      "path": "src/game_core/port/track/postprocess.cpp",
+      "name": "prepare",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P03",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Provide explicit host-independent postprocess inputs/outputs and activation state; preserve unsupported gaps."
+    },
+    {
+      "path": "src/game_core/port/track/postprocess.hpp",
+      "name": "register_value",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P03",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Provide explicit host-independent postprocess inputs/outputs and activation state; preserve unsupported gaps."
+    },
+    {
+      "path": "src/game_core/port/track/projection.hpp",
+      "name": "original_focal_h",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D10",
+      "evidence_record": "reverse/task0052/lod-focal.md",
+      "reason": "Restore original global512 screen-relative LOD focal calculation and expose a typed host seam."
+    },
+    {
+      "path": "src/game_core/port/track/reflection.hpp",
+      "name": "environment_packet_0010AC50",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D08",
+      "evidence_record": "reverse/task0052/reflection-host.md",
+      "reason": "Represent proven original context2 GS packet defaults and bounded source-alpha ranges."
+    },
+    {
+      "path": "src/game_core/port/track/reflection.hpp",
+      "name": "environment_alpha_bounds",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D08",
+      "evidence_record": "reverse/task0052/reflection-host.md",
+      "reason": "Represent proven original context2 GS packet defaults and bounded source-alpha ranges."
+    },
+    {
+      "path": "src/game_core/port/track/reflection.hpp",
+      "name": "environment_318_additive_supported",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D08",
+      "evidence_record": "reverse/task0052/reflection-host.md",
+      "reason": "Represent proven original context2 GS packet defaults and bounded source-alpha ranges."
+    },
+    {
+      "path": "src/game_core/port/track/runtime.cpp",
+      "name": "ResourceIndex::ResourceIndex",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D06",
+      "evidence_record": "reverse/task0052/cpu-preparation.md",
+      "reason": "Own immutable resource indices and transactional frame preparation while retaining original shared ordering state."
+    },
+    {
+      "path": "src/game_core/src/care.cpp",
+      "name": "cmpl",
+      "kind": "recovered",
+      "original_name": "cmpl",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/001207a8.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/001209a0.md"
+      ],
+      "reason": "Bounded original owner implementation and explicit host projection; record states Retail/Debug correspondence, represented branches and unresolved dependencies."
+    },
+    {
+      "path": "src/game_core/src/care.cpp",
+      "name": "cmph",
+      "kind": "recovered",
+      "original_name": "cmph",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/00120828.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00120a20.md"
+      ],
+      "reason": "Bounded original owner implementation and explicit host projection; record states Retail/Debug correspondence, represented branches and unresolved dependencies."
+    },
+    {
+      "path": "src/game_core/src/care.cpp",
+      "name": "make_chain",
+      "kind": "recovered",
+      "original_name": "make_chain",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/00120850.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00120a48.md"
+      ],
+      "reason": "Bounded original owner implementation and explicit host projection; record states Retail/Debug correspondence, represented branches and unresolved dependencies."
+    },
+    {
+      "path": "src/game_core/src/care.cpp",
+      "name": "ch2d",
+      "kind": "recovered",
+      "original_name": "ch2d",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/00120980.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00120b78.md"
+      ],
+      "reason": "Bounded original owner implementation and explicit host projection; record states Retail/Debug correspondence, represented branches and unresolved dependencies."
+    },
+    {
+      "path": "src/game_core/src/care.cpp",
+      "name": "convex_hull",
+      "kind": "recovered",
+      "original_name": "convex_hull",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/001209f8.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00120bf0.md"
+      ],
+      "reason": "Bounded original owner implementation and explicit host projection; record states Retail/Debug correspondence, represented branches and unresolved dependencies."
+    },
+    {
+      "path": "src/game_core/src/care.cpp",
+      "name": "smooth_shadow_corners",
+      "kind": "recovered",
+      "original_name": "smooth_shadow_corners",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/00120c00.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00120df8.md"
+      ],
+      "reason": "Bounded original owner implementation and explicit host projection; record states Retail/Debug correspondence, represented branches and unresolved dependencies."
+    },
+    {
+      "path": "src/game_core/src/care.cpp",
+      "name": "sh_Setup",
+      "kind": "recovered",
+      "original_name": "sh_Setup",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/00120d60.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00120f58.md"
+      ],
+      "reason": "Bounded original owner implementation and explicit host projection; record states Retail/Debug correspondence, represented branches and unresolved dependencies."
+    },
+    {
+      "path": "src/game_core/src/care.cpp",
+      "name": "CarRenderInfo::Render",
+      "kind": "recovered",
+      "original_name": "CarRenderInfo::Render",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/00120ef8.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/001210f0.md"
+      ],
+      "reason": "Bounded original owner implementation and explicit host projection; record states Retail/Debug correspondence, represented branches and unresolved dependencies."
+    },
+    {
+      "path": "src/game_core/src/ecstasy/ecstasye.cpp",
+      "name": "CalculateH",
+      "kind": "recovered",
+      "evidence_id": "E0052D10",
+      "evidence_record": "reverse/task0052/lod-focal.md",
+      "reason": "Restore original global512 screen-relative LOD focal calculation and expose a typed host seam.",
+      "original_name": "CalculateH",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/00104448.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/001042e8.md"
+      ]
+    },
+    {
+      "path": "src/game_core/src/ecstasy/ecstasye.cpp",
+      "name": "hp2::recovered::DisplayFilter",
+      "kind": "recovered",
+      "evidence_id": "E-0052-P03",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Restore original filter/history/radial viewport primitives in the original free-function owner.",
+      "original_name": "DisplayFilter",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/0010f6a8.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/0010fa88.md"
+      ]
+    },
+    {
+      "path": "src/game_core/src/ecstasy/ecstasye.cpp",
+      "name": "hp2::recovered::DisplayRadialBlur",
+      "kind": "recovered",
+      "evidence_id": "E-0052-P03",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Restore original filter/history/radial viewport primitives in the original free-function owner.",
+      "original_name": "DisplayRadialBlur",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/0010f280.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/0010f660.md"
+      ]
+    },
+    {
+      "path": "src/game_core/src/ecstasy/ecstasye.cpp",
+      "name": "hp2::recovered::DisplayBlendPrevious",
+      "kind": "recovered",
+      "evidence_id": "E-0052-P03",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Restore original filter/history/radial viewport primitives in the original free-function owner.",
+      "original_name": "DisplayBlendPrevious",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/0010f4f0.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/0010f8d0.md"
+      ]
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenveffectse.cpp",
+      "name": "bits",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P01",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Restore original GS postprocess palette/depth/pass arithmetic in its original declaring owner."
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenveffectse.cpp",
+      "name": "value",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P01",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Restore original GS postprocess palette/depth/pass arithmetic in its original declaring owner."
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenveffectse.cpp",
+      "name": "integer",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P01",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Restore original GS postprocess palette/depth/pass arithmetic in its original declaring owner."
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenveffectse.cpp",
+      "name": "alpha",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P01",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Restore original GS postprocess palette/depth/pass arithmetic in its original declaring owner."
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenveffectse.cpp",
+      "name": "RemapLinearIntoClut8",
+      "kind": "recovered",
+      "evidence_id": "E-0052-P01",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Restore original GS postprocess palette/depth/pass arithmetic in its original declaring owner.",
+      "original_name": "RemapLinearIntoClut8",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/001189f8.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/00118dc0.md"
+      ]
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenveffectse.cpp",
+      "name": "MapScreenZToPaletteIndex",
+      "kind": "recovered",
+      "evidence_id": "E-0052-P01",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Restore original GS postprocess palette/depth/pass arithmetic in its original declaring owner.",
+      "original_name": "MapScreenZToPaletteIndex",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/00119b58.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/00119f20.md"
+      ]
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenveffectse.cpp",
+      "name": "MapPaletteIndexToScreenZ",
+      "kind": "recovered",
+      "evidence_id": "E-0052-P01",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Restore original GS postprocess palette/depth/pass arithmetic in its original declaring owner.",
+      "original_name": "MapPaletteIndexToScreenZ",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/00119b70.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/00119f38.md"
+      ]
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenveffectse.cpp",
+      "name": "MapScreenZToViewZ",
+      "kind": "recovered",
+      "evidence_id": "E-0052-P01",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Restore original GS postprocess palette/depth/pass arithmetic in its original declaring owner.",
+      "original_name": "MapScreenZToViewZ",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/00119b90.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/00119f58.md"
+      ]
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenveffectse.cpp",
+      "name": "CreateFogPalette",
+      "kind": "recovered",
+      "evidence_id": "E-0052-P01",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Restore original GS postprocess palette/depth/pass arithmetic in its original declaring owner.",
+      "original_name": "CreateFogPalette",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/00119308.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/001196d0.md"
+      ]
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenveffectse.cpp",
+      "name": "CreateFocusPalette",
+      "kind": "recovered",
+      "evidence_id": "E-0052-P02",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Restore original GS postprocess palette/depth/pass arithmetic in its original declaring owner.",
+      "original_name": "CreateFocusPalette",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/00119c20.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/00119fe8.md"
+      ]
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenveffectse.cpp",
+      "name": "eAttachDepthIntoAlpha",
+      "kind": "recovered",
+      "evidence_id": "E-0052-P01",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Restore original GS postprocess palette/depth/pass arithmetic in its original declaring owner.",
+      "original_name": "eAttachDepthIntoAlpha",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/00118a60.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/00118e28.md"
+      ]
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenveffectse.cpp",
+      "name": "eAttachFog",
+      "kind": "recovered",
+      "evidence_id": "E-0052-P01",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Restore original GS postprocess palette/depth/pass arithmetic in its original declaring owner.",
+      "original_name": "eAttachFog",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/00119768.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/00119b30.md"
+      ]
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenveffectse.cpp",
+      "name": "eAttachDepthOfField",
+      "kind": "recovered",
+      "evidence_id": "E-0052-P02",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Restore original GS postprocess palette/depth/pass arithmetic in its original declaring owner.",
+      "original_name": "eAttachDepthOfField",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/00119f70.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/0011a338.md"
+      ]
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenveffectse.cpp",
+      "name": "SetupBlackAndWhite",
+      "kind": "recovered",
+      "evidence_id": "E-0052-P05",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Restore original GS postprocess palette/depth/pass arithmetic in its original declaring owner.",
+      "original_name": "SetupBlackAndWhite",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/0011a990.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/0011ad58.md"
+      ]
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenveffectse.cpp",
+      "name": "eAttachBlackAndWhite",
+      "kind": "recovered",
+      "evidence_id": "E-0052-P05",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Restore original GS postprocess palette/depth/pass arithmetic in its original declaring owner.",
+      "original_name": "eAttachBlackAndWhite",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/track/0011a9f0.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/0011adb8.md"
+      ]
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenvmape.cpp",
+      "name": "ComputeReflectionST",
+      "kind": "recovered",
+      "original_name": "ComputeReflectionST",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/001179b0.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00117d78.md"
+      ],
+      "reason": "Bounded original owner implementation and explicit host projection; record states Retail/Debug correspondence, represented branches and unresolved dependencies."
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenvmape.cpp",
+      "name": "CreateRefSampleTable",
+      "kind": "recovered",
+      "original_name": "CreateRefSampleTable",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/00117a38.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00117e00.md"
+      ],
+      "reason": "Bounded original owner implementation and explicit host projection; record states Retail/Debug correspondence, represented branches and unresolved dependencies."
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenvmape.cpp",
+      "name": "warp",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Restore original reflection sample tables, warped2D primitives and Retail camera schedule."
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenvmape.cpp",
+      "name": "rotation",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Restore original reflection sample tables, warped2D primitives and Retail camera schedule."
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenvmape.cpp",
+      "name": "transform",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Restore original reflection sample tables, warped2D primitives and Retail camera schedule."
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenvmape.cpp",
+      "name": "CreateEnvMap",
+      "kind": "recovered",
+      "original_name": "CreateEnvMap",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/00118150.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00118518.md"
+      ],
+      "reason": "Bounded original owner implementation and explicit host projection; record states Retail/Debug correspondence, represented branches and unresolved dependencies."
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenvmape.cpp",
+      "name": "CreateBackEnvMap",
+      "kind": "recovered",
+      "original_name": "CreateBackEnvMap",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/00118498.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00118860.md"
+      ],
+      "reason": "Bounded original owner implementation and explicit host projection; record states Retail/Debug correspondence, represented branches and unresolved dependencies."
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenvmape.cpp",
+      "name": "eCreateEnvMapPrims",
+      "kind": "recovered",
+      "original_name": "eCreateEnvMapPrims",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/00118810.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00118bd8.md"
+      ],
+      "reason": "Bounded original owner implementation and explicit host projection; record states Retail/Debug correspondence, represented branches and unresolved dependencies."
+    },
+    {
+      "path": "src/game_core/src/ecstasy/eenvmape.cpp",
+      "name": "eEnvMap::UpdateCameras",
+      "kind": "recovered",
+      "original_name": "eEnvMap::UpdateCameras",
+      "evidence_id": "E-0052-E01",
+      "evidence_record": "reverse/task0052/environment.md",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/001175c8.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/001179c0.md"
+      ],
+      "reason": "Bounded original owner implementation and explicit host projection; record states Retail/Debug correspondence, represented branches and unresolved dependencies."
+    },
+    {
+      "path": "src/game_core/src/skye.cpp",
+      "name": "SkyInitModel",
+      "kind": "recovered",
+      "original_name": "SkyInitModel",
+      "evidence_id": "E-0052-E03",
+      "evidence_record": "reverse/task0052/environment.md",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/0011c450.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/0011c7c8.md"
+      ],
+      "reason": "Bounded original owner implementation and explicit host projection; record states Retail/Debug correspondence, represented branches and unresolved dependencies."
+    },
+    {
+      "path": "src/game_core/src/skye.cpp",
+      "name": "SkyLoader",
+      "kind": "recovered",
+      "original_name": "SkyLoader",
+      "evidence_id": "E-0052-E03",
+      "evidence_record": "reverse/task0052/environment.md",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/0011c5f8.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/0011c970.md"
+      ],
+      "reason": "Bounded original owner implementation and explicit host projection; record states Retail/Debug correspondence, represented branches and unresolved dependencies."
+    },
+    {
+      "path": "src/game_core/src/skye.cpp",
+      "name": "StuffSky",
+      "kind": "recovered",
+      "original_name": "StuffSky",
+      "evidence_id": "E-0052-E03",
+      "evidence_record": "reverse/task0052/environment.md",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/0011c6f8.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/0011ca70.md"
+      ],
+      "reason": "Bounded original owner implementation and explicit host projection; record states Retail/Debug correspondence, represented branches and unresolved dependencies."
+    },
+    {
+      "path": "src/game_core/src/sune.cpp",
+      "name": "StuffSun",
+      "kind": "recovered",
+      "original_name": "StuffSun",
+      "evidence_id": "E-0052-E05",
+      "evidence_record": "reverse/task0052/environment.md",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/001252b0.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00125430.md"
+      ],
+      "reason": "Bounded original owner implementation and explicit host projection; record states Retail/Debug correspondence, represented branches and unresolved dependencies."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_command_batches.hpp",
+      "name": "same_track_batch_state",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D11",
+      "evidence_record": "reverse/task0052/contiguous-batching.md",
+      "reason": "Plan conservative contiguous identical-uniform mesh spans without native command or blend-order mutation."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_command_batches.hpp",
+      "name": "contiguous_track_batches",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D11",
+      "evidence_record": "reverse/task0052/contiguous-batching.md",
+      "reason": "Plan conservative contiguous identical-uniform mesh spans without native command or blend-order mutation."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "name": "host",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D07",
+      "evidence_record": "reverse/task0052/reflection-host.md",
+      "reason": "Adapt original scheduled six-view capture and one persistent2D atlas through the shared GPU submission callback; retain documented precision gap."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "name": "camera_transform",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D07",
+      "evidence_record": "reverse/task0052/reflection-host.md",
+      "reason": "Adapt original scheduled six-view capture and one persistent2D atlas through the shared GPU submission callback; retain documented precision gap."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "name": "submit",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D07",
+      "evidence_record": "reverse/task0052/reflection-host.md",
+      "reason": "Adapt original scheduled six-view capture and one persistent2D atlas through the shared GPU submission callback; retain documented precision gap."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "name": "impl_",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D07",
+      "evidence_record": "reverse/task0052/reflection-host.md",
+      "reason": "Adapt original scheduled six-view capture and one persistent2D atlas through the shared GPU submission callback; retain documented precision gap."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "name": "~TrackReflectionRenderer",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D07",
+      "evidence_record": "reverse/task0052/reflection-host.md",
+      "reason": "Adapt original scheduled six-view capture and one persistent2D atlas through the shared GPU submission callback; retain documented precision gap."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "name": "TrackReflectionRenderer::clear",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D07",
+      "evidence_record": "reverse/task0052/reflection-host.md",
+      "reason": "Adapt original scheduled six-view capture and one persistent2D atlas through the shared GPU submission callback; retain documented precision gap."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "name": "TrackReflectionRenderer::update",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D07",
+      "evidence_record": "reverse/task0052/reflection-host.md",
+      "reason": "Adapt original scheduled six-view capture and one persistent2D atlas through the shared GPU submission callback; retain documented precision gap."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "name": "TrackReflectionRenderer::ready",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D07",
+      "evidence_record": "reverse/task0052/reflection-host.md",
+      "reason": "Adapt original scheduled six-view capture and one persistent2D atlas through the shared GPU submission callback; retain documented precision gap."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "name": "TrackReflectionRenderer::diagnostic",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D07",
+      "evidence_record": "reverse/task0052/reflection-host.md",
+      "reason": "Adapt original scheduled six-view capture and one persistent2D atlas through the shared GPU submission callback; retain documented precision gap."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "name": "TrackReflectionRenderer::hack_matrix",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D07",
+      "evidence_record": "reverse/task0052/reflection-host.md",
+      "reason": "Adapt original scheduled six-view capture and one persistent2D atlas through the shared GPU submission callback; retain documented precision gap."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "name": "TrackReflectionRenderer::texture",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D07",
+      "evidence_record": "reverse/task0052/reflection-host.md",
+      "reason": "Adapt original scheduled six-view capture and one persistent2D atlas through the shared GPU submission callback; retain documented precision gap."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "name": "TrackReflectionRenderer::face_texture",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D07",
+      "evidence_record": "reverse/task0052/reflection-host.md",
+      "reason": "Adapt original scheduled six-view capture and one persistent2D atlas through the shared GPU submission callback; retain documented precision gap."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.hpp",
+      "name": "front_texture",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D07",
+      "evidence_record": "reverse/task0052/reflection-host.md",
+      "reason": "Adapt original scheduled six-view capture and one persistent2D atlas through the shared GPU submission callback; retain documented precision gap."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.hpp",
+      "name": "back_texture",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D07",
+      "evidence_record": "reverse/task0052/reflection-host.md",
+      "reason": "Adapt original scheduled six-view capture and one persistent2D atlas through the shared GPU submission callback; retain documented precision gap."
+    },
+    {
+      "path": "src/platform/shaders/track_shader.cpp",
+      "name": "track_environment_shader_source",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D08",
+      "evidence_record": "reverse/task0052/reflection-host.md",
+      "reason": "Bind original GS Roadshine/environment math with explicit feature gates and preserved base/depth semantics."
+    },
+    {
+      "path": "src/port/vehicle/model.hpp",
+      "name": "collision_vertices",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Cache/expose read-only original collision vertices and render configuration for original shadow/environment providers."
+    },
+    {
+      "path": "src/port/vehicle/model.hpp",
+      "name": "render_config",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Cache/expose read-only original collision vertices and render configuration for original shadow/environment providers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "camera_owners",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "material",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "palette",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "copy_camera",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "impl_",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "~TrackPostprocess",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::mark_tracked_mesh",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::mark_mesh_changed",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::notify_mesh_sorting",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::mark_tracked_material",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::mark_material_changed",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::notify_material_parameter",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::mark_material_dirty",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::set_screen_resources",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::get_colour_texture",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::get_depth_texture",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::available",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::active",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::fog_active",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::focus_active",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::release",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_postprocess.cpp",
+      "name": "TrackPostprocess::update",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-P06",
+      "evidence_record": "reverse/task0052/postprocess.md",
+      "reason": "Host-only postprocess resource ownership, exact palette/stage GPU projection, depth proxies and explicitly notified cache; constructor parser artifacts are included as observed names, not recovered original identifiers."
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_snapshot",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::_bind_methods",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::release_display",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::update_view",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_state",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.hpp",
+      "name": "frame_summary",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw_render_controls",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/game_core/port/track/runtime.hpp",
+      "name": "texture",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/game_core/port/track/settings.hpp",
+      "name": "unsigned",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/game_core/port/track/settings.hpp",
+      "name": "RenderSettings",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/game_core/port/track/settings.hpp",
+      "name": "enabled",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/game_core/port/track/settings.hpp",
+      "name": "set",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/game_core/port/track/settings.hpp",
+      "name": "set_distance",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/game_core/port/track/settings.hpp",
+      "name": "restore",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/game_core/port/track/settings.hpp",
+      "name": "shared_render_settings",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::_notification",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::submit_frame",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::complete_visual_readback",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::set_effect_enabled",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::restore_render_defaults",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::set_visibility_override",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::set_camera_mode",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::set_visual_state",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::set_visual_timestep",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_environment_capture",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_render_targets",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_effects",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_render_controls",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::frame_summary",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "limit",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "impl_",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::acquire",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::clear",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::trim_unreferenced",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::bytes",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::entries",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::builds",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches_tests.cpp",
+      "name": "require",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches_tests.cpp",
+      "name": "normal_bytes",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches_tests.cpp",
+      "name": "source_mesh",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches_tests.cpp",
+      "name": "test_track_mesh_batch_cache",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/port/vehicle/environment_fusion.hpp",
+      "name": "single_triangle_environment_fusion_rgb_candidate",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/port/vehicle/environment_fusion.hpp",
+      "name": "fused_environment_copy_31c_rgb",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-H01",
+      "evidence_record": "reverse/task0052/host-integration.md",
+      "reason": "Shared host session, explicit effect controls, cached GPU submission and diagnostics; no new original behavior asserted."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::particle_count",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "ParticleSimulation::step",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "bound",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "decode_particles",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "floats",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "number",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "seed_",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "text",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/game_core/port/track/particles.cpp",
+      "name": "word",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/game_core/port/track/particles.hpp",
+      "name": "global_seed",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/game_core/port/track/particles.hpp",
+      "name": "groups",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/game_core/port/track/particles.hpp",
+      "name": "resources",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/game_core/src/acidfxe.cpp",
+      "name": "AcidEffectSystem::AddAutoEmitter",
+      "kind": "recovered",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Restore the evidenced static WorldEffects branch in the original AcidFX owner; typed overloads retain explicit host pool/list/projection boundaries and documented unresolved branches.",
+      "original_name": "AcidEffectSystem::AddAutoEmitter",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/001274a0.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/001275f8.md"
+      ]
+    },
+    {
+      "path": "src/game_core/src/acidfxe.cpp",
+      "name": "AcidEffectSystem::DoTimeStep",
+      "kind": "recovered",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Restore the evidenced static WorldEffects branch in the original AcidFX owner; typed overloads retain explicit host pool/list/projection boundaries and documented unresolved branches.",
+      "original_name": "AcidEffectSystem::DoTimeStep",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/00128718.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00128870.md"
+      ]
+    },
+    {
+      "path": "src/game_core/src/acidfxe.cpp",
+      "name": "AcidEffectSystem::RenderEffects",
+      "kind": "recovered",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Restore the evidenced static WorldEffects branch in the original AcidFX owner; typed overloads retain explicit host pool/list/projection boundaries and documented unresolved branches.",
+      "original_name": "AcidEffectSystem::RenderEffects",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/00128da0.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00128ef8.md"
+      ]
+    },
+    {
+      "path": "src/game_core/src/acidfxe.cpp",
+      "name": "AcidEffectSystem::TriggerEmitter",
+      "kind": "recovered",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Restore the evidenced static WorldEffects branch in the original AcidFX owner; typed overloads retain explicit host pool/list/projection boundaries and documented unresolved branches.",
+      "original_name": "AcidEffectSystem::TriggerEmitter",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/00127700.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00127858.md"
+      ]
+    },
+    {
+      "path": "src/game_core/src/acidfxe.cpp",
+      "name": "hermite_parameter",
+      "kind": "recovered",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Restore the evidenced static WorldEffects branch in the original AcidFX owner; typed overloads retain explicit host pool/list/projection boundaries and documented unresolved branches.",
+      "original_name": "hermite_parameter",
+      "function_records": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/environment/00126af8.md",
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00126c50.md"
+      ]
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::_bind_methods",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Expose actual geometry-space CV/pose/textures and bind explicit original dynamic capture; unsupported destination-alpha31C is detached with a NotImplemented diagnostic, preserving base pass and standalone frontend behavior."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::get_state",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Expose actual geometry-space CV/pose/textures and bind explicit original dynamic capture; unsupported destination-alpha31C is detached with a NotImplemented diagnostic, preserving base pass and standalone frontend behavior."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::get_visual_state",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Expose actual geometry-space CV/pose/textures and bind explicit original dynamic capture; unsupported destination-alpha31C is detached with a NotImplemented diagnostic, preserving base pass and standalone frontend behavior."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::get_visual_texture",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Expose actual geometry-space CV/pose/textures and bind explicit original dynamic capture; unsupported destination-alpha31C is detached with a NotImplemented diagnostic, preserving base pass and standalone frontend behavior."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::set_environment_capture",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Expose actual geometry-space CV/pose/textures and bind explicit original dynamic capture; unsupported destination-alpha31C is detached with a NotImplemented diagnostic, preserving base pass and standalone frontend behavior."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_vehicle_renderer.cpp",
+      "name": "Ps2VehicleRenderer::update_view",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Expose actual geometry-space CV/pose/textures and bind explicit original dynamic capture; unsupported destination-alpha31C is detached with a NotImplemented diagnostic, preserving base pass and standalone frontend behavior."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_environment_renderer.cpp",
+      "name": "TrackEnvironmentRenderer::clear",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E03",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_environment_renderer.cpp",
+      "name": "TrackEnvironmentRenderer::update",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E03",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_environment_renderer.cpp",
+      "name": "host",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E03",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_environment_renderer.cpp",
+      "name": "impl_",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E03",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_environment_renderer.cpp",
+      "name": "lookup",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E03",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_environment_renderer.cpp",
+      "name": "matrix",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E03",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_environment_renderer.cpp",
+      "name": "~TrackEnvironmentRenderer",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E03",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::clear",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::global_seed",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::set_alpha_ranks",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "TrackParticleRenderer::update",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "global_seed",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "impl_",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "mip",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_particle_renderer.cpp",
+      "name": "~TrackParticleRenderer",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E07",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_shadow_renderer.cpp",
+      "name": "TrackShadowRenderer::clear",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_shadow_renderer.cpp",
+      "name": "TrackShadowRenderer::update",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_shadow_renderer.cpp",
+      "name": "host",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_shadow_renderer.cpp",
+      "name": "impl_",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_shadow_renderer.cpp",
+      "name": "native",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_shadow_renderer.cpp",
+      "name": "owner",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_shadow_renderer.cpp",
+      "name": "texture",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_shadow_renderer.cpp",
+      "name": "~TrackShadowRenderer",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E06",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::clear",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E05",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::complete_readback",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E05",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::set_alpha_ranks",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E05",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "TrackSunRenderer::update",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E05",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "impl_",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E05",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "mip_lookup",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E05",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "~TrackSunRenderer",
+      "kind": "port_adapter",
+      "evidence_id": "E-0052-E05",
+      "evidence_record": "reverse/task0052/environment.md",
+      "reason": "Explicit port-owned resource, state, GPU or ownership boundary; no original ABI or unproven game behavior is asserted."
+    },
+    {
+      "path": "src/game_core/port/track/reflection.hpp",
+      "name": "require_environment_source_alpha",
+      "kind": "port_adapter",
+      "evidence_id": "E0052D13",
+      "evidence_record": "reverse/task0052/reflection-host.md",
+      "reason": "Fail explicitly for unrepresented gameplay destination-alpha path; keep frontend mode3 separate."
+    }
+  ]
+}

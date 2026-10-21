@@ -31,12 +31,11 @@ inline float screen_depth(float view_z,float near_z,float far_z,
     const auto coefficients=screen_depth_coefficients(near_z,far_z,bias_level,z24);
     return coefficients[0]+coefficients[1]/view_z;
 }
-// VU ordinary vertex projection stores float z bits unchanged; only xy get
-// integer/fixed projection. GS ZBUF.PSM30/31 retains 32/24 low bits respectively.
+// VU stores float z bits in the PACKED XYZF2 z word (GIFtag0x412).
+// XYZF2 extracts bits4..27, before the selected ZBUF storage format.
 inline std::uint32_t screen_depth_to_gs(float screen_z,std::uint8_t zbuffer_mode=0x30) {
     std::uint32_t bits;std::memcpy(&bits,&screen_z,4);
-    if(zbuffer_mode==0x30)return bits;
-    if(zbuffer_mode==0x31)return bits&0xffffffu;
+    if(zbuffer_mode==0x30||zbuffer_mode==0x31)return (bits>>4)&0xffffffu;
     hp2::not_implemented("0x002A7860","Track GS depth format outside original normal targets");
 }
 // Port GPU projection, not original arithmetic. Double retains the complete

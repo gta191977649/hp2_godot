@@ -1,5 +1,10 @@
 # HP2 PS2 Reversed
 
+TASK-0071 changes the Windows default to **Vulkan + Forward+**, retaining the
+global `./build.ps1 --profile` ImGui profiler. Track11 performance/visual
+acceptance and original-runtime verification are tracked separately; see
+[migration results and limitations](docs/PERFORMANCE_TASK0071.md).
+
 A native C++ reconstruction of *Need for Speed: Hot Pursuit 2* (PS2), with Godot as the host and rendering backend. The current target is the US PS2 release, `SLUS_203.62`, on Windows x86-64.
 
 The CarViewer **Test drive** closure now targets the user-supplied symbol-rich Debug
@@ -8,6 +13,13 @@ version binding and remaining limits are documented in [DEBUG_DRIVING_AUDIT.md](
 
 Player transmission controls, the centralized driving InputMap and original skid
 rendering are described in [PLAYER_DRIVING.md](docs/PLAYER_DRIVING.md) (TASK-0046).
+Original wheel smoke/tire-spew and remaining physics work are documented in
+[DRIVING_EFFECTS.md](docs/DRIVING_EFFECTS.md) and [DRIVING_GAPS.md](docs/DRIVING_GAPS.md).
+
+TrackViewer, Test drive and the independent single-car scene share the track
+renderer. See [TRACK_VIEWER.md](docs/TRACK_VIEWER.md) for controls, Effects gates
+and current rendering limits. TASK-0052 is still active; complete original effects
+and1080p/60FPS performance have not been established.
 
 ## 1. Project Goals
 
@@ -34,7 +46,7 @@ See the generated [progress tracker](docs/PROGRESS.md) for current recovery stat
 
 ## 4. Build Instructions
 
-On Windows, install a C++17 compiler, CMake 3.24+, Ninja and Python 3. The frontend also requires Godot **4.4.1**, the pinned `godot-cpp` submodule and the pinned FFmpeg **8.1** SDK. Follow the [development guide](docs/DEVELOPMENT.md) for dependency setup and local engine paths.
+On Windows, install a C++17 compiler, CMake 3.24+, Ninja and Python 3. The frontend also requires Godot **4.7.2**, the pinned `godot-cpp` submodule and the pinned FFmpeg **8.1** SDK. Follow the [development guide](docs/DEVELOPMENT.md) for dependency setup and local engine paths.
 
 Provide your own original PS2 `ZZDATA` directory through `HP2_PS2_ASSET_ROOT`, or copy [the configuration example](config/ps2_assets.example.json) to `config/ps2_assets.local.json` and set its `root`. Game binaries and assets are not distributed with this project.
 
@@ -105,3 +117,19 @@ Independent single-car runtime (TASK-0051): launch `godot/scenes/race_scene.tscn
 with `--track=11 --car=ELISE`. It uses the same native frame packets and GPU host as
 TrackViewer in Debug and Release. See [Track rendering](docs/TRACK_VIEWER.md) for
 controls, tests and remaining dynamic environment-capture limitations.
+
+
+### TASK-0055 rendering optimization
+
+The shared TrackViewer/Test drive/race renderer now defaults to accepted host
+resource and particle-buffer reuse, preserving native visibility/LOD/effects and
+physics. Full30-track Release1080p paired tests reduce median-route frame time
+10.03% and host submission33.16%, with no persistent tail regression. Debug118/118
+and Release98/98 checks pass. Loading stalls and original effects gaps remain.
+See [results and limits](docs/PERFORMANCE_TASK0055.md). Local DLL/config snapshots
+and launchers: `local/task0055/delivery/`. Use
+`--track-optimization-profile=baseline` to disable the new policy.
+
+Track rendering uses the original zone/section/tree/instance LOD selection.
+TASK0058 retires the optional Godot HLOD backend; `godot_hlod` is rejected.
+See [native culling integration](docs/NATIVE_TRACK_CULLING.md).

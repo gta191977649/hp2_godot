@@ -14,6 +14,21 @@
 
 namespace {
 void check(bool value,const char* message){if(!value)throw std::runtime_error(message);}
+void light_selector_cases(){
+    port::driving::Memory m;m.map(0x324000,0x4000);m.map(0x2d7ae8,16);
+    const auto car=m.allocate(0x900),driver=m.allocate(0x280);m.word(car+0x28,driver);
+    m.scalar(0x324b68,.05f);for(unsigned i=0;i<16;++i)m.byte(0x2d7ae8+i,i<8?1:0);
+    auto select=[&](int day=-1,bool frontend=false){return port::driving::vehicle_light_state(m,car,day,frontend);};
+    auto s=select();check(!s.headlight_left&&!s.headlight_right&&!s.brakelights,"Daytime fixture lights default off");
+    for(int day:{2,3}){s=select(day);check(s.headlight_left&&s.headlight_right&&s.brakelights,"Original dusk/night overrides both light tables");}
+    for(int day:{0,1}){s=select(day);check(!s.headlight_left&&!s.headlight_right&&!s.brakelights,"Original day codes do not force lights");}
+    m.scalar(driver+0x218,.05f);check(!select().brakelights,"Brake threshold equality remains off");
+    m.scalar(driver+0x218,std::nextafter(.05f,1.f));check(select().brakelights,"Brake greater than original threshold illuminates rear lights");m.scalar(driver+0x218,0);
+    m.word(car+0x830,1);s=select();check(s.headlight_left&&s.headlight_right,"Original headlight state enables both sides");m.word(car+0x830,0);
+    m.word(car+0x808,1);s=select();check(s.headlight_left&&!s.headlight_right,"Original police first half-period selects left");m.word(0x327d04,8);s=select();check(!s.headlight_left&&s.headlight_right,"Original police second half-period selects right");m.word(car+0x808,0);
+    m.word(0x326c80,1);s=select();check(s.headlight_left&&s.headlight_right,"Original force headlight flag overrides ordinary state");m.word(0x326c80,0);
+    check(select(-1,true).brakelights,"Original frontend context enables brakelights");m.word(0x326c84,1);check(select().brakelights,"Original force brake flag overrides pedal");
+}
 template<class F>void rejects(F f){bool rejected=false;try{f();}catch(const std::exception&){rejected=true;}check(rejected,"Expected explicit vehicle failure");}
 
 class CountingSource final : public port::assets::Source {
@@ -258,6 +273,7 @@ void check_catalog_changes(port::assets::Source& original) {
 }
 }
 int main() {
+    light_selector_cases();
     const auto root=hp2::platform::resolve_zzdata_root(".");
     if(!root){
         const auto* configured=std::getenv(hp2::platform::kAssetRootEnvVar);
@@ -268,6 +284,20 @@ int main() {
     for(const auto* code:{"911TURBO","BMWM5COP","4DR_SEDAN"}) {
         port::vehicle::Model model;
         model.load(input,std::string("CARS/")+code+"/GEOMETRY.BIN");
+        const auto original_body=body_snapshot(model);unsigned head_surfaces=0,brake_surfaces=0;
+        const auto head_off=hp2::frontend::bStringHash((model.render_config().prefix+"_HEADLIGHT").c_str());
+        const auto head_on=hp2::frontend::bStringHash((model.render_config().prefix+"_HEADLIGHT_ON").c_str());
+        const auto brake_off=hp2::frontend::bStringHash((model.render_config().prefix+"_BRAKELIGHT").c_str());
+        const auto brake_on=hp2::frontend::bStringHash((model.render_config().prefix+"_BRAKELIGHT_ON").c_str());
+        for(const auto& part:model.parts())if(part.group==port::vehicle::Part::Group::Body&&part.lod<3)
+            for(std::size_t i=0;i<model.geometry().solids[part.solid].surfaces.size();++i){
+                const auto off=model.driving_texture(part.solid,i,{}),on=model.driving_texture(part.solid,i,{true,true,true});
+                if(off==head_off&&on==head_on)++head_surfaces;if(off==brake_off&&on==brake_on)++brake_surfaces;
+            }
+        std::cerr<<"TASK0082 light groups "<<code<<" head="<<head_surfaces<<" brake="<<brake_surfaces<<'\n';
+        if(std::string(code)=="4DR_SEDAN")check(head_surfaces==0&&brake_surfaces==0,"Traffic sample has no mapped dynamic light surfaces; do not invent them");
+        else check(head_surfaces&&brake_surfaces,"Original body resolves both dynamic light texture groups");
+        check(body_snapshot(model).textures==original_body.textures&&body_snapshot(model).uv==original_body.uv,"Dynamic light lookup preserves original geometry and UVs");
         check(!model.textures().empty(),"Vehicle must bind original textures");
         check(!model.parts().empty(),"Vehicle parts must be bound");
         const auto normal=model.select(200,-1);

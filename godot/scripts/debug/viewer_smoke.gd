@@ -56,7 +56,7 @@ func _run() -> void:
 		_check(viewer.fixture.visible and viewer.fixture_meshes > 0, "Synthetic fixture")
 		# A first mouse event over the native panel must not reach the camera.
 		var hover := InputEventMouseMotion.new()
-		hover.position = Vector2(40, 55)
+		hover.position = Vector2(40, 55) * float(DebugTools.last_frame.get("ui_scale", 1.0))
 		_check(DebugTools.handle_input(hover), "ImGui first hover capture")
 		var panel_camera: Vector3 = viewer.camera.position
 		var panel_click := InputEventMouseButton.new()
@@ -161,7 +161,7 @@ func _run() -> void:
 	get_window().size = Vector2i(1100, 700)
 	await _wait_frames()
 	_check(bool(DebugTools.last_frame.get("fps_visible", false)), "Shared ImGui Debug FPS")
-	_check(float(DebugTools.last_frame.get("fps_right", 0)) == get_viewport().get_visible_rect().size.x - 8, "ImGui FPS right alignment")
+	_check(float(DebugTools.last_frame.get("fps_right", 0)) == get_viewport().get_visible_rect().size.x - 8 * float(DebugTools.last_frame.get("ui_scale", 1.0)), "ImGui FPS right alignment")
 	_check(not _has_controls(DebugTools.scene_owner), "Viewer uses native ImGui controls")
 	DebugTools.request("close")
 	await _wait_frames(6)

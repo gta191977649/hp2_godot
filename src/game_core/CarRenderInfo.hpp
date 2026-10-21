@@ -90,9 +90,13 @@ int GetPixelSize(float radius, float projection_scale,
                  const std::array<float, 3>& camera_position,
                  const std::array<float, 3>& camera_forward);
 }
+namespace port::driving {class Memory;}
+namespace port::track {struct Scene;struct ShadowInput;struct ShadowPacket;}
 namespace hp2::recovered {
 class CarRenderInfo {
 public:
+    // TASK0052 bounded live-car shadow branches, original src/care.cpp Render.
+    static port::track::ShadowPacket Render(port::driving::Memory&,const port::track::Scene&,const port::track::ShadowInput&);
     // ELF 0x00120EF8, E-0034-M01. Bounded lighting-context delegation within Render:
     // calls shared 0x00115978 for a static part in default frontend mode 3.
     // Explicit native transform/result are port-side interfaces, not the PS2 ABI.

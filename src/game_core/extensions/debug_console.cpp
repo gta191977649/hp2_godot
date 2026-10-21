@@ -111,9 +111,11 @@ std::vector<Batch> DebugConsole::frame(float width,float height,float delta,cons
     auto& p=*impl_;p.current();p.drain();p.ui->begin(width,height,delta);
     if(draw)draw();
     if(p.open){
-        ImGui::SetNextWindowSize({std::max(16.f,std::min(760.f,width-16)),std::max(16.f,std::min(440.f,height-16))},ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize({std::max(16.f,std::min(760.f,width/p.ui->scale()-16)),std::max(16.f,std::min(440.f,height/p.ui->scale()-16))},ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowPos({8,36},ImGuiCond_FirstUseEver);p.console->Draw();
     }
     p.trim();return p.ui->finish(width,height);
 }
+void DebugConsole::set_ui_scale(float scale){impl_->ui->set_scale(scale);}
+float DebugConsole::ui_scale()const{return impl_->ui->scale();}
 }

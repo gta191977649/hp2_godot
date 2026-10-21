@@ -14,10 +14,20 @@
 #include "game_core/port/driving/object_view.hpp"
 namespace port::driving::native {struct InitServices;}
 namespace port::driving {struct ContactProvider;}
+namespace port::driving {struct TerrainEffectServices;}
+namespace port::driving {struct CarEffectServices;}
 namespace hp2::recovered {
 class Car : public port::driving::ObjectView {
 public:
  using ObjectView::ObjectView;
+ // Debug00131D78/00131E58; E-0081-L01. Full entries explicitly reject the
+ // untranslated topology/path and Player consumers after their state slices.
+ void BeginMovement(float);
+ void FinishMovement(float);
+ // Debug 00133988; E-0075-T01. Wheel loop recovered; full remainder throws.
+ void TriggerCarTerrainEffects(float,port::driving::TerrainEffectServices&);
+ // Debug 0011E4E0; E-0075-C01. Host service binding; wheel effects only.
+ void TriggerEffect(int,float,int,const std::array<float,4>*,port::driving::CarEffectServices&);
  // Debug00132788; E-0048-D03. Host bindings; original five topology probes,
  // wheel3 ride height and quantized rotations, no whole Car construction claim.
  void FindFlatOnTrackPosition(std::array<float,16>&,std::array<float,4>&,std::uint16_t,port::driving::ContactProvider&);

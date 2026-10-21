@@ -66,9 +66,16 @@ int main(){try{
     // Reverse winding for the original inward-facing wall normal.
     std::swap(wall.vertices[1],wall.vertices[3]);environment->topology.polygons={road,wall};
     port::driving::NativeBackend driving(elf);driving.collision_geometry(source.read("CARS/911TURBO/GEOMETRY.BIN"));driving.track(environment);
-    bool impact=false;float prior_speed=0;
+    bool impact=false;float prior_speed=0;unsigned impact_step=0,audio_requests=0;
     for(unsigned step=0;step<600;++step){const auto snapshot=driving.advance(config,{1,0,0},1.0f/60);const auto& runtime=driving.static_collisions();
-        if(runtime.applied_impulses){check(runtime.last_impulse[0]<0,"Controlled wall did not oppose forward car momentum");check(snapshot.velocity->at(0)<prior_speed,"Controlled impact did not change original native velocity");impact=true;break;}prior_speed=snapshot.velocity->at(0);}
+        audio_requests+=snapshot.collision_sounds.size();
+        if(runtime.applied_impulses&&!impact){check(runtime.last_impulse[0]<0,"Controlled wall did not oppose forward car momentum");check(snapshot.velocity->at(0)<prior_speed,"Controlled impact did not change original native velocity");impact=true;impact_step=step;}
+        if(impact&&step>impact_step+20)break;
+        prior_speed=snapshot.velocity->at(0);}
+    check(audio_requests>0,"Native wall collision did not publish delayed original impact sound");
+    const auto requests_before=audio_requests;
+    for(unsigned step=0;step<20;++step)audio_requests+=driving.advance(config,{1,0,0},1.0f/60).collision_sounds.size();
+    check(audio_requests==requests_before,"Persistent wall contact restarted an allocated impact sample");
     check(impact,"Native driving did not dispatch original wall collision response");
     std::cout<<"FULL_NATIVE_WALL_IMPACT_OK impulses="<<driving.static_collisions().applied_impulses<<'\n';
     auto corner=std::make_shared<port::driving::TrackEnvironment>(*environment);corner->direction={{0.70710678f,0.70710678f}};
@@ -78,14 +85,18 @@ int main(){try{
     for(unsigned step=0;step<650;++step){corner_driving.advance(config,{1,0,0},1.0f/60);const auto& hits=corner_driving.static_collisions().impulses_by_polygon;
         if(hits.count(1)&&hits.count(2)){both=true;break;}}
     check(both,"Original contact recheck did not resolve both corner walls");std::cout<<"FULL_NATIVE_CORNER_IMPACT_OK\n";
-    auto unsupported=std::make_shared<port::driving::TrackEnvironment>(*environment);unsupported->topology.polygons[1].terrain=4;
+    // TASK0087: water now follows original static-body constants; CAR terrain
+    // still requires unrecovered ownership and preserves this rollback boundary.
+    auto unsupported=std::make_shared<port::driving::TrackEnvironment>(*environment);unsupported->topology.polygons[1].terrain=32;
     port::driving::NativeBackend failed(elf),control(elf);for(auto* b:{&failed,&control})b->collision_geometry(source.read("CARS/911TURBO/GEOMETRY.BIN"));failed.track(unsupported);control.track(environment);
     bool rejected=false;
     for(unsigned step=0;step<600&&!rejected;++step){const auto before_position=failed.physics_car_address()?failed.memory().vector(failed.memory().word(failed.physics_car_address()+0x18)+0x10):std::array<float,4>{};
-        const auto contacts_before=failed.static_collisions().resolved_contacts,witnesses_before=failed.static_collisions().witnesses.size();
+        const auto contacts_before=failed.static_collisions().resolved_contacts,witnesses_before=failed.static_collisions().witnesses.size(),audio_before=failed.static_collisions().audio_contacts.size();
+        const auto seed_before=failed.physics_car_address()?failed.memory().word(0x327eec):0;
         try{failed.advance(config,{1,0,0},1.0f/60);}catch(const std::exception&){
             rejected=true;const auto failed_body=failed.memory().word(failed.physics_car_address()+0x18);
             check(failed.memory().vector(failed_body+0x10)==before_position&&failed.static_collisions().resolved_contacts==contacts_before&&failed.static_collisions().witnesses.size()==witnesses_before,"Collision failure changed committed native memory or witness diagnostics");
+            check(failed.static_collisions().audio_contacts.size()==audio_before&&failed.memory().word(0x327eec)==seed_before,"Rejected collision changed audio lifetime or random state");
             unsupported->topology.polygons[1].terrain=1;const auto retry=failed.advance(config,{1,0,0},1.0f/60),expected=control.advance(config,{1,0,0},1.0f/60);
             check(retry.body==expected.body&&retry.velocity==expected.velocity&&failed.static_collisions().applied_impulses==control.static_collisions().applied_impulses,"Rejected collision candidate changed subsequent original state");break;
         }control.advance(config,{1,0,0},1.0f/60);

@@ -1,0 +1,15 @@
+{
+  "binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "read_only": true,
+  "version": "independently unknown",
+  "private_directory": "local/task0088/camera",
+  "captures_sha256": {
+    "0015bfe0-listing.json": "3b66b8e3d0a8f1ca6aa8ccd6b709e87264e1671425b20a083e61b7c7bb4499bc",
+    "0015c2b0.json": "068305f8ad47d1cdbd51f6ad4d8cbbdf68f85068ea0b32cf2a576990ae9ae35a",
+    "0015d794-listing.json": "aeeff381b9fb0b60bf7a1bb656494cf9e73bbf9280a72a3ca83009179778eb14",
+    "00176ee0.json": "e3ad3705f7ec2ff30f21631f8686d6181d9b5b9f6961078df95b15bb59ceef3f",
+    "dash-symbols.json": "dcec5d2f09d8d23ea098218e04178bc85f89786c9c5d0439ac122ee7b004805a",
+    "RideInfo.json": "10058bd76a905a5f5b8d7b16d8615e80337c5eb4303a15f9da384f81bc22da86",
+    "SkipFE.json": "0bfc4ebf511c080082c901abe15208733eca61e823b2c20ebb8bc3d37e0ee0b4"
+  }
+}

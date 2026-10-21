@@ -1,9 +1,30 @@
 # TrackViewer and real-track driving
 
+TASK0075 browsing uses Camera3D default75 degrees/KEEP_HEIGHT; Test drive and
+race retain their own outside projection. Original wheel smoke/tire-spew now
+shares track particles; see [effects and limits](DRIVING_EFFECTS.md).
+
+Static draw submission census and default particle/postprocess caches:
+[render cost analysis](PERFORMANCE_TASK0063.md), [30-track counts](TRACK_DRAW_COUNTS.md).
+
+
+Top-left camera coordinates label HP2 and Godot axes. Shared ImGui and host screen
+text follow monitor DPI; see [UI_DPI.md](UI_DPI.md).
+
+Track host allocation/eviction, on-demand `get_memory_state()` diagnostics and
+Track11 before/after measurements are documented in [TRACK_MEMORY.md](TRACK_MEMORY.md).
+
 TrackViewer loads the player's original Retail track geometry, scenery instances,
 textures and road topology directly from the configured ZZDATA tree. Vehicle driving
 uses the separate SHA-bound Debug physics implementation. The viewer is a development
 tool; loading and PC acceptance tests do not establish original-game equivalence.
+
+Visibility includes **Render props** (checked by default). Uncheck it to hide
+placed trees and props in main and reflection views, including Show LOD. This
+port-side gate removes transformed scenery submissions; world-identity geometry
+(roads and baked world meshes) and collision remain. Recheck to restore them.
+The choice is shared across track renderer instances for the session; Restore
+Original Defaults enables it again. Geometry baked into world meshes is retained.
 
 ## Open and use
 
@@ -199,12 +220,132 @@ Z24 range is explicit. All observed track surface bindings use Bias0/1; Bias2
 fails explicitly. Mip filtering and floating host depth are port projections,
 not original GS rasterizer equivalence.
 
-Remaining independent effect: FIRETRUCK_00 and XB_GASTRKTANK_L1A_00 need the
-original six-view dynamic environment capture/context2 pass. Their base pass is
-shown with an explicit diagnostic; no substitute reflection texture is used.
-The tunnel/wet-road paths do not depend on that capture. Original visual/numeric
-comparison remains separate; PC tests never establish Verified status.
+TASK-0052 adds the original scheduled six-view environment capture and shared
+atlas/context2 adapter for the bounded source-alpha branch. Gameplay vehicle
+flag4 reflections require destination alpha and remain explicitly unsupported;
+the frontend mode3 behavior is kept separate. Per-draw PSMCT16 framebuffer
+precision is also an explicit host gap. The tunnel/wet-road paths do not depend
+on dynamic capture. Original visual/numeric comparison remains separate; PC
+tests never establish Verified status.
 
 Evidence: [scenery](../reverse/task0051/scenery.md),
 [blend/depth/state](../reverse/task0051/blend.md),
 [runtime entry](../reverse/task0051/runtime-entry.md).
+
+
+## Effects and visibility (TASK-0052, in progress)
+
+The ImGui `Effects` group lists surface, environment, weather/particles and
+postprocess permissions with their actual activation state and unavailable reason.
+A checked box allows the original conditions to activate an effect; it does not
+force that effect in every track. `Restore Original Defaults` restores session
+permissions shared by TrackViewer, Test drive and the independent race scene.
+Roadshine controls the high-light contribution while retaining road-mask blending.
+Fog and Focus use their original lookup tables; an independent color-grading LUT
+has not been established and is explicitly unavailable. Incomplete stages remain
+marked unavailable rather than producing a substitute modern effect.
+
+`Visibility` defaults to original near/far selection and pixel-size LOD. Optional
+distance override and restore controls are debugging tools; performance acceptance
+uses the original automatic settings. Effect settings do not alter wheel grip or
+native collision response. Presentation timestep is provided separately from
+physics; capture views do not advance WorldEffects again.
+
+Actual-window regressions include the ImGui Roadshine checkbox and visibility
+controls, an opaque vehicle in front of the sky, shared viewer/runtime color plus
+native-depth coverage, and real Track11 forest-fire particle packets. Full pipeline
+recovery and the 1080p/60FPS target are still tracked as incomplete in TASK-0052.
+
+
+TASK0053 regression build uses layer-aware custom bounds for sky/Sun/particles;
+the main compositing viewport must submit zero3D calls. Visibility now shows
+visible / considered / loaded instance counts and selected / loaded sections.
+The fixed Track11 start uses14/128 sections and102/8407 loaded instances; loading
+the complete asset cache does not submit the entire track. Roadshine permission
+skips its extra specular sample when disabled, retaining road/water alpha masks.
+Debug and Release launchers / build manifest: local/task0053/delivery.
+
+
+TASK0054 fixes the custom screen-packet render-target Y convention shared by Sun
+and world particles. Camera yaw/pitch/translation updates their projection from
+original world anchors; the adapter preserves actual GPU projectionY sign.
+Original lens-flare offsets still follow their original screen-space layer rules.
+Regression tests include off-center Sun positions, frozen-time original particle
+packets and an asymmetric host-only production-shader probe. Old53 DLL fails both
+strong controls; ordinary sky and native-depth conventions are unchanged.
+
+
+TASK0055 host optimization selection is shared by TrackViewer, Test drive and
+race_scene. CLI --track-optimization-profile=baseline|optimized is applied before
+load. The optimized candidate enables resource/particle buffer reuse, preserving
+original far distance, LOD, effects and native frame order. get_optimization_state
+reports effective policy and reuse counters. Options are immutable while loaded;
+clear before changing them. MultiMesh, occlusion and opaque queue are experimental
+and excluded from the optimized profile pending their separate gates.
+
+
+TASK-0055 acceptance completed:30 tracks,120 route-warmup/600 measured frames,
+3 repeats in both frozen54/final55 Release1080p runs. Native packet/pose, original
+effect permissions and draw-call distributions match. Median-route improvements:
+wall10.03%, CPU prepare27.62%, host submission33.16%; no persistent>5% wall median/
+P95/P99 regression. GPU timers unavailable; loading stalls remain. The accepted
+resource/particle-reuse profile is now the common project default. Distinct
+material identity retained; MultiMesh/occlusion/opaque remain experimental/off.
+See [performance report](PERFORMANCE_TASK0055.md). Override at launch with
+--track-optimization-profile=baseline. No original-console Verified promotion.
+
+Archived TASK0056 HLOD (removed by TASK0058): `--track-lod-backend=godot_hlod` formerly used original authored levels
+with Godot engine switching. Original remains default. Local delivery launchers,
+API diagnostics, limitations and rollback are in [GODOT_HLOD.md](GODOT_HLOD.md).
+
+### Show LOD (port debug display)
+
+TrackViewer exposes `Show LOD` beside the collision/material controls. Default off;
+enabling it displays every available authored model slot simultaneously in the
+selected track sections, bypassing normal LOD distance ranges. Section selection
+and engine frustum clipping remain. Levels overlap at their original transforms;
+z-fighting is expected. No generated low meshes or collision/physics changes.
+Production uses only `original`; disabling restores native culling. The previous
+`godot_hlod` backend is retired and rejected.
+The session choice survives track switches and is suppressed while driving.
+
+Reproduce host coverage:
+`local/tools/godot-4.4.1/Godot_v4.4.1-stable_win64_console.exe --path godot --audio-driver Dummy --script res://scripts/runtime/track_show_lod_smoke.gd`.
+
+TASK0058: see [native track culling](NATIVE_TRACK_CULLING.md). `Show LOD` remains
+an explicit debug-only bypass; disable it for normal visibility/performance checks.
+
+### Camera movement and particle recovery gaps (TASK-0059)
+
+Fast movement/rotation must not unload scenery when an untranslated particle blend
+is encountered. Unsupported blend-bound quads are counted and explained below the
+debug controls; supported particles and normal track draws continue. This does not
+mean the missing high-alpha compositor is restored. `Reset Camera`/R returns to
+current track start/forward. New delivery is local/task0059/delivery; earlier
+native launch shortcuts forward to it. Native visibility rules are unchanged.
+
+The coordinate overlay displays `Draw calls (total)` from Godot's `Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME`, updated each UI frame from the last rendered frame. This is the engine-wide total across rendered viewports, rather than a native command estimate.
+
+TASK-0065 adds expandable **Render statistics** with last-frame per-viewport visible/shadow/canvas draws and primitive counts, plus a JSON camera/control diagnostic export. TASK-0066 removes the track allowlist: the optimized profile enables matrix batching for every track under common state-based eligibility; car/capture and other generic state fallbacks remain. The known Track24 colour discrepancy is not yet repaired. See [dense-view results and rollback](PERFORMANCE_TASK0065.md).
+
+See [global policy and current validation limits](PERFORMANCE_TASK0066.md). All future optimizations use global rendering-state rules rather than track-ID allowlists.
+
+TASK-0067 displays **Triangles/primitives** beside the global draw-call counter beneath coordinates. Both read Godot Performance monitors for the last rendered frame; the primitive total includes triangle, line and point primitives across rendered viewports. There is no added GPU readback.
+
+
+## Port-side wireframe display (TASK-0074)
+
+Open **Effects > Debug (Godot) > Wireframe debug** to inspect geometry edges.
+The checkbox defaults off and currently supports Vulkan Forward+ only. It uses
+Godot viewport debug draw, not replacement GS materials or recovered behavior.
+The direct main viewport and compositor source colour viewport switch together;
+encoded depth, history and reflection consumers keep their existing modes.
+Restoring Original Defaults, unloading the track or exiting the scene disables
+the diagnostic and restores the previous main viewport debug mode. New colour
+viewports created while enabled receive the diagnostic on the next host update.
+
+This is a script-only adapter through the existing Effects descriptor/action
+chain; no DLL rebuild or native selection/physics changes are needed. No helper
+node or per-frame polling exists until first enabled; polling stops when disabled.
+Forward+ uses the engine's viewport wireframe mode, with no startup wireframe
+resource generation enabled. API reference: [Godot RenderingServer](https://docs.godotengine.org/en/stable/classes/class_renderingserver.html#enum-renderingserver-viewportdebugdraw).

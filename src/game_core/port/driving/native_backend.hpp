@@ -19,6 +19,13 @@ public:
     // Port-side read-only inspection anchor for evidence/regression capture.
     std::uint32_t physics_car_address()const{return mover_;}
     const StaticCollisions& static_collisions()const{return collisions_;}
+    const TrackEnvironment* track_environment()const{return track_contact_.environment.get();}
+    unsigned terrain_at_body(Memory&,std::uint32_t car);
+    // Port visual transaction: original terrain counters are separate from force
+    // integration. A failed effect dependency must not publish partial counters.
+    void visual_effects(const std::function<void(Memory&,std::uint32_t)>& apply){
+        if(!initialized_)return;Memory next=state_;apply(next,car_);state_=std::move(next);
+    }
     void collision_geometry(std::vector<std::uint8_t> bytes){collision_geometry_=std::move(bytes);collision_geometry_available_=true;reset();}
 private:
     void initialize(Memory&,const Config&);
@@ -30,12 +37,16 @@ private:
     PlaneContact plane_;
     TrackContact track_contact_;
     StaticCollisions collisions_;
+    CollisionSoundSelector collision_sound_selector_;
+    TireAudioMixer tire_audio_mixer_;
+    SplashAudioMixer splash_audio_mixer_;
     std::vector<std::uint8_t> collision_geometry_;
     bool collision_geometry_available_=false;
     ContactProvider* contact(){return track_contact_.environment?static_cast<ContactProvider*>(&track_contact_):static_cast<ContactProvider*>(&plane_);}
     std::array<SurfaceMaterial,5> catalog_;
     std::vector<SurfaceMaterial> track_catalog_;
     bool loaded_=false,initialized_=false;
+    bool horn_input_=false; // Port event-edge ownership; commits with Memory.
     std::uint32_t mover_=0,car_=0,controls_=0;
     std::uint64_t step_=0;
     SkidArena skid_arena_;

@@ -1,5 +1,275 @@
 # Progress log — session narrative, newest first
 
+## 2026-10-21 TASK-0081 - Recovered frame state and ResetCar leaf
+
+Implemented exact Begin/FinishMovement state slices in original car.cpp with
+explicit port-owned entry points. NativeBackend captures old motion once before
+movement and computes acceleration/odometer/distance once after collision retries,
+inside the existing candidate transaction. Full Car entries still throw for
+topology/path/Player remainder. Complete ResetCar001BD6C0 now initializes fixture
+state while preserving original position/distance/control/W fields and store order.
+
+Deferred reset no longer disappears: after every PhysicsCar Move, a pending
+ResetMe rejects the candidate at original ResetToRoutePoint00132FB0, preserving
+the committed pose/clock/request. Full route recovery remains unimplemented.
+E-0081-R01 establishes route data exists in Track11 (16 exactly framed routes),
+but distance-aware point selection needs persistent wrapped track progress and
+TrackedController ownership. No nearest-XY/spawn/host restart replacement.
+E-0081-L01 exact listings/type evidence and E-0081-R01 dependency captures are
+indexed in reverse/task0081/evidence.json. New route records are Decompiled only;
+ResetCar is Implemented and full Begin/FinishMovement remain partial. No Verified.
+
+Validation: native two directly affected tests passed2/2 initially13.50s and after
+final store-order matching16.81s. Broader driver/backend/engine/drivetrain/surface/
+mover/contact/track regression8/8 passed40.75s before that store-order adjustment;
+the directly affected pair was then rebuilt/rerun. Final Godot ps2_port build
+passed. Strict successor scope6/6 tests and historical79 scope5/5 passed. Exact
+commands, tool pins, final closure checks and limitations are recorded in TASK0081.
+No full suite/graphical/original-runtime comparison, no commit/proprietary additions
+or Ghidra mutations. Existing workspace changes preserved.
+
+TASK0081 closure: class-members/migration/single-chain/preservation4/4 passed,
+27.63s. Generation/--check,35-capture/14-record metadata checks and whitespace
+review passed. No frozen predecessor review or unrelated body changed.
+
+Next action: recover route/signpost field bridge and loading, persistent
+TrackPathCoordinate progress/length-wrap and TrackedController point ownership,
+then connect original ResetCore/ResetToRoutePoint. This bounded first stage is
+complete; the unsupported route guard must remain until real recovery exists.
+
+## 2026-10-21 TASK-0080 - End-to-end driving chain review
+
+Reviewed host input through driver, physics, contacts and publication, plus
+original Car/World frame orchestration. E-0080-L01/I01/P01 preserve36 fresh
+read-only Debug decompilation captures with SHA-bound import provenance and
+public response-hash index reverse/task0080/evidence.json. Twenty new function
+records are Decompiled only. No runtime code or existing status changed.
+
+Most immediate gap is deferred reset: BottomOut/PleaseResetMeLater produces
+Car+854, original Car::Move00131B90 consumes it through route-point recovery,
+but current fixture does not. Full Begin/FinishMovement path, acceleration,
+distance and out-of-topology recovery are missing. Existing ordinary engine,
+clutch, suspension, tire, rigid body and static impulse chains are connected.
+
+Input findings include device0-only default joypad mapping (synthetic confirmed),
+missing disconnect ownership/wheel classification, SPORT_SHIFT2 hidden behind
+validation restricted to0/1, standalone transmission selection and gamepad action
+coverage. Original byte preprocessing differs from explicit normalized host input.
+Fresh0013C028 police/BeACop gates supersede TASK0079 generic nitro-next priority.
+Special terrain, damage-dependent handling/post-impact events, Smokeable/multicar,
+full effects/audio/haptics and race ownership remain separately scoped gaps.
+See reverse/task0080/driving-chain-audit.md for concrete source/evidence and order.
+
+Validation: six native targets rebuilt (no work), matching CTest subset6/6 passed
+in27.14s. Asset-free pinned Godot4.7.2 probe printed18 cases: device0 signed axes
+work, device1/3 produce zero. Public reproducible script:
+reverse/task0080/input-device-probe.gd. No actual unplug/hardware or original
+numerical trace, no graphical/full-suite run. New unit tests omitted because
+production code is unchanged. Closure source-protection/progress checks and
+exact commands are recorded in TASK0080. No commit, proprietary additions or
+Ghidra database edits. Existing workspace edits retained.
+
+Closure: existing_body_preservation/progress_tables2/2 passed,11.12s;
+generation/--check,36-capture/20-record metadata validation and git diff --check
+passed. New records remain Decompiled; no original verification promotion.
+
+Next action: scoped original route/controller/reset lifecycle recovery, using
+Car::Move00131B90 -> ResetToRoutePoint00132FB0 -> ResetCore00132DF0 and necessary
+Begin/FinishMovement state; do not replace that behavior with session restart.
+
+## 2026-10-21 TASK-0079 - Driving chain state lifecycle
+
+Scoped audit of Debug CarDriver, CarState, Engine and DriveTrain against the
+current native controller. Existing RealDriver/PhysicsCar torque, clutch,
+steering and shifting are connected; conservative dashboard address parsing
+undercredits grouped methods, overloads and inline setters. No blanket status
+promotion. Original allocation/replay/sound and non-null Player nitro are not
+added to the playerless fixture. See reverse/task0079/driving-chain.md.
+
+E-0079-S01 read-only Ghidra confirms CarState::BeginTimestep001BD938 resets
+CrossedWheelTerrain[3..0] to ROAD1, called from Car::BeginMovement00131D78 at
+00131E50. Implemented the full four-store function and called it once before
+Move/collision retries, preserving candidate-frame rollback. Other BeginMovement
+work remains outside the binding. No database writes or proprietary files added.
+
+Validation: cmake --build --preset native-debug --target driving_player_tests
+driving_backend_tests driving_engine_tests driving_drivetrain_tests
+driving_surface_tests driving_mover_tests -j 6 passed. ctest --preset native-debug
+-R '^(driving_player|driving_backend|driving_engine|driving_drivetrain|driving_surfaces|driving_mover)$'
+--output-on-failure: 6/6 passed,26.21s, including original-data backend and surface
+checks. New tests cover write extent, intra-frame maxima, snow-to-road reset and
+rejected-frame rollback. Python test_debug_driving_chain.py:6 passed;
+test_recovery_progress.py:29 passed. Godot extension build and final generated
+checks are recorded in the task. Existing native_backend.hpp:25 misleading
+indentation warning preserved. CMake3.29.2, Ninja1.12.0, GCC13.2.0,
+Python3.14.4; godot-cpp pin e4b7c25e721ce3435a029087e3917a30aa73f06b matches.
+
+Godot ps2_port build passed. Initial final contracts were4/5: the old TASK0077
+rendering-only freeze correctly rejected this task's two intentional function
+changes. A strict TASK0079 successor now pins only BeginTimestep and advance,
+retains immutable predecessor reviews and rejects other identity/stub/auxiliary
+changes. existing_body_preservation rerun:1/1 passed,7.87s. New TASK0079 scope
+tests5/5 and existing TASK0077 scope tests5/5 passed. complete_class_members,
+debug_driving_migration_rules, debug_driving_single_chain and progress_tables
+passed in the initial run. Generated progress/check and Git whitespace review
+passed. CarState now has7/18 uniquely evidenced Debug bodies (38.9%).
+
+No matched original Debug trace, graphical smoke or full-suite rerun; native
+checks do not establish PS2 equivalence. No commit created; pre-existing workspace
+changes preserved. Next: read TASK-0079 and DRIVING_GAPS.md, then recover original
+Player nitro dependencies in a new scoped task before enabling that input.
+
+
+## 2026-10-21 TASK-0078 - Concise collapsed progress dashboard
+
+User requested only a large overall count/percentage, collapsed CLASS coverage
+and collapsed Functions grouped by class; every list starts closed. The generator
+now owns the whole page, preserves the old page in PROGRESS_ARCHIVE_TASK0078.md,
+and retains source/evidence distinctions in the JSON. The headline counts only
+evidenced Retail bodies over its full inventory; class rows retain bound-method
+denominators and unknown totals. Shared entries deduplicate globally. Unowned
+functions remain Unassigned / global, with no inferred classes or invented names.
+
+The TASK0041 name export omitted unnamed Debug entries; E-0078-I01 derives a
+durable address-only 10069-entry inventory from TASK0073's already retained,
+complete SHA-bound catalog. No Ghidra mutation or new behavior assertion. Source
+statuses, game logic and original verification remain unchanged. P0 TASK0077
+rendering work remains incomplete after interrupted graphical controls; no further
+Godot runs are scheduled as part of this progress-layout request.
+
+Validation and final counts are recorded in TASK-0078. The save watcher and build
+refresh continue using the same entry points; the generated headline is inside
+the dashboard markers to avoid self-triggered save loops. Session prose stays in
+this log, rather than returning to the dashboard.
+
+Final validation: 29 tooling tests and2 focused CTests pass; wrapper/generated
+checks pass. Structural inspection confirms one headline and318 balanced details
+groups, all default-collapsed. Actual watcher testing with offline MCP mocked
+records exactly two refreshes (startup plus a debounced task save), with no output
+feedback. An initial timer-based fixture missed its intended edit; retry starts
+the edit after the initial snapshot and passes. The watcher exited; no background
+service was left running. Counts:419 class rows,17886 unique entries, headline
+30/7544 evidenced Retail bodies (0.4%). No native rebuild/graphics needed and no
+Verified promotion. Reproduce with tools/track_progress.ps1 -Once or -Check.
+
+## 2026-10-20 TASK-0073 - Automatic recovery progress
+
+Added deterministic SHA/address-keyed class/member accounting, generated JSON and
+Markdown, a save watcher and offline build refresh. Existing user changes were
+preserved. Shells, throwing templates, directly partial bodies and evidence-backed
+claims are separate; method totals remain unknown and statuses are never promoted.
+All repository text is English. No game logic, Ghidra annotations or assets changed.
+
+Read-only live MCP enumerated 7544 Retail and 10069 Debug entries, with no Debug
+bound-address misses and 254 Retail misses. Those misses are catalog/entry questions,
+not permission to discard records or infer whole-entry boundaries. Large responses
+use stored-output chunks. Current program info omits SHA-256, so configured import
+path plus original-file SHA binds provenance, explicitly without database-memory
+certification. Private catalogs/status stay in ignored local/progress.
+
+Usage and limits: docs/AUTO_PROGRESS.md. Exact final validation and continuation
+are recorded in TASK-0073. No original verification or commit is claimed.
+
+Final validation: 22 Python behavior tests and both targeted CTest checks pass;
+native-debug build completed all178 steps and exercised automatic refresh. The
+owned watcher smoke observed the real log save and updated its generated contents,
+then was stopped. No background process is left running. Scoped diff checks pass.
+
+## 2026-10-19 TASK-0071 - Vulkan migration and build-lock correction
+
+Preserved existing uncommitted work and the original DLL before changing the
+Windows default to Vulkan/Forward+. Added numeric-GS HDR viewport transport,
+CarViewer presentation, strict backend startup, global profile method metadata,
+selected-Track11 benchmark tooling and strict host-source successor checks.
+Bounded actual Vulkan vehicle/fusion/particle/Sun/sky/postprocess/lifecycle and
+ELISE reflection checks pass. Dense/nearby native packets agree across backends;
+pixels differ and HDR per-primitive COLCLAMP remains an explicit gap.
+
+The first graphical fixed-start series reports median-of-repeat wall32.737ms
+Compatibility versus24.277ms Vulkan. The paired gain8.460ms does not exceed
+baseline repeat spread8.518ms, so the conservative performance gate rejects it.
+An earlier minimized console run was excluded. Dense/route measurements are not
+final acceptance evidence: the user rebuild interrupted the ongoing matrix.
+No Verified or complete-performance claim is made.
+
+The user reported a build failure while the task-owned benchmark retained the
+workspace DLL. Reproduced ld Permission denied at linking, stopped only the owned
+matrix/benchmark, and reran `./build.ps1`: exit0. Bounded Vulkan frontend launch
+with --gpu-profile --profiling --profile-debug exited0 and exported120 frames.
+Subsequent checks use the isolated candidate project. The user's newly launched
+normal profile process is preserved; do not stop it or run competing FPS tests.
+TASK0071 remains active for the full criteria in its task file.
+
+## 2026-10-19 TASK-0070 - Global live ImGui profiling
+
+User clarified realtime in-game drawing, a global profile_debug.gd name, function
+hotspots and ImGui presentation. Delivered the persistent global collector and
+shared native ImGui panel with240-frame history, CPU/GPU/counter/function modes,
+pause/frame inspection, clear and120-frame export. Headless/global frontend
+capture works without a loaded track. Script entrypoints, native driving tick
+and existing renderer section timings are explicitly inclusive wall scopes.
+
+Actual ImGui input checks caught/fixed frontend viewer-input gating. Windowed
+buttons, function rows, headless console/diagnostic tests and real Running game
+scope capture pass. Native race runtime integration with profiling also passes
+focus/restart/failure/exit/re-entry. Normal root Debug DLL rebuilt after user window
+released its DLL lock; staging was used during the lock, no user process killed.
+TASK0070 exact source successor retires the old script path and carries inherited
+pins. Native logic/shaders/RNG unchanged; no full native sampling/FPS claim.
+
+## 2026-10-19 TASK-0069 - Godot4.7.2 and profiler-driven diagnosis
+
+User explicitly requested direct runtime upgrade without an old-engine baseline,
+plus the active rendering API in the title. Official archive checksum/version
+checked; all current build/test/launch paths select4.7.2. Retain godot-cpp ABI
+pin; GPU particle-layout/Sun/postprocess/lifecycle5/5, headless controls/mesh/UI
+diagnostics, actual OpenGL title and14 custom monitors pass. Normal Debug build
+and editor import pass. New exact source successor carries inherited auxiliary
+pins and TASK0068 port caches; old frozen review JSON stays unchanged.
+
+Short current-pose warm profiler capture:2880x1695 colour/depth GPU medians
+4.38/1.78ms; Sun synchronous readback wall5.78ms despite targetGPU0.019ms.
+4096->16byte reduction does not materially reduce the wait and stays off.
+History timestamp anomalies remain unresolved; do not add viewport times or
+claim60FPS. Native/image cache fallback parity passes at the pose and nearby;
+30-track static census covers60 props-on/off records. Track24 known colour debt
+is not waived. Results and reproduction: docs/PERFORMANCE_TASK0069.md.
+TASK0068's broader unimplemented GPU experiments remain active/deferred explicitly.
+Bounded normal frontend boot also selects4.7.2/OpenGL and exits0; forced early
+shutdown retains one AudioStreamWAV and AudioStreamPlaybackWAV. Preserve that
+cleanup warning as a limitation; it is not evidence of a render-object leak or
+normal user-close behavior.
+
+## 2026-10-19 TASK-0061 - Live coordinates and host UI DPI
+
+Completed camera HP2/Godot header, logical UI/physical framebuffer-input contract,
+revisioned fonts and effective Windows per-window DPI. UiDisplay scales host text
+in Debug/Release with original font baselines and weak lifecycle ownership. No
+original glyph/world/render-resolution changes. Native scale2.0, Track11 forced
+100/150/200/100 windows PASS; small-window header containment fixed. Console/viewer
+regressions and Release text/native race lifecycle PASS. Debug3/3,Release2/2 tests
+and9before/14after strict host-only review PASS. Physical cross-monitor/non-Windows
+checks remain unavailable, no Verified/FPS claim. Delivery local/task0061/delivery,
+all8DLLs/flavor and hashes, workspace resource junctions. Build output isolated from
+the user's running root frontend; no process terminated or changes committed.
+
+## 2026-10-19 TASK-0060 - Track host memory residency
+
+Completed scoped Track11 ownership correction: lazy singleton/sky GPU surfaces,
+exact decoded-attribute merging without intermediate GPU upload/readback, bounded
+inactive draws with coordinated depth/uniform eviction, lazy debug overlays and
+release of consumed raw bundle. On-demand memory categories distinguish payloads
+from actual process bytes. Native culling/material/physics bodies unchanged;
+strict successor13before/20after PASS. Debug8/8 and Release7/7 targeted checks,
+GPU transport/ownership, actual viewer motion and Release race lifecycle PASS.
+Debug/Release delivery peaks1909.84/1896.73MiB vs4237.52/4225.77MiB predecessor;
+24native hashes and scoped1080p pixels match per flavor. Ownership clears/cancels
+to zero; residual process bytes remain unattributed without allocation tracing.
+PDH paging is system-wide and total process faults include soft faults. No PS2
+Verified or FPS claim. Delivery local/task0060/delivery with8DLLs per flavor,
+manifests and workspace resource junctions. No commit/staging. User's coordinate/
+DPI follow-up starts separate TASK-0061; user-owned root frontend remains running.
+
 This is the running narrative of how the port got here: what each session looked at, what it
 found, what it got wrong and corrected, and the exact commands it ran. It is append-mostly and
 deliberately long.
@@ -15,8 +285,18 @@ place and kept, because the fact that a session believed it, and why, is itself 
 ## Contents
 
 <!-- generated:contents:begin -->
-<!-- Generated by reverse/scripts/generate_progress.py on 2026-10-17. Do not edit by hand. -->
+<!-- Generated by reverse/scripts/generate_progress.py on 2026-10-21. Do not edit by hand. -->
 
+- [2026-10-21 TASK-0081 - Recovered frame state and ResetCar leaf](#2026-10-21-task-0081---recovered-frame-state-and-resetcar-leaf)
+- [2026-10-21 TASK-0080 - End-to-end driving chain review](#2026-10-21-task-0080---end-to-end-driving-chain-review)
+- [2026-10-21 TASK-0079 - Driving chain state lifecycle](#2026-10-21-task-0079---driving-chain-state-lifecycle)
+- [2026-10-21 TASK-0078 - Concise collapsed progress dashboard](#2026-10-21-task-0078---concise-collapsed-progress-dashboard)
+- [2026-10-20 TASK-0073 - Automatic recovery progress](#2026-10-20-task-0073---automatic-recovery-progress)
+- [2026-10-19 TASK-0071 - Vulkan migration and build-lock correction](#2026-10-19-task-0071---vulkan-migration-and-build-lock-correction)
+- [2026-10-19 TASK-0070 - Global live ImGui profiling](#2026-10-19-task-0070---global-live-imgui-profiling)
+- [2026-10-19 TASK-0069 - Godot4.7.2 and profiler-driven diagnosis](#2026-10-19-task-0069---godot472-and-profiler-driven-diagnosis)
+- [2026-10-19 TASK-0061 - Live coordinates and host UI DPI](#2026-10-19-task-0061---live-coordinates-and-host-ui-dpi)
+- [2026-10-19 TASK-0060 - Track host memory residency](#2026-10-19-task-0060---track-host-memory-residency)
 - [TASK-0032 — Debug CarViewer and TrackViewer scaffolds (2026-10-14)](#task-0032--debug-carviewer-and-trackviewer-scaffolds-2026-10-14)
 - [TASK-0031 — F8 debug console and independent Debug FPS (2026-10-14)](#task-0031--f8-debug-console-and-independent-debug-fps-2026-10-14)
 - [TASK-0030 — Concise README completion (2026-10-13)](#task-0030--concise-readme-completion-2026-10-13)
@@ -76,6 +356,35 @@ place and kept, because the fact that a session believed it, and why, is itself 
 - [TASK-0048 - Real TrackViewer and track physics](#task-0048---real-trackviewer-and-track-physics)
 - [TASK-0049 - Track orientation and contact debug display](#task-0049---track-orientation-and-contact-debug-display)
 - [TASK-0050 - Track/car proportions and outside-camera projection](#task-0050---trackcar-proportions-and-outside-camera-projection)
+- [TASK-0052 checkpoint (2026-10-18, incomplete)](#task-0052-checkpoint-2026-10-18-incomplete)
+- [TASK-0052 subsequent validated checkpoint (2026-10-18)](#task-0052-subsequent-validated-checkpoint-2026-10-18)
+- [TASK-0052 passing-build delivery requested (2026-10-18)](#task-0052-passing-build-delivery-requested-2026-10-18)
+- [TASK-0053 runtime regression checkpoint (2026-10-18)](#task-0053-runtime-regression-checkpoint-2026-10-18)
+- [TASK-0054 camera-motion projection regression (2026-10-18)](#task-0054-camera-motion-projection-regression-2026-10-18)
+- [TASK-0056: Show LOD user-requested increment (2026-10-19)](#task-0056-show-lod-user-requested-increment-2026-10-19)
+- [TASK-0056 authored LOD coverage clarification](#task-0056-authored-lod-coverage-clarification)
+- [TASK-0057 - Track culling / generated LOD investigation complete](#task-0057---track-culling--generated-lod-investigation-complete)
+- [TASK-0058 native culling integration complete (2026-10-19)](#task-0058-native-culling-integration-complete-2026-10-19)
+- [TASK-0058 delivery dependency correction](#task-0058-delivery-dependency-correction)
+- [TASK-0059 - Motion/rotation disappearance fixed with explicit particle gap](#task-0059---motionrotation-disappearance-fixed-with-explicit-particle-gap)
+- [TASK-0062 - 2026-10-19](#task-0062---2026-10-19)
+- [TASK-0063 - 2026-10-19](#task-0063---2026-10-19)
+- [TASK-0064 - Live viewer draw count](#task-0064---live-viewer-draw-count)
+- [TASK-0065 - Track11 dense matrix submissions](#task-0065---track11-dense-matrix-submissions)
+- [TASK-0066 - Global batching without track-ID exceptions](#task-0066---global-batching-without-track-id-exceptions)
+- [TASK-0067 - Live triangle/primitive counter](#task-0067---live-triangleprimitive-counter)
+- [TASK-0072 worker integration,2026-10-20](#task-0072-worker-integration2026-10-20)
+- [TASK-0075 - Original wheel particles and current driving gaps (2026-10-20)](#task-0075---original-wheel-particles-and-current-driving-gaps-2026-10-20)
+- [2026-10-20 TASK-0076 driving render retention](#2026-10-20-task-0076-driving-render-retention)
+- [2026-10-21 — TASK-0082 vehicle lights, horn and engine audio](#2026-10-21--task-0082-vehicle-lights-horn-and-engine-audio)
+- [2026-10-21 — TASK-0083 collision and drift audio](#2026-10-21--task-0083-collision-and-drift-audio)
+- [2026-10-21 — TASK-0084 recovered Test drive camera](#2026-10-21--task-0084-recovered-test-drive-camera)
+- [2026-10-21 TASK-0085 GPU particle implementation](#2026-10-21-task-0085-gpu-particle-implementation)
+- [2026-10-21 TASK-0086 original vehicle light sprites](#2026-10-21-task-0086-original-vehicle-light-sprites)
+- [2026-10-21 TASK-0087 Track12 reported driving gaps](#2026-10-21-task-0087-track12-reported-driving-gaps)
+- [2026-10-21 TASK-0088 original POV and held lookback correction](#2026-10-21-task-0088-original-pov-and-held-lookback-correction)
+- [2026-10-21 TASK-0089 original water effects](#2026-10-21-task-0089-original-water-effects)
+- [TASK-0090 - C++ portability audit (2026-10-21)](#task-0090---c-portability-audit-2026-10-21)
 
 <!-- generated:contents:end -->
 
@@ -2011,3 +2320,644 @@ matrix tests cover4:3,16:9 and portrait, failed entry and driving return. The or
 follow/spring/obstruction camera remains unrecovered; no claim that this projection
 alone explains all reported visual differences. See reverse/task0050 and TASK0050
 for exact checks and final regression. No C++body changes or historical pin changes.
+
+## TASK-0052 checkpoint (2026-10-18, incomplete)
+
+Closed the TASK0051 baseline96/98 plus two corrected regressions and the isolated
+Release windowed runtime check. Historical source-review pins remain frozen.
+TASK0052 adds a shared native visual-frame description, public session Effects
+gates, original camera ranges and CalculateH, indexed preparation and changed-only
+GPU parameter submission. Main/capture rendering shares Ps2TrackRenderer's actual
+submit function. Native sky, weather query, Sun/shadow helpers, postprocess stages
+and AcidFX slices retain separate Retail/Debug evidence and original ownership.
+
+Important counterevidence: Roadshine C3 and fused blend tests agree with the
+translated original math, so no arbitrary strength reduction was introduced.
+Godot's depth texture excludes transparent roads in the tested backend: the port
+uses matching cached depth variants of the same source meshes/material discard
+rules. Original ScreenWidth512, not host1920, drives native LOD for every view.
+Depth shader programs must be shared; compiling one per strip caused avoidable
+first-entry stalls. Reflection targets are six64 faces and one persistent256 atlas,
+with unresolved per-draw PSMCT16 precision explicitly reported.
+
+Tests and exact pending work are in the active TASK0052. The full live-car route
+is still too slow (Debug Track11 median80.91ms before subsequent batching work),
+so browser-only timings are not60FPS acceptance. Sun/AcidFX closure, full Release
+all30 profiling, actual window UI checks and final successor audit remain pending.
+All captures/binaries/assets stay under ignored local or external directories.
+The isolated test DLL has not been promoted to godot/bin. No Verified promotion.
+
+
+## TASK-0052 subsequent validated checkpoint (2026-10-18)
+
+Ghidra read-only access restored. Integrated actual WorldEffects packets and common
+Sun/scenery/particle alpha ranks, fixed sky far-plane sign that overpainted opaque
+cars, added cached depth-mesh discovery/change notifications and isolated lifecycle
+ownership. Added actual ImGui click, original-emitter GPU and sky negative-control
+fixtures. Independent race scene now forwards UI input and clears captured driving
+controls. Debug99/99 nonGPU and6/6 window regressions pass, plus separate particle
+and ImGui window tests. Release92/93 initial, failed symbol-link metadata corrected
+by standard class generator then4/4 rerun passes.80 new version/address-bound symbol
+entries retain Decompiled status. Explicit TASK0052 source successor audit passes,
+13 negative review tests pass, historical0051 unchanged. No task-complete/Verified
+claim or normal-DLL promotion. Full commands/log paths/remaining prerequisites are
+in the active task. All30 Release performance sweep still running; Track11 measured
+37.304ms median,46.974msP95,69.383msP99 with original defaults at1080p after cache.
+
+
+## TASK-0052 passing-build delivery requested (2026-10-18)
+
+User deferred60FPS work. Stopped only the owned performance process, preserving
+partial metrics; no new optimization patches applied. Promoted current Debug /
+ImGui build to normal godot/bin and retained Debug/Release copies plus old DLL
+backup under local/task0052/delivery. Debug build cache now uses the normal project
+again. Task remains active for explicit original-rendering gaps and later performance.
+Final build/test results and shortcuts are recorded in the delivery manifest.
+
+
+## TASK-0053 runtime regression checkpoint (2026-10-18)
+
+Fixed the evidenced exact-zero VU reciprocal-square-root carrier in Debug
+SkidSet001A8150, retaining nonzero underflow as an explicit gap. Removed host
+ignore_culling from custom-projected sky/Sun/particles: it bypassed camera layer
+masks and leaked all capture skies into main/depth views. Camera-frustum custom
+bounds preserve normal layer isolation. Track11 fixed-pose draws3921 ->1912;
+Sun-facing original GPU coverage0 ->1024, road-occluded0. Original native visibility
+remains14/128 sections,230 considered,102 visible/8407 loaded instances. Added
+read-only Visibility counters. Roadshine OFF now skips its extra texture sample
+while retaining road/water mask alpha; unchanged enabled integer fusion is tested.
+Vehicle environment materials cache stable bindings and unsupported31C diagnosis,
+while validating/updating the capture matrix each call. Shared builds/tests and
+TASK0053 successor review are in progress; no Verified or60FPS claim.
+
+
+TASK0053 validation complete over bounded fixes: Debug100/100 nonGPU and
+Release94/94 including required preservation reruns after explicit review;
+9/9 selected GPU/window checks including race rerun with Dummy audio driver.
+Release independent actual window PASS for real track/car, controls, failure,
+restart and re-entry. Passing binaries/launchers with hashes at
+local/task0053/delivery. Remaining driving CPU submission cost is explicitly open;
+final wet-pose Roadshine on/off/on34.973/33.445/33.791ms, same715draws. No broad
+stutter-resolved or60FPS claim. Ghidra/read-only and original evidence status
+unchanged. TASK0053 remains active for the remaining performance criterion.
+
+
+## TASK-0054 camera-motion projection regression (2026-10-18)
+
+User reports Sun and particles incorrectly follow camera. Actual original Sun
+worldpoint diagnostic reproduced vertical mirror: expectedY370.73 vsobserved169.88
+in540px viewport while X agrees. Explicit POSITION bypassed Godot render-target
+projectionY sign. Shared host screen helper now preserves that sign for both
+Sun and particle packets, including depth proxies. Native positions, simulation,
+layer quads, alpha/depth/readback unchanged. Corrected preliminaryY369.01; dynamic
+Sun GPU test passes, old53DLL fails it. Three moving-camera actualparticle tests
+pass but oldDLL also passed broadunion bounds; stronger isolated shader transport
+negative-control fixture is being added. Debug/Release builds pass; full tests
+in progress. TASK0054 has independent two-body source successor review; historical
+53 remains frozen. No original-console Verified claim.
+
+
+TASK0054 completion: Debug101/101, Release95/95; final shared GPU5/5 PASS.
+Strong Sun and asymmetric production-particle controls fail on frozen53 DLL,
+pass current build. Release actual-window fixtures respect original defaults
+(no Debug-only override); moving Sun/road occlusion and actualparticle/probe PASS.
+Both binaries promoted/copied with launchers/hashes at local/task0054/delivery.
+Only host projection corrected, no native source or physics delta. Original
+Verified unchanged. Next independent work remains TASK0053 CPU cost/TASK0052 gaps.
+
+
+2026-10-19 TASK0055: host optimization implementation. Frozen54 baseline DLLs
+and successor source review retained; current Debug/Release build PASS. Resource
+cache/dirty submission, closed vehicle depth-uniform contract and persistent
+particle mesh buffers implemented. Pure pool/particle GPU fixture PASS; reflection
+three nondegenerate ELISE poses exact atlas/final/color/rawdepth/native-packet PASS.
+First reflection fixture offset-8 was colinear and failed both variants; corrected
+fixture offset-4 without production math change. MultiMesh all30 stopped Track24
+pose50 on exact color mismatch; rawdepth equal; reuse-only isolation PASS. Keep
+MultiMesh experimental/off, no relaxed image threshold. All30 reuse correctness,
+independent occlusion/opaque gates and exclusive Release performance remain in
+progress. No FPS/default/Verified claim yet.
+
+
+TASK0055 all30 reuse GPU completion: TRACK_OPTIMIZATION_GPU_OK tracks=30,
+90 actual static poses exact final/intermediate-color/rawdepth and logical packet
+parity. Post-sequence forest-fire pair516active/91visible equal, exact pixels;
+clear/reload/invalid-track cleanup PASS. Log local/task0055/parity-reuse-all30.log.
+Counts differ from the initial single-track fixture because the renderer preserves
+its original RNG across prior track loads; each pair receives the same sequence.
+Benchmark creates fresh renderer/session each repeat, resetting this caller seed.
+
+
+Final cache correction: independent-process1080p probes isolated differences to
+car reflection: raw native-depth and reflection-disabled images exact. Shared
+materials yielded107 differing atlas pixels in all3 repeats; distinct materials
+removed atlas differences in all3. Remove material sharing entirely, preserve
+material identity. Native input/frame digests and camera/car pose bits match.
+Residual tiny independent-process car-reflection raster differences also occur
+within baseline repeats (1-18pixels); cause is unresolved, not waived as a zero-
+difference controlled test. GLES3 source already declares invariant gl_Position;
+no speculative precision/shader/depth patch was made.
+
+Strengthened controlled fixture now1920x1080, real Ps2DrivingRuntime first native
+snapshot, actual chase pose, real car capture binding, plus3 rotated/moving views.
+Final cache passes exact native packet/view counts, atlas/final/color/rawdepth in
+all4 poses (reflection-native-drive-1080p.log). All30 final-cache rerun in progress.
+Public read-only render-target getter available Release for untimed diagnostics;
+no Debug effect override relaxed. Successor review now17before/63after, host only.
+Earlier14.9% wall result used unsafe sharing and is diagnostic history, NOT final
+performance acceptance. Benchmark loading time is deterministic and final native
+digest/pose bits plus color/depth/atlas captures occur outside sampled loops.
+Temporary car-reflection-off capture occurs only after all samples/original
+captures as isolation evidence, never to improve measured frames.
+
+
+FINAL no-material-sharing candidate: all30/90pose exact final/color/rawdepth and
+native digest PASS, dynamic post-sequence particles516/91 equal, failure/clear
+cleanup PASS (parity-stable-cache-all30.log). Same final source104 non-GPU Debug
+and98 Release checks pass;14 final GPU checks in progress. Snapshot hashes at
+local/task0055/final-benchmark-inputs.json. No more production changes planned.
+
+Final timed paths are local/task0055/final-baseline/all30.json and
+local/task0055/final-optimized/all30.json; preserve earlier partial/diagnostic
+directories. Run frozen54 baseline and final-cache optimized sequentially, no
+concurrent builds/tests. Current benchmark optional --performance-isolate-reflection
+only generates an extra untimed reflection-off diagnostic after original samples;
+default false, not used for final timing. All timed samples retain original effects.
+Comparator requires matching serialized pose and final native packet evidence,
+in addition to all30/120/600/3, relative gain and no persistent wall tail regression.
+
+
+2026-10-19 TASK0055 final acceptance: frozen54/final55 Release1080p all30,
+120 complete-route warmup/600 samples/3 repeats each (180 complete runs),0 failures.
+Comparator PASS; identical camera/body pose bits and native packet/sections/zone/
+visible-instance data, effect permissions and draw distributions. Median-route
+wall-10.0328%, prepare-27.6223%, host submit-33.1621%; no persistent>5% wall median/
+P95/P99 regression. GPU timers unavailable. Median load10.116s->10.166s and worst
+loading frame8.289s->8.896s: no loading improvement claimed. Report at
+docs/PERFORMANCE_TASK0055.md; raw data/captures ignored under local/task0055/final-*.
+Safe profile promoted only after gates; both Debug/Release constructor checks
+pass. Isolated DLL/config delivery snapshots keep shared workspace script/asset
+junctions and external ELF/assets; no proprietary data added to Git. Debug118/118,
+Release98/98, final all30 GPU and enhanced1080p native-driving/reflection checks
+pass. Material sharing removed after atlas evidence; MultiMesh failed color gate;
+occlusion/opaque had no eligible work and remain off. Source review17before/63after
+port-only identities preserves frozen54/native/physics. No original Verified claim.
+
+### TASK0053 - explicit experimental MultiMesh trial, 2026-10-19
+
+User requested trying existing instancing. Added ignored delivery MultiMesh viewer/
+Release race launchers; Release startup flag assertion passed (instancing true,
+safe caches true, occlusion/opaque false). Accepted default/source/binaries unchanged.
+Known TASK0055 Track24 color mismatch remains; no new FPS/equivalence claim.
+See TASK0053 trial section for reproduction and rollback.
+
+### TASK0053 support / E-0051-S02: original track LOD resource recheck
+
+User asked whether original track assets actually contain LOD. Read-only scan:
+all30 TRACKB LZC packages have multi-model SceneryInfo rows; TRACKB11 has398
+2-model rows, TRACKB21 has277 2-model and130 3-model rows. Detailed counts,
+offsets, thresholds and coverage limitations appended to reverse/task0051/scenery.md.
+No implementation changes; original runtime comparison still absent.
+
+### TASK0056 - Godot HLOD source freeze and validation checkpoint
+
+Implemented optional engine-selected original authored levels in the shared renderer,
+independent core descriptors, original section eligibility and per-view persistent
+range/depth resources. Original selection remains default. All30 host load/view/clear
+passes, including original default texture-table binding exposed by all-level warmup.
+E0056T01 restores bounded original eSolid/GetTextureInfo owners and retains source
+aliases; no generated fallback pixels. Both ELF entry byte ranges match pinned files.
+Prewarm/cancel preserve visual clock; GPU projection/range/capture and viewer/drive/
+independent race checks pass. Debug107/Release101 non-GPU checks and final4 targeted
+checks pass; final source review11before/19after preserves all prior native bodies.
+Final original14-GPU regression and exclusive selected-route fresh-process benchmarks
+run via local/task0056/final-regression-performance.ps1; see TASK0056 exact continuation.
+No FPS improvement/default promotion claimed before measurements. No Verified claim.
+
+## TASK-0056: Show LOD user-requested increment (2026-10-19)
+
+Added port-only TrackViewer ImGui checkbox/action/snapshot forwarding. Shared
+renderer expands original levels in either backend, disables level ranges while
+checked, restores ranges when unchecked, and keeps original-mode draw-cache keys
+separate. Depth/environment passes inherit source-node range state. No native
+physics/recovered behavior changed. Prior benchmark is no longer running; its
+partial outputs are diagnostic and do not establish performance improvement.
+
+Debug and Release: `cmake --build build/godot-debug -j 6` and
+`cmake --build build/godot-release -j 6` passed (GCC13.2/Godot4.4.1).
+Targeted CTest debug_console/static_lods/track_hlod_source_review_rules/
+progress_tables: 4/4 passed. Both-backend actual-window toggle/lifecycle smoke
+passed SHOW_LOD_OK: local/task0056/show-lod-smoke.log. Standalone --check-only on
+asset_viewer.gd cannot resolve DebugTools autoload in that invocation; the complete
+scene smoke is the valid entry check. Delivery DLL snapshots refreshed; no commit.
+PC checks do not imply PS2 Verified. Task56 broader performance closure remains.
+
+Show LOD final: full scene entry TRACK_VIEWER_SMOKE_OK; Release debug_console
+1/1 PASS. Standalone check-only autoload limitation did not occur in actual scene.
+User requested one representative track only; no new catalogue sweep. GPU tests
+restored opt-in OFF. Debug B5989342A24A054C835812C1006B5796C85AF908956C56B7DF3AE4F5CE9205C2;
+Release04231C65DD003E9704A9346FC2E257EBDECD016D066893A7366033288FDAD829.
+
+## TASK-0056 authored LOD coverage clarification
+
+User observed mostly vegetation switches. Single Track11 asset inventory confirms
+6922 single-distinct-reference/1483 two-reference non-sky instances. All24 multi
+model tuples use REDWOOD/SHRB/FORESTLINE names;50 road-named tuples are single.
+E0056H02 documents bounds and six unresolved slots. Built static_lods_tests and
+ran --assets11 --lod-inventory PASS. No all30 run, no new recovered/runtime changes.
+
+## TASK-0057 - Track culling / generated LOD investigation complete
+
+Read-only Ghidra Retail00150950/00150378/0014FE18 refresh confirms original
+hierarchical selection, not whole-track submission. Current HLOD CPU candidate
+expansion differs. Godot4.4.1 official generator/ArrayMesh/GLES3 paths inspected.
+Tracked headless Track11 probe passed24batches,5generated terrain levels, sampled
+4017->3717triangles; no road reduction in sample. Synthetic reference1LOD. Not a
+pixel, FPS or original-equivalence test. See TRACK_CULLING_AND_GENERATED_LOD.md
+and reverse/task0057 results. Default code/physics unchanged. User one-track scope
+respected; no all30 sweep. Follow-up is optional cached constrained terrain mesh LOD
+plus original candidate culling, not blanket automatic decimation. No commit.
+
+## TASK-0058 native culling integration complete (2026-10-19)
+
+User revoked host HLOD. Original only accepted, all normal main/capture frames call
+original runtime; Show LOD explicit diagnostic retained, host ranges0. Nine reviewed
+port body replacements, original culling/physics unchanged. Source chain now has
+TASK0058 successor pinned to TASK0056, both source-review test suites pass.
+Fresh read-only Retail0010E638/0010CCB0/00150D98/eCreateView001070C0, paired Debug
+view0010EA18/Camera001566E0 and original defaults inspected. No unknown wholecamera
+claim. Debug/Release cmake --build -j6 PASS; --assets11 runtime PASS; targeted6/6
+CTest PASS; native GPU and viewer/Test drive/Release race lifecycle+all6capture views
+PASS. No all30 run. Native start view128sections/8407instances->14/203considered/
+62selected; camera motion54/52selected. Evidence E0058R01, docs/NATIVE_TRACK_CULLING.md.
+Task56 deferred, archived launchers forward58, current native launchers and DLL pins
+under ignored local/task0058/delivery. Inspected start screenshot; offset100 screenshot
+is off-road water because test camera follows a straight vector, not road topology.
+No FPS or original Verified claim. No commit; unrelated edits and external assets kept.
+
+TASK0058 final closure: Release targeted4/4 PASS, final source audit9/9 PASS,
+diff whitespace check PASS. Native launch snapshots pinned in BUILD-INFO.json.
+All owned test windows closed; no catalogue-wide test was run this increment.
+
+## TASK-0058 delivery dependency correction
+
+User reported Windows Error126 missing avcodec62/avutil60/swscale9 in the actual
+Debug delivery folder. Root cause: snapshot code copied only extension/config;
+prior checks used workspace and staged-build directories that already had sidecars.
+Copied all8 matching built runtime DLLs into BOTH delivery bin folders, including
+swresample6 and transitive FFmpeg libraries. Added tools/stage_godot_runtime.ps1
+with mandatory dependency presence checks and per-flavor SHA256 manifests.
+Extension hashes unchanged; no native/recovered code or rebuild needed.
+Direct delivery Debug actual-window viewer/Test drive/return/clear passed
+TRACK_NATIVE_VIEWER_DRIVE_OK. Release direct delivery starts and native captures
+passed; final lifecycle result is recorded below after completion. No new tracks.
+
+Delivery correction final: direct task58 Debug viewer/Test drive PASS and direct
+task58 Release RACE_RUNTIME_SMOKE_OK PASS, including exit/re-entry. Logs
+local/task0058/delivery-debug-check.log and delivery-release-check.log contain no
+extension/dependency errors. Both manifests have8DLLs and matching extension pins.
+Packaging follow-up closed; no all-track test, native-code change or commit.
+
+## TASK-0059 - Motion/rotation disappearance fixed with explicit particle gap
+
+Initial distant/return and68pose probes plus180continuous moved/rotated frames did
+not trigger fatal state. User confirmed Track11 and simultaneous rotation; zone
+crossing probe reproduced DUSTA_CS guard. Entire-atlas bound false-positive was
+separated from real high-alpha gap (vertex199/tile89). Read-only Retail00128DA0/
+Debug00128EF8 confirms original RGBA255 clamp, so no fake alpha attenuation.
+Corrected atlas footprint, cached immutable bounds, caught/reported only per-quad
+NotImplemented, compacted valid node/stream/alpha ranks; no global disable or
+native/physics change. Unsupported quad omission is visible and incomplete; full
+signed GS compositor is NOT claimed. Corrected Reset Camera world-origin bug.
+
+Build Debug/Release PASS, targeted6/6 PASS, source successor3before/4after PASS.
+Direct task59delivery Debug motion/reset PASS3gapframes with supported particles;
+Release native/gap/culling/lifecycle PASS1gapframe. Only Track11 tested. Both bins
+have8runtime DLLs, BUILD-INFO pins. Previous58launchers forward59. Inspected actual
+fixed-gap.png shows visible scene and warning. Test harness Reset/autoload/path
+failures preserved in task notes; final runs clean. Commands: --script
+res://scripts/debug/track_camera_motion_smoke.gd -- --track-load=11 (Debug);
+res://scripts/runtime/track_native_culling_smoke.gd -- --particle-gap-smoke
+--native-capture-dir=<absolute directory> (Release). No commit or Verified claim.
+
+## TASK-0062 - 2026-10-19
+
+Added default-on TrackViewer Visibility Render props. Port-only transformed
+scenery filter before shared main/reflection/HLOD batching; world-identity
+geometry/collision preserved. Shared session gate and defaults/action/snapshot
+wiring. Native mixed-frame and settings tests pass; Debug bridge build passes.
+Staged headless controls PASS; actual ImGui window off/on PASS, Track11 commands
+1186 ->581 ->1186. Paused fixture explicitly redraws before count inspection. No recovered body changed, no PS2 Verified.
+
+## TASK-0063 - 2026-10-19
+
+User-authorized render analysis/optimization implemented, then user replaced long
+FPS matrices with static/native tests and drawcall statistics. Owned benchmark
+terminated. Completed30-track/60row CPU census, native state/RNG rollback parity,
+stream raw bytes and prior15image exact checks. Default state/transport/texture
+caches remove redundant work; Sun reduction/Copy cutout queue remain off.
+Debug/Release build and normal workspace build passed. Static table shows main
+colour batches Track12 993->49 and Track42 925->51 with Props off; conditional
+world passes1947/1847 include encoded-depth replay, before reflections/other
+producers. These are not actual total GPU calls or FPS results. Frozen source
+chain extended with exact port scope and auxiliary field/shader file hashes.
+See PERFORMANCE_TASK0063.md and TRACK_DRAW_COUNTS.md. No commit or PS2 Verified.
+
+## TASK-0064 - Live viewer draw count
+
+Added Godot last-rendered-frame global draw calls below TrackViewer coordinates. Reads Performance monitor once per UI snapshot without GPU readback. Header remains auto-sized. Normal Debug build and native debug_console passed; no performance sampling run. TASK0064 explicitly reviews only the two presentation adapter bodies.
+
+## TASK-0065 - Track11 dense matrix submissions
+
+Implemented viewport engine counters and full camera/control export/restore. CPU-pretransformed meshes failed exact depth parity, so raw local attributes plus per-vertex matrix rows retain shader arithmetic. Final optimized default is restricted to Track11 without a car visual consumer; native selection, LOD, alpha order, effect quality and RNG remain unchanged. Seven1080p default pairs are byte-identical with heavy totals2409->669/3003->689, plus three ordinary Track11 marker poses. Capture/Track24/opaque failures remain recorded and disabled; a viewer-to-car transition plus four actual reflection atlas/colour/depth checks pass through baseline fallback. Track24 default poses retain764/799/796draws and exact pixels. Mobile and Forward+ pass their own comparisons, but cross-backend outputs differ, so Compatibility remains.30-track CPU census covers60rows; no sustainedFPS or PS2-equivalence claim. Normal Debug build and13targeted native/UI/host/source checks pass. TASK0065 pins exact11-before/13-after port adapter changes and auxiliary sources without refreshing old reviews. See PERFORMANCE_TASK0065.md for reproduction and remaining work.
+
+## TASK-0066 - Global batching without track-ID exceptions
+
+User explicitly requested global optimizations. Removed Track11-only policy field and numeric predicate; the optimized profile now applies the same matrix planner to all tracks. Preserved generic state-based fallbacks and independent rollback. Normal Debug build and14native/UI/host/source checks pass. Track11 three marker images remain exact; Track24 now uses batching by default (764->266 and799->231draws), with its known second-view colour mismatch still failing exact image validation while depth/native packets match. Did not widen image tolerance or claim all-track visual/FPS acceptance. Source successor validates three exact port changes, freezes previous review bytes via explicit historical auxiliary snapshots and carries all inherited live auxiliary pins. Future optimization policy is global/state-based, never a track allowlist. See PERFORMANCE_TASK0066.md.
+
+## TASK-0067 - Live triangle/primitive counter
+
+Added Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME to the existing UI snapshot and same-row Triangles/primitives display beside draw calls. Global last-rendered-frame scope includes triangle/line/point primitives; no GPU readback or rendering/native logic changes. Normal Debug build updates workspace DLL; native debug_console and headless TrackViewer startup pass. TASK0067 reviews exactly two port function changes and carries all inherited auxiliary pins without refreshing frozen predecessor reviews.
+
+
+## TASK-0072 worker integration,2026-10-20
+
+Preserved the uncommitted checkout and pre-split DLL in ignored worker-baseline.
+Added a Godot-free CPU mesh builder, main-thread miss snapshots, native worker
+groups and same-view joins with ordered resource creation/upload. Native28/28
+relevant checks and engine0/2/4 packed-attribute/error/cache contracts passed.
+Pre-split vs split0/Safe actual driving723 ticks/seven native-resolution checkpoints
+passed8759 checks. Found inherited _notification delivery bypassed the old fixture
+override; an explicit virtual lifecycle hook preserves production behavior while
+isolating deterministic fixture focus. Earlier interrupted matrix runs are invalid.
+Confirmed native zone->section->tree->instance selection remains present: observed
+Track11 zone71 selects14/128 sections and considers235/8407 instances at first
+checkpoint. Threading never replaces this selection. Final matrix/report pending.
+
+
+TASK0072 closing worker checkpoint: full0/2/4 Safe driving image/state parity
+passes8759 comparisons per pair. Separate differs in colour/final/reflection
+hashes and reports wrong-thread RenderingDevice finalization/ObjectDB leaks.
+No engine-only attribution was run. User stopped repeated windowed tests; all
+owned running/queued Godot jobs cancelled before the timing matrix. No FPS gain
+claimed, no default changed, task active. Sector chain confirmed active and
+neighbour-zone/section exclusion tests added. Final builds/source pins recorded
+in the performance report; no proprietary data or captures enter version control.
+
+
+TASK0072 closing worker checkpoint:0/2/4 Safe driving image/state parity passes8759
+comparisons per pair. Separate differs in colour/final/reflection hashes and reports
+wrong-thread RenderingDevice finalization/ObjectDB leaks. No engine-only attribution
+was run. User stopped repeated windowed tests; all owned running/queued Godot jobs
+cancelled before timing. No FPS gain/default promotion, task active. Original sector
+chain retained and neighbour-zone/section exclusion tests pass. Debug/Release builds
+and native28/28 plus settled8/8 checks pass. No original Verified promotion.
+
+
+TASK-0072 CPU submission phase: implemented versioned bulk vehicle snapshots,
+source/order/field depth tracking, stable handles/names and per-view pure CPU math
+in the shared Godot native group. Debug/Release builds, native5+2, Python7+7+21,
+8759 bounded PC parity checks and552 unchanged core hashes pass. Necessary Godot
+permission was renewed. Four consolidated performance processes show no gain:
+drive median paired-0.430ms, moving rotation-2.090ms; all P95/P99 pairs regress.
+No default promotion:0/Safe, candidates off, failed residency/Separate off. Uniform
+reads-89.18% but8185 proxy creations persist; legitimate source churn defeats
+near-every-frame discovery cache. Math TU remains outside current host-O2 list;
+small-task snapshot/join costs need work. Raw maxima include frame719 sync export,
+so sustained/export-separated acceptance remains pending. Whole-frame GPU N/A.
+Task stays active, no60FPS/Verified claim, no commit. Continue from performance
+report and ignored cpu-submit-phase paired metrics; no more window runs queued.
+
+
+TASK-0074 completed: Effects > Debug (Godot) > Wireframe debug uses existing
+port-side descriptors/actions and a lazy renderer-owned Godot viewport helper.
+Default off; colour/root only; depth/history/reflection/native selection retained.
+Actual isolated Vulkan ImGui click/pixel/depth/recreation/default/exit smoke passes;
+no native rebuild or PS2 Verified claim. Private artifacts under local/task0074.
+
+
+## TASK-0075 - Original wheel particles and current driving gaps (2026-10-20)
+
+Preserved the pre-existing dirty workspace. TrackViewer preview controls no longer
+write FOV; initial/reset/aspect-ratio/real-track-drive-return checks retain default
+75/KEEP_HEIGHT. Driving and CarViewer/race policies remain separate.
+
+Read-only Debug trace E-0075-T01/C01/P01..P03/001/D02/D03 recovers per-wheel
+terrain smoke and rear tire-spew, saturating skid history, original source list
+order/copies, static config wheel positions, negative intensity and live current
+car velocity. World updates existing particles before terrain emission. Shared
+GLOBALB library plus INGAMEB textures feed the existing particle algorithms and
+renderer; no modern replacement particle behavior or physics is introduced.
+The one-car tool supplies distance0/outside camera/all-view car visibility.
+Dynamic storage clears without losing static groups/RNG. Flat synthetic depth
+is explicitly host-side; real-track consumers share native depth and alpha order.
+
+New native tests4/4, existing native regressions10/10 and seven related production
+host/projection checks pass. Exact two-reset x120-step visual-on/off trajectory
+comparisons pass. Vulkan flat and Track11 fixtures produce peaks469/467 and497/398
+active/visible with no reported gaps in those bounded runs. Screenshots inspected
+and ignored. Original probe timed out; no Verified or commit claim. Full terrain
+remainder, first-person/mirror/multi-car/damage and signed GS blending remain open.
+See DRIVING_EFFECTS.md, DRIVING_GAPS.md and TASK-0075 for commands/continuation.
+
+TASK0075 final strict successor review passed10 replaced/33 bounded or host
+identities and153 auxiliary pins;14 fail-closed review contract tests passed.
+Frozen prior review/scope bytes remain unchanged. New pass-scoped historical
+reuse removes repeated work without retaining caches across validation passes.
+An initial broader CTest run timed out in debug_driving_migration_rules. Direct
+verbose rerun of that unchanged suite passed12/12 in7.496seconds. The timeout
+cause is unresolved; it is not evidence of an original behavior mismatch or a
+confirmed historical-recursion defect in that unit suite.
+
+Final TASK0075 bounded CTest rerun passed6/6 in42.03s (new review,14 review
+contracts, class coverage/generator, original migration and single driving chain).
+The unchanged migration suite passed in7.51s; the earlier timeout is retained as
+an unresolved transient validation event, not a code defect diagnosis. Generated
+progress and scoped source/diff checks pass after completion.
+
+## 2026-10-20 TASK-0076 driving render retention
+
+User reported world disappearing mid-drive and expensive vehicle reflections.
+Found update_view/readback catch paths unloaded track+collision on rendering gaps;
+retained independently rendered car explains a compatible source mechanism, though
+field exception unknown. These catches now warn/expose per-frame error and retain
+loaded state for retry. Default/restore Environment capture is off; opt-in retained.
+Native settings, five initial CTests and controls host passed. Vulkan actual
+missing-camera fault retained geometry/topology and recovered; capture scheduling
+vanished when disabled and worked on opt-in. Inspected recovered road screenshot.
+Source successor permits six exact host slots; TASK0075 frozen snapshots untouched.
+14 predecessor review contracts and strict live source audit pass.
+Initial main link was locked by user's app; isolated build/tests succeeded without
+closing it. Later app exited independently; restored normal CMake output paths and
+main Debug build passed. New DLL is installed in godot/bin for next launch.
+See reverse/task0076/source-review.md for exact commands, versions and limits.
+No Verified or performance-percentage claim; if reproduced, use new warning and
+render_error/readback_error to investigate the exact dependency.
+
+## 2026-10-21 — TASK-0082 vehicle lights, horn and engine audio
+
+Recovered native lamp selection and original ON/OFF material assets; ordinary
+horn input also flashes headlights. H is a port-side binding. Decoded original
+MSH/MSB twelve-engine-plus-horn banks and recovered RPM/throttle/shift/timbre,
+volume and pitch mixer slices.49vehicle rows decode;15traffic rows reference
+unavailable bank47CB8E5A. Both driving hosts own playback via driving_audio.gd;
+pause/restart stop/reset host voices. See reverse/task0082 evidence and strict
+source-review.json. Full flares/SPU/stereo/replay/special audio remain unbound.
+Native4/4tests passed43.21s; Godot extension build passed; headless audio transport
+1/1passed1.64s. Dummy audio proves transport, not listening quality or original
+runtime equivalence. No Verified promotion and no commit. Next: authored flare
+marker/parameter/texture recovery; original executable comparison remains needed.
+
+## 2026-10-21 — TASK-0083 collision and drift audio
+
+Recovered original InGame impact variants, impulse/time/material gates and RNG;
+static collision event lifetime now produces one impact per collision. Restored
+persistent wall/wood scrape with nonlinear distance and original stepped fade.
+Original tire skid/squall/burnout state and four looping samples supply ten logical
+slots independently of skidmarks. Both driving consumers share playback transport.
+Evidence E-0083-A01/C01/T01 under reverse/task0083;24functionrecords indexed.
+Native5/5passed25.71s; final collision creation-order correction wall1/1passed13.23s;
+Godot final staged2/2passed5.33s. Strict review83 7/7 and preservation1/1passed;
+frozen82 unchanged. No Verified promotion or commit. Original spatial/SPU/cadence,
+rolling/damage/tire-impact and multi-car consumers remain outside bounded scope.
+Running user frontend locks normal DLL; final DLL validated under ignored
+local/task0083/godot-stage/bin. Window preserved; normal cache output restored.
+After closing it, run cmake --build --preset godot-debug --target ps2_port -j6.
+Next recovery: original spatial sound/service cadence; see completed TASK0083.
+
+## 2026-10-21 — TASK-0084 recovered Test drive camera
+
+Test drive now consumes bounded original exterior DriveCameraMover POV1/history,
+normal lookback easing and original topology clearance. V toggles front/back;
+mouse orbit temporarily overrides the live native pose and returns after1.5s idle.
+Godot default75verticalFOV/KEEP_HEIGHT replaces the old horizontal-FOV override
+by explicit user request. Focus/UI/exit lifecycle and viewer projection restoration
+are tested. Evidence E-0084-C01/M01/H01 under reverse/task0084;19entryrecords indexed.
+Native camera1/1passed3.42s including64configs/14fallbacks/wall/240drivingframes;
+five hostchecks passed16.37s including actualCarViewer and realtrack11. Strict84
+7/7 and preservation1/1passed; frozen83 unchanged. Final normal DLL built successfully.
+No commit or Verified promotion. Camera shake/pursuit/in-car/birdseye/DOF/full
+original topology cache and runtime comparison remain scoped future work.
+Next: read completedTASK0084 and recover remaining original camera services;
+reproduce with ctest --preset native-debug -R '^driving_camera$' and the hostsuite
+listed in the task. Keep user-requested Godot projection policy when extending.
+
+
+## 2026-10-21 TASK-0085 GPU particle implementation
+
+Scope: user-approved native emission/lifetime ledger plus optional Godot GPU
+simulation/draw backend, followed sequentially by TASK-0086 vehicle flares. No
+vehicle physics replacement or Verified promotion. Original emission replay and
+six native regressions passed. Actual Vulkan smoke, lifecycle and production
+shader state probes run on pinned Godot4.7.2 Intel Arc B390; raw evidence remains
+under local/task0085. The first counter-only GPU run was rejected after image
+inspection revealed no births. Explicit request_process_time caused double
+processing; use zero engine delta, shader epochs and committed
+RenderingServer::particles_request_process(baseRID) instead. Deferred commit and
+abort prevent failed host frames from submitting GPU births. Main-view timing
+only; capture faces reuse output. Native default remains pending the full matrix.
+A first benchmark attempt produced no samples because its driving harness still
+referenced TASK0084-removed yaw_offset; adapt the harness to driving_camera.yaw.
+That invalid capture remains preserved, and is excluded from performance claims.
+
+
+TASK-0085 completion: user explicitly stopped further benchmarking. Terminated
+only task-owned matrix Python/PowerShell/Godot processes, preserved raw runs,
+and did not promote incomplete timings. GPU remains optional, native default.
+Final GPU CTests3/3 passed26.25s. Proceed sequentially to TASK-0086 flares.
+
+
+## 2026-10-21 TASK-0086 original vehicle light sprites
+
+Recovered marker/pivot/normal bindings and original static flare resources, exact
+bit-float angular power, intensity and ePoly consumer state. Bound twelve native
+channels through driving snapshots to fixed attached billboard instances sharing
+static mesh/materials. Real BMWM5COP horn toggles already recovered FAST cop state;
+no new native state setter. Original three textures decode from GLOBAL pack.
+Native and GPU flat/Track11 tests cover actual pixels, occlusion9920->0, copphase,
+reset, reload and cleanup. Original runtime equivalence remains unverified. A
+first Track11 test incorrectly assumed monotonic size with changed angle; corrected
+the assertion while preserving recovered formula. Added ObjectID cleanup after
+identifying extension-wrapper teardown can follow child-node deletion. No further
+benchmarking after the user's explicit instruction.
+
+
+TASK-0086 validation completion: final vehicle flare GPU CTests3/3 passed37.33s,
+including explicit live-node exit after ObjectID cleanup fix. Driving camera,
+asset and track pipeline checks passed. Existing race smoke had a stale7-argument
+horn mock and applied Test drive default75 to the separate original-horizontal-
+FOV runtime; corrected only that test and race_runtime_host passed40.93s. The
+first failed progress freshness check came from appending outside the compact
+tracker generator; regenerated it. An atomic replace briefly returned Windows
+WinError5; retry succeeded, and progress_tables passed2.26s. No remaining behavior
+or build failure. Strict E-0086-S01 source preservation is final pending check.
+
+
+TASK-0086 complete: final strict scope tests7/7 passed280.215s and
+existing_body_preservation1/1 passed294.43s. ReviewSHA256
+5eb78631b86cd079c7074730ebf2cec463eb8f988d520bfa6224ac50f54b9b40;
+frozen85unchanged. Scope8replacements/19additions, allstubfalse,7modifiedaux and
+13newpins. Earlier cancelled and auxiliary-classification test runs are superseded
+by the final passes. Both TASK-0085 andTASK-0086 are completed with the explicit
+performance-matrix waiver/native-default boundary. Raw evidence and screenshots
+remain ignored. No commit or proprietary asset staging. Optional continuation:
+original runtime equivalence/globalDMAalpha validation under TASK-0052, not another
+performance matrix without a new user request.
+
+## 2026-10-21 TASK-0087 Track12 reported driving gaps
+
+Fresh read-only Debug TriggerEmitter evidence confirms zero-interval retries;
+removed the premature throw while preserving RNG and adding an explicit throwing
+port iteration budget. Actual Track12 gravel/sand emitters and full-pool RNG
+regressions pass. Original optional null wheel-blur solids now load with an
+explicit diagnostic rather than failing each driving frame. Original terrain
+rows4/5/20 now reach existing native wheel/static contact logic; unsupported
+CAR terrain remains explicit. Water-specific wipers/splash/replay are unresolved.
+
+Native CTests track12_particles/gpu_particle_emission2/2 passed11.82s;
+vehicle_blur_absence/vehicle_model2/2 passed; static_collisions/water_contacts2/2
+passed38.64s, and driving_tracks passed18.26s. Godot4.7.2 on Intel ArcB390:
+track12_driving_gaps_host/gpu2/2 passed29.47s. Fixture uses actual Track12,
+native911TURBO driving and an absent-blur CROWNVIC render model, with test-only
+positive blur alpha. No benchmark or original equivalence claim.
+
+The running user game initially locked the normal DLL. Staged import and host
+smoke passed without terminating it. After the user closed the game and
+authorized replacement, normal CMake output paths were restored and the final
+ps2_port DLL linked successfully. Both final host tests use that normal DLL.
+No commit or proprietary asset staging.
+
+TASK-0087 complete: strict source unit7/7 passed291.455s and existing_body_preservation1/1 passed293.52s. Final review SHA25665248eca7c5d4f621fc9c52cb838aec312ef7f5b974de3a2c27250c1c8ea68fc; frozen86 unchanged, no original stub transitions. Cached metadata validation passed after recording results. No additional benchmark. Optional continuation: original-runtime equivalence or water-specific wipers/splash/replay, with fresh scoped evidence.
+
+## 2026-10-21 TASK-0088 original POV and held lookback correction
+
+The user clarified that V must cycle original driving POVs and their FOV, while
+B holds lookback and release restores the selected POV. This supersedes the
+earlier TASK0084 lookback-toggle/Godot-projection exception. Read-only original
+Update/Cycle evidence restores authored forward bumper, closer/exterior views,
+horizontal90/71.520996-degree projection and native own-car suppression flags.
+Native dashboard metadata is recovered but host dashboard rendering remains an
+explicit throwing boundary. Godot's single-car main subtree suppression preserves
+loaded resources and the independent world-face environment capture consumer.
+
+Native camera1/1 passed4.18s, all64configs plus bumper/B/ground/reverse checks;
+six host checks passed42.05s, final normal DLL rebuild and latest-DLL camera test
+passed3.92s. V/B repeat/consumption/focus, mouse idle return, preview near/FOV and
+visibility restoration are covered. No benchmark or Verified claim. Strict88 is
+the remaining closure check; water effects research proceeds separately before
+TASK0089 implementation. No commit or proprietary staging.
+
+TASK-0088 complete: strict unit7/7 passed264.287s and preservation1/1 passed261.06s. Review SHA256583208d733c67735396dc33277e9445be9eb51755084374f84742885e9303123; frozen87 unchanged, no stub transitions. TASK0089 now active for authored DriveOver water spray, original splash audio and timed rigid-animation wipers; rain-screen RainSplash remains a separate subsystem.
+
+## 2026-10-21 TASK-0089 original water effects
+
+Restored authored water DriveOver groups, original body query/pair positions and channel blending; timed wiper state and original splash audio cooldown/RNG; original rigid animation matrices, model/skin/default texture binding and pixel-size gate. Native candidate ownership prevents render/capture audio duplication. Original InGame patches use existing gain/pitch helpers. Actual 911TURBO/GLOBAL controlled water tests pass for4/5/20; original MUDPUDDLE particle groups remain empty. No Godot physics or generated geometry/texture/phase.
+
+Native11/11 passed65.01s; final nullsound water1/1 passed31.55s. Wiper/geometry/model final3/3 passed11.87s. Initial host fixture option-setting check was corrected before load; later independent race test exposed over-eager external-animation resolution for passive track solids. Retain unresolved metadata/diagnostics, throw only for required active animation, then rebuild normal DLL. Final race/water host2/2 passed21.07s; preceding six relevant host tests including Vulkan water4.94s passed. Ignored GPU screenshot inspected, no original equivalence claim. Source freeze sent for strict89; no further benchmark. Original replay capture, full World sound scheduler, damage/nitro/flat-tire and separate RainSplash remain outside slice. No commit or proprietary staging.
+
+## TASK-0090 - C++ portability audit (2026-10-21)
+
+Completed source/build review; see docs/CPP_PORTABILITY.md and tasks/completed/TASK-0090-cpp-portability-audit.md. Core searches found no direct Windows/Godot headers; guarded host API use is isolated. Non-Windows FFmpeg discovery and extension entries exist, while host test defaults, ARM64 Linux manifest coverage and non-Windows packaging/float parity require follow-up. Windows test enumeration found 133 tests; no cross-host pass is claimed. CMake 3.29.2, Python 3.14.4 and godot-cpp pin inspected. No behavior changes or new behavior tests; no commit. Continue TASK-0090 findings with the cross-host commands in the review; Linux/macOS hosts and suitable SDKs are required.
+
+
+TASK-0089 completed: source scope unit7/7 passed (reported15152.077s wall includes environment suspension). Initial preservation run timed out10227.66s during machine wall jump, with no assertion failure; one authorized identical retry passed1/1 in349.32s. Final review SHA256a9fdb1c94b8c4902d5c723203d11c7c17b6764b888db6a2ab32f56d8afb846ce; frozen88 unchanged,17 replaced/12 added functions,16 modified auxiliary/10 new pins, no original stub transitions. Cached metadata check passed0.48s. Temporary task-owned awake helper released. No gameplay tests or benchmark repeated after functional closure. Final normal DLL includes camera and water fixes; optional continuation remains original runtime/World/replay or separate RainSplash evidence.

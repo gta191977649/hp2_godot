@@ -1,0 +1,515 @@
+{
+  "task": "TASK-0083",
+  "evidence": "E-0083-S01",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "7bb5cd394d9b83f98c4c1c735997340ee18e84d4f15700119b398714b951abc7",
+  "baseline_inventory_sha256": "d5bcab412e06a11135a8dd14592587ff1b773c9f366b0c30d269d8b3ce9ada65",
+  "before": [
+    {
+      "path": "src/game_core/port/driving/static_collisions.cpp",
+      "name": "StaticCollisions::clear",
+      "signature_sha256": "e55249dd0bee2533384c3ccc7e50b51b42b368fb8f9b01b13ec952083c51bbd4",
+      "body_sha256": "74700fe705b45a838f7a974db18dd5b4e669c9e89da63714c5d680e42b8f6fd8",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/static_collisions.cpp",
+      "name": "StaticCollisions::contacts",
+      "signature_sha256": "bff8ea7f425c5ca6334cdedeb0a065e31e2a3adfa7c2213037ed200d631a0484",
+      "body_sha256": "d26200be640aefaa12ee023871edcdf5993844ac37b0afa9441cc91acbf15b13",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/static_collisions.cpp",
+      "name": "StaticCollisions::process",
+      "signature_sha256": "1d283126a8621c42f9b5fed320b7463607e68416d4a96a402d1165638f8a2288",
+      "body_sha256": "6df64da840736eb77c04673ce3a9cf72d1ae489e5ff2de3722496cd20a551604",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/static_collisions.cpp",
+      "name": "StaticCollisions::resolve",
+      "signature_sha256": "a4990ed8911d121a82a431176f8d7ad20d9b468347ccc79be6e1e7b0e0b8b8e6",
+      "body_sha256": "5e2e4f75bb0b9b775508d9763606c2c2df9362631e41a7cd1acc57bcb4b40e96",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::advance",
+      "signature_sha256": "4b3b67ca000d00c4cfc26033669039b9ac1a8c4990327486dbfa5a4ee70d6e66",
+      "body_sha256": "7b06eb04336a1afd182a9a4ebf03321cdd8b1cad44602b680b6ede4cd6ff83bd",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::reset",
+      "signature_sha256": "72473a2dedd76871aea38250fdda48bad108b6e5eef4fb49edf61f905b055ce7",
+      "body_sha256": "248bca75949d474aa7e8d3d70d7ec8de487d30f25d3adb640acf9c3491946245",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::_bind_methods",
+      "signature_sha256": "536b0ee77af7622e05aadb1350ad9e811ea3af39bb65011327131a1ce50adc59",
+      "body_sha256": "70171135eb1c5d55eb8beafb91e7e908f7655c04bf84b9654a85ef02fd18ba35",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::get_driving_audio_bank",
+      "signature_sha256": "dce6c6625c33a48143de7e63a70ffd62f94f6389e6c7620234050937d31eab07",
+      "body_sha256": "9a1978cc781236124ecf5fb089957bff0eadfc68d894f7210f733b381fd84d83",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::get_driving_audio_state",
+      "signature_sha256": "e5e139f34b4a556c1d3932c098bdc7f18821547ea194e4603bfc7b4860b9af88",
+      "body_sha256": "2f65c57d48b91b2d786f254bbb680ff542ccaddf6cd05dc58ea7adb3b1668268",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::load_config",
+      "signature_sha256": "bb174e3f294a621387ae16f0d510d53eab5fef5c036620744fbb5bd468a74f24",
+      "body_sha256": "f1913cf56551b968543844845ccd88d2d9f2cc6ef16922667aa5ca2d0342710d",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::reset_audio",
+      "signature_sha256": "b758f83a31e50957f897d5d8fb94e119f3c93ffa759cf9670bfae07c76b9c975",
+      "body_sha256": "63b71b12e0f6b183b1c7cb6a94b18e8ac27d7780e503c794fdca279e5cea0393",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::update_audio",
+      "signature_sha256": "c7f2dec4c79b1b3c3762f7c8277883de5f338bc31eb0f08c8ff3927ead73f4a4",
+      "body_sha256": "f866cd22d5814da5b47d9f2ff318a4a92e8ae9222f8504fbab3221cc6acd5a0d",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/game_core/indep/src/carsoundtires.cpp",
+      "name": "TireAudioMixer::update",
+      "signature_sha256": "c1e7880e4238caf257772d7e78a116c6bbfdee043682cf30fb97087508c3ec92",
+      "body_sha256": "63242b2101b6fe631cf202a617d4ce9825701b6617863d4a6feb39a874ffe470",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_audio.cpp",
+      "name": "word",
+      "signature_sha256": "9361fdaea6a109d9054fdd60f5d19b9974aa124ab2db19711bdef0fa53d3fbfe",
+      "body_sha256": "5f3e37817f59490e5457710a5ba25974b851cec7c3632a8bb0b987387230d502",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_audio.cpp",
+      "name": "half",
+      "signature_sha256": "d3aa77dd51f525446dfa7c5640d2822d4e2a435537a9446f2f964c71e873c8ab",
+      "body_sha256": "81484dbeb8fd0e8586e689c546cc996ba35148a6af1b4c572ddb0afad8555e4d",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_audio.cpp",
+      "name": "name",
+      "signature_sha256": "c8911c7152010931de49d0f29b1d363cef65eac135e281ea9b1b36374224d1aa",
+      "body_sha256": "a19225281c72d589bf15ac07c12010a7afe75ae5d981d5ccc96d265bd9e280a6",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_audio.cpp",
+      "name": "big",
+      "signature_sha256": "0a9b7dc549b90af1f20e3e908187fead8c70edbef4ecedd4442c0f012ff1aecb",
+      "body_sha256": "039a5bfe6935e1157193359068ae7373db98dba9319ef59a9a730fa8054c14d1",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_audio.cpp",
+      "name": "decode",
+      "signature_sha256": "40f0ae4727a43e95018230ed797cfce2481bd460cdc9d13d24edb7f300d573f7",
+      "body_sha256": "eee5649c30382052c0100d0c02928743688135556724f7a48dc44af2720e101c",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_audio.cpp",
+      "name": "load_ingame_sound_samples",
+      "signature_sha256": "6d9d64fab0cd3b25ae74031add1b2ff797de81b422bf86cb8a120801ecddb225",
+      "body_sha256": "f312ab7da3132429ed5dab6ff3444ed15d1c53294f725d9e5866bc2359343a7d",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_audio.cpp",
+      "name": "load_collision_sound_bank",
+      "signature_sha256": "74ff20537735061942140c4be6d3cc2a66e5163a9c3a96d327eb957402b015f9",
+      "body_sha256": "0283cef80e7c9296eb5869163b9facd174fdb31711452a025ea8c76fefbf2f40",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_audio.cpp",
+      "name": "CollisionSoundSelector::select",
+      "signature_sha256": "cc619789c1ff38d495382d9a899b619b5a2c63a3815469b64314f786542f0445",
+      "body_sha256": "acb731dad824716f59af8068550fc2630bfae56f0399ad8388a3697d560b598f",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_audio.cpp",
+      "name": "collision_sound_volume",
+      "signature_sha256": "0ff93e0b96372ae0eb11b5f99380522ea9069e2e9cf3ae7b0098de5eb5f59851",
+      "body_sha256": "cdf5f0569afc5ce8f9c9151a8fd8046b1f989193487bb7c836abccc0f6941622",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_audio.cpp",
+      "name": "collision_sound_ready",
+      "signature_sha256": "7798f3815c1e808d7abacb460f50fd2314a5de59d0cd28b95683424539e6db9f",
+      "body_sha256": "9f9f37b58bb62d09e67cc829cebd52e405cbfd5b524516185e58a8aa2c5d76b7",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_audio.cpp",
+      "name": "collision_sound_request",
+      "signature_sha256": "ac577877cd5188b1678f224d1a14c08e5108895251f2c581b69a481bc3b8894f",
+      "body_sha256": "1e3eaf635194847449a735117cff59e63fcbc7143cd8e0d836c26e266b4cbc99",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_audio.cpp",
+      "name": "scrape_volume",
+      "signature_sha256": "47fb609ce7928a05fb09346a024972dbc7bfc6d51ebcc30fd3bf8357d4e34615",
+      "body_sha256": "69635c10780134bb8285794a5a333ae5924d2b93827c9c3bbffc6a44f1720a72",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_audio.cpp",
+      "name": "collision_scrape_start",
+      "signature_sha256": "412b3c34e6b0c0f04fca89cafcb8ea2643aeac4c70992f1ad170013eac7aa47e",
+      "body_sha256": "6be52a792b49d9a693d6f09dbd733e5a08b5335e0791b90f38b6384edf0f8c0d",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_audio.cpp",
+      "name": "collision_scrape_update_volume",
+      "signature_sha256": "1264cfffa596cf713b589b324c05cda75700d18870cd94c4becf414237cfda0a",
+      "body_sha256": "1e1e8f6245b546a134c137df2efe4a6ceba31e6198af060f8e345c84a276f243",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_audio.cpp",
+      "name": "collision_scrape_fade_adjust",
+      "signature_sha256": "146d09dccbcc4b8e26d350f848a9e7077878fddc3aaba9d9368dada097bbfd1e",
+      "body_sha256": "f48b6e90faabe780ac6ea063d62b181cf81d41f77994e3d21501ccb6aeeb464c",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_audio.cpp",
+      "name": "collision_scrape_fade_step",
+      "signature_sha256": "9ce2333071f8e58ea13dab121457479954d6f8285a96faa8a5f6c0630c4f5f6d",
+      "body_sha256": "c2ccf8a5c8ed1bc2a15e482d773b271b7c7a886cf79a1d20c831063b2cf01beb",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_audio.cpp",
+      "name": "collision_scrape_fade_finished",
+      "signature_sha256": "2a237fb07f53f57e0b98a218b9d03f977456a1950642bdd7a4e214dc4e89c40a",
+      "body_sha256": "c9c3b3bc5b8390e62bee1d6dd94f9bee0d60eb97d00deedf1572577352134280",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_events.cpp",
+      "name": "accumulate_collision_audio",
+      "signature_sha256": "4015b50c383abf33bd5bc963d3bd207640dd820194dff54b2d08d15edc6b77dc",
+      "body_sha256": "ecb8575d2413699bad7ed8e8d2dff1d3480c327ff7c63cbd62354437c91a123c",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_events.cpp",
+      "name": "update_collision_scrape",
+      "signature_sha256": "e7c51e47d6625ebe146c59b01e500090f68e681048dbc7a7852f04b80e92d769",
+      "body_sha256": "9850992db7da8471f60b5ca42e6ebb6a39e2f002a0b9bab5060d90f81578f6b6",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_events.cpp",
+      "name": "collision_audio_alive",
+      "signature_sha256": "9dea904dad95a5caad6e67fd7f96b42a535ad87039c65db42a8fce2dba7f027f",
+      "body_sha256": "3be7a9432090270230c0aacb54b6b42fdf55e9070d1e3f20f112e87c9762a2e8",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_events.cpp",
+      "name": "update_collision_audio",
+      "signature_sha256": "a8da347f2aab41f820762f519e99e7aebd776b689258c936fc87abb7a0da30f4",
+      "body_sha256": "a2be546c800910494b243e4b346d19d032331848a31241084569e06f0c0d12e5",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/collision_sound_state.hpp",
+      "name": "reset",
+      "signature_sha256": "9ff976f8fad5585cc849b888aad4393a57c9bbc7c42ba3d86f20bb2287f8e7dd",
+      "body_sha256": "822d0931f0767f73ac811369cd9858d1e123576b9cb07a46655b0461b5683d4f",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::reset",
+      "signature_sha256": "72473a2dedd76871aea38250fdda48bad108b6e5eef4fb49edf61f905b055ce7",
+      "body_sha256": "7a185a0d34a4aadee55a4b84dc197ec498e988b67454feb97423b970cb075bb9",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/native_backend.cpp",
+      "name": "NativeBackend::advance",
+      "signature_sha256": "4b3b67ca000d00c4cfc26033669039b9ac1a8c4990327486dbfa5a4ee70d6e66",
+      "body_sha256": "825eb08c01265d217539e079ce10a6d02693ac3ebae4eeeac1eae08639619275",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/static_collisions.cpp",
+      "name": "StaticCollisions::clear",
+      "signature_sha256": "e55249dd0bee2533384c3ccc7e50b51b42b368fb8f9b01b13ec952083c51bbd4",
+      "body_sha256": "8de443671270410dbe6b469cc344ba611b818702b0630aae5908a62587cbd724",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/static_collisions.cpp",
+      "name": "StaticCollisions::contacts",
+      "signature_sha256": "bff8ea7f425c5ca6334cdedeb0a065e31e2a3adfa7c2213037ed200d631a0484",
+      "body_sha256": "70dac80a89f8aa93f892545e44f56c34dd80189b0826897b28b10376b89d71f0",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/static_collisions.cpp",
+      "name": "StaticCollisions::resolve",
+      "signature_sha256": "a4990ed8911d121a82a431176f8d7ad20d9b468347ccc79be6e1e7b0e0b8b8e6",
+      "body_sha256": "6ba38fcac9adb6caf36ad6c75c38a6eaa3181d4380c18d488ed4de4872b0459e",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/static_collisions.cpp",
+      "name": "StaticCollisions::process",
+      "signature_sha256": "1d283126a8621c42f9b5fed320b7463607e68416d4a96a402d1165638f8a2288",
+      "body_sha256": "2de373016f7ee19f2efa3b8e8e65e14ac1e6e24ecd67dd90ab81f7074a9fb90d",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/tire_audio.cpp",
+      "name": "load_tire_sound_bank",
+      "signature_sha256": "51d7e0a2c7f93f85f31cf69c7e7104a9a945a836550d29951bfe32723eec4749",
+      "body_sha256": "ddd8c6bba522abe0ce25aa59d971d054529226bbe274bfb16246b421972769ba",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/game_core/port/driving/tire_audio_state.hpp",
+      "name": "reset",
+      "signature_sha256": "9ff976f8fad5585cc849b888aad4393a57c9bbc7c42ba3d86f20bb2287f8e7dd",
+      "body_sha256": "974fad2fb668de72467720fd3d60ed40c0e8415ee03e00bd4660d3eba0ce91fb",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::_bind_methods",
+      "signature_sha256": "536b0ee77af7622e05aadb1350ad9e811ea3af39bb65011327131a1ce50adc59",
+      "body_sha256": "cc52a7982afdc570a48f7b602c3bc14a389f56a5628b09d63e6777c1014d3e01",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::load_config",
+      "signature_sha256": "bb174e3f294a621387ae16f0d510d53eab5fef5c036620744fbb5bd468a74f24",
+      "body_sha256": "4b0a387515543f26d0976bb61b8ece2d6ab282bed1b087c28243c2cb0b58e109",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::reset_audio",
+      "signature_sha256": "b758f83a31e50957f897d5d8fb94e119f3c93ffa759cf9670bfae07c76b9c975",
+      "body_sha256": "19e595b628cd84722549090df21df58d646055f1a6ec48a845c1d0ea38db79e2",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::update_audio",
+      "signature_sha256": "c7f2dec4c79b1b3c3762f7c8277883de5f338bc31eb0f08c8ff3927ead73f4a4",
+      "body_sha256": "3f580208234f8ede8673c910a5335321ab0b14c168f280ec0e2ca1f50ed1c978",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::get_driving_audio_bank",
+      "signature_sha256": "dce6c6625c33a48143de7e63a70ffd62f94f6389e6c7620234050937d31eab07",
+      "body_sha256": "94397d22f530d30c2a93a7db5ce4ab7dcf78471d68e9a23efeb2b5b292ba279f",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::take_collision_audio_events",
+      "signature_sha256": "dec0b75ce07cb2c5996e9dfbd83394a9072a2804374432d0476b11aa23057769",
+      "body_sha256": "fdad85ad0be4a839289ed0eedcbc7869ea014d45510056b94a6f06293aeaa935",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_driving_runtime.cpp",
+      "name": "Ps2DrivingRuntime::get_driving_audio_state",
+      "signature_sha256": "e5e139f34b4a556c1d3932c098bdc7f18821547ea194e4603bfc7b4860b9af88",
+      "body_sha256": "a1b18556828b02ca3b945ab19a5e18c75e6c991b33e6dd237e4fb9c8669ba14b",
+      "stub": false,
+      "evidence_id": "E-0083-S01",
+      "reason": "Recover bounded collision/tire sample producers, committed event projection, rollback and host voice lifecycle; C01/A01/T01 behavior evidence remains separate."
+    }
+  ],
+  "replacements": {
+    "CMakeLists.txt": {
+      "before": "4345070f45b1ffe05d58e3503a20bd9a865ff6b7b3a68b435489d838c3ccafd4",
+      "after": "c7cfe5c0467499961751f47cc701054e928788d825d1131e51826db23de6f3d4"
+    },
+    "godot/scripts/runtime/driving_audio.gd": {
+      "before": "e2c17bf994503a296d7bac10306fb12158ee5b06e6efaaf4f1277b2b80114e4c",
+      "after": "b4b33c9ea97d20149fba0c30468907a19941626712f7cea4c21a3d1531cd061a"
+    },
+    "godot/scripts/runtime/driving_audio_smoke.gd": {
+      "before": "82f56e63e20902b4bad0761c3e8fbd76aadc19207abb83760c034a40973a6b5b",
+      "after": "27ac8fee0260533662690530acab61029a3839868521b94669113baeb3330e66"
+    },
+    "reverse/scripts/audit_task0082_review.py": {
+      "before": "674d16644aa2c9a2de9e5ea4c17a5c26fa41899edc867f327fce2f6367a1e0d8",
+      "after": "c8432765adf7691a4c6beefa13ce55e18d483468782f64b697151f132993685a"
+    },
+    "reverse/tests/test_task0082_source_review.py": {
+      "before": "999a2c1fbcd2eddf16bc9ac964df3f0e4aaf5d0fb41661f70a11a21f69c2b32d",
+      "after": "b8fc9be247fbd7b3ba5f41bc3395fefa17a6d244eb7ef83cf79311de2bddcfeb"
+    },
+    "src/game_core/port/driving/native_backend.hpp": {
+      "before": "62f584cc19d3b6f4ef1491fa51df06f0db66e0abf8eca4d505e1087c0ef35486",
+      "after": "733d89036d7be862d252f2972726b9837c5cbf4b361daaf5075b926a6af03830"
+    },
+    "src/game_core/port/driving/session.hpp": {
+      "before": "2b058483ba7d587fb0f0d477762a60eeb2ff0a501d769a4a3567bbe2044d2a6c",
+      "after": "445c167bbacd2b7bb8aa17e6902f57de7ccc3e4b68ba02c328daad474eebb1d9"
+    },
+    "src/platform/godot_bridge/ps2_driving_runtime.cpp": {
+      "before": "332ba0f69bbd4e2a3b81d085d3718bda4fcbe36d8d612ec418c600d3d5dad18b",
+      "after": "f1e9669c575800bce036d1ee0b5e23ed097218fbcc6798eb3d7c4debf0e40769"
+    },
+    "src/platform/godot_bridge/ps2_driving_runtime.hpp": {
+      "before": "e7e534674ac392083670a7cf9a5a8e017e804e05ab0084cc2dbdd087f9d68ccb",
+      "after": "2a4adf1df4e4fb30924f63d472dd42a5e47e3e4de4b2aad44c8b0d7eee91b78d"
+    }
+  },
+  "additions": {
+    "godot/scripts/runtime/collision_audio_transport_smoke.gd": "7290767320fc5a450e6085ecdbe28c9097a6eda6af3af54a28b87ded2cdbdd2d",
+    "reverse/scripts/audit_task0083_review.py": "6a0a3c615a37523e0351941236b3580851a5dbaa97637fbd7e937058812abc03",
+    "reverse/task0083/source-review.md": "c800b964a1f95cc8efa24d192321c4112362d9d2e6b4ca8a44ee7d40f8f03109",
+    "reverse/tests/test_task0083_source_review.py": "9c5a831e3f336afc3084fc21238c84abe94c96a395b51f2e1c49f5279cc181a3",
+    "src/game_core/port/driving/collision_audio.hpp": "4993a4738aeef25c5a1ceded0cba49849538374a0a6fa2494ce7ba36655d860a",
+    "src/game_core/port/driving/collision_events.hpp": "5e668208127976a88d5f874b6a5e85bcee23e914f44199154f40fcc0f18142b2",
+    "src/game_core/port/driving/collision_sound_state.hpp": "e54d474070cb61ddea1ad9c4105d9b583a29e32b1f100ff30143a5e7a6be44f7",
+    "src/game_core/port/driving/static_collisions.hpp": "2904175a41fd3afc5fcd7bc4549424d98e12175d852c11a47a87b4faba636b12",
+    "src/game_core/port/driving/tire_audio.hpp": "367bdc7012fd0599ed3db209ecb4a9dd4992c0fda805cba51165b7c1a0792b12",
+    "src/game_core/port/driving/tire_audio_state.hpp": "a4f4468c40b567e783ab9b6c591386775086879f940627c014c43ebfd456d3b1",
+    "src/tests/driving_collision_audio_tests.cpp": "67774f808bf2a1e7dc12d384253449e42eb24f756a61661231e76f764e2e3269",
+    "src/tests/driving_collision_events_tests.cpp": "47e4239533332f6c405ba1ff26641e6b3088f628ff1b9748515d8322b99af23c",
+    "src/tests/driving_tire_audio_tests.cpp": "987754c1357b2e9c0a5a5204c27f1312c699434105c69ac8d2bb3ad041cedb1b",
+    "src/tests/static_collision_tests.cpp": "c3b85fbbeb6228f8cf417a84782c32b374246ce73b183ff6f6d779fb6cc8e099"
+  }
+}

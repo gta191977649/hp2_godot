@@ -1,0 +1,50 @@
+{
+  "evidence_id": "E-0083-A01",
+  "binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "version": "independently unknown Debug build/revision",
+  "private_capture_directory": "local/task0083/audio",
+  "capture_sha256": {
+    "001ab900.json": "22d7af67fa3fb66ff4379c3433cf1d27b740c028865d7b7676da4c9bad4ee5c8",
+    "001acfa8.json": "cf6b40185d17e5274b218074c703352aa257a3ccd83fa92d59f67539619a7abd",
+    "001e0c18-listing.json": "028825206d2687cc9632327e37a0e422d0fb456d716cddcf9ff45024f93b15ac",
+    "001e0c18.json": "c36d37844bde6ac5278543cf323cbf9c22387bb49d3196ef0f383cff218b082b",
+    "001e0d00.json": "44f1ac7e5709b33e0537467eb6d775877edfefa089c44d2a889eb8e849727b3f",
+    "001e0d68.json": "3cffaa93be3489e958f414654d22a7290922665be0ef64c39c664fd2f7b9a589",
+    "001e10c8.json": "4145146273b85edcb05fd8a6dac5469135cbb066984deeff6191655902b7ffde",
+    "001e11e8.json": "14a3320a3b75faa3923991639002bac76f3086a71d5a66578e01e3927aac1f68",
+    "001e1288.json": "43a60209916d43419d30009d71511599d2480d5ba58947859b113a8e1ac8057c",
+    "001e13c0.json": "c177721618f63f485345649ae30c8cded680c087615eb970ef90bd43e43fd1a9",
+    "001e1468.json": "02100a13f3048b05960f78837209772ec98bcd6235e095fe54e7f6b4aee78fe5",
+    "001e1838-listing.json": "6364a6e39bda52ae4a67228508184b599ab411d58c7a381e3dd08e718a295111",
+    "001e1838.json": "8ae031430df6523e94b26888d1b9e11b7bec2660cc7b929b6e3bdfd7508359de",
+    "001e1970.json": "bad42cf25f6da1357f2473a6f773a3a8a527be449902ef11238faa00fe8407f6",
+    "001e1d80.json": "42d8a56692c0680fec936889e0732c947ebb60566c572b2321a853a30e4b2584",
+    "00203e20.json": "d2353f5eb5a6078a7dcab1c69d6017414b98809cf270e4d5816d512765fa54be",
+    "00219698.json": "597e8f6fbbb129336e05930c1601469b19cdf716d38812c6877d5f68402e45ad",
+    "0026c910.json": "f2528ae57cbdca925bcf25ed67256b6cb4e23d0595977ba0965962872372e509",
+    "0026cb40.json": "83b68f7c0719a1ec3541546cea5f39ec6fdf1b2ef6d4c6536b58cd5fee9ef94c",
+    "002b1080.json": "5e0188e179e9b3dc1e0c7828a089febc191894ffba277e91966c6d5bc4dd324a",
+    "00325b78.json": "c80f2a4ca2df680abb1837828aec2428a45ff16e5ce58add0ba61ba6549f8bea",
+    "003262d4.json": "915df9a085222090e5c9a6b6d4d3b4f8bf0bdc7a4dfacbbcc1c98c9bff6a2bb2",
+    "Collision.json": "350aebe0ae3e072f639e5b2d199f7a9b12814ada7bb786690c8ce71c75d44695",
+    "SampleLibrary3.json": "a61506c1da0b560230d52dd74b7f0329694494a8e6b2ef302bc70c2d597bd067",
+    "SoundRandomSeed.json": "1ecf3226dd5d60cd63e8d408a17ca4ebd6d51318a11cc60ab848cc749ed18abf",
+    "TerrainType.json": "fd1257c84ecfcea1cebce00b74cf41ee05d3d28bb32548b8ecda982a876f8727",
+    "TerrainTypeInfo.json": "327d5dc9e839e9a32af6282479044317a5a4d2cbf0c445b5bddfba32efc893e9",
+    "TerrainTypeInfoTable.json": "92f51b9fd1ee01577d2e370a463562dfde305d9864332054df848554d5cd12b8"
+  },
+  "original_assets": {
+    "__Unknown/FDFBE4AB": {
+      "size": 3584,
+      "sha256": "3f057c6fd464c036ff6aac739b3de4c7d5287f129914088324ff749e8a4d5f81"
+    },
+    "__Unknown/FDFBE4A5": {
+      "size": 939328,
+      "sha256": "0f1e2e0e151206eb8268a7ab653001c29c244995511f70718ae0197edcf1b32d"
+    }
+  },
+  "limitations": [
+    "Static inspection only; no original runtime audio comparison.",
+    "functions.json is an oversized-output reference, not used as complete evidence."
+  ]
+}

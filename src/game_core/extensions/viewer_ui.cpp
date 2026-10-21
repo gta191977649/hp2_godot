@@ -21,22 +21,73 @@ void ViewerUi::enqueue(UiAction action){
 std::optional<UiAction> ViewerUi::next(){
     if(pending_.empty())return {};auto action=std::move(pending_.front());pending_.pop_front();return action;
 }
+void ViewerUi::draw_render_controls(){
+    if(state_.effects.empty())return;
+    const auto target=[&](const std::string& name){const auto a=ImGui::GetItemRectMin(),b=ImGui::GetItemRectMax();targets_[name]={{(a.x+b.x)*.5f,(a.y+b.y)*.5f}};};
+    const bool effects_open=ImGui::CollapsingHeader("Effects");target("track_effects_group");
+    if(effects_open){
+        std::string category;
+        for(const auto& effect:state_.effects){
+            if(category!=effect.category){category=effect.category;ImGui::Separator();ImGui::TextUnformatted(category.c_str());}
+            const bool disabled=!state_.render_ready||!effect.available;
+            if(disabled){ImGui::PushItemFlag(ImGuiItemFlags_Disabled,true);ImGui::PushStyleVar(ImGuiStyleVar_Alpha,ImGui::GetStyle().Alpha*.5f);}
+            bool enabled=effect.enabled;ImGui::PushID(effect.id.c_str());
+            if(ImGui::Checkbox(effect.name.c_str(),&enabled)){UiAction a{"track_effect"};a.name=effect.id;a.enabled=enabled;enqueue(std::move(a));}target("effect_"+effect.id);
+            if(disabled){ImGui::PopStyleVar();ImGui::PopItemFlag();}
+            if(ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)&&!effect.reason.empty()){ImGui::BeginTooltip();ImGui::PushTextWrapPos(ImGui::GetCursorPosX()+280);ImGui::TextUnformatted(effect.reason.c_str());ImGui::PopTextWrapPos();ImGui::EndTooltip();}
+            ImGui::SameLine();ImGui::TextDisabled("%s",!effect.available?"unavailable":effect.active?"active":"inactive");ImGui::PopID();
+        }
+        if(ImGui::Button("Restore Original Defaults"))enqueue({"track_render_defaults"});target("track_render_defaults");
+    }
+    const bool visibility_open=ImGui::CollapsingHeader("Visibility");target("track_visibility_group");
+    if(visibility_open){
+        ImGui::Text("Near %.3f | Far %.1f",double(state_.effective_near),double(state_.effective_far));
+        ImGui::Text("Instances %d visible / %d considered / %d loaded",state_.visible_instances,state_.considered_instances,state_.loaded_instances);
+        ImGui::Text("Sections %d / %d",state_.selected_sections,state_.loaded_sections);
+        if(!state_.render_ready){ImGui::PushItemFlag(ImGuiItemFlags_Disabled,true);ImGui::PushStyleVar(ImGuiStyleVar_Alpha,ImGui::GetStyle().Alpha*.5f);}
+        bool props=state_.render_props;
+        if(ImGui::Checkbox("Render props",&props)){UiAction a{"track_props"};a.enabled=props;enqueue(std::move(a));}target("track_props");
+        bool enabled=state_.distance_override;float distance=state_.draw_distance;
+        if(ImGui::Checkbox("Override Draw Distance",&enabled)){UiAction a{"track_distance"};a.enabled=enabled;a.value=distance;enqueue(std::move(a));}target("track_distance_override");
+        if(enabled){ImGui::SetNextItemWidth(-1);if(ImGui::SliderFloat("##DrawDistance",&distance,std::max(1.f,state_.effective_near*2),state_.original_far*4,"%.1f")){UiAction a{"track_distance"};a.enabled=true;a.value=distance;enqueue(std::move(a));}target("track_distance");}
+        if(ImGui::Button("Restore Original Visibility")){UiAction a{"track_distance"};a.enabled=false;a.value=state_.original_far;enqueue(std::move(a));}target("track_distance_reset");
+        if(!state_.render_ready){ImGui::PopStyleVar();ImGui::PopItemFlag();}
+        ImGui::Text("Native %.2f ms | Submit %.2f ms",state_.native_frame_ms,state_.host_submit_ms);
+    }
+}
+
 void ViewerUi::draw(float width,float height){
     targets_.clear();
     if(state_.kind=="frontend")return;
     const ImVec2 available{std::max(1.f,width),std::max(1.f,height)};
-    ImGui::SetNextWindowPos({16,36},ImGuiCond_FirstUseEver);
+    float panel_top=36;
+    if(state_.camera_known&&(state_.kind=="track"||state_.real_track)){
+        ImGui::SetNextWindowPos({8,4},ImGuiCond_Always);
+        ImGui::SetNextWindowSizeConstraints({0,0},{std::max(1.f,width-160),available.y});
+        ImGui::SetNextWindowBgAlpha(.35f);
+        ImGui::Begin("Track coordinates",nullptr,ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoInputs|ImGuiWindowFlags_AlwaysAutoResize|ImGuiWindowFlags_NoSavedSettings);
+        const auto& p=state_.camera_host;
+        ImGui::Text("Camera HP2:   X %.2f  Y %.2f  Z %.2f",double(p[2]),double(p[0]),double(p[1]));
+        ImGui::Text("Camera Godot: X %.2f  Y %.2f  Z %.2f",double(p[0]),double(p[1]),double(p[2]));
+        if(state_.draw_calls>=0)ImGui::Text("Draw calls (total): %lld",static_cast<long long>(state_.draw_calls));
+        else ImGui::TextUnformatted("Draw calls (total): N/A");
+        ImGui::SameLine();
+        if(state_.rendered_primitives>=0)ImGui::Text(" | Triangles/primitives: %lld",static_cast<long long>(state_.rendered_primitives));
+        else ImGui::TextUnformatted(" | Triangles/primitives: N/A");
+        panel_top=ImGui::GetWindowPos().y+ImGui::GetWindowSize().y+4;ImGui::End();
+    }
+    ImGui::SetNextWindowPos({16,panel_top},ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize({std::min(340.f,available.x),std::min(state_.kind=="track"?440.f:300.f,available.y)},ImGuiCond_FirstUseEver);
     if(state_.kind=="track"&&state_.track_id<0){
-        ImGui::SetNextWindowPos({16,36},ImGuiCond_Always);
+        ImGui::SetNextWindowPos({16,panel_top},ImGuiCond_Always);
         ImGui::SetNextWindowSize({std::min(340.f,available.x),std::min(440.f,available.y)},ImGuiCond_Always);
     }
     if(state_.preview&&!was_preview_){
-        ImGui::SetNextWindowPos({16,36},ImGuiCond_Always);
+        ImGui::SetNextWindowPos({16,panel_top},ImGuiCond_Always);
         ImGui::SetNextWindowSize({std::min(340.f,available.x),std::min(280.f,available.y)},ImGuiCond_Always);
     }
     if(driving_entered_){
-        ImGui::SetNextWindowPos({16,36},ImGuiCond_Always);
+        ImGui::SetNextWindowPos({16,panel_top},ImGuiCond_Always);
         ImGui::SetNextWindowSize({std::min(320.f,available.x),std::min(310.f,available.y-36)},ImGuiCond_Always);
         driving_entered_=false;
     }
@@ -45,10 +96,22 @@ void ViewerUi::draw(float width,float height){
         driving_left_=false;
     }
     was_preview_=state_.preview;
-    ImGui::SetNextWindowSizeConstraints({std::min(180.f,available.x),std::min(100.f,available.y)},{std::min(420.f,available.x),(advanced_open_||state_.kind=="driving"||state_.kind=="track")?available.y:std::min(320.f,available.y)});
+    const float panel_height=std::max(1.f,available.y-(state_.camera_known&&(state_.kind=="track"||state_.real_track)?panel_top:0));
+    ImGui::SetNextWindowSizeConstraints({std::min(180.f,available.x),std::min(100.f,panel_height)},{std::min(420.f,available.x),(advanced_open_||state_.kind=="driving"||state_.kind=="track"||state_.kind=="track_runtime")?panel_height:std::min(320.f,panel_height)});
     const auto window_flags=state_.kind=="driving"?ImGuiWindowFlags_NoScrollbar|ImGuiWindowFlags_NoScrollWithMouse:ImGuiWindowFlags_None;
+    const bool track_window=state_.kind!="car"&&(state_.kind!="driving"||state_.real_track);
+    if(track_window)if(auto* window=ImGui::FindWindowByName("TrackViewer###TrackViewerCompact"))
+        if(window->Pos.y<panel_top)ImGui::SetNextWindowPos({window->Pos.x,panel_top},ImGuiCond_Always);
     const bool visible=ImGui::Begin((state_.kind=="car"||(state_.kind=="driving"&&!state_.real_track))?"CarViewer###CarViewerCompact":"TrackViewer###TrackViewerCompact",nullptr,window_flags);
     if(visible){
+        if(state_.kind=="track"||state_.real_track){
+            const bool open=ImGui::CollapsingHeader("Render statistics");
+            if(open!=state_.render_statistics_enabled){UiAction action{"render_statistics"};action.enabled=open;enqueue(std::move(action));}
+            if(open){
+                for(const auto& line:state_.render_statistics)ImGui::TextWrapped("%s",line.c_str());
+                if(ImGui::Button("Export draw diagnostic"))enqueue({"export_render_statistics"});
+            }
+        }
         const auto tooltip=[&](const std::string& text){
             ImGui::SetNextWindowSizeConstraints({0,0},available);ImGui::BeginTooltip();
             ImGui::PushTextWrapPos(ImGui::GetCursorPosX()+std::max(1.f,std::min(320.f,width-24)));
@@ -69,6 +132,7 @@ void ViewerUi::draw(float width,float height){
             button(state_.real_track?"Return to TrackViewer":"Return to CarViewer","drive_exit");
             const bool body=ImGui::BeginChild("DrivingBody",{0,0},false);
             if(body){
+            if(state_.real_track)draw_render_controls();
             if(state_.driving_powertrain_known){
                 const auto gear=state_.driving_gear==0?std::string("R"):state_.driving_gear==1?std::string("N"):std::to_string(state_.driving_gear-1);
                 ImGui::Text("Speed %.2f (native units) | Gear %s",double(state_.driving_speed),gear.c_str());
@@ -139,7 +203,8 @@ void ViewerUi::draw(float width,float height){
             }
             ImGui::EndChild();
         }
-        if(state_.kind!="car"&&state_.kind!="driving") {
+        if(state_.kind=="track_runtime")draw_render_controls();
+        if(state_.kind!="car"&&state_.kind!="driving"&&state_.kind!="track_runtime") {
             button("CarViewer","car");beside("Back to Frontend");button("Back to Frontend","close");
             ImGui::Separator();
         }
@@ -162,10 +227,12 @@ void ViewerUi::draw(float width,float height){
                 ImGui::EndCombo();
             }
             button("Drive on track","track_drive");beside("Reset Camera");button("Reset Camera","reset");
+            draw_render_controls();
             // Pinned ImGui1.77 exposes disabled item flags through its internal API.
             // These independent tool flags affect browsing presentation only.
             if(!state_.debug_ready){ImGui::PushItemFlag(ImGuiItemFlags_Disabled,true);ImGui::PushStyleVar(ImGuiStyleVar_Alpha,ImGui::GetStyle().Alpha*0.5f);}
-            bool collision=state_.render_collision,material=state_.render_material;
+            bool collision=state_.render_collision,material=state_.render_material,lod=state_.show_lod;
+            if(ImGui::Checkbox("Show LOD",&lod)){UiAction a{"show_lod"};a.enabled=lod;enqueue(std::move(a));}target("show_lod");
             if(ImGui::Checkbox("Render Collision",&collision)){UiAction a{"render_collision"};a.enabled=collision;enqueue(std::move(a));}target("render_collision");
             if(ImGui::Checkbox("Render Material",&material)){UiAction a{"render_material"};a.enabled=material;enqueue(std::move(a));}target("render_material");
             if(!state_.debug_ready){ImGui::PopStyleVar();ImGui::PopItemFlag();}

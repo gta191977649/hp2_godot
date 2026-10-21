@@ -1,14 +1,22 @@
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
+#include <set>
 #include "game_core/port/driving/skid_services.hpp"
 #include "game_core/port/track/effects.hpp"
 #include "game_core/port/track/runtime.hpp"
+#include "game_core/port/track/postprocess.hpp"
 
 namespace hp2::recovered {
+// Retail00104448 / Debug001042E8; original global ScreenWidth and bAngle math.
+float CalculateH(port::driving::Memory&,std::uint16_t horizontal_fov);
+// TASK0052 E-0052-P03, static viewport quad slices; original TU ecstasye.cpp.
+std::optional<port::track::postprocess::Quad> DisplayFilter(const port::track::postprocess::View&,const port::track::postprocess::ScreenControls&);
+std::vector<port::track::postprocess::Quad> DisplayRadialBlur(const port::track::postprocess::View&,const port::track::postprocess::ScreenControls&);
+std::optional<port::track::postprocess::Quad> DisplayBlendPrevious(const port::track::postprocess::View&,const port::track::postprocess::ScreenControls&);
 // TASK0051 bounded track command stage of original eDisplayFrame, excluding
 // vehicles/frontend/screen effects and hardware DMA ownership.
 port::track::Frame eDisplayFrame(const port::track::Scene&,const port::track::FrameView&,
-    std::vector<std::size_t>&,port::driving::Memory&,std::vector<std::uint32_t>* texture_chain_order=nullptr);
+    std::vector<std::size_t>&,port::driving::Memory&,std::vector<std::uint32_t>* texture_chain_order=nullptr,const port::track::ResourceIndex* resource_index=nullptr);
 }
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
@@ -91,6 +99,10 @@ public:
 namespace hp2::recovered {
 class eSolid {
 public:
+    // Retail0010BDB8 / Debug0010C1B0; E0056T01. Original table-name iteration
+    // and GetTextureInfo(name,1,0), with explicit owning host resource sets.
+    static std::vector<std::uint32_t> FixTextureTable(const std::vector<std::uint32_t>&,
+        const std::set<std::uint32_t>& loaded,const std::set<std::uint32_t>& render_targets);
     // ELF 0x00103FF0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/vehicle/00103ff0.md.
     // Original Debug reference: eSolid::FixStripEntryTable(unsigned char *, int, unsigned char *); exact original method spelling; void/no-argument host gap interface only.
     // Port-side void/no-argument placeholder; original signature unknown.

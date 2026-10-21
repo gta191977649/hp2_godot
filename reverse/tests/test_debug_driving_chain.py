@@ -20,8 +20,14 @@ class DebugDrivingChainTests(unittest.TestCase):
         self.assertIn('next_collisions.process(next,body,car_,track->topology,motion,move,recompute)', source)
         self.assertNotIn('native::Move(', source)
         self.assertNotIn('read_original_image(', source)
-        bridge = (ROOT / 'src/platform/godot_bridge/ps2_driving_lab.cpp').read_text()
+        bridge = (ROOT / 'src/platform/godot_bridge/ps2_driving_runtime.cpp').read_text()
         self.assertIn('port::driving::debug_image_path(', bridge)
+        wrapper = (ROOT / 'src/platform/godot_bridge/ps2_driving_lab.cpp').read_text()
+        header = (ROOT / 'src/platform/godot_bridge/ps2_driving_lab.hpp').read_text()
+        self.assertIn('class Ps2DrivingLab : public Ps2DrivingRuntime', header)
+        self.assertIn('HP2_DEBUG_BUILD != 0', header)
+        self.assertNotIn('NativeBackend', wrapper)
+        self.assertNotIn('session_', wrapper)
 
     def test_composite_solver_has_one_owner(self):
         for name in ('projections.hpp', 'unresolved_entries.cpp'):

@@ -1,0 +1,366 @@
+{
+  "task": "TASK-0065",
+  "status": "approved",
+  "target_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "predecessor_review_lf_sha256": "5311b782baab28f8de4897fa0c6df609880c83548e5dd4f991432b8819c30df3",
+  "baseline_inventory_sha256": "e6ebff25adeee5c3212b684ffa3d5fd4673ddf3ec905d27eeab44c8bf97b685a",
+  "scope_lf_sha256": "84545666ed2978115f217e970e2495896ae72d4472077d68d0f463331c08ff50",
+  "before": [
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "name": "submit",
+      "signature_sha256": "ee5a9a694ebb68684a0f69f442ce86d2e1fc38d41cf2f5e81f9576bc3150be70",
+      "body_sha256": "8b2d255cc7356830b28e32a47d5794fa9caa52ad48956a671f26b31f21896293",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "name": "optimization_options_dictionary",
+      "signature_sha256": "a3e108631a9561d04a98afa02a548475cccb9ad732d5696817b642a8cf43131a",
+      "body_sha256": "a579a3792f3701f482fe07d2adfd3c1d4e962d97883c813efb749bc8aecd525e",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "name": "optimization_options_from_dictionary",
+      "signature_sha256": "4b602a919c9358f7afa6859062c67a56797edefac0477a354c9e5f3a9fe48fc4",
+      "body_sha256": "827dc941737d861f6dfe7b8d4dc1f0e652451c7ddcdda44c48d79d1b047dec2c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "name": "startup_track_optimizations",
+      "signature_sha256": "44fe4981c0718eb8be36f2ab6ff83aa90410056e4cce3482b483e4c6a5b80891",
+      "body_sha256": "ebfc115086a81bebed0ead5ed21ef4320ccd8c5b133232732b9cb9f98261c611",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::acquire",
+      "signature_sha256": "06ef987b7eff738a9a3586e234783df6704de0a34a7411a005c4c4e2fe4f037f",
+      "body_sha256": "72e0da40ee3da565aab7b93e2aa7365dbf79ed244ca9207a7a043ad6ca772c0d",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches_tests.cpp",
+      "name": "test_track_mesh_batch_cache",
+      "signature_sha256": "dff0b198f09223e11a4fb88e66308e54ac33750c9e13bff7b62397c79c6ca3d5",
+      "body_sha256": "e3ade38eb3316351f0177df7a48b42ef8fde7ef87d0521539f318d52412c714f",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_optimization_state",
+      "signature_sha256": "24a616fd0067ca95a31de9c7efeb453ffe887be49021f8e3d4a0e0688dd16e1f",
+      "body_sha256": "3b732ea418aefc3a0fc5cc2a95fc1d84f8cfbf3260b6244fc2e2922cffa61012",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::submit_frame",
+      "signature_sha256": "f88cc7cc040672c5074b7faa44e3a579eedfa98216a917bf68c4cf67623d9ec7",
+      "body_sha256": "a257a29199a7d9c9d0a45a6a1ec7d4ddcf4ca1ff7a0c4c20c11550c0d57b421a",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "create_sun_target",
+      "signature_sha256": "7cd4ea22e3e979a53bb1e06108619942c1729ab10598d171cd4bb13f7410b7bc",
+      "body_sha256": "7f2a413167b931dc1159b87945ac396e2838e97fc35fce1881e5721fb958e344",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw",
+      "signature_sha256": "af5c4109ffb88c769db23520815cad4706cfef9cd312c96a3eb3cbd7b1f54a9d",
+      "body_sha256": "7014a7ca46a303cea31b9648b6a98e358099478d79fb2a62ef39f034a398b1af",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_snapshot",
+      "signature_sha256": "ef5026d842bd185acad14f92379c944f1db983a3f42547c13e2d150baa0f1c1e",
+      "body_sha256": "93836e8b7ab876b46b5ee8d1abfb57aebd6d5841383534ef4a776007d1da934e",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    }
+  ],
+  "after": [
+    {
+      "path": "src/game_core/extensions/viewer_ui.cpp",
+      "name": "ViewerUi::draw",
+      "signature_sha256": "af5c4109ffb88c769db23520815cad4706cfef9cd312c96a3eb3cbd7b1f54a9d",
+      "body_sha256": "38b29e8a06a4f1456e057eeba54952a4dc4f8f4fdce7697af281302827d887a1",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_render_host.cpp",
+      "name": "Ps2RenderHost::viewer_ui_snapshot",
+      "signature_sha256": "ef5026d842bd185acad14f92379c944f1db983a3f42547c13e2d150baa0f1c1e",
+      "body_sha256": "75d359bda0161065766143cc303a717f8547613068adbd3a4cd889d73e9f6b59",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::get_optimization_state",
+      "signature_sha256": "24a616fd0067ca95a31de9c7efeb453ffe887be49021f8e3d4a0e0688dd16e1f",
+      "body_sha256": "322ce9b96de49ab2dce07459b433471a7541eed979085b34d14037739e4e8494",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/ps2_track_renderer.cpp",
+      "name": "Ps2TrackRenderer::submit_frame",
+      "signature_sha256": "f88cc7cc040672c5074b7faa44e3a579eedfa98216a917bf68c4cf67623d9ec7",
+      "body_sha256": "7c3af80e737bac82a877c4d65a9ad47bc6a826c15c5a218f86c795adfe5d8f7a",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "name": "TrackMeshBatchCache::acquire",
+      "signature_sha256": "06ef987b7eff738a9a3586e234783df6704de0a34a7411a005c4c4e2fe4f037f",
+      "body_sha256": "03884afe70fdba023fa0f1fd3fdee567244e9a21ecbcc943e33098f764ba2690",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches_tests.cpp",
+      "name": "test_track_mesh_batch_cache",
+      "signature_sha256": "dff0b198f09223e11a4fb88e66308e54ac33750c9e13bff7b62397c79c6ca3d5",
+      "body_sha256": "d2e599a269827c7cb976048a42ab95e20fcef18845abd38d8879fc8f7b59798c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "name": "optimization_options_dictionary",
+      "signature_sha256": "a3e108631a9561d04a98afa02a548475cccb9ad732d5696817b642a8cf43131a",
+      "body_sha256": "36cde40cd1573167913cbd48f973cfd3348635f8ad50126e676a6d8f0ea64a6f",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "name": "optimization_options_from_dictionary",
+      "signature_sha256": "4b602a919c9358f7afa6859062c67a56797edefac0477a354c9e5f3a9fe48fc4",
+      "body_sha256": "bc2ab808bb66d90abe077984299eb56d0a500952426e43e3ff87335eee90dd90",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "name": "startup_track_optimizations",
+      "signature_sha256": "44fe4981c0718eb8be36f2ab6ff83aa90410056e4cce3482b483e4c6a5b80891",
+      "body_sha256": "91b8399dffddfa394080de8143a2cdf06554cf3e5aa23f7acc0a0f8be87d05e9",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_reflection_renderer.cpp",
+      "name": "submit",
+      "signature_sha256": "ee5a9a694ebb68684a0f69f442ce86d2e1fc38d41cf2f5e81f9576bc3150be70",
+      "body_sha256": "adf89bc0da4d4ecb93de9c94ad152f243a7636e75706711bf83cd91162750b3c",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_sun_renderer.cpp",
+      "name": "create_sun_target",
+      "signature_sha256": "7cd4ea22e3e979a53bb1e06108619942c1729ab10598d171cd4bb13f7410b7bc",
+      "body_sha256": "baebe6616424e70b82f5a1c59e0f23402f9cfca0f7dac7e4311e00768b36eb8b",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_world_batches.hpp",
+      "name": "eligible_track_world_batch",
+      "signature_sha256": "9f831d55b3d26222b8d9d5c928af50b66cc100e00c98a8811089eee90f73687a",
+      "body_sha256": "eacb0fa34602f1ed33c4143c15cc20ce1a4480d1b3e169f29909e6c5e7a07aa7",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_world_batches.hpp",
+      "name": "contiguous_track_world_batches",
+      "signature_sha256": "15849f5bf69337dfa3fb0f0fa58ae8b08ef955192354ae401862d089c7716b6f",
+      "body_sha256": "d7b1f581ebba17feace938e50ea1a7144cc4d1f64d3754d6100fe7f01c1cfd52",
+      "stub": false,
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    }
+  ],
+  "auxiliary_sources": [
+    {
+      "path": "src/platform/godot_bridge/track_command_batches.hpp",
+      "lf_sha256": "136d79fee8cf1bf60df4de958f9186d3f619f1e3f83a7e7880e3f548b28fc73c",
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_optimization.hpp",
+      "lf_sha256": "86991be4e24be10325643e6cbddb5069150dbdd4c2885ec36f80382fb22e375e",
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/platform/godot_bridge/track_mesh_batches.cpp",
+      "lf_sha256": "df2ca1d6ae65f8a53b88044b5efc2dbcaffe0cf2fe356b794cc2e196f9d98750",
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/game_core/extensions/viewer_ui.hpp",
+      "lf_sha256": "fe9bea066622bd25ee8a7cc05d85bf3c00eb6207d5e1bec906e775653266b685",
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/tests/track_world_batches_tests.cpp",
+      "lf_sha256": "7dcf3cb5231a44bafae5b1b464f553d70645c62a726711dec250de776c1f3689",
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "src/tests/track_draw_inventory.cpp",
+      "lf_sha256": "ea54ac27a7fa309b900aa235c665f69d5d403c259c6ced712ce442af025a9954",
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics.gd",
+      "lf_sha256": "c04dec9b91e0fb25805ca9e164f3a9b51a1a8f9aa7f2288ca02e3558bc0b05d5",
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "godot/scripts/debug/track_render_diagnostics_smoke.gd",
+      "lf_sha256": "c272436d6c7931dab6174063829bc3504455f8fbe7d9906dabf2ed0bb5837a54",
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "godot/scripts/debug/asset_viewer.gd",
+      "lf_sha256": "c468513b735e46df5654d4b097563f0156a6ac2d20145a007b8ef046298bd92c",
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_smoke.gd",
+      "lf_sha256": "23d754b5f7322c24d8189b1d3b97218fa40f066563d63ab838cefd93ceba7de5",
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    },
+    {
+      "path": "godot/scripts/runtime/track_optimization_reflection_smoke.gd",
+      "lf_sha256": "0b8f8723f0bbb6556a7aee6729b689fa6cb12729e3fc8d6803bc2795c2a5058c",
+      "kind": "port_adapter",
+      "evidence_id": "E0065H01",
+      "evidence_record": "reverse/task0065/host-rendering.md",
+      "reason": "User-authorized Track11 matrix submission/viewport diagnostics; raw native behavior retained with failed candidates gated out."
+    }
+  ]
+}
