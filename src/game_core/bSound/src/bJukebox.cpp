@@ -45,6 +45,17 @@ JukeboxCartridge JukeboxCartridge::load_from_zzdata(const std::string& root) {
             MusicTune tune;
             tune.category=category;tune.offset=word(metadata,o);tune.size=word(metadata,o+4);
             tune.sync_size=word(metadata,o+8);tune.name=text(metadata,o+12,84);
+            if(c>127 || t>127) hp2::not_implemented("0x001EEF60","Jukebox pair exceeds original signed-byte operands");
+            tune.cartridge_category=static_cast<std::uint8_t>(c);
+            tune.cartridge_song=static_cast<std::uint8_t>(t);
+            // 001AED90 stores the first field and each nonterminal '-' successor.
+            std::size_t field_start=0;
+            do {
+                const auto delimiter=tune.name.find('-',field_start);
+                tune.metadata_fields.push_back(tune.name.substr(field_start,delimiter-field_start));
+                if(delimiter==std::string::npos || delimiter+1==tune.name.size())break;
+                field_start=delimiter+1;
+            } while(true);
             // Original001AED90 splits on '-' without collapsing empty fields.
             std::size_t start=0;int field=0;
             while(field<4) {
@@ -72,7 +83,8 @@ PcmSound JukeboxCartridge::decode(std::size_t index) const {
 }
 bool Sub_001AF050(int type,bool genre_enabled) {
     if(type<0 || type>5) hp2::not_implemented("0x001AF050","jukebox song type outside recovered matrix");
-    constexpr bool frontend[6]={false,false,false,false,true,true};
+    // E-0092-J05:002B6300 is six rows of THREE columns, mode5 uses column0.
+    constexpr bool frontend[6]={false,false,false,true,true,true};
     return frontend[type] && genre_enabled;
 }
 std::optional<std::size_t> Sub_0027ECA8(const std::vector<bool>& enabled,std::size_t& cursor) {
@@ -92,6 +104,14 @@ int bRandom(int count,std::uint32_t& seed) {
 }
 FrontendMusic::FrontendMusic(const std::vector<MusicTune>& tunes) {
     for(const auto& tune:tunes) enabled_.push_back(Sub_001AF050(tune.type,true));
+}
+void FrontendMusic::set_enabled(std::vector<bool> enabled) {
+    if(enabled.size()!=enabled_.size())throw std::runtime_error("Jukebox filter size differs from cartridge");
+    enabled_=std::move(enabled);
+}
+void FrontendMusic::select(std::size_t index) {
+    if(index>=enabled_.size())throw std::runtime_error("Jukebox selection outside cartridge");
+    cursor_=index;playing_=true;
 }
 std::optional<std::size_t> FrontendMusic::enter(std::uint32_t frame_counter) {
     if(playing_) return std::nullopt;

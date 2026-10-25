@@ -996,3 +996,129 @@ void RaceEvent::GetRaceCount() {
     hp2::not_implemented("0x00202088", "RaceEvent::GetRaceCount (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+
+#include "game_core/indep/inc/EventTree.hpp"
+#include <cstring>
+#include <stdexcept>
+
+namespace port::race::event_reader {
+std::uint32_t word(const std::uint8_t* p){return std::uint32_t(p[0])|(std::uint32_t(p[1])<<8)|(std::uint32_t(p[2])<<16)|(std::uint32_t(p[3])<<24);}
+std::int16_t half(const std::uint8_t* p){return static_cast<std::int16_t>(std::uint16_t(p[0])|(std::uint16_t(p[1])<<8));}
+std::string text(const std::uint8_t* p,std::size_t size){std::size_t n=0;while(n<size && p[n])++n;return {reinterpret_cast<const char*>(p),n};}
+template<class T> const T* table(const std::vector<T>& values,int index,const char* address){
+    if(index<0 || static_cast<std::size_t>(index)>=values.size())hp2::not_implemented(address,"Debug event table index outside original loaded data");
+    return &values[static_cast<std::size_t>(index)];
+}
+void collect(const std::vector<hp2::assets::Chunk>& chunks,std::vector<const hp2::assets::Chunk*>& trees){
+    for(const auto& c:chunks){if(c.tag==0x80034a00)trees.push_back(&c);else if(c.is_container())collect(c.children,trees);}
+}
+}
+namespace port::race {
+// Debug001FB138/001FB458 and EventInfo type, E-0097-D01. Host parser only;
+// original pointer relocation/global list insertion/progress binding are excluded.
+std::vector<hp2::debug::EventTree> parse_debug_event_tables(const std::vector<std::uint8_t>& bytes){
+    using namespace event_reader;
+    std::size_t consumed=0;const auto chunks=hp2::assets::parse_chunks_top(bytes,&consumed);
+    if(consumed!=bytes.size())throw std::runtime_error("Incomplete event bundle chunk consumption");
+    std::vector<const hp2::assets::Chunk*> found;collect(chunks,found);
+    std::vector<hp2::debug::EventTree> result;
+    for(const auto* container:found){
+        hp2::debug::EventTree tree;
+        for(const auto& c:container->children){
+            const auto* data=bytes.data()+c.payload_offset();
+            if(c.tag==1){tree.sName=text(data,c.size);continue;}
+            if(c.tag==0x34a01 || c.tag==0x34a02 || c.tag==0x34a06){
+                if(c.size%4)throw std::runtime_error("Misaligned Debug event four-byte table");
+                auto& target=c.tag==0x34a01?tree.pCars:c.tag==0x34a02?tree.pTracks:tree.pOpponents;
+                for(std::size_t i=0;i<c.size;i+=4)target.push_back(word(data+i));
+            }else if(c.tag==0x34a03){
+                if(c.size%8)throw std::runtime_error("Misaligned Debug event goal table");
+                for(std::size_t i=0;i<c.size;i+=8)tree.pGoals.push_back({static_cast<std::uint16_t>(half(data+i)),static_cast<std::uint16_t>(half(data+i+2)),word(data+i+4)});
+            }else if(c.tag==0x34a04){
+                if(c.size%8)throw std::runtime_error("Misaligned Debug event reward table");
+                for(std::size_t i=0;i<c.size;i+=8){hp2::debug::EventReward reward;std::copy_n(data+i,8,reward.Field_0x00.begin());tree.pRewards.push_back(reward);}
+            }else if(c.tag==0x34a05){
+                if(c.size%0xbc)throw std::runtime_error("Misaligned Debug EventInfo table");
+                for(std::size_t i=0;i<c.size;i+=0xbc){
+                    const auto* r=data+i;hp2::debug::EventInfo e;
+                    e.sName=text(r+8,32);e.nNumber=static_cast<std::int8_t>(r[0x28]);e.nType=static_cast<std::int8_t>(r[0x29]);
+                    e.nClass=static_cast<std::int8_t>(r[0x2a]);e.nOpponentSelect=static_cast<std::int8_t>(r[0x2b]);e.nCops=static_cast<std::int8_t>(r[0x2c]);
+                    e.eCopStrength=static_cast<std::int32_t>(word(r+0x30));
+                    e.bRoadBlocks=static_cast<std::int8_t>(r[0x34]);e.bSpikeStrips=static_cast<std::int8_t>(r[0x35]);e.bBarricadeSmokeables=static_cast<std::int8_t>(r[0x36]);
+                    e.bTickets=static_cast<std::int8_t>(r[0x37]);e.bHelicopter=static_cast<std::int8_t>(r[0x38]);
+                    e.nNumBeACopRoadBlocks=static_cast<std::int8_t>(r[0x39]);e.nNumBeACopChoppers=static_cast<std::int8_t>(r[0x3a]);
+                    e.nCars=static_cast<std::int8_t>(r[0x3b]);e.nTracks=static_cast<std::int8_t>(r[0x3c]);e.nGoals=static_cast<std::int8_t>(r[0x3d]);
+                    e.nRewards=static_cast<std::int8_t>(r[0x3e]);e.nOpponents=static_cast<std::int8_t>(r[0x3f]);e.bZoneEnabled=static_cast<std::int8_t>(r[0x40]);e.nObjective=half(r+0x42);
+                    for(std::size_t j=0;j<20;++j)e.aCars[j]=half(r+0x44+j*2);
+                    for(std::size_t j=0;j<8;++j){e.aTracks[j]=half(r+0x6c+j*2);e.aGoals[j]=half(r+0x7c+j*2);e.aRewards[j]=half(r+0x8c+j*2);}
+                    for(std::size_t j=0;j<7;++j)e.aOpponents[j]=half(r+0x9c+j*2);
+                    const auto boost=word(r+0xac);std::memcpy(&e.fOpponentBoostScale,&boost,4);
+                    e.mTitleString=static_cast<std::int32_t>(word(r+0xb0));e.mDescriptionString=static_cast<std::int32_t>(word(r+0xb4));e.mDamage=static_cast<std::int32_t>(word(r+0xb8));
+                    if(e.nCars<0 || e.nCars>20 || e.nTracks<0 || e.nTracks>8 || e.nGoals<0 || e.nGoals>8 || e.nRewards<0 || e.nRewards>8 || e.nOpponents<0 || e.nOpponents>7)
+                        throw std::runtime_error("Debug EventInfo count exceeds original inline array");
+                    tree.pEvents.push_back(e);
+                }
+            }
+        }
+        // Debug001F9450 compares case-insensitively; E3/global registration and
+        // pointer ownership remain outside this non-E3 asset adapter.
+        auto folded=tree.sName;
+        for(auto& c:folded)if(c>='A' && c<='Z')c=static_cast<char>(c+('a'-'A'));
+        if(folded=="championship")tree.nType=0;
+        else if(folded=="hot pursuit")tree.nType=1;
+        else hp2::not_implemented("0x001F9450","unknown original Debug event tree name");
+        result.push_back(std::move(tree));
+    }
+    return result;
+}
+}
+namespace hp2::debug {
+// Exact Debug getter entries; E-0097-D02. Caller index rejection is original.
+// Debug0x001FBBC8, E-0097-D02; explicit host context, original valid-domain body.
+const std::uint32_t* EventInfo::GetCar(const EventTree& tree,int n)const {
+    if(n<0 || n>=nCars)return nullptr;
+    return ::port::race::event_reader::table(tree.pCars,aCars.at(n),"0x001FBBC8");
+}
+// Debug0x001FBC08, E-0097-D02; explicit host context, original valid-domain body.
+const EventGoal* EventInfo::GetGoal(const EventTree& tree,int n)const {
+    if(n<0 || n>=nGoals)return nullptr;
+    return ::port::race::event_reader::table(tree.pGoals,aGoals.at(n),"0x001FBC08");
+}
+// Debug0x001FBC48, E-0097-D02; explicit host context, original valid-domain body.
+const std::uint32_t* EventInfo::GetTrack(const EventTree& tree,int n)const {
+    if(n<0 || n>=nTracks)return nullptr;
+    return ::port::race::event_reader::table(tree.pTracks,aTracks.at(n),"0x001FBC48");
+}
+// Debug0x001FBC88, E-0097-D02; explicit host context, original valid-domain body.
+const EventReward* EventInfo::GetReward(const EventTree& tree,int n)const {
+    if(n<0 || n>=nRewards)return nullptr;
+    return ::port::race::event_reader::table(tree.pRewards,aRewards.at(n),"0x001FBC88");
+}
+// Debug0x001FBCC8, E-0097-D02; explicit host context, original valid-domain body.
+const std::uint32_t* EventInfo::GetOpponent(const EventTree& tree,int n)const {
+    if(n<0 || n>=nOpponents)return nullptr;
+    return ::port::race::event_reader::table(tree.pOpponents,aOpponents.at(n),"0x001FBCC8");
+}
+// Debug0x001FBD08, E-0097-D02; explicit host context, original valid-domain body.
+const EventGoal* EventInfo::GetObjective(const EventTree& tree)const {
+    return ::port::race::event_reader::table(tree.pGoals,nObjective,"0x001FBD08");
+}
+// Debug001FC028 E-0097-D02. Preserve the original default arm.
+int EventInfo::GetStateSize()const {
+    switch(nType){case 0:case 2:return 1;case 1:case 5:case 6:return 4;case 3:return 12;case 4:return 16;default:return 1;}
+}
+// Debug001FA178 E-0097-D03. Constants00325D10/14 both bits3C23D70A.
+void EventTrack::SetRace(std::uint32_t packed,::port::driving::init::ByteView race,
+    const std::function<std::optional<int>(int)>& GetTrackInfo){
+    race.require(0,0x310);
+    if(!GetTrackInfo)hp2::not_implemented("0x001FA178","original GetTrackInfo service missing");
+    race.word(0,packed&0xff);race.word(0x2c,(packed>>14)&15);
+    race.word(4,(packed>>10)&3);race.word(8,(packed>>12)&3);race.word(12,(packed>>9)&1);
+    const std::uint32_t bits=0x3c23d70a;float factor;std::memcpy(&factor,&bits,4);
+    race.scalar(0x10,static_cast<float>((packed>>18)&127)*factor);
+    race.scalar(0x14,static_cast<float>(packed>>25)*factor);
+    const auto info=GetTrackInfo(static_cast<int>(packed&255));
+    if(info)race.word(0x28,static_cast<std::uint32_t>(*info));
+}
+}

@@ -87,3 +87,12 @@ This is the quad dependency slice only. It does not establish complete frontend 
 ## Parent integration results
 
 The packet/backend extension and native frontend quad fixtures were subsequently implemented by TASK-0039. Parent integrated authored parser fields, draw colours/UVs, alpha dispatch, signed layers and exact visibility. Nonzero mode2 rotation remains a throwing gap. A containing-clip regression corrected right/bottom branch guards to test the original clip bound, preserving arbitrary uncut UV corners. See docs/FRONTEND_RENDER_AUDIT.md and the active task for final validation and original-equivalence limitations.
+
+## TASK-0095 continuation - E-0095-N04
+
+The Q07 construction-order unknown is now resolved by0013FBA0 tail insertion and
+001402A0 non-reordering postload: equal-layer CPU submission reverses authored
+order. Crucially final visual order also depends on00112858 bucket phases:
+24..20,15..0,19..16,28..25. Universal numeric descending is retired. See
+[NameEntry render evidence](task0095-name-entry.md) for original call sites,
+captures and bounded native/Godot validation. No original equivalence promotion.

@@ -10,6 +10,66 @@
 #include "game_core/indep/src/point.hpp"
 
 #include "game_core/port/not_implemented.hpp"
+#include "game_core/indep/inc/point.hpp"
+#include <cmath>
+
+namespace hp2::debug {
+// Debug001D73B8, E-0098-U01; exact source point.cpp E-0042-S001.
+void tCubic1D::MakeCoeffs(){
+    const float delta=ValDesired-Val;Coeff[3]=Val;Coeff[2]=dVal;
+    Coeff[0]=(dVal+dValDesired)-(delta+delta);
+    Coeff[1]=(delta*3.f-dValDesired)-(dVal+dVal);
+}
+// Debug001D7408, E-0098-U01.
+float tCubic1D::GetVal(float t)const{return ((Coeff[0]*t+Coeff[1])*t+Coeff[2])*t+Coeff[3];}
+// Debug001D7438, E-0098-U01.
+float tCubic1D::GetdVal(float t)const{return ((Coeff[0]*t*3.f+Coeff[1])+Coeff[1])*t+Coeff[2];}
+// Debug001D7468, E-0098-U01.
+float tCubic1D::GetddVal(float t)const{return (Coeff[0]*t*6.f+Coeff[1])+Coeff[1];}
+// Debug001D7490, E-0098-U01.
+float tCubic1D::GetDerivative(float t)const{
+    if(duration==0)hp2::not_implemented("0x001D7490","original zero-duration derivative exceptional domain");
+    const float reciprocal=1.f/duration;return GetdVal(t*reciprocal)*reciprocal;
+}
+// Debug001D74C8, E-0098-U01.
+float tCubic1D::GetSecondDerivative(float t)const{
+    if(duration==0)hp2::not_implemented("0x001D74C8","original zero-duration second derivative exceptional domain");
+    const float reciprocal=1.f/duration;return (GetddVal(t*reciprocal)*reciprocal)*reciprocal;
+}
+// Debug001D7508, E-0098-U01. Uses existing coefficients BEFORE MakeCoeffs.
+void tCubic1D::ClampDerivative(float magnitude){
+    const float derivative=GetDerivative(duration);
+    if(magnitude<std::abs(derivative))dValDesired=((std::abs(derivative)/derivative)*magnitude)*duration;
+}
+// Debug001D7568, E-0098-U01. Original00325B38 bits3E2AAAAB (float32 one sixth).
+void tCubic1D::ClampSecondDerivative(float magnitude){
+    float first=GetSecondDerivative(0),last=GetSecondDerivative(duration);
+    const float a=std::abs(first),b=std::abs(last);
+    if(magnitude<a)first=(a/first)*magnitude;
+    if(magnitude<b)last=(b/last)*magnitude;
+    if(magnitude<b || magnitude<a){
+        const float squared=duration*duration;first=first*squared;
+        Coeff[1]=first*.5f;Coeff[0]=(last*squared-first)*0x1.555556p-3f;
+    }
+}
+// Debug001D7B00, E-0098-U01. Preserve flag2 rebuild and threshold<1 behavior.
+void cPoint::SplineSeek(tCubic1D& point,float elapsed,float d_clamp,float dd_clamp){
+    if(point.state!=1){
+        if(point.state!=2)return;
+        point.time=0;if(point.flags==0)point.state=1;
+        if(0<d_clamp)point.ClampDerivative(d_clamp);
+        point.MakeCoeffs();
+        // Original deliberately passes d_clamp rather than dd_clamp here.
+        if(0<dd_clamp)point.ClampSecondDerivative(d_clamp);
+    }
+    if(point.duration==0)hp2::not_implemented("0x001D7B00","original zero-duration spline exceptional domain");
+    point.time=point.time+elapsed/point.duration;
+    if(point.arrivalThreshold<=point.time){
+        if(1.f<=point.arrivalThreshold){point.Val=point.ValDesired;point.dVal=point.dValDesired;}
+        point.state=0;
+    }else{point.Val=point.GetVal(point.time);point.dVal=point.GetdVal(point.time);}
+}
+}
 
 namespace hp2::recovered {
 // ELF 0x001DB3D0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001db3d0.md.

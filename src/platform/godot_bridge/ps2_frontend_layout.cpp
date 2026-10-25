@@ -103,6 +103,7 @@ void Ps2FrontEndLayout::_bind_methods() {
     godot::ClassDB::bind_method(godot::D_METHOD("title_pulse_restart"), &Ps2FrontEndLayout::title_pulse_restart);
     godot::ClassDB::bind_method(godot::D_METHOD("set_startup_presentation", "movie_visible", "letterbox", "startup_active"), &Ps2FrontEndLayout::set_startup_presentation);
     godot::ClassDB::bind_method(godot::D_METHOD("frontend_music", "previous_finished"), &Ps2FrontEndLayout::frontend_music);
+    godot::ClassDB::bind_method(godot::D_METHOD("start_frontend_music"), &Ps2FrontEndLayout::start_frontend_music);
     godot::ClassDB::bind_method(godot::D_METHOD("find_screen_by_name", "screen_name"), &Ps2FrontEndLayout::find_screen_by_name);
 }
 
@@ -177,10 +178,13 @@ godot::Array Ps2FrontEndLayout::drain_menu_audio() {
     return result;
 }
 
-godot::Dictionary Ps2FrontEndLayout::frontend_music(bool previous_finished) {
-    const auto request = runtime_.frontend_music(previous_finished);
+namespace {
+godot::Dictionary music_dictionary(const port::runtime::MusicRequest& request) {
     godot::Dictionary result;
     result["ok"] = request.ok;
+    result["stop"] = request.stop;
+    result["gain"] = request.gain;
+    result["output_mode"] = request.output_mode;
     if (!request.not_implemented.empty()) result["not_implemented"] = to_godot(request.not_implemented);
     if (request.has_track) {
         result["stream"] = pcm_stream(request.pcm);
@@ -190,6 +194,15 @@ godot::Dictionary Ps2FrontEndLayout::frontend_music(bool previous_finished) {
         result["name"] = godot::String(request.name.c_str());
     }
     return result;
+}
+
+} // namespace
+
+godot::Dictionary Ps2FrontEndLayout::frontend_music(bool previous_finished) {
+    return music_dictionary(runtime_.frontend_music(previous_finished));
+}
+godot::Dictionary Ps2FrontEndLayout::start_frontend_music() {
+    return music_dictionary(runtime_.frontend_music(false,true));
 }
 
 bool Ps2FrontEndLayout::event_tree_joy_event(int joy_event) {

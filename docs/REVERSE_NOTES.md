@@ -704,3 +704,28 @@ DriveOver spray, timed wiper state, Splash1/2/3 sound selection and original rig
 animation matrices. Raw assets/captures remain ignored. Full terrain entry,
 world sound scheduling, original replay capture and separate RainSplash remain
 explicit limits. See reverse/task0089; PC tests do not establish original parity.
+
+
+## TASK-0098 original selection core,2026-10-26
+
+See [selection evidence](../reverse/task0098/selection-core.md), hashed capture
+manifest and active TASK-0098. Original Debug car/skin/list/popup state now has
+scoped native tests; no complete page or career claim. Debug CarLanguageInfo has
+24-byte rows/full-name offset0x10; Retail28-byte rows/full-name0x14. All50 reviewed
+common identities/IDs correspond; never overlay layouts. Original camera output
+is world->view, not camera pose. Presentation/launch and original runtime matches
+remain open, with explicit throwing boundaries.
+
+## TASK-0098 Tick and locked display continuation,2026-10-26
+
+E-0098-T01 restores001947D0 orchestration with explicit original services.
+Strict overlay/thumbnail gates and superseded completion unloading prevent wrong
+identity display. The double ShowLoadedCar at full-overlay completion is original.
+Camera offsets require00196688 initialization beyond ELF zero-fill. Fresh00193AE0
+is JR RA/NOP. E-0098-L02 restores signed timer/alpha/group-slide and task/BAC/event/
+points unlock description priority; formatting varargs use signed event nNumber.
+E-0098-F02 preserves stage1/7 packet boundaries, without implementing original
+intervening3D shared depth/reflection. See the three task0098 dependency records
+and hashed captures. Eight native regressions and normal Godot DLL build pass;
+formal selection entry/whole loading/World/pursuit/outcome and original/performance
+acceptance remain open. No matching Debug PCSX2 scenario; no Verified promotion.

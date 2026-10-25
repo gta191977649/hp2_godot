@@ -1,5 +1,14 @@
 # Architecture and ownership
 
+TASK0092/0093 extends the native frontend owner with Jukebox and Audio Options
+snapshots, exact song-pair metadata, scalar Hermite state, live volume/output
+requests and the successful Autosave host-device path. The Godot script polls
+audio-device requests and owns its private output bus; it does not choose songs,
+widget content, slider positions or save transitions. Autosave uses original
+memory-card popup geometry and capacity wrapping, while platform storage retains
+the existing read-input/private-write separation. See FRONTEND_COMPLETION.md and
+the TASK0092/0093 evidence records for scope and original-hardware limitations.
+
 TASK0088 separates original POV selection from held lookback: native camera
 publishes pose/projection/own-car flags; the host binds V cycle, B hold/release
 and temporary mouse orbit. TASK0089 adds raw native timed-wiper state and splash
@@ -600,3 +609,33 @@ billboards, independent of GPU simulation. VehicleFlareState is a Godot-free
 snapshot channel; Model retains original markers and textures. Runtime Debug
 resources supply original parameters. See PERFORMANCE_TASK0085.md and
 VEHICLE_LIGHT_FLARES.md for tested boundaries and the user-waived timing matrix.
+
+## TASK-0096/0098 version-isolated career foundation
+
+hp2::debug EventTree/CarTypeInfo/FrontendPlayerInfo/VisibleCarSet/CarSelector
+hold decoded host state for the authorized Debug career behavior. Existing Retail
+frontend/profile storage remains independent. Explicit port services bind assets,
+translation, original unlock checks, popup submission and continuation; absent
+required services throw. These types do not assert original object ABI or allocator
+lifetime. Native selection is not yet bound to the production event entry.
+
+VisibleCar ownership is allocated once at selection entry, with stable pointee
+identity through original adjacent sorting. Per-input neighbor lookup is constant
+time via the original CarIndex and bounded vector storage; no per-frame list copy
+or Dictionary publication. Renderer/model cache/async ownership remains future
+TASK-0098 work. Debug24-byte and Retail28-byte language records are mapped by
+reviewed identities/IDs, never overlaid. See reverse/task0098/selection-core.md.
+
+TASK-0098 continuation: TickServices binds original selector loading/palette/
+lighting/effect dependencies to the native001947D0 ordering, without owning a
+synthetic race or suppressing missing services. LockedDisplay uses stable native
+VisibleCar identity, original spline/timer state and required localized rectangle
+submission. Its reward tables decode from SHA-bound Debug memory. Original
+static camera-offset stores run once per fresh selection image, separately from
+ELF mapping. Constructor/destructor and production lifecycle remain incomplete.
+
+Frontend Frame packets now retain stage1/7 quad ranges alongside the unchanged
+flat vector. Concatenation rebases them and coverage validation detects legacy
+unclassified packets. Existing canvas submission remains flat. Original selector
+stages0/2/4 require a reviewed compositor, separate mirrored-car passes and shared
+depth; stage metadata alone does not supply that implementation.

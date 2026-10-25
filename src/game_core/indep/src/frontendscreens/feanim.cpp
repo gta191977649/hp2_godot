@@ -134,3 +134,49 @@ void tSlideAnimation::Sub_00248BE8() {
     hp2::not_implemented("0x00248BE8", "tSlideAnimation::Sub_00248BE8 (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+namespace port::selection::alpha_projection {
+// Debug001411D8/00140308,00140FC8/00140CC0. Semantic adapter of existing widget storage.
+unsigned get(const hp2::frontend::FeWidget& w,unsigned corner){
+    if(w.type==2)return corner==0?w.a:w.field_0x5c[corner-1]>>24;
+    return w.type==1?w.a:0;
+}
+void set(hp2::frontend::FeWidget& w,int alpha,unsigned corner){
+    const auto value=static_cast<std::uint8_t>(alpha);
+    if(w.type==2){
+        w.dirty_0x2b=6;
+        if(corner==0)w.a=value;
+        else w.field_0x5c[corner-1]=(w.field_0x5c[corner-1]&0xffffffu)|(std::uint32_t(value)<<24);
+    }else if(w.type==1 && w.a!=value){w.a=value;w.dirty_0x2b=6;}
+}
+}
+namespace hp2::debug {
+// Debug002416F8, E-0098-U03. Signed char conversion is intentional, including alpha128.
+feAnimAlphaElement::feAnimAlphaElement(hp2::frontend::FeWidget* object):Object(object){
+    if(Object)for(unsigned i=0;i<4;++i){const auto a=::port::selection::alpha_projection::get(*Object,i);
+        SavedAlphas[i]=float(a<128?int(a):int(a)-256);}
+}
+// Debug002418A8, E-0098-U03. Always use captured alphas, never compound live alpha.
+void feAnimAlphaElement::SetAlphaScale(float scale){
+    if(!Object)return;
+    const unsigned count=Object->type==2?4:1;
+    for(unsigned i=0;i<count;++i)::port::selection::alpha_projection::set(*Object,int(SavedAlphas[i]*scale),i);
+}
+// Debug00241978, E-0098-U03. Restore authored corner alphas when leaving the screen.
+feAnimAlphaElement::~feAnimAlphaElement(){SetAlphaScale(1);}
+// Debug00241B00, E-0098-U03. Host screen reference replaces original screen-hash lookup.
+feAlphaAnimation::feAlphaAnimation(hp2::frontend::FeScreen& screen):ScreenHash(screen){}
+// Debug00241A30, E-0098-U03. Preserve original group traversal order.
+feAlphaAnimation::feAlphaAnimation(hp2::frontend::FeScreen& screen,std::uint32_t group):ScreenHash(screen){
+    for(auto& w:screen.widgets)if(w.class_hash==group)Fading.push_back(std::make_unique<feAnimAlphaElement>(&w));
+}
+// Debug00241B18, E-0098-U03. Missing original object is a no-op; duplicate additions are retained.
+void feAlphaAnimation::AddObject(std::uint32_t hash){
+    if(auto* w=hp2::frontend::FindWidget_00143D50(ScreenHash,hash,0))Fading.push_back(std::make_unique<feAnimAlphaElement>(w));
+}
+// Debug00241B90, E-0098-U03. No allocations in the frame update.
+void feAlphaAnimation::SetAlphaScale(float scale){for(auto& item:Fading)item->SetAlphaScale(scale);}
+// Debug00241BE8 ->00244080, E-0098-U03. Original removes head first; this matters
+// when AddObject captured the same widget again after its alpha changed.
+feAlphaAnimation::~feAlphaAnimation(){for(auto& item:Fading)item.reset();}
+}

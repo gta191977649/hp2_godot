@@ -885,10 +885,9 @@ void MenuHighlightAnim_00248870::Update_00248970(float now_seconds, const Widget
     if (screen_0x00 == nullptr) return;
     const float elapsed_s = now_seconds - start_time_0x08;
     if (elapsed_s < kAnimDuration_gp_0x3ADC) {
-        // FUN_0025A5E0: sine of the scaled argument. The ELF reaches it through a 16-bit angle
-        // table (factor 65536 / 2pi), which is a sine, so std::sin reproduces it.
+        // E-0094-D04: original16-bit angle quantization and Retail polynomial.
         const float phase = (elapsed_s * kAnimQuarterTurn_gp_0x678C) / kAnimDuration_gp_0x3ADC;
-        const float eased = std::sin(phase);
+        const float eased = bSin(phase);
         const float scale = scale_start_0x14 + (scale_end_0x18 - scale_start_0x14) * eased;
         const float alpha = kAnimAlphaStart_gp_0x3AD0 +
                             (kAnimAlphaEnd_gp_0x3ACC - kAnimAlphaStart_gp_0x3AD0) * eased;
@@ -1053,8 +1052,7 @@ void tScrollingMenuList::Update_0024A1A8(float delta) {
     }
     field_0x24 += delta*10;
     if(field_0x24>6.283f)field_0x24-=6.283f;
-    // FUN0025A5E0 table quantization remains the existing port std::sin limitation.
-    const int alpha=static_cast<int>(128*(std::sin(field_0x24)+1)*0.5f);
+    const int alpha=static_cast<int>(128*(bSin(field_0x24)+1)*0.5f);
     for(auto hash:{field_0x28,field_0x2c})
         if(auto* a=FindWidget_00143D50(*field_0x00,hash,0))SetAlpha(*a,alpha);
 }
@@ -1085,7 +1083,7 @@ void tLeftRightArrowScroll::Update_0024A730(float delta,const WidgetMeasure& mea
         // 001447E0 computes centre after bounding-box conversion to integer.
         const int top=static_cast<int>(rect.y0),bottom=static_cast<int>(rect.y1);
         const int centre=top+(bottom-top)/2;
-        const int alpha=static_cast<int>(128*(std::sin(field_0x1c)+1)*0.5f);
+        const int alpha=static_cast<int>(128*(bSin(field_0x1c)+1)*0.5f);
         for(auto hash:{field_0x04,field_0x08})if(auto*w=FindWidget_00143D50(*field_0x00,hash,2)){
             const auto size=measure(*w);
             SetAlpha(*w,alpha);
@@ -1350,3 +1348,48 @@ void tPopupMenu::GetCurrentMenuItem() {
     hp2::not_implemented("0x0016B5A8", "tPopupMenu::GetCurrentMenuItem (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+namespace hp2::frontend {
+// ELF00144BA0/00144AE8 and whitespace00144A68, E-0092-J07. Preserve the
+// original scanner restart at start-of-next-line+1, rather than standard wrapping.
+void Sub_00144BA0(FeScreen& screen,std::uint32_t class_hash,const std::string& text) {
+    std::vector<FeWidget*> lines;
+    for(auto& widget:screen.widgets)if(widget.type==1 && widget.class_hash==class_hash && lines.size()<32)
+        lines.push_back(&widget);
+    if(lines.empty())return;
+    const auto emit=[&](std::size_t row,std::size_t begin,std::size_t end) {
+        if(end-begin>255)hp2::not_implemented("0x00144AE8","popup substring exceeds original temporary buffer");
+        auto& widget=*lines[row];
+        if(widget.text_capacity==0)hp2::not_implemented("0x00140E20","popup line has zero capacity");
+        const auto value=text.substr(begin,end-begin);
+        widget.visible=1;
+        if(widget.text!=value) {
+            widget.text=value.substr(0,widget.text_capacity-1);
+            widget.string_id_0x60=0;widget.dirty_0x2b=5;
+        }
+    };
+    std::size_t row=0,begin=0,last_break=0,pos=0,scanned=0;
+    bool has_break=false;
+    while(pos<text.size() && text[pos]!='\0') {
+        const char c=text[pos];
+        if(c==' ' || c=='\t' || c=='@') {has_break=true;last_break=pos;}
+        if(lines[row]->text_capacity<2)hp2::not_implemented("0x00144BA0","popup line capacity below recovered range");
+        bool split=false;
+        if(has_break) {
+            if(scanned>=lines[row]->text_capacity-2)split=true;
+            else {++scanned;if(c=='@')split=true;}
+            if(split) {
+                emit(row,begin,last_break);
+                begin=last_break+1;scanned=0;
+                if(++row==lines.size())return;
+                has_break=false;pos=begin;
+            }
+        } else ++scanned;
+        ++pos;
+    }
+    // A forced trailing break can leave the original scanner one byte beyond NUL;
+    // the host string ends at that NUL and does not copy unrelated memory.
+    emit(row,begin,std::min(pos,text.size()));
+    for(std::size_t i=row+1;i<lines.size();++i)lines[i]->visible=0;
+}
+}

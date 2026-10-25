@@ -4,7 +4,9 @@
 // partial port-side reconstruction, not the original translation unit.
 #include "options.hpp"
 #include "game_core/port/not_implemented.hpp"
+#include <algorithm>
 #include <cstdio>
+#include <cstring>
 
 bool ::port::frontend::advance_zero_velocity_path(hp2::frontend::AnimationGroup& path, float delta_seconds) {
         if (path.field_0x48 == 0) return true;
@@ -28,6 +30,408 @@ bool ::port::frontend::advance_zero_velocity_path(hp2::frontend::AnimationGroup&
                              path.field_0x34) * t + path.field_0x38;
         }
     return path.field_0x48 == 0;
+}
+
+namespace port::frontend::jukebox_projection {
+// Host bounds checks surround the original array accesses; malformed/unsupported
+// inputs fail explicitly instead of manufacturing songs or clipping the list.
+std::uint32_t word(const JukeboxScreenState& state,std::size_t offset) {
+    std::uint32_t value=0;
+    for(unsigned i=0;i<4;++i)value|=std::uint32_t(state.snapshot.at(offset+i))<<(i*8);
+    return value;
+}
+std::size_t group_index(const JukeboxScreenState& state) {
+    const auto index=state.snapshot[0xae];
+    if(index>=state.groups.size()) hp2::not_implemented("0x001F0478","Jukebox category outside recovered groups");
+    return index;
+}
+void preview(const JukeboxScreenState& state,const JukeboxScreenServices& services,bool resume) {
+    const auto& group=state.groups.at(group_index(state));
+    if(state.cursor<0 || static_cast<std::size_t>(state.cursor)>=group.songs.size())
+        hp2::not_implemented("0x001F0CC8","Jukebox song cursor outside recovered group");
+    const auto song=group.songs[static_cast<std::size_t>(state.cursor)];
+    if(!services.preview) hp2::not_implemented("0x0027D6A8","Jukebox preview service missing");
+    services.preview(state.snapshot[0x1c+song*4],state.snapshot[0x1d+song*4],resume);
+}
+// ELF00143E70 ->00140E20, E-0092-J04; the owning string storage is host-side.
+void set_text(hp2::frontend::FeScreen& screen,std::uint32_t hash,const std::string& value) {
+    auto* widget=hp2::frontend::FindWidget_00143D50(screen,hash,1);
+    if(!widget || widget->text==value)return;
+    if(widget->text_capacity==0)
+        hp2::not_implemented("0x00140E20","Jukebox dynamic text has zero original capacity");
+    widget->text=value.substr(0,widget->text_capacity-1);
+    widget->string_id_0x60=0;
+    widget->dirty_0x2b=5;
+}
+void set_colour(hp2::frontend::FeScreen& screen,std::uint32_t hash,
+    const hp2::frontend::MenuColour_00169BD0& colour) {
+    if(auto* widget=hp2::frontend::FindWidget_00143D50(screen,hash,1))hp2::frontend::SetColor(*widget,colour);
+}
+}
+
+namespace port::frontend::display_projection {
+template<std::size_t N>std::uint32_t word(const std::array<std::uint8_t,N>& bytes,std::size_t offset) {
+    std::uint32_t value=0;for(unsigned b=0;b<4;++b)value|=std::uint32_t(bytes.at(offset+b))<<(b*8);return value;
+}
+template<std::size_t N>void store(std::array<std::uint8_t,N>& bytes,std::size_t offset,std::uint32_t value) {
+    for(unsigned b=0;b<4;++b)bytes.at(offset+b)=static_cast<std::uint8_t>(value>>(b*8));
+}
+void label(hp2::frontend::FeScreen& screen,std::uint32_t hash,std::uint32_t id,
+    const std::function<std::string(std::uint32_t)>& localize) {
+    hp2::frontend::SetWidgetStringId_001449A8(screen,hash,id);
+    if(auto* widget=hp2::frontend::FindWidget_00143D50(screen,hash,1))widget->text=id ? localize(id) : "";
+}
+template<std::size_t N>std::uint8_t cycle(std::uint8_t current,int direction,const std::uint8_t (&table)[N]) {
+    for(std::size_t i=0;i<N;++i)if(table[i]==current)return table[(static_cast<int>(i)+direction+static_cast<int>(N))%N];
+    return table[0]; //001BD8B0 unknown-value path ignores direction.
+}
+}
+
+namespace hp2::frontend {
+// E-0094-D01:001F3A28/001F3730/001EE148 and six original change helpers.
+const char* Sub_001F3A28(::port::frontend::DisplayOptionsState& state,int message,MenuEvent_0016A458& event,
+    const ::port::frontend::DisplayContext& context) {
+    using namespace ::port::frontend::display_projection;
+    const auto item=event.field_0x00-0x52e039f3u;
+    if(message==1) {
+        if(item==6)return "Customize P1 HUD";
+        if(item==7)return "Customize P2 HUD";
+        if(item==8)return "Calibrate display offset";
+        event.sound_id_0x0C=0;
+    } else if((message==6 || message==7) && item<6) {
+        const int direction=message==6 ? -1 : 1;
+        auto& bytes=state.snapshot;
+        if(item==0) {
+            constexpr std::uint8_t field_003140A0[]{0,1,2,3,4,6};
+            constexpr std::uint8_t field_00331090[]{7,6},field_00331098[]{8,6};
+            if(context.gameflow==3 || (context.dat_0031ab0c==0 && context.gp_ae48==1))bytes[2]=cycle(bytes[2],direction,field_003140A0);
+            else if(context.dat_0031ab0c!=0)bytes[4]=cycle(bytes[4],direction,field_00331098);
+            else bytes[3]=cycle(bytes[3],direction,field_00331090);
+            bytes[3]=bytes[2]==6 ? 6 : 7;bytes[4]=bytes[2]==6 ? 6 : 8;
+        } else if(item==1)bytes[0]=bytes[0]==0;
+        else if(item==2)bytes[1]=bytes[1]==0;
+        else if(item==3)bytes[5]=bytes[5]==2 ? 0 : 2;
+        else if(item==4)bytes[6]=bytes[6]==0;
+        else if(item==5)bytes[7]=bytes[7]==0;
+        event.sound_id_0x0C=message==6 ? 1 : 2;
+    } else if(message==13)event.sound_id_0x0C=0;
+    return nullptr;
+}
+// E-0094-D01:001F37D0/001F38D0/001F3950/001F36D8/001F3630/001F3650.
+void Sub_001F3A28(const ::port::frontend::DisplayOptionsState& state,FeScreen& screen,
+    const std::function<std::string(std::uint32_t)>& localize) {
+    using namespace ::port::frontend::display_projection;
+    const auto& b=state.snapshot;
+    constexpr std::uint32_t field_001F37D0[]{0x22345,0x22346,0x22347,0x223a8,0x22348,0x22349,0x22353,0,0x223a9,0x223aa};
+    if(b[2]>=10 || b[5]>=3)hp2::not_implemented("0x001F37D0","Display value outside original string tables");
+    label(screen,0x55cb09f2,field_001F37D0[b[2]],localize);
+    label(screen,0x2e931f1b,b[0] ? 0x22352 : 0x22353,localize);
+    label(screen,0x03d90172,b[1] ? 0x2234b : 0x2234a,localize);
+    constexpr std::uint32_t field_002BA1B8[]{0x22353,0x18e71,0x22352};
+    label(screen,0x5610f2f4,field_002BA1B8[b[5]],localize);
+    label(screen,0x422313cb,b[6] ? 0x22352 : 0x22353,localize);
+    label(screen,0x8fe4086b,b[7] ? 0x22352 : 0x22353,localize);
+}
+// E-0094-D02,001F46D8. Address-preserving bounded changes to player settings.
+void Sub_001F46D8(::port::frontend::HudOptionsState& state,int message,MenuEvent_0016A458& event) {
+    using namespace ::port::frontend::display_projection;
+    const auto item=event.field_0x00-0x52e039f3u;
+    if((message==6 || message==7) && item<7) {
+        auto& b=state.snapshot;
+        if(item==0)store(b,0xc,word(b,0xc)==0);
+        else if(item==1)store(b,8,word(b,8)==0);
+        else if(item==2)store(b,0x10,word(b,0x10)^0x40u);
+        else if(item==3)store(b,0x10,word(b,0x10)^0x10u);
+        else if(item==4)store(b,0x10,word(b,0x10)^0x100u);
+        else if(item==5) {
+            const int next=static_cast<int>(b[6])+(message==6 ? -1 : 1);
+            b[6]=static_cast<std::uint8_t>(next<0 ? 4 : next>4 ? 0 : next);
+            store(b,0x10,b[6]==4 ? word(b,0x10)&~4u : word(b,0x10)|4u);
+        } else store(b,0x2c,word(b,0x2c)==0);
+        event.sound_id_0x0C=message==6 ? 1 : 2;
+    } else if(message==1 || message==13)event.sound_id_0x0C=0;
+}
+// E-0094-D02: six value helpers001F4360..001F46B0 retain original conditions.
+void Sub_001F46D8(const ::port::frontend::HudOptionsState& state,FeScreen& screen,
+    const std::function<std::string(std::uint32_t)>& localize) {
+    using namespace ::port::frontend::display_projection;
+    const auto& b=state.snapshot;const auto flags=word(b,0x10),lookback=word(b,0xc);
+    label(screen,0x2e018745,lookback==0 ? 0x22356 : lookback==1 ? 0x22351 : 0,localize);
+    label(screen,0xffc3dcd2,word(b,8)==1 ? 0x22353 : 0x22352,localize);
+    label(screen,0x4ceb3ed2,(flags&0x40) ? 0x22352 : 0x22353,localize);
+    label(screen,0x1054482b,(flags&0x10) ? 0x22352 : 0x22353,localize);
+    label(screen,0xc7e2117e,(flags&0x100) ? 0x22352 : 0x22353,localize);
+    constexpr std::uint32_t field_001F45D8[]{0x2234c,0x2234d,0x2234e,0x2234f,0x22353};
+    label(screen,0x6caf6d10,b[6]<5 ? field_001F45D8[b[6]] : 0,localize);
+    label(screen,0x6bd89c11,word(b,0x2c) ? 0x22352 : 0x22353,localize);
+}
+// E-0094-D03:001F4B20 jump table002BA3D0 and complete interior listing.
+bool Sub_001F4B20(::port::frontend::DisplayOffsetState& state,int message,int& sound) {
+    sound=0;
+    if(message==6) {const auto next=static_cast<std::int32_t>(static_cast<std::uint32_t>(state.x)-4u);state.x=next< -650 ? -650 : next;if(next>= -650)sound=1;}
+    else if(message==7){state.x=static_cast<std::int32_t>(static_cast<std::uint32_t>(state.x)+4u);sound=1;}
+    else if(message==8){const auto next=static_cast<std::int32_t>(static_cast<std::uint32_t>(state.y)-1u);state.y=next< -50 ? -50 : next;if(next>= -50)sound=1;}
+    else if(message==9){state.y=static_cast<std::int32_t>(static_cast<std::uint32_t>(state.y)+1u);sound=1;}
+    else if(message==14){state.x=state.cached_x;state.y=state.cached_y;sound=5;}
+    else if(message==17)sound=6;
+    else if(message==1){sound=5;return true;}
+    return false;
+}
+
+// ELF001DAEC8 bounded scalar path, E-0093-A01. All operation grouping follows
+// 001DA780,001DA7D0,001DA800; no Godot tween or zero-derivative substitution.
+void Sub_001DAEC8(::port::frontend::ScalarPath& path,float delta) {
+    if(path.phase!=1 && path.phase!=2)return;
+    if(path.phase==2) {
+        path.time=0;path.phase=1;
+        const float difference=path.target-path.current;
+        path.a=(path.velocity+path.target_velocity)-(difference+difference);
+        path.b=(difference*3.0f-path.target_velocity)-(path.velocity+path.velocity);
+        path.c=path.velocity;path.d=path.current;
+    }
+    path.time+=delta/path.duration;
+    if(path.limit<=path.time) {
+        if(path.limit>=1.0f){path.current=path.target;path.velocity=path.target_velocity;}
+        path.phase=0;
+    } else {
+        path.current=((path.a*path.time+path.b)*path.time+path.c)*path.time+path.d;
+        path.velocity=(path.a*path.time*3.0f+path.b+path.b)*path.time+path.c;
+    }
+}
+}
+
+namespace port::frontend::audio_projection {
+constexpr std::uint32_t defaults[]{0x3ee66666,0x3f59999a,0x3ec28f5c,0x3f0ccccd,
+    0x3ea8f5c3,0x3e9eb852,0x3f400000};
+float read_float(const std::array<std::uint8_t,0xb0>& bytes,std::size_t index) {
+    std::uint32_t bits=0;
+    for(unsigned b=0;b<4;++b)bits|=std::uint32_t(bytes.at(index*4+b))<<(b*8);
+    float result;std::memcpy(&result,&bits,4);return result;
+}
+void write_float(std::array<std::uint8_t,0xb0>& bytes,std::size_t index,float value) {
+    std::uint32_t bits;std::memcpy(&bits,&value,4);
+    for(unsigned b=0;b<4;++b)bytes.at(index*4+b)=static_cast<std::uint8_t>(bits>>(b*8));
+}
+float factor(std::size_t index) {
+    if(index>=7)hp2::not_implemented("0x0016DC20","Audio slider index outside seven original categories");
+    float value;std::memcpy(&value,&defaults[index],4);return 0.7f/value;
+}
+}
+
+namespace hp2::frontend {
+// ELF001EF3C8/0016DC20, E-0093-A01. Constructor snaps the initial path to
+// normalized raw amplitude (no entrance animation) and preserves the full snapshot.
+void Sub_001EF3C8(::port::frontend::AudioOptionsState& state,const std::array<std::uint8_t,0xb0>& snapshot) {
+    state={};state.snapshot=snapshot;
+    for(std::size_t i=0;i<7;++i) {
+        auto& path=state.sliders[i];
+        path.current=::port::frontend::audio_projection::read_float(snapshot,i)*::port::frontend::audio_projection::factor(i);
+        path.target=path.current;
+    }
+}
+// ELF0016DD38/0016DD18/0016DD28, E-0093-A01.
+std::optional<float> Sub_0016DD38(::port::frontend::AudioOptionsState& state,std::size_t index,float delta) {
+    using namespace ::port::frontend::audio_projection;
+    const float scale=factor(index),old=read_float(state.snapshot,index);
+    float normalized=(old+delta)*scale;
+    if(normalized>1.0f)normalized=1.0f;
+    if(normalized<0.0f)normalized=0.0f;
+    const float raw=normalized/scale;
+    write_float(state.snapshot,index,raw);
+    auto& path=state.sliders.at(index);path.target=normalized;
+    if(normalized!=path.current)path.phase=2;
+    if(raw!=old)return normalized;
+    return std::nullopt;
+}
+// ELF0016DE30 +001EFB38, E-0093-A02. Rectangle integer endpoints precede
+// normalized interpolation and final truncation. Marker scale/Y remain authored.
+void Sub_0016DE30(::port::frontend::AudioOptionsState& state,FeScreen& screen,float delta,
+    const WidgetMeasure& measure,const std::function<std::string(std::uint32_t)>& localize) {
+    constexpr std::uint32_t field_001EF3C8[]{0xc866642b,0xc866686c,0xc8666cad,0xc86670ee,0xc866752f,0xc8667970,0xc8667db1};
+    for(std::size_t i=0;i<7;++i) {
+        Sub_001DAEC8(state.sliders[i],delta);
+        const auto rect=GetWidgetRect_00144280(screen,0xa29f7a16+static_cast<std::uint32_t>(i),measure);
+        if(!rect.valid)continue;
+        const int left=static_cast<int>(rect.x0),right=static_cast<int>(rect.x1);
+        const int x=static_cast<int>(static_cast<float>(left)+state.sliders[i].current*static_cast<float>(right-left));
+        if(auto* marker=FindWidget_00143D50(screen,field_001EF3C8[i],0)) {
+            if(marker->x!=x){marker->x=static_cast<float>(x);marker->dirty_0x2b=4;}
+        }
+    }
+    const unsigned output=state.snapshot[0xac]|(unsigned(state.snapshot[0xad])<<8);
+    constexpr std::uint32_t field_001EFB38[]{0x1adb9,0x1adb8,0x1adbb};
+    if(output>2)hp2::not_implemented("0x001EFB38","Audio output mode outside original selector");
+    SetWidgetStringId_001449A8(screen,0x2932dfca,field_001EFB38[output]);
+    if(auto* widget=FindWidget_00143D50(screen,0x2932dfca,1))widget->text=localize(field_001EFB38[output]);
+}
+}
+
+namespace hp2::frontend {
+// ELF001F02D8 +001EF240, E-0092-J01. Portable data/grouping slice only.
+void Sub_001F02D8(::port::frontend::JukeboxScreenState& state,
+    const std::array<std::uint8_t,0xb0>& snapshot,
+    std::vector<::port::frontend::JukeboxSongMetadata> metadata) {
+    using namespace ::port::frontend;
+    JukeboxScreenState next;
+    next.snapshot=snapshot;
+    next.metadata=std::move(metadata);
+    const auto count=jukebox_projection::word(next,0x9c);
+    if(count>32 || count!=next.metadata.size())
+        hp2::not_implemented("0x001EF240","Jukebox metadata/count exceeds original 32-song block");
+    for(std::size_t i=0;i<count;++i) {
+        const auto& label=next.metadata[i].field_3;
+        if(label.empty())continue; // Original ignores null/empty metadata field3.
+        auto group=std::find_if(next.groups.begin(),next.groups.end(),[&](const auto& g){return g.label==label;});
+        if(group==next.groups.end()) {
+            if(next.groups.size()==6 || label.size()>=20)
+                hp2::not_implemented("0x001EF240","Jukebox group exceeds original storage");
+            next.groups.push_back({label,{}});
+            group=next.groups.end()-1;
+        }
+        if(group->songs.size()==20)
+            hp2::not_implemented("0x001EF240","Jukebox group exceeds original index storage");
+        next.snapshot[0x1f+i*4]=static_cast<std::uint8_t>(group-next.groups.begin());
+        group->songs.push_back(i);
+    }
+    // 001F0478 immediately reads the selected group. Preserve unsupported empty
+    // input as a gap, rather than substituting a fabricated category.
+    (void)Sub_001F0478(next);
+    state=std::move(next);
+}
+
+// ELF001F0478, E-0092-J02. Widget transport/colour binding is deliberately separate.
+::port::frontend::JukeboxPresentation Sub_001F0478(::port::frontend::JukeboxScreenState& state) {
+    using namespace ::port::frontend;
+    const auto genre=jukebox_projection::group_index(state);
+    const auto& songs=state.groups[genre].songs;
+    const auto count=static_cast<int>(songs.size());
+    if(state.cursor<0 || state.cursor>=count || state.first_row<0)
+        hp2::not_implemented("0x001F0478","Jukebox row state outside recovered bounds");
+    while(state.first_row+5<=state.cursor && state.first_row+5<count)++state.first_row;
+    while(state.cursor<state.first_row && state.first_row>=0)--state.first_row;
+    JukeboxPresentation result;
+    result.category_enabled=(state.snapshot[0xaf]&(1u<<genre))!=0;
+    result.category_arrows=!state.list_active;
+    const auto visible=std::min(5,count);
+    for(int row=0;row<visible;++row) {
+        const auto song=songs.at(static_cast<std::size_t>(state.first_row+row));
+        const auto mode=result.category_enabled ? state.snapshot.at(0x1e + song*4) : 0;
+        if(mode>5)hp2::not_implemented("0x001F0478","Jukebox mode outside six original string IDs");
+        const bool selected=state.list_active && state.cursor==state.first_row+row;
+        result.rows.push_back({song,selected,selected,mode});
+    }
+    result.up=state.list_active && state.first_row!=0;
+    result.down=state.list_active && count>4 && state.first_row!=count-5;
+    return result;
+}
+
+// ELF001F0478; E-0092-J04, task0092-jukebox.md. Hash arrays are the exact
+// five used entries of each six-word static block at0031AE00..0031AE77.
+void Sub_001F0478(::port::frontend::JukeboxScreenState& state,FeScreen& screen,
+    const std::function<std::string(std::uint32_t)>& localize) {
+    using namespace ::port::frontend;
+    using namespace ::port::frontend::jukebox_projection;
+    const auto view=Sub_001F0478(state);
+    constexpr std::uint32_t field_0031AE00[]{0x64a819c7,0x64a819c8,0x64a819c9,0x64a819ca,0x64a819cb};
+    constexpr std::uint32_t field_0031AE18[]{0x03b57047,0x03b57048,0x03b57049,0x03b5704a,0x03b5704b};
+    constexpr std::uint32_t field_0031AE30[]{0x89fb635f,0x8c508c00,0x8ea5b4a1,0x90fadD42,0x935005e3};
+    constexpr std::uint32_t field_0031AE48[]{0x0b825845,0x0b825846,0x0b825847,0x0b825848,0x0b825849};
+    constexpr std::uint32_t field_0031AE60[]{0xfc0279b8,0xfc0279b9,0xfc0279ba,0xfc0279bb,0xfc0279bc};
+    constexpr std::uint32_t field_002B9D30[]{0x1add9,0x1adda,0x1addd,0x1addb,0x1ade4,0x1addc};
+    for(std::size_t i=0;i<5;++i) {
+        const bool visible=i<view.rows.size();
+        for(auto hash:{field_0031AE00[i],field_0031AE18[i],field_0031AE30[i]})
+            SetWidgetVisible_00144968(screen,hash,visible);
+        const bool arrows=visible && view.rows[i].arrows;
+        SetWidgetVisible_00144968(screen,field_0031AE48[i],arrows);
+        SetWidgetVisible_00144968(screen,field_0031AE60[i],arrows);
+        if(!visible)continue;
+        const auto& row=view.rows[i];
+        const auto& metadata=state.metadata.at(row.song);
+        set_text(screen,field_0031AE00[i],metadata.field_1);
+        set_text(screen,field_0031AE18[i],metadata.field_0);
+        const auto id=field_002B9D30[row.mode];
+        SetWidgetStringId_001449A8(screen,field_0031AE30[i],id);
+        if(auto* widget=FindWidget_00143D50(screen,field_0031AE30[i],1))widget->text=localize(id);
+        const auto colour=row.highlighted ? kHighlightColour_gp_0x5330 :
+            (view.category_enabled ? MenuColour_00169BD0{128,128,128} : kDisabledColour_gp_0x5324);
+        for(auto hash:{field_0031AE00[i],field_0031AE18[i],field_0031AE30[i]})set_colour(screen,hash,colour);
+    }
+    SetWidgetVisible_00144968(screen,0xedf2e4ee,view.up);
+    SetWidgetVisible_00144968(screen,0x20d73d01,view.down);
+    const auto playing=word(state,0xa4);
+    if(playing>=state.metadata.size())hp2::not_implemented("0x001F0478","Jukebox now-playing index outside snapshot");
+    const auto& metadata=state.metadata[playing];
+    set_text(screen,0x0b41999a,metadata.field_1+" ("+metadata.field_0+")"); //00331698
+    set_text(screen,0x52e039f3,state.groups[group_index(state)].label);
+    set_colour(screen,0x52e039f3,view.category_arrows ? kHighlightColour_gp_0x5330 : MenuColour_00169BD0{128,128,128});
+    SetWidgetVisible_00144968(screen,0xd1cda594,view.category_arrows);
+    SetWidgetVisible_00144968(screen,0x9345e4a7,view.category_arrows);
+}
+
+// ELF001F0D10 jump table002B9D50 and listing001F0D5C..001F121C,
+// E-0092-J03. Message1/10/13 clear sound; other table default arms do nothing.
+void Sub_001F0D10(::port::frontend::JukeboxScreenState& state,int message,int& sound,
+    std::uint32_t tick,float elapsed_seconds,bool playback_active,
+    const ::port::frontend::JukeboxScreenServices& services) {
+    using namespace ::port::frontend;
+    const auto genre=jukebox_projection::group_index(state);
+    const auto count=static_cast<int>(state.groups[genre].songs.size());
+    if(message==1 || message==10 || message==13) {sound=0;return;}
+    if(message==15) {
+        state.snapshot[0xaf]^=static_cast<std::uint8_t>(1u<<genre);
+        if((state.snapshot[0xaf]&(1u<<genre))==0) {
+            state.list_active=false;state.first_row=0;state.cursor=0;
+        }
+        sound=5;
+    } else if(message==6 || message==7) {
+        const int direction=message==6 ? -1 : 1;
+        if(state.list_active) {
+            const auto song=state.groups[genre].songs.at(static_cast<std::size_t>(state.cursor));
+            auto& mode=state.snapshot.at(0x1e + song*4);
+            int next=static_cast<int>(mode)+direction;
+            if(next<0)next=5;
+            if(next>=6)next=0;
+            mode=static_cast<std::uint8_t>(next);
+        } else {
+            int next=static_cast<int>(genre)+direction;
+            if(next<0)next=static_cast<int>(state.groups.size())-1;
+            if(next>=static_cast<int>(state.groups.size()))next=0;
+            state.snapshot[0xae]=static_cast<std::uint8_t>(next);
+            state.cursor=0;
+        }
+        sound=message==6 ? 1 : 2;
+    } else if(message==8 || message==9) {
+        if(state.list_active) {
+            if(message==8 && state.cursor==0 && state.first_row==0) {
+                if(!services.stop)hp2::not_implemented("0x0027D868","Jukebox stop service missing");
+                state.list_active=false;
+                services.stop(); // Original leaves this message's sound untouched.
+            } else {
+                const int next=state.cursor+(message==8 ? -1 : 1);
+                if(next<0 || next>=count) {sound=0;return;}
+                state.cursor=next;sound=message==8 ? 3 : 4;
+                state.selection_tick=tick;state.preview_pending=true;
+            }
+        } else if(message==9) {
+            if((state.snapshot[0xaf]&(1u<<genre))!=0) {
+                state.list_active=true;state.selection_tick=tick;state.preview_pending=true;
+            } else sound=6;
+        } else sound=0;
+    } else if(message==17) {
+        if(!services.commit)hp2::not_implemented("0x001F0D10","Jukebox Back dependency chain missing");
+        services.commit(state);
+    } else if(message==18) {
+        if(elapsed_seconds>0.5f && state.preview_pending) {
+            if(!services.preview)hp2::not_implemented("0x0027D6A8","Jukebox preview service missing");
+            state.preview_pending=false;
+            jukebox_projection::preview(state,services,false);
+        }
+        if(elapsed_seconds>30.0f && !playback_active)
+            jukebox_projection::preview(state,services,false);
+    }
+    (void)Sub_001F0478(state);
+}
 }
 
 namespace hp2::frontend {

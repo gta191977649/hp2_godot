@@ -23,10 +23,24 @@ render::Rect clip_of(hp2::frontend::FeScreen& screen, const hp2::frontend::FeWid
 
 // Appends `quad` after applying the original clip rectangle. Returns false when the clip
 // removes it entirely.
-bool emit(render::Frame& out, render::Quad quad, const render::Rect& clip) {
+bool emit(render::Frame& out, render::Quad quad, const render::Rect& clip,
+          render::FrontendStage stage) {
     if (!render::crop(quad, clip)) return false;
+    const auto first=out.quads.size();
     out.quads.push_back(quad);
+    if (!out.frontend_ranges.empty() && out.frontend_ranges.back().stage==stage &&
+        out.frontend_ranges.back().first+out.frontend_ranges.back().count==first)
+        ++out.frontend_ranges.back().count;
+    else out.frontend_ranges.push_back({stage,first,1});
     return true;
+}
+
+// Debug00112C60, E-0098-F01: preserve the original view0 submission boundary.
+// This metadata does not move the existing quads or implement the intervening3D stages.
+render::FrontendStage frontend_stage(std::int8_t layer) {
+    if (layer>=20 && layer<=24) return render::FrontendStage::background;
+    if (layer>=0 && layer<=28) return render::FrontendStage::foreground;
+    return render::FrontendStage::unspecified;
 }
 
 // Port projection of00140098, E-0039-F02: pairs belong to the CURRENT glyph,
@@ -108,6 +122,7 @@ FrameStats build_frame(hp2::frontend::FeScreen& screen, const WidgetSizes& sizes
                        const FrameOptions& options, render::Frame& out) {
     FrameStats stats;
     out.quads.clear();
+    out.frontend_ranges.clear();
     out.logical_size = {static_cast<float>(screen.width), static_cast<float>(screen.height)};
     ++out.sequence;
 
@@ -122,24 +137,39 @@ FrameStats build_frame(hp2::frontend::FeScreen& screen, const WidgetSizes& sizes
                                 options.exclusive_height * w.scale_y};
             quad.source = {0, 0, options.exclusive_width, options.exclusive_height};
             quad.color = {1, 1, 1, 1};
-            if (emit(out, quad, {})) ++stats.quads;
+            if (emit(out, quad, {}, frontend_stage(static_cast<std::int8_t>(w.layer)))) ++stats.quads;
         }
         return stats;
     }
 
-    // The authored layer byte counts down toward the viewer (grid/blueprint backdrops carry the
-    // larger values, menu text carries 0), so paint descending, preserving authored order
-    // within a layer.
-    std::vector<std::size_t> order(screen.widgets.size());
-    std::iota(order.begin(), order.end(), std::size_t{0});
-    std::stable_sort(order.begin(), order.end(), [&screen](std::size_t a, std::size_t b) {
-        return static_cast<std::int8_t>(screen.widgets[a].layer) >
-               static_cast<std::int8_t>(screen.widgets[b].layer);
+    // E-0095-N04:0013FBA0 appends authored nodes;00145F30 traverses
+    // their stable ascending layer list backwards INTO layer buckets. Actual
+    // submission00112858 consumes24..20,15..0,19..16,28..25 in separate phases.
+    // Keyboard layers16..19 therefore overlay ordinary frontend layers0..15.
+    const auto phase=[](std::int8_t layer) {
+        if(layer>=20 && layer<=24)return 0;
+        if(layer>=0 && layer<=15)return 1;
+        if(layer>=16 && layer<=19)return 2;
+        if(layer>=25 && layer<=28)return 3;
+        hp2::not_implemented("0x00145D38","frontend layer bucket outside recovered render phases");
+    };
+    std::vector<std::size_t> order;
+    for(std::size_t i=0;i<screen.widgets.size();++i)if(screen.widgets[i].visible==1) {
+        phase(static_cast<std::int8_t>(screen.widgets[i].layer));
+        order.push_back(i);
+    }
+    std::stable_sort(order.begin(), order.end(), [&screen,&phase](std::size_t a, std::size_t b) {
+        const auto first=static_cast<std::int8_t>(screen.widgets[a].layer);
+        const auto second=static_cast<std::int8_t>(screen.widgets[b].layer);
+        const int first_phase=phase(first),second_phase=phase(second);
+        if(first_phase!=second_phase)return first_phase<second_phase;
+        return first!=second ? first>second : a>b;
     });
 
     const auto measure = sizes.measure();
     for (const std::size_t slot : order) {
         const auto& w = screen.widgets[slot];
+        const auto stage=frontend_stage(static_cast<std::int8_t>(w.layer));
         if (w.visible != 1) continue; //00145F30, E-0039-Q08
         if (!options.suppressed_widget.empty() && w.name == options.suppressed_widget) continue;
 
@@ -202,7 +232,7 @@ FrameStats build_frame(hp2::frontend::FeScreen& screen, const WidgetSizes& sizes
                         quad.destination = {pen_x,pen_y,icon.w*w.scale_x*w.scale_x,icon.h*w.scale_y};
                         quad.source = {icon.u+0.5f,icon.v+0.5f,icon.w,icon.h};
                         quad.color = colour;
-                        if (emit(out,quad,clip)) { ++stats.glyphs; ++emitted; }
+                        if (emit(out,quad,clip,stage)) { ++stats.glyphs; ++emitted; }
                         pen_x += icon.advance;
                         break;
                     }
@@ -225,7 +255,7 @@ FrameStats build_frame(hp2::frontend::FeScreen& screen, const WidgetSizes& sizes
                 //00142694..001426D4: equal half-texel offsets at both UV edges, same extent.
                 quad.source = {glyph->u + 0.5f, glyph->v + 0.5f, glyph->w, glyph->h};
                 quad.color = colour;
-                if (emit(out, quad, clip)) { ++stats.glyphs; ++emitted; }
+                if (emit(out, quad, clip,stage)) { ++stats.glyphs; ++emitted; }
                 // Preserve the original double application of scale to kerning.00142844..54.
                 const float step = (fixed ? cell : glyph->advance + adjustment) * w.scale_x;
                 pen_x += wrapped ? std::nearbyint(step) : step;
@@ -260,7 +290,7 @@ FrameStats build_frame(hp2::frontend::FeScreen& screen, const WidgetSizes& sizes
             quad.colors[i] = {static_cast<float>(c&255)/128, static_cast<float>((c>>8)&255)/128,
                 static_cast<float>((c>>16)&255)/128, static_cast<float>(c>>24)/128};
         }
-        if (emit(out, quad, clip)) ++stats.quads;
+        if (emit(out, quad, clip,stage)) ++stats.quads;
         else ++stats.clipped_out;
     }
     return stats;

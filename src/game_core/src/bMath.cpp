@@ -1,12 +1,45 @@
 
 // TASK-0042: bounded host projections; original member ABI remains unverified.
 #include "game_core/port/driving/projection_support.hpp"
+#include "game_core/indep/src/fmenus.hpp"
+#include <cstring>
+#include <cmath>
+
+namespace port::frontend {
+namespace {
+float retail_math_bits(std::uint32_t bits){float result;std::memcpy(&result,&bits,4);return result;}
+}
+}
+namespace hp2::frontend {
+// Retail0025A5E0 ->0025A540, E-0094-D04. Constants0032F1B4..0032F1DB,
+// independently read from Retail; no Debug addresses/behavior are transplanted.
+// CVT.W.S uses the existing finite truncation projection; original FCR31/runtime
+// equivalence remains unverified. Unsupported exceptional operands throw here.
+float bSin(float radians) {
+    using ::port::frontend::retail_math_bits;
+    const float scaled=radians*retail_math_bits(0x4622f983);
+    if(!std::isfinite(scaled) || static_cast<double>(scaled)<-2147483648.0 || static_cast<double>(scaled)>=2147483648.0)
+        hp2::not_implemented("0x0025A5F0","Retail frontend sine CVT.W.S exceptional operand");
+    const auto angle=static_cast<std::uint16_t>(static_cast<std::int32_t>(scaled));
+    float f8=static_cast<float>(angle)*retail_math_bits(0x38c90fdb),sign=1;
+    if(retail_math_bits(0x4096cbe4)<=f8)f8=f8-retail_math_bits(0x40c90fdb);
+    else if(retail_math_bits(0x3fc90fdb)<=f8){sign=-sign;f8=f8-retail_math_bits(0x40490fdb);}
+    float f1=f8*f8,f0=f8*f1,f2=f0*f1;
+    f0=f0*retail_math_bits(0x3e2aaaab);
+    float f3=f2*f1;f0=f8-f0;f2=f2*retail_math_bits(0x3c088889);
+    f1=f3*f1;f3=f3*retail_math_bits(0x39500d01);f0=f0+f2;
+    f1=f1*retail_math_bits(0x3638ef1d);f0=f0-f3;f0=f0+f1;
+    return f0*sign;
+}
+}
 #include "game_core/src/bMath.hpp"
 namespace hp2::recovered {
 using namespace port::driving;
 using namespace port::driving::native;
 using namespace port::driving::init;
 namespace { float debug_math_scalar(Memory& m,std::uint32_t a){return m.scalar(a);} }
+// Debug002539E0, E-0098-C01. Original unsigned16 quarter-turn addition.
+float bCos(Memory& m,std::uint16_t angle){return hp2::recovered::bSin(m,static_cast<std::uint16_t>(angle+0x4000u));}
 }
 
 // Retail 0x0025A3D0; E-0041-M01; E-0042-S001; exact Debug TU src\bMath.cpp

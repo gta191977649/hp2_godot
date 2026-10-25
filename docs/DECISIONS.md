@@ -1,4 +1,54 @@
+## TASK-0096 - Debug single-player Ultimate Racer authority (2026-10-26)
+
+The user explicitly extends Debug NFSHP2.ELF SHA815b60c7...332f1b behavioral authority
+from Test drive to the complete single-player Ultimate Racer closure, including
+necessary frontend/selection, World/race/AI/police, outcomes and progression.
+Retail assets/profile/frontend remain separately identified, with per-field and
+per-ID semantic adaptation. Symbol availability is not proof of Retail equivalence.
+Actual races are authorized in TASK-0096; TASK-0091's historical no-race scope is
+not silently rewritten. Target current machine1920x1080 Vulkan/Forward+60FPS.
+Original logic/RNG/timing/object counts remain native; Godot GPU/lighting/instancing
+adapters require behavior and render-order equivalence gates. Preserve existing
+uncommitted work. Unknown branches and missing original comparisons remain explicit.
+
+## TASK-0095 - Host frontend gamepad ports (2026-10-25)
+
+The first two devices in Godot Input.get_connected_joypads map to original ports0/1.
+Keyboard remains port0. Host face buttons A/B/X/Y map to original menu Select/
+Back/Square/Cancel; shoulders, dpad, Start and Back buttons forward their original
+JOY_EVENT identifiers. Left-stick threshold crossings use an explicit host0.5
+dead zone. This is a device adapter, not recovered PS2 calibration/repeat behavior.
+Original pad gates remain in portable C++ screen handlers. Physical two-pad testing
+and full trigger/repeat/calibration service remain open; native NameEntry verifies
+both original player gates and profile separation.
+
+## TASK-0094 - Host display calibration translation (2026-10-25)
+
+Retail001F4B20 stores signed GS display offsets. The host retains these raw values
+in the private profile and requests a canvas translation after logical clipping:
+X/4 logical pixels and Y logical pixels, scaled with the output viewport. This is
+an explicit host display-device policy (four horizontal GS clocks per host pixel),
+not verified GS timing equivalence. It leaves authored widget coordinates intact.
+Native tests assert the request, not PS2 visual equivalence.
+
 # Decision log
+
+## TASK-0092/0093 - Frontend audio and private Autosave device
+
+Recovered menu state, timing, audio selection/filtering, volume settings and popup
+text remain native. The existing private filesystem profile store supplies the
+successful available-device path at00245B00. Autosave still enters its authored
+screen/popup, consumes input, observes the original strict timing gates and pops
+history on completion. No PS2 card selection/capacity/format/overwrite emulation is
+claimed. The configured read profile is never a write destination.
+
+The Godot frontend owns a private audio bus. Mono requests set
+AudioEffectStereoEnhance.pan_pullout=0 for live downmix; Stereo and original
+Pro Logic II requests retain the stereo carrier. No invented surround DSP is
+substituted for the unrecovered SPU encoder. Speaker choice persists and Mono
+has a live host consumer, but this does not establish PS2 hardware equivalence.
+Host API: [Godot AudioEffectStereoEnhance](https://docs.godotengine.org/en/stable/classes/class_audioeffectstereoenhance.html).
+Original option IDs and state come exclusively from Retail MCP/original FE data.
 
 ## TASK-0081 - Bind recovered frame slices without pretending full route recovery
 
@@ -982,3 +1032,22 @@ Original replay capture ownership, complete World sound scheduling and the
 separate rain-screen RainSplash system are not inferred from this water slice.
 Port input recording remains separate from original replay capture. No benchmark
 or original-runtime equivalence promotion.
+
+## 2026-10-26 TASK-0098 selection presentation services
+
+Keep Debug decoded camera/pose/light/alpha behavior in independent native storage with original names/addresses. Existing shared native geometry/texture worker and bounded staged Godot uploads may carry actual named selector solids; they must retain generation cancellation and never fabricate a vehicle identity for PLATFORM/CARCOVER. Typed C++ pose/light handoff avoids per-part/per-frame Dictionary construction. Individual source ownership not yet established is explicitly a port projection, not an asserted original file/ABI. Required Tick/locked/help/speech/render dependencies fail explicitly until bound. Fresh eDisplayFrame stages require reviewed multi-stage composition; do not substitute the model viewer or assume all UI overlays all3D. These seams do not authorize synthetic World/AI/outcomes.
+
+## 2026-10-26 TASK-0098 Tick and render packet boundaries
+
+Preserve original selector load polling and unload/load/begin ordering behind
+typed required services; a superseded completed load is not permission to publish
+the wrong selected vehicle. Restore static camera-offset initialization separately
+from SHA-checked ELF mapping. Locked description lookup retains original ordered
+task/event/points data and localization arguments, with explicit frame-owned text
+rendering. No guessed unlock text or silent missing-effect update is admitted.
+
+Carry stage1/7 ranges as optional native Frame metadata while retaining existing
+quad order/backend compatibility. Validate complete known coverage before a future
+compositor relies on it; legacy event-tree appends remain explicitly incomplete.
+This does not authorize replacing original stage0/2/4 shared-depth/reflection
+ordering with a generic vehicle viewport between two canvas layers.

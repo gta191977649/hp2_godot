@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <cstddef>
 #include <array>
 #include <memory>
 #include <vector>
@@ -23,7 +24,22 @@ struct Quad {
  std::array<Color,4> colors{};
  bool bypass_clip=false; // E-0039-Q05: original rotated quads skip CPU rectangle clipping.
 };
-struct Frame { Vec2 logical_size{640,480}; Color clear{0,0,0,1}; std::vector<Quad> quads; std::uint64_t sequence=0; };
+// E-0098-F01: view0 Flailer layers24..20 are submitted in eDisplayFrame stage1;
+// layers15..0,19..16,28..25 are submitted in stage7. These are port packet tags,
+// not an original enum or a compositor: stages0/2/4 still require shared 3D state.
+enum class FrontendStage : std::uint8_t { unspecified=0, background=1, foreground=7 };
+struct FrontendQuadRange {
+ FrontendStage stage=FrontendStage::unspecified;
+ std::size_t first=0,count=0;
+};
+struct Frame { Vec2 logical_size{640,480}; Color clear{0,0,0,1}; std::vector<Quad> quads; std::uint64_t sequence=0;
+ // Optional metadata from the widget builder. Consumers that append quads must
+ // propagate/rebase their ranges before treating this as complete frame coverage.
+ // Empty stages have no range; existing flat-quad backends remain compatible.
+ std::vector<FrontendQuadRange> frontend_ranges;
+ // Port display-device translation after logical clipping, separate from widgets.
+ Vec2 display_offset{};
+};
 class Resources {
 public:
  virtual ~Resources()=default;
@@ -35,6 +51,12 @@ public:
  virtual void submit(const Frame& frame,Resources& resources)=0;
  virtual void reset()=0;
 };
+// Port packet utilities. Coverage requires known stages and a contiguous partition
+// of every quad; legacy appends that omit metadata therefore remain detectable.
+bool frontend_ranges_complete(const Frame& frame) noexcept;
+// Appends without reordering quads; rebases and merges only adjacent equal-stage
+// ranges. Partial metadata stays partial. Invalid/overlapping ranges are rejected.
+void append_frontend_frame(Frame& destination,const Frame& source);
 // Applies original clip rectangles without knowing the rendering device.
 bool crop(Quad& quad,const Rect& clip);
 } // namespace port::render

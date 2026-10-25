@@ -4,6 +4,64 @@
 #include <cmath>
 #include <cstring>
 #include <stdexcept>
+#include "game_core/port/not_implemented.hpp"
+
+namespace port::selection {
+// E-0098-R02: selected original initialization fields only, not whole00117708.
+LightingDefaults load_lighting_defaults(port::driving::Memory& memory){
+    LightingDefaults values;
+    values.normal.Light0.Position={{memory.scalar(0x324aec),memory.scalar(0x324af8),memory.scalar(0x324af0)}};
+    values.normal.Light1.Position={{-5,-1,0}};
+    values.normal.Light2.Position={{memory.scalar(0x324af4),memory.scalar(0x324afc),memory.scalar(0x324af4)}};
+    values.normal.Light0.Colour={{80,80,80}};values.normal.Light1.Colour={{64,64,64}};
+    values.normal.Light2.Colour={{128,128,180}};values.normal.LightA.Colour={{32,32,32}};
+    values.silouette.Light0.Position={{0,memory.scalar(0x324b08),-5}};
+    values.silouette.Light1.Position={{-5,10,0}};
+    values.silouette.Light2.Position={{memory.scalar(0x324b00),10,memory.scalar(0x324b04)}};
+    return values;
+}
+}
+namespace hp2::debug {
+// Debug00115BD0, E-0098-R02. View2 is player2; all other view IDs use player1.
+void SetSelectCarLighting(std::array<SelectCarLights,2>& players,int view_id,float intensity,int silouette,
+    const port::selection::LightingDefaults& defaults){
+    auto& result=players[view_id==2?1:0];
+    if(silouette){
+        result.Light0=defaults.silouette.Light0;result.Light1=defaults.silouette.Light1;
+        result.Light2=defaults.silouette.Light2;result.LightA.Colour=defaults.silouette.LightA.Colour;
+        return;
+    }
+    const float shift=intensity*30.f;
+    const auto shifted=[&](SelectCarLight& out,const SelectCarLight& source){
+        out.Position=source.Position;
+        for(int i=0;i<3;++i)out.Colour[i]=std::min(source.Colour[i]+shift,255.f);
+    };
+    shifted(result.Light0,defaults.normal.Light0);shifted(result.Light1,defaults.normal.Light1);
+    shifted(result.Light2,defaults.normal.Light2);
+    for(int i=0;i<3;++i)result.LightA.Colour[i]=std::min(defaults.normal.LightA.Colour[i],255.f);
+}
+// Debug00115D88 selector frontend branch, E-0098-R02; E-0048-A06 original TU.
+std::array<float,28> elSetupLightContext(const SelectCarLights& lights,
+    const std::array<float,16>& view,const std::array<float,16>& part){
+    std::array<float,28> packet{};
+    const std::array<const SelectCarLight*,3> sources{{&lights.Light0,&lights.Light1,&lights.Light2}};
+    const auto inverse_rotate=[](const std::array<float,3>& v,const std::array<float,16>& matrix){
+        std::array<float,3> out{};
+        for(int i=0;i<3;++i)out[i]=(v[0]*matrix[i*4]+v[1]*matrix[i*4+1])+v[2]*matrix[i*4+2];
+        return out;
+    };
+    for(int light=0;light<3;++light){
+        const auto& source=*sources[light];
+        const auto world=inverse_rotate(source.Position,view),local=inverse_rotate(world,part);
+        const float squared=(local[0]*local[0]+local[1]*local[1])+local[2]*local[2];
+        if(!(squared>0) || !std::isfinite(squared))hp2::not_implemented("0x00115D88","selection light direction outside finite nonzero domain");
+        const float reciprocal=1.f/std::sqrt(squared);
+        for(int axis=0;axis<3;++axis){packet[light*4+axis]=source.Colour[axis];packet[16+axis*4+light]=local[axis]*reciprocal;}
+    }
+    for(int axis=0;axis<3;++axis)packet[12+axis]=lights.LightA.Colour[axis];
+    packet[15]=128;return packet;
+}
+}
 namespace hp2::recovered {
 // Debug00115780 / Retail00115370; E-0048-A06.
 int QueryLightDatabase(eLightQuery& query,const std::vector<port::track::LightPack>& packs,

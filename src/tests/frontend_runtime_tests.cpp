@@ -72,6 +72,10 @@ void check_main_menu(FrontEndRuntime& runtime) {
     auto state = runtime.menu_open(0);
     require(state.ok, "main menu failed to open: " + state.error + state.not_implemented);
     require(state.item_count >= 2, "NEW_MAIN_MENU must expose at least two MENUITEM widgets");
+    port::render::Frame staged;
+    runtime.build_frame(*runtime.catalog(),staged);
+    require(!staged.quads.empty() && port::render::frontend_ranges_complete(staged),
+            "original main-menu packet lost complete frontend stage coverage");
 
     const int start = state.current;
     state = press(runtime, JOY_EVENT_SCROLL_DOWN);
@@ -129,14 +133,8 @@ void check_activation(FrontEndRuntime& runtime) {
         require(state.ok, "Options failed to open");
         for (int step = 0; step < choice; ++step) state = press(runtime, JOY_EVENT_SCROLL_DOWN);
         state = press(runtime, JOY_EVENT_MENU_SELECT);
-        if (choice == 2) { // Display preparation, ELF 0x001EE6C0, deliberately untranslated
-            require(state.not_implemented.find("001EE6C0") != std::string::npos &&
-                        state.screen == 24,
-                    "Display preparation must report its missing state");
-            continue;
-        }
         const int target = (int[]){28, 31, 26, 37, 29, 16, 30}[choice];
-        if (choice == 0 || choice == 1 || choice == 4) {
+        if (choice == 0 || choice == 1 || choice == 2 || choice == 4) {
             require(state.screen == 24 && state.exiting, "Options must animate before switching");
             runtime.menu_tick(0.5);
             state = runtime.menu_state();
@@ -165,7 +163,7 @@ MenuState enter_option(FrontEndRuntime& runtime, int option_index) {
 // Was --submenu-smoke.
 void check_submenus(FrontEndRuntime& runtime) {
     const struct { int item, screen; } routes[] = {
-        {0, 28}, {1, 31}, {3, 37}, {4, 29}, {5, 16}, {6, 30}};
+        {0, 28}, {1, 31}, {2, 26}, {3, 37}, {4, 29}, {5, 16}, {6, 30}};
     for (const auto& route : routes) {
         auto state = enter_option(runtime, route.item);
         require(state.screen == route.screen,
@@ -378,7 +376,7 @@ void check_localisation_and_audio(FrontEndRuntime& runtime) {
     require(std::fabs(sound.gain - 0.1023f) < 0.001f, "menu category/descriptor gain differs");
 
     // The jukebox picks tune 5 on entry and tune 7 when that one ends.
-    const auto first = runtime.frontend_music(false);
+    const auto first = runtime.frontend_music(false,true);
     require(first.ok && first.has_track, "first frontend music selection failed");
     require(first.index == 5 && first.pcm.sample_rate == 32000, "first tune selection/PCM differs");
     require(std::fabs(first.gain - 0.45f) < 0.0001f, "music category gain differs");

@@ -77,6 +77,10 @@ var intro_movie: Object
 var background_movie: Object
 var movie_audio: AudioStreamPlayer
 var music_audio: AudioStreamPlayer
+var frontend_audio_bus: StringName
+var frontend_output_effect: AudioEffectStereoEnhance
+# Port device adapter: first two connected host pads become original ports0/1.
+var frontend_axis_directions: Dictionary = {}
 var view_scale := 2
 var startup_active := false
 var startup_movie_visible := false
@@ -99,9 +103,20 @@ func _ready() -> void:
 	show_info = DebugTools.info_enabled
 	intro_movie = ClassDB.instantiate("Ps2MoviePlayer")
 	background_movie = ClassDB.instantiate("Ps2MoviePlayer")
+	# Port device adapter: Mono downmix is live; stereo carriers are retained for
+	# Stereo/Pro Logic II. This does not emulate the PS2 SPU surround encoder.
+	frontend_audio_bus = StringName("Hp2Frontend_%d" % get_instance_id())
+	AudioServer.add_bus()
+	var bus_index := AudioServer.bus_count - 1
+	AudioServer.set_bus_name(bus_index, frontend_audio_bus)
+	AudioServer.set_bus_send(bus_index, &"Master")
+	frontend_output_effect = AudioEffectStereoEnhance.new()
+	AudioServer.add_bus_effect(bus_index, frontend_output_effect)
 	movie_audio = AudioStreamPlayer.new()
+	movie_audio.bus = frontend_audio_bus
 	add_child(movie_audio)
 	music_audio = AudioStreamPlayer.new()
+	music_audio.bus = frontend_audio_bus
 	add_child(music_audio)
 	music_audio.finished.connect(_next_music)
 
@@ -239,13 +254,13 @@ func _draw_frame() -> void:
 			int(last_stats["missing"]), int(last_stats["clipped_out"]),
 			int(last_stats["textures"])]
 
-func _send_joy_event(joy_event: int) -> void:
+func _send_joy_event(joy_event: int, pad_index: int = 0) -> void:
 	if startup_active:
 		if joy_event in [JOY_EVENT_START, JOY_EVENT_MENU_SELECT]:
 			_apply_startup(intro_movie.select_startup())
 		return
 	# One native dispatch also reports untranslated event-tree paths and queues their audio.
-	var state: Dictionary = layout.menu_joy_event(0, joy_event, true)
+	var state: Dictionary = layout.menu_joy_event(pad_index, joy_event, true)
 	if not bool(state.get("ok", false)):
 		_report(str(state.get("error", "menu event failed")), true)
 		return
@@ -258,6 +273,42 @@ func _send_joy_event(joy_event: int) -> void:
 
 func _input(event: InputEvent) -> void:
 	if DebugTools.handle_input(event):
+		return
+	if event is InputEventJoypadButton or event is InputEventJoypadMotion:
+		var connected := Input.get_connected_joypads()
+		var pad_index := connected.find(event.device)
+		if pad_index < 0 or pad_index > 1:
+			return
+		if event is InputEventJoypadButton:
+			if not event.pressed:
+				return
+			var buttons := {
+				JOY_BUTTON_A: JOY_EVENT_MENU_SELECT,
+				JOY_BUTTON_B: JOY_EVENT_MENU_BACK,
+				JOY_BUTTON_X: JOY_EVENT_MENU_SQUARE,
+				JOY_BUTTON_Y: JOY_EVENT_MENU_CANCEL,
+				JOY_BUTTON_START: JOY_EVENT_START,
+				JOY_BUTTON_BACK: JOY_EVENT_SELECT,
+				JOY_BUTTON_LEFT_SHOULDER: JOY_EVENT_MENU_L1,
+				JOY_BUTTON_RIGHT_SHOULDER: JOY_EVENT_MENU_R1,
+				JOY_BUTTON_DPAD_UP: JOY_EVENT_SCROLL_UP,
+				JOY_BUTTON_DPAD_DOWN: JOY_EVENT_SCROLL_DOWN,
+				JOY_BUTTON_DPAD_LEFT: JOY_EVENT_SCROLL_LEFT,
+				JOY_BUTTON_DPAD_RIGHT: JOY_EVENT_SCROLL_RIGHT,
+			}
+			if buttons.has(event.button_index):
+				_send_joy_event(int(buttons[event.button_index]), pad_index)
+		elif event.axis == JOY_AXIS_LEFT_X or event.axis == JOY_AXIS_LEFT_Y:
+			# Explicit host dead zone; original PS2 calibration is a separate device service.
+			var key := Vector2i(event.device, event.axis)
+			var direction := -1 if event.axis_value < -0.5 else (1 if event.axis_value > 0.5 else 0)
+			if int(frontend_axis_directions.get(key, 0)) != direction:
+				frontend_axis_directions[key] = direction
+				if direction != 0:
+					var id := JOY_EVENT_MENU_ANALOG_LEFT if direction < 0 else JOY_EVENT_MENU_ANALOG_RIGHT
+					if event.axis == JOY_AXIS_LEFT_Y:
+						id = JOY_EVENT_MENU_ANALOG_UP if direction < 0 else JOY_EVENT_MENU_ANALOG_DOWN
+					_send_joy_event(id, pad_index)
 		return
 	if not (event is InputEventKey) or not event.pressed or event.echo:
 		return
@@ -317,10 +368,12 @@ func _configure_background() -> void:
 		1: "MOVIES/hotpursuit_movie.AVI",
 		2: "MOVIES/worldracing_ movie.AVI",
 		24: "MOVIES/options_movie.AVI",
+		25: "MOVIES/options_movie_new.AVI",
 		26: "MOVIES/options_movie_new.AVI",
 		27: "MOVIES/options_movie_new.AVI",
 		28: "MOVIES/options_movie_new.AVI",
 		31: "MOVIES/options_movie_new.AVI",
+		34: "MOVIES/options_movie_new.AVI", # registered JukeBox Music document95B2B627
 	}.get(screen_index, "")
 	if filename.is_empty():
 		background_movie.stop()
@@ -330,6 +383,8 @@ func _configure_background() -> void:
 		_fatal(str(result.get("not_implemented", "background movie open failed")))
 
 func _play_menu_audio() -> void:
+	if DisplayServer.get_name() != "headless":
+		_play_music_request(layout.frontend_music(false))
 	for request in layout.drain_menu_audio():
 		if request.has("not_implemented"):
 			_report("NOT_IMPLEMENTED: " + str(request["not_implemented"]), true)
@@ -337,6 +392,7 @@ func _play_menu_audio() -> void:
 		if DisplayServer.get_name() == "headless":
 			continue
 		var player := AudioStreamPlayer.new()
+		player.bus = frontend_audio_bus
 		player.stream = request["stream"]
 		player.volume_linear = float(request.get("gain", 1.0))
 		player.pitch_scale = float(request.get("pitch_scale", 1.0))
@@ -347,7 +403,7 @@ func _play_menu_audio() -> void:
 func _start_music() -> void:
 	if DisplayServer.get_name() == "headless":
 		return
-	_play_music_request(layout.frontend_music(false))
+	_play_music_request(layout.start_frontend_music())
 
 func _next_music() -> void:
 	_play_music_request(layout.frontend_music(true))
@@ -356,6 +412,12 @@ func _play_music_request(request: Dictionary) -> void:
 	if not bool(request.get("ok", false)):
 		_fatal(str(request.get("not_implemented", "jukebox scheduling failed")))
 		return
+	if bool(request.get("stop", false)):
+		music_audio.stop()
+	if request.has("gain"):
+		music_audio.volume_linear = float(request["gain"])
+	if frontend_output_effect != null:
+		frontend_output_effect.pan_pullout = 0.0 if int(request.get("output_mode", 1)) == 0 else 1.0
 	if request.has("stream"):
 		music_audio.stream = request["stream"]
 		music_audio.volume_linear = float(request["gain"])
@@ -374,6 +436,9 @@ func _exit_tree() -> void:
 		background_movie.stop()
 	if render_host != null:
 		render_host.release()
+	var bus_index := AudioServer.get_bus_index(frontend_audio_bus)
+	if bus_index > 0:
+		AudioServer.remove_bus(bus_index)
 
 func _capture(path: String) -> void:
 	await RenderingServer.frame_post_draw
@@ -388,6 +453,9 @@ func _capture(path: String) -> void:
 	print("FRONTEND_CAPTURE_OK: ", path)
 	set_process(false)
 	_exit_tree()
+	# Capture-only teardown: allow the audio mix thread to release stopped WAV
+	# playbacks before the test process exits. Two fast render frames are insufficient.
+	await get_tree().create_timer(0.1).timeout
 	await get_tree().process_frame
 	await get_tree().process_frame
 	get_tree().quit(0)

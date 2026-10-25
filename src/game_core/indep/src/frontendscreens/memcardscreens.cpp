@@ -11,6 +11,28 @@
 
 #include "game_core/port/not_implemented.hpp"
 
+namespace hp2::frontend {
+// E-0092-J07: successful host-device path of00246138, with original strict
+// timing gates. Card selection/capacity/format/overwrite errors are not fabricated.
+bool Sub_00246138(::port::frontend::AutosaveState& state,double delta,
+    const std::function<std::string()>& store) {
+    if(!state.error.empty())hp2::not_implemented("0x00246138",state.error.c_str());
+    state.elapsed+=delta;
+    if(state.phase==1 && state.elapsed>1.0)state.phase=2;
+    else if(state.phase==2) {
+        if(!store)hp2::not_implemented("0x00245B00","Autosave host storage service unavailable");
+        state.error=store();
+        if(!state.error.empty())hp2::not_implemented("0x00246138",state.error.c_str());
+        state.phase=6;state.text_id=0x24ddc;state.elapsed=0;
+    } else if(state.phase==6 && state.elapsed>2.0) {
+        state.phase=8;state.text_id=0x24ddd;state.elapsed=0;
+    } else if(state.phase==8 && state.elapsed>2.0) {
+        state.phase=14;state.text_id=0;
+    }
+    return state.phase==14;
+}
+}
+
 namespace hp2::recovered {
 // ELF 0x00246BD8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00246bd8.md.
 void MemcardLoader::Sub_00246BD8() {

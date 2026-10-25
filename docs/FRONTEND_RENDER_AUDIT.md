@@ -84,3 +84,13 @@ later event3/Options windowed captures include the restored button glyph. Final 
 invalidated when an external concurrent build cleaned shared binaries/DLL. TASK-0039 retains
 the exact commands/results and sequential rerun prerequisite; do not quote that canceled run
 as a source regression or a successful final acceptance run.
+
+## TASK-0095 render ordering continuation
+
+E-0095-N04 resolves authored node insertion and final bucket submission. Widgets
+are appended to the loader list; equal-layer drawing reverses authored order.
+Final render phases are24..20,15..0,19..16,28..25, so keyboard16..19 overlays
+ordinary frontend0..15. Frame builder uses these phases and rejects unsupported
+visible layers outside0..28. Native deterministic tie/phase tests and a full
+keyboard window capture exercise the correction. Original runtime comparison
+remains open. Records: reverse/.../frontend/task0095-name-entry.md.

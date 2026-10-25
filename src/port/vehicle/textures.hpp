@@ -19,6 +19,8 @@ struct TextureCache {
     std::map<std::uint32_t,std::pair<Texture,std::uint64_t>> decoded;
     std::size_t bytes=0;std::uint64_t clock=0,hits=0,decodes=0;double decode_ms=0;
     std::optional<Texture> frontend_environment;
+    std::optional<hp2::assets::Hp2TpkArchive> frontend_archive;
+    std::map<std::uint32_t,Texture> frontend_decoded;
 };
 class Textures {
 public:
@@ -27,6 +29,8 @@ public:
     // Retains raw material metadata without inferring PS2 blending/culling behavior.
     std::vector<Texture> load(const std::vector<std::uint32_t>& hashes);
     Texture frontend_environment();
+    // Explicit FRONTB named-solid bank adapter; separate from vehicle pack priority.
+    std::vector<Texture> load_frontend(const std::vector<std::uint32_t>& hashes);
     void reset() { *cache_=TextureCache{}; }
 private:
     assets::Source& source_;

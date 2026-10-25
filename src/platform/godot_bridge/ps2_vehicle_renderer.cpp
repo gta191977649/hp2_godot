@@ -19,6 +19,8 @@
 #include <chrono>
 #include "port/vehicle/base_material.hpp"
 #include "port/vehicle/texture_state.hpp"
+#include "game_core/port/frontend/selection_render.hpp"
+#include "game_core/src/ecstasy/elighte.hpp"
 #include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/label3d.hpp>
 #include <godot_cpp/classes/immediate_mesh.hpp>
@@ -98,6 +100,10 @@ std::string mesh_key(const port::render::VehicleSolid& solid){
 }
 }
 struct Ps2VehicleRenderer::Impl {
+    std::uint32_t requested_frontend_solid=0;
+    std::optional<hp2::debug::SelectCarLights> frontend_lights;
+    std::array<float,16> frontend_view{};
+    std::uint64_t frontend_light_revision=0;
     struct Draw {
         godot::Ref<godot::ShaderMaterial> material;
         std::size_t part{},surface{};
@@ -106,6 +112,7 @@ struct Ps2VehicleRenderer::Impl {
         godot::MeshInstance3D* node=nullptr;
         bool bounded_alpha=false;
         bool lighting_valid=false;
+        std::uint64_t frontend_light_revision=0;
         godot::Basis lighting_basis;
         std::array<float,28> lights{};
         godot::Ref<godot::ShaderMaterial> reflection;
@@ -172,6 +179,7 @@ Ps2VehicleRenderer::~Ps2VehicleRenderer(){cancel_load();}
 void Ps2VehicleRenderer::_bind_methods() {
     godot::ClassDB::bind_method(godot::D_METHOD("apply_driving_snapshot","snapshot"),&Ps2VehicleRenderer::apply_driving_snapshot);
     godot::ClassDB::bind_method(godot::D_METHOD("request_car","relative_path","car_id","skin_id"),&Ps2VehicleRenderer::request_car);
+    godot::ClassDB::bind_method(godot::D_METHOD("request_frontend_solid","hash"),&Ps2VehicleRenderer::request_frontend_solid);
     godot::ClassDB::bind_method(godot::D_METHOD("pump_load"),&Ps2VehicleRenderer::pump_load);
     godot::ClassDB::bind_method(godot::D_METHOD("set_show_lods","enabled"),&Ps2VehicleRenderer::set_show_lods);
     godot::ClassDB::bind_method(godot::D_METHOD("set_wheel_blur","enabled"),&Ps2VehicleRenderer::set_wheel_blur);
@@ -458,16 +466,61 @@ void Ps2VehicleRenderer::cancel_load(){
     if(impl_->staging){auto current=std::move(impl_);impl_=std::move(current->staging);release_display();impl_=std::move(current);}
     impl_->loading=false;++impl_->generation;
 }
-godot::Dictionary Ps2VehicleRenderer::request_car(const godot::String& path,int car,int skin){
+godot::Dictionary Ps2VehicleRenderer::request_car(const godot::String& path,int car,int skin){return request_native(path,car,skin,0);}
+bool Ps2VehicleRenderer::apply_frontend_pose(const hp2::debug::FrontEndRenderingCar& state,
+    const std::array<float,16>& scale,const hp2::debug::SelectCarLights& lights,
+    const std::array<float,16>& view,const port::driving::VehicleLightState& texture_lights){
+    std::string gap;
+    const auto error=catch_all([&]{gap=hp2::guard([&]{
+        if(!impl_->model || !impl_->display_ready || impl_->loading)
+            throw std::logic_error("Frontend pose requires a completed original model request");
+        if(state.LightsOn || state.CopLightsOn)
+            hp2::not_implemented("0x00123EA8","selector forced flare-state display is not bound");
+        if(bool(state.OverrideModel)!=impl_->model->is_frontend_solid())
+            throw std::logic_error("Frontend override requires its actual original named-solid renderer");
+        if(state.OverrideModel && impl_->model->geometry().solids.front().hash!=state.OverrideModel->NameHash)
+            throw std::logic_error("Frontend named solid does not match original override hash");
+        const port::render::VehicleSolid* body=nullptr;
+        for(const auto& part:impl_->model->parts())if(part.group==port::vehicle::Part::Group::Body && part.lod==0){
+            body=&impl_->model->geometry().solids.at(part.solid);break;}
+        if(!body)hp2::not_implemented("0x00123EA8","original frontend Body0 bounds unavailable");
+        const auto transform=host_matrix(port::selection::frontend_render_matrix(state,scale,body->bounds_min,body->bounds_max));
+        if(!impl_->model->is_frontend_solid())impl_->model->apply_frontend_pose(state.TireMatrices,state.BrakeMatrices);
+        if(get_transform()!=transform)set_transform(transform);
+        set_visible(state.Visible!=0);impl_->lights=texture_lights;
+        const auto same_light=[](const hp2::debug::SelectCarLight& a,const hp2::debug::SelectCarLight& b){return a.Position==b.Position && a.Colour==b.Colour;};
+        const auto* previous=impl_->frontend_lights?&*impl_->frontend_lights:nullptr;
+        if(!previous || impl_->frontend_view!=view || !same_light(previous->Light0,lights.Light0)
+            || !same_light(previous->Light1,lights.Light1) || !same_light(previous->Light2,lights.Light2)
+            || !same_light(previous->LightA,lights.LightA)){
+            impl_->frontend_lights=lights;impl_->frontend_view=view;++impl_->frontend_light_revision;
+        }
+        layout_lods();
+    });});
+    impl_->error=!error.empty()?error:gap;return impl_->error.empty();
+}
+godot::Dictionary Ps2VehicleRenderer::request_frontend_solid(std::int64_t hash){
+    if(hash!=0xd8173744ll && hash!=0xb077e934ll){
+        impl_->error="Unreviewed frontend named solid requested";return get_state();
+    }
+    return request_native("FRONTEND/FRONTB.BUN",-1,-1,static_cast<std::uint32_t>(hash));
+}
+godot::Dictionary Ps2VehicleRenderer::request_native(const godot::String& path,int car,int skin,std::uint32_t frontend_solid){
     const auto error=catch_all([&]{
         if(!requests_enabled())throw std::logic_error("CarViewer is disabled in Release builds");
         cancel_load();auto input=assets();if(impl_->gpu->root!=input.root()){impl_->gpu=std::make_shared<GpuCache>();impl_->gpu->root=input.root();}
-        impl_->requested_car=car;impl_->requested_skin=skin;impl_->requested_path=path.utf8().get_data();impl_->error.clear();impl_->loading=true;impl_->upload_ms=impl_->max_upload_slice_ms=0;impl_->previews.clear();
-        impl_->ticket=loader().request(input.root(),path.utf8().get_data(),car,skin,impl_->show_lods,impl_->wheel_blur);
+        impl_->requested_car=car;impl_->requested_skin=skin;impl_->requested_frontend_solid=frontend_solid;
+        impl_->requested_path=path.utf8().get_data();impl_->error.clear();impl_->loading=true;impl_->upload_ms=impl_->max_upload_slice_ms=0;impl_->previews.clear();
+        if(frontend_solid){impl_->show_lods=false;impl_->wheel_blur=false;}
+        impl_->ticket=loader().request(input.root(),path.utf8().get_data(),car,skin,impl_->show_lods,impl_->wheel_blur,frontend_solid);
     });
     if(!error.empty()){release_display();impl_->model.reset();impl_->error=error;impl_->loading=false;impl_->completed=impl_->generation;}return get_state();
 }
 godot::Dictionary Ps2VehicleRenderer::set_show_lods(bool enabled){
+    if(impl_->requested_frontend_solid && (impl_->loading || (impl_->model && impl_->model->is_frontend_solid()))){
+        if(enabled)impl_->error="A named frontend solid has no vehicle LOD viewer";
+        return get_state();
+    }
     impl_->show_lods=enabled;
     if(impl_->loading)return request_car(string(impl_->requested_path),impl_->requested_car,impl_->requested_skin);
     if(impl_->model)return request_car(string(impl_->model->path()),impl_->model->car_id(),impl_->model->skin_id());
@@ -563,8 +616,10 @@ godot::Dictionary Ps2VehicleRenderer::update_view(const godot::Vector3& position
                 }
             }
             // Port-side world placement adapter for the recovered static light slice.
-            if(!draw.lighting_valid||draw.lighting_basis!=world.basis||draw.lights[15]!=part.lights[15]){
-                draw.lights=hp2::recovered::CarRenderInfo::Sub_00120EF8(source_matrix(world));
+            if(!draw.lighting_valid||draw.lighting_basis!=world.basis||draw.lights[15]!=part.lights[15]
+                || draw.frontend_light_revision!=impl_->frontend_light_revision){
+                draw.lights=impl_->frontend_lights?hp2::debug::elSetupLightContext(*impl_->frontend_lights,impl_->frontend_view,source_matrix(world))
+                    :hp2::recovered::CarRenderInfo::Sub_00120EF8(source_matrix(world));
                 draw.lights[15]=part.lights[15];
                 const std::string suffix[]={"35c","35d","35e","35f","360","361","362"};
                 for(int i=0;i<7;++i){
@@ -573,7 +628,7 @@ godot::Dictionary Ps2VehicleRenderer::update_view(const godot::Vector3& position
                     if(draw.depth_parameters)vehicle_depth_staging::publish(draw.depth_parameters,std::size_t(i)+1,value);
                 }
                 if(draw.reflection.is_valid())for(int i=0;i<7;++i)draw.reflection->set_shader_parameter(string("light_"+suffix[i]),godot::Vector4(draw.lights[i*4],draw.lights[i*4+1],draw.lights[i*4+2],draw.lights[i*4+3]));
-                draw.lighting_basis=world.basis;draw.lighting_valid=true;
+                draw.lighting_basis=world.basis;draw.lighting_valid=true;draw.frontend_light_revision=impl_->frontend_light_revision;
             }
             // Reject the unsupported negative-destination GL blend range explicitly.
             // Convex texture/vertex interpolation is bounded by these maxima.
@@ -762,7 +817,8 @@ godot::Dictionary Ps2VehicleRenderer::apply_driving_snapshot(const godot::Dictio
         port::driving::validate_wheels(wheels);
         impl_->model->apply_wiper_state(wipers);
         impl_->flare_state=flares;impl_->flare_state_available=has_flares;
-        impl_->model->apply_driving_pose(wheels);set_transform(body);impl_->driving_pose=true;impl_->lights=lights;impl_->error.clear();layout_lods();
+        impl_->model->apply_driving_pose(wheels);set_transform(body);impl_->driving_pose=true;impl_->lights=lights;
+        if(impl_->frontend_lights){impl_->frontend_lights.reset();++impl_->frontend_light_revision;}impl_->error.clear();layout_lods();
     });
     if(!error.empty())impl_->error=error;
     auto result=get_state();result["ok"]=error.empty();result["driving_pose"]=impl_->driving_pose;

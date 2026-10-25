@@ -263,6 +263,9 @@ void SetWidgetStringId_001449A8(FeScreen& screen, std::uint32_t name_hash,
 // FUN_00144968(screen, name_hash, visible) -> FUN_00143D50(screen, hash, 0) then
 // FUN_00140728(widget, visible), which writes widget+0x29.
 void SetWidgetVisible_00144968(FeScreen& screen, std::uint32_t name_hash, bool visible);
+// ELF00144BA0/00144AE8, E-0092-J07. Capacity-based popup text projection;
+// returned bottom-Y/repositioning is outside this overload (Autosave flags9).
+void Sub_00144BA0(FeScreen& screen,std::uint32_t class_hash,const std::string& text);
 
 // FUN_001454E8(screen, class_hash, visible): the same +0x29 write, for **every** widget whose
 // class hash matches, walked with FUN_00143DD8.
@@ -695,6 +698,9 @@ private:
 // E-0016-S03. Original global RNG seed's initialized word is 0x12345678
 // at 00332068; other original callers advance it. Host owns the shared state.
 std::int32_t bRandom(std::int32_t bound, std::uint32_t& state);
+// Retail0025A5E0/0025A540, E-0094-D04; native frontend overload with original
+// angle quantization and scalar polynomial, independent of Debug driving memory.
+float bSin(float radians);
 // TASK-0041 E-0041-R10; original class spelling; retail 0x002495F0, debug 0x00242C40. Native interface/layout remain port projections.
 class tGlobalBackgroundAnimation {
 public:

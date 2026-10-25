@@ -6,6 +6,7 @@
 #include <map>
 #include <stdexcept>
 #include <cstring>
+#include <algorithm>
 
 namespace {
 
@@ -48,6 +49,18 @@ public:
 
 void check(bool condition, const char* what) {
     if (!condition) throw std::runtime_error(what);
+}
+
+void check_stage_coverage(const render::Frame& frame) {
+    check(render::frontend_ranges_complete(frame),"widget frame has incomplete frontend stage metadata");
+    std::size_t next=0;
+    for (const auto& range:frame.frontend_ranges) {
+        check(range.count>0 && range.first==next,"frontend stage ranges overlap or leave a gap");
+        check(range.first<=frame.quads.size() && range.count<=frame.quads.size()-range.first,
+              "frontend stage range exceeds quads");
+        next+=range.count;
+    }
+    check(next==frame.quads.size(),"frontend stage ranges do not cover all widget quads");
 }
 
 hp2::frontend::FeWidget quad_widget(const char* name, float x, float y, std::uint32_t texture,
@@ -141,6 +154,91 @@ int main() {
         // PS2 colour bytes: 0x80 is opaque, so 64/128/0/128 is (0.5, 1, 0, 1).
         check(drawn.color.r == 0.5f && drawn.color.g == 1.0f && drawn.color.b == 0.0f &&
                   drawn.color.a == 1.0f, "0x80-is-opaque colour");
+        // E-0095-N04: equal-layer keyboard panels follow glyphs in the asset;
+        // reverse traversal must draw their backdrop first, preserving glyph visibility.
+        screen.widgets[1].layer=0;
+        runtime::build_frame(screen,sizes,{},frame);
+        check(frame.quads[0].texture==kBack && frame.quads[1].texture==kPanel,
+              "equal-layer draw must reverse authored order");
+        screen.widgets[1].layer=9;
+        hp2::frontend::FeScreen phases;
+        for(auto layer:{0,16,20,25,19,28,24,15})
+            phases.widgets.push_back(quad_widget("PHASE",static_cast<float>(layer),0,kPanel,layer));
+        runtime::build_frame(phases,sizes,{},frame);
+        const int expected_phases[]{24,20,15,0,19,16,28,25};
+        for(std::size_t i=0;i<8;++i)
+            check(frame.quads[i].destination.x==expected_phases[i],
+                  "final bucket phases must overlay keyboard after ordinary frontend");
+        check_stage_coverage(frame);
+        check(frame.frontend_ranges.size()==2 && frame.frontend_ranges[0].first==0 &&
+              frame.frontend_ranges[0].count==2 &&
+              frame.frontend_ranges[0].stage==render::FrontendStage::background &&
+              frame.frontend_ranges[1].first==2 && frame.frontend_ranges[1].count==6 &&
+              frame.frontend_ranges[1].stage==render::FrontendStage::foreground,
+              "view0 stage1/stage7 split differs from original layer groups");
+        // E-0098-F01: preserve every authored layer's existing ordering, with an
+        // empty camera-dependent/widget stage represented by no packet range.
+        hp2::frontend::FeScreen all_layers;
+        for(int layer=0;layer<29;++layer)
+            all_layers.widgets.push_back(quad_widget("LAYER",float(layer),0,kPanel,layer));
+        runtime::build_frame(all_layers,sizes,{},frame);
+        check_stage_coverage(frame);
+        const int expected_all[]{24,23,22,21,20,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0,
+                                 19,18,17,16,28,27,26,25};
+        check(frame.quads.size()==29 && frame.frontend_ranges[0].count==5 &&
+              frame.frontend_ranges[1].count==24,"all-layer stage counts differ");
+        for(std::size_t i=0;i<29;++i)
+            check(frame.quads[i].destination.x==expected_all[i],"stage tags changed flat quad order");
+        for(auto& w:all_layers.widgets)if(w.layer>=20 && w.layer<=24)w.visible=0;
+        runtime::build_frame(all_layers,sizes,{},frame);check_stage_coverage(frame);
+        check(frame.frontend_ranges.size()==1 && frame.frontend_ranges[0].first==0 &&
+              frame.frontend_ranges[0].stage==render::FrontendStage::foreground,
+              "empty background stage left a stale range");
+        for(auto& w:all_layers.widgets)w.visible=w.layer>=20 && w.layer<=24;
+        runtime::build_frame(all_layers,sizes,{},frame);check_stage_coverage(frame);
+        check(frame.frontend_ranges.size()==1 && frame.frontend_ranges[0].count==5 &&
+              frame.frontend_ranges[0].stage==render::FrontendStage::background,
+              "empty foreground stage left a stale range");
+        for(auto& w:all_layers.widgets)w.visible=0;
+        runtime::build_frame(all_layers,sizes,{},frame);check_stage_coverage(frame);
+        check(frame.frontend_ranges.empty(),"empty frame retained previous stage metadata");
+        auto staged_text=text_widget("GLYPHS",10,20,kFont,"ABC",2);staged_text.layer=20;
+        all_layers.widgets={staged_text,quad_widget("MISSING",0,0,0xdeadbeef,24),
+                           quad_widget("OVERLAY",0,0,kPanel,0)};
+        runtime::build_frame(all_layers,sizes,{},frame);check_stage_coverage(frame);
+        check(frame.frontend_ranges.size()==2 && frame.frontend_ranges[0].count==3 &&
+              frame.frontend_ranges[1].first==3 && frame.frontend_ranges[1].count==1,
+              "glyphs or missing assets corrupted emitted-quad range counts");
+        {
+            const auto original=frame;
+            render::Frame combined;render::append_frontend_frame(combined,original);
+            render::append_frontend_frame(combined,original);check_stage_coverage(combined);
+            check(combined.frontend_ranges.size()==4 && combined.frontend_ranges[2].first==4 &&
+                  combined.frontend_ranges[3].first==7,"append failed to rebase stage ranges");
+            for(std::size_t i=0;i<combined.quads.size();++i)
+                check(combined.quads[i].destination.x==original.quads[i%4].destination.x &&
+                      combined.quads[i].texture==original.quads[i%4].texture,
+                      "append changed original flat quad sequence");
+            auto foreground=original;foreground.quads={original.quads.back()};
+            foreground.frontend_ranges={{render::FrontendStage::foreground,0,1}};
+            render::append_frontend_frame(combined,foreground);check_stage_coverage(combined);
+            check(combined.frontend_ranges.size()==4 && combined.frontend_ranges.back().count==2,
+                  "adjacent equal-stage ranges did not merge");
+            render::append_frontend_frame(foreground,foreground);check_stage_coverage(foreground);
+            check(foreground.quads.size()==2 && foreground.frontend_ranges.size()==1,
+                  "self append corrupted frame/ranges");
+            combined.quads.push_back(original.quads.front());
+            check(!render::frontend_ranges_complete(combined),"legacy untagged append reported complete");
+            render::append_frontend_frame(combined,foreground);
+            check(!render::frontend_ranges_complete(combined),"tagged append concealed a legacy gap");
+            auto unknown=foreground;unknown.frontend_ranges[0].stage=render::FrontendStage::unspecified;
+            check(!render::frontend_ranges_complete(unknown),"unspecified stage reported complete");
+            auto invalid=original;invalid.frontend_ranges[1].first=1;
+            check(!render::frontend_ranges_complete(invalid),"overlapping ranges reported complete");
+            const auto size=combined.quads.size();bool rejected=false;
+            try{render::append_frontend_frame(combined,invalid);}catch(const std::invalid_argument&){rejected=true;}
+            check(rejected && combined.quads.size()==size,"invalid range append mutated destination");
+        }
         // E-0039-Q02/Q03: distinct authored corners survive the presentation boundary.
         screen.widgets[0].field_0x5c = {0x40008000u,0x20800000u,0x10808000u};
         screen.widgets[0].field_0x70 = {0.25f,0,0.75f,0,0.75f,1,0.25f,1};
@@ -314,7 +412,10 @@ int main() {
         clipped_text.clip_hash_0x4c = mask.name_hash;
         clipped.widgets = {clipped_text, mask};
         runtime::build_frame(clipped, sizes, {}, frame);
-        check(frame.quads[0].destination.x == 80, "text without bit 0x10 is unclipped");
+        const auto unclipped=std::find_if(frame.quads.begin(),frame.quads.end(),
+            [](const auto& q){return q.texture==kFont;});
+        check(unclipped!=frame.quads.end() && unclipped->destination.x==80,
+              "text without bit 0x10 is unclipped");
         clipped.widgets[0].text_align = 2 | 0x10;
         runtime::build_frame(clipped, sizes, {}, frame);
         for (const auto& quad : frame.quads)
@@ -326,6 +427,9 @@ int main() {
         clipped.widgets[0].y = -500;
         stats = runtime::build_frame(clipped, sizes, {}, frame);
         check(stats.quads == 1 && stats.clipped_out == 1, "quad outside its clip reported");
+        check_stage_coverage(frame);
+        check(frame.frontend_ranges.size()==1 && frame.frontend_ranges[0].count==1,
+              "clipped-away quad left a stage packet entry");
 
         // --- startup movie override --------------------------------------------------------
         hp2::frontend::FeScreen title;
@@ -337,6 +441,10 @@ int main() {
         options.exclusive_width = 512;
         options.exclusive_height = 256;
         stats = runtime::build_frame(title, sizes, options, frame);
+        check_stage_coverage(frame);
+        check(frame.frontend_ranges.size()==1 &&
+              frame.frontend_ranges[0].stage==render::FrontendStage::foreground,
+              "exclusive startup quad did not retain its authored stage");
         check(stats.quads == 1 && frame.quads.size() == 1, "movie override draws only the movie");
         check(frame.quads[0].texture == kMovie, "movie slot texture id preserved");
         check(frame.quads[0].destination.width == 512 && frame.quads[0].destination.height == 256,

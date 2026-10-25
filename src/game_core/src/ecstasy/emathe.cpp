@@ -6,6 +6,11 @@ namespace hp2::recovered {
 using namespace port::driving;
 using namespace port::driving::native;
 using namespace port::driving::init;
+// Debug0011BDD8, E-0098-C01. Row-major post-translation; retain full multiply order.
+void eTranslate(SolverMatrix& destination,const SolverMatrix& input,const std::array<float,3>& v){
+    const SolverMatrix translation{{1,0,0,0,0,1,0,0,0,0,1,0,v[0],v[1],v[2],1}};
+    hp2::recovered::eMulMatrix(destination,input,translation);
+}
 }
 
 // Retail 0x0011BD90; E-0041-M01; E-0042-S001; exact Debug TU src\ecstasy\emathe.cpp

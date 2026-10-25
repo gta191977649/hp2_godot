@@ -3,6 +3,10 @@
 #include <godot_cpp/classes/texture2d.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
 #include <memory>
+#include <array>
+#include <cstdint>
+namespace hp2::debug {struct FrontEndRenderingCar;struct SelectCarLights;}
+namespace port::driving {struct VehicleLightState;}
 
 namespace port::godot_bridge {
 // Shared Godot backend for native CarRenderInfo/vehicle render data.
@@ -16,6 +20,7 @@ class Ps2VehicleRenderer : public godot::Node3D {
     void layout_lods();
     void cancel_load();
     godot::Dictionary load_requested(const godot::String& path, int car_id, int skin_id);
+    godot::Dictionary request_native(const godot::String&,int,int,std::uint32_t frontend_solid);
 protected:
     static void _bind_methods();
     virtual bool requests_enabled() const { return true; }
@@ -24,6 +29,11 @@ public:
     Ps2VehicleRenderer();
     ~Ps2VehicleRenderer() override;
     godot::Dictionary request_car(const godot::String& relative_path,int car_id,int skin_id);
+    godot::Dictionary request_frontend_solid(std::int64_t hash);
+    // Native frontend presentation seam: no per-part Dictionary or invented physics.
+    bool apply_frontend_pose(const hp2::debug::FrontEndRenderingCar&,const std::array<float,16>& car_scale,
+        const hp2::debug::SelectCarLights&,const std::array<float,16>& view,
+        const port::driving::VehicleLightState& texture_lights);
     godot::Dictionary pump_load();
     godot::Dictionary set_show_lods(bool enabled);
     godot::Dictionary set_wheel_blur(bool enabled);

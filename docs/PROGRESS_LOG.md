@@ -1,4 +1,227 @@
-# Progress log — session narrative, newest first
+## 2026-10-26 - TASK-0098 selector loading, locked display and packet stages
+
+Continued TASK-0098 under the renewed full TASK-0096 request. E-0098-T01 recovers
+native selector Tick load/fade/scroll/orbit/camera/pose/light order and the bounded
+static camera-offset stores. Delayed and superseded loads are tested, including
+the original duplicate reinit at full overlay. Fresh00193AE0 listing is an original
+no-op; no replacement spotlight effect is invented. E-0098-L02 implements locked
+slide/timer/signed alpha and ordered task/BAC/event/points unlock descriptions;
+localization and frame-owned rectangle rendering remain required services.
+E-0098-F02 preserves background/interface stage ranges through widget emission
+and production document concatenation; exact flat quad order remains unchanged.
+Coverage validation exposes legacy unclassified event-tree packets. No shared-depth
+compositor, formal selection entry or mirrored-car pass is implied complete.
+
+Validation: native build of eight scoped targets passed; eight CTests passed25.34s
+with actual configured assets/Debug ELF. Final normal Godot ps2_port DLL rebuild
+passed. CMake3.29.2/GCC13.2.0/Python3.14.4 and pinned godot-cpp
+e4b7c25e721ce3435a029087e3917a30aa73f06b unchanged. Original event audit passed64
+events/32 Hot Pursuit; five KO storage incompatibilities remain isolated. Scoped
+diff check passed. Required test-file ignore exceptions were added explicitly;
+no proprietary file staged, and no staging/commit requested or performed.
+
+Detailed evidence/commands/limits are in reverse/task0098/loading-lifecycle.md,
+locked-display.md, render-stages.md and the active task. Original comparison is
+blocked by no running matching PCSX2 scenario and timed-out21512/28011 probes;
+Retail oracle is invalid for Debug. Full production selection, constructor/
+destructor/FrameEffects/render composition, World/police/rules/results/private
+save and resource/performance acceptance remain incomplete. No Verified promotion.
+
+Exact continuation: TASK-0098 constructor/destructor and FrameEffects ownership,
+reviewed stage0/1/2/4/7 shared-depth compositor, then actual native service/profile
+adapter binding and event-to-selection-to-valid-launch route. Keep TASK-0099 in
+backlog until those prerequisites exist. Do not substitute the single-car tool
+fixture or fabricated outcome. Run scoped commands in active TASK-0098, regenerate
+progress with `py -3 reverse/scripts/generate_progress.py`, then contract checks.
+
+## 2026-10-26 - TASK-0098 selection input and display continuation
+
+Continued original selector orbit/digital/analog/help state and typed page callback, including Param/Noise, bounded navigation, current-car skin reload and explicit dependency dispatch. Constructor loading overlay corrected to original130. Native alpha caches signed per-corner values and restores duplicates head-first per fresh00244080 evidence. Final native selection/camera/widgets3/3 passed3.60s; model/driving-camera regressions earlier3/3 passed14.94s; normal Godot DLL rebuilt. Vulkan original prop fixture passed2.51s with stale generation discarded. Earlier test-only field/arithmetic assertions corrected; no guessed production constants.
+
+Evidence and commands in reverse/task0098/display-dependencies.md. Fresh frame order shows main solids before Flailer24..20, platform/particles, reflection+mainalpha, then three overlay layer ranges; single-pass viewer composition would be wrong. Locked text task/event/points priority captured but not implemented. Full Tick/loader/locked rendering/FrameEffects/compositing and formal production event route remain open, followed by World/police/outcomes/performance. No Verified or playable career claim. Continue TASK-0098; no staging/commit; user files preserved.
+
+## 2026-10-26 - TASK-0098 original selection native core
+
+Continued only0098 under parent0096. Implemented separate hp2::debug decoded
+car/status/ride/list projections and original scalar bodies in original source
+ownership. Both players' event restrictions, signed skin rules, bounded nonwrapping
+car navigation, wrapping skins, stable original adjacent sorting, current-node
+identity, per-game ride slots and selected-car settings are covered. Selector
+confirm/popup/cancel/readiness-before-advance implemented as a scoped projection;
+full constructor, sounds/Noise, outer Back/orbit/held input, model/presentation and
+production launch remain explicit gaps. No viewer substitute or synthetic race.
+
+Fresh read-only Ghidra MCP audited original Sort00249958 and Debug24-byte versus
+Retail28-byte CarLanguageInfo. All50 identities/five common IDs match after explicit
+field conversion. Original English assets resolve64 full-name bindings and the
+non-COP acceleration/BHP accesses. Initial broad spec assertions failed on43004/
+44004; original001953B0 does numeric top speed and hides COP specs, so final checks
+follow actual calls. Missing text was not manufactured.27 original entry records
+updated (26 scoped core Tested, partial callback Decompiled),176 capture hashes
+indexed in reverse/task0098/evidence.json. Original raw data remains ignored.
+
+Native build targets and8-test command are recorded verbatim in TASK-0098:
+8/8 passed42.11s. Final neighbor-index/status/reentry selection1/1 passed1.08s.
+Normal `cmake --build --preset godot-debug --target ps2_port --parallel 4` passed
+again after final source edits. Progress tables/contracts2/2 passed2.48s; asset
+inventory --check passed. Checkpoint diff whitespace check passed. No FPS/graphical/lifetime/PCSX2 equivalence claim.
+CMake3.29.2/GCC13.2.0/Python3.14.4/Godot4.7.2 and existing godot-cpp pin unchanged.
+
+Next continue active TASK-0098 native camera/Quaternion, original model loader,
+reflection/lights/animation/help/speech and generation-safe host resource ownership;
+then bind actual event entry. SetCameraMatrix consumes world->view; inverse-view
+pose is required. Original runtime oracle still absent. Later0099..0103 World/
+police/race/outcome/performance acceptance remains incomplete. No commit/staging;
+all prior user changes preserved. This checkpoint is not a playable career.
+
+##2026-10-26 - TASK-0096/0097 Ultimate Racer implementation start
+
+Recorded user's expanded Debug authority for full single-player Ultimate Racer;
+AGENT.md/DECISIONS and parent0096 preserve separate Retail scope and existing
+uncommitted work. Established ordered0097..0103 subtasks. REA independent
+read-only workers investigated selection, launch/World and police; main writer
+implemented only current inventory/data foundation. Both ELF hashes match, MCP
+is available.130 original Debug function entries/228 private capture hashes are
+indexed as static evidence, not whole-entry recovery claims.
+
+Added independent hp2::debug EventInfo fields/getters/state-size and EventTrack
+SetRace in original eventtree.cpp/header ownership. All64 original records decode;
+Hot Pursuit has32 nodes with types0:8,1:2,2:4,3:5,4:4,5:4,6:5. Debug KO progress12
+versus Retail16 makes raw save rebind invalid for5 Hot Pursuit events. All table
+references/packed track settings/bounds/original flag18 tested. No fake races or
+outcomes. `cmake --build --preset native-debug --target ultimate_event_tests --parallel 4`
+passed; `ctest --preset native-debug -R '^(ultimate_event|eventtree)$' --output-on-failure`
+2/2 passed1.36s. `py -3 reverse/scripts/audit_ultimate_racer.py` and`--check` pass.
+No FPS or original-runtime equivalence claim. Original oracle unavailable in checked
+local tools/config/processes. Continue active TASK-0098 selection restrictions and
+state machine, then original visual loader/camera/effects and race handoff. Related
+commits:none. Raw binaries/assets/captures remain ignored.
+
+##2026-10-26 - TASK-0092 corrective BGM lifecycle audit
+
+User reports BGM in states that should be silent. Fresh read-only Ghidra MCP
+rechecked Retail SHA7335b8ed...eafacc2 and Title/Jukebox start/stop/completion
+call sites (E-0092-J08). Confirmed port bug: newly added per-frame music polling
+implicitly called scheduler.enter, bypassing original explicit001AEAB0 timing.
+Removed implicit selection. Separate explicit binding retains original startup/
+main-menu requests; inactive/stale completion cannot resurrect a stopped track.
+Original manual second-movie skip has no start call; natural last-movie end and
+main-menu construction do. Do not generalize all static Title states as silent.
+Jukebox original strict30-second inactive preview retry remains unchanged.
+
+Native selected targets and Godot-debug ps2_port build passed.
+`ctest --preset native-debug -R '^(frontend_jukebox|frontend_runtime|jukebox_screen|jukebox|movieplayer)$' --output-on-failure`:
+5/5 passed35.88s. Added silence regressions and corrected the former test that
+wrongly expected direct-Jukebox polling to start music. Godot4.7.2 headless
+`--path godot --script D:/dev/hp2_godot/reverse/scripts/check_frontend_music_gate.gd`
+passed binding gate; windowed command with `-- --host-audio --screen=22 --scale=1`
+passed actual AudioStreamPlayer Title-silence/explicit-start check. Both exit0.
+Raw captures ignored local/task0092-audit; metadata/index and audit are durable.
+No computer-use/Ghidra mutations/Verified promotion. Full original comparison
+remains open. TASK-0095 Help implementation deferred for this user-reported defect.
+
+##2026-10-25 - TASK-0091 final validation checkpoint (work incomplete)
+
+`cmake --build --preset native-debug --parallel 4`: passed all145 pending build
+steps. `cmake --build --preset godot-debug --target ps2_port --parallel 4`: passed.
+`ctest --preset native-debug -R '^(frontend_.*|jukebox|jukebox_screen|frame_builder|fmenus_menu|eventtree|screen_manager|progress_tables)$' --output-on-failure`:
+19/19 passed48.17s, including all current frontend integration, input, viewport,
+quad, frame and generated-progress checks. Godot4.7.2 headless command
+`--path godot -- --native-render-smoke`: passed41 documents,1064 quads,
+7700 glyphs,120 textures; authored empty document36. This proves frame production,
+not complete behavior of41 screens. Headless editor import also passed.
+
+Window NameEntry capture command:
+`--path godot -- --screen=24 --scale=1 --menu-events=4,4,4,4,9,wait:1,9,wait:0.8 --capture=D:/dev/hp2_godot/local/task0091/name-entry-phases-fixed.png`.
+Exited0 and inspected complete keyboard. Raw window captures remain ignored.
+No computer-use, no Ghidra mutations, no staging/commit. Diff check passed.
+
+Continuation: TASK-0095 shared Help dependency001E3B88/001E3DD8/001E4028,
+then create a scoped controller/profile/credits task and proceed through remaining
+TASK-0091 race setup/car/track/launch and endgame/pause/replay. Input/menu adapters
+are incomplete for original repeat, calibration and physical devices. Retain
+untranslated exceptions and open criteria. Original PCSX2 comparison prerequisites
+are unavailable in checked PATH/process/local-tools/config locations; no Verified
+promotion. Existing captures in local/task0091/{name,race,endgame}-agent provide
+read-only evidence leads for subsequent implementation, never completed status.
+
+##2026-10-25 - TASK-0095 keyboard render closure
+
+Read-only MCP established original final layer buckets:24..20,15..0,19..16,
+28..25, plus reverse-authored ties. CPU widget traversal alone was insufficient;
+retired the earlier universal numeric-descending inference. Frame builder now
+preserves these submission phases. Vulkan window capture visibly shows complete
+NameEntry keyboard. Native keyboard/frame tests2/2 pass2.12s; final-phase fixture
+added. General frontend regressions passed earlier except an old frame test's
+hardcoded first-quad assumption (corrected to identify font texture); generated
+progress check passed after regeneration. Shared Help and original comparison
+remain open, as do the rest of TASK-0091. PCSX2 was not found on PATH, among
+running processes, in configured tools or local config; no original comparison
+was attempted or claimed. All raw captures remain ignored; no Git staging.
+
+##2026-10-25 - TASK-0095 NameEntry checkpoint
+
+Implemented portable Retail3x14 keyboard, overwrite/delete/case/cursor controls,
+matching player gates, ungated Back commit, gender and whole-screen snapshot
+comparison, profile writes and conditional Autosave. Original scalar animation
+preserves velocity on retarget and snaps wrapping grid movement. Authored slots,
+keyboard class and caret are bound. Native test1/1 passed1.74s; expanded P2 and
+120Hz animation trace added subsequently. Godot extension builds and headless
+editor import passes. Added explicit host two-pad adapter; physical devices not
+tested. Reproducible Options route window capture reveals equal-layer occlusion:
+keyboard glyphs are behind their panel. This remains an incomplete visual criterion,
+not a passed comparison. Investigate original widget-list construction before
+changing tie ordering (TASK-0039 Q07 previously identified this unknown).
+Autosave slot formatting capture now displays original localized slot1 correctly.
+Ten native frontend regressions passed10/10,38.67s; no original comparison.
+
+##2026-10-25 - TASK-0091 / TASK-0092..0094 production integration checkpoint
+
+Read-only Ghidra MCP only; computer-use excluded by user. Integrated Jukebox
+real metadata and five-row widgets, strict preview timer, mode/genre toggles,
+preferred-track Back resume, natural completion modes and private Autosave.
+Recovered successful Autosave timing and authored FRONTB35 popup wrapping; PS2
+card error/hardware paths remain explicit gaps. Audio Options now owns seven
+normalized sliders, raw gain settings, derivative-preserving scalar animation,
+output mode, defaults and menu feedback. Dedicated host audio bus supports live
+Mono downmix; stereo carrier is used for the stored Dolby mode without claiming
+SPU encoding. Window Audio capture leak resolved by draining mix before capture
+exit. Display/HUD/calibration implemented with separate player snapshots and
+asymmetric original calibration limits. Host offset translation is a recorded
+port policy. Retail frontend bSin polynomial replaces incorrect standard-sine
+projection; exceptional conversions and original numeric equivalence stay open.
+
+Native4/4 integration tests passed38.97s; commands and remaining checks in
+TASK-0094. Prior Jukebox/Audio window captures and isolated save roundtrip passed;
+formatted Autosave/Display/HUD captures pending current Godot build. No original
+PCSX2 comparisons, no Verified promotions. No proprietary files staged.
+
+# Progress log â€” session narrative, newest first
+
+## 2026-10-25 TASK-0091/0092 - Retail Jukebox state recovery
+
+TASK-0091 records the complete-frontend request, including post-race/pause/replay
+interfaces and an explicit non-racing launch boundary. The38-row registration
+census is only a seed; complete screen/state coverage is unresolved. TASK-0092
+is the current bounded implementation scope. The user excludes computer-use;
+subsequent binary investigation uses read-only Ghidra MCP only.
+
+E-0092-J01..J03 recover Jukebox grouping, five-row scroll decisions, category
+and mode navigation, genre toggles, preview operands and strict timing gates.
+Portable overloads in original options.cpp use explicit host state/services;
+whole-entry throwing templates remain unchanged. A reproducible capture checks
+three MCP memory ranges against the configured SHA-bound Retail ELF. The known
+001F0D10 undefined-entry error is recorded, not repaired in the database.
+
+Native targeted build and8/8 regressions passed, including configured-original
+JBC and existing frontend runtime checks. The Godot-preset portable test target
+built and passed1/1; this is not extension/windowed validation. CMake3.29.2,
+GCC13.2.0, Python3.14.4. Exact commands/results are in TASK-0092. No original
+comparison, Verified promotion, staging or commit. Proprietary evidence stays ignored.
+
+Next: TASK-0092 production JBC metadata and original widget binding, then preview
+transport, Back filtering/resume and profile/Autosave. Read FRONTEND_COMPLETION.md
+and frontend/task0092-jukebox.md; Jukebox and the overall frontend remain incomplete.
 
 ## 2026-10-21 TASK-0081 - Recovered frame state and ResetCar leaf
 
@@ -280,13 +503,17 @@ status tables, blockers and the next action -- and is the one the startup protoc
 
 Nothing here is deleted when it turns out to be wrong. A retired claim is marked as retracted in
 place and kept, because the fact that a session believed it, and why, is itself evidence
-(AGENT.md R6). The original header of this material was: `Project state — 2026-10-13 (Australia/Sydney)`.
+(AGENT.md R6). The original header of this material was: `Project state â€” 2026-10-13 (Australia/Sydney)`.
 
 ## Contents
 
 <!-- generated:contents:begin -->
-<!-- Generated by reverse/scripts/generate_progress.py on 2026-10-21. Do not edit by hand. -->
+<!-- Generated by reverse/scripts/generate_progress.py on 2026-10-26. Do not edit by hand. -->
 
+- [2026-10-26 - TASK-0098 selector loading, locked display and packet stages](#2026-10-26---task-0098-selector-loading-locked-display-and-packet-stages)
+- [2026-10-26 - TASK-0098 selection input and display continuation](#2026-10-26---task-0098-selection-input-and-display-continuation)
+- [2026-10-26 - TASK-0098 original selection native core](#2026-10-26---task-0098-original-selection-native-core)
+- [2026-10-25 TASK-0091/0092 - Retail Jukebox state recovery](#2026-10-25-task-00910092---retail-jukebox-state-recovery)
 - [2026-10-21 TASK-0081 - Recovered frame state and ResetCar leaf](#2026-10-21-task-0081---recovered-frame-state-and-resetcar-leaf)
 - [2026-10-21 TASK-0080 - End-to-end driving chain review](#2026-10-21-task-0080---end-to-end-driving-chain-review)
 - [2026-10-21 TASK-0079 - Driving chain state lifecycle](#2026-10-21-task-0079---driving-chain-state-lifecycle)
@@ -297,44 +524,44 @@ place and kept, because the fact that a session believed it, and why, is itself 
 - [2026-10-19 TASK-0069 - Godot4.7.2 and profiler-driven diagnosis](#2026-10-19-task-0069---godot472-and-profiler-driven-diagnosis)
 - [2026-10-19 TASK-0061 - Live coordinates and host UI DPI](#2026-10-19-task-0061---live-coordinates-and-host-ui-dpi)
 - [2026-10-19 TASK-0060 - Track host memory residency](#2026-10-19-task-0060---track-host-memory-residency)
-- [TASK-0032 — Debug CarViewer and TrackViewer scaffolds (2026-10-14)](#task-0032--debug-carviewer-and-trackviewer-scaffolds-2026-10-14)
-- [TASK-0031 — F8 debug console and independent Debug FPS (2026-10-14)](#task-0031--f8-debug-console-and-independent-debug-fps-2026-10-14)
-- [TASK-0030 — Concise README completion (2026-10-13)](#task-0030--concise-readme-completion-2026-10-13)
-- [TASK-0029 — Root-level classes and Ghidra-confirmed directories (2026-10-13)](#task-0029--root-level-classes-and-ghidra-confirmed-directories-2026-10-13)
-- [TASK-0028 — Editable C++ class/member templates (2026-10-13)](#task-0028--editable-c-classmember-templates-2026-10-13)
-- [TASK-0027 — Class names, and the one mechanism that binds them (2026-10-13)](#task-0027--class-names-and-the-one-mechanism-that-binds-them-2026-10-13)
-- [TASK-0026 — PROGRESS.md split into a tracker and this log (2026-10-13)](#task-0026--progressmd-split-into-a-tracker-and-this-log-2026-10-13)
-- [TASK-0025 — The Language Options screen, reversed end to end (active)](#task-0025--the-language-options-screen-reversed-end-to-end-active)
-- [TASK-0021 — The memory-card save system and the event tree it unblocked (active)](#task-0021--the-memory-card-save-system-and-the-event-tree-it-unblocked-active)
+- [TASK-0032 â€” Debug CarViewer and TrackViewer scaffolds (2026-10-14)](#task-0032--debug-carviewer-and-trackviewer-scaffolds-2026-10-14)
+- [TASK-0031 â€” F8 debug console and independent Debug FPS (2026-10-14)](#task-0031--f8-debug-console-and-independent-debug-fps-2026-10-14)
+- [TASK-0030 â€” Concise README completion (2026-10-13)](#task-0030--concise-readme-completion-2026-10-13)
+- [TASK-0029 â€” Root-level classes and Ghidra-confirmed directories (2026-10-13)](#task-0029--root-level-classes-and-ghidra-confirmed-directories-2026-10-13)
+- [TASK-0028 â€” Editable C++ class/member templates (2026-10-13)](#task-0028--editable-c-classmember-templates-2026-10-13)
+- [TASK-0027 â€” Class names, and the one mechanism that binds them (2026-10-13)](#task-0027--class-names-and-the-one-mechanism-that-binds-them-2026-10-13)
+- [TASK-0026 â€” PROGRESS.md split into a tracker and this log (2026-10-13)](#task-0026--progressmd-split-into-a-tracker-and-this-log-2026-10-13)
+- [TASK-0025 â€” The Language Options screen, reversed end to end (active)](#task-0025--the-language-options-screen-reversed-end-to-end-active)
+- [TASK-0021 â€” The memory-card save system and the event tree it unblocked (active)](#task-0021--the-memory-card-save-system-and-the-event-tree-it-unblocked-active)
 - [What gta-reversed actually does about "not implemented" (TASK-0020 follow-up)](#what-gta-reversed-actually-does-about-not-implemented-task-0020-follow-up)
 - [NotImplemented reporting made central (TASK-0020 follow-up)](#notimplemented-reporting-made-central-task-0020-follow-up)
-- [Ghidra MCP — still not connected, and why (RETRACTED 2026-10-13)](#ghidra-mcp--still-not-connected-and-why-retracted-2026-10-13)
-- [TASK-0020 — Original source tree alignment (active)](#task-0020--original-source-tree-alignment-active)
-- [TASK-0018 — Native runtime and replaceable rendering backend (active)](#task-0018--native-runtime-and-replaceable-rendering-backend-active)
-- [TASK-0019 — Original function names (completed scoped investigation)](#task-0019--original-function-names-completed-scoped-investigation)
-- [TASK-0017 — Submenu Back and overflow (active)](#task-0017--submenu-back-and-overflow-active)
-- [TASK-0016 — Startup/media/audio/scroll integration (active)](#task-0016--startupmediaaudioscroll-integration-active)
-- [TASK-0015 — Activation and animation integration (active; remaining gaps explicit)](#task-0015--activation-and-animation-integration-active-remaining-gaps-explicit)
-- [TASK-0013 — Original front-end actually rendered (not a debug UI)](#task-0013--original-front-end-actually-rendered-not-a-debug-ui)
-- [TASK-0012 update — Native runtime texture loader; standalone .exe built; original source tree recovered](#task-0012-update--native-runtime-texture-loader-standalone-exe-built-original-source-tree-recovered)
-- [TASK-0011 update — Central GAMEFLOW_STATE_* dispatcher found; FUN_0016fa80 hypothesis retired](#task-0011-update--central-gameflowstate-dispatcher-found-fun0016fa80-hypothesis-retired)
-- [TASK-0012 — PS2 original asset pipeline (active; container + P8/RGBA decode delivered)](#task-0012--ps2-original-asset-pipeline-active-container--p8rgba-decode-delivered)
-- [TASK-0011 — Front-end menu minimal closed loop (active; scoped completion)](#task-0011--front-end-menu-minimal-closed-loop-active-scoped-completion)
-- [TASK-0010 — Main-loop structural shell completed](#task-0010--main-loop-structural-shell-completed)
-- [TASK-0009 — Whole-binary recovery active](#task-0009--whole-binary-recovery-active)
-- [TASK-0008 — Police AI map completed](#task-0008--police-ai-map-completed)
-- [TASK-0007 — Function naming completed](#task-0007--function-naming-completed)
-- [TASK-0006 — PS2Recomp trial completed](#task-0006--ps2recomp-trial-completed)
+- [Ghidra MCP â€” still not connected, and why (RETRACTED 2026-10-13)](#ghidra-mcp--still-not-connected-and-why-retracted-2026-10-13)
+- [TASK-0020 â€” Original source tree alignment (active)](#task-0020--original-source-tree-alignment-active)
+- [TASK-0018 â€” Native runtime and replaceable rendering backend (active)](#task-0018--native-runtime-and-replaceable-rendering-backend-active)
+- [TASK-0019 â€” Original function names (completed scoped investigation)](#task-0019--original-function-names-completed-scoped-investigation)
+- [TASK-0017 â€” Submenu Back and overflow (active)](#task-0017--submenu-back-and-overflow-active)
+- [TASK-0016 â€” Startup/media/audio/scroll integration (active)](#task-0016--startupmediaaudioscroll-integration-active)
+- [TASK-0015 â€” Activation and animation integration (active; remaining gaps explicit)](#task-0015--activation-and-animation-integration-active-remaining-gaps-explicit)
+- [TASK-0013 â€” Original front-end actually rendered (not a debug UI)](#task-0013--original-front-end-actually-rendered-not-a-debug-ui)
+- [TASK-0012 update â€” Native runtime texture loader; standalone .exe built; original source tree recovered](#task-0012-update--native-runtime-texture-loader-standalone-exe-built-original-source-tree-recovered)
+- [TASK-0011 update â€” Central GAMEFLOW_STATE_* dispatcher found; FUN_0016fa80 hypothesis retired](#task-0011-update--central-gameflowstate-dispatcher-found-fun0016fa80-hypothesis-retired)
+- [TASK-0012 â€” PS2 original asset pipeline (active; container + P8/RGBA decode delivered)](#task-0012--ps2-original-asset-pipeline-active-container--p8rgba-decode-delivered)
+- [TASK-0011 â€” Front-end menu minimal closed loop (active; scoped completion)](#task-0011--front-end-menu-minimal-closed-loop-active-scoped-completion)
+- [TASK-0010 â€” Main-loop structural shell completed](#task-0010--main-loop-structural-shell-completed)
+- [TASK-0009 â€” Whole-binary recovery active](#task-0009--whole-binary-recovery-active)
+- [TASK-0008 â€” Police AI map completed](#task-0008--police-ai-map-completed)
+- [TASK-0007 â€” Function naming completed](#task-0007--function-naming-completed)
+- [TASK-0006 â€” PS2Recomp trial completed](#task-0006--ps2recomp-trial-completed)
 - [Scope and milestones](#scope-and-milestones)
-- [Assessment snapshot — TASK-0002](#assessment-snapshot--task-0002)
+- [Assessment snapshot â€” TASK-0002](#assessment-snapshot--task-0002)
 - [Delivered infrastructure](#delivered-infrastructure)
 - [Environment observed at initialization (updates below)](#environment-observed-at-initialization-updates-below)
-- [Initialization validation ledger — 2026-10-09](#initialization-validation-ledger--2026-10-09)
+- [Initialization validation ledger â€” 2026-10-09](#initialization-validation-ledger--2026-10-09)
 - [TASK-0014 front-end menu interaction (2026-10-12)](#task-0014-front-end-menu-interaction-2026-10-12)
 - [Continuation](#continuation)
-- [2026-10-14 — TASK-0033 native ImGui and original vehicle base material](#2026-10-14--task-0033-native-imgui-and-original-vehicle-base-material)
-- [TASK-0033 compact viewer and loading follow-up — 2026-10-14](#task-0033-compact-viewer-and-loading-follow-up--2026-10-14)
-- [TASK-0034 UV, continuous preview and shared materials — 2026-10-14](#task-0034-uv-continuous-preview-and-shared-materials--2026-10-14)
+- [2026-10-14 â€” TASK-0033 native ImGui and original vehicle base material](#2026-10-14--task-0033-native-imgui-and-original-vehicle-base-material)
+- [TASK-0033 compact viewer and loading follow-up â€” 2026-10-14](#task-0033-compact-viewer-and-loading-follow-up--2026-10-14)
+- [TASK-0034 UV, continuous preview and shared materials â€” 2026-10-14](#task-0034-uv-continuous-preview-and-shared-materials--2026-10-14)
 - [2026-10-14 - TASK-0035 wheels, glass environment and mirror binding](#2026-10-14---task-0035-wheels-glass-environment-and-mirror-binding)
 - [TASK-0036 - Complete vehicle upload beyond host surface capacity](#task-0036---complete-vehicle-upload-beyond-host-surface-capacity)
 - [2026-10-15 - TASK-0037 packet helper naming traceback](#2026-10-15---task-0037-packet-helper-naming-traceback)
@@ -376,21 +603,22 @@ place and kept, because the fact that a session believed it, and why, is itself 
 - [TASK-0072 worker integration,2026-10-20](#task-0072-worker-integration2026-10-20)
 - [TASK-0075 - Original wheel particles and current driving gaps (2026-10-20)](#task-0075---original-wheel-particles-and-current-driving-gaps-2026-10-20)
 - [2026-10-20 TASK-0076 driving render retention](#2026-10-20-task-0076-driving-render-retention)
-- [2026-10-21 — TASK-0082 vehicle lights, horn and engine audio](#2026-10-21--task-0082-vehicle-lights-horn-and-engine-audio)
-- [2026-10-21 — TASK-0083 collision and drift audio](#2026-10-21--task-0083-collision-and-drift-audio)
-- [2026-10-21 — TASK-0084 recovered Test drive camera](#2026-10-21--task-0084-recovered-test-drive-camera)
+- [2026-10-21 â€” TASK-0082 vehicle lights, horn and engine audio](#2026-10-21--task-0082-vehicle-lights-horn-and-engine-audio)
+- [2026-10-21 â€” TASK-0083 collision and drift audio](#2026-10-21--task-0083-collision-and-drift-audio)
+- [2026-10-21 â€” TASK-0084 recovered Test drive camera](#2026-10-21--task-0084-recovered-test-drive-camera)
 - [2026-10-21 TASK-0085 GPU particle implementation](#2026-10-21-task-0085-gpu-particle-implementation)
 - [2026-10-21 TASK-0086 original vehicle light sprites](#2026-10-21-task-0086-original-vehicle-light-sprites)
 - [2026-10-21 TASK-0087 Track12 reported driving gaps](#2026-10-21-task-0087-track12-reported-driving-gaps)
 - [2026-10-21 TASK-0088 original POV and held lookback correction](#2026-10-21-task-0088-original-pov-and-held-lookback-correction)
 - [2026-10-21 TASK-0089 original water effects](#2026-10-21-task-0089-original-water-effects)
 - [TASK-0090 - C++ portability audit (2026-10-21)](#task-0090---c-portability-audit-2026-10-21)
+- [2026-10-26 TASK-0098 display dependencies](#2026-10-26-task-0098-display-dependencies)
 
 <!-- generated:contents:end -->
 
 ---
 
-## TASK-0032 — Debug CarViewer and TrackViewer scaffolds (2026-10-14)
+## TASK-0032 â€” Debug CarViewer and TrackViewer scaffolds (2026-10-14)
 
 Added asset-free Godot 3D viewers with explicitly synthetic fixtures, grid/axes, lighting,
 orbit/free cameras, panels and command routing. Native port::extensions state/requests and
@@ -412,7 +640,7 @@ pairs them unconditionally; native tiny-viewport and host tests now pass without
 assertions. No reverse engineering, real asset loading or recovery-confidence changes.
 Debug/console-on restored; prior uncommitted work preserved; no commit created.
 
-## TASK-0031 — F8 debug console and independent Debug FPS (2026-10-14)
+## TASK-0031 â€” F8 debug console and independent Debug FPS (2026-10-14)
 
 Port-side tooling only: pinned imgui-console 7840945b5a20ea9f4e83f98d1ad3d9379aede3ed
 with bundled csys/ImGui, MIT licenses and documented focus/history patches. Native module
@@ -434,7 +662,7 @@ a targeted patch and real input regression test corrected it.
 Toolchain: CMake 3.29.2, Ninja 1.12.0, GCC 13.2.0 MinGW-w64, Python 3.14.4,
 Godot 4.4.1.stable.official.49a5bc7b6. No commit created.
 
-## TASK-0030 — Concise README completion (2026-10-13)
+## TASK-0030 â€” Concise README completion (2026-10-13)
 
 Completed the user's five-section README template in 59 lines, retaining its title/headings.
 Explained native core/runtime/host responsibilities, partial frontend coverage, remaining
@@ -445,7 +673,7 @@ All 12 local links and documented commands were checked; build.ps1 --help, diff 
 progress checks passed. No runtime tests rerun for this documentation-only task, no behavior
 or original-equivalence status changed, no commit created. Recovery priority remains TASK-0025.
 
-## TASK-0029 — Root-level classes and Ghidra-confirmed directories (2026-10-13)
+## TASK-0029 â€” Root-level classes and Ghidra-confirmed directories (2026-10-13)
 
 The user explicitly replaced TASK-0028's unknown-path placement rule: move all class pairs
 out of port/class_templates into game_core, then apply original directories only when Ghidra
@@ -496,7 +724,7 @@ class-qualified diagnostic or original debug/type evidence. Unknown classes rema
 The frontend recovery priority remains TASK-0025's 00183830 profile/game reset; normal DLL
 deployment still requires the running frontend to release godot/bin/ps2_port.dll.
 
-## TASK-0028 — Editable C++ class/member templates (2026-10-13)
+## TASK-0028 â€” Editable C++ class/member templates (2026-10-13)
 
 Implemented the user's evidence-driven template plan as a separate task. Target US PS2
 SLUS_203.62, unknown executable revision, SHA-256
@@ -549,7 +777,7 @@ inventory's record/address, with original signature/boundary evidence before imp
 For normal frontend deployment, rerun the Godot build once the current DLL is released. The
 existing frontend completeness priority remains TASK-0025's 00183830 profile/game reset.
 
-## TASK-0027 — Class names, and the one mechanism that binds them (2026-10-13)
+## TASK-0027 â€” Class names, and the one mechanism that binds them (2026-10-13)
 
 User asked whether class names had been identified, wanted the task board out of the tracker,
 and wanted a list of every class with its own progress -- which meant identifying the functions
@@ -600,7 +828,7 @@ Validated: `ctest --preset native-debug --output-on-failure` -> 25/25 passed. Wr
 `docs/CLASS_RECOVERY.md`; the table is generated into `docs/PROGRESS.md` from
 `reverse/classes.csv`, and the task board is gone from it.
 
-## TASK-0026 — PROGRESS.md split into a tracker and this log (2026-10-13)
+## TASK-0026 â€” PROGRESS.md split into a tracker and this log (2026-10-13)
 
 User said this document was too messy to track anything from, and pointed at
 `D:\dev\gta-reversed\docs\ReversedClasses.md` as the model.
@@ -636,7 +864,7 @@ R6 specifies.
 
 Validated: `ctest --preset native-debug --output-on-failure` -> 25/25 passed.
 
-## TASK-0025 — The Language Options screen, reversed end to end (active)
+## TASK-0025 â€” The Language Options screen, reversed end to end (active)
 
 User hit `hp2::NotImplemented: screen item activation handler not translated (ELF 0x1f1dd8 ...)`
 and asked for the language menu and its functions. That address is reached whenever any item on
@@ -695,7 +923,7 @@ profile and game reset, against the TASK-0021 `settings.db` profile layout, so t
 `Language Options Pre FE` path can complete. Start from
 `tasks/active/TASK-0025-language-options-screen.md` and `docs/FRONTEND_MENU_LANGUAGE.md`.
 
-## TASK-0021 — The memory-card save system and the event tree it unblocked (active)
+## TASK-0021 â€” The memory-card save system and the event tree it unblocked (active)
 
 User asked to finish reversing `eventtree`, with the correct front-end implementation including
 its animations and effects, and said the save system had to come first because the event tree
@@ -715,7 +943,7 @@ read-only client `tools/ghidra.py`; no Ghidra state was modified (AGENT.md R5).
 - **One payload file, `settings.db`, of 0x114E0 = 70,880 bytes**, self-describing and with no
   separate header: `FUN_00245738` stamps the payload's own length into its first word and a
   checksum into its last. `FUN_001878B0` is a signed 32-bit sum of 0x4537 words == 0x114DC bytes,
-  i.e. everything except the checksum — a figure derived from the loop's termination condition
+  i.e. everything except the checksum â€” a figure derived from the loop's termination condition
   and then found to agree exactly with the checksum's offset.
 - **The global player profile is that payload**: one 0x114E0-byte block at **0x002FC050**, with
   no serialiser at either end. Three arithmetic identities from three different functions confirm
@@ -738,7 +966,7 @@ read-only client `tools/ghidra.py`; no Ghidra state was modified (AGENT.md R5).
 - Nine unexplained ELF immediates resolved by hashing screen 39's real widget names:
   0x0880AC4C is `HELP_TEXT`, 0x027F7503 `HELP_BUTTON`, 0xAA5D7D3F `BOTTOM_MASK`, 0xA3B23510
   `EVENT_PANEL`, 0xA01BCDC6 the class EVENT_PANEL and EVENT_NUMBER share, and 0xA744BA7B /
-  0xFD297FD4 / 0xF1EED4CD are screens 17, 18 and 19 — so the event tree is a four-document
+  0xFD297FD4 / 0xF1EED4CD are screens 17, 18 and 19 â€” so the event tree is a four-document
   cluster, not one screen.
 - Start node, tree type and view state all come from the profile (`FUN_001F5D00` /
   `FUN_001F5D28` / `FUN_001F5D50`, read from the listing because the decompiler lost the R5900
@@ -812,12 +1040,12 @@ CMake 3.29.2, Ninja 1.12.0, MinGW GCC 13.2.0, Python 3.14.4, Godot 4.4.1.stable.
 - `cmake --build --preset godot-debug --parallel 4` then `ctest --preset godot-debug`:
   **23/23 passed**.
 - `./tools/run_frontend.ps1 -RenderSmoke`:
-  `NATIVE_RENDER_SMOKE_OK: screens=41 quads=1085 glyphs=7765 textures=120 empty=[36]` —
+  `NATIVE_RENDER_SMOKE_OK: screens=41 quads=1085 glyphs=7765 textures=120 empty=[36]` â€”
   identical to the pre-task baseline. One change was needed to keep it that way, and it is
   worth recording rather than hiding: once the tree started taking its mode from the profile,
   the smoke's cold `menu_open(39)` produced no tree at all (927 quads / 7733 glyphs /
   118 textures), because profile+0x1072C is 0 until a mode-select screen writes it. That is the
-  correct recovered behaviour, not a regression — the original would show nothing either. The
+  correct recovered behaviour, not a regression â€” the original would show nothing either. The
   smoke now walks the real route once before its per-screen loop, so its screen-39 coverage is
   real rather than accidental.
 - `./tools/run_frontend.ps1 -RuntimeSmoke`: `FRONTEND_RUNTIME_SMOKE_OK`.
@@ -904,7 +1132,7 @@ prevent. AGENT.md R3 now spells this out along with the new API.
 
 Validation: 22/22 CTest, all Godot checks unchanged, both presets build with no warnings.
 
-## Ghidra MCP — still not connected, and why (RETRACTED 2026-10-13)
+## Ghidra MCP â€” still not connected, and why (RETRACTED 2026-10-13)
 
 **This conclusion was wrong and cost several sessions.** The server was running the whole
 time at `http://127.0.0.1:8080/mcp`, reachable through this repository's own read-only client
@@ -922,7 +1150,7 @@ a mismatch worth checking) and its jar carries the `XrefsEndpoints` this work ne
 missing is the client half: no MCP bridge is installed anywhere on this machine. Pinning the 97
 identifier strings to addresses is blocked until the user registers that bridge.
 
-## TASK-0020 — Original source tree alignment (active)
+## TASK-0020 â€” Original source tree alignment (active)
 
 User asked that `src/game_core` match the original HP2 project's structure, file names,
 folder names, class names and function names, using the REA skill and a Ghidra MCP string
@@ -943,7 +1171,7 @@ this file: `indep\src\fmenus.cpp` had been stored with a literal form-feed where
 `\f` should be.
 
 **No identifier was renamed.** The 74 `Class::Method` and 23 pool-name strings the ELF
-carries are real original identifiers, but every one is `string_only` — none is pinned to
+carries are real original identifiers, but every one is `string_only` â€” none is pinned to
 the address of the function it names, and TASK-0019 already ruled that allocation labels
 are not type/method proof. `Sub_<ADDR>` / `Type_<ADDR>` names therefore stand (AGENT.md
 R13). Tempting but refused: `tExitScreenAnimation` for `Type_002490D8`,
@@ -957,7 +1185,7 @@ Exact next action: reconnect Ghidra MCP, then pin the `Class::Method` and pool s
 addresses via cross-references so identifier renaming becomes evidence-backed
 (TASK-0020 next steps). Nothing is committed.
 
-## TASK-0018 — Native runtime and replaceable rendering backend (active)
+## TASK-0018 â€” Native runtime and replaceable rendering backend (active)
 
 User resumed the deferred architecture task and authorized the migration. The front end
 no longer renders through GDScript. D008 records one rendering contract: native
@@ -1015,7 +1243,7 @@ boots clean; nine screens 0 differing pixels against the pre-deletion native cap
 
 Open question carried forward: the highlight ghost period. The old `--animation-smoke`
 expected a 2 s restart and failed; that failure was confirmed **pre-existing** by stashing
-all TASK-0018 work and rebuilding. The native replacement measures instead of asserting —
+all TASK-0018 work and rebuilding. The native replacement measures instead of asserting â€”
 scale 1.7071 at 2.01 s against a 1.0000 target, i.e. the 4 s default `open_menu_animation`
 records (E-0016-08). Needs its own task against the original.
 
@@ -1023,7 +1251,7 @@ Exact next action: move startup/movie/music orchestration and screen selection i
 `FrontEndRuntime`, the last front-end decision-making left in GDScript (TASK-0018 Next
 steps 1). Nothing is committed.
 
-## TASK-0019 — Original function names (completed scoped investigation)
+## TASK-0019 â€” Original function names (completed scoped investigation)
 
 RenderingServer work is deferred at the user's request; TASK-0018 remains incomplete.
 Read-only Ghidra inventory classified 7,544 function symbols. Whole-C-string references
@@ -1038,7 +1266,7 @@ strings before adopting more names. TASK-0017 normal submenu paths and Audio/Dis
 viewport checks passed previously (18/18 CTest plus Godot smoke); remaining settings,
 editor/save branches and original equivalence are still incomplete.
 
-## TASK-0017 — Submenu Back and overflow (active)
+## TASK-0017 â€” Submenu Back and overflow (active)
 
 User reports submenu Backspace failure and Audio items drawing below the hint/footer.
 Confirmed host gap: onlyOptions24 Back is implemented. Root recovered manager history
@@ -1048,7 +1276,7 @@ and original scrolling viewport, clipping/group offsets/arrows. No blanket permi
 or guessed scrolling. Next integrate portable handlers and viewport tests, then actual
 Godot traversal and Audio screenshot. Prior TASK-0016 remains preserved.
 
-## TASK-0016 — Startup/media/audio/scroll integration (active)
+## TASK-0016 â€” Startup/media/audio/scroll integration (active)
 
 Latest user correction: viewport backdrop is now opaque black, replacing Godot
 default gray around movies/title art. Actual DX12 title screenshot inspected;
@@ -1067,7 +1295,7 @@ IN_FRONTEND (2), updating only during LOADING_TRACK_COMMON (3).
 
 User correction: BGM now uses original JBC0x8000-byte channel interleave and
 matches the authorized map_tools_ps2 decoder byte-for-byte (E-0016-A06). Movie
-audio uses raw stereo ADPCM, mix48000/pitch3762÷4096 (E-0016-A07), with0.16-second
+audio uses raw stereo ADPCM, mix48000/pitch3762Ã·4096 (E-0016-A07), with0.16-second
 video lag. BGM/menu neutral driver pitch is applied separately from PCM metadata.
 Video vertical rows now follow original negative-stride decoding (E-0016-V06);
 actual DX12 EA/main-menu screenshots were inspected and display upright.
@@ -1083,7 +1311,7 @@ TASK-0016 with original comparison and remaining boot/settings/handler gaps.
 Final Windows export runtime smoke PASS/exit0; final EA4-second verbose capture
 exited without leak warnings. Earlier transientObjectDB warning remains recorded.
 
-## TASK-0015 — Activation and animation integration (active; remaining gaps explicit)
+## TASK-0015 â€” Activation and animation integration (active; remaining gaps explicit)
 
 Main-menu Championship/Speed/Options now request registered documents 1/2/24; the first two
 write DAT_002FC070=1/0. All 37 FUN_0016ADB0 registrations are in a port-side immutable table,
@@ -1113,7 +1341,7 @@ snapshot state. Next independent recovery is Cops On/Off Mode Select handlers 00
 Run `./tools/run_frontend.ps1 -Build` to try current implementation.
 
 
-## TASK-0013 — Original front-end actually rendered (not a debug UI)
+## TASK-0013 â€” Original front-end actually rendered (not a debug UI)
 
 User rejected the previous deliverable as "the debug screen", asking for the real game front-end
 rendered exactly like the PS2. Decoded the game's own screen/widget layout format (chunk
@@ -1145,7 +1373,7 @@ screen-name <-> screen-index mapping is still unproven (screen 0 == main menu is
 inference). Full write-up: docs/FRONTEND_LAYOUT.md; task: tasks/active/TASK-0013-frontend-layout.md.
 Next: localised strings, then drive selection/highlight state so the real screens are operable.
 
-## TASK-0012 update — Native runtime texture loader; standalone .exe built; original source tree recovered
+## TASK-0012 update â€” Native runtime texture loader; standalone .exe built; original source tree recovered
 
 Three user-directed follow-ups completed in this pass. (1) User required the reversed code to
 load everything directly from the original PS2 assets at runtime, not via a manual Python export
@@ -1186,7 +1414,7 @@ from the prior pass); cross-reference the newly-recovered fmenus.cpp/frontendscr
 against specific function addresses if a viable method is found; consider renaming port-side
 `HP2_*` labels to align with recovered original class names where confidently attributable.
 
-## TASK-0011 update — Central GAMEFLOW_STATE_* dispatcher found; FUN_0016fa80 hypothesis retired
+## TASK-0011 update â€” Central GAMEFLOW_STATE_* dispatcher found; FUN_0016fa80 hypothesis retired
 
 User pointed at an existing, independently-validated local PS2 texture decoder
 (D:\dev\eagl-godot\map_tools_ps2) and asked to combine it with continued Ghidra MCP work to
@@ -1194,7 +1422,7 @@ fully reverse the original menu source, explicitly "don't guess yourself." Fixed
 texture decoder by porting that project's validated decode path verbatim (root cause of the prior
 artifact: a missing 0x80-byte alignment on the pixel/palette data-pool base offset); FRONTB.BUN
 decode success rate went from 210/365 to 357/365 with zero visible artifacts (see
-docs/ASSET_PIPELINE.md §4.4). Returned to the ELF side and obtained a full decompile of
+docs/ASSET_PIPELINE.md Â§4.4). Returned to the ELF side and obtained a full decompile of
 FUN_0016fa80 (previously assumed to be an unaudited ~465KB function and the likely New Main Menu
 update/tick routine) -- it is actually a clean 312-byte one-shot cleanup function; the "oversized
 envelope" hypothesis from TASK-0006/0007/0011 is retired as almost certainly a Ghidra
@@ -1212,14 +1440,14 @@ enter callback (0x00168830, decompiled) calls FUN_0016fa80 then unconditionally 
 GAMEFLOW_STATE_LOADING_TRACK_SPECIFIC -- an unresolved contradiction with "IN_FRONTEND" sounding
 like a sustained browse-the-menu state (its update slot is empty), flagged as the top open
 question. 4 new/updated function records (E-0011-17 superseded/corrected, E-0011-18..22); 0x0016fa80's
-record rewritten in place rather than left stale. Full write-up: docs/FRONTEND_MENU.md §8. No
+record rewritten in place rather than left stale. Full write-up: docs/FRONTEND_MENU.md Â§8. No
 Ghidra mutations; no PCSX2 comparison; no Git commit.
 Next: resolve the IN_FRONTEND contradiction (decompile 0x00168db8/0x001690a0/etc. to see whether
 gameplay ever returns to IN_FRONTEND, or whether the sustained menu-browsing loop lives entirely
 inside one state's update callback rather than in this dispatcher), then the remaining open items
 in docs/FRONTEND_MENU.md's updated priority list.
 
-## TASK-0012 — PS2 original asset pipeline (active; container + P8/RGBA decode delivered)
+## TASK-0012 â€” PS2 original asset pipeline (active; container + P8/RGBA decode delivered)
 
 User pointed at an authorized local PS2 disc dump (D:\ps2_game\GAME\ZZDATA) and asked for a
 non-hardcoded global config entry point, plus reverse engineering that can actually render the
@@ -1228,11 +1456,11 @@ structure. Delivered: `tools/ps2_assets.py` as the single global ZZDATA-path res
 `HP2_PS2_ASSET_ROOT` then gitignored `config/ps2_assets.local.json`; tracked
 `config/ps2_assets.example.json` template). Reverse engineered and validated (byte-exact full
 file consumption) a generic "eLab" nested-chunk container format shared by FRONTEND/FRONTB.BUN
-(14.4MB, 1760 chunks) and GLOBAL/HUDTEX.BIN (1.5MB, 9 chunks) — `tools/asset_extractor/
+(14.4MB, 1760 chunks) and GLOBAL/HUDTEX.BIN (1.5MB, 9 chunks) â€” `tools/asset_extractor/
 elab_chunks.py`. Found real original frontend UI text in FRONTB.BUN including developer
 placeholder/joke strings ("Phil is a loser, so I have to make this fake menu item") proving
 unmodified shipped data, plus real labels (PRESS START, Championship, Options, Credits,
-Controller, Language Select, Setup, Race Type) and `UwE*`-prefixed widget type names — not yet
+Controller, Language Select, Setup, Race Type) and `UwE*`-prefixed widget type names â€” not yet
 cross-referenced to specific screens. Identified and validated (cross-checked against three
 independent open-source community references: xan1242/xnfstpktool, PS2HomeDeveloper/
 ps2-tim2-tool, leeao/PS2Textures, all cited in docs/ASSET_PIPELINE.md) the HP2 TPK texture
@@ -1242,20 +1470,20 @@ swizzle + CSM1 CLUT reorder + PS2 alpha range) and RGBA32 pixel decode in
 texture headers with zero failures (remainder skipped: unsupported 4bpp/DXT, not guessed).
 Visually confirmed multiple decoded textures are clearly recognizable real game art (tachometer
 gauges, car badges including a legible BMW roundel, a full `DISPLAYSETUP_BG` road scene, and a
-`PURSUIT_TREE_BG` event-tree map) — sent to the user. All decoded images and chunk dumps are
+`PURSUIT_TREE_BG` event-tree map) â€” sent to the user. All decoded images and chunk dumps are
 gitignored (`tools/asset_extractor/output/`); no proprietary bytes committed. Open: a fine
 speckle artifact remains in every P8 decode, most likely authentic PS2-era dithering but not
 confirmed; 4bpp/DXT/swizzled-RGBA decode not implemented; the widget/layout record format (which
 texture/text belongs to which named screen) is completely unparsed, so no Godot rendering of
-real original layout exists yet — explicitly do not treat the decoded images as "the rendered
+real original layout exists yet â€” explicitly do not treat the decoded images as "the rendered
 menu," only as validated raw material toward it. Full report: docs/ASSET_PIPELINE.md. Registered
 analyzed asset file hashes in reverse/assets.csv. No Git commit (left to the user, per prior note
 in TASK-0011).
 Next: parse LANGUAGES/FE_ENGLISH.BIN for authoritative menu text, then reverse the UwEMENUITEM_*
 widget record layout, then resolve the P8 artifact (ideally against a real PCSX2 screenshot),
-then implement 4bpp/DXT decode — only after that attempt an actual layout-accurate Godot render.
+then implement 4bpp/DXT decode â€” only after that attempt an actual layout-accurate Godot render.
 
-## TASK-0011 — Front-end menu minimal closed loop (active; scoped completion)
+## TASK-0011 â€” Front-end menu minimal closed loop (active; scoped completion)
 
 User asked for the "original front-end flow minimal closed loop": confirm a main menu and its
 adjacent pages, trace NewMainMenu creation/update/input-callback/page-switching, restore
@@ -1295,7 +1523,7 @@ Next: TASK-0003-style boundary/ABI audit of FUN_0016fa80 (highest-value next ste
 best lead for New Main Menu's real update logic and menu-item content); then trace
 FUN_0016eef8's raw-input source; then locate New Main Menu's own construction site.
 
-## TASK-0010 — Main-loop structural shell completed
+## TASK-0010 â€” Main-loop structural shell completed
 
 Mainloop 0x0012F378 mapped: 61 callsites / 39 distinct targets, five startup sites,
 12 guards and 19 nested World/controller/entity/mover connections. EngineShell
@@ -1314,7 +1542,7 @@ Next: resume TASK-0009 with World object/partition/entity ABI and data contracts
 then recover/register a tested module handler. Original execution oracle, clock,
 state enum and complete behavior remain unresolved. TASK-0005 unchanged.
 
-## TASK-0009 — Whole-binary recovery active
+## TASK-0009 â€” Whole-binary recovery active
 
 User requested every function, correct names and classes; only the stripped ELF
 is available. Full inventory: reverse/recovery/TASK-0009-functions.csv, 7,544 rows.
@@ -1322,7 +1550,7 @@ First pass exports 7,516 pseudocode bodies and records 28 boundary blockers;
 49 class texts / 118 method-text hints await address proof. Two police local bodies
 now have native code and partial class storage views. Native CTest 4/4 and five
 export safety tests passed. No Verified functions or trustworthy original names.
-Move control-flow candidate 0x001A1030–0x001A1BCB produces a full separate
+Move control-flow candidate 0x001A1030â€“0x001A1BCB produces a full separate
 instruction translation; candidate output retains 27 other placeholders. No live
 Ghidra names/types/boundaries changed; previous outputs/config remain preserved.
 Report and reproduction: docs/FULL_RECOVERY.md. Full restoration remains incomplete.
@@ -1330,7 +1558,7 @@ Next: R5900/pcode/ABI review of Move and tail-call entry 0x001A0E88 before any
 journaled live repair; trace class hints and recover external-call contracts.
 Existing TASK-0005 remains independently active. No commit made.
 
-## TASK-0008 — Police AI map completed
+## TASK-0008 â€” Police AI map completed
 
 Read-only MCP inspection links mode 4 to CopDriver and mode 5 to CopMover.
 Think candidate 0x001A2110 has 2,432 defined bytes and existing C++ translation.
@@ -1343,7 +1571,7 @@ No native behavior implemented or Verified status assigned. TASK-0005 untouched.
 Next police action: scoped boundary/ABI audit of 0x001A1030 and undefined vtable
 entry 0x001A0E88, then typed helper recovery with original behavior comparison.
 
-## TASK-0007 — Function naming completed
+## TASK-0007 â€” Function naming completed
 
 Screened all 7,544 functions; reviewed all 20 pilots. Applied 16 evidence-backed
 HP2_ purpose names and recorded 11 automatic jump aliases (27 entries total).
@@ -1358,7 +1586,7 @@ Existing TASK-0005 remains independent and active; no implementation changes mad
 Next reverse action: TASK-0003 must audit damaged camera/FlightAreas entries,
 the oversized 0x0016FA80 envelope and allocation return ABI before further naming.
 
-## TASK-0006 — PS2Recomp trial completed
+## TASK-0006 â€” PS2Recomp trial completed
 
 User-requested PS2Recomp/Ghidra generation trial completed on 2026-10-10.
 See `docs/PS2RECOMP_TRIAL.md` for commands, tool/dependency identities and evidence.
@@ -1380,7 +1608,7 @@ M0 is complete for Windows x86-64. TASK-0002 static workload assessment is compl
 for the current Ghidra snapshot; no game reconstruction or asset conversion was
 performed. M1 is in progress: read-only MCP/R5900 connectivity and ELF identity
 are established, but boundary/ABI quality and broad identification are unfinished.
-M2–M6 have not been achieved. Current active tasks: TASK-0005 (independent infrastructure),
+M2â€“M6 have not been achieved. Current active tasks: TASK-0005 (independent infrastructure),
 TASK-0009 (full-binary recovery), TASK-0011 (front-end menu; closed-loop scope delivered,
 broader menu-content recovery remains open), TASK-0012 (PS2 asset pipeline; container + P8/RGBA
 texture decode delivered, layout/text semantic decode and remaining pixel formats remain open).
@@ -1388,7 +1616,7 @@ Completed tasks: TASK-0000, TASK-0002, TASK-0006, TASK-0007, TASK-0008 and TASK-
 Next reverse task: TASK-0003 boundary/ABI audit (now prioritizing the FUN_0016fa80 envelope
 surfaced by TASK-0011), then TASK-0004 original comparison setup and the scoped pilot backlog.
 
-## Assessment snapshot — TASK-0002
+## Assessment snapshot â€” TASK-0002
 
 Report: `docs/assessment/BINARY_REPORT.md`. Binary: D:/ps2_game/SLUS_203.62,
 SHA-256 `7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2`.
@@ -1449,7 +1677,7 @@ Downloaded archive SHA-256:
 `8f2c75b734bd956027ae3ca92c41f78b5d5a255dacc0f20e4e3c523c545ad410`.
 This is a local artifact identity, not an independently checked upstream checksum.
 
-## Initialization validation ledger — 2026-10-09
+## Initialization validation ledger â€” 2026-10-09
 
 | Check | Result | Evidence |
 |---|---|---|
@@ -1527,7 +1755,7 @@ Original request-file SHA-256 values after scaffold creation:
 - eval.txt: 5B2E413E9B4153C2DF6E4341417D0943063A04734C0BA0E75A551263C10EC2FA
 
 
-## 2026-10-14 — TASK-0033 native ImGui and original vehicle base material
+## 2026-10-14 â€” TASK-0033 native ImGui and original vehicle base material
 
 Implemented the single native ImGui session for viewer panels/console/FPS, post-frame
 actions, first-click capture and console-off Debug operation. Catalog retains all64 original
@@ -1582,7 +1810,7 @@ progress-table/UTF-8 staleness was also regenerated and rechecked. No failing fe
 check is being hidden behind the final matrix. Whole render-entry and partial-view
 recovery remain active beyond this bounded static base slice; no Verified promotion.
 
-## TASK-0033 compact viewer and loading follow-up — 2026-10-14
+## TASK-0033 compact viewer and loading follow-up â€” 2026-10-14
 
 Contained all shared ImGui root windows and tooltips across drag/settings/resize; replaced
 car list/color combo with a searchable selector and material-derived clickable paint tiles.
@@ -1599,7 +1827,7 @@ full39/39 passed. Final Debug/on restored and focused8/8 passed. Full resource p
 not a historical before/after claim; GPU uploads are spread across frames. Original appearance
 is not Verified. Detailed commands, initial failures/fixes and timings are in TASK-0033.
 
-## TASK-0034 UV, continuous preview and shared materials — 2026-10-14
+## TASK-0034 UV, continuous preview and shared materials â€” 2026-10-14
 
 E-0034-U01 identifies the legacy indexed decoder's reversed row output, with original
 UV accessor arithmetic intact. Restore row-zero image order at the vehicle adapter;
@@ -2794,7 +3022,7 @@ See reverse/task0076/source-review.md for exact commands, versions and limits.
 No Verified or performance-percentage claim; if reproduced, use new warning and
 render_error/readback_error to investigate the exact dependency.
 
-## 2026-10-21 — TASK-0082 vehicle lights, horn and engine audio
+## 2026-10-21 â€” TASK-0082 vehicle lights, horn and engine audio
 
 Recovered native lamp selection and original ON/OFF material assets; ordinary
 horn input also flashes headlights. H is a port-side binding. Decoded original
@@ -2808,7 +3036,7 @@ Native4/4tests passed43.21s; Godot extension build passed; headless audio transp
 runtime equivalence. No Verified promotion and no commit. Next: authored flare
 marker/parameter/texture recovery; original executable comparison remains needed.
 
-## 2026-10-21 — TASK-0083 collision and drift audio
+## 2026-10-21 â€” TASK-0083 collision and drift audio
 
 Recovered original InGame impact variants, impulse/time/material gates and RNG;
 static collision event lifetime now produces one impact per collision. Restored
@@ -2825,7 +3053,7 @@ local/task0083/godot-stage/bin. Window preserved; normal cache output restored.
 After closing it, run cmake --build --preset godot-debug --target ps2_port -j6.
 Next recovery: original spatial sound/service cadence; see completed TASK0083.
 
-## 2026-10-21 — TASK-0084 recovered Test drive camera
+## 2026-10-21 â€” TASK-0084 recovered Test drive camera
 
 Test drive now consumes bounded original exterior DriveCameraMover POV1/history,
 normal lookback easing and original topology clearance. V toggles front/back;
@@ -2961,3 +3189,7 @@ Completed source/build review; see docs/CPP_PORTABILITY.md and tasks/completed/T
 
 
 TASK-0089 completed: source scope unit7/7 passed (reported15152.077s wall includes environment suspension). Initial preservation run timed out10227.66s during machine wall jump, with no assertion failure; one authorized identical retry passed1/1 in349.32s. Final review SHA256a9fdb1c94b8c4902d5c723203d11c7c17b6764b888db6a2ab32f56d8afb846ce; frozen88 unchanged,17 replaced/12 added functions,16 modified auxiliary/10 new pins, no original stub transitions. Cached metadata check passed0.48s. Temporary task-owned awake helper released. No gameplay tests or benchmark repeated after functional closure. Final normal DLL includes camera and water fixes; optional continuation remains original runtime/World/replay or separate RainSplash evidence.
+
+## 2026-10-26 TASK-0098 display dependencies
+
+Continued original selection camera/quaternion/integer-angle/audio, spline-retarget, swatch/thumbnail/logo, wheel/body/reflection and selector light-packet recovery. Added real PLATFORM/CARCOVER shared native cache/worker/GPU upload adapter and stale-generation fixture. Cached signed-alpha animation and original fade-group transitions now tested including per-corner restoration. Exact addresses/evidence, build commands, passing tests and initial test-only failures are in reverse/task0098/display-dependencies.md. Latest native three regressions passed14.94s; latest normal Godot DLL built. No original oracle, Verified, production-page integration or career/FPS acceptance. TASK-0098 stays active; next original input/orbit/help, full Tick/load and FrameEffects, then production event entry. Existing uncommitted files preserved; no staging/commit.

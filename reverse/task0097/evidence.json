@@ -1,0 +1,930 @@
+{
+  "task": "TASK-0097",
+  "behavior_binary_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+  "asset_binary_sha256": "7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2",
+  "revision": "unknown",
+  "evidence_ids": [
+    "E-0097-D01",
+    "E-0097-D02",
+    "E-0097-D03",
+    "E-0097-V01",
+    "E-0097-G01",
+    "E-0097-S01",
+    "E-0097-P01"
+  ],
+  "status": "static source evidence and scoped port tests; not Verified",
+  "captures": [
+    {
+      "file": "local/task0096/root/001e9968.decompile.json",
+      "sha256": "c713e9b128d16048c954b76e728b49498f4e1f0f3ed4ec5113b574ec51b3ce58"
+    },
+    {
+      "file": "local/task0096/root/001eab20.decompile.json",
+      "sha256": "ee84def405298f5fd2b7adb2bbfd777f105f36e3ab04f3e3bfd78f11e1133445"
+    },
+    {
+      "file": "local/task0096/root/001f9450.decompile.json",
+      "sha256": "0d13b1bf044b91f9978d2e64c2051104485e91b48928153d10de42b54189ea5c"
+    },
+    {
+      "file": "local/task0096/root/001f9ee0.decompile.json",
+      "sha256": "5f3d756ee2bd8ae459563eb1ea317e59bf2becc5c3162197d290431827b31780"
+    },
+    {
+      "file": "local/task0096/root/001fa178.decompile.json",
+      "sha256": "6f7bec7652a1f2fa30b54d0a2feeab1203033070e8ffe3f1b7aa5ce048e0a1f9"
+    },
+    {
+      "file": "local/task0096/root/001fa178.listing.json",
+      "sha256": "30be5a380844ad5c3b99a63a23ffe6f5527b44a0b067f89d5dcb71242c2a273f"
+    },
+    {
+      "file": "local/task0096/root/001fa378.decompile.json",
+      "sha256": "64550a22dfc93ea9c3d19e9a63aa5f54fa5190c2cfd2776480d9e49495ac06b0"
+    },
+    {
+      "file": "local/task0096/root/001fb138.decompile.json",
+      "sha256": "65c8af31139246813160245c4f8238efbe7163e9ef940f13a58cb9c85c5bf9a0"
+    },
+    {
+      "file": "local/task0096/root/001fb458.decompile.json",
+      "sha256": "31500318eddb3e4a2194c32e19bccee6afbb710aae1829cda6bafa69d0a64b57"
+    },
+    {
+      "file": "local/task0096/root/001fbbc8.decompile.json",
+      "sha256": "cdbda92cc33d5badc428722a5968a35e8f33526056a220984c713b69cc664d01"
+    },
+    {
+      "file": "local/task0096/root/001fbc08.decompile.json",
+      "sha256": "d31d86bc9acf596d421e212e86b09ebc5289a53a852b3c66753adf5c2da4245f"
+    },
+    {
+      "file": "local/task0096/root/001fbc48.decompile.json",
+      "sha256": "e3164c485da80075ee2ef90e6723a034f506102425c30af70407565f7d2bd83a"
+    },
+    {
+      "file": "local/task0096/root/001fbc88.decompile.json",
+      "sha256": "6dfcf467ac3d161e4ecaf7620dbed25072e6d2c4d49e065178949e4b60f00d86"
+    },
+    {
+      "file": "local/task0096/root/001fbcc8.decompile.json",
+      "sha256": "c9ddf58aa998393bea9217a6b2300f67641145ca0bdb43be1b0bcf22a84e7bcf"
+    },
+    {
+      "file": "local/task0096/root/001fbd08.decompile.json",
+      "sha256": "b68f306f8369f02935726c719811a19b91937ab7151590d4d3ae6271a953e852"
+    },
+    {
+      "file": "local/task0096/root/001fc028.decompile.json",
+      "sha256": "9d3bb3cc5971c030c3091d6d67ab1128ea32c97b219b88b0139079b2e5cdd654"
+    },
+    {
+      "file": "local/task0096/root/00325d10.memory.json",
+      "sha256": "e6c371b58d83575e1402e3a160bc1cea51f0761cec0b9e6192251a651d35e126"
+    },
+    {
+      "file": "local/task0096/root/00325d14.memory.json",
+      "sha256": "2a5bccea7f12919251f1381ad589064f60a330a216f8a6584a14ae5e8a4e218c"
+    },
+    {
+      "file": "local/task0096/root/asset-event-bindings.json",
+      "sha256": "a997c39d0aca95753ce6985a3237ee6e17b7fb39af106f01e01dec20f32f7996"
+    },
+    {
+      "file": "local/task0096/root/eNFSRaceModes.type.json",
+      "sha256": "ac857be93c31d67100ef759a52acae89fa29683b72b331f7f285a48cd9e76608"
+    },
+    {
+      "file": "local/task0096/root/eOpponentSelect.type.json",
+      "sha256": "c5c2fe5790b34bcffa7cc3337e0670d78354b3e890faa07a0a9b111df3d1f33e"
+    },
+    {
+      "file": "local/task0096/root/eOpponentStrength.type.json",
+      "sha256": "a0d6199c0912bf26006167c1cfd380b0b8ed9528840f9702e9f36aef76464fd3"
+    },
+    {
+      "file": "local/task0096/root/eRaceType.type.json",
+      "sha256": "5374aa1cbbf23b21799e00d136959d67da237ac526fddb72e32048fd732a1577"
+    },
+    {
+      "file": "local/task0096/root/eTrackDirection.type.json",
+      "sha256": "accadf9bc5736874ddb23ef78cfc10b073a1a46d50197c7dac13737a66ac9b75"
+    },
+    {
+      "file": "local/task0096/root/eTrackTimeOfDay.type.json",
+      "sha256": "51f6874d7bc8aedc751ff1c23cb1be77a28306c4851ba8f0fbcf02c4a02d69a7"
+    },
+    {
+      "file": "local/task0096/root/eTrackWeather.type.json",
+      "sha256": "5a32200fa140fc410c99a2ecf94f6d310a404b8cbe28a4fce05385628ebbafcd"
+    },
+    {
+      "file": "local/task0096/root/eTreeType.type.json",
+      "sha256": "6f3bc95a5ed6ba05783953c806fbe6141170a89507366e13f528781a4ea59315"
+    },
+    {
+      "file": "local/task0096/root/EventCar.type.json",
+      "sha256": "efdd71be149c4ec2eb3cf27879338c0ff6a431b8cb50be2c3b104a3f262b4d26"
+    },
+    {
+      "file": "local/task0096/root/EventGoal.type.json",
+      "sha256": "2524e4c14365c853877be4cb5b0d35dca1eacfcccdedced74810c1fe2a68766b"
+    },
+    {
+      "file": "local/task0096/root/EventInfo.type.json",
+      "sha256": "49ef9eb7ac701ba3061644fbba4467b0ce0d94cc3f3a3ad6d3114aa78471ccd4"
+    },
+    {
+      "file": "local/task0096/root/EventOpponent.type.json",
+      "sha256": "725f58e94ad60a67cb54e1f32902c6de7d39f16b594f3b5ec2fb9438ca1d78ab"
+    },
+    {
+      "file": "local/task0096/root/EventReward.type.json",
+      "sha256": "73351b833cc85de2f379d7358ad3e43d46caa5c2f4f6794cbc901df2f8f47238"
+    },
+    {
+      "file": "local/task0096/root/EventTrack.type.json",
+      "sha256": "e0648f3d066fd848311ef96f9534059e1339c4c53825dc9b875de82ad0381137"
+    },
+    {
+      "file": "local/task0096/root/functions-EventInfo.json",
+      "sha256": "a859924c333733f8425b484878f727c09659c13c05f234ddd54f6e2c06119375"
+    },
+    {
+      "file": "local/task0096/root/functions-EventTree.json",
+      "sha256": "dd8535e1686c699815cfcbcd3989aa32f6284bd73dc889038c457cbf4c1a67ae"
+    },
+    {
+      "file": "local/task0096/root/RaceEvent.type.json",
+      "sha256": "05fe152de1c06c5c5d06146e20b932f401fbd3ac46e88d0446ffdee2df033dc0"
+    },
+    {
+      "file": "local/task0096/root/RaceParameters.type.json",
+      "sha256": "68117677af18cf39fb206a49d1b2fcc389f8e5120f8075e7390bb08f6f149aa9"
+    },
+    {
+      "file": "local/task0096/root/RaceTypes.type.json",
+      "sha256": "e23be36bc980bfbcea115c411b9e0081dc7dab5f0c3eb70a8762e2e71fb15b60"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/001822f0-refs.json",
+      "sha256": "baf178c2fe3d63ba33f5a841333e6e7c3123b022ea24736e0214278370407d49"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/001822f0.json",
+      "sha256": "b2550e841ac1a58d13df24f17aaf606234086044b7d946b5d46c5ac9dc9f9fdb"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00182818.json",
+      "sha256": "32638fb56bc8b8d0f6688a1d65938c781af96806a9e250a91953ea40ed470952"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00185ab0.json",
+      "sha256": "a9b0da86c26195760505f27381037096ad4dee6392fcdc9f591317211d0f5af4"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00185af8.json",
+      "sha256": "f3bb2068af42112919f405095b6324bc68262ff5eafeed88387b689b2cc5c0d7"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00185b28.json",
+      "sha256": "3246eb258fb9ee16d772cbcff9024f11416a5e7258c56ef86a5b2fa6ba8ea06f"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00185b88.json",
+      "sha256": "3e4fb7c87e200a5fbaf17f66ec5862237960ef6ff43cc7b7497d9f0063f3d22e"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00185c38.json",
+      "sha256": "be51bcfd613b8cb92e853c85a290c91796475bda58080606b477f98073791188"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00185cc8.json",
+      "sha256": "aaf6b15549cab45f684a9a1b1697cc91b5f9883321819c6662e03be1fcc6a1d7"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00185cd8.json",
+      "sha256": "1640ebf20f488a0e2dd8155a5706c947b07b50db1a666b5727b002a4bc5387d4"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00186668.json",
+      "sha256": "807331161bd13e75f00b631c587d5e135687f668470e45c4f8add7252860b5bd"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00186688.json",
+      "sha256": "55e926b38f49ead229b9edf82d46e64479a4c75153096183fc3e62ec00125872"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00191f38.json",
+      "sha256": "9f7303f3d4acc4df15a6510a392797fe02049c7d4f32c0a91763f7cc669da60a"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00191fb8.json",
+      "sha256": "24f24802d81f2f60c419ec916b7fffb3a863ea4e0250e45c6bdb0901c654e750"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00192038.json",
+      "sha256": "b407580c8841d1a852d9dc5fd180c0e70dfd183e9af11c05306e9578fc97208e"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00192068.json",
+      "sha256": "116031d30b3138dcc157aed22641141b39440a2ee4c7655dae3f7aeb6454b283"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00192090.json",
+      "sha256": "fb7875e5c3d93482f1052b88036cab028cfc1025acfc48437218bfc8028b03ed"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/001920a8.json",
+      "sha256": "0ff66b2a474b2dde95c4a673ca761c812e7fe2ef98241d8b4263b7848b775205"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/001921d0.json",
+      "sha256": "8a3661b6afb32aafd01f151e0a5d066e8c9080a1b77ac0c5120b58eb369dce8b"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00192410.json",
+      "sha256": "0d2879af939a248243fdc038a31b93449df82bb73d6e08cea39aac998e19bc94"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00192518.json",
+      "sha256": "4f58d045fbd40838659734e726e0fe629b759f590066ae6216e3b813be34ab67"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00192b78.json",
+      "sha256": "2b8295e7e4ef9e4e61a8b3055cc813e5f41de89c87cf46c5eef6f215e70a89e9"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00194248.json",
+      "sha256": "a3286cf02b611814ce31c7f852035d5aaf1b340e57d17c675ff66ff467e6b66a"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00194310.json",
+      "sha256": "179e81f2cd2a94119d80e10f29e3d66735b7850eb9f8d02e93a077a010aab80b"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00194378.json",
+      "sha256": "efce2b4ef97ce0114459b7e909411219216bc4b4648749a44d8f0b06f318951b"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/001943f0.json",
+      "sha256": "a15b0245472ef6c178fbbb6c30695279c21eba15551100dd3ca5542b9d3c258f"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/001945f0.json",
+      "sha256": "fcfe6fb63208204374f0376a8dabe435de4404abcc408aafab248f3906ee5db9"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00194610.json",
+      "sha256": "ca140c16d53971f76b97f439da27fc5d73cf8384829fd3bbad4dd4060a5e38c2"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00194628.json",
+      "sha256": "25f44aa2ea330b572fa95d4e5fed31d5db031d511fd6a8904c0a67b69daca0e2"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/001947d0.json",
+      "sha256": "489c3c999d8b92babd50a58b4774c44aa6db92b0178786397953e06b500bf1a6"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00194e08.json",
+      "sha256": "a06241b5ab5574275369b6434ab2d4357f7dcc04505601a7bc74d3511013a91c"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00195ef0.json",
+      "sha256": "5e0ed9f072e4ae83f5db79bebebb483ec40b7fc1b4a3b2f5b88720a0045978c5"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00195fe8.json",
+      "sha256": "0cbd32f862e5f30bd8067d0a4b2d037d73459f86565b64c1746d76d766ca9a50"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00196198.json",
+      "sha256": "3df0d81a1d974bc782bb568ca65b2b7a75c42acb17594d2c1083e9711f61c1ee"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00196348.json",
+      "sha256": "e69160bd7afd88a1cea60dff3fda13510fa55809355164477aad9d9b0a3da2e8"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/001963a8.json",
+      "sha256": "b7a9c06306046834492e5df061a443183489aa3ad13f3f54955d5d47e86e86db"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/001963e8.json",
+      "sha256": "a1cb658653e9379fa5bfe15fb6a5eda4886a7063b156cfe9d14c8e5a3fc22e11"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00196500.json",
+      "sha256": "a1cb658653e9379fa5bfe15fb6a5eda4886a7063b156cfe9d14c8e5a3fc22e11"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/001965c0.json",
+      "sha256": "3182940fe8b448fcbf49293a2d368fd308983e0796a71ce8009d386a929ed84c"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00196688.json",
+      "sha256": "716a4405ed66d514d741f081d7058d888e4d700f8266684eaf11e185652d4cf4"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/00196910.json",
+      "sha256": "ce369ec61f5f7b37972260b335b5b56ae5bfdebd77b2a827f01e1c01380d9af0"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/001f2a34.json",
+      "sha256": "5784abe9c5561b902f5ad93b4d964bfe8b105e7ddf6f8f5933697c54da404574"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/001f2cd0.json",
+      "sha256": "747c47e41d672fbd53def61c366c762a096ab64ab19509ab1520fa7381276bda"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/001fa8b8.json",
+      "sha256": "f99ef804f7aba04f1b518d0479f1958d31f459c3a52090bbfe4b366f17395a63"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/001fae70.json",
+      "sha256": "90d5dd42a2a8ae4f97fba239955a14264b94f99495efc4a1977f9cf5333cc974"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/001fbbc8.json",
+      "sha256": "84f3d36361cb3967e3c0905fb933d52c2b9e626f8d4992ebcb45117e77a4bff5"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/identity.json",
+      "sha256": "50982454fd5d482ee4a61b2c148898e9799af8c3459ffe3f339afc23a1f0cd62"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/type-CarSelector.json",
+      "sha256": "869443b7c73f3869c9a9b505a3e7348a6c1b2eb721382cc3cd96ed5adc764722"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/type-CarStatus.json",
+      "sha256": "25257a194f598008b8461465e49ded07eb4b4d94589f9bf3c98a0b6886307bb7"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/type-CarTypeInfo.json",
+      "sha256": "d9dc74d4092b44936e61935d80235803dc5f025211f8e3a0c9db3786e37ac8e9"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/type-cPlayerSettings.json",
+      "sha256": "f67fd7d452c387d1281b47a17f9fb9ce016e696224ae96be03505b8eec7b6dcd"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/type-eCarStatus.json",
+      "sha256": "0dcca3668b38ecff23e182d76f675e5f9a7ce7a6835fd507c34183d559519a17"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/type-eSelectorState.json",
+      "sha256": "4b7444b53cf1ae03971dbb93017eed2c5f0c7dcda51dffdad3b35a85f0347493"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/type-EventCar.json",
+      "sha256": "3a197d985dbe2c8b74e4a885741debaa71c4a1669ba876d59a8e97befe0eb3a8"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/type-EventInfo.json",
+      "sha256": "1d2ae4cbfd13e38a6c8557af2fbd47b4cd46594a941ea3f4660ef631a1bba3d7"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/type-EventTree.json",
+      "sha256": "d9490c5470ca54101c9abc468db3364ed18359be6b8aa6156f644af45f6ef8bf"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/type-FrontendDatabase.json",
+      "sha256": "7b3398e2a9a071e54493cb26f78745683903cc667e650296f62012d65a1e693d"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/type-FrontendPlayerInfo.json",
+      "sha256": "2dcadebeece36a32c4dde17845ae97c2a34b3a5575dd43ca2d3b458c4a1a176a"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/type-GameTypes.json",
+      "sha256": "5420c86b103ddf93a99d213f3eee2db775a6ad437b7966623ca9509aa49ea047"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/type-HandlingModes.json",
+      "sha256": "4482a02ffa2555bc341280aadacff6d8300d271fa1b677e7827eea84fb9f2eff"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/type-RideInfo.json",
+      "sha256": "10058bd76a905a5f5b8d7b16d8615e80337c5eb4303a15f9da384f81bc22da86"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/type-ScreenMessage.json",
+      "sha256": "f58081cda48700223c4d7a022a82e5e53831ca992b79944637f275ee2987ac23"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/type-SelectCarScreen.json",
+      "sha256": "d9a723dee2a9b622a757d99742b056e5c0dbf4c1fba8bbeb22d10d8c0ce84c97"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/type-TransmissionTypes.json",
+      "sha256": "6ef48ae5c93889950b0e7102698960ce6ffbbdc4f1f85efbd29819ab8fdba879"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/type-VisibleCar.json",
+      "sha256": "5e765012507ce83f0fec92d95fc7e93d91b2a2b56c62c486e689dcd882566c77"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/type-VisibleCarSet.json",
+      "sha256": "b19346f61697300534d1fe4f62ccb59739f356e005ccc67e24d546b6b3488e86"
+    },
+    {
+      "file": "local/task0096/selectcar-agent/types-list.json",
+      "sha256": "bd961f0a7e82f8ffbe9242d0f6156e265292c88d59fb330d1870926964842a78"
+    },
+    {
+      "file": "local/task0096/race-agent/001473f0.decompile.json",
+      "sha256": "3a949b90628a2f758c7b6582376c541251216b980f89839ba76fb550f1dab4b0"
+    },
+    {
+      "file": "local/task0096/race-agent/00147768.decompile.json",
+      "sha256": "6d5b8c6a620271e44a3d12fe89ceb2bd74f10a7f8ab11c527571328597e66cbb"
+    },
+    {
+      "file": "local/task0096/race-agent/00149398.json",
+      "sha256": "01215c16913fe9586a83bcd8807e6885b74d39f5fafe0d67b9a642873b563668"
+    },
+    {
+      "file": "local/task0096/race-agent/001493f0.decompile.json",
+      "sha256": "65cb835fcde45b8ecd4dfba2147c964fc2a82102e6eb1a5c6a5a49cb824ee9a5"
+    },
+    {
+      "file": "local/task0096/race-agent/001494c8.json",
+      "sha256": "77957623d3548cdda46f11310385e6d047359e04ad1d91560b06fd0f7a16485e"
+    },
+    {
+      "file": "local/task0096/race-agent/001495b0.json",
+      "sha256": "7cc237fd16a056beea3cda7a09695a37f2238f412107e73526e0e51f9ac88b9b"
+    },
+    {
+      "file": "local/task0096/race-agent/00149800.json",
+      "sha256": "3411d6cc88a9dfcb7d839df2f8db8b1c6ff5bd56aa1b251c2f417e8132dea790"
+    },
+    {
+      "file": "local/task0096/race-agent/00149800.refs.json",
+      "sha256": "3e43b20e760554847dda3a366aec3f3e6b49d0b51ffd0c7373a4af343224800d"
+    },
+    {
+      "file": "local/task0096/race-agent/001499f8.json",
+      "sha256": "73fde7784de5838ae8c52af9743d216b70fdc45345cc94e919decf835019ea50"
+    },
+    {
+      "file": "local/task0096/race-agent/0014a128.decompile.json",
+      "sha256": "a8ce519bc60ba480081868d338560d499a9b6443557be00d9589d3edb0a6ead2"
+    },
+    {
+      "file": "local/task0096/race-agent/0014a4a8.json",
+      "sha256": "242da6f602389283337493358dc174bd658676ee3bf05acb050d73f9d7ee9e5b"
+    },
+    {
+      "file": "local/task0096/race-agent/0014aad8.json",
+      "sha256": "527d049195684572aac569a7081c675d99b3dd78a7e2e9710000ab5e1f915429"
+    },
+    {
+      "file": "local/task0096/race-agent/0014ac60.json",
+      "sha256": "c9b213a7887cbb1f14de4ebbb7bf69898bf762afe2f5be931060b3565b3780d6"
+    },
+    {
+      "file": "local/task0096/race-agent/0014ca28.decompile.json",
+      "sha256": "fd5f76378c995b96c53b65bd15e4dd00ddfcc154c799355cf002caf1c9fe78aa"
+    },
+    {
+      "file": "local/task0096/race-agent/001683c8.json",
+      "sha256": "436308322f18b349ca3385ee04bb40ad4f28bad98cbfe02949fdc84144c7b0cb"
+    },
+    {
+      "file": "local/task0096/race-agent/00168418.json",
+      "sha256": "e44c60193cb20c85d286f19986a5c855f46c9db2e73fd78ddb17653f1c553368"
+    },
+    {
+      "file": "local/task0096/race-agent/00168438.json",
+      "sha256": "80ee85ffc71867f73881987904362622b48eef9139d093d6fd6ff68f653196a4"
+    },
+    {
+      "file": "local/task0096/race-agent/001684b8.json",
+      "sha256": "61ab49daf1a0465aedc1a4d29b6364396f1a0a60284cfaac87b7363780eb93e3"
+    },
+    {
+      "file": "local/task0096/race-agent/001684e8.json",
+      "sha256": "6eeb17513c0c0eb57280351539bd8187c0fcd9ac96c3a501ede0e3853279798f"
+    },
+    {
+      "file": "local/task0096/race-agent/001684f8.json",
+      "sha256": "45b11a602774b38394f135ecb92e3beee12f9f9aafd336cf9a86a526f52c8f28"
+    },
+    {
+      "file": "local/task0096/race-agent/00168540.json",
+      "sha256": "52033a28ea80330fe62b36ad09eb1f239b9a547e8317fdb668207e2601028a75"
+    },
+    {
+      "file": "local/task0096/race-agent/00168540.references_to.json",
+      "sha256": "9471ccf756bcc02e42ac9e4dac5ea16b0a75260d80d12bc52e5df27fc055708e"
+    },
+    {
+      "file": "local/task0096/race-agent/00168608.json",
+      "sha256": "48eae027debf375f396ea1082f1c0dfadae07be840ad49ea1f59dd4aad3d5247"
+    },
+    {
+      "file": "local/task0096/race-agent/001827e0.json",
+      "sha256": "76d5dca4d4feb0422fd81cc7c38ae2d8e770c6c8ff90a3cefd97977a598fc7b1"
+    },
+    {
+      "file": "local/task0096/race-agent/0018344c.json",
+      "sha256": "95062d3e51d16724f09ccff24b88fbdf9cec308fd88811fd220cd3ccb49e9757"
+    },
+    {
+      "file": "local/task0096/race-agent/00183680.json",
+      "sha256": "95062d3e51d16724f09ccff24b88fbdf9cec308fd88811fd220cd3ccb49e9757"
+    },
+    {
+      "file": "local/task0096/race-agent/00183a58.json",
+      "sha256": "248e62763134ba686b5910a32ccb879a7d443ab36a31acf84b3dbdd00819aa6e"
+    },
+    {
+      "file": "local/task0096/race-agent/00183a58.references_to.json",
+      "sha256": "de53bd769ea383f2d2f08d30225cd42aef1e5a69127aae7d255895d1e09648b8"
+    },
+    {
+      "file": "local/task0096/race-agent/00184640.json",
+      "sha256": "d9034c1ab41d0873b9a860ff1af016c69a03e5696aa5aa33c849b7ad940417e4"
+    },
+    {
+      "file": "local/task0096/race-agent/00184640.refs.json",
+      "sha256": "85239f73455260f4850b0fcbe29eae372f5f25f41b3c4700557de588c161fa34"
+    },
+    {
+      "file": "local/task0096/race-agent/001b67c0.decompile.json",
+      "sha256": "83b6621655c5506b48cc5b367b3ff17ae4582d422840f32e488bdeadcf2466ca"
+    },
+    {
+      "file": "local/task0096/race-agent/001e9968.json",
+      "sha256": "6ba7254960ac87be2a5830563cb9f0a87bba216b683caae72ea075e7b207a083"
+    },
+    {
+      "file": "local/task0096/race-agent/001f2c34.json",
+      "sha256": "747c47e41d672fbd53def61c366c762a096ab64ab19509ab1520fa7381276bda"
+    },
+    {
+      "file": "local/task0096/race-agent/001fa178.json",
+      "sha256": "952ffda73654f77d98806e7c5ed47377318048dd2ce6da1c875f288bf5ee7b20"
+    },
+    {
+      "file": "local/task0096/race-agent/001fa178.references_to.json",
+      "sha256": "bb33489f857cf78cd975fe0ac520b1d821fd0683bab1724c4f09436a201f8762"
+    },
+    {
+      "file": "local/task0096/race-agent/001fa378.json",
+      "sha256": "3e7d9595bc98253c400d68ebc9adf386ca8be20bd3837441015fd2f4f53c2aa5"
+    },
+    {
+      "file": "local/task0096/race-agent/001fa378.references_to.json",
+      "sha256": "6ba3d6738f2d18aa5e5727bab9a17ae8f0bbe149d71e62d5797489d7dbf1855f"
+    },
+    {
+      "file": "local/task0096/race-agent/22.symbols.json",
+      "sha256": "83b6b862c2f68da3651556a41f959a98a3c4f63e72051e283773dce3663c3138"
+    },
+    {
+      "file": "local/task0096/race-agent/45.symbols.json",
+      "sha256": "51c8b680c8ce7cac2f6e4dcb0446c2d31f1123418038d294d49ec2bc406995c6"
+    },
+    {
+      "file": "local/task0096/race-agent/47.symbols.json",
+      "sha256": "a3c0d07365432f80a793685a4ba407e6e02b1553845c156e9ba8d06922bd891a"
+    },
+    {
+      "file": "local/task0096/race-agent/eRaceStage.type.json",
+      "sha256": "b291c1cf10b73d6456152df83686a52fd9152b3221a2dbba7b4d2041e0ce1c56"
+    },
+    {
+      "file": "local/task0096/race-agent/EventInfo.type.json",
+      "sha256": "1d2ae4cbfd13e38a6c8557af2fbd47b4cd46594a941ea3f4660ef631a1bba3d7"
+    },
+    {
+      "file": "local/task0096/race-agent/RaceCoordinator.json",
+      "sha256": "73e5f21599882cff2cf87baa8c7776286ee397951451feb849eecb227e2300cc"
+    },
+    {
+      "file": "local/task0096/race-agent/RaceCoordinator.type.json",
+      "sha256": "509e4f6affa5fbf9285143aa1bd57f26e90b5f1c3b6d6a661fc9dace3cc1a64d"
+    },
+    {
+      "file": "local/task0096/race-agent/RaceParameters.json",
+      "sha256": "8db564758d982be4b6c9c88ee97a7c0e09dc07370d7b04ccffef7bc268222206"
+    },
+    {
+      "file": "local/task0096/race-agent/RaceParameters.type.json",
+      "sha256": "1d40f027c6226d736ae462dd264c8950f57ccf92bb9770c2e763d5815cb78232"
+    },
+    {
+      "file": "local/task0096/race-agent/RCMessage.type.json",
+      "sha256": "c4b9ecf6632366e3b2700bdf2165f1878ca392daed60ff50a921ba5f31d1259a"
+    },
+    {
+      "file": "local/task0096/race-agent/RCState.type.json",
+      "sha256": "effe2f4224a0cc3d8ad47104aef7c3d334e6089e41b298a19500675eb0ffcd48"
+    },
+    {
+      "file": "local/task0096/race-agent/SetupRaceParametersAfterRaceSetup.json",
+      "sha256": "d45d736cc309d6a7d99f4de2d7238533835ea07c706791303de3511e21854d34"
+    },
+    {
+      "file": "local/task0096/police-agent/0014a39c.json",
+      "sha256": "a8ce519bc60ba480081868d338560d499a9b6443557be00d9589d3edb0a6ead2"
+    },
+    {
+      "file": "local/task0096/police-agent/0014ca28.json",
+      "sha256": "fd5f76378c995b96c53b65bd15e4dd00ddfcc154c799355cf002caf1c9fe78aa"
+    },
+    {
+      "file": "local/task0096/police-agent/0014d588.json",
+      "sha256": "54d401b64a538b83bb5f3da2f0833ee1184508f5122e14c766f9568e4493c04e"
+    },
+    {
+      "file": "local/task0096/police-agent/0014d9a8.json",
+      "sha256": "bab155f652aa4354e33b6419f6027bb0cf725e8a6f664571c8a999750d37176d"
+    },
+    {
+      "file": "local/task0096/police-agent/0019e8a8.json",
+      "sha256": "8f43b3a31e3ad129e5f6a76e5f7b75b70eceb26c0361ab04110b708e70316f16"
+    },
+    {
+      "file": "local/task0096/police-agent/0019e8a8.refs.json",
+      "sha256": "71aef28005a87b2854752c3a5bf6e98235a652522011948b81a2ebaf348bca8f"
+    },
+    {
+      "file": "local/task0096/police-agent/0019f980.json",
+      "sha256": "b27a9486c96959254b30b34121d6daec7eb8092cab5f8f580203874b7cdd0bc6"
+    },
+    {
+      "file": "local/task0096/police-agent/0019f980.refs.json",
+      "sha256": "dc42c24be235d6de4e0d21dedd44184addc739f31a47b189a435c634c43c0211"
+    },
+    {
+      "file": "local/task0096/police-agent/0021de80.json",
+      "sha256": "109bf6a91c4c5449c996a700440ead771f830a34f444bb3afde8e89e96958b70"
+    },
+    {
+      "file": "local/task0096/police-agent/0021de80.refs.json",
+      "sha256": "186e86dfb56d14fced9785c1fe663ad161039b9a6e837b6c2f4a2f17be7c4518"
+    },
+    {
+      "file": "local/task0096/police-agent/0021e270.json",
+      "sha256": "aa5c632ba575b1a94b29b7ea6387f1c9a4cc84dc3a4ef68fbb49f790c9e27527"
+    },
+    {
+      "file": "local/task0096/police-agent/0021ed68.json",
+      "sha256": "ffd28ecdc7f2a8775b2a609646e8eab899c6645e859ae62ef802cc2dbe624487"
+    },
+    {
+      "file": "local/task0096/police-agent/0021ef58.json",
+      "sha256": "0f60dd5ebb580081d1edfdcca9af3b0e456d85684d3ffc875663e4b98cb94e98"
+    },
+    {
+      "file": "local/task0096/police-agent/0021ef58.refs.json",
+      "sha256": "12c211d0f4b826d953aa1d725c935f8d238257bae845ce8aa12617aa4d49876b"
+    },
+    {
+      "file": "local/task0096/police-agent/0021f140.json",
+      "sha256": "59799e4340c74cd8915c123ef676ec4aa0b8991afc0df66cb321a81d0d48ad8b"
+    },
+    {
+      "file": "local/task0096/police-agent/0021f1e0.json",
+      "sha256": "e31f5e89983a507d12b4a78bcc76d6c45091eb63eb5cacc85f5f3f32223ef0e4"
+    },
+    {
+      "file": "local/task0096/police-agent/0021f2a8.json",
+      "sha256": "2170b4fcd3178ccac2a7124b33f5f952b5a3c1d2bb515baa629a5782251abb68"
+    },
+    {
+      "file": "local/task0096/police-agent/0021f778.json",
+      "sha256": "d0b480a26dc98a9699aa25924d637405a445e066253f93440476bfeccf9ec0f0"
+    },
+    {
+      "file": "local/task0096/police-agent/0021f8f0.json",
+      "sha256": "ddc8a18cd4a8289e87a007f0f2785081cb0de129deaa1c86ea761c8a623b1fe9"
+    },
+    {
+      "file": "local/task0096/police-agent/002200f0.json",
+      "sha256": "a4f993587b44f0ea75e868d4a85d1368d01fb9f34d00625a289b638a3c477b34"
+    },
+    {
+      "file": "local/task0096/police-agent/00220440.json",
+      "sha256": "f93baf9ec5c38e0e0acf5e4ce6b283abd11e7e12608df15af9122bd94848e417"
+    },
+    {
+      "file": "local/task0096/police-agent/00220738.json",
+      "sha256": "6220707689ae863a959311ae32fcd20a6754377e41738f5eb3a5266a081b2abb"
+    },
+    {
+      "file": "local/task0096/police-agent/00220b08.json",
+      "sha256": "03cca2ec080a3e62633dde214841d8701d15dc0bceef73cb9edc10a8230ee055"
+    },
+    {
+      "file": "local/task0096/police-agent/00221218.json",
+      "sha256": "0b2afaeefade44ca499332eee8fdae2d539be749621c86d86dbc6b4e03b0dd01"
+    },
+    {
+      "file": "local/task0096/police-agent/002216e0.json",
+      "sha256": "36a50528c04b3ec46520c2c5094f8c181b499fcca7f0d1c151d97d3786ad7e46"
+    },
+    {
+      "file": "local/task0096/police-agent/002217a0.json",
+      "sha256": "415afd520f78b43db0b66c313076c101c1d27b03da0bf94cc72bec137a03af22"
+    },
+    {
+      "file": "local/task0096/police-agent/00221b28.json",
+      "sha256": "a8bf5c3e4b85d5b6cdf72f09a0c730ceafa733e71914db9b600d7de8718c4478"
+    },
+    {
+      "file": "local/task0096/police-agent/00221b28.refs.json",
+      "sha256": "5bd1330a08e781fdf000e727773f741ec87d305678cd03bfd488b6feb8dc5101"
+    },
+    {
+      "file": "local/task0096/police-agent/00222490.refs.json",
+      "sha256": "2eb04f03915f31c4921860639cf44d72311c48e5ae54144529fcf7b952d3bf8b"
+    },
+    {
+      "file": "local/task0096/police-agent/002224bc.json",
+      "sha256": "01da12f7a2622205d8afad05f90afcf5f09bab5f228e88afd477d7d87c9e66ef"
+    },
+    {
+      "file": "local/task0096/police-agent/00222530.refs.json",
+      "sha256": "3460a5092350020d27da1605a420208a69f646f13db13890c4798a4770e02b3b"
+    },
+    {
+      "file": "local/task0096/police-agent/00222544.json",
+      "sha256": "48aa1dffada8e941d96e57d243c1e6316389d22957d40c1adee6eefaed7201dd"
+    },
+    {
+      "file": "local/task0096/police-agent/002225b0.refs.json",
+      "sha256": "844c5d198b0178c0f068faebf2081ed783f15b186f2a6aa5e77aade295853357"
+    },
+    {
+      "file": "local/task0096/police-agent/002225d0.json",
+      "sha256": "397b9a9ca9e33cb287b2183dd718df6f5ecf6e21e5181e1fb968200ed5fd1a4e"
+    },
+    {
+      "file": "local/task0096/police-agent/002225f8.json",
+      "sha256": "837135921f887293108101d3d69491764187a74ee774a9a53b85f817b7560e9d"
+    },
+    {
+      "file": "local/task0096/police-agent/00223720.json",
+      "sha256": "8ce9806bbdcca343d84eedda0789c23307e7c9dfd5fd78c84a9d8583c60aa9a9"
+    },
+    {
+      "file": "local/task0096/police-agent/00223850.json",
+      "sha256": "6d6da0b6e1e75bc567217f100e6ae3e85a2d14efad8577a45927f49b5f9988fb"
+    },
+    {
+      "file": "local/task0096/police-agent/00223a18.json",
+      "sha256": "49c4de4df97c5e52939d21c653e26ca3391972a10f0c575c3949f310f0cebae3"
+    },
+    {
+      "file": "local/task0096/police-agent/00223b08.json",
+      "sha256": "8d1807559369f3a3412726a82e5bad5f837e3a526603d45befe62e314114ef27"
+    },
+    {
+      "file": "local/task0096/police-agent/00223e38.json",
+      "sha256": "380d46671a877ac2e01d15a62bda24d6af2b4999f99ad3a56516a5cc9c9e87db"
+    },
+    {
+      "file": "local/task0096/police-agent/00223ed8.json",
+      "sha256": "cdc962ddb52c4002dfeb6e6c16135eb2f19e514497b59adfe89767ddf1961fc8"
+    },
+    {
+      "file": "local/task0096/police-agent/002243d0.json",
+      "sha256": "d92af30965e4f941a4e012196e1a2285d142ac9eff8d8ff5c4230951dc97b7cf"
+    },
+    {
+      "file": "local/task0096/police-agent/00224690.json",
+      "sha256": "3511da068522c51700412cdaaf358b397bf9db9a3c24477460e4c2af5c02f386"
+    },
+    {
+      "file": "local/task0096/police-agent/002247d0.json",
+      "sha256": "a72ccdcef384df332095c41af94c2b340d7fa6eb1a5912bee9dd5a05026e7e12"
+    },
+    {
+      "file": "local/task0096/police-agent/00224848.json",
+      "sha256": "538d016f1a5bf94782ac095442bf0b15e4592bea86e1216a5943da64af75d029"
+    },
+    {
+      "file": "local/task0096/police-agent/002249d0.json",
+      "sha256": "d0ed50973667332e17e1e081786c517dfc5ec61f197ba83ea8a78a8287a6e4e7"
+    },
+    {
+      "file": "local/task0096/police-agent/00226618.json",
+      "sha256": "ae64a626123b2b210ea81f5821510b52c5646e44f21b0793e8e095e76365252a"
+    },
+    {
+      "file": "local/task0096/police-agent/002269a0.json",
+      "sha256": "e8764368d51bfde0c2f0bb3d5b6f1b4d5c2c87bd760a7036f186bc6f22fa718d"
+    },
+    {
+      "file": "local/task0096/police-agent/00227460.json",
+      "sha256": "940445f59b6de407b3c65ae442f35386ab53ca9308eb0d4cf28c854f4bc9d872"
+    },
+    {
+      "file": "local/task0096/police-agent/002281a8.json",
+      "sha256": "c9342fbd1bec7fdbd7121551fc17f8b54e00009ffcd1498f927e2da8c240e15d"
+    },
+    {
+      "file": "local/task0096/police-agent/002285f8.json",
+      "sha256": "2c7a58b32d7216e496d653395c27e0ca31a7589e721ba25dce4fb6f81feefe5b"
+    },
+    {
+      "file": "local/task0096/police-agent/00228bc8.json",
+      "sha256": "1d8ca7af448ab6f2251ca65b049c583da42e5dbeb91e05a3230ab90930390fac"
+    },
+    {
+      "file": "local/task0096/police-agent/00228e80.json",
+      "sha256": "78fcf34faaafef39e7385fb38fcb8bc8cbf282a98f1b77e275eb8d96aadc4bc2"
+    },
+    {
+      "file": "local/task0096/police-agent/002290d0.json",
+      "sha256": "d497a3ba8c881084993bdbe386bf53aa1497232208cad02f7146105c261391d0"
+    },
+    {
+      "file": "local/task0096/police-agent/0022a5a0.json",
+      "sha256": "d13e50ce6cc470298842b3890ddfc3dba120420f8ff45dace8bff40fedada6dd"
+    },
+    {
+      "file": "local/task0096/police-agent/002480d0.json",
+      "sha256": "428d117a97731fa84d9d87a5dc4e666adfd51bf939c26caffa44b9e2d530f5be"
+    },
+    {
+      "file": "local/task0096/police-agent/002b4e90.memory.json",
+      "sha256": "e8ff027261281a6dad1905c890f56e407de205e11ebe984e5a7320ea32c14dfa"
+    },
+    {
+      "file": "local/task0096/police-agent/00308608.memory.json",
+      "sha256": "7e4ee783a0169d3493c3beaf9c7972485475b9e457fb1bda7abe3e9d8b7c5167"
+    },
+    {
+      "file": "local/task0096/police-agent/00313bb8.memory.json",
+      "sha256": "cd3097577c989207bac8e687b04155b02255d279b0fa2c54b68a04c885c8cea3"
+    },
+    {
+      "file": "local/task0096/police-agent/00313c00.memory.json",
+      "sha256": "0fbec6afd3aec2b5fcfb670b45a9db9c00508f4def29da465171e81f705b7e5f"
+    },
+    {
+      "file": "local/task0096/police-agent/00325ff0.memory.json",
+      "sha256": "609e81287a025621e9e936e7c3c4583f3880504ed2d8d84d5d1fff2e242ae8ee"
+    },
+    {
+      "file": "local/task0096/police-agent/0032604c.memory.json",
+      "sha256": "6bf97fc042af2024a7bc34f09e13cd82ef222ffddd0a2baf32d74cdcf6fd906c"
+    },
+    {
+      "file": "local/task0096/police-agent/00328bfc.refs.json",
+      "sha256": "2d07dd547e85d9804c7b27d10333f88db28f16b876b5297ec68529cd91e53781"
+    },
+    {
+      "file": "local/task0096/police-agent/00328c00.refs.json",
+      "sha256": "4acbf512eac3611723e801a65a7154aaedca09b23afabff4613d4a8c78ed5cdd"
+    },
+    {
+      "file": "local/task0096/police-agent/00328c38.memory.json",
+      "sha256": "fa6f1ab821adb8deaba1ff887d86cd6bc5f3547c8bb0da2b0f8976fe71e03bc4"
+    },
+    {
+      "file": "local/task0096/police-agent/all-police-symbols.json",
+      "sha256": "0cc5b04a1e4abb3056082640f60914fe6bbac61b174bd245c8f4ed5123c41339"
+    },
+    {
+      "file": "local/task0096/police-agent/constants-symbols.json",
+      "sha256": "d7052bf9dd30a24f823e647e5db8a20c06b9f11c07a626149bc14876ad229d9f"
+    },
+    {
+      "file": "local/task0096/police-agent/cop-extra-symbols.json",
+      "sha256": "241b17333b3f6e10594e5d663de65ed9bcf2730c1b2bb2d3639004b359a416f8"
+    },
+    {
+      "file": "local/task0096/police-agent/lifecycle-symbols.json",
+      "sha256": "4bf0758caff1619c72d928ea4f338348a79b56fbed069e02a5bc6124c2beb2b4"
+    },
+    {
+      "file": "local/task0096/police-agent/project.json",
+      "sha256": "ed567126d3a922a3d5798df78dc1c29123443a9ef60396b75738a804240be2b7"
+    },
+    {
+      "file": "local/task0096/police-agent/selected-symbols.json",
+      "sha256": "f6a83f01585faab92d3b28cc1164939b4bae6a2e8f73ba65dcac19772db0d3e1"
+    },
+    {
+      "file": "local/task0096/police-agent/symbols-full.json",
+      "sha256": "eac1cc22bcdec2f5e6406d762b7da7355ea7c6e17dabd7481f6cba2f6c408043"
+    },
+    {
+      "file": "local/task0096/police-agent/symbols.json",
+      "sha256": "1fae0fb9d3e8c65f39e1bda010013e18ac4cde9cecc44b7ada3b5feb7ef3ff1e"
+    },
+    {
+      "file": "local/task0096/police-agent/world-symbols.json",
+      "sha256": "12a1b5ea8665edec23570a6b2e33a298395ad46e40a4eb6199708aabfe1af7ee"
+    }
+  ]
+}

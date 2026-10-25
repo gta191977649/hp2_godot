@@ -96,7 +96,7 @@ namespace hp2::recovered {
 class CarRenderInfo {
 public:
     // TASK0052 bounded live-car shadow branches, original src/care.cpp Render.
-    static port::track::ShadowPacket Render(port::driving::Memory&,const port::track::Scene&,const port::track::ShadowInput&);
+    static ::port::track::ShadowPacket Render(::port::driving::Memory&,const ::port::track::Scene&,const ::port::track::ShadowInput&);
     // ELF 0x00120EF8, E-0034-M01. Bounded lighting-context delegation within Render:
     // calls shared 0x00115978 for a static part in default frontend mode 3.
     // Explicit native transform/result are port-side interfaces, not the PS2 ABI.
@@ -107,25 +107,25 @@ public:
     // No allocation, resolved texture objects, damage, markers or full PS2 layout.
     // Lights-off assumes null car and no original environment override.
     // skin=1 is the explicit viewer default; original default is not established.
-    static port::CarRenderBindings Sub_0011E860(const std::string& prefix,
+    static ::port::CarRenderBindings Sub_0011E860(const std::string& prefix,
                                                std::int32_t Field_0x538,
                                                std::uint8_t skin = 1);
     // ELF 0x00120EF8, E-0033-B02. Null-car (static viewer) LOD slice only.
     // projected_size is the already-truncated/scaled integer from 0x00107600.
     // Presence entries correspond to body +0x4c,+0x64,+0x7c,+0x94 pointers.
     // Debug overrides and live-car cap are outside this slice.
-    static port::CarLodSelection Sub_00120EF8(int projected_size,
+    static ::port::CarLodSelection Sub_00120EF8(int projected_size,
                                              const std::array<bool, 4>& presence);
     // E-0033-B05/B06, ELF 0x00120EF8 submission matrices with caller 0x00197CE0.
     // Explicit static pose: zero wheel spin; steering is a caller-selected 16-bit angle.
     // Source row-vector matrices; translation occupies lanes12..14.
-    static port::CarAttachmentMatrices Sub_00120EF8(const port::CarRenderConfig& config,
+    static ::port::CarAttachmentMatrices Sub_00120EF8(const ::port::CarRenderConfig& config,
                                                    std::uint16_t steering);
     // ELF00120EF8, E-0033-B02/E-0035-W01/E-0038-W01. Render-side basis
     // composition for raw001C0D78 tire/second-group matrices. Wheels0/3 use
     // the original source-Z half turn (tire/blur) or source-Y reflection(brake).
     // Inputs are source row-vector matrices, before this render-only composition.
-    static port::CarAttachmentMatrices Sub_00120EF8(const port::CarAttachmentMatrices& source);
+    static ::port::CarAttachmentMatrices Sub_00120EF8(const ::port::CarAttachmentMatrices& source);
     // Whole-function entry points remain untranslated; overloads above are slices.
     void Sub_0011E860();
     void Sub_00120EF8();

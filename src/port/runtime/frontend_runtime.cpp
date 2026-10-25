@@ -7,6 +7,8 @@
 #include <cstdio>
 #include <sstream>
 #include <stdexcept>
+#include <algorithm>
+#include <cstring>
 
 namespace port::runtime {
 namespace {
@@ -15,6 +17,13 @@ std::string hex(std::uint32_t value) {
     std::ostringstream text;
     text << "0x" << std::hex << value;
     return text.str();
+}
+float audio_value(const std::array<std::uint8_t,0xb0>& options,std::size_t index) {
+    std::uint32_t bits=0;
+    for(unsigned b=0;b<4;++b)bits|=std::uint32_t(options.at(index*4+b))<<(b*8);
+    float value;std::memcpy(&value,&bits,sizeof(value));
+    if(!std::isfinite(value) || value<0)throw std::runtime_error("invalid saved audio category volume");
+    return value;
 }
 
 std::string describe_menu_message(int message) {
@@ -57,6 +66,14 @@ void FrontEndRuntime::reset_state() {
     sound_bank_.reset();
     music_scheduler_.reset();
     jukebox_.reset();
+    jukebox_screen_.reset();
+    autosave_.reset();save_popup_.reset();
+    audio_screen_.reset();pending_volume_feedback_.clear();
+    display_screen_.reset();hud_screen_.reset();calibration_.reset();name_entry_.reset();
+    display_baseline_valid_=false;hud_arrow_target_=0;hud_arrow_phase_=0;
+    selection_animation_={};
+    audio_options_={};
+    pending_music_index_=-1;pending_music_stop_=false;music_auto_mode_=true;music_playing_=false;
     pending_sound_names_.clear();
     last_sound_name_.clear();
     sound_clock_seconds_ = 0;
@@ -82,6 +99,7 @@ LoadResult FrontEndRuntime::load(const std::string& asset_search_start_dir,
                                  const std::string& relative_path) {
     LoadResult result;
     reset_state();
+    profile_search_start_=asset_search_start_dir;
 
     auto root = hp2::platform::resolve_zzdata_root(asset_search_start_dir);
     if (!root) {
@@ -127,6 +145,15 @@ LoadResult FrontEndRuntime::load(const std::string& asset_search_start_dir,
         jukebox_ = std::make_unique<hp2::port::audio::JukeboxCartridge>(
             hp2::port::audio::JukeboxCartridge::load_from_zzdata(*root));
         music_scheduler_ = std::make_unique<hp2::port::audio::FrontendMusic>(jukebox_->tunes());
+        initialize_audio_options();
+        if(!profile_load_.loaded) {
+            const std::array<std::uint8_t,8> defaults{1,0,0,7,8,2,1,1}; //001EE0A0,English,non-debug
+            std::copy(defaults.begin(),defaults.end(),profile_.bytes()+0x14c);
+            for(int player=0;player<2;++player) {
+                const auto name=event_localize(0x27165+player);
+                std::copy_n(name.data(),std::min<std::size_t>(11,name.size()),profile_.bytes()+0x10d90+player*0x6d0);
+            }
+        }
     } catch (const std::exception& error) {
         last_error_ = error.what();
         result.error = last_error_;
@@ -220,6 +247,8 @@ render::Rect FrontEndRuntime::widget_clip(int screen_index, std::size_t slot) co
 
 MenuState FrontEndRuntime::menu_open(int screen_index) {
     MenuState result;
+    commit_hud(); //001F4178 destruction commit, including Back/manager replacement.
+    hud_screen_.reset();display_screen_.reset();calibration_.reset();name_entry_.reset();
     menu_group_.reset();
     menu_screen_index_ = -1;
     message_log_.clear();
@@ -227,8 +256,11 @@ MenuState FrontEndRuntime::menu_open(int screen_index) {
     scrolling_text_.reset();
     menu_viewport_.reset();
     menu_selector_.reset();
+    jukebox_screen_.reset();
+    autosave_.reset();save_popup_.reset();
     exit_animation_.reset();
     exit_class_name_.clear();
+    audio_screen_.reset();
 
     if (screen_index < 0 || screen_index >= screen_count()) {
         result.error = "screen index out of range";
@@ -249,6 +281,24 @@ MenuState FrontEndRuntime::menu_open(int screen_index) {
     menu_group_->pad_index_0x10 = -1;    // FUN_0016AA00's "any pad" value
     menu_group_->initial_index_0x0C = 0; // list position, not a MENUITEM_%d suffix
     menu_group_->callback_0x18 = [this](int message, hp2::frontend::MenuEvent_0016A458& event) {
+        if(name_entry_) {dispatch_name_entry(message,event);return;}
+        if(jukebox_screen_) {
+            dispatch_jukebox(message,event.sound_id_0x0C);
+            if(message_log_.size()>=64)message_log_.erase(message_log_.begin());
+            message_log_.push_back(describe_menu_message(message));
+            return;
+        }
+        if(hud_screen_) {
+            dispatch_hud(message,event);
+            if(message_log_.size()>=64)message_log_.erase(message_log_.begin());
+            message_log_.push_back(describe_menu_message(message));return;
+        }
+        if(calibration_) {
+            if(hp2::frontend::Sub_001F4B20(*calibration_,message,event.sound_id_0x0C))request_history_back();
+            profile_.write_u32(0x144,static_cast<std::uint32_t>(calibration_->x));
+            profile_.write_u32(0x148,static_cast<std::uint32_t>(calibration_->y));
+            return;
+        }
         if (menu_viewport_ && menu_selector_) {
             const hp2::frontend::WidgetMeasure measure = [this](const auto& w) { return measure_widget(w); };
             if (active_class_name_ == "Audio Options")
@@ -258,6 +308,8 @@ MenuState FrontEndRuntime::menu_open(int screen_index) {
                 hp2::frontend::Sub_001F3A28(message, event, *menu_viewport_, *menu_selector_,
                                             *menu_group_->screen_0x14, measure);
         }
+        if(audio_screen_ && message!=1)dispatch_audio(message,event);
+        if(display_screen_ && message!=1)dispatch_display(message,event);
         if (message == hp2::frontend::kMenuMessage0x04) {
             bind_menu_animation(event.field_0x00);
             bind_scrolling_text(event.field_0x00);
@@ -281,6 +333,53 @@ MenuState FrontEndRuntime::menu_open(int screen_index) {
     });
 
     result.not_implemented = hp2::guard([&] {
+        if(active_class_name_=="NameEntry") {
+            name_entry_=std::make_unique<port::frontend::NameEntryState>();
+            for(int p=0;p<2;++p) {
+                std::copy_n(profile_.bytes()+0x10d90+p*0x6d0,12,name_entry_->names[p].begin());
+                name_entry_->names[p][11]=0;
+                name_entry_->flags[p]=profile_.read_u8(0x10d83+p*0x6d0);
+            }
+            name_entry_->initial_names=name_entry_->names;name_entry_->initial_flags=name_entry_->flags;
+            const auto* panel=hp2::frontend::FindWidget_00143D50(screens_[slot],0x35b2f256,0);
+            if(!panel)hp2::not_implemented("0x0024C458","NameEntry keyboard panel missing");
+            name_entry_->panel_authored_x=panel->x;name_entry_->panel_authored_y=panel->y;
+            hp2::frontend::Sub_0024D408(*name_entry_,screens_[slot],[this](auto id){return event_localize(id);});
+            menu_selector_=std::make_unique<hp2::frontend::tLeftRightArrowScroll>();
+            menu_selector_->Construct_0024A690(screens_[slot],0xd1cda594,0x9345e4a7);
+        }
+        if(active_class_name_=="JukeBox Music")open_jukebox();
+        if(active_class_name_=="Audio Options") {
+            audio_screen_=std::make_unique<port::frontend::AudioOptionsState>();
+            hp2::frontend::Sub_001EF3C8(*audio_screen_,audio_options_);
+        }
+        if(active_class_name_=="Display Options") {
+            if(!display_baseline_valid_)capture_display_baseline();
+            display_screen_=std::make_unique<port::frontend::DisplayOptionsState>();
+            std::copy_n(profile_.bytes()+0x14c,8,display_screen_->snapshot.begin());
+            hp2::frontend::Sub_001F3A28(*display_screen_,screens_[slot],[this](auto id){return event_localize(id);});
+        }
+        if(active_class_name_=="Customize P1 HUD" || active_class_name_=="Customize P2 HUD") {
+            hud_screen_=std::make_unique<port::frontend::HudOptionsState>();
+            hud_screen_->player=active_class_name_=="Customize P2 HUD" ? 1 : 0;
+            std::copy_n(profile_.bytes()+0x10d7c+hud_screen_->player*0x6d0,0x30,hud_screen_->snapshot.begin());
+            hp2::frontend::Sub_001F46D8(*hud_screen_,screens_[slot],[this](auto id){return event_localize(id);});
+            scrolling_text_=std::make_unique<hp2::frontend::tAnimatedBlurb>();
+            scrolling_text_->Construct_002491B0(screens_[slot]);
+        }
+        if(active_class_name_=="Calibrate display offset") {
+            calibration_.emplace();
+            calibration_->x=profile_.read_i32(0x144);calibration_->y=profile_.read_i32(0x148);
+            //001F4AD8 caches current regional GS offsets on entry.
+            calibration_->cached_x=calibration_->x;calibration_->cached_y=calibration_->y;
+        }
+        if(active_class_name_=="Autosave") {
+            autosave_.emplace();
+            const int document=hp2::frontend::screen_index_for_name_hash(screens_,0x0ce3f7ce);
+            if(document<0)hp2::not_implemented("0x00245E30","original memory-card popup document missing");
+            save_popup_=authored_screens_[static_cast<std::size_t>(document)];
+            apply_save_popup();
+        }
         open_menu_animation(screen_index);
         background_animation_.Bind_00249A40(&screens_[slot],
             [this](int bound) { return hp2::frontend::bRandom(bound, random_state_); },
@@ -300,6 +399,9 @@ MenuState FrontEndRuntime::menu_open(int screen_index) {
             menu_selector_->Construct_0024A690(*menu_group_->screen_0x14, 0xD1CDA594, 0x9345E4A7);
         }
         menu_group_->EnsureMenu_0016A858();
+        apply_jukebox_widgets();
+        if(audio_screen_)hp2::frontend::Sub_0016DE30(*audio_screen_,screens_[slot],0,
+            [this](const auto& w){return measure_widget(w);},[this](auto id){return event_localize(id);});
         // 001F1DD8 message 0x0B, after the menu list exists: 0016D2A8 looks the item up in it.
         // Both class names share this document and this constructor; only the +0x08 flag
         // differs, and that is what decides whether Back/activation runs the 00183830 reset.
@@ -434,7 +536,304 @@ bool FrontEndRuntime::event_tree_joy_event(int joy_event) {
     return true;
 }
 
+// TASK-0092 E-0092-J05:001EF1C8/001EEF60/001AFA28. Host representation of
+// original global AudioOptions, including exact default volume bits and song pairs.
+void FrontEndRuntime::initialize_audio_options() {
+    if(profile_load_.loaded)std::copy_n(profile_.bytes()+0x94,audio_options_.size(),audio_options_.begin());
+    else {
+        constexpr std::uint32_t defaults[]{0x3ee66666,0x3f59999a,0x3ec28f5c,0x3f0ccccd,
+            0x3ea8f5c3,0x3e9eb852,0x3f400000};
+        for(std::size_t i=0;i<7;++i)for(unsigned b=0;b<4;++b)
+            audio_options_[i*4+b]=static_cast<std::uint8_t>(defaults[i]>>(b*8));
+        const auto& tunes=jukebox_->tunes();
+        if(tunes.size()>32)hp2::not_implemented("0x001EEF60","Jukebox exceeds original AudioOptions song capacity");
+        audio_options_[0x9c]=static_cast<std::uint8_t>(tunes.size());
+        audio_options_[0xa4]=5;audio_options_[0xac]=1;audio_options_[0xaf]=0xff;
+        for(std::size_t i=0;i<tunes.size();++i) {
+            audio_options_[0x1c+i*4]=tunes[i].cartridge_category;
+            audio_options_[0x1d+i*4]=tunes[i].cartridge_song;
+            audio_options_[0x1e + i*4]=static_cast<std::uint8_t>(tunes[i].type);
+        }
+    }
+    //001EF240 publishes genre indices into the same snapshot. This also validates
+    // the saved song pairs before using them in audio scheduling.
+    open_jukebox();
+    audio_options_=jukebox_screen_->snapshot;
+    jukebox_screen_.reset();
+    std::copy(audio_options_.begin(),audio_options_.end(),profile_.bytes()+0x94);
+    filter_frontend_music();
+}
+
+void FrontEndRuntime::open_jukebox() {
+    std::uint32_t count=0;
+    for(unsigned b=0;b<4;++b)count|=std::uint32_t(audio_options_[0x9c+b])<<(b*8);
+    if(count>32)hp2::not_implemented("0x001EEF60","saved AudioOptions song count exceeds original capacity");
+    std::vector<port::frontend::JukeboxSongMetadata> metadata;
+    for(std::size_t i=0;i<count;++i) {
+        const auto& tunes=jukebox_->tunes();
+        auto tune=std::find_if(tunes.begin(),tunes.end(),[&](const auto& t){
+            return t.cartridge_category==audio_options_[0x1c+i*4] && t.cartridge_song==audio_options_[0x1d+i*4];});
+        if(tune==tunes.end() || tune->metadata_fields.size()<5)
+            hp2::not_implemented("0x001AED90","saved Jukebox pair or original metadata unavailable");
+        metadata.push_back({tune->metadata_fields[0],tune->metadata_fields[1],tune->metadata_fields[3]});
+    }
+    auto state=std::make_unique<port::frontend::JukeboxScreenState>();
+    hp2::frontend::Sub_001F02D8(*state,audio_options_,std::move(metadata));
+    jukebox_screen_=std::move(state);
+}
+
+void FrontEndRuntime::filter_frontend_music() {
+    const auto& tunes=jukebox_->tunes();
+    std::vector<bool> enabled(tunes.size(),false);
+    const auto count=audio_options_[0x9c]; // validated full word in open_jukebox
+    for(std::size_t i=0;i<count;++i) {
+        const auto category=audio_options_[0x1c+i*4],song=audio_options_[0x1d+i*4];
+        const auto genre=audio_options_[0x1f+i*4];
+        if(genre>=8)hp2::not_implemented("0x001AF050","saved Jukebox genre exceeds original bit mask");
+        for(std::size_t j=0;j<tunes.size();++j)if(tunes[j].cartridge_category==category && tunes[j].cartridge_song==song)
+            enabled[j]=hp2::port::audio::Sub_001AF050(audio_options_[0x1e + i*4],(audio_options_[0xaf]&(1u<<genre))!=0);
+    }
+    music_scheduler_->set_enabled(std::move(enabled));
+}
+
+void FrontEndRuntime::queue_jukebox_track(std::uint8_t category,std::uint8_t song,bool automatic) {
+    const auto& tunes=jukebox_->tunes();
+    auto tune=std::find_if(tunes.begin(),tunes.end(),[&](const auto& t){return t.cartridge_category==category && t.cartridge_song==song;});
+    if(tune==tunes.end())hp2::not_implemented("0x0027E530","Jukebox cartridge/song pair unavailable");
+    pending_music_index_=static_cast<int>(tune-tunes.begin());
+    music_scheduler_->select(static_cast<std::size_t>(pending_music_index_));
+    pending_music_stop_=true;music_auto_mode_=automatic;music_playing_=true;
+}
+
+void FrontEndRuntime::commit_jukebox(const port::frontend::JukeboxScreenState& state) {
+    //001F0D5C..001F0ED8: Autosave precedes full copy/filter/resume. Preferred
+    // index+A4 is independent of the highlighted preview cursor.
+    if(state.snapshot!=audio_options_ && profile_.read_u32(4)!=0) {
+        if(navigation_history_.size()>=12)hp2::not_implemented("0x0016B418","Jukebox Autosave history overflow");
+        navigation_history_.emplace_back("Autosave");
+    }
+    audio_options_=state.snapshot;
+    std::copy(audio_options_.begin(),audio_options_.end(),profile_.bytes()+0x94);
+    filter_frontend_music();
+    std::uint32_t preferred=0;
+    for(unsigned b=0;b<4;++b)preferred|=std::uint32_t(audio_options_[0xa4+b])<<(b*8);
+    if(preferred>=audio_options_[0x9c])hp2::not_implemented("0x001F0D10","Jukebox preferred song outside snapshot");
+    const auto genre=audio_options_[0x1f+preferred*4];
+    if((audio_options_[0xaf]&(1u<<genre)) && audio_options_[0x1e + preferred*4]!=0)
+        queue_jukebox_track(audio_options_[0x1c+preferred*4],audio_options_[0x1d+preferred*4],true);
+    else {
+        music_auto_mode_=true;pending_music_stop_=true;pending_music_index_=-1;music_playing_=false;
+        const auto next=music_scheduler_->finished(0); //0027D640(1) always selects NEXT.
+        if(next)queue_jukebox_track(jukebox_->tunes()[*next].cartridge_category,jukebox_->tunes()[*next].cartridge_song,true);
+    }
+}
+
+void FrontEndRuntime::dispatch_jukebox(int message,int& sound) {
+    const auto ticks=static_cast<std::uint32_t>(std::fmod(menu_clock_seconds_*4000,4294967296.0));
+    const auto elapsed=static_cast<float>(static_cast<std::int32_t>(ticks-jukebox_screen_->selection_tick))*0.00025f; //0032EC04
+    port::frontend::JukeboxScreenServices services{
+        [this](auto category,auto song,bool automatic){queue_jukebox_track(category,song,automatic);},
+        [this]{pending_music_stop_=true;pending_music_index_=-1;music_auto_mode_=false;music_playing_=false;music_scheduler_->stop();},
+        [this](const auto& state){commit_jukebox(state);}};
+    hp2::frontend::Sub_001F0D10(*jukebox_screen_,message,sound,ticks,elapsed,music_playing_,services);
+    apply_jukebox_widgets();
+}
+
+void FrontEndRuntime::apply_jukebox_widgets() {
+    if(!jukebox_screen_ || active_class_name_!="JukeBox Music" || menu_screen_index_<0)return;
+    hp2::frontend::Sub_001F0478(*jukebox_screen_,screens_[static_cast<std::size_t>(menu_screen_index_)],
+        [this](auto id){return event_localize(id);});
+}
+
+void FrontEndRuntime::apply_save_popup() {
+    if(!autosave_ || !save_popup_)return;
+    auto& document=*save_popup_;
+    //00245E30 config:0 buttons,flags9,title249F4,authored document0CE3F7CE.
+    const auto format=event_localize(autosave_->text_id);
+    char text[256]; //00245E30 formats slot+1 (twice for the saving warning).
+    const int length=std::snprintf(text,sizeof(text),format.c_str(),autosave_->logical_slot+1,autosave_->logical_slot+1);
+    if(length<0 || length>=static_cast<int>(sizeof(text)))
+        hp2::not_implemented("0x00245E30","formatted save popup exceeds original temporary buffer");
+    hp2::frontend::Sub_00144BA0(document,0x5d6dd123,text);
+    hp2::frontend::SetWidgetStringId_001449A8(document,0x85eda094,0x249f4);
+    if(auto* title=hp2::frontend::FindWidget_00143D50(document,0x85eda094,1))title->text=event_localize(0x249f4);
+    for(auto hash:{0xe0105663u,0xe0105664u,0xe0105665u})
+        if(auto* button=hp2::frontend::FindWidget_00143D50(document,hash,1)) {
+            button->string_id_0x60=0;button->text.clear();button->dirty_0x2b=5;
+        }
+    hp2::frontend::SetWidgetVisible_00144968(document,0xab671c9a,false);
+}
+
+void FrontEndRuntime::capture_display_baseline() {
+    //001EE6C0: two eight-byte records followed by both complete0x30 player records.
+    std::size_t destination=0;
+    for(const auto& block:std::array<std::pair<std::size_t,std::size_t>,4>{{{0x144,8},{0x14c,8},{0x10d7c,0x30},{0x1144c,0x30}}}) {
+        std::copy_n(profile_.bytes()+block.first,block.second,display_baseline_.begin()+destination);
+        destination+=block.second;
+    }
+    display_baseline_valid_=true;
+}
+bool FrontEndRuntime::display_settings_changed() const {
+    if(!display_baseline_valid_)hp2::not_implemented("0x001EE878","Display baseline not captured");
+    std::size_t destination=0;
+    for(const auto& block:std::array<std::pair<std::size_t,std::size_t>,4>{{{0x144,8},{0x14c,8},{0x10d7c,0x30},{0x1144c,0x30}}}) {
+        if(!std::equal(profile_.bytes()+block.first,profile_.bytes()+block.first+block.second,display_baseline_.begin()+destination))return true;
+        destination+=block.second;
+    }
+    return false;
+}
+void FrontEndRuntime::commit_hud() {
+    if(hud_screen_)std::copy(hud_screen_->snapshot.begin(),hud_screen_->snapshot.end(),
+        profile_.bytes()+0x10d7c+hud_screen_->player*0x6d0); //001F4178 destruction
+}
+void FrontEndRuntime::dispatch_display(int message,hp2::frontend::MenuEvent_0016A458& event) {
+    const auto* target=hp2::frontend::Sub_001F3A28(*display_screen_,message,event,{});
+    hp2::frontend::Sub_001F3A28(*display_screen_,screens_[static_cast<std::size_t>(menu_screen_index_)],
+        [this](auto id){return event_localize(id);});
+    if(message==4) {
+        constexpr std::uint32_t targets[]{0x55cb09f2,0x2e931f1b,0x03d90172,0x5610f2f4,0x422313cb,0x8fe4086b};
+        const auto item=event.field_0x00-0x52e039f3u;
+        selection_animation_.Bind_002488D0(item<6 ? targets[item] : 0,static_cast<float>(menu_clock_seconds_));
+    }
+    if(target) {
+        std::copy(display_screen_->snapshot.begin(),display_screen_->snapshot.end(),profile_.bytes()+0x14c);
+        exit_animation_=std::make_unique<hp2::frontend::tExitScreenAnimation>();
+        exit_animation_->Construct_002490D8(screens_[static_cast<std::size_t>(menu_screen_index_)]);exit_class_name_=target;
+    }
+}
+void FrontEndRuntime::dispatch_hud(int message,hp2::frontend::MenuEvent_0016A458& event) {
+    hp2::frontend::Sub_001F46D8(*hud_screen_,message,event);
+    auto& screen=screens_[static_cast<std::size_t>(menu_screen_index_)];
+    hp2::frontend::Sub_001F46D8(*hud_screen_,screen,[this](auto id){return event_localize(id);});
+    if(message==4) {
+        constexpr std::uint32_t values[]{0x2e018745,0xffc3dcd2,0x4ceb3ed2,0x1054482b,0xc7e2117e,0x6caf6d10,0x6bd89c11};
+        constexpr std::uint32_t tips[]{0x24d74,0x24d75,0x24d76,0x24d77,0x24d78,0x24d79,0x24cb0};
+        const auto item=event.field_0x00-0x52e039f3u;
+        hud_arrow_target_=item<2 ? event.field_0x00 : item<7 ? values[item] : 0;
+        selection_animation_.Bind_002488D0(item<7 ? values[item] : 0,static_cast<float>(menu_clock_seconds_));
+        if(scrolling_text_)scrolling_text_->Bind_00249518(item<7 ? event_localize(tips[item]) : "");
+        bind_menu_animation(event.field_0x00);
+        update_hud_arrows(0);
+    }
+}
+void FrontEndRuntime::update_hud_arrows(float delta) {
+    if(!hud_screen_)return;
+    auto& screen=screens_[static_cast<std::size_t>(menu_screen_index_)];
+    hud_arrow_phase_+=600.0f*delta; //003319C4,00215EE8
+    if(hud_arrow_phase_>360.0f)hud_arrow_phase_-=360.0f;
+    std::uint32_t bits=0x3c8efa36;float radians;std::memcpy(&radians,&bits,4);
+    const int alpha=static_cast<int>((hp2::frontend::bSin(hud_arrow_phase_*radians)+1.0f)*64.0f);
+    const auto rect=hp2::frontend::GetWidgetRect_00144280(screen,hud_arrow_target_,[this](const auto& w){return measure_widget(w);});
+    for(auto hash:{0xd1cda594u,0x9345e4a7u})if(auto* arrow=hp2::frontend::FindWidget_00143D50(screen,hash,2)) {
+        arrow->visible=hud_arrow_target_ ? 1 : 0;
+        if(rect.valid) {
+            const int top=static_cast<int>(rect.y0),bottom=static_cast<int>(rect.y1);
+            const int height=static_cast<int>(measure_widget(*arrow).height);
+            arrow->y=static_cast<float>(top+(bottom-top)/2)-static_cast<float>(height)*0.5f;
+            arrow->dirty_0x2b=4;
+        }
+        hp2::frontend::SetAlpha(*arrow,alpha);
+    }
+}
+
+// Retail0024D870/0024D5C0/0024D088, E-0095-N01..N03.
+void FrontEndRuntime::commit_name_entry() {
+    if(!name_entry_)return;
+    for(int p=0;p<2;++p) {
+        std::copy_n(name_entry_->names[p].begin(),11,profile_.bytes()+0x10d90+p*0x6d0);
+        profile_.bytes()[0x10d83+p*0x6d0]=name_entry_->flags[p];
+    }
+}
+void FrontEndRuntime::dispatch_name_entry(int message,hp2::frontend::MenuEvent_0016A458& event) {
+    auto& state=*name_entry_;auto& screen=screens_[static_cast<std::size_t>(menu_screen_index_)];
+    const auto measure=[this](const auto& w){return measure_widget(w);};
+    const auto localize=[this](auto id){return event_localize(id);};
+    if(state.active) {
+        const int old_row=state.row,old_column=state.column;
+        hp2::frontend::Sub_0024D088(state,message,event);
+        if(state.active && (old_row!=state.row || old_column!=state.column)) {
+            const bool wrap=std::abs(old_row-state.row)>1 || std::abs(old_column-state.column)>1;
+            hp2::frontend::Sub_0024C948(state,screen,measure,wrap);
+        }
+        if(!state.active)commit_name_entry();
+    } else {
+        if(message==1) {
+            const int player=event.field_0x00==0x52e039f5?1:0;
+            if((event.field_0x00==0x52e039f3 || event.field_0x00==0x52e039f5) && event.pad_index_0x04==player) {
+                hp2::frontend::Sub_0024C708(state,player);
+                hp2::frontend::Sub_0024C948(state,screen,measure,true);
+                state.panel_x={};state.panel_x.current=650;state.panel_x.target=state.panel_authored_x;
+                state.panel_x.duration=0.5f;state.panel_x.phase=2;
+                //0024C708 performs its immediate render/update before the first tick.
+                hp2::frontend::Sub_0024CA60(state,screen,0,measure,localize);
+            } else event.sound_id_0x0C=0;
+        } else if((message==6 || message==7) && (event.field_0x00==0x52e039f4 || event.field_0x00==0x52e039f6)) {
+            hp2::frontend::Sub_0024D660(state,message,event);commit_name_entry();
+        } else if(message==4) {
+            bind_menu_animation(event.field_0x00);
+            const std::uint32_t value=event.field_0x00==0x52e039f4?0xd6f9d954u:event.field_0x00==0x52e039f6?0xc33bae35u:0u;
+            selection_animation_.Bind_002488D0(value,static_cast<float>(menu_clock_seconds_));
+            if(menu_selector_)menu_selector_->Bind_0024A860(value);
+            bind_scrolling_text(event.field_0x00);
+        }
+    }
+    hp2::frontend::Sub_0024D408(state,screen,localize);
+}
+
+void FrontEndRuntime::commit_audio(bool autosave) {
+    if(!audio_screen_ || audio_screen_->snapshot==audio_options_)return;
+    audio_options_=audio_screen_->snapshot;
+    std::copy(audio_options_.begin(),audio_options_.end(),profile_.bytes()+0x94);
+    filter_frontend_music(); //001EF120 reapplies current frontend eligibility.
+    if(autosave && profile_.read_u32(4)!=0) {
+        if(navigation_history_.size()>=12)hp2::not_implemented("0x0016B418","Audio Autosave history overflow");
+        navigation_history_.emplace_back("Autosave");
+    }
+}
+
+// E-0093-A02,001EFB80/001EFAA0/001AFAB8/001AF1E0 host service binding.
+void FrontEndRuntime::dispatch_audio(int message,hp2::frontend::MenuEvent_0016A458& event) {
+    auto& state=*audio_screen_;
+    const auto hash=event.field_0x00;
+    if(message==6 || message==7) {
+        if(hash>=0x52e039f3 && hash<=0x52e039f9) {
+            const auto feedback=hp2::frontend::Sub_0016DD38(state,hash-0x52e039f3,message==6 ? -0.05f : 0.05f);
+            if(feedback)pending_volume_feedback_.emplace_back("MenuAdjustVolume",*feedback); //001AF760/002B2B48
+        } else if(hash==0x52e039fa) {
+            const int old=state.snapshot[0xac]|(int(state.snapshot[0xad])<<8);
+            state.snapshot[0xac]=static_cast<std::uint8_t>((old+(message==6 ? 2 : 1))%3);
+            state.snapshot[0xad]=0;event.sound_id_0x0C=message==6 ? 1 : 2;
+        }
+    } else if(message==1) {
+        if(hash==0x52e039fb) {
+            commit_audio(false);
+            exit_animation_=std::make_unique<hp2::frontend::tExitScreenAnimation>();
+            exit_animation_->Construct_002490D8(screens_[static_cast<std::size_t>(menu_screen_index_)]);
+            exit_class_name_="JukeBox Music";
+        } else if(hash==0xaee77883) {
+            constexpr std::uint32_t defaults[]{0x3ee66666,0x3f59999a,0x3ec28f5c,0x3f0ccccd,0x3ea8f5c3,0x3e9eb852,0x3f400000};
+            for(std::size_t i=0;i<7;++i) {
+                for(unsigned b=0;b<4;++b)state.snapshot[i*4+b]=static_cast<std::uint8_t>(defaults[i]>>(b*8));
+                const auto feedback=hp2::frontend::Sub_0016DD38(state,i,0);
+                if(feedback)pending_volume_feedback_.emplace_back("MenuAdjustVolume",*feedback);
+            }
+        } else if(hash==0xaee77884) {
+            for(std::size_t i=0;i<state.snapshot[0x9c];++i) {
+                const auto category=state.snapshot[0x1c+i*4],song=state.snapshot[0x1d+i*4];
+                for(const auto& tune:jukebox_->tunes())if(tune.cartridge_category==category && tune.cartridge_song==song)
+                    state.snapshot[0x1e + i*4]=static_cast<std::uint8_t>(tune.type);
+            }
+            for(std::size_t i=0xa0;i<0xac;++i)state.snapshot[i]=0;
+            state.snapshot[0xae]=0;state.snapshot[0xaf]=0xff;
+        } else event.sound_id_0x0C=0;
+    } else if(message==13)event.sound_id_0x0C=0;
+    hp2::frontend::Sub_0016DE30(state,screens_[static_cast<std::size_t>(menu_screen_index_)],0,
+        [this](const auto& w){return measure_widget(w);},[this](auto id){return event_localize(id);});
+}
+
 void FrontEndRuntime::dispatch_activation(hp2::frontend::MenuEvent_0016A458& event) {
+    if(audio_screen_){dispatch_audio(1,event);return;}
+    if(display_screen_){dispatch_display(1,event);return;}
     const std::uint32_t name_hash = event.field_0x00;
     port::frontend::ScreenActionServices services{
         [this](const char* name, bool push) {
@@ -446,7 +845,7 @@ void FrontEndRuntime::dispatch_activation(hp2::frontend::MenuEvent_0016A458& eve
             exit_animation_->Construct_002490D8(screens_[static_cast<std::size_t>(menu_screen_index_)]);
             exit_class_name_ = name;
         },
-        [] { hp2::not_implemented("0x001EE6C0", "display preparation not translated"); },
+        [this] { capture_display_baseline(); },
         [this](std::uint32_t address, std::uint32_t argument) {
             // The same three seams the Back path uses, in the same order the handler calls them.
             if (address == 0x0021E0D0) apply_language(static_cast<int>(argument));
@@ -467,6 +866,10 @@ void FrontEndRuntime::dispatch_activation(hp2::frontend::MenuEvent_0016A458& eve
         hp2::frontend::Sub_00216638(1, name_hash, dat_002FC070_, services);
     } else if (menu_screen_index_ == 24) {
         hp2::frontend::Sub_001EECA8(1, name_hash, services);
+    } else if(active_class_name_=="Audio Options" && name_hash==0x52e039fb) {
+        //001EFB80 message1, E-0092-J06: copy/apply AudioOptions before the
+        // original exit animation to JukeBox Music. No edited audio snapshot yet.
+        services.exit_animation("JukeBox Music");
     } else if (menu_screen_index_ == 1) {
         // "Cops On Mode Select" (FUN_002174A0). The event is passed through because the original
         // gates Quick Race and Tournament on its +0x04 pad field.
@@ -720,10 +1123,53 @@ MenuState FrontEndRuntime::menu_joy_event(int pad_index, int joy_event, bool pre
         return result;
     }
     const std::string not_implemented = hp2::guard([&] {
+        if(autosave_)return; //0016BAC0 flags9 consumes all input while status popup is active.
+        if(name_entry_ && name_entry_->active) {
+            if(!pressed)return;
+            int message=0;
+            switch(joy_event) {
+            case hp2::input::JOY_EVENT_MENU_SELECT:message=1;break;
+            case hp2::input::JOY_EVENT_SCROLL_LEFT:case hp2::input::JOY_EVENT_MENU_ANALOG_LEFT:message=6;break;
+            case hp2::input::JOY_EVENT_SCROLL_RIGHT:case hp2::input::JOY_EVENT_MENU_ANALOG_RIGHT:message=7;break;
+            case hp2::input::JOY_EVENT_SCROLL_UP:case hp2::input::JOY_EVENT_MENU_ANALOG_UP:message=8;break;
+            case hp2::input::JOY_EVENT_SCROLL_DOWN:case hp2::input::JOY_EVENT_MENU_ANALOG_DOWN:message=9;break;
+            case hp2::input::JOY_EVENT_MENU_SQUARE:message=10;break;
+            case hp2::input::JOY_EVENT_MENU_L1:message=15;break;
+            case hp2::input::JOY_EVENT_MENU_R1:message=16;break;
+            case hp2::input::JOY_EVENT_MENU_BACK:message=17;break;
+            default:return;
+            }
+            hp2::frontend::MenuEvent_0016A458 event;event.pad_index_0x04=pad_index;
+            dispatch_name_entry(message,event);
+            hp2::frontend::PlayMenuSound_0016E038(event.sound_id_0x0C);
+            return;
+        }
         if (pressed && event_tree_joy_event(joy_event)) return;
         // FUN_001EEF00 forwards to 00249128 during exit, which consumes further menu input.
         if (!exit_animation_ && joy_event == hp2::input::JOY_EVENT_MENU_BACK && pressed) {
-            if (active_class_name_ == "Options") {
+            if(jukebox_screen_) {
+                int sound=6;dispatch_jukebox(17,sound);
+                hp2::frontend::PlayMenuSound_0016E038(sound);
+                request_history_back();
+            } else if(name_entry_) {
+                commit_name_entry();
+                if(hp2::frontend::Sub_0024D370(*name_entry_) && profile_.read_u32(4)!=0) {
+                    if(navigation_history_.size()>=12)hp2::not_implemented("0x0016B418","NameEntry Autosave history overflow");
+                    navigation_history_.emplace_back("Autosave");
+                }
+                hp2::frontend::PlayMenuSound_0016E038(6);request_history_back();
+            } else if(audio_screen_) {
+                commit_audio(true);hp2::frontend::PlayMenuSound_0016E038(6);request_history_back();
+            } else if(display_screen_) {
+                std::copy(display_screen_->snapshot.begin(),display_screen_->snapshot.end(),profile_.bytes()+0x14c);
+                if(display_settings_changed() && profile_.read_u32(4)!=0) {
+                    if(navigation_history_.size()>=12)hp2::not_implemented("0x0016B418","Display Autosave history overflow");
+                    navigation_history_.emplace_back("Autosave");
+                }
+                display_baseline_valid_=false;hp2::frontend::PlayMenuSound_0016E038(6);request_history_back();
+            } else if(hud_screen_ || calibration_ || active_class_name_=="Calibrate Display") {
+                hp2::frontend::PlayMenuSound_0016E038(6);request_history_back();
+            } else if (active_class_name_ == "Options") {
                 hp2::frontend::PlayMenuSound_0016E038(6);
                 request_history_back();
             } else if (active_class_name_ != "New Main Menu") {
@@ -816,6 +1262,8 @@ WidgetSizes::Redirect FrontEndRuntime::ghost_redirect() const {
     // The highlight ghost acquires its target's font, string and transform on every tick
     // (FUN_001410A0), so it must be measured as its target, not as the authored template.
     return [this](const hp2::frontend::FeWidget& widget) -> const hp2::frontend::FeWidget* {
+        if(selection_animation_.screen_0x00 && widget.name_hash==selection_animation_.template_hash_0x0C)
+            return hp2::frontend::FindWidget_00143D50(*selection_animation_.screen_0x00,selection_animation_.target_hash_0x04,1);
         if (highlight_animation_.screen_0x00 != nullptr &&
             widget.name_hash == highlight_animation_.template_hash_0x0C) {
             return hp2::frontend::FindWidget_00143D50(*highlight_animation_.screen_0x00,
@@ -836,7 +1284,14 @@ hp2::frontend::WidgetMetrics FrontEndRuntime::measure_widget(const hp2::frontend
 
 void FrontEndRuntime::open_menu_animation(int screen_index) {
     highlight_animation_ = {};
+    selection_animation_ = {};
     menu_clock_seconds_ = 0;
+    if(audio_screen_ || display_screen_ || hud_screen_ || name_entry_) {
+        auto& screen=screens_[static_cast<std::size_t>(screen_index)];
+        highlight_animation_.Construct_00248870(&screen,0xab671c9a,hp2::frontend::kAnimGhostColour_gp_0x3F08,0);
+        selection_animation_.Construct_00248870(&screen,0x1042eac3,0xffffffff,0);
+        return;
+    }
     // E-0016-V01: Title also binds ANIMATING_MENUITEM/PRESS_START_1, retaining default 4s period.
     // Screens 1 and 2 bind it the same way: FUN_00216E80 and FUN_00217538 each call
     // FUN_00248870(instance+0x23C, document, ANIMATING_MENUITEM, gp-0x3F08). (E-0016-08)
@@ -855,9 +1310,14 @@ void FrontEndRuntime::open_menu_animation(int screen_index) {
 void FrontEndRuntime::bind_menu_animation(std::uint32_t name_hash) {
     if (highlight_animation_.screen_0x00 == nullptr) return;
     highlight_animation_.Bind_002488D0(name_hash, static_cast<float>(menu_clock_seconds_));
+    if(menu_viewport_)return; //001F4E68 bars were already placed using viewport slot.
     char mask[32];
     std::snprintf(mask, sizeof(mask), hp2::frontend::kMaskNameFormat_002BEFA0,
                   hp2::frontend::MenuItemIndexFromNameHash_0016A330(name_hash));
+    if(hud_screen_ || name_entry_) {
+        hp2::frontend::HandleHighlight(*menu_group_->screen_0x14,hp2::frontend::bStringHash(mask),
+            [this](const auto& w){return measure_widget(w);});return;
+    }
     hp2::frontend::PlaceSelectionBars_00216880(*highlight_animation_.screen_0x00,
         hp2::frontend::bStringHash(mask), [this](const auto& w) { return measure_widget(w); });
 }
@@ -880,6 +1340,26 @@ TickResult FrontEndRuntime::menu_tick(double delta) {
     }
     menu_clock_seconds_ += delta;
     sound_clock_seconds_ += delta;
+    if(autosave_) {
+        result.not_implemented=hp2::guard([&] {
+            const bool complete=hp2::frontend::Sub_00246138(*autosave_,delta,[this]{
+                return hp2::platform::store_profile(profile_search_start_,hp2::memorycard::kRegionNtsc_001A3390,profile_);});
+            if(complete) {
+                request_history_back();apply_pending_screen(); //00247C68 ->00170320(1)
+            } else apply_save_popup();
+        });
+        result.ok=true;result.screen=menu_screen_index_;
+        return result;
+    }
+    if(jukebox_screen_) {
+        result.not_implemented=hp2::guard([&]{int sound=0;dispatch_jukebox(18,sound);});
+        if(!result.not_implemented.empty()){result.ok=true;result.screen=menu_screen_index_;return result;}
+    }
+    if(audio_screen_)hp2::frontend::Sub_0016DE30(*audio_screen_,screens_[static_cast<std::size_t>(menu_screen_index_)],static_cast<float>(delta),
+        [this](const auto& w){return measure_widget(w);},[this](auto id){return event_localize(id);});
+    update_hud_arrows(static_cast<float>(delta));
+    if(name_entry_)hp2::frontend::Sub_0024CA60(*name_entry_,screens_[static_cast<std::size_t>(menu_screen_index_)],
+        static_cast<float>(delta),[this](const auto& w){return measure_widget(w);},[this](auto id){return event_localize(id);});
     if (menu_screen_index_ == kEventTreeScreen) {
         event_tree_.tick(static_cast<float>(delta));
         // The original mutates live profile globals during transitions.
@@ -897,8 +1377,10 @@ TickResult FrontEndRuntime::menu_tick(double delta) {
     if (menu_viewport_) menu_viewport_->Update_0024A1A8(static_cast<float>(delta));
     if (menu_selector_) menu_selector_->Update_0024A730(static_cast<float>(delta),
         [this](const auto& w) { return measure_widget(w); });
-    // 0016CCA8 gates this update on GAMEFLOW_STATE_LOADING_TRACK_COMMON (index 3).
-    // This standalone host is in front-end state (index 2), so blueprint state is frozen.
+    // E-0091-G02: table starts002FAEA0 (name,enter,exit,tick). State3 is
+    // GAMEFLOW_STATE_IN_FRONTEND; the earlier entry-field-based naming was shifted.
+    background_animation_.Update_00249AE8(static_cast<float>(delta),
+        [this](int bound){return hp2::frontend::bRandom(bound,random_state_);});
     if (exit_animation_ && exit_animation_->Update_00249128(static_cast<float>(delta))) {
         exit_animation_.reset();
         pending_class_name_ = exit_class_name_;
@@ -910,6 +1392,8 @@ TickResult FrontEndRuntime::menu_tick(double delta) {
         highlight_animation_.Update_00248970(static_cast<float>(menu_clock_seconds_),
                                              [this](const auto& w) { return measure_widget(w); });
     }
+    if(selection_animation_.active())selection_animation_.Update_00248970(static_cast<float>(menu_clock_seconds_),
+        [this](const auto& w){return measure_widget(w);});
     result.ok = true;
     result.screen = menu_screen_index_;
     return result;
@@ -917,16 +1401,19 @@ TickResult FrontEndRuntime::menu_tick(double delta) {
 
 std::vector<SoundRequest> FrontEndRuntime::drain_menu_audio() {
     std::vector<SoundRequest> result;
-    auto requests = std::move(pending_sound_names_);
+    auto requests = std::move(pending_volume_feedback_);
+    pending_volume_feedback_.clear();
+    for(auto& name:pending_sound_names_)requests.emplace_back(std::move(name),1.0f);
     pending_sound_names_.clear();
-    for (const auto& name : requests) {
+    for (const auto& entry : requests) {
+        const auto& name=entry.first;
         SoundRequest request;
         request.event = name;
         try {
             if (!sound_bank_) throw std::runtime_error("original sound bank not loaded");
             request.pcm = sound_bank_->decode(name);
             request.pitch_scale = hp2::port::audio::neutral_playback_pitch_scale(request.pcm.sample_rate);
-            request.gain = request.pcm.nominal_gain * 0.31f; // E-0016-A04, category-3 init 001AFAB8.
+            request.gain = request.pcm.nominal_gain * audio_value(audio_screen_ ? audio_screen_->snapshot : audio_options_,5)*entry.second;
         } catch (const std::exception& error) {
             request.not_implemented = error.what();
         }
@@ -935,21 +1422,37 @@ std::vector<SoundRequest> FrontEndRuntime::drain_menu_audio() {
     return result;
 }
 
-MusicRequest FrontEndRuntime::frontend_music(bool previous_finished) {
+MusicRequest FrontEndRuntime::frontend_music(bool previous_finished,bool start_requested) {
     MusicRequest result;
     try {
         if (!jukebox_ || !music_scheduler_) throw std::runtime_error("original jukebox not loaded");
         const auto ticks = static_cast<std::uint32_t>(std::fmod(sound_clock_seconds_ * 4000, 4294967296.0));
-        const auto index = previous_finished ? music_scheduler_->finished(ticks)
-                                             : music_scheduler_->enter(ticks);
+        std::optional<std::size_t> index;
+        // E-0092-J08: completion belongs only to the currently playing device
+        // request; stopped/queued replacement callbacks cannot select another tune.
+        if(previous_finished && music_playing_ && pending_music_index_<0 && !pending_music_stop_) {
+            music_playing_=false;
+            if(music_auto_mode_)index=music_scheduler_->finished(ticks);
+            else music_scheduler_->stop();
+        }
+        if(pending_music_index_>=0)index=static_cast<std::size_t>(pending_music_index_);
+        else if(start_requested && !music_playing_ && !pending_music_stop_) {
+            index=music_scheduler_->enter(ticks); // explicit001AEAB0 call, never a device poll
+            if(index)music_auto_mode_=true;
+        }
+        result.stop=pending_music_stop_;
+        result.gain=audio_value(audio_screen_ ? audio_screen_->snapshot : audio_options_,0); //category5,001EEF60
+        const auto& output=audio_screen_ ? audio_screen_->snapshot : audio_options_;
+        result.output_mode=output[0xac]|(int(output[0xad])<<8);
         if (index) {
             result.pcm = jukebox_->decode(*index);
-            result.gain = result.pcm.nominal_gain;
             result.pitch_scale = hp2::port::audio::neutral_playback_pitch_scale(result.pcm.sample_rate);
             result.index = static_cast<int>(*index);
             result.name = jukebox_->tunes()[*index].name;
             result.has_track = true;
+            music_playing_=true;
         }
+        pending_music_stop_=false;pending_music_index_=-1;
         result.ok = true;
     } catch (const std::exception& error) {
         result.not_implemented = error.what();
@@ -986,6 +1489,7 @@ void FrontEndRuntime::set_startup_presentation(bool movie_visible, bool letterbo
 FrameStats FrontEndRuntime::build_frame(render::Resources& resources, render::Frame& frame) {
     if (menu_screen_index_ < 0 || static_cast<std::size_t>(menu_screen_index_) >= screens_.size()) {
         frame.quads.clear();
+        frame.frontend_ranges.clear();
         return {};
     }
     FrameOptions options;
@@ -1002,6 +1506,13 @@ FrameStats FrontEndRuntime::build_frame(render::Resources& resources, render::Fr
     const WidgetSizes sizes(resources, fonts_, ghost_redirect());
     auto stats = port::runtime::build_frame(screens_[static_cast<std::size_t>(menu_screen_index_)],
                                             sizes, options, frame);
+    if(autosave_ && save_popup_) {
+        render::Frame addition;
+        const auto drawn=port::runtime::build_frame(*save_popup_,sizes,{},addition);
+        render::append_frontend_frame(frame,addition);
+        stats.quads+=drawn.quads;stats.glyphs+=drawn.glyphs;stats.texts+=drawn.texts;
+        stats.missing+=drawn.missing;stats.clipped_out+=drawn.clipped_out;
+    }
     if (menu_screen_index_ == kEventTreeScreen && options.exclusive_widget.empty()) {
         // FUN_001F6FA0 takes every node's panel geometry from screen 39's own EVENT_PANEL
         // widget, so hand the authored record over instead of inventing a size.
@@ -1036,7 +1547,7 @@ FrameStats FrontEndRuntime::build_frame(render::Resources& resources, render::Fr
             }
             render::Frame addition;
             const auto drawn = port::runtime::build_frame(document, sizes, sibling_options, addition);
-            frame.quads.insert(frame.quads.end(), addition.quads.begin(), addition.quads.end());
+            render::append_frontend_frame(frame,addition);
             stats.quads += drawn.quads; stats.glyphs += drawn.glyphs; stats.texts += drawn.texts;
             stats.missing += drawn.missing; stats.clipped_out += drawn.clipped_out;
         };
@@ -1045,6 +1556,11 @@ FrameStats FrontEndRuntime::build_frame(render::Resources& resources, render::Fr
         if (state >= 4 && state <= 6) sibling(19, event_tree_.alpha(), false);
         if (state == 7) sibling(18, event_tree_.alpha(), true);
     }
+    // TASK-0094 port display-device policy: four horizontal GS clock units per
+    // host logical pixel, one vertical unit per logical pixel. Original raw
+    // offsets stay in the profile; this is not a GS scanout equivalence claim.
+    frame.display_offset={static_cast<float>(profile_.read_i32(0x144))*0.25f,
+                          static_cast<float>(profile_.read_i32(0x148))};
     return stats;
 }
 

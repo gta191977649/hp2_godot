@@ -8,6 +8,25 @@
 #include "game_core/indep/inc/CameraMover.hpp"
 
 #include "game_core/port/not_implemented.hpp"
+#include "game_core/port/frontend/selection_camera.hpp"
+#include <cmath>
+
+namespace hp2::debug {
+// Debug0015A568, E-0098-C01; exact cameramover.cpp source E-0042-S001.
+void MyQuaternionMultiply(bQuaternion& out,const bQuaternion& first,const bQuaternion& second){
+    // Original preloads every component, so destination can alias either source.
+    const auto a=first,b=second;
+    out.w=((a.w*b.w-a.x*b.x)-a.y*b.y)-a.z*b.z;
+    out.x=((a.y*b.z-a.z*b.y)+a.w*b.x)+a.x*b.w;
+    out.y=((a.z*b.x-a.x*b.z)+a.w*b.y)+a.y*b.w;
+    out.z=((a.x*b.y-a.y*b.x)+a.w*b.z)+a.z*b.w;
+}
+// Debug0015A610, E-0098-C01; exact cameramover.cpp source E-0042-S001.
+void NormalizeQuaternion(bQuaternion& q){
+    const float norm=std::sqrt(((q.x*q.x+q.y*q.y)+q.z*q.z)+q.w*q.w);
+    q.w=q.w/norm;q.x=q.x/norm;q.y=q.y/norm;q.z=q.z/norm;
+}
+}
 
 namespace hp2::recovered {
 // ELF 0x001577D0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001577d0.md.

@@ -44,10 +44,103 @@ struct BackServices {
     std::function<void(std::uint32_t,std::uint32_t)> invoke;
     std::function<void(const char*)> push_history;
 };
+// TASK-0092: explicit host projection, not a PS2 object layout. The snapshot is
+// the original 0xB0-byte AudioOptions block copied to Jukebox instance+0x70.
+// Metadata is supplied from the cartridge through 001AEF80, never guessed.
+struct JukeboxSongMetadata {
+    std::string field_0, field_1, field_3;
+};
+struct JukeboxGroup {
+    std::string label;
+    std::vector<std::size_t> songs;
+};
+struct JukeboxScreenState {
+    std::array<std::uint8_t,0xb0> snapshot{};
+    std::vector<JukeboxSongMetadata> metadata;
+    std::vector<JukeboxGroup> groups;
+    bool list_active=false;
+    int cursor=0, first_row=0;
+    std::uint32_t selection_tick=0;
+    bool preview_pending=false;
+};
+struct JukeboxVisibleRow {
+    std::size_t song=0;
+    bool highlighted=false, arrows=false;
+    int mode=0;
+};
+struct JukeboxPresentation {
+    std::vector<JukeboxVisibleRow> rows;
+    bool up=false, down=false, category_arrows=false, category_enabled=false;
+};
+struct JukeboxScreenServices {
+    std::function<void(std::uint8_t,std::uint8_t,bool)> preview;
+    std::function<void()> stop;
+    // Full Back dependency chain remains explicit and is implemented by the owner.
+    std::function<void(const JukeboxScreenState&)> commit;
+};
+// TASK-0093 host scalar-path storage for001DA780/001DAEC8. Unlike the older
+// exit-only projection, current derivatives survive a mid-animation retarget.
+struct ScalarPath {
+    float current=0,velocity=0,target=0,target_velocity=0;
+    float a=0,b=0,c=0,d=0,time=0,duration=0.25f,limit=1;
+    int phase=0;
+};
+struct AudioOptionsState {
+    std::array<std::uint8_t,0xb0> snapshot{};
+    std::array<ScalarPath,7> sliders;
+};
+struct DisplayOptionsState { std::array<std::uint8_t,8> snapshot{}; };
+struct DisplayContext {
+    int gameflow=3; // E-0091-G02: current standalone host is IN_FRONTEND.
+    int dat_0031ab0c=0,gp_ae48=0; // explicit non-frontend branch inputs
+};
+struct HudOptionsState {std::array<std::uint8_t,0x30> snapshot{};int player=0;};
+struct DisplayOffsetState {std::int32_t x=0,y=0,cached_x=0,cached_y=0;};
 // Port-side routing only; handler slices below retain their actual ELF addresses.
 BackEvent query_back(std::uint32_t handler_address,BackContext& context,const BackServices& services);
 }
 namespace hp2::frontend {
+// Retail001F3A28 +001EE148/001F3730, E-0094-D01; returns an original exit
+// class name for activation, or nullptr for messages without a screen request.
+const char* Sub_001F3A28(::port::frontend::DisplayOptionsState&,int,MenuEvent_0016A458&,
+    const ::port::frontend::DisplayContext&);
+// Six value refresh helpers001F35E8..001F3980, E-0094-D01, bounded widget binding.
+void Sub_001F3A28(const ::port::frontend::DisplayOptionsState&,FeScreen&,
+    const std::function<std::string(std::uint32_t)>&);
+// Retail001F46D8 and change helpers001EE020/1F8/230/258/2B0/2D8/328,
+// E-0094-D02. Entire0x30 player snapshot is retained for destruction commit.
+void Sub_001F46D8(::port::frontend::HudOptionsState&,int,MenuEvent_0016A458&);
+void Sub_001F46D8(const ::port::frontend::HudOptionsState&,FeScreen&,
+    const std::function<std::string(std::uint32_t)>&);
+// Retail001F4B20, E-0094-D03; raw signed32 GS offsets, original asymmetric
+// bounds. True requests the original explicit Select history pop.
+bool Sub_001F4B20(::port::frontend::DisplayOffsetState&,int,int& sound);
+// ELF001DA780/001DA7D0/001DA800/001DAEC8; E-0093-A01. Scalar path only,
+// zero external velocity/acceleration limits as passed by0016DE30.
+void Sub_001DAEC8(::port::frontend::ScalarPath&,float delta);
+// ELF001EF3C8/0016DC20; E-0093-A01. Seven slider data constructors.
+void Sub_001EF3C8(::port::frontend::AudioOptionsState&,const std::array<std::uint8_t,0xb0>&);
+// ELF0016DD38; E-0093-A01. Returns normalized feedback volume iff raw value changes.
+std::optional<float> Sub_0016DD38(::port::frontend::AudioOptionsState&,std::size_t,float delta);
+// ELF0016DE30 +001EFB38; E-0093-A02. Original marker-X geometry and output string.
+void Sub_0016DE30(::port::frontend::AudioOptionsState&,FeScreen&,float delta,
+    const WidgetMeasure&,const std::function<std::string(std::uint32_t)>& localize);
+// ELF 001EF240, 001F02D8; E-0092-J01, reverse/.../frontend/task0092-jukebox.md.
+// Grouping-only constructor projection; does not replace the whole-entry template.
+void Sub_001F02D8(::port::frontend::JukeboxScreenState&,
+    const std::array<std::uint8_t,0xb0>&,
+    std::vector<::port::frontend::JukeboxSongMetadata>);
+// ELF 001F0478; E-0092-J02. Five visible rows and original scroll/arrow predicates.
+::port::frontend::JukeboxPresentation Sub_001F0478(::port::frontend::JukeboxScreenState&);
+// ELF001F0478 with00143E70/00140E20/00143F88/00140CA0 widget dependencies;
+// E-0092-J04. Localisation and now-playing snapshot come from the runtime owner.
+void Sub_001F0478(::port::frontend::JukeboxScreenState&,FeScreen&,
+    const std::function<std::string(std::uint32_t)>& localize);
+// ELF 001F0D10, 001F0CC8; E-0092-J03. Caller supplies original timer conversion
+// and playback-active observation. Result is the message payload's sound at +0x0C.
+void Sub_001F0D10(::port::frontend::JukeboxScreenState&, int message, int& sound,
+    std::uint32_t tick, float elapsed_seconds, bool playback_active,
+    const ::port::frontend::JukeboxScreenServices&);
 // ELF 0x00248568/0x001DAEC8; E-0015-21. Only the zero-velocity exit path is modelled.
 // TASK-0041 E-0041-R11; original class spelling; retail 0x00248568, debug 0x00241C38. Native interface/layout remain port projections.
 struct AnimationGroup {

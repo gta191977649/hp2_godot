@@ -17,6 +17,57 @@ namespace port::vehicle {
 namespace {
 std::array<float,16> identity() {return {{1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1}};}
 }
+// TASK-0098 E-0098-R03. Native bank transport for the two original selector
+// named solids. This adapter is not original CarLoader and creates no fake car.
+void Model::load_frontend_solid(assets::Source& source,std::uint32_t hash){
+    if(hash!=0xd8173744u && hash!=0xb077e934u)
+        throw std::invalid_argument("Only reviewed original PLATFORM/CARCOVER frontend solids are supported");
+    if(cache_->root!=source.root()){*cache_=ModelCache{};cache_->root=source.root();}
+    if(cache_->global.empty())cache_->global=source.read("GLOBAL/GLOBALB.BUN");
+    if(cache_->frontend.empty())cache_->frontend=source.read("FRONTEND/FRONTB.BUN");
+    const std::string key="FRONTEND/FRONTB.BUN:"+std::to_string(hash);
+    auto cached=cache_->geometry.find(key);
+    if(cached==cache_->geometry.end()){
+        auto decoded=assets::decode_vehicle_geometry(cache_->frontend,{hash});
+        if(decoded.solids.size()!=1 || decoded.solids[0].hash!=hash)
+            throw std::runtime_error("Required original selector named solid is absent or ambiguous");
+        std::size_t size=0;for(const auto& surface:decoded.solids[0].surfaces)
+            size+=surface.vertices.size()*sizeof(render::VehicleVertex)+surface.indices.size()*sizeof(std::uint32_t);
+        cache_->bytes+=size;cached=cache_->geometry.emplace(key,ModelCache::Geometry{std::move(decoded),{},++cache_->clock,size}).first;++cache_->reads;
+    }else{++cache_->hits;cached->second.age=++cache_->clock;}
+    geometry_=cached->second.data;path_="FRONTEND/FRONTB.BUN";car_id_=skin_id_=-1;config_={};
+    frontend_solid_=true;frontend_pose_=false;phase_=0;driving_pose_=false;wipers_active_=false;wheel_blur_=false;
+    parts_.clear();textures_.clear();materials_.clear();light_roles_.clear();position_markers_.clear();collision_vertices_.clear();
+    presence_.fill(false);presence_[0]=true;wheel_blur_available_.fill(false);marker_pivot_={};
+    auto& solid=geometry_.solids[0];
+    if(solid.rigid_animation || solid.rigid_animation_unresolved)
+        hp2::not_implemented("0x0010E048","selector named-solid rigid animation lifetime not bound");
+    parts_.push_back({solid.name,0,identity(),0,Part::Group::Body,true,true,
+        hp2::recovered::CarRenderInfo::Sub_00120EF8(identity())});
+    std::vector<std::uint32_t> hashes;
+    for(const auto& surface:solid.surfaces){
+        if((surface.render_flags&0x400) || surface.indices.empty())continue;
+        hashes.push_back(surface.texture_hash);
+        if(!materials_.count(surface.material_hash))materials_.emplace(surface.material_hash,
+            port::read_car_material(cache_->global,surface.material_hash));
+    }
+    Textures textures(source,cache_->textures);textures_=textures.load_frontend(hashes);
+    if(std::any_of(solid.surfaces.begin(),solid.surfaces.end(),[](const auto& s){return (s.render_flags&0x100) && !(s.render_flags&0x400);}))
+        textures_.push_back(textures.frontend_environment());
+    for(auto& surface:solid.surfaces){
+        if((surface.render_flags&0x400) || surface.indices.empty())continue;
+        const auto found=std::find_if(textures_.begin(),textures_.end(),[&](const auto& t){return t.header.tex_hash==surface.texture_hash;});
+        if(found==textures_.end())throw std::runtime_error("Required frontend solid texture not bound");
+        const auto& entry=surface.strip_entry;
+        const auto sx=std::uint16_t(entry[4])|(std::uint16_t(entry[5])<<8),sy=std::uint16_t(entry[6])|(std::uint16_t(entry[7])<<8);
+        const auto factors=port::FixStripSTs(found->header.width,found->header.height,sx,sy);
+        for(auto& vertex:surface.vertices)for(int axis=0;axis<2;++axis)vertex.uv[axis]*=factors.cropped_image[axis];
+    }
+    diagnostic_="Original selector named solid; native FRONTB geometry/material/texture transport. Selection light, pose and render ordering are supplied by the frontend runtime; original equivalence unverified.";
+    // The decoder's gaps include its unconditional scope disclaimer. Actual
+    // unsupported packet paths throw in the decoder; retain the scope messages.
+    for(const auto& gap:geometry_.gaps)diagnostic_+=" "+gap;
+}
 void Model::load_id(assets::Source& source,int car_id,int skin_id) {
     if(cache_->root!=source.root()){*cache_=ModelCache{};cache_->root=source.root();}
     if(cache_->catalog.empty()){Catalog catalog(source);catalog.load();cache_->catalog=catalog.cars();}
@@ -41,7 +92,7 @@ void Model::load(assets::Source& source,const std::string& geometry_path,const s
     if(cache_->global.empty())cache_->global=source.read("GLOBAL/GLOBALB.BUN");
     const auto& global=cache_->global;
     const auto config=port::read_car_render_config(global,code,std::uint8_t(skin));
-    config_=config;phase_=0;driving_pose_=false;wipers_active_=false;
+    config_=config;phase_=0;driving_pose_=false;wipers_active_=false;frontend_solid_=false;frontend_pose_=false;
     const auto bindings=hp2::recovered::CarRenderInfo::Sub_0011E860(config.prefix,config.Field_0x538,std::uint8_t(skin));
     const auto attachments=hp2::recovered::CarRenderInfo::Sub_00120EF8(config,0);
     const auto binding_start=std::chrono::steady_clock::now();double geometry_phase_ms=0;
@@ -209,13 +260,13 @@ void Model::load(assets::Source& source,const std::string& geometry_path,const s
     cache_->binding_ms+=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-binding_start).count()-geometry_phase_ms-textures_ms;
 }
 void Model::set_wheel_blur(bool enabled){
-    if(driving_pose_)throw std::logic_error("Preview controls are disabled for driving snapshots");
+    if(driving_pose_ || frontend_pose_)throw std::logic_error("Preview controls are disabled for original external poses");
     if(enabled&&std::count_if(parts_.begin(),parts_.end(),[](const auto& part){return part.group==Part::Group::WheelBlur;})!=4)
         throw std::runtime_error("Original four-wheel blur geometry is not available");
     wheel_blur_=enabled;phase_=0;advance_wheels(0);
 }
 void Model::advance_wheels(double delta){
-    if(driving_pose_)throw std::logic_error("Preview integration is disabled for driving snapshots");
+    if(driving_pose_ || frontend_pose_)throw std::logic_error("Preview integration is disabled for original external poses");
     if(!std::isfinite(delta)||delta<0)throw std::invalid_argument("Invalid vehicle animation delta");
     if(!wheel_blur_&&delta>0)return;
     // Port-side demonstration input, NOT recovered vehicle speed or simulation.
@@ -234,7 +285,7 @@ void Model::advance_wheels(double delta){
     }
 }
 void Model::set_wheel_speed(double radians_per_second){
-    if(driving_pose_)throw std::logic_error("Preview controls are disabled for driving snapshots");
+    if(driving_pose_ || frontend_pose_)throw std::logic_error("Preview controls are disabled for original external poses");
     if(!std::isfinite(radians_per_second)||std::abs(radians_per_second)>150)
         throw std::invalid_argument("Preview wheel speed must be within -150..150 rad/s");
     wheel_speed_=radians_per_second;advance_wheels(0);
@@ -276,6 +327,7 @@ std::array<float,3> Model::preview_color()const {
 }
 port::CarLodSelection Model::select(int projected_size,int forced_lod) {
     if(forced_lod < -1 || forced_lod>3)throw std::invalid_argument("LOD must be Auto or 0..3");
+    if(frontend_solid_){for(auto& part:parts_)part.selected=part.enabled;return {0,0,true,false,false};}
     auto selection=hp2::recovered::CarRenderInfo::Sub_00120EF8(projected_size,presence_);
     if(forced_lod>=0) {
         if(!presence_[forced_lod])throw std::runtime_error("Requested body LOD is absent in this original resource");
@@ -332,6 +384,21 @@ std::uint32_t Model::driving_texture(std::size_t solid,std::size_t surface,
 }
 
 namespace port::vehicle {
+void Model::apply_frontend_pose(const std::array<std::array<float,16>,4>& tires,
+    const std::array<std::array<float,16>,4>& brakes){
+    if(frontend_solid_)throw std::logic_error("A named frontend solid has no vehicle wheel pose");
+    port::CarAttachmentMatrices source{};
+    for(int i=0;i<4;++i){driving::validate_matrix(tires[i]);driving::validate_matrix(brakes[i]);
+        source.tire[i]=tires[i];source.brake[i]=brakes[i];source.blur[i]=tires[i];}
+    // Debug001210F0 external-matrix branch, E-0098-R01: render basis ONCE.
+    const auto rendered=hp2::recovered::CarRenderInfo::Sub_00120EF8(source);
+    frontend_pose_=true;wheel_blur_=false;wipers_active_=false;phase_=0;
+    for(auto& part:parts_)if(part.wheel>=0){
+        if(part.group==Part::Group::Tire)part.transform=rendered.tire[part.wheel];
+        else if(part.group==Part::Group::Brake)part.transform=rendered.brake[part.wheel];
+        else if(part.group==Part::Group::WheelBlur)part.lights[15]=0;
+    }
+}
 void Model::apply_driving_pose(const std::array<driving::WheelSnapshot,4>& wheels){
     // Validate the whole publication before changing the last completed display.
     driving::validate_wheels(wheels);

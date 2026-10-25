@@ -6,6 +6,26 @@
 #include <stdexcept>
 
 namespace port::vehicle {
+std::vector<Texture> Textures::load_frontend(const std::vector<std::uint32_t>& hashes){
+    if(!cache_->frontend_archive)cache_->frontend_archive=hp2::assets::Hp2TpkArchive::load(source_.read("FRONTEND/FRONTB.BUN"));
+    if(!cache_->frontend_archive)throw std::runtime_error("Original frontend named-solid texture archive missing");
+    std::vector<Texture> result;std::set<std::uint32_t> seen;
+    for(const auto hash:hashes){
+        if(!seen.insert(hash).second)continue;
+        const auto cached=cache_->frontend_decoded.find(hash);
+        if(cached!=cache_->frontend_decoded.end()){result.push_back(cached->second);++cache_->hits;continue;}
+        const hp2::assets::TpkTextureHeader* found=nullptr;
+        for(const auto& entry:cache_->frontend_archive->headers())if(entry.tex_hash==hash){
+            if(found)throw std::runtime_error("Ambiguous original named-solid texture hash in frontend bank");found=&entry;
+        }
+        if(!found)throw std::runtime_error("Original named-solid texture absent from frontend bank");
+        const auto decoded=cache_->frontend_archive->decode(*found,true,true);
+        if(!decoded)throw std::runtime_error("Original named-solid frontend texture format unsupported");
+        Texture texture{*found,*decoded,"FRONTEND/FRONTB.BUN"};
+        cache_->frontend_decoded.emplace(hash,texture);++cache_->decodes;result.push_back(std::move(texture));
+    }
+    return result;
+}
 Texture Textures::frontend_environment(){
     if(cache_->frontend_environment)return *cache_->frontend_environment;
     auto archive=hp2::assets::Hp2TpkArchive::load(source_.read("FRONTEND/FRONTB.BUN"));

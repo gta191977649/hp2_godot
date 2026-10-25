@@ -5,6 +5,8 @@
 #include "game_core/indep/src/fmenus.hpp"
 #include "game_core/port/frontend/frontendscreens/modeselect.hpp"
 #include "game_core/indep/src/frontendscreens/options.hpp"
+#include "game_core/indep/src/frontendscreens/memcardscreens.hpp"
+#include "game_core/indep/src/frontendscreens/nameentry.hpp"
 #include "port/assets/catalog.hpp"
 #include "port/assets/event_name_catalog.hpp"
 #include "port/runtime/event_tree_view.hpp"
@@ -83,6 +85,8 @@ struct SoundRequest {
 struct MusicRequest {
     bool ok = false;
     bool has_track = false;
+    bool stop = false; // Port audio-device request, emitted for0027D868/explicit replacement.
+    int output_mode=1; //001AFA10/001AF9E0 host speaker-device request.
     hp2::port::audio::PcmSound pcm;
     float gain = 1, pitch_scale = 1;
     int index = 0;
@@ -117,7 +121,9 @@ public:
     MenuState menu_state() const;
     TickResult menu_tick(double delta);
     std::vector<SoundRequest> drain_menu_audio();
-    MusicRequest frontend_music(bool previous_finished);
+    // E-0092-J08: poll/completion never implicitly calls001AEAB0. Only an
+    // explicit original start call site sets start_requested.
+    MusicRequest frontend_music(bool previous_finished,bool start_requested=false);
     void title_visual_state(bool movie_state, bool can_start);
     void title_pulse_restart();
 
@@ -161,6 +167,24 @@ public:
     const std::string& last_error() const { return last_error_; }
 
 private:
+    void initialize_audio_options();
+    void open_jukebox();
+    void dispatch_jukebox(int message,int& sound);
+    void apply_jukebox_widgets();
+    void filter_frontend_music();
+    void queue_jukebox_track(std::uint8_t category,std::uint8_t song,bool automatic);
+    void commit_jukebox(const port::frontend::JukeboxScreenState& state);
+    void apply_save_popup();
+    void dispatch_audio(int message,hp2::frontend::MenuEvent_0016A458&);
+    void commit_audio(bool autosave);
+    void capture_display_baseline();
+    bool display_settings_changed() const;
+    void dispatch_display(int message,hp2::frontend::MenuEvent_0016A458&);
+    void dispatch_hud(int message,hp2::frontend::MenuEvent_0016A458&);
+    void update_hud_arrows(float delta);
+    void commit_hud();
+    void dispatch_name_entry(int message,hp2::frontend::MenuEvent_0016A458&);
+    void commit_name_entry();
     void apply_language(int language);
     void request_history_back();
     void bind_scrolling_text(std::uint32_t name_hash);
@@ -178,6 +202,23 @@ private:
     std::unique_ptr<hp2::port::audio::GuestSampleBank> sound_bank_;
     std::unique_ptr<hp2::port::audio::JukeboxCartridge> jukebox_;
     std::unique_ptr<hp2::port::audio::FrontendMusic> music_scheduler_;
+    std::array<std::uint8_t,0xb0> audio_options_{}; //002FC0E4, E-0092-J05.
+    std::unique_ptr<port::frontend::JukeboxScreenState> jukebox_screen_;
+    int pending_music_index_=-1;
+    bool pending_music_stop_=false,music_auto_mode_=true,music_playing_=false;
+    std::string profile_search_start_;
+    std::optional<port::frontend::AutosaveState> autosave_;
+    std::optional<hp2::frontend::FeScreen> save_popup_;
+    std::unique_ptr<port::frontend::AudioOptionsState> audio_screen_;
+    std::vector<std::pair<std::string,float>> pending_volume_feedback_;
+    std::unique_ptr<port::frontend::DisplayOptionsState> display_screen_;
+    std::unique_ptr<port::frontend::HudOptionsState> hud_screen_;
+    std::optional<port::frontend::DisplayOffsetState> calibration_;
+    std::unique_ptr<port::frontend::NameEntryState> name_entry_;
+    std::array<std::uint8_t,0x70> display_baseline_{};
+    bool display_baseline_valid_=false;
+    std::uint32_t hud_arrow_target_=0;
+    float hud_arrow_phase_=0; //003319C8, persistent across HUD screen instances.
     std::vector<std::string> pending_sound_names_;
     std::string last_sound_name_;
     double sound_clock_seconds_ = 0, last_sound_seconds_ = -1;
@@ -194,6 +235,7 @@ private:
     hp2::frontend::tGlobalBackgroundAnimation background_animation_;
     std::uint32_t random_state_ = 0x12345678; // Original initialized seed; prior boot draws unresolved.
     hp2::frontend::MenuHighlightAnim_00248870 highlight_animation_;
+    hp2::frontend::MenuHighlightAnim_00248870 selection_animation_;
     bool title_movie_state_ = false;
     bool startup_movie_visible_ = false, startup_letterbox_ = false, startup_active_ = false;
     double menu_clock_seconds_ = 0.0; // Host clock, not a reconstructed PS2 frame counter.

@@ -16,6 +16,10 @@ struct MusicTune {
     std::string category;
     std::uint32_t offset = 0, size = 0, sync_size = 0;
     int type = 0; // Exact name field 4, parsed by original 001AEFD0 via001AED90.
+    // TASK-0092 E-0092-J04: host metadata for the 001AED90 split and the
+    // 001EEF60 cartridge/song pair, distinct from the flattened host index.
+    std::vector<std::string> metadata_fields;
+    std::uint8_t cartridge_category=0, cartridge_song=0;
 };
 class JukeboxCartridge {
 public:
@@ -43,6 +47,11 @@ public:
     explicit FrontendMusic(const std::vector<MusicTune>& tunes);
     std::optional<std::size_t> enter(std::uint32_t frame_counter);
     std::optional<std::size_t> finished(std::uint32_t frame_counter);
+    // Port audio-device seam: recovered selection/genre filtering supplies this
+    // mask; explicit0027D6A8 requests can select even a filtered-out song.
+    void set_enabled(std::vector<bool> enabled);
+    void select(std::size_t index);
+    void stop() { playing_=false; }
 private:
     std::vector<bool> enabled_;
     std::size_t cursor_=0;

@@ -1,0 +1,64 @@
+class_name,document_hash,handler_address,registration_evidence,behavior_audit,production_route,original_comparison
+Popup,0x037F3133,0x00000000,E-0015-REG-01,unassessed,unassessed,not_verified
+Select Car Dialog,0x41C2FDC3,0x00000000,E-0015-REG-01,unassessed,unassessed,not_verified
+Select Car Dialog P1,0x6344DA01,0x00000000,E-0015-REG-01,unassessed,unassessed,not_verified
+Select Car Dialog P2,0x6344DA02,0x00000000,E-0015-REG-01,unassessed,unassessed,not_verified
+Challenge,0x2D62CFE2,0x001B6BD0,E-0015-REG-01,unassessed,unassessed,not_verified
+ChallengeBeACop,0xE55F1297,0x001B6F18,E-0015-REG-01,unassessed,unassessed,not_verified
+Single Race Setup,0xD1EADBCA,0x001B8AE8,E-0015-REG-01,unassessed,unassessed,not_verified
+Free Run Setup,0xD1EADBCA,0x001B8C98,E-0015-REG-01,unassessed,unassessed,not_verified
+Lap Knockout Setup,0xD1EADBCA,0x001B8F30,E-0015-REG-01,unassessed,unassessed,not_verified
+Knockout Setup,0xD1EADBCA,0x001B9210,E-0015-REG-01,unassessed,unassessed,not_verified
+Be The Cop Setup,0xD1EADBCA,0x001B93D8,E-0015-REG-01,unassessed,unassessed,not_verified
+Options,0x95AD096B,0x001EEF00,E-0015-REG-01,unassessed,unassessed,not_verified
+Audio Options,0xE116761C,0x001F0278,E-0015-REG-01,E-0093-A01..A02 bounded sliders/output/defaults,TASK-0093 integrated; host stereo device policy,not_verified
+JukeBox Music,0x95B2B627,0x001F1220,E-0015-REG-01,E-0092-J01..J07 bounded controls/media/save,TASK-0092 integrated; original comparison and hardware gaps open,not_verified
+Username Options,0x617A4E0A,0x001F19E8,E-0015-REG-01,unassessed,unassessed,not_verified
+Language Options,0x632B068E,0x001F1DD8,E-0015-REG-01,unassessed,unassessed,not_verified
+Language Options Pre FE,0x632B068E,0x001F1DD8,E-0015-REG-01,unassessed,unassessed,not_verified
+Credits,0xFD8A3B6D,0x001F21B0,E-0015-REG-01,unassessed,unassessed,not_verified
+Credits FE Movie,0xB5761D00,0x001F2470,E-0015-REG-01,unassessed,unassessed,not_verified
+Credits Reward movie,0xB5761D00,0x001F2470,E-0015-REG-01,unassessed,unassessed,not_verified
+BBG Creation movie,0xB5761D00,0x001F2470,E-0015-REG-01,unassessed,unassessed,not_verified
+BBG Credits movie,0xB5761D00,0x001F2470,E-0015-REG-01,unassessed,unassessed,not_verified
+EACredits,0x39C4C62C,0x001F3320,E-0015-REG-01,unassessed,unassessed,not_verified
+BBGCredits,0x39C4C62C,0x001F3320,E-0015-REG-01,unassessed,unassessed,not_verified
+Display Options,0x8BC68340,0x001F3EC0,E-0015-REG-01,E-0094-D01 settings; D04 sine,TASK-0094 integrated; shared Help open,not_verified
+Customize P1 HUD,0x28891A22,0x001F4960,E-0015-REG-01,E-0094-D02 P1 snapshot/destruction,TASK-0094 integrated; shared Help open,not_verified
+Customize P2 HUD,0x28891A22,0x001F49C8,E-0015-REG-01,E-0094-D02 P2 snapshot/destruction,TASK-0094 integrated; physical second-pad check open,not_verified
+Calibrate Display,0xDDF09124,0x001F4A30,E-0015-REG-01,unassessed,unassessed,not_verified
+Calibrate display offset,0x7AB428C1,0x001F4B20,E-0015-REG-01,E-0094-D03 raw GS control offsets,TASK-0094 controls integrated; host translation; shared Help open,not_verified
+New Main Menu,0xAE0F8AA1,0x00216A10,E-0015-REG-01,unassessed,unassessed,not_verified
+Cops On Mode Select,0x5B35F533,0x002174A0,E-0015-REG-01,unassessed,unassessed,not_verified
+Cops Off Mode Select,0x033E7771,0x00217AF8,E-0015-REG-01,unassessed,unassessed,not_verified
+Joystick PreConfig,0x8BD5060B,0x00240060,E-0015-REG-01,unassessed,unassessed,not_verified
+Phils Load Save,0x9829BFAB,0x00247830,E-0015-REG-01,unassessed,unassessed,not_verified
+BootAutoload,0xFA2AC5C6,0x00247AB0,E-0015-REG-01,unassessed,unassessed,not_verified
+Autosave,0xFA2AC5C6,0x00247D00,E-0015-REG-01,E-0092-J07 successful host-device path only,TASK-0092 private-store integration; card error paths open,not_verified
+NameEntry,0x617A4E0A,0x0024DBD8,E-0015-REG-01,E-0095-N01..N04 controls/profile/animation/render,TASK-0095 integrated; shared Help and original comparison open,not_verified
+View Event Tree,0x147F8A59,0x001FB218,E-0021-22,unassessed,unassessed,not_verified
+Select Car,0xB5074AB4,0x00198928,E-0091-G01@00198BC8,static handler evidence; full closure open,not connected,not_verified
+Select Car2P,0x18DC8E52,0x00198928,E-0091-G01@00198BC8,static handler evidence; full closure open,not connected,not_verified
+Select Car2P,0x18DC8E53,0x00198928,E-0091-G01@00198BC8,static handler evidence; full closure open,not connected,not_verified
+Select Track,0x15417B53,0x001A0920,E-0091-G01@001A09E8,static handler evidence; full closure open,not connected,not_verified
+Pause Menu,0x605D2BF1,0x00171060,E-0091-G01@00174B20,static handler evidence; full closure open,not connected,not_verified
+Pause audio,0x6B321E4E,0x00171898,E-0091-G01@00174B20,static handler evidence; full closure open,not connected,not_verified
+Pause display,0xCC36FAB2,0x00173D88,E-0091-G01@00174B20,static handler evidence; full closure open,not connected,not_verified
+Pause Options,0x2B5A03A8,0x001729F0,E-0091-G01@00174B20,static handler evidence; full closure open,not connected,not_verified
+Race Objective,0x887B4D37,0x00171BB8,E-0091-G01@00174B20,static handler evidence; full closure open,not connected,not_verified
+Race Objective 2PBAC,0xB5ECD7A0,0x00171BB8,E-0091-G01@00174B20,static handler evidence; full closure open,not connected,not_verified
+Pause BAC controls,0x887B4D37,0x00171FD0,E-0091-G01@00174B20,static handler evidence; full closure open,not connected,not_verified
+Debug Menu,0xD4742CD7,0x00174590,E-0091-G01@00174B20,static handler evidence; full closure open,not connected,not_verified
+Points Rewards,0x7E420558,0x001DD278,E-0091-G01@001E1F88,static handler evidence; full closure open,not connected,not_verified
+Task Rewards,0x7E420558,0x001DD278,E-0091-G01@001E1F88,static handler evidence; full closure open,not connected,not_verified
+Events Unlocked,0x7E420558,0x001DD278,E-0091-G01@001E1F88,static handler evidence; full closure open,not connected,not_verified
+Reward menu,0x7E420558,0x001DD278,E-0091-G01@001E1F88,static handler evidence; full closure open,not connected,not_verified
+Race Results,0xAB049B2B,0x001DD278,E-0091-G01@001E1F88,static handler evidence; full closure open,not connected,not_verified
+Tourney Standings,0x0532B6FF,0x001DD278,E-0091-G01@001E1F88,static handler evidence; full closure open,not connected,not_verified
+Best Lap Times,0xACB2A4CA,0x001DD278,E-0091-G01@001E1F88,static handler evidence; full closure open,not connected,not_verified
+Best Total Times,0xF5A3CF51,0x001DD278,E-0091-G01@001E1F88,static handler evidence; full closure open,not connected,not_verified
+End Game Menu,0x1A64E903,0x001DD278,E-0091-G01@001E1F88,static handler evidence; full closure open,not connected,not_verified
+Be The Cop Results 1P,0x67EB8D12,0x001DD278,E-0091-G01@001E1F88,static handler evidence; full closure open,not connected,not_verified
+Be The Cop Results 2P,0x67EB8D33,0x001DD278,E-0091-G01@001E1F88,static handler evidence; full closure open,not connected,not_verified
+Lap Times 1P,0xC4881CBD,0x001E10F0,E-0091-G01@001E1EEC,static handler evidence; full closure open,not connected,not_verified
+Lap Times 2P,0xC4881CDE,0x001E10F0,E-0091-G01@001E1EEC,static handler evidence; full closure open,not connected,not_verified

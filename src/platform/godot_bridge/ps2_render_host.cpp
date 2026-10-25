@@ -157,9 +157,10 @@ int Ps2RenderHost::submit(const port::render::Frame& frame, port::render::Resour
     int movie_quads = 0;
     auto* server = godot::RenderingServer::get_singleton();
     server->canvas_item_clear(item_);
-    server->canvas_item_set_transform(
-        item_, godot::Transform2D().scaled(godot::Vector2(static_cast<real_t>(output_scale_),
-                                                          static_cast<real_t>(output_scale_))));
+    auto transform=godot::Transform2D().scaled(godot::Vector2(static_cast<real_t>(output_scale_),
+                                                             static_cast<real_t>(output_scale_)));
+    transform.set_origin(godot::Vector2(frame.display_offset.x*output_scale_,frame.display_offset.y*output_scale_));
+    server->canvas_item_set_transform(item_,transform);
     if (frame.clear.a > 0) {
         server->canvas_item_add_rect(
             item_, godot::Rect2(0, 0, frame.logical_size.x, frame.logical_size.y),

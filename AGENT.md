@@ -18,6 +18,14 @@ authority for Test drive. Keep its addresses, layouts, records and implementatio
 separate from Retail; this does not change the target of unrelated systems. See
 `docs/DEBUG_DRIVING_AUDIT.md`. All evidence, naming and read-only rules below still apply.
 
+TASK-0096 records a second explicit user authorization (2026-10-26): use the same
+Debug NFSHP2.ELF as the primary behavior authority for the complete single-player
+Ultimate Racer closure, including required selection/frontend, World/race/AI/police,
+results and progression. This permits actual racing in TASK-0096. Existing Retail
+assets/frontend/profile adapters require reviewed semantic version correspondence;
+no whole-version equivalence or layout compatibility is assumed. Unrelated systems
+retain their existing authority. See tasks/active/TASK-0096-ultimate-racer.md.
+
 ## R0. Two sources of truth, and nothing else
 
 Code and documentation in this repository may only assert something about the original game when

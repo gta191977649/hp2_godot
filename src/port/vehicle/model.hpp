@@ -24,7 +24,7 @@ struct Part {
 // Single-worker cache; snapshots own their model data and do not read this on the render thread.
 struct ModelCache {
     std::string root;
-    std::vector<std::uint8_t> global;
+    std::vector<std::uint8_t> global,frontend;
     std::vector<CarChoice> catalog;
     std::shared_ptr<TextureCache> textures=std::make_shared<TextureCache>();
     struct Geometry {render::VehicleGeometry data;std::vector<std::array<float,3>> collision_vertices;std::uint64_t age=0;std::size_t bytes=0;};
@@ -53,6 +53,12 @@ public:
     std::array<float,3> preview_color()const;
     void load(assets::Source& source,const std::string& geometry_path,const std::string& code={},int skin=1);
     void load_id(assets::Source& source,int car_id,int skin_id);
+    // Whitelisted original selector PLATFORM/CARCOVER solids; never a fake car ID.
+    void load_frontend_solid(assets::Source& source,std::uint32_t hash);
+    bool is_frontend_solid()const{return frontend_solid_;}
+    // Source-local wheel matrices, consumed without preview rotation integration.
+    void apply_frontend_pose(const std::array<std::array<float,16>,4>& tires,
+                             const std::array<std::array<float,16>,4>& brakes);
     port::CarLodSelection select(int projected_size,int forced_lod);
     void set_part_visible(const std::string& name,bool visible);
     const render::VehicleGeometry& geometry()const{return geometry_;}
@@ -71,6 +77,8 @@ public:
 private:
     std::shared_ptr<ModelCache> cache_;
     bool include_lods_=true;
+    bool frontend_solid_=false;
+    bool frontend_pose_=false;
     bool wheel_blur_=false;
     bool driving_pose_=false;
     bool wipers_active_=false;

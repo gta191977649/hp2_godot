@@ -13,6 +13,7 @@ float bRandom(Memory& m,std::uint32_t state,float value);
 float bRandom(Memory& m,float value);
 float bSin(Memory&m,std::uint16_t a);
 float bSin(Memory&m,float f);
+float bCos(Memory&m,std::uint16_t angle);
 std::uint16_t bASin(Memory&m,float f);
 std::int16_t bATan(Memory&m,float x,float y);
 std::int32_t bDiv(std::int32_t numerator,std::int32_t denominator);
@@ -37,6 +38,7 @@ void Sub_00254350(Memory&m);
 void eRotateZ(Memory&,SolverMatrix& destination,const SolverMatrix& input,std::uint16_t angle);
 void eRotateY(Memory&,SolverMatrix& destination,const SolverMatrix& input,std::uint16_t angle);
 void eRotateX(Memory&,SolverMatrix& destination,const SolverMatrix& input,std::uint16_t angle);
+void eTranslate(SolverMatrix& destination,const SolverMatrix& input,const std::array<float,3>&);
 }
 
 namespace hp2::recovered {

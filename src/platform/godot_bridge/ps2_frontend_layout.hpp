@@ -37,6 +37,7 @@ public:
     godot::Dictionary menu_tick(double delta);
     godot::Array drain_menu_audio();
     godot::Dictionary frontend_music(bool previous_finished);
+    godot::Dictionary start_frontend_music();
 
     // View Event Tree screen: true when the recovered tree consumed the event, so the host does
     // not also feed it to the menu.
