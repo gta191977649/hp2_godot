@@ -1,3 +1,10 @@
+TASK0098 adds a native SelectionPage ownership binder with explicit host resource
+leases, copied car nodes, cached widget groups and shared after-display FrameEffects.
+The production host/entry remains unbound. Native Flailer layers/depth and Debug
+alpha radix order are preserved for the required shared-depth compositor; the GPU
+executor remains open. See reverse/task0098/page-ownership.md and
+composition-preparation.md. No full career/race/save completion claim.
+
 # Architecture and ownership
 
 TASK0092/0093 extends the native frontend owner with Jukebox and Audio Options
@@ -639,3 +646,18 @@ flat vector. Concatenation rebases them and coverage validation detects legacy
 unclassified packets. Existing canvas submission remains flat. Original selector
 stages0/2/4 require a reviewed compositor, separate mirrored-car passes and shared
 depth; stage metadata alone does not supply that implementation.
+
+TASK-0098 effects continuation: ParticleSimulation now has an explicit native
+frontend branch that rebuilds mutable Hermite bases after auto-emission and before
+integration. Its ordinary world/driving branch retains the previous cache path.
+SharedParticleState carries the global RNG and1000/400 particle/group accounting;
+step_shared publishes a single candidate and ledger only after success. Larger
+World owners must clone all participating states together and still supply shared
+dynamic-trigger/global-definition ownership. The selector nebula writes shared
+ColourMatrix through typed emitter handles; render-before-step timing is retained
+as a required caller contract. Production selector ownership remains unbound.
+
+Fresh E-0098-F03 supersedes the earlier compositor shorthand: stages2/4 flush
+solids while preserving pending alpha for stage5, and reflected cars suppress
+environment-map/sorted-alpha strips with flags0x11. The backend requires that
+shared alpha/depth/target domain before formal selection can be enabled.

@@ -10,8 +10,11 @@ executable revision/date unknown. E-0098-F01 is retained in
 
 `eDisplayFrame00112C60` submits view0 Flailer layers24..20 in stage1, after sky;
 stage7 submits layers15..0,19..16,28..25. Main car solids are in stage0,
-platform callbacks/FrameEffects in stage2, and reflected car solids/alpha followed
-by main-car alpha in stage4. The reflected car uses the existing view/render
+platform callbacks/FrameEffects in stage2, and reflected car then main-car alpha
+submission in stage4. E-0098-F03 corrects earlier wording: intrinsic reflection
+flags0x11 suppress envmap/sorted-alpha, stages2/4 flush solids only, and the shared
+pending alpha list flushes in stage5. See [counterevidence](compositor-correction.md).
+The reflected car uses the existing view/render
 targets and the EVIEWMODE_ONE gate. These observations do not establish all
 reflection clipping/material or render-target blend behavior.
 

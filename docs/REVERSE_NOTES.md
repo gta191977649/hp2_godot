@@ -729,3 +729,30 @@ intervening3D shared depth/reflection. See the three task0098 dependency records
 and hashed captures. Eight native regressions and normal Godot DLL build pass;
 formal selection entry/whole loading/World/pursuit/outcome and original/performance
 acceptance remain open. No matching Debug PCSX2 scenario; no Verified promotion.
+
+## TASK-0098 mutable effects and compositor counterevidence,2026-10-26
+
+E-0098-P01..P04 recover frontend mutable basis reconstruction, general inverse/
+Hermite arithmetic, original20-emitter nebula state and shared1000/400 pool/RNG
+accounting. Emitter600 is initial overflow-capable storage, not a maximum. Original
+unwritten extra-control Z/W lanes remain unknown; consumed X/Y and full colour
+lanes are the implemented projection. Real zero-speed nebula exposed host0/0;
+00128510 VRSQRT/00128524 VMUL require the bounded instruction carrier documented
+in frontend-effects.md. Gravity affects the later integrated particle direction.
+
+E-0098-F03 supersedes prior "reflection solid+alpha"/stage4-flush shorthand.
+Intrinsic flags0x11 suppress envmap/sorted alpha, stages2/4 retain pending alpha
+and stage5 flushes the shared domain. See compositor-correction.md. E-0096-C01
+retains the genuine finish/result/autosave and police dependencies, not a new
+implementation. Full frontend entry/World/pursuit/result/save remains incomplete;
+no original comparison, Verified promotion or frame-budget claim.
+
+
+## TASK-0098 ownership and composition preparation,2026-10-27
+
+See reverse/task0098/page-ownership.md (E-0098-O01..O04) and
+composition-preparation.md (E-0098-F04). Important counterevidence:00182430 is a
+preload tail thunk, not a no-op; only0016B670 and0011EA78/EA80 are confirmed empty.
+Selector copy owns independent nodes but shares player status; grouped locked
+animation destruction restores integer XY only. Flailer GS depth and alpha depth
+are different domains. Native tests do not certify runtime or backend equivalence.

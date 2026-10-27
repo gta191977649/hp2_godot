@@ -11599,7 +11599,7 @@
 </details>
 
 <details>
-<summary>Unassigned / global · Debug 815b60c7f473 · 0.5% (50/9675)</summary>
+<summary>Unassigned / global · Debug 815b60c7f473 · 0.5% (53/9675)</summary>
 
 | Address | Function | Implementation | Record status |
 |---|---|---|---|
@@ -11734,8 +11734,8 @@
 | <code>0x00104C80</code> | <code>RadixSortFloatKey(unsigned char *, unsigned char *, int, int)</code> | Missing / unresolved | Not recorded |
 | <code>0x00104F58</code> | <code>TestSort(void)</code> | Missing / unresolved | Not recorded |
 | <code>0x00104F60</code> | <code>eNewAlphaSortKey(void)</code> | Missing / unresolved | Not recorded |
-| <code>0x00104FE0</code> | <code>RadixSortAlphaKeys(eAlphaSortKey *, eAlphaSortKey *, eAlphaList *)</code> | Missing / unresolved | Not recorded |
-| <code>0x001053B8</code> | <code>SortAlphaKeys(eAlphaList *)</code> | Missing / unresolved | Not recorded |
+| <code>0x00104FE0</code> | [<code>RadixSortAlphaKeys__FP13eAlphaSortKeyT0P10eAlphaList</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00104fe0.md) | Missing / unresolved | Tested |
+| <code>0x001053B8</code> | [<code>SortAlphaKeys__FP10eAlphaList</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001053b8.md) | Missing / unresolved | Tested |
 | <code>0x00105498</code> | <code>eEnableAntiAliasing(void)</code> | Missing / unresolved | Not recorded |
 | <code>0x001054A8</code> | <code>eDisableAntiAliasing(void)</code> | Missing / unresolved | Not recorded |
 | <code>0x001054B8</code> | <code>eGetScreenWidth(void)</code> | Missing / unresolved | Not recorded |
@@ -11885,7 +11885,7 @@
 | <code>0x0010F8D0</code> | [<code>DisplayBlendPrevious</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/0010f8d0.md) | Unconfirmed body | Decompiled |
 | <code>0x0010FA88</code> | [<code>DisplayFilter</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/0010fa88.md) | Unconfirmed body | Decompiled |
 | <code>0x0010FC38</code> | <code>SetupSceneryCullInfo(eView *, SceneryCullInfo &amp;)</code> | Missing / unresolved | Not recorded |
-| <code>0x0010FE48</code> | <code>ePoly::Render(TextureInfo *, int)</code> | Missing / unresolved | Not recorded |
+| <code>0x0010FE48</code> | [<code>Render__5ePolyP11TextureInfoi</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/0010fe48.md) | Missing / unresolved | Decompiled |
 | <code>0x00110340</code> | <code>GetColour1555(unsigned int)</code> | Missing / unresolved | Not recorded |
 | <code>0x00110628</code> | <code>ePointSprite3D::Render(TextureInfo *)</code> | Missing / unresolved | Not recorded |
 | <code>0x00110768</code> | <code>eAttachDirectData(TextureInfo *, float, void *, unsigned short)</code> | Missing / unresolved | Not recorded |
@@ -12200,9 +12200,9 @@
 | <code>0x00126138</code> | <code>Sub_00126138</code> | Missing / unresolved | Not recorded |
 | <code>0x00126158</code> | <code>Sub_00126158</code> | Missing / unresolved | Not recorded |
 | <code>0x00126160</code> | <code>myexp(float)</code> | Missing / unresolved | Not recorded |
-| <code>0x001261E0</code> | <code>fDeterminant(bMatrix4 *)</code> | Missing / unresolved | Not recorded |
-| <code>0x00126378</code> | <code>fInvertMatrix(bMatrix4 *, bMatrix4 *)</code> | Missing / unresolved | Not recorded |
-| <code>0x00126AB8</code> | <code>hermite_basis(bMatrix4 *, bMatrix4 *, float, float, float, float)</code> | Missing / unresolved | Not recorded |
+| <code>0x001261E0</code> | [<code>fDeterminant__FP8bMatrix4</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/001261e0.md) | Missing / unresolved | Tested |
+| <code>0x00126378</code> | [<code>fInvertMatrix__FP8bMatrix4T0</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00126378.md) | Missing / unresolved | Tested |
+| <code>0x00126AB8</code> | [<code>hermite_basis__FP8bMatrix4T0ffff</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00126ab8.md) | Missing / unresolved | Tested |
 | <code>0x00126C50</code> | [<code>hermite_parameter</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00126c50.md) | Missing / unresolved | Decompiled |
 | <code>0x00126C90</code> | <code>GetCarEffectPositionName(CarEffectPosition)</code> | Missing / unresolved | Not recorded |
 | <code>0x00126EC8</code> | [<code>afxInit</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00126ec8.md) | Missing / unresolved | Decompiled |
@@ -12225,8 +12225,8 @@
 | <code>0x001275E8</code> | <code>AcidEffectSystem::TweakerCheck(void)</code> | Missing / unresolved | Not recorded |
 | <code>0x001275F0</code> | <code>AcidEffectSystem::RenderDebug(eView *)</code> | Missing / unresolved | Not recorded |
 | <code>0x001275F8</code> | [<code>AcidEffectSystem::AddAutoEmitter</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/001275f8.md) | Missing / unresolved | Decompiled |
-| <code>0x001277E0</code> | <code>AcidEffectSystem::RemoveAutoEmitter(AcidEmitter *)</code> | Missing / unresolved | Not recorded |
-| <code>0x00127800</code> | <code>AcidEffectSystem::KillAllActiveEffects(void)</code> | Missing / unresolved | Not recorded |
+| <code>0x001277E0</code> | [<code>RemoveAutoEmitter__16AcidEffectSystemP11AcidEmitter</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/001277e0.md) | Evidenced body | Tested |
+| <code>0x00127800</code> | [<code>KillAllActiveEffects__16AcidEffectSystem</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00127800.md) | Evidenced body | Tested |
 | <code>0x00127858</code> | [<code>AcidEffectSystem::TriggerEmitter</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00127858.md) | Missing / unresolved | Decompiled |
 | <code>0x001287F8</code> | <code>AcidEffectSystem::UpdateInterestPoints(void)</code> | Missing / unresolved | Not recorded |
 | <code>0x00128870</code> | [<code>AcidEffectSystem::DoTimeStep</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00128870.md) | Unconfirmed body | Decompiled |
@@ -14227,9 +14227,9 @@
 | <code>0x00186088</code> | [<code>GetFullName__11CarTypeInfo</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00186088.md) | Partial | Tested |
 | <code>0x001860A8</code> | <code>CarTypeInfo::GetShortName(void)</code> | Missing / unresolved | Not recorded |
 | <code>0x001860C8</code> | <code>CarTypeInfo::GetManufacturerName(void)</code> | Missing / unresolved | Not recorded |
-| <code>0x001860E8</code> | <code>CarTypeInfo::GetCarSpec0To60(void)</code> | Missing / unresolved | Not recorded |
+| <code>0x001860E8</code> | [<code>GetCarSpec0To60__11CarTypeInfo</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001860e8.md) | Partial | Tested |
 | <code>0x00186108</code> | <code>CarTypeInfo::GetCarSpecTopSpeed(void)</code> | Missing / unresolved | Not recorded |
-| <code>0x00186128</code> | <code>CarTypeInfo::GetCarSpecBHP(void)</code> | Missing / unresolved | Not recorded |
+| <code>0x00186128</code> | [<code>GetCarSpecBHP__11CarTypeInfo</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00186128.md) | Missing / unresolved | Tested |
 | <code>0x00186148</code> | <code>LoaderCarInfo(bChunk *)</code> | Missing / unresolved | Not recorded |
 | <code>0x001862D8</code> | <code>UnloaderCarInfo(bChunk *)</code> | Missing / unresolved | Not recorded |
 | <code>0x00186318</code> | <code>GetCarTypeName(CarType)</code> | Missing / unresolved | Not recorded |
@@ -14480,13 +14480,13 @@
 | <code>0x00192068</code> | [<code>PrevSkin__10VisibleCar</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00192068.md) | Partial | Tested |
 | <code>0x00192090</code> | [<code>GetNextCar__13VisibleCarSetP10VisibleCar</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00192090.md) | Partial | Tested |
 | <code>0x001920A8</code> | [<code>GetPrevCar__13VisibleCarSetP10VisibleCar</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001920a8.md) | Partial | Tested |
-| <code>0x001920C0</code> | <code>VisibleCarSet::VisibleCarSet(VisibleCarSet &amp;)</code> | Missing / unresolved | Not recorded |
+| <code>0x001920C0</code> | [<code>__13VisibleCarSetR13VisibleCarSet</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001920c0.md) | Partial | Tested |
 | <code>0x001921D0</code> | [<code>__13VisibleCarSetP18FrontendPlayerInfob</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001921d0.md) | Partial | Tested |
 | <code>0x00192378</code> | <code>VisibleCarSet::~VisibleCarSet(void)</code> | Missing / unresolved | Not recorded |
 | <code>0x00192410</code> | [<code>CarListSort__FP10VisibleCarT0</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00192410.md) | Missing / unresolved | Tested |
 | <code>0x00192518</code> | [<code>SortVisibleCarList__13VisibleCarSet</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00192518.md) | Evidenced body | Tested |
-| <code>0x00192580</code> | <code>PreloadCurrentSelectedCars(void)</code> | Missing / unresolved | Not recorded |
-| <code>0x001926E8</code> | <code>UnloadCurrentSelectedCars(void)</code> | Missing / unresolved | Not recorded |
+| <code>0x00192580</code> | [<code>PreloadCurrentSelectedCars__Fv</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00192580.md) | Missing / unresolved | Tested |
+| <code>0x001926E8</code> | [<code>UnloadCurrentSelectedCars__Fv</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001926e8.md) | Missing / unresolved | Tested |
 | <code>0x00192770</code> | [<code>__18CarLockedDisplayeri</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00192770.md) | Evidenced body | Tested |
 | <code>0x00192800</code> | [<code>SetCurrentCar__18CarLockedDisplayerP10VisibleCarii</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00192800.md) | Partial | Tested |
 | <code>0x001928F8</code> | [<code>Update__18CarLockedDisplayer</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001928f8.md) | Evidenced body | Tested |
@@ -14496,7 +14496,7 @@
 | <code>0x00192A78</code> | <code>CarSelector::InitSpotlights(void)</code> | Missing / unresolved | Not recorded |
 | <code>0x00192B30</code> | <code>CarSelector::CloseSpotlights(void)</code> | Missing / unresolved | Not recorded |
 | <code>0x00192B78</code> | [<code>__11CarSelector12JoystickPortiiUiR13VisibleCarSeti</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00192b78.md) | Missing / unresolved | Decompiled |
-| <code>0x00193278</code> | <code>CarSelector::~CarSelector(void)</code> | Missing / unresolved | Not recorded |
+| <code>0x00193278</code> | [<code>_$_11CarSelector</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00193278.md) | Missing / unresolved | Decompiled |
 | <code>0x001936E8</code> | [<code>SetupCarOverrideModel__11CarSelector</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001936e8.md) | Partial | Tested |
 | <code>0x00193740</code> | [<code>SetupSwatches__11CarSelector</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00193740.md) | Partial | Tested |
 | <code>0x00193820</code> | [<code>UpdateSwatches__11CarSelector</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00193820.md) | Partial | Tested |
@@ -14504,7 +14504,7 @@
 | <code>0x00193AE0</code> | <code>CarSelector::UpdateSpotlight(void)</code> | Missing / unresolved | Not recorded |
 | <code>0x00193AE8</code> | [<code>SetupThumbnails__11CarSelector</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00193ae8.md) | Evidenced body | Tested |
 | <code>0x00193C18</code> | [<code>UpdateThumbnails__11CarSelector</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00193c18.md) | Evidenced body | Tested |
-| <code>0x00193E60</code> | <code>CarSelector::UpdateNebula(void)</code> | Missing / unresolved | Not recorded |
+| <code>0x00193E60</code> | [<code>UpdateNebula__11CarSelector</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00193e60.md) | Partial | Tested |
 | <code>0x00194108</code> | <code>CarSelector::SetCameraParameters(CarType)</code> | Missing / unresolved | Not recorded |
 | <code>0x00194140</code> | [<code>AdjustHelpMessage__11CarSelector</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00194140.md) | Partial | Tested |
 | <code>0x00194248</code> | [<code>EnterOrbitMode__11CarSelector</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00194248.md) | Partial | Tested |
@@ -14518,7 +14518,7 @@
 | <code>0x001947D0</code> | [<code>Tick__11CarSelector</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001947d0.md) | Partial | Tested |
 | <code>0x00194E08</code> | [<code>ScreenCallback__11CarSelector13ScreenMessageP18ScreenCallbackData</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00194e08.md) | Unconfirmed body | Decompiled |
 | <code>0x00195290</code> | [<code>UpdateFadeGroups__11CarSelector</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00195290.md) | Evidenced body | Tested |
-| <code>0x001953B0</code> | <code>CarSelector::UpdateInfoBarAtTop(void)</code> | Missing / unresolved | Not recorded |
+| <code>0x001953B0</code> | [<code>UpdateInfoBarAtTop__11CarSelector</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001953b0.md) | Partial | Tested |
 | <code>0x001957D8</code> | [<code>UpdateRenderingCarParameters__11CarSelectorP20FrontEndRenderingCari</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001957d8.md) | Partial | Tested |
 | <code>0x00195AF0</code> | [<code>ShowLoadedCar__11CarSelector</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00195af0.md) | Partial | Tested |
 | <code>0x00195B90</code> | [<code>CalculateCarLogoTexture__11CarSelectorP11CarTypeInfo</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00195b90.md) | Partial | Tested |
@@ -14538,7 +14538,7 @@
 | <code>0x00196658</code> | <code>global destructors keyed to ChooseCarRotationSpeed</code> | Missing / unresolved | Not recorded |
 | <code>0x00196688</code> | [<code>_GLOBAL_$I$ChooseCarRotationSpeed</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00196688.md) | Missing / unresolved | Decompiled |
 | <code>0x001968E8</code> | <code>CarSelector::JoyHandlerBridge(JoystickPort, JoyEvent, unsigned char, void *)</code> | Missing / unresolved | Not recorded |
-| <code>0x00196908</code> | [<code>_$_18CarLockedDisplayer</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00196908.md) | Missing / unresolved | Decompiled |
+| <code>0x00196908</code> | [<code>_$_18CarLockedDisplayer</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00196908.md) | Evidenced body | Tested |
 | <code>0x00196960</code> | <code>bTList&lt;VisibleCar&gt;::Sort(int (*)(VisibleCar *, VisibleCar *))</code> | Missing / unresolved | Not recorded |
 | <code>0x00196968</code> | <code>bTList&lt;VisibleCar&gt;::~bTList(void)</code> | Missing / unresolved | Not recorded |
 | <code>0x001969D8</code> | <code>VisibleCar::~VisibleCar(void)</code> | Missing / unresolved | Not recorded |
@@ -19030,7 +19030,7 @@
 | <code>0x00241C38</code> | [<code>__14AnimationGroupiiifff</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00241c38.md) | Missing / unresolved | Tested |
 | <code>0x00241CF8</code> | <code>AnimationGroup::AnimationGroup(int, int, float, float, float)</code> | Missing / unresolved | Not recorded |
 | <code>0x00241DB8</code> | [<code>SetupToAnimate__14AnimationGroupff</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00241db8.md) | Evidenced body | Tested |
-| <code>0x00241E50</code> | <code>AnimationGroup::~AnimationGroup(void)</code> | Missing / unresolved | Not recorded |
+| <code>0x00241E50</code> | [<code>_$_14AnimationGroup</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00241e50.md) | Missing / unresolved | Tested |
 | <code>0x00241EB8</code> | [<code>Animate__14AnimationGroup</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00241eb8.md) | Missing / unresolved | Tested |
 | <code>0x00241F30</code> | <code>AnimationGroup::IsFinished(void)</code> | Missing / unresolved | Not recorded |
 | <code>0x00241F40</code> | <code>tHighlightAnimation::tHighlightAnimation(int, int, int)</code> | Missing / unresolved | Not recorded |

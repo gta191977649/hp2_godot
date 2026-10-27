@@ -75,6 +75,15 @@ std::string CarTypeInfo::GetFullName(const std::function<std::string(int)>& GetT
         hp2::not_implemented("0x00186088","original car language/translation binding missing");
     return GetTranslatedString(pLanguageInfo->LanguageSpecFullName);
 }
+// Debug001860E8/00186128, E-0098-O02. Original numeric localization IDs.
+std::string CarTypeInfo::GetCarSpec0To60(const std::function<std::string(int)>& translate)const{
+    if(!pLanguageInfo || !translate)hp2::not_implemented("0x001860E8","original acceleration localization binding missing");
+    return translate(pLanguageInfo->LanguageSpec0_60);
+}
+std::string CarTypeInfo::GetCarSpecBHP(const std::function<std::string(int)>& translate)const{
+    if(!pLanguageInfo || !translate)hp2::not_implemented("0x00186128","original BHP localization binding missing");
+    return translate(pLanguageInfo->LanguageSpecBHP);
+}
 // Debug00186668, E-0098-S01. Keep signed normal-car count and police special case.
 int CarTypeInfo::GetNumAvailableSkins() const {
     return UsageType==CAR_USAGE_TYPE_COP?1:NumAvailableSkinNumbers;
@@ -113,6 +122,7 @@ std::array<hp2::debug::CarTypeInfo,64> decode_car_info(const std::vector<std::ui
         car.CarClass=static_cast<std::int8_t>(row[0xe6]);
         // E-0098-R01: Debug WheelInfo type, car.Wheels+120/stride20hex.
         const auto scalar=[&](int offset){const auto bits=word(offset);float value;std::memcpy(&value,&bits,4);return value;};
+        car.Control.SpeedLimiter=scalar(0x320); // E-0098-O02, Debug Control+20.
         for(int n=0;n<4;++n){auto& wheel=car.Wheels[n];const int offset=0x120+n*0x20;
             for(int axis=0;axis<3;++axis)wheel.Position[axis]=scalar(offset+axis*4);
             wheel.Radius=scalar(offset+0xc);wheel.Width=scalar(offset+0x10);

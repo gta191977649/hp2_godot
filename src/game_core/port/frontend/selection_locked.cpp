@@ -74,13 +74,16 @@ void FormatUnlockBlurbForCar(std::array<char,256>& out,int car_type,int game_typ
 // starts at640, and retains EndPosition as float before integer publication.
 LockedDisplay::LockedDisplay(hp2::frontend::FeScreen& screen):screen_(screen){
     if(auto* w=hp2::frontend::FindWidget_00143D50(screen_,master,0)){
-        EndPosition=w->x;saved_y_=port::driving::cvt_w_s(w->y);
+        EndPosition=w->x;saved_x_=port::driving::cvt_w_s(w->x);saved_y_=port::driving::cvt_w_s(w->y);
     }
     if(auto* w=hp2::frontend::FindWidget_00143D50(screen_,overlay,0))
         MaxAlpha=w->a<128?int(w->a):int(w->a)-256;
     Spline.duration=.5f;Spline.flags=1;
     setup_slide(640.f,EndPosition);
 }
+// Debug00196908 ->00241E50, E-0098-O01. Restore saved integer group position;
+// alpha/visibility are not restored by the original AnimationGroup destructor.
+LockedDisplay::~LockedDisplay(){publish_position(saved_x_,saved_y_);}
 // Debug00241DB8, E-0098-L02; grouped branch only, using original saved Y.
 void LockedDisplay::setup_slide(float start,float end){
     Spline.flags=0;Spline.state=0;Spline.Val=start;Spline.ValDesired=end;
@@ -91,10 +94,13 @@ void LockedDisplay::setup_slide(float start,float end){
 // Debug001450F8 via00244110, E-0098-L02. Capture master position before
 // traversing backwards; offsets are relative to the current master, not authored X.
 void LockedDisplay::publish_slide(){
+    publish_position(port::driving::cvt_w_s(Spline.Val),saved_y_);
+}
+void LockedDisplay::publish_position(int x_position,int y_position){
     const auto* anchor=hp2::frontend::FindWidget_00143D50(screen_,master,0);
     if(!anchor)return;
-    const float dx=float(port::driving::cvt_w_s(Spline.Val))-anchor->x;
-    const float dy=float(saved_y_)-anchor->y;
+    const float dx=float(x_position)-anchor->x;
+    const float dy=float(y_position)-anchor->y;
     for(auto i=screen_.widgets.rbegin();i!=screen_.widgets.rend();++i){
         if(i->class_hash!=group)continue;
         const float x=i->x+dx,y=i->y+dy;

@@ -24,6 +24,80 @@ void AcidEffectSystem::RemoveAutoEmitter() {
 } // namespace hp2::recovered
 
 #include "game_core/src/acidfxe.hpp"
+#include "game_core/src/bMath.hpp"
+#include <cmath>
+
+namespace hp2::debug {
+// Debug001261E0, E-0098-P01. Keep the original24-term accumulation order.
+float fDeterminant(const port::driving::SolverMatrix& m){
+    for(const float lane:m)if(!std::isfinite(lane))hp2::not_implemented("0x001261E0","nonfinite determinant input outside frontend projection");
+    float result=m[3]*m[12]*m[9]*m[6]-m[2]*m[12]*m[9]*m[7];
+    result=result-m[3]*m[12]*m[10]*m[5];
+    result=result+m[1]*m[12]*m[10]*m[7];
+    result=result+m[2]*m[12]*m[11]*m[5];
+    result=result-m[1]*m[12]*m[11]*m[6];
+    result=result-m[3]*m[13]*m[8]*m[6];
+    result=result+m[2]*m[13]*m[8]*m[7];
+    result=result+m[3]*m[13]*m[10]*m[4];
+    result=result-m[0]*m[13]*m[10]*m[7];
+    result=result-m[2]*m[13]*m[11]*m[4];
+    result=result+m[0]*m[13]*m[11]*m[6];
+    result=result+m[3]*m[14]*m[8]*m[5];
+    result=result-m[1]*m[14]*m[8]*m[7];
+    result=result-m[3]*m[14]*m[9]*m[4];
+    result=result+m[0]*m[14]*m[9]*m[7];
+    result=result+m[1]*m[14]*m[11]*m[4];
+    result=result-m[0]*m[14]*m[11]*m[5];
+    result=result-m[2]*m[15]*m[8]*m[5];
+    result=result+m[1]*m[15]*m[8]*m[6];
+    result=result+m[2]*m[15]*m[9]*m[4];
+    result=result-m[0]*m[15]*m[9]*m[6];
+    result=result-m[1]*m[15]*m[10]*m[4];
+    result=result+m[0]*m[15]*m[10]*m[5];
+    if(!std::isfinite(result))hp2::not_implemented("0x001261E0","exceptional EE determinant result");
+    return result;
+}
+// Debug00126378, E-0098-P01. The sixteen original cofactor expressions have
+// the same two instruction-order forms; index projection avoids reordering sums.
+void fInvertMatrix(port::driving::SolverMatrix& out,const port::driving::SolverMatrix& in){
+    if(&out==&in)hp2::not_implemented("0x00126378","inverse source/destination alias is outside frontend projection");
+    for(const float lane:in)if(!std::isfinite(lane))hp2::not_implemented("0x00126378","nonfinite general matrix inverse input");
+    const float determinant=fDeterminant(in);
+    if(determinant==0 || !std::isfinite(determinant))
+        hp2::not_implemented("0x00126378","singular or exceptional EE general matrix inverse");
+    const float reciprocal=1.f/determinant;
+    port::driving::SolverMatrix candidate{};
+    for(int row=0;row<4;++row)for(int column=0;column<4;++column){
+        std::array<int,3> rows{},columns{};int ri=0,ci=0;
+        for(int i=0;i<4;++i){if(i!=column)rows[ri++]=i;if(i!=row)columns[ci++]=i;}
+        const float a=in[rows[0]*4+columns[0]],b=in[rows[0]*4+columns[1]],c=in[rows[0]*4+columns[2]];
+        const float d=in[rows[1]*4+columns[0]],e=in[rows[1]*4+columns[1]],f=in[rows[1]*4+columns[2]];
+        const float g=in[rows[2]*4+columns[0]],h=in[rows[2]*4+columns[1]],i=in[rows[2]*4+columns[2]];
+        const float cofactor=(row+column)%2
+            ? ((((c*e*g-b*f*g)-c*d*h)+a*f*h+b*d*i)-a*e*i)
+            : (((((b*f*g-c*e*g)+c*d*h)-a*f*h)-b*d*i)+a*e*i);
+        candidate[row*4+column]=reciprocal*cofactor;
+        if(!std::isfinite(candidate[row*4+column]))hp2::not_implemented("0x00126378","exceptional EE inverse result");
+    }
+    out=candidate;
+}
+// Debug00126AB8, E-0098-P01. Keep both original basis products, despite their
+// algebraic cancellation. eMulMatrix is the recovered VU operation, not a library.
+void hermite_basis(port::driving::SolverMatrix& out,const port::driving::SolverMatrix& p,
+    float u1,float u2,float u3,float u4){
+    for(const float lane:p)if(!std::isfinite(lane))hp2::not_implemented("0x00126AB8","nonfinite Hermite controls outside frontend projection");
+    port::driving::SolverMatrix u{},inverse{},k{},nf{};
+    const std::array<float,4> parameters{{u1,u2,u3,u4}};
+    for(int i=0;i<4;++i){const float square=parameters[i]*parameters[i];u[i*4]=square*parameters[i];
+        u[i*4+1]=square;u[i*4+2]=parameters[i];u[i*4+3]=1;}
+    const port::driving::SolverMatrix mf{{2,-2,1,1,-3,3,-2,-1,0,0,1,0,1,0,0,0}};
+    const port::driving::SolverMatrix imf{{0,0,0,1,1,1,1,1,0,0,1,0,3,2,1,0}};
+    fInvertMatrix(inverse,u);
+    hp2::recovered::eMulMatrix(k,imf,inverse);
+    hp2::recovered::eMulMatrix(nf,mf,k);
+    hp2::recovered::eMulMatrix(out,nf,p);
+}
+}
 
 namespace hp2::recovered {
 // ELF 0x00129880; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00129880.md.
@@ -107,7 +181,14 @@ void AcidEffectSystem::TriggerEmitter(port::driving::Memory& math,port::track::P
    const auto position=transform(e.local_world,local,true);
    const float frame_random=random(seed),life=std::min((c[6]-life_variance)+random(seed)*life_variance,60.f),angle_random=random(seed);
    float speed=(c[8]-speed_variance)+random(seed)*speed_variance,inherit=0;
-   if(motion_base!=0.f){inherit=std::clamp(motion_base+random(seed)*motion_variance,0.f,1.f);if(!d.flags[6]){float magnitude=0;for(unsigned k=0;k<3;++k){direction[k]=speed*direction[k]+inherit*e.inherit_velocity[k];magnitude+=direction[k]*direction[k];}speed=std::sqrt(magnitude);for(auto& v:direction)v/=speed;}}
+   if(motion_base!=0.f){inherit=std::clamp(motion_base+random(seed)*motion_variance,0.f,1.f);if(!d.flags[6]){
+    float magnitude=0;for(unsigned k=0;k<3;++k){direction[k]=speed*direction[k]+inherit*e.inherit_velocity[k];magnitude+=direction[k]*direction[k];}
+    speed=std::sqrt(magnitude);
+    // Debug00128510 VRSQRT ->00128524 VMUL, E-0098-P03. The original
+    // zero-speed selector nebula packs a zero direction, not host IEEE0/0 NaN.
+    const float reciprocal=magnitude==0.f?port::driving::ee_vrsqrt_one_zero(magnitude,"0x00128510"):1.f/speed;
+    for(auto& v:direction)v=v*reciprocal;
+   }}
    auto initial_angle=std::uint16_t(port::driving::cvt_w_s(-angle_range*.5f+angle_random*angle_range)&0xfffe);if(d.flags[5])initial_angle|=seed&1;
    if(!e.dont_emit&&available){port::track::Particle p;p.position=position;p.frame=std::uint8_t(port::driving::cvt_w_s(frame_random*frames));p.life=std::int16_t(port::driving::cvt_w_s(life*1024.f));p.angle=initial_angle;p.speed=std::uint16_t(port::driving::cvt_w_s(std::min(speed*128.f,65535.f)));p.inherit=std::uint8_t(port::driving::cvt_w_s(inherit*255.f));for(unsigned k=0;k<3;++k)p.direction[k]=std::int8_t(port::driving::cvt_w_s(direction[k]*127.f));particles.push_back(p);--available;}
    countdown=1.f/((c[4]-number_variance)+random(seed)*number_variance);countdown=std::clamp(countdown,0.f,240.f);

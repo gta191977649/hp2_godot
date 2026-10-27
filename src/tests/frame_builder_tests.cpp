@@ -206,6 +206,8 @@ int main() {
         all_layers.widgets={staged_text,quad_widget("MISSING",0,0,0xdeadbeef,24),
                            quad_widget("OVERLAY",0,0,kPanel,0)};
         runtime::build_frame(all_layers,sizes,{},frame);check_stage_coverage(frame);
+        check(frame.quads[0].frontend_layer==20 && frame.quads[1].frontend_layer==20 && frame.quads[2].frontend_layer==20
+                && frame.quads[3].frontend_layer==0,"glyph expansion lost original Flailer layer");
         check(frame.frontend_ranges.size()==2 && frame.frontend_ranges[0].count==3 &&
               frame.frontend_ranges[1].first==3 && frame.frontend_ranges[1].count==1,
               "glyphs or missing assets corrupted emitted-quad range counts");
@@ -217,7 +219,8 @@ int main() {
                   combined.frontend_ranges[3].first==7,"append failed to rebase stage ranges");
             for(std::size_t i=0;i<combined.quads.size();++i)
                 check(combined.quads[i].destination.x==original.quads[i%4].destination.x &&
-                      combined.quads[i].texture==original.quads[i%4].texture,
+                      combined.quads[i].texture==original.quads[i%4].texture &&
+                        combined.quads[i].frontend_layer==original.quads[i%4].frontend_layer,
                       "append changed original flat quad sequence");
             auto foreground=original;foreground.quads={original.quads.back()};
             foreground.frontend_ranges={{render::FrontendStage::foreground,0,1}};

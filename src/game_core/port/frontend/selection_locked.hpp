@@ -36,6 +36,9 @@ struct LockedDisplayServices {
 class LockedDisplay {
 public:
     explicit LockedDisplay(hp2::frontend::FeScreen&);
+    ~LockedDisplay();
+    LockedDisplay(const LockedDisplay&)=delete;
+    LockedDisplay& operator=(const LockedDisplay&)=delete;
     void SetCurrentCar(hp2::debug::VisibleCar*,int unlock_all,int player_number,
         int game_type,std::uint32_t real_timer,const LockedDisplayServices&);
     void Update(std::uint32_t real_timer,float real_time_elapsed);
@@ -48,8 +51,9 @@ public:
     hp2::debug::tCubic1D Spline;
 private:
     hp2::frontend::FeScreen& screen_;
-    int saved_y_=0;
+    int saved_x_=0,saved_y_=0;
     void setup_slide(float,float);
     void publish_slide();
+    void publish_position(int,int);
 };
 }

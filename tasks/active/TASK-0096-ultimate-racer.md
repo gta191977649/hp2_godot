@@ -89,3 +89,16 @@ packet stage ranges. These are bounded dependencies, not a formal selection entr
 or complete loading lifecycle. See the TASK-0098 checkpoint and its exact next
 action. All parent end-to-end, World/pursuit/outcome and original/performance
 acceptance checkboxes remain open.
+
+Renewed one-delivery request2026-10-26: implementation remains dependency-ordered
+in active TASK-0098. Native mutable frontend effects/nebula/shared budgets and
+normalization now have bounded regressions; compositor counterevidence adds the
+stage5 shared-alpha flush. The five requested end-to-end deliverables remain
+incomplete. Read-only World/police/real-outcome/save prerequisites are retained in
+reverse/task0097/lifecycle-continuation.md E-0096-C01; they are not implementations.
+
+2026-10-27 continuation: TASK-0098 adds a tested native page lifetime composition,
+preload/info/group ownership and shared-alpha/Flailer-depth preparation. Actual
+host resource leases/shared-depth GPU executor and formal event entry are still
+unbound.13 scoped regressions and normal Godot DLL build passed at the checkpoint;
+final commands/results are in TASK-0098. No parent acceptance box is newly checked.

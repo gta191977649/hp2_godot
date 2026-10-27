@@ -77,6 +77,7 @@ add_library(game_core STATIC
   src/game_core/port/frontend/screen_manager.cpp src/game_core/indep/src/fmenus.cpp
   src/game_core/port/frontend/selection_camera.cpp
   src/game_core/port/frontend/selection_locked.cpp
+  src/game_core/port/frontend/composition.cpp
   src/game_core/indep/src/frontendscreens/options.cpp
   src/game_core/indep/src/frontendscreens/joystickconfiguration.cpp
   src/game_core/port/frontend/frontendscreens/registry_0016adb0.cpp
@@ -105,7 +106,7 @@ add_library(port_runtime STATIC src/port/render/frame.cpp src/port/assets/catalo
   src/port/vehicle/catalog.cpp
   src/port/assets/vehicle_geometry.cpp src/port/vehicle/model.cpp
   src/port/runtime/frame_builder.cpp src/port/runtime/frontend_runtime.cpp
-  src/port/runtime/event_tree_view.cpp)
+  src/port/runtime/event_tree_view.cpp src/port/runtime/selection_page.cpp)
 target_include_directories(port_runtime PUBLIC src)
 target_compile_features(port_runtime PUBLIC cxx_std_17)
 find_package(Threads REQUIRED)
@@ -406,6 +407,17 @@ if(BUILD_TESTING)
   target_link_libraries(selection_locked_tests PRIVATE game_core)
   add_test(NAME selection_locked COMMAND selection_locked_tests)
   set_tests_properties(selection_locked PROPERTIES WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  add_executable(frontend_composition_tests src/tests/frontend_composition_tests.cpp)
+  target_link_libraries(frontend_composition_tests PRIVATE game_core)
+  add_test(NAME frontend_composition COMMAND frontend_composition_tests)
+  add_executable(selection_page_tests src/tests/selection_page_tests.cpp)
+  target_link_libraries(selection_page_tests PRIVATE port_runtime)
+  add_test(NAME selection_page COMMAND selection_page_tests)
+  set_tests_properties(selection_page PROPERTIES WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  add_executable(frontend_effects_tests src/tests/frontend_effects_tests.cpp)
+  target_link_libraries(frontend_effects_tests PRIVATE port_runtime)
+  add_test(NAME frontend_effects COMMAND frontend_effects_tests)
+  set_tests_properties(frontend_effects PROPERTIES WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
   add_executable(frontend_name_entry_tests src/tests/frontend_name_entry_tests.cpp)
   target_link_libraries(frontend_name_entry_tests PRIVATE port_runtime)
   add_test(NAME frontend_name_entry COMMAND frontend_name_entry_tests)

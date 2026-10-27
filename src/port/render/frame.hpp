@@ -22,6 +22,9 @@ struct Quad {
  bool has_vertex_data=false;
  std::array<Vec2,4> positions{}, source_points{};
  std::array<Color,4> colors{};
+ // E-0098-F04: authored Flailer layer survives glyph expansion/clipping and
+ // document concatenation. -1 denotes legacy/untagged port quads.
+ std::int8_t frontend_layer=-1;
  bool bypass_clip=false; // E-0039-Q05: original rotated quads skip CPU rectangle clipping.
 };
 // E-0098-F01: view0 Flailer layers24..20 are submitted in eDisplayFrame stage1;

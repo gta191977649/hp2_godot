@@ -14,4 +14,11 @@ inline float ee_div_s_zero(float numerator,float denominator,const char* instruc
     const std::uint32_t bits=((a^b)&0x80000000u)|0x7f7fffffu;
     float value;std::memcpy(&value,&bits,4);return value;
 }
+// Port-only instruction carrier for Debug00128510: VRSQRT with numerator1
+// and zero sum-of-squares. E-0098-P03; exception flags/general VU remain outside.
+// PCSX2's ISA implementation confirms the same finite signed result as DIV.S
+// for this narrow nonzero-numerator/zero-denominator case; see evidence record.
+inline float ee_vrsqrt_one_zero(float squared,const char* instruction_address){
+    return ee_div_s_zero(1.f,squared,instruction_address);
+}
 }

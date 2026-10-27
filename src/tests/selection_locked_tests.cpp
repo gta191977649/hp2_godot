@@ -64,6 +64,16 @@ int main(){
         try{port::selection::FormatUnlockBlurbForCar(out,42,9,1,svc);}catch(const hp2::NotImplemented&){failed=true;}
         require(failed,"unbounded localized formatter overwrote original buffer");
     }
+    {
+        hp2::frontend::FeScreen restored;
+        restored.widgets={widget(0xa8af730b,0x6a096871,80.5f,15.75f),widget(9,0x6a096871,100.5f,35.75f),widget(10,0,4,5)};
+        {port::selection::LockedDisplay temporary(restored);restored.widgets[0].visible=0;restored.widgets[1].a=23;}
+        require(restored.widgets[0].x==80 && restored.widgets[0].y==15
+            && restored.widgets[1].x==100 && restored.widgets[1].y==35,
+            "locked group destructor failed saved integer coordinates");
+        require(!restored.widgets[0].visible && restored.widgets[1].a==23 && restored.widgets[2].x==4,
+            "locked group destructor invented visibility/alpha/unrelated restoration");
+    }
     hp2::frontend::FeScreen screen;screen.name_hash_0x08=7;
     screen.widgets={widget(0xa8af730b,0x6a096871,80.5f,15.75f),
         widget(9,0x6a096871,100.5f,35.75f),widget(0xbea3c79c,0,0,0,200),

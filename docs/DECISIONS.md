@@ -1,3 +1,14 @@
+## TASK-0098 - Port selection lifetime ownership (2026-10-27)
+
+SelectionPage uses required cancellation/resource leases for host model, renderer,
+camera, loader and input registrations. Explicit close preserves the recovered
+single-player normal exit sequence, including duplicate preload and whole
+FrameEffects group kill. Abnormal destruction/construction rollback only releases
+owned resources and restores cached groups. Asynchronous model jobs must not retain a page
+pointer; referenced services outlive the owner. This port exception/lifetime policy
+adds no original-game behavior or GPU readiness claim. Actual production leases
+and the shared colour/depth compositor remain required before formal entry.
+
 ## TASK-0096 - Debug single-player Ultimate Racer authority (2026-10-26)
 
 The user explicitly extends Debug NFSHP2.ELF SHA815b60c7...332f1b behavioral authority
@@ -1051,3 +1062,29 @@ quad order/backend compatibility. Validate complete known coverage before a futu
 compositor relies on it; legacy event-tree appends remain explicitly incomplete.
 This does not authorize replacing original stage0/2/4 shared-depth/reflection
 ordering with a generic vehicle viewport between two canvas layers.
+
+## 2026-10-26 TASK-0098 mutable frontend effects and shared budgets
+
+Project the original general inverse/Hermite operations rather than substituting
+the existing affine inverse or simplifying away original matrix products. Only
+initialized colour and consumed extra X/Y output lanes are claimed; original
+unwritten stack Z/W remain unresolved and unused by rendering. Stage the rewritten
+definitions with particles so a failed basis rebuild cannot publish partial data.
+Do not move original after-render FrameEffects stepping before drawing.
+
+Use explicit port-owned shared1000-particle/400-group accounting and RNG for
+multiple auto-emitter systems. Emitter600 is initial capacity with original pool
+overflow growth, not a limit. The new shared step uses one candidate copy, not
+an additional nested full-simulation transaction. Future World dynamic triggers
+and cross-system definitions require their own reviewed binding.
+
+For the reached zero-speed nebula normalization at Debug00128510, add a narrow
+port VRSQRT-one/zero instruction carrier using the already established finite
+zero-denominator policy. Original instruction/zero-speed asset inputs are the
+game evidence; PCSX2 v2.8.0 VUops is an ISA implementation reference only. No
+epsilon, guessed direction, new particle rate, general VU exception model or
+original equivalence claim. See reverse/task0098/frontend-effects.md E-0098-P03.
+
+Retain E-0098-F03 counterevidence explicitly: reflection0x11 disables envmap and
+sorted alpha, and stage5 owns the shared pending-alpha flush. Implementing five
+flattened viewport images would not satisfy those original conditions.

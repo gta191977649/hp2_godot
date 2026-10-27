@@ -13,6 +13,7 @@
 #include <cstdio>
 #include "game_core/port/driving/projections.hpp"
 #include "game_core/src/bMath.hpp"
+#include "game_core/port/track/particles.hpp"
 
 namespace port::selection::widget_projection {
 // Port cache of immutable original THUMBNAIL_CLOAK_%d hashes. No per-frame strings.
@@ -57,6 +58,19 @@ bool cloaked(const hp2::debug::CarSelector& selector,const hp2::debug::VisibleCa
 }
 
 namespace port::selection {
+// Debug00140C10 through00143C60, E-0098-O02. Compare before bounded copy,
+// retain unchanged LanguageID/dirty state exactly as the original early return.
+void set_widget_string(WidgetContext& ctx,std::uint32_t hash,const std::string& text){
+    auto* widget=hp2::frontend::FindWidget_00143D50(ctx.screen,hash,1);if(!widget)return;
+    if(widget->text==text)return;
+    if(!widget->text_capacity)hp2::not_implemented("0x00140C10","original text widget has no writable capacity");
+    widget->text=text.substr(0,widget->text_capacity-1);widget->dirty_0x2b=5;widget->string_id_0x60=0;
+}
+// Debug00196688 static vector stores, E-0098-P02. No raw BSS values assumed.
+NebulaColours load_nebula_colours(const ::port::driving::Memory& m){
+    return {{{60,100,180,0,60,100,180,38,60,100,180,41,60,100,180,0}},
+        {{77,35,22,0,34,12,12,125,29,4,m.scalar(0x325600),80,21,m.scalar(0x325604),0,0}}};
+}
 // Debug00196688, E-0098-T01. No screen registration or other initializer claim.
 void initialize_camera_offsets(::port::driving::Memory& m){
     m.scalar(0x307970,m.scalar(0x325608));m.scalar(0x307974,0);m.scalar(0x307978,m.scalar(0x32560c));
@@ -75,6 +89,28 @@ std::array<float,16> frontend_render_matrix(const hp2::debug::FrontEndRenderingC
 }
 
 namespace hp2::debug {
+// Debug00193E60, E-0098-P02. Colour writes are shared; basis rebuild occurs
+// later in original frontend DoTimeStep after rendering, never here in Tick.
+void CarSelector::UpdateNebula(::port::driving::Memory& m,::port::track::ParticleSimulation& effects,
+    const ::port::selection::NebulaColours& colours){
+    const auto& car=::port::selection::widget_projection::current(*this,"0x00193E60");
+    if(!car.CarUnlocked && !AllCarsUnlocked)NebulaColourParam=std::min(1.f,NebulaColourParam+m.scalar(0x3255b0));
+    else NebulaColourParam=std::max(0.f,NebulaColourParam-m.scalar(0x3255ac));
+    if(NumNebulaEmitters<0 || NumNebulaEmitters>64)
+        hp2::not_implemented("0x00193E60","nebula emitter count outside decoded original array");
+    const auto step=NumNebulaEmitters?std::uint16_t(0x10000u/unsigned(NumNebulaEmitters)):0;
+    for(int i=0;i<NumNebulaEmitters;++i){
+        if(!NebulaEmitters[i])continue;
+        const auto angle=std::uint16_t(i*step);auto transform=hp2::recovered::bIdentity();
+        hp2::recovered::eRotateZ(m,transform,transform,std::uint16_t(angle+0x4000));
+        transform[12]=hp2::recovered::bCos(m,angle)*15.f;transform[13]=hp2::recovered::bSin(m,angle)*15.f;
+        transform[14]=-1.25f;transform[15]=1;
+        std::array<float,16> colour{};
+        for(int lane=0;lane<16;++lane){const float difference=colours.locked[lane]-colours.unlocked[lane];
+            colour[lane]=difference*NebulaColourParam+colours.unlocked[lane];}
+        effects.set_frontend_emitter(*NebulaEmitters[i],transform,colour);
+    }
+}
 // Debug001947D0, E-0098-T01; full instruction order in lifecycle/0.json.
 // Dependency bodies remain explicit services; no synthetic loader completions.
 void CarSelector::Tick(const ::port::selection::TickServices& svc){
@@ -288,13 +324,64 @@ void CarSelector::SetLogo(::port::selection::WidgetContext& ctx){
     const auto& info=ctx.cars[car.eCarType];
     if(!ctx.translated_key)hp2::not_implemented("0x00195D60","original string-key translation service missing");
     const auto name=ctx.translated_key(info.GetFullName(ctx.translated_id));
-    if(auto* w=hp2::frontend::FindWidget_00143D50(ctx.screen,0x39e91754,1)){
-        if(!w->text_capacity)hp2::not_implemented("0x00195D60","original selected car name buffer has zero capacity");
-        w->text=name.substr(0,w->text_capacity-1);w->string_id_0x60=0;w->dirty_0x2b=5;
-    }
+    ::port::selection::set_widget_string(ctx,0x39e91754,name);
     texture(ctx,0xb270d4a5,CalculateCarLogoTexture(info));
     const auto nfs=CalculateNFSLogoTexture(info);
     if(nfs){texture(ctx,0x729a0c4b,nfs);visible(ctx,0x729a0c4b,true);}else visible(ctx,0x729a0c4b,false);
+}
+// Debug001953B0, E-0098-O02. Metric/tree-event inputs bind original Fred
+// globals explicitly. Speed uses Control.SpeedLimiter, not localized TopSpeed.
+void CarSelector::UpdateInfoBarAtTop(::port::selection::WidgetContext& ctx,
+    const ::port::driving::Memory& memory,bool metric_units,bool use_tree_event){
+    using namespace ::port::selection::widget_projection;
+    const auto& car=current(*this,"0x001953B0");
+    if(car.eCarType<0 || car.eCarType>=64)hp2::not_implemented("0x001953B0","original topbar car identity outside catalogue");
+    const auto& info=ctx.cars[car.eCarType];
+    const bool show=!cloaked(*this,car) && info.UsageType!=CAR_USAGE_TYPE_COP;
+    for(const auto hash:{0x0c0384ccu,0xe6882001u,0xe79e7936u,0x02920d75u,0xd8b0bab5u,0xc86209a4u,0xc86209a5u,0xc86209a6u})visible(ctx,hash,show);
+    if(!ctx.translated_id)hp2::not_implemented("0x001953B0","original topbar numeric localization missing");
+    const auto write=[&](std::uint32_t hash,const std::string& value){::port::selection::set_widget_string(ctx,hash,value);};
+    if(show){
+        const bool suffix=info.HighPerformance!=0 || info.UsageType==CAR_USAGE_TYPE_COP;
+        float speed=info.Control.SpeedLimiter;if(metric_units)speed=speed*memory.scalar(0x3255f8);
+        write(0x0c0384cc,std::to_string(::port::driving::cvt_w_s(speed))+(suffix?"+":"")+" "+ctx.translated_id(metric_units?0x2234b:0x2234a));
+        const auto acceleration=info.GetCarSpec0To60(ctx.translated_id);
+        const auto acceleration_label=ctx.translated_id(42000);
+        write(0xe6882001,acceleration+(suffix?"-":"")+" "+acceleration_label);
+        const auto bhp=info.GetCarSpecBHP(ctx.translated_id);
+        const auto bhp_label=ctx.translated_id(44000);
+        write(0xe79e7936,bhp+(suffix?"+":"")+" "+bhp_label);
+        write(0x02920d75,std::to_string(int(info.CarClass)+1));
+        write(0xd8b0bab5,ctx.translated_id(0xbfb1));
+    }
+    write(0x09b562fd,ctx.translated_id(0xbfaf)+" "+std::to_string(VisibleCars.NumberUnlocked)+"/"+std::to_string(VisibleCars.TotalNumCars));
+    visible(ctx,0x09b562fd,!use_tree_event);
+}
+// Debug00192580, E-0098-O04. Rebuild each player's original list on every
+// call; only changed types unload/load. Both constructor temporaries are local.
+void PreloadCurrentSelectedCars(FrontendDatabase& fred,std::array<int,2>& CurrentPreloadedCarTypes,
+    const ::port::selection::ListServices& lists,const ::port::selection::PreloadServices& loader){
+    if(fred.NumPlayerCars>2)hp2::not_implemented("0x00192580","original player count exceeds decoded two-player storage");
+    for(int player=0;player<fred.NumPlayerCars;++player){
+        VisibleCarSet visible_car_set(fred.FrontendPlayers[player],fred.GameType,
+            player==0 && fred.GameType==7,lists);
+        if(!visible_car_set.pCurrentVisibleCar)hp2::not_implemented("0x00192580","original preload current car is absent");
+        const int type=visible_car_set.pCurrentVisibleCar->eCarType;
+        if(CurrentPreloadedCarTypes[player]==type)continue;
+        if(!loader.load || !loader.unload || !loader.begin_loading || !loader.set_frontend_roundrobin)
+            hp2::not_implemented("0x00192580","original preload CarLoader binding missing");
+        if(CurrentPreloadedCarTypes[player]!=-1)loader.unload(CurrentPreloadedCarTypes[player]);
+        CurrentPreloadedCarTypes[player]=type;
+        loader.set_frontend_roundrobin(1,1);loader.load(type);loader.begin_loading();
+    }
+}
+// Debug001926E8, E-0098-O04. Both slots, independent of Fred.NumPlayerCars.
+void UnloadCurrentSelectedCars(std::array<int,2>& CurrentPreloadedCarTypes,
+    const ::port::selection::PreloadServices& loader){
+    for(auto& type:CurrentPreloadedCarTypes)if(type!=-1){
+        if(!loader.unload)hp2::not_implemented("0x001926E8","original preload unload binding missing");
+        loader.unload(type);type=-1;
+    }
 }
 // Debug00191F38, E-0098-S01. Debug0024C8B0 hashing matches reviewed frontend hash.
 VisibleCar::VisibleCar(int type,CarStatus& status,int car_index,const CarTypeInfo& info)
@@ -335,6 +422,19 @@ int CarListSort(const VisibleCar& before,const VisibleCar& after,const ::port::s
     const auto a=key(before),b=key(after);
     const auto first=svc.full_name(before.eCarType),second=svc.full_name(after.eCarType);
     return !(b<a+std::uint32_t(std::strcmp(first.c_str(),second.c_str())>0));
+}
+// Debug001920C0, E-0098-O01. Independent nodes retain original status references;
+// map current identity, preserve counts/order, and do not rerun sorting/unlock checks.
+VisibleCarSet::VisibleCarSet(const VisibleCarSet& source)
+    :TotalNumCars(source.TotalNumCars),NumberUnlocked(source.NumberUnlocked){
+    VisibleCarList.reserve(source.VisibleCarList.size());
+    for(const auto& node:source.VisibleCarList){
+        if(!node)hp2::not_implemented("0x001920C0","null node outside original visible-car list");
+        auto copy=std::make_unique<VisibleCar>(*node);
+        if(node.get()==source.pCurrentVisibleCar)pCurrentVisibleCar=copy.get();
+        VisibleCarList.push_back(std::move(copy));
+    }
+    if(!pCurrentVisibleCar && !VisibleCarList.empty())pCurrentVisibleCar=VisibleCarList.front().get();
 }
 // Debug00192518 -> typed00196960 -> bList::Sort00249958, E-0098-S01.
 void VisibleCarSet::SortVisibleCarList(const ::port::selection::ListServices& svc){

@@ -24,8 +24,9 @@ render::Rect clip_of(hp2::frontend::FeScreen& screen, const hp2::frontend::FeWid
 // Appends `quad` after applying the original clip rectangle. Returns false when the clip
 // removes it entirely.
 bool emit(render::Frame& out, render::Quad quad, const render::Rect& clip,
-          render::FrontendStage stage) {
+          render::FrontendStage stage,std::int8_t layer) {
     if (!render::crop(quad, clip)) return false;
+    quad.frontend_layer=layer;
     const auto first=out.quads.size();
     out.quads.push_back(quad);
     if (!out.frontend_ranges.empty() && out.frontend_ranges.back().stage==stage &&
@@ -137,7 +138,7 @@ FrameStats build_frame(hp2::frontend::FeScreen& screen, const WidgetSizes& sizes
                                 options.exclusive_height * w.scale_y};
             quad.source = {0, 0, options.exclusive_width, options.exclusive_height};
             quad.color = {1, 1, 1, 1};
-            if (emit(out, quad, {}, frontend_stage(static_cast<std::int8_t>(w.layer)))) ++stats.quads;
+            if (emit(out, quad, {}, frontend_stage(static_cast<std::int8_t>(w.layer)),static_cast<std::int8_t>(w.layer))) ++stats.quads;
         }
         return stats;
     }
@@ -232,7 +233,7 @@ FrameStats build_frame(hp2::frontend::FeScreen& screen, const WidgetSizes& sizes
                         quad.destination = {pen_x,pen_y,icon.w*w.scale_x*w.scale_x,icon.h*w.scale_y};
                         quad.source = {icon.u+0.5f,icon.v+0.5f,icon.w,icon.h};
                         quad.color = colour;
-                        if (emit(out,quad,clip,stage)) { ++stats.glyphs; ++emitted; }
+                        if (emit(out,quad,clip,stage,static_cast<std::int8_t>(w.layer))) { ++stats.glyphs; ++emitted; }
                         pen_x += icon.advance;
                         break;
                     }
@@ -255,7 +256,7 @@ FrameStats build_frame(hp2::frontend::FeScreen& screen, const WidgetSizes& sizes
                 //00142694..001426D4: equal half-texel offsets at both UV edges, same extent.
                 quad.source = {glyph->u + 0.5f, glyph->v + 0.5f, glyph->w, glyph->h};
                 quad.color = colour;
-                if (emit(out, quad, clip,stage)) { ++stats.glyphs; ++emitted; }
+                if (emit(out, quad, clip,stage,static_cast<std::int8_t>(w.layer))) { ++stats.glyphs; ++emitted; }
                 // Preserve the original double application of scale to kerning.00142844..54.
                 const float step = (fixed ? cell : glyph->advance + adjustment) * w.scale_x;
                 pen_x += wrapped ? std::nearbyint(step) : step;
@@ -290,7 +291,7 @@ FrameStats build_frame(hp2::frontend::FeScreen& screen, const WidgetSizes& sizes
             quad.colors[i] = {static_cast<float>(c&255)/128, static_cast<float>((c>>8)&255)/128,
                 static_cast<float>((c>>16)&255)/128, static_cast<float>(c>>24)/128};
         }
-        if (emit(out, quad, clip,stage)) ++stats.quads;
+        if (emit(out, quad, clip,stage,static_cast<std::int8_t>(w.layer))) ++stats.quads;
         else ++stats.clipped_out;
     }
     return stats;

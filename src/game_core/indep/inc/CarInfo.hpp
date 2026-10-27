@@ -19,6 +19,7 @@ struct WheelInfo {
     int WheelNumber=0;
     float YRenderOffset=0;
 };
+struct ControlInfo {float SpeedLimiter=0;}; // Decoded accessed field only, not ABI.
 struct CarTypeInfo {
     std::array<char,32> CarTypeName{},DashGeometryFilename{};
     std::int8_t HighPerformance=0,NumAvailableSkinNumbers=0,CarClass=0;
@@ -27,11 +28,14 @@ struct CarTypeInfo {
     std::array<std::int8_t,10> AvailableSkinNumbers{};
     int DefaultSkinNumber=0;
     std::array<WheelInfo,4> Wheels{};
+    ControlInfo Control;
     const CarLanguageInfo* pLanguageInfo=nullptr;
     int GetNumAvailableSkins() const;
     // Language is an explicit host binding of the original global language.
     int GetAvailableSkin(int index,int language) const;
     std::string GetFullName(const std::function<std::string(int)>& GetTranslatedString) const;
+    std::string GetCarSpec0To60(const std::function<std::string(int)>&) const;
+    std::string GetCarSpecBHP(const std::function<std::string(int)>&) const;
 };
 }
 namespace port::selection {

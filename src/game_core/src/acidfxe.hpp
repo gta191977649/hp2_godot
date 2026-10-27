@@ -21,3 +21,12 @@ namespace hp2::recovered {
 // Original src/acidfxe.cpp: Retail00126AF8 / Debug00126C50.
 port::driving::SolverVector hermite_parameter(const port::driving::SolverMatrix&,float);
 }
+
+namespace hp2::debug {
+// Debug001261E0/00126378/00126AB8; E-0098-P01. Original src/acidfxe.cpp
+// math with explicit finite, nonsingular host storage; not the affine bInvertMatrix.
+float fDeterminant(const port::driving::SolverMatrix&);
+void fInvertMatrix(port::driving::SolverMatrix&,const port::driving::SolverMatrix&);
+void hermite_basis(port::driving::SolverMatrix&,const port::driving::SolverMatrix&,
+    float,float,float,float);
+}

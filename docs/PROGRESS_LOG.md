@@ -1,3 +1,73 @@
+## 2026-10-27 - TASK-0098 page ownership and compositor preparation
+
+User restored Ghidra MCP; continued readonly captured Debug evidence under the
+renewed five-deliverable request. Added native single-player SelectionPage binding
+with required resource/cancellation leases, copied nodes,22 native input callbacks,
+loading/Tick/locked/alpha state,20 shared nebula registrations and ordered explicit
+close. Normal close preserves duplicate preload and whole FrameEffects group kill.
+Port abnormal-construction/disposal rollback is separate. Host fixture tests cover
+delayed loads, pending switch exit, second pad, after-display effects,30 reentries
+and injected construction failure; this is not production upload cancellation QA.
+
+E-0098-O01..O04 adds independent VisibleCarSet copying, grouped integer-position
+restoration, exact topbar/SetString and native preload/unload. E-0098-F04 adds Debug
+byte-radix/shared-alpha order, Flailer depth domains and per-quad source layer.
+602 registrations verify original600 initial pool is not an arbitrary hard cap;
+teardown retains unrelated registrations and trims reusable host storage.
+13 bounded evidence records and698 ignored capture hashes indexed. Constructor/
+destructor/Render2D whole entries remain Decompiled/partial. No Verified promotion.
+
+Scoped13/13 passed26.06s; normal Godot DLL build passed. Final real-asset topbar
+checks passed1/1 in2.34s. Exact commands, source-review and progress contracts are
+recorded in TASK-0098. Final page failure-gate1/1 passed1.19s, final Godot rebuild
+passed, progress contracts2/2 passed1.91s, full diff whitespace check passed. All698
+capture hashes and13 new scoped unique address keys/record paths passed. An initial
+whole-catalog uniqueness assumption was corrected against seven unchanged Retail
+alias addresses in HEAD. Toolchain/pins unchanged. No commit/staging/restricted files.
+
+Remaining work: actual shared physical colour/depth GPU executor, original native
+help/speech/rectangle services, production cancellation leases and formal event/
+StartRace. Full World, police/rules/results/progression/save, Debug original-runtime
+comparison and1080p performance acceptance are incomplete. Continue TASK-0098 from
+page-ownership.md/composition-preparation.md;0099..0103 remain backlog.
+
+## 2026-10-26 - TASK-0098 mutable frontend effects and dependency audit
+
+Continued active TASK-0098 under the renewed request to finish all five TASK-0096
+deliverables in one delivery. The end-to-end request remains unfulfilled. Native
+E-0098-P01..P04 adds finite general inverse/Hermite math, mutable frontend bases,
+original nebula transforms/shared colour matrices, zero-speed VRSQRT carrier and
+shared1000/400 particle/group budget/RNG transactions and teardown. Shared systems
+reject private-budget stepping and unbound dynamic triggers. One candidate is
+used per shared step; ordinary driving/GPU-emission paths retain their defaults.
+Definitions/unknown extra Z/W/global dynamic-trigger ownership boundaries remain
+explicit. See reverse/task0098/frontend-effects.md for original sources, ISA-only
+reference distinction, failed/corrected test assumptions and exact commands.
+
+Validation: native scoped11/11 passed23.41s with original assets/Debug ELF; after
+the final shared-accounting guards, effects/GPU-emission/driving3/3 passed6.56s.
+Particle boundary source-review1/1 passed8.56s. Normal Godot DLL build passed
+before final guards; final rebuild and generated-progress contracts recorded in
+active TASK-0098. CMake3.29.2/GCC13.2.0/Python3.14.4; godot-cpp
+e4b7c25e721ce3435a029087e3917a30aa73f06b unchanged. No original runtime, window,
+performance or full retry/resource acceptance is asserted. Read-only process/
+listener inspection found no PCSX2 or21512/28011 listening endpoint.
+
+E-0098-F03 corrects prior compositor prose: reflection0x11 suppresses envmap and
+sorted-alpha strips; stages2/4 flush solids only, stage5 flushes their shared
+pending alpha domain. Existing stage1/7 metadata does not implement that domain.
+An overbroad Release-disabled loader inference was rejected against the shared
+base-class source. See compositor-correction.md. Independent read-only E-0096-C01
+police/real-finish/result/autosave dependencies are durable in
+reverse/task0097/lifecycle-continuation.md; no downstream implementation was
+silently substituted or marked complete.
+
+Exact continuation: TASK-0098 complete selector ownership/input/popup/help/speech/
+after-render effects and corrected stage0/1/2/4/5/7 compositor/profile binding,
+then formal event entry and actual launch. Only then activate TASK-0099 for shared
+World/participants, followed by police, genuine finish/rewards/progression/results/
+private transactional save. No staging/commit, synthetic outcome or Verified claim.
+
 ## 2026-10-26 - TASK-0098 selector loading, locked display and packet stages
 
 Continued TASK-0098 under the renewed full TASK-0096 request. E-0098-T01 recovers
@@ -508,8 +578,10 @@ place and kept, because the fact that a session believed it, and why, is itself 
 ## Contents
 
 <!-- generated:contents:begin -->
-<!-- Generated by reverse/scripts/generate_progress.py on 2026-10-26. Do not edit by hand. -->
+<!-- Generated by reverse/scripts/generate_progress.py on 2026-10-27. Do not edit by hand. -->
 
+- [2026-10-27 - TASK-0098 page ownership and compositor preparation](#2026-10-27---task-0098-page-ownership-and-compositor-preparation)
+- [2026-10-26 - TASK-0098 mutable frontend effects and dependency audit](#2026-10-26---task-0098-mutable-frontend-effects-and-dependency-audit)
 - [2026-10-26 - TASK-0098 selector loading, locked display and packet stages](#2026-10-26---task-0098-selector-loading-locked-display-and-packet-stages)
 - [2026-10-26 - TASK-0098 selection input and display continuation](#2026-10-26---task-0098-selection-input-and-display-continuation)
 - [2026-10-26 - TASK-0098 original selection native core](#2026-10-26---task-0098-original-selection-native-core)

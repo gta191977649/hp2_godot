@@ -24,6 +24,13 @@ struct ParticleEmitter {
  std::array<float,4> inherit_velocity{};std::string name;
 };
 struct ParticleResources {std::vector<ParticleDefinition> definitions;std::vector<ParticleEmitter> emitters;};
+// Port-owned transaction state for original global AcidRandomSeed and the two
+// non-overflow pools. Copy with ALL participating simulations for whole-world
+// rollback. Emitter pool600 is initial storage and may grow; it is not a cap.
+struct SharedParticleState {std::uint32_t seed=0;std::size_t particles=0,groups=0;};
+// Debug00128870 frontend branch, E-0098-P01. Fully defined colour lanes and
+// consumed extra X/Y lanes only; original unwritten extra Z/W stack lanes unknown.
+void rebuild_frontend_bases(ParticleDefinition&,const port::driving::Memory&);
 struct Particle {
  std::int16_t life=0;std::uint16_t angle=0,speed=0;std::uint8_t inherit=0,frame=0;
  std::array<float,3> position{};std::array<std::int8_t,3> direction{};
@@ -59,7 +66,19 @@ struct ParticleGpuCommand {
 class ParticleSimulation {
 public:
  explicit ParticleSimulation(ParticleResources,std::uint32_t global_seed);
- void step(port::driving::Memory&,float,const std::array<std::array<float,3>,3>& interest_points);
+ ParticleSimulation(ParticleResources,SharedParticleState&);
+ // Original AddAutoEmitter registration with stable port handles, shared RNG
+ // and reuse after owning selector teardown. No hard600-emitter limit.
+ std::size_t add_auto_emitter(const ParticleEmitter&,SharedParticleState&);
+ void step(port::driving::Memory&,float,const std::array<std::array<float,3>,3>& interest_points,
+           bool frontend=false);
+ // Auto-emitter step against shared pools/RNG; publishing both is transactional.
+ // Dynamic TriggerEffect callers still need an owning shared transaction adapter.
+ void step_shared(SharedParticleState&,port::driving::Memory&,float,
+                  const std::array<std::array<float,3>,3>&,bool frontend=false);
+ void remove_auto_emitter(std::size_t);
+ void kill_all_active_effects();
+ void kill_all_active_effects(SharedParticleState&);
  // Select before spawning. GPU mode keeps only the original life/expiry ledger
  // on CPU; group particle positions remain their birth positions in this mode.
  void set_gpu_emission(bool enabled);
@@ -69,6 +88,14 @@ public:
  // Port-owned copies of Debug afxCopyEmitter 0x00127380 (E-0075-001).
  // Dynamic copies share particle/group pools, but never enter the auto-emitter list.
  std::size_t add_dynamic_emitter(const ParticleEmitter&);
+ // Port typed write binding of Debug selector00193E60. Stable emitter indices;
+ // all emitters sharing one original definition see the same colour matrix.
+ void set_frontend_emitter(std::size_t index,const std::array<float,16>& transform,
+                            const std::array<float,16>& colour_matrix){
+  const auto definition=definition_.at(index);auto& emitter=resources_.emitters.at(index);
+  emitter.local_world=transform;
+  if(definition<resources_.definitions.size())resources_.definitions[definition].colour_matrix=colour_matrix;
+ }
  void clear_dynamic_emitters();
  // Caller stages a simulation transaction around event triggers plus step().
  // Debug Car::TriggerEffect restores orientation with its last selected local
@@ -89,6 +116,7 @@ public:
  void set_state_cache(bool enabled){state_cache_=enabled;}
 private:
  bool state_cache_=false,gpu_emission_=false;
+ bool shared_accounting_=false;
  std::uint64_t next_group_id_=1;
  std::vector<ParticleGpuCommand> gpu_commands_;
  void advance_gpu(port::driving::Memory&,float,const std::array<std::array<float,3>,3>&);
@@ -96,8 +124,15 @@ private:
      const std::array<std::array<float,3>,3>&,const std::array<float,16>&,
      const std::array<float,4>&,const std::array<float,16>*);
  void capture_spawn(const ParticleGroup&,std::size_t before);
+ void clear_active_groups();
+ void trim_removed_auto_tail();
+ void advance_native(port::driving::Memory&,float,const std::array<std::array<float,3>,3>&,
+                     bool,std::vector<ParticleEmitter>&,std::list<ParticleGroup>&,
+                     std::uint32_t&,std::vector<ParticleDefinition>&);
  std::array<float,3> car_velocity_{};
  std::size_t static_count_=0;
+ std::vector<bool> auto_storage_live_;
+ std::size_t particle_capacity_=1000,group_capacity_=400;
  ParticleResources resources_;std::uint32_t seed_;std::vector<std::size_t> order_,definition_;std::list<ParticleGroup> groups_;
 };
 ParticleResources decode_particles(const std::vector<std::uint8_t>&);

@@ -13,6 +13,7 @@
 #include <string>
 
 namespace hp2::debug {struct VisibleCar;}
+namespace port::track {class ParticleSimulation;}
 
 namespace port::selection {
 // Port services bind original globals; missing required evidence/services fail explicitly.
@@ -21,6 +22,12 @@ struct ListServices {
     std::function<bool(int,bool)> is_car_unlocked;
     std::function<std::string(int)> full_name;
     bool all_cars_available=false;
+};
+// Explicit original CarLoader globals and RideInfo(type,-1,0,0) request seam.
+struct PreloadServices {
+    std::function<void(int)> unload,load;
+    std::function<void()> begin_loading;
+    std::function<void(int,int)> set_frontend_roundrobin;
 };
 // Semantic popup submission, not an original PopupConfig ABI.
 struct Popup {
@@ -54,6 +61,8 @@ struct WidgetContext {
     std::function<std::string(int)> translated_id;
     std::function<std::string(const std::string&)> translated_key;
 };
+// Semantic FlailerPrintf/SetString binding (Debug00143C60/00140C10).
+void set_widget_string(WidgetContext&,std::uint32_t,const std::string&);
 struct ScreenServices {
     SelectorServices state;
     WidgetContext& widgets;
@@ -87,6 +96,8 @@ struct TickServices {
 // Bounded vector-store part of Debug00196688; call once for a fresh selection
 // memory image, before Tick. ELF zero-fill is not C++ static initialization.
 void initialize_camera_offsets(::port::driving::Memory&);
+struct NebulaColours {std::array<float,16> unlocked{},locked{};};
+NebulaColours load_nebula_colours(const ::port::driving::Memory&);
 }
 namespace hp2::debug {
 // Debug ScreenMessage/ScreenCallbackData: decoded fields only, no original layout.
@@ -117,10 +128,18 @@ struct VisibleCarSet {
     VisibleCar* pCurrentVisibleCar=nullptr;
     int TotalNumCars=0,NumberUnlocked=0;
     VisibleCarSet(FrontendPlayerInfo&,int game_type,bool be_a_cop,const ::port::selection::ListServices&);
+    VisibleCarSet(const VisibleCarSet&);
+    VisibleCarSet& operator=(const VisibleCarSet&)=delete;
     void SortVisibleCarList(const ::port::selection::ListServices&);
     VisibleCar* GetNextCar(VisibleCar*);
     VisibleCar* GetPrevCar(VisibleCar*);
 };
+// Debug00192580/001926E8. CurrentPreloadedCarTypes is the original two-slot
+// global projected as host state; no owning loader or PS2 RideInfo ABI claim.
+void PreloadCurrentSelectedCars(FrontendDatabase&,std::array<int,2>&,
+    const ::port::selection::ListServices&,const ::port::selection::PreloadServices&);
+void UnloadCurrentSelectedCars(std::array<int,2>&,const ::port::selection::PreloadServices&);
+
 enum eSelectorState { SS_SELECT=0,SS_TRANSMISSION=1,SS_HANDLING=2,SS_READY=3,SS_NUM_STATES=4 };
 enum TransmissionTypes { TT_AUTO=0,TT_MANUAL=1,TT_SPORT=2 };
 enum HandlingModes { HM_CLASSIC=0,HM_EXTREME=1 };
@@ -139,7 +158,7 @@ struct CarSelector {
     int PopupID=-1;
     int NumSwatches=0;
     std::array<std::uint32_t,10> SwatchFlailerHashes{},SwatchTextureHashes{};
-    tCubic1D ThumbnailHorizCubic;
+    tCubic1D ThumbnailHorizCubic{};
     VisibleCar* LoadedCar=nullptr;
     VisibleCar* LoadingCar=nullptr;
     FrontEndRenderingCar* pFrontEndRenderingCar=nullptr;
@@ -149,6 +168,12 @@ struct CarSelector {
     std::uint16_t CarRotationZ=0x3efb;
     std::uint16_t StatCamFOV=0x1c44;
     int LightsOn=0,CopLightsOn=0;
+    int NumNebulaEmitters=0;
+    float NebulaColourParam=0;
+    // Port handles for original nullable emitter pointers; no PS2 ABI overlay.
+    std::array<std::optional<std::size_t>,64> NebulaEmitters{};
+    void UpdateNebula(::port::driving::Memory&,::port::track::ParticleSimulation&,
+        const ::port::selection::NebulaColours&);
     void Tick(const ::port::selection::TickServices&);
     void SetupCarOverrideModel();
     void ShowLoadedCar(const ::port::selection::RenderServices&);
@@ -162,6 +187,8 @@ struct CarSelector {
     std::uint32_t CalculateCarLogoTexture(const CarTypeInfo&) const;
     std::uint32_t CalculateNFSLogoTexture(const CarTypeInfo&) const;
     void SetLogo(::port::selection::WidgetContext&);
+    void UpdateInfoBarAtTop(::port::selection::WidgetContext&,const ::port::driving::Memory&,
+                            bool metric_units,bool use_tree_event);
     // Service receives a Debug help-table address, zero for original default override.
     void AdjustHelpMessage(const FrontendDatabase&,const std::function<void(std::uint32_t)>&);
     bool CanEnterOrbitMode(const VisibleCar*,bool help_active) const;

@@ -1,6 +1,7 @@
 #include "game_core/indep/src/frontendscreens/selectcar.hpp"
 #include "game_core/port/assets/fe_language.hpp"
 #include "game_core/port/not_implemented.hpp"
+#include "game_core/port/driving/memory.hpp"
 #include "platform/ps2_asset_root.hpp"
 #include "port/vehicle/catalog.hpp"
 #include "port/runtime/frame_builder.hpp"
@@ -57,6 +58,52 @@ int main(){
         require(alpha.widgets[0].a==192,"duplicate restoration must use original head-first destruction order");
     }
     using namespace hp2::debug;
+    {
+        std::array<CarTypeInfo,64> data{};FrontendPlayerInfo owner;
+        data[0].NumAvailableSkinNumbers=1;data[0].Control.SpeedLimiter=200;
+        data[0].CarClass=-2;data[0].HighPerformance=1;
+        const CarLanguageInfo language{0,501,502,503,504,505};data[0].pLanguageInfo=&language;
+        owner.SetCarAvailability(eCAR_UNLOCKED_FULLY_VISIBLE,0,-1,false,data,0);
+        port::selection::ListServices services{data,{},[](int){return std::string("fixture");},false};
+        VisibleCarSet original(owner,9,false,services);
+        original.pCurrentVisibleCar->ThumbnailHash=123;original.pCurrentVisibleCar->SkinIndex=7;
+        VisibleCarSet copy(original);
+        require(copy.pCurrentVisibleCar!=original.pCurrentVisibleCar
+            && copy.pCurrentVisibleCar->pCarStatus==original.pCurrentVisibleCar->pCarStatus
+            && copy.pCurrentVisibleCar->SkinIndex==7 && copy.pCurrentVisibleCar->ThumbnailHash==123,
+            "selector list copy lost independent nodes/shared player status or copied fields");
+        copy.pCurrentVisibleCar->SkinIndex=0;
+        require(original.pCurrentVisibleCar->SkinIndex==7,"page copy changed temporary source node");
+        original.pCurrentVisibleCar=nullptr;VisibleCarSet fallback(original);
+        require(fallback.pCurrentVisibleCar==fallback.VisibleCarList.front().get(),"copy without source current must select first node");
+        hp2::frontend::FeScreen screen;
+        for(auto id:{0x0c0384ccu,0xe6882001u,0xe79e7936u,0x02920d75u,0xd8b0bab5u,
+                    0xc86209a4u,0xc86209a5u,0xc86209a6u,0x09b562fdu}){
+            hp2::frontend::FeWidget w;w.name_hash=id;w.type=1;w.text_capacity=80;screen.widgets.push_back(w);
+        }
+        std::vector<int> translated;
+        port::selection::WidgetContext ctx{screen,data,{}, {},[&](int id){translated.push_back(id);return "L"+std::to_string(id);},{}};
+        port::driving::Memory m;m.map(0x3255f8,4);m.scalar(0x3255f8,1.61f);
+        CarSelector ui{copy};ui.UpdateInfoBarAtTop(ctx,m,false,false);
+        require(widget(screen,0x0c0384cc).text=="200+ L140106"
+            && widget(screen,0xe6882001).text=="L501- L42000"
+            && widget(screen,0xe79e7936).text=="L503+ L44000"
+            && widget(screen,0x02920d75).text=="-1"
+            && widget(screen,0x09b562fd).text=="L49071 1/1","topbar numeric speed/spec suffix/signed class/counter differs");
+        require(translated==std::vector<int>{0x2234a,501,42000,503,44000,0xbfb1,0xbfaf},"topbar translation order differs");
+        ui.UpdateInfoBarAtTop(ctx,m,true,true);
+        require(widget(screen,0x0c0384cc).text=="322+ L140107" && !widget(screen,0x09b562fd).visible,"metric speed or tree counter visibility differs");
+        data[0].UsageType=CAR_USAGE_TYPE_COP;translated.clear();ui.UpdateInfoBarAtTop(ctx,m,false,false);
+        for(std::size_t i=0;i<8;++i)require(!screen.widgets[i].visible,"police car leaked specification widgets");
+        require(translated==std::vector<int>{0xbfaf},"hidden police specs still translated");
+        auto& text=screen.widgets[0];text.text="same";text.dirty_0x2b=4;text.string_id_0x60=88;
+        port::selection::set_widget_string(ctx,text.name_hash,"same");
+        require(text.dirty_0x2b==4 && text.string_id_0x60==88,"unchanged text lost original dirty/language state");
+        text.text_capacity=5;port::selection::set_widget_string(ctx,text.name_hash,"same-long");
+        require(text.text=="same" && text.dirty_0x2b==5 && !text.string_id_0x60,"bounded text compared after truncation");
+        text.text_capacity=1;port::selection::set_widget_string(ctx,text.name_hash,"new");
+        require(text.text.empty(),"one-byte original text capacity failed NUL semantics");
+    }
     tCubic1D path;path.duration=.5f;path.ValDesired=39;path.state=2;
     cPoint::SplineSeek(path,.125f,0,0);near(path.Val,6.09375f,"original spline quarter value differs");
     near(path.dVal,43.875f,"original spline quarter velocity differs");
@@ -158,6 +205,7 @@ int main(){
     port::runtime::WidgetSizes sizes(textures,fonts);
     hp2::port::assets::FeLanguage english(source.read("LANGUAGES/FE_ENGLISH.BIN"));
     const auto translated=[&](int id){std::string text;require(english.lookup(id,text),"original numeric name translation missing");return text;};
+    port::driving::Memory unit_memory;unit_memory.map(0x3255f8,4);unit_memory.word(0x3255f8,0x3fce147b);
     for(const auto& event:trees[1].pEvents){
         FrontendDatabase fred;fred.MakeEventCarsAvailable(trees[1],event,original_cars,0);
         const port::selection::ListServices names{original_cars,{},[&](int type){return original_cars[type].GetFullName(translated);},false};
@@ -169,7 +217,8 @@ int main(){
         ui.SetupThumbnails(bindings);
         for(const auto& node:available.VisibleCarList){
             available.pCurrentVisibleCar=node.get();ui.SetupSwatches(bindings);ui.UpdateSwatches(bindings);
-            ui.SetLogo(bindings);ui.UpdateThumbnails(bindings,0);
+            ui.SetLogo(bindings);ui.UpdateInfoBarAtTop(bindings,unit_memory,false,true);
+            ui.UpdateInfoBarAtTop(bindings,unit_memory,true,true);ui.UpdateThumbnails(bindings,0);
             require(widget(document,0x39e91754).text==original_cars[node->eCarType].GetFullName(translated),"real selected car name binding differs");
             for(int i=0;i<ui.NumSwatches;++i)require(textures.texture(ui.SwatchTextureHashes[i])!=nullptr,"original swatch texture missing");
             require(textures.texture(widget(document,0xb270d4a5).texture_hash)!=nullptr,"original selected car logo texture missing");

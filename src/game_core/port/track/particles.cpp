@@ -23,18 +23,110 @@ ParticleResources decode_particles(const std::vector<std::uint8_t>& bytes){Read 
 }
 
 #include "game_core/indep/inc/AcidFX.hpp"
+#include "game_core/src/acidfxe.hpp"
 #include "game_core/port/not_implemented.hpp"
 #include <algorithm>
 namespace port::track {
+// Debug00128A60..00128B0C, E-0098-P01. Rendering consumes extra X/Y only.
+void rebuild_frontend_bases(ParticleDefinition& definition,const port::driving::Memory& memory){
+ std::array<float,4> parameters{};port::driving::SolverMatrix extra{},colour{},basis{};
+ for(int i=0;i<4;++i){
+  parameters[i]=definition.key_positions[i]*memory.scalar(0x324c84);
+  extra[i*4]=definition.size[i];extra[i*4+1]=definition.relative_angle[i]*memory.scalar(0x324c88);
+ }
+ hp2::debug::hermite_basis(colour,definition.colour_matrix,parameters[0],parameters[1],parameters[2],parameters[3]);
+ // Scratch Z/W zeros are port-only: outputs from those unknown original lanes
+ // are discarded, not claimed as recovered values or passed to rendering.
+ hp2::debug::hermite_basis(basis,extra,parameters[0],parameters[1],parameters[2],parameters[3]);
+ definition.colour_basis=colour;
+ for(int i=0;i<4;++i){definition.extra_basis[i*4]=basis[i*4];definition.extra_basis[i*4+1]=basis[i*4+1];}
+}
 ParticleSimulation::ParticleSimulation(ParticleResources resources,std::uint32_t seed):resources_(std::move(resources)),seed_(seed){
  static_count_=resources_.emitters.size();
+ auto_storage_live_.assign(static_count_,true);
  definition_.resize(resources_.emitters.size(),resources_.definitions.size());
  for(std::size_t i=0;i<resources_.emitters.size();++i){for(std::size_t d=0;d<resources_.definitions.size();++d)if(resources_.definitions[d].name_hash==resources_.emitters[i].data_hash){if(definition_[i]!=resources_.definitions.size())throw std::runtime_error("Ambiguous original AcidFX emitter data");definition_[i]=d;}
   const auto* data=definition_[i]<resources_.definitions.size()?&resources_.definitions[definition_[i]]:nullptr;
   hp2::recovered::AcidEffectSystem::AddAutoEmitter(resources_.emitters[i],data,seed_,[&](bool head){if(head)order_.insert(order_.begin(),i);else order_.push_back(i);});
  }
 }
+ParticleSimulation::ParticleSimulation(ParticleResources resources,SharedParticleState& shared)
+ :ParticleSimulation(std::move(resources),shared.seed){
+ shared.seed=seed_;shared_accounting_=true;
+}
 std::size_t ParticleSimulation::particle_count()const{std::size_t count=0;for(const auto& g:groups_)count+=g.particles.size();return count;}
+std::size_t ParticleSimulation::add_auto_emitter(const ParticleEmitter& input,SharedParticleState& shared){
+ if(!shared_accounting_)throw std::logic_error("Auto-emitter registration requires shared effect accounting");
+ std::size_t index=static_count_;
+ for(std::size_t i=0;i<auto_storage_live_.size();++i)if(!auto_storage_live_[i]
+     && std::none_of(groups_.begin(),groups_.end(),[&](const auto& group){return group.emitter==i;})){index=i;break;}
+ if(index==static_count_ && resources_.emitters.size()!=static_count_)
+  hp2::not_implemented("0x001275F8","appending auto emitters after dynamic copies requires a general stable emitter registry");
+ std::size_t definition=resources_.definitions.size();
+ for(std::size_t i=0;i<resources_.definitions.size();++i)if(resources_.definitions[i].name_hash==input.data_hash){
+  if(definition!=resources_.definitions.size())throw std::runtime_error("Ambiguous original auto-emitter data");
+   definition=i;
+ }
+ auto emitter=input;auto seed=shared.seed;bool head=false;
+ hp2::recovered::AcidEffectSystem::AddAutoEmitter(emitter,
+     definition<resources_.definitions.size()?&resources_.definitions[definition]:nullptr,seed,[&](bool value){head=value;});
+ // Reserve before publishing any logical registration or RNG state.
+ order_.reserve(order_.size()+1);
+ if(index==static_count_){resources_.emitters.reserve(static_count_+1);definition_.reserve(static_count_+1);auto_storage_live_.reserve(static_count_+1);
+  resources_.emitters.push_back(std::move(emitter));definition_.push_back(definition);auto_storage_live_.push_back(true);++static_count_;
+ }else{resources_.emitters[index]=std::move(emitter);definition_[index]=definition;auto_storage_live_[index]=true;}
+ if(head)order_.insert(order_.begin(),index);else order_.push_back(index);
+ seed_=seed;shared.seed=seed;return index;
+}
+// Port storage binding of Debug001277E0; detach only. Original selector then
+// destroys its emitter and calls KillAllActiveEffects for the entire system.
+void ParticleSimulation::remove_auto_emitter(std::size_t index){
+ const auto found=std::find(order_.begin(),order_.end(),index);
+ if(found==order_.end())throw std::invalid_argument("Original auto-emitter is not attached to this system");
+ order_.erase(found);
+ auto_storage_live_.at(index)=false;
+}
+void ParticleSimulation::trim_removed_auto_tail(){
+ if(resources_.emitters.size()!=static_count_)return;
+ while(static_count_ && !auto_storage_live_.back()
+     && std::none_of(groups_.begin(),groups_.end(),[&](const auto& group){return group.emitter==static_count_-1;})){
+  resources_.emitters.pop_back();definition_.pop_back();auto_storage_live_.pop_back();--static_count_;
+ }
+}
+// Debug00127800, E-0098-P04. Keep resources, traversal and RNG unchanged.
+void ParticleSimulation::kill_all_active_effects(){
+ if(shared_accounting_)throw std::logic_error("Shared effects require their pool ledger for teardown");
+ clear_active_groups();
+}
+void ParticleSimulation::clear_active_groups(){
+ if(gpu_emission_){
+  auto commands=gpu_commands_;
+  for(const auto& group:groups_){ParticleGpuCommand command;command.kind=ParticleGpuCommandKind::RemoveGroup;
+   command.group=group.id;command.emitter=group.emitter;command.definition=group.definition;commands.push_back(std::move(command));}
+  gpu_commands_.swap(commands);
+ }
+ groups_.clear();
+ trim_removed_auto_tail();
+}
+void ParticleSimulation::kill_all_active_effects(SharedParticleState& shared){
+ const auto particles=particle_count(),groups=groups_.size();
+ if(shared.particles<particles || shared.groups<groups)throw std::logic_error("Shared particle pool ownership is inconsistent");
+ clear_active_groups();shared.particles-=particles;shared.groups-=groups;
+}
+void ParticleSimulation::step_shared(SharedParticleState& shared,port::driving::Memory& math,float dt,
+ const std::array<std::array<float,3>,3>& points,bool frontend){
+ const auto own_particles=particle_count(),own_groups=groups_.size();
+ if(shared.particles<own_particles || shared.groups<own_groups || shared.particles>1000 || shared.groups>400)
+  throw std::logic_error("Shared particle pool ownership is inconsistent");
+ const auto outside_particles=shared.particles-own_particles,outside_groups=shared.groups-own_groups;
+ auto next=*this;next.shared_accounting_=true;next.seed_=shared.seed;next.particle_capacity_=1000-outside_particles;next.group_capacity_=400-outside_groups;
+ if(frontend && next.gpu_emission_)hp2::not_implemented("0x00128870","frontend dynamic particle bases require the native backend");
+ if(next.gpu_emission_)next.advance_gpu(math,dt,points);
+ else next.advance_native(math,dt,points,frontend,next.resources_.emitters,next.groups_,next.seed_,next.resources_.definitions);
+ const auto particles=outside_particles+next.particle_count(),groups=outside_groups+next.groups_.size();
+ next.particle_capacity_=1000;next.group_capacity_=400;
+ *this=std::move(next);shared.seed=seed_;shared.particles=particles;shared.groups=groups;
+}
 void ParticleSimulation::set_gpu_emission(bool enabled){
  if(enabled==gpu_emission_)return;
  if(!groups_.empty()||!gpu_commands_.empty())throw std::logic_error("Particle backend must be selected before spawning");
@@ -51,6 +143,7 @@ void ParticleSimulation::capture_spawn(const ParticleGroup& group,std::size_t be
  gpu_commands_.push_back(std::move(command));
 }
 void ParticleSimulation::clear_dynamic_emitters(){
+ if(shared_accounting_)hp2::not_implemented("0x00127800","shared dynamic-emitter cleanup requires its owning pool transaction");
  if(gpu_emission_){
   auto commands=gpu_commands_;
   for(const auto& group:groups_)if(group.emitter>=static_count_){ParticleGpuCommand command;
@@ -61,6 +154,7 @@ void ParticleSimulation::clear_dynamic_emitters(){
  // Port-side detach: static world effects and shared RNG survive car resets.
  groups_.remove_if([&](const auto& group){return group.emitter>=static_count_;});
  resources_.emitters.resize(static_count_);definition_.resize(static_count_);
+ trim_removed_auto_tail();
 }
 std::size_t ParticleSimulation::add_dynamic_emitter(const ParticleEmitter& source){
  // Debug afxCopyEmitter 0x00127380: zero allocated record, copy identity,
@@ -80,45 +174,53 @@ std::size_t ParticleSimulation::add_dynamic_emitter(const ParticleEmitter& sourc
 }
 void ParticleSimulation::trigger_dynamic(port::driving::Memory& math,std::size_t index,float intensity,
  const std::array<std::array<float,3>,3>& points,const std::array<float,16>& transform,const std::array<float,4>& velocity,const std::array<float,16>* restored_orientation){
+ if(shared_accounting_)hp2::not_implemented("0x00127858","shared dynamic TriggerEffect requires its owning pool transaction");
  if(gpu_emission_){auto next=*this;next.trigger_gpu(math,index,intensity,points,transform,velocity,restored_orientation);*this=std::move(next);return;}
  if(std::find(order_.begin(),order_.end(),index)!=order_.end())throw std::invalid_argument("Dynamic trigger requires a copied emitter");
  auto& emitter=resources_.emitters.at(index);const auto saved=restored_orientation?*restored_orientation:emitter.local_world;
  emitter.local_world=transform;emitter.inherit_velocity=velocity;
  auto group=std::find_if(groups_.begin(),groups_.end(),[&](const auto& g){return g.emitter==index;});
- const bool available=group!=groups_.end()||groups_.size()<400;
+ const bool available=group!=groups_.end()||groups_.size()<group_capacity_;
  if(group==groups_.end()&&available){groups_.push_back({index,definition_.at(index),{}});group=std::prev(groups_.end());}
  std::vector<Particle> unavailable;auto& particles=available?group->particles:unavailable;
  const auto count=particle_count();
- try{hp2::recovered::AcidEffectSystem::TriggerEmitter(math,emitter,resources_.definitions.at(definition_.at(index)),intensity,points,seed_,particles,count<1000?1000-count:0,available);}
+ try{hp2::recovered::AcidEffectSystem::TriggerEmitter(math,emitter,resources_.definitions.at(definition_.at(index)),intensity,points,seed_,particles,count<particle_capacity_?particle_capacity_-count:0,available);}
  catch(...){emitter.local_world=saved;throw;}
  emitter.local_world=saved;
  if(available&&particles.empty())groups_.erase(group);
 }
-void ParticleSimulation::step(port::driving::Memory& math,float dt,const std::array<std::array<float,3>,3>& points){
- if(gpu_emission_){auto next=*this;next.advance_gpu(math,dt,points);*this=std::move(next);return;}
- // Host transaction: failures never publish partially advanced RNG, groups or emitters.
- // Both paths invoke the same recovered calls in the same order. The candidate
- // stages only mutable state; immutable definitions and traversal indices stay put.
- const auto advance=[&](auto& emitters,auto& groups,auto& seed){
+void ParticleSimulation::advance_native(port::driving::Memory& math,float dt,
+ const std::array<std::array<float,3>,3>& points,bool frontend,
+ std::vector<ParticleEmitter>& emitters,std::list<ParticleGroup>& groups,
+ std::uint32_t& seed,std::vector<ParticleDefinition>& definitions){
  std::size_t count=0;for(const auto& group:groups)count+=group.particles.size();
  for(auto i:order_){auto& e=emitters[i];if(e.state>=2)break;
-  const auto& data=resources_.definitions.at(definition_[i]);
+  const auto& data=definitions.at(definition_[i]);
   hp2::recovered::AcidEffectSystem::DoTimeStep(e,data,dt,[&](float step){
    auto group=std::find_if(groups.begin(),groups.end(),[&](const auto& g){return g.emitter==i;});
-   const bool available=group!=groups.end()||groups.size()<400;
+   const bool available=group!=groups.end()||groups.size()<group_capacity_;
    if(group==groups.end()&&available){groups.push_back({i,definition_[i],{}});group=std::prev(groups.end());}
    std::vector<Particle> unavailable;auto& particles=available?group->particles:unavailable;const auto before=particles.size();
-   hp2::recovered::AcidEffectSystem::TriggerEmitter(math,e,data,step,points,seed,particles,count<1000?1000-count:0,available);count+=particles.size()-before;
+   hp2::recovered::AcidEffectSystem::TriggerEmitter(math,e,data,step,points,seed,particles,count<particle_capacity_?particle_capacity_-count:0,available);count+=particles.size()-before;
    if(available&&particles.empty())groups.erase(group);
   });
  }
+ // Original frontend rebuild follows emission and precedes particle integration.
+ // Caller invokes this after display; moving it before draw changes presentation.
+ if(frontend)for(auto& definition:definitions)rebuild_frontend_bases(definition,math);
  // Debug00128BA4..00128BF0: static pCar==0 contributes no live motion;
  // dynamic groups use current car velocity only for positive MotionInherit.
- for(auto i=groups.begin();i!=groups.end();){const auto& data=resources_.definitions[i->definition];hp2::recovered::AcidEffectSystem::DoTimeStep(i->particles,data,dt,i->emitter>=static_count_&&data.controls[12]>0?car_velocity_:std::array<float,3>{});if(i->particles.empty())i=groups.erase(i);else ++i;}
- };
- if(!state_cache_){auto next=*this;advance(next.resources_.emitters,next.groups_,next.seed_);*this=std::move(next);return;}
+ for(auto i=groups.begin();i!=groups.end();){const auto& data=definitions[i->definition];hp2::recovered::AcidEffectSystem::DoTimeStep(i->particles,data,dt,i->emitter>=static_count_&&data.controls[12]>0?car_velocity_:std::array<float,3>{});if(i->particles.empty())i=groups.erase(i);else ++i;}
+}
+void ParticleSimulation::step(port::driving::Memory& math,float dt,const std::array<std::array<float,3>,3>& points,bool frontend){
+ if(shared_accounting_)throw std::logic_error("Shared effects require step_shared and their pool ledger");
+ if(frontend && gpu_emission_)hp2::not_implemented("0x00128870","frontend dynamic particle bases require the native backend");
+ if(gpu_emission_){auto next=*this;next.advance_gpu(math,dt,points);*this=std::move(next);return;}
+ // World cache stages mutable particles only; frontend also stages its rewritten
+ // definitions. Both invoke exactly the same recovered calls in the same order.
+ if(!state_cache_ || frontend){auto next=*this;next.advance_native(math,dt,points,frontend,next.resources_.emitters,next.groups_,next.seed_,next.resources_.definitions);*this=std::move(next);return;}
  auto emitters=resources_.emitters;auto groups=groups_;auto seed=seed_;
- advance(emitters,groups,seed);
+ advance_native(math,dt,points,frontend,emitters,groups,seed,resources_.definitions);
  // std::allocator-backed container swaps cannot fail, so publishing is atomic
  // with respect to exceptions just as in the whole-simulation reference path.
  resources_.emitters.swap(emitters);groups_.swap(groups);seed_=seed;
@@ -135,11 +237,11 @@ void ParticleSimulation::trigger_gpu(port::driving::Memory& math,std::size_t ind
  auto& emitter=resources_.emitters.at(index);const auto saved=restored_orientation?*restored_orientation:emitter.local_world;
  emitter.local_world=transform;emitter.inherit_velocity=velocity;
  auto group=std::find_if(groups_.begin(),groups_.end(),[&](const auto& g){return g.emitter==index;});
- const bool available=group!=groups_.end()||groups_.size()<400;
+ const bool available=group!=groups_.end()||groups_.size()<group_capacity_;
  if(group==groups_.end()&&available){groups_.push_back({index,definition_.at(index),{},next_group_id_++});group=std::prev(groups_.end());}
  std::vector<Particle> unavailable;auto& particles=available?group->particles:unavailable;
  const auto count=particle_count(),before=particles.size();
- hp2::recovered::AcidEffectSystem::TriggerEmitter(math,emitter,resources_.definitions.at(definition_.at(index)),intensity,points,seed_,particles,count<1000?1000-count:0,available);
+ hp2::recovered::AcidEffectSystem::TriggerEmitter(math,emitter,resources_.definitions.at(definition_.at(index)),intensity,points,seed_,particles,count<particle_capacity_?particle_capacity_-count:0,available);
  emitter.local_world=saved;
  if(available){capture_spawn(*group,before);if(particles.empty())groups_.erase(group);}
 }
@@ -152,11 +254,11 @@ void ParticleSimulation::advance_gpu(port::driving::Memory& math,float dt,const 
   const auto& data=resources_.definitions.at(definition_[i]);
   hp2::recovered::AcidEffectSystem::DoTimeStep(emitter,data,dt,[&](float duration){
    auto group=std::find_if(groups_.begin(),groups_.end(),[&](const auto& g){return g.emitter==i;});
-   const bool available=group!=groups_.end()||groups_.size()<400;
+   const bool available=group!=groups_.end()||groups_.size()<group_capacity_;
    if(group==groups_.end()&&available){groups_.push_back({i,definition_[i],{},next_group_id_++});group=std::prev(groups_.end());}
    std::vector<Particle> unavailable;auto& particles=available?group->particles:unavailable;
    const auto before=particles.size();
-   hp2::recovered::AcidEffectSystem::TriggerEmitter(math,emitter,data,duration,points,seed_,particles,count<1000?1000-count:0,available);
+   hp2::recovered::AcidEffectSystem::TriggerEmitter(math,emitter,data,duration,points,seed_,particles,count<particle_capacity_?particle_capacity_-count:0,available);
    count+=particles.size()-before;
    if(available){capture_spawn(*group,before);if(particles.empty())groups_.erase(group);}
   });

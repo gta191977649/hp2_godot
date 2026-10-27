@@ -53,6 +53,27 @@ int main(){
     VisibleCarSet list(player,9,false,services);
     require(list.TotalNumCars==2 && list.NumberUnlocked==2,"event visible count differs");
     {
+        std::array<int,2> preloaded{-1,-1};std::vector<std::string> requests;
+        port::selection::PreloadServices loader;
+        loader.unload=[&](int type){requests.push_back("unload"+std::to_string(type));};
+        loader.load=[&](int type){requests.push_back("load"+std::to_string(type));};
+        loader.begin_loading=[&]{requests.push_back("begin");};
+        loader.set_frontend_roundrobin=[&](int frontend,int roundrobin){
+            require(frontend==1 && roundrobin==1,"preload original loader flags differ");requests.push_back("flags");};
+        fred.NumPlayerCars=1;PreloadCurrentSelectedCars(fred,preloaded,services,loader);
+        require(preloaded==std::array<int,2>{1,-1} && requests==std::vector<std::string>{"flags","load1","begin"},"initial preload request differs");
+        requests.clear();PreloadCurrentSelectedCars(fred,preloaded,services,loader);
+        require(requests.empty(),"duplicate original preload restarted identical request");
+        fred.FrontendPlayers[0].AssignCarOfType(9,2,6,0,cars);fred.NumPlayerCars=2;
+        PreloadCurrentSelectedCars(fred,preloaded,services,loader);
+        require(requests==std::vector<std::string>{"unload1","flags","load2","begin","flags","load1","begin"}
+            && preloaded==std::array<int,2>{2,1},"changed/two-player preload request order differs");
+        requests.clear();fred.NumPlayerCars=0;UnloadCurrentSelectedCars(preloaded,loader);
+        require(requests==std::vector<std::string>{"unload2","unload1"} && preloaded==std::array<int,2>{-1,-1},"preload cleanup depended on current player count");
+        requests.clear();UnloadCurrentSelectedCars(preloaded,loader);require(requests.empty(),"preload cleanup repeated unloaded requests");
+        fred.NumPlayerCars=1;fred.FrontendPlayers[0].AssignCarOfType(9,1,4,0,cars);
+    }
+    {
         CarSelector ui{list};SelectCarCameraMover camera;ui.pSelectCarCameraMover=&camera;
         require(ui.FadeCarOverlayAlpha==130,"original selector starts behind loading overlay");
         std::vector<std::string> calls;

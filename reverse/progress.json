@@ -8900,7 +8900,7 @@
       "definitions": [
         {
           "path": "src/game_core/src/acidfxe.cpp",
-          "line": 30,
+          "line": 104,
           "name": "RainSplash::Recalc"
         }
       ],
@@ -16222,7 +16222,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/carinfo.cpp",
-          "line": 133,
+          "line": 143,
           "name": "CarTypeInfo::GetNumAvailableSkins"
         }
       ],
@@ -16244,7 +16244,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/carinfo.cpp",
-          "line": 142,
+          "line": 152,
           "name": "Table::SetMinMax"
         }
       ],
@@ -17871,7 +17871,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 486,
+          "line": 586,
           "name": "VisibleCar::SetCurrentSkinNumber"
         }
       ],
@@ -17893,7 +17893,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 491,
+          "line": 591,
           "name": "VisibleCar::NextSkin"
         }
       ],
@@ -17915,7 +17915,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 496,
+          "line": 596,
           "name": "VisibleCar::PrevSkin"
         }
       ],
@@ -17937,7 +17937,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 472,
+          "line": 572,
           "name": "CarSelector::SetupCarOverrideModel"
         }
       ],
@@ -17959,7 +17959,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 479,
+          "line": 579,
           "name": "SelectCarScreen::AreAllSelectorsReady"
         }
       ],
@@ -34267,7 +34267,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/carinfo.cpp",
-          "line": 146,
+          "line": 156,
           "name": "Table::CalcIndexMultiplier"
         }
       ],
@@ -48289,7 +48289,7 @@
       "definitions": [
         {
           "path": "src/game_core/src/acidfxe.cpp",
-          "line": 30,
+          "line": 104,
           "name": "RainSplash::Recalc"
         }
       ],
@@ -80994,7 +80994,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/carinfo.cpp",
-          "line": 133,
+          "line": 143,
           "name": "CarTypeInfo::GetNumAvailableSkins"
         }
       ],
@@ -81229,7 +81229,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/carinfo.cpp",
-          "line": 142,
+          "line": 152,
           "name": "Table::SetMinMax"
         }
       ],
@@ -85368,7 +85368,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 486,
+          "line": 586,
           "name": "VisibleCar::SetCurrentSkinNumber"
         }
       ],
@@ -85395,7 +85395,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 491,
+          "line": 591,
           "name": "VisibleCar::NextSkin"
         }
       ],
@@ -85422,7 +85422,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 496,
+          "line": 596,
           "name": "VisibleCar::PrevSkin"
         }
       ],
@@ -85840,7 +85840,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 472,
+          "line": 572,
           "name": "CarSelector::SetupCarOverrideModel"
         }
       ],
@@ -86432,7 +86432,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 479,
+          "line": 579,
           "name": "SelectCarScreen::AreAllSelectorsReady"
         }
       ],
@@ -188255,34 +188255,42 @@
       "address": "0x00104FE0",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
+      "record_statuses": [
+        "Tested"
+      ],
+      "record_valid": true,
+      "host_test_claim": true,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "RadixSortAlphaKeys(eAlphaSortKey *, eAlphaSortKey *, eAlphaList *)",
+      "name": "RadixSortAlphaKeys__FP13eAlphaSortKeyT0P10eAlphaList",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00104fe0.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001053B8",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
+      "record_statuses": [
+        "Tested"
+      ],
+      "record_valid": true,
+      "host_test_claim": true,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "SortAlphaKeys(eAlphaList *)",
+      "name": "SortAlphaKeys__FP10eAlphaList",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001053b8.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -190955,17 +190963,21 @@
       "address": "0x0010FE48",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "ePoly::Render(TextureInfo *, int)",
+      "name": "Render__5ePolyP11TextureInfoi",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/0010fe48.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -196605,51 +196617,63 @@
       "address": "0x001261E0",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
+      "record_statuses": [
+        "Tested"
+      ],
+      "record_valid": true,
+      "host_test_claim": true,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "fDeterminant(bMatrix4 *)",
+      "name": "fDeterminant__FP8bMatrix4",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/001261e0.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x00126378",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
+      "record_statuses": [
+        "Tested"
+      ],
+      "record_valid": true,
+      "host_test_claim": true,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "fInvertMatrix(bMatrix4 *, bMatrix4 *)",
+      "name": "fInvertMatrix__FP8bMatrix4T0",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00126378.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x00126AB8",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
+      "record_statuses": [
+        "Tested"
+      ],
+      "record_valid": true,
+      "host_test_claim": true,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "hermite_basis(bMatrix4 *, bMatrix4 *, float, float, float, float)",
+      "name": "hermite_basis__FP8bMatrix4T0ffff",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00126ab8.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -197053,35 +197077,51 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001277E0",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "evidenced_body",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "AcidEffectSystem::RemoveAutoEmitter(AcidEmitter *)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/port/track/particles.cpp",
+          "line": 83,
+          "name": "ParticleSimulation::remove_auto_emitter"
+        }
+      ],
+      "issues": [],
+      "name": "RemoveAutoEmitter__16AcidEffectSystemP11AcidEmitter",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/001277e0.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x00127800",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "evidenced_body",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "AcidEffectSystem::KillAllActiveEffects(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/port/track/particles.cpp",
+          "line": 97,
+          "name": "ParticleSimulation::kill_all_active_effects"
+        }
+      ],
+      "issues": [],
+      "name": "KillAllActiveEffects__16AcidEffectSystem",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00127800.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -197135,7 +197175,7 @@
       "definitions": [
         {
           "path": "src/game_core/src/acidfxe.cpp",
-          "line": 41,
+          "line": 115,
           "name": "AcidEffectSystem::DoTimeStep"
         }
       ],
@@ -233823,18 +233863,28 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001860E8",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "partial",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "CarTypeInfo::GetCarSpec0To60(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/carinfo.cpp",
+          "line": 79,
+          "name": "CarTypeInfo::GetCarSpec0To60"
+        }
+      ],
+      "issues": [
+        "explicit untranslated path in body"
+      ],
+      "name": "GetCarSpec0To60__11CarTypeInfo",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001860e8.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -233858,17 +233908,21 @@
       "address": "0x00186128",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
+      "record_statuses": [
+        "Tested"
+      ],
+      "record_valid": true,
+      "host_test_claim": true,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "CarTypeInfo::GetCarSpecBHP(void)",
+      "name": "GetCarSpecBHP__11CarTypeInfo",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00186128.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -234003,7 +234057,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/carinfo.cpp",
-          "line": 79,
+          "line": 88,
           "name": "CarTypeInfo::GetNumAvailableSkins"
         }
       ],
@@ -234028,7 +234082,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/carinfo.cpp",
-          "line": 83,
+          "line": 92,
           "name": "CarTypeInfo::GetAvailableSkin"
         }
       ],
@@ -234352,7 +234406,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/carinfo.cpp",
-          "line": 146,
+          "line": 156,
           "name": "Table::CalcIndexMultiplier"
         }
       ],
@@ -239907,7 +239961,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 300,
+          "line": 387,
           "name": "VisibleCar::VisibleCar"
         }
       ],
@@ -239934,7 +239988,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 309,
+          "line": 396,
           "name": "VisibleCar::SetCurrentSkinNumber"
         }
       ],
@@ -239978,7 +240032,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 315,
+          "line": 402,
           "name": "VisibleCar::NextSkin"
         }
       ],
@@ -240005,7 +240059,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 321,
+          "line": 408,
           "name": "VisibleCar::PrevSkin"
         }
       ],
@@ -240032,7 +240086,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 373,
+          "line": 473,
           "name": "VisibleCarSet::GetNextCar"
         }
       ],
@@ -240059,7 +240113,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 381,
+          "line": 481,
           "name": "VisibleCarSet::GetPrevCar"
         }
       ],
@@ -240076,18 +240130,28 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001920C0",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "partial",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "VisibleCarSet::VisibleCarSet(VisibleCarSet &)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
+          "line": 428,
+          "name": "VisibleCarSet::VisibleCarSet"
+        }
+      ],
+      "issues": [
+        "explicit untranslated path in body"
+      ],
+      "name": "__13VisibleCarSetR13VisibleCarSet",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001920c0.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -240103,7 +240167,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 351,
+          "line": 451,
           "name": "VisibleCarSet::VisibleCarSet"
         }
       ],
@@ -240168,7 +240232,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 340,
+          "line": 440,
           "name": "VisibleCarSet::SortVisibleCarList"
         }
       ],
@@ -240184,34 +240248,42 @@
       "address": "0x00192580",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
+      "record_statuses": [
+        "Tested"
+      ],
+      "record_valid": true,
+      "host_test_claim": true,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "PreloadCurrentSelectedCars(void)",
+      "name": "PreloadCurrentSelectedCars__Fv",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00192580.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001926E8",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
+      "record_statuses": [
+        "Tested"
+      ],
+      "record_valid": true,
+      "host_test_claim": true,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "UnloadCurrentSelectedCars(void)",
+      "name": "UnloadCurrentSelectedCars__Fv",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001926e8.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -240252,7 +240324,7 @@
       "definitions": [
         {
           "path": "src/game_core/port/frontend/selection_locked.cpp",
-          "line": 107,
+          "line": 113,
           "name": "LockedDisplay::SetCurrentCar"
         }
       ],
@@ -240279,7 +240351,7 @@
       "definitions": [
         {
           "path": "src/game_core/port/frontend/selection_locked.cpp",
-          "line": 125,
+          "line": 131,
           "name": "LockedDisplay::Update"
         }
       ],
@@ -240304,7 +240376,7 @@
       "definitions": [
         {
           "path": "src/game_core/port/frontend/selection_locked.cpp",
-          "line": 137,
+          "line": 143,
           "name": "LockedDisplay::Render"
         }
       ],
@@ -240411,17 +240483,21 @@
       "address": "0x00193278",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "CarSelector::~CarSelector(void)",
+      "name": "_$_11CarSelector",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00193278.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -240437,7 +240513,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 153,
+          "line": 189,
           "name": "CarSelector::SetupCarOverrideModel"
         }
       ],
@@ -240464,7 +240540,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 199,
+          "line": 235,
           "name": "CarSelector::SetupSwatches"
         }
       ],
@@ -240491,7 +240567,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 210,
+          "line": 246,
           "name": "CarSelector::UpdateSwatches"
         }
       ],
@@ -240518,7 +240594,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 194,
+          "line": 230,
           "name": "CarSelector::CloseSwatches"
         }
       ],
@@ -240562,7 +240638,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 227,
+          "line": 263,
           "name": "CarSelector::SetupThumbnails"
         }
       ],
@@ -240587,7 +240663,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 238,
+          "line": 274,
           "name": "CarSelector::UpdateThumbnails"
         }
       ],
@@ -240602,18 +240678,28 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x00193E60",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "partial",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "CarSelector::UpdateNebula(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
+          "line": 94,
+          "name": "CarSelector::UpdateNebula"
+        }
+      ],
+      "issues": [
+        "explicit untranslated path in body"
+      ],
+      "name": "UpdateNebula__11CarSelector",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/environment/00193e60.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -240646,7 +240732,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 579,
+          "line": 679,
           "name": "CarSelector::AdjustHelpMessage"
         }
       ],
@@ -240673,7 +240759,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 522,
+          "line": 622,
           "name": "CarSelector::EnterOrbitMode"
         }
       ],
@@ -240700,7 +240786,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 537,
+          "line": 637,
           "name": "CarSelector::EnterChooseMode"
         }
       ],
@@ -240727,7 +240813,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 516,
+          "line": 616,
           "name": "CarSelector::CanEnterOrbitMode"
         }
       ],
@@ -240754,7 +240840,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 550,
+          "line": 650,
           "name": "CarSelector::JoyHandler"
         }
       ],
@@ -240781,7 +240867,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 407,
+          "line": 507,
           "name": "CarSelector::AdvanceState"
         }
       ],
@@ -240806,7 +240892,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 412,
+          "line": 512,
           "name": "CarSelector::DevanceState"
         }
       ],
@@ -240831,7 +240917,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 389,
+          "line": 489,
           "name": "CarSelector::SummonPopup"
         }
       ],
@@ -240875,7 +240961,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 80,
+          "line": 116,
           "name": "CarSelector::Tick"
         }
       ],
@@ -240902,12 +240988,12 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 417,
+          "line": 517,
           "name": "CarSelector::ScreenCallback"
         },
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 605,
+          "line": 705,
           "name": "CarSelector::ScreenCallback"
         }
       ],
@@ -240934,7 +241020,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 503,
+          "line": 603,
           "name": "CarSelector::UpdateFadeGroups"
         }
       ],
@@ -240949,18 +241035,28 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001953B0",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "partial",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "CarSelector::UpdateInfoBarAtTop(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
+          "line": 334,
+          "name": "CarSelector::UpdateInfoBarAtTop"
+        }
+      ],
+      "issues": [
+        "explicit untranslated path in body"
+      ],
+      "name": "UpdateInfoBarAtTop__11CarSelector",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001953b0.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -240976,7 +241072,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 170,
+          "line": 206,
           "name": "CarSelector::UpdateRenderingCarParameters"
         }
       ],
@@ -241003,7 +241099,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 161,
+          "line": 197,
           "name": "CarSelector::ShowLoadedCar"
         }
       ],
@@ -241030,7 +241126,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 259,
+          "line": 295,
           "name": "CarSelector::CalculateCarLogoTexture"
         }
       ],
@@ -241057,7 +241153,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 276,
+          "line": 312,
           "name": "CarSelector::CalculateNFSLogoTexture"
         }
       ],
@@ -241082,7 +241178,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 282,
+          "line": 318,
           "name": "CarSelector::SetLogo"
         }
       ],
@@ -241202,7 +241298,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 453,
+          "line": 553,
           "name": "SelectCarScreen::SetSelectedCars"
         }
       ],
@@ -241246,7 +241342,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/frontendscreens/selectcar.cpp",
-          "line": 443,
+          "line": 543,
           "name": "SelectCarScreen::AreAllSelectorsReady"
         }
       ],
@@ -241381,17 +241477,21 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x00196908",
       "owners": [],
-      "state": "missing",
+      "state": "evidenced_body",
       "record_statuses": [
-        "Decompiled"
+        "Tested"
       ],
       "record_valid": true,
-      "host_test_claim": false,
+      "host_test_claim": true,
       "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "definitions": [
+        {
+          "path": "src/game_core/port/frontend/selection_locked.cpp",
+          "line": 86,
+          "name": "LockedDisplay::~LockedDisplay"
+        }
       ],
+      "issues": [],
       "name": "_$_18CarLockedDisplayer",
       "inventoried": true,
       "record_paths": [
@@ -322640,7 +322740,7 @@
       "definitions": [
         {
           "path": "src/game_core/port/frontend/selection_locked.cpp",
-          "line": 85,
+          "line": 88,
           "name": "LockedDisplay::setup_slide"
         }
       ],
@@ -322656,17 +322756,21 @@
       "address": "0x00241E50",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
+      "record_statuses": [
+        "Tested"
+      ],
+      "record_valid": true,
+      "host_test_claim": true,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "AnimationGroup::~AnimationGroup(void)",
+      "name": "_$_14AnimationGroup",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00241e50.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
