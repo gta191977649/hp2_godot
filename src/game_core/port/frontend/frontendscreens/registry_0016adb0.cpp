@@ -24,7 +24,7 @@ namespace {
 // stored name hash, not StringHash_002534A8 of the class name in the same row. The two differ
 // -- StringHash_002534A8("View Event Tree") is 0xFB14F36C, and screen 39 stores 0x147F8A59 --
 // because the class name and the authored document name are different strings.
-constexpr std::array<Registration, 38> table{{
+constexpr std::array<Registration, 63> table{{
     {"Popup", 0x037F3133u, 0x00000000u}, // call 0x0016E8E8
     {"Select Car Dialog", 0x41C2FDC3u, 0x00000000u}, // call 0x0016E90C
     {"Select Car Dialog P1", 0x6344DA01u, 0x00000000u}, // call 0x0016E930
@@ -63,14 +63,48 @@ constexpr std::array<Registration, 38> table{{
     {"Autosave", 0xFA2AC5C6u, 0x00247D00u}, // call 0x00247E6C
     {"NameEntry", 0x617A4E0Au, 0x0024DBD8u}, // call 0x0024DCA4
     {"View Event Tree", 0x147F8A59u, 0x001FB218u}, // tail call 0x001FB860 -> FUN_0016AD88
+    // TASK-0098 entry prerequisites: E-0091-G01 registration operands.
+    // Registration is not implementation/readiness of a screen handler.
+    {"Select Car", 0xB5074AB4u, 0x00198928u}, // E-0091-G01@00198BC8
+    {"Select Car2P", 0x18DC8E52u, 0x00198928u}, // E-0091-G01@00198BC8
+    {"Select Car2P", 0x18DC8E53u, 0x00198928u}, // E-0091-G01@00198BC8
+    {"Select Track", 0x15417B53u, 0x001A0920u}, // E-0091-G01@001A09E8
+    {"Pause Menu", 0x605D2BF1u, 0x00171060u}, // E-0091-G01@00174B20
+    {"Pause audio", 0x6B321E4Eu, 0x00171898u}, // E-0091-G01@00174B20
+    {"Pause display", 0xCC36FAB2u, 0x00173D88u}, // E-0091-G01@00174B20
+    {"Pause Options", 0x2B5A03A8u, 0x001729F0u}, // E-0091-G01@00174B20
+    {"Race Objective", 0x887B4D37u, 0x00171BB8u}, // E-0091-G01@00174B20
+    {"Race Objective 2PBAC", 0xB5ECD7A0u, 0x00171BB8u}, // E-0091-G01@00174B20
+    {"Pause BAC controls", 0x887B4D37u, 0x00171FD0u}, // E-0091-G01@00174B20
+    {"Debug Menu", 0xD4742CD7u, 0x00174590u}, // E-0091-G01@00174B20
+    {"Points Rewards", 0x7E420558u, 0x001DD278u}, // E-0091-G01@001E1F88
+    {"Task Rewards", 0x7E420558u, 0x001DD278u}, // E-0091-G01@001E1F88
+    {"Events Unlocked", 0x7E420558u, 0x001DD278u}, // E-0091-G01@001E1F88
+    {"Reward menu", 0x7E420558u, 0x001DD278u}, // E-0091-G01@001E1F88
+    {"Race Results", 0xAB049B2Bu, 0x001DD278u}, // E-0091-G01@001E1F88
+    {"Tourney Standings", 0x0532B6FFu, 0x001DD278u}, // E-0091-G01@001E1F88
+    {"Best Lap Times", 0xACB2A4CAu, 0x001DD278u}, // E-0091-G01@001E1F88
+    {"Best Total Times", 0xF5A3CF51u, 0x001DD278u}, // E-0091-G01@001E1F88
+    {"End Game Menu", 0x1A64E903u, 0x001DD278u}, // E-0091-G01@001E1F88
+    {"Be The Cop Results 1P", 0x67EB8D12u, 0x001DD278u}, // E-0091-G01@001E1F88
+    {"Be The Cop Results 2P", 0x67EB8D33u, 0x001DD278u}, // E-0091-G01@001E1F88
+    {"Lap Times 1P", 0xC4881CBDu, 0x001E10F0u}, // E-0091-G01@001E1EEC
+    {"Lap Times 2P", 0xC4881CDEu, 0x001E10F0u}, // E-0091-G01@001E1EEC
 }};
 } // namespace
 
-const std::array<Registration, 38>& registrations() noexcept { return table; }
+const std::array<Registration, 63>& registrations() noexcept { return table; }
 
 const Registration* find_registration(std::string_view name) noexcept {
     for (const auto& entry : table) {
         if (entry.class_name == name) return &entry;
+    }
+    return nullptr;
+}
+
+const Registration* find_registration(std::string_view name, std::uint32_t document_hash) noexcept {
+    for (const auto& entry : table) {
+        if (entry.class_name == name && entry.document_hash == document_hash) return &entry;
     }
     return nullptr;
 }

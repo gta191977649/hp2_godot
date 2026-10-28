@@ -19,8 +19,11 @@ struct Registration {
     std::uint32_t handler_address;
 };
 
-const std::array<Registration, 38>& registrations() noexcept;
+const std::array<Registration, 63>& registrations() noexcept;
+// Name-only lookup returns the first operand row. Select Car2P has two original
+// documents: callers resolving a known document must use the exact overload.
 const Registration* find_registration(std::string_view class_name) noexcept;
+const Registration* find_registration(std::string_view class_name, std::uint32_t document_hash) noexcept;
 // Multiple classes may share a document. First row is for diagnostics only;
 // a document hash cannot recover the originating class or handler uniquely.
 const Registration* find_registration_for_document_hash(std::uint32_t hash) noexcept;

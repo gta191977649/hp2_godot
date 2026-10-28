@@ -32,10 +32,115 @@
     "E-0098-O02",
     "E-0098-O03",
     "E-0098-O04",
-    "E-0098-F04"
+    "E-0098-F04",
+    "E-0098-RP01",
+    "E-0098-RP02",
+    "E-0098-RP03",
+    "E-0098-RP04",
+    "E-0098-RP05"
   ],
   "status": "Scoped native core port tests; presentation/original-runtime comparison incomplete; not Verified",
   "captures": [
+    {
+      "file": "local/task0096/first-event-launch/0015308c-track-loader.json",
+      "sha256": "f3190a967f56fbe9953e0afec5e175adb270602ea6563a35c55516d21f524742"
+    },
+    {
+      "file": "local/task0096/first-event-launch/001532b0-track-loader.json",
+      "sha256": "a23efec28d84722bdecddc0fdec8c6ddb7d1d1c814e40d966fdb91097210b826"
+    },
+    {
+      "file": "local/task0096/first-event-launch/00153420-retail-track-loader.json",
+      "sha256": "9b7e7e4124cc163cbbc4319c7cebc2cb07c6b16e67a837abf0a0753e1441b4da"
+    },
+    {
+      "file": "local/task0096/first-event-launch/00153608-retail-track-loader.json",
+      "sha256": "0b8f23d304a1036ae5783132d7f0c07ad67cc400496962122edcc16077699ffb"
+    },
+    {
+      "file": "local/task0096/first-event-launch/001846d0-retail-track-consumer.json",
+      "sha256": "c23f192cc0faa5f0bc05511d3f49bc0428ead48def3591252b329702b0e6a606"
+    },
+    {
+      "file": "local/task0096/first-event-launch/00184840-retail-track-consumer.json",
+      "sha256": "c23f192cc0faa5f0bc05511d3f49bc0428ead48def3591252b329702b0e6a606"
+    },
+    {
+      "file": "local/task0096/first-event-launch/00185288-retail-track-consumer.json",
+      "sha256": "dc5a2d194d27ce3b101ed7d229162897fbcfabdbeb409a4fc5ab16fc06dff09b"
+    },
+    {
+      "file": "local/task0096/first-event-launch/00185618-retail-character-consumer.json",
+      "sha256": "51962600ff71fa69bc90c4117752fa656c9e318aa7ddeadee0ef6d76af4ea0ae"
+    },
+    {
+      "file": "local/task0096/first-event-launch/00185640-retail-character-consumer.json",
+      "sha256": "936f4ddd630a1b882d36c66d7455d1f6be59e83fa68af1e88f78c5ab6d7eb735"
+    },
+    {
+      "file": "local/task0096/first-event-launch/00185fe8-retail-character.json",
+      "sha256": "4c814cc5b60af5a096b66433a1f6b2cfc744069b347739831b27e779cd604974"
+    },
+    {
+      "file": "local/task0096/first-event-launch/001d5f68-character-track.json",
+      "sha256": "a76f19dffc4ab28e22f8c324eed7f370339b3ba5d5a9ef065ea05cd9ec8f6655"
+    },
+    {
+      "file": "local/task0096/first-event-launch/001d60b8-character-track.json",
+      "sha256": "e16ab15342233fddaa3276b0a74eec1fd6dfb02ca1d161869e8ccc5bf7af5391"
+    },
+    {
+      "file": "local/task0096/first-event-launch/001d6140-character-track.json",
+      "sha256": "1349ab1665e7fbbb033ffddbcb9381396771e2b8409f06a7561c4314c3f2b557"
+    },
+    {
+      "file": "local/task0096/first-event-launch/001d61c8-character-track.json",
+      "sha256": "b02594f7b1ff51b2246a109803fed194db2365d92efaa026e51cb4120422c52a"
+    },
+    {
+      "file": "local/task0096/first-event-launch/001d9508-retail-character.json",
+      "sha256": "a7efecb3d958a554c876fcbb94ae6e4c9b50523fd28e587d970704a9dfdff6d0"
+    },
+    {
+      "file": "local/task0096/first-event-launch/001ea158-character-track.json",
+      "sha256": "c9445727e49d743075e600c84ca65acb13080572da37193750df34562df51ae3"
+    },
+    {
+      "file": "local/task0096/first-event-launch/001ea178-character-track.json",
+      "sha256": "13cba9cbef12c94a4083ad118fa8ee300d51671d3bf68317fc4d0e5f5374a922"
+    },
+    {
+      "file": "local/task0096/first-event-launch/0032739c-character-track.json",
+      "sha256": "75446c8c90bccd05b7dc07dc2a5452fb9bb05c4edce30503ef5b4e7ff45375b3"
+    },
+    {
+      "file": "local/task0096/first-event-launch/CharacterInfo-schema.json",
+      "sha256": "bd834f3cabc06cdc379f70c7a987be568eb6cf33b3acf8ed4a4055fac24586b3"
+    },
+    {
+      "file": "local/task0096/first-event-launch/TrackInfo-schema.json",
+      "sha256": "6e19915e989073c4c6e5953d7e653e98c3a63e737b19b4bc3b07b5a9dc300ce6"
+    },
+    {
+      "file": "local/task0096/first-event-launch/character-track-symbols.json",
+      "sha256": "aeb6cd42550fba51f9af804fed967e5768e7f044f0754c2f1aec8f829ff47d9d"
+    },
+    {
+      "file": "local/task0096/first-event-launch/global-character-track-chunks.json",
+      "sha256": "1ba6ba9353f75599014f7d1cece5fca9b069c5f86efb3f36670a8a46bdc299bf"
+    },
+    {
+      "file": "local/task0096/first-event-launch/real-global-character-track13.json",
+      "sha256": "97c56eed859f09da98d67ec5b9c762ff28cfc50fb66d5c1f94900fe8ae1b9bfd"
+    },
+    {
+      "file": "local/task0096/first-event-launch/retail-gettrackinfo-refs.json",
+      "sha256": "306f5e28d6b71cc159bb5654fc674c2dc3e4bd321b9b24ecb84612673bd651a4"
+    },
+    {
+      "file": "local/task0096/first-event-launch/retail-setupcars-00185690.json",
+      "sha256": "809277e24c6aa447404e7454060a7ca339aca4aec4472cadf814779732dc31d8"
+    },
     {
       "file": "local/task0096/race-agent/001210f0.json",
       "sha256": "6f5008dc5e9dce2b9a7d732699d76dbc7e7698b7006df370b5ff4e54db9e4a35"
@@ -2035,6 +2140,438 @@
     {
       "file": "local/task0098/compositor/targets-refs.json",
       "sha256": "d62c9ebdde63244258ec808660154be0cb0526e9d2fd3ad748753c9846a3e9e3"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00153070.json",
+      "sha256": "f3190a967f56fbe9953e0afec5e175adb270602ea6563a35c55516d21f524742"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001675a0.json",
+      "sha256": "f0129c962700f7e1c596c62fb30d3b9e447137cb414c400e8a295bad6283e365"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001675b0.json",
+      "sha256": "b4026995743785a890da4d7a37362fdb1821c67e48ab4c58c0c4ee7f97c3c628"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00167b5c.json",
+      "sha256": "60a167d4e1b5edbeeb22309e8aee89f95827c9e1617d7faa69fb96c2982a4c71"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00168608.json",
+      "sha256": "48eae027debf375f396ea1082f1c0dfadae07be840ad49ea1f59dd4aad3d5247"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00182440.json",
+      "sha256": "e9bc2af2cd79f782e9b5fdc03df04968b16ba6617c029c7012fbba9d7b563bfa"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00182610.json",
+      "sha256": "0cb8a3889adb9bc93b2d703906fe0f5a8553dd23809805225b6bbd2c438ad438"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00182718.json",
+      "sha256": "941143f53ce24f11ffd05beee66dfeb748ad1c9e3971ef09c926638881e5f680"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00182758.json",
+      "sha256": "93d29dd086e5b5693e20ae29d0763e6ffa71ead8c68285970575c5b0832fdf91"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00182818.json",
+      "sha256": "32638fb56bc8b8d0f6688a1d65938c781af96806a9e250a91953ea40ed470952"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00182990.json",
+      "sha256": "6a273d742dc7506a2426204db0bf2d1fb47c2877af244d24da2f1c86638d137e"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00183378.json",
+      "sha256": "95062d3e51d16724f09ccff24b88fbdf9cec308fd88811fd220cd3ccb49e9757"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00183930.json",
+      "sha256": "e9e7e63b729755c6d62eb4636ee4f79f93df49f1e58fe6778964047a28edbda0"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00183a08.json",
+      "sha256": "618193ae0b11ba37db9a9b8a4135392a7ddb31caaee29f880325a725d76e8b12"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00183a58.json",
+      "sha256": "248e62763134ba686b5910a32ccb879a7d443ab36a31acf84b3dbdd00819aa6e"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00184180.listing.json",
+      "sha256": "b2fcde45d8a0bac495b42126038b301f5c5f6b6c5f5fdd4e47e33da43cdc5a66"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00184390.json",
+      "sha256": "7570b9a7e2a1d81ccb00faf03912e9b9c69100493a69a5299a0216009bf16ccf"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00184640.json",
+      "sha256": "d9034c1ab41d0873b9a860ff1af016c69a03e5696aa5aa33c849b7ad940417e4"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00184c10.json",
+      "sha256": "d077ccdb9a6d244e90bb8a6ab76e675109d0957b7c7cf16b99e4667e9124fd96"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00184c48.json",
+      "sha256": "4bfefbf20dd3bc496675f30fcdeaeb4bbccfff845b42cb050c63215a4a578abd"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00184ca8.json",
+      "sha256": "169abe4d6aed6e005176565afb2784f5e127f7d9510cdbf36b9741657db9069c"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00184d40.json",
+      "sha256": "d2569a9c6948f42faa77b1870d77597148360480f641a63de24c785625ea498d"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00185108.json",
+      "sha256": "fffe0579f9906340a0e49b4b2ec77121fb26ea347d27867ec0ce3d203514434b"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00185140.json",
+      "sha256": "9770700df92e9c3a0c2b1309c57d170a4a5e3bce345b5278550e47ae6de8fc39"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00185fa0.json",
+      "sha256": "1f5dd2b51f78d9a90fbfb89bd407e111c05d40d951f154cebe5dc74df1df338a"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00186330.json",
+      "sha256": "4871959f6285e9926020179cfaa460eaacbd103d3acd2a5ae83c0d5fdc13998b"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001863c8.json",
+      "sha256": "a05b13fe7a04a390cda1f2df33acc415a0b81db310338774f6209a6c486fdd30"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00186610.json",
+      "sha256": "2517275093028bb72419c788c04a3d3ed58b4f6a1943fe674475a19b8df376ce"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001867c0.json",
+      "sha256": "776d98fab5f33f97d4864505703526e67a21624e5e253c4cee7d357f1d90e23a"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001965c0.json",
+      "sha256": "3182940fe8b448fcbf49293a2d368fd308983e0796a71ce8009d386a929ed84c"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001d6140.json",
+      "sha256": "1349ab1665e7fbbb033ffddbcb9381396771e2b8409f06a7561c4314c3f2b557"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001d61c8.json",
+      "sha256": "b02594f7b1ff51b2246a109803fed194db2365d92efaa026e51cb4120422c52a"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001e9968-refs.json",
+      "sha256": "a4a99c8b4e3a81e5de2bc5b1dff72b09d52392508670e76d9bc4d04e4929b656"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001e9968.json",
+      "sha256": "6ba7254960ac87be2a5830563cb9f0a87bba216b683caae72ea075e7b207a083"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001e9968.listing.json",
+      "sha256": "a489e3fe5d1f1b35f1350a691db9755008b1f9c1469b627cbae0b7c95b9d7009"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001e9de0.json",
+      "sha256": "062d8850ff4fb4169d15e6baf80f395b33331c28c5ea779136415e49af739e37"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001e9de0.listing.json",
+      "sha256": "8c0bb3029bd9b9017f6816a72a314bb7d97d6f322089d806da7a2a75a7591096"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001e9e78.json",
+      "sha256": "c9c23e1c0b1676b5f75fd063a7ca62da472ff7a8bc44e21c1bfb490ea1072ced"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001e9ec8.json",
+      "sha256": "95e167a84f3f17fb9822445c2c5ec07f862861c316db3e4b10173b8c20334a81"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001e9ee0.json",
+      "sha256": "5faad22a40f5bf4be3dac2b3bf71d5094e7e530cc146f3d0054f4e3a9bf2c9dd"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001e9f68.json",
+      "sha256": "dfe6da904eae631ac819f6b2604ea8bafc9cbb46193d663534857c9fe5c9ad6a"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001e9ff0.json",
+      "sha256": "9629205b0714d0e9c2e48fac736bb7a1aeaf6d1dce6acbee9fe48d2be74d3ac2"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001ea070.json",
+      "sha256": "ba542b655f2ed7169d56462a115e5780b2a8fca6c7a6a94008fa4760f144cd34"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001ea0b8.json",
+      "sha256": "37bde7506ab1bc6199ebea7a3dada2fec790e782c6d2dacda90c48dd44f0c94d"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001ea158.json",
+      "sha256": "c9445727e49d743075e600c84ca65acb13080572da37193750df34562df51ae3"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001ea178.json",
+      "sha256": "13cba9cbef12c94a4083ad118fa8ee300d51671d3bf68317fc4d0e5f5374a922"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001ea330.json",
+      "sha256": "149840ea052c2f164b0456bfa13adcf9ae0a5829608b15436bdc5f6875aecde0"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001ea330.listing.json",
+      "sha256": "4ac3826ee3f1b60da2dfe60393f7df67a22366a10f1c19645fcc8e76bd9e483e"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001ea440.json",
+      "sha256": "38939cb42c6be7a55851943f7e61b4190994fb135fceec604681e019ca10726b"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001ea7a0.json",
+      "sha256": "c0063274511454ed785f9df765a53eb67d2c5f15f74606855388a51078e6d11e"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001ea7a8.json",
+      "sha256": "ad045d2dd9154cfa7fbe5e2fcac15d072d1112f3f12b4f8aa15f2b8492a0f1bd"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001f2cd0.json",
+      "sha256": "747c47e41d672fbd53def61c366c762a096ab64ab19509ab1520fa7381276bda"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001fa178.json",
+      "sha256": "952ffda73654f77d98806e7c5ed47377318048dd2ce6da1c875f288bf5ee7b20"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001fa378.json",
+      "sha256": "3e7d9595bc98253c400d68ebc9adf386ca8be20bd3837441015fd2f4f53c2aa5"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001fb540.json",
+      "sha256": "aa1617c81991578341bdc17fedaae687a2bf7a7457d998c9dd42294966d8dabe"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001fb560.json",
+      "sha256": "b8183efbe035026016a38683559589dd2a85342145ea1f3d33afca298e93d24f"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001fc1e8.json",
+      "sha256": "eb05756fad86cbc9b52ffd7a218f0ca5edab19e4da033a7475c73a8101208bee"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001fc5e8.json",
+      "sha256": "adc6517b7a2159c20eccac2833a71f4c940f10df13e0fa4351b05898fad249c7"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001fc648.json",
+      "sha256": "b69ed883bc061c9d2e3903c475a56208c385dd59e376f605ada3b441e9dcd452"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001fc678.json",
+      "sha256": "53e31200061c5866c37a3f1afcc69de351a20d8bc0b88ceae505acca39e0a60f"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001fc808.json",
+      "sha256": "399ef3426750d10bebfd436414fa919aa3753ce200fe78d63e5e48213b093936"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001fc840.json",
+      "sha256": "4067957ceabe0710d58c496ea847fd5e0b1dde40ab2e9353e4d1aecd64e5585a"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001fd118.json",
+      "sha256": "f5ec638933f6b1566b5d1730c92a2378e44e670f27e19d0a5fd2aa94d687a3fc"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001fd598.json",
+      "sha256": "da4223a4595292a92dfc38ee1c30df7f9ecc5d10c5f8d9d3b0fa39eeac40a9ed"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001fd638.json",
+      "sha256": "c4b130b973c5870085b11e2de043213e9e2c83aa325e7206730c8c42de905085"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001fd6c8.json",
+      "sha256": "fb78da2d2f070010a1010956c1fce660fab7ef232bb5bf88f3dbc39144f1ad80"
+    },
+    {
+      "file": "local/task0098/first-event-launch/001fd708.json",
+      "sha256": "76dbe07e851bcdc3e933994cafea72c8f3e524e35d97346bfe2cd7075c8ea784"
+    },
+    {
+      "file": "local/task0098/first-event-launch/0021113c.json",
+      "sha256": "09011203270dbdf9c492fd2186230e03c19fe17d77d576e0fdae81a325a389b7"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00211880.json",
+      "sha256": "4ec1d2bcc69ab3a88cffccad5a513762288a6907a92bcfa9806dbcf1c7f4b995"
+    },
+    {
+      "file": "local/task0098/first-event-launch/0024cab0.json",
+      "sha256": "69d4e3270dc0153cec5f172a46d7b269c50d010e324f0dfb2cb7b281e51394d6"
+    },
+    {
+      "file": "local/task0098/first-event-launch/0024cb98.json",
+      "sha256": "0d9baaa7df7e6589210288b95f7d75fd60b41f93ce7f7cdcaac35ae531dce459"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00253790.json",
+      "sha256": "e84f8a807b79842102740453b13f994dd488967242e9824448a6a5fb675ca74c"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00253858.json",
+      "sha256": "440aecc844fd92661dbad675276de9b88ae07a9cc237d2c0cc5fabf1b9fcb9db"
+    },
+    {
+      "file": "local/task0098/first-event-launch/00253858.listing.json",
+      "sha256": "3577d7c4ba848f94fbf125b133171ffe3583e2834fd9ddd9aac6e9865002d824"
+    },
+    {
+      "file": "local/task0098/first-event-launch/CarType.json",
+      "sha256": "5f935baa3fa0d9dde2515e91f84b267c185f0f5d5039dfa1fb54989dcb5c463e"
+    },
+    {
+      "file": "local/task0098/first-event-launch/CarTypeInfo.json",
+      "sha256": "d9dc74d4092b44936e61935d80235803dc5f025211f8e3a0c9db3786e37ac8e9"
+    },
+    {
+      "file": "local/task0098/first-event-launch/CharacterInfo.json",
+      "sha256": "bd834f3cabc06cdc379f70c7a987be568eb6cf33b3acf8ed4a4055fac24586b3"
+    },
+    {
+      "file": "local/task0098/first-event-launch/DriverInfo.json",
+      "sha256": "7b48fbfb848aa0c53797fbd47985634dabb6ec9ca85566774a5300420c38cb2a"
+    },
+    {
+      "file": "local/task0098/first-event-launch/DriverTypeEnum.json",
+      "sha256": "cd689486ccc7d974ede1f04e0bf7c64071c6228d0bc744ae21c3ddbd0d9cc004"
+    },
+    {
+      "file": "local/task0098/first-event-launch/RaceParameters.json",
+      "sha256": "1d40f027c6226d736ae462dd264c8950f57ccf92bb9770c2e763d5815cb78232"
+    },
+    {
+      "file": "local/task0098/first-event-launch/RaceTypes.json",
+      "sha256": "b9a377166a1b526cb8ee45c7fe704ce2cb872067173ecd4ba25b11980d66354c"
+    },
+    {
+      "file": "local/task0098/first-event-launch/TrackInfo.json",
+      "sha256": "6e19915e989073c4c6e5953d7e653e98c3a63e737b19b4bc3b07b5a9dc300ce6"
+    },
+    {
+      "file": "local/task0098/first-event-launch/cPlayerSettings.json",
+      "sha256": "f67fd7d452c387d1281b47a17f9fb9ce016e696224ae96be03505b8eec7b6dcd"
+    },
+    {
+      "file": "local/task0098/first-event-launch/car-identity-audit.json",
+      "sha256": "0df3949a1cc29079442b2ea87fbcc15b7ad378779bbb10323a2b15a3d305b761"
+    },
+    {
+      "file": "local/task0098/first-event-launch/eNFSRaceModes.json",
+      "sha256": "5461634fd1cbe127b0ec3dcdc137c74967ede16c1b9420b2ec7c7f10fa991b13"
+    },
+    {
+      "file": "local/task0098/first-event-launch/eOpponentSelect.json",
+      "sha256": "ace7fb91c7958f632dac19b3f1a7b6d65570d49382260d48e2f8610e534194c3"
+    },
+    {
+      "file": "local/task0098/first-event-launch/eTrackTimeOfDay.json",
+      "sha256": "8c6ac8d0341e2436730e9345e6c2bd85c725cd4c9a511375d808f3667d625668"
+    },
+    {
+      "file": "local/task0098/first-event-launch/launch-functions.json",
+      "sha256": "fd70915072b138f4265ef51faa5348dfbffee52da3eb32b169f4356ddc9714f1"
+    },
+    {
+      "file": "local/task0098/first-event-launch/memory-002ac028.json",
+      "sha256": "3e6495f98689b00eaa8b7bb88be83cc4898fb8f049112f8a836e78cf1d353cf5"
+    },
+    {
+      "file": "local/task0098/first-event-launch/memory-003253fc.json",
+      "sha256": "efb9c0fa052ad8c06eb6c1e6575c5ea9373859bdb63ca2ff16eaa0e7b4ef5124"
+    },
+    {
+      "file": "local/task0098/first-event-launch/memory-00325400.json",
+      "sha256": "6f60a3bb201ec4bf4287c56eb783a366ee5536b343d65c0ce012684868544107"
+    },
+    {
+      "file": "local/task0098/first-event-launch/memory-003278d0.json",
+      "sha256": "3acd21ca1e39b208f00d8b486256bc7bf51dba8fe357094027a0659952b5e319"
+    },
+    {
+      "file": "local/task0098/first-event-launch/raceparameters-functions.json",
+      "sha256": "8db564758d982be4b6c9c88ee97a7c0e09dc07370d7b04ccffef7bc268222206"
+    },
+    {
+      "file": "local/task0098/first-event-launch/tGlobalDisplaySettings.json",
+      "sha256": "cee9221db6f8586a800013bca5625349f38e76f29ec7434f8fd620fff687e5ab"
+    },
+    {
+      "file": "local/task0098/first-event-launch/type-CarUsageType.json",
+      "sha256": "471035bd701bd583defc9e5b0a2dbf87751ef2020bec130d18a921fb208f0489"
+    },
+    {
+      "file": "local/task0098/first-event-launch/type-DriverInfo.json",
+      "sha256": "7b48fbfb848aa0c53797fbd47985634dabb6ec9ca85566774a5300420c38cb2a"
+    },
+    {
+      "file": "local/task0098/first-event-launch/type-DriverTypeEnum.json",
+      "sha256": "cd689486ccc7d974ede1f04e0bf7c64071c6228d0bc744ae21c3ddbd0d9cc004"
+    },
+    {
+      "file": "local/task0098/first-event-launch/type-EventGoal.json",
+      "sha256": "b25b5823b4317eed963bcc486a6dbd55d715e7bdf6edac7388016ebcde10f8ce"
+    },
+    {
+      "file": "local/task0098/first-event-launch/type-EventResult.json",
+      "sha256": "5d5b2697fec9875d9bf564f27353b0591bea303885d6fe85dd9e1c96234df990"
+    },
+    {
+      "file": "local/task0098/first-event-launch/type-EventTimeState.json",
+      "sha256": "3dc5ba8ce8582727322ea9e134cc143ba669410d14d861de3665066b072bcf7e"
+    },
+    {
+      "file": "local/task0098/first-event-launch/type-EventTrack.json",
+      "sha256": "0de5c7d3255f751cb1ae6a848e26d31865dac4ddf836c3241011d9769f0cccd8"
+    },
+    {
+      "file": "local/task0098/first-event-launch/type-FredHighScore.json",
+      "sha256": "652e2472b735e562167f89cfc08342b9749849b501037369cac85f13ff88ea9e"
+    },
+    {
+      "file": "local/task0098/first-event-launch/type-FredTrackHighScores.json",
+      "sha256": "1a7fae488d16e7652bfe1baad25449737a3208e8152e1a61f53a71e3c5e58ed3"
+    },
+    {
+      "file": "local/task0098/first-event-launch/type-GameFlowState.json",
+      "sha256": "a78c167c4ffae289826a1acb509fb68df88ab4b0fec5956ddfe89b324891d297"
+    },
+    {
+      "file": "local/task0098/first-event-launch/type-HighScoreTable.json",
+      "sha256": "e8682d04c68cd937c31f9f4dabf02ce12db7ee4fae6d6378e7ab0d58ea6fce8c"
+    },
+    {
+      "file": "local/task0098/first-event-launch/type-RaceEvent.json",
+      "sha256": "d3be84d25a0502755c82285af7d7ad67b9ec67ec27ed2228482cde16345c5d64"
+    },
+    {
+      "file": "local/task0098/first-event-launch/type-RaceParameters.json",
+      "sha256": "1d40f027c6226d736ae462dd264c8950f57ccf92bb9770c2e763d5815cb78232"
+    },
+    {
+      "file": "local/task0098/first-event-launch/type-eEventStatus.json",
+      "sha256": "e8a1cdf6b1e3d14b267b254b1d322a18994a23727da9465440538e4859fdc3ee"
     },
     {
       "file": "local/task0098/frameeffects/00112c60.json",

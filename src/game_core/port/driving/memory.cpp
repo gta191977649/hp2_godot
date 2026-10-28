@@ -4,6 +4,11 @@
 #include <stdexcept>
 
 namespace port::driving {
+Memory::Footprint Memory::footprint() const{
+    Footprint result{regions_.size(),0,allocations_.size()};
+    for(const auto& region:regions_)result.payload_bytes+=region.second.size();
+    return result;
+}
 Memory::Scratch::~Scratch() noexcept {
     while(memory_.allocations_.size()>count_){memory_.regions_.erase(memory_.allocations_.back());memory_.allocations_.pop_back();}
     memory_.next_=next_;

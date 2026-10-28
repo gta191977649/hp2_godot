@@ -4,6 +4,21 @@
 #pragma once
 #include "game_core/port/driving/static_collisions.hpp"
 
+namespace hp2::debug {
+// TASK-0099 E-0099-W01. Shared logical-memory projection; this host constructor
+// does NOT stand in for original World0014CA28 construction or its dependencies.
+class World {
+public:
+    World(::port::driving::Memory& memory,std::uint32_t address):memory_(memory),address_(address){}
+    void BuildCarTable();
+    std::uint32_t GetCarByNumber(int) const;
+    void ResetTimeScale();
+private:
+    ::port::driving::Memory& memory_;
+    std::uint32_t address_;
+};
+}
+
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: qualified_string; evidence: E-0019-N03.
 // Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).

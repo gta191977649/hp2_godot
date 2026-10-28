@@ -116,6 +116,7 @@ std::array<hp2::debug::CarTypeInfo,64> decode_car_info(const std::vector<std::ui
         const auto word=[&](int offset){return std::uint32_t(row[offset])|(std::uint32_t(row[offset+1])<<8)
             |(std::uint32_t(row[offset+2])<<16)|(std::uint32_t(row[offset+3])<<24);};
         std::copy_n(row,32,car.CarTypeName.begin());
+          std::copy_n(row+0x40,32,car.GeometryFilename.begin());
         std::copy_n(row+0x80,32,car.DashGeometryFilename.begin());
         car.HighPerformance=static_cast<std::int8_t>(row[0xe4]);
         car.NumAvailableSkinNumbers=static_cast<std::int8_t>(row[0xe5]);
@@ -123,6 +124,7 @@ std::array<hp2::debug::CarTypeInfo,64> decode_car_info(const std::vector<std::ui
         // E-0098-R01: Debug WheelInfo type, car.Wheels+120/stride20hex.
         const auto scalar=[&](int offset){const auto bits=word(offset);float value;std::memcpy(&value,&bits,4);return value;};
         car.Control.SpeedLimiter=scalar(0x320); // E-0098-O02, Debug Control+20.
+          for(int n=0;n<5;++n)car.LocationProb[n]=scalar(0x520+n*4); // E-0098-RP02.
         for(int n=0;n<4;++n){auto& wheel=car.Wheels[n];const int offset=0x120+n*0x20;
             for(int axis=0;axis<3;++axis)wheel.Position[axis]=scalar(offset+axis*4);
             wheel.Radius=scalar(offset+0xc);wheel.Width=scalar(offset+0x10);
@@ -156,5 +158,51 @@ void Table::SetMinMax(float lower,float upper) {
 void Table::CalcIndexMultiplier() {
     const auto count=port::driving::detail_group_0018f808::signed_bits(m_.word(address_+4)-1);
     m_.scalar(address_+0x10,static_cast<float>(count)/(m_.scalar(address_+0xc)-m_.scalar(address_+8)));
+}
+}
+
+#include "game_core/indep/inc/Fred.hpp"
+#include "game_core/src/bMath.hpp"
+#include <cmath>
+namespace hp2::debug {
+// Debug00185FA0, E-0098-RP02. Original byte narrowing is preserved.
+void RideInfo::Init(int type,int skin,int dash,int damage){
+    Type=type;SkinNumber=static_cast<std::uint8_t>(skin);HasDash=static_cast<std::uint8_t>(dash);
+    CanBeVertexDamaged=static_cast<std::uint8_t>(damage);InstanceIndex=0;
+}
+// Debug001867C0, E-0098-RP02. Padding+5..7 is intentionally untouched.
+DriverInfo::DriverInfo(::port::driving::Memory& m,std::uint32_t a,int driver_number,int driver_type,
+    const RideInfo& ride,int character,int skill,int start,const std::function<std::uint32_t(int)>& get_character){
+    if(!get_character)hp2::not_implemented("0x001867C0","original GetCharacterInfo binding missing");
+    m.byte(a+1,static_cast<std::uint8_t>(driver_number));m.byte(a+4,static_cast<std::uint8_t>(start));
+    m.word(a+8,static_cast<std::uint32_t>(driver_type));m.byte(a,0);
+    m.word(a+12,static_cast<std::uint32_t>(ride.Type));m.byte(a+16,ride.InstanceIndex);
+    m.byte(a+17,ride.SkinNumber);m.byte(a+18,ride.HasDash);m.byte(a+19,ride.CanBeVertexDamaged);
+    m.byte(a+2,static_cast<std::uint8_t>(character));m.word(a+20,get_character(character));
+    m.byte(a+3,static_cast<std::uint8_t>(skill));
+}
+// Debug00186610, E-0098-RP02. Even a single non-cop skin consumes RNG.
+int CarTypeInfo::GetRandomSkin(::port::driving::Memory& memory,int language) const{
+    if(UsageType==CAR_USAGE_TYPE_COP)return GetAvailableSkin(0,language);
+    if(NumAvailableSkinNumbers==0)return 0;
+    if(NumAvailableSkinNumbers<0 || NumAvailableSkinNumbers>10)
+        hp2::not_implemented("0x00186610","original skin list outside decoded host domain");
+    return AvailableSkinNumbers[hp2::recovered::bRandom(memory,int(NumAvailableSkinNumbers))];
+}
+// Debug001863C8, E-0098-RP02. Original two-pass iterator, shared RNG and threshold.
+// Location index/language/catalog bind original globals; no locally seeded random engine.
+bool GenerateRandomRideInfo(::port::driving::Memory& memory,RideInfo& ride,CarUsageType usage,int car_class,
+    const std::array<CarTypeInfo,64>& cars,int location,int language){
+    if(location<0 || location>=5)hp2::not_implemented("0x001863C8","original LocationProb index outside decoded host domain");
+    const auto eligible=[&](const CarTypeInfo& car){return car.UsageType==usage && car.GeometryFilename[0]
+        && (car_class==-1 || car.CarClass==car_class) && car.GetNumAvailableSkins()>0;};
+    float total=0;for(const auto& car:cars)if(eligible(car))total=total+car.LocationProb[location];
+    if(!(memory.scalar(0x325400)<std::abs(total)))return false;
+    float weight=hp2::recovered::bRandom(memory,total);
+    for(const auto& car:cars)if(eligible(car)){
+        weight=weight-car.LocationProb[location];
+        if(!(0.f<weight)){ride.Init(car.Type,car.GetRandomSkin(memory,language),0,0);return true;}
+    }
+    return false;
 }
 }

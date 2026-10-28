@@ -1,3 +1,11 @@
+TASK0099 now develops the shared first-event World after the bounded native launch
+boundary. Native StartRace preserves original state/track/participant/GameFlow order,
+with explicit required production profile/record/localization services still unbound.
+World table registration uses one logical Memory and original Car/DriverInfo links;
+it does not construct or simulate the World. See reverse/task0098/first-event-launch.md
+and reverse/task0099/shared-world.md. Port-only copy baseline is in memory-baseline.md;
+no playable-race or FPS acceptance is claimed.
+
 TASK0098 adds a native SelectionPage ownership binder with explicit host resource
 leases, copied car nodes, cached widget groups and shared after-display FrameEffects.
 The production host/entry remains unbound. Native Flailer layers/depth and Debug

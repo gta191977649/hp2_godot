@@ -10,7 +10,7 @@
 - Existing Retail frontend/assets/profile authority remains separately identified:
   SLUS_203.62 SHA7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
   Never reinterpret one version's storage as the other's.
-- Current implementation subtask: TASK-0098 original event-bound selection.
+- Current implementation subtask: TASK-0099 first-event shared World; TASK-0098 formal frontend bindings remain incomplete.
   TASK-0097 inventory/version foundation completed; full mode remains incomplete.
 - Preserve all existing uncommitted user work; no staging/commit requested.
 
@@ -77,7 +77,7 @@ paths throw at their address. PC tests do not establish Verified. No proprietary
 ELF/assets/database/save/captures in Git. Missing original-runtime prerequisites
 remain explicit; independent implementation continues without invented evidence.
 
-Inventory TASK-0097 is complete. Continue active TASK-0098; native selection core
+Inventory TASK-0097 is complete. Current implementation is TASK-0099 after the2026-10-28 scheduling revision; native selection core
 is tested, original selection presentation/production entry and subsequent World/
 police/rules/outcome stages remain incomplete. No playable career is claimed.
 Update task findings, evidence records/symbols, decisions and
@@ -102,3 +102,25 @@ preload/info/group ownership and shared-alpha/Flailer-depth preparation. Actual
 host resource leases/shared-depth GPU executor and formal event entry are still
 unbound.13 scoped regressions and normal Godot DLL build passed at the checkpoint;
 final commands/results are in TASK-0098. No parent acceptance box is newly checked.
+
+2026-10-28 user-approved first-event priority: native launch baseline/event/13participants/StartRace-to-GameFlow now has bounded original-data tests, with clearly labelled text/profile/flow fixtures. Current implementation advances to TASK-0099 World/participants rather than further isolated presentation work. This revises scheduling, not behavior/acceptance: TASK-0098 stays incomplete for actual frontend/private-profile services and no original/runtime/performance box is checked. First event full roundtrip remains unfinished; no synthetic outcome or playable-race claim.
+
+## Approved full-closure execution,2026-10-28
+
+User approved full Retail frontend plus complete single-player Ultimate Racer,
+including all32 events, actual production routes and matched original behavior.
+Scheduling supersedes the earlier first-World-first revision: current implementation
+returns to TASK-0098 Event -> production selection -> cancel/reentry, then0099..0103.
+TASK-0091 retains unrelated Retail pages. No existing acceptance is waived.
+
+Current bounded scope: reconcile the63-row evidence inventory with the38-row runtime
+registry; recover Debug tTreeDetails StartEvent/HandleMessages and the exact entry
+writes, history and multitrack continuation. Required host bindings must be explicit.
+Tests distinguish local orchestration/service fixtures from production/window and
+original-runtime acceptance. Keep the actual event route throwing until real page
+services exist. No claim of an operational selection page from registry/core work.
+
+Environment: CMake3.29.2, Python3.14.4, pinned godot-cpp
+e4b7c25e721ce3435a029087e3917a30aa73f06b. Readonly Ghidra MCP responds;
+no PCSX2 process or listening21512/28011 port observed. Original comparison is open.
+Existing uncommitted changes are preserved. No staging or commit requested.

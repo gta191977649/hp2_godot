@@ -16222,7 +16222,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/carinfo.cpp",
-          "line": 143,
+          "line": 145,
           "name": "CarTypeInfo::GetNumAvailableSkins"
         }
       ],
@@ -16244,7 +16244,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/carinfo.cpp",
-          "line": 152,
+          "line": 154,
           "name": "Table::SetMinMax"
         }
       ],
@@ -34267,7 +34267,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/carinfo.cpp",
-          "line": 156,
+          "line": 158,
           "name": "Table::CalcIndexMultiplier"
         }
       ],
@@ -80994,7 +80994,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/carinfo.cpp",
-          "line": 143,
+          "line": 145,
           "name": "CarTypeInfo::GetNumAvailableSkins"
         }
       ],
@@ -81229,7 +81229,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/carinfo.cpp",
-          "line": 152,
+          "line": 154,
           "name": "Table::SetMinMax"
         }
       ],
@@ -213784,35 +213784,55 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x0014D028",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "partial",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "World::BuildCarTable(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/world.cpp",
+          "line": 85,
+          "name": "World::BuildCarTable"
+        }
+      ],
+      "issues": [
+        "explicit untranslated path in body"
+      ],
+      "name": "BuildCarTable__5World",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/0014d028.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x0014D1F8",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "partial",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "World::GetCarByNumber(int)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/world.cpp",
+          "line": 108,
+          "name": "World::GetCarByNumber"
+        }
+      ],
+      "issues": [
+        "explicit untranslated path in body"
+      ],
+      "name": "GetCarByNumber__5Worldi",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/0014d1f8.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -213886,18 +213906,26 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x0014D328",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "evidenced_body",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "World::ResetTimeScale(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/world.cpp",
+          "line": 116,
+          "name": "World::ResetTimeScale"
+        }
+      ],
+      "issues": [],
+      "name": "ResetTimeScale__5World",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/0014d328.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -232455,17 +232483,21 @@
       "address": "0x00182610",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
+      "record_statuses": [
+        "Tested"
+      ],
+      "record_valid": true,
+      "host_test_claim": true,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "PickCharacterNumberThatIsntRacing(int *, int, int)",
+      "name": "PickCharacterNumberThatIsntRacing__FPiii",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00182610.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -232717,16 +232749,22 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x00183378",
       "owners": [],
-      "state": "missing",
+      "state": "partial",
       "record_statuses": [
         "Decompiled"
       ],
       "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
-      "definitions": [],
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/fred.cpp",
+          "line": 210,
+          "name": "FrontendDatabase::StartRace"
+        }
+      ],
       "issues": [
-        "no uniquely address-bound definition"
+        "explicit untranslated path in body"
       ],
       "name": "StartRace__16FrontendDatabase",
       "inventoried": true,
@@ -232807,32 +232845,42 @@
       "address": "0x00183A08",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
+      "record_statuses": [
+        "Tested"
+      ],
+      "record_valid": true,
+      "host_test_claim": true,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "PickCopCharacterNumber(int)",
+      "name": "PickCopCharacterNumber__Fi",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00183a08.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x00183A58",
       "owners": [],
-      "state": "missing",
+      "state": "partial",
       "record_statuses": [
         "Decompiled"
       ],
       "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
-      "definitions": [],
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/fred.cpp",
+          "line": 147,
+          "name": "FrontendDatabase::SetupCarsForRace"
+        }
+      ],
       "issues": [
-        "no uniquely address-bound definition"
+        "explicit untranslated path in body"
       ],
       "name": "SetupCarsForRace__16FrontendDatabase",
       "inventoried": true,
@@ -232844,18 +232892,28 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x00184390",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "state": "partial",
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/fred.cpp",
+          "line": 137,
+          "name": "FrontendDatabase::CalculateStartingPositions"
+        }
       ],
-      "name": "FrontendDatabase::CalculateStartingPositions(void)",
+      "issues": [
+        "explicit untranslated path in body"
+      ],
+      "name": "CalculateStartingPositions__16FrontendDatabase",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00184390.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -233662,18 +233720,26 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x00185FA0",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "evidenced_body",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "RideInfo::Init(CarType, int, int, int)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/carinfo.cpp",
+          "line": 169,
+          "name": "RideInfo::Init"
+        }
+      ],
+      "issues": [],
+      "name": "Init__8RideInfo7CarTypeiii",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00185fa0.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -234014,34 +234080,48 @@
       "address": "0x001863C8",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
+      "record_statuses": [
+        "Tested"
+      ],
+      "record_valid": true,
+      "host_test_claim": true,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "GenerateRandomRideInfo(RideInfo *, CarUsageType, int)",
+      "name": "GenerateRandomRideInfo__FP8RideInfo12CarUsageTypei",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001863c8.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x00186610",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "partial",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "CarTypeInfo::GetRandomSkin(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/carinfo.cpp",
+          "line": 185,
+          "name": "CarTypeInfo::GetRandomSkin"
+        }
+      ],
+      "issues": [
+        "explicit untranslated path in body"
+      ],
+      "name": "GetRandomSkin__11CarTypeInfo",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00186610.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -234133,18 +234213,28 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001867C0",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "partial",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "DriverInfo::DriverInfo(int, DriverTypeEnum, RideInfo *, int, int, int)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/carinfo.cpp",
+          "line": 174,
+          "name": "DriverInfo::DriverInfo"
+        }
+      ],
+      "issues": [
+        "explicit untranslated path in body"
+      ],
+      "name": "__10DriverInfoi14DriverTypeEnumP8RideInfoiii",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001867c0.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -234406,7 +234496,7 @@
       "definitions": [
         {
           "path": "src/game_core/indep/src/carinfo.cpp",
-          "line": 156,
+          "line": 158,
           "name": "Table::CalcIndexMultiplier"
         }
       ],
@@ -252696,17 +252786,21 @@
       "address": "0x001A8C98",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "InitClans(void)",
+      "name": "InitClans__Fv",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001a8c98.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -261146,17 +261240,21 @@
       "address": "0x001BB7A0",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "InitMunitions(void)",
+      "name": "InitMunitions__Fv",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001bb7a0.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -261384,17 +261482,21 @@
       "address": "0x001BBDB0",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "SmokeBomb::InitSmokeBomb(void)",
+      "name": "InitSmokeBomb__9SmokeBomb",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001bbdb0.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -261520,17 +261622,21 @@
       "address": "0x001BC108",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "DroppedSpikes::InitDroppedSpikes(void)",
+      "name": "InitDroppedSpikes__13DroppedSpikes",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001bc108.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -261690,17 +261796,21 @@
       "address": "0x001BC560",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "Rocket::InitRocket(void)",
+      "name": "InitRocket__6Rocket",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001bc560.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -274152,17 +274262,21 @@
       "address": "0x001D6698",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "InitFernFlatteners(void)",
+      "name": "InitFernFlatteners__Fv",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001d6698.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -274305,17 +274419,21 @@
       "address": "0x001D6D30",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "InitFernShakers(void)",
+      "name": "InitFernShakers__Fv",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001d6d30.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -282990,17 +283108,21 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001E9968",
       "owners": [],
-      "state": "missing",
+      "state": "evidenced_body",
       "record_statuses": [
-        "Decompiled"
+        "Tested"
       ],
       "record_valid": true,
-      "host_test_claim": false,
+      "host_test_claim": true,
       "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/raceparameters.cpp",
+          "line": 111,
+          "name": "RaceParameters::InitWithDefaults"
+        }
       ],
+      "issues": [],
       "name": "InitWithDefaults__14RaceParameters",
       "inventoried": true,
       "record_paths": [
@@ -283028,171 +283150,257 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001E9DE0",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "partial",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "RaceParameters::AddDriverInfo(DriverInfo &)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/raceparameters.cpp",
+          "line": 129,
+          "name": "RaceParameters::AddDriverInfo"
+        }
+      ],
+      "issues": [
+        "explicit untranslated path in body"
+      ],
+      "name": "AddDriverInfo__14RaceParametersR10DriverInfo",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001e9de0.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001E9E78",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "partial",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "RaceParameters::SetDriverInfo(DriverInfo &, int)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/raceparameters.cpp",
+          "line": 140,
+          "name": "RaceParameters::SetDriverInfo"
+        }
+      ],
+      "issues": [
+        "explicit untranslated path in body"
+      ],
+      "name": "SetDriverInfo__14RaceParametersR10DriverInfoi",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001e9e78.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001E9EC8",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "partial",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "RaceParameters::GetDriverInfo(int)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/raceparameters.cpp",
+          "line": 146,
+          "name": "RaceParameters::GetDriverInfo"
+        }
+      ],
+      "issues": [
+        "explicit untranslated path in body"
+      ],
+      "name": "GetDriverInfo__14RaceParametersi",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001e9ec8.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001E9EE0",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "evidenced_body",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "RaceParameters::GetDriverInfoByDriverNumber(int)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/raceparameters.cpp",
+          "line": 151,
+          "name": "RaceParameters::GetDriverInfoByDriverNumber"
+        }
+      ],
+      "issues": [],
+      "name": "GetDriverInfoByDriverNumber__14RaceParametersi",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001e9ee0.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001E9F68",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "evidenced_body",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "RaceParameters::EliminateDriver(int, int)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/raceparameters.cpp",
+          "line": 157,
+          "name": "RaceParameters::EliminateDriver"
+        }
+      ],
+      "issues": [],
+      "name": "EliminateDriver__14RaceParametersii",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001e9f68.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001E9FF0",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "evidenced_body",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "RaceParameters::ClearEliminatedDrivers(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/raceparameters.cpp",
+          "line": 167,
+          "name": "RaceParameters::ClearEliminatedDrivers"
+        }
+      ],
+      "issues": [],
+      "name": "ClearEliminatedDrivers__14RaceParameters",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001e9ff0.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001EA070",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "evidenced_body",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "RaceParameters::GetNumEliminated(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/raceparameters.cpp",
+          "line": 177,
+          "name": "RaceParameters::GetNumEliminated"
+        }
+      ],
+      "issues": [],
+      "name": "GetNumEliminated__14RaceParameters",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001ea070.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001EA0B8",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "evidenced_body",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "RaceParameters::ResetStartingPositions(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/raceparameters.cpp",
+          "line": 183,
+          "name": "RaceParameters::ResetStartingPositions"
+        }
+      ],
+      "issues": [],
+      "name": "ResetStartingPositions__14RaceParameters",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001ea0b8.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001EA158",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "evidenced_body",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "RaceParameters::GetLocationNumber(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/raceparameters.cpp",
+          "line": 192,
+          "name": "RaceParameters::GetLocationNumber"
+        }
+      ],
+      "issues": [],
+      "name": "GetLocationNumber__14RaceParameters",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001ea158.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001EA178",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "evidenced_body",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "RaceParameters::GetLocationIndex(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/raceparameters.cpp",
+          "line": 194,
+          "name": "RaceParameters::GetLocationIndex"
+        }
+      ],
+      "issues": [],
+      "name": "GetLocationIndex__14RaceParameters",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001ea178.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -283232,16 +283440,22 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001EA330",
       "owners": [],
-      "state": "missing",
+      "state": "partial",
       "record_statuses": [
-        "Decompiled"
+        "Tested"
       ],
       "record_valid": true,
-      "host_test_claim": false,
+      "host_test_claim": true,
       "original_verification_claim": false,
-      "definitions": [],
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/raceparameters.cpp",
+          "line": 90,
+          "name": "cPlayerSettings::ResetToDefaults"
+        }
+      ],
       "issues": [
-        "no uniquely address-bound definition"
+        "explicit untranslated path in body"
       ],
       "name": "ResetToDefaults__15cPlayerSettings",
       "inventoried": true,
@@ -283287,18 +283501,26 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001EA440",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "evidenced_body",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "tGlobalDisplaySettings::ResetToDefaults(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/raceparameters.cpp",
+          "line": 102,
+          "name": "tGlobalDisplaySettings::ResetToDefaults"
+        }
+      ],
+      "issues": [],
+      "name": "ResetToDefaults__22tGlobalDisplaySettings",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001ea440.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -283491,35 +283713,51 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001EA7A0",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "evidenced_body",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "RaceParameters::ChooseHudTextures(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/raceparameters.cpp",
+          "line": 199,
+          "name": "RaceParameters::ChooseHudTextures"
+        }
+      ],
+      "issues": [],
+      "name": "ChooseHudTextures__14RaceParameters",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001ea7a0.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001EA7A8",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "evidenced_body",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "RaceParameters::IsFreeRun(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/raceparameters.cpp",
+          "line": 190,
+          "name": "RaceParameters::IsFreeRun"
+        }
+      ],
+      "issues": [],
+      "name": "IsFreeRun__14RaceParameters",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001ea7a8.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -289703,16 +289941,22 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001FA378",
       "owners": [],
-      "state": "missing",
+      "state": "partial",
       "record_statuses": [
         "Decompiled"
       ],
       "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
-      "definitions": [],
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/eventtree.cpp",
+          "line": 1160,
+          "name": "EventTree::SetRace"
+        }
+      ],
       "issues": [
-        "no uniquely address-bound definition"
+        "explicit untranslated path in body"
       ],
       "name": "SetRace__9EventTreeP14RaceParametersP9EventInfo",
       "inventoried": true,
@@ -290114,18 +290358,26 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001FB540",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "evidenced_body",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "EventTimeState::Reset(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/eventtree.cpp",
+          "line": 1134,
+          "name": "EventTimeState::Reset"
+        }
+      ],
+      "issues": [],
+      "name": "Reset__14EventTimeState",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001fb540.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -290148,18 +290400,26 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001FB560",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "evidenced_body",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "EventTimeState::GetStatus(EventGoal *)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/eventtree.cpp",
+          "line": 1136,
+          "name": "EventTimeState::GetStatus"
+        }
+      ],
+      "issues": [],
+      "name": "GetStatus__14EventTimeStateP9EventGoal",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001fb560.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -290822,18 +291082,28 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001FC1E8",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "state": "partial",
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/eventtree.cpp",
+          "line": 1154,
+          "name": "EventInfo::WillSuperBonusEventBeUnlockedIfThisEventIsWon"
+        }
       ],
-      "name": "EventInfo::WillSuperBonusEventBeUnlockedIfThisEventIsWon(void)",
+      "issues": [
+        "explicit untranslated path in body"
+      ],
+      "name": "WillSuperBonusEventBeUnlockedIfThisEventIsWon__9EventInfo",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001fc1e8.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -290992,18 +291262,26 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001FC648",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "evidenced_body",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "EventResult::Reset(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/eventtree.cpp",
+          "line": 1130,
+          "name": "EventResult::Reset"
+        }
+      ],
+      "issues": [],
+      "name": "Reset__11EventResult",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001fc648.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -291026,18 +291304,26 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001FC678",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "evidenced_body",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "RaceEvent::ResetResults(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/eventtree.cpp",
+          "line": 1132,
+          "name": "RaceEvent::ResetResults"
+        }
+      ],
+      "issues": [],
+      "name": "ResetResults__9RaceEvent",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001fc678.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -291383,18 +291669,28 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001FD118",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "state": "partial",
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/eventtree.cpp",
+          "line": 1148,
+          "name": "RaceEvent::GetRaceIndex"
+        }
       ],
-      "name": "RaceEvent::GetRaceIndex(void)",
+      "issues": [
+        "explicit untranslated path in body"
+      ],
+      "name": "GetRaceIndex__9RaceEvent",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001fd118.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -291519,18 +291815,28 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x001FD708",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "state": "partial",
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/eventtree.cpp",
+          "line": 1142,
+          "name": "RaceEvent::ResetState"
+        }
       ],
-      "name": "RaceEvent::ResetState(void)",
+      "issues": [
+        "explicit untranslated path in body"
+      ],
+      "name": "ResetState__9RaceEvent",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001fd708.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -305371,18 +305677,26 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x00216528",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "evidenced_body",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "DriveTarget::DriveTarget(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/drivetarget.cpp",
+          "line": 25,
+          "name": "DriveTarget::DriveTarget"
+        }
+      ],
+      "issues": [],
+      "name": "__11DriveTarget",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00216528.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -305456,18 +305770,28 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x002167C0",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "state": "partial",
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/drivetarget.cpp",
+          "line": 30,
+          "name": "DriveTarget::Clear"
+        }
       ],
-      "name": "DriveTarget::Clear(Car *, float)",
+      "issues": [
+        "explicit untranslated path in body"
+      ],
+      "name": "Clear__11DriveTargetP3Carf",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/002167c0.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -305916,17 +306240,21 @@
       "address": "0x00218850",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "OBB::OBB(void)",
+      "name": "__3OBB",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00218850.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -307207,17 +307535,21 @@
       "address": "0x0021A4E8",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "SpawnSmokeables(void)",
+      "name": "SpawnSmokeables__Fv",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/0021a4e8.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -308762,17 +309094,21 @@
       "address": "0x0021CE28",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "InitTerrainEffectEmitters(void)",
+      "name": "InitTerrainEffectEmitters__Fv",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/0021ce28.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -308914,18 +309250,28 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x0021CFF0",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "partial",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "TrafficTeleporter::TrafficTeleporter(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/trafficteleporter.cpp",
+          "line": 14,
+          "name": "TrafficTeleporter::TrafficTeleporter"
+        }
+      ],
+      "issues": [
+        "explicit untranslated path in body"
+      ],
+      "name": "__17TrafficTeleporter",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/0021cff0.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -309067,18 +309413,26 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x0021D700",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "evidenced_body",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "TrafficTeleporter::SetThinkTime(void)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/trafficteleporter.cpp",
+          "line": 31,
+          "name": "TrafficTeleporter::SetThinkTime"
+        }
+      ],
+      "issues": [],
+      "name": "SetThinkTime__17TrafficTeleporter",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/0021d700.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -309101,18 +309455,28 @@
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
       "address": "0x0021D778",
       "owners": [],
-      "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
-      "original_verification_claim": false,
-      "definitions": [],
-      "issues": [
-        "no uniquely address-bound definition"
+      "state": "partial",
+      "record_statuses": [
+        "Tested"
       ],
-      "name": "TrafficTeleporter::FillInTotals(unsigned int *, unsigned int)",
+      "record_valid": true,
+      "host_test_claim": true,
+      "original_verification_claim": false,
+      "definitions": [
+        {
+          "path": "src/game_core/indep/src/trafficteleporter.cpp",
+          "line": 22,
+          "name": "TrafficTeleporter::FillInTotals"
+        }
+      ],
+      "issues": [
+        "explicit untranslated path in body"
+      ],
+      "name": "FillInTotals__17TrafficTeleporterPUiUi",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/0021d778.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -325624,17 +325988,21 @@
       "address": "0x00247218",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "tTrackGraph::tTrackGraph(void)",
+      "name": "__11tTrackGraph",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00247218.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -331704,17 +332072,21 @@
       "address": "0x00253790",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
+      "record_statuses": [
+        "Tested"
+      ],
+      "record_valid": true,
+      "host_test_claim": true,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "bSetRandomSeed(unsigned int, unsigned int *)",
+      "name": "bSetRandomSeed__FUiPUi",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00253790.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -331763,17 +332135,21 @@
       "address": "0x00253858",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
-      "host_test_claim": false,
+      "record_statuses": [
+        "Tested"
+      ],
+      "record_valid": true,
+      "host_test_claim": true,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "bRandom(int)",
+      "name": "bRandom__Fi",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/00253858.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",

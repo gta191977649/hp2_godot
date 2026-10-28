@@ -17,9 +17,26 @@ int main() {
             [&](const char* name) { animated = name; },
             [&] { ++preparations; }};
         auto check = [](bool value) { if (!value) throw std::runtime_error("action mismatch"); };
-        // 37 FUN_0016ADB0 registrations plus the one TASK-0021 added: "View Event Tree"
+        // Original38 rows plus25 additional E-0091-G01 car/track/pause/endgame rows.
+        // TASK-0021: "View Event Tree"
         // registers through the sibling FUN_0016AD88 at 0x001FB860, which is why it was missed.
-        check(port::frontend::registrations().size() == 38);
+        check(port::frontend::registrations().size() == 63);
+        const auto* car = port::frontend::find_registration("Select Car");
+        check(car && car->document_hash == 0xB5074AB4 && car->handler_address == 0x00198928);
+        const auto* p1 = port::frontend::find_registration("Select Car2P", 0x18DC8E52);
+        const auto* p2 = port::frontend::find_registration("Select Car2P", 0x18DC8E53);
+        check(p1 && p2 && p1 != p2 && p1->handler_address == p2->handler_address);
+        check(!port::frontend::find_registration("Select Car2P", 0xB5074AB4));
+        check(!port::frontend::find_registration("missing", 0x18DC8E52));
+        for (const auto& row : port::frontend::registrations()) {
+            check(port::frontend::find_registration(row.class_name, row.document_hash) == &row);
+            check(port::frontend::find_registration_for_document_hash(row.document_hash) != nullptr);
+        }
+        const auto* results = port::frontend::find_registration("Race Results");
+        const auto* rewards = port::frontend::find_registration("Task Rewards");
+        check(results && rewards && results->handler_address == 0x001DD278
+            && rewards->handler_address == results->handler_address);
+        check(port::frontend::find_registration("Pause Menu")->document_hash == 0x605D2BF1);
         const auto* tree = port::frontend::find_registration("View Event Tree");
         check(tree != nullptr && tree->document_hash == 0x147F8A59u &&
               tree->handler_address == 0x001FB218u);

@@ -240,3 +240,37 @@ save or1920x1080 performance pass. TASK-0098 and parent TASK-0096 remain active.
 - Final normal Godot DLL rebuild after the closing-state gate passed.
 - Final progress contracts2/2 passed1.91s; full `git diff --check` passed (line-ending notices only). No staged changes.
 - All698 capture hashes match and13 new scoped version/address keys/records are unique, with no Verified status. An initially overbroad whole-catalog uniqueness assertion found seven existing Retail alias addresses; comparison with HEAD confirmed those entries are unchanged. No unrelated alias edits were made.
+
+## First real event milestone,2026-10-28
+
+User explicitly prioritized the first legitimate event full race roundtrip while retaining complete career as final scope. Current bounded implementation remains TASK-0098: original launch baseline, event settings, selected-car and participant handoff. Stop expanding unrelated presentation details during this slice. GPU/original-interface acceptance remains open, not waived or marked complete. TASK-0099 owns actual World after this handoff; no test fixture may generate race results.
+
+Scope: Debug RaceParameters001E9968 baseline/settings/DriverInfo, EventTree001FA378 and first Hot Pursuit event1 (tableindex0), then original StartRace/SetupCarsForRace boundary. Validate exact field stores, preserved prior fields, RNG and participants against MCP/real assets. Unknown dependencies continue explicit exceptions. This milestone includes original six-cop and traffic requirements; zero AI racers does not imply no police.
+
+Workspace started clean at cf037a6; CMake3.29.2/Python3.14.4 and pinned godot-cpp checked. Readonly MCP responded successfully2026-10-28. Actual original runtime and performance acceptance remain outstanding.
+
+## First-event native launch boundary checkpoint,2026-10-28
+
+E-0098-RP01..RP05 adds real Debug defaults/driver operations, reviewed Retail track/character field adapter, original random ride/character/cop selection, first-delivery EventTree/RaceEvent state and StartRace orchestration. Real assets produce13 DriverInfo records (one player/six traffic/six police) and the original GameFlow request. Required localization, full profile/record and flow services are explicit host bindings, exercised with labelled fixtures. Native startup reentry30 times preserves13 records/old-state snapshot and releases temporary logical driver allocation. This is NOT a running race or full retry/resource/window acceptance.
+
+The user's2026-10-28 first-race priority changes implementation scheduling: after this bounded native launch handoff, move current implementation to TASK-0099 shared World construction/participants. TASK-0098 remains incomplete for production UI/compositor/private-profile bindings. It is not marked completed and no prerequisite is fabricated. Resume its formal entry binding once the real RaceSession can consume the launch. Do not keep expanding presentation helpers in place of World/race implementation.
+
+## Approved full-closure execution,2026-10-28
+
+User approved full Retail frontend plus complete single-player Ultimate Racer,
+including all32 events, actual production routes and matched original behavior.
+Scheduling supersedes the earlier first-World-first revision: current implementation
+returns to TASK-0098 Event -> production selection -> cancel/reentry, then0099..0103.
+TASK-0091 retains unrelated Retail pages. No existing acceptance is waived.
+
+Current bounded scope: reconcile the63-row evidence inventory with the38-row runtime
+registry; recover Debug tTreeDetails StartEvent/HandleMessages and the exact entry
+writes, history and multitrack continuation. Required host bindings must be explicit.
+Tests distinguish local orchestration/service fixtures from production/window and
+original-runtime acceptance. Keep the actual event route throwing until real page
+services exist. No claim of an operational selection page from registry/core work.
+
+Environment: CMake3.29.2, Python3.14.4, pinned godot-cpp
+e4b7c25e721ce3435a029087e3917a30aa73f06b. Readonly Ghidra MCP responds;
+no PCSX2 process or listening21512/28011 port observed. Original comparison is open.
+Existing uncommitted changes are preserved. No staging or commit requested.

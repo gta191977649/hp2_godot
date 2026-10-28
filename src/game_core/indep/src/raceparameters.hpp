@@ -1,5 +1,42 @@
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
+#include "game_core/port/driving/memory.hpp"
+#include <functional>
+
+namespace port::race {
+// Explicit bindings of original frontend/SkipFE globals; no profile ABI overlay.
+struct DefaultSettings {
+    bool skip_frontend=false,english_language=true;
+    std::uint8_t pov_index=1,rear_view=1,speedo_mode=0,jump_camera=1,zone_camera=1;
+};
+using SkinLookup=std::function<void(int,int,int)>;
+}
+namespace hp2::debug {
+// E-0098-RP01. Logical PS2 storage projection, not a host ABI or a second world.
+class RaceParameters {
+public:
+    RaceParameters(::port::driving::Memory& memory,std::uint32_t address):memory_(memory),address_(address){}
+    void InitWithDefaults(const ::port::race::DefaultSettings&);
+    void AddDriverInfo(std::uint32_t,const ::port::race::SkinLookup&);
+    void SetDriverInfo(std::uint32_t,int);
+    std::uint32_t GetDriverInfo(int) const;
+    std::uint32_t GetDriverInfoByDriverNumber(int) const;
+    std::uint32_t EliminateDriver(int,int);
+    void ClearEliminatedDrivers();
+    int GetNumEliminated() const;
+    void ResetStartingPositions();
+    bool IsFreeRun() const;
+    int GetLocationNumber() const;
+    int GetLocationIndex() const;
+    void ChooseHudTextures();
+private:
+    ::port::driving::Memory& memory_;
+    std::uint32_t address_;
+};
+struct tGlobalDisplaySettings {
+    static void ResetToDefaults(::port::driving::Memory&,std::uint32_t,const ::port::race::DefaultSettings&);
+};
+}
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.

@@ -1,5 +1,17 @@
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
+#include "game_core/port/driving/memory.hpp"
+namespace hp2::debug {
+// TASK-0099 E-0099-W02, logical state only; no PS2 host ABI claim.
+class DriveTarget {
+public:
+    DriveTarget(::port::driving::Memory&,std::uint32_t);
+    void Clear(std::uint32_t car,float distance_to_clear_past);
+private:
+    ::port::driving::Memory& memory_;
+    std::uint32_t address_;
+};
+}
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.

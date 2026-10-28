@@ -51,6 +51,10 @@ std::uint32_t bRandom(Memory& m,std::uint32_t state,std::uint32_t divisor) {
     const auto old=m.word(state);const auto v3=old^0x1d872b41u;
     const auto a0=v3^(v3>>5);m.word(state,a0^v3^(a0<<27));return old%divisor;
 }
+// Debug00253858, E-0098-RP01. Original integer overload shares bDefaultSeed.
+std::uint32_t bRandom(Memory& m,int range){return bRandom(m,0x329060,static_cast<std::uint32_t>(range));}
+// Debug00253790, E-0098-RP02. Seeding performs an original warm-up draw, even for zero.
+void bSetRandomSeed(Memory& m,std::uint32_t value,std::uint32_t state){m.word(state,value);bRandom(m,state,std::uint32_t(1));}
 }
 
 // Retail 0x0025A410; E-0042-C169; E-0042-S001; exact Debug TU src\bMath.cpp

@@ -2,6 +2,7 @@
 // Port-side bounded logical address space. No original allocator or native ABI is claimed.
 #include "game_core/port/driving/byte_view.hpp"
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <map>
 #include <vector>
@@ -10,6 +11,9 @@ namespace port::driving {
 class Memory {
 public:
     using Address=std::uint32_t;
+    struct Footprint {std::size_t regions=0,payload_bytes=0,owned_allocations=0;};
+    // Port-only read-only accounting; no PS2 allocator/statistics claim.
+    Footprint footprint() const;
     // Port-side stack lifetime for temporary logical allocations. Persistent
     // constructor allocations must occur outside this scope.
     class Scratch {

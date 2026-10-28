@@ -1042,7 +1042,8 @@ std::vector<hp2::debug::EventTree> parse_debug_event_tables(const std::vector<st
                 if(c.size%0xbc)throw std::runtime_error("Misaligned Debug EventInfo table");
                 for(std::size_t i=0;i<c.size;i+=0xbc){
                     const auto* r=data+i;hp2::debug::EventInfo e;
-                    e.sName=text(r+8,32);e.nNumber=static_cast<std::int8_t>(r[0x28]);e.nType=static_cast<std::int8_t>(r[0x29]);
+                    e.sName=text(r+8,32);std::copy_n(reinterpret_cast<const char*>(r+8),32,e.port_name_bytes.begin());
+                    e.nNumber=static_cast<std::int8_t>(r[0x28]);e.nType=static_cast<std::int8_t>(r[0x29]);
                     e.nClass=static_cast<std::int8_t>(r[0x2a]);e.nOpponentSelect=static_cast<std::int8_t>(r[0x2b]);e.nCops=static_cast<std::int8_t>(r[0x2c]);
                     e.eCopStrength=static_cast<std::int32_t>(word(r+0x30));
                     e.bRoadBlocks=static_cast<std::int8_t>(r[0x34]);e.bSpikeStrips=static_cast<std::int8_t>(r[0x35]);e.bBarricadeSmokeables=static_cast<std::int8_t>(r[0x36]);
@@ -1120,5 +1121,90 @@ void EventTrack::SetRace(std::uint32_t packed,::port::driving::init::ByteView ra
     race.scalar(0x14,static_cast<float>(packed>>25)*factor);
     const auto info=GetTrackInfo(static_cast<int>(packed&255));
     if(info)race.word(0x28,static_cast<std::uint32_t>(*info));
+}
+}
+
+#include "game_core/port/race/launch.hpp"
+namespace hp2::debug {
+// Debug001FC648, E-0098-RP04. Original packed-time/rank/reason reset.
+void EventResult::Reset(){nRank=0;tTime.PackedTime=0;nReason=0;}
+// Debug001FC678, E-0098-RP04. Original resets all eight result slots.
+void RaceEvent::ResetResults(){for(auto& result:aResults)result.Reset();}
+// Debug001FB540, E-0098-RP04. Original four-byte persistent state reset.
+void EventTimeState::Reset(::port::driving::init::ByteView state){state.word(0,0);}
+// Debug001FB560, E-0098-RP04. Packed time and objective comparisons are signed32.
+eEventStatus EventTimeState::GetStatus(::port::driving::init::ByteView state,const EventGoal& goal){
+    const auto time=static_cast<std::int32_t>(state.word(0));
+    if(time==0 || time==0x7fffffff)return eEVENT_UNTRIED;
+    return time<=static_cast<std::int32_t>(goal.nData)?eEVENT_PASSED:eEVENT_FAILED;
+}
+// Debug001FD708, E-0098-RP04. Only time-state dependencies are translated here.
+void RaceEvent::ResetState(){
+    if(!pState.data)return;
+    if(nType==1 || nType==5 || nType==6){EventTimeState::Reset(pState);return;}
+    hp2::not_implemented("0x001FD708","original rank/KO/tournament state reset not translated");
+}
+// Debug001FD118, E-0098-RP04. Non-multitrack types always return zero.
+int RaceEvent::GetRaceIndex() const{
+    if(nType!=3 && nType!=4)return 0;
+    if(!pState.data)return 0;
+    hp2::not_implemented("0x001FD118","original KO/tournament race index not translated");
+}
+// Debug001FC1E8, E-0098-RP04. Ordinary event numbers are an original immediate false.
+bool EventInfo::WillSuperBonusEventBeUnlockedIfThisEventIsWon() const{
+    if(nNumber!=31)return false;
+    hp2::not_implemented("0x001FC1E8","original event31 cross-tree unlock prediction not translated");
+}
+// Debug001FA378, E-0098-RP04. First HP delivery branch with explicit original
+// state/localization bindings. Unknown branches fail BEFORE touching prior settings.
+void EventTree::SetRace(::port::driving::init::ByteView race,const EventInfo& event,RaceEvent& active,
+    ::port::driving::init::ByteView state,const ::port::race::EventLaunchServices& services){
+    race.require(0,0x310);
+    if(nType!=1 || event.nNumber!=1 || event.nType!=5 || event.nOpponents!=0)
+        hp2::not_implemented("0x001FA378","non-first-delivery event binding not translated");
+    if(!services.translated_key || !services.translated_id || !services.format_description)
+        hp2::not_implemented("0x001FA378","original reward/objective localization bindings missing");
+    const int size=event.GetStateSize();state.require(0,size);
+    pCurrentEvent=&event;services.fred.nCurrentEvent=event.nNumber;
+    active.sName=event.port_name_bytes;
+    std::copy_n(state.data,size,active.aOldState.begin());active.pTree=this;active.pState=state;
+    active.nNumber=event.nNumber;active.nType=event.nType;active.nClass=event.nClass;
+    active.nCars=event.nCars;active.nTracks=event.nTracks;active.nRewards=event.nRewards;
+    active.nInitialPlayers=1;active.nOpponents=event.nOpponents;
+    const auto* objective=event.GetObjective(*this);
+    if(!objective)hp2::not_implemented("0x001FA378","original event objective record missing");
+    active.Objective=*objective;
+    for(int i=0;i<event.nCars;++i)active.aCars.at(i)=*event.GetCar(*this,i);
+    for(int i=0;i<event.nTracks;++i)active.aTracks.at(i)=*event.GetTrack(*this,i);
+    for(int i=0;i<event.nRewards;++i)active.aRewards.at(i)=*event.GetReward(*this,i);
+    std::string reward;
+    if(event.nRewards<1)reward=services.translated_key("No reward");
+    else{
+        const auto& first=active.aRewards[0].Field_0x00;
+        if(first[0]==0){
+            if(!services.car_full_name)hp2::not_implemented("0x001FA378","original reward car GetFullName binding missing");
+            reward=services.translated_key(services.car_full_name(first[1]));
+        }else if(first[0]==1){
+            if(!services.track_language_id)hp2::not_implemented("0x001FA378","original reward track language binding missing");
+            reward=services.translated_id(services.track_language_id(first[1],first[2]));
+        }else reward=services.translated_key("Unhandled type");
+    }
+    if(reward.size()>=active.sRewardName.size())hp2::not_implemented("0x001FA378","original reward string outside bounded host buffer domain");
+    std::copy(reward.begin(),reward.end(),active.sRewardName.begin());active.sRewardName[reward.size()]=0;
+    const auto description=services.translated_id(event.mDescriptionString);
+    const auto formatted=services.format_description(*this,event,description);
+    if(formatted.size()>=512)hp2::not_implemented("0x001FA378","original description outside bounded host buffer domain");
+    std::copy(formatted.begin(),formatted.end(),race.data+0x54);race.data[0x54+formatted.size()]=0;
+    race.word(0x50,1);active.ResetResults();
+    race.word(0x27c,2);race.word(0x274,0);race.word(0x28,1);race.word(0x20,1);race.word(0x24,active.Objective.nData);
+    race.word(0x30,1);race.word(0x34,static_cast<std::uint32_t>(event.nOpponents));
+    race.word(0x25c,6);race.word(0x38,static_cast<std::uint32_t>(event.nOpponentSelect));
+    race.word(0x288,static_cast<std::uint32_t>(event.eCopStrength));
+    race.word(0x260,static_cast<std::uint32_t>(event.bTickets));race.word(0x264,static_cast<std::uint32_t>(event.bRoadBlocks));
+    race.word(0x268,static_cast<std::uint32_t>(event.bBarricadeSmokeables));race.word(0x26c,static_cast<std::uint32_t>(event.bSpikeStrips));
+    race.word(0x270,static_cast<std::uint32_t>(event.bHelicopter));race.word(0x280,static_cast<std::uint32_t>(event.nNumBeACopRoadBlocks));
+    race.word(0x284,static_cast<std::uint32_t>(event.nNumBeACopChoppers));race.word(0x4c,0);race.word(0x40,event.mDamage!=0);
+    race.data[0x3c]=static_cast<std::uint8_t>(event.nOpponents+1);
+    race.scalar(0x2fc,event.fOpponentBoostScale);race.scalar(0x300,event.fOpponentBoostScale);
 }
 }

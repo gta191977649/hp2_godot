@@ -63,3 +63,58 @@ void World::DoTimestepCollisions(port::driving::Memory& m,port::driving::StaticC
     for(unsigned iteration=0;iteration<20;++iteration){const auto contacts=collisions.contacts(m,body,topology,motion);if(contacts.empty())return;collisions.resolve(m,body,car,contacts.front(),motion,move,recompute);}
 }
 }
+
+namespace port::race {
+// Port-only malformed-list guard. Floyd traversal requires no per-call allocations.
+void validate_world_ring(::port::driving::Memory& memory,std::uint32_t head){
+    const auto next=[&](std::uint32_t pointer){
+        if(!pointer)hp2::not_implemented("0x0014D028","original World list contains null link");
+        return memory.word(pointer);
+    };
+    auto slow=head,fast=head;
+    do{
+        slow=next(slow);fast=next(fast);if(fast!=head)fast=next(fast);
+        if(fast==head)return;
+        if(slow==fast)hp2::not_implemented("0x0014D028","original World list cycle does not reach sentinel");
+    }while(true);
+}
+}
+namespace hp2::debug {
+// Debug0014D028, E-0099-W01. Original stable four traversals: player, AI racer,
+// COP/SUPER_COP, traffic. Car.MyDriver+8 supplies type; unknown types are omitted.
+void World::BuildCarTable(){
+    auto& memory=memory_;const auto world=address_;
+    ::port::race::validate_world_ring(memory,world);::port::race::validate_world_ring(memory,world+8);
+    memory.word(world+0x1c,0);memory.word(world+0x20,0);memory.word(world+0x24,0);memory.word(world+0x28,0);
+    unsigned count=0;
+    const auto append_group=[&](int type,int alternative){
+        for(auto car=memory.word(world);car!=world;car=memory.word(car)){
+            const auto driver=memory.word(car+0x14);
+            if(!driver)hp2::not_implemented("0x0014D028","original Car.MyDriver is not bound");
+            const int actual=memory.signed_word(driver+8);
+            if(actual!=type && actual!=alternative)continue;
+            if(count>=14)hp2::not_implemented("0x0014D028","original World.CarTable exceeds fourteen entries");
+            memory.word(world+0x2c+4*count,car);++count;memory.word(world+0x1c,count);
+        }
+    };
+    append_group(1,1);memory.word(world+0x20,count);
+    append_group(2,2);memory.word(world+0x24,count);
+    append_group(4,5);memory.word(world+0x28,count);
+    append_group(3,3);
+    for(unsigned index=0;index<count;++index)memory.half(memory.word(world+0x2c+4*index)+8,static_cast<std::uint16_t>(index));
+    // Original final AICarList traversal has no body; ring validity was checked above.
+}
+// Debug0014D1F8, E-0099-W01. Search signed Car.DriverNumber, not CarIndex or a table ordinal.
+std::uint32_t World::GetCarByNumber(int number) const{
+    const int count=memory_.signed_word(address_+0x1c);
+    if(count<0 || count>14)hp2::not_implemented("0x0014D1F8","original World.CarTable count outside host bounds");
+    for(int i=0;i<count;++i){const auto car=memory_.word(address_+0x2c+4*i);
+        if(memory_.signed_half(car+0xa)==number)return car;}
+    return 0;
+}
+// Debug0014D328, E-0099-W01. Preserve previous waste and all unrelated World fields.
+void World::ResetTimeScale(){
+    memory_.word(address_+0x190,0);memory_.scalar(address_+0x184,1);
+    memory_.scalar(address_+0x188,0);memory_.scalar(address_+0x17c,0);memory_.word(address_+0x18c,0);
+}
+}

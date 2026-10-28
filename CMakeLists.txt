@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 3.24)
 project(PS2PCPort VERSION 0.1.0 LANGUAGES CXX)
 
+# Port-only standalone copy baseline; excluded from normal builds and CTest.
+add_executable(port_memory_copy_benchmark EXCLUDE_FROM_ALL
+  src/port/diagnostics/memory_copy_benchmark.cpp
+  src/game_core/port/driving/memory.cpp src/game_core/port/driving/original_image.cpp)
+target_include_directories(port_memory_copy_benchmark PRIVATE src)
+target_compile_features(port_memory_copy_benchmark PRIVATE cxx_std_17)
+
 include(CTest)
 option(PORT_BUILD_GODOT "Build the optional Godot 4 bridge" OFF)
 option(PORT_ENABLE_GPU_TESTS "Run windowed vehicle shader RGB checks with configured original assets" OFF)
@@ -100,6 +107,7 @@ set_target_properties(game_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # TASK-0018 / D008: platform-independent port runtime. Produces render::Frame and owns the
 # original-asset texture catalog. Links game_core only; never godot-cpp or a backend.
 add_library(port_runtime STATIC src/port/render/frame.cpp src/port/assets/catalog.cpp
+  src/port/runtime/race_launch_catalog.cpp
   src/game_core/port/track/assets.cpp src/game_core/port/track/runtime.cpp src/game_core/port/track/environment.cpp src/game_core/port/track/particles.cpp src/game_core/port/driving/track_environment.cpp
   src/game_core/port/driving/car_effects.cpp
   src/port/vehicle/textures.cpp
@@ -384,6 +392,13 @@ if(BUILD_TESTING)
   add_test(NAME frontend_audio COMMAND frontend_audio_tests)
   set_tests_properties(frontend_audio PROPERTIES WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
   add_executable(ultimate_event_tests src/tests/ultimate_event_tests.cpp)
+  add_executable(race_parameters_tests src/tests/race_parameters_tests.cpp)
+  add_executable(world_participants_tests src/tests/world_participants_tests.cpp)
+  target_link_libraries(world_participants_tests PRIVATE port_runtime)
+  add_test(NAME world_participants COMMAND world_participants_tests)
+  target_link_libraries(race_parameters_tests PRIVATE port_runtime)
+  add_test(NAME race_parameters COMMAND race_parameters_tests)
+  set_tests_properties(race_parameters PROPERTIES WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
   target_link_libraries(ultimate_event_tests PRIVATE port_runtime)
   add_test(NAME ultimate_event COMMAND ultimate_event_tests)
   set_tests_properties(ultimate_event PROPERTIES WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")

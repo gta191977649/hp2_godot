@@ -9,6 +9,8 @@ using port::driving::SolverVector;
 using port::driving::SolverMathContext;
 using port::driving::native::Matrix;
 std::uint32_t bRandom(Memory& m,std::uint32_t state,std::uint32_t divisor);
+std::uint32_t bRandom(Memory& m,int range);
+void bSetRandomSeed(Memory&,std::uint32_t value,std::uint32_t state);
 float bRandom(Memory& m,std::uint32_t state,float value);
 float bRandom(Memory& m,float value);
 float bSin(Memory&m,std::uint16_t a);

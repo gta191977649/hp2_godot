@@ -1088,3 +1088,9 @@ original equivalence claim. See reverse/task0098/frontend-effects.md E-0098-P03.
 Retain E-0098-F03 counterevidence explicitly: reflection0x11 disables envmap and
 sorted alpha, and stage5 owns the shared pending-alpha flush. Implementing five
 flattened viewport images would not satisfy those original conditions.
+
+## 2026-10-28 first-event scheduling and shared native launch
+
+The user's first-real-event milestone revises scheduling: progress from bounded original launch parameters/participants into TASK-0099 shared World construction while TASK-0098 formal frontend/compositor/private-profile bindings remain explicitly incomplete. No task acceptance is waived, no synthetic race/outcome or reduced police/traffic configuration is authorized. Port service fixtures test native boundaries only. Original StartRace requests GameFlow unload/load rather than directly substituting the single-car scene. Session ownership must keep tree/state/catalog/memory alive through callbacks and isolate loading failure before publishing a running race.
+
+World registration and startup use one shared Memory. An EXCLUDE_FROM_ALL Release standalone benchmark measures image clone/destroy baseline separately from gameplay; no FPS inference or backend transaction replacement is made. Dirty-page work must cover retained mutable views and all write/allocation paths before replacing existing rollback behavior. No Godot physics/navigation substitution, per-car whole-world copies or proprietary input staging.

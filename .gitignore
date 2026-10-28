@@ -67,6 +67,8 @@ saves/
 !/src/tests/frontend_name_entry_tests.cpp
 
 !/src/tests/ultimate_event_tests.cpp
+!/src/tests/race_parameters_tests.cpp
+!/src/tests/world_participants_tests.cpp
 !/src/tests/ultimate_selection_tests.cpp
 !/src/tests/ultimate_selection_camera_tests.cpp
 !/src/tests/ultimate_selection_widgets_tests.cpp

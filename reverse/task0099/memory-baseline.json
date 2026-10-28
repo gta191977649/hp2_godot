@@ -1,0 +1,77 @@
+{
+  "task": "TASK-0099",
+  "evidence_id": "E-0099-M01",
+  "scope": "port-only image clone/destroy; not gameplay performance acceptance",
+  "build_type": "Release",
+  "compiler": "GCC13.2.0",
+  "flags": "-O3 -DNDEBUG",
+  "host_cpu": "Intel Core Ultra X7 358H",
+  "host_cores": 16,
+  "host_logical_processors": 16,
+  "source_and_build_hashes": {
+    "src/port/diagnostics/memory_copy_benchmark.cpp": "bab334e39e2243ff04c1d11d79143e320a7065564f3e1049327113f4f6e0ba86",
+    "src/game_core/port/driving/memory.cpp": "9f3df82125b1965161c0b1b44c566e35bd5204ff9bead0058417791e3887afaa",
+    "src/game_core/port/driving/memory.hpp": "f2fa216a0f49eb7aeaac3000676e4ce8a2b03ee7839acb02a9e7185f792f0dc8",
+    "src/game_core/port/driving/original_image.cpp": "18291e8dc3c4b437800a1b6a3cc0d25bdb550e3757ead67367b1495377c15588",
+    "build/native-memory-release/port_memory_copy_benchmark.exe": "92a55602ee539ad94eb9fdd5756d1e5fddf68c1a0b60f72c73fc71f236a0a11d"
+  },
+  "runs": [
+    {
+      "file": "local/task0099/memory-copy-run1.json",
+      "sha256": "dd486f17229c650d02121ac76f9755a7832f7b2c8e4b3cb53a5c1f061849f3dd",
+      "summary": {
+        "scope": "port memory image clone and destroy only; no simulation/rendering",
+        "behavior_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+        "warmup": 120,
+        "samples": 600,
+        "regions": 2,
+        "payload_bytes_per_copy": 2310172,
+        "mapped_owned_allocations": 0,
+        "heap_allocation_count_measured": false,
+        "gpu_time_available": false,
+        "mean_ms": 0.558538833,
+        "p50_ms": 0.585,
+        "p99_ms": 0.8929,
+        "max_ms": 2.7976
+      }
+    },
+    {
+      "file": "local/task0099/memory-copy-run2.json",
+      "sha256": "814e18af308414cf611a56662649a5b2fecd2807d3f9d7c59a5ae851347cfff1",
+      "summary": {
+        "scope": "port memory image clone and destroy only; no simulation/rendering",
+        "behavior_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+        "warmup": 120,
+        "samples": 600,
+        "regions": 2,
+        "payload_bytes_per_copy": 2310172,
+        "mapped_owned_allocations": 0,
+        "heap_allocation_count_measured": false,
+        "gpu_time_available": false,
+        "mean_ms": 0.594404167,
+        "p50_ms": 0.5911,
+        "p99_ms": 0.9468,
+        "max_ms": 1.0535
+      }
+    },
+    {
+      "file": "local/task0099/memory-copy-run3.json",
+      "sha256": "552af48ebbabe3f62cd1b71b746deff67115882b30cf574f40e321a766074153",
+      "summary": {
+        "scope": "port memory image clone and destroy only; no simulation/rendering",
+        "behavior_sha256": "815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
+        "warmup": 120,
+        "samples": 600,
+        "regions": 2,
+        "payload_bytes_per_copy": 2310172,
+        "mapped_owned_allocations": 0,
+        "heap_allocation_count_measured": false,
+        "gpu_time_available": false,
+        "mean_ms": 0.599293667,
+        "p50_ms": 0.5981,
+        "p99_ms": 0.9045,
+        "max_ms": 1.903
+      }
+    }
+  ]
+}
