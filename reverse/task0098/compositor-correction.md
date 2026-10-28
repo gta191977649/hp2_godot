@@ -51,3 +51,12 @@ viewer restriction. This correction asserts no complete production binding.
 
 Unknowns: final target initialization, full clipping/blend behavior and original
 runtime output. No silent viewport sandwich or guessed sort/depth replacement.
+
+## E-0098-RB01 bounded reflection correction,2026-10-28
+
+The intrinsic0x11 flags now reach the direct host vehicle adapter: envmap
+next-pass disabled and ApplyAlphaSorting strips make no colour/depth contribution.
+See reflection-binding.md for fresh type/listing evidence and GPU tests. This
+supersedes only the earlier sentence about ignored Reflection flags; shared
+physical targets, pending-alpha executor and actual page binding remain open.
+The strict production roundtrip test still FAILS at001F6A28.

@@ -18,6 +18,7 @@ class Ps2VehicleRenderer : public godot::Node3D {
     void release_display();
     void rebuild_display(bool incremental=false);
     void layout_lods();
+    void apply_frontend_flags(std::uint32_t flags);
     void cancel_load();
     godot::Dictionary load_requested(const godot::String& path, int car_id, int skin_id);
     godot::Dictionary request_native(const godot::String&,int,int,std::uint32_t frontend_solid);

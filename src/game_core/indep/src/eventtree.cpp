@@ -1208,3 +1208,50 @@ void EventTree::SetRace(::port::driving::init::ByteView race,const EventInfo& ev
     race.scalar(0x2fc,event.fOpponentBoostScale);race.scalar(0x300,event.fOpponentBoostScale);
 }
 }
+
+#include "game_core/port/frontend/event_entry.hpp"
+
+namespace hp2::debug {
+// Debug001F2BD8, E-0098-E01, reverse/task0098/production-entry.md.
+// Host services bind current leaf/unlock map and original global storage.
+void tTreeDetails::StartEvent(ScreenCallbackData& data,const ::port::selection::EventEntryServices& s){
+    if(!pTree || !LastKnownEvent || !s.set_race || !s.build_unlock_list)
+        hp2::not_implemented("0x001F2BD8","event entry requires tree/event/race/unlock bindings");
+    s.race.require(0x254,4);
+    s.challenge_race_mode=1;
+    s.race.word(0x254,1); // RACE_MODE_NFS_EXTREME, original001F2C20.
+    s.fred.nCurrentEvent=LastKnownEvent->nNumber;
+    s.set_race(*pTree,*LastKnownEvent);
+    s.build_unlock_list();
+    // Original IsMultiTrack001FC5C8: only event types3 and4.
+    if(LastKnownEvent->nType==3 || LastKnownEvent->nType==4){
+        if(!s.get_status)hp2::not_implemented("0x001FC2A8","event status binding missing");
+        if(s.get_status(*LastKnownEvent)==eEVENT_INPROGRESS){
+            if(data.Port==0){ // JOYSTICK_PORT1; only this continuation branch gates Port.
+                if(!s.push_screen)hp2::not_implemented("0x001F1E28","event continuation history binding missing");
+                s.push_screen("View Event Tree");
+                if(!s.continue_event)hp2::not_implemented("0x001828E8","multitrack continuation binding missing");
+                s.continue_event();
+            }
+            return;
+        }
+    }
+    s.fred.GameType=pTree->nType==0?8:9;
+    s.fred.MakeEventCarsAvailable(*pTree,*LastKnownEvent,s.cars,s.language);
+    if(!s.change_screen)hp2::not_implemented("0x0014C978","production Select Car transition binding missing");
+    s.change_screen("Select Car",true);
+}
+// Debug001F2D20, E-0098-E01. START13 is NOT an alias for SELECT1 here.
+void tTreeDetails::HandleMessages(ScreenMessage message,ScreenCallbackData& data,
+    const ::port::selection::EventEntryServices& s){
+    const int msg=static_cast<int>(message);
+    if(msg>=10)return;
+    if(msg>=6){data.Noise=0;return;}
+    if(message!=MENUITEM_SELECT)return;
+    if(!LastKnownEvent || !s.get_status)
+        hp2::not_implemented("0x001FC2A8","event selection status binding missing");
+    if(static_cast<int>(s.get_status(*LastKnownEvent))>0){
+        data.Noise=0x16;StartEvent(data,s);
+    }else data.Noise=0x17;
+}
+}

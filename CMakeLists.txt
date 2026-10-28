@@ -114,7 +114,7 @@ add_library(port_runtime STATIC src/port/render/frame.cpp src/port/assets/catalo
   src/port/vehicle/catalog.cpp
   src/port/assets/vehicle_geometry.cpp src/port/vehicle/model.cpp
   src/port/runtime/frame_builder.cpp src/port/runtime/frontend_runtime.cpp
-  src/port/runtime/event_tree_view.cpp src/port/runtime/selection_page.cpp)
+  src/port/runtime/event_tree_view.cpp src/port/runtime/selection_page.cpp src/port/runtime/selection_runtime.cpp)
 target_include_directories(port_runtime PUBLIC src)
 target_compile_features(port_runtime PUBLIC cxx_std_17)
 find_package(Threads REQUIRED)
@@ -661,7 +661,7 @@ if(PORT_BUILD_GODOT)
     src/platform/godot_bridge/ps2_track_viewer.cpp
     src/platform/godot_bridge/ps2_driving_runtime.cpp
     src/platform/godot_bridge/ps2_driving_lab.cpp
-    src/platform/godot_bridge/ps2_render_host.cpp src/platform/not_implemented_dialog.cpp)
+    src/platform/godot_bridge/ps2_render_host.cpp src/platform/godot_bridge/frontend_gpu_executor.cpp src/platform/not_implemented_dialog.cpp)
   target_sources(ps2_port PRIVATE src/platform/godot_bridge/ps2_movie_player.cpp)
   target_include_directories(ps2_port PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
   target_compile_definitions(ps2_port PRIVATE HP2_DEBUG_BUILD=$<IF:$<CONFIG:Debug>,1,0>

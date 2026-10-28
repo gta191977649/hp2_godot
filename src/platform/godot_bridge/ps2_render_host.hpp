@@ -1,5 +1,7 @@
 #pragma once
 #include "profile_debug_ui.hpp"
+#include "frontend_gpu_executor.hpp"
+#include <godot_cpp/classes/image_texture.hpp>
 #include "ps2_frontend_layout.hpp"
 #include "ps2_movie_player.hpp"
 #include "port/render/frame.hpp"
@@ -116,6 +118,8 @@ private:
     // Returns how many quads sampled a live movie surface.
     int submit(const port::render::Frame& frame, port::render::Resources& resources);
 
+    std::unique_ptr<FrontendGpuExecutor> frontend_gpu_;
+    godot::Ref<godot::ImageTexture> frontend_image_;
     godot::RID item_;
     std::map<port::render::TextureId, Uploaded> textures_;
     double output_scale_ = 1.0;

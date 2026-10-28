@@ -90,6 +90,9 @@ var screen_count := 0
 var last_stats: Dictionary = {}
 var info_label: Label
 var show_info := false
+# Port diagnostics for scripted acceptance. Capturing a frame is not a pass if
+# the production input/tick/render route has already reported a runtime error.
+var runtime_error_count := 0
 
 func _ready() -> void:
 	for required in ["Ps2FrontEndLayout", "Ps2RenderHost", "Ps2MoviePlayer"]:
@@ -197,6 +200,8 @@ func _make_label(position_px: Vector2, colour: Color) -> Label:
 	return label
 
 func _report(message: String, error: bool = false) -> void:
+	if error:
+		runtime_error_count += 1
 	DebugTools.write_log(message, error)
 	if error:
 		push_error(message)
@@ -227,6 +232,9 @@ func _process(delta: float) -> void:
 			_fatal(str(bg_tick["not_implemented"]))
 			return
 	var tick: Dictionary = layout.menu_tick(delta)
+	if tick.has("not_implemented") or not bool(tick.get("ok", false)):
+		_report(str(tick.get("not_implemented", tick.get("error", "native menu tick failed"))), true)
+		return
 	if int(tick.get("screen", screen_index)) != screen_index:
 		screen_index = int(tick["screen"])
 		_open_screen(false)
@@ -391,7 +399,14 @@ func _play_menu_audio() -> void:
 			continue
 		if DisplayServer.get_name() == "headless":
 			continue
+		if request.get("stop", false):
+			for child in get_children():
+				if child is AudioStreamPlayer and child.get_meta("hp2_menu_event", "") == request["event"]:
+					child.stop()
+					child.queue_free()
+			continue
 		var player := AudioStreamPlayer.new()
+		player.set_meta("hp2_menu_event", request["event"])
 		player.bus = frontend_audio_bus
 		player.stream = request["stream"]
 		player.volume_linear = float(request.get("gain", 1.0))
@@ -450,7 +465,8 @@ func _capture(path: String) -> void:
 	if get_viewport().get_texture().get_image().save_png(path) != OK:
 		_fatal("capture failed")
 		return
-	print("FRONTEND_CAPTURE_OK: ", path)
+	var capture_ok := runtime_error_count == 0
+	print("FRONTEND_CAPTURE_%s: %s (runtime_errors=%d)" % ["OK" if capture_ok else "FAIL", path, runtime_error_count])
 	set_process(false)
 	_exit_tree()
 	# Capture-only teardown: allow the audio mix thread to release stopped WAV
@@ -458,7 +474,7 @@ func _capture(path: String) -> void:
 	await get_tree().create_timer(0.1).timeout
 	await get_tree().process_frame
 	await get_tree().process_frame
-	get_tree().quit(0)
+	get_tree().quit(0 if capture_ok else 1)
 
 # Integration check for the native render path: every screen must build a frame through the
 # backend, and the frame must come out of the runtime rather than from this script.

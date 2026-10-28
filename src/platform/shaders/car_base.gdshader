@@ -4,6 +4,8 @@ uniform sampler2D base_texture : @SAMPLER_HINT@;
 uniform bool base_lit = true;
 uniform bool flag_0x4 = false;
 uniform bool reflection_pass = false;
+// Host suppression of an original unsubmitted strip; default preserves race/viewer paths.
+uniform bool frontend_skip_strip = false;
 uniform vec3 environment_row0;
 uniform vec3 environment_row1;
 uniform vec3 environment_row2;
@@ -124,6 +126,7 @@ void vertex(){
     gs_color_numerator = gs_rgba * gs_color_w;
 }
 void fragment(){
+if(frontend_skip_strip){discard;}
 vec4 gs_rgba = gs_color_numerator / gs_color_w;
 @FRAGMENT_SOURCE@
 }

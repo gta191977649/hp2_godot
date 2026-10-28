@@ -50,6 +50,7 @@ godot::Dictionary to_dictionary(const port::runtime::MenuState& state) {
     result["screen"] = state.screen;
     result["dat_002FC070"] = state.dat_002FC070;
     result["active_class"] = to_godot(state.active_class);
+    godot::Dictionary selection;selection["active"]=state.selection.active;selection["loaded"]=state.selection.loaded;selection["car"]=state.selection.car;selection["skin"]=state.selection.skin;selection["overlay"]=state.selection.overlay;selection["visible_cars"]=state.selection.visible_cars;selection["generation"]=static_cast<int64_t>(state.selection.generation);result["selection"]=selection;
     result["history_depth"] = state.history_depth;
     result["exiting"] = state.exiting;
     result["item_count"] = state.item_count;
@@ -166,7 +167,8 @@ godot::Array Ps2FrontEndLayout::drain_menu_audio() {
     for (const auto& request : runtime_.drain_menu_audio()) {
         godot::Dictionary entry;
         entry["event"] = to_godot(request.event);
-        if (request.not_implemented.empty()) {
+        if(request.operation==1){entry["stop"]=true;}
+        else if (request.not_implemented.empty()) {
             entry["stream"] = pcm_stream(request.pcm);
             entry["pitch_scale"] = request.pitch_scale;
             entry["gain"] = request.gain;

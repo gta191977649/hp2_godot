@@ -6864,7 +6864,7 @@
 | <code>0x00198418</code> | <code>Sub_00198418</code> | Missing / unresolved | Not recorded |
 | <code>0x00198420</code> | <code>Sub_00198420</code> | Missing / unresolved | Not recorded |
 | <code>0x00198490</code> | <code>Sub_00198490</code> | Missing / unresolved | Not recorded |
-| <code>0x00198518</code> | <code>Sub_00198518</code> | Missing / unresolved | Not recorded |
+| <code>0x00198518</code> | [<code>Sub_00198518</code>](../reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/00198518.md) | Missing / unresolved | Decompiled |
 | <code>0x00198640</code> | <code>Sub_00198640</code> | Missing / unresolved | Not recorded |
 | <code>0x001986C8</code> | <code>Sub_001986C8</code> | Missing / unresolved | Not recorded |
 | <code>0x00198810</code> | <code>Sub_00198810</code> | Missing / unresolved | Not recorded |
@@ -12159,7 +12159,7 @@
 | <code>0x00123D20</code> | <code>UpdateEnvironmentMapCameras(void)</code> | Missing / unresolved | Not recorded |
 | <code>0x00123E10</code> | <code>RenderFrontEndCar(CarRenderInfo *, eView *, bVector3 *, bMatrix4 *, bMatrix4 *, bMatrix4 *, int, int, unsigned int, int)</code> | Missing / unresolved | Not recorded |
 | <code>0x00123E98</code> | <code>RenderFrontEndCarOverrideModel(eModel *, bMatrix4 *, unsigned int)</code> | Missing / unresolved | Not recorded |
-| <code>0x00123EA8</code> | <code>RenderFrontEndCars(eView *, int, int, int, int)</code> | Missing / unresolved | Not recorded |
+| <code>0x00123EA8</code> | [<code>RenderFrontEndCars__FP5eViewiiii</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/frontend/00123ea8.md) | Missing / unresolved | Decompiled |
 | <code>0x001241E0</code> | <code>RenderCars(eView *)</code> | Missing / unresolved | Not recorded |
 | <code>0x00124428</code> | <code>RenderDashboards(eView *)</code> | Missing / unresolved | Not recorded |
 | <code>0x00124628</code> | <code>bTList&lt;FrontEndRenderingCar&gt;::~bTList(void)</code> | Missing / unresolved | Not recorded |
@@ -13315,7 +13315,7 @@
 | <code>0x001566B8</code> | <code>Sub_001566B8</code> | Missing / unresolved | Not recorded |
 | <code>0x001566C8</code> | <code>Sub_001566C8</code> | Missing / unresolved | Not recorded |
 | <code>0x001566D8</code> | <code>Sub_001566D8</code> | Missing / unresolved | Not recorded |
-| <code>0x001566E0</code> | <code>Camera::Camera(void)</code> | Missing / unresolved | Not recorded |
+| <code>0x001566E0</code> | [<code>__6Camera</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/frontend/001566e0.md) | Missing / unresolved | Decompiled |
 | <code>0x001567D0</code> | <code>Camera::Camera(Camera const &amp;)</code> | Missing / unresolved | Not recorded |
 | <code>0x00156868</code> | <code>Camera::SetCameraMatrix(bMatrix4 const &amp;, float)</code> | Missing / unresolved | Not recorded |
 | <code>0x00156B18</code> | <code>Camera::CommunicateWithJollyRancher(char *)</code> | Missing / unresolved | Not recorded |
@@ -16944,7 +16944,7 @@
 | <code>0x001F2AF8</code> | <code>tTreeDetails::SyncHelpMenu(void)</code> | Missing / unresolved | Not recorded |
 | <code>0x001F2BD0</code> | <code>tTreeDetails::Activate(void)</code> | Missing / unresolved | Not recorded |
 | <code>0x001F2BD8</code> | [<code>StartEvent__12tTreeDetails13ScreenMessageP18ScreenCallbackDataP10tEventLeaf</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001f2bd8.md) | Missing / unresolved | Decompiled |
-| <code>0x001F2D20</code> | <code>tTreeDetails::HandleMessages(ScreenMessage, ScreenCallbackData *, tEventLeaf *)</code> | Missing / unresolved | Not recorded |
+| <code>0x001F2D20</code> | [<code>HandleMessages__12tTreeDetails13ScreenMessageP18ScreenCallbackDataP10tEventLeaf</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001f2d20.md) | Missing / unresolved | Decompiled |
 | <code>0x001F2DC8</code> | <code>SetObjectColor(FlailerObjectChunk *, bVector4 *)</code> | Missing / unresolved | Not recorded |
 | <code>0x001F2EA0</code> | <code>RenderHLine(float, float, float, bVector4 *)</code> | Missing / unresolved | Not recorded |
 | <code>0x001F2FA8</code> | <code>RenderVLine(float, float, float, bVector4 *)</code> | Missing / unresolved | Not recorded |
@@ -16954,11 +16954,11 @@
 | <code>0x001F33B0</code> | <code>tEventLeaf::~tEventLeaf(void)</code> | Missing / unresolved | Not recorded |
 | <code>0x001F3430</code> | <code>tUnlockMap::tUnlockMap(void)</code> | Missing / unresolved | Not recorded |
 | <code>0x001F3458</code> | <code>tUnlockMap::Reset(void)</code> | Missing / unresolved | Not recorded |
-| <code>0x001F3460</code> | <code>tUnlockMap::AddGoal(EventGoal *, int)</code> | Missing / unresolved | Not recorded |
+| <code>0x001F3460</code> | [<code>AddGoal__10tUnlockMapP9EventGoali</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/frontend/001f3460.md) | Missing / unresolved | Decompiled |
 | <code>0x001F34B0</code> | <code>tUnlockMap::Print(void)</code> | Missing / unresolved | Not recorded |
 | <code>0x001F3548</code> | <code>tUnlockMap::GetEventsUnlocked(int *, int, RaceEvent *)</code> | Missing / unresolved | Not recorded |
 | <code>0x001F3608</code> | <code>tUnlockMap::GetNumEventsUnlocked(RaceEvent *)</code> | Missing / unresolved | Not recorded |
-| <code>0x001F3630</code> | <code>tEventLeaf::BuildUnlockList(tUnlockMap *)</code> | Missing / unresolved | Not recorded |
+| <code>0x001F3630</code> | [<code>BuildUnlockList__10tEventLeafP10tUnlockMap</code>](../reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/frontend/001f3630.md) | Missing / unresolved | Decompiled |
 | <code>0x001F3710</code> | <code>tEventLeaf::DisplayUnlockCrap(void)</code> | Missing / unresolved | Not recorded |
 | <code>0x001F3750</code> | <code>tEventLeaf::CalculateCachedTextureInfo(void)</code> | Missing / unresolved | Not recorded |
 | <code>0x001F3868</code> | <code>tEventLeaf::GetRewardString(void)</code> | Missing / unresolved | Not recorded |

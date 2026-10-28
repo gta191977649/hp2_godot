@@ -29,9 +29,9 @@ public:
 namespace port::driving::native {struct ScheduleServices;}
 namespace hp2::recovered {
 // TASK-0044 E-0044-P05. Global-context Memory is an explicit port binding.
-float GetRealTimeElapsedFromQuantized(port::driving::Memory&,std::int32_t);
+float GetRealTimeElapsedFromQuantized(::port::driving::Memory&,std::int32_t);
 std::int32_t GetQuantizedRealTimeElapsed(float);
-void PrepareRealTimestep(port::driving::Memory&,float,port::driving::native::ScheduleServices&);
-void AdvanceRealTime(port::driving::Memory&);void ResetWorldTime(port::driving::Memory&);
-void PrepareWorldTimestep(port::driving::Memory&,float);void AdvanceWorldTime(port::driving::Memory&);
+void PrepareRealTimestep(::port::driving::Memory&,float,::port::driving::native::ScheduleServices&);
+void AdvanceRealTime(::port::driving::Memory&);void ResetWorldTime(::port::driving::Memory&);
+void PrepareWorldTimestep(::port::driving::Memory&,float);void AdvanceWorldTime(::port::driving::Memory&);
 }

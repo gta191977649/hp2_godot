@@ -50,10 +50,12 @@ std::string describe_menu_message(int message) {
 } // namespace
 
 FrontEndRuntime::~FrontEndRuntime() {
+    selection_.reset();
     hp2::frontend::install_menu_sound_sink({}); // Global host callback must not outlive this owner.
 }
 
 void FrontEndRuntime::reset_state() {
+    selection_.reset();pending_sound_controls_.clear();
     menu_group_.reset();          // holds a pointer into screens_, which is about to reallocate
     menu_screen_index_ = -1;
     navigation_history_.clear();
@@ -479,11 +481,10 @@ bool FrontEndRuntime::event_tree_joy_event(int joy_event) {
             if (event_tree_.state() == 2) {
                 const int status = event_tree_.selected_tree()->Status_002010B8(
                     event_tree_.profile(), event_tree_.cursor());
-                // FUN_001F6B70: locked uses TreeWrong (0x17), successful selection
-                // TreeSelect (0x16). Missing race/car selection remains an explicit gap.
-                sound = status > 0 ? 0x16 : 0x17;
-                hp2::frontend::PlayMenuSound_0016E038(sound);
-                if (status > 0) hp2::not_implemented("0x001F6A28", "event car/race selection dependencies not translated");
+                // Debug001F2D20: only SELECT starts; Start has no branch.
+                if(joy_event!=hp2::input::JOY_EVENT_MENU_SELECT)return true;
+                if(status>0)selection_=std::make_unique<SelectionRuntime>(*this);
+                else hp2::frontend::PlayMenuSound_0016E038(0x17);
                 return true;
             }
             if (event_tree_.state() == 5) return true; // 001F65C8 delegates preview input.
@@ -1081,12 +1082,14 @@ void FrontEndRuntime::apply_pending_screen() {
             hp2::not_implemented("0x0016B418", "history overflow behavior not recovered");
         navigation_history_.push_back(active_class_name_);
     }
+    if(selection_ && selection_->observation().active && name!="Select Car"){selection_->close();selection_.reset();}
     const auto activated = activated_name_hash_;
     requested_class_for_open_ = name;
     const auto opened = menu_open(target);
     active_class_name_ = name; // preserve many-to-one class identity (e.g. NameEntry)
     activated_name_hash_ = activated;
-    if (!opened.ok) hp2::not_implemented("0x0016C4C0", "target menu construction failed");
+    if (!opened.ok || !opened.not_implemented.empty()) hp2::not_implemented("0x0016C4C0", ("target menu construction failed: "+opened.not_implemented).c_str());
+    if(name=="Select Car"){if(!selection_)throw std::logic_error("Selection owner absent");selection_->activate();}
 }
 
 void FrontEndRuntime::request_history_back() {
@@ -1144,7 +1147,8 @@ MenuState FrontEndRuntime::menu_joy_event(int pad_index, int joy_event, bool pre
             hp2::frontend::PlayMenuSound_0016E038(event.sound_id_0x0C);
             return;
         }
-        if (pressed && event_tree_joy_event(joy_event)) return;
+        if(selection_ && selection_->observation().active){selection_->input(pad_index,joy_event,pressed);apply_pending_screen();return;}
+        if (pressed && event_tree_joy_event(joy_event)) {apply_pending_screen();return;}
         // FUN_001EEF00 forwards to 00249128 during exit, which consumes further menu input.
         if (!exit_animation_ && joy_event == hp2::input::JOY_EVENT_MENU_BACK && pressed) {
             if(jukebox_screen_) {
@@ -1222,6 +1226,7 @@ MenuState FrontEndRuntime::menu_joy_event(int pad_index, int joy_event, bool pre
 
 MenuState FrontEndRuntime::menu_state() const {
     MenuState state;
+    if(selection_)state.selection=selection_->observation();
     state.screen = menu_screen_index_;
     state.dat_002FC070 = dat_002FC070_;
     state.active_class = active_class_name_;
@@ -1340,6 +1345,7 @@ TickResult FrontEndRuntime::menu_tick(double delta) {
     }
     menu_clock_seconds_ += delta;
     sound_clock_seconds_ += delta;
+    if(selection_ && selection_->observation().active){result.not_implemented=hp2::guard([&]{selection_->tick(static_cast<float>(delta));});result.ok=true;result.screen=menu_screen_index_;return result;}
     if(autosave_) {
         result.not_implemented=hp2::guard([&] {
             const bool complete=hp2::frontend::Sub_00246138(*autosave_,delta,[this]{
@@ -1365,6 +1371,7 @@ TickResult FrontEndRuntime::menu_tick(double delta) {
         // The original mutates live profile globals during transitions.
         profile_.write_u32(hp2::memorycard::kEventTreeViewState_001FAF60,
             event_tree_.profile().EventTreeViewState_001FAF60());
+        if(event_tree_.state()==0 || event_tree_.state()==2)profile_.write_u32(hp2::memorycard::kEventTreeViewState_001FAF60,event_tree_.state());
         update_event_tree_overlay(static_cast<float>(delta));
         const auto ticks = static_cast<std::uint32_t>(std::fmod(menu_clock_seconds_ * 4000, 4294967296.0));
         event_car_logos_.Sub_001F8FB0(ticks, random_state_);
@@ -1400,7 +1407,7 @@ TickResult FrontEndRuntime::menu_tick(double delta) {
 }
 
 std::vector<SoundRequest> FrontEndRuntime::drain_menu_audio() {
-    std::vector<SoundRequest> result;
+    auto result=std::move(pending_sound_controls_);pending_sound_controls_.clear();
     auto requests = std::move(pending_volume_feedback_);
     pending_volume_feedback_.clear();
     for(auto& name:pending_sound_names_)requests.emplace_back(std::move(name),1.0f);

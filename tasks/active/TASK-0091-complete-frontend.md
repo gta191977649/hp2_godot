@@ -34,3 +34,35 @@ connected in the working tree with bounded PC tests; original comparison remains
 open. Continue TASK-0095 NameEntry keyboard, then controller/profile/help/credits,
 race setup/car/track and results/pause/replay. Their normal paths remain incomplete.
 No Verified promotion and no commit requested.
+
+## Approved combined frontend/career plan,2026-10-28
+
+Complete frontend plus single-player Ultimate Racer is now approved. The active
+implementation scope is TASK-0098 event/production selection; unrelated Retail
+pages remain queued here with existing criteria unchanged. The no-race boundary
+in this Retail task does not restrict the already authorized Debug TASK-0096.
+reverse/frontend/closure-routes.csv is the reproducible63-registration/76-document
+baseline (90 route/unknown rows), not an exhaustive state audit or behavior pass.
+Run `py -3 reverse/scripts/audit_frontend_closure.py --check`. Every final
+window/original acceptance remains pending until evidenced. See
+reverse/task0098/production-entry.md for current entry implementation and gaps.
+
+## Approved combined frontend/career plan,2026-10-28
+
+Complete frontend plus single-player Ultimate Racer is now approved. The active
+implementation scope is TASK-0098 event/production selection; unrelated Retail
+pages remain queued here with existing criteria unchanged. The no-race boundary
+in this Retail task does not restrict the already authorized Debug TASK-0096.
+reverse/frontend/closure-routes.csv is the reproducible63-registration/76-document
+baseline (90 route/unknown rows), not an exhaustive state audit or behavior pass.
+Run `py -3 reverse/scripts/audit_frontend_closure.py --check`. Every final
+window/original acceptance remains pending until evidenced. See
+reverse/task0098/production-entry.md for current entry implementation and gaps.
+
+2026-10-28 TASK-0098 production entry milestone: real Main Menu -> first
+Ultimate Racer delivery -> loaded Select Car -> Back -> reenter has now passed
+the GPU/script route (three cycles, swatch input and visible vehicle checks).
+See reverse/task0098/production-roundtrip.md for the final run/commands and
+remaining unsupported paths. This supersedes the prior blocked001F6A28 entry
+report only for that bounded route. Full selection, all events, race closure,
+Release performance and original certification remain incomplete.

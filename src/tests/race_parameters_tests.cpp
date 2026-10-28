@@ -1,3 +1,4 @@
+#include "game_core/port/frontend/event_entry.hpp"
 #include "game_core/indep/src/raceparameters.hpp"
 #include "game_core/indep/inc/Fred.hpp"
 #include "game_core/port/driving/original_image.hpp"
@@ -142,7 +143,20 @@ int main(){
                 [&](const auto& tree,const auto& event,const std::string& text){require(&tree==&trees[1] && &event==&first && text=="fixture template","original description call bindings changed");text_calls.push_back(3);return std::string("fixture objective");}};
             bindings.car_full_name=[&](int car){require(car==41,"first reward car identity differs");text_calls.push_back(4);return std::string("fixture car");};
             const auto original_seed=original.word(parameters+0x30c);
-            trees[1].SetRace(original.view(parameters,0x310),first,active,saved,bindings);
+            // Actual asset-backed SetRace/availability, explicit host unlock/history/page fixtures.
+            int challenge_mode=0;std::vector<std::string> entry_calls;
+            port::selection::EventEntryServices entry{fred,original.view(parameters,0x310),challenge_mode,catalog.cars()};
+            entry.get_status=[&](const auto& e){require(&e==&first,"entry queried wrong original event");return eEVENT_UNTRIED;};
+            entry.set_race=[&](auto& tree,const auto& e){entry_calls.push_back("race");tree.SetRace(original.view(parameters,0x310),e,active,saved,bindings);};
+            entry.build_unlock_list=[&]{entry_calls.push_back("fixture unlock list");};
+            entry.change_screen=[&](const char* name,bool push){require(std::string(name)=="Select Car" && push,"real event entry changed destination/history");entry_calls.push_back("fixture page");};
+            tTreeDetails details{&trees[1],&first};ScreenCallbackData entry_data;
+            fred.GameType=-1;details.HandleMessages(MENUITEM_SELECT,entry_data,entry);
+            require(entry_calls==std::vector<std::string>{"race","fixture unlock list","fixture page"}
+                && challenge_mode==1 && entry_data.Noise==0x16 && fred.GameType==9
+                && original.word(parameters+0x254)==1,"real first event entry orchestration differs");
+            require(fred.FrontendPlayers[0].aCarStatus[selected].nStatus==eCAR_UNLOCKED_FULLY_VISIBLE,
+                "original event entry did not expose required player car");
             require(text_calls==std::vector<int>({4,1,2,3}) && fred.nCurrentEvent==1 && trees[1].pCurrentEvent==&first,"event binding/localization order differs");
             require(saved.word(0)==123456 && active.aOldState[0]==64 && active.aOldState[1]==226 && active.aOldState[2]==1
                 && active.aResults[7].nRank==0 && active.aPrevState[0]==77,"event must capture prior profile state before startup reset; results reset must not overwrite previous-state snapshot");

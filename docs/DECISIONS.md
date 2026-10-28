@@ -1094,3 +1094,30 @@ flattened viewport images would not satisfy those original conditions.
 The user's first-real-event milestone revises scheduling: progress from bounded original launch parameters/participants into TASK-0099 shared World construction while TASK-0098 formal frontend/compositor/private-profile bindings remain explicitly incomplete. No task acceptance is waived, no synthetic race/outcome or reduced police/traffic configuration is authorized. Port service fixtures test native boundaries only. Original StartRace requests GameFlow unload/load rather than directly substituting the single-car scene. Session ownership must keep tree/state/catalog/memory alive through callbacks and isolate loading failure before publishing a running race.
 
 World registration and startup use one shared Memory. An EXCLUDE_FROM_ALL Release standalone benchmark measures image clone/destroy baseline separately from gameplay; no FPS inference or backend transaction replacement is made. Dirty-page work must cover retained mutable views and all write/allocation paths before replacing existing rollback behavior. No Godot physics/navigation substitution, per-car whole-world copies or proprietary input staging.
+
+## 2026-10-28 TASK-0098 intrinsic reflection binding and strict window gate
+
+Preserve original00123EA8/0010E120 intrinsic0x11 behavior in the existing direct
+host vehicle adapter. Fragment discard represents an omitted strip's absence of
+colour/depth writes; remove its environment next-pass independently. This is a
+bounded material implementation and does not replace the required shared target/
+ordered-flush executor. Existing race/viewer uniforms default to suppression off.
+A narrow Debug TextureInfo+4D correspondence supports sorting eligibility; no
+whole texture-context compatibility is inferred. E-0098-RB01 records limitations.
+
+Actual game-window route acceptance uses Python and project-owned input scripts,
+per user instruction excluding computer-use. The screenshot-only path must fail
+its process exit after reporting any runtime error. A strict production route
+script remains a failing acceptance gate until real selection services/rendering
+are connected; no fixture substitution, status upgrade or exception deletion.
+
+## TASK-0098 production shared-target device transport,2026-10-28
+
+SelectionPage is now owned by FrontEndRuntime. A port draw packet carries original
+stage ordering/texture/material/depth inputs to one RenderingDevice colour/depth
+framebuffer; the initial device transport synchronously reads RGB scanout back
+to an ImageTexture for the host canvas. Destination alpha stays internal to the
+GPU passes and is not canvas transparency. This replaces no recovered physics
+and introduces no Godot dependency to recovered C++. Performance/complete GS
+equivalence are not claimed; limits and exact acceptance are recorded in
+reverse/task0098/production-roundtrip.md.

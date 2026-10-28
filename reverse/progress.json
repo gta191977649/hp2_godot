@@ -86353,8 +86353,10 @@
       "address": "0x00198518",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
       "definitions": [],
@@ -86363,7 +86365,9 @@
       ],
       "name": "Sub_00198518",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/00198518.md"
+      ]
     },
     {
       "binary_id": "sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2",
@@ -195916,17 +195920,21 @@
       "address": "0x00123EA8",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "RenderFrontEndCars(eView *, int, int, int, int)",
+      "name": "RenderFrontEndCars__FP5eViewiiii",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/frontend/00123ea8.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -218146,17 +218154,21 @@
       "address": "0x001566E0",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "Camera::Camera(void)",
+      "name": "__6Camera",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/frontend/001566e0.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -287074,17 +287086,21 @@
       "address": "0x001F2D20",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "tTreeDetails::HandleMessages(ScreenMessage, ScreenCallbackData *, tEventLeaf *)",
+      "name": "HandleMessages__12tTreeDetails13ScreenMessageP18ScreenCallbackDataP10tEventLeaf",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/career/001f2d20.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -287244,17 +287260,21 @@
       "address": "0x001F3460",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "tUnlockMap::AddGoal(EventGoal *, int)",
+      "name": "AddGoal__10tUnlockMapP9EventGoali",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/frontend/001f3460.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",
@@ -287312,17 +287332,21 @@
       "address": "0x001F3630",
       "owners": [],
       "state": "missing",
-      "record_statuses": [],
-      "record_valid": false,
+      "record_statuses": [
+        "Decompiled"
+      ],
+      "record_valid": true,
       "host_test_claim": false,
       "original_verification_claim": false,
       "definitions": [],
       "issues": [
         "no uniquely address-bound definition"
       ],
-      "name": "tEventLeaf::BuildUnlockList(tUnlockMap *)",
+      "name": "BuildUnlockList__10tEventLeafP10tUnlockMap",
       "inventoried": true,
-      "record_paths": []
+      "record_paths": [
+        "reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/frontend/001f3630.md"
+      ]
     },
     {
       "binary_id": "sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b",

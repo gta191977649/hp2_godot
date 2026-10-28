@@ -1,3 +1,4 @@
+#include "game_core/port/frontend/selection_render.hpp"
 #include "game_core/port/frontend/composition.hpp"
 #include "game_core/port/not_implemented.hpp"
 #include "game_core/port/driving/memory.hpp"
@@ -11,6 +12,13 @@ namespace {
 void require(bool value,const char* message){if(!value)throw std::runtime_error(message);}
 }
 int main(){
+    hp2::debug::FrontEndRenderingCar car;
+    require(port::selection::frontend_render_flags(car)==0,"main car unexpectedly disables rendering features");
+    car.Reflection=1;const auto reflected=port::selection::frontend_render_flags(car);
+    require(reflected==0x11 && !port::selection::frontend_strip_enabled(reflected,true)
+        && port::selection::frontend_strip_enabled(reflected,false),"reflection must omit sorted-alpha strips, preserving opaque ones");
+    require(port::selection::frontend_strip_enabled(1,true),"disable-envmap alone must retain alpha strips");
+    car.Reflection=0;require(port::selection::frontend_strip_enabled(port::selection::frontend_render_flags(car),true),"returning to main car must restore alpha eligibility");
     using port::selection::AlphaKey;using port::selection::alpha_order_001053B8;
     port::driving::Memory table;table.map(0x2c1530,29*4);
     for(int i=0;i<29;++i)table.scalar(0x2c1530+i*4,float(100+i));

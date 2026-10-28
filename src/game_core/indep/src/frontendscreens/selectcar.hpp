@@ -107,7 +107,7 @@ enum ScreenMessage { MESSAGE_NONE=0,MENUITEM_SELECT=1,MENUITEM_ACTIVATE=2,MENUIT
     SCREEN_UNACTIVATE=12,SCREEN_START_BUTTON=13,SCREEN_SELECT_BUTTON=14,SCREEN_L1=15,
     SCREEN_R1=16,SCREEN_BACK_BUTTON=17,SCREEN_TICK=18,SCREEN_RENDER=19,POPUP_ACTIVE=20,
     POPUP_DISMISS=21,POPUP_NEXT=22,POPUP_PREV=23,ANY_BUTTON_PRESSED=24 };
-struct ScreenCallbackData {int Param=0,Noise=0;std::uint32_t ItemHash=0;};
+struct ScreenCallbackData {int Param=0,Noise=0;std::uint32_t ItemHash=0;int Port=0;};
 // E-0098-S01. Decoded Debug names/state only, NOT original object ABI.
 struct VisibleCar {
     CarStatus* pCarStatus=nullptr;

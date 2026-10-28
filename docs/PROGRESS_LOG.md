@@ -1,3 +1,83 @@
+## 2026-10-28 TASK-0098 real-window failing acceptance and reflection binding
+
+User explicitly requested Python/project-script testing, not computer-use. Actual
+Godot4.7.2 Vulkan/Forward+ on Intel Arc B390 reproduces the reported _input ->
+_send_joy_event -> _report stack at Retail001F6A28 from Main Menu/Ultimate Racer.
+New strict acceptance command `py -3 reverse/scripts/check_frontend_selection_roundtrip.py`
+FAILS with exit1; latest run-00ulygx6 has no Select Car checkpoint. No UI roundtrip
+or parent criterion is marked complete. Logs/screenshots are ignored and the
+runner isolates profile/save inputs/outputs; it uses actual Input.parse_input_event.
+
+Fixed the capture-only false success: a reported runtime error still permits a
+diagnostic screenshot but now emits FRONTEND_CAPTURE_FAIL/exit1. Positive actual
+Main Menu capture exits0, negative Event trace exits1. Capturing is not acceptance.
+
+E-0098-RB01 fresh readonly MCP confirms intrinsic reflection0x11 and Debug sorting
+field4D. Host frontend pose now suppresses sorted strips' colour/depth and detaches
+envmap next-passes, respecting subsequent capture/texture updates and restoring
+main-car eligibility. New actual GPU material/occlusion tests pass, along with
+existing modulation/environment tests. One initial test-material reset omission
+was corrected in the fixture, not counted as a pass. This is a bounded prerequisite,
+not the missing shared physical colour/depth executor or production page binding.
+
+Native11-target build and11 selected CTests passed23.91s. Normal Godot DLL rebuild
+passed (previous in-use lock absent). Exact GPU command, known failed invocation,
+evidence and limitations: reverse/task0098/reflection-binding.md. No commit,
+staging, proprietary exports or Verified promotion. Continue TASK-0098 with
+E-0098-F03/F04 actual shared-target executor and real SelectionPage services;
+keep the strict production route test red until it actually works.
+
+## 2026-10-28 TASK-0098 approved full-closure plan and event-entry prerequisites
+
+The user approved complete frontend (including Jukebox) plus all32 Ultimate Racer
+events and real race/results/save roundtrips. Scheduling returns to production
+Event -> selection -> cancel/reentry before TASK-0099. All original-comparison,
+resource and performance criteria remain binding; no task is complete.
+
+Read-only Debug MCP recovers StartEvent001F2BD8/HandleMessages001F2D20, including
+mode/store order, live repeated multitrack status read, Port0-only continuation
+and SELECT-only input. Native orchestration and actual-asset first-event tests
+pass with explicitly labelled required host fixtures; production entry still
+throws001F6A28. The63-registration runtime now includes the25 already evidenced
+missing operands and exact class/document resolution. Asset-backed audit yields
+76 authored documents and90 route/unknown rows, including27 unmapped documents;
+no page or caller completeness is inferred. Details: reverse/task0098/production-entry.md.
+
+Native builds passed,16 scoped CTests passed39.55s; Godot ps2_port target was
+up-to-date. Initial header include-order failure was fixed by isolating the Debug
+entry declaration/service header, not counted as a successful validation.
+CMake3.29.2/GCC13.2.0/Python3.14.4 and godot-cpp pin unchanged. No PCSX2/listening
+21512/28011 endpoint observed; original certification remains blocked by that
+prerequisite while independent implementation remains possible.
+
+HEAD changed externally cf037a6 -> c949d1c during work; it includes registry and
+scope changes already made in this session. No commit/staging was performed by
+this agent, and the new HEAD was preserved. Next: TASK-0098 E-0098-F03/F04 actual
+shared physical colour/depth executor and real page services, then production
+Debug entry/profile adapter and window Event/Select Car/cancel/reentry acceptance.
+Do not substitute the new entry's host fixtures or resume World first.
+
+
+Final checkpoint validation:
+- Fixed existing unqualified port:: references in Timer declarations to ::port::;
+  including the new entry header after FrontEndRuntime now compiles. No timer
+  behavior changed; ultimate_event deliberately compiles this include order.
+- Final native rebuild of the16-test target set passed; final scoped CTest
+  command above passed16/16 in29.15s after this declaration fix.
+- Final `cmake --build --preset godot-debug --target ps2_port --parallel 4`:
+  compilation passed; normal link BLOCKED because godot/bin/ps2_port.dll is in
+  use (Permission denied). The running user process was not stopped.
+- Independent link using the freshly compiled objects/libraries and Ninja's exact
+  generated linker argument list passed after changing only DLL/import-library
+  output paths to ignored local/task0098/entry-build. Reproduce after releasing
+  the DLL with the normal build command, or use the exact linker arguments saved
+  in local/task0098/entry-build/manifest.json. This is link validation, not window
+  acceptance; the running user's DLL was not replaced.
+- `py -3 reverse/scripts/audit_frontend_closure.py --check`: passed63/76/90.
+- `ctest --preset native-debug -R '^(progress_tables|recovery_progress_contracts)$' --output-on-failure`: passed2/2 in1.83s before final log refresh; final refresh/check recorded below.
+- `git diff --check`: passed (existing CRLF notices only). Raw captures/build
+  products remain ignored. No original comparison/window or Verified claim.
+
 ## 2026-10-28 - TASK-0098 native launch to TASK-0099 shared World
 
 User renewed first legitimate event full roundtrip as the immediate milestone, retaining full career as final scope. Workspace started clean at cf037a6. Dependency scheduling now advances to TASK-0099 after bounded native launch handoff; TASK-0098 formal frontend/compositor/profile/flow providers remain incomplete and no task is marked completed.
@@ -592,6 +672,8 @@ place and kept, because the fact that a session believed it, and why, is itself 
 <!-- generated:contents:begin -->
 <!-- Generated by reverse/scripts/generate_progress.py on 2026-10-28. Do not edit by hand. -->
 
+- [2026-10-28 TASK-0098 real-window failing acceptance and reflection binding](#2026-10-28-task-0098-real-window-failing-acceptance-and-reflection-binding)
+- [2026-10-28 TASK-0098 approved full-closure plan and event-entry prerequisites](#2026-10-28-task-0098-approved-full-closure-plan-and-event-entry-prerequisites)
 - [2026-10-28 - TASK-0098 native launch to TASK-0099 shared World](#2026-10-28---task-0098-native-launch-to-task-0099-shared-world)
 - [2026-10-27 - TASK-0098 page ownership and compositor preparation](#2026-10-27---task-0098-page-ownership-and-compositor-preparation)
 - [2026-10-26 - TASK-0098 mutable frontend effects and dependency audit](#2026-10-26---task-0098-mutable-frontend-effects-and-dependency-audit)
@@ -698,6 +780,7 @@ place and kept, because the fact that a session believed it, and why, is itself 
 - [2026-10-21 TASK-0089 original water effects](#2026-10-21-task-0089-original-water-effects)
 - [TASK-0090 - C++ portability audit (2026-10-21)](#task-0090---c-portability-audit-2026-10-21)
 - [2026-10-26 TASK-0098 display dependencies](#2026-10-26-task-0098-display-dependencies)
+- [2026-10-28 TASK-0098 actual production selection milestone accepted](#2026-10-28-task-0098-actual-production-selection-milestone-accepted)
 
 <!-- generated:contents:end -->
 
@@ -3278,3 +3361,22 @@ TASK-0089 completed: source scope unit7/7 passed (reported15152.077s wall includ
 ## 2026-10-26 TASK-0098 display dependencies
 
 Continued original selection camera/quaternion/integer-angle/audio, spline-retarget, swatch/thumbnail/logo, wheel/body/reflection and selector light-packet recovery. Added real PLATFORM/CARCOVER shared native cache/worker/GPU upload adapter and stale-generation fixture. Cached signed-alpha animation and original fade-group transitions now tested including per-corner restoration. Exact addresses/evidence, build commands, passing tests and initial test-only failures are in reverse/task0098/display-dependencies.md. Latest native three regressions passed14.94s; latest normal Godot DLL built. No original oracle, Verified, production-page integration or career/FPS acceptance. TASK-0098 stays active; next original input/orbit/help, full Tick/load and FrameEffects, then production event entry. Existing uncommitted files preserved; no staging/commit.
+
+## 2026-10-28 TASK-0098 actual production selection milestone accepted
+
+FrontEndRuntime now owns native SelectionPage and real model/input/widget/camera/
+lighting/audio/effect leases. One GPU colour/depth target executes stage/alpha
+ordering. Fresh original constructor/projection evidence corrects FOV-adjusted
+near and Retail points. RGB-only scanout fixes the blank vehicle caused by using
+GS destination alpha as canvas transparency. Failed vertex-binding/teardown and
+state-only green runs remain counterevidence.
+
+Final real GPU-window script run-xci09xbl PASS: three first-event entry/cancel/
+reentry cycles, real loaded car, visible-region check, swatch input, no native
+errors or RID leaks. Godot/native builds passed; eight selected regressions and
+contracts8/8 passed7.64s. No computer-use, staging, commit or Verified promotion.
+All32 events, selection confirmation/race, Help/orbit/popup/locked text, original
+comparison and Release performance remain incomplete. Exact commands and next
+TASK-0098 steps: reverse/task0098/production-roundtrip.md. One final documentation
+append initially failed Windows default text decoding; explicit UTF-8 corrected
+it before final generation/validation.

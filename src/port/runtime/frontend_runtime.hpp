@@ -11,6 +11,7 @@
 #include "port/assets/event_name_catalog.hpp"
 #include "port/runtime/event_tree_view.hpp"
 #include "port/runtime/frame_builder.hpp"
+#include "selection_runtime.hpp"
 #include "platform/ps2_profile_store.hpp"
 #include <memory>
 #include <string>
@@ -42,6 +43,7 @@ struct MenuItem {
 };
 
 struct MenuState {
+    SelectionObservation selection;
     bool ok = false;
     // False when no menu list is open; a host projection then has no item/sound/message fields
     // to report, which is distinct from an open menu that happens to hold no items.
@@ -76,6 +78,7 @@ struct ScreenInfo {
 
 // One decoded original sample, ready for whatever audio device the host owns.
 struct SoundRequest {
+    int operation=0; // Port device: play=0, stop matching event=1.
     std::string event;
     hp2::port::audio::PcmSound pcm;
     float gain = 1, pitch_scale = 1;
@@ -95,6 +98,7 @@ struct MusicRequest {
 };
 
 class FrontEndRuntime {
+    friend class SelectionRuntime;
 public:
     FrontEndRuntime() = default;
     ~FrontEndRuntime();
@@ -135,6 +139,7 @@ public:
     // surfaces (kIntroMovieTexture, kBackgroundMovieTexture): the authored size of those quads
     // comes from the live movie.
     FrameStats build_frame(render::Resources& resources, render::Frame& frame);
+    SelectionRuntime* selection() {return selection_.get();}
 
     // The original-asset texture catalog, or nullptr before a successful load().
     assets::Catalog* catalog() { return catalog_.get(); }
@@ -197,6 +202,8 @@ private:
     void reset_state();
 
     std::unique_ptr<assets::DirectorySource> asset_source_;
+    std::unique_ptr<SelectionRuntime> selection_;
+    std::vector<SoundRequest> pending_sound_controls_;
     std::unique_ptr<assets::Catalog> catalog_;
     std::unique_ptr<hp2::port::assets::FeLanguage> language_;
     std::unique_ptr<hp2::port::audio::GuestSampleBank> sound_bank_;

@@ -112,6 +112,7 @@ void Ps2RenderHost::set_output_scale(double scale) {
 }
 
 void Ps2RenderHost::release() {
+    frontend_image_.unref();frontend_gpu_.reset();
 #if HP2_DEBUG_BUILD
     console_.reset();
 #endif
@@ -248,7 +249,22 @@ godot::Dictionary Ps2RenderHost::draw(godot::Object* runtime, godot::Object* int
         result["not_implemented"] = last_error_;
         return result;
     }
-    const int movie_quads = submit(frame, resources);
+    int movie_quads=0;
+    const auto render_error=catch_all([&]{gap=hp2::guard([&]{
+        if(auto* selection=layout->runtime().selection();selection && selection->observation().active){
+            if(!frontend_gpu_)frontend_gpu_=std::make_unique<FrontendGpuExecutor>();
+            const auto packet=selection->packet(frame,resources);auto image=frontend_gpu_->render(packet);
+            // The physical scanout consumes RGB. GS destination alpha belongs to
+            // subsequent GS passes, not the host canvas transparency channel.
+            image->convert(godot::Image::FORMAT_RGB8);
+            if(frontend_image_.is_null())frontend_image_=godot::ImageTexture::create_from_image(image);else frontend_image_->update(image);
+            auto* server=godot::RenderingServer::get_singleton();server->canvas_item_clear(item_);
+            server->canvas_item_set_transform(item_,godot::Transform2D().scaled({real_t(output_scale_),real_t(output_scale_)}));
+            server->canvas_item_add_texture_rect(item_,{0,0,frame.logical_size.x,frame.logical_size.y},frontend_image_->get_rid());
+            selection->after_display();result["shared_frontend_target"]=true;result["shared_draws"]=int64_t(packet.draws.size());result["shared_vertices"]=int64_t(packet.vertices.size());
+        }else{frontend_image_.unref();frontend_gpu_.reset();movie_quads=submit(frame,resources);}
+    });});
+    if(!render_error.empty()||!gap.empty()){last_error_=godot::String::utf8((render_error.empty()?gap:render_error).c_str());result["error"]=last_error_;return result;}
 
     last_error_ = "";
     result["ok"] = true;

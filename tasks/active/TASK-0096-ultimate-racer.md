@@ -10,7 +10,7 @@
 - Existing Retail frontend/assets/profile authority remains separately identified:
   SLUS_203.62 SHA7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
   Never reinterpret one version's storage as the other's.
-- Current implementation subtask: TASK-0099 first-event shared World; TASK-0098 formal frontend bindings remain incomplete.
+- Current implementation subtask: TASK-0098 production Event -> selection entry, per the approved full-closure plan2026-10-28. TASK-0099 World work is retained and deferred until selection roundtrip acceptance.
   TASK-0097 inventory/version foundation completed; full mode remains incomplete.
 - Preserve all existing uncommitted user work; no staging/commit requested.
 
@@ -124,3 +124,11 @@ Environment: CMake3.29.2, Python3.14.4, pinned godot-cpp
 e4b7c25e721ce3435a029087e3917a30aa73f06b. Readonly Ghidra MCP responds;
 no PCSX2 process or listening21512/28011 port observed. Original comparison is open.
 Existing uncommitted changes are preserved. No staging or commit requested.
+
+2026-10-28 TASK-0098 production entry milestone: real Main Menu -> first
+Ultimate Racer delivery -> loaded Select Car -> Back -> reenter has now passed
+the GPU/script route (three cycles, swatch input and visible vehicle checks).
+See reverse/task0098/production-roundtrip.md for the final run/commands and
+remaining unsupported paths. This supersedes the prior blocked001F6A28 entry
+report only for that bounded route. Full selection, all events, race closure,
+Release performance and original certification remain incomplete.

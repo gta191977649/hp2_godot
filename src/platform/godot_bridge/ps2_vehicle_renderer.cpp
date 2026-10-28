@@ -101,6 +101,7 @@ std::string mesh_key(const port::render::VehicleSolid& solid){
 }
 struct Ps2VehicleRenderer::Impl {
     std::uint32_t requested_frontend_solid=0;
+    std::uint32_t frontend_flags=0;
     std::optional<hp2::debug::SelectCarLights> frontend_lights;
     std::array<float,16> frontend_view{};
     std::uint64_t frontend_light_revision=0;
@@ -119,6 +120,7 @@ struct Ps2VehicleRenderer::Impl {
         std::size_t batch=0,batch_surface=0;
         vehicle_depth_staging::Owner depth_parameters;
         std::uint32_t bound_texture=0;
+        bool apply_alpha_sorting=false,frontend_flags_bound=false;
     };
     struct Texture {godot::Ref<godot::ImageTexture> image;const port::vehicle::Texture* data;unsigned max_alpha;};
     std::map<std::uint32_t,Texture> uploaded;
@@ -202,6 +204,7 @@ void Ps2VehicleRenderer::_bind_methods() {
 }
 void Ps2VehicleRenderer::release_display() {
     impl_->display_ready=false;impl_->driving_pose=false;
+    impl_->frontend_flags=0;
     impl_->lights={};impl_->flare_state={};impl_->flare_state_available=false;impl_->flare_renderer.reset();impl_->flare_billboards.clear();impl_->flare_error.clear();
     impl_->capture_binding_valid=false;impl_->capture_binding_error.clear();
     impl_->capture_ready=false;impl_->capture_texture.unref();impl_->capture_bound_texture=0;
@@ -310,11 +313,11 @@ void Ps2VehicleRenderer::rebuild_display(bool incremental) {
             godot::Ref<godot::ShaderMaterial> material;material.instantiate();material->set_shader(shader->second);
             // E0055V01: closed BASE-material writer contract for the optional
             // depth-proxy cache. Static parameters are initialized below;
-            // update_view also swaps original head/brake texture states. The two
-            // texture fields use the depth consumer's ordinary dynamic fallback;
+            // update_view also swaps original head/brake texture states. Dynamic
+            // texture/suppression fields use the depth consumer's dynamic fallback;
             // the eight camera/lighting parameters retain their staging contract.
             godot::PackedStringArray depth_dynamic;
-            for(const char* name:{"source_camera","light_35c","light_35d","light_35e","light_35f","light_360","light_361","light_362","base_texture","flag_0x4"})depth_dynamic.push_back(name);
+            for(const char* name:{"source_camera","light_35c","light_35d","light_35e","light_35f","light_360","light_361","light_362","base_texture","flag_0x4","frontend_skip_strip"})depth_dynamic.push_back(name);
             material->set_meta("hp2_depth_dynamic_uniforms",depth_dynamic);
             material->set_meta("hp2_depth_uniform_contract",1);
             material->set_render_priority(state.deferred?2:0);
@@ -343,6 +346,7 @@ void Ps2VehicleRenderer::rebuild_display(bool incremental) {
             impl_->building_materials.push_back(material);
             impl_->draws.push_back({material,part_index,surface_index,blend,bool(surface.render_flags&4)||texture.data->header.Field_0x74!=0,texture.max_alpha});
             auto& draw=impl_->draws.back();
+            draw.apply_alpha_sorting=state.deferred;
             draw.bound_texture=surface.texture_hash;
             if(impl_->vehicle_depth_staging)draw.depth_parameters=vehicle_depth_staging::create(material);
             draw.batch=batch;draw.batch_surface=(impl_->building_materials.size()-1)%godot::RenderingServer::MAX_MESH_SURFACES;
@@ -467,6 +471,23 @@ void Ps2VehicleRenderer::cancel_load(){
     impl_->loading=false;++impl_->generation;
 }
 godot::Dictionary Ps2VehicleRenderer::request_car(const godot::String& path,int car,int skin){return request_native(path,car,skin,0);}
+// E-0098-RB01: explicit per-instance material binding of original reflection flags.
+// Discard substitutes a skipped strip submission only; shared depth/stage executor
+// and full Debug texture-context equivalence remain separate requirements.
+void Ps2VehicleRenderer::apply_frontend_flags(std::uint32_t flags){
+    const bool changed=impl_->frontend_flags!=flags;
+    impl_->frontend_flags=flags;
+    if(changed)impl_->capture_binding_valid=false;
+    for(auto& draw:impl_->draws){
+        if(!changed && draw.frontend_flags_bound)continue;
+        draw.material->set_shader_parameter("frontend_skip_strip",
+            !port::selection::frontend_strip_enabled(flags,draw.apply_alpha_sorting));
+        const bool envmap=!(flags&1u) && (!impl_->capture_requested || (impl_->capture_ready && !draw.flag_0x4));
+        const godot::Ref<godot::Material> next=envmap?godot::Ref<godot::Material>(draw.reflection):godot::Ref<godot::Material>();
+        if(draw.material->get_next_pass()!=next)draw.material->set_next_pass(next);
+        draw.frontend_flags_bound=true;
+    }
+}
 bool Ps2VehicleRenderer::apply_frontend_pose(const hp2::debug::FrontEndRenderingCar& state,
     const std::array<float,16>& scale,const hp2::debug::SelectCarLights& lights,
     const std::array<float,16>& view,const port::driving::VehicleLightState& texture_lights){
@@ -495,6 +516,7 @@ bool Ps2VehicleRenderer::apply_frontend_pose(const hp2::debug::FrontEndRendering
             || !same_light(previous->LightA,lights.LightA)){
             impl_->frontend_lights=lights;impl_->frontend_view=view;++impl_->frontend_light_revision;
         }
+        apply_frontend_flags(port::selection::frontend_render_flags(state));
         layout_lods();
     });});
     impl_->error=!error.empty()?error:gap;return impl_->error.empty();
@@ -601,6 +623,9 @@ godot::Dictionary Ps2VehicleRenderer::update_view(const godot::Vector3& position
                 draw.flag_0x4=bool(surface.render_flags&4)||texture.data->header.Field_0x74!=0;
                 draw.material->set_shader_parameter("flag_0x4",draw.flag_0x4);
                 draw.maximum_texture_alpha=texture.max_alpha;draw.bound_texture=light_texture;
+                draw.apply_alpha_sorting=texture.data->header.Field_0x4d!=0;
+                draw.material->set_shader_parameter("frontend_skip_strip",
+                    !port::selection::frontend_strip_enabled(impl_->frontend_flags,draw.apply_alpha_sorting));
             }
             const auto world=draw.node->get_global_transform();
             const auto camera=source(world.affine_inverse().xform(position));
@@ -693,10 +718,10 @@ void Ps2VehicleRenderer::set_environment_capture(const godot::Dictionary& captur
  const bool changed=!impl_->capture_binding_valid||impl_->capture_bound_ready!=impl_->capture_ready||impl_->capture_bound_enabled!=impl_->capture_enabled||impl_->capture_bound_texture!=texture_id||impl_->capture_bound_generation!=impl_->generation||impl_->capture_bound_draw_count!=impl_->draws.size();
  if(!changed){if(!impl_->capture_binding_error.empty())impl_->capture_diagnostic=impl_->capture_binding_error;return;}
  impl_->capture_binding_error.clear();
- if(impl_->capture_ready&&std::any_of(impl_->draws.begin(),impl_->draws.end(),[](const auto& draw){return draw.reflection.is_valid()&&draw.flag_0x4;}))
+ if(!(impl_->frontend_flags&1u)&&impl_->capture_ready&&std::any_of(impl_->draws.begin(),impl_->draws.end(),[](const auto& draw){return draw.reflection.is_valid()&&draw.flag_0x4;}))
      impl_->capture_binding_error=catch_all([&]{port::track::require_environment_source_alpha(true,0);});
  for(auto& draw:impl_->draws)if(draw.reflection.is_valid()){
- const bool supported=impl_->capture_ready&&!draw.flag_0x4;
+ const bool supported=!(impl_->frontend_flags&1u)&&impl_->capture_ready&&!draw.flag_0x4;
  const godot::Ref<godot::Material> next=supported?godot::Ref<godot::Material>(draw.reflection):godot::Ref<godot::Material>();
  if(draw.material->get_next_pass()!=next)draw.material->set_next_pass(next);
  if(supported&&(!impl_->capture_binding_valid||impl_->capture_bound_texture!=texture_id||impl_->capture_bound_generation!=impl_->generation||impl_->capture_bound_draw_count!=impl_->draws.size()))draw.reflection->set_shader_parameter("base_texture",impl_->capture_texture);

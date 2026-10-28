@@ -1,0 +1,91 @@
+route_id,class_name,document_hash,retail_handler,documents,owner_task,evidence,production_evidence,acceptance,window_acceptance,original_comparison
+REG-000,Popup,0x037F3133,0x00000000,FRONTEND/FRONTB.BUN:14;GLOBAL/INGAMEB.BUN:21,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-001,Select Car Dialog,0x41C2FDC3,0x00000000,FRONTEND/FRONTB.BUN:7,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-002,Select Car Dialog P1,0x6344DA01,0x00000000,FRONTEND/FRONTB.BUN:8,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-003,Select Car Dialog P2,0x6344DA02,0x00000000,FRONTEND/FRONTB.BUN:9,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-004,Challenge,0x2D62CFE2,0x001B6BD0,FRONTEND/FRONTB.BUN:11,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-005,ChallengeBeACop,0xE55F1297,0x001B6F18,FRONTEND/FRONTB.BUN:3,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-006,Single Race Setup,0xD1EADBCA,0x001B8AE8,FRONTEND/FRONTB.BUN:12,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-007,Free Run Setup,0xD1EADBCA,0x001B8C98,FRONTEND/FRONTB.BUN:12,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-008,Lap Knockout Setup,0xD1EADBCA,0x001B8F30,FRONTEND/FRONTB.BUN:12,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-009,Knockout Setup,0xD1EADBCA,0x001B9210,FRONTEND/FRONTB.BUN:12,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-010,Be The Cop Setup,0xD1EADBCA,0x001B93D8,FRONTEND/FRONTB.BUN:12,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-011,Options,0x95AD096B,0x001EEF00,FRONTEND/FRONTB.BUN:24,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-012,Audio Options,0xE116761C,0x001F0278,FRONTEND/FRONTB.BUN:28,TASK-0093,E-0015-REG-01,TASK-0093 integrated; host stereo device policy,sliders/output/defaults/feedback/back/persist,pending,pending
+REG-013,JukeBox Music,0x95B2B627,0x001F1220,FRONTEND/FRONTB.BUN:34,TASK-0092,E-0015-REG-01,TASK-0092 integrated; original comparison and hardware gaps open,play/change/filter/finish/exit/silent-state/persist,pending,pending
+REG-014,Username Options,0x617A4E0A,0x001F19E8,FRONTEND/FRONTB.BUN:29,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-015,Language Options,0x632B068E,0x001F1DD8,FRONTEND/FRONTB.BUN:30,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-016,Language Options Pre FE,0x632B068E,0x001F1DD8,FRONTEND/FRONTB.BUN:30,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-017,Credits,0xFD8A3B6D,0x001F21B0,FRONTEND/FRONTB.BUN:16,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-018,Credits FE Movie,0xB5761D00,0x001F2470,FRONTEND/FRONTB.BUN:22,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-019,Credits Reward movie,0xB5761D00,0x001F2470,FRONTEND/FRONTB.BUN:22,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-020,BBG Creation movie,0xB5761D00,0x001F2470,FRONTEND/FRONTB.BUN:22,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-021,BBG Credits movie,0xB5761D00,0x001F2470,FRONTEND/FRONTB.BUN:22,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-022,EACredits,0x39C4C62C,0x001F3320,FRONTEND/FRONTB.BUN:40,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-023,BBGCredits,0x39C4C62C,0x001F3320,FRONTEND/FRONTB.BUN:40,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-024,Display Options,0x8BC68340,0x001F3EC0,FRONTEND/FRONTB.BUN:26,TASK-0094,E-0015-REG-01,TASK-0094 integrated; shared Help open,adjust/defaults/back/persist/help,pending,pending
+REG-025,Customize P1 HUD,0x28891A22,0x001F4960,FRONTEND/FRONTB.BUN:25,TASK-0094,E-0015-REG-01,TASK-0094 integrated; shared Help open,adjust/defaults/back/persist/help,pending,pending
+REG-026,Customize P2 HUD,0x28891A22,0x001F49C8,FRONTEND/FRONTB.BUN:25,TASK-0094,E-0015-REG-01,TASK-0094 integrated; physical second-pad check open,adjust/defaults/back/persist/help,pending,pending
+REG-027,Calibrate Display,0xDDF09124,0x001F4A30,FRONTEND/FRONTB.BUN:32,TASK-0094,E-0015-REG-01,unassessed,adjust/defaults/back/persist/help,pending,pending
+REG-028,Calibrate display offset,0x7AB428C1,0x001F4B20,FRONTEND/FRONTB.BUN:33,TASK-0094,E-0015-REG-01,TASK-0094 controls integrated; host translation; shared Help open,adjust/defaults/back/persist/help,pending,pending
+REG-029,New Main Menu,0xAE0F8AA1,0x00216A10,FRONTEND/FRONTB.BUN:0,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-030,Cops On Mode Select,0x5B35F533,0x002174A0,FRONTEND/FRONTB.BUN:1,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-031,Cops Off Mode Select,0x033E7771,0x00217AF8,FRONTEND/FRONTB.BUN:2,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-032,Joystick PreConfig,0x8BD5060B,0x00240060,FRONTEND/FRONTB.BUN:31,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-033,Phils Load Save,0x9829BFAB,0x00247830,FRONTEND/FRONTB.BUN:37,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-034,BootAutoload,0xFA2AC5C6,0x00247AB0,FRONTEND/FRONTB.BUN:36;GLOBAL/INGAMEB.BUN:25,TASK-0091,E-0015-REG-01,unassessed,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-035,Autosave,0xFA2AC5C6,0x00247D00,FRONTEND/FRONTB.BUN:36;GLOBAL/INGAMEB.BUN:25,TASK-0091,E-0015-REG-01,TASK-0092 private-store integration; card error paths open,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-036,NameEntry,0x617A4E0A,0x0024DBD8,FRONTEND/FRONTB.BUN:29,TASK-0095,E-0015-REG-01,TASK-0095 integrated; shared Help and original comparison open,grid/edit/commit/reentry/help,pending,pending
+REG-037,View Event Tree,0x147F8A59,0x001FB218,FRONTEND/FRONTB.BUN:39,TASK-0098,E-0021-22,unassessed,locked/unlocked/details/reward/select/back/all32-events,pending,pending
+REG-038,Select Car,0xB5074AB4,0x00198928,FRONTEND/FRONTB.BUN:4,TASK-0098,E-0091-G01@00198BC8,not connected,event-select/cars/skins/confirm/cancel/reentry/stale-load,pending,pending
+REG-039,Select Car2P,0x18DC8E52,0x00198928,FRONTEND/FRONTB.BUN:5,TASK-0091,E-0091-G01@00198BC8,not connected,two-pad-frontend/confirm/cancel; two-player-race-out-of-scope,pending,pending
+REG-040,Select Car2P,0x18DC8E53,0x00198928,FRONTEND/FRONTB.BUN:6,TASK-0091,E-0091-G01@00198BC8,not connected,two-pad-frontend/confirm/cancel; two-player-race-out-of-scope,pending,pending
+REG-041,Select Track,0x15417B53,0x001A0920,FRONTEND/FRONTB.BUN:10,TASK-0091,E-0091-G01@001A09E8,not connected,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-042,Pause Menu,0x605D2BF1,0x00171060,GLOBAL/INGAMEB.BUN:0,TASK-0101,E-0091-G01@00174B20,not connected,actual-race/open/adjust/resume/retry/abandon,pending,pending
+REG-043,Pause audio,0x6B321E4E,0x00171898,GLOBAL/INGAMEB.BUN:2,TASK-0101,E-0091-G01@00174B20,not connected,actual-race/open/adjust/resume/retry/abandon,pending,pending
+REG-044,Pause display,0xCC36FAB2,0x00173D88,GLOBAL/INGAMEB.BUN:3,TASK-0101,E-0091-G01@00174B20,not connected,actual-race/open/adjust/resume/retry/abandon,pending,pending
+REG-045,Pause Options,0x2B5A03A8,0x001729F0,GLOBAL/INGAMEB.BUN:4,TASK-0101,E-0091-G01@00174B20,not connected,actual-race/open/adjust/resume/retry/abandon,pending,pending
+REG-046,Race Objective,0x887B4D37,0x00171BB8,GLOBAL/INGAMEB.BUN:19,TASK-0101,E-0091-G01@00174B20,not connected,actual-race/open/adjust/resume/retry/abandon,pending,pending
+REG-047,Race Objective 2PBAC,0xB5ECD7A0,0x00171BB8,GLOBAL/INGAMEB.BUN:20,TASK-0101,E-0091-G01@00174B20,not connected,actual-race/open/adjust/resume/retry/abandon,pending,pending
+REG-048,Pause BAC controls,0x887B4D37,0x00171FD0,GLOBAL/INGAMEB.BUN:19,TASK-0101,E-0091-G01@00174B20,not connected,actual-race/open/adjust/resume/retry/abandon,pending,pending
+REG-049,Debug Menu,0xD4742CD7,0x00174590,GLOBAL/INGAMEB.BUN:1,TASK-0091,E-0091-G01@00174B20,not connected,production-entry/input/variants/back/reentry/media-and-settings,pending,pending
+REG-050,Points Rewards,0x7E420558,0x001DD278,GLOBAL/INGAMEB.BUN:11,TASK-0102,E-0091-G01@001E1F88,not connected,actual-outcome/summary/return/reward-once/persist,pending,pending
+REG-051,Task Rewards,0x7E420558,0x001DD278,GLOBAL/INGAMEB.BUN:11,TASK-0102,E-0091-G01@001E1F88,not connected,actual-outcome/summary/return/reward-once/persist,pending,pending
+REG-052,Events Unlocked,0x7E420558,0x001DD278,GLOBAL/INGAMEB.BUN:11,TASK-0102,E-0091-G01@001E1F88,not connected,actual-outcome/summary/return/reward-once/persist,pending,pending
+REG-053,Reward menu,0x7E420558,0x001DD278,GLOBAL/INGAMEB.BUN:11,TASK-0102,E-0091-G01@001E1F88,not connected,actual-outcome/summary/return/reward-once/persist,pending,pending
+REG-054,Race Results,0xAB049B2B,0x001DD278,GLOBAL/INGAMEB.BUN:12,TASK-0102,E-0091-G01@001E1F88,not connected,actual-outcome/summary/return/reward-once/persist,pending,pending
+REG-055,Tourney Standings,0x0532B6FF,0x001DD278,GLOBAL/INGAMEB.BUN:13,TASK-0102,E-0091-G01@001E1F88,not connected,actual-outcome/summary/return/reward-once/persist,pending,pending
+REG-056,Best Lap Times,0xACB2A4CA,0x001DD278,GLOBAL/INGAMEB.BUN:14,TASK-0102,E-0091-G01@001E1F88,not connected,actual-outcome/summary/return/reward-once/persist,pending,pending
+REG-057,Best Total Times,0xF5A3CF51,0x001DD278,GLOBAL/INGAMEB.BUN:15,TASK-0102,E-0091-G01@001E1F88,not connected,actual-outcome/summary/return/reward-once/persist,pending,pending
+REG-058,End Game Menu,0x1A64E903,0x001DD278,GLOBAL/INGAMEB.BUN:16,TASK-0102,E-0091-G01@001E1F88,not connected,actual-outcome/summary/return/reward-once/persist,pending,pending
+REG-059,Be The Cop Results 1P,0x67EB8D12,0x001DD278,GLOBAL/INGAMEB.BUN:26,TASK-0102,E-0091-G01@001E1F88,not connected,actual-outcome/summary/return/reward-once/persist,pending,pending
+REG-060,Be The Cop Results 2P,0x67EB8D33,0x001DD278,GLOBAL/INGAMEB.BUN:27,TASK-0102,E-0091-G01@001E1F88,not connected,actual-outcome/summary/return/reward-once/persist,pending,pending
+REG-061,Lap Times 1P,0xC4881CBD,0x001E10F0,GLOBAL/INGAMEB.BUN:34,TASK-0102,E-0091-G01@001E1EEC,not connected,actual-outcome/summary/return/reward-once/persist,pending,pending
+REG-062,Lap Times 2P,0xC4881CDE,0x001E10F0,GLOBAL/INGAMEB.BUN:33,TASK-0102,E-0091-G01@001E1EEC,not connected,actual-outcome/summary/return/reward-once/persist,pending,pending
+DOC-FRONTEND-013,,0xB6657464,,FRONTEND/FRONTB.BUN:13,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-FRONTEND-015,,0x74D2DFA2,,FRONTEND/FRONTB.BUN:15,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-FRONTEND-017,,0xA744BA7B,,FRONTEND/FRONTB.BUN:17,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-FRONTEND-018,,0xFD297FD4,,FRONTEND/FRONTB.BUN:18,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-FRONTEND-019,,0xF1EED4CD,,FRONTEND/FRONTB.BUN:19,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-FRONTEND-020,,0x492E86E9,,FRONTEND/FRONTB.BUN:20,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-FRONTEND-021,,0xDD4197C9,,FRONTEND/FRONTB.BUN:21,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-FRONTEND-023,,0xADB8E59E,,FRONTEND/FRONTB.BUN:23,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-FRONTEND-027,,0xA4031EF6,,FRONTEND/FRONTB.BUN:27,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-FRONTEND-035,,0x0CE3F7CE,,FRONTEND/FRONTB.BUN:35,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-FRONTEND-038,,0xBEC7CD92,,FRONTEND/FRONTB.BUN:38,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-GLOBAL-005,,0xF1F1F8E5,,GLOBAL/INGAMEB.BUN:5,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-GLOBAL-006,,0xA8EB7AF0,,GLOBAL/INGAMEB.BUN:6,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-GLOBAL-007,,0x6283BE92,,GLOBAL/INGAMEB.BUN:7,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-GLOBAL-008,,0xCC28B8A9,,GLOBAL/INGAMEB.BUN:8,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-GLOBAL-009,,0x936ACE42,,GLOBAL/INGAMEB.BUN:9,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-GLOBAL-010,,0x60BEFAED,,GLOBAL/INGAMEB.BUN:10,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-GLOBAL-017,,0x89B2FC0F,,GLOBAL/INGAMEB.BUN:17,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-GLOBAL-018,,0xA3E1BC36,,GLOBAL/INGAMEB.BUN:18,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-GLOBAL-022,,0x49C15518,,GLOBAL/INGAMEB.BUN:22,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-GLOBAL-023,,0xDDCE04A3,,GLOBAL/INGAMEB.BUN:23,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-GLOBAL-024,,0x0CE3F7CE,,GLOBAL/INGAMEB.BUN:24,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-GLOBAL-028,,0x3EA89B7C,,GLOBAL/INGAMEB.BUN:28,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-GLOBAL-029,,0xD4D25EE7,,GLOBAL/INGAMEB.BUN:29,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-GLOBAL-030,,0xC17316C9,,GLOBAL/INGAMEB.BUN:30,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-GLOBAL-031,,0xACCBFCB8,,GLOBAL/INGAMEB.BUN:31,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending
+DOC-GLOBAL-032,,0xACCBFCB9,,GLOBAL/INGAMEB.BUN:32,TASK-0091,authored-header-0x10203+0x08,class/caller/variant mapping unresolved,recover-caller-and-state-variants/production-entry/input/back,pending,pending

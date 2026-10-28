@@ -80,9 +80,14 @@ func _run() -> void:
 		{"blend": false, "alpha": 0, "flag": false, "ambient": 32, "expected": Vector3i.ZERO},
 		{"blend": false, "alpha": 128, "flag": true, "ambient": 32, "expected": Vector3i.ZERO},
 		{"blend": false, "alpha": 128, "flag": true, "ambient": 33, "expected": Vector3i(33, 28, 28)}]
+	# Original reflection flag16: omitted strip writes neither colour nor depth.
+	cases.append({"blend": false, "alpha": 128, "flag": false, "ambient": 32, "skip": true, "expected": Vector3i.ZERO})
+	cases.append({"blend": true, "alpha": 64, "flag": false, "ambient": 32, "skip": true, "expected": Vector3i.ZERO})
+	cases.append({"blend": false, "alpha": 128, "flag": false, "ambient": 32, "skip": false, "expected": Vector3i(33, 28, 28)})
 	for sample in cases:
 		var blend := bool(sample.blend)
 		var material: ShaderMaterial = transparent if blend else opaque
+		material.set_shader_parameter("frontend_skip_strip", bool(sample.get("skip", false)))
 		material.set_shader_parameter("base_lit", true)
 		material.set_shader_parameter("flag_0x4", sample.flag)
 		material.set_shader_parameter("source_camera", Vector3(0, 0, 5))
@@ -108,6 +113,8 @@ func _run() -> void:
 		_check(absi(actual.x - expected.x) <= 1 and absi(actual.y - expected.y) <= 1 and absi(actual.z - expected.z) <= 1, "Final GPU RGB %s != %s (blend=%s)" % [actual, expected, blend])
 		print("CAR_MATERIAL_GPU_PIXEL: blend=", blend, " flag4=", sample.flag, " raw_alpha=", raw_alpha, " actual=", actual, " expected=", expected, " tolerance=1 encoded framebuffer unit")
 	# A later transparent surface behind paint must not show through the bonnet.
+	# Restore this material after the deliberate omitted-strip sample above.
+	transparent.set_shader_parameter("frontend_skip_strip", false)
 	for uniform in opaque.shader.get_shader_uniform_list():
 		paint.set_shader_parameter(uniform.name, opaque.get_shader_parameter(uniform.name))
 	instance.material_override = paint
@@ -125,6 +132,16 @@ func _run() -> void:
 	var occlusion_rgb := Vector3i(roundi(occluded.r * 255), roundi(occluded.g * 255), roundi(occluded.b * 255))
 	_check(occlusion_rgb == Vector3i(33, 28, 28), "Paint must occlude a later source-over surface: " + str(occlusion_rgb))
 	print("CAR_MATERIAL_GPU_DEPTH: actual=", occlusion_rgb, " paint occludes the later surface")
+	paint.set_shader_parameter("frontend_skip_strip", true)
+	for i in 4:
+		await get_tree().process_frame
+		RenderingServer.force_draw(false)
+	var skipped_pixel := viewport.get_texture().get_image().get_pixel(32, 32)
+	var skipped_rgb := Vector3i(roundi(skipped_pixel.r * 255), roundi(skipped_pixel.g * 255), roundi(skipped_pixel.b * 255))
+	_check(absi(skipped_rgb.x - 133) <= 1 and absi(skipped_rgb.y - 55) <= 1 and absi(skipped_rgb.z - 37) <= 1,
+		"Omitted frontend strip must leave depth available to the later surface: " + str(skipped_rgb))
+	paint.set_shader_parameter("frontend_skip_strip", false)
+	print("FRONTEND_OMITTED_STRIP_GPU_OK: no colour/depth write; later surface visible=", skipped_rgb)
 	behind.hide()
 	# E-0035-R03 independent VU fixture: reflected=(1,0,0), identity environment.
 	# Only the fixture input is substituted; the production environment arithmetic is used.

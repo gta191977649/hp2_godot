@@ -274,3 +274,133 @@ Environment: CMake3.29.2, Python3.14.4, pinned godot-cpp
 e4b7c25e721ce3435a029087e3917a30aa73f06b. Readonly Ghidra MCP responds;
 no PCSX2 process or listening21512/28011 port observed. Original comparison is open.
 Existing uncommitted changes are preserved. No staging or commit requested.
+
+## Approved-plan entry checkpoint,2026-10-28
+
+E-0098-E01: recovered Debug tTreeDetails StartEvent001F2BD8 and
+HandleMessages001F2D20 with exact mode/store/order/status/history/port behavior.
+See reverse/task0098/production-entry.md. Registry now includes63 original
+operand rows; exact class/document lookup preserves both Select Car2P variants.
+Original assets inventory76 documents and90 route/unknown rows;27 document
+caller mappings remain unresolved. The matrix is not a completeness certificate.
+
+Acceptance remains open: production Event -> Select Car -> cancel/reentry,
+actual loading/camera/car/audio/help leases and shared physical depth compositor.
+No normal route was changed to bypass001F6A28. The actual-asset entry test still
+uses explicit unlock/page/text/profile/flow fixtures, not a running UI or race.
+No Verified promotion. Complete this milestone before returning to TASK-0099.
+
+Validation: CMake3.29.2/GCC13.2.0/Python3.14.4; pinned godot-cpp unchanged.
+- `cmake --build --preset native-debug --target ultimate_event_tests frontend_actions_tests --parallel 4`: passed after isolating the Debug service header from the Retail header; an initial include-order build failed and is not counted as a pass.
+- `cmake --build --preset native-debug --target race_parameters_tests --parallel 4`: passed.
+- `cmake --build --preset native-debug --target frontend_runtime_tests frontend_back_tests frontend_exit_tests frontend_modeselect_tests ultimate_selection_tests ultimate_selection_camera_tests ultimate_selection_widgets_tests ultimate_selection_lifecycle_tests selection_locked_tests selection_page_tests frontend_composition_tests frame_builder_tests world_participants_tests --parallel 4`: passed.
+- `ctest --preset native-debug -R '^(frontend_actions|frontend_back|frontend_exit|frontend_modeselect|frontend_runtime|ultimate_event|race_parameters|world_participants|ultimate_selection|ultimate_selection_camera|ultimate_selection_widgets|ultimate_selection_lifecycle|selection_locked|selection_page|frontend_composition|frame_builder)$' --output-on-failure`:16/16 passed39.55s; original-asset/ELF branches ran on this configured machine.
+- `cmake --build --preset godot-debug --target ps2_port --parallel 4`: passed/up-to-date; no window operation acceptance implied.
+- `py -3 reverse/scripts/audit_frontend_closure.py`: passed63 registrations/76 authored documents/90 rows; --check and progress validation recorded in session log.
+
+During this work HEAD changed externally from cf037a6 to c949d1c, including the
+registry and approved-scope notes already written here. This agent made no commit
+and preserved the new HEAD; remaining entry changes are uncommitted.
+
+Final checkpoint validation:
+- Fixed existing unqualified port:: references in Timer declarations to ::port::;
+  including the new entry header after FrontEndRuntime now compiles. No timer
+  behavior changed; ultimate_event deliberately compiles this include order.
+- Final native rebuild of the16-test target set passed; final scoped CTest
+  command above passed16/16 in29.15s after this declaration fix.
+- Final `cmake --build --preset godot-debug --target ps2_port --parallel 4`:
+  compilation passed; normal link BLOCKED because godot/bin/ps2_port.dll is in
+  use (Permission denied). The running user process was not stopped.
+- Independent link using the freshly compiled objects/libraries and Ninja's exact
+  generated linker argument list passed after changing only DLL/import-library
+  output paths to ignored local/task0098/entry-build. Reproduce after releasing
+  the DLL with the normal build command, or use the exact linker arguments saved
+  in local/task0098/entry-build/manifest.json. This is link validation, not window
+  acceptance; the running user's DLL was not replaced.
+- `py -3 reverse/scripts/audit_frontend_closure.py --check`: passed63/76/90.
+- `ctest --preset native-debug -R '^(progress_tables|recovery_progress_contracts)$' --output-on-failure`: passed2/2 in1.83s before final log refresh; final refresh/check recorded below.
+- `git diff --check`: passed (existing CRLF notices only). Raw captures/build
+  products remain ignored. No original comparison/window or Verified claim.
+
+## 2026-10-28 TASK-0098 real-window failing acceptance and reflection binding
+
+User explicitly requested Python/project-script testing, not computer-use. Actual
+Godot4.7.2 Vulkan/Forward+ on Intel Arc B390 reproduces the reported _input ->
+_send_joy_event -> _report stack at Retail001F6A28 from Main Menu/Ultimate Racer.
+New strict acceptance command `py -3 reverse/scripts/check_frontend_selection_roundtrip.py`
+FAILS with exit1; latest run-00ulygx6 has no Select Car checkpoint. No UI roundtrip
+or parent criterion is marked complete. Logs/screenshots are ignored and the
+runner isolates profile/save inputs/outputs; it uses actual Input.parse_input_event.
+
+Fixed the capture-only false success: a reported runtime error still permits a
+diagnostic screenshot but now emits FRONTEND_CAPTURE_FAIL/exit1. Positive actual
+Main Menu capture exits0, negative Event trace exits1. Capturing is not acceptance.
+
+E-0098-RB01 fresh readonly MCP confirms intrinsic reflection0x11 and Debug sorting
+field4D. Host frontend pose now suppresses sorted strips' colour/depth and detaches
+envmap next-passes, respecting subsequent capture/texture updates and restoring
+main-car eligibility. New actual GPU material/occlusion tests pass, along with
+existing modulation/environment tests. One initial test-material reset omission
+was corrected in the fixture, not counted as a pass. This is a bounded prerequisite,
+not the missing shared physical colour/depth executor or production page binding.
+
+Native11-target build and11 selected CTests passed23.91s. Normal Godot DLL rebuild
+passed (previous in-use lock absent). Exact GPU command, known failed invocation,
+evidence and limitations: reverse/task0098/reflection-binding.md. No commit,
+staging, proprietary exports or Verified promotion. Continue TASK-0098 with
+E-0098-F03/F04 actual shared-target executor and real SelectionPage services;
+keep the strict production route test red until it actually works.
+
+Final script/reflection checkpoint: progress_tables, recovery_progress_contracts
+and track_optimization_performance_rules3/3 passed1.97s; evidence hashes/unique
+scoped records and whitespace checks passed. No staging/commit. Exact native/GPU
+commands and private reproduction artifacts are in reflection-binding.md.
+The production selection roundtrip is still FAILED, not completed or Verified.
+
+## 2026-10-28 production roundtrip implementation (in progress)
+
+Current single scope: actual Main Menu -> first legal Ultimate Racer event ->
+Select Car -> Back -> repeat three times, with real native services/assets and
+one physical GPU colour/depth target. Do not promote this milestone to full
+selection/race or original certification. No computer-use, commits or staging.
+
+Acceptance includes loaded car, zero fade overlay, shared GPU submission, visible
+vehicle-region smoke check, three returns and no runtime errors/resource leaks.
+Early state-only green runs were rejected after screenshot inspection: their
+final RGBA canvas upload incorrectly treated GS destination alpha as canvas
+transparency. Correct scanout consumes RGB; GPU target retains its alpha.
+Native/GPU build logs and failed/successful runs remain private under local/task0098.
+
+## Final acceptance,2026-10-28
+
+PASS `py -3 reverse/scripts/check_frontend_selection_roundtrip.py` after final
+shared-RNG/projection/scanout/error-reporting changes: fresh run-xci09xbl, exit0,
+three actual enter/loaded-car/cancel/reentry cycles, swatch change assertion,
+visible-vehicle pixel checks, no runtime errors/crash/RID leaks. Private manifest,
+result.json and select-car-0/1/2.png preserve commands/hashes/checkpoints/images.
+Native final rebuild passed; eight selected regressions/contracts passed8/8 in7.64s:
+`ctest --preset native-debug -R '^(selection_page|frontend_composition|frontend_actions|ultimate_event|race_parameters|progress_tables|recovery_progress_contracts|track_optimization_performance_rules)$' --output-on-failure`.
+Godot Debug DLL normal rebuild passed. No staging/commit or Verified promotion.
+
+Continuation: TASK-0098 remains active. The specific first-event enter/cancel
+production milestone is accepted. Next recover/bind selection Help/locked text,
+orbit speech/audio and transmission/handling popup/continuation, then reviewed
+remaining event-state adapters. TASK-0099 real race and all32 event certification
+remain separate unfinished work. Do not regress to the old001F6A28 entry guard.
+
+## Final acceptance,2026-10-28
+
+PASS `py -3 reverse/scripts/check_frontend_selection_roundtrip.py` after final
+shared-RNG/projection/scanout/error-reporting changes: fresh run-xci09xbl, exit0,
+three actual enter/loaded-car/cancel/reentry cycles, swatch change assertion,
+visible-vehicle pixel checks, no runtime errors/crash/RID leaks. Private manifest,
+result.json and select-car-0/1/2.png preserve commands/hashes/checkpoints/images.
+Native final rebuild passed; eight selected regressions/contracts passed8/8 in7.64s:
+`ctest --preset native-debug -R '^(selection_page|frontend_composition|frontend_actions|ultimate_event|race_parameters|progress_tables|recovery_progress_contracts|track_optimization_performance_rules)$' --output-on-failure`.
+Godot Debug DLL normal rebuild passed. No staging/commit or Verified promotion.
+
+Continuation: TASK-0098 remains active. The specific first-event enter/cancel
+production milestone is accepted. Next recover/bind selection Help/locked text,
+orbit speech/audio and transmission/handling popup/continuation, then reviewed
+remaining event-state adapters. TASK-0099 real race and all32 event certification
+remain separate unfinished work. Do not regress to the old001F6A28 entry guard.

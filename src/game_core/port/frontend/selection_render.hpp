@@ -13,6 +13,15 @@ struct FrontEndRenderingCar {
 };
 }
 namespace port::selection {
+// Debug00123EA8 -> RenderStrips0010E120, E-0098-F03/RB01. Reflection
+// suppresses environment mapping(bit1) and ApplyAlphaSorting strips(bit16).
+// Port projection of the original flags, not an original function declaration.
+inline std::uint32_t frontend_render_flags(const hp2::debug::FrontEndRenderingCar& car){
+    return car.Reflection?0x11u:0u;
+}
+inline bool frontend_strip_enabled(std::uint32_t flags,bool apply_alpha_sorting){
+    return !(flags&0x10u) || !apply_alpha_sorting;
+}
 struct RenderServices {
     std::function<void(int,int,int)> get_skin_info;
     std::function<void(hp2::debug::FrontEndRenderingCar&,const hp2::debug::RideInfo&)> reinit;
