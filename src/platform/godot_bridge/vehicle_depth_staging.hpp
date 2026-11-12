@@ -8,17 +8,23 @@
 #include <godot_cpp/variant/string_name.hpp>
 #include <godot_cpp/variant/variant.hpp>
 namespace port::godot_bridge::vehicle_depth_staging {
-using Registry=ParameterStagingRegistry<godot::StringName,godot::Variant>;
+enum ParameterSlot : std::size_t {
+    SourceCamera, LightFirst, BaseTexture=8, Flag0x4, FrontendSkipStrip, ParameterCount
+};
+using Registry=ParameterStagingRegistry<godot::StringName,godot::Variant,4096,ParameterCount>;
 using Owner=Registry::Owner;
 inline Registry& registry(){static Registry value;return value;}
 inline Owner create(const godot::Ref<godot::ShaderMaterial>& material){
     if(material.is_null()||material->get_shader().is_null())return {};
-    const std::array<godot::StringName,8> names{{"source_camera","light_35c","light_35d","light_35e","light_35f","light_360","light_361","light_362"}};
+    const std::array<godot::StringName,ParameterCount> names{{
+        "source_camera","light_35c","light_35d","light_35e","light_35f","light_360","light_361","light_362",
+        "base_texture","flag_0x4","frontend_skip_strip"
+    }};
     return registry().create(material->get_instance_id(),material->get_shader()->get_instance_id(),names);
 }
 inline void publish(const Owner& owner,std::size_t index,const godot::Variant& value){registry().publish(owner,index,value);}
 inline bool lookup(std::uint64_t material_id,std::uint64_t shader_id,const godot::StringName& name,godot::Variant& value){return registry().lookup(material_id,shader_id,name,value);}
-inline bool read_snapshot(std::uint64_t material_id,std::uint64_t shader_id,Registry::Snapshot& value){return registry().read_snapshot(material_id,shader_id,value);}
+inline Registry::ReadView read_view(std::uint64_t material_id,std::uint64_t shader_id){return registry().read_view(material_id,shader_id);}
 inline void invalidate(std::uint64_t material_id){registry().invalidate(material_id);}
 inline Registry::Statistics stats(){return registry().stats();}
 }

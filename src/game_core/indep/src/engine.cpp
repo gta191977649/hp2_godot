@@ -446,3 +446,28 @@ void DriveTrain::GetState(std::uint32_t out){m_.word(out,m_.word(address_+0xc));
 float DriveTrain::GetState(){return m_.scalar(address_+0xc);}
 std::int32_t DriveTrain::GetSize(){return 1;}
 }
+
+// TASK-0099 E-0099-W33. Debug destructor bodies and real original pool ownership.
+#include "game_core/indep/inc/ComponentPhysics.hpp"
+#include "game_core/inc/bSlotPool.hpp"
+namespace hp2::recovered {
+void Engine::Sub_00188A38(int flags){m_.word(address_+8,0x2ac3f8);PhysicsComponent(m_,address_).Sub_00199A70(0);if(flags&1)hp2::debug::SlotPool(m_,m_.word(0x32702c)).Free(address_);}
+void DriveTrain::Sub_0018A2F8(int flags){PhysicsComponent(m_,address_).Sub_00199A70(0);if(flags&1)hp2::debug::SlotPool(m_,m_.word(0x327030)).Free(address_);}
+}
+
+#include "game_core/indep/inc/Replay.hpp"
+namespace hp2::recovered {
+// Debug00188A98; E-0099-W74; replay-frame/00188a98.json/type-Engine.json.
+void Engine::DoSnapshot(std::uint32_t snapshot){
+ if(m_.byte(snapshot+0x3c)||m_.byte(snapshot+0x3d))m_.word(address_+0x58,0);
+ hp2::debug::ReplaySnapshot s(m_,snapshot);s.BeginNamedSection(0x327910);
+ for(unsigned off:{0xcu,0x44u,0x48u,0x4cu,0x54u})s.MoveData(address_+off,4);
+ s.MoveData(address_+0x50,1,4,0);s.EndNamedSection();
+}
+// Debug001890C0; E-0099-W74; replay-frame/001890c0.json/type-DriveTrain.json.
+void DriveTrain::DoSnapshot(std::uint32_t snapshot){
+ hp2::debug::ReplaySnapshot s(m_,snapshot);s.BeginNamedSection(0x2ac370);
+ for(unsigned off:{0xcu,0x2cu,0x48u,0x34u,0x30u,0x38u,0x3cu,0x40u,0x44u})s.MoveData(address_+off,4);
+ s.EndNamedSection();
+}
+}

@@ -78,15 +78,18 @@ def debug_canonical_owners() -> dict:
     assert registry['binary_id'] == 'sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b'
     assert registry['superseded_template_binary_id'] == BINARY
     owners = dict(registry['classes'])
-    successor = ROOT / 'reverse/classes/task0046-debug-canonical-owners.json'
-    if successor.exists():
-        amendment = json.loads(successor.read_text())
+    for successor_name in ('task0046-debug-canonical-owners.json',
+                           'task0107-debug-canonical-owners.json'):
+        successor = ROOT / 'reverse/classes' / successor_name
+        if not successor.exists():
+            continue
+        amendment = json.loads(successor.read_text(encoding='utf-8'))
         assert amendment['binary_id'] == registry['binary_id']
         assert amendment['superseded_template_binary_id'] == BINARY
         for name, owner in amendment['classes'].items():
             if name in owners:
                 raise ValueError('Successor must not silently replace a canonical owner: ' + name)
-            owners[name] = dict(owner, registry_source='reverse/classes/task0046-debug-canonical-owners.json')
+            owners[name] = dict(owner, registry_source='reverse/classes/' + successor_name)
     return owners
 
 
@@ -397,7 +400,7 @@ def fill_code(classes: list[dict], check: bool) -> None:
     for cls in classes:
         if cls.get('superseded_by_debug'):
             path = ROOT / cls['superseded_by_debug']['header']
-            if not path.is_file() or not class_range(path.read_text(), cls['name'], cls['namespace']):
+            if not path.is_file() or not class_range(path.read_text(encoding='utf-8'), cls['name'], cls['superseded_by_debug'].get('namespace', cls['namespace'])):
                 raise ValueError('Missing canonical Debug owner: ' + cls['name'])
             continue
         path = ROOT / cls["header"]

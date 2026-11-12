@@ -6,6 +6,38 @@
 // No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
 // Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
 #include "game_core/PlayerTireSound.hpp"
+#include "game_core/port/race/car_sound_construction.hpp"
+#include "game_core/src/bSample.hpp"
+
+namespace hp2::debug {
+// Debug0020D200, E-0099-W31.
+void BaseTireSound::Sub_0020D200(::port::race::CarSoundResources& resources){Sub_00203980();m_.word(address_+0x1c,0x2b3d88);bSample(m_,address_+0x24).Sub_0026B2A0();bSample(m_,address_+0xe0).Sub_0026B2A0();m_.half(address_+0x22,1);m_.half(address_+0x20,1);
+ for(const auto pair:{std::array<std::uint32_t,2>{{0x24,0x2b3be0}},std::array<std::uint32_t,2>{{0xe0,0x2b3bf0}}}){bSample sample(m_,address_+pair[0]);sample.Initialize(::port::race::required_ingame_sample(resources,::port::race::original_sound_text(m_,pair[1])));sample.SetCategory(1);}}
+// Original kAITireSound constructor is emitted inline in factory0020EE70.
+void kAITireSound::Sub_0020EE70(std::uint32_t car,::port::race::CarSoundResources& resources){Sub_0020D200(resources);m_.word(address_+0x1c,0x2b3ce8);bSample(m_,address_+0x1a0).Sub_0026B2A0();bSample(m_,address_+0x25c).Sub_0026B2A0();m_.word(address_+0x19c,car);
+ for(const auto pair:{std::array<std::uint32_t,2>{{0x1a0,0x2b3c20}},std::array<std::uint32_t,2>{{0x25c,0x2b3c38}}}){bSample sample(m_,address_+pair[0]);sample.Initialize(::port::race::required_ingame_sample(resources,::port::race::original_sound_text(m_,pair[1])));sample.SetCategory(0);}
+ m_.word(address_+0x318,address_+0x1a0);m_.word(address_+0x320,0);m_.word(address_+0x31c,0);Activate(true);
+}
+// Debug0020D660, E-0099-W31. Real track region and actual road-noise Play call.
+void PlayerTireSound::Sub_0020D660(std::uint32_t car,int side,::port::race::CarSoundResources& resources){
+ Sub_0020D200(resources);m_.word(address_+0x19c,car);m_.word(address_+0x1b0,std::uint32_t(side));m_.word(address_+0x1ac,0);m_.word(address_+0x1c,0x2b3d38);
+ for(const auto terrain:{0x1c4u,0x290u}){bSample(m_,address_+terrain+12).Sub_0026B2A0();m_.word(address_+terrain,0);m_.word(address_+terrain+4,0);m_.word(address_+terrain+8,0);}
+ for(const auto offset:{0x360u,0x41cu,0x4d8u,0x594u,0x650u,0x70cu,0x7c8u,0x884u,0x940u,0x9fcu})bSample(m_,address_+offset).Sub_0026B2A0();
+ const std::array<std::uint32_t,2> bindings[]={{{0x41c,0x2b3c00}},{{0x4d8,0x2b3c10}},{{0x594,0x2b3c20}},{{0x650,0x2b3c38}},{{0x70c,0x2b3c48}},{{0x940,0x2b3c58}},{{0x9fc,0x2b3c68}},{{0x884,0x2b3c80}},{{0x7c8,0x2b3c38}}};
+ for(const auto& pair:bindings){bSample sample(m_,address_+pair[0]);sample.Initialize(::port::race::required_ingame_sample(resources,::port::race::original_sound_text(m_,pair[1])));sample.SetCategory(1);}bSample(m_,address_+0xe0).SetCategory(0xffffffff);
+ const auto track=m_.word(0x327398);if(!track)hp2::not_implemented("0x0020D660","actual CurrentTrackInfo.SoundRegion is not bound");const auto bank=::port::race::original_sound_text(m_,track+0x80);
+ if(!bank.empty() && !resources.region(bank))hp2::not_implemented("0x0026FAB8","complete actual selected-track sound region is not loaded");
+ if(resources.region(bank)){const auto leaves=resources.sample(bank,::port::race::original_sound_text(m_,0x3289c0));m_.word(address_+0x35c,leaves?1:0);if(leaves){bSample(m_,address_+0x360).Initialize(leaves);bSample(m_,address_+0x360).SetCategory(1);}}
+ for(const auto pair:{std::array<std::uint32_t,2>{{0x1c4,0x2b3c90}},std::array<std::uint32_t,2>{{0x290,0x2b3be0}}}){const auto source=resources.in_game_sample(::port::race::original_sound_text(m_,pair[1]));const auto at=address_+pair[0];if(source){m_.word(at,1);m_.word(at+8,0x3289bc);m_.word(at+200,std::uint32_t(side));m_.word(at+4,0);bSample(m_,at+12).Initialize(source);bSample(m_,at+12).SetCategory(1);}else m_.word(at,0);}
+ if(m_.word(0x326f40) && m_.word(0x327980) && m_.word(0x3289b8))bSample(m_,address_+0x41c).Play(0,0,0,resources);
+ m_.word(address_+0x1c0,1);m_.scalar(address_+0x1bc,0);if(bSample(m_,address_+0x9fc).IsPlaying())bSample(m_,address_+0x9fc).Stop();
+ m_.word(address_+0x1b8,0);m_.scalar(address_+0x1a8,0);m_.scalar(address_+0x1a0,-1);m_.scalar(address_+0x1b4,1);m_.scalar(address_+0x1a4,1);Activate(true);
+}
+// Debug0020F680/0020DA00/0020F5A8. Reverse original embedded-sample order.
+void BaseTireSound::Sub_0020F680(int flags){m_.word(address_+0x1c,0x2b3d88);bSample(m_,address_+0xe0).Sub_0026B3F8(2);bSample(m_,address_+0x24).Sub_0026B3F8(2);Sub_00204060(flags);}
+void kAITireSound::Sub_0020F5A8(int flags){m_.word(address_+0x1c,0x2b3ce8);bSample(m_,address_+0x25c).Sub_0026B3F8(2);bSample(m_,address_+0x1a0).Sub_0026B3F8(2);Sub_0020F680(flags);}
+void PlayerTireSound::Sub_0020DA00(int flags){m_.word(address_+0x1c,0x2b3d38);for(const auto offset:{0x9fcu,0x940u,0x884u,0x7c8u,0x70cu,0x650u,0x594u,0x4d8u,0x41cu,0x360u,0x29cu,0x1d0u})bSample(m_,address_+offset).Sub_0026B3F8(2);Sub_0020F680(flags);}
+}
 
 #include "game_core/port/not_implemented.hpp"
 

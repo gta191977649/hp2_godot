@@ -25,18 +25,22 @@ def input_paths(project, engine):
     for path in project.rglob('*'):
         rel = path.relative_to(project)
         if path.is_file() and '.godot' not in rel.parts and path.suffix in {
-                '.gd', '.gdshader', '.gdshaderinc', '.glsl', '.godot', '.gdextension', '.dll', '.tscn'}:
+                '.gd', '.gdshader', '.gdshaderinc', '.glsl', '.godot', '.gdextension', '.dll', '.tscn', '.cfg'}:
             inputs['project/' + rel.as_posix()] = str(path)
     for path in (ROOT / 'src').rglob('*'):
         if path.is_file() and path.suffix in {'.cpp', '.hpp', '.h', '.glsl', '.gdshader'}:
             inputs['source/' + path.relative_to(ROOT).as_posix()] = str(path)
     for rel in ['CMakeLists.txt', 'CMakePresets.json', 'build.ps1',
-                'tools/run_track_costs.ps1', 'tools/task0077_baseline.py']:
+                'tools/run_track_costs.ps1', 'tools/task0077_baseline.py',
+                'tools/test_event_window.py', 'tools/championship_performance.py']:
         inputs['source/' + rel] = str(ROOT / rel)
     for name in ['CMakeCache.txt', 'build.ninja', 'compile_commands.json']:
         path = ROOT / 'build/godot-debug' / name
         if path.is_file():
             inputs['configured_recipe/' + name] = str(path)
+        path = ROOT / 'build/godot-release' / name
+        if path.is_file():
+            inputs['configured_recipe/release/' + name] = str(path)
     return inputs
 
 

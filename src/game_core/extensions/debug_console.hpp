@@ -25,6 +25,7 @@ public:
     bool info() const;
     void set_info(bool value);
     void log(std::string text, bool error = false); // thread-safe; collects while hidden
+    void warning(std::string text); // TASK-0111: actual WARNING severity/color.
     void snapshot(Snapshot value);
     Snapshot snapshot() const;
     void execute(const std::string& command);

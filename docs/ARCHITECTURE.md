@@ -1,3 +1,28 @@
+TASK-0099 continuation2026-11-02: source Pursuit/child/pool lifetimes and
+snapshot restoration now compose in the Godot-independent core. Actual
+poolZERO behavior, constructor omissions, enum byte preservation and bool
+fullword extension are distinct. CarResetServices carries route/physics owners
+and two independent optional raw W operands; source World forwards actual
+resource contexts with both unknown values unset. Native opt-in tests declare
+operands explicitly. Source partial mutation remains visible at reached guards.
+This adds no productionGameFlow or whole-match provider. See task0099 manifests.
+
+TASK-0099 continuation2026-10-30: the bounded native authored-event probe retains
+frontend/profile/resource owners through a genuine pending StartRace request,
+constructs participants in one shared Memory, then closes source borrowers
+before their owners. Source audio and AI action pools belong to that shared
+lifetime. Championship first-event startup/frame/cleanup passes; HP startup
+reaches the active police dependency. This probe does not implement production
+ServiceGameFlow or a complete match. See reverse/task0099/authored-world.md.
+
+TASK-0098 continuation2026-10-29: SelectionRuntime now owns two native PopupMenu
+slots with port-owned authored PopupView documents. Explicit services bind text,
+item state/colour, Debug packed-clock animation/sine and reentrant callbacks.
+Active documents supply modal snapshots/native frames. Host stack IDs retain the
+original authored depth layer separately; targets follow actual document/slot.
+Native001965C0 readiness is bound; real StartRace/World remains unimplemented.
+See reverse/task0098/popup-production.md. This introduces no race/result state.
+
 TASK0099 now develops the shared first-event World after the bounded native launch
 boundary. Native StartRace preserves original state/track/participant/GameFlow order,
 with explicit required production profile/record/localization services still unbound.
@@ -14,6 +39,19 @@ executor remains open. See reverse/task0098/page-ownership.md and
 composition-preparation.md. No full career/race/save completion claim.
 
 # Architecture and ownership
+
+TASK-0112 adds actual source driving camera ownership inside the shared World
+Memory. Camera events dispatch through the recovered Player camera branches;
+source camera updates precede HUD/clock advancement and publish with the World
+frame. Rendering never updates native camera state. Existing temporary mouse
+observation remains a host operation. Hor+ is a separate host projection policy.
+
+Visible source Flailer nodes are copied read-only into frame-owned documents.
+The UI backend prepares glyph/texture packets and uploads before committing
+source presentation, then draws only the matching committed generation/step.
+The transport reuses existing original-font/art rendering. It does not restore
+the still-disabled original nonzero HUD, pause or result producers. TASK-0112
+remains active; see reverse/task0112/presentation.md.
 
 TASK0092/0093 extends the native frontend owner with Jukebox and Audio Options
 snapshots, exact song-pair metadata, scalar Hermite state, live volume/output
@@ -669,3 +707,116 @@ Fresh E-0098-F03 supersedes the earlier compositor shorthand: stages2/4 flush
 solids while preserving pending alpha for stage5, and reflected cars suppress
 environment-map/sorted-alpha strips with flags0x11. The backend requires that
 shared alpha/depth/target domain before formal selection can be enabled.
+
+
+TASK0104 frontend Controls now use Container-allocated responsive regions and a
+single content rectangle shared by selection layer SubViewports, native clip
+projection and mouse transport. Original animation stays in local authored
+coordinates; full reflow is invalidated separately from individual animated
+Control updates. See reverse/task0104/layout.md for the port policy and remaining
+route/font/shared-target limitations.
+
+TASK0105 replaces selection's local-device image transport with render-thread
+work on the main RenderingDevice. Control SubViewport textures and the final
+Texture2DRD stay on the GPU; the shared stages/depth/alpha contract is preserved.
+Frontend-owned promise workers prepare bounded cached model/skin snapshots and
+outlive page cancellation, while page-owned generation checks control publication.
+Recovered C++ remains Godot-free. See PERFORMANCE_TASK0105.md for resource
+ownership, passed sustained targets and remaining page-transition/acceptance gaps.
+
+
+TASK-0099 World construction uses one actual Debug logical Memory and concrete
+source resource owners, independent of Godot and the single-car NativeBackend.
+Explicit original process-static initializers run before World construction;
+source-only version adapters preserve raw records and consumed-field provenance.
+The original constructor and construction-state destructor now execute with real
+route graph, effects, static scenery collision, cop structures and speech startup.
+Active participant scheduling is not yet bound to production launch. See
+reverse/task0099/world-construction.md for ownership and exact supported scope.
+
+### TASK-0099 shared participant checkpoint
+
+Actual AddRacingCar now constructs and publishes real Cars in the same World
+Memory, with source-backed controls, pooled Physics/Mellow movers and collision
+pointers. Original default AI movement4 is preserved. The native8-participant
+fixture uses actual authored starts, actual Race/RacingCar and ReplayManager
+constructors and original CleanupCars->Race->World lifetime. Full Player, live
+AI/collision scheduling and audio device remain separate required dependencies.
+Memory::Temporary releases a single port operand buffer without rewinding later
+persistent cache allocations. No recovered core code depends on Godot types.
+
+### TASK-0099 World snapshot/input integration,2026-10-29
+
+Actual World frame, Race.Update and countdown UI now execute source functions
+in the shared Memory. Typed SnapshotServices propagates actual route/physics
+resources through RC/World/Car/RigidBody snapshots. Snapshot encoding uses the
+original section stack, widths, feature/driver IDs and source pools rather than
+whole-memory dumps. Input registration owns actual EventNodes and guest callback
+addresses; hardware polling/dispatch is a separate required platform domain.
+The real outer MainLoop, full race and production launch remain incomplete.
+See reverse/task0099/{world-frame,replay-frame,world-snapshot,input-registration}.md.
+
+
+### TASK-0107 unified source World debug session
+
+`port/runtime/world_session` owns one logical Memory and actual FreeRun6 RC,
+World, Player, Replay, scenery and original audio owners. Native integration and
+Godot use this same composition. `free_run_launch` uses source defaults and Fred
+setup, not a synthetic fixture roster; the default is13 actual participants.
+A serial native-only bootstrap worker returns a generation-owned session to
+Ps2DrivingRuntime. The bridge publishes identities/poses/objects/source flags,
+PCM and immutable AcidFX groups. Rendering only projects committed groups and
+never integrates a second particle simulation for the World.
+
+`world_debug_entry.gd` is the sole viewer/command launch and return router into
+race_scene. Each presentation transaction validates actor resources, all body
+and wheel poses, sparse source scenery flags/poses and per-actor shadow bindings,
+then commits the source frame for particle/audio consumption. Rejected frames
+keep the previous presentation and terminate the backend. Cameras and wheel
+blur opacity remain explicit port debug presentation policies; source tire/
+brake matrices, phase, angular speed and body movement come from World.
+
+The opt-in Python window observer reports and captures its own viewport only;
+`tools/test_world_window.py` supplies PID-bound Win32 input. Background message
+mode has an explicit host focus fixture and does not establish actual focus
+acceptance. Production GameFlow/results/save and EE numerical guards retain
+their prior unresolved status. See tasks/completed/TASK-0107-world-debug-entry.md.
+
+### TASK-0077 Godot Server boundary in Championship
+
+The race publishes one committed native World frame to presentation and audio.
+There is no second race collision world in PhysicsServer3D. Host queries can
+own an independent PhysicsServer3D space on demand when a host consumer exists.
+Native collision and race progression consume the original geometry and state.
+
+RenderingServer resources are owned by the main-thread track and viewport
+adapters under Safe. The optional track depth publication transports selected
+mesh resources, transforms, sort keys and shader versions directly to the
+existing depth consumer. Other depth producers use their normal source path.
+Immutable geometry preparation remains on workers. The fixed-pose compositor
+probe borrows scene depth on the rendering thread and reads its own copy only
+on explicit diagnostic request.
+
+The native audio snapshot supplies one 48 kHz stereo PCM block. The host
+keeps unsubmitted blocks with a read offset and uses AudioStreamGeneratorPlayback
+for AudioServer playback. It clears the queue across World presentation
+transitions and publishes queue depth, skipped mixes and submission time.
+
+## TASK-0110 native finish consumers, 2026-11-06
+
+Race and RaceEvent now expose source remaining-finisher/result/progress/retry
+consumers over the same logical Memory. Fred.TheRaceIsOver orders original
+options, high scores, points, transient stats, event posting and task/point
+rewards; Player/cop leaves retain original owners. These are consumers, not a
+new RaceSession, outcome transaction or Godot gameplay path. The production
+selection/World/postrace/save owners remain unbound. Caller lifetime must prevent
+duplicate outcome delivery. Unknown-path task/points reward code is explicitly
+port-side root placement using recovered NFSTaskParameters, not inferred speech
+ownership. See reverse/task0110 and active TASK-0110 for evidence/validation.
+
+
+### TASK-0110 authored event transport and dynamic presentation
+
+The retained FrontEndRuntime stages one versioned semantic EventLaunchRequest; an independent WorldSession retains the original event resources and performs the real Debug event setup. Original race state7 ends simulation and publishes copied settlement data. The host candidate-save transaction precedes replacing retained profile progress; return restores the actual Event Tree. Retail/Debug per-record state mapping is explicit, not an ABI overlay. Complete natural finish/window/save acceptance is tracked separately in TASK-0110.
+
+World render snapshots include exact object addresses/model hashes/matrices. Objects associated with static scenery replace that record's presentation; original spawned objects without such association use an independent source-address draw. The immutable scene is never mutated. Host conservative bounds reuse existing native classifier/lighting; this is a PC presentation adapter, not recovered dynamic-culling equivalence. Invalid/unknown models still reject atomically. Missing optional original replay/results/specific sound presentation is disabled before execution with address-anchored warnings; mandatory simulation guards remain.

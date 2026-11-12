@@ -19,9 +19,11 @@ class Catalog:public render::Resources {
  std::map<std::string,hp2::assets::Hp2TpkArchive> archives_;
  std::map<render::TextureId,std::shared_ptr<render::Bitmap>> textures_;
  std::vector<std::string> bundles_{"FRONTEND/FRONTB.BUN","GLOBAL/GLOBALB.BUN","GLOBAL/INGAMEB.BUN","GLOBAL/HUDTEX.BIN","GLOBAL/DYNTEX.BIN","FRONTEND/TSELECT.BIN"};
+ std::vector<std::string> presentation_bundles_;
 public:
  explicit Catalog(Source& source):source_(source){}
  std::shared_ptr<const render::Bitmap> texture(render::TextureId id)override;
+ void set_presentation_bundles(const std::vector<std::string>& bundles){if(presentation_bundles_==bundles)return;presentation_bundles_=bundles;reset();}
  void update(render::TextureId id,std::shared_ptr<render::Bitmap> bitmap){textures_[id]=std::move(bitmap);}
  void remove(render::TextureId id){textures_.erase(id);}
  void reset(){textures_.clear();archives_.clear();}

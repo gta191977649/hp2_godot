@@ -19,3 +19,11 @@ public:
     void GetSize();
 };
 } // namespace hp2::recovered
+
+// E-0099-W62. Original resource list/query component; this does not claim the
+// asynchronous resource/file-transfer loader has been implemented.
+#include "game_core/port/driving/memory.hpp"
+namespace hp2::debug {
+void Sub_00197508(::port::driving::Memory&);
+std::uint32_t FindResourceFile(::port::driving::Memory&,std::uint32_t filename); //001972E8.
+}

@@ -29,7 +29,7 @@ bounded Retail police-control leaves, not a native Debug manager/pursuit runtime
 
 Race::FinishCar001483F8 derives rank/time/reason from actual participants, calls
 RaceEvent::RecordResults001FC6F8 and changes player control/finish behavior.
-Coordinator0014BAF4 calls FrontendDatabase::TheRaceIsOver001858B8, which snapshots
+Coordinator0014BAB0 calls FrontendDatabase::TheRaceIsOver001858B8, which snapshots
 options, records scores, awards real Player points, constructs TransientStats,
 posts results and checks rewards. Original bodies include00185750/00185690 points,
 00184E60 records,00185320 transient stats,002443C8 task rewards and00244D00 rewards.
@@ -63,3 +63,14 @@ Race -> original police/pursuit/hybrid movement -> genuine finish/results ->
 rewards/records/progression conversion -> ordered result/autosave UI and private
 transactional persistence. Whole entries and virtual dependencies above remain
 untranslated. No original numerical/visual comparison or Verified promotion.
+
+
+## TASK-0110 correction, 2026-11-06
+
+Fresh read-only MCP E-0110-F01 confirms TheRaceHasFinished entry0014BAB0.
+The former0014BAF4 entry claim above is superseded: it is the interior JAL to
+TheRaceIsOver. Source Race.Update/FinishCar were already implemented in W70;
+TASK-0110 now adds actual remaining-finisher/final-result/progress/retry and
+Fred records/points/transient/task-reward consumers. Older missing-body
+statements retain their historical scope. Production launch/GameFlow/postrace
+screens/save and original comparison remain open; see reverse/task0110.

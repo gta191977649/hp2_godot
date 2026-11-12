@@ -24,6 +24,10 @@ public:
     // Debug0013B198,0013B200,0013B438,0013B948; E-0046-C01.
     void SetManualTransmission(int type);
     void Drive(float t,port::driving::PlayerServices&);
+    bool NitroActive()const; //0013C118, E-0099-W63.
+    bool NitroWasActive()const; //0013C098.
+    bool NitroAvailable()const; //0013C178.
+    void JoyHandler_NitroBoost(int port,int event,std::uint8_t param); //0013C028, explicit original callback binding to this view.
     void DoSteering(float t,int port,port::driving::PlayerServices&);
     void DoThrottleBrakeReverse(float t,port::driving::PlayerServices&);
     // Debug0013BC90/0013BD70; original static handler bound to this PS2 address.
@@ -66,6 +70,7 @@ public:
     // Debug reference: RealDriver::RemoveJoyHandlers(void); E-0041-V01; retail ABI unconfirmed.
     void RemoveJoyHandlers();
     // Debug0013B1D8; E-0046-C01.
+    void ForceEBrakeStop(float); //0013B360,E-0099-W121; actual realdriver.cpp.
     void SetLowGear();
     // ELF 0x0013C420; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013c420.md.
     // Port-side void/no-argument placeholder; original signature unknown.

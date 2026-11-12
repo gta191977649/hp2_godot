@@ -20,6 +20,19 @@ class MemberSafetyTests(unittest.TestCase):
         self.assertIn('GetCar', text[bounds[0]:bounds[1]])
         self.assertNotIn('field', text[bounds[0]:bounds[1]])
 
+    def test_debug_successor_validates_its_own_namespace_without_recreating_retail_shell(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(templates, 'ROOT', Path(directory)), patch.object(templates, 'definitions', return_value={}):
+            header = Path(directory) / 'owner.hpp'
+            source = 'namespace hp2::debug { class Example {}; }'
+            header.write_text(source, encoding='utf-8')
+            cls = dict(name='Example', namespace='hp2::recovered',
+                       superseded_by_debug=dict(header='owner.hpp', namespace='hp2::debug'))
+            templates.fill_code([cls], check=True)
+            self.assertEqual(header.read_text(encoding='utf-8'), source)
+            header.write_text('namespace hp2::recovered { class Example {}; }', encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'Missing canonical Debug owner'):
+                templates.fill_code([cls], check=True)
+
     def test_original_path_does_not_escape_repository(self):
         self.assertEqual(complete.source_path('..\\indep\\src\\engine.cpp'), 'src/game_core/indep/src/engine.cpp')
         self.assertIsNone(complete.source_path('D:/private.cpp'))

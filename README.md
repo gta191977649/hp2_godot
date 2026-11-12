@@ -16,8 +16,27 @@ rendering are described in [PLAYER_DRIVING.md](docs/PLAYER_DRIVING.md) (TASK-004
 Original wheel smoke/tire-spew and remaining physics work are documented in
 [DRIVING_EFFECTS.md](docs/DRIVING_EFFECTS.md) and [DRIVING_GAPS.md](docs/DRIVING_GAPS.md).
 
-TrackViewer, Test drive and the independent single-car scene share the track
-renderer. See [TRACK_VIEWER.md](docs/TRACK_VIEWER.md) for controls, Effects gates
+TASK-0107 unifies **Drive on track**, **Test drive**, F8 `driving` and the direct
+race scene behind one real source WorldSession. Run `.\build.ps1 --run`, open
+`trackviewer` in F8, select car/skin/track, then use **Drive on track**. TASK-0111
+now defaults to **Minimal FreeRun**: one source player, original no-cops/zero-traffic
+configuration, and incomplete skid trails disabled with F8 console WARNINGs.
+`--world-strict` retains the prior guarded13-car diagnostic route. Mandatory
+simulation gaps still preserve the last complete frame. P pauses, period
+single-steps, R restarts and Esc returns. No production results/save closure or
+Verified claim is implied. See [World debug delivery](docs/TASK0107_WORLD_DEBUG_UI.md).
+
+TASK-0110 additionally binds the first Hot Pursuit and Championship Event Tree
+entries through original selection and authored World requests. Use the real main
+menu mode -> Event Tree -> first event -> selected car. The first Championship
+event now passes actual Python keyboard-driven
+three-lap completion, five-driver source results, private-save content/checksum
+validation and retained Event Tree return. Other events and full original
+presentation remain separate scope; optional missing features emit console
+WARNINGs. No whole-game PS2 equivalence or60FPS claim. See
+[event integration and current limits](reverse/task0110/event-world-integration.md).
+
+Static viewers and the unified World use the same track renderer. See [TRACK_VIEWER.md](docs/TRACK_VIEWER.md) for controls, Effects gates
 and current rendering limits. TASK-0052 is still active; complete original effects
 and1080p/60FPS performance have not been established.
 
@@ -133,3 +152,5 @@ and launchers: `local/task0055/delivery/`. Use
 Track rendering uses the original zone/section/tree/instance LOD selection.
 TASK0058 retires the optional Godot HLOD backend; `godot_hlod` is rejected.
 See [native culling integration](docs/NATIVE_TRACK_CULLING.md).
+
+TASK-0111 control policy (2026-11-06): the minimal-driving PC preset selects manual transmission through recovered RealDriver::SetManualTransmission so Q/E operate gears. Strict mode retains original setup. Ghidra inspection of Debug001770D8/0013BC90/0013BD70 confirms automatic-mode callbacks reroute to Player preview/freeze, whose dependencies remain unrecovered. This is an explicit PC preset, not original FreeRun parity. Pause changes its label to Resume while paused.

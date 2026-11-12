@@ -71,6 +71,7 @@ public:
     std::optional<UiAction> next();
     const auto& targets()const{return targets_;}
     const ViewerUiState& state()const{return state_;}
-    static void fps(float width,double fps,double ms);
+    struct FpsRegion {float x,y,width,height;}; // Port logical ImGui region; host pixels divided by DPI.
+    static void fps(float width,double fps,double ms,const std::optional<FpsRegion>& region=std::nullopt);
 };
 }

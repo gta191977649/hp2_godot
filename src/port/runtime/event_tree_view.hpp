@@ -35,6 +35,7 @@ struct EventTreeLoadResult {
 
 class EventTreeView {
 public:
+    using StatusProvider=std::function<int(int,int,const hp2::frontend::EventLink_002008B8*)>;
     // Loads both trees from a bundle and selects one by the mode id the mode-select screens write
     // into DAT_0030C77C: 8 picks "Championship", 9 picks "Hot Pursuit" (FUN_00185568).
     //
@@ -43,7 +44,8 @@ public:
     // before a load, so passing one is always safe. The view keeps a copy: the original reads
     // the live global, and the port has no global.
     EventTreeLoadResult load(assets::Source& source, const std::string& relative_path, int mode_id,
-                             const hp2::memorycard::Profile_002FC050& profile = {});
+                             const hp2::memorycard::Profile_002FC050& profile = {},StatusProvider source_status={});
+    int status(int tree_type,int record_index,const hp2::frontend::EventLink_002008B8* goal=nullptr)const;
 
     bool loaded() const { return tree() != nullptr; }
     const hp2::frontend::EventTree_001FFC40* selected_tree() const { return tree(); }
@@ -66,6 +68,7 @@ public:
     // (FUN_001FA978). Returns true when the cursor actually moved, which is what the original
     // turns into a sound or into silence.
     bool move_cursor(int direction);
+    bool select_node_port(int index); // Explicit PC mouse selection, preserving visibility/state gates.
 
     // FUN_001FAF60's answer for one input, as a menu sound id from kMenuSoundTable_002FB0A8:
     // 0x14 for a left/right move, 0x13 for up/down, 0x15 for the zoom in and out, 0x18 for
@@ -106,6 +109,7 @@ private:
     static void target(hp2::frontend::AnimationGroup& path, float value);
 
     std::vector<hp2::frontend::EventTree_001FFC40> trees_;
+    StatusProvider source_status_;
     hp2::memorycard::Profile_002FC050 profile_;
     int selected_tree_ = -1;
     int cursor_ = -1;
@@ -132,6 +136,8 @@ EventTreeOverlayStats append_event_tree(const EventTreeView& view, const WidgetS
                                         render::Resources& resources, render::Frame& frame,
                                         const hp2::frontend::FeWidget* panel_template = nullptr,
                                         const hp2::frontend::FeWidget* number_template = nullptr,
-                                        const hp2::frontend::FeScreen* screen_template = nullptr);
+                                        const hp2::frontend::FeScreen* screen_template = nullptr,
+                                        std::vector<hp2::frontend::FeWidget>* text_nodes = nullptr,
+                                      bool port_unclipped = false);
 
 } // namespace port::runtime

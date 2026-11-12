@@ -6,8 +6,53 @@
 #include "game_core/indep/src/voronoiclip.hpp"
 
 #include "game_core/port/not_implemented.hpp"
+#include "game_core/port/driving/memory.hpp"
+#include "game_core/port/race/collision_resources.hpp"
+
+namespace hp2::debug {
+// Debug001CD8B0, E-0099-W19. Nonzero debug Caffeine objects require the original
+// espDeleteObject service; inactive witnesses have the actual empty branch.
+void Sub_001CD8B0(::port::driving::Memory& m,std::uint32_t at,int in_chrg){
+    if(m.word(at+0x44))hp2::not_implemented("0x001CD8B0","original VCWitness Caffeine-object deletion is not implemented");
+    if(in_chrg&1)m.release(at);
+}
+}
 
 namespace hp2::recovered {
+// Debug001D00E8/001D0120, E-0099-W23. Authored and Rect embedded arrays have
+// DynamicallyAllocated0; dynamic arrays follow original deletion order.
+void VCPolyhedron::Sub_001D00E8(::port::driving::Memory& m,std::uint32_t at,int in_chrg){
+    if(m.word(at+8)!=0){for(unsigned i=0;i<4;++i)if(auto array=m.word(at+0x20+4*i))m.release(array);
+        for(unsigned i=0;i<4;++i)m.word(at+0x20+4*i,0);m.word(at+8,0);}
+    if(m.word(at+0xc))hp2::not_implemented("0x001D0120","original VCPolyhedron Caffeine-object deletion is not implemented");
+    if(in_chrg&1)m.release(at);
+}
+// Debug001D01C8 ->001D00A8/001D0D10, E-0099-W23. All pointers remain logical.
+void VCPolyhedron::MemoryImageLoad(::port::driving::Memory& m,std::uint32_t at,const std::array<std::uint32_t,4>& arrays,const std::array<int,4>& counts){
+    m.word(at+8,0);
+    for(unsigned i=0;i<4;++i){if(counts[i]<0 || counts[i]>32767)throw std::out_of_range("Original collision volume count outside signed16 domain");
+        m.half(at+0x18+2*i,std::uint16_t(counts[i]));m.word(at+0x20+4*i,arrays[i]);m.half(at+0x10+2*i,std::uint16_t(counts[i]));}
+    const unsigned strides[3]={20,12,24},offsets[3]={16,8,20};
+    for(unsigned kind=0;kind<3;++kind)for(int i=0;i<counts[kind];++i){const auto feature=arrays[kind]+std::uint32_t(i)*strides[kind],field=feature+offsets[kind];
+        const auto index=m.word(field);if(std::uint64_t(index)+m.byte(feature+1)>std::uint32_t(counts[3]))throw std::out_of_range("Original collision feature plane index outside source span");
+        m.word(field,arrays[3]+index*24);}
+    for(int i=0;i<counts[3];++i){const auto field=arrays[3]+std::uint32_t(i)*24+20,code=m.word(field),kind=code&15,index=code>>4;
+        if(code==0xffffffffu || kind>2){m.word(field,0);continue;}
+        if(index>=std::uint32_t(counts[kind]))throw std::out_of_range("Original collision plane feature code outside source span");
+        m.word(field,arrays[kind]+index*strides[kind]);}
+}
+// Debug001D0990, E-0099-W23. The existing recovered feature operations are
+// shared with the raw original view; only their actual plane outputs are stored.
+void VCPolyhedron::SetVoronoiPlanes(::port::driving::Memory& m,std::uint32_t at){
+    auto p=::port::race::read_collision_polyhedron(m,at);
+    const auto store=[&](std::uint32_t plane,const ::port::track::VoronoiPlane& value){for(unsigned j=0;j<3;++j)m.scalar(plane+4+4*j,value.normal[j]);m.scalar(plane+16,value.distance);};
+    for(unsigned i=0;i<p.vertices.size();++i){VCVertex::SetVoronoiPlanes(p,i);const auto planes=m.word(m.word(at+0x20)+20*i+16);
+        for(unsigned j=0;j<p.vertices[i].planes.size();++j)store(planes+24*j,p.vertices[i].planes[j]);}
+    for(unsigned i=0;i<p.faces.size();++i){VCFace::SetVoronoiPlanes(p,i);const auto planes=m.word(m.word(at+0x28)+24*i+20);
+        for(unsigned j=0;j<p.faces[i].planes.size();++j)store(planes+24*j,p.faces[i].planes[j]);}
+    for(unsigned i=0;i<p.edges.size();++i){VCEdge::SetVoronoiPlanes(p,i);const auto planes=m.word(m.word(at+0x24)+12*i+8);
+        for(unsigned j=0;j<4;++j)store(planes+24*j,p.edges[i].planes[j]);}
+}
 // ELF 0x001D2A48; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d2a48.md.
 void VCEdge::SetVoronoiPlanes() {
     hp2::not_implemented("0x001D2A48", "VCEdge::SetVoronoiPlanes (signature and full body unresolved)");
@@ -253,6 +298,11 @@ std::uint32_t& vc_first(port::track::VoronoiWitness& w){return w.switch_state==1
 std::uint32_t& vc_second(port::track::VoronoiWitness& w){return w.switch_state==2?w.feature1:w.feature2;}
 VVector& vc_point1(port::track::VoronoiWitness& w){return w.switch_state==1?w.point1:w.point2;}
 VVector& vc_point2(port::track::VoronoiWitness& w){return w.switch_state==2?w.point1:w.point2;}
+// E-0099-W38, port observations only; XYZ algorithms remain canonical E-0048.
+using PointWrite=port::track::VoronoiPointWrite;
+void vc_store_point1(port::track::VoronoiWitness& w,const VVector& p,PointWrite how,std::uint32_t site=0){const unsigned i=w.switch_state==1?0:1;vc_point1(w)=p;w.port_point_writes[i]=how;w.port_point_write_sites[i]=site;}
+void vc_store_point2(port::track::VoronoiWitness& w,const VVector& p,PointWrite how,std::uint32_t site=0){const unsigned i=w.switch_state==2?0:1;vc_point2(w)=p;w.port_point_writes[i]=how;w.port_point_write_sites[i]=site;}
+
 }
 namespace hp2::recovered {
 // Debug 0x001CDA08; E-0048-T05.
@@ -262,7 +312,7 @@ int VCWitness::CheckVertexVertex(port::track::VoronoiWitness& w,const port::trac
     const auto xb=VCTransformedFeature::TransformVertex(b,second,ba);
     for(const auto& p:vc_planes(a,first))if(vc_plane(p.plane,xb.head)<0){vc_first(w)=p.feature;return 0;}
     const auto& p1=a.vertices.at(first>>4).position;const auto& p2=b.vertices.at(second>>4).position;const auto difference=vc_sub(p1,xb.head);
-    w.distance=std::sqrt(voronoi_dot(difference,difference));vc_point1(w)=p1;vc_point2(w)=p2;return 1.0e-5f<w.distance?1:2;
+    w.distance=std::sqrt(voronoi_dot(difference,difference));vc_store_point1(w,p1,PointWrite::unknown_w,0x1cdc88);vc_store_point2(w,p2,PointWrite::unknown_w,0x1cdcc0);return 1.0e-5f<w.distance?1:2;
 }
 // Debug 0x001CDD00; E-0048-T05.
 int VCWitness::CheckVertexEdge(port::track::VoronoiWitness& w,const port::track::VoronoiPolyhedron& a,const port::track::VoronoiPolyhedron& b,const port::track::VoronoiTransform& ab,const port::track::VoronoiTransform& ba){
@@ -270,10 +320,10 @@ int VCWitness::CheckVertexEdge(port::track::VoronoiWitness& w,const port::track:
     for(const auto& p:vc_planes(b,second))if(vc_plane(p.plane,xa.head)<0){vc_second(w)=p.feature;return 0;}
     const auto xb=VCTransformedFeature::TransformEdge(b,second,ba);port::track::VoronoiClip clip;const auto& v=a.vertices.at(first>>4).position;
     const auto neighbor=VCVoronoiClip::ClipVertexPlanes(clip,a,xb,&v,vc_planes(a,first));if(neighbor!=vc_null){vc_first(w)=neighbor;return 0;}
-    vc_point1(w)=v;
-    if(clip.penetration){w.distance=0;vc_point2(w)=xa.head;return 2;}
+    vc_store_point1(w,v,clip.penetration?PointWrite::unknown_w:PointWrite::vector_w0,clip.penetration?0x1cdea8:0);
+    if(clip.penetration){w.distance=0;vc_store_point2(w,xa.head,PointWrite::vector_w1);return 2;}
     const auto& edge=b.edges.at(second>>4);const auto& tail=b.vertices.at(edge.vertices[0]).position;const auto direction=voronoi_direction(edge);
-    vc_point2(w)=vc_add(tail,vc_scale(direction,voronoi_dot(vc_sub(xa.head,tail),direction)));const auto diff=vc_sub(xa.head,vc_point2(w));w.distance=std::sqrt(voronoi_dot(diff,diff));return 1;
+    vc_store_point2(w,vc_add(tail,vc_scale(direction,voronoi_dot(vc_sub(xa.head,tail),direction))),PointWrite::vector_w0);const auto diff=vc_sub(xa.head,vc_point2(w));w.distance=std::sqrt(voronoi_dot(diff,diff));return 1;
 }
 }
 namespace hp2::recovered {
@@ -284,12 +334,12 @@ int VCWitness::CheckVertexFace(port::track::VoronoiWitness& w,const port::track:
     for(const auto& p:planes){const auto d=vc_plane(p.plane,xa.head);if(d<minimum){minimum=d;neighbor=p.feature;}}
     if(neighbor!=vc_null){vc_second(w)=neighbor;return 0;}
     const auto* face=&b.faces.at(second>>4);const float distance=vc_plane(face->plane,xa.head);
-    if(std::abs(distance)<1.0e-4f){w.distance=0;vc_point1(w)=vertex.position;vc_point2(w)=xa.head;return 2;}
+    if(std::abs(distance)<1.0e-4f){w.distance=0;vc_store_point1(w,vertex.position,PointWrite::xyz_only);vc_store_point2(w,xa.head,PointWrite::vector_w1);return 2;}
     for(auto edge_index:vertex.edges){const auto& edge=a.edges.at(edge_index);const auto other=edge.vertices[0]==(first>>4)?edge.vertices[1]:edge.vertices[0];const auto transformed=VCTransformedFeature::TransformVertex(a,other<<4,ab);
         const auto other_distance=vc_plane(face->plane,transformed.head);if((distance<0&&distance<other_distance)||(distance>0&&other_distance<distance)){vc_first(w)=(edge_index<<4)|1u;return 0;}}
-    if(distance>0){vc_point1(w)=vertex.position;vc_point2(w)=vc_add(xa.head,vc_scale(face->plane.normal,-distance));w.distance=distance;return 1;}
+    if(distance>0){vc_store_point1(w,vertex.position,PointWrite::xyz_only);vc_store_point2(w,vc_add(xa.head,vc_scale(face->plane.normal,-distance)),PointWrite::vector_w0);w.distance=distance;return 1;}
     float best=distance;for(unsigned i=0;i<b.faces.size();++i){const auto d=vc_plane(b.faces[i].plane,xa.head);if(best<d){best=d;face=&b.faces[i];vc_second(w)=(i<<4)|2u;}}
-    w.distance=best;vc_point1(w)=vertex.position;vc_point2(w)=vc_add(xa.head,vc_scale(face->plane.normal,-best));return best<0?2:1;
+    w.distance=best;vc_store_point1(w,vertex.position,PointWrite::xyz_only);vc_store_point2(w,vc_add(xa.head,vc_scale(face->plane.normal,-best)),PointWrite::vector_w0);return best<0?2:1;
 }
 }
 namespace hp2::recovered {
@@ -309,9 +359,9 @@ int VCWitness::CheckEdgeEdge(port::track::VoronoiWitness& w,const port::track::V
     const auto& ea=a.edges.at(first>>4);const auto& eb=b.edges.at(second>>4);const auto& tail=a.vertices.at(ea.vertices[0]).position;const auto& head=a.vertices.at(ea.vertices[1]).position;
     const auto direction1=voronoi_direction(ea),direction2=voronoi_direction(eb);VVector transformed_direction{};for(unsigned j=0;j<3;++j)transformed_direction[j]=(ba.basis[0][j]*direction2[0]+ba.basis[1][j]*direction2[1])+ba.basis[2][j]*direction2[2];
     const auto delta=vc_sub(xb.tail,tail);const float dot=voronoi_dot(transformed_direction,direction1);const float denominator=1.0f-dot*dot;const float numerator=voronoi_dot(delta,vc_sub(direction1,vc_scale(transformed_direction,dot)));
-    if(denominator<1.0e-6f)vc_point1(w)=numerator>0?head:tail;
-    else{float lambda=numerator/denominator;if(lambda<0)lambda=0;else{const auto length=vc_sub(head,tail);const float maximum=std::sqrt(voronoi_dot(length,length));if(lambda>maximum)lambda=maximum;}vc_point1(w)=vc_add(tail,vc_scale(direction1,lambda));}
-    const auto projected=vc_transform(ab,vc_point1(w));const auto& tail2=b.vertices.at(eb.vertices[0]).position;vc_point2(w)=vc_add(tail2,vc_scale(direction2,voronoi_dot(vc_sub(projected,tail2),direction2)));
+    if(denominator<1.0e-6f)vc_store_point1(w,numerator>0?head:tail,PointWrite::vector_w0);
+    else{float lambda=numerator/denominator;if(lambda<0)lambda=0;else{const auto length=vc_sub(head,tail);const float maximum=std::sqrt(voronoi_dot(length,length));if(lambda>maximum)lambda=maximum;}vc_store_point1(w,vc_add(tail,vc_scale(direction1,lambda)),PointWrite::vector_w0);}
+    const auto projected=vc_transform(ab,vc_point1(w));const auto& tail2=b.vertices.at(eb.vertices[0]).position;vc_store_point2(w,vc_add(tail2,vc_scale(direction2,voronoi_dot(vc_sub(projected,tail2),direction2))),PointWrite::vector_w0);
     const auto distance=vc_sub(projected,vc_point2(w));w.distance=std::sqrt(voronoi_dot(distance,distance));return 1;
 }
 }
@@ -361,4 +411,82 @@ int VCWitness::VClip(port::track::VoronoiWitness& w,const port::track::VoronoiPo
         if(status!=0)return status;
     }return status;
 }
+}
+
+namespace hp2::debug {
+// Debug001CD860; E-0099-W38. Original voronoiclip.cpp; CP padding remains untouched.
+void Sub_001CD860(::port::driving::Memory& m,std::uint32_t p,std::uint32_t p1,std::uint32_t p2){
+ for(unsigned offset:{0x20u,0x30u})for(unsigned axis=0;axis<3;++axis)m.word(p+offset+axis*4,0);
+ m.word(p+4,m.word(p1+0x20));m.word(p+8,m.word(p2+0x20));m.word(p+0xc,p1);m.word(p+0x10,p2);
+ m.word(p,0);m.word(p+0x40,0);m.word(p+0x44,0);m.word(p+0x48,0);
+}
+}
+
+namespace port::race::detail {
+// Port-only read view of the original already-built Voronoi planes. Never
+// regenerate normals/distances: these exact raw floats feed the canonical walk.
+::port::track::VoronoiPolyhedron shared_voronoi_planes(const ::port::driving::Memory& m,std::uint32_t poly){
+ auto shape=::port::race::read_collision_polyhedron(m,poly);
+ const auto plane=[&](std::uint32_t p){return ::port::track::VoronoiPlane{{{m.scalar(p+4),m.scalar(p+8),m.scalar(p+12)}},m.scalar(p+16)};};
+ for(unsigned i=0;i<shape.vertices.size();++i){const auto record=m.word(poly+0x20)+20*i,planes=m.word(record+16);for(unsigned j=0;j<m.byte(record+1);++j)shape.vertices[i].planes.push_back(plane(planes+24*j));}
+ for(unsigned i=0;i<shape.edges.size();++i){const auto planes=m.word(m.word(poly+0x24)+12*i+8);for(unsigned j=0;j<4;++j)shape.edges[i].planes[j]=plane(planes+24*j);}
+ for(unsigned i=0;i<shape.faces.size();++i){const auto record=m.word(poly+0x28)+24*i,planes=m.word(record+20);for(unsigned j=0;j<m.byte(record+1);++j)shape.faces[i].planes.push_back(plane(planes+24*j));}
+ return shape;
+}
+::port::track::VoronoiPose shared_voronoi_pose(const ::port::driving::Memory& m,std::uint32_t r,std::uint32_t p){
+ const auto matrix=m.matrix(r);if(matrix[3]!=0||matrix[7]!=0||matrix[11]!=0||matrix[12]!=0||matrix[13]!=0||matrix[14]!=0||matrix[15]!=1)
+  hp2::not_implemented("0x001CCF28","Shared VClip full non-homogeneous rotation transform is not reconstructed");
+ ::port::track::VoronoiPose pose;for(unsigned i=0;i<3;++i){for(unsigned j=0;j<3;++j)pose.basis[i][j]=matrix[i*4+j];pose.position[i]=m.scalar(p+i*4);}return pose;
+}
+}
+namespace hp2::recovered {
+// Debug001D0A50, E-0099-W38. Pointer differences use actual20/12/24-byte arrays.
+std::uint32_t VCPolyhedron::GetFeatureCode(const ::port::driving::Memory& m,std::uint32_t poly,std::uint32_t feature){
+ if(!feature)return 0xffffffffu;const auto type=m.byte(feature);if(type>2)return 0xffffffffu;
+ const unsigned strides[]{20,12,24};const auto base=m.word(poly+0x20+type*4);const auto count=m.signed_half(poly+0x10+type*2);
+ if(count<0||feature<base||(feature-base)%strides[type]||(feature-base)/strides[type]>=static_cast<unsigned>(count))throw std::out_of_range("Original VC feature pointer outside its typed array");
+ return ((feature-base)/strides[type]<<4)|type;
+}
+// Debug001D0B08, E-0099-W38. Invalid feature codes return null as in the original.
+std::uint32_t VCPolyhedron::GetFeature(const ::port::driving::Memory& m,std::uint32_t poly,std::uint32_t code){
+ if(code==0xffffffffu||(code&15)>2)return 0;const auto type=code&15;const unsigned strides[]{20,12,24};const auto count=m.signed_half(poly+0x10+type*2);
+ if(count<0||(code>>4)>=static_cast<unsigned>(count))throw std::out_of_range("Original VC feature code outside its typed array");
+ return m.word(poly+0x20+type*4)+(code>>4)*strides[type];
+}
+// Debug001CF360, E-0099-W38. Real memory identity, feature cache and source planes;
+// canonical E-0048 finite XYZ walk reused after fresh dispatch/CP-store review.
+int VCWitness::VClip(::port::driving::Memory& m,std::uint32_t p,std::uint32_t r1,std::uint32_t t1,std::uint32_t r2,std::uint32_t t2,std::optional<std::uint32_t> padding){
+ if(m.word(0x328408))hp2::not_implemented("0x001D0E80","Original active VClip polygon-print traversal is not reconstructed");
+ const auto p1=m.word(p+0xc),p2=m.word(p+0x10);const auto a=::port::race::detail::shared_voronoi_planes(m,p1),b=::port::race::detail::shared_voronoi_planes(m,p2);
+ const auto pose1=::port::race::detail::shared_voronoi_pose(m,r1,t1),pose2=::port::race::detail::shared_voronoi_pose(m,r2,t2);
+ ::port::track::VoronoiWitness w;w.feature1=VCPolyhedron::GetFeatureCode(m,p1,m.word(p+4));w.feature2=VCPolyhedron::GetFeatureCode(m,p2,m.word(p+8));w.distance=m.scalar(p+0x40);w.switch_state=m.signed_word(p);
+ for(unsigned i=0;i<3;++i){w.point1[i]=m.scalar(p+0x20+i*4);w.point2[i]=m.scalar(p+0x30+i*4);}
+ const int status=VClip(w,a,pose1,b,pose2);
+ m.word(p,static_cast<std::uint32_t>(w.switch_state));m.word(p+4,VCPolyhedron::GetFeature(m,p1,w.feature1));m.word(p+8,VCPolyhedron::GetFeature(m,p2,w.feature2));m.scalar(p+0x40,w.distance);
+ for(unsigned point=0;point<2;++point){
+  using Write=::port::track::VoronoiPointWrite;const auto how=w.port_point_writes[point];if(how==Write::none)continue;
+  if(how==Write::unknown_w&&!padding){
+   switch(w.port_point_write_sites[point]){case 0x1cdea8:hp2::not_implemented("0x001CDEA8","Original CP write consumes an unknown local vector pad; explicit port policy is required");
+    case 0x1cdcc0:hp2::not_implemented("0x001CDCC0","Original CP write consumes an unknown local vector pad; explicit port policy is required");
+    default:hp2::not_implemented("0x001CDC88","Original CP write consumes an unknown local vector pad; explicit port policy is required");}
+  }
+  const auto dest=p+0x20+point*16;const auto& value=point?w.point2:w.point1;for(unsigned i=0;i<3;++i)m.scalar(dest+i*4,value[i]);
+  if(how==Write::vector_w0)m.word(dest+12,0);else if(how==Write::vector_w1)m.word(dest+12,0x3f800000u);else if(how==Write::unknown_w)m.word(dest+12,*padding);
+ }
+ return status;
+}
+}
+
+namespace hp2::recovered {
+// Debug001CFFA8, E-0099-W38; original voronoiclip.cpp. Node links stay untouched.
+void VCPolyhedron::Sub_001CFFA8(::port::driving::Memory& m,std::uint32_t p){
+ m.word(p+8,1);for(unsigned i=0;i<8;++i)m.half(p+0x10+i*2,0);for(unsigned i=0;i<4;++i)m.word(p+0x20+i*4,0);m.word(p+0xc,0);
+}
+}
+
+#include "game_core/indep/inc/Replay.hpp"
+namespace hp2::recovered {
+// Debug001CD918, E-0099-W76. Actual feature codes, not pointer serialization;
+// fresh MIPS confirms P1+C/P2+10, F1+4/F2+8, SwitchState+0, CPs+20/+30.
+void VCWitness::DoSnapshot(::port::driving::Memory& m,std::uint32_t w,std::uint32_t snapshot){hp2::debug::ReplaySnapshot s(m,snapshot);s.BeginSection(w,0x2afbf0);::port::driving::Memory::Temporary codes(m,8);const auto p=codes.address();m.word(p,VCPolyhedron::GetFeatureCode(m,m.word(w+0xc),m.word(w+4)));m.word(p+4,VCPolyhedron::GetFeatureCode(m,m.word(w+0x10),m.word(w+8)));s.MoveData(p,4,4,0);s.MoveData(p+4,4,4,0);if(m.byte(snapshot+0x3d)){m.word(w+4,VCPolyhedron::GetFeature(m,m.word(w+0xc),m.word(p)));m.word(w+8,VCPolyhedron::GetFeature(m,m.word(w+0x10),m.word(p+4)));}s.MoveData(w,4,4,1);s.MoveData(w+0x20,12);s.MoveData(w+0x30,12);s.MoveData(w+0x40,4);s.EndSection();}
 }

@@ -1,3 +1,108 @@
+## TASK-0112 - Shared source camera and host widescreen (2026-11-06)
+
+Use the existing actual E-0099-W50 DriveCameraMover/Camera objects with the
+World's real topology/collision resources. Recover Player type1 construction,
+POV/input/gauge branches and required lookback animation calls in their original
+translation units. Keep ordinary driving InputMap/RealDriver ownership intact.
+Native camera/Flailer state is committed once per source frame; rendering reads
+values. Temporary mouse observation is explicitly host policy and may recenter
+while the source clock is paused. Terminal source frames remain frozen.
+
+The user selected Hor+ relative to4:3, superseding fixed horizontal projection
+for the World entry only. Derive vertical FOV at the host boundary and use
+KEEP_HEIGHT; do not change original FOV values or source camera motion. Source
+Flailer documents keep equal X/Y scale. Full edge-HUD placement awaits recovered
+widget roles; arbitrary coordinate-based anchoring is not original evidence.
+Full original HUD/pause/results remain unfinished and TASK-0112 stays active.
+
+## TASK-0110 - Authored event host and bounded numerical carriers (2026-11-06)
+
+The resumed minimum is the naturally unlocked first Hot Pursuit Event Tree event, Elise Delivery. Production original selection/readiness stages a versioned semantic request. A retained native frontend owns profile/history while a PC scene owns asynchronous original World/resource lifetimes. The real source StartEvent/SetRace/StartRace/countdown/World/finish data consumers remain authoritative. The source finish coordinator runs MarkEnd/abort inspection/remaining-finisher finalization/notifications/records/points/PostResults/rewards once before actual POSTRACE7. PC results display copied source rows; untranslated original EndGameScreens/replay presentation is disabled before entry with identified warnings, as an extension of the user's minimal presentation preference. Strict mode keeps source guards. No forced win, teleport or timeout substitutes a finish.
+
+Retail profile states are mapped per record using independently computed Retail offsets and Debug state pointers, with only reviewed common rank/time changes committed. KO/tournament differences stay explicit. The host saves a candidate privately before replacing live progress, rejects stale/duplicate settlement identities, and restores the retained Event Tree. This is PC host ownership, not a recovered ServiceGameFlow implementation or whole-version profile equivalence.
+
+Original dynamic Resample evidence E-0110-A01 supports a function-local toward-zero FPU scope; same-input natural6point output matches24/24 words and final length, whereas default PC rounding differs. Caller rounding is restored on every exit and across threads. This is a bounded numerical model, not general EE bit equivalence. No uninitialized scratch tail is filled. Unsupported original data/encoding paths still guard.
+
+Sony CPU evidence already authorized in E-0099-W54 defines SQRT.S of negative normals as sqrt(abs) with I/SI, without a trap. Playable World uses the existing positive-normal PC sqrt carrier for that same magnitude and emits an identified WARNING when its exact EE low-bit rounding is unestablished. Strict diagnostics retain the nonexact-negative precision stop. The thread-local scope restores the caller policy; geometry/physics source equations, operands and status semantics are unchanged. This records a PC numerical-model assumption, not a claim of exact hardware arithmetic or a license to fabricate unknown source operands. Native unit tests and PCSX2 source probes do not promote game behavior to Verified.
+
+### TASK-0110 continuation: entry and source scoring
+
+The reviewed adapter also admits Championship tree0/event1, preserving its actual5-actor/track12 request. Other event layouts are not implicitly supported. Source Player.UpdateHud runs after World/Replay and before source clocks advance. A logical HUD animation adapter retains original durations, pending-score replacement/completion and full feature-mask transition flush; repeated steady features do not flush pending awards. The actual PC outside camera is provided as explicit semantic context, without writing a fabricated source camera address. Visual original HUD/camera equivalence is not claimed.
+
+Each newly required unknown source stack lane has a separately named optional operand. CopMover ground/invalid-ground/airborne and MellowMover airborne-up lanes are not silently equated. Production PC policy independently supplies zero and emits warnings; strict source callers retain missing-operand guards. The drafting zero-distance and bNormalize zero/underflow instruction paths use the scoped, warned numerical carrier based on original Sony ISA semantics. Native7F7FFFFF saturation does not claim the exact extended EE7FFFFFFF encoding, general flags or low-bit equivalence. No artificial geometry adjustment is used.
+
+The reached normal.W product at Contact001D1D04 is about-4.4137e38: outside native binary32 range but inside the original VU extended finite range. Minimal World explicitly projects this value onto its existing finite PC carrier, with a site-specific WARNING; this is a numerical model limitation, not original overflow saturation or equivalence. Strict mode retains the native-range guard. All four source lanes and their multiplication remain active; no W reset or XYZ correction is made. Exact EE extended-float representation remains separate work.
+
+The reviewed Smokeable collision sound001E1B68 may be disabled independently before execution in minimal World, with a WARNING. Source collision anchors, break thresholds, Awake transitions, impulses and emitters remain mandatory. Strict mode preserves the unsupported enabled-sound boundary before release side effects. Source SoundEnabled0 returns naturally without a missing-sound warning.
+
+## TASK-0111 - Minimal driving and visible optional gaps (2026-11-06)
+
+User authorizes a minimal playable path and requires every unimplemented function
+to produce a console warning. The host defaults to an explicit minimal-driving
+FreeRun preset using original no-police and zero-traffic configuration producers.
+Native requests and --world-strict retain strict reconstruction behavior. One
+source player is constructed; no active AI/traffic/cop object is silently removed.
+
+Only reviewed skid generation/display is disabled before execution for this
+preset (E-0111-P01). Physical wheel state, forces, collisions, input and routes
+remain source-owned and mandatory. Every reached NotImplemented is observed
+independently from the existing debugger reaction, queued across worker threads
+and shown in the console with identity/reason/action and repeat counts. No global
+no-op/zero return, unimplemented-body suppression or fabricated result is added.
+
+This changes PC runtime policy, not original behavior authority. The earlier
+00217454 audio interpretation is retired: it is AI DriveTarget::Resample and
+remains mandatory when AI is configured. TASK-0110 full-race acceptance stays open.
+
+## TASK-0107 - One source World for debugging (2026-11-02)
+
+Use the Godot-independent WorldSession as the common native fixture and user
+entry backend. FreeRun6 parameters come from the original Fred/default/setup
+chain, including traffic and police. The port owns car/skin/track selection and
+explicit separately named research stack operands; it does not change unlocks,
+construct an eight-car test roster, or substitute Godot physics. This debug
+composition does not implement production event GameFlow, results or saves.
+
+Publish complete source frames transactionally. Godot binds all actor/scenery
+poses before commit_presentation enables that frame's PCM and particle snapshot.
+Objects use generation and original addresses. Shadow/reflection/display passes
+read this frame and never advance World. Source particles use CPU packet
+projection of the committed AcidEffectSystem groups; the optional host GPU
+integrator remains a static-viewer experiment, because reintegration would
+advance the already-updated World effects twice. Reached unsupported skids or
+other original guards stop before source publication. Rendering failures retain
+the previous presentation and require restart or return.
+
+The asynchronous bootstrap worker owns native resources only and serializes
+construction. Cancelled results cannot be adopted by a later session. Normal
+source cleanup and host resource release are measured separately. Display
+cameras and main-view mesh reuse for reflection capture are host debug policy,
+not recovered original camera/WorldObject render equivalence. No Verified claim.
+
+## TASK-0099 - Bounded CPU consumer proofs and unknown storage (2026-10-31)
+
+Retain original game control flow and arithmetic ordering. W114/W115 may project
+only a consumer result proved invariant over the authoritative Sony CPU result
+domain for explicitly bounded operands; unsupported operands still throw at the
+original instruction. This does not recover a generic CPU instruction result.
+W112 records that native RNE short-output loops do not prove original EE
+reachability; unique EE arithmetic and, conditionally, actual original stack
+words are required. Original constructor/XYZ snapshot omissions similarly do not
+authorize default heap W. Keep reached unknowns explicit, before mutation when
+original ordering permits. Neither native success nor a DLL link is Verified.
+
+## TASK-0098 - Production popup ownership (2026-10-29)
+
+Bind existing native two-slot orchestration to actual authored documents through
+port-owned PopupView. Represent screen visibility by active-document submission,
+preserving authored widget visibility and callback reentrancy. Scope PC action
+identities to document and slot because all popup documents share button hashes.
+Retain original Debug timer/sine math; matching Retail control flow does not prove
+math or ABI equivalence. The measured Retail text-group adapter is semantically
+reviewed against Debug00144990. Keep real StartRace/World missing at its explicit
+continuation boundary; no synthetic result or one-car launch is authorized as a
+substitute. Evidence/tests/limits: reverse/task0098/popup-production.md.
+
 ## TASK-0098 - Port selection lifetime ownership (2026-10-27)
 
 SelectionPage uses required cancellation/resource leases for host model, renderer,
@@ -1121,3 +1226,405 @@ GPU passes and is not canvas transparency. This replaces no recovered physics
 and introduces no Godot dependency to recovered C++. Performance/complete GS
 equivalence are not claimed; limits and exact acceptance are recorded in
 reverse/task0098/production-roundtrip.md.
+
+
+## 2026-10-28 TASK-0104 Godot responsive region ownership
+
+Use Godot VBoxContainer/MarginContainer/ScrollContainer to allocate frontend
+regions and toolbar space. A port-only document-hash/widget-slot table assigns
+controls and their art to coherent regions; never infer anchors from animated
+coordinates. Retain original offsets inside regions for animation/decoration
+relationships. Tree nodes/static panels share one scene transform; selection
+Control layers and the existing shared-depth packet consume one content size
+and projection. Preserve off-scanout template clipping on portrait displays.
+Do not crop previous-size layer textures: defer publication until their matching
+size is rendered. Original state/actions remain native. This explicitly records
+the authorized PC layout extension, not recovered PS2 hierarchy or full Godot
+font/GS equivalence. Evidence, checks and remaining gaps: reverse/task0104/layout.md.
+
+## 2026-10-28 TASK-0105 selection GPU transport and asset delivery
+
+Supersede the initial local-RD/readback/ImageTexture selection transport with
+main-RD render-thread execution and Texture2DRD presentation. Sample the original
+Control layer targets directly; keep native stage/depth/alpha decisions. Preserve
+opaque final canvas output without discarding intermediate RGB blend source alpha.
+Queued packets retain input textures; device creation, resize and destruction run
+on the render thread. Cache static resources and invalidate mutable bitmap identity.
+
+Prepare skins and independent mutable model copies on a frontend-owned worker.
+Promise tickets cancel publication without joining; page/type/skin/generation
+checks reject stale results. The prior skin can remain displayed while the exact
+replacement is pending; this is explicit host delivery policy. Bounded template
+LRU limits do not replace the existing independent decode-cache limits. Reject DLL
+static worker lifetime because Windows unload can occur after worker termination.
+No recovered timing/physics change or original equivalence follows from the PC
+measurements. Full page initialization/teardown remains synchronous and measured
+separately. Evidence and limitations: docs/PERFORMANCE_TASK0105.md, E-0105-P01..P03.
+
+
+## 2026-10-28 TASK-0104 event viewport and glyph commands
+
+Supersede the centred640x480 event crop and full480 reduced-area scale. Container
+allocation defines the event viewport; its uniform scale uses the actual original
+event-mask height and maps native camera320/240 to the view centre. Export native
+geometry uncropped only on this port Control path, then clip it in Godot. Keep
+paragraph-box layout separate from tree camera layout. Consume native numeric
+glyph positions with Godot Labels, preserving original space/alignment/kerning
+without host string reshaping. This is an authorized PC presentation extension;
+default native clipping/state and selection shared-depth ownership stay intact.
+See reverse/task0104/event-layout.md for independent atlas-ink checks and limits.
+
+
+## 2026-10-28 - TASK-0104 frontend FPS region
+
+Keep the existing native ImGui FPS renderer and global DebugTools layer. Frontend
+provides an optional pixel rectangle reserved by its Container footer; the bridge
+converts it once to logical ImGui units using the existing DPI service. Other
+scenes keep the original FPS layout. KeyBinding remains the only footer button;
+return continues through native inputs. Debug/Release compile boundaries remain
+unchanged; both builds currently publish the same DLL path, so runtime build
+identity must be checked when diagnosing missing debug UI.
+
+
+## 2026-10-29 TASK-0099 actual World resource ownership
+
+Use Debug World construction and original logical pools/lists, with explicit
+port-owned original-resource bindings. Retain Retail-to-Debug schema adapters:
+Signpost12-to8 is a reviewed field projection preserving full Retail records,
+not a raw overlay or a claim about its unresolved extra word. Required original
+providers never default to empty success. Imported BSS zero is not loaded source
+absence. Host Memory::release owns only port allocations; it does not replace
+or claim original allocator performance. AcidFX afxClose deliberately retains its
+emitter pool; explicit port session shutdown also releases that retained pool.
+World destruction preserves original global writes and order, with active-object
+paths guarded until recovered. Production race entry remains gated by real
+participant/scheduling dependencies; Godot physics is not introduced. Evidence
+and tested constructor scope: reverse/task0099/world-construction.md.
+
+
+## 2026-10-29 TASK-0099 temporary lifetime and unknown vector lane
+
+Use Memory::Temporary for one logical stack operand when a recovered callee can
+allocate persistent state. Memory::Scratch rolls back all later allocations and
+is unsuitable across lazy cache/pool creation. Car placement now retains actual
+callee state and releases only its point buffer; native regression covers a
+persistent allocation made after a temporary one.
+
+Car00130B90's local bVector3 initializes XYZ but loads an indeterminate fourth
+stack lane into the old vectors. That lane is not recovered as zero. Require an
+explicit port_stack_vector_lane operand; native constructor fixtures supply0.
+A nonnull original start vector still supplies its own full128-bit lanes to
+Position/old Position. Do not promote the chosen padding value to original
+behavior or Verified. This follows the existing explicit uninitialized-W operand
+contract in physics initialization, and changes no recovered XYZ physics.
+
+## 2026-10-29 TASK-0099 W40 PC sound device boundary
+
+Keep recovered EE voice ownership, channel locks, sample parameters and exact
+IOP short-word command queue in the game core. Original resident constructors
+return after enqueue; they do not synchronously render hardware audio. A port::
+PCM device may consume those exact commands and retained authored MSB samples,
+using the existing decoded-PCM codec and an explicit PC resampler/output clock.
+Preserve raw left/right/pitch/ADSR/effect/offset values for inspection. Reset a
+queue only after concrete command consumption succeeds; never acknowledge a
+missing device, skip volume-zero Play, or force sound flags off.
+
+This is an explicit PC hardware binding, not a reconstruction/Verified claim for
+IOP-side SPU Gaussian interpolation, envelope curves or reverb DSP. Unsupported
+stream/nonzero-offset commands remain explicit boundaries until reviewed; no
+invented DSP behavior may be presented as recovered. Native PCM/device checks
+and original hardware/PCSX2 audio comparisons are distinct acceptance scopes.
+The choice does not change recovered physics or replace it with Godot physics.
+
+
+## 2026-10-29 TASK-0099 W54 user-authorized CPU manual supplement
+
+The user explicitly authorized original Sony EE manuals as supplemental CPU ISA
+evidence. This is a narrow exception to AGENT.md R0 for instruction behavior,
+operand/result formats and processor flags only. Original publisher PDFs may be
+read from mirrors when document identity, revision, page and SHA-256 are recorded.
+Third-party summaries/emulator implementations remain leads, not replacement
+authority. The exception supplies no game logic, layouts, defaults, resources,
+identifiers or control flow; those still require the authorized shipped artifact.
+Do not reinterpret this as permission to redesign recovered physics.
+
+E-0099-W54 applies that authority to SQRT.S at Debug001D4998. The port preserves
+the original dot/square/geometry expressions and restores the documented result
+only for exact-representable negative normal roots, including the observed native
+-2^-22 case. Nonexact negative rounding remains explicit because the original
+manual does not establish equivalence to host IEEE rounding. Signed-zero and
+I/D/SI instruction status have scoped native tests; this is not a complete EE
+emulator or global FCR31 model. Native tests never establish Verified.
+
+See reverse/task0099/ee-sqrt.md and ee-sqrt-evidence.json for the original Sony
+v6.0 April2002 instruction/core references, pages, mirror URLs, file hashes,
+private capture paths and domain limits. Store only citation/query/hash metadata
+in Git; the original manuals/page extracts/renders remain ignored local files.
+
+## 2026-10-29 TASK-0099 W62 PC memory admission boundary
+
+RaceCoordinator001495B0 and ReplayManager consume free-memory primitives. Debug
+bInitPlatformMemory00250968 obtains a Sony SDK heap result through
+GetPS2HeapSize002508C8/mallinfo, then initializes MemoryPools00329048. ELF-zero
+list heads are not initialized free lists. Original pool queries and their
+alignment/header deductions remain distinct from the PC provider.
+
+The user-authorized PC platform implementation adds an opt-in owned-payload
+budget to port::driving::Memory; default allocation remains unbudgeted. Imported
+ELF/asset mappings are excluded. Owned allocation, release, Temporary and Scratch
+charge exact payload bytes. Admission exhaustion throws std::bad_alloc before
+changing the cursor, ownership list or mapped regions. A caller cannot lower the
+budget below the current charge. This is a PC admission policy, not PS2 heap
+capacity, mallinfo, allocator overhead, fragmentation or a guarantee against host
+allocation failure.
+
+port::race::MemoryAvailability accepts an explicit caller-owned capacity or
+samples Windows GlobalMemoryStatusEx available physical and commit memory. The
+host factory bounds that snapshot by the signed query range and current logical
+allocation limit (and any existing tighter budget). This enforces a measured PC
+capacity rather than a fixed success threshold. Other platforms require a real
+provider or explicit capacity. Its ReplayMemoryServices callback borrows the
+provider lifetime. Original game source still chooses whether memory is enough;
+no PS2 heap equivalence or Verified claim follows from PC tests.
+
+See reverse/task0099/race-coordinator.md and ignored
+local/task0099/rc-construction captures for the original SDK primitive frontier.
+
+## 2026-10-29 TASK-0099 W62 literal diagnostic output boundary
+
+The actual unloaded Jukebox.Stop path calls cJukeboxPlayer.IsCartridgeLoaded,
+which emits the original warning through bSound.Printf002702C8. Preserve the
+original m_nChannel==-1 suppression and original literal bytes. For the recovered
+no-varargs literal subset, PC stdout is the explicit platform output primitive;
+a failed host write is an error. A percent format remains hp2::NotImplemented
+rather than an invented PS2 varargs/formatter interpretation. This is not a
+reconstruction of bVPrintf's formatter, terminal channel multiplexing or console
+transport, and does not silently acknowledge active audio. Loaded cartridges
+still require the original Update/stream/StopPlaying chain. MusicEnabled is never
+forced off to make RaceCoordinator cleanup pass.
+
+## TASK-0099 actual World frame resource boundary (E-0099-W67)
+
+World0014D9A8 calls actual source game functions directly in the shared Memory.
+Port WorldFrameServices carries typed route/AI/physics resources, joystick and
+clock/monitor primitives, plus three independent optional original-unwritten
+stack lanes for event discs, terrain discs and camera shake. It provides no
+replacement game-function callbacks. A reached unimplemented child still
+throws at its original address. Actual source PrepareWorldTimestep/AdvanceWorldTime
+remain caller operations; the frame does not invent an outer loop. The native
+fixture declares each zero lane explicitly as PC execution policy, not original
+stack contents. Event dispatch binds actual CarReflectEventHandler identity;
+other reached handler identities require their own concrete implementation.
+
+## TASK-0099 extended VU evidence boundary (E-0099-W71)
+
+The user's Sony original EE-document authorization is CPU semantics only. The
+original EE-VU manual supports signed extended-range overflow saturation at
+001A81DC; it does not provide a unique nonexact extended multiplication LSB.
+The latter reached domain keeps hp2::NotImplemented, with raw operands retained.
+No host truncation, geometry clamp or source flag override is substituted. The
+user has no hardware/configured PCSX2 at present and directs continuation of
+other dependencies. A typed LastNormal.W consumer audit is bounded evidence,
+not proof against arbitrary memory/register observers. See shared-skids.md and
+skid-normal-consumers.md. No original-runtime Verified status is introduced.
+
+TASK-0099 SnapshotServices is a port resource context for actual source snapshot
+children. It carries typed routes/physics resources and explicit unknown CPU
+lane policy, not replacement game callbacks. Guest input callback identities
+are stored as source addresses in actual EventNodes. Device polling remains a
+separate platform primitive; source registration cannot be replaced by assigning
+RealDriver.Port directly. See world-snapshot.md and input-registration.md.
+
+TASK-0111 control policy (2026-11-06): the minimal-driving PC preset selects manual transmission through recovered RealDriver::SetManualTransmission so Q/E operate gears. Strict mode retains original setup. Ghidra inspection of Debug001770D8/0013BC90/0013BD70 confirms automatic-mode callbacks reroute to Player preview/freeze, whose dependencies remain unrecovered. This is an explicit PC preset, not original FreeRun parity. Pause changes its label to Resume while paused.
+
+
+### TASK-0110 reviewed collision audio host
+
+E-0110-AU01 identifies omitted original component initialization and lazy audio updates, rather than a missing glass sample implementation. The synchronous host now calls actual collision_sound.Register001E1768, then sound3d_oneshot.Init00204090 before World construction and their real UnRegister/Close before releasing source audio. The unbound middle SpeechNoise.RequestSamples00210388 producer is explicitly disabled with a WARNING.
+
+After World/replay/player HUD and before real/world clock advancement, a port-owned scheduler preserves sound.Update001ACAA8's actual SoundEnabled, strictly greater-than8 ticker-difference, RCstate6 pause, currentGameFlow!=3 and not-muted gates, then calls existing collision_sound.Update and oneshot.Update in original order. Its outer timestamp store precedes the inner gates. Unexpected asynchronous region-loading state remains guarded; no source completion is manufactured. Other unbound presentation producers are individually warned and disabled. This is a reviewed subset with existing PC sample mixing, not full original sound.Update/SPU/GameFlow equivalence. The original current GameFlow ELF word remains0; it is not forced to an invented gameplay state.
+
+
+### TASK-0112 font/resource and pause operand boundaries
+
+E-0112-H01 keeps duplicate-hash original fonts registered rather than deduplicating
+them. Original unload removes the first hash; the host performs all original
+unloads while all raw buffers remain alive, then releases the buffers. This fixes
+an observed dangling Font.Header without changing lookup/unload semantics.
+Localized frame publication uses a const transport of the original language
+lookup and never edits source strings to make them render.
+
+E-0112-P01 transports only caller-written pause PopupConfig fields across explicit
+native services. DismissParam/PopupID were not initialized by these captured
+callers; no defaults from the independent selector popup are inferred. These
+remaining operands and original popup/menu/RC state6 lifecycle must be resolved
+before enabling full source pause presentation. Native prerequisite tests do not
+establish full frontend or original-machine equivalence.
+
+
+### TASK-0112 font/resource and pause operand boundaries
+
+E-0112-H01 keeps duplicate-hash original fonts registered rather than deduplicating
+them. Original unload removes the first hash; the host performs all original
+unloads while all raw buffers remain alive, then releases the buffers. This fixes
+an observed dangling Font.Header without changing lookup/unload semantics.
+Localized frame publication uses a const transport of the original language
+lookup and never edits source strings to make them render.
+
+E-0112-P01 transports only caller-written pause PopupConfig fields across explicit
+native services. DismissParam/PopupID were not initialized by these captured
+callers; no defaults from the independent selector popup are inferred. These
+remaining operands and original popup/menu/RC state6 lifecycle must be resolved
+before enabling full source pause presentation. Native prerequisite tests do not
+establish full frontend or original-machine equivalence.
+
+
+### TASK-0112 native UI publication and continuation
+
+The user-approved2026-11-07 scope enables original nonzero Player HUD,
+TrackMap, PauseMenu/RC6 and EndGameScreens for authored single-player events;
+3D cockpit dashboard rendering remains outside this task. Native original
+logic owns rules, score animation completion and result predicates. GPU draw
+consumes immutable source widget/geometry snapshots. Independent UI revisions
+permit native menu animation publication without advancing a race step. Host
+focus/console suspension is separate from user pause; held driving inputs are
+cleared across both boundaries.
+
+Track map textures use immutable selected-track resource paths from the actual
+catalog, bound to the dedicated race UI Catalog. Changing resource owners clears
+that Catalog's decoded/cache misses. Raw original ePoly STQ and native gauge
+corners are transported to the GPU; they are not recreated as host gauge rules.
+Mirror projection uses the recovered camera/FOV and target descriptors; the
+explicit PC render-target aspect adapter and pre-HUD tracking-angle publication
+stage retain the documented timing/projection limitations in
+reverse/task0112/hud-integration.md. No original-machine equivalence is asserted.
+
+Original retry/restart/next source actions retain their actual native control
+flow. A storage-only generation acknowledgement reseals persistent baselines;
+it does not execute StartRace or reset source RNG. Reloads capture a pointer-free
+same-Debug continuation capsule and rebind destination owned resources. Previous
+outcomes remain available for once-only real private saving after native menu
+transitions. Failed or stale acknowledgements cannot advance the attempt.
+
+### TASK-0112: source NIS publication and host skin transport (2026-11-07)
+
+Capture NIS resource loading uses real BIN/CAM chunk consumers with synchronous
+host I/O; the original loaded callback is delivered only after both consumers
+finish. Source native camera lists select only each view's front mover. Native
+prepublication captures NisManager.Render's actual per-view gates, SetupForRendering,
+authored root/bone/inverse-bind matrices and hand props; Godot receives copied
+packets and never evaluates animation time or calls source update functions.
+Car publication honors original override poses and per-view visibility bits.
+
+The host NIS renderer uses actual driver solids and DRIVTEX textures. Original
+DoBlendingOnStrip metadata is retained in XYZ float low bytes, with two source
+bone matrices and special raw0/raw1 endpoints. NIS passes NULL light context;
+RenderStrips0010E120 disables bits1C0, so the host shared original color/alpha
+shader uses source-established unlit vertex color, with environment disabled.
+This is a bounded native-to-GPU transport, not proof of original GS precision.
+Final native/GPU acceptance for this new transport remains pending.
+
+### TASK-0112: original clip and read-only capture (2026-11-07)
+
+The recovered Flailer initializer sets0,0,644,480, distinct from authored640x480
+screens. Normal and UI-only WorldFrame publication copies those source bounds.
+Godot layout/presenter consume only the committed bounds and preserve the source
+widget positions/scales; an aspect-fitted clipped Control contains offscreen
+authored fields. Actual RaceResults GPU negative control is0vs8722 gutter pixels.
+The debug-only asset viewer copies a resource document and has no World or rule
+mutation. Screenshot capture requests a deferred GPU redraw of committed packets,
+with a30second bounded wait; it never calls native UI/physics update. Final64check
+window run passes; older HP capture timeout is preserved separately from its
+completed natural finish/page/save/return evidence. Full NIS transport component
+and native validation pass; no live pursuit/NIS capture or PS2 equivalence claim.
+
+### TASK-0113 / TASK-0114 loading and vehicle observation (2026-11-07)
+
+Original loading uses actual GLOBALB LOADING_TRACK, DYNTEX LOADING bitmap,
+source font/language and tLoadingScreenAnimation. A port first-post-draw barrier
+precedes asynchronous work, and visibility extends to actual GPU/actor commit;
+these host scheduling adaptations are separate from source GameFlow timing.
+No fake progress or minimum duration. Rendering consumes immutable native UI.
+Mouse observation in every POV revolves around the actual displayed body mesh
+union center, including draw batches, with fixed active radius. This requested
+GTA-like interaction is explicit host policy; native camera/rules are unchanged,
+and idle returns to the exact native pose. Evidence/limits: task0113/acceptance.
+
+### TASK-0077 Championship measurement and depth parameter ownership
+
+Wall-only race timing measures consecutive race process entries. The owned
+external keyboard fixture consumes compact loopback pose telemetry during
+sampling so the on-disk observer and detailed GPU collector stay out of the
+timed interval. GPU attribution uses a separate diagnostic run, completed
+timestamp pairs and, under Safe, the engine's pre/post draw signal interval.
+
+The opt-in vehicle depth consumer borrows its publisher's parameter view only
+at the existing main-thread synchronization point. Each slot carries its own
+version. Missing data and replaced owners use the source shader's value. The
+experimental MultiMesh submission uses contiguous authored static commands
+within the same section and LOD, with World pose/flag overrides excluded.
+
+### TASK-0077 race submission and raster experiments
+
+Race static batching treats each World override as a submission barrier
+and uses the original section and LOD for the remaining static commands.
+Ordinary encoded-depth geometry may share a proxy mesh for a contiguous
+static span. The original proxy path handles the remaining depth states.
+The two batch policies remain independent and opt-in after the moving
+race gate. The explicit performance60 profile scales owned colour, depth
+and history targets together and schedules the mirror independently.
+The root HUD and native camera, race and World inputs use the normal path.
+
+### TASK-0077 Vulkan call trace and World shadow transport
+
+The Windows Vulkan layer is scoped to the isolated benchmark child. It keeps
+the stock engine and logs selected calls to memory. The trace joins completed
+viewport ranges on a measured Windows QPC clock bracket and uses the Safe
+presenting thread. Off-thread call durations are not added to frame wall time.
+
+World shadow strips may keep their Godot mesh and index buffer while vertex
+count stays stable. Only changed vertex and attribute regions are uploaded.
+Update the mesh's custom bounds using the stock AABB rules so culling and
+transparent sort centers follow the current positions. Keep the new transport
+opt-in until it has a measured in-race frame-time result.
+
+### TASK-0077 Championship Godot Server boundaries
+
+The committed native World frame remains the authority for movement, contacts,
+race progression and source PCM. The race has no PhysicsServer3D query consumer.
+A future host-only query belongs to a separate on-demand space owned by the
+current track generation. Its results have no path back into World.
+
+The main-thread track renderer publishes eligible selected depth sources to
+TrackPostprocess. It owns the geometry and shader identity, while parameter
+writes already notify the consumer. The consumer maintains the existing depth
+encoding and takes care of proxy lifetime. The candidate remains opt-in.
+The conservative MultiMesh pool retains server resources by source section,
+LOD and draw identity within each view, with bounded inactive retention.
+
+World PCM crosses the bridge in one packed block per committed frame.
+AudioStreamGeneratorPlayback submits available blocks to Godot's AudioServer.
+Only a partial block needs a slice. The host tracks skipped mixes and queue
+depth and clears outstanding audio at pause, retry and exit.
+
+### TASK-0077 Godot race image quality
+
+Authored races use Godot's FXAA on the main colour SubViewport. The
+performance60 preset leaves FXAA off unless explicitly requested. The
+encoded depth target and HUD remain separate from that pass.
+
+Ordinary race track materials use Godot's linear or linear-mipmap sampler
+with matching repeat state. The host uploads authored mip pixels into the
+engine mip chain and lets Godot generate the missing levels. Alpha-tested
+coverage, mixed wrap axes, biased road depth and original multi-pass
+materials keep their specialized sampling. The source raster state is
+still available with `--race-godot-sampling=false --race-fxaa=false`.
+
+### TASK-0016 frontend background movie ownership
+
+Native frontend screen construction publishes the retained movie request
+from the original calls. The Godot host owns the decoder and projects the
+decoded size into the authored PANELMOVIE transform. A screen without a
+movie widget can retain playback for the next screen. Movie texture reuse
+and loop restart are host media operations. Original PS2 plane output and
+complete boot/gameflow gates remain a separate verification boundary.

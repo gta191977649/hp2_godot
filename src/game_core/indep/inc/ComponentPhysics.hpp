@@ -8,6 +8,7 @@ class PhysicsSystem : public port::driving::ObjectView {
 public:
  using ObjectView::ObjectView;
  // Debug00199a98 constructor body; allocation is a separate port boundary.
+ void Sub_00199AB8(int); // Debug destructor, E-0099-W33
  void port_initialize();
  static void port_initialize(port::driving::init::ByteView,std::uint32_t);
  // Debug00199b60/00199bb8/00199f98/0019a130/0019a220.
@@ -20,6 +21,7 @@ public:
 class PhysicsComponent : public port::driving::ObjectView {
 public:
  using ObjectView::ObjectView;
+ void Sub_00199A70(int); // Debug destructor, E-0099-W33
  // Debug0019a230/0019a238.
  void ComputeAuxiliaries();void ResolveForces();
 };

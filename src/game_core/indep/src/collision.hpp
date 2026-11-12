@@ -23,3 +23,26 @@ public:
     void IsSmokeableInvolved();
 };
 } // namespace hp2::recovered
+
+#include "game_core/port/driving/object_view.hpp"
+namespace hp2::debug {
+// Debug002191D8/00219208, E-0099-W38; original collision.cpp.
+void InitCollision(::port::driving::Memory&);
+void CloseCollision(::port::driving::Memory&);
+class Collision : public ::port::driving::ObjectView {
+public:
+ using ObjectView::ObjectView;
+ // Debug00219230/00219308; explicit original pool-owned lifecycle.
+ void Sub_00219230(std::uint32_t witness,std::uint32_t contact_point);
+ void Sub_00219308(int flags);
+ int GetTerrainType() const; //00219698, E-0099-W38
+ bool IsTwoCarCollision() const; //00219730
+ void GetCollidingCars(std::uint32_t& first,std::uint32_t& second) const; //00219758
+ bool IsSmokeableInvolved() const; //002197E8
+ bool IsPlayerInvolved() const; //002197A0
+ void DoSnapshot(std::uint32_t); //00219370 E-0099-W76.
+ int Update(float timestep); //00219650
+ void End(); //00219690
+ void AddImpulse(std::uint32_t point,std::uint32_t impulse,float scrape_speed); //00219400, E-0099-W38
+};
+}

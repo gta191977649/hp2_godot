@@ -103,3 +103,17 @@ public:
     void Sub_00248BE8();
 };
 } // namespace hp2::recovered
+
+// TASK-0099 E-0099-W62: explicit original Debug highlight lifetime.
+namespace hp2::debug {struct ScreenCallbackData;}
+#include "game_core/port/driving/object_view.hpp"
+namespace hp2::debug {
+class tHighlightAnimation:public ::port::driving::ObjectView {
+public:using ObjectView::ObjectView;
+ void Sub_00241F40(int screen_hash,int object_for_animation,int target_color);
+ void Sub_00241F80(int flags);
+ void SetCurrentMenuItem(int); //00241FA0, E-0112-P02.
+ void Animate(); //00242040, E-0112-P02.
+ void HandleEvents(int,const ScreenCallbackData&); //002421B0, E-0112-P02.
+};
+}

@@ -59,6 +59,46 @@ int main(int argc,char** argv){try{
  LightPack pack;hp2::recovered::vAABB lightnode;lightnode.PositionX=100;lightnode.ExtentX=lightnode.ExtentY=lightnode.ExtentZ=10;lightnode.NumChildren=-1;lightnode.ChildrenIndicies[0]=0;pack.tree.NodeArray.push_back(lightnode);hp2::recovered::eLight light;light.Type=0;light.Colour=0x00332211;light.PositionX=100;light.Size=10;light.FarStart=5;light.Intensity=1;pack.lights.push_back(light);auto matrix=instance.transform;matrix[12]=100;auto context=hp2::recovered::elSetupLightContext({pack},matrix);require(context[12]==17&&context[13]==34&&context[14]==51,"Per-instance ambient query failed");
  auto identity=instance.transform;require(hp2::recovered::elSetupLightContext({pack})==hp2::recovered::elSetupLightContext({pack},identity),"Per-instance identity lighting changed audited world context");
  scene->textures.clear();bool failed_frame=false;try{runtime.prepare_frame(view,math);}catch(const std::runtime_error&){failed_frame=true;}require(failed_frame,"Missing selected texture silently accepted");scene->textures.push_back(texture);require(runtime.prepare_frame(view,math).commands.size()==2,"Failed frame poisoned subsequent command preparation");
+ // TASK-0107 synthetic host operand tests. These do not establish PS2 equivalence.
+ {
+  auto moved_scene=std::make_shared<Scene>(*scene);moved_scene->instances[0].flags=0;
+  for(auto& solid:moved_scene->geometry.solids){solid.bounds_min={{-1,-1,-1}};solid.bounds_max={{1,1,1}};}
+  Runtime moved;moved.load(moved_scene);WorldObjectBinding object;object.section=11;object.record=0;object.model_hash=10;object.matrix=instance.transform;object.matrix[12]=150;
+  moved.set_world_objects({object},{{11,0,0x10}});auto changed=moved.prepare_frame(view,math);
+  require(changed.commands.size()==2,"Dynamic binding duplicated or hid object");for(const auto& c:changed.commands)require(c.matrix[12]==150,"Dynamic binding ignored actual source pose");
+  require(moved_scene->instances[0].transform[12]==0&&moved_scene->instances[0].flags==0,"World binding mutated immutable resources");
+  bool bad=false;auto invalid=object;invalid.record=7;try{moved.set_world_objects({invalid},{});}catch(const std::invalid_argument&){bad=true;}require(bad,"Unknown source record accepted");require(moved.prepare_frame(view,math).commands[0].matrix[12]==150,"Failed binding changed committed operands");
+  bad=false;invalid=object;invalid.model_hash=999;try{moved.set_world_objects({invalid},{});}catch(const std::invalid_argument&){bad=true;}require(bad,"Model hash mismatch accepted");
+  bad=false;invalid=object;invalid.matrix[0]=0;try{moved.set_world_objects({invalid},{});}catch(const std::invalid_argument&){bad=true;}require(bad,"Singular World pose accepted");
+  object.matrix[12]=5000;moved.set_world_objects({object},{});require(moved.prepare_frame(view,math).commands.empty(),"Moved object used old static tree bounds");
+  moved.set_world_objects({},{{11,0,0x10}});require(moved.prepare_frame(view,math).commands.empty(),"Expired object resurrected source-hidden static instance");
+  moved.set_world_objects({},{});require(moved.prepare_frame(view,math).commands.size()==2,"Absent sparse flags failed to restore asset baseline");
+  object.matrix[12]=150;object.visible=true;auto capture_view=view;capture_view.exclude_flags|=0x106;
+  moved.set_world_objects({object},{{11,0,0x11c}});const auto exact_dynamic=moved.prepare_frame(capture_view,math);
+  require(exact_dynamic.commands.size()==2,"Static direction/hide flags suppressed a source-enabled World object");for(const auto& c:exact_dynamic.commands)require(c.matrix==object.matrix,"Static reflection depth bias modified the exact World object pose");
+  object.visible=false;object.matrix={};moved.set_world_objects({object},{});const auto inactive_static=moved.prepare_frame(view,math);
+  require(inactive_static.commands.size()==2&&inactive_static.commands[0].matrix==instance.transform,"Inactive mapped World object hid or moved the source static instance");
+  moved.set_world_objects({object},{{11,0,0x10}});require(moved.prepare_frame(view,math).commands.empty(),"Inactive mapped object overrode actual source static hide flag");
+  auto retained_pose=instance.transform;retained_pose[12]=125;moved.set_world_objects({object},{{11,0,0,retained_pose}});const auto inactive_pose=moved.prepare_frame(view,math);
+  require(inactive_pose.commands.size()==2&&inactive_pose.commands[0].matrix==retained_pose,"Inactive mapped object replaced a source static pose override");
+  bad=false;invalid=object;invalid.record=9;try{moved.set_world_objects({invalid},{});}catch(const std::invalid_argument&){bad=true;}require(bad,"Inactive mapped object bypassed source association validation");object.visible=true;object.matrix=instance.transform;
+  auto reverse_matrix=instance.transform;reverse_matrix[0]=-1;reverse_matrix[5]=-1;reverse_matrix[12]=100;
+  moved.set_world_objects({},{{11,0,0,reverse_matrix}});const auto reversed=moved.prepare_frame(view,math);require(reversed.commands.size()==2&&reversed.commands[0].matrix==reverse_matrix,"Source reverse pose transport was not displayed");
+  moved.set_world_objects({},{});require(moved.prepare_frame(view,math).commands[0].matrix==instance.transform,"Removed source pose override did not restore asset baseline");
+  // TASK-0110: actual source WorldObjects spawned without a static scenery
+  // record use their independent address/model/pose, never a guessed record0.
+  WorldObjectBinding independent;independent.model_hash=10;independent.matrix=instance.transform;independent.source_address=1234;
+  moved.set_world_objects({independent},{});const auto spawned=moved.prepare_frame(view,math);
+  require(spawned.commands.size()==4,"Independent source model was omitted or replaced static art");
+  unsigned independent_commands=0;for(const auto& command:spawned.commands)if(command.instance==moved_scene->instances.size()+1234){++independent_commands;require(command.matrix==independent.matrix,"Independent model lost source pose");}
+  require(independent_commands==2,"Independent source address did not own both surface commands");
+  bad=false;try{moved.set_world_objects({independent,independent},{});}catch(const std::invalid_argument&){bad=true;}require(bad,"Duplicate independent source address accepted");
+  auto absent=independent;absent.source_address=0;bad=false;try{moved.set_world_objects({absent},{});}catch(const std::invalid_argument&){bad=true;}require(bad,"Independent model without source identity accepted");
+  absent=independent;absent.model_hash=999;bad=false;try{moved.set_world_objects({absent},{});}catch(const std::invalid_argument&){bad=true;}require(bad,"Unknown independent model accepted");
+  require(moved.prepare_frame(view,math).commands.size()==4,"Rejected independent binding changed committed frame");
+  moved.set_world_objects({},{});require(moved.prepare_frame(view,math).commands.size()==2,"Removed independent source retained a draw");
+  moved_scene->instances[0].flags=0x200;moved.load(moved_scene);bad=false;try{moved.set_world_objects({object},{});}catch(const std::invalid_argument&){bad=true;}require(bad,"World-baked geometry accepted as dynamic source");
+ }
  runtime.unload();require(!runtime.ready(),"Unload retained resources");bool rejected=false;try{runtime.prepare_frame(view,math);}catch(const std::logic_error&){rejected=true;}require(rejected,"Unloaded frame query accepted");
  std::cout<<"TRACK_RUNTIME_UNIT_OK\n";
  if(argc>1){std::string asset_root=argv[1];if(asset_root=="--assets"){const auto configured=hp2::platform::resolve_zzdata_root(".");if(!configured)return 77;asset_root=*configured;try{(void)port::driving::debug_image_path(".");}catch(const std::exception&){return 77;}}math=port::driving::read_debug_image(port::driving::debug_image_path("."));require(original_focal_h(math,0)==10,"Original zero-FOV fallback changed");require(std::abs(original_focal_h(math,0x4000)-256.f)<.01f,"Original global512 focal projection changed");port::assets::DirectorySource source(asset_root);auto catalog=load_catalog(source);std::size_t count=0;for(const auto& entry:catalog){if(argc>2&&std::stoi(argv[2])!=entry.number)continue;runtime.load(source,entry);const auto& loaded=*runtime.resources();view.position={{0,0,0}};view.direction={{1,0,0}};view.focal_h=600;view.clip_matrix={};view.clip_matrix[0]=view.clip_matrix[5]=view.clip_matrix[10]=1.f/30000;view.clip_matrix[15]=1;std::vector<std::size_t> legacy_zones(loaded.zones.size());std::iota(legacy_zones.begin(),legacy_zones.end(),0);std::vector<std::uint32_t> legacy_chains;

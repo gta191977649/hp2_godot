@@ -1,4 +1,5 @@
 #include "game_core/extensions/debug_console.hpp"
+#include "game_core/port/runtime_warnings.hpp"
 #include "game_core/extensions/viewer_session.hpp"
 #include "game_core/extensions/viewer_ui.hpp"
 #include <csys/system.h>
@@ -20,6 +21,19 @@ int main() {
     for(int i=0;i<3000;++i)console.log("line "+std::to_string(i));
     check(console.log_count()==2048);
     console.execute("clear");check(console.log_count()==0);
+    // Warnings queued while hidden retain real severity for the console's
+    // warning filter/color, rather than just adding text to a normal log.
+    console.warning("WARNING [ELF 0x00100001] port test missing feature");
+    check(!console.visible()&&console.log_count()==1);
+    check(console.commands().Items().back().m_Type==csys::WARNING);
+    check(console.commands().Items().back().m_Data.find("0x00100001")!=std::string::npos);
+    console.execute("clear");check(console.log_count()==0);
+    for(int i=0;i<3;++i)port::diagnostics::warn("0x00100010","port console fixture","optional fixture disabled");
+    console.execute("warnings");
+    bool retained_warning=false;
+    for(const auto& item:console.commands().Items())
+        if(item.m_Type==csys::WARNING&&item.m_Data.find("0x00100010")!=std::string::npos&&item.m_Data.find("count: 3")!=std::string::npos)retained_warning=true;
+    check(retained_warning);console.execute("clear");check(console.log_count()==0);
     console.execute("info on");check(console.info());
     console.execute("info invalid");check(console.info());
     console.execute("info off");check(!console.info());
@@ -190,5 +204,20 @@ int main() {
         viewer_console.frame(1280,800,1.f/60,[&]{ui.draw(1280/scale,800/scale);});
         auto action=ui.next();if(!action)std::cerr<<"DPI click scale="<<scale<<" target="<<point[0]<<","<<point[1]<<" mouse="<<ImGui::GetIO().MousePos.x<<","<<ImGui::GetIO().MousePos.y<<"\n";check(action&&action->action=="render_collision");
     }
+    viewer_console.set_ui_scale(1);
+    viewer_console.execute("info on");
+    viewer_console.frame(1280,800,1.f/60,[&]{ViewerUi::fps(1280,60,16.7,ViewerUi::FpsRegion{12,754,900,42});});
+    auto* fps_window=ImGui::FindWindowByName("Debug FPS");
+    check(fps_window&&fps_window->Active&&std::abs(fps_window->Pos.x-12)<.01f&&std::abs(fps_window->Pos.y-754)<.01f);
+    auto* info_window=ImGui::FindWindowByName("HP2 Debug Info");check(info_window&&info_window->Active);
+    // Info stays renderable after its bounded frame history wraps and at high DPI.
+    viewer_console.set_info(true);
+    for(int i=0;i<250;++i)viewer_console.frame(800,600,i%30==0?.05f:1.f/60);
+    viewer_console.set_ui_scale(2.f);
+    check(!viewer_console.frame(800,600,1.f/60).empty());
+    auto* curve_window=ImGui::FindWindowByName("HP2 Debug Info");
+    check(curve_window&&curve_window->Active);
+    viewer_console.set_info(false);viewer_console.set_ui_scale(1.f);
+    viewer_console.execute("info off");
     std::cout << "DEBUG_CONSOLE_OK\n";
 }

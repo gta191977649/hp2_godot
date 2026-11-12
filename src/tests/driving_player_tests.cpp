@@ -1,3 +1,4 @@
+#include "game_core/indep/inc/Sound3d.hpp"
 // TASK-0046 instruction-backed control cases, not PS2 numerical certification.
 #include "game_core/indep/inc/RealDriver.hpp"
 #include "game_core/ReplayManager.hpp"
@@ -36,7 +37,7 @@ void frame_motion_state(){
  }
  m.scalar(state+0x384,std::numeric_limits<float>::quiet_NaN());finish_movement_state(m,car,.5f);
  check(std::isnan(m.scalar(state+0x368)),"Original two-rejection comparison does not hide unordered odometer input");
- check(!hp2::guard([&]{hp2::recovered::Car(m,car).BeginMovement(.5f);}).empty(),"Whole BeginMovement still reports untranslated topology services");
+ check(!hp2::guard([&]{hp2::recovered::Car(m,car).BeginMovement(.5f);}).empty(),"Whole BeginMovement rejects an absent actual topology/image owner");
  check(!hp2::guard([&]{hp2::recovered::Car(m,car).FinishMovement(.5f);}).empty(),"Whole FinishMovement still reports untranslated path consumers");
 }
 void terrain_frame_lifecycle(){
@@ -62,7 +63,6 @@ struct Fixture {
   // E-0046-C01 exact Ghidra little-endian constant words.
   m.word(0x324eac,0x410f0c79);m.word(0x324eb0,0x3f19999a);m.word(0x324eb4,0x3e4ccccd);
   m.word(0x327180,0x3f000000);m.word(0x327184,0xc1f00000);m.word(0x327188,0xc0000000);
-  services.RegisterInterestingEvent=[](Memory&,float,const char*){};
   hp2::recovered::RealDriver(m,driver).Sub_0013AB98(car);
  }
  hp2::recovered::RealDriver view(){return {m,driver};}
@@ -94,7 +94,10 @@ void replay_event(){
  m.word(replay+4,1);r.RegisterInterestingEvent(1,"EBrake");check(m.scalar(node+0x14c)==3,"Capture adds interesting value to instant replay snapshot");
 }
 void horn_controls(){
- Fixture f;f.m.map(0x312000,0x1000);const auto sound=f.m.allocate(0x50),horn=f.m.allocate(4);
+ Fixture f;f.m.map(0x312000,0x1000);const auto sound=f.m.allocate(0x50),horn=f.m.allocate(32);
+ // Explicit control-only base Sound3d fixture: its original virtual targets
+ // are proven empty. Actual HornSound3d queue ownership is tested separately.
+ hp2::debug::Sound3d(f.m,horn).Sub_00203980();
  f.m.word(f.car+0x850,sound);f.m.word(sound+0x34,horn);f.m.word(0x326f40,1);f.m.word(0x327980,1);
  auto driver=f.view();driver.JoyHandler_HonkHorn(0,0,1);
  check(horn_activation(f.m,sound)&&f.m.word(f.car+0x830)==1,"Ordinary horn press activates sound and flashes headlights");

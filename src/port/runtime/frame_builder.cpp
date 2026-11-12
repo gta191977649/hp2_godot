@@ -183,6 +183,40 @@ FrameStats build_frame(hp2::frontend::FeScreen& screen, const WidgetSizes& sizes
             const auto* font = sizes.font(w.texture_hash);
             if (font == nullptr) { ++stats.missing; continue; }
             if (w.text.empty()) continue;
+            if(w.port_text_rectangle){
+                // Debug00144CC0/00144FD0, E-0112-P03. Explicit rectangle draw
+                // starts at TopLeft regardless of ordinary alignment flags.
+                const auto& bounds=*w.port_text_rectangle;
+                const render::Rect text_clip{bounds[0],bounds[1],bounds[2],bounds[3]};
+                const auto whitespace=[](unsigned char c){return c==' '||(c>=9&&c<=13);};
+                float pen_x=w.x,pen_y=w.y;int emitted=0;
+                for(std::size_t character=0;character<w.text.size();){
+                    const auto code=static_cast<unsigned char>(w.text[character]);std::size_t next=character+1;
+                    if(inline_button(code)){
+                        const auto* buttons=sizes.font(hp2::frontend::bStringHash("BUTTONSOUT"));
+                        if(!buttons){++stats.missing;character=next;continue;}
+                        const auto mapped=kSub_00141DD8_002F09C0[code-0x80];
+                        for(const auto& icon:buttons->glyphs)if(icon.code==mapped){render::Quad quad;quad.texture=buttons->texture_hash;quad.destination={pen_x,pen_y,icon.w*w.scale_x*w.scale_x,icon.h*w.scale_y};quad.source={icon.u+.5f,icon.v+.5f,icon.w,icon.h};quad.color=colour;if(emit(out,quad,text_clip,stage,static_cast<std::int8_t>(w.layer))){++stats.glyphs;++emitted;}pen_x+=icon.advance;break;}
+                        character=next;continue;
+                    }
+                    const hp2::frontend::FeGlyph* glyph=nullptr;
+                    for(const auto& candidate:font->glyphs)if(candidate.code==code){glyph=&candidate;break;}
+                    float draw_x=0,draw_y=0;
+                    if(glyph){const float adjustment=character?pair_adjustment(*font,*glyph,static_cast<unsigned char>(w.text[character-1]))*w.scale_x:0.f;draw_x=pen_x+adjustment;draw_y=pen_y;pen_x+=float(static_cast<int>(w.scale_x*(glyph->advance+adjustment)));}
+                    bool newline=false;
+                    if(whitespace(code)){
+                        std::size_t end=next;while(end<w.text.size()&&!whitespace(static_cast<unsigned char>(w.text[end])))++end;
+                        const float width=WidgetSizes::text_advance(*font,w.text.substr(next,end-next))*w.scale_x;
+                        if(text_clip.x+text_clip.width<pen_x+width){newline=true;pen_y+=float(static_cast<int>(font->line_height));pen_x=w.x;}
+                    }
+                    if(code=='@'&&!newline){newline=true;pen_y+=float(static_cast<int>(font->line_height));pen_x=w.x;}
+                    if(newline||!glyph){while(next<w.text.size()&&whitespace(static_cast<unsigned char>(w.text[next])))++next;}
+                    else{render::Quad quad;quad.texture=w.texture_hash;quad.destination={draw_x,draw_y,glyph->w*w.scale_x*w.scale_x,glyph->h*w.scale_y};quad.source={glyph->u+.5f,glyph->v+.5f,glyph->w,glyph->h};quad.color=colour;if(emit(out,quad,text_clip,stage,static_cast<std::int8_t>(w.layer))){++stats.glyphs;++emitted;}}
+                    character=next;
+                }
+                if(emitted>0)++stats.texts;else ++stats.clipped_out;
+                continue;
+            }
             const bool fixed = !wrapped && (w.text_align & 0x40) != 0;
             const float cell = fixed ? fixed_cell(*font) : 0;
             float align_width = WidgetSizes::text_advance(*font, w.text);
@@ -276,16 +310,17 @@ FrameStats build_frame(hp2::frontend::FeScreen& screen, const WidgetSizes& sizes
         quad.color = colour;
         //001428F0, E-0039-Q02/Q03: preserve all four authored UVs and colours.
         // Original FCR31 conversion is unresolved; retain existing fractional dimensions.
-        if (w.field_0x44 == 2 && w.field_0x40 != 0)
+        if (!w.port_quad_corners && w.field_0x44 == 2 && w.field_0x40 != 0)
             hp2::not_implemented("0x001428F0", "frontend rotated quad matrix not translated");
         quad.has_vertex_data = true;
         const auto& d = quad.destination;
         quad.positions = {render::Vec2{d.x,d.y}, render::Vec2{d.x+d.width,d.y},
             render::Vec2{d.x+d.width,d.y+d.height}, render::Vec2{d.x,d.y+d.height}};
+        if(w.port_quad_corners){for(unsigned i=0;i<4;++i)quad.positions[i]={(*w.port_quad_corners)[i][0],(*w.port_quad_corners)[i][1]};quad.bypass_clip=true;}
         quad.colors[0] = colour;
         for (std::size_t i = 0; i < 4; ++i) {
-            quad.source_points[i] = {bitmap.width*w.field_0x70[i*2] + (i==0 || i==3 ? 0.5f : -0.5f),
-                bitmap.height*w.field_0x70[i*2+1] + (i<2 ? 0.5f : -0.5f)};
+            quad.source_points[i] = {bitmap.width*w.field_0x70[i*2] + (w.port_quad_corners?0.f:(i==0 || i==3 ? 0.5f : -0.5f)),
+                bitmap.height*w.field_0x70[i*2+1] + (w.port_quad_corners?0.f:(i<2 ? 0.5f : -0.5f))};
             if (i==0) continue;
             const auto c = w.field_0x5c[i-1];
             quad.colors[i] = {static_cast<float>(c&255)/128, static_cast<float>((c>>8)&255)/128,

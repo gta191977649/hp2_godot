@@ -332,7 +332,16 @@ void ViewerUi::draw(float width,float height){
     }
     ImGui::End();
 }
-void ViewerUi::fps(float width,double fps,double ms){
+void ViewerUi::fps(float width,double fps,double ms,const std::optional<FpsRegion>& region){
+    if(region){
+        ImGui::SetNextWindowPos({region->x,region->y},ImGuiCond_Always);
+        ImGui::SetNextWindowSize({std::max(1.f,region->width),std::max(1.f,region->height)},ImGuiCond_Always);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,{0,0});
+        ImGui::Begin("Debug FPS",nullptr,ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoInputs|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoBackground);
+        ImGui::SetCursorPos({0,std::max(0.f,(region->height-ImGui::GetTextLineHeight())*.5f)});
+        ImGui::TextColored({.6f,.9f,1,1},"%.0f FPS / %.2f ms",fps,ms);
+        ImGui::End();ImGui::PopStyleVar();return;
+    }
     ImGui::SetNextWindowPos({std::max(0.f,width-8),4},ImGuiCond_Always,{1,0});
     ImGui::SetNextWindowSizeConstraints({0,0},{std::max(1.f,width),ImGui::GetIO().DisplaySize.y});
     ImGui::SetNextWindowBgAlpha(0);

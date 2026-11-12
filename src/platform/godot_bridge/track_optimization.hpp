@@ -7,13 +7,14 @@
 namespace port::godot_bridge {
 struct TrackOptimizationOptions {
     bool resource_reuse=false,particle_mesh_reuse=false,instancing=false,occlusion=false,opaque_queue=false,world_batches=false;
+    bool depth_batches=false,race_world_batches=false,shadow_stream=false,static_depth_sources=false;
 };
 inline godot::Dictionary optimization_options_dictionary(const TrackOptimizationOptions& o){
-    godot::Dictionary d;d["resource_reuse"]=o.resource_reuse;d["particle_mesh_reuse"]=o.particle_mesh_reuse;d["instancing"]=o.instancing;d["occlusion"]=o.occlusion;d["opaque_queue"]=o.opaque_queue;d["world_batches"]=o.world_batches;return d;
+    godot::Dictionary d;d["resource_reuse"]=o.resource_reuse;d["particle_mesh_reuse"]=o.particle_mesh_reuse;d["instancing"]=o.instancing;d["occlusion"]=o.occlusion;d["opaque_queue"]=o.opaque_queue;d["world_batches"]=o.world_batches;d["depth_batches"]=o.depth_batches;d["race_world_batches"]=o.race_world_batches;d["shadow_stream"]=o.shadow_stream;d["static_depth_sources"]=o.static_depth_sources;return d;
 }
 inline TrackOptimizationOptions optimization_options_from_dictionary(const godot::Dictionary& d,TrackOptimizationOptions o={}){
     const auto keys=d.keys();for(int i=0;i<keys.size();++i){const godot::String key=keys[i];if(d[key].get_type()!=godot::Variant::BOOL)throw std::invalid_argument("Optimization options must be Boolean");const bool value=d[key];
-    if(key=="resource_reuse")o.resource_reuse=value;else if(key=="particle_mesh_reuse")o.particle_mesh_reuse=value;else if(key=="instancing")o.instancing=value;else if(key=="occlusion")o.occlusion=value;else if(key=="opaque_queue")o.opaque_queue=value;else if(key=="world_batches")o.world_batches=value;else throw std::invalid_argument("Unknown host optimization option");}return o;
+    if(key=="resource_reuse")o.resource_reuse=value;else if(key=="particle_mesh_reuse")o.particle_mesh_reuse=value;else if(key=="instancing")o.instancing=value;else if(key=="occlusion")o.occlusion=value;else if(key=="opaque_queue")o.opaque_queue=value;else if(key=="world_batches")o.world_batches=value;else if(key=="depth_batches")o.depth_batches=value;else if(key=="race_world_batches")o.race_world_batches=value;else if(key=="shadow_stream")o.shadow_stream=value;else if(key=="static_depth_sources")o.static_depth_sources=value;else throw std::invalid_argument("Unknown host optimization option");}return o;
 }
 inline TrackOptimizationOptions startup_track_optimizations(){
     TrackOptimizationOptions o;

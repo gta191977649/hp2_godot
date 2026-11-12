@@ -1,5 +1,17 @@
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
+#include "game_core/port/driving/memory.hpp"
+namespace hp2::debug {
+// Debug NumberAllocator12-byte memory view, E-0099-W19; original collisionbody.cpp.
+class NumberAllocator {
+    ::port::driving::Memory& memory_;std::uint32_t address_;
+public:
+    NumberAllocator(::port::driving::Memory& m,std::uint32_t a):memory_(m),address_(a){}
+    // Debug001D2758/001D27F0/001D2830/001D28F0/001D5910.
+    void SetMaxNumbers(int);int AllocateNumber();void AllocateNumber(int);void FreeNumber(int);
+    void Sub_001D5910(int);
+};
+}
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: allocator_label; evidence: E-0027-C01.

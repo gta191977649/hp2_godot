@@ -2,6 +2,48 @@
 #pragma once
 #include "game_core/port/track/topology.hpp"
 #include <optional>
+#include "game_core/port/driving/memory.hpp"
+#include "game_core/port/driving/object_view.hpp"
+#include "game_core/port/track/topology_resources.hpp"
+namespace hp2::debug {
+std::uint32_t GetTrackInfo(const ::port::driving::Memory&,int); //00153070, W72; source Name/range gates.
+enum eConstraintType {eCONSTRAIN_BY_ROTATION=0,eCONSTRAIN_BY_SCALE=1}; // E-0099-W50, captured original enum.
+class TrackPolygon:public ::port::driving::ObjectView {
+public:using ObjectView::ObjectView;
+ bool PointInShaft(const std::array<float,4>&,float* elevation=nullptr); //00151428.
+ bool SegmentIntersects(const std::array<float,4>&,const std::array<float,4>&,std::array<float,4>* intersection); //001515E0.
+ bool TestSegmentToPoly(float& nearest,const std::array<float,4>& target,const std::array<float,4>& position,const std::array<float,4>& low,const std::array<float,4>& high,bool two_sided); //001516D8.
+};
+class TopologyCoordinate : public ::port::driving::ObjectView {
+public:
+    using ObjectView::ObjectView;
+    // Debug00151878/00151920/00151980/00151CC0; E-0099-W26.
+    void Sub_00151878();
+    void Sub_001518C0(int in_chrg); // Debug001518C0; releases references, no field resets.
+    void ClearInterestBBox();
+    void SetInterestBBox(const std::array<float,2>&,float,const std::array<float,2>* velocity=nullptr);
+    float GetElevation(const std::array<float,3>&,int* terrain=nullptr,std::array<float,4>* normal=nullptr,bool* valid=nullptr);
+    bool HasTopology(const std::array<float,2>&); //Debug001521A8, shared cache; E-0099-W39.
+    bool ConstrainToTopology(eConstraintType,bool two_sided,const std::array<float,4>& target,std::array<float,4>& position,float wall_margin,float wall_up_max); //00152500; E-0099-W50.
+    // Debug001521A8 ->00151CC0, E-0099-W17. Fresh-coordinate branch only;
+    // original test elevation is read from the authorized Debug image.
+    static bool HasTopology(const ::port::driving::Memory&,const ::port::track::Topology&,const std::array<float,2>&);
+};
+class TopologyTree : public ::port::driving::ObjectView {
+public:
+ using ObjectView::ObjectView;
+ // E-0099-W26, original track.cpp; source-backed pointers throughout.
+ void Sub_00152760();
+ void InitTree(); //00152798
+ void CloseTree(); //001527E8
+ std::uint32_t GetSquare(float,float); //00152A58, return_closest_square=0
+ std::vector<std::uint32_t> BuildTrackPolygons(const std::array<float,2>&,const std::array<float,2>&,int maximum); //00152E48
+ void RemoveTrackPolygons(std::uint32_t table,int count); //00153018
+ std::uint32_t AssignTrackPolygon(std::uint32_t); //00152D98
+ void UnAssignTrackPolygon(std::uint32_t); //00152E38
+ void FlushUnusedTrackPolygons(); //00152CF8
+};
+}
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.

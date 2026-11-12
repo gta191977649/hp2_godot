@@ -1,6 +1,9 @@
 // TASK-0044: canonical Debug body and explicitly synthetic contact/noise fixtures.
 #include "game_core/indep/src/rigidbody.hpp"
 #include "game_core/src/bMath.hpp"
+#include "game_core/port/driving/ee_scalar.hpp"
+#include <cmath>
+#include <limits>
 #include <iostream>
 #include <stdexcept>
 using namespace port::driving;
@@ -29,6 +32,14 @@ int main(){
     check(m.vector(body+0xf0)==native::Vector{{0,0,-8,0}},"Gravity term is recovered force, not host physics");
     m.matrix(body+0x20,{{2,0,0,7,0.5f,3,0,8,0,0,4,9,99,98,97,0}});hp2::recovered::eOrthonormalizeMatrix(m,body+0x20);
     check(m.matrix(body+0x20)==identity,"Orthonormalization clears all affine nonrotation lanes");
+    // E-0110-F19: actual orthonormalizer instruction grouping, explicit
+    // finite projection only; no source World state or synthetic epsilon.
+    const SolverMatrix huge{{1e20f,0,0,17,0,1e20f,0,18,0,0,1,19,7,8,9,20}};
+    m.matrix(body+0x20,huge);check(hp2::guard([&]{hp2::recovered::eOrthonormalizeMatrix(m,body+0x20);}).find("0x0011C110")!=std::string::npos&&m.matrix(body+0x20)==huge,"Strict orthonormalizer did not retain finite-overflow research boundary");
+    {PcSqrtCarrierScope playable(true);hp2::recovered::eOrthonormalizeMatrix(m,body+0x20);const auto result=m.matrix(body+0x20);for(float value:result)check(std::isfinite(value),"Finite source orthonormalizer stage produced host Inf/NaN");check(result[0]>1&&result[10]>1&&result[3]==0&&result[7]==0&&result[11]==0&&result[12]==0&&result[13]==0&&result[14]==0&&result[15]==1,"Orthonormalizer replaced source saturated norm with stable hypot/unit basis or changed affine stores");}
+    auto degenerate=identity;degenerate[0]=0;m.matrix(body+0x20,degenerate);check(hp2::guard([&]{hp2::recovered::eOrthonormalizeMatrix(m,body+0x20);}).find("0x0011C12C")!=std::string::npos,"Strict orthonormalizer silently supplied a zero-axis basis");
+    {PcSqrtCarrierScope playable(true);hp2::recovered::eOrthonormalizeMatrix(m,body+0x20);const auto result=m.matrix(body+0x20);check(result[0]==0&&result[5]==0&&result[10]==0&&result[15]==1,"Sony zero VRSQRT carrier introduced an epsilon or replacement axis");}
+    auto poisoned=identity;poisoned[0]=std::numeric_limits<float>::quiet_NaN();m.matrix(body+0x20,poisoned);{PcSqrtCarrierScope playable(true);check(hp2::guard([&]{hp2::recovered::eOrthonormalizeMatrix(m,body+0x20);}).find("0x0011C110")!=std::string::npos,"Playable orthonormalizer capped a nonfinite source XYZ input");}m.matrix(body+0x20,identity);
     const auto point=m.allocate(16),material=m.allocate(4),plane=m.allocate(16),found=m.allocate(4);
     m.vector(point,{{9,-7,20,1}});PlaneContact contact;contact.height=3;
     check(contact.GetElevation(m,0,point,material,plane,found)==3&&m.word(material)==1&&m.word(found)==1&&m.vector(plane)==native::Vector{{0,0,1,3}},"Synthetic geometry publishes audited selected-surface contract");

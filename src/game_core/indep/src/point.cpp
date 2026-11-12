@@ -238,3 +238,36 @@ void tCubic3D::SetValDesired() {
     hp2::not_implemented("0x001DACD8", "tCubic3D::SetValDesired (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+namespace hp2::debug {
+// Debug001D7638,E-0099-W100. Comparison changes state only when unequal.
+void tCubic2D::SetVal(const std::array<float,2>& v){for(unsigned i=0;i<2;++i){const auto a=address_+0x30*i;m_.scalar(a,v[i]);if(v[i]!=m_.scalar(a+8))m_.half(a+0x2c,2);}}
+// Debug001D7688,E-0099-W100. Equal derivative does not reset existing state.
+void tCubic2D::SetdVal(const std::array<float,2>& v){for(unsigned i=0;i<2;++i){const auto a=address_+0x30*i;m_.scalar(a+4,v[i]);if(v[i]!=m_.scalar(a+12))m_.half(a+0x2c,2);}}
+}
+
+namespace hp2::debug {
+// Debug001D76D8,E-0099-W106. Original desired values and conditional states.
+void tCubic2D::SetValDesired(const std::array<float,2>& v){for(unsigned i=0;i<2;++i){const auto p=address_+0x30*i;m_.scalar(p+8,v[i]);if(v[i]!=m_.scalar(p))m_.half(p+0x2c,2);}}
+// Debug001D7770/001D7788,E-0099-W106. Actual XY-only source outputs.
+std::array<float,2> tCubic2D::GetVal()const{return {{m_.scalar(address_),m_.scalar(address_+0x30)}};}
+std::array<float,2> tCubic2D::GetdVal()const{return {{m_.scalar(address_+4),m_.scalar(address_+0x34)}};}
+}
+namespace port::driving {
+// Port-only field transport; original48-byte field offsets are type evidence.
+// Every scalar is read from shared Memory, never a typed-host default/padding.
+static hp2::debug::tCubic1D port_read_cubic(Memory& m,std::uint32_t p){hp2::debug::tCubic1D v;v.Val=m.scalar(p);v.dVal=m.scalar(p+4);v.ValDesired=m.scalar(p+8);v.dValDesired=m.scalar(p+12);for(unsigned i=0;i<4;++i)v.Coeff[i]=m.scalar(p+16+4*i);v.time=m.scalar(p+0x20);v.duration=m.scalar(p+0x24);v.arrivalThreshold=m.scalar(p+0x28);v.state=m.signed_half(p+0x2c);v.flags=m.signed_half(p+0x2e);return v;}
+static void port_write_cubic(Memory& m,std::uint32_t p,const hp2::debug::tCubic1D& v){m.scalar(p,v.Val);m.scalar(p+4,v.dVal);m.scalar(p+8,v.ValDesired);m.scalar(p+12,v.dValDesired);for(unsigned i=0;i<4;++i)m.scalar(p+16+4*i,v.Coeff[i]);m.scalar(p+0x20,v.time);m.scalar(p+0x24,v.duration);m.scalar(p+0x28,v.arrivalThreshold);m.half(p+0x2c,static_cast<std::uint16_t>(v.state));m.half(p+0x2e,static_cast<std::uint16_t>(v.flags));}
+}
+namespace hp2::debug {
+// Debug001D7B00,E-0099-W106 binding of existing E-0098-U01 scalar body;
+// transport is per-field, not a second implementation or host layout cast.
+void cPoint::SplineSeek(::port::driving::Memory& m,std::uint32_t p,float time,float d,float dd){auto value=::port::driving::port_read_cubic(m,p);SplineSeek(value,time,d,dd);::port::driving::port_write_cubic(m,p,value);}
+// Debug001D7C38,E-0099-W106. Exact two scalar calls with original zero clamps.
+void cPoint::SplineSeek(::port::driving::Memory& m,std::uint32_t p,float time){SplineSeek(m,p,time,0,0);SplineSeek(m,p+0x30,time,0,0);}
+}
+
+namespace hp2::debug {
+// Debug001D7468,E-0099-W106 explicit field binding to existing scalar body.
+float tCubic1D::GetddVal(::port::driving::Memory& m,std::uint32_t p,float t){return ::port::driving::port_read_cubic(m,p).GetddVal(t);}
+}

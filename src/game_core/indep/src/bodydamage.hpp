@@ -27,3 +27,5 @@ public:
     void GetVisibleTotalDamage();
 };
 } // namespace hp2::recovered
+
+namespace hp2::debug {void ServiceTweakerDamage(); /*001B2760 E-0099-W67, original empty.*/}

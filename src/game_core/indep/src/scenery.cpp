@@ -14,6 +14,20 @@
 #include "game_core/port/not_implemented.hpp"
 
 namespace hp2::recovered {
+// Debug001502E0; E-0099-W15. Preserve source Position/BBox/flags and rotate
+// only flagged original signed-short basis records using original eRotateZ.
+void ScenerySectionHeader::FlipObjectsOnBackwardsTrack(port::driving::Memory& m,std::uint32_t section){
+    for(int i=0;i<m.signed_word(section+0x20);++i){
+        const auto instance=m.word(section+0x1c)+std::uint32_t(i)*0x30;
+        if(!(m.half(instance+0xe)&0x400))continue;
+        port::driving::SolverMatrix matrix{};matrix[15]=1;
+        for(unsigned row=0;row<3;++row)for(unsigned lane=0;lane<3;++lane)
+            matrix[row*4+lane]=float(m.signed_half(instance+0x1c+2*(row*3+lane)))*0.00006103515625f;
+        hp2::recovered::eRotateZ(m,matrix,matrix,0x8000);
+        for(unsigned row=0;row<3;++row)for(unsigned lane=0;lane<3;++lane)
+            m.half(instance+0x1c+2*(row*3+lane),std::uint16_t(std::int32_t(matrix[row*4+lane]*16384.0f)));
+    }
+}
 // Debug0014F9F8; E-0048-A05; original TU ..\indep\src\scenery.cpp.
 // reverse/functions/sha256-815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b/track/0014f9f8.md.
 port::driving::SolverMatrix CreateFacadeMatrix(port::driving::Memory& original_math,
@@ -53,7 +67,15 @@ const port::track::Zone* FindVisibleZone(const port::track::Scene& scene,const s
 }
 // Retail0014FE18 / Debug0014FA68. Radius+4 pixel-size policy and first eligible LOD.
 void ScenerySectionHeader::DrawAScenery(const port::track::Scene& scene,std::size_t index,const port::track::FrameView& view,unsigned visibility,port::driving::Memory& math,port::track::Frame& frame){
-    const auto& object=scene.instances.at(index);++frame.considered_instances;
+    // TASK-0107 port operand binding. Original classifier/LOD arithmetic below
+    // is unchanged; immutable resources remain the baseline for unbound records.
+    const port::track::Instance* operand=nullptr;
+    if(view.world_operands){const auto found=view.world_operands->values.find(index);if(found!=view.world_operands->values.end()){
+        if(found->second.detached!=view.world_dynamic_pass||!found->second.visible)return;
+        operand=&found->second.value;
+    }else if(view.world_dynamic_pass)return;}
+    if(!operand)operand=&scene.instances.at(index);
+    const auto& object=*operand;++frame.considered_instances;
     if(std::find(scene.environment.sky_instances.begin(),scene.environment.sky_instances.end(),index)!=scene.environment.sky_instances.end())return;
     if(visibility==1){visibility=ClassifyAABB(object.bbox_min,object.bbox_max,view.clip_matrix);if(!visibility)return;}
     if(object.flags&view.exclude_flags&0xff)return;
@@ -99,10 +121,37 @@ void GrandSceneryCullInfo::CullView(const port::track::Scene& scene,const port::
         if(frame.resource_index){const auto found=frame.resource_index->sections.find(number);if(found==frame.resource_index->sections.end()||found->second>=scene.sections.size()||scene.sections[found->second].number!=number)throw std::runtime_error("Track section index no longer matches immutable scene");ScenerySectionHeader::TreeCull(scene,scene.sections[found->second],view,math,frame);}
         else {const auto found=std::find_if(scene.sections.begin(),scene.sections.end(),[&](const auto& s){return s.number==number;});ScenerySectionHeader::TreeCull(scene,*found,view,math,frame);}
     }
+    // Port presentation pass: moved objects must not depend on their old static
+    // tree bounds. Submit before the original eDisplayFrame queue sorts.
+    if(view.world_operands){auto dynamic_view=view;dynamic_view.world_dynamic_pass=true;
+        for(const auto id:view.world_operands->dynamic_order)ScenerySectionHeader::DrawAScenery(scene,id,dynamic_view,1,math,frame);
+    }
 }
 }
 
 namespace hp2::recovered {
 // Retail00150D98 / Debug001509E8, single-view binding; no frame-buffer ownership.
 void GrandSceneryCullInfo::DoCulling(const port::track::Scene& scene,const port::track::FrameView& view,std::vector<std::size_t>& order,port::driving::Memory& math,port::track::Frame& frame){WhatSectionsShouldWeDraw(scene,view,order,frame);CullView(scene,view,math,frame);}
+}
+
+// TASK-0099 E-0099-W65. Port selective resource component of original
+// LoaderScenery0014E920/UnloaderScenery0014EBD8, original scenery.cpp.
+// Debug SHA256815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
+#include "game_core/port/race/smokeables.hpp"
+#include "game_core/port/race/car_render_resources.hpp"
+#include "game_core/inc/bSlotPool.hpp"
+namespace port::race {
+void initialize_scenery_models(::port::driving::Memory& m,SmokeableResources& resources){
+ if(!resources.source_data_loaded||resources.scenery_models_initialized)throw std::logic_error("Original scenery data must be loaded once before model initialization");
+ if(!m.word(0x326700))hp2::not_implemented("0x00109E18","Original eModel pool startup is required by scenery model construction");
+ for(const auto header:resources.section_load_order)for(int i=0;i<m.signed_word(header+0x18);++i){const auto info=m.word(header+0x14)+std::uint32_t(i)*0x28;for(unsigned lod=0;lod<3;++lod)if(const auto hash=m.word(info+4*lod)){const auto model=hp2::debug::bOMalloc(m,m.word(0x326700));m.word(model+8,0);m.word(model+12,0);m.word(info+0x14+4*lod,model);eModel(m,model).Init(hash);}}
+ resources.scenery_models_initialized=true;
+}
+void close_scenery_models(::port::driving::Memory& m,SmokeableResources& resources){
+ if(!resources.scenery_models_initialized)throw std::logic_error("Original scenery model component was not initialized");
+ // Component consumes the caller's source section order. Original unloader
+ // does not clear pModel fields; the owner subsequently releases whole records.
+ for(const auto header:resources.section_load_order)for(int i=0;i<m.signed_word(header+0x18);++i){const auto info=m.word(header+0x14)+std::uint32_t(i)*0x28;for(unsigned lod=0;lod<3;++lod)if(const auto model=m.word(info+0x14+4*lod))eModel(m,model).Sub_00115100(3);}
+ resources.scenery_models_initialized=false;
+}
 }

@@ -30,3 +30,6 @@ namespace port::driving::native {
 float GetDownforceAtSpeed(Memory&m,std::uint32_t a,float speed){return hp2::recovered::Aerodynamics(m,a).GetDownforceAtSpeed(speed);}
 void Aerodynamics::ResolveForces(Memory&m,std::uint32_t a,std::uint32_t out){hp2::recovered::Aerodynamics(m,a).ResolveForces(out);}
 }
+
+// Debug001AB3C8; E-0099-W74; replay-frame/001ab3c8.json.
+namespace hp2::recovered {void Aerodynamics::DoSnapshot(std::uint32_t snapshot){if(m_.byte(snapshot+0x3c)||m_.byte(snapshot+0x3d)){m_.word(address_+0x14,0);m_.word(address_+8,0);m_.word(address_+0x10,0);}}}

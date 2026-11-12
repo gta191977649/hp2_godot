@@ -1,5 +1,14 @@
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
+#include "game_core/port/driving/object_view.hpp"
+namespace hp2::debug {
+// Debug source owner ../indep/src/speech/sedwedge.cpp; E-0110-F04. Explicit
+// logical object view, independent of the historical Retail template below.
+class cSEDWedge:public ::port::driving::ObjectView {
+public:using ObjectView::ObjectView;
+ bool ClearEventQueue(); //002011A0; inactive source branch, active device gap retained.
+};
+}
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.

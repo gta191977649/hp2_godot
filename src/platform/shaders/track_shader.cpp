@@ -13,7 +13,7 @@ std::string sample_case(int level,bool linear,const port::track::TextureState& s
     return code+"return texelFetch("+sampler+",c,0);";
 }
 }
-std::string track_shader_source(const hp2::assets::TpkTextureHeader& header,const port::track::EffectState& effect,port::track::Fusion40 fusion){
+std::string track_shader_source(const hp2::assets::TpkTextureHeader& header,const port::track::EffectState& effect,port::track::Fusion40 fusion,bool godot_sampling){
     using port::track::Fusion40;
     if(effect.matrix_pack==2)throw std::invalid_argument("Track BiasLevel2 requires a separate host depth range; no shipped track surface uses it");
     if(effect.rewrite_alpha&&fusion==Fusion40::None)throw std::invalid_argument("Track strip40 needs a proven two-pass fusion or explicit destination-alpha rendering");
@@ -26,11 +26,19 @@ std::string track_shader_source(const hp2::assets::TpkTextureHeader& header,cons
     std::string minify;
     if(mm<2)minify="return sample_original(0,uv,"+std::string(mm==1?"true":"false")+");";
     else{minify="lod=clamp(lod,0.0,"+std::to_string(maximum)+".0);";const std::string linear=mm>=4?"true":"false";if(mm==3||mm==5)minify+="int first=int(floor(lod));return mix(sample_original(first,uv,"+linear+"),sample_original(min(first+1,"+std::to_string(maximum)+"),uv,"+linear+"),fract(lod));";else minify+="return sample_original(int(floor(lod+0.5)),uv,"+linear+");";}
-    std::string sampling=embedded_shaders::track_sampling;
-    replace_shader_token(sampling,"@MIP_DECLARATIONS@",declarations);replace_shader_token(sampling,"@SAMPLE_CASES@",cases);
-    replace_shader_token(sampling,"@LOD_SCALE@",std::to_string(float(1u<<header.Field_0x71)));
-    replace_shader_token(sampling,"@LOD_BIAS@",std::to_string(float(static_cast<std::int16_t>(std::uint16_t(header.Field_0x72)<<4))/256.f));
-    replace_shader_token(sampling,"@MINIFY_SOURCE@",minify);
+    std::string sampling;
+    std::string sampler_hint="filter_linear, repeat_enable";
+    if(godot_sampling){
+        sampling="vec4 sample_track(vec2 uv){return texture(base_texture,uv);}";
+        sampler_hint=maximum>0&&mm>=2?"filter_linear_mipmap":"filter_linear";
+        sampler_hint+=state.repeat_u?", repeat_enable":", repeat_disable";
+    }else{
+        sampling=embedded_shaders::track_sampling;
+        replace_shader_token(sampling,"@MIP_DECLARATIONS@",declarations);replace_shader_token(sampling,"@SAMPLE_CASES@",cases);
+        replace_shader_token(sampling,"@LOD_SCALE@",std::to_string(float(1u<<header.Field_0x71)));
+        replace_shader_token(sampling,"@LOD_BIAS@",std::to_string(float(static_cast<std::int16_t>(std::uint16_t(header.Field_0x72)<<4))/256.f));
+        replace_shader_token(sampling,"@MINIFY_SOURCE@",minify);
+    }
     std::string modes="fog_disabled, shadows_disabled, ";modes+=effect.test.write_depth?"depth_draw_always":"depth_draw_never";
     const bool additive=fusion==Fusion40::Additive||state.additive;
     modes+=additive?", blend_add":", blend_mix";
@@ -45,7 +53,7 @@ std::string track_shader_source(const hp2::assets::TpkTextureHeader& header,cons
     if(fusion==Fusion40::None&&!state.additive&&state.blend==port::vehicle::BlendMode::SourceOver)alpha="ALPHA=combined.a/128.0;";
     replace_shader_token(fragment,"@TRACK_ALPHA_OUTPUT@",alpha);
     replace_shader_token(fragment,"@TRACK_DEPTH_OUTPUT@",effect.matrix_pack?"DEPTH=hp2_track_project_host_depth(-VERTEX.z,track_host_depth_ab);":"");
-    auto code=car_base_shader_source(modes,fragment,"filter_linear, repeat_enable");
+    auto code=car_base_shader_source(modes,fragment,sampler_hint);
     replace_shader_token(code,"uniform bool base_lit = true;",std::string("uniform bool base_lit = ")+((effect.flags&0x80)?"true;":"false;"));
     replace_shader_token(code,"uniform bool flag_0x4 = false;",std::string("uniform bool flag_0x4 = ")+((effect.flags&4)?"true;":"false;"));
     std::string helpers="uniform bool effect_roadshine_enabled = true;\nfloat hp2_affine_bit_power(float v,float s,float b){return vu_bit_affine(v,s,b);}\n";

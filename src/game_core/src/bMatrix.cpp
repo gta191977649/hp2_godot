@@ -58,6 +58,9 @@ void bTransposeMatrix(SolverMatrix& out, const SolverMatrix& in) {
 // Retail 0x0025AED0; E-0042-U193; E-0042-S001; exact Debug TU src\bMatrix.cpp
 // Debug 0x00254278; E-0044-M01; bMulMatrix(bVector3 *, bMatrix4 const *, bVector3 const *)
 namespace hp2::recovered {
+// Debug00254238, E-0099-W60. Original vector4 operation, independent of the
+// vector3 global-homogeneous overload; all operands preload for aliasing.
+void bMulMatrix(SolverVector& destination,const SolverMatrix& matrix,const SolverVector& vector){const auto input=vector;SolverVector result{};for(unsigned lane=0;lane<4;++lane){float value=matrix[lane]*input[0];value+=matrix[4+lane]*input[1];value+=matrix[8+lane]*input[2];value+=matrix[12+lane]*input[3];result[lane]=value;}destination=result;}
 void bMulMatrix(SolverVector& out, const SolverMatrix& matrix,
                  const SolverVector& in, const SolverMathContext& context) {
     using namespace port::driving::detail_group_00138f38;

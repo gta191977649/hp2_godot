@@ -161,14 +161,8 @@ Snapshot NativeBackend::advance(const Config& config,const Input& input,float el
     next.scalar(controls_+0x25c,input.throttle);next.scalar(controls_+0x264,input.brake);
     next.scalar(controls_+0x254,input.steering);next.scalar(controls_+0x274,input.handbrake);
     PlayerServices player;
-    // Debug001C2ED0 null pTrackRouteEditor branch and Debug001FEE80 empty body.
-    player.MaybeAddTrackRoutePoint=[](Memory& m,std::uint32_t car){hp2::recovered::MaybeAddTrackRoutePoint(m,car);};
-    player.RealDriverAddNearbyDebugTopology=[](Memory& m,std::uint32_t car){hp2::recovered::RealDriverAddNearbyDebugTopology(m,car);};
     player.IsJoystickPluggedIn=[](std::int32_t){return true;};
     player.IsJoystickTypeWheel=[](std::int32_t){return false;};
-    // Debug0013E070 CapturingFlag0 branch: original replay capture is disabled in
-    // this fixture. Session recording is separate port input recording.
-    player.RegisterInterestingEvent=[](Memory& m,float value,const char* name){hp2::recovered::ReplayManager(m,m.word(0x3271a8)).RegisterInterestingEvent(value,name);};
     driver.Drive(dt,player);
     // E-0081-L01: one frame history/terrain window around all collision retries.
     // Full topology/path/Player lifecycle is outside this explicit state slice.
@@ -188,7 +182,7 @@ Snapshot NativeBackend::advance(const Config& config,const Input& input,float el
     finish_movement_state(next,car_,dt);
     // E0089W01/W03: once per candidate native frame; retries and visual captures
     // cannot publish sound/RNG/timed-wiper state until this candidate commits.
-    trigger_water_terrain_state(next,car_,0,next_splash_mixer,[&](float value,const char* name){player.RegisterInterestingEvent(next,value,name);});
+    trigger_water_terrain_state(next,car_,0,next_splash_mixer,[&](float value,const char* name){hp2::recovered::ReplayManager(next,next.word(0x3271a8)).RegisterInterestingEvent(value,name);});
     auto snapshot=publish(next,dt);
     snapshot.wipers=wiper_snapshot(next,car_);
     snapshot.splash_audio=next_splash_mixer.update(next);

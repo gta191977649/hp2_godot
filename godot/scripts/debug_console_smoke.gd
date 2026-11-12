@@ -4,6 +4,8 @@ var menu_events := 0
 var updates := 0
 
 func _ready() -> void:
+	frontend_input.path="user://debug/console-smoke-bindings.cfg"
+	frontend_input.initialize()
 	render_host = DebugTools.host
 	DebugTools.register_scene(self, "frontend")
 	for argument in OS.get_cmdline_user_args():
@@ -21,8 +23,8 @@ func _process(delta: float) -> void:
 	updates += 1
 	_draw_console(delta)
 
-func _send_joy_event(_event: int) -> void:
-	menu_events += 1
+func _send_joy_event(_event: int, _port: int = 0, pressed: bool = true) -> void:
+	if pressed: menu_events += 1
 
 func _key(code: Key, pressed: bool = true, echo: bool = false, unicode: int = 0) -> void:
 	var event := InputEventKey.new()

@@ -1,5 +1,22 @@
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
+#include "game_core/port/driving/object_view.hpp"
+namespace hp2::debug {
+class DrivingLocation : public ::port::driving::ObjectView {
+public:
+ using ObjectView::ObjectView;
+ void DoSnapshot(std::uint32_t snapshot); //00233A38, W74.
+ // Debug002338F8/00233918/00233928/002339C8, E-0099-W34.
+ void SetRoute(std::uint32_t route,std::uint32_t point,int line,bool relaxed);
+ void SetRoutePoint(std::uint32_t point); //Debug00233910, W47.
+ void SetDrivingLine(int line,bool relaxed);
+ void SetRelaxedSwitch(bool);
+ bool IsClear()const;
+ // Debug00233940/00233990, E-0099-W37.
+ float GetNumSecondsLeftInRelaxedSwitch()const;
+ bool AreWeInARelaxedSwitch()const;
+};
+}
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.

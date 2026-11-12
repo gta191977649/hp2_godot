@@ -375,3 +375,6 @@ public:
     void Sub_001F1A78();
 };
 } // namespace hp2::recovered
+
+// Existing port scalar conversion used by the PC slider device adapter.
+namespace port::frontend::audio_projection {float factor(std::size_t index);}

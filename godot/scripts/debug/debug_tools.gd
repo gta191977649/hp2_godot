@@ -12,6 +12,8 @@ var operation_pending := false
 var title_cooldown := 0.0
 var frontend_scene := "res://scenes/frontend_native.tscn"
 var rendering_api := ""
+# Set only by the selection benchmark. Zero is ordinary gameplay.
+var debug_ui_sample_mode := 0
 
 func _ready() -> void:
 	rendering_api = preload("res://scripts/debug/render_api.gd").current()
@@ -29,9 +31,11 @@ func _ready() -> void:
 	info_enabled = "--info" in OS.get_cmdline_user_args()
 	var test_session := false
 	for argument in OS.get_cmdline_user_args():
-		test_session = test_session or argument in ["--viewer-smoke", "--car-render-smoke", "--material-gpu-smoke", "--driving-smoke", "--driving-asset-smoke", "--driving-os-smoke"] or argument.begins_with("--expect-debug=")
+		test_session = test_session or argument in ["--viewer-smoke", "--car-render-smoke", "--material-gpu-smoke", "--driving-smoke", "--driving-asset-smoke", "--driving-os-smoke", "--world-debug-smoke", "--race-runtime-smoke", "--world-debug-lifecycle-smoke"] or argument.begins_with("--expect-debug=")
 	# Headless test viewport constraints must not overwrite the user's viewer layout/history.
 	var settings := "user://debug/smoke-imgui.ini" if test_session else "user://debug/imgui.ini"
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--debug-ui-settings="): settings=argument.trim_prefix("--debug-ui-settings=")
 	host.console_init(ProjectSettings.globalize_path(settings), info_enabled)
 	if "--viewer-smoke" in OS.get_cmdline_user_args():
 		var runner := load("res://scripts/debug/viewer_smoke.gd").new() as Node
@@ -60,7 +64,10 @@ func set_info(value: bool) -> void:
 func write_log(text: String, error: bool = false) -> void:
 	if host != null:
 		host.console_log(text, error)
-	print(text)
+	if error:
+		printerr("ERROR: " + text)
+	else:
+		print(text)
 
 func is_console_open() -> bool:
 	return host != null and host.console_visible()
@@ -113,7 +120,16 @@ func _process(delta: float) -> void:
 	var ui_display := get_node_or_null("/root/UiDisplay")
 	statistics["ui_scale"] = float(ui_display.scale_factor) if ui_display != null else (float(host.get_ui_scale()) if host.has_method("get_ui_scale") else 1.0)
 	statistics["profile_debug"] = ProfileDebug.ui_state()
+	if debug_ui_sample_mode != 0:
+		statistics["measure_debug_ui"] = true
+		statistics["suspend_debug_ui"] = debug_ui_sample_mode == 2
+	elif statistics.has("measure_debug_ui"):
+		statistics.erase("measure_debug_ui")
+		statistics.erase("suspend_debug_ui")
+	var ui_begin := Time.get_ticks_usec() if debug_ui_sample_mode != 0 else 0
 	last_frame = host.console_frame(size.x, size.y, delta, statistics)
+	if debug_ui_sample_mode != 0:
+		last_frame["host_ms"] = (Time.get_ticks_usec() - ui_begin) / 1000.0
 	if str(last_frame.get("profile_debug",{}).get("action",""))=="capture":
 		ProfileDebug.capture_next_frames()
 	info_enabled = bool(last_frame.get("info", info_enabled))
@@ -152,12 +168,20 @@ func _dispatch_request(pending: Dictionary) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		var scene := frontend_scene if action == "close" else "res://scenes/debug/%s_viewer.tscn" % action
 		if action == "driving":
-			# Compatibility command: one CarViewer scene with an embedded drive mode.
-			if is_instance_valid(scene_owner) and scene_owner.get("viewer_kind") == "car":
-				scene_owner.viewer_ui_action({"action": "test_drive"})
+			if is_instance_valid(scene_owner) and scene_owner.scene_file_path == "res://scenes/race_scene.tscn":
+				scene_owner.begin_session()
 				return
-			test_drive_requested = true
-			scene = "res://scenes/debug/car_viewer.tscn"
+			var request: Dictionary = preload("res://scripts/runtime/world_debug_entry.gd").selection(get_tree())
+			if is_instance_valid(scene_owner) and scene_owner.has_method("world_debug_launch_request"):
+				if scene_owner.pending_load or scene_owner.track_pending:
+					write_log("Wait for the selected original resources to finish loading", true)
+					return
+				request = scene_owner.world_debug_launch_request()
+			var origin: Node = scene_owner if is_instance_valid(scene_owner) else self
+			var transition: Error = preload("res://scripts/runtime/world_debug_entry.gd").launch(origin, request)
+			if transition != OK:
+				write_log("World debug transition failed: %d" % transition, true)
+			return
 		var error := get_tree().change_scene_to_file(scene)
 		if error != OK:
 			write_log("Scene transition failed: %s (%d)" % [scene, error], true)

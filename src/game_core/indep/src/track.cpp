@@ -16,6 +16,11 @@ float PlaneContact::GetElevation(Memory& m,std::uint32_t,std::uint32_t point,
 
 #include "game_core/indep/src/track.hpp"
 
+namespace hp2::debug {
+// TASK-0099 E-0099-W72. Actual shared table pointer and highest-number domain.
+std::uint32_t GetTrackInfo(const ::port::driving::Memory& m,int number){if(number<=0||number>m.signed_word(0x3273a0))return 0;const auto row=m.word(0x32739c)+std::uint32_t(number-1)*0xa0;return m.byte(row)?row:0;}
+}
+
 #include "game_core/port/not_implemented.hpp"
 
 namespace hp2::recovered {
@@ -101,6 +106,13 @@ float GetRoadNoise(Memory& m,std::uint32_t point,std::int32_t material) {
 #include "game_core/port/assets/elab_chunks.hpp"
 #include <algorithm>
 #include <limits>
+namespace hp2::debug {
+// Debug001521A8, E-0099-W17. This wraps the previously recovered fresh polygon
+// query of00151CC0/Retail00152070; it is not a nearest-XY or terrain shortcut.
+bool TopologyCoordinate::HasTopology(const ::port::driving::Memory& memory,const ::port::track::Topology& topology,const std::array<float,2>& position){
+    return hp2::recovered::TopologyCoordinate::GetElevation(topology,{{position[0],position[1],memory.scalar(0x00324f68)}}).found;
+}
+}
 namespace {
 std::uint16_t track_u16(const std::uint8_t* p){return std::uint16_t(p[0])|(std::uint16_t(p[1])<<8);}
 std::int16_t track_i16(const std::uint8_t* p){const auto v=track_u16(p);return static_cast<std::int16_t>(v);}
@@ -259,5 +271,228 @@ std::vector<std::size_t> Topology::collision_candidates(const CollisionCylinder&
     std::vector<std::size_t> out;
     for(auto index:candidates)if(hp2::recovered::DynamicCollisionBody::TrackPolygonCheck(body,polygons[index])&&out.size()<48)out.push_back(index);
     std::sort(out.begin(),out.end());return out;
+}
+}
+
+#include "game_core/inc/bSlotPool.hpp"
+#include "game_core/port/driving/projections.hpp"
+#include <cstring>
+namespace hp2::debug {
+// Debug00152760; E-0099-W26.
+void TopologyTree::Sub_00152760(){
+ for(unsigned i=0;i<0x24;i+=4)m_.word(address_+i,0);
+ m_.word(address_+0x24,address_+0x24);m_.word(address_+0x28,address_+0x24);
+}
+// Debug00152798; E-0099-W26. Explicit original tree startup, not a lazy query side effect.
+void TopologyTree::InitTree(){
+ const auto pool=bNewSlotPool(m_,0x80,0x400,0x002a8108,0x10);m_.word(0x00327394,pool);
+ m_.word(0x00327380,0);m_.word(0x00327384,0);m_.word(pool+0x14,m_.word(pool+0x14)&~3u);
+}
+// Debug00152E38; E-0099-W26. Original byte reference count wraps.
+void TopologyTree::UnAssignTrackPolygon(std::uint32_t polygon){m_.byte(polygon+8,static_cast<std::uint8_t>(m_.byte(polygon+8)-1));}
+// Debug00153018; E-0099-W26.
+void TopologyTree::RemoveTrackPolygons(std::uint32_t table,int count){for(int i=0;i<count;++i)UnAssignTrackPolygon(m_.word(table+static_cast<unsigned>(i)*4));}
+// Debug00152CF8; E-0099-W26. The original stops after101 deletions.
+void TopologyTree::FlushUnusedTrackPolygons(){
+ const auto head=address_+0x24;auto node=m_.word(head);int removed=0;
+ while(node!=head){const auto next=m_.word(node);if(!m_.byte(node+8)){
+  const auto previous=m_.word(node+4);m_.word(previous,next);m_.word(next+4,previous);
+  const auto source=m_.word(node+12);if(source)m_.half(source+6,0xffff);
+  SlotPool(m_,m_.word(0x00327394)).Free(node);if(++removed>100)break;node=m_.word(previous);
+ }else node=next;}
+ if(!removed)hp2::not_implemented("0x00152CF8","original topology pool exhaustion invokes bBreak with no unused polygons");
+}
+// Debug00152D98 ->001510F8; E-0099-W26. Source records, slot numbers and list identities are shared.
+std::uint32_t TopologyTree::AssignTrackPolygon(std::uint32_t source){
+ auto& m=m_;const auto pool=m.word(0x00327394);if(!pool)hp2::not_implemented("0x00152D98","original TrackPolygonSlotPool was not initialized");
+ auto number=m.signed_half(source+6);std::uint32_t polygon;
+ if(number<0){if(!m.word(pool+0x10))FlushUnusedTrackPolygons();polygon=SlotPool(m,pool).Malloc();
+  if(!polygon)hp2::not_implemented("0x00152D98","original TrackPolygon pool allocation failed");
+  // Debug001510F8. Preserve fixed-point integer wrapping and VU reciprocal
+  // normalization grouping; the older decoded Retail projection divides lanes.
+  ::port::track::Polygon expanded;const auto bits=m.byte(source+1);
+  expanded.bounds={{m.signed_half(source+8+(bits&3)*2)*0.125f,m.signed_half(source+16+((bits>>2)&3)*2)*0.125f,
+   m.signed_half(source+8+((bits>>4)&3)*2)*0.125f,m.signed_half(source+16+(bits>>6)*2)*0.125f}};
+  expanded.count=(m.byte(source+3)&0x10)?4:3;
+  for(unsigned i=0;i<4;++i){const auto fixed=static_cast<std::uint32_t>(static_cast<std::int32_t>(m.signed_half(source+24+i*2)))*256u+
+    static_cast<std::uint32_t>(static_cast<std::int32_t>(m.signed_half(source+4)))*65536u;
+   float z=static_cast<float>(static_cast<std::int32_t>(fixed))*0x1p-16f;if(m.byte(source+3)&4)z*=4;
+   expanded.vertices[i]={{m.signed_half(source+8+i*2)*0.125f,m.signed_half(source+16+i*2)*0.125f,z}};
+  }
+  std::array<float,3> va{},vb{};for(unsigned i=0;i<3;++i){va[i]=expanded.vertices[1][i]-expanded.vertices[0][i];vb[i]=expanded.vertices[2][i]-expanded.vertices[0][i];}
+  const auto cross=track_cross(va,vb);const auto squared=track_dot(cross,cross);
+  if(!(squared>0)||!std::isfinite(squared))hp2::not_implemented("0x001510F8","unsupported degenerate/nonfinite VU track-polygon normalization");
+  const float reciprocal=1.f/std::sqrt(squared);for(unsigned i=0;i<3;++i)expanded.plane[i]=cross[i]*reciprocal;
+  expanded.plane[3]=(expanded.vertices[0][0]*expanded.plane[0]+expanded.vertices[0][1]*expanded.plane[1])+expanded.vertices[0][2]*expanded.plane[2];
+  m.byte(polygon+11,m.byte(source+2));m.byte(polygon+8,0);m.byte(polygon+10,m.byte(source+3));m.word(polygon+0x10,0);
+  for(unsigned i=0;i<4;++i)m.scalar(polygon+0x14+i*4,expanded.bounds[i]);
+  for(unsigned i=0;i<4;++i)for(unsigned axis=0;axis<3;++axis)m.scalar(polygon+0x30+i*16+axis*4,expanded.vertices[i][axis]);
+  m.byte(polygon+9,expanded.count);for(unsigned i=0;i<4;++i)m.scalar(polygon+0x70+i*4,expanded.plane[i]);
+  // Original bGetSlotNumber002510A0, no expanded pools: InitTree disables overflow.
+  m.half(source+6,static_cast<std::uint16_t>((polygon-pool-0x30)/m.word(pool+0x28)));m.word(polygon+12,source);
+  const auto head=address_+0x24,previous=m.word(head+4);m.word(previous,polygon);m.word(head+4,polygon);m.word(polygon+4,previous);m.word(polygon,head);
+ }else polygon=pool+0x30+static_cast<std::uint32_t>(number)*m.word(pool+0x28);
+ m.byte(polygon+8,static_cast<std::uint8_t>(m.byte(polygon+8)+1));return polygon;
+}
+// Debug00152A58, return_closest_square=0; E-0099-W26.
+std::uint32_t TopologyTree::GetSquare(float x,float y){
+ auto& m=m_;auto node=m.word(address_);float left=-16384,bottom=-16384;
+ for(unsigned level=10;level;--level){const float half=static_cast<float>(1u<<level)*32*0.5f;unsigned quadrant=0;
+  if(left+half<=x){quadrant|=1;left+=half;}if(bottom+half<=y){quadrant|=2;bottom+=half;}
+  const auto child=m.half(node+quadrant*2);if(!child)return 0;
+  if(level==1)return m.word(address_+8)+child*12;node=m.word(address_)+child*8;
+ }return 0;
+}
+// Debug00152E48/00152B88; E-0099-W26. Original mutable source deduplication and order.
+std::vector<std::uint32_t> TopologyTree::BuildTrackPolygons(const std::array<float,2>& low,const std::array<float,2>& high,int maximum){
+ auto& m=m_;std::vector<std::uint32_t> sources;
+ if(-32768.f<low[0]&&high[0]<m.scalar(0x00324f78)&&-32768.f<low[1]&&high[1]<m.scalar(0x00324f78)){
+  for(float y=hp2::recovered::TopologyTree::GetSquareCorner(low[1]);y<=high[1];y+=32)
+   for(float x=hp2::recovered::TopologyTree::GetSquareCorner(low[0]);x<=high[0];x+=32){const auto square=GetSquare(x,y);if(!square)continue;
+    const auto begin=m.half(square+8);const int end=begin+m.signed_half(square+10);
+    for(int i=begin;i<end;++i){const auto source=m.word(address_+16)+m.half(m.word(address_+24)+static_cast<unsigned>(i)*2)*32;
+     if(m.byte(source))continue;const auto bits=m.byte(source+1);
+     const float minx=m.signed_half(source+8+(bits&3)*2)*0.125f,miny=m.signed_half(source+16+((bits>>2)&3)*2)*0.125f;
+     const float maxx=m.signed_half(source+8+((bits>>4)&3)*2)*0.125f,maxy=m.signed_half(source+16+(bits>>6)*2)*0.125f;
+     if(minx<=high[0]&&miny<=high[1]&&low[0]<=maxx&&low[1]<=maxy&&static_cast<int>(sources.size())<maximum){sources.push_back(source);m.byte(source,1);}
+    }
+   }
+ }
+ std::vector<std::uint32_t> out;for(auto source:sources){m.byte(source,0);out.push_back(AssignTrackPolygon(source));}return out;
+}
+// Debug001527E8; E-0099-W26. Original close frees all cached polygons.
+void TopologyTree::CloseTree(){
+ const auto pool=m_.word(0x00327394);if(!pool)return;const auto head=address_+0x24;
+ while(m_.word(head)!=head){const auto node=m_.word(head),next=m_.word(node),previous=m_.word(node+4);m_.word(previous,next);m_.word(next+4,previous);
+  const auto source=m_.word(node+12);if(source)m_.half(source+6,0xffff);SlotPool(m_,pool).Free(node);}
+ bDeleteSlotPool(m_,pool);m_.word(0x00327394,0);
+}
+// Debug00151878; E-0099-W26.
+void TopologyCoordinate::Sub_00151878(){
+ for(unsigned offset=0x2a0;offset<=0x2ac;offset+=4)m_.word(address_+offset,0);
+ m_.word(address_+0x2b4,0);m_.word(address_+0x2b8,0);m_.word(address_+0x2bc,0);ClearInterestBBox();
+}
+// Debug00151920 + bInitializeBoundingBox00252790; E-0099-W26.
+void TopologyCoordinate::ClearInterestBBox(){
+ auto& m=m_;const auto a=address_;for(unsigned off:{0u,0x10u}){
+  m.word(a+off+4,m.word(0x00329054));m.word(a+off,m.word(0x00329054));
+  m.word(a+off+12,m.word(0x00329058));m.word(a+off+8,m.word(0x00329058));}
+ TopologyTree(m,0x002f0d10).RemoveTrackPolygons(a+0x20,m.signed_word(a+0x2a0));m.word(a+0x2b0,0);
+ for(unsigned off=0x2a0;off<=0x2ac;off+=4)m.word(a+off,0);
+}
+// Debug00151980; E-0099-W26. Retains cached references until a bbox miss.
+void TopologyCoordinate::SetInterestBBox(const std::array<float,2>& p,float radius,const std::array<float,2>* velocity){
+ auto& m=m_;const auto a=address_;for(unsigned j=0;j<2;++j){m.scalar(a+j*4,p[j]-radius);m.scalar(a+8+j*4,p[j]+radius);}
+ if(m.scalar(a+0x10)<=m.scalar(a)&&m.scalar(a+8)<=m.scalar(a+0x18)&&m.scalar(a+0x14)<=m.scalar(a+4)&&m.scalar(a+12)<=m.scalar(a+0x1c))return;
+ TopologyTree tree(m,0x002f0d10);tree.RemoveTrackPolygons(a+0x20,m.signed_word(a+0x2a0));
+ for(unsigned off=0x2a0;off<=0x2ac;off+=4)m.word(a+off,0);m.word(a+0x2b0,0);
+ float scale=m.scalar(0x00324f64);const float padded=radius+0.5f;
+ for(int attempt=0;attempt<(velocity?5:1);++attempt){
+  for(unsigned j=0;j<2;++j){m.scalar(a+0x10+j*4,p[j]-padded);m.scalar(a+0x18+j*4,p[j]+padded);
+   if(velocity){const auto future=p[j]+(*velocity)[j]*scale;m.scalar(a+0x10+j*4,std::min(m.scalar(a+0x10+j*4),future-padded));m.scalar(a+0x18+j*4,std::max(m.scalar(a+0x18+j*4),future+padded));}}
+  const auto x=m.scalar(a+0x10)-m.scalar(a+0x18),y=m.scalar(a+0x14)-m.scalar(a+0x1c);
+  if(!velocity||std::sqrt(x*x+y*y)<m.scalar(0x00324f60))break;scale*=0.75f;if(attempt==3)scale=0;
+ }
+ const auto polygons=tree.BuildTrackPolygons({{m.scalar(a+0x10),m.scalar(a+0x14)}},{{m.scalar(a+0x18),m.scalar(a+0x1c)}},160);
+ unsigned at=0;for(auto polygon:polygons)if(!(m.byte(polygon+10)&(2|8)))m.word(a+0x20+at++*4,polygon);m.word(a+0x2a4,at);
+ const auto horizontal=at;for(auto polygon:polygons)if(m.byte(polygon+10)&2)m.word(a+0x20+at++*4,polygon);m.word(a+0x2a8,at-horizontal);
+ const auto vertical_end=at;if(at!=polygons.size())for(auto polygon:polygons)if(m.byte(polygon+10)&8)m.word(a+0x20+at++*4,polygon);
+ m.word(a+0x2a0,static_cast<std::uint32_t>(polygons.size()));m.word(a+0x2ac,at-vertical_end);
+}
+// Debug00151CC0; E-0099-W26. Exact persistent polygon preference and table promotion.
+float TopologyCoordinate::GetElevation(const std::array<float,3>& p,int* terrain,std::array<float,4>* normal,bool* valid){
+ auto& m=m_;const auto a=address_;if(valid)*valid=true;
+ const auto inside=[&](std::uint32_t poly){
+  const auto edge=[&](unsigned x,unsigned y){return (m.scalar(poly+0x30+y*16+4)-m.scalar(poly+0x30+x*16+4))*(p[0]-m.scalar(poly+0x30+x*16))-(m.scalar(poly+0x30+y*16)-m.scalar(poly+0x30+x*16))*(p[1]-m.scalar(poly+0x30+x*16+4));};
+  float value=std::max(-1.f,edge(0,1));if(value<=0)value=std::max(value,edge(1,2));if(value<=0)value=std::max(value,edge(3,0));if(value<=0&&m.byte(poly+9)==4)value=std::max(value,edge(2,3));return value;
+ };
+ const auto height=[&](std::uint32_t poly){return (m.scalar(poly+0x7c)-(m.scalar(poly+0x70)*p[0]+m.scalar(poly+0x74)*p[1]))/m.scalar(poly+0x78);};
+ const auto copy_result=[&](std::uint32_t poly){if(terrain)*terrain=m.signed_byte(poly+11);if(normal)*normal=m.vector(poly+0x70);};
+ const auto previous=m.word(a+0x2b0);if(previous&&inside(previous)<0){copy_result(previous);return height(previous);}
+ if(!(m.scalar(a)<=p[0]&&p[0]<=m.scalar(a+8)&&m.scalar(a+4)<=p[1]&&p[1]<=m.scalar(a+12)))SetInterestBBox({{p[0],p[1]}},8);
+ int selected=-1;float chosen=p[2],limit=p[2]+1;
+ for(unsigned pass=0;pass<2;++pass){float best=m.scalar(0x0032738c);selected=-1;
+  for(int i=0;i<m.signed_word(a+0x2a4);++i){const auto poly=m.word(a+0x20+static_cast<unsigned>(i)*4);
+   if(m.scalar(poly+0x14)>p[0]||p[0]>m.scalar(poly+0x1c)||m.scalar(poly+0x18)>p[1]||p[1]>m.scalar(poly+0x20))continue;
+   const auto side=inside(poly);if(side>0)continue;const auto z=height(poly);
+   if(best<z&&z<limit){best=z;chosen=z;selected=i;if(!(m.byte(poly+10)&1)&&side<0){m.word(a+0x2b0,poly);break;}}
+  }
+  if(selected>=0)break;limit=m.scalar(0x00327390);
+ }
+ if(selected<0){if(valid)*valid=false;if(terrain)*terrain=1;if(normal){(*normal)[0]=0;(*normal)[2]=-1;(*normal)[1]=0;}return p[2];}
+ const auto poly=m.word(a+0x20+static_cast<unsigned>(selected)*4);
+ if(selected>4){for(int i=selected;i>0;--i)m.word(a+0x20+static_cast<unsigned>(i)*4,m.word(a+0x20+static_cast<unsigned>(i-1)*4));m.word(a+0x20,poly);}
+ copy_result(poly);return chosen;
+}
+}
+namespace port::track {
+// Port-owned allocation adapter for the reviewed Retail/Debug00152860 raw schema.
+TopologyResources load_retail_topology_resources(::port::driving::Memory& m,const std::vector<std::uint8_t>& bytes){
+ constexpr std::uint32_t tree=0x002f0d10;
+ if(m.word(tree+0x24)!=tree+0x24||m.word(tree+0x28)!=tree+0x24||!m.word(0x00327394))throw std::logic_error("TopologyTree constructor/InitTree must run before loading raw resources");
+ for(unsigned off=0;off<32;off+=8)if(m.word(tree+off))throw std::logic_error("Original topology resources already loaded");
+ Topology validation;validation.load(bytes); // Existing complete tree/index bounds validation.
+ const auto chunks=hp2::assets::parse_chunks_top(bytes);TopologyResources out;out.owner=&m;
+ for(unsigned i=0;i<4;++i){const auto* chunk=hp2::assets::find_first(chunks,0x34130+i);if(!chunk)throw std::runtime_error("Required raw topology chunk missing");
+  const auto start=i<2?(chunk->header_offset+0x17)&~std::size_t(15):chunk->payload_offset();const auto size=chunk->payload_offset()+chunk->size-start;
+  const auto raw=m.allocate(static_cast<std::uint32_t>(size));out.allocations.push_back(raw);std::memcpy(m.view(raw,size).data,bytes.data()+start,size);
+  const unsigned stride=i==0?8:i==1?12:i==2?32:2;m.word(tree+i*8,raw);m.word(tree+i*8+4,static_cast<std::uint32_t>(size/stride));
+  if(i==2)for(unsigned p=0;p<size;p+=32)m.half(raw+p+6,0xffff);
+ }
+ out.loaded=true;return out;
+}
+void unload_topology_resources(::port::driving::Memory& m,TopologyResources& resources){
+ if(resources.owner!=&m||!resources.loaded)throw std::invalid_argument("Topology resource owner/lifetime mismatch");
+ if(m.word(0x00327394))throw std::logic_error("CloseTree must release expanded polygon references before raw topology disposal");
+ for(unsigned i=0;i<32;i+=4)m.word(0x002f0d10+i,0);
+ for(auto p:resources.allocations)m.release(p);resources={};
+}
+}
+
+namespace hp2::debug {
+// Debug001518C0; E-0099-W26. Unlike ClearInterestBBox, the destructor does not reset fields.
+void TopologyCoordinate::Sub_001518C0(int in_chrg){TopologyTree(m_,0x002f0d10).RemoveTrackPolygons(address_+0x20,m_.signed_word(address_+0x2a0));if(in_chrg&1)m_.release(address_);}
+}
+
+#include "game_core/port/track/position_markers.hpp"
+namespace hp2::debug {
+// Debug00151018; TASK-0099 E-0099-W34. Exact authored list order/hash matching.
+int GetNumTrackPositionMarkers(const ::port::driving::Memory& m,std::uint32_t hash){int count=0;for(auto p=m.word(0x327378);p!=0x327378;p=m.word(p))if(m.word(p+8)==hash)++count;return count;}
+// Debug00151058; E-0099-W34. Index counts matching hashes only; misses return0.
+std::uint32_t GetTrackPositionMarker(const ::port::driving::Memory& m,std::uint32_t hash,int index){int count=0;for(auto p=m.word(0x327378);p!=0x327378;p=m.word(p))if(m.word(p+8)==hash){if(count==index)return p;++count;}return 0;}
+// Debug00153258, E-0099-W34. Marker34146 branch only, no whole track loader claim.
+int LoaderTrackGeometry(::port::driving::Memory& m,std::uint32_t chunk){
+ if(m.word(chunk)!=0x34146)hp2::not_implemented("0x00153258","non-marker LoaderTrackGeometry branch requires its actual resource owner");
+ for(unsigned i=0;i<m.word(chunk+4)/24;++i){const auto node=chunk+8+24*i,tail=m.word(0x32737c);m.word(tail,node);m.word(node+4,tail);m.word(0x32737c,node);m.word(node,0x327378);}return 1;
+}
+// Debug00153368, E-0099-W34. Unlink records; backing bytes belong to bundle.
+int UnloaderTrackGeometry(::port::driving::Memory& m,std::uint32_t chunk){
+ if(m.word(chunk)!=0x34146)hp2::not_implemented("0x00153368","non-marker UnloaderTrackGeometry branch requires its actual resource owner");
+ for(unsigned i=0;i<m.word(chunk+4)/24;++i){const auto node=chunk+8+24*i,next=m.word(node),prev=m.word(node+4);m.word(prev,next);m.word(next+4,prev);}return 1;
+}
+}
+
+namespace hp2::debug {
+// Debug001521A8, E-0099-W39. Uses this coordinate's persistent actual cache.
+bool TopologyCoordinate::HasTopology(const std::array<float,2>& p){bool valid=false;GetElevation({{p[0],p[1],m_.scalar(0x324f68)}},nullptr,nullptr,&valid);return valid;}
+}
+
+namespace hp2::debug {
+// Debug00151428, E-0099-W50. Read actual expanded vertices/plane directly;
+// no independent polygon cache or re-normalized Retail adapter is used.
+bool TrackPolygon::PointInShaft(const std::array<float,4>& point,float* elevation){const int count=m_.signed_byte(address_+9);if(count!=3&&count!=4)hp2::not_implemented("0x00151428","original shaft test with unsupported vertex count/uninitialized stack rays");std::array<std::array<float,3>,4> rays{};for(int i=0;i<count;++i)for(unsigned axis=0;axis<3;++axis)rays[i][axis]=m_.scalar(address_+0x30+std::uint32_t(i)*16+axis*4)-point[axis];const std::array<float,3> normal{{m_.scalar(address_+0x70),m_.scalar(address_+0x74),m_.scalar(address_+0x78)}};for(int i=0;i<count;++i)if(track_dot(track_cross(rays[i],rays[(i+1)%count]),normal)<0)return false;if(elevation)*elevation=-track_dot(rays[0],normal);return true;}
+// Debug001515E0, E-0099-W50. Strict opposite-plane-side test; endpoint touches
+// are rejected. Ordered interpolation retains all four original vector lanes.
+bool TrackPolygon::SegmentIntersects(const std::array<float,4>& first,const std::array<float,4>& second,std::array<float,4>* intersection){std::array<float,3> a{},b{},normal{};for(unsigned axis=0;axis<3;++axis){const auto origin=m_.scalar(address_+0x30+axis*4);a[axis]=first[axis]-origin;b[axis]=second[axis]-origin;normal[axis]=m_.scalar(address_+0x70+axis*4);}const float da=track_dot(a,normal),db=track_dot(b,normal);if(!(da*db<0))return false;const float ratio=std::abs(da)/(std::abs(da)+std::abs(db));std::array<float,4> point{};for(unsigned lane=0;lane<4;++lane)point[lane]=(second[lane]-first[lane])*ratio+first[lane];if(!PointInShaft(point))return false;if(intersection)*intersection=point;return true;}
+// Debug001516D8, E-0099-W50. Original bBoundingBoxOverlapping00252C10 uses
+// STRICT XYZ overlap, unlike older bounded camera prose claiming inclusive.
+bool TrackPolygon::TestSegmentToPoly(float& nearest,const std::array<float,4>& target,const std::array<float,4>& position,const std::array<float,4>& low,const std::array<float,4>& high,bool two_sided){auto minimum=m_.vector(address_+0x30),maximum=minimum;for(int i=1;i<m_.signed_byte(address_+9);++i)for(unsigned axis=0;axis<3;++axis){const auto value=m_.scalar(address_+0x30+std::uint32_t(i)*16+axis*4);minimum[axis]=std::min(minimum[axis],value);maximum[axis]=std::max(maximum[axis],value);}for(unsigned axis=0;axis<3;++axis)if(!(low[axis]<maximum[axis]&&minimum[axis]<high[axis]))return false;std::array<float,4> intersection{};if(!SegmentIntersects(target,position,&intersection))return false;std::array<float,3> difference{},normal{};for(unsigned axis=0;axis<3;++axis){difference[axis]=intersection[axis]-target[axis];normal[axis]=m_.scalar(address_+0x70+axis*4);}if(!two_sided&&0<=track_dot(difference,normal))return false;const auto distance=std::sqrt(track_dot(difference,difference));if(distance<nearest){nearest=distance;return true;}return false;}
+// Debug00152500, E-0099-W50. Uses this coordinate's existing shared polygon
+// table and references; never builds a substitute topology or independent cache.
+bool TopologyCoordinate::ConstrainToTopology(eConstraintType type,bool two_sided,const std::array<float,4>& target,std::array<float,4>& position,float margin,float wall_up){auto low=target,high=target;for(unsigned axis=0;axis<3;++axis){low[axis]=std::min(low[axis],position[axis]-margin);high[axis]=std::max(high[axis],position[axis]+margin);}float nearest=m_.scalar(0x324f74);std::uint32_t chosen=0;for(int i=0;i<m_.signed_word(address_+0x2a0);++i){const auto polygon=m_.word(address_+0x20+std::uint32_t(i)*4);if(TrackPolygon(m_,polygon).TestSegmentToPoly(nearest,target,position,low,high,two_sided))chosen=polygon;}
+ std::array<float,4> boom{};for(unsigned lane=0;lane<4;++lane)boom[lane]=position[lane]-target[lane];const float distance=std::sqrt((boom[0]*boom[0]+boom[1]*boom[1])+boom[2]*boom[2]);if(!(nearest<distance))return false;
+ const auto normalize=[&](float length){const auto normalized=hp2::recovered::bNormalize({{boom[0],boom[1],boom[2]}},length);for(unsigned axis=0;axis<3;++axis)boom[axis]=normalized[axis];};
+ if(type==eCONSTRAIN_BY_ROTATION){const auto flags=m_.byte(chosen+0xa);if(flags&2){const float length=nearest-margin;normalize(length);boom[2]+=wall_up*(1-length/distance);for(unsigned lane=0;lane<4;++lane)position[lane]=target[lane]+boom[lane];return true;}const float plane=(m_.scalar(chosen+0x7c)-(m_.scalar(chosen+0x70)*position[0]+m_.scalar(chosen+0x74)*position[1]))/m_.scalar(chosen+0x78);position[2]=(flags&8)?plane-margin:plane+margin;
+ }else if(type==eCONSTRAIN_BY_SCALE){normalize(nearest-margin);for(unsigned lane=0;lane<4;++lane)position[lane]=target[lane]+boom[lane];}return true;
 }
 }

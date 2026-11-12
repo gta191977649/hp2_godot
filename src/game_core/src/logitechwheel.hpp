@@ -19,3 +19,18 @@ public:
     void RecalculateDeviceNumber();
 };
 } // namespace hp2::recovered
+
+#include "game_core/port/driving/object_view.hpp"
+namespace hp2::debug {
+void Sub_0012B510(::port::driving::Memory&,std::uint32_t,int); //WheelDevice constructor.
+void Sub_0012CA50(::port::driving::Memory&); //Original two-device CRT initializer.
+// E-0099-W66: bReset is never read by either recovered machine-code body.
+// The port projection omits that dead operand, including unwritten caller values.
+void PortSetForceConditionData(::port::driving::Memory&,int,int,float,float,float,float,float,float); //0012C3E0.
+void PortSetForcePeriodicData(::port::driving::Memory&,int,int,float,float,float,float,float,float,float,float,float); //0012C540.
+void PortPlayShake(::port::driving::Memory&,int,float); //0012C918.
+void PortStopForce(::port::driving::Memory&,int); //0012C398,E-0112-P02.
+void PortSetOverallForceGain(::port::driving::Memory&,int,float); //0012C980.
+int GetWheelId(::port::driving::Memory&,int); //0012C2B8.
+void PortPlayCrash(::port::driving::Memory&,int,int,float,float); //0012C880.
+}

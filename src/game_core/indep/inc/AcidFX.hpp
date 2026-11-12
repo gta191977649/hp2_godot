@@ -49,3 +49,29 @@ public:
     void RemoveAutoEmitter();
 };
 } // namespace hp2::recovered
+
+#include "game_core/port/driving/object_view.hpp"
+#include <optional>
+#include "game_core/inc/bSlotPool.hpp"
+namespace port::track {struct AcidEffectServices;}
+namespace hp2::debug {
+// Debug00124FA0/001250A0, E-0099-W57/W109. Exact original AcidFX.hpp owner;
+// source leaves active groups/cache fields untouched. Parent unlinks first.
+class AcidEmitter:public ::port::driving::ObjectView {public:using ObjectView::ObjectView;void Sub_00124FA0(int flags){m_.word(0x326d6c,m_.word(0x326d6c)-1);if(flags&1)SlotPool(m_,m_.word(0x326d68)).Free(address_);}};
+class AcidParticle:public ::port::driving::ObjectView {public:using ObjectView::ObjectView;void Sub_0012A4A0(int);}; //E-0099-W53
+class AcidActiveGroup:public ::port::driving::ObjectView {public:using ObjectView::ObjectView;void Sub_0012A3B0(int);}; //E-0099-W53
+class AcidEffectSystem:public ::port::driving::ObjectView {
+public:using ObjectView::ObjectView;
+ void AddAutoEmitter(std::uint32_t); //001275F8, E-0099-W57
+ void RemoveAutoEmitter(std::uint32_t); //001277E0, E-0099-W57
+ void TweakerCheck(); //001275E8, E-0099-W67; JR RA/NOP.
+ void UpdateInterestPoints(); //001287F8, E-0099-W53
+ void DoTimeStep(float,const ::port::track::AcidEffectServices&); //00128870
+ // Debug00127858, E-0099-W53. Actual shared group/particle pools and raw fields.
+ // Optional port policy supplies only the original disc pdir stack W, never
+ // an implicit default or original deterministic value.
+ void TriggerEmitter(std::uint32_t emitter,float timestep,std::uint32_t car,std::optional<std::uint32_t> port_stack_vector_lane=std::nullopt);
+};
+}
+
+namespace hp2::debug {void rain_TimeStep(float); /*0012A2B0 E-0099-W67, original empty.*/}

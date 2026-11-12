@@ -15,3 +15,7 @@ public:
     void Initialize();
 };
 } // namespace hp2::recovered
+
+// TASK-0099 E-0099-W40. Port-side shared-Memory declaration; source owns original001CC238.
+#include "game_core/port/driving/memory.hpp"
+namespace hp2::debug {std::uint32_t GetActiveCameras(::port::driving::Memory&);}

@@ -11,6 +11,13 @@
 
 #include "game_core/port/not_implemented.hpp"
 #include "game_core/port/driving/memory.hpp"
+#include "game_core/port/driving/player_services.hpp"
+
+namespace hp2::debug {
+// Debug001C2ED0, E-0099-W63. Exact original null-editor branch. Production
+// recording stays explicit at the actual member target, never a fake callback.
+void MaybeAddTrackRoutePoint(::port::driving::Memory& m,std::uint32_t,std::uint32_t,float,int,int){if(m.word(0x3281d4))hp2::not_implemented("0x001C24A8","actual TrackRouteEditor recording dependency is not reconstructed");}
+}
 
 namespace hp2::recovered {
 // Debug001C2ED0; E-0046-C01. Host car binding supplies original position/velocity.
@@ -32,3 +39,8 @@ void TrackRouteEditor::GetCameraPosition() {
     hp2::not_implemented("0x001C4188", "TrackRouteEditor::GetCameraPosition (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+namespace hp2::debug {
+// Debug001C2E90, E-0099-W67. Actual null-editor gate precedes the member call.
+void ServiceTrackRouteEditor(::port::driving::Memory& m){if(m.word(0x3281d4))hp2::not_implemented("0x001C1D40","actual TrackRouteEditor.Service is required");}
+}

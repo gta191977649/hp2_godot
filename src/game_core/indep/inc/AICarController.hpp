@@ -2,6 +2,17 @@
 // Older placement comments below describe the historical host partitions; no retail ABI is asserted.
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
+#include "game_core/port/driving/object_view.hpp"
+namespace hp2::debug {
+class NearbyCarList : public ::port::driving::ObjectView {
+public:
+ using ObjectView::ObjectView;
+ void BuildArray(std::uint32_t driving_location,float min_time); //Debug00191570, E-0099-W47
+ std::uint32_t GetCarAhead(std::uint32_t car)const; //Debug00191AF8.
+ int GetCarsIndexInArray(std::uint32_t car)const; //Debug00191A68, E-0099-W37.
+ std::uint32_t GetNearbyCar(std::uint32_t car)const; //Debug00191AB0.
+};
+}
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: qualified_string; evidence: E-0019-N03.

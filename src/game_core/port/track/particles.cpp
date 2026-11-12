@@ -3,6 +3,8 @@
 #include <cmath>
 #include <stdexcept>
 #include <algorithm>
+#include <set>
+#include <map>
 namespace port::track {
 namespace {
 struct Read {const std::vector<std::uint8_t>& b;
@@ -26,6 +28,8 @@ ParticleResources decode_particles(const std::vector<std::uint8_t>& bytes){Read 
 #include "game_core/src/acidfxe.hpp"
 #include "game_core/port/not_implemented.hpp"
 #include <algorithm>
+#include <set>
+#include <map>
 namespace port::track {
 // Debug00128A60..00128B0C, E-0098-P01. Rendering consumes extra X/Y only.
 void rebuild_frontend_bases(ParticleDefinition& definition,const port::driving::Memory& memory){
@@ -115,6 +119,7 @@ void ParticleSimulation::kill_all_active_effects(SharedParticleState& shared){
 }
 void ParticleSimulation::step_shared(SharedParticleState& shared,port::driving::Memory& math,float dt,
  const std::array<std::array<float,3>,3>& points,bool frontend){
+ if(committed_world_snapshot_)throw std::logic_error("Committed World particles are read-only; simulation belongs to World");
  const auto own_particles=particle_count(),own_groups=groups_.size();
  if(shared.particles<own_particles || shared.groups<own_groups || shared.particles>1000 || shared.groups>400)
   throw std::logic_error("Shared particle pool ownership is inconsistent");
@@ -213,6 +218,7 @@ void ParticleSimulation::advance_native(port::driving::Memory& math,float dt,
  for(auto i=groups.begin();i!=groups.end();){const auto& data=definitions[i->definition];hp2::recovered::AcidEffectSystem::DoTimeStep(i->particles,data,dt,i->emitter>=static_count_&&data.controls[12]>0?car_velocity_:std::array<float,3>{});if(i->particles.empty())i=groups.erase(i);else ++i;}
 }
 void ParticleSimulation::step(port::driving::Memory& math,float dt,const std::array<std::array<float,3>,3>& points,bool frontend){
+ if(committed_world_snapshot_)throw std::logic_error("Committed World particles are read-only; simulation belongs to World");
  if(shared_accounting_)throw std::logic_error("Shared effects require step_shared and their pool ledger");
  if(frontend && gpu_emission_)hp2::not_implemented("0x00128870","frontend dynamic particle bases require the native backend");
  if(gpu_emission_){auto next=*this;next.advance_gpu(math,dt,points);*this=std::move(next);return;}
@@ -274,5 +280,38 @@ void ParticleSimulation::advance_gpu(port::driving::Memory& math,float dt,const 
   particles.erase(std::remove_if(particles.begin(),particles.end(),[&](Particle& p){const int life=int(p.life)-ticks;if(life<1)return true;p.life=static_cast<std::int16_t>(life);return false;}),particles.end());
   if(particles.empty()){command.kind=ParticleGpuCommandKind::RemoveGroup;command.timestep=0;gpu_commands_.push_back(std::move(command));group=groups_.erase(group);}else ++group;
  }
+}
+}
+
+
+namespace port::track {
+// TASK-0107 E-0107-P01. Port snapshot reader of the existing W53 source
+// AcidActiveGroup and packed AcidParticle layouts (acidfxe.cpp 00127858/00128870).
+// Definition field correspondence is the same retained544-byte schema consumed
+// by decode_particles; source-computed colour/extra bases are copied verbatim.
+void ParticleSimulation::import_committed_world(const port::driving::Memory& m,std::uint32_t system){
+ ParticleResources resources;std::list<ParticleGroup> groups;std::map<std::uint32_t,std::size_t> definitions;std::set<std::uint32_t> visited_groups,visited_particles;
+ const auto string_at=[&](std::uint32_t address,unsigned count){std::string out;for(unsigned i=0;i<count;++i){const auto c=m.byte(address+i);if(!c)break;out.push_back(static_cast<char>(c));}return out;};
+ const auto floats=[&](auto& target,std::uint32_t address){for(std::size_t i=0;i<target.size();++i)target[i]=m.scalar(address+static_cast<std::uint32_t>(4*i));};
+ for(auto group=m.word(system);group!=system;group=m.word(group)){
+  if(!group||!visited_groups.insert(group).second)throw std::runtime_error("Malformed committed World AcidFX group ring");
+  const auto data=m.word(group+8);if(!data)throw std::runtime_error("Committed World AcidFX group has no source definition");
+  auto found=definitions.find(data);std::size_t index;
+  if(found==definitions.end()){
+   index=resources.definitions.size();definitions.emplace(data,index);ParticleDefinition d;
+   d.name_hash=m.word(data+8);d.texture_hash=m.word(data+12);d.group_hash=m.word(data+16);for(unsigned i=0;i<8;++i)d.flags[i]=m.byte(data+24+i);
+   floats(d.controls,data+32);floats(d.volume_center,data+96);floats(d.volume_extent,data+112);d.far_clip=m.scalar(data+128);d.gravity=m.scalar(data+132);d.drag=m.scalar(data+136);d.max_pixel_size=m.scalar(data+140);
+   floats(d.key_positions,data+144);floats(d.colour_matrix,data+160);floats(d.size,data+224);floats(d.relative_angle,data+240);floats(d.colour_basis,data+256);floats(d.extra_basis,data+320);
+   d.name=string_at(data+384,64);d.texture_name=string_at(data+448,48);d.group_name=string_at(data+496,48);resources.definitions.push_back(std::move(d));
+  }else index=found->second;
+  ParticleGroup output;output.id=group;output.definition=index;output.emitter=0;
+  const auto head=group+20;
+  for(auto particle=m.word(head);particle!=head;particle=m.word(particle)){
+   if(!particle||!visited_particles.insert(particle).second)throw std::runtime_error("Malformed committed World AcidFX particle ring");
+   Particle value;value.life=m.signed_half(particle+8);value.angle=m.half(particle+10);value.speed=m.half(particle+12);value.inherit=m.byte(particle+14);value.frame=m.byte(particle+31);
+   for(unsigned axis=0;axis<3;++axis){value.position[axis]=m.scalar(particle+16+4*axis);value.direction[axis]=m.signed_byte(particle+28+axis);}output.particles.push_back(value);
+  }groups.push_back(std::move(output));
+ }
+ resources_=std::move(resources);groups_=std::move(groups);order_.clear();definition_.clear();gpu_commands_.clear();gpu_emission_=false;shared_accounting_=false;committed_world_snapshot_=true;
 }
 }

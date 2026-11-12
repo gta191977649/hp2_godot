@@ -30,3 +30,23 @@ public:
     void DistanceIsWithinRoute();
 };
 } // namespace hp2::recovered
+
+// TASK-0099 E-0099-W74. Exact original inline source marker TrackRoute.hpp.
+// Memory-view signatures are port operands; original forwarding bodies only.
+#include "game_core/port/driving/object_view.hpp"
+namespace port::race {struct SnapshotRoutePointer{std::uint32_t address;};struct SnapshotRoutePointPointer{std::uint32_t address;};}
+namespace hp2::debug {
+class TrackRouteManager:public ::port::driving::ObjectView {
+public:using ObjectView::ObjectView;
+ void DoSnapshot(std::uint32_t pproute,std::uint32_t snapshot); //001CA718, W74 inline.
+ void DoSnapshot(std::uint32_t pproute_point,std::uint32_t route,std::uint32_t snapshot); //001CA700.
+ void DoPointerSnapshot(std::uint32_t snapshot,::port::race::SnapshotRoutePointer); //001BFBE0, W74.
+ void DoPointerSnapshot(std::uint32_t snapshot,::port::race::SnapshotRoutePointPointer,std::uint32_t route); //001BFC78.
+ void DoPointerSnapshot(std::uint32_t snapshot,::port::race::SnapshotRoutePointPointer); //001BFD50.
+};
+}
+
+namespace hp2::debug {
+inline void TrackRouteManager::DoSnapshot(std::uint32_t pointer,std::uint32_t snapshot){DoPointerSnapshot(snapshot,::port::race::SnapshotRoutePointer{pointer});}
+inline void TrackRouteManager::DoSnapshot(std::uint32_t pointer,std::uint32_t route,std::uint32_t snapshot){DoPointerSnapshot(snapshot,::port::race::SnapshotRoutePointPointer{pointer},route);}
+}

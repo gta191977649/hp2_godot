@@ -1,6 +1,14 @@
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
 #include "game_core/port/track/voronoi.hpp"
+#include <optional>
+namespace port::driving {class Memory;}
+namespace hp2::debug {
+// Debug001CD860, E-0099-W38. Explicit original raw constructor.
+void Sub_001CD860(::port::driving::Memory&,std::uint32_t,std::uint32_t,std::uint32_t);
+// Debug001CD8B0; E-0099-W19. Explicit raw original VCWitness destructor.
+void Sub_001CD8B0(::port::driving::Memory&,std::uint32_t,int);
+}
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
@@ -44,6 +52,16 @@ public:
 namespace hp2::recovered {
 class VCPolyhedron {
 public:
+    static void Sub_001CFFA8(::port::driving::Memory&,std::uint32_t); //Debug ctor, E-0099-W38
+    // Debug001D01C8/001D0D10/001D0990; E-0099-W23. Original shared Memory.
+    static void MemoryImageLoad(::port::driving::Memory&,std::uint32_t,const std::array<std::uint32_t,4>&,const std::array<int,4>&);
+    static void SetVoronoiPlanes(::port::driving::Memory&,std::uint32_t);
+    // Debug001D0A50/001D0B08, E-0099-W38. Real original raw feature identities.
+    static std::uint32_t GetFeatureCode(const ::port::driving::Memory&,std::uint32_t poly,std::uint32_t feature);
+    static std::uint32_t GetFeature(const ::port::driving::Memory&,std::uint32_t poly,std::uint32_t code);
+
+    // Debug001D00E8/001D0120; E-0099-W23. Original explicit raw destruction.
+    static void Sub_001D00E8(::port::driving::Memory&,std::uint32_t,int);
     // Debug 0x001D01C8/001D0D10; E-0048-T04; memory-image conversion host binding.
     static void MemoryImageLoad(port::track::VoronoiPolyhedron&,const port::track::VoronoiImage&);
     // ELF 0x001D3100; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d3100.md.
@@ -180,6 +198,7 @@ public:
 namespace hp2::recovered {
 class VCWitness {
 public:
+    static void DoSnapshot(::port::driving::Memory&,std::uint32_t witness,std::uint32_t snapshot); //001CD918 E-0099-W76.
     // Debug 0x001CE5F8; E-0048-T05.
     static int SubCheckEdgeEdge(port::track::VoronoiWitness&,const port::track::VoronoiPolyhedron&,std::uint32_t,const port::track::VoronoiTransformedFeature&,int);
     // Debug 0x001CDA08; E-0048-T05.
@@ -193,6 +212,9 @@ public:
     // Debug 0x001CEC10; E-0048-T05.
     static int CheckEdgeFace(port::track::VoronoiWitness&,const port::track::VoronoiPolyhedron&,const port::track::VoronoiPolyhedron&,const port::track::VoronoiTransform&,const port::track::VoronoiTransform&);
     // TASK-0048 E-0048-T05; Debug original feature-walk host binding.
+    // Debug001CF360, E-0099-W38. Actual raw pointers/planes; required optional
+    // PC policy only where original CP stores consume uninitialized stack pads.
+    static int VClip(::port::driving::Memory&,std::uint32_t witness,std::uint32_t rotation1,std::uint32_t position1,std::uint32_t rotation2,std::uint32_t position2,std::optional<std::uint32_t> port_padding);
     static int VClip(port::track::VoronoiWitness&,const port::track::VoronoiPolyhedron&,const port::track::VoronoiPose&,const port::track::VoronoiPolyhedron&,const port::track::VoronoiPose&);
     // ELF 0x001D0890; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d0890.md.
     // Original Debug reference: VCWitness::VCWitness(VCPolyhedron *, VCPolyhedron *); constructor/destructor entry is not a native C++ lifetime operation.

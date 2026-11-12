@@ -25,3 +25,39 @@ public:
     void ReadData();
 };
 } // namespace hp2::recovered
+
+// TASK-0099 E-0099-W74. Explicit logical Debug snapshot view; no native C++ ABI.
+// Original fields: timers+28/+2C; capture/restore/checksum/verify bytes+3C..3F;
+// depth+40, overflow+41, sectionNumber+42, dataPosition+150,size+154,data+158.
+#include "game_core/port/driving/object_view.hpp"
+namespace port::race {
+// Port operand carrier disambiguates original pointer-type MoveData overloads.
+struct SnapshotMatrix {std::uint32_t address;};
+}
+namespace hp2::debug {
+// Debug enum recovered verbatim; E-0099-W81, type-eReplaySpecialEvent.json.
+enum eReplaySpecialEvent {REPLAY_SPECIAL_EVENT_FORCE_RACE_FINISH=0,REPLAY_SPECIAL_EVENT_DRIVER_MODE=1,REPLAY_SPECIAL_EVENT_DAMAGE_MODE=2,REPLAY_SPECIAL_EVENT_TRANSMISSION_TYPE=3,REPLAY_SPECIAL_EVENT_JUMP_CAM=4,REPLAY_SPECIAL_EVENT_ZONE_CAM=5,NUM_REPLAY_SPECIAL_EVENTS=6};
+class ReplaySnapshot:public ::port::driving::ObjectView {
+public:using ObjectView::ObjectView;
+ void Init(std::uint32_t name); //0013CAE8; original logical C-string operand.
+ std::uint32_t GetChecksum(std::uint32_t pdata,int data_size,int memory_size)const; //0013CB68.
+ void MoveData(std::uint32_t pdata,int data_size,int memory_size=-1,int sign_extend=0); //0013CD08.
+ void MoveData(::port::race::SnapshotMatrix matrix,int data_size); //0013CF00; data_size unused by source.
+ void BeginSection(std::uint32_t object,std::uint32_t name); //0013D088.
+ void BeginSection(std::uint32_t name){BeginSection(0,name);} //Original header overload emitted001369F8.
+ void EndSection(); //0013D158.
+ void BeginNamedSection(std::uint32_t name){BeginSection(0,name);} //0013EB20 original inline.
+ void EndNamedSection(){EndSection();} //0013EB18 original inline.
+ void VerifyData(std::uint32_t pdata,int data_size,int memory_size=-1,int sign_extend=0); //0013CED0.
+ void ReadData(std::uint32_t pdata,int data_size,int memory_size,int sign_extend);
+ void WriteData(std::uint32_t pdata,int data_size,int memory_size,int sign_extend);
+ void VerifyMoveDataInSync(std::uint32_t section_name,std::uint32_t func_name);
+};
+}
+
+#include "game_core/port/race/snapshot_services.hpp"
+namespace hp2::debug {
+class DemoModeReplay:public ::port::driving::ObjectView {public:using ObjectView::ObjectView;
+ void ServiceRecording(bool took_snapshot,const ::port::race::SnapshotServices& ={}); //0013F2F0,W74; active file operations explicit.
+};
+}

@@ -471,6 +471,17 @@ int main() {
         check(wrapped_frame.quads[2].destination.y == 12 &&
               wrapped_frame.quads[3].destination.y == 24, "word lookahead and explicit break use successive rows");
 
+        // E-0112-P03: Debug explicit rectangle drawing is per widget and starts
+        // at TopLeft even when the ordinary text flags request right alignment.
+        detail.widgets[0].port_text_rectangle=std::array<float,4>{{0,0,25,60}};
+        detail.widgets[0].text_align=1;
+        runtime::build_frame(detail,sizes,{},wrapped_frame);
+        check(wrapped_frame.quads.size()==4,"Debug source rectangle lost wrapped letters");
+        check(wrapped_frame.quads[0].destination.x==0&&wrapped_frame.quads[2].destination.y==12&&wrapped_frame.quads[3].destination.y==24,"Debug rectangle applied ordinary alignment or lost source line breaks");
+        auto second_objective=detail.widgets[0];second_objective.name_hash+=1;second_objective.x=100;second_objective.text="A@B";second_objective.port_text_rectangle=std::array<float,4>{{100,0,25,60}};detail.widgets.push_back(second_objective);
+        runtime::build_frame(detail,sizes,{},wrapped_frame);
+        check(wrapped_frame.quads.size()==6,"Per-widget rectangles failed independent two-objective rendering");
+
         // --- the frame crosses a backend boundary with no device type ----------------------
         FakeBackend backend;
         resources.add(kMovie, 512, 256);

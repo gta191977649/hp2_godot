@@ -2,6 +2,8 @@
 #include <cstring>
 #include <limits>
 #include <stdexcept>
+#include <algorithm>
+#include <new>
 
 namespace port::driving {
 Memory::Footprint Memory::footprint() const{
@@ -9,15 +11,42 @@ Memory::Footprint Memory::footprint() const{
     for(const auto& region:regions_)result.payload_bytes+=region.second.size();
     return result;
 }
+void Memory::set_payload_budget(std::optional<std::size_t> capacity){
+    if(capacity&&*capacity<charged_payload_)throw std::invalid_argument("PC payload budget is below existing allocations");
+    payload_budget_=capacity;
+}
+std::optional<std::size_t> Memory::free_payload_bytes()const{
+    if(!payload_budget_)return std::nullopt;
+    return *payload_budget_-charged_payload_;
+}
+std::size_t Memory::largest_admitted_payload(std::uint32_t alignment)const{
+    if(!alignment||(alignment&(alignment-1)))throw std::invalid_argument("Invalid logical allocation alignment");
+    const auto align=[&](std::uint64_t value){return (value+alignment-1)&~std::uint64_t(alignment-1);};
+    constexpr std::uint64_t ceiling=0xffffffffull-16;
+    auto cursor=align(next_);std::uint64_t largest=0;
+    for(const auto& region:regions_){
+        if(cursor>ceiling)break;
+        const std::uint64_t begin=region.first,end=begin+region.second.size();
+        if(end<=cursor)continue;
+        if(cursor<begin)largest=std::max(largest,std::min(begin,ceiling)-cursor);
+        cursor=align(end);
+    }
+    if(cursor<=ceiling)largest=std::max(largest,ceiling-cursor);
+    if(payload_budget_)largest=std::min(largest,std::uint64_t(*payload_budget_-charged_payload_));
+    return static_cast<std::size_t>(largest);
+}
+Memory::Temporary::Temporary(Memory& memory,std::uint32_t size):memory_(memory),address_(memory.allocate(size)){}
+Memory::Temporary::~Temporary() noexcept{memory_.release(address_);}
 Memory::Scratch::~Scratch() noexcept {
-    while(memory_.allocations_.size()>count_){memory_.regions_.erase(memory_.allocations_.back());memory_.allocations_.pop_back();}
+    while(memory_.allocations_.size()>count_){const auto address=memory_.allocations_.back();memory_.charged_payload_-=memory_.regions_.at(address).size();memory_.regions_.erase(address);memory_.allocations_.pop_back();}
     memory_.next_=next_;
 }
 const std::uint8_t* Memory::resolve(Address address,std::size_t size) const {
     const auto end=std::uint64_t(address)+size;
     if(end>0x100000000ull)throw std::out_of_range("Logical address range wraps");
     auto it=regions_.upper_bound(address);
-    if(it==regions_.begin())throw std::out_of_range("Unmapped logical address "+std::to_string(address));
+    if(it==regions_.begin())
+        throw std::out_of_range("Unmapped logical address "+std::to_string(address));
     --it;const auto offset=std::size_t(address-it->first);
     if(offset>it->second.size()||size>it->second.size()-offset)throw std::out_of_range("Truncated logical region at "+std::to_string(address)+" length "+std::to_string(size));
     return it->second.data()+offset;
@@ -32,19 +61,35 @@ void Memory::map(Address address,const std::vector<std::uint8_t>& bytes){
     regions_.emplace(address,bytes);
 }
 void Memory::map(Address address,std::uint32_t size){map(address,std::vector<std::uint8_t>(size));}
+void Memory::unmap(Address address,std::size_t expected_size){
+    if(std::find(allocations_.begin(),allocations_.end(),address)!=allocations_.end())throw std::invalid_argument("Owned logical allocation requires release");
+    const auto found=regions_.find(address);
+    if(found==regions_.end()||found->second.size()!=expected_size)throw std::invalid_argument("Logical unmap requires exact mapped region start and size");
+    regions_.erase(found);
+}
 Memory::Address Memory::allocate(std::uint32_t size,std::uint32_t alignment){
     if(!size||!alignment||(alignment&(alignment-1)))throw std::invalid_argument("Invalid logical allocation");
+    if(payload_budget_&&size>*payload_budget_-charged_payload_)throw std::bad_alloc();
     auto candidate=(std::uint64_t(next_)+alignment-1)&~std::uint64_t(alignment-1);
     while(candidate+size+16<=0xffffffffull){
         auto it=regions_.upper_bound(static_cast<Address>(candidate));
         if(it!=regions_.begin()) {auto previous=std::prev(it);auto end=std::uint64_t(previous->first)+previous->second.size();if(end>candidate){candidate=(end+alignment-1)&~std::uint64_t(alignment-1);continue;}}
         if(it!=regions_.end()&&candidate+size>it->first){candidate=(std::uint64_t(it->first)+it->second.size()+alignment-1)&~std::uint64_t(alignment-1);continue;}
-        auto result=static_cast<Address>(candidate);map(result,size);allocations_.push_back(result);
+        auto result=static_cast<Address>(candidate);allocations_.push_back(result);
+        try{map(result,size);}catch(...){allocations_.pop_back();throw;}
+        charged_payload_+=size;
         // An unmapped port-owned guard prevents an unobserved object field from
         // silently aliasing the next component's list links.
         next_=result+size+16;return result;
     }
     throw std::overflow_error("Logical allocator exhausted");
+}
+void Memory::release(Address address){
+    const auto found=std::find(allocations_.begin(),allocations_.end(),address);
+    if(found==allocations_.end())throw std::invalid_argument("Cannot release non-owned logical allocation");
+    charged_payload_-=regions_.at(address).size();
+    regions_.erase(address);allocations_.erase(found);
+    // Do not reuse an address that may still be held by a stale observer.
 }
 init::ByteView Memory::view(Address address,std::size_t size){return {resolve(address,size),size};}
 std::uint8_t Memory::byte(Address a)const{return *resolve(a,1);}

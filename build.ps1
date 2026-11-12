@@ -5,6 +5,7 @@ $portPreset = 'godot-debug'
 $portJobs = 4
 $portClean = $false
 $portRun = $false
+$portDebug = $false
 $portProfile = $false
 $portEditor = $false
 $portPrepareWorkers = 0
@@ -15,10 +16,11 @@ $ErrorActionPreference = 'Stop'
 
 function Show-PortBuildHelp {
     @'
-Usage: ./build.ps1 [--clean] [--run | --profile | --editor] [--preset NAME] [--jobs N]
+Usage: ./build.ps1 [--clean] [--run | --debug | --profile | --editor] [--preset NAME] [--jobs N]
 
   --clean         Clean generated build outputs, then rebuild.
   --run           Build successfully, then run the frontend.
+  --debug         Build and run with engine debugging and the Info overlay.
   --profile       Run with the global ImGui profiler, function scopes and monitors.
   --editor        Open the project editor for Profiler / Visual Profiler / Monitors.
   --preset NAME   godot-debug (default), godot-release, or native-debug.
@@ -27,12 +29,20 @@ Usage: ./build.ps1 [--clean] [--run | --profile | --editor] [--preset NAME] [--j
   --render-thread=safe|separate   Godot render thread mode (default: safe).
   --track-submit-math=true|false CPU submission math candidate (default: false).
   --track-vehicle-depth-staging=true|false  Bulk depth parameters (default: false).
+  --race-render-profile=fidelity|performance60   Race raster and mirror profile.
+  --race-godot-sampling=true|false  Godot texture sampling for ordinary race surfaces.
+  --race-fxaa=true|false            Godot FXAA for the race colour viewport.
+  --track-opt-depth_batches=true|false        Experimental encoded-depth batching.
+  --track-opt-race_world_batches=true|false   Experimental race static batching.
+  --track-opt-shadow_stream=true|false        Experimental race shadow mesh uploads.
+  --track-opt-static_depth_sources=true|false Experimental static depth submission.
   --track-depth-discovery-cache=true|false  Source/field depth cache (default: false).
   --help, -h      Show this help.
 
 Examples:
   ./build.ps1
   ./build.ps1 --run
+  ./build.ps1 --debug
   ./build.ps1 --clean --run
   ./build.ps1 --clean --preset native-debug
 
@@ -48,9 +58,13 @@ try {
             '^(--help|-h)$' { Show-PortBuildHelp; exit 0 }
             '^--render-prepare-workers=(0|2|4)$' { $portPrepareWorkers = [int]$Matches[1]; continue }
             '^--(?:track-submit-math|track-vehicle-depth-staging|track-depth-discovery-cache)=(?:true|false)$' { $portRenderCandidates += $portOption; continue }
+            '^--race-render-profile=(?:fidelity|performance60)$' { $portRenderCandidates += $portOption; continue }
+            '^--race-(?:godot-sampling|fxaa)=(?:true|false)$' { $portRenderCandidates += $portOption; continue }
+            '^--track-opt-(?:depth_batches|race_world_batches|shadow_stream|static_depth_sources|instancing)=(?:true|false)$' { $portRenderCandidates += $portOption; continue }
             '^--render-thread=(safe|separate)$' { $portRenderThread = $Matches[1]; continue }
             '^--clean$'  { $portClean = $true; continue }
             '^--run$' { $portRun = $true; continue }
+            '^--debug$' { $portRun = $true; $portDebug = $true; continue }
             '^--profile$' { $portRun = $true; $portProfile = $true; continue }
             '^--editor$' { $portRun = $true; $portEditor = $true; continue }
             '^--preset=(.+)$' { $portPreset = $Matches[1]; continue }
@@ -84,6 +98,7 @@ try {
     if ($portEditor -and $portRenderThread -eq 'separate') { throw 'Separate render mode must be tested standalone; the editor forces Safe.' }
     if ($portProfile -and $portEditor) { throw 'Choose --profile or --editor.' }
     if ($portProfile -and $portPreset -ne 'godot-debug') { throw '--profile requires godot-debug for native ImGui tooling.' }
+    if ($portDebug -and $portPreset -ne 'godot-debug') { throw '--debug requires the godot-debug preset.' }
     if ($portRun -and $portPreset -eq 'native-debug') {
         throw '--run needs a Godot preset; native-debug builds the independent core only.'
     }
@@ -134,6 +149,10 @@ try {
             Write-Output 'Starting the frontend.'
             $portEngineArgs = @('--render-thread', $portRenderThread)
             $portUserArgs = @("--render-prepare-workers=$portPrepareWorkers", "--render-thread-requested=$portRenderThread") + $portRenderCandidates
+            if ($portDebug) {
+                $portEngineArgs += '--debug'
+                $portUserArgs += '--info'
+            }
             if ($portEditor) {
                 & $portEngine @portEngineArgs --editor --path (Join-Path $portRoot 'godot') -- @portUserArgs
             } elseif ($portProfile) {

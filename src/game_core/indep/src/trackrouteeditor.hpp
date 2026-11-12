@@ -15,3 +15,6 @@ public:
     void IsButtonPressedRepeat();
 };
 } // namespace hp2::recovered
+
+namespace port::driving {class Memory;}
+namespace hp2::debug {void ServiceTrackRouteEditor(::port::driving::Memory&); /*001C2E90 E-0099-W67.*/}

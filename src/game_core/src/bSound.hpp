@@ -1,5 +1,18 @@
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
+#include "game_core/port/driving/object_view.hpp"
+#include <string>
+namespace hp2::debug {
+class bSound:public ::port::driving::ObjectView {
+public:using ObjectView::ObjectView;
+ // Debug0026FAB8; E-0099-W31. Actual ordered case-sensitive region lookup.
+ std::uint32_t Region(const std::string&)const;
+ void SetCategoryVolume(std::uint32_t,float); //0026FD28,E-0112-P03.
+ float GetCategoryVolume(std::uint32_t)const; //0026FE38 E-0099-W40
+ void notifyClient(std::uint32_t message,std::uint32_t object); //0026FF50 E-0099-W40
+ void Printf(std::uint32_t literal)const; //002702C8, W62 no-varargs literal subset.
+};
+}
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.

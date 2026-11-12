@@ -23,6 +23,7 @@ class TrackSubmissionCache {
     const port::track::Scene* scene_=nullptr;
     std::vector<TrackSectionOwner> owners_;
     std::vector<port::track::DrawCommand> inputs_;
+    std::vector<bool> world_exclusions_;
     std::vector<TrackCommandBatch> plan_;
     bool valid_=false,world_=false,dynamic_=false;
     struct SurfaceDescriptor {std::size_t vertices,indices;std::uint32_t texture,material;};
@@ -47,14 +48,23 @@ class TrackSubmissionCache {
         if(!a.effect.alpha_pass)x.depth=y.depth=0;
         return same_submission_input(x,y);
     }
-    std::vector<TrackCommandBatch> dynamic_plan(const port::track::Scene& scene,const port::track::Frame& frame,bool world){
+    std::vector<TrackCommandBatch> dynamic_plan(const port::track::Scene& scene,const port::track::Frame& frame,bool world,const std::vector<bool>& exclusions){
         std::vector<TrackCommandBatch> result;result.reserve(frame.commands.size());
         constexpr auto maximum=std::size_t(std::numeric_limits<std::int32_t>::max());
         for(std::size_t i=0;i<frame.commands.size();++i){
             const auto counts=surface(scene,frame.commands[i]);
             if(counts.vertices>maximum)throw std::length_error("Track mesh exceeds host signed index capacity");
             const bool capacity=!result.empty()&&result.back().vertices<=maximum&&counts.vertices<=maximum-result.back().vertices;
-            if(!capacity||!same_state(scene,frame.commands[i-1],frame.commands[i]))result.emplace_back();
+            bool barrier=false;
+            if(i&&!exclusions.empty()){
+                const auto& a=frame.commands[i-1];
+                const auto& b=frame.commands[i];
+                barrier=exclusions[i-1]||exclusions[i]||a.lod!=b.lod||
+                    a.instance>=owners_.size()||b.instance>=owners_.size()||
+                    owners_[a.instance].count!=1||owners_[b.instance].count!=1||
+                    owners_[a.instance].section!=owners_[b.instance].section;
+            }
+            if(!capacity||barrier||!same_state(scene,frame.commands[i-1],frame.commands[i]))result.emplace_back();
             auto& batch=result.back();batch.subranges.push_back({i,batch.vertices,counts.vertices,batch.indices,counts.indices});
             batch.vertices+=counts.vertices;batch.indices+=counts.indices;
         }
@@ -66,7 +76,8 @@ class TrackSubmissionCache {
                 const auto& a=frame.commands[merged.back().subranges.back().command];
                 const auto& b=frame.commands[batch.subranges.front().command];
                 auto normalized=b;normalized.matrix=a.matrix;
-                append=eligible_track_world_batch(a)&&eligible_track_world_batch(b)&&a.lod==b.lod&&
+                const bool static_pair=exclusions.empty()||(!exclusions[merged.back().subranges.back().command]&&!exclusions[batch.subranges.front().command]);
+                append=static_pair&&eligible_track_world_batch(a)&&eligible_track_world_batch(b)&&a.lod==b.lod&&
                     same_state(scene,a,normalized)&&merged.back().vertices+batch.vertices<=65536;
                 if(append){
                     append=a.instance<owners_.size()&&b.instance<owners_.size()&&
@@ -88,20 +99,22 @@ public:
     std::uint64_t surface_hits=0,surface_builds=0,surface_evictions=0;
     std::size_t cached_surfaces()const{return surfaces_.size();}
     void clear(){scene_=nullptr;owners_.clear();inputs_.clear();plan_.clear();valid_=false;dynamic_=false;surfaces_.clear();hits=builds=owner_builds=compares=0;dynamic_hits=dynamic_builds=size_misses=state_misses=mode_misses=disabled_builds=0;surface_hits=surface_builds=surface_evictions=scene_builds=cold_builds=0;last_build_reason="none";}
-    const std::vector<TrackCommandBatch>& acquire(const port::track::Scene& scene,const port::track::Frame& frame,bool world,bool enabled,bool dynamic_plan_enabled=false){
+    const std::vector<TrackCommandBatch>& acquire(const port::track::Scene& scene,const port::track::Frame& frame,bool world,bool enabled,bool dynamic_plan_enabled=false,const std::vector<bool>& exclusions={}){
+        if(!exclusions.empty()&&exclusions.size()!=frame.commands.size())throw std::invalid_argument("World batch exclusions must match source commands");
+        dynamic_plan_enabled|=!exclusions.empty();
         const bool changed_scene=scene_!=&scene;
         if(changed_scene){clear();scene_=&scene;++scene_builds;}
-        if(!enabled){last_build_reason="disabled";++disabled_builds;valid_=false;plan_=world?contiguous_track_world_batches(scene,frame):contiguous_track_batches(scene,frame);++builds;return plan_;}
+        if(world&&owners_.empty()){owners_=track_section_owners(scene);++owner_builds;}
+        if(!enabled){last_build_reason="disabled";++disabled_builds;valid_=false;plan_=exclusions.empty()?(world?contiguous_track_world_batches(scene,frame,&owners_):contiguous_track_batches(scene,frame)):dynamic_plan(scene,frame,world,exclusions);++builds;return plan_;}
         if(!valid_){++cold_builds;last_build_reason=changed_scene?"scene":"cold";}
         else if(world_!=world||dynamic_!=dynamic_plan_enabled){++mode_misses;last_build_reason="mode";}
         else if(inputs_.size()!=frame.commands.size()){++size_misses;last_build_reason="selection_size";}
-        bool same=valid_&&world_==world&&dynamic_==dynamic_plan_enabled&&inputs_.size()==frame.commands.size();
+        bool same=valid_&&world_==world&&dynamic_==dynamic_plan_enabled&&inputs_.size()==frame.commands.size()&&world_exclusions_==exclusions;
         if(same)for(std::size_t i=0;i<inputs_.size();++i){++compares;if(!(dynamic_plan_enabled?same_submission_plan_input(inputs_[i],frame.commands[i]):same_submission_input(inputs_[i],frame.commands[i]))){same=false;++state_misses;last_build_reason="selection_or_state";break;}}
         if(same){++hits;if(dynamic_plan_enabled)++dynamic_hits;return plan_;}
-        if(world&&owners_.empty()){owners_=track_section_owners(scene);++owner_builds;}
-        plan_=dynamic_plan_enabled?dynamic_plan(scene,frame,world):(world?contiguous_track_world_batches(scene,frame,&owners_):contiguous_track_batches(scene,frame));
+        plan_=dynamic_plan_enabled?dynamic_plan(scene,frame,world,exclusions):(world?contiguous_track_world_batches(scene,frame,&owners_):contiguous_track_batches(scene,frame));
         if(dynamic_plan_enabled)++dynamic_builds;
-        inputs_=frame.commands;world_=world;dynamic_=dynamic_plan_enabled;valid_=true;++builds;return plan_;
+        inputs_=frame.commands;world_exclusions_=exclusions;world_=world;dynamic_=dynamic_plan_enabled;valid_=true;++builds;return plan_;
     }
 };
 }

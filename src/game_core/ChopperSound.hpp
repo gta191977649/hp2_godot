@@ -33,3 +33,14 @@ public:
     void ActivateSound();
 };
 } // namespace hp2::recovered
+
+#include "game_core/port/driving/object_view.hpp"
+namespace hp2::debug {
+class ChopperSound:public ::port::driving::ObjectView {
+public:using ObjectView::ObjectView;
+ void Sub_0020F960(std::uint32_t); //Debug ctor, E-0099-W94.
+ void Sub_0020F9E8(int); //Debug dtor, E-0099-W94.
+ void DeactivateSound(); //Debug0020FC20, E-0099-W98.
+};
+namespace sound {std::uint32_t CreateChopperSound(::port::driving::Memory&,std::uint32_t);} //0020FC90.
+}

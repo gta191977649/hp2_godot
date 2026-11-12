@@ -130,6 +130,18 @@ A silent fallback is indistinguishable from recovered behaviour at runtime, whic
 failure mode these rules exist to prevent. Keep the throw site at the boundary of the missing
 work, so the message points at the function that still needs reversing.
 
+### TASK-0111 user-authorized optional presentation policy (2026-11-06)
+
+The user explicitly requests minimal playable driving without stopping for every
+unimplemented optional feature, and requires every missing function to appear as
+a console WARNING. Port bindings may disable a specifically reviewed optional
+presentation subsystem before execution, identifying its original address,
+missing dependency and disabled capability. Retain a strict reconstruction mode.
+Original missing functions still throw; the observer reports every reached gap.
+Do not blanket-catch simulation failures, fabricate recovered return values or
+continue a partially executed physics/collision/route/input frame. This is a PC
+runtime policy, not original behavior or Verified equivalence. See TASK-0111.
+
 ## R4. Behaviour comes from the binary, not from taste
 
 - Do not "improve" recovered logic: keep the original's wrap-around, its modulo, its off-by-one,

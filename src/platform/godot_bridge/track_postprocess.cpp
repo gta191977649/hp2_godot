@@ -1,4 +1,5 @@
 #include "track_postprocess.hpp"
+#include "championship_timing.hpp"
 #include "vehicle_depth_staging.hpp"
 #include "platform/render/depth_sync.hpp"
 #include "game_core/src/ecstasy/eenveffectse.hpp"
@@ -22,6 +23,8 @@
 #include <godot_cpp/core/object.hpp>
 #include <godot_cpp/variant/packed_byte_array.hpp>
 #include <stdexcept>
+#include <algorithm>
+#include <cmath>
 #include <map>
 #include <set>
 #include <functional>
@@ -44,6 +47,11 @@ godot::Ref<godot::ShaderMaterial> material(const char* code){
  godot::Ref<godot::Shader> shader;shader.instantiate();shader->set_code(code);
  godot::Ref<godot::ShaderMaterial> result;result.instantiate();result->set_shader(shader);return result;
 }
+std::string encoded_depth_output(bool bias){
+ return std::string("\nfloat pp_lo=uintBitsToFloat(")+(bias?"0x40000040u":"0x40000010u")+
+  ");float pp_hi=uintBitsToFloat("+(bias?"0x40802000u":"0x40800000u")+
+  ");float pp_a=(-pp_hi*pp_near+pp_lo*pp_far)/(pp_far-pp_near);float pp_b=pp_far*pp_near*(pp_hi-pp_lo)/(pp_far-pp_near);uint pp_z=(floatBitsToUint(pp_a+pp_b/max(-VERTEX.z,0.000001))>>4u)&0xffffffu;ALBEDO=hp2_framebuffer_rgb(vec3(float(pp_z&255u),float((pp_z>>8u)&255u),float((pp_z>>16u)&255u))/255.0);ALPHA=1.0;\n";
+}
 godot::Ref<godot::ImageTexture> palette(const port::track::postprocess::Palette& p){
  godot::PackedByteArray bytes;bytes.resize(1024);auto* out=bytes.ptrw();
  for(unsigned i=0;i<256;i++)for(unsigned k=0;k<4;k++)out[4*i+k]=std::uint8_t(p[i]>>(8*k));
@@ -59,8 +67,9 @@ void copy_camera(godot::Camera3D* target,godot::Camera3D* source,unsigned mask,b
 }
 }
 struct TrackPostprocess::Impl {
+ double discovery_ms=0, proxy_ms=0, material_ms=0;
  bool reuse=false,occlusion=false,consumer_cache=true,parameter_notifications=true;
- bool vehicle_staging=false;std::uint64_t staged_reads=0,staged_misses=0;
+ bool vehicle_staging=false;std::uint64_t staged_reads=0,staged_misses=0,depth_uniform_writes=0;
  bool structure_observer=false;port::render::DepthDirtyState dirty;
  godot::Callable order_observer;std::set<std::uint64_t> order_parents;
  godot::Transform3D owner_transform;bool owner_transform_valid=false;
@@ -74,13 +83,35 @@ struct TrackPostprocess::Impl {
   material->set_shader_parameter(name,value);++parameter_sets;
  }
 
- struct Variant {godot::Ref<godot::ShaderMaterial> source,depth;godot::Array uniforms,values;std::vector<godot::StringName> names,dynamic_names;std::map<godot::StringName,int> uniform_slots;std::uint64_t shader_id=0;std::uint64_t staged_generation=0,staged_version=0;bool dynamic_contract=false,first_sync=true;float near_z=0,far_z=0;};
+ struct Variant {
+  godot::Ref<godot::ShaderMaterial> source,depth;
+  godot::Array uniforms,values;
+  std::vector<godot::StringName> names,dynamic_names;
+  std::vector<std::size_t> dynamic_staging_slots;
+  std::map<godot::StringName,int> uniform_slots;
+  std::array<std::uint64_t,vehicle_depth_staging::ParameterCount> staged_versions{};
+  std::uint64_t shader_id=0,staged_generation=0;
+  bool dynamic_contract=false,first_sync=true;
+  float near_z=0,far_z=0;
+ };
  std::map<std::uint64_t,Variant> variants;std::map<std::uint64_t,std::set<std::uint64_t>> material_meshes,mesh_materials;
  std::map<std::uint64_t,godot::Ref<godot::Shader>> shaders;
  std::map<std::uint64_t,bool> shader_writes;std::set<std::uint64_t> nonwriting_nodes;
  std::set<std::uint64_t> dirty_materials,tracked_materials,tracked_meshes,dirty_meshes,visible_sources;
  std::vector<std::uint64_t> source_meshes;int scene_node_count=-1;bool discovery_dirty=true;
  std::map<std::uint64_t,godot::MeshInstance3D*> proxies;
+ struct StaticBinding {
+  std::uint64_t material=0,version=0;
+  godot::Ref<godot::ArrayMesh> mesh;
+  godot::Transform3D transform;
+  float sorting_offset=0;
+ };
+ std::map<std::uint64_t,StaticBinding> static_bindings;
+ std::size_t static_sources=0;
+ std::map<std::uint64_t,godot::MeshInstance3D*> batched_proxies;
+ std::set<std::uint64_t> batched_sources;
+ godot::Ref<godot::ShaderMaterial> batched_material;
+ float batched_near=0,batched_far=0;
  std::map<std::uint64_t,std::pair<float,bool>> sorting_cache;
  port::track::postprocess::Palette cached_fog{},cached_focus{};
  bool cache_valid=false,fog_active=false,focus_active=false,history_ready=false;bool history_alpha_known[2]={false,false};
@@ -97,6 +128,7 @@ struct TrackPostprocess::Impl {
 };
 godot::Ref<godot::ShaderMaterial> TrackPostprocess::Impl::depth_material(const godot::Ref<godot::ShaderMaterial>& original,float n,float f,std::set<std::uint64_t>& synced_materials){
  auto& p=*this;
+ ChampionshipTimingScope timing(p.material_ms);
      auto& variant=p.variants[original->get_instance_id()];
      const auto shader_id=original->get_shader()->get_instance_id();if(variant.depth.is_valid()&&variant.shader_id!=shader_id)variant=Variant{};
      if(variant.depth.is_null()){
@@ -110,7 +142,7 @@ godot::Ref<godot::ShaderMaterial> TrackPostprocess::Impl::depth_material(const g
       const bool bias=depth.find("hp2_track_depth_coeff")!=std::string::npos;
       const bool particle=depth.find("particle_original_depth")!=std::string::npos;
       if(writing&&depth.find("hp2_framebuffer_rgb")==std::string::npos)throw std::runtime_error("Track depth proxy unsupported shader framebuffer conversion");
-      std::string output=writing?std::string("\nfloat pp_lo=uintBitsToFloat(")+(bias?"0x40000040u":"0x40000010u")+");float pp_hi=uintBitsToFloat("+(bias?"0x40802000u":"0x40800000u")+");float pp_a=(-pp_hi*pp_near+pp_lo*pp_far)/(pp_far-pp_near);float pp_b=pp_far*pp_near*(pp_hi-pp_lo)/(pp_far-pp_near);uint pp_z=(floatBitsToUint(pp_a+pp_b/max(-VERTEX.z,0.000001))>>4u)&0xffffffu;ALBEDO=hp2_framebuffer_rgb(vec3(float(pp_z&255u),float((pp_z>>8u)&255u),float((pp_z>>16u)&255u))/255.0);ALPHA=1.0;\n":"\ndiscard;\n";
+      std::string output=writing?encoded_depth_output(bias):"\ndiscard;\n";
       if(particle&&writing)output="\nuint pp_z=uint(particle_z)&0xffffffu;ALBEDO=hp2_framebuffer_rgb(vec3(float(pp_z&255u),float((pp_z>>8u)&255u),float((pp_z>>16u)&255u))/255.0);ALPHA=1.0;\n";
       depth.insert(end-1,output);depth.insert(depth.find("void vertex()"),"uniform float pp_near=0.5;uniform float pp_far=500.0;\n");
       for(const char* blend:{"blend_add","blend_sub","blend_mul","blend_premul_alpha"}){const auto pos=depth.find(blend);if(pos!=std::string::npos)depth.replace(pos,std::char_traits<char>::length(blend),"blend_mix");}
@@ -127,19 +159,40 @@ godot::Ref<godot::ShaderMaterial> TrackPostprocess::Impl::depth_material(const g
       if(p.dirty_materials.count(original->get_instance_id())||!p.tracked_materials.count(original->get_instance_id())){
        const bool full=variant.first_sync||p.dirty_materials.count(original->get_instance_id())||!p.reuse||!variant.dynamic_contract;
        const auto& names=full?variant.names:variant.dynamic_names;
-       vehicle_depth_staging::Registry::Snapshot staged;
-       const bool staged_valid=p.vehicle_staging&&!full&&vehicle_depth_staging::read_snapshot(original->get_instance_id(),shader_id,staged);
-       const bool unchanged=staged_valid&&variant.staged_generation==staged.generation&&variant.staged_version==staged.version;
-       for(const auto& name:names){const int u=variant.uniform_slots.at(name);godot::Variant value;bool published=false;
-        if(staged_valid)for(std::size_t i=0;i<staged.names.size();++i)if(staged.names[i]==name&&staged.valid[i]){published=true;++p.staged_reads;if(!unchanged)value=staged.values[i];break;}
-        if(published&&unchanged)continue;
-        if(!published){value=original->get_shader_parameter(name);++p.uniform_reads;if(p.vehicle_staging&&!full)++p.staged_misses;}
-        if(variant.values[u]!=value){variant.depth->set_shader_parameter(name,value);variant.values[u]=value;}
+       const auto staged=p.vehicle_staging&&!full
+           ? vehicle_depth_staging::read_view(original->get_instance_id(),shader_id)
+           : vehicle_depth_staging::Registry::ReadView{};
+       if(staged&&variant.staged_generation!=staged->generation){
+        variant.dynamic_staging_slots.clear();
+        for(const auto& name:names){
+         const auto found=std::find(staged->names.begin(),staged->names.end(),name);
+         variant.dynamic_staging_slots.push_back(std::size_t(found-staged->names.begin()));
+        }
+        variant.staged_versions.fill(0);
        }
-       if(staged_valid){variant.staged_generation=staged.generation;variant.staged_version=staged.version;}else{variant.staged_generation=variant.staged_version=0;}
+       for(std::size_t index=0;index<names.size();++index){
+        const auto& name=names[index];
+        godot::Variant value;
+        const auto slot=staged?variant.dynamic_staging_slots[index]:vehicle_depth_staging::ParameterCount;
+        if(staged&&slot<staged->values.size()&&staged->valid[slot]){
+         ++p.staged_reads;
+         const auto version=staged->parameter_versions[slot];
+         if(version!=0&&variant.staged_versions[slot]==version)continue;
+         variant.staged_versions[slot]=version;
+         value=staged->values[slot];
+        }else{
+         if(slot<variant.staged_versions.size())variant.staged_versions[slot]=0;
+         value=original->get_shader_parameter(name);
+         ++p.uniform_reads;
+         if(p.vehicle_staging&&!full)++p.staged_misses;
+        }
+        const int u=variant.uniform_slots.at(name);
+        if(variant.values[u]!=value){variant.depth->set_shader_parameter(name,value);++p.depth_uniform_writes;variant.values[u]=value;}
+       }
+       variant.staged_generation=staged?staged->generation:0;
        variant.first_sync=false;
       }
-      if(variant.near_z!=n){variant.depth->set_shader_parameter("pp_near",n);variant.near_z=n;}if(variant.far_z!=f){variant.depth->set_shader_parameter("pp_far",f);variant.far_z=f;}
+      if(variant.near_z!=n){variant.depth->set_shader_parameter("pp_near",n);++p.depth_uniform_writes;variant.near_z=n;}if(variant.far_z!=f){variant.depth->set_shader_parameter("pp_far",f);++p.depth_uniform_writes;variant.far_z=f;}
      }
  return variant.depth;
 }
@@ -148,8 +201,18 @@ void TrackPostprocess::set_occlusion_enabled(bool enabled){impl_->occlusion=enab
 void TrackPostprocess::mark_instance_batch(godot::MultiMeshInstance3D* node){if(node)impl_->instance_sources.insert(node->get_instance_id());}
 godot::Array TrackPostprocess::scheduled_viewports()const{godot::Array result;if(active()){result.push_back(impl_->colour->get_viewport_rid());result.push_back(impl_->depth->get_viewport_rid());result.push_back(impl_->history[impl_->history_index]->get_viewport_rid());}return result;}
 godot::Dictionary TrackPostprocess::stats()const{
- const auto& p=*impl_;godot::Dictionary d;d["vehicle_depth_staging"]=p.vehicle_staging;d["staged_parameter_reads"]=int64_t(p.staged_reads);d["staged_snapshot_reads"]=int64_t(vehicle_depth_staging::stats().snapshot_reads);d["staged_parameter_misses"]=int64_t(p.staged_misses);d["discovery_cache"]=p.discovery_cache;d["structure_observer"]=p.structure_observer;d["source_structure_epoch"]=int64_t(p.dirty.structure_epoch);d["discovery_scans"]=int64_t(p.discovery_scans);d["discovery_visits"]=int64_t(p.discovery_visits);d["proxy_creations"]=int64_t(p.proxy_creations);d["parameter_notifications"]=p.parameter_notifications;d["direct_parameter_sets"]=int64_t(p.direct_parameter_sets);d["direct_parameter_skips"]=int64_t(p.direct_parameter_skips);d["uniform_reads"]=int64_t(p.uniform_reads);d["parameter_sets"]=int64_t(p.parameter_sets);d["parameter_skips"]=int64_t(p.parameter_skips);d["depth_proxies"]=int64_t(p.proxies.size());d["instance_depth_proxies"]=int64_t(p.instance_proxies.size());d["depth_materials"]=int64_t(p.variants.size());d["depth_shaders"]=int64_t(p.shaders.size());
+ const auto& p=*impl_;godot::Dictionary d;
+ d["encoded_depth_batch_draws"]=int64_t(p.batched_proxies.size());
+ d["static_depth_sources"]=int64_t(p.static_sources);
+ d["encoded_depth_batched_sources"]=int64_t(p.batched_sources.size());
+ if(championship_timing_enabled()){
+  d["profile_discovery_ms"]=p.discovery_ms;
+  d["profile_proxy_ms"]=p.proxy_ms;
+  d["profile_material_ms"]=p.material_ms;
+ }
+ d["vehicle_depth_staging"]=p.vehicle_staging;d["staged_parameter_reads"]=int64_t(p.staged_reads);d["staged_snapshot_reads"]=int64_t(vehicle_depth_staging::stats().snapshot_reads);d["staged_parameter_misses"]=int64_t(p.staged_misses);d["discovery_cache"]=p.discovery_cache;d["structure_observer"]=p.structure_observer;d["source_structure_epoch"]=int64_t(p.dirty.structure_epoch);d["discovery_scans"]=int64_t(p.discovery_scans);d["discovery_visits"]=int64_t(p.discovery_visits);d["proxy_creations"]=int64_t(p.proxy_creations);d["parameter_notifications"]=p.parameter_notifications;d["direct_parameter_sets"]=int64_t(p.direct_parameter_sets);d["direct_parameter_skips"]=int64_t(p.direct_parameter_skips);d["uniform_reads"]=int64_t(p.uniform_reads);d["depth_uniform_writes"]=int64_t(p.depth_uniform_writes+p.direct_parameter_sets);d["parameter_sets"]=int64_t(p.parameter_sets);d["parameter_skips"]=int64_t(p.parameter_skips);d["depth_proxies"]=int64_t(p.proxies.size());d["instance_depth_proxies"]=int64_t(p.instance_proxies.size());d["depth_materials"]=int64_t(p.variants.size());d["depth_shaders"]=int64_t(p.shaders.size());
  const bool enabled=active();d["consumer_cache"]=p.consumer_cache;d["active"]=enabled;d["fog_active"]=enabled&&p.fog_active;d["focus_active"]=enabled&&p.focus_active;d["depth_alpha_active"]=enabled&&p.depth_alpha_active;d["black_white_active"]=enabled&&p.bw_active;d["filter_active"]=enabled&&p.filter_active;d["radial_active"]=enabled&&p.radial_active;d["previous_active"]=enabled&&p.previous_active;d["history_ready"]=p.history_ready;d["history_index"]=int64_t(p.history_index);
+ d["colour_fxaa"]=enabled&&p.colour->get_screen_space_aa()==godot::Viewport::SCREEN_SPACE_AA_FXAA;
  godot::Array targets;const char* roles[]{"colour","native_depth","history_0","history_1"};
  for(unsigned i=0;i<4;++i){godot::Dictionary target;target["role"]=roles[i];auto* viewport=godot::Object::cast_to<godot::SubViewport>(godot::ObjectDB::get_instance(p.owned_ids[i+1]));
   const bool scheduled=enabled&&viewport&&(i<2||i-2==p.history_index);target["scheduled"]=scheduled;
@@ -172,6 +235,7 @@ void TrackPostprocess::forget_mesh(godot::MeshInstance3D* mesh){
  if(!mesh)return;auto& p=*impl_;const auto id=mesh->get_instance_id();
  const auto found=p.proxies.find(id);if(found!=p.proxies.end()){memdelete(found->second);p.proxies.erase(found);}
  const auto bindings=p.mesh_materials.find(id);if(bindings!=p.mesh_materials.end()){for(auto material:bindings->second){auto sources=p.material_meshes.find(material);if(sources!=p.material_meshes.end()){sources->second.erase(id);if(sources->second.empty())p.material_meshes.erase(sources);}}p.mesh_materials.erase(bindings);}p.tracked_meshes.erase(id);p.dirty_meshes.erase(id);p.dirty.forget(id);p.nonwriting_nodes.erase(id);p.visible_sources.erase(id);p.sorting_cache.erase(id);
+ p.static_bindings.erase(id);
  p.source_meshes.erase(std::remove(p.source_meshes.begin(),p.source_meshes.end(),id),p.source_meshes.end());p.discovery_dirty=true;
 }
 void TrackPostprocess::forget_material(const godot::Ref<godot::ShaderMaterial>& material){
@@ -196,7 +260,9 @@ void TrackPostprocess::notify_scene_node(godot::Node* node){
 void TrackPostprocess::notify_mesh_sorting(godot::MeshInstance3D* mesh,float offset,bool use_aabb){
  if(!mesh)return;const auto id=mesh->get_instance_id();const auto value=std::make_pair(offset,use_aabb);
  auto old=impl_->sorting_cache.find(id);if(old!=impl_->sorting_cache.end()&&old->second==value)return;
- impl_->sorting_cache[id]=value;auto proxy=impl_->proxies.find(id);if(proxy!=impl_->proxies.end()){proxy->second->set("sorting_offset",offset);proxy->second->set("sorting_use_aabb_center",use_aabb);}
+ impl_->sorting_cache[id]=value;
+ if(impl_->static_bindings.count(id))return;
+ auto proxy=impl_->proxies.find(id);if(proxy!=impl_->proxies.end()){proxy->second->set("sorting_offset",offset);proxy->second->set("sorting_use_aabb_center",use_aabb);}
 }
 void TrackPostprocess::mark_tracked_material(const godot::Ref<godot::ShaderMaterial>& material){if(material.is_valid())impl_->tracked_materials.insert(material->get_instance_id());}
 void TrackPostprocess::mark_material_changed(const godot::Ref<godot::ShaderMaterial>& material){mark_material_dirty(material);}
@@ -239,7 +305,9 @@ void TrackPostprocess::release(){
 }
 void TrackPostprocess::update(godot::Node3D* owner,godot::Camera3D* source,
  const port::track::postprocess::Weather& weather,float n,float f,
- const port::track::postprocess::Controls& controls,bool allowed,float focal,float dof,const port::track::postprocess::Frame* prepared,const port::track::postprocess::ScreenControls* screen){
+ const port::track::postprocess::Controls& controls,bool allowed,float focal,float dof,const port::track::postprocess::Frame* prepared,const port::track::postprocess::ScreenControls* screen,
+ const std::vector<EncodedDepthBatch>& depth_batches,float raster_scale,
+ const std::vector<StaticDepthSource>& static_sources,const std::unordered_set<std::uint64_t>& registered_sources,bool colour_fxaa){
  if(!allowed||!owner||!source||!owner->is_inside_tree()||!owner->is_visible_in_tree()){release();return;}
  if(!(n>0&&f>n))throw std::invalid_argument("Track postprocess original near/far invalid");
  auto& p=*impl_;
@@ -254,6 +322,8 @@ void TrackPostprocess::update(godot::Node3D* owner,godot::Camera3D* source,
   p.owner_id=owner->get_instance_id();p.source_id=source->get_instance_id();p.source_mask=source->get_cull_mask();
 
   p.colour=memnew(godot::SubViewport);p.depth=memnew(godot::SubViewport);p.owned_ids[1]=p.colour->get_instance_id();p.owned_ids[2]=p.depth->get_instance_id();
+  if(colour_fxaa&&godot::RenderingServer::get_singleton()->get_current_rendering_method()!="gl_compatibility")
+   p.colour->set_screen_space_aa(godot::Viewport::SCREEN_SPACE_AA_FXAA);
   for(auto* viewport:{p.colour,p.depth}){
    viewport->set_use_hdr_2d(godot::RenderingServer::get_singleton()->get_current_rendering_method()!="gl_compatibility");
    viewport->set_world_3d(source->get_world_3d());viewport->set_canvas_cull_mask(0);
@@ -276,8 +346,10 @@ void TrackPostprocess::update(godot::Node3D* owner,godot::Camera3D* source,
   p.parameter(p.composite_material,"encoded_depth",p.depth->get_texture(),true);
  }
  const godot::Vector2 size=source->get_viewport()->get_visible_rect().size;
- if(!p.reuse||p.colour->get_size()!=godot::Vector2i(size))p.colour->set_size(godot::Vector2i(size));if(!p.reuse||p.depth->get_size()!=godot::Vector2i(size))p.depth->set_size(godot::Vector2i(size));if(!p.reuse||p.output->get_size()!=size)p.output->set_size(size);
- for(unsigned i=0;i<2;i++){if(p.history[i]->get_size()!=godot::Vector2i(size)){p.history_ready=false;p.history[i]->set_size(godot::Vector2i(size));}p.history_rect[i]->set_size(size);p.history[i]->set_update_mode(godot::SubViewport::UPDATE_DISABLED);}
+ const godot::Vector2i raster(raster_scale==1.f?godot::Vector2i(size):
+  godot::Vector2i(std::max(2,int(std::lround(size.x*raster_scale))),std::max(2,int(std::lround(size.y*raster_scale)))));
+ if(!p.reuse||p.colour->get_size()!=raster)p.colour->set_size(raster);if(!p.reuse||p.depth->get_size()!=raster)p.depth->set_size(raster);if(!p.reuse||p.output->get_size()!=size)p.output->set_size(size);
+ for(unsigned i=0;i<2;i++){if(p.history[i]->get_size()!=raster){p.history_ready=false;p.history[i]->set_size(raster);}p.history_rect[i]->set_size(godot::Vector2(raster));p.history[i]->set_update_mode(godot::SubViewport::UPDATE_DISABLED);}
  p.history_index^=1u;p.history[p.history_index]->set_update_mode(godot::SubViewport::UPDATE_ALWAYS);
  p.output->set_texture(p.history[p.history_index]->get_texture());
  if(p.history_ready)p.parameter(p.composite_material,"previous_texture",p.history[p.history_index^1u]->get_texture(),true);else p.parameter(p.composite_material,"previous_texture",p.initial_display,true);
@@ -321,8 +393,11 @@ void TrackPostprocess::update(godot::Node3D* owner,godot::Camera3D* source,
  p.parameter(shader,"jitter_blend",controls.JitterBlend);p.parameter(shader,"jitter_count",controls.dofNumPasses);
  // A depth proxy retains the original vertex transformation, discard and Z-write
  // rules. Reading hint_depth_texture here would omit transparent road geometry.
+ p.discovery_ms=p.proxy_ms=p.material_ms=0;
  std::set<std::uint64_t> seen,synced_materials;
  const auto source_world=source->get_world_3d();
+ {
+ ChampionshipTimingScope timing(p.discovery_ms);
  if(p.discovery_cache){const auto transform=owner->get_global_transform();if(!p.owner_transform_valid||p.owner_transform!=transform){for(auto id:p.tracked_meshes){p.dirty_meshes.insert(id);p.dirty.mark(id,Transform|Visibility);}p.owner_transform=transform;p.owner_transform_valid=true;}}
  const int node_count=source->get_tree()->get_node_count();
  for(auto id:p.source_meshes)if(!godot::ObjectDB::get_instance(id)){p.discovery_dirty=true;break;}
@@ -333,7 +408,7 @@ void TrackPostprocess::update(godot::Node3D* owner,godot::Camera3D* source,
    ++p.discovery_visits;
    if(node!=source->get_viewport()&&godot::Object::cast_to<godot::Viewport>(node))return;
    if(auto* mesh=godot::Object::cast_to<godot::MeshInstance3D>(node))
-    if((mesh->get_layer_mask()&p.source_mask)&&mesh->get_world_3d()==source_world){p.source_meshes.push_back(mesh->get_instance_id());if(p.discovery_cache&&p.structure_observer)for(auto* parent=mesh->get_parent();parent;parent=parent->get_parent()){next_parents.insert(parent->get_instance_id());if(parent==source->get_viewport())break;}}
+    if(!registered_sources.count(mesh->get_instance_id())&&(mesh->get_layer_mask()&p.source_mask)&&mesh->get_world_3d()==source_world){p.source_meshes.push_back(mesh->get_instance_id());if(p.discovery_cache&&p.structure_observer)for(auto* parent=mesh->get_parent();parent;parent=parent->get_parent()){next_parents.insert(parent->get_instance_id());if(parent==source->get_viewport())break;}}
    for(int i=0;i<node->get_child_count();i++)discover(node->get_child(i));
   };
   discover(source->get_viewport());
@@ -341,10 +416,55 @@ void TrackPostprocess::update(godot::Node3D* owner,godot::Camera3D* source,
   for(auto id:next_parents)if(!p.order_parents.count(id))if(auto* node=godot::Object::cast_to<godot::Node>(godot::ObjectDB::get_instance(id)))if(!node->is_connected("child_order_changed",p.order_observer))node->connect("child_order_changed",p.order_observer);
   p.order_parents=std::move(next_parents);p.discovery_dirty=false;p.scene_node_count=node_count;p.dirty.discovered();
  }
- for(auto source_id:p.source_meshes){
-  auto* mesh=godot::Object::cast_to<godot::MeshInstance3D>(godot::ObjectDB::get_instance(source_id));if(!mesh)continue;
+ }
+ {
+ ChampionshipTimingScope timing(p.proxy_ms);
+ std::set<std::uint64_t> batch_keys,batched_sources;
+ if((p.source_mask&1u)&&!depth_batches.empty()){
+  if(p.batched_material.is_null()){
+   const std::string code=
+    "shader_type spatial;render_mode unshaded,cull_disabled,fog_disabled,shadows_disabled,depth_draw_always,blend_mix;"
+    "uniform float pp_near;uniform float pp_far;"
+    "vec3 hp2_framebuffer_rgb(vec3 encoded){return encoded;}"
+    "void vertex(){MODELVIEW_MATRIX=VIEW_MATRIX*transpose(mat4(CUSTOM1,CUSTOM2,CUSTOM3,vec4(0.0,0.0,0.0,1.0)));}"
+    "void fragment(){"+encoded_depth_output(false)+"}";
+   p.batched_material=material(code.c_str());
+   p.batched_material->set_render_priority(-64);
+  }
+  if(p.batched_near!=n){p.batched_material->set_shader_parameter("pp_near",n);p.batched_near=n;}
+  if(p.batched_far!=f){p.batched_material->set_shader_parameter("pp_far",f);p.batched_far=f;}
+  for(const auto& batch:depth_batches){
+   const auto key=batch.source_nodes.front();
+   if(!batch_keys.insert(key).second)throw std::logic_error("Duplicate encoded-depth batch owner");
+   batched_sources.insert(batch.source_nodes.begin(),batch.source_nodes.end());
+   auto& proxy=p.batched_proxies[key];
+   if(!proxy){
+    proxy=memnew(godot::MeshInstance3D);
+    proxy->set_layer_mask(depth_layer);
+    proxy->set_cast_shadows_setting(godot::GeometryInstance3D::SHADOW_CASTING_SETTING_OFF);
+    proxy->set_material_override(p.batched_material);
+    proxy->set_sorting_use_aabb_center(false);
+    p.depth->add_child(proxy);
+   }
+   if(proxy->get_mesh()!=batch.mesh)proxy->set_mesh(batch.mesh);
+   if(proxy->get_sorting_offset()!=batch.sorting_offset)proxy->set_sorting_offset(batch.sorting_offset);
+  }
+ }
+ for(auto it=p.batched_proxies.begin();it!=p.batched_proxies.end();){
+  if(batch_keys.count(it->first)){++it;continue;}
+  memdelete(it->second);
+  it=p.batched_proxies.erase(it);
+ }
+ for(auto id:p.batched_sources)if(!batched_sources.count(id)){
+  p.dirty_meshes.insert(id);
+  p.dirty.mark(id,All);
+ }
+ p.batched_sources=std::move(batched_sources);
+ const auto sync_legacy=[&](std::uint64_t source_id){
+  if(p.batched_sources.count(source_id)){p.visible_sources.erase(source_id);return;}
+  auto* mesh=godot::Object::cast_to<godot::MeshInstance3D>(godot::ObjectDB::get_instance(source_id));if(!mesh)return;
   if(p.tracked_meshes.count(source_id)&&!p.dirty_meshes.count(source_id)&&(p.proxies.count(source_id)||p.nonwriting_nodes.count(source_id))){
-   if(p.visible_sources.count(source_id))seen.insert(source_id);continue;
+   if(p.visible_sources.count(source_id))seen.insert(source_id);return;
   }
   const unsigned changes=p.discovery_cache?p.dirty.changes(source_id,p.tracked_meshes.count(source_id)!=0):All;
   p.visible_sources.erase(source_id);
@@ -383,7 +503,55 @@ void TrackPostprocess::update(godot::Node3D* owner,godot::Camera3D* source,
     }
    }
   }
+ };
+ p.static_sources=0;
+ if(p.source_mask&1u)for(const auto& entry:static_sources){
+  const auto id=entry.node_id;
+  if(p.batched_sources.count(id))continue;
+  if(entry.mesh.is_null()){
+   if(p.static_bindings.erase(id)){p.dirty_meshes.insert(id);p.dirty.mark(id,All);}
+   sync_legacy(id);
+   continue;
+  }
+  ++p.static_sources;
+  seen.insert(id);
+  auto& proxy=p.proxies[id];
+  auto& binding=p.static_bindings[id];
+  const bool first=binding.material==0;
+  if(!proxy){
+   ++p.proxy_creations;
+   proxy=memnew(godot::MeshInstance3D);
+   proxy->set_layer_mask(depth_layer);
+   p.depth->add_child(proxy);
+  }
+  if(first||binding.mesh!=entry.mesh){
+   proxy->set_mesh(entry.mesh);
+   binding.mesh=entry.mesh;
+  }
+  if(first||binding.transform!=entry.transform){
+   proxy->set_global_transform(entry.transform);
+   binding.transform=entry.transform;
+  }
+  if(first||binding.sorting_offset!=entry.sorting_offset){
+   proxy->set_sorting_offset(entry.sorting_offset);
+   binding.sorting_offset=entry.sorting_offset;
+  }
+  if(first){
+   proxy->set_sorting_use_aabb_center(false);
+   proxy->set_custom_aabb({});
+   proxy->set_visibility_range_begin(0);
+   proxy->set_visibility_range_end(0);
+  }
+  const auto material_id=entry.material->get_instance_id();
+  if(first||binding.material!=material_id||binding.version!=entry.material_version||p.dirty_materials.count(material_id)){
+   const auto variant=p.depth_material(entry.material,n,f,synced_materials);
+   proxy->set_surface_override_material(0,variant);
+   binding.material=material_id;
+   binding.version=entry.material_version;
+  }
+  if(!proxy->is_visible())proxy->show();
  }
+ for(auto id:p.source_meshes)if(!registered_sources.count(id))sync_legacy(id);
  // Instance batches share the exact MultiMesh resource; only material output changes.
  for(auto it=p.instance_sources.begin();it!=p.instance_sources.end();){
   const auto id=*it;auto* node=godot::Object::cast_to<godot::MultiMeshInstance3D>(godot::ObjectDB::get_instance(id));
@@ -399,14 +567,23 @@ void TrackPostprocess::update(godot::Node3D* owner,godot::Camera3D* source,
   const auto depth_material=p.depth_material(material,n,f,synced_materials);if(proxy->get_material_override()!=depth_material)proxy->set_material_override(depth_material);
   if(proxy->get_sorting_offset()!=node->get_sorting_offset())proxy->set_sorting_offset(node->get_sorting_offset());proxy->set_sorting_use_aabb_center(false);if(!proxy->is_visible())proxy->show();
  }
+ }
+ // Material synchronization is measured inside the proxy traversal.
+ p.proxy_ms-=p.material_ms;
  // Material dirtiness is independent of geometry dirtiness: a camera/light
  // update must reach a sealed mesh even when its transform remains unchanged.
+ {
+ ChampionshipTimingScope timing(p.material_ms);
  for(auto& item:p.variants){auto& v=item.second;
-  if(p.dirty_materials.count(item.first)&&(!p.parameter_notifications||!synced_materials.count(item.first)))for(const auto& name:v.names){const int u=v.uniform_slots.at(name);const auto value=v.source->get_shader_parameter(name);++p.uniform_reads;if(v.values[u]!=value){v.depth->set_shader_parameter(name,value);v.values[u]=value;}}
-  if(v.near_z!=n){v.depth->set_shader_parameter("pp_near",n);v.near_z=n;}if(v.far_z!=f){v.depth->set_shader_parameter("pp_far",f);v.far_z=f;}
+  if(p.dirty_materials.count(item.first)&&(!p.parameter_notifications||!synced_materials.count(item.first)))for(const auto& name:v.names){const int u=v.uniform_slots.at(name);const auto value=v.source->get_shader_parameter(name);++p.uniform_reads;if(v.values[u]!=value){v.depth->set_shader_parameter(name,value);++p.depth_uniform_writes;v.values[u]=value;}}
+  if(v.near_z!=n){v.depth->set_shader_parameter("pp_near",n);++p.depth_uniform_writes;v.near_z=n;}if(v.far_z!=f){v.depth->set_shader_parameter("pp_far",f);++p.depth_uniform_writes;v.far_z=f;}
  }
+ }
+ {
+ ChampionshipTimingScope timing(p.proxy_ms);
  p.dirty_meshes.clear();p.dirty.consumed();p.dirty_materials.clear();
  for(auto& entry:p.proxies)if(!seen.count(entry.first))entry.second->hide();
+ }
  // Nodes created above belong to this compositor, so they cannot introduce
  // new source geometry. Keep the discovery watermark after our own mutations;
  // external node changes and explicit notifications still invalidate next frame.

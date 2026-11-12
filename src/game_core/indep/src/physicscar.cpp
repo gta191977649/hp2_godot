@@ -2,6 +2,7 @@
 // NFSHP2.ELF SHA815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
 #include "game_core/indep/inc/PhysicsCar.hpp"
 #include "game_core/indep/src/carstate.hpp"
+#include "game_core/indep/src/engine.hpp"
 #include "game_core/port/driving/projection_support.hpp"
 namespace hp2::recovered {
 // Debug 001375B0; E-0044-P01/P02.
@@ -318,8 +319,8 @@ void PhysicsCar::JumpStabilizer() {
     using namespace detail_group_00138e08;
     if(m.signed_word(m.word(mover+0x54)+0x3bc)>=2)return;
     const auto body=m.word(mover+0x18);const auto v=m.vector(body+0xa0);const float mass=m.scalar(body+0x118);
-    const float f=port::driving::Graph::GetValue(m,0x003270c0,len(v));
-    const auto damping=mul(v,-(mass*f));auto old=m.vector(body+0x100);for(unsigned i=0;i<4;++i)old[i]=old[i]+damping[i];m.vector(body+0x100,old);
+    const auto inspect=[&](float result,float left,float right,unsigned lane,const char* stage,const char* pc){if(!std::isfinite(result)||!std::isfinite(left)||!std::isfinite(right)){const auto bits=[](float x){std::uint32_t word;std::memcpy(&word,&x,4);return std::to_string(word);};const auto car=m.word(mover+0x54);const std::string why=std::string("Physics jump moment producer stage=")+stage+" mover="+std::to_string(mover)+" mover4="+std::to_string(m.word(mover+4))+" body="+std::to_string(body)+" car="+std::to_string(car)+" mode="+std::to_string(m.word(car+0x24))+" lane="+std::to_string(lane)+" left_bits="+bits(left)+" right_bits="+bits(right)+" result_bits="+bits(result);hp2::not_implemented(pc,why.c_str());}return result;};
+    const float x=inspect(v[0]*v[0],v[0],v[0],0,"angular-square","0x001394A8"),y=inspect(v[1]*v[1],v[1],v[1],1,"angular-square","0x001394A8"),z=inspect(v[2]*v[2],v[2],v[2],2,"angular-square","0x001394A8");const float xy=inspect(x+y,x,y,0,"angular-sum-y","0x001394AC"),square=inspect(xy+z,xy,z,0,"angular-sum-z","0x001394B0");const float f=port::driving::Graph::GetValue(m,0x003270c0,std::sqrt(square));const float factor=-inspect(mass*f,mass,f,0,"mass-grade","0x001394CC");auto damping=v;for(unsigned i=0;i<4;++i)damping[i]=inspect(v[i]*factor,v[i],factor,i,"angular-scale","0x001394E8");auto old=m.vector(body+0x100);for(unsigned i=0;i<4;++i)old[i]=inspect(old[i]+damping[i],old[i],damping[i],i,"moment-add","0x0019A828");m.vector(body+0x100,old);
 
 }
 
@@ -344,6 +345,7 @@ void PhysicsCar::IterateForces() {
         ModifyClutchTorque(m,drive);
     }
     for(std::int32_t i=0;i<4;++i)port::driving::FinalizeGroundForce(m,m.word(mover+0x30+4*i),i);
+    hp2::recovered::DriveTrain(m,drive).FinalizeClutchTorque(); // Debug00138EC0, W33 counterevidence.
 
 }
 
@@ -450,3 +452,170 @@ void PhysicsVehicle::Sub_00139678() {
     hp2::not_implemented("0x00139678", "PhysicsVehicle::Sub_00139678 (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+#include "game_core/inc/bSlotPool.hpp"
+#include <limits>
+namespace hp2::debug {
+// Debug00136EE8, E-0099-W21. Exact sizes/counts/names; these pools are
+// independent from original InitCollisionBody pools and owned by ClosePhysics.
+void InitPhysics(::port::driving::Memory& m){
+ const auto n=m.signed_word(0x311f78+0x308);
+ if(n<0||n>std::numeric_limits<int>::max()/4)throw std::out_of_range("Original physics driver count exceeds host integer bounds");
+ const int wheel_count=n*4;
+ m.word(0x327020,bNewSlotPool(m,0x180,n+32,0x2a69a0,0x10));
+ m.word(0x327024,bNewSlotPool(m,0x90,n,0x2a69b8,0x10));
+ m.word(0x327028,bNewSlotPool(m,0x190,wheel_count,0x2a69e0,0x10));
+ m.word(0x32702c,bNewSlotPool(m,0x5c,n,0x2a69f0,0x10));
+ m.word(0x327030,bNewSlotPool(m,0x94,n,0x2a6a00,0x10));
+ m.word(0x327034,bNewSlotPool(m,0x18,n,0x2a6a18,0x10));
+ m.word(0x327038,bNewSlotPool(m,0xb0,wheel_count,0x2a6a30,0x10));
+ m.word(0x32703c,bNewSlotPool(m,0x1c0,n,0x2a6a48,0x10));
+ m.word(0x327040,bNewSlotPool(m,0x40,n,0x2a6a60,0x10));
+ m.word(0x327044,bNewSlotPool(m,0xc,n,0x2a6a78,0x10));
+}
+// Debug00137030, E-0099-W21. All deletes precede all ten null stores.
+void ClosePhysics(::port::driving::Memory& m){
+ for(unsigned i=0;i<10;++i)bDeleteSlotPool(m,m.word(0x327020+i*4));
+ for(unsigned i=0;i<10;++i)m.word(0x327020+i*4,0);
+}
+}
+
+// TASK-0099 E-0099-W33. Shared Memory and original InitPhysics pool construction.
+#include "game_core/port/race/physics_construction.hpp"
+#include "game_core/indep/inc/CarMover.hpp"
+#include "game_core/indep/src/rigidbody.hpp"
+#include "game_core/indep/src/wheel.hpp"
+#include "game_core/indep/src/suspension.hpp"
+#include <cstring>
+namespace port::race::detail {
+// Port binding of Debug0024A350 for the explicit host Count clock.
+float physics_tick_delta(::port::driving::Memory& m,std::uint32_t start,std::uint32_t end){
+ return (static_cast<float>(end-start)/m.scalar(0x326254))*1000.0f;
+}
+}
+namespace hp2::debug {
+void PhysicsCar::Sub_001370C0(std::uint32_t config,std::uint32_t driver,std::uint32_t car,
+                             ::port::race::PhysicsConstructionServices& service){
+ auto& m=m_;const auto p=address_;
+ m.word(p+4,0x2a67d0);hp2::recovered::PhysicsSystem(m,p+8).port_initialize();m.word(p+0x14,0x2a6b18);
+ m.word(p,driver);m.word(p+0x58,0);m.word(p+0x5c,0);m.word(p+0x6c,0);
+ m.word(p+0x4c,config);m.word(p+0x54,car);m.word(p+0x14,0x2a6ad8);m.word(p+4,0x2a6af8);
+ m.word(p+0x50,car+0x40);m.scalar(p+0x70,1);
+ const auto body=bOMalloc(m,m.word(0x327020));hp2::recovered::RigidBody(m,body).port_initialize(config+0x1e0);
+ m.word(p+0x18,body);hp2::recovered::PhysicsSystem system(m,p+8);system.AddComponent(body);
+ m.word(body+0x174,m.word(config+0x320));m.word(body+0x114,m.byte(config+0xe4)!=0);
+ const auto steering=bOMalloc(m,m.word(0x327024));hp2::recovered::TwoWheelAckermanSteering(m,steering).Sub_001A3F30(config);m.word(p+0x1c,steering);
+ for(unsigned i=0;i<4;++i){
+  const auto wheel=bOMalloc(m,m.word(0x327028)),axle=(i/2)*0x20;
+  hp2::recovered::Wheel(m,wheel).port_initialize(config+0x120+i*0x20,config+0x1a0+axle,config+0x300,car+0x40);m.word(p+0x30+i*4,wheel);
+  const auto suspension=bOMalloc(m,m.word(0x327038));
+  hp2::recovered::Suspension(m,suspension).port_initialize(i,body,wheel,i<2?steering:0,config+0x230+axle);m.word(p+0x20+i*4,suspension);
+  system.AddComponent(wheel);system.AddComponent(suspension);
+ }
+ for(unsigned i=0;i<4;++i)m.word(m.word(p+0x20+i*4)+0x10,m.word(p+0x20+(i^1)*4));
+ const auto engine=bOMalloc(m,m.word(0x32702c));hp2::recovered::Engine(m,engine).Sub_00188998(config+0x2b0,car+0x40);
+ m.word(p+0x40,engine);system.AddComponent(engine);m.word(engine+0x40,m.byte(config+0xe4)!=0);
+ const auto drive=bOMalloc(m,m.word(0x327030));hp2::recovered::DriveTrain(m,drive).Sub_00189020(config+0x270,engine,p+0x30,car+0x40);
+ m.word(p+0x44,drive);system.AddComponent(drive);
+ const auto aero=bOMalloc(m,m.word(0x327034));m.scalar(aero+8,1);m.scalar(aero+0xc,1);m.word(aero+0x10,0);m.word(aero+0x14,0);
+ m.word(p+0x48,aero);m.word(aero+4,body);m.word(aero,config+0x2f0);
+ m.word(::port::driving::native::detail_group_00137100_runtime::global_address(0xb408),0);
+ hp2::recovered::PhysicsCar math(m,p);math.Calibrate();math.InitializeStateFromCar();
+ ::port::driving::native::InitServices binding;
+ // The old E0044 carriers retain historical address labels; targets below are
+ // Debug0024A340/0024A350. No synthetic PhysicsSystem/ResolveForces provider.
+ if(service.ticker)binding.Sub_00250F38=[&service]{return static_cast<std::uint64_t>(service.ticker());};
+ binding.Sub_00250F48=[&m](std::uint64_t start,std::uint64_t end){const float v=::port::race::detail::physics_tick_delta(m,static_cast<std::uint32_t>(start),static_cast<std::uint32_t>(end));std::uint32_t bits;std::memcpy(&bits,&v,4);return bits;};
+ binding.contact=service.contact;binding.Field_00137938_stack_w=service.port_stack_vector_lane;
+ binding.ResolveForces=[&service](::port::driving::Memory& memory,std::uint32_t object){PhysicsCar(memory,object).ResolveForces(service);};
+ math.ComputeAuxiliaries(binding);
+ m.scalar(p+0x74,1);m.word(p+0x64,1);m.word(p+0x68,2);m.word(p+0x60,1);
+}
+void PhysicsCar::ResolveForces(::port::race::PhysicsConstructionServices& service){
+ auto& m=m_;const auto p=address_;
+ if(!service.ticker)hp2::not_implemented("0x0024A340","Original PhysicsCar profiling Count clock is absent");
+ const auto start=service.ticker();const auto body=m.word(p+0x18),table=m.word(body+8);
+ m.word(0x3270b8,m.word(0x3270b8)+1);
+ if(m.word(table+0x34)!=0x19b2a0)hp2::not_implemented("0x00138D90","Unrecovered body pre-force virtual target");
+ hp2::recovered::RigidBody(m,body+static_cast<std::int32_t>(m.signed_half(table+0x30))).ResolveForces();
+ ::port::driving::Memory::Temporary temporary(m,16);const auto scratch=temporary.address();
+ ::port::driving::native::Aerodynamics::ResolveForces(m,m.word(p+0x48),scratch);
+ const float request=m.word(0x3270b4)?m.scalar(scratch)*0.25f:0.0f;
+ for(unsigned i=0;i<4;++i)hp2::recovered::Suspension(m,m.word(p+0x20+i*4)).ResolveForces(request);
+ service.ticker();hp2::recovered::PhysicsCar math(m,p);math.IterateForces();
+ const auto iter_end=service.ticker();m.scalar(0x3270cc,::port::race::detail::physics_tick_delta(m,start,iter_end));
+ for(unsigned i=0;i<4;++i)hp2::recovered::Suspension(m,m.word(p+0x20+i*4)).ResolveMoreForces();
+ math.JumpStabilizer();const auto end=service.ticker();m.scalar(0x3270c8,::port::race::detail::physics_tick_delta(m,start,end));
+}
+void PhysicsCar::Sub_001376C8(int flags){
+ auto& m=m_;const auto p=address_;m.word(p+0x14,0x2a6ad8);m.word(p+4,0x2a6af8);
+ if(const auto steering=m.word(p+0x1c)){
+  const auto table=m.word(steering+8),target=m.word(table+0xc),adjusted=steering+static_cast<std::int32_t>(m.signed_half(table+8));
+  if(target!=0x1a3ed0&&target!=0x1a3f10)hp2::not_implemented("0x001376C8","Unrecovered steering destructor target");
+  hp2::recovered::TwoWheelAckermanSteering(m,adjusted).Sub_001A3ED0(3);
+ }
+ SlotPool(m,m.word(0x327034)).Free(m.word(p+0x48));
+ // Inline PhysicsVehicle001395D8 has the same complete list destruction body
+ // as PhysicsSystem00199AB8; it does not clear Size or stale member pointers.
+ hp2::recovered::PhysicsSystem(m,p+8).Sub_00199AB8(0);CarMover(m,p).Sub_00136B28(flags);
+}
+}
+
+#include "game_core/port/race/damage_resources.hpp"
+#include "game_core/indep/src/skids.hpp"
+namespace hp2::debug {
+// Debug00137D18, E-0099-W42. Concrete shared-original callees, not the fixture
+// NativeBackend. W71 binds actual shared skid/Clan ownership; active print and
+// exceptional arithmetic gaps remain explicit original-address boundaries.
+float PhysicsCar::Move(float t,::port::race::PhysicsConstructionServices& service){
+ auto& m=m_;if(!service.ticker)hp2::not_implemented("0x0024A340","actual PhysicsCar Count clock binding is required");
+ ::port::driving::native::InitServices auxiliary;auxiliary.contact=service.contact;auxiliary.Field_00137938_stack_w=service.port_stack_vector_lane;
+ auxiliary.Sub_00250F38=[&service]{return static_cast<std::uint64_t>(service.ticker());};
+ auxiliary.Sub_00250F48=[&m](std::uint64_t start,std::uint64_t end){const auto delta=::port::race::detail::physics_tick_delta(m,static_cast<std::uint32_t>(start),static_cast<std::uint32_t>(end));std::uint32_t bits;std::memcpy(&bits,&delta,4);return bits;};
+ auxiliary.ResolveForces=[&service](auto& memory,auto physics){PhysicsCar(memory,physics).ResolveForces(service);};
+ ::port::driving::native::DrivingServices frame;frame.Sub_00250F38=auxiliary.Sub_00250F38;frame.Sub_00250F48=auxiliary.Sub_00250F48;frame.Field_001389A4_stack_w=service.port_stack_vector_lane;
+ frame.IsJoystickTypeWheel=[&m](int port){return hp2::debug::IsJoystickTypeWheel(m,port);};
+ frame.IntegrateEuler=[&auxiliary](auto& memory,auto system,float dt){::port::driving::native::integrate(memory,system,dt,auxiliary);};
+ frame.eOrthonormalizeMatrix=[](auto& memory,auto matrix){hp2::recovered::eOrthonormalizeMatrix(memory,matrix);};
+ frame.Sub_0019D980=[](auto& memory,auto body){hp2::recovered::RigidBody(memory,body).PrintCurrentState();};
+ frame.Sub_0018C030=[](auto& memory,auto drive){hp2::recovered::DriveTrain(memory,drive).PrintCurrentState();};
+ frame.Sub_001B50C8=[](auto& memory,auto damage){return BodyDamage(memory,damage).GetVisibleTotalDamage();};
+ frame.UpdateCar=[](auto& memory,auto physics,float dt){hp2::recovered::PhysicsCar(memory,physics).UpdateCar(dt);};
+ frame.MaybeMakeSkids=[&service](auto& memory,auto wheel,auto car,float dt){if(!service.enable_skid_trails)return;::port::driving::SkidServices skid;skid.contact=service.contact;skid.shared_world=true;skid.port_stack_vector_lane=service.port_stack_vector_lane;hp2::recovered::Wheel(memory,wheel).MaybeMakeSkids(dt,car,skid);};
+ return hp2::recovered::PhysicsCar(m,address_).Move(t,frame);
+}
+}
+
+namespace hp2::debug {
+// Debug00137748, E-0099-W42. The same concrete force/clock/contact binding as
+// the original shared constructor and Euler post-integrate virtual target.
+void PhysicsCar::ComputeAuxiliaries(::port::race::PhysicsConstructionServices& service){
+ auto& m=m_;::port::driving::native::InitServices auxiliary;auxiliary.contact=service.contact;auxiliary.Field_00137938_stack_w=service.port_stack_vector_lane;
+ if(service.ticker)auxiliary.Sub_00250F38=[&service]{return static_cast<std::uint64_t>(service.ticker());};
+ auxiliary.Sub_00250F48=[&m](std::uint64_t start,std::uint64_t end){const auto delta=::port::race::detail::physics_tick_delta(m,static_cast<std::uint32_t>(start),static_cast<std::uint32_t>(end));std::uint32_t bits;std::memcpy(&bits,&delta,4);return bits;};
+ auxiliary.ResolveForces=[&service](auto& memory,auto physics){PhysicsCar(memory,physics).ResolveForces(service);};
+ hp2::recovered::PhysicsCar(m,address_).ComputeAuxiliaries(auxiliary);
+}
+}
+
+#include "game_core/indep/inc/Replay.hpp"
+#include "game_core/indep/src/rigidbody.hpp"
+#include "game_core/indep/src/wheel.hpp"
+#include "game_core/indep/src/suspension.hpp"
+#include "game_core/indep/src/aerodynamics.hpp"
+namespace hp2::debug {
+// Debug00137410; E-0099-W74; replay-frame/00137410.json/type-PhysicsCar.json.
+void PhysicsCar::DoSnapshot(std::uint32_t snapshot,const ::port::race::SnapshotServices& services){
+ auto& m=m_;const auto a=address_;ReplaySnapshot s(m,snapshot);s.BeginNamedSection(0x2a6a90);s.MoveData(a+0x70,4);
+ hp2::recovered::RigidBody(m,m.word(a+0x18)).DoSnapshot(snapshot,services);
+ const auto steering=m.word(a+0x1c),entry=m.word(steering+8)+0x18;const auto delta=m.signed_half(entry);
+ if(m.word(entry+4)!=0x1a34f0)hp2::not_implemented("0x00137410","Physics snapshot steering virtual target");
+ hp2::recovered::TwoWheelAckermanSteering(m,steering+static_cast<std::uint32_t>(delta)).DoSnapshot(snapshot);
+ for(unsigned i=0;i<4;++i){hp2::recovered::Wheel(m,m.word(a+0x30+4*i)).DoSnapshot(snapshot);hp2::recovered::Suspension(m,m.word(a+0x20+4*i)).DoSnapshot(snapshot);}
+ hp2::recovered::Engine(m,m.word(a+0x40)).DoSnapshot(snapshot);hp2::recovered::DriveTrain(m,m.word(a+0x44)).DoSnapshot(snapshot);
+ hp2::recovered::Aerodynamics(m,m.word(a+0x48)).DoSnapshot(snapshot);
+ // CarMover::DoSnapshot00130B38 is an instruction-confirmed empty body.
+ s.MoveData(a+0x74,4);s.MoveData(a+0x58,4);s.MoveData(a+0x5c,4);s.MoveData(a+0x60,1,4,0);s.MoveData(a+0x64,1,4,0);
+ s.MoveData(a+0x68,4,4,1);s.MoveData(a+0x6c,4);s.EndNamedSection();
+}
+}

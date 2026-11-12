@@ -201,3 +201,5 @@ void PreviewPause::GetPoint() {
     hp2::not_implemented("0x001657A0", "PreviewPause::GetPoint (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+#include "game_core/port/race/nis_preview_route.inc"

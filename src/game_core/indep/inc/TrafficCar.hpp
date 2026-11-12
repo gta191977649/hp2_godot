@@ -26,3 +26,18 @@ public:
     void Sub_00168088();
 };
 } // namespace hp2::recovered
+
+#include "game_core/indep/inc/CarMover.hpp"
+namespace port::race {struct PhysicsConstructionServices;}
+namespace hp2::debug {
+// Logical shared-Memory view, no host ABI. W105 freshly corroborates the
+// original TrafficCar.hpp definition owner for destructor00167550 only.
+class TrafficCar:public ::port::driving::ObjectView {
+public:
+ using ObjectView::ObjectView;
+ void Sub_00166ED0(std::uint32_t); //Original trafficcar.cpp ctor, W35/W105.
+ void DoSnapshot(std::uint32_t); //Original trafficcar.cpp00166F28, W105.
+ float Move(float,::port::race::PhysicsConstructionServices&); //Debug00166FC0, E-0099-W111.
+ void Sub_00167550(int flags){m_.word(address_+4,0x2aa000);CarMover(m_,address_).Sub_00136B28(flags);}
+};
+}

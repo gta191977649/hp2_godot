@@ -55,8 +55,9 @@ reconstructed merely by implementing the title movie sequence.
 | Main menu `00216460` | `MOVIES/mainmenu_movie.AVI` |
 | Cops On `00216E80` | `MOVIES/hotpursuit_movie.AVI` |
 | Cops Off `00217538` | `MOVIES/worldracing_ movie.AVI` (embedded space is real) |
-| Generic Options `0016D100` → `0016D0F0` | `MOVIES/options_movie.AVI` |
-| Credits `001F1F38`, shared Options base `001F4C98` (Audio/Controller/Display/Jukebox) | `MOVIES/options_movie_new.AVI` |
+| Options `001EEBB8`, shared Options base `001F4C98`, and Credits `001F1F38` | `MOVIES/options_movie_new.AVI` |
+| Challenge, ChallengeBeACop, and the shared race-setup constructor through `001B5DE0` | Cops Off movie if `002FC070` is zero, Cops On movie otherwise |
+| Standalone helper `0016D100` → `0016D0F0`, with no identified caller | `MOVIES/options_movie.AVI` |
 
 `0016CE30` returns without restarting if the requested filename matches the
 active movie. It binds original `PANELMOVIE` and `MOVIE_256_384_Y/UA/VA/US/VS`
@@ -190,3 +191,45 @@ Raw JSON exports are ignored under `local/task0016/`; no Ghidra mutations.
 TASK-0017 reinspection001F4C98 and Display001F33B8/Jukebox001F02D8 confirms
 common base requests002BA010. Host background mapping now includes Display26
 and Jukebox27. Prior table mislabeled001F1F38 asAudio; it isCredits constructor.
+
+## 2026-11-12 Retail background lifecycle recheck (E-0016-V07)
+
+The configured Retail ELF hash matches the target above. Fresh read-only
+Ghidra direct xrefs and constructor traces resolve these routes:
+
+- `Options` handler `001EEF00` constructs through `001EEBB8 → 001F4C98`.
+  Audio `001EF3C8`, Display `001F33B8`, JukeBox `001F02D8`, both HUD
+  customization classes `001F3F20`, and Joystick PreConfig
+  `00240060 → 002400C0` reach the same `options_movie_new.AVI` request.
+  Credits `001F1F38` directly requests the same filename.
+- Registration `001B98E8` links Challenge `001B6BD0 → 001B5E30`,
+  ChallengeBeACop `001B6F18 → 001B6C68`, and Single Race / Free Run /
+  Lap Knockout / Knockout / Be The Cop Setup through `001B7B20`
+  cases 100–104 and shared constructor `001B8390` to `001B5DE0`.
+  The initialized word at `002FC070` is zero. Main-menu stores at
+  `002166D8/002166F0` select the subsequent mode.
+- Explicit stops include first shared Select Car / Select Car2P creation
+  `00198420 → 00198470`, View Event Tree `001F96B8 → 001F9C54`,
+  Phils Load Save `002473D0 → 00247468`, BootAutoload
+  `002478C0 → 00247934`, textual credits `001F2E80 → 001F2F18`,
+  and separate credits movie entry `001F2240 → 001F22FC`. Other direct
+  stops are replacement `0016CE84`, the per-tick gate `0016D05C`,
+  title attract `0016ECE4`, gameflow reset `0016FB74`, and Quick Race
+  launch `00216C68`. Username, Language, Select Track and controller
+  configuration/calibration have no identified direct setter or stop in the
+  inspected constructors. Authored widget visibility controls presentation.
+- `0016CE30` is suppressed by nonzero `gp-0x59FC` in the original.
+  `0016D028` stops on nonzero `gp-0x53B0`. The latter is initially
+  zero at `00330540`, set at Racing exit `00169188` and cleared at
+  Unloading Track Common enter `001692B4` (table `002FAEA4`).
+  The host frontend has a separate event suspension and resume lifecycle.
+  Original attract and complete gameflow flag timing are still open.
+
+Authored FRONTB.BUN contains PANELMOVIE on documents 0, 1, 2, 3, 11, 12,
+13, 24–29, 31 and 34 with the common transform and original UVs. It is
+absent from Select Car, Select Track, Language, Event Tree, calibration
+offset and Credits, even though Credits requests the shared stream.
+Document 20 also contains PANELMOVIE with a different authored transform.
+Its class or route remains unresolved, and no new movie request is inferred.
+The host uses decoded dimensions for an authored PANELMOVIE and leaves
+retained playback independent of whether the current screen draws it.

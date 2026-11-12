@@ -1,5 +1,23 @@
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
+#include "game_core/port/driving/object_view.hpp"
+#include "game_core/port/race/debug_transport.hpp"
+namespace hp2::debug {
+// E-0099-W41, Debug NFSHP2.ELF815b...332f1b. Original brepeat.cpp;
+// explicit logical storage including the variable-length trailing stream.
+class bRepeat : public ::port::driving::ObjectView {
+public:
+ using ObjectView::ObjectView;
+ void DoSnapshot(std::uint32_t snapshot,bool add_data_position); //0013C990,W74.
+ void PrepareToAddData(int bytes,int channels,int enable_codeine);
+ void PrepareToRemoveData();
+ void TellCodeineWeAreFinishedRemovingData(const ::port::race::MonitorSyscall& ={}); //001E7AC0, E-0099-W49.
+ void WriteToLocation(std::int32_t location,std::int32_t data,int bits);
+ std::int32_t ReadFromLocation(std::int32_t location,int bits)const;
+ int AddData(std::int32_t,int bits,int channel,const ::port::race::MonitorSyscall& monitor={});
+ std::int32_t RemoveData(int bits,int channel);
+};
+}
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.

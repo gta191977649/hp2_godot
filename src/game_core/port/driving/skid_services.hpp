@@ -6,6 +6,7 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <optional>
 namespace port::driving {
 struct ContactProvider;
 using SkidVector=std::array<float,3>;
@@ -40,6 +41,12 @@ struct SkidServices {
     ContactProvider* contact=nullptr;
     std::function<void(const SkidQuad&)> emit;
     bool depth_route_enabled=true; // Explicit synthetic normal-target render service.
+    // Port binding distinction only: actual World code never supplies the
+    // separate fixture arena/clan. Positive shared skids require their real owner.
+    bool shared_world=false;
+    // W71 explicit port policy at original Wheel position.sp+5C, restart
+    // position stackW and bbox-radius stackW consumers. No recovered value.
+    std::optional<std::uint32_t> port_stack_vector_lane;
 };
 using SkidTextureLookup=std::function<SkidTexture(const std::string&,std::uint32_t)>;
 // Host allocator/list binding only; allocation extent/count come from Debug InitSkids.

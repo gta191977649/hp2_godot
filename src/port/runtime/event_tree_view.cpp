@@ -28,6 +28,7 @@ void solid(render::Frame& frame, float x, float y, float width, float height,
 } // namespace
 
 void EventTreeView::clear() {
+    source_status_={};
     trees_.clear();
     status_gaps_.clear();
     border_phase_ = 0;
@@ -54,10 +55,11 @@ const hp2::frontend::EventTree_001FFC40* EventTreeView::tree() const {
 
 EventTreeLoadResult EventTreeView::load(assets::Source& source, const std::string& relative_path,
                                         int mode_id,
-                                        const hp2::memorycard::Profile_002FC050& profile) {
+                                        const hp2::memorycard::Profile_002FC050& profile,StatusProvider source_status) {
     EventTreeLoadResult result;
     clear();
     profile_ = profile;
+    source_status_=std::move(source_status);
     mode_id_ = mode_id;
     std::vector<std::uint8_t> buffer;
     try {
@@ -107,6 +109,8 @@ EventTreeLoadResult EventTreeView::load(assets::Source& source, const std::strin
         // FUN_002010B8 event32 first requires events1..31 in BOTH trees Won.
         // Resolve that dependency here, where both parsed trees are available.
         bool completion = true;
+        if(source_status_){const int status=status_of(unsigned(intro));if(status>0&&status!=4)state_=7;}
+        else {
         for (const auto& candidate : trees_) {
             for (int number = 1; number <= 31; ++number) {
                 const int index = candidate.FindLeafByEventNumber(number);
@@ -118,6 +122,7 @@ EventTreeLoadResult EventTreeView::load(assets::Source& source, const std::strin
         if (completion) {
             const int status = selected->Status_002010B8(profile_, intro);
             if (status > 0 && status != 4) state_ = 7;
+        }
         }
     }
     result.ok = true;
@@ -145,6 +150,11 @@ EventTreeNode EventTreeView::node_at(std::size_t index) const {
     if (node.number == 32 && node.status == 0) {
         int visibility = 0;
         const auto gap = hp2::guard([&] {
+            if(source_status_){
+                const int row=selected->FindLeafByEventNumber(31);
+                if(row<0)throw std::logic_error("Source current-tree event31 is missing");
+                visibility=status(selected->type_0x08,row)==4;return; // Debug001F3950.
+            }
             for (const auto& candidate : trees_) {
                 const int row = candidate.FindLeafByEventNumber(31);
                 if (row < 0) hp2::not_implemented("0x001F77F0", "event31 tree gate unavailable");
@@ -185,6 +195,7 @@ int EventTreeView::status_of(std::size_t index) const {
     if (selected == nullptr) return hp2::frontend::kEventStatusLocked;
     int status = -1; // Port-side unknown, never represented as a recovered status.
     const std::string gap = hp2::guard([&] {
+        if(source_status_){status=this->status(selected->type_0x08,int(index));return;}
         if (selected->records[index].number_0x28 == 32) {
             // Resolve event32's other-tree dependency where both parsed trees exist.
             for (const auto& candidate : trees_) for (int number = 1; number <= 31; ++number) {
@@ -199,6 +210,12 @@ int EventTreeView::status_of(std::size_t index) const {
         status_gaps_.push_back(gap);
     return status;
 }
+int EventTreeView::status(int tree_type,int record_index,const hp2::frontend::EventLink_002008B8* goal)const{
+    const auto found=std::find_if(trees_.begin(),trees_.end(),[&](const auto& candidate){return candidate.type_0x08==tree_type;});
+    if(found==trees_.end()||record_index<0||unsigned(record_index)>=found->records.size())throw std::invalid_argument("Event status identity is outside the loaded view");
+    if(source_status_)return source_status_(tree_type,found->records[unsigned(record_index)].number_0x28,goal);
+    return found->Status_002010B8(profile_,record_index,goal);
+}
 
 int EventTreeView::tree_type() const {
     const auto* selected = tree();
@@ -207,6 +224,13 @@ int EventTreeView::tree_type() const {
 
 std::uint32_t EventTreeView::title_string_id() const {
     return hp2::frontend::TitleStringId_001F96B8(mode_id_);
+}
+
+bool EventTreeView::select_node_port(int index){
+    if(state_!=0 || !tree() || index<0 || std::size_t(index)>=tree()->records.size())return false;
+    const auto node=node_at(index);if(node.visibility!=1 || node.status<0)return false;
+    if(!source_status_&&(node.number==31||node.number==32)&&node.status==0)return false;
+    cursor_=index;target_camera(zoom_path_.field_0x24);return true;
 }
 
 bool EventTreeView::move_cursor(int direction) {
@@ -222,7 +246,11 @@ bool EventTreeView::move_cursor(int direction) {
     // 32 are only enterable once their completion gates are met. Those gates are not recovered,
     // so the port applies the part that is -- a node reporting Locked cannot be entered -- and
     // the rest stays an open question.
-    if (status_of(static_cast<std::size_t>(target)) == hp2::frontend::kEventStatusLocked) {
+    if(source_status_){
+        // Debug MaybeChangeLeaf001F6158 calls IsVisible001F3950, not GetStatus
+        // !=LOCKED. Current-tree31 may expose locked32 before the opposite31.
+        if(node_at(unsigned(target)).visibility!=1)return false;
+    }else if (status_of(static_cast<std::size_t>(target)) == hp2::frontend::kEventStatusLocked) {
         const auto& record = selected->records[static_cast<std::size_t>(target)];
         if (record.number_0x28 == 0x1f || record.number_0x28 == 0x20) return false;
     }
@@ -321,7 +349,7 @@ EventTreeOverlayStats append_event_tree(const EventTreeView& view, const WidgetS
                                         render::Resources& resources, render::Frame& frame,
                                         const hp2::frontend::FeWidget* panel_template,
                                         const hp2::frontend::FeWidget* number_template,
-                                        const hp2::frontend::FeScreen* screen_template) {
+                                        const hp2::frontend::FeScreen* screen_template,std::vector<hp2::frontend::FeWidget>* text_nodes, bool port_unclipped) {
     EventTreeOverlayStats stats;
     const auto nodes = view.nodes();
     if (view.state() != 0 && view.state() != 1 && view.state() != 3) return stats;
@@ -341,7 +369,7 @@ EventTreeOverlayStats append_event_tree(const EventTreeView& view, const WidgetS
         if (widget.name_hash == 0xAA5D7D3Fu) mask = &widget;
     }
     render::Rect clip;
-    if (mask) { const auto size = sizes.scaled(*mask); clip = {mask->x, mask->y, size.width, size.height}; }
+    if (mask && !port_unclipped) { const auto size = sizes.scaled(*mask); clip = {mask->x, mask->y, size.width, size.height}; }
     const auto line = [&](render::Vec2 from, render::Vec2 to, const render::Color& colour) {
         const auto* authored = from.y == to.y ? horizontal : vertical;
         if (!authored) hp2::not_implemented("0x001F6CF0", "authored HLINE/VLINE template unavailable");
@@ -398,7 +426,7 @@ EventTreeOverlayStats append_event_tree(const EventTreeView& view, const WidgetS
                     if (!row) continue;
                     const int parent = tree->FindLeafByEventNumber(row->prerequisite_number_0x02);
                     if (parent < 0) continue;
-                    if (tree->Status_002010B8(view.profile(), parent, row) >= 2 &&
+                    if (view.status(tree->type_0x08,parent,row) >= 2 &&
                         midpoint >= std::min(nodes[child].x, nodes[parent].x) &&
                         midpoint <= std::max(nodes[child].x, nodes[parent].x)) passed = true;
                 }
@@ -486,6 +514,7 @@ EventTreeOverlayStats append_event_tree(const EventTreeView& view, const WidgetS
         widget.a = static_cast<std::uint8_t>((dim ? 80.0f : 128.0f) *
                     (node.selected ? view.alpha() : 1.0f));
         widget.clip_hash_0x4c = 0;
+        if(text_nodes){widget.name="EVENT_NODE_"+std::to_string(node.index);text_nodes->push_back(std::move(widget));++stats.numbers;continue;}
         number_screen.widgets.push_back(widget);
         render::Frame number_frame;
         const auto result = build_frame(number_screen, sizes, {}, number_frame);

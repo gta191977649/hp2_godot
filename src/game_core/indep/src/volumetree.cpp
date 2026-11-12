@@ -38,3 +38,21 @@ const vAABB* vAABBTree::QueryLeaf(float x,float y,float z)const {
     return &NodeArray.front();
 }
 }
+
+namespace hp2::debug {
+// Debug001B72F0; E-0099-W29; Contains001B70E8 is inlined below. Loader validates the graph.
+std::uint32_t vAABBTree::QueryLeafHelper(std::uint32_t node,float x,float y,float z)const{
+ const auto base=m_.word(address_);const auto count=m_.signed_half(node+14);
+ for(int i=0;i<count;++i){const auto child=base+static_cast<std::int32_t>(m_.signed_half(node+28+static_cast<unsigned>(i)*2))*48;
+  if(std::abs(x-m_.scalar(child))<m_.scalar(child+16)&&std::abs(y-m_.scalar(child+4))<m_.scalar(child+20)&&std::abs(z-m_.scalar(child+8))<m_.scalar(child+24)){
+   if(m_.signed_half(child+14)<1)return child;if(const auto leaf=QueryLeafHelper(child,x,y,z))return leaf;
+  }
+ }return 0;
+}
+// Debug001B73F0; E-0099-W29. Strict boundary tests; first matching recursive leaf wins.
+std::uint32_t vAABBTree::QueryLeaf(float x,float y,float z)const{
+ const auto root=m_.word(address_);if(!root)return 0;
+ if(!(std::abs(x-m_.scalar(root))<m_.scalar(root+16)&&std::abs(y-m_.scalar(root+4))<m_.scalar(root+20)&&std::abs(z-m_.scalar(root+8))<m_.scalar(root+24)))return 0;
+ return m_.signed_half(root+14)>0?QueryLeafHelper(root,x,y,z):root;
+}
+}

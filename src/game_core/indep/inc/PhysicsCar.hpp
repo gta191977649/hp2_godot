@@ -18,3 +18,8 @@ public:
  void JumpStabilizer();void IterateForces();void ResolveForces();void UpdateCar(float);
 };
 }
+
+namespace hp2::debug {
+// Debug00136EE8/00137030, E-0099-W21. Real original pool ownership.
+void InitPhysics(::port::driving::Memory&);void ClosePhysics(::port::driving::Memory&);
+}

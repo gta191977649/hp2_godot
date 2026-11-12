@@ -85,3 +85,11 @@ void RaceSetupBaseClass::FindChangeableByLanguageID() {
     hp2::not_implemented("0x001B7AE8", "RaceSetupBaseClass::FindChangeableByLanguageID (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+
+namespace hp2::debug {
+// Debug001B6048, E-0107-F01; original racesetup.cpp. All three words explicit.
+void DataFreeRunSetup::InitWithDefaults(::port::driving::Memory& m,std::uint32_t a){m.word(a,3);m.word(a+8,1);m.word(a+4,0);}
+// Debug001B32A0, E-0107-F01; original racesetup.cpp.
+void DataChallengeScreen::InitWithDefaults(::port::driving::Memory& m,std::uint32_t a){m.word(a+8,1);m.word(a+4,3);m.word(a,1);m.word(a+12,1);}
+}

@@ -3,6 +3,7 @@
 #include "track_postprocess.hpp"
 #include "track_reflection_renderer.hpp"
 #include "track_shadow_renderer.hpp"
+#include "championship_timing.hpp"
 #include "track_mesh_batches.hpp"
 #include "track_world_batches.hpp"
 #include "track_submission_cache.hpp"
@@ -28,6 +29,7 @@
 #include "game_core/port/track/projection.hpp"
 #include "platform/shaders/track_shader.hpp"
 #include <godot_cpp/classes/camera3d.hpp>
+#include <godot_cpp/core/object.hpp>
 #include <godot_cpp/classes/display_server.hpp>
 #include <godot_cpp/classes/viewport.hpp>
 #include <sstream>
@@ -71,6 +73,27 @@
 namespace port::godot_bridge {
 namespace {
 godot::String text(const std::string& s){return godot::String::utf8(s.c_str());}
+godot::Ref<godot::Image> with_godot_mip_chain(const godot::Ref<godot::Image>& base,
+    const std::vector<hp2::assets::DecodedTexture>& authored){
+    // Keep the supplied mip pixels. Godot fills the missing tail for its
+    // hardware sampler; the original per-level textures remain available.
+    auto image=godot::Image::create_from_data(base->get_width(),base->get_height(),
+        false,godot::Image::FORMAT_RGBA8,base->get_data());
+    if(image->generate_mipmaps()!=godot::OK||authored.size()>std::size_t(image->get_mipmap_count()))return {};
+    auto pixels=image->get_data();
+    auto* data=pixels.ptrw();
+    int width=base->get_width(),height=base->get_height();
+    for(std::size_t i=0;i<authored.size();++i){
+        width=std::max(1,width/2);height=std::max(1,height/2);
+        const auto& mip=authored[i];
+        const auto offset=image->get_mipmap_offset(int(i+1));
+        if(mip.width!=width||mip.height!=height||offset<0||
+            mip.rgba.size()!=std::size_t(width)*height*4||
+            std::size_t(offset)+mip.rgba.size()>std::size_t(pixels.size()))return {};
+        std::memcpy(data+offset,mip.rgba.data(),mip.rgba.size());
+    }
+    return godot::Image::create_from_data(base->get_width(),base->get_height(),true,godot::Image::FORMAT_RGBA8,pixels);
+}
 godot::Vector3 host(const std::array<float,3>& p){return {p[1],p[2],p[0]};}
 port::assets::DirectorySource source(){
     const auto start=godot::ProjectSettings::get_singleton()->globalize_path("res://");
@@ -116,7 +139,8 @@ struct Ps2TrackRenderer::Impl {
     std::size_t hlod_warm_cursor=0;
     std::uint64_t hlod_warm_frame_base=0;
     godot::Camera3D* hlod_load_camera=nullptr;
-    double environment_submit_ms=0,main_submit_ms=0,reflection_submit_ms=0,post_submit_ms=0,particle_submit_ms=0,sun_submit_ms=0,sun_readback_ms=0;
+    double environment_submit_ms=0,shadow_submit_ms=0,main_submit_ms=0,reflection_submit_ms=0,post_submit_ms=0,particle_submit_ms=0,sun_submit_ms=0,sun_readback_ms=0;
+    double alpha_order_ms=0,draw_trim_ms=0,mirror_host_ms=0;
     godot::Dictionary batch_breaks;
     std::uint64_t scene_generation=0;unsigned prepare_workers=0;bool submit_math_enabled=false;std::map<unsigned,godot::Dictionary> preparation_views;
     int diagnostics_level=0;bool submit_cache=true,depth_param_cache=true,dynamic_plan=false,residency_cache=false,capture_world_batches=false;TrackSubmissionCache submission_plan;std::map<unsigned,TrackSubmissionCache> reflection_plans;
@@ -133,6 +157,9 @@ struct Ps2TrackRenderer::Impl {
     std::shared_ptr<const port::track::Scene> scene;
     std::map<std::uint32_t,godot::Ref<godot::ImageTexture>> textures;
     std::map<std::uint32_t,std::vector<godot::Ref<godot::ImageTexture>>> mipmaps;
+    std::set<std::uint32_t> godot_mip_textures;
+    bool race_godot_sampling=false,race_fxaa=false;
+    std::size_t godot_sampling_materials=0;
     std::map<std::string,godot::Ref<godot::Shader>> shaders;
     std::map<std::tuple<std::uint32_t,std::uint32_t,std::uint16_t>,godot::Ref<godot::ShaderMaterial>> materials;
     std::vector<godot::GeometryInstance3D*> nodes;
@@ -147,6 +174,12 @@ struct Ps2TrackRenderer::Impl {
     std::unique_ptr<TrackPostprocess> postprocess_renderer;
     std::unique_ptr<TrackReflectionRenderer> reflection_renderer;
     std::array<std::unique_ptr<TrackEnvironmentRenderer>,6> reflection_skies;
+    std::uint64_t secondary_camera_id=0;
+    float race_raster_scale=1.f;
+    std::uint16_t secondary_original_fov=0;
+    std::unique_ptr<TrackEnvironmentRenderer> secondary_sky;
+    godot::Array world_visuals;bool world_visuals_set=false;
+    std::map<std::pair<int64_t,int64_t>,std::unique_ptr<TrackShadowRenderer>> world_shadows;
     std::unique_ptr<TrackShadowRenderer> shadow_renderer;ShadowFrame shadow_frame;godot::Dictionary visual_state;
     std::unique_ptr<TrackSunRenderer> sun_renderer;SunFrame sun_frame;bool readback_connected=false;
     std::unique_ptr<TrackParticleRenderer> particle_renderer;ParticleFrame particle_frame;
@@ -176,6 +209,11 @@ struct Ps2TrackRenderer::Impl {
     std::map<std::pair<std::size_t,std::size_t>,godot::Ref<godot::ArrayMesh>> meshes;
     std::map<std::pair<std::size_t,std::size_t>,std::uint64_t> mesh_last_used;
     std::unique_ptr<TrackMeshBatchCache> batch_cache;
+    std::vector<TrackSectionOwner> depth_section_owners;
+    std::vector<EncodedDepthBatch> depth_batches;
+    std::vector<StaticDepthSource> static_depth_sources;
+    std::unordered_set<std::uint64_t> registered_depth_sources;
+    std::map<unsigned,godot::Dictionary> race_submission_stats;
     // Host policy only: active views are never evicted or clipped by these limits.
     static constexpr std::size_t inactive_draw_limit=256,inactive_mesh_limit=16u*1024u*1024u;
     std::size_t draw_evictions=0,released_bundle_bytes=0;
@@ -228,6 +266,7 @@ void Ps2TrackRenderer::_bind_methods(){
     godot::ClassDB::bind_static_method("Ps2TrackRenderer",godot::D_METHOD("test_instance_pool"),&test_track_instance_pool);
     godot::ClassDB::bind_static_method("Ps2TrackRenderer",godot::D_METHOD("test_particle_mesh_reuse"),&TrackParticleRenderer::test_mesh_reuse);
 #endif
+    godot::ClassDB::bind_static_method("Ps2TrackRenderer",godot::D_METHOD("test_shadow_mesh_stream"),&TrackShadowRenderer::test_mesh_stream);
     godot::ClassDB::bind_method(godot::D_METHOD("get_catalog"),&Ps2TrackRenderer::get_catalog);
     godot::ClassDB::bind_method(godot::D_METHOD("request_track","number"),&Ps2TrackRenderer::request_track);
     godot::ClassDB::bind_method(godot::D_METHOD("load_track","relative_path"),&Ps2TrackRenderer::load_track);
@@ -244,8 +283,13 @@ void Ps2TrackRenderer::_bind_methods(){
     godot::ClassDB::bind_method(godot::D_METHOD("get_render_controls"),&Ps2TrackRenderer::get_render_controls);
     godot::ClassDB::bind_method(godot::D_METHOD("get_environment_capture"),&Ps2TrackRenderer::get_environment_capture);
     godot::ClassDB::bind_method(godot::D_METHOD("set_camera_mode","original_type"),&Ps2TrackRenderer::set_camera_mode);
+    godot::ClassDB::bind_method(godot::D_METHOD("set_secondary_view","camera","original_fov"),&Ps2TrackRenderer::set_secondary_view);
+    godot::ClassDB::bind_method(godot::D_METHOD("set_race_performance_raster","enabled"),&Ps2TrackRenderer::set_race_performance_raster);
+    godot::ClassDB::bind_method(godot::D_METHOD("set_race_godot_quality","texture_sampling","fxaa"),&Ps2TrackRenderer::set_race_godot_quality);
     godot::ClassDB::bind_method(godot::D_METHOD("set_visual_timestep","seconds"),&Ps2TrackRenderer::set_visual_timestep);
     godot::ClassDB::bind_method(godot::D_METHOD("set_visual_state","state"),&Ps2TrackRenderer::set_visual_state);
+    godot::ClassDB::bind_method(godot::D_METHOD("apply_world_objects","objects","scenery_flags"),&Ps2TrackRenderer::apply_world_objects,DEFVAL(godot::Array()));
+    godot::ClassDB::bind_method(godot::D_METHOD("set_world_vehicle_visuals","states"),&Ps2TrackRenderer::set_world_vehicle_visuals);
     godot::ClassDB::bind_method(godot::D_METHOD("set_driving_effect_source","source"),&Ps2TrackRenderer::set_driving_effect_source);
     godot::ClassDB::bind_method(godot::D_METHOD("set_render_collision","enabled"),&Ps2TrackRenderer::set_render_collision);
     godot::ClassDB::bind_method(godot::D_METHOD("set_show_lod","enabled"),&Ps2TrackRenderer::set_show_lod);
@@ -262,6 +306,8 @@ void Ps2TrackRenderer::release_display(){
     if(impl_->particle_renderer)impl_->particle_seed=impl_->particle_renderer->global_seed();
     impl_->particle_renderer.reset();impl_->particle_frame={};impl_->main_alpha_draws.clear();impl_->visual_timestep=0;
     impl_->reflection_renderer.reset();for(auto& sky:impl_->reflection_skies)sky.reset();
+    impl_->secondary_sky.reset();
+    impl_->world_shadows.clear();impl_->world_visuals.clear();impl_->world_visuals_set=false;
     impl_->shadow_renderer.reset();impl_->shadow_frame={};impl_->visual_state.clear();
     impl_->environment_renderer.reset();impl_->environment_frame={};
     impl_->visual_state_valid=false;
@@ -270,9 +316,12 @@ void Ps2TrackRenderer::release_display(){
     for(auto it=impl_->nodes.rbegin();it!=impl_->nodes.rend();++it){remove_child(*it);memdelete(*it);}impl_->nodes.clear();
     impl_->occlusion_pool.reset();impl_->opaque_queue_draws=0;
     impl_->instance_pool.reset();impl_->instance_owners.clear();impl_->main_instance_nodes.clear();impl_->instance_groups=impl_->instanced_commands=impl_->instance_saved_draws=0;
+    impl_->depth_batches.clear();impl_->static_depth_sources.clear();impl_->registered_depth_sources.clear();
+    impl_->depth_section_owners.clear();impl_->race_submission_stats.clear();
     impl_->preparation_views.clear();impl_->material_state_samples.clear();impl_->material_state_mismatches=0;impl_->source_mesh_creations=impl_->source_payload_bytes=0;impl_->reflection_plans.clear();impl_->submission_plan.clear();impl_->batch_cache.reset();impl_->submission_counts.clear();impl_->submission_times.clear();impl_->draw_evictions=impl_->released_bundle_bytes=0;
     impl_->uniform_values.clear();impl_->shared_materials.clear();impl_->active_viewport_rids.clear();impl_->parameter_sets=impl_->parameter_skips=impl_->batch_cache_skips=impl_->material_reuses=impl_->sorting_updates=0;
     impl_->textures.clear();impl_->meshes.clear();impl_->mesh_last_used.clear();impl_->mipmaps.clear();impl_->shaders.clear();impl_->materials.clear();
+    impl_->godot_mip_textures.clear();impl_->godot_sampling_materials=0;
     impl_->alpha_ranges.clear();impl_->texture_info.clear();impl_->bounds={};impl_->has_bounds=false;
 }
 godot::Dictionary Ps2TrackRenderer::configure_optimizations(const godot::Dictionary& options){
@@ -312,7 +361,10 @@ godot::Dictionary Ps2TrackRenderer::get_lod_ranges(int instance,int view)const{
         result["levels"]=levels;});result["ok"]=failure.empty();result["error"]=text(failure);return result;
 }
 godot::Dictionary Ps2TrackRenderer::get_optimization_state()const{
-    godot::Dictionary result;result["submit_math_enabled"]=impl_->submit_math_enabled;result["render_prepare_workers"]=impl_->prepare_workers;result["render_thread_requested"]=requested_render_thread();result["render_thread_actual"]=godot::RenderingServer::get_singleton()->is_on_render_thread()?"safe":"separate";godot::Dictionary preparations;for(const auto& p:impl_->preparation_views)preparations[p.first]=p.second;result["render_preparation_views"]=preparations;result["effective"]=optimization_options_dictionary(impl_->optimization);result["loaded"]=bool(impl_->scene);result["resource_reuse_default_validated"]=godot::String(godot::ProjectSettings::get_singleton()->get_setting("hp2/rendering/optimization_profile","baseline"))=="optimized";result["instancing_validation"]="Experimental: Track24 exact colour mismatch; excluded from optimized profile";result["material_sharing_enabled"]=false;result["material_sharing_validation"]="Disabled: Track11 reflection atlas changed under sharing; distinct material identity retained";result["experimental_occlusion"]=true;result["experimental_opaque_queue"]=true;result["world_batches_scope"]="All tracks use the same unlit contiguous main-view batching policy; local lighting, alpha order, capture consumers, nonidentity owners and HLOD retain baseline";result["capture_world_batches"]=impl_->capture_world_batches;result["residency_cache"]=impl_->residency_cache;result["inactive_draw_limit"]=int64_t(impl_->residency_cache?4096:Impl::inactive_draw_limit);result["inactive_mesh_limit_bytes"]=int64_t(impl_->residency_cache?128u*1024u*1024u:Impl::inactive_mesh_limit);result["inactive_retention_frames"]=int64_t(impl_->residency_cache?1800:120);result["dynamic_plan_cache"]=impl_->dynamic_plan;result["submission_plan_cache"]=impl_->submit_cache;result["submission_plan_hits"]=int64_t(impl_->submission_plan.hits);result["submission_plan_builds"]=int64_t(impl_->submission_plan.builds);result["section_owner_builds"]=int64_t(impl_->submission_plan.owner_builds);result["diagnostics_level"]=impl_->diagnostics_level;result["world_batches_consumer_fallback"]=impl_->optimization.world_batches&&impl_->visual_state_valid;
+    godot::Dictionary result;
+    result["godot_sampling_materials"]=int64_t(impl_->godot_sampling_materials);
+    result["godot_mip_textures"]=int64_t(impl_->godot_mip_textures.size());
+    result["submit_math_enabled"]=impl_->submit_math_enabled;result["render_prepare_workers"]=impl_->prepare_workers;result["render_thread_requested"]=requested_render_thread();result["render_thread_actual"]=godot::RenderingServer::get_singleton()->is_on_render_thread()?"safe":"separate";godot::Dictionary preparations;for(const auto& p:impl_->preparation_views)preparations[p.first]=p.second;result["render_preparation_views"]=preparations;result["effective"]=optimization_options_dictionary(impl_->optimization);result["loaded"]=bool(impl_->scene);result["resource_reuse_default_validated"]=godot::String(godot::ProjectSettings::get_singleton()->get_setting("hp2/rendering/optimization_profile","baseline"))=="optimized";result["instancing_validation"]="Experimental: Track24 exact colour mismatch; excluded from optimized profile";result["material_sharing_enabled"]=false;result["material_sharing_validation"]="Disabled: Track11 reflection atlas changed under sharing; distinct material identity retained";result["experimental_occlusion"]=true;result["experimental_opaque_queue"]=true;result["world_batches_scope"]="All tracks use the same unlit contiguous main-view batching policy; local lighting, alpha order, capture consumers, nonidentity owners and HLOD retain baseline";result["capture_world_batches"]=impl_->capture_world_batches;result["residency_cache"]=impl_->residency_cache;result["inactive_draw_limit"]=int64_t(impl_->residency_cache?4096:Impl::inactive_draw_limit);result["inactive_mesh_limit_bytes"]=int64_t(impl_->residency_cache?128u*1024u*1024u:Impl::inactive_mesh_limit);result["inactive_retention_frames"]=int64_t(impl_->residency_cache?1800:120);result["dynamic_plan_cache"]=impl_->dynamic_plan;result["submission_plan_cache"]=impl_->submit_cache;result["submission_plan_hits"]=int64_t(impl_->submission_plan.hits);result["submission_plan_builds"]=int64_t(impl_->submission_plan.builds);result["section_owner_builds"]=int64_t(impl_->submission_plan.owner_builds);result["diagnostics_level"]=impl_->diagnostics_level;result["world_batches_consumer_fallback"]=impl_->optimization.world_batches&&impl_->visual_state_valid;
     godot::Dictionary counters;counters["material_state_samples"]=impl_->material_state_samples;counters["material_state_mismatches"]=int64_t(impl_->material_state_mismatches);counters["source_mesh_creations"]=int64_t(impl_->source_mesh_creations);counters["geometry_upload_payload_bytes"]=int64_t(impl_->source_payload_bytes+(impl_->batch_cache?impl_->batch_cache->uploaded_payload_bytes():0));counters["upload_byte_scope"]="Logical track geometry CPU payload on uploads; excludes textures/particles/vehicle/driver conversion; not GPU transfer measurement";counters["batch_mesh_builds"]=int64_t(impl_->batch_cache?impl_->batch_cache->builds():0);counters["batch_mesh_cached_bytes"]=int64_t(impl_->batch_cache?impl_->batch_cache->bytes():0);counters["parameter_sets"]=int64_t(impl_->parameter_sets);counters["parameter_skips"]=int64_t(impl_->parameter_skips);counters["batch_cache_skips"]=int64_t(impl_->batch_cache_skips);counters["shared_materials"]=int64_t(impl_->shared_materials.size());counters["material_reuses"]=int64_t(impl_->material_reuses);counters["sorting_updates"]=int64_t(impl_->sorting_updates);counters["instance_groups"]=int64_t(impl_->instance_groups);counters["instanced_commands"]=int64_t(impl_->instanced_commands);counters["instance_saved_draws"]=int64_t(impl_->instance_saved_draws);if(impl_->instance_pool){counters["instance_pool_entries"]=int64_t(impl_->instance_pool->entries());counters["instance_buffer_uploads"]=int64_t(impl_->instance_pool->transform_uploads());}counters["opaque_queue_draws"]=int64_t(impl_->opaque_queue_draws);if(impl_->occlusion_pool)result["occlusion"]=impl_->occlusion_pool->stats();if(impl_->sun_renderer)result["sun"]=impl_->sun_renderer->stats();if(impl_->particle_renderer)result["particles"]=impl_->particle_renderer->stats();if(impl_->postprocess_renderer)result["postprocess"]=impl_->postprocess_renderer->stats();result["counters"]=counters;return result;
 }
 void Ps2TrackRenderer::clear_track(){
@@ -395,8 +447,17 @@ godot::Dictionary Ps2TrackRenderer::pump_load(){
             godot::PackedByteArray bytes;bytes.resize(t.bitmap.rgba.size());
             std::memcpy(bytes.ptrw(),t.bitmap.rgba.data(),t.bitmap.rgba.size());
             auto image=godot::Image::create_from_data(t.bitmap.width,t.bitmap.height,false,godot::Image::FORMAT_RGBA8,bytes);
-            if(image.is_null())throw std::runtime_error("Track texture upload failed");impl_->textures.emplace(t.header.tex_hash,godot::ImageTexture::create_from_image(image));
+            if(image.is_null())throw std::runtime_error("Track texture upload failed");
             const auto mips=scene.mipmaps.find(t.header.tex_hash);
+            const auto& header=t.header;
+            const bool same_wrap=bool(header.Field_0x4c&1)==bool(header.Field_0x4c&2);
+            if(impl_->race_godot_sampling&&same_wrap&&header.BiasLevel==0&&header.alpha_bits!=0x48&&
+                header.Field_0x70>=2&&port::vehicle::test_state_00105AC0(header).alpha_test!=6&&
+                mips!=scene.mipmaps.end()&&!mips->second.empty()){
+                auto chain=with_godot_mip_chain(image,mips->second);
+                if(chain.is_valid()){image=chain;impl_->godot_mip_textures.insert(t.header.tex_hash);}
+            }
+            impl_->textures.emplace(t.header.tex_hash,godot::ImageTexture::create_from_image(image));
             if(mips!=scene.mipmaps.end())for(const auto& mip:mips->second){
                 godot::PackedByteArray pixels;pixels.resize(mip.rgba.size());std::memcpy(pixels.ptrw(),mip.rgba.data(),mip.rgba.size());
                 const auto level=godot::Image::create_from_data(mip.width,mip.height,false,godot::Image::FORMAT_RGBA8,pixels);
@@ -485,6 +546,7 @@ void Ps2TrackRenderer::trim_draw_cache(){
         if(remaining<=(impl_->residency_cache?4096u:Impl::inactive_draw_limit)&&bytes<=(impl_->residency_cache?128u*1024u*1024u:Impl::inactive_mesh_limit)&&!expired)break;
         --remaining;bytes-=draw.mesh_bytes;
         for(auto* node:{draw.node,draw.reflection_node})if(node){
+            impl_->registered_depth_sources.erase(node->get_instance_id());
             if(impl_->postprocess_renderer)impl_->postprocess_renderer->forget_mesh(node);
             removed.insert(node);remove_child(node);memdelete(node);
         }
@@ -572,28 +634,68 @@ void Ps2TrackRenderer::submit_frame(port::track::Frame& frame,godot::Camera3D* c
     impl_->batch_cache->set_cpu_source([owner=impl_->scene](std::size_t solid,std::size_t surface){return std::shared_ptr<const port::render::VehicleSurface>(owner,&owner->geometry.solids.at(solid).surfaces.at(surface));},
         [this](std::size_t solid,std::size_t surface){return impl_->meshes.count({solid,surface})!=0;});
     const auto plan_begin=std::chrono::steady_clock::now();
-    const bool use_world_batches=impl_->optimization.world_batches&&get_global_transform()==godot::Transform3D()&&((view_id==0&&!impl_->visual_state_valid)||impl_->capture_world_batches);
+    const bool use_world_batches=impl_->runtime.world_operand_count()==0&&impl_->optimization.world_batches&&get_global_transform()==godot::Transform3D()&&((view_id==0&&!impl_->visual_state_valid)||impl_->capture_world_batches);
+    const bool race_world_batches=view_id==0&&!hlod&&impl_->world_visuals_set&&impl_->optimization.race_world_batches&&get_global_transform()==godot::Transform3D();
+    std::vector<bool> world_exclusions;
+    if(race_world_batches){
+        world_exclusions.reserve(frame.commands.size());
+        for(const auto& command:frame.commands)
+            world_exclusions.push_back(impl_->runtime.has_world_operand(command.instance));
+    }
     std::vector<TrackCommandBatch> batches;const std::vector<TrackCommandBatch>* cached_plan=nullptr;
     std::map<std::size_t,std::size_t> instance_counts;
     if(impl_->optimization.instancing&&!hlod){
         if(!impl_->instance_pool)impl_->instance_pool=std::make_unique<TrackInstancePool>(*this);
         impl_->instance_pool->begin_view(view_id);if(view_id==0)impl_->main_instance_nodes.clear();
         if(impl_->instance_owners.empty()){impl_->instance_owners.resize(impl_->scene->instances.size());std::vector<unsigned> owners(impl_->instance_owners.size());for(auto& o:impl_->instance_owners)o.known=false;for(const auto& section:impl_->scene->sections)for(std::size_t i=0;i<section.instance_count;++i){const auto index=section.instance_begin+i;if(index>=owners.size())throw std::runtime_error("Section instance ownership exceeds track resources");auto& o=impl_->instance_owners[index];o.section=section.number;o.known=++owners[index]==1;}}
-        std::vector<TrackInstanceBoundary> boundaries;boundaries.reserve(frame.commands.size());for(const auto& c:frame.commands){auto b=impl_->instance_owners.at(c.instance);b.view=view_id;b.lod_epoch=c.lod;boundaries.push_back(b);}
-        const auto plan=contiguous_track_instance_batches(*impl_->scene,frame,boundaries);auto submissions=track_instance_submissions(*impl_->scene,frame,plan);batches.reserve(submissions.size());for(auto& entry:submissions){if(entry.instance_count>1)instance_counts.emplace(entry.batch.subranges.front().command,entry.instance_count);batches.push_back(std::move(entry.batch));}
-        impl_->instance_groups+=plan.groups;impl_->instanced_commands+=plan.instanced_commands;impl_->instance_saved_draws+=plan.saved_draws;
-    }else if(hlod){
+        std::vector<TrackInstanceBoundary> boundaries;
+        boundaries.reserve(frame.commands.size());
+        for(const auto& command:frame.commands){
+            TrackInstanceBoundary boundary{view_id,0,command.lod,false};
+            if(command.instance<impl_->instance_owners.size()&&!impl_->runtime.has_world_operand(command.instance)){
+                boundary=impl_->instance_owners[command.instance];
+                boundary.view=view_id;
+                boundary.lod_epoch=command.lod;
+            }
+            boundaries.push_back(boundary);
+        }
+        const auto plan=contiguous_track_instance_batches(*impl_->scene,frame,boundaries);
+        if(plan.groups){
+            auto submissions=track_instance_submissions(*impl_->scene,frame,plan);
+            batches.reserve(submissions.size());
+            for(auto& entry:submissions){
+                if(entry.instance_count>1)instance_counts.emplace(entry.batch.subranges.front().command,entry.instance_count);
+                batches.push_back(std::move(entry.batch));
+            }
+            impl_->instance_groups+=plan.groups;
+            impl_->instanced_commands+=plan.instanced_commands;
+            impl_->instance_saved_draws+=plan.saved_draws;
+        }
+    }
+    if(batches.empty()&&hlod){
         // A range belongs to one source instance and one original level. Never
         // combine surfaces whose distance anchors or level selection can differ.
         for(std::size_t i=0;i<frame.commands.size();++i){const auto& c=frame.commands[i];const auto& s=impl_->scene->geometry.solids.at(c.solid).surfaces.at(c.surface);
             const bool append=i&&!batches.empty()&&frame.commands[i-1].instance==c.instance&&frame.commands[i-1].lod==c.lod&&same_track_batch_state(*impl_->scene,frame.commands[i-1],c);
             if(!append)batches.emplace_back();auto& b=batches.back();b.subranges.push_back({i,b.vertices,s.vertices.size(),b.indices,s.indices.size()});b.vertices+=s.vertices.size();b.indices+=s.indices.size();}
-    }else if(view_id==0)cached_plan=&impl_->submission_plan.acquire(*impl_->scene,frame,use_world_batches,impl_->submit_cache,impl_->dynamic_plan);
-    else if(impl_->dynamic_plan||impl_->capture_world_batches)cached_plan=&impl_->reflection_plans[view_id].acquire(*impl_->scene,frame,use_world_batches,impl_->submit_cache,impl_->dynamic_plan);
-    else batches=contiguous_track_batches(*impl_->scene,frame);
+    }else if(batches.empty()){
+        if(view_id==0)cached_plan=&impl_->submission_plan.acquire(*impl_->scene,frame,use_world_batches||race_world_batches,impl_->submit_cache,impl_->dynamic_plan||impl_->runtime.world_operand_count()!=0,world_exclusions);
+        else if(impl_->dynamic_plan||impl_->capture_world_batches)cached_plan=&impl_->reflection_plans[view_id].acquire(*impl_->scene,frame,use_world_batches,impl_->submit_cache,impl_->dynamic_plan||impl_->runtime.world_operand_count()!=0);
+        else batches=contiguous_track_batches(*impl_->scene,frame);
+    }
     const auto plan_end=std::chrono::steady_clock::now();
     impl_->submission_times[view_id][1]=std::chrono::duration<double,std::milli>(plan_end-plan_begin).count();
     const auto& final_batches=cached_plan?*cached_plan:batches;
+    const auto upload_before=impl_->batch_cache->uploaded_payload_bytes()+impl_->source_payload_bytes;
+    const auto mesh_creations_before=impl_->batch_cache->builds()+impl_->source_mesh_creations;
+    const bool batch_depth=view_id==0&&!hlod&&impl_->optimization.depth_batches&&
+        get_global_transform()==godot::Transform3D()&&
+        godot::RenderingServer::get_singleton()->get_current_rendering_method()=="forward_plus";
+    const bool publish_depth=view_id==0&&impl_->optimization.static_depth_sources;
+    const auto owner_transform=publish_depth?get_global_transform():godot::Transform3D();
+    if(view_id==0)impl_->static_depth_sources.clear();
+    std::vector<std::uint64_t> depth_sources;
+    if(batch_depth)depth_sources.resize(final_batches.size());
     std::size_t largest=0;for(const auto& batch:final_batches)largest=std::max(largest,batch.subranges.size());
     impl_->submission_counts[view_id]={frame.commands.size(),final_batches.size(),largest};
     // Snapshot only required misses. Do not instantiate Godot resources here.
@@ -644,7 +746,14 @@ void Ps2TrackRenderer::submit_frame(port::track::Frame& frame,godot::Camera3D* c
                 const auto& header=impl_->texture_info.at(surface.texture_hash)->header;
                 auto fusion=port::track::Fusion40::None;
                 if(command.effect.second_pass_320){const auto a=impl_->alpha_ranges.at(surface.texture_hash),b=impl_->alpha_ranges.at(0x0184d1f8);fusion=port::track::fusion_40(command.effect,a[0],a[1],b[0],b[1]);if(fusion==port::track::Fusion40::None)throw std::runtime_error("Track flag40 destination-alpha pass exceeds proven host fusion coverage");}
-                auto code=track_shader_source(header,command.effect,fusion);
+                const auto& effect=command.effect;
+                const bool needs_mips=effect.texture.maximum_mip_level>0&&header.Field_0x70>=2;
+                const bool godot_sampling=impl_->race_godot_sampling&&
+                    effect.texture.repeat_u==effect.texture.repeat_v&&
+                    !effect.rewrite_alpha&&!effect.second_pass_320&&!effect.environment_pass&&!effect.matrix_pack&&
+                    !effect.texture.additive&&effect.test.alpha_test!=6&&
+                    (!needs_mips||impl_->godot_mip_textures.count(surface.texture_hash));
+                auto code=track_shader_source(header,effect,fusion,godot_sampling);
                 if(batch.baked_world)replace_shader_token(code,"void vertex(){","void vertex(){\n    MODELVIEW_MATRIX=VIEW_MATRIX*transpose(mat4(CUSTOM1,CUSTOM2,CUSTOM3,vec4(0.0,0.0,0.0,1.0)));\n");
                 if(impl_->optimization.opaque_queue&&eligible_track_opaque_queue(command)){replace_shader_token(code,"ALPHA=1.0;","");++impl_->opaque_queue_draws;}
                 auto shader=impl_->shaders.find(code);if(shader==impl_->shaders.end()){godot::Ref<godot::Shader> value;value.instantiate();value->set_code(text(code));shader=impl_->shaders.emplace(code,value).first;}
@@ -654,7 +763,8 @@ void Ps2TrackRenderer::submit_frame(port::track::Frame& frame,godot::Camera3D* c
                 draw.material.instantiate();draw.material->set_shader(shader->second);
                 set_parameter(draw.material,"base_texture",impl_->textures.at(surface.texture_hash));
                 set_parameter(draw.material,"base_lit",bool(command.effect.flags&0x80));set_parameter(draw.material,"flag_0x4",bool(command.effect.flags&4));
-                for(int level=1;level<=header.Field_0x6e;++level)set_parameter(draw.material,text("mip_"+std::to_string(level)),impl_->mipmaps.at(surface.texture_hash).at(level-1));
+                if(godot_sampling)++impl_->godot_sampling_materials;
+                else for(int level=1;level<=header.Field_0x6e;++level)set_parameter(draw.material,text("mip_"+std::to_string(level)),impl_->mipmaps.at(surface.texture_hash).at(level-1));
                 if(command.effect.second_pass_320)set_parameter(draw.material,"specular_texture",impl_->textures.at(0x0184d1f8));
                 const auto material=scene.materials.find(surface.material_hash);
                 if(command.effect.flags&0x1c0){if(material==scene.materials.end())throw std::runtime_error("Native track frame has unresolved lighting material");const auto& block=material->second.blocks;for(int i=0;i<4;++i)set_parameter(draw.material,text("material_"+std::to_string(350+i)),godot::Vector4(block[i*4],block[i*4+1],block[i*4+2],block[i*4+3]));}
@@ -730,17 +840,109 @@ void Ps2TrackRenderer::submit_frame(port::track::Frame& frame,godot::Camera3D* c
             }else if(draw.reflection_node)draw.reflection_node->hide();
             if(instance_count>1){
                 std::vector<godot::Transform3D> transforms;transforms.reserve(instance_count);for(std::size_t i=0;i<instance_count;++i){const auto& c=frame.commands[rank+i];transforms.push_back(c.identity?godot::Transform3D():host_matrix(c.matrix));}
-                auto* node=impl_->instance_pool->submit(view_id,rank,batch_mesh,draw.material,transforms,1u<<view_id);
+                const TrackInstancePool::Key instance_key{impl_->instance_owners[command.instance].section,
+                    command.lod,command.instance,command.solid,command.surface};
+                auto* node=impl_->instance_pool->submit(view_id,instance_key,batch_mesh,draw.material,transforms,1u<<view_id);
                 const float origin=(get_global_position()-camera_position).dot(direction);const float offset=origin-float(frame.commands.size()-rank)*4096.f;
                 node->set_sorting_use_aabb_center(false);if(node->get_sorting_offset()!=offset)node->set_sorting_offset(offset);
                 if(view_id==0){impl_->main_instance_nodes.push_back(node);if(impl_->postprocess_renderer)impl_->postprocess_renderer->mark_instance_batch(node);}
                 if(cached.visible){draw.node->hide();cached.visible=false;if(impl_->postprocess_renderer)impl_->postprocess_renderer->mark_mesh_changed(draw.node,TrackPostprocess::Visibility);}
             }else if(!cached.visible){draw.node->set_visible(true);cached.visible=true;if(impl_->postprocess_renderer)impl_->postprocess_renderer->mark_mesh_changed(draw.node,TrackPostprocess::Visibility);}
+            if(batch_depth&&instance_count==1)depth_sources[index]=draw.node->get_instance_id();
+            if(publish_depth&&instance_count==1){
+                const auto id=draw.node->get_instance_id();
+                const auto& test=command.effect.test;
+                const auto& effect=command.effect;
+                // The shader identity versions the binding. Source parameter
+                // changes still reach it through the existing write notification.
+                const auto shader=draw.material->get_shader();
+                const bool eligible=!hlod&&!batch.baked_world&&shader.is_valid()&&
+                    !effect.alpha_pass&&!effect.environment_pass&&!effect.rewrite_alpha&&!effect.second_pass_320&&
+                    !effect.matrix_pack&&!effect.texture.additive&&effect.texture.blend==port::vehicle::BlendMode::Copy&&
+                    test.write_depth&&(test.alpha_test==1||test.alpha_test==5)&&test.depth_test==2&&
+                    std::none_of(batch.subranges.begin(),batch.subranges.end(),[&](const auto& range){
+                        return impl_->runtime.has_world_operand(frame.commands[range.command].instance);
+                    });
+                if(eligible){
+                    impl_->registered_depth_sources.insert(id);
+                    impl_->static_depth_sources.push_back({id,batch_mesh,draw.material,owner_transform*transform,
+                        draw.sorting_offset,shader->get_instance_id()});
+                }else if(impl_->registered_depth_sources.count(id)){
+                    impl_->static_depth_sources.push_back({id});
+                }
+            }
             if(math&&math->pose.valid)cached.pose_cache=math->pose;cached.initialized=true;draw.used_frame=impl_->frame_number;visible.push_back(&draw);
             ++rank;if(view_id==0)impl_->triangles+=batch.indices/3*instance_count;
         }
         for(auto* draw:impl_->view_draws[view_id])if(draw->used_frame!=impl_->frame_number){draw->node->set_visible(false);draw->state.visible=false;if(impl_->postprocess_renderer)impl_->postprocess_renderer->mark_mesh_changed(draw->node,TrackPostprocess::Visibility);if(draw->reflection_node)draw->reflection_node->hide();}
         impl_->view_draws[view_id]=std::move(visible);if(impl_->instance_pool)impl_->instance_pool->end_view(view_id);if(view_id==0&&impl_->occlusion_pool)impl_->occlusion_pool->end_frame();
+        if(view_id==0)impl_->depth_batches.clear();
+        if(batch_depth){
+            if(impl_->depth_section_owners.empty())impl_->depth_section_owners=track_section_owners(*impl_->scene);
+            std::map<std::uint64_t,unsigned> source_counts;
+            for(auto id:depth_sources)if(id)++source_counts[id];
+            TrackCommandBatch geometry;
+            geometry.baked_world=true;
+            EncodedDepthBatch encoded;
+            int section=-1;
+            unsigned lod=0;
+            const auto flush=[&]{
+                if(encoded.source_nodes.size()>1){
+                    encoded.mesh=impl_->batch_cache->acquire(frame,geometry);
+                    const auto first=geometry.subranges.front().command;
+                    encoded.sorting_offset=(get_global_position()-camera_position).dot(direction)-float(frame.commands.size()-first)*4096.f;
+                    impl_->depth_batches.push_back(std::move(encoded));
+                }
+                encoded={};
+                geometry.subranges.clear();
+                geometry.vertices=geometry.indices=0;
+            };
+            for(std::size_t i=0;i<final_batches.size();++i){
+                const auto& batch=final_batches[i];
+                const auto& first=frame.commands[batch.subranges.front().command];
+                const auto& owners=impl_->depth_section_owners;
+                const int next_section=first.instance<owners.size()?owners[first.instance].section:-1;
+                const bool eligible=depth_sources[i]&&source_counts.at(depth_sources[i])==1&&batch.vertices<=65536&&
+                    std::all_of(batch.subranges.begin(),batch.subranges.end(),[&](const auto& range){
+                        const auto& command=frame.commands[range.command];
+                        const auto& test=command.effect.test;
+                        return command.instance<owners.size()&&owners[command.instance].count==1&&
+                            owners[command.instance].section==next_section&&command.lod==first.lod&&
+                            !impl_->runtime.has_world_operand(command.instance)&&eligible_track_world_batch(command)&&
+                            test.write_depth&&test.alpha_test==5&&test.depth_test==2;
+                    });
+                if(!eligible||next_section!=section||first.lod!=lod||geometry.vertices+batch.vertices>65536)flush();
+                if(!eligible)continue;
+                section=next_section;
+                lod=first.lod;
+                encoded.source_nodes.push_back(depth_sources[i]);
+                for(auto range:batch.subranges){
+                    range.first_vertex+=geometry.vertices;
+                    range.first_index+=geometry.indices;
+                    geometry.subranges.push_back(range);
+                }
+                geometry.vertices+=batch.vertices;
+                geometry.indices+=batch.indices;
+            }
+            flush();
+        }
+        if(championship_timing_enabled()||race_world_batches||batch_depth||publish_depth||impl_->optimization.instancing){
+            godot::Dictionary stats;
+            stats["static_mesh_batches"]=int64_t(std::count_if(final_batches.begin(),final_batches.end(),[](const auto& batch){return batch.baked_world;}));
+            stats["world_excluded_commands"]=int64_t(std::count(world_exclusions.begin(),world_exclusions.end(),true));
+            stats["instance_batches"]=int64_t(instance_counts.size());
+            stats["depth_batches"]=int64_t(view_id==0?impl_->depth_batches.size():0);
+            stats["static_depth_sources"]=int64_t(view_id==0?impl_->static_depth_sources.size():0);
+            stats["upload_payload_bytes"]=int64_t(impl_->batch_cache->uploaded_payload_bytes()+impl_->source_payload_bytes-upload_before);
+            stats["geometry_creations"]=int64_t(impl_->batch_cache->builds()+impl_->source_mesh_creations-mesh_creations_before);
+            if(impl_->optimization.instancing&&impl_->instance_pool){
+                const auto counters=impl_->instance_pool->view_counters(view_id);
+                stats["instance_allocations"]=int64_t(counters.allocations);
+                stats["instance_uploads"]=int64_t(counters.uploads);
+                stats["instance_upload_bytes"]=int64_t(counters.upload_bytes);
+            }
+            impl_->race_submission_stats[view_id]=stats;
+        }
         impl_->submission_times[view_id][2]=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-view_begin).count();
 }
 
@@ -751,7 +953,7 @@ godot::Dictionary Ps2TrackRenderer::update_view(const godot::Vector3& camera_pos
         if(!camera)throw std::runtime_error("Shared track rendering requires an active Camera3D");
         // Capture-only geometry uses layers2..7; the main view and postprocess
         // colour camera consume layer1 and the caller's remaining world layers.
-        if(camera->get_cull_mask()!=0)camera->set_cull_mask(camera->get_cull_mask()&~0x7eu);
+        if(camera->get_cull_mask()!=0)camera->set_cull_mask(camera->get_cull_mask()&~0xfeu);
         port::track::FrameView view;view.position={float(camera_position.z),float(camera_position.x),float(camera_position.y)};
         const auto direction=-camera->get_global_transform().basis.get_column(2);
         view.direction={float(direction.z),float(direction.x),float(direction.y)};
@@ -774,9 +976,40 @@ godot::Dictionary Ps2TrackRenderer::update_view(const godot::Vector3& camera_pos
         auto frame=(impl_->static_lods&&impl_->show_lod)?impl_->runtime.prepare_hlod_frame(view,*impl_->math,*impl_->static_lods):impl_->runtime.prepare_frame(view,*impl_->math);
         const auto submit_begin=std::chrono::steady_clock::now();
         impl_->native_frame_ms=std::chrono::duration<double,std::milli>(submit_begin-native_begin).count();
-        ++impl_->frame_number;impl_->submission_counts.clear();impl_->submission_times.clear();impl_->instance_groups=impl_->instanced_commands=impl_->instance_saved_draws=0;impl_->active_viewport_rids.clear();impl_->active_viewport_rids.push_back(viewport->get_viewport_rid());
+        ++impl_->frame_number;impl_->submission_counts.clear();impl_->submission_times.clear();impl_->race_submission_stats.clear();impl_->instance_groups=impl_->instanced_commands=impl_->instance_saved_draws=0;impl_->active_viewport_rids.clear();impl_->active_viewport_rids.push_back(viewport->get_viewport_rid());
         impl_->packet_digest.clear();impl_->frame_view=view;impl_->triangles=0;impl_->roadshine_active=false;
+        impl_->race_submission_stats.clear();
         impl_->main_alpha_draws.clear();const auto main_begin=std::chrono::steady_clock::now();submit_frame(frame,camera,0);impl_->main_submit_ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-main_begin).count();impl_->frame=std::move(frame);
+        // TASK-0112: source eView3 selects its own sections, LOD and frustum.
+        // Shared resource caches supply a separate layer128 submission; no
+        // source World/Player update or visual timestep is performed here.
+        auto* secondary=godot::Object::cast_to<godot::Camera3D>(godot::ObjectDB::get_instance(impl_->secondary_camera_id));
+        if(!secondary&&impl_->secondary_camera_id)set_secondary_view(nullptr,0);
+        auto* secondary_target=secondary?godot::Object::cast_to<godot::SubViewport>(secondary->get_viewport()):nullptr;
+        impl_->mirror_host_ms=0;
+        if(secondary&&(impl_->race_raster_scale==1.f||!secondary_target||secondary_target->get_update_mode()!=godot::SubViewport::UPDATE_DISABLED)){
+            ChampionshipTimingScope mirror_timing(impl_->mirror_host_ms);
+            port::track::FrameView sub;const auto position=secondary->get_global_position();const auto direction=-secondary->get_global_transform().basis.get_column(2);
+            sub.position={float(position.z),float(position.x),float(position.y)};sub.direction={float(direction.z),float(direction.x),float(direction.y)};
+            sub.view_id=3;sub.near_z=secondary->get_near();sub.far_z=secondary->get_far();sub.frame_counter=view.frame_counter;sub.visual_timestep=0;
+            sub.focal_h=port::track::original_focal_h(*impl_->math,impl_->secondary_original_fov);
+            // CreateViewMatricies0010EA18 WorldScreenClipMatrix intentionally
+            // omits raster AspectRatioX/Y. Preserve the larger original CPU
+            // selection frustum; actual rendering uses the separate GPU camera.
+            const float half_x=std::min(128.f,256.f*impl_->math->scalar(0x3268c8)),half_y=std::min(32.f,64.f*impl_->math->scalar(0x3268cc));
+            if(!(half_x>0&&half_y>0))throw std::runtime_error("Invalid source mirror ClipVolumeScale operands");
+            godot::Projection projection;for(int c=0;c<4;++c)for(int r=0;r<4;++r)projection[c][r]=0;
+            projection[0][0]=sub.focal_h/half_x;projection[1][1]=sub.focal_h/half_y;
+            projection[2][2]=-(sub.far_z+sub.near_z)/(sub.far_z-sub.near_z);projection[2][3]=-1;
+            projection[3][2]=-2*sub.far_z*sub.near_z/(sub.far_z-sub.near_z);
+            const auto clip=projection*godot::Projection(secondary->get_global_transform().affine_inverse());
+            const int columns[]{2,0,1,3};for(int c=0;c<4;++c)for(int r=0;r<4;++r)sub.clip_matrix[c*4+r]=clip[columns[c]][r];
+            const auto selection_begin=std::chrono::steady_clock::now();auto mirror_frame=(impl_->static_lods&&impl_->show_lod)?impl_->runtime.prepare_hlod_frame(sub,*impl_->math,*impl_->static_lods):impl_->runtime.prepare_frame(sub,*impl_->math);
+            const auto selection_ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-selection_begin).count();submit_frame(mirror_frame,secondary,7);impl_->submission_times[7][0]=selection_ms;
+            impl_->active_viewport_rids.push_back(secondary->get_viewport()->get_viewport_rid());
+            if(!impl_->secondary_sky){EnvironmentResourceLookup lookup;lookup.mesh=[this](std::size_t solid,std::size_t surface){return acquire_source_mesh(solid,surface);};lookup.texture=[this](std::uint32_t hash)->godot::Ref<godot::Texture2D>{return impl_->textures.at(hash);};lookup.mip=[this](std::uint32_t hash,unsigned level)->godot::Ref<godot::Texture2D>{return impl_->mipmaps.at(hash).at(level-1);};impl_->secondary_sky=std::make_unique<TrackEnvironmentRenderer>(*this,std::move(lookup));}
+            impl_->secondary_sky->update(secondary,impl_->scene,*impl_->math,std::uint32_t(impl_->frame_number),0,settings.enabled(port::track::EffectId::Sky),3,128);
+        }
         const auto environment_begin=std::chrono::steady_clock::now();
         if(!impl_->environment_renderer){EnvironmentResourceLookup lookup;
             lookup.mesh=[this](std::size_t solid,std::size_t surface){return acquire_source_mesh(solid,surface);};
@@ -785,9 +1018,24 @@ godot::Dictionary Ps2TrackRenderer::update_view(const godot::Vector3& camera_pos
             impl_->environment_renderer=std::make_unique<TrackEnvironmentRenderer>(*this,std::move(lookup));
         }
         impl_->environment_frame=impl_->environment_renderer->update(camera,impl_->scene,*impl_->math,std::uint32_t(impl_->frame_number),0,settings.enabled(port::track::EffectId::Sky));
-        if(impl_->visual_state_valid&&impl_->environment){if(!impl_->shadow_renderer)impl_->shadow_renderer=std::make_unique<TrackShadowRenderer>(*this);
+        impl_->shadow_submit_ms=0;
+        {
+        ChampionshipTimingScope shadow_timing(impl_->shadow_submit_ms);
+        if(impl_->world_visuals_set){
+            if(impl_->shadow_renderer)impl_->shadow_renderer->clear();impl_->shadow_frame={};
+            std::set<std::pair<int64_t,int64_t>> current;
+            if(impl_->environment)for(int i=0;i<impl_->world_visuals.size();++i){const godot::Dictionary state=impl_->world_visuals[i];const auto key=std::make_pair(int64_t(state["world_generation"]),int64_t(state["world_address"]));current.insert(key);
+                auto& renderer=impl_->world_shadows[key];if(!renderer)renderer=std::make_unique<TrackShadowRenderer>(*this,impl_->optimization.shadow_stream);
+                const auto shadow=renderer->update(state,*impl_->scene,*impl_->math,impl_->environment->topology,settings.enabled(port::track::EffectId::Shadows));
+                impl_->shadow_frame.strips+=shadow.strips;impl_->shadow_frame.triangles+=shadow.triangles;
+                impl_->shadow_frame.mesh_creations+=shadow.mesh_creations;impl_->shadow_frame.region_updates+=shadow.region_updates;
+                impl_->shadow_frame.gaps.insert(impl_->shadow_frame.gaps.end(),shadow.gaps.begin(),shadow.gaps.end());
+            }
+            for(auto it=impl_->world_shadows.begin();it!=impl_->world_shadows.end();)if(!current.count(it->first))it=impl_->world_shadows.erase(it);else ++it;
+        }else if(impl_->visual_state_valid&&impl_->environment){if(!impl_->shadow_renderer)impl_->shadow_renderer=std::make_unique<TrackShadowRenderer>(*this);
             impl_->shadow_frame=impl_->shadow_renderer->update(impl_->visual_state,*impl_->scene,*impl_->math,impl_->environment->topology,settings.enabled(port::track::EffectId::Shadows));
         }else if(impl_->shadow_renderer){impl_->shadow_renderer->clear();impl_->shadow_frame={};}
+        }
         impl_->environment_submit_ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-environment_begin).count();
         const auto reflection_begin=std::chrono::steady_clock::now();
         if(is_visible_in_tree()&&godot::DisplayServer::get_singleton()->get_name()!="headless"&&impl_->visual_state_valid&&settings.enabled(port::track::EffectId::Environment)){
@@ -810,6 +1058,7 @@ godot::Dictionary Ps2TrackRenderer::update_view(const godot::Vector3& camera_pos
         }else if(impl_->reflection_renderer)impl_->reflection_renderer->clear();
         impl_->reflection_submit_ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-reflection_begin).count();
         const auto post_begin=std::chrono::steady_clock::now();
+        impl_->alpha_order_ms=0;
         if(is_visible_in_tree()&&godot::DisplayServer::get_singleton()->get_name()!="headless"){
             if(!impl_->postprocess_renderer)impl_->postprocess_renderer=std::make_unique<TrackPostprocess>();
             if(impl_->postprocess_renderer->needs_structure_observer()){auto* tree=get_tree();const auto observer=callable_mp(this,&Ps2TrackRenderer::depth_source_structure_changed);
@@ -820,7 +1069,7 @@ godot::Dictionary Ps2TrackRenderer::update_view(const godot::Vector3& camera_pos
             for(auto* node:impl_->main_instance_nodes)impl_->postprocess_renderer->mark_instance_batch(node);
             const auto& weather=impl_->frame.weather;
             const bool active=godot::RenderingServer::get_singleton()->get_current_rendering_method()!="gl_compatibility"||!impl_->scene->particles.emitters.empty()||!impl_->frame.postprocess.passes.empty()||(settings.enabled(port::track::EffectId::Sun)&&impl_->scene->environment.sun.available);
-            impl_->postprocess_renderer->update(this,camera,{weather.fog_colour,weather.fog_start,weather.fog},depth.near_z,depth.far_z,view.post_controls,active,view.camera_focal_distance,view.camera_depth_of_field,&impl_->frame.postprocess);
+            impl_->postprocess_renderer->update(this,camera,{weather.fog_colour,weather.fog_start,weather.fog},depth.near_z,depth.far_z,view.post_controls,active,view.camera_focal_distance,view.camera_depth_of_field,&impl_->frame.postprocess,nullptr,impl_->depth_batches,impl_->race_raster_scale,impl_->static_depth_sources,impl_->registered_depth_sources,impl_->race_fxaa);
             impl_->post_submit_ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-post_begin).count();
             const auto sun_begin_time=std::chrono::steady_clock::now();
             if(!impl_->sun_renderer){impl_->sun_renderer=std::make_unique<TrackSunRenderer>(*this,
@@ -838,6 +1087,7 @@ godot::Dictionary Ps2TrackRenderer::update_view(const godot::Vector3& camera_pos
             impl_->particle_renderer->set_driving_source(impl_->driving_effect_source.ptr());
             impl_->particle_frame=impl_->particle_renderer->update(impl_->scene,*impl_->math,view,view.visual_timestep,impl_->postprocess_renderer->get_depth_texture(),settings.enabled(port::track::EffectId::Particles),1,camera);
             impl_->particle_submit_ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-particle_begin_time).count();
+            ChampionshipTimingScope alpha_timing(impl_->alpha_order_ms);
             // Retail eDisplayFrame enqueues scenery, Sun, then WorldEffects.
             // Recreate insertion order before the original reversed radix ordering.
             std::vector<std::size_t> input;for(std::size_t i=0;i<impl_->frame.commands.size();++i)if(impl_->frame.commands[i].effect.alpha_pass)input.push_back(i);
@@ -852,7 +1102,11 @@ godot::Dictionary Ps2TrackRenderer::update_view(const godot::Vector3& camera_pos
             impl_->sun_renderer->set_alpha_ranks(std::vector<std::size_t>(ranks.begin()+sun_begin,ranks.begin()+particle_begin),ranks.size(),host_origin);
             impl_->particle_renderer->set_alpha_ranks(std::vector<std::size_t>(ranks.begin()+particle_begin,ranks.end()),ranks.size(),host_origin);
         }
-        trim_draw_cache();
+        impl_->draw_trim_ms=0;
+        {
+            ChampionshipTimingScope trim_timing(impl_->draw_trim_ms);
+            trim_draw_cache();
+        }
         if(impl_->postprocess_renderer)impl_->active_viewport_rids.append_array(impl_->postprocess_renderer->scheduled_viewports());
         if(impl_->sun_renderer)impl_->active_viewport_rids.append_array(impl_->sun_renderer->scheduled_viewports());
         if(impl_->reflection_renderer)impl_->active_viewport_rids.append_array(impl_->reflection_renderer->scheduled_viewports());
@@ -886,7 +1140,62 @@ void Ps2TrackRenderer::set_diagnostics_level(const godot::String& level){
 void Ps2TrackRenderer::set_render_props(bool enabled){const auto failure=catch_all([&]{if(!performance_controls())throw std::logic_error("Props visibility is available in Debug only");port::track::shared_render_settings().set_props(enabled);});if(!failure.empty())impl_->error=failure;}
 void Ps2TrackRenderer::restore_render_defaults(){if(performance_controls())port::track::shared_render_settings().restore();}
 void Ps2TrackRenderer::set_visibility_override(bool enabled,double distance){const auto failure=catch_all([&]{if(!performance_controls())throw std::logic_error("Visibility overrides are available in Debug only");port::track::shared_render_settings().set_distance(enabled,float(distance));});if(!failure.empty())impl_->error=failure;}
+void Ps2TrackRenderer::set_secondary_view(godot::Camera3D* camera,int original_fov){
+    if(camera&&(original_fov<=0||original_fov>=65536))throw std::invalid_argument("Source mirror FOV must be a nonzero original bAngle");
+    impl_->secondary_camera_id=camera?camera->get_instance_id():0;impl_->secondary_original_fov=std::uint16_t(original_fov);
+    if(!camera){
+        for(auto* draw:impl_->view_draws[7]){draw->node->hide();draw->state.visible=false;if(draw->reflection_node)draw->reflection_node->hide();}
+        impl_->view_draws[7].clear();
+        if(impl_->instance_pool){impl_->instance_pool->begin_view(7);impl_->instance_pool->end_view(7);}
+        if(impl_->secondary_sky)impl_->secondary_sky->clear();
+    }
+}
+void Ps2TrackRenderer::set_race_performance_raster(bool enabled){impl_->race_raster_scale=enabled?.75f:1.f;}
+void Ps2TrackRenderer::set_race_godot_quality(bool texture_sampling,bool fxaa){
+    if(impl_->loading||impl_->scene)return;
+    impl_->race_godot_sampling=texture_sampling;
+    impl_->race_fxaa=fxaa;
+}
 void Ps2TrackRenderer::set_camera_mode(int original_type){if(original_type!=1&&original_type!=2&&original_type!=5){impl_->error="Unsupported original camera mover type";return;}impl_->camera_mode=original_type;}
+// TASK-0107 port projection. Validation finishes before Runtime atomically
+// replaces its sparse presentation operands; no source Scene/Memory mutation.
+godot::Dictionary Ps2TrackRenderer::apply_world_objects(const godot::Array& objects,const godot::Array& flags){
+    godot::Dictionary result;
+    const auto error=catch_all([&]{
+        std::vector<port::track::WorldObjectBinding> bindings;std::vector<port::track::WorldSceneryFlags> overrides;
+        const auto integer=[](const godot::Dictionary& row,const char* key)->int64_t{if(!row.has(key)||row[key].get_type()!=godot::Variant::INT)throw std::invalid_argument(std::string("World scenery integer is absent: ")+key);const auto value=int64_t(row[key]);if((std::string(key)=="source_section"||std::string(key)=="source_record")&&(value<0||value>std::numeric_limits<int>::max()))throw std::invalid_argument("World scenery source integer is out of range");return value;};
+        const auto source_matrix=[](const godot::Variant& input){
+            if(input.get_type()!=godot::Variant::TRANSFORM3D)throw std::invalid_argument("World scenery pose must be Transform3D");const godot::Transform3D pose=input;std::array<float,16> matrix{};
+            const int columns[]{2,0,1};for(unsigned c=0;c<3;++c){const auto v=pose.basis.get_column(columns[c]);matrix[c*4]=v.z;matrix[c*4+1]=v.x;matrix[c*4+2]=v.y;}matrix[12]=pose.origin.z;matrix[13]=pose.origin.x;matrix[14]=pose.origin.y;matrix[15]=1;return matrix;
+        };
+        for(int i=0;i<flags.size();++i){if(flags[i].get_type()!=godot::Variant::DICTIONARY)throw std::invalid_argument("World scenery flag record must be a dictionary");const godot::Dictionary row=flags[i];const auto value=integer(row,"flags");if(value<0||value>65535)throw std::invalid_argument("World scenery flags exceed raw16");
+            port::track::WorldSceneryFlags binding;binding.section=int(integer(row,"source_section"));binding.record=int(integer(row,"source_record"));binding.flags=std::uint16_t(value);if(row.has("transform"))binding.matrix=source_matrix(row["transform"]);overrides.push_back(binding);
+        }
+        std::set<int64_t> identities;
+        for(int i=0;i<objects.size();++i){if(objects[i].get_type()!=godot::Variant::DICTIONARY)throw std::invalid_argument("World object must be a dictionary");const godot::Dictionary row=objects[i];
+            const auto address=integer(row,"address"),hash=integer(row,"model_hash");if(address<=0||address>0xffffffffLL||!identities.insert(address).second||hash<0||hash>0xffffffffLL)throw std::invalid_argument("World object identity/model hash is invalid");
+            if(!row.has("transform")||row["transform"].get_type()!=godot::Variant::TRANSFORM3D||!row.has("visible")||row["visible"].get_type()!=godot::Variant::BOOL)throw std::invalid_argument("World object transform/visibility is absent");
+            // Source-disabled objects (including Chopper before activation) may
+            // legitimately have no scenery source and no initialized pose.
+            if(!row.has("source_section")||!row.has("source_record")||row["source_section"].get_type()!=godot::Variant::INT||row["source_record"].get_type()!=godot::Variant::INT)throw std::invalid_argument("World object source mapping is absent");
+            if(!bool(row["visible"])&&int64_t(row["source_section"])==-1&&int64_t(row["source_record"])==-1)continue;
+            if(!hash)throw std::invalid_argument("Visible or mapped World object model hash is absent");
+            port::track::WorldObjectBinding binding;binding.source_address=std::uint32_t(address);
+            const bool independent=int64_t(row["source_section"])==-1&&int64_t(row["source_record"])==-1;
+            binding.section=independent?-1:int(integer(row,"source_section"));binding.record=independent?-1:int(integer(row,"source_record"));binding.model_hash=std::uint32_t(hash);binding.visible=bool(row["visible"]);binding.matrix=source_matrix(row["transform"]);bindings.push_back(binding);
+        }
+        impl_->runtime.set_world_objects(bindings,overrides);result["objects"]=int64_t(objects.size());result["scenery_flags"]=int64_t(flags.size());
+    });result["ok"]=error.empty();if(!error.empty()){result["error"]=text(error);impl_->error=error;}return result;
+}
+godot::Dictionary Ps2TrackRenderer::set_world_vehicle_visuals(const godot::Array& states){
+    godot::Dictionary result;const auto error=catch_all([&]{std::set<std::pair<int64_t,int64_t>> seen;
+        for(int i=0;i<states.size();++i){if(states[i].get_type()!=godot::Variant::DICTIONARY)throw std::invalid_argument("World vehicle visual must be a dictionary");const godot::Dictionary state=states[i];
+            if(!state.has("world_generation")||!state.has("world_address")||state["world_generation"].get_type()!=godot::Variant::INT||state["world_address"].get_type()!=godot::Variant::INT)throw std::invalid_argument("World vehicle visual needs source identity");
+            const auto key=std::make_pair(int64_t(state["world_generation"]),int64_t(state["world_address"]));if(key.second<=0||!seen.insert(key).second)throw std::invalid_argument("Invalid or duplicate World vehicle identity");
+        }
+        impl_->world_visuals=states.duplicate(true);impl_->world_visuals_set=true;
+    });result["ok"]=error.empty();if(!error.empty()){impl_->error=error;result["error"]=text(error);}return result;
+}
 void Ps2TrackRenderer::set_visual_state(const godot::Dictionary& state){
     impl_->visual_state_valid=false;impl_->visual_state=state;
     const auto failure=catch_all([&]{if(!bool(state.get("available",false)))return;
@@ -996,6 +1305,12 @@ godot::Dictionary Ps2TrackRenderer::get_memory_state()const{
 godot::Dictionary Ps2TrackRenderer::get_state()const{
     godot::Dictionary result;result["lod"]=get_lod_state();result["geometry_counts_are_candidates"]=impl_->show_lod;result["active_viewport_rids"]=impl_->active_viewport_rids;result["host_stats"]=get_optimization_state();
     godot::Dictionary costs;costs["environment_submit_ms"]=impl_->environment_submit_ms;costs["main_submit_ms"]=impl_->main_submit_ms;costs["reflection_submit_ms"]=impl_->reflection_submit_ms;costs["post_submit_ms"]=impl_->post_submit_ms;costs["particle_submit_ms"]=impl_->particle_submit_ms;costs["sun_submit_ms"]=impl_->sun_submit_ms;costs["previous_sun_readback_ms"]=impl_->sun_readback_ms;costs["batch_breaks_nonexclusive"]=impl_->batch_breaks;costs["batch_breaks_enabled"]=impl_->diagnostics_level==2;result["costs"]=costs;const auto failure=catch_all([&]{result["ok"]=impl_->ok;result["loading"]=impl_->loading;result["track_id"]=impl_->number;
+    if(championship_timing_enabled()){
+        costs["profile_shadow_submit_ms"]=impl_->shadow_submit_ms;
+        costs["profile_alpha_order_ms"]=impl_->alpha_order_ms;
+        costs["profile_draw_trim_ms"]=impl_->draw_trim_ms;
+        costs["profile_mirror_host_ms"]=impl_->mirror_host_ms;
+    }
     result["render_ok"]=impl_->render_error.empty()&&impl_->readback_error.empty();result["render_error"]=text(impl_->render_error);result["readback_error"]=text(impl_->readback_error);
     result["show_lod"]=impl_->show_lod;result["render_collision"]=impl_->render_collision;result["render_material"]=impl_->render_material;
     result["debug_ready"]=impl_->ok&&impl_->environment&&impl_->environment->topology.ready()&&impl_->debug_error.empty();
@@ -1013,8 +1328,12 @@ godot::Dictionary Ps2TrackRenderer::get_state()const{
     result["sky_draws"]=int64_t(impl_->environment_frame.sky_draws);result["fog_intensity"]=impl_->frame.weather.fog;result["fog_start"]=impl_->frame.weather.fog_start;result["fog_colour"]=int64_t(impl_->frame.weather.fog_colour);result["postprocess_passes"]=int64_t(impl_->frame.postprocess.passes.size());
     result["particle_emitter_count"]=int64_t(impl_->scene?impl_->scene->particles.emitters.size():0);result["particle_definition_count"]=int64_t(impl_->scene?impl_->scene->particles.definitions.size():0);result["particles_unsupported_quads"]=int64_t(impl_->particle_frame.unsupported_quads);godot::Array particle_gaps;for(const auto& gap:impl_->particle_frame.gaps)particle_gaps.push_back(text(gap));result["particle_recovery_gaps"]=particle_gaps;result["particles_active"]=int64_t(impl_->particle_frame.active);result["particles_visible"]=int64_t(impl_->particle_frame.visible);
     result["sun_quads"]=int64_t(impl_->sun_frame.quads);result["sun_uncovered"]=impl_->sun_frame.uncovered_available?godot::Variant(impl_->sun_frame.uncovered):godot::Variant();result["sun_readback_pending"]=impl_->sun_frame.readback_pending;
-    result["environment_capture_ready"]=impl_->reflection_renderer&&impl_->reflection_renderer->ready();result["shadow_strips"]=int64_t(impl_->shadow_frame.strips);result["shadow_triangles"]=int64_t(impl_->shadow_frame.triangles);
-    godot::Array submissions;for(const auto& pair:impl_->submission_counts){godot::Dictionary row;row["view_id"]=pair.first==0?1:int(pair.first+3);row["source_frame"]=int64_t(impl_->frame_number);row["scheduled_this_frame"]=true;row["commands"]=int64_t(pair.second[0]);row["batches"]=int64_t(pair.second[1]);row["largest_batch"]=int64_t(pair.second[2]);const auto timing=impl_->submission_times.find(pair.first);if(timing!=impl_->submission_times.end()){row["selection_ms"]=pair.first==0?impl_->native_frame_ms:timing->second[0];row["planning_ms"]=timing->second[1];row["submission_wall_ms"]=timing->second[2];}row["timing_contract"]="Planning is included in submission wall; selection is separate CPU wall, not GPU time";const TrackSubmissionCache* cache=pair.first==0?&impl_->submission_plan:nullptr;const auto reflected=impl_->reflection_plans.find(pair.first);if(reflected!=impl_->reflection_plans.end())cache=&reflected->second;if(cache){row["plan_hits"]=int64_t(cache->hits);row["plan_builds"]=int64_t(cache->builds);row["dynamic_hits"]=int64_t(cache->dynamic_hits);row["surface_builds"]=int64_t(cache->surface_builds);row["surface_cache_entries"]=int64_t(cache->cached_surfaces());row["plan_last_build_reason"]=cache->last_build_reason;}submissions.push_back(row);}result["view_submissions"]=submissions;
+    result["environment_capture_ready"]=impl_->reflection_renderer&&impl_->reflection_renderer->ready();result["world_scenery_operands"]=int64_t(impl_->runtime.world_operand_count());result["world_shadow_actors"]=int64_t(impl_->world_shadows.size());result["shadow_strips"]=int64_t(impl_->shadow_frame.strips);result["shadow_triangles"]=int64_t(impl_->shadow_frame.triangles);
+    result["shadow_mesh_creations"]=int64_t(impl_->shadow_frame.mesh_creations);
+    result["shadow_mesh_region_updates"]=int64_t(impl_->shadow_frame.region_updates);
+    godot::Array submissions;for(const auto& pair:impl_->submission_counts){godot::Dictionary row;row["view_id"]=pair.first==0?1:pair.first==7?3:int(pair.first+3);row["source_frame"]=int64_t(impl_->frame_number);row["scheduled_this_frame"]=true;row["commands"]=int64_t(pair.second[0]);row["batches"]=int64_t(pair.second[1]);row["largest_batch"]=int64_t(pair.second[2]);const auto timing=impl_->submission_times.find(pair.first);if(timing!=impl_->submission_times.end()){row["selection_ms"]=pair.first==0?impl_->native_frame_ms:timing->second[0];row["planning_ms"]=timing->second[1];row["submission_wall_ms"]=timing->second[2];}row["timing_contract"]="Planning is included in submission wall; selection is separate CPU wall, not GPU time";const TrackSubmissionCache* cache=pair.first==0?&impl_->submission_plan:nullptr;const auto reflected=impl_->reflection_plans.find(pair.first);if(reflected!=impl_->reflection_plans.end())cache=&reflected->second;if(cache){row["plan_hits"]=int64_t(cache->hits);row["plan_builds"]=int64_t(cache->builds);row["dynamic_hits"]=int64_t(cache->dynamic_hits);row["surface_builds"]=int64_t(cache->surface_builds);row["surface_cache_entries"]=int64_t(cache->cached_surfaces());row["plan_last_build_reason"]=cache->last_build_reason;}submissions.push_back(row);}result["view_submissions"]=submissions;
+    godot::Dictionary race_submissions;for(const auto& entry:impl_->race_submission_stats)race_submissions[int64_t(entry.first)]=entry.second;
+    result["race_submission_batches"]=race_submissions;
     result["batch_cache_bytes"]=int64_t(impl_->batch_cache?impl_->batch_cache->bytes():0);result["batch_cache_entries"]=int64_t(impl_->batch_cache?impl_->batch_cache->entries():0);
     result["loaded_instances"]=int64_t(impl_->scene?impl_->scene->instances.size():0);
     result["loaded_sections"]=int64_t(impl_->scene?impl_->scene->sections.size():0);

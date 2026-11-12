@@ -9,7 +9,7 @@ namespace port::godot_bridge {
 // base_lit/flag_0x4 are specialized from effective flags, not caller overrides.
 // depth_near/depth_far define the source depth projection; bind actual view values.
 std::string track_shader_source(const hp2::assets::TpkTextureHeader&,
-    const port::track::EffectState&,port::track::Fusion40);
+    const port::track::EffectState&,port::track::Fusion40,bool godot_sampling=false);
 // Separate original packet318 additive pass. Packet31C requires destination alpha.
 std::string track_environment_shader_source(const port::track::EffectState&);
 }

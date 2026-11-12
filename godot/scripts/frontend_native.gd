@@ -1,21 +1,10 @@
-extends Node2D
+extends Control
 
-# TASK-0018 / D008: the Godot host for the native front-end runtime.
-#
-# This script makes no drawing decisions and holds no game state. The host it replaced
-# (scripts/frontend.gd, deleted in TASK-0018) pulled a Dictionary per widget every frame and did
-# the draw ordering, glyph placement, text alignment and clip intersection itself in
-# Control._draw.
-#
-# Here the division is:
-#   native  (game_core + port_runtime) -- screens, menus, navigation, animation, measurement,
-#                                         draw order, glyph layout, original clip rectangles,
-#                                         and the resulting port::render::Frame
-#   backend (Ps2RenderHost)            -- RenderingServer RIDs, canvas item, texture uploads
-#   this script                        -- window, keys -> recovered JOY_EVENT_* ids, frame
-#                                         delta, audio hardware, process lifetime
-#
-# Nothing below reads a widget, a position, a colour or a texture.
+# TASK-0104: Godot Control host; native C++ remains the frontend state owner.
+const FrontendInput = preload("res://scripts/runtime/frontend_input.gd")
+const FrontendControls = preload("res://scripts/runtime/frontend_controls.gd")
+var frontend_input := FrontendInput.new()
+var controls: Control
 
 const CANVAS := Vector2(640.0, 480.0)
 
@@ -41,33 +30,6 @@ const JOY_EVENT_MENU_ANALOG_RIGHT := 19
 const JOY_EVENT_MENU_ANALOG_UP := 20
 const JOY_EVENT_MENU_ANALOG_DOWN := 21
 
-static func _key_map() -> Dictionary:
-	return {
-		KEY_UP: JOY_EVENT_SCROLL_UP,
-		KEY_DOWN: JOY_EVENT_SCROLL_DOWN,
-		KEY_LEFT: JOY_EVENT_SCROLL_LEFT,
-		KEY_RIGHT: JOY_EVENT_SCROLL_RIGHT,
-		KEY_W: JOY_EVENT_MENU_ANALOG_UP,
-		KEY_S: JOY_EVENT_MENU_ANALOG_DOWN,
-		KEY_A: JOY_EVENT_MENU_ANALOG_LEFT,
-		KEY_D: JOY_EVENT_MENU_ANALOG_RIGHT,
-		KEY_ENTER: JOY_EVENT_START,
-		KEY_KP_ENTER: JOY_EVENT_START,
-		KEY_SPACE: JOY_EVENT_MENU_SELECT,
-		KEY_Z: JOY_EVENT_MENU_SELECT,
-		KEY_X: JOY_EVENT_MENU_CANCEL,
-		KEY_BACKSPACE: JOY_EVENT_MENU_BACK,
-		KEY_C: JOY_EVENT_MENU_BACK,
-		KEY_V: JOY_EVENT_MENU_SQUARE,
-		KEY_H: JOY_EVENT_MENU_HELP,
-		KEY_F1: JOY_EVENT_MENU_HELP,
-		KEY_BACKSLASH: JOY_EVENT_SELECT,
-		KEY_Q: JOY_EVENT_MENU_L1,
-		KEY_E: JOY_EVENT_MENU_R1,
-		KEY_1: JOY_EVENT_MENU_L2,
-		KEY_3: JOY_EVENT_MENU_R2,
-	}
-
 static func _font_bundles() -> PackedStringArray:
 	return PackedStringArray(["FRONTEND/FRONTB.BUN", "GLOBAL/GLOBALB.BUN", "GLOBAL/INGAMEB.BUN"])
 
@@ -75,6 +37,7 @@ var layout: Object
 var render_host: Object
 var intro_movie: Object
 var background_movie: Object
+var background_movie_path := ""
 var movie_audio: AudioStreamPlayer
 var music_audio: AudioStreamPlayer
 var frontend_audio_bus: StringName
@@ -93,8 +56,16 @@ var show_info := false
 # Port diagnostics for scripted acceptance. Capturing a frame is not a pass if
 # the production input/tick/render route has already reported a runtime error.
 var runtime_error_count := 0
+var authored_event_handoff := false
 
 func _ready() -> void:
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--world-os-state=") and not get_tree().has_meta("world_window_probe"):
+			get_tree().set_meta("world_window_probe", true)
+			get_tree().root.add_child.call_deferred(preload("res://scripts/runtime/world_window_probe.gd").new())
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frontend_input.initialize()
+	Input.joy_connection_changed.connect(_joy_connection_changed)
 	for required in ["Ps2FrontEndLayout", "Ps2RenderHost", "Ps2MoviePlayer"]:
 		if not ClassDB.class_exists(required):
 			push_error("GDExtension class missing: %s" % required)
@@ -148,6 +119,11 @@ func _ready() -> void:
 		return
 	screen_count = int(result.get("screen_count", 0))
 	layout.load_fonts(_font_bundles())
+	controls = FrontendControls.new()
+	controls.name = "FrontendControls"
+	add_child(controls)
+	controls.initialize(self, layout, frontend_input)
+	controls.action_requested.connect(_ui_action)
 	if start_name != "":
 		var resolved: int = layout.find_screen_by_name(start_name)
 		if resolved < 0:
@@ -155,9 +131,9 @@ func _ready() -> void:
 			return
 		screen_index = resolved
 
-	# The backend draws into this node's canvas item; window scaling is its concern, not a
-	# transform applied to native geometry.
-	render_host.attach(get_canvas_item())
+	# The selection backend and ordinary Controls share the Container-owned
+	# content canvas; the PC toolbar is a separate VBox sibling.
+	render_host.attach(controls.content.get_canvas_item())
 	render_host.set_output_scale(float(view_scale))
 
 	DebugTools.set_info(show_info)
@@ -189,6 +165,9 @@ func _ready() -> void:
 		elif argument == "--runtime-smoke":
 			_runtime_smoke()
 			return
+		elif argument == "--background-movie-smoke":
+			await _background_movie_smoke()
+			return
 
 func _make_label(position_px: Vector2, colour: Color) -> Label:
 	var label := Label.new()
@@ -211,26 +190,38 @@ func _fatal(message: String) -> void:
 	get_tree().quit(1)
 
 func _open_screen(open_menu: bool = true) -> void:
-	_configure_background()
 	var opened: Dictionary = layout.menu_open(screen_index) if open_menu else layout.menu_state()
 	if opened.has("not_implemented"):
 		_report("NOT_IMPLEMENTED: " + str(opened["not_implemented"]), true)
+	_configure_background()
+	if screen_index == 0 and not startup_active:
+		_start_music()
 
 func _process(delta: float) -> void:
+	var frontend_start := Time.get_ticks_usec()
 	var _profile_scope := ProfileDebug.scope("FrontendNative._process")
 	if layout == null:
 		return
+	if authored_event_handoff:
+		return
+	if layout.has_method("take_event_launch"):
+		var launch: Dictionary = layout.take_event_launch()
+		if not launch.get("ok", false):
+			_report(str(launch.get("error", "Authored event handoff failed")), true)
+			return
+		if launch.get("pending", false):
+			var handoff := preload("res://scripts/runtime/event_entry.gd").launch(self, launch)
+			if handoff != OK:
+				_report("Authored event scene handoff failed: %d" % handoff, true)
+			return
 	if startup_active:
 		var movie_tick: Dictionary = intro_movie.tick(delta)
 		if movie_tick.has("not_implemented"):
 			_fatal(str(movie_tick["not_implemented"]))
 			return
 		_apply_startup(intro_movie.tick_startup(bool(movie_tick.get("finished", false)), delta))
-	if background_movie != null:
-		var bg_tick: Dictionary = background_movie.tick(delta)
-		if bg_tick.has("not_implemented"):
-			_fatal(str(bg_tick["not_implemented"]))
-			return
+	if controls != null and not controls.bindings_panel.visible:
+		for command in frontend_input.tick(delta): _send_joy_event(command.id,command.port,command.pressed)
 	var tick: Dictionary = layout.menu_tick(delta)
 	if tick.has("not_implemented") or not bool(tick.get("ok", false)):
 		_report(str(tick.get("not_implemented", tick.get("error", "native menu tick failed"))), true)
@@ -238,37 +229,68 @@ func _process(delta: float) -> void:
 	if int(tick.get("screen", screen_index)) != screen_index:
 		screen_index = int(tick["screen"])
 		_open_screen(false)
+	_configure_background()
+	if not background_movie_path.is_empty():
+		var bg_tick: Dictionary = background_movie.tick(delta)
+		if bg_tick.has("not_implemented"):
+			_fatal(str(bg_tick["not_implemented"]))
+			return
 	_play_menu_audio()
 	_draw_frame()
 	_draw_console(delta)
+	last_stats["frontend_cpu_ms"] = (Time.get_ticks_usec()-frontend_start)/1000.0
 
 func _draw_console(_delta: float) -> void:
 	DebugTools.statistics = last_stats.duplicate()
 	DebugTools.statistics["screen"] = "frontend:%d" % screen_index
+	if controls != null:
+		DebugTools.statistics["fps_region"] = controls.fps_region()
+		DebugTools.statistics["fps_hidden"] = startup_active
 	show_info = DebugTools.info_enabled
 	if info_label != null:
 		info_label.visible = show_info
 
-# The whole render step: one native frame, one backend submission. No widget crosses this call.
-func _draw_frame() -> void:
-	var _profile_scope := ProfileDebug.scope("FrontendNative._draw_frame")
-	last_stats = render_host.draw(layout, intro_movie, background_movie)
-	if not bool(last_stats.get("ok", false)):
-		_report(str(last_stats.get("error", "render host draw failed")), true)
-		return
-	if show_info and info_label != null:
-		info_label.text = "screen %d/%d  quads=%d glyphs=%d missing=%d clipped=%d textures=%d" % [
-			screen_index, screen_count - 1, int(last_stats["quads"]), int(last_stats["glyphs"]),
-			int(last_stats["missing"]), int(last_stats["clipped_out"]),
-			int(last_stats["textures"])]
+func suspend_for_event() -> void:
+	authored_event_handoff = true
+	frontend_input.release_all()
+	movie_audio.stream_paused = true
+	music_audio.stream_paused = true
+	hide()
+	process_mode = Node.PROCESS_MODE_DISABLED
 
-func _send_joy_event(joy_event: int, pad_index: int = 0) -> void:
+func resume_from_event(returned: Dictionary) -> void:
+	process_mode = Node.PROCESS_MODE_INHERIT
+	authored_event_handoff = false
+	screen_index = int(returned.get("screen", screen_index))
+	DebugTools.register_scene(self, "frontend")
+	show()
+	movie_audio.stream_paused = false
+	music_audio.stream_paused = false
+	_open_screen(false)
+	_draw_frame()
+
+# Sync Godot Controls, then submit their layer textures with native selection geometry.
+func _draw_frame() -> void:
+	if controls == null: return
+	var sync_start := Time.get_ticks_usec()
+	var state: Dictionary = controls.sync()
+	var sync_ms := (Time.get_ticks_usec()-sync_start)/1000.0
+	if not state.get("ok", false):
+		_report(str(state.get("error", "Control frontend snapshot failed")), true)
+		return
+	var dimensions: Vector2 = controls.content_size()
+	last_stats = render_host.draw_controls(layout, controls.composition_layers(), int(dimensions.x), int(dimensions.y))
+	last_stats.merge(state)
+	last_stats["controls_sync_cpu_ms"] = sync_ms
+	if not bool(last_stats.get("ok", false)): _report(str(last_stats.get("error", "Control frontend render failed")), true)
+
+func _send_joy_event(joy_event: int, pad_index: int = 0, pressed: bool = true) -> void:
 	if startup_active:
-		if joy_event in [JOY_EVENT_START, JOY_EVENT_MENU_SELECT]:
+		if pressed and joy_event in [JOY_EVENT_START, JOY_EVENT_MENU_SELECT]:
 			_apply_startup(intro_movie.select_startup())
 		return
 	# One native dispatch also reports untranslated event-tree paths and queues their audio.
-	var state: Dictionary = layout.menu_joy_event(pad_index, joy_event, true)
+	var state: Dictionary = layout.menu_joy_event(pad_index, joy_event, pressed)
 	if not bool(state.get("ok", false)):
 		_report(str(state.get("error", "menu event failed")), true)
 		return
@@ -279,54 +301,49 @@ func _send_joy_event(joy_event: int, pad_index: int = 0) -> void:
 		_open_screen(false)
 	_play_menu_audio()
 
+func _ui_action(action: Dictionary) -> void:
+	var state: Dictionary = layout.ui_action(action)
+	if not state.get("ok", false) or state.has("not_implemented"):
+		_report(str(state.get("not_implemented", state.get("error", "UI action failed"))), true)
+		return
+	if int(state.get("screen", screen_index)) != screen_index:
+		screen_index = int(state.screen)
+		_open_screen(false)
+	_play_menu_audio()
+
 func _input(event: InputEvent) -> void:
+	if controls != null and event is InputEventMouseMotion and event.relative.length_squared()>0:
+		controls.pointer_motion_frame = Engine.get_process_frames()
 	if DebugTools.handle_input(event):
+		get_viewport().set_input_as_handled()
 		return
-	if event is InputEventJoypadButton or event is InputEventJoypadMotion:
-		var connected := Input.get_connected_joypads()
-		var pad_index := connected.find(event.device)
-		if pad_index < 0 or pad_index > 1:
-			return
-		if event is InputEventJoypadButton:
-			if not event.pressed:
-				return
-			var buttons := {
-				JOY_BUTTON_A: JOY_EVENT_MENU_SELECT,
-				JOY_BUTTON_B: JOY_EVENT_MENU_BACK,
-				JOY_BUTTON_X: JOY_EVENT_MENU_SQUARE,
-				JOY_BUTTON_Y: JOY_EVENT_MENU_CANCEL,
-				JOY_BUTTON_START: JOY_EVENT_START,
-				JOY_BUTTON_BACK: JOY_EVENT_SELECT,
-				JOY_BUTTON_LEFT_SHOULDER: JOY_EVENT_MENU_L1,
-				JOY_BUTTON_RIGHT_SHOULDER: JOY_EVENT_MENU_R1,
-				JOY_BUTTON_DPAD_UP: JOY_EVENT_SCROLL_UP,
-				JOY_BUTTON_DPAD_DOWN: JOY_EVENT_SCROLL_DOWN,
-				JOY_BUTTON_DPAD_LEFT: JOY_EVENT_SCROLL_LEFT,
-				JOY_BUTTON_DPAD_RIGHT: JOY_EVENT_SCROLL_RIGHT,
-			}
-			if buttons.has(event.button_index):
-				_send_joy_event(int(buttons[event.button_index]), pad_index)
-		elif event.axis == JOY_AXIS_LEFT_X or event.axis == JOY_AXIS_LEFT_Y:
-			# Explicit host dead zone; original PS2 calibration is a separate device service.
-			var key := Vector2i(event.device, event.axis)
-			var direction := -1 if event.axis_value < -0.5 else (1 if event.axis_value > 0.5 else 0)
-			if int(frontend_axis_directions.get(key, 0)) != direction:
-				frontend_axis_directions[key] = direction
-				if direction != 0:
-					var id := JOY_EVENT_MENU_ANALOG_LEFT if direction < 0 else JOY_EVENT_MENU_ANALOG_RIGHT
-					if event.axis == JOY_AXIS_LEFT_Y:
-						id = JOY_EVENT_MENU_ANALOG_UP if direction < 0 else JOY_EVENT_MENU_ANALOG_DOWN
-					_send_joy_event(id, pad_index)
+	if controls != null and controls.handle_modal(event):
+		get_viewport().set_input_as_handled()
 		return
-	if not (event is InputEventKey) or not event.pressed or event.echo:
+	if controls != null and controls.text_focus() and event is InputEventKey:
+		if event.pressed and event.keycode == KEY_ESCAPE:
+			_send_joy_event(JOY_EVENT_MENU_BACK)
+			get_viewport().set_input_as_handled()
 		return
-	var map := _key_map()
-	if map.has(event.keycode):
-		_send_joy_event(int(map[event.keycode]))
+	if startup_active and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_send_joy_event(JOY_EVENT_MENU_SELECT)
+		get_viewport().set_input_as_handled()
 		return
-	match event.keycode:
-		KEY_ESCAPE:
-			get_tree().quit(0)
+	var commands := frontend_input.handle(event)
+	for command in commands: _send_joy_event(command.id, command.port, command.pressed)
+	if not commands.is_empty():
+		get_viewport().set_input_as_handled()
+		return
+	if controls != null and controls.forward_mouse(event): get_viewport().set_input_as_handled()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		for command in frontend_input.release_all():
+			if layout != null: _send_joy_event(command.id, command.port, command.pressed)
+
+func _joy_connection_changed(_device: int, connected: bool) -> void:
+	if not connected:
+		for command in frontend_input.release_all(): _send_joy_event(command.id, command.port, command.pressed)
 
 # Host seam: the recovered startup state decides the action and the presentation; this forwards
 # the presentation to the runtime so the frame builder, not this script, suppresses widgets.
@@ -367,28 +384,20 @@ func _apply_startup(result: Dictionary) -> void:
 		layout.title_visual_state(int(result.get("state", 1)) == 2, bool(result.get("can_start", false)))
 
 func _configure_background() -> void:
-	if screen_index == 0 and not startup_active:
-		_start_music()
 	if background_movie == null:
 		return
-	var filename: String = {
-		0: "MOVIES/mainmenu_movie.AVI",
-		1: "MOVIES/hotpursuit_movie.AVI",
-		2: "MOVIES/worldracing_ movie.AVI",
-		24: "MOVIES/options_movie.AVI",
-		25: "MOVIES/options_movie_new.AVI",
-		26: "MOVIES/options_movie_new.AVI",
-		27: "MOVIES/options_movie_new.AVI",
-		28: "MOVIES/options_movie_new.AVI",
-		31: "MOVIES/options_movie_new.AVI",
-		34: "MOVIES/options_movie_new.AVI", # registered JukeBox Music document95B2B627
-	}.get(screen_index, "")
+	var filename: String = layout.get_background_movie()
+	if filename == background_movie_path:
+		return
 	if filename.is_empty():
 		background_movie.stop()
+		background_movie_path = ""
 		return
 	var result: Dictionary = background_movie.play(filename, true)
 	if not bool(result.get("ok", false)):
 		_fatal(str(result.get("not_implemented", "background movie open failed")))
+		return
+	background_movie_path = filename
 
 func _play_menu_audio() -> void:
 	if DisplayServer.get_name() != "headless":
@@ -571,4 +580,67 @@ func _runtime_smoke() -> void:
 		_fatal("authored PANELMOVIE widget did not reach the renderer: %s" % str(stats))
 		return
 	print("FRONTEND_RUNTIME_SMOKE_OK: startup movies/PCM, title gate, background movie, live movie quad")
+	get_tree().quit(0)
+
+func _background_movie_smoke() -> void:
+	if DisplayServer.get_name() == "headless":
+		get_tree().quit(77)
+		return
+	set_process(false)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_draw_frame()
+	await RenderingServer.frame_post_draw
+	await RenderingServer.frame_post_draw
+	var panel: TextureRect
+	for control in controls.nodes.values():
+		if control.get_meta("frontend_authored").texture == 0xc3f0caef:
+			panel = control as TextureRect
+			break
+	if panel == null or panel.texture == null or panel.size.x < 100 or panel.size.y < 100:
+		_fatal("Main menu PANELMOVIE did not resolve to its live widget dimensions: %s, %s" % [background_movie_path, panel.size if panel != null else "missing"])
+		return
+	var authored: Dictionary = panel.get_meta("frontend_authored")
+	if authored.bounds.size != Vector2(256,384)*authored.scale or authored.layer != 5:
+		_fatal("Main menu PANELMOVIE lost its authored transform")
+		return
+	var visible_area := Rect2i(panel.get_global_rect().intersection(get_viewport().get_visible_rect()))
+	var first := get_viewport().get_texture().get_image().get_region(visible_area).get_data()
+	var texture := panel.texture
+	var first_frame := texture.get_image().get_data()
+	var tick: Dictionary = background_movie.tick(2.5)
+	await RenderingServer.frame_post_draw
+	await RenderingServer.frame_post_draw
+	var second := get_viewport().get_texture().get_image().get_region(visible_area).get_data()
+	if not tick.get("ok", false) or int(tick.get("frame",0)) < 1 or first == second:
+		_fatal("Decoded background did not animate on the actual Control viewport")
+		return
+	_open_screen()
+	if background_movie.get_texture() != texture or background_movie.tick(0.0).get("frame") != tick.get("frame"):
+		_fatal("Reopening the same screen reset its movie")
+		return
+	var wrapped: Dictionary = background_movie.tick(30.0)
+	if not wrapped.get("ok",false) or wrapped.get("frame") != 0 or texture.get_image().get_data() != first_frame:
+		_fatal("Background movie did not reopen at frame zero")
+		return
+	screen_index = 24
+	_open_screen()
+	var options_texture: Texture2D = background_movie.get_texture()
+	if options_texture == null or options_texture == texture or background_movie_path != "MOVIES/options_movie_new.AVI":
+		_fatal("Options did not switch to the original shared movie")
+		return
+	var options_frame: Dictionary = background_movie.tick(0.25)
+	screen_index = 28
+	_open_screen()
+	if background_movie.get_texture() != options_texture or background_movie.tick(0).get("frame") != options_frame.get("frame"):
+		_fatal("Audio Options restarted the already running Options movie")
+		return
+	screen_index = 37 # FRONTB.BUN document 9829BFAB, Phils Load Save.
+	_open_screen()
+	if not background_movie_path.is_empty() or background_movie.get_texture() != null or runtime_error_count != 0:
+		_fatal("Entering the original Load/Save screen did not clear the movie")
+		return
+	print("FRONTEND_BACKGROUND_MOVIE_OK live Control bounds/pixels/retention/loop")
+	_exit_tree()
+	await get_tree().create_timer(0.1).timeout
 	get_tree().quit(0)

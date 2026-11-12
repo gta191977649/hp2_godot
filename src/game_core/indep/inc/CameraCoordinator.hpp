@@ -33,3 +33,16 @@ public:
     void GetCameraKeys();
 };
 } // namespace hp2::recovered
+
+#include "game_core/port/driving/object_view.hpp"
+namespace hp2::debug {
+class NisCameraCoordinator:public ::port::driving::ObjectView {
+public:using ObjectView::ObjectView;
+ void Sub_00198DF8(int,std::uint32_t,std::uint32_t,int,float,int);
+ void Sub_00198F18(int);
+ void Update(float); //00198F80 original empty.
+ int NumCameraKeys()const; //00198F88.
+ std::uint32_t GetCameraKeys()const; //00198FB0.
+ void Enable();void Disable(); //Base00197650/00197608.
+};
+}

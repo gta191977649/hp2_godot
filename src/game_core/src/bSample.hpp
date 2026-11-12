@@ -75,3 +75,35 @@ public:
     void IsPaused();
 };
 } // namespace hp2::recovered
+
+#include "game_core/port/driving/object_view.hpp"
+namespace port::race {class CarSoundResources;}
+namespace hp2::debug {
+// TASK-0099 E-0099-W27. Explicit logical bSample view, not a host/SPU ABI.
+class bSample : public ::port::driving::ObjectView {
+public:
+ using ObjectView::ObjectView;
+ void Sub_0026B2A0();void Sub_0026B3F8(int);
+ static void Initialize(::port::driving::Memory&,int slots); // Debug0026B468
+ static std::uint32_t Sub_0026DD98(::port::driving::Memory&);
+ void Initialize(std::uint32_t source); // Debug0026B4C0: names only, not memcpy.
+ void SetName(std::uint32_t);void SetBankName(std::uint32_t);
+ std::uint32_t GetName()const;std::uint32_t GetBankName()const;
+ void SetCategory(std::uint32_t);bool IsPlaying();void Stop();
+ // Debug0026CA08/0026C2C8; E-0099-W31. Typed real bank-data binding; voice
+ // allocation remains an explicit platform boundary until actually implemented.
+ int GetChannels()const; //0026CA08 original shared-Memory SDK tables
+ int GetChannels(::port::race::CarSoundResources&)const;
+ std::uint32_t CalcPitch(float)const; //0026BA98 E-0099-W40
+ std::uint16_t CalcVolume(float)const; //0026C120 E-0099-W40
+ std::int8_t CalcPan(float)const; //0026B948 E-0099-W40
+ void SetVolume(float); //0026BF98 E-0099-W40
+ void SetPitch(float); //0026B9B8
+ void SetAzimuth(std::uint16_t); //0026C0B8
+ void Fade(float,std::uint32_t); //0026C910
+ float GetVolume()const; //0026C1A0 actual SDK voice volume
+ float GetScaledVolume()const; //0026BEC8 E-0099-W40
+ std::uint32_t Play(float,float,float); //0026C2C8 actual software SDK globals
+ std::uint32_t Play(float,float,float,::port::race::CarSoundResources&);
+};
+}

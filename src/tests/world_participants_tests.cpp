@@ -1,4 +1,6 @@
+#include <cmath>
 #include "game_core/indep/inc/World.hpp"
+#include "game_core/indep/inc/Car.hpp"
 #include "game_core/port/not_implemented.hpp"
 #include "game_core/indep/src/drivetarget.hpp"
 #include "game_core/TrafficTeleporter.hpp"
@@ -17,17 +19,29 @@ void link(port::driving::Memory& memory,std::uint32_t head,const std::vector<std
 }
 int main(){
     port::driving::Memory memory;const auto world=memory.allocate(0x1730);hp2::debug::World state(memory,world);
+    memory.vector(world+0x150,{{0,0,100,123}});memory.vector(world+0x160,{{10,0,0,-456}});
+    require(state.GetDistanceToClosestPlayer(std::array<float,2>{{0,0}})==0&&state.GetDistanceToClosestPlayer(std::array<float,3>{{0,0,0}})==10,"Original XY/XYZ player-distance selection differs");
+    require(state.GetDistanceToClosestPlayer(std::array<float,3>{{3,4.5f,100}})==std::sqrt(29.25f),"Original MIN.S distance was truncated or padding consumed");
+    memory.map(0x327cf8,4);memory.word(0x327cf8,0xf0000001);
+    const auto checksum_car1=memory.allocate(0x890),checksum_car2=memory.allocate(0x890);
+    memory.vector(checksum_car1+0x60,{{.25f,-.125f,3,99}});memory.vector(checksum_car2+0x60,{{-.125f,0,0,-77}});
+    memory.word(world+0x18,0);memory.word(world+0x1c,2);memory.word(world+0x2c,checksum_car1);memory.word(world+0x30,checksum_car2);
+    require(hp2::recovered::Car(memory,checksum_car1).CalculateDebugChecksum()==8192&&hp2::recovered::Car(memory,checksum_car2).CalculateDebugChecksum()==std::uint32_t(-8192),"Car checksum conversion/grouping differs");
+    constexpr std::uint32_t packed=(0xf0000001u*33u+8192u)*33u+std::uint32_t(-8192);
+    require(state.CalculateDebugChecksum()==std::uint16_t(packed+(packed>>16))&&memory.vector(world+0x70)==memory.vector(checksum_car1+0x60)&&memory.vector(world+0x80)==memory.vector(checksum_car2+0x60),"World checksum wrap/fold/full position publication differs");
     memory.map(0x311f78,0x310);memory.map(0x325f40,4);memory.scalar(0x325f40,.001f);
     const auto target=memory.allocate(0x210);
     for(unsigned i=0;i<0x210;++i)memory.byte(target+i,77);
-    hp2::debug::DriveTarget drive_target(memory,target);
+    hp2::debug::DriveTarget drive_target(memory,target);drive_target.Sub_00216528();
     require(memory.signed_byte(target+0x204)==-1 && memory.word(target+0x1fc)==0
         && memory.word(target+0x1f8)==0 && memory.byte(target)==0,"DriveTarget constructor must call original Clear after zeroing");
     memory.byte(target,3);memory.scalar(target+0x200,100);drive_target.Clear(0,0);
     require(memory.byte(target)==0 && memory.scalar(target+0x200)==0,"zero-distance drive target clear differs");
     memory.byte(target,3);drive_target.Clear(0,-1);require(memory.byte(target)==0,"negative-distance target clear differs");
-    memory.byte(target,3);require(!hp2::guard([&]{drive_target.Clear(0,10);}).empty() && memory.byte(target)==3,
-        "untranslated positive-distance target branch must fail before partial clear");
+    // Active positive-distance interpolation is covered by ai_drive_target;
+    // an empty original target requires no Car operand, even for distance>0.
+    memory.byte(target,0);memory.scalar(target+0x200,123);drive_target.Clear(0,10);
+    require(memory.byte(target)==0&&memory.scalar(target+0x200)==0,"Empty positive-distance target clear differs");
     memory.byte(target,255);drive_target.Clear(0,10);require(memory.byte(target)==0,"signed negative point-count clear branch differs");
     const auto teleporter=memory.allocate(0x58);memory.scalar(0x311f78+0x10,1);
     std::vector<unsigned> route_calls;

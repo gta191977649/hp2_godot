@@ -1,5 +1,21 @@
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
+#include "game_core/port/driving/memory.hpp"
+namespace hp2::debug {
+struct DataEventSelectScreen {
+ static int GetSelectedEvent(const ::port::driving::Memory&,std::uint32_t,int); //001F1F00,W86.
+};
+struct tUnlockMap {
+ static void Reset(::port::driving::Memory&,std::uint32_t); //001F3458, W80.
+ static void AddGoal(::port::driving::Memory&,std::uint32_t,std::uint32_t,int); //001F3460.
+};
+struct tEventLeaf {
+ static void BuildUnlockList(::port::driving::Memory&,std::uint32_t,std::uint32_t); //001F3630 raw source pointer/list operands.
+};
+std::uint32_t GetEventDescriptionToken(const ::port::driving::Memory&,std::uint32_t); //001F1F58, W72.
+void FormatEventDescriptionToken(::port::driving::Memory&,std::uint32_t tree,std::uint32_t info,std::uint32_t token,std::uint32_t output); //001F1FD0.
+void FormatEventDescription(::port::driving::Memory&,std::uint32_t tree,std::uint32_t info,std::uint32_t text,std::uint32_t output,int length); //001F2158.
+}
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.

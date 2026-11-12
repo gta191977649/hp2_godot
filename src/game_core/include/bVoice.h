@@ -23,3 +23,21 @@ public:
     void Sub_0027C6F8();
 };
 } // namespace hp2::recovered
+
+#include "game_core/port/driving/object_view.hpp"
+namespace hp2::debug {
+// Port view storage of original8-byte bVoice; no host ABI claim. E-0099-W40.
+class bVoice:public ::port::driving::ObjectView {
+public:using ObjectView::ObjectView;
+ void Release(); //00274550
+ void Set(std::uint16_t,std::uint32_t); //00274578
+ std::uint32_t GetSample()const; //002745B8
+ std::uint16_t GetId()const; //002745F0
+};
+class bVoiceMgr {
+public:
+ static void Initialize(::port::driving::Memory&); //00272C90
+ static std::uint32_t GetVoice(::port::driving::Memory&,std::uint16_t,std::uint32_t); //00272D10
+ static void ReleaseVoice(::port::driving::Memory&,std::uint32_t); //00272F28
+};
+}

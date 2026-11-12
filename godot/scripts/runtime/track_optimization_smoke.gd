@@ -5,12 +5,23 @@ var candidate: Node3D
 var camera: Camera3D
 var mode := "optimized"
 var selected := {}
+var pose_path := ""
+var probe_scene_depth := false
+var explicit_source_samples := 0
+var quality_changed_pixels := false
 func _ready() -> void:_run.call_deferred()
 func _fail(reason: String) -> void:
  push_error(reason)
  get_tree().quit(1)
 func _options() -> Dictionary:
- var result := {"resource_reuse":false,"particle_mesh_reuse":false,"instancing":false,"occlusion":false,"opaque_queue":false,"world_batches":false}
+ var result := {"resource_reuse":false,"particle_mesh_reuse":false,"instancing":false,"occlusion":false,"opaque_queue":false,"world_batches":false,"depth_batches":false,"race_world_batches":false,"shadow_stream":false,"static_depth_sources":false}
+ if mode=="static_depth_sources":result.static_depth_sources=true
+ if mode=="depth_batches":
+  result.resource_reuse=true
+  result.depth_batches=true
+ if mode=="race_world_batches":
+  result.resource_reuse=true
+  result.race_world_batches=true
  if mode=="reuse" or mode=="optimized" or mode=="world_reuse":
   result.resource_reuse=true
   result.particle_mesh_reuse=true
@@ -50,7 +61,12 @@ func _capture(renderer: Node3D) -> Dictionary:
  DirAccess.make_dir_recursive_absolute(directory)
  var diagnostic_file := FileAccess.open(directory.path_join("draw-"+RenderingServer.get_current_rendering_method()+"-"+mode+"-"+str(renderer==candidate)+"-"+str(camera.position)+"-"+str(-camera.basis.z)+".json"),FileAccess.WRITE)
  var targets: Dictionary=renderer.get_render_targets()
- var result := {"draws":Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),"final":get_viewport().get_texture().get_image(),"summary":renderer.frame_summary()}
+ var stats: Dictionary=renderer.get_optimization_state()
+ var result := {"draws":Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),"final":get_viewport().get_texture().get_image(),"summary":renderer.frame_summary(),"depth_batches":stats.get("postprocess",{}).get("encoded_depth_batch_draws",0),"static_depth_sources":stats.get("postprocess",{}).get("static_depth_sources",0)}
+ if mode=="godot_quality":
+  result["fxaa"]=stats.get("postprocess",{}).get("colour_fxaa",false)
+  result["sampling_materials"]=stats.get("godot_sampling_materials",0)
+  result["mip_textures"]=stats.get("godot_mip_textures",0)
  for key in ["colour","native_depth"]:
   var texture: Texture2D=targets.get(key)
   if texture==null:return {"error":"Missing actual render target "+key}
@@ -63,6 +79,57 @@ func _capture(renderer: Node3D) -> Dictionary:
   detail.image_sha256[key]=hash.finish().hex_encode()
  diagnostic_file.store_string(JSON.stringify(detail,"  "))
  return result
+func _compare_scene_depth(label: String, reference: Image) -> bool:
+ var colour_texture: Texture2D=candidate.get_render_targets().get("colour")
+ var colour_camera: Camera3D
+ for child in candidate.get_children():
+  if child is SubViewport and child.get_texture()==colour_texture:
+   colour_camera=child.get_camera_3d()
+   break
+ if colour_camera==null:
+  _fail("Colour camera is unavailable for compositor depth probe")
+  return false
+ var depth: Dictionary=candidate.get_state().visibility_audit
+ var near_far:=Vector2(depth.effective_near,depth.effective_far)
+ var script=preload("res://scripts/debug/task0077_scene_depth_probe.gd")
+ var stages: Array[CompositorEffect]=[
+  script.new(CompositorEffect.EFFECT_CALLBACK_TYPE_PRE_TRANSPARENT,near_far),
+  script.new(CompositorEffect.EFFECT_CALLBACK_TYPE_POST_TRANSPARENT,near_far)]
+ var compositor:=Compositor.new()
+ compositor.compositor_effects=stages
+ colour_camera.compositor=compositor
+ for index in 3:
+  await RenderingServer.frame_post_draw
+ var inputs: Array[Image]=[]
+ for stage in stages:
+  stage.request_image()
+  inputs.append(await stage.captured)
+ colour_camera.compositor=null
+ for stage in stages:
+  stage.close()
+  await stage.released
+ var encoded:=reference.duplicate() as Image
+ encoded.convert(Image.FORMAT_RGBAF)
+ var expected:=encoded.get_data().to_float32_array()
+ for index in inputs.size():
+  var result:=inputs[index]
+  if result.is_empty() or result.get_size()!=encoded.get_size():
+   _fail("Scene depth probe did not produce a matching raster")
+   return false
+  var actual:=result.get_data()
+  var foreground:=0
+  var missing:=0
+  var unequal:=0
+  for offset in range(0,expected.size(),4):
+   var expected_z:=roundi(expected[offset]*255.0) | (roundi(expected[offset+1]*255.0)<<8) | (roundi(expected[offset+2]*255.0)<<16)
+   var actual_z:=int(actual[offset]) | (int(actual[offset+1])<<8) | (int(actual[offset+2])<<16)
+   foreground+=int(expected_z!=0)
+   missing+=int(expected_z!=0 and actual_z==0)
+   unequal+=int(expected_z!=actual_z)
+  print("TASK0077_SCENE_DEPTH ",label," ",["pre_transparent","post_transparent"][index],
+   " foreground=",foreground," missing=",missing," unequal=",unequal," pixels=",encoded.get_width()*encoded.get_height())
+ return true
+
 func _compare(label: String) -> bool:
  var a := await _capture(baseline)
  var b := await _capture(candidate)
@@ -70,6 +137,10 @@ func _compare(label: String) -> bool:
   _fail("Optimization capture failed: "+str(a)+str(b))
   return false
  print("DENSE_DRAW_COUNTS ",label," baseline=",a.get("draws")," candidate=",b.get("draws"))
+ print("ENCODED_DEPTH_BATCHES ",label," ",b.get("depth_batches",0))
+ if mode=="static_depth_sources":
+  print("STATIC_DEPTH_SOURCES ",label," ",b.static_depth_sources)
+  explicit_source_samples+=int(b.static_depth_sources)
  for key in ["packet_digest","commands","sections","zone","visible_instances"]:
   if a.summary.get(key)!=b.summary.get(key) or not a.summary.has(key):
    _fail("Optimization native frame differs: "+label+" "+key)
@@ -80,6 +151,9 @@ func _compare(label: String) -> bool:
  for key in ["final","colour","native_depth"]:
   var first: Image=a[key]
   var second: Image=b[key]
+  if mode=="godot_quality" and key!="native_depth" and not first.is_empty() and first.get_size()==second.get_size():
+   quality_changed_pixels=quality_changed_pixels or first.get_data()!=second.get_data()
+   continue
   if first.is_empty() or first.get_size()!=second.get_size() or first.get_data()!=second.get_data():
    var output := ProjectSettings.globalize_path("res://../local/task0055")
    DirAccess.make_dir_recursive_absolute(output)
@@ -90,9 +164,21 @@ func _compare(label: String) -> bool:
     candidate_image.save_png(output.path_join(label+"-"+saved+"-"+mode+".png"))
    _fail("Optimization exact GPU mismatch: "+label+" "+key+" mode="+mode)
    return false
+ if mode=="godot_quality":
+  if a.fxaa or a.sampling_materials!=0 or not b.fxaa or b.sampling_materials<=0:
+   _fail("Godot quality fixture did not exercise the expected viewport and samplers")
+   return false
+  print("TASK0077_GODOT_QUALITY ",label," materials=",b.sampling_materials," mip_textures=",b.mip_textures," encoded_depth=exact")
+ if probe_scene_depth and not await _compare_scene_depth(label,b.native_depth):return false
  print("TRACK_OPTIMIZATION_PARITY ",mode," ",label," ",JSON.stringify(candidate.get_optimization_state()))
  return true
 func _clear_check() -> bool:
+ if mode=="static_depth_sources" and explicit_source_samples==0:
+  _fail("Fixed camera comparison did not exercise explicit static depth sources")
+  return false
+ if mode=="godot_quality" and not quality_changed_pixels:
+  _fail("Godot quality fixture did not change any colour pixels")
+  return false
  for renderer in [baseline,candidate]:
   renderer.clear_track()
   var state: Dictionary=renderer.get_state()
@@ -108,14 +194,16 @@ func _run() -> void:
   get_tree().quit(77)
   return
  var args := OS.get_cmdline_user_args()
+ probe_scene_depth="--probe-scene-depth" in args
  for argument in args:
   if argument.begins_with("--optimization-mode="):mode=argument.trim_prefix("--optimization-mode=")
- if mode not in ["reuse","multimesh","occlusion","opaque","world","world_reuse","default","optimized"]:
+  if argument.begins_with("--optimization-poses="):pose_path=argument.trim_prefix("--optimization-poses=")
+ if mode not in ["reuse","multimesh","occlusion","opaque","world","world_reuse","default","optimized","depth_batches","race_world_batches","static_depth_sources","godot_quality"]:
   _fail("Unknown optimization test mode")
   return
  var overlay := get_node_or_null("/root/DebugTools")
  if overlay:overlay.hide()
- get_window().size=Vector2i(1920,1080) if "--dense-pose" in args else Vector2i(960,540)
+ get_window().size=Vector2i(1920,1080) if "--dense-pose" in args or not pose_path.is_empty() else Vector2i(960,540)
  DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
  camera=Camera3D.new()
  camera.keep_aspect=Camera3D.KEEP_WIDTH
@@ -124,14 +212,18 @@ func _run() -> void:
  camera.current=true
  baseline=ClassDB.instantiate("Ps2TrackRenderer")
  candidate=ClassDB.instantiate("Ps2TrackRenderer")
+ if mode=="godot_quality":candidate.set_race_godot_quality(true,true)
  add_child(baseline)
  add_child(candidate)
  candidate.hide()
- var fixture: Dictionary=ClassDB.class_call_static("Ps2TrackRenderer","test_instance_pool")
- if not fixture.get("ok",false):
-  _fail("MultiMesh resource fixture failed: "+str(fixture))
-  return
+ if ClassDB.class_has_method("Ps2TrackRenderer","test_instance_pool"):
+  var fixture: Dictionary=ClassDB.class_call_static("Ps2TrackRenderer","test_instance_pool")
+  if not fixture.get("ok",false):
+   _fail("MultiMesh resource fixture failed: "+str(fixture))
+   return
  var off := {"resource_reuse":false,"particle_mesh_reuse":false,"instancing":false,"occlusion":false,"opaque_queue":false,"world_batches":false}
+ if mode in ["depth_batches","race_world_batches"]:
+  off.resource_reuse=true
  baseline.configure_optimizations(off)
  selected=candidate.get_optimization_state().effective if mode=="default" else _options()
  if mode!="default" and not candidate.configure_optimizations(selected).get("ok",false):
@@ -160,6 +252,30 @@ func _run() -> void:
    _fail("Loaded reconfiguration was not atomically rejected")
    return
   baseline.restore_render_defaults()
+  if mode=="race_world_batches":
+   for renderer in [baseline,candidate]:
+    var applied: Dictionary=renderer.apply_world_objects([],[])
+    if not applied.get("ok",false):
+     _fail("World scenery fixture failed: "+str(applied))
+     return
+    renderer.set_world_vehicle_visuals([])
+  if not pose_path.is_empty():
+   var poses: Variant=JSON.parse_string(FileAccess.get_file_as_string(pose_path))
+   if not poses is Array or poses.size()!=3:
+    _fail("Expected three recorded camera poses")
+    return
+   for pose in poses:
+    var columns: Array=pose.basis
+    var position: Array=pose.position
+    camera.transform=Transform3D(Basis(Vector3(columns[0][0],columns[0][1],columns[0][2]),
+     Vector3(columns[1][0],columns[1][1],columns[1][2]),Vector3(columns[2][0],columns[2][1],columns[2][2])),
+     Vector3(position[0],position[1],position[2]))
+    camera.fov=float(pose.fov)
+    if not await _compare(str(pose.label)):return
+   if not _clear_check():return
+   print("TRACK_GEOMETRY_PARITY_OK ",mode)
+   get_tree().quit(0)
+   return
   var initial: Dictionary=baseline.get_state()
   var start: Vector3=initial.start_position
   var forward: Vector3=initial.start_forward

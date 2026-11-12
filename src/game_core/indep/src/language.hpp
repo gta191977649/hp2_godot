@@ -23,3 +23,5 @@ public:
     void Unloader();
 };
 } // namespace hp2::recovered
+
+#include "game_core/indep/inc/Language.hpp"

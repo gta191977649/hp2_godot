@@ -3,6 +3,7 @@
 // This file sits at that path. The path is original; what the file holds is a
 // partial port-side reconstruction, not the original translation unit.
 #include "sound.hpp"
+#include "game_core/src/bSample.hpp"
 #include "game_core/port/not_implemented.hpp"
 #include <algorithm>
 #include <fstream>
@@ -172,3 +173,65 @@ PcmSound GuestSampleBank::decode(const std::string& event_name) const {
     hp2::not_implemented("0x002719B8", "E-0016-A01: requested bSound event absent in Guest asset bank");
 }
 } // namespace hp2::port::audio
+
+// Debug inline ../indep/inc/SpeechNoise.hpp instance emitted in sound.cpp; E-0099-W16.
+#include "game_core/port/race/cop_speech.hpp"
+namespace port::race {
+// Debug001AD768 ->002101D0; E-0099-W16. This exact call target owns
+//32B150/327EE8, distinct from the same-named inline copies in other TUs.
+std::uint32_t CopSpeechBindings::noise_instance(){
+ constexpr std::uint32_t noise=0x32b150;
+ if(memory_.word(0x327ee8)==0){construct_noise(noise);memory_.word(0x327ee8,1);}
+ return noise;
+}
+}
+
+#include "game_core/src/bSound.hpp"
+#include "game_core/src/bRegion.hpp"
+#include "game_core/port/driving/memory.hpp"
+#include "game_core/port/not_implemented.hpp"
+namespace {
+std::string port_original_sound_string(const ::port::driving::Memory& m,std::uint32_t at){std::string out;for(unsigned i=0;i<4096;++i){const auto c=m.byte(at+i);if(!c)return out;out.push_back(char(c));}throw std::out_of_range("Unterminated original sound string");}
+}
+namespace hp2::debug {
+// Debug001AB900, E-0099-W40. Actual cached global InGame region and ordered
+// bRegion lookup; absent whole source data remains an explicit dependency.
+std::uint32_t GetInGameSample(::port::driving::Memory& m,std::uint32_t name){auto region=m.word(0x327f24);if(!region){const auto sound=m.word(0x329320);if(!sound)hp2::not_implemented("0x001AB900","actual bSound source lookup state is not initialized");region=bSound(m,sound).Region(port_original_sound_string(m,0x327f28));m.word(0x327f24,region);}if(!region)hp2::not_implemented("0x001AB900","actual authored InGame region is not loaded");return bRegion(m,region).Sample(port_original_sound_string(m,name));}
+// Debug001AC8C8/001AC8D0, E-0099-W40. Actual loading-state observation only;
+// these functions do not manufacture loader completion or change sound flags.
+int IsSoundRegionLoadingInProgress(const ::port::driving::Memory& m){return m.signed_word(0x327ef8);}
+int IsSoundRegionLoadingComplete(const ::port::driving::Memory& m){return IsSoundRegionLoadingInProgress(m)==0;}
+}
+
+#include "game_core/bSound/include/bJukebox.h"
+namespace hp2::debug {
+// Original sound.cpp static,001AD710. Unmentioned fields stay untouched.
+void Sub_001AD710(::port::driving::Memory& m){const auto a=0x308ce0u;m.word(a,0);m.word(a+0x228c,1);m.word(a+0x2290,0xffffffff);m.scalar(a+0x2294,1);m.word(a+0x22a0,0);for(auto offset:{0x44u,0x2248u,0x224cu,0x2274u,0x2270u,0x2280u,0x227cu,0x2298u,0x229cu})m.word(a+offset,0);}
+namespace sound::jukebox {
+void Stop(::port::driving::Memory& m){if(m.word(0x326f48))cJukeboxPlayer(m,0x308ce0).Stop();}
+// MIPS entry001AC2D0 stores then falls through into Stop001AC2D8.
+void DelayedStart(::port::driving::Memory& m,float seconds){m.scalar(0x327f14,seconds);Stop(m);}
+}
+}
+
+namespace hp2::debug {
+// Debug001AD118, E-0099-W70. No SoundEnabled suppression is present in source.
+void TriggerFinishLineSound(::port::driving::Memory& m){const auto sample=GetInGameSample(m,0x2ae120);if(sample)bSample(m,sample).Play(1,0,0);}
+}
+
+#include "game_core/src/bSound.hpp"
+#include "game_core/src/bRegion.hpp"
+#include "game_core/src/bSample.hpp"
+#include "game_core/src/bDriverPS2.hpp"
+namespace hp2::debug::sound {
+// Debug001AD000/001AD010/001ACFF8; E-0112-P03.
+float GetVolumeBalance(const ::port::driving::Memory& m){return m.scalar(0x325808);}
+float GetVolumeDefault(const ::port::driving::Memory& m,int category){return unsigned(category)<7?m.scalar(0x32580c+4*unsigned(category)):-1.f;}
+int GetAudioMode(const ::port::driving::Memory& m){return m.signed_word(0x327f9c);}
+// Debug001ACFC8 -> bSound.SetMode00270208; E-0112-P03.
+void SetAudioMode(::port::driving::Memory& m,int mode){if(mode==1)bSnd_SetStereo(m);else if(mode==0)bSnd_SetMono(m);else if(mode==2)bSnd_SetPrologic(m);m.word(0x327f9c,std::uint32_t(mode));}
+// Debug001ACDC8; E-0112-P03. Source table order and repeated speech lookup.
+void SaveVolumesForSpeech(::port::driving::Memory& m){bSound sound(m,m.word(0x329320));for(unsigned i=0;i<5;++i){m.scalar(0x30af88+4*i,sound.GetCategoryVolume(m.word(0x30afa0+4*i)));m.scalar(0x327f18,sound.GetCategoryVolume(6));}}
+// Debug001ACD48; E-0112-P03. Existing source bank/sample/voice implementation.
+void PlayCommonRegionSample(::port::driving::Memory& m,const std::string& name,float volume){if(m.word(0x326f40)){const auto snd=m.word(0x329320);const auto region=m.word(snd+4);const auto sample=bRegion(m,region).Sample(name);if(!sample)hp2::not_implemented("0x001ACD48","required source common-region sample is absent");bSample view(m,sample);view.SetCategory(3);view.Play(volume,0,0);}}
+}

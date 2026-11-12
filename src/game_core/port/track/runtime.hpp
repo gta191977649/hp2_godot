@@ -4,12 +4,18 @@
 #include "postprocess.hpp"
 #include "game_core/port/driving/memory.hpp"
 #include <memory>
+#include <optional>
 #include <unordered_map>
 #include <stdexcept>
 #include <string>
 namespace port::track {
 struct StaticLodScene;
 // Port-owned immutable resources and frame values; native XYZ, column-major matrices.
+// TASK-0107: explicit port presentation operands, never edits to asset/game Memory.
+struct WorldObjectBinding { int section=-1,record=-1;std::uint32_t model_hash=0;std::array<float,16> matrix{};bool visible=true;std::uint32_t source_address=0; };
+struct WorldSceneryFlags { int section=-1,record=-1;std::uint16_t flags=0;std::optional<std::array<float,16>> matrix; };
+struct WorldInstanceOperand { Instance value;bool detached=false,visible=true; };
+struct WorldInstanceOperands { std::unordered_map<std::size_t,WorldInstanceOperand> values;std::vector<std::size_t> dynamic_order; };
 struct FrameView {
     std::array<float,3> position{},direction{{1,0,0}};
     std::array<float,16> clip_matrix{}; // native world -> homogeneous clip (-w..w)
@@ -23,6 +29,8 @@ struct FrameView {
     std::array<float,3> environment_position{};
     bool environment_capture_valid=false; // requires the original car capture origin
     postprocess::Controls post_controls;
+    const WorldInstanceOperands* world_operands=nullptr; // borrowed during frame preparation only
+    bool world_dynamic_pass=false;
 };
 struct DrawCommand {
     std::size_t instance=0,solid=0,surface=0;
@@ -72,7 +80,12 @@ public:
     Frame prepare_hlod_frame(const FrameView&,port::driving::Memory&,const StaticLodScene&,
         std::size_t warm_instance=std::size_t(-1));
     std::string diagnostics()const;
+    // Full sparse flag override-set relative to immutable asset baseline; atomic commit.
+    void set_world_objects(const std::vector<WorldObjectBinding>&,const std::vector<WorldSceneryFlags>&);
+    std::size_t world_operand_count()const{return world_operands_.values.size();}
+    bool has_world_operand(std::size_t instance)const{return world_operands_.values.count(instance)!=0;}
 private:
+    WorldInstanceOperands world_operands_;
     std::shared_ptr<const Scene> scene_;
     std::unique_ptr<ResourceIndex> index_;
     std::vector<std::size_t> zone_order_;

@@ -1,3 +1,538 @@
+## 2026-11-12 TASK-0105 Debug Championship selection
+
+Paired one-process ImGui phases isolated a median 0.64–0.66 ms Info-on
+host cost and a roughly 23 ms selection packet. Optimized the selection
+packet's indexed expansion and enabled scoped Debug optimization for its
+port translation unit. The isolated candidate passed production interaction
+checks and reached 12.61–12.64 ms Info-on P95, still above the 8.33 ms gate.
+Exact artifacts and next GPU submission work are in PERFORMANCE_TASK0105.
+
+## 2026-11-12 TASK-0016 frontend background movie
+
+Reproduced a zero-area PANELMOVIE in the live Control frontend. The host now
+uses decoder dimensions with the authored transform, UVs and layer. Retail
+Ghidra confirmed Options uses options_movie_new and the Challenge/setup
+classes share the mode-dependent movie helper. Background requests now
+follow native class lifetimes, retaining same-file playback and explicitly
+clearing it at source stop callsites. The MV30 loop now resumes at frame zero.
+See TASK-0016 for fixed tests, launch commands and original-runtime limits.
+
+## 2026-11-12 TASK-0077 Godot race sampling and FXAA
+
+Connected normal event colour FXAA and ordinary track texture sampling to
+Godot. Three Track 12 fixed scenes changed colour as requested and preserved
+the command digest and encoded depth exactly. Narrowed mip-chain allocation
+from 233 to 38 eligible textures on Track 12 while preserving authored levels.
+The legacy material coverage path and a launch override remain available.
+
+## 2026-11-12 TASK-0077 Championship Godot Server integration
+
+Preserved original World authority, added optional direct static depth
+publication and stable per-view MultiMesh ownership, and changed World PCM
+transport to blocks. Track 12 fixed scenes were exact for both candidates.
+The main-view depth probe found no usable foreground before transparent
+drawing and residual byte mismatches after it. One short control and one
+short run per candidate showed no accepted whole-frame improvement.
+MultiMesh reduced replay P50 from 6.221 to 5.492 ms, while its depth proxy
+sync rose from 3.396 to 5.586 ms. Audio transport and race pause/retry/exit
+passed. The remaining target and reproducible commands are in TASK-0077.
+
+## 2026-11-11 TASK-0077 World shadow stream race and command replay
+
+One 120-frame opt-in run passed all 12 Championship route checks. Whole
+frame P95 changed 58.107→52.989 ms and host shadow P95 3.676→0.865 ms.
+The common first-render-pass-to-buffer-end P95 changed 4.461→4.297 ms.
+The added Vulkan markers put 6.087 ms median after the first observed
+replay command, including 3.210 ms inside render passes. The interval
+before that marker was 1.726 ms and includes render graph preparation.
+The runs follow the same route, with different input timing and positions.
+No repeat race was launched. Continue TASK-0077 with the replay workload.
+
+## 2026-11-11 TASK-0077 Vulkan tail and World shadow upload
+
+One short Track 12 Release capture matched 117 of 120 production frames to
+the Windows Vulkan call trace. After the viewport group, 7.180 ms median
+elapsed before ending the main command buffer, out of 7.675 ms total.
+Queue submits took 0.127 ms and present 0.012 ms. Godot issued no blocking
+fence waits in the matched intervals. The boundary also includes screen
+acquire, blit setup, transfer workers and command graph work. The opt-in
+World shadow stream avoids rebuilding stable-topology surfaces and passed
+exact packed-array and Vulkan raster checks. Ten native tests passed.
+Race FPS for the candidate remains open. See TASK-0077 for reproduction.
+
+## 2026-11-11 TASK-0077 Championship batch gates and engine attribution
+
+Fixed Track 12 captures matched in both opt-in batch modes. The depth-only
+candidate saved at most one draw, and race static batching regressed moving
+frame P95 from 48.143 to 49.392 ms despite a large static draw-count reduction.
+The opt-in 75% raster and 30 Hz mirror profile passed after adapting Sun's
+viewport-size guard, with 49.595 ms P95. None reached the 60 FPS gate.
+
+One production diagnostic captured 17.116 ms median track host view,
+8.186 ms inside depth, and 15.334 ms Godot draw wall time. A bounded
+cache-trim experiment produced mixed tails and was reverted. Same-frame
+clock alignment measured 7.009 ms median after Godot's viewport group.
+Continue TASK-0077 by splitting device command finalization, presentation
+and next-frame waits. See the task for exact captures and commands.
+
+## 2026-11-11 TASK-0077 Championship Release and vehicle submission
+
+Three capped wall-only Release references measured P50 43.184–43.992 ms and
+P95 49.319–51.049 ms at 1080p. Versioned vehicle depth staging had mixed tail
+results and remains opt-in. Stopped the repeat matrix at the user's request.
+Sharing vehicle pose calculations and skipping identical light writes reduced
+five-car view CPU P50 from 5.569 to 2.200 ms in the single follow-up. Full-frame
+diagnostic P95 fell from 56.151 to 53.514 ms, with P99 rising from 60.887 to
+62.283 ms. The 16.67 ms budget remains unmet. Nine rebuilt native tests and
+12 actual race checks passed. The legacy fixed-image fixture failed in its
+reference startup, so pixel parity is open. Next action is an encoded-depth
+submission inventory and a fixed-pose batch check. See TASK-0077 for exact
+commands, identities, throughput limitations and render-thread status.
+
+## 2026-11-11 TASK-0077 production Championship render boundary and performance
+
+Audited the production source/build graph and Windows extension imports, then
+ran the authored first Championship through the real menu, selection, loading,
+and driving path in isolated projects using the original asset root. The
+render path submits native scene/visibility/material data to Godot Vulkan.
+TASK-0018 records asset decoding, native behavior and GPU submission ownership.
+
+The Championship harness measures 120 warm / 600 sampled frames, holds export
+through the last frame interval, writes the profile atomically, and validates
+source/DLL/engine identity, viewport, effective renderer policy and source steps.
+All three 1080p baseline runs passed. Median wall time ranged 75.874–80.798 ms.
+Depth postprocess measured 11.043 ms median in A1 and performed 572 discovery
+scans. One depth-discovery candidate trial stopped at source step 578 on the
+existing 0x001C6070 route recovery guard. That trial is an excluded capture.
+Exact commands, repeat data and continuation are in TASK-0077.
+
+## 2026-11-06 TASK-0112 shared race camera and widescreen checkpoint
+
+TASK-0112 remains active. Actual Player/DriveCameraMover/Camera now share the
+existing World Memory, original topology/collision resources and source cleanup.
+Restored bounded Player camera construction/cycle/events/gauge and required
+AnimatedDriver lookback dependencies retain original addresses and source owners.
+V respects the original initial timer/mode gates; B has actual source animation
+side effects. Source camera updates once at the World boundary, never per render
+pass. Existing semantic driving input/RealDriver path is retained.
+
+The host reuses driving_camera.gd temporary observation and provides explicit
+Hor+ projection, live resize and F11 fullscreen. Source Flailer value snapshots
+and prepared texture/glyph packets preserve generation/step before presentation.
+The countdown test checks exact animated records and unchanged source bytes,
+list heads and clock. Full original HUD, pause and results producers are still
+missing; current text HUD and PC results are not claimed as recovered UI.
+
+Full native-debug and normal Godot-debug builds pass. Five focused native checks
+pass74.88s. Python GPU source camera/mouse/4:3/16:9/21:9/fullscreen checks18 pass;
+actual foreground focus/F8 checks8 pass; Championship launch/controls/return20
+and Hot Pursuit launch/input/return10 pass. Full new finish/save/lifecycle matrix
+is pending. Nine live Ghidra function prefixes match the hash-checked Debug ELF;
+oversized HUD captures were retrieved completely via paged tool output. No
+computer use, staging, commit, proprietary asset export or Verified promotion.
+Exact commands/artifacts and continuation: reverse/task0112/presentation.md and
+tasks/active/TASK-0112-race-presentation-widescreen.md.
+
+## 2026-11-06 TASK-0111 playable FreeRun and Python control audit
+
+User requested necessary-only playable driving with every missing function visible as a console WARNING, then an actual Python-injected game test. Explicit PC minimal preset uses original no-cops/no-traffic one-player producers, disables only statically audited skid presentation before entry, and retains mandatory source simulation guards. Strict policy remains available with --world-strict. Atomic missing-function observer, thread-safe counted warning retention, yellow native console severity and warnings replay command cover reached and pre-disabled dependencies. No arbitrary exception suppression or recovered default return.
+
+Actual extended GPU test PASS32 checks on track11 ELISE skin7, including measured acceleration/turning/braking, handbrake/horn, actual Q/E gears, keyboard and mouse World controls, restart/return, F8 warnings. It discovered automatic-shift Player reroute guard0013BD70; minimal PC preset now explicitly selects original manual transmission. Strict auto preview/freeze remains unresolved. Pause button shows Resume when paused. Exact commands, failed/limited scopes and evidence are in reverse/task0111/validation.md and TASK-0111. Background message injection does not prove actual foreground focus. No original-runtime Verified claim.
+
+TASK-0111 scoped acceptance completed. Native final checks PASS (minimal1200-frame/manual/strict-failure regression48.64s; other4 checks passed). Earlier immediate-shift test assertion failure was corrected to respect original startline and shift settling. TASK-0110 production race remains incomplete: StartRace001965C0 and lifecycle, mandatory AI Resample002171D8 scratch operands (call00217454), full finish0014BAB0, production results/save. Next session: reproduce TASK-0111 window command then continue TASK-0110 from those blockers. Preserve unrelated existing dirty tree; no commit made.
+
+## 2026-11-06 TASK-0110 minimal race plan and native finish milestone
+
+Final validation appendix: final native consumer/Godot builds PASS; final
+5-check CTest PASS5/5 in29.62s, including regenerated class coverage, progress
+freshness/contracts and both new native regressions. Final Godot headless
+PORT_SMOKE_OK:42 and git diff --check PASS. Commands, exact artifact/log hashes
+and separate failed/blocked scopes: reverse/task0110/validation.json.
+
+
+Request: plan and implement the smallest complete production race in one delivery.
+Read the referenced chat, tasks and repository rules; used read-only Ghidra MCP
+and REA workflow. Created TASK-0110 for one authored first Championship event;
+TASK-0106 remains separate. Existing user changes retained. The complete
+playable roundtrip is NOT achieved; TASK-0110 stays active.
+
+E-0110-F01/F02/F03 add33 callable native finish consumers plus an expanded
+bStrToLong callee: remaining finishers/final results, roster/place/progress/
+continuation/retry, Fred abortion/options/records/name/score/bonus/transient,
+actual cop tickets and task/point rewards. Source remains Godot-free. Full
+TheRaceIsOver native data flow uses actual RecordResults/points/PostResults/
+rewards with explicit source operands, not a synthetic-success provider.
+
+Counterevidence: signed position+A rather than finish order+C; full LW abort
+observation; TheRaceHasFinished entry0014BAB0 rather than its interior JAL0014BAF4;
+19points rows skip flag5 and include19, aliasing Fred abort word. The initial
+contiguous19flags test failed and was corrected from original Ghidra memory.
+Unknown original reward source ownership remains explicit in the port-side root
+NFSTaskParameters files. See reverse/task0110 for records, queries and hashes.
+
+Tools: CMake3.29.2, GCC13.2.0, Python3.14.4,
+Godot4.7.2.stable.official.ed1daf0bf, godot-cpp pin
+e4b7c25e721ce3435a029087e3917a30aa73f06b. Commands/results:
+
+- cmake --build build/native-debug -j4: PASS232steps.
+- cmake --build build/godot-debug --target ps2_port -j4: PASS; final comment/address-bookkeeping rebuild separately logged local/task0110.
+- ctest --test-dir build/native-debug -R '^(race_finish_original|frontend_finish_original)$' --output-on-failure: PASS2/2,2.54s before comment-only anchor updates; final rerun below.
+- ctest --test-dir build/native-debug -R '^(race_finish_original|frontend_finish_original|race_start|race_parameters|ultimate_event|frontend_result_original|frontend_records_original|frontend_status_original|frontend_start_original|race_start_original|race_coordinator_original|world_clock_audio_frame_original|world_session_original|class_template_gaps|class_template_coverage|class_template_generator|recovery_progress_contracts)$' --output-on-failure:16/17PASS79.68s; sole failure stale class inventory. py -3 reverse/scripts/generate_class_templates.py --write regenerated it. Targeted class_template_coverage rerun PASS1/1,23.88s. This is16 original passes plus a separate metadata pass, not one clean17/17run.
+- local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe --headless --path godot res://scenes/main.tscn -- --smoke-test: PASS, PORT_SMOKE_OK:42; no window/gameplay claim.
+- build/native-debug/car_construction_tests.exe --authored-event 0 --event-tree 0 --world-frames 521: BLOCKED/exit1 at source Resample00217454 (original scratch-tail/prior-stack operands required).520source-clock lines precede the guard; no full match. Extended-VU001A81DC remains distinct.
+
+No PCSX2 process or21512/28011 listener observed. Production window driving-to-
+finish/results/save, retry/resource/performance and original comparison remain
+blocked/unperformed, not passed. TheRaceIsOver accumulates source awards; the
+future real session must commit each outcome once. No Verified promotion.
+
+Continuation: active TASK-0110, SelectionRuntime StartRace001965C0 -> real
+GameFlow/loading/MainLoop/shared event World, then TheRaceHasFinished0014BAB0/
+EndGameScreens/postrace/private persistence. Retain CPU/stack guards and exact
+authored event; no debug FreeRun substitution. No staging or commit.
+
+## 2026-11-03 TASK-0109 minimal Debug Info frame curve
+
+Implemented raw host frame delta history (240 samples), current FPS/ms and recent
+peak in HP2 Debug Info. Removed screen, quads/glyphs, texture/missing and clipped
+rows; status command and full profiler remain available. Port-only UI policy,
+no original evidence or Verified change. History wraps without allocation and
+continues while hidden; finite positive deltas only, adaptive graph range.
+
+Validation: CMake 3.29.2, MinGW GCC 13.2.0. cmake --build build/godot-debug
+--target debug_console_tests --parallel 4 passes. ctest --test-dir
+build/godot-debug -R '^debug_console$' --output-on-failure passes 1/1 (1.03s),
+including 250 frames/history wrap and DPI rendering. An initial test insertion
+stole console input focus; moved that check after input tests and reran cleanly.
+Combined debug_console_tests/ps2_port build compiled the UI library but DLL link
+failed: godot/bin/ps2_port.dll Permission denied (in use). No process terminated.
+Interactive visual validation remains pending. TASK-0109 stays active for DLL
+publication: close the running frontend, then ./build.ps1 --debug and inspect
+HP2 Debug Info. Existing user changes preserved; no commit made.
+
+## 2026-11-03 TASK-0108 build launcher debug flag
+
+Completed port-side --debug: implies run, requires godot-debug, forwards engine
+--debug and existing Info --info. Ordinary build/run unchanged. Combined profile
+and editor paths covered. No original-game evidence or verification change.
+PowerShell 7.6.5 / Python 3.14.4: py -3 reverse/scripts/tests/test_build_debug_flag.py
+passes 6 tests with isolated CMake/engine mocks; pwsh -NoProfile -File ./build.ps1
+--help passes. Full build and interactive launch omitted: no native/Godot logic
+changed. Continuation: ./build.ps1 --debug with the pinned engine and local assets.
+Existing user edits preserved; no commit made.
+
+## 2026-11-03 TASK-0107 guarded World debug entry delivered
+
+TASK-0107 is completed for its approved first guarded debug scope, not Verified
+or a completed production race. Normal native-debug and Godot-debug ALL builds
+pass; build.ps1 --run remains the entry. Final DLL SHA256
+5d3845c69fe0a6c54e35d642a19c7d21b53d37152cf778f662258237047560da.
+
+Source FreeRun6 produces13 actual cars (1Player/6traffic/6police), unchanged
+unlock records. One WorldSession owns original RC/World/Player/Replay/audio.
+Four UI routes share race_scene and retain selection/camera on return. Original
+body/wheel and source object/flag/pose publications commit transactionally;
+render passes read one committed frame and do not simulate again. Source AcidFX
+snapshot transport replaces the old per-car retrigger/integration in World view.
+
+Native source motion and horn publication regression PASS53.45s; retained old
+actual rosters3/3 PASS23.70s; final track/particle/FreeRun3/3 PASS2.55s. Current
+World/InputMap Godot tests2/2 PASS92.81s, plus terminal camera check PASS95.23s.
+Headless30restarts/10viewer roundtrips pass40 source teardown checks. Separate
+actual Vulkan30restarts pass30 teardown checks; source closed footprint all0,
+Godot nodes889/resources15/audio player1 and texture memory110370816bytes fixed,
+buffer/video variation under0.5KiB. External process private memory net grows
+about65MiB after warmup; no attribution or zero-leak claim. Async readiness is
+observed, internal queue lengths are not.
+
+User-requested Python Win32 injection proves final DLL movement/guard/restart/
+return10checks; additional track12/skin7 and F50/skin2/track11 checkpoints,
+real foreground focus/F8 8checks, and3loading cancellations/final generation
+7checks pass. Own-viewport screenshots and exact scopes/hashes are recorded by
+E-0107-V01. Source1A88C8 is the expected reached stop after short driving; it
+retains the last complete picture and rejects continuation. Actual converted
+prop GPU draw and full original rendering equivalence are unverified. Native
+adapter tests cover dynamic exact pose, flags and hidden/static restoration.
+
+Normal ALL build exposed stale generated Retail tCopManager tests after its
+existing Debug canonical source adoption. E-0107-B01 adds version-scoped owner
+bookkeeping, namespace safety and regenerates12 obsolete calls without inventing
+a constructor or crediting Retail behavior. Four existing source files previously
+manually appended to a generated list now have explicit game_core registration.
+Full builds pass; template/naming/pipeline5/5 PASS49.57s, generator8tests PASS.
+No original game bodies changed in this build repair. Source horn state now reads
+original Sound3d activation; full-throttle extra test first hit the known skid
+guard, then normal coasting horn press/release isolated that publication check.
+
+No computer-use after the explicit Python instruction, no commit and no ELF/ISO/
+assets staged. Exact continuation: TASK-0099 actual shared Clan RenderSkids at
+1A88C8, original ownership/LRU and commit barrier; do not disable effects or reuse
+partial Memory. Production GameFlow/results/save and original numerical limits
+remain outside this completed first debug entry. Historical prior session text
+below preserves its then-active status and superseded checkpoints.
+
+## 2026-11-02 TASK-0107 unified World implementation and first DLL
+
+Implemented FreeRun source setup, Godot-independent WorldSession, whole-World
+transactional publication, shared PCM, read-only original particle transport,
+selection/return routing and the race_scene presentation barrier. Default source
+roster is one player, six traffic and six cops. Initial native final regression
+PASS4/4 in30.16s: track_runtime, world_particle_snapshot, world_session_original,
+free_run_launch_original. Native and Godot debug builds link. Initial Godot
+compile failed on missing Node3D/Camera3D complete includes; corrected. Initial
+transport test link omitted port_runtime; corrected. Initial new-DLL headless
+smoke found a Configured-to-Loading entry omission; UI integration was corrected
+before claiming playable acceptance. Native success is not original equivalence.
+Window/lifecycle acceptance is still pending.
+
+Window input integration corrected a copied fixture hardware response: reporting
+the actual Player port connected prevents original RealDriver0013B200 from
+resetting Joy values. Native motion test PASS49.96s; ten committed throttle
+frames produced horizontal displacement0.0934907 and source speed0.955077.
+Preserved authored HP/Championship regressions PASS3/3 23.70s; naming/pipeline/
+effect contracts PASS4/4 10.81s. The final epoch DLL links. Python Win32
+background message injection (explicit host focus fixture) then passed10 scoped
+checks, including actual motion/W/A, source1A88C8 freeze and terminal rejection,
+restart and return. It reports `guarded`, not full positive input acceptance.
+Gunmetal default skin4 is dark; actual source skin7 renders Lightning Yellow.
+Own viewport captures stay in local/task0107/python-world-guard2/. No further
+computer-use after the user's explicit Python instruction.
+
+Evidence E-0107-F01 and reverse/task0107/world-session{.md,-evidence.json};
+particle transport is a port reader of E-0099-W53 layouts, with declared-record
+transport tests. Logs are ignored local/task0107/. Task remains active.
+
+## 2026-10-29 TASK-0099 all-track firstframe and actual UI/state resources
+
+World firstframe immutable corpus PASS60/60,407.932s, actual30tracks both
+directions with actual RC construction/destruction and loaded event/scenery
+providers. Metadata reverse/task0099/world-frame-corpus.json. Normal Godot
+ps2_port DLL checkpoint build passes192scheduled steps; later W70/W71/W72/W73
+changes need an incremental build after stabilization. Root build initially used
+wrong target hp2_port, corrected to configured ps2_port; not counted as success.
+
+Five-check latest wave PASS13.14s: race_start1.39 (extended actual result/finish
+consumers), W72raw tree owner1.88, W68terrain1.38, actual Worldfirstframe6.53,
+W73countdown1.94. W73 uses actual three UI bundles, real cached textures, exact
+alpha/center scale, source CountDownLow softwarevoice/EE queue and PC PCM consume,
+complete baseline. Sony original EE manual p356 supports finite alpha CVT.W.S
+round-toward-zero under the existing user CPU-only authorization. Retail raw
+color/scale/texture fields were independently inspected. No full UI rendering.
+
+Initial latest build failed a PC namespace shadow in bSlotPool.hpp after sound
+hpp introduces hp2::port. Qualifying declarations ::port::driving fixes name
+lookup only; rerun47steps PASS. Logs local/task0099/world-frame/rolling-build-
+rerun.log and rolling-components-ctest.log. Metadata has scopedW70/W72/W73 rows.
+
+Natural repeatedWorld first12frames pass;13th reaches positiveSkid/Clan. W71
+initial dedicated check correctly exposed missing DEFAULTTEXTURE fixture data,
+then exposed an erroneous source list-head binding to counters327E6C/70. Fresh
+MIPS/staticCRT establishes real list327E60/64; originalSub1A8B30 now required at
+process startup. Corrected actual resource/LRU test passes1.75s and baseline.
+Mellow.UpdateCar must forward explicit physics stack-W policy just as Physics.Move
+already does; root corrected this port binding. Rolling240frames recheck pending.
+Task remains active; complete production race/progression and original equivalence
+have not been established.
+
+## 2026-10-29 TASK-0099 complete World firstframe passes
+
+W67 actual World.DoTimestep selected-track firstframe PASS6.28s with genuineRC
+construction/destruction, loaded event/scenery models, actual8participants and
+all source frame stages through W70 Race.Update; complete resource baseline.
+Central29step six-target build passes. Seven CTests PASS23.63s: memory0.16,
+W66feedback1.41,W69Player2.10,W68terrain1.50,authored30x33terrain10.81,
+W67component1.35,actualWorldfirstframe6.28. Logs local/task0099/world-frame/
+full-frame-{build,ctest}.log. Immutable60case firstframe corpus running privately;
+source-consecutive frames now expose actual countdown/racing dependencies.
+This is a firstframe milestone, not complete race/progression/Verified.
+
+Metadata audit7094current private capture/log hashes match, no missing files.
+One explicitly recorded superseded duplicate query is historical, excluded from
+current hash claims. Five contract checks pass; progress_tables initially failed
+because an appended tracker note was outside generator output. Regenerating with
+py -3 reverse/scripts/generate_progress.py restores its passing2.32s check.
+Narrative stays here/task files; generated tracker is left generator-owned.
+
+## 2026-10-29 TASK-0099 ownership and World-frame integration checkpoint
+
+Actual RC001495B0 constructor passes30tracks x2directions:60/60,487.013s.
+Historical manual-teardown probe scope remains explicit in race-coordinator-ctor-
+corpus.json. Selected-track forward/reverse now execute actual RC001496C8
+teardown, PlayerCleanup, queue/state/pools and loaded-resource baseline. These
+are fixture DriverInfo identities, not the original Fred roster producer.
+
+W65 scenery/Fern corpus60/60 passes188.77s:146376model allocations,144586bound
+solids,8528rigid rows,124656animated paths,2030634particles. All1790NullSolid
+references remain source nulls. Empty selected A resources/missing hashes are
+unresolved residency/version questions; no alternative-track fallback is added.
+
+Central W66 feedback/W69 Player game-state/memory checks PASS1.52/2.14/0.15s.
+W68 initially failed a fixture no-cache expectation; corrected fixture passes
+1.39s, production unchanged. W67 DAT wrap/ties, traffic gates/timer/visibility
+and stable intrusive fractional-X sorting component checks PASS1.48s. See
+local/task0099/world-frame/integration-ctest.log and subsystem notes.
+
+World0014D9A8 source orchestration and tiny source-empty services are implemented
+and syntax checked. Whole-frame linking/acceptance awaits W70 Race.Update and
+actual event/scenery-loaded caller integration. W70 discovered original AI IDs
+100..106; older0,2..8fixture corpus is preserved with its historical scope.
+No full World/competition or Verified claim. TASK-0099 and TASK-0096 stay active.
+
+## 2026-10-29 TASK-0099 original initialization and player controller checkpoint
+
+W56 actual InitCars ->InitPlayers ->Race.Init(COUNTDOWN3) now passes all30tracks
+in both directions:60/60,501.142s. It uses genuine W55 Player ownership and actual
+source time tables/sorts/routes, shared8World movement/collision and complete
+loaded-resource baseline. This is not RC constructor execution or full scheduler;
+explicit fixture DriverInfo ranks/unknown stack operands and declared no-car-sound
+branch remain scoped. Metadata: reverse/task0099/race-start-corpus.json separates
+private probe SHA from authorized behavior ELF SHA. Final NRI/empty-route edge
+corrections are covered by current race_start units.
+
+W60 actual RealController route/spline/prediction/target frame passes60component
+frames low/high/wrong-way with real Player and authored route/car resources.
+Car.Think now binds its actual signed descriptor234798. Four-check integration
+passes4/4in16.21s: actual Player+8World movement, actual countdown start chain,
+race-start units and police-frame component gates. Root W61 adds source police
+outer call order, timers/lists/player pursuit/patrol and actual landmark polygon/
+graph uncloaking, with active pursuit/cop/spike/spawn child boundaries explicit.
+Extended polygon tests pass169grid/boundary points, first-match overlapping
+landmarks and positive graph mutation; Retail consumed fields independently
+reviewed through MCP. W57 Smokeable periodic collector test now passes1.52s;
+its earlier fixture assumed1ms instead of actual4000Hz and was corrected without
+changing production math. Earlier joint17checks had16pass/that1failure, now
+resolved, not silently described as a clean17check wave.
+
+W62 genuine RC owner/memory/PauseMenu/resource/state callbacks, W63 real Player
+RealDriver/nitro/diagnostic bindings and W57 active Smokeable/WorldObject cleanup
+remain active. No original-runtime comparison, Verified promotion, production
+partial World launch, commit or full competition completion is claimed.
+
+## 2026-10-29 TASK-0099 real collision and Player dependency checkpoint
+
+Actual30track x2direction first-frame shared8World collision corpus passes60/60
+in438.658s. Scope: genuine prestart AI Think/Drive, source grid/Race/Replay and
+shared pooled movement/contact scheduling, FinishMovement and full cleanup
+baseline; no Player/RC constructor or complete World.DoTimestep in this corpus.
+Exact per-case commands/log hashes and probe identity are metadata-only in
+reverse/task0099/world-collision-corpus.json. Earlier60movement-only cases are a
+separate narrower checkpoint. Sony original EE v6 manuals are explicitly user
+authorized for CPU semantics only: negativeSQRT.S current2^-22 magnitude has exact
+2^-11 result, with documented invalid flags. No geometry clamp or invented EE
+rounding was added; nonexact negative roots still guard. See DECISIONS andW54.
+
+W53 raw AcidFX actual30tracks passes4108sources/6568particles, including178disc
+sources/120live-source cases, explicit chosen unknown discW. CMake now separates
+fixture raw_acidfx from raw_acidfx_original --original; earlier fixture pass alone
+was not corpus evidence. W52 actual3UI bundles pass86screens/2784objects/1601bitmap
+coordinates and source lookup/dirty/visibility/close. Authored duplicate name
+6EB9985D required first-match lookup oracle correction; source logic unchanged.
+Extended helpers preserve object-invisible0 vs screen-invisible1 and group byte
+writes without deletion. W38 new Monitor test fixed its missing source saturation
+expectation; production damage calculation unchanged, foundation passes.
+
+W51 actual NIS/overlay dependencies pass; W55 actual Player ctor/close standalone
+passes3single/split owners using real RadarBeep and letterbox with complete
+allocation baseline. W56 RC.InitCars/Race initialization and W57 Smokeable/frame
+service dependencies remain active work. W58 camera-shake producer now requires
+explicit unknown stackW only at actual positive publication; central test pending.
+Toolchain remains CMake3.29.2/Ninja1.12/GNU13.2/Python3.14.4. No original execution
+comparison, Verified promotion, commit or complete competition claim.
+
+## 2026-10-29 TASK-0099 actual World and shared participant recovery
+
+
+## 2026-10-29 TASK-0099 — shared live movement checkpoint
+
+User priority remains actual World and correctly recovered dependencies. W37
+curated target/scoring/around-car/moving-SAT chain and W38 shared witness/contact
+foundation are now indexed with precise partial scopes. W40 actual enabled sound
+uses48-channel software voices and a PCM command consumer (explicit PC hardware
+mapping, not SPU equivalence). W41 actual bRepeat and capture allocation now pass
+bitstream/error/compression/threshold tests. W42 first shared Physics frame runs
+all64 authored cars; W43 Car.Move wraps exact gear/reverse animation and blink
+handling. W44 cached player distance retains floating MIN.S. W46 actual collision
+force gates and pending WheelDevices impact fields are implemented/tested.
+
+Latest W46 Car regression3/3 PASS18.35s (64cars10.61s,8World4.45s,normal-sound
+Car/PCM3.28s), local/task0099/force-impact/ctest.log. Earlier integration7/7
+PASS15.21s, shared-physics-move/integration-ctest.log. Toolchain unchanged:
+CMake3.29.2/Ninja1.12/GNU13.2/Python3.14.4. Native passes do not establish original
+runtime equivalence. New source ownership corroboration moved wheel classifier
+to its actual src/joysticke.cpp. MIPS review corrected Static/TrackBody zero-vector
+pointer3115D0 and retained RigidBody cross-product W; zero-valued fixtures alone
+had missed pointer identity. No restricted binaries/assets/raw captures committed.
+
+Still active: actual Mellow.Move (W45), full shared collision response/effects,
+normal AI controller/driver frame, actual Player/camera ownership, replay snapshot
+and World.DoTimestep scheduling. World.DoTimestepMove has the original dynamic
+CollisionBodyList snapshot, not CarTable iteration; central integration awaits
+Mellow. Exact continuation is TASK-0099, build native targets then run actual
+world_participants_original and shared_collision_foundation; retain reached
+address-bound exceptions until each real dependency is recovered. No full race
+closure, Verified promotion or commit is claimed.
+
+Sole implementation task0099; user prioritizes real World and all correctly
+recovered dependencies ahead of remaining presentation work. Debug815b60c7...
+332f1b authority, revision unknown; source-backed Retail asset adapters retain
+independent field/consumer reviews. No assets/ELF/database captures added to Git.
+
+Actual World0014CA28/ordered fresh0014CC80 now use original pools, graph/routes,
+texture/emitter/scenery/VirginSmokeable/police/speech resources in one Memory.
+Thirty track bundles and both directions pass. Actual64 Car construction and
+close pass with real geometry/render/characters/damage/cache/events (49damage,
+15traffic). Expanded native mode tests use actual controllers and pooled Physics/
+Mellow/Traffic movers; both directions pass and restore allocation baselines.
+
+Actual8 simultaneous participants pass with original AddRacingCar,1Physics and
+7Mellow, original defaultmovement4, authored starts/Race boundaries, World table/
+AI pooled nodes and signed lookup. Actual CleanupCars->Race->World ordering
+restores full loaded-resource footprint (latest3.74s). DirectWorldclose negative
+exposes original emitter-position pool ordering; no original reordering made.
+Driver operands remain explicit test inputs; actual Player is still required.
+
+Latest scoped runs: prior constructor11/11 tests104.57s; reverse64Car+physics
+lifetime+60grids3/3 32.22s; expandedforward64 modes11.65s/reverse11.66s;
+Carpromotion+8participants2/2 15.06s; render113 resourcecases10.64s;
+traffic force/field tests1.10s; RacingCar fixture and64soundfactories pass.
+W31 normal-enabled player sound still reaches actual0025C610 boundary. W40
+software channels/voices/packets do not imply an audible device. W39 lifecycle
+checks and W37AI/W38contact/W40audio remain ongoing; full live World/gameplay,
+original execution comparison and performance acceptance remain incomplete.
+
+Tool pins remain CMake3.29.2/Ninja1.12/GNU13.2/Python3.14.4; Godot4.7.2 and
+pinned godot-cpp unchanged. Earlier normal Godot build passed before the latest
+participant additions; final rebuild remains required. New source owners are
+confirmed through read-only MCP ECOFF tuples. No staging/commit or Verified.
+Next: complete required AI/contact/audio bodies and actual replay/player owner,
+then original shared scheduler; never substitute the single-car fixture.
+
+## 2026-10-29 TASK-0098 production transmission and handling popups
+
+Scope: preserve the complete-race request and existing user modifications;
+implement the next production dependency under TASK-0098. E-0098-X04 retains52
+fresh read-only Debug/Retail MCP captures with hashes. Actual authored documents,
+item RGB/state, message/button/title text, packed-clock animation/Debug sine,
+two-slot dispatch and reentrant dismissal now bind the existing native owner.
+A measured text-group overload retains bottom-Y before hiding unused lines.
+Port document/slot action identity avoids identical-button-hash aliasing.
+
+Readiness001965C0 now permits Transmission -> Handling. StartRace still throws
+for missing production World services. There is no complete race, result/reward/
+save or full-event completion; no synthetic state or single-car substitution.
+Native tests cover text return boundaries, saved RGB/alpha and two-slot UI/ghost
+ownership. Actual Godot4.7.2 Vulkan/Forward+ window run-_q6djl5_ passed production
+entry, loaded car, Transmission -> Handling -> Back -> Transmission -> Back.
+Both popup screenshots inspected. Final checks are recorded in TASK-0098.
+
+E-0099-W04 is an independent read-only construction audit (21 captures), not a
+World implementation. It records actual route/TrackPathCoordinate/graph/resource,
+Car/controller/mover and participant prerequisites. Continue TASK-0098 launch
+ownership, then that TASK-0099 chain. Full original comparison, Release performance
+and resource-lifetime acceptance remain open. Summaries:
+reverse/task0098/popup-production.md and reverse/task0099/world-construction-audit.md.
+Unrelated user work preserved. No staging/commit or Verified promotion.
+
 ## 2026-10-28 TASK-0098 real-window failing acceptance and reflection binding
 
 User explicitly requested Python/project-script testing, not computer-use. Actual
@@ -670,8 +1205,32 @@ place and kept, because the fact that a session believed it, and why, is itself 
 ## Contents
 
 <!-- generated:contents:begin -->
-<!-- Generated by reverse/scripts/generate_progress.py on 2026-10-28. Do not edit by hand. -->
+<!-- Generated by reverse/scripts/generate_progress.py on 2026-11-12. Do not edit by hand. -->
 
+- [2026-11-12 TASK-0105 Debug Championship selection](#2026-11-12-task-0105-debug-championship-selection)
+- [2026-11-12 TASK-0016 frontend background movie](#2026-11-12-task-0016-frontend-background-movie)
+- [2026-11-12 TASK-0077 Godot race sampling and FXAA](#2026-11-12-task-0077-godot-race-sampling-and-fxaa)
+- [2026-11-12 TASK-0077 Championship Godot Server integration](#2026-11-12-task-0077-championship-godot-server-integration)
+- [2026-11-11 TASK-0077 World shadow stream race and command replay](#2026-11-11-task-0077-world-shadow-stream-race-and-command-replay)
+- [2026-11-11 TASK-0077 Vulkan tail and World shadow upload](#2026-11-11-task-0077-vulkan-tail-and-world-shadow-upload)
+- [2026-11-11 TASK-0077 Championship batch gates and engine attribution](#2026-11-11-task-0077-championship-batch-gates-and-engine-attribution)
+- [2026-11-11 TASK-0077 Championship Release and vehicle submission](#2026-11-11-task-0077-championship-release-and-vehicle-submission)
+- [2026-11-11 TASK-0077 production Championship render boundary and performance](#2026-11-11-task-0077-production-championship-render-boundary-and-performance)
+- [2026-11-06 TASK-0112 shared race camera and widescreen checkpoint](#2026-11-06-task-0112-shared-race-camera-and-widescreen-checkpoint)
+- [2026-11-06 TASK-0111 playable FreeRun and Python control audit](#2026-11-06-task-0111-playable-freerun-and-python-control-audit)
+- [2026-11-06 TASK-0110 minimal race plan and native finish milestone](#2026-11-06-task-0110-minimal-race-plan-and-native-finish-milestone)
+- [2026-11-03 TASK-0109 minimal Debug Info frame curve](#2026-11-03-task-0109-minimal-debug-info-frame-curve)
+- [2026-11-03 TASK-0108 build launcher debug flag](#2026-11-03-task-0108-build-launcher-debug-flag)
+- [2026-11-03 TASK-0107 guarded World debug entry delivered](#2026-11-03-task-0107-guarded-world-debug-entry-delivered)
+- [2026-11-02 TASK-0107 unified World implementation and first DLL](#2026-11-02-task-0107-unified-world-implementation-and-first-dll)
+- [2026-10-29 TASK-0099 all-track firstframe and actual UI/state resources](#2026-10-29-task-0099-all-track-firstframe-and-actual-uistate-resources)
+- [2026-10-29 TASK-0099 complete World firstframe passes](#2026-10-29-task-0099-complete-world-firstframe-passes)
+- [2026-10-29 TASK-0099 ownership and World-frame integration checkpoint](#2026-10-29-task-0099-ownership-and-world-frame-integration-checkpoint)
+- [2026-10-29 TASK-0099 original initialization and player controller checkpoint](#2026-10-29-task-0099-original-initialization-and-player-controller-checkpoint)
+- [2026-10-29 TASK-0099 real collision and Player dependency checkpoint](#2026-10-29-task-0099-real-collision-and-player-dependency-checkpoint)
+- [2026-10-29 TASK-0099 actual World and shared participant recovery](#2026-10-29-task-0099-actual-world-and-shared-participant-recovery)
+- [2026-10-29 TASK-0099 — shared live movement checkpoint](#2026-10-29-task-0099--shared-live-movement-checkpoint)
+- [2026-10-29 TASK-0098 production transmission and handling popups](#2026-10-29-task-0098-production-transmission-and-handling-popups)
 - [2026-10-28 TASK-0098 real-window failing acceptance and reflection binding](#2026-10-28-task-0098-real-window-failing-acceptance-and-reflection-binding)
 - [2026-10-28 TASK-0098 approved full-closure plan and event-entry prerequisites](#2026-10-28-task-0098-approved-full-closure-plan-and-event-entry-prerequisites)
 - [2026-10-28 - TASK-0098 native launch to TASK-0099 shared World](#2026-10-28---task-0098-native-launch-to-task-0099-shared-world)
@@ -691,6 +1250,7 @@ place and kept, because the fact that a session believed it, and why, is itself 
 - [2026-10-19 TASK-0069 - Godot4.7.2 and profiler-driven diagnosis](#2026-10-19-task-0069---godot472-and-profiler-driven-diagnosis)
 - [2026-10-19 TASK-0061 - Live coordinates and host UI DPI](#2026-10-19-task-0061---live-coordinates-and-host-ui-dpi)
 - [2026-10-19 TASK-0060 - Track host memory residency](#2026-10-19-task-0060---track-host-memory-residency)
+- [2026-10-29 TASK-0099 actual World constructor and participant foundations](#2026-10-29-task-0099-actual-world-constructor-and-participant-foundations)
 - [TASK-0032 â€” Debug CarViewer and TrackViewer scaffolds (2026-10-14)](#task-0032--debug-carviewer-and-trackviewer-scaffolds-2026-10-14)
 - [TASK-0031 â€” F8 debug console and independent Debug FPS (2026-10-14)](#task-0031--f8-debug-console-and-independent-debug-fps-2026-10-14)
 - [TASK-0030 â€” Concise README completion (2026-10-13)](#task-0030--concise-readme-completion-2026-10-13)
@@ -781,8 +1341,52 @@ place and kept, because the fact that a session believed it, and why, is itself 
 - [TASK-0090 - C++ portability audit (2026-10-21)](#task-0090---c-portability-audit-2026-10-21)
 - [2026-10-26 TASK-0098 display dependencies](#2026-10-26-task-0098-display-dependencies)
 - [2026-10-28 TASK-0098 actual production selection milestone accepted](#2026-10-28-task-0098-actual-production-selection-milestone-accepted)
+- [2026-10-28 TASK-0104 responsive Control layout correction](#2026-10-28-task-0104-responsive-control-layout-correction)
+- [2026-10-28 TASK-0105 selection performance](#2026-10-28-task-0105-selection-performance)
+- [2026-10-28 TASK-0104 event digits and wide clipping follow-up](#2026-10-28-task-0104-event-digits-and-wide-clipping-follow-up)
+- [2026-10-28 - TASK-0104 toolbar and debug layer](#2026-10-28---task-0104-toolbar-and-debug-layer)
+- [TASK-0098 - Selection continuation001965C0 (2026-10-28)](#task-0098---selection-continuation001965c0-2026-10-28)
+- [TASK-0098 - Actual Godot confirmation probe (2026-10-28)](#task-0098---actual-godot-confirmation-probe-2026-10-28)
+- [TASK-0098 native popup input checkpoint,2026-10-28](#task-0098-native-popup-input-checkpoint2026-10-28)
+- [Native popup input/dismissal projection,2026-10-28](#native-popup-inputdismissal-projection2026-10-28)
+- [TASK-0098 two-slot popup owner and Quick Race scope,2026-10-28](#task-0098-two-slot-popup-owner-and-quick-race-scope2026-10-28)
+- [TASK-0098 native Summon orchestration,2026-10-28](#task-0098-native-summon-orchestration2026-10-28)
+- [2026-10-29 TASK-0099 World snapshot and input prerequisite checkpoint](#2026-10-29-task-0099-world-snapshot-and-input-prerequisite-checkpoint)
+- [2026-10-30 TASK-0099 real-clock, authored request and active-World continuation](#2026-10-30-task-0099-real-clock-authored-request-and-active-world-continuation)
+- [TASK-0099 continuation: authored World and active dependencies (2026-10-30)](#task-0099-continuation-authored-world-and-active-dependencies-2026-10-30)
+- [TASK-0099 positive snapshots and authored rolling (2026-10-31)](#task-0099-positive-snapshots-and-authored-rolling-2026-10-31)
+- [TASK-0099 continuation2026-10-31: W106..W118](#task-0099-continuation2026-10-31-w106w118)
+- [TASK-0099 continuation2026-11-02: interrupted-state recovery and W119..W123](#task-0099-continuation2026-11-02-interrupted-state-recovery-and-w119w123)
+- [TASK-0110 completed minimum event closure, 2026-11-06](#task-0110-completed-minimum-event-closure-2026-11-06)
+- [TASK-0112 HUD/pause native continuation, 2026-11-06](#task-0112-hudpause-native-continuation-2026-11-06)
+- [TASK-0100 / TASK-0101 - cop admission and result-action checkpoint (2026-11-06)](#task-0100--task-0101---cop-admission-and-result-action-checkpoint-2026-11-06)
+- [2026-11-07 — TASK-0100 logging and first HP checkpoint](#2026-11-07--task-0100-logging-and-first-hp-checkpoint)
+- [2026-11-07 - TASK-0112 original race presentation implementation](#2026-11-07---task-0112-original-race-presentation-implementation)
+- [Final acceptance, 2026-11-07](#final-acceptance-2026-11-07)
+- [2026-11-11 TASK-0077 Godot Visual Profiler confirmation](#2026-11-11-task-0077-godot-visual-profiler-confirmation)
+- [2026-11-11 TASK-0077 split World and depth timings](#2026-11-11-task-0077-split-world-and-depth-timings)
 
 <!-- generated:contents:end -->
+
+## 2026-10-29 TASK-0099 actual World constructor and participant foundations
+
+User explicitly prioritized real World and correctly recovered dependencies.
+W05..W18 now implement actual shared-memory construction and construction-state
+cleanup with concrete route/path/signpost, pool/graph, texture/emitter,
+Virgin/static collision, police geometry and speech startup. Thirty track bundles
+pass construction/close in both directions and restore the pre-World resource
+baseline. Checkpoint11tests passed104.57s; normal Godot DLL built. Exact commands,
+versions and counterevidence: reverse/task0099/world-construction.md. PC tests do
+not establish original equivalence; no Verified promotion.
+
+Continue TASK-0099 actual participants. W19 IDs/witnesses, W21 base/null controls
+and physics pools, W22 state/damage resources, W24 real/AI control constructors
+have native regressions; W20 records full scheduler/collision ordering. W23
+collision geometry corpus correction, W25 real solid/model/render and W26 shared
+topology/path cache ownership remain in progress. Car construction and full
+World timestep/race/results/rewards/save remain open. Preserve preexisting dirty
+work; no stage/commit. Exact continuation blockers are in TASK-0099.
+
 
 ---
 
@@ -3380,3 +3984,990 @@ comparison and Release performance remain incomplete. Exact commands and next
 TASK-0098 steps: reverse/task0098/production-roundtrip.md. One final documentation
 append initially failed Windows default text decoding; explicit UTF-8 corrected
 it before final generation/validation.
+
+
+## 2026-10-28 TASK-0104 responsive Control layout correction
+
+Preserved all pre-existing uncommitted work. Fixed incorrect snapshot text-align
+bits using existing E-0039-F03. Read-only Ghidra E-0104-L01 reconfirmed separate
+paragraph text/clip origins and line advance at Retail001451E0/00144ED0; original
+ELF SHA256 matched7335b8ed...facc2. No original function identity/status changed.
+
+Godot Containers allocate content/toolbar and semantic regions. Explicit original
+document/widget IDs replace runtime coordinate-threshold anchoring. Tree static
+panels and dynamic nodes share a scene transform; event number text has separate
+native visual bounds from its mouse target. Selection layer textures, projection
+and input share content size; portrait keeps hidden authored templates clipped.
+Animations update individual Controls without global reflow. Native state/actions
+remain authoritative and Godot-free. Details: reverse/task0104/layout.md.
+
+Build passed with existing SelectionRuntime aggregate warnings. Nine targeted
+native regressions passed28.10s, including text/paragraph-origin corrections.
+Initial window runs retained counterevidence for generation timing, nonexistent
+Help modal, portrait off-canvas templates and parent/child event-number scaling;
+geometry assertions were strengthened instead of relying on buttons being visible.
+Task0104 remains active for full-route/hardware/original/performance acceptance.
+No computer-use, proprietary Git additions, staging, commit or Verified promotion.
+
+
+Final TASK-0104 window gate PASS: run-xruhtyfn (startup/input plus main70,
+reload8, layout1094 checks;36 phase screenshots). Seven sizes, modal columns,
+DPI exemption, exact event-number transform, hidden-template clipping, slider
+resize drag, continuous selector resize and real swatch click/cancel/reentry
+passed. Screenshots were visually reviewed. `git diff --check` passed; progress
+was regenerated and its test passed1/1. Full task remains active for the explicitly
+recorded original/hardware/routes/performance gaps. Next: TASK-0104 remaining
+route/Help inventory; reproduction and prerequisites are in its active task file.
+
+## 2026-10-28 TASK-0105 selection performance
+
+Implemented main-RD/Texture2DRD transport, direct Control texture sampling, bounded
+resource/model caching and asynchronous skin delivery/cancellation. Preserved
+existing user changes, original stage/depth/alpha and after-display ownership.
+No recovered function or Verified status change. E-0105-P01..P03 and exact commands,
+versions, private manifests and limitations are in PERFORMANCE_TASK0105.md.
+
+Release1920x1080-window idle P95 improved80.734ms ->8.526ms. Warm skin maximum
+frame9.346ms / frontend CPU6.394ms, rapid-skin maximum9.393ms. Production image
+readback0; idle texture uploads0, dynamic vertices about2MiB/frame. Final clean
+benchmark run-_zp0kpw1 passed. Retain the earlier60-second soak's WASAPI invalidation
+failure; its graphics capture was visually reviewed and the identical-DLL recheck
+had no errors. Early DLL-static-worker shutdown hang was corrected with explicit
+frontend ownership; subsequent exits and repeated page routes passed.
+
+Native11/11 passed27.81s, final affected3/3 passed21.37s. Final Debug three-cycle
+production roundtrip run-ozp0ck5_ passed. Controls main70/reload8 and selection
+resize/mouse checks passed; total layout gate still fails358 event glyph origin/
+number-raster checks in the separately reopened TASK-0104 follow-up. Do not repeat
+the previous session's full-layout PASS claim for this current workspace.
+
+TASK-0105 remains active for the real multi-car performance gate (the supported
+empty-profile route exposes one car), total Controls acceptance and page-transition
+follow-up. Cancel/reentry input wall times125.539/444.445ms remain; steady reentry
+percentiles exclude entry input. Next: profile SelectionRuntime construction,
+activate/close and Control recreation, then run measure_selection_performance.py
+--label page-transition with existing original assets and separately configured
+Retail/Debug ELFs. Release DLL installed for normal launch. No staging or commit.
+
+
+## 2026-10-28 TASK-0104 event digits and wide clipping follow-up
+
+Reopened earlier event acceptance after user feedback. Native glyph commands now
+position Godot Labels independently of host string advances; full-width event
+geometry clips to one Container viewport. Corrected undersized full480 scaling
+to the actual original mask height, kept details text-box layout separate, and
+removed old pre-cropping only from the port Control projection. Prior failed scale,
+stack classification, fixture-coverage and startup-input runs remain recorded.
+
+Build passed; nine native regressions9/9 passed51.56s. Final window gate
+run-6_qxl9sk passed startup/input plus main70/reload8/layout1386 checks. Digit
+ink1/9/10 and explicit32 fixture match original atlas/native extents in browsing
+and visible transition. Seven event sizes and wide details screenshots inspected;
+wide mouse details/selection/cancel/reentry passes. No original-runtime parity or
+Verified claim, no stage/commit. Concurrent GPU/performance checkout edits were
+preserved. Exact repro/continuation: reverse/task0104/event-layout.md; TASK-0104
+broader route/Help/hardware/original acceptance remains active.
+
+
+## 2026-10-28 - TASK-0104 toolbar and debug layer
+
+Removed PC Back and Confirm/Back/Help hints; retained KeyBinding and relocated
+the existing ImGui FPS through an optional footer region, with one DPI conversion.
+The loaded DLL probe was Release (debug=false, console=false); rebuilt Debug.
+Kept the global layer100 DebugTools and existing F8/profile implementations;
+connected the info flag to native ImGui statistics drawing. Isolated test window
+preferences and repaired the stale console smoke root/joy-event signature.
+
+`cmake --build --preset godot-debug --parallel 4` passed.
+`ctest --preset godot-debug -R '^(debug_console|debug_console_host|profile_debug_contract_host|frontend_runtime|frame_builder)$' --output-on-failure`:5/5 passed20.63s.
+`py -3 reverse/scripts/check_frontend_controls.py`: passed startup/input contract,
+main/reload/layout/toolbar in local/task0104/controls-acceptance/run-vdcsv94j.
+Actual screenshots reviewed for footer, F8 typed status, info/profile, wide and
+portrait. Resize pointer overlap had changed menu selection; the layout hover
+invalidation fixed the preservation check. Native logic unchanged. Broader task
+stays active and original equivalence remains unverified. Continuation/report:
+reverse/task0104/toolbar.md. Preserve unrelated TASK-0105/uncommitted work.
+
+Toolbar DPI rerun passed at1.0/1.5/2.0 through UiDisplay, including actual FPS
+region assertions and screenshots (toolbar-dpi.log in run-vdcsv94j). The test
+temporarily suspends physical-monitor polling while injecting service values;
+physical monitor migration was not available. Initial synthetic1.0 injection was
+overwritten by monitor polling; the isolated rerun passed. Progress tables and
+`git diff --check` passed; no changes staged or committed.
+
+## TASK-0098 - Selection continuation001965C0 (2026-10-28)
+
+Scope: renewed full TASK-0096 request; one bounded implementation slice only.
+E-0098-X01 fresh read-only Debug decompile/listing/string establishes exact
+continuation order and mode8/9 branch. Native method and port whole-callee
+bindings implemented; production guard corrected from00196348 to001965C0.
+Null/unready, mode branches, selected ride commit order, live post-dismiss mode
+and missing-service regression passed. No whole-call provider is silently empty.
+
+Commands: cmake --build --preset native-debug --target ultimate_selection_tests
+--parallel 4 passed; ctest --preset native-debug -R '^ultimate_selection$'
+--output-on-failure passed1/1 in0.51s; cmake --build --preset godot-debug --target
+ps2_port --parallel 4 passed normal DLL link. Existing initializer/indentation
+warnings remain. CMake3.29.2, Python3.14.4; pinned godot-cpp
+ e4b7c25e721ce3435a029087e3917a30aa73f06b confirmed.
+
+No actual race, result/save, original-runtime comparison or Verified claim.
+Continue TASK-0098 actual popup ownership/dismissal and production continuation
+with session-owned StartRace services, then TASK-0099 World. Preserve current
+user changes; no staging/commit. Raw captures stay ignored under
+local/task0098/continuation; hashes in continuation-evidence.json.
+
+Final checkpoint: related native build (selection_page_tests race_parameters_tests
+ultimate_event_tests) passed. ctest --preset native-debug -R
+'^(ultimate_selection|selection_page|race_parameters|ultimate_event|progress_tables|recovery_progress_contracts)$'
+--output-on-failure passed6/6 in6.03s. git diff --check passed with existing
+line-ending notices. No stage/commit. Production popup/launch and full race remain
+unimplemented; this checkpoint does not satisfy the requested complete closure.
+
+## TASK-0098 - Actual Godot confirmation probe (2026-10-28)
+
+Scope: production selection confirmation; full closure request remains active.
+Added optional --confirm-selection input probe to the existing GPU/script runner.
+This is explicitly not full race acceptance. Actual Godot window launched with
+isolated profile/save paths; probe FAILED exit1 at00194628 production popup owner.
+Private run-r5ulmyxx screenshot was inspected: actual Elise selection visible,
+no popup or race. Normal three-cycle route subsequently PASSED exit0 in fresh
+run-txpvzsmw, preserving existing enter/skin/cancel/reentry coverage.
+
+E-0098-X02 captures original popup Summon/Dismiss/HandleJoy and two-slot owner
+semantics; reverse/task0098/popup-owner.md records callback reentrancy and exact
+next action. These are investigation, not implementation. No actual World,
+finish/result/save or original certification, no complete closure claim.
+
+Reproduce failure: py -3 reverse/scripts/check_frontend_selection_roundtrip.py
+--confirm-selection. Continue TASK-0098 real Flailer popup/menu-item/highlight/text
+binding before production001965C0/StartRace, then TASK-0099. No missing external
+prerequisite is claimed; required code remains unimplemented. No commit/staging.
+
+## TASK-0098 native popup input checkpoint,2026-10-28
+
+## Native popup input/dismissal projection,2026-10-28
+
+Implemented port::frontend::PopupMenu address-anchored0016AE08/0016AF28 in
+original fmenus.cpp with port semantic storage/services in popup.hpp. Whole
+view/item/highlight/animation and sound dependencies are required services,
+not empty recovered implementations. Summon/render/two-slot owner and production
+host binding remain missing. These native methods alone do not unblock00194628.
+
+Fresh instruction captures establish dismiss sound5, navigation sounds1/2,
+flags/event mapping and callback22/23. Callback-adjusted noise is consumed after
+callback, and active clears before dismissal callback, preserving reentrant
+replacement. Tests include cancellation flags8/2, zero-button Start, horizontal
+and vertical mapping, analog directions, wraps, releases, exact call ordering,
+missing services and callback-created replacement popup. View callbacks are
+explicit test fixtures, not GPU or original-runtime acceptance.
+
+Build: cmake --build --preset native-debug --target ultimate_selection_tests
+selection_page_tests race_parameters_tests --parallel 4 passed. CTest regex
+'^(ultimate_selection|selection_page|race_parameters)$' passed3/3 in3.09s.
+cmake --build --preset godot-debug --target ps2_port --parallel 4 passed.
+No original-runtime/Verified or full-race completion claim.
+
+Latest production window command after native popup changes:
+py -3 reverse/scripts/check_frontend_selection_roundtrip.py --confirm-selection
+FAILED exit1, local/task0098/selection-roundtrip/run-2ju0sod8. It still reaches
+00194628 because production popup creation/view services are not yet bound.
+No complete-race checkpoint exists. Next implementation must connect original
+Summon/menu-item/text/highlight to real frontend resources, then two-slot owner
+and the existing native input/dismissal methods; no further native-only test may
+be reported as a working production popup. Full TASK-0096 remains incomplete.
+
+## TASK-0098 two-slot popup owner and Quick Race scope,2026-10-28
+
+Implemented Debug0016C028/0016C080 two-slot popup owner semantic projection in
+fmenus.cpp/popup.hpp. Tests cover first inactive slot, full capacity returns-1
+without invoking Summon, invalid/inactive dismissal, configured dismissal and
+callback-reentrant reuse. Whole Summon/view remains an explicit required service;
+production00194628 is still unbound. No full-race success is claimed.
+
+cmake --build --preset native-debug --target ultimate_selection_tests --parallel 4
+passed; ctest --preset native-debug -R '^ultimate_selection$' --output-on-failure
+passed1/1 in0.47s. cmake --build --preset godot-debug --target ps2_port --parallel 4
+passed normal DLL link. Existing matching Debug original comparisons remain open.
+
+Read-only E-0098-X03 Quick Race dependency audit records original argument/return;
+TASK-0106 backlog separately scopes the newly requested second launch route.
+Current implementation stays TASK-0098 actual Summon/menu-item/highlight/text
+binding, then existing continuation/StartRace and real World. Both reported
+production guards remain outstanding. Preserve user changes; no stage/commit.
+
+## TASK-0098 native Summon orchestration,2026-10-28
+
+E-0098-X02: implemented semantic0016AAD8 in original fmenus.cpp. It copies
+config/activates, shows view, dispatches POPUP_ACTIVE with original port-1 and
+zero payload/noise, plays callback-adjusted sound, sets starting index, resets
+three items, highlights only with buttons, renders message, optionally places
+buttons at returned height+10, clears text, assigns original button/title IDs,
+aligns arrows and binds animation. Popup.title_id is port semantic storage of
+original PopupConfig.Title. Fresh instruction capture confirms-1 and order.
+Required view/format/item/animation dependencies still throw when not provided.
+
+Exact service-order regression passes in ultimate_selection (fixture services,
+not actual window binding). cmake --build --preset native-debug --target
+ultimate_selection_tests --parallel 4 passed; ctest --preset native-debug -R
+'^ultimate_selection$' --output-on-failure passed1/1 in0.44s. Normal
+cmake --build --preset godot-debug --target ps2_port --parallel 4 passed.
+Existing initializer/indentation warnings remain; no unrelated cleanup.
+
+TASK-0098 remains active. Next implementation is production popup documents,
+menu-item state/colour, RenderTextIntoGroup and highlight-animation services
+feeding this method and the existing two-slot owner/input/dismissal code.
+Actual00194628 is still guarded until those real services exist. Native-only
+progress is not production popup, race or full-loop acceptance. No new Godot
+window success, original comparison or Verified claim. No stage/commit.
+
+## 2026-10-29 TASK-0099 World snapshot and input prerequisite checkpoint
+
+Scope TASK-0099 (parent0096). W71 actual128SkidSet/40Clan lifecycle and narrow
+Sony VU extended overflow semantics now let consecutive actual World reach
+call29/index28/stage3. Nonexact nonextreme extended W multiplication remains
+explicit at001A81DC. User has no hardware/configured PCSX2 and directs continuing
+other implementation; no host low-bit guess or runtime equivalence claim.
+
+Central snapshot integration buildPASS191scheduled steps. Seven tests: frontend
+real64event/roster3.30s, countdown1.70s, World clock1.17s, cop snapshot1.14s,
+Replay snapshot1.16s PASS; World component and full object tree initiallyFAIL.
+World fixture missed an outer section; fixture-only correction yields World/AI
+2/2PASS2.40s (1.20/1.19). Real object tree finds original RealDriver.Port=-1
+constructor state and source bBreak13CBA0 unsigned-width check. W77 restores
+actual DetermineAllPlayersInputModes/SetInputMode/AddJoyHandlers prerequisite,
+including source registration and teardown, instead of editing Port.
+
+W77 core input node/scanner/pool buildPASS29scheduled steps; dedicated test
+PASS1.18s (total1.19), original configuration tables, raw callback identities,
+duplicate order, queued cancellation and complete allocation baseline. W78 raw
+result cleanup and W79 real smokeable restoration remain active scoped work.
+Source-owner records/evidence paths updated; no commit or Verified claim.
+Logs: local/task0099/world-snapshot/integration-{build,ctest}.log,
+local/task0099/ai-snapshot/{build,ctest}.log and
+local/task0099/input-registration/{build,ctest}.log. Tool versions: CMake3.29.2,
+Ninja1.12, GNU13.2, Python3.14.4; hardware comparison unavailable. Normal DLL
+and final contracts will be rerun after the current source checkpoints settle.
+
+TASK-0099 follow-up: genuine11660-byte fullforest capture ANDrestore passes
+at sourceCOUNTDOWN3, actual Player inputNONE/rebind and complete resource
+baseline. Central12/12PASS31.17s, including new result/64event close and input
+chain. Normal Godot ps2_port DLL buildPASS195actual/198scheduled steps, log
+world-snapshot/final-godot-build.log. Factory/virtual-position W79 fixture
+PASS1.17s,total1.18s after actual base+three derived source constructions.
+Provenance/generation contracts6/6PASS6.09s. Current5436 local path/SHA metadata
+references match, zero missing/mismatch; historical superseded-query rows are
+excluded explicitly. git diff --check passes (normal LF/CRLF notices only).
+The immutable30track x2direction snapshot-roundtrip probe is running separately;
+its historical fixture IDs0,2..8 remain explicit, not the W72 frontend roster.
+No full race, hardware comparison, commit or Verified claim.
+
+TASK-0099 immutable snapshot-roundtrip corpus completes60/60PASS:30tracks x2,
+wall127.927s,sum377.350s with3independent processes. Source constructor-stage3
+RC/Player/eight-Car capture/restoration/input lifecycle and full resourcebaseline;
+not rolling World or frontend roster. Manifest world-snapshot-roundtrip-corpus.json
+preserves exe/runner/case-log hashes. W79 typedfour-family factory stream now
+also passes actualSnapshotAllSmokeables capture→delete→recreate→restore and
+complete baseline1.19s,total1.20s. Exact source/CPU-lane scopes remain explicit.
+
+## 2026-10-30 TASK-0099 real-clock, authored request and active-World continuation
+
+The prior closure wave completed14/14PASS33.08s and normalGodot DLL58actual/
+61scheduled steps. Ghidra was initially absent/refused localhost8080; existing
+project/server restored, read-only14tools and openNFSHP2.ELF confirmed. Configured
+Debug SHA remains815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
+No annotations, names, analysis or database boundaries were changed.
+
+W82 actualPassed/GetStatus/bonus status andW84 original8000-record initialization/
+indexes/record publication pass. Individually reviewedTrackInfo40..42/46 added;
+Length50 remains unmapped. W85concrete real-timestep API calls actualJoylog;
+sourcePAL/NTSC clamps/error/8bit+4bit channels tested. Central4/4PASS12.70s,
+including actualRC/Player/eight-Car clock-frame7.41s. The continuous clock probe
+first reached missing software voices oncall2 throughunconditionalcountdown.
+
+W87 sharedone-owner authored7bank/144sample audio now supports trueenabled
+8participants. Two clock-frame casesPASS6.14/6.10s, actual13commands/1600PCM
+frames/nonzero output and full sourceclose/baseline. OriginalSourceSound.Update
+and physicalaudio/SPUequivalence remain outside that component. No production
+sound/music flags were forced off. W83newrequiredWpolicy exposedmissingMellow
+service forwarding; bindingfixed, not an implicitW0 fallback.
+
+W83 genuineVirgin conversion/SetInitial/Awaken/damping now passes actual
+MaybeCreateWitnesses conversion, fullpoolnull, no duplicate and fullbaseline
+(1.16s,total1.17). Expandedtestinitiallyused2000/2001 as two-second4kHz values;
+fixturecorrected8000/8001, productionconstant/codeunchanged. FreshMIPS exposed
+W76snapshotrestorepool reversal: TrackPolygon uses328428, Witness328430.
+Fixedbothallocations; newactualpositivecapture/delete/restore poolcounter
+regression shared_collision_foundation PASS1.16s. Older60-case constructor
+snapshotcorpus hadzero suchchildren and is not retroactively expanded.
+
+W86 rawauthoredStartRace passes all64/54AI plus KO/tournament continuation,
+actualDesired/Pending GameFlow request stores. It does not process transition,
+UI/unlock admission, fulldefaults or World. Positiveclosure4/4PASS10.96s covers
+thatunit2.31s, abovefoundation, W83conversion1.15s and enabledsound6.30s.
+
+The immutable clock+soundprobe ba4dc4900e6fe066e2525bd4e421c083d9bb5ddcfdc2035e2a6e93f96e4bae70
+completes161sourceclock steps, thenindex161/162ndcall failsSlotPool0 in actual
+AICarController.Think. GDB stack and explicitframe_number confirmit; Jukebox
+warning is not the failingcallee. W89actualInit/CloseAIPlans andfixed20marker
+lifetime restore process resources; correctedmarkerunit allocatesactualWorldObject
+pool (initialheapfixturebaseline failed), standalonePASS. W90actioncontinuation/
+strictinterrupt and+288stickycursor correction pass13domains/15assertions.
+Postbootstrap immutableprobe03e89bd5592f27715ecdc8e46e6afe9e4b4bdf15dbecfe095b8e1bdca1e7d769
+nowreaches proper00190760 boost/catchup guard; W92recovers thatpath andreviewed
+rawdifficultygraphs independently. These clocks are not the olderfixed1/60
+World-only VUframe29 domain; that numericalguard is unchanged.
+
+W88actualauthoredrequest→World fixture branch is active. FirstChampionship
+row0 is Track12/5racers IDs0,100..103; firstHP Delivery is Track13/traffic100.
+Firstprobe foundInitPhysics beforeactualrequestcount, count0 poolerror; moved
+thatRP-dependent startup afteractualStartRace, no fabricated count. W91restores
+actualtraffic/CopControl constructor helpers requiredbyprimaryHP request.
+CurrentSourceAI/W91 checkpoints andnewfixture awaitnextcentralbuild; no complete
+match, production transition, originalhardware comparison or Verified claim.
+Reproduce/source limits in task0099 top and the corresponding subsystem notes.
+
+## TASK-0099 continuation: authored World and active dependencies (2026-10-30)
+
+Ghidra's existing8080 MCP connection is restored and read-only original evidence
+work continues against the configured Debug815b60...332f1b binary. The W88
+corrected Championship probe passes its actual first-event request,5Car World,
+one source-clock frame and original RC/result/resource teardown baseline.
+The HP request preserves13DriverInfo entries; positive native output and a
+corrected read-only World-list walk confirm IDs0,50..55,10..15. An earlier
+debugger script read Car.Next as DriverInfo and its role values are rejected;
+new evidence reports the correct IDs and actual fixture roster instead.
+
+W94 original Chopper constructor/sound/clear/cleanup dependencies now advance
+that HP request into World frame0. Read-only native inspection confirms a real
+TRACK_HELICOPTER model and solid, both with hashA2CFBC02. Its active police
+virtual Think continuation0021EF58 is W96; bounded Chopper full lifetime tests
+are being finalized. No empty model, skipped police or muted audio substitution
+was introduced. No complete HP frame/cleanup success is claimed by that probe.
+
+W89 action-pool/marker startup, W90 action continuation and W92 authored catchup
+pass centralAI4/4 in4.54s, including ai_drive_target. W93 honk/avoid passes1.17s
+centrally; the immutable rolling240-clock/audio probe now reaches genuine
+positive DrivingChoice.MakeNewChoice0023BD28, a separate W95 implementation.
+The old action-pool failure at index161 is a recovered prerequisite. The old
+fixed1/60 World-only extended-VU frame29 guard remains a distinct unresolved
+scope; no hardware or configured PCSX2 comparison is available.
+
+Root imported W83/86/89/90/91/92/93 scoped implementation records and refreshed
+generated progress. Evidence-reference validation checks11810 local path/hash
+pairs with zero missing/mismatched; central provenance/progress contracts6/6
+PASS6.28s. Logs are under local/task0099/world-snapshot/continuation-*.
+Broad native/Godot rebuild and W94/95/96 follow-up checks remain active.
+No full match, production transition or Verified claim; no commit created.
+
+Next checkpoint: central native19related tests PASS17/17 in35.34s plus2/2 in2.28s.
+W94 genuine enabled-sound13Car+Chopper constructor→RC teardown passes complete
+source owner baseline, with actual model/solid. W95 positive choice central
+testPASS1.16s, combined W94+W95 pairPASS2.30s. Normal Godot ps2_port DLL link
+PASS102actual/105scheduled steps. Query/implementation metadata imported through
+W94/W95 without missing captures. All these checks are PC implementation scope.
+
+Immutable v5 sourceclock+sound execution now completes170full steps, then
+call171/index170 stops at1A81DC. New operands7E000A02/Q64=402F091540000000/
+product64=47FF0B8271CD5500 are recorded in world-choice-frontier.json with exact
+GDB stack and binary/log hashes. Do not conflate this with oldfixedframe29 or
+claim240frames/cleanup passed. The Sony manual does not resolve its exact lowbits;
+no original hardware/configured PCSX2 exists and the user requested independent
+work continue. W96 police dispatch remains active; W98 recovers actual Chopper
+snapshot/removal/sound dependency; W99 adds practical positive AvoidCars snapshot
+coverage (old corpus only had inactive/JustDrive actions). W97 read-only audit
+records actual GameFlow table/callback/CarLoader chain rather than fakeCurrent6.
+
+## TASK-0099 positive snapshots and authored rolling (2026-10-31)
+
+W98 central actual Chopper active165-byte capture/restore, partial-width enum/
+bool/XYZ/matrix codecs, Plan6 reset ordering, real queued ChopperEngine Stop
+and complete resource baseline PASS1.43s. W99 positive AvoidCars uses genuine
+InitAIPlans270/15, signed DriverNumber codec with reordered World.CarTable,
+source103byte stream, retained old object and real two-object teardown baseline;
+central ai_snapshot PASS1.13s. Old JustDrive/constructor-only corpus is unchanged.
+
+New authored_championship_clock_original CTest executes actual Championship
+tree0row0/Track12forward/5Cars for240source clock steps, naturalstage4 and original
+RC/result/resource cleanup, PASS8.39s. Combined3/3PASS10.96s. Its longer1200step
+immutablev5 probe completes488steps before actualBeltMover ctor1FF108 oncall489,
+confirmed by GDBindex488. W100 owns this required source dependency; no belt flag
+or roster suppression. Separate HPsnapshot immutablev6 fails earlier controller
+target1A03B8 throughCar131108; W101 recovers that original dependency. W96 owns
+police Think. Distinct limits/commands are in current-world-checkpoints.md;
+no production GameFlow, full match or original-runtime equivalence is asserted.
+
+W96/W100/W101 central build PASS38actual/39scheduled steps,3/3testsPASS3.60s
+(copThink1.11s,CopDriverSnapshot1.36s,BeltCtor1.12s). Immutablev7 actual HP
+passes police initial dispatch and reaches TrafficDriver.Think18A600; actual
+Championship passes BeltCtor and reaches SetBelt1FF9F8. HP snapshot passes
+CopDriver and reaches next controller target18A5A0, confirmed by read-only GDB.
+W102/103/104 own those separate next source dependencies. Exact pin/logs are in
+evidence.json and current-world-checkpoints.md. No new full-frame/1200step or
+HP snapshot/cleanup PASS follows from these failing probes.
+
+Fresh W104 original bool overload1369D8 evidence corrects W98 EmitDust memory
+width: serialized1byte restores4bytes, sign0. Initial implementation/test both
+wrongly preserved upper bytes; the old165byte stream/component PASS did not
+validate that rule. Correct source call and poisoned-upper-byte regression are
+being revalidated; preserve counterevidence, never retroactively claim original
+equivalence. W99 fullword bool checks remain independently scoped.
+
+
+## TASK-0099 continuation2026-10-31: W106..W118
+
+Recovered actual Belt Move/static graphs/RPM, periodic spline snapshots, Chopper
+Fly prelude/effect retirement, Traffic Move/static tables, pointer/snapshot
+codecs and Smokeable pose/Move/sleep/retirement dependency closure. Definition
+bodies follow ELF source ownership, including original inline headers. All
+scoped function records retain Debug SHA815b60c7...332f1b and explicit limits.
+Native tests are not original-hardware verification. Fresh whole-Car Belt
+restore remains guarded where original heap W cannot be established.
+
+W114 and W115 implement only source-proven consumer outcomes for their bounded
+zero-normalization and negative-root inputs. They supply neither guessed CPU
+raw results nor a global floating-point emulator. W112 Sony EE rounding audit
+shows native RNE reachability cannot establish original EE scratch-tail
+reachability. Both original arithmetic and conditionally original prior stack
+words remain evidence requirements. No endpoint/zero/loop change is substituted.
+
+Immutable actual HPv15 passes240steps with13Cars/Chopper, natural COUNTDOWN3 to
+RACING4 and nonzero source PCM, followed by original RC/result/resource baseline.
+HPv17 then passes the former Smokeable frontier and completes391steps; index391
+stops in TrafficDriver -> Psycho.SetTarget -> DriveTarget.Resample217454,
+count6/produced5. Championshipv12 separately completes520steps, count10/produced9
+via Belt.SetBelt. Wrongtree GDB output is excluded from HP evidence. The separate
+HP12628-byte full constructor snapshot Take/Restore/close stays a0frame check.
+
+Public latest build38stepsPASS,46/46 related native checksPASS95.95s. The earlier
+45/46 result exposed invalid stale control fixture operands; W118 fixes those
+test owners and exact guarded destructor expectations, without production code
+changes. Latest normal Godot DLL6actual/7scheduled stepsPASS. Commands/log/SHA
+pins are in reverse/task0099/evidence.json. Versions remain GCC13.2.0/C++17,
+CMake3.29.2,Ninja1.12.0,Python3.14.4 and Godot4.7.2 ed1daf0bf.
+
+W113 distinguishes RaceStage/RCState/GameFlow enums and the reviewed frontend3
+predicates. Current0/Desired4/Pending0 remains an actual request, not a completed
+production loading transition. W119/W120 continue independent pursuit snapshot
+and Chopper chase dependencies. Production GameFlow/loading/MainLoop, full match
+finish/results/progression and hardware comparison remain incomplete. No commit
+or Verified promotion. Exact continuation commands remain at the task top.
+
+W117 positive close follow-up: immutablev17 actualHP391stepsPASS, original
+RC/result/resource footprint restored, audio407commands/312800PCM/nonzero1.
+This covers live Smokeable movement/pose/witness before the next index391
+Resample guard. authored-hp-smokeable-rolling.json pins command/executable/log.
+Contracts6/6PASS4.00s;13500current private evidence refs hash-validated0missing/
+0mismatch. ContinueW119/W120; no complete match claim.
+
+W120 chase helper/HasSignposts/real bRefreshTweaker delegation and trigger
+order now pass55-step public build and4/4 selected tests24.43s. Natural source
+platform0 is retained; explicit platform1 tests original monitor-send guard
+after source flag clear. No fake monitor, active flight or weapons claim.
+W119/W121/W122 continue active pursuit snapshot, pullover release and real
+player reset dependencies with original owner placement and separate W operands.
+
+
+## TASK-0099 continuation2026-11-02: interrupted-state recovery and W119..W123
+
+Reconnected original Ghidra MCP14tools after user opened it; fresh227BC0 owner
+proves cop.cpp, allowing actual SetDesiredLogicState rather than a guessed
+inline placement. W119 pursuit restore/lifetime source and W121 pullover
+nonarrest release continue with exact remaining active-child guards. W122 real
+Player reset native CLI passes with independent declared W1.0/2.0,8060byte5Car
+snapshot/restore/inputrebind and originalresource baseline;0Worldframes. Latest
+ordinary-operand CPU guards are retested in the final common build.
+
+W123 counterevidence: earlier Belt.Move incorrectly read adjacent CarTypeInfo
++0x128 instead of originalradius+0x12C. FreshMIPS/240bytes match the SHA-pinned
+ELF. Actual authored Belt-to-Wheel four-call GDB regression rejects oldv18
+(189.056915vs91.683121 atwheel0) and accepts correctedv19 all4wheels. Source
+field values differ without fabricated config. CorrectedChampionship520steps
+and originalRC/result/resourceclosePASS, audio536/416000/nonzero1.1200request
+still reachesResample217454; exactnewindex is not inferred fromoldv12.
+
+W119 pool initialization counterevidence: sourcepool flags15 include actual
+ZERO_ALLOCATED_MEMORY2. RealbOMalloc therefore clears the slot before ctor;
+rawdirectctor omissions remain a separate input domain. Retained and fresh
+snapshot tests must preserve this distinction. The earlier rawctor-only
+uncertainty is not applied to the proven manager allocation path.
+
+
+Final W119..W123 validation: common native116actual/117scheduled+44incremental
+and normalGodot76actual/79scheduled+3actual/4scheduledPASS. Broad49 tests:
+48PASS/1failedfixture135.31s. HP firstrow has noAIracer; Championship has no
+CopManager. No profile/roster/cops enable override was introduced. FinalHP
+fullEnd/ticket/Player andChampdirectAIleaves+Player checks2/2PASS12.09s,
+with2step fixturebuild; the two earlier failure logs remain counterevidence.
+Pursuit564byte/sourceownership/lifetime publicPASS1.25s; Playerreset5.40s.
+Correct latestv20 HP391steps andChamp520steps bothPASSsourceclose/nonzeroPCM.
+These native scopes cover50distinct checks in separate runs, never oneclaimed
+50/50run. Task remains active; exact EE/prior-stack/VU, productionGameFlow and
+complete competition/hardware-equivalence criteria remain open.
+
+Final currentv20 nativeGDB independently reconfirms HPindex391/count6→5 and
+Champindex520/count10→9 at217454, separatelyfromsuccessful391/520stepclose
+runs. contracts6/6PASS5.52s aftergeneration.232curatedsourceownerpaths match,
+0flags; implementationpathcheck isnotAST/equivalenceverification. Remaining
+evidence/material/diff checks are recorded inrootmanifest.
+
+Final privateevidencecheckpoint13987path/SHAreferences validated0missing/
+0mismatch; immutable reportpinned inrootmanifest. Source232placementrows0flags.
+Finaldiff/materialinventoryPASS,0staged, nocommit. TASK-0099staysactive;
+continuationcommands andpreciseevidenceblockers areattasktop.
+
+
+### TASK-0110 continuing actual event closure, 2026-11-06
+
+Current source integration admits the reviewed first HP and Championship events through real menus and selection. Authoritative roster/rules remain13actors/track13 and5actors/track12. The original source dependencies exposed by continuous execution are recovered individually, with optional presentation disabled explicitly and every missing capability reported through warnings. No fake outcome, position/progress edit or roster reduction is used.
+
+Current native CTest command `ctest --test-dir build/native-debug -R '^(frontend_runtime|shared_collision_foundation|frontend_finish_original|ee_scalar_carriers)$' --output-on-failure` passes4/4 in40.53s (frontend38.00s; shared collision1.26s; finish1.21s; scalar0.04s). Corrected frontend fixtures cover both actual event semantic transports, generation/seed/selected ride/profile mapping and retained return. The earlier failing frontend expectation that first Championship entry must remain unsupported is superseded by E-0110-E02, not ignored.
+
+New original airborne MellowMover and bNormalize child fixtures pass `traffic_construction`1/1 in1.18s after building event_world_tests/traffic_construction_tests. Original bNormalize ownership correction moves the actual3D body from historical bMath.cpp into source-proven src/bVector.cpp; no behavior is inferred from that old location. Missing W stack padding remains an independent explicit operand, with strict guard and PC-policy warning.
+
+The Python Championship physical-window fixture reaches the actual5-actor event and drives the player, but then stops at original contact.SetToPhysicsMode dispatch. The source vtable audit is in progress. Route observer initially exposed a closed-route tail distance reset; only the external test driver now unwraps that final segment geometrically for keyboard planning. Native route bytes/clocks/progress are unchanged. No natural finish/private settlement/return acceptance is claimed yet. Logs remain ignored under local/task0110.
+
+
+TASK-0110 further coherent checks: F13 native/Godot builds pass; shared_collision_foundation/smokeable_think/ee_scalar_carriers pass3/3 in2.61s. Actual HP now passes prior1373 normal/friction boundary and reaches1374 earliest input-position.W nonfinite guard; next arithmetic investigation traces the producer rather than accepting NaN. Actual Championship source reaches304 then exposes a PC-only rejection of a visible independent WorldObject. The presentation adapter now binds exact source-address/model/pose without inventing a static record. track_runtime passes1/1 in0.09s and scalar carrier1/1 in0.08s; current actual window continuation is running.
+
+F14 source finish audit found the genuinely required forced action6 is AIActionPullOver (not an inferred CoolDown); only the source name is introduced. Its full lifecycle/points/dispatch is implemented; ai_action_selection_original + ai_new_choice_original pass2/2 in2.48s. Native/Godot incremental builds pass. The actual full-window run includes this build. Complete natural race/save/return still remains the acceptance criterion, not these fixtures.
+
+
+TASK-0110 external route-driver counterevidence: the evaluated progress QuickSpline also leads the test car into a tree near9.5percent. Dense interpolation alone was insufficient; the progress reference is not a drivable road guarantee. E-0110-RO01 now observes only the already localized real player's TrackRoute through original read-only next-point/signpost helpers. Native observation tests pass1/1 in0.09s; full bridge/native build passes. Initial actual window sample correctly identifies source route3/point264 and original forward road. The driver uses road XY observations and physical keys; its horizon/distance/steering are external test heuristics, never recovered autopilot or game-state writes. The previous stuck run was closed gracefully through its owned window and is not credited as a pass. New full road test is running. Full native ALL rebuild is also running after common service/header changes.
+
+
+TASK-0110 continuation: latest class/progress/contracts checks pass3/3 in27.04s; repository diff --check passes (line-ending notices only). Native continuous --drive-road fixture reaches first-lap~69percent/step4668, observes finite original velocity operands beyond native float range, and after the instruction carrier reaches4676 normal finite-input subtraction overflow. Actual physical road trajectories independently expose the same normal subtraction boundary (one run707) and source Belt.SlideCoef straight-line zero sign DIV (another run1603/~21.8percent). C01/R01/B01 retain explicit numerical-model warnings and strict guards; no nativeInf input is accepted. Latest velocity/Belt component regressions pass2/2 in2.34s. Required remaining work is central build of coherent normal/basic impulse finite-operator carriers, then both full native diagnostic and mandatory Python physical event/results/fresh-save/tree-return. No full race acceptance yet.
+
+
+TASK-0110 first complete-course traversal reached the genuine lap boundary: nativev4 step6857 and actual UI step6869 near100percent both trigger original LapFinishedSpeech00202108 after lap bookkeeping, before snapshot commit. F17 now retains actual lap/record/single-player speech selection and shared global RNG consumption; only untranslated SPCH_AddEventV00289918 submission is explicitly disabled/warned in minimal presentation. Whole-selector suppression was rejected because it would change later AI randomness. Native frontend_finish_original passes1/1 in1.28s; Godot rebuild passes. New full nativev5 and actual Python lap-speech runs are active, with final Euler scalar instruction staging/no-contraction policy included. No full3-lap/settlement/save claim yet.
+
+
+TASK-0110 nativev6 genuinely completes all3 Championship laps: step20301/lap3 with normal road-driving controls and original roster/rules. The next real finished-driver AI frame reaches special signed skill speed-factor correspondence001910B0, assigned event_entry; queued settlement has not completed yet. The actual window path reaches1313/~17.5percent and F18 now proves its angularVelocity XYZ are alreadyNaN while linear/angular momenta are ordinary and transient rotation coefficients huge. This is upstream matrix-product arithmetic, not evidence to cap alreadybad inputs; event_ai traces ComputeAux stages and event_finish checks normalization/source substep ordering. Generic CVT remains strict; wheel-phase site1BDEB0 now has audited finite signed saturation from the Sony instruction manual, without wrapping the underlying angle. Updated three targeted tests pass3/3 in2.49s; native/Godot builds pass.
+
+Actual controls-specific window test passes20checks (champ-controls-v2/report.json), covering real menu entry, source input, pause/frozenstep/resume, actual handbrake, E/Q actual manual gearbox, moving-source S braking/release and retained EventTree return. Initial stopped-S fixture assumption was corrected: original stoppedS selects reverse, so gear assertions now precedeS and braking is tested on a moving vehicle. No game behavior was changed to make that fixture pass. HUD help now includes the original reverse behavior. Full natural event/window/private-save acceptance remains active and separate.
+
+
+TASK-0110 latest coherent source freeze: native ALL build passes216steps
+(closure-native-all.log), and the final selected regressions pass25/25 in169.21s
+(closure-regressions.log), including metadata generation contracts and actual
+source lifetime/finish/math/AI consumers. Latest copied nativev8 completes the
+authored Championship three laps at step20421 with five real result rows,
+non-aborted, player points4000, and source cleanup. No synthetic outcome or
+whole-game/original numerical equivalence is claimed. The parent-owned actual
+physical-key UI run remains active in second lap; its result/private-save/tree
+return acceptance remains distinct and required.
+
+
+## TASK-0110 completed minimum event closure, 2026-11-06
+
+Actual full-window champ-matrix-ortho passes13checks through real main menu,
+Event Tree, car/manual/handling, source countdown/three laps/five participants,
+natural Results, fresh private save and retained Event Tree. Results at20472,
+non-aborted, player rank5/time16:54.46/4750points. Separate read-only save
+validator PASS:70880-byte original raw payload, checksum/size stamp, full source
+progress block and4750points; progress offset224 changed to5. Source World
+cleanup completes; no runtime/script errors. Latest nativev8 separately passes
+full three-lap event/results/cleanup at20421 (own trajectory4000points).
+
+Native ALL216steps, final regressions25/25 in169.21s, controls20checks,
+headless PORT_SMOKE_OK:42 and diff checks pass. Exact commands/hashes in
+reverse/task0110/validation.json. Task moved to completed; no commit/staging,
+no Verified promotion. Parent TASK-0096 remains active. Next action: choose one
+next authored event and audit its version adapter/mandatory source dependencies;
+repeat full natural-window/save acceptance. First HP full completion remains
+separate. Optional missing presentation is warned/disabled before execution,
+mandatory gaps strict, numerical and performance limits explicitly retained.
+
+
+## TASK-0112 HUD/pause native continuation, 2026-11-06
+
+Read-only Ghidra yielded original fonts/text setters/measurements, all HudAnimator
+start/update/finish bodies and Player wrappers, plus PauseMenu ownership,
+activation, resume and confirmation callers.47 source entry prefixes match the
+hash-checked authorized Debug ELF. Restored components, capture hashes and exact
+limitations are recorded in reverse/task0112/hud-pause-primitives.md and
+evidence.json. Native tests use actual authored fonts/text/bitmap/pause/language
+resources with explicit host fixture operands. Duplicate font hash unload exposed
+a dangling raw Header; two-phase source unload then raw release fixes it without
+deduplication. Source pause quit lacks the plugged-controller check that restart
+performs. Unwritten PopupConfig operands remain unresolved, not defaulted.
+
+Source nonzero HUD producers, pause callback/RC6/session wiring and original
+result UI are still incomplete. EndGameScreens predicate/list/reward captures
+are evidence only. Current ordinary text HUD/PC results are not original-frontend
+acceptance. Task stays active; no staging/commit or Verified promotion. Build/test
+results and the resulting DLL hash are recorded in evidence.json. Continue with
+nonzero SetHudFeatures/RenderHud/tach/map, then pause/UI-only publication and
+EndGameScreens; retain one WorldSession and once-only settlement/private save.
+
+TASK-0112 native checkpoint validation: delivered native-debug/Godot-debug ALL
+builds PASS. Source regression6/6 PASS110.36s; final resource/Player/HUD/countdown
+4/4 PASS9.17s; repaired generated/class/pipeline/progress contracts5/5 PASS36.11s.
+DLL SHA-256 4c50b28e088f2674053e436ab4a20f69df2c08c568b098447e18480d51fb3391.
+Original standalone UI/Player fixtures now initialize/load actual texture owners
+before font/UI loading and close in reverse dependency order. Port project_count
+continues to count projects only. No new full-window HUD/pause/results acceptance;
+reproduce commands and corrected failures are retained in evidence.json.
+
+
+TASK-0100 activated2026-11-06 for approved full Event Tree plan first milestone: natural firstHP closure with original13actors. Actual Python window run started at local/task0100/hp-first-full; no finish/save claim yet. TASK-0112 source camera/HUD/pause progress discovered and retained. REA independent adapter/type and UI-rule evidence audits running; root owns live runtime and builds.
+
+
+TASK-0100 continuing checkpoint: exact Crowbar zero-center boundary reproduced
+at nativeframe456; CB01 scoped source VRSQRT-zero implementation passes
+shared_collision_foundation/runtime_warnings2/2 in1.82s. Native/Godot diagnostic
+and corrected builds pass. Matching native advances to459 and reaches mandatory
+TrafficDriver action CalculatePointsToDrive dispatch0018ACC0; actual vtable
+identity investigation continues before binding. Actual Python updated GPU run
+hp-crowbar-full started; no full HP result/save claim. New full stderr mirror
+is observed in its real Godot log (address/reason/action/count), including
+previously retained event31 gate2010B8 unknown; this remains required all-tree
+work, not suppressed success. Host navigation-after-save fault fixture passes
+one commit/changed-result rejection/navigation retry. Tests and fixture paths
+are recorded in active TASK-0100. All64 event type/layout/RNG/shared32 audits
+continue independently; root does not widen first-entry guards without semantic
+codec and exact source RNG ownership. No commit/staging.
+
+
+TASK-0100/TASK-0101 source integration checkpoint2026-11-06: actual HP unified
+UI controls pass24checks, including original13actors, keyboardpause/frozenstep,
+handbrake/manualgear/movingbrake and actualowned-window mousePause/Resume,
+retainedtree/sourcecleanup. Report local/task0100/hp-unified-mouse-controls.
+These are bounded controls, NOT naturalfullHP/saveacceptance. Runtime warnings
+mirrorstderr immediately andfinalshutdown prints exact retainedcounts; native
+boundary errors andhostscene failures also printcomplete diagnostics.
+
+Required sourcefield correction: RP+254=NFSRaceMode1; Fred+10 is
+ChallengeScreenData.mRaceMode1, NOT language. ActualFred.SelectedLanguage+170
+andLanguageManager+0(313898) nowagree withactualselected6localeassetheaderID.
+Earlierrecords/runartifact language-at+10 statements are retired. NoUS/UK
+reinterpretation: DebugenumEN0,FR1,DE2,IT3,ES4,SE5. Preparedtexttransportusesraw
+PackedByteArrays, neverUnicode roundtrip. LegacyfirstCHrace artifactremains
+historicalPCfunctionalclosure, freshcorrect-modeCHfullregression requiredunder
+TASK0101; nooriginal-equivalenceclaim followsfromoldsetup.
+
+Menu rawSetRace executes once, after actualmainmenu defaultcolorseeddraw owner,
+with post-SetRace both512progress and25named RPscalars/sourceoldstate retained.
+World imports/rebinds actualresourcepointers andsource-defaultscaffold without
+another randomizingdefaults/SetRace call. Newrawpreparation fixture coversall64
+records/all7types, sourceRNGordering, differentguestaddresses andall310RPbytes.
+Nativeintegrated7/7 pass66.32s; newstatus+collision2/2 pass7.38s; copadmission
+andregressions4/4 pass4.79s. Testsnotall64gameplayacceptance.
+
+Numericnative nowpasses662 to1272, actualnewprepared GPUalsoadvancespastold
+moment-inputinterval andstopsoriginalcopadmission. Prior momentInf producer
+remainsunresolved (notreproducedbynewseednative/currentGPU); allfirst-producer
+guards/diagnostics remain, no speculativepatch. ContactfiniteVSUB anddamping
+stagefixes have sourceinstruction/modewarnings, noexactEEprecisionclaim.
+
+Debugsource eventstatus adapter nowavoidsunrecoveredRetail31opaqueglobals;
+sourceVisibility32 usesCURRENTtree31, distinctfromRetailprojection. Private
+all7type/series entryfixtures aredevelopment tests withsyntheticprogress,
+NOTsourceunlock/gameplayevidence. Firstcentralgenericfixture failedatfrontend
+load; fullerror/setup underinvestigation, noacceptance. Rootcontinuation:
+completecopadmission/cleanupfixture, publishactualtrapbranch, repeatnaturalHP
+with originalroster; genericentryfixturemustpassbeforepublishingwidenedUI.
+
+
+## TASK-0100 / TASK-0101 - cop admission and result-action checkpoint (2026-11-06)
+
+The coordinated native target build and Godot ps2_port target build pass.
+Full default builds were interrupted to avoid rebuilding unrelated test targets;
+only the explicitly requested targets are claimed here. Commands:
+`cmake --build build/native-debug --target result_actions_tests runtime_warning_tests frontend_runtime_tests cop_admission_tests event_world_tests --parallel 4`
+and `cmake --build build/godot-debug --target ps2_port --parallel 4`.
+CTest result_actions, runtime_warnings, frontend_runtime and cop_admission pass
+4/4 in61.83s (local/task0101-result-actions-tests.log). The earlier corrected
+generic-entry fixture passes all9 cases; its integrated7-test run passes in
+160.30s (local/task0100-cop-generic-tests.log), superseding the initial fixture
+load failure above. These synthetic entry/state fixtures are not all-event
+gameplay or natural-unlock acceptance.
+
+WorldSession now owns the decoded topology used by CopResources for the full
+Impl lifetime, replacing a bootstrap-local object whose address escaped. No
+original topology or cop behavior is changed. Current HP actual-window and
+normal-input native probes retain all13 source participants. Natural HP
+results/save/return remains pending; no new full Championship regression or
+Verified claim. WARNING messages mirror complete address/reason/action to stderr;
+merged repeats retain exact shutdown counts.
+
+## 2026-11-07 — TASK-0100 logging and first HP checkpoint
+
+User requirement: every reached unimplemented path is visible as console WARNING;
+`./build.ps1 --run` also retains full terminal diagnostics. The warning observer
+is independent of debugger reactions and reports address/reason/action. The bus
+prints full first/powers-of-two messages immediately to stderr and keeps exact
+counts; joined-worker shutdown prints every distinct final count. Mandatory
+source gaps still throw, with no continuation through an incomplete frame.
+Standard/unknown ABI failures and host errors also print full stderr messages.
+`build.ps1` directly invokes the pinned Godot console executable with inherited
+streams; there is no diagnostic truncation/redirection in that run path.
+
+Revalidation: `ctest --test-dir build/native-debug -R runtime_warning
+--output-on-failure`: PASS 1/1, 0.11s. Headless pinned Godot 4.7.2 fixture
+`--headless --path godot ../tools/fixtures/event_return_retry.tscn --
+--terminal-log-fixture`: exit0; independent stdout/stderr capture confirms the
+complete host ERROR text and EVENT_RETURN_RETRY_OK. Captures:
+`local/task0100-terminal-fixture-{stdout,stderr}.log`. This is logging/host
+transaction verification, not a gameplay or original-machine comparison.
+
+Native normal-input HP probe now reaches genuine Results at source_step13892,
+player_finished1, aborted0, finish_reason1, rank1, time11:25.78, points0 and source
+cleanup PASS: `local/task0100-hp-recovery-road-probe.log`. The authored five-minute
+delivery objective was not met. This is a completed native attempt, not Python
+UI/save acceptance or an unlock victory. Current owned-window Python attempt:
+`py -3 tools/test_event_window.py --drive-route --road-course-driver
+--result-timeout 3000 --output local/task0100/hp-track-polygon-full`, shell log
+`local/task0100-hp-track-polygon-full.log`. It has passed the old step9765
+TrackPolygon boundary; results/save/return remain pending. No participant,
+position, clock, progress, result or unlock injection is permitted.
+
+
+## 2026-11-07 - TASK-0112 original race presentation implementation
+
+User approved full original single-player HUD, pause and result presentation.
+3D cockpit dashboard excluded. Preserve dirty tree; no commits or Verified
+promotion. Acceptance requires native/Godot builds, focused behavior regressions
+and actual Python window input plus viewport captures, including genuine finish
+and private-save return. Independent source HUD, pause and results scopes use
+read-only Ghidra. Host integration adds UI-only publication identity. Current
+mandatory gaps remain nonzero HUD/map/tachometer, paused RC6 menu integration
+and EndGameScreens producers. No new acceptance claimed.
+
+
+###2026-11-07 TASK-0112 integration checkpoint
+
+Source nonzero HUD/map/gauges, original pause/submenus and EndGameScreens are
+bound through immutable native frames and separate UI revision updates. Source
+simulation remains frozen during menu ticks. Native focused regression8/8 PASS
+122.71s (`local/task0112/current-focused-ctest.log`). Latest focused Godot build
+passes; final ALL builds are pending. First Python Championship launch and
+physical W input pass; full presentation FAILS at the selected Track12 map
+texture resolver, which is being corrected. No acceptance claim for that run.
+Debug/Retail reward flags require the reviewed identity codec, actual source
+award receipt for the abortion-alias index, and an atomically coupled private
+supplement. Continuation/capsule and reward transaction final validation pending.
+No computer use, staging or commits. No Verified promotion.
+
+
+###2026-11-07 TASK-0112 full-flow acceptance blockers
+
+Prescribed `./build.ps1 --preset native-debug --jobs 4` and Godot counterpart
+PASS (`native-all-final.log`, `godot-all-final.log`). Final DLL9be23f86aa8301c9e0a54fdbf78e194e2c9d482bfcfedc939f98a2ee1a415841.
+Focused18/18 PASS208.38s (`final-native-ctest.log`). Python actual menu/HUD/pause/
+retry/aspect/fullscreen succeeds; mirror sourceALPHA48 fix now shows actual
+reflected road. Source Display On/Off labels corrected by reloading native
+widget setters before gray-state projection. Both full drives fail before
+results: Championship0019B1A8 nonfinite RigidBody input, HP0019F708 missing active
+CopDriver chase chain. These are explicit unresolved required dependencies,
+not full-loop passes. Visible source Debug pause callback is being recovered.
+Raw screenshots/logs/private profiles stay ignored under local/task0112. No
+computer use, source state forcing, commit, or Verified claim.
+
+### 2026-11-07 TASK-0112 genuine Championship and visual correction
+
+Physical Python driving completed three Championship laps and actual source
+settlement: closure-championship/report.json records 23 checks and
+full_settlement_acceptance=true on DLL
+3842013c4b9634e9abb01bfbe5369d005d128ab53a1eeb88bc59726e011dc15c.
+The original EventFailed, RaceResults, BestLap, BestTotal and final menu pages
+were navigated; private settings/reward supplement saved and Quit returned to
+the event tree. Goal was missed, so this does not cover success unlock branches.
+Screenshots found duplicate headings/selection and literal format text. Native
+widget identity now uses the original address rather than nonunique NONAME hash;
+writeback also preserves font/clip/layer/quad properties. Debug001DB890 title
+uses the confirmed event+68 argument. Retail001DC5D8 supplies the reviewed
+Retail-only race-count resource role using actual Debug event producers.
+
+The old HP run was explicitly stopped on its owned executable/PID after GUI
+release retention was diagnosed; it is not a full-loop pass. Real RaceScene
+release routing now has a positive fixture and meaningful negative control:
+py -3 tools/test_race_input_release.py PASS (input-release-final.log).
+Cop/NIS resource/camera/placement closure is undergoing compilation. The first
+native-nis-ui build failed on Player include/declaration hygiene, now corrected;
+new builds and final visual/HP acceptance remain pending. All raw captures and
+private game assets remain ignored. No computer use, forced finish, commit or
+original-machine Verified claim.
+
+### 2026-11-07 TASK-0112 source NIS and native/GPU validation
+
+Both prescribed ALL builds pass after new source dependencies (native-nis-
+publication-final-build.log, godot-nis-publication-final-build.log). Current DLL
+SHA25685b7e4073984625c5c098a727287a7d760de96aa0efda69ad373bf76d817d985.
+Native focused8/8 PASS32.71s (nis-skin-ui-final-ctest.log): cop Think/pursuit,
+source HUD and actual four-driver skin metadata, NIS resources/placement/pose
+packets, end-game screens and menu host. Integration12/12 PASS79.53s
+(nss-integration-regression.log), contracts5/5 PASS30.67s
+(nis-final-contracts.log). Missing declaration/link dependencies and an invalid
+fixture assertion requiring an empty always-present decoder limitation list
+were corrected before these passing results; prior failure logs remain.
+
+Actual GPU component uploads all four original textured drivers using42 source
+bone slots and clears their draws; nis-gpu-component-final.log/.png PASS.
+Identity matrices make this a GPU transport fixture only, not live NIS proof.
+Read-only source audit found and corrected missing normal-frame packet copy,
+stale retry/reload packets, and conversion outside the GDExt exception boundary.
+Source MainLoop ordering was rechecked: prepare NIS after camera/HUD/audio and
+before clock advance. da338 older HP was intentionally stopped through its owned
+window and does not count as full-flow acceptance. Current85b7 actual HP Python
+run uses closure-hotpursuit-publication; source observer remains read-only.
+
+New scoped records/indexes merged without overwriting original names or promoting
+Verified. Class inventory and generated progress refreshed. Source image/data
+bundles and private saves remain ignored; no restricted binary paths in Git
+status, no computer use, stage or commit. Final genuine HP and corrected result
+visual acceptance remain pending.
+
+### 2026-11-07 TASK-0112 foreground, contact producer and R10 extension
+
+Actual OS foreground loss/return and F8 console suspension PASS22checks:
+py -3 tools/test_event_window.py --launch-only --host-suspend-smoke --output local/task0112/host-focus-console3
+report.json confirms actual_os_foreground and matching expected/actual independent
+window HWND. No focus-message fallback was used in that passing run. Whole-world
+step/clocks/actor poses freeze, held keys clear, host resume keeps original RC6
+inactive; source Start/Pause still opens/animates/resumes correctly. Earlier
+Windows activation refusals remain failed logs; one uncontrolled Championship
+attempt also reached contact001D20BC finite-input protection. Source-backed
+GetContactPointVelocity001D1EA8 now uses the actual VOPMULA/VOPMSUB/VADD sequence
+under the existing explicit finite-PC carrier. It preserves W and strict bad-
+input guards, with original addresses and48 matching ELF bytes. Source fixture
+and result-header regression2/2 PASS3.02s (contact-tourney-ctest.log).
+
+R10 inventory found three authored race-count templates: RaceResults,
+TourneyStandings, and source-proven PRE-race stats. Additional10byte/operand
+checks prove Tourney header offset0 before row filtering. Actual Tourney callback
+now initializes it; native fixture exercises the callback even when rows are
+not applicable. PreRaceStats89B2FC0F usesoffset1 and is not globally rewritten
+or mislabeled as a result page. All four complete driver solid chunks in
+CHARACTERSA andINGAMEB are byte-identical (nis-driver-bank-identity.json).
+
+Native/Godot ALL builds PASS after contact/Tourney changes, current DLL
+06ed655055fc3fc54873a99e67c6b15068ad1f066748f8c99c6e35c812055121
+(godot-contact-tourney-final-build.log). Components9/9 PASS36.74s
+(integrated-final-components.log). The running old85b7 HP library was preserved
+as ignored ps2_port-85b7-inflight.dll while mapped; its real test continues.
+New Championship full Python test runs in closure-championship-final on06ed,
+with independent private saves. Both observers remain read-only and both use
+owned-window keyboard messages. Neither ongoing drive is a completed acceptance
+claim. Next inspect their reports/results/screenshots, finish final checks and
+update TASK-0112/progress. No computer use, staging, commit or Verified promotion.
+
+### TASK-0112 final presentation acceptance
+
+2026-11-07 FINAL TASK-0112 acceptance (supersedes historical checkpoints below):
+both native-debug and godot-debug ALL builds PASS (native-completion-build.log,
+godot-completion-build.log). Final DLL SHA256
+dbcd6c920bf42558cf0731e234ff08c7c232550002a334468b080975d62285f4.
+Championship genuine3laps/result/record/save/sourceQuit PASS49checks on06ed.
+HotPursuit85b7 naturally finished and traversed4original pages, saved and returned
+to tree; original CLI FAIL only on final5s screenshot. Separate flow-audit.json
+and same-run recovered viewport retain this distinction; no forged report.json.
+Final dbcd launch-only Python window regression PASS64checks, actualOSforeground,
+originalHUD/pause/submenus/confirmations/controls/retry/host-consolefreeze,
+4:3/16:9/21:9/fullscreen/return and repaired30s committed-packet capture.
+Original644x480 clip is immutable frame metadata; actualRaceResults GPU positive
+0 gutterpixels vs unclipped negative8722. Native viewport/World/menu3/3 PASS47.46s.
+R10 twenty and R11 five actual-ELF checks; source EndMenu pulse deliberately
+preserved. Success rewards/unlocks and pursuit/NIS difficult branches covered by
+native tests; actual slow drives missed objectives. No live NIS capture or PS2
+Verified claim. No computer use, race-state observer writes, staging or commits.
+Acceptance commands, tools, per-version limitations and screenshots:
+reverse/task0112/acceptance.md. No unresolved implementation blocker for scope.
+
+
+Final completion checks: regenerated372class/1203member/23catalogue templates;
+ctest class_template_coverage/class_template_generator/progress_tables/
+recovery_progress_contracts/pipeline_contracts5/5 PASS26.34s
+(completion-contracts2.log). First attempt failed stale symbol implementation
+links after R11 merge; generator repaired derived files, no status promotion.
+Native/Godot final ALL builds PASS; git diff --check PASS. Python release test
+PASS. Related commits: none (not requested). Source evidence and public acceptance
+ledger remain repository memory; private profiles/raw assets/captures stay ignored.
+TASK-0112 moved to completed; scoped acceptance evidence is aggregate per-version,
+not a claim that both long drives ran on the final viewport-only DLL.
+
+Post-move `py -3 reverse/scripts/generate_progress.py` updated the dashboard;
+progress_tables/recovery_progress_contracts/pipeline_contracts3/3 PASS2.90s
+(`completed-contracts.log`). Final diff check PASS; restricted-material scan
+empty (`completion-worktree-audit.json`,3,547 porcelain-uall paths, including
+pre-existing untracked trees; this count is not comparable to collapsed status).
+
+### TASK-0113 / TASK-0114 user continuation, 2026-11-07
+
+Restore the missing original loading presentation and implement the explicitly
+requested PC vehicle-centered observation orbit. Preserve existing dirty work,
+no commits or computer use. Loading behavior/resources require authorized Debug
+ELF evidence and reviewed Retail correspondence; orbit tuning is a user-approved
+host policy, never a recovered PS2 claim. Loading worker owns native lifecycle,
+results worker audits independent source/resources; camera worker owns orbit and
+geometry checks. Root coordinates builds, Python real-menu viewport acceptance,
+shared indexes and final docs. Acceptance is pending, not completed or Verified.
+Root added --loading-smoke to the existing read-only Python event harness.
+
+## Final acceptance, 2026-11-07
+
+Completed implemented PC scope; no original-machine Verified claim. Final DLL
+SHA256 2ca5b3affc287dc3f60af71e9dad6c89b7b1c036015273beadec8d54898b94b0.
+Native/Godot ALL builds PASS: local/task0113/native-texture-build.log and
+godot-final-build.log (the latter includes final test-only rebuild).
+Native loading_screen_original, race_menu_original, flailer_resources_original,
+hud_animation_original4/4 PASS: local/task0113/final-regressions.log.
+Generated class inventory372classes/1203members/23catalogue labels; contracts5/5
+PASS32.43s local/task0113/contracts.log. Loading source proof27/27 checks;
+23 function-index contributions merged preserving existing names/statuses.
+
+Python actual-menu Championship loading/drive/pause/return13checks PASS:
+py -3 tools/test_event_window.py --championship --launch-only --loading-smoke --output local/task0113/championship-loading-clean
+The original-loading.png is visually inspected and its capture metadata confirms
+actual loading visible; original logo/text/texture and no temporary panels.
+HP equivalent13checks PASS in local/task0113/hotpursuit-loading-clean (command
+omits --championship); both final captures use the shared clean presenter.
+No full-finish claim is
+made for these launch-only runs. Earlier sourceflag-only capture showed racecars;
+it is rejected, not loading visual evidence. Observer now allows loading-phase
+GPU capture and records actual capture state without delaying native work.
+
+Camera final Python source-camera/vehicle-center/two-angle/radius/idle/aspect/
+fullscreen19checks PASS with final extra-body-batch bounds:
+py -3 tools/test_world_window.py --input-mode messages --background --camera-wide --track 11 --skin 7 --output local/task0114/camera-final
+Pure adapter PASS: Godot --headless --path godot --script res://scripts/debug/vehicle_orbit_tests.gd
+Artifacts local/task0114/adapter-tests.log and camera-final/report.json; actual
+application screenshots vehicle-centered-orbit-first.png and -sweep.png.
+Source camera/step/generation remain unchanged during paused orbit. The geometry
+test independently unions actual displayed mesh bounds. Camera values are an
+explicit user-authorized host policy, not recovered PS2 tuning.
+
+Corrected failures retained: missing native texture-list/font ownership caused
+unmapped0x74; real TextureBindings now initialize and own GLOBALB before fonts,
+explicit close releases borrowers first. A fixture wrongly queried an invisible
+widget omitted by the source snapshot; it now checks actual absence. The capture
+probe previously waited for race readiness; loading capture now checks metadata.
+Temporary UI overlays are hidden for actual loading and restored for diagnostics.
+No race clocks/positions/laps/finish values were injected, no computer use, no
+staging or commits. Existing dirty work retained. Required unimplemented source
+paths still throw. Demo-disc resource incompatibility is explicit and outside
+the normal single-player loading request; no full GameFlow/CRT equivalence claim.
+
+Next session: read selected task and use the exact commands above with a fresh
+ignored output/private-save directory if changing loading or camera behavior.
+Source records: reverse/task0113/loading-source-audit.md and
+loading-implementation.md. No implementation blocker remains for this scope.
+
+## 2026-11-11 TASK-0077 Godot Visual Profiler confirmation
+
+The built-in editor Visual Profiler captured the first Championship over a
+local debugger connection. The 1080p Vulkan Forward+ run passed the 600-frame
+window capture and identity check. Encoded depth median was 2.20 ms GPU versus
+10.91 ms inclusive host postprocess wall. The longest sampled frame was
+364.289 ms, with 313.427 ms inside the World tick and bridge-return scope.
+Exact viewport timings and continuation are recorded in TASK-0077.
+
+## 2026-11-11 TASK-0077 split World and depth timings
+
+The 600-frame Championship Visual Profiler repeat localized a 530.512 ms
+frame to native World advance (474.140 ms); bridge result construction
+was 0.060 ms. Depth material work was the largest sustained depth CPU
+subphase at 7.075 ms median, followed by proxy synchronization at 3.096 ms
+and discovery at 0.961 ms. The native regression set passed 4/4. Continue
+TASK-0077 with native World subphase attribution and variant/uniform splits.
+Exact commands, source-step ranges and artifact paths are in the task.

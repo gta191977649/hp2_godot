@@ -1,5 +1,7 @@
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
+#include <cstdint>
+namespace hp2::debug {std::uint32_t GetAccelerationTable(int type); /*Debug00186F88, E-0099-W47*/}
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.

@@ -41,3 +41,12 @@ void cJukeboxPlayer::GetSampleRate() {
     hp2::not_implemented("0x00280260", "cJukeboxPlayer::GetSampleRate (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+// TASK-0099 E-0099-W62. Exact original source src/bJukebox.cpp, Debug SHA
+//815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
+#include "game_core/bSound/include/bJukebox.h"
+#include "game_core/src/bSound.hpp"
+namespace hp2::debug {
+bool cJukeboxPlayer::IsCartridgeLoaded()const{const bool loaded=m_.word(address_+0x2248)!=0;if(!loaded)bSound(m_,m_.word(0x329320)).Printf(0x2bb980);return loaded;}
+void cJukeboxPlayer::Stop(){if(IsCartridgeLoaded())hp2::not_implemented("0x00278168","loaded original jukebox cartridge requires Update/IsPlaying/stream StopPlaying");}
+}

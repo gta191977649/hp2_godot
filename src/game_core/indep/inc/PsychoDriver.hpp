@@ -82,3 +82,13 @@ public:
     void Sub_002A0550();
 };
 } // namespace hp2::recovered
+
+#include "game_core/port/race/control_construction.hpp"
+namespace hp2::debug {
+// Debug0013AAF8,E-0099-W102; fresh mdebug definition owner PsychoDriver.hpp.
+inline float PsychoDriver::GetDesiredTimeToSpeed()const{return m_.scalar(address_+0x244);}
+// Debug0013AB00,E-0099-W34/W102; original header owner, not its emission TU.
+inline float PsychoDriver::GetDesiredSpeed()const{return m_.scalar(address_+0x240);}
+// Debug0013AAE8,E-0110-P01; exact original inline PsychoDriver.hpp owner.
+inline void PsychoDriver::SetLowGear(){m_.word(address_+0x220,0xffffffff);}
+}

@@ -30,3 +30,23 @@ public:
     void Sub_002091A0();
 };
 } // namespace hp2::recovered
+
+#include "game_core/port/driving/object_view.hpp"
+namespace hp2::debug {
+class Sound3d : public ::port::driving::ObjectView {
+public:
+ using ObjectView::ObjectView;
+ void Sub_00203980();void Sub_00204060(int); // E-0099-W27.
+ void Activate(bool);void ActivateSound();void DeactivateSound();
+ static float GetDistToClosestCamera(::port::driving::Memory&,std::uint32_t); //00203A30 E-0099-W40
+ static std::uint16_t ComputeAzimuth(::port::driving::Memory&,std::uint32_t); //00203C90
+ static float ComputeVolume(::port::driving::Memory&,std::uint32_t,float); //00203E20
+ void UpdateCamRelativeDistAndVelocity(std::uint32_t position); //00203B10 E-0099-W40.
+ void Update(std::uint32_t position,std::uint32_t envelope); //00203B88.
+};
+}
+
+namespace hp2::debug {
+// Debug001365F0,E-0099-W106; original smooth<float> inline definition owner.
+inline float smooth(float curr,float target,float delta){float next=curr+delta;if(target<=next){next=curr-delta;if(next<=target)next=target;}return next;}
+}

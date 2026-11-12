@@ -20,3 +20,12 @@ public:
     void Sub_002A0550();
 };
 } // namespace hp2::recovered
+
+#include "game_core/indep/inc/CarController.hpp"
+namespace hp2::debug {
+class NullController : public CarController {
+public:
+ using CarController::CarController;
+ void Sub_00136908(int); // E-0099-W21, original car.cpp destructor.
+};
+}

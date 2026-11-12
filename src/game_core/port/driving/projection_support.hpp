@@ -25,7 +25,15 @@ inline std::int32_t signed_bits(std::uint32_t bits){std::int32_t result;std::mem
 
 inline void reset_dispatch(Memory& m,std::uint32_t code,std::uint32_t object,InitServices& services){
     switch(code){
-    case 0x0019b170:Sub_0019D848(m,object);return;
+    case 0x0019b170:{
+        // E-0099-W83. Carry the caller's explicit original-unwritten lane
+        // through this shared virtual dispatch, preserving its raw bits.
+        if(!services.Field_00137938_stack_w)
+            hp2::not_implemented("0x0019B170","RigidBody auxiliary dispatch requires explicit original stack W policy");
+        float stack_w;
+        std::memcpy(&stack_w,&*services.Field_00137938_stack_w,sizeof(stack_w));
+        Sub_0019D848(m,object,stack_w);return;
+    }
     case 0x001a1b30:Wheel::ComputeAuxiliaries(m,object);return;
     case 0x001a37a0:
         if(!services.contact)hp2::not_implemented("0x001A5FC0","Contact provider is absent");

@@ -4,6 +4,7 @@
 #pragma once
 #include <vector>
 #include <cstddef>
+#include <cstdint>
 #include <array>
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
@@ -18,6 +19,8 @@ namespace port::driving {class Memory;}
 namespace hp2::recovered {
 class ScenerySectionHeader {
 public:
+    // Debug001502E0; E-0099-W15. Explicit shared original record view.
+    static void FlipObjectsOnBackwardsTrack(port::driving::Memory&,std::uint32_t section);
     static void TreeCull(const port::track::Scene&,const port::track::Section&,const port::track::FrameView&,port::driving::Memory&,port::track::Frame&);
     static void DrawAScenery(const port::track::Scene&,std::size_t,const port::track::FrameView&,unsigned,port::driving::Memory&,port::track::Frame&);
 };

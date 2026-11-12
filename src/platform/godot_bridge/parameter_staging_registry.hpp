@@ -5,25 +5,26 @@
 #include <map>
 #include <memory>
 namespace port::godot_bridge {
-template<class Name,class Value,std::size_t Capacity=4096>
+template<class Name,class Value,std::size_t Capacity=4096,std::size_t Slots=8>
 class ParameterStagingRegistry {
 public:
     struct Snapshot {
         std::uint64_t material=0,shader=0,generation=0,version=0;
-        std::array<std::uint64_t,8> parameter_versions{};
-        std::array<Name,8> names;
-        std::array<Value,8> values;
-        std::array<bool,8> valid{};
+        std::array<std::uint64_t,Slots> parameter_versions{};
+        std::array<Name,Slots> names;
+        std::array<Value,Slots> values;
+        std::array<bool,Slots> valid{};
     };
     struct Statistics {std::uint64_t registrations=0,published=0,hits=0,misses=0,invalidations=0,evictions=0,snapshot_reads=0;std::size_t entries=0;};
     using Owner=std::shared_ptr<Snapshot>;
+    using ReadView=std::shared_ptr<const Snapshot>;
 private:
     struct Entry {std::weak_ptr<Snapshot> value;std::uint64_t serial;};
     std::map<std::uint64_t,Entry> entries_;
     Statistics stats_;
     std::uint64_t serial_=0,generation_=0;
 public:
-    Owner create(std::uint64_t material,std::uint64_t shader,const std::array<Name,8>& names){
+    Owner create(std::uint64_t material,std::uint64_t shader,const std::array<Name,Slots>& names){
         static_assert(Capacity>0,"Staging registry requires a positive bound");
         if(entries_.size()>=Capacity&&!entries_.count(material)){
             for(auto it=entries_.begin();it!=entries_.end();)if(it->second.value.expired())it=entries_.erase(it);else ++it;
@@ -40,18 +41,25 @@ public:
         if(!owner->valid[index]||!(owner->values[index]==value)){owner->values[index]=value;owner->parameter_versions[index]=++owner->version;}
         owner->valid[index]=true;++stats_.published;
     }
-    // Detached copy at the original consumer point: no live registry crosses workers.
-    bool read_snapshot(std::uint64_t material,std::uint64_t shader,Snapshot& value){
+    // Borrow only for an immediate main-thread consumer. Revalidate the registry
+    // on each visit so expiry, invalidation, eviction and shader replacement work.
+    ReadView read_view(std::uint64_t material,std::uint64_t shader){
         auto found=entries_.find(material);
-        if(found==entries_.end()){++stats_.misses;return false;}
+        if(found==entries_.end()){++stats_.misses;return {};}
         auto owner=found->second.value.lock();
-        if(!owner){entries_.erase(found);++stats_.misses;return false;}
-        if(owner->shader!=shader){++stats_.misses;return false;}
-        value=*owner;found->second.serial=++serial_;++stats_.snapshot_reads;return true;
+        if(!owner){entries_.erase(found);++stats_.misses;return {};}
+        if(owner->shader!=shader){++stats_.misses;return {};}
+        found->second.serial=++serial_;++stats_.snapshot_reads;return owner;
+    }
+    bool read_snapshot(std::uint64_t material,std::uint64_t shader,Snapshot& value){
+        const auto view=read_view(material,shader);
+        if(!view)return false;
+        value=*view;
+        return true;
     }
     bool lookup(std::uint64_t material,std::uint64_t shader,const Name& name,Value& value){
-        Snapshot snapshot;if(!read_snapshot(material,shader,snapshot))return false;
-        for(std::size_t i=0;i<snapshot.names.size();++i)if(snapshot.names[i]==name&&snapshot.valid[i]){value=snapshot.values[i];++stats_.hits;return true;}
+        auto snapshot=read_view(material,shader);if(!snapshot)return false;
+        for(std::size_t i=0;i<snapshot->names.size();++i)if(snapshot->names[i]==name&&snapshot->valid[i]){value=snapshot->values[i];++stats_.hits;return true;}
         ++stats_.misses;return false;
     }
     void invalidate(std::uint64_t material){

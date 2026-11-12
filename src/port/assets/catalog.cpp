@@ -16,7 +16,8 @@ bool DirectorySource::probe(const std::string& path){
 std::shared_ptr<const render::Bitmap> Catalog::texture(render::TextureId id){
  auto cached=textures_.find(id);if(cached!=textures_.end())return cached->second;
  if(id>0xffffffffu)return {};
- for(const auto& bundle:bundles_){
+ auto selected=bundles_;selected.insert(selected.end(),presentation_bundles_.begin(),presentation_bundles_.end());
+ for(const auto& bundle:selected){
   auto it=archives_.find(bundle);
   if(it==archives_.end()){
    std::vector<std::uint8_t> bytes;

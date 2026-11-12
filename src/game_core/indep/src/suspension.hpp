@@ -9,7 +9,10 @@ std::array<float,4> GetPointVelocity(const std::array<float,4>&,const std::array
 class Suspension : public port::driving::ObjectView {
 public:
  using ObjectView::ObjectView;
+ void DoSnapshot(std::uint32_t snapshot); //E-0099-W74; exact source entry documented at body.
+
  // Debug001a3680; original initialization separated from host lifetime.
+ void Sub_001A3E48(int); // Debug destructor, E-0099-W33
  void port_initialize(int position,std::uint32_t body,std::uint32_t wheel,std::uint32_t steering,std::uint32_t info);
  // Debug001a3768/3790/37a0.
  void Calibrate(float load);void SetState();static void SetState(port::driving::init::ByteView);void ComputeAuxiliaries(port::driving::ContactProvider&);
@@ -31,6 +34,9 @@ namespace hp2::recovered {
 class TwoWheelAckermanSteering : public port::driving::ObjectView {
 public:
  using ObjectView::ObjectView;
+ void DoSnapshot(std::uint32_t snapshot); //E-0099-W74; exact source entry documented at body.
+
+ void Sub_001A3ED0(int); // Debug destructor, E-0099-W33
  void Sub_001A3F30(std::uint32_t config);
  void SetSteering(std::uint16_t value); //001A3540
  void ComputeAuxiliaries(); //001A3EC8 original empty entry

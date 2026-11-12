@@ -19,3 +19,26 @@ public:
     void EmitPoint();
 };
 } // namespace hp2::recovered
+
+#include "game_core/port/driving/object_view.hpp"
+#include "game_core/port/race/hud_geometry.hpp"
+#include <vector>
+namespace hp2::debug {
+// E-0112-M01. Original0xB0-byte logical-memory TrackMap view.
+class TrackMap:public ::port::driving::ObjectView {
+public:using ObjectView::ObjectView;
+ void Sub_001B7FD0(std::uint32_t track,std::uint32_t car,std::uint32_t player);
+ void Sub_001B81E0(int flags);
+ void InitTrackMapModeInfo(); //001BA610.
+ void Render(std::vector<::port::race::HudPolygon>&); //001B8200.
+ int GetAngle(std::uint16_t&); //001B8A90.
+ int GetCameraDirection(std::array<float,4>&); //001BA4C8.
+ std::array<float,2> GetCarUVPosition(const std::array<float,4>&); //001B9E68.
+ std::array<std::array<float,2>,4> GetBoxOnMap(const std::array<float,2>&,float,float,float,float,std::uint16_t); //001B9F00.
+ void MapToScreen(::port::race::HudPolygon&,std::array<std::array<float,4>,4>&); //001BA070.
+ void ClipPolygon(const ::port::race::HudPolygon&,std::uint32_t texture,int layer,std::vector<::port::race::HudPolygon>&); //001B9558.
+ void DrawMap(std::array<float,2>&,std::array<std::array<float,2>,4>&,std::uint16_t,std::vector<::port::race::HudPolygon>&); //001B8BC0.
+ void DrawMarker(const std::array<float,4>&,const std::array<float,2>&,std::uint16_t,const std::array<std::array<float,2>,4>&,std::uint32_t,int,std::uint32_t,std::uint16_t,float,float,std::vector<::port::race::HudPolygon>&); //001B9068.
+ void DrawOverOrUnderLay(std::uint32_t,int,std::vector<::port::race::HudPolygon>&); //001B93A0.
+};
+}

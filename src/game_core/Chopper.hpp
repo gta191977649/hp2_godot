@@ -58,3 +58,21 @@ public:
     void RenderChopper();
 };
 } // namespace hp2::recovered
+
+#include "game_core/port/driving/object_view.hpp"
+namespace port::track {struct RouteData;}
+namespace hp2::debug {
+// TASK-0099 E-0099-W94. Logical view; original allocation3C0, not host ABI.
+class Chopper:public ::port::driving::ObjectView {
+public:
+ using ObjectView::ObjectView;
+ void Sub_001E4018(const ::port::track::RouteData&); //Debug original ctor, E-0099-W94.
+ void Sub_001E40D0(int); //Debug original dtor, E-0099-W94.
+ void ClearVariables(const ::port::track::RouteData&); //Debug001E4188.
+ void DoSnapshot(std::uint32_t,const ::port::track::RouteData&); //Debug001E4250, E-0099-W98.
+ void RemoveChopperFromWorld(); //Debug001E4998, E-0099-W98.
+ void Fly(float); //Debug001E6C70, E-0099-W109; active children remain guarded.
+ bool FollowThisCar(std::uint32_t car); //Debug001E44B8, E-0099-W120.
+ void DoTweakerTriggers(); //Debug001E6B98; chase branch W120, bomb child guarded.
+};
+}

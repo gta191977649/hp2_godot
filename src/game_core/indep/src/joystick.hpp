@@ -34,3 +34,29 @@ public:
     void RemoveEvent();
 };
 } // namespace hp2::recovered
+
+// TASK-0099 E-0099-W62. Original input-list/static component, not a physical
+// device poll/scanner binding. Debug authority SHA256
+//815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
+#include "game_core/port/driving/object_view.hpp"
+namespace hp2::debug {
+void Sub_00155228(::port::driving::Memory&);
+class Joystick:public ::port::driving::ObjectView {
+public:using ObjectView::ObjectView;
+ std::uint32_t FindEventNode(int event)const; //00153870.
+ void ConnectEventNodeConfig(std::uint32_t event_node); //001538A0,E-0099-W77.
+};
+class QueuedJoystickEvents:public ::port::driving::ObjectView {
+public:using ObjectView::ObjectView;
+ void RemoveEvent(int port,int event); //001536A0.
+};
+int IsJoyHandlerAdded(::port::driving::Memory&,int port,int event); //00153EC8.
+void RemoveJoyHandler(::port::driving::Memory&,int port,int event); //00153E38, active node destruction explicit.
+// E-0099-W77. Raw original callback addresses are stored, not host callbacks.
+void AddJoyHandler(::port::driving::Memory&,int port,int event,std::uint32_t handler,std::uint32_t handler_object); //00153D90;00153E30 thunk.
+int DetermineAvailableJoystickConfigurations(::port::driving::Memory&,std::uint32_t configuration_numbers,int max_configuration_numbers,int joystick_type); //00154BF8.
+int ChooseJoystickConfigurationNumber(::port::driving::Memory&,int joystick_type,int user_configuration_number); //00154C88.
+std::uint32_t FindScannerConfig(::port::driving::Memory&,int event,int joystick_type,int user_configuration_number); //00154CF0.
+}
+
+namespace hp2::debug {void JoystickDoSnapshot(::port::driving::Memory&,std::uint32_t snapshot); /*001540B0,E-0099-W74*/}

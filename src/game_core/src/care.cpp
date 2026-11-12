@@ -11,6 +11,38 @@
 #include "game_core/port/driving/car_effects.hpp"
 #include "game_core/port/driving/vehicle_lights.hpp"
 #include "game_core/src/bMath.hpp"
+#include "game_core/inc/bSlotPool.hpp"
+#include "game_core/indep/src/fmenus.hpp"
+#include "game_core/port/race/world_construction.hpp"
+#include "game_core/port/not_implemented.hpp"
+
+namespace hp2::debug {
+// Debug0011DDB8, E-0099-W06. The recovered routine always creates a new pool;
+// unlike InitClans/InitSkids it has no lazy-allocation test. Original padding in
+// TestSprite and bytes outside these exact stores remain untouched.
+void InitCarEffects(::port::driving::Memory& memory){
+    memory.word(0x00326cd8,bNewSlotPool(memory,0x10,0x15e,0x002a4c30,0x10));
+    for(unsigned i=0;i<26;++i){
+        const auto row=0x002d7bb0+i*8;
+        const auto name=memory.word(row);
+        if(!name)hp2::not_implemented("0x0024C8B0","CarEffectParameters.Name is not bound");
+        std::string text;
+        for(unsigned offset=0;;++offset){
+            if(offset==4096)hp2::not_implemented("0x0024C8B0","unterminated CarEffectParameters.Name");
+            const auto c=memory.byte(name+offset);if(!c)break;text.push_back(static_cast<char>(c));
+        }
+        memory.word(row+4,hp2::frontend::bStringHash(text.c_str()));
+    }
+    // Original eIdentity0011B558 produces the same identity carrier as the
+    // existing canonical recovered bIdentity. No engine matrix enters here.
+    memory.matrix(0x002d7b70,hp2::recovered::bIdentity());
+    const auto sprite=0x002d7c90;
+    memory.word(sprite,0);memory.word(sprite+0x28,0x80808080);
+    memory.scalar(sprite+0x20,1);memory.word(sprite+4,0);memory.word(sprite+8,0);
+    memory.scalar(sprite+0xc,1);memory.word(sprite+0x10,0);memory.word(sprite+0x14,0);
+    memory.scalar(sprite+0x18,1);memory.scalar(sprite+0x1c,1);memory.word(sprite+0x24,0);
+}
+}
 
 namespace port::driving {
 // Debug00120350; E-0082-L01, reverse/task0082/lights.md. NFSHP2.ELF SHA-256
@@ -512,5 +544,224 @@ port::track::ShadowPacket CarRenderInfo::Render(port::driving::Memory& math,cons
  for(unsigned row=0;row<3;++row){if(bad[row]+bad[row+1]>=4)continue;ShadowStrip strip;strip.ramp=false;strip.colour={{128,128,128,static_cast<std::uint8_t>(std::min(unsigned(alpha),255u))}};for(unsigned col=0;col<4;++col)for(unsigned r=0;r<2;++r){const auto i=(row+r)*4+col;strip.vertices.push_back({points[i],uv[i]});}out.strips.push_back(std::move(strip));}
  }
  return out;
+}
+}
+
+namespace hp2::debug {
+// Debug0011DE78, E-0099-W18. Original deliberately retains the stale global.
+void CloseCarEffects(::port::driving::Memory& m){bDeleteSlotPool(m,m.word(0x326cd8));}
+}
+
+#include "game_core/port/race/car_render_resources.hpp"
+#include "game_core/port/race/damage_resources.hpp"
+#include "game_core/port/track/texture_bindings.hpp"
+#include "game_core/port/track/emitter_bindings.hpp"
+#include <limits>
+namespace hp2::recovered {
+// Debug0011E7B0; E-0110-CE01. Original src/care.cpp; raw RideInfo skin
+// byte and existing render resource names/pointers, without host GPU operations.
+void Car::SwitchSkin(std::uint32_t skin){
+ const auto ride=m_.word(address_+0x10);m_.byte(ride+5,static_cast<std::uint8_t>(skin));
+ port::race::CarRenderInfo(m_,m_.word(address_+0x4b0)).SwitchSkin(ride);
+ port::race::CarRenderInfo(m_,m_.word(address_+0x4b0)).UpdateSkinTextures();
+}
+}
+namespace port::race {
+// Debug00120080; E-0099-W25. Actual raw RideInfo/texture-name producer.
+void CarRenderInfo::SwitchSkin(std::uint32_t ride){
+ m_.word(address_+4,ride);GetUsedCarTextureInfo(m_,address_+0x2b0,ride,0);
+ const auto used=address_+0x2b0,first=m_.word(used+0x44),second=m_.word(used+0x48),replace=m_.word(used+0x70),replace_b=m_.word(used+0x74);
+ for(auto table:{address_+0x528,address_+0x560}){m_.word(table,first);m_.word(table+4,replace);m_.word(table+28,second);m_.word(table+32,replace_b);}
+ m_.word(address_+0x6cc,first);m_.word(address_+0x6d0,replace);
+}
+// Debug001200F0; E-0110-CE01. Exact replacement row NewNameHash+4 and
+// pTextureInfo+8; lookup retains the original missing-texture fallback.
+void CarRenderInfo::UpdateTextureInfo(std::uint32_t entry){
+ m_.word(entry+8,hp2::debug::GetTextureInfo(m_,m_.word(entry+4),1,0));
+}
+// Debug00120128; E-0110-CE01. These five rows only, in original call order.
+void CarRenderInfo::UpdateSkinTextures(){
+ for(const auto offset:{0x528u,0x544u,0x560u,0x57cu,0x6ccu})UpdateTextureInfo(address_+offset);
+}
+// Debug00120188; E-0099-W25. Original breakable item bit extraction and state tables.
+void CarRenderInfo::UpdateCarReplacementTextures(){
+ const auto s=address_;auto bits=[&](){const auto car=m_.word(s);if(!car)return 0u;const auto damage=m_.word(car+0x844);return damage?m_.word(damage+0xcc):0u;};
+ for(unsigned i=0;i<6;++i)m_.word(s+0x560+28*(i+2)+4,m_.word(0x2d7c80+4*((bits()>>(2*(i+8)))&3)));
+ m_.word(s+0x374,0);
+ for(unsigned i=0;i<4;++i){const auto table=s+0x560+28*(i+8);const auto amount=(bits()>>(2*(i+4)))&3;
+  if(amount<2)m_.word(table+4,m_.word(table));else{m_.word(table+4,m_.word(s+0x2b0+(i<2?0x84:0x90)));m_.word(s+0x374,m_.word(s+0x374)|m_.word(0x2d7aa0+4*i));}
+ }
+ const auto broken=m_.word(s+0x374);if((broken&m_.word(0x2d7aa8))&&(broken&m_.word(0x2d7aac)))m_.word(s+0x374,broken|m_.word(0x2d7ab0));
+ for(unsigned i=0;i<3;++i)eModel(m_,s+0x40+24*i).ReconnectTextureTable();
+}
+// Debug00120558; E-0099-W25. Exact marker hashes, normal-table index and pool records.
+void CarRenderInfo::CreateCarLightFlares(){
+ const auto s=address_,info=m_.word(s+8);if(!info)return;const auto base=render_resource_text(m_,info+32);const auto hash=hp2::frontend::bStringHash(base.c_str());
+ for(auto marker=hp2::debug::eFindPositionMarker(m_,0,hash);marker;marker=hp2::debug::eFindPositionMarker(m_,0,hash,marker)){
+  const auto name=m_.word(marker+8);int type=-1;unsigned flags=0;
+  switch(name){case 0x4ae7f96f:case 0xacec665c:type=0;break;case 0x34970013:case 0x5f09c5e2:case 0x7efcf06f:type=1;break;case 0x944e5339:case 0xbea9aee6:type=2;break;case 0x1e4150b4:type=4;flags=1;break;case 0xe662c161:type=5;flags=1;break;case 0xb4348dba:type=6;break;case 0xa532fc46:type=7;break;case 0xa7e6ea53:type=8;break;default:break;}
+  if(type<0)continue;const auto pool=m_.word(0x326710);if(!pool)hp2::not_implemented("0x00109E18","Original eLightFlareSlotPool component startup is required");
+  const auto p=hp2::debug::bOMalloc(m_,pool);m_.byte(p+13,static_cast<std::uint8_t>(type));m_.byte(p+12,1);m_.byte(p+16,0);m_.word(p+8,name);m_.half(p+14,static_cast<std::uint16_t>(flags));
+  const auto tail=m_.word(s+0x36c);m_.word(tail,p);m_.word(s+0x36c,p);m_.word(p+4,tail);m_.word(p,s+0x368);
+  for(unsigned axis=0;axis<3;++axis){m_.scalar(p+48+4*axis,m_.scalar(marker+16+4*axis)-m_.scalar(s+48+4*axis));m_.word(p+64+4*axis,m_.word(0x2d7af8+12*m_.byte(marker+29)+4*axis));}
+  m_.word(p+60,0);m_.word(p+76,0);
+ }
+}
+// Debug0011D7A8; E-0099-W25. Shared plane normals mutate only if original tolerance fails.
+static void InitPart(Memory&m,std::uint32_t culler,unsigned part,const std::array<float,4>&position){
+ const auto info=0x2d7640+80*part;for(int i=0;i<m.signed_word(info+12);++i){const auto p=info+16+16*static_cast<unsigned>(i);auto normal=m.vector(p);const float length=std::sqrt((normal[0]*normal[0]+normal[1]*normal[1])+normal[2]*normal[2]);if(m.scalar(0x324b60)<std::fabs(1.f-length)){const float inverse=1.f/length;for(auto&v:normal)v=v*inverse;m.vector(p,normal);}}
+ m.vector(culler+32*part,position);
+}
+}
+
+namespace port::race {
+// Debug0011EA88; E-0099-W25. Full required constructor sequence in original care.cpp.
+void CarRenderInfo::Sub_0011EA88(std::uint32_t ride,std::uint32_t car){
+ const auto s=address_;auto& m=m_;
+ for(unsigned i=0;i<26;++i){m.word(s+0x40+24*i+8,0);m.word(s+0x40+24*i+12,0);}
+ m.word(s+0x368,s+0x368);m.word(s+0x36c,s+0x368);
+ for(unsigned i=0;i<26;++i){const auto list=s+0x378+8*i;m.word(list,list);m.word(list+4,list);}
+ for(unsigned i=0;i<28;++i){const auto list=s+0x448+8*i;m.word(list,list);m.word(list+4,list);}
+ for(unsigned i=0;i<0x1c0;++i)m.byte(s+0x760+i,0);
+ m.word(s,car);m.word(s+0x920,0);m.word(s+4,ride);m.word(s+0x370,hp2::recovered::bRandom(m,8));
+ if(!m.word(0x3278e0))hp2::not_implemented("0x00186148","Original CarInfo resource loader has not published its array");
+ const auto info=m.word(0x3278e0)+0x560*m.word(ride),skin=GetSkinInfo(m,m.signed_word(ride),m.signed_byte(ride+5),1);m.word(s+8,info);
+ if(!skin)hp2::not_implemented("0x00186330","Original SkinInfo resource table is absent");
+ const auto base=render_resource_text(m,info+32);auto hash=[&](unsigned fmt,int a=0,int b=0){return render_format_hash(m,fmt,base,a,b);};
+ SwitchSkin(ride);const auto used=s+0x2b0;
+ const unsigned window_hashes[]={0x7b220ddf,0x1b0763a0,0xe7e4ef49,0x4cdebfca,0x60f8b13c,0x0ab88f5d};
+ m.word(s+0x560,m.word(used+0x44));m.word(s+0x57c,m.word(used+0x48));
+ for(unsigned i=0;i<6;++i)m.word(s+0x560+28*(i+2),window_hashes[i]);for(unsigned i=0;i<4;++i)m.word(s+0x560+28*(i+8),m.word(used+0x50+4*i));
+ UpdateCarReplacementTextures();
+ m.word(s+0x6b0,m.word(used+0x4c));m.word(s+0x6b4,m.word(used+0x78));
+ m.word(s+0x6e8,m.word(used+0x64));m.word(s+0x6ec,m.word(used+0xa0));m.word(s+0x704,m.word(used+0x68));m.word(s+0x708,m.word(used+0xa4));
+ const auto material_hash=m.word(skin+0x2c);m.word(s+0x364,elGetLightMaterial(m,material_hash));const bool traffic=m.word(info+0x538)==2;
+ for(unsigned i=0;i<4;++i){const int level=traffic&&i?int(i-1):int(i);const bool damaged=m.signed_byte(ride+7)&&m.signed_byte(ride+4)&&i<2;const auto model=s+0x40+24*i;
+  eModel view(m,model);view.Init(hash(damaged?0x326ce8:0x326cf0,'A'+level,m.signed_byte(ride+4)));
+  if(i>1&&!traffic)view.RenameTexture(m.word(used+0x44),m.word(used+0x48));view.AttachReplacementTextureTable(s+(i<3?0x560:0x528),i<3?12:2,i<3?int(i):0);
+ }
+ const unsigned tire_formats[]={0x2a4c70,0x2a4c80,0x2a4c90,0x2a4ca0,0x2a4cb0,0x2a4cc0};std::array<unsigned,6> tire_hash{};for(unsigned i=0;i<6;++i)tire_hash[i]=hash(tire_formats[i]);if(traffic){tire_hash[2]=tire_hash[1];tire_hash[5]=tire_hash[4];}
+ for(unsigned side=0;side<2;++side)for(unsigned lod=0;lod<3;++lod)eModel(m,s+0xa0+48*lod+24*side).Init(tire_hash[side*3+lod]);
+ for(unsigned lod=0;lod<3;++lod){const auto rear=s+0xb8+48*lod;if(!m.word(rear+12)){eModel(m,rear).UnInit();eModel(m,rear).Init(tire_hash[lod]);}}
+ for(unsigned side=0;side<2;++side)for(unsigned lod=0;lod<3;++lod)eModel(m,s+0xa0+48*lod+24*side).AttachReplacementTextureTable(s+0x6cc,3,int(side*3+lod));
+ for(unsigned side=0;side<2;++side)for(unsigned lod=0;lod<3;++lod)eModel(m,s+0xa0+48*lod+24*side).ReplaceLightMaterial(0xd6d6080a,material_hash);
+ const auto brake_front=hash(0x2a4cd0);eModel(m,s+0x160).Init(brake_front);eModel(m,s+0x178).Init(hash(0x2a4ce0));if(!m.word(s+0x184)){eModel(m,s+0x178).UnInit();eModel(m,s+0x178).Init(brake_front);}
+ for(unsigned i=0;i<2;++i)eModel(m,s+0x160+24*i).AttachReplacementTextureTable(s+0x528,2,int(i+1));for(unsigned i=0;i<2;++i)eModel(m,s+0x160+24*i).ReplaceLightMaterial(0xd6d6080a,material_hash);
+ const unsigned pair_offsets[]={0x190,0x1c0,0x1f0};const unsigned pair_formats[][2]={{0x2a4cf0,0x2a4d00},{0x2a4d10,0x2a4d28},{0x2a4d40,0x2a4d58}};
+ for(unsigned pair=0;pair<3;++pair){for(unsigned i=0;i<2;++i)eModel(m,s+pair_offsets[pair]+24*i).Init(hash(pair_formats[pair][i]));if(pair<2)for(unsigned i=0;i<2;++i)eModel(m,s+pair_offsets[pair]+24*i).AttachReplacementTextureTable(s+0x528,2,int(3+pair*2+i));for(unsigned i=0;i<2;++i)eModel(m,s+pair_offsets[pair]+24*i).ReplaceLightMaterial(0xd6d6080a,material_hash);}
+ eModel(m,s+0x220).Init(hash(m.signed_byte(ride+4)?0x2a4d70:0x2a4d80,m.signed_byte(ride+4)));
+ const unsigned dash_offsets[]={0x238,0x268,0x250,0x280,0x298},dash_formats[]={0x326cf8,0x2a4d90,0x2a4da0,0x2a4db0,0x2a4dc0};for(unsigned i=0;i<5;++i)eModel(m,s+dash_offsets[i]).Init(hash(dash_formats[i]));
+ eModel(m,s+0x238).AttachReplacementTextureTable(s+0x6b0,1,0);eModel(m,s+0x268).AttachReplacementTextureTable(s+0x6b0,1,1);for(unsigned i=0;i<3;++i)eModel(m,s+dash_offsets[i]).ReplaceLightMaterial(0xd6d6080a,material_hash);
+ const auto blur=hash(0x2a4dd0);for(unsigned i=0;i<2;++i)eModel(m,s+0x130+24*i).Init(blur);for(unsigned i=0;i<2;++i)if(!m.word(s+0x13c+24*i)){eModel(m,s+0x130+24*i).UnInit();eModel(m,s+0x130+24*i).Init(hash(i?0x2a4df0:0x2a4de0));}for(unsigned i=0;i<2;++i)eModel(m,s+0x130+24*i).AttachReplacementTextureTable(s+0x6cc,3,int(i+6));
+ const bool frontend=m.word(0x3275ac)==3;const auto shadow=hp2::debug::GetTextureInfo(m,hash(frontend?0x2a4e00:0x2a4e10),0,0);m.word(s+0x35c,shadow);m.word(s+0x360,hp2::debug::GetTextureInfo(m,0xbadb4475,0,0));if(shadow)m.byte(shadow+0x29,frontend?5:3);
+ if(car){hp2::recovered::Car(m,car).AssignAnimatedDriver(base);if(const auto damage=m.word(car+0x844)){
+  hp2::debug::BodyDamage body(m,damage+8);const auto name=base+"_A";body.SetALevelBodyDamageInfo(name.c_str());
+  if(!m.signed_byte(ride+7)){const auto scuffs=base+"_SCUFFS";body.AddModel(s+0x220,scuffs.c_str(),1);}else{for(unsigned i=0;i<3;++i){const auto level=base+"_"+char('A'+i);body.AddModel(s+0x40+24*i,level.c_str(),0);}const auto scuffs=base+"_SCUFFS";body.AddModel(s+0x220,scuffs.c_str(),0);}
+ }}
+ const auto body=m.word(s+0x4c);for(unsigned axis=0;axis<3;++axis)m.scalar(s+0x30+4*axis,body?m.scalar(body+0x90+4*axis):0.f);
+ CreateCarLightFlares();if(!body)hp2::not_implemented("0x0010CDA0","Missing original body solid leaves constructor bounding-box temporary undefined");
+ // Original named AABB components are XYZ. Uninitialized temporary W padding
+ // has no recovered value; the explicit host carrier preserves its padding.
+ std::array<float,3> lo{},hi{};for(unsigned axis=0;axis<3;++axis){lo[axis]=m.scalar(body+0x40+4*axis);hi[axis]=m.scalar(body+0x50+4*axis);}
+ for(unsigned model:{s+0x40,s+0x1c0,s+0x1d8}){if(const auto solid=m.word(model+12))for(unsigned axis=0;axis<3;++axis){lo[axis]=m.scalar(solid+0x40+4*axis);hi[axis]=m.scalar(solid+0x50+4*axis);}for(unsigned axis=0;axis<3;++axis){if(model==s+0x40){m.scalar(s+0x10+4*axis,lo[axis]);m.scalar(s+0x20+4*axis,hi[axis]);}else{m.scalar(s+0x10+4*axis,std::min(m.scalar(s+0x10+4*axis),lo[axis]));m.scalar(s+0x20+4*axis,std::max(m.scalar(s+0x20+4*axis),hi[axis]));}}}
+ for(unsigned axis=0;axis<3;++axis){m.scalar(s+0x10+4*axis,m.scalar(s+0x10+4*axis)-m.scalar(0x324b64));m.scalar(s+0x20+4*axis,m.scalar(s+0x20+4*axis)+m.scalar(0x324b64));}
+ std::array<std::array<float,4>,4> wheels{};for(unsigned i=0;i<4;++i)wheels[i]=m.vector(info+0x120+32*i);const auto culler=s+0x760;for(unsigned i=0;i<4;++i)InitPart(m,culler,i,wheels[i]);
+ std::array<float,4> left{},right{},under{};for(unsigned axis=0;axis<4;++axis){left[axis]=(wheels[0][axis]+wheels[3][axis])*0.5f;right[axis]=(wheels[1][axis]+wheels[2][axis])*0.5f;under[axis]=(left[axis]+right[axis])*0.5f;}
+ InitPart(m,culler,4,left);InitPart(m,culler,5,right);for(unsigned i=0;i<4;++i)InitPart(m,culler,6+i,wheels[i]);InitPart(m,culler,10,wheels[0]);InitPart(m,culler,11,wheels[2]);InitPart(m,culler,12,under);
+ std::array<float,4> front{},side{};for(unsigned axis=0;axis<4;++axis){front[axis]=wheels[0][axis]-wheels[1][axis];side[axis]=wheels[1][axis]-wheels[2][axis];}
+ std::array<float,4> normal{{front[1]*side[2]-front[2]*side[1],front[2]*side[0]-front[0]*side[2],front[0]*side[1]-front[1]*side[0],front[3]}};const float inverse=1.f/std::sqrt((normal[0]*normal[0]+normal[1]*normal[1])+normal[2]*normal[2]);for(unsigned axis=0;axis<4;++axis)under[axis]=under[axis]+(normal[axis]*inverse)*wheels[0][3];InitPart(m,culler,13,under);
+}
+}
+
+namespace port::race {
+// Debug0011FCE8; E-0099-W25. Fresh alpha=null and original idle queue branch.
+// EI/unused COP0 Count read are CPU-platform boundaries; active rendering cannot
+// be replaced by an idle success and therefore throws before freeing resources.
+void CarRenderInfo::Sub_0011FCE8(){
+ auto&m=m_;const auto s=address_;
+ if(m.word(0x3266d0)||m.word(0x3266d4))hp2::not_implemented("0x001121E0","Active original render/buffer-swap synchronization is not bound");
+ if(const auto car=m.word(s))hp2::recovered::Car(m,car).UnAssignAnimatedDriver();
+ if(const auto alpha=m.word(s+0x920))m.release(alpha);
+ for(int i=27;i>=0;--i){const auto list=s+0x448+8*static_cast<unsigned>(i);while(m.word(list)!=list){const auto p=m.word(list);m.word(list,m.word(p));if(m.word(list+4)==p)m.word(list+4,list);hp2::debug::SlotPool(m,m.word(0x326cd8)).Free(p);}}
+ for(int i=25;i>=0;--i)hp2::debug::afxDeleteEmitters(m,s+0x378+8*static_cast<unsigned>(i));
+ const auto list=s+0x368;while(m.word(list)!=list){const auto p=m.word(list),next=m.word(p),prev=m.word(p+4);m.word(prev,next);m.word(next+4,prev);hp2::debug::SlotPool(m,m.word(0x326710)).Free(p);}
+ for(int i=25;i>=0;--i)eModel(m,s+0x40+24*static_cast<unsigned>(i)).UnInit();
+}
+}
+namespace hp2::recovered {
+// Debug0011DEA8; E-0099-W25. Actual owned object, pool/list order, marker
+// mapping and original26 emitter groups; no host eModel pointer substitutions.
+void Car::InitRenderInfo(std::uint32_t ride){
+ auto&m=m_;const auto car=address_;const auto render=m.allocate(0x930);
+ ::port::race::CarRenderInfo(m,render).Sub_0011EA88(ride,car);const auto info=m.word(car+12);m.word(car+0x4b0,render);
+ const auto base=::port::race::render_resource_text(m,info+32);const auto type=hp2::frontend::bStringHash(base.c_str());
+ auto append=[&](unsigned group,const std::array<float,3>&position){const auto pool=m.word(0x326cd8);if(!pool)hp2::not_implemented("0x0011DDB8","Original CarEmitterPositionSlotPool startup is required");const auto p=hp2::debug::bOMalloc(m,pool),list=render+0x448+8*group,tail=m.word(list+4);m.word(list+4,p);m.word(tail,p);m.word(p,list);for(unsigned axis=0;axis<3;++axis)m.scalar(p+4+4*axis,position[axis]);};
+ append(0,{{0,0,0}});
+ const unsigned pairs[][2]={{0,1},{3,2},{0,3},{1,2}};
+ for(unsigned i=0;i<4;++i){std::array<float,3> position{};for(unsigned axis=0;axis<3;++axis)position[axis]=(m.scalar(info+0x120+32*pairs[i][0]+4*axis)+m.scalar(info+0x120+32*pairs[i][1]+4*axis))*0.5f;append(i+1,position);}
+ for(unsigned i=0;i<4;++i)append(i+5,{{m.scalar(info+0x120+32*i),m.scalar(info+0x124+32*i),m.scalar(info+0x128+32*i)}});
+ for(auto marker=hp2::debug::eFindPositionMarker(m,0,type);marker;marker=hp2::debug::eFindPositionMarker(m,0,type,marker)){
+  int first=-1,second=-1;switch(m.word(marker+8)){
+  case 0x725758bf:first=26;break;case 0xa7e6ea53:first=18;second=20;break;case 0xa2799c2b:case 0xa5b28001:case 0xf21be91e:first=10;break;case 0x7b220ddf:first=12;break;case 0xa532fc46:first=18;second=21;break;case 0xd947f346:first=19;second=22;break;case 0xc52bf01b:first=25;break;case 0xe7e4ef49:first=14;break;case 0x494ed280:first=27;break;case 0x59a55db5:first=9;break;case 0x4cdebfca:first=15;break;case 0x60f8b13c:first=16;break;case 0x68100815:first=11;break;case 0x05f63788:first=24;break;case 0x0ab88f5d:first=17;break;case 0x1b0763a0:first=13;break;case 0x02b52399:first=19;second=23;break;default:break;
+  }
+  std::array<float,3> position{};for(unsigned axis=0;axis<3;++axis)position[axis]=m.scalar(marker+16+4*axis)-m.scalar(render+48+4*axis);if(first>=0)append(static_cast<unsigned>(first),position);if(second>=0)append(static_cast<unsigned>(second),position);
+ }
+ for(unsigned i=0;i<26;++i)hp2::debug::afxGetEmitters(m,render+0x378+8*i,m.word(0x2d7bb4+8*i));
+ m.word(0x326cdc,hp2::debug::GetTextureInfo(m,0x2340,1,0));
+}
+// Debug0011E4A8; E-0099-W25. Original deleting destructor and final null store.
+void Car::CloseRenderInfo(){if(const auto render=m_.word(address_+0x4b0)){::port::race::CarRenderInfo(m_,render).Sub_0011FCE8();m_.release(render);}m_.word(address_+0x4b0,0);}
+}
+
+namespace port::race {
+// Debug00123B18; E-0099-W25. Actual primitive2-byte alpha/flags save array.
+void CarRenderInfo::OverRideAlpha(std::uint8_t alpha,bool semi,bool write_z){
+ const auto s=address_;auto&m=m_;if(m.word(s+0x920))return;const auto count=m.word(s+0x2f0),saved=m.allocate(count*2);m.word(s+0x920,saved);
+ for(unsigned i=0;i<count;++i)if(const auto texture=hp2::debug::GetTextureInfo(m,m.word(s+0x2b0+4*i),1,0)){
+  m.byte(saved+2*i,m.byte(texture+0x76));m.half(saved+2*i,static_cast<std::uint16_t>((m.half(saved+2*i)&0xfeff)|((m.byte(texture+0x4f)&1)<<8)));
+  m.half(saved+2*i,static_cast<std::uint16_t>((m.half(saved+2*i)&0xfdff)|((m.byte(texture+0x50)&1)<<9)));
+  m.byte(texture+0x50,write_z?1:0);m.byte(texture+0x76,alpha);m.byte(texture+0x4f,semi?1:0);
+ }
+}
+// Debug00123C40; E-0099-W25. Restores original record flags then frees/save-pointer null.
+void CarRenderInfo::RestoreAlpha(){const auto s=address_;auto&m=m_;const auto saved=m.word(s+0x920);if(!saved)return;
+ for(unsigned i=0;i<m.word(s+0x2f0);++i)if(const auto texture=hp2::debug::GetTextureInfo(m,m.word(s+0x2b0+4*i),1,0)){
+  m.byte(texture+0x76,m.byte(saved+2*i));m.byte(texture+0x4f,m.byte(saved+2*i+1)&1);m.byte(texture+0x50,(m.byte(saved+2*i+1)>>1)&1);
+ }
+ m.release(saved);m.word(s+0x920,0);
+}
+}
+
+#include "game_core/indep/inc/AcidFX.hpp"
+namespace hp2::recovered {
+// Debug0011E4E0, E-0099-W38; exact src/care.cpp owner. Original linked emitter
+// and position records remain in shared Memory; active emission uses raw AcidFX.
+void Car::TriggerEffect(int effect,float intensity,int parameter,std::uint32_t override_velocity){
+ TriggerEffect(effect,intensity,parameter,override_velocity,std::nullopt);
+}
+void Car::TriggerEffect(int effect,float intensity,int parameter,std::uint32_t override_velocity,std::optional<std::uint32_t> port_stack_vector_lane){
+ const auto render=m_.word(address_+0x4b0);if(!render||intensity==0||effect==0||m_.word(address_+0x510))return;
+ if(effect<1||effect>=26)hp2::not_implemented("0x0011E4E0","Original CarEffect index outside recovered table");
+ auto list=render+0x378+static_cast<unsigned>(effect)*8;const auto terrain=m_.word(0x328b58);
+ if(static_cast<unsigned>(effect-1)<5&&terrain)list=terrain+(static_cast<unsigned>(parameter)&0xffffu)*8+static_cast<unsigned>(effect-1)*0x108;
+ int position=0;if(static_cast<unsigned>(effect-3)<2||effect==8||effect==9)position=parameter>>16;
+ auto local_world=m_.matrix(address_+0x90);const auto origin=address_+(position>0&&position<9?0x60:0x50);
+ for(unsigned axis=0;axis<3;++axis)local_world[12+axis]=m_.scalar(origin+axis*4);local_world[15]=1;
+ const auto velocity=override_velocity?override_velocity:address_+0x70;
+ for(auto emitter=m_.word(list);emitter!=list;emitter=m_.word(emitter)){
+  auto orientation=m_.matrix(emitter+0x30);const auto data=m_.word(emitter+0x1c);
+  if(!data)hp2::not_implemented("0x0011E4E0","Original Car emitter requires loaded EmitterData before CarPosition read");
+  const int id=position?position:m_.signed_word(data+0x58);if(id<0||id>=28)hp2::not_implemented("0x0011E4E0","Original CarEffectPosition index outside recovered table");
+  const auto head=render+0x448+static_cast<unsigned>(id)*8;
+  for(auto node=m_.word(head);node!=head;node=m_.word(node)){
+   for(unsigned axis=0;axis<3;++axis)orientation[12+axis]=m_.scalar(node+4+axis*4);orientation[15]=1;
+   std::array<float,16> world;eMulMatrix(world,orientation,local_world);m_.matrix(emitter+0x30,world);
+   for(unsigned axis=0;axis<3;++axis)m_.word(emitter+0x70+axis*4,m_.word(velocity+axis*4));m_.word(emitter+0x7c,0);
+   hp2::debug::AcidEffectSystem(m_,0x2e6f40).TriggerEmitter(emitter,-intensity,address_,port_stack_vector_lane);
+  }
+  // Source restores the orientation carrying the LAST position visited, not
+  // the emitter's entry translation. Empty position lists preserve all16 lanes.
+  m_.matrix(emitter+0x30,orientation);
+ }
 }
 }

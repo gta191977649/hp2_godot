@@ -1,5 +1,6 @@
 #pragma once
 #include <exception>
+#include <cstdio>
 #include <string>
 #include <utility>
 
@@ -29,8 +30,12 @@ std::string catch_all(Body&& body) {
     try {
         std::forward<Body>(body)();
     } catch (const std::exception& error) {
+        std::fprintf(stderr,"ERROR [GDExtension boundary] %s\n",error.what());
+        std::fflush(stderr);
         return error.what();
     } catch (...) {
+        std::fprintf(stderr,"ERROR [GDExtension boundary] unknown exception crossed the GDExtension boundary\n");
+        std::fflush(stderr);
         return "unknown exception crossed the GDExtension boundary";
     }
     return {};

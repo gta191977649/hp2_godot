@@ -4,6 +4,14 @@
 #include "game_core/indep/src/fmenus.hpp"
 #include <cstring>
 #include <cmath>
+#include "game_core/src/bMath.hpp"
+#include "game_core/port/driving/projections.hpp"
+namespace hp2::recovered {
+// Debug00253FB8,E-0100-PA01. Preserve source angle-before-radius write order.
+std::uint32_t bToPolar(Memory& m,std::uint32_t dest,const std::array<float,2>& v){const float square=v[0]*v[0]+v[1]*v[1];if(!std::isfinite(v[0])||!std::isfinite(v[1])||!std::isfinite(square))hp2::not_implemented("0x00253FB8","original polar scalar square/angle operands exceed reviewed finite PC domain");const auto angle=hp2::recovered::bATan(m,v[0],v[1]);m.half(dest+4,static_cast<std::uint16_t>(angle));m.scalar(dest,std::sqrt(square));return dest;}
+// Debug00253898; E-0112-H02. Original abs divisor and floor correction.
+float bFMod(float a,float b){const float divisor=std::fabs(b);if(divisor==0)hp2::not_implemented("0x00253898","zero divisor requires original EE exceptional arithmetic");const float quotient=a/divisor;float integral=float(::port::driving::cvt_w_s(quotient));if(quotient<integral)integral-=1.f;return (quotient-integral)*divisor;}
+}
 
 namespace port::frontend {
 namespace {
@@ -226,12 +234,9 @@ namespace port::driving {
 std::int16_t bFixATan(Memory&m,std::int32_t x,std::int32_t y) { return hp2::recovered::bFixATan(m,x,y); }
 }
 
+
 namespace hp2::recovered {
-// Debug00251D28; E-0046-S03. Preserve sqrt/length then reciprocal grouping.
-std::array<float,3> bNormalize(const std::array<float,3>&v,float length){
-    float sum=v[0]*v[0];sum=sum+v[1]*v[1];sum=sum+v[2]*v[2];
-    float divisor=std::sqrt(sum)/length;
-    if(divisor==0)return {{length,0,0}};
-    divisor=1.0f/divisor;return {{v[0]*divisor,v[1]*divisor,v[2]*divisor}};
-}
+// Debug00253A10; E-0099-W37. Original simultaneous sine/cosine polynomial,
+// with coefficients and angle reduction from original loaded global storage.
+void bSinCos(Memory& m,float& sine,float& cosine,std::uint16_t angle){float sign=1.f,x=static_cast<float>(angle)*m.scalar(0x326284),reduction=m.scalar(0x32628c);bool reduced=true;if(x<m.scalar(0x326288)){if(x<m.scalar(0x326290))reduced=false;else{sign=-1.f;reduction=m.scalar(0x326294);}}if(reduced)x=x-reduction;const float square=x*x,fifth=x*square*square,sixth=square*square*square,seventh=fifth*square,fourth_term=square*square*m.scalar(0x32629c),eighth=sixth*square,sixth_term=sixth*m.scalar(0x3262a4),eighth_term=eighth*m.scalar(0x3262ac),tenth_term=eighth*square*m.scalar(0x3262b4);sine=((((x-x*square*m.scalar(0x326298))+fifth*m.scalar(0x3262a0))-seventh*m.scalar(0x3262a8))+seventh*square*m.scalar(0x3262b0))*sign;cosine=(((((1.f-square*.5f)+fourth_term)-sixth_term)+eighth_term)-tenth_term)*sign;}
 }

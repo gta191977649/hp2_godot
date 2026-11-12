@@ -19,3 +19,16 @@ public:
     void GetLargestFreeBlock();
 };
 } // namespace hp2::recovered
+
+// TASK-0099 E-0099-W62. Debug002506A8/002506E0/00250D58/00250D80;
+// authority815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
+#include "game_core/port/driving/object_view.hpp"
+namespace hp2::debug {
+class MemoryPool:public ::port::driving::ObjectView {
+public:using ObjectView::ObjectView;
+ std::int32_t GetAmountFree()const;
+ std::int32_t GetLargestFreeBlock()const;
+};
+std::int32_t bCountFreeMemory(::port::driving::Memory&,int mask);
+std::int32_t bLargestMalloc(::port::driving::Memory&,int mask);
+}

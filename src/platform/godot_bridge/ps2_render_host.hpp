@@ -2,6 +2,8 @@
 #include "profile_debug_ui.hpp"
 #include "frontend_gpu_executor.hpp"
 #include <godot_cpp/classes/image_texture.hpp>
+#include <godot_cpp/classes/shader.hpp>
+#include <godot_cpp/classes/shader_material.hpp>
 #include "ps2_frontend_layout.hpp"
 #include "ps2_movie_player.hpp"
 #include "port/render/frame.hpp"
@@ -9,6 +11,7 @@
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/rid.hpp>
 #include <map>
+#include <optional>
 #include <godot_cpp/classes/input_event.hpp>
 #include "game_core/extensions/viewer_session.hpp"
 #if HP2_DEBUG_BUILD
@@ -46,6 +49,7 @@ protected:
 
 public:
     ~Ps2RenderHost() override;
+    godot::Dictionary diagnostic_qpc_clock() const;
     bool is_debug_build() const { return HP2_DEBUG_BUILD != 0; }
     bool console_available() const { return HP2_ENABLE_DEBUG_CONSOLE != 0; }
     bool console_input(const godot::Ref<godot::InputEvent>& event);
@@ -77,6 +81,15 @@ public:
 
     // Window scaling is a backend concern: frames stay in the original 640x480 authored space.
     void set_output_scale(double scale);
+#if HP2_DEBUG_BUILD
+    // Read-only original-asset viewer seam; no menu, World or finish mutation.
+    godot::Dictionary debug_draw_authored_screen(godot::Object* resources,int64_t hash,double width,double height);
+#endif
+    godot::Dictionary draw_loading(godot::Object* resources,double width,double height);
+    godot::Dictionary draw_world(godot::Object* world,godot::Object* resources,double width,double height);
+    godot::Dictionary prepare_world_ui(godot::Object* world,godot::Object* resources);
+    void set_world_mirror(const godot::Ref<godot::Texture2D>& texture);
+    godot::Dictionary draw_mirror_overlay(godot::Object* world,godot::Object* resources,double width,double height);
     double get_output_scale() const { return output_scale_; }
 
     // The host's whole per-frame entry point. Pulls one native frame from the runtime and
@@ -88,6 +101,7 @@ public:
     //          renderer without reading widgets.
     godot::Dictionary draw(godot::Object* runtime, godot::Object* intro_movie,
                            godot::Object* background_movie);
+    godot::Dictionary draw_controls(godot::Object* runtime,const godot::Array& layers,int width,int height);
 
     // Frees every RID this host owns. Called from the destructor as well.
     void release();
@@ -107,6 +121,7 @@ private:
     std::uint64_t console_font_revision_=0;
     std::vector<godot::RID> console_items_;
     std::vector<godot::RID> console_draw_items_;
+    bool console_drawing_suspended_{};
     // One device texture per drawn original entry, re-uploaded only when the bitmap revision
     // changes, which is what makes the per-frame movie surfaces cheap.
     struct Uploaded {
@@ -119,7 +134,18 @@ private:
     int submit(const port::render::Frame& frame, port::render::Resources& resources);
 
     std::unique_ptr<FrontendGpuExecutor> frontend_gpu_;
-    godot::Ref<godot::ImageTexture> frontend_image_;
+    std::optional<port::render::Frame> world_ui_;
+    std::uint64_t world_ui_generation_=0;
+    std::uint64_t world_ui_revision_=0;
+    int world_ui_screens_=0;
+    std::vector<godot::RID> projective_items_;
+    std::vector<godot::Ref<godot::ShaderMaterial>> projective_materials_;
+    godot::Ref<godot::Shader> projective_shader_;
+    godot::Ref<godot::Texture2D> world_mirror_;
+    godot::RID mirror_mask_item_;
+    godot::Ref<godot::ShaderMaterial> mirror_mask_material_;
+    godot::Ref<godot::Shader> mirror_mask_shader_;
+    godot::Ref<godot::Texture2DRD> frontend_image_;
     godot::RID item_;
     std::map<port::render::TextureId, Uploaded> textures_;
     double output_scale_ = 1.0;

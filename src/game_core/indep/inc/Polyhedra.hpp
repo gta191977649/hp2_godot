@@ -9,6 +9,8 @@
 namespace hp2::recovered {
 class WaferPolyhedron {
 public:
+    // Debug002132C8, E-0099-W38. Actual embedded arrays and original plane allocation gaps.
+    static void Init(::port::driving::Memory&,std::uint32_t wafer,std::uint32_t track_polygon,const std::array<float,3>& center);
     // Debug 0x002132C8; NFSHP2.ELF SHA-256
     // 815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
     // E-0048-T03. Adjacency and feature construction; host vectors own allocation.
@@ -50,6 +52,8 @@ public:
 namespace hp2::recovered {
 class PipelinePolyhedron {
 public:
+    // Debug00213D00; E-0099-W23. Original shared record operation.
+    static void MoveCenterOfGravity(::port::driving::Memory&,std::uint32_t,const std::array<float,3>&);
     // Debug 0x00213D00; E-0048-T04. Original one-time center-of-gravity correction.
     static void MoveCenterOfGravity(port::track::CollisionVolume& volume,const std::array<float,3>& cog){
         for(auto& v:volume.shape.vertices)for(unsigned j=0;j<3;++j)v.position[j]-=cog[j];
@@ -92,6 +96,8 @@ inline std::vector<CollisionVolume> load_collision_volumes(const std::vector<std
 namespace hp2::recovered {
 class RectPolyhedron {
 public:
+    // Debug00212EB0; E-0099-W23. Full original embedded-array record constructor.
+    static void Sub_00212EB0(::port::driving::Memory&,std::uint32_t,float,float,float,float,float,float);
     // Debug 0x00212EB0; E-0048-T03. Original constructor as an explicit host operation.
     static void Sub_00212EB0(port::track::VoronoiPolyhedron& out,float x1,float x0,float y1,float y0,float z1,float z0){
         constexpr unsigned RectEdgesNearFaces[6][4]={{0,1,2,3},{4,5,6,7},{0,8,4,9},{2,10,6,11},{1,9,5,10},{3,11,7,8}};
@@ -112,4 +118,9 @@ public:
         out=std::move(p);
     }
 };
+}
+namespace hp2::debug {
+// Debug002141F8/00213C98; E-0099-W23. Explicit startup and original lookup.
+void Sub_002141F8(::port::driving::Memory&);
+std::uint32_t FindPipelinePolyhedron(::port::driving::Memory&,std::uint32_t,const std::array<float,3>*);
 }

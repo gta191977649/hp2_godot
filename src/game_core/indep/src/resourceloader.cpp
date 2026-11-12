@@ -15,3 +15,15 @@ void ResourceFile::GetSize() {
     hp2::not_implemented("0x001995E0", "ResourceFile::GetSize (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+// TASK-0099 E-0099-W62, Debug authority815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
+namespace hp2::debug {
+void Sub_00197508(::port::driving::Memory& m){m.word(0x327b7c,0x327b78);m.word(0x327b78,0x327b78);}
+std::uint32_t FindResourceFile(::port::driving::Memory& m,std::uint32_t filename){
+ auto file=m.word(0x327b7c);if(!file)hp2::not_implemented("0x001972E8","original ResourceFileList static initialization is required");
+ for(;file!=0x327b78;file=m.word(file+4)){
+  std::uint32_t i=0;for(;;++i){const auto left=m.byte(file+0x10+i),right=m.byte(filename+i);if(left!=right)break;if(!left)return file;}
+ }
+ return 0;
+}
+}

@@ -3,6 +3,9 @@
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
 #include "game_core/port/driving/static_collisions.hpp"
+#include "game_core/port/race/debug_transport.hpp"
+#include "game_core/port/race/snapshot_services.hpp"
+namespace port::race {struct CarConstructionServices;struct AiDriveTargetServices;struct WorldConstructionServices;struct PhysicsConstructionServices;struct WorldFrameServices;}
 
 namespace hp2::debug {
 // TASK-0099 E-0099-W01. Shared logical-memory projection; this host constructor
@@ -10,13 +13,48 @@ namespace hp2::debug {
 class World {
 public:
     World(::port::driving::Memory& memory,std::uint32_t address):memory_(memory),address_(address){}
+    // Debug0014CA28, E-0099-W06. Explicit original construction, separate from
+    // the host view above. Required resource callees must be supplied in full.
+    // A throw leaves original partial construction visible in candidate Memory;
+    // the session must own/discard that candidate rather than publish it.
+    void Sub_0014CA28(const ::port::race::WorldConstructionServices&);
+    // Debug0014CC80, E-0099-W18/W35. Original teardown including AI pointer
+    // nodes and owned Cars; active collision/OBB/callee gaps remain explicit.
+    void Sub_0014CC80(int in_chrg);
+    void DoTimestep(float,::port::race::WorldFrameServices&); //0014D9A8 E-0099-W67; actual shared frame.
+    void DoTimestepMove(float timestep,::port::race::PhysicsConstructionServices&); //0014D588, E-0099-W38
+    void DoTimestepCollisions(float timestep,::port::race::PhysicsConstructionServices&); //0014D630, E-0099-W38
+    void FlushCollisions(); //0014E260, E-0099-W38; instruction-confirmed empty
+    void VerifyDebugChecksums(const ::port::race::MonitorSyscall& ={}); //0014DFD0, E-0099-W49.
+    std::uint16_t CalculateDebugChecksum(); //0014DF10, E-0099-W48.
+    // Debug0014E268, E-0099-W91. Appends only a genuinely placed Car.
+    void AddTrafficCar(std::uint32_t,const ::port::race::CarConstructionServices&,::port::race::PhysicsConstructionServices&,const ::port::race::AiDriveTargetServices&);
     void BuildCarTable();
     std::uint32_t GetCarByNumber(int) const;
     void ResetTimeScale();
+    void DoPointerSnapshot(std::uint32_t snapshot,std::uint32_t ppcar); //0014D240 E-0099-W76.
+    void DoCarPointerSnapshot(std::uint32_t ppcar,std::uint32_t snapshot){DoPointerSnapshot(snapshot,ppcar);} //00130A58 original World.hpp inline.
+    void DoSnapshot(std::uint32_t,const ::port::race::SnapshotServices& = {}); //0014CE40 E-0099-W76.
+
+    void SetWorldPaused(float,std::uint32_t original_callback,int param); //0014D348, E-0099-W75.
+    void UpdateWorldPaused(); //0014D368, null-callback timer domain.
+    int IsWorldPaused()const; //0014D3D0.
+    float GetTimestep(const std::function<std::uint32_t()>& ticker={}); //0014D408; primitive Count reader only.
+
+    std::uint32_t Random(int); //Debug0014E208, E-0099-W47.
+    float Random(float); //Debug0014E230, E-0099-W37; actual shared seed.
+    void IncrementCollisionPredictionID(); //Debug0014E250, E-0099-W37.
+    //Debug0014E0D0/0014E128, E-0099-W44. Actual cached two-player positions;
+    // arrays are port decoded operands, not an original PS2 ABI.
+    float GetDistanceToClosestPlayer(const std::array<float,2>&)const;
+    float GetDistanceToClosestPlayer(const std::array<float,3>&)const;
+    float GetDATToClosestPlayer(float)const; //0014E188, E-0099-W67; signed nearest wrapped DAT, second wins ties.
 private:
     ::port::driving::Memory& memory_;
     std::uint32_t address_;
 };
+int CarListCheckFlip(::port::driving::Memory&,std::uint32_t before,std::uint32_t after); //0014D2E8 E-0099-W67.
+void Sort(::port::driving::Memory&,std::uint32_t list,std::uint32_t comparator); //0014E5B0, actual World list instantiation.
 }
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
@@ -49,7 +87,7 @@ namespace hp2::recovered {
 class World {
 public:
     // Debug0014D630; E-0048-T06. Single dynamic car / immutable track branch.
-    static void DoTimestepCollisions(port::driving::Memory&,port::driving::StaticCollisions&,std::uint32_t,std::uint32_t,const port::track::Topology&,port::driving::CollisionMotion&,const std::function<void(float)>&,const std::function<void()>&);
+    static void DoTimestepCollisions(::port::driving::Memory&,::port::driving::StaticCollisions&,std::uint32_t,std::uint32_t,const ::port::track::Topology&,::port::driving::CollisionMotion&,const std::function<void(float)>&,const std::function<void()>&);
     // No member address is confirmed; no speculative members are declared.
 
 public:

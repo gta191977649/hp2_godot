@@ -46,6 +46,8 @@ var track_debug_driving := false
 var diagnostic_restore_path := ""
 var render_diagnostics = preload("res://scripts/debug/track_render_diagnostics.gd").new()
 var encoded_view = preload("res://scripts/debug/encoded_view.gd").new()
+var world_restore_pending: Dictionary = {}
+const WORLD_ENTRY := preload("res://scripts/runtime/world_debug_entry.gd")
 
 func _ready() -> void:
 	if DebugTools.host == null or not DebugTools.host.is_debug_build():
@@ -77,6 +79,10 @@ func _ready() -> void:
 		add_child(preload("res://scripts/debug/track_native_smoke.gd").new())
 	if "--track-smoke" in OS.get_cmdline_user_args():
 		add_child(preload("res://scripts/debug/track_smoke.gd").new())
+	var restored: Dictionary = WORLD_ENTRY.take_restore(get_tree(), viewer_kind)
+	if not restored.is_empty():
+		_restore_world_viewer.call_deferred(restored)
+		return
 	var explicit_load := false
 	if "--driving-smoke" in OS.get_cmdline_user_args() or "--driving-asset-smoke" in OS.get_cmdline_user_args() or "--driving-os-smoke" in OS.get_cmdline_user_args():
 		explicit_load = true
@@ -134,6 +140,69 @@ func _select_initial_car() -> void:
 			if int(skin.id) >= 0:
 				viewer_ui_action({"action": "select_car", "car_id": int(car.id), "skin_id": int(skin.id)})
 				return
+
+func world_debug_launch_request() -> Dictionary:
+	var request: Dictionary = WORLD_ENTRY.selection(get_tree())
+	if car_model != null:
+		var native: Dictionary = car_model.get_state()
+		request.car_id = int(native.get("car_id", -1))
+		request.skin_id = int(native.get("skin_id", -1))
+		for item in car_catalog:
+			if int(item.id) == request.car_id:
+				request.car_code = str(item.code)
+				break
+	if viewer_kind == "track" and track_state.get("ok", false):
+		request.track = int(track_state.track_id)
+	return request
+
+func world_debug_return_context() -> Dictionary:
+	var request := world_debug_launch_request()
+	return {"scene": scene_file_path, "kind": viewer_kind, "source": str(DebugTools.host.viewer_state().get("source", "")),
+		"track": int(request.track), "car_id": int(request.car_id), "skin_id": int(request.skin_id),
+		"camera": camera.transform, "fov": camera.fov, "near": camera.near, "keep_aspect": camera.keep_aspect,
+		"orbit_center": orbit_center, "orbit_yaw": orbit_yaw, "orbit_pitch": orbit_pitch, "orbit_distance": orbit_distance,
+		"move_speed": move_speed, "preview": preview_mode, "show_lods": show_lods, "wireframe": wireframe,
+		"bounds": show_bounds, "inspection": inspection}
+
+func _restore_world_viewer(context: Dictionary) -> void:
+	world_restore_pending = context
+	preview_mode = bool(context.get("preview", false))
+	show_lods = bool(context.get("show_lods", false))
+	wireframe = bool(context.get("wireframe", false))
+	show_bounds = bool(context.get("bounds", false))
+	inspection = bool(context.get("inspection", false))
+	if viewer_kind == "track":
+		var source := str(context.get("source", ""))
+		if not source.is_empty():
+			DebugTools.host.viewer_apply("load", source)
+		track_state = track_model.request_track(int(context.track))
+		track_pending = bool(track_state.get("loading", false))
+		if not track_pending:
+			_publish_track_result()
+	var selected_path := ""
+	for item in car_catalog:
+		if int(item.id) == int(context.car_id):
+			selected_path = str(item.path)
+			break
+	if viewer_kind == "car" and not selected_path.is_empty():
+		DebugTools.host.viewer_apply("load", selected_path)
+	_queue_car(car_model.request_car(selected_path, int(context.car_id), int(context.skin_id)), false)
+
+func _finish_world_viewer_restore() -> void:
+	if world_restore_pending.is_empty() or pending_load or track_pending:
+		return
+	var context := world_restore_pending
+	world_restore_pending = {}
+	orbit_center = context.orbit_center
+	orbit_yaw = float(context.orbit_yaw)
+	orbit_pitch = float(context.orbit_pitch)
+	orbit_distance = float(context.orbit_distance)
+	move_speed = float(context.move_speed)
+	camera.transform = context.camera
+	camera.fov = float(context.fov)
+	camera.near = float(context.near)
+	camera.keep_aspect = int(context.keep_aspect)
+	car_model.set_show_lods(show_lods)
 
 func _capture(path: String) -> void:
 	await get_tree().create_timer(0.5).timeout
@@ -629,6 +698,7 @@ func _process(delta: float) -> void:
 						elif preview_errors.has(int(skin.id)):
 							skin["preview_error"] = preview_errors[int(skin.id)]
 			_publish_car_result(loaded, frame_on_load)
+	_finish_world_viewer_restore()
 	if test_drive_pending and not pending_load and not track_pending and car_state.get("ok", false) and (viewer_kind == "car" or track_state.get("ok", false)):
 		test_drive_pending = false
 		driving.start()
@@ -691,7 +761,8 @@ func _viewer_notification(what: int) -> void:
 func _exit_tree() -> void:
 	release_camera()
 	if driving != null:
-		driving.lab.clear_particles()
+		if driving.lab != null:
+			driving.lab.clear_particles()
 	if car_model != null:
 		car_model.clear_car()
 	if track_model != null:
@@ -699,6 +770,8 @@ func _exit_tree() -> void:
 	DebugTools.unregister_scene(self)
 
 func _publish_track_result() -> void:
+	if track_state.get("ok", false):
+		WORLD_ENTRY.remember(get_tree(), {"track": int(track_state.track_id)})
 	_sync_track_debug()
 	var ok := bool(track_state.get("ok", false))
 	DebugTools.host.viewer_loaded(ok, str(track_state.get("diagnostic", "")) if ok else str(track_state.get("error", "Track load failed")), str(track_state.get("summary", "")))

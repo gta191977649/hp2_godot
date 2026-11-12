@@ -4,6 +4,7 @@
 // partial port-side reconstruction, not the original translation unit.
 #include "frontendscreens/options.hpp"
 #include "fmenus.hpp"
+#include "game_core/port/frontend/popup.hpp"
 #include "game_core/port/assets/elab_chunks.hpp"
 #include "game_core/port/input/joyevents.hpp"
 #include "game_core/port/not_implemented.hpp"
@@ -1353,10 +1354,13 @@ namespace hp2::frontend {
 // ELF00144BA0/00144AE8 and whitespace00144A68, E-0092-J07. Preserve the
 // original scanner restart at start-of-next-line+1, rather than standard wrapping.
 void Sub_00144BA0(FeScreen& screen,std::uint32_t class_hash,const std::string& text) {
+    (void)Sub_00144BA0(screen,class_hash,text,{});
+}
+int Sub_00144BA0(FeScreen& screen,std::uint32_t class_hash,const std::string& text,const WidgetMeasure& measure) {
     std::vector<FeWidget*> lines;
     for(auto& widget:screen.widgets)if(widget.type==1 && widget.class_hash==class_hash && lines.size()<32)
         lines.push_back(&widget);
-    if(lines.empty())return;
+    if(lines.empty())return 0;
     const auto emit=[&](std::size_t row,std::size_t begin,std::size_t end) {
         if(end-begin>255)hp2::not_implemented("0x00144AE8","popup substring exceeds original temporary buffer");
         auto& widget=*lines[row];
@@ -1381,7 +1385,7 @@ void Sub_00144BA0(FeScreen& screen,std::uint32_t class_hash,const std::string& t
             if(split) {
                 emit(row,begin,last_break);
                 begin=last_break+1;scanned=0;
-                if(++row==lines.size())return;
+                if(++row==lines.size())return 0;
                 has_break=false;pos=begin;
             }
         } else ++scanned;
@@ -1390,6 +1394,186 @@ void Sub_00144BA0(FeScreen& screen,std::uint32_t class_hash,const std::string& t
     // A forced trailing break can leave the original scanner one byte beyond NUL;
     // the host string ends at that NUL and does not copy unrelated memory.
     emit(row,begin,std::min(pos,text.size()));
+    // Both versions measure the NEXT line when it exists, before hiding it.
+    const auto* bottom=lines[std::min(row+1,lines.size()-1)];
+    const int height=static_cast<int>(bottom->y+(measure?measure(*bottom).height:0.f));
     for(std::size_t i=row+1;i<lines.size();++i)lines[i]->visible=0;
+    return height;
 }
+}
+
+namespace port::frontend {
+// Debug0016AE08; E-0098-X02; frontend/0016ae08.md. View service clears
+// the three item states in reverse order and hides the original document.
+void PopupMenu::Sub_0016AE08(int port,int param,const PopupServices& svc){
+    if(!svc.dismiss_view)hp2::not_implemented("0x0016AE08","original popup item/visibility teardown missing");
+    svc.dismiss_view();
+    active=false;
+    if(!svc.callback || !svc.sound)hp2::not_implemented("0x0016AE08","original popup callback/sound missing");
+    hp2::debug::ScreenCallbackData data;data.Port=port;data.Param=param;data.Noise=5;
+    svc.callback(hp2::debug::POPUP_DISMISS,data);
+    svc.sound(data.Noise);
+}
+// Debug0016AF28; E-0098-X02; frontend/0016af28.md. Original calls
+// GetCurrentMenuItem for ItemHash; popup item hashes are supplied by the view.
+bool PopupMenu::Sub_0016AF28(int port,int event,int param,const PopupServices& svc){
+    using namespace hp2::input;
+    if(param!=1)return true;
+    if(config.flags&1){
+        if(event==JOY_EVENT_SCROLL_UP || event==JOY_EVENT_SCROLL_DOWN)event=JOY_EVENT_NULL;
+        if(event==JOY_EVENT_SCROLL_LEFT || event==JOY_EVENT_MENU_ANALOG_LEFT)event=JOY_EVENT_SCROLL_UP;
+        if(event==JOY_EVENT_SCROLL_RIGHT || event==JOY_EVENT_MENU_ANALOG_RIGHT)event=JOY_EVENT_SCROLL_DOWN;
+    }else if(event==JOY_EVENT_SCROLL_LEFT || event==JOY_EVENT_SCROLL_RIGHT)event=JOY_EVENT_NULL;
+    if(event==JOY_EVENT_MENU_SELECT || event==JOY_EVENT_START){
+        if(config.flags&8){if(config.flags&2)Sub_0016AE08(port,config.cancel_param,svc);}
+        else{
+            if(config.n_buttons<0 || config.n_buttons>3 || index<0)
+                hp2::not_implemented("0x0016AF28","popup index outside decoded valid domain");
+            const int which=config.n_buttons?index%config.n_buttons:0;
+            Sub_0016AE08(port,config.button_params[which],svc);
+        }
+        return true;
+    }
+    if(event==JOY_EVENT_MENU_BACK){if(config.flags&2)Sub_0016AE08(port,config.cancel_param,svc);return true;}
+    if(event!=JOY_EVENT_SCROLL_UP && event!=JOY_EVENT_SCROLL_DOWN)return true;
+    if(config.n_buttons>=2){
+        if(config.n_buttons>3 || index<0 || index>=config.n_buttons)
+            hp2::not_implemented("0x0016AF28","popup movement outside decoded valid domain");
+        if(!svc.unhighlight || !svc.highlight)hp2::not_implemented("0x0016AF28","original popup item highlight missing");
+        svc.unhighlight(index);
+        if(event==JOY_EVENT_SCROLL_UP){if(--index<0)index=config.n_buttons-1;}
+        else if(++index>=config.n_buttons)index=0;
+        svc.highlight(index);
+        if(svc.callback){
+            if(!svc.item_hash || !svc.sound)hp2::not_implemented("0x0016AF28","original popup item/sound missing");
+            hp2::debug::ScreenCallbackData data;data.Port=port;data.ItemHash=svc.item_hash(index);
+            data.Noise=event==JOY_EVENT_SCROLL_UP?1:2;
+            svc.callback(event==JOY_EVENT_SCROLL_UP?hp2::debug::POPUP_NEXT:hp2::debug::POPUP_PREV,data);
+            svc.sound(data.Noise);
+        }
+        if(!svc.set_highlight_animation)hp2::not_implemented("0x0016AF28","original popup highlight animation missing");
+        svc.set_highlight_animation(index);
+    }
+    if(!svc.align_arrows)hp2::not_implemented("0x0016AF28","original popup arrow alignment missing");
+    svc.align_arrows();return true;
+}
+}
+
+namespace port::frontend {
+// Debug0016C028; E-0098-X02; frontend/0016c028.md.
+int PopupList::Sub_0016C028(const selection::Popup& config,
+    const std::function<void(PopupMenu&,const selection::Popup&)>& summon){
+    for(int i=0;i<2;++i)if(!menus[i].active){
+        if(!summon)hp2::not_implemented("0x0016C028","original popup Summon service missing");
+        summon(menus[i],config);return i;
+    }
+    return -1;
+}
+// Debug0016C080; E-0098-X02; frontend/0016c080.md.
+void PopupList::Sub_0016C080(int id,const PopupServices& services){
+    if(static_cast<unsigned>(id)<2 && menus[id].active)
+        menus[id].Sub_0016AE08(menus[id].config.port,menus[id].config.dismiss_param,services);
+}
+}
+
+namespace port::frontend {
+// Debug0016AAD8; E-0098-X02; frontend/0016aad8.md. No PS2 ABI overlay.
+void PopupMenu::Sub_0016AAD8(const selection::Popup& input,const PopupServices& svc){
+    active=true;config=input;
+    if(!svc.show_view || !svc.callback || !svc.sound)
+        hp2::not_implemented("0x0016AAD8","original popup visibility/callback/sound missing");
+    svc.show_view();
+    hp2::debug::ScreenCallbackData data;data.Port=-1;
+    svc.callback(hp2::debug::POPUP_ACTIVE,data);svc.sound(data.Noise);
+    index=config.start_button;
+    if(!svc.reset_item)hp2::not_implemented("0x0016AAD8","original popup item initialization missing");
+    for(int i=0;i<3;++i)svc.reset_item(i,config.screen_hash,config.port);
+    if(config.n_buttons){
+        if(!svc.highlight)hp2::not_implemented("0x0016AAD8","original popup highlight missing");
+        svc.highlight(index);
+    }
+    if(!svc.render_message)hp2::not_implemented("0x0016AAD8","original popup message rendering missing");
+    const int height=svc.render_message(config.message_id);
+    if(config.flags&4){
+        if(!svc.set_top_y)hp2::not_implemented("0x0016AAD8","original popup button placement missing");
+        for(int i=0;i<3;++i)svc.set_top_y(0xe0105663u+i,height+10);
+    }
+    if(!svc.clear_text || !svc.set_language)hp2::not_implemented("0x0016AAD8","original popup text/language missing");
+    for(int i=0;i<3;++i)svc.clear_text(0xe0105663u+i);
+    svc.clear_text(0x85eda094u);
+    for(int i=0;i<3;++i)svc.set_language(0xe0105663u+i,config.n_buttons?config.button_ids[i]:0);
+    svc.set_language(0x85eda094u,config.title_id);
+    if(!svc.align_arrows || !svc.set_highlight_animation)
+        hp2::not_implemented("0x0016AAD8","original popup arrow/animation missing");
+    svc.align_arrows();svc.set_highlight_animation(index);
+}
+}
+
+namespace port::frontend {
+// E-0098-X04: Debug0016A8F0/00168B70 constructor defaults, decoded view only.
+PopupView::PopupView(const hp2::frontend::FeScreen& document,port::driving::Memory& memory,
+    hp2::frontend::WidgetMeasure measure,std::function<std::string(int)> localize)
+    :screen(document),memory_(memory),measure_(std::move(measure)),localize_(std::move(localize)){}
+
+// Debug00169000/001690E0 +00140A90; E-0098-X04. SetColor preserves alpha.
+void PopupView::item_state(int i,std::uint32_t bits,bool set){
+    auto& state=state_.at(i);if(set)state|=bits;else state&=~bits;
+    std::uint32_t rgb=saved_.at(i);
+    if((state&3)==3)rgb=memory_.word(0x327628)|(memory_.word(0x32762c)<<8)|(memory_.word(0x327630)<<16);
+    else if((state&3)!=1)rgb=memory_.word(0x327634)|(memory_.word(0x327638)<<8)|(memory_.word(0x32763c)<<16);
+    if(auto* w=hp2::frontend::FindWidget_00143D50(screen,0xe0105663u+i,1)){
+        hp2::frontend::SetColor(*w,{std::uint8_t(rgb),std::uint8_t(rgb>>8),std::uint8_t(rgb>>16)});w->dirty_0x2b=1;
+    }
+}
+// E-0098-X04: explicit adapters of Debug0016AAD8's whole view dependencies.
+PopupServices PopupView::services(std::function<void(hp2::debug::ScreenMessage,hp2::debug::ScreenCallbackData&)> callback,
+    std::function<void(int)> sound){
+    using namespace hp2::frontend;
+    PopupServices s;s.callback=std::move(callback);s.sound=std::move(sound);
+    // Visibility is represented by the owning PopupMenu's active flag. Documents
+    // are submitted only while active; authored per-widget visibility is retained.
+    s.show_view=[]{};
+    s.dismiss_view=[this]{for(int i=2;i>=0;--i)item_state(i,2,false);};
+    s.reset_item=[this](int i,std::uint32_t hash,int){
+        if(hash!=screen.name_hash_0x08)throw std::logic_error("Popup document identity mismatch");
+        if(auto* w=FindWidget_00143D50(screen,0xe0105663u+i,1))
+            saved_.at(i)=w->r|(std::uint32_t(w->g)<<8)|(std::uint32_t(w->b)<<16)|(std::uint32_t(w->a)<<24);
+        item_state(i,2,false);
+    };
+    s.highlight=[this](int i){item_state(i,2,true);};s.unhighlight=[this](int i){item_state(i,2,false);};
+    s.item_hash=[](int i){return 0xe0105663u+i;};
+    s.align_arrows=[]{}; // Debug0016AF20 is a proven empty body, E-0098-X04.
+    s.render_message=[this](int id){return Sub_00144BA0(screen,0x5d6dd123,localize_(id),measure_);};
+    s.set_top_y=[this](std::uint32_t hash,int y){SetWidgetY_00144458(screen,hash,y);};
+    s.clear_text=[this](std::uint32_t hash){if(auto* w=FindWidget_00143D50(screen,hash,1)){
+        w->text.clear();w->string_id_0x60=0;w->dirty_0x2b=5;}};
+    s.set_language=[this](std::uint32_t hash,int id){SetWidgetStringId_001449A8(screen,hash,id);
+        if(auto* w=FindWidget_00143D50(screen,hash,1))w->text=id?localize_(id):std::string{};};
+    s.set_highlight_animation=[this](int i){bind_animation(i);};return s;
+}
+const hp2::frontend::FeWidget* PopupView::ghost_target(const hp2::frontend::FeWidget& w)const{
+    if(w.name_hash!=0xab671c9a)return nullptr;
+    // Identity is checked as well: every authored page may use the same hash.
+    for(const auto& candidate:screen.widgets)if(&candidate==&w)
+        return hp2::frontend::FindWidget_00143D50(const_cast<hp2::frontend::FeScreen&>(screen),target_,1);
+    return nullptr;
+}
+std::map<std::uint32_t,std::string> PopupView::button_targets(const hp2::frontend::FeScreen* document,int slot,int count)const{
+    std::map<std::uint32_t,std::string> out;if(document!=&screen)return out;
+    for(int i=0;i<count;++i)out[0xe0105663u+i]="popup:"+std::to_string(slot)+":"+std::to_string(i);
+    return out;
+}
+}
+
+// TASK-0113 E-0113-L03. Debug tLoadingScreenAnimation, source fmenus.cpp.
+#include "game_core/port/race/loading_screen.hpp"
+#include "game_core/indep/src/frontendscreens/feanim.hpp"
+#include "game_core/port/race/flailer_resources.hpp"
+namespace hp2::debug {
+// Debug0016ECB0. Actual demo selector and owned highlight allocation.
+void tLoadingScreenAnimation::Sub_0016ECB0(int screen){auto& m=m_;if(m.word(0x2e78e0))screen=int(hp2::frontend::bStringHash("DEMO_CONTROLS"));m.word(address_,std::uint32_t(screen));const auto highlight=m.allocate(32,16);m.word(address_+4,highlight);tHighlightAnimation animation(m,highlight);animation.Sub_00241F40(screen,int(hp2::frontend::bStringHash("GLOBAL_ANIMATING_MENUITEM")),m.signed_word(0x328a28));animation.SetCurrentMenuItem(int(hp2::frontend::bStringHash("GLOBAL_LOADING_STRING")));m.scalar(highlight+0x1c,2);m.word(address_+8,FindFlailerObject(m,std::uint32_t(screen),0x120e827c,1));}
+// Debug0016ED80. Source destroys its owned highlight before optional self.
+void tLoadingScreenAnimation::Sub_0016ED80(int flags){if(const auto highlight=m_.word(address_+4))tHighlightAnimation(m_,highlight).Sub_00241F80(3);if(flags&1)m_.release(address_);}
+// Debug0016EDD8. Original screen-list visibility, not inferred object flags.
+void tLoadingScreenAnimation::Tick(){auto& m=m_;if(m.word(0x3275ac)==3||m.word(0x3275a8))return;if(FlailerRenderManager(m,0x2e82b0).IsScreenVisible(m.word(address_)))tHighlightAnimation(m,m.word(address_+4)).Animate();const auto manual=m.word(address_+8);if(!manual)hp2::not_implemented("0x0016EDD8","authored loading ManualObject is required by source visibility call");FlailerObjectChunk(m,manual).SetVisibility(0);if(m.word(0x2f3890+0x1072c)==2&&(m.word(0x3275ac)-4u)<2&&m.signed_byte(0x2f3890+0x10d7f)==1)FlailerObjectChunk(m,manual).SetVisibility(1);}
 }

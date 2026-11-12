@@ -137,3 +137,31 @@ std::array<float,28> elSetupLightContext(const std::vector<port::track::LightPac
     return out;
 }
 }
+
+#include "game_core/port/race/car_render_resources.hpp"
+#include "game_core/CarRenderInfo.hpp"
+namespace port::race {
+// Debug00116E28; E-0099-W25. Original missing-name fallback points to actual default.
+std::uint32_t elGetLightMaterial(Memory&m,std::uint32_t hash){for(auto p=m.word(0x326aa8);p!=0x326aa8;p=m.word(p))if(m.word(p+8)==hash)return p;return m.word(0x326ab0);}
+// Debug00115348 material-table branch3401E; E-0099-W25.
+int LoaderLightMaterialChunk(Memory&m,std::uint32_t chunk){
+ if(m.word(chunk)!=0x3401e)return 0;const auto header=(chunk+23)&~15u;
+ if(m.word(header+8)!=1)return 1;
+ for(unsigned i=0;i<m.word(header+12);++i){const auto material=header+16+320*i;
+  // Debug00116DF0 /00116C20: independently reviewed Retail00116828 coefficient map.
+  // Debug constants324A50/54 match3DCCCCCD/3B808081 exactly (W25 read capture).
+  for(unsigned block=0;block<2;++block){std::array<float,19> input{};for(unsigned j=0;j<19;++j)input[j]=m.scalar(material+32+80*block+4*j);const auto output=::port::Sub_00116828(input);for(unsigned j=0;j<16;++j)m.scalar(material+192+64*block+4*j,output[j]);}
+  const auto tail=m.word(0x326aac);m.word(tail,material);m.word(material+4,tail);m.word(0x326aac,material);m.word(material,0x326aa8);
+  if(m.word(material+8)==0x2c420d64)m.word(0x326ab0,material);
+ }
+ return 1;
+}
+// Debug001155F0 material-table branch; E-0099-W25.
+void UnloadLightMaterialChunk(Memory&m,std::uint32_t chunk){
+ if(m.word(chunk)!=0x3401e)return;const auto header=(chunk+23)&~15u;if(m.word(header+8)!=1)return;
+ for(unsigned i=0;i<m.word(header+12);++i){const auto material=header+16+320*i,next=m.word(material),prev=m.word(material+4);m.word(prev,next);m.word(next+4,prev);if(m.word(material+8)==0x2c420d64)m.word(0x326ab0,0x2cd0c0);}
+}
+// Required LightMaterialList stores00117490 and default buffer zero00116E68;
+// E-0099-W25. This does not claim whole elInit lighting/view setup.
+void initialize_light_material_list(Memory&m){m.word(0x326aac,0x326aa8);m.word(0x326aa8,0x326aa8);for(unsigned i=0;i<0x140;++i)m.byte(m.word(0x326ab0)+i,0);}
+}

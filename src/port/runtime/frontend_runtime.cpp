@@ -1,8 +1,15 @@
+#include "platform/ps2_reward_store.hpp"
+#include "port/runtime/source_event_status.hpp"
 #include "port/runtime/frontend_runtime.hpp"
 #include "game_core/port/frontend/frontendscreens/registry_0016adb0.hpp"
 #include "game_core/port/input/joyevents.hpp"
 #include "game_core/port/not_implemented.hpp"
 #include "platform/ps2_asset_root.hpp"
+#include "game_core/port/driving/original_image.hpp"
+#include "game_core/port/race/frontend_language_resources.hpp"
+#include "game_core/indep/inc/Fred.hpp"
+#include "game_core/indep/inc/Language.hpp"
+#include "game_core/indep/src/raceparameters.hpp"
 #include <cmath>
 #include <cstdio>
 #include <sstream>
@@ -56,6 +63,7 @@ FrontEndRuntime::~FrontEndRuntime() {
 
 void FrontEndRuntime::reset_state() {
     selection_.reset();pending_sound_controls_.clear();
+    pending_event_launch_.reset();active_event_launch_.reset();active_event_tree_.reset();last_settled_generation_=0;
     menu_group_.reset();          // holds a pointer into screens_, which is about to reallocate
     menu_screen_index_ = -1;
     navigation_history_.clear();
@@ -84,17 +92,146 @@ void FrontEndRuntime::reset_state() {
     highlight_animation_ = {};
     pending_class_name_.clear();
     active_class_name_.clear();
+    background_movie_.clear();
     exit_animation_.reset();
     authored_screens_.clear();
     catalog_.reset();
     asset_source_.reset();
     startup_movie_visible_ = startup_letterbox_ = startup_active_ = false;
     event_tree_.clear();
+    source_event_status_.reset();
     event_text_cursor_ = -1;
     event_tree_error_.clear();
     event_tree_bundle_.clear();
+    event_default_color_seed_.reset();
     profile_ = {};
     profile_load_ = {};
+    event_rewards_.reset();
+    event_score_axes_.reset();
+}
+
+std::optional<port::race::EventLaunchRequest> FrontEndRuntime::take_event_launch(){
+    if(!pending_event_launch_)return {};
+    if(!active_event_launch_||active_event_launch_->generation!=pending_event_launch_->generation)throw std::logic_error("Authored settings handoff lost active generation ownership");
+    // Called after the original input callback has returned. Close the page's
+    // borrowers and commit its selected settings before source World loading.
+    if(selection_){selection_->close();selection_.reset();}
+    const auto settings=decode_event_settings(EventSettingsVersion::Retail,
+        std::vector<std::uint8_t>(profile_.bytes(),profile_.bytes()+profile_.size()));
+    const auto& p=settings.players[0];const auto& pending=*pending_event_launch_;
+    if(p.driving_style!=std::uint8_t(pending.driving_style)||p.transmission_type!=std::uint8_t(pending.transmission)||p.preferred_gender!=std::uint8_t(pending.preferred_gender))throw std::logic_error("Final selector settings disagree with staged legacy fields");
+    pending_event_launch_->event_settings=settings;active_event_launch_->event_settings=settings;
+    if(!event_rewards_)throw std::logic_error("Source physical reward baseline is unavailable");
+    pending_event_launch_->event_rewards=event_rewards_;active_event_launch_->event_rewards=event_rewards_;
+    auto request=std::move(pending_event_launch_);pending_event_launch_.reset();
+    return request;
+}
+void FrontEndRuntime::complete_event(const port::race::EventSettlement& result){
+    if(!active_event_launch_)throw std::logic_error("No authored event owns this settlement");
+    const auto& request=*active_event_launch_;
+    if(result.generation!=request.generation || result.tree_type!=request.tree_type
+        || result.event_index!=request.event_index || result.event_number!=request.event_number)
+        throw std::logic_error("Stale or mismatched authored event settlement");
+    if(last_settled_generation_==result.generation)throw std::logic_error("Authored event already settled");
+    if(result.event_progress.size()!=hp2::memorycard::kEventBlockSize_001FE988)
+        throw std::logic_error("Settlement profile tree block has invalid extent");
+    const auto* tree=active_event_tree_?&*active_event_tree_:nullptr;
+    if(!tree || tree->type_0x08!=result.tree_type)throw std::logic_error("Settlement frontend tree owner changed");
+    const auto layout=hp2::frontend::build_profile_layout_001FE988(*tree);
+    auto candidate=profile_;auto* block=candidate.EventBlock_001FE988(result.tree_type);
+    if(request.event_profile){
+        if(!result.event_profile)throw std::logic_error("Settlement dropped the authored both-tree profile transport");
+        if(!std::equal(result.event_progress.begin(),result.event_progress.end(),(*result.event_profile)[result.tree_type].begin()))throw std::logic_error("Legacy selected-tree publication disagrees with complete settlement profile");
+        EventProfilePayload baseline;
+        for(int tree_type=0;tree_type<2;++tree_type)std::copy_n(candidate.EventBlock_001FE988(tree_type),256,baseline[tree_type].begin());
+        const auto merged=transcode_event_profile(request.event_profile->layout,*result.event_profile,request.event_profile->layout,baseline);
+        if(merged!=*result.event_profile)throw std::logic_error("Settlement modified opaque or unallocated Retail profile bytes");
+        for(int tree_type=0;tree_type<2;++tree_type)std::copy(merged[tree_type].begin(),merged[tree_type].end(),candidate.EventBlock_001FE988(tree_type));
+    }else{
+    if(result.event_profile)throw std::logic_error("Legacy authored request has no full profile layout authority");
+    // Retail/Debug state layouts are independently decoded. Common rank/time
+    // states are reviewed; KO/tournament payloads must remain untouched here.
+    for(std::size_t i=0;i<tree->records.size();++i){
+        const auto& record=tree->records[i];const auto at=layout.offsets.at(i);
+        const auto size=hp2::frontend::EventSaveSize_00200DE8(record.goal_type_0x29);
+        if(at<0 || at+size>int(result.event_progress.size()))throw std::logic_error("Settlement event slice exceeds profile block");
+        const auto kind=record.goal_type_0x29;
+        if(kind!=0 && kind!=1 && kind!=2 && kind!=5 && kind!=6){
+            if(!std::equal(result.event_progress.begin()+at,result.event_progress.begin()+at+size,block+at))
+                hp2::not_implemented("0x001FCA30","cross-version KO/tournament settlement profile adaptation is not reviewed");
+        }else std::copy_n(result.event_progress.data()+at,size,block+at);
+    }
+    }
+    if(request.event_scores){
+        if(!result.event_scores||!event_score_axes_)throw std::logic_error("Settlement dropped its source score/name baseline");
+        const auto source=transcode_event_scores(request.event_scores->axes,*result.event_scores,*event_score_axes_);
+        const std::vector<std::uint8_t> baseline(candidate.bytes(),candidate.bytes()+candidate.size());
+        // Selection close may change settings, but must never change this sealed
+        // score baseline while an outcome owns it. All checks precede storage.
+        const auto sealed=transcode_event_scores(request.event_scores->axes,request.event_scores->profile,*event_score_axes_);
+        if(encode_event_scores(EventScoreVersion::Retail,*event_score_axes_,sealed,baseline)!=baseline)throw std::logic_error("Authored score baseline changed before settlement");
+        const auto encoded=encode_event_scores(EventScoreVersion::Retail,*event_score_axes_,source,baseline);
+        std::copy(encoded.begin(),encoded.end(),candidate.bytes());
+    }else if(result.event_scores)throw std::logic_error("Legacy authored request has no score/name authority");
+    if(request.event_settings){
+        if(!result.event_settings)throw std::logic_error("Settlement dropped its full source settings");
+        const std::vector<std::uint8_t> baseline(candidate.bytes(),candidate.bytes()+candidate.size());
+        if(encode_event_settings(EventSettingsVersion::Retail,*request.event_settings,baseline)!=baseline)throw std::logic_error("Authored settings baseline changed before settlement");
+        const auto encoded=encode_event_settings(EventSettingsVersion::Retail,*result.event_settings,baseline);
+        std::copy(encoded.begin(),encoded.end(),candidate.bytes());
+    }else if(result.event_settings)throw std::logic_error("Legacy authored request has no full settings authority");
+    auto next_rewards=event_rewards_;
+    if(request.event_rewards){
+        if(!result.event_rewards||!event_rewards_||encode_debug_reward_payload(*request.event_rewards)!=encode_debug_reward_payload(*event_rewards_))throw std::logic_error("Settlement dropped or changed its sealed physical reward baseline");
+        const auto baseline=std::vector<std::uint8_t>(candidate.bytes(),candidate.bytes()+candidate.size());
+        if(project_retail_event_rewards(*request.event_rewards,baseline)!=baseline)throw std::logic_error("Authored Retail reward baseline changed before settlement");
+        const auto encoded=project_retail_event_rewards(*result.event_rewards,baseline,result.final_reward_awarded);
+        std::copy(encoded.begin(),encoded.end(),candidate.bytes());next_rewards=result.event_rewards;
+    }else if(result.event_rewards||result.final_reward_awarded)throw std::logic_error("Legacy authored request has no reward authority");
+    candidate.write_u32(0x10e04,result.player_points);
+    if(!next_rewards)throw std::logic_error("Private source reward baseline is absent");
+    const auto saved=hp2::platform::store_private_reward_profile(profile_search_start_,hp2::memorycard::kRegionNtsc_001A3390,candidate,*next_rewards);
+    if(!saved.empty())throw std::runtime_error("Private event profile save failed: "+saved);
+    profile_=std::move(candidate);event_rewards_=std::move(next_rewards);random_state_=result.random_state;last_settled_generation_=result.generation;
+}
+// TASK-0112 E-0112-CONT01. A source retry/next-stage creates a fresh storage
+// transaction while preserving the retained frontend and its private profile.
+// All potentially throwing baseline work precedes publishing the generation.
+EventAttemptBaseline FrontEndRuntime::continue_event_attempt(std::uint64_t previous_generation,bool require_saved_outcome){
+ if(!active_event_launch_)throw std::logic_error("No authored event owns this continuation");
+ const auto next_generation=next_event_attempt_generation(previous_generation,active_event_launch_->generation,last_settled_generation_,event_launch_generation_,require_saved_outcome);
+ if(pending_event_launch_)throw std::logic_error("A pending initial authored launch cannot be continued");
+ auto next=*active_event_launch_;
+ const std::vector<std::uint8_t> bytes(profile_.bytes(),profile_.bytes()+profile_.size());
+ next.player_points=profile_.read_u32(0x10e04);
+ if(next.event_profile){for(unsigned tree=0;tree<2;++tree)std::copy_n(profile_.EventBlock_001FE988(int(tree)),256,next.event_profile->blocks[tree].begin());next.event_progress.assign(next.event_profile->blocks.at(next.tree_type).begin(),next.event_profile->blocks.at(next.tree_type).end());}
+ else next.event_progress.assign(profile_.EventBlock_001FE988(next.tree_type),profile_.EventBlock_001FE988(next.tree_type)+256);
+ if(next.event_scores){if(!event_score_axes_)throw std::logic_error("Authored continuation lost score-axis authority");const auto current=decode_event_scores(EventScoreVersion::Retail,*event_score_axes_,bytes);next.event_scores->profile=transcode_event_scores(*event_score_axes_,current,next.event_scores->axes);}
+ if(next.event_settings)next.event_settings=decode_event_settings(EventSettingsVersion::Retail,bytes);
+ if(next.event_rewards){if(!event_rewards_)throw std::logic_error("Authored continuation lost physical reward baseline");next.event_rewards=event_rewards_;}
+ next.random_state=random_state_;next.generation=next_generation;
+ // The caller's original World remains authoritative for live RP/roster/RNG.
+ // This copied request seals storage only; re-running initial launch is forbidden.
+ auto baseline=event_attempt_baseline(next,previous_generation);
+ active_event_launch_=std::move(next);event_launch_generation_=next_generation;return baseline;
+}
+void FrontEndRuntime::return_from_event(std::optional<std::uint32_t> random_state){
+    if(!active_event_launch_)throw std::logic_error("No authored event is active");
+    // E-0101-RA01: an actual World seed or already adopted settlement identifies
+    // normal race exit. Early bootstrap abandonment without either retains the
+    // explicit PC policy; no original successful-quit flow is inferred there.
+    const bool normal_return=random_state.has_value()||last_settled_generation_==active_event_launch_->generation;
+    pending_event_launch_.reset();active_event_launch_.reset();active_event_tree_.reset();
+    if(selection_){selection_->close();selection_.reset();}
+    if(random_state)random_state_=*random_state;
+    if(normal_return){
+        // Source BeginGameFlowLoadingFrontEnd00167B48 call00167B5C -> RP
+        // InitWithDefaults001E9968. Retained resources do not omit its required
+        // scalar/draw. Deterministic RP storage is rebound on the next entry;
+        // profile progress stays separate. This precedes returned-page RNG.
+        event_default_color_seed_=std::uint32_t(hp2::frontend::bRandom(-1,random_state_));
+    }
+    request_history_back();apply_pending_screen();
 }
 
 LoadResult FrontEndRuntime::load(const std::string& asset_search_start_dir,
@@ -120,8 +257,10 @@ LoadResult FrontEndRuntime::load(const std::string& asset_search_start_dir,
     // what the original hands its own driver before a load, so the front end behaves exactly as
     // it did before the save system existed. hp2::platform owns every path decision.
     profile_ = {};
-    profile_load_ = hp2::platform::load_profile(asset_search_start_dir,
-                                                hp2::memorycard::kRegionNtsc_001A3390, profile_);
+    event_rewards_.reset();
+    try {profile_load_ = hp2::platform::load_private_reward_profile(asset_search_start_dir,
+                                                hp2::memorycard::kRegionNtsc_001A3390, profile_,event_rewards_);}
+    catch(const std::exception& error){last_error_=error.what();result.error=last_error_;return result;}
     std::vector<std::uint8_t> buffer;
     try {
         buffer = asset_source_->read(relative_path);
@@ -136,7 +275,41 @@ LoadResult FrontEndRuntime::load(const std::string& asset_search_start_dir,
         // English is the port's explicit initial language choice, not guessed text.
         language_ = std::make_unique<hp2::port::assets::FeLanguage>(
             asset_source_->read("LANGUAGES/FE_ENGLISH.BIN"));
-        event_names_.load(asset_source_->read("GLOBAL/GLOBALB.BUN"));
+        const auto global=asset_source_->read("GLOBAL/GLOBALB.BUN");
+        event_names_.load(global);event_score_axes_=read_retail_event_score_axes(global);
+        if(!event_rewards_){
+            // Physical Debug-only words retain actual freshly initialized image
+            // bits; only reviewed common Retail reward identities overlay them.
+            const auto reward_image=driving::read_debug_image(driving::debug_image_path(asset_search_start_dir));
+            event_rewards_=import_retail_event_rewards(std::vector<std::uint8_t>(profile_.bytes(),profile_.bytes()+profile_.size()),read_debug_event_rewards(reward_image,0x2f3890));
+        }
+        if(!profile_load_.loaded){
+            // Source Fred.InitWithDefaults181D78: InitStatsTables then exactly
+            //600 cleared name bytes. This scoped producer never resets loaded
+            //zero bits, unrelated profile fields, source RNG or menu RP.
+            auto source_memory=driving::read_debug_image(driving::debug_image_path(asset_search_start_dir));
+            const auto seed=source_memory.word(0x329060);
+            race::FrontendLanguageResources tracks(source_memory);tracks.load_track_names(global);
+            tracks.load(asset_source_->read("LANGUAGES/FE_ENGLISH.BIN"));
+            hp2::debug::HighScoreTable::InitStatsTables(source_memory,0x2f3890+0x6b4);
+            for(unsigned i=0;i<0x600;++i)source_memory.byte(0x2f3890+0x100b4+i,0);
+            const auto axes=read_debug_event_score_axes(source_memory);
+            const auto fresh=transcode_event_scores(axes,read_debug_event_scores(source_memory,0x2f3890,axes),*event_score_axes_);
+            const std::vector<std::uint8_t> baseline(profile_.bytes(),profile_.bytes()+profile_.size());
+            auto encoded=encode_event_scores(EventScoreVersion::Retail,*event_score_axes_,fresh,baseline);
+            for(unsigned p=0;p<2;++p)hp2::debug::cPlayerSettings::ResetToDefaults(source_memory,0x2f3890+0x10d7c+p*0x6d0,{});
+            port::race::DefaultSettings defaults;defaults.english_language=source_memory.signed_word(0x313898)==0;
+            hp2::debug::tGlobalDisplaySettings::ResetToDefaults(source_memory,0x2f3890+0x148,defaults);
+            auto fresh_settings=read_debug_event_settings(source_memory,0x2f3890);
+            for(unsigned p=0;p<2;++p){
+                const auto name=hp2::debug::GetTranslatedString(source_memory,int(0x27165+p));
+                std::vector<std::uint8_t> raw;for(unsigned j=0;j<11;++j){const auto ch=source_memory.byte(name+j);raw.push_back(ch);if(!ch)break;}
+                set_event_player_name(fresh_settings.players[p],raw);
+            }
+            encoded=encode_event_settings(EventSettingsVersion::Retail,fresh_settings,encoded);
+            if(source_memory.word(0x329060)!=seed)throw std::logic_error("Source fresh score initialization changed original RNG");
+            tracks.close();std::copy(encoded.begin(),encoded.end(),profile_.bytes());
+        }
         for (auto& screen : screens_) for (auto& widget : screen.widgets) {
             if (widget.string_id_0x60 != 0 &&
                 !language_->lookup(widget.string_id_0x60, widget.text))
@@ -148,14 +321,6 @@ LoadResult FrontEndRuntime::load(const std::string& asset_search_start_dir,
             hp2::port::audio::JukeboxCartridge::load_from_zzdata(*root));
         music_scheduler_ = std::make_unique<hp2::port::audio::FrontendMusic>(jukebox_->tunes());
         initialize_audio_options();
-        if(!profile_load_.loaded) {
-            const std::array<std::uint8_t,8> defaults{1,0,0,7,8,2,1,1}; //001EE0A0,English,non-debug
-            std::copy(defaults.begin(),defaults.end(),profile_.bytes()+0x14c);
-            for(int player=0;player<2;++player) {
-                const auto name=event_localize(0x27165+player);
-                std::copy_n(name.data(),std::min<std::size_t>(11,name.size()),profile_.bytes()+0x10d90+player*0x6d0);
-            }
-        }
     } catch (const std::exception& error) {
         last_error_ = error.what();
         result.error = last_error_;
@@ -248,6 +413,7 @@ render::Rect FrontEndRuntime::widget_clip(int screen_index, std::size_t slot) co
 // ---------------------------------------------------------------------- recovered menu runtime
 
 MenuState FrontEndRuntime::menu_open(int screen_index) {
+    ++ui_generation_;
     MenuState result;
     commit_hud(); //001F4178 destruction commit, including Back/manager replacement.
     hud_screen_.reset();display_screen_.reset();calibration_.reset();name_entry_.reset();
@@ -335,6 +501,7 @@ MenuState FrontEndRuntime::menu_open(int screen_index) {
     });
 
     result.not_implemented = hp2::guard([&] {
+        update_background_movie_request();
         if(active_class_name_=="NameEntry") {
             name_entry_=std::make_unique<port::frontend::NameEntryState>();
             for(int p=0;p<2;++p) {
@@ -383,6 +550,13 @@ MenuState FrontEndRuntime::menu_open(int screen_index) {
             apply_save_popup();
         }
         open_menu_animation(screen_index);
+        if(active_class_name_=="New Main Menu"){
+            // E-0101-PL01, source NewMainMenu00211098 call0021113C invokes RP001E9968
+            // after tSlideInAnimation construction, before later background
+            // activity. Retain this required scalar/draw at its source owner;
+            // Selection/World import its value without repeating initialization.
+            event_default_color_seed_=std::uint32_t(hp2::frontend::bRandom(-1,random_state_));
+        }
         background_animation_.Bind_00249A40(&screens_[slot],
             [this](int bound) { return hp2::frontend::bRandom(bound, random_state_); },
             [this](const auto& widget) { return measure_widget(widget); });
@@ -425,8 +599,10 @@ MenuState FrontEndRuntime::menu_open(int screen_index) {
         // profile+0x1072C, which the mode-select screen just wrote. The port used to pass a
         // hardcoded 9 here, so Championship opened the Hot Pursuit tree.
         const int mode = profile_.SelectedMode_00185568();
+        source_event_status_=std::make_shared<SourceEventStatus>(profile_search_start_,*asset_source_,event_tree_bundle_,profile_,port_language_);
+        const auto authority=source_event_status_;
         const auto loaded =
-            event_tree_.load(*asset_source_, event_tree_bundle_, mode, profile_);
+            event_tree_.load(*asset_source_, event_tree_bundle_, mode, profile_,[authority](int tree,int number,const auto* goal){return authority->status(tree,number,goal);});
         if (!loaded.ok) event_tree_error_ = loaded.error;
         for (int sibling : {17, 18, 19}) screens_[sibling] = authored_screens_[sibling];
         result.not_implemented = hp2::guard([&] {
@@ -440,10 +616,34 @@ MenuState FrontEndRuntime::menu_open(int screen_index) {
         if (!result.not_implemented.empty()) { result.ok = true; return result; }
     } else {
         event_tree_.clear();
+        source_event_status_.reset();
     }
     result = menu_state();
     result.ok = true;
     return result;
+}
+
+void FrontEndRuntime::update_background_movie_request() {
+    // Port transport of explicit Retail constructor calls to 0016CE30 or
+    // 0016D0A0. A constructor without either call keeps the active movie.
+    const auto& name=active_class_name_;
+    if(name=="New Main Menu")background_movie_="MOVIES/mainmenu_movie.AVI"; // 00216460
+    else if(name=="Cops On Mode Select")background_movie_="MOVIES/hotpursuit_movie.AVI"; // 00216E80
+    else if(name=="Cops Off Mode Select")background_movie_="MOVIES/worldracing_ movie.AVI"; // 00217538
+    else if(name=="Options"||name=="Audio Options"||name=="Display Options"||
+        name=="JukeBox Music"||name=="Customize P1 HUD"||name=="Customize P2 HUD"||
+        name=="Credits"||name=="Joystick PreConfig")
+        background_movie_="MOVIES/options_movie_new.AVI"; // 001F4C98 / 001F1F38
+    else if(name=="Challenge"||name=="ChallengeBeACop"||name=="Single Race Setup"||
+        name=="Free Run Setup"||name=="Lap Knockout Setup"||name=="Knockout Setup"||name=="Be The Cop Setup"){
+        background_movie_=dat_002FC070_==0?"MOVIES/worldracing_ movie.AVI":"MOVIES/hotpursuit_movie.AVI";
+    }else if((name=="Select Car"||name=="Select Car2P")&&(!selection_||!selection_->observation().active)){
+        background_movie_.clear(); // shared first construction, 00198470
+    }else if(name=="View Event Tree"||
+        name=="Phils Load Save"||name=="BootAutoload"||name=="EACredits"||name=="BBGCredits"||
+        name=="Credits FE Movie"||name=="Credits Reward movie"||name=="BBG Creation movie"||name=="BBG Credits movie"){
+        background_movie_.clear();
+    }
 }
 
 bool FrontEndRuntime::event_tree_joy_event(int joy_event) {
@@ -479,8 +679,7 @@ bool FrontEndRuntime::event_tree_joy_event(int joy_event) {
         case hp2::input::JOY_EVENT_MENU_SELECT:
         case hp2::input::JOY_EVENT_START:
             if (event_tree_.state() == 2) {
-                const int status = event_tree_.selected_tree()->Status_002010B8(
-                    event_tree_.profile(), event_tree_.cursor());
+                const int status = event_tree_.status(event_tree_.tree_type(),event_tree_.cursor());
                 // Debug001F2D20: only SELECT starts; Start has no branch.
                 if(joy_event!=hp2::input::JOY_EVENT_MENU_SELECT)return true;
                 if(status>0)selection_=std::make_unique<SelectionRuntime>(*this);
@@ -960,7 +1159,7 @@ void FrontEndRuntime::bind_event_tree_text() {
     const auto& tree = *event_tree_.selected_tree();
     const int index = event_tree_.cursor();
     const auto& record = tree.records.at(static_cast<std::size_t>(index));
-    const auto& profile = event_tree_.profile();
+    const auto profile = source_event_status_?source_event_status_->formatter_profile(event_tree_.profile()):event_tree_.profile();
     const auto timer = [this](std::int32_t ticks) { return event_timer(ticks); };
     const auto localize = [this](std::uint32_t id) { return event_localize(id); };
     const auto ticks = static_cast<std::uint32_t>(std::fmod(menu_clock_seconds_ * 4000, 4294967296.0));
@@ -984,7 +1183,7 @@ void FrontEndRuntime::bind_event_tree_text() {
         }
     };
     // FUN_001F8890 / E-0022-R03: real browsing overlay producers.
-    const int status = tree.Status_002010B8(profile, index);
+    const int status = event_tree_.status(tree.type_0x08,index);
     const auto result = status >= 3
         ? hp2::frontend::Sub_00200E78(tree, profile, index, status, localize, timer) : std::string{};
     event_pending_status_ = hp2::frontend::Sub_001F60E8(
@@ -1263,10 +1462,163 @@ MenuState FrontEndRuntime::menu_state() const {
 }
 
 
+// TASK-0104: port-only semantic projection. Recovered owners remain authoritative.
+FrontendUiSnapshot FrontEndRuntime::ui_snapshot() {
+    FrontendUiSnapshot out;out.generation=ui_generation_;out.page=active_class_name_;
+    out.modal=bool(autosave_)||(name_entry_&&name_entry_->active)||(selection_&&selection_->popup_active());out.selection=selection_ && selection_->observation().active;
+    out.display_offset={float(profile_.read_i32(0x144))*.25f,float(profile_.read_i32(0x148))};
+    const auto state=menu_state();
+    int ui_stack=0;
+    const auto append=[&](hp2::frontend::FeScreen& screen,float alpha,bool modal){
+        const auto selection_targets=out.selection?selection_->ui_targets(&screen):std::map<std::uint32_t,std::string>{};
+        for(std::size_t remaining=screen.widgets.size();remaining>0;){const auto i=--remaining;auto w=screen.widgets[i];
+            const bool wrapped=(screen.index==17||screen.index==18) && w.name_hash==0x7a31036b;
+            if(w.visible!=1 && !wrapped && !startup_movie_visible_)continue;
+            if(name_entry_ && name_entry_->active && w.name.size()==4 && w.name[0]=='P' && w.name[2]=='C')continue;
+            if(startup_movie_visible_ && w.name!=(startup_letterbox_?"TITLE_LETTERBOX":"TITLE_FULLSCREEN"))continue;
+            if(startup_active_ && !startup_movie_visible_ && w.name=="TITLE_LETTERBOX")continue;
+            if(startup_movie_visible_)w.texture_hash=0; // Host supplies the live intro texture.
+            auto measured=measure_widget(screen.widgets[i]);FrontendUiWidget item;item.stack=ui_stack;
+            item.id=std::to_string(screen.name_hash_0x08)+":"+std::to_string(i);item.widget=w;
+            item.widget.a=std::uint8_t(w.a*alpha);
+            for(auto& c:item.widget.field_0x5c)c=(c&0xffffffu)|(std::uint32_t(std::uint8_t((c>>24)*alpha))<<24);
+            float x=w.x,y=w.y;
+            // E-0039-F03, Retail001424F4..00142524: bit1 right, bit4 centre.
+            // Bounds are already aligned; Godot must draw left-aligned within them.
+            if(w.type==1){if(w.text_align&1)x-=measured.width;else if(w.text_align&4)x-=measured.width*.5f;}
+            item.bounds={x,y,measured.width,measured.height};
+            if(w.clip_hash_0x4c){const auto box=hp2::frontend::GetWidgetRect_00144280(screen,w.clip_hash_0x4c,[this](const auto& widget){return measure_widget(widget);});item.clip={box.x0,box.y0,box.x1-box.x0,box.y1-box.y0};}
+            if(!out.modal || modal)for(const auto& menu:state.items)if(menu.name_hash==w.name_hash){item.interactive=true;item.enabled=menu.enabled;item.selected=menu.current;item.menu_index=menu.menuitem_index;}
+            if(wrapped){const auto box=hp2::frontend::GetWidgetRect_00144280(screen,0x7ad2801e,[this](const auto& widget){return measure_widget(widget);});// E-0022-R04 / E-0104-L01:00144ED0 starts at the text
+                // template, not the clipping box origin (which also contains track labels).
+                item.clip={box.x0,box.y0,box.x1-box.x0,box.y1-box.y0};
+                item.bounds={w.x,w.y,std::max(0.f,box.x1-w.x),std::max(0.f,box.y1-w.y)};item.wrap=true;}
+            if(name_entry_ && !name_entry_->active && item.interactive && (item.menu_index==3||item.menu_index==4))item.input_port=1;
+            if(name_entry_ && name_entry_->active && w.name.rfind("CHAR_",0)==0 && w.name.size()==7){item.id="keyboard:"+w.name.substr(5);item.interactive=true;item.input_port=name_entry_->player;}
+            if(auto found=selection_targets.find(w.name_hash);found!=selection_targets.end() && (!out.modal||modal)){item.id="selection:"+found->second;item.interactive=true;}
+            out.widgets.push_back(std::move(item));
+        }
+        ++ui_stack;
+    };
+    if(menu_screen_index_>=0)append(screens_.at(menu_screen_index_),1,false);
+    if(name_entry_ && name_entry_->active){auto& screen=screens_.at(menu_screen_index_);const auto& state=*name_entry_;FrontendUiWidget item;item.id="name-editor";item.kind="editor";item.widget.type=1;item.widget.layer=19;item.stack=ui_stack;item.interactive=true;item.input_port=state.player;
+        const auto first="P"+std::to_string(state.player+1)+"C1",last="P"+std::to_string(state.player+1)+"C7";
+        const auto a=hp2::frontend::GetWidgetRect_00144280(screen,hp2::frontend::bStringHash(first.c_str()),[this](const auto& w){return measure_widget(w);});
+        const auto b=hp2::frontend::GetWidgetRect_00144280(screen,hp2::frontend::bStringHash(last.c_str()),[this](const auto& w){return measure_widget(w);});
+        if(const auto* w=hp2::frontend::FindWidget_00143D50(screen,hp2::frontend::bStringHash(first.c_str()),1)){item.widget=*w;item.widget.layer=19;}
+        item.widget.text=state.buffer.data();item.bounds={a.x0,a.y0,std::max(100.f,b.x1-a.x0),std::max(20.f,a.y1-a.y0)};out.widgets.push_back(std::move(item));
+    }
+    if(audio_screen_){auto& screen=screens_.at(menu_screen_index_);constexpr std::uint32_t handles[]{0xc866642b,0xc866686c,0xc8666cad,0xc86670ee,0xc866752f,0xc8667970,0xc8667db1};
+        for(int i=0;i<7;++i){const auto box=hp2::frontend::GetWidgetRect_00144280(screen,0xa29f7a16+i,[this](const auto& w){return measure_widget(w);});if(!box.valid)continue;
+            FrontendUiWidget item;item.id="audio-slider:"+std::to_string(i);item.kind="slider";item.widget.layer=0;item.stack=ui_stack;item.bounds={box.x0,box.y0,box.x1-box.x0,box.y1-box.y0};item.interactive=!out.modal;item.value=audio_screen_->sliders[i].target;item.menu_index=i+1;
+            if(const auto* handle=hp2::frontend::FindWidget_00143D50(screen,handles[i],0))item.handle_texture=handle->texture_hash;
+            out.widgets.push_back(std::move(item));}
+    }
+    if(menu_screen_index_==kEventTreeScreen && !startup_movie_visible_){
+        auto& screen=screens_.at(kEventTreeScreen);const WidgetSizes sizes(*catalog_,fonts_,ghost_redirect());
+        const auto* panel=hp2::frontend::FindWidget_00143D50(screen,hp2::frontend::bStringHash("EVENT_PANEL"),0);
+        const auto* number=hp2::frontend::FindWidget_00143D50(screen,hp2::frontend::bStringHash("EVENT_NUMBER"),1);
+        render::Frame geometry;std::vector<hp2::frontend::FeWidget> numbers;
+        const auto mask=hp2::frontend::GetWidgetRect_00144280(screen,0xaa5d7d3f,[&](const auto& w){return sizes.scaled(w);});
+        if(!mask.valid || mask.y1<=mask.y0)throw std::logic_error("original event viewport template unavailable");
+        out.event_clip={mask.x0,mask.y0,mask.x1-mask.x0,mask.y1-mask.y0};
+        append_event_tree(event_tree_,sizes,*catalog_,geometry,panel,number,&screen,&numbers,true);
+        std::size_t index=0;
+        for(const auto& q:geometry.quads){FrontendUiWidget item;item.stack=ui_stack;item.id="event-art:"+std::to_string(index++);item.widget.type=2;item.widget.layer=0;item.widget.texture_hash=std::uint32_t(q.texture);item.bounds=q.destination;
+            item.widget.r=std::uint8_t(std::clamp(q.color.r*128,0.f,255.f));item.widget.g=std::uint8_t(std::clamp(q.color.g*128,0.f,255.f));item.widget.b=std::uint8_t(std::clamp(q.color.b*128,0.f,255.f));item.widget.a=std::uint8_t(std::clamp(q.color.a*128,0.f,255.f));
+            item.widget.field_0x5c.fill(std::uint32_t(item.widget.r)|(std::uint32_t(item.widget.g)<<8)|(std::uint32_t(item.widget.b)<<16)|(std::uint32_t(item.widget.a)<<24));
+            auto image=q.texture?catalog_->texture(q.texture):nullptr;if(image){const auto& r=q.source;item.widget.field_0x70={{r.x/image->width,r.y/image->height,(r.x+r.width)/image->width,r.y/image->height,(r.x+r.width)/image->width,(r.y+r.height)/image->height,r.x/image->width,(r.y+r.height)/image->height}};}
+            out.widgets.push_back(std::move(item));}
+        for(auto& w:numbers){const auto id=std::stoi(w.name.substr(11));FrontendUiWidget item;item.stack=ui_stack;item.id="event:"+std::to_string(id);item.widget=w;item.widget.layer=0;
+            const auto dimensions=panel?sizes.scaled(*panel):hp2::frontend::WidgetMetrics{};const auto node=event_tree_.nodes().at(id);const auto at=event_tree_.camera_offset();const auto zoom=event_tree_.zoom();
+            item.bounds={at.x+node.x*zoom-dimensions.width*zoom*.5f,at.y+node.y*zoom-dimensions.height*zoom*.5f,dimensions.width*zoom,dimensions.height*zoom};
+            const auto text_size=sizes.scaled(w);float text_x=w.x;
+            if(w.text_align&1)text_x-=text_size.width;else if(w.text_align&4)text_x-=text_size.width*.5f;
+            item.text_bounds={text_x,w.y,text_size.width,text_size.height};
+            // Port transport of existing E-0039-F03 glyph commands. Do not ask a
+            // host text shaper to reconstruct original advances/kerning again.
+            hp2::frontend::FeScreen text_screen;text_screen.widgets.push_back(w);
+            render::Frame text_frame;port::runtime::build_frame(text_screen,sizes,{},text_frame);
+            const auto* font=sizes.font(w.texture_hash);
+            for(const auto& quad:text_frame.quads){
+                const auto glyph=std::find_if(font->glyphs.begin(),font->glyphs.end(),[&](const auto& g){return quad.source.x==g.u+.5f && quad.source.y==g.v+.5f && quad.source.width==g.w && quad.source.height==g.h;});
+                if(glyph==font->glyphs.end())throw std::logic_error("event glyph command lacks original font identity");
+                item.glyphs.push_back({glyph->code,quad.destination,quad.source});
+            }
+            item.interactive=event_tree_.state()==0;item.selected=node.selected;item.menu_index=id;out.widgets.push_back(std::move(item));}
+    }
+    ++ui_stack;
+    if(menu_screen_index_==kEventTreeScreen){const auto state=event_tree_.state();
+        if((state>=1&&state<=4)||state==6)append(screens_.at(17),1-event_tree_.alpha(),false);
+        if(state>=4&&state<=6)append(screens_.at(19),event_tree_.alpha(),false);
+        if(state==7)append(screens_.at(18),event_tree_.alpha(),false);
+    }
+    if(save_popup_)append(*save_popup_,1,true);
+    if(selection_)for(auto* document:selection_->popup_documents())append(*document,1,true);
+    return out;
+}
+MenuState FrontEndRuntime::ui_action(const FrontendUiAction& action){
+    MenuState result;
+    if(action.generation!=ui_generation_){result.error="stale frontend UI generation";return result;}
+    if(action.port<0||action.port>1){result.error="invalid frontend input port";return result;}
+    if(action.kind==FrontendUiAction::Kind::Back)return menu_joy_event(action.port,hp2::input::JOY_EVENT_MENU_BACK,true);
+    const auto snapshot=ui_snapshot();auto target=std::find_if(snapshot.widgets.begin(),snapshot.widgets.end(),[&](const auto& w){return w.id==action.id;});
+    if(target==snapshot.widgets.end()||!target->interactive||!target->enabled||(snapshot.modal && target->kind!="editor" && target->id.rfind("keyboard:",0)!=0 && target->id.rfind("selection:popup:",0)!=0)||exit_animation_){result.error="frontend UI target is not actionable";return result;}
+    if(target->id=="name-editor" || target->id.rfind("keyboard:",0)==0){
+        if(!name_entry_||!name_entry_->active){result.error="native name editor is closed";return result;}
+        auto& state=*name_entry_;
+        if(action.kind==FrontendUiAction::Kind::EditText){
+            // Explicit PC text replacement policy; character alphabet/storage are E-0095-N01.
+            const std::string alphabet="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!.# ";
+            if(action.text.size()>7 || action.text.find_first_not_of(alphabet)!=std::string::npos){result.error="name contains unsupported characters";return result;}
+            state.buffer.fill(0);std::copy(action.text.begin(),action.text.end(),state.buffer.begin());state.cursor=std::min(6,int(action.text.size()));
+        }else if(action.kind==FrontendUiAction::Kind::Activate){hp2::frontend::MenuEvent_0016A458 event;event.pad_index_0x04=state.player;
+            if(target->id=="name-editor")dispatch_name_entry(17,event);
+            else{const auto suffix=target->id.substr(9);state.row=std::stoi(suffix.substr(0,1),nullptr,16);state.column=std::stoi(suffix.substr(1,1),nullptr,16);dispatch_name_entry(1,event);}
+            hp2::frontend::PlayMenuSound_0016E038(event.sound_id_0x0C);
+        }
+        hp2::frontend::Sub_0024CA60(state,screens_.at(menu_screen_index_),0,[this](const auto& w){return measure_widget(w);},[this](auto id){return event_localize(id);});
+        result=menu_state();result.ok=true;return result;
+    }
+    if(action.kind==FrontendUiAction::Kind::SetValue && (!std::isfinite(action.value)||action.value<0||action.value>1)){result.error="UI value outside normalized range";return result;}
+    if(action.id.rfind("selection:",0)==0){
+        result.not_implemented=hp2::guard([&]{
+            if(action.kind!=FrontendUiAction::Kind::Focus && !selection_->ui_choose(action.id.substr(10)))result.error="selection target is not selectable";
+        });
+        if(!result.error.empty()||!result.not_implemented.empty())return result;
+        result=menu_state();result.ok=true;return result;
+    }
+    if(action.id.rfind("event:",0)==0){
+        if(!event_tree_.select_node_port(target->menu_index)){result.error="event target is not selectable";return result;}
+        if(action.kind==FrontendUiAction::Kind::Activate)return menu_joy_event(action.port,hp2::input::JOY_EVENT_MENU_SELECT,true);
+        result=menu_state();result.ok=true;return result;
+    }
+    result.not_implemented=hp2::guard([&]{
+        if(!menu_group_||!menu_group_->child_0x08)throw std::logic_error("UI target has no native menu");
+        auto& list=*menu_group_->child_0x08;auto items=list.items();
+        auto item=std::find_if(items.begin(),items.end(),[&](auto* p){return p->index_0x10==target->menu_index;});
+        if(item==items.end())throw std::logic_error("UI target has no native menu item");
+        if(list.current_0x08!=*item){if(list.current_0x08)list.current_0x08->Unhighlight_001699F8(list.callback_0x0C);
+            list.SetCurrentIndex_0016A0F0(int(item-items.begin()));(*item)->Highlight_00169968(list.callback_0x0C);}
+    });
+    if(!result.not_implemented.empty())return result;
+    if(action.kind==FrontendUiAction::Kind::SetValue){
+        if(target->kind!="slider"||!audio_screen_){result.error="UI target has no scalar value";return result;}
+        const auto index=std::size_t(target->menu_index-1);const float delta=(action.value-audio_screen_->sliders.at(index).target)/port::frontend::audio_projection::factor(index);
+        const auto feedback=hp2::frontend::Sub_0016DD38(*audio_screen_,index,delta);if(feedback)pending_volume_feedback_.emplace_back("MenuAdjustVolume",*feedback);
+        hp2::frontend::Sub_0016DE30(*audio_screen_,screens_.at(menu_screen_index_),0,[this](const auto& w){return measure_widget(w);},[this](auto id){return event_localize(id);});
+        result=menu_state();result.ok=true;return result;
+    }
+    if(action.kind==FrontendUiAction::Kind::Activate)return menu_joy_event(action.port,hp2::input::JOY_EVENT_MENU_SELECT,true);
+    if(action.kind==FrontendUiAction::Kind::Adjust)return menu_joy_event(action.port,action.direction<0?hp2::input::JOY_EVENT_SCROLL_LEFT:hp2::input::JOY_EVENT_SCROLL_RIGHT,true);
+    result=menu_state();result.ok=true;return result;
+}
+
 WidgetSizes::Redirect FrontEndRuntime::ghost_redirect() const {
     // The highlight ghost acquires its target's font, string and transform on every tick
     // (FUN_001410A0), so it must be measured as its target, not as the authored template.
     return [this](const hp2::frontend::FeWidget& widget) -> const hp2::frontend::FeWidget* {
+        if(selection_)if(const auto* target=selection_->ghost_target(widget))return target;
         if(selection_animation_.screen_0x00 && widget.name_hash==selection_animation_.template_hash_0x0C)
             return hp2::frontend::FindWidget_00143D50(*selection_animation_.screen_0x00,selection_animation_.target_hash_0x04,1);
         if (highlight_animation_.screen_0x00 != nullptr &&
@@ -1349,7 +1701,9 @@ TickResult FrontEndRuntime::menu_tick(double delta) {
     if(autosave_) {
         result.not_implemented=hp2::guard([&] {
             const bool complete=hp2::frontend::Sub_00246138(*autosave_,delta,[this]{
-                return hp2::platform::store_profile(profile_search_start_,hp2::memorycard::kRegionNtsc_001A3390,profile_);});
+                if(!event_rewards_)return std::string("Physical reward baseline unavailable");
+                const auto current=import_retail_event_rewards(std::vector<std::uint8_t>(profile_.bytes(),profile_.bytes()+profile_.size()),*event_rewards_);
+                const auto error=hp2::platform::store_private_reward_profile(profile_search_start_,hp2::memorycard::kRegionNtsc_001A3390,profile_,current);if(error.empty())event_rewards_=current;return error;});
             if(complete) {
                 request_history_back();apply_pending_screen(); //00247C68 ->00170320(1)
             } else apply_save_popup();
@@ -1513,6 +1867,11 @@ FrameStats FrontEndRuntime::build_frame(render::Resources& resources, render::Fr
     const WidgetSizes sizes(resources, fonts_, ghost_redirect());
     auto stats = port::runtime::build_frame(screens_[static_cast<std::size_t>(menu_screen_index_)],
                                             sizes, options, frame);
+    if(selection_)for(auto* document:selection_->popup_documents()){
+        render::Frame addition;const auto drawn=port::runtime::build_frame(*document,sizes,{},addition);
+        render::append_frontend_frame(frame,addition);
+        stats.quads+=drawn.quads;stats.glyphs+=drawn.glyphs;stats.texts+=drawn.texts;stats.missing+=drawn.missing;stats.clipped_out+=drawn.clipped_out;
+    }
     if(autosave_ && save_popup_) {
         render::Frame addition;
         const auto drawn=port::runtime::build_frame(*save_popup_,sizes,{},addition);

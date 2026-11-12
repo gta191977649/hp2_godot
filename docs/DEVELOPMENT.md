@@ -1,5 +1,26 @@
 # Development guide
 
+TASK-0112 camera/widescreen checkpoint: run `.\build.ps1 --run` and enter the
+same World scene from Drive on track, Test drive or an authored event. V cycles
+source POV after its initial timer gate; hold B for rear view; right-drag/click
+capture provides temporary mouse observation. Escape releases capture before
+current debug navigation; F11 toggles host fullscreen. The World uses Hor+4:3
+reference projection. Original race HUD/pause/results restoration is unfinished.
+
+Reproduce owned-window checks without computer use:
+
+```powershell
+py -3 tools/test_world_window.py --input-mode messages --background --camera-wide --track 11 --skin 7 --output local/task0112/camera
+py -3 tools/test_world_window.py --input-mode messages --focus-only --track 11 --skin 7 --output local/task0112/focus
+py -3 tools/test_event_window.py --championship --launch-only --controls-smoke --output local/task0112/championship
+py -3 tools/test_event_window.py --launch-only --output local/task0112/hotpursuit
+```
+
+Background messages do not prove real foreground hardware input. The separate
+focus-only run checks actual owned-window foreground loss/return and F8 isolation.
+Event launch-only results do not establish full finish/private-save acceptance.
+Source evidence and remaining dependencies: `reverse/task0112/presentation.md`.
+
 TASK0071 selects Vulkan + Forward+ on Windows. Normal run/editor/profile paths
 share the project configuration; automatic D3D12/OpenGL fallback is disabled.
 Use explicit `--rendering-method gl_compatibility --rendering-driver opengl3`
@@ -101,11 +122,17 @@ export templates are required for packaging, not ordinary editor/runtime tests.
 ```powershell
 ./build.ps1                         # configure and build godot-debug
 ./build.ps1 --run                   # build successfully, then start the frontend
+./build.ps1 --debug                 # build and run with engine debugging and Info
 ./build.ps1 --clean --run            # clean generated outputs, build, then run
 ./build.ps1 --clean --preset native-debug --jobs 4
 ./build.ps1 --preset=godot-release --jobs=4
 ./build.ps1 --help
 ```
+
+TASK-0108: `--debug` implies `--run` and requires `godot-debug`. It forwards
+Godot's engine `--debug` flag and the existing port-side `--info` overlay flag.
+It can also be combined with `--profile` or `--editor`. The default build-only
+command and ordinary `--run` retain their existing behavior.
 
 GNU-style options work in PowerShell7 and Windows PowerShell5.1. Run mode requires
 the local pinned engine described above; native-debug cannot launch a Godot scene.
@@ -428,3 +455,86 @@ performance testing was stopped by the user. TASK-0086 original light flare
 attachments are independent of this switch. For targeted regression commands see
 PERFORMANCE_TASK0085.md and VEHICLE_LIGHT_FLARES.md. Do not infer PS2 equivalence
 from PC/GPU smoke results.
+
+
+TASK-0099 actual World regression entry: `cmake --build build/native-debug
+--target world_loading_tests world_dependencies_tests world_emitter_bindings_tests
+world_texture_bindings_tests world_construction_tests cop_resources_tests
+cop_speech_tests -j 6`, followed by `ctest --test-dir build/native-debug -R
+'^(world_|cop_resources|cop_speech)' --output-on-failure`. Original-data tests
+require configured authorized Debug ELF and original ZZDATA; absence returns77.
+The World tests execute actual construction/close with all thirty bundles, plus
+reverse direction; they are not a playable race, original-runtime comparison,
+or whole-frame performance test. Scope/evidence: reverse/task0099/world-construction.md.
+
+
+TASK-0099 live dependency checks (source assets are local prerequisites):
+`cmake --build build/native-debug --target car_construction_tests ai_drive_target_tests shared_collision_foundation_tests replay_construction_tests repeat_bitstream_tests pcm_command_device_tests -j6`
+`ctest --test-dir build/native-debug -R '^(car_construction_original|car_construction_sound_original|world_participants_original|ai_drive_target|shared_collision_foundation|replay_construction|repeat_bitstream|pcm_command_device_original)$' --output-on-failure`
+See reverse/task0099/car-move.md, shared-physics-move.md and force-impact.md
+for exact scope, local logs and remaining original dependencies. These checks
+exercise actual shared source resources; no original-runtime verification follows.
+
+
+TASK-0099 additional original-resource checks:
+`cmake --build build/native-debug --target flailer_resources_tests raw_acidfx_tests ai_driver_tests player_dependency_tests camera_view_tests drive_camera_update_tests -j6`
+`ctest --test-dir build/native-debug -R '^(flailer_resources_original|raw_acidfx|raw_acidfx_original|ai_driver|player_dependencies_original|camera_view_original|drive_camera_update_original)$' --output-on-failure`
+The two AcidFX entries intentionally distinguish component fixtures from the
+30-track `--original` corpus. To reproduce one actual8 collision frame:
+`./build/native-debug/car_construction_tests.exe --participants --collision-stage --track-index 0`
+(add `--reverse` for reverse source direction; catalog indices0..29). Complete
+60-case checkpoint metadata is in reverse/task0099/world-collision-corpus.json;
+it does not include full Player/RC ownership or full World frame scheduling.
+
+### TASK-0099 actual shared frame checks
+
+After the W70 source definition is available, build and execute:
+
+```powershell
+cmake --build build/native-debug --target car_construction_tests world_frame_tests player_feedback_tests player_construction_tests car_terrain_effects_tests -j 4
+ctest --test-dir build/native-debug -R "^(world_frame|world_frame_original|player_feedback_original|player_game_state_original|car_terrain_effects|car_terrain_effects_original)$" --output-on-failure
+```
+
+`world_frame` is explicit component DAT/traffic/sort validation;
+`world_frame_original` invokes actual RC construction, loaded event/scenery
+resources, original time preparation, World frame, time advance and actual RC
+cleanup. Both remain native consistency checks, not original runtime equivalence.
+Reached dependencies must be restored from evidence; do not suppress them to
+make the frame pass. Authored W68 mode exercises30track emitter bundles across
+33explicit typed terrain domains; it is not actual vehicle traversal of them.
+
+
+## TASK-0107 unified World debugging
+
+Build with `.\build.ps1 --run`, open TrackViewer, choose a car/skin/track and use
+**Drive on track**. CarViewer **Test drive**, F8 `driving`, and direct
+`res://scenes/race_scene.tscn` use the same source WorldSession. Direct CLI accepts
+`--track=11 --car=ELISE --skin=4 --reverse` after Godot's `--` separator. CarViewer
+uses the most recent track, initially11. Static viewers remain available.
+
+P pauses/resumes, period advances one source step, R restarts and Esc returns.
+A reached source guard freezes the last complete frame; restart or return is
+required. Numerical/stack research operands are explicitly labeled PC choices;
+this debug composition is not a completed production race/results/save flow.
+
+Native checks: `ctest --test-dir build/native-debug -R
+"^(world_session_original|free_run_launch_original|world_particle_snapshot|track_runtime)$"
+--output-on-failure`. Actual Windows input: `py -3 tools/test_world_window.py`.
+The Python test starts its own GPU process and injects physical scancodes only
+after PID and foreground validation. Its opt-in observer reports state and never
+drives simulation. Test artifacts go to local/task0107/python-world, not Git.
+
+
+For an input test that does not repeatedly take desktop focus, use:
+
+```powershell
+py -3 tools/test_world_window.py --input-mode messages --background --skin 7 --accept-guard 0x001A88C8
+```
+
+This opt-in background fixture bypasses only host focus gating and uses Win32
+messages with actual key/scancode fields; it does not prove real foreground
+focus behavior. `guarded` means the exact accepted source boundary froze and
+restart/return passed, not that the remaining positive control sequence passed.
+ELISE skin7 is Lightning Yellow; the original default skin4 is dark Gunmetal.
+Current actual input can reach shared skid consumer1A88C8 after a few frames;
+continuous unrestricted driving is not yet accepted.

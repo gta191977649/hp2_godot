@@ -2,6 +2,16 @@
 #include <array>
 #include <cstdint>
 #include <vector>
+#include "game_core/port/driving/object_view.hpp"
+namespace hp2::debug {
+// E-0099-W29. Actual shared-Memory source-node query; no host index/pointer overlay.
+class vAABBTree : public ::port::driving::ObjectView {
+public:
+ using ObjectView::ObjectView;
+ std::uint32_t QueryLeaf(float,float,float)const; // Debug001B73F0.
+ std::uint32_t QueryLeafHelper(std::uint32_t,float,float,float)const; // Debug001B72F0.
+};
+}
 // E-0048-A06. Port companion header; original source marker is
 // ..\indep\src\volumetree.cpp. Explicit host containers, not PS2 object ABI.
 namespace hp2::recovered {

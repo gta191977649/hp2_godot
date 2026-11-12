@@ -48,3 +48,19 @@ void ChopperSound::ActivateSound() {
     hp2::not_implemented("0x00215050", "ChopperSound::ActivateSound (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+#include "game_core/indep/inc/Sound3d.hpp"
+#include "game_core/indep/src/sound.hpp"
+#include "game_core/src/bSample.hpp"
+namespace hp2::debug {
+// Debug0020F960, E-0099-W94. Actual shared source sample; no muted substitute.
+void ChopperSound::Sub_0020F960(std::uint32_t chopper){Sound3d(m_,address_).Sub_00203980();m_.word(address_+0x20,chopper);m_.word(address_+0x1c,0x2b3e48);if(m_.word(0x326f40)){const auto sample=GetInGameSample(m_,0x2b3e00);m_.word(address_+0x24,sample);if(!sample)hp2::not_implemented("0x0020F960","original ChopperEngine sample is absent from actual InGame region");bSample object(m_,sample);object.SetCategory(0);if(object.IsPlaying())object.Stop();}m_.word(address_+0x28,0);m_.word(address_+0x2c,0);}
+// Debug0020F9E8, E-0099-W94. Source dtor delegates directly to Sound3d.
+void ChopperSound::Sub_0020F9E8(int flags){m_.word(address_+0x1c,0x2b3e48);Sound3d(m_,address_).Sub_00204060(flags);}
+// Debug0020FC20, E-0099-W98; exact choppersound.cpp definition owner.
+void ChopperSound::DeactivateSound(){if(m_.word(0x326f40))if(const auto sample=m_.word(address_+0x24))bSample(m_,sample).Stop();}
+namespace sound {
+// Debug0020FC90, E-0099-W94; exact choppersound.cpp definition owner.
+std::uint32_t CreateChopperSound(::port::driving::Memory& m,std::uint32_t chopper){const auto object=m.allocate(0x30);ChopperSound(m,object).Sub_0020F960(chopper);return object;}
+}
+}

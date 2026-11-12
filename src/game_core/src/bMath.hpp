@@ -3,11 +3,15 @@
 // original implementation TUs are src/bMath.cpp, src/bMatrix.cpp and src/ecstasy/emathe.cpp.
 #include "game_core/port/driving/projections.hpp"
 namespace hp2::recovered {
-using port::driving::Memory;
-using port::driving::SolverMatrix;
-using port::driving::SolverVector;
-using port::driving::SolverMathContext;
-using port::driving::native::Matrix;
+float bFMod(float a,float b); //Debug00253898; E-0112-H02, floor quotient, not std::fmod.
+// Debug00251C70/00251CC8, E-0099-W37. Original implementation src/bVector.cpp.
+std::array<float,2> bNormalize(const std::array<float,2>&);
+std::array<float,2> bNormalize(const std::array<float,2>&,float length);
+using ::port::driving::Memory;
+using ::port::driving::SolverMatrix;
+using ::port::driving::SolverVector;
+using ::port::driving::SolverMathContext;
+using ::port::driving::native::Matrix;
 std::uint32_t bRandom(Memory& m,std::uint32_t state,std::uint32_t divisor);
 std::uint32_t bRandom(Memory& m,int range);
 void bSetRandomSeed(Memory&,std::uint32_t value,std::uint32_t state);
@@ -16,8 +20,10 @@ float bRandom(Memory& m,float value);
 float bSin(Memory&m,std::uint16_t a);
 float bSin(Memory&m,float f);
 float bCos(Memory&m,std::uint16_t angle);
+void bSinCos(Memory&,float& sine,float& cosine,std::uint16_t angle); //Debug00253A10, E-0099-W37.
 std::uint16_t bASin(Memory&m,float f);
 std::int16_t bATan(Memory&m,float x,float y);
+std::uint32_t bToPolar(Memory&,std::uint32_t,const std::array<float,2>&); //Debug00253FB8,E-0100-PA01; original dest r/a fields.
 std::int32_t bDiv(std::int32_t numerator,std::int32_t denominator);
 std::uint16_t bFixATan(Memory&m,std::int32_t value);
 std::int16_t bFixATan(Memory&m,std::int32_t x,std::int32_t y);
@@ -26,6 +32,7 @@ std::array<float,16> bInvertMatrix(const std::array<float,16>& a);
 void bTransposeMatrix(SolverMatrix& out, const SolverMatrix& in);
 void bMulMatrix(SolverVector& out, const SolverMatrix& matrix,
                  const SolverVector& in, const SolverMathContext& context);
+void bMulMatrix(SolverVector& out,const SolverMatrix& matrix,const SolverVector& in); //Debug00254238, E-0099-W60, original vector4 overload.
 Matrix bMulMatrix(const Matrix& a,const Matrix& b);
 void eOrthonormalizeMatrix(Memory& m,std::uint32_t a);
 void eMulMatrix(SolverMatrix&out,const SolverMatrix&a,const SolverMatrix&b);

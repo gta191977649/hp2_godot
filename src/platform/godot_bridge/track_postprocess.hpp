@@ -1,14 +1,34 @@
 #pragma once
 #include "game_core/port/track/postprocess.hpp"
 #include <memory>
+#include <vector>
+#include <cstdint>
+#include <unordered_set>
+#include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/variant/callable.hpp>
 #include <godot_cpp/variant/array.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/string_name.hpp>
 #include <godot_cpp/variant/variant.hpp>
+#include <godot_cpp/variant/transform3d.hpp>
 #include <godot_cpp/classes/viewport_texture.hpp>
 namespace godot { class Node; class Node3D; class Camera3D; class Texture2D; class ShaderMaterial; class MeshInstance3D; class MultiMeshInstance3D; }
 namespace port::godot_bridge {
+struct EncodedDepthBatch {
+    godot::Ref<godot::ArrayMesh> mesh;
+    std::vector<std::uint64_t> source_nodes;
+    float sorting_offset=0;
+};
+// Port-side submission packet. A null mesh delegates the registered source
+// to the normal depth consumer for this frame.
+struct StaticDepthSource {
+    std::uint64_t node_id;
+    godot::Ref<godot::ArrayMesh> mesh;
+    godot::Ref<godot::ShaderMaterial> material;
+    godot::Transform3D transform;
+    float sorting_offset=0;
+    std::uint64_t material_version=0;
+};
 // Host resources only. Original palette/stage numerical behavior lives in core.
 class TrackPostprocess {
     struct Impl; std::unique_ptr<Impl> impl_;
@@ -21,7 +41,10 @@ public:
         const port::track::postprocess::Controls&,bool allowed=true,
         float camera_focal_distance=0,float camera_depth_of_field=0,
         const port::track::postprocess::Frame* prepared=nullptr,
-        const port::track::postprocess::ScreenControls* screen=nullptr);
+        const port::track::postprocess::ScreenControls* screen=nullptr,
+        const std::vector<EncodedDepthBatch>& depth_batches={},float raster_scale=1.f,
+        const std::vector<StaticDepthSource>& static_sources={},
+        const std::unordered_set<std::uint64_t>& registered_sources={},bool colour_fxaa=false);
     // Sealed meshes require mark_mesh_changed after visibility, mesh, material,
     // transform or sorting changes. Material parameters use their separate API.
     void set_resource_reuse(bool);

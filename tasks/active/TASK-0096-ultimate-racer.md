@@ -1,5 +1,13 @@
 # TASK-0096 - Complete single-player Ultimate Racer lifecycle
 
+Latest continuation2026-10-29: user explicitly prioritizes real World.
+TASK-0099 now has actual World construction and pre-simulation destruction with
+concrete original dependencies; thirty-track source integration passes. See
+reverse/task0099/world-construction.md for version counterevidence, exact scope,
+tests and remaining original participant/World scheduling requirements. No
+playable race/results/rewards/save or full-tree acceptance is claimed. TASK-0098
+production transmission/handling popup progress remains retained separately.
+
 - Status: active
 - User authorization:2026-10-26, approved implementation plan. Actual racing is
   authorized for this scope, superseding TASK-0091's no-race boundary here only.
@@ -10,7 +18,7 @@
 - Existing Retail frontend/assets/profile authority remains separately identified:
   SLUS_203.62 SHA7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
   Never reinterpret one version's storage as the other's.
-- Current implementation subtask: TASK-0098 production Event -> selection entry, per the approved full-closure plan2026-10-28. TASK-0099 World work is retained and deferred until selection roundtrip acceptance.
+- Current implementation subtask: TASK-0099 real World and correctly recovered dependencies, per explicit user priority2026-10-29. TASK-0098 remaining production launch work stays open.
   TASK-0097 inventory/version foundation completed; full mode remains incomplete.
 - Preserve all existing uncommitted user work; no staging/commit requested.
 

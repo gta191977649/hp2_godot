@@ -9,16 +9,41 @@
 // PC behaviour only. None of this establishes original-hardware equivalence.
 #include "game_core/port/input/joyevents.hpp"
 #include "port/runtime/frontend_runtime.hpp"
+#include "platform/ps2_profile_store.hpp"
+#include <fstream>
+#include <iterator>
 #include <cmath>
+#include <algorithm>
 #include <cstdio>
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <chrono>
+#include <thread>
+#include <filesystem>
+#include <cstdlib>
 
 namespace {
 
 using namespace port::runtime;
 using namespace hp2::input;
+struct PrivateSaveFixture {
+    bool existed=false;std::string prior;
+    explicit PrivateSaveFixture(const std::filesystem::path& path){if(const auto* old=std::getenv("HP2_PORT_SAVE_ROOT")){existed=true;prior=old;}
+#ifdef _WIN32
+        _putenv_s("HP2_PORT_SAVE_ROOT",path.string().c_str());
+#else
+        setenv("HP2_PORT_SAVE_ROOT",path.string().c_str(),1);
+#endif
+    }
+    ~PrivateSaveFixture(){
+#ifdef _WIN32
+        _putenv_s("HP2_PORT_SAVE_ROOT",existed?prior.c_str():"");
+#else
+        if(existed)setenv("HP2_PORT_SAVE_ROOT",prior.c_str(),1);else unsetenv("HP2_PORT_SAVE_ROOT");
+#endif
+    }
+};
 
 void require(bool condition, const std::string& what) {
     if (!condition) throw std::runtime_error(what);
@@ -112,6 +137,7 @@ void check_activation(FrontEndRuntime& runtime) {
     for (int choice = 0; choice < 3; ++choice) {
         auto state = runtime.menu_open(0);
         require(state.ok, "main menu failed to open");
+        require(runtime.background_movie()=="MOVIES/mainmenu_movie.AVI","Main menu movie request missing");
         for (int step = 0; step < choice; ++step) state = press(runtime, JOY_EVENT_SCROLL_DOWN);
         state = press(runtime, JOY_EVENT_MENU_SELECT);
         const int target = (int[]){1, 2, 24}[choice];
@@ -119,12 +145,22 @@ void check_activation(FrontEndRuntime& runtime) {
                                             " got " + std::to_string(state.screen));
         if (choice < 2) {
             require(state.dat_002FC070 == 1 - choice, "main-menu mode flag mismatch");
+            require(runtime.background_movie()==(choice==0?"MOVIES/hotpursuit_movie.AVI":"MOVIES/worldracing_ movie.AVI"),
+                    "Mode selector movie request differs");
             const auto missing = press(runtime, JOY_EVENT_MENU_SELECT);
             require(!missing.not_implemented.empty(), "untranslated mode handler must raise");
-        }
+            const auto expected=runtime.background_movie();
+            const auto document=choice==0?0xe55f1297u:0x2d62cfe2u;
+            int challenge=-1;
+            for(int index=0;index<runtime.screen_count();++index)
+                if(runtime.screen(index)->name_hash_0x08==document){challenge=index;break;}
+            require(challenge>=0 && runtime.menu_open(challenge).ok, "Challenge document unavailable");
+            require(runtime.background_movie()==expected,"Challenge movie must follow the initialized race mode");
+        } else require(runtime.background_movie()=="MOVIES/options_movie_new.AVI","Options constructor must use the shared movie");
     }
     auto state = press(runtime, JOY_EVENT_MENU_BACK);
     require(state.screen == 0, "Options Back did not return to main");
+    require(runtime.background_movie()=="MOVIES/mainmenu_movie.AVI","Options Back did not restore main menu movie");
     state = press(runtime, JOY_EVENT_MENU_BACK);
     require(state.screen == 0, "main menu must reject Back");
 
@@ -143,6 +179,9 @@ void check_activation(FrontEndRuntime& runtime) {
                                             std::to_string(target) + " got " + std::to_string(state.screen));
         if (choice == 4)
             require(state.active_class == "NameEntry", "shared document must preserve NameEntry");
+        const std::string expected_movie=state.active_class=="Phils Load Save"?"":"MOVIES/options_movie_new.AVI";
+        require(runtime.background_movie()==expected_movie,
+                "Options child movie lifecycle differs for "+state.active_class);
     }
     std::printf("  activation: main routes, mode flag, Back, Options exit, explicit gaps\n");
 }
@@ -413,6 +452,7 @@ void check_event_tree_route(FrontEndRuntime& runtime, int mode_screen, int want_
         }
         if (state.screen != 39) continue;
         reached = true;
+        require(runtime.background_movie().empty(),"Event Tree did not stop the preceding mode movie");
         require(state.not_implemented.empty(),
                 "entering the event tree must not raise: " + state.not_implemented);
         require(runtime.event_tree().loaded(),
@@ -555,19 +595,20 @@ void check_event_tree(FrontEndRuntime& runtime) {
             "Back returns to state 0");
     require(!runtime.event_tree_joy_event(JOY_EVENT_MENU_BACK),
             "state 0 leaves Back to the navigation history");
-    // Use the integrated route on an unlocked event: the known input handler must
-    // report its actual downstream gaps while preview return remains functional.
+    // This fixture retains Championship mode8 from the preceding route. Both
+    // reviewed first-event adapters have dedicated readiness/transport groups;
+    // remain on the detail here to test the independent model-preview boundary.
     runtime.menu_open(39);
     for (int step = 0; runtime.event_tree().cursor_info().number != 1 && step < 10; ++step)
         runtime.event_tree_joy_event(JOY_EVENT_SCROLL_UP);
     require(runtime.event_tree().cursor_info().number == 1, "return to unlocked root through recovered navigation");
     runtime.menu_joy_event(0, JOY_EVENT_MENU_SELECT, true);
     runtime.menu_tick(0.5);
-    const auto race_gap = runtime.menu_joy_event(0, JOY_EVENT_MENU_SELECT, true);
-    require(race_gap.not_implemented.find("0x001F6A28") != std::string::npos,
-            "unlocked detail selection reports missing car/race selection by original address");
-    require(hp2::frontend::last_menu_sound_request().sound_id == 0x16,
-            "unlocked detail selection answers TreeSelect");
+    const auto details=runtime.ui_snapshot();
+    const auto paragraph=std::find_if(details.widgets.begin(),details.widgets.end(),[](const auto& w){return w.widget.name=="TRACK_LINE_1" && w.wrap;});
+    require(paragraph!=details.widgets.end() && paragraph->bounds.y==126.f && paragraph->clip.y==64.f,
+            "paragraph text origin must stay below the track labels inside the larger clip box");
+    require(!runtime.take_event_launch(),"Opening Championship details fabricated a ready World request");
     const auto preview_gap = runtime.menu_joy_event(0, JOY_EVENT_MENU_SQUARE, true);
     require(preview_gap.not_implemented.find("0x001F6440") != std::string::npos &&
             runtime.event_tree().state() == 4, "model preview gap is explicit after state 4 entry");
@@ -599,6 +640,157 @@ void check_event_tree(FrontEndRuntime& runtime) {
                 hp2::frontend::kZoomLevels_gp_0x4178[1]);
 }
 
+// TASK-0104 PC semantic contracts against real original assets, not PS2 equivalence.
+void check_ui_contract(FrontEndRuntime& runtime){
+    auto opened=runtime.menu_open(0);require(opened.ok,"UI contract main menu");
+    const auto original=runtime.ui_snapshot();require(original.generation>0,"UI generation missing");
+    // FRONTB document2920254113: bit2 left-aligned text starts at its authored X.
+    // The previous snapshot subtracted half its width and clipped the description.
+    const auto main_label=std::find_if(original.widgets.begin(),original.widgets.end(),[](const auto& w){return w.widget.name=="MENUITEM_1";});
+    const auto description=std::find_if(original.widgets.begin(),original.widgets.end(),[](const auto& w){return w.widget.name=="SCROLLING_TEXT";});
+    require(main_label!=original.widgets.end() && main_label->bounds.x==152.f,"left-aligned menu origin differs from original document");
+    require(description!=original.widgets.end() && description->bounds.x==description->widget.x,"scroll text origin differs from original document");
+    const auto target=std::find_if(original.widgets.begin(),original.widgets.end(),[](const auto& w){return w.interactive && w.menu_index==3;});
+    require(target!=original.widgets.end() && target->bounds.has_area(),"Options has no semantic hit target");
+    FrontendUiAction action;action.id=target->id;action.generation=original.generation;action.kind=FrontendUiAction::Kind::Focus;
+    auto focused=runtime.ui_action(action);require(focused.ok && focused.current_name=="MENUITEM_3","PC focus did not use original menu selection");
+    require(runtime.ui_snapshot().generation==original.generation,"Focus reconstructed the page");
+    action.kind=FrontendUiAction::Kind::Activate;require(runtime.ui_action(action).not_implemented.empty(),"PC activation hit untranslated path");
+    for(int i=0;i<90;++i)runtime.menu_tick(1.0/60);
+    require(runtime.menu_state().active_class=="Options","PC activation did not reach Options");
+    const auto stale=runtime.ui_action(action);require(!stale.ok && stale.error.find("stale")!=std::string::npos,"old page click was accepted");
+    auto options=runtime.ui_snapshot();auto audio=std::find_if(options.widgets.begin(),options.widgets.end(),[](const auto& w){return w.interactive && w.menu_index==1;});
+    require(audio!=options.widgets.end(),"Audio action missing");action.id=audio->id;action.generation=options.generation;
+    require(runtime.ui_action(action).not_implemented.empty(),"Audio entry failed");for(int i=0;i<90;++i)runtime.menu_tick(1.0/60);
+    auto snapshot=runtime.ui_snapshot();require(snapshot.page=="Audio Options","Audio UI page missing");
+    require(std::count_if(snapshot.widgets.begin(),snapshot.widgets.end(),[](const auto& w){return w.kind=="slider";})==7,"Audio scalar controls missing");
+    action.id="audio-slider:0";action.generation=snapshot.generation;action.kind=FrontendUiAction::Kind::SetValue;action.value=.25f;
+    require(runtime.ui_action(action).ok,"PC scalar request rejected");
+    snapshot=runtime.ui_snapshot();const auto scalar=std::find_if(snapshot.widgets.begin(),snapshot.widgets.end(),[](const auto& w){return w.id=="audio-slider:0";});
+    require(scalar!=snapshot.widgets.end() && std::fabs(scalar->value-.25f)<1e-5f,"native audio scalar did not consume PC value");
+    action.value=2;require(!runtime.ui_action(action).ok,"invalid PC scalar accepted");
+    action.kind=FrontendUiAction::Kind::Focus;action.port=2;require(!runtime.ui_action(action).ok,"unknown PC port accepted");
+    std::printf("  typed UI: real menu focus/activation, stale clicks, scalar conversion/range/port checks\n");
+}
+
+void check_event_transport(FrontEndRuntime& runtime,int tree_type=1){
+    if(!std::getenv("HP2_PS2_DEBUG_ELF") && !std::filesystem::exists("config/ps2_debug_elf.local.json")){
+        std::puts("  authored event transport skipped: authorized Debug ELF not configured");return;
+    }
+    require(!runtime.take_event_launch(),"Fresh frontend unexpectedly contains a World launch");
+    runtime.menu_open(0);if(tree_type==0)press(runtime,JOY_EVENT_SCROLL_DOWN);press(runtime,JOY_EVENT_MENU_SELECT);
+    for(int i=0;i<90;++i)runtime.menu_tick(1.0/60);
+    require(runtime.menu_state().active_class==(tree_type==1?"Cops On Mode Select":"Cops Off Mode Select"),"Actual event transport route did not enter mode selection");
+    for(int i=0;i<(tree_type==1?3:2);++i)press(runtime,JOY_EVENT_SCROLL_DOWN);
+    press(runtime,JOY_EVENT_MENU_SELECT);for(int i=0;i<90;++i)runtime.menu_tick(1.0/60);
+    require(runtime.menu_state().active_class=="View Event Tree","Actual event transport route did not enter tree");
+    const auto selected=runtime.event_tree().cursor_info();
+    const auto selected_tree=*runtime.event_tree().selected_tree();
+    const auto progress_layout=hp2::frontend::build_profile_layout_001FE988(selected_tree);
+    const auto* source_progress=runtime.profile().EventBlock_001FE988(tree_type);
+    const std::vector<std::uint8_t> expected_progress(source_progress,source_progress+256);
+    EventProfilePayload expected_both;for(int tree=0;tree<2;++tree)std::copy_n(runtime.profile().EventBlock_001FE988(tree),256,expected_both[tree].begin());
+    press(runtime,JOY_EVENT_MENU_SELECT);runtime.menu_tick(1);
+    auto entered=press(runtime,JOY_EVENT_MENU_SELECT);require(entered.not_implemented.empty(),"Authored tree entry failed: "+entered.not_implemented);
+    const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(30);
+    bool loaded=false;
+    while(std::chrono::steady_clock::now()<deadline){
+        const auto tick=runtime.menu_tick(1.0/60);require(tick.not_implemented.empty(),"Selection tick failed: "+tick.not_implemented);
+        const auto selection=runtime.menu_state().selection;
+        if(selection.active&&selection.loaded&&selection.overlay==0){loaded=true;break;}
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    }
+    require(loaded,"Original selection assets did not become ready for launch");
+    require(!runtime.take_event_launch(),"Selection loading fabricated an unconfirmed launch");
+    const auto selected_ride=runtime.menu_state().selection;
+    press(runtime,JOY_EVENT_MENU_SELECT); // Original transmission popup.
+    press(runtime,JOY_EVENT_SCROLL_RIGHT);press(runtime,JOY_EVENT_MENU_SELECT); // Manual, then handling popup.
+    const auto chosen=press(runtime,JOY_EVENT_MENU_SELECT);require(chosen.not_implemented.empty(),"Selection continuation did not stage launch: "+chosen.not_implemented);
+    auto request=runtime.take_event_launch();require(bool(request),"Ready original selectors did not stage authored event");
+    require(request->event_number==selected.number && request->event_index==selected.index && request->tree_type==tree_type,"Launch lost actual selected event identity");
+    require(request->prepared_event.has_value(),"Production menu lost its sole original SetRace checkpoint");
+    const auto& prepared=*request->prepared_event;
+    require(prepared.tree_type==tree_type&&prepared.event_number==selected.number,"Prepared menu identity differs from selected authored event");
+    require(prepared.parameters[unsigned(port::runtime::PreparedParameter::NFSRaceMode)]==1,"Menu NFSRaceMode was replaced by language");
+    require(prepared.parameters[unsigned(port::runtime::PreparedParameter::RaceType)]==1&&!prepared.objective.empty(),"Original menu SetRace scalar/objective preparation is missing");
+    require(prepared.old_state.size()==unsigned(tree_type==0?1:4),"Prepared menu old-state extent differs from source type");
+    require(request->event_progress.size()==256&&request->event_progress_offsets.size()==32,"Launch omitted versioned profile layout");
+    require(request->event_profile&&request->event_profile->blocks==expected_both,"Launch dropped opposite-tree source profile state");
+    const auto& full_layout=request->event_profile->layout;
+    require(full_layout.version==EventProfileVersion::Retail&&full_layout.trees[0].size()==32&&full_layout.trees[1].size()==32,"Launch lacks complete explicit Retail layout");
+    const auto shared0=std::find_if(full_layout.trees[0].begin(),full_layout.trees[0].end(),[](const auto& r){return r.event.number==32;});
+    const auto shared1=std::find_if(full_layout.trees[1].begin(),full_layout.trees[1].end(),[](const auto& r){return r.event.number==32;});
+    require(shared0->location==shared1->location,"Launch split original globally shared event32 slice");
+    require(request->event_progress==expected_progress&&std::equal(request->event_progress_offsets.begin(),request->event_progress_offsets.end(),progress_layout.offsets.begin()),"Launch changed original progress or independent Retail record mapping");
+    require(request->car_id>=0&&request->skin_id>=0&&request->track>0&&request->transmission==1,"Launch lost original selected ride/settings/track");
+    require(request->car_id==selected_ride.car&&request->skin_id==selected_ride.skin,"Launch substituted the displayed source-selected ride");
+    require(request->random_state==runtime.random_state(),"Event handoff reset the live original frontend RNG state");
+    require(!runtime.take_event_launch(),"One original confirmation produced duplicate World requests");
+    auto stale=port::race::EventSettlement{};bool rejected=false;
+    try{runtime.complete_event(stale);}catch(const std::logic_error&){rejected=true;}
+    require(rejected,"Stale outcome was accepted by active authored event");
+    require(runtime.random_state()==request->random_state,"Rejected settlement changed original RNG state");
+    // E-0101-EP01 explicit transport fixtures, not generated gameplay outcomes.
+    port::race::EventSettlement outcome;outcome.generation=request->generation;outcome.tree_type=request->tree_type;outcome.event_index=request->event_index;outcome.event_number=request->event_number;outcome.player_points=request->player_points+7;outcome.random_state=request->random_state+1;outcome.event_progress=request->event_progress;
+    rejected=false;try{runtime.complete_event(outcome);}catch(const std::logic_error&){rejected=true;}require(rejected,"Full request silently downgraded to selected-block-only settlement");
+    outcome.event_profile=expected_both;
+    require(request->event_scores.has_value(),"Production request omitted source score/name baseline");
+    outcome.event_scores=request->event_scores->profile; // Explicit transport fixture; no source score outcome is fabricated.
+    require(request->event_settings.has_value(),"Production request omitted full settings");outcome.event_settings=request->event_settings;outcome.event_rewards=request->event_rewards;
+    require(outcome.event_rewards.has_value(),"Production request omitted physical reward authority");
+    // Explicit semantic transport fixture: preserve the Debug spare/car22 words
+    // through the private pair without pretending these are gameplay awards.
+    outcome.event_rewards->point_words[5]=0x13579bdf;outcome.event_rewards->point_words[7]=1;
+    auto missing_rewards=outcome;missing_rewards.event_rewards.reset();rejected=false;try{runtime.complete_event(missing_rewards);}catch(const std::logic_error&){rejected=true;}require(rejected,"Settlement silently dropped physical reward authority");
+    const int other=1-tree_type;const auto rank=std::find_if(full_layout.trees[other].begin(),full_layout.trees[other].end(),[](const auto& r){return r.event.type==0&&r.event.number!=32;});require(rank!=full_layout.trees[other].end(),"Original opposite tree lacks rank fixture");
+    (*outcome.event_profile)[rank->location.tree_type][rank->location.offset]=1;
+    (*outcome.event_profile)[shared0->location.tree_type][shared0->location.offset]=1;
+    outcome.event_progress.assign((*outcome.event_profile)[tree_type].begin(),(*outcome.event_profile)[tree_type].end());
+    auto conflict=outcome;conflict.event_progress[0]^=1;rejected=false;try{runtime.complete_event(conflict);}catch(const std::logic_error&){rejected=true;}require(rejected,"Conflicting legacy/full settlement state was accepted");
+    auto opaque=outcome;opaque.event_profile->at(0).at(255)^=1;opaque.event_progress.assign(opaque.event_profile->at(tree_type).begin(),opaque.event_profile->at(tree_type).end());rejected=false;try{runtime.complete_event(opaque);}catch(const std::logic_error&){rejected=true;}require(rejected,"Unallocated Retail bytes were silently overwritten by settlement");
+    const auto fixture=std::filesystem::path("local/task0101")/("frontend-profile-codec-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));PrivateSaveFixture isolated(fixture);
+    rejected=false;try{runtime.continue_event_attempt(request->generation,true);}catch(const std::logic_error&){rejected=true;}require(rejected,"Unsaved result authorized another source attempt");
+    runtime.complete_event(outcome);
+    for(int tree=0;tree<2;++tree)require(std::equal(outcome.event_profile->at(tree).begin(),outcome.event_profile->at(tree).end(),runtime.profile().EventBlock_001FE988(tree)),"Frontend commit lost both-tree semantic state/alias");
+    require(runtime.profile().read_u32(0x10e04)==outcome.player_points&&runtime.random_state()==outcome.random_state,"Full commit lost source points/RNG");
+    const auto save_path=hp2::platform::profile_store_path(".",hp2::memorycard::kRegionNtsc_001A3390);std::ifstream save(save_path,std::ios::binary);const std::vector<std::uint8_t> bytes{std::istreambuf_iterator<char>(save),{}};hp2::memorycard::Profile_002FC050 saved_profile;
+    require(hp2::memorycard::Load_00245D30(bytes,saved_profile)==hp2::memorycard::LoadResult_00245780::kOk,"Both-tree private fixture save failed original size/checksum validation");
+    for(int tree=0;tree<2;++tree)require(std::equal(outcome.event_profile->at(tree).begin(),outcome.event_profile->at(tree).end(),saved_profile.EventBlock_001FE988(tree)),"Private save did not retain both original tree blocks");
+    rejected=false;try{runtime.complete_event(outcome);}catch(const std::logic_error&){rejected=true;}require(rejected&&runtime.profile().read_u32(0x10e04)==outcome.player_points,"Repeated full settlement was awarded twice");
+    // TASK-0112: storage acknowledgement is separate from source retry/next.
+    // It neither launches another race nor awards points or consumes RNG.
+    const std::vector<std::uint8_t> sealed_bytes(runtime.profile().bytes(),runtime.profile().bytes()+runtime.profile().size());
+    const auto prior_generation=request->generation;
+    auto baseline=runtime.continue_event_attempt(prior_generation,true);
+    require(baseline.previous_generation==prior_generation&&baseline.generation>prior_generation&&baseline.player_points==outcome.player_points&&baseline.random_state==outcome.random_state,"Continuation did not seal the saved career/RNG baseline");
+    require(baseline.event_profile&&baseline.event_profile->blocks==*outcome.event_profile,"Continuation lost opposite-tree/shared progress");
+    require(baseline.event_rewards&&encode_debug_reward_payload(*baseline.event_rewards)==encode_debug_reward_payload(*outcome.event_rewards),"Saved continuation discarded Debug-only spare/car22 physical rewards");
+    require(std::filesystem::exists(save_path+".hp2-debug-rewards.v1"),"Private outcome omitted its metadata/hash-bound reward supplement");
+    require(std::equal(sealed_bytes.begin(),sealed_bytes.end(),runtime.profile().bytes())&&runtime.random_state()==outcome.random_state&&!runtime.take_event_launch(),"Storage seal changed profile/RNG or staged another initial launch");
+    apply_event_attempt_baseline(*request,baseline);
+    require(request->prepared_event.has_value()&&request->generation==baseline.generation,"Storage acknowledgement discarded original launch identity");
+    rejected=false;try{runtime.continue_event_attempt(prior_generation,true);}catch(const std::logic_error&){rejected=true;}require(rejected,"Duplicate old generation resealed an attempt");
+    rejected=false;try{apply_event_attempt_baseline(*request,baseline);}catch(const std::logic_error&){rejected=true;}require(rejected,"Native duplicate continuation acknowledgement was accepted");
+    rejected=false;try{runtime.complete_event(outcome);}catch(const std::logic_error&){rejected=true;}require(rejected,"Old result settled into the new source attempt");
+    rejected=false;try{runtime.continue_event_attempt(request->generation,true);}catch(const std::logic_error&){rejected=true;}require(rejected,"Unsettled next attempt inherited previous save acknowledgement");
+    // A pause retry needs no result save; the old persisted baseline survives.
+    const auto retry=runtime.continue_event_attempt(request->generation,false);apply_event_attempt_baseline(*request,retry);
+    outcome.generation=request->generation;runtime.complete_event(outcome);
+    require(runtime.profile().read_u32(0x10e04)==outcome.player_points&&runtime.random_state()==outcome.random_state,"Retry settlement re-awarded prior saved points or drew RNG");
+    rejected=false;try{runtime.complete_event(outcome);}catch(const std::logic_error&){rejected=true;}require(rejected,"Retry result settlement was not once-only");
+    auto expected_return_state=outcome.random_state;
+    const auto expected_return_color=std::uint32_t(hp2::frontend::bRandom(-1,expected_return_state));
+    runtime.return_from_event();require(runtime.menu_state().active_class=="View Event Tree","Event return did not restore retained frontend tree");
+    require(runtime.event_default_color_seed()==expected_return_color,"Normal return omitted the original frontend-loading default-color checkpoint");
+    auto returned_screen=*runtime.screen(39);hp2::frontend::tGlobalBackgroundAnimation expected_background;expected_background.Construct_002495F0();
+    expected_background.Bind_00249A40(&returned_screen,[&](int bound){return hp2::frontend::bRandom(bound,expected_return_state);},[](const auto&){return hp2::frontend::WidgetMetrics{};});
+    require(runtime.random_state()==expected_return_state,"Return default checkpoint did not precede exactly the original page/background draws");
+    const auto after_return=runtime.random_state();rejected=false;try{runtime.return_from_event(outcome.random_state);}catch(const std::logic_error&){rejected=true;}
+    require(rejected&&runtime.random_state()==after_return&&runtime.event_default_color_seed()==expected_return_color,"Duplicate return consumed another source default draw");
+    for(int tree=0;tree<2;++tree)require(std::equal(outcome.event_profile->at(tree).begin(),outcome.event_profile->at(tree).end(),runtime.profile().EventBlock_001FE988(tree)),"Frontend default reset erased settled progress");
+    require(!runtime.take_event_launch(),"Returning to tree replayed an old launch");
+    std::puts("  authored event transport: real tree/selection/readiness, exact ride/settings, versioned state, one-shot request, stale outcome rejection, retained frontend return");
+}
 } // namespace
 
 int main() {
@@ -612,7 +804,9 @@ int main() {
             {"activation", check_activation},             {"submenus", check_submenus},
             {"highlight ghost", check_highlight_animation},
             {"localisation/audio", check_localisation_and_audio},
-            {"event tree", check_event_tree}};
+            {"event tree", check_event_tree},{"Control UI contracts",check_ui_contract},
+            {"HP authored event transport",[](FrontEndRuntime& runtime){check_event_transport(runtime,1);}},
+            {"Championship authored event transport",[](FrontEndRuntime& runtime){check_event_transport(runtime,0);}}};
         for (const auto& group : groups) {
             FrontEndRuntime runtime;
             const auto loaded = runtime.load(".", "FRONTEND/FRONTB.BUN");

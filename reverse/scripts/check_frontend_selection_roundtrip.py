@@ -20,6 +20,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--godot', type=Path, default=ROOT / 'local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe')
     parser.add_argument('--output', type=Path, default=ROOT / 'local/task0098/selection-roundtrip')
+    parser.add_argument('--confirm-selection', action='store_true',
+        help='Check production transmission/handling/cancel; this is not full race acceptance')
     args = parser.parse_args()
     output = args.output.resolve()
     if not output.is_relative_to(ROOT / 'local'):
@@ -32,6 +34,8 @@ def main():
     command = [str(args.godot.resolve()), '--path', str(ROOT / 'godot'),
         '--script', 'res://scripts/runtime/frontend_selection_roundtrip.gd', '--',
         '--screen=0', '--scale=1', '--expect-debug=true', '--roundtrip-output=' + str(run)]
+    if args.confirm_selection:
+        command.append('--confirm-selection')
     env = os.environ.copy()
     # Force the original empty-profile startup and isolate any private writes.
     # The nonexistent read-only input never modifies a real player save.
@@ -66,6 +70,9 @@ def main():
     labels = {checkpoint['label'] for checkpoint in result.get('checkpoints', [])}
     required = {'main-menu', 'mode-select', 'event-tree', 'event-details', 'final'} | {
         f'{prefix}-{cycle}' for prefix in ('select-car', 'returned') for cycle in range(3)}
+    if args.confirm_selection:
+        required = {'main-menu', 'mode-select', 'event-tree', 'event-details',
+            'select-car-0', 'selection-confirmed', 'handling-popup', 'popup-cancelled', 'final'}
     ok = manifest.get('exit_code') == 0 and not errors and result.get('ok') is True and image_valid and required <= labels
     manifest.update(ok=ok, result=result, screenshot_valid=image_valid, missing_checkpoints=sorted(required - labels))
     (run / 'manifest.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')

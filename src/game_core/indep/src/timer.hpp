@@ -1,9 +1,20 @@
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
 #include <cstdint>
+#include <string>
+namespace port::driving {class Memory;}
 namespace hp2::debug {
 // Decoded packed carrier only, E-0098-RP04; not the full original Timer interface/ABI.
-struct Timer {std::int32_t PackedTime=0;};
+struct Timer {std::int32_t PackedTime=0;
+ // Debug001A1548/001A1600, E-0099-W34. Memory supplies loaded constants.
+ float GetSecondsRounded(const ::port::driving::Memory&,float iota)const;
+ void RoundTime(const ::port::driving::Memory&,float iota);
+ int CountDown(float seconds); //Debug001A14C8, E-0099-W47.
+ void GetHoursMinsSeconds(int&,int&,int&,int&)const; //001A1300, W72.
+ void PrintToString(::port::driving::Memory&,std::uint32_t,int flags); //001A1370.
+};
+void IntToString2(::port::driving::Memory&,std::uint32_t,int,int,bool); //001A1018.
+void PrintToString(::port::driving::Memory&,std::uint32_t,int,int,int,int,int); //001A1098.
 }
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
@@ -34,4 +45,15 @@ std::int32_t GetQuantizedRealTimeElapsed(float);
 void PrepareRealTimestep(::port::driving::Memory&,float,::port::driving::native::ScheduleServices&);
 void AdvanceRealTime(::port::driving::Memory&);void ResetWorldTime(::port::driving::Memory&);
 void PrepareWorldTimestep(::port::driving::Memory&,float);void AdvanceWorldTime(::port::driving::Memory&);
+}
+
+namespace hp2::debug {void WorldTimeDoSnapshot(::port::driving::Memory&,std::uint32_t snapshot); /*001A0F20 E-0099-W76.*/}
+
+#include "game_core/port/race/debug_transport.hpp"
+namespace hp2::debug {
+// Debug001A0C50, E-0099-W85. Concrete original Joylog calls, with only the
+// optional development-monitor transport supplied by the native platform.
+// Legacy recovered::ScheduleServices overload remains a separate old adapter.
+void PrepareRealTimestep(::port::driving::Memory&,float,
+                        const ::port::race::MonitorSyscall& ={});
 }

@@ -109,12 +109,16 @@ public:
  const ParticleResources& resources()const{return resources_;}
  std::uint32_t global_seed()const{return seed_;}
  std::size_t particle_count()const;
+ // TASK-0107: read-only publication of W53 source records after World commits.
+ // No emitter trigger, RNG consumption or particle integration occurs here.
+ void import_committed_world(const port::driving::Memory&,std::uint32_t system=0x2e6f40);
  // E-0075-D02: active groups with pCar read the current Car.State.Velocity,
  // independently of the last emission. This adapter owns one driving car.
  void set_car_velocity(const std::array<float,3>& value){car_velocity_=value;}
  // Port-only step transaction optimization; definitions and traversal indices stay put during step.
  void set_state_cache(bool enabled){state_cache_=enabled;}
 private:
+ bool committed_world_snapshot_=false;
  bool state_cache_=false,gpu_emission_=false;
  bool shared_accounting_=false;
  std::uint64_t next_group_id_=1;

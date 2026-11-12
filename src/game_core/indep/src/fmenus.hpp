@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -46,6 +47,9 @@ inline constexpr std::uint32_t kQuadWidgetId      = 0x00010210; // 144-byte text
 inline constexpr std::uint32_t kTextWidgetId      = 0x00010212; // variable-size text widget
 
 struct FeWidget {
+    // Port-only identity for a live native snapshot. Names may repeat (NONAME).
+    // Never serialized as an original Flailer field or dereferenced by drawing.
+    std::uint32_t port_source_address = 0;
     std::uint32_t chunk_id = 0;     // kQuadWidgetId or kTextWidgetId
     std::uint32_t name_hash = 0;    // +0x08; appears as a literal immediate in the ELF
     std::uint32_t class_hash = 0;   // +0x0c; shared by widgets of the same class
@@ -63,6 +67,12 @@ struct FeWidget {
     // E-0039-Q02/Q03, quad-only remaining TR/BR/BL packed colours and TL/TR/BR/BL UVs.
     std::array<std::uint32_t, 3> field_0x5c{0x80808080u,0x80808080u,0x80808080u};
     std::array<float, 8> field_0x70{0,0,1,0,1,1,0,1};
+    // Port-only immutable ePoly packet corners; source producers already
+    // performed rotation, tachometer fan generation and clipping.
+    std::optional<std::array<std::array<float,2>,4>> port_quad_corners;
+    // E-0112-P03: port draw transport for Debug00144CC0 explicit text rectangle.
+    // This metadata has no field in the serialized Flailer object.
+    std::optional<std::array<float,4>> port_text_rectangle;
     std::uint32_t text_capacity = 0; // +0x54 (text widgets): authored buffer length
     std::uint32_t text_align = 0;    // +0x58 (text widgets): a bitfield, not an enum --
                                      // FUN_00140FA8 tests bits 1, 2 and 4 of it when it rescales
@@ -518,6 +528,9 @@ struct WidgetMetrics {
     float height = 0.0f;
 };
 using WidgetMeasure = std::function<WidgetMetrics(const FeWidget&)>;
+// E-0098-X04: same scanner; preserves bottom-Y before unused lines are hidden.
+// Debug00144990 is reviewed semantically, not ABI-overlaid.
+int Sub_00144BA0(FeScreen&,std::uint32_t,const std::string&,const WidgetMeasure&);
 
 // FUN_00144280(doc, hash, &x0, &y0, &x1, &y1): the widget's bounding box, where x1/y1 are
 // x + FUN_00140588(widget) and y + FUN_001405E0(widget). (E-0015-06)

@@ -22,6 +22,10 @@ struct Quad {
  bool has_vertex_data=false;
  std::array<Vec2,4> positions{}, source_points{};
  std::array<Color,4> colors{};
+ // Port transport of original ePoly STQ. source_points carry S/T in bitmap
+ // pixels when present; the GPU divides interpolated ST by interpolated Q.
+ bool has_projective_uv=false;
+ std::array<float,4> projective_q{{1,1,1,1}};
  // E-0098-F04: authored Flailer layer survives glyph expansion/clipping and
  // document concatenation. -1 denotes legacy/untagged port quads.
  std::int8_t frontend_layer=-1;

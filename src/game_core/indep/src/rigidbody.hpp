@@ -2,6 +2,7 @@
 // TASK-0044 E-0044-S01/S02; Debug SHA256815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
 // Exact owner/source RigidBody, indep/src/rigidbody.cpp. Host storage binds explicit PS2 Memory.
 #include "game_core/port/driving/object_view.hpp"
+#include "game_core/port/race/snapshot_services.hpp"
 #include "game_core/port/driving/projections.hpp"
 namespace hp2::recovered {
 // Debug0019ac98; E-0044-S01. Bounded vector/matrix host values.
@@ -9,7 +10,9 @@ port::driving::SolverMatrix VectorStarMatrix(const port::driving::SolverVector&,
 class RigidBody : public port::driving::ObjectView {
 public:
  using ObjectView::ObjectView;
+ void DoSnapshot(std::uint32_t snapshot,const ::port::race::SnapshotServices& ={}); //Debug0019A398, E-0099-W74.
  // Debug0019a2d8 constructor body; original allocation separate from host lifetime.
+ void Sub_0019B5F8(int); // Debug destructor, E-0099-W33
  void port_initialize(std::uint32_t config);
  // Debug0019a568/0019a580.
  void SetState(std::uint32_t position,std::uint32_t matrix,std::uint32_t velocity,std::uint32_t angular);

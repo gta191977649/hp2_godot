@@ -1,4 +1,5 @@
 #include "game_core/indep/src/frontendscreens/selectcar.hpp"
+#include "game_core/port/frontend/popup.hpp"
 #include "game_core/port/not_implemented.hpp"
 #include "platform/ps2_asset_root.hpp"
 #include "game_core/port/assets/fe_language.hpp"
@@ -16,6 +17,129 @@ std::vector<std::uint8_t> read(const std::string& path){
 }
 }
 int main(){
+    {
+        // Explicit port fixtures, not an original-frame or ELF comparison.
+        hp2::frontend::FeScreen text;std::vector<hp2::frontend::FeWidget> lines;
+        for(int i=0;i<3;++i){hp2::frontend::FeWidget w;w.type=1;w.class_hash=9;w.text_capacity=8;
+            w.y=10.f+i*12;w.visible=1;text.widgets.push_back(w);}
+        const hp2::frontend::WidgetMeasure measure=[](const auto&){return hp2::frontend::WidgetMetrics{20,7};};
+        require(hp2::frontend::Sub_00144BA0(text,9,"short",measure)==29,
+            "popup bottom must use next authored line before hiding it");
+        require(text.widgets[0].text=="short" && !text.widgets[1].visible && !text.widgets[2].visible,
+            "popup unused line visibility differs");
+        require(hp2::frontend::Sub_00144BA0(text,9,"a@b@c",measure)==41 && text.widgets[2].text=="c",
+            "popup last line bottom differs");
+        require(hp2::frontend::Sub_00144BA0(text,9,"a@b@c@d",measure)==0,
+            "popup exhausted-line return differs");
+        port::driving::Memory memory;memory.map(0x327628,24);memory.map(0x328e40,8);
+        memory.word(0x327628,128);memory.word(0x32762c,64);memory.word(0x327630,0);
+        memory.word(0x327634,24);memory.word(0x327638,24);memory.word(0x32763c,24);
+        memory.scalar(0x328e40,1);memory.scalar(0x328e44,2);
+        hp2::frontend::FeScreen document;document.name_hash_0x08=123;
+        for(int i=0;i<3;++i){hp2::frontend::FeWidget w;w.type=1;w.name_hash=0xe0105663u+i;
+            w.r=10+i;w.g=20;w.b=30;w.a=57;document.widgets.push_back(w);}
+        port::frontend::PopupView view(document,memory,measure,[](int){return std::string("translated");});
+        auto svc=view.services([](auto,auto&){},[](int){});
+        for(int i=0;i<3;++i)svc.reset_item(i,123,0);
+        svc.highlight(1);auto& w=view.screen.widgets[1];
+        require(w.r==128 && w.g==64 && w.b==0 && w.a==57 && w.dirty_0x2b==1,
+            "popup item highlight changed original alpha or colour");
+        svc.unhighlight(1);require(w.r==11 && w.g==20 && w.b==30 && w.a==57,
+            "popup item did not restore saved RGB");
+        svc.set_highlight_animation(1);
+        hp2::frontend::FeWidget unrelated;unrelated.name_hash=0xab671c9a;
+        require(!view.ghost_target(unrelated),"popup ghost hijacked another document's identical hash");
+        port::frontend::PopupView second(document,memory,measure,[](int){return std::string("translated");});
+        const auto first_targets=view.button_targets(&view.screen,0,3);
+        const auto second_targets=second.button_targets(&second.screen,1,3);
+        require(first_targets.at(0xe0105663u)=="popup:0:0" && second_targets.at(0xe0105663u)=="popup:1:0",
+            "two live popup slots aliased their UI action identities");
+        require(view.button_targets(&second.screen,0,3).empty() && second.button_targets(&view.screen,1,3).empty(),
+            "popup targets leaked into another document with identical hashes");
+    }
+    {
+        port::frontend::PopupMenu popup;popup.active=true;popup.config.n_buttons=3;
+        popup.config.button_params={1,2,3};popup.index=0;
+        std::vector<std::string> calls;
+        port::frontend::PopupServices svc;
+        {
+            port::frontend::PopupMenu summoned;port::frontend::PopupServices init;
+            std::vector<std::string> order;port::selection::Popup config;
+            config.n_buttons=3;config.start_button=2;config.message_id=49000;
+            config.button_ids={10,20,30};config.flags=7;config.title_id=40;
+            init.show_view=[&]{require(summoned.active && summoned.config.message_id==49000,"show before config copy");order.emplace_back("show");};
+            init.callback=[&](auto msg,auto& data){require(msg==hp2::debug::POPUP_ACTIVE && data.Port==-1 && data.Noise==0,"summon callback payload differs");data.Noise=3;order.emplace_back("callback");};
+            init.sound=[&](int n){require(n==3,"summon ignored callback noise");order.emplace_back("sound");};
+            init.reset_item=[&](int i,auto hash,int port){require(hash==config.screen_hash && port==config.port,"item screen/port differs");order.push_back("reset"+std::to_string(i));};
+            init.highlight=[&](int i){require(i==2,"configured starting index lost");order.emplace_back("highlight");};
+            init.render_message=[&](int id){require(id==49000,"message ID differs");order.emplace_back("message");return 35;};
+            init.set_top_y=[&](auto hash,int y){require(y==45,"button baseline differs");order.push_back("y"+std::to_string(hash-0xe0105663u));};
+            init.clear_text=[&](auto hash){order.emplace_back(hash==0x85eda094u?"clear-title":"clear-button");};
+            init.set_language=[&](auto hash,int id){require(id==(hash==0x85eda094u?40:config.button_ids.at(hash-0xe0105663u)),"button/title language differs");order.emplace_back("language");};
+            init.align_arrows=[&]{order.emplace_back("arrows");};
+            init.set_highlight_animation=[&](int i){require(i==2,"animation target differs");order.emplace_back("animation");};
+            summoned.Sub_0016AAD8(config,init);
+            require(order==std::vector<std::string>({"show","callback","sound","reset0","reset1","reset2","highlight","message","y0","y1","y2","clear-button","clear-button","clear-button","clear-title","language","language","language","language","arrows","animation"}),"Summon operation order differs");
+            require(!hp2::guard([&]{summoned.Sub_0016AAD8(config,{});}).empty(),"Summon silently omitted view");
+        }
+        svc.dismiss_view=[&]{require(popup.active,"popup hidden after deactivation");calls.emplace_back("hide");};
+        svc.unhighlight=[&](int i){calls.push_back("off"+std::to_string(i));};
+        svc.highlight=[&](int i){calls.push_back("on"+std::to_string(i));};
+        svc.item_hash=[](int i){return std::uint32_t(100+i);};
+        svc.set_highlight_animation=[&](int i){calls.push_back("anim"+std::to_string(i));};
+        svc.align_arrows=[&]{calls.emplace_back("arrows");};
+        svc.sound=[&](int i){calls.push_back("sound"+std::to_string(i));};
+        svc.callback=[&](auto msg,auto& data){
+            if(msg==hp2::debug::POPUP_DISMISS){
+                require(!popup.active && data.Param==3 && data.Noise==5 && data.Port==1,
+                    "popup dismissal parameter/activity/noise/port differs");
+                popup.active=true;popup.config.message_id=99;data.Noise=18;calls.emplace_back("next-popup");
+            }else{
+                require(msg==hp2::debug::POPUP_NEXT && data.ItemHash==102 && data.Param==0 && data.Noise==1,
+                    "popup navigation callback differs");calls.emplace_back("move");
+            }
+        };
+        popup.Sub_0016AF28(1,5,0,svc);require(calls.empty(),"release changed popup");
+        popup.Sub_0016AF28(1,3,1,svc);require(calls.empty(),"horizontal popup accepted digital up");
+        popup.Sub_0016AF28(1,5,1,svc);
+        require(popup.index==2 && calls==std::vector<std::string>({"off0","on2","move","sound1","anim2","arrows"}),
+            "popup wrap/highlight/callback/animation order differs");
+        calls.clear();popup.Sub_0016AF28(1,9,1,svc);
+        require(popup.active && popup.config.message_id==99 && calls==std::vector<std::string>({"hide","next-popup","sound18"}),
+            "reentrant dismissal erased next popup or callback noise");
+        require(!hp2::guard([&]{popup.Sub_0016AE08(1,3,{});}).empty(),"missing popup view silently dismissed");
+        int dismissed=-1;svc.callback=[&](auto msg,auto& data){
+            if(msg==hp2::debug::POPUP_DISMISS)dismissed=data.Param;
+        };
+        popup.config.flags=8;popup.Sub_0016AF28(1,9,1,svc);
+        require(dismissed==-1,"noncancellable flags8 popup accepted confirmation");
+        popup.config.flags=10;popup.config.cancel_param=42;popup.Sub_0016AF28(1,9,1,svc);
+        require(dismissed==42,"flags8 confirmation did not take cancel branch");
+        popup.active=true;popup.config.flags=0;popup.index=1;popup.config.n_buttons=3;
+        popup.Sub_0016AF28(1,5,1,svc);require(popup.index==1,"vertical popup accepted digital horizontal");
+        popup.Sub_0016AF28(1,4,1,svc);require(popup.index==2,"vertical down did not advance");
+        popup.Sub_0016AF28(1,4,1,svc);require(popup.index==0,"vertical down failed to wrap");
+        popup.config.flags=1;popup.Sub_0016AF28(1,18,1,svc);require(popup.index==2,"analog left mapping differs");
+        popup.Sub_0016AF28(1,19,1,svc);require(popup.index==0,"analog right mapping differs");
+        popup.config.n_buttons=0;popup.config.button_params[0]=7;
+        popup.active=true;popup.Sub_0016AF28(1,7,1,svc);require(dismissed==7,"zero-button Start parameter differs");
+        port::frontend::PopupList slots;port::selection::Popup config;
+        const auto summon=[](auto& menu,const auto& config){menu.config=config;menu.active=true;};
+        require(slots.Sub_0016C028(config,summon)==0 && slots.Sub_0016C028(config,summon)==1,
+            "popup owner did not allocate first inactive slot");
+        require(slots.Sub_0016C028(config,{})==-1,"full popup owner invoked missing summon or exceeded two slots");
+        slots.Sub_0016C080(-1,{});slots.Sub_0016C080(2,{});
+        bool hidden=false;port::frontend::PopupServices owner_svc;
+        owner_svc.dismiss_view=[&]{hidden=true;};owner_svc.sound=[](int){};
+        owner_svc.callback=[&](auto msg,auto& data){
+            require(msg==hp2::debug::POPUP_DISMISS && hidden && data.Param==6 && !slots.menus[0].active,
+                "programmatic popup dismissal config/order differs");
+            require(slots.Sub_0016C028(config,summon)==0,"reentrant popup did not reuse released first slot");
+        };
+        slots.Sub_0016C080(0,owner_svc);require(slots.menus[0].active,"owner erased callback replacement");
+        slots.menus[1].active=false;slots.Sub_0016C080(1,{});
+        require(!hp2::guard([&]{slots.Sub_0016C028(config,{});}).empty(),"inactive slot silently skipped missing Summon");
+    }
     using namespace hp2::debug;
     std::array<CarTypeInfo,64> cars{};
     for(int i=0;i<64;++i){
@@ -128,6 +252,37 @@ int main(){
     require(list.VisibleCarList[0]->eCarType==2 && list.pCurrentVisibleCar==selected && selected->CarIndex==1,
         "sort invalidated current identity or did not assign final indices");
     CarSelector selector{list};SelectCarScreen screen;screen.NumCarSelectors=1;screen.CarSelectors[0]=&selector;
+    std::vector<std::string> continuation_calls;
+    port::selection::ContinuationServices continuation;
+    continuation.dismiss_all_popups=[&]{
+        require(player.GetSelectedRideInfo(fred.GameType).Type==selected->eCarType,
+            "continuation dismissed before committing selected ride");
+        continuation_calls.emplace_back("dismiss");
+    };
+    continuation.start_race=[&]{continuation_calls.emplace_back("race");};
+    continuation.change_screen=[&](const char* name,bool push){
+        require(std::string(name)=="Select Track" && push,"continuation track/history differs");
+        continuation_calls.emplace_back("track");
+    };
+    require(!SelectCarScreen::MaybeContinueToNextScreen(nullptr,fred,cars,{}),"absent selection continued");
+    require(!SelectCarScreen::MaybeContinueToNextScreen(&screen,fred,cars,{}),"unready selection continued");
+    selector.SelectorState=SS_HANDLING;
+    for(int mode:{8,9,0}){
+        fred.GameType=mode;continuation_calls.clear();
+        require(SelectCarScreen::MaybeContinueToNextScreen(&screen,fred,cars,continuation)==1,
+            "ready selection failed to continue");
+        require(continuation_calls==std::vector<std::string>({"dismiss",mode==0?"track":"race"}),
+            "continuation branch/order differs");
+    }
+    fred.GameType=9;
+    continuation.dismiss_all_popups=[&]{continuation_calls.emplace_back("dismiss");fred.GameType=0;};
+    continuation_calls.clear();
+    SelectCarScreen::MaybeContinueToNextScreen(&screen,fred,cars,continuation);
+    require(continuation_calls==std::vector<std::string>({"dismiss","track"}),"GameType read before dismissal");
+    fred.GameType=9;
+    require(!hp2::guard([&]{SelectCarScreen::MaybeContinueToNextScreen(&screen,fred,cars,{});}).empty(),
+        "missing continuation service silently succeeded");
+    selector.SelectorState=SS_SELECT;
     port::selection::Popup popup;int popups=0,launches=0;
     const port::selection::SelectorServices selector_services{
         [&](const auto& p){popup=p;return ++popups;},

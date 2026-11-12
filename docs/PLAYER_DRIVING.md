@@ -1,9 +1,29 @@
+## TASK-0111 minimal driving policy, 2026-11-06
+
+The World host now defaults to **Minimal FreeRun**: one actual source player,
+original no-police/zero-traffic setup producers, no AI/traffic/cop participants.
+Incomplete skid trails are disabled before execution; wheel forces/contact,
+physics, collision, original input and routes continue. Engine audio remains
+active. F8 shows each missing function as a WARNING with original address,
+reason, action and repeat counts. Warnings survive a hidden console and worker
+threads. --world-strict retains the prior strict13-car diagnostic path.
+
+This is a user-authorized PC preset, not original equivalence or a completed
+Championship race. Mandatory simulation gaps still freeze the last complete
+frame and produce a warning. P pauses, period steps, R creates a fresh source
+World and Esc returns. See TASK-0111 and reverse/task0111 for tested scope.
+
 # TASK-0046 player controls and skid marks
 
-Test drive remains embedded in CarViewer. Its behavior target is Debug NFSHP2.ELF,
-SHA-256 815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
-This is a synthetic-plane vehicle test, not a recovered race/track environment.
-Implementation and original numerical certification are reported separately.
+TASK-0107 supersedes the historical embedded single-car entry: CarViewer Test
+drive, TrackViewer Drive on track, F8 driving and the direct race scene now use
+one actual source World. The behavior authority remains Debug NFSHP2.ELF,
+SHA-256815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
+The synthetic NativeBackend survives as a C++ research fixture only. Historical
+plane/embedded-UI acceptance scripts below are not World acceptance; no current
+World build claims their results. Source shared-skid publication1A88C8 is an
+explicit current boundary. See TASK0107_WORLD_DEBUG_UI.md and DEVELOPMENT.md.
+Implementation and original numerical certification remain separate.
 
 ## Controls and input ownership
 
@@ -86,6 +106,18 @@ comparison limits; rolling/damaged-tire and spatial services are not complete.
 
 ## TASK-0084 Test drive camera
 
+TASK-0112 (2026-11-06) binds the actual source Player/DriveCameraMover/Camera
+to WorldSession. V selects an eligible original POV after the original initial
+one-second input gate; hold B for rear view. Right-drag or click the world to
+capture the mouse for temporary observation; idle returns to the source camera.
+Escape releases capture first; otherwise it retains current debug navigation.
+F11 toggles host fullscreen. World uses explicit Hor+ projection relative to4:3,
+preserving vertical coverage at16:9/21:9; original camera fields are unchanged.
+The standalone research adapter retains its historical KEEP_WIDTH default.
+Dashboard GPU presentation remains warned/disabled in minimal mode and guarded
+in strict mode. Full original race HUD/pause/results remain active work. See
+`reverse/task0112/presentation.md` and TASK-0112; no Verified claim.
+
 Test drive defaults to the recovered fullscreen exterior camera (player
 settings POV1), with the original normal/look-back transition. TASK0088 corrects
 V to cycle the available original driving POVs, including forward-facing bumper.
@@ -100,3 +132,15 @@ outside71.52099609375 degrees) and recovered near plane. Exiting restores the
 viewer's prior projection and pose. Evidence and limitations: reverse/task0088
 and reverse/task0084/camera.md and modes.md. Mouse
 sensitivity, idle delay and return rate are host policy, not recovered PS2 tuning.
+
+TASK-0111 control policy (2026-11-06): the minimal-driving PC preset selects manual transmission through recovered RealDriver::SetManualTransmission so Q/E operate gears. Strict mode retains original setup. Ghidra inspection of Debug001770D8/0013BC90/0013BD70 confirms automatic-mode callbacks reroute to Player preview/freeze, whose dependencies remain unrecovered. This is an explicit PC preset, not original FreeRun parity. Pause changes its label to Resume while paused.
+
+
+TASK-0100 terminal diagnostics update2026-11-06: runtime missing-feature
+WARNING messages are mirrored directly to stderr with full ELF address, reason,
+action and repeat count, while the retained F8 console receives the same
+messages. build --run uses the pinned console executable with inherited streams.
+Distinct messages are not truncated; identical repeats use first/powers-of-two
+summaries with exact counters retained. ABI boundary exceptions and host error
+logs also go to stderr. Mandatory gaps still stop; logging does not suppress
+exceptions or skip simulation.

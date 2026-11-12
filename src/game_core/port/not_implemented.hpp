@@ -3,6 +3,7 @@
 // read this path as evidence of where the original kept this code.
 #pragma once
 #include <cassert>
+#include <atomic>
 #include <cstdio>
 #include <cstdlib>
 #include <stdexcept>
@@ -48,11 +49,20 @@ public:
 // code.
 using NotImplementedHandler = void (*)(const char* elf_address, const char* what,
                                        const char* message);
+// Port-side diagnostics observer, independent of the debugger reaction. It is
+// called for every reached gap before the original failure policy. Exceptions
+// from an observer are isolated here and never replace NotImplemented.
+using NotImplementedObserver = void (*)(const char* elf_address, const char* what,
+                                        const char* message);
 
 namespace detail {
-inline NotImplementedHandler& not_implemented_handler_slot() {
-    static NotImplementedHandler handler = nullptr;
+inline std::atomic<NotImplementedHandler>& not_implemented_handler_slot() {
+    static std::atomic<NotImplementedHandler> handler{nullptr};
     return handler;
+}
+inline std::atomic<NotImplementedObserver>& not_implemented_observer_slot() {
+    static std::atomic<NotImplementedObserver> observer{nullptr};
+    return observer;
 }
 // Zero-configuration fallback: HP2_ASSERT_NOT_IMPLEMENTED=1 routes through the standard
 // assert() so a debug build stops at the site with no host code at all.
@@ -67,7 +77,13 @@ inline bool assert_requested() {
 
 // Install (or, with nullptr, remove) the debug reaction. One call, in one place, at startup.
 inline void set_not_implemented_handler(NotImplementedHandler handler) {
-    detail::not_implemented_handler_slot() = handler;
+    detail::not_implemented_handler_slot().store(handler,std::memory_order_release);
+}
+// Install/remove only function pointers whose code remains alive until all
+// callers have joined. Atomic publication prevents source worker data races;
+// removal does not wait for an already-running callback.
+inline void set_not_implemented_observer(NotImplementedObserver observer) noexcept {
+    detail::not_implemented_observer_slot().store(observer,std::memory_order_release);
 }
 
 // The one report point for a reached-but-untranslated recovered path.
@@ -78,7 +94,11 @@ inline void set_not_implemented_handler(NotImplementedHandler handler) {
     message += elf_address;
     message += " not implemented; see tasks/active and reverse/functions records)";
 
-    if (const auto handler = detail::not_implemented_handler_slot()) {
+    if (const auto observer=detail::not_implemented_observer_slot().load(std::memory_order_acquire)) {
+        try { observer(elf_address,what,message.c_str()); }
+        catch (...) { /* Diagnostics must never replace the original failure. */ }
+    }
+    if (const auto handler = detail::not_implemented_handler_slot().load(std::memory_order_acquire)) {
         handler(elf_address, what, message.c_str());
     } else if (detail::assert_requested()) {
         std::fprintf(stderr, "%s\n", message.c_str());

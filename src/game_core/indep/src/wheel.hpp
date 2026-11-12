@@ -12,7 +12,10 @@ void SetSliderValue(int,float,float,float);
 class Wheel : public port::driving::ObjectView {
 public:
     using ObjectView::ObjectView;
+ void DoSnapshot(std::uint32_t snapshot); //E-0099-W74; exact source entry documented at body.
+
     // Debug001a16e8: original constructor body, explicit host lifetime adapter.
+    void Sub_001A3410(int); // Debug destructor, E-0099-W33
     void port_initialize(std::uint32_t wi,std::uint32_t ti,std::uint32_t ci,std::uint32_t car_state);
     // Debug001a1b20.
     void Calibrate();

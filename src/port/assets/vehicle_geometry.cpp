@@ -99,6 +99,7 @@ render::VehicleSolid solid(const Reader& r,const Chunk& parent) {
     for(std::size_t i=0;i<24 && r.data[header+0x10+i];++i)result.name.push_back(char(r.data[header+0x10+i]));
     result.external_rigid_animation_hash=r.u32(header+0x28);
     result.strip_flags=r.u16(header+0x32);
+    result.animation_node_count=r.u32(header+0xa0);
     for(std::size_t i=0;i<3;++i){result.bounds_min[i]=r.f32(header+0x40+i*4);result.bounds_max[i]=r.f32(header+0x50+i*4);}
     for(std::size_t i=0;i<16;++i)result.transform[i]=r.f32(header+0x60+i*4);
     const auto count=r.u16(header+0x34);
@@ -147,6 +148,20 @@ render::VehicleSolid solid(const Reader& r,const Chunk& parent) {
             vertex.uv=hp2::recovered::eStripData::GetST0(packet_data,0,j);
             vertex.raw_color=hp2::recovered::eStripDataE::GetElementRGBA(packet_data,0,j);
             vertex.has_color=true;
+            if(result.animation_node_count){
+                // Exact grouped/remainder XYZ addressing from GetXYZ and
+                // DoBlendingOnStrip0010DB40. No bit clearing/quantization:
+                // source blends the same floats containing these low bytes.
+                const auto groups=vertex_count/4,remainder=vertex_count%4;
+                const auto lane=j%4;std::size_t xyz=0x20+(j/4)*0x30;
+                std::array<std::uint32_t,3> bits{};
+                if(j<std::size_t(groups)*4){for(unsigned axis=0;axis<3;++axis)bits[axis]=packet_reader.u32(xyz+axis*16+lane*4);}
+                else{if(groups)xyz+=4;for(unsigned axis=0;axis<3;++axis)bits[axis]=packet_reader.u32(xyz+(std::size_t(remainder)*axis+lane)*4);}
+                render::VehicleSkinBinding binding{std::uint8_t(bits[0]),std::uint8_t(bits[1]),std::uint8_t(bits[2])};
+                if((binding.raw_weight!=1&&binding.matrix0>=result.animation_node_count)||(binding.raw_weight!=0&&binding.matrix1>=result.animation_node_count))
+                    hp2::not_implemented("0x0010DB40","source vertex bone index exceeds actual animation tree");
+                vertex.skin=binding;
+            }
             for(std::size_t component=0;has_normals&&component<3;++component){
                 const auto raw=packet_data[normal_command+4+(j/4)*12+component*4+j%4];
                 const auto signed_value=raw<128?int(raw):int(raw)-256;

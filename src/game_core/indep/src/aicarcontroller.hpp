@@ -15,3 +15,8 @@ public:
     void Clear();
 };
 } // namespace hp2::recovered
+
+#include "game_core/port/driving/object_view.hpp"
+namespace hp2::debug {
+class DrivingInformation:public ::port::driving::ObjectView {public:using ObjectView::ObjectView;void DoSnapshot(std::uint32_t snapshot);}; //00191B78,W74.
+}

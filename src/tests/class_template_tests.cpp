@@ -1272,18 +1272,6 @@ int main() {
     failures += !expect_gap("0x00230BF8", "tAICop::IsNearPursuitTarget", [] { hp2::recovered::tAICop instance; instance.IsNearPursuitTarget(); });
     failures += !expect_gap("0x002491B0", "tAnimatedBlurb::Sub_002491B0", [] { hp2::recovered::tAnimatedBlurb instance; instance.Sub_002491B0(); });
     failures += !expect_gap("0x001F8C10", "tCarLogoAnimation::Sub_001F8C10", [] { hp2::recovered::tCarLogoAnimation instance; instance.Sub_001F8C10(); });
-    failures += !expect_gap("0x002244A0", "tCopManager::GetNextPursuitID", [] { hp2::recovered::tCopManager instance; instance.GetNextPursuitID(); });
-    failures += !expect_gap("0x00224F70", "tCopManager::GetCopByCar", [] { hp2::recovered::tCopManager instance; instance.GetCopByCar(); });
-    failures += !expect_gap("0x002254E8", "tCopManager::GetCurrentCopSpeaker", [] { hp2::recovered::tCopManager instance; instance.GetCurrentCopSpeaker(); });
-    failures += !expect_gap("0x002255B8", "tCopManager::ReserveCopSpeaker", [] { hp2::recovered::tCopManager instance; instance.ReserveCopSpeaker(); });
-    failures += !expect_gap("0x00225610", "tCopManager::ReleaseCopSpeaker", [] { hp2::recovered::tCopManager instance; instance.ReleaseCopSpeaker(); });
-    failures += !expect_gap("0x00225C40", "tCopManager::GetArrestingOfficer", [] { hp2::recovered::tCopManager instance; instance.GetArrestingOfficer(); });
-    failures += !expect_gap("0x00226238", "tCopManager::GetActiveRoadBlock", [] { hp2::recovered::tCopManager instance; instance.GetActiveRoadBlock(); });
-    failures += !expect_gap("0x00226448", "tCopManager::GetRoadBlockFromLoadedDataIndex", [] { hp2::recovered::tCopManager instance; instance.GetRoadBlockFromLoadedDataIndex(); });
-    failures += !expect_gap("0x00226968", "tCopManager::GetNumActiveRoadBlocks", [] { hp2::recovered::tCopManager instance; instance.GetNumActiveRoadBlocks(); });
-    failures += !expect_gap("0x00226BB0", "tCopManager::GetSpeedTrapFromLoadedDataIndex", [] { hp2::recovered::tCopManager instance; instance.GetSpeedTrapFromLoadedDataIndex(); });
-    failures += !expect_gap("0x00227438", "tCopManager::IsBeingPursued", [] { hp2::recovered::tCopManager instance; instance.IsBeingPursued(); });
-    failures += !expect_gap("0x002289F8", "tCopManager::ShouldDisplayBustedText", [] { hp2::recovered::tCopManager instance; instance.ShouldDisplayBustedText(); });
     failures += !expect_gap("0x001DA780", "tCubic1D::MakeCoeffs", [] { hp2::recovered::tCubic1D instance; instance.MakeCoeffs(); });
     failures += !expect_gap("0x001DA7D0", "tCubic1D::GetVal", [] { hp2::recovered::tCubic1D instance; instance.GetVal(); });
     failures += !expect_gap("0x001DA800", "tCubic1D::GetdVal", [] { hp2::recovered::tCubic1D instance; instance.GetdVal(); });
@@ -1346,6 +1334,6 @@ int main() {
     failures += !expect_gap("0x00250100", "tWordQueue::Remove", [] { hp2::recovered::tWordQueue instance; instance.Remove(); });
     failures += !expect_gap("0x001B9CD0", "vAABB::Contains", [] { hp2::recovered::vAABB instance; instance.Contains(); });
     failures += !expect_gap("0x001B9D40", "vAABB::Encloses", [] { hp2::recovered::vAABB instance; instance.Encloses(); });
-    std::cout << "CLASS_TEMPLATE_GAPS_CHECKED: 1064\n";
+    std::cout << "CLASS_TEMPLATE_GAPS_CHECKED: 1052\n";
     return failures ? 1 : 0;
 }

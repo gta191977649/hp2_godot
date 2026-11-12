@@ -5,6 +5,8 @@ param(
  [ValidateSet('safe','separate')][string]$RenderThread='safe',
  [ValidateRange(120,720)][int]$FrameLimit=720,
  [switch]$SubmitRepair,
+ [switch]$DepthDiscovery,
+ [switch]$VehicleDepthStaging,
  [switch]$LegacyReference
 )
 # Port-side actual driving/image fixture; sequential GPU execution required.
@@ -13,10 +15,14 @@ $portRoot=Split-Path -Parent $PSScriptRoot
 $portProject=(Resolve-Path -LiteralPath $ProjectPath).Path
 $portOutput=[IO.Path]::GetFullPath($OutputDirectory)
 if($LegacyReference -and ($PrepareWorkers -ne 0 -or $RenderThread -ne 'safe')){throw 'Legacy reference must use0/Safe'}
+if($DepthDiscovery -and ($SubmitRepair -or $LegacyReference -or $VehicleDepthStaging)){throw 'DepthDiscovery is an independent candidate'}
+if($VehicleDepthStaging -and ($SubmitRepair -or $LegacyReference)){throw 'VehicleDepthStaging is an independent candidate'}
 New-Item -ItemType Directory -Force -Path $portOutput | Out-Null
 $portEngine=Join-Path $portRoot 'local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64.exe'
 $portArgs=@('--windowed','--position','32,32','--render-thread',$RenderThread,'--disable-vsync','--rendering-method','forward_plus','--rendering-driver','vulkan','--path',$portProject,'--audio-driver','Dummy','--script','res://scripts/runtime/task0072_driving_parity.gd','--',"--driving-parity-frame-limit=$FrameLimit",("--driving-parity-output="+$portOutput),'--track-sun-gpu-resident=true',"--render-prepare-workers=$PrepareWorkers","--render-thread-requested=$RenderThread")
 if($SubmitRepair){$portArgs+=@('--track-submit-math=true','--track-vehicle-depth-staging=true','--track-depth-discovery-cache=true')}
+if($DepthDiscovery){$portArgs+='--track-depth-discovery-cache=true'}
+if($VehicleDepthStaging){$portArgs+='--track-vehicle-depth-staging=true'}
 $portQuoted=@($portArgs | ForEach-Object {'"'+$_.Replace('"','\"')+'"'})
 $portProcess=Start-Process -FilePath $portEngine -ArgumentList $portQuoted -WorkingDirectory $portRoot -WindowStyle Hidden -RedirectStandardOutput (Join-Path $portOutput 'run.log') -RedirectStandardError (Join-Path $portOutput 'errors.log') -PassThru
 Write-Output "Parity PID=$($portProcess.Id) workers=$PrepareWorkers render=$RenderThread"

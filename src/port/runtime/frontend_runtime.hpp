@@ -12,6 +12,9 @@
 #include "port/runtime/event_tree_view.hpp"
 #include "port/runtime/frame_builder.hpp"
 #include "selection_runtime.hpp"
+#include "frontend_ui.hpp"
+#include "event_launch.hpp"
+#include "event_attempt.hpp"
 #include "platform/ps2_profile_store.hpp"
 #include <memory>
 #include <string>
@@ -121,8 +124,11 @@ public:
 
     // ----------------------------------------------------------------- recovered menu runtime
     MenuState menu_open(int screen_index);
+    const std::string& background_movie() const { return background_movie_; }
     MenuState menu_joy_event(int pad_index, int joy_event, bool pressed);
     MenuState menu_state() const;
+    FrontendUiSnapshot ui_snapshot();
+    MenuState ui_action(const FrontendUiAction& action);
     TickResult menu_tick(double delta);
     std::vector<SoundRequest> drain_menu_audio();
     // E-0092-J08: poll/completion never implicitly calls001AEAB0. Only an
@@ -140,6 +146,15 @@ public:
     // comes from the live movie.
     FrameStats build_frame(render::Resources& resources, render::Frame& frame);
     SelectionRuntime* selection() {return selection_.get();}
+    // Port lifetime transport; the request is staged only by the recovered
+    // SelectCarScreen readiness/SetSelectedCars/StartRace call sequence.
+    std::optional<port::race::EventLaunchRequest> take_event_launch();
+    void complete_event(const port::race::EventSettlement&);
+    // Port storage acknowledgement for source RC8/RC9, never a new SetRace.
+    EventAttemptBaseline continue_event_attempt(std::uint64_t previous_generation,bool require_saved_outcome);
+    void return_from_event(std::optional<std::uint32_t> random_state={});
+    std::uint32_t random_state() const {return random_state_;} // Read-only port transport diagnostics.
+    std::optional<std::uint32_t> event_default_color_seed() const {return event_default_color_seed_;} // Read-only source checkpoint diagnostic.
 
     // The original-asset texture catalog, or nullptr before a successful load().
     assets::Catalog* catalog() { return catalog_.get(); }
@@ -202,7 +217,11 @@ private:
     void reset_state();
 
     std::unique_ptr<assets::DirectorySource> asset_source_;
+    std::shared_ptr<class SelectionAssetService> selection_assets_;
     std::unique_ptr<SelectionRuntime> selection_;
+    std::optional<port::race::EventLaunchRequest> pending_event_launch_,active_event_launch_;
+    std::optional<hp2::frontend::EventTree_001FFC40> active_event_tree_;
+    std::uint64_t event_launch_generation_=0,last_settled_generation_=0;
     std::vector<SoundRequest> pending_sound_controls_;
     std::unique_ptr<assets::Catalog> catalog_;
     std::unique_ptr<hp2::port::assets::FeLanguage> language_;
@@ -241,6 +260,9 @@ private:
     std::int32_t dat_00331A60_ = 0;
     hp2::frontend::tGlobalBackgroundAnimation background_animation_;
     std::uint32_t random_state_ = 0x12345678; // Original initialized seed; prior boot draws unresolved.
+    // E-0101-PL01: source NewMainMenu ctor00211098/call0021113C -> RP.InitWithDefaults
+    // color seed. Separate from the subsequently advanced shared RNG state.
+    std::optional<std::uint32_t> event_default_color_seed_;
     hp2::frontend::MenuHighlightAnim_00248870 highlight_animation_;
     hp2::frontend::MenuHighlightAnim_00248870 selection_animation_;
     bool title_movie_state_ = false;
@@ -252,11 +274,14 @@ private:
     std::string last_error_;
     std::unique_ptr<hp2::frontend::MenuGroup_0016AA00> menu_group_;
     int menu_screen_index_ = -1;
+    std::uint64_t ui_generation_=0;
     std::uint32_t activated_name_hash_ = 0;
-    std::int32_t dat_002FC070_ = -1; // Unknown initial value; written only by recovered actions.
+    std::int32_t dat_002FC070_ = 0; // Retail initial word 002FC070; written by 00216638.
     // Cops On / Cops Off Mode Select globals (FUN_002174A0 / FUN_00217AF8). (E-0016-03)
     port::frontend::ModeSelectGlobals mode_select_globals_;
     std::string active_class_name_;
+    std::string background_movie_;
+    void update_background_movie_request();
     std::string requested_class_for_open_;
     std::string pending_class_name_;
     bool pending_push_history_ = false;
@@ -269,6 +294,9 @@ private:
     // reads it. All zero when nothing is configured.
     hp2::memorycard::Profile_002FC050 profile_;
     hp2::platform::ProfileLoad profile_load_;
+    std::optional<EventRewardTransfer> event_rewards_;
+    // E-0102-SP03: independent actual Retail catalog metadata, not World echo.
+    std::optional<EventScoreAxes> event_score_axes_;
 
     // E-0021-23: copy the profile-resident mode-select globals into the profile.
     void commit_mode_select_globals();
@@ -285,6 +313,7 @@ private:
     // profile+0x1072C and is no longer a field here: FUN_001FB218 reads it from the profile.
     static constexpr int kEventTreeScreen = 39;
     EventTreeView event_tree_;
+    std::shared_ptr<class SourceEventStatus> source_event_status_;
     std::string event_tree_error_;
     std::string event_tree_bundle_;
     assets::EventNameCatalog event_names_;

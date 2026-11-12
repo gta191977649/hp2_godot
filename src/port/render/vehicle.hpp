@@ -7,6 +7,13 @@
 
 // Port-side presentation data. These are not PS2 ABI structures.
 namespace port::render {
+// E-0112-SKIN01: DoBlendingOnStrip0010DB40 reads metadata from the
+// low byte of original XYZ float bits. Full XYZ floats remain the operands.
+struct VehicleSkinBinding {
+    std::uint8_t matrix0{},matrix1{},raw_weight{};
+    // fBlendVertex0010DA28 has an explicit raw1 endpoint, not 1/256.
+    float matrix1_weight()const{return raw_weight==1?1.0f:float(raw_weight)/256.0f;}
+};
 struct VehicleVertex {
     std::array<float, 3> position{};
     std::array<float, 2> uv{};
@@ -15,6 +22,7 @@ struct VehicleVertex {
     std::array<std::int8_t,3> raw_normal{};
     std::array<float,3> normal{};
     bool has_normal{};
+    std::optional<VehicleSkinBinding> skin;
 };
 struct VehicleSurface {
     std::uint32_t texture_hash{};
@@ -37,6 +45,7 @@ struct VehicleRigidAnimation {
 struct VehicleSolid {
     std::string name;
     std::uint32_t hash{};
+    std::uint32_t animation_node_count{}; //Original eSolid.AnimationTree.NumNodes+0xA0.
     std::uint16_t strip_flags{}; // Original eSolid aggregate StripFlags+0x32.
     std::array<float, 3> bounds_min{};
     std::array<float, 3> bounds_max{};

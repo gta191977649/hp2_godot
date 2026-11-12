@@ -3,11 +3,211 @@
 // This file sits at that path. The path is original; what the file holds is a
 // partial port-side reconstruction, not the original translation unit.
 #include "game_core/indep/src/eventtree.hpp"
+#include "game_core/indep/inc/Race.hpp"
 #include "game_core/port/not_implemented.hpp"
 #include <cmath>
 #include <cstring>
 #include <stdexcept>
 #include <algorithm>
+#include <limits>
+#include "game_core/port/race/frontend_event_resources.hpp"
+#include "game_core/indep/inc/EventTree.hpp"
+#include "game_core/port/track/texture_bindings.hpp"
+#include "game_core/src/bMath.hpp"
+#include "game_core/indep/inc/CarInfo.hpp"
+#include "game_core/indep/inc/EndGameScreens.hpp"
+#include "game_core/indep/inc/Language.hpp"
+#include "game_core/indep/inc/Fred.hpp"
+#include "game_core/indep/src/track.hpp"
+#include "game_core/indep/src/frontendscreens/campaigntrees.hpp"
+#include "game_core/indep/src/raceparameters.hpp"
+
+namespace {
+std::string port_event_text(const ::port::driving::Memory& m,std::uint32_t a){std::string text;for(unsigned i=0;i<4096;++i){const auto c=m.byte(a+i);if(!c)return text;text+=char(c);}throw std::out_of_range("Unterminated original EventTree string");}
+bool port_event_equal(const std::string& a,const std::string& b){if(a.size()!=b.size())return false;const auto fold=[](unsigned char c){return c>='A'&&c<='Z'?c+32:c;};for(unsigned i=0;i<a.size();++i)if(fold(a[i])!=fold(b[i]))return false;return true;}
+}
+namespace hp2::debug {
+// Debug001FC618 ->001FB968/001FBBB0, E-0101-PL01. LH/LB/LB retain signed
+// extraction. Non-multitrack source leaves all three output operands untouched.
+void EventInfo::GetSelectedCar(const ::port::driving::Memory& m,std::uint32_t a,int& car,int& skin,int& dash){
+ const auto type=m.signed_byte(a+0x29);if(type!=3&&type!=4)return;
+ const auto state=m.word(a+4),offset=type==3?4u:8u;
+ car=m.signed_half(state+offset);skin=m.signed_byte(state+offset+2);dash=m.signed_byte(state+offset+3);
+}
+// TASK-0099 E-0099-W82. Debug001FB4A8; original definition eventtree.cpp.
+// Passed explicitly supplies its goal, so the target does not recurse through
+// its own unlock dependencies. Missing event numbers return false in source.
+bool EventGoal::Passed(const ::port::driving::Memory& m,std::uint32_t goal,std::uint32_t tree){
+    const auto event=EventTree::GetEventNumber(m,tree,m.half(goal+2));
+    return event&&EventInfo::GetStatus(m,event,goal)==eEVENT_PASSED;
+}
+// Debug001FC2A8; E-0099-W82. Original global003287E8 and signed field reads
+// confirmed by fresh symbol/reference/listing captures. Source evaluates all
+// dependency goals and ORs their results; do not replace that with all-of or a
+// short-circuit search. An explicit goal bypasses the unlock checks entirely.
+eEventStatus EventInfo::GetStatus(const ::port::driving::Memory& m,std::uint32_t event,std::uint32_t goal){
+    if(m.word(0x3287e8))return eEVENT_PASSED;
+    if(!goal){
+        if(m.signed_byte(event+0x28)==32){
+            const auto pursuit=EventTree::GetEventNumber(m,m.word(0x328800),31);
+            const auto ultimate=EventTree::GetEventNumber(m,m.word(0x3287fc),31);
+            if(pursuit&&GetStatus(m,pursuit)!=eEVENT_PASSED)return eEVENT_LOCKED;
+            if(ultimate&&GetStatus(m,ultimate)!=eEVENT_PASSED)return eEVENT_LOCKED;
+        }else if(m.signed_byte(event+0x3d)>0){
+            bool passed=false;
+            for(int i=0;i<m.signed_byte(event+0x3d);++i){
+                const auto current=GetGoal(m,event,i);
+                const bool result=EventGoal::Passed(m,current,m.word(event));
+                passed=passed|result;
+            }
+            if(!passed)return eEVENT_LOCKED;
+        }
+        goal=m.word(m.word(event)+0x24)+8*std::uint32_t(std::int32_t(m.signed_half(event+0x42)));
+    }
+    const auto state=m.word(event+4);
+    switch(m.signed_byte(event+0x29)){
+    case 0:case 2:return EventRankState::GetStatus(m,state,goal);
+    case 1:case 5:case 6:return EventTimeState::GetStatus(m,state,goal);
+    case 3:return EventKoState::GetStatus(m,state,goal);
+    case 4:return EventTournamentState::GetStatus(m,state,goal,m.signed_byte(event+0x3c),m.signed_byte(event+0x3f));
+    default:return eEVENT_UNTRIED;
+    }
+}
+// Debug001FC1E8; E-0099-W82. Prediction reads actual current/opposite event31
+// states and never changes a result, unlock flag, tree or profile field.
+bool EventInfo::WillSuperBonusEventBeUnlockedIfThisEventIsWon(const ::port::driving::Memory& m,std::uint32_t event){
+    if(m.signed_byte(event+0x28)!=31)return false;
+    const auto tree=m.word(event);
+    const auto opposite=m.word(m.word(tree+8)==1?0x3287fc:0x328800);
+    if(!opposite)return false;
+    const auto current=EventTree::GetEventNumber(m,tree,31);
+    const auto other=EventTree::GetEventNumber(m,opposite,31);
+    if(!current||!other)return false;
+    const auto current_status=GetStatus(m,current);
+    const auto other_status=GetStatus(m,other);
+    return current_status!=eEVENT_PASSED&&other_status==eEVENT_PASSED;
+}
+// TASK-0099 E-0099-W78. Original primitive result-state lifecycle.
+void EventRankState::Reset(::port::driving::Memory& m,std::uint32_t a){m.byte(a,0);}
+eEventStatus EventRankState::GetStatus(const ::port::driving::Memory& m,std::uint32_t a,std::uint32_t goal){const auto rank=m.byte(a);return !rank?eEVENT_UNTRIED:rank<=m.word(goal+4)?eEVENT_PASSED:eEVENT_FAILED;}
+void EventTimeState::Reset(::port::driving::Memory& m,std::uint32_t a){m.word(a,0);}
+eEventStatus EventTimeState::GetStatus(const ::port::driving::Memory& m,std::uint32_t a,std::uint32_t goal){const int time=m.signed_word(a);return time==0||time==0x7fffffff?eEVENT_UNTRIED:time<=m.signed_word(goal+4)?eEVENT_PASSED:eEVENT_FAILED;}
+void EventKoState::Reset(::port::driving::Memory& m,std::uint32_t a){m.word(a,0);}
+eEventStatus EventKoState::GetStatus(const ::port::driving::Memory& m,std::uint32_t a,std::uint32_t goal){if(!GetRaceIndex(m,a))return eEVENT_UNTRIED;const unsigned rank=m.byte(a)&15u;return !rank?eEVENT_INPROGRESS:rank<=m.word(goal+4)?eEVENT_PASSED:eEVENT_FAILED;}
+void EventTournamentState::Reset(::port::driving::Memory& m,std::uint32_t a){for(int i=7;i>=0;--i)m.byte(a+std::uint32_t(i),0);}
+unsigned EventTournamentState::RacerRank(const ::port::driving::Memory& m,std::uint32_t a,int index){unsigned rank=1;for(int i=0;i<8;++i)if(i!=index){const auto own=m.byte(a+std::uint32_t(index)),other=m.byte(a+std::uint32_t(i));if(own<other||(own==other&&i<index))++rank;}return rank;}
+unsigned EventTournamentState::UserRank(const ::port::driving::Memory& m,std::uint32_t a){return RacerRank(m,a,0);}
+eEventStatus EventTournamentState::GetStatus(const ::port::driving::Memory& m,std::uint32_t a,std::uint32_t goal,int races,int opponents){const int index=GetRaceIndex(m,a,opponents);if(!index)return eEVENT_UNTRIED;if(index<races)return eEVENT_INPROGRESS;return UserRank(m,a)<=m.word(goal+4)?eEVENT_PASSED:eEVENT_FAILED;}
+std::uint32_t RaceEvent::GetRankState(const ::port::driving::Memory& m,std::uint32_t a){const int type=m.signed_half(a+0x6a);return type==0||type==2?m.word(a+4):0;}
+std::uint32_t RaceEvent::GetTournamentState(const ::port::driving::Memory& m,std::uint32_t a){return m.signed_half(a+0x6a)==4?m.word(a+4):0;}
+std::uint32_t RaceEvent::GetKoState(const ::port::driving::Memory& m,std::uint32_t a){return m.signed_half(a+0x6a)==3?m.word(a+4):0;}
+std::uint32_t RaceEvent::GetTimeState(const ::port::driving::Memory& m,std::uint32_t a){const int type=m.signed_half(a+0x6a);return type==1||type==5||type==6?m.word(a+4):0;}
+eEventStatus RaceEvent::GetStatus(const ::port::driving::Memory& m,std::uint32_t a,std::uint32_t state){const auto goal=a+0x7c;switch(m.signed_half(a+0x6a)){case 0:case 2:return EventRankState::GetStatus(m,state,goal);case 1:case 5:case 6:return EventTimeState::GetStatus(m,state,goal);case 3:return EventKoState::GetStatus(m,state,goal);case 4:return EventTournamentState::GetStatus(m,state,goal,m.signed_half(a+0x70),m.signed_half(a+0x74));default:return eEVENT_UNTRIED;}}
+eEventStatus RaceEvent::GetStatus(const ::port::driving::Memory& m,std::uint32_t a){return GetStatus(m,a,m.word(a+4));}
+eEventStatus RaceEvent::GetOldStatus(const ::port::driving::Memory& m,std::uint32_t a){return GetStatus(m,a,a+8);}
+bool RaceEvent::ResultShouldBeDiscarded(const ::port::driving::Memory& m,std::uint32_t a){
+    const auto old=GetOldStatus(m,a),current=GetStatus(m,a);if(current<old)return true;if(old!=current)return false;
+    switch(m.signed_half(a+0x6a)){
+    case 0:case 2:{const auto state=GetRankState(m,a);if(!state)return false;const auto previous=m.byte(a+8);if(!previous)return false;const auto rank=m.byte(state);return !rank||previous<rank;}
+    case 1:case 5:case 6:{const auto state=GetTimeState(m,a);if(!state)return false;const int previous=m.signed_word(a+8);if(previous==0||previous==0x7fffffff)return false;const int time=m.signed_word(state);return time==0||time==0x7fffffff||previous<time;}
+    case 3:{if(!FrontendDatabase::UseTreeEvent(m,0x2f3890))return false;const auto state=GetKoState(m,a);if(!state)return false;const int previous=EventKoState::GetRank(m,a+8,0),rank=EventKoState::GetRank(m,state,0);if(!previous)return rank!=0;if(!rank)return false;return previous<rank;}
+    case 4:{const auto state=GetTournamentState(m,a);return state&&old>eEVENT_UNTRIED&&EventTournamentState::UserRank(m,a+8)<EventTournamentState::UserRank(m,state);}
+    default:return false;
+    }
+}
+void RaceEvent::MaybeDiscardResult(::port::driving::Memory& m,std::uint32_t a){if(ResultShouldBeDiscarded(m,a))m.copy(m.word(a+4),a+8,std::uint32_t(GetStateSize(m,a)));}
+int RaceEvent::GetRaceIndex(const ::port::driving::Memory& m,std::uint32_t a){const auto state=m.word(a+4);if(!state)return 0;switch(m.signed_half(a+0x6a)){case 3:return EventKoState::GetRaceIndex(m,state);case 4:return EventTournamentState::GetRaceIndex(m,state,m.signed_half(a+0x74));default:return 0;}}
+void RaceEvent::ResetState(::port::driving::Memory& m,std::uint32_t a){const auto state=m.word(a+4);if(!state)return;switch(m.signed_half(a+0x6a)){case 0:case 2:EventRankState::Reset(m,state);break;case 1:case 5:case 6:EventTimeState::Reset(m,state);break;case 3:EventKoState::Reset(m,state);break;case 4:EventTournamentState::Reset(m,state);break;default:break;}}
+int EventKoState::GetRank(const ::port::driving::Memory& m,std::uint32_t a,int index){return std::uint32_t(index)<8?int((m.word(a)>>(std::uint32_t(index)*4))&15):0;}
+bool RaceEvent::RacerEliminated(const ::port::driving::Memory& m,std::uint32_t a,int index){return m.word(0x311f98)==4&&EventKoState::GetRank(m,m.word(a+4),index)!=0;}
+bool RaceEvent::DriverEliminated(const ::port::driving::Memory& m,std::uint32_t a,int number){return RacerEliminated(m,a,RacerIndexFromDriverNumber(m,a,number));}
+void EventTrack::SetRace(::port::driving::Memory& m,std::uint32_t a,std::uint32_t race){
+    m.word(race,m.byte(a));m.word(race+0x2c,(m.word(a)>>14)&15);m.word(race+4,(m.word(a)>>10)&3);m.word(race+8,(m.word(a)>>12)&3);m.word(race+12,(m.word(a)>>9)&1);
+    m.scalar(race+0x10,float((m.word(a)>>18)&127)*m.scalar(0x325d10));const auto number=m.byte(a);m.scalar(race+0x14,float(m.word(a)>>25)*m.scalar(0x325d14));const auto track=hp2::debug::GetTrackInfo(m,number);if(track)m.word(race+0x28,std::uint32_t(m.signed_byte(track+0x43)));
+}
+// TASK-0099 E-0099-W72. Sparse raw-memory source overloads, no host ABI cast.
+int EventInfo::GetStateSize(const ::port::driving::Memory& m,std::uint32_t a){switch(m.signed_byte(a+0x29)){case 1:case 5:case 6:return 4;case 3:return 12;case 4:return 16;default:return 1;}}
+bool EventTree::SetName(::port::driving::Memory& m,std::uint32_t a,std::uint32_t name){if(const auto previous=m.word(a+12))m.release(previous);if(!name){m.word(a+12,0);return false;}const auto text=port_event_text(m,name);const auto copy=m.allocate(std::uint32_t(text.size()+1));for(unsigned i=0;i<=text.size();++i)m.byte(copy+i,i<text.size()?std::uint8_t(text[i]):0);m.word(a+12,copy);
+ const bool e3=m.word(0x326e98)!=0;if(port_event_equal(text,port_event_text(m,e3?0x2b27c8:0x2b27d8))){m.word(0x328800,a);m.word(a+8,1);return true;}if(port_event_equal(text,port_event_text(m,e3?0x2b27e8:0x2b27f8))){m.word(0x3287fc,a);m.word(a+8,0);return true;}return false;
+}
+void EventTree::Sub_001F8688(::port::driving::Memory& m,std::uint32_t a,std::uint32_t name,std::optional<std::uint32_t> center_w){m.word(a+12,0);SetName(m,a,name);
+ for(auto offset:{0x10u,0x8u,0x14u,0x18u,0x1cu,0x20u,0x24u,0x28u,0x2cu,0x30u,0x3cu,0x40u,0x44u,0x48u,0x4cu,0x50u,0x54u,0x58u,0x5cu})m.word(a+offset,0);
+ if(!center_w){hp2::not_implemented("0x001F872C","original vCenter.W comes from unwritten stack word; explicit port operand required");}m.word(a+0x60,0);m.word(a+0x64,0);m.word(a+0x68,0);m.word(a+0x6c,*center_w);m.word(a+0x70,1);m.matrix(a+0x80,hp2::recovered::bIdentity());m.matrix(a+0xc0,hp2::recovered::bIdentity());for(unsigned i=0;i<8;++i)m.word(a+0x100+4*i,0);for(unsigned i=0;i<6;++i)m.word(a+0x100+4*i,GetTextureInfo(m,m.word(0x312fc0+4*i),1,0));
+}
+void EventTree::Sub_001F87A8(::port::driving::Memory& m,std::uint32_t a,int flags){if(const auto name=m.word(a+12))m.release(name);if(m.word(a+0x40))hp2::not_implemented("0x001F87A8","active original EventLeaf array destruction is required");if(flags&1)m.release(a);}
+void EventTree::SetEvents(::port::driving::Memory& m,std::uint32_t a,std::uint32_t events,int bytes){m.word(a+0x3c,events);const int count=bytes/0xbc;m.word(a+0x5c,events);m.word(a+0x44,std::uint32_t(count));for(int i=0;i<count;++i)m.word(events+std::uint32_t(i)*0xbc,a);}
+void EventTree::CalcStatePointers(::port::driving::Memory& m,std::uint32_t a,std::uint32_t buffer,int size,int alignment){(void)size;m.word(a+0x48,0);
+ const auto assign=[&](std::uint32_t event,bool aligned){if(m.signed_byte(event+0x28)==32&&m.word(0x2f3890+0x384)){m.word(event+4,m.word(0x2f3890+0x384));return;}
+  m.word(event+4,buffer+m.word(a+0x48));const int bytes=EventInfo::GetStateSize(m,event),old=m.signed_word(a+0x48);int next=old+bytes;if(aligned){if(!alignment)hp2::not_implemented("0x001F9F88","original divide-by-zero trap in event-state alignment");next=((old+bytes-1+alignment)/alignment)*alignment;}m.word(a+0x48,std::uint32_t(next));if(m.signed_byte(event+0x28)==32)m.word(0x2f3890+0x384,m.word(event+4));};
+ for(int pass=0;pass<2;++pass)for(int i=0;i<m.signed_word(a+0x44);++i){const auto event=m.word(a+0x3c)+std::uint32_t(i)*0xbc;const int bytes=EventInfo::GetStateSize(m,event);if((pass==0&&bytes>=alignment)||(pass==1&&bytes<alignment))assign(event,pass==0);}
+}
+std::uint32_t EventTree::GetEventNumber(const ::port::driving::Memory& m,std::uint32_t a,int number){for(int i=0;i<m.signed_word(a+0x44);++i){const auto event=m.word(a+0x3c)+std::uint32_t(i)*0xbc;if(m.signed_byte(event+0x28)==number)return event;}return 0;}
+std::uint32_t GetEventTree(const ::port::driving::Memory& m,const std::string& name){for(auto tree=m.word(0x3287f0);tree!=0x3287f0;tree=m.word(tree))if(port_event_equal(name,port_event_text(m,m.word(tree+12))))return tree;return 0;}
+int LoaderEventTree(::port::driving::Memory& m,std::uint32_t chunk,std::optional<std::uint32_t> center_w){if(m.word(chunk)!=0x80034a00)return 0;const auto tree=m.allocate(0x120);EventTree::Sub_001F8688(m,tree,0,center_w);const auto tail=m.word(0x3287f4);m.word(tail,tree);m.word(tree+4,tail);m.word(0x3287f4,tree);m.word(tree,0x3287f0);
+ const std::uint64_t end=std::uint64_t(chunk)+8+m.word(chunk+4);for(auto child=chunk+8;child<end;){const auto tag=m.word(child),bytes=m.word(child+4),payload=child+8;if(std::uint64_t(child)+8+bytes>end)throw std::out_of_range("Original EventTree child exceeds retained resource");
+  switch(tag){case 1:if(!EventTree::SetName(m,tree,payload)){const auto next=m.word(tree),previous=m.word(tree+4);m.word(previous,next);m.word(next+4,previous);EventTree::Sub_001F87A8(m,tree,3);hp2::not_implemented("0x001FB248","unrecognized source EventTree name follows original deleted-tree branch");}break;
+   case 0x34a01:m.word(tree+0x14,payload);m.word(tree+0x18,bytes>>2);break;case 0x34a02:m.word(tree+0x1c,payload);m.word(tree+0x20,bytes>>2);break;
+   case 0x34a03:m.word(tree+0x24,payload);m.word(tree+0x28,bytes>>3);break;case 0x34a04:m.word(tree+0x2c,payload);m.word(tree+0x30,bytes>>3);break;
+   case 0x34a06:m.word(tree+0x34,payload);m.word(tree+0x38,bytes>>2);break;
+   case 0x34a05:EventTree::SetEvents(m,tree,payload,int(bytes));if(m.word(tree+8)==0)EventTree::CalcStatePointers(m,tree,0x2f3890+0x184,256,4);else if(m.word(tree+8)==1)EventTree::CalcStatePointers(m,tree,0x2f3890+0x284,256,4);break;
+   default:break;
+  }child+=bytes+8;
+ }return 1;
+}
+int UnloaderEventTree(::port::driving::Memory& m,std::uint32_t chunk){if(m.word(chunk)!=0x80034a00)return 0;m.word(0x3287f8,0);m.word(0x3287fc,0);m.word(0x328800,0);while(m.word(0x3287f0)!=0x3287f0){const auto tree=m.word(0x3287f0),next=m.word(tree),previous=m.word(tree+4);m.word(0x3287f0,tree);m.word(previous,next);m.word(next+4,previous);EventTree::Sub_001F87A8(m,tree,3);}m.word(0x3287f0,0x3287f0);return 1;}
+}
+
+namespace {
+std::uint32_t port_raw_event_item(const ::port::driving::Memory& m,std::uint32_t info,int index,unsigned count,unsigned indices,unsigned table,unsigned stride){if(index<0||index>=m.signed_byte(info+count))return 0;return m.word(m.word(info)+table)+std::int32_t(m.signed_half(info+indices+2*std::uint32_t(index)))*stride;}
+void port_event_strncpy(::port::driving::Memory& m,std::uint32_t to,std::uint32_t from,unsigned count){bool ended=false;for(unsigned i=0;i<count;++i){const auto c=ended?0:m.byte(from+i);m.byte(to+i,std::uint8_t(c));if(!c)ended=true;}}
+void port_event_strcpy(::port::driving::Memory& m,std::uint32_t to,std::uint32_t from){for(unsigned i=0;i<4096;++i){const auto c=m.byte(from+i);m.byte(to+i,c);if(!c)return;}throw std::out_of_range("Unterminated original selected event text");}
+}
+namespace hp2::debug {
+// E-0099-W72. Original raw EventInfo table getters retain null index paths.
+std::uint32_t EventInfo::GetCar(const ::port::driving::Memory& m,std::uint32_t a,int i){return port_raw_event_item(m,a,i,0x3b,0x44,0x14,4);}
+std::uint32_t EventInfo::GetGoal(const ::port::driving::Memory& m,std::uint32_t a,int i){return port_raw_event_item(m,a,i,0x3d,0x7c,0x24,8);}
+std::uint32_t EventInfo::GetTrack(const ::port::driving::Memory& m,std::uint32_t a,int i){return port_raw_event_item(m,a,i,0x3c,0x6c,0x1c,4);}
+std::uint32_t EventInfo::GetReward(const ::port::driving::Memory& m,std::uint32_t a,int i){return port_raw_event_item(m,a,i,0x3e,0x8c,0x2c,8);}
+std::uint32_t EventInfo::GetOpponent(const ::port::driving::Memory& m,std::uint32_t a,int i){return port_raw_event_item(m,a,i,0x3f,0x9c,0x34,4);}
+std::uint32_t EventInfo::GetObjective(const ::port::driving::Memory& m,std::uint32_t a){return m.word(m.word(a)+0x24)+std::int32_t(m.signed_half(a+0x42))*8;}
+int EventInfo::GetRaceCount(const ::port::driving::Memory& m,std::uint32_t a){const auto type=m.signed_byte(a+0x29);return type==3?m.signed_byte(a+0x3f):type==4?m.signed_byte(a+0x3c):1;}
+void EventResult::Reset(::port::driving::Memory& m,std::uint32_t a){m.word(a+8,0);m.word(a,0);m.word(a+4,0);}
+void RaceEvent::ResetResults(::port::driving::Memory& m,std::uint32_t a){for(unsigned i=0;i<8;++i)EventResult::Reset(m,a+0x150+12*i);}
+int EventKoState::GetRaceIndex(const ::port::driving::Memory& m,std::uint32_t a){const auto ranks=m.word(a);int count=0;for(unsigned i=0;i<8;++i)count+=((ranks>>(4*i))&15)!=0;return count;}
+int EventKoState::GetRandomSeed(const ::port::driving::Memory& m,std::uint32_t a){return m.signed_word(a+8);}
+void EventKoState::NewRandomSeed(::port::driving::Memory& m,std::uint32_t a){m.word(a+8,hp2::recovered::bRandom(m,-1));}
+int EventTournamentState::GetRaceIndex(const ::port::driving::Memory& m,std::uint32_t a,int opponents){int possible=0,earned=0;for(int i=0;i<=opponents;++i)possible+=m.byte(0x328830+std::uint32_t(i));for(unsigned i=0;i<8;++i)earned+=m.byte(a+i);if(!possible)hp2::not_implemented("0x001FB9F0","original tournament points division trap");return earned/possible;}
+int EventTournamentState::GetRandomSeed(const ::port::driving::Memory& m,std::uint32_t a){return m.signed_word(a+12);}
+void EventTournamentState::NewRandomSeed(::port::driving::Memory& m,std::uint32_t a){m.word(a+12,hp2::recovered::bRandom(m,-1));}
+// Debug001FA378. Complete source selected-event producer, including actual
+// language/reward/description dependencies. No successful game callbacks or
+// blank objective/reward substitutes are accepted by this raw overload.
+void EventTree::SetRace(::port::driving::Memory& m,std::uint32_t tree,std::uint32_t race,std::uint32_t info){constexpr auto event=0x312cd0u;m.word(tree+0x5c,info);m.word(0x2f3890+0x10730,std::uint32_t(int(m.signed_byte(info+0x28))));
+ for(unsigned i=0;i<32;++i){m.byte(event+0x28+i,m.byte(info+8+i));}const int bytes=EventInfo::GetStateSize(m,info);for(int i=0;i<bytes;++i)m.byte(event+8+std::uint32_t(i),m.byte(m.word(info+4)+std::uint32_t(i)));m.word(event,m.word(info));m.word(event+4,m.word(info+4));
+ const unsigned fields[][2]={{0x68,0x28},{0x6a,0x29},{0x6c,0x2a},{0x6e,0x3b},{0x70,0x3c},{0x72,0x3e}};for(const auto& field:fields)m.half(event+field[0],std::uint16_t(std::int16_t(m.signed_byte(info+field[1]))));m.half(event+0x76,1);m.half(event+0x74,std::uint16_t(std::int16_t(m.signed_byte(info+0x3f))));
+ const auto objective=EventInfo::GetObjective(m,info);m.word(event+0x7c,m.word(objective));m.word(event+0x80,m.word(objective+4));
+ for(int i=0;i<m.signed_byte(info+0x3b);++i)m.word(event+0x84+4*std::uint32_t(i),m.word(EventInfo::GetCar(m,info,i)));
+ for(int i=0;i<m.signed_byte(info+0x3c);++i)m.word(event+0xd4+4*std::uint32_t(i),m.word(EventInfo::GetTrack(m,info,i)));
+ for(int i=0;i<m.signed_byte(info+0x3e);++i){const auto reward=EventInfo::GetReward(m,info,i),to=event+0xf4+8*std::uint32_t(i);m.word(to,m.word(reward));m.word(to+4,m.word(reward+4));}
+ for(int i=0;i<m.signed_byte(info+0x3f);++i)m.word(event+0x134+4*std::uint32_t(i),m.word(EventInfo::GetOpponent(m,info,i)));
+ if(m.signed_byte(info+0x3e)<1)port_event_strcpy(m,event+0x48,GetTranslatedString(m,std::uint32_t(0x2b2818)));
+ else{std::uint32_t name;const auto reward=event+0xf4;if(m.byte(reward)==0){const auto type=m.byte(reward+1);const auto full=CarTypeInfo::GetFullName(m,m.word(0x3278e0)+std::uint32_t(type)*0x560);name=GetTranslatedString(m,full);}
+  else if(m.byte(reward)==1)name=GetTranslatedString(m,GetTheRightTrackLanguageID(m,int(m.byte(reward+1)),int(m.byte(reward+2))));
+  else{port_event_strcpy(m,event+0x48,GetTranslatedString(m,std::uint32_t(0x2b2808)));name=0;}
+  if(name)port_event_strncpy(m,event+0x48,name,32);
+ }
+ FormatEventDescription(m,tree,info,GetTranslatedString(m,m.signed_word(info+0xb4)),race+0x54,512);m.word(race+0x50,1);RaceEvent::ResetResults(m,event);m.word(race+0x27c,2);m.word(race+0x274,0);
+ const int type=m.signed_half(event+0x6a);switch(type){case 1:m.word(race+0x20,2);m.word(race+0x24,m.word(event+0x80));break;case 2:m.word(race+0x20,3);break;
+  case 3:{const auto state=m.word(info+4);m.word(race+0x20,4);if(!EventKoState::GetRaceIndex(m,state))EventKoState::NewRandomSeed(m,state);m.word(race+0x30c,std::uint32_t(EventKoState::GetRandomSeed(m,state)));break;}
+  case 4:{const auto state=m.word(info+4);m.word(race+0x20,5);if(!EventTournamentState::GetRaceIndex(m,state,m.signed_byte(info+0x3f)))EventTournamentState::NewRandomSeed(m,state);m.word(race+0x30c,std::uint32_t(EventTournamentState::GetRandomSeed(m,state)));break;}
+  case 5:m.word(race+0x28,1);m.word(race+0x20,1);m.word(race+0x24,m.word(event+0x80));break;
+  case 6:m.word(race+0x27c,0);m.word(race+0x274,1);m.word(race+0x278,0);m.word(race+0x20,1);m.word(race+0x24,m.word(event+0x80));break;
+  default:m.word(race+0x20,1);break;
+ }
+ m.word(race+0x30,1);m.word(race+0x34,std::uint32_t(int(m.signed_byte(info+0x3f))));m.word(race+0x25c,m.word(tree+8)==1?6:0);m.word(race+0x38,std::uint32_t(int(m.signed_byte(info+0x2b))));m.word(race+0x288,m.word(info+0x30));
+ const unsigned flags[][2]={{0x260,0x37},{0x264,0x34},{0x268,0x36},{0x26c,0x35},{0x270,0x38},{0x280,0x39}};for(const auto& flag:flags)m.word(race+flag[0],std::uint32_t(int(m.signed_byte(info+flag[1]))));m.word(race+0x4c,0);m.word(race+0x284,std::uint32_t(int(m.signed_byte(info+0x3a))));m.word(race+0x40,m.word(info+0xb8)!=0);m.byte(race+0x3c,std::uint8_t(m.byte(info+0x3f)+1));m.word(race+0x2fc,m.word(info+0xac));m.word(race+0x300,m.word(info+0xac));
+}
+}
 
 namespace hp2::frontend {
 namespace {
@@ -1138,30 +1338,42 @@ eEventStatus EventTimeState::GetStatus(::port::driving::init::ByteView state,con
     if(time==0 || time==0x7fffffff)return eEVENT_UNTRIED;
     return time<=static_cast<std::int32_t>(goal.nData)?eEVENT_PASSED:eEVENT_FAILED;
 }
-// Debug001FD708, E-0098-RP04. Only time-state dependencies are translated here.
+// Debug001FD708, E-0098-RP04/E-0101-PL01. Original resets only progress;
+// selected car/skin/dash/color seed survive KO/tournament reset.
 void RaceEvent::ResetState(){
     if(!pState.data)return;
+    if(nType==0 || nType==2){pState.require(0,1);pState.data[0]=0;return;} //001FB4F8.
     if(nType==1 || nType==5 || nType==6){EventTimeState::Reset(pState);return;}
-    hp2::not_implemented("0x001FD708","original rank/KO/tournament state reset not translated");
+    if(nType==3){pState.word(0,0);return;} // Original EventKoState.Reset001FB5A0.
+    if(nType==4){pState.require(0,8);for(int i=7;i>=0;--i)pState.data[i]=0;return;} //001FB988.
 }
 // Debug001FD118, E-0098-RP04. Non-multitrack types always return zero.
 int RaceEvent::GetRaceIndex() const{
     if(nType!=3 && nType!=4)return 0;
     if(!pState.data)return 0;
-    hp2::not_implemented("0x001FD118","original KO/tournament race index not translated");
+    if(nType==3){const auto ranks=pState.word(0);int count=0;for(unsigned i=0;i<8;++i)count+=((ranks>>(4*i))&15)!=0;return count;} //001FB698.
+    if(!port_points_at_00328830)
+        hp2::not_implemented("0x001FB9F0","decoded tournament requires the original points-table binding");
+    pState.require(0,8);int possible=0,earned=0;
+    for(int i=0;i<=nOpponents;++i)possible+=port_points_at_00328830(unsigned(i));
+    for(unsigned i=0;i<8;++i)earned+=pState.data[i];
+    if(!possible)hp2::not_implemented("0x001FB9F0","original tournament points division trap");
+    return earned/possible;
 }
 // Debug001FC1E8, E-0098-RP04. Ordinary event numbers are an original immediate false.
 bool EventInfo::WillSuperBonusEventBeUnlockedIfThisEventIsWon() const{
     if(nNumber!=31)return false;
     hp2::not_implemented("0x001FC1E8","original event31 cross-tree unlock prediction not translated");
 }
-// Debug001FA378, E-0098-RP04. First HP delivery branch with explicit original
+// Debug001FA378, E-0098-RP04/E-0110-E02. First HP delivery/Championship branches with explicit original
 // state/localization bindings. Unknown branches fail BEFORE touching prior settings.
 void EventTree::SetRace(::port::driving::init::ByteView race,const EventInfo& event,RaceEvent& active,
     ::port::driving::init::ByteView state,const ::port::race::EventLaunchServices& services){
     race.require(0,0x310);
-    if(nType!=1 || event.nNumber!=1 || event.nType!=5 || event.nOpponents!=0)
-        hp2::not_implemented("0x001FA378","non-first-delivery event binding not translated");
+    const bool delivery=nType==1&&event.nNumber==1&&event.nType==5&&event.nOpponents==0;
+    const bool championship=nType==0&&event.nNumber==1&&event.nType==0&&event.nOpponents>=0&&event.nOpponents<=7;
+    if(!delivery&&!championship)
+        hp2::not_implemented("0x001FA378","event binding outside reviewed first Championship/delivery branches");
     if(!services.translated_key || !services.translated_id || !services.format_description)
         hp2::not_implemented("0x001FA378","original reward/objective localization bindings missing");
     const int size=event.GetStateSize();state.require(0,size);
@@ -1177,6 +1389,7 @@ void EventTree::SetRace(::port::driving::init::ByteView race,const EventInfo& ev
     for(int i=0;i<event.nCars;++i)active.aCars.at(i)=*event.GetCar(*this,i);
     for(int i=0;i<event.nTracks;++i)active.aTracks.at(i)=*event.GetTrack(*this,i);
     for(int i=0;i<event.nRewards;++i)active.aRewards.at(i)=*event.GetReward(*this,i);
+    for(int i=0;i<event.nOpponents;++i)active.aOpponents.at(i)=*event.GetOpponent(*this,i);
     std::string reward;
     if(event.nRewards<1)reward=services.translated_key("No reward");
     else{
@@ -1196,9 +1409,10 @@ void EventTree::SetRace(::port::driving::init::ByteView race,const EventInfo& ev
     if(formatted.size()>=512)hp2::not_implemented("0x001FA378","original description outside bounded host buffer domain");
     std::copy(formatted.begin(),formatted.end(),race.data+0x54);race.data[0x54+formatted.size()]=0;
     race.word(0x50,1);active.ResetResults();
-    race.word(0x27c,2);race.word(0x274,0);race.word(0x28,1);race.word(0x20,1);race.word(0x24,active.Objective.nData);
+    race.word(0x27c,2);race.word(0x274,0);race.word(0x20,1);
+    if(delivery){race.word(0x28,1);race.word(0x24,active.Objective.nData);}
     race.word(0x30,1);race.word(0x34,static_cast<std::uint32_t>(event.nOpponents));
-    race.word(0x25c,6);race.word(0x38,static_cast<std::uint32_t>(event.nOpponentSelect));
+    race.word(0x25c,nType==1?6:0);race.word(0x38,static_cast<std::uint32_t>(event.nOpponentSelect));
     race.word(0x288,static_cast<std::uint32_t>(event.eCopStrength));
     race.word(0x260,static_cast<std::uint32_t>(event.bTickets));race.word(0x264,static_cast<std::uint32_t>(event.bRoadBlocks));
     race.word(0x268,static_cast<std::uint32_t>(event.bBarricadeSmokeables));race.word(0x26c,static_cast<std::uint32_t>(event.bSpikeStrips));
@@ -1223,7 +1437,7 @@ void tTreeDetails::StartEvent(ScreenCallbackData& data,const ::port::selection::
     s.fred.nCurrentEvent=LastKnownEvent->nNumber;
     s.set_race(*pTree,*LastKnownEvent);
     s.build_unlock_list();
-    // Original IsMultiTrack001FC5C8: only event types3 and4.
+    // Original IsMultiTrack001FC5D8: only event types3 and4 (E-0110-F01).
     if(LastKnownEvent->nType==3 || LastKnownEvent->nType==4){
         if(!s.get_status)hp2::not_implemented("0x001FC2A8","event status binding missing");
         if(s.get_status(*LastKnownEvent)==eEVENT_INPROGRESS){
@@ -1253,5 +1467,130 @@ void tTreeDetails::HandleMessages(ScreenMessage message,ScreenCallbackData& data
     if(static_cast<int>(s.get_status(*LastKnownEvent))>0){
         data.Noise=0x16;StartEvent(data,s);
     }else data.Noise=0x17;
+}
+}
+
+namespace hp2::debug {
+// Debug001FC078; E-0099-W56. Original event-state byte sizes by nType.
+int RaceEvent::GetStateSize(const ::port::driving::Memory& m,std::uint32_t address){switch(m.signed_half(address+0x6a)){case 0:case 2:return 1;case 1:case 5:case 6:return 4;case 3:return 12;case 4:return 16;default:return 1;}}
+// Debug001FCB90. Requires the actual native event-state owner to publish pState;
+// a decoded frontend/profile structure is not an original raw state allocation.
+void RaceEvent::SavePreRaceState(::port::driving::Memory& m,std::uint32_t address){const int size=GetStateSize(m,address);const auto source=m.word(address+4);if(!source)hp2::not_implemented("0x001FCB90","actual original RaceEvent state owner is not bound");m.copy(address+0x18,source,static_cast<unsigned>(size));}
+}
+
+namespace hp2::debug {
+// E-0099-W70, original eventtree.cpp. Raw Memory consumer, not decoded profile
+// state. RecordResults does not consume pTree/pState or the pRace argument.
+int RaceEvent::RacerIndexFromDriverNumber(const ::port::driving::Memory& m,std::uint32_t a,int number){return number>99?m.signed_half(a+0x76)+number-100:number;}
+void RaceEvent::RecordResults(::port::driving::Memory& m,std::uint32_t a,std::uint32_t race,std::uint32_t racing,int rank){
+ (void)race;const int index=RacerIndexFromDriverNumber(m,a,m.signed_half(m.word(racing)+0xa));
+ if(index<0||index>=8)hp2::not_implemented("0x001FC6F8","original raw result index lies outside eight entries; source event/roster producer is required");
+ const auto reason=m.signed_half(racing+0x12);std::uint32_t timer=racing+0xb4;
+ if(m.signed_word(0x311f98)==2)timer=RacingCar(m,racing).GetBestLapTime();
+ const auto time=m.word(timer),result=a+0x150+12*static_cast<unsigned>(index);
+ m.word(result,static_cast<std::uint32_t>(rank));m.word(result+4,time);m.word(result+8,static_cast<std::uint32_t>(static_cast<std::int32_t>(reason)));
+}
+}
+
+namespace hp2::debug {
+// Debug001FB958/001FBB98, E-0099-W86. Raw source selected-car fields;
+// low-byte/halfword truncation is deliberate, and other progress/seed stays.
+void EventKoState::SetSelectedCar(::port::driving::Memory& m,std::uint32_t a,int car,int skin,int dash){m.byte(a+7,std::uint8_t(dash));m.half(a+4,std::uint16_t(car));m.byte(a+6,std::uint8_t(skin));}
+void EventTournamentState::SetSelectedCar(::port::driving::Memory& m,std::uint32_t a,int car,int skin,int dash){m.byte(a+11,std::uint8_t(dash));m.half(a+8,std::uint16_t(car));m.byte(a+10,std::uint8_t(skin));}
+// Debug001FC5E8, E-0099-W86. Only source KO/tournament types write fields.
+void EventInfo::SetSelectedCar(::port::driving::Memory& m,std::uint32_t a,int car,int skin,int dash){const auto type=m.signed_byte(a+0x29);if(type==3)EventKoState::SetSelectedCar(m,m.word(a+4),car,skin,dash);else if(type==4)EventTournamentState::SetSelectedCar(m,m.word(a+4),car,skin,dash);}
+}
+
+// TASK-0110 E-0110-F01. Debug NFSHP2.ELF SHA-256
+// 815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
+// Raw original state consumers; records/queries: reverse/task0110/finish.md.
+namespace hp2::debug {
+// Debug001FB7E8; E-0110-F01. The jump table writes one four-bit rank in the first word.
+void EventKoState::SetRank(::port::driving::Memory& m,std::uint32_t a,int index,int rank){
+ if(static_cast<unsigned>(index)>=8)return;
+ const auto shift=4*static_cast<unsigned>(index);
+ m.word(a,(m.word(a)&~(15u<<shift))|((static_cast<std::uint32_t>(rank)&15u)<<shift));
+}
+// Debug001FC5D8; E-0110-F01. LHU followed by ADDIU and unsigned SLTIU.
+bool RaceEvent::IsMultiTrack(const ::port::driving::Memory& m,std::uint32_t a){return static_cast<std::uint32_t>(m.signed_half(a+0x6a)-3)<2;}
+// Debug001FC658; E-0110-F01. The event's own state is not the abortion authority.
+bool RaceEvent::RaceWasAborted(const ::port::driving::Memory& m,std::uint32_t){return FrontendDatabase::RaceWasAborted(m,0x2f3890);}
+// Debug001FC6D8; E-0110-F01. Human numbers precede the AI range starting at100.
+int RaceEvent::DriverNumberFromRacerIndex(const ::port::driving::Memory& m,std::uint32_t a,int index){const int players=m.signed_half(a+0x76);return index<players?index:static_cast<std::int32_t>(static_cast<std::uint32_t>(index)-static_cast<std::uint32_t>(players)+100u);}
+// Debug001FC7D0; E-0110-F01. DriverInfo absence/elimination is tested in the real roster.
+bool RaceEvent::DriverInTheRace(::port::driving::Memory& m,std::uint32_t,int number){const auto driver=RaceParameters(m,0x311f78).GetDriverInfoByDriverNumber(number);return driver&&m.signed_byte(driver)==0;}
+// Debug001FC7A0; E-0110-F01.
+bool RaceEvent::RacerInTheRace(::port::driving::Memory& m,std::uint32_t a,int index){return DriverInTheRace(m,a,DriverNumberFromRacerIndex(m,a,index));}
+// Debug001FC870; E-0110-F01. Strict comparison keeps the first index on a tie.
+int RaceEvent::GetLastPlace(::port::driving::Memory& m,std::uint32_t a){int chosen=0,rank=0;for(int i=0;i<8;++i)if(RacerInTheRace(m,a,i)){const int next=m.signed_word(a+0x150+12*i);if(rank<next){chosen=i;rank=next;}}return chosen;}
+// Debug001FC900; E-0110-F01. The initial comparison bound8 and default index0 are original.
+int RaceEvent::GetFirstPlace(::port::driving::Memory& m,std::uint32_t a){int chosen=0,rank=8;for(int i=0;i<8;++i)if(RacerInTheRace(m,a,i)){const int next=m.signed_word(a+0x150+12*i);if(next<rank){chosen=i;rank=next;}}return chosen;}
+// Debug001FCA30; E-0110-F01. Actual rank/time/KO/tournament state publication. This does
+// not commit a PC profile or claim original save-device completion.
+void RaceEvent::PostResults(::port::driving::Memory& m,std::uint32_t a){
+ if(RaceWasAborted(m,a))return;
+ const auto state=m.word(a+4);
+ switch(m.signed_half(a+0x6a)){
+ case 0:case 2:if(state)m.byte(state,static_cast<std::uint8_t>(m.word(a+0x150)));break;
+ case 1:case 5:case 6:if(state)m.word(state,m.word(a+0x154));break;
+ case 3:if(state){const int last=GetLastPlace(m,a);EventKoState::SetRank(m,state,last,m.signed_word(a+0x150+12*last));if(static_cast<std::int32_t>(m.word(0x311fa8)+m.word(0x311fac))<3){const int first=GetFirstPlace(m,a);EventKoState::SetRank(m,state,first,m.signed_word(a+0x150+12*first));}}break;
+ case 4:if(state)for(unsigned i=0;i<8;++i){const auto rank=m.word(a+0x150+12*i);if(rank)m.byte(state+i,static_cast<std::uint8_t>(m.byte(state+i)+m.byte(0x32882fu+rank)));}break;
+ }
+}
+// Debug001FD190; E-0110-F01.
+int RaceEvent::GetRaceCount(const ::port::driving::Memory& m,std::uint32_t a){const int type=m.signed_half(a+0x6a);return type==3?m.signed_half(a+0x74):type==4?m.signed_half(a+0x70):1;}
+// Debug001FD490; E-0110-F01. KO's last-place driver-number test is unsigned; a tournament
+// continues at the original <= boundary, not a host-derived race-count rule.
+bool RaceEvent::IsThereAnotherRace(::port::driving::Memory& m,std::uint32_t a){
+ const int type=m.signed_half(a+0x6a);
+ if(type==3){int remaining=0;for(int i=0;i<m.signed_word(0x2f3890+0x10734);++i)if(DriverInTheRace(m,a,i))++remaining;if(static_cast<std::uint32_t>(DriverNumberFromRacerIndex(m,a,GetLastPlace(m,a)))<2)--remaining;if(remaining>0)return static_cast<std::int32_t>(m.word(0x311fa8)+m.word(0x311fac))>2;}
+ else if(type==4)return GetRaceIndex(m,a)+1<=GetRaceCount(m,a);
+ return false;
+}
+// Debug001FCBD0; E-0110-F01. The two exact copies intentionally have different sources.
+// Missing pState remains an explicit source-owner gap rather than a no-op retry.
+void RaceEvent::RestartRace(::port::driving::Memory& m,std::uint32_t a){
+ const bool preserve=!IsMultiTrack(m,a)||!IsThereAnotherRace(m,a);
+ const auto state=m.word(a+4);
+ if(!state)hp2::not_implemented("0x001FCBD0","original persistent event state is required for retry");
+ if(preserve)m.copy(a+8,state,static_cast<unsigned>(GetStateSize(m,a)));
+ m.copy(state,a+0x18,static_cast<unsigned>(GetStateSize(m,a)));
+}
+// Debug001FCC48, E-0101-RA02. Reset the event without recreating its roster,
+// selected ride or RNG. Caller sends RC_NEXT_RACE with Param0 afterward.
+void RaceEvent::RestartEvent(::port::driving::Memory& m,std::uint32_t a){
+ if(!IsThereAnotherRace(m,a)&&!ResultShouldBeDiscarded(m,a))
+  m.copy(a+8,m.word(a+4),static_cast<unsigned>(GetStateSize(m,a)));
+ ResetState(m,a);ResetResults(m,a);
+ RaceParameters parameters(m,0x311f78);parameters.ClearEliminatedDrivers();
+ parameters.ResetStartingPositions();FrontendDatabase::CalculateStartingPositions(m);
+ EventTrack::SetRace(m,a+0xd4,0x311f78);
+}
+// Debug001FD1C0, E-0101-RA02. Result publication already advances the source
+// progress. Preserve current DriverInfo entries and settings; no fresh entry.
+bool RaceEvent::SetupNextRace(::port::driving::Memory& m,std::uint32_t a){
+ const bool next=IsThereAnotherRace(m,a);if(!next)return false;
+ constexpr auto rp=0x311f78u;
+ m.copy(rp+0x28c,0x2f3890+0x10738+0x644,48);
+ RaceParameters parameters(m,rp);const int type=m.signed_half(a+0x6a);
+ if(type==3){
+  const int last=GetLastPlace(m,a);
+  parameters.EliminateDriver(DriverNumberFromRacerIndex(m,a,last),m.signed_word(a+0x150+12*last));
+  m.byte(rp+0x3c,std::uint8_t(m.word(a+0x150)));m.byte(rp+0x3d,std::uint8_t(m.word(a+0x15c)));
+  for(int i=0;i<8;++i){const auto d=parameters.GetDriverInfoByDriverNumber(DriverNumberFromRacerIndex(m,a,i));
+   if(d&&!m.signed_byte(d))m.byte(d+4,std::uint8_t(m.word(a+0x150+12*i)));}
+ }else if(type==4){
+  const auto state=GetTournamentState(m,a);m.byte(rp+0x3c,std::uint8_t(EventTournamentState::UserRank(m,state)));
+  for(int i=0;i<8;++i){const auto d=parameters.GetDriverInfoByDriverNumber(DriverNumberFromRacerIndex(m,a,i));
+   if(d&&!m.signed_byte(d))m.byte(d+4,std::uint8_t(EventTournamentState::RacerRank(m,state,i)));}
+ }
+ if(type==3||type==4){
+  const int index=GetRaceIndex(m,a),tracks=m.signed_half(a+0x70);
+  if(!tracks)hp2::not_implemented("0x001FD1C0","original SetupNextRace division-by-zero break7");
+  if(index==std::numeric_limits<std::int32_t>::min()&&tracks==-1)
+   hp2::not_implemented("0x001FD1C0","original SetupNextRace signed division overflow domain");
+  EventTrack::SetRace(m,a+0xd4+std::uint32_t(index%tracks)*4,rp);
+ }
+ return next;
 }
 }

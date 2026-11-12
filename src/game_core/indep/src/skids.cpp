@@ -5,9 +5,37 @@
 #include "game_core/src/ecstasy/ecstasye.hpp"
 #include "game_core/indep/src/fmenus.hpp"
 #include "game_core/port/not_implemented.hpp"
+#include "game_core/inc/bSlotPool.hpp"
+#include "game_core/port/race/world_construction.hpp"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
+namespace hp2::debug {
+// Debug001A8798, E-0099-W06. Full original initializer over shared logical
+// globals/pool. This overload does not use the separate synthetic SkidArena.
+void InitSkids(::port::driving::Memory& memory,const ::port::race::TextureInfoLookup& lookup){
+    if(memory.word(0x00327e68)==0){
+        const auto pool=bNewSlotPool(memory,0x110,0x80,0x002add90,0x10);
+        memory.word(0x00327e68,pool);
+        memory.word(pool+0x14,memory.word(pool+0x14)&~std::uint32_t(SLOTPOOL_FLAG_OVERFLOW_IF_FULL));
+    }
+    for(unsigned i=0;i<33;++i){
+        const auto destination=0x00308c30+i*4;
+        memory.word(destination,0);
+        const auto name=memory.word(0x003102e8+i*0x90+0x10);
+        if(!name)continue;
+        std::string text;
+        for(unsigned offset=0;;++offset){
+            if(offset==4096)hp2::not_implemented("0x0024C8B0","unterminated TerrainTypeInfo.SkidTextureName");
+            const auto c=memory.byte(name+offset);if(!c)break;text.push_back(static_cast<char>(c));
+        }
+        const auto hash=hp2::frontend::bStringHash(text.c_str());
+        if(!lookup)hp2::not_implemented("0x001A95C8","original GetTextureInfo service is not bound");
+        memory.word(destination,lookup(hash,1,0));
+    }
+    memory.word(0x00327e6c,0);memory.word(0x00327e70,0);
+}
+}
 namespace port::driving::skid_detail {
 // Port memory/list adapters only. No alternate geometry/eligibility implementation.
 SkidVector read(const Memory&m,std::uint32_t a){return {{m.scalar(a),m.scalar(a+4),m.scalar(a+8)}};}
@@ -153,4 +181,57 @@ void RenderSkids(Memory&m,const SkidView&view,SkidServices&s){
         node=next;
     }
 }
+}
+
+namespace hp2::debug {
+// Debug001A8850, E-0099-W18. Exact pool/null and reverse texture-table clears.
+void CloseSkids(::port::driving::Memory& m){
+ if(m.word(0x327e68)){bDeleteSlotPool(m,m.word(0x327e68));m.word(0x327e68,0);}
+ for(int i=32;i>=0;--i)m.word(0x308c30+4*i,0);
+}
+}
+
+// TASK-0099 E-0099-W71. Actual shared original ownership, separate from retained
+// synthetic fixture overloads above. Debug SHA256815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
+#include "game_core/indep/inc/Skids.hpp"
+#include "game_core/port/driving/ee_vu_skid_lane.hpp"
+#include "game_core/indep/inc/Clans.hpp"
+#include "game_core/src/bList.hpp"
+#include <cstring>
+namespace hp2::debug {
+namespace {
+// Port-only logical-memory/list/policy adapters, no original helper ABI claim.
+using M=::port::driving::Memory;
+void skid_unlink(M&m,std::uint32_t p){const auto n=m.word(p),b=m.word(p+4);m.word(b,n);m.word(n+4,b);}
+void skid_front(M&m,std::uint32_t p){const auto h=0x327e60u,n=m.word(h);m.word(h,p);m.word(n+4,p);m.word(p+4,h);m.word(p,n);}
+float skid_policy(std::optional<std::uint32_t> p,const char*site){if(!p)hp2::not_implemented(site,"Explicit port policy for original uninitialized skid stack W is required");float value;std::memcpy(&value,&*p,4);if(!std::isfinite(value))hp2::not_implemented(site,"Exceptional original skid stack W policy outside finite projection");return value;}
+}
+void SkidSet::Sub_001A8008(std::uint32_t maker,std::uint32_t car,std::uint32_t p,std::uint32_t d,int terrain,float intensity,std::optional<std::uint32_t> radius){m_.word(address_+0x30,maker);m_.word(address_+0x24,car);m_.word(address_+0x34,std::uint32_t(terrain));m_.word(address_+0xf0,0);m_.copy(address_+0x40,p,16);m_.copy(address_+0x60,p,16);m_.copy(address_+0x50,p,16);m_.copy(address_+0x100,p,16);const auto clan=GetClan(m_,p);m_.word(address_+0x28,clan);const auto node=bPNode::Malloc(m_),head=clan+8,tail=m_.word(head+4);m_.word(address_+0x2c,node);m_.word(tail,node);m_.word(head+4,node);m_.word(node,head);m_.word(node+8,address_);m_.word(node+4,tail);AddSegment(p,d,intensity,radius);}
+void SkidSet::Sub_001A80D8(int flags){if(const auto maker=m_.word(address_+0x30))SkidMaker(m_,maker).MakeNoSkid();const auto node=m_.word(address_+0x2c);skid_unlink(m_,node);bPNode::Free(m_,node);if(flags&1)SlotPool(m_,m_.word(0x327e68)).Free(address_);}
+int SkidSet::AddSegment(std::uint32_t p,std::uint32_t d,float intensity,std::optional<std::uint32_t> radius){auto&m=m_;const auto a=address_;const auto count=m.signed_word(a+0xf0);float extra=0;std::array<float,4>normal{};std::uint32_t normal_w_bits=0;
+ if(count>0){const auto last=a+0x60+std::uint32_t(count)*16;for(unsigned i=0;i<4;++i){const float left=m.scalar(p+4*i),right=m.scalar(last+4*i);if(!std::isfinite(left)||!std::isfinite(right)||std::fpclassify(left)==FP_SUBNORMAL||std::fpclassify(right)==FP_SUBNORMAL)hp2::not_implemented("0x001A81A0","Original extended/denormal VU skid subtraction lane requires its instruction carrier");normal[i]=left-right;}const float xx=normal[0]*normal[0],yy=normal[1]*normal[1],zz=normal[2]*normal[2];const float square=(xx+yy)+zz;if(!std::isfinite(square))hp2::not_implemented("0x001A81C4","Exceptional original skid distance SQRT");extra=std::sqrt(square);
+  if(extra){const float q=1.f/extra;for(unsigned lane=0;lane<3;++lane){normal[lane]*=q;if(!std::isfinite(normal[lane]))hp2::not_implemented("0x001A81DC","Exceptional original XYZ skid normalization remains unresolved");}const float input_w=normal[3];normal[3]*=q;if(!std::isfinite(normal[3]))normal_w_bits=::port::driving::vu_skid_extreme_product_001a81dc(input_w,double(q)).bits;else std::memcpy(&normal_w_bits,&normal[3],4);}
+  else if(normal[0]==0&&normal[1]==0&&normal[2]==0){const double q=std::ldexp(2.-std::ldexp(1.,-23),128);for(unsigned lane=0;lane<3;++lane)normal[lane]=float(double(normal[lane])*q);const float input_w=normal[3];const double product=double(input_w)*q;if(!std::isfinite(product)||std::fabs(product)>double(std::numeric_limits<float>::max()))normal_w_bits=::port::driving::vu_skid_extreme_product_001a81dc(input_w,q).bits;else{normal[3]=float(product);std::memcpy(&normal_w_bits,&normal[3],4);}}
+
+  else hp2::not_implemented("0x001A81C8","Nonzero underflowed original VU skid squared norm");
+ }
+ bool merge=false;if(count>1){float dot=normal[0]*m.scalar(a+0x10);dot=dot+normal[1]*m.scalar(a+0x14);dot=dot+normal[2]*m.scalar(a+0x18);const float angle=1-dot,total=m.scalar(a+0x20)+extra;if(m.scalar(0x3257c8)<angle){FinishedAddingSkids();return 0;}merge=total<.25f||angle<m.scalar(0x3257cc);if(3<total)merge=false;}
+ std::uint32_t segment;if(merge){segment=a+0x60+std::uint32_t(count)*16;m.scalar(a+0x20,m.scalar(a+0x20)+extra);}else{if(count==8)return 1;segment=a+0x70+std::uint32_t(count)*16;m.word(a+0xf0,std::uint32_t(count+1));if(count+1>1){for(unsigned lane=0;lane<3;++lane)m.scalar(a+0x10+4*lane,normal[lane]);m.word(a+0x1c,normal_w_bits);}m.scalar(a+0x20,extra);}
+ ::port::driving::SkidVector pos{{m.scalar(p),m.scalar(p+4),m.scalar(p+8)}},delta{{m.scalar(d),m.scalar(d+4),m.scalar(d+8)}};hp2::recovered::SkidSegment(m,segment).SetPoints(pos,delta);m.byte(segment+15,::port::driving::skid_detail::byte_cast(intensity*255,"0x001A8314"));
+ const float radius_w=skid_policy(radius,"0x00252A74");for(unsigned i=0;i<4;++i){const float padding=i==3?radius_w:extra,point=m.scalar(p+i*4),lo=m.scalar(a+0x60+i*4),hi=m.scalar(a+0x50+i*4);if(!std::isfinite(point)||!std::isfinite(lo)||!std::isfinite(hi))hp2::not_implemented("0x00252A84","Exceptional original full-lane skid bounding box");m.scalar(a+0x60+i*4,std::min(lo,point-padding));m.scalar(a+0x50+i*4,std::max(hi,point+padding));}
+ Clan(m,m.word(a+0x28)).ExpandBoundingBox(a+0x60,a+0x50);for(unsigned i=0;i<4;++i)m.scalar(a+0x100+i*4,(m.scalar(a+0x60+i*4)+m.scalar(a+0x50+i*4))*.5f);return 0;
+}
+void SkidSet::FinishedAddingSkids(){if(const auto maker=m_.word(address_+0x30)){m_.word(maker,0);m_.word(address_+0x30,0);}}
+void SkidSet::GetLastPoints(std::uint32_t p,std::uint32_t d){const auto segment=address_+0x70+std::uint32_t(m_.signed_word(address_+0xf0)-1)*16;::port::driving::SkidVector position,delta;hp2::recovered::SkidSegment(m_,segment).GetPoints(position,&delta);for(unsigned i=0;i<3;++i){m_.scalar(p+4*i,position[i]);if(d)m_.scalar(d+4*i,delta[i]);}}
+std::uint32_t CreateNewSkidSet(M&m,std::uint32_t maker,std::uint32_t car,std::uint32_t p,std::uint32_t d,int terrain,float intensity,std::optional<std::uint32_t> radius){const auto pool=m.word(0x327e68),head=0x327e60u;if(!m.word(head))hp2::not_implemented("0x001A8B30","Original SkidSetList process static initialization is required");if(!pool)hp2::not_implemented("0x001A8798","Original shared SkidSet pool startup is required");if(m.word(pool+0x18)==m.word(pool+0x2c)){const auto old=m.word(head+4);if(old==head)hp2::not_implemented("0x001A8590","Original full skid pool has no published LRU owner");skid_unlink(m,old);SkidSet(m,old).Sub_001A80D8(3);}const auto set=SlotPool(m,pool).Malloc();SkidSet(m,set).Sub_001A8008(maker,car,p,d,terrain,intensity,radius);skid_front(m,set);return set;}
+void SkidMaker::MakeSkid(std::uint32_t car,std::uint32_t p,std::uint32_t d,int terrain,float intensity,std::optional<std::uint32_t> radius,std::optional<std::uint32_t> restart_w){auto set=m_.word(address_);if(!set){m_.word(address_,CreateNewSkidSet(m_,address_,car,p,d,terrain,intensity,radius));return;}if(car==m_.word(set+0x24)&&terrain==m_.signed_word(set+0x34))if(!SkidSet(m_,set).AddSegment(p,d,intensity,radius))return;
+ ::port::driving::Memory::Temporary stack(m_,32);const auto last=stack.address(),delta=last+16;SkidSet(m_,set).GetLastPoints(last,delta);const auto n=m_.signed_word(set+0xf0);const float old=float(m_.byte(set+0x70+std::uint32_t(n-1)*16+15))*m_.scalar(0x3257d4);SkidSet(m_,set).FinishedAddingSkids();(void)skid_policy(restart_w,"0x001A8724");m_.word(last+12,*restart_w);set=CreateNewSkidSet(m_,address_,car,last,delta,terrain,old,radius);SkidSet(m_,set).AddSegment(p,d,intensity,radius);m_.word(address_,set);
+}
+void SkidMaker::MakeNoSkid(){if(const auto set=m_.word(address_))SkidSet(m_,set).FinishedAddingSkids();}
+void DeleteThisSkid(M&m,std::uint32_t set){skid_unlink(m,set);SkidSet(m,set).Sub_001A80D8(3);}
+}
+
+namespace hp2::debug {
+// Debug001A8B30: required original process static, never lazy-init insideSkids.
+void Sub_001A8B30(::port::driving::Memory&m){m.word(0x327e64,0x327e60);m.word(0x327e60,0x327e60);}
 }

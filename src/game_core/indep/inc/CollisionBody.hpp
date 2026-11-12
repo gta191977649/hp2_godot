@@ -5,7 +5,133 @@
 #include "game_core/port/track/topology.hpp"
 #include "game_core/port/track/voronoi.hpp"
 namespace port::driving {struct CollisionMotion;class Memory;}
+namespace port::race {struct CollisionResources;}
+namespace port::race {struct PhysicsConstructionServices;}
 #include "game_core/port/driving/memory.hpp"
+#include <string>
+#include <optional>
+
+namespace hp2::debug {
+// Exact Debug names/values, E-0099-W15; no Retail/native ABI assertion.
+enum CollisionBodyType {CAR_COLLISION_BODY=0,SMOKEABLE_COLLISION_BODY=1,
+    VIRGIN_SMOKEABLE_COLLISION_BODY=2,TRACK_POLYGON_COLLISION_BODY=3};
+class CollisionBody {
+protected:
+    ::port::driving::Memory& memory_;std::uint32_t address_;
+public:
+    static bool AnySmokeablesInBox(::port::driving::Memory&,const std::array<float,4>&,const std::array<float,4>&); //001D39A0,E-0112-NIS03.
+    CollisionBody(::port::driving::Memory& memory,std::uint32_t address):memory_(memory),address_(address){}
+    // Debug001D3520 /001D35E8, E-0099-W15. Constructor/destructor entries
+    // are explicit operations; this C++ memory-view lifetime does not invoke them.
+    void Sub_001D3520(int,CollisionBodyType);
+    void DoSnapshot(std::uint32_t); //001D36D0 E-0099-W76.
+    static void SnapshotEverything(::port::driving::Memory&,std::uint32_t); //001D3AA8.
+    static std::uint32_t FindCollisionBody(::port::driving::Memory&,int); //001D3B20.
+
+    void Sub_001D35E8(int in_chrg);
+    void DisableCollisions();void EnableCollisions(); //001D3B40/001D3B50, E-0099-W96; original byte counter.
+    // Debug001D37D0 /001D3888 /001D3A68, E-0099-W15.
+    void UpdateMaxCollisionBodyWidth(float);
+    void SetBBoxMinMax(const std::array<float,2>&,const std::array<float,2>&);
+    void SetDebugName(const std::string&);
+    std::uint32_t GetCollision(int index)const; //001D3B70, E-0099-W38
+    // Debug001D3A48, E-0099-W15, instruction-confirmed empty original body.
+    void PlotToCaffeine(const std::array<float,16>&,const std::array<float,3>&);
+};
+class StaticCollisionBody : public CollisionBody {
+public:
+    float GetMassInverse()const; //001D5CF8,E-0110-F09.
+    using CollisionBody::CollisionBody;
+    // Debug001D5310 /001D5370, E-0099-W15.
+    void Sub_001D5310(int,CollisionBodyType);void Sub_001D5370(int);
+    void DoSnapshot(std::uint32_t); //001D5398 E-0099-W76.
+    int AreCollisionsEnabled() const; //Debug001D5C98, E-0099-W38
+    std::uint32_t GetRotation() const; //Debug001D5DB8, E-0099-W38
+    std::uint32_t GetVelocity() const; //Debug001D5DC8
+    float GetMaxBackupTime() const; //Debug001D5DA0
+};
+class TrackPolygonCollisionBody : public StaticCollisionBody {
+public:
+    using StaticCollisionBody::StaticCollisionBody;
+    void Sub_001D53A0(int id,std::uint32_t topology_polygon); //E-0099-W38
+    void Sub_001D54B8(int); //E-0099-W38
+    void DoSnapshot(std::uint32_t); //001D5550 E-0099-W76.
+    static void SnapshotEverything(::port::driving::Memory&,std::uint32_t); //001D55B8.
+    std::uint32_t GetPosition()const; //001D5750
+    int GetTerrainType()const; //001D5760
+};
+class DynamicCollisionBody : public CollisionBody {
+public:
+    float GetMassInverse()const; //001D5BE8,E-0110-F09.
+    using CollisionBody::CollisionBody;
+    // Debug001D3BE0/001D3C60; E-0099-W19. Original raw dynamic base lifecycle.
+    void Sub_001D3BE0(int,CollisionBodyType,std::uint32_t topology_coordinate);
+    void Sub_001D3C60(int);
+    // Debug001D3D90/001D3F28; E-0099-W23. Actual shared geometry/bounds.
+    void BuildBoundingVolumes();void UpdatePosition();
+    void DoSnapshot(std::uint32_t); //001D3C88 E-0099-W76.
+    void BeginMove(float); //Debug001D3FA0, E-0099-W38
+    void Interpolate(std::uint32_t position,std::uint32_t rotation,float backup_time); //001D4040
+    float GetMaxBackupTime() const; //001D5C00
+    void InterpolateVelocity(std::uint32_t output,float backup_time); //001D41E8, E-0099-W38
+    void Backup(float backup_time); //001D4298
+    void SetPosition(std::uint32_t position); //001D5C08
+    void GetCurrentVelocities(std::uint32_t velocity,std::uint32_t angular_velocity); //001D4378
+    void RecomputeAuxilliaries(::port::race::PhysicsConstructionServices&); //001D4348
+    void SetToPhysicsMode(std::uint32_t); //001D5BF8, E-0110-E03; original JR/NOP.
+    int TrackPolygonCheck(std::uint32_t track_polygon); //001D4920, E-0099-W38
+    int CreateTrackPolygonCollisionBodies(); //001D46D8
+    void MaybeCreateWitnesses(const ::port::race::PhysicsConstructionServices* =nullptr); //001D4468;E-0099-W83.
+
+};
+class CarCollisionBody : public DynamicCollisionBody {
+public:
+    using DynamicCollisionBody::DynamicCollisionBody;
+    // Debug001D4A80/001D4BD8; E-0099-W23. Requires complete authored sources.
+    void Sub_001D4A80(std::uint32_t car,const ::port::race::CollisionResources&);
+    void Sub_001D4BD8(int);
+    // Debug001D5B68; E-0099-W23. Original logical pointer in both movement modes.
+    void DoSnapshot(std::uint32_t); //001D4C90 E-0099-W76.
+    void SetupPhysicsPointers(); // Debug001D4D70, E-0099-W33
+    void SetToPhysicsMode(std::uint32_t hitter,::port::race::PhysicsConstructionServices&); //Debug001D4DD0
+    void Move(float timestep,::port::race::PhysicsConstructionServices&); //001D4E28, E-0099-W38
+    std::uint32_t GetPosition() const;
+    std::uint32_t GetRotation() const; //Debug001D5B28, E-0099-W38
+    std::uint32_t GetVelocity() const; //Debug001D5B48, E-0099-W38
+    int AreCollisionsEnabled() const; //Debug001D4EA8, E-0099-W38
+    int IsBlinking(); //001D5AB8, E-0099-W38
+    float GetMassInverse()const; //001D4ED0, E-0099-W38
+    std::uint32_t GetInertiaTensorInverse(); //001D4F08
+    void ApplyImpulse(std::uint32_t impulse,std::uint32_t arm); //001D4F50, E-0099-W38
+    void AddDamage(std::uint32_t arm,float magnitude); //001D5008; required live callees retain guards
+    void AnimateCollisionReaction(std::uint32_t impulse,float magnitude); //001D5188
+};
+// Debug001D3788 /001D58C8, E-0099-W15.
+int CollisionBodyFlipFunction(const ::port::driving::Memory&,std::uint32_t,std::uint32_t);
+void Sub_001D58C8(::port::driving::Memory&);
+// Debug001D2938/001D2A58/001D3A58; E-0099-W19.
+void InitCollisionBody(::port::driving::Memory&);void CloseCollisionBody(::port::driving::Memory&);
+int IsYawControlInducingCollisionBody(const ::port::driving::Memory&,std::uint32_t); //001D31E8, E-0099-W38
+std::uint16_t GetNextCollisionBodyID(const ::port::driving::Memory&);
+class CollisionBodyWitness {
+    ::port::driving::Memory& memory_;std::uint32_t address_;
+public:
+    CollisionBodyWitness(::port::driving::Memory& m,std::uint32_t a):memory_(m),address_(a){}
+    // Debug001D2BF0; E-0099-W19. Inactive collision/Caffeine and non-track bodies.
+    std::uint32_t GetCollision(std::uint32_t contact_point); //001D2FB8, E-0099-W38
+    void BeginCollision(std::uint32_t contact_point); //001D2FF0
+    void EndCollision(); //001D3080
+    void DoSnapshot(std::uint32_t); //001D2DA0 E-0099-W76.
+    static void SnapshotEverything(::port::driving::Memory&,std::uint32_t); //001D2E40.
+    void TestForContact(std::uint32_t contact_list,std::optional<std::uint32_t> port_padding); //001D3230
+    void Sub_001D2AC8(std::uint32_t body1,std::uint32_t body2); //Debug001D2AC8, E-0099-W38
+    void Sub_001D2BF0(int);
+    int HasExpired() const; //Debug001D30F0, E-0099-W38
+    static int DoesWitnessExist(const ::port::driving::Memory&,std::uint32_t,std::uint32_t); //001D34D0
+};
+// Debug001D3480; E-0099-W19.
+void EliminateAllWitnesses(::port::driving::Memory&);
+}
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: qualified_string; evidence: E-0019-N03.

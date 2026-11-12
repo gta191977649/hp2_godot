@@ -78,7 +78,7 @@ void TrackParticleRenderer::set_mesh_change_callback(std::function<void(godot::M
 godot::Dictionary TrackParticleRenderer::stats()const{
  if(impl_->gpu){auto d=impl_->gpu->stats();d["backend"]="godot_gpu";d["simulation_ms"]=impl_->simulation_ms;d["packet_ms"]=impl_->packet_ms;d["packing_ms"]=0.0;d["upload_ms"]=impl_->upload_ms;
  if(impl_->simulation){std::size_t count=0,groups=0;const auto& auto_order=impl_->simulation->auto_emitter_order();for(const auto& g:impl_->simulation->groups())if(std::find(auto_order.begin(),auto_order.end(),g.emitter)==auto_order.end()){++groups;count+=g.particles.size();}d["native_active_particles"]=int64_t(impl_->simulation->particle_count());d["native_dynamic_particles"]=int64_t(count);d["native_dynamic_groups"]=int64_t(groups);}return d;}
- godot::Dictionary d;d["backend"]="native";std::uint64_t creations=impl_->baseline_creations,surfaces=impl_->baseline_creations,updates=0,bytes=0;std::size_t capacity=0,degenerate=0;
+ godot::Dictionary d;d["backend"]=impl_->driving_source?"source_world_snapshot":"native";std::uint64_t creations=impl_->baseline_creations,surfaces=impl_->baseline_creations,updates=0,bytes=0;std::size_t capacity=0,degenerate=0;
  for(const auto& s:impl_->streams){creations+=s.creations;surfaces+=s.surfaces;updates+=s.updates;bytes+=s.bytes;capacity+=s.capacity;if(s.active)degenerate+=s.capacity-s.active;}
  d["staging_cache"]=impl_->staging_cache;d["staging_size_changes"]=int64_t(impl_->staging_size_changes);d["transport_cache"]=impl_->transport_cache;d["state_cache"]=impl_->state_cache;d["simulation_ms"]=impl_->simulation_ms;d["packet_ms"]=impl_->packet_ms;d["packing_ms"]=impl_->packing_ms;d["upload_ms"]=impl_->upload_ms;d["parameter_sets"]=int64_t(impl_->parameter_sets);d["parameter_skips"]=int64_t(impl_->parameter_skips);
  std::uint64_t queries=0;for(const auto& s:impl_->streams)queries+=s.layout_queries;d["layout_queries"]=int64_t(queries);
@@ -89,6 +89,10 @@ void TrackParticleRenderer::set_driving_source(Ps2DrivingRuntime* source){
  if(source==impl_->driving_source)return;
  if(impl_->simulation)impl_->simulation->clear_dynamic_emitters();
  impl_->wheel_effects={};impl_->driving_step=0;impl_->driving_source=source;
+ // World already advanced its AcidEffectSystem. Host transport must only project
+ // committed particles, whereas the optional GPU backend integrates them again.
+ if(source){if(impl_->gpu)impl_->gpu->clear();impl_->gpu.reset();impl_->rollback.reset();}
+ else if(impl_->gpu_backend&&!impl_->gpu){impl_->gpu=std::make_unique<GpuParticleRenderer>(impl_->owner,impl_->texture,impl_->mip);impl_->gpu->set_material_callbacks(impl_->track_material,impl_->material_parameter);}
 }
 void TrackParticleRenderer::clear(){impl_->rollback.reset();if(impl_->gpu)impl_->gpu->clear();if(impl_->simulation)impl_->seed=impl_->simulation->global_seed();impl_->simulation.reset();impl_->wheel_effects={};impl_->driving_step=0;impl_->scene.reset();for(auto* n:impl_->nodes){if(n->get_parent())n->get_parent()->remove_child(n);memdelete(n);}impl_->nodes.clear();impl_->materials.clear();impl_->parameter_cache.clear();impl_->parameter_sets=impl_->parameter_skips=0;impl_->simulation_ms=impl_->packet_ms=impl_->packing_ms=impl_->upload_ms=0;impl_->alpha_max.clear();impl_->tile_alpha_max.clear();impl_->streams.clear();impl_->staging.clear();impl_->staging_size_changes=0;impl_->baseline_creations=0;impl_->active_quads=0;}
 ParticleFrame TrackParticleRenderer::update(std::shared_ptr<const port::track::Scene> scene,port::driving::Memory& math,const port::track::FrameView& frame,float dt,godot::Ref<godot::Texture2D> depth,bool enabled,unsigned layer,godot::Camera3D* source_camera,bool require_native_depth){
@@ -98,16 +102,11 @@ ParticleFrame TrackParticleRenderer::update(std::shared_ptr<const port::track::S
  if(impl_->gpu){if(impl_->rollback)throw std::logic_error("GPU particle frame was not committed or aborted");impl_->rollback=std::make_unique<port::track::ParticleSimulation>(*impl_->simulation);impl_->rollback_effects=impl_->wheel_effects;impl_->rollback_step=impl_->driving_step;}
  impl_->interests[0]=frame.position;
  if(impl_->driving_source!=nullptr){
+  const auto snapshot=impl_->driving_source->world_particle_snapshot();
   const auto source_step=impl_->driving_source->particle_step();
-  // Original World0014DDE0 updates existing groups before0014DE44 emission.
-  // Candidate simulation/bindings and native visual counters commit together.
-  auto next=*impl_->simulation;auto effects=impl_->wheel_effects;
-  if(source_step<impl_->driving_step){next.clear_dynamic_emitters();effects={};}
-  next.set_car_velocity(impl_->driving_source->particle_velocity());
-  const float step=impl_->driving_source->particle_timestep(impl_->driving_step);
-  if(!impl_->gpu||step>0)next.step(math,step,impl_->interests);
-  if(step>0&&source_step!=impl_->driving_step)impl_->driving_source->emit_wheel_particles(next,effects,impl_->interests);
-  *impl_->simulation=std::move(next);impl_->wheel_effects=std::move(effects);impl_->driving_step=source_step;
+  if(snapshot){if(source_step!=impl_->driving_step||impl_->driving_step==0)*impl_->simulation=*snapshot;}
+  else impl_->simulation=std::make_unique<port::track::ParticleSimulation>(port::track::ParticleResources{},0);
+  impl_->driving_step=source_step;
  }else if(!impl_->gpu||dt>0)impl_->simulation->step(math,dt,impl_->interests);
  result.active=impl_->simulation->particle_count();impl_->simulation_ms=std::chrono::duration<double,std::milli>(Clock::now()-simulation_begin).count();
  if(impl_->gpu){const auto begin=Clock::now();auto output=impl_->gpu->update(scene,impl_->simulation->gpu_commands(),frame,depth,enabled,layer,source_camera,require_native_depth);impl_->packet_ms=std::chrono::duration<double,std::milli>(Clock::now()-begin).count();output.active=result.active;output.visible=enabled?result.active:0;return output;}

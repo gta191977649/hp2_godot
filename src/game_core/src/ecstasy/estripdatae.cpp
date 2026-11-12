@@ -91,3 +91,27 @@ void eStripDataE::GetElementRGBA() {
     hp2::not_implemented("0x0011C180", "eStripDataE::GetElementRGBA (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+#include "game_core/port/race/car_render_resources.hpp"
+namespace port::race {
+// Debug0011C408; E-0099-W25; exact original element-address projection.
+std::pair<std::uint32_t,std::uint32_t> GetElementST0(Memory&m,std::uint32_t data,int vert){
+ const int count=m.byte(data+4);const int tail=(count%4&&count/4)?4:0;
+ auto p=data+static_cast<unsigned>(count*12+tail+32);
+ if(vert<(count/2)*2){p+=static_cast<unsigned>((vert/2)*16+4);if(vert&1)return {p+12,p+8};}
+ else{if(count/2)p+=static_cast<unsigned>((vert/2)*16+4);p+=4;}
+ return {p,p+4};
+}
+}
+
+namespace port::race {
+// Debug0011C310; E-0099-W25.
+std::array<std::uint32_t,3> GetElementXYZ(Memory&m,std::uint32_t data,int vert){
+ const auto count=m.byte(data+4);const int groups=count/4,remain=count%4,lane=vert&3;auto p=data+28;
+ if(vert<groups*4){p+=static_cast<unsigned>((vert/4)*48+4+lane*4);return {p,p+16,p+32};}
+ if(groups)p+=static_cast<unsigned>((vert/4)*48+4);
+ return {p+static_cast<unsigned>(lane*4+4),p+static_cast<unsigned>((remain+lane)*4+4),p+static_cast<unsigned>((2*remain+lane)*4+4)};
+}
+// Debug0011C4F8; E-0099-W25.
+std::uint32_t GetElementRGBA(Memory&m,std::uint32_t data,int vert){const int count=m.byte(data+4);return data+static_cast<unsigned>(vert*2+count*20+((count%4&&count/4)?4:0)+((count%2&&count/2)?4:0)+40);}
+}

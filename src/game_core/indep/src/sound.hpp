@@ -47,3 +47,25 @@ private:
     std::vector<std::pair<std::string,float>> gains_;
 };
 } // namespace hp2::port::audio
+
+#include "game_core/port/driving/memory.hpp"
+namespace hp2::debug {
+std::uint32_t GetInGameSample(::port::driving::Memory&,std::uint32_t name); //001AB900 E-0099-W40
+int IsSoundRegionLoadingInProgress(const ::port::driving::Memory&); //001AC8C8
+int IsSoundRegionLoadingComplete(const ::port::driving::Memory&); //001AC8D0
+void TriggerFinishLineSound(::port::driving::Memory&); //001AD118,W70; original parameter is unused.
+}
+namespace hp2::debug::sound::jukebox {
+void DelayedStart(::port::driving::Memory&,float); //001AC2D0, W62.
+void Stop(::port::driving::Memory&); //001AC2D8.
+}
+namespace hp2::debug {void Sub_001AD710(::port::driving::Memory&);}
+
+namespace hp2::debug::sound {
+float GetVolumeBalance(const ::port::driving::Memory&); //001AD000,E-0112-P03.
+float GetVolumeDefault(const ::port::driving::Memory&,int); //001AD010.
+int GetAudioMode(const ::port::driving::Memory&); //001ACFF8.
+void SetAudioMode(::port::driving::Memory&,int); //001ACFC8.
+void SaveVolumesForSpeech(::port::driving::Memory&); //001ACDC8.
+void PlayCommonRegionSample(::port::driving::Memory&,const std::string&,float); //001ACD48.
+}

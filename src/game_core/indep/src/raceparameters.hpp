@@ -18,6 +18,7 @@ public:
     RaceParameters(::port::driving::Memory& memory,std::uint32_t address):memory_(memory),address_(address){}
     void InitWithDefaults(const ::port::race::DefaultSettings&);
     void AddDriverInfo(std::uint32_t,const ::port::race::SkinLookup&);
+    void AddDriverInfo(std::uint32_t); //001E9DE0 direct original GetSkinInfo resource consumer.
     void SetDriverInfo(std::uint32_t,int);
     std::uint32_t GetDriverInfo(int) const;
     std::uint32_t GetDriverInfoByDriverNumber(int) const;
@@ -29,6 +30,8 @@ public:
     int GetLocationNumber() const;
     int GetLocationIndex() const;
     void ChooseHudTextures();
+    void DoSnapshot(std::uint32_t snapshot); //001E9A98,W74.
+    void Print()const; //Debug001EA328, E-0099-W62, original empty body.
 private:
     ::port::driving::Memory& memory_;
     std::uint32_t address_;
@@ -114,3 +117,18 @@ public:
     void CycleLeaderboardMode();
 };
 } // namespace hp2::recovered
+
+#include "game_core/port/driving/object_view.hpp"
+namespace port::race {
+// E-0112-P03. Raw source field views, not a native C++ ABI.
+class PlayerSettingsView:public ::port::driving::ObjectView {
+public:using ObjectView::ObjectView;
+ void ToggleScoring();void ToggleGauges();void ToggleHudHotkey();void ToggleLapInfo();
+ void CycleSplitTime(int);void ToggleRacePosition();void ToggleLookback();
+ void CycleAlternateCamera();void ToggleCameraSpring();
+};
+class GlobalDisplaySettingsView:public ::port::driving::ObjectView {
+public:using ObjectView::ObjectView;
+ bool CycleLeaderboardMode(int);bool CycleTrackMap(int);
+};
+}

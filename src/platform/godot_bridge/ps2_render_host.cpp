@@ -1,15 +1,20 @@
 #include <godot_cpp/classes/performance.hpp>
 #include "ps2_render_host.hpp"
+#include "ps2_driving_runtime.hpp"
 #include "boundary.hpp"
 #include "game_core/port/not_implemented.hpp"
+#include "game_core/port/runtime_warnings.hpp"
 #include "port/runtime/frame_builder.hpp"
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
+#include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/packed_byte_array.hpp>
 #include <godot_cpp/variant/transform2d.hpp>
 #include <cstring>
+#include <cmath>
 #include <algorithm>
+#include <chrono>
 #include <godot_cpp/classes/input_event_key.hpp>
 #include <godot_cpp/classes/input_event_mouse_button.hpp>
 #include <godot_cpp/classes/input_event_mouse_motion.hpp>
@@ -46,6 +51,22 @@ godot::Ref<godot::Image> to_image(const port::render::Bitmap& bitmap) {
 
 } // namespace
 
+godot::Dictionary Ps2RenderHost::diagnostic_qpc_clock() const {
+    godot::Dictionary clock;
+#ifdef _WIN32
+    LARGE_INTEGER before, after, frequency;
+    QueryPerformanceFrequency(&frequency);
+    QueryPerformanceCounter(&before);
+    const auto godot_usec = godot::Time::get_singleton()->get_ticks_usec();
+    QueryPerformanceCounter(&after);
+    clock["godot_usec"] = godot_usec;
+    clock["qpc_before"] = before.QuadPart;
+    clock["qpc_after"] = after.QuadPart;
+    clock["qpc_frequency"] = frequency.QuadPart;
+#endif
+    return clock;
+}
+
 std::shared_ptr<const port::render::Bitmap> LiveResources::texture(port::render::TextureId id) {
     if (id == port::runtime::kIntroMovieTexture) return intro_;
     if (id == port::runtime::kBackgroundMovieTexture) return background_;
@@ -53,6 +74,16 @@ std::shared_ptr<const port::render::Bitmap> LiveResources::texture(port::render:
 }
 
 void Ps2RenderHost::_bind_methods() {
+    godot::ClassDB::bind_method(godot::D_METHOD("diagnostic_qpc_clock"), &Ps2RenderHost::diagnostic_qpc_clock);
+#if HP2_DEBUG_BUILD
+    godot::ClassDB::bind_method(godot::D_METHOD("debug_draw_authored_screen","resources","hash","width","height"),&Ps2RenderHost::debug_draw_authored_screen);
+#endif
+    godot::ClassDB::bind_method(godot::D_METHOD("draw_mirror_overlay","world","resources","width","height"),&Ps2RenderHost::draw_mirror_overlay);
+    godot::ClassDB::bind_method(godot::D_METHOD("set_world_mirror","texture"),&Ps2RenderHost::set_world_mirror);
+    godot::ClassDB::bind_method(godot::D_METHOD("prepare_world_ui","world","resources"),&Ps2RenderHost::prepare_world_ui);
+    godot::ClassDB::bind_method(godot::D_METHOD("draw_loading","resources","width","height"),&Ps2RenderHost::draw_loading);
+    godot::ClassDB::bind_method(godot::D_METHOD("draw_world","world","resources","width","height"),&Ps2RenderHost::draw_world);
+    godot::ClassDB::bind_method(godot::D_METHOD("draw_controls","runtime","layers","width","height"),&Ps2RenderHost::draw_controls);
     godot::ClassDB::bind_method(godot::D_METHOD("console_visible"), &Ps2RenderHost::console_visible);
     godot::ClassDB::bind_method(godot::D_METHOD("viewer_keyboard_capture"),&Ps2RenderHost::viewer_keyboard_capture);
     godot::ClassDB::bind_method(godot::D_METHOD("viewer_ui_snapshot","snapshot"),&Ps2RenderHost::viewer_ui_snapshot);
@@ -112,17 +143,22 @@ void Ps2RenderHost::set_output_scale(double scale) {
 }
 
 void Ps2RenderHost::release() {
+    world_mirror_.unref();world_ui_.reset();world_ui_generation_=0;world_ui_revision_=0;world_ui_screens_=0;
     frontend_image_.unref();frontend_gpu_.reset();
 #if HP2_DEBUG_BUILD
     console_.reset();
 #endif
     auto* server = godot::RenderingServer::get_singleton();
     if (server != nullptr) {
+        if(mirror_mask_item_.is_valid())server->free_rid(mirror_mask_item_);
+        for(auto rid:projective_items_)if(rid.is_valid())server->free_rid(rid);
         for (auto rid : console_draw_items_) if(rid.is_valid()) server->free_rid(rid);
         for (auto rid : console_items_) if(rid.is_valid()) server->free_rid(rid);
         if(console_font_.is_valid()) server->free_rid(console_font_);
         if(console_parent_.is_valid()) server->free_rid(console_parent_);
     }
+    mirror_mask_item_={};mirror_mask_material_.unref();mirror_mask_shader_.unref();
+    projective_items_.clear();projective_materials_.clear();projective_shader_.unref();
     console_items_.clear(); console_draw_items_.clear(); console_font_={};console_parent_={};
     if (server == nullptr) { textures_.clear(); item_ = godot::RID(); return; }
     for (auto& entry : textures_)
@@ -134,6 +170,7 @@ void Ps2RenderHost::release() {
 
 godot::RID Ps2RenderHost::texture_for(port::render::TextureId id,
                                       port::render::Resources& resources) {
+    if(id==0x100000003ull)return world_mirror_.is_valid()?world_mirror_->get_rid():godot::RID();
     const auto bitmap = resources.texture(id);
     if (!bitmap || bitmap->width <= 0 || bitmap->height <= 0) return godot::RID();
     auto* server = godot::RenderingServer::get_singleton();
@@ -154,6 +191,88 @@ godot::RID Ps2RenderHost::texture_for(port::render::TextureId id,
     return entry.rid;
 }
 
+// TASK-0112. Prepare candidate UI before the shared presentation barrier.
+void Ps2RenderHost::set_world_mirror(const godot::Ref<godot::Texture2D>& texture){world_mirror_=texture;}
+
+godot::Dictionary Ps2RenderHost::draw_mirror_overlay(godot::Object* runtime,godot::Object* resources,double width,double height){
+ godot::Dictionary result;const auto error=catch_all([&]{auto* source=godot::Object::cast_to<Ps2DrivingRuntime>(runtime);auto* layout=godot::Object::cast_to<Ps2FrontEndLayout>(resources);if(!source||!layout||!source->candidate_frame()||width<=0||height<=0)throw std::invalid_argument("Mirror overlay requires source frame and prepared render target");
+  const auto& frame=*source->candidate_frame();if(!frame.mirror_view)return;auto* catalog=layout->runtime().catalog();if(!catalog)throw std::logic_error("Mirror original texture catalog is unavailable");const auto& view=*frame.mirror_view;
+  port::render::Frame overlay;overlay.clear={0,0,0,0};overlay.logical_size={float(width),float(height)};const float sx=float(width)/float(view.texture_size[0]),sy=float(height)/float(view.texture_size[1]);const auto& rect=view.overlay_rect;
+  // INGAMEB RVM uses ALPHA44 (source over); RVM_MASK uses ALPHA48:
+  // (Cs-0)*As/128+Cd, with framebuffer alpha replaced by source alpha.
+  // Generic Canvas source-over would paint its opaque black interior over
+  // the rear view. Copy the prior raster RGB explicitly and replace alpha.
+  const auto info=catalog->texture(view.overlay_hashes[0]),mask=catalog->texture(view.overlay_hashes[1]);if(!info||!mask)throw std::runtime_error("Original mirror overlay texture is missing");
+  port::render::Quad quad;quad.has_vertex_data=true;quad.texture=view.overlay_hashes[0];quad.positions={port::render::Vec2{rect[0]*sx,rect[1]*sy},port::render::Vec2{(rect[0]+rect[2])*sx,rect[1]*sy},port::render::Vec2{(rect[0]+rect[2])*sx,(rect[1]+rect[3])*sy},port::render::Vec2{rect[0]*sx,(rect[1]+rect[3])*sy}};const float w=float(info->width),h=float(info->height);quad.source_points={port::render::Vec2{w,0},port::render::Vec2{0,0},port::render::Vec2{0,h},port::render::Vec2{w,h}};for(auto& c:quad.colors)c={1,1,1,1};overlay.quads.push_back(quad);
+  output_scale_=1;submit(overlay,*catalog);
+  auto* server=godot::RenderingServer::get_singleton();if(!mirror_mask_item_.is_valid()){mirror_mask_item_=server->canvas_item_create();server->canvas_item_set_parent(mirror_mask_item_,item_);server->canvas_item_set_draw_index(mirror_mask_item_,127);mirror_mask_shader_.instantiate();mirror_mask_shader_->set_code(R"shader(shader_type canvas_item;
+render_mode unshaded, blend_disabled;
+uniform sampler2D native_destination : hint_screen_texture, repeat_disable, filter_nearest;
+void fragment(){vec4 src=texture(TEXTURE,UV);vec4 dst=texture(native_destination,SCREEN_UV);COLOR=vec4(dst.rgb+src.rgb*src.a,src.a);}
+)shader");mirror_mask_material_.instantiate();mirror_mask_material_->set_shader(mirror_mask_shader_);server->canvas_item_set_material(mirror_mask_item_,mirror_mask_material_->get_rid());}
+  server->canvas_item_clear(mirror_mask_item_);godot::PackedVector2Array points,uvs;godot::PackedColorArray colours;for(const auto& p:quad.positions){points.push_back({p.x,p.y});colours.push_back({1,1,1,1});}for(const godot::Vector2 uv:{godot::Vector2{1,0},godot::Vector2{0,0},godot::Vector2{0,1},godot::Vector2{1,1}})uvs.push_back(uv);godot::PackedInt32Array indices;for(int i:{0,1,3,1,2,3})indices.push_back(i);server->canvas_item_add_triangle_array(mirror_mask_item_,indices,points,colours,uvs,godot::PackedInt32Array(),godot::PackedFloat32Array(),texture_for(view.overlay_hashes[1],*catalog));
+ });result["ok"]=error.empty();if(!error.empty())result["error"]=godot::String::utf8(error.c_str());return result;
+}
+
+godot::Dictionary Ps2RenderHost::prepare_world_ui(godot::Object* runtime,godot::Object* resources){
+ godot::Dictionary result;const auto error=catch_all([&]{
+  auto* source=godot::Object::cast_to<Ps2DrivingRuntime>(runtime);auto* layout=godot::Object::cast_to<Ps2FrontEndLayout>(resources);
+  if(!source||!layout||!source->candidate_frame())throw std::invalid_argument("World UI requires a source frame and original resources");
+  auto* catalog=layout->runtime().catalog();if(!catalog)throw std::logic_error("World UI original texture catalog is unavailable");
+  const auto& candidate=*source->candidate_frame();catalog->set_presentation_bundles(candidate.ui_texture_bundles);port::render::Frame frame;frame.clear={0,0,0,0};frame.sequence=candidate.step;
+  port::runtime::WidgetSizes sizes(*catalog,layout->runtime().fonts());int missing=0;
+  for(auto document:candidate.ui_screens){port::render::Frame addition;const auto stats=port::runtime::build_frame(document,sizes,{},addition);missing+=stats.missing;port::render::append_frontend_frame(frame,addition);}
+  if(candidate.mirror_view){
+   if(world_mirror_.is_null())throw std::runtime_error("Original mirror requires its prepared render target");
+   auto rect=candidate.mirror_view->display_rect;const auto& raster=candidate.mirror_view->raster_size;for(unsigned i=0;i<4;++i)rect[i]*=i%2?480.f/float(raster[1]):640.f/float(raster[0]);port::render::Quad mirror;mirror.texture=0x100000003ull;mirror.has_vertex_data=true;mirror.frontend_layer=127;mirror.positions={port::render::Vec2{rect[0],rect[1]},port::render::Vec2{rect[0]+rect[2],rect[1]},port::render::Vec2{rect[0]+rect[2],rect[1]+rect[3]},port::render::Vec2{rect[0],rect[1]+rect[3]}};
+   const float w=float(world_mirror_->get_width()),h=float(world_mirror_->get_height());mirror.source_points={port::render::Vec2{w,0},port::render::Vec2{0,0},port::render::Vec2{0,h},port::render::Vec2{w,h}};for(auto& c:mirror.colors)c={1,1,1,1};frame.quads.insert(frame.quads.begin(),mirror);
+  }
+  for(const auto& polygon:candidate.hud_geometry){
+   const auto bitmap=catalog->texture(polygon.texture_hash);if(!bitmap)throw std::runtime_error("Source HUD map texture is unavailable: hash="+std::to_string(polygon.texture_hash)+" layer="+std::to_string(polygon.layer));
+   port::render::Quad quad;quad.texture=polygon.texture_hash;quad.has_vertex_data=true;quad.has_projective_uv=true;quad.bypass_clip=true;quad.frontend_layer=static_cast<std::int8_t>(polygon.layer);
+   for(unsigned i=0;i<4;++i){const auto& v=polygon.vertices[i];quad.positions[i]={v.position[0],v.position[1]};quad.source_points[i]={v.uvq[0]*bitmap->width,v.uvq[1]*bitmap->height};quad.projective_q[i]=v.uvq[2];const auto c=v.colour;quad.colors[i]={float(c&255)/128.f,float((c>>8)&255)/128.f,float((c>>16)&255)/128.f,float(c>>24)/128.f};}
+   frame.quads.push_back(std::move(quad));
+  }
+  // Original Flailer/ePoly world UI uses shared layer buckets, including map
+  // geometry emitted outside the screen-object rings. Keep ties stable.
+  if(!candidate.hud_geometry.empty()){std::stable_sort(frame.quads.begin(),frame.quads.end(),[](const auto& a,const auto& b){return a.frontend_layer>b.frontend_layer;});frame.frontend_ranges.clear();}
+  if(missing)throw std::runtime_error("Candidate World UI references missing original font/texture resources");
+  // Upload before committing any source pose/audio. Drawing only consumes RIDs.
+  for(const auto& quad:frame.quads)if(quad.texture&&!texture_for(quad.texture,*catalog).is_valid())throw std::runtime_error("World UI texture upload failed");
+  world_ui_=std::move(frame);world_ui_generation_=candidate.generation;world_ui_revision_=candidate.ui_revision;world_ui_screens_=int(candidate.ui_screens.size());
+ });result["ok"]=error.empty();if(!error.empty())result["error"]=godot::String::utf8(error.c_str());return result;
+}
+// Native committed source documents only; no menu/simulation tick.
+godot::Dictionary Ps2RenderHost::draw_world(godot::Object* runtime,godot::Object* resources,double width,double height){
+ godot::Dictionary result;const auto error=catch_all([&]{
+  auto* source=godot::Object::cast_to<Ps2DrivingRuntime>(runtime);auto* layout=godot::Object::cast_to<Ps2FrontEndLayout>(resources);
+  if(!source||!layout||!item_.is_valid()||width<=0||height<=0)throw std::invalid_argument("World UI requires committed runtime, original resources, canvas and positive size");
+  const auto* committed=source->presented_frame();if(!committed||!world_ui_||world_ui_->sequence!=committed->step||world_ui_generation_!=committed->generation||world_ui_revision_!=committed->ui_revision)throw std::logic_error("World UI presentation generation/step/revision mismatch");
+  auto* catalog=layout->runtime().catalog();if(!catalog)throw std::logic_error("World UI original texture catalog is unavailable");
+  // Central source screens use equal X/Y scale. Edge HUD anchoring requires its
+  // recovered producer/role and is not inferred from arbitrary widget positions.
+  // Caller places a clipped Control using the immutable original Flailer clip
+  // (initializer001462B0:0,0,644,480), relative to the authored640x480 canvas.
+  // Preserve that guard band; no widget positions/visibility or source state change.
+  const auto& clip=committed->ui_clip_bounds;
+  for(const auto value:clip)if(!std::isfinite(value))throw std::runtime_error("Invalid published source UI clip");
+  if(!(clip[2]>clip[0]&&clip[3]>clip[1]))throw std::runtime_error("Source UI clip was not initialized");
+  output_scale_=std::min(width/640.,height/480.);world_ui_->display_offset={-clip[0],-clip[1]};
+  submit(*world_ui_,*catalog);result["screens"]=world_ui_screens_;result["quads"]=int64_t(world_ui_->quads.size());result["step"]=int64_t(world_ui_->sequence);
+ });result["ok"]=error.empty();if(!error.empty())result["error"]=godot::String::utf8(error.c_str());return result;
+}
+#if HP2_DEBUG_BUILD
+godot::Dictionary Ps2RenderHost::debug_draw_authored_screen(godot::Object* resources,int64_t hash,double width,double height){
+ godot::Dictionary result;const auto error=catch_all([&]{
+  auto* layout=godot::Object::cast_to<Ps2FrontEndLayout>(resources);if(!layout||!item_.is_valid()||width<=0||height<=0||hash<=0||hash>0xffffffffLL)throw std::invalid_argument("Authored-screen viewer arguments are invalid");
+  auto& runtime=layout->runtime();auto* catalog=runtime.catalog();if(!catalog)throw std::runtime_error("Authored-screen original texture catalog missing");
+  const hp2::frontend::FeScreen* document=nullptr;for(int i=0;;++i){const auto* candidate=runtime.screen(i);if(!candidate)break;if(candidate->name_hash_0x08==std::uint32_t(hash)){document=candidate;break;}}
+  if(!document)throw std::runtime_error("Authored-screen hash absent from original bundle");
+  auto copy=*document;port::runtime::WidgetSizes sizes(*catalog,runtime.fonts());port::render::Frame frame;const auto stats=port::runtime::build_frame(copy,sizes,{},frame);if(stats.missing)throw std::runtime_error("Authored-screen original font or texture missing");
+  output_scale_=std::min(width/640.,height/480.);frame.display_offset={0,0};submit(frame,*catalog);result["quads"]=int64_t(frame.quads.size());
+ });result["ok"]=error.empty();if(!error.empty())result["error"]=godot::String(error.c_str());return result;
+}
+#endif
 int Ps2RenderHost::submit(const port::render::Frame& frame, port::render::Resources& resources) {
     int movie_quads = 0;
     auto* server = godot::RenderingServer::get_singleton();
@@ -167,16 +286,38 @@ int Ps2RenderHost::submit(const port::render::Frame& frame, port::render::Resour
             item_, godot::Rect2(0, 0, frame.logical_size.x, frame.logical_size.y),
             to_color(frame.clear));
     }
+    const bool projective=std::any_of(frame.quads.begin(),frame.quads.end(),[](const auto& q){return q.has_projective_uv;});
+    for(auto child:projective_items_)server->canvas_item_clear(child);
+    if(projective){
+     if(projective_shader_.is_null()){projective_shader_.instantiate();projective_shader_->set_code(R"shader(shader_type canvas_item;
+render_mode unshaded;
+uniform vec3 source_rgb=vec3(1.0);
+varying float original_q;
+varying float original_alpha;
+void vertex(){original_q=COLOR.r;original_alpha=COLOR.g;COLOR=vec4(1.0);}
+void fragment(){COLOR=texture(TEXTURE,UV/original_q)*vec4(source_rgb,original_alpha);}
+)shader");}
+     while(projective_items_.size()<frame.quads.size()){auto child=server->canvas_item_create();server->canvas_item_set_parent(child,item_);server->canvas_item_set_draw_index(child,int(projective_items_.size()));projective_items_.push_back(child);projective_materials_.emplace_back();}
+    }
+    std::size_t quad_index=0;
     for (const auto& quad : frame.quads) {
+        const auto draw_item=projective?projective_items_[quad_index]:item_;
+        if(projective){
+         if(quad.has_projective_uv){
+          auto& material=projective_materials_[quad_index];if(material.is_null()){material.instantiate();material->set_shader(projective_shader_);}
+          for(unsigned i=1;i<4;++i)if(quad.colors[i].r!=quad.colors[0].r||quad.colors[i].g!=quad.colors[0].g||quad.colors[i].b!=quad.colors[0].b)throw std::logic_error("Source projective HUD polygon requires independent RGB transport");
+          material->set_shader_parameter("source_rgb",godot::Vector3(quad.colors[0].r,quad.colors[0].g,quad.colors[0].b));server->canvas_item_set_material(draw_item,material->get_rid());
+         }else server->canvas_item_set_material(draw_item,godot::RID());
+        }
+        ++quad_index;
         if (quad.has_vertex_data) {
             godot::RID rid;
             float width = 1, height = 1;
             if (quad.texture != 0) {
                 rid = texture_for(quad.texture, resources);
                 if (!rid.is_valid()) continue;
-                const auto& texture = textures_.at(quad.texture);
-                width = static_cast<float>(texture.width);
-                height = static_cast<float>(texture.height);
+                if(quad.texture==0x100000003ull){width=float(world_mirror_->get_width());height=float(world_mirror_->get_height());}
+                else{const auto& texture = textures_.at(quad.texture);width = static_cast<float>(texture.width);height = static_cast<float>(texture.height);}
                 if (quad.texture == port::runtime::kIntroMovieTexture ||
                     quad.texture == port::runtime::kBackgroundMovieTexture) ++movie_quads;
             }
@@ -186,13 +327,15 @@ int Ps2RenderHost::submit(const port::render::Frame& frame, port::render::Resour
                 points.push_back(godot::Vector2(quad.positions[corner].x, quad.positions[corner].y));
                 uvs.push_back(godot::Vector2(quad.source_points[corner].x / width,
                                             quad.source_points[corner].y / height));
-                colors.push_back(to_color(quad.colors[corner]));
+                if(quad.has_projective_uv){if(!std::isfinite(quad.projective_q[corner])||quad.projective_q[corner]==0)throw std::logic_error("Invalid original HUD projective Q");colors.push_back(godot::Color(quad.projective_q[corner],quad.colors[corner].a,0,1));}
+                else colors.push_back(to_color(quad.colors[corner]));
             }
-            server->canvas_item_add_polygon(item_, points, colors, uvs, rid);
+            godot::PackedInt32Array indices;for(int index:{0,1,3,1,2,3})indices.push_back(index);
+            server->canvas_item_add_triangle_array(draw_item,indices,points,colors,uvs,godot::PackedInt32Array(),godot::PackedFloat32Array(),rid);
             continue;
         }
         if (quad.texture == 0) { // solid-colour rect; see render::Quad
-            server->canvas_item_add_rect(item_, to_rect(quad.destination), to_color(quad.color));
+            server->canvas_item_add_rect(draw_item, to_rect(quad.destination), to_color(quad.color));
             continue;
         }
         if (quad.texture == port::runtime::kIntroMovieTexture ||
@@ -202,7 +345,7 @@ int Ps2RenderHost::submit(const port::render::Frame& frame, port::render::Resour
         // clip_uv true: sampling stays inside the frame's source rectangle, so a glyph never
         // bleeds in its neighbour from the shared font atlas and a cropped quad keeps the exact
         // partial region port::render::crop produced for the original clip.
-        server->canvas_item_add_texture_rect_region(item_, to_rect(quad.destination), rid,
+        server->canvas_item_add_texture_rect_region(draw_item, to_rect(quad.destination), rid,
                                                     to_rect(quad.source), to_color(quad.color),
                                                     false, true);
     }
@@ -253,11 +396,9 @@ godot::Dictionary Ps2RenderHost::draw(godot::Object* runtime, godot::Object* int
     const auto render_error=catch_all([&]{gap=hp2::guard([&]{
         if(auto* selection=layout->runtime().selection();selection && selection->observation().active){
             if(!frontend_gpu_)frontend_gpu_=std::make_unique<FrontendGpuExecutor>();
-            const auto packet=selection->packet(frame,resources);auto image=frontend_gpu_->render(packet);
-            // The physical scanout consumes RGB. GS destination alpha belongs to
-            // subsequent GS passes, not the host canvas transparency channel.
-            image->convert(godot::Image::FORMAT_RGB8);
-            if(frontend_image_.is_null())frontend_image_=godot::ImageTexture::create_from_image(image);else frontend_image_->update(image);
+            const auto packet=selection->packet(frame,resources);frontend_image_=frontend_gpu_->render(packet);
+            result.merge(frontend_gpu_->statistics());
+            const godot::String gpu_error=result.get("gpu_error",godot::String());if(!gpu_error.is_empty())throw std::runtime_error(gpu_error.utf8().get_data());
             auto* server=godot::RenderingServer::get_singleton();server->canvas_item_clear(item_);
             server->canvas_item_set_transform(item_,godot::Transform2D().scaled({real_t(output_scale_),real_t(output_scale_)}));
             server->canvas_item_add_texture_rect(item_,{0,0,frame.logical_size.x,frame.logical_size.y},frontend_image_->get_rid());
@@ -280,6 +421,45 @@ godot::Dictionary Ps2RenderHost::draw(godot::Object* runtime, godot::Object* int
     return result;
 }
 
+
+// TASK-0104: Control-generated layer images are device resources, not reconstructed widgets.
+godot::Dictionary Ps2RenderHost::draw_controls(godot::Object* runtime,const godot::Array& layers,int width,int height){
+    godot::Dictionary result;auto* layout=godot::Object::cast_to<Ps2FrontEndLayout>(runtime);
+    if(!layout || width<=0 || height<=0){result["error"]="Invalid Control frontend target";return result;}
+    std::string gap;const auto failure=catch_all([&]{gap=hp2::guard([&]{
+        auto* server=godot::RenderingServer::get_singleton();server->canvas_item_clear(item_);
+        auto* selection=layout->runtime().selection();
+        if(!selection || !selection->observation().active){frontend_image_.unref();frontend_gpu_.reset();result["ok"]=true;return;}
+        port::render::Frame ui;auto* resources=layout->runtime().catalog();if(!resources)throw std::logic_error("Control selection lacks original assets");
+        const auto packet_begin=std::chrono::steady_clock::now();
+        auto packet=selection->packet(ui,*resources);
+        result["selection_packet_cpu_ms"]=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-packet_begin).count();
+        // Match the Control scene fit in both portrait and landscape without distorting the vehicle.
+        const float fit=std::min(float(width)/640.f,float(height)/480.f);
+        for(auto& vertex:packet.vertices){vertex.clip[0]*=640.f*fit/width;vertex.clip[1]*=480.f*fit/height;}
+        packet.width=width;packet.height=height;
+        std::vector<FrontendGpuExecutor::ExternalTexture> external;
+        for(int i=0;i<layers.size();++i){godot::Dictionary layer=layers[i];const int number=layer["layer"];
+            godot::Ref<godot::Texture2D> texture=layer["texture"];if(texture.is_null())throw std::logic_error("Control layer texture missing");
+            if(texture->get_width()!=width || texture->get_height()!=height){result["ok"]=true;result["resize_pending"]=true;return;}
+            const auto id=0x300000000ull|std::uint32_t(number);external.push_back({id,texture});
+            const float depth=selection->layer_depth(number);
+            port::render::FrontendDraw draw;draw.first=packet.vertices.size();draw.count=6;draw.texture=id;draw.stage=number>=20&&number<=24?1:7;draw.alpha_threshold=0;
+            const int triangles[6]={0,1,2,0,2,3};const float xy[4][2]={{-1,-1},{1,-1},{1,1},{-1,1}};const float uv[4][2]={{0,0},{1,0},{1,1},{0,1}};
+            for(int index:triangles)packet.vertices.push_back({{{xy[index][0],xy[index][1],depth,1}},{uv[index][0],uv[index][1]},{{1,1,1,1}}});
+            packet.draws.push_back(draw);
+        }
+        std::stable_sort(packet.draws.begin(),packet.draws.end(),[](const auto& a,const auto& b){return a.stage<b.stage;});
+        if(!frontend_gpu_)frontend_gpu_=std::make_unique<FrontendGpuExecutor>();
+        const auto draws=packet.draws.size(),vertices=packet.vertices.size();
+        result.merge(frontend_gpu_->statistics());
+        const godot::String gpu_error=result.get("gpu_error",godot::String());if(!gpu_error.is_empty())throw std::runtime_error(gpu_error.utf8().get_data());
+        frontend_image_=frontend_gpu_->render(std::move(packet),std::move(external));
+        server->canvas_item_set_transform(item_,godot::Transform2D());server->canvas_item_add_texture_rect(item_,{0,0,float(width),float(height)},frontend_image_->get_rid());selection->after_display();
+        result["ok"]=true;result["shared_frontend_target"]=true;result["shared_draws"]=int64_t(draws);result["shared_vertices"]=int64_t(vertices);
+    });});
+    if(!failure.empty()||!gap.empty()){result["ok"]=false;result["error"]=godot::String::utf8((failure.empty()?gap:failure).c_str());}return result;
+}
 
 void Ps2RenderHost::console_init(const godot::String& settings, bool info) {
     const auto failure=catch_all([&] {
@@ -409,10 +589,31 @@ godot::Dictionary Ps2RenderHost::console_frame(double width,double height,double
     const auto failure=catch_all([&] {
 #if HP2_DEBUG_BUILD
         if(!console_)return;
+        const bool measure = bool(status.get("measure_debug_ui", false));
+        const bool suspend = measure && bool(status.get("suspend_debug_ui", false));
+        auto* server = godot::RenderingServer::get_singleton();
+        if (suspend) {
+            if (!console_drawing_suspended_) {
+                for (auto rid : console_draw_items_) server->canvas_item_clear(rid);
+            }
+            console_drawing_suspended_ = true;
+            result["suspended"] = true;
+            result["info"] = console_->info();
+            return;
+        }
+        console_drawing_suspended_ = false;
+        using Clock = std::chrono::steady_clock;
+        const auto stamp = [measure] { return measure ? Clock::now() : Clock::time_point{}; };
+        const auto elapsed = [](Clock::time_point start, Clock::time_point end) {
+            return std::chrono::duration<double, std::milli>(end - start).count();
+        };
+        // Main-thread publication includes warnings queued while hidden or on
+        // source workers. Do not drain until the console actually exists.
+        for(auto& warning:port::diagnostics::take_warning_messages())console_->warning(std::move(warning));
         const double ui_scale=status.has("ui_scale")?double(status["ui_scale"]):get_ui_scale();
         const godot::Dictionary profile_state=status.get("profile_debug",godot::Dictionary{});
         const bool bulk=bool(profile_state.get("ui_bulk_upload",false));result["ui_bulk_upload"]=bulk;
-        console_->enable_viewer_input(viewer_ui_.state().kind!="frontend"||bool(profile_state.get("enabled",false)));
+        console_->enable_viewer_input(viewer_ui_.state().kind!="frontend"||bool(profile_state.get("enabled",false))||console_->info());
         console_->set_ui_scale(float(ui_scale));
         extensions::Snapshot state;
         state.screen=godot::String(status.get("screen",godot::String("unknown"))).utf8().get_data();
@@ -420,21 +621,26 @@ godot::Dictionary Ps2RenderHost::console_frame(double width,double height,double
         state.quads=status.get("quads",0);state.glyphs=status.get("glyphs",0);
         state.textures=status.get("textures",0);state.missing=status.get("missing",0);state.clipped=status.get("clipped_out",0);
         console_->snapshot(std::move(state));
+        const auto draw_begin = stamp();
         const auto batches=console_->frame(width,height,delta,[&] {
             const float scale=console_->ui_scale();
-            extensions::ViewerUi::fps(float(width)/scale,double(status.get("fps",0.0)),double(status.get("ms",0.0)));
+            std::optional<extensions::ViewerUi::FpsRegion> fps_region;
+            const godot::Rect2 rect=status.get("fps_region",godot::Rect2{});
+            if(rect.has_area())fps_region=extensions::ViewerUi::FpsRegion{rect.position.x/scale,rect.position.y/scale,rect.size.x/scale,rect.size.y/scale};
+            if(!bool(status.get("fps_hidden",false)))extensions::ViewerUi::fps(float(width)/scale,double(status.get("fps",0.0)),double(status.get("ms",0.0)),fps_region);
             viewer_ui_.draw(float(width)/scale,float(height)/scale);
             result["profile_debug"]=profile_debug_ui_.draw(status.get("profile_debug",godot::Dictionary{}),float(width)/scale,float(height)/scale);
         });
+        if (measure) result["draw_data_ms"] = elapsed(draw_begin, stamp());
         result["ui_scale"]=console_->ui_scale();result["font_revision"]=int64_t(console_->font().revision);
         result["font_width"]=console_->font().width;result["font_height"]=console_->font().height;
         const auto& ui=viewer_ui_.state();result["coordinates_visible"]=ui.camera_known&&(ui.kind=="track"||ui.real_track);
         if(ui.camera_known){const auto& p=ui.camera_host;result["camera_position_hp2"]=godot::Vector3(p[2],p[0],p[1]);result["camera_position_godot"]=godot::Vector3(p[0],p[1],p[2]);}
-        result["fps_visible"]=true;result["fps_right"]=width-8*console_->ui_scale();
+        result["fps_visible"]=!bool(status.get("fps_hidden",false));result["fps_region"]=status.get("fps_region",godot::Rect2{});result["fps_right"]=width-8*console_->ui_scale();
         result["capture_mouse"]=console_->capture_mouse();result["capture_keyboard"]=console_->capture_keyboard();
         result["visible"]=console_->visible();result["info"]=console_->info();result["batches"]=static_cast<int>(batches.size());
         result["logs"]=static_cast<int>(console_->log_count());
-        auto* server=godot::RenderingServer::get_singleton();
+        const auto canvas_begin = stamp();
         for(auto rid:console_draw_items_)server->canvas_item_clear(rid);
         if(console_font_revision_!=console_->font().revision){
             if(console_font_.is_valid())server->free_rid(console_font_);
@@ -445,9 +651,11 @@ godot::Dictionary Ps2RenderHost::console_frame(double width,double height,double
             auto rid=server->canvas_item_create();server->canvas_item_set_parent(rid,console_parent_);console_items_.push_back(rid);
             auto child=server->canvas_item_create();server->canvas_item_set_parent(child,rid);console_draw_items_.push_back(child);
         }
+        double packing_ms = 0;
         for(std::size_t i=0;i<batches.size();++i) {
             const auto& b=batches[i];auto rid=console_items_[i];
             server->canvas_item_set_custom_rect(rid,true,to_rect(b.clip));server->canvas_item_set_clip(rid,true);
+            const auto packing_begin = stamp();
             godot::PackedVector2Array points,uvs;godot::PackedColorArray colors;godot::PackedInt32Array indices;
             if(bulk){
                 const auto count=static_cast<int64_t>(b.vertices.size());
@@ -459,8 +667,13 @@ godot::Dictionary Ps2RenderHost::console_frame(double width,double height,double
                 for(auto& v:b.vertices) {points.append({v.position.x,v.position.y});uvs.append({v.uv.x,v.uv.y});colors.append(to_color(v.color));}
                 for(auto index:b.indices)indices.append(index);
             }
+            if (measure) packing_ms += elapsed(packing_begin, stamp());
             // RenderingServer clipping applies to children, so geometry belongs to a child.
             server->canvas_item_add_triangle_array(console_draw_items_[i],indices,points,colors,uvs,{}, {},console_font_);
+        }
+        if (measure) {
+            result["pack_ms"] = packing_ms;
+            result["canvas_ms"] = elapsed(canvas_begin, stamp()) - packing_ms;
         }
 #else
         (void)width;(void)height;(void)delta;(void)status;
@@ -636,3 +849,8 @@ void Ps2RenderHost::viewer_rendering(const godot::String& description) {
 }
 
 } // namespace port::godot_bridge
+
+namespace port::godot_bridge {
+// TASK-0113: immutable source loading documents; draw never advances timers.
+godot::Dictionary Ps2RenderHost::draw_loading(godot::Object* resources,double width,double height){godot::Dictionary result;const auto error=catch_all([&]{auto* layout=godot::Object::cast_to<Ps2FrontEndLayout>(resources);if(!layout||!item_.is_valid()||width<=0||height<=0)throw std::invalid_argument("Loading draw requires original resources and attached canvas");const auto* loading=layout->loading_presentation();if(!loading||!loading->active())throw std::logic_error("Original loading screen not active");auto* catalog=layout->runtime().catalog();if(!catalog)throw std::logic_error("Original loading texture catalog missing");catalog->set_presentation_bundles({"GLOBAL/DYNTEX.BIN","GLOBAL/GLOBALB.BUN"});port::runtime::WidgetSizes sizes(*catalog,layout->runtime().fonts());port::render::Frame frame;frame.sequence=loading->revision();int missing=0;for(auto document:loading->documents()){port::render::Frame addition;const auto stats=port::runtime::build_frame(document,sizes,{},addition);missing+=stats.missing;port::render::append_frontend_frame(frame,addition);}if(missing)throw std::runtime_error("Original loading font/texture unavailable");output_scale_=std::min(width/640.,height/480.);const auto clip=loading->clip_bounds();frame.display_offset={-clip[0],-clip[1]};submit(frame,*catalog);result["screen_hash"]=int64_t(loading->screen_hash());result["revision"]=int64_t(loading->revision());result["quads"]=int64_t(frame.quads.size());result["missing"]=missing;});result["ok"]=error.empty();if(!error.empty())result["error"]=godot::String::utf8(error.c_str());return result;}
+}

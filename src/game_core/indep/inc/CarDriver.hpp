@@ -69,3 +69,19 @@ public:
     void Sub_00136D00();
 };
 } // namespace hp2::recovered
+
+namespace hp2::debug {
+// E-0099-W21; original inline ../indep/inc/CarDriver.hpp emitted in car.cpp.
+class CarDriver : public ::port::driving::ObjectView {
+public:
+ using ObjectView::ObjectView;
+ void DoSnapshot(std::uint32_t snapshot); //Debug00130AA0, E-0099-W74.
+ void Sub_00136D10(); // Debug00136D10. SportGear remains untouched.
+ void Sub_00136CB0(int in_chrg); // Debug00136CB0.
+ // Debug00136BD0, E-0099-W34. Original base virtual returns0.
+ float GetDesiredSpeed()const{return 0.0f;}
+ bool IsHonking()const{return false;} //Debug00136C00, E-0099-W39.
+ void StartHonkHorn(){} //Debug00136C10, instruction-confirmed empty.
+ void StopHonkHorn(){} //Debug00136C08, instruction-confirmed empty.
+};
+}

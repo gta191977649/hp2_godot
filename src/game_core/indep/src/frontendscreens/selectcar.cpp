@@ -549,6 +549,23 @@ int SelectCarScreen::AreAllSelectorsReady() const{
     }
     return 1;
 }
+// Debug001965C0; E-0098-X01; career/001965c0.md. Services bind original globals.
+int SelectCarScreen::MaybeContinueToNextScreen(SelectCarScreen* screen,FrontendDatabase& fred,
+    const std::array<CarTypeInfo,64>& cars,const ::port::selection::ContinuationServices& svc){
+    if(!screen || !screen->AreAllSelectorsReady())return 0;
+    screen->SetSelectedCars(fred,cars);
+    if(!svc.dismiss_all_popups)hp2::not_implemented("0x001965C0","original DismissAllPopups service missing");
+    svc.dismiss_all_popups();
+    // Read GameType after dismissal, as in the original listing0019660C.
+    if(fred.GameType==8 || fred.GameType==9){
+        if(!svc.start_race)hp2::not_implemented("0x001965C0","original StartRace service missing");
+        svc.start_race();
+    }else{
+        if(!svc.change_screen)hp2::not_implemented("0x001965C0","original ChangeToScreen service missing");
+        svc.change_screen("Select Track",true);
+    }
+    return 1;
+}
 // Debug00196198, E-0098-S02. Outer Back also invokes this; do not implement rollback.
 void SelectCarScreen::SetSelectedCars(FrontendDatabase& fred,const std::array<CarTypeInfo,64>& cars){
     if(fred.NumPlayerCars<0 || fred.NumPlayerCars>2)hp2::not_implemented("0x00196198","invalid player count");

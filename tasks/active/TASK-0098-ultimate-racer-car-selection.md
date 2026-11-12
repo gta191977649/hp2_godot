@@ -1,5 +1,35 @@
 # TASK-0098 - Original event-bound vehicle and skin selection
 
+## Latest scope and continuation, 2026-10-29
+
+Status: active. User renewed complete-race delivery; no acceptance is waived.
+Current implementation slice: production transmission/handling popup documents,
+text/item RGB/state/animation/input/dismissal and native001965C0 readiness.
+Checks: fresh Debug evidence, native return/colour/two-slot-ownership regressions,
+normal Godot DLL and actual GPU-window transition/cancel checks. No synthetic race.
+
+E-0098-X04 now binds the former production00194628 guard to actual authored
+resources. Native readiness permits transmission -> handling; real StartRace/World
+session services still throw. No complete race/finish/results/rewards/save exists.
+Older popup failure checkpoints below are superseded only for this bounded route.
+See reverse/task0098/popup-production.md and popup-view-evidence.json.
+
+Read-only review found and fixed two-slot UI hash aliasing: action identity now
+follows the actual document/slot. New tests cover both slots, alpha-preserving RGB
+and bottom-Y-before-hide. Original Debug sine/timer math and unused arrow sine
+are retained. No engine types or replacement physics enter the recovered core.
+
+Actual window run-_q6djl5_ passed Main Menu -> Ultimate Racer event1 -> loaded car
+-> Transmission -> right/confirm -> Handling -> Back -> Transmission -> Back ->
+selection. Both popup images inspected. Isolated private saves were used. Final
+commands/results are appended in the final checkpoint below.
+
+Next: production StartRace ownership/profile/record/flow services documented in
+first-event-launch.md, then TASK-0099 real route/TrackPathCoordinate/graph/resources,
+World/Car/controller construction. E-0099-W04 is read-only dependency audit, not
+a task switch or implementation. Remaining help/locked/speech/event adapters and
+all full0096/0106 race acceptance remain open. No Verified promotion or commit.
+
 ## Current continuation scope,2026-10-26
 
 The user requests the complete TASK-0096 flow in one sustained delivery. Work
@@ -404,3 +434,184 @@ production milestone is accepted. Next recover/bind selection Help/locked text,
 orbit speech/audio and transmission/handling popup/continuation, then reviewed
 remaining event-state adapters. TASK-0099 real race and all32 event certification
 remain separate unfinished work. Do not regress to the old001F6A28 entry guard.
+
+## TASK-0098 continuation checkpoint,2026-10-28
+
+Renewed full TASK-0096 implementation request retains all32-event/full-roundtrip
+acceptance. Current single slice: original selection continuation001965C0.
+E-0098-X01 implements native MaybeContinueToNextScreen with explicit whole-callee
+services; symbols/record/hashed captures updated. Native build of
+ultimate_selection_tests passed; ctest --preset native-debug -R '^ultimate_selection$'
+--output-on-failure passed1/1 (0.51s). This is not a production launch.
+
+Next: recover/bind actual popup owner and dismissal, then production
+MaybeContinueToNextScreen/StartRace services with durable session ownership.
+Do not replace World with the single-car fixture. TASK-0098 and parent remain
+active; no full-race/result/save/original/performance criterion is checked.
+
+Final checkpoint: related native build (selection_page_tests race_parameters_tests
+ultimate_event_tests) passed. ctest --preset native-debug -R
+'^(ultimate_selection|selection_page|race_parameters|ultimate_event|progress_tables|recovery_progress_contracts)$'
+--output-on-failure passed6/6 in6.03s. git diff --check passed with existing
+line-ending notices. No stage/commit. Production popup/launch and full race remain
+unimplemented; this checkpoint does not satisfy the requested complete closure.
+
+## TASK-0098 - Actual Godot confirmation probe (2026-10-28)
+
+Scope: production selection confirmation; full closure request remains active.
+Added optional --confirm-selection input probe to the existing GPU/script runner.
+This is explicitly not full race acceptance. Actual Godot window launched with
+isolated profile/save paths; probe FAILED exit1 at00194628 production popup owner.
+Private run-r5ulmyxx screenshot was inspected: actual Elise selection visible,
+no popup or race. Normal three-cycle route subsequently PASSED exit0 in fresh
+run-txpvzsmw, preserving existing enter/skin/cancel/reentry coverage.
+
+E-0098-X02 captures original popup Summon/Dismiss/HandleJoy and two-slot owner
+semantics; reverse/task0098/popup-owner.md records callback reentrancy and exact
+next action. These are investigation, not implementation. No actual World,
+finish/result/save or original certification, no complete closure claim.
+
+Reproduce failure: py -3 reverse/scripts/check_frontend_selection_roundtrip.py
+--confirm-selection. Continue TASK-0098 real Flailer popup/menu-item/highlight/text
+binding before production001965C0/StartRace, then TASK-0099. No missing external
+prerequisite is claimed; required code remains unimplemented. No commit/staging.
+
+## TASK-0098 native popup input checkpoint,2026-10-28
+
+## Native popup input/dismissal projection,2026-10-28
+
+Implemented port::frontend::PopupMenu address-anchored0016AE08/0016AF28 in
+original fmenus.cpp with port semantic storage/services in popup.hpp. Whole
+view/item/highlight/animation and sound dependencies are required services,
+not empty recovered implementations. Summon/render/two-slot owner and production
+host binding remain missing. These native methods alone do not unblock00194628.
+
+Fresh instruction captures establish dismiss sound5, navigation sounds1/2,
+flags/event mapping and callback22/23. Callback-adjusted noise is consumed after
+callback, and active clears before dismissal callback, preserving reentrant
+replacement. Tests include cancellation flags8/2, zero-button Start, horizontal
+and vertical mapping, analog directions, wraps, releases, exact call ordering,
+missing services and callback-created replacement popup. View callbacks are
+explicit test fixtures, not GPU or original-runtime acceptance.
+
+Build: cmake --build --preset native-debug --target ultimate_selection_tests
+selection_page_tests race_parameters_tests --parallel 4 passed. CTest regex
+'^(ultimate_selection|selection_page|race_parameters)$' passed3/3 in3.09s.
+cmake --build --preset godot-debug --target ps2_port --parallel 4 passed.
+No original-runtime/Verified or full-race completion claim.
+
+Latest production window command after native popup changes:
+py -3 reverse/scripts/check_frontend_selection_roundtrip.py --confirm-selection
+FAILED exit1, local/task0098/selection-roundtrip/run-2ju0sod8. It still reaches
+00194628 because production popup creation/view services are not yet bound.
+No complete-race checkpoint exists. Next implementation must connect original
+Summon/menu-item/text/highlight to real frontend resources, then two-slot owner
+and the existing native input/dismissal methods; no further native-only test may
+be reported as a working production popup. Full TASK-0096 remains incomplete.
+
+## TASK-0098 two-slot popup owner and Quick Race scope,2026-10-28
+
+Implemented Debug0016C028/0016C080 two-slot popup owner semantic projection in
+fmenus.cpp/popup.hpp. Tests cover first inactive slot, full capacity returns-1
+without invoking Summon, invalid/inactive dismissal, configured dismissal and
+callback-reentrant reuse. Whole Summon/view remains an explicit required service;
+production00194628 is still unbound. No full-race success is claimed.
+
+cmake --build --preset native-debug --target ultimate_selection_tests --parallel 4
+passed; ctest --preset native-debug -R '^ultimate_selection$' --output-on-failure
+passed1/1 in0.47s. cmake --build --preset godot-debug --target ps2_port --parallel 4
+passed normal DLL link. Existing matching Debug original comparisons remain open.
+
+Read-only E-0098-X03 Quick Race dependency audit records original argument/return;
+TASK-0106 backlog separately scopes the newly requested second launch route.
+Current implementation stays TASK-0098 actual Summon/menu-item/highlight/text
+binding, then existing continuation/StartRace and real World. Both reported
+production guards remain outstanding. Preserve user changes; no stage/commit.
+
+## TASK-0098 native Summon orchestration,2026-10-28
+
+E-0098-X02: implemented semantic0016AAD8 in original fmenus.cpp. It copies
+config/activates, shows view, dispatches POPUP_ACTIVE with original port-1 and
+zero payload/noise, plays callback-adjusted sound, sets starting index, resets
+three items, highlights only with buttons, renders message, optionally places
+buttons at returned height+10, clears text, assigns original button/title IDs,
+aligns arrows and binds animation. Popup.title_id is port semantic storage of
+original PopupConfig.Title. Fresh instruction capture confirms-1 and order.
+Required view/format/item/animation dependencies still throw when not provided.
+
+Exact service-order regression passes in ultimate_selection (fixture services,
+not actual window binding). cmake --build --preset native-debug --target
+ultimate_selection_tests --parallel 4 passed; ctest --preset native-debug -R
+'^ultimate_selection$' --output-on-failure passed1/1 in0.44s. Normal
+cmake --build --preset godot-debug --target ps2_port --parallel 4 passed.
+Existing initializer/indentation warnings remain; no unrelated cleanup.
+
+TASK-0098 remains active. Next implementation is production popup documents,
+menu-item state/colour, RenderTextIntoGroup and highlight-animation services
+feeding this method and the existing two-slot owner/input/dismissal code.
+Actual00194628 is still guarded until those real services exist. Native-only
+progress is not production popup, race or full-loop acceptance. No new Godot
+window success, original comparison or Verified claim. No stage/commit.
+
+## Final E-0098-X04 validation, 2026-10-29
+
+Tools checked: CMake3.29.2; Ninja1.12.0; Python3.14.4; GNU C++13.2.0
+(C:/Strawberry/c/bin/c++.exe); Godot4.7.2.stable.official.ed1daf0bf;
+Vulkan1.4.359 / Forward+ / Intel Arc B390. Pinned godot-cpp HEAD remains
+e4b7c25e721ce3435a029087e3917a30aa73f06b. Behavior authority/revision and
+per-query hashes are retained in popup-view-evidence.json; no binary committed.
+
+Passed final builds (after the two-slot ownership correction and arrow-sine restoration):
+
+```powershell
+cmake --build --preset native-debug --target ultimate_selection_tests frontend_runtime_tests selection_page_tests frontend_composition_tests frontend_actions_tests race_parameters_tests --parallel 4
+cmake --build --preset godot-debug --target ps2_port --parallel 4
+```
+
+Both exited0. Existing unrelated initialization/indentation warnings remain.
+Private logs: local/task0098/popup-native-build-final.log and
+popup-view-build-final.log. No Release or full-race build/acceptance is implied.
+
+Passed final scoped regressions,13/13 in34.13s:
+
+```powershell
+ctest --preset native-debug -R '^(ultimate_selection|ultimate_selection_camera|ultimate_selection_widgets|ultimate_selection_lifecycle|selection_locked|selection_page|frontend_composition|frontend_actions|frontend_runtime|ultimate_event|race_parameters|progress_tables|recovery_progress_contracts)$' --output-on-failure
+```
+
+Private log: local/task0098/popup-native-ctest-final.log. Focused new view tests
+use explicit synthetic text/color/measurement fixtures. Original-data regressions
+also ran with configured assets. These do not establish original equivalence.
+
+Passed actual GPU-window checks against the final DLL:
+
+```powershell
+py -3 reverse/scripts/check_frontend_selection_roundtrip.py --confirm-selection
+py -3 reverse/scripts/check_frontend_selection_roundtrip.py
+```
+
+Popup transition/cancel run-d93g30ed exited0, with original Transmission/Handling
+documents, modal three/two-button checks, reentrant replacement and cancel checks.
+The unchanged three-cycle car/skin/cancel/reentry route run-bia5bfy8 exited0.
+Manifests contain exact launch args, DLL/engine hashes, checkpoints, result and
+images. Earlier inspected popup images remain run-_q6djl5_/transmission.png and
+handling.png. No missing World path was bypassed or labelled a passing race.
+
+Metadata:73/73 new read-only capture hashes matched (52 popup/version-review,
+21 World audit). Untracked restricted-material extension scan passed. git diff
+--check passed (line-ending notices only); staged file count0; no deletion of
+tracked files and no commit. A notes-only private helper initially failed on an
+unrelated legacy non-UTF8 record; narrowing it to this evidence's records fixed
+the helper, without changing that unrelated file. Final metadata checks follow
+progress regeneration; no behavior status is promoted.
+
+Remaining: actual StartRace/session resources and production profile/record/flow
+providers, full selection services/event adapters, real World/routes/graph/Car/
+controller/AI/police scheduling, rules/results/rewards/private-save/retry/return.
+Full matched original comparison, Release1080p/60FPS and30-retry/10-roundtrip
+resource baselines remain unverified. No external prerequisite is claimed as the
+cause of missing implementations. TASK-0098/0096 stay active;0106 stays backlog.
+
+Reproduce the working popup milestone with the --confirm-selection command.
+Continue TASK-0098 production StartRace ownership from first-event-launch.md,
+then TASK-0099 actual route/TrackPathCoordinate and graph/World/Car/controller
+construction from world-construction-audit.md. Full race closure is unfinished.

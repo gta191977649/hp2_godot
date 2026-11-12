@@ -33,12 +33,17 @@ struct PreloadServices {
 struct Popup {
     std::uint32_t screen_hash=0;
     int port=0,flags=3,dismiss_param=6,cancel_param=0,n_buttons=0;
-    int message_id=0,start_button=0;
+    int message_id=0,start_button=0,title_id=0;
     std::array<int,3> button_ids{},button_params{};
 };
 struct SelectorServices {
     std::function<int(const Popup&)> summon_popup;
     std::function<bool()> maybe_continue;
+};
+// Port-side bindings for the original static selection continuation.
+struct ContinuationServices {
+    std::function<void()> dismiss_all_popups,start_race;
+    std::function<void(const char*,bool)> change_screen;
 };
 struct OrbitServices {
     const std::array<hp2::debug::CarTypeInfo,64>& cars;
@@ -210,6 +215,9 @@ struct SelectCarScreen {
     int NumCarSelectors=0;
     int AreAllSelectorsReady() const;
     void SetSelectedCars(FrontendDatabase&,const std::array<CarTypeInfo,64>&);
+    // Debug 0x001965C0; E-0098-X01; career/001965c0.md. Explicit global screen binding.
+    static int MaybeContinueToNextScreen(SelectCarScreen*,FrontendDatabase&,
+        const std::array<CarTypeInfo,64>&,const ::port::selection::ContinuationServices&);
 };
 }
 

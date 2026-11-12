@@ -60,3 +60,13 @@ private:
     bool playing_=false;
 };
 } // namespace hp2::port::audio
+
+#include "game_core/port/driving/object_view.hpp"
+namespace hp2::debug {
+// E-0099-W62; no-varargs caller warning retained, active cartridge explicit.
+class cJukeboxPlayer:public ::port::driving::ObjectView {
+public:using ObjectView::ObjectView;
+ bool IsCartridgeLoaded()const; //00275560.
+ void Stop(); //002757F8.
+};
+}

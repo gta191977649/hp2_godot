@@ -12,3 +12,9 @@ public:
     // No member address is confirmed; no speculative members are declared.
 };
 } // namespace hp2::recovered
+
+#include "game_core/port/driving/object_view.hpp"
+namespace hp2::debug {
+// Port companion view; actual DoTimestep definition owner is munitions.cpp.
+class MunitionEffectsHandler:public ::port::driving::ObjectView {public:using ObjectView::ObjectView;void DoTimestep(float); /*001BCB50, W109*/};
+}

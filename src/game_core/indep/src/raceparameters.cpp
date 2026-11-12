@@ -70,6 +70,7 @@ void tGlobalDisplaySettings::CycleLeaderboardMode() {
 
 #include "game_core/indep/inc/Fred.hpp"
 #include "game_core/port/driving/projections.hpp"
+#include "game_core/port/race/car_render_resources.hpp"
 #include "game_core/src/bMath.hpp"
 #include <array>
 #include <algorithm>
@@ -136,6 +137,14 @@ void RaceParameters::AddDriverInfo(std::uint32_t driver,const ::port::race::Skin
     ::port::race::copy_driver(m,m.word(address_+0x304)+24u*count,driver);
     m.word(address_+0x308,count+1);
 }
+void RaceParameters::AddDriverInfo(std::uint32_t driver){
+    auto& m=memory_;const int before=m.signed_word(address_+0x308);
+    ::port::race::require_driver_count(before,"0x001E9DE0");if(before>=14)return;
+    (void)::port::race::GetSkinInfo(m,m.signed_word(driver+12),m.signed_byte(driver+17),1);
+    const int count=m.signed_word(address_+0x308);
+    if(count<0||count>=14)hp2::not_implemented("0x001E9DE0","driver count outside original append domain after actual skin lookup");
+    ::port::race::copy_driver(m,m.word(address_+0x304)+24u*std::uint32_t(count),driver);m.word(address_+0x308,std::uint32_t(count)+1);
+}
 // Debug001E9E78, E-0098-RP01. Set does not change count or invoke GetSkinInfo.
 void RaceParameters::SetDriverInfo(std::uint32_t driver,int index){
     if(index>=14)return;
@@ -197,4 +206,51 @@ int RaceParameters::GetLocationIndex() const{const auto number=GetLocationNumber
 namespace hp2::debug {
 // Debug001EA7A0, E-0098-RP05. Confirmed original empty function, not a missing HUD implementation.
 void RaceParameters::ChooseHudTextures(){}
+}
+
+namespace hp2::debug {void RaceParameters::Print()const{}} //Debug001EA328, E-0099-W62.
+
+#include "game_core/indep/inc/Replay.hpp"
+namespace hp2::debug {
+// Debug001EA3D0; E-0099-W74; replay-frame/001ea3d0.json/type-cPlayerSettings.json.
+void cPlayerSettings::DoSnapshot(::port::driving::Memory& m,std::uint32_t a,std::uint32_t snapshot){
+ ReplaySnapshot s(m,snapshot);s.BeginSection(0x2b17f0);for(unsigned off:{2u,3u,7u})s.MoveData(a+off,1);s.EndSection();
+}
+// Debug001E9A98; E-0099-W74; replay-frame/001e9a98.json/type-RaceParameters.json.
+void RaceParameters::DoSnapshot(std::uint32_t snapshot){
+ auto& m=memory_;const auto a=address_;ReplaySnapshot s(m,snapshot);s.BeginSection(0x2b17e0);
+ s.MoveData(a,1,4,1);for(unsigned off:{4u,8u,12u})s.MoveData(a+off,1);
+ s.MoveData(a+0x10,4);s.MoveData(a+0x14,4);s.MoveData(a+0x20,1);s.MoveData(a+0x24,4);
+ for(unsigned off:{0x28u,0x2cu,0x30u,0x34u})s.MoveData(a+off,1,4,1);
+ s.MoveData(a+0x38,1);s.MoveData(a+0x3c,1);s.MoveData(a+0x3d,1);s.MoveData(a+0x40,1,4,0);
+ s.MoveData(a+0x2f2,1);s.MoveData(a+0x2f3,1);s.MoveData(a+0x4c,1,4,0);s.MoveData(a+0x14,1);s.MoveData(a+0x50,1,4,0);s.MoveData(a+0x254,1);
+ for(unsigned off:{0x25cu,0x260u,0x264u,0x268u,0x26cu,0x270u,0x274u,0x278u,0x27cu,0x280u,0x284u})s.MoveData(a+off,1,4,1);
+ s.MoveData(a+0x288,1);cPlayerSettings::DoSnapshot(m,a+0x28c,snapshot);cPlayerSettings::DoSnapshot(m,a+0x2bc,snapshot);
+ s.MoveData(a+0x2f4,1);s.MoveData(a+0x2f8,1,4,1);s.MoveData(a+0x2fc,4);s.MoveData(a+0x300,4);s.MoveData(a+0x308,4,4,1);
+ for(int i=0;i<m.signed_word(a+0x308);++i)DriverInfo::DoSnapshot(m,m.word(a+0x304)+24*i,snapshot);
+ s.EndSection();
+}
+}
+
+namespace port::race {
+// Debug001EA3C0/001EA610/001EA638/001EA648; E-0112-P03.
+void PlayerSettingsView::ToggleScoring(){m_.word(address_+44,!m_.word(address_+44));}
+void PlayerSettingsView::ToggleGauges(){m_.word(address_+16,m_.word(address_+16)^0x40);}
+void PlayerSettingsView::ToggleHudHotkey(){m_.word(address_+40,!m_.word(address_+40));}
+void PlayerSettingsView::ToggleLapInfo(){m_.word(address_+16,m_.word(address_+16)^0x100);}
+// Debug001EA670; E-0112-P03. One correction per end, not an arbitrary modulo.
+void PlayerSettingsView::CycleSplitTime(int direction){int v=m_.signed_byte(address_+6)+direction;if(v<0)v=4;if(v>4)v=0;m_.byte(address_+6,std::uint8_t(v));const auto features=m_.word(address_+16);m_.word(address_+16,v==4?features&~4u:features|4u);}
+// Debug001EA6C8/001EA6F0/001EA718/001EA740; E-0112-P03.
+void PlayerSettingsView::ToggleRacePosition(){m_.word(address_+16,m_.word(address_+16)^0x10);}
+void PlayerSettingsView::ToggleLookback(){const int v=m_.signed_word(address_+12);if(v==0)m_.word(address_+12,1);else if(v==1)m_.word(address_+12,0);}
+void PlayerSettingsView::CycleAlternateCamera(){const int v=m_.signed_byte(address_+5)+1;m_.byte(address_+5,std::uint8_t(v%2));}
+void PlayerSettingsView::ToggleCameraSpring(){m_.word(address_+8,!m_.word(address_+8));}
+// Debug001EA4C0; E-0112-P03. Direction is intentionally ignored.
+bool GlobalDisplaySettingsView::CycleLeaderboardMode(int){const auto old=m_.signed_byte(address_+5);m_.byte(address_+5,old==2?0:2);return m_.signed_byte(address_+5)!=old;}
+// Debug001EA4E8; E-0112-P03. Preserve mode-specific skipping and two-player range.
+bool GlobalDisplaySettingsView::CycleTrackMap(int direction){
+ if(m_.word(0x3121ec)){const int old=m_.signed_byte(address_+4);int v=old;if(old==6)v=8;else if(old==8)v=6;m_.byte(address_+4,std::uint8_t(v));return v!=old;}
+ if(m_.word(0x3275ac)==3||m_.signed_word(0x327780)==1){const int old=m_.signed_byte(address_+2);int v=old+direction;if(v<0)v=6;if(v>6)v=0;if(v==5)v=direction>0?6:4;m_.byte(address_+2,std::uint8_t(v));return v!=old;}
+ const int old=m_.signed_byte(address_+3);int v=old+direction;if(v<6)v=7;if(v>7)v=6;m_.byte(address_+3,std::uint8_t(v));return v!=old;
+}
 }

@@ -52,8 +52,14 @@ public:
     godot::Dictionary get_environment_capture() const;
     godot::Dictionary get_render_targets() const;
     void set_camera_mode(int original_type);
+    // TASK-0112 host view 7, source eView 3; nullptr releases mirror visibility.
+    void set_secondary_view(godot::Camera3D* camera,int original_fov);
+    void set_race_performance_raster(bool enabled);
+    void set_race_godot_quality(bool texture_sampling,bool fxaa);
     void set_visual_timestep(double seconds);
     void set_visual_state(const godot::Dictionary&);
+    godot::Dictionary apply_world_objects(const godot::Array&,const godot::Array&);
+    godot::Dictionary set_world_vehicle_visuals(const godot::Array&);
     void set_driving_effect_source(const godot::Ref<Ps2DrivingRuntime>&);
     void set_render_collision(bool enabled);
     void set_render_material(bool enabled);

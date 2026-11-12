@@ -1,7 +1,10 @@
 #pragma once
+#include <optional>
 // Exact original Debug header marker ../indep/inc/Contact.hpp, E-0048-D04.
 // These inline host bindings assert neither original inline placement nor object ABI;
-// the original implementation translation unit has not been recovered.
+// E-0099-W38 now independently confirms original indep/src/contact.cpp.
+// The historical static-body APIs below retain their bounded host signatures;
+// actual shared-Memory Contact pool operations are declared separately below.
 #include "game_core/port/driving/collision.hpp"
 #include "game_core/port/driving/memory.hpp"
 #include "game_core/port/driving/ee_scalar.hpp"
@@ -99,5 +102,30 @@ public:
         CarCollisionBody::ApplyImpulse(m,body,car,{{total[0],total[1],total[2],0}},{{arm[0],arm[1],arm[2],0}});
         out.applied=true;out.impulse=total;out.arm=arm;out.scrape_speed=speed;return out;
     }
+};
+}
+
+#include "game_core/port/driving/object_view.hpp"
+namespace port::race {struct PhysicsConstructionServices;}
+namespace hp2::debug {
+// E-0099-W38, original contact.cpp; explicit original Contact pool lifetime.
+void GetContactPointVelocity(::port::driving::Memory&,std::uint32_t dest,std::uint32_t velocity,std::uint32_t angular,std::uint32_t arm); //001D1EA8
+float DenominatorTerm(::port::driving::Memory&,std::uint32_t inertia,std::uint32_t arm,std::uint32_t normal); //001D1ED8
+void InitContact(::port::driving::Memory&); //001D12D0
+void CloseContact(::port::driving::Memory&); //001D1300
+class Contact : public ::port::driving::ObjectView {
+public:
+ using ObjectView::ObjectView;
+ // Debug001D13C8/001D1408/001D1698; E-0099-W38. Optional policy supplies
+ // original unwritten stack W only where explicitly reached, never XYZ.
+ void Sub_001D13C8(std::uint32_t body1,std::uint32_t body2,std::uint32_t witness,std::optional<std::uint32_t> port_padding);
+ float FindContactTime(std::optional<std::uint32_t> port_padding);
+ void Crowbar(float backup_time,std::optional<std::uint32_t> port_padding);
+ void FindContactPointAndNormal(std::uint32_t point,std::uint32_t normal); //001D1AE0, E-0099-W38
+ void CollisionImpulse(bool disable_smokeable_collision_sound=false); //001D1F58,E-0110-F13; actual body virtuals/retry.
+ void Resolve(::port::race::PhysicsConstructionServices&); //001D18D8, E-0099-W38
+ void Sub_001D26C8(int); // original inline Contact.hpp destructor
+ static void RemoveContacts(::port::driving::Memory&,std::uint32_t list,std::uint32_t body); //001D1328
+ static int ContactTimeSorting(const ::port::driving::Memory&,std::uint32_t before,std::uint32_t after); //001D13A0
 };
 }

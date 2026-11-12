@@ -91,13 +91,15 @@ godot::Dictionary Ps2MoviePlayer::tick(double delta) {
             const double fps = static_cast<double>(movie_.rate) / movie_.scale;
             const auto frame_count = movie_.video_frames.size();
             const double duration = frame_count / fps;
-            // E-0016-A07: audio starts immediately; original video clock lags by 0.16 s.
-            const double video_time = std::max(0.0, elapsed_ - (audio_.is_valid() ? 0.16 : 0.0));
             if (loop_ && elapsed_ >= duration) {
-                elapsed_ = std::fmod(elapsed_, duration);
+                // E-0016-V02 reopens the stream at completion. Determine the
+                // due frame against the reopened clock, not the expired one.
+                elapsed_ = 0;
                 decoder_ = std::make_unique<port::media::MovieDecoder>(movie_.width, movie_.height);
                 next_frame_ = 0;
             }
+            // E-0016-A07: audio starts immediately; original video clock lags by 0.16 s.
+            const double video_time = std::max(0.0, elapsed_ - (audio_.is_valid() ? 0.16 : 0.0));
             const auto due = std::min(frame_count - 1, static_cast<std::size_t>(std::floor(video_time * fps)));
             while (next_frame_ <= due) {
                 const auto pixels = decoder_->decode_frame(movie_.video_frames[next_frame_++]);

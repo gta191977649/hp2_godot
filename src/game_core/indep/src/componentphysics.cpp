@@ -1,4 +1,8 @@
 #include "game_core/indep/inc/ComponentPhysics.hpp"
+#include "game_core/port/driving/ee_scalar.hpp"
+#include <cmath>
+#include <cstring>
+#include "game_core/port/race/traffic_construction.hpp"
 // TASK-0042: bounded host projections; original member ABI remains unverified.
 #include "game_core/port/driving/projection_support.hpp"
 // Retail 0x0019C170; E-0042-C089; E-0042-S001; exact Debug TU ..\indep\src\componentphysics.cpp
@@ -37,7 +41,9 @@ void PhysicsSystem::ComputeAuxiliaries(port::driving::native::InitServices& serv
     const auto start=services.Sub_00250F38();auto object=m.word(head);
     while(object!=head){
         const auto table=m.word(object+8);
-        reset_dispatch(m,m.word(table+0x44),object+static_cast<std::int32_t>(m.signed_half(table+0x40)),services);
+        const auto adjusted=object+static_cast<std::int32_t>(m.signed_half(table+0x40));
+        if(m.word(table+0x44)==0x2154d8)hp2::debug::Mellovator(m,adjusted).ComputeAuxiliaries();
+        else reset_dispatch(m,m.word(table+0x44),adjusted,services);
         object=m.word(object);
     }
     const auto end=services.Sub_00250F38();
@@ -85,7 +91,7 @@ void PhysicsSystem::IntegrateEuler(float dt,const port::driving::native::Integra
         if(op!=0x03e00008u || (delay&0xffff0000u)!=0x24820000u)
             hp2::not_implemented("0x00199BB8","component state pointer virtual target");
         const auto state=node+static_cast<std::int16_t>(m.half(table+0x18))+static_cast<std::int16_t>(delay&0xffffu);
-        for(std::uint32_t j=0;j<n;++j){const float product=dt*m.scalar(scratch+(i+j)*4);m.scalar(state+j*4,m.scalar(state+j*4)+product);}i+=n;
+        for(std::uint32_t j=0;j<n;++j){const float derivative=m.scalar(scratch+(i+j)*4),old=m.scalar(state+j*4);if(!std::isfinite(dt)||!std::isfinite(old)||!std::isfinite(derivative)){const auto bits=[](float x){std::uint32_t word;std::memcpy(&word,&x,4);return std::to_string(word);};const std::string why="Euler input producer component="+std::to_string(node)+" state="+std::to_string(state)+" index="+std::to_string(j)+" old_bits="+bits(old)+" derivative_bits="+bits(derivative)+" timestep_bits="+bits(dt);hp2::not_implemented("0x00199C50",why.c_str());}const float product=::port::driving::ee_mul_s_finite(dt,derivative,"0x00199C50"),result=::port::driving::ee_add_s_finite(old,product,"0x00199C58");if(!std::isfinite(old)||!std::isfinite(derivative)||!std::isfinite(product)||!std::isfinite(result)){const auto bits=[](float x){std::uint32_t word;std::memcpy(&word,&x,4);return std::to_string(word);};const std::string why="Euler producer component="+std::to_string(node)+" state="+std::to_string(state)+" index="+std::to_string(j)+" old_bits="+bits(old)+" derivative_bits="+bits(derivative)+" timestep_bits="+bits(dt)+" product_bits="+bits(product)+" result_bits="+bits(result);hp2::not_implemented("0x00199BB8",why.c_str());}m.scalar(state+j*4,result);}i+=n;
     }
     if(!calls.after)hp2::not_implemented("0x00199BB8","post integration dispatch");
     calls.after(m,head);
@@ -104,4 +110,31 @@ void PhysicsSystem::ResolveForces(){}
 void PhysicsComponent::ResolveForces(){}
 // Debug0019a230 E-0044-S01; JR RA/NOP.
 void PhysicsComponent::ComputeAuxiliaries(){}
+}
+
+// TASK-0099 E-0099-W33. Debug00199A70/00199AB8; original componentphysics.cpp.
+#include "game_core/indep/src/rigidbody.hpp"
+#include "game_core/indep/src/wheel.hpp"
+#include "game_core/indep/src/suspension.hpp"
+#include "game_core/indep/src/engine.hpp"
+namespace hp2::recovered {
+void PhysicsComponent::Sub_00199A70(int flags){m_.word(address_+8,0x2ad180);if(flags&1)m_.release(address_);}
+void PhysicsSystem::Sub_00199AB8(int flags){
+ auto& m=m_;const auto head=address_;m.word(head+0xc,0x2ad160);
+ while(m.word(head)!=head){
+  const auto node=m.word(head),next=m.word(node),prev=m.word(node+4),table=m.word(node+8);
+  m.word(prev,next);m.word(next+4,prev);
+  const auto adjusted=node+static_cast<std::int32_t>(m.signed_half(table+8));
+  switch(m.word(table+0xc)){
+   case 0x19b5f8:RigidBody(m,adjusted).Sub_0019B5F8(3);break;
+   case 0x1a3410:Wheel(m,adjusted).Sub_001A3410(3);break;
+   case 0x1a3e48:Suspension(m,adjusted).Sub_001A3E48(3);break;
+   case 0x188a38:Engine(m,adjusted).Sub_00188A38(3);break;
+   case 0x18a2f8:DriveTrain(m,adjusted).Sub_0018A2F8(3);break;
+   case 0x216400:hp2::debug::Mellovator(m,adjusted).Sub_00216400(3);break;
+   default:hp2::not_implemented("0x00199AB8","Unrecovered physics component destructor target");
+  }
+ }
+ if(flags&1)m.release(head);
+}
 }

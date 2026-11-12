@@ -1,5 +1,11 @@
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
+#include "game_core/port/driving/memory.hpp"
+namespace hp2::debug {
+// Logical views, not original C++ layouts; original definitions in racesetup.cpp.
+struct DataFreeRunSetup { static void InitWithDefaults(::port::driving::Memory&,std::uint32_t); }; //001B6048, E-0107-F01.
+struct DataChallengeScreen { static void InitWithDefaults(::port::driving::Memory&,std::uint32_t); }; //001B32A0, E-0107-F01.
+}
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.

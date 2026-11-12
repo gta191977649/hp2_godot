@@ -3,6 +3,47 @@
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
 
+#include "game_core/port/driving/object_view.hpp"
+namespace hp2::debug {
+std::uint32_t GetLookbackCar(::port::driving::Memory&,std::uint32_t car,bool& slow); //0015C138; E-0099-W50.
+std::uint16_t CalculateLookbackAngle(::port::driving::Memory&,std::uint32_t car,std::uint32_t follow,const std::array<float,16>& body); //0015C060.
+// E-0099-W50. Explicit original2C-byte Memory view, not native class ABI.
+class CameraMover:public ::port::driving::ObjectView {
+public:using ObjectView::ObjectView;
+ void Sub_001571E8(int view_id,int type);
+ void Sub_00157280(int flags);
+ void Enable(); //001572D8.
+ void Disable(); //00157350.
+ void Update(); //001572C8; proven original empty base target only.
+ void Render(std::uint32_t view); //001572D0; proven empty base target only.
+ // Debug0015F750, E-0099-W50. Actual base virtual getter returns null.
+ std::uint32_t GetCameraInfo()const{return 0;}
+ void EnforceMinGapToWalls(std::uint32_t topology,const std::array<float,4>& car_position,const std::array<float,4>& camera_position,std::array<float,4>& adjustment); //00157420.
+ void IsoProjectionMatrix(std::array<float,16>&,const std::array<float,4>& eye,const std::array<float,4>& look,const std::array<float,2>& projection); //00157618.
+};
+class MaxCameraMover:public CameraMover {
+public:using CameraMover::CameraMover;
+ void Sub_00159DF8(int,std::uint32_t,std::uint32_t,float,int);
+ void Sub_00159EB0(int);
+ void Update(); //00159EC8.
+};
+class DriveCameraMover:public CameraMover {
+public:using CameraMover::CameraMover;
+ void Sub_0015BD10(int view_id,std::uint32_t car,int pov_index,float lookback_speed,int disable_lag,int lookback,int perfect_focus);
+ void Sub_0015BEB8(int flags);
+ void SetPOVIndex(int); //0015BFD8.
+ void SetLookBack(int); //0015F678; E-0112-C01.
+ bool OutsidePOV(); //0015C218; E-0112-C01.
+ void ResetState(); //0015BF28.
+ static float GetCorrectionYaw(::port::driving::Memory&,std::uint16_t); //0015BC10.
+ static int GetCorrectionPitch(std::uint16_t); //0015BC88.
+ std::uint32_t GetPOV(int); //0015BFE0; original nullable result.
+ // Debug0015F648, E-0099-W50. Original inline getter, actual loaded resource.
+ std::uint32_t GetCameraInfo()const{return m_.word(address_+0x74);}
+ void Update(); //0015C2B0; shared live state; alternate-car debug selection remains explicit.
+};
+}
+
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: allocator_label; evidence: E-0027-C01.
 // Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).

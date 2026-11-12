@@ -1,6 +1,16 @@
 // PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
 
+#include "game_core/indep/inc/Sound3dSample.hpp"
+namespace hp2::debug {
+void RemoveSample(::port::driving::Memory&,std::uint32_t message,std::uint32_t object,std::uint32_t private_data); //00204640.
+void Sub_00204C40(::port::driving::Memory&); // Actual static list.
+namespace sound3d_oneshot {
+void Init(::port::driving::Memory&);void Reset(::port::driving::Memory&);void Close(::port::driving::Memory&);void Update(::port::driving::Memory&);
+std::uint32_t Play(::port::driving::Memory&,std::uint32_t source,std::uint32_t position,float volume,float pitch); //00204298.
+}
+}
+
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
 // Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.

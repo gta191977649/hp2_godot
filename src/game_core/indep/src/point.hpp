@@ -145,3 +145,9 @@ public:
     void SetValDesired();
 };
 } // namespace hp2::recovered
+
+#include "game_core/port/driving/object_view.hpp"
+namespace hp2::debug {
+// Debug001D7638/001D7688,E-0099-W100; original point.cpp methods.
+class tCubic2D:public ::port::driving::ObjectView {public:using ObjectView::ObjectView;void SetVal(const std::array<float,2>&);void SetdVal(const std::array<float,2>&);void SetValDesired(const std::array<float,2>&);std::array<float,2> GetVal()const;std::array<float,2> GetdVal()const;};
+}

@@ -4,6 +4,7 @@ extends SceneTree
 var frontend: Node
 var output := ""
 var checkpoints: Array[Dictionary] = []
+var confirm_selection := false
 
 func _initialize() -> void:
 	call_deferred("_run")
@@ -72,6 +73,8 @@ func _finish(ok: bool, reason: String) -> void:
 
 func _run() -> void:
 	for argument in OS.get_cmdline_user_args():
+		if argument == "--confirm-selection":
+			confirm_selection = true
 		if argument.begins_with("--roundtrip-output="):
 			output = argument.trim_prefix("--roundtrip-output=")
 	if output.is_empty() or DisplayServer.get_name() == "headless":
@@ -126,6 +129,42 @@ func _run() -> void:
 			await _finish(false, "vehicle region is blank (%d visible pixels)" % visible_pixels)
 			return
 		_snapshot("select-car-%d" % cycle)
+		if confirm_selection:
+			await _press(KEY_SPACE)
+			await process_frame
+			_snapshot("selection-confirmed")
+			var popup: Dictionary = frontend.layout.ui_snapshot()
+			var buttons: Array = popup.widgets.filter(func(w): return w.interactive and str(w.id).begins_with("selection:popup:"))
+			if not popup.modal or buttons.size() != 3:
+				await _finish(false, "transmission popup has no three original interactive buttons")
+				return
+			await RenderingServer.frame_post_draw
+			root.get_texture().get_image().save_png(output.path_join("transmission.png"))
+			# Exercise original movement, reentrant same-slot replacement and cancel.
+			await _press(KEY_RIGHT)
+			await _press(KEY_SPACE)
+			popup = frontend.layout.ui_snapshot()
+			buttons = popup.widgets.filter(func(w): return w.interactive and str(w.id).begins_with("selection:popup:"))
+			if not popup.modal or buttons.size() != 2:
+				await _finish(false, "handling popup did not replace transmission")
+				return
+			_snapshot("handling-popup")
+			await RenderingServer.frame_post_draw
+			root.get_texture().get_image().save_png(output.path_join("handling.png"))
+			await _press(KEY_BACKSPACE)
+			popup = frontend.layout.ui_snapshot()
+			buttons = popup.widgets.filter(func(w): return w.interactive and str(w.id).begins_with("selection:popup:"))
+			if not popup.modal or buttons.size() != 3:
+				await _finish(false, "handling cancel did not restore transmission")
+				return
+			await _press(KEY_BACKSPACE)
+			if frontend.layout.ui_snapshot().modal:
+				await _finish(false, "transmission cancel did not release modal input")
+				return
+			_snapshot("popup-cancelled")
+			await _finish(frontend.runtime_error_count == 0,
+				"production transmission/handling/cancel route; full race remains separate")
+			return
 		# Exercise the actual host input translation, including skin and car directions.
 		var original_skin: int = frontend.layout.menu_state()["selection"]["skin"]
 		await _press(KEY_DOWN)

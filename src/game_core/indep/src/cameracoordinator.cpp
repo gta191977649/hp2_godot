@@ -103,3 +103,5 @@ void NisCameraCoordinator::GetCameraKeys() {
     hp2::not_implemented("0x0019B688", "NisCameraCoordinator::GetCameraKeys (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+#include "game_core/port/race/nis_camera.inc"

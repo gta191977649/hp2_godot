@@ -54,3 +54,8 @@ public:
     void Init();
 };
 } // namespace hp2::recovered
+
+namespace hp2::debug {
+// Debug0018E058/0018E078, E-0099-W92; actual table.cpp definitions.
+class Linear:public ::port::driving::ObjectView {public:using ObjectView::ObjectView;void Init(float x0,float y0,float x1,float y1);float GetValue(float x)const;};
+}

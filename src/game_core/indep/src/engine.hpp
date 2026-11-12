@@ -14,6 +14,9 @@ void CalculateShiftPoints(Memory&,std::uint32_t config,std::uint32_t engineConfi
 class Engine : public port::driving::ObjectView {
 public:
  using ObjectView::ObjectView;
+ void DoSnapshot(std::uint32_t snapshot); //E-0099-W74; exact source entry documented at body.
+
+ void Sub_00188A38(int); // Debug destructor, E-0099-W33
  void Sub_00188998(std::uint32_t config,std::uint32_t car);
  void ComputeAuxiliaries(); //00188B38
  std::uint32_t GetDerivative(std::uint32_t out); //00188B88
@@ -35,6 +38,9 @@ public:
 class DriveTrain : public port::driving::ObjectView {
 public:
  using ObjectView::ObjectView;
+ void DoSnapshot(std::uint32_t snapshot); //E-0099-W74; exact source entry documented at body.
+
+ void Sub_0018A2F8(int); // Debug destructor, E-0099-W33
  void Sub_00189020(std::uint32_t config,std::uint32_t engine,std::uint32_t wheels,std::uint32_t car);
  float GetDifferentialAngularVelocity(); //001891B0
  float GetDriveWheelSlippage(); //00189280

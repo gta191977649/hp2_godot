@@ -18,6 +18,15 @@ var previous_upload := -1
 var previous_uniforms := -1
 var last_generation := -1
 var capture_active := true
+var event_benchmark := false
+var event_wall_only := false
+var event_capture_started := false
+var event_capture_generation := -1
+var event_last_sample_usec := 0
+var render_started_usec := 0
+var event_started_usec := 0
+var event_metadata: Dictionary = {}
+var event_loading_costs: Dictionary = {}
 var export_held := false # TASK0077: benchmark releases only after timed sampling.
 var capture_completed_process_frame := -1
 var latest_functions: Array[Dictionary] = []
@@ -126,9 +135,10 @@ func _read_timestamps_on_render_thread() -> void:
         completed=rd.get_captured_timestamps_frame()
         for index in rd.get_captured_timestamps_count():
             var label := rd.get_captured_timestamp_name(index)
-            if not (label.begins_with("vp_begin_") or label.begins_with("vp_end_")):continue
-            var is_begin := label.begins_with("vp_begin_")
-            var rid_id := label.trim_prefix("vp_begin_" if is_begin else "vp_end_")
+            var grouped := label in ["> Render Viewports", "< Render Viewports"]
+            if not grouped and not (label.begins_with("vp_begin_") or label.begins_with("vp_end_")):continue
+            var is_begin := label.begins_with(">") if grouped else label.begins_with("vp_begin_")
+            var rid_id := "engine_viewports" if grouped else label.trim_prefix("vp_begin_" if is_begin else "vp_end_")
             var pair: Dictionary=pairs.get(rid_id,{})
             pair["begin" if is_begin else "end"]=[rd.get_captured_timestamp_cpu_time(index),rd.get_captured_timestamp_gpu_time(index)]
             pairs[rid_id]=pair
@@ -153,6 +163,9 @@ func _accept_timestamps(completed: int, pairs: Dictionary) -> void:
         var cpu_valid := int(first[0])>0 and int(last[0])>=int(first[0])
         var gpu_valid := int(first[1])>0 and int(last[1])>=int(first[1])
         timestamp_rows[rid_id]={"cpu_ms":(int(last[0])-int(first[0]))/1000.0 if cpu_valid else null,"gpu_ms":(int(last[1])-int(first[1]))/1000000.0 if gpu_valid else null,"source_frame":completed,"timing_status":"completed_timestamp_pair" if gpu_valid else "gpu_timestamp_unavailable"}
+        if rid_id=="engine_viewports" and cpu_valid:
+            timestamp_rows[rid_id]["cpu_begin_usec"]=int(first[0])
+            timestamp_rows[rid_id]["cpu_end_usec"]=int(last[0])
     if not timestamp_rows.is_empty():timestamp_status="completed_timestamp_pairs"
 
 func _vector_data(value: Vector3) -> Array:
@@ -261,7 +274,7 @@ class FunctionScope extends RefCounted:
             if is_instance_valid(owner):owner.record_function(function_name,(Time.get_ticks_usec()-started)/1000.0)
 
 func scope(function_name: String) -> RefCounted:
-    return FunctionScope.new(self,function_name) if enabled else null
+    return FunctionScope.new(self,function_name) if enabled and not event_wall_only else null
 
 func call_traced(function_name: String, callable: Callable, arguments: Array = []):
     var _profile_scope := scope(function_name)
@@ -322,11 +335,23 @@ func _ready() -> void:
         if argument.begins_with("--track-profile-frames="):limit=clampi(int(argument.trim_prefix("--track-profile-frames=")),1,600)
         if argument.begins_with("--profile-debug-output="):output=argument.trim_prefix("--profile-debug-output=")
         if argument.begins_with("--profile-debug-frames="):limit=clampi(int(argument.trim_prefix("--profile-debug-frames=")),1,600)
-    if not enabled:
+    event_benchmark="--championship-performance" in arguments
+    event_wall_only=event_benchmark and "--championship-wall-only" in arguments
+    if event_benchmark:
+        capture_active=false
+        event_started_usec=Time.get_ticks_usec()
+        if "--championship-uncapped" in arguments:
+            DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+    if not enabled and not event_wall_only:
         set_process(false)
         return
     if async_export:export_identity_cache=_source_identity()
     process_priority=10000
+    if event_wall_only:
+        return
+    if event_benchmark and RenderingServer.is_on_render_thread():
+        RenderingServer.frame_pre_draw.connect(_begin_engine_draw)
+        RenderingServer.frame_post_draw.connect(_end_engine_draw)
     get_tree().node_added.connect(_node_added)
     _discover(get_tree().root)
     for key in ["process_cpu_ms","physics_cpu_ms","native_ms","host_ms","main_submit_ms","post_submit_ms","particle_submit_ms","particle_simulation_ms","particle_packing_ms","particle_upload_ms","sun_readback_ms","draw_calls","primitives","particle_uploaded_bytes","depth_uniform_reads","collector_ms"]:
@@ -359,9 +384,141 @@ func _node_added(node: Node) -> void:
         targets[rid]=weakref(node)
         RenderingServer.viewport_set_measure_render_time(rid,true)
 
+func event_scope(label: String, started: int) -> void:
+    if event_benchmark and capture_active and not event_wall_only:
+        record_function(label,(Time.get_ticks_usec()-started)/1000.0)
+
+func _begin_engine_draw() -> void:
+    render_started_usec=Time.get_ticks_usec() if capture_active else 0
+
+func _end_engine_draw() -> void:
+    if render_started_usec!=0 and not samples.is_empty():
+        var row: Dictionary=samples.back()
+        if int(row.event_frame.process_frame)==Engine.get_process_frames():
+            var ended := Time.get_ticks_usec()
+            row.metrics["engine_draw_signal_ms"]=(ended-render_started_usec)/1000.0
+            row.metrics["engine_scene_setup_ms"]=RenderingServer.get_frame_setup_time_cpu()
+            row.metrics["engine_pre_draw_gap_ms"]=(render_started_usec-event_last_sample_usec)/1000.0
+            row.metrics["engine_draw_begin_usec"]=render_started_usec
+            row.metrics["engine_draw_end_usec"]=ended
+    render_started_usec=0
+
+func _finish_event_interval(next_started: int) -> void:
+    var sample: Dictionary=samples.back()
+    sample.metrics["frame_wall_ms"]=(next_started-event_last_sample_usec)/1000.0
+    if sample.metrics.has("engine_draw_end_usec"):
+        sample.metrics["post_draw_to_next_process_ms"]=(next_started-int(sample.metrics.engine_draw_end_usec))/1000.0
+
+func event_loading_scope(label: String, started: int) -> void:
+    if not event_benchmark or event_capture_started or event_wall_only:return
+    var duration := (Time.get_ticks_usec()-started)/1000.0
+    var row: Dictionary=event_loading_costs.get(label,{"calls":0,"total_ms":0.0,"max_ms":0.0})
+    row.calls+=1
+    row.total_ms+=duration
+    row.max_ms=maxf(row.max_ms,duration)
+    event_loading_costs[label]=row
+
+func _event_capture_frame() -> Dictionary:
+    if exported or export_status in ["failed","queued","writing"]:return {}
+    var scene := get_tree().current_scene
+    var is_race: bool=scene!=null and scene.get_script()!=null and scene.get_script().resource_path=="res://scripts/runtime/race_scene.gd"
+    if event_capture_started and samples.size()==limit:
+        if is_race and int(scene.generation)==event_capture_generation:
+            _finish_event_interval(int(scene.profile_process_started))
+            capture_active=false
+            capture_completed_process_frame=Engine.get_process_frames()
+            export_held=false
+            export_status="ready"
+            event_metadata["measurement_end_usec"]=int(scene.profile_process_started)
+            event_metadata["export_started_usec"]=Time.get_ticks_usec()
+            var settings: Dictionary=scene.track_renderer.get_optimization_state()
+            event_metadata["render_thread_actual"]=settings.get("render_thread_actual")
+            event_metadata["render_prepare_workers"]=settings.get("render_prepare_workers")
+            event_metadata["instancing"]=settings.get("effective",{}).get("instancing")
+            event_metadata["instance_saved_draws_total"]=settings.get("counters",{}).get("instance_saved_draws")
+            var post: Dictionary=settings.get("postprocess",{})
+            event_metadata["godot_sampling_materials"]=settings.get("godot_sampling_materials",0)
+            event_metadata["godot_mip_textures"]=settings.get("godot_mip_textures",0)
+            event_metadata["colour_fxaa"]=post.get("colour_fxaa",false)
+            event_metadata["race_render_profile"]=scene.race_render_profile
+            event_metadata["depth_batches"]=settings.get("effective",{}).get("depth_batches",false)
+            event_metadata["race_world_batches"]=settings.get("effective",{}).get("race_world_batches",false)
+            event_metadata["shadow_stream"]=settings.get("effective",{}).get("shadow_stream",false)
+            event_metadata["static_depth_sources"]=settings.get("effective",{}).get("static_depth_sources",false)
+            if scene.audio_display != null:
+                event_metadata["audio_skipped_mixes"]=scene.audio_display.skipped_mixes-int(event_metadata.get("audio_skips_at_measurement_start",0))
+                event_metadata["audio_submit_usec"]=scene.audio_display.submit_usec-int(event_metadata.get("audio_submit_at_measurement_start",0))
+            event_metadata["mirror_refresh_count"]=scene.mirror_refresh_count
+            event_metadata["mirror_hold_count"]=scene.mirror_hold_count
+            var colour_size: Vector2i=post.get("colour_size",Vector2i.ZERO)
+            var depth_size: Vector2i=post.get("native_depth_size",Vector2i.ZERO)
+            event_metadata["colour_size"]=[colour_size.x,colour_size.y]
+            event_metadata["native_depth_size"]=[depth_size.x,depth_size.y]
+            event_metadata["end_submission_batches"]=scene.track_state.get("race_submission_batches",{})
+            event_metadata["geometry_upload_payload_bytes_total"]=settings.get("counters",{}).get("geometry_upload_payload_bytes")
+            if event_wall_only:
+                event_metadata["effective_postprocess"]=post
+            export_profile()
+            return {}
+    var eligible: bool=is_race and scene.phase=="Running" and int(scene.event_request.get("tree_type",-1))==0 and int(scene.world_state.get("race",{}).get("stage",-1))==4
+    if not event_capture_started:
+        if not eligible or float(scene.profile_input.get("throttle",0))<=0:return {}
+        var vulkan_tail := "--championship-vulkan-tail" in OS.get_cmdline_user_args()
+        begin_capture(120,120 if vulkan_tail else 600,true)
+        event_capture_started=true
+        event_capture_generation=int(scene.generation)
+        event_metadata={
+            "event":scene.event_request.duplicate(true),"track":scene.track_id,"car":scene.car_code,
+            "skin":scene.skin_id,"actor_count":scene.last_world.get("actors",[]).size(),
+            "warm_frames":120,"sample_frames":limit,"start_step":scene.presented_step,
+            "profiler_ready_to_active_ms":(Time.get_ticks_usec()-event_started_usec)/1000.0,
+            "loading_pumps":event_loading_costs,"profiler_ui":ui_enabled,"wall_only":event_wall_only,
+            "track_load_ms":scene.track_state.get("load_ms"),
+            "initial_vehicle_load":{
+                "cpu_ms":scene.car_state.get("cpu_ms"),"upload_ms":scene.car_state.get("upload_ms"),
+                "geometry_decode_ms":scene.car_state.get("geometry_decode_ms"),
+                "texture_decode_ms":scene.car_state.get("texture_decode_ms"),
+            },
+        }
+        if vulkan_tail:
+            var clock_host: RefCounted=ClassDB.instantiate("Ps2RenderHost")
+            event_metadata["qpc_clock"]=clock_host.diagnostic_qpc_clock()
+    if not eligible or int(scene.generation)!=event_capture_generation:
+        capture_active=false
+        export_status="failed"
+        export_error="Championship left the active source World during sampling"
+        push_error(export_error)
+        return {}
+    var now: int=scene.profile_process_started
+    if samples.is_empty() and scene.audio_display!=null:
+        event_metadata["audio_skips_at_measurement_start"]=scene.audio_display.skipped_mixes
+        event_metadata["audio_submit_at_measurement_start"]=scene.audio_display.submit_usec
+    if not samples.is_empty():
+        _finish_event_interval(now)
+    event_last_sample_usec=now
+    var race: Dictionary=scene.world_state.get("race",{})
+    var body: Transform3D=scene.state.get("body",Transform3D.IDENTITY)
+    var size: Vector2=scene.get_viewport().get_visible_rect().size
+    return {
+        "process_frame":Engine.get_process_frames(),"step":scene.presented_step,
+        "generation":scene.generation,"lap":race.get("lap"),"track_percent":race.get("track_percent"),
+        "position":_vector_data(body.origin),"input":scene.profile_input.duplicate(),
+        "viewport_size":[int(size.x),int(size.y)],
+        "audio_queued_frames":scene.audio_display.queued_frames if scene.audio_display!=null else 0,
+    }
+
 func _process(_delta: float) -> void:
     var begin := Time.get_ticks_usec()
     if async_export or export_thread!=null or not export_queue.is_empty():_poll_exports()
+    var event_frame := _event_capture_frame() if event_benchmark else {}
+    if event_benchmark and event_frame.is_empty():
+        function_current.clear()
+        return
+    if event_wall_only:
+        seen_frames+=1
+        if seen_frames>warm_frames:
+            samples.append({"event_frame":event_frame,"metrics":{"frame_wall_ms":0.0},"functions":[],"viewports":[]})
+        return
     var renderer: Node3D
     for reference in renderers:
         var node=reference.get_ref()
@@ -383,6 +540,37 @@ func _process(_delta: float) -> void:
     var uniforms := int(post.get("uniform_reads",0))
     latest={"frame_wall_ms":_delta*1000.0,"process_cpu_ms":Performance.get_monitor(Performance.TIME_PROCESS)*1000.0,"physics_cpu_ms":Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS)*1000.0,"draw_calls":int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),"primitives":int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME))}
     latest["sun_uncovered_async"]=sun_diagnostic
+    if event_benchmark and state.get("ok",false):
+        latest["reflection_submit_ms"]=costs.get("reflection_submit_ms")
+        latest["environment_submit_ms"]=costs.get("environment_submit_ms")
+        latest["shadow_submit_ms"]=costs.get("profile_shadow_submit_ms")
+        latest["shadow_mesh_creations"]=state.get("shadow_mesh_creations")
+        latest["shadow_mesh_region_updates"]=state.get("shadow_mesh_region_updates")
+        latest["static_depth_sources"]=post.get("static_depth_sources")
+        latest["alpha_order_ms"]=costs.get("profile_alpha_order_ms")
+        latest["draw_trim_ms"]=costs.get("profile_draw_trim_ms")
+        latest["mirror_host_ms"]=costs.get("profile_mirror_host_ms")
+        latest["sun_submit_ms"]=costs.get("sun_submit_ms")
+        var engine_timing: Dictionary=timestamp_rows.get("engine_viewports",{})
+        latest["engine_viewports_cpu_ms"]=engine_timing.get("cpu_ms")
+        latest["engine_viewports_gpu_ms"]=engine_timing.get("gpu_ms")
+        latest["engine_viewports_source_frame"]=engine_timing.get("source_frame")
+        latest["engine_viewports_begin_usec"]=engine_timing.get("cpu_begin_usec")
+        latest["engine_viewports_end_usec"]=engine_timing.get("cpu_end_usec")
+        latest["mirror_selection_ms"]=null
+        latest["mirror_submit_ms"]=null
+        for submission in state.get("view_submissions",[]):
+            if int(submission.get("view_id",0))==3:
+                latest["mirror_selection_ms"]=submission.get("selection_ms")
+                latest["mirror_submit_ms"]=submission.get("submission_wall_ms")
+        latest["depth_post_submit_ms"]=costs.get("post_submit_ms")
+        latest["depth_proxy_creations"]=post.get("proxy_creations")
+        latest["depth_discovery_ms"]=post.get("profile_discovery_ms")
+        latest["depth_proxy_sync_ms"]=post.get("profile_proxy_ms")
+        latest["depth_material_ms"]=post.get("profile_material_ms")
+        var batches: Dictionary=host.get("counters",{})
+        latest["source_mesh_upload_count"]=batches.get("source_mesh_creations")
+        latest["geometry_upload_payload_bytes"]=batches.get("geometry_upload_payload_bytes")
     if state.get("ok",false):
         latest.merge({"native_ms":state.get("native_frame_ms",0),"host_ms":state.get("host_submit_ms",0),"main_submit_ms":costs.get("main_submit_ms",0),"post_submit_ms":costs.get("post_submit_ms",0),"particle_submit_ms":costs.get("particle_submit_ms",0),"particle_simulation_ms":particle.get("simulation_ms",0),"particle_packing_ms":particle.get("packing_ms",0),"particle_upload_ms":particle.get("upload_ms",0),"sun_readback_ms":costs.get("previous_sun_readback_ms",0),"particle_uploaded_bytes":maxi(0,upload-previous_upload) if previous_upload>=0 else 0,"depth_uniform_reads":maxi(0,uniforms-previous_uniforms) if previous_uniforms>=0 else 0})
     latest_functions.clear()
@@ -418,7 +606,10 @@ func _process(_delta: float) -> void:
     latest_viewports=rows
     if capture_active and not exported and seen_frames>warm_frames:
         samples.append({"engine_frame":Engine.get_frames_drawn(),"track":last_generation,"scene":get_tree().current_scene.scene_file_path if get_tree().current_scene!=null else "", "context":_capture_context(renderer,state),"metrics":latest.duplicate(),"viewports":rows,"functions":latest_functions.duplicate(true)})
-        if samples.size()>=limit:
+        if event_benchmark:
+            samples.back()["event_frame"]=event_frame
+            samples.back()["track_submissions"]=state.get("race_submission_batches",{})
+        if samples.size()>=limit and not event_benchmark:
             capture_active=false
             capture_completed_process_frame=Engine.get_process_frames()
             export_status="ready"
@@ -434,7 +625,7 @@ func export_profile() -> String:
     if samples.is_empty():return ""
     if output.is_empty():output=ProjectSettings.globalize_path("user://debug/profile-debug-"+str(Time.get_unix_time_from_system())+".json")
     var file: FileAccess
-    if not async_export:
+    if not async_export and not event_benchmark:
         DirAccess.make_dir_recursive_absolute(output.get_base_dir())
         file=FileAccess.open(output,FileAccess.WRITE)
         if file==null:
@@ -442,8 +633,11 @@ func export_profile() -> String:
             return ""
     var data := {"schema":1,"engine":Engine.get_version_info(),"api":preload("res://scripts/debug/render_api.gd").current(),"driver":RenderingServer.get_current_rendering_driver_name(),"rendering_method":RenderingServer.get_current_rendering_method(),"adapter":RenderingServer.get_video_adapter_name(),"resolution":[get_window().size.x,get_window().size.y],"samples":samples,"notes":"Native CPU wall times may include waits. Viewport GPU values are engine timestamp measurements from earlier completed frames; zero/disabled is unknown. Viewports are separate workloads, not an additive total frame estimate. Byte/read metrics are cumulative-counter deltas. Profiling overhead is recorded as collector_ms."}
     data["schema"]=2
+    if event_benchmark:
+        data["event_benchmark"]=event_metadata
+        data["event_benchmark"]["completed_process_frame"]=capture_completed_process_frame
     data["source_identity"]=_source_identity(async_export)
-    data["timing_source"]="render_thread_RenderingDevice_completed_timestamp_pairs"
+    data["timing_source"]="consecutive_race_process_entries" if event_wall_only else "render_thread_RenderingDevice_completed_timestamp_pairs"
     data["notes"]="CPU wall entries may overlap/include GPU waits. Viewport timestamp pairs are read together on the rendering thread and tagged with RenderingDevice completed source_frame; this is not engine_frame. A source frame is consumed once, missing endpoints or repeated completion frames are unavailable. Current scheduled flags describe collection time, not the delayed source frame. Viewports must never be summed as total frame GPU time. Byte/read metrics are cumulative deltas; collector_ms excludes deferred render-thread query and export. Camera/effect context belongs to the CPU sample, not delayed GPU source_frame."
     if async_export:
         if export_queue.size()>=4:
@@ -465,7 +659,15 @@ func export_profile() -> String:
         export_error=""
         _start_export_job()
         return "" if export_status=="failed" else output
-    file.store_string(JSON.stringify(data,"  "))
+    if event_benchmark:
+        var result := _write_export_snapshot(data,output,output+".tmp")
+        if not result.ok:
+            export_status="failed"
+            export_error=str(result.error)
+            push_error(export_error)
+            return ""
+    else:
+        file.store_string(JSON.stringify(data,"  "))
     exported=true
     capture_active=false
     export_status="complete"
@@ -474,7 +676,7 @@ func export_profile() -> String:
 
 func _exit_tree() -> void:
     export_held=false # Shutdown is outside benchmark acceptance; preserve captures.
-    if enabled and not exported:export_profile()
+    if enabled and not exported and not event_benchmark:export_profile()
     _poll_exports(true)
     if not enabled:return
     for rid in targets:

@@ -189,3 +189,26 @@ void TwoWheelAckermanSteering::SetSteering(std::uint16_t value) {
  matrix[0]=cosine;matrix[1]=sine;matrix[4]=-sine;matrix[5]=cosine;m.matrix(s+0x50,matrix);
 }
 }
+
+// TASK-0099 E-0099-W33. Debug destructor bodies and real original pool ownership.
+#include "game_core/indep/inc/ComponentPhysics.hpp"
+#include "game_core/inc/bSlotPool.hpp"
+namespace hp2::recovered {
+void Suspension::Sub_001A3E48(int flags){PhysicsComponent(m_,address_).Sub_00199A70(0);if(flags&1)hp2::debug::SlotPool(m_,m_.word(0x327038)).Free(address_);}
+void TwoWheelAckermanSteering::Sub_001A3ED0(int flags){m_.word(address_+8,0x2adad8);m_.word(address_+8,0x2adaf8);if(flags&1)hp2::debug::SlotPool(m_,m_.word(0x327024)).Free(address_);}
+}
+
+#include "game_core/indep/inc/Replay.hpp"
+namespace hp2::recovered {
+// Debug001A36B0; E-0099-W74; replay-frame/001a36b0.json/type-Suspension.json.
+void Suspension::DoSnapshot(std::uint32_t snapshot){
+ hp2::debug::ReplaySnapshot s(m_,snapshot);s.BeginNamedSection(0x2ada80);s.MoveData(address_+0x14,4);s.MoveData(address_+0x18,4);
+ if(m_.byte(snapshot+0x3c)||m_.byte(snapshot+0x3d))for(auto r:{std::pair<unsigned,unsigned>{0x1c,4},{0x20,16},{0x30,64},{0x70,4},{0xa0,4}})
+  for(unsigned i=0;i<r.second;++i)m_.byte(address_+r.first+i,0);
+ s.EndNamedSection();
+}
+// Debug001A34F0; E-0099-W74. Original matrix overload ignores 0x80 size and processes first matrix only.
+void TwoWheelAckermanSteering::DoSnapshot(std::uint32_t snapshot){
+ hp2::debug::ReplaySnapshot s(m_,snapshot);s.BeginNamedSection(0x2ada60);s.MoveData(::port::race::SnapshotMatrix{address_+0x10},0x80);s.EndNamedSection();
+}
+}

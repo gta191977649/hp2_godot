@@ -31,3 +31,19 @@ public:
     void Sub_001C00A8();
 };
 } // namespace hp2::recovered
+
+#include "game_core/port/driving/object_view.hpp"
+namespace port::race {struct PhysicsConstructionServices;}
+namespace hp2::debug {
+// E-0099-W21. Logical view, not original host ABI. Original owning source
+// ../indep/src/carcontroller.cpp, confirmed by E-0042-S001 and fresh decompile.
+class CarController : public ::port::driving::ObjectView {
+public:
+ using ObjectView::ObjectView;
+ void ReleaseBoost(); //001BD278,E-0099-W121; carcontroller.cpp.
+ void DoSnapshot(std::uint32_t snapshot); //Debug001BD1E8, E-0099-W74.
+ void Sub_001BD1A8(std::uint32_t car); // Debug001BD1A8; Driver+4 stays untouched.
+ void Sub_001BD1C0(int in_chrg); // Debug001BD1C0.
+ void SetToPhysicsMode(std::uint32_t,::port::race::PhysicsConstructionServices&); //Debug001BD218
+};
+}

@@ -21,6 +21,9 @@ func _on_node_removed(node: Node) -> void:
  if node is Control:_controls.erase(node.get_instance_id())
 func _register(reference: WeakRef) -> void:
  var control=reference.get_ref() as Control
+ # Responsive race HUD owns bounded viewport font sizes, not a DPI baseline.
+ if control!=null and control.has_meta("port_viewport_font_size"):return
+ if control!=null and (control.has_meta("frontend_widget_id") or control.has_meta("frontend_bitmap_font")):return
  if control==null or not control.is_inside_tree() or _controls.has(control.get_instance_id()):return
  if control.has_meta("_port_ui_dpi_baseline"):
   var original: Dictionary=control.get_meta("_port_ui_dpi_baseline")

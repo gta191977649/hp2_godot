@@ -756,3 +756,75 @@ preload tail thunk, not a no-op; only0016B670 and0011EA78/EA80 are confirmed emp
 Selector copy owns independent nodes but shares player status; grouped locked
 animation destruction restores integer XY only. Flailer GS depth and alpha depth
 are different domains. Native tests do not certify runtime or backend equivalence.
+
+
+## TASK-0099 World constructor dependencies, 2026-10-29
+
+E-0099-W05..W18 replace the W04 constructor gap with actual shared-memory
+construction/resources and fresh World destruction. Important counterevidence:
+Retail Signpost is12 bytes while Debug is8; naive stride reuse fails actual
+records. Graph sign presence is low-byte FF, confirmed in instructions rather
+than decompiler packed-word output. FlushSlotPool retains allocation counters;
+FastMalloc neither expands nor zeros. Debug/Retail zero-spawner control flow
+and cop slot sizes differ. CloseMunitions entry is001BB7E8 (query001BB810 was
+inside that function), not001BB810. See reverse/task0099/world-construction.md,
+per-function/structure records and metadata-only manifests. Original differential
+execution, active World timestep/participants and full race closure remain open.
+
+
+## TASK-0099 W54 authorized CPU ISA exception,2026-10-29
+
+User authorization now permits original Sony EE manuals to supplement CPU
+instruction semantics only; game-behavior R0 is unchanged. E-0099-W54 identifies
+original publisher v6.0 April2002 PDFs by hashes and pages, not an emulator or
+community description. See reverse/task0099/ee-sqrt.md and ee-sqrt-evidence.json. TrackPolygonCheck
+001D4920 retains its exact source expressions; SQRT.S001D4998 now supports the
+current native exact negative radicand with documented magnitude/sign and scoped
+I/D/SI status. Nonexact negative roots and unsupported encodings still throw.
+Manual rounding caveats forbid claiming general host/EE low-bit equality.
+
+Standalone primitive build/run and expanded foundation syntax pass. Actual8
+collision-stage central rerun is pending; no full race or original equivalence
+claim follows. The newly noticed extended-EE versus IEEE maximum-bit difference
+in the older zero-divide helper is counterevidence, not silently fixed as part of
+this SQRT task. Preserve that separate scope for a future original-CPU review.
+
+
+W54 central follow-up: actual8 --participants --collision-stage PASS7.38s after
+the exact-negative SQRT projection. First log/hash are preserved with W54;
+original execution equivalence and complete race closure remain open. Monitor
+fixture counterevidence: easy[0] factor100 *scalar~0.005 *impact10 clampsdelta1;
+the failing assertion expected5. Corrected native expectations preserve the
+original source and add a distinct medium-difficulty accumulation case.
+
+## TASK-0099 latest World/VU and snapshot boundary,2026-10-29
+
+W71 raw Skid/Clan lifecycle advances actual source-consecutive World to call29.
+Original Sony EE-VU overflow semantics are applied only to the proven extreme
+product; nonextreme extended product7E000A02 times Q64=402FD28640000000
+remains unresolved at001A81DC. User confirms no original hardware/configured
+PCSX2 is available and asks to continue independent source dependencies. Local
+read-only debug/PINE endpoints time out. Preserve exact source instructions and
+unknown status; typed dead-lane evidence is not global VU-state equivalence.
+
+W73 source countdown and W75 clock pass; W74/W76 actual snapshot codec/tree
+components pass bounded checks. Genuine full-tree TakeSnapshot first identifies
+missing original MainLoop Player input-mode/RealDriver registration, because
+constructor Port=-1 fails the source unsigned one-byte check. W77 implements
+that prerequisite and actual node/scanner/pool registration; it never clears
+the field to bypass bBreak. Follow the task top and subsystem evidence records
+for current integration results; older chronological notes retain older scopes.
+
+
+## TASK-0110 finish/progression consumers, 2026-11-06
+
+E-0110-F01/F02/F03 recover native finish/progress/retry, Fred outcome consumers
+and actual task/point rewards. Source final notification reads signed position+A,
+not finish order+C. PostResults observes the entire unmasked abort word. The
+19-row points table skips completion index5 and includes19, whose raw destination
+is the same303FB8 word as Fred.bRaceWasAborted. Preserve this alias and original
+ordering; do not compact flags or make outcome delivery implicitly repeatable.
+TheRaceHasFinished entry is0014BAB0;0014BAF4 is its interior JAL. Old docs retain
+the superseded claim as counterevidence. See reverse/task0110 for complete
+queries/hashes, implementation extents, tests and unresolved production/CPU
+boundaries. PC tests and headless loading do not establish original equivalence.

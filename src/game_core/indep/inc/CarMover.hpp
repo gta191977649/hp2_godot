@@ -22,3 +22,25 @@ public:
     void Sub_00136B78();
 };
 } // namespace hp2::recovered
+
+#include "game_core/port/driving/object_view.hpp"
+namespace hp2::debug {
+// E-0099-W21. Original inline ../indep/inc/CarMover.hpp emitted in car.cpp.
+class CarMover : public ::port::driving::ObjectView {
+public:
+ using ObjectView::ObjectView;
+ void Sub_00136B50();
+ // Debug00136B28, E-0099-W21/W105. Exact original CarMover.hpp definition owner.
+ void Sub_00136B28(int flags){m_.word(address_+4,0x2a67d0);if(flags&1)m_.release(address_);}
+ void SetDriver(std::uint32_t); // Debug00136B20.
+ void DoSnapshot(std::uint32_t); //Debug00130B38, original empty car.cpp body, E-0099-W105.
+};
+class NullMover : public CarMover {
+public:
+ using CarMover::CarMover;
+ void Sub_00136B08(std::uint32_t state);void Sub_00136AA8(int);
+ static std::uint32_t Sub_00136A88(::port::driving::Memory&); // operator new
+ void SetDriver(std::uint32_t); // Debug00136A70; proven empty override.
+ float Move(float); // Debug00130B40, original car.cpp.
+};
+}

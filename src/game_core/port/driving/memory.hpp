@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <vector>
 
 namespace port::driving {
@@ -14,6 +15,26 @@ public:
     struct Footprint {std::size_t regions=0,payload_bytes=0,owned_allocations=0;};
     // Port-only read-only accounting; no PS2 allocator/statistics claim.
     Footprint footprint() const;
+    // Opt-in PC payload admission policy. Imported image/map regions are not
+    // heap allocations. No PS2 capacity, headers or fragmentation is asserted.
+    void set_payload_budget(std::optional<std::size_t> capacity);
+    std::optional<std::size_t> payload_budget()const{return payload_budget_;}
+    std::size_t charged_payload_bytes()const{return charged_payload_;}
+    std::optional<std::size_t> free_payload_bytes()const;
+    std::size_t largest_admitted_payload(std::uint32_t alignment=16)const;
+    // Port-owned single temporary buffer. Unlike Scratch it preserves any later
+    // persistent allocations made by a recovered callee (e.g. topology pools).
+    class Temporary {
+    public:
+        Temporary(Memory&,std::uint32_t size);
+        ~Temporary() noexcept;
+        Temporary(const Temporary&)=delete;
+        Temporary& operator=(const Temporary&)=delete;
+        Address address()const{return address_;}
+    private:
+        Memory& memory_;
+        Address address_;
+    };
     // Port-side stack lifetime for temporary logical allocations. Persistent
     // constructor allocations must occur outside this scope.
     class Scratch {
@@ -28,8 +49,14 @@ public:
         Address next_;
     };
     Address allocate(std::uint32_t size,std::uint32_t alignment=16);
+    // Port allocator lifetime only. Never releases mapped original-image regions.
+    // Persistent releases must not occur inside Scratch scopes.
+    void release(Address);
     void map(Address,const std::vector<std::uint8_t>&);
     void map(Address,std::uint32_t size);
+    // Port-only exact imported/projection region lifetime. Owned allocations
+    // require release(); absent/partial/wrong-size requests never mutate state.
+    void unmap(Address,std::size_t expected_size);
     init::ByteView view(Address,std::size_t size);
     std::uint8_t byte(Address) const;
     std::int8_t signed_byte(Address) const;
@@ -53,5 +80,7 @@ private:
     std::map<Address,std::vector<std::uint8_t>> regions_;
     std::vector<Address> allocations_;
     Address next_=0x01000000;
+    std::size_t charged_payload_=0;
+    std::optional<std::size_t> payload_budget_;
 };
 }

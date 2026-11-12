@@ -29,3 +29,18 @@ public:
     void Move();
 };
 } // namespace hp2::recovered
+
+#include "game_core/port/driving/object_view.hpp"
+namespace port::race {struct PhysicsConstructionServices;}
+namespace hp2::debug {
+void Sub_002005D8(::port::driving::Memory&); //E-0099-W106 original process static initializer.
+
+// Debug source exact lifetime/SetBelt/Move; E-0099-W100/W102/W106.
+// Exceptional numerical domains retain their original-address guards.
+class BeltMover:public ::port::driving::ObjectView {public:using ObjectView::ObjectView;void Sub_001FF108(std::uint32_t car);void Sub_001FF410(int flags);void ClearCalculatedVariables();
+ void DoSnapshot(std::uint32_t snapshot); //001FF4D8,E-0099-W110.
+ float Move(float,::port::race::PhysicsConstructionServices&);
+ void GetPoint(std::array<float,4>&,float);void GetDerivative(std::array<float,4>&,float);void GetSecondDerivative(std::array<float,4>&,float);float AverageAir(float);float SlideCoef(float);
+ void SetBelt();void FindCoordinates();float Dot(const std::array<float,4>& point,std::array<float,4>& to,std::array<float,4>& slope,float t);float GetMaximumAcceleration();float GetAccelerationDueToGravity(); //E-0099-W102.
+};
+}

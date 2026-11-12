@@ -5,6 +5,7 @@ namespace hp2::recovered {
 class Aerodynamics : public port::driving::ObjectView {
 public:
  using ObjectView::ObjectView;
+ void DoSnapshot(std::uint32_t snapshot); //Debug001AB3C8, E-0099-W74.
  void DoSnapshot(); // excluded replay path, throws
  void ResolveForces(std::uint32_t output=0); //001AB3F0
  float GetDownforceAtSpeed(float speed); //001AB638

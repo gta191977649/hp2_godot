@@ -14,6 +14,9 @@ struct CarLanguageInfo {
         LanguageSpecFullName=0,LanguageSpecShortName=0;
 };
 const CarLanguageInfo& FindCarLanguageInfo(int car_type);
+std::uint32_t FindCarLanguageInfo(const ::port::driving::Memory&,int); //00186050, W72 raw source table.
+void InitCarInfo(::port::driving::Memory&); //00186EB8.
+void DetermineAvailableCarSkins(::port::driving::Memory&); //00186E58.
 struct WheelInfo {
     std::array<float,3> Position{};
     float Radius=0,Width=0;
@@ -22,6 +25,10 @@ struct WheelInfo {
 };
 struct ControlInfo {float SpeedLimiter=0;}; // Decoded accessed field only, not ABI.
 struct CarTypeInfo {
+    static std::uint32_t GetFullName(::port::driving::Memory&,std::uint32_t); //00186088, W72 raw source overload.
+    static int GetNumAvailableSkins(const ::port::driving::Memory&,std::uint32_t); //00186668.
+    static int GetAvailableSkin(const ::port::driving::Memory&,std::uint32_t,int); //00186688.
+    static int GetRandomSkin(::port::driving::Memory&,std::uint32_t); //00186610.
     std::array<char,32> CarTypeName{},GeometryFilename{},DashGeometryFilename{};
     std::int8_t HighPerformance=0,NumAvailableSkinNumbers=0,CarClass=0;
     int Type=0;
@@ -43,12 +50,15 @@ struct CarTypeInfo {
 struct RideInfo;
 // E-0098-RP02. Host call projection writes a logical24-byte original record.
 struct DriverInfo {
+    static void DoSnapshot(::port::driving::Memory&,std::uint32_t,std::uint32_t snapshot); //00186840,W74.
+    static void Sub_001867C0(::port::driving::Memory&,std::uint32_t,int,int,std::uint32_t,int,int,int);
     DriverInfo(::port::driving::Memory&,std::uint32_t,int driver_number,int driver_type,
         const RideInfo&,int character,int skill,int start,
         const std::function<std::uint32_t(int)>& GetCharacterInfo);
 };
 bool GenerateRandomRideInfo(::port::driving::Memory&,RideInfo&,CarUsageType,int car_class,
     const std::array<CarTypeInfo,64>&,int location_index,int language);
+bool GenerateRandomRideInfo(::port::driving::Memory&,std::uint32_t,CarUsageType,int); //001863C8 raw source globals.
 }
 namespace port::selection {
 // Decodes fields reviewed against Debug LoaderCarInfo00186148/type CarTypeInfo.

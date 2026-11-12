@@ -272,3 +272,34 @@ by another route is unresolved.
 ## Related commits
 
 None. All TASK-0018 work is uncommitted in the working tree; no commit was requested.
+
+## Production instruction-execution boundary (2026-11-11, TASK-0077)
+
+The Windows production target links game_core, port_runtime, godot-cpp,
+port_media and the port debug libraries as configured. Inspect the actual PE
+imports with `objdump -p godot/bin/ps2_port.dll`. The audited workspace binary
+imports Windows/CRT and FFmpeg libraries, with no emulator library import.
+The build graph and source review also cover statically linked dependencies.
+The PS2Recomp output in TASK-0006 is an offline investigation artifact.
+
+- **Decode and resource ownership.** Original ZZDATA geometry and texture
+  containers are read by the existing loaders. The vehicle VIF layout reader
+  extracts vertices, UVs, normals and strip topology into native data.
+  Track upload caches ArrayMesh resources by source solid/surface. NIS loads
+  and caches a solid at its first use, then currently re-skins and uploads its
+  mesh for each submitted pose. Track streaming and NIS first-use work can
+  overlap presentation. These are separately measurable resource costs.
+- **Native behavior and selection.** The frontend and World publish native
+  frames. Track Runtime computes source visibility, LOD and effect state per
+  view. Native EE/VU arithmetic helpers are bounded implementations of
+  recovered operands, independent of any instruction fetch or dispatch loop.
+- **PC GPU submission.** Ps2RenderHost submits native menu/loading/HUD draws.
+  Ps2TrackRenderer and Ps2VehicleRenderer submit Godot meshes/materials and
+  schedule main, mirror, reflection and depth targets. GS-derived blend and
+  depth formulas are inputs to those shaders. Unimplemented source operations
+  retain their address-anchored guards.
+
+This audit covers the authored Championship production route and its shared
+render adapters. It establishes a source/build boundary, with original visual
+and numerical equivalence tracked separately. Keep R7 runtime asset decoding.
+See TASK-0077 for isolated window evidence and exact performance checks.

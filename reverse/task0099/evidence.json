@@ -6,9 +6,129 @@
     "E-0099-W01",
     "E-0099-W02",
     "E-0099-W03",
-    "E-0099-M01"
+    "E-0099-M01",
+    "E-0099-W04",
+    "E-0099-W05",
+    "E-0099-W06",
+    "E-0099-W07",
+    "E-0099-W08",
+    "E-0099-W09",
+    "E-0099-W10",
+    "E-0099-W11",
+    "E-0099-W12",
+    "E-0099-W13",
+    "E-0099-W14",
+    "E-0099-W15",
+    "E-0099-W16",
+    "E-0099-W17",
+    "E-0099-W18",
+    "E-0099-W19",
+    "E-0099-W20",
+    "E-0099-W21",
+    "E-0099-W22",
+    "E-0099-W23",
+    "E-0099-W24",
+    "E-0099-W25",
+    "E-0099-W26",
+    "E-0099-W27",
+    "E-0099-W28",
+    "E-0099-W29",
+    "E-0099-W30",
+    "E-0099-W31",
+    "E-0099-W32",
+    "E-0099-W33",
+    "E-0099-W34",
+    "E-0099-W35",
+    "E-0099-W36",
+    "E-0099-W37",
+    "E-0099-W38",
+    "E-0099-W39",
+    "E-0099-W40",
+    "E-0099-W41",
+    "E-0099-W42",
+    "E-0099-W43",
+    "E-0099-W44",
+    "E-0099-W46",
+    "E-0099-W48",
+    "E-0099-W45",
+    "E-0099-W49",
+    "E-0099-W50",
+    "E-0099-W51",
+    "E-0099-W47",
+    "E-0099-W52",
+    "E-0099-W53",
+    "E-0099-W54",
+    "E-0099-W55",
+    "E-0099-W56",
+    "E-0099-W57",
+    "E-0099-W58",
+    "E-0099-W59",
+    "E-0099-W60",
+    "E-0099-W61",
+    "E-0099-W62",
+    "E-0099-W63",
+    "E-0099-W64",
+    "E-0099-W65",
+    "E-0099-W66",
+    "E-0099-W67",
+    "E-0099-W68",
+    "E-0099-W69",
+    "E-0099-W70",
+    "E-0099-W71",
+    "E-0099-W72",
+    "E-0099-W73",
+    "E-0099-W74",
+    "E-0099-W75",
+    "E-0099-W76",
+    "E-0099-W77",
+    "E-0099-W78",
+    "E-0099-W79",
+    "E-0099-W80",
+    "E-0099-W81",
+    "E-0099-W82",
+    "E-0099-W83",
+    "E-0099-W84",
+    "E-0099-W85",
+    "E-0099-W86",
+    "E-0099-W87",
+    "E-0099-W88",
+    "E-0099-W89",
+    "E-0099-W90",
+    "E-0099-W91",
+    "E-0099-W92",
+    "E-0099-W93",
+    "E-0099-W94",
+    "E-0099-W95",
+    "E-0099-W96",
+    "E-0099-W97",
+    "E-0099-W98",
+    "E-0099-W99",
+    "E-0099-W100",
+    "E-0099-W101",
+    "E-0099-W102",
+    "E-0099-W103",
+    "E-0099-W104",
+    "E-0099-W105",
+    "E-0099-W106",
+    "E-0099-W107",
+    "E-0099-W108",
+    "E-0099-W109",
+    "E-0099-W110",
+    "E-0099-W111",
+    "E-0099-W112",
+    "E-0099-W113",
+    "E-0099-W114",
+    "E-0099-W115",
+    "E-0099-W116",
+    "E-0099-W117",
+    "E-0099-W118",
+    "E-0099-W119",
+    "E-0099-W120",
+    "E-0099-W121",
+    "E-0099-W122",
+    "E-0099-W123"
   ],
-  "status": "Scoped native tests only; real World construction/simulation/production entry incomplete; not Verified",
+  "status": "Actual World construction/ordered fresh teardown and64Car no-sound constructor domains pass native tests; live World simulation/production closure incomplete; never Verified",
   "captures": [
     {
       "file": "local/task0096/first-world/001473f0.json",
@@ -182,5 +302,607 @@
       "file": "local/task0096/first-world/world-seconddeps-symbols.json",
       "sha256": "32ad95b99c0cf54c1793168aa46d6fbaa6a99cff81d7ee50b553b1715fce170d"
     }
-  ]
+  ],
+  "subsystem_records": [
+    "reverse/task0099/ai-drive-target.md",
+    "reverse/task0099/ai-frame.md",
+    "reverse/task0099/animated-driver.md",
+    "reverse/task0099/camera-startup.md",
+    "reverse/task0099/car-collision.md",
+    "reverse/task0099/car-construction.md",
+    "reverse/task0099/car-events.md",
+    "reverse/task0099/car-feedback.md",
+    "reverse/task0099/car-frame.md",
+    "reverse/task0099/car-geometry.md",
+    "reverse/task0099/car-lifecycle.md",
+    "reverse/task0099/car-move.md",
+    "reverse/task0099/car-render.md",
+    "reverse/task0099/car-sound-factories.md",
+    "reverse/task0099/car-state-damage.md",
+    "reverse/task0099/car-voices.md",
+    "reverse/task0099/control-construction.md",
+    "reverse/task0099/coordinate-memory.md",
+    "reverse/task0099/cop-frame.md",
+    "reverse/task0099/cop-resources.md",
+    "reverse/task0099/cop-speech.md",
+    "reverse/task0099/ee-sqrt.md",
+    "reverse/task0099/event-manager.md",
+    "reverse/task0099/flailer-resources.md",
+    "reverse/task0099/force-impact.md",
+    "reverse/task0099/joylog.md",
+    "reverse/task0099/mellow-move.md",
+    "reverse/task0099/memory-baseline.md",
+    "reverse/task0099/player-construction.md",
+    "reverse/task0099/player-controller.md",
+    "reverse/task0099/player-frame.md",
+    "reverse/task0099/player-owner.md",
+    "reverse/task0099/race-car.md",
+    "reverse/task0099/race-start.md",
+    "reverse/task0099/raw-acidfx.md",
+    "reverse/task0099/real-driver-frame.md",
+    "reverse/task0099/replay-construction.md",
+    "reverse/task0099/shared-collisions.md",
+    "reverse/task0099/shared-physics-car.md",
+    "reverse/task0099/shared-physics-move.md",
+    "reverse/task0099/shared-world.md",
+    "reverse/task0099/smokeable-think.md",
+    "reverse/task0099/trackpath-direction-review.md",
+    "reverse/task0099/virgin-smokeables.md",
+    "reverse/task0099/world-construction-audit.md",
+    "reverse/task0099/world-construction.md",
+    "reverse/task0099/world-distances.md",
+    "reverse/task0099/world-scheduler.md",
+    "reverse/task0099/race-coordinator.md",
+    "reverse/task0099/fern-shaker.md",
+    "reverse/task0099/player-feedback.md",
+    "reverse/task0099/car-terrain-effects.md",
+    "reverse/task0099/player-game-state.md",
+    "reverse/task0099/world-frame.md",
+    "reverse/task0099/fred-roster.md",
+    "reverse/task0099/countdown-frame.md",
+    "reverse/task0099/world-clock.md",
+    "reverse/task0099/race-update.md",
+    "reverse/task0099/shared-skids.md",
+    "reverse/task0099/skid-normal-consumers.md",
+    "reverse/task0099/replay-frame.md",
+    "reverse/task0099/cop-snapshot.md",
+    "reverse/task0099/world-snapshot.md",
+    "reverse/task0099/input-registration.md",
+    "reverse/task0099/fred-result.md",
+    "reverse/task0099/player-input.md",
+    "reverse/task0099/smokeable-create.md",
+    "reverse/task0099/frontend-request.md",
+    "reverse/task0099/replay-events.md",
+    "reverse/task0099/frontend-status.md",
+    "reverse/task0099/frontend-records.md",
+    "reverse/task0099/real-world-clock.md",
+    "reverse/task0099/smokeable-live.md",
+    "reverse/task0099/frontend-start.md",
+    "reverse/task0099/shared-world-audio.md",
+    "reverse/task0099/authored-world.md",
+    "reverse/task0099/active-ai-bootstrap.md",
+    "reverse/task0099/ai-active.md",
+    "reverse/task0099/ambient-participants.md",
+    "reverse/task0099/ai-boost.md",
+    "reverse/task0099/ai-avoid.md",
+    "reverse/task0099/chopper-construction.md",
+    "reverse/task0099/ai-new-choice.md",
+    "reverse/task0099/gameflow-transition-audit.md",
+    "reverse/task0099/ai-avoid-snapshot-review.md",
+    "reverse/task0099/chopper-snapshot.md",
+    "reverse/task0099/ai-avoid-snapshot.md",
+    "reverse/task0099/current-world-checkpoints.md",
+    "reverse/task0099/belt-construction.md",
+    "reverse/task0099/copdriver-snapshot.md",
+    "reverse/task0099/cop-think-dispatch.md",
+    "reverse/task0099/trafficdriver-snapshot.md",
+    "reverse/task0099/belt-set.md",
+    "reverse/task0099/trafficcar-snapshot.md",
+    "reverse/task0099/traffic-think.md",
+    "reverse/task0099/cop-active-snapshot.md",
+    "reverse/task0099/belt-move.md",
+    "reverse/task0099/cop-driver-think.md",
+    "reverse/task0099/chopper-fly.md",
+    "reverse/task0099/belt-snapshot.md",
+    "reverse/task0099/traffic-move.md",
+    "reverse/task0099/traffic-normalize-consumer.md",
+    "reverse/task0099/track-check-consumer.md",
+    "reverse/task0099/drive-target-tail.md",
+    "reverse/task0099/gameflow-world-state-audit.md",
+    "reverse/task0099/smokeable-pose.md",
+    "reverse/task0099/control-regression.md",
+    "reverse/task0099/smokeable-move.md",
+    "reverse/task0099/authored-hp-smokeable-rolling.json",
+    "reverse/task0099/chopper-chase.md",
+    "reverse/task0099/player-car-reset.md",
+    "reverse/task0099/belt-wheel-radius.md",
+    "reverse/task0099/pursuit-snapshot.md",
+    "reverse/task0099/pullover-end.md"
+  ],
+  "continuation_validation_20261030": {
+    "task": "TASK-0099",
+    "tools": "CMake3.29.2/Ninja1.12.0/GCC13.2.0/Python3.14.4",
+    "commands": [
+      "cmake --build build/native-debug --target car_construction_tests shared_collision_foundation_tests smokeable_conversion_tests smokeable_create_tests frontend_start_tests frontend_records_tests frontend_status_tests real_world_clock_tests active_ai_bootstrap_tests ai_action_selection_tests ai_boost_tests ai_avoid_tests ai_drive_target_tests ambient_participant_tests world_snapshot_tests ai_snapshot_tests replay_snapshot_tests -j4",
+      "ctest --test-dir build/native-debug -R '^(shared_collision_foundation|smokeable_conversion_original|smokeable_create_original|frontend_start_original|frontend_records_original|frontend_status_original|real_world_clock_original|active_ai_bootstrap_original|ai_action_selection_original|ai_boost_original|ai_avoid_original|ai_drive_target|ambient_participants_original|world_snapshot|ai_snapshot|replay_snapshot|world_clock_audio_frame_original|world_clock_countdown_frame_original|snapshot_tree_original)$' --output-on-failure",
+      "ctest --test-dir build/native-debug -R '^(smokeable_create|replay_snapshot_original)$' --output-on-failure",
+      "ctest --test-dir build/native-debug -R '^(progress_tables|recovery_progress_contracts|pipeline_contracts|confirmed_identifier_adoption|identifier_entity_rules|player_source_review_rules)$' --output-on-failure",
+      "py -3 reverse/scripts/generate_progress.py",
+      "py -3 local/task0099/world-snapshot/validate-metadata.py",
+      "git diff --check"
+    ],
+    "logs": [
+      {
+        "path": "local/task0099/world-snapshot/continuation-build.log",
+        "sha256": "baafee6d0b5910d1fa8c4c93b952b895982e203a4a7c3a346bb1faf54d75f3a0"
+      },
+      {
+        "path": "local/task0099/world-snapshot/continuation-ctest.log",
+        "sha256": "3ba63253f5009201c5bb68404c3b61a16bcd4fc542c230b001f483e9ed7a61ca"
+      },
+      {
+        "path": "local/task0099/world-snapshot/continuation-snapshot-smokeable-ctest.log",
+        "sha256": "e00eca797428ffdb60586bd2d5f06af80a7e2f6689ae73bb2c5e61575bf0d457"
+      },
+      {
+        "path": "local/task0099/world-snapshot/continuation-contracts.log",
+        "sha256": "70319de2d6fc9aa3bf263a07e23f42f8836552938a969b16d9115ebbaa8a1f54"
+      },
+      {
+        "path": "local/task0099/world-snapshot/continuation-diff-check.log",
+        "sha256": "49136cad6e655823f4ac974ba58ff15fafa31f8e682e991cc4830e94179fdba9"
+      },
+      {
+        "path": "local/task0099/world-snapshot/metadata-hash-validation-pinned-12423.json",
+        "sha256": "e54378cbc154ec07c2e1de2bc9ba5c5dcd9f944a1703a14a582fe854e56a0886"
+      }
+    ],
+    "result": "Native build45steps PASS;17 scoped CTests PASS35.34s plus2 additional PASS2.28s;6 contracts PASS6.28s;11810 local evidence references no missing/mismatched. Diff check clean except line-ending conversion notices.",
+    "limits": "Original-runtime verification absent; W94 lifecycle/W95 positive choice/W96 police continuation pending separate validation. No full match or production GameFlow claim.",
+    "metadata_report_note": "The current private validator overwrites its report. The last report is now pinned to an immutable filename; mutable reports must never be SHA-referenced by evidence being validated. Earlier11810 check is historical; pinned later report checks12423 current references."
+  },
+  "world_choice_frontier": "reverse/task0099/world-choice-frontier.json",
+  "chopper_choice_central_validation": {
+    "builds": [
+      {
+        "path": "local/task0099/world-snapshot/chopper-choice-integration-build.log",
+        "sha256": "211716b16e6e11415d04cee0f53482b945170421952164cb2c25ecc86a50c88c"
+      },
+      {
+        "path": "local/task0099/world-snapshot/continuation-godot-build.log",
+        "sha256": "67d6b6d5af378f112c1ec51ccf8202eaecab1d22cd7780ad9cd2ad3c81d87b84"
+      },
+      {
+        "path": "local/task0099/world-snapshot/choice-central-build.log",
+        "sha256": "7a38e54f2ca7a54cee67a297543e0114de0275fa1f4eb81617c9b81616ef797c"
+      }
+    ],
+    "tests": {
+      "path": "local/task0099/world-snapshot/choice-central-ctest.log",
+      "sha256": "274f65339c950d054369bd88e6aa9f9f45dc304896e5b1ab3636c19281619a0b"
+    },
+    "commands": [
+      "cmake --build build/native-debug --target chopper_construction_tests car_construction_tests -j4",
+      "cmake --build build/godot-debug --target ps2_port -j4",
+      "cmake --build build/native-debug --target ai_new_choice_tests -j4",
+      "ctest --test-dir build/native-debug -R '^(ai_new_choice_original|chopper_construction_original)$' --output-on-failure"
+    ],
+    "result": "Native builds PASS; normal Godot DLL PASS102actual/105scheduled; two scoped central tests PASS2.30s; no original-runtime verification."
+  },
+  "authored_championship_clock": "reverse/task0099/authored-championship-clock.json",
+  "longer_authored_championship_frontier": {
+    "command": "world-choice-v5.exe --authored-event 0 --event-tree 0 --world-frames 1200",
+    "logs": [
+      {
+        "path": "local/task0099/authored-world/championship-1200-v5.log",
+        "sha256": "6cebe78fbd60438926bc97784a1ab908f417f32d93778c263f65c87d73ca4fb5"
+      },
+      {
+        "path": "local/task0099/authored-world/championship-1200-v5.gdb",
+        "sha256": "8e458387fb14e2235d22edc3aeba2f240b9846c38666b6e6f34eab910b2a0e34"
+      },
+      {
+        "path": "local/task0099/authored-world/championship-1200-v5-gdb.log",
+        "sha256": "45d54f83793088ffa9982857c9989d0eda63d510bcadcbaa764d6537950f861a"
+      }
+    ],
+    "completed_full_steps": 488,
+    "guarded_call": 489,
+    "guarded_index": 488,
+    "guard": "BeltMover constructor001FF108",
+    "scope": "No1200step/cleanup/fullmatch PASS from this failing run. Source guard retained; actual construction dependency W100."
+  },
+  "cop_belt_central_validation": {
+    "commands": [
+      "cmake --build build/native-debug --target cop_think_tests copdriver_snapshot_tests belt_construction_tests car_construction_tests -j4",
+      "ctest --test-dir build/native-debug -R '^(cop_think_original|copdriver_snapshot_original|belt_construction_original)$' --output-on-failure"
+    ],
+    "logs": [
+      {
+        "path": "local/task0099/world-snapshot/cop-belt-integration-build.log",
+        "sha256": "ee8f97e88f7df5525125565f3e1689522f0b68d59bda36c71205c28128783170"
+      },
+      {
+        "path": "local/task0099/world-snapshot/cop-belt-integration-ctest.log",
+        "sha256": "b51c154d9a10f1b5a9f7a1e226e7c4e36d81eeb9c90d6bb025d6feb23c49b017"
+      }
+    ],
+    "result": "PASS38actual/39scheduled build;3/3native tests3.60s; not hardware/PCSX2 Verified"
+  },
+  "v7_world_frontiers": {
+    "executable": {
+      "path": "local/task0099/authored-world/authored-world-cop-belt-v7.exe",
+      "sha256": "9c71a4616027db3e37d1a7914da6326bfbddc649931243a15a3edfd49bbb4e72"
+    },
+    "logs": [
+      {
+        "path": "local/task0099/authored-world/hp-cop-v7.log",
+        "sha256": "f07167ced047fddd780d5f0c6773581be071c889beb3407e3c46db5574e77566"
+      },
+      {
+        "path": "local/task0099/authored-world/championship-belt-v7.log",
+        "sha256": "629ec2cf4d0eebde17ff8096f51d44d01aae59dac71e6293ce34f92d1b482a29"
+      },
+      {
+        "path": "local/task0099/authored-world/hp-snapshot-v7.log",
+        "sha256": "3a99889a7cff6a4781c22b47e05199f19d685a50bc4142ad400297cd94d08e21"
+      },
+      {
+        "path": "local/task0099/authored-world/hp-controller-target-v7-gdb.log",
+        "sha256": "724a6818501eca3e8bcc544db964b350cba187497c7fb65736c6eb1c568b7f8f"
+      }
+    ],
+    "observations": [
+      "Actual HP source frame0 passes police initial dispatch, then TrafficDriver frame0018A600 guard.",
+      "Actual Championship passes reached Belt construction, then SetBelt001FF9F8 guard.",
+      "Actual HP snapshot passes CopDriver codec, then controller target0018A5A0 guard (fresh symbol confirmation separate W104)."
+    ],
+    "limits": "These failing probes do not prove full frames/1200step/HP snapshot roundtrip/cleanup; separate component tests and Championship240step PASS keep their own scopes."
+  },
+  "authored_hp_snapshot": "reverse/task0099/authored-hp-snapshot.json",
+  "cop_active_traffic_central": {
+    "commands": [
+      "cmake --build build/native-debug --target cop_active_snapshot_tests traffic_think_tests car_construction_tests -j4",
+      "ctest --test-dir build/native-debug -R '^(cop_active_snapshot_original|traffic_think_original)$' --output-on-failure"
+    ],
+    "logs": [
+      {
+        "path": "local/task0099/world-snapshot/cop-active-traffic-build.log",
+        "sha256": "8d411453fb5fca9babe1d3c9cd5debda6713a8f3d8aa4a6480ffd4b0c8cf4327"
+      },
+      {
+        "path": "local/task0099/world-snapshot/cop-active-traffic-ctest.log",
+        "sha256": "ca97a5ee50ff4241d3cce940deb655b9a91e0420e7350c8db410d4ddded378c6"
+      }
+    ],
+    "result": "BuildPASS38actual/39scheduled,2/2testsPASS2.27s; not hardware/PCSX2 verification."
+  },
+  "authored_hp_clock": "reverse/task0099/authored-hp-clock.json",
+  "authored_hp_rolling": "reverse/task0099/authored-hp-rolling.json",
+  "hp1200_v15_next_frontier": {
+    "command": "authored-world-trackpredicate-v15.exe --authored-event 0 --world-frames 1200",
+    "logs": [
+      {
+        "path": "local/task0099/authored-world/hp-1200-v15.log",
+        "sha256": "e68700ad8c296986ad31fd3d558c167aac7b8994f367cae0e58283172be6dbc2"
+      },
+      {
+        "path": "local/task0099/authored-world/hp-pose-v15.gdb",
+        "sha256": "9a5b4ba26ee1fb0714315ea355f28d728ce0bfa6fc342505464313be7b052a2c"
+      },
+      {
+        "path": "local/task0099/authored-world/hp-pose-v15-gdb.log",
+        "sha256": "15b1aa870c7526daa47ec991693235e69abd6ce9c453c4053ea5b4f403a1494b"
+      }
+    ],
+    "completed_full_steps": 324,
+    "guarded_index": 324,
+    "guarded_call": 325,
+    "guard": "shared collision pose slot28/target0021C908 Smokeable rotation getter, W116",
+    "limit": "No1200step or cleanup PASS from this failing run."
+  },
+  "current_normal_godot_build": {
+    "command": "cmake --build build/godot-debug --target ps2_port -j4",
+    "log": {
+      "path": "local/task0099/world-snapshot/current-world-godot-build.log",
+      "sha256": "7cb6c7ca13be72fb4bd6131df1f4663dd26337dac130ada4e68be0a6c440a131"
+    },
+    "result": "PASS70actual/73scheduled; includes through W116. Source W117 still active; DLL link is not production World/GameFlow/visual acceptance."
+  },
+  "world_closure_regression_v2": {
+    "build_log": {
+      "path": "local/task0099/world-snapshot/world-closure-build-v2.log",
+      "sha256": "d7e483e3d8049a95b844f5ec47dde848c1c6ee7710460ad3c19917ce42e012ac"
+    },
+    "ctest_log": {
+      "path": "local/task0099/world-snapshot/world-closure-ctest-v2.log",
+      "sha256": "540c75302198c122c746cf7fe786fef2a66913d90873aa5275f4e574e37936bb"
+    },
+    "result": "BuildPASS39steps.45/46testsPASS;control_construction FAIL due obsolete invalid pointers at now-implemented destructor paths. W118 test-only repair active. Not an all-pass report."
+  },
+  "hp1200_v16_next_frontier": {
+    "executable": {
+      "path": "local/task0099/authored-world/authored-world-smokeablepose-v16.exe",
+      "sha256": "0a8c587e1953566f30e8249c9afe67dc5d253dec3ecb382e8e86af2c4d0b776e"
+    },
+    "logs": [
+      {
+        "path": "local/task0099/authored-world/hp-1200-v16.log",
+        "sha256": "a7fd86e4da674f123ddb75051da31095e541fd51525d23728adece97ba4d9e34"
+      },
+      {
+        "path": "local/task0099/authored-world/hp-dynamic-move-v16.gdb",
+        "sha256": "6d90e1643f5c93cc694649a2dd31a04707615fb2fd6ddf94b343ee0d10510347"
+      },
+      {
+        "path": "local/task0099/authored-world/hp-dynamic-move-v16-gdb.log",
+        "sha256": "e938a23156db692123e25a518f6d9ddc1f704ca52e036ba85b3d5198b4066b91"
+      }
+    ],
+    "completed_full_steps": 325,
+    "guarded_frame_index": 325,
+    "guard": "World dynamic Move target0021B688 at0014D588; W117",
+    "limit": "No1200step or source cleanup PASS from this failing run."
+  },
+  "hp1200_v17_next_frontier": {
+    "executable": {
+      "path": "local/task0099/authored-world/authored-world-smokeablemove-v17.exe",
+      "sha256": "cff231680e9f96ab7c92312ae68ecbf5ec425628b75b143b8a2c587ddd56f753"
+    },
+    "command": "authored-world-smokeablemove-v17.exe --authored-event 0 --world-frames 1200",
+    "logs": [
+      {
+        "path": "local/task0099/authored-world/hp-1200-v17.log",
+        "sha256": "3fc017825487f90e50073c47ef8ae3079bdd0c1f75ecfcd6e2f81c5ab44ea76a"
+      },
+      {
+        "path": "local/task0099/authored-world/hp-resample-v17.gdb",
+        "sha256": "75d80a797cca8dd109c218c35b23e1bc52ad0483a71ac593126086cf171852e3"
+      },
+      {
+        "path": "local/task0099/authored-world/hp-resample-v17-gdb.log",
+        "sha256": "59b8355b9202280ef2221be37886c2b9d3b368ddf738397232ce2bcee3a75c15"
+      }
+    ],
+    "live_original_listing": {
+      "path": "local/task0099/authored-world/hp-resample-v17-live-listing.json",
+      "sha256": "2e9f16d037c988f94ef475efcc53865310700d956cd202c0326ed7f2a9b061c9"
+    },
+    "completed_full_steps": 391,
+    "guarded_frame_index": 391,
+    "count": 6,
+    "produced": 5,
+    "segment": 3,
+    "target": "0x04790640",
+    "float_operands": {
+      "total": {
+        "native_value": 29.8143902,
+        "bits": "41EE83DF"
+      },
+      "spacing": {
+        "native_value": 5.96287823,
+        "bits": "40BECFE6"
+      },
+      "distance": {
+        "native_value": 29.8143921,
+        "bits": "41EE83E0"
+      },
+      "last": {
+        "native_value": 23.8515129,
+        "bits": "41BECFE6"
+      }
+    },
+    "caller_chain": [
+      "DriveTarget.Resample002171D8/guard00217454",
+      "PsychoDriver.SetTarget0013A230",
+      "TrafficDriver.ExecuteCurrentAction",
+      "TrafficDriver.Think",
+      "Car.Think",
+      "World.DoTimestep"
+    ],
+    "limit": "Native RNE projection only. No proof of EE early exit or original stack tail. This differs from Championship v12 Belt/count10 frontier. No1200step or source close PASS. Wrongtree hp-resample-v17-wrongtree-gdb.log ran --event-tree0 and is not HP evidence."
+  },
+  "current_normal_godot_build_v2": {
+    "command": "cmake --build build/godot-debug --target ps2_port -j4",
+    "log": {
+      "path": "local/task0099/world-snapshot/current-world-godot-build-v2.log",
+      "sha256": "0cc6de99dad1588f9566720ffbae3a12e4f4beed6aecf3273db9805223af2ac7"
+    },
+    "result": "PASS6actual/7scheduled; latest W117 production source. No production loading/full match/visual claim."
+  },
+  "world_closure_regression_v3": {
+    "build_command": "cmake --build build/native-debug --target car_construction_tests shared_collision_foundation_tests smokeable_conversion_tests smokeable_create_tests frontend_start_tests frontend_records_tests frontend_status_tests real_world_clock_tests active_ai_bootstrap_tests ai_action_selection_tests ai_boost_tests ai_avoid_tests ai_new_choice_tests ai_drive_target_tests ambient_participant_tests world_snapshot_tests ai_snapshot_tests replay_snapshot_tests chopper_construction_tests chopper_snapshot_tests chopper_fly_tests belt_construction_tests belt_set_tests belt_move_tests belt_snapshot_tests cop_think_tests cop_driver_think_tests copdriver_snapshot_tests cop_active_snapshot_tests cop_frame_tests cop_snapshot_tests traffic_construction_tests traffic_think_tests trafficdriver_snapshot_tests trafficcar_snapshot_tests traffic_move_tests physics_construction_tests control_construction_tests car_control_tests track_polygon_consumer_tests -j4",
+    "ctest_command": "ctest --test-dir build/native-debug -R '^(car_control|control_construction|physics_construction|traffic_construction|shared_collision_foundation|ai_drive_target|cop_frame|cop_snapshot|replay_snapshot_original|world_snapshot|snapshot_tree_original|ai_snapshot|smokeable_create|frontend_status_original|real_world_clock_original|world_clock_audio_frame_original|world_clock_countdown_frame_original|frontend_records_original|smokeable_conversion_original|frontend_start_original|active_ai_bootstrap_original|ai_action_selection_original|ai_boost_original|authored_hp_rolling_original|track_polygon_consumer_original|authored_hp_clock_original|traffic_move_original|belt_snapshot_original|chopper_fly_original|belt_move_original|cop_driver_think_original|authored_hp_snapshot_original|cop_active_snapshot_original|traffic_think_original|trafficcar_snapshot_original|belt_set_original|trafficdriver_snapshot_original|cop_think_original|copdriver_snapshot_original|belt_construction_original|chopper_snapshot_original|authored_championship_clock_original|ai_new_choice_original|chopper_construction_original|ai_avoid_original|ambient_participants_original)$' --output-on-failure",
+    "build_log": {
+      "path": "local/task0099/world-snapshot/world-closure-build-v3.log",
+      "sha256": "e6e06c64ab412f331c59d6cddd37385e3d066e85ff2a81b0d622777329f7b2a3"
+    },
+    "ctest_log": {
+      "path": "local/task0099/world-snapshot/world-closure-ctest-v3.log",
+      "sha256": "f94819d0370e96b314432b95bb6245057d727536ea72771c80d43f02dcaad5e2"
+    },
+    "result": "PASS38buildsteps;46/46testsPASS95.95s. W118corrected invalid test operands;latestW117 linked. No original runtime equivalence."
+  },
+  "w117_w118_central_validation": {
+    "build_command": "cmake --build build/native-debug --target smokeable_conversion_tests control_construction_tests car_construction_tests -j4",
+    "ctest_command": "ctest --test-dir build/native-debug -R '^(smokeable_conversion_original|control_construction)$' --output-on-failure",
+    "build_log": {
+      "path": "local/task0099/world-snapshot/smokeable-move-control-build.log",
+      "sha256": "f0044f234df17e81e6cd4ce1e0a506b1b7ea9326ab493678cdc67ccf048df43d"
+    },
+    "ctest_log": {
+      "path": "local/task0099/world-snapshot/smokeable-move-control-ctest.log",
+      "sha256": "e870e4f6ea0627393f83d6e39c1be6d9ac6e5a1f0f9f6bc127e8254fb9eb5fb5"
+    },
+    "result": "2/2PASS2.29s"
+  },
+  "authored_hp_smokeable_rolling": "reverse/task0099/authored-hp-smokeable-rolling.json",
+  "current_world_contracts_v3": {
+    "command": "ctest --test-dir build/native-debug -R '^(progress_tables|recovery_progress_contracts|pipeline_contracts|confirmed_identifier_adoption|identifier_entity_rules|player_source_review_rules)$' --output-on-failure",
+    "log": {
+      "path": "local/task0099/world-snapshot/current-world-contracts-v3.log",
+      "sha256": "47b01c447c0698722e13ab76c8fe18f04aa69261dfe93c592f932d2e01045273"
+    },
+    "result": "6/6PASS4.00s afterW117 symbolsimport and generatedprogress"
+  },
+  "current_source_placement_v3": {
+    "command": "py -3 local/task0099/audit_late_placement.py",
+    "log": {
+      "path": "local/task0099/world-snapshot/source-placement-v3.log",
+      "sha256": "5779ad3925efe3a42acf4ad01b12f0d070aac2df3577a7b9fafebfeda9451575"
+    },
+    "result": "184scopedentries checked;0missingfile/ownerpathflags. This is path comparison, not independent AST/body equivalence."
+  },
+  "current_diff_material_v3": {
+    "diff_command": "git diff --check",
+    "diff_log": {
+      "path": "local/task0099/world-snapshot/world-closure-diff-check-v3.log",
+      "sha256": "faccef0f22940153d0b6280de79dac91feeacdc5b9df04c6834406a58c86e307"
+    },
+    "restricted_log": {
+      "path": "local/task0099/world-snapshot/restricted-material-v3.log",
+      "sha256": "baec387f24c7061354ecb55e86ad276f8fbd59309ce7d027bb4e2b590a209e02"
+    },
+    "result": "PASSdiff; no restricted extension hits in untrackednonignored inventory. No stage or commit."
+  },
+  "chopper_chase_central": {
+    "build_command": "cmake --build build/native-debug --target chopper_fly_tests car_construction_tests -j4",
+    "build_log": {
+      "path": "local/task0099/world-snapshot/chopper-chase-build.log",
+      "sha256": "d798b2cd81fea21537d6f464617eb02a1c50fa498e6ccc54509fd434815164b0"
+    },
+    "ctest_command": "ctest --test-dir build/native-debug -R '^(chopper_fly_original|authored_hp_clock_original|authored_hp_rolling_original|authored_hp_snapshot_original)$' --output-on-failure",
+    "ctest_log": {
+      "path": "local/task0099/world-snapshot/chopper-chase-ctest.log",
+      "sha256": "8ac6a0a747f33eca8661d9e7c2d21c7130d5c3a3b94964e72ca979792bd56db7"
+    },
+    "result": "PASS55buildsteps;4/4testsPASS24.43s. Componentchase/cancel only, no activeflight claim. Existing real HP240/0framesnapshot domains unchanged.",
+    "executables": [
+      {
+        "path": "local/task0099/authored-world/authored-world-chase-v18.exe",
+        "sha256": "e46d669170fb5cd797a2f54b0abb10d9a68599f82af1a69a92278abb7b008cd2"
+      },
+      {
+        "path": "local/task0099/chopper-chase/chopper-chase-central-v18.exe",
+        "sha256": "58cc9c9537f6625d401fc271cf984e5942bfab3bfe42772843127413bfea98de"
+      }
+    ]
+  },
+  "player_reset_central_cli": {
+    "command": "local/task0099/authored-world/authored-world-reset-radius-v19.exe --authored-event 0 --event-tree 0 --snapshot-tree --snapshot-only --route-reset",
+    "executable": {
+      "path": "local/task0099/authored-world/authored-world-reset-radius-v19.exe",
+      "sha256": "1a9f2813f9945591f6edcff5a2af0ef8af82cf62c36793f60351fc2c16f745a0"
+    },
+    "log": {
+      "path": "local/task0099/world-snapshot/player-route-reset.log",
+      "sha256": "0b55b9b46faa15ab52c879c4df3f1be8b79e8a95642a43228466273b5ce4b42a"
+    },
+    "build_log": {
+      "path": "local/task0099/world-snapshot/world-resume-build.log",
+      "sha256": "6c909880d93ad7bf6c9bb0dcc3db53dcb9f668a87ef9c6a0337aea14db478265"
+    },
+    "result": "PASSexit0 genuinePlayerCar reset/partialprefix/missingW checks,8060byte5Car snapshot restore/inputrebind/original sourceclose.0Worldframes, no hardwareeq."
+  },
+  "belt_radius_correction": "reverse/task0099/w123-evidence.json",
+  "final_world_validation_20261102": {
+    "build_logs": [
+      {
+        "path": "local/task0099/world-snapshot/world-final-build.log",
+        "sha256": "4f10a5bdd7827a6fd3b6bb33ecc01f9918de439f1636af9968aa499d3b16b957"
+      },
+      {
+        "path": "local/task0099/world-snapshot/world-final-incremental-build.log",
+        "sha256": "f0dd4117270c2e1193dbb73013d718cc3f3f421da01435274744ee81fa9fc70e"
+      },
+      {
+        "path": "local/task0099/world-snapshot/world-final-godot-build.log",
+        "sha256": "866f00195a4af532fdefbf5f387365c17cee71fea2ed0b58397636245cd95e81"
+      },
+      {
+        "path": "local/task0099/world-snapshot/world-final-incremental-godot.log",
+        "sha256": "ea219e01181fd53b5ac4e09b7cdb34a3d62c078ef94dddc107e208cd2ad9c736"
+      }
+    ],
+    "build_result": "PASSnative116actual/117scheduled then44incremental; normalGodot76actual/79scheduled then3actual/4scheduled. Includeslatestcoreguards. Laterfixture-onlybuild2actual/3scheduled PASS.",
+    "initial_ctest": {
+      "script": {
+        "path": "local/task0099/world-snapshot/final-regression.ps1",
+        "sha256": "169681cb49573f1322877191f373b874e8736d2012cca4c0e96eee23ea726e49"
+      },
+      "log": {
+        "path": "local/task0099/world-snapshot/world-final-ctest.log",
+        "sha256": "e7be69c3e5cea7febc95a988b1546710ba79dabeafbd56b7785c933c74ce37ed"
+      },
+      "result": "48/49PASS135.31s; soleHPPulloverfixturewrongAIrosterassumption. Not allpass."
+    },
+    "fixture_counterexample": {
+      "build_log": {
+        "path": "local/task0099/world-snapshot/pullover-roster-build.log",
+        "sha256": "1710c384b329c64478b20e8cb879e93ac184ef8947569dcbeb6c1c2e31324f82"
+      },
+      "log": {
+        "path": "local/task0099/world-snapshot/pullover-roster-ctest.log",
+        "sha256": "24a2e1e7e8d3facae24874bc15528e9d3aa863b033526e26bea0ae157b8a606d"
+      },
+      "result": "1/2PASS22.36s. HPpassed;ChampionshiphasnoCopManager. No game roster/flags forced."
+    },
+    "final_targeted": {
+      "command": "ctest --test-dir build/native-debug -R '^(authored_hp_pullover_original|authored_championship_pullover_leaves_original)$' --output-on-failure",
+      "build_log": {
+        "path": "local/task0099/world-snapshot/pullover-roster-build-v2.log",
+        "sha256": "54402322245855684028f8264bd1ee39edc1eb20fdb81e20c7199ed2ad26ddcf"
+      },
+      "log": {
+        "path": "local/task0099/world-snapshot/pullover-roster-ctest-v2.log",
+        "sha256": "d48503dc96ed284e72c293f2391a629eb10b2d5f8ff0ad0cf73da9ae95f142cd"
+      },
+      "result": "2/2PASS12.09s,HP6.44s/Champdirectleaves5.63s. Togetherwith48unchangedpassingchecks,50distinctscopedchecksaccepted; no claimone50/50run."
+    },
+    "current_executable": {
+      "path": "local/task0099/authored-world/authored-world-final-v20.exe",
+      "sha256": "2cc5281fa5de6a1d48f9c1da28d397900cb1c02d3950228a853190e83a140741"
+    },
+    "source_placement": {
+      "log": {
+        "path": "local/task0099/world-snapshot/source-placement-final.log",
+        "sha256": "72de96c095ec230e03b904e52665a925e53a9c4d2be25723dbeefa22998c5b90"
+      },
+      "result": "232curatedimplementationpathsexistandmatchsourceowners;0flags;notanAST/equivalenceproof."
+    },
+    "pullover_full_stdout": {
+      "path": "local/task0099/pullover-end/public-full-output.log",
+      "sha256": "cd344052215d9dc879f240cc1fea778d9f3673fa085fa1ef28caf722a165c3a7"
+    },
+    "contracts": {
+      "command": "ctest --test-dir build/native-debug -R '^(progress_tables|recovery_progress_contracts|pipeline_contracts|confirmed_identifier_adoption|identifier_entity_rules|player_source_review_rules)$' --output-on-failure",
+      "log": {
+        "path": "local/task0099/world-snapshot/world-final-contracts.log",
+        "sha256": "f3afbd8bb3a9a9fcc817c071a37f7d07f972362d4eddcf3c9fc894ddddb55583"
+      },
+      "result": "6/6PASS5.52s afterlatestfunctionmaps/generatedprogress"
+    },
+    "diff_and_material": {
+      "diff_command": "git diff --check",
+      "diff_log": {
+        "path": "local/task0099/world-snapshot/world-final-diff-v3.log",
+        "sha256": "92559dbeee773d78aecc0a0d29119386749c869e691197ab0506fd6f2fe1b1dd"
+      },
+      "restricted_inventory": {
+        "path": "local/task0099/world-snapshot/restricted-material-final.log",
+        "sha256": "9aef4610ee56104d9bd966eaad836c4ae0c21503fed66db9fbf69b7603a621f8"
+      },
+      "staged_files": 0,
+      "commit": "none"
+    },
+    "metadata_hashes": {
+      "command": "py -3 local/task0099/world-snapshot/validate-metadata.py",
+      "checkpoint": {
+        "path": "local/task0099/world-snapshot/metadata-final-pinned-20261102-13987.json",
+        "sha256": "900bb7ab9559aa5bb407b9b07c75e61c7225120f8dcaa3f5dbfbbb49e77b4e2f"
+      },
+      "result": "13987currentprivatepath/SHApairs;0missing/0mismatch beforeaddingthisproofreference. MutablevalidatorreportisnotSHAreferenced."
+    }
+  },
+  "current_runtime_20261102": "reverse/task0099/current-world-runtime-20261102.json"
 }

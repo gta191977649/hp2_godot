@@ -466,6 +466,7 @@ void Sub_001A2FC0(Memory&m) {
 }
 
 #include "game_core/indep/src/skids.hpp"
+#include "game_core/indep/inc/Skids.hpp"
 // Debug001A2CF8; E-0046-S03; original source indep/src/wheel.cpp.
 namespace hp2::recovered {
 void Wheel::MaybeMakeSkids(float,std::uint32_t car,port::driving::SkidServices&s){
@@ -476,7 +477,7 @@ void Wheel::MaybeMakeSkids(float,std::uint32_t car,port::driving::SkidServices&s
     const float vx=m.scalar(w+0xf0),vy=m.scalar(w+0xf4);
     if(!(slipping||8.0f<m.scalar(w+0x158)*m.scalar(w+0x168))||!m.byte(w+0x155)||
        ((blown>>(m.word(wi+0x14)&31))&1)||!(1.0f<std::sqrt(vx*vx+vy*vy))){maker.MakeNoSkid();return;}
-    validate_skid_services(s);
+    if(!s.shared_world)validate_skid_services(s);
     if(!s.contact)hp2::not_implemented("0x00151CC0","Wheel skid endpoint topology elevation service");
     SkidVector delta{{-vy,vx,0}};
     const float inv=1.0f/std::sqrt((delta[0]*delta[0]+delta[1]*delta[1])+delta[2]*delta[2]);
@@ -489,7 +490,7 @@ void Wheel::MaybeMakeSkids(float,std::uint32_t car,port::driving::SkidServices&s
     width=width*(intensity<0.5f?0.5f:intensity);width=width*0.5f;
     delta=hp2::recovered::bNormalize(delta,width);
     const SkidVector center{{m.scalar(w+0xa0),m.scalar(w+0xa4),m.scalar(w+0xa8)}};
-    Memory::Scratch scratch(m);const auto right=m.allocate(16),left=m.allocate(16);
+    Memory::Temporary scratch(m,32);const auto right=scratch.address(),left=right+16;
     for(unsigned i=0;i<3;++i){m.scalar(right+4*i,center[i]+delta[i]);m.scalar(left+4*i,center[i]-delta[i]);}
     const auto cs=m.word(w+0x18),owner=m.word(cs+4);
     const float rz=s.contact->GetElevation(m,owner,right,0,0,0);
@@ -498,6 +499,33 @@ void Wheel::MaybeMakeSkids(float,std::uint32_t car,port::driving::SkidServices&s
     delta[2]=rz*0.5f-lz*0.5f;delta=hp2::recovered::bNormalize(delta,width);
     if(!slipping)intensity=intensity*m.scalar(0x00325774);
     if(terrain==4)intensity=0;else if(intensity<m.scalar(0x00325778))intensity=m.scalar(0x00325778);
-    maker.MakeSkid(m.word(car+0x514)==0xffffffffu?0:car,position,delta,terrain,intensity,s);
+    if(s.shared_world){
+        Memory::Temporary operands(m,32);const auto p=operands.address(),d=p+16;
+        for(unsigned i=0;i<3;++i){m.scalar(p+i*4,position[i]);m.scalar(d+i*4,delta[i]);}
+        if(!s.port_stack_vector_lane)hp2::not_implemented("0x001A2F84","Explicit policy for original unwritten Wheel skid position.sp+5C is required");
+        m.word(p+12,*s.port_stack_vector_lane);
+        hp2::debug::SkidMaker(m,w+0x180).MakeSkid(m.word(car+0x514)==0xffffffffu?0:car,p,d,terrain,intensity,s.port_stack_vector_lane,s.port_stack_vector_lane);
+    }else maker.MakeSkid(m.word(car+0x514)==0xffffffffu?0:car,position,delta,terrain,intensity,s);
+}
+}
+
+// TASK-0099 E-0099-W33. Debug destructor bodies and real original pool ownership.
+#include "game_core/indep/inc/ComponentPhysics.hpp"
+#include "game_core/inc/bSlotPool.hpp"
+namespace hp2::recovered {
+void Wheel::Sub_001A3410(int flags){SkidMaker(m_,address_+0x180).MakeNoSkid();PhysicsComponent(m_,address_).Sub_00199A70(0);if(flags&1)hp2::debug::SlotPool(m_,m_.word(0x327028)).Free(address_);}
+}
+
+#include "game_core/indep/inc/Replay.hpp"
+namespace hp2::recovered {
+// Debug001A1738; E-0099-W74; replay-frame/001a1738.json/type-Wheel.json.
+void Wheel::DoSnapshot(std::uint32_t snapshot){
+ hp2::debug::ReplaySnapshot s(m_,snapshot);s.BeginNamedSection(0x327d18);
+ s.MoveData(address_+0x1c,4);s.MoveData(address_+0x20,4);s.MoveData(address_+0x110,4,4,1);
+ if(m_.byte(snapshot+0x3c)||m_.byte(snapshot+0x3d)){
+  for(auto r:{std::pair<unsigned,unsigned>{0x30,64},{0x70,64},{0xb0,64},{0xf0,16},{0x100,8},{0x108,4},{0x10c,4},{0x114,8},{0x120,16},{0x130,16},{0x140,16},{0x150,4},{0x154,1},{0x155,1},{0x156,2},{0x158,4},{0x160,4},{0x164,4},{0x168,4},{0x170,4},{0x174,4},{0x178,4},{0x17c,4},{0x16c,4}})
+   for(unsigned i=0;i<r.second;++i)m_.byte(address_+r.first+i,0);
+ }
+ s.EndNamedSection();
 }
 }

@@ -6,6 +6,61 @@
 // No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
 // Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
 #include "game_core/AIEngineSound.hpp"
+#include "game_core/port/race/car_sound_construction.hpp"
+#include "game_core/port/race/control_construction.hpp"
+#include "game_core/src/bSample.hpp"
+#include "game_core/src/bMath.hpp"
+#include <cstring>
+
+namespace hp2::debug {
+// Debug0020AB30, E-0099-W31. All34 embedded samples use their real constructor.
+void PlayerEngineSound::Sub_0020AB30(std::uint32_t car,::port::race::CarSoundResources& resources){
+ Sub_00203980();m_.word(address_+0x1c,0x2b3b60);bSample(m_,address_+0x30).Sub_0026B2A0();bSample(m_,address_+0xec).Sub_0026B2A0();
+ for(const auto side:{0x1f8u,0xe78u})for(unsigned i=0;i<16;++i){const auto voice=address_+side+200*i;m_.half(voice,0);m_.half(voice+2,0);m_.scalar(voice+4,0);m_.half(voice+8,0);bSample(m_,voice+12).Sub_0026B2A0();}
+ for(unsigned i=0;i<12;++i){const auto entry=address_+0x1b14+20*i;m_.word(entry,0xffffffff);m_.half(entry+4,0);m_.half(entry+6,1);m_.word(entry+8,0);m_.word(entry+12,0);m_.scalar(entry+16,1);}
+ m_.word(address_+0x20,car);m_.word(address_+0x24,0);float rpm=m_.scalar(0x32818c);if(rpm==100.0f)rpm=m_.scalar(car+0x3d0);
+ m_.word(address_+0x1b0,0);m_.word(address_+0x1e8,0);m_.scalar(address_+0x1b4,0);m_.scalar(address_+0x1f0,0);m_.scalar(address_+0x1ec,rpm);m_.scalar(address_+0x1f4,1);m_.scalar(address_+0x1ac,1);
+ Init(resources);bSample(m_,address_+0x30).Initialize(::port::race::required_ingame_sample(resources,::port::race::original_sound_text(m_,0x2b3a30)));bSample(m_,address_+0x30).SetCategory(2);
+ bSample(m_,address_+0xec).Initialize(::port::race::required_ingame_sample(resources,::port::race::original_sound_text(m_,0x2b3a40)));bSample(m_,address_+0xec).SetCategory(2);Activate(true);
+}
+// Debug0020AE48. Original authored car patches and two independent EngineDefs.
+void PlayerEngineSound::Init(::port::race::CarSoundResources& resources){
+ if(!m_.word(0x326f40))return;const auto car=m_.word(address_+0x20),info=m_.word(car+0xc);const auto bank=::port::race::original_sound_text(m_,info+0x330),prefix=::port::race::original_sound_text(m_,info+0x356);
+ if(!resources.region(bank))hp2::not_implemented("0x0026FAB8","actual player engine sound region is not loaded");m_.word(address_+0x1e4,1);m_.word(address_+0x1c04,m_.word(0x327f9c));
+ for(unsigned i=0;i<4;++i)m_.half(address_+0x1dc+2*i,std::uint16_t(std::int16_t(m_.signed_byte(info+0x360+i))));
+ m_.word(address_+0x1d4,std::uint32_t(std::int32_t(m_.signed_half(info+0x364))));m_.word(address_+0x1d8,std::uint32_t(std::int32_t(m_.signed_half(info+0x366))));
+ m_.scalar(address_+0x28,float(m_.signed_half(info+0x3b0)));m_.scalar(address_+0x2c,float(m_.signed_half(info+0x3b2)));
+ for(unsigned i=0;i<12;++i){const auto entry=address_+0x1b14+20*i;const auto suffix=::port::race::original_sound_text(m_,m_.word(0x2b3a50+4*i));
+  m_.word(entry+12,std::uint32_t(std::int32_t(m_.signed_half(info+0x368+2*i))));m_.scalar(entry+16,m_.scalar(info+0x380+4*i));m_.half(entry+4,suffix.size()>1&&suffix[1]=='x'?1:0);
+  const auto source=resources.sample(bank,prefix+suffix);if(!source)return;m_.word(entry,1);
+  for(const auto side:{0x1f8u,0xe78u}){bSample sample(m_,address_+side+200*i+12);sample.Initialize(source);sample.SetCategory(2);}
+ }
+ m_.word(address_+0x1b08,resources.engine_definition(0));m_.word(address_+0x1b0c,resources.engine_definition(1));ResolveTables();
+}
+// Debug0020B2E0. The unusual i>>3 HighestPatch indexing is listing-confirmed;
+// do not silently replace it with modulo8 or a legacy host-mixer interpretation.
+void PlayerEngineSound::ResolveTables(){
+ for(unsigned n=0;n<2;++n){const auto definition=m_.word(address_+0x1b08+4*n);if(m_.byte(definition+5)==0){
+  for(unsigned i=0;i<8;++i){const auto first=definition+0x128+4*i,second=definition+0x148+4*i;m_.word(first,first+m_.word(first));m_.word(second,second+m_.word(second));}m_.byte(definition+5,1);}}
+ m_.word(address_+0x1bc,0);m_.half(address_+0x1cc,0);m_.byte(address_+0x1cb,0);
+ for(unsigned i=0;i<16;++i){const auto definition=m_.word(address_+0x1b08+(i<8?0:4));if(m_.signed_byte(definition+0x20+(i>>3))>=0)m_.byte(address_+0x1cb,std::uint8_t(i+1));}
+}
+// Debug0020C4D8, E-0099-W31. Actual shared sound RNG and authored AI patch.
+void AIEngineSound::Sub_0020C4D8(std::uint32_t car,::port::race::CarSoundResources& resources){
+ Sub_00203980();m_.word(address_+0x1c,0x2b3b20);bSample(m_,address_+0x24).Sub_0026B2A0();Average(m_,address_+0xec).Sub_0018DBF8(20);
+ m_.word(address_+0x20,car);m_.scalar(address_+0xe8,0);m_.scalar(address_+0xe4,-1);m_.word(address_+0xfc,0xffffffff);m_.word(address_+0x100,10);m_.scalar(address_+0x104,1000);m_.scalar(address_+0x108,1);
+ m_.scalar(address_+0xe0,-hp2::recovered::bRandom(m_,0x327eec,m_.scalar(0x325df4)));
+ const auto types=m_.word(0x3278e0);if(!types)hp2::not_implemented("0x0020C7A0","actual CarTypeInfoArray is not bound for AI engine sample selection");
+ const auto type=m_.signed_word(m_.word(car+0x10));std::int8_t number=0;if(m_.signed_word(types+std::uint32_t(type)*0x560+0x538)!=2)number=std::int8_t(m_.half(m_.word(car+0xc)+0x354));
+ const char name[]="AIEngine0";for(unsigned i=0;i<sizeof(name);++i)m_.byte(0x32b988+i,std::uint8_t(name[i]));m_.byte(0x32b990,std::uint8_t(m_.byte(0x32b990)+std::uint8_t(number)));
+ bSample(m_,address_+0x24).Initialize(::port::race::required_ingame_sample(resources,::port::race::original_sound_text(m_,0x32b988)));bSample(m_,address_+0x24).SetCategory(0);
+}
+// Debug0020AD30/0020D128. No native mixer substitutes original sample lifetime.
+void PlayerEngineSound::Sub_0020AD30(int flags){m_.word(address_+0x1c,0x2b3b60);for(unsigned i=0;i<2;++i)if(auto definition=m_.word(address_+0x1b08+4*i)){m_.release(definition);m_.word(address_+0x1b08+4*i,0);}
+ for(const auto side:{0xe78u,0x1f8u})for(int i=15;i>=0;--i)bSample(m_,address_+side+200*std::uint32_t(i)+12).Sub_0026B3F8(2);
+ bSample(m_,address_+0xec).Sub_0026B3F8(2);bSample(m_,address_+0x30).Sub_0026B3F8(2);Sub_00204060(flags);}
+void AIEngineSound::Sub_0020D128(int flags){m_.word(address_+0x1c,0x2b3b20);Average(m_,address_+0xec).Sub_0018DC70(2);bSample(m_,address_+0x24).Sub_0026B3F8(2);Sub_00204060(flags);}
+}
 #include "game_core/port/driving/vehicle_audio.hpp"
 #include "game_core/port/driving/projections.hpp"
 #include "game_core/port/not_implemented.hpp"
@@ -195,3 +250,8 @@ void PlayerEngineSound::ResolveTables() {
     hp2::not_implemented("0x002105D0", "PlayerEngineSound::ResolveTables (signature and full body unresolved)");
 }
 } // namespace hp2::recovered
+
+namespace hp2::debug {
+// Debug0020CA70, E-0099-W40. Original activation queues a real silent-start voice.
+void AIEngineSound::ActivateSound(){if(m_.word(0x326f40)&&m_.word(0x327980))bSample(m_,address_+0x24).Play(0,0,0);}
+}

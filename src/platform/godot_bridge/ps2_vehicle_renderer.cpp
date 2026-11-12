@@ -313,9 +313,8 @@ void Ps2VehicleRenderer::rebuild_display(bool incremental) {
             godot::Ref<godot::ShaderMaterial> material;material.instantiate();material->set_shader(shader->second);
             // E0055V01: closed BASE-material writer contract for the optional
             // depth-proxy cache. Static parameters are initialized below;
-            // update_view also swaps original head/brake texture states. Dynamic
-            // texture/suppression fields use the depth consumer's dynamic fallback;
-            // the eight camera/lighting parameters retain their staging contract.
+            // update_view also swaps original head/brake texture states.
+            // The optional depth staging publishes the same dynamic BASE values.
             godot::PackedStringArray depth_dynamic;
             for(const char* name:{"source_camera","light_35c","light_35d","light_35e","light_35f","light_360","light_361","light_362","base_texture","flag_0x4","frontend_skip_strip"})depth_dynamic.push_back(name);
             material->set_meta("hp2_depth_dynamic_uniforms",depth_dynamic);
@@ -323,7 +322,8 @@ void Ps2VehicleRenderer::rebuild_display(bool incremental) {
             material->set_render_priority(state.deferred?2:0);
             material->set_shader_parameter("base_texture",texture.image);
             material->set_shader_parameter("base_lit",!impl_->inspection&&bool(surface.render_flags&0x80));
-            material->set_shader_parameter("flag_0x4",bool(surface.render_flags&4)||texture.data->header.Field_0x74!=0);
+            const bool flag_0x4=bool(surface.render_flags&4)||texture.data->header.Field_0x74!=0;
+            material->set_shader_parameter("flag_0x4",flag_0x4);
             const auto& block=model.materials().at(surface.material_hash).blocks;
             for(int i=0;i<4;++i)material->set_shader_parameter(string("material_"+std::to_string(350+i)),godot::Vector4(block[i*4],block[i*4+1],block[i*4+2],block[i*4+3]));
             for(int i=0;i<7;++i){const auto& l=part.lights;const std::string suffix[]={"35c","35d","35e","35f","360","361","362"};material->set_shader_parameter(string("light_"+suffix[i]),godot::Vector4(l[i*4],l[i*4+1],l[i*4+2],l[i*4+3]));}
@@ -348,7 +348,14 @@ void Ps2VehicleRenderer::rebuild_display(bool incremental) {
             auto& draw=impl_->draws.back();
             draw.apply_alpha_sorting=state.deferred;
             draw.bound_texture=surface.texture_hash;
-            if(impl_->vehicle_depth_staging)draw.depth_parameters=vehicle_depth_staging::create(material);
+            if(impl_->vehicle_depth_staging){
+                draw.depth_parameters=vehicle_depth_staging::create(material);
+                if(draw.depth_parameters){
+                    const auto& names=draw.depth_parameters->names;
+                    for(std::size_t slot=0;slot<names.size();++slot)
+                        vehicle_depth_staging::publish(draw.depth_parameters,slot,material->get_shader_parameter(names[slot]));
+                }
+            }
             draw.batch=batch;draw.batch_surface=(impl_->building_materials.size()-1)%godot::RenderingServer::MAX_MESH_SURFACES;
             if(!impl_->inspection&&(surface.render_flags&0x100)){
                 const auto env_code=car_base_shader_source("fog_disabled, shadows_disabled, depth_draw_never, blend_add",car_fragment_source(false,5,true,false),"filter_linear, repeat_disable");
@@ -440,7 +447,9 @@ void Ps2VehicleRenderer::layout_lods(){
                     // duplicate() copied those exact source parameter values. Keep
                     // independent storage; subsequent writes cannot alias another LOD.
                     if(source_parameters&&draw.depth_parameters&&source_parameters->shader==draw.depth_parameters->shader){
-                        draw.depth_parameters->values=source_parameters->values;draw.depth_parameters->valid=source_parameters->valid;
+                        for(std::size_t slot=0;slot<source_parameters->values.size();++slot)
+                            if(source_parameters->valid[slot])
+                                vehicle_depth_staging::publish(draw.depth_parameters,slot,source_parameters->values[slot]);
                     }
                 }
                 draw.material->set_meta("hp2_depth_dynamic_uniforms",original_material->get_meta("hp2_depth_dynamic_uniforms"));draw.material->set_meta("hp2_depth_uniform_contract",1);
@@ -480,8 +489,10 @@ void Ps2VehicleRenderer::apply_frontend_flags(std::uint32_t flags){
     if(changed)impl_->capture_binding_valid=false;
     for(auto& draw:impl_->draws){
         if(!changed && draw.frontend_flags_bound)continue;
-        draw.material->set_shader_parameter("frontend_skip_strip",
-            !port::selection::frontend_strip_enabled(flags,draw.apply_alpha_sorting));
+        const bool skip_strip=!port::selection::frontend_strip_enabled(flags,draw.apply_alpha_sorting);
+        draw.material->set_shader_parameter("frontend_skip_strip",skip_strip);
+        if(draw.depth_parameters)
+            vehicle_depth_staging::publish(draw.depth_parameters,vehicle_depth_staging::FrontendSkipStrip,skip_strip);
         const bool envmap=!(flags&1u) && (!impl_->capture_requested || (impl_->capture_ready && !draw.flag_0x4));
         const godot::Ref<godot::Material> next=envmap?godot::Ref<godot::Material>(draw.reflection):godot::Ref<godot::Material>();
         if(draw.material->get_next_pass()!=next)draw.material->set_next_pass(next);
@@ -613,8 +624,35 @@ godot::Dictionary Ps2VehicleRenderer::update_view(const godot::Vector3& position
         // Explicit race capture carries original eEnvMap face2 HackMan matrix.
         // Standalone viewer retains its historical frontend-only orientation.
         const auto environment=impl_->capture_requested?impl_->capture_hack:port::eCreateLookAtMatrix(source(position),source(get_global_position()),{{0,0,1}});
+        const std::array<godot::StringName,7> light_names{
+            "light_35c","light_35d","light_35e","light_35f","light_360","light_361","light_362"};
+        const std::array<godot::StringName,3> environment_names{
+            "environment_row0","environment_row1","environment_row2"};
+        const godot::StringName camera_name("source_camera");
+        godot::MeshInstance3D* pose_node=nullptr;
+        bool pose_visible=false;
+        godot::Transform3D world;
+        std::array<float,16> part_matrix{};
+        std::array<float,3> camera{};
+        std::optional<std::array<float,28>> pose_lights;
+        std::optional<std::array<godot::Vector3,3>> environment_rows;
         for(auto& draw:impl_->draws) {
-            const auto& part=impl_->model->parts()[draw.part];if(!draw.node||!draw.node->is_visible_in_tree())continue;
+            if(!draw.node)continue;
+            // A part can have many original material surfaces with the same pose.
+            // Reuse the projection inputs while retaining per-surface draw order.
+            if(draw.node!=pose_node){
+                pose_node=draw.node;
+                pose_visible=pose_node->is_visible_in_tree();
+                if(pose_visible){
+                    world=pose_node->get_global_transform();
+                    part_matrix=source_matrix(world);
+                    camera=source(world.affine_inverse().xform(position));
+                    pose_lights.reset();
+                    environment_rows.reset();
+                }
+            }
+            if(!pose_visible)continue;
+            const auto& part=impl_->model->parts()[draw.part];
             const auto light_texture=impl_->model->driving_texture(part.solid,draw.surface,impl_->lights);
             if(draw.bound_texture!=light_texture){
                 const auto& texture=impl_->uploaded.at(light_texture);
@@ -624,35 +662,55 @@ godot::Dictionary Ps2VehicleRenderer::update_view(const godot::Vector3& position
                 draw.material->set_shader_parameter("flag_0x4",draw.flag_0x4);
                 draw.maximum_texture_alpha=texture.max_alpha;draw.bound_texture=light_texture;
                 draw.apply_alpha_sorting=texture.data->header.Field_0x4d!=0;
-                draw.material->set_shader_parameter("frontend_skip_strip",
-                    !port::selection::frontend_strip_enabled(impl_->frontend_flags,draw.apply_alpha_sorting));
-            }
-            const auto world=draw.node->get_global_transform();
-            const auto camera=source(world.affine_inverse().xform(position));
-            const godot::Vector3 source_camera_value(camera[0],camera[1],camera[2]);
-            draw.material->set_shader_parameter("source_camera",source_camera_value);
-            if(draw.depth_parameters)vehicle_depth_staging::publish(draw.depth_parameters,0,source_camera_value);
-            if(draw.reflection.is_valid()&&(!impl_->capture_requested||impl_->capture_ready)){
-                draw.reflection->set_shader_parameter("source_camera",godot::Vector3(camera[0],camera[1],camera[2]));
-                const auto part_matrix=source_matrix(world);
-                for(int row=0;row<3;++row){
-                    std::array<float,3> v{};for(int axis=0;axis<3;++axis)v[axis]=part_matrix[row*4]*environment[axis]+part_matrix[row*4+1]*environment[4+axis]+part_matrix[row*4+2]*environment[8+axis];
-                    draw.reflection->set_shader_parameter(string("environment_row"+std::to_string(row)),godot::Vector3(v[0],v[1],v[2]));
+                const bool skip_strip=!port::selection::frontend_strip_enabled(impl_->frontend_flags,draw.apply_alpha_sorting);
+                draw.material->set_shader_parameter("frontend_skip_strip",skip_strip);
+                if(draw.depth_parameters){
+                    vehicle_depth_staging::publish(draw.depth_parameters,vehicle_depth_staging::BaseTexture,texture.image);
+                    vehicle_depth_staging::publish(draw.depth_parameters,vehicle_depth_staging::Flag0x4,draw.flag_0x4);
+                    vehicle_depth_staging::publish(draw.depth_parameters,vehicle_depth_staging::FrontendSkipStrip,skip_strip);
                 }
+            }
+            const godot::Vector3 source_camera_value(camera[0],camera[1],camera[2]);
+            draw.material->set_shader_parameter(camera_name,source_camera_value);
+            if(draw.depth_parameters)vehicle_depth_staging::publish(draw.depth_parameters,vehicle_depth_staging::SourceCamera,source_camera_value);
+            if(draw.reflection.is_valid()&&(!impl_->capture_requested||impl_->capture_ready)){
+                draw.reflection->set_shader_parameter(camera_name,source_camera_value);
+                if(!environment_rows){
+                    auto& rows=environment_rows.emplace();
+                    for(int row=0;row<3;++row){
+                        std::array<float,3> value{};
+                        for(int axis=0;axis<3;++axis)
+                            value[axis]=part_matrix[row*4]*environment[axis]+part_matrix[row*4+1]*environment[4+axis]+part_matrix[row*4+2]*environment[8+axis];
+                        rows[row]={value[0],value[1],value[2]};
+                    }
+                }
+                for(std::size_t row=0;row<environment_names.size();++row)
+                    draw.reflection->set_shader_parameter(environment_names[row],(*environment_rows)[row]);
             }
             // Port-side world placement adapter for the recovered static light slice.
             if(!draw.lighting_valid||draw.lighting_basis!=world.basis||draw.lights[15]!=part.lights[15]
                 || draw.frontend_light_revision!=impl_->frontend_light_revision){
-                draw.lights=impl_->frontend_lights?hp2::debug::elSetupLightContext(*impl_->frontend_lights,impl_->frontend_view,source_matrix(world))
-                    :hp2::recovered::CarRenderInfo::Sub_00120EF8(source_matrix(world));
-                draw.lights[15]=part.lights[15];
-                const std::string suffix[]={"35c","35d","35e","35f","360","361","362"};
-                for(int i=0;i<7;++i){
-                    const godot::Vector4 value(draw.lights[i*4],draw.lights[i*4+1],draw.lights[i*4+2],draw.lights[i*4+3]);
-                    draw.material->set_shader_parameter(string("light_"+suffix[i]),value);
-                    if(draw.depth_parameters)vehicle_depth_staging::publish(draw.depth_parameters,std::size_t(i)+1,value);
+                if(!pose_lights)
+                    pose_lights=impl_->frontend_lights?hp2::debug::elSetupLightContext(*impl_->frontend_lights,impl_->frontend_view,part_matrix)
+                        :hp2::recovered::CarRenderInfo::Sub_00120EF8(part_matrix);
+                auto lights=*pose_lights;
+                lights[15]=part.lights[15];
+                std::array<bool,7> changed{};
+                for(std::size_t i=0;i<light_names.size();++i){
+                    const auto* lanes=lights.data()+i*4;
+                    // The shader consumes float bit patterns. Preserve signed zero.
+                    changed[i]=!draw.lighting_valid||std::memcmp(lanes,draw.lights.data()+i*4,4*sizeof(float))!=0;
+                    if(!changed[i])continue;
+                    const godot::Vector4 value(lanes[0],lanes[1],lanes[2],lanes[3]);
+                    draw.material->set_shader_parameter(light_names[i],value);
+                    if(draw.depth_parameters)vehicle_depth_staging::publish(draw.depth_parameters,vehicle_depth_staging::LightFirst+i,value);
                 }
-                if(draw.reflection.is_valid())for(int i=0;i<7;++i)draw.reflection->set_shader_parameter(string("light_"+suffix[i]),godot::Vector4(draw.lights[i*4],draw.lights[i*4+1],draw.lights[i*4+2],draw.lights[i*4+3]));
+                if(draw.reflection.is_valid())for(std::size_t i=0;i<light_names.size();++i){
+                    if(!changed[i])continue;
+                    const auto* lanes=lights.data()+i*4;
+                    draw.reflection->set_shader_parameter(light_names[i],godot::Vector4(lanes[0],lanes[1],lanes[2],lanes[3]));
+                }
+                draw.lights=lights;
                 draw.lighting_basis=world.basis;draw.lighting_valid=true;draw.frontend_light_revision=impl_->frontend_light_revision;
             }
             // Reject the unsupported negative-destination GL blend range explicitly.

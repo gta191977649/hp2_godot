@@ -7,6 +7,16 @@ ImGui frame, not Godot Control/CanvasLayer widgets. Normal standalone launches
 do not collect or show the profiler. The window can be dragged, resized, scrolled
 or collapsed, using the same DPI/input rules as the other ImGui tools.
 
+## Compact Debug Info (TASK-0109)
+
+`./build.ps1 --debug` or console `info on` opens the minimal HP2 Debug Info
+panel: current FPS/frame interval, recent peak and a rolling 240-frame interval
+curve in milliseconds. Samples use raw host frame delta, not smoothed timings
+or GPU execution time. The vertical range expands for spikes, with a 33.33 ms
+minimum. History continues while the panel is hidden. Screen/resource counters
+are removed from this panel; console `status` retains them. The full profiler
+remains available through `--profile`.
+
 ## Live tools
 
 - CPU/frame-wall, GPU-viewport, draw/primitive and function-hotspot categories.
@@ -152,3 +162,15 @@ snapshot_ms excludes the separate draw snapshot. Worker accumulated time is not
 frame wall time; dispatch/prepare/join overlap. View CPU rows carry source_frame;
 old preparation snapshots must be attributed to their saved source frame.
 Vehicle staging reports bulk snapshot reads separately from uniform reads.
+
+
+## Frontend toolbar and missing debug tools (TASK-0104)
+
+`./build.ps1 --run` defaults to Debug; F8 opens the console, `--info` enables
+statistics, and `./build.ps1 --profile` enables the existing profiler. Frontend
+reserves the footer left region for the existing ImGui FPS window. Other scenes
+retain its upper-right default. DebugTools stays a global layer100 CanvasLayer.
+Debug and Release share `godot/bin/ps2_port.dll`: a Release build overwrites the
+Debug artifact and excludes console support. Rebuild Debug before diagnosing
+visibility. Tests may pass `--debug-ui-settings=PATH` to isolate window geometry;
+default user preferences remain in `user://debug/imgui.ini`.

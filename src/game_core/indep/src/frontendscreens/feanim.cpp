@@ -6,6 +6,41 @@
 // No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
 // Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
 #include "game_core/AnimationGroup.hpp"
+#include "game_core/port/frontend/popup.hpp"
+#include "game_core/src/bMath.hpp"
+
+namespace port::frontend {
+// Debug00241FA0, E-0098-X04. Both original lookups consume scale X.
+void PopupView::bind_animation(int index){
+    target_=0xe0105663u+index;timer_=now_;
+    const auto* w=hp2::frontend::FindWidget_00143D50(screen,target_,0);
+    const float scale=w?w->scale_x:1.f;
+    start_=scale*memory_.scalar(0x328e40);end_=scale*memory_.scalar(0x328e44);
+}
+// Debug00242040; E-0098-X04. Retains Debug sine and packed-timer arithmetic,
+// while the host supplies RealTimer through the selection page's shared clock.
+void PopupView::tick(std::uint32_t now,float dt){
+    using namespace hp2::frontend;now_=now;
+    // Debug0016AEB8 retains even the original unused arrow sine evaluation.
+    arrow_phase_+=dt*9.f;
+    if(memory_.scalar(0x3252c8)<arrow_phase_)arrow_phase_-=memory_.scalar(0x3252c8);
+    (void)hp2::recovered::bSin(memory_,arrow_phase_);
+    const float elapsed=float(std::uint32_t(now-timer_))*memory_.scalar(0x3261fc);
+    if(elapsed<memory_.scalar(0x328e3c)){
+        const float phase=(elapsed*memory_.scalar(0x326200))/memory_.scalar(0x328e3c);
+        const float scale=start_+(end_-start_)*hp2::recovered::bSin(memory_,phase);
+        const float alpha=memory_.scalar(0x328e48)+(memory_.scalar(0x328e4c)-memory_.scalar(0x328e48))*hp2::recovered::bSin(memory_,phase);
+        auto* target=FindWidget_00143D50(screen,target_,1);auto* ghost=FindWidget_00143D50(screen,0xab671c9a,1);
+        if(!target){if(ghost)ghost->visible=0;}
+        else if(ghost){CopyWidgetTransform_001410A0(*ghost,*target);
+            SetWidgetScale_00140FA8(*ghost,scale,measure_(*ghost));SetAlpha(*ghost,int(alpha));
+            const auto colour=memory_.word(0x328a28);
+            if(colour!=0xffffffffu)SetColor(*ghost,{std::uint8_t(colour),std::uint8_t(colour>>8),std::uint8_t(colour>>16)});
+        }
+    }
+    if(memory_.scalar(0x328e50)<elapsed)timer_=now;
+}
+}
 
 // TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
 // Class spelling: allocator_label; evidence: E-0027-C01.
@@ -179,4 +214,49 @@ void feAlphaAnimation::SetAlphaScale(float scale){for(auto& item:Fading)item->Se
 // Debug00241BE8 ->00244080, E-0098-U03. Original removes head first; this matters
 // when AddObject captured the same widget again after its alpha changed.
 feAlphaAnimation::~feAlphaAnimation(){for(auto& item:Fading)item.reset();}
+}
+
+// TASK-0099 E-0099-W62, Debug authority815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
+namespace hp2::debug {
+void tHighlightAnimation::Sub_00241F40(int screen,int object,int color){
+ m_.word(address_+8,0);m_.word(address_,static_cast<std::uint32_t>(screen));
+ const auto timeout=m_.word(0x328e50),end=m_.word(0x328e44),start=m_.word(0x328e40);
+ m_.word(address_+8,m_.word(0x327cd8));m_.word(address_+0xc,static_cast<std::uint32_t>(object));m_.word(address_+0x10,static_cast<std::uint32_t>(color));
+ m_.word(address_+0x14,start);m_.word(address_+0x18,end);m_.word(address_+0x1c,timeout);m_.word(address_+4,0);
+}
+void tHighlightAnimation::Sub_00241F80(int flags){if(flags&1)m_.release(address_);}
+}
+
+#include "game_core/port/race/flailer_resources.hpp"
+#include "game_core/port/driving/ee_scalar.hpp"
+#include <cmath>
+namespace hp2::debug {
+// Debug00241FA0; E-0112-P02. Both original FlailerGetScale calls use ScaleX.
+void tHighlightAnimation::SetCurrentMenuItem(int item){
+ auto& m=m_;m.word(address_+4,std::uint32_t(item));m.word(address_+8,m.word(0x327cd8));
+ float scale=1;const auto object=FindFlailerObject(m,m.word(address_),std::uint32_t(item),0);if(object)scale=m.scalar(object+0x38);
+ m.scalar(address_+0x14,scale*m.scalar(0x328e40));m.scalar(address_+0x18,scale*m.scalar(0x328e44));
+}
+// Debug00242040; E-0112-P02. Source RealTimer, sine, copy/scale/alpha/color order.
+void tHighlightAnimation::Animate(){
+ auto& m=m_;const float elapsed=float(std::int32_t(m.word(0x327cd8)-m.word(address_+8)))*m.scalar(0x3261fc);
+ if(elapsed<m.scalar(0x328e3c)){
+  const float phase=(elapsed*m.scalar(0x326200))/m.scalar(0x328e3c);
+  const float sine=hp2::recovered::bSin(m,phase);
+  const float scale=m.scalar(address_+0x14)+(m.scalar(address_+0x18)-m.scalar(address_+0x14))*sine;
+  const float alpha=m.scalar(0x328e48)+(m.scalar(0x328e4c)-m.scalar(0x328e48))*hp2::recovered::bSin(m,phase);
+  const auto from=FindFlailerObject(m,m.word(address_),m.word(address_+4),1),to=FindFlailerObject(m,m.word(address_),m.word(address_+0xc),1);
+  if(!from){if(to)m.byte(to+0x29,0);}
+  else if(to){
+   // Debug00140E90 CopyFlailerText preserves target's cached strip pointer.
+   const auto strip=m.word(to+0x2c);for(unsigned i=0;i<0x40;++i)m.byte(to+0x28+i,m.byte(from+0x28+i));m.word(to+0x2c,strip);m.byte(to+0x2b,8);
+   FlailerTextChunk text(m,to);text.ScaleAboutCenter(scale);
+   if(!std::isfinite(alpha)||alpha<-2147483648.f||alpha>=2147483648.f)hp2::not_implemented("0x00242040","exceptional EE highlight alpha CVT.W.S operand");
+   text.SetAlpha(::port::driving::cvt_w_s(alpha));if(m.word(address_+0x10)!=0xffffffffu)text.SetColor(m.word(address_+0x10));
+  }
+ }
+ if(m.scalar(address_+0x1c)<elapsed)m.word(address_+8,m.word(0x327cd8));
+}
+// Debug002421B0; E-0112-P02. Other callback messages are original no-ops.
+void tHighlightAnimation::HandleEvents(int msg,const ScreenCallbackData& d){if(msg==18)Animate();else if(msg==4)SetCurrentMenuItem(int(d.ItemHash));}
 }
