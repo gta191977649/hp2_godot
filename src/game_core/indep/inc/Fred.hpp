@@ -790,6 +790,8 @@ private:
 void BindCampaignScreen(SelectCarScreenServices& services);
 void UnbindCampaignScreen();
 FlailerScreenConfig& CampaignScreenConfiguration();
+bool FocusCampaignPointerEvent(std::uint32_t number);
+bool FocusNamePointerCharacter(std::uint32_t key);
 std::uint32_t FigureOutTrackNameImageHash(std::int32_t track,std::int32_t direction,
     const LanguageManager& language);
 // PC-only Select Track presentation precision. Source PAL still owns raw

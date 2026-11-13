@@ -337,7 +337,8 @@ struct CampaignLeaf {
         std::int32_t maximum=0;for (const auto* parent:parents)maximum=std::max(maximum,parent->event->GetStatus());
         return event->GetStatus()==0 && maximum<=0;
     }
-    void Render(SelectCarScreenServices& services,const std::array<float,16>& view,float alpha)
+    void Render(SelectCarScreenServices& services,const std::array<float,16>& view,float alpha,
+        bool pointerEnabled)
     {
         auto& ui=*services.menus->ui;if (!Visible(*services.menus->raceSetup->events))return;
         auto matrix=view;for (auto& value:matrix)value*=campaignPresentation.masterScale;
@@ -350,6 +351,14 @@ struct CampaignLeaf {
                     copy.topLeftY+position[1]-masterCenter[1]},matrix);
                 copy.topLeftX=placed[0];copy.topLeftY=placed[1];copy.scaleX*=matrix[0];copy.scaleY*=matrix[5];
                 RenderBitmap(ui,copy,alpha);
+                if (pointerEnabled && copy.key==master->key && copy.strip) {
+                    for (const auto& poly:copy.strip->polygons) {
+                        const auto& a=poly.vertices[0].position;
+                        const auto& b=poly.vertices[2].position;
+                        ui.render->pointerEventPanels.push_back({static_cast<std::uint32_t>(event->number),
+                            {a[0],a[1],b[0],b[1]}});
+                    }
+                }
             } else if (object->kind==1) {
                 TextCopy copy(*static_cast<FlailerTextChunk*>(object));
                 const bool alignNumber=ui.externalPresentation && copy.key==0x16b7d629u;
@@ -657,7 +666,7 @@ public:
                 if (leaf->event->number==32 && leaf->event->GetStatus()==0)alpha=campaignPresentation.unselectedAlpha;
                 if (leaf.get()==current_ && state_!=0)ResetFlailerTextClipWindow();
                 else SetFlailerTextClipWindow(clipMin_.data(),clipMax_.data());
-                leaf->Render(services_,matrix,alpha);
+                leaf->Render(services_,matrix,alpha,Ui().externalPresentation && state_==0);
             }
             RenderIndicator(matrix);
         }
@@ -707,6 +716,14 @@ public:
         default:break;
         }
     }
+    bool FocusPointerEvent(std::uint32_t number)
+    {
+        if (state_!=0) return false;
+        auto* leaf=FindLeaf(static_cast<std::int32_t>(number));
+        if (!leaf || !leaf->Visible(*services_.menus->raceSetup->events)) return false;
+        if (leaf!=current_) SelectLeaf(*leaf);
+        return true;
+    }
 private:
     FlailerUiState& Ui()const {return *services_.menus->ui;}
     FrontendPlayerManager& Frontend()const {return *services_.menus->frontend;}
@@ -740,11 +757,16 @@ private:
             for (auto* leaf:choices) {const auto difference=std::fabs(leaf->position[0]-current_->position[0]);if (difference<distance) {distance=difference;candidate=leaf;}}
         }
         if (!candidate || candidate==current_ || !candidate->Visible(*services_.menus->raceSetup->events))return false;
-        current_->selectionScale=1.0f;current_=candidate;current_->selectionScale=2.0f;
+        SelectLeaf(*candidate);
+        return true;
+    }
+    void SelectLeaf(CampaignLeaf& leaf)
+    {
+        current_->selectionScale=1.0f;current_=&leaf;current_->selectionScale=2.0f;
         blurb_.SetEvent(*current_->event);animated_.NewText(current_->event->summaryLanguageId);
         carLogos_.SetEvent(*current_->event);trackLogos_.SetEvent(*current_->event);Recenter();
         const float desired[2]{FlailerAnimationRandomRange(0.0f,320.0f),FlailerAnimationRandomRange(0.0f,240.0f)};
-        tCubic2DSetValDesired(&parallax_,desired);return true;
+        tCubic2DSetValDesired(&parallax_,desired);
     }
     void SyncHelp()
     {
@@ -915,6 +937,10 @@ void BindCampaignScreen(SelectCarScreenServices& services)
     campaignServices=&services;
 }
 void UnbindCampaignScreen() {campaignView.reset();campaignServices=nullptr;}
+bool FocusCampaignPointerEvent(std::uint32_t number)
+{
+    return campaignView && campaignView->FocusPointerEvent(number);
+}
 FlailerScreenConfig& CampaignScreenConfiguration()
 {
     static FlailerScreenConfig configuration{"View Event Tree",&CampaignCallback,

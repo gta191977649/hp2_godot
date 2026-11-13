@@ -5,6 +5,7 @@ $editor = $false
 $clean = $false
 $jobs = 8
 $raceArgument = $null
+$renderingDriver = 'vulkan'
 for ($index = 0; $index -lt $args.Count; $index++) {
     switch ($args[$index]) {
         '--mvp' { }
@@ -13,6 +14,12 @@ for ($index = 0; $index -lt $args.Count; $index++) {
         { $_ -match '^--race-track=\d+$' } { $raceArgument = [string]$_; $run = $true }
         '--debug' { $run = $true; $preset = 'godot-mvp-debug' }
         '--clean' { $clean = $true }
+        '--rendering-driver' {
+            if (++$index -ge $args.Count -or $args[$index] -notin @('vulkan', 'd3d12')) {
+                throw '--rendering-driver requires vulkan or d3d12.'
+            }
+            $renderingDriver = $args[$index].ToLowerInvariant()
+        }
         '--preset' {
             if (++$index -ge $args.Count) { throw '--preset requires a name.' }
             $preset = [string]$args[$index]
@@ -46,9 +53,9 @@ try {
         $engine = Join-Path $PSScriptRoot 'local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe'
         if (-not (Test-Path -LiteralPath $engine -PathType Leaf)) { throw 'Godot 4.7.2 console executable is required.' }
         $project = Join-Path $PSScriptRoot "build/$preset/mvp-project"
-        if ($editor) { & $engine --editor --path $project }
-        elseif ($raceArgument) { & $engine --path $project -- $raceArgument }
-        else { & $engine --path $project }
+        if ($editor) { & $engine --editor --path $project --rendering-driver $renderingDriver }
+        elseif ($raceArgument) { & $engine --path $project --rendering-driver $renderingDriver -- $raceArgument }
+        else { & $engine --path $project --rendering-driver $renderingDriver }
         exit $LASTEXITCODE
     }
 } finally {

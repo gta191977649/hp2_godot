@@ -1,6 +1,7 @@
 #pragma once
 
 #include <godot_cpp/classes/node2d.hpp>
+#include <godot_cpp/classes/input_event.hpp>
 #include <godot_cpp/classes/texture2d.hpp>
 #include <array>
 #include <memory>
@@ -9,11 +10,16 @@ struct EditorMarkerTexture;
 
 namespace hp2 {
 struct FrontendStateView;
+class ApplicationRuntime;
+class RacePresentation;
 class GameResources;
 
 class FrontendPresentation {
 public:
-    FrontendPresentation(godot::Node2D& canvas, const GameResources& files);
+    FrontendPresentation(godot::Node2D& canvas, const GameResources& files, ApplicationRuntime& runtime,
+        RacePresentation& host);
+    void pointer_input(const godot::Ref<godot::InputEvent>& event);
+    void pointer_button(int index);
     ~FrontendPresentation();
     void update(const FrontendStateView& state, godot::Vector2 viewport);
     void update_rear_view(const godot::Ref<godot::Texture2D>& view,

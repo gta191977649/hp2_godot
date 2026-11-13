@@ -582,6 +582,8 @@ void FlailerLeftRightArrowScroll::Animate()
 {
     pulse_.Step(ui_.clock->realTimeElapsed);
     if (current_) {
+        if (ui_.externalPresentation)
+            ui_.render->pointerArrowRows.push_back({screen_,current_});
         std::int32_t left=0,top=0,right=0,bottom=0;
         Require(ui_.resources->GetBoundingBox(screen_,current_,left,top,right,bottom,ui_.language),
             "Arrow target has no actual authored bounding box");

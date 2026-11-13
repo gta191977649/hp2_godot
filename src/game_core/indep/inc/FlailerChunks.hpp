@@ -183,6 +183,17 @@ struct FlailerRenderManager {
         float scaleRatio{}, duration{}, period{}, endAlpha{};
     };
     std::vector<Highlight> highlights;
+    // Event panels reuse one authored bitmap template, so each submission
+    // carries its own event number and projected bounds for the pointer host.
+    struct PointerEventPanel {
+        std::uint32_t number{};
+        std::array<float,4> bounds{};
+    };
+    std::vector<PointerEventPanel> pointerEventPanels;
+    struct PointerArrowRow {
+        std::uint32_t screen{}, value{};
+    };
+    std::vector<PointerArrowRow> pointerArrowRows;
     std::array<const FlailerScreenResource*,8> visibleScreens{};
     // The original manager has29 depth lists. These retain the same object
     // caches until the frontend command consumer completes its frame.

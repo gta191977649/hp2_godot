@@ -1425,6 +1425,8 @@ void FlailerRenderManager::SubmitPolygon(FlailerStripPool& pool,const EditorMark
 
 void FlailerRenderManager::CompleteSubmissions() noexcept
 {
+    pointerEventPanels.clear();
+    pointerArrowRows.clear();
     for (const auto& highlight:highlights)
         highlight.layout->pool->Complete(*highlight.layout);
     highlights.clear();

@@ -8,9 +8,11 @@ var tested_screens := {}
 var initial_mode: Window.Mode
 var resize_failed := false
 var loading_captured := false
+var mouse_pause := false
 
 func _initialize() -> void:
     direct = not OS.get_cmdline_user_args().is_empty()
+    mouse_pause = OS.get_environment("HP2_MVP_MOUSE_PAUSE") == "1"
     track_picker = OS.get_environment("HP2_MVP_RESIZE_TRACK_PICKER") == "1"
     initial_mode = root.mode
     super._initialize()
@@ -86,8 +88,7 @@ func _process(delta: float) -> bool:
         return _fail("direct_resize_timeout")
     if not is_instance_valid(race):
         race = root.get_node_or_null("NativeGame/RacePresentation")
-        if is_instance_valid(race) and OS.get_environment("HP2_MVP_DEBUG_CONSOLE") == "1":
-            _tap(KEY_QUOTELEFT)
+        _dismiss_debug_console()
         return false
     var sample: Dictionary = race.call("telemetry")
     var screen: String = sample.get("screen", "")
@@ -103,8 +104,36 @@ func _process(delta: float) -> bool:
         stage = 3
         _resize_sweep("direct-pause", true)
     elif stage == 3:
-        stage = 4
-        next_input = 0
+        if mouse_pause:
+            root.size = Vector2i(800, 600)
+            stage = 33
+            next_input = Time.get_ticks_msec() + 150
+        else:
+            stage = 4
+            next_input = 0
+    elif stage == 33 and Time.get_ticks_msec() >= next_input:
+        if sample.has("debug_console_open"):
+            _tap(KEY_QUOTELEFT)
+            stage = 38
+            next_input = Time.get_ticks_msec() + 250
+            return false
+        return _open_restart_popup()
+    elif stage == 38 and Time.get_ticks_msec() >= next_input:
+        if not sample.get("debug_console_open", false):
+            return _fail("debug_console_did_not_open")
+        _click_design(Vector2(270, 165))
+        stage = 39
+        next_input = Time.get_ticks_msec() + 350
+    elif stage == 39 and Time.get_ticks_msec() >= next_input:
+        if screen != "Pause Menu" or sample.get("race_state") != 6:
+            return _fail("debug_console_mouse_passthrough")
+        _dismiss_debug_console()
+        stage = 40
+        next_input = Time.get_ticks_msec() + 250
+    elif stage == 40 and Time.get_ticks_msec() >= next_input:
+        if sample.get("debug_console_open", false):
+            return _fail("debug_console_did_not_close")
+        return _open_restart_popup()
     elif stage == 4 and sample.get("selected_item") == 0x52e039f4:
         stage = 5
         _tap(KEY_ENTER)
@@ -113,13 +142,55 @@ func _process(delta: float) -> bool:
         _tap(KEY_DOWN if sample.get("selected_item", 0) < 0x52e039f4 else KEY_UP)
         next_input = Time.get_ticks_msec() + 650
     elif stage == 5 and Time.get_ticks_msec() >= next_input:
+        if sample.get("selected_item") != 0x52e039f4:
+            return _fail("restart_selection")
         stage = 6
         _resize_sweep("direct-confirm")
     elif stage == 6:
-        stage = 7
-        print("HP2_MVP_RESIZE_PASS direct ", tested_screens)
-        quit(0)
+        if mouse_pause:
+            root.size = Vector2i(800, 600)
+            stage = 34
+            next_input = Time.get_ticks_msec() + 150
+            return false
+        return _finish_direct()
+    elif stage == 34 and Time.get_ticks_msec() >= next_input:
+        _click_design(Vector2(25, 25))
+        stage = 35
+        next_input = Time.get_ticks_msec() + 350
+    elif stage == 35 and Time.get_ticks_msec() >= next_input:
+        if screen != "Pause Menu" or sample.get("race_state") != 6:
+            return _fail("modal_outside_click")
+        _click_design(Vector2(475, 288))
+        stage = 36
+        next_input = Time.get_ticks_msec() + 650
+    elif stage == 36 and Time.get_ticks_msec() >= next_input:
+        _click_design(Vector2(270, 165))
+        stage = 37
+    elif stage == 37 and sample.get("race_state") == 3:
+        return _finish_direct()
     return false
+
+func _open_restart_popup() -> bool:
+    _click_design(Vector2(270, 197))
+    stage = 5
+    next_input = Time.get_ticks_msec() + 650
+    return false
+
+func _finish_direct() -> bool:
+    stage = 7
+    print("HP2_MVP_RESIZE_PASS direct ", tested_screens)
+    quit(0)
+    return false
+
+func _click_design(position: Vector2) -> void:
+    var canvas := race.get_node("FrontendCanvas") as Node2D
+    for down in [true, false]:
+        var event := InputEventMouseButton.new()
+        event.button_index = MOUSE_BUTTON_LEFT
+        event.position = canvas.to_global(position)
+        event.global_position = event.position
+        event.pressed = down
+        root.push_input(event)
 
 func _capture(name: String) -> bool:
     if tested_screens.has(name):
@@ -146,9 +217,13 @@ func _resize_sweep(name: String, maximize := false) -> bool:
         sizes.append(Vector2i(1280, 900))
     for wanted in sizes:
         root.size = wanted
-        await process_frame
-        await RenderingServer.frame_post_draw
-        var image := root.get_texture().get_image()
+        var image: Image
+        for attempt in range(5):
+            await process_frame
+            await RenderingServer.frame_post_draw
+            image = root.get_texture().get_image()
+            if root.size == wanted and image != null and image.get_size() == wanted:
+                break
         if root.size != wanted or image == null or image.get_size() != wanted:
             return _resize_error("extent_" + name)
         var fitted_scale := minf(wanted.x / 640.0, wanted.y / 480.0)

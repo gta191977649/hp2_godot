@@ -20,6 +20,8 @@ public:
     void _input(const godot::Ref<godot::InputEvent>& event) override;
     void report_launch_error(const godot::String& stage, const godot::String& track, const godot::String& reason);
     godot::Dictionary telemetry() const;
+    void frontend_pointer_input(const godot::Ref<godot::InputEvent>& event);
+    void frontend_pointer_button(int index);
 
 protected:
     static void _bind_methods();

@@ -23,6 +23,13 @@ Race or the Championship event tree (Track 12). Hot Pursuit → Ultimate
 Racer leads to the first event, Lotus Elise Delivery (Track 13).
 Use WASD or the arrow keys to drive, Space for handbrake and Esc to pause.
 In the frontend, Esc exits the application.
+Click menu items to select them, scroll to navigate lists, and right-click
+to go back. The race HUD uses its existing driving controls.
+
+On Windows, `./build.ps1 --run --rendering-driver d3d12` starts Forward+
+with Direct3D 12 and SDR output. Windows 11 can apply Auto HDR to eligible
+games when HDR and Auto HDR are enabled in Windows Display Settings.
+The default launcher uses Vulkan.
 The default race minimap rotates with the player's car. Single-player
 fixed-map choices are available in Display Options.
 `./build.ps1 --run --race-track=12` opens the diagnostic race directly.

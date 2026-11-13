@@ -1519,6 +1519,7 @@ place and kept, because the fact that a session believed it, and why, is itself 
 - [2026-11-13 TASK-0127 ImGui console shortcut](#2026-11-13-task-0127-imgui-console-shortcut)
 - [2026-11-13 TASK-0126 Race pause key and minimap heading](#2026-11-13-task-0126-race-pause-key-and-minimap-heading)
 - [2026-11-13 TASK-0126 Rotating minimap and rear view](#2026-11-13-task-0126-rotating-minimap-and-rear-view)
+- [2026-11-13 TASK-0126 Godot mouse input and Windows rendering driver](#2026-11-13-task-0126-godot-mouse-input-and-windows-rendering-driver)
 
 <!-- generated:contents:end -->
 
@@ -5390,3 +5391,11 @@ Debug and Release staged. Track 12 Forward+ showed the live mirror in
 the captured HUD. The Release resize smoke checked the mirror center,
 target binding and projection size at 800x600, 1120x630, 1260x540 and
 540x720. Exact PAL raster parity and performance measurements remain open.
+
+## 2026-11-13 TASK-0126 Godot mouse input and Windows rendering driver
+
+Implemented pointer dispatch through the frontend Control and original UI
+callbacks. Vulkan mouse probes reached Quick Race on Track 12 and the first
+Hot Pursuit event on Track 13. Debug and Release staged. Track 12 resize
+smokes passed on Vulkan and D3D12. The task records the reproduction command
+and the remaining settings, replay, results and Auto HDR checks.

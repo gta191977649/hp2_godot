@@ -12,6 +12,10 @@
 - [ ] Finish migration of authored visual animations to Godot and validate the latest changes when requested.
 - [x] Present the live rear view with original textures and centered resize behavior.
 - [ ] Cover race results, replay presentation, remaining screens and unverified locales. Exact GS blend and sampler parity remains open.
+- [x] Enter Track 12 and Track 13 with Godot mouse input from the normal frontend.
+- [x] Dismiss the Debug console from smoke scripts and verify that the open console blocks clicks through to Pause Menu.
+- [ ] Finish mouse verification for settings, replay, results and locked events.
+- [ ] Confirm Windows Auto HDR activation with Xbox Game Bar on an HDR-enabled display.
 
 ## Evidence
 
@@ -98,3 +102,33 @@ Next action for TASK-0126 is to port the menu group slide, arrow pulse
 and background transitions from the donor's animation owners into
 Godot while preserving their authored inputs. Check the echo on selection
 and the event-number anchors when runtime testing resumes.
+
+## Mouse input and rendering backend
+
+Godot consumes Flailer geometry and source identities for pointer hit testing.
+The source UI tick validates the queued screen generation and runs existing
+selection, menu, popup, campaign, name entry and replay callbacks. Godot buttons
+provide click targets for actions with no suitable authored geometry. The live
+race HUD is informational. The open ImGui console captures pointer and keyboard
+events before the frontend controls. The smoke scripts read the actual console
+state and use the grave key to dismiss it before sending game input.
+`build.ps1 --rendering-driver d3d12` selects the SDR D3D12 Forward+ path. Vulkan
+remains the default. No Windows display settings were changed.
+
+- Built and staged Debug and Release using `cmake --build --preset godot-mvp-debug --target stage_mvp --parallel 16` and `cmake --build --preset godot-mvp-release --target stage_mvp --parallel 16` with Godot 4.7.2.
+- Vulkan Godot mouse probes reached the live races from Quick Race and the first Hot Pursuit event. The Track 13 probe visited the event tree, selected the Elise and an automatic transmission, then advanced both pre-race screens. Logs are `local/task0126-mouse-quick/smoke.log` and `local/task0126-mouse-pursuit/click.log`.
+- The Release keyboard frontend smoke passed when run by itself at 960x720 with `--script "$PWD/tools/test_frontend_mvp.gd"`. See `local/task0126-mouse-keyboard/serial.log`.
+- The direct Track 12 keyboard resize probe passed on Vulkan and D3D12 Forward+ on Intel Arc B390. It checked 800x600, 1120x630, 1260x540 and 540x720 with the HUD and rear view, Pause Menu and restart confirmation. The Debug `HP2_MVP_MOUSE_PAUSE=1` run passed after checking that Resume clicks are captured by the open console, opening the Restart Race modal, clicking outside, cancelling and resuming. Logs and captures are under `local/task0126-mouse-keyboard`, `local/task0126-mouse-d3d12` and `local/task0126-mouse-pause-final`.
+- D3D12 Forward+ reported feature level 12_0 and played the menu videos. The Windows Auto HDR indicator and a complete D3D12 Track 13 race were not verified. Actual HDR activation is a Windows decision.
+
+```powershell
+$env:HP2_PS2_ASSET_ROOT = 'D:/ps2_game/Need for Speed - Hot Pursuit 2 (USA).iso'
+$env:HP2_PROFILE_DIR = "$PWD/local/task0126-mouse-followup/profile"
+$env:HP2_MVP_SCREENSHOT_DIR = "$PWD/local/task0126-mouse-followup"
+$env:HP2_MVP_MOUSE_PAUSE = '1'
+New-Item -ItemType Directory -Force $env:HP2_MVP_SCREENSHOT_DIR | Out-Null
+& ./local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe --path build/godot-mvp-debug/mvp-project --rendering-driver vulkan --resolution 800x600 --script "$PWD/tools/test_mvp_frontend_resize.gd" -- --race-track=12
+```
+
+Continue by exercising settings and post-race pages with mouse events and
+checking the Game Bar Auto HDR indicator after `./build.ps1 --run --rendering-driver d3d12`.

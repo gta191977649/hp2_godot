@@ -247,7 +247,7 @@ bool ImGuiOverlay::input(const Ref<InputEvent>& event) {
                 if (index == MOUSE_BUTTON_WHEEL_DOWN) io.MouseWheel -= button->get_factor();
             }
         }
-        return io.WantCaptureMouse;
+        return true;
     }
     return false;
 }

@@ -223,6 +223,8 @@ extern std::int32_t newSongTitleWidth;
 class FlailerLoadingScreenAnimation;
 
 struct FlailerScreenList {
+    // Port-side identity for events queued against the presented screen.
+    std::uint64_t pointerEpoch{};
     ScreenStack stack{};
     const char* mainScreen{};
     std::array<FlailerPopup*,2> popups{};

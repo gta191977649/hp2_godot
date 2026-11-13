@@ -48,8 +48,7 @@ func _process(_delta: float) -> bool:
         return _fail("timeout")
     if not is_instance_valid(race):
         race = root.get_node_or_null("NativeGame/RacePresentation")
-        if is_instance_valid(race) and OS.get_environment("HP2_MVP_DEBUG_CONSOLE") == "1":
-            _tap(KEY_QUOTELEFT)
+        _dismiss_debug_console()
         return false
     var sample: Dictionary = race.call("telemetry")
     var screen: String = sample.get("screen", "")
@@ -255,6 +254,10 @@ func _run_full_event(sample: Dictionary, screen: String) -> bool:
         stage = 45
         _finish(sample, "results-return")
     return false
+
+func _dismiss_debug_console() -> void:
+    if is_instance_valid(race) and race.telemetry().get("debug_console_open", false):
+        _tap(KEY_QUOTELEFT)
 
 func _key(key: Key, held: bool) -> void:
     var event := InputEventKey.new()

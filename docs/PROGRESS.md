@@ -5,7 +5,7 @@
 
 The active game implementation is the Windows donor. See [TASK-0123](../tasks/active/TASK-0123-native-source-migration.md) for the current build. [TASK-0124](../tasks/active/TASK-0124-modular-godot-presentation.md) tracks the Godot presentation refactor.
 
-[TASK-0126](../tasks/active/TASK-0126-authored-frontend-and-race-ui.md) tracks authored frontend and race UI. Windows Release smoke reached Track 12 from Quick Race and Championship, including pause and return to menu. Continue with menu slide, arrow pulse and background Tweens. Latest highlight and number alignment edits await runtime validation.
+[TASK-0126](../tasks/active/TASK-0126-authored-frontend-and-race-ui.md) tracks authored frontend and race UI. Godot mouse input reached Track 12 Quick Race and Track 13 Hot Pursuit. Vulkan and D3D12 passed the Track 12 resize smoke. Continue with mouse checks for settings, replay and results, and check Windows Auto HDR activation on D3D12.
 
 [TASK-0127](../tasks/completed/TASK-0127-debug-launch.md) restored Debug startup with the complete disc and verified the ImGui overlay at 200% DPI, including a missing-bank assertion and live Track 12 input handoff.
 

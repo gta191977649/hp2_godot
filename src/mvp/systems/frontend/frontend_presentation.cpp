@@ -1,16 +1,21 @@
 #include "frontend_presentation.hpp"
 
 #include "assets/mesh_converter.hpp"
+#include "presentation/race_presentation.hpp"
 #include "frontend_video.hpp"
 #include "indep/inc/Flags.hpp"
 #include "indep/inc/FlailerDB.hpp"
 #include "indep/inc/Fred.hpp"
 #include "indep/inc/Texture.hpp"
+#include "bware/inc/bWare.hpp"
 
+#include <godot_cpp/classes/button.hpp>
 #include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/camera3d.hpp>
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
+#include <godot_cpp/classes/input_event_mouse_button.hpp>
+#include <godot_cpp/classes/input_event_mouse_motion.hpp>
 #include <godot_cpp/classes/interval_tweener.hpp>
 #include <godot_cpp/classes/mesh_instance3d.hpp>
 #include <godot_cpp/classes/property_tweener.hpp>
@@ -23,6 +28,7 @@
 #include <godot_cpp/classes/tween.hpp>
 #include <godot_cpp/classes/video_stream_player.hpp>
 #include <godot_cpp/variant/packed_float32_array.hpp>
+#include <godot_cpp/variant/callable_method_pointer.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -97,10 +103,11 @@ Ref<Image> rgba_image(const std::uint8_t* source, int width, int height) {
 }
 
 struct FrontendPresentation::Storage {
-    Storage(Node2D& node, const GameResources& files)
+    Storage(Node2D& node, const GameResources& files, ApplicationRuntime& runtime, RacePresentation& host)
         : canvas(node), background(*memnew(Node2D)), videoMatte(*memnew(Node2D)), overlay(*memnew(Node2D)),
           mapBackground(*memnew(Node2D)), mapTexture(*memnew(Node2D)),
-          mapForeground(*memnew(Node2D)), player(*memnew(VideoStreamPlayer)), video(player, files) {
+          mapForeground(*memnew(Node2D)), player(*memnew(VideoStreamPlayer)), video(player, files),
+          pointerRuntime(runtime), pointerHost(host), pointerSurface(*memnew(Control)) {
         canvas.add_child(&background);
         canvas.add_child(&videoMatte);
         videoMatte.set_z_index(1);
@@ -132,6 +139,12 @@ void fragment() {
         player.set_expand(true);
         player.set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
         player.hide();
+        canvas.add_child(&pointerSurface);
+        pointerSurface.set_name("FrontendPointer");
+        pointerSurface.set_z_index(40);
+        pointerSurface.set_mouse_filter(Control::MOUSE_FILTER_STOP);
+        pointerSurface.connect("gui_input", callable_mp(&host, &RacePresentation::frontend_pointer_input));
+        pointerSurface.hide();
     }
     Node2D& canvas;
     Node2D& background;
@@ -167,6 +180,247 @@ void fragment() {
     Ref<Tween> transition;
     std::string screen;
     bool loading{};
+    ApplicationRuntime& pointerRuntime;
+    RacePresentation& pointerHost;
+    Control& pointerSurface;
+    using Action = FrontendPointerAction;
+    struct Hit { Rect2 rect; FrontendPointerTarget target; };
+    std::vector<Hit> hits;
+    struct PointerButton { Button* node; Action action; };
+    std::vector<PointerButton> pointerButtons;
+    std::optional<FrontendPointerTarget> pressedTarget, hoverTarget;
+    std::uint64_t pointerEpoch{};
+    FrontendPointerTarget pointerPage{};
+    bool pointerModal{}, pointerReplay{}, pointerHelp{}, pointerTitle{}, pointerHorizontal{};
+
+    static bool same_target(const FrontendPointerTarget& a, const FrontendPointerTarget& b) {
+        return a.screen == b.screen && a.object == b.object && a.event == b.event && a.action == b.action;
+    }
+
+    void send_pointer(FrontendPointerTarget target, Action action) {
+        target.action = action;
+        pointerRuntime.QueueFrontendPointer(pointerEpoch, target);
+    }
+
+    void pointer_input(const Ref<InputEvent>& event) {
+        const Ref<InputEventMouse> mouse = event;
+        if (mouse.is_null()) return;
+        const auto point = mouse->get_position() + pointerSurface.get_position();
+        auto found = std::find_if(hits.rbegin(), hits.rend(),
+            [&](const Hit& hit) { return hit.rect.has_point(point); });
+        std::optional<FrontendPointerTarget> target;
+        if (found != hits.rend()) target = found->target;
+        if (!target && pointerTitle) target = pointerPage;
+        if (const Ref<InputEventMouseMotion> motion = event; motion.is_valid()) {
+            pointerSurface.set_default_cursor_shape(target ? Control::CURSOR_POINTING_HAND : Control::CURSOR_ARROW);
+            if (target && (target->object || target->event) && target->action == Action::Confirm &&
+                !target->event && (!hoverTarget || !same_target(*hoverTarget, *target))) {
+                send_pointer(*target, Action::Focus);
+            }
+            hoverTarget = target;
+            return;
+        }
+        const Ref<InputEventMouseButton> button = event;
+        if (button.is_null()) return;
+        switch (button->get_button_index()) {
+        case MOUSE_BUTTON_LEFT:
+            if (button->is_pressed()) pressedTarget = target;
+            else {
+                if (target && pressedTarget && same_target(*target, *pressedTarget))
+                    send_pointer(*target, target->action);
+                pressedTarget.reset();
+            }
+            break;
+        case MOUSE_BUTTON_RIGHT:
+            if (button->is_pressed()) send_pointer(pointerPage, Action::Back);
+            break;
+        case MOUSE_BUTTON_WHEEL_UP: case MOUSE_BUTTON_WHEEL_DOWN:
+            if (button->is_pressed() && !pointerModal) {
+                const bool up = button->get_button_index() == MOUSE_BUTTON_WHEEL_UP;
+                if (pointerReplay) send_pointer(pointerPage, up ? Action::ReplayPrevious : Action::ReplayNext);
+                else if (pointerHorizontal || (target && target->action == Action::Right)) {
+                    const auto entry = target && target->action == Action::Right ? *target : pointerPage;
+                    send_pointer(entry, up ? Action::Left : Action::Right);
+                } else send_pointer(pointerPage, up ? Action::Previous : Action::Next);
+            }
+            break;
+        default: break;
+        }
+    }
+
+    void add_pointer_button(const char* label, Action action, std::size_t index, int row) {
+        if (pointerButtons.size() <= index) {
+            auto* button = memnew(Button);
+            button->set_focus_mode(Control::FOCUS_NONE);
+            button->set_mouse_filter(Control::MOUSE_FILTER_PASS);
+            button->set_default_cursor_shape(Control::CURSOR_POINTING_HAND);
+            pointerSurface.add_child(button);
+            button->connect("pressed", callable_mp(&pointerHost, &RacePresentation::frontend_pointer_button)
+                .bind(static_cast<int>(index)));
+            pointerButtons.push_back({button, action});
+        }
+        auto& entry = pointerButtons[index];
+        entry.action = action;
+        auto& button = *entry.node;
+        if (button.get_text() != label) button.set_text(label);
+        const auto position = Vector2(12 + 102 * (index % 6), row) - pointerSurface.get_position();
+        button.set_position(position);
+        button.set_size({98, 28});
+        button.show();
+    }
+
+    void pointer_button(int index) {
+        if (index >= 0 && static_cast<std::size_t>(index) < pointerButtons.size() &&
+            pointerButtons[index].node->is_visible_in_tree())
+            send_pointer(pointerPage, pointerButtons[index].action);
+    }
+
+    void update_pointer(const FrontendStateView& state) {
+        hits.clear();
+        if (pointerEpoch != state.pointerEpoch || pointerReplay != state.pointerReplay ||
+            pointerHelp != state.pointerHelp) {
+            for (const auto& button : pointerButtons) button.node->hide();
+            pressedTarget.reset();
+            hoverTarget.reset();
+            pointerEpoch = state.pointerEpoch;
+        }
+        pointerModal = state.pointerModal;
+        pointerReplay = state.pointerReplay;
+        pointerHelp = state.pointerHelp;
+        pointerTitle = !pointerModal && screen == "Title Screen";
+        pointerHorizontal = screen == "Select Car" || screen == "Select Track";
+        const auto page = std::find_if(state.pointerTargets.begin(), state.pointerTargets.end(),
+            [](const auto& target) { return target.object == 0; });
+        pointerPage = page == state.pointerTargets.end() ? FrontendPointerTarget{} : *page;
+        if ((page == state.pointerTargets.end() && !pointerReplay) || loading) {
+            pressedTarget.reset();
+            hoverTarget.reset();
+            pointerSurface.hide();
+            return;
+        }
+        pointerSurface.set_position(layout.visible_rect().position);
+        pointerSurface.set_size(layout.visible_rect().size);
+        pointerSurface.show();
+        const auto add = [&](Rect2 rect, FrontendPointerTarget target) {
+            rect = rect.intersection(layout.visible_rect());
+            if (!rect.has_area()) return;
+            auto previous = std::find_if(hits.begin(), hits.end(),
+                [&](const Hit& hit) { return same_target(hit.target, target); });
+            if (previous == hits.end()) hits.push_back({rect, target});
+            else previous->rect = previous->rect.merge(rect);
+        };
+        std::vector<std::uint32_t> characters;
+        if (!pointerModal && screen == "NameEntry") {
+            for (int row = 0; row < 3; ++row)
+                for (int col = 0; col < 14; ++col) {
+                    char name[16];
+                    std::snprintf(name, sizeof(name), "CHAR_%X%X", row, col);
+                    characters.push_back(hashString(name));
+                }
+        }
+        for (int layer = 28; layer >= 0; --layer) {
+            for (const auto* strip : state.layout->layers[layer]) {
+                auto item = std::find_if(state.pointerTargets.begin(), state.pointerTargets.end(),
+                    [&](const auto& entry) {
+                        return entry.object && entry.object == strip->sourceObject &&
+                            (!strip->sourceScreen || entry.screen == strip->sourceScreen);
+                    });
+                FrontendPointerTarget target;
+                if (item != state.pointerTargets.end()) target = *item;
+                else if (!pointerModal && (strip->sourceObject == 0xd1cda594u ||
+                    strip->sourceObject == 0x9345e4a7u || strip->sourceObject == 0xedf2e4eeu ||
+                    strip->sourceObject == 0x20d73d01u)) {
+                    if (strip->sourceScreen && strip->sourceScreen != pointerPage.screen) continue;
+                    target = pointerPage;
+                    switch (strip->sourceObject) {
+                    case 0xd1cda594u: target.action = Action::Left; break;
+                    case 0x9345e4a7u: target.action = Action::Right; break;
+                    case 0xedf2e4eeu: target.action = Action::Previous; break;
+                    default: target.action = Action::Next; break;
+                    }
+                } else if (!pointerModal && std::any_of(state.layout->pointerArrowRows.begin(),
+                    state.layout->pointerArrowRows.end(), [&](const auto& row) {
+                        return row.screen == pointerPage.screen && row.value == strip->sourceObject;
+                    })) {
+                    target = pointerPage;
+                    target.object = state.selectedItem;
+                    target.action = Action::Right;
+                } else if (std::find(characters.begin(), characters.end(), strip->sourceObject) != characters.end()) {
+                    target = pointerPage;
+                    target.object = strip->sourceObject;
+                } else continue;
+                for (auto* part = strip; part; part = part->nextTexture.get()) {
+                    for (const auto& polygon : part->polygons) {
+                        if (std::none_of(polygon.vertices.begin(), polygon.vertices.end(),
+                            [](const auto& v) { return (v.color >> 24) != 0; })) continue;
+                        Rect2 bounds({polygon.vertices[0].position[0], polygon.vertices[0].position[1]}, {});
+                        for (const auto& v : polygon.vertices) bounds = bounds.expand({v.position[0], v.position[1]});
+                        add(bounds, target);
+                    }
+                }
+            }
+        }
+        if (!pointerModal && screen == "View Event Tree") {
+            for (const auto& panel : state.layout->pointerEventPanels) {
+                const auto& b = panel.bounds;
+                auto target = pointerPage;
+                target.event = panel.number;
+                add(Rect2({b[0], b[1]}, {b[2] - b[0], b[3] - b[1]}).abs(), target);
+            }
+        }
+        std::size_t index = 0;
+        const auto button = [&](const char* label, Action action, int row = 444) {
+            add_pointer_button(label, action, index++, row);
+        };
+        if (state.pointerHelp) {
+            hits.clear();
+            button("Close help", Action::Back);
+        } else if (pointerReplay && !pointerModal) {
+            button("Previous", Action::ReplayPrevious);
+            button("Play / Pause", Action::ReplayPause);
+            button("Next", Action::ReplayNext);
+            button("Slow motion", Action::ReplaySlow);
+            button("Camera", Action::ReplayCamera);
+            button("HUD", Action::ReplayHud);
+        } else if (!pointerModal && pointerHorizontal) {
+            const auto has = [&](Action action) {
+                return std::any_of(hits.begin(), hits.end(),
+                    [&](const auto& hit) { return hit.target.action == action; });
+            };
+            if (!has(Action::Left)) button("Previous", Action::Left);
+            if (!has(Action::Right)) button("Next", Action::Right);
+            if (!has(Action::Previous))
+                button(screen == "Select Car" ? "Previous color" : "Previous time", Action::Previous);
+            if (!has(Action::Next))
+                button(screen == "Select Car" ? "Next color" : "Next time", Action::Next);
+            if (screen == "Select Track") button("Preview", Action::Item);
+            if (screen == "Select Car" || !has(Action::Confirm))
+                button("Confirm", Action::Confirm);
+        } else if (!pointerModal && screen == "View Event Tree") {
+            if (state.layout->pointerEventPanels.empty()) {
+                button("Continue", Action::Confirm);
+                button("Rewards", Action::Item);
+            }
+        } else if (!pointerModal && screen.rfind("Pre Race", 0) == 0) {
+            button("Previous", Action::Back);
+            button("Next", Action::Confirm);
+        } else if (!characters.empty() && std::any_of(hits.begin(), hits.end(), [&](const Hit& hit) {
+            return std::find(characters.begin(), characters.end(), hit.target.object) != characters.end();
+        })) {
+            button("Character set", Action::Item);
+            button("Caret left", Action::CaretLeft);
+            button("Caret right", Action::CaretRight);
+        } else if (!pointerModal && (screen == "Pause audio" || screen == "Pause display" ||
+            screen == "Customize P1 HUD" || screen == "JukeBox Music")) {
+            button("Decrease", Action::Left);
+            button("Increase", Action::Right);
+        } else if (hits.empty() && !pointerTitle && (!pointerModal || state.pointerPopupButtons == 0)) {
+            button("Continue", Action::Confirm);
+        }
+        if (state.pointerHelpAvailable && !state.pointerHelp && !pointerModal && !pointerReplay && !pointerTitle)
+            button("Help", Action::Help, 410);
+        for (; index < pointerButtons.size(); ++index) pointerButtons[index].node->hide();
+    }
     struct Highlight {
         Node2D* node{};
         Ref<Tween> tween;
@@ -537,9 +791,12 @@ void fragment() {
     }
 };
 
-FrontendPresentation::FrontendPresentation(Node2D& canvas, const GameResources& files)
-    : storage_(std::make_unique<Storage>(canvas, files)) {}
+FrontendPresentation::FrontendPresentation(Node2D& canvas, const GameResources& files,
+    ApplicationRuntime& runtime, RacePresentation& host)
+    : storage_(std::make_unique<Storage>(canvas, files, runtime, host)) {}
 FrontendPresentation::~FrontendPresentation() = default;
+void FrontendPresentation::pointer_input(const Ref<InputEvent>& event) { storage_->pointer_input(event); }
+void FrontendPresentation::pointer_button(int index) { storage_->pointer_button(index); }
 bool FrontendPresentation::video_playing() const noexcept {return storage_->video.playing();}
 std::uint64_t FrontendPresentation::video_request() const noexcept {return storage_->video.request_id();}
 bool FrontendPresentation::showing_loading() const noexcept {return storage_->loading;}
@@ -652,6 +909,7 @@ void FrontendPresentation::update(const FrontendStateView& state, Vector2 viewpo
     s.draw_layers(*state.layout, s.mapForeground, 28, 25);
     s.mapMeshes.resize(s.usedMapMeshes);
     s.update_highlights(*state.layout);
+    s.update_pointer(state);
     if (screen == "Title Screen" && s.video.playing()) {
         const auto rect = s.layout.fit_movie(s.layout.visible_rect());
         s.player.set_position(rect.position);

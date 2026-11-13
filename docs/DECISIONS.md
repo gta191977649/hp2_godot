@@ -81,3 +81,12 @@ controls. The MVP can route original speech to Godot's resampled stream
 player. One worker reads and decodes bounded ADPCM blocks. The mixer reads
 PCM from a preallocated ring. The Godot route is opt-in while the other
 game audio categories and the matched performance comparison remain open.
+
+## TASK-0126 - Godot pointer input and renderer choice
+
+Godot owns hit testing and fallback controls in the centered frontend canvas.
+The application runtime validates screen generations and dispatches pointer
+commands through the original UI callbacks on its frontend tick. Flailer
+publishes the geometry and identities needed for mouse targets. Vulkan remains
+the default Forward+ driver. The Windows launcher can also select D3D12 with
+SDR output so Windows can decide whether to apply Auto HDR.

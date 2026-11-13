@@ -257,7 +257,8 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
         session_->frontendCanvas = memnew(Node2D);
         session_->frontendCanvas->set_name("FrontendCanvas");
         add_child(session_->frontendCanvas);
-        session_->frontend = std::make_unique<FrontendPresentation>(*session_->frontendCanvas, session_->files);
+        session_->frontend = std::make_unique<FrontendPresentation>(*session_->frontendCanvas, session_->files,
+            session_->runtime, *this);
         session_->cinematic = std::make_unique<NisPresentation>(*this);
         set_process(true);
         return true;
@@ -285,6 +286,14 @@ void RacePresentation::_input(const Ref<InputEvent>& event) {
         get_viewport()->set_input_as_handled();
         if (!session_->host.inRace && key->is_pressed() && !key->is_echo()) quit_game();
     }
+}
+
+void RacePresentation::frontend_pointer_input(const Ref<InputEvent>& event) {
+    if (session_ && session_->frontend && !failed_) session_->frontend->pointer_input(event);
+}
+
+void RacePresentation::frontend_pointer_button(int index) {
+    if (session_ && session_->frontend && !failed_) session_->frontend->pointer_button(index);
 }
 
 void RacePresentation::_process(double delta) {
@@ -448,6 +457,9 @@ void RacePresentation::_process(double delta) {
 Dictionary RacePresentation::telemetry() const {
     Dictionary result;
     if (!session_) return result;
+#ifdef HP2_MVP_IMGUI
+    result["debug_console_open"] = debug_ && debug_->captures_game_input();
+#endif
     const auto& frame = session_->bridge.current();
     if (session_->frontend) {
         result["screen"] = session_->frontendScreen;

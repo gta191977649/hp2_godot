@@ -1040,7 +1040,7 @@ std::int32_t FlailerScreenList::SummonPopup(const FlailerPopupConfig& parameters
     for (std::size_t index=0;index<popups.size();++index) {
         Require(popups[index],"Screen list has no popup owner");
         if (!popups[index]->activeState) {
-            popups[index]->Summon(parameters);return static_cast<std::int32_t>(index);
+            ++pointerEpoch;popups[index]->Summon(parameters);return static_cast<std::int32_t>(index);
         }
     }
     return -1;
@@ -1051,7 +1051,10 @@ void FlailerScreenList::DismissPopup(std::int32_t index)
     if (static_cast<std::uint32_t>(index)>=popups.size()) return;
     auto* popup=popups[static_cast<std::size_t>(index)];
     Require(popup,"Screen list has no popup owner");
-    if (popup->activeState) popup->Dismiss(popup->configuration->joystickPort,popup->configuration->dismissResult);
+    if (popup->activeState) {
+        ++pointerEpoch;
+        popup->Dismiss(popup->configuration->joystickPort,popup->configuration->dismissResult);
+    }
 }
 
 void FlailerScreenNode::SetVisibility(std::int32_t visibility)
@@ -1062,6 +1065,7 @@ void FlailerScreenNode::SetVisibility(std::int32_t visibility)
 
 void FlailerScreenList::ChangeToScreen(const char* name,bool push)
 {
+    ++pointerEpoch;
     Require(ui && background && input && input->router && input->screens==this,
         "Screen list transition has no live UI/background/input owner");
     // Native exit animations own their destination string. UnActivate can
@@ -1143,6 +1147,7 @@ void FlailerScreenList::JoyHandler(std::int32_t port,std::int32_t event,std::uin
         Require(popup,"Frontend input has no popup owner");
         if (popup->activeState && (popup->configuration->joystickPort==port || popup->configuration->joystickPort==-1)) {
             popup->JoyHandler(port,event,value);popupHandled=true;
+            if (!popup->activeState) ++pointerEpoch;
         }
     }
     if (popupHandled) return;

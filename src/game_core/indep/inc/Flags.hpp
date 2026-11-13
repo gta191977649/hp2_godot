@@ -316,6 +316,12 @@ class LanguageManager;
 struct FlailerRenderManager;
 struct FrontendFrame;
 struct NisManagerRegistry;
+enum class FrontendPointerAction { Focus, Confirm, Back, Left, Right, Previous, Next, Item,
+    CaretLeft, CaretRight, Help, ReplayPause, ReplayPrevious, ReplayNext, ReplaySlow, ReplayCamera, ReplayHud };
+struct FrontendPointerTarget {
+    std::uint32_t screen{}, object{}, event{};
+    FrontendPointerAction action{FrontendPointerAction::Confirm};
+};
 struct FrontendStateView {
     // Borrowed CPU layout. Consume synchronously before the next runtime advance.
     const FlailerRenderManager* layout{};
@@ -324,6 +330,10 @@ struct FrontendStateView {
     const ::CarCinematicServices* cameras{};
     const char* screen{};
     std::uint32_t selectedItem{};
+    std::uint64_t pointerEpoch{};
+    std::vector<FrontendPointerTarget> pointerTargets;
+    bool pointerModal{}, pointerReplay{}, pointerHelp{}, pointerHelpAvailable{};
+    int pointerPopupButtons{};
 };
 struct RaceStateView {
     const ::WorldSimulation* simulation{};
@@ -356,7 +366,8 @@ public:
     void InitializeRace(int track);
     // Port-side policy, evaluated before starting a selected frontend race.
     void InitializeFrontend(int quickRaceTrack, bool (*supportsTrack)(int));
-    FrontendStateView FrontendState() const noexcept;
+    FrontendStateView FrontendState() const;
+    void QueueFrontendPointer(std::uint64_t epoch, FrontendPointerTarget target);
     bool AdvanceRace();
     int SelectedTrack() const noexcept;
     RaceStateView RaceState() const noexcept;

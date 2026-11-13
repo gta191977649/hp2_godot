@@ -14,6 +14,7 @@
 #include "indep/inc/eEnvMap.hpp"
 #include "indep/inc/FlailerDB.hpp"
 #include "indep/inc/FMenus.hpp"
+#include "indep/inc/FEAnim.hpp"
 #include "indep/inc/GameFlow.hpp"
 #include "indep/inc/World.hpp"
 #include "bware/inc/bWare.hpp"
@@ -46,6 +47,7 @@
 #include "indep/inc/CameraMover.hpp"
 #include "indep/inc/CarDriver.hpp"
 #include <array>
+#include <deque>
 #include <cstring>
 #include <cstdio>
 #include <thread>
@@ -261,6 +263,121 @@ struct ApplicationRuntime::Storage {
     Sound3dSampleRegistry positionalSamples;WorldImpactAudio impactAudio{};WorldAudioEffects impactEffects{};
     FlailerUiState ui;FlailerRenderManager renderer;
     FlailerScreenList screens;
+    struct PointerCommand { std::uint64_t epoch; FrontendPointerTarget target; };
+    std::deque<PointerCommand> pointerCommands;
+
+    FlailerPopup* PointerPopup() const {
+        for (auto it=screens.popups.rbegin();it!=screens.popups.rend();++it)
+            if (*it && (*it)->activeState) return *it;
+        return nullptr;
+    }
+    bool PointerReplay() const {
+        for (std::size_t index=0;index<input.count;++index)
+            if (input.registrations[index].target.kind==GAME_INPUT_REPLAY_SCREEN) return true;
+        return false;
+    }
+    void ApplyPointerCommand() {
+        if (pointerCommands.empty()) return;
+        const auto command=pointerCommands.front();pointerCommands.pop_front();
+        if (command.epoch!=screens.pointerEpoch) return;
+        const auto& target=command.target;
+        using Action=FrontendPointerAction;
+        auto action=target.action;
+        if (screens.help && screens.help->IsActive()) {
+            if (action==Action::Back || action==Action::Confirm || action==Action::Help)
+                screens.help->Dismiss();
+            return;
+        }
+        if (auto* popup=PointerPopup()) {
+            if (target.screen!=popup->configuration->screenKey) return;
+            const int port=popup->configuration->joystickPort<0 ? 0:popup->configuration->joystickPort;
+            if (action==Action::Back) {
+                popup->JoyHandler(port,11,1);
+            } else if (action==Action::Confirm || action==Action::Focus) {
+                int index=0;
+                for (;index<popup->configuration->buttonCount;++index)
+                    if (popup->buttons[index]->objectKey==target.object) break;
+                if (index==popup->configuration->buttonCount) {
+                    if (index==0 && !target.object && action==Action::Confirm) popup->JoyHandler(port,9,1);
+                    else return;
+                } else {
+                    if (popup->selectedIndex!=index) {
+                        popup->UnHighlightCurrentMenuItem();
+                        popup->selectedIndex=index;
+                        popup->HighlightCurrentMenuItem();
+                        popup->highlight->SetCurrentMenuItem(target.object);
+                    }
+                    if (action==Action::Confirm) popup->JoyHandler(port,9,1);
+                }
+            }
+            if (!popup->activeState) ++screens.pointerEpoch;
+            return;
+        }
+        if (PointerReplay()) {
+            int event=0;
+            switch (action) {
+            case Action::Back: event=99;break;
+            case Action::ReplayPause: event=100;break;
+            case Action::ReplayPrevious: event=101;break;
+            case Action::ReplayNext: event=102;break;
+            case Action::ReplaySlow: event=103;break;
+            case Action::ReplayCamera: event=104;break;
+            case Action::ReplayHud: event=107;break;
+            default: return;
+            }
+            Require(gameInputDispatch(&input,0,event,1)==GAME_INPUT_OK,"Replay pointer input failed");
+            return;
+        }
+        auto* active=screens.active;
+        if (!active || ui.ignoreJoystick) return;
+        auto* screen=active->FindFlailerScreen(static_cast<std::int32_t>(target.screen));
+        if (!screen || (screen->joystickPort!=0 && screen->joystickPort!=-1)) return;
+        if (target.event) {
+            if (active->configuration!=&CampaignScreenConfiguration() ||
+                !FocusCampaignPointerEvent(target.event)) return;
+        } else if (target.object) {
+            auto* item=screen->menu ? screen->menu->FindItem(target.object):nullptr;
+            if (item && (item->flags&1u)) screen->SetActiveMenuItem(target.object);
+            else if (!FocusNamePointerCharacter(target.object)) return;
+        }
+        int event=0;
+        switch (action) {
+        case Action::Confirm: event=9;break;
+        case Action::Back:
+            if (std::strcmp(active->configuration->name,"Pause Menu")==0) event=7;
+            else {
+                if (screens.stack.count==0) {
+                    ScreenCallbackData data{0,0,1,6};
+                    const auto callback=active->configuration->callback;
+                    if (callback) callback(ScreenMessage::LeaveScreen,&data);
+                    if (data.value!=1) ui.sound->Play(data.sound);
+                    ++screens.pointerEpoch;
+                    return;
+                }
+                event=11;
+            }
+            break;
+        case Action::Left: event=5;break;
+        case Action::Right: event=6;break;
+        case Action::Previous: event=3;break;
+        case Action::Next: event=4;break;
+        case Action::Item: event=17;break;
+        case Action::CaretLeft: event=13;break;
+        case Action::CaretRight: event=15;break;
+        case Action::Help:
+            if (ui.helpEnabled && (screens.overrideHelpItems || active->configuration->helpItems)) {
+                screens.MakeHelpGo(screens.overrideHelpItems ? screens.overrideHelpItems :
+                    active->configuration->helpItems,1);
+            }
+            return;
+        default: return;
+        }
+        // Run on the source UI tick, after the keyboard/controller scanner.
+        // Its existing per-loop gate resolves competing physical inputs.
+        screens.JoyHandler(0,event,1);
+        if (action==Action::Confirm || action==Action::Back || action==Action::Item)
+            ++screens.pointerEpoch;
+    }
     std::unique_ptr<FlailerHelpMenu> help;
     std::unique_ptr<FlailerGlobalBackgroundAnimation> background;
     std::array<std::unique_ptr<FlailerPopup>,2> popups;
@@ -757,14 +874,46 @@ void ApplicationRuntime::InitializeFrontend(int quickRaceTrack, bool (*supportsT
     Initialize();
 }
 
-FrontendStateView ApplicationRuntime::FrontendState() const noexcept
+FrontendStateView ApplicationRuntime::FrontendState() const
 {
     auto& s=*storage_;
     if(!s.stateOnly() || !s.initialized)return {};
     const auto* active=s.screens.active;
-    return {&s.renderer,s.movie.get(),&s.frontendFrame,&s.cameras,
+    FrontendStateView result{&s.renderer,s.movie.get(),&s.frontendFrame,&s.cameras,
         active && active->configuration ? active->configuration->name:nullptr,
         active ? active->GetActiveMenuItem():0};
+    result.pointerEpoch=s.screens.pointerEpoch;
+    result.pointerReplay=s.PointerReplay();
+    result.pointerHelp=s.screens.help && s.screens.help->IsActive();
+    result.pointerHelpAvailable=active && s.ui.helpEnabled &&
+        (s.screens.overrideHelpItems || active->configuration->helpItems);
+    if (const auto* popup=s.PointerPopup()) {
+        result.pointerModal=true;
+        result.pointerPopupButtons=popup->configuration->buttonCount;
+        for (int index=0;index<popup->configuration->buttonCount;++index)
+            result.pointerTargets.push_back({popup->configuration->screenKey,popup->buttons[index]->objectKey});
+        result.pointerTargets.push_back({popup->configuration->screenKey,0});
+    } else if (active && !s.ui.ignoreJoystick) {
+        for (auto* screen=active->screenRoot.next;screen!=&active->screenRoot;screen=screen->next) {
+            if (screen->joystickPort!=0 && screen->joystickPort!=-1) continue;
+            const auto key=static_cast<std::uint32_t>(screen->screenId);
+            result.pointerTargets.push_back({key,0});
+            if (screen->menu) {
+                for (auto* item=screen->menu->root.next;item!=&screen->menu->root;item=item->next)
+                    if (item->flags&1u) result.pointerTargets.push_back({key,item->objectKey});
+            }
+        }
+    }
+    return result;
+}
+
+void ApplicationRuntime::QueueFrontendPointer(std::uint64_t epoch,FrontendPointerTarget target)
+{
+    auto& s=*storage_;
+    if (!s.stateOnly() || epoch!=s.screens.pointerEpoch) return;
+    if (!s.pointerCommands.empty() && s.pointerCommands.back().target.action==FrontendPointerAction::Focus)
+        s.pointerCommands.pop_back();
+    if (s.pointerCommands.size()<16) s.pointerCommands.push_back({epoch,target});
 }
 
 int ApplicationRuntime::SelectedTrack() const noexcept {return storage_->parameters.selectedScenario;}
@@ -1025,6 +1174,7 @@ bool ApplicationRuntime::TickInternal()
                 }
             }
             s.soundClock.ticks=static_cast<uint32_t>(s.clock.realTimer);
+            if (s.stateOnly()) s.ApplyPointerCommand();
             MenuSystemTick(&s.screens);
             s.trackPhase->ServicePresentation(s.flow,s.profilesOwner);
             // DamageAbove normally publishes this operand during RenderCars.

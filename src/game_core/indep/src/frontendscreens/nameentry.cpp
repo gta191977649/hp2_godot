@@ -166,6 +166,16 @@ public:
         }
     }
     bool PlayerRight(std::int32_t port) const {return (player_==0 || player_==1) && player_==port;}
+    bool FocusPointerCharacter(std::uint32_t key)
+    {
+        if (!PlayerRight(0)) return false;
+        for (int row=0;row<3;++row)for (int column=0;column<14;++column) {
+            char name[20];std::snprintf(name,sizeof(name),"CHAR_%X%X",row,column);
+            if (hashString(name)!=key) continue;
+            column_=column;row_=row;UpdateCursor();return true;
+        }
+        return false;
+    }
     bool HandleEvent(ScreenMessage message,ScreenCallbackData& data)
     {
         // Closed PAL2BF270 table: ScreenEvent13/15 move the edit caret;
@@ -236,6 +246,10 @@ struct tNameEntryData {
 
 class NameEntry final {
 public:
+    bool FocusPointerCharacter(std::uint32_t key)
+    {
+        return editing_ && keyboard_.FocusPointerCharacter(key);
+    }
     NameEntry(MainMenuScreenServices& services,std::uint32_t screen)
         : services_(services),screen_(screen),keyboard_(services,screen),
           highlight_(*services.ui,screen,0xab671c9au,services.ui->animationSettings.highlightColor),
@@ -320,6 +334,11 @@ private:
     bool editing_{};
 };
 std::unique_ptr<NameEntry> nameOwner;
+}
+
+bool FocusNamePointerCharacter(std::uint32_t key)
+{
+    return nameOwner && nameOwner->FocusPointerCharacter(key);
 }
 
 void BindNameEntryScreen(MainMenuScreenServices& services)
