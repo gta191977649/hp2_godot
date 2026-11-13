@@ -1,346 +1,787 @@
-#include "game_core/port/driving/projection_support.hpp"
-#include "game_core/indep/inc/Table.hpp"
-namespace port::driving {
-void CalcIndexMultiplier(Memory& m,std::uint32_t s) {hp2::recovered::Table(m,s).CalcIndexMultiplier();}
-void SetMinMax(Memory& m,std::uint32_t s,float lower,float upper) {hp2::recovered::Table(m,s).SetMinMax(lower,upper);}
-}
-#include "game_core/indep/src/carinfo.hpp"
-#include "game_core/indep/inc/CarInfo.hpp"
-#include "game_core/indep/inc/Language.hpp"
-#include "game_core/port/race/character_resources.hpp"
-#include "game_core/indep/src/raceparameters.hpp"
-#include "game_core/src/bMath.hpp"
+#include "../inc/CarInfo.hpp"
+#include "indep/inc/Replay.hpp"
+#include "bware/inc/bWare.hpp"
+#include "bware/inc/bMath.hpp"
+#include "bware/inc/bWare.hpp"
+#include "Language.hpp"
+#include "indep/inc/Fred.hpp"
+
+#include <algorithm>
+#include <cctype>
 #include <cmath>
-namespace hp2::debug {
-// E-0099-W72. Actual authored raw CarLanguageInfo, not decoded profile fields.
-std::uint32_t CarTypeInfo::GetFullName(::port::driving::Memory& m,std::uint32_t a){const auto info=m.word(a+0x558);if(!info)hp2::not_implemented("0x00186088","raw CarLanguageInfo resource is required");return GetTranslatedString(m,m.signed_word(info+0x10));}
-std::uint32_t FindCarLanguageInfo(const ::port::driving::Memory& m,int type){for(auto info=0x304db8u;info<=0x305267u;info+=24)if(m.signed_word(info)==type)return info;return 0x304db8;}
-int CarTypeInfo::GetNumAvailableSkins(const ::port::driving::Memory& m,std::uint32_t a){return m.word(a+0x538)==1?1:m.signed_byte(a+0xe5);}
-int CarTypeInfo::GetAvailableSkin(const ::port::driving::Memory& m,std::uint32_t a,int index){
-    if(m.word(a+0x538)==1)return m.word(0x313898)==0?1:2;
-    const int count=m.signed_byte(a+0xe5);
-    if(!count)hp2::not_implemented("0x00186688","original zero-skin divide trap");
-    return m.signed_byte(a+0x544+std::uint32_t(index%count));
+#include <math.h>
+#include <cstring>
+
+namespace hp2 {
+void SnapshotRideInfo(CarAppearanceSelection& ride,ReplaySnapshot& snapshot)
+{
+    replaySnapshotBeginSection(&snapshot,nullptr,"RideInfo");
+    replaySnapshotMoveData(&snapshot,&ride.modelCode,1,-1,0);
+    replaySnapshotMoveData(&snapshot,&ride.skinNumber,1,1,1);
+    replaySnapshotMoveData(&snapshot,&ride.dashboardTextures,1,1,1);
+    replaySnapshotEndSection(&snapshot);
 }
-void DetermineAvailableCarSkins(::port::driving::Memory& m){for(unsigned i=0;i<64;++i){const auto info=m.word(0x3278e0)+i*0x560;if(m.byte(info+64))(void)CarTypeInfo::GetNumAvailableSkins(m,info);}}
-void InitCarInfo(::port::driving::Memory& m){if(!m.word(0x3278e0))hp2::not_implemented("0x00186EB8","actual CarInfo resource table must be loaded first");for(int i=0;i<64;++i)m.word(m.word(0x3278e0)+std::uint32_t(i)*0x560+0x558,FindCarLanguageInfo(m,i));DetermineAvailableCarSkins(m);}
-int CarTypeInfo::GetRandomSkin(::port::driving::Memory& m,std::uint32_t a){
-    if(m.word(a+0x538)==1)return GetAvailableSkin(m,a,0);
-    const int count=m.signed_byte(a+0xe5);if(!count)return 0;
-    return m.signed_byte(a+0x544+hp2::recovered::bRandom(m,count));
+
+void SnapshotDriverInfo(RaceDriverInfo& driver,ReplaySnapshot& snapshot,
+    const CarDriverAppearanceCatalogue& characters)
+{
+    replaySnapshotBeginSection(&snapshot,nullptr,"DriverInfo");
+    replaySnapshotMoveData(&snapshot,&driver.eliminated,1,1,1);
+    replaySnapshotMoveData(&snapshot,&driver.driverNumber,1,1,1);
+    replaySnapshotMoveData(&snapshot,&driver.behaviorProfile,1,1,1);
+    replaySnapshotMoveData(&snapshot,&driver.startingPosition,1,1,1);
+    replaySnapshotMoveData(&snapshot,&driver.driverClass,1,-1,0);
+    SnapshotRideInfo(driver.appearance,snapshot);
+    replaySnapshotMoveData(&snapshot,&driver.characterIndex,1,1,1);
+    if (driver.characterIndex!=-1 && snapshot.restoring)
+        driver.character=carDriverCharacterAt(&characters,driver.characterIndex);
+    replaySnapshotEndSection(&snapshot);
 }
-void DriverInfo::Sub_001867C0(::port::driving::Memory& m,std::uint32_t a,int number,int type,std::uint32_t ride,int character,int skill,int start){
-    m.word(a+12,0xffffffffu);m.byte(a+19,0);m.byte(a+16,0);m.byte(a+17,0);m.byte(a+18,0);
-    m.byte(a+1,std::uint8_t(number));m.byte(a+4,std::uint8_t(start));m.word(a+8,std::uint32_t(type));m.byte(a,0);
-    // Original LDL/LDR snapshots all8 source bytes before SDL/SDR, including
-    // alias cases after the preceding inline RideInfo constructor stores.
-    std::array<std::uint8_t,8> value{};for(unsigned i=0;i<8;++i)value[i]=m.byte(ride+i);for(unsigned i=0;i<8;++i)m.byte(a+12+i,value[i]);
-    m.byte(a+2,std::uint8_t(character));m.word(a+20,GetCharacterInfo(m,character));m.byte(a+3,std::uint8_t(skill));
-}
-bool GenerateRandomRideInfo(::port::driving::Memory& m,std::uint32_t ride,CarUsageType usage,int car_class){
-    const int location=RaceParameters(m,0x311f78).GetLocationIndex();
-    const auto base=m.word(0x3278e0);
-    const auto eligible=[&](std::uint32_t p){return m.signed_word(p+0x538)==int(usage)&&m.byte(p+0x40)&&(car_class==-1||m.signed_byte(p+0xe6)==car_class)&&CarTypeInfo::GetNumAvailableSkins(m,p)>0;};
-    float total=0;for(unsigned i=0;i<64;++i){const auto p=base+i*0x560;if(eligible(p))total+=m.scalar(p+0x520+std::uint32_t(location)*4);}
-    if(!(m.scalar(0x325400)<std::abs(total)))return false;
-    float weight=hp2::recovered::bRandom(m,total);
-    for(unsigned i=0;i<64;++i){const auto p=base+i*0x560;if(!eligible(p))continue;weight-=m.scalar(p+0x520+std::uint32_t(location)*4);if(0.f<weight)continue;
-        const auto type=m.word(p+0x534);const int skin=CarTypeInfo::GetRandomSkin(m,p);m.byte(ride+5,std::uint8_t(skin));m.word(ride,type);m.byte(ride+7,0);m.byte(ride+4,0);m.byte(ride+6,0);return true;
-    }return false;
-}
-}
-#include "game_core/port/assets/elab_chunks.hpp"
+} // namespace hp2
+#include <limits>
 #include <stdexcept>
+#include <unordered_set>
 
-#include "game_core/port/not_implemented.hpp"
+namespace hp2 {
+namespace {
+constexpr std::size_t kRecordSize = 0x560;
+constexpr std::size_t kGeometryPathOffset = 0x40;
+constexpr std::size_t kGeometryPathBytes = 0x20;
 
-namespace hp2::debug {
-// Debug00186050, static00304DB8..00305267, E-0098-S03. IDs only, no asset text.
-const CarLanguageInfo& FindCarLanguageInfo(int car_type){
-    static constexpr std::array<CarLanguageInfo,50> CarLanguageInfoTable{{
-        {-1,42002,43002,44002,41100,41300},
-        {0,42002,43002,44002,41100,41300},
-        {2,42003,43003,44003,41101,41301},
-        {4,42004,43004,44004,41102,41302},
-        {5,42006,43006,44006,41103,41303},
-        {7,42007,43007,44007,41104,41304},
-        {9,42008,43008,44008,41105,41305},
-        {11,42009,43009,44009,41106,41306},
-        {13,42010,43010,44010,41107,41307},
-        {15,42011,43011,44011,41108,41308},
-        {17,42012,43012,44012,41109,41309},
-        {19,42013,43013,44013,41110,41310},
-        {20,42014,43014,44014,41111,41311},
-        {21,42015,43015,44015,41112,41312},
-        {23,42016,43016,44016,41113,41313},
-        {27,42017,43017,44017,41114,41314},
-        {29,42018,43018,44018,41115,41315},
-        {31,42019,43019,44019,41116,41316},
-        {32,42020,43020,44020,41117,41317},
-        {33,42021,43021,44021,41118,41318},
-        {34,42022,43022,44022,41119,41319},
-        {35,42023,43023,44023,41120,41320},
-        {37,42024,43024,44024,41121,41321},
-        {39,42025,43025,44025,41122,41322},
-        {41,42026,43026,44026,41123,41323},
-        {43,42027,43027,44027,41124,41324},
-        {45,42028,43028,44028,41125,41325},
-        {47,42029,43029,44029,41126,41326},
-        {25,42041,43041,44041,41127,41327},
-        {1,42002,43002,44002,41200,41400},
-        {3,42003,43003,44003,41201,41401},
-        {6,42006,43006,44006,41202,41402},
-        {8,42007,43007,44007,41203,41403},
-        {10,42008,43008,44008,41204,41404},
-        {12,42009,43009,44009,41205,41405},
-        {14,42010,43010,44010,41206,41406},
-        {16,42011,43011,44011,41207,41407},
-        {18,42012,43012,44012,41208,41408},
-        {24,42016,43016,44016,41212,41412},
-        {28,42017,43017,44017,41213,41413},
-        {30,42018,43018,44018,41214,41414},
-        {36,42023,43023,44023,41215,41415},
-        {38,42024,43024,44024,41216,41416},
-        {40,42025,43025,44025,41217,41417},
-        {42,42026,43026,44026,41218,41418},
-        {44,42027,43027,44027,41219,41419},
-        {46,42028,43028,44028,41220,41420},
-        {48,42029,43029,44029,41221,41421},
-        {26,42041,43041,44041,41222,41422},
-        {22,42042,43042,44042,41211,41411},
-    }};
-    for(const auto& info:CarLanguageInfoTable)if(info.TheCarType==car_type)return info;
-    return CarLanguageInfoTable.front();
+std::string Text(const std::uint8_t* p, std::size_t capacity) {
+    const auto* end = std::find(p, p + capacity, std::uint8_t{0});
+    return {reinterpret_cast<const char*>(p), static_cast<std::size_t>(end - p)};
 }
-// Debug00186088, E-0098-S03. Translation resolves original numeric ID explicitly.
-std::string CarTypeInfo::GetFullName(const std::function<std::string(int)>& GetTranslatedString) const{
-    if(!pLanguageInfo || !GetTranslatedString)
-        hp2::not_implemented("0x00186088","original car language/translation binding missing");
-    return GetTranslatedString(pLanguageInfo->LanguageSpecFullName);
+
+float Float(const std::uint8_t* p) {
+    const auto raw = ReadU32(p);
+    float value;
+    static_assert(sizeof(float) == 4, "The game stores IEEE-754 binary32 values");
+    std::memcpy(&value, &raw, sizeof(value));
+    if (!std::isfinite(value)) throw std::runtime_error("Non-finite PS2 car field");
+    return value;
 }
-// Debug001860E8/00186128, E-0098-O02. Original numeric localization IDs.
-std::string CarTypeInfo::GetCarSpec0To60(const std::function<std::string(int)>& translate)const{
-    if(!pLanguageInfo || !translate)hp2::not_implemented("0x001860E8","original acceleration localization binding missing");
-    return translate(pLanguageInfo->LanguageSpec0_60);
+
+std::string Upper(std::string name) {
+    for (auto& c:name) c=static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+    return name;
 }
-std::string CarTypeInfo::GetCarSpecBHP(const std::function<std::string(int)>& translate)const{
-    if(!pLanguageInfo || !translate)hp2::not_implemented("0x00186128","original BHP localization binding missing");
-    return translate(pLanguageInfo->LanguageSpecBHP);
+
+bool GeometryPath(const std::uint8_t* p) {
+    const auto name=Upper(Text(p,kGeometryPathBytes));
+    return name.size()>19 && name.compare(0,5,"CARS\\")==0 &&
+           name.size()>=12 && name.compare(name.size()-12,12,"GEOMETRY.BIN")==0;
 }
-// Debug00186668, E-0098-S01. Keep signed normal-car count and police special case.
-int CarTypeInfo::GetNumAvailableSkins() const {
-    return UsageType==CAR_USAGE_TYPE_COP?1:NumAvailableSkinNumbers;
-}
-// Debug00186688, E-0098-S01. Explicit language binds original global, not a locale guess.
-int CarTypeInfo::GetAvailableSkin(int index,int language) const {
-    if(UsageType==CAR_USAGE_TYPE_COP)return language==0?1:2;
-    if(!NumAvailableSkinNumbers)
-        hp2::not_implemented("0x00186688","zero original skin divisor");
-    const int slot=index%NumAvailableSkinNumbers;
-    if(slot<0 || slot>=static_cast<int>(AvailableSkinNumbers.size()))
-        hp2::not_implemented("0x00186688","original skin lookup outside decoded storage");
-    return AvailableSkinNumbers[slot];
-}
-}
-namespace port::selection {
-// E-0098-S01: host decoding only, reviewed Debug type offsets + LoaderCarInfo00186148.
-std::array<hp2::debug::CarTypeInfo,64> decode_car_info(const std::vector<std::uint8_t>& bytes){
-    const auto chunks=hp2::assets::parse_chunks_top(bytes);
-    const auto* table=hp2::assets::find_first(chunks,0x34600);
-    if(!table)throw std::runtime_error("Original car config chunk0x34600 missing");
-    const auto base=(table->header_offset+0x17u)&~std::size_t(15);
-    const auto end=table->payload_offset()+table->size;
-    if(base>end || end>bytes.size() || 64u*0x560u>end-base)
-        throw std::runtime_error("Original selection car table truncated");
-    std::array<hp2::debug::CarTypeInfo,64> result{};
-    for(std::size_t i=0;i<result.size();++i){
-        const auto* row=bytes.data()+base+i*0x560;
-        auto& car=result[i];
-        const auto word=[&](int offset){return std::uint32_t(row[offset])|(std::uint32_t(row[offset+1])<<8)
-            |(std::uint32_t(row[offset+2])<<16)|(std::uint32_t(row[offset+3])<<24);};
-        std::copy_n(row,32,car.CarTypeName.begin());
-          std::copy_n(row+0x40,32,car.GeometryFilename.begin());
-        std::copy_n(row+0x80,32,car.DashGeometryFilename.begin());
-        car.HighPerformance=static_cast<std::int8_t>(row[0xe4]);
-        car.NumAvailableSkinNumbers=static_cast<std::int8_t>(row[0xe5]);
-        car.CarClass=static_cast<std::int8_t>(row[0xe6]);
-        // E-0098-R01: Debug WheelInfo type, car.Wheels+120/stride20hex.
-        const auto scalar=[&](int offset){const auto bits=word(offset);float value;std::memcpy(&value,&bits,4);return value;};
-        car.Control.SpeedLimiter=scalar(0x320); // E-0098-O02, Debug Control+20.
-          for(int n=0;n<5;++n)car.LocationProb[n]=scalar(0x520+n*4); // E-0098-RP02.
-        for(int n=0;n<4;++n){auto& wheel=car.Wheels[n];const int offset=0x120+n*0x20;
-            for(int axis=0;axis<3;++axis)wheel.Position[axis]=scalar(offset+axis*4);
-            wheel.Radius=scalar(offset+0xc);wheel.Width=scalar(offset+0x10);
-            wheel.WheelNumber=static_cast<std::int32_t>(word(offset+0x14));wheel.YRenderOffset=scalar(offset+0x18);}
-        car.Type=static_cast<std::int32_t>(word(0x534));
-        car.UsageType=static_cast<hp2::debug::CarUsageType>(word(0x538));
-        for(int n=0;n<10;++n)car.AvailableSkinNumbers[n]=static_cast<std::int8_t>(row[0x544+n]);
-        car.DefaultSkinNumber=static_cast<std::int32_t>(word(0x554));
-        // Original InitCarInfo00186EB8 binds by loop identity, independent of row.Type.
-        car.pLanguageInfo=&hp2::debug::FindCarLanguageInfo(static_cast<int>(i));
+
+CarDefinition ReadCar(const std::uint8_t* bytes, std::uint32_t offset) {
+    CarDefinition car;
+    car.recordOffset = offset;
+    car.name=Text(bytes,0x20);
+    car.baseName=Text(bytes+0x20,0x20);
+    car.geometryPath=Text(bytes+0x40,0x20);
+    car.geometryCompressedPath=Text(bytes+0x60,0x60);
+    car.dashboardGeometryPath=Text(bytes+0xA0,0x20);
+    std::memcpy(&car.selectionSortOrder,bytes+0xE4,1);
+    car.defaultSkinNumber=static_cast<std::int32_t>(ReadU32(bytes+0x554));
+    car.gauges.combined=static_cast<std::int32_t>(ReadU32(bytes+0x4d0));
+    for (std::size_t axis=0;axis<2;++axis) {
+        car.gauges.tachometerAngles[axis]=Float(bytes+0x4d4+axis*4);
+        for (std::size_t units=0;units<2;++units) {
+            car.gauges.speedometerAngles[units][axis]=Float(bytes+0x4e8+units*8+axis*4);
+            car.gauges.speedometerRange[units][axis]=Float(bytes+0x4f8+units*8+axis*4);
+        }
     }
+    car.gauges.genericMaximum=Float(bytes+0x4e0);
+    for (unsigned axis=0;axis<2;++axis) {
+        car.gauges.tachometerCenter[axis]=static_cast<std::int16_t>(ReadU16(bytes+0x4e4+axis*2));
+        car.gauges.speedometerCenter[axis]=static_cast<std::int16_t>(ReadU16(bytes+0x508+axis*2));
+        car.gauges.speedTextPosition[axis]=static_cast<std::int16_t>(ReadU16(bytes+0x50c+axis*2));
+        car.gauges.unitsPosition[axis]=static_cast<std::int16_t>(ReadU16(bytes+0x510+axis*2));
+    }
+    car.manufacturer=Text(bytes+0xC0,0x20);
+    car.engineSound=Text(bytes+0x330,0x20);
+    car.aiEngineSampleIndex=ReadU16(bytes+0x354);
+    std::memcpy(car.playerEngineSamplePrefix.data(),bytes+0x356,8);
+    car.enginePitchOrigin=ReadU16(bytes+0x35E);
+    std::memcpy(car.engineThrottleRamp.data(),bytes+0x360,4);
+    car.engineDetuneScale=static_cast<std::int16_t>(ReadU16(bytes+0x364));
+    car.engineDetuneBias=static_cast<std::int16_t>(ReadU16(bytes+0x366));
+    for (unsigned i=0;i<12;++i) {
+        car.engineVoiceDetune[i]=static_cast<std::int16_t>(ReadU16(bytes+0x368+2*i));
+        car.engineVoiceGain[i]=Float(bytes+0x380+4*i);
+    }
+    car.engineParameter3B0=static_cast<std::int16_t>(ReadU16(bytes+0x3B0));
+    car.engineParameter3B2=static_cast<std::int16_t>(ReadU16(bytes+0x3B2));
+    car.driveTrainInfo.shiftRpmFraction = Float(bytes + 0x270);
+    car.driveTrainInfo.frontFinalDrive = Float(bytes + 0x278);
+    car.driveTrainInfo.rearFinalDrive = Float(bytes + 0x27C);
+    car.driveTrainInfo.rearDriveFraction = Float(bytes + 0x280);
+    car.driveTrainInfo.clutchStiffness = Float(bytes + 0x284);
+    car.driveTrainInfo.forwardGearCount = static_cast<int32_t>(ReadU32(bytes + 0x288));
+    car.driveTrainInfo.clutchRate = Float(bytes + 0x28C);
+    for (unsigned i = 0; i < 8; ++i)
+        car.driveTrainInfo.gearRatios[i] = Float(bytes + 0x290 + 4 * i);
+    car.rigidBodyInfo.mass = Float(bytes + 0x1E0);
+    car.cameraTargetClearance = Float(bytes + 0x1EC);
+    car.roadBlockDimensions = {Float(bytes + 0x1E4), Float(bytes + 0x1E8)};
+    car.supportsDashboardTextures = bytes[0x80] != 0; // LB followed by a nonzero test.
+    for (unsigned i = 0; i < car.selectionWeights.size(); ++i)
+        car.selectionWeights[i] = Float(bytes + 0x520 + 4 * i);
+    for (unsigned i = 0; i < car.driverAnimationOffset.size(); ++i)
+        car.driverAnimationOffset[i] = Float(bytes + 0xF0 + 4 * i);
+    for (unsigned i = 0; i < 16; ++i)
+        car.rigidBodyInfo.inertia[i] = Float(bytes + 0x1F0 + 4 * i);
+    for (unsigned i = 0; i < 4; ++i)
+        car.centerOfMass[i] = Float(bytes + 0x110 + 4 * i);
+    car.steeringGeometry = {Float(bytes + 0x120), Float(bytes + 0x180),
+                            Float(bytes + 0x124), Float(bytes + 0x144)};
+    car.aerodynamicsInfo = {Float(bytes + 0x2F0), Float(bytes + 0x2F4), Float(bytes + 0x2F8)};
+    car.engineInfo.idleRpm = Float(bytes + 0x2B0);
+    car.engineInfo.redlineRpm = Float(bytes + 0x2B4);
+    car.engineInfo.maximumRpm = Float(bytes + 0x2B8);
+    car.engineInfo.momentOfInertia = Float(bytes + 0x2BC);
+    for (unsigned i = 0; i < 9; ++i)
+        car.engineInfo.torqueCurve[i] = Float(bytes + 0x2C0 + 4 * i);
+    for (unsigned i = 0; i < 3; ++i)
+        car.engineInfo.brakingCurve[i] = Float(bytes + 0x2E4 + 4 * i);
+    car.forwardSpeedLimitMph=Float(bytes+0x320);
+    car.ordinaryYawLimit = Float(bytes + 0x318);
+    car.pursuitYawLimit = Float(bytes + 0x31C);
+    car.preloadDownforceScale = Float(bytes + 0x2FC);
+    car.yawBaseCoefficient = Float(bytes + 0x310);
+    car.yawCollisionCoefficient = Float(bytes + 0x314);
+    car.steeringRangeDegrees = Float(bytes + 0x300);
+    car.pursuitConfiguration = bytes[0xE4] != 0;
+    car.modelCode = static_cast<std::int32_t>(ReadU32(bytes + 0x534));
+    car.bodyCategory = static_cast<std::int32_t>(ReadU32(bytes + 0x538));
+    car.challengeAvailability = static_cast<std::int32_t>(ReadU32(bytes + 0x53c));
+    car.pursuitAvailability = static_cast<std::int32_t>(ReadU32(bytes + 0x540));
+    std::memcpy(&car.routeVehicleClass, bytes + 0xE6, sizeof(car.routeVehicleClass));
+    Require(car.routeVehicleClass >= 0 && car.routeVehicleClass <= 9,
+            "Car type has an invalid authored road class");
+    for (unsigned layout = 0; layout < 2; ++layout) {
+        auto& count = car.cameraCatalogue.viewCount[layout];
+        count = static_cast<std::int32_t>(ReadU32(bytes + 0x3C0 + layout * 4));
+        Require(count >= 0 && count <= 4, "Car type has an invalid authored camera count");
+        for (std::int32_t index = 0; index < count; ++index) {
+            const auto* record = bytes + 0x3D0 + layout * 128 + index * 32;
+            auto& view = car.cameraCatalogue.views[layout][index];
+            view.kind = static_cast<std::int32_t>(ReadU32(record));
+            for (unsigned axis = 0; axis < 3; ++axis)
+                view.offset[axis] = Float(record + 4 + axis * 4);
+            for (unsigned parameter = 0; parameter < 8; ++parameter)
+                view.parameters[parameter] = ReadU16(record + 16 + parameter * 2);
+        }
+    }
+    car.brakeInfo = {Float(bytes + 0x304), Float(bytes + 0x308)};
+    for (unsigned axle = 0; axle < 2; ++axle) {
+        const auto* tire = bytes + 0x1A0 + axle * 0x20;
+        car.tireInfo[axle] = {Float(tire), Float(tire + 4), Float(tire + 8),
+                              Float(tire + 12), Float(tire + 16)};
+        const auto* suspension = bytes + 0x230 + axle * 0x20;
+        car.suspensionInfo[axle] = {
+            Float(suspension + 0x14), Float(suspension + 0x1C),
+            Float(suspension), Float(suspension + 4), Float(suspension + 8),
+            Float(suspension + 0x0C), Float(suspension + 0x10), Float(suspension + 0x18)
+        };
+    }
+    for (unsigned i=0;i<4;++i) {
+        const auto* w=bytes+0x120+i*0x20;
+        auto& wheel=car.wheels[i];
+        for (unsigned a=0;a<3;++a) wheel.position[a]=Float(w+a*4);
+        wheel.radius=Float(w+0x0C);
+        wheel.halfWidth=Float(w+0x10);
+        wheel.meshIndex=ReadU32(w+0x14);
+        wheel.sideValue=Float(w+0x18);
+        wheel.unknown=Float(w+0x1C);
+        auto& info = car.wheelInfo[i];
+        info.reactionScale = wheel.radius;
+        std::copy(wheel.position.begin(), wheel.position.end(), info.mountPosition);
+        info.mountPosition[3] = wheel.radius;
+        info.halfWidth = wheel.halfWidth;
+        info.index = static_cast<int32_t>(wheel.meshIndex);
+        if (wheel.radius<=0 || wheel.radius>5 || wheel.halfWidth<=0 || wheel.halfWidth>5)
+            throw std::runtime_error("Malformed PS2 wheel dimensions: "+car.name);
+    }
+    if (car.name.empty() || car.baseName.empty() || car.driveTrainInfo.forwardGearCount<=0 ||
+        car.driveTrainInfo.forwardGearCount>6 ||
+        !GeometryPath(bytes+kGeometryPathOffset))
+        throw std::runtime_error("Malformed PS2 GLOBALB car definition");
+    carPerformanceInitialize(&car.performance);
+    const auto physics = car.PhysicsInfo();
+    if (!carPerformanceBuild(&car.performance, &physics, &carPerformanceDefaultTuning))
+        throw std::runtime_error("Invalid original car performance configuration: " + car.name);
+    return car;
+}
+
+constexpr std::array<std::int32_t, 12> kDemoCars = {
+    45, 23, 47, 21, 25, 11, 32, 50, 51, 53, 55, 57
+};
+
+std::int8_t SignedByte(const std::uint8_t* data) noexcept {
+    std::int8_t value;
+    std::memcpy(&value, data, sizeof(value));
+    return value;
+}
+
+void CheckChunk(const std::vector<std::uint8_t>& data, const Chunk& chunk) {
+    Require(Inside(chunk.headerOffset, 8, data.size()), "CarInfo chunk header lies outside package");
+    Require(chunk.payloadOffset == chunk.headerOffset + 8 &&
+            chunk.endOffset == chunk.payloadOffset + chunk.size &&
+            Inside(chunk.payloadOffset, chunk.size, data.size()),
+            "CarInfo chunk extent is inconsistent");
+    Require(ReadU32(data.data() + chunk.headerOffset) == chunk.id &&
+            ReadU32(data.data() + chunk.headerOffset + 4) == chunk.size,
+            "CarInfo chunk descriptor differs from resource header");
+}
+
+void LoadChildren(CarInfoResource& owner, const std::vector<std::uint8_t>& data,
+                  std::size_t begin, std::size_t length,
+                  CarInfoAvailability availability, unsigned depth) {
+    Require(depth < 32, "CarInfo resource containers are nested too deeply");
+    for (const auto& chunk : ReadChunks(data, begin, length)) {
+        if (chunk.IsContainer())
+            LoadChildren(owner, data, chunk.payloadOffset, chunk.size, availability, depth + 1);
+        else
+            owner.LoadChunk(data, chunk, availability);
+    }
+}
+} // namespace
+
+CarInfoResource::CarInfoResource() : cars_(CarCount) {
+    // Final PAL30D578: the two distinct full/short IDs are retained with the model key.
+    // This owner is mutable; ELF write flags are not treated as immutability.
+    languageInfo_={{
+        {-1,41300,41100,42002,43002,43102,44002},
+        {0,41300,41100,42002,43002,43102,44002},
+        {2,41301,41101,42003,43003,43103,44003},
+        {4,41302,41102,42004,43004,43104,44004},
+        {5,41303,41103,42006,43006,43106,44006},
+        {7,41304,41104,42007,43007,43107,44007},
+        {9,41305,41105,42008,43008,43108,44008},
+        {11,41306,41106,42009,43009,43109,44009},
+        {13,41307,41107,42010,43010,43110,44010},
+        {15,41308,41108,42011,43011,43111,44011},
+        {17,41309,41109,42012,43012,43112,44012},
+        {19,41310,41110,42013,43013,43113,44013},
+        {20,41311,41111,42014,43014,43114,44014},
+        {21,41312,41112,42015,43015,43115,44015},
+        {23,41313,41113,42016,43016,43116,44016},
+        {27,41314,41114,42017,43017,43117,44017},
+        {29,41315,41115,42018,43018,43118,44018},
+        {31,41316,41116,42019,43019,43119,44019},
+        {32,41317,41117,42020,43020,43120,44020},
+        {33,41318,41118,42021,43021,43121,44021},
+        {34,41319,41119,42022,43022,43122,44022},
+        {35,41320,41120,42023,43023,43123,44023},
+        {37,41321,41121,42024,43024,43124,44024},
+        {39,41322,41122,42025,43025,43125,44025},
+        {41,41323,41123,42026,43026,43126,44026},
+        {43,41324,41124,42027,43027,43127,44027},
+        {45,41325,41125,42028,43028,43128,44028},
+        {47,41326,41126,42029,43029,43129,44029},
+        {25,41327,41127,42041,43041,43141,44041},
+        {1,41400,41200,42002,43002,43102,44002},
+        {3,41401,41201,42003,43003,43103,44003},
+        {6,41402,41202,42006,43006,43106,44006},
+        {8,41403,41203,42007,43007,43107,44007},
+        {10,41404,41204,42008,43008,43108,44008},
+        {12,41405,41205,42009,43009,43109,44009},
+        {14,41406,41206,42010,43010,43110,44010},
+        {16,41407,41207,42011,43011,43111,44011},
+        {18,41408,41208,42012,43012,43112,44012},
+        {24,41412,41212,42016,43016,43116,44016},
+        {28,41413,41213,42017,43017,43117,44017},
+        {30,41414,41214,42018,43018,43118,44018},
+        {36,41415,41215,42023,43023,43123,44023},
+        {38,41416,41216,42024,43024,43124,44024},
+        {40,41417,41217,42025,43025,43125,44025},
+        {42,41418,41218,42026,43026,43126,44026},
+        {44,41419,41219,42027,43027,43127,44027},
+        {46,41420,41220,42028,43028,43128,44028},
+        {48,41421,41221,42029,43029,43129,44029},
+        {26,41422,41222,42041,43041,43141,44041},
+        {22,41411,41211,42042,43042,43142,44042}
+    }};
+    for (auto& car : cars_) carPerformanceInitialize(&car.performance);
+    InitCarInfo();
+}
+
+CarInfoResource::CarInfoResource(const GameResources& resources,
+                               CarInfoAvailability availability)
+    : CarInfoResource(resources.Load("GLOBAL/GLOBALB.LZC"), availability) {}
+
+CarInfoResource::CarInfoResource(const std::vector<std::uint8_t>& package,
+                               CarInfoAvailability availability)
+    : CarInfoResource() {
+    LoadPackage(package, availability);
+}
+
+void CarInfoResource::LoadPackage(const std::vector<std::uint8_t>& package,
+                                 CarInfoAvailability availability) {
+    LoadChildren(*this, package, 0, package.size(), availability, 0);
+    Require(carsLoaded_, "GLOBALB contains no CarInfo chunk");
+    Require(skinsLoaded_, "GLOBALB contains no SkinInfo chunk");
+}
+
+bool CarInfoResource::LoadChunk(const std::vector<std::uint8_t>& package,
+                               const Chunk& chunk, CarInfoAvailability availability) {
+    if (chunk.id != CarChunk && chunk.id != SkinChunk) return false;
+    CheckChunk(package, chunk);
+    if (chunk.id == CarChunk) LoadCars(package, chunk, availability);
+    else LoadSkins(package, chunk);
+    return true;
+}
+
+void CarInfoResource::LoadCars(const std::vector<std::uint8_t>& package,
+                              const Chunk& chunk, CarInfoAvailability availability) {
+    Require(availability == CarInfoAvailability::FullGame || availability == CarInfoAvailability::DemoDisc,
+            "CarInfo availability policy is not bound");
+    Require(chunk.headerOffset <= std::numeric_limits<std::size_t>::max() - 23,
+            "CarInfo alignment overflows");
+    const auto begin = (chunk.headerOffset + 23) & ~std::size_t{15};
+    Require(begin >= chunk.payloadOffset && begin <= chunk.endOffset &&
+            chunk.endOffset - begin == CarCount * kRecordSize,
+            "CarInfo chunk must contain exactly 64 aligned records");
+    Require(begin <= std::numeric_limits<std::uint32_t>::max() - CarCount * kRecordSize,
+            "CarInfo resource offset does not fit the authored offset domain");
+
+    // Decode/build all records before applying the source demo geometry gate.
+    // Temporary staging also leaves existing resource state intact on a bad record.
+    std::vector<CarDefinition> definitions;
+    definitions.reserve(CarCount);
+    std::array<Appearance, CarCount> appearances{};
+    std::unordered_set<std::string> names;
+    for (std::size_t index = 0; index < CarCount; ++index) {
+        const auto offset = begin + index * kRecordSize;
+        const auto* record = package.data() + offset;
+        auto car = ReadCar(record, static_cast<std::uint32_t>(offset));
+        Require(car.modelCode == static_cast<std::int32_t>(index),
+                "CarInfo model code differs from its array position");
+        Require(names.insert(Upper(car.name)).second, "Duplicate CarInfo model name");
+        auto& appearance = appearances[index];
+        appearance.visual.modelCode = car.modelCode;
+        appearance.visual.driverAnimationCode = SignedByte(record + 0xE7);
+        const auto skinCount = SignedByte(record + 0xE5);
+        Require(skinCount >= 0 && skinCount <= 8, "CarInfo skin choice count is invalid");
+        appearance.skins.count = static_cast<std::uint8_t>(skinCount);
+        for (std::size_t choice = 0; choice < appearance.skins.numbers.size(); ++choice)
+            appearance.skins.numbers[choice] = SignedByte(record + 0x544 + choice);
+        definitions.push_back(std::move(car));
+    }
+    if (availability == CarInfoAvailability::DemoDisc) {
+        for (std::size_t index = 0; index < CarCount; ++index)
+            if (std::find(kDemoCars.begin(), kDemoCars.end(), static_cast<std::int32_t>(index)) == kDemoCars.end())
+                definitions[index].geometryPath.clear();
+    }
+    for (std::size_t index = 0; index < CarCount; ++index) {
+        cars_[index] = std::move(definitions[index]);
+        appearance_[index] = appearances[index];
+    }
+    carsLoaded_ = true;
+    InitCarInfo();
+}
+
+CarLanguageInfo* CarInfoResource::FindCarLanguageInfo(std::int32_t modelCode)
+{
+    for (auto& descriptor:languageInfo_)if (descriptor.modelCode==modelCode)return &descriptor;
+    return &languageInfo_.front();
+}
+
+void CarInfoResource::InitCarInfo()
+{
+    for (std::size_t index=0;index<CarCount;++index)
+        cars_[index].languageInfo=FindCarLanguageInfo(static_cast<std::int32_t>(index));
+    // The original tail188CA8 queries skin counts, without writing any state.
+    for (std::size_t index=0;index<CarCount;++index)
+        if (!cars_[index].geometryPath.empty())(void)AvailableSkinCount(index);
+}
+
+const char* CarDefinition::GetShortName(const LanguageManager& language) const
+{
+    // The shipped language table has no traffic names. Its legacy fallback
+    // points at the first racer; the native player option must identify the
+    // actual selected traffic model instead of displaying that other car.
+    if(bodyCategory==2)return name.c_str();
+    Require(languageInfo,"Car short name has no canonical language descriptor");
+    return language.GetString(languageInfo->shortNameLanguageId);
+}
+
+const char* CarDefinition::GetFullName(const LanguageManager& language) const
+{
+    if(bodyCategory==2)return name.c_str();
+    Require(languageInfo,"Car full name has no canonical language descriptor");
+    return language.GetString(languageInfo->fullNameLanguageId);
+}
+
+void CarInfoResource::LoadSkins(const std::vector<std::uint8_t>& package,
+                               const Chunk& chunk) {
+    constexpr std::size_t recordSize = 64;
+    Require(chunk.size % recordSize == 0, "SkinInfo chunk has a partial record");
+    std::vector<CarSkin> skins;
+    skins.reserve(chunk.size / recordSize);
+    std::unordered_set<std::uint64_t> keys;
+    for (std::size_t offset = chunk.payloadOffset; offset < chunk.endOffset; offset += recordSize) {
+        const auto* record = package.data() + offset;
+        CarSkin skin;
+        skin.modelCode = static_cast<std::int32_t>(ReadU32(record));
+        skin.skinNumber = static_cast<std::int32_t>(ReadU32(record + 4));
+        skin.displayName = Text(record + 8, 32);
+        skin.selectionMask = ReadU32(record + 40);
+        skin.lightMaterialKey = ReadU32(record + 44);
+        skin.authoredWord30 = ReadU32(record + 48);
+        Require(skin.modelCode >= 0 && skin.modelCode < static_cast<std::int32_t>(CarCount) &&
+                skin.skinNumber >= 0 && !skin.displayName.empty(), "SkinInfo identifier is invalid");
+        Require(ReadU32(record + 52) == 0 && ReadU32(record + 56) == 0 && ReadU32(record + 60) == 0,
+                "SkinInfo contains unsupported nonzero reserved file words");
+        const auto key = std::uint64_t(static_cast<std::uint32_t>(skin.modelCode)) << 32 |
+                         static_cast<std::uint32_t>(skin.skinNumber);
+        Require(keys.insert(key).second, "Duplicate SkinInfo model/skin identifier");
+        skins.push_back(std::move(skin));
+    }
+    skins_.swap(skins);
+    skinsLoaded_ = true;
+}
+
+bool CarInfoResource::UnloadChunk(std::uint32_t kind) noexcept {
+    if (kind == CarChunk) {
+        carsLoaded_ = false;
+        // The original static acceleration tables survive this unbind.
+        return true;
+    }
+    if (kind == SkinChunk) {
+        skins_.clear();
+        skinsLoaded_ = false;
+        return true;
+    }
+    return false;
+}
+
+const std::vector<CarDefinition>& CarInfoResource::Cars() const noexcept {
+    static const std::vector<CarDefinition> empty;
+    return carsLoaded_ ? cars_ : empty;
+}
+
+const CarDefinition& CarInfoResource::Car(std::size_t modelCode) const {
+    Require(carsLoaded_, "CarInfo is not loaded");
+    Require(modelCode < CarCount, "CarInfo model code is outside 0..63");
+    return cars_[modelCode];
+}
+
+RigidBodyInfo* CarInfoResource::MutableRigidBodyInfo(std::size_t modelCode) {
+    Require(carsLoaded_ && cars_.size() == CarCount, "Physical properties require the loaded canonical CarInfo owner");
+    Require(modelCode < CarCount, "Physical property model code is outside 0..63");
+    return &cars_[modelCode].rigidBodyInfo;
+}
+
+const CarDefinition& CarInfoResource::Find(const std::string& name) const {
+    const auto wanted = Upper(name);
+    for (const auto& car : Cars())
+        if (Upper(car.name) == wanted) return car;
+    throw std::runtime_error("Car not present in CarInfo resource: " + name);
+}
+
+bool CarInfoResource::IsAvailable(std::size_t modelCode) const {
+    return !Car(modelCode).geometryPath.empty();
+}
+
+const CarDriverVisualVehicleInfo& CarInfoResource::VisualInfo(std::size_t modelCode) const {
+    (void)Car(modelCode);
+    return appearance_[modelCode].visual;
+}
+
+const CarDriverVisualVehicleInfo& CarInfoResource::VisualInfo(const std::string& name) const {
+    return VisualInfo(static_cast<std::size_t>(Find(name).modelCode));
+}
+
+const CarSkinChoices& CarInfoResource::AuthoredSkins(std::size_t modelCode) const {
+    (void)Car(modelCode);
+    return appearance_[modelCode].skins;
+}
+
+const CarSkin* CarInfoResource::FindSkin(std::int32_t modelCode, std::int32_t skinNumber,
+                                       bool allowFirstFallback) const noexcept {
+    for (const auto& skin : skins_)
+        if (skin.modelCode == modelCode && skin.skinNumber == skinNumber) return &skin;
+    return allowFirstFallback && !skins_.empty() ? &skins_.front() : nullptr;
+}
+
+std::int32_t CarInfoResource::AvailableSkinCount(std::size_t modelCode) const {
+    return Car(modelCode).bodyCategory == 1 ? 1 : appearance_[modelCode].skins.count;
+}
+
+std::int32_t CarInfoResource::AvailableSkinNumber(std::size_t modelCode, std::int32_t selection,
+                                                bool alternatePursuitSkin) const {
+    if (Car(modelCode).bodyCategory == 1) return alternatePursuitSkin ? 2 : 1;
+    const auto& choices = appearance_[modelCode].skins;
+    Require(selection >= 0 && choices.count != 0, "Invalid CarInfo skin selection");
+    return choices.numbers[static_cast<std::size_t>(selection) % choices.count];
+}
+
+std::int32_t CarInfoResource::RandomSkin(std::size_t modelCode, bool alternatePursuitSkin) const {
+    if (Car(modelCode).bodyCategory == 1)
+        return AvailableSkinNumber(modelCode, 0, alternatePursuitSkin);
+    const auto& choices = appearance_[modelCode].skins;
+    if (choices.count == 0) return 0;
+    return choices.numbers[vectorDefaultRandomBounded(choices.count)];
+}
+
+bool CarInfoResource::WeightedPickRide(CarAppearanceSelection& output, std::int32_t bodyCategory,
+    std::int32_t routeVehicleClass, const RaceParameters& parameters,
+    const LanguageManager& language) const {
+    Require(carsLoaded_ && cars_.size() == CarCount, "Weighted car selection requires its canonical CarInfo owner");
+    const std::int32_t category = parameters.selectedScenario / 10;
+    const std::int32_t weight = category == 6 ? 4 : category - 1;
+    Require(weight >= 0 && weight < 5, "Race selection has no valid authored car-weight column");
+    const auto eligible = [&](const CarDefinition& car) {
+        return car.bodyCategory == bodyCategory && !car.geometryPath.empty() &&
+            (routeVehicleClass == -1 || car.routeVehicleClass == routeVehicleClass) &&
+            AvailableSkinCount(static_cast<std::size_t>(car.modelCode)) > 0;
+    };
+    float total = 0.0f;
+    for (const auto& car : cars_)
+        if (eligible(car)) total = total + car.selectionWeights[static_cast<std::size_t>(weight)];
+    if (std::fabs(total) <= 0.0010000000474974513f) return false;
+    float remaining = vectorDefaultRandomFloat(total);
+    for (const auto& car : cars_) {
+        if (!eligible(car)) continue;
+        remaining = remaining - car.selectionWeights[static_cast<std::size_t>(weight)];
+        if (remaining <= 0.0f) {
+            output.skinNumber = static_cast<std::int8_t>(RandomSkin(static_cast<std::size_t>(car.modelCode),
+                language.currentLanguage != 0));
+            output.modelCode = car.modelCode;
+            output.reserved = 0;
+            output.variant = 0;
+            output.dashboardTextures = 0;
+            return true;
+        }
+    }
+    return false;
+}
+
+const CarPerformance& CarInfoResource::Acceleration(std::size_t modelCode) const {
+    Require(modelCode < CarCount, "Acceleration table model code is outside 0..63");
+    return cars_[modelCode].performance;
+}
+
+SampledCurve CarInfoResource::AccelerationCurve(std::size_t modelCode) const {
+    return carPerformanceCurve(&Acceleration(modelCode));
+}
+
+PhysicsCarInfo CarDefinition::PhysicsInfo() const noexcept {
+    PhysicsCarInfo info{};
+    info.body = &rigidBodyInfo;
+    info.centerOfMass = centerOfMass.data();
+    info.steering = &steeringGeometry;
+    info.engine = &engineInfo;
+    info.driveTrain = &driveTrainInfo;
+    info.aerodynamics = &aerodynamicsInfo;
+    info.wheels = wheelInfo.data();
+    info.tires = tireInfo.data();
+    info.brakes = &brakeInfo;
+    info.suspension = suspensionInfo.data();
+    for (unsigned i = 0; i < 4; ++i) info.wheelSideOffset[i] = wheels[i].sideValue;
+    info.forwardSpeedLimit = forwardSpeedLimitMph;
+    info.ordinaryYawLimit = ordinaryYawLimit;
+    info.pursuitYawLimit = pursuitYawLimit;
+    info.preloadDownforceScale = preloadDownforceScale;
+    info.yawBaseCoefficient = yawBaseCoefficient;
+    info.yawCollisionCoefficient = yawCollisionCoefficient;
+    info.pursuitConfiguration = pursuitConfiguration;
+    info.modelCode = modelCode;
+    info.routeVehicleClass = routeVehicleClass;
+    info.steeringRangeDegrees = steeringRangeDegrees;
+    info.bodyCategory = bodyCategory;
+    info.driverAnimationOffset = driverAnimationOffset.data();
+    return info;
+}
+} // namespace hp2
+
+namespace hp2 {
+
+
+
+RaceDriverInfo* InitializeDriverInfo(RaceDriverInfo& driver,std::int32_t number,
+    std::int32_t driverClass,const CarAppearanceSelection& ride,
+    std::int32_t characterIndex,std::int32_t behaviorProfile,std::int32_t startingPosition,
+    const CarDriverAppearanceCatalogue& characters)
+{
+    driver.appearance.modelCode=-1;
+    driver.appearance.reserved=0;driver.appearance.variant=0;
+    driver.appearance.skinNumber=0;driver.appearance.dashboardTextures=0;
+    const auto numberByte=static_cast<std::uint8_t>(number);
+    const auto positionByte=static_cast<std::uint8_t>(startingPosition);
+    std::memcpy(&driver.driverNumber,&numberByte,1);
+    std::memcpy(&driver.startingPosition,&positionByte,1);
+    driver.driverClass=driverClass;driver.eliminated=0;
+    // Clearing precedes copying in PAL. A reference to this same appearance
+    // therefore sees the cleared values; do not snapshot ride on entry.
+    driver.appearance=ride;
+    const auto characterByte=static_cast<std::uint8_t>(characterIndex);
+    std::memcpy(&driver.characterIndex,&characterByte,1);
+    driver.character=carDriverCharacterAt(&characters,characterIndex);
+    const auto behaviorByte=static_cast<std::uint8_t>(behaviorProfile);
+    std::memcpy(&driver.behaviorProfile,&behaviorByte,1);
+    return &driver;
+}
+
+} // namespace hp2
+
+
+int32_t carPerformanceBuild(CarPerformance* performance, const PhysicsCarInfo* info,
+                             const CarPerformanceTuning* tuning)
+{
+    if (!performance || !info || !info->body || !info->driveTrain || !info->engine || !info->wheels ||
+        !tuning || info->driveTrain->forwardGearCount < 1 || info->driveTrain->forwardGearCount > 6 ||
+        !(info->body->mass > 0.0f) || !(tuning->sampleSpeedStep > 0.0f) ||
+        !(tuning->maximumSampleSpeed > 0.0f)) return 0;
+    const DriveTrainInfo* train = info->driveTrain;
+    const float rearFraction = train->rearDriveFraction;
+    const float frontFraction = 1.0f - rearFraction;
+    const float frontDrive = frontFraction * train->frontFinalDrive;
+    const float rearDrive = rearFraction * train->rearFinalDrive;
+    const float finalDrive = frontDrive + rearDrive;
+    const float frontRadius = frontFraction * info->wheels[0].reactionScale;
+    const float rearRadius = rearFraction * info->wheels[2].reactionScale;
+    const float radius = frontRadius + rearRadius;
+    if (!(radius > 0.0f)) return 0;
+    float upshift[9] = {0}, downshift[9] = {0};
+    driveTrainBuildShiftTables(train, info->engine, upshift, downshift, &tuning->shift);
+    SampledCurve torque;
+    sampledCurveInitialize(&torque, info->engine->torqueCurve, 9, info->engine->idleRpm, info->engine->maximumRpm);
+
+    /* The final PAL configuration has 101 temporary speed samples. A fixed
+     * bound makes malformed tuning fail before it can overrun that storage. */
+    float acceleration[101];
+    int32_t count = 0;
+    int32_t gear = upshift[2] <= 0.0f ? 3 : 2;
+    float speed = 0.0f, rpm = 0.0f;
+    if (gear >= train->forwardGearCount + 2) return 0;
+    for (;;) {
+        if (count == 101) return 0;
+        const float outputTorque = sampledCurveEvaluate(&torque, rpm);
+        speed = speed + tuning->sampleSpeedStep;
+        const float axleTorque = outputTorque * finalDrive;
+        const float gearTorque = axleTorque * train->gearRatios[gear];
+        const float force = gearTorque / radius;
+        acceleration[count++] = force / info->body->mass;
+        if (!(speed < tuning->maximumSampleSpeed)) break;
+        const float wheelVelocity = speed / radius;
+        const float driveVelocity = wheelVelocity * finalDrive;
+        const float engineVelocity = driveVelocity * train->gearRatios[gear];
+        rpm = engineVelocity * tuning->angularVelocityToRpm;
+        if (upshift[gear] <= rpm) {
+            ++gear;
+            if (gear >= train->forwardGearCount + 2) break;
+        }
+    }
+    acceleration[count - 1] = 0.0f;
+    SampledCurve generated;
+    sampledCurveInitialize(&generated, acceleration, count, acceleration[count - 1], speed);
+    for (int32_t index = 0; index < CAR_PERFORMANCE_SAMPLES; ++index) {
+        const float scaled = (float)index * speed;
+        const float coordinate = 0.0f + scaled / (float)(CAR_PERFORMANCE_SAMPLES - 1);
+        performance->samples[index] = sampledCurveEvaluate(&generated, coordinate);
+        if (!isfinite(performance->samples[index])) return 0;
+    }
+    performance->maximumSpeed = speed;
+    return 1;
+}
+
+namespace hp2 {
+namespace {
+std::string TireName(const std::string& format, const std::string& name)
+{
+    std::string result;
+    bool substituted = false;
+    for (std::size_t i = 0; i < format.size(); ++i) {
+        if (format[i] != '%') { result.push_back(format[i]); continue; }
+        Require(++i < format.size(), "Truncated tire texture format");
+        if (format[i] == '%') result.push_back('%');
+        else {
+            Require(format[i] == 's' && !substituted, "Tire texture format requires one string");
+            result += name; substituted = true;
+        }
+    }
+    Require(substituted, "Tire texture format has no model name");
     return result;
 }
 }
 
-namespace hp2::recovered {
-// ELF 0x001884B8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001884b8.md.
-void CarTypeInfo::GetNumAvailableSkins() {
-    hp2::not_implemented("0x001884B8", "CarTypeInfo::GetNumAvailableSkins (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/indep/inc/Table.hpp"
-
-namespace hp2::recovered {
-// ELF 0x00189120; E-0042-C057; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/00189120.md.
-void Table::SetMinMax(float lower,float upper) {
-    m_.scalar(address_+8,lower);m_.scalar(address_+0xc,upper);CalcIndexMultiplier();
-}
-// Debug00187318, full listing E-0044-E01.
-void Table::CalcIndexMultiplier() {
-    const auto count=port::driving::detail_group_0018f808::signed_bits(m_.word(address_+4)-1);
-    m_.scalar(address_+0x10,static_cast<float>(count)/(m_.scalar(address_+0xc)-m_.scalar(address_+8)));
-}
-}
-
-#include "game_core/indep/inc/Fred.hpp"
-#include "game_core/src/bMath.hpp"
-#include <cmath>
-namespace hp2::debug {
-// Debug00185FA0, E-0098-RP02. Original byte narrowing is preserved.
-void RideInfo::Init(int type,int skin,int dash,int damage){
-    Type=type;SkinNumber=static_cast<std::uint8_t>(skin);HasDash=static_cast<std::uint8_t>(dash);
-    CanBeVertexDamaged=static_cast<std::uint8_t>(damage);InstanceIndex=0;
-}
-// Debug001867C0, E-0098-RP02. Padding+5..7 is intentionally untouched.
-DriverInfo::DriverInfo(::port::driving::Memory& m,std::uint32_t a,int driver_number,int driver_type,
-    const RideInfo& ride,int character,int skill,int start,const std::function<std::uint32_t(int)>& get_character){
-    if(!get_character)hp2::not_implemented("0x001867C0","original GetCharacterInfo binding missing");
-    m.byte(a+1,static_cast<std::uint8_t>(driver_number));m.byte(a+4,static_cast<std::uint8_t>(start));
-    m.word(a+8,static_cast<std::uint32_t>(driver_type));m.byte(a,0);
-    m.word(a+12,static_cast<std::uint32_t>(ride.Type));m.byte(a+16,ride.InstanceIndex);
-    m.byte(a+17,ride.SkinNumber);m.byte(a+18,ride.HasDash);m.byte(a+19,ride.CanBeVertexDamaged);
-    m.byte(a+2,static_cast<std::uint8_t>(character));m.word(a+20,get_character(character));
-    m.byte(a+3,static_cast<std::uint8_t>(skill));
-}
-// Debug00186610, E-0098-RP02. Even a single non-cop skin consumes RNG.
-int CarTypeInfo::GetRandomSkin(::port::driving::Memory& memory,int language) const{
-    if(UsageType==CAR_USAGE_TYPE_COP)return GetAvailableSkin(0,language);
-    if(NumAvailableSkinNumbers==0)return 0;
-    if(NumAvailableSkinNumbers<0 || NumAvailableSkinNumbers>10)
-        hp2::not_implemented("0x00186610","original skin list outside decoded host domain");
-    return AvailableSkinNumbers[hp2::recovered::bRandom(memory,int(NumAvailableSkinNumbers))];
-}
-// Debug001863C8, E-0098-RP02. Original two-pass iterator, shared RNG and threshold.
-// Location index/language/catalog bind original globals; no locally seeded random engine.
-bool GenerateRandomRideInfo(::port::driving::Memory& memory,RideInfo& ride,CarUsageType usage,int car_class,
-    const std::array<CarTypeInfo,64>& cars,int location,int language){
-    if(location<0 || location>=5)hp2::not_implemented("0x001863C8","original LocationProb index outside decoded host domain");
-    const auto eligible=[&](const CarTypeInfo& car){return car.UsageType==usage && car.GeometryFilename[0]
-        && (car_class==-1 || car.CarClass==car_class) && car.GetNumAvailableSkins()>0;};
-    float total=0;for(const auto& car:cars)if(eligible(car))total=total+car.LocationProb[location];
-    if(!(memory.scalar(0x325400)<std::abs(total)))return false;
-    float weight=hp2::recovered::bRandom(memory,total);
-    for(const auto& car:cars)if(eligible(car)){
-        weight=weight-car.LocationProb[location];
-        if(!(0.f<weight)){ride.Init(car.Type,car.GetRandomSkin(memory,language),0,0);return true;}
+CarUsedTextureInfo BuildCarTextureInfo(const CarInfoResource& info,
+    const CarAppearanceSelection& selection, int frontend,
+    const CarTextureNamingPolicy& naming)
+{
+    const auto& car = info.Car(static_cast<std::size_t>(selection.modelCode));
+    CarUsedTextureInfo result;
+    const auto key = [&car](const std::string& suffix) {
+        return hashString((car.baseName + suffix).c_str());
+    };
+    const auto append = [&result](std::uint32_t value) {
+        Require(result.count < result.usedKeys.size(), "Car texture list capacity exceeded");
+        result.usedKeys[result.count++] = value;
+    };
+    result.defaultSkinKeys = {key("_SKIN1"), key("_SKIN1B")};
+    const auto number = std::to_string(static_cast<int>(selection.skinNumber));
+    result.skinKeys[0] = key("_SKIN" + number);
+    append(result.skinKeys[0]);
+    if (!frontend) {
+        result.skinKeys[1] = key("_SKIN" + number + "B");
+        append(result.skinKeys[1]);
     }
-    return false;
+    if (selection.dashboardTextures) {
+        result.defaultDashboardKey = key("_DASHSKIN1");
+        result.dashboardKey = key("_DASHSKIN" + number);
+        append(result.dashboardKey);
+    }
+    result.headlightSideKeys = {key("_HEADLIGHT_LEFT"), key("_HEADLIGHT_RIGHT")};
+    result.brakeSideKeys = {key("_BRAKELIGHT_LEFT"), key("_BRAKELIGHT_RIGHT")};
+    result.reverseLightKey = key("_REVERSELIGHT");
+    const std::array<const char*,9> lighting = {"_HEADLIGHT", "_HEADLIGHT_ON", "_HEADLIGHT_DAMAGE0",
+        "_BRAKELIGHT", "_BRAKELIGHT_ON", "_BRAKELIGHT_DAMAGE0", "_REVERSELIGHT", "_REVERSELIGHT_ON", "_REVERSELIGHT"};
+    for (std::size_t index = 0; index < lighting.size(); ++index) {
+        result.lightingKeys[index] = key(lighting[index]);
+        append(result.lightingKeys[index]);
+    }
+    result.shadowKey = key(frontend ? "_SHADOWFE" : "_SHADOWIG");
+    append(result.shadowKey);
+    result.defaultTireKey = hashString(TireName(naming.tireTextureFormat, car.baseName).c_str());
+    result.tireKey = hashString(TireName(naming.tireTextureFormat, car.name).c_str());
+    result.defaultTireBlurKey = key("_WHEEL_BLUR");
+    result.tireBlurKey = hashString((car.name + "_WHEEL_BLUR").c_str());
+    append(result.tireKey); append(result.tireBlurKey);
+    result.licensePlateKey = key("_LICENSE_PLATE");
+    append(result.licensePlateKey);
+    return result;
+}
+} // namespace hp2
+
+namespace hp2 {
+const char* RaceDriverName(const RaceDriverInfo& driver)
+{
+    // Complete final DriverInfo::GetName188770. Final330878 is empty.
+    return driver.character?driver.character->name:"";
 }
 }
 
-#include "game_core/port/race/car_render_resources.hpp"
-#include "game_core/indep/src/engine.hpp"
-#include "game_core/indep/inc/Table.hpp"
-namespace port::race {
-// Debug00186F88; E-0099-W25.
-static std::uint32_t GetAccelerationTable(int type){return 0x3052e8+0x94*static_cast<unsigned>(type);}
-// Debug00186F18 constructor stores. Port explicit process startup of the64 original objects.
-void initialize_car_info_tables(Memory&m){for(unsigned i=0;i<64;++i){const auto object=0x305268+0x94*i;hp2::recovered::Table(m,object+128).Sub_0018D810(object,32,0,m.scalar(0x325404));for(int j=30;j>=0;--j)m.scalar(object+4*static_cast<unsigned>(j),4);m.word(object+124,0);}}
-// Debug00186FA0; E-0099-W25. Native Table/CalculateShiftPoints are the already
-// recovered Debug leaves. Scratch is host ownership for original temporary data.
-static void MakeAccelerationTable(Memory&m,std::uint32_t output,std::uint32_t info){
- Memory::Scratch scratch(m);const auto up=m.allocate(36),down=m.allocate(36),torque=m.allocate(20),accel=m.allocate(20),data=m.allocate(0x194);
- const auto drive=info+0x270,engine=info+0x2b0;const float split=m.scalar(drive+16),mass=m.scalar(info+0x1e0);
- const float final_drive=(1.f-split)*m.scalar(drive+8)+split*m.scalar(drive+12);
- const float radius=(1.f-split)*m.scalar(info+0x12c)+split*m.scalar(info+0x16c);
- hp2::recovered::CalculateShiftPoints(m,drive,engine,up,down,m.scalar(0x327924));
- hp2::recovered::Table(m,torque).Sub_0018D810(engine+16,9,m.scalar(engine),m.scalar(engine+8));
- float speed=0,rpm=0;unsigned count=0;int gear=2;if(m.scalar(up+8)<=0)gear=3;
- bool finished=false;
- while(gear<m.signed_word(drive+24)+2&&!finished){
-  for(;;){speed=speed+m.scalar(0x32540c);const float torque_value=hp2::recovered::Table(m,torque).GetValue(rpm);const float ratio=m.scalar(drive+32+4*static_cast<unsigned>(gear));
-   if(count>=101)hp2::not_implemented("0x00186FA0","Acceleration generation exceeds original0x194 temporary extent");
-   m.scalar(data+4*count++,((torque_value*final_drive*ratio)/radius)/mass);
-   if(m.scalar(0x325408)<=speed){finished=true;break;}
-   rpm=((speed/radius)*final_drive*ratio)*m.scalar(0x325410);
-   if(!(rpm<m.scalar(up+4*static_cast<unsigned>(gear))))break;
-  }
-  ++gear;
- }
- if(count==0)hp2::not_implemented("0x00186FA0","Original acceleration table has no generated samples");
- m.word(data+4*(count-1),0);hp2::recovered::Table(m,accel).Sub_0018D810(data,count,0,speed);
- const auto entries=m.signed_word(output+4);for(int i=0;i<entries;++i){const float sample=(static_cast<float>(i)*speed)/static_cast<float>(entries-1);m.scalar(m.word(output)+4*static_cast<unsigned>(i),hp2::recovered::Table(m,accel).GetValue(sample));}
- hp2::recovered::Table(m,output).SetMinMax(0,speed);
-}
-// Debug00186148; E-0099-W25. Whole CarInfo and SkinInfo branches, including
-// acceleration construction and actual demo-disc geometry filtering.
-int LoaderCarInfo(Memory&m,std::uint32_t chunk){
- if(m.word(chunk)==0x34600){const auto records=(chunk+23)&~15u;m.word(0x3278e0,records);
-  for(int i=0;i<64;++i)MakeAccelerationTable(m,GetAccelerationTable(i),records+0x560*static_cast<unsigned>(i));
-  if(m.word(0x2e78e0))for(unsigned i=0;i<64;++i){bool allowed=false;for(unsigned j=0;j<12;++j)if(m.word(0x2ac070+4*j)==i){allowed=true;break;}if(!allowed)m.byte(records+0x560*i+64,0);}
-  return 1;
- }
- if(m.word(chunk)==0x34601){m.word(0x3278e4,chunk+8);m.word(0x3278e8,m.word(chunk+4)>>6);return 1;}return 0;
-}
-// Debug001862D8; E-0099-W25.
-int UnloaderCarInfo(Memory&m,std::uint32_t chunk){if(m.word(chunk)==0x34600){m.word(0x3278e0,0);return 1;}if(m.word(chunk)==0x34601){m.word(0x3278e4,0);m.word(0x3278e8,0);return 1;}return 0;}
-// Debug00186330; E-0099-W25. Default is first skin record, not same-car heuristic.
-std::uint32_t GetSkinInfo(Memory&m,int type,int skin,int fallback){for(int i=0;i<m.signed_word(0x3278e8);++i){const auto p=m.word(0x3278e4)+64*static_cast<unsigned>(i);if(m.signed_word(p)==type&&m.signed_word(p+4)==skin)return p;}return fallback?m.word(0x3278e4):0;}
+const CarPerformanceTuning carPerformanceDefaultTuning = {
+    55.5555572509765625f, 138.8889007568359375f, 1.38888895511627197f, 9.54930400848388672f,
+    {1, 0.949999988079071f, 0.949999988079071f,
+     0.3499999940395355f, 300.0f, 50.0f, 1.2000000476837158f}
+};
+
+CarPerformance* carPerformanceInitialize(CarPerformance* performance)
+{
+    for (int32_t index = 0; index < CAR_PERFORMANCE_SAMPLES - 1; ++index)
+        performance->samples[index] = 4.0f;
+    performance->samples[CAR_PERFORMANCE_SAMPLES - 1] = 0.0f;
+    performance->maximumSpeed = carPerformanceDefaultTuning.defaultMaximumSpeed;
+    return performance;
 }
 
-namespace port::race {
-// Debug00186940; E-0099-W25. Full ordered texture-name/hash producer; type-name
-// substitutions for tire and wheel blur are confirmed by original MIPS arguments.
-void GetUsedCarTextureInfo(Memory&m,std::uint32_t out,std::uint32_t ride,int frontend){
- for(unsigned i=0;i<0xac;++i)m.byte(out+i,0);
- const auto info=m.word(0x3278e0)+0x560*m.word(ride);const auto base=render_resource_text(m,info+32),type=render_resource_text(m,info);const int skin=m.signed_byte(ride+5);
- auto hash=[&](unsigned fmt,const std::string&name,int value=0){return render_format_hash(m,fmt,name,value);};
- m.word(out+0x44,hash(0x2ac160,base));m.word(out+0x48,hash(0x2ac170,base));
- const auto first=hash(0x2ac180,base,skin);m.word(out,first);m.word(out+0x70,first);unsigned count=1;
- if(!frontend){const auto second=hash(0x2ac190,base,skin);m.word(out+4,second);m.word(out+0x74,second);count=2;}
- if(m.signed_byte(ride+6)){m.word(out+0x4c,hash(0x2ac1a0,base));const auto dash=hash(0x2ac1b0,base,skin);m.word(out+0x78,dash);m.word(out+4*count++,dash);}else{m.word(out+0x4c,0);m.word(out+0x78,0);}
- const unsigned light_formats[]={0x2ac1c0,0x2ac1d8,0x2ac1f0,0x2ac208,0x2ac220};for(unsigned i=0;i<5;++i)m.word(out+0x50+4*i,hash(light_formats[i],base));
- const unsigned replace_formats[]={0x2ac230,0x2ac240,0x2ac250,0x2ac268,0x2ac278,0x2ac290,0x2ac220,0x2ac2a8,0x2ac220};
- for(unsigned i=0;i<9;++i)m.word(out+0x7c+4*i,hash(replace_formats[i],base));
- for(unsigned i=0;i<9;++i)m.word(out+4*count++,m.word(out+0x7c+4*i));
- const auto shadow=hash(frontend?0x2ac2c0:0x2ac2d0,base);m.word(out+0xa8,shadow);m.word(out+4*count++,shadow);
- m.word(out+0x64,hash(0x3278f8,base));m.word(out+0xa0,hash(0x3278f8,type));
- m.word(out+0x68,hash(0x2ac2e0,base));m.word(out+0xa4,hash(0x2ac2e0,type));
- m.word(out+4*count++,m.word(out+0xa0));m.word(out+4*count++,m.word(out+0xa4));
- const auto plate=hash(0x2ac2f0,base);m.word(out+0x6c,plate);m.word(out+4*count++,plate);m.word(out+0x40,count);
-}
-}
-
-namespace hp2::debug {
-// Debug00186F88; E-0099-W47. Same original shared Table array used by loader.
-std::uint32_t GetAccelerationTable(int type){return ::port::race::GetAccelerationTable(type);}
-}
-
-#include "game_core/indep/inc/Replay.hpp"
-#include "game_core/port/race/character_resources.hpp"
-namespace hp2::debug {
-// Debug001866C8; E-0099-W74; replay-frame/001866c8.json/type-RideInfo.json.
-void RideInfo::DoSnapshot(::port::driving::Memory& m,std::uint32_t a,std::uint32_t snapshot){
- ReplaySnapshot s(m,snapshot);s.BeginSection(0x2ac0a0);s.MoveData(a,1);s.MoveData(a+5,1);s.MoveData(a+6,1);s.EndSection();
-}
-// Debug00186840; E-0099-W74; replay-frame/00186840.json/type-DriverInfo.json.
-void DriverInfo::DoSnapshot(::port::driving::Memory& m,std::uint32_t a,std::uint32_t snapshot){
- ReplaySnapshot s(m,snapshot);s.BeginSection(0x2ac150);
- for(unsigned off:{0u,1u,3u,4u,8u})s.MoveData(a+off,1);
- RideInfo::DoSnapshot(m,a+12,snapshot);s.MoveData(a+2,1);
- if(m.signed_byte(a+2)!=-1&&m.byte(snapshot+0x3d))m.word(a+20,GetCharacterInfo(m,m.signed_byte(a+2)));
- s.EndSection();
-}
+SampledCurve carPerformanceCurve(const CarPerformance* performance)
+{
+    SampledCurve curve;
+    sampledCurveInitialize(&curve, performance->samples, CAR_PERFORMANCE_SAMPLES, 0.0f, performance->maximumSpeed);
+    return curve;
 }

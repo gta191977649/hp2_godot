@@ -1,0 +1,9 @@
+[configuration]
+
+entry_symbol = "hp2_track12_init"
+compatibility_minimum = "4.7"
+reloadable = false
+
+[libraries]
+
+windows.x86_64 = "res://bin/hp2_track12.dll"

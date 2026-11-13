@@ -1,169 +1,328 @@
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
-// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/indep/src/trackgraph.hpp"
+#include "indep/inc/World.hpp"
+#include "indep/inc/TrackRoute.hpp"
+#include "indep/inc/TrackRoute.hpp"
+#include "indep/inc/TrackPath.hpp"
+#include "indep/inc/Pursuit.hpp"
+#include "indep/inc/Car.hpp"
+#include "indep/inc/Car.hpp"
+#include "indep/inc/CarDriver.hpp"
 
-#include "game_core/port/not_implemented.hpp"
-#include "game_core/inc/bSlotPool.hpp"
+#include <array>
+#include <cstdint>
+#include <memory>
 #include <stdexcept>
-#include <utility>
+#include <vector>
 
-namespace hp2::recovered {
-// ELF 0x0024E4D0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0024e4d0.md.
-void tTrackGraph::GetVertexNumber() {
-    hp2::not_implemented("0x0024E4D0", "tTrackGraph::GetVertexNumber (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
+namespace {
+struct GraphVertex {
+    CarRecoveryConnection* connection = nullptr;
+    std::int32_t groupId = -1;
+    std::int32_t poseIndex = -1;
+    float routeDistance = 0;
+    std::array<std::int32_t,2> outgoing{{-1,-1}};
+    std::array<std::int32_t,2> incoming{{-1,-1}};
+};
 
-namespace port::track {
-// Host bounds around the recovered memory access, not original failure semantics.
-static std::uint32_t graph_signpost(const RouteData& data,const port::driving::Memory& m,std::uint32_t point){
-    const auto index=m.byte(point+0x2c);
-    if(index>=data.signpost_count || !data.signposts)throw std::out_of_range("Original graph signpost index invalid");
-    return data.signposts+8*index;
+struct GraphEdge {
+    std::int32_t firstVertex = -1;
+    std::int32_t lastVertex = -1;
+    std::int32_t groupId = -1;
+    std::int32_t firstPose = -1;
+    std::int32_t lastPose = -1;
+    std::int32_t cloaked = 0;
+    std::int32_t initiallyCloaked = 0;
+    std::int32_t available = 1;
+    std::vector<std::int32_t> roadBlocks;
+    std::vector<std::int32_t> speedTraps;
+};
+}
+
+struct TrackGraph {
+    const CarRecoveryPointRegistry* road;
+    std::vector<GraphVertex> vertices;
+    std::vector<GraphEdge> edges;
+    std::int32_t hasCloaked = 0;
+};
+
+namespace {
+const CarRecoveryGroup* findGroup(const TrackGraph& graph, std::int32_t id)
+{
+    for (std::size_t index=0;index<graph.road->groupCount;++index)
+        if (graph.road->groups[index].id==id) return &graph.road->groups[index];
+    return nullptr;
+}
+
+void addVertex(TrackGraph& graph, const CarRecoveryGroup& group, std::int32_t index)
+{
+    if (graph.vertices.size()==100) throw std::runtime_error("Track graph exceeds its authored vertex capacity");
+    const auto& pose=group.poses[index];
+    const std::size_t connectionIndex=pose.flags&255u;
+    if (connectionIndex>=graph.road->connectionCount)
+        throw std::runtime_error("Track graph vertex references a missing road connection");
+    GraphVertex vertex;
+    vertex.connection=&graph.road->connections[connectionIndex];
+    vertex.groupId=group.id;
+    vertex.poseIndex=index;
+    TrackRouteLocation location;
+    trackRouteLocationAtPoint(graph.road->route,&location,pose.position);
+    vertex.routeDistance=location.distance;
+    graph.vertices.push_back(vertex);
+}
+
+std::int32_t addEdge(TrackGraph& graph, std::int32_t vertexIndex,
+    bool followConnection, std::int32_t cloaked)
+{
+    if (graph.edges.size()==400) throw std::runtime_error("Track graph exceeds its authored edge capacity");
+    const auto& vertex=graph.vertices.at(static_cast<std::size_t>(vertexIndex));
+    const auto result=static_cast<std::int32_t>(graph.edges.size());
+    graph.edges.emplace_back();
+    auto& edge=graph.edges.back();
+    edge.firstVertex=vertexIndex;
+    edge.cloaked=edge.initiallyCloaked=cloaked;
+    edge.groupId=followConnection ? vertex.connection->groupId : vertex.groupId;
+    edge.firstPose=followConnection ? vertex.connection->poseIndex : vertex.poseIndex;
+    const auto* group=findGroup(graph,edge.groupId);
+    if (!group || edge.firstPose<0 || edge.firstPose>=group->poseCount)
+        throw std::runtime_error("Track graph edge references a missing road pose");
+    for (std::int32_t point=edge.firstPose;point<group->poseCount;++point) {
+        const auto flags=group->poses[point].flags;
+        if (flags&0x4000u) edge.available=0;
+        const auto roadBlock=static_cast<std::int32_t>((flags>>8)&63u);
+        const auto speedTrap=static_cast<std::int32_t>((flags>>22)&63u);
+        if (roadBlock!=63) edge.roadBlocks.push_back(roadBlock);
+        if (speedTrap!=63) edge.speedTraps.push_back(speedTrap);
+        if (point!=edge.firstPose && (flags&255u)!=255u) {
+            const std::int32_t found=trackGraphFindVertex(&graph,edge.groupId,point);
+            if (found!=-1) {
+                edge.lastVertex=found;
+                edge.lastPose=point;
+                break;
+            }
+        }
+    }
+    return result;
+}
+
+void initializeGraph(TrackGraph& graph)
+{
+    graph.vertices.reserve(100);
+    graph.edges.reserve(400);
+    for (std::int32_t id=0;id<49;++id) {
+        const auto* group=findGroup(graph,id);
+        if (!group) continue;
+        for (std::int32_t point=0;point<group->poseCount;++point) {
+            const auto connectionIndex=group->poses[point].flags&255u;
+            if (connectionIndex==255u) continue;
+            if (connectionIndex>=graph.road->connectionCount)
+                throw std::runtime_error("Track graph pose references a missing connection");
+            const auto flags=graph.road->connections[connectionIndex].flags;
+            if ((flags&8u) && (flags&7u)!=3u) continue;
+            if (flags&0x40u) graph.hasCloaked=1;
+            addVertex(graph,*group,point);
+        }
+    }
+    for (std::size_t index=0;index<graph.vertices.size();++index) {
+        const auto flags=graph.vertices[index].connection->flags;
+        const bool classThree=(flags&7u)==3u;
+        if (classThree && !(flags&8u)) continue;
+        if ((flags&7u)==2u || classThree) {
+            const auto edge=addEdge(graph,static_cast<std::int32_t>(index),true,0);
+            graph.vertices[index].outgoing[0]=edge;
+        } else {
+            const auto first=addEdge(graph,static_cast<std::int32_t>(index),false,0);
+            graph.vertices[index].outgoing[0]=first;
+            const auto second=addEdge(graph,static_cast<std::int32_t>(index),true,(flags>>6)&1u);
+            graph.vertices[index].outgoing[1]=second;
+        }
+    }
+    for (std::size_t index=0;index<graph.edges.size();++index) {
+        const auto destination=graph.edges[index].lastVertex;
+        if (destination<0) continue;
+        auto& incoming=graph.vertices.at(static_cast<std::size_t>(destination)).incoming;
+        incoming[incoming[0]==-1 ? 0 : 1]=static_cast<std::int32_t>(index);
+    }
+    for (auto& vertex:graph.vertices) {
+        if (vertex.incoming[1]==-1 || vertex.outgoing[0]==-1) continue;
+        const auto& incoming=graph.edges[static_cast<std::size_t>(vertex.incoming[1])];
+        if (incoming.cloaked) continue;
+        const auto& outgoing=graph.edges[static_cast<std::size_t>(vertex.outgoing[0])];
+        if (outgoing.groupId==incoming.groupId) std::swap(vertex.incoming[0],vertex.incoming[1]);
+    }
 }
 }
-namespace hp2::debug {
-using port::driving::Memory;
-// Debug00248150/00248168; E-0099-W07. Capacity guards are port-only.
-std::uint32_t tTrackGraph::GetVertex(int i)const{
-    if(i<0||i>=100)throw std::out_of_range("Original graph vertex capacity exceeded");
-    return address_+0xc+std::uint32_t(i)*0x28;
+
+TrackGraph* trackGraphCreate(const CarRecoveryPointRegistry* road)
+{
+    if (!road || !road->route || !road->groups || (!road->connections && road->connectionCount)) return nullptr;
+    try {
+        std::unique_ptr<TrackGraph> graph(new TrackGraph);
+        graph->road=road;
+        initializeGraph(*graph);
+        return graph.release();
+    } catch (const std::exception&) {
+        return nullptr;
+    }
 }
-std::uint32_t tTrackGraph::GetEdge(int i)const{
-    if(i<0||i>=400)throw std::out_of_range("Original graph edge capacity exceeded");
-    return address_+0xfac+std::uint32_t(i)*0x2c;
+
+void trackGraphDispose(TrackGraph* graph)
+{
+    delete graph;
 }
-// Debug002478E0; E-0099-W07. Real TrackPathCoordinate supplies distance.
-void tTrackGraph::AddVertex(std::uint32_t route,std::uint32_t point,const port::track::RouteData& data){
-    auto& m=memory_;const auto index=m.signed_word(address_);const auto v=GetVertex(index);
-    m.word(address_,std::uint32_t(index+1));m.word(v+0x18,0xffffffffu);m.word(v+0x1c,0xffffffffu);
-    m.word(v+8,port::track::graph_signpost(data,m,point));
-    const int number=m.signed_half(route+0xa);
-    m.word(v+0xc,std::uint32_t(number));
-    const auto offset=std::int64_t(point)-route-0x428;
-    if(offset<0 || offset%0x70)throw std::out_of_range("Original graph point is not a route table entry");
-    const int n=int(offset/0x70);m.word(v+0x10,n);
-    m.scalar(v+0x14,port::track::route_point_distance(data,m,number,n));
-}
-// Debug00247990; E-0099-W07. Match own endpoint OR signpost endpoint in order.
-int tTrackGraph::GetVertexNumber(int route,int point)const{
-    const auto& m=memory_;
-    for(int i=0;i<m.signed_word(address_);++i){const auto v=GetVertex(i);
-        if(m.signed_word(v+0xc)==route && m.signed_word(v+0x10)==point)return i;
-        const auto sign=m.word(v+8);if(m.byte(sign)==route && m.half(sign+2)==point)return i;
+
+int32_t trackGraphFindVertex(const TrackGraph* graph, int32_t groupId, int32_t poseIndex)
+{
+    for (std::size_t index=0;index<graph->vertices.size();++index) {
+        const auto& vertex=graph->vertices[index];
+        if ((vertex.groupId==groupId && vertex.poseIndex==poseIndex) ||
+            (vertex.connection->groupId==groupId && vertex.connection->poseIndex==poseIndex))
+            return static_cast<std::int32_t>(index);
     }
     return -1;
 }
-// Debug00247A20; E-0099-W07. Append slots BEFORE detecting the destination,
-// so the ending route point contributes its roadblock/speedtrap records as well.
-int tTrackGraph::AddEdge(int vertex,bool branch,bool cloaked,const port::track::RouteData& data){
-    auto& m=memory_;const int index=m.signed_word(address_+4);const auto edge=GetEdge(index),v=GetVertex(vertex);
-    m.word(address_+4,index+1);m.word(edge+4,0xffffffffu);m.word(edge+0x18,cloaked);m.word(edge,vertex);m.word(edge+0x14,cloaked);
-    const auto sign=m.word(v+8);const int route=branch?m.byte(sign):m.signed_word(v+0xc);
-    const int first=branch?m.half(sign+2):m.signed_word(v+0x10);
-    m.word(edge+8,route);m.word(edge+0xc,first);
-    if(route<0 || route>=100 || !data.routes[route])throw std::out_of_range("Original graph edge route missing: vertex="+std::to_string(vertex)+" route="+std::to_string(route)+" first="+std::to_string(first)+" own_route="+std::to_string(m.signed_word(v+0xc))+" sign_bits="+std::to_string(m.word(sign)));
-    const auto route_address=data.routes[route];const int count=m.signed_word(route_address+0x10);
-    if(first<0)throw std::out_of_range("Original graph edge first point invalid");
-    const auto append=[&](std::uint32_t head,std::uint32_t pool,std::uint32_t value){
-        const auto node=bOMalloc(m,m.word(pool));if(!node)hp2::not_implemented("0x00247A20","original graph slot allocation failed");
-        const auto tail=m.word(head+4);m.word(tail,node);m.word(head+4,node);m.word(node+8,value);m.word(node+4,tail);m.word(node,head);
-    };
-    for(int p=first;p<count;++p){const auto point=route_address+0x428+std::uint32_t(p)*0x70;const auto flags=m.word(point+0x2c);
-        if((flags&0x3f00)!=0x3f00)append(edge+0x1c,0x328ef0,(flags>>8)&0x3f);
-        if((flags&0xfc00000)!=0xfc00000)append(edge+0x24,0x328ef4,(flags>>22)&0x3f);
-        if(p!=first && m.byte(point+0x2c)!=0xff){const int to=GetVertexNumber(route,p);
-            if(to!=-1){m.word(edge+0x10,p);m.word(edge+4,to);return index;}}
+
+int32_t trackGraphFindEdge(const TrackGraph* graph, int32_t groupId, int32_t poseIndex)
+{
+    for (std::size_t index=0;index<graph->edges.size();++index) {
+        const auto& edge=graph->edges[index];
+        if (!edge.cloaked && edge.groupId==groupId && edge.firstPose<=poseIndex && poseIndex<=edge.lastPose)
+            return static_cast<std::int32_t>(index);
     }
-    // The original leaves nLastRoutePoint untouched if no endpoint was found.
-    return index;
-}
-// Debug00247218; E-0099-W07. Original order,100 vertices/400 edge capacity,
-//49 racing-route scan, branch rules, incoming overwrite and backward ordering.
-void tTrackGraph::Sub_00247218(const port::track::RouteData& data){
-    auto& m=memory_;m.word(address_+0x546c,0x2b6e58);
-    for(int i=0;i<400;++i){const auto e=GetEdge(i);for(auto h:{e+0x1c,e+0x24}){m.word(h,h);m.word(h+4,h);}}
-    m.word(address_,0);m.word(address_+4,0);m.word(address_+8,0);
-    m.word(0x328ef0,bNewSlotPool(m,0xc,0x80,0x2b6e38,0x10));
-    m.word(0x328ef4,bNewSlotPool(m,0xc,0x80,0x2b6e48,0x10));
-    for(int r=0;r<49;++r){const auto route=data.routes[r];if(!route)continue;
-        for(int n=0;n<m.signed_word(route+0x10);++n){const auto p=route+0x428+std::uint32_t(n)*0x70;
-            // Listing00247348 is LBU/XORI FF; the decompiler's field != -1
-            // refers to the 8-bit SignNumber, not the packed 32-bit word.
-            if(m.byte(p+0x2c)==0xff)continue;
-            const auto bits=m.word(port::track::graph_signpost(data,m,p));
-            if(!(bits&0x800) || (bits&0x700)==0x300){if(bits&0x4000)m.word(address_+8,1);AddVertex(route,p,data);}
-        }
-    }
-    for(int i=0;i<m.signed_word(address_);++i){const auto v=GetVertex(i);const auto bits=m.word(m.word(v+8));const auto kind=bits&0x700;
-        if(kind!=0x300 || (bits&0x800)){
-            if(kind==0x200 || kind==0x300)m.word(v+0x18,AddEdge(i,true,false,data));
-            else{m.word(v+0x18,AddEdge(i,false,false,data));m.word(v+0x1c,AddEdge(i,true,(bits&0x4000)!=0,data));}
-        }
-    }
-    for(int i=0;i<m.signed_word(address_);++i){const auto v=GetVertex(i);m.word(v+0x20,0xffffffffu);m.word(v+0x24,0xffffffffu);}
-    for(int i=0;i<m.signed_word(address_+4);++i){const auto v=GetVertex(m.signed_word(GetEdge(i)+4));m.word(v+0x20+(m.signed_word(v+0x20)!=-1?4:0),i);}
-    for(int i=0;i<m.signed_word(address_);++i){const auto v=GetVertex(i);const auto back=m.signed_word(v+0x24),forward=m.signed_word(v+0x18);
-        if(back!=-1 && forward!=-1 && m.word(GetEdge(back)+0x14)==0 && m.word(GetEdge(back)+8)==m.word(GetEdge(forward)+8)){
-            const auto old=m.word(v+0x20);m.word(v+0x20,back);m.word(v+0x24,old);
-        }
-    }
-}
-// Debug00247878; E-0099-W07. Shared Signpost mutation is part of uncloaking.
-void tTrackGraph::UncloakAllEdges(){
-    auto& m=memory_;for(int i=0;i<m.signed_word(address_+4);++i){const auto e=GetEdge(i);
-        if(m.word(e+0x14)){m.word(e+0x14,0);const auto sign=m.word(GetVertex(m.signed_word(e))+8);m.word(sign,m.word(sign)&0xffffbfffu);}}
-    m.word(address_+8,0);
-}
-// Debug00247C30 /00248148; E-0099-W07.
-std::uint32_t tTrackGraph::FindEdgeByRouteAndPoint(int route,int point)const{
-    const auto& m=memory_;for(int i=0;i<m.signed_word(address_+4);++i){const auto e=GetEdge(i);
-        if(!m.word(e+0x14) && m.signed_word(e+8)==route && m.signed_word(e+0xc)<=point && point<=m.signed_word(e+0x10))return e;}
-    return 0;
-}
-bool tTrackGraph::HasCloakedEdges()const{return (memory_.word(address_+8)&0xff)!=0;}
-// Debug00247608; E-0099-W07. Lists free through their original pools before
-// pool teardown. Empty list/node destructors have no remaining store, confirmed
-// by00248180/00248188/00248290/00248308 and bNode00115280.
-void tTrackGraph::Sub_00247608(int in_chrg){
-    auto& m=memory_;m.word(address_+0x546c,0x2b6e58);
-    for(int i=0;i<m.signed_word(address_+4);++i){const auto e=GetEdge(i);
-        for(int k=0;k<2;++k){const auto head=e+(k?0x24:0x1c),pool=m.word(k?0x328ef4:0x328ef0);
-            while(m.word(head)!=head){const auto node=m.word(head),next=m.word(node),previous=m.word(node+4);
-                m.word(previous,next);m.word(next+4,previous);SlotPool(m,pool).Free(node);}
-        }
-    }
-    bDeleteSlotPool(m,m.word(0x328ef0));m.word(0x328ef0,0);bDeleteSlotPool(m,m.word(0x328ef4));m.word(0x328ef4,0);
-    if(in_chrg&1)m.release(address_);
-}
-// Debug002480D0 /00248100; E-0099-W07.
-void InitTrackGraph(Memory& m,const port::track::RouteData& data){
-    if(!data.initialized)throw std::logic_error("Original route postload must precede graph initialization");
-    const auto graph=m.allocate(0x5470);tTrackGraph(m,graph).Sub_00247218(data);m.word(0x328ef8,graph);
-}
-void CleanupTrackGraph(Memory& m){if(const auto graph=m.word(0x328ef8))tTrackGraph(m,graph).Sub_00247608(3);m.word(0x328ef8,0);}
+    return -1;
 }
 
-#include "game_core/indep/inc/Replay.hpp"
-namespace hp2::debug {
-// Debug002477D8, E-0099-W76. Original bool carrier is4bytes with1serialized byte.
-void tTrackGraph::DoSnapshot(std::uint32_t snapshot){auto& m=memory_;ReplaySnapshot s(m,snapshot);s.MoveData(address_+8,1,4,0);for(int i=0;i<m.signed_word(address_+4);++i){const auto edge=GetEdge(i);if(m.word(edge+0x18))s.MoveData(edge+0x14,1,4,0);}}
+void trackGraphUncloakAllEdges(TrackGraph* graph)
+{
+    for (auto& edge:graph->edges) {
+        if (!edge.cloaked) continue;
+        edge.cloaked=0;
+        auto* connection=graph->vertices[static_cast<std::size_t>(edge.firstVertex)].connection;
+        connection->flags=static_cast<std::uint8_t>(connection->flags&~0x40u);
+    }
+    graph->hasCloaked=0;
 }
 
-#include "game_core/indep/inc/Car.hpp"
-#include "game_core/indep/inc/CopChase.hpp"
-#include "game_core/indep/src/copmgr.hpp"
-namespace hp2::debug {
-// Debug00247F00,E-0110-F07. Original authored edge lists; first match, at most five edges.
-std::uint32_t tTrackGraph::FindSpeedTrap(std::uint32_t car,float minimum,float maximum,bool forward,const ::port::race::AiDriveTargetServices& ai)const{
- auto& m=memory_;hp2::recovered::Car vehicle(m,car);const auto route=vehicle.GetRoute(ai),point=vehicle.GetRoutePoint(ai);if(!route||!point)return 0;
- const auto difference=static_cast<std::int32_t>(point-route-0x428u);const auto index=static_cast<std::int32_t>(static_cast<std::uint32_t>(difference)*0xb6db6db7u)>>4;
- auto edge=FindEdgeByRouteAndPoint(m.signed_half(route+0xa),index);if(!edge)return 0;const float position=m.scalar(car+0x7f4);
- for(int visited=0;visited<5;++visited){const auto head=edge+0x24;for(auto node=m.word(head);node!=head;node=m.word(node)){const auto manager=m.word(0x328c1c);if(!manager)hp2::not_implemented("0x00221420","actual CopManager required by authored graph trap index");const auto trap=tCopManager(m,manager).GetSpeedTrapFromLoadedDataIndex(m.signed_word(node+8));if(!trap)continue;const float distance=forward?GetForwardTrackDistance(m,m.scalar(trap+0x14),position):GetForwardTrackDistance(m,position,m.scalar(trap+0x14));if(distance<maximum&&minimum<=distance)return trap;}
- if(visited==4)break;const auto vertex=GetVertex(m.signed_word(edge+(forward?4:0)));const int next=m.signed_word(vertex+(forward?0x18:0x20));if(next==-1)break;edge=GetEdge(next);}
- return 0;
+int32_t trackGraphHasCloakedEdges(const TrackGraph* graph) { return graph->hasCloaked; }
+
+// Complete PAL24E318..24E3B4. Only edges authored as cloaked have a mutable
+// replay bit. This method has no source BeginSection/EndSection calls and
+// does not rewrite the separately owned road connection records.
+void trackGraphDoSnapshot(TrackGraph* graph,ReplaySnapshot* snapshot)
+{
+    replaySnapshotMoveData(snapshot,&graph->hasCloaked,1,4,0);
+    for(auto& edge:graph->edges)
+        if(edge.initiallyCloaked)
+            replaySnapshotMoveData(snapshot,&edge.cloaked,1,4,0);
 }
+
+size_t trackGraphVertexCount(const TrackGraph* graph) { return graph->vertices.size(); }
+size_t trackGraphEdgeCount(const TrackGraph* graph) { return graph->edges.size(); }
+
+int32_t trackGraphInspectVertex(const TrackGraph* graph, size_t index, int32_t values[8], float* distance)
+{
+    if (!graph || index>=graph->vertices.size() || !values || !distance) return 0;
+    const auto& v=graph->vertices[index];
+    values[0]=v.groupId;values[1]=v.poseIndex;values[2]=v.connection->groupId;values[3]=v.connection->poseIndex;
+    values[4]=v.outgoing[0];values[5]=v.outgoing[1];values[6]=v.incoming[0];values[7]=v.incoming[1];
+    *distance=v.routeDistance;
+    return 1;
+}
+
+int32_t trackGraphInspectEdge(const TrackGraph* graph, size_t index, int32_t values[8],
+    const int32_t** blocks, size_t* blockCount, const int32_t** traps, size_t* trapCount)
+{
+    if (!graph || index>=graph->edges.size() || !values || !blocks || !blockCount || !traps || !trapCount) return 0;
+    const auto& e=graph->edges[index];
+    values[0]=e.firstVertex;values[1]=e.lastVertex;values[2]=e.groupId;values[3]=e.firstPose;
+    values[4]=e.lastPose;values[5]=e.cloaked;values[6]=e.initiallyCloaked;values[7]=e.available;
+    *blocks=e.roadBlocks.data();*blockCount=e.roadBlocks.size();
+    *traps=e.speedTraps.data();*trapCount=e.speedTraps.size();
+    return 1;
+}
+
+// PAL24E880..24EA68. The source walks at most five actual edges, retains
+// each authored annotation's order, and follows primary adjacency only.
+WorldServicesResult trackGraphFindRoadBlock(const TrackGraph* graph,PursuitManager* manager,
+    Car* car,float minimumDistance,float maximumDistance,int32_t forward,PursuitRoadBlock** result)
+{
+    if(!graph || !graph->road || !graph->road->route || !manager || !manager->world || !car || !result)
+        return WORLD_SERVICES_INVALID_BINDING;
+    *result=nullptr;
+    CarMovement* movement=static_cast<CarMovement*>(car->movement);
+    if(!movement || movement->bindings.owner!=car || !movement->frame || !movement->frame->environment.driver)
+        return WORLD_SERVICES_INVALID_BINDING;
+    const CarDriver* driver=movement->frame->environment.driver;
+    const CarRecoveryGroup* group=carDriverCurrentGroup(driver,1);
+    const CarRecoveryPose* pose=carDriverCurrentPose(driver,1);
+    if(!group || !pose)return WORLD_SERVICES_OK;
+    int32_t poseIndex=-1;
+    for(int32_t i=0;i<group->poseCount;++i)if(&group->poses[i]==pose){poseIndex=i;break;}
+    if(poseIndex<0)return WORLD_SERVICES_INVALID_BINDING;
+    int32_t edgeIndex=trackGraphFindEdge(graph,group->id,poseIndex);
+    if(edgeIndex<0)return WORLD_SERVICES_OK;
+    const float targetDistance=movement->routeLocation.distance;
+    for(int32_t hop=0;hop<5;++hop) {
+        if(static_cast<size_t>(edgeIndex)>=graph->edges.size())return WORLD_SERVICES_INVALID_BINDING;
+        const auto& edge=graph->edges[static_cast<size_t>(edgeIndex)];
+        for(int32_t authoredIndex:edge.roadBlocks) {
+            PursuitRoadBlock* block=pursuitManagerRoadBlockBySite(manager,authoredIndex);
+            if(!block)continue;
+            // Complete230DE8 helper: one forward wrap, not signed nearest
+            // distance or a new clamp of invalid route positions.
+            float distance=forward ? block->routeDistance-targetDistance : targetDistance-block->routeDistance;
+            if(distance<0.0f)distance+=graph->road->route->length;
+            if(!(distance<maximumDistance) || !(minimumDistance<=distance))continue;
+            int32_t clear=0;const auto status=pursuitPositionClear(manager->world,block->groundPoint,&clear);
+            if(status!=WORLD_SERVICES_OK)return status;
+            if(clear){*result=block;return WORLD_SERVICES_OK;}
+        }
+        if(hop==4)break;
+        const int32_t vertexIndex=forward ? edge.lastVertex : edge.firstVertex;
+        if(vertexIndex<0 || static_cast<size_t>(vertexIndex)>=graph->vertices.size())return WORLD_SERVICES_INVALID_BINDING;
+        const auto& vertex=graph->vertices[static_cast<size_t>(vertexIndex)];
+        edgeIndex=forward ? vertex.outgoing[0] : vertex.incoming[0];
+        if(edgeIndex==-1)break;
+    }
+    return WORLD_SERVICES_OK;
+}
+
+// PAL24EA68..24EC3C. Unlike the road-block query, the graph selects a trap
+// solely by ordered annotation and route distance. Occupancy and physical
+// placement clearance are checked afterwards by the real manager caller.
+WorldServicesResult trackGraphFindSpeedTrap(const TrackGraph* graph,PursuitManager* manager,
+    Car* car,float minimumDistance,float maximumDistance,int32_t forward,PursuitSpeedTrap** result)
+{
+    if(!graph || !graph->road || !graph->road->route || !manager || !car || !result)
+        return WORLD_SERVICES_INVALID_BINDING;
+    *result=nullptr;
+    CarMovement* movement=static_cast<CarMovement*>(car->movement);
+    if(!movement || movement->bindings.owner!=car || !movement->frame || !movement->frame->environment.driver)
+        return WORLD_SERVICES_INVALID_BINDING;
+    const CarDriver* driver=movement->frame->environment.driver;
+    const CarRecoveryGroup* group=carDriverCurrentGroup(driver,1);
+    const CarRecoveryPose* pose=carDriverCurrentPose(driver,1);
+    if(!group || !pose)return WORLD_SERVICES_OK;
+    int32_t poseIndex=-1;
+    for(int32_t i=0;i<group->poseCount;++i)if(&group->poses[i]==pose){poseIndex=i;break;}
+    if(poseIndex<0)return WORLD_SERVICES_INVALID_BINDING;
+    int32_t edgeIndex=trackGraphFindEdge(graph,group->id,poseIndex);
+    if(edgeIndex<0)return WORLD_SERVICES_OK;
+    const float targetDistance=movement->routeLocation.distance;
+    for(int32_t hop=0;hop<5;++hop) {
+        if(static_cast<size_t>(edgeIndex)>=graph->edges.size())return WORLD_SERVICES_INVALID_BINDING;
+        const auto& edge=graph->edges[static_cast<size_t>(edgeIndex)];
+        for(int32_t authoredIndex:edge.speedTraps) {
+            PursuitSpeedTrap* trap=pursuitManagerSpeedTrapBySite(manager,authoredIndex);
+            if(!trap)continue;
+            float distance=forward ? trap->routeDistance-targetDistance : targetDistance-trap->routeDistance;
+            if(distance<0.0f)distance+=graph->road->route->length;
+            if(distance<maximumDistance && minimumDistance<=distance){*result=trap;return WORLD_SERVICES_OK;}
+        }
+        if(hop==4)break;
+        const int32_t vertexIndex=forward ? edge.lastVertex : edge.firstVertex;
+        if(vertexIndex<0 || static_cast<size_t>(vertexIndex)>=graph->vertices.size())return WORLD_SERVICES_INVALID_BINDING;
+        const auto& vertex=graph->vertices[static_cast<size_t>(vertexIndex)];
+        edgeIndex=forward ? vertex.outgoing[0] : vertex.incoming[0];
+        if(edgeIndex==-1)break;
+    }
+    return WORLD_SERVICES_OK;
 }

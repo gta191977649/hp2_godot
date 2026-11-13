@@ -1,102 +1,233 @@
-// TASK-0042 E-0042-S001: exact Debug source marker(s): ..\indep\src\sound3d.cpp.
-// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: exact Debug declaring class with adopted retail correspondence; evidence: E-0042-S001.
-// Placement: TASK-0042 E-0042-S001; exact Debug definition source/header markers where recorded; unmatched companion remains port-side; retail ABI unconfirmed.
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/indep/inc/Sound3d.hpp"
+#include "Sound3d.hpp"
+#include "Sound3dSample.hpp"
 
-#include "game_core/port/not_implemented.hpp"
-#include "game_core/port/race/car_sound_construction.hpp"
-#include <cstdio>
-#include "game_core/indep/src/sound3dsample.hpp"
-#include "game_core/ChopperSound.hpp"
+#include "CameraMover.hpp"
+#include "indep/inc/Player.hpp"
+#include "indep/inc/Timer.hpp"
+#include "bware/inc/bMath.hpp"
+#include "bware/inc/bMath.hpp"
 
-namespace hp2::recovered {
-// ELF 0x00208B28; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00208b28.md.
-void Sound3d::Activate() {
-    hp2::not_implemented("0x00208B28", "Sound3d::Activate (signature and full body unresolved)");
-}
-
-// ELF 0x00208C78; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00208c78.md.
-void Sound3d::UpdateCamRelativeDistAndVelocity() {
-    hp2::not_implemented("0x00208C78", "Sound3d::UpdateCamRelativeDistAndVelocity (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x00208FE0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00208fe0.md.
-void Sound3d::AzimuthToPan() {
-    hp2::not_implemented("0x00208FE0", "Sound3d::AzimuthToPan (signature and full body unresolved)");
-}
-
-// ELF 0x002091A0; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/002091a0.md.
-void Sound3d::Sub_002091A0() {
-    hp2::not_implemented("0x002091A0", "Sound3d::Sub_002091A0 (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::debug {
-// Debug00203980, E-0099-W27, original ../indep/src/sound3d.cpp.
-void Sound3d::Sub_00203980(){m_.word(address_+0x1c,0x2b2eb0);m_.word(address_+4,1);m_.scalar(address_+0xc,1);m_.word(address_,0);m_.scalar(address_+8,1);m_.half(address_+0x10,0);m_.scalar(address_+0x14,0);m_.scalar(address_+0x18,0);}
-// Debug002039C0, E-0099-W27. Recovered base virtual targets are proven empty;
-// derived activation requires its actual class operation, never a generic no-op.
-void Sound3d::Activate(bool on){
- if(on&&m_.word(address_)){m_.word(address_,1);return;}
- const auto table=m_.word(address_+0x1c);
- if(table==0x2b2eb0){if(on)ActivateSound();else DeactivateSound();}
- else{
-  const auto slot=table+(on?48:40);std::uint32_t target=0;std::int16_t delta=0;
-  try{target=m_.word(slot+4);delta=m_.signed_half(slot);}catch(const std::out_of_range&){hp2::not_implemented("0x002039C0","original derived Sound3d virtual table data is not mapped");}
-  const auto adjusted=address_+std::uint32_t(std::int32_t(delta));
-  // Each listed target is independently recovered as an empty original body;
-  // unknown subclasses never inherit a generic silent activation substitute.
-  if(on && (target==0x00204000 || target==0x0020b118 || target==0x0020dad8 || target==0x0020f4b0)){}
-  else if(!on && target==0x00204008){}
-  else if(on && target==0x0018b8e0)BaseCarSound(m_,adjusted).ActivateSound();
-  else if(on && target==0x00204c58)Sound3dSample(m_,adjusted).ActivateSound();
-  else if(!on && target==0x00204cb0)Sound3dSample(m_,adjusted).DeactivateSound();
-  else if(!on && target==0x0020fc20)ChopperSound(m_,adjusted).DeactivateSound();
-  else if(on && target==0x0018d168)HornSound3d(m_,adjusted).ActivateSound();
-  else if(!on && target==0x0018d190)HornSound3d(m_,adjusted).DeactivateSound();
-  else if(on && target==0x0018d4d8)SirenSound3d(m_,adjusted).ActivateSound();
-  else if(!on && target==0x0018d510)SirenSound3d(m_,adjusted).DeactivateSound();
-  else if(on && target==0x0020ca70)AIEngineSound(m_,adjusted).ActivateSound();
-  else{char address[11];std::snprintf(address,sizeof(address),"0x%08X",target);hp2::not_implemented(address,"original Sound3d virtual activation target is not implemented");}
- }
- m_.word(address_,on?1:0);
-}
-// Debug00204000/00204008, E-0099-W27: both bodies are instruction-confirmed empty.
-void Sound3d::ActivateSound(){}void Sound3d::DeactivateSound(){}
-// Debug00204060, E-0099-W27.
-void Sound3d::Sub_00204060(int flags){m_.word(address_+0x1c,0x2b2eb0);if(flags&1)m_.release(address_);}
-}
-
-#include "game_core/indep/src/soundscape.hpp"
-#include "game_core/port/race/car_render_resources.hpp"
-#include "game_core/src/bMath.hpp"
 #include <cmath>
+
 namespace {
-float port_sound_camera_distance(::port::driving::Memory& m,std::uint32_t point,std::uint32_t camera){const auto x=m.scalar(point)-m.scalar(camera+0x40),y=m.scalar(point+4)-m.scalar(camera+0x44),z=m.scalar(point+8)-m.scalar(camera+0x48);return std::sqrt((x*x+y*y)+z*z);}
+
+/* Native binding of the actual GetActiveCameras consumer. Its source cache
+ * contains these same view pointers; it owns no separate camera transform. */
+const CarCinematicView* activeView(const Sound3dBindings* bindings, int32_t index)
+{
+    if (!bindings->players->players[index]) return nullptr;
+    return bindings->cameras->screens[index + 1].view;
 }
-namespace hp2::debug {
-// Debug00203A30, E-0099-W40. Exact two active-camera scan and scalar fallback.
-float Sound3d::GetDistToClosestCamera(::port::driving::Memory& m,std::uint32_t point){const auto array=GetActiveCameras(m);float distance=m.scalar(0x325da4);for(unsigned i=0;i<2;++i)if(const auto camera=m.word(array+i*4)){const auto candidate=port_sound_camera_distance(m,point,camera);if(candidate<distance)distance=candidate;}
- if(distance==m.scalar(0x325da8)){const auto camera=m.word(::port::race::eGetView(m,1)+0x38);if(!camera)hp2::not_implemented("0x00203A30","actual primary eView camera pose is not initialized");distance=port_sound_camera_distance(m,point,camera);}return distance;
+
+bool validListeners(const Sound3dBindings* bindings)
+{
+    return bindings && bindings->players && bindings->cameras &&
+        bindings->players->count >= 0 && bindings->players->count <= 2 &&
+        bindings->cameras->screens[1].view;
 }
-// Debug00203C90, E-0099-W40. Actual XY heading and original bASin table;
-// zero-distance exceptional FP paths retain their existing explicit math guard.
-std::uint16_t Sound3d::ComputeAzimuth(::port::driving::Memory& m,std::uint32_t point){const auto players=m.signed_word(0x311fa8);if(players<2){const auto camera=m.word(::port::race::eGetView(m,1)+0x38);if(!camera)hp2::not_implemented("0x00203C90","actual primary eView camera pose is not initialized");float x=m.scalar(point)-m.scalar(camera+0x40),y=m.scalar(point+4)-m.scalar(camera+0x44);const auto length=std::sqrt(x*x+y*y);x=x/length;y=y/length;const auto dir_x=m.scalar(camera+0x50),dir_y=m.scalar(camera+0x54);auto angle=std::uint16_t(0x4000-hp2::recovered::bASin(m,x*dir_x+y*dir_y));if(-y*dir_x+x*dir_y<0)angle=std::uint16_t(0u-angle);return angle;}
- const auto cameras=GetActiveCameras(m);int nearest=-1;float minimum=m.scalar(0x325dac);for(int i=0;i<players;++i){const auto camera=m.word(cameras+std::uint32_t(i)*4);if(!camera)hp2::not_implemented("0x00203C90","required active multiplayer camera pose is not initialized");const auto x=m.scalar(camera+0x40)-m.scalar(point),y=m.scalar(camera+0x44)-m.scalar(point+4);const auto distance=x*x+y*y;if(!(minimum<=distance)){minimum=distance;nearest=i;}}
- const auto azimuth=m.half(0x327978);return nearest==0?std::uint16_t(0u-azimuth):azimuth;
+
+float squaredDistance(const float first[4], const float second[4])
+{
+    const float x = first[0] - second[0];
+    const float y = first[1] - second[1];
+    const float z = first[2] - second[2];
+    return (x * x + y * y) + z * z;
 }
-// Debug00203E20, E-0099-W40. Original envelope math and operation order.
-float Sound3d::ComputeVolume(::port::driving::Memory& m,std::uint32_t point,float sphere){const auto distance=GetDistToClosestCamera(m,point);if(sphere<distance)return 0;const auto ratio=distance*(1.0f/sphere);return 1.0f-std::sqrt((distance+distance)*(1.0f/sphere)-ratio*ratio);}
-// Debug00203B10, E-0099-W40. Relative velocity updates only strictly within
-// (-80,80); distance always updates. Original source timestep is shared Memory.
-void Sound3d::UpdateCamRelativeDistAndVelocity(std::uint32_t position){const float distance=GetDistToClosestCamera(m_,position),velocity=(distance-m_.scalar(address_+0x18))/m_.scalar(0x327d08);if(velocity<80&&-80<velocity)m_.scalar(address_+0x14,velocity);m_.scalar(address_+0x18,distance);}
-// Debug00203B88, E-0099-W40. Known actual relative-distance virtual target,
-// original Doppler/envelope/azimuth order; unknown targets stay explicit.
-void Sound3d::Update(std::uint32_t position,std::uint32_t envelope){const auto table=m_.word(address_+0x1c);if(m_.word(table+0x3c)!=0x203b10||m_.signed_half(table+0x38)!=0)hp2::not_implemented("0x00203B88","unknown original Sound3d camera-relative update target");UpdateCamRelativeDistAndVelocity(position);if(m_.word(address_+4))m_.scalar(address_+0xc,1-m_.scalar(address_+0x14)/m_.scalar(0x3288d8));if(!envelope)m_.scalar(address_+8,1);else{const auto distance=m_.scalar(address_+0x18);float volume;if(m_.scalar(envelope+8)<distance)volume=0;else{const float ratio=distance*m_.scalar(envelope+4);volume=m_.scalar(envelope)*(1-std::sqrt((distance+distance)*m_.scalar(envelope+4)-ratio*ratio));}m_.scalar(address_+8,volume);if(1<volume)m_.scalar(address_+8,1);}m_.half(address_+0x10,ComputeAzimuth(m_,position));}
+
+} // namespace
+
+void sound3dInitialize(Sound3dState* sound)
+{
+    sound->active = 0;
+    sound->dopplerActive = 1;
+    sound->pitch = 1.0f;
+    sound->volume = 1.0f;
+    sound->azimuth = 0;
+    sound->relativeVelocity = 0.0f;
+    sound->distance = 0.0f;
+}
+
+Sound3dResult sound3dDistanceToClosestCamera(const Sound3dBindings* bindings,
+    const float position[4], float* distance)
+{
+    if (!validListeners(bindings) || !position || !distance)
+        return SOUND3D_INVALID_BINDING;
+
+    float closest = 8999999488.0f;
+    for (int32_t index = 0; index != 2; ++index) {
+        const CarCinematicView* view = activeView(bindings, index);
+        if (bindings->players->players[index] && !view)
+            return SOUND3D_INVALID_BINDING;
+        if (view) {
+            const float candidate = std::sqrt(squaredDistance(position, view->current.eye));
+            if (candidate < closest) closest = candidate;
+        }
+    }
+    if (closest == 8999999488.0f) {
+        const CarCinematicView* view = bindings->cameras->screens[1].view;
+        closest = std::sqrt(squaredDistance(position, view->current.eye));
+    }
+    *distance = closest;
+    return SOUND3D_OK;
+}
+
+Sound3dResult sound3dUpdateRelativeMotion(Sound3dState* sound,
+    const Sound3dBindings* bindings, const float position[4])
+{
+    if (!sound || !bindings || !bindings->clock) return SOUND3D_INVALID_BINDING;
+    float distance;
+    const Sound3dResult result = sound3dDistanceToClosestCamera(bindings, position, &distance);
+    if (result != SOUND3D_OK) return result;
+    const float velocity = finiteRatio(distance - sound->distance, bindings->clock->worldTimeElapsed);
+    if (velocity < 80.0f && -80.0f < velocity) sound->relativeVelocity = velocity;
+    sound->distance = distance;
+    return SOUND3D_OK;
+}
+
+Sound3dResult sound3dUpdate(Sound3dState* sound, const Sound3dBindings* bindings,
+    const float position[4], const Sound3dEnvelope* envelope)
+{
+    if (!sound || !bindings || !bindings->speedOfSound) return SOUND3D_INVALID_BINDING;
+    const Sound3dResult result = sound3dUpdateRelativeMotion(sound, bindings, position);
+    if (result != SOUND3D_OK) return result;
+    if (sound->dopplerActive) {
+        sound->pitch = 1.0f - finiteRatio(sound->relativeVelocity, *bindings->speedOfSound);
+    }
+    if (envelope) {
+        float volume;
+        if (envelope->maximumDistance < sound->distance) {
+            volume = 0.0f;
+        } else {
+            const float doubledDistance = sound->distance + sound->distance;
+            const float coordinate = sound->distance * envelope->inverseDistance;
+            const float doubledCoordinate = doubledDistance * envelope->inverseDistance;
+            const float square = coordinate * coordinate;
+            const float curve = std::sqrt(std::fabs(doubledCoordinate - square));
+            volume = envelope->volume * (1.0f - curve);
+        }
+        sound->volume = volume;
+        if (1.0f < volume) sound->volume = 1.0f;
+    } else {
+        sound->volume = 1.0f;
+    }
+    return sound3dComputeAzimuth(bindings, position, &sound->azimuth);
+}
+
+Sound3dResult sound3dComputeAzimuth(const Sound3dBindings* bindings,
+    const float position[4], uint16_t* azimuth)
+{
+    if (!validListeners(bindings) || !bindings->multiplayerAzimuth || !position || !azimuth)
+        return SOUND3D_INVALID_BINDING;
+
+    if (bindings->players->count >= 2) {
+        float closest = 8999999488.0f;
+        int32_t selected = -1;
+        for (int32_t index = 0; index < bindings->players->count; ++index) {
+            const CarCinematicView* view = activeView(bindings, index);
+            if (!view) return SOUND3D_INVALID_BINDING;
+            const float x = view->current.eye[0] - position[0];
+            const float y = view->current.eye[1] - position[1];
+            const float distance = x * x + y * y;
+            if (distance < closest) {
+                closest = distance;
+                selected = index;
+            }
+        }
+        const uint16_t offset = *bindings->multiplayerAzimuth;
+        *azimuth = selected == 0 ? static_cast<uint16_t>(0u - offset) : offset;
+        return SOUND3D_OK;
+    }
+
+    const CarCinematicViewFrame& view = bindings->cameras->screens[1].view->current;
+    float y = position[1] - view.eye[1];
+    float x = position[0] - view.eye[0];
+    const float squaredLength = x * x + y * y;
+    const float length = std::sqrt(squaredLength);
+    x = finiteRatio(x, length);
+    y = finiteRatio(y, length);
+    const float first = x * view.forward[0];
+    const float second = y * view.forward[1];
+    const uint16_t direction = vectorArcSineAngle(first + second);
+    uint16_t angle = static_cast<uint16_t>(16384u - direction);
+    const float oppositeY = -y;
+    const float crossFirst = x * view.forward[1];
+    const float crossSecond = oppositeY * view.forward[0];
+    const float cross = crossSecond + crossFirst;
+    if (cross < 0.0f) angle = static_cast<uint16_t>(0u - angle);
+    *azimuth = angle;
+    return SOUND3D_OK;
+}
+
+Sound3dResult sound3dComputeVolume(const Sound3dBindings* bindings,
+    const float position[4], float maximumDistance, float* volume)
+{
+    if (!volume) return SOUND3D_INVALID_BINDING;
+    float distance;
+    const Sound3dResult result = sound3dDistanceToClosestCamera(bindings, position, &distance);
+    if (result != SOUND3D_OK) return result;
+    const float inverse = finiteRatio(1.0f, maximumDistance);
+    if (maximumDistance < distance) {
+        *volume = 0.0f;
+    } else {
+        const float coordinate = distance * inverse;
+        const float doubledDistance = distance + distance;
+        const float square = coordinate * coordinate;
+        const float curve = std::sqrt(std::fabs(doubledDistance * inverse - square));
+        *volume = 1.0f - curve;
+    }
+    return SOUND3D_OK;
+}
+
+float sound3dAzimuthToPan(uint16_t azimuth)
+{
+    const uint32_t angle = azimuth;
+    const uint32_t remainder = angle % 16383u;
+    float pan = static_cast<float>(remainder) * 0.00006103515625f;
+    if (angle >= 16383u) {
+        if (angle - 16383u < 16385u) pan = 1.0f - pan;
+        else if (static_cast<uint16_t>(angle - 32768u) < 16385u) pan = -pan;
+        else pan = pan - 1.0f;
+    }
+    return pan * 0.5f;
+}
+
+uint16_t sound3dPanToAzimuth(float pan)
+{
+    if (pan < 0.0f) {
+        const float coordinate = (pan + 0.5f) + (pan + 0.5f);
+        const float scaled = coordinate * 16383.0f;
+        return static_cast<uint16_t>(convertFloatToInt32(scaled + 49152.0f));
+    }
+    if (0.0f < pan) {
+        const float doubled = pan + pan;
+        return static_cast<uint16_t>(convertFloatToInt32(doubled * 16383.0f));
+    }
+    return 0;
+}
+
+Sound3d::Sound3d()
+{
+    sound3dInitialize(&spatial);
+}
+
+Sound3d::~Sound3d() = default;
+
+WorldAudioResult Sound3d::Activate(int32_t active)
+{
+    WorldAudioResult result = WORLD_AUDIO_OK;
+    if (!active) {
+        // PAL bSample::Stop274740..274778 synchronously emits event8.
+        // Its positional owner can delete this object. The callback and
+        // destructor do not read active, so commit this store before that
+        // one concrete deletion path; preserve ordering for other sounds.
+        const auto* positional = dynamic_cast<const Sound3dSample*>(this);
+        if (positional && positional->StopCanDeleteOwner()) {
+            spatial.active = active;
+            return DeactivateSound();
+        }
+        result = DeactivateSound();
+    }
+    else if (!spatial.active) result = ActivateSound();
+    spatial.active = active;
+    return result;
 }

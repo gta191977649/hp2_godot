@@ -1,172 +1,280 @@
-// TASK-0044 E-0044-E01: Debug tables; full query manifest in local/task0044/engine.
-#include "game_core/port/driving/projection_support.hpp"
-#include "game_core/indep/inc/Table.hpp"
-#include "game_core/indep/src/table.hpp"
-namespace port::driving {
-void Sub_0018F808(Memory& m,std::uint32_t s,std::uint32_t data,std::uint32_t count,float lo,float hi) {hp2::recovered::Table(m,s).Sub_0018D810(data,count,lo,hi);}
-float Table::GetValue(Memory& m,std::uint32_t s,float x) {return hp2::recovered::Table(m,s).GetValue(x);}
-float Graph::GetValue(Memory& m,std::uint32_t s,float x) {return hp2::recovered::Graph(m,s).GetValue(x);}
+#include "indep/inc/Replay.hpp"
+#include "indep/inc/Table.hpp"
+#include "bware/inc/bMath.hpp"
+
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
+
+void carCameraParameterMapInitialize(CarCameraParameterMap* mapping,
+                                      float firstParameter, float firstValue,
+                                      float lastParameter, float lastValue)
+{
+    const float valueRange = lastValue - firstValue;
+    const float parameterRange = lastParameter - firstParameter;
+    const float scale = finiteRatio(valueRange, parameterRange);
+    const float origin = scale * firstParameter;
+    mapping->scale = scale;
+    mapping->offset = firstValue - origin;
 }
-namespace hp2::recovered {
-void Table::Sub_0018D810(std::uint32_t values,std::uint32_t count,float lower,float upper) {
-    m_.word(address_,values);m_.word(address_+4,count);SetMinMax(lower,upper);
+
+float carCameraParameterMapEvaluate(const CarCameraParameterMap* mapping, float parameter)
+{
+    const float scaled = mapping->scale * parameter;
+    return scaled + mapping->offset;
 }
-float Table::GetValue(float value) {
-    using namespace port::driving::detail_group_0018f808;
-    const auto data=m_.word(address_),count=m_.word(address_+4);
-    return interpolate(value,m_.scalar(address_+8),m_.scalar(address_+0xc),m_.scalar(address_+0x10),count,
-      [&](std::int32_t i){if(i<0 || static_cast<std::uint32_t>(i)>=count) throw std::out_of_range("Interpolation index outside mapped table");return m_.scalar(data+static_cast<std::uint32_t>(i)*4);});
+
+void driverFilterUpdate(DriverFilter* filter,float value,float elapsed)
+{
+    const float previous = filter->current;
+    filter->current = value;
+    const float change = value-previous;
+    filter->previous = previous;
+    const float midpoint = previous+change*0.5f;
+    driverHistoryPush(&filter->integral,elapsed*midpoint);
+    driverHistoryPush(&filter->derivative,finiteRatio(change,elapsed));
 }
-void Graph::Sub_0018D9E8(std::uint32_t points,std::uint32_t count) {m_.word(address_,points);m_.word(address_+4,count);}
-float Graph::GetValue(float value) {
-    const auto count=m_.signed_word(address_+4);const auto data=m_.word(address_);
-    if(count<2 || value<=m_.scalar(data)) return m_.scalar(data+4);
-    const auto last=data+static_cast<std::uint32_t>(count)*8;
-    if(m_.scalar(last-8)<=value) return m_.scalar(last-4);
-    const float epsilon=m_.scalar(0x3254e0);
-    for(std::int32_t i=0;i<count-1;++i) {
-        const auto at=data+static_cast<std::uint32_t>(i)*8;
-        const float start=m_.scalar(at),next=m_.scalar(at+8);
-        if(start<=value && value<next) {
-            const float width=next-start,base=m_.scalar(at+4),delta=m_.scalar(at+12)-base;
-            if(!(epsilon<std::fabs(width))) return base+delta*0.5f;
-            float fraction=value-start;fraction=fraction/width;fraction=fraction*delta;return base+fraction;
+
+void driverFilterReset(DriverFilter* filter,float previous)
+{
+    filter->current = 0.0f;filter->previous = previous;
+    driverHistoryReset(&filter->integral,0.0f);driverHistoryReset(&filter->derivative,0.0f);
+}
+
+void driverHistoryPush(DriverHistory* history, float sample)
+{
+    if (history->count < history->capacity) ++history->count;
+    const float added = bScalarAdd(history->sum, sample);
+    history->sum = bScalarAdd(added, -(history->samples[history->next]));
+    history->samples[history->next] = sample;
+    history->value = bScalarDivide(history->sum, (float)history->count);
+    history->next = (uint8_t)(history->next + 1u);
+    if (history->capacity <= history->next) history->next = 0;
+}
+
+void driverHistoryReset(DriverHistory* history, float sample)
+{
+    for (uint32_t index = 0; index < history->capacity; ++index) history->samples[index] = sample;
+    history->count = 0;
+    history->sum = sample * (float)history->capacity;
+}
+
+void driverHistoryFill(DriverHistory* history, float sample)
+{
+    for (uint32_t index = 0; index < history->capacity; ++index) history->samples[index] = sample;
+    history->value = sample;
+    history->count = history->capacity;
+    history->sum = sample * (float)history->capacity;
+}
+
+float driverHistoryLatest(const DriverHistory* history)
+{
+    if (history->count == 0) return 0.0f;
+    const uint8_t index = history->next == 0 ? (uint8_t)(history->capacity - 1u) : (uint8_t)(history->next - 1u);
+    return history->samples[index];
+}
+
+SampledCurve* sampledCurveSetSamples(SampledCurve* curve, const float* samples,
+                                    int32_t sampleCount)
+{
+    curve->samples = samples;
+    curve->sampleCount = sampleCount;
+    return curve;
+}
+
+float sampledCurveEvaluate(const SampledCurve* curve, float input)
+{
+    if (input < curve->minimum)
+        input = curve->minimum;
+    else if (curve->maximum < input)
+        input = curve->maximum;
+
+    const float offset = bScalarAdd(input, -curve->minimum);
+    const float coordinate = bScalarMultiply(offset, curve->coordinateScale);
+    // Integer conversion truncates, selecting the lower surrounding sample.
+    const int32_t index = (int32_t)coordinate;
+    if (index == curve->sampleCount - 1)
+        return curve->samples[index];
+
+    const float first = curve->samples[index];
+    const float second = curve->samples[index + 1];
+    const float fraction = bScalarAdd(coordinate, -(float)index);
+    const float change = bScalarAdd(second, -first);
+    const float interpolatedChange = bScalarMultiply(change, fraction);
+    return bScalarAdd(first, interpolatedChange);
+}
+
+float keyedCurveEvaluate(const KeyedCurve* curve, float coordinate)
+{
+    const CurveKey* keys = curve->keys;
+    if (curve->count < 2) return keys[0].value;
+    if (coordinate <= keys[0].coordinate) return keys[0].value;
+    if (keys[curve->count - 1].coordinate <= coordinate)
+        return keys[curve->count - 1].value;
+    for (int32_t i = 0; i < curve->count - 1; ++i) {
+        if (keys[i].coordinate <= coordinate && coordinate < keys[i + 1].coordinate) {
+            const float width = bScalarAdd(keys[i + 1].coordinate, -(keys[i].coordinate));
+            const float change = bScalarAdd(keys[i + 1].value, -(keys[i].value));
+            if (fabsf(width) <= 0.000001f)
+                return bScalarAdd(keys[i].value, bScalarMultiply(change, 0.5f));
+            const float fraction = bScalarDivide((bScalarAdd(coordinate, -(keys[i].coordinate))), width);
+            return bScalarAdd(keys[i].value, bScalarMultiply(fraction, change));
         }
     }
-    return m_.scalar(data+4);
-}
-}
-#include "game_core/indep/src/table.hpp"
-
-#include "game_core/port/not_implemented.hpp"
-
-namespace hp2::recovered {
-// ELF 0x0018FCB8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0018fcb8.md.
-void Average::Record() {
-    hp2::not_implemented("0x0018FCB8", "Average::Record (signature and full body unresolved)");
+    return keys[0].value;
 }
 
-// ELF 0x0018FD50; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0018fd50.md.
-void Average::Reset() {
-    hp2::not_implemented("0x0018FD50", "Average::Reset (signature and full body unresolved)");
+float keyedCurveInverse(const KeyedCurve* curve, float value)
+{
+    const CurveKey* keys = curve->keys;
+    // The original fallback intentionally returns the first key's VALUE.
+    if (curve->count < 2) return keys[0].value;
+    if (value <= keys[0].value) return keys[0].coordinate;
+    if (keys[curve->count - 1].value <= value)
+        return keys[curve->count - 1].coordinate;
+    for (int32_t i = 0; i < curve->count - 1; ++i) {
+        if (keys[i].value <= value && value < keys[i + 1].value) {
+            const float width = keys[i + 1].value - keys[i].value;
+            const float change = keys[i + 1].coordinate - keys[i].coordinate;
+            if (fabsf(width) <= 0.000001f)
+                return keys[i].coordinate + change * 0.5f;
+            const float fraction = (value - keys[i].value) / width;
+            return keys[i].coordinate + fraction * change;
+        }
+    }
+    return keys[0].value;
 }
 
-// ELF 0x0018FDA0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0018fda0.md.
-void Average::Flush() {
-    hp2::not_implemented("0x0018FDA0", "Average::Flush (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x0018F9F0; E-0042-C077; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/0018f9f0.md.
-
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x00190050; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00190050.md.
-void Linear::Init() {
-    hp2::not_implemented("0x00190050", "Linear::Init (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/indep/inc/Table.hpp"
-
-
-namespace hp2::recovered {
-float Table::InverseLookup(float value) {
- const auto data=m_.word(address_);const auto count=m_.signed_word(address_+4);
- float previous=m_.scalar(data);
- if(std::fabs(value-previous)<m_.scalar(0x3254d8)) return previous;
- bool side=previous<value;
- for(std::int32_t i=1;i<count;++i) {
-  const float current=m_.scalar(data+static_cast<std::uint32_t>(i)*4);
-  float index;
-  if(std::fabs(value-current)<m_.scalar(0x3254dc)) index=static_cast<float>(i);
-  else if((current<value)!=side) index=static_cast<float>(i-1)+(value-previous)/(current-previous);
-  else {previous=current;side=current<value;continue;}
-  return m_.scalar(address_+8)+index/m_.scalar(address_+0x10);
- }
- return m_.scalar(address_+8)+static_cast<float>(count-1)/m_.scalar(address_+0x10);
-}
-float Graph::GetInverse(float value) {
- const auto data=m_.word(address_);const auto count=m_.signed_word(address_+4);
- if(count<2) return m_.scalar(data+4);
- if(value<=m_.scalar(data+4)) return m_.scalar(data);
- const auto last=data+static_cast<std::uint32_t>(count-1)*8;
- if(m_.scalar(last+4)<=value) return m_.scalar(last);
- for(std::int32_t i=0;i<count-1;++i) {
-  const auto at=data+static_cast<std::uint32_t>(i)*8;
-  const float start=m_.scalar(at+4),next=m_.scalar(at+12);
-  if(start<=value && value<next) {
-   const float width=next-start,base=m_.scalar(at),delta=m_.scalar(at+8)-base;
-   if(std::fabs(width)<=m_.scalar(0x3254e4)) return base+delta*0.5f;
-   return base+((value-start)/width)*delta;
-  }
- }
- return m_.scalar(data+4);
-}
+DriverHistory* driverHistoryInitialize(DriverHistory* history, uint8_t capacity)
+{
+    if (!history || capacity == 0) return NULL;
+    float* samples = (float*)calloc(capacity, sizeof(*samples));
+    if (!samples) return NULL;
+    history->capacity = capacity;
+    history->next = 0;
+    history->count = 0;
+    history->sum = 0.0f;
+    history->value = 0.0f;
+    history->samples = samples;
+    return history;
 }
 
-
-#include "game_core/port/race/control_construction.hpp"
-#include <stdexcept>
-namespace hp2::debug {
-// Debug0018DBF8; E-0099-W24; original table.cpp. Padding+3 is untouched.
-void Average::Sub_0018DBF8(int n){
- if(n<=0||static_cast<unsigned>(n)>0x3fffffffu)throw std::invalid_argument("Average requires a positive representable sample allocation");
- auto& m=m_;const auto a=address_;
- m.byte(a+1,0);m.byte(a+2,0);m.word(a+4,0);m.word(a+8,0);m.byte(a,static_cast<std::uint8_t>(n));
- const auto data=m.allocate(static_cast<std::uint32_t>(n)*4);m.word(a+12,data);
- for(int i=0;i<n;++i)m.word(data+static_cast<std::uint32_t>(i)*4,0);
-}
-// Debug0018DD58; E-0099-W24. Does not reset CurrentSlot or fAverage.
-void Average::Reset(float value){
- auto& m=m_;const auto a=address_;const auto count=m.byte(a);
- for(unsigned i=0;i<count;++i)m.scalar(m.word(a+12)+i*4,value);
- m.byte(a+2,0);m.scalar(a+4,value*static_cast<float>(count));
-}
-// Debug0018E010; E-0099-W24.
-void PidError::Reset(float calibration){
- m_.word(address_+0x20,0);m_.scalar(address_+0x24,calibration);
- Average(m_,address_).Reset(0);Average(m_,address_+0x10).Reset(0);
-}
+void driverHistoryDispose(DriverHistory* history)
+{
+    free(history->samples);
+    history->samples = NULL;
 }
 
-
-namespace hp2::debug {
-// Debug0018DC70; E-0099-W24. Does not null pData or reset counters.
-void Average::Sub_0018DC70(int flags){if(const auto data=m_.word(address_+12))m_.release(data);if(flags&1)m_.release(address_);}
+// Complete PAL18FE38. The serialized capacity must fit the same owner's
+// existing allocation; source restores never allocate a replacement history.
+void driverHistorySnapshot(DriverHistory* history,ReplaySnapshot* snapshot)
+{
+    const uint8_t capacity=history->capacity;
+    replaySnapshotBeginSection(snapshot,nullptr,"Average");
+    replaySnapshotMoveData(snapshot,&history->capacity,1,1,0);
+    replaySnapshotMoveData(snapshot,&history->next,1,1,0);
+    replaySnapshotMoveData(snapshot,&history->count,1,1,0);
+    replaySnapshotMoveFloat(snapshot,&history->sum);
+    if (history->capacity>capacity || !history->samples) {
+        snapshot->result=REPLAY_SNAPSHOT_INVALID_BINDING;
+        replaySnapshotEndSection(snapshot);
+        return;
+    }
+    for (uint32_t index=0;index<history->capacity;++index)
+        replaySnapshotMoveFloat(snapshot,history->samples+index);
+    if (snapshot->recording || snapshot->restoring)
+        history->value=history->count ? history->sum/static_cast<float>(history->count) : 0.0f;
+    replaySnapshotEndSection(snapshot);
 }
 
-namespace hp2::debug {
-// Debug0018DCC0; E-0099-W47. Original byte ring indices, ordered total update.
-void Average::Record(float value){auto& m=m_;const auto a=address_;if(m.byte(a+2)<m.byte(a))m.byte(a+2,m.byte(a+2)+1);const float total=m.scalar(a+4)+value;m.scalar(a+4,total);const auto entry=m.word(a+12)+4*m.byte(a+1);m.scalar(a+4,total-m.scalar(entry));m.scalar(entry,value);const auto next=static_cast<std::uint8_t>(m.byte(a+1)+1);m.byte(a+1,next);m.scalar(a+8,m.scalar(a+4)/static_cast<float>(m.byte(a+2)));if(m.byte(a)<=next)m.byte(a+1,0);}
-// Debug0018DF38; E-0099-W47. Integral trapezoid and derivative original ordering.
-void PidError::Record(float error,float seconds){const float previous=m_.scalar(address_+0x20);m_.scalar(address_+0x20,error);m_.scalar(address_+0x24,previous);Average(m_,address_).Record(seconds*(previous+(error-previous)*.5f));Average(m_,address_+16).Record((error-previous)/seconds);}
+// Full PAL18FF98..190008, PidError::DoSnapshot.
+void driverFilterSnapshot(DriverFilter* filter,ReplaySnapshot* snapshot)
+{
+    replaySnapshotBeginSection(snapshot,nullptr,"PidError");
+    driverHistorySnapshot(&filter->integral,snapshot);
+    driverHistorySnapshot(&filter->derivative,snapshot);
+    replaySnapshotMoveFloat(snapshot,&filter->current);
+    replaySnapshotMoveFloat(snapshot,&filter->previous);
+    replaySnapshotEndSection(snapshot);
 }
 
-#include "game_core/indep/inc/Replay.hpp"
-namespace hp2::debug {
-// Debug0018DE40; E-0099-W74; original table.cpp; replay-frame/0018de40.json/type-Average.json.
-void Average::DoSnapshot(std::uint32_t snapshot){
- ReplaySnapshot s(m_,snapshot);s.BeginSection(0x3279c0);
- for(unsigned i=0;i<3;++i)s.MoveData(address_+i,1);
- s.MoveData(address_+4,4);for(unsigned i=0;i<m_.byte(address_);++i)s.MoveData(m_.word(address_+12)+4*i,4);
- if(m_.byte(snapshot+0x3c)||m_.byte(snapshot+0x3d)){
-  m_.word(address_+8,0);if(m_.byte(address_+2))m_.scalar(address_+8,m_.scalar(address_+4)/static_cast<float>(m_.byte(address_+2)));
- }
- s.EndSection();
-}
-// Debug0018DFA0; E-0099-W74; replay-frame/0018dfa0.json/type-PidError.json.
-void PidError::DoSnapshot(std::uint32_t snapshot){
- ReplaySnapshot s(m_,snapshot);s.BeginSection(0x2ac800);Average(m_,address_).DoSnapshot(snapshot);
- Average(m_,address_+0x10).DoSnapshot(snapshot);s.MoveData(address_+0x20,4);s.MoveData(address_+0x24,4);s.EndSection();
-}
+// PAL Table methods and the existing native PidError storage adapter.
+static void sampledCurveUpdateScale(SampledCurve* curve)
+{
+    const float intervals = (float)(curve->sampleCount - 1);
+    const float width = bScalarAdd(curve->maximum, -curve->minimum);
+    curve->coordinateScale = bScalarDivide(intervals, width);
 }
 
-namespace hp2::debug {
-// Debug0018E058, E-0099-W92. Source operation order is retained.
-void Linear::Init(float x0,float y0,float x1,float y1){const float slope=(y1-y0)/(x1-x0);m_.scalar(address_,slope);m_.scalar(address_+4,y0-slope*x0);}
-// Debug0018E078, E-0099-W92.
-float Linear::GetValue(float x)const{return m_.scalar(address_)*x+m_.scalar(address_+4);}
+void sampledCurveSetRange(SampledCurve* curve, float minimum, float maximum)
+{
+    curve->minimum = minimum;
+    curve->maximum = maximum;
+    sampledCurveUpdateScale(curve);
+}
+
+SampledCurve* sampledCurveInitialize(SampledCurve* curve, const float* samples,
+                                    int32_t sampleCount,
+                                    float minimum, float maximum)
+{
+    curve->samples = samples;
+    curve->sampleCount = sampleCount;
+    sampledCurveSetRange(curve, minimum, maximum);
+    return curve;
+}
+
+float sampledCurveInverse(const SampledCurve* curve, float value)
+{
+    const float tolerance = 0.000001f;
+    const float first = curve->samples[0];
+    const float firstDifference = value - first;
+    if (fabsf(firstDifference) < tolerance)
+        return first;
+
+    int below = first < value;
+    for (int32_t index = 1; index < curve->sampleCount; ++index) {
+        const float current = curve->samples[index];
+        const float difference = value - current;
+        if (fabsf(difference) < tolerance) {
+            const float offset = (float)index / curve->coordinateScale;
+            return curve->minimum + offset;
+        }
+
+        const int currentBelow = current < value;
+        if (currentBelow != below) {
+            const float previous = curve->samples[index - 1];
+            const float change = current - previous;
+            const float fromPrevious = value - previous;
+            const float fraction = fromPrevious / change;
+            const float coordinate = (float)(index - 1) + fraction;
+            const float offset = coordinate / curve->coordinateScale;
+            return curve->minimum + offset;
+        }
+        below = currentBelow;
+    }
+
+    const float offset = (float)(curve->sampleCount - 1) / curve->coordinateScale;
+    return curve->minimum + offset;
+}
+
+int32_t driverFilterInitialize(DriverFilter* filter,uint8_t integralCapacity,uint8_t derivativeCapacity)
+{
+    memset(filter,0,sizeof(*filter));
+    if (!driverHistoryInitialize(&filter->integral,integralCapacity)) return 0;
+    if (!driverHistoryInitialize(&filter->derivative,derivativeCapacity)) {
+        driverHistoryDispose(&filter->integral);return 0;
+    }
+    return 1;
+}
+
+void driverFilterDispose(DriverFilter* filter)
+{
+    driverHistoryDispose(&filter->integral);driverHistoryDispose(&filter->derivative);
+}
+
+/* Camera path support. */
+float carCameraParameterMapInverse(const CarCameraParameterMap* mapping, float value)
+{
+    if (fabsf(mapping->scale) <= 0.0010000000474974513f) return mapping->offset;
+    return finiteRatio(value - mapping->offset, mapping->scale);
 }

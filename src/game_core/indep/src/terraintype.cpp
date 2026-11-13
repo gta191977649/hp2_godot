@@ -1,22 +1,509 @@
-// Original ../indep/src/terraintype.cpp ownership: E-0099-W12 read-only ECOFF
-// FDR/SYMR/marker and path-string captures, separately from function recovery.
-#include "game_core/port/race/smokeables.hpp"
-#include "game_core/indep/src/fmenus.hpp"
-#include <stdexcept>
+#include "indep/inc/TerrainType.hpp"
+#include "indep/inc/TerrainType.hpp"
+#include "bware/inc/bWare.hpp"
 
-namespace hp2::debug {
-// Debug001D1248, E-0099-W12. Exact ordered33-row hash lookup, absent returnsNONE0.
-int MatchTerrainType(const ::port::driving::Memory& memory,std::uint32_t hash){
-    for(int i=0;i<33;++i)if(memory.word(0x3102e8+i*0x90+4)==hash)return i;
+#include <cstring>
+
+namespace {
+// Final PAL318C00,33 records. Prototype values are never imported here.
+TerrainMaterial materials[33] = {
+    { // 0: NONE
+        1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+        "NONE", 0, 0, 0x0u, nullptr,
+        0.10000000149011612f, 0.0f, 0.0f, 0xa0404040u,
+        {
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"", 20.0f, 50.0f},
+        }
+    },
+    { // 1: ROAD
+        1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+        "ROAD", 0, 1, 0x1u, "SKID_ROAD",
+        0.10000000149011612f, 0.0f, 0.0f, 0xa0808080u,
+        {
+            {"XETT_ROAD_DR", 20.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"XETT_ROAD_SK", 5.0f, 40.0f},
+            {"XETT_ROAD_SP", 2.0f, 200.0f},
+            {"XEBO_ROAD", 1.0f, 2.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 50.0f},
+        }
+    },
+    { // 2: DIRT
+        1.399999976158142f, 1.0f, 0.05000000074505806f, 0.9700000286102295f, 0.9578750133514404f, 1.0f,
+        "DIRT", 0, 2, 0x0u, "SKID_DIRT",
+        0.5f, 0.44999998807907104f, 130.0f, 0xa0003060u,
+        {
+            {"", 3.0f, 30.0f},
+            {"XETT_DIRTRD_DR", 35.0f, 100.0f},
+            {"XETT_DIRTRD_SK", 5.0f, 20.0f},
+            {"XETT_DIRTRD_SP", 1.5f, 10.0f},
+            {"XEBO_DIRT", 1.0f, 2.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 3: DIRTROAD
+        1.399999976158142f, 1.0f, 0.019999999552965164f, 0.9900000095367432f, 0.9812999963760376f, 1.0f,
+        "DIRTROAD", 0, 3, 0x0u, "SKID_DIRT",
+        0.20000000298023224f, 0.18000000715255737f, 85.0f, 0xa0204070u,
+        {
+            {"", 3.0f, 30.0f},
+            {"XETT_DIRTRD_DR", 35.0f, 100.0f},
+            {"XETT_DIRTRD_SK", 5.0f, 20.0f},
+            {"XETT_DIRTRD_SP", 1.5f, 10.0f},
+            {"XEBO_DIRT", 1.0f, 2.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 4: PUDDLE
+        1.0f, 1.0f, 0.009999999776482582f, 0.9599999785423279f, 0.9513000249862671f, 1.100000023841858f,
+        "PUDDLE", 0, 4, 0x1u, "SKID_ROAD",
+        1.0f, 0.0f, 0.0f, 0xb0802020u,
+        {
+            {"XETT_PUDDLE_DRSL", 3.0f, 30.0f},
+            {"XETT_PUDDLE_DR", 35.0f, 100.0f},
+            {"XETT_PUDDLE_SK", 5.0f, 20.0f},
+            {"XETT_PUDDLE_SP", 1.0f, 100.0f},
+            {"", 0.6000000238418579f, 3.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 5: DEEP_WATER
+        1.0f, 1.0f, 0.029999999329447746f, 0.9599999785423279f, 0.9480000138282776f, 1.5f,
+        "DEEP_WATER", 0, 5, 0x0u, nullptr,
+        1.0f, 0.0f, 0.0f, 0x80802020u,
+        {
+            {"XETT_DEEPWATER_DRSL", 3.0f, 30.0f},
+            {"XETT_DEEPWATER_DR", 35.0f, 100.0f},
+            {"XETT_DEEPWATER_SK", 5.0f, 20.0f},
+            {"XETT_DEEPWATER_SP", 1.0f, 100.0f},
+            {"", 0.6000000238418579f, 3.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 6: GRASS
+        1.399999976158142f, 1.0f, 0.05000000074505806f, 0.9599999785423279f, 0.9480000138282776f, 1.0499999523162842f,
+        "GRASS", 0, 6, 0x0u, "SKID_GRASS",
+        1.0f, 0.25f, 56.0f, 0x80008040u,
+        {
+            {"", 3.0f, 30.0f},
+            {"XETT_XETT_GRASS_DR", 35.0f, 100.0f},
+            {"XETT_GRASS_SK", 5.0f, 20.0f},
+            {"XETT_GRASS_SP", 2.0f, 200.0f},
+            {"XEBO_DIRT", 1.0f, 2.0f},
+            {"XECS_GRASS", 15.0f, 100.0f},
+            {"XECS_GRASS", 15.0f, 50.0f},
+        }
+    },
+    { // 7: SAND
+        1.399999976158142f, 1.0f, 0.05000000074505806f, 0.9599999785423279f, 0.949999988079071f, 2.0f,
+        "SAND", 0, 7, 0x0u, "SKID_SAND",
+        1.0f, 0.25f, 40.0f, 0x804080ffu,
+        {
+            {"", 3.0f, 30.0f},
+            {"XETT_SAND_DR", 35.0f, 100.0f},
+            {"XETT_SAND_SK", 5.0f, 20.0f},
+            {"XETT_SAND_SP", 5.0f, 200.0f},
+            {"XEBO_DIRT", 1.0f, 2.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 8: SNOW
+        1.399999976158142f, 1.0f, 0.009999999776482582f, 0.949999988079071f, 0.9381250143051147f, 1.0f,
+        "SNOW", 0, 8, 0x0u, "SKID_DIRT",
+        1.0f, 0.20000000298023224f, 100.0f, 0x80b0b0b0u,
+        {
+            {"", 20.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"", 20.0f, 100.0f},
+            {"", 20.0f, 100.0f},
+            {"", 0.6000000238418579f, 3.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 9: DIRT_SHOULDER
+        1.399999976158142f, 1.0f, 0.019999999552965164f, 0.9800000190734863f, 0.9713000059127808f, 1.0f,
+        "DIRT_SHOULDER", 0, 9, 0x0u, "SKID_DIRT",
+        0.20000000298023224f, 0.10999999940395355f, 45.0f, 0x80205070u,
+        {
+            {"", 3.0f, 30.0f},
+            {"XETT_DIRTRD_DR", 35.0f, 100.0f},
+            {"XETT_DIRTRD_SK", 5.0f, 20.0f},
+            {"XETT_DIRTRD_SP", 1.5f, 10.0f},
+            {"XEBO_DIRT", 1.0f, 2.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 10: SAND_SHOULDER
+        1.399999976158142f, 1.0f, 0.014999999664723873f, 0.9700000286102295f, 0.9613000154495239f, 1.2000000476837158f,
+        "SAND_SHOULDER", 0, 10, 0x0u, "SKID_SAND",
+        0.5f, 0.05000000074505806f, 32.0f, 0x806080b0u,
+        {
+            {"", 3.0f, 30.0f},
+            {"XETT_SAND_DR", 35.0f, 100.0f},
+            {"XETT_SAND_SK", 5.0f, 20.0f},
+            {"XETT_SAND_SP", 5.0f, 200.0f},
+            {"", 0.6000000238418579f, 3.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 11: SNOW_SHOULDER
+        1.399999976158142f, 1.0f, 0.009999999776482582f, 0.9700000286102295f, 0.9578750133514404f, 1.0f,
+        "SNOW_SHOULDER", 0, 11, 0x0u, "SKID_DIRT",
+        0.5f, 0.20000000298023224f, 100.0f, 0x80a0a0a0u,
+        {
+            {"", 20.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"", 20.0f, 100.0f},
+            {"", 20.0f, 100.0f},
+            {"", 0.6000000238418579f, 3.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 12: SIDEWALK
+        1.0f, 1.100000023841858f, 0.029999999329447746f, 1.0f, 1.0f, 1.0f,
+        "SIDEWALK", 0, 12, 0x1u, "SKID_ROAD",
+        0.10000000149011612f, 0.10000000149011612f, 320.0f, 0x80606060u,
+        {
+            {"XETT_RRCSSW_DR", 15.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"XETT_RRCSSW_SK", 5.0f, 20.0f},
+            {"XETT_RRCSSW_SP", 2.0f, 100.0f},
+            {"XEBO_ROAD", 1.0f, 2.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 13: SNOW_SIDEWALK
+        1.399999976158142f, 1.0f, 0.029999999329447746f, 0.9700000286102295f, 0.9578750133514404f, 1.0f,
+        "SNOW_SIDEWALK", 0, 13, 0x1u, "SKID_DIRT",
+        0.5f, 0.10000000149011612f, 320.0f, 0x80606060u,
+        {
+            {"", 20.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"", 20.0f, 100.0f},
+            {"", 20.0f, 100.0f},
+            {"", 0.6000000238418579f, 3.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 14: ROCK
+        1.0f, 1.0f, 0.019999999552965164f, 1.0f, 1.0f, 1.0099999904632568f,
+        "ROCK", 0, 14, 0x0u, nullptr,
+        0.10000000149011612f, 0.20000000298023224f, 100.0f, 0x8080a0a0u,
+        {
+            {"XETT_ROCK_DR", 15.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"XETT_ROCK_SK", 5.0f, 20.0f},
+            {"XETT_ROCK_SP", 2.0f, 100.0f},
+            {"XEBO_ROAD", 1.0f, 2.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 15: WOOD_WALL
+        1.0f, 1.0f, 0.009999999776482582f, 1.0f, 1.0f, 1.0f,
+        "WOOD_WALL", 0, 15, 0x0u, "SKID_ROAD",
+        0.5f, 0.20000000298023224f, 100.0f, 0xa0002040u,
+        {
+            {"", 20.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"", 20.0f, 20.0f},
+            {"", 20.0f, 100.0f},
+            {"", 0.6000000238418579f, 3.0f},
+            {"XECS_WOOD_WALL", 4.0f, 15.0f},
+            {"XECS_WOOD_WALL", 15.0f, 50.0f},
+        }
+    },
+    { // 16: CACTUS_WALL
+        1.0f, 1.0f, 0.009999999776482582f, 1.0f, 1.0f, 1.0f,
+        "CACTUS_WALL", 0, 16, 0x100u, nullptr,
+        1.0f, 0.20000000298023224f, 100.0f, 0xa050e000u,
+        {
+            {"", 20.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"", 20.0f, 100.0f},
+            {"", 20.0f, 100.0f},
+            {"", 0.6000000238418579f, 3.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 17: SOLID_WALL
+        1.0f, 1.0f, 0.009999999776482582f, 1.0f, 1.0f, 1.0f,
+        "SOLID_WALL", 0, 17, 0x0u, nullptr,
+        0.10000000149011612f, 0.20000000298023224f, 100.0f, 0xa0e05040u,
+        {
+            {"", 20.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"", 20.0f, 100.0f},
+            {"", 20.0f, 100.0f},
+            {"", 0.6000000238418579f, 3.0f},
+            {"XECS_SOLID_WALL", 10.0f, 15.0f},
+            {"XECS_SOLID_WALL", 15.0f, 50.0f},
+        }
+    },
+    { // 18: BOARDWALK
+        1.0f, 10.0f, 0.041999999433755875f, 1.0f, 1.0f, 1.0199999809265137f,
+        "BOARDWALK", 0, 18, 0x1u, "SKID_ROAD",
+        0.10000000149011612f, 0.4000000059604645f, 100.0f, 0xa0c080c0u,
+        {
+            {"XETT_BOARDWALK_DR", 15.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"XETT_BOARDWALK_SK", 5.0f, 20.0f},
+            {"XETT_BOARDWALK_SP", 5.0f, 100.0f},
+            {"XEBO_ROAD", 1.0f, 2.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 19: COBBLESTONE
+        1.0f, 3.0f, 0.04800000041723251f, 1.0f, 1.0f, 1.0199999809265137f,
+        "COBBLESTONE", 0, 19, 0x1u, "SKID_ROAD",
+        0.10000000149011612f, 0.20000000298023224f, 90.0f, 0xa080c0c0u,
+        {
+            {"XETT_RRCSSW_DR", 15.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"XETT_RRCSSW_SK", 5.0f, 20.0f},
+            {"XETT_RRCSSW_SP", 2.0f, 100.0f},
+            {"XEBO_ROAD", 1.0f, 2.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 20: MUD_PUDDLE
+        1.0f, 1.0f, 0.009999999776482582f, 0.9599999785423279f, 0.9513000249862671f, 1.100000023841858f,
+        "MUD_PUDDLE", 0, 20, 0x1u, "SKID_ROAD",
+        1.0f, 0.0f, 0.0f, 0xa0808080u,
+        {
+            {"XETT_MUDPUDDLE_DR", 50.0f, 150.0f},
+            {"", 50.0f, 100.0f},
+            {"XETT_MUDPUDDLE_SK", 5.0f, 20.0f},
+            {"XETT_MUDPUDDLE_SP", 2.0f, 100.0f},
+            {"", 0.6000000238418579f, 3.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 21: ROUGH_ROAD
+        1.0f, 1.0f, 0.019999999552965164f, 1.0f, 1.0f, 1.0099999904632568f,
+        "ROUGH_ROAD", 0, 21, 0x1u, "SKID_ROAD",
+        0.10000000149011612f, 0.20000000298023224f, 42.0f, 0xa0808080u,
+        {
+            {"XETT_RRCSSW_DR", 15.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"XETT_RRCSSW_SK", 5.0f, 20.0f},
+            {"XETT_RRCSSW_SP", 2.0f, 100.0f},
+            {"XEBO_ROAD", 1.0f, 2.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 22: GRASS_SHOULDER
+        1.0f, 1.0f, 0.009999999776482582f, 0.9800000190734863f, 0.9713000059127808f, 1.0199999809265137f,
+        "GRASS_SHOULDER", 0, 22, 0x0u, "SKID_ROAD",
+        0.5f, 0.25f, 53.0f, 0xa0808080u,
+        {
+            {"", 3.0f, 30.0f},
+            {"XETT_GRASS_DR", 35.0f, 100.0f},
+            {"XETT_GRASS_SK", 5.0f, 20.0f},
+            {"XETT_GRASS_SP", 2.0f, 100.0f},
+            {"XEBO_DIRT", 1.0f, 2.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 23: AUTUMN_LEAVES
+        1.0f, 1.0f, 0.019999999552965164f, 0.9700000286102295f, 0.9599999785423279f, 1.0f,
+        "AUTUMN_LEAVES", 0, 23, 0x0u, "SKID_ROAD",
+        0.10000000149011612f, 0.07999999821186066f, 173.0f, 0xa0808080u,
+        {
+            {"", 3.0f, 30.0f},
+            {"XETT_AUTLV_DR", 35.0f, 100.0f},
+            {"XETT_AUTLV_SK", 5.0f, 20.0f},
+            {"XETT_AUTLV_SP", 2.0f, 100.0f},
+            {"XEBO_ROAD", 1.0f, 2.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 24: AUTUMN_LEAVES_SHOULDER
+        1.0f, 1.0f, 0.009999999776482582f, 0.9800000190734863f, 0.9713000059127808f, 1.0f,
+        "AUTUMN_LEAVES_SHOULDER", 0, 24, 0x0u, "SKID_ROAD",
+        0.10000000149011612f, 0.07999999821186066f, 151.0f, 0xa0808080u,
+        {
+            {"", 3.0f, 30.0f},
+            {"XETT_AUTLV_DR", 35.0f, 100.0f},
+            {"XETT_AUTLV_SK", 5.0f, 20.0f},
+            {"XETT_AUTLV_SP", 2.0f, 100.0f},
+            {"XEBO_ROAD", 1.0f, 2.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 25: MULCH
+        1.399999976158142f, 1.0f, 0.029999999329447746f, 0.9700000286102295f, 0.9578750133514404f, 1.0499999523162842f,
+        "MULCH", 0, 25, 0x0u, "SKID_DIRT",
+        0.5f, 0.07999999821186066f, 98.0f, 0xa0808080u,
+        {
+            {"", 3.0f, 30.0f},
+            {"XETT_MULCH_DR", 35.0f, 100.0f},
+            {"XETT_MULCH_SK", 5.0f, 20.0f},
+            {"XETT_MULCH_SP", 2.0f, 100.0f},
+            {"XEBO_DIRT", 1.0f, 2.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 26: MULCH_SHOULDER
+        1.399999976158142f, 1.0f, 0.014999999664723873f, 0.9800000190734863f, 0.9713000059127808f, 1.0499999523162842f,
+        "MULCH_SHOULDER", 0, 26, 0x0u, "SKID_DIRT",
+        0.5f, 0.07999999821186066f, 92.0f, 0xa0808080u,
+        {
+            {"", 3.0f, 30.0f},
+            {"XETT_MULCH_DR", 35.0f, 100.0f},
+            {"XETT_MULCH_SK", 5.0f, 20.0f},
+            {"XETT_MULCH_SP", 2.0f, 100.0f},
+            {"XEBO_DIRT", 1.0f, 2.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 27: ROAD_AUTUMN
+        1.0f, 1.0f, 0.0f, 0.9900000095367432f, 0.9812999963760376f, 1.0f,
+        "ROAD_AUTUMN", 0, 27, 0x1u, "SKID_ROAD",
+        0.10000000149011612f, 0.0f, 0.0f, 0xa0808080u,
+        {
+            {"", 3.0f, 30.0f},
+            {"XETT_ROADAUT_DR", 35.0f, 100.0f},
+            {"XETT_ROAD_SP", 5.0f, 20.0f},
+            {"XETT_ROAD_SK", 5.0f, 100.0f},
+            {"XEBO_ROAD", 1.0f, 2.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 28: PLANT
+        1.0f, 1.0f, 0.0f, 0.9900000095367432f, 0.9810000061988831f, 1.0f,
+        "PLANT", 0, 28, 0x100u, nullptr,
+        1.0f, 0.0f, 0.0f, 0xa0808080u,
+        {
+            {"", 15.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"", 2.0f, 100.0f},
+            {"", 5.0f, 100.0f},
+            {"", 0.6000000238418579f, 3.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 29: POST
+        1.0f, 1.0f, 0.0f, 0.9900000095367432f, 0.9810000061988831f, 1.0f,
+        "POST", 0, 29, 0x100u, nullptr,
+        0.20000000298023224f, 0.0f, 0.0f, 0xa0808080u,
+        {
+            {"", 15.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"", 2.0f, 100.0f},
+            {"", 5.0f, 100.0f},
+            {"", 0.6000000238418579f, 3.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 30: METAL_GRATE
+        1.0f, 1.0f, 0.0f, 0.9900000095367432f, 0.9812999963760376f, 1.0f,
+        "METAL_GRATE", 0, 30, 0x101u, nullptr,
+        0.0f, 0.20000000298023224f, 90.0f, 0xa0123456u,
+        {
+            {"", 15.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"", 2.0f, 100.0f},
+            {"", 5.0f, 100.0f},
+            {"", 0.6000000238418579f, 3.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+        }
+    },
+    { // 31: POTHOLE
+        1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+        "POTHOLE", 0, 31, 0x1u, "SKID_ROAD",
+        0.10000000149011612f, 0.20000000298023224f, 90.0f, 0xa0543210u,
+        {
+            {"XETT_ROAD_DR", 20.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"XETT_ROAD_SK", 5.0f, 20.0f},
+            {"XETT_ROAD_SP", 2.0f, 200.0f},
+            {"", 0.6000000238418579f, 3.0f},
+            {"", 50.0f, 100.0f},
+            {"", 50.0f, 50.0f},
+        }
+    },
+    { // 32: CAR
+        1.0f, 1.0f, 0.0f, 0.9900000095367432f, 0.9812999963760376f, 1.0f,
+        "CAR", 0, 32, 0x100u, nullptr,
+        0.0f, 0.0f, 0.0f, 0xa0808080u,
+        {
+            {"", 15.0f, 100.0f},
+            {"", 50.0f, 100.0f},
+            {"", 2.0f, 100.0f},
+            {"", 5.0f, 100.0f},
+            {"", 0.6000000238418579f, 3.0f},
+            {"XECI_CAR", 10.0f, 15.0f},
+            {"", 2.0f, 4.0f},
+        }
+    },
+};
+}
+
+const TerrainMaterial* terrainDefaultMaterials(size_t* count)
+{
+    if (count) *count = 33;
+    return materials;
+}
+
+int32_t terrainTypeMatchName(const char* name)
+{
+    if (name) {
+        for (int32_t index = 0; index < 33; ++index) {
+            if (std::strcmp(name, materials[index].name) == 0) return index;
+        }
+    }
     return 0;
 }
-// Debug001D1280, E-0099-W12. Original process-static hashes are not in ELF data.
-void Sub_001D1280(::port::driving::Memory& memory){
-    for(std::uint32_t row=0x3102e8;row<0x311578;row+=0x90){
-        const auto address=memory.word(row);std::string name;
-        for(std::uint32_t n=0;n<256;++n){const auto ch=memory.byte(address+n);if(!ch)break;name.push_back(char(ch));}
-        if(name.size()==256)throw std::out_of_range("Original terrain type name exceeds host bound");
-        memory.word(row+4,hp2::frontend::bStringHash(name.c_str()));
+
+int32_t terrainTypeMatchKey(uint32_t key)
+{
+    for (int32_t index = 0; index < 33; ++index) {
+        if (materials[index].key == key) return index;
     }
+    return 0;
 }
+
+void terrainTypeInitialize()
+{
+    for (auto& material : materials) material.key = hashString(material.name);
+}
+
+namespace {
+// Native host construction invokes the actual table initializer once.
+struct TerrainTypeStartup {
+    TerrainTypeStartup() { terrainTypeInitialize(); }
+} startup;
 }

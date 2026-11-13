@@ -1,49 +1,71 @@
-// TASK-0099 E-0099-W50. Original ../indep/src/camera.cpp ownership confirmed
-// by live read-only MCP FDR/SYMR/marker/path bytes; Debug authority, not Retail.
-#include "game_core/indep/inc/Camera.hpp"
-#include "game_core/port/driving/projections.hpp"
-#include "game_core/port/not_implemented.hpp"
-#include "game_core/src/ecstasy/emathe.hpp"
+// Camera matrix operations. PAL156BE0/156CD0/156D68.
+// Native typed storage owns the camera matrix and its direction vectors.
+#include "CameraMover.hpp"
+#include "indep/inc/eMath.hpp"
+#include "indep/inc/CameraMover.hpp"
+#include "bware/inc/bMath.hpp"
+#include <cstring>
 #include <cmath>
-namespace hp2::debug {
-// Debug00156868/listing, E-0099-W50. Finite positive normalization domain;
-// exceptional VU reciprocal square root is an explicit original-address gap.
-void Camera::SetCameraMatrix(std::uint32_t input,float time){
- if(m_.word(0x327428))return;
- m_.copy(address_+0x90,address_,0x90);m_.scalar(address_+0x1b4,time);
- auto matrix=m_.matrix(input);
- if(m_.word(0x2f20e0)&&!m_.word(0x326f20)){
-  m_.word(0x32742c,1);matrix=m_.matrix(0x2f20e4);
-  for(unsigned i=12;i<16;++i)matrix[i]*=m_.scalar(0x324f94);
-  matrix[15]=1;
- }else if(m_.word(0x32742c))m_.word(0x32742c,0);
- m_.matrix(address_,matrix);
- // Exact eTransposeMatrix0011BEA0 followed by three homogeneous-lane clears.
- std::array<float,16> transpose{};eTransposeMatrix(transpose,matrix);
- transpose[3]=transpose[7]=transpose[11]=0;
- // eMulVector0011B6A8 initializes vf4 from actual002D39D0; XYZ are added,
- // while its W is retained. Preserve ordered multiply/add and all four lanes.
- std::array<float,4> position{};eMulVector(m_,position,transpose,{{matrix[12],matrix[13],matrix[14],matrix[15]}});
- for(unsigned lane=0;lane<4;++lane)position[lane]=(lane==3?1.0f:0.0f)-position[lane];
- m_.vector(address_+0x40,position);
- const float length=(transpose[8]*transpose[8]+transpose[9]*transpose[9])+transpose[10]*transpose[10];
- if(!(length>0)||!std::isfinite(length))hp2::not_implemented("0x00156868","exceptional original VU camera-direction reciprocal square root");
- const float reciprocal=1/std::sqrt(length);std::array<float,4> direction{},target{};
- for(unsigned lane=0;lane<4;++lane){direction[lane]=transpose[8+lane]*reciprocal;target[lane]=direction[lane]*m_.scalar(address_+0x70);target[lane]+=position[lane];}
- m_.vector(address_+0x50,direction);m_.vector(address_+0x60,target);
- if(m_.word(address_+0x1b0)){m_.word(address_+0x1b0,0);m_.copy(address_+0x90,address_,0x90);}
- const float inverse=1/m_.scalar(address_+0x1b4);
- for(unsigned offset:{0x40u,0x50u,0x60u}){auto velocity=m_.vector(address_+offset);const auto previous=m_.vector(address_+0x90+offset);for(unsigned lane=0;lane<4;++lane)velocity[lane]=(velocity[lane]-previous[lane])*inverse;m_.vector(address_+0x120+offset,velocity);}
- for(unsigned offset:{0x70u,0x74u,0x78u,0x7cu,0x80u})m_.scalar(address_+0x120+offset,(m_.scalar(address_+offset)-m_.scalar(address_+0x90+offset))*inverse);
- const auto difference=std::uint16_t(m_.half(address_+0x84)-m_.half(address_+0x114));m_.half(address_+0x1a4,std::uint16_t(::port::driving::cvt_w_s(inverse*float(difference))));
+
+void carCinematicViewInitialize(CarCinematicServices* services,CarCinematicView* view)
+{
+    // Camera() source frame: focus10, near0.5, far10000, FOV0x36FB.
+    // Native zeroing defines formerly unspecified padding and vector W.
+    *view={};view->elapsed=1.0f;view->resetHistory=1;
+    view->current.focusDistance=10.0f;
+    view->current.nearClip=0.5f;view->current.farClip=10000.0f;
+    view->current.fieldOfView=0x36fb;
+    const float matrix[16]={1,0,0,0, 0,-1,0,0, 0,0,-1,100, 0,0,1200,1};
+    // The authored Camera matrix is column-major in the native e-API;
+    // preserve all sixteen PAL stack lanes, including matrix[11]=100.
+    carCinematicViewPublish(services,view,matrix,1.0f);
+    carCinematicViewPublish(services,view,matrix,1.0f);
 }
-// Debug001566E0/listing, E-0099-W50. Preserve authored startup pose and both
-// SetCameraMatrix calls; second call establishes zero velocity/PreviousKey.
-void Camera::Sub_001566E0(){
- m_.scalar(address_+0x1b4,1);m_.word(address_+0x1b0,0);m_.word(address_+0x1bc,0);m_.word(address_+0x1c0,0);
- m_.scalar(address_+0x74,0);m_.scalar(address_+0x78,0);m_.word(address_+0x1b8,0x80000000);
- m_.scalar(address_+0x70,10);m_.half(address_+0x84,0x36fb);m_.scalar(address_+0x7c,0.5f);m_.scalar(address_+0x80,m_.scalar(0x324f90));
- ::port::driving::Memory::Temporary matrix(m_,64);m_.matrix(matrix.address(),{{1,0,0,0,0,-1,0,0,0,0,-1,100,0,0,1200,1}});
- SetCameraMatrix(matrix.address(),1);SetCameraMatrix(matrix.address(),1);
-}
+
+void carCinematicViewPublish(CarCinematicServices* services,CarCinematicView* view,
+                              const float matrix[16],float elapsed)
+{
+    if(services->suppressPublication)return;
+    view->previous=view->current;
+    view->elapsed=elapsed;
+    if(services->override.enabled&&!services->suppressOverride){
+        services->overrideWasUsed=1;
+        memcpy(view->current.matrix,services->override.matrix,sizeof(view->current.matrix));
+        for(int axis=0;axis<4;++axis)view->current.matrix[12+axis]*=0.009999999776482582f;
+        view->current.matrix[15]=1.0f;
+    }else{
+        if(services->overrideWasUsed)services->overrideWasUsed=0;
+        memcpy(view->current.matrix,matrix,sizeof(view->current.matrix));
+    }
+    float transpose[16],translated[4],translation[4];
+    vectorMatrixTranspose(transpose,view->current.matrix);
+    transpose[3]=transpose[7]=transpose[11]=0.0f;
+    for(int axis=0;axis<3;++axis)translation[axis]=view->current.matrix[12+axis];
+    translation[3]=0.0f;
+    vectorMatrixTransform(translated,transpose,translation);
+    for(int axis=0;axis<3;++axis){
+        view->current.eye[axis]=0.0f-translated[axis];view->current.forward[axis]=transpose[8+axis];
+    }
+    view->current.eye[3]=view->current.forward[3]=0.0f;
+    carCinematicNormalizeThree(view->current.forward);
+    for(int axis=0;axis<3;++axis){
+        const float distance=view->current.forward[axis]*view->current.focusDistance;
+        view->current.target[axis]=distance+view->current.eye[axis];
+    }
+    view->current.target[3]=0.0f;
+    if(view->resetHistory){view->resetHistory=0;view->previous=view->current;}
+    const float inverse=finiteRatio(1.0f,elapsed);
+    for(int axis=0;axis<3;++axis){
+        view->eyeVelocity[axis]=(view->current.eye[axis]-view->previous.eye[axis])*inverse;
+        view->forwardVelocity[axis]=(view->current.forward[axis]-view->previous.forward[axis])*inverse;
+        view->targetVelocity[axis]=(view->current.target[axis]-view->previous.target[axis])*inverse;
+    }
+    view->eyeVelocity[3]=view->forwardVelocity[3]=view->targetVelocity[3]=0.0f;
+    view->focusVelocity=(view->current.focusDistance-view->previous.focusDistance)*inverse;
+    view->minimumVisibilityVelocity=(view->current.minimumVisibility-view->previous.minimumVisibility)*inverse;
+    view->maximumVisibilityVelocity=(view->current.maximumVisibility-view->previous.maximumVisibility)*inverse;
+    view->nearClipVelocity=(view->current.nearClip-view->previous.nearClip)*inverse;
+    view->farClipVelocity=(view->current.farClip-view->previous.farClip)*inverse;
+    const uint16_t delta=(uint16_t)(view->current.fieldOfView-view->previous.fieldOfView);
+    view->fieldOfViewVelocity=(uint16_t)convertFloatToInt32(inverse*(float)delta);
 }

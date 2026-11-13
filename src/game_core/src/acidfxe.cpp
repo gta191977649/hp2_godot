@@ -1,547 +1,1584 @@
-// TASK-0042 E-0042-S001: exact Debug source marker(s): src\acidfxe.cpp.
-// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: qualified_string; evidence: E-0019-N03.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-// Diagnostic text (not a callable signature): AcidEffectSystem::DoTimeStep() [0x002AD370]
-// Diagnostic text (not a callable signature): AcidEffectSystem::RenderEffects [0x002AD390]
-#include "game_core/indep/inc/AcidFX.hpp"
+#include <exception>
+#include "indep/inc/AcidFX.hpp"
+#include "indep/inc/Car.hpp"
+#include "bware/inc/bMath.hpp"
+#include "indep/inc/eMath.hpp"
 
-#include "game_core/port/not_implemented.hpp"
-#include "game_core/port/track/emitter_bindings.hpp"
-#include "game_core/inc/bSlotPool.hpp"
-#include "game_core/indep/src/fmenus.hpp"
-#include "game_core/port/assets/elab_chunks.hpp"
-#include <cstring>
-#include <stdexcept>
-
-namespace hp2::recovered {
-// ELF 0x00127418; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00127418.md.
-void AcidEffectSystem::Sub_00127418() {
-    hp2::not_implemented("0x00127418", "AcidEffectSystem::Sub_00127418 (signature and full body unresolved)");
-}
-
-// ELF 0x00127688; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00127688.md.
-void AcidEffectSystem::RemoveAutoEmitter() {
-    hp2::not_implemented("0x00127688", "AcidEffectSystem::RemoveAutoEmitter (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/src/acidfxe.hpp"
-#include "game_core/src/bMath.hpp"
-#include "game_core/src/ecstasy/emathe.hpp"
+#include <chrono>
 #include <cmath>
+#include <cstring>
 
-namespace hp2::debug {
-// Debug001261E0, E-0098-P01. Keep the original24-term accumulation order.
-float fDeterminant(const port::driving::SolverMatrix& m){
-    for(const float lane:m)if(!std::isfinite(lane))hp2::not_implemented("0x001261E0","nonfinite determinant input outside frontend projection");
-    float result=m[3]*m[12]*m[9]*m[6]-m[2]*m[12]*m[9]*m[7];
-    result=result-m[3]*m[12]*m[10]*m[5];
-    result=result+m[1]*m[12]*m[10]*m[7];
-    result=result+m[2]*m[12]*m[11]*m[5];
-    result=result-m[1]*m[12]*m[11]*m[6];
-    result=result-m[3]*m[13]*m[8]*m[6];
-    result=result+m[2]*m[13]*m[8]*m[7];
-    result=result+m[3]*m[13]*m[10]*m[4];
-    result=result-m[0]*m[13]*m[10]*m[7];
-    result=result-m[2]*m[13]*m[11]*m[4];
-    result=result+m[0]*m[13]*m[11]*m[6];
-    result=result+m[3]*m[14]*m[8]*m[5];
-    result=result-m[1]*m[14]*m[8]*m[7];
-    result=result-m[3]*m[14]*m[9]*m[4];
-    result=result+m[0]*m[14]*m[9]*m[7];
-    result=result+m[1]*m[14]*m[11]*m[4];
-    result=result-m[0]*m[14]*m[11]*m[5];
-    result=result-m[2]*m[15]*m[8]*m[5];
-    result=result+m[1]*m[15]*m[8]*m[6];
-    result=result+m[2]*m[15]*m[9]*m[4];
-    result=result-m[0]*m[15]*m[9]*m[6];
-    result=result-m[1]*m[15]*m[10]*m[4];
-    result=result+m[0]*m[15]*m[10]*m[5];
-    if(!std::isfinite(result))hp2::not_implemented("0x001261E0","exceptional EE determinant result");
+namespace {
+
+float particleRandomUnit(uint32_t& state)
+{
+    state ^= state << 17;
+    state ^= state >> 13;
+    state ^= state << 5;
+    return static_cast<float>(state & 0x7fffffffu) * 4.656612873077393e-10f;
+}
+
+float cycleDuration(ChopperEffectInstance& emitter, const WorldParticleCycle& cycle)
+{
+    if (cycle.duration == 0.0f) return 0.0f;
+    const float variation = cycle.duration * cycle.variation;
+    const float minimum = cycle.duration - variation;
+    const float randomPart = particleRandomUnit(emitter.randomState) * variation;
+    return minimum + randomPart;
+}
+
+void appendEmitter(WorldParticleSystem& system, ChopperEffectInstance& emitter, bool atFront)
+{
+    emitter.particleSystem = &system;
+    emitter.autoPrevious = atFront ? nullptr : system.lastEmitter;
+    emitter.autoNext = atFront ? system.firstEmitter : nullptr;
+    if (emitter.autoPrevious) emitter.autoPrevious->autoNext = &emitter;
+    else system.firstEmitter = &emitter;
+    if (emitter.autoNext) emitter.autoNext->autoPrevious = &emitter;
+    else system.lastEmitter = &emitter;
+    ++system.emitterCount;
+}
+
+void removeParticle(WorldParticleSystem& system, WorldParticleGroup& group, WorldParticle& particle)
+{
+    if (particle.previous) particle.previous->next = particle.next;
+    else group.first = particle.next;
+    if (particle.next) particle.next->previous = particle.previous;
+    else group.last = particle.previous;
+    particle.occupied = 0;
+    particle.next = particle.previous = nullptr;
+    --system.particleCount;
+}
+
+int16_t wrapHalf(int32_t value)
+{
+    const uint16_t bits = static_cast<uint16_t>(value);
+    int16_t result;
+    std::memcpy(&result, &bits, sizeof(result));
     return result;
 }
-// Debug00126378, E-0098-P01. The sixteen original cofactor expressions have
-// the same two instruction-order forms; index projection avoids reordering sums.
-void fInvertMatrix(port::driving::SolverMatrix& out,const port::driving::SolverMatrix& in){
-    if(&out==&in)hp2::not_implemented("0x00126378","inverse source/destination alias is outside frontend projection");
-    for(const float lane:in)if(!std::isfinite(lane))hp2::not_implemented("0x00126378","nonfinite general matrix inverse input");
-    const float determinant=fDeterminant(in);
-    if(determinant==0 || !std::isfinite(determinant))
-        hp2::not_implemented("0x00126378","singular or exceptional EE general matrix inverse");
-    const float reciprocal=1.f/determinant;
-    port::driving::SolverMatrix candidate{};
-    for(int row=0;row<4;++row)for(int column=0;column<4;++column){
-        std::array<int,3> rows{},columns{};int ri=0,ci=0;
-        for(int i=0;i<4;++i){if(i!=column)rows[ri++]=i;if(i!=row)columns[ci++]=i;}
-        const float a=in[rows[0]*4+columns[0]],b=in[rows[0]*4+columns[1]],c=in[rows[0]*4+columns[2]];
-        const float d=in[rows[1]*4+columns[0]],e=in[rows[1]*4+columns[1]],f=in[rows[1]*4+columns[2]];
-        const float g=in[rows[2]*4+columns[0]],h=in[rows[2]*4+columns[1]],i=in[rows[2]*4+columns[2]];
-        const float cofactor=(row+column)%2
-            ? ((((c*e*g-b*f*g)-c*d*h)+a*f*h+b*d*i)-a*e*i)
-            : (((((b*f*g-c*e*g)+c*d*h)-a*f*h)-b*d*i)+a*e*i);
-        candidate[row*4+column]=reciprocal*cofactor;
-        if(!std::isfinite(candidate[row*4+column]))hp2::not_implemented("0x00126378","exceptional EE inverse result");
+
+int8_t wrapByte(int32_t value)
+{
+    const uint8_t bits = static_cast<uint8_t>(value);
+    int8_t result;
+    std::memcpy(&result, &bits, sizeof(result));
+    return result;
+}
+
+float dragAcceleration(float velocity, float drag)
+{
+    const float square = velocity * velocity;
+    const float signedDrag = (velocity < 0.0f ? 1.0f : -1.0f) * drag;
+    return signedDrag * square;
+}
+
+void advanceParticle(WorldParticle& particle, const WorldParticleDefinition& definition,
+                     const CarMovement* car, float elapsed, int32_t ticks)
+{
+    const int32_t previousTicks = particle.remainingTicks;
+    const int32_t remainingTicks = previousTicks - ticks;
+    if (definition.animationRate != 0) {
+        const float periodValue = 1024.0f * (1.0f / static_cast<float>(definition.animationRate));
+        const int32_t period = convertFloatToInt32(periodValue);
+        const uint32_t cells = (1u << static_cast<uint8_t>(definition.atlasWidthPower)) <<
+            static_cast<uint8_t>(definition.atlasHeightPower);
+        const int32_t frames = previousTicks / period - remainingTicks / period;
+        particle.atlasFrame = static_cast<uint8_t>((static_cast<uint32_t>(particle.atlasFrame) +
+            static_cast<uint32_t>(frames)) & (cells - 1u));
     }
-    out=candidate;
-}
-// Debug00126AB8, E-0098-P01. Keep both original basis products, despite their
-// algebraic cancellation. eMulMatrix is the recovered VU operation, not a library.
-void hermite_basis(port::driving::SolverMatrix& out,const port::driving::SolverMatrix& p,
-    float u1,float u2,float u3,float u4){
-    for(const float lane:p)if(!std::isfinite(lane))hp2::not_implemented("0x00126AB8","nonfinite Hermite controls outside frontend projection");
-    port::driving::SolverMatrix u{},inverse{},k{},nf{};
-    const std::array<float,4> parameters{{u1,u2,u3,u4}};
-    for(int i=0;i<4;++i){const float square=parameters[i]*parameters[i];u[i*4]=square*parameters[i];
-        u[i*4+1]=square;u[i*4+2]=parameters[i];u[i*4+3]=1;}
-    const port::driving::SolverMatrix mf{{2,-2,1,1,-3,3,-2,-1,0,0,1,0,1,0,0,0}};
-    const port::driving::SolverMatrix imf{{0,0,0,1,1,1,1,1,0,0,1,0,3,2,1,0}};
-    fInvertMatrix(inverse,u);
-    hp2::recovered::eMulMatrix(k,imf,inverse);
-    hp2::recovered::eMulMatrix(nf,mf,k);
-    hp2::recovered::eMulMatrix(out,nf,p);
-}
-}
-
-namespace hp2::recovered {
-// ELF 0x00129880; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00129880.md.
-void RainSplash::Recalc() {
-    hp2::not_implemented("0x00129880", "RainSplash::Recalc (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-// TASK0052 E-0052-E07: Retail00128718 / Debug00128870 active particle loop.
-#include "game_core/port/driving/projections.hpp"
-#include "game_core/port/driving/ee_scalar.hpp"
-#include <cmath>
-#include <algorithm>
-namespace hp2::recovered {
-void AcidEffectSystem::DoTimeStep(std::vector<port::track::Particle>& particles,const port::track::ParticleDefinition& data,float dt,const std::array<float,3>& inherited){
- if(!std::isfinite(dt)||dt<0)throw std::invalid_argument("Invalid original particle timestep");
- constexpr float inverse127=0.0078740157186985016f,inverse255=0.0039215688593685627f;
- const auto ticks=port::driving::cvt_w_s(dt*1024.f);const auto fps=static_cast<std::int8_t>(data.flags[3]);const int interval=fps?port::driving::cvt_w_s((1.f/float(fps))*1024.f):0;
- auto next=particles;next.erase(std::remove_if(next.begin(),next.end(),[&](auto& p){const int life=int(p.life)-ticks;if(life<1)return true;
- if(interval){const auto mask=((1u<<(data.flags[1]&31))<<(data.flags[2]&31))-1;p.frame=std::uint8_t((p.frame+int(p.life)/interval-life/interval)&mask);}
- const float scale=float(p.speed)*.0078125f*inverse127;std::array<float,3> velocity{};
- for(unsigned k=0;k<3;++k){const float v=float(p.direction[k])*scale;const float sign=v<0?1.f:-1.f;const float gravity=k==2?-data.gravity:0.f;velocity[k]=k==2?v+(gravity+sign*v*v*data.drag)*dt:v+sign*data.drag*v*v*dt;p.position[k]+=velocity[k]*dt;if(data.flags[6])p.position[k]+=(dt*inherited[k])*(float(p.inherit)*inverse255);}
- const float magnitude=std::sqrt(velocity[0]*velocity[0]+velocity[1]*velocity[1]+velocity[2]*velocity[2]);const float inverse=magnitude==0.f?port::driving::ee_div_s_zero(1.f,magnitude,"0x00128C64"):1.f/magnitude;p.life=std::int16_t(life);p.speed=std::uint16_t(port::driving::cvt_w_s(magnitude*128.f));for(unsigned k=0;k<3;++k)p.direction[k]=std::int8_t(port::driving::cvt_w_s(velocity[k]*inverse*127.f));return false;
- }),next.end());particles=std::move(next);
-}
+    const float magnitude = static_cast<float>(particle.speed) * 0.0078125f;
+    const float directionScale = magnitude * 0.007874015718698502f;
+    const float oldX = static_cast<float>(particle.direction[0]) * directionScale;
+    const float oldY = static_cast<float>(particle.direction[1]) * directionScale;
+    const float oldZ = static_cast<float>(particle.direction[2]) * directionScale;
+    const float deltaX = dragAcceleration(oldX, definition.drag) * elapsed;
+    const float deltaY = dragAcceleration(oldY, definition.drag) * elapsed;
+    const float deltaZ = (-definition.gravity + dragAcceleration(oldZ, definition.drag)) * elapsed;
+    const float x = oldX + deltaX;
+    const float y = oldY + deltaY;
+    const float z = oldZ + deltaZ;
+    particle.position[0] = particle.position[0] + x * elapsed;
+    particle.position[1] = particle.position[1] + y * elapsed;
+    particle.position[2] = particle.position[2] + z * elapsed;
+    if (definition.followsCar && car && definition.carMotionScale > 0.0f) {
+        const float influence = static_cast<float>(particle.carMotionScale) * 0.003921568859368563f;
+        const VehicleState& state = *car->bindings.state;
+        const float followX = elapsed * state.velocity[0];
+        const float followY = elapsed * state.velocity[1];
+        const float followZ = elapsed * state.velocity[2];
+        particle.position[0] = particle.position[0] + followX * influence;
+        particle.position[1] = particle.position[1] + followY * influence;
+        particle.position[2] = particle.position[2] + followZ * influence;
+    }
+    const float speed = std::sqrt((x * x + y * y) + z * z);
+    const float reciprocal = finiteRatio(1.0f, speed);
+    particle.speed = static_cast<uint16_t>(convertFloatToInt32(speed * 128.0f));
+    particle.remainingTicks = wrapHalf(remainingTicks);
+    const float normalX = x * reciprocal;
+    const float normalY = y * reciprocal;
+    const float normalZ = z * reciprocal;
+    particle.direction[0] = wrapByte(convertFloatToInt32(normalX * 127.0f));
+    particle.direction[1] = wrapByte(convertFloatToInt32(normalY * 127.0f));
+    particle.direction[2] = wrapByte(convertFloatToInt32(normalZ * 127.0f));
 }
 
-// TASK0052 E-0052-E07: original auto-emitter loop projection. Host owns list nodes.
-namespace hp2::recovered {
-void AcidEffectSystem::DoTimeStep(port::track::ParticleEmitter& emitter,const port::track::ParticleDefinition& data,float dt,const std::function<void(float)>& trigger){
- if(!std::isfinite(dt)||dt<0)throw std::invalid_argument("Invalid original emitter timestep");
- if(!trigger)throw std::invalid_argument("Original TriggerEmitter callback missing");
- const auto state=emitter.state;
- if(state==1)trigger(dt);
- if(emitter.cycle_time!=0.f&&state<2){
-  float remaining=emitter.cycle_time-dt;
-  if(remaining<=0.f){
-   const auto index=state?2u:0u;
-   const float duration=data.controls[index],variance=data.controls[index+1];
-   float next=duration;
-   if(duration!=0.f){
-    auto seed=emitter.random_seed;seed^=seed<<17;seed^=seed>>13;seed^=seed<<5;emitter.random_seed=seed;
-    next=(duration-variance*duration)+float(seed&0x7fffffffu)*4.656612873077392578125e-10f*variance*duration+remaining;
-   }
-   emitter.state=state==0;emitter.cycle_time=next;emitter.countdown=0;
-  }else emitter.cycle_time=remaining;
- }
-}
-}
+} // namespace
 
-#include "game_core/src/bMath.hpp"
-namespace hp2::recovered {
-void AcidEffectSystem::TriggerEmitter(port::driving::Memory& math,port::track::ParticleEmitter& e,const port::track::ParticleDefinition& d,float dt,const std::array<std::array<float,3>,3>& interests,std::uint32_t& global_seed,std::vector<port::track::Particle>& particles,std::size_t available,bool group_available){
- if(!std::isfinite(dt))throw std::invalid_argument("Invalid original TriggerEmitter timestep");
- auto random=[](std::uint32_t& seed){seed^=seed<<17;seed^=seed>>13;seed^=seed<<5;return float(seed&0x7fffffffu)*4.656612873077392578125e-10f;};
- bool nearby=false;for(const auto& p:interests){float length=0;for(unsigned k=0;k<3;++k){const float v=e.local_world[12+k]-p[k];length+=v*v;}if(std::sqrt(length)<d.far_clip){nearby=true;break;}}
- if(!e.random_seed)e.random_seed=std::uint32_t(port::driving::cvt_w_s(random(global_seed)*2147483648.f));
- if(!nearby||(e.state!=1&&dt>=0))return;
- float remaining=dt<0?-dt:((e.cycle_time!=0&&e.cycle_time<dt)?e.cycle_time:dt),countdown=e.countdown;
- if(countdown<remaining&&group_available){
-  auto seed=e.random_seed;
-  auto transform=[](const std::array<float,16>& m,const std::array<float,3>& v,bool point){std::array<float,3> out{};for(unsigned row=0;row<3;++row){out[row]=m[row]*v[0]+m[4+row]*v[1]+m[8+row]*v[2];if(point)out[row]+=m[12+row];}return out;};
-  auto angle=[](float degrees){return std::uint16_t(port::driving::cvt_w_s(degrees*65536.f)/360);};
-  const auto& c=d.controls;const float number_variance=c[5]*c[4],life_variance=c[7]*c[6],speed_variance=c[9]*c[8],motion_variance=c[13]*c[12],motion_base=c[12]-motion_variance;
-  const float angle_range=c[10]*182.0444488525390625f;
-  const float frames=d.flags[4]?float((1u<<(d.flags[1]&31))<<(d.flags[2]&31)):1.f;
-  std::size_t port_iterations=0;
-  do {
-   if(++port_iterations>port::track::emission_iteration_budget)hp2::not_implemented("0x00127700","Port execution budget exhausted while preserving original emitter RNG and zero-interval retries");
-   remaining-=countdown;
-   std::array<float,3> direction{};auto rotation=bIdentity();
-   if(!d.flags[0]){
-    const float rx=random(seed)*c[11]-c[11]*.5f,ry=random(seed)*c[11]-c[11]*.5f,rz=random(seed)*c[11]-c[11]*.5f;
-    eRotateX(math,rotation,rotation,angle(rx));eRotateY(math,rotation,rotation,angle(ry));eRotateZ(math,rotation,rotation,angle(rz));direction=transform(rotation,{{e.local_world[8],e.local_world[9],e.local_world[10]}},false);
-   }else{
-    const float tilt=random(seed)*c[11]-c[11]*.5f;const auto azimuth=angle(random(seed)*360.f-180.f);
-    std::array<float,3> radial{{hp2::recovered::bSin(math,std::uint16_t(azimuth+0x4000)),hp2::recovered::bSin(math,azimuth),0}};
-    eRotateY(math,rotation,rotation,angle(tilt));direction=transform(e.local_world,transform(rotation,radial,false),false);
-   }
-   std::array<float,3> local{};for(unsigned k=0;k<3;++k)local[k]=d.volume_center[k]+(random(seed)*d.volume_extent[k]-d.volume_extent[k]*.5f);
-   const auto position=transform(e.local_world,local,true);
-   const float frame_random=random(seed),life=std::min((c[6]-life_variance)+random(seed)*life_variance,60.f),angle_random=random(seed);
-   float speed=(c[8]-speed_variance)+random(seed)*speed_variance,inherit=0;
-   if(motion_base!=0.f){inherit=std::clamp(motion_base+random(seed)*motion_variance,0.f,1.f);if(!d.flags[6]){
-    float magnitude=0;for(unsigned k=0;k<3;++k){direction[k]=speed*direction[k]+inherit*e.inherit_velocity[k];magnitude+=direction[k]*direction[k];}
-    speed=std::sqrt(magnitude);
-    // Debug00128510 VRSQRT ->00128524 VMUL, E-0098-P03. The original
-    // zero-speed selector nebula packs a zero direction, not host IEEE0/0 NaN.
-    const float reciprocal=magnitude==0.f?port::driving::ee_vrsqrt_one_zero(magnitude,"0x00128510"):1.f/speed;
-    for(auto& v:direction)v=v*reciprocal;
-   }}
-   auto initial_angle=std::uint16_t(port::driving::cvt_w_s(-angle_range*.5f+angle_random*angle_range)&0xfffe);if(d.flags[5])initial_angle|=seed&1;
-   if(!e.dont_emit&&available){port::track::Particle p;p.position=position;p.frame=std::uint8_t(port::driving::cvt_w_s(frame_random*frames));p.life=std::int16_t(port::driving::cvt_w_s(life*1024.f));p.angle=initial_angle;p.speed=std::uint16_t(port::driving::cvt_w_s(std::min(speed*128.f,65535.f)));p.inherit=std::uint8_t(port::driving::cvt_w_s(inherit*255.f));for(unsigned k=0;k<3;++k)p.direction[k]=std::int8_t(port::driving::cvt_w_s(direction[k]*127.f));particles.push_back(p);--available;}
-   countdown=1.f/((c[4]-number_variance)+random(seed)*number_variance);countdown=std::clamp(countdown,0.f,240.f);
-   // E-0087-P01 Debug00127858/Retail00127700: a clamped zero interval
-   // retries the original loop and consumes its RNG; it is not an immediate gap.
-  }while(countdown<=remaining);
-  e.random_seed=seed;
- }
- e.countdown=dt>=0?countdown-remaining:0.f;
-}
-}
-
-
-namespace hp2::recovered {
-void AcidEffectSystem::AddAutoEmitter(port::track::ParticleEmitter& e,const port::track::ParticleDefinition* d,std::uint32_t& seed,const std::function<void(bool)>& insert){
- if(!insert)throw std::invalid_argument("Original auto-emitter insertion service missing");
- auto random=[](std::uint32_t& s){s^=s<<17;s^=s>>13;s^=s<<5;return float(s&0x7fffffffu)*4.656612873077392578125e-10f;};
- if(!e.random_seed)e.random_seed=std::uint32_t(port::driving::cvt_w_s(random(seed)*2147483648.f));
- if(!d||e.state==2){e.state=2;insert(false);}
- else if(e.state<2){const auto index=e.state?0u:2u;float duration=d->controls[index];const float variance=d->controls[index+1];if(duration!=0.f)duration=(duration-variance*duration)+random(e.random_seed)*variance*duration;e.cycle_time=duration;e.countdown=0;insert(true);}
- else {if(e.state!=3)e.state=2;insert(false);}
-}
-}
-
-#include <cstring>
-namespace hp2::recovered {
-port::driving::SolverVector hermite_parameter(const port::driving::SolverMatrix& basis,float t){
- const float square=t*t;const std::array<float,4> u{{square*t,square,t,1}};std::array<float,4> out{};
- for(unsigned r=0;r<4;++r)out[r]=((basis[r]*u[0]+basis[4+r]*u[1])+basis[8+r]*u[2])+basis[12+r];return out;
-}
-std::vector<port::track::ParticleDraw> AcidEffectSystem::RenderEffects(port::driving::Memory& math,const port::track::ParticleSimulation& simulation,const port::track::ParticleView& view){
- if(!view.outside_clip||!view.project||!view.texture_available||!std::isfinite(view.focal_h)||view.focal_h<=0)throw std::invalid_argument("Original particle projection/texture services missing");
- std::vector<port::track::ParticleDraw> draws;std::size_t group_index=0;
- for(const auto& group:simulation.groups()){
-  const auto& data=simulation.resources().definitions.at(group.definition);port::track::ParticleDraw draw;draw.texture=data.texture_hash;draw.group=group_index++;
-  if(!view.texture_available(draw.texture))continue;
-  const unsigned shift=data.flags[1]&31,mask_x=(1u<<shift)-1,mask_y=(1u<<(data.flags[2]&31))-1;const float du=1.f/float(1u<<shift),dv=1.f/float(1u<<(data.flags[2]&31));
-  const float maximum=data.max_pixel_size==0?512.f:data.max_pixel_size;float sum_z=0;
-  for(const auto& particle:group.particles){
-   if(view.outside_clip(particle.position))continue;
-   const float t=1.f-(float(particle.life)*.0009765625f)*(1.f/data.controls[6]);const auto projection=view.project(particle.position);const auto extra=hermite_parameter(data.extra_basis,t);
-   float radius=extra[0]>0?(extra[0]*view.focal_h)/projection.camera_z:0.f;if(radius>maximum)radius=maximum;
-   if(!(radius>1.f&&projection.camera_z<data.far_clip))continue;
-   auto relative=std::uint16_t(port::driving::cvt_w_s(extra[1]));if(particle.angle&1)relative=std::uint16_t(-relative);const auto angle=std::uint16_t(particle.angle+relative);
-   port::track::ParticleQuad quad;const int center_x=port::driving::cvt_w_s(projection.screen_x),center_y=port::driving::cvt_w_s(projection.screen_y);
-   if(!angle){const int rx=port::driving::cvt_w_s(radius*8.f),ry=port::driving::cvt_w_s(radius*7.f);quad.xy={{{{center_x*16-rx,center_y*16-ry}},{{center_x*16+rx,center_y*16-ry}},{{center_x*16-rx,center_y*16+ry}},{{center_x*16+rx,center_y*16+ry}}}};}
-   else {const std::uint32_t radians_bits=0x38c90fdbu,quarter_bits=0x3fc90fdcu;float radians_scale,quarter;std::memcpy(&radians_scale,&radians_bits,4);std::memcpy(&quarter,&quarter_bits,4);const float radians=float(angle)*radians_scale;const float cosine=eSin(math,radians+quarter),sine=eSin(math,radians);const float size=float(port::driving::cvt_w_s(radius));for(unsigned i=0;i<4;++i){const float x=(i&1)?size:-size,y=(i&2)?size:-size;quad.xy[i]={{port::driving::cvt_w_s((cosine*x-sine*y)*8.f+float(center_x*16)),port::driving::cvt_w_s((sine*x+cosine*y)*7.f+float(center_y*16))}};}}
-   quad.native_depth=(projection.screen_depth_bits&0x0fffffffu)>>(view.z_shift&31);const auto colour=hermite_parameter(data.colour_basis,t);for(unsigned k=0;k<4;++k)quad.colour[k]=std::uint8_t(port::driving::cvt_w_s(std::clamp(colour[k],0.f,255.f)));
-   const float u=float(particle.frame&mask_x)*du,v=float((unsigned(particle.frame)>>shift)&mask_y)*dv;quad.uv={{{{u,v}},{{u+du,v}},{{u,v+dv}},{{u+du,v+dv}}}};
-   draw.quads.push_back(quad);sum_z+=float(port::driving::cvt_w_s(projection.camera_z));
-  }
-  if(!draw.quads.empty()){draw.depth=sum_z/float(draw.quads.size());draws.push_back(std::move(draw));}
- }
- return draws;
-}
-}
-
-namespace port::track {
 namespace {
-void emitter_detach(port::driving::Memory& m,std::uint32_t node){
- const auto next=m.word(node),previous=m.word(node+4);m.word(previous,next);m.word(next+4,previous);
+
+uint16_t particleAngle(float degrees)
+{
+    const int32_t scaled = convertFloatToInt32(degrees * 65536.0f);
+    return static_cast<uint16_t>(scaled / 360);
 }
-void emitter_append(port::driving::Memory& m,std::uint32_t head,std::uint32_t node){
- const auto previous=m.word(head+4);m.word(previous,node);m.word(head+4,node);m.word(node,head);m.word(node+4,previous);
-}
-std::uint32_t emitter_word(const std::vector<std::uint8_t>& b,std::size_t at){
- if(at>b.size()||b.size()-at<4)throw std::runtime_error("Truncated original AcidFX resource");
- return b[at]|std::uint32_t(b[at+1])<<8|std::uint32_t(b[at+2])<<16|std::uint32_t(b[at+3])<<24;
-}
-std::string emitter_name(const port::driving::Memory& m,std::uint32_t at){
- std::string name;for(unsigned i=0;i<4096;++i){const auto c=m.byte(at+i);if(!c)return name;name.push_back(char(c));}
- throw std::runtime_error("Unterminated original AcidFX emitter name");
-}
-// Debug00127570; E-0099-W10. Interest points and padding are not initialized
-// by this original constructor and are deliberately not assigned here.
-void emitter_system_construct(port::driving::Memory& m,std::uint32_t at){
- m.word(at,at);m.word(at+4,at);m.word(at+8,at+8);m.word(at+12,at+8);
- m.word(at+0x40,0);m.word(at+0x44,0);for(int i=0;i<6;++i)m.byte(at+0x48+i,0);
- m.word(at+0x50,0);m.word(at+0x54,0);m.scalar(at+0x58,0);m.scalar(at+0x5c,0);
-}
-// Memory projection of Debug001275F8 using its existing recovered arithmetic.
-void emitter_register(port::driving::Memory& m,std::uint32_t at){
- ParticleEmitter emitter;emitter.state=m.word(at+0x10);emitter.random_seed=m.word(at+0x24);
- emitter.cycle_time=m.scalar(at+0x14);emitter.countdown=m.scalar(at+0x18);
- ParticleDefinition definition;const auto data=m.word(at+0x1c);
- if(data)for(int i=0;i<4;++i)definition.controls[i]=m.scalar(data+0x20+4*i);
- auto seed=m.word(0x326d78);
- hp2::recovered::AcidEffectSystem::AddAutoEmitter(emitter,data?&definition:nullptr,seed,[&](bool first){
-  constexpr std::uint32_t head=0x2e6f48;
-  if(first){const auto next=m.word(head);m.word(head,at);m.word(next+4,at);m.word(at,next);m.word(at+4,head);}
-  else emitter_append(m,head,at);
- });
- m.word(0x326d78,seed);m.word(at+0x10,emitter.state);m.word(at+0x24,emitter.random_seed);
- m.scalar(at+0x14,emitter.cycle_time);m.scalar(at+0x18,emitter.countdown);
- m.word(0x2e6f90,m.word(0x2e6f90)+1);
-}
-}
-}
-namespace hp2::debug {
-using port::driving::Memory;
-// Debug00126EC8; E-0099-W10.
-void afxInit(Memory& m){
- m.word(0x326d60,bNewSlotPool(m,0x20,1000,0x2a5358,0x10));
- m.word(0x326d64,bNewSlotPool(m,0x1c,400,0x2a5370,0x10));
- m.word(0x326d68,bNewSlotPool(m,0xc0,600,0x2a5388,0x10));
- for(auto global:{0x326d60u,0x326d64u}){const auto pool=m.word(global);
-  m.word(pool+0x14,m.word(pool+0x14)&~std::uint32_t(SLOTPOOL_FLAG_ZERO_ALLOCATED_MEMORY|SLOTPOOL_FLAG_OVERFLOW_IF_FULL));}
-}
-// Debug00127278; E-0099-W10. First-match lookup, including duplicate hashes.
-std::uint32_t afxGetEmitterData(Memory& m,std::uint32_t name,std::uint32_t group,std::uint32_t previous){
- if(!name&&!group)return 0;
- constexpr std::uint32_t head=0x326d70;
- for(auto p=m.word(previous?previous:head);p!=head;p=m.word(p))
-  if((!name||m.word(p+8)==name)&&(!group||m.word(p+0x10)==group))return p;
- return 0;
-}
-// Debug001272F0; E-0099-W10. Name-only compares the DEFINITION name;
-// name+group compares the EMITTER name before its definition group.
-std::uint32_t afxGetEmitter(Memory& m,std::uint32_t name,std::uint32_t group,std::uint32_t previous){
- if(!name&&!group)return 0;
- constexpr std::uint32_t head=0x2e6f48;
- for(auto p=m.word(previous?previous:head);p!=head;p=m.word(p)){
-  const auto data=m.word(p+0x1c);
-  if(!name){if(data&&m.word(data+0x10)==group)return p;}
-  else if(!group){if(!data)hp2::not_implemented("0x001272F0","name-only lookup encountered null original emitter data");if(m.word(data+8)==name)return p;}
-  else if(m.word(p+8)==name&&data&&m.word(data+0x10)==group)return p;
- }
- return 0;
-}
-// Debug00127380/00127518; E-0099-W10. Pool allocation and zeroed copy
-// retain the original Name/definition/matrix-only initialization.
-std::uint32_t afxCopyEmitter(Memory& m,std::uint32_t source){
- const auto pool=m.word(0x326d68);if(!pool)hp2::not_implemented("0x00127380","original AcidEmitterSlotPool has not been initialized");
- const auto at=bOMalloc(m,pool);if(!at)hp2::not_implemented("0x00127380","original emitter pool allocation returned null before its memset");
- std::memset(m.view(at+8,0xb8).data,0,0xb8);m.word(0x326d6c,m.word(0x326d6c)+1);
- const auto name=port::track::emitter_name(m,source+0x80);m.word(at+8,hp2::frontend::bStringHash(name.c_str()));
- for(std::size_t i=0;i<std::min<std::size_t>(63,name.size());++i)m.byte(at+0x80+std::uint32_t(i),std::uint8_t(name[i]));
- m.byte(at+0xbf,0);if(const auto data=m.word(source+0x1c))m.word(at+0x1c,data);
- m.copy(at+0x30,source+0x30,0x40);return at;
-}
-// Debug00127438; E-0099-W10. Lookup order and tail insertion are original.
-void afxGetEmitters(Memory& m,std::uint32_t head,std::uint32_t group){
- std::uint32_t previous=0;
- while((previous=afxGetEmitter(m,0,group,previous))!=0)
-  if(const auto copy=afxCopyEmitter(m,previous))port::track::emitter_append(m,head,copy);
-}
-// Debug001274C0/00124FA0/001250A0; E-0099-W10.
-void afxDeleteEmitters(Memory& m,std::uint32_t head){
- while(m.word(head)!=head){const auto node=m.word(head);port::track::emitter_detach(m,node);
-  m.word(0x326d6c,m.word(0x326d6c)-1);SlotPool(m,m.word(0x326d68)).Free(node);}
-}
-// Debug00127800/0012A3B0/0012A418/0012A728/0012A490; E-0099-W10.
-void KillAllActiveEffects(Memory& m,std::uint32_t head){
- while(m.word(head)!=head){const auto group=m.word(head);port::track::emitter_detach(m,group);
-  m.word(group+0xc,0);m.word(group+8,0);const auto particles=group+0x14;
-  while(m.word(particles)!=particles){const auto p=m.word(particles);port::track::emitter_detach(m,p);SlotPool(m,m.word(0x326d60)).Free(p);}
-  SlotPool(m,m.word(0x326d64)).Free(group);
- }
-}
-// Debug00126F60; E-0099-W10. Emitter pool is intentionally retained.
-void afxClose(Memory& m){
- KillAllActiveEffects(m,0x2e6ee0);KillAllActiveEffects(m,0x2e6f40);
- bDeleteSlotPool(m,m.word(0x326d60));bDeleteSlotPool(m,m.word(0x326d64));
- m.word(0x326d60,0);m.word(0x326d64,0);
-}
-}
-namespace port::track {
-// Port owner: explicit original static construction precedes afxInit00126EC8.
-void EmitterBindings::init(){
- if(initialized_)throw std::logic_error("AcidFX binding already initialized");
- if(memory_.word(0x326d60)||memory_.word(0x326d64)||memory_.word(0x326d68))throw std::logic_error("AcidFX pools already owned");
- if(memory_.word(0x326d6c))throw std::logic_error("AcidFX copied emitter count is not empty");
- emitter_system_construct(memory_,0x2e6ee0);emitter_system_construct(memory_,0x2e6f40);
- memory_.word(0x326d70,0x326d70);memory_.word(0x326d74,0x326d70);
- hp2::debug::afxInit(memory_);initialized_=true;
-}
-// Debug00126FA8/00127240/00127530/001275F8; E-0099-W10.
-void EmitterBindings::load_bundle(const std::vector<std::uint8_t>& bytes){
- if(!initialized_)throw std::logic_error("AcidFX binding is not initialized");
- const auto chunks=hp2::assets::parse_chunks_top(bytes);
- const auto walk=[&](const auto& self,const std::vector<hp2::assets::Chunk>& list)->void{
-  for(const auto& chunk:list){if(chunk.tag==0x35021||chunk.tag==0x35020){
-    const auto start=(chunk.header_offset+23)&~std::size_t(15),end=chunk.payload_offset()+chunk.size;
-    if(start>end||end-start<16)throw std::runtime_error("Truncated original AcidFX resource header");
-    const auto stride=chunk.tag==0x35021?544u:192u,version=chunk.tag==0x35021?4u:5u;
-    // The original loader recognizes but ignores unsupported record versions.
-    if(emitter_word(bytes,start+8)!=version)continue;
-    const auto count=emitter_word(bytes,start+12);
-    if(count>(end-start-16)/stride)throw std::runtime_error("Original AcidFX record count exceeds chunk");
-    if(!count)continue;
-    const auto size=count*stride,address=memory_.allocate(size);
-    std::memcpy(memory_.view(address,size).data,bytes.data()+start+16,size);
-    records_.push_back({address,count,stride});
-    for(std::uint32_t i=0;i<count;++i){const auto at=address+i*stride;
-      if(stride==544)emitter_append(memory_,0x326d70,at);
-      else{if(const auto data=hp2::debug::afxGetEmitterData(memory_,memory_.word(at+0xc),0))memory_.word(at+0x1c,data);
-        emitter_register(memory_,at);}
+
+WorldParticleGroup* acquireParticleGroup(WorldParticleSystem& system,
+    ChopperEffectInstance& emitter, CarMovement* car)
+{
+    WorldParticleGroup* group = emitter.particleGroup;
+    if (group && group->occupied && group->generation == emitter.particleGroupGeneration &&
+        group->emitter == &emitter && group->car == car) return group;
+    for (size_t index = 0; index < system.groupCapacity; ++index) {
+        group = &system.groupStorage[index];
+        if (group->occupied) continue;
+        *group = {};
+        group->definition = emitter.particleDefinition;
+        group->emitter = &emitter;
+        group->car = car;
+        group->generation = system.nextGeneration++;
+        group->occupied = 1;
+        group->previous = system.lastGroup;
+        if (system.lastGroup) system.lastGroup->next = group;
+        else system.firstGroup = group;
+        system.lastGroup = group;
+        emitter.particleGroup = group;
+        emitter.particleGroupGeneration = group->generation;
+        ++system.groupCount;
+        return group;
     }
-   }else self(self,chunk.children);
-  }
- };walk(walk,chunks);
-}
-void EmitterBindings::populate(std::uint32_t list,std::uint32_t group){
- if(!initialized_)throw std::logic_error("AcidFX binding is not initialized");
- hp2::debug::afxGetEmitters(memory_,list,group);
-}
-void EmitterBindings::erase(std::uint32_t list){hp2::debug::afxDeleteEmitters(memory_,list);}
-// Debug001270B8/001277E0/00127260; E-0099-W10. Port guard prevents
-// references escaping their owning original resource lifetime.
-void EmitterBindings::unload_all(){
- if(memory_.word(0x326d6c))throw std::logic_error("Delete copied AcidFX emitter lists before unloading resources");
- if(memory_.word(0x2e6f40)!=0x2e6f40||memory_.word(0x2e6ee0)!=0x2e6ee0)throw std::logic_error("Kill active AcidFX groups before unloading resources");
- for(const auto& record:records_){for(std::uint32_t i=0;i<record.count;++i){const auto at=record.address+i*record.stride;
-   emitter_detach(memory_,at);if(record.stride==192)memory_.word(0x2e6f90,memory_.word(0x2e6f90)-1);}
-  memory_.release(record.address);
- }
- records_.clear();
-}
-void EmitterBindings::shutdown(){
- if(!initialized_)return;
- if(memory_.word(0x326d6c))throw std::logic_error("Delete copied AcidFX emitter lists before shutdown");
- hp2::debug::afxClose(memory_);unload_all();
- // Port ownership policy: the original close retains this pool for process life.
- hp2::debug::bDeleteSlotPool(memory_,memory_.word(0x326d68));memory_.word(0x326d68,0);initialized_=false;
-}
-std::size_t EmitterBindings::definition_count()const{std::size_t n=0;for(const auto& r:records_)if(r.stride==544)n+=r.count;return n;}
-std::size_t EmitterBindings::source_count()const{std::size_t n=0;for(const auto& r:records_)if(r.stride==192)n+=r.count;return n;}
+    return nullptr;
 }
 
-namespace hp2::debug {
-// Debug00127858, E-0099-W38/W53. Actual original raw gates, allocation/cache,
-// RNG and packed particle writes; original-unwritten disc W requires port policy.
-void AcidEffectSystem::TriggerEmitter(std::uint32_t emitter,float timestep,std::uint32_t car,std::optional<std::uint32_t> port_stack_vector_lane){
- const auto data=m_.word(emitter+0x1c);if(!data)return;
- bool near=false;for(unsigned i=0;i<3&&!near;++i){float square[3];for(unsigned axis=0;axis<3;++axis){const float delta=m_.scalar(emitter+0x60+axis*4)-m_.scalar(address_+0x10+i*16+axis*4);square[axis]=delta*delta;}near=std::sqrt((square[0]+square[1])+square[2])<m_.scalar(data+0x80);}
- // Source seeds even an emitter rejected by FarClip, before returning.
- if(!m_.word(emitter+0x24)){auto seed=m_.word(0x326d78);seed^=seed<<17;seed^=seed>>13;seed^=seed<<5;m_.word(0x326d78,seed);m_.word(emitter+0x24,static_cast<std::uint32_t>(::port::driving::cvt_w_s((static_cast<float>(seed&0x7fffffff)*4.656612873077392578125e-10f)*2147483648.f)));}
- if(!near)return;if(m_.word(emitter+0x10)!=1&&!(timestep<0))return;
- float remaining=timestep;if(timestep<0)remaining=-timestep;else{const float cycle=m_.scalar(emitter+0x14);if(cycle!=0&&cycle<timestep)remaining=cycle;}
- float countdown=m_.scalar(emitter+0x18);if(countdown<remaining){
-  auto group=m_.word(emitter+0x20);const auto groups=m_.word(0x326d64),particles=m_.word(0x326d60);
-  if(!groups||!particles)hp2::not_implemented("0x00127A74","Original AcidFX pools must be initialized before emission");
-  const auto full=[&](std::uint32_t pool){return m_.word(pool+0x18)==m_.word(pool+0x2c);};
-  if((!group||m_.word(group+12)!=emitter||m_.word(group+16)!=car)&&!full(groups)){
-   group=SlotPool(m_,groups).Malloc();const auto head=group+20;m_.word(head,head);m_.word(head+4,head);const auto definition=m_.word(emitter+0x1c),tail=m_.word(address_+4);m_.word(group+16,car);m_.word(tail,group);m_.word(address_+4,group);m_.word(group+8,definition);m_.word(group+4,tail);m_.word(group,address_);m_.word(group+12,emitter);m_.word(emitter+0x20,group);
-  }
-  // Source retains a nonnull mismatching cached group when the group pool is
-  // full. Its Emitter/Data/Car fields are NOT repaired by this branch.
-  if(group){
-   auto seed=m_.word(emitter+0x24);auto random=[&](){seed^=seed<<17;seed^=seed>>13;seed^=seed<<5;return static_cast<float>(seed&0x7fffffff)*4.656612873077392578125e-10f;};
-   const auto angle=[](float degrees){return static_cast<std::uint16_t>(::port::driving::cvt_w_s(degrees*65536.f)/360);};
-   const auto world=m_.matrix(emitter+0x30);auto orientation=world;orientation[12]=orientation[13]=orientation[14]=0;orientation[15]=1;
-   const float number=m_.scalar(data+0x30),number_variance=m_.scalar(data+0x34)*number,life_base=m_.scalar(data+0x38),life_variance=m_.scalar(data+0x3c)*life_base,speed_base=m_.scalar(data+0x40),speed_variance=m_.scalar(data+0x44)*speed_base,motion_variance=m_.scalar(data+0x54)*m_.scalar(data+0x50),motion_base=m_.scalar(data+0x50)-motion_variance,spread=m_.scalar(data+0x4c),half_spread=spread*0.5f,angle_range=m_.scalar(data+0x48)*m_.scalar(0x324c7c);
-   const auto frames_bits=(1u<<(static_cast<unsigned>(m_.signed_byte(data+0x19))&31))<<(static_cast<unsigned>(m_.signed_byte(data+0x1a))&31);const float frames=m_.byte(data+0x1c)?static_cast<float>(static_cast<std::int32_t>(frames_bits)):1;
-   std::size_t iterations=0;do{
-    if(++iterations>::port::track::emission_iteration_budget)hp2::not_implemented("0x00128738","Port execution budget exhausted while preserving original zero-interval emission retries");remaining-=countdown;
-    auto rotation=hp2::recovered::bIdentity();std::array<float,4> direction;
-    if(!m_.byte(data+0x18)){
-     const float x=random()*spread-half_spread,y=random()*spread-half_spread,z=random()*spread-half_spread;
-     hp2::recovered::eRotateX(m_,rotation,m_.matrix(0x2d3950),angle(x));hp2::recovered::eRotateY(m_,rotation,rotation,angle(y));hp2::recovered::eRotateZ(m_,rotation,rotation,angle(z));
-     hp2::debug::eMulVector(direction,rotation,{{world[8],world[9],world[10],world[11]}});
-    }else{
-     const float tilt=random()*spread-half_spread;const auto azimuth=angle(random()*360.f-180.f);
-     if(!port_stack_vector_lane)hp2::not_implemented("0x00127E38","Original disc pdir.W is unwritten; explicit port stack-lane policy required");float lane;const auto bits=*port_stack_vector_lane;std::memcpy(&lane,&bits,4);if(!std::isfinite(lane))hp2::not_implemented("0x00127E38","Exceptional chosen original disc stack-W arithmetic remains unmodeled");
-     direction={{hp2::recovered::bCos(m_,azimuth),hp2::recovered::bSin(m_,azimuth),0,lane}};
-     hp2::recovered::eRotateY(m_,rotation,m_.matrix(0x2d3950),angle(tilt));hp2::debug::eMulVector(direction,rotation,direction);hp2::debug::eMulVector(direction,orientation,direction);
+WorldParticle* acquireParticle(WorldParticleSystem& system, WorldParticleGroup& group)
+{
+    for (size_t index = 0; index < system.particleCapacity; ++index) {
+        WorldParticle* particle = &system.particleStorage[index];
+        if (particle->occupied) continue;
+        *particle = {};
+        particle->occupied = 1;
+        particle->previous = group.last;
+        if (group.last) group.last->next = particle;
+        else group.first = particle;
+        group.last = particle;
+        ++system.particleCount;
+        return particle;
     }
-    std::array<float,4> position;for(unsigned axis=0;axis<3;++axis){const float extent=m_.scalar(data+0x70+axis*4);position[axis]=m_.scalar(data+0x60+axis*4)+(random()*extent-extent*0.5f);}position[3]=1;hp2::debug::eMulVector(position,world,position);
-    const float frame_random=random();float life=(life_base-life_variance)+random()*life_variance;const float angle_random=random();float speed=(speed_base-speed_variance)+random()*speed_variance,inherit=0;
-    if(motion_base!=0){inherit=motion_base+random()*motion_variance;if(inherit<0)inherit=0;if(inherit>1)inherit=1;if(!m_.byte(data+0x1e)){float square[3];for(unsigned axis=0;axis<3;++axis){direction[axis]=speed*direction[axis]+inherit*m_.scalar(emitter+0x70+axis*4);square[axis]=direction[axis]*direction[axis];}const float magnitude=(square[0]+square[1])+square[2];speed=std::sqrt(magnitude);const float inverse=magnitude==0?::port::driving::ee_vrsqrt_one_zero(magnitude,"0x00128510"):1.f/speed;for(unsigned axis=0;axis<3;++axis)direction[axis]*=inverse;}}
-    auto initial_angle=static_cast<std::uint16_t>(::port::driving::cvt_w_s((-angle_range*0.5f)+angle_random*angle_range)&0xfffe);if(m_.byte(data+0x1d))initial_angle=static_cast<std::uint16_t>(initial_angle|(seed&1));if(life>60)life=60;
-    if(!m_.word(emitter+0x28)&&!full(particles)){
-     const auto particle=SlotPool(m_,particles).Malloc();m_.byte(particle+31,static_cast<std::uint8_t>(::port::driving::cvt_w_s(frame_random*frames)));m_.byte(particle+30,static_cast<std::uint8_t>(::port::driving::cvt_w_s(direction[2]*127.f)));m_.byte(particle+14,static_cast<std::uint8_t>(::port::driving::cvt_w_s(inherit*255.f)));m_.byte(particle+28,static_cast<std::uint8_t>(::port::driving::cvt_w_s(direction[0]*127.f)));m_.byte(particle+29,static_cast<std::uint8_t>(::port::driving::cvt_w_s(direction[1]*127.f)));
-     const float packed_speed=std::min(m_.scalar(0x324c80),speed*128.f);const auto head=group+20,tail=m_.word(head+4);m_.word(tail,particle);m_.word(head+4,particle);m_.half(particle+8,static_cast<std::uint16_t>(::port::driving::cvt_w_s(life*1024.f)));m_.half(particle+10,initial_angle);m_.half(particle+12,static_cast<std::uint16_t>(::port::driving::cvt_w_s(packed_speed)));m_.scalar(particle+20,position[1]);m_.scalar(particle+16,position[0]);m_.scalar(particle+24,position[2]);m_.word(particle+4,tail);m_.word(particle,head);
-     // Source never initializes AcidParticle.Pad+0F.
+    ++system.droppedParticles;
+    return nullptr;
+}
+
+void particleDirection(float output[4], ChopperEffectInstance& emitter,
+                       const WorldParticleDefinition& definition)
+{
+    float identity[16], rotation[16];
+    rotationMatrixIdentity(identity);
+    const float halfSpread = definition.directionSpread * 0.5f;
+    if (definition.conicalEmission) {
+        const float spread = particleRandomUnit(emitter.randomState) * definition.directionSpread;
+        const uint16_t cone = particleAngle(spread - halfSpread);
+        const float yawDegrees = particleRandomUnit(emitter.randomState) * 360.0f - 180.0f;
+        const uint16_t yaw = particleAngle(yawDegrees);
+        const float initial[4] = {vectorCosineAngle(yaw), rotationSineAngle(yaw), 0, 0};
+        motionMatrixRotateY(rotation, identity, cone);
+        vectorMatrixTransform(output, rotation, initial);
+        float emitterRotation[16];
+        std::memcpy(emitterRotation, emitter.frame, sizeof(emitterRotation));
+        emitterRotation[12] = emitterRotation[13] = emitterRotation[14] = 0.0f;
+        emitterRotation[15] = 1.0f;
+        vectorMatrixTransform(output, emitterRotation, output);
+    } else {
+        const float first = particleRandomUnit(emitter.randomState) * definition.directionSpread;
+        const uint16_t x = particleAngle(first - halfSpread);
+        const float second = particleRandomUnit(emitter.randomState) * definition.directionSpread;
+        const uint16_t y = particleAngle(second - halfSpread);
+        const float third = particleRandomUnit(emitter.randomState) * definition.directionSpread;
+        const uint16_t yaw = particleAngle(third - halfSpread);
+        motionMatrixRotateX(rotation, identity, x);
+        motionMatrixRotateY(rotation, rotation, y);
+        motionMatrixRotateYaw(rotation, rotation, yaw);
+        const float initial[4] = {emitter.frame[8], emitter.frame[9], emitter.frame[10], 0};
+        vectorMatrixTransform(output, rotation, initial);
     }
-    const float denominator=(number-number_variance)+random()*number_variance;countdown=denominator==0?::port::driving::ee_div_s_zero(1.f,denominator,"0x00128704"):1.f/denominator;if(countdown>240)countdown=240;if(countdown<0)countdown=0;
-   }while(countdown<=remaining);
-   m_.word(emitter+0x24,seed);if(m_.word(group+20)==group+20){::port::track::emitter_detach(m_,group);AcidActiveGroup(m_,group).Sub_0012A3B0(3);}
-  }
- }
- m_.scalar(emitter+0x18,timestep>=0?countdown-remaining:0.f);
+}
+
+} // namespace
+
+WorldServicesResult worldParticlesTriggerEmitter(WorldParticleSystem* system,
+    ChopperEffectInstance* emitter, float elapsed, CarMovement* car)
+{
+    if (!system || !system->randomState || !emitter) return WORLD_SERVICES_INVALID_BINDING;
+    const WorldParticleDefinition* definition = emitter->particleDefinition;
+    if (!definition) return WORLD_SERVICES_OK;
+    bool interested = false;
+    for (const auto& point : system->interestPoints) {
+        const float x = emitter->frame[12] - point[0];
+        const float y = emitter->frame[13] - point[1];
+        const float z = emitter->frame[14] - point[2];
+        if (std::sqrt((x * x + y * y) + z * z) < definition->interestDistance) {
+            interested = true;
+            break;
+        }
+    }
+    if (emitter->randomState == 0)
+        emitter->randomState = static_cast<uint32_t>(convertFloatToInt32(
+            particleRandomUnit(*system->randomState) * 2147483648.0f));
+    if (!interested || (emitter->emissionState != 1 && !(elapsed < 0.0f)))
+        return WORLD_SERVICES_OK;
+    float duration = elapsed;
+    if (duration >= 0.0f) {
+        if (emitter->cycleRemaining != 0.0f && emitter->cycleRemaining < duration)
+            duration = emitter->cycleRemaining;
+    } else duration = -duration;
+    float interval = emitter->emissionRemainder;
+    if (!(interval < duration)) {
+        emitter->emissionRemainder = elapsed >= 0.0f ? interval - duration : 0.0f;
+        return WORLD_SERVICES_OK;
+    }
+    WorldParticleGroup* group = acquireParticleGroup(*system, *emitter, car);
+    if (!group) {
+        emitter->emissionRemainder = elapsed >= 0.0f ? interval - duration : 0.0f;
+        return WORLD_SERVICES_OK;
+    }
+    const float rateVariation = definition->emissionRateVariation * definition->emissionRate;
+    const float minimumRate = definition->emissionRate - rateVariation;
+    const float lifeVariation = definition->lifetimeVariation * definition->lifetime;
+    const float minimumLife = definition->lifetime - lifeVariation;
+    const float speedVariation = definition->speedVariation * definition->speed;
+    const float minimumSpeed = definition->speed - speedVariation;
+    const float motionVariation = definition->carMotionVariation * definition->carMotionScale;
+    const float minimumMotion = definition->carMotionScale - motionVariation;
+    const float rotationRange = definition->directionAngle * 182.04444885253906f;
+    const float minimumRotation = -rotationRange * 0.5f;
+    float atlasCells = 1.0f;
+    if (definition->randomAtlasFrame) {
+        const uint32_t count = (1u << static_cast<uint8_t>(definition->atlasWidthPower)) <<
+            static_cast<uint8_t>(definition->atlasHeightPower);
+        atlasCells = static_cast<float>(count);
+    }
+    do {
+        duration = duration - interval;
+        float direction[4];
+        particleDirection(direction, *emitter, *definition);
+        float local[4], position[4];
+        for (size_t axis = 0; axis < 3; ++axis) {
+            const float randomOffset = particleRandomUnit(emitter->randomState) * definition->spawnRange[axis];
+            const float centered = randomOffset - definition->spawnRange[axis] * 0.5f;
+            local[axis] = definition->spawnOffset[axis] + centered;
+        }
+        local[3] = 1.0f;
+        vectorMatrixTransform(position, emitter->frame, local);
+        const float randomFrame = particleRandomUnit(emitter->randomState) * atlasCells;
+        const uint8_t atlasFrame = static_cast<uint8_t>(convertFloatToInt32(randomFrame));
+        const float randomLife = particleRandomUnit(emitter->randomState) * lifeVariation;
+        float life = minimumLife + randomLife;
+        const float randomRotation = particleRandomUnit(emitter->randomState) * rotationRange;
+        const float rotationValue = minimumRotation + randomRotation;
+        const float randomSpeed = particleRandomUnit(emitter->randomState) * speedVariation;
+        float speed = minimumSpeed + randomSpeed;
+        float motion = 0.0f;
+        if (minimumMotion != 0.0f) {
+            const float randomMotion = particleRandomUnit(emitter->randomState) * motionVariation;
+            motion = minimumMotion + randomMotion;
+            motion = minimumFinite(1.0f, maximumFinite(0.0f, motion));
+            if (!definition->followsCar) {
+                float velocity[3];
+                for (size_t axis = 0; axis < 3; ++axis) {
+                    const float own = speed * direction[axis];
+                    const float inherited = motion * emitter->carVelocity[axis];
+                    velocity[axis] = own + inherited;
+                }
+                speed = std::sqrt((velocity[0] * velocity[0] + velocity[1] * velocity[1]) + velocity[2] * velocity[2]);
+                const float reciprocal = finiteRatio(1.0f, speed);
+                for (size_t axis = 0; axis < 3; ++axis) direction[axis] = velocity[axis] * reciprocal;
+            }
+        }
+        uint16_t rotation = static_cast<uint16_t>(convertFloatToInt32(rotationValue)) & 0xfffeu;
+        if (definition->emissionMode) rotation |= static_cast<uint16_t>(emitter->randomState & 1u);
+        if (life > 60.0f) life = 60.0f;
+        if (!emitter->suppressParticles) {
+            if (WorldParticle* particle = acquireParticle(*system, *group)) {
+                for (size_t axis = 0; axis < 3; ++axis) {
+                    particle->position[axis] = position[axis];
+                    particle->direction[axis] = wrapByte(convertFloatToInt32(direction[axis] * 127.0f));
+                }
+                particle->remainingTicks = wrapHalf(convertFloatToInt32(life * 1024.0f));
+                particle->rotation = rotation;
+                particle->speed = static_cast<uint16_t>(convertFloatToInt32(minimumFinite(speed * 128.0f, 65535.0f)));
+                particle->carMotionScale = static_cast<uint8_t>(convertFloatToInt32(motion * 255.0f));
+                particle->atlasFrame = atlasFrame;
+            }
+        }
+        const float randomRate = particleRandomUnit(emitter->randomState) * rateVariation;
+        interval = finiteRatio(1.0f, minimumRate + randomRate);
+        if (interval > 240.0f) interval = 240.0f;
+        if (interval < 0.0f) interval = 0.0f;
+    } while (interval <= duration);
+    if (!group->first) worldParticlesDisposeGroup(system, group);
+    emitter->emissionRemainder = elapsed >= 0.0f ? interval - duration : 0.0f;
+    return system->result = WORLD_SERVICES_OK;
+}
+
+void worldParticlesInitialize(WorldParticleSystem* system,
+    WorldParticle* particles, size_t particleCapacity,
+    WorldParticleGroup* groups, size_t groupCapacity,
+    uint32_t* randomState, const CarCinematicServices* cameras)
+{
+    *system = {};
+    system->particleStorage = particles;
+    system->particleCapacity = particleCapacity;
+    system->groupStorage = groups;
+    system->groupCapacity = groupCapacity;
+    system->randomState = randomState;
+    system->cameras = cameras;
+    system->nextGeneration = 1;
+    if ((!particles && particleCapacity) || (!groups && groupCapacity) || !randomState || !cameras) {
+        system->result = WORLD_SERVICES_INVALID_BINDING;
+        return;
+    }
+    for (size_t index = 0; index < particleCapacity; ++index) particles[index] = {};
+    for (size_t index = 0; index < groupCapacity; ++index) groups[index] = {};
+}
+
+WorldServicesResult worldParticlesAddEmitter(WorldParticleSystem* system, ChopperEffectInstance* emitter)
+{
+    if (!system || !system->randomState || !emitter || emitter->particleSystem)
+        return WORLD_SERVICES_INVALID_BINDING;
+    if (emitter->randomState == 0)
+        emitter->randomState = static_cast<uint32_t>(convertFloatToInt32(
+            particleRandomUnit(*system->randomState) * 2147483648.0f));
+    if (!emitter->particleDefinition || emitter->emissionState == 2) {
+        emitter->emissionState = 2;
+        appendEmitter(*system, *emitter, false);
+    } else if (static_cast<uint32_t>(emitter->emissionState) < 2u) {
+        const WorldParticleDefinition& definition = *emitter->particleDefinition;
+        emitter->cycleRemaining = cycleDuration(*emitter,
+            emitter->emissionState ? definition.on : definition.off);
+        emitter->emissionRemainder = 0.0f;
+        appendEmitter(*system, *emitter, true);
+    } else {
+        if (emitter->emissionState != 3) emitter->emissionState = 2;
+        appendEmitter(*system, *emitter, false);
+    }
+    return system->result = WORLD_SERVICES_OK;
+}
+
+void worldParticlesRemoveEmitter(WorldParticleSystem* system, ChopperEffectInstance* emitter)
+{
+    if (!system || !emitter || emitter->particleSystem != system) return;
+    if (emitter->autoPrevious) emitter->autoPrevious->autoNext = emitter->autoNext;
+    else system->firstEmitter = emitter->autoNext;
+    if (emitter->autoNext) emitter->autoNext->autoPrevious = emitter->autoPrevious;
+    else system->lastEmitter = emitter->autoPrevious;
+    emitter->autoNext = emitter->autoPrevious = nullptr;
+    emitter->particleSystem = nullptr;
+    --system->emitterCount;
+}
+
+void worldParticlesUpdateInterestPoints(WorldParticleSystem* system)
+{
+    const int32_t views[3] = {1, 2, 0};
+    for (size_t index = 0; index < 3; ++index) {
+        const CarCinematicView* view = system->cameras->screens[views[index]].view;
+        if (view) std::memcpy(system->interestPoints[index], view->current.eye, sizeof(float) * 4);
+    }
+}
+
+void worldParticlesDisposeGroup(WorldParticleSystem* system, WorldParticleGroup* group)
+{
+    if (!system || !group || !group->occupied) return;
+    // PAL12A258 clears the two borrowed definition/Car cells before the
+    // AcidParticle list destructor12A2C0 returns every live particle to its
+    // original pool. The Windows pools use occupied slots, not PS2 addresses.
+    group->definition = nullptr;
+    group->car = nullptr;
+    while (group->first) removeParticle(*system, *group, *group->first);
+    if (group->previous) group->previous->next = group->next;
+    else system->firstGroup = group->next;
+    if (group->next) group->next->previous = group->previous;
+    else system->lastGroup = group->previous;
+    if (group->emitter && group->emitter->particleGroup == group &&
+        group->emitter->particleGroupGeneration == group->generation) {
+        group->emitter->particleGroup = nullptr;
+        group->emitter->particleGroupGeneration = 0;
+    }
+    group->emitter = nullptr;
+    group->occupied = 0;
+    group->next = group->previous = nullptr;
+    --system->groupCount;
+}
+
+void worldParticlesKillAllActiveEffects(WorldParticleSystem* system)
+{
+    // The source list is the active-group list at AcidEffectSystem+0.
+    // Auto emitters form a different list and survive this operation.
+    while (system->firstGroup)
+        worldParticlesDisposeGroup(system, system->firstGroup);
+}
+
+WorldServicesResult worldParticlesAdvance(WorldParticleSystem* system, float elapsed)
+{
+    if (!system || !system->randomState || !system->cameras)
+        return WORLD_SERVICES_INVALID_BINDING;
+    const auto started = std::chrono::steady_clock::now();
+    const int32_t ticks = convertFloatToInt32(elapsed * 1024.0f);
+    worldParticlesUpdateInterestPoints(system);
+    ChopperEffectInstance* emitter = system->firstEmitter;
+    while (emitter) {
+        ChopperEffectInstance* next = emitter->autoNext;
+        const int32_t state = emitter->emissionState;
+        if (state == 1) {
+            const auto result = worldParticlesTriggerEmitter(system, emitter, elapsed, nullptr);
+            if (result != WORLD_SERVICES_OK) return system->result = result;
+        }
+        if (emitter->cycleRemaining != 0.0f && static_cast<uint32_t>(state) < 2u) {
+            const float remaining = emitter->cycleRemaining - elapsed;
+            if (remaining <= 0.0f) {
+                emitter->emissionState = state == 0 ? 1 : 0;
+                const WorldParticleDefinition& definition = *emitter->particleDefinition;
+                const WorldParticleCycle& cycle = state == 0 ? definition.on : definition.off;
+                emitter->cycleRemaining = cycle.duration == 0.0f ? 0.0f : cycleDuration(*emitter, cycle) + remaining;
+                emitter->emissionRemainder = 0.0f;
+            } else emitter->cycleRemaining = remaining;
+        }
+        // A completed transient emitter may remain linked between active
+        // world effects until its Chopper owner next sweeps. Ending the list
+        // walk here silently prevents later still-active rocket trails and
+        // explosion members from emitting this frame. Retired emitters have
+        // no update, but must not hide unrelated live source instances.
+        emitter = next;
+    }
+    // PAL1288E8..1289C8: the live global definition list is edited only
+    // while CurrentGameFlowState is3. World and Frame effects borrow it.
+    for (auto* definition = system->definitions && system->gameFlowState &&
+            *system->gameFlowState==3 ? *system->definitions : nullptr;
+            definition; definition=definition->nextDefinition) {
+        float knots[4], sizeRotation[16]{};
+        for (size_t lane = 0; lane < 4; ++lane) {
+            knots[lane] = definition->controlKnots[lane] * 0.3333333432674408f;
+            sizeRotation[lane * 4] = definition->controlSizes[lane];
+            sizeRotation[lane * 4 + 1] = definition->controlRotations[lane] * 182.04444885253906f;
+        }
+        if (!worldParticleHermiteBasis(definition->colorCurve, definition->controlColors, knots) ||
+            !worldParticleHermiteBasis(definition->sizeRotationCurve, sizeRotation, knots))
+            return system->result = WORLD_SERVICES_OWNER_FAILURE;
+    }
+    WorldParticleGroup* group = system->firstGroup;
+    while (group) {
+        WorldParticleGroup* next = group->next;
+        WorldParticle* particle = group->first;
+        while (particle) {
+            WorldParticle* following = particle->next;
+            if (static_cast<int32_t>(particle->remainingTicks) - ticks <= 0)
+                removeParticle(*system, *group, *particle);
+            else advanceParticle(*particle, *group->definition, group->car, elapsed, ticks);
+            particle = following;
+        }
+        if (!group->first) worldParticlesDisposeGroup(system, group);
+        group = next;
+    }
+    system->stepMilliseconds = std::chrono::duration<float, std::milli>(
+        std::chrono::steady_clock::now() - started).count();
+    return system->result = WORLD_SERVICES_OK;
+}
+
+void worldParticleHermiteEvaluate(float output[4], const float coefficients[16], float parameter)
+{
+    const float square = parameter * parameter;
+    const float cube = square * parameter;
+    float result[4];
+    for (size_t lane = 0; lane < 4; ++lane) {
+        const float first = coefficients[lane] * cube;
+        const float second = coefficients[4 + lane] * square;
+        const float third = coefficients[8 + lane] * parameter;
+        result[lane] = ((first + second) + third) + coefficients[12 + lane];
+    }
+    std::memcpy(output, result, sizeof(result));
+}
+
+int32_t worldParticleHermiteBasis(float output[16], const float values[16], const float knots[4])
+{
+    float powers[16];
+    for (size_t row = 0; row < 4; ++row) {
+        const float square = knots[row] * knots[row];
+        powers[row * 4] = square * knots[row];
+        powers[row * 4 + 1] = square;
+        powers[row * 4 + 2] = knots[row];
+        powers[row * 4 + 3] = 1.0f;
+    }
+    float inverse[16];
+    afxMatrixInverse(inverse,powers);
+    const float constraints[16] = {0,0,0,1, 1,1,1,1, 0,0,1,0, 3,2,1,0};
+    const float hermite[16] = {2,-2,1,1, -3,3,-2,-1, 0,0,1,0, 1,0,0,0};
+    float constrained[16], basis[16];
+    eMulMatrix(constrained,constraints,inverse);
+    eMulMatrix(basis,hermite,constrained);
+    eMulMatrix(output,basis,values);
+    // Source returns no status. This native API reports completed evaluation;
+    // there is no invented singular-determinant rejection in the PAL caller.
+    return 1;
+}
+
+#include "indep/inc/Ecstasy.hpp"
+#include "bware/inc/bWare.hpp"
+#include "bware/inc/bChunk.hpp"
+#include "bware/inc/bWare.hpp"
+
+#include <algorithm>
+
+namespace hp2 {
+namespace {
+std::string text(const std::uint8_t* data, std::size_t capacity)
+{
+    const auto* end = std::find(data, data + capacity, std::uint8_t(0));
+    Require(end != data + capacity, "Chopper effect resource name is unterminated");
+    return {reinterpret_cast<const char*>(data), static_cast<std::size_t>(end - data)};
+}
+
+float real(const std::uint8_t* data)
+{
+    const auto bits = ReadU32(data);
+    float value;
+    std::memcpy(&value, &bits, sizeof(value));
+    Require(std::isfinite(value), "Chopper effect frame is non-finite");
+    return value;
+}
+
+} // namespace
+
+ChopperEffectData::ChopperEffectData(const std::vector<std::uint8_t>& global,
+    const ChopperEffectData* sharedDefinitions)
+{
+    std::vector<Chunk> definitionChunks, instanceChunks;
+    const auto visit = [&](const auto& self, std::size_t begin, std::size_t size, unsigned depth) -> void {
+        Require(depth <= 32, "Chopper effect nesting exceeds 32 levels");
+        for (const auto& chunk : ReadChunks(global, begin, size)) {
+            if (chunk.id == 0x35021u) definitionChunks.push_back(chunk);
+            else if (chunk.id == 0x35020u) instanceChunks.push_back(chunk);
+            else if (chunk.IsContainer()) self(self, chunk.payloadOffset, chunk.size, depth + 1);
+        }
+    };
+    visit(visit, 0, global.size(), 0);
+    for (const auto& chunk : definitionChunks) {
+        const auto begin = (chunk.payloadOffset + 15u) & ~std::size_t(15u);
+        Require(begin <= chunk.endOffset && chunk.endOffset - begin >= 16,
+            "Chopper effect definition header is truncated");
+        Require(ReadU32(global.data() + begin + 8) == 4, "Unsupported Chopper effect definition version");
+        const auto count = ReadU32(global.data() + begin + 12);
+        Require(count <= (chunk.endOffset - begin - 16) / 544 &&
+            static_cast<std::size_t>(count) * 544 == chunk.endOffset - begin - 16,
+            "Chopper effect definition array is incomplete");
+        for (std::uint32_t index = 0; index < count; ++index) {
+            const auto* bytes = global.data() + begin + 16 + static_cast<std::size_t>(index) * 544;
+            WorldParticleDefinition definition{};
+            definition.key = ReadU32(bytes + 8);
+            definition.textureKey = ReadU32(bytes + 12);
+            definition.groupKey = ReadU32(bytes + 16);
+            const uint32_t carEffectPosition = ReadU32(bytes + 0x58);
+            std::memcpy(&definition.carEffectPosition, &carEffectPosition, sizeof(carEffectPosition));
+            const auto signedByte = [](std::uint8_t value) {
+                std::int8_t result;
+                std::memcpy(&result, &value, sizeof(result));
+                return result;
+            };
+            definition.conicalEmission = signedByte(bytes[0x18]);
+            definition.atlasWidthPower = signedByte(bytes[0x19]);
+            definition.atlasHeightPower = signedByte(bytes[0x1a]);
+            definition.animationRate = signedByte(bytes[0x1b]);
+            definition.randomAtlasFrame = signedByte(bytes[0x1c]);
+            definition.emissionMode = signedByte(bytes[0x1d]);
+            definition.followsCar = signedByte(bytes[0x1e]);
+            Require(definition.atlasWidthPower >= 0 && definition.atlasHeightPower >= 0 &&
+                definition.atlasWidthPower + definition.atlasHeightPower <= 30,
+                "Effect atlas dimensions exceed the CPU frame selector");
+            definition.on = {real(bytes + 0x20), real(bytes + 0x24)};
+            definition.off = {real(bytes + 0x28), real(bytes + 0x2c)};
+            definition.emissionRate = real(bytes + 0x30);
+            definition.emissionRateVariation = real(bytes + 0x34);
+            definition.lifetime = real(bytes + 0x38);
+            definition.lifetimeVariation = real(bytes + 0x3c);
+            definition.speed = real(bytes + 0x40);
+            definition.speedVariation = real(bytes + 0x44);
+            definition.directionAngle = real(bytes + 0x48);
+            definition.directionSpread = real(bytes + 0x4c);
+            definition.carMotionScale = real(bytes + 0x50);
+            definition.carMotionVariation = real(bytes + 0x54);
+            for (int lane = 0; lane < 3; ++lane) {
+                definition.spawnOffset[lane] = real(bytes + 0x60 + lane * 4);
+                definition.spawnRange[lane] = real(bytes + 0x70 + lane * 4);
+            }
+            definition.interestDistance = real(bytes + 0x80);
+            definition.gravity = real(bytes + 0x84);
+            definition.drag = real(bytes + 0x88);
+            definition.maximumPixelSize = real(bytes + 0x8c);
+            for (int lane=0;lane<4;++lane) {
+                definition.controlKnots[lane]=real(bytes+0x90+lane*4);
+                definition.controlSizes[lane]=real(bytes+0xe0+lane*4);
+                definition.controlRotations[lane]=real(bytes+0xf0+lane*4);
+            }
+            for (int lane = 0; lane < 16; ++lane) {
+                definition.controlColors[lane]=real(bytes+0xa0+lane*4);
+                definition.colorCurve[lane] = real(bytes + 0x100 + lane * 4);
+                definition.sizeRotationCurve[lane] = real(bytes + 0x140 + lane * 4);
+            }
+            const auto name = text(bytes + 384, 64);
+            const auto render = text(bytes + 448, 48);
+            const auto group = text(bytes + 496, 48);
+            Require(hashString(name.c_str()) == definition.key && hashString(render.c_str()) == definition.textureKey &&
+                hashString(group.c_str()) == definition.groupKey, "Chopper effect definition name/key mismatch");
+            auto inserted=particleDefinitions_.emplace(definition.key, definition);
+            Require(inserted.second, "Repeated Chopper effect definition");
+            auto* current=&inserted.first->second;
+            if(lastDefinition_)lastDefinition_->nextDefinition=current;else firstDefinition_=current;
+            lastDefinition_=current;
+        }
+    }
+    std::size_t instanceCount = 0;
+    for (const auto& chunk : instanceChunks) {
+        const auto begin = (chunk.payloadOffset + 15u) & ~std::size_t(15u);
+        Require(begin <= chunk.endOffset && chunk.endOffset - begin >= 16,
+            "Chopper effect instance header is truncated");
+        Require(ReadU32(global.data() + begin + 8) == 5, "Unsupported Chopper effect instance version");
+        const auto count = ReadU32(global.data() + begin + 12);
+        Require(count <= (chunk.endOffset - begin - 16) / 192 &&
+            static_cast<std::size_t>(count) * 192 == chunk.endOffset - begin - 16,
+            "Chopper effect instance array is incomplete");
+        instanceCount += count;
+    }
+    templates_.reserve(instanceCount);
+    authoredEmitters_.reserve(instanceCount);
+    for (const auto& chunk : instanceChunks) {
+        const auto begin = (chunk.payloadOffset + 15u) & ~std::size_t(15u);
+        const auto count = ReadU32(global.data() + begin + 12);
+        for (std::uint32_t index = 0; index < count; ++index) {
+            const auto* bytes = global.data() + begin + 16 + static_cast<std::size_t>(index) * 192;
+            const auto definitionKey=ReadU32(bytes+12);
+            const auto* definition=Definition(definitionKey);
+            if (!definition && sharedDefinitions)definition=sharedDefinitions->Definition(definitionKey);
+            Require(definition!=nullptr,"Chopper effect instance references an unknown definition");
+            names_.push_back(std::make_unique<std::string>(text(bytes + 128, 64)));
+            ChopperEffectTemplate instance{};
+            instance.name = names_.back()->c_str();
+            instance.key = hashString(instance.name);
+            instance.definitionKey = definition->key;
+            instance.particleDefinition = definition;
+            instance.renderKey = definition->textureKey;
+            instance.groupKey = definition->groupKey;
+            for (int lane = 0; lane < 16; ++lane) instance.frame[lane] = real(bytes + 48 + lane * 4);
+            templates_.push_back(instance);
+            members_[instance.groupKey].push_back(&templates_.back());
+            ChopperEffectInstance emitter{};
+            emitter.resource=&templates_.back();emitter.particleDefinition=definition;
+            std::memcpy(emitter.frame,instance.frame,sizeof(emitter.frame));
+            const auto state=ReadU32(bytes+0x10);std::memcpy(&emitter.emissionState,&state,4);
+            emitter.randomState=ReadU32(bytes+0x24);
+            emitter.cycleRemaining=real(bytes+0x14);emitter.emissionRemainder=real(bytes+0x18);
+            const auto suppressed=ReadU32(bytes+0x28);std::memcpy(&emitter.suppressParticles,&suppressed,4);
+            for (std::size_t lane=0;lane<3;++lane)emitter.carVelocity[lane]=real(bytes+0x70+lane*4);
+            emitter.occupied=1;
+            authoredEmitters_.push_back(emitter);
+        }
+    }
+    for (const auto& group : members_)
+        groups_.push_back({group.first, group.second.data(), group.second.size()});
+}
+
+const ChopperEffectGroup* ChopperEffectData::Find(std::uint32_t key) const noexcept
+{
+    for (auto* catalogue=this;catalogue;catalogue=catalogue->nextCatalogue_)
+        for (const auto& group:catalogue->groups_)if (group.key==key)return &group;
+    return nullptr;
+}
+
+const WorldParticleDefinition* ChopperEffectData::Definition(std::uint32_t key) const noexcept
+{
+    for (auto* catalogue=this;catalogue;catalogue=catalogue->nextCatalogue_) {
+        const auto found=catalogue->particleDefinitions_.find(key);
+        if (found!=catalogue->particleDefinitions_.end())return &found->second;
+    }
+    return nullptr;
+}
+
+WorldParticleDefinition* ChopperEffectData::EditableDefinition(std::uint32_t key) noexcept
+{
+    for(auto* catalogue=this;catalogue;catalogue=catalogue->nextCatalogue_) {
+        const auto found=catalogue->particleDefinitions_.find(key);
+        if(found!=catalogue->particleDefinitions_.end())return &found->second;
+    }
+    return nullptr;
+}
+
+ChopperEffectData::~ChopperEffectData()
+{
+    if (UnbindParticles()!=WORLD_SERVICES_OK)std::terminate();
+    Unregister();
+}
+
+WorldServicesResult ChopperEffectData::BindParticles(WorldParticleSystem& system)
+{
+    if (particleSystem_ || !system.randomState || !system.cameras)return WORLD_SERVICES_INVALID_BINDING;
+    particleSystem_=&system;
+    for (auto& emitter:authoredEmitters_) {
+        if (system.nextGeneration==UINT64_MAX)return WORLD_SERVICES_CAPACITY;
+        emitter.generation=system.nextGeneration++;
+        const auto result=worldParticlesAddEmitter(&system,&emitter);
+        if (result!=WORLD_SERVICES_OK)return result;
+    }
+    return WORLD_SERVICES_OK;
+}
+
+WorldServicesResult ChopperEffectData::UnbindParticles() noexcept
+{
+    if (!particleSystem_)return WORLD_SERVICES_OK;
+    auto& system=*particleSystem_;
+    // The source world teardown retires live effects before their definition
+    // chunk is released. Refuse to free a definition still used by a group.
+    for (auto* group=system.firstGroup;group;group=group->next)
+        for (const auto& definition:particleDefinitions_)
+            if (group->definition==&definition.second)return WORLD_SERVICES_INVALID_BINDING;
+    for (auto* emitter=system.firstEmitter;emitter;emitter=emitter->autoNext)
+        if (emitter->resource)
+            for (const auto& resource:templates_)if (emitter->resource==&resource) {
+                bool authored=false;
+                for (const auto& instance:authoredEmitters_)if (emitter==&instance) {authored=true;break;}
+                if (!authored)return WORLD_SERVICES_INVALID_BINDING;
+            }
+    for (auto& emitter:authoredEmitters_) {
+        if (emitter.particleGroup && emitter.particleGroup->emitter==&emitter &&
+                emitter.particleGroup->generation==emitter.particleGroupGeneration)
+            emitter.particleGroup->emitter=nullptr;
+        emitter.particleGroup=nullptr;emitter.particleGroupGeneration=0;
+        if (emitter.particleSystem)worldParticlesRemoveEmitter(&system,&emitter);
+    }
+    particleSystem_=nullptr;return WORLD_SERVICES_OK;
+}
+
+bool ChopperEffectData::Register(ChopperEffectData& bank) noexcept
+{
+    if (catalogueRoot_ || nextCatalogue_ || &bank==this)return false;
+    auto* root=bank.catalogueRoot_?bank.catalogueRoot_:&bank;
+    if (root==this)return false;
+    auto* tail=root;
+    while (tail->nextCatalogue_) {
+        if (tail->nextCatalogue_==this)return false;
+        tail=tail->nextCatalogue_;
+    }
+    tail->nextCatalogue_=this;catalogueRoot_=root;
+    if(firstDefinition_) {
+        auto** definition=&root->firstDefinition_;
+        while(*definition)definition=&(*definition)->nextDefinition;
+        *definition=firstDefinition_;
+    }
+    return true;
+}
+
+void ChopperEffectData::Unregister() noexcept
+{
+    if (!catalogueRoot_)return;
+    if(firstDefinition_) {
+        auto** definition=&catalogueRoot_->firstDefinition_;
+        while(*definition && *definition!=firstDefinition_)definition=&(*definition)->nextDefinition;
+        if(*definition)*definition=lastDefinition_->nextDefinition;
+        lastDefinition_->nextDefinition=nullptr;
+    }
+    auto** link=&catalogueRoot_->nextCatalogue_;
+    while (*link && *link!=this)link=&(*link)->nextCatalogue_;
+    if (*link)*link=nextCatalogue_;
+    nextCatalogue_=nullptr;catalogueRoot_=nullptr;
+}
+
+void ChopperEffectData::UpdateTextures(ResourceRegistry& resources)
+{
+    for (auto* catalogue=this;catalogue;catalogue=catalogue->nextCatalogue_)
+      for (const auto& entry:catalogue->particleDefinitions_) {
+        const auto& definition=entry.second;
+        auto& texture=catalogue->textures_[&definition];
+        if (!resources.IsTextureAlive(texture) || texture->key!=definition.textureKey)
+            texture=resources.ResolveTexture(definition.textureKey,false);
+    }
+}
+
+const EditorMarkerTexture* ChopperEffectData::Texture(const ChopperEffectTemplate& resource) const noexcept
+{
+    return resource.particleDefinition ? Texture(*resource.particleDefinition):nullptr;
+}
+
+const EditorMarkerTexture* ChopperEffectData::Texture(const WorldParticleDefinition& definition) const noexcept
+{
+    const auto* root=catalogueRoot_?catalogueRoot_:this;
+    for (auto* catalogue=root;catalogue;catalogue=catalogue->nextCatalogue_) {
+        const auto found=catalogue->textures_.find(&definition);
+        if (found!=catalogue->textures_.end())return found->second;
+    }
+    return nullptr;
+}
+
+} // namespace hp2
+
+
+#include <string.h>
+
+void chopperEffectsInitialize(ChopperMunitionEffects* effects,
+    ChopperEffectInstance* instances, size_t capacity,
+    ChopperEffectRequest* requests, size_t requestCapacity,
+    const ChopperEffectGroup* groups, size_t groupCount)
+{
+    memset(effects, 0, sizeof(*effects));
+    effects->instances = instances;
+    effects->capacity = capacity;
+    effects->requests = requests;
+    effects->requestCapacity = requestCapacity;
+    effects->groups = groups;
+    effects->groupCount = groupCount;
+    effects->nextGeneration = 1;
+    if ((!instances && capacity) || (!requests && requestCapacity) || (!groups && groupCount)) {
+        effects->result = WORLD_SERVICES_INVALID_BINDING;
+        return;
+    }
+    if (capacity) memset(instances, 0, capacity * sizeof(*instances));
+}
+
+WorldServicesResult chopperEffectsBindParticles(ChopperMunitionEffects* effects,
+    WorldParticleSystem* particles)
+{
+    if (!effects || !particles || !particles->randomState || !particles->cameras)
+        return WORLD_SERVICES_INVALID_BINDING;
+    if (effects->particles == particles) return WORLD_SERVICES_OK;
+    for (size_t index = 0; index < effects->capacity; ++index)
+        if (effects->instances[index].occupied) return WORLD_SERVICES_INVALID_BINDING;
+    effects->particles = particles;
+    return effects->result = WORLD_SERVICES_OK;
+}
+
+static bool canRecordRequests(const ChopperMunitionEffects* effects, size_t count)
+{
+    if (effects->particles) return true;
+    return effects->requestCount <= effects->requestCapacity &&
+        count <= effects->requestCapacity - effects->requestCount &&
+        count <= UINT64_MAX - effects->nextSequence;
+}
+
+static ChopperEffectRequest* appendRequest(ChopperMunitionEffects* effects, ChopperEffectInstance* instance,
+    ChopperEffectRequestKind kind)
+{
+    if (!effects->requests || effects->requestCount >= effects->requestCapacity ||
+        effects->nextSequence == UINT64_MAX) {
+        ++effects->droppedRequests;
+        return nullptr;
+    }
+    ChopperEffectRequest* request = &effects->requests[
+        (effects->readIndex + effects->requestCount) % effects->requestCapacity];
+    request->kind = kind;
+    request->resource = instance->resource;
+    request->instance = instance;
+    request->generation = instance->generation;
+    request->sequence = effects->nextSequence++;
+    memcpy(request->frame, instance->frame, sizeof(request->frame));
+    request->elapsed = 0.0f;
+    ++effects->requestCount;
+    return request;
+}
+
+WorldServicesResult chopperEffectsSpawnGroup(ChopperMunitionEffects* effects,
+    uint32_t groupKey, const float frame[16])
+{
+    if (!effects || !frame) return WORLD_SERVICES_INVALID_BINDING;
+    const ChopperEffectGroup* group = NULL;
+    for (size_t index = 0; index < effects->groupCount; ++index)
+        if (effects->groups[index].key == groupKey) { group = &effects->groups[index]; break; }
+    if (!group || (group->count && !group->members))
+        return effects->result = WORLD_SERVICES_INVALID_BINDING;
+    // Never reserve half of an authored explosion group: each member must
+    // belong to the same successfully published detonation.
+    for (size_t index = 0; index < group->count; ++index) {
+        if (!group->members[index] || group->members[index]->groupKey != groupKey)
+            return effects->result = WORLD_SERVICES_INVALID_BINDING;
+    }
+    size_t freeSlots = 0;
+    for (size_t index = 0; index < effects->capacity; ++index)
+        freeSlots += !effects->instances[index].occupied;
+    // An exhausted native emitter pool may contain completed auto-emitters
+    // that have not yet reached the Chopper owner's normal sweep. Reclaim
+    // only after the real particle cycle has marked them completed. The
+    // request-only test backend uses its own explicit completion markers.
+    if (group->count > freeSlots) {
+        size_t requestCompleted = 0;
+        for (ChopperEffectInstance* instance = effects->first; instance; instance = instance->next)
+            requestCompleted += instance->emissionState != 1;
+        if (requestCompleted && requestCompleted <= SIZE_MAX - group->count &&
+            canRecordRequests(effects, group->count + requestCompleted)) {
+            chopperEffectsSweep(effects);
+            if (effects->result != WORLD_SERVICES_OK)return effects->result;
+            freeSlots = 0;
+            for (size_t index = 0; index < effects->capacity; ++index)
+                freeSlots += !effects->instances[index].occupied;
+        }
+    }
+    if (group->count > freeSlots || !canRecordRequests(effects, group->count) ||
+        group->count > UINT64_MAX - effects->nextGeneration)
+        return effects->result = WORLD_SERVICES_CAPACITY;
+    size_t slot = 0;
+    for (size_t index = 0; index < group->count; ++index) {
+        while (effects->instances[slot].occupied) ++slot;
+        ChopperEffectInstance* instance = &effects->instances[slot++];
+        memset(instance, 0, sizeof(*instance));
+        instance->resource = group->members[index];
+        instance->particleDefinition = instance->resource->particleDefinition;
+        memcpy(instance->frame, frame, sizeof(instance->frame));
+        instance->generation = effects->nextGeneration++;
+        instance->emissionState = 1;
+        instance->occupied = 1;
+        instance->next = effects->first;
+        instance->previous = NULL;
+        if (effects->first) effects->first->previous = instance;
+        else effects->last = instance;
+        effects->first = instance;
+        if (effects->particles) {
+            const auto result = worldParticlesAddEmitter(effects->particles, instance);
+            if (result != WORLD_SERVICES_OK) return effects->result = result;
+        }
+        appendRequest(effects, instance, CHOPPER_EFFECT_START);
+    }
+    return effects->result = WORLD_SERVICES_OK;
+}
+
+static void detachParticleEmitter(ChopperMunitionEffects* effects, ChopperEffectInstance* instance)
+{
+    WorldParticleSystem* particles = effects->particles;
+    if (!particles) return;
+    if (instance->particleSystem == particles) worldParticlesRemoveEmitter(particles, instance);
+    for (WorldParticleGroup* group = particles->firstGroup; group; group = group->next)
+        if (group->emitter == instance) group->emitter = nullptr;
+    instance->particleGroup = nullptr;
+    instance->particleGroupGeneration = 0;
+}
+
+static void releaseInstance(ChopperMunitionEffects* effects, ChopperEffectInstance* instance)
+{
+    detachParticleEmitter(effects, instance);
+    appendRequest(effects, instance, CHOPPER_EFFECT_RELEASE);
+    if (instance->previous) instance->previous->next = instance->next;
+    else effects->first = instance->next;
+    if (instance->next) instance->next->previous = instance->previous;
+    else effects->last = instance->previous;
+    instance->occupied = 0;
+    instance->next = instance->previous = NULL;
+}
+
+void chopperEffectsSweep(ChopperMunitionEffects* effects)
+{
+    if (!effects) return;
+    ChopperEffectInstance* instance = effects->first;
+    while (instance) {
+        ChopperEffectInstance* next = instance->next;
+        if (instance->emissionState != 1) {
+            if (!canRecordRequests(effects, 1)) {
+                effects->result = WORLD_SERVICES_CAPACITY;
+                return;
+            }
+            releaseInstance(effects, instance);
+        }
+        instance = next;
+    }
+    effects->result = WORLD_SERVICES_OK;
+}
+
+void chopperEffectsDispose(ChopperMunitionEffects* effects)
+{
+    if (!effects) return;
+    for (ChopperEffectInstance* instance = effects->first; instance; instance = instance->next)
+        instance->emissionState = 0;
+    chopperEffectsSweep(effects);
+}
+
+// Dispose the real MunitionEffectsHandler subset in the shared native pool.
+// Other World effects retain their own instances and published particles.
+void chopperEffectsReleaseOwner(ChopperMunitionEffects* effects,const void* owner)
+{
+    if (!effects || !owner)return;
+    ChopperEffectInstance* instance=effects->first;
+    while (instance) {
+        ChopperEffectInstance* next=instance->next;
+        if (instance->lifetimeOwner==owner) {
+            if (!canRecordRequests(effects,1)) {
+                effects->result=WORLD_SERVICES_CAPACITY;
+                return;
+            }
+            releaseInstance(effects,instance);
+        }
+        instance=next;
+    }
+}
+
+int32_t chopperEffectsTake(ChopperMunitionEffects* effects, ChopperEffectRequest* request)
+{
+    if (!effects || !request || !effects->requestCount) return 0;
+    *request = effects->requests[effects->readIndex];
+    effects->readIndex = (effects->readIndex + 1) % effects->requestCapacity;
+    --effects->requestCount;
+    return 1;
+}
+
+void chopperEffectCompleted(ChopperMunitionEffects* effects,
+    ChopperEffectInstance* instance, uint64_t generation)
+{
+    if (!effects || !instance) return;
+    if (effects->particles) return;
+    for (ChopperEffectInstance* current = effects->first; current; current = current->next) {
+        if (current == instance && current->occupied && current->generation == generation) {
+            current->emissionState = 0;
+            return;
+        }
+    }
+}
+
+WorldServicesResult chopperEffectsCreatePersistentGroup(ChopperMunitionEffects* effects,
+    uint32_t groupKey, ChopperEffectInstance** first, ChopperEffectInstance** last)
+{
+    if (!effects || !first || !last || *first || *last) return WORLD_SERVICES_INVALID_BINDING;
+    const ChopperEffectGroup* group = NULL;
+    for (size_t index = 0; index < effects->groupCount; ++index)
+        if (effects->groups[index].key == groupKey) { group = &effects->groups[index]; break; }
+    if (!group || (group->count && !group->members))
+        return effects->result = WORLD_SERVICES_INVALID_BINDING;
+    size_t available = 0;
+    for (size_t index = 0; index < effects->capacity; ++index)
+        available += !effects->instances[index].occupied;
+    if (group->count > available || group->count > UINT64_MAX - effects->nextGeneration)
+        return effects->result = WORLD_SERVICES_CAPACITY;
+    for (size_t index = 0; index < group->count; ++index)
+        if (!group->members[index] || group->members[index]->groupKey != groupKey)
+            return effects->result = WORLD_SERVICES_INVALID_BINDING;
+    size_t slot = 0;
+    for (size_t index = 0; index < group->count; ++index) {
+        while (effects->instances[slot].occupied) ++slot;
+        ChopperEffectInstance* instance = &effects->instances[slot++];
+        memset(instance, 0, sizeof(*instance));
+        instance->resource = group->members[index];
+        instance->particleDefinition = instance->resource->particleDefinition;
+        memcpy(instance->frame, instance->resource->frame, sizeof(instance->frame));
+        instance->generation = effects->nextGeneration++;
+        instance->occupied = 1;
+        instance->previous = *last;
+        if (*last) (*last)->next = instance;
+        else *first = instance;
+        *last = instance;
+    }
+    return effects->result = WORLD_SERVICES_OK;
+}
+
+void chopperEffectsReleasePersistentGroup(ChopperMunitionEffects* effects,
+    ChopperEffectInstance** first, ChopperEffectInstance** last)
+{
+    if (!effects || !first || !last) return;
+    ChopperEffectInstance* instance = *first;
+    while (instance) {
+        if (!canRecordRequests(effects, 1)) {
+            effects->result = WORLD_SERVICES_CAPACITY;
+            return;
+        }
+        ChopperEffectInstance* next = instance->next;
+        detachParticleEmitter(effects, instance);
+        appendRequest(effects, instance, CHOPPER_EFFECT_RELEASE);
+        *first = next;
+        if (next) next->previous = NULL;
+        else *last = NULL;
+        instance->occupied = 0;
+        instance->next = instance->previous = NULL;
+        instance = next;
+    }
+    effects->result = WORLD_SERVICES_OK;
+}
+
+WorldServicesResult chopperEffectsEmit(ChopperMunitionEffects* effects,
+    ChopperEffectInstance* instance, const float frame[16], float elapsed)
+{
+    if (!effects || !instance || !frame) return WORLD_SERVICES_INVALID_BINDING;
+    size_t slot = 0;
+    while (slot < effects->capacity && &effects->instances[slot] != instance) ++slot;
+    if (slot == effects->capacity || !instance->occupied || !instance->resource)
+        return effects->result = WORLD_SERVICES_INVALID_BINDING;
+    if (!canRecordRequests(effects, 1))
+        return effects->result = WORLD_SERVICES_CAPACITY;
+    memcpy(instance->frame, frame, sizeof(instance->frame));
+    if (effects->particles) {
+        const auto result = worldParticlesTriggerEmitter(effects->particles, instance, elapsed, nullptr);
+        if (result != WORLD_SERVICES_OK) return effects->result = result;
+    }
+    if (ChopperEffectRequest* request = appendRequest(effects, instance, CHOPPER_EFFECT_EMIT))
+        request->elapsed = elapsed;
+    return effects->result = WORLD_SERVICES_OK;
+}
+
+#include <array>
+
+namespace hp2 {
+
+struct AcidFXRuntime::Storage {
+    std::array<WorldParticle,1000> particles{};
+    std::array<WorldParticleGroup,400> groups{};
+    std::array<ChopperEffectInstance,600> emitters{};
+    std::uint32_t randomState=0x23985727u;
+    WorldParticleSystem system{};
+    WorldParticleSystem frameSystem{};
+    ChopperMunitionEffects handler{};
+    ChopperEffectData* catalogue=nullptr;
+};
+
+AcidFXRuntime::AcidFXRuntime(const CarCinematicServices& cameras)
+    :storage_(std::make_unique<Storage>())
+{
+    auto& state=*storage_;
+    worldParticlesInitialize(&state.system,state.particles.data(),state.particles.size(),
+        state.groups.data(),state.groups.size(),&state.randomState,&cameras);
+    // Both original AcidEffectSystem instances share the global afxInit
+    // pools (PAL126D70); only their emitter/group lists and interest points
+    // are separate. No effect has been published during either initializer.
+    worldParticlesInitialize(&state.frameSystem,state.particles.data(),state.particles.size(),
+        state.groups.data(),state.groups.size(),&state.randomState,&cameras);
+    chopperEffectsInitialize(&state.handler,state.emitters.data(),state.emitters.size(),
+        nullptr,0,nullptr,0);
+    Require(chopperEffectsBindParticles(&state.handler,&state.system)==WORLD_SERVICES_OK,
+        "FX pools must borrow their one initialized particle owner");
+}
+
+AcidFXRuntime::~AcidFXRuntime()
+{
+    auto& state=*storage_;
+    chopperEffectsDispose(&state.handler);
+    worldParticlesKillAllActiveEffects(&state.frameSystem);
+    worldParticlesKillAllActiveEffects(&state.system);
+    // ResourceRegistry and actors must release their borrowed emitters first.
+    if (state.catalogue || state.system.firstEmitter || state.frameSystem.firstEmitter)std::terminate();
+}
+
+WorldParticleSystem& AcidFXRuntime::Particles() noexcept
+{
+    return storage_->system;
+}
+
+WorldParticleSystem& AcidFXRuntime::FrameParticles() noexcept
+{
+    return storage_->frameSystem;
+}
+
+void AcidFXRuntime::BindGameFlow(const std::int32_t& state) noexcept
+{
+    storage_->system.gameFlowState=&state;
+    storage_->frameSystem.gameFlowState=&state;
+}
+
+ChopperEffectInstance* AcidFXRuntime::CreateFrameEmitter(std::uint32_t key,const void* owner)
+{
+    auto& state=*storage_;
+    Require(state.catalogue && owner,"Frame emitter has no actual catalogue/lifetime owner");
+    const auto* definition=state.catalogue->Definition(key);
+    Require(definition,"Frame emitter definition is missing from the loaded catalogue");
+    for(auto& emitter:state.emitters)if(!emitter.occupied) {
+        Require(state.handler.nextGeneration!=UINT64_MAX,"FX emitter generation exhausted");
+        emitter={};emitter.occupied=1;emitter.lifetimeOwner=owner;
+        emitter.generation=state.handler.nextGeneration++;
+        emitter.particleDefinition=definition;emitter.emissionState=1;
+        if(worldParticlesAddEmitter(&state.frameSystem,&emitter)!=WORLD_SERVICES_OK) {
+            emitter={};throw std::runtime_error("Frame emitter could not enter its actual effect system");
+        }
+        return &emitter;
+    }
+    return nullptr; // Original fixed afx emitter pool may be exhausted.
+}
+
+void AcidFXRuntime::ReleaseFrameEmitter(ChopperEffectInstance& emitter,const void* owner)
+{
+    auto& state=*storage_;
+    Require(emitter.occupied && emitter.lifetimeOwner==owner && emitter.particleSystem==&state.frameSystem,
+        "Frame emitter release has a mismatched lifetime owner");
+    worldParticlesRemoveEmitter(&state.frameSystem,&emitter);
+    if(emitter.particleGroup && emitter.particleGroup->generation==emitter.particleGroupGeneration &&
+            emitter.particleGroup->emitter==&emitter)emitter.particleGroup->emitter=nullptr;
+    emitter={};
+}
+
+void AcidFXRuntime::BindCatalogue(ChopperEffectData& catalogue)
+{
+    auto& state=*storage_;
+    Require(!state.catalogue,"The FX pool already has a global catalog");
+    Require(catalogue.Particles()==&state.system,
+        "The global catalog must publish its authored emitters to the same FX owner");
+    state.handler.groups=catalogue.Groups();
+    state.handler.groupCount=catalogue.GroupCount();
+    state.catalogue=&catalogue;
+    state.system.definitions=state.frameSystem.definitions=catalogue.DefinitionList();
+}
+
+void AcidFXRuntime::ReleaseCatalogue(ChopperEffectData& catalogue)
+{
+    auto& state=*storage_;
+    Require(state.catalogue==&catalogue,"The global FX catalog is not bound here");
+    for (const auto& emitter:state.emitters)
+        Require(!emitter.occupied,"An actor still owns a dynamic FX emitter");
+    Require(!state.frameSystem.firstEmitter,
+        "A camera still owns an emitter from the retiring global FX catalog");
+    // PAL afxClose126E08 retires FrameEffects before the shared pools and
+    // their authored definitions. Camera destruction removes auto emitters;
+    // their already emitted particles retain definitions until this close.
+    worldParticlesKillAllActiveEffects(&state.frameSystem);
+    Require(catalogue.UnbindParticles()==WORLD_SERVICES_OK,
+        "Live FX groups still reference the global catalog");
+    state.handler.groups=nullptr;
+    state.handler.groupCount=0;
+    state.catalogue=nullptr;
+    state.system.definitions=state.frameSystem.definitions=nullptr;
+}
+
+ChopperMunitionEffects& AcidFXRuntime::Emitters()
+{
+    Require(storage_->catalogue!=nullptr,"Dynamic FX needs the loaded global catalog");
+    return storage_->handler;
+}
+
+} // namespace hp2
+
+
+// Complete original matrix primitives. Matrix lane names are row/column;
+// reload suffixes preserve the original overlapping-input store order.
+float afxMatrixDeterminant(const float input[16])
+{
+    const float m00_0=input[0];
+    const float m33_0=input[15];
+    const float m30_0=input[3];
+    const float m03_0=input[12];
+    const float m12_0=input[9];
+    const float m21_0=input[6];
+    const float m20_0=input[2];
+    const float m31_0=input[7];
+    const float m22_0=input[10];
+    const float m11_0=input[5];
+    const float m10_0=input[1];
+    const float m32_0=input[11];
+    const float m13_0=input[13];
+    const float m02_0=input[8];
+    const float m01_0=input[4];
+    const float m23_0=input[14];
+    return (((((((((((((((((((((((((m30_0 * m03_0) * (m12_0 * m21_0)) - ((m20_0 * m03_0) * (m12_0 * m31_0))) - ((m30_0 * m03_0) * (m22_0 * m11_0))) + ((m10_0 * m03_0) * (m22_0 * m31_0))) + ((m20_0 * m03_0) * (m32_0 * m11_0))) - ((m10_0 * m03_0) * (m32_0 * m21_0))) - ((m30_0 * m13_0) * (m02_0 * m21_0))) + ((m20_0 * m13_0) * (m02_0 * m31_0))) + ((m30_0 * m13_0) * (m22_0 * m01_0))) - ((m00_0 * m13_0) * (m22_0 * m31_0))) - ((m20_0 * m13_0) * (m32_0 * m01_0))) + ((m00_0 * m13_0) * (m32_0 * m21_0))) + ((m30_0 * m23_0) * (m02_0 * m11_0))) - ((m10_0 * m23_0) * (m02_0 * m31_0))) - ((m30_0 * m23_0) * (m12_0 * m01_0))) + ((m00_0 * m23_0) * (m12_0 * m31_0))) + ((m10_0 * m23_0) * (m32_0 * m01_0))) - ((m00_0 * m23_0) * (m32_0 * m11_0))) - ((m20_0 * m33_0) * (m02_0 * m11_0))) + ((m10_0 * m33_0) * (m02_0 * m21_0))) + ((m20_0 * m33_0) * (m12_0 * m01_0))) - ((m00_0 * m33_0) * (m12_0 * m21_0))) - ((m10_0 * m33_0) * (m22_0 * m01_0))) + ((m00_0 * m33_0) * (m22_0 * m11_0)));
+}
+
+void afxMatrixInverse(float output[16],const float input[16])
+{
+    const float determinant=afxMatrixDeterminant(input);
+    const float m22_0=input[10];
+    const float m21_0=input[6];
+    const float m32_0=input[11];
+    const float m31_0=input[7];
+    const float m13_0=input[13];
+    const float m12_0=input[9];
+    const float m23_0=input[14];
+    const float m11_0=input[5];
+    const float m33_0=input[15];
+    const float reciprocal=finiteRatio(1.0f,determinant);
+    output[0]=(reciprocal * (((((((m21_0 * m32_0) * m13_0) - ((m31_0 * m22_0) * m13_0)) + ((m31_0 * m12_0) * m23_0)) - ((m11_0 * m32_0) * m23_0)) - ((m21_0 * m12_0) * m33_0)) + ((m11_0 * m22_0) * m33_0)));
+    const float m22_1=input[10];
+    const float m30_0=input[3];
+    const float m20_0=input[2];
+    const float m32_1=input[11];
+    const float m13_1=input[13];
+    const float m12_1=input[9];
+    const float m23_1=input[14];
+    const float m10_0=input[1];
+    const float m33_1=input[15];
+    output[1]=(reciprocal * (((((((m30_0 * m22_1) * m13_1) - ((m20_0 * m32_1) * m13_1)) - ((m30_0 * m12_1) * m23_1)) + ((m10_0 * m32_1) * m23_1)) + ((m20_0 * m12_1) * m33_1)) - ((m10_0 * m22_1) * m33_1)));
+    const float m21_1=input[6];
+    const float m20_1=input[2];
+    const float m31_1=input[7];
+    const float m30_1=input[3];
+    const float m13_2=input[13];
+    const float m11_1=input[5];
+    const float m23_2=input[14];
+    const float m10_1=input[1];
+    const float m33_2=input[15];
+    output[2]=(reciprocal * (((((((m20_1 * m31_1) * m13_2) - ((m30_1 * m21_1) * m13_2)) + ((m30_1 * m11_1) * m23_2)) - ((m10_1 * m31_1) * m23_2)) - ((m20_1 * m11_1) * m33_2)) + ((m10_1 * m21_1) * m33_2)));
+    const float m21_2=input[6];
+    const float m30_2=input[3];
+    const float m20_2=input[2];
+    const float m31_2=input[7];
+    const float m12_2=input[9];
+    const float m11_2=input[5];
+    const float m22_2=input[10];
+    const float m10_2=input[1];
+    const float m32_2=input[11];
+    output[3]=(reciprocal * (((((((m30_2 * m21_2) * m12_2) - ((m20_2 * m31_2) * m12_2)) - ((m30_2 * m11_2) * m22_2)) + ((m10_2 * m31_2) * m22_2)) + ((m20_2 * m11_2) * m32_2)) - ((m10_2 * m21_2) * m32_2)));
+    const float m22_3=input[10];
+    const float m31_3=input[7];
+    const float m21_3=input[6];
+    const float m32_3=input[11];
+    const float m03_0=input[12];
+    const float m02_0=input[8];
+    const float m23_3=input[14];
+    const float m01_0=input[4];
+    const float m33_3=input[15];
+    output[4]=(reciprocal * (((((((m31_3 * m22_3) * m03_0) - ((m21_3 * m32_3) * m03_0)) - ((m31_3 * m02_0) * m23_3)) + ((m01_0 * m32_3) * m23_3)) + ((m21_3 * m02_0) * m33_3)) - ((m01_0 * m22_3) * m33_3)));
+    const float m22_4=input[10];
+    const float m20_3=input[2];
+    const float m32_4=input[11];
+    const float m30_3=input[3];
+    const float m03_1=input[12];
+    const float m02_1=input[8];
+    const float m23_4=input[14];
+    const float m00_0=input[0];
+    const float m33_4=input[15];
+    output[5]=(reciprocal * (((((((m20_3 * m32_4) * m03_1) - ((m30_3 * m22_4) * m03_1)) + ((m30_3 * m02_1) * m23_4)) - ((m00_0 * m32_4) * m23_4)) - ((m20_3 * m02_1) * m33_4)) + ((m00_0 * m22_4) * m33_4)));
+    const float m21_4=input[6];
+    const float m30_4=input[3];
+    const float m20_4=input[2];
+    const float m31_4=input[7];
+    const float m03_2=input[12];
+    const float m01_1=input[4];
+    const float m23_5=input[14];
+    const float m00_1=input[0];
+    const float m33_5=input[15];
+    output[6]=(reciprocal * (((((((m30_4 * m21_4) * m03_2) - ((m20_4 * m31_4) * m03_2)) - ((m30_4 * m01_1) * m23_5)) + ((m00_1 * m31_4) * m23_5)) + ((m20_4 * m01_1) * m33_5)) - ((m00_1 * m21_4) * m33_5)));
+    const float m21_5=input[6];
+    const float m20_5=input[2];
+    const float m31_5=input[7];
+    const float m30_5=input[3];
+    const float m02_2=input[8];
+    const float m01_2=input[4];
+    const float m22_5=input[10];
+    const float m00_2=input[0];
+    const float m32_5=input[11];
+    output[7]=(reciprocal * (((((((m20_5 * m31_5) * m02_2) - ((m30_5 * m21_5) * m02_2)) + ((m30_5 * m01_2) * m22_5)) - ((m00_2 * m31_5) * m22_5)) - ((m20_5 * m01_2) * m32_5)) + ((m00_2 * m21_5) * m32_5)));
+    const float m12_3=input[9];
+    const float m11_3=input[5];
+    const float m32_6=input[11];
+    const float m31_6=input[7];
+    const float m03_3=input[12];
+    const float m02_3=input[8];
+    const float m13_3=input[13];
+    const float m01_3=input[4];
+    const float m33_6=input[15];
+    output[8]=(reciprocal * (((((((m11_3 * m32_6) * m03_3) - ((m31_6 * m12_3) * m03_3)) + ((m31_6 * m02_3) * m13_3)) - ((m01_3 * m32_6) * m13_3)) - ((m11_3 * m02_3) * m33_6)) + ((m01_3 * m12_3) * m33_6)));
+    const float m12_4=input[9];
+    const float m30_6=input[3];
+    const float m10_3=input[1];
+    const float m32_7=input[11];
+    const float m03_4=input[12];
+    const float m02_4=input[8];
+    const float m13_4=input[13];
+    const float m00_3=input[0];
+    const float m33_7=input[15];
+    output[9]=(reciprocal * (((((((m30_6 * m12_4) * m03_4) - ((m10_3 * m32_7) * m03_4)) - ((m30_6 * m02_4) * m13_4)) + ((m00_3 * m32_7) * m13_4)) + ((m10_3 * m02_4) * m33_7)) - ((m00_3 * m12_4) * m33_7)));
+    const float m11_4=input[5];
+    const float m10_4=input[1];
+    const float m31_7=input[7];
+    const float m30_7=input[3];
+    const float m03_5=input[12];
+    const float m01_4=input[4];
+    const float m13_5=input[13];
+    const float m00_4=input[0];
+    const float m33_8=input[15];
+    output[10]=(reciprocal * (((((((m10_4 * m31_7) * m03_5) - ((m30_7 * m11_4) * m03_5)) + ((m30_7 * m01_4) * m13_5)) - ((m00_4 * m31_7) * m13_5)) - ((m10_4 * m01_4) * m33_8)) + ((m00_4 * m11_4) * m33_8)));
+    const float m11_5=input[5];
+    const float m30_8=input[3];
+    const float m10_5=input[1];
+    const float m31_8=input[7];
+    const float m02_5=input[8];
+    const float m01_5=input[4];
+    const float m12_5=input[9];
+    const float m00_5=input[0];
+    const float m32_8=input[11];
+    output[11]=(reciprocal * (((((((m30_8 * m11_5) * m02_5) - ((m10_5 * m31_8) * m02_5)) - ((m30_8 * m01_5) * m12_5)) + ((m00_5 * m31_8) * m12_5)) + ((m10_5 * m01_5) * m32_8)) - ((m00_5 * m11_5) * m32_8)));
+    const float m12_6=input[9];
+    const float m21_6=input[6];
+    const float m11_6=input[5];
+    const float m22_6=input[10];
+    const float m03_6=input[12];
+    const float m02_6=input[8];
+    const float m13_6=input[13];
+    const float m01_6=input[4];
+    const float m23_6=input[14];
+    output[12]=(reciprocal * (((((((m21_6 * m12_6) * m03_6) - ((m11_6 * m22_6) * m03_6)) - ((m21_6 * m02_6) * m13_6)) + ((m01_6 * m22_6) * m13_6)) + ((m11_6 * m02_6) * m23_6)) - ((m01_6 * m12_6) * m23_6)));
+    const float m12_7=input[9];
+    const float m10_6=input[1];
+    const float m22_7=input[10];
+    const float m20_6=input[2];
+    const float m03_7=input[12];
+    const float m02_7=input[8];
+    const float m13_7=input[13];
+    const float m00_6=input[0];
+    const float m23_7=input[14];
+    output[13]=(reciprocal * (((((((m10_6 * m22_7) * m03_7) - ((m20_6 * m12_7) * m03_7)) + ((m20_6 * m02_7) * m13_7)) - ((m00_6 * m22_7) * m13_7)) - ((m10_6 * m02_7) * m23_7)) + ((m00_6 * m12_7) * m23_7)));
+    const float m11_7=input[5];
+    const float m20_7=input[2];
+    const float m10_7=input[1];
+    const float m21_7=input[6];
+    const float m03_8=input[12];
+    const float m01_7=input[4];
+    const float m13_8=input[13];
+    const float m00_7=input[0];
+    const float m23_8=input[14];
+    output[14]=(reciprocal * (((((((m20_7 * m11_7) * m03_8) - ((m10_7 * m21_7) * m03_8)) - ((m20_7 * m01_7) * m13_8)) + ((m00_7 * m21_7) * m13_8)) + ((m10_7 * m01_7) * m23_8)) - ((m00_7 * m11_7) * m23_8)));
+    const float m11_8=input[5];
+    const float m10_8=input[1];
+    const float m21_8=input[6];
+    const float m20_8=input[2];
+    const float m02_8=input[8];
+    const float m01_8=input[4];
+    const float m12_8=input[9];
+    const float m00_8=input[0];
+    const float m22_8=input[10];
+    output[15]=(reciprocal * (((((((m10_8 * m21_8) * m02_8) - ((m20_8 * m11_8) * m02_8)) + ((m20_8 * m01_8) * m12_8)) - ((m00_8 * m21_8) * m12_8)) - ((m10_8 * m01_8) * m22_8)) + ((m00_8 * m11_8) * m22_8)));
+}
+
+// Final AcidEffectSystem::RenderEffects128DA0..12982C, original AcidFXE.cpp.
+// The original live lists, curves, atlas, size and source group order remain
+// canonical. The PC renderer receives projected floating-point vertices;
+// no console screen-address or float-as-depth-word transport remains.
+#include "indep/inc/Texture.hpp"
+
+namespace hp2 {
+namespace {
+bool particleCarVisible(const WorldParticleGroup& group,const CarCinematicScreen& view)
+{
+    if(!group.car)return true;
+    const auto& bindings=group.car->bindings;
+    Require(bindings.owner && bindings.ownerMotion,"Particle group lost its live Car/motion owner");
+    if(!((bindings.ownerMotion->wheelEffectsFlags>>view.id)&1u))return false;
+    // Exact final26-entry switch2AD3B0. The hidden-car and rear-view
+    // exceptions are source car-effect positions, not texture heuristics.
+    switch(group.definition->carEffectPosition) {
+    case 10:return view.id!=3 && view.view->hiddenCar!=bindings.owner;
+    case 9:case 11:case 26:return view.id==3 || view.view->hiddenCar!=bindings.owner;
+    case 1:case 5:case 6:return view.view->hiddenCar!=bindings.owner || !view.view->visibilityFlags;
+    default:return true;
+    }
 }
 }
 
-namespace hp2::debug {
-// Debug0012A4A0/0012A728, E-0099-W53. bTNode destructor is empty; only
-// original deletion flag frees the actual shared particle slot, no field reset.
-void AcidParticle::Sub_0012A4A0(int flags){if(flags&1)SlotPool(m_,m_.word(0x326d60)).Free(address_);}
-// Debug0012A3B0/0012A418/0012A490, E-0099-W53. Caller unlinks the group;
-// source deliberately retains emitter.LastActiveGroup's stale cache pointer.
-void AcidActiveGroup::Sub_0012A3B0(int flags){m_.word(address_+12,0);m_.word(address_+8,0);const auto head=address_+20;while(m_.word(head)!=head){const auto p=m_.word(head);::port::track::emitter_detach(m_,p);AcidParticle(m_,p).Sub_0012A4A0(3);}if(flags&1)SlotPool(m_,m_.word(0x326d64)).Free(address_);}
+WorldParticleRenderSummary RenderWorldParticles(const WorldParticleSystem& system,
+    const ChopperEffectData& catalogue,const CarCinematicScreen& view,EcstasyFrame& frame)
+{
+    WorldParticleRenderSummary result;
+    if(!system.firstGroup)return result;
+    Require(view.id>=0 && view.id<32 && view.view && view.target && view.matricesCalculated,
+        "Particle rendering lacks the current calculated source view");
+    // RenderEffects128EB8 obtains its focal input from CalculateH104448;
+    // the released display is512 wide. Main PC views scale that focal input
+    // to their actual height. The authored pixel cap must use the same scale,
+    // otherwise a growing nebula becomes a fixed512-pixel patch at4K.
+    const bool nativeRaster=system.cameras && system.cameras->projection.nativeAspectCorrection &&
+        (view.id==1 || view.id==2);
+    float particlePixelScale=1.0f;
+    if(nativeRaster) {
+        Require(std::isfinite(view.pixelScale) && view.pixelScale>0.0f &&
+            std::isfinite(view.sourcePixelScale) && view.sourcePixelScale>0.0f,
+            "Particle view has no calculated source/native focal scales");
+        particlePixelScale=view.pixelScale/view.sourcePixelScale;
+    }
+    const auto depthRange=ecstasyNativeDepthRange(view.matrices.clipToScreen,view.target->format);
+    const auto* projection=view.matrices.clipToScreen;
+    Require(projection[0]!=0.0f && projection[5]!=0.0f,
+        "Particle projection has no native pixel scale");
+    // Reuse one producer buffer across groups. AttachParticleGroup copies
+    // directly into the frame's contiguous native storage before it clears.
+    std::vector<EcstasyParticleQuad> quads;
+    for(const auto* group=system.firstGroup;group;group=group->next) {
+        ++result.groups;
+        Require(group->occupied && group->definition,"Particle list contains a retired definition/group");
+        if(!particleCarVisible(*group,view)) {++result.hiddenCarGroups;continue;}
+        const auto& definition=*group->definition;
+        const auto* descriptor=catalogue.Texture(definition);
+        if(!descriptor) {++result.missingTextures;continue;}
+        if(system.renderSelectedOnly && system.selectedEmitter && group->emitter!=system.selectedEmitter)continue;
+        const auto* texture=textureInfoForDescriptor(descriptor);
+        Require(texture && texture->pixels.Data(),"Particle definition points to an unretained texture");
+        const auto widthPower=static_cast<std::uint8_t>(definition.atlasWidthPower);
+        const auto heightPower=static_cast<std::uint8_t>(definition.atlasHeightPower);
+        Require(definition.atlasWidthPower>=0 && definition.atlasHeightPower>=0 &&
+            widthPower<=30 && heightPower<=30,"Particle atlas dimensions exceed their authored domain");
+        const auto width=std::uint32_t(1)<<widthPower,height=std::uint32_t(1)<<heightPower;
+        const float du=1.0f/static_cast<float>(width),dv=1.0f/static_cast<float>(height);
+        const float inverseLifetime=1.0f/definition.lifetime;
+        const float sourceMaximum=definition.maximumPixelSize==0.0f ? 512.0f:definition.maximumPixelSize;
+        const float maximum=sourceMaximum*particlePixelScale;
+        quads.clear();
+        float depthSum=0.0f;
+        for(const auto* particle=group->first;particle;particle=particle->next) {
+            ++result.particles;
+            if(!particle->occupied)throw std::runtime_error("Particle list contains a retired particle");
+            const float age=1.0f-(static_cast<float>(particle->remainingTicks)*0.0009765625f)*inverseLifetime;
+            const float point[4]={particle->position[0],particle->position[1],particle->position[2],1.0f};
+            if(eGetClipFlags(point,view.matrices.worldToClip)) {++result.centerClipped;continue;}
+            float camera[4],clip[4],size[4];
+            eMulVector4(camera,view.matrices.worldToView,point);
+            eMulVector4(clip,view.matrices.worldToClip,point);
+            worldParticleHermiteEvaluate(size,definition.sizeRotationCurve,age);
+            float pixels=size[0]>0.0f ? (size[0]*view.pixelScale)/camera[2]:0.0f;
+            if(maximum<pixels)pixels=maximum;
+            if(!(pixels>1.0f)) {++result.sizeClipped;continue;}
+            if(!(camera[2]<definition.interestDistance)) {++result.distanceClipped;continue;}
+            const auto delta=static_cast<std::uint16_t>(convertFloatToInt32(size[1]));
+            const auto rotation=static_cast<std::uint16_t>((particle->rotation&1u) ?
+                particle->rotation-delta:particle->rotation+delta);
+            EcstasyParticleQuad quad;
+            Require(std::isfinite(clip[3]) && clip[3]>0.0f,"Particle clip divisor is invalid");
+            const float z=clip[2]/clip[3];
+            const float divisor=projection[11]*z+projection[15];
+            Require(std::isfinite(divisor) && divisor!=0.0f,"Particle screen divisor is invalid");
+            const float scaleX=projection[0]/divisor,scaleY=projection[5]/divisor;
+            // Pixel-centre snapping is an authored visual convention. Work
+            // around the native viewport centre, without the GS2048 bias,
+            // unsigned12.4 wrapping, or integer bits carried in float Z.
+            const float centerX=std::floor((clip[0]/clip[3])*scaleX);
+            const float centerY=std::floor((clip[1]/clip[3])*scaleY);
+            quad.depth=depthRange[0]+(depthRange[1]-depthRange[0])*(z+1.0f)*0.5f;
+            if(rotation==0) {
+                const float halfX=std::trunc(pixels*8.0f)*(1.0f/16.0f);
+                const float halfY=std::trunc(pixels*7.0f)*(1.0f/16.0f);
+                for(std::size_t i=0;i<4;++i) {
+                    quad.clipXY[i][0]=(centerX+((i&1u) ? halfX:-halfX))/scaleX;
+                    quad.clipXY[i][1]=(centerY+((i&2u) ? halfY:-halfY))/scaleY;
+                }
+            } else {
+                float sine,cosine;motionAngleComponents(rotation,&sine,&cosine);
+                for(std::size_t i=0;i<4;++i) {
+                    const float px=(i&1u) ? pixels:-pixels,py=(i&2u) ? pixels:-pixels;
+                    // PAL1293DC..12946C: rotate, apply the authored X8/Y7
+                    // proportions, then retain its sixteenth-pixel grid.
+                    const float rotatedX=(cosine*px)+((-sine)*py);
+                    const float rotatedY=(sine*px)+(cosine*py);
+                    quad.clipXY[i][0]=(std::floor(rotatedX*8.0f+centerX*16.0f)*(1.0f/16.0f))/scaleX;
+                    quad.clipXY[i][1]=(std::floor(rotatedY*7.0f+centerY*16.0f)*(1.0f/16.0f))/scaleY;
+                }
+            }
+            float color[4];worldParticleHermiteEvaluate(color,definition.colorCurve,age);
+            for(std::size_t lane=0;lane<4;++lane) {
+                if(!std::isfinite(color[lane]))throw std::runtime_error("Particle curve produced a nonfinite color");
+                const auto component=static_cast<std::uint32_t>(convertFloatToInt32(std::clamp(color[lane],0.0f,255.0f)));
+                quad.color|=component<<(lane*8);
+            }
+            const float u=static_cast<float>(particle->atlasFrame&(width-1u))*du;
+            const float v=static_cast<float>((particle->atlasFrame>>widthPower)&(height-1u))*dv;
+            quad.uv={{{u,v},{u+du,v},{u,v+dv},{u+du,v+dv}}};
+            depthSum=depthSum+static_cast<float>(convertFloatToInt32(camera[2]));
+            quads.push_back(quad);++result.drawnParticles;
+        }
+        if(!quads.empty()) {
+            frame.AttachParticleGroup(quads,*descriptor,view,depthSum/static_cast<float>(quads.size()));
+            ++result.drawnGroups;
+        }
+    }
+    // eAttachDirectData submits each group in source list order. Its single
+    // average-depth alpha key is sorted with scenery and cars by the later
+    // AttachAlphaPolys flush, without reordering this packet's own quads.
+    return result;
 }
-
-#include "game_core/port/track/acidfx_services.hpp"
-#include "game_core/port/race/car_render_resources.hpp"
-namespace hp2::debug {
-// Debug001287F8, E-0099-W53. Exact1/2/0 view order, full16-byte camera
-// CurrentKey.Position copies. Null camera preserves prior interest point.
-void AcidEffectSystem::UpdateInterestPoints(){constexpr int views[3]{1,2,0};for(unsigned i=0;i<3;++i){const auto view=::port::race::eGetView(m_,views[i]),camera=m_.word(view+0x38);if(camera)m_.copy(address_+0x10+i*16,camera+0x40,16);}}
-// Debug00128870, E-0099-W53. Actual shared auto-emitter/group/particle lists;
-// no host ParticleSimulation ledger or synthetic pool-availability parameter.
-void AcidEffectSystem::DoTimeStep(float dt,const ::port::track::AcidEffectServices& services){
- if(!services.ticker)hp2::not_implemented("0x0024A340","AcidFX update requires an explicit original Count-unit ticker");const auto start=services.ticker();const auto ticks=::port::driving::cvt_w_s(dt*1024.f);UpdateInterestPoints();
- const auto auto_head=address_+8;for(auto emitter=m_.word(auto_head);emitter!=auto_head;){const auto next=m_.word(emitter),state=m_.word(emitter+0x10);if(state==1)TriggerEmitter(emitter,dt,0,services.port_stack_vector_lane);const bool stop=state>1;float remaining=m_.scalar(emitter+0x14);
-  if(remaining!=0&&state<2){remaining-=dt;if(remaining<=0){const auto data=m_.word(emitter+0x1c);if(!data)hp2::not_implemented("0x0012892C","Original cycling emitter requires loaded data");const auto off=state?0x28u:0x20u;float duration=m_.scalar(data+off);const float variance=m_.scalar(data+off+4);if(duration!=0){auto seed=m_.word(emitter+0x24);seed^=seed<<17;seed^=seed>>13;seed^=seed<<5;m_.word(emitter+0x24,seed);duration=(duration-variance*duration)+((static_cast<float>(seed&0x7fffffff)*4.656612873077392578125e-10f)*variance)*duration+remaining;}m_.word(emitter+0x10,state==0);m_.scalar(emitter+0x14,duration);m_.word(emitter+0x18,0);}else m_.scalar(emitter+0x14,remaining);}
-  if(stop)break;emitter=next;
- }
- if(m_.word(0x3275ac)==3){for(auto data=m_.word(0x326d70);data!=0x326d70;data=m_.word(data)){
-   std::array<float,4> keys;::port::driving::SolverMatrix extra,colour,basis;for(unsigned row=0;row<4;++row){keys[row]=m_.scalar(data+0x90+row*4)*m_.scalar(0x324c84);extra[row*4]=m_.scalar(data+0xe0+row*4);extra[row*4+1]=m_.scalar(data+0xf0+row*4)*m_.scalar(0x324c88);}
-   hermite_basis(colour,m_.matrix(data+0xa0),keys[0],keys[1],keys[2],keys[3]);m_.matrix(data+0x100,colour);if(!services.port_extra_control_lanes)hp2::not_implemented("0x00128B0C","Original frontend extra-control Z/W stack lanes require explicit port policy");for(unsigned row=0;row<4;++row)for(unsigned lane=0;lane<2;++lane){const auto bits=(*services.port_extra_control_lanes)[row*2+lane];std::memcpy(&extra[row*4+2+lane],&bits,4);}hermite_basis(basis,extra,keys[0],keys[1],keys[2],keys[3]);m_.matrix(data+0x140,basis);
-  }}
- for(auto group=m_.word(address_);group!=address_;){const auto next_group=m_.word(group),data=m_.word(group+8),head=group+20;const int fps=m_.signed_byte(data+0x1b);const int interval=fps?::port::driving::cvt_w_s((1.f/static_cast<float>(fps))*1024.f):0;const bool live=m_.byte(data+0x1e)!=0;std::array<float,3> inherited{{0,0,0}};const auto car=m_.word(group+16);if(live&&car&&0<m_.scalar(data+0x50))for(unsigned axis=0;axis<3;++axis)inherited[axis]=dt*m_.scalar(car+0x70+axis*4);
-  for(auto particle=m_.word(head);particle!=head;){const auto next=m_.word(particle);const int old_life=m_.signed_half(particle+8),life=static_cast<std::int32_t>(static_cast<std::uint32_t>(old_life)-static_cast<std::uint32_t>(ticks));if(life<1){::port::track::emitter_detach(m_,particle);AcidParticle(m_,particle).Sub_0012A4A0(3);}else{
-    auto frame=m_.byte(particle+31);if(interval){const auto mask=((1u<<(static_cast<unsigned>(m_.signed_byte(data+0x19))&31))<<(static_cast<unsigned>(m_.signed_byte(data+0x1a))&31))-1;frame=static_cast<std::uint8_t>((frame+old_life/interval-life/interval)&mask);}
-    const float scale=(static_cast<float>(m_.half(particle+12))*0.0078125f)*m_.scalar(0x324c8c),drag=m_.scalar(data+0x88),inherit=static_cast<float>(m_.byte(particle+14))*m_.scalar(0x324c90);std::array<float,3> velocity,position;float squares[3];for(unsigned axis=0;axis<3;++axis){const float v=static_cast<float>(m_.signed_byte(particle+28+axis))*scale,sign=v<0?1.f:-1.f;if(axis==2){const float v_drag=v*drag;const float drag_force=(sign*v)*v_drag;velocity[axis]=v+(-m_.scalar(data+0x84)+drag_force)*dt;}else{const float square=v*v;const float drag_force=(sign*drag)*square;velocity[axis]=v+drag_force*dt;}position[axis]=m_.scalar(particle+16+axis*4)+velocity[axis]*dt;if(live)position[axis]+=inherited[axis]*inherit;squares[axis]=velocity[axis]*velocity[axis];}
-    const float magnitude=std::sqrt((squares[0]+squares[1])+squares[2]);const float inverse=magnitude==0?::port::driving::ee_div_s_zero(1.f,magnitude,"0x00128DBC"):1.f/magnitude;m_.byte(particle+31,frame);m_.half(particle+8,static_cast<std::uint16_t>(life));for(unsigned axis=0;axis<3;++axis)m_.scalar(particle+16+axis*4,position[axis]);m_.half(particle+12,static_cast<std::uint16_t>(::port::driving::cvt_w_s(magnitude*128.f)));for(unsigned axis=0;axis<3;++axis)m_.byte(particle+28+axis,static_cast<std::uint8_t>(::port::driving::cvt_w_s((velocity[axis]*inverse)*127.f)));
-   }particle=next;
-  }
-  if(m_.word(head)==head){::port::track::emitter_detach(m_,group);AcidActiveGroup(m_,group).Sub_0012A3B0(3);}group=next_group;
- }
- const auto end=services.ticker();const float rate=m_.scalar(0x326254);if(rate==0||!std::isfinite(rate))hp2::not_implemented("0x0024A350","Original ticker rate must be initialized for AcidFX update profile");m_.scalar(address_+0x5c,(static_cast<float>(end-start)/rate)*1000.f);
-}
-}
-
-namespace hp2::debug {
-// Debug001277E0, E-0099-W57. Original unlink and NumAutoEmitters decrement;
-// no detached-state repair or implicit ownership transfer.
-void AcidEffectSystem::RemoveAutoEmitter(std::uint32_t emitter){const auto prev=m_.word(emitter+4),next=m_.word(emitter);const auto count=m_.word(address_+0x50);m_.word(prev,next);m_.word(next+4,prev);m_.word(address_+0x50,count-1);}
-}
-
-namespace hp2::debug {
-// Debug001275F8, E-0099-W57. Exact raw registration, cycle/RNG initialization,
-// active-at-head and inactive-at-tail ordering; caller supplies a detached emitter.
-void AcidEffectSystem::AddAutoEmitter(std::uint32_t emitter){
- if(!m_.word(emitter+0x24)){auto seed=m_.word(0x326d78);seed^=seed<<17;seed^=seed>>13;seed^=seed<<5;m_.word(0x326d78,seed);m_.word(emitter+0x24,static_cast<std::uint32_t>(::port::driving::cvt_w_s((static_cast<float>(seed&0x7fffffff)*4.656612873077392578125e-10f)*2147483648.f)));}
- const auto data=m_.word(emitter+0x1c),state=m_.word(emitter+0x10),head=address_+8;
- if(data&&state<2){const auto field=state?0x20u:0x28u;float duration=m_.scalar(data+field);const float variance=m_.scalar(data+field+4);if(duration!=0){auto seed=m_.word(emitter+0x24);seed^=seed<<17;seed^=seed>>13;seed^=seed<<5;m_.word(emitter+0x24,seed);duration=(duration-variance*duration)+((static_cast<float>(seed&0x7fffffff)*4.656612873077392578125e-10f)*variance)*duration;}
-  const auto first=m_.word(head);m_.word(head,emitter);m_.word(first+4,emitter);m_.word(emitter,first);m_.scalar(emitter+0x14,duration);m_.word(emitter+4,head);m_.word(emitter+0x18,0);
- }else{if(!data||state!=3)m_.word(emitter+0x10,2);const auto tail=m_.word(head+4);m_.word(tail,emitter);m_.word(head+4,emitter);m_.word(emitter,head);m_.word(emitter+4,tail);}
- m_.word(address_+0x50,m_.word(address_+0x50)+1);
-}
-}
-
-namespace hp2::debug {
-// Debug001275E8/0012A2B0, E-0099-W67. Both bodies are original JR RA/NOP.
-void AcidEffectSystem::TweakerCheck(){}
-void rain_TimeStep(float){}
-}
+} // namespace hp2

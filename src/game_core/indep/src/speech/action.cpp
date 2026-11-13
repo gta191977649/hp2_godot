@@ -1,15 +1,34 @@
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
-// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/indep/src/speech/action.hpp"
+#include "indep/src/speech/fsm.hpp"
+#include "indep/inc/SpeechNoise.hpp"
 
-#include "game_core/port/not_implemented.hpp"
-
-namespace hp2::recovered {
-// ELF 0x0020BE48; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0020be48.md.
-void actionHelicopter_t::execute() {
-    hp2::not_implemented("0x0020BE48", "actionHelicopter_t::execute (signature and full body unresolved)");
+static WorldSpeechResult noiseFailure(WorldAudioResult result)
+{
+    return result == WORLD_AUDIO_INVALID_BINDING || result == WORLD_AUDIO_STALE_REFERENCE ?
+        WORLD_SPEECH_INVALID_BINDING : WORLD_SPEECH_AUDIO_FAILURE;
 }
-} // namespace hp2::recovered
+
+WorldSpeechResult worldSpeechActionExecute(const WorldSpeechAction* action,
+    WorldSpeechManager* manager, const WorldSpeechContext* context)
+{
+    if (!action || !action->function || !manager || !manager->noise ||
+        !manager->messages || !manager->identities || !context)
+        return WORLD_SPEECH_INVALID_BINDING;
+    const WorldAudioResult squelch = manager->noise->BeginSquelchNoise();
+    if (squelch != WORLD_AUDIO_OK) return noiseFailure(squelch);
+    return action->function(*manager->messages, *manager->identities, *context);
+}
+
+WorldSpeechResult worldSpeechHelicopterActionExecute(const WorldSpeechAction* action,
+    WorldSpeechManager* manager, const WorldSpeechContext* context)
+{
+    if (!action || !action->function || !manager || !manager->noise ||
+        !manager->messages || !manager->identities || !context)
+        return WORLD_SPEECH_INVALID_BINDING;
+    const WorldAudioResult squelch = manager->noise->BeginSquelchNoise();
+    if (squelch != WORLD_AUDIO_OK) return noiseFailure(squelch);
+    /* PAL's default helicopter voice is genuinely NULL. The real noise
+     * owner preserves that branch; no guessed helicopter cue is allocated. */
+    const WorldAudioResult helicopter = manager->noise->StartHelicopterNoise();
+    if (helicopter != WORLD_AUDIO_OK) return noiseFailure(helicopter);
+    return action->function(*manager->messages, *manager->identities, *context);
+}

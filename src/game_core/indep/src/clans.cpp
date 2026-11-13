@@ -1,45 +1,161 @@
-// Debug source marker ../indep/src/clans.cpp. E-0099-W06 captures the ECOFF
-// FDR/SYMR/marker/string via read-only MCP, separately from function recovery.
-#include "game_core/port/race/world_construction.hpp"
-#include "game_core/inc/bSlotPool.hpp"
-#include "game_core/port/not_implemented.hpp"
-#include "game_core/indep/inc/Clans.hpp"
-#include "game_core/indep/inc/Skids.hpp"
-#include "game_core/port/driving/projections.hpp"
+#include "indep/inc/Clans.hpp"
+#include "bware/inc/bMath.hpp"
+#include "bware/inc/bWare.hpp"
 #include <algorithm>
-#include <cmath>
+#include <cassert>
+#include <cstring>
 
-namespace hp2::debug {
-// Debug001A90F0, E-0099-W06. Explicit original process-static list construction.
-void Sub_001A90F0(::port::driving::Memory& memory){memory.word(0x327e90,0x327e90);memory.word(0x327e94,0x327e90);}
-// Debug001A8C98, E-0099-W06; Debug SHA256
-// 815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
-void InitClans(::port::driving::Memory& memory){
-    if(memory.word(0x00327e98)==0)
-        memory.word(0x00327e98,bNewSlotPool(memory,0x50,0x28,0x002addc8,0x10));
-}
-}
+// Names/path: beta Clans.obj and individual PDRs. All branches, limits and
+// clocks below follow final PAL1AB618..1AB9F0; native pointers own no PS2 state.
+struct WheelTrailClanOwner {
+    hp2::SkidResources* skids{};
+    const GameTime* clock{};
+    std::array<WheelTrailClan,hp2::ClanResources::Capacity> slots{};
+    WheelTrailClan* first{};
+    WheelTrailClan* last{};
+    std::size_t count{};
+};
 
-namespace hp2::debug {
-// Debug001A8D20 ->001A8CD0/001A8FE0, E-0099-W18. Fresh World has no clans.
-void CloseClans(::port::driving::Memory& m){
- if(!m.word(0x327e98))return;
- FlushClans(m);
- bDeleteSlotPool(m,m.word(0x327e98));m.word(0x327e98,0);
-}
-}
-
-// Debug001A8F90/8FE0/8D50/8CD0, E-0099-W71; exact original clans.cpp.
-// SHA256815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
-namespace hp2::debug {
 namespace {
-// Port-only logical-memory/list adapters; not additional recovered functions.
-void clan_unlink(::port::driving::Memory&m,std::uint32_t p){const auto n=m.word(p),b=m.word(p+4);m.word(b,n);m.word(n+4,b);}
-void clan_front(::port::driving::Memory&m,std::uint32_t p){const auto h=0x327e90u,n=m.word(h);m.word(h,p);m.word(n+4,p);m.word(p+4,h);m.word(p,n);}
+void removeClan(WheelTrailClanOwner& owner,WheelTrailClan& clan) noexcept
+{
+    if(clan.previous)clan.previous->next=clan.next;else owner.first=clan.next;
+    if(clan.next)clan.next->previous=clan.previous;else owner.last=clan.previous;
+    clan.next=nullptr;clan.previous=nullptr;
 }
-void Clan::Sub_001A8F90(std::uint32_t p,std::uint32_t hash){const auto h=address_+8;m_.word(h,h);m_.word(h+4,h);m_.copy(address_+0x20,p,16);m_.word(address_+0x10,hash);m_.copy(address_+0x30,p,16);m_.copy(address_+0x40,p,16);/* original leaves LastUpdateTime+14 untouched */}
-void Clan::Sub_001A8FE0(int flags){const auto h=address_+8;while(m_.word(h)!=h)DeleteThisSkid(m_,m_.word(m_.word(h)+8));if(flags&1)SlotPool(m_,m_.word(0x327e98)).Free(address_);}
-void Clan::ExpandBoundingBox(std::uint32_t lo,std::uint32_t hi){for(unsigned i=0;i<4;++i){const auto at=i*4;const float a=m_.scalar(address_+0x30+at),b=m_.scalar(lo+at),c=m_.scalar(address_+0x40+at),d=m_.scalar(hi+at);if(!std::isfinite(a)||!std::isfinite(b)||!std::isfinite(c)||!std::isfinite(d))hp2::not_implemented("0x00252AB0","Exceptional original full-lane VU Clan bounding box MIN/MAX");m_.scalar(address_+0x30+at,std::min(a,b));m_.scalar(address_+0x40+at,std::max(c,d));}}
-std::uint32_t GetClan(::port::driving::Memory&m,std::uint32_t position){const auto x=::port::driving::cvt_w_s(m.scalar(position)*65536.f),y=::port::driving::cvt_w_s(m.scalar(position+4)*65536.f);const auto hash=(std::uint32_t(y>>22)<<16)+(std::uint32_t(x>>22)&0xffff);const auto head=0x327e90u,pool=m.word(0x327e98);if(!pool||!m.word(head))hp2::not_implemented("0x001A8C98","Original Clan static list and pool startup are required");for(auto p=m.word(head);p!=head;p=m.word(p))if(m.word(p+0x10)==hash){clan_unlink(m,p);m.word(p+0x14,m.word(0x327d00));clan_front(m,p);return p;}if(m.word(pool+0x18)==m.word(pool+0x2c)){const auto old=m.word(head+4);if(old==head)hp2::not_implemented("0x001A8E2C","Original full Clan pool has no published LRU owner");clan_unlink(m,old);Clan(m,old).Sub_001A8FE0(3);}const auto p=bOMalloc(m,pool);Clan(m,p).Sub_001A8F90(position,hash);clan_front(m,p);return p;}
-void FlushClans(::port::driving::Memory&m){const auto h=0x327e90u;while(m.word(h)!=h){const auto p=m.word(h);clan_unlink(m,p);Clan(m,p).Sub_001A8FE0(3);}}
+void prependClan(WheelTrailClanOwner& owner,WheelTrailClan& clan) noexcept
+{
+    clan.previous=nullptr;clan.next=owner.first;
+    if(owner.first)owner.first->previous=&clan;else owner.last=&clan;
+    owner.first=&clan;
+}
+void destroyClan(WheelTrailClanOwner& owner,WheelTrailClan& clan) noexcept
+{
+    removeClan(owner,clan);
+    while(clan.first)wheelTrailDelete(&owner.skids->Trails(),clan.first);
+    clan.occupied=false;--owner.count;
+}
+WheelTrailClan* getClan(WheelTrailClanOwner& owner,const float position[3])
+{
+    const auto key=hp2::ClanPositionKey(position);
+    for(auto* clan=owner.first;clan;clan=clan->next)if(clan->key==key) {
+        removeClan(owner,*clan);prependClan(owner,*clan);
+        clan->lastTouched=owner.clock->worldLoopCounter;return clan;
+    }
+    if(owner.count==owner.slots.size())destroyClan(owner,*owner.last);
+    for(auto& clan:owner.slots)if(!clan.occupied) {
+        // GetClan calls bOMalloc before the constructor. Its default pool
+        // flags clear the complete slot on every allocation, including reuse.
+        // Keep that allocation boundary separate from the constructor fields.
+        clan=WheelTrailClan{};
+        clan.owner=&owner;clan.occupied=true;clan.key=key;
+        std::copy_n(position,3,clan.position);
+        std::copy_n(position,3,clan.minimum);std::copy_n(position,3,clan.maximum);
+        prependClan(owner,clan);++owner.count;return &clan;
+    }
+    throw std::logic_error("ClanSlotPool occupancy is corrupt");
+}
+}
+
+namespace hp2 {
+std::uint32_t ClanPositionKey(const float position[3]) noexcept
+{
+    const auto x=convertFloatToInt32(position[0]*65536.0f);
+    const auto y=convertFloatToInt32(position[1]*65536.0f);
+    // Explicit arithmetic shift of source signed words, independent of host
+    // signed-shift rules. The final key has low16 X and high16 Y.
+    const auto cell=[](std::int32_t v) {
+        const auto bits=static_cast<std::uint32_t>(v);
+        return (bits>>22)|(v<0?0xfffffc00u:0u);
+    };
+    return (cell(x)&0xffffu)|(cell(y)<<16);
+}
+ClanResources::ClanResources(const GameTime& clock)
+    :owner_(std::make_unique<WheelTrailClanOwner>())
+{
+    owner_->clock=&clock;
+}
+ClanResources::ClanResources(SkidResources& skids,const GameTime& clock):ClanResources(clock)
+{
+    BindSkids(skids);
+}
+void ClanResources::BindSkids(SkidResources& skids)
+{
+    Require(!owner_->skids,"ClanResources already has its actual Skid owner");
+    Require(skids.Trails().clans==nullptr,"SkidResources already has a Clan owner");
+    // InitClans owns40 slots. World construction binds it before any trails.
+    for(std::size_t i=0;i<skids.Trails().capacity;++i)
+        Require(skids.Trails().storage[i].creation==0,"Clans must bind before SkidSet creation");
+    owner_->skids=&skids;
+    skids.Trails().clans=owner_.get();
+}
+ClanResources::~ClanResources()
+{
+    Flush();if(owner_->skids)owner_->skids->Trails().clans=nullptr;
+}
+void ClanResources::Flush() noexcept
+{
+    while(owner_->first)destroyClan(*owner_,*owner_->first);
+}
+WheelTrailClan* ClanResources::Get(const float position[3])
+{Require(owner_->skids,"GetClan requires the actual initialized Skids pool");return getClan(*owner_,position);}
+const WheelTrailClan* ClanResources::Find(const float position[3]) const noexcept
+{
+    const auto key=ClanPositionKey(position);
+    for(auto* clan=owner_->first;clan;clan=clan->next)if(clan->key==key)return clan;
+    return nullptr;
+}
+std::size_t ClanResources::Count() const noexcept {return owner_->count;}
+std::size_t ClanResources::TrailCount(const WheelTrailClan& clan) const noexcept
+{
+    assert(clan.owner==owner_.get() && clan.occupied);
+    std::size_t count=0;for(auto* trail=clan.first;trail;trail=trail->clanNext)++count;return count;
+}
+void ClanResources::Bounds(const WheelTrailClan& clan,float minimum[3],float maximum[3]) const
+{
+    Require(clan.owner==owner_.get() && clan.occupied,"Clan belongs to another or released World");
+    std::copy_n(clan.minimum,3,minimum);std::copy_n(clan.maximum,3,maximum);
+}
+void ClanResources::PrepareRender(const float matrix[16],const CarCinematicScreen& screen,
+    std::vector<SkidRenderQuad>& output)
+{
+    Require(matrix && screen.view,"RenderClans requires the live view and clip matrix");
+    for(auto* clan=owner_->first;clan;) {
+        // Save the next original node: visible groups may move to list head.
+        auto* next=clan->next;
+        if(ecstasyViewBoundsPixelSize(&screen,clan->minimum,clan->maximum)>=11 &&
+           ecstasyClassifyBounds(clan->minimum,clan->maximum,matrix)!=0) {
+            const std::uint32_t elapsedBits=static_cast<std::uint32_t>(owner_->clock->worldLoopCounter)-
+                static_cast<std::uint32_t>(clan->lastTouched);
+            std::int32_t elapsed;std::memcpy(&elapsed,&elapsedBits,sizeof(elapsed));
+            if(elapsed>=301) {
+                clan->lastTouched=owner_->clock->worldLoopCounter;
+                removeClan(*owner_,*clan);prependClan(*owner_,*clan);
+            }
+            wheelTrailPrepareRender(*owner_->skids,clan->first,matrix,screen,output);
+        }
+        clan=next;
+    }
+}
+}
+
+void wheelTrailClanAttach(WheelTrailStore* store,WheelTrail* trail,const float position[3])
+{
+    assert(store && store->clans && trail && !trail->clan);
+    auto* clan=getClan(*store->clans,position);
+    trail->clan=clan;trail->clanPrevious=nullptr;trail->clanNext=clan->first;
+    if(clan->first)clan->first->clanPrevious=trail;else clan->last=trail;
+    clan->first=trail;
+}
+void wheelTrailClanDetach(WheelTrailStore* store,WheelTrail* trail) noexcept
+{
+    auto* clan=trail->clan;
+    if(!clan)return;
+    assert(store && store->clans && clan->owner==store->clans);
+    (void)store;
+    if(trail->clanPrevious)trail->clanPrevious->clanNext=trail->clanNext;
+    else clan->first=trail->clanNext;
+    if(trail->clanNext)trail->clanNext->clanPrevious=trail->clanPrevious;
+    else clan->last=trail->clanPrevious;
+    trail->clan=nullptr;trail->clanNext=nullptr;trail->clanPrevious=nullptr;
 }

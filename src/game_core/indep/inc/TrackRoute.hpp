@@ -1,52 +1,292 @@
-// TASK-0042 E-0042-S001: exact Debug source marker(s): ../indep/inc/TrackRoute.hpp.
-// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
-// PORT-SIDE template file; destination/header extension is not original-file evidence.
-#pragma once
+#ifndef NFSHP2_INDEP_INC_TRACKROUTE_HPP
+#define NFSHP2_INDEP_INC_TRACKROUTE_HPP
 
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: qualified_string; evidence: E-0019-N03.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-// Diagnostic text (not a callable signature): TrackRoute::FindClosestPoint() [0x002B7328]
-namespace hp2::recovered {
-class TrackRoute {
-public:
-    // No member address is confirmed; no speculative members are declared.
+#include <stddef.h>
+#include <stdint.h>
+#include "indep/inc/TrackPath.hpp"
+#include "indep/inc/CarDriver.hpp"
+#include "indep/inc/Timer.hpp"
+#include "indep/inc/Ecstasy.hpp"
 
-public:
-    // TASK-0028: missing entries; existing storage and bodies are preserved.
-    // ELF 0x001C1910; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c1910.md.
-    // Original Debug reference: TrackRoute::GetRelativePoint(TrackRoutePoint *, bool); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void GetRelativePoint();
-    // ELF 0x001C1D30; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c1d30.md.
-    // Original Debug reference: TrackRoute::FindClosestPointAhead(bVector2 const *, TrackRoutePoint *); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void FindClosestPointAhead();
-    // ELF 0x001C2780; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c2780.md.
-    // Original Debug reference: TrackRoute::DistanceIsWithinRoute(float); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void DistanceIsWithinRoute();
+struct ReplaySnapshot;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct CarRecoveryPose {
+    float position[3];
+    float direction[2];
+    float segmentLength;
+    float halfWidths[2];
+    float routeDistance;
+    uint32_t flags;
+    uint8_t groupId;
+    float gradeAcross;
+    float gradeAlong;
+    int16_t laneOffsetsQuantized[21];
+    uint8_t laneSpeeds[21];
+} CarRecoveryPose;
+
+typedef struct CarRecoveryGroup {
+    int16_t id;
+    int32_t category;
+    uint32_t flags;
+    float minimum[2];
+    float maximum[2];
+    const CarRecoveryPose* poses;
+    int32_t poseCount;
+    uint32_t laneFlags[21];
+    float minimumRouteDistance;
+    float maximumRouteDistance;
+    uint32_t laneProperties[21][11];
+} CarRecoveryGroup;
+
+typedef struct CarRecoveryConnection {
+    uint8_t groupId;
+    uint8_t flags;
+    uint16_t poseIndex;
+    float routeDistance;
+    uint32_t properties;
+} CarRecoveryConnection;
+
+/* Group order is the authored order within each category. The arrays and
+ * route remain borrowed from the track resource owner. */
+typedef struct CarRecoveryPointRegistry {
+    const CarRecoveryGroup* groups;
+    size_t groupCount;
+    const TrackRoute* route;
+    int32_t reverse;
+    CarRecoveryConnection* connections;
+    size_t connectionCount;
+} CarRecoveryPointRegistry;
+
+typedef struct CarRecoverySelection {
+    const CarRecoveryGroup* group;
+    const CarRecoveryPose* pose;
+} CarRecoverySelection;
+
+/* Requires a populated route and at least one authored pose. The first pose
+ * establishes traversal continuity; later poses determine the route range. */
+void carRecoveryUpdateRouteRange(CarRecoveryGroup* group, const TrackRoute* route);
+int32_t carRecoveryGroupContainsRouteDistance(const CarRecoveryGroup* group, float distance);
+
+float carRecoveryDistance(const TrackRoute* route, const CarRecoveryPose* pose,
+                           const float point[2], float routeDistance);
+const CarRecoveryPose* carRecoveryFindInGroup(const CarRecoveryPointRegistry* registry,
+                                             const CarRecoveryGroup* group,
+                                             const float point[2], float maximumDistance,
+                                             float routeDistance, uint32_t flags);
+int32_t carRecoverySelectPose(CarRecoverySelection* selection, const CarRecoveryPointRegistry* registry,
+                        const float point[2], int32_t categoryMode, uint32_t flags,
+                        float routeDistance);
+
+
+/* Writable views refer to the same resource-owned groups/points exposed by
+ * the query registry. They do not contain a second geometry or flag copy. */
+typedef struct CarRecoveryMutableGroup {
+    CarRecoveryGroup* group;
+    CarRecoveryPose* poses;
+} CarRecoveryMutableGroup;
+
+void carRecoverySwapPosePrefix(CarRecoveryPose* first, CarRecoveryPose* second);
+void carRecoveryReversePoseDistance(CarRecoveryPose* pose, float routeLength);
+void carRecoveryReverseGroup(CarRecoveryMutableGroup* owner, float routeLength);
+void carRecoveryReverseGroupDistances(CarRecoveryMutableGroup* owner, float routeLength);
+void carRecoveryReverseGroups(CarRecoveryMutableGroup* groups, size_t count, float routeLength);
+void carRecoveryReverseConnections(CarRecoveryPointRegistry* registry);
+int32_t carRecoveryPreprocess(CarRecoveryPointRegistry* registry,
+    CarRecoveryMutableGroup* groups, size_t count, int32_t forward);
+
+
+const CarRecoveryGroup* carRecoveryConnectionGroup(const CarRecoveryPointRegistry* registry,
+                                                   const CarRecoveryConnection* connection);
+const CarRecoveryPose* carRecoveryConnectionPose(const CarRecoveryPointRegistry* registry,
+                                                 const CarRecoveryConnection* connection);
+const CarRecoveryConnection* carRecoveryPointConnection(const CarRecoveryPointRegistry* registry,
+                                                         const CarRecoveryPose* pose);
+const CarRecoveryPose* carRecoveryAdjacentPose(const CarRecoveryGroup* group,
+    const CarRecoveryPose* pose,int32_t forward);
+/* Native validation of route ownership; -1 for a stale/foreign point. */
+int32_t carRecoveryOwnedPoseIndex(const CarRecoveryGroup* group,const CarRecoveryPose* pose);
+/* -1 when a cached branch belongs to another or retired route table. */
+int32_t carRecoveryOwnedConnectionIndex(const CarRecoveryPointRegistry* registry,
+                                        const CarRecoveryConnection* connection);
+const CarRecoveryPose* carRecoveryFirstFollowingPose(const CarRecoveryGroup* group,const float point[2],
+                                                     const CarRecoveryPose* first);
+int32_t carRecoveryConnectionsAvailable(const CarRecoveryPointRegistry* registry);
+/* Connections are sorted by route distance and the registry is nonempty.
+ * A position beyond the last connection wraps to the first one. */
+uint32_t carRecoveryConnectionAtDistance(const CarRecoveryPointRegistry* registry, float distance);
+int32_t carRecoveryFindFollowingBranches(const CarRecoveryPointRegistry* registry,
+                                         CarRecoverySelection* output,int32_t capacity,
+                                         const CarRecoveryGroup* group,const CarRecoveryPose* pose,
+                                         float distance,int32_t forward);
+
+
+/* The original point calculation defines XYZ. The unused homogeneous lane
+ * is initialized to zero in the native result. Output has four floats. */
+void driverRoadPointPosition(const CarRecoveryPose* pose, float output[4],
+                              float along, float across);
+void driverRoadReversePose(CarRecoveryPose* pose, float routeLength);
+int32_t driverRoadSelectionValid(const CarRecoverySelection* selection);
+CarDriverResult driverRoadNextPose(const CarRecoveryPointRegistry* registry, CarRecoverySelection* selection);
+CarDriverResult driverRoadAdvanceSelection(const CarRecoveryPointRegistry* registry, CarRecoverySelection* selection);
+CarDriverResult driverRoadPrepareConnections(CarRecoveryPointRegistry* registry);
+
+
+
+float driverLaneOutsideRoad(const CarRecoveryPose* pose,float across);
+void carRecoverySnapshotGroup(const struct CarRecoveryPointRegistry* registry,
+    struct ReplaySnapshot* snapshot,const struct CarRecoveryGroup** group);
+void carRecoverySnapshotPoseInGroup(const struct CarRecoveryGroup* group,
+    struct ReplaySnapshot* snapshot,const CarRecoveryPose** pose);
+void carRecoverySnapshotPose(const struct CarRecoveryPointRegistry* registry,
+    struct ReplaySnapshot* snapshot,const CarRecoveryPose** pose);
+void carRecoverySelectionSnapshot(const struct CarRecoveryPointRegistry* registry,
+    struct CarRecoverySelection* selection,struct ReplaySnapshot* snapshot);
+
+
+// Native public bindings for the individually proved TrackRoute/editor owners.
+// Host views preserve the existing resource/router lifetime; no Beta ABI layout
+// or unimplemented authoring mode is implied by these declarations.
+typedef struct TerrainTopology TerrainTopology;
+typedef struct TrackRouteEditor TrackRouteEditor;
+typedef struct TrackRouteEditorInput TrackRouteEditorInput;
+struct EditorMarkerResources;
+
+typedef enum TrackRouteEditorResult {
+    TRACK_ROUTE_EDITOR_OK,
+    TRACK_ROUTE_EDITOR_INVALID_BINDING,
+    TRACK_ROUTE_EDITOR_ALLOCATION_FAILURE,
+    TRACK_ROUTE_EDITOR_INPUT_CAPACITY
+} TrackRouteEditorResult;
+
+/* One track owns these mutable commands and one editor. Every Drive camera
+ * borrows that same editor; activation is deliberately not reference counted. */
+typedef struct TrackRouteEditorSettings {
+    int32_t selectedGroup;
+    int32_t activeCameraDraws;
+    uint64_t selectionRevision;
+} TrackRouteEditorSettings;
+
+typedef struct TrackRouteEditorContext {
+    CarRecoveryPointRegistry* registry;
+    CarRecoveryMutableGroup* mutableGroups;
+    size_t mutableGroupCount;
+    TerrainTopology* terrain;
+    GameInputRouter* input;
+    const GameTime* clock;
+    TrackRouteEditorSettings* settings;
+    struct EditorMarkerResources* markers;
+} TrackRouteEditorContext;
+
+void trackRouteEditorSettingsInitialize(TrackRouteEditorSettings* settings);
+TrackRouteEditor* trackRouteEditorCreate(const TrackRouteEditorContext* context,
+    TrackRouteEditorResult* result);
+void trackRouteEditorDispose(TrackRouteEditor* editor);
+TrackRouteEditorResult trackRouteEditorActivate(TrackRouteEditor* editor,const float eye[4]);
+void trackRouteEditorDeactivate(TrackRouteEditor* editor);
+TrackRouteEditorResult trackRouteEditorTickCamera(TrackRouteEditor* editor);
+void trackRouteEditorResetCamera(TrackRouteEditor* editor);
+void trackRouteEditorFindNear(TrackRouteEditor* editor,const float point[4]);
+void trackRouteEditorUpdateRoadPose(TrackRouteEditor* editor,int32_t groupId,int32_t poseIndex);
+int32_t trackRouteEditorGetCameraPosition(const TrackRouteEditor* editor,
+    float eye[4],float direction[4]);
+
+/* Input storage belongs to the editor. The router borrows concrete records,
+ * preserving raw values, pending presses, elapsed repeat time and order. */
+void trackRouteEditorInputDispatch(TrackRouteEditorInput* input,uint8_t value);
+int32_t trackRouteEditorInputRepeat(TrackRouteEditorInput* input,float elapsed,
+    float initialDelay,float repeatDelay);
+TrackRouteEditorResult trackRouteEditorActivateInput(TrackRouteEditor* editor,int32_t device);
+void trackRouteEditorDeactivateInput(TrackRouteEditor* editor);
+
+/* These editing operations mutate the same resource-owned point array that
+ * every recovery, road-planner and camera reader already borrows. */
+void trackRouteEditorSetWidths(CarRecoveryPose* pose,float first,float second);
+int32_t trackRouteEditorUpdateSegment(CarRecoveryMutableGroup* group,int32_t index);
+int32_t trackRouteEditorMovePoint(CarRecoveryMutableGroup* group,int32_t index,
+    const float point[4]);
+
+
+struct TrackRouteEditorInput {
+    int32_t event;
+    int32_t device;
+    uint8_t raw;
+    uint8_t pending;
+    float repeatElapsed;
+    float nextRepeat;
 };
-} // namespace hp2::recovered
 
-// TASK-0099 E-0099-W74. Exact original inline source marker TrackRoute.hpp.
-// Memory-view signatures are port operands; original forwarding bodies only.
-#include "game_core/port/driving/object_view.hpp"
-namespace port::race {struct SnapshotRoutePointer{std::uint32_t address;};struct SnapshotRoutePointPointer{std::uint32_t address;};}
-namespace hp2::debug {
-class TrackRouteManager:public ::port::driving::ObjectView {
-public:using ObjectView::ObjectView;
- void DoSnapshot(std::uint32_t pproute,std::uint32_t snapshot); //001CA718, W74 inline.
- void DoSnapshot(std::uint32_t pproute_point,std::uint32_t route,std::uint32_t snapshot); //001CA700.
- void DoPointerSnapshot(std::uint32_t snapshot,::port::race::SnapshotRoutePointer); //001BFBE0, W74.
- void DoPointerSnapshot(std::uint32_t snapshot,::port::race::SnapshotRoutePointPointer,std::uint32_t route); //001BFC78.
- void DoPointerSnapshot(std::uint32_t snapshot,::port::race::SnapshotRoutePointPointer); //001BFD50.
+struct TrackRouteEditor {
+    TrackRouteEditorContext context;
+    int32_t mode;
+    int32_t selectedPose;
+    int32_t inputRegistered;
+    int32_t validPose;
+    TrackRouteEditorInput inputs[18];
+    float desiredEye[4];
+    float desiredDirection[4];
+    float currentEye[4];
+    float eyeVelocity[4];
+    float currentDirection[4];
+    float directionVelocity[4];
+    float roadAnchor[4];
+    uint16_t roadHeading;
+    EditorMarkerModel markers[4][3];
+    EditorMarkerReplacement replacements[4][3];
 };
+
+
+
+#ifdef __cplusplus
 }
 
-namespace hp2::debug {
-inline void TrackRouteManager::DoSnapshot(std::uint32_t pointer,std::uint32_t snapshot){DoPointerSnapshot(snapshot,::port::race::SnapshotRoutePointer{pointer});}
-inline void TrackRouteManager::DoSnapshot(std::uint32_t pointer,std::uint32_t route,std::uint32_t snapshot){DoPointerSnapshot(snapshot,::port::race::SnapshotRoutePointPointer{pointer},route);}
+#include <cstdint>
+#include <vector>
+
+namespace hp2 {
+
+class CarRecoveryData final {
+public:
+    CarRecoveryData(const std::vector<std::uint8_t>& track, const TrackRoute* route, bool reverse);
+    CarRecoveryData(const CarRecoveryData&) = delete;
+    CarRecoveryData& operator=(const CarRecoveryData&) = delete;
+    CarRecoveryData(CarRecoveryData&&) = delete;
+    CarRecoveryData& operator=(CarRecoveryData&&) = delete;
+    CarRecoveryPointRegistry& Native() noexcept { return registry_; }
+    const CarRecoveryPointRegistry& Native() const noexcept { return registry_; }
+    const CarRecoveryGroup* Group(std::uint8_t id) const noexcept;
+    std::vector<CarRecoveryMutableGroup> MutableGroups();
+
+private:
+    CarRecoveryPointRegistry registry_{};
+    std::vector<CarRecoveryGroup> groups_;
+    std::vector<std::vector<CarRecoveryPose>> poses_;
+    std::vector<CarRecoveryConnection> connections_;
+};
+
+} // namespace hp2
+
+#endif
+
+
+// Native declaration of the individually proved trackroute.cpp HeapSort.
+#include <stddef.h>
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* The original ordering function returns a floating difference. Storage
+ * and element strides must describe a valid writable array. */
+typedef float (*ArraySortCompare)(const void* first, const void* second);
+int32_t arrayHeapSort(void* array, int32_t count, size_t stride, ArraySortCompare compare);
+
+#ifdef __cplusplus
 }
+#endif
+
+#endif

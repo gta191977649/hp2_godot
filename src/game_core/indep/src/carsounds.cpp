@@ -1,242 +1,1035 @@
-// TASK-0042 E-0042-S001: exact Debug source marker(s): ..\indep\src\carsounds.cpp.
-// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: allocator_label; evidence: E-0027-C01.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/HornSound3d.hpp"
+#include "CarSounds.hpp"
+#include "bsound/include/bSound.h"
+#include "indep/inc/Timer.hpp"
+#include "bware/inc/bMath.hpp"
+#include "indep/inc/Car.hpp"
+#include "indep/inc/Car.hpp"
+#include "indep/inc/Car.hpp"
+#include "indep/inc/World.hpp"
+#include "indep/inc/CarDriver.hpp"
+#include "indep/inc/Player.hpp"
+#include "indep/inc/World.hpp"
+#include "CarInfo.hpp"
+#include "PhysicsCar.hpp"
+#include "RigidBody.hpp"
+#include "Race.hpp"
+#include "indep/inc/Race.hpp"
+#include "Player.hpp"
+#include "indep/inc/Collision.hpp"
 
-#include "game_core/BaseAICarSound.hpp"
-
-#include "game_core/port/not_implemented.hpp"
-#include "game_core/port/race/car_sound_construction.hpp"
-
-namespace hp2::debug {
-// E-0099-W68: integer queue stores in branch delay slots, Debug0018B490.
-void BaseCarSound::TriggerSplash(int side,int intensity){m_.word(address_+(side?0x28:0x24),std::uint32_t(intensity));}
-}
-#include "game_core/src/bSample.hpp"
-#include "game_core/src/bMath.hpp"
-#include "game_core/indep/src/track.hpp"
-#include <string>
+#include <algorithm>
+#include <cmath>
+#include <cstring>
+#include <new>
 #include <stdexcept>
+#include <string>
+
+/* Exact initialized PAL cells. The explicit global initializer below writes
+ * only its actual envelope/azimuth cells; it never resets the live RNG. */
+CarSoundGlobals carSoundGlobals = {
+    {1, 1}, 1, 1, 0x2AAA, 350.0f,
+    {1.2999999523162842f, 260.0f, 0.003846153849735856f},
+    {1.2999999523162842f, 130.0f, 0.007692307699471712f},
+    0x4000, 0, 0
+};
+
+CarSoundPolicy* carSoundCurrentPolicy(void)
+{
+    return &carSoundGlobals.policy;
+}
 
 namespace {
-// Port-only bounded extraction of original strings, never an invented sample.
-std::string port_sound_text(const ::port::driving::Memory& m,std::uint32_t at){std::string s;for(unsigned i=0;i<4096;++i){const auto c=m.byte(at+i);if(!c)return s;s.push_back(char(c));}throw std::out_of_range("Unterminated original car sound string");}
-std::uint32_t port_required_ingame(::port::race::CarSoundResources& resources,const std::string& name){const auto sample=resources.in_game_sample(name);if(!sample)hp2::not_implemented("0x001AB900","required authored InGame sample is absent");return sample;}
-// Exact constructor sequence emitted inline in BasePlayer/AI constructors.
-std::uint32_t port_construct_horn(::port::driving::Memory& m,std::uint32_t source,::port::race::CarSoundResources& resources){
- const auto at=m.allocate(0xe0);hp2::debug::Sound3d(m,at).Sub_00203980();m.word(at+0x1c,0x2ac678);hp2::debug::bSample sample(m,at+0x20);sample.Sub_0026B2A0();
- if(!source){auto name=port_sound_text(m,0x327998);if(name.size()<6)throw std::out_of_range("Original horn template too short");name[5]=char(m.signed_word(0x327994)+'1');m.word(0x327994,std::uint32_t((m.signed_word(0x327994)+1)%3));source=port_required_ingame(resources,name);}
- sample.Initialize(source);sample.SetCategory(0);m.scalar(at+0xdc,1);return at;
-}
-// Debug0018D390. All three actual source samples and shared selector are kept.
-std::uint32_t port_construct_siren(::port::driving::Memory& m,::port::race::CarSoundResources& resources){
- const auto at=m.allocate(0x268);hp2::debug::Sound3d(m,at).Sub_00203980();m.word(at+0x1c,0x2ac790);
- for(unsigned i=0;i<3;++i)hp2::debug::bSample(m,at+0x20+i*0xbc).Sub_0026B2A0();m.scalar(at+0x258,17);
- for(unsigned i=0;i<3;++i){m.byte(0x2ac5c9,std::uint8_t('1'+i));const auto source=resources.sample(port_sound_text(m,0x327988),port_sound_text(m,0x2ac5c0));if(!source)hp2::not_implemented("0x0018D390","required authored cop siren sample is absent");
-  hp2::debug::bSample sample(m,at+0x20+i*0xbc);sample.Initialize(source);sample.SetCategory(0);}
- m.word(0x327990,std::uint32_t((m.signed_word(0x327990)+1)%3));m.scalar(at+0x264,1);m.word(at+0x25c,0);m.scalar(at+0x260,1);m.word(at+0x254,m.word(0x327990));return at;
-}
-void port_destroy_sound_child(::port::driving::Memory& m,std::uint32_t at){
- const auto table=m.word(at+0x1c);
- if(table==0x2ac678){m.word(at+0x1c,table);hp2::debug::bSample(m,at+0x20).Sub_0026B3F8(2);hp2::debug::Sound3d(m,at).Sub_00204060(3);}
- else if(table==0x2ac790){m.word(at+0x1c,table);for(int i=2;i>=0;--i)hp2::debug::bSample(m,at+0x20+std::uint32_t(i)*0xbc).Sub_0026B3F8(2);hp2::debug::Sound3d(m,at).Sub_00204060(3);}
- else if(table==0x2b3b20)hp2::debug::AIEngineSound(m,at).Sub_0020D128(3);
- else if(table==0x2b3b60)hp2::debug::PlayerEngineSound(m,at).Sub_0020AD30(3);
- else if(table==0x2b3ce8)hp2::debug::kAITireSound(m,at).Sub_0020F5A8(3);
- else if(table==0x2b3d38)hp2::debug::PlayerTireSound(m,at).Sub_0020DA00(3);
- else hp2::not_implemented("0x0018B260","original child Sound3d destructor target is not bound");
 
-}
-}
-namespace hp2::debug {
-// Debug0018D100, E-0099-W31. Explicit original process-static envelope fields.
-void Sub_0018D100(::port::driving::Memory& m){m.half(0x327978,0x2aaa);m.scalar(0x3077f0,m.scalar(0x3254c0));m.scalar(0x3077f8,m.scalar(0x3254c4));m.scalar(0x307800,m.scalar(0x3254c8));m.scalar(0x3077e8,m.scalar(0x3254c4));m.scalar(0x3077ec,260);m.half(0x329420,0x4000);m.scalar(0x3077fc,130);}
-// Debug0018B148, E-0099-W31. Shared samples remain owned by real source regions.
-void BaseCarSound::Sub_0018B148(std::uint32_t car,::port::race::CarSoundResources& resources){
- Sub_00203980();m_.word(address_+0x20,car);m_.scalar(address_+0x24,0);m_.scalar(address_+0x28,0);m_.scalar(address_+0x2c,0);m_.scalar(address_+0x30,0);m_.word(address_+0x1c,0x2ac748);
- for(int i=0;i<3;++i){auto name=port_sound_text(m_,0x3279a0);if(name.size()<7)throw std::out_of_range("Original splash template too short");name[6]=char('1'+i);bSample(m_,port_required_ingame(resources,name)).SetCategory(0);}
- const auto blowout=port_required_ingame(resources,"TirePop1");m_.word(address_+0x40,blowout);bSample(m_,blowout).SetCategory(0);m_.word(address_+0x3c,0);m_.word(address_+0x44,0);m_.word(address_+0x48,0);
- m_.word(address_+0x38,m_.signed_word(m_.word(car+0xc)+0x538)==1?port_construct_siren(m_,resources):0);
-}
-// Debug0018C6F0; AI engine begins inactive, actual AITire activation is empty.
-void BaseAICarSound::Sub_0018C6F0(std::uint32_t car,::port::race::CarSoundResources& resources){
- Sub_0018B148(car,resources);m_.word(address_+0x1c,0x2ac6b8);m_.word(address_+0x4c,0x3077f8);
- const auto engine=m_.allocate(0x10c);AIEngineSound(m_,engine).Sub_0020C4D8(car,resources);m_.word(address_+0x3c,engine);
- m_.word(address_+0x34,port_construct_horn(m_,0,resources));const auto tire=m_.allocate(0x324);kAITireSound(m_,tire).Sub_0020EE70(car,resources);m_.word(address_+0x44,tire);
-}
-// Debug0018B9A8. Real car bank horn and authored engine/tire dependencies.
-void BasePlayerCarSound::Sub_0018B9A8(std::uint32_t car,::port::race::CarSoundResources& resources){
- Sub_0018B148(car,resources);m_.word(address_+0x1c,0x2ac700);bSample(m_,address_+0x60).Sub_0026B2A0();const auto topology=m_.allocate(0x2c0);TopologyCoordinate(m_,topology).Sub_00151878();
- m_.scalar(address_+0x54,0);m_.scalar(address_+0x58,0);m_.word(address_+0x50,topology);m_.word(address_+0x5c,1);m_.word(address_+0x4c,0x3077e8);
- bSample(m_,address_+0x60).Initialize(port_required_ingame(resources,port_sound_text(m_,0x3279a8)));bSample(m_,address_+0x60).SetCategory(0);
- const auto info=m_.word(car+0xc);const auto bank=port_sound_text(m_,info+0x330),horn_name=port_sound_text(m_,info+0x356)+port_sound_text(m_,0x3279b0);
- if(!resources.region(bank))hp2::not_implemented("0x0026FAB8","required actual player car sound region is not loaded");
- m_.word(address_+0x34,port_construct_horn(m_,resources.sample(bank,horn_name),resources));const auto engine=m_.allocate(0x1c08);PlayerEngineSound(m_,engine).Sub_0020AB30(car,resources);m_.word(0x3289a4,engine);m_.word(address_+0x3c,engine);
- const auto front=m_.allocate(0xab8);PlayerTireSound(m_,front).Sub_0020D660(car,0,resources);m_.word(address_+0x44,front);
- if(m_.signed_word(0x311f78+0x30)==1){const auto left=m_.allocate(0xab8);PlayerTireSound(m_,left).Sub_0020D660(car,1,resources);m_.word(address_+0x48,left);}
- m_.half(address_+0x11c,0);if(m_.signed_word(0x311f78+0x30)>1){const auto driver=m_.signed_half(car+0xa);if(driver==0)m_.half(address_+0x11c,std::uint16_t(0-m_.half(0x327978)));else if(driver==1)m_.half(address_+0x11c,m_.half(0x327978));}
- Activate(true);
-}
-// Debug0018B8E0. Original virtual activation only touches engine and two tires.
-void BaseCarSound::ActivateSound(){Sound3d(m_,m_.word(address_+0x3c)).Activate(true);for(unsigned i=0;i<2;++i)if(auto child=m_.word(address_+0x44+4*i))Sound3d(m_,child).Activate(true);}
-// Debug0018B260/0018C7F0/0018BB80. Actual class-owned cleanup order.
-void BaseCarSound::Sub_0018B260(int flags){m_.word(address_+0x1c,0x2ac748);
- for(const auto offset:{0x34u,0x3cu,0x38u,0x44u,0x48u})if(auto child=m_.word(address_+offset))port_destroy_sound_child(m_,child);Sub_00204060(flags);}
-void BaseAICarSound::Sub_0018C7F0(int flags){m_.word(address_+0x1c,0x2ac6b8);Sub_0018B260(flags);}
-void BasePlayerCarSound::Sub_0018BB80(int flags){m_.word(address_+0x1c,0x2ac700);bSample(m_,address_+0x60).Stop();if(auto topology=m_.word(address_+0x50))TopologyCoordinate(m_,topology).Sub_001518C0(3);bSample(m_,address_+0x60).Sub_0026B3F8(2);Sub_0018B260(flags);}
-}
-namespace hp2::debug::sound {
-// Original factory bodies0018CB30/0018CB78/0018CBC0. Required context is a
-// concrete authored data owner, never a replacement factory callback.
-std::uint32_t CreatePlayerCarSound(::port::driving::Memory& m,std::uint32_t car,::port::race::CarSoundResources& resources){if(!resources.source_ready())hp2::not_implemented("0x001AB900","complete authored InGame sound sources are not bound");const auto at=m.allocate(0x120);BasePlayerCarSound(m,at).Sub_0018B9A8(car,resources);resources.register_sound(at);return at;}
-std::uint32_t CreateAICarSound(::port::driving::Memory& m,std::uint32_t car,::port::race::CarSoundResources& resources){if(!resources.source_ready())hp2::not_implemented("0x001AB900","complete authored InGame sound sources are not bound");const auto at=m.allocate(0x50);BaseAICarSound(m,at).Sub_0018C6F0(car,resources);resources.register_sound(at);return at;}
-std::uint32_t CreateAICopCarSound(::port::driving::Memory& m,std::uint32_t car,::port::race::CarSoundResources& resources){if(!resources.source_ready())hp2::not_implemented("0x001AB900","complete authored InGame sound sources are not bound");const auto at=m.allocate(0x50);BaseAICarSound(m,at).Sub_0018C6F0(car,resources);resources.register_sound(at);return at;}
-void DeleteCarSound(::port::driving::Memory& m,std::uint32_t at){if(m.word(at+0x1c)==0x2ac700)BasePlayerCarSound(m,at).Sub_0018BB80(3);else if(m.word(at+0x1c)==0x2ac6b8)BaseAICarSound(m,at).Sub_0018C7F0(3);else hp2::not_implemented("0x0018B260","original car sound destructor type is not bound");}
-void DeleteCarSound(::port::driving::Memory& m,std::uint32_t at,::port::race::CarSoundResources& resources){DeleteCarSound(m,at);resources.unregister_sound(at);}
+const WorldAudioBank* soundBank(const WorldAudioRequestQueue& audio, const char* name)
+{
+    if (audio.bankCount && !audio.banks) return nullptr;
+    for (size_t index = 0; index < audio.bankCount; ++index)
+        if (audio.banks[index].name && std::strcmp(audio.banks[index].name, name) == 0)
+            return &audio.banks[index];
+    return nullptr;
 }
 
-namespace hp2::recovered {
-// ELF 0x0018E7E8; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0018e7e8.md.
-void BaseAICarSound::Sub_0018E7E8() {
-    hp2::not_implemented("0x0018E7E8", "BaseAICarSound::Sub_0018E7E8 (signature and full body unresolved)");
+bool bankContainsCue(const WorldAudioBank* bank, const WorldAudioCue* cue)
+{
+    if (!bank || !cue || (bank->cueCount && !bank->cues)) return false;
+    for (size_t index = 0; index < bank->cueCount; ++index)
+        if (&bank->cues[index] == cue) return true;
+    return false;
 }
 
-// ELF 0x0018E800; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0018e800.md.
-void BaseAICarSound::Update() {
-    hp2::not_implemented("0x0018E800", "BaseAICarSound::Update (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/indep/inc/CarSounds.hpp"
-
-namespace hp2::recovered {
-// ELF 0x0018D480; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0018d480.md.
-void BaseCarSound::GetHornSample() {
-    hp2::not_implemented("0x0018D480", "BaseCarSound::GetHornSample (signature and full body unresolved)");
+const WorldAudioBank* uniqueCueBank(const WorldAudioRequestQueue& audio, const WorldAudioCue* cue)
+{
+    const WorldAudioBank* found = nullptr;
+    if (audio.bankCount && !audio.banks) return nullptr;
+    for (size_t index = 0; index < audio.bankCount; ++index) {
+        if (!bankContainsCue(&audio.banks[index], cue)) continue;
+        if (found) return nullptr;
+        found = &audio.banks[index];
+    }
+    return found;
 }
 
-// ELF 0x0018D550; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0018d550.md.
-void BaseCarSound::Mute() {
-    hp2::not_implemented("0x0018D550", "BaseCarSound::Mute (signature and full body unresolved)");
+} // namespace
+
+void carSoundInitializeGlobals(CarSoundGlobals* globals)
+{
+    globals->multiplayerAzimuth = 0x2AAA;
+    globals->playerEnvelope.inverseDistance = 0.003846153849735856f;
+    globals->aiEnvelope.volume = 1.2999999523162842f;
+    globals->aiEnvelope.inverseDistance = 0.007692307699471712f;
+    globals->playerEnvelope.volume = 1.2999999523162842f;
+    globals->playerEnvelope.maximumDistance = 260.0f;
+    globals->reflectionAzimuth = 0x4000;
+    globals->aiEnvelope.maximumDistance = 130.0f;
 }
 
-// ELF 0x0018D830; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0018d830.md.
-void BaseCarSound::DeactivateSound() {
-    hp2::not_implemented("0x0018D830", "BaseCarSound::DeactivateSound (signature and full body unresolved)");
+const WorldAudioCue* carHornSoundChooseSample(WorldAudioRequestQueue* audio,
+    CarSoundGlobals* globals)
+{
+    if (!audio || !globals || globals->nextHorn < 0 || globals->nextHorn > 2) {
+        if (audio) audio->result = WORLD_AUDIO_INVALID_BINDING;
+        return nullptr;
+    }
+    const int32_t selected = globals->nextHorn;
+    globals->nextHorn = (selected + 1) % 3;
+    char name[] = "Horn01";
+    name[5] = static_cast<char>(selected + '1');
+    return worldAudioFindInGame(audio, name);
 }
 
-// ELF 0x0018D8D8; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0018d8d8.md.
-void BaseCarSound::ActivateSound() {
-    hp2::not_implemented("0x0018D8D8", "BaseCarSound::ActivateSound (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/BasePlayerCarSound.hpp"
-
-namespace hp2::recovered {
-// ELF 0x0018DB78; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0018db78.md.
-void BasePlayerCarSound::Sub_0018DB78() {
-    hp2::not_implemented("0x0018DB78", "BasePlayerCarSound::Sub_0018DB78 (signature and full body unresolved)");
+CarHornSound::CarHornSound()
+    : audio_(nullptr), globals_(nullptr), voice_{nullptr, 0}, pitchScale_(1.0f)
+{
 }
 
-// ELF 0x0018DBF0; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0018dbf0.md.
-void BasePlayerCarSound::Update() {
-    hp2::not_implemented("0x0018DBF0", "BasePlayerCarSound::Update (signature and full body unresolved)");
+CarHornSound::~CarHornSound()
+{
+    Dispose();
 }
 
-// ELF 0x0018DD10; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0018dd10.md.
-void BasePlayerCarSound::Mute() {
-    hp2::not_implemented("0x0018DD10", "BasePlayerCarSound::Mute (signature and full body unresolved)");
+WorldAudioResult CarHornSound::Initialize(WorldAudioRequestQueue* audio,
+    CarSoundGlobals* globals, const WorldAudioCue* sample, const WorldAudioBank* sourceBank)
+{
+    if (!audio || !globals || voice_.instance) return WORLD_AUDIO_INVALID_BINDING;
+    sound3dInitialize(&spatial);
+    audio_ = audio;
+    globals_ = globals;
+    const WorldAudioCue* cue = sample ? sample : carHornSoundChooseSample(audio, globals);
+    const WorldAudioBank* bank = sample ?
+        (sourceBank ? sourceBank : uniqueCueBank(*audio, sample)) : audio->inGameBank;
+    if (!bankContainsCue(bank, cue)) return audio->result = WORLD_AUDIO_INVALID_BINDING;
+    WorldAudioResult result = worldAudioInitializeVoiceFromCue(audio, bank, cue, &voice_);
+    if (result != WORLD_AUDIO_OK) return result;
+    result = worldAudioSetVoiceCategory(audio, voice_, 0);
+    if (result != WORLD_AUDIO_OK) return result;
+    pitchScale_ = 1.0f;
+    return WORLD_AUDIO_OK;
 }
 
-// ELF 0x0018DDA0; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0018dda0.md.
-void BasePlayerCarSound::GetHornSample() {
-    hp2::not_implemented("0x0018DDA0", "BasePlayerCarSound::GetHornSample (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x0018F160; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0018f160.md.
-void HornSound3d::ActivateSound() {
-    hp2::not_implemented("0x0018F160", "HornSound3d::ActivateSound (signature and full body unresolved)");
+WorldAudioResult CarHornSound::Dispose()
+{
+    if (!voice_.instance) return WORLD_AUDIO_OK;
+    const WorldAudioResult result = worldAudioRetireVoice(audio_, voice_);
+    if (result == WORLD_AUDIO_OK) voice_ = {nullptr, 0};
+    return result;
 }
 
-// ELF 0x0018F188; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0018f188.md.
-void HornSound3d::DeactivateSound() {
-    hp2::not_implemented("0x0018F188", "HornSound3d::DeactivateSound (signature and full body unresolved)");
+WorldAudioResult CarHornSound::ActivateSound()
+{
+    if (!audio_ || !globals_) return WORLD_AUDIO_INVALID_BINDING;
+    if (!globals_->policy.audioSystemEnabled) return WORLD_AUDIO_OK;
+    return worldAudioPlayVoice(audio_, voice_, 0.0f, 0.0f, 0.0f);
 }
 
-// ELF 0x0018F208; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0018f208.md.
-void HornSound3d::Mute() {
-    hp2::not_implemented("0x0018F208", "HornSound3d::Mute (signature and full body unresolved)");
+WorldAudioResult CarHornSound::DeactivateSound()
+{
+    if (!audio_) return WORLD_AUDIO_INVALID_BINDING;
+    return worldAudioStopInstance(audio_, voice_.instance);
 }
 
-// ELF 0x0018F218; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0018f218.md.
-void HornSound3d::Update() {
-    hp2::not_implemented("0x0018F218", "HornSound3d::Update (signature and full body unresolved)");
+WorldAudioResult CarHornSound::Pause(int32_t paused)
+{
+    return worldAudioPauseVoice(audio_, voice_, paused != 0);
 }
 
-// ELF 0x0018F2B0; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0018f2b0.md.
-void HornSound3d::Sub_0018F2B0() {
-    hp2::not_implemented("0x0018F2B0", "HornSound3d::Sub_0018F2B0 (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/SirenSound3d.hpp"
-
-namespace hp2::recovered {
-// ELF 0x0018F4D0; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0018f4d0.md.
-void SirenSound3d::ActivateSound() {
-    hp2::not_implemented("0x0018F4D0", "SirenSound3d::ActivateSound (signature and full body unresolved)");
+WorldAudioResult CarHornSound::Update(float volume, uint16_t azimuth, float pitch)
+{
+    if (!spatial.active) return WORLD_AUDIO_OK;
+    WorldAudioResult result = worldAudioSetVoiceVolume(audio_, voice_, volume);
+    if (result != WORLD_AUDIO_OK) return result;
+    result = worldAudioSetVoiceControlCode(audio_, voice_, azimuth);
+    if (result != WORLD_AUDIO_OK) return result;
+    const float scaledPitch = pitchScale_ * pitch;
+    return worldAudioSetVoicePitchOffset(audio_, voice_, scaledPitch - 1.0f);
 }
 
-// ELF 0x0018F508; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0018f508.md.
-void SirenSound3d::DeactivateSound() {
-    hp2::not_implemented("0x0018F508", "SirenSound3d::DeactivateSound (signature and full body unresolved)");
+CarSirenSound::CarSirenSound()
+    : audio_(nullptr), globals_(nullptr), clock_(nullptr), voices_{}, current_(0),
+      remainingSeconds_(17.0f), broken_(0), targetPitch_(1.0f), currentPitch_(1.0f)
+{
 }
 
-// ELF 0x0018F528; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0018f528.md.
-void SirenSound3d::Mute() {
-    hp2::not_implemented("0x0018F528", "SirenSound3d::Mute (signature and full body unresolved)");
+CarSirenSound::~CarSirenSound()
+{
+    Dispose();
 }
 
-// ELF 0x0018F548; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0018f548.md.
-void SirenSound3d::Update() {
-    hp2::not_implemented("0x0018F548", "SirenSound3d::Update (signature and full body unresolved)");
+WorldAudioResult CarSirenSound::Initialize(WorldAudioRequestQueue* audio,
+    CarSoundGlobals* globals, const GameTime* clock)
+{
+    if (!audio || !globals || !clock || globals->nextSiren < 0 || globals->nextSiren > 2)
+        return WORLD_AUDIO_INVALID_BINDING;
+    for (const auto& voice : voices_)
+        if (voice.instance) return WORLD_AUDIO_INVALID_BINDING;
+    sound3dInitialize(&spatial);
+    audio_ = audio;
+    globals_ = globals;
+    clock_ = clock;
+    remainingSeconds_ = 17.0f;
+    for (int32_t index = 0; index < 3; ++index) {
+        char name[] = "CopSiren01";
+        name[9] = static_cast<char>(index + '1');
+        const WorldAudioCue* cue = worldAudioFindInGame(audio, name);
+        if (!cue) return audio->result = WORLD_AUDIO_INVALID_BINDING;
+        WorldAudioResult result = worldAudioInitializeVoiceFromCue(audio, audio->inGameBank, cue, &voices_[index]);
+        if (result != WORLD_AUDIO_OK) return result;
+        result = worldAudioSetVoiceCategory(audio, voices_[index], 0);
+        if (result != WORLD_AUDIO_OK) return result;
+    }
+    globals->nextSiren = (globals->nextSiren + 1) % 3;
+    current_ = globals->nextSiren;
+    broken_ = 0;
+    targetPitch_ = 1.0f;
+    currentPitch_ = 1.0f;
+    return WORLD_AUDIO_OK;
 }
 
-// ELF 0x0018F710; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0018f710.md.
-void SirenSound3d::Sub_0018F710() {
-    hp2::not_implemented("0x0018F710", "SirenSound3d::Sub_0018F710 (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x0018D258; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0018d258.md.
-void BaseCarSound::Sub_0018D258() {
-    hp2::not_implemented("0x0018D258", "BaseCarSound::Sub_0018D258 (signature and full body unresolved)");
-}
-
-// ELF 0x0018D340; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0018d340.md.
-void BaseCarSound::Update() {
-    hp2::not_implemented("0x0018D340", "BaseCarSound::Update (signature and full body unresolved)");
+WorldAudioResult CarSirenSound::Dispose()
+{
+    WorldAudioResult result = WORLD_AUDIO_OK;
+    for (int32_t index = 2; index >= 0; --index) {
+        if (!voices_[index].instance) continue;
+        const WorldAudioResult retired = worldAudioRetireVoice(audio_, voices_[index]);
+        if (retired == WORLD_AUDIO_OK) voices_[index] = {nullptr, 0};
+        else if (result == WORLD_AUDIO_OK) result = retired;
+    }
+    if (audio_) audio_->result = result;
+    return result;
 }
 
-// ELF 0x0018D750; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0018d750.md.
-void BaseCarSound::InSoundSphere() {
-    hp2::not_implemented("0x0018D750", "BaseCarSound::InSoundSphere (signature and full body unresolved)");
+WorldAudioResult CarSirenSound::SetMode(int32_t mode)
+{
+    WorldAudioResult result = WORLD_AUDIO_OK;
+    if (mode == 0) {
+        if (spatial.active) result = Activate(0);
+    } else if (!spatial.active) {
+        result = Activate(1);
+    }
+    if (spatial.active) SetBroken(mode == 4);
+    return result;
 }
-} // namespace hp2::recovered
 
-namespace hp2::debug {
-// Debug0018D168/0018D190, E-0099-W40. Real queue/voice ownership at zero gain.
-void HornSound3d::ActivateSound(){if(m_.word(0x326f40))bSample(m_,address_+0x20).Play(0,0,0);}
-void HornSound3d::DeactivateSound(){bSample(m_,address_+0x20).Stop();}
-// Debug0018D4D8/0018D510, E-0099-W40. Original current-siren table selection.
-void SirenSound3d::ActivateSound(){if(m_.word(0x326f40))bSample(m_,address_+0x20+m_.word(address_+0x254)*0xbc).Play(0,0,0);}
-void SirenSound3d::DeactivateSound(){bSample(m_,address_+0x20+m_.word(address_+0x254)*0xbc).Stop();}
+void CarSirenSound::SetBroken(int32_t broken)
+{
+    broken_ = broken;
+}
+
+WorldAudioResult CarSirenSound::ActivateSound()
+{
+    if (!audio_ || !globals_) return WORLD_AUDIO_INVALID_BINDING;
+    if (!globals_->policy.audioSystemEnabled) return WORLD_AUDIO_OK;
+    return worldAudioPlayVoice(audio_, voices_[current_], 0.0f, 0.0f, 0.0f);
+}
+
+WorldAudioResult CarSirenSound::DeactivateSound()
+{
+    if (!audio_) return WORLD_AUDIO_INVALID_BINDING;
+    return worldAudioStopInstance(audio_, voices_[current_].instance);
+}
+
+WorldAudioResult CarSirenSound::Pause(int32_t paused)
+{
+    return worldAudioPauseVoice(audio_, voices_[current_], paused != 0);
+}
+
+float CarSirenSound::BrokenPitch()
+{
+    if (targetPitch_ == currentPitch_)
+        targetPitch_ = vectorRandomFloat(&worldAudioRuntime.randomState, 0.8999999761581421f) + 0.10000000149011612f;
+    const float upper = currentPitch_ + 0.029999999329447746f;
+    if (upper < targetPitch_) currentPitch_ = upper;
+    else {
+        const float lower = currentPitch_ - 0.029999999329447746f;
+        currentPitch_ = targetPitch_ < lower ? lower : targetPitch_;
+    }
+    return currentPitch_;
+}
+
+WorldAudioResult CarSirenSound::Update(float volume, uint16_t azimuth, float pitch)
+{
+    if (!audio_ || !globals_ || !clock_) return WORLD_AUDIO_INVALID_BINDING;
+    if (volume == 0.0f) {
+        const WorldAudioResult result = Activate(0);
+        if (result != WORLD_AUDIO_OK) return result;
+    }
+    if (!spatial.active) return WORLD_AUDIO_OK;
+
+    remainingSeconds_ = remainingSeconds_ - clock_->worldTimeElapsed;
+    if (remainingSeconds_ < 0.0f) {
+        const WorldAudioResult result = worldAudioStopInstance(audio_, voices_[current_].instance);
+        if (result != WORLD_AUDIO_OK) return result;
+        current_ = (current_ + 1) % 3;
+        remainingSeconds_ = 17.0f;
+    }
+    WorldAudioVoiceRef voice = voices_[current_];
+    WorldAudioResult result = worldAudioValidateVoice(audio_, voice);
+    if (result != WORLD_AUDIO_OK) return result;
+    if (voice.instance->playing) {
+        result = worldAudioSetVoiceVolume(audio_, voice, volume);
+        if (result != WORLD_AUDIO_OK) return result;
+    } else {
+        remainingSeconds_ = 17.0f;
+        if (globals_->policy.audioSystemEnabled) {
+            result = worldAudioPlayVoice(audio_, voice, volume, 0.0f, 0.0f);
+            if (result != WORLD_AUDIO_OK) return result;
+        }
+    }
+    if (broken_) pitch = pitch * BrokenPitch();
+    result = worldAudioSetVoicePitchOffset(audio_, voice, pitch - 1.0f);
+    if (result != WORLD_AUDIO_OK) return result;
+    return worldAudioSetVoiceControlCode(audio_, voice, azimuth);
+}
+
+namespace {
+
+WorldAudioResult splashSample(WorldAudioRequestQueue* audio, int32_t index,
+    WorldAudioVoiceRef* sample)
+{
+    if (index == -1)
+        index = static_cast<int32_t>(vectorRandomBounded(3, &worldAudioRuntime.randomState));
+    char name[] = "Splash1";
+    name[6] = static_cast<char>(static_cast<uint8_t>(static_cast<uint32_t>(index) + '1'));
+    return worldAudioAcquireInGameSample(audio, name, sample);
+}
+
+class AiCarSound final : public CarSoundState {
+public:
+    AiCarSound(CarMovement* movement, const CarSoundBindings& bindings);
+    ~AiCarSound() override;
+    WorldAudioResult Update(float volume, uint16_t azimuth, float pitch) override;
+};
+
+} // namespace
+
+CarSoundState::CarSoundState(CarMovement* movement, const CarSoundBindings& bindings)
+    : movement_(movement), bindings_(bindings), splashLevel_{}, splashCountdown_{},
+      horn_{}, engine_{}, siren_{}, tirePop_{nullptr, 0}, tires_{}, envelope_(nullptr)
+{
+    if (!movement || !movement->bindings.state || !movement->bindings.info ||
+        !bindings.audio || !bindings.globals)
+        throw std::invalid_argument("Car sound has no actual movement/audio owner");
+    for (int32_t index = 0; index < 3; ++index) {
+        WorldAudioVoiceRef splash{};
+        if (splashSample(bindings.audio, index, &splash) != WORLD_AUDIO_OK ||
+            worldAudioSetVoiceCategory(bindings.audio, splash, 0) != WORLD_AUDIO_OK)
+            throw std::runtime_error("Car splash samples are absent from the actual bank");
+    }
+    if (worldAudioAcquireInGameSample(bindings.audio, "TirePop1", &tirePop_) != WORLD_AUDIO_OK ||
+        worldAudioSetVoiceCategory(bindings.audio, tirePop_, 0) != WORLD_AUDIO_OK)
+        throw std::runtime_error("Car tire-pop sample is absent from the actual bank");
+    if (movement->bindings.info->bodyCategory == 1) {
+        siren_ = std::make_unique<CarSirenSound>();
+        if (siren_->Initialize(bindings.audio, bindings.globals, bindings.clock) != WORLD_AUDIO_OK)
+            throw std::runtime_error("Car siren cannot initialize its actual samples");
+    }
+}
+
+CarSoundState::~CarSoundState()
+{
+    horn_.reset();
+    engine_.reset();
+    siren_.reset();
+    tires_[0].reset();
+    tires_[1].reset();
+    // Splash and tire-pop are borrowed bank samples, not private voices.
+}
+
+WorldAudioResult CarSoundState::Update(float volume, uint16_t azimuth, float pitch)
+{
+    (void)azimuth;
+    if (!envelope_ || !horn_) return WORLD_AUDIO_INVALID_BINDING;
+    if (sound3dUpdate(&spatial, &bindings_.spatial, movement_->bindings.state->position,
+        envelope_) != SOUND3D_OK) return WORLD_AUDIO_INVALID_BINDING;
+    spatial.volume = spatial.volume * volume;
+    spatial.pitch = spatial.pitch * pitch;
+    WorldAudioResult result = horn_->Update(spatial.volume, spatial.azimuth, spatial.pitch);
+    if (result == WORLD_AUDIO_OK && siren_) result = UpdateSirenSound();
+    if (result == WORLD_AUDIO_OK)
+        result = UpdateSplash(spatial.volume, splashLevel_[0], splashCountdown_[0]);
+    if (result == WORLD_AUDIO_OK)
+        result = UpdateSplash(spatial.volume, splashLevel_[1], splashCountdown_[1]);
+    return result;
+}
+
+WorldAudioResult CarSoundState::UpdateSirenSound()
+{
+    if (!siren_) return WORLD_AUDIO_INVALID_BINDING;
+    WorldAudioResult result = WORLD_AUDIO_OK;
+    if (spatial.active) {
+        if (!bindings_.frame) return WORLD_AUDIO_INVALID_BINDING;
+        result = siren_->SetMode(bindings_.frame->signalEnabled);
+    } else if (siren_->spatial.active) {
+        result = siren_->Activate(0);
+    }
+    if (result == WORLD_AUDIO_OK)
+        result = siren_->Update(spatial.volume, spatial.azimuth, spatial.pitch);
+    return result;
+}
+
+const WorldAudioCue* CarSoundState::GetHornSample()
+{
+    return nullptr; // The original BaseCarSound virtual method returns NULL.
+}
+
+WorldAudioResult CarSoundState::UpdateSplash(float volume, int32_t& level, int32_t& countdown)
+{
+    if (countdown) countdown = static_cast<int32_t>(static_cast<uint32_t>(countdown) - 1u);
+    if (!level) return WORLD_AUDIO_OK;
+    if (countdown) {
+        level = 0;
+        return WORLD_AUDIO_OK;
+    }
+    WorldAudioResult result = WORLD_AUDIO_OK;
+    if (bindings_.globals->policy.audioSystemEnabled &&
+        bindings_.globals->policy.vehicleAudioEnabled && bindings_.globals->splashEnabled) {
+        WorldAudioVoiceRef sample{};
+        result = splashSample(bindings_.audio, -1, &sample);
+        if (result == WORLD_AUDIO_OK)
+            result = worldAudioPlayVoice(bindings_.audio, sample, volume * static_cast<float>(level), -1.0f, 0.0f);
+    }
+    countdown = 10;
+    level = 0;
+    return result;
+}
+
+WorldAudioResult CarSoundState::Pause(int32_t paused)
+{
+    if (!horn_ || !engine_) return WORLD_AUDIO_INVALID_BINDING;
+    WorldAudioResult result = horn_->Pause(paused);
+    if (result == WORLD_AUDIO_OK) result = engine_->Pause(paused);
+    if (result == WORLD_AUDIO_OK && siren_) result = siren_->Pause(paused);
+    for (auto& tire : tires_) {
+        if (result == WORLD_AUDIO_OK && tire) result = tire->Pause(paused);
+    }
+    for (int32_t index = 0; result == WORLD_AUDIO_OK && index < 3; ++index) {
+        WorldAudioVoiceRef sample{};
+        result = splashSample(bindings_.audio, index, &sample);
+        if (result == WORLD_AUDIO_OK) result = worldAudioPauseVoice(bindings_.audio, sample, paused != 0);
+    }
+    return result;
+}
+
+WorldAudioResult CarSoundState::ScaleRoadNoise(float scale)
+{
+    for (auto& tire : tires_) if (tire) tire->ScaleRoadNoise(scale);
+    return WORLD_AUDIO_OK;
+}
+
+bool CarSoundState::InSoundSphere() const
+{
+    return spatial.distance < 130.0f;
+}
+
+WorldAudioResult CarSoundState::DeactivateSound()
+{
+    if (!horn_ || !engine_) return WORLD_AUDIO_INVALID_BINDING;
+    WorldAudioResult result = horn_->Activate(0);
+    if (result == WORLD_AUDIO_OK) result = engine_->Activate(0);
+    for (auto& tire : tires_) {
+        if (result == WORLD_AUDIO_OK && tire) result = tire->Activate(0);
+    }
+    return result;
+}
+
+WorldAudioResult CarSoundState::ActivateSound()
+{
+    if (!engine_) return WORLD_AUDIO_INVALID_BINDING;
+    WorldAudioResult result = engine_->Activate(1);
+    for (auto& tire : tires_) {
+        if (result == WORLD_AUDIO_OK && tire) result = tire->Activate(1);
+    }
+    return result;
+}
+
+Sound3d* CarSoundState::Engine() const { return engine_.get(); }
+BaseTireSound* CarSoundState::Tire(int32_t side) const { return tires_[side != 0].get(); }
+
+int32_t carSoundStartHorn(CarSoundState* sound)
+{
+    if (!sound || !sound->horn_) return 0;
+    if (!sound->bindings_.globals->policy.audioSystemEnabled ||
+        !sound->bindings_.globals->policy.vehicleAudioEnabled) return 1;
+    return sound->horn_->Activate(1) == WORLD_AUDIO_OK;
+}
+
+int32_t carSoundStopHorn(CarSoundState* sound)
+{
+    if (!sound || !sound->horn_) return 0;
+    if (!sound->bindings_.globals->policy.audioSystemEnabled ||
+        !sound->bindings_.globals->policy.vehicleAudioEnabled) return 1;
+    return sound->horn_->Activate(0) == WORLD_AUDIO_OK;
+}
+
+int32_t carSoundHornActive(const CarSoundState* sound)
+{
+    return sound && sound->horn_ && sound->bindings_.globals->policy.audioSystemEnabled &&
+        sound->bindings_.globals->policy.vehicleAudioEnabled && sound->horn_->spatial.active != 0;
+}
+
+int32_t carSoundRefreshEffects(CarSoundState* sound)
+{
+    if (!sound) return 0;
+    const CarSoundGlobals& globals = *sound->bindings_.globals;
+    if (globals.policy.audioSystemEnabled && globals.policy.vehicleAudioEnabled && globals.tirePopEnabled) {
+        if (worldAudioPlayVoice(sound->bindings_.audio, sound->tirePop_, sound->spatial.volume,
+            static_cast<float>(sound->spatial.azimuth), sound->spatial.pitch) != WORLD_AUDIO_OK) return 0;
+    }
+    for (auto& tire : sound->tires_) if (tire) tire->TriggerTireBlowOut();
+    return 1;
+}
+
+void carSoundSetSurfaceLevel(CarSoundState* sound, int32_t channel, int32_t level)
+{
+    if (!sound) std::abort(); // Required source Car+854 owner is absent.
+    sound->splashLevel_[channel != 0] = level;
+}
+
+namespace {
+
+AiCarSound::AiCarSound(CarMovement* movement, const CarSoundBindings& bindings)
+    : CarSoundState(movement, bindings)
+{
+    envelope_ = &bindings.globals->aiEnvelope;
+    WorldAudioResult result;
+    engine_.reset(carSoundCreateAiEngine(movement, &bindings, &result));
+    if (!engine_) throw std::runtime_error("AI car engine sound cannot be constructed");
+    auto horn = std::make_unique<CarHornSound>();
+    if (horn->Initialize(bindings.audio, bindings.globals, GetHornSample()) != WORLD_AUDIO_OK)
+        throw std::runtime_error("AI car horn cannot initialize its actual sample");
+    horn_ = std::move(horn);
+    tires_[0].reset(carSoundCreateAiTire(movement, &bindings, &result));
+    if (!tires_[0]) throw std::runtime_error("AI car tires cannot initialize actual samples");
+}
+
+AiCarSound::~AiCarSound() = default;
+
+WorldAudioResult AiCarSound::Update(float volume, uint16_t azimuth, float pitch)
+{
+    if (!spatial.active) {
+        return sound3dUpdateRelativeMotion(&spatial, &bindings_.spatial,
+            movement_->bindings.state->position) == SOUND3D_OK ? WORLD_AUDIO_OK : WORLD_AUDIO_INVALID_BINDING;
+    }
+    WorldAudioResult result = CarSoundState::Update(volume * 1.5f, azimuth, pitch);
+    if (result == WORLD_AUDIO_OK) result = engine_->Update(spatial.volume, spatial.azimuth, spatial.pitch);
+    if (result == WORLD_AUDIO_OK) result = tires_[0]->Update(spatial.volume, spatial.azimuth, spatial.pitch);
+    return result;
+}
+
+CarSoundState* createAiCarSound(CarMovement* movement, const CarSoundBindings* bindings,
+    WorldAudioResult* result)
+{
+    if (!bindings) {
+        if (result) *result = WORLD_AUDIO_INVALID_BINDING;
+        return nullptr;
+    }
+    try {
+        auto* sound = new AiCarSound(movement, *bindings);
+        if (result) *result = WORLD_AUDIO_OK;
+        return sound;
+    } catch (const std::bad_alloc& failure) {
+        if (bindings->audio && bindings->audio->library)
+            bindings->audio->library->RecordSourceFailure(WORLD_AUDIO_CAPACITY,"AI car sound",failure.what());
+        if (result) *result = WORLD_AUDIO_CAPACITY;
+    } catch (const std::exception& failure) {
+        const auto status=WORLD_AUDIO_INVALID_BINDING;
+        if (bindings->audio && bindings->audio->library)
+            bindings->audio->library->RecordSourceFailure(status,"AI car sound",failure.what());
+        if (result) *result = status;
+    } catch (...) {
+        if (bindings->audio && bindings->audio->library)
+            bindings->audio->library->RecordSourceFailure(WORLD_AUDIO_INVALID_BINDING,"AI car sound","Non-standard source exception");
+        if (result) *result = WORLD_AUDIO_INVALID_BINDING;
+    }
+    return nullptr;
+}
+
+} // namespace
+
+CarSoundState* carSoundCreateAi(CarMovement* movement,
+    const CarSoundBindings* bindings, WorldAudioResult* result)
+{
+    return createAiCarSound(movement, bindings, result);
+}
+
+CarSoundState* carSoundCreateAiCop(CarMovement* movement,
+    const CarSoundBindings* bindings, WorldAudioResult* result)
+{
+    return createAiCarSound(movement, bindings, result);
+}
+
+namespace {
+
+// Final48-byte POVVolumeTable310090. Rows are the actual signed Player
+// camera-view byte0..3; the three columns retain their source order.
+float playerPovVolumes[4][3] = {
+    {0.800000011920929f, 1.0f, 0.75f},
+    {0.8999999761581421f, 0.8999999761581421f, 0.8500000238418579f},
+    {1.0f, 0.75f, 1.0f},
+    {1.25f, 0.4000000059604645f, 0.8999999761581421f}
+};
+
+struct PlayerCarAudioFailure { WorldAudioResult result; };
+
+void requirePlayerCarAudio(WorldAudioResult result)
+{
+    if (result != WORLD_AUDIO_OK) throw PlayerCarAudioFailure{result};
+}
+
+CarFramePlayerState* playerCarOwner(const CarMovement* movement)
+{
+    if (!movement || !movement->frame) return nullptr;
+    auto* player = movement->frame->environment.player;
+    if (!player) return nullptr;
+    return player->car == movement && movement->bindings.player == &player->movement ? player : nullptr;
+}
+
+float playerPovVolume(const CarMovement* movement, int32_t type)
+{
+    int32_t view = 0;
+    if (movement->bindings.player) {
+        const auto* player = playerCarOwner(movement);
+        if (!player) throw PlayerCarAudioFailure{WORLD_AUDIO_INVALID_BINDING};
+        view = player->settings.cameraView;
+    }
+    if (view < 0 || view >= 4) throw PlayerCarAudioFailure{WORLD_AUDIO_INVALID_BINDING};
+    if (type == 0) return playerPovVolumes[view][0];
+    if (type == 1) return playerPovVolumes[view][2];
+    if (type == 2) return playerPovVolumes[view][1];
+    return 1.0f;
+}
+
+const hp2::CarDefinition& playerCarDefinition(const CarMovement* movement,
+    const CarSoundBindings& bindings)
+{
+    if (!movement || !movement->bindings.info || !bindings.cars || !bindings.cars->CarsLoaded())
+        throw std::invalid_argument("Player car sound has no retained physical model");
+    const int32_t model = movement->bindings.info->modelCode;
+    if (model < 0 || model >= 64)
+        throw std::invalid_argument("Player car sound model is outside the actual64-record resource");
+    const auto& definition = bindings.cars->Car(static_cast<size_t>(model));
+    if (movement->bindings.info->engine != &definition.engineInfo)
+        throw std::invalid_argument("Player car sound has a different physical model owner");
+    return definition;
+}
+
+void soundLocalPoint(CarMovement* movement, float output[2], const float point[2])
+{
+    VehicleState* state = movement->bindings.state;
+    const float* frame = vehicleStateVelocityFrame(state);
+    float transpose[16], transformed[4];
+    vectorMatrixTranspose(transpose, frame);
+    const float relative[4] = {point[0] - state->position[0], point[1] - state->position[1], 0.0f, 0.0f};
+    vectorMatrixTransform(transformed, transpose, relative);
+    output[0] = transformed[0];
+    output[1] = transformed[1];
+}
+
+const float* soundBodyPosition(const CollisionShape* shape)
+{
+    if (shape->bodyMode) return shape->body ? shape->body->motion.position : nullptr;
+    return shape->vehicle.position;
+}
+
+} // namespace
+
+CarFramePlayerState* BasePlayerCarSound::Player() const
+{
+    return playerCarOwner(movement_);
+}
+
+BasePlayerCarSound::BasePlayerCarSound(CarMovement* movement, const CarSoundBindings& bindings)
+    : CarSoundState(movement, bindings), topology_{}, wind_{},
+      reflectionPending_{0, 0}, reflectionReady_(1), playerAzimuth_(0)
+{
+    if (!movement->frame || !movement->bindings.environment ||
+        !movement->bindings.environment->contact.terrain ||
+        !movement->bindings.environment->contact.terrain->topology ||
+        !bindings.race || !bindings.race->services || !bindings.race->services->settings ||
+        bindings.frame != &movement->frame->state || !bindings.spatial.players ||
+        bindings.spatial.players->soundPolicy != &bindings.globals->policy)
+        throw std::invalid_argument("Player car sound has no same-owner frame/topology/configuration");
+    // PAL130BC0 clears Car.player before18EB28 constructs this sound owner.
+    // Player attachment is required by the later Update consumer, not by
+    // this constructor; enforcing it here prevented the actual Car lifetime.
+    const auto& definition = playerCarDefinition(movement, bindings);
+    // Traffic resources have no player .ctl or per-model sample bank. Keep
+    // their InGame horn and the native player engine factory, which owns a
+    // dedicated RPM/throttle loop on the player's engine-volume category.
+    const bool traffic=definition.bodyCategory==2;
+    const auto* modelBank = traffic ? nullptr : soundBank(*bindings.audio, definition.engineSound.c_str());
+    topology_ = std::make_unique<TerrainSurface>();
+    terrainSurfaceInitialize(topology_.get(), movement->bindings.environment->contact.terrain->topology);
+    envelope_ = &bindings.globals->playerEnvelope;
+    try {
+        const auto* wind = worldAudioFindInGame(bindings.audio, "Wind");
+        if (!wind) throw PlayerCarAudioFailure{WORLD_AUDIO_INVALID_BINDING};
+        requirePlayerCarAudio(worldAudioInitializeVoiceFromCue(bindings.audio,
+            bindings.audio->inGameBank, wind, &wind_));
+        requirePlayerCarAudio(worldAudioSetVoiceCategory(bindings.audio, wind_, 0));
+        auto horn = std::make_unique<CarHornSound>();
+        requirePlayerCarAudio(horn->Initialize(bindings.audio, bindings.globals, GetHornSample(), modelBank));
+        horn_ = std::move(horn);
+        WorldAudioResult result{};
+        engine_.reset(carSoundCreatePlayerEngine(movement, &bindings, &result));
+        if (!engine_) throw PlayerCarAudioFailure{result == WORLD_AUDIO_OK ? WORLD_AUDIO_INVALID_BINDING : result};
+        tires_[0].reset(carSoundCreatePlayerTire(movement, 0, &bindings, &result));
+        if (!tires_[0]) throw PlayerCarAudioFailure{result == WORLD_AUDIO_OK ? WORLD_AUDIO_INVALID_BINDING : result};
+        const int32_t mode = bindings.race->services->settings->mode;
+        if (mode == 1) {
+            tires_[1].reset(carSoundCreatePlayerTire(movement, 1, &bindings, &result));
+            if (!tires_[1]) throw PlayerCarAudioFailure{result == WORLD_AUDIO_OK ? WORLD_AUDIO_INVALID_BINDING : result};
+        }
+        if (mode >= 2) {
+            const int32_t driver = movement->bindings.owner->driverNumber;
+            if (driver == 0) playerAzimuth_ = static_cast<uint16_t>(0u - bindings.globals->multiplayerAzimuth);
+            else if (driver == 1) playerAzimuth_ = bindings.globals->multiplayerAzimuth;
+        }
+        requirePlayerCarAudio(Activate(1));
+    } catch (...) {
+        if (wind_.instance) worldAudioRetireVoice(bindings_.audio, wind_);
+        terrainSurfaceDispose(topology_.get());
+        throw;
+    }
+}
+
+BasePlayerCarSound::~BasePlayerCarSound()
+{
+    if (wind_.instance) worldAudioStopInstance(bindings_.audio, wind_.instance);
+    if (topology_) {
+        terrainSurfaceDispose(topology_.get());
+        topology_.reset();
+    }
+    if (wind_.instance) worldAudioRetireVoice(bindings_.audio, wind_);
+}
+
+const WorldAudioCue* BasePlayerCarSound::GetHornSample()
+{
+    const auto& definition = playerCarDefinition(movement_, bindings_);
+    if(definition.bodyCategory==2)return nullptr; // Real InGame Horn01..03 chooser.
+    const auto& prefix = definition.playerEngineSamplePrefix;
+    const auto end = std::find(prefix.begin(), prefix.end(), '\0');
+    if (end == prefix.end()) throw PlayerCarAudioFailure{WORLD_AUDIO_INVALID_BINDING};
+    const std::string name = std::string(prefix.begin(), end) + "Horn";
+    const auto* bank = soundBank(*bindings_.audio, definition.engineSound.c_str());
+    return bank ? worldAudioFindInBank(bank, name.c_str()) : nullptr;
+}
+
+WorldAudioVoiceRef BasePlayerCarSound::GetEngineReflectionSample(int32_t index)
+{
+    if (index == -1) index = static_cast<int32_t>(vectorRandomBounded(2, &worldAudioRuntime.randomState));
+    char name[] = "Reflection01";
+    name[11] = static_cast<char>(static_cast<uint8_t>(static_cast<uint32_t>(index) + '1'));
+    WorldAudioVoiceRef voice{};
+    requirePlayerCarAudio(worldAudioAcquireInGameSample(bindings_.audio, name, &voice));
+    return voice;
+}
+
+float BasePlayerCarSound::CalcWindVolume(float volume) const
+{
+    return (playerPovVolume(movement_, 2) * volume) * 0.012000000104308128f;
+}
+
+float BasePlayerCarSound::CalcWindPitch(float pitch) const
+{
+    return pitch * 0.00800000037997961f;
+}
+
+WorldAudioResult BasePlayerCarSound::Pause(int32_t paused)
+{
+    WorldAudioResult result = CarSoundState::Pause(paused);
+    if (result != WORLD_AUDIO_OK) return result;
+    try {
+        requirePlayerCarAudio(worldAudioPauseVoice(bindings_.audio, wind_, paused != 0));
+        requirePlayerCarAudio(worldAudioPauseVoice(bindings_.audio, GetEngineReflectionSample(0), paused != 0));
+        requirePlayerCarAudio(worldAudioPauseVoice(bindings_.audio, GetEngineReflectionSample(1), paused != 0));
+        const auto* player = Player();
+        if (!player) return WORLD_AUDIO_INVALID_BINDING;
+        if (player->cinematicVoice) {
+            const WorldAudioVoiceRef voice = {player->cinematicVoice, player->cinematicVoiceGeneration};
+            requirePlayerCarAudio(worldAudioPauseVoice(bindings_.audio, voice, paused != 0));
+        }
+        return WORLD_AUDIO_OK;
+    } catch (const PlayerCarAudioFailure& failure) {
+        return failure.result;
+    }
+}
+
+WorldAudioResult BasePlayerCarSound::UpdateEngineReflection(float volume, uint16_t azimuth, float pitch)
+{
+    (void)azimuth;
+    (void)pitch;
+    try {
+        if (reflectionPending_[0] || reflectionPending_[1]) {
+            const float speed = movement_->bindings.state->speed;
+            const float gain = speed * 0.029999999329447746f;
+            const float offset = speed * 0.014999999664723873f;
+            for (int32_t side = 0; side < 2; ++side) {
+                if (!reflectionPending_[side]) continue;
+                if (bindings_.globals->policy.audioSystemEnabled && bindings_.globals->policy.vehicleAudioEnabled) {
+                    const auto voice = GetEngineReflectionSample(-1);
+                    requirePlayerCarAudio(worldAudioPlayVoice(bindings_.audio, voice, gain * volume, 0.0f, offset - 1.0f));
+                    const uint16_t angle = side == 0 ? static_cast<uint16_t>(0u - bindings_.globals->reflectionAzimuth) :
+                        bindings_.globals->reflectionAzimuth;
+                    requirePlayerCarAudio(worldAudioSetVoiceControlCode(bindings_.audio, voice, angle));
+                }
+                reflectionPending_[side] = 0;
+            }
+        }
+        if (movement_->bindings.state->speed < 13.88888931274414f) {
+            reflectionReady_ = 1;
+            return WORLD_AUDIO_OK;
+        }
+        return UpdateDynamicBodyReflections();
+    } catch (const PlayerCarAudioFailure& failure) {
+        return failure.result;
+    }
+}
+
+WorldAudioResult BasePlayerCarSound::UpdateDynamicBodyReflections()
+{
+    if (!movement_->collisionSystem || !movement_->collisionSystem->space ||
+        !movement_->bindings.ownerMotion || !movement_->bindings.ownerMotion->collision)
+        return WORLD_AUDIO_INVALID_BINDING;
+    const CollisionSpace* space = movement_->collisionSystem->space;
+    CollisionShape* own = movement_->bindings.ownerMotion->collision->shape;
+    if (!own || !own->next || !own->previous) return WORLD_AUDIO_INVALID_BINDING;
+    const float* ownPosition = soundBodyPosition(own);
+    const float* ownVelocity = collisionShapeVelocity(own);
+    if (!ownPosition || !ownVelocity) return WORLD_AUDIO_INVALID_BINDING;
+    CollisionShape* before = nullptr;
+    CollisionShape* after = nullptr;
+    collisionShapeFindRange(space, own, &before, &after, 9.0f);
+    if (!before || !after) return WORLD_AUDIO_INVALID_BINDING;
+    for (CollisionShape* other = before->next; other != after; other = other->next) {
+        if (!other || other == &space->root) return WORLD_AUDIO_INVALID_BINDING;
+        if (other == own || other->kind == 28) continue;
+        const float* otherPosition = soundBodyPosition(other);
+        const float* otherVelocity = collisionShapeVelocity(other);
+        if (!otherPosition || !otherVelocity) return WORLD_AUDIO_INVALID_BINDING;
+        const float dx = otherPosition[0] - ownPosition[0];
+        const float dy = otherPosition[1] - ownPosition[1];
+        const float dz = otherPosition[2] - ownPosition[2];
+        const float xx = dx * dx, yy = dy * dy, zz = dz * dz;
+        if (9.0f < std::sqrt((xx + yy) + zz)) continue;
+        float local[2];
+        soundLocalPoint(movement_, local, otherPosition);
+        const float vx = ownVelocity[0] - otherVelocity[0];
+        const float vy = ownVelocity[1] - otherVelocity[1];
+        const float vx2 = vx * vx, vy2 = vy * vy;
+        if (!(13.88888931274414f < std::sqrt(vx2 + vy2))) continue;
+        float ownFuture[2], otherFuture[2];
+        vectorMultiplyAdd2(ownFuture, ownPosition, ownVelocity, bindings_.clock->worldTimeElapsed);
+        vectorMultiplyAdd2(otherFuture, otherPosition, otherVelocity, bindings_.clock->worldTimeElapsed);
+        const float futureDelta[2] = {otherFuture[0] - ownFuture[0], otherFuture[1] - ownFuture[1]};
+        float futureDirection[2], ownDirection[2], currentDirection[2];
+        vectorNormalize2(futureDirection, futureDelta);
+        vectorNormalize2(ownDirection, ownVelocity);
+        const float currentDelta[2] = {otherPosition[0] - ownPosition[0], otherPosition[1] - ownPosition[1]};
+        vectorNormalize2(currentDirection, currentDelta);
+        const float currentX = currentDirection[0] * ownDirection[0];
+        const float currentY = currentDirection[1] * ownDirection[1];
+        const float futureX = futureDirection[0] * ownDirection[0];
+        const float futureY = futureDirection[1] * ownDirection[1];
+        const float currentDot = currentX + currentY;
+        const float futureDot = futureX + futureY;
+        if ((currentDot < 0.0f && 0.0f < futureDot) || (0.0f < currentDot && futureDot < 0.0f))
+            reflectionPending_[local[0] < 0.0f ? 0 : 1] = 1;
+    }
+    return WORLD_AUDIO_OK;
+}
+
+WorldAudioResult BasePlayerCarSound::UpdateTopologyReflections()
+{
+    if (!topology_ || !movement_->bindings.state || !movement_->bindings.state->position)
+        return WORLD_AUDIO_INVALID_BINDING;
+    terrainSurfaceUpdate(topology_.get(), movement_->bindings.state->position, 7.0f, nullptr);
+    const float rightMinimum[2] = {0.0f, -12.0f};
+    const float rightMaximum[2] = {5.0f, 12.0f};
+    const float leftMinimum[2] = {-5.0f, -12.0f};
+    const float leftMaximum[2] = {0.0f, 12.0f};
+    int32_t front = 0, middle = 0, back = 0, side = 0;
+    for (size_t index = 0; index < topology_->barrierCount; ++index) {
+        const size_t offset = topology_->groundCount + index;
+        if (offset >= topology_->polygonCount || !topology_->polygons[offset]) return WORLD_AUDIO_INVALID_BINDING;
+        const auto* polygon = topology_->polygons[offset];
+        float first[2], second[2];
+        soundLocalPoint(movement_, first, polygon->minimum);
+        soundLocalPoint(movement_, second, polygon->maximum);
+        const int32_t right = vectorBoundsContainsPoint2(rightMinimum, rightMaximum, first, 0.0f) &&
+            vectorBoundsContainsPoint2(rightMinimum, rightMaximum, second, 0.0f);
+        const int32_t left = vectorBoundsContainsPoint2(leftMinimum, leftMaximum, first, 0.0f) &&
+            vectorBoundsContainsPoint2(leftMinimum, leftMaximum, second, 0.0f);
+        if (!right && !left) continue;
+        for (const float* point : {first, second}) {
+            if (10.0f < point[1]) front = 1;
+            else if (point[1] < -10.0f) back = 1;
+            else { middle = 1; side = right ? 1 : -1; }
+        }
+        if (front || back) break;
+    }
+    if (reflectionReady_ && middle && !front && !back) {
+        reflectionPending_[side == 1 ? 1 : 0] = 1;
+        reflectionReady_ = 0;
+    } else {
+        reflectionReady_ = 1;
+    }
+    return WORLD_AUDIO_OK;
+}
+
+const TerrainSurface* BasePlayerCarSound::ReflectionSurface() const
+{
+    return topology_.get();
+}
+
+WorldAudioResult BasePlayerCarSound::Update(float volume, uint16_t azimuth, float pitch)
+{
+    auto result = CarSoundState::Update(volume, azimuth, pitch);
+    if (result != WORLD_AUDIO_OK) return result;
+    try {
+        spatial.azimuth = playerAzimuth_;
+        const float engineVolume = spatial.volume * playerPovVolume(movement_, 0);
+        const float tireVolume = spatial.volume * playerPovVolume(movement_, 1);
+        requirePlayerCarAudio(engine_->Update(engineVolume, spatial.azimuth, spatial.pitch));
+        for (auto& tire : tires_)
+            if (tire) requirePlayerCarAudio(tire->Update(tireVolume, spatial.azimuth, spatial.pitch));
+        requirePlayerCarAudio(UpdateEngineReflection(spatial.volume, spatial.azimuth, spatial.pitch));
+        auto* player = Player();
+        if (!player) return WORLD_AUDIO_INVALID_BINDING;
+        if (player->cinematicVoice && !player->transitionAudio) {
+            carFramePlayerStopStateAudio(player);
+            if (bindings_.globals->policy.audioSystemEnabled && player->cinematicVoice)
+                return bindings_.audio->result == WORLD_AUDIO_OK ? WORLD_AUDIO_INVALID_BINDING : bindings_.audio->result;
+        }
+        return WORLD_AUDIO_OK;
+    } catch (const PlayerCarAudioFailure& failure) {
+        return failure.result;
+    }
+}
+
+CarSoundState* carSoundCreatePlayer(CarMovement* movement,
+    const CarSoundBindings* bindings, WorldAudioResult* result)
+{
+    if (!bindings) {
+        if (result) *result = WORLD_AUDIO_INVALID_BINDING;
+        return nullptr;
+    }
+    try {
+        auto* sound = new BasePlayerCarSound(movement, *bindings);
+        if (result) *result = WORLD_AUDIO_OK;
+        return sound;
+    } catch (const PlayerCarAudioFailure& failure) {
+        if (bindings->audio && bindings->audio->library)
+            bindings->audio->library->RecordSourceFailure(failure.result,"Player car sound","Source audio operation rejected");
+        if (result) *result = failure.result;
+    } catch (const std::bad_alloc& failure) {
+        if (bindings->audio && bindings->audio->library)
+            bindings->audio->library->RecordSourceFailure(WORLD_AUDIO_CAPACITY,"Player car sound",failure.what());
+        if (result) *result = WORLD_AUDIO_CAPACITY;
+    } catch (const std::exception& failure) {
+        const auto status=WORLD_AUDIO_INVALID_BINDING;
+        if (bindings->audio && bindings->audio->library)
+            bindings->audio->library->RecordSourceFailure(status,"Player car sound",failure.what());
+        if (result) *result = status;
+    } catch (...) {
+        if (bindings->audio && bindings->audio->library)
+            bindings->audio->library->RecordSourceFailure(WORLD_AUDIO_INVALID_BINDING,"Player car sound","Non-standard source exception");
+        if (result) *result = WORLD_AUDIO_INVALID_BINDING;
+    }
+    return nullptr;
+}
+
+namespace {
+
+// Actual closest-sound pointer view3100C0 and GP-4FB0/-4FAC. It never owns
+// cars or sound components and intentionally replaces the first farther
+// candidate; it is not a different sort/priority algorithm.
+struct CarSoundSchedulingState {
+    std::array<CarSoundState*, 6> closest{};
+    int32_t limit = 0;
+    int32_t inserted = 0;
+};
+CarSoundSchedulingState carSoundScheduling;
+
+void maybeInsertCarSound(CarSoundState* sound)
+{
+    if (!sound->InSoundSphere()) return;
+    for (int32_t index = 0; index < carSoundScheduling.limit; ++index) {
+        auto& slot = carSoundScheduling.closest[static_cast<size_t>(index)];
+        if (!slot) { slot = sound; ++carSoundScheduling.inserted; return; }
+    }
+    for (int32_t index = 0; index < carSoundScheduling.limit; ++index) {
+        auto& slot = carSoundScheduling.closest[static_cast<size_t>(index)];
+        if (sound->spatial.distance < slot->spatial.distance) { slot = sound; return; }
+    }
+}
+
+WorldAudioResult maybeActivateCarSound(CarSoundState* sound)
+{
+    int32_t active = 0;
+    for (int32_t index = 0; index < carSoundScheduling.limit; ++index)
+        if (carSoundScheduling.closest[static_cast<size_t>(index)] == sound) { active = 1; break; }
+    return sound->Activate(active);
+}
+
+} // namespace
+
+WorldAudioResult carSoundUpdateAll(const WorldSimulation* simulation)
+{
+    if (!simulation) return WORLD_AUDIO_INVALID_BINDING;
+    if (!simulation->world) return WORLD_AUDIO_OK; // Exact absent-world source branch18EA28.
+    if (!simulation->race || !simulation->race->services || !simulation->race->services->settings ||
+        !simulation->frames) return WORLD_AUDIO_INVALID_BINDING;
+    carSoundScheduling.limit = simulation->race->services->settings->mode > 1 ? 3 : 6;
+    const auto movementFor = [&](const Car* car) -> CarMovement* {
+        if (!car->movement || car->tableIndex >= simulation->frameCount) return nullptr;
+        auto* movement = static_cast<CarMovement*>(car->movement);
+        const CarFrame* frame = simulation->frames[car->tableIndex];
+        if (!frame || frame->movement != movement || movement->frame != frame || movement->bindings.owner != car)
+            return nullptr;
+        return movement;
+    };
+    World* world = simulation->world;
+    for (Car* car = world->carList.next; car != &world->carList; car = car->next) {
+        auto* movement = movementFor(car);
+        if (!movement || !carMovementUpdateSound(movement)) return WORLD_AUDIO_INVALID_BINDING;
+    }
+    for (int32_t index = 0; index < carSoundScheduling.limit; ++index)
+        carSoundScheduling.closest[static_cast<size_t>(index)] = nullptr;
+    carSoundScheduling.inserted = 0;
+    for (Car* car = world->carList.next; car != &world->carList; car = car->next) {
+        if (!car->driverInfo) return WORLD_AUDIO_INVALID_BINDING;
+        if (car->driverInfo->driverClass == 1) continue;
+        auto* movement = movementFor(car);
+        if (!movement || !movement->frame->environment.sound) return WORLD_AUDIO_INVALID_BINDING;
+        maybeInsertCarSound(movement->frame->environment.sound);
+    }
+    for (Car* car = world->carList.next; car != &world->carList; car = car->next) {
+        if (!car->driverInfo) return WORLD_AUDIO_INVALID_BINDING;
+        if (car->driverInfo->driverClass == 1) continue;
+        auto* movement = movementFor(car);
+        if (!movement || !movement->frame->environment.sound) return WORLD_AUDIO_INVALID_BINDING;
+        const auto result = maybeActivateCarSound(movement->frame->environment.sound);
+        if (result != WORLD_AUDIO_OK) return result;
+    }
+    return WORLD_AUDIO_OK;
 }

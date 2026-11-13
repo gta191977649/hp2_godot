@@ -1,30 +1,61 @@
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
-// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/src/texturee.hpp"
+#include "indep/inc/Texture.hpp"
+#include "bware/inc/bWare.hpp"
+#include "bware/inc/bMath.hpp"
 
-#include "game_core/port/not_implemented.hpp"
+namespace hp2 {
 
-namespace hp2::recovered {
-// ELF 0x00100A50; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00100a50.md.
-void TextureInfo::GetScroll() {
-    hp2::not_implemented("0x00100A50", "TextureInfo::GetScroll (signature and full body unresolved)");
+// Complete PAL100A50..100AB0. Both integer conversions retain the engine's
+// original rounding rule; fmod/fract would change negative and half values.
+float TextureInfo::GetScroll(float time,float rate,std::int32_t mode,float interval)
+{
+    if (!mode)return 0.0f;
+    if (mode==2) {
+        Require(interval!=0.0f,"Texture discrete scroll interval is zero");
+        time=static_cast<float>(convertFloatToInt32(time/interval));
+    }
+    const float distance=time*rate;
+    return distance-static_cast<float>(convertFloatToInt32(distance));
 }
 
-// ELF 0x00100AF8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00100af8.md.
-void TextureInfo::GetAlphaChannel() {
-    hp2::not_implemented("0x00100AF8", "TextureInfo::GetAlphaChannel (signature and full body unresolved)");
+// PAL100AF8/100B40/100B98 operate on the retained 32-bit pixel stream.
+// They neither decode a second texture nor modify the palette or alpha
+// while replacing colour. Native extents validate the caller's allocation.
+void TextureInfo::GetAlphaChannel(std::uint8_t* output,std::size_t outputBytes) const
+{
+    if (pixelBytes<4)return;
+    const auto count=static_cast<std::size_t>(pixelBytes)/4;
+    Require(output && outputBytes>=count && pixels.Data() && pixels.size>=count*4,
+        "Texture alpha channel exceeds its actual pixel/output storage");
+    const auto* input=pixels.Data();
+    for (std::size_t index=0;index<count;++index)output[index]=input[index*4+3];
 }
 
-// ELF 0x00100B98; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00100b98.md.
-void TextureInfo::GetColourChannel() {
-    hp2::not_implemented("0x00100B98", "TextureInfo::GetColourChannel (signature and full body unresolved)");
+void TextureInfo::SetColourChannel(const std::uint8_t* input,std::size_t inputBytes)
+{
+    if (pixelBytes<4)return;
+    const auto count=static_cast<std::size_t>(pixelBytes)/4;
+    Require(input && inputBytes>=count*3 && pixels.MutableData() && pixels.size>=count*4,
+        "Texture colour update exceeds its actual pixel/input storage");
+    auto* output=pixels.MutableData();
+    for (std::size_t index=0;index<count;++index) {
+        output[index*4]=input[index*3];
+        output[index*4+1]=input[index*3+1];
+        output[index*4+2]=input[index*3+2];
+    }
 }
 
-// ELF 0x00100BF0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00100bf0.md.
-void TextureInfo::Print() {
-    hp2::not_implemented("0x00100BF0", "TextureInfo::Print (signature and full body unresolved)");
+void TextureInfo::GetColourChannel(std::uint8_t* output,std::size_t outputBytes) const
+{
+    if (pixelBytes<4)return;
+    const auto count=static_cast<std::size_t>(pixelBytes)/4;
+    Require(output && outputBytes>=count*3 && pixels.Data() && pixels.size>=count*4,
+        "Texture colour channel exceeds its actual pixel/output storage");
+    const auto* input=pixels.Data();
+    for (std::size_t index=0;index<count;++index) {
+        output[index*3]=input[index*4];
+        output[index*3+1]=input[index*4+1];
+        output[index*3+2]=input[index*4+2];
+    }
 }
-} // namespace hp2::recovered
+
+} // namespace hp2

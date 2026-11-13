@@ -1,95 +1,210 @@
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
-// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/indep/src/speech/nfsfsm.hpp"
+#include "indep/src/speech/fsm.hpp"
+#include "indep/src/speech/actions.hpp"
 
-#include "game_core/port/not_implemented.hpp"
-
-namespace hp2::recovered {
-// ELF 0x0020D8C0; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0020d8c0.md.
-void nfsFsm::Sub_0020D8C0() {
-    hp2::not_implemented("0x0020D8C0", "nfsFsm::Sub_0020D8C0 (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/indep/src/Speech/actions.hpp"
-
-namespace hp2::recovered {
-// ELF 0x0020E438; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0020e438.md.
-void rotorChatterAction_t::executeAction() {
-    hp2::not_implemented("0x0020E438", "rotorChatterAction_t::executeAction (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x0020E3E8; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0020e3e8.md.
-void rotorLocationAction_t::executeAction() {
-    hp2::not_implemented("0x0020E3E8", "rotorLocationAction_t::executeAction (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x0020E3C8; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0020e3c8.md.
-void rotorSpikeFailedAction_t::executeAction() {
-    hp2::not_implemented("0x0020E3C8", "rotorSpikeFailedAction_t::executeAction (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x0020E410; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0020e410.md.
-void rotorTrafficAction_t::executeAction() {
-    hp2::not_implemented("0x0020E410", "rotorTrafficAction_t::executeAction (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/port/race/cop_speech.hpp"
-#include "game_core/port/race/cop_speech_data.hpp"
-#include <algorithm>
-#include <limits>
-#include <stdexcept>
-namespace port::race {
 namespace {
-std::uint64_t speech_count(const port::driving::Memory& m,std::uint32_t at){return m.word(at)|(std::uint64_t(m.word(at+4))<<32);}
-void speech_count(port::driving::Memory& m,std::uint32_t at,std::uint64_t n){m.word(at,std::uint32_t(n));m.word(at+4,std::uint32_t(n>>32));}
-// Debug00207130/00207248/002072D8, E-0099-W16. Actual fragmented-vector
-// growth, including original array cookie and default transition vtable stores.
-void speech_transition(port::driving::Memory& m,std::uint32_t object,const speech_data::Transition& t,
-                       std::vector<std::uint32_t>& allocations){
- const auto state=object+t.from;auto size=speech_count(m,state+8),capacity=speech_count(m,state+0x10);
- if(size==capacity){const auto desired=std::max<std::uint64_t>(1,size*2),extra=desired-capacity;
-  if(extra>std::uint64_t(std::numeric_limits<int>::max()-16)/20)throw std::overflow_error("Original speech transition allocation exceeds host domain");
-  const auto node=m.allocate(0x18);allocations.push_back(node);
-  const auto array=m.allocate(std::uint32_t(extra)*20+0x10);allocations.push_back(array);m.word(array,std::uint32_t(extra));
-  const auto data=array+0x10;const auto tail=m.word(state+4);m.word(node,0);m.word(node+4,data);
-  const auto first=tail?speech_count(m,tail+8)+speech_count(m,tail+0x10):0;
-  speech_count(m,node+8,first);speech_count(m,node+0x10,extra);
-  for(std::uint64_t i=0;i<extra;++i){const auto at=data+std::uint32_t(i)*20;m.word(at,0);m.word(at+4,0);m.word(at+0x10,0x2b30d8);}
-  if(tail)m.word(tail,node);else m.word(state,node);m.word(state+4,node);speech_count(m,state+0x10,desired);
- }
- speech_count(m,state+8,size+1);
- // Debug00207288 index traversal, after original size increment.
- auto node=m.word(state);
- while(node){const auto first=speech_count(m,node+8),count=speech_count(m,node+0x10);
-  if(first<=size&&size-first<count){const auto at=m.word(node+4)+std::uint32_t(size-first)*20;
-   m.word(at,t.event);m.word(at+4,object+t.to);m.word(at+8,object+t.condition);m.word(at+0xc,object+t.action);return;}
-  node=m.word(node);
- }
- throw std::logic_error("Original speech fragmented-vector index is not present");
+const WorldSpeechCondition conditions[] = {
+    {WorldSpeechConditionKind::Always},
+    {WorldSpeechConditionKind::SupervisorActive},
+    {WorldSpeechConditionKind::SupervisorNotActive},
+    {WorldSpeechConditionKind::Random},
+    {WorldSpeechConditionKind::LocationSet},
+    {WorldSpeechConditionKind::TargetIdSet}
+};
+const WorldSpeechAction actions[] = {
+    {worldSpeechNull, WorldSpeechActionStyle::Radio},
+    {worldSpeechAirborne, WorldSpeechActionStyle::Radio},
+    {worldSpeechBackupConfirm, WorldSpeechActionStyle::Radio},
+    {worldSpeechBackupRequest, WorldSpeechActionStyle::Radio},
+    {worldSpeechBackupRequestLocation, WorldSpeechActionStyle::Radio},
+    {worldSpeechBeginPursuitCopHitRun, WorldSpeechActionStyle::Radio},
+    {worldSpeechBeginPursuitGeneral, WorldSpeechActionStyle::Radio},
+    {worldSpeechBeginPursuitNoId, WorldSpeechActionStyle::Radio},
+    {worldSpeechBeginPursuitHitRunTraffic, WorldSpeechActionStyle::Radio},
+    {worldSpeechBeginPursuitIdGeneral, WorldSpeechActionStyle::Radio},
+    {worldSpeechBeginPursuitIdSpecific, WorldSpeechActionStyle::Radio},
+    {worldSpeechBeginPursuitAgain, WorldSpeechActionStyle::Radio},
+    {worldSpeechBeginPursuitRacing, WorldSpeechActionStyle::Radio},
+    {worldSpeechBeginPursuitSpeed, WorldSpeechActionStyle::Radio},
+    {worldSpeechBeginPursuitErratic, WorldSpeechActionStyle::Radio},
+    {worldSpeechBeginPursuitReckless, WorldSpeechActionStyle::Radio},
+    {worldSpeechBreakPursuit, WorldSpeechActionStyle::Radio},
+    {worldSpeechCarStopped, WorldSpeechActionStyle::Radio},
+    {worldSpeechChatterTraffic, WorldSpeechActionStyle::Radio},
+    {worldSpeechChatterGeneral, WorldSpeechActionStyle::Radio},
+    {worldSpeechCopBackOff, WorldSpeechActionStyle::Radio},
+    {worldSpeechCopPursuitAvoidance, WorldSpeechActionStyle::Radio},
+    {worldSpeechCrash, WorldSpeechActionStyle::Radio},
+    {worldSpeechCrashAmbulance, WorldSpeechActionStyle::Radio},
+    {worldSpeechCrashTow, WorldSpeechActionStyle::Radio},
+    {worldSpeechCrashBackup, WorldSpeechActionStyle::Radio},
+    {worldSpeechCurrentSpeed, WorldSpeechActionStyle::Radio},
+    {worldSpeechDirection, WorldSpeechActionStyle::Radio},
+    {worldSpeechDispatchBeginPursuitReckless, WorldSpeechActionStyle::Radio},
+    {worldSpeechDispatchBeginPursuitRacing, WorldSpeechActionStyle::Radio},
+    {worldSpeechDispatchBeginPursuitHitRunCop, WorldSpeechActionStyle::Radio},
+    {worldSpeechDispatchBeginPursuitHitRunTraffic, WorldSpeechActionStyle::Radio},
+    {worldSpeechDispatchBeginVehicleIdSpecific, WorldSpeechActionStyle::Radio},
+    {worldSpeechDispatchRoadBlockUpdate, WorldSpeechActionStyle::Radio},
+    {worldSpeechDispatchSpikeStripSet, WorldSpeechActionStyle::Radio},
+    {worldSpeechDispatchAmbulanceConfirm, WorldSpeechActionStyle::Radio},
+    {worldSpeechDispatchBeginPursuitSpeed, WorldSpeechActionStyle::Radio},
+    {worldSpeechDispatchConfirm, WorldSpeechActionStyle::Radio},
+    {worldSpeechDispatchRotorDeployed, WorldSpeechActionStyle::Radio},
+    {worldSpeechDispatchTerminate, WorldSpeechActionStyle::Radio},
+    {worldSpeechDispatchTowConfirm, WorldSpeechActionStyle::Radio},
+    {worldSpeechDispatchIdRequest, WorldSpeechActionStyle::Radio},
+    {worldSpeechFlatTire, WorldSpeechActionStyle::Radio},
+    {worldSpeechPursuitCopHit, WorldSpeechActionStyle::Radio},
+    {worldSpeechPursuitUpdateSpeed, WorldSpeechActionStyle::Radio},
+    {worldSpeechPursuitUpdateSubjectLocation, WorldSpeechActionStyle::Radio},
+    {worldSpeechPursuitUpdateVehicleIdSpecific, WorldSpeechActionStyle::Radio},
+    {worldSpeechRacerCaught, WorldSpeechActionStyle::Radio},
+    {worldSpeechRadioArrest, WorldSpeechActionStyle::Radio},
+    {worldSpeechRequestAnotherRoadBlock, WorldSpeechActionStyle::Radio},
+    {worldSpeechRoadBlockFailureAvoid, WorldSpeechActionStyle::Radio},
+    {worldSpeechRoadBlockFailureThrough, WorldSpeechActionStyle::Radio},
+    {worldSpeechRoadblockRequest, WorldSpeechActionStyle::Radio},
+    {worldSpeechRoadBlockSet, WorldSpeechActionStyle::Radio},
+    {worldSpeechRoadBlockSetting, WorldSpeechActionStyle::Radio},
+    {worldSpeechRotorRequest, WorldSpeechActionStyle::Radio},
+    {worldSpeechRotorLocation, WorldSpeechActionStyle::Helicopter},
+    {worldSpeechRotorChatter, WorldSpeechActionStyle::Helicopter},
+    {worldSpeechRotorTraffic, WorldSpeechActionStyle::Helicopter},
+    {worldSpeechRotorSpikeFailed, WorldSpeechActionStyle::Helicopter},
+    {worldSpeechSpikeStripFailure, WorldSpeechActionStyle::Radio},
+    {worldSpeechSpikeStripTireBlow, WorldSpeechActionStyle::Radio},
+    {worldSpeechSpikeStripRequest, WorldSpeechActionStyle::Radio},
+    {worldSpeechSpikeStripSetLeft, WorldSpeechActionStyle::Radio},
+    {worldSpeechSpikeStripSetRight, WorldSpeechActionStyle::Radio},
+    {worldSpeechSpikeStripSet, WorldSpeechActionStyle::Radio},
+    {worldSpeechStandByForSuper, WorldSpeechActionStyle::Radio},
+    {worldSpeechSuperBackOff, WorldSpeechActionStyle::Radio},
+    {worldSpeechSuperRequest, WorldSpeechActionStyle::Radio},
+    {worldSpeechSuperTerminate, WorldSpeechActionStyle::Radio},
+    {worldSpeechSupervisorConfirm, WorldSpeechActionStyle::Radio},
+    {worldSpeechSupervisorInitiates, WorldSpeechActionStyle::Radio},
+    {worldSpeechSupervisorRoadBlockOK, WorldSpeechActionStyle::Radio},
+    {worldSpeechSupervisorRotorOK, WorldSpeechActionStyle::Radio},
+    {worldSpeechSupervisorSpikeStripOK, WorldSpeechActionStyle::Radio},
+    {worldSpeechSuspectCrash, WorldSpeechActionStyle::Radio},
+    {worldSpeechSuspectCrashTraffic, WorldSpeechActionStyle::Radio},
+    {worldSpeechSuspectFound, WorldSpeechActionStyle::Radio},
+    {worldSpeechSuspectLost, WorldSpeechActionStyle::Radio},
+    {worldSpeechTacticHitFormal, WorldSpeechActionStyle::Radio},
+    {worldSpeechTacticHitInformal, WorldSpeechActionStyle::Radio},
+    {worldSpeechTacticDivert, WorldSpeechActionStyle::Radio},
+    {worldSpeechTacticCutoff, WorldSpeechActionStyle::Radio},
+    {worldSpeechUpdateReckless, WorldSpeechActionStyle::Radio},
+    {worldSpeechDispatchBeOnLookout, WorldSpeechActionStyle::Radio},
+    {worldSpeechDispatchRoadBlockNA, WorldSpeechActionStyle::Radio},
+    {worldSpeechDispatchHelicopterNA, WorldSpeechActionStyle::Radio},
+};
+
+struct TransitionSpec { unsigned from, to; int32_t event; unsigned condition, action; };
+/* All92 entries retain final PAL construction order, including priority
+ * when more than one condition accepts the same event. */
+const TransitionSpec graph[] = {
+    {1, 0, 1, 0, 37},
+    {6, 0, 1, 0, 33},
+    {8, 0, 1, 0, 34},
+    {2, 0, 1, 1, 70},
+    {2, 0, 1, 2, 37},
+    {0, 0, 32, 0, 47},
+    {0, 0, 61, 0, 1},
+    {0, 0, 16, 0, 4},
+    {0, 1, 4, 0, 14},
+    {0, 1, 10, 0, 7},
+    {0, 0, 19, 0, 18},
+    {0, 0, 18, 0, 19},
+    {0, 1, 20, 0, 21},
+    {0, 14, 39, 0, 22},
+    {0, 14, 40, 0, 42},
+    {0, 1, 35, 0, 48},
+    {0, 1, 36, 0, 17},
+    {0, 0, 47, 0, 50},
+    {0, 0, 48, 0, 51},
+    {0, 2, 52, 0, 49},
+    {0, 6, 50, 0, 53},
+    {0, 6, 51, 0, 54},
+    {0, 0, 53, 0, 60},
+    {0, 0, 46, 0, 59},
+    {0, 0, 58, 0, 61},
+    {0, 8, 56, 0, 63},
+    {0, 8, 57, 0, 64},
+    {0, 8, 55, 0, 65},
+    {0, 0, 64, 0, 75},
+    {0, 0, 67, 0, 76},
+    {0, 21, 27, 0, 79},
+    {21, 0, 1, 0, 80},
+    {0, 0, 29, 0, 81},
+    {0, 0, 30, 0, 82},
+    {0, 10, 6, 0, 8},
+    {10, 0, 1, 0, 31},
+    {0, 11, 13, 0, 13},
+    {11, 0, 1, 0, 36},
+    {0, 1, 5, 0, 6},
+    {0, 1, 2, 0, 43},
+    {0, 12, 49, 0, 52},
+    {12, 0, 1, 1, 72},
+    {12, 0, 1, 2, 37},
+    {0, 13, 54, 0, 62},
+    {13, 0, 1, 1, 74},
+    {13, 0, 1, 2, 37},
+    {0, 0, 15, 0, 3},
+    {0, 0, 17, 0, 2},
+    {0, 20, 33, 0, 67},
+    {20, 0, 1, 0, 16},
+    {0, 22, 34, 0, 20},
+    {22, 0, 1, 1, 69},
+    {22, 0, 1, 2, 39},
+    {0, 14, 38, 0, 24},
+    {14, 0, 1, 5, 25},
+    {14, 0, 1, 0, 40},
+    {0, 1, 62, 0, 26},
+    {0, 1, 63, 0, 27},
+    {0, 15, 31, 0, 83},
+    {15, 0, 1, 2, 37},
+    {15, 0, 1, 0, 0},
+    {0, 19, 41, 0, 55},
+    {19, 0, 1, 2, 37},
+    {19, 0, 1, 1, 73},
+    {0, 0, 42, 0, 38},
+    {0, 0, 45, 0, 58},
+    {0, 0, 44, 0, 57},
+    {0, 0, 43, 0, 56},
+    {0, 23, 59, 0, 68},
+    {23, 0, 1, 0, 66},
+    {0, 16, 60, 0, 71},
+    {16, 0, 1, 4, 45},
+    {16, 0, 1, 0, 46},
+    {0, 4, 3, 0, 5},
+    {4, 0, 1, 0, 30},
+    {0, 1, 7, 0, 9},
+    {0, 5, 8, 0, 10},
+    {5, 0, 1, 0, 32},
+    {0, 5, 14, 0, 11},
+    {0, 7, 9, 0, 10},
+    {7, 9, 1, 0, 41},
+    {9, 5, 1, 0, 10},
+    {0, 18, 11, 0, 12},
+    {18, 0, 1, 0, 29},
+    {0, 2, 21, 0, 44},
+    {0, 2, 22, 0, 45},
+    {0, 2, 24, 0, 46},
+    {0, 2, 25, 0, 77},
+    {0, 2, 26, 0, 78},
+    {0, 0, 68, 0, 84},
+    {0, 0, 69, 0, 85},
+    {0, 0, 70, 0, 86},
+};
 }
-}
-// Debug00207630; E-0099-W16. Every captured constructor statement is covered:
-//25 state constructors,93 virtual-field stores and92 ordered transitions.
-// Conditions/actions are original memory objects; executing their still-missing
-// event/audio paths is not claimed by this constructor projection.
-void construct_speech_fsm(port::driving::Memory& m,std::uint32_t at,std::vector<std::uint32_t>& allocations){
- m.word(at,0);m.word(at+4,0);m.word(at+8,0x2b3048); // fsm00206DC0.
- m.word(at+8,0x2b3100);
- for(auto offset:speech_data::states){const auto state=at+offset;m.word(state,0);m.word(state+4,0);
-  speech_count(m,state+8,0);speech_count(m,state+0x10,0);m.word(state+0x18,0x2b30a8);}
- for(const auto& store:speech_data::stores)m.word(at+store.offset,store.value);
- for(const auto& transition:speech_data::transitions)speech_transition(m,at,transition,allocations);
- m.word(at+4,at+0x10);
-}
+
+void worldSpeechFsmBuild(WorldSpeechFsm* fsm)
+{
+    worldSpeechFsmInitialize(fsm);
+    for (auto& state : fsm->states) worldSpeechStateInitialize(&state);
+    for (const auto& edge : graph)
+        worldSpeechFsmAddTransition(fsm, &fsm->states[edge.from], &fsm->states[edge.to],
+            edge.event, &conditions[edge.condition], &actions[edge.action]);
+    fsm->initial = &fsm->states[0];
 }

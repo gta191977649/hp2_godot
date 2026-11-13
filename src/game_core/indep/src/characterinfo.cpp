@@ -1,52 +1,176 @@
-// TASK-0099 E-0099-W28. Original ..\indep\src\characterinfo.cpp source
-// ownership corroborated by read-only MCP FDR/SYMR/source-marker/string captures.
-#include "game_core/port/race/character_resources.hpp"
-#include "game_core/port/assets/elab_chunks.hpp"
-#include "game_core/indep/src/fmenus.hpp"
-#include <cstring>
-#include <stdexcept>
+#include "indep/inc/CarDriver.hpp"
+#include "indep/inc/CarDriver.hpp"
+#include "bware/inc/bWare.hpp"
+#include "bware/inc/bChunk.hpp"
+#include "bware/inc/bWare.hpp"
 
-namespace hp2::debug {
-// Debug001D6030, including bStrICmp0024CAB0/bToUpper0024CB98, E-0099-W28.
-std::uint32_t GetBodyTypeInfo(const ::port::driving::Memory& m,std::uint32_t name){
-    const auto upper=[](std::uint8_t c){return std::uint32_t(c-'a')<26?std::uint8_t(c&0x5f):c;};
-    for(int i=0;i<m.signed_word(0x328438);++i){const auto info=m.word(0x328434)+std::uint32_t(i)*0xb4;
-        for(std::uint32_t j=0;;++j){const auto a=upper(m.byte(name+j)),b=upper(m.byte(info+j));if(a!=b)break;if(!a)return info;}}
+#include <algorithm>
+#include <cstring>
+
+int32_t carDriverAppearanceLoad(CarDriverAppearanceCatalogue* catalogue,
+    const CarDriverAppearanceChunk* chunk)
+{
+    if (chunk->kind == 0x34301u) {
+        const size_t count = chunk->authoredPayloadSize / 180u;
+        if (count > chunk->availableRecords || (count && !chunk->records.appearances))
+            return 0;
+        catalogue->appearances = chunk->records.appearances;
+        catalogue->appearanceCount = count;
+        return 1;
+    }
+    if (chunk->kind == 0x34300u) {
+        const size_t count = chunk->authoredPayloadSize / 68u;
+        if (count > chunk->availableRecords || (count && !chunk->records.characters))
+            return 0;
+        catalogue->characters = chunk->records.characters;
+        catalogue->characterCount = count;
+        return 1;
+    }
     return 0;
 }
-// Debug001D61C8, E-0099-W28. Original index bounds, not CharacterNumber search.
-std::uint32_t GetCharacterInfo(const ::port::driving::Memory& m,int number){return number>=0 && number<m.signed_word(0x328440)?m.word(0x32843c)+std::uint32_t(number)*0x44:0;}
-std::uint32_t GetCharacterInfoFromNameHash(const ::port::driving::Memory& m,std::uint32_t hash){
-    for(int i=0;i<m.signed_word(0x328440);++i){const auto info=m.word(0x32843c)+std::uint32_t(i)*0x44;std::string name;for(unsigned j=0;;++j){const auto c=m.byte(info+4+j);if(!c)break;name+=char(c);}if(hp2::frontend::bStringHash(name.c_str())==hash)return info;}return 0;
-}
-}
-namespace port::race {
-CharacterResources load_character_resources(::port::driving::Memory& m,const std::vector<std::vector<std::uint8_t>>& bundles){
-    if(m.word(0x328434) || m.word(0x32843c))throw std::logic_error("Character source owner requires unloaded original tables");
-    CharacterResources resources;
-    for(const auto& bytes:bundles){std::size_t consumed=0;const auto chunks=hp2::assets::parse_chunks_top(bytes,&consumed);
-        if(consumed!=bytes.size())throw std::out_of_range("Incomplete original character source bundle");
-        const auto visit=[&](const auto& self,const auto& list)->void{for(const auto& chunk:list){
-            if(chunk.tag==0x34300 || chunk.tag==0x34301){const auto stride=chunk.tag==0x34300?0x44u:0xb4u;
-                if(chunk.size%stride)throw std::out_of_range("Invalid original character record span");
-                const auto allocation=m.allocate(chunk.size?chunk.size:8);resources.owned_allocations.push_back(allocation);
-                std::memcpy(m.view(allocation,chunk.size?chunk.size:8).data,bytes.data()+(chunk.size?chunk.payload_offset():chunk.header_offset),chunk.size?chunk.size:8);
-                const auto payload=allocation+(chunk.size?0:8);
-                // Original LoaderCharacterInfo001D5F68: exact raw source arrays.
-                if(chunk.tag==0x34300){m.word(0x32843c,payload);m.word(0x328440,chunk.size/stride);resources.character_chunk=true;}
-                else{m.word(0x328434,payload);m.word(0x328438,chunk.size/stride);resources.body_chunk=true;}}
-            self(self,chunk.children);
-        }};visit(visit,chunks);
+
+int32_t carDriverAppearanceUnload(CarDriverAppearanceCatalogue* catalogue,uint32_t kind)
+{
+    if (kind == 0x34301u) {
+        catalogue->appearances = nullptr;
+        catalogue->appearanceCount = 0;
+        return 1;
     }
-    resources.source_data_loaded=true;return resources;
+    if (kind == 0x34300u) {
+        catalogue->characters = nullptr;
+        catalogue->characterCount = 0;
+        return 1;
+    }
+    return 0;
 }
-void unload_character_resources(::port::driving::Memory& m,CharacterResources& resources){
-    if(!resources.source_data_loaded)throw std::logic_error("Character source owner is not loaded");
-    // Original UnloaderCharacterInfo001D5FE8 resets matching table globals.
-    // Borrowing DriverInfo/AnimatedDriver objects must be destroyed by caller.
-    if(resources.body_chunk){m.word(0x328434,0);m.word(0x328438,0);}
-    if(resources.character_chunk){m.word(0x32843c,0);m.word(0x328440,0);}
-    for(auto it=resources.owned_allocations.rbegin();it!=resources.owned_allocations.rend();++it)m.release(*it);
-    resources=CharacterResources{};
+
+const CarDriverAppearance* carDriverAppearanceFind(
+    const CarDriverAppearanceCatalogue* catalogue,const char* name)
+{
+    for (size_t index = 0; index < catalogue->appearanceCount; ++index)
+        if (stringCompareInsensitive(name,catalogue->appearances[index].name) == 0)
+            return catalogue->appearances + index;
+    return nullptr;
 }
+
+const CarDriverCharacter* carDriverCharacterFind(
+    const CarDriverAppearanceCatalogue* catalogue,const char* name)
+{
+    for (size_t index = 0; index < catalogue->characterCount; ++index)
+        if (stringCompareInsensitive(name,catalogue->characters[index].name) == 0)
+            return catalogue->characters + index;
+    return nullptr;
 }
+
+const CarDriverCharacter* carDriverCharacterFindKey(
+    const CarDriverAppearanceCatalogue* catalogue,uint32_t key)
+{
+    for (size_t index = 0; index < catalogue->characterCount; ++index)
+        if (hashString(catalogue->characters[index].name) == key)
+            return catalogue->characters + index;
+    return nullptr;
+}
+
+int32_t carDriverCharacterCount(const CarDriverAppearanceCatalogue* catalogue)
+{
+    return static_cast<int32_t>(catalogue->characterCount);
+}
+
+const CarDriverCharacter* carDriverCharacterAt(
+    const CarDriverAppearanceCatalogue* catalogue,int32_t index)
+{
+    if (index < 0 || static_cast<size_t>(index) >= catalogue->characterCount)
+        return nullptr;
+    return catalogue->characters + index;
+}
+
+namespace hp2 {
+namespace {
+
+template<std::size_t N> void readDriverName(char (&output)[N],const std::uint8_t* bytes)
+{
+    Require(std::find(bytes,bytes + N,std::uint8_t(0)) != bytes + N,
+        "Driver appearance name is not terminated");
+    std::memcpy(output,bytes,N);
+}
+
+std::int32_t readDriverSignedWord(const std::uint8_t* bytes)
+{
+    const auto bits = ReadU32(bytes);
+    std::int32_t value;
+    std::memcpy(&value,&bits,sizeof(value));
+    return value;
+}
+
+} // namespace
+
+CarDriverAppearanceResources::CarDriverAppearanceResources(const std::vector<std::uint8_t>& bundle)
+{
+    std::uint32_t appearanceBytes = 0,characterBytes = 0;
+    const auto visit = [&](const auto& self,std::size_t begin,std::size_t size,unsigned depth)->void {
+        Require(depth <= 32,"Driver appearance resource nesting exceeds 32 levels");
+        for (const auto& chunk : ReadChunks(bundle,begin,size)) {
+            if (chunk.id == 0x34301u) {
+                Require(appearances_.empty() && chunk.size % 180 == 0,
+                    "Driver appearance class table is repeated or truncated");
+                appearanceBytes = chunk.size;
+                for (std::size_t offset = 0; offset < chunk.size; offset += 180) {
+                    const auto* bytes = bundle.data() + chunk.payloadOffset + offset;
+                    CarDriverAppearance appearance{};
+                    readDriverName(appearance.name,bytes);
+                    for (int index = 0; index < 3; ++index)
+                        appearance.modelKeys[index] = ReadU32(bytes + 24 + index * 4);
+                    for (int index = 0; index < 2; ++index) {
+                        appearance.materialKeys[index] = ReadU32(bytes + 36 + index * 4);
+                        appearance.variantCounts[index] = readDriverSignedWord(bytes + 44 + index * 4);
+                        Require(appearance.variantCounts[index] >= 0 && appearance.variantCounts[index] <= 16,
+                            "Driver appearance variant count exceeds its authored array");
+                        for (int variant = 0; variant < 16; ++variant)
+                            appearance.textureKeys[index][variant] = ReadU32(bytes + 52 + index * 64 + variant * 4);
+                    }
+                    appearances_.push_back(appearance);
+                }
+            } else if (chunk.id == 0x34300u) {
+                Require(characters_.empty() && chunk.size % 68 == 0,
+                    "Driver character table is repeated or truncated");
+                characterBytes = chunk.size;
+                for (std::size_t offset = 0; offset < chunk.size; offset += 68) {
+                    const auto* bytes = bundle.data() + chunk.payloadOffset + offset;
+                    CarDriverCharacter character{};
+                    character.id = readDriverSignedWord(bytes);
+                    readDriverName(character.name,bytes + 4);
+                    readDriverName(character.appearanceName,bytes + 36);
+                    for (int index = 0; index < 2; ++index)
+                        character.variants[index] = readDriverSignedWord(bytes + 60 + index * 4);
+                    characters_.push_back(character);
+                }
+            } else if (chunk.IsContainer()) {
+                self(self,chunk.payloadOffset,chunk.size,depth + 1);
+            }
+        }
+    };
+    visit(visit,0,bundle.size(),0);
+
+    CarDriverAppearanceChunk appearances{};
+    appearances.kind = 0x34301u;
+    appearances.authoredPayloadSize = appearanceBytes;
+    appearances.records.appearances = appearances_.data();
+    appearances.availableRecords = appearances_.size();
+    Require(carDriverAppearanceLoad(&catalogue_,&appearances) != 0,"Driver class table cannot be registered");
+    CarDriverAppearanceChunk characters{};
+    characters.kind = 0x34300u;
+    characters.authoredPayloadSize = characterBytes;
+    characters.records.characters = characters_.data();
+    characters.availableRecords = characters_.size();
+    Require(carDriverAppearanceLoad(&catalogue_,&characters) != 0,"Driver character table cannot be registered");
+
+    for (const auto& character : characters_) {
+        const auto* appearance = carDriverAppearanceFind(&catalogue_,character.appearanceName);
+        Require(appearance != nullptr,"Driver character names an absent appearance class");
+        for (int index = 0; index < 2; ++index)
+            Require(character.variants[index] >= 0 && character.variants[index] < 16,
+                "Driver character variant is outside its authored texture array");
+    }
+}
+
+} // namespace hp2

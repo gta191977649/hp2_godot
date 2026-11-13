@@ -1,24 +1,73 @@
-// TASK-0042 E-0042-S001: exact Debug source marker(s): ../indep/inc/DemoDisc.hpp.
-// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
-// PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
 
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: qualified_string; evidence: E-0019-N03.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-// Diagnostic text (not a callable signature): DemoDiscManager::Init() [0x002ADA80]
-// Diagnostic text (not a callable signature): DemoDiscManager::SetEndReason() [0x002ADDC8]
-// Diagnostic text (not a callable signature): DemoDiscManager::EndDemo() [0x002ADE40]
-namespace hp2::recovered {
-class DemoDiscManager {
-public:
-    // ELF 0x0012E6C8; E-0019-N03; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/startup/0012e6c8.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Init();
-    // ELF 0x0012EB00; E-0019-N03; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/startup/0012eb00.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void SetEndReason();
+#include <cstdint>
+
+struct GameTime;
+struct ApplicationLaunchOptions;
+namespace hp2 { enum class CarInfoAvailability; }
+
+// Native settings for the release's six demo tweakables. Sony launcher
+// arguments and packed console records are not Windows configuration data.
+struct DemoDiscConfiguration {
+    bool useTweakables=false;
+    std::uint16_t language=0;
+    std::uint16_t aspect=0;
+    std::uint16_t playMode=0;
+    std::uint16_t inactiveTimeoutSeconds=60;
+    std::uint16_t totalTimeoutSeconds=600;
+    std::uint16_t masterVolumeScale=10;
 };
-} // namespace hp2::recovered
+
+struct DemoDiscParameters {
+    std::uint16_t language;
+    std::uint16_t aspect;
+    std::uint16_t playMode;
+    std::uint16_t inactiveTimeoutSeconds;
+    std::uint16_t totalTimeoutSeconds;
+    std::uint16_t mediaType;
+    std::uint16_t masterVolumeScale;
+    std::uint16_t directorySector;
+};
+
+// One application-lifetime content policy. Native member layout is not a
+// binary overlay of the original 48-byte console object.
+class DemoDiscManager final {
+public:
+    DemoDiscManager();
+    void Init(const GameTime& clock,ApplicationLaunchOptions& launch,
+        const DemoDiscConfiguration& configuration);
+    void ForceActive(const GameTime& clock,ApplicationLaunchOptions& launch,
+        const DemoDiscConfiguration& configuration);
+
+    std::int32_t ActivationWord() const noexcept { return activation_; }
+    bool IsAttractMode() const noexcept;
+    hp2::CarInfoAvailability Availability() const noexcept;
+    const DemoDiscParameters& Parameters() const noexcept { return parameters_; }
+    // ReplayScreen event108 writes the original manager +1E/+20 cells.
+    // This accessor updates the existing policy, never a replay-only copy.
+    void SetReplayRecordingTimeouts() noexcept {
+        parameters_.inactiveTimeoutSeconds=32767;parameters_.totalTimeoutSeconds=32767;
+    }
+    std::int32_t InitialRealTime() const noexcept { return initialRealTime_; }
+    std::int32_t LastRealTime() const noexcept { return lastRealTime_; }
+    // GenerateJoyEvents writes this same source+0C cell after real scanner
+    // activity, only when the sampled real time is newer.
+    void NoteInputTime(std::int32_t ticks) noexcept { if (lastRealTime_<ticks)lastRealTime_=ticks; }
+
+    void SetEndReason(std::int32_t reason) noexcept;
+    std::int32_t EndReason() const noexcept { return endReason_; }
+    // Windows consumes this request in its real application shutdown path;
+    // returning to the Sony browser or stopping forever is not required.
+    void EndDemo() noexcept;
+    bool ExitRequested() const noexcept { return exitRequested_; }
+
+private:
+    DemoDiscParameters parameters_;
+    std::int32_t activation_;
+    std::int32_t initialRealTime_;
+    std::int32_t lastRealTime_;
+    std::int32_t endReason_;
+    bool exitRequested_;
+};
+
+extern DemoDiscManager TheDemoDiscManager;

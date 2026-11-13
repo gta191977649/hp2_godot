@@ -1,203 +1,742 @@
-#include "game_core/port/race/cop_driver_targets.hpp"
-#include "game_core/port/race/ai_drive_target.hpp"
-#include "game_core/indep/inc/CopChase.hpp"
-#include "game_core/indep/src/drivetarget.hpp"
-#include "game_core/indep/src/pursuit.hpp"
-// TASK-0099 E-0099-W91. Debug NFSHP2.ELF SHA815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
-// Exact original definition source ../indep/src/copdriver.cpp; revision unknown.
-#include "game_core/port/race/control_construction.hpp"
-#include "game_core/indep/inc/CarDriver.hpp"
-#include "game_core/indep/src/coputil.hpp"
-#include "game_core/port/not_implemented.hpp"
-#include "game_core/indep/inc/CarMover.hpp"
-#include "game_core/indep/inc/Car.hpp"
-#include "game_core/indep/src/carstate.hpp"
-#include "game_core/indep/src/track.hpp"
-#include "game_core/src/bMath.hpp"
-#include "game_core/port/race/physics_construction.hpp"
-#include "game_core/port/driving/ee_rounding.hpp"
-#include "game_core/port/driving/ee_scalar.hpp"
-#include "game_core/port/driving/projections.hpp"
-#include "game_core/indep/inc/Replay.hpp"
-#include <algorithm>
-#include <cmath>
-#include <cstring>
-#include <utility>
-namespace hp2::debug {
-// Debug0019E650, E-0110-CM01; full constructor stores, including the original
-// unwritten local vector's independently supplied PC research padding lane.
-void CopMover::Sub_0019E650(std::uint32_t car,std::optional<std::uint32_t> normal_w){
- auto& m=m_;const auto a=address_;m.word(a+4,0x2ad7c8);m.word(a+8,car);
- m.vector(a+0x10,m.vector(car+0x70));m.vector(a+0x50,m.vector(a+0x10));
- m.word(a+0x74,0);m.word(a+0x30,m.word(car+0x3c0));m.half(a+0x2a,m.half(car+0x3a4));
- m.word(a+0x34,m.word(0x325680));m.word(a+0x2c,m.word(car+0x3c0));m.half(a+0x28,m.half(car+0x3a4));
- ResetMaxThrottleAccel();m.scalar(a+0x38,40);m.word(a+0x20,0);m.word(a+0x24,0);
- if(!normal_w)hp2::not_implemented("0x0019E6E4","CopMover constructor ground-normal stack padding lane requires an independent explicit original or PC research operand");
- m.word(a+0x60,0);m.word(a+0x64,0);m.word(a+0x68,0x3f800000);m.word(a+0x6c,*normal_w);
- m.word(a+0x70,0);m.word(a+0x40,0);
-}
-// Debug0019E700, E-0110-CM01; the original tail calls the base with live flags.
-void CopMover::Sub_0019E700(int flags){m_.word(address_+4,0x2ad7c8);CarMover(m_,address_).Sub_00136B28(flags);}
-// Debug0019E718, E-0110-CM01; exact31-row jump table002AD520; default preserves.
-void CopMover::ResetMaxThrottleAccel(){auto& m=m_;const auto type=m.word(m.word(m.word(address_+8)+0xc)+0x534);
- switch(type){case 4:m.word(address_+0x3c,0x41340000);break;case 31:m.word(address_+0x3c,0x414c0000);break;case 32:case 33:m.word(address_+0x3c,0x41700000);break;case 34:m.word(address_+0x3c,0x41640000);break;default:break;}}
-// Debug0019E798,E-0110-CM01. Enum snapshot consumes one byte in-place;
-// bool snapshot consumes one byte but restores the original full bool word.
-void CopMover::DoSnapshot(std::uint32_t snapshot){const auto a=address_;ReplaySnapshot s(m_,snapshot);s.BeginSection(0x2ad5a0);CarMover(m_,a).DoSnapshot(snapshot);s.MoveData(a+0x10,12);s.MoveData(a+0x28,2);s.MoveData(a+0x2a,2);for(unsigned off:{0x2cu,0x34u,0x30u})s.MoveData(a+off,4);s.MoveData(a+0x50,12);s.MoveData(a+0x74,1);s.MoveData(a+0x38,4);s.MoveData(a+0x3c,4);s.MoveData(a+0x60,12);s.MoveData(a+0x70,1,4,0);s.MoveData(a+0x20,8);s.MoveData(a+0x40,4);s.EndSection();}
+#include "indep/inc/CopDriver.hpp"
+#include "bware/inc/bMath.hpp"
+#include "indep/inc/Car.hpp"
+#include "indep/inc/eMath.hpp"
+#include <math.h>
+#include <string.h>
 
-// Debug0019E8A8,E-0110-CM01. Original steering/translating branches and common
-// five-point ground/body/wheel publication. Scoped EE truncation is the existing
-// PC numerical carrier; no original-runtime bit-equivalence claim is made.
-float CopMover::Move(float t,::port::race::PhysicsConstructionServices& services){
- ::port::driving::EeTruncationScope rounding("0x0019E8A8");
- auto& m=m_;const auto a=address_,car=m.word(a+8),s=car+0x40;
- const auto divide=[](float n,float d,const char* at){if(!std::isfinite(n)||!std::isfinite(d))hp2::not_implemented(at,"CopMover nonfinite EE scalar operand is outside the finite PC numerical carrier");const float value=d==0?::port::driving::ee_div_s_zero(n,d,at):n/d;if(!std::isfinite(value))hp2::not_implemented(at,"CopMover exceptional EE scalar encoding is outside the finite PC numerical carrier");return value;};
- const auto square=[](const std::array<float,4>& v){float value=v[0]*v[0];value=value+v[1]*v[1];return value+v[2]*v[2];};
- auto position=m.vector(car+0x60),normal=m.vector(a+0x60);int terrain;bool valid;
- TopologyCoordinate topology(m,car+0x520);topology.GetElevation({position[0],position[1],position[2]},&terrain,&normal,&valid);
- if(!valid){if(!services.cop_mover_invalid_ground_normal_w)hp2::not_implemented("0x0019E930","CopMover invalid-topology ground normal requires independent source stack padding");normal[0]=0;normal[1]=0;normal[2]=1;m.word(a+0x6c,*services.cop_mover_invalid_ground_normal_w);normal[3]=m.scalar(a+0x6c);}
- m.vector(a+0x60,normal);m.half(a+0x28,m.half(car+0x3a4));m.word(a+0x2c,m.word(car+0x3c0));m.vector(a+0x10,m.vector(car+0x70));
- const auto manager=m.word(0x328c1c);if(!manager)hp2::not_implemented("0x0019E97C","CopMover requires the original active CopManager");
- const auto difficulty=m.signed_word(manager+0x28ec);if(difficulty<0||difficulty>2)hp2::not_implemented("0x0019E998","CopMover difficulty reads outside the source three-element local speed table");
- m.word(a+0x70,0);const float maximum=m.scalar(a+0x34)+m.scalar(0x2ad5c8+4u*unsigned(difficulty));
- const float acceleration=divide(-m.scalar(a+0x3c),maximum,"0x0019E9A8")*std::fabs(m.scalar(a+0x2c))+m.scalar(a+0x3c);
- if(maximum<m.scalar(a+0x30))m.scalar(a+0x30,maximum);m.word(car+0x810,0);
- const auto mode=m.word(a+0x74);auto velocity=m.vector(a+0x10);
- if(mode==0){
-  CalculateFacingAngle(maximum,t);m.half(car+0x3a4,m.half(a+0x28));
-  float change=divide(m.scalar(a+0x30)-m.scalar(a+0x2c),t,"0x0019EA10");const float magnitude=std::fabs(change);
-  if(change<0){float timer=m.scalar(a+0x40)+(t+t);if(1<timer)timer=1;m.scalar(a+0x40,timer);const float brake=m.scalar(a+0x38),limit=brake*timer;
-   if(limit<magnitude)change=change*divide(limit,magnitude,"0x0019EA74");
-   if(brake*m.scalar(0x325684)<magnitude||timer==1)m.scalar(m.word(car+0x2c)+0x218,divide(magnitude,brake,"0x0019EAA4"));
-  }else{m.word(a+0x40,0);if(acceleration<magnitude){m.word(car+0x810,1);change=change*divide(acceleration,magnitude,"0x0019EAC8");}m.word(m.word(car+0x2c)+0x218,0);}
-  float speed=m.scalar(a+0x2c)+change*t;m.scalar(a+0x2c,speed);if(maximum<std::fabs(speed)){speed=speed*divide(maximum,std::fabs(speed),"0x0019EB14");m.scalar(a+0x2c,speed);}m.scalar(car+0x3c0,speed);
-  const auto angle=m.half(a+0x28);velocity[0]=speed*hp2::recovered::bCos(m,angle);velocity[1]=speed*hp2::recovered::bSin(m,angle);
-  float dot=velocity[0]*normal[0];dot=dot+velocity[1]*normal[1];dot=dot+velocity[2]*normal[2];const float projected=dot<4?dot:4;
-  for(unsigned i=0;i<3;++i)velocity[i]=velocity[i]-normal[i]*projected;
-  if(4<dot)m.word(a+0x70,1);m.vector(a+0x10,velocity);m.vector(car+0x70,velocity);m.scalar(car+0x3c4,std::sqrt(square(velocity)));m.word(car+0x440,0);
- }else if(mode==1){
-  const float length=std::sqrt(square(velocity)),vx=divide(velocity[0],length,"0x0019EC54"),vy=divide(velocity[1],length,"0x0019EC4C");
-  const float ax=divide(m.scalar(a+0x50)-velocity[0],t,"0x0019EC34"),ay=divide(m.scalar(a+0x54)-velocity[1],t,"0x0019EC3C");
-  const float longitudinal=ax*vx+ay*vy;float lx=longitudinal*vx,ly=longitudinal*vy;
-  const float previous_x=m.scalar(a+0x20),previous_y=m.scalar(a+0x24);float tx=ax-lx,ty=ay-ly;m.scalar(a+0x20,tx);m.scalar(a+0x24,ty);
-  const float transverse=std::sqrt(tx*tx+ty*ty);if(35<transverse){const float factor=divide(35,transverse,"0x0019ECDC");tx=tx*factor;ty=ty*factor;m.scalar(a+0x20,tx);m.scalar(a+0x24,ty);}
-  const float jx=divide(tx-previous_x,t,"0x0019ED08"),jy=divide(ty-previous_y,t,"0x0019ED0C"),jerk=std::sqrt(jx*jx+jy*jy);
-  if(150<jerk){const float factor=divide(150,jerk,"0x0019ED44");ty=previous_y+(jy*factor)*t;tx=previous_x+(jx*factor)*t;m.scalar(a+0x24,ty);m.scalar(a+0x20,tx);}
-  float magnitude=std::sqrt(lx*lx+ly*ly);
-  if(longitudinal<0){float timer=m.scalar(a+0x40)+(t+t);if(1<timer)timer=1;m.scalar(a+0x40,timer);const float brake=m.scalar(a+0x38),limit=brake*timer;
-   if(limit<magnitude){const float factor=divide(limit,magnitude,"0x0019EDDC");lx=lx*factor;ly=ly*factor;magnitude=limit;}
-   if(brake*m.scalar(0x325688)<magnitude||timer==1)m.scalar(m.word(car+0x2c)+0x218,divide(magnitude,brake,"0x0019EE1C"));
-  }else{m.word(a+0x40,0);m.word(m.word(car+0x2c)+0x218,0);if(acceleration<magnitude){m.word(car+0x810,1);const float factor=divide(acceleration,magnitude,"0x0019EE40");lx=lx*factor;ly=ly*factor;}}
-  velocity[0]=velocity[0]+(lx+m.scalar(a+0x20))*t;velocity[1]=velocity[1]+(ly+m.scalar(a+0x24))*t;
-  float dot=velocity[0]*normal[0];dot=dot+velocity[1]*normal[1];dot=dot+velocity[2]*normal[2];const float projected=dot<4?dot:4;
-  for(unsigned i=0;i<3;++i)velocity[i]=velocity[i]-normal[i]*projected;if(4<dot)m.word(a+0x70,1);
-  float speed=std::sqrt(square(velocity));if(maximum<std::fabs(speed)){const float factor=divide(maximum,std::fabs(speed),"0x0019EF40");for(auto& lane:velocity)lane=lane*factor;speed=speed*factor;}
-  m.vector(a+0x10,velocity);m.vector(car+0x70,velocity);m.scalar(car+0x3c0,speed);m.scalar(car+0x3c4,std::sqrt(square(velocity)));m.word(car+0x440,0);
-  const float squared=square(velocity),inverse=squared==0?::port::driving::ee_vrsqrt_one_zero(squared,"0x0019EFA4"):1.f/std::sqrt(squared);
-  const auto angle=hp2::recovered::bFixATan(m,::port::driving::cvt_w_s((velocity[0]*inverse)*65536.f),::port::driving::cvt_w_s((velocity[1]*inverse)*65536.f));
-  m.half(a+0x2a,std::uint16_t(angle));CalculateFacingAngle(maximum,t);m.half(car+0x3a4,m.half(a+0x28));
- }
- position=m.vector(car+0x60);velocity=m.vector(a+0x10);for(unsigned i=0;i<4;++i)position[i]=position[i]+velocity[i]*t;m.vector(car+0x60,position);
- bool grounded=m.word(a+0x70)==0;
- if(grounded){
-  // Listing0019F0B8..0019F0D0 is a five-iteration NOP loop, followed by
-  // literal world-axis offsets; no unobserved wheel/body rotation is invented.
-  const std::array<std::array<float,2>,5> offsets{{{{0,0}},{{1,0}},{{-1,0}},{{0,1}},{{0,-1}}}};
-  std::array<float,5> heights;float minimum=m.scalar(0x32568c),maximum_height=m.scalar(0x325690);
-  for(unsigned i=0;i<5;++i){int sample_terrain;heights[i]=topology.GetElevation({position[0]+offsets[i][0],position[1]+offsets[i][1],position[2]},&sample_terrain);minimum=std::min(minimum,heights[i]);maximum_height=std::max(maximum_height,heights[i]);}
-  if(std::fabs(maximum_height-minimum)<=2){const auto config=m.word(car+0xc);const float pitch=((heights[1]-heights[0])-(heights[2]-heights[0]))*.5f*m.scalar(0x325694),roll=((heights[3]-heights[0])-(heights[4]-heights[0]))*.5f*m.scalar(0x325694);
-   position[2]=((heights[0]+m.scalar(config+0x18c))-m.scalar(config+0x188))+m.scalar(config+0x118);m.scalar(car+0x68,position[2]);
-   auto matrix=hp2::recovered::bIdentity();hp2::recovered::eRotateZ(m,matrix,matrix,m.half(car+0x3a4));hp2::recovered::eRotateX(m,matrix,matrix,std::uint16_t(::port::driving::cvt_w_s(roll)));hp2::recovered::eRotateY(m,matrix,matrix,std::uint16_t(-std::int16_t(::port::driving::cvt_w_s(pitch))));m.matrix(car+0x90,matrix);
-   const auto cog=m.vector(config+0x110);auto geometry=position;for(unsigned i=0;i<4;++i)geometry[i]=geometry[i]-cog[i];m.vector(car+0x50,geometry);
-  }else{m.word(a+0x70,1);}
- }
- hp2::recovered::CarState state(m,s);state.CalculateGeometryPosition();
- // The grounded path writes stack3C=0 in its five-offset array setup. If the
- // initial airborne branch skips that setup, the original fourth lane is a
- // distinct unwritten stack operand, not the constructor's normal padding.
- std::uint32_t angular_w=0;if(!grounded){if(!services.cop_mover_airborne_angular_w)hp2::not_implemented("0x0019F2F8","CopMover airborne angular-velocity padding requires an independent explicit source stack operand");angular_w=*services.cop_mover_airborne_angular_w;}
- m.word(car+0xd0,0);m.word(car+0xd4,0);m.word(car+0xd8,0);m.word(car+0xdc,angular_w);m.half(car+0x3a6,m.half(m.word(car+0x2c)+0x210));
- const auto config=m.word(car+0xc);for(unsigned i=0;i<4;++i){const auto off=i*4;const float angular=divide(m.scalar(a+0x2c),m.scalar(config+0x12c+0x20*i),"0x0019F338");m.scalar(s+0x2b0+off,angular);m.scalar(s+0x2c0+off,m.scalar(s+0x2c0+off)+angular*t);m.word(s+0x300+off,0);state.SetWheelTouchingGround(int(i),1);state.SetWheelTerrain(int(i),1);m.word(s+0x334+8*i,0);m.word(s+0x338+8*i,0);m.word(s+0x354+off,0);m.word(s+0x2d0+off,0);for(unsigned j=0;j<4;++j)m.word(s+0x2f0+4*j,0);}
- state.CalculateWheelMatrices();hp2::recovered::Car(m,car).ComputeFakeRPM();return t;
-}
-// Debug0019F560; fresh body/listing + mdebug ownership, E-0099-W91.
-void CopDriver::Sub_0019F560(std::uint32_t car,const ::port::track::RouteData& routes){
- TrackedController(m_,address_).Sub_00233D68(car,routes);m_.word(address_+8,0x2ad758);
- const auto driver=m_.allocate(0x230);CarDriver(m_,driver).Sub_00136D10();m_.word(driver+0x22c,0x2a67f0);m_.word(driver+0x228,0);m_.word(driver+0x220,0xffffffff);
- m_.word(address_+0x30,0);m_.word(address_+0x3c,0xffffffff);m_.scalar(address_+0x40,0);m_.scalar(address_+0x44,0);m_.scalar(address_+0x38,m_.scalar(0x3256a8));m_.word(address_+0x28,1);m_.word(address_+4,driver);m_.word(address_+0x34,0);m_.word(address_+0x2c,1);m_.word(address_+0x24,1);
- // Original switch table002AD5F0; default deliberately preserves nCarClass.
- switch(m_.word(m_.word(car+0xc)+0x534)){case 4:m_.word(address_+0x48,4);break;case 31:m_.word(address_+0x48,3);break;case 32:m_.word(address_+0x48,0);break;case 33:m_.word(address_+0x48,1);break;case 34:m_.word(address_+0x48,2);break;default:break;}
-}
-// Debug0019F6A8; known constructor's real NullDriver virtual destructor only.
-void CopDriver::Sub_0019F6A8(int flags){m_.word(address_+8,0x2ad758);if(const auto driver=m_.word(address_+4)){const auto vt=m_.word(driver+0x22c);if(m_.word(vt+0xc)!=0x136b98||m_.signed_half(vt+8)!=0)hp2::not_implemented("0x0019F6A8","actual replacement CarDriver destructor is unrecovered");m_.word(driver+0x22c,0x2a67f0);CarDriver(m_,driver).Sub_00136CB0(3);}TrackedController(m_,address_).Sub_00233DB8(flags);}
+int32_t copDriverLookAhead(float output[2],float* lateralError,const DriverCommand* command,
+    const float position[2],const float offset[2],float distance)
+{
+    if(command->count==1){
+        const float x=position[0]-command->points[0].position[0];
+        const float y=position[1]-command->points[0].position[1];
+        const float xx=x*x;
+        const float yy=y*y;
+        if(sqrtf(xx+yy)<=distance){
+            output[0]=command->points[0].position[0];
+            output[1]=command->points[0].position[1];
+            *lateralError=0.0f;
+            return 1;
+        }
+    }else if(command->count>=2){
+        for(int32_t index=command->count-2;index>=0;--index){
+            const float* first=command->points[index].position;
+            const float* second=command->points[index+1].position;
+            float directionX=second[0]-first[0];
+            float directionY=second[1]-first[1];
+            const float xx=directionX*directionX;
+            const float yy=directionY*directionY;
+            const float length=sqrtf(xx+yy);
+            if(length!=0.0f){
+                const float inverse=finiteRatio(1.0f,length);
+                directionY=directionY*inverse;
+                directionX=directionX*inverse;
+            }
+            const float deltaY=position[1]-first[1];
+            const float deltaX=position[0]-first[0];
+            const float projectedY=deltaY*directionY;
+            const float projectedX=deltaX*directionX;
+            const float projection=projectedX+projectedY;
+            if(!(0.0f<=projection&&projection<length))continue;
+            float covered=-projection;
+            for(int32_t following=index+1;following<command->count;++following){
+                const float* previous=command->points[following-1].position;
+                const float* next=command->points[following].position;
+                const float dx=next[0]-previous[0];
+                const float dy=next[1]-previous[1];
+                const float dxSquared=dx*dx;
+                const float dySquared=dy*dy;
+                const float segmentLength=sqrtf(dxSquared+dySquared);
+                covered=covered+segmentLength;
+                if(distance<=covered){
+                    const float remaining=covered-distance;
+                    const float inverse=finiteRatio(1.0f,segmentLength);
+                    const float xDirection=dx*inverse;
+                    const float yDirection=dy*inverse;
+                    const float alongX=xDirection*remaining;
+                    const float alongY=yDirection*remaining;
+                    const float offsetX=xDirection*offset[0];
+                    const float offsetY=yDirection*offset[1];
+                    const float baseX=next[0]-alongX;
+                    output[0]=(baseX+offsetX)+offsetY;
+                    const float tangentY=yDirection*offset[0];
+                    const float normalY=(-xDirection)*offset[1];
+                    const float baseY=next[1]-alongY;
+                    output[1]=(baseY+tangentY)+normalY;
+                    const float errorX=position[0]-output[0];
+                    const float errorY=position[1]-output[1];
+                    const float lateralX=errorX*yDirection;
+                    const float lateralY=errorY*(-xDirection);
+                    *lateralError=fabsf(lateralX+lateralY);
+                    return 1;
+                }
+            }
+            break;
+        }
+    }
+    const int32_t fallback=command->count<2?0:1;
+    output[0]=command->points[fallback].position[0];
+    output[1]=command->points[fallback].position[1];
+    return 0;
 }
 
-#include "game_core/indep/inc/Replay.hpp"
-namespace hp2::debug {
-// Debug001A03B8, E-0099-W101; exact original copdriver.cpp definition owner.
-// Enum bytes preserve their upper storage; the signed int index widens to4.
-void CopDriver::DoSnapshot(std::uint32_t snapshot){ReplaySnapshot s(m_,snapshot);s.BeginSection(address_,0x2ad748);TrackedController(m_,address_).DoSnapshot(snapshot);for(unsigned off:{0x24u,0x28u,0x2cu})s.MoveData(address_+off,1);for(unsigned off:{0x30u,0x34u,0x38u})s.MoveData(address_+off,4);s.MoveData(address_+0x40,8);s.MoveData(address_+0x3c,1,4,1);s.EndSection();}
+void copDriverPointFromEnd(float output[2],const DriverCommand* command,const float offset[2])
+{
+    if(command->count<=0)return;
+    int32_t current=command->count-1;
+    int32_t following=current;
+    if(command->count<2){
+        output[0]=command->points[current].position[0];
+        output[1]=command->points[current].position[1];
+        return;
+    }
+    float covered=0.0f;
+    while(current>0&&covered<=offset[0]){
+        following=current;
+        --current;
+        const float x=command->points[current].position[0]-command->points[following].position[0];
+        const float y=command->points[current].position[1]-command->points[following].position[1];
+        const float xx=x*x;
+        const float yy=y*y;
+        covered=covered+sqrtf(xx+yy);
+    }
+    const float* first=command->points[current].position;
+    const float* next=command->points[following].position;
+    float x=next[0]-first[0];
+    float y=next[1]-first[1];
+    const float remaining=covered-offset[0];
+    const float xx=x*x;
+    const float yy=y*y;
+    const float length=sqrtf(xx+yy);
+    float scaledX=x,scaledY=y;
+    if(0.0f<length){
+        const float scale=finiteRatio(remaining,length);
+        scaledY=y*scale;
+        scaledX=x*scale;
+    }
+    output[0]=first[0]+scaledX;
+    output[1]=first[1]+scaledY;
+    const float normalX=y;
+    const float normalY=-x;
+    const float normalXX=normalX*normalX;
+    const float normalYY=normalY*normalY;
+    const float normalLength=sqrtf(normalXX+normalYY);
+    if(normalLength!=0.0f){
+        x=finiteRatio(normalY,normalLength);
+        y=finiteRatio(normalX,normalLength);
+    }else{x=normalY;y=normalX;}
+    output[0]=output[0]+y*offset[1];
+    output[1]=output[1]+x*offset[1];
 }
 
-namespace hp2::debug {
-// Debug0019F980, E-0099-W108. Exact copdriver.cpp owner and source branch delay slot.
-// Tracked Think and CopSlot read precede the non-COP_MOVEMENT return.
-// E-0112-COP01 restores original patrol/pursuit/backing-up continuations.
-// Debug0019F708,E-0112-COP01. Source near/far history and exact DLOffset.
-void CopDriver::GetPursuitTargetPoint(std::array<float,2>& result,const ::port::race::AiDriveTargetServices& services,std::optional<std::uint32_t> point_w){auto& m=m_;const auto a=address_,cop=m.word(m.word(0x328c1c)+16+4*m.word(a+0x3c)),pursuit=m.word(cop);if(!pursuit)return;const auto chased=m.word(pursuit+16),car=m.word(a),driver=m.word(a+4);const auto position=[&](std::uint32_t at){return std::array<float,2>{{m.scalar(at+0x60),m.scalar(at+0x64)}};};float lateral;switch(m.word(cop+0x14)){
- case 1:case 2:case 3:case 4:case 5:case 6:case 10:{const float x=m.scalar(car+0x60)-m.scalar(chased+0x60),y=m.scalar(car+0x64)-m.scalar(chased+0x64);m.word(a+0x2c,1);const std::array<float,2> offset{{m.scalar(cop+0x2c),m.scalar(cop+0x30)}};if(std::sqrt(x*x+y*y)<20){DriveTarget(m,driver).Sub_002165B8(pursuit+0x240);GetDriveTargetPointByDLOffsetFromStart(m,result,pursuit+0x240,offset);}else{DriveTarget(m,driver).Sub_002165B8(pursuit+0x30);FindDriveTargetPointByDistance(m,result,lateral,pursuit+0x30,position(car),20,offset);}break;}
- case 7:case 8:{m.word(a+0x2c,0);tAICop owner(m,cop);owner.InitializeDriveTarget(services);owner.UpdateDriveTarget(position(chased),false,services,point_w);std::array<float,2> offset{{0,0}};if(m.word(cop+0x14)==7){const auto route=hp2::recovered::Car(m,chased).GetRoutePoint(services);offset[1]=(m.scalar(chased+0x60)-m.scalar(route))*m.scalar(route+0x10)-(m.scalar(chased+0x64)-m.scalar(route+4))*m.scalar(route+0xc);}FindDriveTargetPointByDistance(m,result,lateral,m.word(a+4),position(chased),20,offset);break;}
- case 9:{m.word(a+0x2c,0);tAICop owner(m,cop);owner.InitializeDriveTarget(services);owner.UpdateDriveTarget(position(car),false,services,point_w);FindDriveTargetPointByDistance(m,result,lateral,m.word(a+4),position(car),20,{{0,0}});break;}
- default:return;}}
-void CopDriver::Think(float elapsed,const ::port::track::RouteData& routes,::port::race::PhysicsConstructionServices* physics,const ::port::race::AiDriveTargetServices* supplied){
- auto& m=m_;TrackedController(m,address_).Think(elapsed,routes);const auto a=address_,index=m.word(a+0x3c),car=m.word(a);const auto manager=m.word(0x328c1c);if(!manager)hp2::not_implemented("0x0019F980","actual CopManager owner required before source slot lookup");const auto mode=m.word(car+0x24),cop=m.word(manager+0x10+4*index);if(mode!=5)return;if(index>=7||!cop)hp2::not_implemented("0x0019F9E8","actual registered AI cop required before original pursuit dereference");
- const auto pursuit=m.word(cop),chased=pursuit?m.word(pursuit+16):0,mover=m.word(car+0x30),driver=m.word(a+4);::port::race::AiDriveTargetServices fallback;fallback.routes=&routes;const auto& services=supplied?*supplied:fallback;const auto point_w=physics?physics->cop_target_point_w:std::optional<std::uint32_t>{};
- if(AreWeStuck(elapsed)&&!tAICop(m,cop).IsNearPursuitTarget()){m.word(a+0x28,m.word(a+0x24));m.word(a+0x24,4);m.scalar(a+0x34,2);}
- m.scalar(mover+0x38,40);CopMover(m,mover).ResetMaxThrottleAccel();
- const auto position=[&](std::uint32_t c){return std::array<float,2>{{m.scalar(c+0x60),m.scalar(c+0x64)}};};
- const auto target=[&]{std::array<float,2> result{{m.scalar(a+0x40),m.scalar(a+0x44)}};GetPursuitTargetPoint(result,services,point_w);m.scalar(a+0x40,result[0]);m.scalar(a+0x44,result[1]);};
- const auto polar=[&](const std::array<float,2>& v){::port::driving::Memory::Temporary out(m,8);hp2::recovered::bToPolar(m,out.address(),v);return std::pair<float,std::uint16_t>{m.scalar(out.address()),m.half(out.address()+4)};};
- const auto steer_delta=[&]{return std::array<float,2>{{m.scalar(a+0x40)-m.scalar(car+0x60),m.scalar(a+0x44)-m.scalar(car+0x64)}};};
- const auto find_patrol=[&]{std::array<float,2> result;float lateral;FindDriveTargetPointByDistance(m,result,lateral,m.word(a+4),position(car),20,{{m.scalar(cop+0x2c),m.scalar(cop+0x30)}});m.scalar(a+0x40,result[0]);m.scalar(a+0x44,result[1]);};
- const auto route_lateral=[&](std::uint32_t c){const auto p=hp2::recovered::Car(m,c).GetRoutePoint(services);if(!p)hp2::not_implemented("0x0019F980","source cop lateral comparison requires actual localized route point");return (m.scalar(c+0x60)-m.scalar(p))*m.scalar(p+0x10)-(m.scalar(c+0x64)-m.scalar(p+4))*m.scalar(p+0xc);};
- switch(m.word(a+0x24)){
- case 0:{m.scalar(mover+0x38,2);m.word(mover+0x30,0);m.word(driver+0x214,0);m.scalar(driver+0x21c,1);m.word(driver+0x224,0xffffffff);m.scalar(driver+0x218,1);m.half(driver+0x210,0);m.word(driver+0x220,0xffffffff);m.word(mover+0x74,0);if(m.word(m.word(driver+0x22c)+0x3c)!=0x136b88)hp2::not_implemented("0x0019FAD8","Original disabled-cop desired-speed virtual target is not recovered");break;}
- case 1:m.word(mover+0x30,0);m.word(mover+0x74,0);break;
- case 2:find_patrol();m.word(mover+0x74,0);m.half(mover+0x2a,polar(steer_delta()).second);m.scalar(mover+0x3c,4);m.word(mover+0x30,m.word(a+0x38));break;
- case 3:{if(!pursuit)return;float chased_speed=m.scalar(chased+0x3c4);target();const auto delta=steer_delta();const float x=m.scalar(car+0x60)-m.scalar(chased+0x60),y=m.scalar(car+0x64)-m.scalar(chased+0x64),distance=std::sqrt(x*x+y*y);std::array<float,2> chased_velocity{{m.scalar(chased+0x70),m.scalar(chased+0x74)}};const auto sub=m.word(cop+0x14);
- if(distance<40&&0<chased_velocity[0]*m.scalar(car+0x70)+chased_velocity[1]*m.scalar(car+0x74)&&m.scalar(0x3256ac)<=m.scalar(car+0x3c4)){
-  m.word(mover+0x74,1);float parallel_factor=1,perpendicular_factor=1.5f,extra=0;if(m.word(chased+0x18)){chased_velocity=tNearFollowTarget(m,pursuit+0x450).GetVelocity(.25f);const float length=std::sqrt(chased_velocity[0]*chased_velocity[0]+chased_velocity[1]*chased_velocity[1]);if(0<length){const auto late=tNearFollowTarget(m,pursuit+0x450).GetVelocity(m.scalar(0x328c34));const float factor=std::sqrt(late[0]*late[0]+late[1]*late[1])/length;chased_velocity[0]=chased_velocity[0]*factor;chased_velocity[1]=chased_velocity[1]*factor;}}
-  switch(sub){case 5:case 8:parallel_factor=1.5f;extra=3;break;case 6:extra=3;perpendicular_factor=10;break;case 7:{float factor=m.scalar(0x3256b4);if(std::fabs(route_lateral(chased)-route_lateral(car))<=2.5f){if(m.scalar(chased+0x3c0)*m.scalar(0x3256b0)<60){chased_velocity={{0,0}};break;}factor=.5f;}chased_velocity[0]=chased_velocity[0]*factor;chased_velocity[1]=chased_velocity[1]*factor;break;}case 10:perpendicular_factor=3;m.scalar(mover+0x38,14);break;default:break;}
-  const auto direction=hp2::recovered::bNormalize(std::array<float,2>{{m.scalar(car+0x70),m.scalar(car+0x74)}});const float projection=delta[0]*direction[0]+delta[1]*direction[1],px=direction[0]*projection,py=direction[1]*projection;float vx=0,vy=0;if(sub!=10){vy=py*parallel_factor+(delta[1]-py)*perpendicular_factor+chased_velocity[1];vx=px*parallel_factor+(delta[0]-px)*perpendicular_factor+chased_velocity[0];}const float speed=std::sqrt((vx*vx+vy*vy)+0.f);float factor=1;if(0<speed)factor=(speed+extra)/speed;if(!physics||!physics->cop_desired_velocity_w)hp2::not_implemented("0x0019FF20","source local vel.pad requires independent explicit port operand");std::uint32_t lane=*physics->cop_desired_velocity_w;float pad;std::memcpy(&pad,&lane,4);if(0<speed){vx=vx*factor;vy=vy*factor;pad=pad*factor;}m.scalar(mover+0x50,vx);m.scalar(mover+0x54,vy);m.word(mover+0x58,0);m.scalar(mover+0x5c,pad);return;
- }
- m.word(mover+0x74,0);m.half(mover+0x2a,polar(delta).second);float desired=0;switch(sub){case 1:case 2:case 4:case 5:case 6:desired=distance+chased_speed;break;case 3:desired=distance*5+chased_speed;break;case 7:if(std::fabs(route_lateral(chased)-route_lateral(car))<=2.5f){if(!(m.scalar(chased+0x3c0)*m.scalar(0x3256b8)<60))desired=chased_speed*.5f;break;}[[fallthrough]];case 8:desired=chased_speed*m.scalar(0x3256bc);break;case 9:desired=m.scalar(mover+0x34);break;case 10:desired=0;break;default:break;}
- const int car_class=std::min(int(m.signed_byte(m.word(chased+0xc)+0xe6)),m.signed_word(a+0x48));const auto route=hp2::recovered::Car(m,car).GetRoutePoint(services);const int difficulty=m.word(chased+0x18)?m.signed_word(manager+0x28ec):2;if(car_class<0||car_class>=21||difficulty<0||difficulty>2||!route)hp2::not_implemented("0x0019F980","source cop line speed needs actual route/class/difficulty table domain");const float line=(float(std::uint32_t(m.byte(route+0x5a+unsigned(car_class)))<<16)*1.52587890625e-5f)*m.scalar(0x308608+4*unsigned(difficulty));float speed=std::min(line,desired);if(m.scalar(0x3256c0)<speed){const auto own=position(car),ch=position(chased);const auto angle=polar({{ch[0]-own[0],ch[1]-own[1]}});const auto diff=std::int16_t(angle.second-m.half(car+0x3a4));if(16384<std::fabs(float(diff))&&1<angle.first)speed=m.scalar(0x3256c0);}m.scalar(mover+0x30,speed);break;}
- case 4:{const float time=m.scalar(a+0x34)-elapsed;m.scalar(a+0x34,time);if(time<0){m.word(a+0x24,m.word(a+0x28));return;}if(m.word(a+0x28)==2)find_patrol();else if(m.word(a+0x28)==3)target();m.word(mover+0x74,0);m.half(mover+0x2a,polar(steer_delta()).second);m.scalar(mover+0x3c,4);m.word(mover+0x30,m.word(0x3256c4));break;}
- default:break;
- }
-}
+#include "indep/inc/Replay.hpp"
+
+// PAL1A0F20..1A102C. Scalar transfer widths and order are source-defined;
+// vector padding is deliberately not serialized.
+void copMoverSnapshot(CopMover* mover,ReplaySnapshot* snapshot)
+{
+    replaySnapshotBeginSection(snapshot,mover,"CopMover");
+    replaySnapshotMoveData(snapshot,mover->velocity,12,-1,0);
+    replaySnapshotMoveData(snapshot,&mover->heading,2,2,0);
+    replaySnapshotMoveData(snapshot,&mover->targetHeading,2,2,0);
+    replaySnapshotMoveFloat(snapshot,&mover->speed);
+    replaySnapshotMoveFloat(snapshot,&mover->speedLimit);
+    replaySnapshotMoveFloat(snapshot,&mover->targetSpeed);
+    replaySnapshotMoveData(snapshot,mover->targetVelocity,12,-1,0);
+    replaySnapshotMoveData(snapshot,&mover->mode,1,-1,0);
+    replaySnapshotMoveFloat(snapshot,&mover->brakingLimit);
+    replaySnapshotMoveFloat(snapshot,&mover->accelerationLimit);
+    replaySnapshotMoveData(snapshot,mover->groundNormal,12,-1,0);
+    replaySnapshotMoveData(snapshot,&mover->airborne,1,4,0);
+    replaySnapshotMoveData(snapshot,mover->lateralAcceleration,8,-1,0);
+    replaySnapshotMoveFloat(snapshot,&mover->brakingBlend);
+    if(snapshot->restoring && snapshot->result==REPLAY_SNAPSHOT_OK)
+        mover->velocity[3]=mover->targetVelocity[3]=mover->groundNormal[3]=0.0f;
+    replaySnapshotEndSection(snapshot);
 }
 
-namespace hp2::debug {
-// Debug001A02F0,E-0110-P01; original copdriver.cpp. No recent collision
-// preserves the timer; only patrolling/pursuit accumulate below strict2m/s.
-bool CopDriver::AreWeStuck(float elapsed){if(!CarInRecentCollision(m_,m_.word(address_)))return false;switch(m_.word(address_+0x24)){case 0:case 1:case 4:m_.word(address_+0x30,0);return false;case 2:case 3:if(m_.scalar(m_.word(address_)+0x3c4)<2){const float timer=m_.scalar(address_+0x30)+elapsed;m_.scalar(address_+0x30,timer);return 1<timer;}m_.word(address_+0x30,0);return false;default:return false;}}
+// Full PAL1A2B58..1A2C30. Source modes are byte transfers, independent of
+// the typed host carrier; no pursuit or road state is duplicated here.
+void copDriverSnapshot(CopDriver* driver,ReplaySnapshot* snapshot)
+{
+    replaySnapshotBeginSection(snapshot,driver,"CopDriver");
+    driverRouteSnapshot(&driver->base,snapshot);
+    replaySnapshotMoveData(snapshot,&driver->drivingMode,1,-1,0);
+    replaySnapshotMoveData(snapshot,&driver->previousMode,1,-1,0);
+    replaySnapshotMoveData(snapshot,&driver->commandFromTarget,1,-1,0);
+    replaySnapshotMoveFloat(snapshot,&driver->stalledSeconds);
+    replaySnapshotMoveFloat(snapshot,&driver->reverseSeconds);
+    replaySnapshotMoveFloat(snapshot,&driver->targetSpeed);
+    replaySnapshotMoveData(snapshot,driver->lookAhead,8,-1,0);
+    replaySnapshotMoveInteger(snapshot,&driver->entryIndex,1);
+    replaySnapshotEndSection(snapshot);
 }
 
-#include "game_core/indep/inc/CopDriver.hpp"
-#include "game_core/port/driving/ee_scalar.hpp"
-#include "game_core/port/driving/projections.hpp"
-#include <cmath>
-namespace hp2::debug {
-// Debug0019F448,E-0110-F08. Instruction listing fixes MUL.S grouping and signed16 wrap.
-float CopMover::CalculateFacingAngle(float maximum_speed,float elapsed){auto& m=m_;const float speed=m.scalar(address_+0x2c);float limit=m.scalar(0x3256a0);if(0<=speed){const float numerator=m.scalar(0x325698);const float ratio=maximum_speed==0?::port::driving::ee_div_s_zero(numerator,maximum_speed,"0x0019F468"):numerator/maximum_speed;limit=ratio*std::fabs(speed)+m.scalar(0x32569c);}const auto difference=static_cast<std::int16_t>(m.half(address_+0x2a)-m.half(address_+0x28));float delta=static_cast<float>(difference);if(limit<std::fabs(delta))delta=delta*(limit/std::fabs(delta));const float factor=std::fabs(speed)*m.scalar(0x3256a4);float angular=delta*factor;const float cap=static_cast<float>(0x780000/360);if(cap<std::fabs(angular))angular=0<=angular?cap:-cap;float change=angular*elapsed;if(std::fabs(delta)<std::fabs(change))change=delta;const auto increment=::port::driving::cvt_w_s(change);m.half(address_+0x28,static_cast<std::uint16_t>(m.half(address_+0x28)+static_cast<std::uint32_t>(increment)));return angular;}
+// CopDriver allocation and control use typed PC owners.
+CarDriverResult copDriverInitialize(CopDriver* driver,CarMovement* movement,PursuitCollisionContext* pursuit)
+{
+    if(!driver||!movement||!movement->bindings.controls||!pursuit)return CAR_DRIVER_INVALID_BINDING;
+    int32_t routeClass;
+    switch(movement->info.modelCode){
+    case 4:routeClass=4;break;
+    case 31:routeClass=3;break;
+    case 32:routeClass=0;break;
+    case 33:routeClass=1;break;
+    case 34:routeClass=2;break;
+    default:return CAR_DRIVER_INVALID_BINDING;
+    }
+    memset(driver,0,sizeof(*driver));
+    const CarDriverResult result=driverRouteInitialize(&driver->base,movement,CAR_DRIVER_COP);
+    if(result!=CAR_DRIVER_OK)return result;
+    driver->pursuit=pursuit;
+    driverCommandInitialize(&driver->command);
+    CarControls* controls=movement->bindings.controls;
+    controls->steeringAngle=0;
+    controls->throttle=0.0f;
+    controls->brake=0.0f;
+    controls->handbrake=0.0f;
+    controls->gearRequest=-1;
+    controls->nitroRequest=0;
+    driver->drivingMode=1;
+    driver->previousMode=1;
+    driver->commandFromTarget=1;
+    driver->entryIndex=-1;
+    driver->targetSpeed=29.056772232055664f;
+    driver->routeClassLimit=routeClass;
+    return CAR_DRIVER_OK;
 }
 
-#include "game_core/port/race/cop_driver_targets.hpp"
-namespace hp2::debug {
-// Debug001A0490,E-0112-COP01. Original backward segment scan, second-point
-// failure fallback and untouched lateral error on failure are intentional.
-bool FindDriveTargetPointByDistance(::port::driving::Memory& m,std::array<float,2>& res,float& lateral,std::uint32_t target,const std::array<float,2>& position,float desired,const std::array<float,2>& offset){const int count=m.signed_byte(target);const auto point=[&](int index){const auto at=target+16+std::uint32_t(index)*16;return std::array<float,2>{{m.scalar(at),m.scalar(at+4)}};};if(count==1){const auto p=point(0);const float x=position[0]-p[0],y=position[1]-p[1];if(std::sqrt(x*x+y*y)<=desired){res=p;lateral=0;return true;}}else if(count>=2){for(int first=count-2;first>=0;--first){const auto a=point(first),b=point(first+1);float dx=b[0]-a[0],dy=b[1]-a[1];const float length=std::sqrt(dx*dx+dy*dy);if(length!=0){dx=dx*(1/length);dy=dy*(1/length);}const float projection=(position[0]-a[0])*dx+(position[1]-a[1])*dy;if(0<=projection&&projection<length){float distance=-projection;for(int i=first;i<count-1;++i){const auto p=point(i),q=point(i+1);dx=q[0]-p[0];dy=q[1]-p[1];const float segment=std::sqrt(dx*dx+dy*dy);distance=distance+segment;if(desired<=distance){const float inverse=segment==0?::port::driving::ee_div_s_zero(1,segment,"0x001A04FC"):1/segment;dx=dx*inverse;dy=dy*inverse;res[0]=(q[0]-dx*(distance-desired))+dx*offset[0]+dy*offset[1];res[1]=(q[1]-dy*(distance-desired))+dy*offset[0]+-dx*offset[1];lateral=std::fabs((position[0]-res[0])*dy+(position[1]-res[1])*-dx);return true;}}break;}}}res=point(count<2?0:1);return false;}
-// Debug001A0750,E-0112-COP01. Offset.d measures BACK from final target point.
-void GetDriveTargetPointByDLOffsetFromStart(::port::driving::Memory& m,std::array<float,2>& result,std::uint32_t target,const std::array<float,2>& offset){const int count=m.signed_byte(target);const auto point=[&](int index){const auto at=target+16+std::uint32_t(index)*16;return std::array<float,2>{{m.scalar(at),m.scalar(at+4)}};};auto older=point(count-1),newer=older;if(count<2){result=older;return;}float distance=0;if(offset[0]>=0){for(int i=count-1;i>=0;--i){newer=older;older=point(i);const float x=older[0]-newer[0],y=older[1]-newer[1];distance=distance+std::sqrt(x*x+y*y);if(i==0||offset[0]<distance)break;}}float x=newer[0]-older[0],y=newer[1]-older[1];const float length=std::sqrt(x*x+y*y);if(0<length){const float fraction=(distance-offset[0])/length;x=x*fraction;y=y*fraction;}result={{older[0]+x,older[1]+y}};float lx=newer[1]-older[1],ly=-(newer[0]-older[0]);const float size=std::sqrt(lx*lx+ly*ly);if(size!=0){lx=lx/size;ly=ly/size;}result[0]=result[0]+lx*offset[1];result[1]=result[1]+ly*offset[1];}
+int32_t copDriverCheckStall(CopDriver* driver,float elapsed)
+{
+    if(!driver->base.movement->bindings.ownerMotion->collision->shape->contactCount)return 0;
+    if(driver->drivingMode==2||driver->drivingMode==3){
+        if(driver->base.movement->bindings.state->speed<2.0f){
+            driver->stalledSeconds=driver->stalledSeconds+elapsed;
+            return 1.0f<driver->stalledSeconds;
+        }
+        driver->stalledSeconds=0.0f;
+    }else if(0<=driver->drivingMode&&driver->drivingMode<5)driver->stalledSeconds=0.0f;
+    return 0;
+}
+
+void copDriverSelectTargetPoint(CopDriver* driver,float output[2])
+{
+    if(driver->entryIndex<0||(size_t)driver->entryIndex>=driver->pursuit->entryCount){
+        driver->base.result=CAR_DRIVER_MISSING_PURSUIT;return;
+    }
+    PursuitCollisionEntry* entry=driver->pursuit->entries[driver->entryIndex];
+    if(!entry||!entry->group)return;
+    const CarMovement* movement=driver->base.movement;
+    const CarMovement* target=entry->group->target;
+    if(entry->drivingState<3||entry->drivingState>12)return;
+    const float* ownPosition=movement->bindings.state->position;
+    const float* targetPosition=target->bindings.state->position;
+    float error;
+    if(entry->drivingState==9||entry->drivingState==10||entry->drivingState==11){
+        driver->commandFromTarget=0;
+        CarDriverResult result=pursuitEntrySelectRoad(entry);
+        if(result!=CAR_DRIVER_OK){driver->base.result=result;return;}
+        const float* position=entry->drivingState==11?ownPosition:targetPosition;
+        result=pursuitEntryBuildRoadCommand(entry,&driver->command,position,0);
+        if(result!=CAR_DRIVER_OK){driver->base.result=result;return;}
+        float offset[2]={0.0f,0.0f};
+        if(entry->drivingState==9){
+            const CarDriver* targetDriver=(const CarDriver*)target->bindings.owner->controller;
+            const CarRecoveryPose* pose=carDriverCurrentPose(targetDriver,1);
+            if(!pose){driver->base.result=CAR_DRIVER_MISSING_ROAD;return;}
+            const float x=targetPosition[0]-pose->position[0];
+            const float y=targetPosition[1]-pose->position[1];
+            const float first=x*pose->direction[1];
+            const float second=y*pose->direction[0];
+            offset[1]=first-second;
+        }
+        copDriverLookAhead(output,&error,&driver->command,position,offset,20.0f);
+    }else{
+        driver->commandFromTarget=1;
+        const float x=ownPosition[0]-targetPosition[0];
+        const float y=ownPosition[1]-targetPosition[1];
+        const float xx=x*x;
+        const float yy=y*y;
+        if(sqrtf(xx+yy)<20.0f){
+            driverCommandCopy(&driver->command,&entry->group->recentTargetPath);
+            copDriverPointFromEnd(output,&entry->group->recentTargetPath,entry->targetOffset);
+        }else{
+            driverCommandCopy(&driver->command,&entry->group->targetPath);
+            copDriverLookAhead(output,&error,&entry->group->targetPath,ownPosition,entry->targetOffset,20.0f);
+        }
+    }
+}
+
+static uint16_t headingTo(const float from[2],const float to[2])
+{
+    const float difference[2]={to[0]-from[0],to[1]-from[1]};
+    VectorPolar2 polar;vectorPolarFromCartesian2(&polar,difference);
+    return polar.angle;
+}
+
+static float distanceXY(const float first[2],const float second[2])
+{
+    const float x=first[0]-second[0];
+    const float y=first[1]-second[1];
+    const float xx=x*x;
+    const float yy=y*y;
+    return sqrtf(xx+yy);
+}
+
+static const CarRecoveryPose* currentPose(const CarMovement* movement)
+{
+    return carDriverCurrentPose((const CarDriver*)movement->bindings.owner->controller,1);
+}
+
+static float lateralPosition(const VehicleState* vehicle,const CarRecoveryPose* pose)
+{
+    const float x=vehicle->position[0]-pose->position[0];
+    const float y=vehicle->position[1]-pose->position[1];
+    const float first=x*pose->direction[1];
+    const float second=y*pose->direction[0];
+    return first-second;
+}
+
+static float lateralDifference(const CarMovement* movement,const CarMovement* target)
+{
+    const float targetLateral=lateralPosition(target->bindings.state,currentPose(target));
+    const float ownLateral=lateralPosition(movement->bindings.state,currentPose(movement));
+    return fabsf(targetLateral-ownLateral);
+}
+
+static void setVelocityTarget(CopDriver* driver,const PursuitCollisionEntry* entry,
+                               const float difference[2])
+{
+    CarMovement* movement=driver->base.movement;
+    CopMover* mover=movement->cop;
+    const CarMovement* target=entry->group->target;
+    const VehicleState* vehicle=movement->bindings.state;
+    const VehicleState* targetState=target->bindings.state;
+    float longitudinalWeight=1.0f;
+    float lateralWeight=1.5f;
+    float excessSpeed=0.0f;
+    float targetVelocity[2];
+    if(target->bindings.player){
+        pursuitVelocityHistorySample(targetVelocity,&entry->group->velocityHistory,0.25f);
+        const float xx=targetVelocity[0]*targetVelocity[0];
+        const float yy=targetVelocity[1]*targetVelocity[1];
+        const float length=sqrtf(xx+yy);
+        if(0.0f<length){
+            float prediction[2];
+            pursuitVelocityHistorySample(prediction,&entry->group->velocityHistory,0.6499999761581421f);
+            const float nextXX=prediction[0]*prediction[0];
+            const float nextYY=prediction[1]*prediction[1];
+            const float scale=finiteRatio(sqrtf(nextXX+nextYY),length);
+            targetVelocity[0]=targetVelocity[0]*scale;
+            targetVelocity[1]=targetVelocity[1]*scale;
+        }
+    }else{
+        targetVelocity[0]=targetState->velocity[0];
+        targetVelocity[1]=targetState->velocity[1];
+    }
+    switch(entry->drivingState){
+    case 7:case 10:longitudinalWeight=1.5f;excessSpeed=3.0f;break;
+    case 8:excessSpeed=3.0f;lateralWeight=10.0f;break;
+    case 9:{
+        float scale;
+        if(lateralDifference(movement,target)<=2.5f){
+            if(targetState->forwardSpeed*2.236999988555908f<60.0f){
+                targetVelocity[0]=0.0f;targetVelocity[1]=0.0f;break;
+            }
+            scale=0.5f;
+        }else scale=1.100000023841858f;
+        targetVelocity[0]=targetVelocity[0]*scale;
+        targetVelocity[1]=targetVelocity[1]*scale;
+        break;
+    }
+    case 12:mover->brakingLimit=14.0f;lateralWeight=3.0f;break;
+    default:break;
+    }
+    float direction[2];vectorNormalize2(direction,vehicle->velocity);
+    const float first=difference[0]*direction[0];
+    const float second=difference[1]*direction[1];
+    const float projection=first+second;
+    const float parallelX=direction[0]*projection;
+    const float parallelY=direction[1]*projection;
+    const float lateralX=difference[0]-parallelX;
+    const float lateralY=difference[1]-parallelY;
+    float velocity[4]={0.0f,0.0f,0.0f,0.0f};
+    if(entry->drivingState!=12){
+        const float alongX=parallelX*longitudinalWeight;
+        const float alongY=parallelY*longitudinalWeight;
+        const float acrossX=lateralX*lateralWeight;
+        const float acrossY=lateralY*lateralWeight;
+        velocity[0]=(alongX+acrossX)+targetVelocity[0];
+        velocity[1]=(alongY+acrossY)+targetVelocity[1];
+    }
+    const float xx=velocity[0]*velocity[0];
+    const float yy=velocity[1]*velocity[1];
+    const float length=sqrtf((xx+yy)+0.0f);
+    if(0.0f<length){
+        const float scale=finiteRatio(length+excessSpeed,length);
+        for(int axis=0;axis<4;++axis)velocity[axis]=velocity[axis]*scale;
+    }
+    for(int axis=0;axis<4;++axis)mover->targetVelocity[axis]=velocity[axis];
+    mover->targetVelocity[2]=0.0f;
+}
+
+static void setHeadingTarget(CopDriver* driver,const PursuitCollisionEntry* entry,float distance,float targetSpeed)
+{
+    static const float difficultySpeedScale[3]={1.149999976158142f,1.2000000476837158f,1.25f};
+    CarMovement* movement=driver->base.movement;
+    CopMover* mover=movement->cop;
+    const CarMovement* target=entry->group->target;
+    const VehicleState* targetState=target->bindings.state;
+    mover->mode=0;
+    const float difference[2]={driver->lookAhead[0]-movement->bindings.state->position[0],
+        driver->lookAhead[1]-movement->bindings.state->position[1]};
+    VectorPolar2 polar;
+    vectorPolarFromCartesian2(&polar,difference);
+    mover->targetHeading=polar.angle;
+    float speed=0.0f;
+    switch(entry->drivingState){
+    case 3:case 4:case 6:case 7:case 8:speed=distance+targetSpeed;break;
+    case 5:speed=distance*5.0f+targetSpeed;break;
+    case 9:
+        if(lateralDifference(movement,target)<=2.5f){
+            if(!(targetState->forwardSpeed*2.236999988555908f<60.0f))speed=targetSpeed*0.5f;
+        }else speed=targetSpeed*1.100000023841858f;
+        break;
+    case 10:speed=targetSpeed*1.100000023841858f;break;
+    case 11:speed=mover->speedLimit;break;
+    default:break;
+    }
+    int32_t lane=target->info.routeVehicleClass;
+    if(driver->routeClassLimit<lane)lane=driver->routeClassLimit;
+    const CarRecoveryPose* pose=currentPose(movement);
+    if(!pose||lane<0||lane>=21){driver->base.result=CAR_DRIVER_MISSING_ROAD;return;}
+    int32_t difficulty=2;
+    if(target->bindings.player)difficulty=driver->pursuit->severity;
+    if(difficulty<0||difficulty>=3){driver->base.result=CAR_DRIVER_INVALID_BINDING;return;}
+    const float authored=(float)((uint32_t)pose->laneSpeeds[lane]*65536u)*0.0000152587890625f;
+    const float limit=authored*difficultySpeedScale[difficulty];
+    speed=minimumFinite(limit,speed);
+    const float minimumSpeed=8.940545082092285f;
+    if(minimumSpeed<speed){
+        const uint16_t heading=headingTo(movement->bindings.state->position,targetState->position);
+        const uint16_t wrapped=(uint16_t)(heading-movement->bindings.state->heading);
+        const int32_t headingDifference=wrapped<32768u?(int32_t)wrapped:(int32_t)wrapped-65536;
+        const float magnitude=fabsf((float)headingDifference);
+        if(16384.0f<magnitude&&1.0f<distance)speed=minimumSpeed;
+    }
+    mover->targetSpeed=speed;
+}
+
+void copDriverThink(CopDriver* driver,float elapsed)
+{
+    driverRouteAdvance(&driver->base,elapsed);
+    if(driver->base.result!=CAR_DRIVER_OK)return;
+    if(driver->entryIndex<0||(size_t)driver->entryIndex>=driver->pursuit->entryCount){
+        driver->base.result=CAR_DRIVER_MISSING_PURSUIT;return;
+    }
+    PursuitCollisionEntry* entry=driver->pursuit->entries[driver->entryIndex];
+    if(!entry){driver->base.result=CAR_DRIVER_MISSING_PURSUIT;return;}
+    CarMovement* movement=driver->base.movement;
+    if(movement->mode!=5)return;
+    CopMover* mover=movement->cop;
+    if(!mover){driver->base.result=CAR_DRIVER_INVALID_BINDING;return;}
+    if(copDriverCheckStall(driver,elapsed)&&!pursuitEntryNearTarget(entry)){
+        driver->previousMode=driver->drivingMode;
+        driver->drivingMode=4;
+        driver->reverseSeconds=2.0f;
+    }
+    mover->brakingLimit=40.0f;
+    copMoverSetAccelerationLimit(mover,movement->info.modelCode);
+    switch(driver->drivingMode){
+    case 0:{
+        CarControls* controls=movement->bindings.controls;
+        mover->brakingLimit=2.0f;mover->targetSpeed=0.0f;mover->mode=0;
+        controls->throttle=0.0f;controls->brake=1.0f;controls->handbrake=1.0f;
+        controls->steeringAngle=0;controls->gearRequest=-1;controls->shiftTarget=-1;
+        break;
+    }
+    case 1:mover->targetSpeed=0.0f;mover->mode=0;break;
+    case 2:{
+        float error;
+        mover->mode=0;
+        copDriverLookAhead(driver->lookAhead,&error,&driver->command,movement->bindings.state->position,entry->targetOffset,20.0f);
+        mover->targetHeading=headingTo(movement->bindings.state->position,driver->lookAhead);
+        mover->accelerationLimit=4.0f;mover->targetSpeed=driver->targetSpeed;
+        break;
+    }
+    case 3:{
+        if(!entry->group)return;
+        const CarMovement* target=entry->group->target;
+        const VehicleState* vehicle=movement->bindings.state;
+        const VehicleState* targetState=target->bindings.state;
+        const float targetSpeed=targetState->speed;
+        copDriverSelectTargetPoint(driver,driver->lookAhead);
+        if(driver->base.result!=CAR_DRIVER_OK)return;
+        const float difference[2]={driver->lookAhead[0]-vehicle->position[0],driver->lookAhead[1]-vehicle->position[1]};
+        const float distance=distanceXY(vehicle->position,targetState->position);
+        const float first=targetState->velocity[0]*vehicle->velocity[0];
+        const float second=targetState->velocity[1]*vehicle->velocity[1];
+        if(distance<40.0f&&0.0f<first+second&&13.410818099975586f<=vehicle->speed){
+            mover->mode=1;
+            setVelocityTarget(driver,entry,difference);
+        }else setHeadingTarget(driver,entry,distance,targetSpeed);
+        break;
+    }
+    case 4:
+        driver->reverseSeconds=driver->reverseSeconds-elapsed;
+        if(driver->reverseSeconds<0.0f){driver->drivingMode=driver->previousMode;return;}
+        if(driver->previousMode==2){
+            float error;
+            copDriverLookAhead(driver->lookAhead,&error,&driver->command,movement->bindings.state->position,entry->targetOffset,20.0f);
+        }else if(driver->previousMode==3)copDriverSelectTargetPoint(driver,driver->lookAhead);
+        mover->mode=0;
+        mover->targetHeading=headingTo(movement->bindings.state->position,driver->lookAhead);
+        mover->accelerationLimit=4.0f;mover->targetSpeed=-8.940545082092285f;
+        break;
+    default:break;
+    }
+}
+
+// Remaining CopMover bodies: complete PAL1A0DD8/1A0EA0/1A1030/1A1BD0.
+// Private C helpers below only factor regions of the original Move body.
+void copMoverSetAccelerationLimit(CopMover* mover, int32_t modelCode)
+{
+    switch (modelCode) {
+    case 4: mover->accelerationLimit = 11.25f; break;
+    case 31: mover->accelerationLimit = 12.75f; break;
+    case 32: case 33: mover->accelerationLimit = 15.0f; break;
+    case 34: mover->accelerationLimit = 14.25f; break;
+    }
+}
+
+int32_t copMoverInitialize(CopMover* mover, CarMovement* movement)
+{
+    if (!movement->bindings.pursuit || movement->bindings.pursuit->severity<0 ||
+        movement->bindings.pursuit->severity>2) return 0;
+    const int32_t model = movement->info.modelCode;
+    if (model != 4 && (model < 31 || model > 34)) return 0;
+    const VehicleState* state = movement->bindings.state;
+    mover->movement = movement;
+    memcpy(mover->velocity,state->velocity,3*sizeof(float));
+    mover->velocity[3]=0.0f;
+    memcpy(mover->targetVelocity,mover->velocity,sizeof(mover->targetVelocity));
+    mover->speed = mover->targetSpeed = state->forwardSpeed;
+    mover->heading = mover->targetHeading = state->heading;
+    mover->speedLimit = 84.9351806640625f;
+    mover->mode = 0;
+    copMoverSetAccelerationLimit(mover,model);
+    mover->brakingLimit = 40.0f;
+    mover->lateralAcceleration[0] = mover->lateralAcceleration[1] = 0.0f;
+    mover->groundNormal[0] = mover->groundNormal[1] = 0.0f;
+    mover->groundNormal[2] = 1.0f;
+    mover->groundNormal[3] = 0.0f;
+    mover->airborne = 0;
+    mover->brakingBlend = 0.0f;
+    return 1;
+}
+
+float copMoverUpdateHeading(CopMover* mover, float maximumSpeed, float elapsed)
+{
+    const float maximumError = mover->speed >= 0.0f ?
+        finiteRatio(-9000.0f,maximumSpeed)*fabsf(mover->speed) + 12000.0f : 12000.0f;
+    float error = (float)(int16_t)(uint16_t)(mover->targetHeading-mover->heading);
+    if (maximumError < fabsf(error)) error *= finiteRatio(maximumError,fabsf(error));
+    float rate = error * (fabsf(mover->speed)*0.30000001192092896f);
+    if (21845.0f < fabsf(rate)) rate = rate >= 0.0f ? 21845.0f : -21845.0f;
+    float step = rate*elapsed;
+    if (fabsf(error) < fabsf(step)) step = error;
+    mover->heading = (uint16_t)(mover->heading + convertFloatToInt32(step));
+    return rate;
+}
+
+static void constrainToGround(CopMover* mover)
+{
+    const float dot = (mover->velocity[0]*mover->groundNormal[0] +
+                       mover->velocity[1]*mover->groundNormal[1]) + mover->velocity[2]*mover->groundNormal[2];
+    const float projection = minimumFinite(dot,4.0f);
+    for (int axis = 0; axis < 3; ++axis) mover->velocity[axis] -= mover->groundNormal[axis]*projection;
+    if (4.0f < dot) mover->airborne = 1;
+}
+
+static void alignToGround(CopMover* mover)
+{
+    CarMovement* movement = mover->movement;
+    VehicleState* state = movement->bindings.state;
+    static const float offsets[5][2] = {{0,0},{1,0},{-1,0},{0,1},{0,-1}};
+    float heights[5], maximum = -1000000.0f, minimum = 1000000.0f;
+    for (int index = 0; index < 5; ++index) {
+        const float point[4] = {offsets[index][0]+state->position[0], offsets[index][1]+state->position[1],state->position[2],0};
+        heights[index] = terrainSurfaceElevation(movement->bindings.environment->contact.terrain,point,NULL,NULL,NULL);
+        maximum = maximumFinite(maximum,heights[index]); minimum = minimumFinite(minimum,heights[index]);
+    }
+    if (fabsf(maximum-minimum) <= 2.0f) {
+        const float positiveX = heights[1]-heights[0], negativeX = heights[2]-heights[0];
+        const float positiveY = heights[3]-heights[0], negativeY = heights[4]-heights[0];
+        const float slopeX = (positiveX-negativeX)*0.5f;
+        const float slopeY = (positiveY-negativeY)*0.5f;
+        const uint16_t yawTilt = (uint16_t)(0u-(uint32_t)convertFloatToInt32(slopeX*10435.66796875f));
+        const uint16_t pitchTilt = (uint16_t)convertFloatToInt32(slopeY*10435.66796875f);
+        const WheelTorqueInfo* wheel = &movement->info.wheels[3];
+        state->position[2] = ((heights[0]+wheel->reactionScale)-wheel->mountPosition[2]) + movement->info.centerOfMass[2];
+        float orientation[16]; rotationMatrixIdentity(orientation);
+        motionMatrixRotateYaw(orientation,orientation,state->heading);
+        motionMatrixRotateX(orientation,orientation,pitchTilt);
+        motionMatrixRotateY(state->orientation,orientation,yawTilt);
+        for (int axis = 0; axis < 3; ++axis) state->centerPosition[axis] = state->position[axis]-movement->info.centerOfMass[axis];
+        state->centerPosition[3]=1.0f;
+    } else mover->airborne = 1;
+}
+
+static void accelerateAlongHeading(CopMover* mover, float maximumSpeed, float maximumAcceleration,float elapsed)
+{
+    CarMovement* movement = mover->movement;
+    VehicleState* state = movement->bindings.state;
+    CarControls* controls = movement->bindings.controls;
+    (void)copMoverUpdateHeading(mover,maximumSpeed,elapsed);
+    state->heading = mover->heading;
+    float acceleration = finiteRatio(mover->targetSpeed-mover->speed,elapsed);
+    const float magnitude = fabsf(acceleration);
+    if (acceleration < 0.0f) {
+        mover->brakingBlend += elapsed+elapsed;
+        if (1.0f < mover->brakingBlend) mover->brakingBlend = 1.0f;
+        const float limit = mover->brakingLimit*mover->brakingBlend;
+        if (limit < magnitude) acceleration *= finiteRatio(limit,magnitude);
+        if (mover->brakingLimit*0.30000001192092896f < magnitude || mover->brakingBlend == 1.0f)
+            controls->brake = finiteRatio(magnitude,mover->brakingLimit);
+    } else {
+        mover->brakingBlend = 0.0f;
+        if (maximumAcceleration < magnitude) {
+            acceleration *= finiteRatio(maximumAcceleration,magnitude);
+            carFrameSetSpecialEffect(movement->frame,1);
+        }
+        controls->brake = 0.0f;
+    }
+    mover->speed += acceleration*elapsed;
+    if (maximumSpeed < fabsf(mover->speed)) mover->speed *= finiteRatio(maximumSpeed,fabsf(mover->speed));
+    state->forwardSpeed = mover->speed;
+    mover->velocity[0] = mover->speed * vectorCosineAngle(mover->heading);
+    mover->velocity[1] = mover->speed * rotationSineAngle(mover->heading);
+    constrainToGround(mover);
+    memcpy(state->velocity,mover->velocity,sizeof(mover->velocity));
+    state->speed = sqrtf((mover->velocity[0]*mover->velocity[0] + mover->velocity[1]*mover->velocity[1]) + mover->velocity[2]*mover->velocity[2]);
+    state->velocityFrameValid = 0;
+}
+
+static void accelerateTowardVelocity(CopMover* mover,float maximumSpeed,float maximumAcceleration,float elapsed)
+{
+    CarMovement* movement = mover->movement;
+    VehicleState* state = movement->bindings.state;
+    CarControls* controls = movement->bindings.controls;
+    const float speed = sqrtf((mover->velocity[0]*mover->velocity[0] + mover->velocity[1]*mover->velocity[1]) + mover->velocity[2]*mover->velocity[2]);
+    // At rest there is no longitudinal velocity axis. Keep the requested
+    // acceleration in the existing bounded lateral controller, rather than
+    // importing the exceptional 0/0 projection from PAL1A13D4/1A13DC.
+    const float x = speed == 0.0f ? 0.0f : finiteRatio(mover->velocity[0],speed);
+    const float y = speed == 0.0f ? 0.0f : finiteRatio(mover->velocity[1],speed);
+    const float ax = finiteRatio(mover->targetVelocity[0]-mover->velocity[0],elapsed);
+    const float ay = finiteRatio(mover->targetVelocity[1]-mover->velocity[1],elapsed);
+    const float along = ax*x + ay*y;
+    float longitudinal[2] = {along*x,along*y};
+    const float oldLateral[2] = {mover->lateralAcceleration[0],mover->lateralAcceleration[1]};
+    mover->lateralAcceleration[0] = ax-longitudinal[0]; mover->lateralAcceleration[1] = ay-longitudinal[1];
+    float magnitude = sqrtf(mover->lateralAcceleration[0]*mover->lateralAcceleration[0] + mover->lateralAcceleration[1]*mover->lateralAcceleration[1]);
+    if (35.0f < magnitude) {
+        const float scale = finiteRatio(35.0f,magnitude);
+        mover->lateralAcceleration[0] *= scale; mover->lateralAcceleration[1] *= scale;
+    }
+    float jerk[2] = {finiteRatio(mover->lateralAcceleration[0]-oldLateral[0],elapsed),
+                     finiteRatio(mover->lateralAcceleration[1]-oldLateral[1],elapsed)};
+    magnitude = sqrtf(jerk[0]*jerk[0]+jerk[1]*jerk[1]);
+    if (150.0f < magnitude) {
+        const float scale = finiteRatio(150.0f,magnitude);
+        jerk[0] *= scale; jerk[1] *= scale;
+        mover->lateralAcceleration[1] = oldLateral[1]+jerk[1]*elapsed;
+        mover->lateralAcceleration[0] = oldLateral[0]+jerk[0]*elapsed;
+    }
+    magnitude = sqrtf(longitudinal[0]*longitudinal[0]+longitudinal[1]*longitudinal[1]);
+    if (along < 0.0f) {
+        mover->brakingBlend += elapsed+elapsed;
+        if (1.0f < mover->brakingBlend) mover->brakingBlend = 1.0f;
+        const float limit = mover->brakingLimit*mover->brakingBlend;
+        if (limit < magnitude) {
+            const float scale = finiteRatio(limit,magnitude);
+            longitudinal[1] *= scale; longitudinal[0] *= scale;
+            magnitude = limit;
+        }
+        if (mover->brakingLimit*0.30000001192092896f < magnitude || mover->brakingBlend == 1.0f)
+            controls->brake = finiteRatio(magnitude,mover->brakingLimit);
+    } else {
+        mover->brakingBlend = 0.0f;controls->brake = 0.0f;
+        if (maximumAcceleration < magnitude) {
+            const float scale = finiteRatio(maximumAcceleration,magnitude);
+            longitudinal[1] *= scale; longitudinal[0] *= scale;
+            carFrameSetSpecialEffect(movement->frame,1);
+        }
+    }
+    mover->velocity[0] += (longitudinal[0]+mover->lateralAcceleration[0])*elapsed;
+    mover->velocity[1] += (longitudinal[1]+mover->lateralAcceleration[1])*elapsed;
+    constrainToGround(mover);
+    float velocityLength = sqrtf((mover->velocity[0]*mover->velocity[0] + mover->velocity[1]*mover->velocity[1]) + mover->velocity[2]*mover->velocity[2]);
+    if (maximumSpeed < fabsf(velocityLength)) {
+        const float scale = finiteRatio(maximumSpeed,fabsf(velocityLength));
+        for (int axis = 0; axis < 3; ++axis) mover->velocity[axis] *= scale;
+        velocityLength *= scale;
+    }
+    memcpy(state->velocity,mover->velocity,sizeof(mover->velocity));
+    state->forwardSpeed = velocityLength;
+    const float squared = (mover->velocity[0]*mover->velocity[0] + mover->velocity[1]*mover->velocity[1]) + mover->velocity[2]*mover->velocity[2];
+    state->speed = sqrtf(squared);state->velocityFrameValid = 0;
+    const float inverse = finiteRatio(1.0f,sqrtf(squared));
+    mover->targetHeading = vectorFixedAtan2Angle(convertFloatToInt32((mover->velocity[0]*inverse)*65536.0f),
+                                               convertFloatToInt32((mover->velocity[1]*inverse)*65536.0f));
+    (void)copMoverUpdateHeading(mover,maximumSpeed,elapsed);
+    state->heading = mover->heading;
+}
+
+float copMoverMove(CopMover* mover,float elapsed)
+{
+    // No time has passed: preserve controls, terrain pose and mover history
+    // before the velocity controller can divide its requested delta by time.
+    if (elapsed == 0.0f) return 0.0f;
+    CarMovement* movement = mover->movement;
+    VehicleState* state = movement->bindings.state;
+    bool hasGround;
+    (void)terrainSurfaceElevation(movement->bindings.environment->contact.terrain,state->position,NULL,mover->groundNormal,&hasGround);
+    if (!hasGround) {
+        mover->groundNormal[0] = mover->groundNormal[1] = 0.0f;
+        mover->groundNormal[2] = 1.0f;
+    }
+    mover->groundNormal[3]=0.0f;
+    mover->heading = state->heading;mover->speed = state->forwardSpeed;
+    memcpy(mover->velocity,state->velocity,3*sizeof(float));
+    mover->velocity[3]=0.0f;
+    static const float difficultyBonus[3] = {-4.470272541046143f,-2.2351362705230713f,0};
+    // PAL1A1104..1A114C reads the manager's copied/clamped pursuit
+    // severity, independently of the racing opponents' difficulty.
+    const float maximumSpeed = mover->speedLimit + difficultyBonus[movement->bindings.pursuit->severity];
+    const float maximumAcceleration = (-mover->accelerationLimit/maximumSpeed)*fabsf(mover->speed) + mover->accelerationLimit;
+    if (maximumSpeed < mover->targetSpeed) mover->targetSpeed = maximumSpeed;
+    mover->airborne = 0;
+    carFrameSetSpecialEffect(movement->frame,0);
+    if (mover->mode == 0) accelerateAlongHeading(mover,maximumSpeed,maximumAcceleration,elapsed);
+    else if (mover->mode == 1) accelerateTowardVelocity(mover,maximumSpeed,maximumAcceleration,elapsed);
+    for (int axis = 0; axis < 3; ++axis) state->position[axis] += mover->velocity[axis]*elapsed;
+    state->position[3]=1.0f;
+    if (!mover->airborne) alignToGround(mover);
+    vehicleStateUpdateCenterPosition(state);
+    memset(state->angularVelocity,0,sizeof(state->angularVelocity));
+    state->steeringAngle = movement->bindings.controls->steeringAngle;
+    for (int wheel = 0; wheel < 4; ++wheel) {
+        state->wheelAngularVelocity[wheel] = mover->speed / movement->info.wheels[wheel].reactionScale;
+        state->wheelAngle[wheel] += state->wheelAngularVelocity[wheel]*elapsed;
+        state->suspensionTravel[wheel] = 0.0f;
+        vehicleStateSetWheelContact(state,wheel,1);vehicleStateSetWheelMaterial(state,wheel,1);
+        state->wheelSlip[wheel][0] = state->wheelSlip[wheel][1] = 0.0f;
+        state->wheelSlipRatio[wheel] = state->wheelNormalLoad[wheel] = 0.0f;
+        memset(state->suspensionImpulse,0,sizeof(state->suspensionImpulse));
+    }
+    vehicleStateUpdateWheelPoses(state);
+    carMovementUpdatePowertrainDisplay(movement,&carDriveDisplayDefaultTuning);
+    return elapsed;
 }

@@ -1,254 +1,892 @@
-// TASK-0042 E-0042-S001: exact Debug source marker(s): ..\indep\src\carsoundtires.cpp.
-// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: allocator_label; evidence: E-0027-C01.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/PlayerTireSound.hpp"
-#include "game_core/port/race/car_sound_construction.hpp"
-#include "game_core/src/bSample.hpp"
+#include "CarSounds.hpp"
+#include "bsound/include/bSound.h"
+#include "indep/inc/TerrainType.hpp"
+#include "indep/inc/Car.hpp"
+#include "CarSounds.hpp"
+#include "bware/inc/bMath.hpp"
+#include "indep/inc/Car.hpp"
+#include "Track.hpp"
 
-namespace hp2::debug {
-// Debug0020D200, E-0099-W31.
-void BaseTireSound::Sub_0020D200(::port::race::CarSoundResources& resources){Sub_00203980();m_.word(address_+0x1c,0x2b3d88);bSample(m_,address_+0x24).Sub_0026B2A0();bSample(m_,address_+0xe0).Sub_0026B2A0();m_.half(address_+0x22,1);m_.half(address_+0x20,1);
- for(const auto pair:{std::array<std::uint32_t,2>{{0x24,0x2b3be0}},std::array<std::uint32_t,2>{{0xe0,0x2b3bf0}}}){bSample sample(m_,address_+pair[0]);sample.Initialize(::port::race::required_ingame_sample(resources,::port::race::original_sound_text(m_,pair[1])));sample.SetCategory(1);}}
-// Original kAITireSound constructor is emitted inline in factory0020EE70.
-void kAITireSound::Sub_0020EE70(std::uint32_t car,::port::race::CarSoundResources& resources){Sub_0020D200(resources);m_.word(address_+0x1c,0x2b3ce8);bSample(m_,address_+0x1a0).Sub_0026B2A0();bSample(m_,address_+0x25c).Sub_0026B2A0();m_.word(address_+0x19c,car);
- for(const auto pair:{std::array<std::uint32_t,2>{{0x1a0,0x2b3c20}},std::array<std::uint32_t,2>{{0x25c,0x2b3c38}}}){bSample sample(m_,address_+pair[0]);sample.Initialize(::port::race::required_ingame_sample(resources,::port::race::original_sound_text(m_,pair[1])));sample.SetCategory(0);}
- m_.word(address_+0x318,address_+0x1a0);m_.word(address_+0x320,0);m_.word(address_+0x31c,0);Activate(true);
-}
-// Debug0020D660, E-0099-W31. Real track region and actual road-noise Play call.
-void PlayerTireSound::Sub_0020D660(std::uint32_t car,int side,::port::race::CarSoundResources& resources){
- Sub_0020D200(resources);m_.word(address_+0x19c,car);m_.word(address_+0x1b0,std::uint32_t(side));m_.word(address_+0x1ac,0);m_.word(address_+0x1c,0x2b3d38);
- for(const auto terrain:{0x1c4u,0x290u}){bSample(m_,address_+terrain+12).Sub_0026B2A0();m_.word(address_+terrain,0);m_.word(address_+terrain+4,0);m_.word(address_+terrain+8,0);}
- for(const auto offset:{0x360u,0x41cu,0x4d8u,0x594u,0x650u,0x70cu,0x7c8u,0x884u,0x940u,0x9fcu})bSample(m_,address_+offset).Sub_0026B2A0();
- const std::array<std::uint32_t,2> bindings[]={{{0x41c,0x2b3c00}},{{0x4d8,0x2b3c10}},{{0x594,0x2b3c20}},{{0x650,0x2b3c38}},{{0x70c,0x2b3c48}},{{0x940,0x2b3c58}},{{0x9fc,0x2b3c68}},{{0x884,0x2b3c80}},{{0x7c8,0x2b3c38}}};
- for(const auto& pair:bindings){bSample sample(m_,address_+pair[0]);sample.Initialize(::port::race::required_ingame_sample(resources,::port::race::original_sound_text(m_,pair[1])));sample.SetCategory(1);}bSample(m_,address_+0xe0).SetCategory(0xffffffff);
- const auto track=m_.word(0x327398);if(!track)hp2::not_implemented("0x0020D660","actual CurrentTrackInfo.SoundRegion is not bound");const auto bank=::port::race::original_sound_text(m_,track+0x80);
- if(!bank.empty() && !resources.region(bank))hp2::not_implemented("0x0026FAB8","complete actual selected-track sound region is not loaded");
- if(resources.region(bank)){const auto leaves=resources.sample(bank,::port::race::original_sound_text(m_,0x3289c0));m_.word(address_+0x35c,leaves?1:0);if(leaves){bSample(m_,address_+0x360).Initialize(leaves);bSample(m_,address_+0x360).SetCategory(1);}}
- for(const auto pair:{std::array<std::uint32_t,2>{{0x1c4,0x2b3c90}},std::array<std::uint32_t,2>{{0x290,0x2b3be0}}}){const auto source=resources.in_game_sample(::port::race::original_sound_text(m_,pair[1]));const auto at=address_+pair[0];if(source){m_.word(at,1);m_.word(at+8,0x3289bc);m_.word(at+200,std::uint32_t(side));m_.word(at+4,0);bSample(m_,at+12).Initialize(source);bSample(m_,at+12).SetCategory(1);}else m_.word(at,0);}
- if(m_.word(0x326f40) && m_.word(0x327980) && m_.word(0x3289b8))bSample(m_,address_+0x41c).Play(0,0,0,resources);
- m_.word(address_+0x1c0,1);m_.scalar(address_+0x1bc,0);if(bSample(m_,address_+0x9fc).IsPlaying())bSample(m_,address_+0x9fc).Stop();
- m_.word(address_+0x1b8,0);m_.scalar(address_+0x1a8,0);m_.scalar(address_+0x1a0,-1);m_.scalar(address_+0x1b4,1);m_.scalar(address_+0x1a4,1);Activate(true);
-}
-// Debug0020F680/0020DA00/0020F5A8. Reverse original embedded-sample order.
-void BaseTireSound::Sub_0020F680(int flags){m_.word(address_+0x1c,0x2b3d88);bSample(m_,address_+0xe0).Sub_0026B3F8(2);bSample(m_,address_+0x24).Sub_0026B3F8(2);Sub_00204060(flags);}
-void kAITireSound::Sub_0020F5A8(int flags){m_.word(address_+0x1c,0x2b3ce8);bSample(m_,address_+0x25c).Sub_0026B3F8(2);bSample(m_,address_+0x1a0).Sub_0026B3F8(2);Sub_0020F680(flags);}
-void PlayerTireSound::Sub_0020DA00(int flags){m_.word(address_+0x1c,0x2b3d38);for(const auto offset:{0x9fcu,0x940u,0x884u,0x7c8u,0x70cu,0x650u,0x594u,0x4d8u,0x41cu,0x360u,0x29cu,0x1d0u})bSample(m_,address_+offset).Sub_0026B3F8(2);Sub_0020F680(flags);}
-}
-
-#include "game_core/port/not_implemented.hpp"
-
-namespace hp2::recovered {
-
-
-
-
-// ELF 0x00212950; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00212950.md.
-void PlayerTireSound::Sub_00212950() {
-    hp2::not_implemented("0x00212950", "PlayerTireSound::Sub_00212950 (signature and full body unresolved)");
-}
-
-// ELF 0x00212CF0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00212cf0.md.
-void PlayerTireSound::Sub_00212CF0() {
-    hp2::not_implemented("0x00212CF0", "PlayerTireSound::Sub_00212CF0 (signature and full body unresolved)");
-}
-
-// ELF 0x00212E88; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00212e88.md.
-// TASK-0041 E-0041-V01; debug 0x0020DAD0: PlayerTireSound::DeactivateSound(void); retail 0x00212E88.
-void PlayerTireSound::DeactivateSound() {
-    hp2::not_implemented("0x00212E88", "PlayerTireSound::DeactivateSound (signature and full body unresolved)");
-}
-
-// ELF 0x00212E90; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00212e90.md.
-// TASK-0041 E-0041-V01; debug 0x0020DAD8: PlayerTireSound::ActivateSound(void); retail 0x00212E90.
-void PlayerTireSound::ActivateSound() {
-    hp2::not_implemented("0x00212E90", "PlayerTireSound::ActivateSound (signature and full body unresolved)");
-}
-
-// ELF 0x002134D8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002134d8.md.
-// TASK-0041 E-0041-V01; debug 0x0020E120: PlayerTireSound::Mute(int); retail 0x002134D8.
-void PlayerTireSound::Mute() {
-    hp2::not_implemented("0x002134D8", "PlayerTireSound::Mute (signature and full body unresolved)");
-}
-
-// ELF 0x002135A0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002135a0.md.
-// TASK-0041 E-0041-V01; debug 0x0020E1E8: PlayerTireSound::Update(float, unsigned short, float); retail 0x002135A0.
-void PlayerTireSound::Update() {
-    hp2::not_implemented("0x002135A0", "PlayerTireSound::Update (signature and full body unresolved)");
-}
-
-// ELF 0x002149F8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002149f8.md.
-// TASK-0041 E-0041-V01; debug 0x0020F600: PlayerTireSound::ScaleRoadNoise(float); retail 0x002149F8.
-void PlayerTireSound::ScaleRoadNoise() {
-    hp2::not_implemented("0x002149F8", "PlayerTireSound::ScaleRoadNoise (signature and full body unresolved)");
-}
-
-// ELF 0x00214A00; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00214a00.md.
-// TASK-0041 E-0041-V01; debug 0x0020F608: PlayerTireSound::TriggerTireBlowOut(void); retail 0x00214A00.
-void PlayerTireSound::TriggerTireBlowOut() {
-    hp2::not_implemented("0x00214A00", "PlayerTireSound::TriggerTireBlowOut (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: allocator_label; evidence: E-0027-C01.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/kAITireSound.hpp"
-
-#include "game_core/port/not_implemented.hpp"
-
-namespace hp2::recovered {
-
-
-
-
-// ELF 0x002124F0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002124f0.md.
-void kAITireSound::Sub_002124F0() {
-    hp2::not_implemented("0x002124F0", "kAITireSound::Sub_002124F0 (signature and full body unresolved)");
-}
-
-
-
-
-
-
-
-
-
-// ELF 0x002A0550; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002a0550.md.
-void kAITireSound::Sub_002A0550() {
-    hp2::not_implemented("0x002A0550", "kAITireSound::Sub_002A0550 (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/BaseTireSound.hpp"
-
-namespace hp2::recovered {
-// ELF 0x002125A0; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002125a0.md.
-void BaseTireSound::Mute() {
-    hp2::not_implemented("0x002125A0", "BaseTireSound::Mute (signature and full body unresolved)");
-}
-
-// ELF 0x00214A68; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00214a68.md.
-void BaseTireSound::ScaleRoadNoise() {
-    hp2::not_implemented("0x00214A68", "BaseTireSound::ScaleRoadNoise (signature and full body unresolved)");
-}
-
-// ELF 0x00214A70; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00214a70.md.
-void BaseTireSound::TriggerTireBlowOut() {
-    hp2::not_implemented("0x00214A70", "BaseTireSound::TriggerTireBlowOut (signature and full body unresolved)");
-}
-
-// ELF 0x00214A78; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00214a78.md.
-void BaseTireSound::Sub_00214A78() {
-    hp2::not_implemented("0x00214A78", "BaseTireSound::Sub_00214A78 (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x00214890; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00214890.md.
-void kAITireSound::ActivateSound() {
-    hp2::not_implemented("0x00214890", "kAITireSound::ActivateSound (signature and full body unresolved)");
-}
-
-// ELF 0x00214898; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00214898.md.
-void kAITireSound::DeactivateSound() {
-    hp2::not_implemented("0x00214898", "kAITireSound::DeactivateSound (signature and full body unresolved)");
-}
-
-// ELF 0x002148E0; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/002148e0.md.
-void kAITireSound::Mute() {
-    hp2::not_implemented("0x002148E0", "kAITireSound::Mute (signature and full body unresolved)");
-}
-
-// ELF 0x00214928; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00214928.md.
-void kAITireSound::Update() {
-    hp2::not_implemented("0x00214928", "kAITireSound::Update (signature and full body unresolved)");
-}
-
-// ELF 0x002149A0; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/002149a0.md.
-void kAITireSound::Sub_002149A0() {
-    hp2::not_implemented("0x002149A0", "kAITireSound::Sub_002149A0 (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/port/driving/tire_audio_state.hpp"
 #include <algorithm>
 #include <cmath>
-namespace port::driving {
-// Debug0020DBC8/DAF8/DF80/E088/E1E8/E860; E-0083-T01.
-// Supported skid, squall and burnout slices only. This port-side producer does
-// not claim the full original Update (road noise/leaves/one-shots/damaged tires).
-TireAudioFrame TireAudioMixer::update(const Memory& m,std::uint32_t car,float distance){
-    if(!std::isfinite(distance)||distance<0||distance>1)
-        hp2::not_implemented("0x0020E1E8","Unsupported tire audio distance volume");
-    const auto state=car+0x40;
-    const bool enabled=m.word(0x326f40)!=0&&m.word(0x327980)!=0;
-    const auto slip=[&](unsigned wheel){
-        if(!m.byte(state+0x310+wheel))return 0.f;
-        const float x=m.scalar(state+0x334+wheel*8),y=m.scalar(state+0x338+wheel*8);
-        const float value=std::sqrt(x*x+y*y);return value<0.25f?0.f:value;
-    };
-    const auto smooth=[](float current,float target,float delta){float value=current+delta;if(target<=value){value=current-delta;if(value<=target)value=target;}return value;};
-    for(unsigned side=0;side<2;++side){
-        auto* v=voices_.data()+5*side;
-        const auto terrain0=m.word(state+0x314+4*(side?0:1)),terrain1=m.word(state+0x314+4*(side?3:2));
-        if(terrain0>=33||terrain1>=33)hp2::not_implemented("0x0020E1E8","Tire terrain outside original table");
-        const auto row0=0x3102e8+terrain0*0x90,row1=0x3102e8+terrain1*0x90;
-        bool road=m.byte(row0+12)&&m.byte(row1+12);
-        if(m.word(row0+8)==4||m.word(row1+8)==4)road=previous_road_[side];else previous_road_[side]=road;
-        float skid_volume=0,skid_pitch=1;
-        const unsigned first=side?2:0;
-        const float skid=(slip(first)+slip(first+1))*0.5f;
-        if(side){
-            if(skid<m.scalar(0x325e4c))locked_rear_pitch_[side]=-1;
-            else{
-                skid_volume=skid*m.scalar(0x325e50);
-                if(locked_rear_pitch_[side]==-1)locked_rear_pitch_[side]=std::clamp(m.scalar(0x325e54)*skid,1.f,m.scalar(0x325e58));
-                skid_pitch=locked_rear_pitch_[side];
-            }
-        }else{skid_volume=skid*m.scalar(0x325e5c);skid_pitch=std::clamp(m.scalar(0x325e60)*skid,1.f,1.25f);}
-        const float offset=side?0.f:m.scalar(0x325e8c);
-        if(!road)skid_pitch=offset+1.f;
-        skid_volume=std::clamp(skid_volume*distance,0.f,road?3.5f:2.75f);
-        const unsigned active_skid=road?0:1,other_skid=road?1:0;
-        v[0].sample_index=0;v[1].sample_index=1;
-        if(enabled){if(!v[active_skid].playing&&skid_volume>0)v[active_skid].playing=true;else if(v[active_skid].playing&&skid_volume<=0)v[active_skid].playing=false;}
-        v[other_skid].playing=false;
-        if(skid_volume>0){v[active_skid].volume=skid_volume;v[active_skid].pitch_octaves=skid_pitch-1.f;}
-        // Original squall traction pairs differ from longitudinal skid pairs.
-        const unsigned a=side?1:0,b=side?2:3;
-        const float traction_a=m.byte(state+0x310+a)?std::abs(m.scalar(state+0x354+4*a)):0;
-        const float traction_b=m.byte(state+0x310+b)?std::abs(m.scalar(state+0x354+4*b)):0;
-        const float traction=(traction_a+traction_b)*0.5f;
-        float target=0;
-        const float speed=m.scalar(state+0x384);
-        if(std::abs(speed)>=11.f&&m.scalar(0x325e74)<traction)target=std::min(traction*m.scalar(0x325e78),1.f);
-        float& current=squall_volume_[side];
-        current=smooth(current,target,current>target?m.scalar(0x325e44):m.scalar(0x325e48));
-        const float squall=current*distance;
-        const float squall_pitch=speed*m.scalar(0x325e7c)+(side?0.f:m.scalar(0x325e80));
-        const unsigned active_squall=road?2:3,other_squall=road?3:2;
-        v[2].sample_index=2;v[3].sample_index=1;
-        if(m.word(0x326f40))v[other_squall].playing=false;
-        if(enabled){
-            if(!v[active_squall].playing&&squall>0){v[active_squall].playing=true;v[active_squall].volume=squall;}
-            else if(v[active_squall].playing&&squall<=0)v[active_squall].playing=false;
+#include <cstring>
+#include <new>
+#include <stdexcept>
+#include <string>
+#include <thread>
+
+namespace {
+
+WorldAudioResult initializeTireSample(const CarSoundBindings& bindings,
+    const char* name, uint32_t category, WorldAudioVoiceRef* voice)
+{
+    const WorldAudioCue* cue = worldAudioFindInGame(bindings.audio, name);
+    if (!cue) return WORLD_AUDIO_INVALID_BINDING;
+    WorldAudioResult result = worldAudioInitializeVoiceFromCue(bindings.audio,
+        bindings.audio->inGameBank, cue, voice);
+    if (result == WORLD_AUDIO_OK)
+        result = worldAudioSetVoiceCategory(bindings.audio, *voice, category);
+    return result;
+}
+
+float approachTireVolume(float current, float target)
+{
+    const float step = 0.3499999940395355f;
+    const float upper = current + step;
+    if (upper < target) return upper;
+    const float lower = current - step;
+    return target < lower ? lower : target;
+}
+
+class AiTireSound final : public BaseTireSound {
+public:
+    AiTireSound(CarMovement* movement, const CarSoundBindings& bindings);
+    ~AiTireSound() override;
+    WorldAudioResult Update(float volume, uint16_t azimuth, float pitch) override;
+    WorldAudioResult Pause(int32_t paused) override;
+
+protected:
+    WorldAudioResult ActivateSound() override;
+    WorldAudioResult DeactivateSound() override;
+
+private:
+    WorldAudioResult UpdateSkids(float volume, uint16_t azimuth, float pitch);
+    CarMovement* movement_;
+    WorldAudioVoiceRef skids_[2];
+    int32_t current_;
+    float skidVolume_;
+    float targetVolume_;
+};
+
+} // namespace
+
+BaseTireSound::BaseTireSound(const CarSoundBindings& bindings)
+    : bindings_(bindings), previousContact_{1, 1}, impact_{}
+{
+    if (!bindings.audio || !bindings.globals)
+        throw std::invalid_argument("Tire sound has no live audio owner");
+    try {
+        if (initializeTireSample(bindings_, "TireFlop", 1, &impact_[0]) != WORLD_AUDIO_OK ||
+            initializeTireSample(bindings_, "BottomOut", 1, &impact_[1]) != WORLD_AUDIO_OK)
+            throw std::runtime_error("Tire impact samples are absent from the actual bank");
+    } catch (...) {
+        for (int32_t index = 1; index >= 0; --index)
+            if (impact_[index].instance) worldAudioRetireVoice(bindings_.audio, impact_[index]);
+        throw;
+    }
+}
+
+BaseTireSound::~BaseTireSound()
+{
+    for (int32_t index = 1; index >= 0; --index)
+        if (impact_[index].instance) worldAudioRetireVoice(bindings_.audio, impact_[index]);
+}
+
+WorldAudioResult BaseTireSound::Pause(int32_t paused)
+{
+    WorldAudioResult result = worldAudioPauseVoice(bindings_.audio, impact_[0], paused != 0);
+    if (result == WORLD_AUDIO_OK)
+        result = worldAudioPauseVoice(bindings_.audio, impact_[1], paused != 0);
+    return result;
+}
+
+WorldAudioResult BaseTireSound::UpdateTireImpact(const CarMovement* movement, int32_t side)
+{
+    if (!movement || !movement->bindings.state) return WORLD_AUDIO_INVALID_BINDING;
+    const VehicleState* state = movement->bindings.state;
+    int32_t front = 0;
+    int32_t rear = 0;
+    if (side == -1) {
+        front = state->wheelContact[0] != 0 || state->wheelContact[1] != 0;
+        rear = state->wheelContact[2] != 0 || state->wheelContact[3] != 0;
+    } else if (side == 0) {
+        front = state->wheelContact[1];
+        rear = state->wheelContact[3];
+    } else if (side == 1) {
+        front = state->wheelContact[0];
+        rear = state->wheelContact[2];
+    }
+    WorldAudioResult result = WORLD_AUDIO_OK;
+    if ((front && !previousContact_[0]) || (rear && !previousContact_[1])) {
+        const float vertical = std::fabs(state->velocity[2]) * 0.30000001192092896f;
+        const float x = state->angularVelocity[0] * state->angularVelocity[0];
+        const float y = state->angularVelocity[1] * state->angularVelocity[1];
+        const float angular = std::sqrt(x + y) * 0.800000011920929f;
+        float strength = (vertical + angular) * 0.5f;
+        const float limited = strength < 1.0f ? strength : 1.0f;
+        const CarSoundGlobals& globals = *bindings_.globals;
+        if (globals.policy.audioSystemEnabled && globals.policy.vehicleAudioEnabled && globals.splashEnabled) {
+            result = worldAudioPlayVoice(bindings_.audio, impact_[0], limited * spatial.volume, 0.0f, 0.0f);
+            if (result == WORLD_AUDIO_OK)
+                result = worldAudioSetVoiceControlCode(bindings_.audio, impact_[0], spatial.azimuth);
+            if (result != WORLD_AUDIO_OK) return result;
         }
-        if(squall>0){v[active_squall].volume=smooth(v[active_squall].volume,squall,m.scalar(0x325e98));v[active_squall].pitch_octaves=squall_pitch-1.f;}
-        const float longitudinal=(m.scalar(state+0x344)+m.scalar(state+0x34c))*0.5f+(m.scalar(state+0x334)+m.scalar(state+0x33c))*0.5f;
-        v[4].sample_index=3;
-        if(!road||m.scalar(state+0x38c)<=m.scalar(0x325e90)||longitudinal<=3.f||30.f<=speed)v[4].playing=false;
-        else{
-            if(enabled&&!v[4].playing){v[4].playing=true;v[4].pitch_octaves=side?0.f:m.scalar(0x325e94);}
-            v[4].volume=std::min(longitudinal*0.0625f,3.f)*distance;
+        if (0.8999999761581421f < strength && globals.policy.audioSystemEnabled &&
+            globals.policy.vehicleAudioEnabled && globals.splashEnabled) {
+            const float pitch = vectorRandomFloat(&worldAudioRuntime.randomState,
+                0.699999988079071f) - 0.4000000059604645f;
+            if (impact_[1].instance->category == UINT32_MAX) {
+                if (!bindings_.volumes) return WORLD_AUDIO_INVALID_BINDING;
+                strength = strength * hp2::GetVolumeDefault(*bindings_.volumes, 0);
+            }
+            const float gain = (strength * spatial.volume) * 0.800000011920929f;
+            result = worldAudioPlayVoice(bindings_.audio, impact_[1], gain, 0.0f, pitch);
+            if (result == WORLD_AUDIO_OK)
+                result = worldAudioSetVoiceControlCode(bindings_.audio, impact_[1], spatial.azimuth);
+            if (result != WORLD_AUDIO_OK) return result;
         }
     }
-    return {voices_};
+    previousContact_[1] = static_cast<uint16_t>(rear);
+    previousContact_[0] = static_cast<uint16_t>(front);
+    return result;
 }
+
+void BaseTireSound::ScaleRoadNoise(float scale)
+{
+    (void)scale; // The actual base virtual method is empty.
+}
+
+void BaseTireSound::TriggerTireBlowOut()
+{
+    // The actual base virtual method is empty; PlayerTireSound overrides it.
+}
+
+namespace {
+
+AiTireSound::AiTireSound(CarMovement* movement, const CarSoundBindings& bindings)
+    : BaseTireSound(bindings), movement_(movement), skids_{}, current_(0),
+      skidVolume_(0.0f), targetVolume_(0.0f)
+{
+    if (!movement || !movement->bindings.state)
+        throw std::invalid_argument("AI tire sound has no actual vehicle state");
+    try {
+        if (initializeTireSample(bindings_, "LongitudinalSkid", 0, &skids_[0]) != WORLD_AUDIO_OK ||
+            initializeTireSample(bindings_, "GravelSkid", 0, &skids_[1]) != WORLD_AUDIO_OK ||
+            Activate(1) != WORLD_AUDIO_OK)
+            throw std::runtime_error("AI tire sound cannot initialize its actual samples");
+    } catch (...) {
+        for (int32_t index = 1; index >= 0; --index)
+            if (skids_[index].instance) worldAudioRetireVoice(bindings_.audio, skids_[index]);
+        throw;
+    }
+}
+
+AiTireSound::~AiTireSound()
+{
+    for (int32_t index = 1; index >= 0; --index)
+        if (skids_[index].instance) worldAudioRetireVoice(bindings_.audio, skids_[index]);
+}
+
+WorldAudioResult AiTireSound::ActivateSound()
+{
+    return WORLD_AUDIO_OK; // Original actual virtual body is JR RA / NOP.
+}
+
+WorldAudioResult AiTireSound::DeactivateSound()
+{
+    WorldAudioResult result = worldAudioStopInstance(bindings_.audio, skids_[0].instance);
+    if (result == WORLD_AUDIO_OK)
+        result = worldAudioStopInstance(bindings_.audio, skids_[1].instance);
+    if (result == WORLD_AUDIO_OK)
+        result = worldAudioStopInstance(bindings_.audio, skids_[current_].instance);
+    return result;
+}
+
+WorldAudioResult AiTireSound::Pause(int32_t paused)
+{
+    WorldAudioResult result = BaseTireSound::Pause(paused);
+    if (result == WORLD_AUDIO_OK) result = worldAudioPauseVoice(bindings_.audio, skids_[0], paused != 0);
+    if (result == WORLD_AUDIO_OK) result = worldAudioPauseVoice(bindings_.audio, skids_[1], paused != 0);
+    return result;
+}
+
+WorldAudioResult AiTireSound::Update(float volume, uint16_t azimuth, float pitch)
+{
+    if (!spatial.active) return WORLD_AUDIO_OK;
+    spatial.volume = volume;
+    spatial.azimuth = azimuth;
+    const WorldAudioResult result = UpdateSkids(volume, azimuth, pitch);
+    if (result != WORLD_AUDIO_OK) return result;
+    spatial.volume = spatial.volume * 0.75f;
+    return UpdateTireImpact(movement_, -1);
+}
+
+WorldAudioResult AiTireSound::UpdateSkids(float volume, uint16_t azimuth, float pitch)
+{
+    (void)pitch;
+    const VehicleState* state = movement_->bindings.state;
+    const TerrainMaterial* materials = terrainDefaultMaterials(nullptr);
+    float maximumSlip = 0.0f;
+    int32_t roadWheels = 0;
+    for (int32_t wheel = 0; wheel < 4; ++wheel) {
+        float slip = 0.0f;
+        if (state->wheelContact[wheel]) {
+            const float x = state->wheelSlip[wheel][0] * state->wheelSlip[wheel][0];
+            const float y = state->wheelSlip[wheel][1] * state->wheelSlip[wheel][1];
+            slip = std::sqrt(x + y);
+        }
+        if (slip < 0.25f) slip = 0.0f;
+        maximumSlip = maximumSlip < slip ? slip : maximumSlip;
+        const int32_t material = state->material[wheel];
+        if (material < 0 || material >= 33) return WORLD_AUDIO_INVALID_BINDING;
+        if (static_cast<int8_t>(materials[material].classification & 255u)) ++roadWheels;
+    }
+    const bool gravel = roadWheels < 2;
+    const float skidPitch = state->speed * 0.0101500004529953f + 0.30000001192092896f;
+    targetVolume_ = volume * (gravel ? 3.5f : 5.0f);
+    if (maximumSlip < 10.0f) targetVolume_ = 0.0f;
+    skidVolume_ = approachTireVolume(skidVolume_, targetVolume_);
+    const int32_t selected = gravel ? 1 : 0;
+    WorldAudioResult result = WORLD_AUDIO_OK;
+    if (current_ != selected && skids_[current_].instance->playing) {
+        result = worldAudioStopInstance(bindings_.audio, skids_[current_].instance);
+        if (result != WORLD_AUDIO_OK) return result;
+    }
+    const auto voice = skids_[selected];
+    if (bindings_.globals->policy.audioSystemEnabled && bindings_.globals->policy.vehicleAudioEnabled) {
+        if (!voice.instance->playing && 0.0f < skidVolume_)
+            result = worldAudioPlayVoice(bindings_.audio, voice, skidVolume_, 0.0f, skidPitch - 1.0f);
+        if (result != WORLD_AUDIO_OK) return result;
+        if (voice.instance->playing && skidVolume_ <= 0.0f)
+            result = worldAudioStopInstance(bindings_.audio, voice.instance);
+        if (result != WORLD_AUDIO_OK) return result;
+    }
+    if (0.0f < skidVolume_) {
+        result = worldAudioSetVoiceVolume(bindings_.audio, voice, skidVolume_);
+        if (result == WORLD_AUDIO_OK)
+            result = worldAudioSetVoicePitchOffset(bindings_.audio, voice, skidPitch - 1.0f);
+        if (result == WORLD_AUDIO_OK)
+            result = worldAudioSetVoiceControlCode(bindings_.audio, voice, azimuth);
+    } else {
+        result = worldAudioStopInstance(bindings_.audio, voice.instance);
+    }
+    current_ = selected;
+    return result;
+}
+
+} // namespace
+
+BaseTireSound* carSoundCreateAiTire(CarMovement* movement,
+    const CarSoundBindings* bindings, WorldAudioResult* result)
+{
+    if (!bindings) {
+        if (result) *result = WORLD_AUDIO_INVALID_BINDING;
+        return nullptr;
+    }
+    try {
+        auto* tire = new AiTireSound(movement, *bindings);
+        if (result) *result = WORLD_AUDIO_OK;
+        return tire;
+    } catch (const std::bad_alloc& failure) {
+        if (bindings->audio && bindings->audio->library)
+            bindings->audio->library->RecordSourceFailure(WORLD_AUDIO_CAPACITY,"AI tire sound",failure.what());
+        if (result) *result = WORLD_AUDIO_CAPACITY;
+    } catch (const std::exception& failure) {
+        const auto status=WORLD_AUDIO_INVALID_BINDING;
+        if (bindings->audio && bindings->audio->library)
+            bindings->audio->library->RecordSourceFailure(status,"AI tire sound",failure.what());
+        if (result) *result = status;
+    } catch (...) {
+        if (bindings->audio && bindings->audio->library)
+            bindings->audio->library->RecordSourceFailure(WORLD_AUDIO_INVALID_BINDING,"AI tire sound","Non-standard source exception");
+        if (result) *result = WORLD_AUDIO_INVALID_BINDING;
+    }
+    return nullptr;
+}
+
+namespace {
+
+const WorldAudioBank* findTireTrackBank(const WorldAudioRequestQueue& audio, const char* name)
+{
+    if (audio.bankCount && !audio.banks)
+        throw std::invalid_argument("Track sound-bank catalogue has no retained owner");
+    for (size_t index = 0; index < audio.bankCount; ++index)
+        if (audio.banks[index].name && std::strcmp(audio.banks[index].name, name) == 0)
+            return &audio.banks[index];
+    return nullptr;
+}
+
+struct TireAudioFailure { WorldAudioResult result; };
+
+void requireTireAudio(WorldAudioResult result)
+{
+    if (result != WORLD_AUDIO_OK) throw TireAudioFailure{result};
+}
+
+// PAL GP-3F78/3F74/3F68/-3420: one live owner shared by both tire objects.
+// Both TerrainOneShot members use the same cooldown, not per-car copies.
+struct TireSoundGlobals {
+    int32_t roadNoiseEnabled;
+    float oneShotDelay;
+    float noisePitchScale;
+    uint16_t thumperAzimuth;
+};
+TireSoundGlobals tireSoundGlobals = {1, 0.0f, 0.006499999668449163f, 0x2000};
+
+class TerrainOneShot {
+public:
+    explicit TerrainOneShot(const CarSoundBindings& bindings)
+        : bindings_(bindings), voice_{}, delay_(nullptr), side_(0), entered_(0) {}
+    ~TerrainOneShot();
+    void Initialize(const WorldAudioBank* bank, const WorldAudioCue* cue,
+        float* delay, int32_t side);
+    WorldAudioResult Pause(int32_t paused);
+    WorldAudioResult Update(const CarMovement* movement, int32_t terrain,
+        float volume, uint16_t azimuth, float pitch);
+private:
+    const CarSoundBindings& bindings_;
+    WorldAudioVoiceRef voice_;
+    float* delay_;
+    int32_t side_;
+    int32_t entered_;
+};
+
+TerrainOneShot::~TerrainOneShot()
+{
+    if (voice_.instance) worldAudioRetireVoice(bindings_.audio, voice_);
+}
+
+void TerrainOneShot::Initialize(const WorldAudioBank* bank, const WorldAudioCue* cue,
+    float* delay, int32_t side)
+{
+    if (!cue) return; // The source Init(NULL) leaves this concrete object inactive.
+    requireTireAudio(worldAudioInitializeVoiceFromCue(bindings_.audio, bank, cue, &voice_));
+    requireTireAudio(worldAudioSetVoiceCategory(bindings_.audio, voice_, 1));
+    delay_ = delay;
+    side_ = side;
+    entered_ = 0;
+}
+
+WorldAudioResult TerrainOneShot::Pause(int32_t paused)
+{
+    return voice_.instance ? worldAudioPauseVoice(bindings_.audio, voice_, paused != 0) : WORLD_AUDIO_OK;
+}
+
+WorldAudioResult TerrainOneShot::Update(const CarMovement* movement, int32_t terrain,
+    float volume, uint16_t azimuth, float pitch)
+{
+    if (!voice_.instance) return WORLD_AUDIO_OK;
+    const auto& state = *movement->bindings.state;
+    const int32_t first = side_ == 0 ? 0 : 3;
+    const int32_t second = side_ == 0 ? 1 : 2;
+    if (state.peakMaterial[first] != terrain && state.peakMaterial[second] != terrain) {
+        entered_ = 0;
+        return WORLD_AUDIO_OK;
+    }
+    if (entered_ || (delay_ && 0.0f < *delay_)) return WORLD_AUDIO_OK;
+    const auto result = worldAudioPlayVoice(bindings_.audio, voice_, volume,
+        static_cast<float>(azimuth), pitch - 1.0f);
+    if (result != WORLD_AUDIO_OK) return result;
+    entered_ = 1;
+    if (delay_) *delay_ = 0.30000001192092896f;
+    return WORLD_AUDIO_OK;
+}
+
+class PlayerTireSound final : public BaseTireSound {
+public:
+    PlayerTireSound(CarMovement* movement, int32_t side, const CarSoundBindings& bindings);
+    ~PlayerTireSound() override;
+    WorldAudioResult Update(float volume, uint16_t azimuth, float pitch) override;
+    WorldAudioResult Pause(int32_t paused) override;
+    void ScaleRoadNoise(float scale) override;
+    void TriggerTireBlowOut() override;
+protected:
+    WorldAudioResult ActivateSound() override;
+    WorldAudioResult DeactivateSound() override;
+private:
+    enum Voice { Leaves, RoadNoise, GravelNoise, LongitudinalSkid, GravelSkid,
+        SquallSkid, SecondLongitudinalSkid, BurnOut, TireFlat, MetalScrape, VoiceCount };
+    void SetSamplePitch(WorldAudioVoiceRef voice, float pitch);
+    void CalcTireSquallVolumeAndPitch(float& volume, float& pitch);
+    void CalcTireSkidVolumeAndPitch(float& volume, float& pitch);
+    float CalcTireNoiseVolume() const;
+    float CalcTireNoisePitch() const;
+    float CalcTireSquallVolume() const;
+    float CalcTireSquallPitch() const;
+    void UpdateSquall(int32_t road, float volume, uint16_t azimuth, float pitch);
+    void UpdateLeaves(float volume, uint16_t azimuth, float pitch);
+    void ResetThumperTime();
+    void UpdateThumperTires();
+    void Copy(Voice which, const char* name);
+    void Stop(Voice which);
+    bool Playing(Voice which) const;
+    void Play(Voice which, float volume, float pan, float pitch);
+    void Volume(Voice which, float volume);
+    void Azimuth(Voice which, uint16_t azimuth);
+    CarMovement* movement_;
+    int32_t side_;
+    float skidPitch_;
+    float squallPitch_;
+    float squallVolume_;
+    float roadNoiseScale_;
+    float thumperRemaining_;
+    int32_t thumperRequested_;
+    int32_t road_;
+    std::array<WorldAudioVoiceRef, VoiceCount> voices_{};
+    TerrainOneShot metalBump_;
+    TerrainOneShot tireFlop_;
+};
+
+void PlayerTireSound::Copy(Voice which, const char* name)
+{
+    requireTireAudio(initializeTireSample(bindings_, name, 1, &voices_[which]));
+}
+
+void PlayerTireSound::Stop(Voice which)
+{
+    if (voices_[which].instance)
+        requireTireAudio(worldAudioStopInstance(bindings_.audio, voices_[which].instance));
+}
+
+bool PlayerTireSound::Playing(Voice which) const
+{
+    return voices_[which].instance && voices_[which].instance->playing;
+}
+
+void PlayerTireSound::Play(Voice which, float volume, float pan, float pitch)
+{
+    requireTireAudio(worldAudioPlayVoice(bindings_.audio, voices_[which], volume, pan, pitch));
+}
+
+void PlayerTireSound::Volume(Voice which, float volume)
+{
+    requireTireAudio(worldAudioSetVoiceVolume(bindings_.audio, voices_[which], volume));
+}
+
+void PlayerTireSound::Azimuth(Voice which, uint16_t azimuth)
+{
+    requireTireAudio(worldAudioSetVoiceControlCode(bindings_.audio, voices_[which], azimuth));
+}
+
+PlayerTireSound::PlayerTireSound(CarMovement* movement, int32_t side, const CarSoundBindings& bindings)
+    : BaseTireSound(bindings), movement_(movement), side_(side), skidPitch_(-1.0f),
+      squallPitch_(1.0f), squallVolume_(0.0f), roadNoiseScale_(1.0f),
+      thumperRemaining_(0.0f), thumperRequested_(0), road_(1),
+      metalBump_(bindings_), tireFlop_(bindings_)
+{
+    if (!movement || !movement->bindings.state || !bindings.clock || !bindings.frame ||
+        !bindings.manager || !bindings.trackInfo || (side != 0 && side != 1))
+        throw std::invalid_argument("Player tires require their actual car/frame/track/audio owners");
+    const char* name = bindings.trackInfo->tireBankName;
+    if (!std::memchr(name, 0, sizeof(bindings.trackInfo->tireBankName)))
+        throw std::invalid_argument("Player tire track bank has no bounded name");
+    if (findTireTrackBank(*bindings.audio, name) != bindings.trackBank)
+        throw std::invalid_argument("Player tire track bank is not from the retained34200 record");
+    try {
+        Copy(RoadNoise, "RoadNoise");
+        Copy(GravelNoise, "GravelNoise");
+        Copy(LongitudinalSkid, "LongitudinalSkid");
+        Copy(GravelSkid, "GravelSkid");
+        Copy(SquallSkid, "SquallSkid");
+        Copy(TireFlat, "TireFlat");
+        Copy(MetalScrape, "CrashMetalScrape");
+        Copy(BurnOut, "BurnOutPeel");
+        Copy(SecondLongitudinalSkid, "GravelSkid");
+        requireTireAudio(worldAudioSetVoiceCategory(bindings.audio, impact_[1], UINT32_MAX));
+        if (bindings.trackBank) {
+            const auto* cue = worldAudioFindInBank(bindings.trackBank, "Leaves");
+            if (cue) {
+                requireTireAudio(worldAudioInitializeVoiceFromCue(bindings.audio, bindings.trackBank, cue, &voices_[Leaves]));
+                requireTireAudio(worldAudioSetVoiceCategory(bindings.audio, voices_[Leaves], 1));
+            }
+        }
+        metalBump_.Initialize(bindings.audio->inGameBank,
+            worldAudioFindInGame(bindings.audio, "MetalBump"), &tireSoundGlobals.oneShotDelay, side);
+        tireFlop_.Initialize(bindings.audio->inGameBank,
+            worldAudioFindInGame(bindings.audio, "TireFlop"), &tireSoundGlobals.oneShotDelay, side);
+        if (bindings.globals->policy.audioSystemEnabled && bindings.globals->policy.vehicleAudioEnabled &&
+            tireSoundGlobals.roadNoiseEnabled)
+            Play(RoadNoise, 0.0f, 0.0f, 0.0f);
+        ResetThumperTime();
+        requireTireAudio(Activate(1));
+    } catch (...) {
+        for (auto& voice : voices_)
+            if (voice.instance) worldAudioRetireVoice(bindings_.audio, voice);
+        throw;
+    }
+}
+
+PlayerTireSound::~PlayerTireSound()
+{
+    // PAL212D5C..212DAC stops these10 actual samples before its SDK thread
+    // scheduling boundary2783B0. Windows yields its current thread here;
+    // this is not a second audio clock or an emulated sound-driver thread.
+    static constexpr Voice stopOrder[] = {RoadNoise, GravelNoise, LongitudinalSkid,
+        GravelSkid, SquallSkid, SecondLongitudinalSkid, BurnOut, TireFlat, MetalScrape, Leaves};
+    for (Voice which : stopOrder)
+        if (voices_[which].instance) worldAudioStopInstance(bindings_.audio, voices_[which].instance);
+    std::this_thread::yield();
+    static constexpr Voice retireOrder[] = {MetalScrape, TireFlat, BurnOut,
+        SecondLongitudinalSkid, SquallSkid, GravelSkid, LongitudinalSkid,
+        GravelNoise, RoadNoise, Leaves};
+    for (Voice which : retireOrder)
+        if (voices_[which].instance) worldAudioRetireVoice(bindings_.audio, voices_[which]);
+}
+
+void PlayerTireSound::SetSamplePitch(WorldAudioVoiceRef voice, float pitch)
+{
+    requireTireAudio(worldAudioSetVoicePitchOffset(bindings_.audio, voice, pitch - 1.0f));
+}
+
+float PlayerTireSound::CalcTireNoiseVolume() const
+{
+    const auto& state = *movement_->bindings.state;
+    const int32_t first = side_ == 1 ? 0 : 1;
+    const int32_t second = side_ == 1 ? 3 : 2;
+    float a = 0.0f, b = 0.0f;
+    if (state.wheelContact[first]) a = std::fabs(state.wheelAngularVelocity[first]) * 0.009499999694526196f;
+    if (state.wheelContact[second]) b = std::fabs(state.wheelAngularVelocity[second]) * 0.009499999694526196f;
+    const float value = (a + b) * 0.5f;
+    return 1.0f < value ? 1.0f : value;
+}
+
+float PlayerTireSound::CalcTireNoisePitch() const
+{
+    const auto& state = *movement_->bindings.state;
+    const int32_t first = side_ == 1 ? 0 : 1;
+    const int32_t second = side_ == 1 ? 3 : 2;
+    const float a = state.wheelContact[first] ? std::fabs(state.wheelAngularVelocity[first]) : 0.0f;
+    const float b = state.wheelContact[second] ? std::fabs(state.wheelAngularVelocity[second]) : 0.0f;
+    return (a < b ? b : a) * tireSoundGlobals.noisePitchScale + (side_ == 0 ? 0.15000000596046448f : 0.0f);
+}
+
+float PlayerTireSound::CalcTireSquallVolume() const
+{
+    const auto& state = *movement_->bindings.state;
+    if (std::fabs(state.speed) < 11.0f) return 0.0f;
+    const int32_t first = side_ == 0 ? 0 : 1;
+    const int32_t second = side_ == 0 ? 3 : 2;
+    const float a = state.wheelContact[first] ? std::fabs(state.wheelSlipRatio[first]) : 0.0f;
+    const float b = state.wheelContact[second] ? std::fabs(state.wheelSlipRatio[second]) : 0.0f;
+    const float slip = (a + b) * 0.5f;
+    float volume = 0.0f;
+    if (0.699999988079071f < slip) volume = slip * 1.975000023841858f;
+    return 1.0f < volume ? 1.0f : volume;
+}
+
+float PlayerTireSound::CalcTireSquallPitch() const
+{
+    // The original contact/slip loads are overwritten before the return;
+    // the resulting value depends on sourceCar+3C4 and this side alone.
+    return movement_->bindings.state->speed * 0.0101500004529953f +
+        (side_ == 0 ? 0.15000000596046448f : 0.0f);
+}
+
+void PlayerTireSound::CalcTireSquallVolumeAndPitch(float& volume, float& pitch)
+{
+    const float desired = CalcTireSquallVolume();
+    squallPitch_ = CalcTireSquallPitch();
+    if (desired < squallVolume_) {
+        const float next = squallVolume_ - 0.15000000596046448f;
+        squallVolume_ = desired < next ? next : desired;
+    } else if (squallVolume_ < desired) {
+        const float next = squallVolume_ + 0.07500000298023224f;
+        squallVolume_ = next < desired ? next : desired;
+    }
+    volume = squallVolume_;
+    pitch = squallPitch_;
+}
+
+void PlayerTireSound::CalcTireSkidVolumeAndPitch(float& volume, float& pitch)
+{
+    const auto& state = *movement_->bindings.state;
+    const int32_t first = side_ == 1 ? 2 : 0;
+    const auto slip = [&](int32_t wheel) {
+        float value = 0.0f;
+        if (state.wheelContact[wheel]) {
+            const float x = state.wheelSlip[wheel][0] * state.wheelSlip[wheel][0];
+            const float y = state.wheelSlip[wheel][1] * state.wheelSlip[wheel][1];
+            value = std::sqrt(x + y);
+        }
+        return value < 0.25f ? 0.0f : value;
+    };
+    const float sum = slip(first) + slip(first + 1);
+    const float mean = static_cast<float>(static_cast<double>(sum) * 0.5);
+    volume = 0.0f;
+    pitch = 1.0f;
+    if (side_ == 1) {
+        if (mean < 0.009999999776482582f) { skidPitch_ = -1.0f; return; }
+        volume = mean * 0.30000001192092896f;
+        if (skidPitch_ != -1.0f) { pitch = skidPitch_; return; }
+        const float proposed = (pitch * 0.05999999865889549f) * mean;
+        pitch = proposed < 1.0f ? 1.0f : 1.2000000476837158f < proposed ? 1.2000000476837158f : proposed;
+        skidPitch_ = pitch;
+    } else {
+        volume = mean * 0.4000000059604645f;
+        const float proposed = (pitch * 0.07000000029802322f) * mean;
+        pitch = proposed < 1.0f ? 1.0f : 1.25f < proposed ? 1.25f : proposed;
+    }
+}
+
+WorldAudioResult PlayerTireSound::Pause(int32_t paused)
+{
+    WorldAudioResult result = BaseTireSound::Pause(paused);
+    const Voice order[] = {RoadNoise, GravelNoise, LongitudinalSkid, GravelSkid,
+        SquallSkid, SecondLongitudinalSkid, BurnOut, TireFlat, MetalScrape, Leaves};
+    for (Voice which : order) {
+        if (result == WORLD_AUDIO_OK && voices_[which].instance)
+            result = worldAudioPauseVoice(bindings_.audio, voices_[which], paused != 0);
+    }
+    if (result == WORLD_AUDIO_OK) result = metalBump_.Pause(paused);
+    if (result == WORLD_AUDIO_OK) result = tireFlop_.Pause(paused);
+    return result;
+}
+
+WorldAudioResult PlayerTireSound::ActivateSound()
+{
+    return WORLD_AUDIO_OK; // Actual produced vtable target212E90 is JR RA/NOP.
+}
+
+WorldAudioResult PlayerTireSound::DeactivateSound()
+{
+    return WORLD_AUDIO_OK; // Actual produced vtable target212E88 is JR RA/NOP.
+}
+
+void PlayerTireSound::ScaleRoadNoise(float scale)
+{
+    roadNoiseScale_ = scale;
+}
+
+void PlayerTireSound::TriggerTireBlowOut()
+{
+    thumperRequested_ = 1;
+}
+
+void PlayerTireSound::ResetThumperTime()
+{
+    thumperRemaining_ = 0.0f;
+    if (Playing(MetalScrape)) Stop(MetalScrape);
+}
+
+void PlayerTireSound::UpdateThumperTires()
+{
+    thumperRemaining_ -= bindings_.clock->worldTimeElapsed;
+    if (thumperRemaining_ <= 0.0f) {
+        const auto& state = *movement_->bindings.state;
+        const float speed = std::fabs(state.speed);
+        if (speed < 3.0f) {
+            ResetThumperTime();
+        } else {
+            const int32_t first = side_ == 1 ? 0 : 1;
+            const int32_t second = side_ == 1 ? 3 : 2;
+            if ((state.wheelContact[first] || state.wheelContact[second]) &&
+                bindings_.globals->policy.audioSystemEnabled && bindings_.globals->policy.vehicleAudioEnabled &&
+                bindings_.globals->tirePopEnabled) {
+                Play(TireFlat, spatial.volume, 0.0f, spatial.pitch - 1.0f);
+                const uint16_t offset = side_ == 0 ? tireSoundGlobals.thumperAzimuth :
+                    static_cast<uint16_t>(0u - tireSoundGlobals.thumperAzimuth);
+                Azimuth(TireFlat, static_cast<uint16_t>(spatial.azimuth + offset));
+            }
+            thumperRemaining_ = speed == 0.0f ? 0.0f : 1.899999976158142f / speed;
+            if (thumperRemaining_ < 0.03500000014901161f) thumperRemaining_ = 0.03500000014901161f;
+        }
+    }
+    if (bindings_.frame->disabledWheelCount > 0 && road_ && spatial.active) {
+        const float speed = movement_->bindings.state->speed;
+        const float gain = spatial.volume * (speed * 0.03999999910593033f);
+        const float pitch = spatial.pitch * (speed * 0.004000000189989805f + 1.399999976158142f);
+        if (!Playing(MetalScrape)) {
+            Play(MetalScrape, gain, 0.0f, pitch - 1.0f);
+            Azimuth(MetalScrape, spatial.azimuth);
+        } else {
+            Volume(MetalScrape, gain);
+            Azimuth(MetalScrape, spatial.azimuth);
+            SetSamplePitch(voices_[MetalScrape], pitch);
+        }
+    } else if (Playing(MetalScrape)) {
+        Stop(MetalScrape);
+    }
+}
+
+void PlayerTireSound::UpdateLeaves(float volume, uint16_t azimuth, float pitch)
+{
+    if (!voices_[Leaves].instance) return;
+    const auto& state = *movement_->bindings.state;
+    const int32_t first = side_ == 0 ? 0 : 3;
+    const int32_t second = side_ == 0 ? 1 : 2;
+    const auto leaves = [](int32_t material) { return material == 23 || material == 24 || material == 27; };
+    if (leaves(state.material[first]) || leaves(state.material[second])) {
+        if (!Playing(Leaves)) {
+            Play(Leaves, volume, static_cast<float>(azimuth), pitch - 1.0f);
+        } else {
+            Volume(Leaves, volume);
+            Azimuth(Leaves, azimuth);
+            // PAL213EEC passes the incoming scale directly to this SDK call.
+            requireTireAudio(worldAudioSetVoicePitchOffset(bindings_.audio, voices_[Leaves], pitch));
+        }
+    } else if (Playing(Leaves)) {
+        Stop(Leaves);
+    }
+}
+
+void PlayerTireSound::UpdateSquall(int32_t road, float volume, uint16_t azimuth, float pitch)
+{
+    (void)pitch;
+    const Voice selected = road ? SquallSkid : SecondLongitudinalSkid;
+    const Voice other = road ? SecondLongitudinalSkid : SquallSkid;
+    if (bindings_.globals->policy.audioSystemEnabled && Playing(other)) Stop(other);
+    float gain = 0.0f, samplePitch = 1.0f;
+    CalcTireSquallVolumeAndPitch(gain, samplePitch);
+    gain *= volume;
+    if (selected != other && bindings_.globals->policy.audioSystemEnabled &&
+        bindings_.globals->policy.vehicleAudioEnabled) {
+        if (!Playing(selected) && 0.0f < gain) {
+            Play(selected, gain, 0.0f, samplePitch - 1.0f);
+        } else if (Playing(selected) && gain <= 0.0f) {
+            Stop(selected);
+        }
+    }
+    if (0.0f < gain) {
+        const float current = voices_[selected].instance->volume;
+        const float next = gain < current ? std::max(current - 0.05000000074505806f, gain) :
+            std::min(current + 0.05000000074505806f, gain);
+        Volume(selected, next);
+        SetSamplePitch(voices_[selected], samplePitch);
+        Azimuth(selected, azimuth);
+    } else {
+        Stop(selected);
+    }
+}
+
+WorldAudioResult PlayerTireSound::Update(float volume, uint16_t azimuth, float pitch)
+{
+    if (!spatial.active) return WORLD_AUDIO_OK;
+    try {
+        const auto& state = *movement_->bindings.state;
+        const int32_t first = side_ == 1 ? 0 : 1;
+        const int32_t second = side_ == 1 ? 3 : 2;
+        const auto* materials = terrainDefaultMaterials(nullptr);
+        if (state.material[first] < 0 || state.material[first] >= 33 ||
+            state.material[second] < 0 || state.material[second] >= 33)
+            return WORLD_AUDIO_INVALID_BINDING;
+        const auto& a = materials[state.material[first]];
+        const auto& b = materials[state.material[second]];
+        int32_t road = static_cast<int8_t>(a.classification & 255u) &&
+            static_cast<int8_t>(b.classification & 255u);
+        spatial.volume = volume;
+        spatial.pitch = pitch;
+        spatial.azimuth = azimuth;
+        const float noiseVolume = CalcTireNoiseVolume() * volume;
+        if (a.type != 4 && b.type != 4) road_ = road;
+        road = road_;
+        UpdateLeaves(noiseVolume, azimuth, pitch);
+        if (0.0f < tireSoundGlobals.oneShotDelay)
+            tireSoundGlobals.oneShotDelay -= bindings_.clock->worldTimeElapsed;
+        requireTireAudio(metalBump_.Update(movement_, 30, volume * 1.2999999523162842f, azimuth, pitch));
+        requireTireAudio(tireFlop_.Update(movement_, 31, volume * 1.5f, azimuth, pitch * 0.800000011920929f));
+        thumperRequested_ = a.type == 19 || b.type == 18 || bindings_.frame->disabledWheelCount > 0;
+        if (thumperRequested_) UpdateThumperTires(); else ResetThumperTime();
+        requireTireAudio(UpdateTireImpact(movement_, side_));
+
+        const float sidePitch = side_ == 0 ? 0.15000000596046448f : 0.0f;
+        float skidVolume = 0.0f, skidPitch = 1.0f;
+        CalcTireSkidVolumeAndPitch(skidVolume, skidPitch);
+        if (!road) skidPitch = sidePitch + 1.0f;
+        skidVolume *= volume;
+        const float maximum = road ? 3.5f : 2.75f;
+        skidVolume = skidVolume < 0.0f ? 0.0f : maximum < skidVolume ? maximum : skidVolume;
+        const Voice selected = road ? LongitudinalSkid : GravelSkid;
+        const Voice other = road ? GravelSkid : LongitudinalSkid;
+        const bool enabled = bindings_.globals->policy.audioSystemEnabled && bindings_.globals->policy.vehicleAudioEnabled;
+        if (enabled) {
+            if (!Playing(selected) && 0.0f < skidVolume) Play(selected, skidVolume, 0.0f, skidPitch - 1.0f);
+            if (Playing(selected) && skidVolume <= 0.0f) Stop(selected);
+        }
+        if (Playing(other)) Stop(other);
+        if (0.0f < skidVolume) {
+            Volume(selected, skidVolume);
+            SetSamplePitch(voices_[selected], skidPitch);
+            Azimuth(selected, azimuth);
+        } else {
+            Stop(selected);
+        }
+        UpdateSquall(road, volume, azimuth, pitch);
+
+        const float rear = static_cast<float>(static_cast<double>(state.wheelSlip[2][0] + state.wheelSlip[3][0]) * .5);
+        const float slip = static_cast<float>(static_cast<double>(rear) +
+            static_cast<double>(state.wheelSlip[0][0] + state.wheelSlip[1][0]) * .5);
+        if (road && 0.20000000298023224f < state.effectiveThrottle && 3.0f < slip && state.speed < 30.0f) {
+            if (enabled && !Playing(BurnOut)) Play(BurnOut, 0.0f, 0.0f, sidePitch);
+            const float gain = std::min(slip * 0.0625f, 3.0f) * volume;
+            Volume(BurnOut, gain);
+            Azimuth(BurnOut, azimuth);
+        } else if (Playing(BurnOut)) {
+            Stop(BurnOut);
+        }
+
+        if (road) {
+            if (enabled && tireSoundGlobals.roadNoiseEnabled && !Playing(RoadNoise)) {
+                if (!bindings_.manager->channelVolumes || bindings_.manager->channelVolumeCount <= 4)
+                    return WORLD_AUDIO_INVALID_BINDING;
+                if (bindings_.manager->channelVolumes[4] == 0.0f)
+                    Play(RoadNoise, 0.0f, static_cast<float>(azimuth), CalcTireNoisePitch() - 1.0f);
+            }
+            Volume(RoadNoise, noiseVolume * roadNoiseScale_);
+            Azimuth(RoadNoise, azimuth);
+            SetSamplePitch(voices_[RoadNoise], CalcTireNoisePitch());
+            if (Playing(GravelNoise)) Stop(GravelNoise);
+        } else {
+            const float samplePitch = pitch + sidePitch;
+            if (enabled && tireSoundGlobals.roadNoiseEnabled && !Playing(GravelNoise))
+                Play(GravelNoise, noiseVolume, samplePitch - 1.0f, 0.0f);
+            Volume(GravelNoise, noiseVolume * roadNoiseScale_);
+            Azimuth(GravelNoise, azimuth);
+            SetSamplePitch(voices_[GravelNoise], samplePitch);
+            if (Playing(RoadNoise)) Stop(RoadNoise);
+        }
+        return WORLD_AUDIO_OK;
+    } catch (const TireAudioFailure& failure) {
+        return failure.result;
+    }
+}
+
+} // namespace
+
+WorldAudioResult carSoundBindTrackBank(CarSoundBindings& bindings,
+    const hp2::TrackScenarioData& track)
+{
+    if (!bindings.audio) return WORLD_AUDIO_INVALID_BINDING;
+    try {
+        const TrackResourceInfo* info = track.CurrentInfo();
+        if (!info || !std::memchr(info->tireBankName, 0, sizeof(info->tireBankName)))
+            return WORLD_AUDIO_INVALID_BINDING;
+        const auto* bank = findTireTrackBank(*bindings.audio, info->tireBankName);
+        bindings.trackInfo = info;
+        bindings.trackBank = bank;
+        return WORLD_AUDIO_OK;
+    } catch (const std::exception&) {
+        return WORLD_AUDIO_INVALID_BINDING;
+    }
+}
+
+BaseTireSound* carSoundCreatePlayerTire(CarMovement* movement, int32_t side,
+    const CarSoundBindings* bindings, WorldAudioResult* result)
+{
+    if (!bindings) {
+        if (result) *result = WORLD_AUDIO_INVALID_BINDING;
+        return nullptr;
+    }
+    try {
+        auto* tire = new PlayerTireSound(movement, side, *bindings);
+        if (result) *result = WORLD_AUDIO_OK;
+        return tire;
+    } catch (const TireAudioFailure& failure) {
+        if (bindings->audio && bindings->audio->library)
+            bindings->audio->library->RecordSourceFailure(failure.result,"Player tire sound","Source audio operation rejected");
+        if (result) *result = failure.result;
+    } catch (const std::bad_alloc& failure) {
+        if (bindings->audio && bindings->audio->library)
+            bindings->audio->library->RecordSourceFailure(WORLD_AUDIO_CAPACITY,"Player tire sound",failure.what());
+        if (result) *result = WORLD_AUDIO_CAPACITY;
+    } catch (const std::exception& failure) {
+        const auto status=WORLD_AUDIO_INVALID_BINDING;
+        if (bindings->audio && bindings->audio->library)
+            bindings->audio->library->RecordSourceFailure(status,"Player tire sound",failure.what());
+        if (result) *result = status;
+    } catch (...) {
+        if (bindings->audio && bindings->audio->library)
+            bindings->audio->library->RecordSourceFailure(WORLD_AUDIO_INVALID_BINDING,"Player tire sound","Non-standard source exception");
+        if (result) *result = WORLD_AUDIO_INVALID_BINDING;
+    }
+    return nullptr;
 }

@@ -1,214 +1,291 @@
-#include "game_core/indep/src/suspension.hpp"
-#include "game_core/indep/src/wheel.hpp"
-#include "game_core/indep/src/rigidbody.hpp"
-
-// TASK-0042: bounded host projections; original member ABI remains unverified.
-#include "game_core/port/driving/projection_support.hpp"
-// Retail 0x001A5EA0; E-0042-C125; E-0042-S001; exact Debug TU ..\indep\src\suspension.cpp
-namespace hp2::recovered {
-void Suspension::port_initialize(port::driving::init::ByteView out,std::uint32_t a1,std::uint32_t a2,std::uint32_t a3,std::uint32_t t0,std::uint32_t t1){using namespace port::driving;using namespace port::driving::init;
-    out.require(0,0xa0);
-    out.word(0x9c,a1);out.word(0x94,a2);out.word(8,0x002ada90);out.word(0x90,a3);
-    out.word(0x98,t0);out.word(0xc,t1);out.word(0x10,0);
-}
-}
-namespace port::driving::init {
-void Sub_001A5EA0(ByteView out,std::uint32_t a1,std::uint32_t a2,std::uint32_t a3,std::uint32_t t0,std::uint32_t t1){hp2::recovered::Suspension::port_initialize(out,a1,a2,a3,t0,t1);}
-
+#include "indep/inc/Suspension.hpp"
+#include "bware/inc/bMath.hpp"
+#include "indep/inc/Wheel.hpp"
+static inline float suspensionDotThree(const float first[3], const float second[3])
+{
+    const float xy = first[0] * second[0] + first[1] * second[1];
+    return xy + first[2] * second[2];
 }
 
-// Retail 0x001A5F88; E-0041-M01; E-0042-S001; exact Debug TU ..\indep\src\suspension.cpp
-namespace hp2::recovered {
-void Suspension::Calibrate(port::driving::init::ByteView out,float f12,const std::array<float,4>& a,const std::array<float,4>& b){using namespace port::driving;using namespace port::driving::init;
-    out.require(0x78,0x18);out.scalar(0x78,f12);
-    for(std::size_t i=0;i<4;++i)out.scalar(0x80+4*i,a[i]-b[i]);
-}
-}
-namespace port::driving::init {
-void Calibrate(ByteView out,float f12,const std::array<float,4>& a,const std::array<float,4>& b){hp2::recovered::Suspension::Calibrate(out,f12,a,b);}
+#include <string.h>
+#include "indep/inc/Replay.hpp"
 
+void suspensionInitializeMount(Suspension* suspension, float preload)
+{
+    suspension->preload = preload;
+    for (int i = 0; i < 4; ++i)
+        suspension->mountOffset[i] = bScalarAdd(suspension->wheel->torqueInfo->mountPosition[i], -suspension->body->centerOfMass[i]);
 }
 
-// Retail 0x001A63D0; E-0041-M01; E-0042-S001; exact Debug TU ..\indep\src\suspension.cpp
-namespace hp2::recovered {
-std::array<float,4> GetPointVelocity(const std::array<float,4>& linear,const std::array<float,4>& angular,const std::array<float,4>& point){using namespace port::driving;using namespace port::driving::native;
-    using namespace detail_group_00137100_runtime;
-    auto result=cross(angular,point);for(unsigned i=0;i<4;++i)result[i]=linear[i]+result[i];return result;
-}
-}
-namespace port::driving::native {
-std::array<float,4> GetPointVelocity(const std::array<float,4>& linear,const std::array<float,4>& angular,const std::array<float,4>& point){return hp2::recovered::GetPointVelocity(linear,angular,point);}
-
+void suspensionResetMotion(Suspension* suspension)
+{
+    suspension->motion.travel = 0;
+    suspension->motion.travelSpeed = 0;
 }
 
-// Retail 0x001A6408; E-0042-C130; E-0042-S001; exact Debug TU ..\indep\src\suspension.cpp
-namespace hp2::recovered {
-float Suspension::ApplyGroundPenaltyImpulse(){using namespace port::driving;using namespace port::driving::native;auto& m=m_;const auto object=address_;
-    using namespace detail_group_00137100_runtime;
-    const auto body=m.word(object+0x94),wheel=m.word(object+0x90);
-    const auto point=transform(m,m.matrix(body+0x20),m.vector(object+0x20));
-    const auto velocity=hp2::recovered::GetPointVelocity(m.vector(body+0x90),m.vector(body+0xa0),point),normal=m.vector(wheel+0x140);
-    const float dot=(velocity[0]*normal[0]+velocity[1]*normal[1])+velocity[2]*normal[2];float result=0;
-    if(0<=-dot){result=(-dot*global(m,0xb40c))*m.scalar(body+0x118);auto input=normal;for(auto& lane:input)lane=lane*result;
-        if(m.word(global_address(0xb420))==0)ApplyImpulse(m,body,input,point);}
-    return result;
-}
-}
-namespace port::driving::native {
-float ApplyGroundPenaltyImpulse(Memory& m,std::uint32_t object){return hp2::recovered::Suspension(m,object).ApplyGroundPenaltyImpulse();}
-
+float* suspensionPointVelocity(float output[4], const float linearVelocity[4],
+                                const float angularVelocity[4], const float lever[4])
+{
+    // PAL OPMULA/OPMSUB reverse the operands of the second product.
+    const float x = bScalarAdd(bScalarMultiply(angularVelocity[1], lever[2]), -bScalarMultiply(lever[1], angularVelocity[2]));
+    const float y = bScalarAdd(bScalarMultiply(angularVelocity[2], lever[0]), -bScalarMultiply(lever[2], angularVelocity[0]));
+    const float z = bScalarAdd(bScalarMultiply(angularVelocity[0], lever[1]), -bScalarMultiply(lever[0], angularVelocity[1]));
+    output[0] = bScalarAdd(linearVelocity[0], x);
+    output[1] = bScalarAdd(linearVelocity[1], y);
+    output[2] = bScalarAdd(linearVelocity[2], z);
+    output[3] = bScalarAdd(linearVelocity[3], angularVelocity[3]);
+    return output;
 }
 
-// Retail 0x001A6330; E-0042-C128; E-0042-S001; exact Debug TU ..\indep\src\suspension.cpp
-namespace hp2::recovered {
-void Suspension::ResolveForces(float f12, port::driving::SolverSuspensionProjection& suspension){using namespace port::driving;using namespace port::driving::native;
-    using namespace detail_group_00138f38;
-    float f0 = suspension.Field_0x1c;
-    if (suspension.Field_0x70 != 0) f0 = f0 + f12;
-    if (!suspension.Field_0x90) hp2::not_implemented("0x001A6330", "missing +0x90 wheel projection");
-    suspension.Field_0xa0 = ExchangeZForces(f0, *suspension.Field_0x90, suspension.Field_0x70);
-}
-}
-namespace port::driving {
-void Suspension::ResolveForces(float f12, SolverSuspensionProjection& suspension){hp2::recovered::Suspension::ResolveForces(f12,suspension);}
+float suspensionGetAntiRollRate(const Suspension* suspension) { return suspension->info->antiRollRate; }
+float suspensionGetDamping(const Suspension* suspension)
+{ return suspension->motion.travelSpeed <= 0 ? suspension->info->negativeDamping : suspension->info->positiveDamping; }
+float suspensionGetSpringRate(const Suspension* suspension) { return suspension->info->springRate; }
+float suspensionGetNonlinearRate(const Suspension* suspension) { return suspension->info->nonlinearRate; }
+void suspensionSetTuningValue(Suspension* suspension, float value) { suspension->tuningValue = value; }
+int32_t suspensionGetIndex(const Suspension* suspension) { return suspension->steeringSide; }
+float* suspensionMountOffset(Suspension* suspension) { return suspension->mountOffset; }
 
-}
-
-// Retail 0x001A6370; E-0042-C129; E-0042-S001; exact Debug TU ..\indep\src\suspension.cpp
-namespace hp2::recovered {
-void Suspension::ResolveMoreForces(port::driving::SolverSuspensionProjection& suspension, std::int32_t Field_00330D10){using namespace port::driving;using namespace port::driving::native;
-    using namespace detail_group_00138f38;
-    if (suspension.Field_0x70 == 0) return;
-    if (!suspension.Field_0x90 || !suspension.Field_0x94)
-        hp2::not_implemented("0x001A6370", "missing wheel/body projections");
-    SolverVector delta{};
-    for (unsigned i = 0; i < 4; ++i)
-        delta[i] = suspension.Field_0x90->Field_0x130[i] - suspension.Field_0x94->Field_0x10[i];
-    if (Field_00330D10 == 0)
-        ApplyForce(*suspension.Field_0x94, suspension.Field_0x90->Field_0x120, delta);
-}
-}
-namespace port::driving {
-void ResolveMoreForces(SolverSuspensionProjection& suspension, std::int32_t Field_00330D10){hp2::recovered::Suspension::ResolveMoreForces(suspension,Field_00330D10);}
-
+void suspensionRestoreState(Suspension* suspension, const SuspensionState* state)
+{
+    suspension->motion = *state;
 }
 
-
-namespace hp2::recovered {
-void Suspension::port_initialize(int position,std::uint32_t body,std::uint32_t wheel,std::uint32_t steering,std::uint32_t info){
- Suspension::port_initialize(m_.view(address_,0xb0),static_cast<std::uint32_t>(position),body,wheel,steering,info);
+void suspensionSaveState(const Suspension* suspension, SuspensionState* state)
+{
+    *state = suspension->motion;
 }
-void Suspension::Calibrate(float load){
- const auto a=m_.vector(m_.word(m_.word(address_+0x90)+0xc)),b=m_.vector(m_.word(address_+0x94)+0x160);
- Suspension::Calibrate(m_.view(address_,0xb0),load,a,b);
-}
-void Suspension::SetState(){SetState(m_.view(address_,0x1c));}
-void Suspension::SetState(port::driving::init::ByteView state){state.require(0x14,8);state.word(0x18,0);state.word(0x14,0);}
-void Suspension::SetState(std::uint32_t state){m_.copy(address_+0x14,state,8);}
-void Suspension::GetState(std::uint32_t state){m_.copy(state,address_+0x14,8);}
-std::uint32_t Suspension::GetState(){return address_+0x14;}
-int Suspension::GetSize(){return 2;}
-void Suspension::ComputeAuxiliaries(port::driving::ContactProvider& contact){
- using namespace port::driving;using namespace port::driving::native;auto& m=m_;const auto object=address_;
 
-    using namespace detail_group_00137100_runtime;
-    Memory::Scratch scratch(m);
-    const auto body=m.word(object+0x94),wheel=m.word(object+0x90),config=m.word(object+0xc);
-    auto world=transform(m,m.matrix(body+0x20),m.vector(object+0x80));
-    const auto position=m.vector(body+0x10);for(unsigned i=0;i<4;++i)world[i]=world[i]+position[i];
-    const auto temporary=m.allocate(16);m.vector(temporary,world);
-    const float hit=hp2::recovered::Wheel(m,wheel).FindDrivingSurface(temporary,body+0x20,contact);
-    const float value=hit+m.scalar(m.word(wheel+0xc)+0xc),old=m.scalar(object+0x14);
-    float extra=0;
-    if(m.scalar(config+0x14)<value){extra=value-m.scalar(config+0x14);m.scalar(object+0x14,m.scalar(config+0x14));m.word(object+0x70,1);if(global(m,0xb414)<extra)extra=0;}
-    else if(value<m.scalar(config+0x18)){m.scalar(object+0x14,m.scalar(config+0x18));m.word(object+0x70,0);}
-    else {m.scalar(object+0x14,value);m.word(object+0x70,1);}
-    const float dt=global(m,0xb408);
-    if(global(m,0x8dcc)<dt)m.scalar(object+0x18,(m.scalar(object+0x14)-old)/dt);
-    m.copy(object+0x20,object+0x80,16);m.scalar(object+0x28,m.scalar(object+0x28)+m.scalar(object+0x14));
-    auto matrix=init::bIdentity();const float steer=m.scalar(wheel+0x16c);
-    if(steer!=0){auto rotation=init::bIdentity();const float a=(global(m,0xb41c)*steer)*port::driving::bSin(m,m.scalar(wheel+0x1c));
-        const float c=port::driving::bSin(m,a+global(m,0x8dd0)),s=port::driving::bSin(m,a);
-        rotation[0]=c;rotation[1]=s;rotation[4]=-s;rotation[5]=c;matrix=bMulMatrix(matrix,rotation);}
-    const auto local=m.vector(object+0x20);for(unsigned i=0;i<3;++i)matrix[12+i]=local[i];matrix[15]=1;
-    m.matrix(object+0x30,matrix);
-    if(m.word(object+0x98)){const auto other=m.word(object+0x98);matrix=bMulMatrix(matrix,m.matrix(m.word(other+4)+m.word(object+0x9c)*0x40));}
-    m.matrix(wheel+0xb0,matrix);
-    const auto relative=transform(m,m.matrix(body+0x20),m.vector(object+0x20));
-    const auto velocity=hp2::recovered::GetPointVelocity(m.vector(body+0x90),m.vector(body+0xa0),relative);m.vector(wheel+0xf0,velocity);
-    m.matrix(wheel+0x70,bMulMatrix(m.matrix(body+0xb0),matrix));
-    if(m.word(object+0x70)){
-        const float displacement=m.scalar(object+0x14),rate=m.scalar(object+0x18);
-        float response=std::max(displacement,0.0f)*m.scalar(config);response=response+1;response=m.scalar(config+4)*response;
-        response=displacement*response;response=m.scalar(object+0x78)+response;
-        response=response+rate*m.scalar(config+8+(rate<=0?4:0));m.scalar(object+0x1c,response);
-        response=response+m.scalar(config+0x10)*(displacement-m.scalar(m.word(object+0x10)+0x14));
-        response=response+extra*global(m,0xb410);m.scalar(object+0x1c,response);
-        if(!(response<0))return;
+SuspensionState* suspensionComputeDerivatives(const Suspension* suspension,
+                                               SuspensionState* derivatives)
+{
+    // Suspension motion is assigned by the contact pass. Its integrable
+    // interface contributes no additional change to those two state values.
+    (void)suspension;
+    derivatives->travel = 0.0f;
+    derivatives->travelSpeed = 0.0f;
+    return derivatives;
+}
+
+float suspensionGetTravelLimitDelta(const Suspension* suspension)
+{
+    if (suspension->motion.travel < suspension->info->extensionLimit)
+        return 0.0f;
+    return suspension->info->extensionLimit - suspension->motion.travel;
+}
+
+int32_t suspensionAtBumpStop(const Suspension* suspension)
+{
+    return suspension->motion.travel == suspension->info->bumpStop;
+}
+
+Suspension* suspensionInitialize(Suspension* suspension, int32_t index,
+                                  RigidBody* body, Wheel* wheel,
+                                  const Steering* steering, const SuspensionInfo* info)
+{
+    suspension->steeringSide = index;
+    suspension->body = body;
+    suspension->wheel = wheel;
+    suspension->steering = steering;
+    suspension->info = info;
+    suspension->pairedSuspension = NULL;
+    return suspension;
+}
+
+void suspensionSerializePersistentState(Suspension* suspension, ReplaySnapshot* snapshot)
+{
+    // Complete PAL1A5ED0..1A5F88 replaces the typed transport adaptation.
+    replaySnapshotBeginSection(snapshot,nullptr,"Suspension");
+    replaySnapshotMoveFloat(snapshot,&suspension->motion.travel);
+    replaySnapshotMoveFloat(snapshot,&suspension->motion.travelSpeed);
+    if (snapshot->recording || snapshot->restoring) {
+        suspension->contactForce = 0;
+        memset(suspension->position, 0, sizeof(suspension->position));
+        memset(suspension->transform, 0, sizeof(suspension->transform));
+        suspension->contactPresent = 0;
+        suspension->contactResult = 0;
     }
-    m.word(object+0x1c,0);
-}
-std::uint32_t Suspension::GetDerivative(std::uint32_t out){auto& m=m_;
-    using namespace port::driving::detail_group_001a4930;m.word(out,0);m.word(out+4,0);return out;}
-void Suspension::ResolveForces(float request){
- const int touching=m_.signed_word(address_+0x70);float force=m_.scalar(address_+0x1c);if(touching)force=force+request;
- m_.scalar(address_+0xa0,Wheel(m_,m_.word(address_+0x90)).ExchangeZForces(touching,force));
-}
-void Suspension::ResolveMoreForces(){
- if(m_.signed_word(address_+0x70)==0)return;
- const auto wheel=m_.word(address_+0x90),body=m_.word(address_+0x94);auto delta=m_.vector(wheel+0x130);const auto pos=m_.vector(body+0x10);
- for(unsigned i=0;i<4;++i)delta[i]=delta[i]-pos[i];
- if(m_.word(0x00327d90)==0)RigidBody(m_,body).ApplyForce(m_.vector(wheel+0x120),delta);
-}
+    replaySnapshotEndSection(snapshot);
 }
 
+void suspensionPrepareContact(Suspension* suspension, const WheelContactContext* context)
+{
+    RigidBody* body = suspension->body;
+    Wheel* wheel = suspension->wheel;
+    const SuspensionInfo* info = suspension->info;
+    const WheelContactTuning* tuning = context->tuning;
+    float worldMount[4];
+    vectorMatrixTransformPoint(worldMount, body->motion.orientation, suspension->mountOffset);
+    for (int i = 0; i < 4; ++i) worldMount[i] = bScalarAdd(worldMount[i], body->motion.position[i]);
+    const float groundDistance = wheelGroundDisplacement(wheel, context, worldMount, body->motion.orientation);
+    const float requestedTravel = bScalarAdd(groundDistance, wheel->torqueInfo->reactionScale);
+    const float oldTravel = suspension->motion.travel;
+    float excess = 0;
+    if (info->bumpStop < requestedTravel) {
+        excess = bScalarAdd(requestedTravel, -info->bumpStop);
+        suspension->motion.travel = info->bumpStop;
+        suspension->contactPresent = 1;
+        if (tuning->bumpImpactLimit < excess) excess = 0;
+    } else if (requestedTravel < info->extensionStop) {
+        suspension->motion.travel = info->extensionStop;
+        suspension->contactPresent = 0;
+    } else {
+        suspension->motion.travel = requestedTravel;
+        suspension->contactPresent = 1;
+    }
+    if (0.00009999999747378752f < context->elapsed) {
+        const float change = bScalarAdd(suspension->motion.travel, -oldTravel);
+        suspension->motion.travelSpeed = bScalarFiniteRatio(change, context->elapsed);
+    }
+    for (int i = 0; i < 4; ++i) suspension->position[i] = suspension->mountOffset[i];
+    suspension->position[2] = bScalarAdd(suspension->position[2], suspension->motion.travel);
+    float local[16];
+    rotationMatrixIdentity(local);
+    if (wheel->steeringAngle != 0) {
+        float tilt[16];
+        rotationMatrixIdentity(tilt);
+        float angle = bScalarMultiply(tuning->wheelTiltScale, wheel->steeringAngle);
+        angle = bScalarMultiply(angle, rotationSineRadians(wheel->motion.angle));
+        const float cosine = rotationSineRadians(bScalarAdd(angle, 1.5707964897155762f));
+        const float sine = rotationSineRadians(angle);
+        tilt[0] = cosine; tilt[5] = cosine;
+        tilt[1] = sine; tilt[4] = -sine;
+        vectorMatrixMultiply(local, local, tilt);
+    }
+    for (int i = 0; i < 3; ++i) local[12 + i] = suspension->position[i];
+    local[15] = 1;
+    for (int i = 0; i < 16; ++i) suspension->transform[i] = local[i];
+    if (suspension->steering != NULL) {
+        const float* steering = suspension->steeringSide == 0 ?
+            suspension->steering->leftTransform : suspension->steering->rightTransform;
+        vectorMatrixMultiply(local, local, steering);
+    }
+    wheelSetCarTransform(wheel, local);
+    float lever[4], velocity[4];
+    vectorMatrixTransformPoint(lever, body->motion.orientation, suspension->position);
+    suspensionPointVelocity(velocity, body->linearVelocity, body->angularVelocity, lever);
+    wheelSetVelocity(wheel, velocity);
+    vectorMatrixMultiply(wheel->worldTransform, body->worldTransform, local);
+    if (suspension->contactPresent) {
+        const float nonlinearTravel = 0 < suspension->motion.travel ? suspension->motion.travel : 0;
+        const float springMultiplier = bScalarAdd(bScalarMultiply(nonlinearTravel, info->nonlinearRate), 1.0f);
+        const float springRate = bScalarMultiply(info->springRate, springMultiplier);
+        const float springForce = bScalarMultiply(suspension->motion.travel, springRate);
+        const float damping = suspension->motion.travelSpeed <= 0 ? info->negativeDamping : info->positiveDamping;
+        float force = bScalarAdd(suspension->preload, springForce);
+        force = bScalarAdd(force, bScalarMultiply(suspension->motion.travelSpeed, damping));
+        const float travelDifference = bScalarAdd(suspension->motion.travel, -suspension->pairedSuspension->motion.travel);
+        const float antiRoll = bScalarMultiply(info->antiRollRate, travelDifference);
+        force = bScalarAdd(force, antiRoll);
+        force = bScalarAdd(force, bScalarMultiply(excess, tuning->bumpImpactScale));
+        suspension->contactForce = force < 0 ? 0 : force;
+    } else suspension->contactForce = 0;
+}
 
-#include "game_core/src/bMath.hpp"
-namespace hp2::recovered {
-// Debug001A3F30 full listing E-0044-E01. Constructor does not initialize matrices.
-void TwoWheelAckermanSteering::Sub_001A3F30(std::uint32_t config) {
- m_.word(address_,config);m_.word(address_+8,0x2adad8);m_.word(address_+4,address_+0x10);
-}
-void TwoWheelAckermanSteering::ComputeAuxiliaries() {}
-// Debug001A3540, exact float grouping and asymmetric inner/outer wheel assignment.
-void TwoWheelAckermanSteering::SetSteering(std::uint16_t value) {
- auto& m=m_;const auto s=address_;
- float angle=static_cast<float>(value)*m.scalar(0x325780);
- const auto config=m.word(s);
- const float wheelbase=m.scalar(config+0x120)-m.scalar(config+0x180);
- const float track=m.scalar(config+0x124)-m.scalar(config+0x144);
- if(m.scalar(0x325784)<angle) angle=angle-m.scalar(0x325788);
- bool positive=true;if(angle<0){angle=-angle;positive=false;}
- float denominator=track*angle;float numerator=wheelbase*angle;
- denominator=wheelbase+denominator;const float inner=numerator/denominator;
- const float left=positive?angle:-inner,right=positive?inner:-angle;
- const float phase=m.scalar(0x32578c);
- auto matrix=bIdentity();float cosine=hp2::recovered::bSin(m,left+phase),sine=hp2::recovered::bSin(m,left);
- matrix[0]=cosine;matrix[1]=sine;matrix[4]=-sine;matrix[5]=cosine;m.matrix(s+0x10,matrix);
- matrix=bIdentity();cosine=hp2::recovered::bSin(m,right+phase);sine=hp2::recovered::bSin(m,right);
- matrix[0]=cosine;matrix[1]=sine;matrix[4]=-sine;matrix[5]=cosine;m.matrix(s+0x50,matrix);
-}
+void suspensionSetContactLoad(Suspension* suspension, float extraLoad)
+{
+    float load = suspension->contactForce;
+    if (suspension->contactPresent) load = bScalarAdd(load, extraLoad);
+    suspension->contactResult = wheelSetContactLoad(suspension->wheel, suspension->contactPresent, load);
 }
 
-// TASK-0099 E-0099-W33. Debug destructor bodies and real original pool ownership.
-#include "game_core/indep/inc/ComponentPhysics.hpp"
-#include "game_core/inc/bSlotPool.hpp"
-namespace hp2::recovered {
-void Suspension::Sub_001A3E48(int flags){PhysicsComponent(m_,address_).Sub_00199A70(0);if(flags&1)hp2::debug::SlotPool(m_,m_.word(0x327038)).Free(address_);}
-void TwoWheelAckermanSteering::Sub_001A3ED0(int flags){m_.word(address_+8,0x2adad8);m_.word(address_+8,0x2adaf8);if(flags&1)hp2::debug::SlotPool(m_,m_.word(0x327024)).Free(address_);}
+void suspensionApplyContactForce(Suspension* suspension, const WheelContactContext* context)
+{
+    if (!suspension->contactPresent) return;
+    float lever[4];
+    for (int i = 0; i < 4; ++i)
+        lever[i] = bScalarAdd(suspension->wheel->contactPoint[i], -suspension->body->motion.position[i]);
+    if (!context->tuning->suppressBodyForces)
+        rigidBodyApplyForce(suspension->body, suspension->wheel->worldContactForce, lever);
 }
 
-#include "game_core/indep/inc/Replay.hpp"
-namespace hp2::recovered {
-// Debug001A36B0; E-0099-W74; replay-frame/001a36b0.json/type-Suspension.json.
-void Suspension::DoSnapshot(std::uint32_t snapshot){
- hp2::debug::ReplaySnapshot s(m_,snapshot);s.BeginNamedSection(0x2ada80);s.MoveData(address_+0x14,4);s.MoveData(address_+0x18,4);
- if(m_.byte(snapshot+0x3c)||m_.byte(snapshot+0x3d))for(auto r:{std::pair<unsigned,unsigned>{0x1c,4},{0x20,16},{0x30,64},{0x70,4},{0xa0,4}})
-  for(unsigned i=0;i<r.second;++i)m_.byte(address_+r.first+i,0);
- s.EndNamedSection();
+float suspensionResolveContactImpulse(Suspension* suspension, const WheelContactContext* context)
+{
+    float lever[4], velocity[4];
+    vectorMatrixTransformPoint(lever, suspension->body->motion.orientation, suspension->position);
+    suspensionPointVelocity(velocity, suspension->body->linearVelocity,
+                             suspension->body->angularVelocity, lever);
+    float impulse = -suspensionDotThree(velocity, suspension->wheel->contactNormal);
+    if (impulse < 0) return 0;
+    impulse = impulse * context->tuning->contactImpulseScale;
+    impulse = impulse * suspension->body->mass;
+    float vector[4];
+    for (int i = 0; i < 4; ++i) vector[i] = suspension->wheel->contactNormal[i] * impulse;
+    if (!context->tuning->suppressBodyForces)
+        rigidBodyApplyImpulse(suspension->body, vector, lever);
+    return impulse;
 }
-// Debug001A34F0; E-0099-W74. Original matrix overload ignores 0x80 size and processes first matrix only.
-void TwoWheelAckermanSteering::DoSnapshot(std::uint32_t snapshot){
- hp2::debug::ReplaySnapshot s(m_,snapshot);s.BeginNamedSection(0x2ada60);s.MoveData(::port::race::SnapshotMatrix{address_+0x10},0x80);s.EndNamedSection();
+
+SuspensionState* suspensionState(Suspension* suspension)
+{
+    return &suspension->motion;
 }
+
+int32_t suspensionStateSize(const Suspension* suspension)
+{
+    (void)suspension;
+    return 2;
+}
+
+float suspensionGetTravel(const Suspension* suspension)
+{
+    return suspension->motion.travel;
+}
+
+float suspensionGetTravelSpeed(const Suspension* suspension)
+{
+    return suspension->motion.travelSpeed;
+}
+
+void suspensionSetPairedSuspension(Suspension* suspension, Suspension* paired)
+{
+    suspension->pairedSuspension = paired;
+}
+
+float* suspensionTransform(Suspension* suspension) { return suspension->transform; }
+
+// Initialize the steering geometry and retained suspension state.
+void steeringInitialize(Steering* steering, const SteeringGeometry* geometry)
+{
+    steering->geometry = geometry;
+}
+
+void steeringSetAngle(Steering* steering, uint16_t angle)
+{
+    float radians = bScalarMultiply((float)angle, 0.0000958738019107841f);
+    const float wheelbase = bScalarAdd(steering->geometry->frontAxleX, -steering->geometry->rearAxleX);
+    const float track = bScalarAdd(steering->geometry->leftWheelY, -steering->geometry->rightWheelY);
+    if (3.141590118408203f < radians) radians = bScalarAdd(radians, -6.283180236816406f);
+    const int positive = !(radians < 0.0f);
+    if (!positive) radians = -radians;
+    const float trackChange = bScalarMultiply(track, radians);
+    const float axleChange = bScalarMultiply(wheelbase, radians);
+    const float adjustedWheelbase = bScalarAdd(wheelbase, trackChange);
+    const float adjustedAngle = bScalarDivide(axleChange, adjustedWheelbase);
+    const float left = positive ? radians : -adjustedAngle;
+    const float right = positive ? adjustedAngle : -radians;
+    const float quarterTurn = 1.5707964897155762f;
+    rotationMatrixIdentity(steering->leftTransform);
+    float cosine = rotationSineRadians(bScalarAdd(left, quarterTurn));
+    float sine = rotationSineRadians(left);
+    steering->leftTransform[5] = cosine;
+    steering->leftTransform[0] = cosine;
+    steering->leftTransform[1] = sine;
+    steering->leftTransform[4] = -sine;
+    rotationMatrixIdentity(steering->rightTransform);
+    cosine = rotationSineRadians(bScalarAdd(right, quarterTurn));
+    sine = rotationSineRadians(right);
+    steering->rightTransform[5] = cosine;
+    steering->rightTransform[0] = cosine;
+    steering->rightTransform[1] = sine;
+    steering->rightTransform[4] = -sine;
+}
+
+// Full PAL1A5D10..1A5D60 uses the original matrix overload. Its nominal
+//128-byte argument does not change that overload's one-matrix encoding.
+void steeringDoSnapshot(Steering* steering,ReplaySnapshot* snapshot)
+{
+    replaySnapshotBeginSection(snapshot,nullptr,"TwoWheelAckermanSteering");
+    replaySnapshotMoveMatrix(snapshot,steering->leftTransform,128);
+    replaySnapshotEndSection(snapshot);
 }

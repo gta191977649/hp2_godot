@@ -1,36 +1,95 @@
-#pragma once
-// E-0112-H02. Debug ../indep/inc/HudAnim.hpp; explicit logical-memory view,
-// extent0x120. Native arrays carry values, never the original PS2 call ABI.
-#include "game_core/port/driving/object_view.hpp"
-#include "game_core/port/race/flailer_resources.hpp"
-namespace hp2::debug {
-class HudAnimator:public ::port::driving::ObjectView {
-public:
- using ObjectView::ObjectView;
- void Sub_00234E38(); // Original constructor; writes only original initialized fields.
- void Sub_00234EA8(int flags); // Original destructor.
- void SetVisibility(bool); //00234EC8.
- void StartAnimation(FlailerTextChunk,const std::array<float,2>& Pos1,
-  const std::array<float,2>& Vec1,const std::array<float,2>& Vec2,
-  const std::array<float,2>& ScaleStrt1,const std::array<float,2>& ScaleVec1,
-  int AlphaStrt1,float AlphaMag1,const std::array<float,4>& Clr1,
-  const std::array<float,2>& ScaleStrt2,const std::array<float,2>& ScaleVec2,
-  int AlphaStrt2,float AlphaMag2,const std::array<float,4>& Clr2,
-  float Time1,float TimeHold,float Time2,std::uint32_t strString,
-  std::uint32_t bMusic); //00234F20; Q-copy colour lane4/fullword bool explicit.
- void StartAnimation(FlailerTextChunk,const std::array<float,2>& Pos,
-  const std::array<float,2>& Vec,const std::array<float,2>& ScaleStrt,
-  const std::array<float,2>& ScaleVec,int AlphaStrt,float AlphaMag,float TotalTime,
-  std::uint32_t t); //002351D8; source ignores supplied Timer, uses WorldTimer.
- void StartAnimation(FlailerBitmapChunk,const std::array<float,2>& Pos,
-  const std::array<float,2>& Vec,const std::array<float,2>& ScaleStrt,
-  const std::array<float,2>& ScaleVec,int AlphaStrt,float AlphaMag,float TotalTime,
-  std::uint32_t t,std::uint32_t bVisibility); //00235320; explicit source fullword.
- void StartBlink(FlailerBitmapChunk,const std::array<float,4>& ColorStrt,
-  const std::array<float,4>& ColorMag,float RateStrt,float RateMagnitude); //00235440.
- bool DoAnimation(std::uint32_t t); //002354C8; WorldTimer, returns false even at completion.
- bool DoAnimation(std::uint32_t t,float Intensity); //00235788; WorldTimer.
- bool DoAnimation(const std::uint32_t* t,std::uint32_t string); //00235898; pointed Timer value, source string address.
- void FinishAnimation(); //00235CA0.
+#ifndef NFSHP2_HUD_ANIM_HPP
+#define NFSHP2_HUD_ANIM_HPP
+
+#include "FlailerChunks.hpp"
+#include "indep/inc/Timer.hpp"
+#include <array>
+#include <cstdint>
+
+namespace hp2 {
+
+struct HudTextAnimation {
+    FlailerTextChunk* text;
+    std::array<float,2> position;
+    std::array<float,2> positionIn;
+    std::array<float,2> positionOut;
+    std::array<float,2> scale;
+    std::array<float,2> scaleIn;
+    std::int32_t alpha;
+    float alphaIn;
+    std::array<float,4> color;
+    std::array<float,2> heldScale;
+    std::array<float,2> scaleOut;
+    std::int32_t heldAlpha;
+    float alphaOut;
+    std::array<float,4> colorChange;
+    std::array<float,3> durationSeconds;
+    const char* caption;
+    bool useRealTimer;
 };
+
+struct HudMoveAnimation {
+    std::array<float,2> position{};
+    std::array<float,2> positionChange{};
+    std::array<float,2> scale{};
+    std::array<float,2> scaleChange{};
+    std::int32_t alpha{};
+    float alphaChange{};
+    float durationSeconds{};
+};
+
+/* A CPU animator borrows the same live Flailer object and strip pool. It
+ * owns its interpolation state and copied caption, never another UI object. */
+class HudAnimator final {
+public:
+    HudAnimator();
+    void SetVisibility(bool visible);
+    void StartAnimation(const HudTextAnimation& animation, const GameTime& clock);
+    void StartAnimation(FlailerTextChunk& text,const HudMoveAnimation& animation,const GameTime& clock);
+    void StartAnimation(FlailerBitmapChunk& bitmap,const HudMoveAnimation& animation,
+        const GameTime& clock,bool keepVisible);
+    void StartBlink(FlailerBitmapChunk& bitmap,const std::array<float,4>& color,
+        const std::array<float,4>& colorChange,float period,float periodChange,const GameTime& clock);
+    bool DoAnimation(std::int32_t nowTicks);
+    bool DoAnimation(std::int32_t nowTicks,float blinkStrength);
+    bool DoAnimation(std::int32_t nowTicks, const char* dynamicCaption);
+    void FinishAnimation();
+    bool Active() const noexcept;
+    std::int32_t Phase() const noexcept;
+private:
+    std::array<char,64> caption_{};
+    bool ownsCaption_{};
+    FlailerTextChunk* text_{};
+    FlailerBitmapChunk* bitmap_{};
+    std::array<float,2> position_{};
+    std::array<float,2> positionIn_{};
+    std::array<float,2> scale_{};
+    std::array<float,2> scaleIn_{};
+    std::int32_t alpha_{};
+    float alphaIn_{};
+    std::array<float,2> positionOut_{};
+    std::array<float,2> heldScale_{};
+    std::array<float,2> scaleOut_{};
+    std::int32_t heldAlpha_{};
+    float alphaOut_{};
+    std::array<float,4> blinkStart_{};
+    std::array<float,4> blinkChange_{};
+    std::array<float,4> color_{};
+    std::array<float,4> colorChange_{};
+    std::array<float,3> durationSeconds_{};
+    // Native clock origin stays in ticks. Subtracting two large float
+    // timestamps loses sub-frame precision and fails at the timer wrap.
+    std::int32_t startedTicks_{};
+    float phaseStartedSeconds_{};
+    std::int32_t phase_{};
+    bool active_{};
+    bool keepVisible_{};
+    bool useRealTimer_{};
+    std::int32_t kind_{};
+    float blinkPeriod_{};
+    float blinkPeriodChange_{};
+};
+
 }
+
+#endif

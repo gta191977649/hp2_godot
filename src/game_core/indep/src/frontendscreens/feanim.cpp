@@ -1,262 +1,712 @@
-// TASK-0042 E-0042-S001: exact Debug source marker(s): ..\indep\src\frontendscreens\feanim.cpp.
-// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: allocator_label; evidence: E-0027-C01.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/AnimationGroup.hpp"
-#include "game_core/port/frontend/popup.hpp"
-#include "game_core/src/bMath.hpp"
+#include "FEAnim.hpp"
+#include "FMenus.hpp"
+#include "bware/inc/bMath.hpp"
+#include "bware/inc/bMath.hpp"
+#include "bware/inc/bMath.hpp"
+#include "bware/inc/bWare.hpp"
+#include "bware/inc/bWare.hpp"
+#include "Language.hpp"
+#include <cstring>
+#include <cstdio>
+#include <limits>
 
-namespace port::frontend {
-// Debug00241FA0, E-0098-X04. Both original lookups consume scale X.
-void PopupView::bind_animation(int index){
-    target_=0xe0105663u+index;timer_=now_;
-    const auto* w=hp2::frontend::FindWidget_00143D50(screen,target_,0);
-    const float scale=w?w->scale_x:1.f;
-    start_=scale*memory_.scalar(0x328e40);end_=scale*memory_.scalar(0x328e44);
+namespace hp2 {
+
+void FlailerHighlightAnimation::ForceStart()
+{
+    // Complete PAL248AD0. Timer belongs to the one live UI clock.
+    startedTicks=static_cast<std::uint32_t>(ui_->clock->realTimer);
 }
-// Debug00242040; E-0098-X04. Retains Debug sine and packed-timer arithmetic,
-// while the host supplies RealTimer through the selection page's shared clock.
-void PopupView::tick(std::uint32_t now,float dt){
-    using namespace hp2::frontend;now_=now;
-    // Debug0016AEB8 retains even the original unused arrow sine evaluation.
-    arrow_phase_+=dt*9.f;
-    if(memory_.scalar(0x3252c8)<arrow_phase_)arrow_phase_-=memory_.scalar(0x3252c8);
-    (void)hp2::recovered::bSin(memory_,arrow_phase_);
-    const float elapsed=float(std::uint32_t(now-timer_))*memory_.scalar(0x3261fc);
-    if(elapsed<memory_.scalar(0x328e3c)){
-        const float phase=(elapsed*memory_.scalar(0x326200))/memory_.scalar(0x328e3c);
-        const float scale=start_+(end_-start_)*hp2::recovered::bSin(memory_,phase);
-        const float alpha=memory_.scalar(0x328e48)+(memory_.scalar(0x328e4c)-memory_.scalar(0x328e48))*hp2::recovered::bSin(memory_,phase);
-        auto* target=FindWidget_00143D50(screen,target_,1);auto* ghost=FindWidget_00143D50(screen,0xab671c9a,1);
-        if(!target){if(ghost)ghost->visible=0;}
-        else if(ghost){CopyWidgetTransform_001410A0(*ghost,*target);
-            SetWidgetScale_00140FA8(*ghost,scale,measure_(*ghost));SetAlpha(*ghost,int(alpha));
-            const auto colour=memory_.word(0x328a28);
-            if(colour!=0xffffffffu)SetColor(*ghost,{std::uint8_t(colour),std::uint8_t(colour>>8),std::uint8_t(colour>>16)});
+
+void FlailerHighlightAnimation::HandleEvents(ScreenMessage message,ScreenCallbackData& data)
+{
+    if (message==ScreenMessage::Tick)Animate();
+    else if (message==ScreenMessage::Highlight)SetCurrentMenuItem(data.key);
+}
+
+namespace {
+float BlurbObjectLeft(FlailerUiState& ui,std::uint32_t screen,std::uint32_t key)
+{
+    Require(ui.resources && ui.clock,"Animated blurb has no actual resources/clock");
+    const auto* object=ui.resources->FindObject(screen,key);
+    Require(object,"Animated blurb text object is absent from its authored screen");
+    float x,y;ui.resources->GetTopLeft(*object,x,y,ui.language);
+    return x;
+}
+
+float BlurbElapsed(std::int32_t now,std::int32_t then)
+{
+    const auto raw=static_cast<std::uint32_t>(now)-static_cast<std::uint32_t>(then);
+    std::int32_t elapsed;std::memcpy(&elapsed,&raw,sizeof(elapsed));
+    return static_cast<float>(elapsed)*0.0002500000118743628f;
+}
+}
+
+FlailerAnimatedBlurb::FlailerAnimatedBlurb(FlailerUiState& ui,std::uint32_t screen,
+    std::uint32_t text,std::uint32_t firstAlpha,std::uint32_t secondAlpha)
+    : ui_(ui),screenKey_(screen),textKey_(text),
+      slide_(ui,screen,0,text,650.0f,BlurbObjectLeft(ui,screen,text),0.25f),
+      firstAlpha_(ui,screen),secondAlpha_(ui,screen),destination_(slide_.position.desiredValue)
+{
+    // PAL2491B0 constructs two single-object alpha owners. The existing
+    // native alpha owner has retained multi-object storage; use one entry.
+    firstAlpha_.AddObject(firstAlpha);
+    secondAlpha_.AddObject(secondAlpha);
+}
+
+FlailerAnimatedBlurb::~FlailerAnimatedBlurb()=default;
+
+void FlailerAnimatedBlurb::Animate()
+{
+    if(ui_.externalPresentation) {
+        if(!disabled_ && !textInstalled_) {
+            ui_.resources->SetLanguageID(screenKey_,textKey_,0);
+            ui_.resources->Printf(screenKey_,textKey_,"%s",text_.data());
+            textInstalled_=true;
+        }
+        return;
+    }
+    // PAL249348 includes the final-only disabled gate, absent from beta.
+    if (disabled_)return;
+    const float fadeElapsed=BlurbElapsed(ui_.clock->realTimer,fadeStartedTicks_);
+    const float changedElapsed=BlurbElapsed(ui_.clock->realTimer,textChangedTicks_);
+    if (phase_==1) {
+        const float duration=ui_.animationSettings.blurbFadeDuration;
+        const float alpha=fadeElapsed<duration ? fadeElapsed/duration : 1.0f;
+        firstAlpha_.SetAlphaScale(1.0f-alpha);
+        secondAlpha_.SetAlphaScale(alpha);
+        if (ui_.animationSettings.blurbTextDelay<changedElapsed) {
+            textInstalled_=false;
+            phase_=2;
         }
     }
-    if(memory_.scalar(0x328e50)<elapsed)timer_=now;
+    if (phase_!=2 && phase_!=0)return;
+    firstAlpha_.SetAlphaScale(1.0f);
+    secondAlpha_.SetAlphaScale(0.0f);
+    if (!textInstalled_) {
+        ui_.resources->SetLanguageID(screenKey_,textKey_,0);
+        ui_.resources->Printf(screenKey_,textKey_,"%s",text_.data());
+        slide_.SetupToAnimate(650.0f,destination_);
+        textInstalled_=true;
+    } else if (slide_.position.mode!=0) {
+        slide_.Animate();
+    } else {
+        phase_=3;
+    }
+}
+
+// Final-only PAL2492F0..249348, called by the final campaign bonus view.
+void FlailerAnimatedBlurb::Hide()
+{
+    NewText("");firstAlpha_.SetAlphaScale(0.0f);secondAlpha_.SetAlphaScale(0.0f);disabled_=true;
+}
+
+void FlailerAnimatedBlurb::NewText(std::int32_t languageId)
+{
+    Require(ui_.language,"Animated blurb has no actual Language manager");
+    NewText(ui_.language->GetString(languageId));
+}
+
+void FlailerAnimatedBlurb::NewText(const char* text)
+{
+    Require(text,"Animated blurb text is null");
+    const auto length=std::strlen(text);
+    Require(length<text_.size(),"Animated blurb exceeds its original 256-byte text extent");
+    if(ui_.externalPresentation)textInstalled_=false;
+    if (phase_==2 || phase_==3) {
+        phase_=1;
+        fadeStartedTicks_=ui_.clock->realTimer;
+        textInstalled_=false;
+    }
+    textChangedTicks_=ui_.clock->realTimer;
+    std::memcpy(text_.data(),text,length+1);
+    disabled_=false;
+}
+
+FlailerSlideAnimation::FlailerSlideAnimation(FlailerUiState& ui,std::uint32_t screen)
+    : ui_(ui),screen_(screen)
+{
+    Require(ui_.resources && ui_.clock,"Menu slide has no actual resources/real-time clock");
+}
+
+FlailerSlideAnimation::~FlailerSlideAnimation()
+{
+    // The original list releases from its head. Each group restores the
+    // actual resource coordinates before its retained node is discarded.
+    for (auto& group:groups_)group.reset();
+}
+
+void FlailerSlideAnimation::AddGroup(std::uint32_t group,std::uint32_t anchor,
+    float initial,float desired,float duration)
+{
+    if(ui_.externalPresentation)return;
+    if (maximumDuration_<duration)maximumDuration_=duration;
+    groups_.push_back(std::make_unique<FlailerAnimationGroup>(ui_,screen_,group,anchor,initial,desired,duration));
+}
+
+bool FlailerSlideAnimation::HasControl() const noexcept
+{
+    return startedTicks_!=0 && startedTicks_!=std::numeric_limits<std::int32_t>::max();
+}
+
+void FlailerSlideAnimation::Start()
+{
+    startedTicks_=ui_.clock->realTimer;
+}
+
+bool FlailerSlideAnimation::IsFinished() const
+{
+    if (!HasControl())return false;
+    bool finished=true;
+    for (const auto& group:groups_)finished=(group->position.mode==0) && finished;
+    return finished;
+}
+
+void FlailerSlideAnimation::Animate()
+{
+    if (IsFinished())return;
+    for (auto& group:groups_)group->Animate();
+}
+
+float FlailerSlideAnimation::GetFractionCompleted() const
+{
+    if (!HasControl())return 0.0f;
+    if (IsFinished())return 1.0f;
+    const auto raw=static_cast<std::uint32_t>(ui_.clock->realTimer)-static_cast<std::uint32_t>(startedTicks_);
+    std::int32_t ticks;std::memcpy(&ticks,&raw,sizeof(ticks));
+    return finiteRatio(static_cast<float>(ticks)*0.0002500000118743628f,maximumDuration_);
+}
+
+namespace {
+std::uint32_t MenuSlideKey(const char* format,std::int32_t index)
+{
+    char name[32];const auto count=std::snprintf(name,sizeof(name),format,index);
+    Require(count>=0 && static_cast<std::size_t>(count)<sizeof(name),"Menu slide key exceeds source scratch extent");
+    return hashString(name);
 }
 }
 
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: allocator_label; evidence: E-0027-C01.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/feAnimAlphaElement.hpp"
-
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: allocator_label; evidence: E-0027-C01.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/indep/inc/feAnim.hpp"
-
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: allocator_label; evidence: E-0027-C01.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/tMenuAnimElement.hpp"
-
-#include "game_core/port/not_implemented.hpp"
-
-namespace hp2::recovered {
-// ELF 0x002486E8; E-0042-C163; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/002486e8.md.
-void AnimationGroup::SetupToAnimate() {
-    hp2::not_implemented("0x002486E8", "AnimationGroup::SetupToAnimate (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x00248568; E-0041-R11; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/00248568.md.
-void AnimationGroup::Sub_00248568() {
-    hp2::not_implemented("0x00248568", "AnimationGroup::Sub_00248568 (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/indep/src/frontendscreens/feanim.hpp"
-
-namespace hp2::recovered {
-// ELF 0x002491B0; E-0041-R19; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/002491b0.md.
-void tAnimatedBlurb::Sub_002491B0() {
-    hp2::not_implemented("0x002491B0", "tAnimatedBlurb::Sub_002491B0 (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x002490D8; E-0041-R12; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/002490d8.md.
-void tExitScreenAnimation::Sub_002490D8() {
-    hp2::not_implemented("0x002490D8", "tExitScreenAnimation::Sub_002490D8 (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x002495F0; E-0041-R10; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/002495f0.md.
-void tGlobalBackgroundAnimation::Sub_002495F0() {
-    hp2::not_implemented("0x002495F0", "tGlobalBackgroundAnimation::Sub_002495F0 (signature and full body unresolved)");
+FlailerSlideInAnimation::FlailerSlideInAnimation(FlailerUiState& ui,std::uint32_t screen,float destination)
+    : FlailerSlideAnimation(ui,screen)
+{
+    const auto& settings=ui.animationSettings;
+    for (std::int32_t index=0;index<16;++index) {
+        const auto group=MenuSlideKey("MENUITEM_%d_GROUP",index);
+        const auto anchor=MenuSlideKey("MI_%d_MASK",index);
+        if (ui.resources->FindObjectByGroup(screen,group,0)) {
+            const float item=static_cast<float>(index);
+            AddGroup(group,anchor,item*settings.itemSlideSpacing+640.0f,destination,
+                settings.itemSlideDuration+item*settings.itemSlideDelay);
+        }
+    }
+    Start();
 }
 
-// ELF 0x00249790; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/00249790.md.
-void tGlobalBackgroundAnimation::RemoveTextureHash() {
-    hp2::not_implemented("0x00249790", "tGlobalBackgroundAnimation::RemoveTextureHash (signature and full body unresolved)");
+FlailerSlideOutAnimation::FlailerSlideOutAnimation(FlailerUiState& ui,std::uint32_t screen)
+    : FlailerSlideAnimation(ui,screen)
+{
+    const auto& settings=ui.animationSettings;
+    for (std::int32_t index=0;index<16;++index) {
+        const auto group=MenuSlideKey("MENUITEM_%d_GROUP",index);
+        const auto anchor=MenuSlideKey("MI_%d_MASK",index);
+        if (ui.resources->FindObjectByGroup(screen,group,0)) {
+            float x=0.0f,y=0.0f;
+            if (const auto* object=ui.resources->FindObject(screen,anchor))
+                ui.resources->GetTopLeft(*object,x,y,ui.language);
+            const float item=static_cast<float>(index);
+            AddGroup(group,anchor,x,settings.itemSlideExitPosition,
+                settings.itemSlideDuration+item*settings.itemSlideDelay);
+        }
+    }
 }
 
-// ELF 0x002497B8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/002497b8.md.
-void tGlobalBackgroundAnimation::GetNumTextures() {
-    hp2::not_implemented("0x002497B8", "tGlobalBackgroundAnimation::GetNumTextures (signature and full body unresolved)");
+FlailerExitScreenAnimation::FlailerExitScreenAnimation(FlailerUiState& ui,FlailerScreenList& screens,
+    std::uint32_t screen,const char* destination,bool push)
+    : FlailerSlideOutAnimation(ui,screen),screens_(screens),destination_(destination?destination:""),
+      hasDestination_(destination!=nullptr),push_(push)
+{
+    Start();
 }
 
-// ELF 0x002497F0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/002497f0.md.
-void tGlobalBackgroundAnimation::GetNthTexture() {
-    hp2::not_implemented("0x002497F0", "tGlobalBackgroundAnimation::GetNthTexture (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x0024A690; E-0041-R09; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/0024a690.md.
-void tLeftRightArrowScroll::Sub_0024A690() {
-    hp2::not_implemented("0x0024A690", "tLeftRightArrowScroll::Sub_0024A690 (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x00249C78; E-0041-R08; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/00249c78.md.
-void tMenuAnimElement::Sub_00249C78() {
-    hp2::not_implemented("0x00249C78", "tMenuAnimElement::Sub_00249C78 (signature and full body unresolved)");
+void FlailerExitScreenAnimation::HandleMessages(ScreenMessage message,ScreenCallbackData& data)
+{
+    data.sound=0;
+    if (message==ScreenMessage::LeaveScreen) {data.value=0;return;}
+    if (message==ScreenMessage::Previous || message==ScreenMessage::Next) {data.value=1;return;}
+    if (message==ScreenMessage::Tick) {
+        Animate();
+        if (IsFinished())screens_.ChangeToScreen(hasDestination_?destination_.c_str():nullptr,push_);
+    }
 }
 
-// ELF 0x00249D70; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/00249d70.md.
-void tMenuAnimElement::ApplyDeltaY() {
-    hp2::not_implemented("0x00249D70", "tMenuAnimElement::ApplyDeltaY (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x00249DE0; E-0041-R07; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/00249de0.md.
-void tScrollingMenuList::Sub_00249DE0() {
-    hp2::not_implemented("0x00249DE0", "tScrollingMenuList::Sub_00249DE0 (signature and full body unresolved)");
+FlailerAlphaAnimation::FlailerAlphaAnimation(FlailerUiState& state,std::uint32_t screen)
+    : ui_(&state),screenKey_(screen)
+{
 }
 
-// ELF 0x0024A050; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0024a050.md.
-void tScrollingMenuList::FindMenuElement() {
-    hp2::not_implemented("0x0024A050", "tScrollingMenuList::FindMenuElement (signature and full body unresolved)");
+// PAL248360..24842C visits every actual object in the supplied group.
+// Duplicate object keys inside a group are valid; retain each object itself.
+FlailerAlphaAnimation::FlailerAlphaAnimation(FlailerUiState& state,std::uint32_t screen,std::uint32_t group)
+    : FlailerAlphaAnimation(state,screen)
+{
+    Require(ui_->resources,"Alpha group has no actual Flailer resource owner");
+    for (auto* object=ui_->resources->FindObjectByGroup(screenKey_,group,0);object;
+         object=ui_->resources->FindObjectByGroup(screenKey_,group,0,object)) {
+        Require(object->kind==1 || object->kind==2,"Alpha group requires actual text or bitmap objects");
+        SavedAlpha saved{object,{}};
+        for (std::size_t corner=0;corner<4;++corner)
+            saved.alpha[corner]=static_cast<float>(object->kind==2 ?
+                static_cast<FlailerBitmapChunk*>(object)->GetAlpha(static_cast<std::int32_t>(corner)) :
+                static_cast<FlailerTextChunk*>(object)->GetAlpha());
+        objects_.push_back(saved);
+    }
 }
 
-// ELF 0x0024A248; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0024a248.md.
-void tScrollingMenuList::Highlight() {
-    hp2::not_implemented("0x0024A248", "tScrollingMenuList::Highlight (signature and full body unresolved)");
+void FlailerAlphaAnimation::AddObject(std::uint32_t key)
+{
+    auto* object=ui_->resources->FindObject(screenKey_,key);
+    if (!object)return;
+    Require(object->kind==1 || object->kind==2,"Alpha animation requires an actual text or bitmap object");
+    SavedAlpha saved{object,{}};
+    // Source248028 snapshots all four bitmap corners; text repeats its
+    // single alpha four times. Storage is native lifetime, not a PS2 node.
+    for (std::size_t corner=0;corner<4;++corner)
+        saved.alpha[corner]=static_cast<float>(object->kind==2 ?
+            static_cast<FlailerBitmapChunk*>(object)->GetAlpha(static_cast<std::int32_t>(corner)) :
+            static_cast<FlailerTextChunk*>(object)->GetAlpha());
+    objects_.push_back(saved);
 }
 
-// ELF 0x0024A3E0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0024a3e0.md.
-void tScrollingMenuList::ShowUpArrow() {
-    hp2::not_implemented("0x0024A3E0", "tScrollingMenuList::ShowUpArrow (signature and full body unresolved)");
+void FlailerAlphaAnimation::SetAlphaScale(float scale)
+{
+    for (const auto& saved:objects_) {
+        if (saved.object->kind==2) {
+            for (std::size_t corner=0;corner<4;++corner)
+                static_cast<FlailerBitmapChunk*>(saved.object)->SetAlpha(
+                    convertFloatToInt32(saved.alpha[corner]*scale),static_cast<std::int32_t>(corner));
+        } else saved.object->SetAlpha(convertFloatToInt32(saved.alpha[0]*scale));
+    }
 }
 
-// ELF 0x0024A430; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0024a430.md.
-void tScrollingMenuList::ShowDownArrow() {
-    hp2::not_implemented("0x0024A430", "tScrollingMenuList::ShowDownArrow (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x00248BE8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/00248be8.md.
-void tSlideAnimation::Sub_00248BE8() {
-    hp2::not_implemented("0x00248BE8", "tSlideAnimation::Sub_00248BE8 (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace port::selection::alpha_projection {
-// Debug001411D8/00140308,00140FC8/00140CC0. Semantic adapter of existing widget storage.
-unsigned get(const hp2::frontend::FeWidget& w,unsigned corner){
-    if(w.type==2)return corner==0?w.a:w.field_0x5c[corner-1]>>24;
-    return w.type==1?w.a:0;
-}
-void set(hp2::frontend::FeWidget& w,int alpha,unsigned corner){
-    const auto value=static_cast<std::uint8_t>(alpha);
-    if(w.type==2){
-        w.dirty_0x2b=6;
-        if(corner==0)w.a=value;
-        else w.field_0x5c[corner-1]=(w.field_0x5c[corner-1]&0xffffffu)|(std::uint32_t(value)<<24);
-    }else if(w.type==1 && w.a!=value){w.a=value;w.dirty_0x2b=6;}
-}
-}
-namespace hp2::debug {
-// Debug002416F8, E-0098-U03. Signed char conversion is intentional, including alpha128.
-feAnimAlphaElement::feAnimAlphaElement(hp2::frontend::FeWidget* object):Object(object){
-    if(Object)for(unsigned i=0;i<4;++i){const auto a=::port::selection::alpha_projection::get(*Object,i);
-        SavedAlphas[i]=float(a<128?int(a):int(a)-256);}
-}
-// Debug002418A8, E-0098-U03. Always use captured alphas, never compound live alpha.
-void feAnimAlphaElement::SetAlphaScale(float scale){
-    if(!Object)return;
-    const unsigned count=Object->type==2?4:1;
-    for(unsigned i=0;i<count;++i)::port::selection::alpha_projection::set(*Object,int(SavedAlphas[i]*scale),i);
-}
-// Debug00241978, E-0098-U03. Restore authored corner alphas when leaving the screen.
-feAnimAlphaElement::~feAnimAlphaElement(){SetAlphaScale(1);}
-// Debug00241B00, E-0098-U03. Host screen reference replaces original screen-hash lookup.
-feAlphaAnimation::feAlphaAnimation(hp2::frontend::FeScreen& screen):ScreenHash(screen){}
-// Debug00241A30, E-0098-U03. Preserve original group traversal order.
-feAlphaAnimation::feAlphaAnimation(hp2::frontend::FeScreen& screen,std::uint32_t group):ScreenHash(screen){
-    for(auto& w:screen.widgets)if(w.class_hash==group)Fading.push_back(std::make_unique<feAnimAlphaElement>(&w));
-}
-// Debug00241B18, E-0098-U03. Missing original object is a no-op; duplicate additions are retained.
-void feAlphaAnimation::AddObject(std::uint32_t hash){
-    if(auto* w=hp2::frontend::FindWidget_00143D50(ScreenHash,hash,0))Fading.push_back(std::make_unique<feAnimAlphaElement>(w));
-}
-// Debug00241B90, E-0098-U03. No allocations in the frame update.
-void feAlphaAnimation::SetAlphaScale(float scale){for(auto& item:Fading)item->SetAlphaScale(scale);}
-// Debug00241BE8 ->00244080, E-0098-U03. Original removes head first; this matters
-// when AddObject captured the same widget again after its alpha changed.
-feAlphaAnimation::~feAlphaAnimation(){for(auto& item:Fading)item.reset();}
+FlailerAlphaAnimation::~FlailerAlphaAnimation()
+{
+    // Source24AA30 removes each node in insertion order;2482A8 restores
+    // its captured alpha before releasing it. No final scale is assumed.
+    for (const auto& saved:objects_) {
+        if (saved.object->kind==2) {
+            for (std::size_t corner=0;corner<4;++corner)
+                static_cast<FlailerBitmapChunk*>(saved.object)->SetAlpha(
+                    convertFloatToInt32(saved.alpha[corner]),static_cast<std::int32_t>(corner));
+        } else saved.object->SetAlpha(convertFloatToInt32(saved.alpha[0]));
+    }
 }
 
-// TASK-0099 E-0099-W62, Debug authority815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
-namespace hp2::debug {
-void tHighlightAnimation::Sub_00241F40(int screen,int object,int color){
- m_.word(address_+8,0);m_.word(address_,static_cast<std::uint32_t>(screen));
- const auto timeout=m_.word(0x328e50),end=m_.word(0x328e44),start=m_.word(0x328e40);
- m_.word(address_+8,m_.word(0x327cd8));m_.word(address_+0xc,static_cast<std::uint32_t>(object));m_.word(address_+0x10,static_cast<std::uint32_t>(color));
- m_.word(address_+0x14,start);m_.word(address_+0x18,end);m_.word(address_+0x1c,timeout);m_.word(address_+4,0);
-}
-void tHighlightAnimation::Sub_00241F80(int flags){if(flags&1)m_.release(address_);}
+FlailerAnimationGroup::FlailerAnimationGroup(FlailerUiState& state,std::uint32_t screen,
+    std::uint32_t group,std::uint32_t anchor,float initial,float desired,float duration)
+    : ui(&state),screenKey(screen),groupKey(group),anchorKey(anchor)
+{
+    Require(ui->resources,"Animation group has no actual Flailer resource owner");
+    tCubic1DInitialize(&position);
+    position.continuous=1;
+    auto* object=ui->resources->FindObject(screenKey,anchorKey);
+    Require(object,"Animation group anchor is absent from the actual screen");
+    float x,y;ui->resources->GetTopLeft(*object,x,y,ui->language);
+    savedX=convertFloatToInt32(x);savedY=convertFloatToInt32(y);
+    position.duration=duration;
+    SetupToAnimate(initial,desired);
 }
 
-#include "game_core/port/race/flailer_resources.hpp"
-#include "game_core/port/driving/ee_scalar.hpp"
-#include <cmath>
-namespace hp2::debug {
-// Debug00241FA0; E-0112-P02. Both original FlailerGetScale calls use ScaleX.
-void tHighlightAnimation::SetCurrentMenuItem(int item){
- auto& m=m_;m.word(address_+4,std::uint32_t(item));m.word(address_+8,m.word(0x327cd8));
- float scale=1;const auto object=FindFlailerObject(m,m.word(address_),std::uint32_t(item),0);if(object)scale=m.scalar(object+0x38);
- m.scalar(address_+0x14,scale*m.scalar(0x328e40));m.scalar(address_+0x18,scale*m.scalar(0x328e44));
+FlailerAnimationGroup::~FlailerAnimationGroup()
+{
+    if (groupKey)ui->resources->MoveGroupTo(screenKey,groupKey,anchorKey,
+        static_cast<float>(savedX),static_cast<float>(savedY));
+    else ui->resources->SetTopLeftPosition(screenKey,anchorKey,savedX,savedY);
+    // The original's final base deleting-destructor transport is replaced
+    // by native object lifetime. The real resource restoration above remains.
 }
-// Debug00242040; E-0112-P02. Source RealTimer, sine, copy/scale/alpha/color order.
-void tHighlightAnimation::Animate(){
- auto& m=m_;const float elapsed=float(std::int32_t(m.word(0x327cd8)-m.word(address_+8)))*m.scalar(0x3261fc);
- if(elapsed<m.scalar(0x328e3c)){
-  const float phase=(elapsed*m.scalar(0x326200))/m.scalar(0x328e3c);
-  const float sine=hp2::recovered::bSin(m,phase);
-  const float scale=m.scalar(address_+0x14)+(m.scalar(address_+0x18)-m.scalar(address_+0x14))*sine;
-  const float alpha=m.scalar(0x328e48)+(m.scalar(0x328e4c)-m.scalar(0x328e48))*hp2::recovered::bSin(m,phase);
-  const auto from=FindFlailerObject(m,m.word(address_),m.word(address_+4),1),to=FindFlailerObject(m,m.word(address_),m.word(address_+0xc),1);
-  if(!from){if(to)m.byte(to+0x29,0);}
-  else if(to){
-   // Debug00140E90 CopyFlailerText preserves target's cached strip pointer.
-   const auto strip=m.word(to+0x2c);for(unsigned i=0;i<0x40;++i)m.byte(to+0x28+i,m.byte(from+0x28+i));m.word(to+0x2c,strip);m.byte(to+0x2b,8);
-   FlailerTextChunk text(m,to);text.ScaleAboutCenter(scale);
-   if(!std::isfinite(alpha)||alpha<-2147483648.f||alpha>=2147483648.f)hp2::not_implemented("0x00242040","exceptional EE highlight alpha CVT.W.S operand");
-   text.SetAlpha(::port::driving::cvt_w_s(alpha));if(m.word(address_+0x10)!=0xffffffffu)text.SetColor(m.word(address_+0x10));
-  }
- }
- if(m.scalar(address_+0x1c)<elapsed)m.word(address_+8,m.word(0x327cd8));
+
+void FlailerAnimationGroup::SetupToAnimate(float initial,float desired)
+{
+    if(ui->externalPresentation) {
+        position.value=position.desiredValue=desired;
+        position.mode=0;
+        return;
+    }
+    position.desiredValue=initial;position.continuous=0;
+    if (initial!=position.value)position.mode=2;
+    position.mode=0;
+    position.value=position.desiredValue;
+    position.derivative=position.desiredDerivative;
+    position.desiredValue=desired;
+    if (desired!=position.value)position.mode=2;
+    const auto x=convertFloatToInt32(position.value);
+    if (groupKey)ui->resources->MoveGroupTo(screenKey,groupKey,anchorKey,
+        static_cast<float>(x),static_cast<float>(savedY));
+    else ui->resources->SetTopLeftPosition(screenKey,anchorKey,x,savedY);
 }
-// Debug002421B0; E-0112-P02. Other callback messages are original no-ops.
-void tHighlightAnimation::HandleEvents(int msg,const ScreenCallbackData& d){if(msg==18)Animate();else if(msg==4)SetCurrentMenuItem(int(d.ItemHash));}
+
+void FlailerAnimationGroup::Animate()
+{
+    if(ui->externalPresentation)return;
+    Require(ui->clock,"Animation group has no live real-time clock");
+    tCubic1DUpdate(&position,ui->clock->realTimeElapsed,0.0f,0.0f);
+    const auto x=convertFloatToInt32(position.value);
+    if (groupKey)ui->resources->MoveGroupTo(screenKey,groupKey,anchorKey,
+        static_cast<float>(x),static_cast<float>(savedY));
+    else ui->resources->SetTopLeftPosition(screenKey,anchorKey,x,savedY);
+}
+
+void FlailerResources::SetBitmapCenter(FlailerBitmapChunk& bitmap,float x,float y) const
+{
+    bitmap.SetTopLeftX(x-ScaledBitmapWidth(bitmap)*0.5f);
+    bitmap.SetTopLeftY(y-ScaledBitmapHeight(bitmap)*0.5f);
+}
+
+FlailerHighlightAnimation::FlailerHighlightAnimation(FlailerUiState& ui,std::uint32_t screen,
+    std::uint32_t echo,std::int32_t tint)
+    : screenKey(screen),startedTicks(static_cast<std::uint32_t>(ui.clock->realTimer)),echoKey(echo),
+      color(tint),startScale(ui.animationSettings.highlightStartScale),
+      peakScale(ui.animationSettings.highlightPeakScale),restartDuration(ui.animationSettings.highlightRestart),ui_(&ui)
+{
+}
+
+void FlailerHighlightAnimation::SetCurrentMenuItem(std::uint32_t key)
+{
+    targetKey=key;startedTicks=static_cast<std::uint32_t>(ui_->clock->realTimer);
+    float scale=1.0f;
+    if (auto* object=ui_->resources->FindObject(screenKey,key)) scale=object->scaleX;
+    startScale=scale*ui_->animationSettings.highlightStartScale;
+    scale=1.0f;
+    if (auto* object=ui_->resources->FindObject(screenKey,key)) scale=object->scaleX;
+    peakScale=scale*ui_->animationSettings.highlightPeakScale;
+}
+
+void FlailerHighlightAnimation::Animate()
+{
+    if(ui_->externalPresentation)return;
+    const auto now=static_cast<std::uint32_t>(ui_->clock->realTimer);
+    const auto raw=now-startedTicks;
+    std::int32_t ticks;std::memcpy(&ticks,&raw,sizeof(ticks));
+    const float elapsed=static_cast<float>(ticks)*0.0002500000118743628f;
+    const auto& settings=ui_->animationSettings;
+    if (elapsed<settings.highlightDuration) {
+        const float angle=(elapsed*1.5707499980926514f)/settings.highlightDuration;
+        const float scale=startScale+(peakScale-startScale)*rotationSineRadians(angle);
+        const float alpha=settings.highlightStartAlpha+
+            (settings.highlightEndAlpha-settings.highlightStartAlpha)*rotationSineRadians(angle);
+        auto* target=static_cast<FlailerTextChunk*>(ui_->resources->FindObject(screenKey,targetKey,1));
+        auto* echo=static_cast<FlailerTextChunk*>(ui_->resources->FindObject(screenKey,echoKey,1));
+        if (target && echo) {
+            echo->CopyAttributesFrom(*target);
+            // Authored labels resolve their language ID at render time.
+            // Literal labels need their complete string, including the
+            // terminator, beyond the copied inline attribute prefix.
+            if (target->languageId==0) echo->SetString(target->text);
+            ui_->resources->ScaleTextAboutCenter(*echo,scale,ui_->language);
+            echo->SetAlpha(convertFloatToInt32(alpha));
+            if (color!=-1) echo->SetColor(static_cast<std::uint32_t>(color));
+        } else if (echo) echo->visible=0;
+    }
+    if (restartDuration<elapsed) startedTicks=now;
+}
+
+float FlailerAnimationRandomRange(float minimum,float maximum)
+{
+    const float value=static_cast<float>(vectorDefaultRandomBounded(10000));
+    return minimum+(value*0.00009999999747378752f)*(maximum-minimum);
+}
+
+FlailerGlobalBackgroundAnimation::FlailerGlobalBackgroundAnimation(FlailerUiState& ui):ui_(&ui)
+{
+    for (auto& axis:position.axes) {
+        tCubic1DInitialize(&axis);axis.duration=ui.animationSettings.backgroundDuration;
+        axis.threshold=1.0f;axis.continuous=0;
+    }
+    position.axes[0].value=position.axes[0].desiredValue=320.0f;
+    position.axes[1].value=position.axes[1].desiredValue=240.0f;
+    position.axes[0].mode=position.axes[1].mode=0;
+    DefaultTextureList();
+}
+
+void FlailerGlobalBackgroundAnimation::AddTextureHash(std::uint32_t key)
+{
+    RemoveTextureHash(key);
+    for (auto& entry:textures) if (!entry) { entry=key;break; }
+}
+
+void FlailerGlobalBackgroundAnimation::RemoveTextureHash(std::uint32_t key)
+{
+    for (auto& entry:textures) if (entry==key) entry=0;
+}
+
+std::uint32_t FlailerGlobalBackgroundAnimation::GetNumTextures() const
+{
+    // PAL returns one past the highest occupied slot, including holes.
+    std::uint32_t result=0;
+    for (std::size_t index=0;index<textures.size();++index)
+        if (textures[index]) result=static_cast<std::uint32_t>(index)+1u;
+    return result;
+}
+
+std::uint32_t FlailerGlobalBackgroundAnimation::GetNthTexture(std::uint32_t index) const
+{
+    for (auto key:textures) {
+        if (!key) continue;
+        if (!index) return key;
+        --index;
+    }
+    return 0;
+}
+
+void FlailerGlobalBackgroundAnimation::DefaultTextureList()
+{
+    textures.fill(0);
+    AddTextureHash(hashString("GRID_BLUEPRINT1"));
+    AddTextureHash(hashString("GRID_BLUEPRINT2"));
+}
+
+void FlailerGlobalBackgroundAnimation::Reset()
+{
+    if (fading && master) {
+        const float first=FlailerAnimationRandomRange(160.0f,165.0f);
+        const float second=FlailerAnimationRandomRange(180.0f,300.0f);
+        const float destination=FlailerAnimationRandomRange(300.0f,400.0f);
+        fading->SetAlpha(0,-1);master->SetAlpha(0,-1);
+        ui_->resources->SetBitmapCenter(*fading,first,second);
+        auto& x=position.axes[0];auto& y=position.axes[1];
+        x.desiredValue=first;if (x.value!=first) x.mode=2;
+        y.desiredValue=second;if (y.value!=second) y.mode=2;
+        x.mode=y.mode=0;x.value=x.desiredValue;x.derivative=x.desiredDerivative;
+        y.value=y.desiredValue;y.derivative=y.desiredDerivative;
+        x.desiredValue=destination;if (x.value!=destination) x.mode=2;
+        y.desiredValue=second;if (y.value!=second) y.mode=2;
+        x.duration=y.duration=ui_->animationSettings.backgroundDuration;
+        const auto count=GetNumTextures();
+        Require(count,"Background animation has no authored texture choices");
+        fading->ChangeTexture(GetNthTexture(vectorDefaultRandomBounded(count)));
+    }
+    startedTicks=static_cast<std::uint32_t>(ui_->clock->realTimer);
+}
+
+void FlailerGlobalBackgroundAnimation::ChangeScreenHash(std::uint32_t key)
+{
+    screenKey=key;
+    if (key) {
+        grid=static_cast<FlailerBitmapChunk*>(ui_->resources->FindObject(key,hashString("GRID"),2));
+        master=static_cast<FlailerBitmapChunk*>(ui_->resources->FindObject(key,hashString("MASTER_BP_OBJECT"),2));
+        fading=static_cast<FlailerBitmapChunk*>(ui_->resources->FindObject(key,hashString("FADING_BP_OBJECT"),2));
+        Reset();screenChangedTicks=static_cast<std::uint32_t>(ui_->clock->realTimer);
+    } else { fading=nullptr;grid=nullptr;master=nullptr; }
+}
+
+void FlailerGlobalBackgroundAnimation::Tick()
+{
+    if(ui_->externalPresentation)return;
+    const auto& settings=ui_->animationSettings;
+    position.axes[0].duration=position.axes[1].duration=settings.backgroundDuration;
+    phase+=ui_->clock->realTimeElapsed;
+    if (phase>=6.2829999923706055f) phase-=6.2829999923706055f;
+    if (!master || !fading) return;
+    const auto raw=static_cast<std::uint32_t>(ui_->clock->realTimer)-startedTicks;
+    std::int32_t ticks;std::memcpy(&ticks,&raw,sizeof(ticks));
+    const float elapsed=static_cast<float>(ticks)*0.0002500000118743628f;
+    if (elapsed<settings.backgroundFadeDuration)
+        fading->SetAlpha(convertFloatToInt32((elapsed/settings.backgroundFadeDuration)*128.0f),-1);
+    if (elapsed<settings.backgroundDuration) {
+        tCubic2DUpdate(&position,ui_->clock->realTimeElapsed);
+        float point[2];tCubic2DGetVal(&position,point);
+        ui_->resources->SetBitmapCenter(*fading,point[0],point[1]);
+    }
+    const float ending=settings.backgroundDuration-1.0f;
+    if (ending<elapsed && elapsed<settings.backgroundDuration)
+        fading->SetAlpha(convertFloatToInt32((1.0f-(elapsed-ending))*128.0f),-1);
+    if (settings.backgroundDuration<elapsed) Reset();
+}
+
+} // namespace hp2
+
+namespace hp2 {
+float flailerSineWavePeriod=6.2829999923706055f;
+FlailerSineWave::FlailerSineWave(float low,float high,float speed)
+    : minimum(low),maximum(high),rate(speed) {}
+void FlailerSineWave::Step(float elapsed)
+{
+    phase+=rate*elapsed;
+    // PAL24A5D8 performs one subtraction; a large elapsed value does not
+    // use fmod and an exactly equal phase is retained.
+    if (flailerSineWavePeriod<phase)phase-=flailerSineWavePeriod;
+}
+float FlailerSineWave::GetValFloat() const
+{
+    return minimum+(maximum-minimum)*((rotationSineRadians(phase)+1.0f)*0.5f);
+}
+std::int32_t FlailerSineWave::GetValInt() const
+{
+    // Final24A67C CVT.W.S uses the released scalar conversion policy.
+    return convertFloatToInt32(GetValFloat());
+}
+FlailerLeftRightArrowScroll::FlailerLeftRightArrowScroll(FlailerUiState& ui,
+    std::uint32_t screen,std::uint32_t leftKey,std::uint32_t rightKey)
+    : ui_(ui),screen_(screen),pulse_(0.0f,128.0f,10.0f)
+{
+    Require(ui_.resources && ui_.clock,"Arrow animation has no actual UI resource/clock owner");
+    left_=static_cast<FlailerBitmapChunk*>(ui_.resources->FindObject(screen,leftKey,2));
+    right_=static_cast<FlailerBitmapChunk*>(ui_.resources->FindObject(screen,rightKey,2));
+    SetCurrentItem(0);
+}
+void FlailerLeftRightArrowScroll::Animate()
+{
+    pulse_.Step(ui_.clock->realTimeElapsed);
+    if (current_) {
+        std::int32_t left=0,top=0,right=0,bottom=0;
+        Require(ui_.resources->GetBoundingBox(screen_,current_,left,top,right,bottom,ui_.language),
+            "Arrow target has no actual authored bounding box");
+        const float row=static_cast<float>(top+(bottom-top)/2);
+        if (left_) {
+            left_->SetAlpha(pulse_.GetValInt());
+            left_->SetTopLeftY(row-ui_.resources->ScaledBitmapHeight(*left_)*0.5f);
+        }
+        if (right_) {
+            right_->SetAlpha(pulse_.GetValInt());
+            right_->SetTopLeftY(row-ui_.resources->ScaledBitmapHeight(*right_)*0.5f);
+        }
+    }
+    UpdateVisibility();
+}
+void FlailerLeftRightArrowScroll::UpdateVisibility()
+{
+    if (left_)left_->visible=current_?1:0;
+    if (right_)right_->visible=current_?1:0;
+}
+void FlailerLeftRightArrowScroll::SetCurrentItem(std::uint32_t key)
+{
+    current_=key;UpdateVisibility();
+}
+void FlailerLeftRightArrowScroll::HandleEvent(ScreenMessage message,ScreenCallbackData&)
+{
+    if (message==ScreenMessage::Tick)Animate();
+}
+}
+
+namespace hp2 {
+struct FlailerScrollingMenuList::Storage {
+    struct Element {
+        FlailerObjectChunk& object;
+        float originalY;
+        tCubic1D position{};
+        Element(FlailerUiState& ui,FlailerObjectChunk& source):object(source) {
+            float x;ui.resources->GetTopLeft(source,x,originalY,ui.language);
+            position.duration=0.5f;position.threshold=1.0f;
+            position.value=position.desiredValue=originalY;
+        }
+        ~Element(){object.SetTopLeftY(originalY);}
+        void Apply(float delta) {
+            position.desiredValue+=delta;
+            if(position.value!=position.desiredValue)position.mode=2;
+        }
+        void Tick(float elapsed) {
+            tCubic1DUpdate(&position,elapsed,0.0f,0.0f);object.SetTopLeftY(position.value);
+        }
+    };
+    FlailerUiState& ui;
+    std::uint32_t screen,up,down,clip;
+    float top{},bottom{};
+    std::int32_t mask{-1},count{};
+    FlailerSineWave pulse{0.0f,128.0f,10.0f};
+    std::vector<std::unique_ptr<Element>> elements;
+    Storage(FlailerUiState& state,std::uint32_t s,std::uint32_t u,std::uint32_t d,std::uint32_t c)
+        :ui(state),screen(s),up(u),down(d),clip(c) {}
+    float Y(std::uint32_t key) const {
+        float x=0,y=0;if(auto* object=ui.resources->FindObject(screen,key))
+            ui.resources->GetTopLeft(*object,x,y,ui.language);
+        return y;
+    }
+    Element* Find(std::uint32_t key) const {
+        for(const auto& entry:elements)if(entry->object.key==key)return entry.get();
+        return nullptr;
+    }
+    void Alpha() {
+        for(const auto key:{up,down})if(auto* object=ui.resources->FindObject(screen,key))
+            object->SetAlpha(pulse.GetValInt());
+    }
+    bool Show(bool upwards) const {
+        if(count<8)return false;
+        for(const auto& entry:elements)
+            if(upwards ? entry->position.desiredValue<top : bottom<entry->position.desiredValue)return true;
+        return false;
+    }
+};
+FlailerScrollingMenuList::FlailerScrollingMenuList(FlailerUiState& ui,std::uint32_t screen,
+    std::uint32_t first,std::uint32_t last,std::uint32_t up,std::uint32_t down,std::uint32_t clip)
+    :storage_(std::make_unique<Storage>(ui,screen,up,down,clip))
+{
+    Require(ui.resources && ui.clock,"Scrolling menu has no actual resource/time owners");
+    SetVisibleArea(first,last);storage_->Alpha();
+}
+FlailerScrollingMenuList::~FlailerScrollingMenuList()
+{
+    // Original destructor249ED0 releases elements in list order.
+    for(auto& entry:storage_->elements)entry.reset();
+}
+void FlailerScrollingMenuList::SetVisibleArea(std::uint32_t first,std::uint32_t last)
+{
+    auto& s=*storage_;s.top=s.Y(first);s.bottom=s.Y(last);
+}
+void FlailerScrollingMenuList::AddObject(std::uint32_t key)
+{
+    auto& s=*storage_;auto* object=s.ui.resources->FindObject(s.screen,key);
+    if(!object)return; // PAL249F90 permits an absent optional object.
+    object->SetClipToPoly(s.clip);
+    s.elements.push_back(std::make_unique<Storage::Element>(s.ui,*object));
+}
+void FlailerScrollingMenuList::AddObjects(const std::uint32_t* keys,std::size_t count)
+{
+    Require(keys || !count,"Scrolling menu object list is absent");
+    for(std::size_t index=0;index<count;++index)AddObject(keys[index]);
+}
+void FlailerScrollingMenuList::SetItemCount(std::int32_t count)
+{
+    Require(count>=0,"Scrolling menu item count is negative");storage_->count=count;
+}
+void FlailerScrollingMenuList::SetDesiredTopLeftY(std::uint32_t key,float desired)
+{
+    auto& s=*storage_;
+    if(!s.ui.resources->FindObject(s.screen,key))return;
+    auto* selected=s.Find(key);Require(selected,"Scrolling target has no original animation element");
+    const float delta=desired-selected->position.desiredValue;
+    for(auto& entry:s.elements)entry->Apply(delta);
+}
+void FlailerScrollingMenuList::SetCurrentObject(std::uint32_t key)
+{
+    auto& s=*storage_;const float y=s.Y(key);
+    if(y<s.top)SetDesiredTopLeftY(key,s.top);
+    else if(s.bottom<y)SetDesiredTopLeftY(key,s.bottom);
+}
+std::uint32_t FlailerScrollingMenuList::GetCurrentMenuMask() const
+{
+    // PAL24A888 hashes the seven actual strings MI_1_MASK..MI_7_MASK into
+    // final31CFA0. These are the exact resulting source hash values.
+    constexpr std::uint32_t masks[]={0x6e34e350u,0x708a0bf1u,0x72df3492u,
+        0x75345d33u,0x778985d4u,0x79deae75u,0x7c33d716u};
+    Require(storage_->mask>=0 && storage_->mask<7,"Scrolling menu mask has no highlighted item");
+    return masks[storage_->mask];
+}
+void FlailerScrollingMenuList::HandleEvent(ScreenMessage message,ScreenCallbackData& data)
+{
+    auto& s=*storage_;
+    if(message==ScreenMessage::Highlight) {
+        if(s.mask==-1) {
+            if(data.key>=0x52e039f3u && data.key<=0x52e039fbu)
+                s.mask=std::min(static_cast<std::int32_t>(data.key-0x52e039f3u),6);
+            else if(data.key==0xaee77883u || data.key==0xaee77884u)s.mask=6;
+        }
+        SetCurrentObject(data.key);
+        s.ui.resources->SetObjectVisibility(s.screen,s.up,s.Show(true)?1:0);
+        s.ui.resources->SetObjectVisibility(s.screen,s.down,s.Show(false)?1:0);
+    } else if(message==ScreenMessage::Tick) {
+        for(auto& entry:s.elements)entry->Tick(s.ui.clock->realTimeElapsed);
+        s.pulse.Step(s.ui.clock->realTimeElapsed);s.Alpha();
+    } else if(message==ScreenMessage::Next)s.mask=std::min(s.mask+1,std::min(s.count,7)-1);
+    else if(message==ScreenMessage::Previous)s.mask=std::max(s.mask-1,0);
+}
 }

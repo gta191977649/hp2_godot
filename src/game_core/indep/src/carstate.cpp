@@ -1,167 +1,422 @@
-#include "game_core/indep/src/carstate.hpp"
-#include "game_core/src/bMath.hpp"
+#include "indep/inc/CarState.hpp"
+#include "indep/inc/CarInfo.hpp"
+#include "indep/inc/Replay.hpp"
+#include "indep/inc/Car.hpp"
+#include "indep/inc/eMath.hpp"
+#include "bware/inc/bMath.hpp"
+#include "bware/inc/bMath.hpp"
+#include "indep/inc/Track.hpp"
+#include "bware/inc/bMath.hpp"
+#include "CarState.hpp"
 
-// TASK-0042: bounded host projections; original member ABI remains unverified.
-#include "game_core/port/driving/projection_support.hpp"
-// Retail 0x001C08D0; E-0042-C136; E-0042-S001; exact Debug TU ..\indep\src\carstate.cpp
-namespace port::driving::native {
-float GetYawAlways(Memory& m,std::uint32_t s) {return hp2::recovered::CarState(m,s).GetYawAlways();}
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
+
+void carFrameResetPeakMaterials(VehicleState* state)
+{
+    for (int wheel = 3; wheel >= 0; --wheel)
+        state->peakMaterial[wheel] = 1;
 }
 
-// Retail 0x001C0888; E-0042-C135; E-0042-S001; exact Debug TU ..\indep\src\carstate.cpp
-namespace port::driving::native {
-float GetYaw(Memory& m,std::uint32_t s){return hp2::recovered::CarState(m,s).GetYaw();}
-}
-
-// Retail 0x001C0D78; E-0042-U144; E-0042-S001; exact Debug TU ..\indep\src\carstate.cpp
-namespace port::driving {
-void CalculateWheelMatrices(Memory&m,std::uint32_t car,std::int32_t index){hp2::recovered::CarState(m,car).CalculateWheelMatrices(index);}
-}
-
-#include "game_core/indep/src/carstate.hpp"
-#include "game_core/src/bMath.hpp"
-
-#include "game_core/port/not_implemented.hpp"
-
-namespace hp2::recovered {
-// ELF 0x001C0780; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c0780.md.
-// Debug001BD868; source wheel/audio reset only, not a vehicle position reset.
-void CarState::ResetCarForSound(){auto& m=m_;const auto a=address_;m.scalar(a+0x390,1000);for(unsigned i=0;i<4;++i){for(auto offset:{0x2b0u,0x2c0u,0x2d0u,0x2f0u,0x300u,0x354u})m.word(a+offset+4*i,0);m.byte(a+0x310+i,1);m.word(a+0x334+8*i+4,0);m.word(a+0x334+8*i,0);m.word(a+0x314+4*i,1);m.word(a+0x324+4*i,1);}m.word(a+0x378,0);m.word(a+0x37c,4);m.word(a+0x384,0);m.word(a+0x370,0);m.word(a+0x374,0);}
-
-// Debug001BD938; E-0079-S01; reverse/task0079/driving-chain.md.
-// NFSHP2.ELF SHA-256 815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
-void CarState::BeginTimestep() {
-    // Original descending stores: CrossedWheelTerrain[3..0] = ROAD (1).
-    for (std::int32_t i=3;i>=0;--i)
-        m_.word(address_+0x324+static_cast<std::uint32_t>(i)*4,1);
-}
-
-// ELF 0x001C0888; E-0042-C135; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001c0888.md.
-
-
-// ELF 0x001C08D0; E-0042-C136; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001c08d0.md.
-
-
-// ELF 0x001C0CF8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001c0cf8.md.
-
-
-// ELF 0x001C0D48; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/001c0d48.md.
-
-
-// ELF 0x001C0D78; E-0042-U144; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/vehicle/001c0d78.md.
-
-} // namespace hp2::recovered
-
-// TASK-0044 E-0044-P02, canonical Debug CarState members; source ../indep/src/carstate.cpp.
-namespace hp2::recovered {
-// Debug001BD6C0; E-0081-L01; reverse/task0081/lifecycle.md. Full reset leaf.
-void CarState::ResetCar(){
-    const auto s=address_;auto& m=m_;
-    for(auto offset:{0x30u,0x40u})
-        for(auto lane:{0u,2u,1u})m.word(s+offset+4*lane,0);
-    m.matrix(s+0x50,hp2::recovered::bIdentity());
-    for(auto lane:{0u,2u,1u})m.word(s+0x90+4*lane,0);
-    for(unsigned lane=0;lane<3;++lane)m.word(s+0xa0+4*lane,0);
-    m.half(s+0x364,0);m.half(s+0x366,0);
-    for(unsigned i=0;i<4;++i){
-        for(auto offset:{0x2b0u,0x2c0u,0x2d0u,0x2e0u,0x2f0u})
-            m.word(s+offset+4*i,0);
-        m.byte(s+0x310+i,1);
-        m.word(s+0x334+8*i,0);m.word(s+0x338+8*i,0);
-        m.word(s+0x314+4*i,1);m.word(s+0x354+4*i,0);
-        m.word(s+0x324+4*i,1);m.word(s+0x300+4*i,0);
+void vehicleStateResetForSound(VehicleState* state)
+{
+    state->engineRpm = 1000.0f;
+    for (int32_t wheel = 0; wheel < 4; ++wheel) {
+        state->wheelAngularVelocity[wheel] = 0.0f;
+        state->wheelAngle[wheel] = 0.0f;
+        state->wheelNormalLoad[wheel] = 0.0f;
+        state->suspensionImpulse[wheel] = 0.0f;
+        state->wheelContact[wheel] = 1;
+        state->wheelSlip[wheel][1] = 0.0f;
+        state->wheelSlip[wheel][0] = 0.0f;
+        state->material[wheel] = 1;
+        state->wheelSlipRatio[wheel] = 0.0f;
+        state->peakMaterial[wheel] = 1;
+        state->suspensionTravel[wheel] = 0.0f;
     }
-    m.word(s+0x37c,4);
-    CalculateWheelMatrices();
-    for(auto offset:{0x370u,0x374u,0x378u,0x380u,0x384u,0x38cu,0x3a4u,0x3a8u})
-        m.word(s+offset,0);
-    m.scalar(s+0x390,1000);m.scalar(s+0x394,-1);m.word(s+0x398,1);
-    m.scalar(s+0x3ac,1);m.word(s+0x388,1);m.scalar(s+0x3a0,1);
-    for(unsigned offset=0x3c0;offset<0x400;++offset)m.byte(s+offset,0);
-    m.word(s+0x400,0);
-}
-// Debug001BD970.
-float CarState::GetYaw(){return m_.scalar(address_+0x380)<5.0f?0.0f:GetYawAlways();}
-// Debug001BD9B8.
-float CarState::GetYawAlways(){const auto angle=port::driving::bATan(m_,m_.scalar(address_+0x30),m_.scalar(address_+0x34));const auto delta=static_cast<std::uint16_t>(m_.half(address_+0x364)-static_cast<std::uint16_t>(angle));float value=static_cast<float>(delta)*m_.scalar(0x00325914);if(m_.scalar(0x00325918)<value)value=value-m_.scalar(0x0032591c);return value;}
-// Debug001BDE60. Brake translation deliberately retains original wheel position.
-void CarState::CalculateWheelMatrices(std::int32_t index){auto& m=m_;const auto car=address_;using namespace port::driving;
-
-    using namespace detail_group_001a4930;
-    const auto offset=static_cast<std::uint32_t>(index)*4;
-    SolverMatrix first{};first[0]=first[5]=first[10]=first[15]=1;auto second=first;
-    const auto phase=static_cast<std::uint16_t>(::port::driving::ee_cvt_w_s_finite(m.scalar(car+offset+0x2c0)*m.scalar(0x00325920),"0x001BDEB0"));
-    hp2::recovered::eRotateY(m,first,first,phase);
-    if(index<2){hp2::recovered::eRotateZ(m,first,first,m.half(car+0x366));hp2::recovered::eRotateZ(m,second,second,m.half(car+0x366));}
-    const auto location=m.word(car)+static_cast<std::uint32_t>(index)*0x20+0x120;
-    auto translation=m.vector(location);translation[3]=1;
-    translation[2]=translation[2]+m.scalar(car+offset+0x300);
-    translation[1]=translation[1]+m.scalar(location+0x18);
-    for(unsigned i=0;i<4;++i){first[12+i]=translation[i];second[12+i]=m.scalar(location+4*i);}
-    second[15]=1;
-    m.matrix(car+static_cast<std::uint32_t>(index)*0x40+0xb0,first);
-    m.matrix(car+static_cast<std::uint32_t>(index)*0x40+0x1b0,second);
-
-}
-// Debug001BDFB8.
-void CarState::CalculateWheelMatrices(){for(std::int32_t i=0;i<4;++i)CalculateWheelMatrices(i);}
-// Debug001BDDE0; E-0044-P02, original signed byte transition contract.
-void CarState::SetWheelTouchingGround(std::int32_t i,char value){const auto old=m_.byte(address_+0x310+i);m_.byte(address_+0x310+i,static_cast<std::uint8_t>(value));if(!old&&value)m_.word(address_+0x37c,m_.word(address_+0x37c)+1u);else if(old&&!value)m_.word(address_+0x37c,m_.word(address_+0x37c)-1u);}
-// Debug001BDE30; E-0044-P02.
-void CarState::SetWheelTerrain(std::int32_t i,std::int32_t value){m_.word(address_+0x314+4*i,static_cast<std::uint32_t>(value));if(m_.signed_word(address_+0x324+4*i)<value)m_.word(address_+0x324+4*i,static_cast<std::uint32_t>(value));}
+    state->rightSlip = 0.0f;
+    state->activeContactCount = 4;
+    state->speed = 0.0f;
+    state->averageSlipRatio = 0.0f;
+    state->leftSlip = 0.0f;
 }
 
-// Debug NFSHP2.ELF SHA-256815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
-namespace hp2::recovered {
-// Debug001BD2C0 CarState constructor; TASK-0099 E-0099-W22.
-// Original ../indep/src/carstate.cpp; Memory view lifetime is port-side.
-void CarState::Sub_001BD2C0(std::uint32_t topology_coordinate,std::uint32_t pInfo){
- auto& m=m_;const auto s=address_;
- // Inlined default vector/matrix constructors execute empty loops: no padding initialization.
- m.word(s+0x368,0);m.word(s+0x36c,0);
- m.word(s+0x20,0);m.word(s+0x28,0);m.word(s+0x24,0);
- m.word(s+0x10,0);m.word(s+0x39c,0);
- m.word(s+4,topology_coordinate);m.word(s,pInfo);
- m.word(s+0x18,0);m.word(s+0x14,0);
- ResetCar();
-}
+void vehicleStateSetWheelContact(VehicleState* state, int32_t wheel, int8_t contact)
+{
+    const int8_t previous = state->wheelContact[wheel];
+    state->wheelContact[wheel] = contact;
+    if (!previous) {
+        if (contact) ++state->activeContactCount;
+    } else if (!contact) {
+        --state->activeContactCount;
+    }
 }
 
-namespace hp2::recovered {
-// Debug001BE008; E-0099-W45. Fresh00254278 listing loads homogeneous base
-// 00317B20; original complete XYZW position subtraction is preserved.
-void CarState::CalculateGeometryPosition(){auto& m=m_;const auto s=address_;port::driving::SolverVector transformed{};bMulMatrix(transformed,m.matrix(s+0x50),m.vector(m.word(s)+0x110),{m.vector(0x317b20)});auto value=m.vector(s+0x20);for(unsigned i=0;i<4;++i)value[i]=value[i]-transformed[i];m.vector(s+0x10,value);}
-// Debug001BDA20; E-0099-W47. Cached source relative-coordinate matrix;
-// both source branches run the original orthonormalizer before publishing valid.
-std::uint32_t CarState::GetTransformMatrix(){auto& m=m_;const auto s=address_,matrix=s+0x3c0;if(!m.word(s+0x400)){auto velocity=m.vector(s+0x30);if(m.scalar(s+0x380)<0)for(unsigned i=0;i<3;++i)velocity[i]=-velocity[i];auto value=bIdentity();const float square=(velocity[0]*velocity[0]+velocity[1]*velocity[1])+velocity[2]*velocity[2];if(square>1.f){value[0]=velocity[1];value[1]=-velocity[0];value[4]=velocity[0];value[5]=velocity[1];}else{const auto angle=m.half(s+0x364);const float cosine=hp2::recovered::bCos(m,angle),sine=hp2::recovered::bSin(m,angle);value[0]=sine;value[1]=-cosine;value[4]=cosine;value[5]=sine;}m.matrix(matrix,value);eOrthonormalizeMatrix(m,matrix);m.word(s+0x400,1);}return matrix;}
+void vehicleStateSetWheelMaterial(VehicleState* state, int32_t wheel, int32_t material)
+{
+    state->material[wheel] = material;
+    if (state->peakMaterial[wheel] < material)
+        state->peakMaterial[wheel] = material;
 }
 
-#include "game_core/indep/inc/Replay.hpp"
-namespace hp2::recovered {
-// Debug001BD388; TASK-0099 E-0099-W74. Raw capture 001bd388.json/type-CarState.json.
-void CarState::DoSnapshot(std::uint32_t snapshot){
- auto& m=m_;const auto a=address_;hp2::debug::ReplaySnapshot s(m,snapshot);s.BeginSection(0x2af050);
- for(unsigned off:{0x10u,0x20u,0x30u,0x40u})s.MoveData(a+off,12);
- s.MoveData(::port::race::SnapshotMatrix{a+0x50},64);
- s.MoveData(a+0x90,12);s.MoveData(a+0xa0,12);
- for(unsigned i=0;i<4;++i){const auto p=a+0x2b0+4*i;
-  s.MoveData(p,4);s.MoveData(p+16,4);s.MoveData(p+32,4);s.MoveData(p+64,4);
-  s.MoveData(a+0x310+i,1);s.MoveData(p+100,1);s.MoveData(a+0x334+8*i,8);
-  s.MoveData(p+164,4);s.MoveData(p+80,4);
-  if(m.byte(snapshot+0x3c)||m.byte(snapshot+0x3d))m.word(a+0x324+4*i,1);
- }
- s.MoveData(a+0x364,2);s.MoveData(a+0x366,2);s.MoveData(a+0x368,4);
- const bool taking=m.byte(snapshot+0x3c)||m.byte(snapshot+0x3d);
- if(taking)for(unsigned off:{0x370u,0x374u,0x378u})m.word(a+off,0);
- s.MoveData(a+0x380,4);s.MoveData(a+0x384,4);s.MoveData(a+0x388,1);
- s.MoveData(a+0x38c,4);s.MoveData(a+0x390,4);s.MoveData(a+0x398,1,4,1);
- s.MoveData(a+0x39c,1,4,1);s.MoveData(a+0x3a0,4);s.MoveData(a+0x3a4,4,4,1);
- s.MoveData(a+0x3a8,4);s.MoveData(a+0x3ac,4);
- if(taking){
-  m.matrix(a+0x3c0,hp2::recovered::bIdentity());m.word(a+0x400,0);m.word(a+0x37c,0);
-  for(unsigned i=0;i<4;++i)m.word(a+0x37c,m.word(a+0x37c)+static_cast<std::uint32_t>(m.signed_byte(a+0x310+i)));
-  CalculateWheelMatrices();
- }
- s.EndSection();
+void vehicleStateReset(VehicleState* state)
+{
+    if (state->position) state->position[3] = 1.0f;
+    state->centerPosition[3] = 1.0f;
+    for (int axis = 0; axis < 4; ++axis) {
+        state->velocity[axis] = 0.0f;
+        state->linearAcceleration[axis] = 0.0f;
+        state->angularVelocity[axis] = 0.0f;
+        state->angularAcceleration[axis] = 0.0f;
+    }
+    rotationMatrixIdentity(state->orientation);
+    state->heading = state->steeringAngle = 0;
+    for (int wheel = 0; wheel < 4; ++wheel) {
+        state->wheelAngularVelocity[wheel] = 0.0f;
+        state->wheelAngle[wheel] = 0.0f;
+        state->wheelNormalLoad[wheel] = 0.0f;
+        state->wheelSurfaceOffset[wheel] = 0.0f;
+        state->suspensionImpulse[wheel] = 0.0f;
+        state->suspensionTravel[wheel] = 0.0f;
+        state->wheelContact[wheel] = 1;
+        state->material[wheel] = state->peakMaterial[wheel] = 1;
+        state->wheelSlip[wheel][0] = state->wheelSlip[wheel][1] = 0.0f;
+        state->wheelSlipRatio[wheel] = 0.0f;
+    }
+    state->activeContactCount = 4;
+    vehicleStateUpdateWheelPoses(state);
+    state->averageSlipRatio = state->leftSlip = state->rightSlip = 0.0f;
+    state->forwardSpeed = state->speed = 0.0f;
+    state->effectiveThrottle = 0.0f;
+    state->engineRpm = 1000.0f;
+    state->engineSoundRpm = -1.0f;
+    state->clutchEngaged = state->gear = 1;
+    state->performanceScale = 1.0f;
+    state->tractionAssistPhase = 0;
+    state->tractionAssistTime = 0.0f;
+    state->tractionAssistScale = 1.0f;
+    memset(state->velocityFrame, 0, sizeof(state->velocityFrame));
+    state->velocityFrameValid = 0;
 }
+
+float vehicleStateVelocityHeadingDifference(const VehicleState* state)
+{
+    const uint16_t velocityHeading = vectorAtan2Angle(state->velocity[0], state->velocity[1]);
+    const uint16_t difference = (uint16_t)(state->heading - velocityHeading);
+    float radians = (float)difference * 0.0000958738019107841f;
+    if (3.141590118408203f < radians)
+        radians = radians - 6.283180236816406f;
+    return radians;
+}
+
+float vehicleStateMovingHeadingDifference(const VehicleState* state)
+{
+    return state->forwardSpeed < 5.0f ? 0.0f : vehicleStateVelocityHeadingDifference(state);
+}
+
+const float* vehicleStateVelocityFrame(VehicleState* state)
+{
+    if (!state->velocityFrameValid) {
+        float direction[4];
+        for (int i = 0; i < 4; ++i)
+            direction[i] = state->forwardSpeed < 0.0f ? 0.0f - state->velocity[i] : state->velocity[i];
+        const float x = direction[0] * direction[0];
+        const float y = direction[1] * direction[1];
+        const float z = direction[2] * direction[2];
+        const float xy = x + y;
+        const float squared = xy + z;
+        float basis[16];
+        rotationMatrixIdentity(basis);
+        if (1.0f < squared && (direction[0] != 0.0f || direction[1] != 0.0f)) {
+            // The source's XYZ speed gate selects a horizontal travel frame.
+            // Keep its ordinary float path. At the representation limits,
+            // rescale before normalization: the cross-axis pass squares the
+            // length again and needs headroom for intermediate rounding.
+            float horizontalX = direction[0], horizontalY = direction[1];
+            if (!isfinite(xy) || xy < FLT_MIN || FLT_MAX * 0.5f < xy) {
+                const double length = hypot((double)horizontalX, (double)horizontalY);
+                horizontalX = (float)((double)horizontalX / length);
+                horizontalY = (float)((double)horizontalY / length);
+            }
+            basis[0] = horizontalY;
+            basis[1] = -horizontalX;
+            basis[4] = horizontalX;
+            basis[5] = horizontalY;
+        } else {
+            // Pure vertical motion has no horizontal travel direction. Reuse
+            // the existing heading basis instead of normalizing a zero axis.
+            const float cosine = vectorCosineAngle(state->heading);
+            const float sine = rotationSineAngle(state->heading);
+            basis[0] = sine;
+            basis[1] = -cosine;
+            basis[4] = cosine;
+            basis[5] = sine;
+        }
+        motionMatrixOrthonormalize(state->velocityFrame, basis);
+        state->velocityFrameValid = 1;
+    }
+    return state->velocityFrame;
+}
+
+void vehicleStateUpdateWheelPose(VehicleState* state, int32_t wheel)
+{
+    float visual[16], mount[16];
+    rotationMatrixIdentity(visual);
+    rotationMatrixIdentity(mount);
+    const float angularCoordinate = state->wheelAngle[wheel] * 10430.3779296875f;
+    const uint16_t angle = (uint16_t)convertFloatToInt32(angularCoordinate);
+    motionMatrixRotateY(visual, visual, angle);
+    if (wheel < 2) {
+        motionMatrixRotateYaw(visual, visual, state->steeringAngle);
+        motionMatrixRotateYaw(mount, mount, state->steeringAngle);
+    }
+    const WheelTorqueInfo* info = &state->wheelInfo[wheel];
+    for (int i = 0; i < 3; ++i) {
+        visual[12 + i] = info->mountPosition[i];
+        mount[12 + i] = info->mountPosition[i];
+    }
+    visual[13] = visual[13] + state->wheelSideOffset[wheel];
+    mount[13] = mount[13] + state->wheelSideOffset[wheel];
+    visual[14] = visual[14] + state->suspensionTravel[wheel];
+    mount[14] = mount[14] + state->suspensionTravel[wheel];
+    memcpy(state->wheelVisualTransform[wheel], visual, sizeof(visual));
+    memcpy(state->wheelMountTransform[wheel], mount, sizeof(mount));
+}
+
+void vehicleStateUpdateWheelPoses(VehicleState* state)
+{
+    for (int32_t wheel = 0; wheel < 4; ++wheel)
+        vehicleStateUpdateWheelPose(state, wheel);
+}
+
+void vehicleStateUpdateCenterPosition(VehicleState* state)
+{
+    float center[4];
+    vectorMatrixTransformPoint(center, state->orientation, state->centerOfMass);
+    for (int i = 0; i < 3; ++i)
+        state->centerPosition[i] = state->position[i] - center[i];
+    state->centerPosition[3] = 1.0f;
+}
+
+void driverPerceptionLocalPoint(VehicleState* state,float output[2],const float point[2])
+{
+    float transpose[16],local[4];
+    vectorMatrixTranspose(transpose,vehicleStateVelocityFrame(state));
+    const float delta[4]={point[0]-state->position[0],
+                          point[1]-state->position[1],0.0f,0.0f};
+    vectorMatrixTransformPoint(local,transpose,delta);
+    output[0]=local[0];
+    output[1]=local[1];
+}
+
+// PAL1C0BA8: the three-dimensional overload uses the same cached travel
+// frame as the two-dimensional AI query. All source XYZ lanes are retained.
+void vehicleStateWorldToCar3(VehicleState* state,float output[4],const float point[4])
+{
+    float transpose[16],delta[4];
+    vectorMatrixTranspose(transpose,vehicleStateVelocityFrame(state));
+    for (int lane=0;lane<4;++lane)delta[lane]=point[lane]-state->position[lane];
+    eMulVector3(output,transpose,delta);
+}
+
+// PAL1C0C18: rotate a displacement; translation is a separate operation in
+// CarToWorld. Local temporaries preserve the source's aliased-input behavior.
+void vehicleStateCarToWorldUnadjusted(VehicleState* state,float output[2],const float point[2])
+{
+    const float* transform=vehicleStateVelocityFrame(state);
+    float local[4]={point[0],point[1],0.0f,0.0f};
+    eMulVector3(local,transform,local);
+    output[0]=local[0];output[1]=local[1];
+}
+
+// PAL1C0C80: the PS2 return-by-value ABI is a native output argument here.
+void vehicleStateCarToWorld(VehicleState* state,float output[2],const float point[2])
+{
+    float rotated[2];
+    vehicleStateCarToWorldUnadjusted(state,rotated,point);
+    output[0]=rotated[0]+state->position[0];
+    output[1]=rotated[1]+state->position[1];
+}
+
+namespace hp2 {
+// PAL1C01A8..1C026C. The native car owns position and the retained resource
+// owns all coefficients; this state borrows them, including the same terrain
+// coordinate subsequently consumed by the actual collision and mover paths.
+void InitializeCarState(VehicleState& state,float position[4],
+    TerrainSurface& terrain,const CarDefinition& definition)
+{
+    state.position=position;
+    state.centerOfMass=definition.centerOfMass.data();
+    state.wheelInfo=definition.wheelInfo.data();
+    state.terrain=&terrain;
+    for (int wheel=0;wheel<4;++wheel)
+        state.wheelSideOffset[wheel]=definition.wheels[wheel].sideValue;
+    state.speedDistance=0.0f;
+    state.displacementDistance=0.0f;
+    for (int axis=0;axis<3;++axis) {
+        state.position[axis]=0.0f;
+        state.centerPosition[axis]=0.0f;
+    }
+    state.pursuitMode=0;
+    vehicleStateReset(&state);
+}
+} // namespace hp2
+
+namespace {
+const char* FirstInvalidArray(const float* values,size_t count,const char* field,
+    int32_t* element,int32_t offset=0)
+{
+    for(size_t index=0;index<count;++index)if(!isfinite(values[index])) {
+        if(element)*element=offset+(int32_t)index;
+        return field;
+    }
+    return nullptr;
+}
+const char* FirstInvalidInput(const VehicleState* state,int32_t* element)
+{
+    if(!state)return "state";
+    if(!state->position)return "position";
+    struct NamedArray {const float* values;size_t count;const char* field;};
+    const NamedArray arrays[]={
+        {state->position,4,"position"},{state->wheelSideOffset,4,"wheelSideOffset"},
+        {state->centerPosition,4,"centerPosition"},{state->velocity,4,"velocity"},
+        {state->orientation,16,"orientation"},{state->angularVelocity,4,"angularVelocity"},
+        {state->linearAcceleration,4,"linearAcceleration"},
+        {state->angularAcceleration,4,"angularAcceleration"}};
+    for(const auto& array:arrays)
+        if(const char* field=FirstInvalidArray(array.values,array.count,array.field,element))return field;
+    if(state->centerOfMass)
+        if(const char* field=FirstInvalidArray(state->centerOfMass,3,"centerOfMass",element))return field;
+    for(int wheel=0;wheel<4;++wheel) {
+        if(state->wheelInfo)
+            if(const char* field=FirstInvalidArray(state->wheelInfo[wheel].mountPosition,3,
+                "wheelInfo.mountPosition",element,wheel*3))return field;
+        const NamedArray wheelArrays[]={
+            {state->wheelAngularVelocity+wheel,1,"wheelAngularVelocity"},
+            {state->wheelAngle+wheel,1,"wheelAngle"},
+            {state->wheelNormalLoad+wheel,1,"wheelNormalLoad"},
+            {state->wheelSurfaceOffset+wheel,1,"wheelSurfaceOffset"},
+            {state->suspensionImpulse+wheel,1,"suspensionImpulse"},
+            {state->suspensionTravel+wheel,1,"suspensionTravel"}};
+        for(const auto& array:wheelArrays)
+            if(const char* field=FirstInvalidArray(array.values,array.count,array.field,element,wheel))return field;
+        if(const char* field=FirstInvalidArray(state->wheelSlip[wheel],2,"wheelSlip",element,wheel*2))return field;
+        if(const char* field=FirstInvalidArray(state->wheelSlipRatio+wheel,1,"wheelSlipRatio",element,wheel))return field;
+    }
+    struct NamedScalar {float value;const char* field;};
+    const NamedScalar scalars[]={
+        {state->averageSlipRatio,"averageSlipRatio"},{state->leftSlip,"leftSlip"},
+        {state->rightSlip,"rightSlip"},{state->forwardSpeed,"forwardSpeed"},
+        {state->speed,"speed"},{state->effectiveThrottle,"effectiveThrottle"},
+        {state->engineRpm,"engineRpm"},{state->performanceScale,"performanceScale"},
+        {state->tractionAssistTime,"tractionAssistTime"},{state->tractionAssistScale,"tractionAssistScale"},
+        {state->tractionAssistDwell,"tractionAssistDwell"},{state->speedDistance,"speedDistance"},
+        {state->displacementDistance,"displacementDistance"},{state->engineSoundRpm,"engineSoundRpm"}};
+    for(const auto& scalar:scalars)if(!isfinite(scalar.value))return scalar.field;
+    return nullptr;
+}
+bool VehicleStateInputsFinite(const VehicleState* state)
+{
+    return FirstInvalidInput(state,nullptr)==nullptr;
+}
+}
+const char* vehicleStateFirstInvalidField(const VehicleState* state,int32_t* element)
+{
+    if(element)*element=-1;
+    if(const char* field=FirstInvalidInput(state,element))return field;
+    // A mover invalidates this lazy cache after publishing new velocity.
+    // Its old bytes are not live state until the actual producer rebuilds it.
+    if(state->velocityFrameValid)
+        if(const char* field=FirstInvalidArray(state->velocityFrame,16,"velocityFrame",element))return field;
+    for(int wheel=0;wheel<4;++wheel) {
+        if(const char* field=FirstInvalidArray(state->wheelVisualTransform[wheel],16,
+            "wheelVisualTransform",element,wheel*16))return field;
+        if(const char* field=FirstInvalidArray(state->wheelMountTransform[wheel],16,
+            "wheelMountTransform",element,wheel*16))return field;
+    }
+    return nullptr;
+}
+int32_t vehicleStateIsFinite(const VehicleState* state)
+{
+    return vehicleStateFirstInvalidField(state,nullptr)==nullptr;
+}
+
+// PAL1C0270..1C05D4. Replay stores this one owner, never a second physics
+// snapshot structure. Byte widths and transfer order follow the final PAL
+// body, including its extra X-mantissa quantization absent from beta.
+void vehicleStateSnapshot(VehicleState* state,ReplaySnapshot* snapshot)
+{
+    replaySnapshotBeginSection(snapshot,nullptr,"CarState");
+    replaySnapshotMoveData(snapshot,state->centerPosition,12,-1,0);
+    if (snapshot->recording || snapshot->restoring) {
+        uint32_t bits;
+        memcpy(&bits,&state->position[0],sizeof(bits));
+        bits&=0xfffffff0u;
+        memcpy(&state->position[0],&bits,sizeof(bits));
+    }
+    replaySnapshotMoveData(snapshot,state->position,12,-1,0);
+    replaySnapshotMoveData(snapshot,state->velocity,12,-1,0);
+    replaySnapshotMoveData(snapshot,state->linearAcceleration,12,-1,0);
+    replaySnapshotMoveMatrix(snapshot,state->orientation,64);
+    replaySnapshotMoveData(snapshot,state->angularVelocity,12,-1,0);
+    replaySnapshotMoveData(snapshot,state->angularAcceleration,12,-1,0);
+    for (int wheel=0;wheel<4;++wheel) {
+        replaySnapshotMoveFloat(snapshot,&state->wheelAngularVelocity[wheel]);
+        replaySnapshotMoveFloat(snapshot,&state->wheelAngle[wheel]);
+        replaySnapshotMoveFloat(snapshot,&state->wheelNormalLoad[wheel]);
+        replaySnapshotMoveFloat(snapshot,&state->suspensionImpulse[wheel]);
+        replaySnapshotMoveData(snapshot,&state->wheelContact[wheel],1,1,1);
+        replaySnapshotMoveData(snapshot,&state->material[wheel],1,-1,0);
+        replaySnapshotMoveData(snapshot,state->wheelSlip[wheel],8,-1,0);
+        replaySnapshotMoveFloat(snapshot,&state->wheelSlipRatio[wheel]);
+        replaySnapshotMoveFloat(snapshot,&state->suspensionTravel[wheel]);
+        if (snapshot->recording || snapshot->restoring)state->peakMaterial[wheel]=1;
+    }
+    replaySnapshotMoveData(snapshot,&state->heading,2,2,0);
+    replaySnapshotMoveData(snapshot,&state->steeringAngle,2,2,0);
+    replaySnapshotMoveFloat(snapshot,&state->speedDistance);
+    if (snapshot->recording || snapshot->restoring) {
+        state->averageSlipRatio=0.0f;
+        state->leftSlip=0.0f;
+        state->rightSlip=0.0f;
+    }
+    replaySnapshotMoveFloat(snapshot,&state->forwardSpeed);
+    replaySnapshotMoveFloat(snapshot,&state->speed);
+    replaySnapshotMoveData(snapshot,&state->gear,1,-1,0);
+    replaySnapshotMoveFloat(snapshot,&state->effectiveThrottle);
+    replaySnapshotMoveFloat(snapshot,&state->engineRpm);
+    replaySnapshotMoveInteger(snapshot,&state->clutchEngaged,1);
+    replaySnapshotMoveInteger(snapshot,&state->pursuitMode,1);
+    replaySnapshotMoveFloat(snapshot,&state->performanceScale);
+    replaySnapshotMoveInteger(snapshot,&state->tractionAssistPhase,4);
+    replaySnapshotMoveFloat(snapshot,&state->tractionAssistTime);
+    replaySnapshotMoveFloat(snapshot,&state->tractionAssistScale);
+    if(snapshot->restoring && snapshot->result==REPLAY_SNAPSHOT_OK) {
+        // XYZ is serialized; rebuild native point/direction slots before
+        // checking the new state. Live-state finite validation stays strict.
+        state->position[3]=state->centerPosition[3]=1.0f;
+        state->velocity[3]=state->linearAcceleration[3]=0.0f;
+        state->angularVelocity[3]=state->angularAcceleration[3]=0.0f;
+    }
+    // Reject malformed restored inputs before they reach the wheel-pose
+    // trigonometry/translation producers. Old derived caches are intentionally
+    // excluded here: the healthy snapshot is about to replace them.
+    if(snapshot->restoring && snapshot->result==REPLAY_SNAPSHOT_OK &&
+        !VehicleStateInputsFinite(state))snapshot->result=REPLAY_SNAPSHOT_INVALID_TRANSFER;
+    if ((snapshot->recording || snapshot->restoring) && snapshot->result==REPLAY_SNAPSHOT_OK) {
+        if(!state->wheelInfo) {
+            snapshot->result=REPLAY_SNAPSHOT_INVALID_BINDING;
+            replaySnapshotEndSection(snapshot);return;
+        }
+        rotationMatrixIdentity(state->velocityFrame);
+        state->velocityFrameValid=0;
+        state->activeContactCount=0;
+        for (int wheel=0;wheel<4;++wheel)
+            state->activeContactCount+=state->wheelContact[wheel];
+        vehicleStateUpdateWheelPoses(state);
+        if(snapshot->restoring && !vehicleStateIsFinite(state))
+            snapshot->result=REPLAY_SNAPSHOT_INVALID_TRANSFER;
+    }
+    replaySnapshotEndSection(snapshot);
 }

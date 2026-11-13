@@ -1,220 +1,1669 @@
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
-// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/indep/src/pursuit.hpp"
-#include "game_core/src/bMath.hpp"
-#include "game_core/indep/src/speech/conversions.hpp"
-#include "game_core/port/race/car_render_resources.hpp"
-#include "game_core/indep/src/copmgr.hpp"
-#include "game_core/indep/src/coputil.hpp"
-#include "game_core/indep/inc/CopChase.hpp"
+#include "indep/inc/Pursuit.hpp"
+#include "indep/inc/CopDriver.hpp"
+#include "bware/inc/bMath.hpp"
+#include "Chopper.hpp"
+#include "indep/inc/CarInfo.hpp"
+#include "indep/inc/Car.hpp"
+#include "indep/inc/Player.hpp"
+#include "Language.hpp"
+#include "indep/inc/RaceCoordinator.hpp"
+#include "bware/inc/bMath.hpp"
+#include "indep/inc/World.hpp"
+#include "indep/inc/CarDriver.hpp"
+#include "indep/inc/Player.hpp"
+#include "indep/inc/World.hpp"
+#include "indep/inc/Race.hpp"
+#include "indep/inc/Player.hpp"
+#include "indep/src/speech/mgr.hpp"
+#include "TrackedController.hpp"
+#include "indep/inc/AICarController.hpp"
+#include "indep/inc/TrafficDriver.hpp"
+#include "indep/inc/Replay.hpp"
+#include "indep/inc/TrackRoute.hpp"
+#include "bware/inc/bWare.hpp"
+
+#include <array>
+#include <memory>
+#include <new>
 #include <cmath>
+#include <cstdlib>
 
-#include "game_core/port/not_implemented.hpp"
-#include "game_core/port/runtime_warnings.hpp"
+// PAL331C00 static initialization. Each actual pursuit ctor updates this
+// same cell; contexts borrow it rather than retaining independent copies.
+PursuitTimingTuning pursuitTimingTuning = {10.0f,10.0f};
 
-namespace hp2::debug {
-// Debug00226DC8,E-0100-PA01. Source active-slot compaction and roadblock
-// pointer unlink; never substitutes an empty pursuit or alters the other cop.
-bool tPursuit::RemoveCopFromPursuit(std::uint32_t cop){if(!cop)return false;auto& m=m_;const auto block=m.word(address_+0x14);bool removed=false;int count=m.signed_word(address_+0x5c4);if(count>2)hp2::not_implemented("0x00226DC8","original pursuit count exceeds two-pointer cop array");for(int i=0;i<count&&!removed;++i)if(m.word(address_+0x1c+4*unsigned(i))==cop){m.word(address_+0x1c+4*unsigned(i),0);m.word(address_+0x5c4,std::uint32_t(--count));if(!m.word(address_+0x1c)){m.word(address_+0x1c,m.word(address_+0x20));m.word(address_+0x20,0);}removed=true;}if(block&&!removed)for(unsigned i=0;i<2&&!removed;++i)if(m.word(block+4*i)==cop){m.word(block+4*i,0);removed=true;}if(removed)tCop(m,cop).SetPursuit(0);return removed;}
-// Debug00226358/00225260/00225230/00225318/00224A60,E-0100-PA01.
-bool tPursuit::IsPlayerInvolved()const{return m_.word(m_.word(address_+0x10)+0x18)||m_.word(0x3121ec);}
-std::uint32_t tPursuit::GetExactVehicleDescription(){auto& m=m_;const auto car=m.word(address_+0x10),ride=m.word(car+0x10);const int type=m.signed_word(ride);if(type<0||type>=67||!m.word(0x3278e0))hp2::not_implemented("0x00225260","actual original CarTypeInfo row required by pursuit speech description");if(m.word(m.word(0x3278e0)+unsigned(type)*0x560+0x538)==1)return 0x10000000u;if((type>=15&&type<=16)||type==22)return 0xffffffffu;return std::uint32_t(Speech::ConvertCarTypeToDescription(m,type));}
-std::uint32_t tPursuit::GetChasedCarColour(){auto& m=m_;const auto ride=m.word(m.word(address_+0x10)+0x10);const auto skin=::port::race::GetSkinInfo(m,m.signed_word(ride),m.signed_byte(ride+5),1);if(!skin)hp2::not_implemented("0x00225230","actual authored skin row required by pursuit speech colour");return m.word(skin+0x28);}
-std::uint32_t tPursuit::GetCopSpeaker(){auto& m=m_;const auto primary=m.word(address_+0x5d8);if(primary!=5)return primary;const auto block=m.word(address_+0x14);return block?m.word(block+0x74):tCopManager(m,m.word(0x328c1c)).GetCurrentCopSpeaker();}
-float tPursuit::GetSpeedMPHOrKPH(){auto& m=m_;const auto car=m.word(address_+0x10);return m.scalar(car+0x3c0)*m.scalar(m.word(car+0x18)&&m.byte(0x312265)?0x326004:0x326000);}
-// Debug002256E0,E-0100-PA01. Speech-disabled mode retains state escalation.
-void tPursuit::BeginPursuitCollisionSpeech(std::uint32_t other,bool disabled){auto& m=m_;const bool cop=m.word(m.word(other+0x14)+8)==4;(void)GetCopSpeaker();(void)m.word(address_+0x5e0);if(!disabled)hp2::not_implemented(cop?"0x00205300":"0x00205460","original collision pursuit speech event submission required");::port::diagnostics::warn(cop?"0x00205300":"0x00205460","collision pursuit speech emission disabled by explicit PC presentation policy","retaining source collision classification and pursuit escalation before continuing");if(cop)SwitchPursuitState(2,disabled);else if(m.word(address_+0x5cc)==0)SwitchPursuitState(1,disabled);}
-// Debug00225778,E-0100-PA01. Optional event emission is isolated only after
-// source argument/selection/RNG/state work; no fabricated speaking predicate.
-void tPursuit::StartPursuitSpeech(bool disabled){
- auto& m=m_;const auto exact=GetExactVehicleDescription();const auto manager=m.word(0x328c1c);auto emit=[&](const char* address){if(!disabled)hp2::not_implemented(address,"original pursuit speech event submission required");::port::diagnostics::warn(address,"pursuit speech emission disabled by explicit PC presentation policy","retaining source selectors, arguments, shared RNG, speaker rotation and pursuit state; not submitting speech event");};
- if(!IsPlayerInvolved()){const auto coordinator=m.word(0x327290);if(!coordinator)hp2::not_implemented("0x00225778","actual source RaceCoordinator required for nonplayer pursuit speech");const auto state=m.word(coordinator);if(state==8||state==9)return;if(exact==0xffffffffu){(void)GetCopSpeaker();(void)GetChasedCarColour();emit("0x002054B0");}else{(void)tCopManager(m,manager).GetCurrentCopSpeaker();(void)GetChasedCarColour();emit("0x00205510");}tCopManager(m,manager).NextCopSpeaker();return;}
- if(m.word(0x3121ec)){(void)GetCopSpeaker();(void)GetChasedCarColour();emit(exact==0xffffffffu?"0x002054B0":"0x00205510");return;}
- if(const auto other=CarCausedRecentCollision(m,m.word(address_+0x10))){BeginPursuitCollisionSpeech(other,disabled);m.word(address_+0x5d0,1);m.word(address_+0x5e8,1);return;}
- if(tCopManager(m,manager).GetNumTickets(m.word(address_+0x10))>0){SwitchPursuitState(1,disabled);if(hp2::recovered::bRandom(m,10)<8&&exact!=0xffffffffu){(void)GetCopSpeaker();(void)GetChasedCarColour();emit("0x00205580");return;}}
- if(100.f<GetSpeedMPHOrKPH()&&hp2::recovered::bRandom(m,10)<7){(void)GetCopSpeaker();(void)GetSpeedMPHOrKPH();emit("0x002056C0");return;}
- const auto selection=hp2::recovered::bRandom(m,2);(void)GetCopSpeaker();emit(selection==0?"0x00205390":"0x00205350");
-}
-// Debug00225A30,E-0100-PA01. Source speaker reservations/rotation and fullword
-// bAlreadyJoined publication remain active under optional speech suppression.
-void tPursuit::JoinPursuitSpeech(bool disabled){auto& m=m_;if(!m.word(m.word(address_+0x10)+0x18))return;const auto manager=m.word(0x328c1c);if(m.word(address_+0x5d8)==5){m.word(address_+0x5d8,tCopManager(m,manager).ReserveCopSpeaker());const bool active=std::fabs(m.scalar(manager+0x286c))<=m.scalar(0x326008);(void)active;if(!disabled)hp2::not_implemented("0x00205B10","original suspect-found speech event submission required");::port::diagnostics::warn("0x00205B10","suspect-found speech emission disabled by explicit PC presentation policy","retaining original speaker reservation, primary speaker store and supervisor predicate");}
- else if(!m.word(address_+0x5e4)&&m.signed_word(address_+0x5cc)>0){m.word(address_+0x5e4,1);if(m.word(address_+0x5dc)==5&&m.word(0x311fa8)==1)m.word(address_+0x5dc,tCopManager(m,manager).ReserveCopSpeaker());else{(void)tCopManager(m,manager).GetCurrentCopSpeaker();tCopManager(m,manager).NextCopSpeaker();}(void)GetCopSpeaker();if(!disabled)hp2::not_implemented("0x00205760","original backup-confirm speech event submission required");::port::diagnostics::warn("0x00205760","backup-confirm speech emission disabled by explicit PC presentation policy","retaining original AlreadyJoined flag and speaker reservations/rotation");}}
-// Debug00226FA8, E-0099-W107; exact original pursuit.cpp definition owner.
-bool tPursuit::HasThisCop(std::uint32_t cop)const{for(int i=0;i<m_.signed_word(address_+0x5c4);++i)if(m_.word(address_+0x1c+4*std::uint32_t(i))==cop)return true;if(const auto block=m_.word(address_+0x14))for(unsigned i=0;i<2;++i)if(m_.word(block+4*i)==cop)return true;return false;}
-}
 
-namespace hp2::recovered {
-// ELF 0x0022D080; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0022d080.md.
-void tNearFollowTarget::GetVelocity() {
-    hp2::not_implemented("0x0022D080", "tNearFollowTarget::GetVelocity (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
 
-namespace hp2::recovered {
-// ELF 0x00229ED0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00229ed0.md.
-void tPursuit::SelectPrimaryCop() {
-    hp2::not_implemented("0x00229ED0", "tPursuit::SelectPrimaryCop (signature and full body unresolved)");
-}
-
-// ELF 0x0022BB28; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0022bb28.md.
-void tPursuit::IsCopNearChasedCar() {
-    hp2::not_implemented("0x0022BB28", "tPursuit::IsCopNearChasedCar (signature and full body unresolved)");
-}
-
-// ELF 0x0022BC08; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0022bc08.md.
-void tPursuit::IsRacingWithMe() {
-    hp2::not_implemented("0x0022BC08", "tPursuit::IsRacingWithMe (signature and full body unresolved)");
-}
-
-// ELF 0x0022C920; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0022c920.md.
-void tPursuit::HasThisCop() {
-    hp2::not_implemented("0x0022C920", "tPursuit::HasThisCop (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/indep/src/drivetarget.hpp"
-#include "game_core/indep/src/barricade.hpp"
-#include "game_core/indep/src/coputil.hpp"
-#include "game_core/indep/src/copmgr.hpp"
-#include "game_core/indep/inc/World.hpp"
-#include "game_core/indep/inc/Replay.hpp"
-#include "game_core/Chopper.hpp"
-#include <cmath>
-namespace hp2::debug {
-// E-0099-W119, Debug00227568/002275F0; original pursuit.cpp.
-void tNearFollowTarget::Sub_00227568(){m_.word(address_+0x16c,0x2b4f38);for(unsigned i=0;i<30;++i){m_.word(address_+4+8*i,0);m_.word(address_+8+8*i,0);m_.word(address_+0xf4+4*i,0);}m_.word(address_,0);}
-void tNearFollowTarget::Sub_002275F0(int flags){m_.word(address_+0x16c,0x2b4f38);if(flags&1)m_.release(address_);}
-// Debug00227808,E-0099-W119. Count is signed data1/memory4, all30 XY/time rows.
-void tNearFollowTarget::DoSnapshot(std::uint32_t snapshot){ReplaySnapshot s(m_,snapshot);s.MoveData(address_,1,4,1);for(unsigned i=0;i<30;++i){s.MoveData(address_+4+8*i,8);s.MoveData(address_+0xf4+4*i,4);}}
-// Debug00227288/002272A0,E-0099-W119. Timer is genuinely not initialized here.
-void tRoadBlockStateMachine::Sub_00227288(std::uint32_t pursuit){m_.word(address_+0x10,pursuit);m_.word(address_,0);m_.word(address_+8,0);m_.word(address_+0xc,0);}
-void tRoadBlockStateMachine::Sub_002272A0(int flags){if(flags&1)m_.release(address_);}
-// Debug002274E8,E-0099-W119. Raw enum byte is not a fullword bool; owner is rebound.
-void tRoadBlockStateMachine::DoSnapshot(std::uint32_t snapshot,std::uint32_t pursuit){ReplaySnapshot s(m_,snapshot);s.MoveData(address_,1);s.MoveData(address_+4,4);s.MoveData(address_+8,4,4,1);s.MoveData(address_+0xc,4,4,1);m_.word(address_+0x10,pursuit);}
-// Debug002247D0,E-0099-W119. Real race laps/Point2Point and loaded TrackLength.
-float tPursuit::ScaleTimeByRaceLength(float t)const{const float laps=m_.word(0x311fa0)?1.f:static_cast<float>(m_.signed_word(0x311fa4));float distance=laps*m_.scalar(0x313308);if(!std::isfinite(t)||!std::isfinite(distance))hp2::not_implemented("0x002247D0","original pursuit timer finite FPU operands are unresolved");if(m_.scalar(0x325ff0)<distance)distance=m_.scalar(0x325ff0);if(distance<m_.scalar(0x325ff4))distance=m_.scalar(0x325ff4);return t*(distance*m_.scalar(0x325ff8)+.25f);}
-// Debug00224848,E-0099-W119. Reached supervisor/give-up positive children guarded.
-void tPursuit::SwitchPursuitState(int state,bool disable_speech){auto& m=m_;const auto a=address_;if(state<0||state>5)hp2::not_implemented("0x00224848","original pursuit state table index outside recovered six states");m.word(a+0x5cc,static_cast<std::uint32_t>(state));m.scalar(a+0x5f4,ScaleTimeByRaceLength(m.scalar(0x313bb8+4*static_cast<unsigned>(state))));switch(state){case 0:m.word(a+0x5d4,1);m.word(a+0x5d0,0);m.word(a+0x630,m.word(a+0x630)|2u);break;case 1:m.word(a+0x5d0,3);m.word(a+0x5ec,1);m.word(a+0x5d4,2);m.word(a+0x630,m.word(a+0x630)|3u);break;case 2:m.word(a+0x5ec,1);m.word(a+0x5d4,3);m.word(a+0x630,m.word(a+0x630)|7u);m.word(a+0x5d0,4);tCopManager(m,m.word(0x328c1c)).PossibleCallSupervisor(a,disable_speech);break;case 3:m.word(a+0x5ec,1);m.word(a+0x5d4,4);m.word(a+0x630,m.word(a+0x630)|0x20fu);m.word(a+0x5d0,6);tCopManager(m,m.word(0x328c1c)).PossibleCallSupervisor(a,disable_speech);break;case 4:m.word(a+0x5d4,0);break;case 5:{m.word(a+0x5d4,0);if(IsPlayerInvolved())CopBackOffSpeech(disable_speech);const auto index=m.signed_half(m.word(a+0x10)+8);if(index<0||index>=8)hp2::not_implemented("0x00224848","source car timer index outside eight entries");const auto manager=m.word(0x328c1c);m.scalar(manager+0x2874+4*unsigned(index),16);m.word(manager+0x2894+4*unsigned(index),m.word(0x325ffc));ReleaseAllCops();break;}}}
-// Debug00223850,E-0099-W119. Original embedded constructors and owned Barricade.
-void tPursuit::Sub_00223850(std::int8_t id,std::uint32_t car){auto& m=m_;const auto a=address_;m.word(a+0x634,0x2b4f28);m.word(a+0x10,car);DriveTarget(m,a+0x30).Sub_00216528();DriveTarget(m,a+0x240).Sub_00216528();tNearFollowTarget(m,a+0x450).Sub_00227568();tRoadBlockStateMachine(m,a+0x614).Sub_00227288(a);m.byte(a+0x5c8,static_cast<std::uint8_t>(id));for(unsigned off:{0x5c4u,0x5d4u,0x62cu})m.word(a+off,0);const auto manager=m.word(0x328c1c);if(!manager)hp2::not_implemented("0x00223850","original pursuit requires actual CopManager owner");const int difficulty=m.signed_word(manager+0x28ec);if(difficulty<0||difficulty>2)hp2::not_implemented("0x00223850","original pursuit spawn table difficulty outside authored three rows");m.scalar(a+0x5f0,2);m.scalar(a+0x5f8,3.5f);m.word(0x328c30,m.word(0x2b4e90+4*static_cast<unsigned>(difficulty)));m.word(a+0x5fc,0);m.scalar(a+0x600,10);m.scalar(a+0x604,12);m.word(a+0x5dc,5);for(unsigned off:{0x20u,0x1cu,0x5e0u,0x5e4u,0x5e8u,0x5ecu,0x14u,0x630u,0x18u,0x628u})m.word(a+off,0);if(car){m.scalar(a+0x608,GetTopSpeed(m,car));if(m.word(0x3121ec))m.word(a+0x5d8,m.word(manager+0x2860));else if(m.word(car+0x18))m.word(a+0x5d8,tCopManager(m,manager).ReserveCopSpeaker());}const auto coordinator=m.word(0x327290);if(!coordinator)hp2::not_implemented("0x00223850","original pursuit requires actual RaceCoordinator owner");SwitchPursuitState(m.word(coordinator)==8?3:0);m.word(a+0x610,0);m.scalar(a+0x60c,1);const auto barricade=m.allocate(0x40);tBarricadeManager(m,barricade).Sub_00248418();m.word(a+0x5c0,barricade);}
-// Debug00226C20,E-0099-W119. Actual null-deployment return; positive graph guarded.
-void tPursuit::DisbandRoadBlock(bool){if(m_.word(address_+0x14))hp2::not_implemented("0x00226C20","actual active roadblock cop/spike/barricade disband dependencies are required");}
-// Debug00224B50,E-0099-W119. Existing source Chopper.FollowThisCar is reused.
-void tPursuit::ReleaseChopper(){if(const auto chopper=m_.word(address_+0x18)){m_.word(m_.word(0x328c1c)+0x138,0);Chopper(m_,chopper).FollowThisCar(0);m_.word(address_+0x628,0);m_.word(address_+0x18,0);}}
-// Debug00224AA0,E-0099-W119/E-0100-PA01. Preserve source for-loop count
-// reload after compaction, including its two-slot retained-cop counterexample.
-// Actual IsAIControlled descriptor delta/target are bound; unknown targets guard.
-void tPursuit::ReleaseAllCops(){auto& m=m_;const auto a=address_;int count=m.signed_word(a+0x5c4);for(int i=0;i<count;++i){if(i>=2)hp2::not_implemented("0x00224AA0","original pursuit cop count exceeds owned two-pointer array");if(const auto cop=m.word(a+0x1c+4*unsigned(i))){RemoveCopFromPursuit(cop);const auto table=m.word(cop+0x1c);if(!table)hp2::not_implemented("0x00224AE8","actual cop virtual table required after source pursuit unlink");const auto self=cop+std::int32_t(m.signed_half(table+0x10)),target=m.word(table+0x14);bool ai;if(target==0x22b380)ai=tAICop(m,self).IsAIControlled();else if(target==0x22b3b8)ai=tPlayerCop(m,self).IsAIControlled();else hp2::not_implemented("0x00224AF4","unrecovered actual cop IsAIControlled virtual target");if(ai)tCop(m,cop).SetDesiredLogicState(5);count=m.signed_word(a+0x5c4);}}DisbandRoadBlock(false);ReleaseChopper();}
-// Debug00223A18,E-0099-W119. Source child order and deletion flag. bTNode227890
-// tail-calls bNode115280(flags0), whose proven branch has no stores/calls.
-void tPursuit::Sub_00223A18(int flags){auto& m=m_;const auto a=address_;m.word(a+0x634,0x2b4f28);ReleaseAllCops();const auto car=m.word(a+0x10);if(!car)hp2::not_implemented("0x00223A18","original pursuit destructor requires restored chased Car before player access");if(m.word(car+0x18)){tCopManager manager(m,m.word(0x328c1c));manager.ReleaseCopSpeaker(m.word(a+0x5d8));if(m.word(a+0x5dc)!=5)manager.ReleaseCopSpeaker(m.word(a+0x5dc));}const auto barricade=m.word(a+0x5c0);m.byte(a+0x5c8,0xfe);if(barricade){const auto table=m.word(barricade+0x3c),target=m.word(table+0xc),self=barricade+static_cast<std::int32_t>(m.signed_half(table+8));if(target!=0x248468)hp2::not_implemented("0x00223A18","actual barricade destructor virtual target is not reconstructed");tBarricadeManager(m,self).Sub_00248468(3);}tRoadBlockStateMachine(m,a+0x614).Sub_002272A0(2);tNearFollowTarget(m,a+0x450).Sub_002275F0(2);DriveTarget(m,a+0x240).Sub_00216598(2);DriveTarget(m,a+0x30).Sub_00216598(2);if(flags&1)Sub_002279C8();}
-// Debug00224D78,E-0099-W119. Source widths/order, borrowed pointer codecs and
-// actual embedded children. No substituted empty pursuit or guessed fresh lanes.
-void tPursuit::DoSnapshot(std::uint32_t snapshot){auto& m=m_;const auto a=address_,manager=m.word(0x328c1c),world=m.word(0x3272f0);if(!manager||!world)hp2::not_implemented("0x00224D78","actual pursuit snapshot World/CopManager owners required");ReplaySnapshot s(m,snapshot);s.BeginSection(a,0x2b4f08);s.VerifyData(a+0x5c8,1);World(m,world).DoPointerSnapshot(snapshot,a+0x10);tCopManager cops(m,manager);cops.DoPointerSnapshot(snapshot,::port::race::SnapshotRoadBlockPointer{a+0x14});if(const auto block=m.word(a+0x14)){s.MoveData(block+0x74,4);for(unsigned i=0;i<2;++i)cops.DoPointerSnapshot(snapshot,::port::race::SnapshotCopPointer{block+4*i});}s.MoveData(a+0x5d8,4);s.MoveData(a+0x5dc,4);for(unsigned off:{8u,0xcu,0x62cu})s.MoveData(a+off,4,4,1);::port::driving::Memory::Temporary chopper_flag(m,4);m.word(chopper_flag.address(),m.word(a+0x18)!=0);s.MoveData(chopper_flag.address(),4,4,1);if(m.byte(snapshot+0x3d))m.word(a+0x18,m.word(chopper_flag.address())?m.word(world+0x18):0);s.MoveData(a+0x600,4);s.MoveData(a+0x604,4);s.MoveData(a+0x628,1);s.MoveData(a+0x5c4,4,4,1);for(int i=0;i<m.signed_word(a+0x5c4);++i){if(i>=2)hp2::not_implemented("0x00224D78","original pursuit cop count exceeds recovered two-pointer array");cops.DoPointerSnapshot(snapshot,::port::race::SnapshotCopPointer{a+0x1c+4*static_cast<unsigned>(i)});}for(unsigned off:{0x5ccu,0x5d0u,0x5e0u})s.MoveData(a+off,1);for(unsigned off:{0x5f4u,0x5fcu,0x5f8u,0x5f0u,0x60cu,0x610u})s.MoveData(a+off,4);for(unsigned off:{0x5e4u,0x5e8u,0x5ecu})s.MoveData(a+off,1,4,0);s.MoveData(a+0x608,4);s.MoveData(a+0x630,4);s.MoveData(a+0x5d4,1,4,1);DriveTarget(m,a+0x30).DoSnapshot(snapshot);DriveTarget(m,a+0x240).DoSnapshot(snapshot);const auto chased=m.word(a+0x10);if(!chased)hp2::not_implemented("0x00224D78","original pursuit near-follow condition requires a restored chased Car");if(m.word(chased+0x18))tNearFollowTarget(m,a+0x450).DoSnapshot(snapshot);tRoadBlockStateMachine(m,a+0x614).DoSnapshot(snapshot,a);tBarricadeManager(m,m.word(a+0x5c0)).DoSnapshot(snapshot);s.EndSection();}
-}
-
-// TASK-0100 E-0100-PU02. Original pursuit.cpp mandatory ordinary chase tick.
-// Authority SHA815b60c7...332f1b; read-only listing/ABI audit in PU01.
-#include "game_core/indep/inc/Car.hpp"
-#include "game_core/indep/src/raceparameters.hpp"
-namespace hp2::debug {
 namespace {
-void port_pursuit_emission(bool disabled,const char* at){
- if(!disabled)hp2::not_implemented(at,"original pursuit speech event submission required");
- ::port::diagnostics::warn(at,"pursuit speech emission disabled by explicit PC presentation policy","retaining source selector, arguments, RNG and pursuit state before omitted event submission");
+WorldServicesResult groupSpeechResult(PursuitManager* manager,WorldSpeechResult result)
+{
+    if(result==WORLD_SPEECH_OK || result==WORLD_SPEECH_SUPPRESSED || result==WORLD_SPEECH_DROPPED)
+        return manager->result=WORLD_SERVICES_OK;
+    return manager->result=result==WORLD_SPEECH_INVALID_BINDING ? WORLD_SERVICES_INVALID_BINDING : WORLD_SERVICES_OWNER_FAILURE;
 }
-// Original227618 hidden-return ABI: a0 output, a1 self,a2 position,a3 velocity.
-// The output is input position unchanged; caller discards it. Preserve integer
-// history and latency-loop operations, not the decompiler's float-count fiction.
+
+bool groupOwnerBindings(const PursuitManager* manager,const PursuitCollisionGroup* group)
+{
+    return manager && group && group->owner && group->owner->manager==manager &&
+        group->owner->bindings && manager->parameters && manager->applicationState &&
+        manager->collision && manager->collision->speech;
 }
-std::array<float,2> tNearFollowTarget::Update(std::uint32_t position,std::uint32_t velocity,float dt){
- auto& m=m_;const auto a=address_;
- int count=m.signed_word(a);
- if(count<0||count>30)hp2::not_implemented("0x00227618","original near-follow history count outside thirty slots");
- for(int i=28;i>=0;--i){m.copy(a+4+8*(i+1),a+4+8*i,8);m.word(a+0xf4+4*(i+1),m.word(a+0xf4+4*i));}
- m.copy(a+4,velocity,8);m.scalar(a+0xf4,dt);if(count!=30)m.word(a,unsigned(++count));
- if(count>0){float elapsed=m.scalar(a+0xf4);if(elapsed<m.scalar(0x328c34))for(int i=1;i<count;++i){elapsed=elapsed+m.scalar(a+0xf4+4*i);if(!(elapsed<m.scalar(0x328c34)))break;}}
- return {{m.scalar(position),m.scalar(position+4)}};
+
+bool groupBindings(const PursuitManager* manager,const PursuitCollisionGroup* group)
+{
+    return groupOwnerBindings(manager,group) && group->target;
 }
-void tPursuit::UpdateDriveTargets(float,std::optional<std::uint32_t> add_w,std::optional<std::uint32_t> set_w){
- auto& m=m_;const auto a=address_,car=m.word(a+0x10);const std::array<float,2> pos{{m.scalar(car+0x60),m.scalar(car+0x64)}};
- auto append=[&](std::uint32_t target,float threshold,bool inclusive){
-  const int count=m.signed_byte(target);if(count<0||count>20)hp2::not_implemented("0x00224B90","original pursuit drive-target count exceeds twenty");
-  DriveTarget view(m,target);if(count>1){const auto last=target+16*unsigned(count),previous=last-16;const float x=m.scalar(previous)-m.scalar(last),y=m.scalar(previous+4)-m.scalar(last+4);const float distance=std::sqrt(x*x+y*y);
-   if(!std::isfinite(distance))hp2::not_implemented("0x00224B90","original pursuit target-length exceptional operand requires EE semantics");
-   if(inclusive?distance<=threshold:distance<threshold){view.SetPoint(count-1,pos,-1,-1,-1,0,set_w);return;}
-   if(count==20)view.ShiftLeft(1,true);
-  }view.AddPointToTarget(pos,-1,-1,-1,false,0,add_w);
- };
- append(a+0x30,20,false);(void)tNearFollowTarget(m,a+0x450).Update(car+0x60,car+0x70,m.scalar(0x327d08));append(a+0x240,1,true);
+
+bool speechSessionSuppressed(const PursuitManager* manager)
+{
+    const int32_t state=*manager->applicationState;
+    return state==4 || state==7 || state==5 || state==9;
 }
-void tPursuit::SelectPrimaryCop(){auto& m=m_;const auto first=m.word(address_+0x1c),second=m.word(address_+0x20);if(!first||!second)return;const auto car=m.word(address_+0x10);auto distance=[&](std::uint32_t cop){const auto other=m.word(cop+4);const float x=m.scalar(car+0x60)-m.scalar(other+0x60),y=m.scalar(car+0x64)-m.scalar(other+0x64);return std::sqrt(x*x+y*y);};if(30.f<distance(first)-distance(second)){m.word(address_+0x1c,second);m.word(address_+0x20,first);}}
-bool tPursuit::ShouldPursuitBeCalledOff(){auto& m=m_;const auto car=m.word(address_+0x10);if(m.byte(car+0x848)||m.word(0x311fa0)||RaceParameters(m,0x311f78).IsFreeRun())return false;const int laps=m.signed_word(0x311fa4);if(laps<=3)return false;const float remaining=((float(laps)-m.scalar(m.word(car+0x1c)+0x20))/float(laps))*m.scalar(0x313308);return remaining<=1000.f;}
-bool tPursuit::DoStateTransition(bool disabled){const int state=m_.signed_word(address_+0x5cc);if(state==5)return true;int next=3;if(state==0)next=1;else if(state==1)next=2;else if(state==4)next=4;if(next!=state)SwitchPursuitState(next,disabled);return false;}
-bool tPursuit::IsChasedCarStoppable(){
- auto& m=m_;const auto a=address_,car=m.word(a+0x10),manager=m.word(0x328c1c);
- if(!m.word(0x3121d8)||m.word(manager+0x64+0x1c*unsigned(m.signed_half(car+8)))||hp2::recovered::Car(m,car).IsPoofed()||m.signed_half(m.word(car+0x1c)+0x12))return false;
- if(m.word(0x3121ec))hp2::not_implemented("0x00226618","actual BeACop capture timer/player-cop path required");
- const bool nearby=m.word(a+0x1c)?tCopManager(m,manager).IsCopNearby(car,m.scalar(0x328c38)):m.word(m.word(car+0x14)+8)==2;
- bool stopped=false;
- if(10.f<=m.scalar(car+0x3c4)*m.scalar(0x32604c)||!nearby)m.scalar(a+0x5f0,2);
- else{const float timer=m.scalar(a+0x5f0)-m.scalar(0x327d08);m.scalar(a+0x5f0,timer);if(timer<=0)stopped=true;else if(timer<=1)stopped=tCopManager(m,manager).DidRecentlyCollideWithCop(car);}
- if(m.byte(car+0x848)&&m.scalar(car+0x3c4)<m.scalar(0x326050))return true;
- if(hp2::recovered::Car(m,car).IsBlinking())return true;
- if(m.scalar(car+0xb8)<=m.scalar(0x326054)&&m.scalar(car+0x384)*m.scalar(0x326058)<10)return true;
- return stopped;
+
+CarFramePlayerState* groupPlayer(const PursuitCollisionGroup* group)
+{
+    if(!group->target->bindings.player)return nullptr;
+    CarFrame* frame=group->target->frame;
+    if(!frame || !frame->environment.player ||
+        &frame->environment.player->movement!=group->target->bindings.player)return nullptr;
+    return frame->environment.player;
 }
-void tPursuit::Level0SubStates(bool disabled){
- auto& m=m_;const auto a=address_;const int sub=m.signed_word(a+0x5d0);const float timer=m.scalar(a+0x5f4);
- if(sub==0&&timer<16){if(IsPlayerInvolved()){const auto exact=GetExactVehicleDescription();if(exact==0xffffffffu){(void)GetCopSpeaker();(void)GetChasedCarColour();port_pursuit_emission(disabled,"0x002054B0");}else{const auto choice=hp2::recovered::bRandom(m,40);(void)GetCopSpeaker();if(choice<26)(void)GetChasedCarColour();port_pursuit_emission(disabled,choice==0?"0x002055E0":choice<17?"0x00205510":choice<26?"0x002054B0":choice<36?"0x00205A10":"0x002053D0");}}m.word(a+0x5d0,1);}
- else if(sub==1&&timer<3){if(m.word(m.word(a+0x10)+0x18)){(void)GetCopSpeaker();port_pursuit_emission(disabled,m.word(a+0x5e0)==0?"0x00205720":"0x002057B0");}m.word(a+0x5d0,2);}
-}
-void tPursuit::DoEarlyChaseCollisionCheck(bool disabled){auto& m=m_;const auto a=address_,car=m.word(a+0x10);if(!m.word(car+0x18)||m.word(a+0x5e8))return;const auto other=CarCausedRecentCollision(m,car);if(!other)return;m.word(a+0x5e8,1);if(!m.word(a+0x5d0)){BeginPursuitCollisionSpeech(other,disabled);return;}const auto primary=m.word(a+0x1c);(void)GetCopSpeaker();if(primary&&other==m.word(primary+4)){port_pursuit_emission(disabled,"0x002052B0");SwitchPursuitState(2,disabled);return;}port_pursuit_emission(disabled,"0x00206618");if(m.word(m.word(other+0x14)+8)==4)SwitchPursuitState(2,disabled);else if(!m.word(a+0x5cc))SwitchPursuitState(1,disabled);}
-bool tPursuit::Update(bool disabled,std::optional<std::uint32_t> add_w,std::optional<std::uint32_t> set_w,::port::race::PhysicsConstructionServices* physics){
- auto& m=m_;const auto a=address_,car=m.word(a+0x10);const float dt=m.scalar(0x327d08);bool finished=false;
- tBarricadeManager(m,m.word(a+0x5c0)).Update(dt);const auto landmark=FindLandmark(m,{{m.scalar(car+0x60),m.scalar(car+0x64)}});m.word(a+0x5e0,landmark?m.word(landmark+0x34):0);
- if(m.word(0x311fa8)!=1&&m.signed_half(m.word(car+0x1c)+0x12))return true;
- if(m.word(0x3121ec))hp2::not_implemented("0x00223B08","actual BeACop chase-direction/update path required");
- if(m.scalar(a+0x608)<m.scalar(car+0x3c0))m.scalar(a+0x608,m.scalar(car+0x3c0));
- const int count=m.signed_word(a+0x5c4);if(count<0||count>2)hp2::not_implemented("0x00223B08","original pursuit cop count exceeds two owned pointers");
- for(int i=0;i<count;++i){const auto other=m.word(m.word(a+0x1c+4*i)+4);if(m.word(other+0x24)==5)m.word(m.word(other+0x30)+0x34,m.word(a+0x608));}
- UpdateDriveTargets(dt,add_w,set_w);SelectPrimaryCop();const bool called_off=ShouldPursuitBeCalledOff();
- if(called_off){if(m.signed_word(a+0x5cc)>1){SwitchPursuitState(5,disabled);finished=true;}}
- else if(count||m.signed_word(a+0x5cc)>=3)m.scalar(a+0x5f4,m.scalar(a+0x5f4)-dt);
- if(m.scalar(a+0x5f4)<=0&&DoStateTransition(disabled))finished=true;
- const auto state=m.word(a+0x5cc);if(state!=4&&state!=5){if(finished)return true;if(IsChasedCarStoppable()){tCopManager(m,m.word(0x328c1c)).CreatePullover(a,car,true,physics);SwitchPursuitState(4,disabled);ReleaseAllCops();finished=true;}}
- if(finished)return true;
- tRoadBlockStateMachine(m,a+0x614).Update(disabled,physics);UpdateRoadBlocks(disabled,physics);UpdateChopper(disabled);
- switch(m.word(a+0x5cc)){case 0:Level0SubStates(disabled);[[fallthrough]];case 1:DoEarlyChaseCollisionCheck(disabled);break;case 5:return true;default:break;}return false;
+
+float scaledPursuitStateTime(const PursuitGroupState* state,float seconds)
+{
+    const float laps=state->manager->parameters->pointToPoint ? 1.0f :
+        static_cast<float>(state->manager->parameters->totalLaps);
+    float length=laps*state->bindings->route->length;
+    if(42000.0f<length)length=42000.0f;
+    if(length<14000.0f)length=14000.0f;
+    const float scaled=length*0.000017857142665889114f;
+    const float factor=scaled+0.25f;
+    return seconds*factor;
 }
 }
 
-#include "game_core/port/driving/ee_scalar.hpp"
-namespace hp2::debug {
-// Debug00227708,E-0112-COP01. Hidden RVO output is a native two-float return.
-// Preserve source's subtraction of FIRST time slot (not requested latency).
-std::array<float,2> tNearFollowTarget::GetVelocity(float latency)const{const auto a=address_;const int count=m_.signed_word(a);if(count<0||count>30)hp2::not_implemented("0x00227708","source near-follow count outside30 slots");std::array<float,2> value{{m_.scalar(a+4),m_.scalar(a+8)}};float elapsed=0;for(int i=0;i<count;++i){const float dt=m_.scalar(a+0xf4+4*unsigned(i));elapsed=elapsed+dt;if(latency<=elapsed){if(i<count-1){const float remainder=elapsed-m_.scalar(a+0xf4);for(unsigned j=0;j<2;++j){const auto at=a+4+8*unsigned(i)+4*j;const float current=m_.scalar(at),difference=current-m_.scalar(at+8);const float rate=dt==0?::port::driving::ee_div_s_zero(difference,dt,"0x002277A8"):difference/dt;value[j]=current+rate*remainder;}}break;}}return value;}
+// PAL22AB30..22AB70. A missing reserved channel falls back to a peek,
+// never a pop, from the SAME manager-owned channel deque.
+WorldServicesResult pursuitGroupReadSpeaker(PursuitManager* manager,
+    const PursuitCollisionGroup* group,int32_t* channel)
+{
+    if(!manager || !manager->collision || !group || !channel)return WORLD_SERVICES_INVALID_BINDING;
+    int32_t value=group->currentChannel;
+    if(value==5){
+        if(group->reserved)value=group->reserved->radioChannel;
+        else{
+            const auto& pool=manager->collision->channels;
+            if((!pool.full && pool.readIndex==pool.writeIndex) || pool.readIndex<0 || pool.readIndex>=4)
+                return manager->result=WORLD_SERVICES_OWNER_FAILURE;
+            value=pool.channels[pool.readIndex];
+        }
+    }
+    *channel=value;
+    return manager->result=WORLD_SERVICES_OK;
 }
 
-namespace hp2::debug {
-// Debug00224638, E-0112-COP02. Original blown-tire fast path, requested-chopper
-// doubling and strict spawn-timer comparison; no host clock or elapsed guess.
-bool tPursuit::RoadBlockEncounteredRecently()const{const auto car=m_.word(address_+0x10);if(m_.signed_byte(car+0x848)!=0)return true;float time=m_.scalar(0x328c30);if(m_.word(address_+0x628)==1)time=time+time;return time-4.f<m_.scalar(address_+0x5fc);}
-// Debug00227018, E-0112-COP02. Release precedes primary/secondary reassignment;
-// crash takes exactly one original shared RNG draw even with speech deferred.
-void tPursuit::RemovePrimarySpeaker(bool caused_by_crash,bool disable_speech){auto& m=m_;const auto a=address_;if(!m.word(m.word(a+0x10)+0x18)||RoadBlockEncounteredRecently())return;const auto which=m.word(a+0x5d8);tCopManager manager(m,m.word(0x328c1c));manager.ReleaseCopSpeaker(which);
- if(m.word(a+0x5dc)==5)m.word(a+0x5d8,m.signed_word(a+0x5c4)<2?5:manager.ReserveCopSpeaker());else{m.word(a+0x5d8,m.word(a+0x5dc));m.word(a+0x5dc,5);}
- const char* emission=caused_by_crash?(hp2::recovered::bRandom(m,10)<2?"0x00205960":"0x00205880"):"0x002058D0";
- port_pursuit_emission(disable_speech,emission);
+// PAL22AA20..22AA50. This is the retained skin's actual colour mask.
+WorldServicesResult pursuitGroupReadColour(const PursuitCollisionGroup* group,int32_t* colour)
+{
+    if(!group || !group->owner || !group->owner->bindings || !group->target || !colour ||
+        !group->target->bindings.owner || !group->target->bindings.owner->driverInfo)
+        return WORLD_SERVICES_INVALID_BINDING;
+    const auto* resources=group->owner->bindings->carResources;
+    const auto& appearance=group->target->bindings.owner->driverInfo->appearance;
+    if(!resources || !resources->SkinsLoaded())return WORLD_SERVICES_INVALID_BINDING;
+    const auto* skin=resources->FindSkin(appearance.modelCode,appearance.skinNumber,true);
+    if(!skin)return WORLD_SERVICES_INVALID_BINDING;
+    *colour=static_cast<int32_t>(skin->selectionMask);
+    return WORLD_SERVICES_OK;
+}
+
+// PAL22AA50..22AAF0. Its final language exclusions are deliberately
+// retained; the beta table does not define this behavior.
+WorldServicesResult pursuitGroupReadExactDescription(const PursuitCollisionGroup* group,int32_t* description)
+{
+    if(!group || !group->owner || !group->owner->bindings || !group->target || !description ||
+        !group->target->bindings.owner || !group->target->bindings.owner->driverInfo)
+        return WORLD_SERVICES_INVALID_BINDING;
+    const auto* resources=group->owner->bindings->carResources;
+    const int32_t model=group->target->bindings.owner->driverInfo->appearance.modelCode;
+    if(!resources || !resources->CarsLoaded() || model<0 || static_cast<size_t>(model)>=resources->Cars().size())
+        return WORLD_SERVICES_INVALID_BINDING;
+    if(resources->Car(static_cast<size_t>(model)).bodyCategory==1){*description=0x10000000;return WORLD_SERVICES_OK;}
+    if(model==15 || model==16 || model==22){*description=-1;return WORLD_SERVICES_OK;}
+    if(model==5 || model==6 || model==13 || model==14 || model==43 || model==44){
+        const auto* language=group->owner->bindings->language;
+        if(!language)return WORLD_SERVICES_INVALID_BINDING;
+        if(language->currentLanguage==1 || language->currentLanguage==2){*description=-1;return WORLD_SERVICES_OK;}
+    }
+    *description=worldSpeechConvertCarTypeToDescription(model);
+    return WORLD_SERVICES_OK;
+}
+
+// PAL22A220..22A25C. Display byte1 is the canonical metric-speed setting.
+WorldServicesResult pursuitGroupDisplaySpeed(const PursuitCollisionGroup* group,float* output)
+{
+    if(!group || !group->target || !group->target->bindings.state || !output || !group->owner ||
+        !group->owner->manager || !group->owner->manager->parameters)return WORLD_SERVICES_INVALID_BINDING;
+    bool metric=false;
+    if(group->target->bindings.player){
+        const auto* settings=group->owner->manager->parameters->runtimeSettings;
+        if(!settings)return WORLD_SERVICES_INVALID_BINDING;
+        metric=settings->display.languageDependentOption!=0;
+    }
+    *output=group->target->bindings.state->forwardSpeed*(metric ? 3.5999999046325684f : 2.236999988555908f);
+    return WORLD_SERVICES_OK;
+}
+
+// PAL2253E8..2254E4, including the independent original -50 sentinel.
+WorldServicesResult pursuitManagerPossiblyCallSupervisor(PursuitManager* manager,PursuitCollisionGroup* group)
+{
+    if(!groupOwnerBindings(manager,group))return WORLD_SERVICES_INVALID_BINDING;
+    if(speechSessionSuppressed(manager))return manager->result=WORLD_SERVICES_OK;
+    const float difference=std::fabs(manager->supervisorRemaining-(-50.0f));
+    if(!(difference<=0.0010000000474974513f) || !manager->parameters->roadBlocksEnabled)
+        return manager->result=WORLD_SERVICES_OK;
+    if(!group->target)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+    if(!group->target->bindings.player)return manager->result=WORLD_SERVICES_OK;
+    if(vectorDefaultRandomBounded(2)!=0)return manager->result=WORLD_SERVICES_OK;
+    int32_t channel;
+    const auto read=pursuitGroupReadSpeaker(manager,group,&channel);
+    if(read!=WORLD_SERVICES_OK)return read;
+    const auto result=worldSpeechRaiseSuperRequest(manager->collision->speech,static_cast<uint32_t>(channel));
+    manager->supervisorRemaining=7.0f;
+    return groupSpeechResult(manager,result);
+}
+
+// PAL22B788..22B840. Empty groups or the actual 3/4 random branch use
+// the supervisor event; no placeholder voice/queue-busy test is substituted.
+WorldServicesResult pursuitGroupBackOffSpeech(PursuitManager* manager,PursuitCollisionGroup* group)
+{
+    if(!groupBindings(manager,group))return WORLD_SERVICES_INVALID_BINDING;
+    auto* speech=manager->collision->speech;
+    const bool supervisor=std::fabs(manager->supervisorRemaining)<=0.0010000000474974513f;
+    if(!group->activeCount || (supervisor && vectorDefaultRandomBounded(4)!=0))
+        return groupSpeechResult(manager,worldSpeechRaiseSuperBackOff(speech));
+    int32_t channel;
+    const auto read=pursuitGroupReadSpeaker(manager,group,&channel);
+    if(read!=WORLD_SERVICES_OK)return read;
+    return groupSpeechResult(manager,worldSpeechRaiseCopBackOff(speech,static_cast<uint32_t>(channel),supervisor ? 1 : 0));
+}
+
+// PAL229FE8..22A18C. All six states are explicit; the owning release
+// operation remains a concrete dependency, never a successful no-op.
+WorldServicesResult pursuitGroupSwitchState(PursuitManager* manager,PursuitCollisionGroup* group,int32_t phase)
+{
+    if(!groupOwnerBindings(manager,group) || phase<0 || phase>=6 || !group->owner->bindings->route)
+        return WORLD_SERVICES_INVALID_BINDING;
+    auto& state=*group->owner;
+    static const float durations[6]={30.0f,20.0f,40.0f,300.0f,10.0f,100000.0f};
+    group->phase=phase;
+    state.stateRemainingSeconds=scaledPursuitStateTime(&state,durations[phase]);
+    switch(phase){
+    case 0:group->hudLevel=1;group->requestFlags|=2u;state.speechLevel=0;break;
+    case 1:state.speechLevel=3;state.calledForBackup=1;group->hudLevel=2;group->requestFlags|=3u;break;
+    case 2:state.calledForBackup=1;group->hudLevel=3;group->requestFlags|=7u;state.speechLevel=4;
+        return pursuitManagerPossiblyCallSupervisor(manager,group);
+    case 3:state.calledForBackup=1;group->hudLevel=4;group->requestFlags|=0x20Fu;state.speechLevel=6;
+        return pursuitManagerPossiblyCallSupervisor(manager,group);
+    case 4:group->hudLevel=0;break;
+    case 5:{
+        group->hudLevel=0;
+        if(!group->target)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+        if(group->target->bindings.player){
+            CarFramePlayerState* player=groupPlayer(group);
+            if(!player)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+            const auto result=pursuitGroupBackOffSpeech(manager,group);
+            if(result!=WORLD_SERVICES_OK)return result;
+            carFramePlayerStartScore(player,0);
+            if(player->result)return manager->result=WORLD_SERVICES_OWNER_FAILURE;
+        }
+        const Car* car=group->target->bindings.owner;
+        if(!car || car->tableIndex>=8)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+        manager->participantReset[car->tableIndex].spawnDelay=999999.0f;
+        manager->participantReset[car->tableIndex].preventPursuitSeconds=999999.0f;
+        return pursuitGroupReleaseAll(manager,group);
+    }
+    }
+    return manager->result=WORLD_SERVICES_OK;
+}
+
+namespace {
+WorldServicesResult peekChannel(PursuitManager* manager,int32_t* channel)
+{
+    const auto& pool=manager->collision->channels;
+    if((!pool.full && pool.readIndex==pool.writeIndex) || pool.readIndex<0 || pool.readIndex>=4)
+        return manager->result=WORLD_SERVICES_OWNER_FAILURE;
+    *channel=pool.channels[pool.readIndex];
+    return WORLD_SERVICES_OK;
+}
+
+WorldServicesResult rotateChannel(PursuitManager* manager)
+{
+    int32_t channel;
+    if(!pursuitChannelPop(&manager->collision->channels,&channel))
+        return manager->result=WORLD_SERVICES_OWNER_FAILURE;
+    pursuitChannelPush(&manager->collision->channels,channel);
+    return WORLD_SERVICES_OK;
+}
+
+// PAL22AB70..22ABA0: same retained next channel, with a non-consuming
+// lookup of the actual channel deque when the sentinel is five.
+}
+WorldServicesResult pursuitGroupReadSecondarySpeaker(PursuitManager* manager,
+    const PursuitCollisionGroup* group,int32_t* channel)
+{
+    if(!manager || !group || !channel)return WORLD_SERVICES_INVALID_BINDING;
+    *channel=group->nextChannel;
+    if(*channel==5)return peekChannel(manager,channel);
+    return WORLD_SERVICES_OK;
+}
+namespace {
+
+WorldServicesResult declareCollision(PursuitManager* manager,PursuitCollisionGroup* group,CarMovement* other)
+{
+    int32_t channel;
+    const auto read=pursuitGroupReadSpeaker(manager,group,&channel);
+    if(read!=WORLD_SERVICES_OK)return read;
+    if(group->owner->landmark)
+        return groupSpeechResult(manager,worldSpeechRaiseBeginPursuitGeneral(manager->collision->speech,static_cast<uint32_t>(channel)));
+    if(!other || !other->bindings.owner || !other->bindings.owner->driverInfo)
+        return manager->result=WORLD_SERVICES_INVALID_BINDING;
+    const bool police=other->bindings.owner->driverInfo->driverClass==4;
+    const auto raised=police ? worldSpeechRaiseBeginPursuitCopHitRun(manager->collision->speech,static_cast<uint32_t>(channel),0) :
+        worldSpeechRaiseBeginPursuitHitRunTraffic(manager->collision->speech,static_cast<uint32_t>(channel),0);
+    const auto result=groupSpeechResult(manager,raised);
+    if(result!=WORLD_SERVICES_OK)return result;
+    if(police)return pursuitGroupSwitchState(manager,group,2);
+    if(group->phase==0)return pursuitGroupSwitchState(manager,group,1);
+    return manager->result=WORLD_SERVICES_OK;
 }
 }
 
-namespace hp2::debug {
-// Debug00225F10/00225FC8,E-0112-COP03. Selectors/RNG precede explicit speech boundary.
-void tPursuit::CopBackOffSpeech(bool disabled){auto& m=m_;const auto manager=m.word(0x328c1c);if(m.word(address_+0x5c4)&&(std::fabs(m.scalar(manager+0x286c))>m.scalar(0x326034)||hp2::recovered::bRandom(m,4)==0)){(void)GetCopSpeaker();port_pursuit_emission(disabled,"0x00205D28");}else port_pursuit_emission(disabled,"0x00205D20");}
-void tPursuit::AITicketSpeech(bool disabled){auto& m=m_;if(m.word(m.word(0x327290))-8u<2)return;const auto manager=m.word(0x328c1c);if(!m.word(0x3121ec)){(void)tCopManager(m,manager).GetCurrentCopSpeaker();tCopManager(m,manager).NextCopSpeaker();}else(void)m.word(manager+0x2860);const auto description=GetExactVehicleDescription();const auto choice=hp2::recovered::bRandom(m,3);port_pursuit_emission(disabled,choice&&description!=0xffffffffu?"0x00205D78":"0x00205DC8");}
+// PAL22AFB8..22B288. Declaration selects actual collision, description,
+// ticket-history and speed branches before enqueuing the same speech event.
+WorldServicesResult pursuitGroupDeclareSpeech(PursuitManager* manager,PursuitCollisionGroup* group)
+{
+    if(!groupBindings(manager,group))return WORLD_SERVICES_INVALID_BINDING;
+    auto* speech=manager->collision->speech;
+    if(manager->parameters->specialPursuit){
+        const auto result=groupSpeechResult(manager,worldSpeechFlush(speech));
+        if(result!=WORLD_SERVICES_OK)return result;
+    }
+    int32_t description;
+    auto result=pursuitGroupReadExactDescription(group,&description);
+    if(result!=WORLD_SERVICES_OK)return manager->result=result;
+    const bool involved=group->target->bindings.player || manager->parameters->specialPursuit;
+    if(!involved){
+        if(*manager->applicationState==8 || *manager->applicationState==9)return manager->result=WORLD_SERVICES_OK;
+        int32_t channel,colour;
+        result=description==-1 ? pursuitGroupReadSpeaker(manager,group,&channel) : peekChannel(manager,&channel);
+        if(result!=WORLD_SERVICES_OK)return result;
+        result=pursuitGroupReadColour(group,&colour);if(result!=WORLD_SERVICES_OK)return manager->result=result;
+        const auto raised=description==-1 ? worldSpeechRaiseBeginPursuitIdGeneral(speech,static_cast<uint32_t>(channel),1,colour) :
+            worldSpeechRaiseBeginPursuitIdSpecific(speech,static_cast<uint32_t>(channel),0,description,colour);
+        result=groupSpeechResult(manager,raised);if(result!=WORLD_SERVICES_OK)return result;
+        return manager->result=rotateChannel(manager);
+    }
+    if(!manager->parameters->specialPursuit){
+        CarMovement* other=nullptr;
+        if(pursuitCarCausedRecentCollision(group->target,&other)!=CAR_DRIVER_OK)
+            return manager->result=WORLD_SERVICES_OWNER_FAILURE;
+        if(other){
+            result=declareCollision(manager,group,other);
+            if(result!=WORLD_SERVICES_OK)return result;
+            group->owner->speechLevel=1;group->owner->specialDeclarationSent=1;
+            return manager->result=WORLD_SERVICES_OK;
+        }
+        int32_t tickets;
+        result=pursuitManagerGetPulloverCount(manager,group->target->bindings.owner,&tickets);
+        if(result!=WORLD_SERVICES_OK)return manager->result=result;
+        if(tickets>0){
+            result=pursuitGroupSwitchState(manager,group,1);if(result!=WORLD_SERVICES_OK)return result;
+            const int32_t choice=vectorDefaultRandomBounded(10);
+            if(choice<8 && description!=-1){
+                int32_t channel,colour;
+                result=pursuitGroupReadSpeaker(manager,group,&channel);if(result!=WORLD_SERVICES_OK)return result;
+                result=pursuitGroupReadColour(group,&colour);if(result!=WORLD_SERVICES_OK)return manager->result=result;
+                return groupSpeechResult(manager,worldSpeechRaiseBeginPursuitAgain(speech,static_cast<uint32_t>(channel),description,colour));
+            }
+        }
+    }else{
+        int32_t channel,colour;
+        result=pursuitGroupReadSpeaker(manager,group,&channel);if(result!=WORLD_SERVICES_OK)return result;
+        result=pursuitGroupReadColour(group,&colour);if(result!=WORLD_SERVICES_OK)return manager->result=result;
+        return groupSpeechResult(manager,description==-1 ?
+            worldSpeechRaiseBeginPursuitIdGeneral(speech,static_cast<uint32_t>(channel),1,colour) :
+            worldSpeechRaiseBeginPursuitIdSpecific(speech,static_cast<uint32_t>(channel),0,description,colour));
+    }
+    float speed;
+    result=pursuitGroupDisplaySpeed(group,&speed);if(result!=WORLD_SERVICES_OK)return manager->result=result;
+    if(100.0f<speed && vectorDefaultRandomBounded(10)<7){
+        int32_t channel;
+        result=pursuitGroupReadSpeaker(manager,group,&channel);if(result!=WORLD_SERVICES_OK)return result;
+        result=pursuitGroupDisplaySpeed(group,&speed);if(result!=WORLD_SERVICES_OK)return manager->result=result;
+        return groupSpeechResult(manager,worldSpeechRaiseBeginPursuitSpeed(speech,static_cast<uint32_t>(channel),speed));
+    }
+    const int32_t choice=vectorDefaultRandomBounded(2);
+    int32_t channel;
+    result=pursuitGroupReadSpeaker(manager,group,&channel);if(result!=WORLD_SERVICES_OK)return result;
+    return groupSpeechResult(manager,choice==0 ? worldSpeechRaiseBeginPursuitErratic(speech,static_cast<uint32_t>(channel)) :
+        worldSpeechRaiseBeginPursuitGeneral(speech,static_cast<uint32_t>(channel)));
 }
-#include "game_core/port/race/pursuit_escalation.inc"
+
+// Final PAL22B288..22B3F8: JoinPursuitSpeech passes the group's landmark
+// to20AC40 in a3. The beta producer omitted this released argument.
+WorldServicesResult pursuitGroupJoinSpeech(PursuitManager* manager,PursuitCollisionGroup* group)
+{
+    if(!groupBindings(manager,group))return WORLD_SERVICES_INVALID_BINDING;
+    if(!group->target->bindings.player)return manager->result=WORLD_SERVICES_OK;
+    auto* speech=manager->collision->speech;
+    if(group->currentChannel==5){
+        if(!pursuitChannelPop(&manager->collision->channels,&group->currentChannel))
+            return manager->result=WORLD_SERVICES_OWNER_FAILURE;
+        if(group->owner->landmark){
+            const bool supervisor=std::fabs(manager->supervisorRemaining)<=0.0010000000474974513f;
+            return groupSpeechResult(manager,worldSpeechRaiseSuspectFound(speech,
+                static_cast<uint32_t>(group->currentChannel),supervisor ? 1 : 0,group->owner->landmark));
+        }
+        int32_t description;
+        auto result=pursuitGroupReadExactDescription(group,&description);if(result!=WORLD_SERVICES_OK)return manager->result=result;
+        int32_t channel;
+        result=pursuitGroupReadSpeaker(manager,group,&channel);if(result!=WORLD_SERVICES_OK)return result;
+        if(description==-1)return groupSpeechResult(manager,worldSpeechRaiseBeginPursuitGeneral(speech,static_cast<uint32_t>(channel)));
+        int32_t colour;
+        result=pursuitGroupReadColour(group,&colour);if(result!=WORLD_SERVICES_OK)return manager->result=result;
+        return groupSpeechResult(manager,worldSpeechRaiseBeginPursuitAgain(speech,static_cast<uint32_t>(channel),description,colour));
+    }
+    if(group->owner->joinSpeechSent || group->phase<=0)return manager->result=WORLD_SERVICES_OK;
+    group->owner->joinSpeechSent=1;
+    int32_t channel;
+    if(group->nextChannel==5 && manager->parameters->mode==1){
+        if(!pursuitChannelPop(&manager->collision->channels,&channel))return manager->result=WORLD_SERVICES_OWNER_FAILURE;
+        group->nextChannel=channel;
+    }else{
+        auto result=peekChannel(manager,&channel);if(result!=WORLD_SERVICES_OK)return result;
+        result=rotateChannel(manager);if(result!=WORLD_SERVICES_OK)return result;
+    }
+    int32_t speaker;
+    const auto result=pursuitGroupReadSpeaker(manager,group,&speaker);if(result!=WORLD_SERVICES_OK)return result;
+    return groupSpeechResult(manager,worldSpeechRaiseBackupConfirm(speech,static_cast<uint32_t>(channel),static_cast<uint32_t>(speaker)));
+}
+
+namespace {
+void updateRecordedPath(DriverCommand* command,const float point[4],bool targetPath)
+{
+    bool append=command->count<2;
+    if(!append){
+        const auto& previous=command->points[command->count-2];
+        const auto& last=command->points[command->count-1];
+        const float x=previous.position[0]-last.position[0];
+        const float y=previous.position[1]-last.position[1];
+        const float xx=x*x,yy=y*y;
+        const float distance=std::sqrt(xx+yy);
+        append=targetPath ? 20.0f<=distance : 1.0f<distance;
+    }
+    if(append){
+        if(command->count==DRIVER_COMMAND_CAPACITY)driverCommandTrimFront(command,1,1);
+        // Real source21C1C8 is the XY adapter to3D Append21C2B8: Z=0,
+        // unchanged packed-road sentinels, and the documented native W=0.
+        driverCommandAppend(command,point,nullptr,-1,0,nullptr);
+    }else{
+        // Real source21DA08 similarly supplies XY/Z=0 to21DA50.
+        driverCommandSetPoint(command,command->count-1,point,nullptr,-1,0.0f);
+    }
+}
+}
+
+// PAL22A360..22A544. Both paths and prediction history are the same
+// embedded owners read by CopDriver; no sampled or duplicated target state.
+WorldServicesResult pursuitGroupUpdateDriveTargets(PursuitManager* manager,PursuitCollisionGroup* group)
+{
+    if(!groupBindings(manager,group) || !manager->clock || !group->target->bindings.state ||
+        !group->target->bindings.state->position || group->targetPath.count<0 ||
+        group->targetPath.count>DRIVER_COMMAND_CAPACITY || group->recentTargetPath.count<0 ||
+        group->recentTargetPath.count>DRIVER_COMMAND_CAPACITY)return WORLD_SERVICES_INVALID_BINDING;
+    const auto* vehicle=group->target->bindings.state;
+    const float point[4]={vehicle->position[0],vehicle->position[1],0.0f,0.0f};
+    updateRecordedPath(&group->targetPath,point,true);
+    float unchangedPosition[2];
+    pursuitVelocityHistoryPush(unchangedPosition,&group->velocityHistory,
+        vehicle->position,vehicle->velocity,manager->clock->worldTimeElapsed);
+    updateRecordedPath(&group->recentTargetPath,point,false);
+    return manager->result=WORLD_SERVICES_OK;
+}
+
+// PAL22A190..22A220, including all six jump-table destinations. The
+// terminal result belongs to phase 5; phase 3 deliberately stays phase 3.
+WorldServicesResult pursuitGroupAdvanceState(PursuitManager* manager,
+    PursuitCollisionGroup* group,int32_t* finished)
+{
+    if(!groupBindings(manager,group) || !finished)return WORLD_SERVICES_INVALID_BINDING;
+    int32_t next=3;
+    *finished=0;
+    switch(group->phase) {
+    case 0:next=1;break;
+    case 1:next=2;break;
+    case 2:case 3:next=3;break;
+    case 4:next=4;break;
+    case 5:*finished=1;break;
+    }
+    if(next!=group->phase && !*finished)return pursuitGroupSwitchState(manager,group,next);
+    return manager->result=WORLD_SERVICES_OK;
+}
+
+namespace {
+ChopperTarget* groupChopperTarget(PursuitCollisionGroup* group)
+{
+    Chopper* chopper=group->chopper;
+    if(!chopper || !group->target->bindings.owner ||
+        (chopper->environment.targetCount && !chopper->environment.targets))return nullptr;
+    for(size_t i=0;i<chopper->environment.targetCount;++i) {
+        ChopperTarget* target=&chopper->environment.targets[i];
+        if(target->car==group->target->bindings.owner && target->movement==group->target)return target;
+    }
+    return nullptr;
+}
+WorldServicesResult groupFollowChopper(PursuitManager* manager,PursuitCollisionGroup* group)
+{
+    ChopperTarget* target=groupChopperTarget(group);
+    if(!target)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+    // PAL ignores the navigation return; a genuine unmet native binding is
+    // still reported through the existing concrete Chopper owner.
+    chopperShiftTarget(group->chopper,target);
+    return manager->result=group->chopper->result;
+}
+}
+
+// PAL229678..229970. Every profile draw uses the same World RNG and keeps
+// the original branch order; 14E520(world,2) is Random, not a car query.
+WorldServicesResult pursuitGroupUpdateChopper(PursuitManager* manager,PursuitCollisionGroup* group)
+{
+    if(!groupBindings(manager,group) || !manager->clock || !manager->world ||
+        !group->target->bindings.owner || !group->target->bindings.ownerMotion)
+        return WORLD_SERVICES_INVALID_BINDING;
+    PursuitGroupState& state=*group->owner;
+    if(group->chopper) {
+        if(group->chopper->forceFirstPlayerTarget)return manager->result=WORLD_SERVICES_OK;
+    } else if(group->requestFlags&0x20u) {
+        int32_t available=0;
+        auto result=pursuitManagerChopperAvailable(manager,&available);
+        if(result!=WORLD_SERVICES_OK)return manager->result=result;
+        if(available) {
+            int32_t speaker=0;
+            result=pursuitGroupReadSpeaker(manager,group,&speaker);
+            if(result!=WORLD_SERVICES_OK)return result;
+            result=groupSpeechResult(manager,worldSpeechRaiseRotorRequest(manager->collision->speech,
+                speaker,std::fabs(manager->supervisorRemaining)<=0.0010000000474974513f));
+            if(result!=WORLD_SERVICES_OK)return result;
+            group->extendedTimeout=1;state.chopperWaitSeconds=10.0f;
+            result=pursuitManagerAcquireChopper(manager,&group->chopper);
+            if(result!=WORLD_SERVICES_OK)return manager->result=result;
+            if(group->chopper)group->chopper->totalDrops=0;
+            if(manager->parameters->specialPursuit)group->requestFlags&=~0x20u;
+        }
+    }
+    if(!group->extendedTimeout)return manager->result=WORLD_SERVICES_OK;
+    if(state.chaseDirection==-1.0f && group->extendedTimeout!=1) {
+        if(!group->chopper)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+        // Complete PAL1EADF0..1EAE08 callee, factored here without a
+        // separate name/count claim: release phase 4 back to phase 0.
+        if(group->chopper->phase==4)group->chopper->phase=0;
+        group->extendedTimeout=2;state.chopperWaitSeconds=10.0f;
+    }
+    state.chopperWaitSeconds-=manager->clock->worldTimeElapsed;
+    if(!(state.chopperWaitSeconds<0.0f))return manager->result=WORLD_SERVICES_OK;
+    switch(group->extendedTimeout) {
+    case 1:
+        if(group->chopper) {
+            const auto result=groupSpeechResult(manager,worldSpeechRaiseRotorConfirm(manager->collision->speech));
+            if(result!=WORLD_SERVICES_OK)return result;
+            group->extendedTimeout=2;state.chopperWaitSeconds=5.0f;
+        } else if(manager->parameters->specialPursuit) {
+            const auto result=groupSpeechResult(manager,worldSpeechRaiseDispatchHelicopterNA(
+                manager->collision->speech,manager->selectedRadioChannel));
+            if(result!=WORLD_SERVICES_OK)return result;
+            group->extendedTimeout=0;
+        }
+        break;
+    case 2:
+        group->extendedTimeout=3;state.chopperWaitSeconds=15.0f;
+        return groupFollowChopper(manager,group);
+    case 3: {
+        if(!group->chopper)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+        state.chopperWaitSeconds=state.nextChopperWaitSeconds;
+        state.nextChopperWaitSeconds-=2.0f;
+        if(state.nextChopperWaitSeconds<6.0f)state.nextChopperWaitSeconds=6.0f;
+        const bool disabled=group->target->bindings.ownerMotion->disabledWheelMask!=0;
+        int32_t profile=1;
+        if((group->requestFlags&0x80u) && !disabled && worldRandomBounded(manager->world,2)==0)profile=3;
+        else if(group->chopper->attackProfile && (group->requestFlags&0x100u) &&
+            !disabled && worldRandomBounded(manager->world,2)==0)profile=0;
+        else if(group->requestFlags&0x40u)profile=worldRandomBounded(manager->world,2)==0 ? 1 : 2;
+        if(!group->chopper->target || group->chopper->target->car!=group->target->bindings.owner)
+            return groupFollowChopper(manager,group);
+        chopperStartAttack(group->chopper,profile);
+        return manager->result=group->chopper->result;
+    }
+    }
+    return manager->result=WORLD_SERVICES_OK;
+}
+
+// PAL22ABA0..22ACC0. A real recent collision is consumed only once. The
+// first pursuing officer has a distinct speech path from another police car.
+WorldServicesResult pursuitGroupEarlyCollision(PursuitManager* manager,PursuitCollisionGroup* group)
+{
+    if(!groupBindings(manager,group))return WORLD_SERVICES_INVALID_BINDING;
+    if(!group->target->bindings.player || group->owner->specialDeclarationSent)
+        return manager->result=WORLD_SERVICES_OK;
+    CarMovement* other=nullptr;
+    if(pursuitCarCausedRecentCollision(group->target,&other)!=CAR_DRIVER_OK)
+        return manager->result=WORLD_SERVICES_INVALID_BINDING;
+    if(!other)return manager->result=WORLD_SERVICES_OK;
+    group->owner->specialDeclarationSent=1;
+    if(!group->owner->speechLevel)return declareCollision(manager,group,other);
+    const bool firstCop=group->activeCount>0 && group->active[0] && group->active[0]->movement==other;
+    if(firstCop) {
+        int32_t speaker=0;
+        const auto result=pursuitGroupReadSpeaker(manager,group,&speaker);
+        if(result!=WORLD_SERVICES_OK)return result;
+        const auto raised=groupSpeechResult(manager,worldSpeechRaisePursuitCopHit(
+            manager->collision->speech,speaker,group->owner->landmark));
+        if(raised!=WORLD_SERVICES_OK)return raised;
+        return pursuitGroupSwitchState(manager,group,2);
+    }
+    if(!other->bindings.owner || !other->bindings.owner->driverInfo)
+        return manager->result=WORLD_SERVICES_INVALID_BINDING;
+    if(other->bindings.owner->driverInfo->driverClass==4)return pursuitGroupSwitchState(manager,group,2);
+    int32_t speaker=0;
+    auto result=pursuitGroupReadSpeaker(manager,group,&speaker);
+    if(result!=WORLD_SERVICES_OK)return result;
+    result=groupSpeechResult(manager,worldSpeechRaiseBeginPursuitHitRunTraffic(manager->collision->speech,speaker,0));
+    if(result!=WORLD_SERVICES_OK)return result;
+    if(!group->phase)return pursuitGroupSwitchState(manager,group,1);
+    return manager->result=WORLD_SERVICES_OK;
+}
+
+// PAL22ACC0..22AD30; a landmark chooses the location-bearing producer.
+WorldServicesResult pursuitGroupRaiseBackupSpeech(PursuitManager* manager,PursuitCollisionGroup* group)
+{
+    if(!groupBindings(manager,group))return WORLD_SERVICES_INVALID_BINDING;
+    if(!group->target->bindings.player)return manager->result=WORLD_SERVICES_OK;
+    int32_t speaker=0;
+    const auto result=pursuitGroupReadSpeaker(manager,group,&speaker);
+    if(result!=WORLD_SERVICES_OK)return result;
+    return groupSpeechResult(manager,group->owner->landmark ?
+        worldSpeechRaiseBackupRequestLocation(manager->collision->speech,speaker,group->owner->landmark) :
+        worldSpeechRaiseBackupRequest(manager->collision->speech,speaker));
+}
+
+// PAL22AD30..22AEF8. This later identification declaration is independent
+// of StartPursuitSpeech22AFB8 and retains its original 40-way choice.
+WorldServicesResult pursuitGroupDeclarePursuitSpeech(PursuitManager* manager,PursuitCollisionGroup* group)
+{
+    if(!groupBindings(manager,group))return WORLD_SERVICES_INVALID_BINDING;
+    if(!group->target->bindings.player && !manager->parameters->specialPursuit)
+        return manager->result=WORLD_SERVICES_OK;
+    int32_t description=0;
+    auto result=pursuitGroupReadExactDescription(group,&description);
+    if(result!=WORLD_SERVICES_OK)return manager->result=result;
+    if(description==-1) {
+        int32_t speaker=0,colour=0;
+        result=pursuitGroupReadSpeaker(manager,group,&speaker);if(result!=WORLD_SERVICES_OK)return result;
+        result=pursuitGroupReadColour(group,&colour);if(result!=WORLD_SERVICES_OK)return manager->result=result;
+        return groupSpeechResult(manager,worldSpeechRaiseBeginPursuitIdGeneral(manager->collision->speech,speaker,1,colour));
+    }
+    const uint32_t choice=vectorDefaultRandomBounded(40);
+    int32_t speaker=0;
+    result=pursuitGroupReadSpeaker(manager,group,&speaker);if(result!=WORLD_SERVICES_OK)return result;
+    if(choice==0 || choice<26) {
+        int32_t colour=0;
+        result=pursuitGroupReadColour(group,&colour);if(result!=WORLD_SERVICES_OK)return manager->result=result;
+        if(choice==0)return groupSpeechResult(manager,worldSpeechRaiseBeginPursuitIdRepeated(
+            manager->collision->speech,speaker,0,description,colour));
+        if(choice<17)return groupSpeechResult(manager,worldSpeechRaiseBeginPursuitIdSpecific(
+            manager->collision->speech,speaker,0,description,colour));
+        return groupSpeechResult(manager,worldSpeechRaiseBeginPursuitIdGeneral(manager->collision->speech,speaker,1,colour));
+    }
+    if(choice<36)return groupSpeechResult(manager,worldSpeechRaiseCopPursuitAvoidance(manager->collision->speech,speaker));
+    return groupSpeechResult(manager,worldSpeechRaiseBeginPursuitNoId(manager->collision->speech,speaker));
+}
+
+// PAL2295D8..229678; comparisons are strict, and the source advances the
+// speech level even when the actual producer suppresses or drops its event.
+WorldServicesResult pursuitGroupLevelZeroSpeech(PursuitManager* manager,PursuitCollisionGroup* group)
+{
+    if(!groupBindings(manager,group))return WORLD_SERVICES_INVALID_BINDING;
+    PursuitGroupState& state=*group->owner;
+    if(state.speechLevel==0 && state.stateRemainingSeconds<16.0f) {
+        const auto result=pursuitGroupDeclarePursuitSpeech(manager,group);
+        if(result!=WORLD_SERVICES_OK)return result;
+        state.speechLevel=1;
+    } else if(state.speechLevel==1 && state.stateRemainingSeconds<3.0f) {
+        const auto result=pursuitGroupRaiseBackupSpeech(manager,group);
+        if(result!=WORLD_SERVICES_OK)return result;
+        state.speechLevel=2;
+    }
+    return manager->result=WORLD_SERVICES_OK;
+}
+
+// PAL22B908..22B98C; speaker/speed/location/description/colour read order
+// is retained before the one concrete speech producer receives its values.
+WorldServicesResult pursuitGroupSupervisorInitiates(PursuitManager* manager,PursuitCollisionGroup* group)
+{
+    if(!groupBindings(manager,group))return WORLD_SERVICES_INVALID_BINDING;
+    int32_t speaker=0,description=0,colour=0;float speed=0.0f;
+    auto result=pursuitGroupReadSpeaker(manager,group,&speaker);if(result!=WORLD_SERVICES_OK)return result;
+    result=pursuitGroupDisplaySpeed(group,&speed);if(result!=WORLD_SERVICES_OK)return manager->result=result;
+    const uint32_t location=group->owner->landmark;
+    result=pursuitGroupReadExactDescription(group,&description);if(result!=WORLD_SERVICES_OK)return manager->result=result;
+    result=pursuitGroupReadColour(group,&colour);if(result!=WORLD_SERVICES_OK)return manager->result=result;
+    return groupSpeechResult(manager,worldSpeechRaiseSuperInitiate(manager->collision->speech,
+        speaker,location,description,colour,speed));
+}
+
+// PAL225308..2253E4. The source returns after the first eligible player
+// group; it does not announce every group when the countdown crosses zero.
+WorldServicesResult pursuitManagerActivateSupervisor(PursuitManager* manager)
+{
+    if(!manager || !manager->applicationState || !manager->clock || !manager->collision ||
+        !manager->collision->speech || (manager->groupCount && !manager->groups))
+        return WORLD_SERVICES_INVALID_BINDING;
+    if(speechSessionSuppressed(manager))return manager->result=WORLD_SERVICES_OK;
+    if(0.0f<manager->supervisorRemaining) {
+        manager->supervisorRemaining-=manager->clock->worldTimeElapsed;
+        if(manager->supervisorRemaining<=0.0f) {
+            manager->supervisorRemaining=0.0f;
+            for(size_t i=0;i<manager->groupCount;++i) {
+                PursuitCollisionGroup* group=manager->groups[i];
+                if(!group || !group->target)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+                if(!group->target->bindings.player)continue;
+                int32_t description=0;
+                const auto result=pursuitGroupReadExactDescription(group,&description);
+                if(result!=WORLD_SERVICES_OK)return manager->result=result;
+                if(description!=-1 && static_cast<uint32_t>(group->phase-2)<2)
+                    return pursuitGroupSupervisorInitiates(manager,group);
+            }
+        }
+    }
+    return manager->result=WORLD_SERVICES_OK;
+}
+
+// PAL22C2D0..22C390. A disabled target keeps the chase active. The final
+// 2000 metres of an eligible four-or-more-lap race call it off. Progress is the SAME
+// RaceCarEntry.displayProgress(source+20), not ordinal/rank or a copied lap counter.
+WorldServicesResult pursuitGroupShouldBackOff(PursuitManager* manager,
+    const PursuitCollisionGroup* group,int32_t* backOff)
+{
+    if(!groupBindings(manager,group) || !backOff || !group->target->bindings.ownerMotion)
+        return WORLD_SERVICES_INVALID_BINDING;
+    *backOff=0;
+    // PAL22C2F0 branches to the return with s2=0 in its delay slot. A
+    // disabled wheel keeps this pursuit alive for the original stop/timer
+    // predicate below Update; it must not award an immediate escape.
+    if(group->target->bindings.ownerMotion->disabledWheelMask)return WORLD_SERVICES_OK;
+    if(manager->parameters->pointToPoint || raceParametersIsFreeRun(manager->parameters) ||
+        manager->parameters->totalLaps<4)return WORLD_SERVICES_OK;
+    if(!group->target->bindings.owner || !group->target->bindings.owner->raceEntry ||
+        !group->owner->bindings->route)return WORLD_SERVICES_INVALID_BINDING;
+    const float left=static_cast<float>(manager->parameters->totalLaps)-group->target->bindings.owner->raceEntry->displayProgress;
+    const float distance=left*group->owner->bindings->route->length;
+    *backOff=distance<=2000.0f;
+    return WORLD_SERVICES_OK;
+}
+
+// PAL22B9E8..22BAB8. A reserved road block is tested in XY, exactly like
+// the original, before the independent chopper-request phase is checked.
+WorldServicesResult pursuitGroupAboutToSpeak(const PursuitCollisionGroup* group,int32_t* imminent)
+{
+    if(!group || !group->owner || !imminent)return WORLD_SERVICES_INVALID_BINDING;
+    *imminent=1;
+    if(8.0f<group->elapsed || group->phase==0)return WORLD_SERVICES_OK;
+    if(group->phase==2 && group->owner->stateRemainingSeconds<13.0f)return WORLD_SERVICES_OK;
+    if(!group->target || !group->target->bindings.ownerMotion)return WORLD_SERVICES_INVALID_BINDING;
+    if(group->target->bindings.ownerMotion->disabledWheelMask)return WORLD_SERVICES_OK;
+    if(group->reserved) {
+        if(!group->target->bindings.state)return WORLD_SERVICES_INVALID_BINDING;
+        const float dx=group->reserved->center[0]-group->target->bindings.state->position[0];
+        const float dy=group->reserved->center[1]-group->target->bindings.state->position[1];
+        const float y2=dy*dy;const float x2=dx*dx;
+        if(std::sqrt(x2+y2)<150.0f)return WORLD_SERVICES_OK;
+    }
+    *imminent=group->extendedTimeout==1;
+    return WORLD_SERVICES_OK;
+}
+
+// PAL229ED0..229F70. Reordering changes only the two borrowed officer
+// pointers in this SAME pursuit; officer back-links remain untouched.
+WorldServicesResult pursuitGroupSelectPrimary(PursuitCollisionGroup* group)
+{
+    if(!group || !group->target || !group->target->bindings.state)return WORLD_SERVICES_INVALID_BINDING;
+    PursuitCollisionEntry* first=group->active[0];PursuitCollisionEntry* second=group->active[1];
+    if(!first || !second)return WORLD_SERVICES_OK;
+    if(!first->movement || !second->movement || !first->movement->bindings.state ||
+        !second->movement->bindings.state)return WORLD_SERVICES_INVALID_BINDING;
+    const float* target=group->target->bindings.state->position;
+    const float* a=first->movement->bindings.state->position;
+    const float* b=second->movement->bindings.state->position;
+    const float ax=target[0]-a[0],ay=target[1]-a[1];
+    const float ay2=ay*ay,ax2=ax*ax;
+    const float firstDistance=std::sqrt(ax2+ay2);
+    const float bx=target[0]-b[0],by=target[1]-b[1];
+    const float by2=by*by,bx2=bx*bx;
+    const float secondDistance=std::sqrt(bx2+by2);
+    if(30.0f<firstDistance-secondDistance){group->active[0]=second;group->active[1]=first;}
+    return WORLD_SERVICES_OK;
+}
+
+// PAL22CC38..22CDD0. The state-machine request history and the group's
+// capability flags are distinct source fields, both retained by one owner.
+WorldServicesResult pursuitGroupActivateRoadBlock(PursuitManager* manager,PursuitCollisionGroup* group)
+{
+    if(!groupBindings(manager,group))return WORLD_SERVICES_INVALID_BINDING;
+    PursuitRoadBlockMachine& machine=group->owner->roadBlock;
+    if(machine.group!=group)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+    if(machine.state)return manager->result=WORLD_SERVICES_OK;
+    const bool special=manager->parameters->specialPursuit!=0;
+    if(!(machine.requests&1u) || special) {
+        int32_t speaker=0;
+        auto result=pursuitGroupReadSpeaker(manager,group,&speaker);if(result!=WORLD_SERVICES_OK)return result;
+        const bool supervisor=std::fabs(manager->supervisorRemaining)<=0.0010000000474974513f;
+        WorldSpeechResult speech;
+        if(machine.requests&1u)speech=worldSpeechRaiseRequestAnotherRoadblock(manager->collision->speech,speaker,supervisor);
+        else if(group->requestFlags&0x10u)speech=worldSpeechRaiseSpikeStripRequest(manager->collision->speech,speaker,supervisor);
+        else speech=worldSpeechRaiseRoadblockRequest(manager->collision->speech,speaker,supervisor);
+        result=groupSpeechResult(manager,speech);if(result!=WORLD_SERVICES_OK)return result;
+        if(!(machine.requests&1u))machine.requests|=1u;
+    }
+    if(special) {
+        group->requestFlags&=~8u;
+        if(manager->roadBlocksRemaining)--manager->roadBlocksRemaining;
+        else return groupSpeechResult(manager,worldSpeechRaiseDispatchRoadBlockNA(manager->collision->speech,manager->selectedRadioChannel));
+    }
+    machine.state=1;machine.remainingSeconds=8.0f;
+    return manager->result=WORLD_SERVICES_OK;
+}
+
+// PAL22CA78..22CB30. Difficulty is the actual sole live manager field;
+// the immutable three-value offset table is2BD450 {+.5,0,-.25}.
+WorldServicesResult pursuitGroupRoadBlockSpacing(const PursuitCollisionGroup* group,float* spacing)
+{
+    if(!group || !group->owner || !group->owner->manager || !spacing ||
+        !group->owner->manager->collision)return WORLD_SERVICES_INVALID_BINDING;
+    const int32_t difficulty=group->owner->manager->collision->severity;
+    if(difficulty<0 || difficulty>2)return WORLD_SERVICES_INVALID_BINDING;
+    float base=2.75f;
+    switch(group->owner->roadBlocksUsed) {
+    case 0:base=3.75f;break;
+    case 1:base=3.5f;break;
+    case 2:base=3.0f;break;
+    }
+    constexpr float offsets[3]={0.5f,0.0f,-0.25f};
+    *spacing=base+offsets[difficulty];return WORLD_SERVICES_OK;
+}
+
+// PAL22B5D0..22B788. Landmark lookup precedes the unconditional twenty-way
+// RNG draw; source spike-side and ordinary-roadblock producers stay distinct.
+WorldServicesResult pursuitGroupRoadBlockSettingSpeech(PursuitManager* manager,PursuitCollisionGroup* group)
+{
+    if(!groupBindings(manager,group) || !group->reserved || !manager->simulation ||
+        !manager->simulation->pursuitServices || !manager->simulation->pursuitServices->landmarks)
+        return WORLD_SERVICES_INVALID_BINDING;
+    uint32_t location=0;
+    if(const auto* landmark=pursuitLandmarkFind(manager->simulation->pursuitServices->landmarks,
+        group->reserved->groundPoint))location=landmark->tag;
+    const uint32_t choice=vectorDefaultRandomBounded(20);
+    const bool supervisor=std::fabs(manager->supervisorRemaining)<=0.0010000000474974513f;
+    const int32_t channel=group->reserved->radioChannel;
+    WorldSpeechResult result;
+    if(group->requestFlags&0x10u) {
+        if(choice<3)result=worldSpeechRaiseSpikeStripSet(manager->collision->speech,channel,location,supervisor);
+        else if(group->reserved->pattern==2)result=worldSpeechRaiseSpikeStripSetRight(manager->collision->speech,channel,location,supervisor);
+        else result=worldSpeechRaiseSpikeStripSetLeft(manager->collision->speech,channel,location,supervisor);
+    } else if(choice<3)result=worldSpeechRaiseRoadBlockSetting(manager->collision->speech,channel,supervisor);
+    else result=worldSpeechRaiseRoadBlockSet(manager->collision->speech,channel,supervisor,location);
+    return groupSpeechResult(manager,result);
+}
+
+// PAL229E30..229ED0. The same concrete manager/catalogue determines whether
+// a block exists; channels are consumed only for a real successful block.
+WorldServicesResult pursuitGroupCreateRoadBlock(PursuitManager* manager,PursuitCollisionGroup* group)
+{
+    if(!groupBindings(manager,group))return WORLD_SERVICES_INVALID_BINDING;
+    if(group->owner->allocationMode==1)group->requestFlags|=0x10u;
+    PursuitRoadBlock* block=nullptr;
+    const auto result=pursuitManagerRequestBlock(manager,group,group->owner->chaseDirection,&block);
+    if(result!=WORLD_SERVICES_OK)return manager->result=result;
+    group->reserved=block;
+    if(!block)return manager->result=WORLD_SERVICES_OK;
+    ++group->owner->roadBlocksUsed;group->owner->roadBlockApproachSeconds=3.5f;
+    if(group->target->bindings.player || manager->parameters->specialPursuit) {
+        if(!pursuitChannelPop(&manager->collision->channels,&block->radioChannel))
+            return manager->result=WORLD_SERVICES_OWNER_FAILURE;
+        return pursuitGroupRoadBlockSettingSpeech(manager,group);
+    }
+    return manager->result=WORLD_SERVICES_OK;
+}
+
+// PAL22CDD8..22CE60. Timers continue clamping in every nonzero state.
+// Failed site selection remains state1/timer0 and retries on the next pass.
+WorldServicesResult pursuitGroupUpdateRoadBlockMachine(PursuitManager* manager,PursuitCollisionGroup* group)
+{
+    if(!groupBindings(manager,group) || !manager->clock)return WORLD_SERVICES_INVALID_BINDING;
+    PursuitRoadBlockMachine& machine=group->owner->roadBlock;
+    if(machine.group!=group)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+    if(machine.state) {
+        machine.remainingSeconds-=manager->clock->worldTimeElapsed;
+        if(machine.remainingSeconds<=0.0f)machine.remainingSeconds=0.0f;
+        if(machine.state==1 && machine.remainingSeconds==0.0f) {
+            const auto result=pursuitGroupCreateRoadBlock(manager,group);
+            if(result!=WORLD_SERVICES_OK)return result;
+            if(group->reserved)machine.state=2;
+        }
+    }
+    return manager->result=WORLD_SERVICES_OK;
+}
+
+// PAL22B3F8..22B5D0. Preserve the source's boolean conversion of the
+// speaker argument on the rotor-failure branch, rather than repairing it.
+WorldServicesResult pursuitGroupRoadBlockDefeatedSpeech(PursuitManager* manager,PursuitCollisionGroup* group,int32_t through)
+{
+    if(!groupBindings(manager,group) || !group->reserved)return WORLD_SERVICES_INVALID_BINDING;
+    const bool supervisor=std::fabs(manager->supervisorRemaining)<=0.0010000000474974513f;
+    int32_t speaker=0;WorldServicesResult status;
+    WorldSpeechResult result;
+    if(group->requestFlags&0x10u) {
+        if(group->extendedTimeout==3 && vectorDefaultRandomBounded(3)==0) {
+            status=pursuitGroupReadSpeaker(manager,group,&speaker);if(status!=WORLD_SERVICES_OK)return status;
+            result=worldSpeechRaiseRotorSpikeFailed(manager->collision->speech,supervisor,speaker!=0);
+        } else {
+            status=pursuitGroupReadSpeaker(manager,group,&speaker);if(status!=WORLD_SERVICES_OK)return status;
+            result=worldSpeechRaiseSpikeStripFailure(manager->collision->speech,group->reserved->radioChannel,supervisor,speaker);
+        }
+    } else {
+        status=pursuitGroupReadSpeaker(manager,group,&speaker);if(status!=WORLD_SERVICES_OK)return status;
+        result=through ? worldSpeechRaiseRoadBlockFailureThrough(manager->collision->speech,group->reserved->radioChannel,supervisor,speaker) :
+            worldSpeechRaiseRoadBlockFailureAvoid(manager->collision->speech,group->reserved->radioChannel,supervisor,speaker);
+    }
+    status=groupSpeechResult(manager,result);if(status!=WORLD_SERVICES_OK)return status;
+    if(!manager->parameters->specialPursuit)return groupSpeechResult(manager,worldSpeechRaiseRequestAnotherRoadblock(
+        manager->collision->speech,group->reserved->radioChannel,supervisor));
+    return manager->result=WORLD_SERVICES_OK;
+}
+
+// PAL22C390..22C5A0. Real contact owners drive handbrake/cinematic/audio;
+// the final geometric test independently decides whether the block passed.
+WorldServicesResult pursuitGroupHasPassedRoadBlock(PursuitManager* manager,PursuitCollisionGroup* group,int32_t* passed)
+{
+    if(!groupBindings(manager,group) || !passed || !group->reserved || !group->target->bindings.state ||
+        !group->target->bindings.ownerMotion)return WORLD_SERVICES_INVALID_BINDING;
+    *passed=0;
+    if(group->target->bindings.ownerMotion->disabledWheelMask)return manager->result=WORLD_SERVICES_OK;
+    if(group->target->bindings.player) {
+        CarFramePlayerState* player=groupPlayer(group);
+        if(!player || !group->target->frame || !group->target->frame->environment.driver)
+            return manager->result=WORLD_SERVICES_INVALID_BINDING;
+        for(int32_t i=0;i<2;++i) {
+            const PursuitCollisionEntry* entry=group->reserved->entries[i];if(!entry)continue;
+            if(!entry->movement)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+            int32_t collided=0;
+            if(pursuitCarsCollided(group->target,entry->movement,&collided)!=CAR_DRIVER_OK)
+                return manager->result=WORLD_SERVICES_INVALID_BINDING;
+            if(!collided)continue;
+            CarDriver* driver=group->target->frame->environment.driver;
+            if(group->target->mode==1) {
+                if(driver->kind!=CAR_DRIVER_REAL || !driver->owner.real)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+                realDriverSetHandbrakeTime(&driver->owner.real->input,5.0f);
+            } else if(group->target->mode==2) {
+                if(driver->kind==CAR_DRIVER_AI) {
+                    if(!driver->owner.ai)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+                    aiDriverSetHandbrakeTime(driver->owner.ai,4.0f);
+                } else if(driver->kind==CAR_DRIVER_TRAFFIC) {
+                    if(!driver->owner.traffic)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+                    aiControlsSetHandbrakeTime(&driver->owner.traffic->input,4.0f);
+                }
+            }
+            if(35.76218032836914f<std::fabs(group->target->bindings.state->forwardSpeed) &&
+                carFramePlayerStartState(player,1,0,1,1)) {
+                if(!player->registry || !player->registry->services || !player->registry->services->audio ||
+                    !player->registry->services->audioManager)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+                const auto audio=worldAudioPlayBustRoadBlock(player->registry->services->audio,
+                    player->registry->services->audioManager,group->target->bindings.state->position);
+                if(audio!=WORLD_AUDIO_OK)return manager->result=audio==WORLD_AUDIO_CAPACITY ? WORLD_SERVICES_CAPACITY : WORLD_SERVICES_OWNER_FAILURE;
+            }
+            if(player->result)return manager->result=WORLD_SERVICES_OWNER_FAILURE;
+            break;
+        }
+    }
+    const PursuitRoadBlock& block=*group->reserved;
+    if(!block.roadPose)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+    const float* target=group->target->bindings.state->position;
+    const float dx=block.groundPoint[0]-target[0],dy=block.groundPoint[1]-target[1];
+    const float x2=dx*dx,y2=dy*dy;
+    if(std::sqrt(x2+y2)<block.width) {
+        const float* origin=block.roadPose->position;const float* direction=block.roadPose->direction;
+        const float targetAlong=(target[0]-origin[0])*direction[0]+(target[1]-origin[1])*direction[1];
+        const float blockAlong=(block.groundPoint[0]-origin[0])*direction[0]+(block.groundPoint[1]-origin[1])*direction[1];
+        *passed=5.0f<group->owner->chaseDirection*(targetAlong-blockAlong);
+    }
+    return manager->result=WORLD_SERVICES_OK;
+}
+
+// PAL22BEA0..22C2D0. Capture policy uses the actual car window/countdown,
+// speed/up vector, per-racer reset state and the same selected officer.
+WorldServicesResult pursuitGroupCanStopTarget(PursuitManager* manager,PursuitCollisionGroup* group,int32_t* stoppable)
+{
+    if(!groupBindings(manager,group) || !manager->clock || !stoppable || !group->target->bindings.owner ||
+        !group->target->bindings.state || !group->target->bindings.ownerMotion || !manager->collision->timing)
+        return WORLD_SERVICES_INVALID_BINDING;
+    *stoppable=0;
+    if(!manager->parameters->pulloversEnabled)return manager->result=WORLD_SERVICES_OK;
+    CarMovement* target=group->target;Car* car=target->bindings.owner;
+    if(car->tableIndex>=8)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+    if(manager->participantReset[car->tableIndex].resetPending || carMotionTransitionFlag(target->bindings.ownerMotion))
+        return manager->result=WORLD_SERVICES_OK;
+    if(!car->raceEntry)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+    if(car->raceEntry->completionReason)return manager->result=WORLD_SERVICES_OK;
+    const VehicleState& vehicle=*target->bindings.state;
+    const bool window=carMotionWindowActive(target->bindings.ownerMotion,manager->clock->worldTimer);
+    const bool player=target->bindings.player!=nullptr;
+    float& confirm=group->owner->stopConfirmationSeconds;
+    if(manager->parameters->specialPursuit) {
+        PursuitCollisionEntry* selected=pursuitManagerSelectedEntry(manager);
+        if(!selected || !selected->movement || !selected->movement->bindings.state)
+            return manager->result=WORLD_SERVICES_INVALID_BINDING;
+        const VehicleState& cop=*selected->movement->bindings.state;
+        const float x=vehicle.position[0]-cop.position[0],y=vehicle.position[1]-cop.position[1];
+        const float x2=x*x,y2=y*y;const float distance=std::sqrt(x2+y2);
+        bool captured=window && (player ? car->driveCountdown!=0 : distance<30.0f);
+        bool restore=true;
+        float radius=manager->collision->timing->captureRadius;
+        if(manager->parameters->mode==2)radius*=1.100000023841858f;
+        if(!captured && distance<radius) {
+            if(target->bindings.ownerMotion->disabledWheelMask && vehicle.speed<0.10000000149011612f)captured=true;
+            if(!captured && vehicle.orientation[10]<=0.10000000149011612f &&
+                vehicle.speed*2.236999988555908f<10.0f)captured=true;
+            if(!captured) {
+                const int32_t difficulty=manager->collision->severity;
+                if(difficulty<0 || difficulty>2)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+                constexpr float threshold[3]={8.940545082092285f,6.705409049987793f,6.705409049987793f};
+                float speed=threshold[difficulty];if(manager->parameters->mode==2)speed*=1.5f;
+                if(vehicle.speed<speed) {
+                    confirm-=manager->clock->worldTimeElapsed;restore=false;
+                    if(confirm<0.0f)captured=true;
+                }
+            }
+        }
+        if(captured)*stoppable=cop.speed<6.705409049987793f;
+        else if(restore) {
+            confirm+=manager->clock->worldTimeElapsed;if(2.0f<confirm)confirm=2.0f;
+        }
+        return manager->result=WORLD_SERVICES_OK;
+    }
+    if(group->owner->disabledRemainingSeconds<=0.0f)*stoppable=1;
+    int32_t nearby=0;
+    if(group->active[0]) {
+        const auto result=pursuitManagerAnyCopNear(manager,target,manager->collision->timing->captureRadius,&nearby);
+        if(result!=WORLD_SERVICES_OK)return manager->result=result;
+    } else {
+        if(!car->driverInfo)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+        nearby=car->driverInfo->driverClass==2;
+    }
+    if(vehicle.speed*2.236999988555908f<10.0f && nearby) {
+        confirm-=manager->clock->worldTimeElapsed;
+        if(confirm<=0.0f)*stoppable=1;
+        else if(confirm<=1.0f) {
+            int32_t collided=0;const auto result=pursuitManagerAnyCopContact(manager,target,&collided);
+            if(result!=WORLD_SERVICES_OK)return manager->result=result;
+            if(collided)*stoppable=1;
+        }
+    } else confirm=2.0f;
+    if(target->bindings.ownerMotion->disabledWheelMask && vehicle.speed<0.10000000149011612f)*stoppable=1;
+    else if(window && (!player || car->driveCountdown!=0))*stoppable=1;
+    else if(vehicle.orientation[10]<=0.10000000149011612f && vehicle.speed*2.236999988555908f<10.0f)*stoppable=1;
+    return manager->result=WORLD_SERVICES_OK;
+}
+
+// The geometric admission inside PAL229970..229B58 is relative to the
+// reserved block's first officer, not an independently active chase car.
+WorldServicesResult pursuitGroupRoadBlockHighlightEligibility(const PursuitCollisionGroup* group,int32_t* eligible)
+{
+    if(!group || !eligible || !group->target || !group->target->bindings.state)
+        return WORLD_SERVICES_INVALID_BINDING;
+    *eligible=0;
+    const PursuitCollisionEntry* first=group->reserved ? group->reserved->entries[0] : nullptr;
+    if(!first || !first->movement || !(20.0f<group->target->bindings.state->speed))return WORLD_SERVICES_OK;
+    if(!first->movement->bindings.state)return WORLD_SERVICES_INVALID_BINDING;
+    const float* a=group->target->bindings.state->position;
+    const float* b=first->movement->bindings.state->position;
+    const float x=a[0]-b[0],y=a[1]-b[1],z=a[2]-b[2];
+    const float x2=x*x,y2=y*y,z2=z*z;
+    *eligible=std::sqrt((x2+y2)+z2)<20.0f;
+    return WORLD_SERVICES_OK;
+}
+
+// PAL229970..229B58, including the source's independent escalation tail.
+WorldServicesResult pursuitGroupRoadBlockDefeated(PursuitManager* manager,PursuitCollisionGroup* group,int32_t through)
+{
+    if(!groupBindings(manager,group) || !group->target->bindings.state || !manager->collision->timing)
+        return WORLD_SERVICES_INVALID_BINDING;
+    const bool involved=group->target->bindings.player || manager->parameters->specialPursuit;
+    bool backedOff=false;
+    CarFramePlayerState* player=nullptr;
+    if(involved) {
+        if(group->target->bindings.player) {
+            player=groupPlayer(group);if(!player)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+            int32_t backOff=0;const auto status=pursuitGroupShouldBackOff(manager,group,&backOff);
+            if(status!=WORLD_SERVICES_OK)return manager->result=status;
+            if(backOff) {
+                const auto result=pursuitGroupSwitchState(manager,group,5);if(result!=WORLD_SERVICES_OK)return result;
+                backedOff=true;
+            }
+        }
+        if(!backedOff) {
+            auto status=pursuitGroupRoadBlockDefeatedSpeech(manager,group,through);
+            if(status!=WORLD_SERVICES_OK)return status;
+            if(player) {
+                carFramePlayerStartScore(player,8);
+                if(player->result)return manager->result=WORLD_SERVICES_OWNER_FAILURE;
+                int32_t eligible=0;
+                const auto admission=pursuitGroupRoadBlockHighlightEligibility(group,&eligible);
+                if(admission!=WORLD_SERVICES_OK)return manager->result=admission;
+                if(eligible) {
+                    if(!player->registry || !player->registry->services || !player->registry->services->replay)
+                        return manager->result=WORLD_SERVICES_INVALID_BINDING;
+                    replayManagerAddHighlight(player->registry->services->replay,10.0f);
+                }
+            }
+            if(!manager->parameters->specialPursuit && group->owner->speechLevel==6) {
+                bool request=false;
+                if(!pursuitLimitAiPursuitsToOne) {
+                    const int32_t laps=manager->parameters->pointToPoint ? 1 : manager->parameters->totalLaps;
+                    if(laps==2)request=true;
+                    else if(worldRandomBounded(manager->world,3)<2)request=manager->parameters->chopperEnabled!=0;
+                } else request=manager->parameters->chopperEnabled!=0;
+                if(request){group->elapsed+=manager->collision->timing->radioTimeout;group->requestFlags|=0x20u;}
+            }
+        }
+    }
+    if(group->owner->roadBlocksUsed>=5)group->requestFlags|=0x80u;
+    else if(group->owner->roadBlocksUsed>=3) {
+        if(manager->parameters->authoredPursuitOption26C)group->requestFlags|=0x110u;
+    } else group->requestFlags|=0x40u;
+    return manager->result=WORLD_SERVICES_OK;
+}
+
+// PAL229B58..229DD8. Passed/avoided, disabled and ordinary timeout paths
+// all use the SAME reserved block and actual disband/return-to-patrol graph.
+WorldServicesResult pursuitGroupUpdateRoadBlocks(PursuitManager* manager,PursuitCollisionGroup* group)
+{
+    if(!groupBindings(manager,group) || !manager->clock || !manager->collision->timing ||
+        !group->target->bindings.ownerMotion || !group->target->bindings.owner)
+        return WORLD_SERVICES_INVALID_BINDING;
+    const bool disabled=group->target->bindings.ownerMotion->disabledWheelMask!=0;
+    bool bypassEmptyTimer=false;
+    if(group->reserved) {
+        if(disabled) {
+            if(!group->target->bindings.owner->driverInfo)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+            if(group->target->bindings.owner->driverInfo->driverClass==2 && manager->parameters->specialPursuit) {
+                const auto result=groupSpeechResult(manager,worldSpeechRaiseSpikeStripTireBlow(
+                    manager->collision->speech,manager->selectedRadioChannel,0));if(result!=WORLD_SERVICES_OK)return result;
+            }
+            const auto result=pursuitGroupDisbandRoadBlock(manager,group,1);if(result!=WORLD_SERVICES_OK)return result;
+        }
+        if(group->reserved) {
+            int32_t passed=0;
+            auto result=pursuitGroupHasPassedRoadBlock(manager,group,&passed);if(result!=WORLD_SERVICES_OK)return result;
+            if(passed) {
+                group->elapsed=manager->collision->timing->radioTimeout;
+                if(!disabled){result=pursuitGroupRoadBlockDefeated(manager,group,1);if(result!=WORLD_SERVICES_OK)return result;}
+                result=pursuitGroupDisbandRoadBlock(manager,group,1);if(result!=WORLD_SERVICES_OK)return result;
+            }
+            if(group->reserved) {
+                group->owner->roadBlockApproachSeconds-=manager->clock->worldTimeElapsed;
+                if(group->owner->roadBlockApproachSeconds<=0.0f) {
+                    group->owner->roadBlockApproachSeconds=0.0f;
+                    if(!group->owner->bindings->route)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+                    const float length=group->owner->bindings->route->length;
+                    const float blockDistance=group->reserved->routeDistance;
+                    const float targetDistance=group->target->routeLocation.distance;
+                    float distance=group->owner->chaseDirection==1.0f ?
+                        (blockDistance+100.0f)-targetDistance : (targetDistance+100.0f)-blockDistance;
+                    if(distance<0.0f)distance+=length;
+                    if(length*0.5f<distance) {
+                        group->elapsed=manager->collision->timing->radioTimeout;
+                        if(!disabled){result=pursuitGroupRoadBlockDefeated(manager,group,0);if(result!=WORLD_SERVICES_OK)return result;}
+                        result=pursuitGroupDisbandRoadBlock(manager,group,1);if(result!=WORLD_SERVICES_OK)return result;
+                        bypassEmptyTimer=true;
+                    }
+                }
+            }
+        }
+    }
+    if(!group->reserved && !bypassEmptyTimer) {
+        if(manager->parameters->specialPursuit)group->elapsed=0.0f;
+        else {group->elapsed-=manager->clock->worldTimeElapsed;if(group->elapsed<0.0f)group->elapsed=0.0f;}
+    }
+    if(!group->reserved && (group->requestFlags&8u)) {
+        if(manager->parameters->specialPursuit || (manager->parameters->roadBlocksEnabled && !disabled &&
+            group->target->bindings.player && group->elapsed<=0.0f))return pursuitGroupActivateRoadBlock(manager,group);
+    }
+    return manager->result=WORLD_SERVICES_OK;
+}
+
+// PAL22B840..22B904. AI ticket speech rotates the actual channel deque
+// before choosing the exact-description or generic radio-arrest producer.
+WorldServicesResult pursuitGroupAiTicketSpeech(PursuitManager* manager,PursuitCollisionGroup* group)
+{
+    if(!groupBindings(manager,group))return WORLD_SERVICES_INVALID_BINDING;
+    const int32_t session=*manager->applicationState;
+    if(session==8 || session==9)return manager->result=WORLD_SERVICES_OK;
+    int32_t channel=manager->selectedRadioChannel;
+    if(!manager->parameters->specialPursuit) {
+        if(!pursuitChannelPop(&manager->collision->channels,&channel))
+            return manager->result=WORLD_SERVICES_OWNER_FAILURE;
+        pursuitChannelPush(&manager->collision->channels,channel);
+    }
+    int32_t description;
+    auto result=pursuitGroupReadExactDescription(group,&description);
+    if(result!=WORLD_SERVICES_OK)return manager->result=result;
+    if(vectorDefaultRandomBounded(3)==0 || description==-1)
+        return groupSpeechResult(manager,worldSpeechRaiseRadioArrest(manager->collision->speech,channel));
+    return groupSpeechResult(manager,worldSpeechRaiseCarStopped(manager->collision->speech,channel,description));
+}
+
+// PAL22CB30..22CC00. Retarget the SAME pursuit; its phase, officers and
+// path histories retain their source lifetime. The helicopter clears its
+// followed car, while remaining reserved by this group.
+WorldServicesResult pursuitGroupChangeChasedCar(PursuitManager* manager,
+    PursuitCollisionGroup* group,CarMovement* target)
+{
+    if(!groupBindings(manager,group) || !target || !target->bindings.owner)
+        return WORLD_SERVICES_INVALID_BINDING;
+    group->target=target;
+    if(group->chopper)chopperShiftTarget(group->chopper,nullptr);
+    int32_t speaker=manager->selectedRadioChannel;
+    auto result=WORLD_SERVICES_OK;
+    if(!manager->parameters->specialPursuit) {
+        result=pursuitGroupReadSpeaker(manager,group,&speaker);if(result!=WORLD_SERVICES_OK)return result;
+    }
+    int32_t description,colour;
+    result=pursuitGroupReadExactDescription(group,&description);if(result!=WORLD_SERVICES_OK)return manager->result=result;
+    result=pursuitGroupReadColour(group,&colour);if(result!=WORLD_SERVICES_OK)return manager->result=result;
+    if(description==-1)return groupSpeechResult(manager,worldSpeechRaiseBeginPursuitIdGeneral(
+        manager->collision->speech,static_cast<uint32_t>(speaker),1,colour));
+    return groupSpeechResult(manager,worldSpeechRaiseBeginPursuitIdSpecific(
+        manager->collision->speech,static_cast<uint32_t>(speaker),0,description,colour));
+}
+
+// PAL229288..2295C8, the whole pursuit-group cadence. The caller owns
+// deletion; all group resources remain live until it consumes `finished`.
+WorldServicesResult pursuitGroupUpdate(PursuitManager* manager,PursuitCollisionGroup* group,int32_t* finished)
+{
+    if(!groupBindings(manager,group) || !finished || !manager->clock || !group->owner->barricades ||
+        !group->target->bindings.owner || !group->target->bindings.ownerMotion ||
+        !group->target->bindings.state || !manager->simulation ||
+        !manager->simulation->pursuitServices || !manager->simulation->pursuitServices->landmarks)
+        return WORLD_SERVICES_INVALID_BINDING;
+    *finished=0;
+    auto* state=group->owner;
+    CarMovement* target=group->target;
+    Car* car=target->bindings.owner;
+    const float elapsed=manager->clock->worldTimeElapsed;
+    auto result=pursuitBarricadesAdvance(state->barricades,elapsed);
+    if(result!=WORLD_SERVICES_OK)return manager->result=result;
+    const PursuitLandmark* landmark=pursuitLandmarkFind(manager->simulation->pursuitServices->landmarks,
+        target->bindings.state->position);
+    state->landmark=landmark ? landmark->tag : 0;
+    if(target->bindings.ownerMotion->disabledWheelMask)state->disabledRemainingSeconds-=elapsed;
+    if(manager->parameters->mode!=1) {
+        if(!car->raceEntry)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+        if(car->raceEntry->completionReason) {*finished=1;return manager->result=WORLD_SERVICES_OK;}
+    }
+    if(manager->parameters->specialPursuit) {
+        if(manager->parameters->mode==2) {
+            if(!target->frame || !target->frame->environment.driver)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+            const CarRecoveryPose* pose=carDriverCurrentPose(target->frame->environment.driver,1);
+            if(!pose)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+            const float x=target->bindings.state->velocity[0]*pose->direction[0];
+            const float y=target->bindings.state->velocity[1]*pose->direction[1];
+            const float direction=0.0f<=x+y ? 1.0f : -1.0f;
+            if(0.0f<direction*state->chaseDirection)state->wrongDirectionSeconds=0.0f;
+            else {
+                state->wrongDirectionSeconds+=elapsed;
+                if(8.0f<=state->wrongDirectionSeconds) {
+                    state->wrongDirectionSeconds=0.0f;state->chaseDirection=direction;
+                }
+            }
+        }
+    } else {
+        if(state->maximumTargetSpeed<target->bindings.state->forwardSpeed)
+            state->maximumTargetSpeed=target->bindings.state->forwardSpeed;
+        if(group->activeCount<0 || group->activeCount>2)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+        for(int32_t i=0;i<group->activeCount;++i) {
+            const auto* entry=group->active[i];
+            if(!entry || !entry->movement)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+            if(entry->movement->mode==5) {
+                if(!entry->movement->cop)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+                entry->movement->cop->speedLimit=state->maximumTargetSpeed;
+            }
+        }
+        result=pursuitGroupUpdateDriveTargets(manager,group);if(result!=WORLD_SERVICES_OK)return result;
+        result=pursuitGroupSelectPrimary(group);if(result!=WORLD_SERVICES_OK)return manager->result=result;
+        if(manager->parameters->raceKind==3) {
+            if(!car->raceEntry)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+            *finished=car->raceEntry->completionReason!=0;
+        }
+        int32_t backOff;
+        result=pursuitGroupShouldBackOff(manager,group,&backOff);if(result!=WORLD_SERVICES_OK)return result;
+        if(backOff) {
+            result=pursuitGroupSwitchState(manager,group,5);if(result!=WORLD_SERVICES_OK)return result;
+            *finished=1;
+        } else if(group->activeCount || group->phase>=3)state->stateRemainingSeconds-=elapsed;
+        if(state->stateRemainingSeconds<=0.0f) {
+            int32_t end;
+            result=pursuitGroupAdvanceState(manager,group,&end);if(result!=WORLD_SERVICES_OK)return result;
+            if(end)*finished=1;
+        }
+    }
+    if(group->phase!=4 && group->phase!=5) {
+        if(*finished)return manager->result=WORLD_SERVICES_OK;
+        int32_t canStop;
+        result=pursuitGroupCanStopTarget(manager,group,&canStop);if(result!=WORLD_SERVICES_OK)return result;
+        if(canStop) {
+            result=pursuitManagerCreatePullover(manager,group,car,1);if(result!=WORLD_SERVICES_OK)return result;
+            *finished=1;
+            result=pursuitGroupSwitchState(manager,group,4);if(result!=WORLD_SERVICES_OK)return result;
+            result=pursuitGroupReleaseAll(manager,group);if(result!=WORLD_SERVICES_OK)return result;
+        }
+    }
+    if(*finished)return manager->result=WORLD_SERVICES_OK;
+    result=pursuitGroupUpdateRoadBlockMachine(manager,group);if(result!=WORLD_SERVICES_OK)return result;
+    result=pursuitGroupUpdateRoadBlocks(manager,group);if(result!=WORLD_SERVICES_OK)return result;
+    result=pursuitGroupUpdateChopper(manager,group);if(result!=WORLD_SERVICES_OK)return result;
+    if(!manager->parameters->specialPursuit) {
+        switch(group->phase) {
+        case 0:result=pursuitGroupLevelZeroSpeech(manager,group);if(result!=WORLD_SERVICES_OK)return result;
+            [[fallthrough]];
+        case 1:result=pursuitGroupEarlyCollision(manager,group);if(result!=WORLD_SERVICES_OK)return result;break;
+        case 5:*finished=1;break;
+        default:break;
+        }
+    }
+    return manager->result=WORLD_SERVICES_OK;
+}
+
+
+
+
+
+
+// PAL228FC8..229198. The final-only ten-second disabled timer is retained.
+// This body is pending complete dependent state/lifetime graph validation.
+WorldServicesResult pursuitGroupInitialize(PursuitManager* manager,PursuitGroupState* state,
+    const PursuitGroupBindings* bindings,int32_t id,CarMovement* target)
+{
+    if(!manager || !state || !bindings || !manager->collision || !manager->parameters ||
+        !manager->applicationState || manager->collision->severity<0 || manager->collision->severity>2 ||
+        id<0 || id>=6 || !bindings->carResources)
+        return WORLD_SERVICES_INVALID_BINDING;
+    PursuitCollisionGroup& group=state->group;
+    group.owner=state;
+    state->manager=manager;state->bindings=bindings;
+    group.target=target;
+    driverCommandInitialize(&group.targetPath);
+    driverCommandInitialize(&group.recentTargetPath);
+    pursuitVelocityHistoryInitialize(&group.velocityHistory);
+    state->roadBlock.group=&group;
+    state->roadBlock.state=0;state->roadBlock.requests=0;state->roadBlock.result=0;
+    state->id=static_cast<int8_t>(id);
+    group.activeCount=0;group.hudLevel=0;state->roadBlocksUsed=0;
+    state->stopConfirmationSeconds=2.0f;
+    state->roadBlockApproachSeconds=3.5f;
+    static const float timeouts[3]={20.0f,15.0f,10.0f};
+    pursuitTimingTuning.radioTimeout=timeouts[manager->collision->severity];
+    group.elapsed=0.0f;
+    state->chopperWaitSeconds=10.0f;state->nextChopperWaitSeconds=12.0f;
+    group.nextChannel=5;
+    group.active[0]=nullptr;group.active[1]=nullptr;
+    state->landmark=0;state->joinSpeechSent=0;state->specialDeclarationSent=0;state->calledForBackup=0;
+    group.reserved=nullptr;group.requestFlags=0;group.chopper=nullptr;group.extendedTimeout=0;
+    if(target){
+        float topSpeed;
+        const auto result=pursuitCarTopSpeed(target,bindings->carResources,&topSpeed);
+        if(result!=WORLD_SERVICES_OK)return manager->result=result;
+        state->maximumTargetSpeed=topSpeed;
+        if(manager->parameters->specialPursuit)group.currentChannel=manager->selectedRadioChannel;
+        else if(target->bindings.player &&
+            !pursuitChannelPop(&manager->collision->channels,&group.currentChannel))
+            return manager->result=WORLD_SERVICES_OWNER_FAILURE;
+    }
+    const auto switched=pursuitGroupSwitchState(manager,&group,*manager->applicationState==8 ? 3 : 0);
+    if(switched!=WORLD_SERVICES_OK)return switched;
+    state->chaseDirection=1.0f;state->wrongDirectionSeconds=0.0f;
+    state->barricades=pursuitBarricadesCreate(bindings->collision,bindings->topology,bindings->collisionResources);
+    if(!state->barricades)return manager->result=WORLD_SERVICES_OWNER_FAILURE;
+    state->disabledRemainingSeconds=10.0f;
+    return manager->result=WORLD_SERVICES_OK;
+}
+
+
+
+
+// PAL22C5A0..22C740. The two reserved officers are real entries; optional
+// nearby re-acquisition calls the concrete manager creation operation.
+WorldServicesResult pursuitGroupDisbandRoadBlock(PursuitManager* manager,
+    PursuitCollisionGroup* group,int32_t considerTarget)
+{
+    if(!groupBindings(manager,group))return WORLD_SERVICES_INVALID_BINDING;
+    if(!group->reserved)return manager->result=WORLD_SERVICES_OK;
+    for(int index=0;index<2;++index){
+        PursuitCollisionEntry* entry=group->reserved->entries[index];
+        if(!entry)continue;
+        pursuitCollisionGroupRemove(group,entry);
+        if(pursuitEntryReturnToPatrol(entry)!=WORLD_SERVICES_OK)
+            return manager->result=WORLD_SERVICES_OWNER_FAILURE;
+        if(!considerTarget)continue;
+        if(!entry->movement || !entry->movement->bindings.state || !group->target->bindings.state ||
+            !group->target->bindings.owner)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+        const float* target=group->target->bindings.state->position;
+        const float* officer=entry->movement->bindings.state->position;
+        const float x=target[0]-officer[0],y=target[1]-officer[1];
+        const float xx=x*x,yy=y*y;
+        if(std::sqrt(xx+yy)<30.0f){
+            int32_t created=0;
+            const auto result=pursuitManagerCreatePursuit(manager,entry,group->target->bindings.owner,&created);
+            if(result!=WORLD_SERVICES_OK)return result;
+            if(created)pursuitCollisionSetState(entry,6);
+        }
+    }
+    const bool playerInvolved=group->target->bindings.player || manager->parameters->specialPursuit;
+    if(playerInvolved){
+        const int32_t channel=group->reserved->radioChannel;
+        if(group->target->bindings.player && group->nextChannel==5 && manager->parameters->mode==1)
+            group->nextChannel=channel;
+        else pursuitChannelPush(&manager->collision->channels,channel);
+    }
+    const auto removed=pursuitManagerRemoveSpikes(manager,group->reserved->siteIndex);
+    if(removed!=WORLD_SERVICES_OK)return removed;
+    if(!group->owner->barricades)return manager->result=WORLD_SERVICES_INVALID_BINDING;
+    const auto blink=pursuitBarricadesBlink(group->owner->barricades,2.0f);
+    if(blink!=WORLD_SERVICES_OK)return manager->result=blink;
+    group->reserved=nullptr;
+    group->owner->roadBlock.state=0;
+    return manager->result=WORLD_SERVICES_OK;
+}
+
+// PAL22A260..22A310. Preserve the source's changing loop bound and index
+// progression while Remove compacts the two active slots.
+WorldServicesResult pursuitGroupReleaseAll(PursuitManager* manager,PursuitCollisionGroup* group)
+{
+    if(!groupBindings(manager,group))return WORLD_SERVICES_INVALID_BINDING;
+    for(int32_t index=0;index<group->activeCount;++index){
+        PursuitCollisionEntry* entry=group->active[index];
+        if(!entry)continue;
+        pursuitCollisionGroupRemove(group,entry);
+        if(pursuitCollisionEntryEligible(entry) && pursuitEntryReturnToPatrol(entry)!=WORLD_SERVICES_OK)
+            return manager->result=WORLD_SERVICES_OWNER_FAILURE;
+    }
+    const auto result=pursuitGroupDisbandRoadBlock(manager,group,0);
+    if(result!=WORLD_SERVICES_OK)return result;
+    return pursuitGroupReleaseChopper(manager,group);
+}
+
+
+
+
+
+
+WorldServicesResult pursuitGroupReleaseChopper(PursuitManager* manager,
+    PursuitCollisionGroup* group)
+{
+    if (!group) {
+        if (manager) manager->result = WORLD_SERVICES_INVALID_BINDING;
+        return WORLD_SERVICES_INVALID_BINDING;
+    }
+    Chopper* chopper = group->chopper;
+    if (!chopper || chopper->forceFirstPlayerTarget) {
+        if (manager) manager->result = WORLD_SERVICES_OK;
+        return WORLD_SERVICES_OK;
+    }
+    if (!manager) return WORLD_SERVICES_INVALID_BINDING;
+    manager->chopperReserved = 0;
+    /* The original ignores FollowThisCar's result. Even its navigation gate
+     * must not prevent the subsequent release of this group's references. */
+    chopperShiftTarget(chopper, nullptr);
+    group->extendedTimeout = 0;
+    group->chopper = nullptr;
+    return manager->result = WORLD_SERVICES_OK;
+}
+
+float* pursuitVelocityHistorySample(float output[2],const PursuitVelocityHistory* history,float seconds)
+{
+    float x=history->velocity[0][0];
+    float y=history->velocity[0][1];
+    float accumulated=0.0f;
+    for(int32_t index=0;index<history->count;++index){
+        const float elapsed=history->elapsed[index];
+        accumulated=accumulated+elapsed;
+        if(seconds<=accumulated){
+            accumulated=accumulated-history->elapsed[0];
+            if(index<history->count-1){
+                const float changeX=history->velocity[index][0]-history->velocity[index+1][0];
+                const float changeY=history->velocity[index][1]-history->velocity[index+1][1];
+                const float rateX=finiteRatio(changeX,elapsed);
+                const float rateY=finiteRatio(changeY,elapsed);
+                const float offsetX=rateX*accumulated;
+                const float offsetY=rateY*accumulated;
+                x=history->velocity[index][0]+offsetX;
+                y=history->velocity[index][1]+offsetY;
+            }
+            break;
+        }
+    }
+    output[0]=x;
+    output[1]=y;
+    return output;
+}
+
+
+int32_t pursuitCollisionGroupRemove(PursuitCollisionGroup* group, PursuitCollisionEntry* entry)
+{
+    if (!entry) return 0;
+    for (int index = 0; index < group->activeCount; ++index) {
+        if (group->active[index] != entry) continue;
+        group->active[index] = NULL;
+        --group->activeCount;
+        if (!group->active[0]) {
+            group->active[0] = group->active[1];
+            group->active[1] = NULL;
+        }
+        pursuitCollisionSetGroup(entry, NULL);
+        return 1;
+    }
+    if (group->reserved) {
+        for (int index = 0; index < 2; ++index) {
+            if (group->reserved->entries[index] != entry) continue;
+            group->reserved->entries[index] = NULL;
+            pursuitCollisionSetGroup(entry, NULL);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+// PAL22C920..22C990. Includes both chased officers and a reserved road block.
+int32_t pursuitGroupContainsCop(const PursuitCollisionGroup* group,const PursuitCollisionEntry* entry)
+{
+    for(int32_t index=0;index<group->activeCount;++index)
+        if(group->active[index]==entry)return 1;
+    if(group->reserved)
+        for(const auto* officer:group->reserved->entries)if(officer==entry)return 1;
+    return 0;
+}
+
+// PAL22D180..22D204: all30 history slots are serialized, including the
+// retained unused tail. Count uses the signed one-byte integer overload.
+void pursuitVelocityHistoryDoSnapshot(PursuitVelocityHistory* history,ReplaySnapshot* snapshot)
+{
+    hp2::Require(history && snapshot,"Pursuit history snapshot has no owner");
+    replaySnapshotMoveInteger(snapshot,&history->count,1);
+    hp2::Require(history->count>=0 && history->count<=PURSUIT_VELOCITY_SAMPLES,
+        "Pursuit history snapshot count is outside its original capacity");
+    for(int index=0;index<PURSUIT_VELOCITY_SAMPLES;++index){
+        replaySnapshotMoveData(snapshot,history->velocity[index],8,-1,0);
+        replaySnapshotMoveFloat(snapshot,&history->elapsed[index]);
+    }
+}
+
+// PAL22CE60..22CEE0 has no nested section. The source always rewrites its
+// owning pursuit borrow after the four scalar transfers.
+void pursuitRoadBlockMachineDoSnapshot(PursuitRoadBlockMachine* machine,ReplaySnapshot* snapshot,
+    PursuitCollisionGroup* group)
+{
+    hp2::Require(machine && snapshot && group,"Road-block snapshot has no pursuit owner");
+    replaySnapshotMoveData(snapshot,&machine->state,1,-1,0);
+    replaySnapshotMoveFloat(snapshot,&machine->remainingSeconds);
+    replaySnapshotMoveUnsigned(snapshot,&machine->requests,4);
+    replaySnapshotMoveInteger(snapshot,&machine->result,4);
+    machine->group=group;
+}
+
+// PAL22A548..22AA1C. Complete group stream, using canonical references
+// restored by CopManager before any officer's own back-reference is read.
+void pursuitGroupDoSnapshot(PursuitCollisionGroup* group,ReplaySnapshot* snapshot)
+{
+    hp2::Require(group && group->owner && snapshot,"Pursuit snapshot has no pool owner");
+    auto& state=*group->owner;
+    PursuitManager* manager=state.manager;
+    hp2::Require(manager && manager->world && manager->simulation && state.barricades,
+        "Pursuit snapshot has incomplete World/barricade owners");
+    replaySnapshotBeginSection(snapshot,group,"tPursuit");
+    replaySnapshotVerifyData(snapshot,&state.id,1,1,1);
+    Car* target=group->target?group->target->bindings.owner:nullptr;
+    worldSnapshotCarPointer(manager->world,snapshot,&target);
+    if(snapshot->restoring)group->target=target?target->Movement():nullptr;
+    pursuitManagerSnapshotRoadBlock(manager,snapshot,&group->reserved);
+    if(group->reserved){
+        replaySnapshotMoveData(snapshot,&group->reserved->radioChannel,4,4,0);
+        for(auto& officer:group->reserved->entries)pursuitManagerSnapshotCop(manager,snapshot,&officer);
+    }
+    replaySnapshotMoveData(snapshot,&group->currentChannel,4,4,0);
+    replaySnapshotMoveData(snapshot,&group->nextChannel,4,4,0);
+    replaySnapshotMoveInteger(snapshot,&state.copLimit,4);
+    replaySnapshotMoveInteger(snapshot,&state.allocationMode,4);
+    replaySnapshotMoveInteger(snapshot,&state.roadBlocksUsed,4);
+    int32_t hasChopper=group->chopper?1:0;
+    replaySnapshotMoveInteger(snapshot,&hasChopper,4);
+    if(snapshot->restoring){
+        group->chopper=hasChopper?manager->simulation->chopper:nullptr;
+        hp2::Require(!hasChopper || group->chopper,"Pursuit snapshot refers to an absent World chopper");
+    }
+    replaySnapshotMoveFloat(snapshot,&state.chopperWaitSeconds);
+    replaySnapshotMoveFloat(snapshot,&state.nextChopperWaitSeconds);
+    replaySnapshotMoveData(snapshot,&group->extendedTimeout,1,-1,0);
+    replaySnapshotMoveInteger(snapshot,&group->activeCount,4);
+    hp2::Require(group->activeCount>=0 && group->activeCount<=2,"Pursuit snapshot has too many chase officers");
+    for(int index=0;index<group->activeCount;++index)
+        pursuitManagerSnapshotCop(manager,snapshot,&group->active[index]);
+    replaySnapshotMoveData(snapshot,&group->phase,1,-1,0);
+    replaySnapshotMoveData(snapshot,&state.speechLevel,1,-1,0);
+    replaySnapshotMoveData(snapshot,&state.landmark,1,-1,0);
+    replaySnapshotMoveFloat(snapshot,&state.stateRemainingSeconds);
+    replaySnapshotMoveFloat(snapshot,&group->elapsed);
+    replaySnapshotMoveFloat(snapshot,&state.roadBlockApproachSeconds);
+    replaySnapshotMoveFloat(snapshot,&state.stopConfirmationSeconds);
+    replaySnapshotMoveFloat(snapshot,&state.chaseDirection);
+    replaySnapshotMoveFloat(snapshot,&state.wrongDirectionSeconds);
+    replaySnapshotMoveFloat(snapshot,&state.disabledRemainingSeconds);
+    replaySnapshotMoveData(snapshot,&state.joinSpeechSent,1,4,0);
+    replaySnapshotMoveData(snapshot,&state.specialDeclarationSent,1,4,0);
+    replaySnapshotMoveData(snapshot,&state.calledForBackup,1,4,0);
+    replaySnapshotMoveFloat(snapshot,&state.maximumTargetSpeed);
+    replaySnapshotMoveUnsigned(snapshot,&group->requestFlags,4);
+    replaySnapshotMoveInteger(snapshot,&group->hudLevel,1);
+    hp2::Require(group->target && group->target->bindings.recoveryPoints,
+        "Pursuit snapshot has no actual target/road registry");
+    const auto* registry=group->target->bindings.recoveryPoints;
+    driverCommandSnapshot(&group->targetPath,registry,snapshot);
+    driverCommandSnapshot(&group->recentTargetPath,registry,snapshot);
+    if(group->target->bindings.player)pursuitVelocityHistoryDoSnapshot(&group->velocityHistory,snapshot);
+    pursuitRoadBlockMachineDoSnapshot(&state.roadBlock,snapshot,group);
+    pursuitBarricadesDoSnapshot(state.barricades,snapshot);
+    replaySnapshotEndSection(snapshot);
+}
+
+// PAL229DD8..229E30 RoadBlockEncounteredRecently; same live disabled-wheel/time owners.
+int32_t pursuitCollisionRadioSuppressed(const PursuitCollisionContext* context, const PursuitCollisionGroup* group)
+{
+    if (group->target->bindings.ownerMotion->disabledWheelMask) return 1;
+    if (!context->timing) abort();
+    float timeout = context->timing->radioTimeout;
+    if (group->extendedTimeout == 1) timeout = timeout + timeout;
+    return timeout - 4.0f < group->elapsed;
+}
+
+// Native typed speech payload adapter for the proven RemovePrimarySpeaker graph.
+static void queueRadio(PursuitCollisionContext* context, uint32_t type, int32_t previous, int32_t current)
+{
+    WorldSpeechContext* payload = worldSpeechNextContext(context->speech);
+    if (!payload) {
+        context->result = PURSUIT_COLLISION_INVALID_BINDING;
+        return;
+    }
+    payload->fromId = (uint32_t)previous;
+    payload->toId = (uint32_t)current;
+    const WorldSpeechResult result = worldSpeechPushEvent(context->speech, type);
+    /* Original push silently suppresses these session modes and drops a
+     * full two-event ring. Missing native ownership is a different error. */
+    if (result == WORLD_SPEECH_INVALID_BINDING || result == WORLD_SPEECH_AUDIO_FAILURE)
+        context->result = PURSUIT_COLLISION_INVALID_BINDING;
+}
+
+// PAL22C990..22CA78 RemovePrimarySpeaker, including actual speaker-pool order and RNG.
+void pursuitCollisionChangeRadio(PursuitCollisionContext* context, PursuitCollisionGroup* group, int32_t event)
+{
+    if (!group->target->bindings.player || pursuitCollisionRadioSuppressed(context, group)) return;
+    const int32_t previous = group->currentChannel;
+    pursuitChannelPush(&context->channels, previous);
+    if (group->nextChannel != 5) {
+        group->currentChannel = group->nextChannel;
+        group->nextChannel = 5;
+    } else if (group->activeCount < 2) group->currentChannel = group->nextChannel;
+    else if (!pursuitChannelPop(&context->channels, &group->currentChannel)) {
+        context->result = PURSUIT_COLLISION_EMPTY_CHANNEL_POOL;
+        return;
+    }
+    if (!event) queueRadio(context, 0x28u, previous, group->currentChannel);
+    else if (vectorDefaultRandomBounded(10) < 2) queueRadio(context, 0x26u, previous, group->currentChannel);
+    else queueRadio(context, 0x27u, previous, group->currentChannel);
+}
+
+// PAL22CEE0..22CF68 tNearFollowTarget constructor; native vtable-free carrier.
+void pursuitVelocityHistoryInitialize(PursuitVelocityHistory* history)
+{
+    history->count=0;
+    for(int32_t index=0;index<PURSUIT_VELOCITY_SAMPLES;++index){
+        history->velocity[index][0]=0.0f;
+        history->velocity[index][1]=0.0f;
+        history->elapsed[index]=0.0f;
+    }
+}
+
+// PAL22CF90..22D080 tNearFollowTarget Update; the exact30-slot history remains with its actual pursuit owner.
+float* pursuitVelocityHistoryPush(float output[2],PursuitVelocityHistory* history,
+    const float position[2],const float velocity[2],float elapsed)
+{
+    for(int32_t index=PURSUIT_VELOCITY_SAMPLES-1;index>0;--index){
+        history->velocity[index][0]=history->velocity[index-1][0];
+        history->velocity[index][1]=history->velocity[index-1][1];
+        history->elapsed[index]=history->elapsed[index-1];
+    }
+    history->velocity[0][0]=velocity[0];
+    history->velocity[0][1]=velocity[1];
+    history->elapsed[0]=elapsed;
+    if(history->count<PURSUIT_VELOCITY_SAMPLES)++history->count;
+    const float x=position[0],y=position[1];
+    output[0]=x;
+    output[1]=y;
+    return output;
+}

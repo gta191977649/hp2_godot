@@ -1,498 +1,863 @@
+#include "indep/inc/Track.hpp"
+#include "bware/inc/bMath.hpp"
 
-// TASK-0042: bounded host projections; original member ABI remains unverified.
-#include "game_core/port/driving/projection_support.hpp"
-// Retail 0x00152070; E-0042-C021; E-0042-S001; exact Debug TU ..\indep\src\track.cpp
-namespace port::driving {
-float PlaneContact::GetElevation(Memory& m,std::uint32_t,std::uint32_t point,
-    std::uint32_t material,std::uint32_t plane,std::uint32_t found) {
-    const auto p=m.vector(point);
-    for(float v:p)if(!std::isfinite(v))throw std::invalid_argument("Nonfinite synthetic plane query");
-    if(material)m.word(material,static_cast<std::uint32_t>(surface_material_at(settings,p[0])));
-    if(plane)m.vector(plane,{{0,0,1,height}});
-    if(found)m.word(found,1);
-    return height;
-}
-}
+#include <float.h>
+#include <math.h>
+#include <string.h>
+#include <array>
 
-#include "game_core/indep/src/track.hpp"
-
-namespace hp2::debug {
-// TASK-0099 E-0099-W72. Actual shared table pointer and highest-number domain.
-std::uint32_t GetTrackInfo(const ::port::driving::Memory& m,int number){if(number<=0||number>m.signed_word(0x3273a0))return 0;const auto row=m.word(0x32739c)+std::uint32_t(number-1)*0xa0;return m.byte(row)?row:0;}
+// Existing native private operations of this single topology CU.
+static inline float terrainSurfaceDot3(const float first[4], const float second[4])
+{
+    const float x = bScalarMultiply(first[0], second[0]);
+    const float y = bScalarMultiply(first[1], second[1]);
+    const float z = bScalarMultiply(first[2], second[2]);
+    return bScalarAdd(bScalarAdd(x, y), z);
 }
 
-#include "game_core/port/not_implemented.hpp"
-
-namespace hp2::recovered {
-// ELF 0x00152070; E-0042-C021; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/driving/00152070.md.
-void TopologyCoordinate::GetElevation() {
-    hp2::not_implemented("0x00152070", "TopologyCoordinate::GetElevation (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x00152B10; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00152b10.md.
-void TopologyTree::Sub_00152B10() {
-    hp2::not_implemented("0x00152B10", "TopologyTree::Sub_00152B10 (signature and full body unresolved)");
+static inline void terrainSurfaceCross3(float output[4], const float first[4], const float second[4])
+{
+    // PAL1516D8 OPMULA,1516DC OPMSUB: the second product's
+    // operand order is observable in the source finite multiplier.
+    output[0] = bScalarAdd(bScalarMultiply(first[1], second[2]), -bScalarMultiply(second[1], first[2]));
+    output[1] = bScalarAdd(bScalarMultiply(first[2], second[0]), -bScalarMultiply(second[2], first[0]));
+    output[2] = bScalarAdd(bScalarMultiply(first[0], second[1]), -bScalarMultiply(second[0], first[1]));
+    output[3] = 0.0f;
 }
 
-// ELF 0x00152C10; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00152c10.md.
-void TopologyTree::Loader() {
-    hp2::not_implemented("0x00152C10", "TopologyTree::Loader (signature and full body unresolved)");
+static inline void terrainSurfaceDetachPolygon(TerrainTopology *topology, TerrainPolygon *polygon)
+{
+    if (polygon->previous) polygon->previous->next = polygon->next;
+    else topology->oldest = polygon->next;
+    if (polygon->next) polygon->next->previous = polygon->previous;
+    else topology->newest = polygon->previous;
+    polygon->previous = NULL;
+    polygon->next = NULL;
 }
 
-// ELF 0x00152D30; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00152d30.md.
-void TopologyTree::Unloader() {
-    hp2::not_implemented("0x00152D30", "TopologyTree::Unloader (signature and full body unresolved)");
+static inline bool terrainSurfaceEncodedBoundsOverlap(const TerrainEncodedPolygon *polygon,
+                                 const float minimum[2], const float maximum[2])
+{
+    float minX = (float)((int32_t)polygon->x[polygon->extrema & 3] * 8192) * 0.0000152587890625f;
+    float minY = (float)((int32_t)polygon->y[(polygon->extrema >> 2) & 3] * 8192) * 0.0000152587890625f;
+    float maxX = (float)((int32_t)polygon->x[(polygon->extrema >> 4) & 3] * 8192) * 0.0000152587890625f;
+    float maxY = (float)((int32_t)polygon->y[polygon->extrema >> 6] * 8192) * 0.0000152587890625f;
+    return minX <= maximum[0] && minY <= maximum[1]
+        && minimum[0] <= maxX && minimum[1] <= maxY;
 }
 
-// ELF 0x00152DB0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00152db0.md.
-void TopologyTree::GetSquareCorner() {
-    hp2::not_implemented("0x00152DB0", "TopologyTree::GetSquareCorner (signature and full body unresolved)");
+static inline float terrainSurfacePolygonElevation(const TerrainPolygon *polygon, const float point[4])
+{
+    const float x = bScalarMultiply(polygon->plane[0], point[0]);
+    const float y = bScalarMultiply(polygon->plane[1], point[1]);
+    const float numerator = bScalarAdd(polygon->plane[3], -bScalarAdd(x, y));
+    return bScalarDivide(numerator, polygon->plane[2]);
 }
 
-// ELF 0x00152E08; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00152e08.md.
-void TopologyTree::GetSquare() {
-    hp2::not_implemented("0x00152E08", "TopologyTree::GetSquare (signature and full body unresolved)");
+
+bool terrainPolygonContains(const TerrainPolygon *polygon, const float point[4],
+                            float *planeDistance)
+{
+    float vectors[4][4];
+    for (int i = 0; i < polygon->vertexCount; ++i) {
+        for (size_t axis = 0; axis < 4; ++axis)
+            vectors[i][axis] = polygon->vertices[i][axis] - point[axis];
+    }
+    for (int i = 0; i < polygon->vertexCount; ++i) {
+        float edge[4];
+        terrainSurfaceCross3(edge, vectors[i], vectors[(i + 1) % polygon->vertexCount]);
+        if (terrainSurfaceDot3(edge, polygon->plane) < 0.0f) return false;
+    }
+    if (planeDistance) *planeDistance = -terrainSurfaceDot3(vectors[0], polygon->plane);
+    return true;
 }
 
-// ELF 0x00152F38; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00152f38.md.
-void TopologyTree::GetIntersectingPolygons() {
-    hp2::not_implemented("0x00152F38", "TopologyTree::GetIntersectingPolygons (signature and full body unresolved)");
+bool terrainPolygonIntersectSegment(const TerrainPolygon *polygon,
+                                    const float first[4], const float second[4],
+                                    float intersection[4])
+{
+    float firstDelta[4], secondDelta[4], point[4];
+    for (size_t i = 0; i < 4; ++i) {
+        firstDelta[i] = first[i] - polygon->vertices[0][i];
+        secondDelta[i] = second[i] - polygon->vertices[0][i];
+    }
+    float firstDistance = terrainSurfaceDot3(firstDelta, polygon->plane);
+    float secondDistance = terrainSurfaceDot3(secondDelta, polygon->plane);
+    if (!(firstDistance * secondDistance < 0.0f)) return false;
+    float fraction = fabsf(firstDistance) / (fabsf(firstDistance) + fabsf(secondDistance));
+    for (size_t i = 0; i < 4; ++i) point[i] = (second[i] - first[i]) * fraction + first[i];
+    if (!terrainPolygonContains(polygon, point, NULL)) return false;
+    if (intersection) memcpy(intersection, point, sizeof(point));
+    return true;
 }
-} // namespace hp2::recovered
 
-namespace hp2::recovered {
-// ELF 0x001517D8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001517d8.md.
-void TrackPolygon::PointInShaft() {
-    hp2::not_implemented("0x001517D8", "TrackPolygon::PointInShaft (signature and full body unresolved)");
+bool terrainPolygonTestSegment(const TerrainPolygon *polygon, float *closestDistance,
+                               const float first[4], const float second[4],
+                               const float minimum[4], const float maximum[4],
+                               bool twoSided)
+{
+    float polygonMinimum[4], polygonMaximum[4], intersection[4], delta[4];
+    vectorBoundsFromPoint3(polygonMinimum, polygonMaximum, polygon->vertices[0]);
+    for (int i = 1; i < polygon->vertexCount; ++i)
+        vectorBoundsExpandPoint3(polygonMinimum, polygonMaximum, polygon->vertices[i]);
+    if (!vectorBoundsOverlaps3(polygonMinimum, polygonMaximum, minimum, maximum)) return false;
+    if (!terrainPolygonIntersectSegment(polygon, first, second, intersection)) return false;
+    for (size_t i = 0; i < 4; ++i) delta[i] = intersection[i] - first[i];
+    if (!twoSided && !(terrainSurfaceDot3(delta, polygon->plane) < 0.0f)) return false;
+    float distance = sqrtf(terrainSurfaceDot3(delta, delta));
+    if (!(distance < *closestDistance)) return false;
+    *closestDistance = distance;
+    return true;
 }
-} // namespace hp2::recovered
 
-namespace hp2::recovered { using namespace port::driving; }
+TerrainTopology *terrainTopologyInitialize(TerrainTopology *topology)
+{
+    memset(topology, 0, sizeof(*topology));
+    return topology;
+}
 
-#include "game_core/src/bMath.hpp"
-#include "game_core/indep/inc/Table.hpp"
-#include "game_core/indep/src/table.hpp"
+bool terrainTopologyUnloadChunk(TerrainTopology *topology, TerrainChunkKind kind)
+{
+    switch (kind) {
+    case TERRAIN_CHUNK_BRANCHES: topology->branches = NULL; topology->branchCount = 0; return true;
+    case TERRAIN_CHUNK_SQUARES: topology->squares = NULL; topology->squareCount = 0; return true;
+    case TERRAIN_CHUNK_POLYGONS: topology->polygons = NULL; topology->polygonCount = 0; return true;
+    case TERRAIN_CHUNK_REFERENCES: topology->references = NULL; topology->referenceCount = 0; return true;
+    default: return false;
+    }
+}
 
-// Debug 0x001530A8; E-0044-M02; source ownership E-0042-S001.
-namespace hp2::recovered {
-float GetRoadNoiseGridValue(Memory& m,std::int32_t x,std::int32_t y) {
-    const auto a=static_cast<std::uint32_t>(x),b=static_cast<std::uint32_t>(y);
-    const auto index=(a*b*11u+(a+1u)*(b+1u)*13u)&15u;
-    return m.scalar(0x002f0d40+index*4);
+float terrainTopologySquareCorner(float coordinate)
+{
+    int32_t fixed = (int32_t)(coordinate * 65536.0f);
+    fixed = (int32_t)((uint32_t)fixed & UINT32_C(0xFFE00000));
+    return (float)fixed * 0.0000152587890625f;
 }
+
+const TerrainSquare *terrainTopologyFindSquare(const TerrainTopology *topology,
+                                              float x, float y, bool nearest)
+{
+    if (!topology->branches || !topology->squares) return NULL;
+    size_t node = 0;
+    float cornerX = -16384.0f, cornerY = -16384.0f;
+    for (int level = 10; level >= 1; --level) {
+        if (node >= topology->branchCount) return NULL;
+        float halfSize = ((float)(1U << level) * 32.0f) * 0.5f;
+        float middleX = cornerX + halfSize;
+        float middleY = cornerY + halfSize;
+        unsigned quadrant = (middleX <= x ? 1U : 0U) + (middleY <= y ? 2U : 0U);
+        if (quadrant & 1) cornerX = middleX;
+        if (quadrant & 2) cornerY = middleY;
+        size_t next = topology->branches[node].children[quadrant];
+        if (!next) {
+            if (!nearest) return NULL;
+            for (size_t i = 0; i < 4; ++i) {
+                if (topology->branches[node].children[i]) {
+                    next = topology->branches[node].children[i];
+                    break;
+                }
+            }
+            if (!next) return NULL;
+        }
+        if (level == 1) return next < topology->squareCount ? &topology->squares[next] : NULL;
+        node = next;
+    }
+    return NULL;
 }
-// Debug 0x001530E8; E-0044-M02; source ownership E-0042-S001.
-namespace hp2::recovered {
-float GetRoadNoise(Memory& m,std::uint32_t point,std::int32_t material) {
-    if(material<0||material>=32)throw std::out_of_range("Material outside bounded road projection");
-    const auto row=0x003102e8u+static_cast<std::uint32_t>(material)*0x90u;
-    float x=m.scalar(point)*m.scalar(row+0x18),y=m.scalar(point+4)*m.scalar(row+0x18);
-    float fx=static_cast<float>(cvt_w_s(x)),fy=static_cast<float>(cvt_w_s(y));
-    if(x<fx)fx=fx-1.0f;
-    if(y<fy)fy=fy-1.0f;
-    const auto ix=cvt_w_s(fx),iy=cvt_w_s(fy);
-    y=y-fy;x=x-fx;const float inverse=1.0f-x;
-    float value=inverse*(1.0f-y);value=value*hp2::recovered::GetRoadNoiseGridValue(m,ix,iy);
-    float term=x*(1.0f-y);term=term*hp2::recovered::GetRoadNoiseGridValue(m,ix+1,iy);value=value+term;
-    term=inverse*y;term=term*hp2::recovered::GetRoadNoiseGridValue(m,ix,iy+1);value=value+term;
-    term=x*y;term=term*hp2::recovered::GetRoadNoiseGridValue(m,ix+1,iy+1);value=value+term;
-    return value*m.scalar(row+0x1c);
+
+size_t terrainTopologyCollectSquare(TerrainTopology *topology,
+                                    TerrainEncodedPolygon **output, size_t capacity,
+                                    const TerrainSquare *square,
+                                    const float minimum[2], const float maximum[2])
+{
+    if (!square) return 0;
+    size_t count = 0;
+    for (int i = 0; i < square->referenceCount; ++i) {
+        size_t reference = (size_t)square->firstReference + (size_t)i;
+        if (reference >= topology->referenceCount) break;
+        size_t index = topology->references[reference];
+        if (index >= topology->polygonCount) continue;
+        TerrainEncodedPolygon *polygon = &topology->polygons[index];
+        if (polygon->visited || !terrainSurfaceEncodedBoundsOverlap(polygon, minimum, maximum) || count >= capacity) continue;
+        output[count++] = polygon;
+        polygon->visited = 1;
+    }
+    return count;
 }
+
+void terrainTopologyRelease(TerrainTopology *topology, TerrainPolygon *polygon)
+{
+    (void)topology;
+    polygon->references = (uint8_t)(polygon->references - 1U);
 }
-// TASK-0048 E-0048-T01: Retail SLUS_203.62 SHA-256
-// 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-#include "game_core/port/assets/elab_chunks.hpp"
-#include <algorithm>
+
+void terrainTopologyReleaseMany(TerrainTopology *topology,
+                                TerrainPolygon *const *polygons, size_t count)
+{
+    for (size_t i = 0; i < count; ++i) terrainTopologyRelease(topology, polygons[i]);
+}
+
+#include "Track.hpp"
+#include "bware/inc/bWare.hpp"
+
+const TrackScenarioDefinition* trackScenarioFind(const TrackScenarioCatalog* catalog, int32_t oneBasedIndex)
+{
+    const TrackScenarioDefinition* scenario;
+    if (oneBasedIndex <= 0 || (size_t)oneBasedIndex > catalog->scenarioCount) return NULL;
+    scenario = &catalog->scenarios[oneBasedIndex - 1];
+    return scenario->name[0] ? scenario : NULL;
+}
+
+const TrackLandmark* trackLandmarkFind(const TrackScenarioCatalog* catalog, uint32_t key, int32_t occurrence)
+{
+    int32_t current = 0;
+    for (size_t index = 0; index < catalog->landmarkCount; ++index) {
+        const TrackLandmark* landmark = &catalog->landmarks[index];
+        if (landmark->key != key) continue;
+        if (current++ == occurrence) return landmark;
+    }
+    return NULL;
+}
+
+const TrackLandmark* trackLandmarkFindName(const TrackScenarioCatalog* catalog, const char* name, int32_t occurrence)
+{
+    return trackLandmarkFind(catalog, hashString(name), occurrence);
+}
+
+// PAL1513C8, GetNumTrackPositionMarkers. The flat native catalogue retains
+// the source list order and counts the same key across every authored marker.
+int32_t trackLandmarkCount(const TrackScenarioCatalog* catalog,uint32_t key)
+{
+    uint32_t count=0;
+    for (size_t index=0;index<catalog->landmarkCount;++index)
+        if (catalog->landmarks[index].key==key) ++count;
+    int32_t result;
+    memcpy(&result,&count,sizeof(result));
+    return result;
+}
+
+#include "Track.hpp"
+#include "bware/inc/bChunk.hpp"
+#include "bware/inc/bWare.hpp"
+
+#include <cmath>
+#include <cstring>
 #include <limits>
-namespace hp2::debug {
-// Debug001521A8, E-0099-W17. This wraps the previously recovered fresh polygon
-// query of00151CC0/Retail00152070; it is not a nearest-XY or terrain shortcut.
-bool TopologyCoordinate::HasTopology(const ::port::driving::Memory& memory,const ::port::track::Topology& topology,const std::array<float,2>& position){
-    return hp2::recovered::TopologyCoordinate::GetElevation(topology,{{position[0],position[1],memory.scalar(0x00324f68)}}).found;
-}
-}
+
+namespace hp2 {
 namespace {
-std::uint16_t track_u16(const std::uint8_t* p){return std::uint16_t(p[0])|(std::uint16_t(p[1])<<8);}
-std::int16_t track_i16(const std::uint8_t* p){const auto v=track_u16(p);return static_cast<std::int16_t>(v);}
-std::array<float,3> track_cross(const std::array<float,3>& a,const std::array<float,3>& b){return {{a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]}};}
-float track_dot(const std::array<float,3>& a,const std::array<float,3>& b){return (a[0]*b[0]+a[1]*b[1])+a[2]*b[2];}
-float track_inside(const port::track::Polygon& p,const std::array<float,3>& q){
-    const auto edge=[&](unsigned a,unsigned b){return (p.vertices[b][1]-p.vertices[a][1])*(q[0]-p.vertices[a][0])-(p.vertices[b][0]-p.vertices[a][0])*(q[1]-p.vertices[a][1]);};
-    float value=std::max(-1.0f,edge(0,1));
-    if(value<=0)value=std::max(value,edge(1,2));
-    // The original always reads vertex 3 here, including triangle records.
-    if(value<=0)value=std::max(value,edge(3,0));
-    if(value<=0&&p.count==4)value=std::max(value,edge(2,3));
+float coordinate(const std::uint8_t* bytes)
+{
+    const auto bits = ReadU32(bytes);
+    float value;
+    std::memcpy(&value, &bits, sizeof(value));
+    Require(std::isfinite(value), "Track landmark has a non-finite coordinate");
     return value;
 }
 }
-namespace hp2::recovered {
-// Retail 0x001514A8; E-0048-T01; original packed-to-expanded conversion.
-port::track::Polygon TrackPolygon::Sub_001514A8(const std::uint8_t* bytes){
-    port::track::Polygon p;p.flags=bytes[3];p.terrain=static_cast<std::int8_t>(bytes[2]);p.count=(p.flags&0x10)?4:3;
-    const auto selector=bytes[1];
-    p.bounds={{track_i16(bytes+8+(selector&3)*2)*0.125f,track_i16(bytes+16+((selector>>2)&3)*2)*0.125f,
-        track_i16(bytes+8+((selector>>4)&3)*2)*0.125f,track_i16(bytes+16+(selector>>6)*2)*0.125f}};
-    for(unsigned i=0;i<4;++i){p.vertices[i]={{track_i16(bytes+8+i*2)*0.125f,track_i16(bytes+16+i*2)*0.125f,
-        static_cast<float>(track_i16(bytes+4))+track_i16(bytes+24+i*2)*(1.0f/256.0f)}};if(p.flags&4)p.vertices[i][2]*=4;}
-    std::array<float,3> a{},b{};for(unsigned j=0;j<3;++j){a[j]=p.vertices[1][j]-p.vertices[0][j];b[j]=p.vertices[2][j]-p.vertices[0][j];}
-    auto n=track_cross(a,b);const auto length=std::sqrt(track_dot(n,n));
-    if(!(length>0)||!std::isfinite(length))throw std::invalid_argument("Degenerate track topology polygon");
-    for(unsigned j=0;j<3;++j){n[j]/=length;p.plane[j]=n[j];}p.plane[3]=track_dot(p.vertices[0],n);return p;
-}
-// Retail 0x001517D8; E-0048-T01. Original plane-shaft edge tests.
-bool TrackPolygon::PointInShaft(const port::track::Polygon& p,const std::array<float,3>& point,float* distance){
-    std::array<std::array<float,3>,4> d{};for(unsigned i=0;i<p.count;++i)for(unsigned j=0;j<3;++j)d[i][j]=p.vertices[i][j]-point[j];
-    const std::array<float,3> normal{{p.plane[0],p.plane[1],p.plane[2]}};
-    for(unsigned i=0;i<p.count;++i)if(track_dot(track_cross(d[i],d[(i+1)%p.count]),normal)<0)return false;
-    if(distance)*distance=-track_dot(d[0],normal);
-    return true;
-}
-// Retail 0x00152DB0; E-0048-T01. Fixed-point 32-unit cell corner.
-float TopologyTree::GetSquareCorner(float v){
-    if(!std::isfinite(v)||v<=-32768||v>=32768)throw std::out_of_range("Track square coordinate outside original fixed point range");
-    const auto fixed=static_cast<std::int32_t>(v*65536.0f);
-    return static_cast<float>(static_cast<std::int32_t>(static_cast<std::uint32_t>(fixed)&0xffe00000u))*(1.0f/65536.0f);
-}
-// Retail 0x00152C10; E-0048-T01. Port vectors replace original pointers.
-bool TopologyTree::Loader(port::track::Topology& t,std::uint32_t tag,const std::vector<std::uint8_t>& data,std::size_t header,std::size_t size){
-    if(tag<0x34130||tag>0x34133)return false;
-    if(header>data.size()||data.size()-header<8||size>data.size()-header-8)throw std::invalid_argument("Truncated topology chunk");
-    std::size_t start=header+8,end=start+size;if(tag==0x34130||tag==0x34131)start=(header+0x17)&~std::size_t(15);
-    const std::size_t stride=tag==0x34130?8:tag==0x34131?12:tag==0x34132?32:2;
-    if(start>end||(end-start)%stride)throw std::invalid_argument("Misaligned topology chunk records");
-    if(tag==0x34130){if(!t.nodes.empty())throw std::invalid_argument("Duplicate topology nodes");for(;start<end;start+=8){std::array<std::uint16_t,4> r{};for(unsigned j=0;j<4;++j)r[j]=track_u16(&data[start+j*2]);t.nodes.push_back(r);}}
-    if(tag==0x34131){if(!t.squares.empty())throw std::invalid_argument("Duplicate topology squares");for(;start<end;start+=12){std::array<std::uint16_t,6> r{};for(unsigned j=0;j<6;++j)r[j]=track_u16(&data[start+j*2]);t.squares.push_back(r);}}
-    if(tag==0x34132){if(!t.polygons.empty())throw std::invalid_argument("Duplicate topology polygons");for(;start<end;start+=32)t.polygons.push_back(TrackPolygon::Sub_001514A8(&data[start]));}
-    if(tag==0x34133){if(!t.indices.empty())throw std::invalid_argument("Duplicate topology indices");for(;start<end;start+=2)t.indices.push_back(track_u16(&data[start]));}return true;
-}
-// Retail 0x00152D30; E-0048-T01.
-bool TopologyTree::Unloader(port::track::Topology& t,std::uint32_t tag){switch(tag){case 0x34130:t.nodes.clear();return true;case 0x34131:t.squares.clear();return true;case 0x34132:t.polygons.clear();return true;case 0x34133:t.indices.clear();return true;default:return false;}}
-// Retail 0x00152E08; E-0048-T01. Original missing-child mode 0 only.
-std::optional<std::size_t> TopologyTree::GetSquare(const port::track::Topology& t,float x,float y){
-    float corner_x=-16384,corner_y=-16384;std::size_t node=0;
-    for(int level=10;level>0;--level){if(node>=t.nodes.size())throw std::out_of_range("Topology node reference outside chunk");const float half=static_cast<float>(1<<level)*32*0.5f;
-        unsigned q=0;if(corner_x+half<=x){q|=1;corner_x+=half;}if(corner_y+half<=y){q|=2;corner_y+=half;}
-        const auto child=t.nodes[node][q];if(!child)return {};if(level==1){if(child>=t.squares.size())throw std::out_of_range("Topology square reference outside chunk");return child;}node=child;
-    }return {};
-}
-// Retail 0x00152070; E-0048-T01. Fresh candidate branch, before persistent cache optimization.
-port::track::Contact TopologyCoordinate::GetElevation(const port::track::Topology& t,const std::array<float,3>& q){
-    for(float f:q)if(!std::isfinite(f))throw std::invalid_argument("Nonfinite track elevation query");
-    auto candidates=t.intersecting({{q[0]-8.5f,q[1]-8.5f}},{{q[0]+8.5f,q[1]+8.5f}});
-    port::track::Contact result;result.height=q[2];
-    for(int pass=0;pass<2;++pass){float best=-std::numeric_limits<float>::max();
-        for(auto index:candidates){const auto& p=t.polygons[index];if(p.flags&(2|8))continue;
-            if(q[0]<p.bounds[0]||q[0]>p.bounds[2]||q[1]<p.bounds[1]||q[1]>p.bounds[3])continue;
-            const auto inside=track_inside(p,q);if(inside>0)continue;
-            const float height=(p.plane[3]-(p.plane[0]*q[0]+p.plane[1]*q[1]))/p.plane[2];
-            if(best<height&&(height<(pass?std::numeric_limits<float>::max():q[2]+1.0f))){best=height;result={true,height,p.plane,p.terrain,index};if(!(p.flags&1)&&inside<0)return result;}
-        }if(result.found)return result;
-    }return result;
-}
-}
-namespace port::track {
-void Topology::clear(){nodes.clear();squares.clear();polygons.clear();indices.clear();}
-void Topology::load(const std::vector<std::uint8_t>& data){
-    Topology pending;std::size_t consumed=0;const auto chunks=hp2::assets::parse_chunks_top(data,&consumed);
-    if(consumed!=data.size())throw std::invalid_argument("Incomplete track bundle chunk stream");
-    const auto visit=[&](const auto& self,const std::vector<hp2::assets::Chunk>& items)->void{for(const auto& c:items){
-        hp2::recovered::TopologyTree::Loader(pending,c.tag,data,c.header_offset,c.size);
-        if(c.is_container()){
-            std::size_t child_consumed=0;
-            hp2::assets::parse_chunks(data.data(),data.size(),c.payload_offset(),c.payload_offset()+c.size,&child_consumed);
-            if(child_consumed!=c.payload_offset()+c.size)throw std::invalid_argument("Incomplete nested track chunk stream");
-            self(self,c.children);
+
+TrackScenarioData::TrackScenarioData(const std::vector<std::uint8_t>& track)
+    : authored_(track)
+{
+    bool scenariosFound = false;
+    const auto visit = [&](const auto& self, std::size_t start, std::size_t length, unsigned depth) -> void {
+        Require(depth <= 32, "Track scenario hierarchy is too deep");
+        for (const auto& chunk : ReadChunks(track, start, length)) {
+            if (chunk.id == 0x34200u) {
+                Require(!hasCurrentInfo_ && chunk.size>=0xa4u,"Track repeats or truncates its current34200 header");
+                const auto* bytes=track.data()+chunk.payloadOffset;
+                std::memcpy(currentInfo_.name,bytes,sizeof(currentInfo_.name));
+                std::memcpy(&currentInfo_.number,bytes+0x41,1);
+                std::memcpy(currentInfo_.tireBankName,bytes+0x84,sizeof(currentInfo_.tireBankName));
+                currentInfo_.mapOriginX=coordinate(bytes+0x5c);
+                currentInfo_.mapOriginY=coordinate(bytes+0x60);
+                currentInfo_.mapScale=coordinate(bytes+0x64);
+                currentInfo_.mapRotation=ReadU16(bytes+0x68);
+                currentInfo_.startLineRotation=ReadU16(bytes+0x6a);
+                currentInfo_.finishLineRotation=ReadU16(bytes+0x6c);
+                Require(std::memchr(currentInfo_.name,0,sizeof(currentInfo_.name)) &&
+                    std::memchr(currentInfo_.tireBankName,0,sizeof(currentInfo_.tireBankName)),
+                    "Current track name or tire bank is not terminated in the actual header");
+                hasCurrentInfo_=true;
+            } else if (chunk.id == 0x34201u) {
+                Require(!scenariosFound, "Track repeats its scenario catalog");
+                scenariosFound = true;
+                Require(chunk.size % 164u == 0, "Track scenario catalog has a partial record");
+                scenarios_.resize(chunk.size / 164u);
+                Require(scenarios_.size() <= static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max()),
+                        "Track scenario catalog exceeds its original index range");
+                for (std::size_t index = 0; index < scenarios_.size(); ++index) {
+                    const auto* bytes = track.data() + chunk.payloadOffset + index * 164u;
+                    auto& record = scenarios_[index];
+                    std::memcpy(record.name, bytes, sizeof(record.name));
+                    Require(std::memchr(record.name, 0, sizeof(record.name)) != nullptr,
+                            "Track scenario display name is not terminated");
+                    std::memcpy(&record.courseAvailable, bytes + 64, 1);
+                    const auto courseIndex = ReadU16(bytes + 70);
+                    std::memcpy(&record.courseIndex, &courseIndex, sizeof(courseIndex));
+                    std::memcpy(&record.number,bytes+65,1);
+                    std::memcpy(&record.baseNumber,bytes+66,1);
+                    std::memcpy(&record.routeKind,bytes+67,1);
+                    const auto timeOfDay=ReadU16(bytes+68);
+                    std::memcpy(&record.timeOfDay,&timeOfDay,sizeof(timeOfDay));
+                    for (std::size_t direction=0;direction<2;++direction) {
+                        const auto id=ReadU32(bytes+0x48+direction*4);
+                        std::memcpy(&record.nameLanguageIds[direction],&id,sizeof(id));
+                    }
+                    record.policeCharacterKey=ReadU32(bytes+0x54);
+                    const auto distanceBits=ReadU32(bytes+0x50);
+                    std::memcpy(&record.lengthMiles,&distanceBits,sizeof(distanceBits));
+                    for (std::size_t axis=0;axis<2;++axis) {
+                        const auto elevation=ReadU32(bytes+0x70+axis*4);
+                        std::memcpy(record.elevationFeet+axis,&elevation,sizeof(elevation));
+                    }
+                    const auto difficulty=ReadU32(bytes+0x78);
+                    std::memcpy(&record.difficulty,&difficulty,sizeof(difficulty));
+                    const auto racerRouteIndex=ReadU32(bytes+0x7c);
+                    std::memcpy(&record.racerRouteIndex,&racerRouteIndex,sizeof(racerRouteIndex));
+                    const auto activation = ReadU32(bytes + 128);
+                    std::memcpy(&record.connectionActivationSeconds, &activation, sizeof(activation));
+                }
+                // The original loader explicitly clears populated scenario 54.
+                if (scenarios_.size() >= 54 && scenarios_[53].name[0]) scenarios_[53] = {};
+            } else if (chunk.id == 0x34146u) {
+                Require(chunk.size % 24u == 0, "Track landmark catalog has a partial record");
+                for (std::size_t offset = 0; offset < chunk.size; offset += 24) {
+                    const auto* bytes = track.data() + chunk.payloadOffset + offset;
+                    landmarks_.push_back({ReadU32(bytes + 8), ReadU32(bytes + 12),
+                                          {coordinate(bytes + 16), coordinate(bytes + 20)}});
+                }
+            } else if (chunk.IsContainer()) self(self, chunk.payloadOffset, chunk.size, depth + 1);
         }
-    }};visit(visit,chunks);
-    if(!pending.ready())throw std::invalid_argument("Track bundle has no complete topology tree");
-    for(auto i:pending.indices)if(i>=pending.polygons.size())throw std::out_of_range("Topology polygon index outside chunk");
-    for(const auto& s:pending.squares){const auto count=static_cast<std::int16_t>(s[5]);if(count<0||std::size_t(s[4])+count>pending.indices.size())throw std::out_of_range("Topology square range outside index chunk");}
-    std::vector<bool> visited(pending.nodes.size()*10);
-    const auto validate_nodes=[&](const auto& self,std::size_t node,unsigned depth)->void{
-        if(node>=pending.nodes.size())throw std::out_of_range("Topology node reference outside chunk");
-        const auto key=node*10+depth-1;if(visited[key])return;visited[key]=true;
-        for(auto child:pending.nodes[node])if(child){
-            if(depth==1){if(child>=pending.squares.size())throw std::out_of_range("Topology square reference outside chunk");}
-            else self(self,child,depth-1);
-        }
-    };validate_nodes(validate_nodes,0,10);
-    *this=std::move(pending);
-}
-} // namespace port::track
-namespace hp2::recovered {
-// Retail 0x001531F8; E-0048-T01; no PS2 allocator/cache ABI claim.
-std::vector<std::size_t> TopologyTree::BuildTrackPolygons(const port::track::Topology& t,const std::array<float,2>& low,const std::array<float,2>& high,std::size_t capacity) {
-    const auto& polygons=t.polygons;const auto& squares=t.squares;const auto& indices=t.indices;
-    if(!t.ready())throw std::logic_error("Track topology is not loaded");
-    for(unsigned j=0;j<2;++j)if(!std::isfinite(low[j])||!std::isfinite(high[j])||low[j]>high[j])throw std::invalid_argument("Invalid track query bounds");
-    std::vector<std::size_t> out;std::vector<bool> seen(polygons.size());
-    // Retail 0x001531F8 uses the strict fixed-point domain and a capacity of 160.
-    if(low[0]<=-32768||low[1]<=-32768||high[0]>=32767||high[1]>=32767)return out;
-    for(float y=hp2::recovered::TopologyTree::GetSquareCorner(low[1]);y<=high[1];y+=32)
-        for(float x=hp2::recovered::TopologyTree::GetSquareCorner(low[0]);x<=high[0];x+=32){
-            const auto cell=hp2::recovered::TopologyTree::GetSquare(t,x,y);if(!cell)continue;const auto& s=squares[*cell];
-            for(std::size_t j=s[4];j<std::size_t(s[4])+s[5];++j){const auto index=indices.at(j);const auto& p=polygons.at(index);
-                if(!seen[index]&&p.bounds[0]<=high[0]&&p.bounds[1]<=high[1]&&low[0]<=p.bounds[2]&&low[1]<=p.bounds[3]&&out.size()<capacity){seen[index]=true;out.push_back(index);}}
-        }return out;
-}
-} // namespace hp2::recovered
-namespace port::track {
-std::vector<std::size_t> Topology::intersecting(const std::array<float,2>& low,const std::array<float,2>& high,std::size_t capacity) const {return hp2::recovered::TopologyTree::BuildTrackPolygons(*this,low,high,capacity);}
-Contact Topology::elevation(const std::array<float,3>& q)const{return hp2::recovered::TopologyCoordinate::GetElevation(*this,q);}
+    };
+    visit(visit, 0, track.size(), 0);
+    catalog_ = {scenarios_.data(), scenarios_.size(), landmarks_.data(), landmarks_.size()};
 }
 
-namespace hp2::recovered {
-// Retail 0x00151990; Debug 0x001515E0; E-0048-T02.
-bool TrackPolygon::SegmentIntersects(const port::track::Polygon& p,const std::array<float,3>& first,const std::array<float,3>& second,std::array<float,3>* intersection){
-    const std::array<float,3> n{{p.plane[0],p.plane[1],p.plane[2]}};
-    std::array<float,3> v1{},v2{};for(unsigned j=0;j<3;++j){v1[j]=first[j]-p.vertices[0][j];v2[j]=second[j]-p.vertices[0][j];}
-    const auto d1=track_dot(v1,n),d2=track_dot(v2,n);if(!(d1*d2<0))return false;
-    const auto fraction=std::abs(d1)/(std::abs(d1)+std::abs(d2));std::array<float,3> point{};
-    for(unsigned j=0;j<3;++j)point[j]=first[j]+(second[j]-first[j])*fraction;
-    if(!PointInShaft(p,point,nullptr))return false;
-    if(intersection)*intersection=point;
-    return true;
-}
 }
 
-#include "game_core/indep/inc/CollisionBody.hpp"
-namespace port::track {
-std::vector<std::size_t> Topology::collision_candidates(const CollisionCylinder& body) const {
-    for(float v:body.center)if(!std::isfinite(v))throw std::invalid_argument("Nonfinite collision cylinder center");
-    for(float v:body.axis)if(!std::isfinite(v))throw std::invalid_argument("Nonfinite collision cylinder axis");
-    if(!std::isfinite(body.radius)||!std::isfinite(body.base_height)||!std::isfinite(body.top_height)||body.radius<0||body.base_height<0||body.top_height<0)
-        throw std::invalid_argument("Invalid collision cylinder dimensions");
-    // The caller publishes dimensions from recovered body data. This host helper owns no body IDs or witnesses.
-    const float extent=body.radius+std::max(body.base_height,body.top_height);
-    const auto candidates=intersecting({{body.center[0]-extent,body.center[1]-extent}},{{body.center[0]+extent,body.center[1]+extent}});
-    std::vector<std::size_t> out;
-    for(auto index:candidates)if(hp2::recovered::DynamicCollisionBody::TrackPolygonCheck(body,polygons[index])&&out.size()<48)out.push_back(index);
-    std::sort(out.begin(),out.end());return out;
-}
-}
-
-#include "game_core/inc/bSlotPool.hpp"
-#include "game_core/port/driving/projections.hpp"
-#include <cstring>
-namespace hp2::debug {
-// Debug00152760; E-0099-W26.
-void TopologyTree::Sub_00152760(){
- for(unsigned i=0;i<0x24;i+=4)m_.word(address_+i,0);
- m_.word(address_+0x24,address_+0x24);m_.word(address_+0x28,address_+0x24);
-}
-// Debug00152798; E-0099-W26. Explicit original tree startup, not a lazy query side effect.
-void TopologyTree::InitTree(){
- const auto pool=bNewSlotPool(m_,0x80,0x400,0x002a8108,0x10);m_.word(0x00327394,pool);
- m_.word(0x00327380,0);m_.word(0x00327384,0);m_.word(pool+0x14,m_.word(pool+0x14)&~3u);
-}
-// Debug00152E38; E-0099-W26. Original byte reference count wraps.
-void TopologyTree::UnAssignTrackPolygon(std::uint32_t polygon){m_.byte(polygon+8,static_cast<std::uint8_t>(m_.byte(polygon+8)-1));}
-// Debug00153018; E-0099-W26.
-void TopologyTree::RemoveTrackPolygons(std::uint32_t table,int count){for(int i=0;i<count;++i)UnAssignTrackPolygon(m_.word(table+static_cast<unsigned>(i)*4));}
-// Debug00152CF8; E-0099-W26. The original stops after101 deletions.
-void TopologyTree::FlushUnusedTrackPolygons(){
- const auto head=address_+0x24;auto node=m_.word(head);int removed=0;
- while(node!=head){const auto next=m_.word(node);if(!m_.byte(node+8)){
-  const auto previous=m_.word(node+4);m_.word(previous,next);m_.word(next+4,previous);
-  const auto source=m_.word(node+12);if(source)m_.half(source+6,0xffff);
-  SlotPool(m_,m_.word(0x00327394)).Free(node);if(++removed>100)break;node=m_.word(previous);
- }else node=next;}
- if(!removed)hp2::not_implemented("0x00152CF8","original topology pool exhaustion invokes bBreak with no unused polygons");
-}
-// Debug00152D98 ->001510F8; E-0099-W26. Source records, slot numbers and list identities are shared.
-std::uint32_t TopologyTree::AssignTrackPolygon(std::uint32_t source){
- auto& m=m_;const auto pool=m.word(0x00327394);if(!pool)hp2::not_implemented("0x00152D98","original TrackPolygonSlotPool was not initialized");
- auto number=m.signed_half(source+6);std::uint32_t polygon;
- if(number<0){if(!m.word(pool+0x10))FlushUnusedTrackPolygons();polygon=SlotPool(m,pool).Malloc();
-  if(!polygon)hp2::not_implemented("0x00152D98","original TrackPolygon pool allocation failed");
-  // Debug001510F8. Preserve fixed-point integer wrapping and VU reciprocal
-  // normalization grouping; the older decoded Retail projection divides lanes.
-  ::port::track::Polygon expanded;const auto bits=m.byte(source+1);
-  expanded.bounds={{m.signed_half(source+8+(bits&3)*2)*0.125f,m.signed_half(source+16+((bits>>2)&3)*2)*0.125f,
-   m.signed_half(source+8+((bits>>4)&3)*2)*0.125f,m.signed_half(source+16+(bits>>6)*2)*0.125f}};
-  expanded.count=(m.byte(source+3)&0x10)?4:3;
-  for(unsigned i=0;i<4;++i){const auto fixed=static_cast<std::uint32_t>(static_cast<std::int32_t>(m.signed_half(source+24+i*2)))*256u+
-    static_cast<std::uint32_t>(static_cast<std::int32_t>(m.signed_half(source+4)))*65536u;
-   float z=static_cast<float>(static_cast<std::int32_t>(fixed))*0x1p-16f;if(m.byte(source+3)&4)z*=4;
-   expanded.vertices[i]={{m.signed_half(source+8+i*2)*0.125f,m.signed_half(source+16+i*2)*0.125f,z}};
-  }
-  std::array<float,3> va{},vb{};for(unsigned i=0;i<3;++i){va[i]=expanded.vertices[1][i]-expanded.vertices[0][i];vb[i]=expanded.vertices[2][i]-expanded.vertices[0][i];}
-  const auto cross=track_cross(va,vb);const auto squared=track_dot(cross,cross);
-  if(!(squared>0)||!std::isfinite(squared))hp2::not_implemented("0x001510F8","unsupported degenerate/nonfinite VU track-polygon normalization");
-  const float reciprocal=1.f/std::sqrt(squared);for(unsigned i=0;i<3;++i)expanded.plane[i]=cross[i]*reciprocal;
-  expanded.plane[3]=(expanded.vertices[0][0]*expanded.plane[0]+expanded.vertices[0][1]*expanded.plane[1])+expanded.vertices[0][2]*expanded.plane[2];
-  m.byte(polygon+11,m.byte(source+2));m.byte(polygon+8,0);m.byte(polygon+10,m.byte(source+3));m.word(polygon+0x10,0);
-  for(unsigned i=0;i<4;++i)m.scalar(polygon+0x14+i*4,expanded.bounds[i]);
-  for(unsigned i=0;i<4;++i)for(unsigned axis=0;axis<3;++axis)m.scalar(polygon+0x30+i*16+axis*4,expanded.vertices[i][axis]);
-  m.byte(polygon+9,expanded.count);for(unsigned i=0;i<4;++i)m.scalar(polygon+0x70+i*4,expanded.plane[i]);
-  // Original bGetSlotNumber002510A0, no expanded pools: InitTree disables overflow.
-  m.half(source+6,static_cast<std::uint16_t>((polygon-pool-0x30)/m.word(pool+0x28)));m.word(polygon+12,source);
-  const auto head=address_+0x24,previous=m.word(head+4);m.word(previous,polygon);m.word(head+4,polygon);m.word(polygon+4,previous);m.word(polygon,head);
- }else polygon=pool+0x30+static_cast<std::uint32_t>(number)*m.word(pool+0x28);
- m.byte(polygon+8,static_cast<std::uint8_t>(m.byte(polygon+8)+1));return polygon;
-}
-// Debug00152A58, return_closest_square=0; E-0099-W26.
-std::uint32_t TopologyTree::GetSquare(float x,float y){
- auto& m=m_;auto node=m.word(address_);float left=-16384,bottom=-16384;
- for(unsigned level=10;level;--level){const float half=static_cast<float>(1u<<level)*32*0.5f;unsigned quadrant=0;
-  if(left+half<=x){quadrant|=1;left+=half;}if(bottom+half<=y){quadrant|=2;bottom+=half;}
-  const auto child=m.half(node+quadrant*2);if(!child)return 0;
-  if(level==1)return m.word(address_+8)+child*12;node=m.word(address_)+child*8;
- }return 0;
-}
-// Debug00152E48/00152B88; E-0099-W26. Original mutable source deduplication and order.
-std::vector<std::uint32_t> TopologyTree::BuildTrackPolygons(const std::array<float,2>& low,const std::array<float,2>& high,int maximum){
- auto& m=m_;std::vector<std::uint32_t> sources;
- if(-32768.f<low[0]&&high[0]<m.scalar(0x00324f78)&&-32768.f<low[1]&&high[1]<m.scalar(0x00324f78)){
-  for(float y=hp2::recovered::TopologyTree::GetSquareCorner(low[1]);y<=high[1];y+=32)
-   for(float x=hp2::recovered::TopologyTree::GetSquareCorner(low[0]);x<=high[0];x+=32){const auto square=GetSquare(x,y);if(!square)continue;
-    const auto begin=m.half(square+8);const int end=begin+m.signed_half(square+10);
-    for(int i=begin;i<end;++i){const auto source=m.word(address_+16)+m.half(m.word(address_+24)+static_cast<unsigned>(i)*2)*32;
-     if(m.byte(source))continue;const auto bits=m.byte(source+1);
-     const float minx=m.signed_half(source+8+(bits&3)*2)*0.125f,miny=m.signed_half(source+16+((bits>>2)&3)*2)*0.125f;
-     const float maxx=m.signed_half(source+8+((bits>>4)&3)*2)*0.125f,maxy=m.signed_half(source+16+(bits>>6)*2)*0.125f;
-     if(minx<=high[0]&&miny<=high[1]&&low[0]<=maxx&&low[1]<=maxy&&static_cast<int>(sources.size())<maximum){sources.push_back(source);m.byte(source,1);}
+/* Camera path support. */
+int32_t carCameraTerrainOccludes(TerrainSurface* surface,const float first[4],const float second[4])
+{
+    const float x=first[0]-second[0],y=first[1]-second[1],z=first[2]-second[2];
+    const float xx=x*x,yy=y*y,zz=z*z;
+    const float length=sqrtf((xx+yy)+zz);
+    if(length<30.0f){
+        float middle[4];
+        for(int axis=0;axis<4;++axis){const float sum=first[axis]+second[axis];middle[axis]=sum*0.5f;}
+        terrainSurfaceUpdate(surface,middle,length*0.5f,NULL);
+        return terrainSurfaceIntersectsSegment(surface,first,second,0.5f);
     }
-   }
- }
- std::vector<std::uint32_t> out;for(auto source:sources){m.byte(source,0);out.push_back(AssignTrackPolygon(source));}return out;
-}
-// Debug001527E8; E-0099-W26. Original close frees all cached polygons.
-void TopologyTree::CloseTree(){
- const auto pool=m_.word(0x00327394);if(!pool)return;const auto head=address_+0x24;
- while(m_.word(head)!=head){const auto node=m_.word(head),next=m_.word(node),previous=m_.word(node+4);m_.word(previous,next);m_.word(next+4,previous);
-  const auto source=m_.word(node+12);if(source)m_.half(source+6,0xffff);SlotPool(m_,pool).Free(node);}
- bDeleteSlotPool(m_,pool);m_.word(0x00327394,0);
-}
-// Debug00151878; E-0099-W26.
-void TopologyCoordinate::Sub_00151878(){
- for(unsigned offset=0x2a0;offset<=0x2ac;offset+=4)m_.word(address_+offset,0);
- m_.word(address_+0x2b4,0);m_.word(address_+0x2b8,0);m_.word(address_+0x2bc,0);ClearInterestBBox();
-}
-// Debug00151920 + bInitializeBoundingBox00252790; E-0099-W26.
-void TopologyCoordinate::ClearInterestBBox(){
- auto& m=m_;const auto a=address_;for(unsigned off:{0u,0x10u}){
-  m.word(a+off+4,m.word(0x00329054));m.word(a+off,m.word(0x00329054));
-  m.word(a+off+12,m.word(0x00329058));m.word(a+off+8,m.word(0x00329058));}
- TopologyTree(m,0x002f0d10).RemoveTrackPolygons(a+0x20,m.signed_word(a+0x2a0));m.word(a+0x2b0,0);
- for(unsigned off=0x2a0;off<=0x2ac;off+=4)m.word(a+off,0);
-}
-// Debug00151980; E-0099-W26. Retains cached references until a bbox miss.
-void TopologyCoordinate::SetInterestBBox(const std::array<float,2>& p,float radius,const std::array<float,2>* velocity){
- auto& m=m_;const auto a=address_;for(unsigned j=0;j<2;++j){m.scalar(a+j*4,p[j]-radius);m.scalar(a+8+j*4,p[j]+radius);}
- if(m.scalar(a+0x10)<=m.scalar(a)&&m.scalar(a+8)<=m.scalar(a+0x18)&&m.scalar(a+0x14)<=m.scalar(a+4)&&m.scalar(a+12)<=m.scalar(a+0x1c))return;
- TopologyTree tree(m,0x002f0d10);tree.RemoveTrackPolygons(a+0x20,m.signed_word(a+0x2a0));
- for(unsigned off=0x2a0;off<=0x2ac;off+=4)m.word(a+off,0);m.word(a+0x2b0,0);
- float scale=m.scalar(0x00324f64);const float padded=radius+0.5f;
- for(int attempt=0;attempt<(velocity?5:1);++attempt){
-  for(unsigned j=0;j<2;++j){m.scalar(a+0x10+j*4,p[j]-padded);m.scalar(a+0x18+j*4,p[j]+padded);
-   if(velocity){const auto future=p[j]+(*velocity)[j]*scale;m.scalar(a+0x10+j*4,std::min(m.scalar(a+0x10+j*4),future-padded));m.scalar(a+0x18+j*4,std::max(m.scalar(a+0x18+j*4),future+padded));}}
-  const auto x=m.scalar(a+0x10)-m.scalar(a+0x18),y=m.scalar(a+0x14)-m.scalar(a+0x1c);
-  if(!velocity||std::sqrt(x*x+y*y)<m.scalar(0x00324f60))break;scale*=0.75f;if(attempt==3)scale=0;
- }
- const auto polygons=tree.BuildTrackPolygons({{m.scalar(a+0x10),m.scalar(a+0x14)}},{{m.scalar(a+0x18),m.scalar(a+0x1c)}},160);
- unsigned at=0;for(auto polygon:polygons)if(!(m.byte(polygon+10)&(2|8)))m.word(a+0x20+at++*4,polygon);m.word(a+0x2a4,at);
- const auto horizontal=at;for(auto polygon:polygons)if(m.byte(polygon+10)&2)m.word(a+0x20+at++*4,polygon);m.word(a+0x2a8,at-horizontal);
- const auto vertical_end=at;if(at!=polygons.size())for(auto polygon:polygons)if(m.byte(polygon+10)&8)m.word(a+0x20+at++*4,polygon);
- m.word(a+0x2a0,static_cast<std::uint32_t>(polygons.size()));m.word(a+0x2ac,at-vertical_end);
-}
-// Debug00151CC0; E-0099-W26. Exact persistent polygon preference and table promotion.
-float TopologyCoordinate::GetElevation(const std::array<float,3>& p,int* terrain,std::array<float,4>* normal,bool* valid){
- auto& m=m_;const auto a=address_;if(valid)*valid=true;
- const auto inside=[&](std::uint32_t poly){
-  const auto edge=[&](unsigned x,unsigned y){return (m.scalar(poly+0x30+y*16+4)-m.scalar(poly+0x30+x*16+4))*(p[0]-m.scalar(poly+0x30+x*16))-(m.scalar(poly+0x30+y*16)-m.scalar(poly+0x30+x*16))*(p[1]-m.scalar(poly+0x30+x*16+4));};
-  float value=std::max(-1.f,edge(0,1));if(value<=0)value=std::max(value,edge(1,2));if(value<=0)value=std::max(value,edge(3,0));if(value<=0&&m.byte(poly+9)==4)value=std::max(value,edge(2,3));return value;
- };
- const auto height=[&](std::uint32_t poly){return (m.scalar(poly+0x7c)-(m.scalar(poly+0x70)*p[0]+m.scalar(poly+0x74)*p[1]))/m.scalar(poly+0x78);};
- const auto copy_result=[&](std::uint32_t poly){if(terrain)*terrain=m.signed_byte(poly+11);if(normal)*normal=m.vector(poly+0x70);};
- const auto previous=m.word(a+0x2b0);if(previous&&inside(previous)<0){copy_result(previous);return height(previous);}
- if(!(m.scalar(a)<=p[0]&&p[0]<=m.scalar(a+8)&&m.scalar(a+4)<=p[1]&&p[1]<=m.scalar(a+12)))SetInterestBBox({{p[0],p[1]}},8);
- int selected=-1;float chosen=p[2],limit=p[2]+1;
- for(unsigned pass=0;pass<2;++pass){float best=m.scalar(0x0032738c);selected=-1;
-  for(int i=0;i<m.signed_word(a+0x2a4);++i){const auto poly=m.word(a+0x20+static_cast<unsigned>(i)*4);
-   if(m.scalar(poly+0x14)>p[0]||p[0]>m.scalar(poly+0x1c)||m.scalar(poly+0x18)>p[1]||p[1]>m.scalar(poly+0x20))continue;
-   const auto side=inside(poly);if(side>0)continue;const auto z=height(poly);
-   if(best<z&&z<limit){best=z;chosen=z;selected=i;if(!(m.byte(poly+10)&1)&&side<0){m.word(a+0x2b0,poly);break;}}
-  }
-  if(selected>=0)break;limit=m.scalar(0x00327390);
- }
- if(selected<0){if(valid)*valid=false;if(terrain)*terrain=1;if(normal){(*normal)[0]=0;(*normal)[2]=-1;(*normal)[1]=0;}return p[2];}
- const auto poly=m.word(a+0x20+static_cast<unsigned>(selected)*4);
- if(selected>4){for(int i=selected;i>0;--i)m.word(a+0x20+static_cast<unsigned>(i)*4,m.word(a+0x20+static_cast<unsigned>(i-1)*4));m.word(a+0x20,poly);}
- copy_result(poly);return chosen;
-}
-}
-namespace port::track {
-// Port-owned allocation adapter for the reviewed Retail/Debug00152860 raw schema.
-TopologyResources load_retail_topology_resources(::port::driving::Memory& m,const std::vector<std::uint8_t>& bytes){
- constexpr std::uint32_t tree=0x002f0d10;
- if(m.word(tree+0x24)!=tree+0x24||m.word(tree+0x28)!=tree+0x24||!m.word(0x00327394))throw std::logic_error("TopologyTree constructor/InitTree must run before loading raw resources");
- for(unsigned off=0;off<32;off+=8)if(m.word(tree+off))throw std::logic_error("Original topology resources already loaded");
- Topology validation;validation.load(bytes); // Existing complete tree/index bounds validation.
- const auto chunks=hp2::assets::parse_chunks_top(bytes);TopologyResources out;out.owner=&m;
- for(unsigned i=0;i<4;++i){const auto* chunk=hp2::assets::find_first(chunks,0x34130+i);if(!chunk)throw std::runtime_error("Required raw topology chunk missing");
-  const auto start=i<2?(chunk->header_offset+0x17)&~std::size_t(15):chunk->payload_offset();const auto size=chunk->payload_offset()+chunk->size-start;
-  const auto raw=m.allocate(static_cast<std::uint32_t>(size));out.allocations.push_back(raw);std::memcpy(m.view(raw,size).data,bytes.data()+start,size);
-  const unsigned stride=i==0?8:i==1?12:i==2?32:2;m.word(tree+i*8,raw);m.word(tree+i*8+4,static_cast<std::uint32_t>(size/stride));
-  if(i==2)for(unsigned p=0;p<size;p+=32)m.half(raw+p+6,0xffff);
- }
- out.loaded=true;return out;
-}
-void unload_topology_resources(::port::driving::Memory& m,TopologyResources& resources){
- if(resources.owner!=&m||!resources.loaded)throw std::invalid_argument("Topology resource owner/lifetime mismatch");
- if(m.word(0x00327394))throw std::logic_error("CloseTree must release expanded polygon references before raw topology disposal");
- for(unsigned i=0;i<32;i+=4)m.word(0x002f0d10+i,0);
- for(auto p:resources.allocations)m.release(p);resources={};
-}
+    const float scaled=length*0.03333333507180214f;
+    int32_t samples=convertFloatToInt32(scaled);
+    if((float)samples<scaled)++samples;
+    const float divisor=(float)samples;
+    const float stepLength=finiteRatio(length,divisor);
+    float delta[4],previous[4];
+    for(int axis=0;axis<4;++axis){delta[axis]=first[axis]-second[axis];previous[axis]=second[axis];}
+    for(int32_t index=1;index<=samples;++index){
+        const float fraction=finiteRatio((float)index,divisor);
+        float current[4];
+        for(int axis=0;axis<4;++axis){const float offset=delta[axis]*fraction;current[axis]=second[axis]+offset;}
+        float middle[4];
+        for(int axis=0;axis<4;++axis){const float sum=current[axis]+previous[axis];middle[axis]=sum*0.5f;}
+        terrainSurfaceUpdate(surface,middle,stepLength*0.5f,NULL);
+        if(terrainSurfaceIntersectsSegment(surface,current,previous,0.5f))return 1;
+        memcpy(previous,current,sizeof(previous));
+    }
+    return 0;
 }
 
-namespace hp2::debug {
-// Debug001518C0; E-0099-W26. Unlike ClearInterestBBox, the destructor does not reset fields.
-void TopologyCoordinate::Sub_001518C0(int in_chrg){TopologyTree(m_,0x002f0d10).RemoveTrackPolygons(address_+0x20,m_.signed_word(address_+0x2a0));if(in_chrg&1)m_.release(address_);}
+// Remaining TrackPolygon/TopologyCoordinate/TopologyTree bodies;
+TerrainPolygon *terrainPolygonDecode(TerrainTopology *topology,
+                                    TerrainPolygon *polygon,
+                                    TerrainEncodedPolygon *encoded)
+{
+    polygon->materialIndex = encoded->materialIndex;
+    polygon->flags = encoded->flags;
+    polygon->references = 0;
+    polygon->minimum[0] = (float)((int32_t)encoded->x[encoded->extrema & 3] * 8192) * 0.0000152587890625f;
+    polygon->minimum[1] = (float)((int32_t)encoded->y[(encoded->extrema >> 2) & 3] * 8192) * 0.0000152587890625f;
+    polygon->maximum[0] = (float)((int32_t)encoded->x[(encoded->extrema >> 4) & 3] * 8192) * 0.0000152587890625f;
+    polygon->maximum[1] = (float)((int32_t)encoded->y[encoded->extrema >> 6] * 8192) * 0.0000152587890625f;
+    for (size_t i = 0; i < 4; ++i) {
+        uint32_t heightBits = (uint32_t)(int32_t)encoded->z[i] * 256U
+                            + (uint32_t)(int32_t)encoded->elevationBand * 65536U;
+        int32_t height;
+        memcpy(&height, &heightBits, sizeof(height));
+        polygon->vertices[i][0] = (float)((int32_t)encoded->x[i] * 8192) * 0.0000152587890625f;
+        polygon->vertices[i][1] = (float)((int32_t)encoded->y[i] * 8192) * 0.0000152587890625f;
+        polygon->vertices[i][2] = (float)height * 0.0000152587890625f;
+        polygon->vertices[i][3] = 0.0f;
+    }
+    polygon->vertexCount = (encoded->flags & 16) ? 4 : 3;
+    if (encoded->flags & 4) {
+        for (size_t i = 0; i < 4; ++i) polygon->vertices[i][2] *= 4.0f;
+    }
+    float first[4], second[4], normal[4];
+    for (size_t i = 0; i < 4; ++i) {
+        first[i] = bScalarAdd(polygon->vertices[1][i], -polygon->vertices[0][i]);
+        second[i] = bScalarAdd(polygon->vertices[2][i], -polygon->vertices[0][i]);
+    }
+    terrainSurfaceCross3(normal, first, second);
+    const float inverseLength = bScalarDivide(1.0f, bScalarSquareRoot(terrainSurfaceDot3(normal, normal)));
+    for (size_t i = 0; i < 3; ++i) polygon->plane[i] = bScalarMultiply(normal[i], inverseLength);
+    polygon->plane[3] = terrainSurfaceDot3(polygon->vertices[0], polygon->plane);
+    polygon->encoded = encoded;
+    encoded->cacheIndex = (int16_t)(polygon - topology->cache);
+    polygon->occupied = true;
+    return polygon;
 }
 
-#include "game_core/port/track/position_markers.hpp"
-namespace hp2::debug {
-// Debug00151018; TASK-0099 E-0099-W34. Exact authored list order/hash matching.
-int GetNumTrackPositionMarkers(const ::port::driving::Memory& m,std::uint32_t hash){int count=0;for(auto p=m.word(0x327378);p!=0x327378;p=m.word(p))if(m.word(p+8)==hash)++count;return count;}
-// Debug00151058; E-0099-W34. Index counts matching hashes only; misses return0.
-std::uint32_t GetTrackPositionMarker(const ::port::driving::Memory& m,std::uint32_t hash,int index){int count=0;for(auto p=m.word(0x327378);p!=0x327378;p=m.word(p))if(m.word(p+8)==hash){if(count==index)return p;++count;}return 0;}
-// Debug00153258, E-0099-W34. Marker34146 branch only, no whole track loader claim.
-int LoaderTrackGeometry(::port::driving::Memory& m,std::uint32_t chunk){
- if(m.word(chunk)!=0x34146)hp2::not_implemented("0x00153258","non-marker LoaderTrackGeometry branch requires its actual resource owner");
- for(unsigned i=0;i<m.word(chunk+4)/24;++i){const auto node=chunk+8+24*i,tail=m.word(0x32737c);m.word(tail,node);m.word(node+4,tail);m.word(0x32737c,node);m.word(node,0x327378);}return 1;
-}
-// Debug00153368, E-0099-W34. Unlink records; backing bytes belong to bundle.
-int UnloaderTrackGeometry(::port::driving::Memory& m,std::uint32_t chunk){
- if(m.word(chunk)!=0x34146)hp2::not_implemented("0x00153368","non-marker UnloaderTrackGeometry branch requires its actual resource owner");
- for(unsigned i=0;i<m.word(chunk+4)/24;++i){const auto node=chunk+8+24*i,next=m.word(node),prev=m.word(node+4);m.word(prev,next);m.word(next+4,prev);}return 1;
-}
+void terrainPolygonRelease(TerrainTopology *topology, TerrainPolygon *polygon)
+{
+    (void)topology;
+    if (polygon->encoded) polygon->encoded->cacheIndex = -1;
+    polygon->occupied = false;
+    polygon->encoded = NULL;
 }
 
-namespace hp2::debug {
-// Debug001521A8, E-0099-W39. Uses this coordinate's persistent actual cache.
-bool TopologyCoordinate::HasTopology(const std::array<float,2>& p){bool valid=false;GetElevation({{p[0],p[1],m_.scalar(0x324f68)}},nullptr,nullptr,&valid);return valid;}
+void terrainTopologyInitializeCache(TerrainTopology *topology,
+                                    TerrainPolygon *storage, size_t capacity)
+{
+    topology->cache = storage;
+    topology->cacheCapacity = capacity;
+    topology->oldest = NULL;
+    topology->newest = NULL;
+    memset(storage, 0, capacity * sizeof(*storage));
 }
 
-namespace hp2::debug {
-// Debug00151428, E-0099-W50. Read actual expanded vertices/plane directly;
-// no independent polygon cache or re-normalized Retail adapter is used.
-bool TrackPolygon::PointInShaft(const std::array<float,4>& point,float* elevation){const int count=m_.signed_byte(address_+9);if(count!=3&&count!=4)hp2::not_implemented("0x00151428","original shaft test with unsupported vertex count/uninitialized stack rays");std::array<std::array<float,3>,4> rays{};for(int i=0;i<count;++i)for(unsigned axis=0;axis<3;++axis)rays[i][axis]=m_.scalar(address_+0x30+std::uint32_t(i)*16+axis*4)-point[axis];const std::array<float,3> normal{{m_.scalar(address_+0x70),m_.scalar(address_+0x74),m_.scalar(address_+0x78)}};for(int i=0;i<count;++i)if(track_dot(track_cross(rays[i],rays[(i+1)%count]),normal)<0)return false;if(elevation)*elevation=-track_dot(rays[0],normal);return true;}
-// Debug001515E0, E-0099-W50. Strict opposite-plane-side test; endpoint touches
-// are rejected. Ordered interpolation retains all four original vector lanes.
-bool TrackPolygon::SegmentIntersects(const std::array<float,4>& first,const std::array<float,4>& second,std::array<float,4>* intersection){std::array<float,3> a{},b{},normal{};for(unsigned axis=0;axis<3;++axis){const auto origin=m_.scalar(address_+0x30+axis*4);a[axis]=first[axis]-origin;b[axis]=second[axis]-origin;normal[axis]=m_.scalar(address_+0x70+axis*4);}const float da=track_dot(a,normal),db=track_dot(b,normal);if(!(da*db<0))return false;const float ratio=std::abs(da)/(std::abs(da)+std::abs(db));std::array<float,4> point{};for(unsigned lane=0;lane<4;++lane)point[lane]=(second[lane]-first[lane])*ratio+first[lane];if(!PointInShaft(point))return false;if(intersection)*intersection=point;return true;}
-// Debug001516D8, E-0099-W50. Original bBoundingBoxOverlapping00252C10 uses
-// STRICT XYZ overlap, unlike older bounded camera prose claiming inclusive.
-bool TrackPolygon::TestSegmentToPoly(float& nearest,const std::array<float,4>& target,const std::array<float,4>& position,const std::array<float,4>& low,const std::array<float,4>& high,bool two_sided){auto minimum=m_.vector(address_+0x30),maximum=minimum;for(int i=1;i<m_.signed_byte(address_+9);++i)for(unsigned axis=0;axis<3;++axis){const auto value=m_.scalar(address_+0x30+std::uint32_t(i)*16+axis*4);minimum[axis]=std::min(minimum[axis],value);maximum[axis]=std::max(maximum[axis],value);}for(unsigned axis=0;axis<3;++axis)if(!(low[axis]<maximum[axis]&&minimum[axis]<high[axis]))return false;std::array<float,4> intersection{};if(!SegmentIntersects(target,position,&intersection))return false;std::array<float,3> difference{},normal{};for(unsigned axis=0;axis<3;++axis){difference[axis]=intersection[axis]-target[axis];normal[axis]=m_.scalar(address_+0x70+axis*4);}if(!two_sided&&0<=track_dot(difference,normal))return false;const auto distance=std::sqrt(track_dot(difference,difference));if(distance<nearest){nearest=distance;return true;}return false;}
-// Debug00152500, E-0099-W50. Uses this coordinate's existing shared polygon
-// table and references; never builds a substitute topology or independent cache.
-bool TopologyCoordinate::ConstrainToTopology(eConstraintType type,bool two_sided,const std::array<float,4>& target,std::array<float,4>& position,float margin,float wall_up){auto low=target,high=target;for(unsigned axis=0;axis<3;++axis){low[axis]=std::min(low[axis],position[axis]-margin);high[axis]=std::max(high[axis],position[axis]+margin);}float nearest=m_.scalar(0x324f74);std::uint32_t chosen=0;for(int i=0;i<m_.signed_word(address_+0x2a0);++i){const auto polygon=m_.word(address_+0x20+std::uint32_t(i)*4);if(TrackPolygon(m_,polygon).TestSegmentToPoly(nearest,target,position,low,high,two_sided))chosen=polygon;}
- std::array<float,4> boom{};for(unsigned lane=0;lane<4;++lane)boom[lane]=position[lane]-target[lane];const float distance=std::sqrt((boom[0]*boom[0]+boom[1]*boom[1])+boom[2]*boom[2]);if(!(nearest<distance))return false;
- const auto normalize=[&](float length){const auto normalized=hp2::recovered::bNormalize({{boom[0],boom[1],boom[2]}},length);for(unsigned axis=0;axis<3;++axis)boom[axis]=normalized[axis];};
- if(type==eCONSTRAIN_BY_ROTATION){const auto flags=m_.byte(chosen+0xa);if(flags&2){const float length=nearest-margin;normalize(length);boom[2]+=wall_up*(1-length/distance);for(unsigned lane=0;lane<4;++lane)position[lane]=target[lane]+boom[lane];return true;}const float plane=(m_.scalar(chosen+0x7c)-(m_.scalar(chosen+0x70)*position[0]+m_.scalar(chosen+0x74)*position[1]))/m_.scalar(chosen+0x78);position[2]=(flags&8)?plane-margin:plane+margin;
- }else if(type==eCONSTRAIN_BY_SCALE){normalize(nearest-margin);for(unsigned lane=0;lane<4;++lane)position[lane]=target[lane]+boom[lane];}return true;
+void terrainTopologyDispose(TerrainTopology *topology)
+{
+    TerrainPolygon *polygon = topology->oldest;
+    while (polygon) {
+        TerrainPolygon *next = polygon->next;
+        terrainPolygonRelease(topology, polygon);
+        polygon = next;
+    }
+    topology->cache = NULL;
+    topology->cacheCapacity = 0;
+    topology->oldest = NULL;
+    topology->newest = NULL;
 }
+
+bool terrainTopologyLoadChunk(TerrainTopology *topology, const TerrainTopologyChunk *chunk)
+{
+    switch (chunk->kind) {
+    case TERRAIN_CHUNK_BRANCHES:
+        topology->branches = (const TerrainBranch *)chunk->records;
+        topology->branchCount = chunk->count;
+        return true;
+    case TERRAIN_CHUNK_SQUARES:
+        topology->squares = (const TerrainSquare *)chunk->records;
+        topology->squareCount = chunk->count;
+        return true;
+    case TERRAIN_CHUNK_POLYGONS:
+        topology->polygons = (TerrainEncodedPolygon *)chunk->records;
+        topology->polygonCount = chunk->count;
+        for (size_t i = 0; i < chunk->count; ++i) topology->polygons[i].cacheIndex = -1;
+        return true;
+    case TERRAIN_CHUNK_REFERENCES:
+        topology->references = (const uint16_t *)chunk->records;
+        topology->referenceCount = chunk->count;
+        return true;
+    default:
+        return false;
+    }
 }
+
+size_t terrainTopologyPurgeUnused(TerrainTopology *topology)
+{
+    size_t released = 0;
+    TerrainPolygon *polygon = topology->oldest;
+    while (polygon && released < 101) {
+        TerrainPolygon *next = polygon->next;
+        if (!polygon->references) {
+            terrainSurfaceDetachPolygon(topology, polygon);
+            terrainPolygonRelease(topology, polygon);
+            ++released;
+        }
+        polygon = next;
+    }
+    return released;
+}
+
+TerrainPolygon *terrainTopologyAcquire(TerrainTopology *topology,
+                                      TerrainEncodedPolygon *encoded)
+{
+    TerrainPolygon *polygon = NULL;
+    if (encoded->cacheIndex >= 0 && (size_t)encoded->cacheIndex < topology->cacheCapacity) {
+        polygon = &topology->cache[encoded->cacheIndex];
+    } else {
+        for (int attempt = 0; attempt < 2 && !polygon; ++attempt) {
+            for (size_t i = 0; i < topology->cacheCapacity; ++i) {
+                if (!topology->cache[i].occupied) { polygon = &topology->cache[i]; break; }
+            }
+            if (!polygon && attempt == 0) terrainTopologyPurgeUnused(topology);
+        }
+        if (!polygon) return NULL;
+        terrainPolygonDecode(topology, polygon, encoded);
+        polygon->previous = topology->newest;
+        polygon->next = NULL;
+        if (topology->newest) topology->newest->next = polygon;
+        else topology->oldest = polygon;
+        topology->newest = polygon;
+    }
+    polygon->references = (uint8_t)(polygon->references + 1U);
+    return polygon;
+}
+
+size_t terrainTopologyCollectBounds(TerrainTopology *topology,
+                                    TerrainPolygon **output, size_t capacity,
+                                    const float minimum[2], const float maximum[2])
+{
+    TerrainEncodedPolygon *records[TERRAIN_SURFACE_POLYGON_LIMIT];
+    size_t count = 0;
+    if (capacity > TERRAIN_SURFACE_POLYGON_LIMIT) capacity = TERRAIN_SURFACE_POLYGON_LIMIT;
+    if (-32768.0f < minimum[0] && maximum[0] < 32767.0f
+            && -32768.0f < minimum[1] && maximum[1] < 32767.0f) {
+        for (float y = terrainTopologySquareCorner(minimum[1]); y <= maximum[1]; y += 32.0f) {
+            for (float x = terrainTopologySquareCorner(minimum[0]); x <= maximum[0]; x += 32.0f) {
+                const TerrainSquare *square = terrainTopologyFindSquare(topology, x, y, false);
+                count += terrainTopologyCollectSquare(topology, records + count, capacity - count, square, minimum, maximum);
+            }
+        }
+    }
+    size_t acquired = 0;
+    for (size_t i = 0; i < count; ++i) {
+        records[i]->visited = 0;
+        TerrainPolygon *polygon = terrainTopologyAcquire(topology, records[i]);
+        if (polygon) output[acquired++] = polygon;
+    }
+    return acquired;
+}
+
+TerrainSurface *terrainSurfaceInitialize(TerrainSurface *surface, TerrainTopology *topology)
+{
+    memset(surface, 0, sizeof(*surface));
+    surface->topology = topology;
+    terrainSurfaceReset(surface);
+    return surface;
+}
+
+void terrainSurfaceDispose(TerrainSurface *surface)
+{
+    terrainTopologyReleaseMany(surface->topology, surface->polygons, surface->polygonCount);
+    surface->polygonCount = 0;
+    surface->lastGround = NULL;
+}
+
+void terrainSurfaceReset(TerrainSurface *surface)
+{
+    vectorBoundsInitialize2(surface->queryMinimum, surface->queryMaximum);
+    vectorBoundsInitialize2(surface->cacheMinimum, surface->cacheMaximum);
+    terrainTopologyReleaseMany(surface->topology, surface->polygons, surface->polygonCount);
+    surface->lastGround = NULL;
+    surface->polygonCount = 0;
+    surface->groundCount = 0;
+    surface->barrierCount = 0;
+    surface->overheadCount = 0;
+}
+
+void terrainSurfaceUpdate(TerrainSurface *surface, const float point[2],
+                          float radius, const float direction[2])
+{
+    vectorBoundsInitialize2(surface->queryMinimum, surface->queryMaximum);
+    vectorBoundsExpandRadius2(surface->queryMinimum, surface->queryMaximum, point, radius);
+    if (vectorBoundsContainsBounds2(surface->cacheMinimum, surface->cacheMaximum,
+                                    surface->queryMinimum, surface->queryMaximum)) return;
+    terrainTopologyReleaseMany(surface->topology, surface->polygons, surface->polygonCount);
+    surface->polygonCount = 0;
+    surface->groundCount = 0;
+    surface->barrierCount = 0;
+    surface->overheadCount = 0;
+    surface->lastGround = NULL;
+    float padding = radius + 0.5f;
+    if (direction) {
+        float lookAhead = 0.15000000596046448f;
+        for (int attempt = 0; attempt < 5; ++attempt) {
+            float target[2];
+            vectorBoundsInitialize2(surface->cacheMinimum, surface->cacheMaximum);
+            vectorBoundsExpandRadius2(surface->cacheMinimum, surface->cacheMaximum, point, padding);
+            vectorMultiplyAdd2(target, point, direction, lookAhead);
+            vectorBoundsExpandRadius2(surface->cacheMinimum, surface->cacheMaximum, target, padding);
+            float width = surface->cacheMinimum[0] - surface->cacheMaximum[0];
+            float height = surface->cacheMinimum[1] - surface->cacheMaximum[1];
+            if (sqrtf(width * width + height * height) < 28.799999237060547f) break;
+            lookAhead *= 0.75f;
+            if (attempt == 3) lookAhead = 0.0f;
+        }
+    } else {
+        vectorBoundsInitialize2(surface->cacheMinimum, surface->cacheMaximum);
+        vectorBoundsExpandRadius2(surface->cacheMinimum, surface->cacheMaximum, point, padding);
+    }
+    TerrainPolygon *polygons[TERRAIN_SURFACE_POLYGON_LIMIT];
+    size_t count = terrainTopologyCollectBounds(surface->topology, polygons,
+                                                TERRAIN_SURFACE_POLYGON_LIMIT,
+                                                surface->cacheMinimum, surface->cacheMaximum);
+    size_t written = 0;
+    for (size_t i = 0; i < count; ++i) {
+        if (!(polygons[i]->flags & 10)) surface->polygons[written++] = polygons[i];
+    }
+    surface->groundCount = written;
+    for (size_t i = 0; i < count; ++i) {
+        if (polygons[i]->flags & 2) surface->polygons[written++] = polygons[i];
+    }
+    surface->barrierCount = written - surface->groundCount;
+    for (size_t i = 0; i < count; ++i) {
+        if (polygons[i]->flags & 8) surface->polygons[written++] = polygons[i];
+    }
+    surface->overheadCount = written - surface->groundCount - surface->barrierCount;
+    surface->polygonCount = count;
+}
+
+static float maximumEdgeSide(const TerrainPolygon *polygon, const float point[4])
+{
+    static const unsigned edges[4][2] = {{0, 1}, {1, 2}, {3, 0}, {2, 3}};
+    float side = -1.0f;
+    for (int i = 0; i < polygon->vertexCount; ++i) {
+        const float *first = polygon->vertices[edges[i][0]];
+        const float *second = polygon->vertices[edges[i][1]];
+        const float firstProduct = bScalarMultiply(bScalarAdd(second[1], -first[1]), bScalarAdd(point[0], -first[0]));
+        const float secondProduct = bScalarMultiply(bScalarAdd(second[0], -first[0]), bScalarAdd(point[1], -first[1]));
+        const float cross = bScalarAdd(firstProduct, -secondProduct);
+        if (side < cross) side = cross;
+        if (0.0f < side) break;
+    }
+    return side;
+}
+
+float terrainSurfaceElevation(TerrainSurface *surface, const float point[4],
+                              int32_t *materialIndex, float normal[4], bool *found)
+{
+    if (found) *found = true;
+    if (surface->lastGround && maximumEdgeSide(surface->lastGround, point) < 0.0f) {
+        TerrainPolygon *polygon = surface->lastGround;
+        float height = terrainSurfacePolygonElevation(polygon, point);
+        if (materialIndex) *materialIndex = polygon->materialIndex;
+        if (normal) memcpy(normal, polygon->plane, sizeof(polygon->plane));
+        return height;
+    }
+    if (!vectorBoundsContainsPoint2(surface->queryMinimum, surface->queryMaximum, point, 0.0f))
+        terrainSurfaceUpdate(surface, point, 8.0f, NULL);
+    float height = -FLT_MAX;
+    float limit = bScalarAdd(point[2], 1.0f);
+    int selected = -1;
+    for (int pass = 0; pass < 2 && selected < 0; ++pass) {
+        for (size_t i = 0; i < surface->groundCount; ++i) {
+            TerrainPolygon *polygon = surface->polygons[i];
+            if (polygon->minimum[0] > point[0] || point[0] > polygon->maximum[0]
+                    || polygon->minimum[1] > point[1] || point[1] > polygon->maximum[1]) continue;
+            float side = maximumEdgeSide(polygon, point);
+            if (!(side <= 0.0f)) continue;
+            float candidate = terrainSurfacePolygonElevation(polygon, point);
+            if (!(height < candidate && candidate < limit)) continue;
+            height = candidate;
+            if (!(polygon->flags & 1) && side < 0.0f) {
+                surface->lastGround = polygon;
+                selected = (int)i;
+                break;
+            }
+            selected = (int)i;
+        }
+        limit = FLT_MAX;
+    }
+    if (selected < 0) {
+        if (found) *found = false;
+        if (materialIndex) *materialIndex = 1;
+        if (normal) { normal[0] = 0.0f; normal[1] = 0.0f; normal[2] = -1.0f; }
+        return point[2];
+    }
+    TerrainPolygon *polygon = surface->polygons[selected];
+    if (selected > 4) {
+        memmove(surface->polygons + 1, surface->polygons,
+                (size_t)selected * sizeof(surface->polygons[0]));
+        surface->polygons[0] = polygon;
+    }
+    if (materialIndex) *materialIndex = polygon->materialIndex;
+    if (normal) memcpy(normal, polygon->plane, sizeof(polygon->plane));
+    return height;
+}
+
+bool terrainSurfaceHasGround(TerrainSurface *surface, const float point[2])
+{
+    float sample[4] = {point[0], point[1], 99999.1015625f, 0.0f};
+    bool found;
+    (void)terrainSurfaceElevation(surface, sample, NULL, NULL, &found);
+    return found;
+}
+
+bool terrainSurfaceIntersectsSegment(const TerrainSurface *surface,
+                                     const float first[4], const float second[4], float radius)
+{
+    float minimum[4], maximum[4];
+    vectorBoundsFromPoint3(minimum, maximum, first);
+    terrainBoundsExpandRadius3(minimum, maximum, second, radius);
+    float closestDistance = 999999.0f;
+    for (size_t i = 0; i < surface->polygonCount; ++i) {
+        if (terrainPolygonTestSegment(surface->polygons[i], &closestDistance,
+                                       first, second, minimum, maximum, false)) return true;
+    }
+    return false;
+}
+
+bool terrainSurfaceConstrainSegment(const TerrainSurface *surface, int mode,
+                                    bool twoSided, const float first[4],
+                                    float second[4], float radius, float extraHeight)
+{
+    float minimum[4], maximum[4];
+    vectorBoundsFromPoint3(minimum, maximum, first);
+    terrainBoundsExpandRadius3(minimum, maximum, second, radius);
+    float closestDistance = 999999.0f;
+    const TerrainPolygon *hit = NULL;
+    for (size_t i = 0; i < surface->polygonCount; ++i) {
+        if (terrainPolygonTestSegment(surface->polygons[i], &closestDistance,
+                                       first, second, minimum, maximum, twoSided)) hit = surface->polygons[i];
+    }
+    float delta[4];
+    for (size_t i = 0; i < 4; ++i) delta[i] = second[i] - first[i];
+    float length = sqrtf(terrainSurfaceDot3(delta, delta));
+    if (!(closestDistance < length)) return false;
+    if (mode == 1 || (mode == 0 && (hit->flags & 2))) {
+        float distance = closestDistance - radius;
+        float fraction = distance / length;
+        vectorSetLength3(delta, delta, distance);
+        if (mode == 0) delta[2] += extraHeight * (1.0f - fraction);
+        for (size_t i = 0; i < 4; ++i) second[i] = first[i] + delta[i];
+        return true;
+    }
+    if (mode != 0) return true;
+    float elevation = terrainSurfacePolygonElevation(hit, second);
+    second[2] = (hit->flags & 8) ? elevation - radius : elevation + radius;
+    return true;
+}
+
+float terrainMaterialNoise(int32_t x, int32_t y)
+{
+    static const float samples[16] = {
+        -0.5f, -0.2f, 0.5f, 0.2f, -0.4f, -0.1f, 0.2f, 0.5f,
+        -0.2f, -0.5f, 0.4f, -0.3f, 0.3f, 0.0f, -0.2f, 0.1f
+    };
+    uint32_t first = (uint32_t)x * (uint32_t)y;
+    uint32_t second = ((uint32_t)x + 1U) * ((uint32_t)y + 1U);
+    return samples[(first * 11U + second * 13U) & 15U];
+}
+
+float terrainMaterialDisplacement(const TerrainMaterial *material, const float point[4])
+{
+    const float x = bScalarMultiply(point[0], material->displacementFrequency);
+    const float y = bScalarMultiply(point[1], material->displacementFrequency);
+    float wholeX = (float)(int32_t)x;
+    float wholeY = (float)(int32_t)y;
+    if (x < wholeX) wholeX = bScalarAdd(wholeX, -1.0f);
+    if (y < wholeY) wholeY = bScalarAdd(wholeY, -1.0f);
+    int32_t cellX = (int32_t)wholeX, cellY = (int32_t)wholeY;
+    const float partX = bScalarAdd(x, -wholeX), partY = bScalarAdd(y, -wholeY);
+    const float remainingY = bScalarAdd(1.0f, -partY);
+    const float remainingX = bScalarAdd(1.0f, -partX);
+    const float first = bScalarMultiply(bScalarMultiply(remainingX, remainingY), terrainMaterialNoise(cellX, cellY));
+    const float second = bScalarMultiply(bScalarMultiply(partX, remainingY), terrainMaterialNoise(cellX + 1, cellY));
+    float sum = bScalarAdd(first, second);
+    const float third = bScalarMultiply(bScalarMultiply(remainingX, partY), terrainMaterialNoise(cellX, cellY + 1));
+    sum = bScalarAdd(sum, third);
+    const float fourth = bScalarMultiply(bScalarMultiply(partX, partY), terrainMaterialNoise(cellX + 1, cellY + 1));
+    sum = bScalarAdd(sum, fourth);
+    return bScalarMultiply(sum, material->displacementAmplitude);
+}
+
+// Native decoded-resource/cache lifetime of the same identified topology owner.
+namespace hp2 {
+namespace {
+constexpr std::uint32_t kBranches = 0x00034130;
+constexpr std::uint32_t kSquares = 0x00034131;
+constexpr std::uint32_t kPolygons = 0x00034132;
+constexpr std::uint32_t kReferences = 0x00034133;
+
+void FindTopology(const std::vector<std::uint8_t>& bytes,
+                  std::size_t begin, std::size_t length, unsigned depth,
+                  std::array<Chunk, 4>& found, std::array<bool, 4>& present) {
+    Require(depth < 32, "Terrain chunk nesting exceeds limit");
+    for (const auto& chunk : ReadChunks(bytes, begin, length)) {
+        if (chunk.id >= kBranches && chunk.id <= kReferences) {
+            const auto index = chunk.id - kBranches;
+            Require(!present[index], "Duplicate topology chunk");
+            found[index] = chunk;
+            present[index] = true;
+        } else if (chunk.IsContainer()) {
+            FindTopology(bytes, chunk.payloadOffset, chunk.size, depth + 1, found, present);
+        }
+    }
+}
+
+std::size_t AlignedStart(const Chunk& chunk, std::size_t recordSize) {
+    const auto begin = (chunk.payloadOffset + 15) & ~std::size_t(15);
+    Require(begin <= chunk.endOffset && (chunk.endOffset - begin) % recordSize == 0,
+            "Malformed aligned terrain records");
+    return begin;
+}
+} // namespace
+
+TerrainData::TerrainData(const std::vector<std::uint8_t>& bytes, std::size_t cacheCapacity)
+    : cache_(cacheCapacity) {
+    Require(cacheCapacity > 0 && cacheCapacity <= 32767, "Terrain cache capacity invalid");
+    std::array<Chunk, 4> chunks{};
+    std::array<bool, 4> present{};
+    FindTopology(bytes, 0, bytes.size(), 0, chunks, present);
+    for (bool exists : present) Require(exists, "Track bundle is missing collision topology");
+    for (auto cursor = AlignedStart(chunks[0], 8); cursor < chunks[0].endOffset; cursor += 8) {
+        TerrainBranch branch{};
+        for (unsigned i = 0; i < 4; ++i) branch.children[i] = ReadU16(bytes.data() + cursor + i * 2);
+        branches_.push_back(branch);
+    }
+    for (auto cursor = AlignedStart(chunks[1], 12); cursor < chunks[1].endOffset; cursor += 12) {
+        TerrainSquare square{};
+        square.firstReference = ReadU16(bytes.data() + cursor + 8);
+        square.referenceCount = static_cast<std::int16_t>(ReadU16(bytes.data() + cursor + 10));
+        Require(square.referenceCount >= 0, "Negative terrain square reference count");
+        squares_.push_back(square);
+    }
+    Require(chunks[2].size % 32 == 0, "Malformed encoded terrain polygon records");
+    for (auto cursor = chunks[2].payloadOffset; cursor < chunks[2].endOffset; cursor += 32) {
+        const auto* record = bytes.data() + cursor;
+        TerrainEncodedPolygon polygon{};
+        polygon.visited = record[0];
+        polygon.extrema = record[1];
+        polygon.materialIndex = static_cast<std::int8_t>(record[2]);
+        polygon.flags = record[3];
+        Require((polygon.flags & 10) != 10, "Terrain polygon combines barrier and overhead categories");
+        polygon.elevationBand = static_cast<std::int16_t>(ReadU16(record + 4));
+        polygon.cacheIndex = -1;
+        for (unsigned i = 0; i < 4; ++i) {
+            polygon.x[i] = static_cast<std::int16_t>(ReadU16(record + 8 + i * 2));
+            polygon.y[i] = static_cast<std::int16_t>(ReadU16(record + 16 + i * 2));
+            polygon.z[i] = static_cast<std::int16_t>(ReadU16(record + 24 + i * 2));
+        }
+        polygons_.push_back(polygon);
+    }
+    Require(chunks[3].size % 2 == 0, "Malformed terrain polygon index list");
+    for (auto cursor = chunks[3].payloadOffset; cursor < chunks[3].endOffset; cursor += 2) {
+        const auto index = ReadU16(bytes.data() + cursor);
+        Require(index < polygons_.size(), "Terrain polygon reference outside table");
+        references_.push_back(index);
+    }
+    Require(!branches_.empty() && !squares_.empty() && !polygons_.empty(), "Empty collision topology");
+    for (const auto& branch : branches_) {
+        for (auto index : branch.children)
+            Require(index < branches_.size() || index < squares_.size(), "Terrain node index outside tables");
+    }
+    for (const auto& square : squares_)
+        Require(static_cast<std::size_t>(square.firstReference) + square.referenceCount <= references_.size(),
+                "Terrain square index range outside table");
+    terrainTopologyInitialize(&topology_);
+    terrainTopologyInitializeCache(&topology_, cache_.data(), cache_.size());
+    const TerrainTopologyChunk views[] = {
+        {TERRAIN_CHUNK_BRANCHES, branches_.data(), branches_.size()},
+        {TERRAIN_CHUNK_SQUARES, squares_.data(), squares_.size()},
+        {TERRAIN_CHUNK_POLYGONS, polygons_.data(), polygons_.size()},
+        {TERRAIN_CHUNK_REFERENCES, references_.data(), references_.size()}
+    };
+    for (const auto& view : views) terrainTopologyLoadChunk(&topology_, &view);
+}
+
+TerrainData::~TerrainData() { terrainTopologyDispose(&topology_); }
+} // namespace hp2

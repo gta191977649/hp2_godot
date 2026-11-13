@@ -1,32 +1,146 @@
-// Exact Debug .mdebug original owner ..\indep\src\ecstasy.cpp, TASK-0099 E-0099-W22.
-// Debug SHA-256815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
-#include "game_core/port/race/damage_resources.hpp"
-namespace hp2::debug {
-// Debug001A5758; E-0099-W22. Null filter, previous marker, intrusive original list.
-std::uint32_t eFindPositionMarker(Memory&m,std::uint32_t name,std::uint32_t type,std::uint32_t previous){
- if(name==0&&type==0)return 0;
- for(auto p=previous?m.word(previous):m.word(0x327df0);p!=0x327df0;p=m.word(p))
-  if((name==0||m.word(p+8)==name)&&(type==0||m.word(p+0xc)==type))return p;
- return 0;
+#include "indep/inc/Ecstasy.hpp"
+#include "bware/inc/bChunk.hpp"
+#include "bware/inc/bWare.hpp"
+
+#include <cmath>
+#include <cstring>
+#include <stdexcept>
+#include <utility>
+
+void positionMarkersInitialize(PositionMarkerRegistry* registry)
+{
+    if (registry) {
+        registry->first=nullptr;
+        registry->last=nullptr;
+    }
 }
-// Debug001A5670; E-0099-W22. Chunk address alignment is significant.
-int LoaderPositionMarkers(Memory&m,std::uint32_t chunk){
- if(m.word(chunk)!=0x34013)return 0;
- const auto first=(chunk+0x17)&~15u,count=(m.word(chunk+4)-(first-(chunk+8)))>>5;
- for(unsigned i=0;i<count;++i){const auto p=first+32*i,tail=m.word(0x327df4);
-  m.word(tail,p);m.word(p+4,tail);m.word(0x327df4,p);m.word(p,0x327df0);}
- return 1;
+
+int32_t positionMarkersLoad(PositionMarkerRegistry* registry,uint32_t chunkKind,
+    PositionMarker* records,size_t count)
+{
+    if (chunkKind!=0x34013u)return 0;
+    if (!registry || (count && !records))return 0;
+    for (size_t index=0;index<count;++index)
+        if (records[index].registry)return 0;
+    for (size_t index=0;index<count;++index) {
+        PositionMarker& marker=records[index];
+        marker.next=nullptr;
+        marker.previous=registry->last;
+        if (registry->last)registry->last->next=&marker;
+        else registry->first=&marker;
+        registry->last=&marker;
+        marker.registry=registry;
+    }
+    return 1;
 }
-// Debug001A56E8; E-0099-W22.
-int UnloaderPositionMarkers(Memory&m,std::uint32_t chunk){
- if(m.word(chunk)!=0x34013)return 0;
- const auto first=(chunk+0x17)&~15u,count=(m.word(chunk+4)-(first-(chunk+8)))>>5;
- for(unsigned i=0;i<count;++i){const auto p=first+32*i,next=m.word(p),prev=m.word(p+4);m.word(prev,next);m.word(next+4,prev);}
- return 1;
+
+int32_t positionMarkersUnload(PositionMarkerRegistry* registry,uint32_t chunkKind,
+    PositionMarker* records,size_t count)
+{
+    if (chunkKind!=0x34013u)return 0;
+    if (!registry || (count && !records))return 0;
+    for (size_t index=0;index<count;++index)
+        if (records[index].registry!=registry)return 0;
+    // Source walks the file's records in forward order and unlinks each
+    // actual node. Other loaded catalogues keep their relative order.
+    for (size_t index=0;index<count;++index) {
+        PositionMarker& marker=records[index];
+        if (marker.previous)marker.previous->next=marker.next;
+        else registry->first=marker.next;
+        if (marker.next)marker.next->previous=marker.previous;
+        else registry->last=marker.previous;
+        marker.next=marker.previous=nullptr;
+        marker.registry=nullptr;
+    }
+    return 1;
 }
+
+const PositionMarker* positionMarkerFind(const PositionMarkerRegistry* registry,
+    uint32_t key,uint32_t groupKey,const PositionMarker* previous)
+{
+    if (!key && !groupKey)return nullptr;
+    if (!registry || (previous && previous->registry!=registry))return nullptr;
+    const PositionMarker* marker=previous ? previous->next:registry->first;
+    for (;marker;marker=marker->next) {
+        if (!key) {
+            if (marker->groupKey==groupKey)return marker;
+        } else if (marker->key==key && (!groupKey || marker->groupKey==groupKey)) {
+            return marker;
+        }
+    }
+    return nullptr;
 }
-namespace port::race {
-// Required PositionMarkerList member of original static initializer001A5950;
-// E-0099-W22. Other dynamic frame lists belong to separate frame-memory startup.
-void initialize_position_marker_list(port::driving::Memory&m){m.word(0x327df4,0x327df0);m.word(0x327df0,0x327df0);}
+
+namespace hp2 {
+
+PositionMarkerResources::PositionMarkerResources(const std::vector<std::uint8_t>& bundle,
+    PositionMarkerRegistry& registry)
+    : registry_(registry),authored_(bundle)
+{
+    const auto visit=[&](const auto& self,std::size_t begin,std::size_t size,unsigned depth)->void {
+        Require(depth<=32,"Position marker resource nesting exceeds32 levels");
+        for (const auto& chunk:ReadChunks(authored_,begin,size)) {
+            if (chunk.id==0x34013u) {
+                const std::size_t start=(chunk.payloadOffset+15u)&~std::size_t(15u);
+                Require(start<=chunk.endOffset,"Position marker alignment exceeds chunk extent");
+                Block block;
+                // LoaderPositionMarkers subtracts the alignment gap and
+                // divides by32. Bytes beyond the last full record are not
+                // semantic markers and are never indexed by the source.
+                block.count=(chunk.endOffset-start)/32u;
+                block.records=std::make_unique<PositionMarker[]>(block.count);
+                for (std::size_t index=0;index<block.count;++index) {
+                    PositionMarker& marker=block.records[index];
+                    const auto* record=authored_.data()+start+32u*index;
+                    marker.key=ReadU32(record+8);
+                    marker.groupKey=ReadU32(record+12);
+                    for (int axis=0;axis<3;++axis) {
+                        const uint32_t bits=ReadU32(record+16+4u*axis);
+                        std::memcpy(&marker.position[axis],&bits,sizeof(bits));
+                        Require(std::isfinite(marker.position[axis]),"Position marker coordinate is not finite");
+                    }
+                    marker.tags=ReadU32(record+28);
+                    marker.authoredRecord=record;
+                }
+                blocks_.push_back(std::move(block));
+            } else if (chunk.IsContainer()) {
+                self(self,chunk.payloadOffset,chunk.size,depth+1);
+            }
+        }
+    };
+    visit(visit,0,authored_.size(),0);
+    try {
+        for (auto& block:blocks_)
+            Require(positionMarkersLoad(&registry_,0x34013u,block.records.get(),block.count)!=0,
+                "Position marker block is already registered");
+    } catch (...) {
+        for (auto& block:blocks_)
+            if (block.count && block.records[0].registry==&registry_)
+                positionMarkersUnload(&registry_,0x34013u,block.records.get(),block.count);
+        throw;
+    }
+}
+
+PositionMarkerResources::~PositionMarkerResources()
+{
+    for (auto& block:blocks_)
+        positionMarkersUnload(&registry_,0x34013u,block.records.get(),block.count);
+}
+
+std::size_t PositionMarkerResources::Count() const noexcept
+{
+    std::size_t count=0;
+    for (const auto& block:blocks_)count+=block.count;
+    return count;
+}
+
+const PositionMarker* PositionMarkerResources::At(std::size_t index) const noexcept
+{
+    for (const auto& block:blocks_) {
+        if (index<block.count)return &block.records[index];
+        index-=block.count;
+    }
+    return nullptr;
+}
+
 }

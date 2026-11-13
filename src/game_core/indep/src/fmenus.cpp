@@ -1,1579 +1,1200 @@
-// Original source path, recovered verbatim from the authorized ELF: `..\indep\src\fmenus.cpp`
-// (string at 0x002B27F8, SLUS_203.62 sha256 7335b8ed...facc2; TASK-0020, E-0020-N01).
-// This file sits at that path. The path is original; what the file holds is a
-// partial port-side reconstruction, not the original translation unit.
-#include "frontendscreens/options.hpp"
-#include "fmenus.hpp"
-#include "game_core/port/frontend/popup.hpp"
-#include "game_core/port/assets/elab_chunks.hpp"
-#include "game_core/port/input/joyevents.hpp"
-#include "game_core/port/not_implemented.hpp"
-#include <cmath>
+#include "FMenus.hpp"
+#include "bsound/include/bSound.h"
+#include "bsound/include/bRegion.h"
+#include "FMenus.hpp"
+#include "bware/inc/bWare.hpp"
+#include "bware/inc/bWare.hpp"
+#include "Flags.hpp"
+#include "FEAnim.hpp"
+#include "GameFlow.hpp"
+#include "indep/src/MoviePlayer/MV3Codec.h"
 #include <cstdio>
 #include <cstring>
 #include <utility>
 #include <algorithm>
+#include "FMenus.hpp"
+#include "bware/inc/bMath.hpp"
+#include "bware/inc/bMath.hpp"
 
-namespace hp2::frontend {
-namespace {
+namespace hp2 {
 
-std::uint32_t read_u32(const std::uint8_t* d, std::size_t off) {
-    return static_cast<std::uint32_t>(d[off]) | (static_cast<std::uint32_t>(d[off + 1]) << 8) |
-           (static_cast<std::uint32_t>(d[off + 2]) << 16) | (static_cast<std::uint32_t>(d[off + 3]) << 24);
+FlailerNewSongMonitor::FlailerNewSongMonitor()
+    : screenKey(hashString("CHYRON"))
+{
 }
 
-float read_f32(const std::uint8_t* d, std::size_t off) {
-    std::uint32_t bits = read_u32(d, off);
-    float value;
-    std::memcpy(&value, &bits, sizeof(value));
-    return value;
+FlailerNewSongMonitor::~FlailerNewSongMonitor()
+{
+    alphaAnimation.reset();
+    numberOfChanges=0;
 }
 
-std::string read_fixed_string(const std::uint8_t* d, std::size_t off, std::size_t max_len) {
-    std::size_t len = 0;
-    while (len < max_len && d[off + len] != 0) ++len;
-    return std::string(reinterpret_cast<const char*>(d + off), len);
+void FlailerNewSongMonitor::Reset()
+{
+    alphaAnimation.reset();
 }
 
-} // namespace
+// Independent released process cells PAL3305E0/3305F4.
+std::int32_t newSongDisplayEnabled=1;
+std::int32_t newSongTitleWidth=10;
 
-std::vector<FeScreen> parse_screens(const std::vector<std::uint8_t>& buffer) {
-    std::vector<FeScreen> screens;
-    auto chunks = hp2::assets::parse_chunks_top(buffer);
-    const hp2::assets::Chunk* list = hp2::assets::find_first(chunks, kScreenListChunkId);
-    if (!list) return screens;
-
-    int index = 0;
-    for (const auto& screen_chunk : list->children) {
-        if (screen_chunk.tag != kScreenChunkId || !screen_chunk.is_container()) continue;
-        FeScreen screen;
-        screen.index = index++;
-        for (const auto& child : screen_chunk.children) {
-            const std::uint8_t* d = buffer.data() + child.payload_offset();
-            if (child.tag == kScreenHeaderId && child.size >= 0x1c) {
-                screen.name_hash_0x08 = read_u32(d, 0x08);
-                screen.width = static_cast<int>(d[0x18] | (d[0x19] << 8));
-                screen.height = static_cast<int>(d[0x1a] | (d[0x1b] << 8));
-                continue;
-            }
-            const bool is_quad = child.tag == kQuadWidgetId;
-            const bool is_text = child.tag == kTextWidgetId;
-            if (!is_quad && !is_text) continue;
-            if (child.size < 0x5c) continue;
-
-            FeWidget w;
-            w.chunk_id = child.tag;
-            w.name_hash = read_u32(d, 0x08);
-            w.class_hash = read_u32(d, 0x0c);
-            w.name = read_fixed_string(d, 0x10, 0x18);
-            w.type = d[0x28];
-            w.visible = d[0x29];
-            w.layer = d[0x2a];
-            w.x = read_f32(d, 0x30);
-            w.y = read_f32(d, 0x34);
-            w.scale_x = read_f32(d, 0x38);
-            w.clip_hash_0x4c = read_u32(d, 0x4c);
-            w.scale_y = read_f32(d, 0x3c);
-            if (is_quad && child.size >= 0x90) {
-                w.field_0x40 = static_cast<std::int32_t>(read_u32(d, 0x40));
-                w.field_0x44 = read_u32(d, 0x44);
-                for (std::size_t i = 0; i < 3; ++i) w.field_0x5c[i] = read_u32(d, 0x5c + i*4);
-                for (std::size_t i = 0; i < 8; ++i) w.field_0x70[i] = read_f32(d, 0x70 + i*4);
-            }
-            w.texture_hash = read_u32(d, 0x50);
-
-            // Colour bytes are stored R,G,B,A with PS2 alpha (0x80 == opaque). Quads carry a
-            // four-corner block starting at 0x58; text widgets carry a single colour at 0x5c.
-            const std::size_t colour_off = is_quad ? 0x58 : 0x5c;
-            if (child.size >= colour_off + 4) {
-                w.r = d[colour_off + 0];
-                w.g = d[colour_off + 1];
-                w.b = d[colour_off + 2];
-                w.a = d[colour_off + 3];
-            }
-            if (is_text) {
-                w.text_capacity = read_u32(d, 0x54);
-                w.text_align = read_u32(d, 0x58);
-                if (child.size >= 0x64) w.string_id_0x60 = read_u32(d, 0x60);
-                if (child.size > 0x64) w.text = read_fixed_string(d, 0x64, child.size - 0x64);
-            }
-            screen.widgets.push_back(std::move(w));
+void FlailerNewSongMonitor::Update(FlailerUiState& ui,const CarSoundBindings& sound)
+{
+    Require(ui.clock && ui.flow && ui.resources && ui.render,
+        "Song monitor has no actual clock/flow/resource/render owners");
+    if(soundJukeboxIsPlaying(sound,*ui.flow)) {
+        const auto track=soundJukeboxGetCurrentTrack();
+        if(track!=currentJukeboxIndex || !numberOfChanges) {
+            currentJukeboxIndex=track;songChangedTimer=ui.clock->realTimer;
+            ++numberOfChanges;songChangeStarted=0;
         }
-        screens.push_back(std::move(screen));
-    }
-    return screens;
-}
-
-namespace {
-void collect_chunks(const std::vector<hp2::assets::Chunk>& chunks, std::uint32_t tag,
-                     std::vector<const hp2::assets::Chunk*>& out) {
-    for (const auto& chunk : chunks) {
-        if (chunk.tag == tag) out.push_back(&chunk);
-        if (chunk.is_container()) collect_chunks(chunk.children, tag, out);
-    }
-}
-} // namespace
-
-std::vector<FeFont> parse_fonts(const std::vector<std::uint8_t>& buffer) {
-    std::vector<FeFont> fonts;
-    auto chunks = hp2::assets::parse_chunks_top(buffer);
-    std::vector<const hp2::assets::Chunk*> font_chunks;
-    collect_chunks(chunks, kFontChunkId, font_chunks);
-
-    for (const auto* chunk : font_chunks) {
-        if (chunk->size < 0x14) continue;
-        const std::uint8_t* d = buffer.data() + chunk->payload_offset();
-        FeFont font;
-        font.texture_hash = read_u32(d, 0x00);
-        const std::uint32_t glyph_count = read_u32(d, 0x04);
-        const auto glyph_offset = read_u32(d, 0x0c);
-        const auto pair_offset = read_u32(d, 0x10);
-        const auto pair_count = read_u32(d, 0x08);
-        const std::size_t table_bytes = static_cast<std::size_t>(glyph_count) * 32;
-        if (glyph_count == 0 || glyph_offset < 8 || (pair_count != 0 && pair_offset < 8)) continue;
-        const std::size_t glyph_start = glyph_offset - 8;
-        const std::size_t pair_start = pair_count == 0 ? 0 : pair_offset - 8;
-        if (glyph_start > chunk->size || table_bytes > chunk->size - glyph_start ||
-            pair_start > chunk->size || pair_count > (chunk->size - pair_start) / 8) continue;
-        font.glyphs.reserve(glyph_count);
-        for (std::uint32_t i = 0; i < glyph_count; ++i) {
-            const std::size_t off = glyph_start + static_cast<std::size_t>(i) * 32;
-            FeGlyph g;
-            g.code = static_cast<std::uint16_t>(d[off] | (d[off + 1] << 8));
-            g.flags = static_cast<std::uint16_t>(d[off + 2] | (d[off + 3] << 8));
-            g.u = read_f32(d, off + 0x04);
-            g.v = read_f32(d, off + 0x08);
-            g.w = read_f32(d, off + 0x0c);
-            g.h = read_f32(d, off + 0x10);
-            g.advance = read_f32(d, off + 0x14);
-            g.field_0x1c = read_u32(d, off + 0x1c);
-            // 0013FFA8 stores max glyph height at runtime font+0x420;00140CD8 converts to int.
-            if (g.h > static_cast<float>(font.line_height)) font.line_height = static_cast<std::uint32_t>(g.h);
-            font.glyphs.push_back(g);
+    } else numberOfChanges=0;
+    if(!songChangedTimer || songChangedTimer==INT32_MAX)return;
+    const auto delta=static_cast<std::uint32_t>(ui.clock->realTimer)-static_cast<std::uint32_t>(songChangedTimer);
+    std::int32_t ticks;std::memcpy(&ticks,&delta,sizeof(ticks));
+    const float elapsed=static_cast<float>(ticks)*0.0002500000118743628f;
+    if(elapsed>0.0f && elapsed<5.0f) {
+        if(newSongDisplayEnabled)ui.render->SetScreenVisibility(*ui.resources,screenKey,0);
+        if(!songChangeStarted) {
+            const auto* title=soundJukeboxGetTrackName(sound);
+            const auto* artist=soundJukeboxGetTrackArtist(sound);
+            const auto* label=soundJukeboxGetTrackLabel(sound);
+            Require(title && artist && label,"Active jukebox track lacks its authored title/artist/label metadata");
+            auto& resources=*ui.resources;
+            resources.Printf(screenKey,hashString("RECORD_LABEL"),"%s",label);
+            resources.Printf(screenKey,hashString("ARTIST_NAME"),"%s",artist);
+            resources.Printf(screenKey,hashString("SONG_TITLE"),"\"%s\"",title);
+            songChangeStarted=1;
+            // Exact direct GetWidth140588 dependency, borrowing the same
+            // text/bitmap nodes and their existing width implementation.
+            const auto width=[&](std::uint32_t key) {
+                auto* object=resources.FindObject(screenKey,key);
+                if(!object)return 0;
+                if(object->kind==1)return convertFloatToInt32(resources.ScaledTextWidth(
+                    *static_cast<FlailerTextChunk*>(object),ui.language));
+                if(object->kind==2)return convertFloatToInt32(resources.ScaledBitmapWidth(
+                    *static_cast<FlailerBitmapChunk*>(object)));
+                return 0;
+            };
+            newSongTitleWidth=width(hashString("RECORD_TITLE"));
+            auto maximum=std::max(width(hashString("RECORD_LABEL")),width(hashString("ARTIST_NAME")));
+            maximum=std::max(maximum,width(hashString("SONG_TITLE")));
+            maximum=std::max(maximum,newSongTitleWidth);
+            for(std::int32_t index=1;index<=5;++index) {
+                char name[32];std::snprintf(name,sizeof(name),"CHYRON_BG_%d",index);
+                const auto key=hashString(name);const auto scaled=static_cast<float>(width(key));
+                if(auto* object=resources.FindObject(screenKey,key)) {
+                    // PAL divides the already-rounded current width by
+                    // the actual current X scale before setting new scale.
+                    const auto unscaled=scaled/object->scaleX;
+                    object->SetScaleX((static_cast<float>(maximum)+20.0f)/unscaled);
+                }
+            }
         }
-        for (std::uint32_t i = 0; i < pair_count; ++i) {
-            const auto off = pair_start + static_cast<std::size_t>(i) * 8;
-            font.field_0x410.emplace_back(d[off], read_f32(d, off + 4));
-        }
-        fonts.push_back(std::move(font));
+    } else ui.render->SetScreenVisibility(*ui.resources,screenKey,1);
+    // PAL16C15C..16C1D8 retains comparisons for old fade intervals but no
+    // writes or calls. Do not invent alpha-animation effects for that tail.
+}
+
+void FlailerScreenList::Tick()
+{
+    // PAL16CCA8: tick the live screen/help, both popup objects, movie,
+    // original song monitor, frontend background, then loading animation.
+    if(active)active->Tick();
+    if(help)help->Tick();
+    for(auto* popup:popups)if(popup)popup->Tick();
+    UpdateMovie();
+    Require(ui && ui->flow && soundBindings,"Menu tick has no actual UI/flow/sound bindings");
+    newSongMonitor.Update(*ui,*soundBindings);
+    if(ui->flow->currentState==3) {
+        Require(background,"Frontend menu tick has no actual background animation");
+        background->Tick();
     }
-    return fonts;
+    Require(loadingAnimation,"Menu tick has no actual loading-screen animation");
+    loadingAnimation->Tick();
+}
+void MenuSystemTick(FlailerScreenList* menuSystem)
+{
+    if(menuSystem)menuSystem->Tick();
 }
 
-// =====================================================================================
-// Recovered front-end menu runtime. Each function below is a translation of the ELF function
-// named in its comment; the control flow, wrap-around behaviour, traversal order and fallback
-// values are the original's. See docs/FRONTEND_MENU_INTERACTION.md for the evidence table.
-// =====================================================================================
-
-namespace {
-
-// FUN_0016E038(sound_id) table at 0x002FB0A8, 16 bytes per record. Names verbatim. (E-0014-11)
-struct MenuSoundRow { int id; const char* name; };
-constexpr MenuSoundRow kMenuSoundTable_002FB0A8[] = {
-    {1, "MenuLeftRight"},         {2, "MenuLeftRight"},
-    {3, "MenuUpDown"},            {4, "MenuUpDown"},
-    {5, "MenuSelect"},            {6, "MenuCancel"},
-    {7, "MenuStart"},             {8, "MenuWrong"},
-    {9, "MenuWrong"},             {10, "MenuTrackRightLeft"},
-    {11, "MenuTrackRightLeft"},   {12, "MenuCarRight"},
-    {13, "MenuCarLeft"},          {14, "MenuCarColour"},
-    {15, "MenuCarDisplayOn"},     {16, "MenuCarDisplayActive"},
-    {17, "MenuCarDisplayOff"},    {18, "MenuCarSelect"},
-    {19, "TreeUpDown"},           {20, "TreeLeftRight"},
-    {21, "TreeZoomInOut"},
-};
-
-MenuSoundSink g_menu_sound_sink;
-MenuSoundRequest g_last_menu_sound_request;
-
-// Packs a widget's stored RGBA bytes back into the single u32 the ELF keeps at widget +0x5C, so
-// FUN_00169818's snapshot and FUN_00140CA0's masking operate on the same representation.
-std::uint32_t pack_widget_colour(const FeWidget& widget) {
-    return static_cast<std::uint32_t>(widget.r) | (static_cast<std::uint32_t>(widget.g) << 8) |
-           (static_cast<std::uint32_t>(widget.b) << 16) |
-           (static_cast<std::uint32_t>(widget.a) << 24);
-}
-
-void unpack_widget_colour(FeWidget& widget, std::uint32_t packed) {
-    widget.r = static_cast<std::uint8_t>(packed & 0xffu);
-    widget.g = static_cast<std::uint8_t>((packed >> 8) & 0xffu);
-    widget.b = static_cast<std::uint8_t>((packed >> 16) & 0xffu);
-    widget.a = static_cast<std::uint8_t>((packed >> 24) & 0xffu);
-}
-
-std::uint32_t pack_rgb(const MenuColour_00169BD0& colour) {
-    return static_cast<std::uint32_t>(colour.r) | (static_cast<std::uint32_t>(colour.g) << 8) |
-           (static_cast<std::uint32_t>(colour.b) << 16);
-}
-
-} // namespace
-
-std::uint32_t bStringHash(const char* text) {
-    // FUN_002534A8: h starts at -1 and folds each byte with h = h * 0x21 + byte.
-    std::uint32_t hash = 0xffffffffu;
-    for (const unsigned char* p = reinterpret_cast<const unsigned char*>(text); *p != 0; ++p) {
-        hash = hash * 0x21u + static_cast<std::uint32_t>(*p);
+void FlailerScreenList::StartMovie(const char* filename)
+{
+    // Native launcher option skips only the two startup title movies.
+    // This is the shared menu/credits movie owner: suppressing it here also
+    // suppresses Hot Pursuit, World Racing, option and credit films.
+    // The title-screen owner handles the intro policy before opening them.
+    Require(ui && ui->resources && ui->movie,"Movie screen has no actual UI/resources/player");
+    Require(filename,"Movie screen filename is null");
+    if (movieTextures[0].Data()) {
+        if (movieFilename==filename)return;
+        StopMovie();
     }
-    return hash;
-}
-
-const char* menu_sound_name_002FB0A8(int sound_id) {
-    for (const MenuSoundRow& row : kMenuSoundTable_002FB0A8) {
-        if (row.id == sound_id) return row.name;
+    static constexpr const char* textureNames[]={"PANELMOVIE","MOVIE_256_384_Y",
+        "MOVIE_256_384_UA","MOVIE_256_384_VA","MOVIE_256_384_US","MOVIE_256_384_VS"};
+    for (std::size_t index=0;index<movieTextures.size();++index) {
+        auto* descriptor=ui->resources->FindTexture(hashString(textureNames[index]));
+        auto* info=textureInfoForDescriptor(descriptor);
+        if (index==0)Require(info,"Movie screen has no authored PANELMOVIE texture");
+        movieTextures[index]=info ? info->pixels : TextureByteView{};
     }
-    return nullptr;
+    ui->movie->Close();
+    movieFilename=filename;
+    ui->movie->InitFile(movieFilename.c_str());
 }
 
-void install_menu_sound_sink(MenuSoundSink sink) { g_menu_sound_sink = std::move(sink); }
-
-void PlayMenuSound_0016E038(int sound_id) {
-    // FUN_0016E038: record 0 is all zeroes, so id 0 plays nothing. The 34.0-unit retrigger guard
-    // the original applies to a repeat of the same voice is NOT reproduced: the unit of that
-    // constant was not recovered, and inventing one would be inventing behaviour.
-    if (sound_id == kMenuSoundNone) return;
-    g_last_menu_sound_request.sound_id = sound_id;
-    g_last_menu_sound_request.name = menu_sound_name_002FB0A8(sound_id);
-    if (g_menu_sound_sink) g_menu_sound_sink(g_last_menu_sound_request);
+void FlailerScreenList::UpdateMovie()
+{
+    // PAL16D028 loops the source file for every return other than1.
+    if (!movieTextures[0].Data())return;
+    Require(ui && ui->movie && ui->flow && ui->clock,
+        "Movie update has no actual player/flow/clock owners");
+    // PAL16D044 reads independent InGameFlag330540, not desired flow330548.
+    // Frontend desired/current remain3 while this owner keeps decoding.
+    if (ui->flow->inGameFlag) {StopMovie();return;}
+    auto& pixels=movieTextures[0];
+    if (ui->movie->Update(ui->clock->realTimeElapsed,pixels.MutableData(),pixels.size)!=1)
+        ui->movie->InitFile(movieFilename.c_str());
 }
 
-const MenuSoundRequest& last_menu_sound_request() { return g_last_menu_sound_request; }
+void FlailerScreenList::StopMovie()
+{
+    // PAL16D0A0 retains the filename but releases all six pixel references.
+    if (!movieTextures[0].Data())return;
+    Require(ui && ui->movie,"Movie stop has no actual player owner");
+    ui->movie->Close();
+    for (auto& pixels:movieTextures)pixels={};
+}
 
-FeWidget* FindWidget_00143D50(FeScreen& screen, std::uint32_t name_hash, int type) {
-    // FUN_00143D50: linear walk of the screen's widget list; type 0 matches any type.
-    for (FeWidget& widget : screen.widgets) {
-        if (widget.name_hash != name_hash) continue;
-        if (type == 0) return &widget;
-        if (widget.type == static_cast<std::uint8_t>(type)) return &widget;
+const char* FlailerScreenList::GetDefaultMovieFilename() const noexcept
+{
+    return "MOVIES\\options_movie.AVI";
+}
+
+void FlailerScreenList::StartDefaultMovie()
+{
+    StartMovie(GetDefaultMovieFilename());
+}
+
+FlailerSelectionSet::FlailerSelectionSet()
+    : items{},count(0),current(nullptr),mode(1),showOtherItems(0)
+{
+}
+
+void FlailerSelectionSet::AddItem(FlailerObjectChunk* object)
+{
+    Require(count>=0 && static_cast<std::size_t>(count)<items.size(),
+        "SelectionSet exceeds its actual 32-object extent");
+    if (object) {
+        object->visible=static_cast<std::uint8_t>(showOtherItems!=0);
+        if (!showOtherItems)object->DeleteFlailerStrip();
     }
-    return nullptr;
+    items[static_cast<std::size_t>(count++)]=object;
 }
 
-void SetWidgetStringId_001449A8(FeScreen& screen, std::uint32_t name_hash,
-                                std::uint32_t string_id) {
-    // FUN_001449A8 -> FUN_00143D50(screen, hash, 1) -> FUN_00140EA8(widget, id). The type
-    // argument is 1, so only a text widget matches.
-    FeWidget* widget = FindWidget_00143D50(screen, name_hash, 1);
-    if (widget == nullptr) return;
-    // FUN_00140EA8, verbatim: the early-out on an unchanged id matters, because the dirty byte
-    // and the placeholder clear only happen when the id actually changes.
-    if (widget->string_id_0x60 == string_id) return;
-    widget->string_id_0x60 = string_id;
-    widget->dirty_0x2b = 5;
-    widget->text.clear(); // `*(undefined1 *)(param_1 + 100) = 0`, i.e. +0x64 = '\0'
+void FlailerSelectionSet::AddItems(FlailerResources& resources,std::uint32_t screen,
+    const std::uint32_t* keys,std::int32_t number)
+{
+    Require(number<=0 || keys,"SelectionSet has no authored item-key array");
+    for (std::int32_t index=0;index<number;++index)AddItem(resources.FindObject(screen,keys[index]));
 }
 
-void SetWidgetVisible_00144968(FeScreen& screen, std::uint32_t name_hash, bool visible) {
-    // FUN_00144968 -> FUN_00143D50(screen, hash, 0) -> FUN_00140728(widget, visible), which
-    // writes +0x29. Type 0 here, so it matches a quad or a text widget.
-    FeWidget* widget = FindWidget_00143D50(screen, name_hash, 0);
-    if (widget == nullptr) return;
-    widget->visible = visible ? 1 : 0;
-}
-
-void SetClassVisible_001454E8(FeScreen& screen, std::uint32_t class_hash, bool visible) {
-    // FUN_001454E8: FUN_00143DD8 walks every widget of the class and each one takes the same
-    // +0x29 write. The original's leading FUN_00143DD8(screen, hash, 0, 0) call discards its
-    // result, so it is not reproduced.
-    for (FeWidget& widget : screen.widgets) {
-        if (widget.class_hash != class_hash) continue;
-        widget.visible = visible ? 1 : 0;
+void FlailerSelectionSet::SetCurrentItem(std::uint32_t key)
+{
+    if (mode!=1)return;
+    if (current) {
+        current->visible=static_cast<std::uint8_t>(showOtherItems!=0);
+        if (!showOtherItems)current->DeleteFlailerStrip();
+    }
+    current=nullptr;
+    for (std::int32_t index=0;index<count;++index) {
+        auto* item=items[static_cast<std::size_t>(index)];
+        if (item && item->key==key) {current=item;break;}
+    }
+    if (current) {
+        current->visible=static_cast<std::uint8_t>(showOtherItems==0);
+        if (showOtherItems)current->DeleteFlailerStrip();
     }
 }
 
-void SetColor(FeWidget& widget, const MenuColour_00169BD0& colour) {
-    // FUN_00140CA0: keep the stored alpha byte, replace the low 24 bits, stamp +0x2b on change.
-    const std::uint32_t current = pack_widget_colour(widget);
-    const std::uint32_t updated = (current & 0xff000000u) | (pack_rgb(colour) & 0x00ffffffu);
-    if (current != updated) {
-        unpack_widget_colour(widget, updated);
-        widget.dirty_0x2b = 7;
-    }
-}
-
-int MenuItemIndexFromNameHash_0016A330(std::uint32_t name_hash) {
-    // FUN_0016A330: sprintf/hash/compare over 0..15, falling back to 0.
-    for (int index = 0; index < kMenuItemIndexLimit_0016A330; ++index) {
-        char name[32];
-        std::snprintf(name, sizeof(name), kMenuItemNameFormat_002B2760, index);
-        if (bStringHash(name) == name_hash) return index;
-    }
+std::int32_t FlailerMenu::GetCurrentItemNumber() const
+{
+    std::int32_t number=0;
+    for (auto* item=root.next;item!=&root;item=item->next,++number)
+        if (item==current) return number;
     return 0;
 }
 
-// ------------------------------------------------------------------- MenuThing_00169740
-
-void MenuThing_00169740::Construct_00169740(MenuList_00169F78* owner, std::uint32_t name_hash,
-                                            std::int32_t index) {
-    name_hash_0x0C = name_hash;
-    index_0x10 = index;
-    state_0x08 = kMenuThingStateEnabled_bit0;
-    if (owner == nullptr) {
-        screen_0x24 = nullptr;
-        pad_index_0x20 = -1;
-    } else {
-        pad_index_0x20 = owner->pad_index_0x18;
-        screen_0x24 = owner->screen_0x14;
-    }
-    Resolve_00169818();
+std::uint32_t FlailerMenu::GetActiveMenuItem() const
+{
+    return current ? current->objectKey : 0;
 }
 
-void MenuThing_00169740::Resolve_00169818() {
-    // FUN_00169818: FindWidget(screen, name_hash, type 1), then snapshot the widget colour.
-    if (screen_0x24 == nullptr) return;
-    if (FeWidget* widget = FindWidget_00143D50(*screen_0x24, name_hash_0x0C, 1)) {
-        authored_colour_0x1C = pack_widget_colour(*widget);
-    }
-}
-
-void MenuThing_00169740::SetStateBits_00169BD0(std::uint32_t bits) {
-    state_0x08 |= bits;
-    ApplyStateColour_00169BD0();
-}
-
-void MenuThing_00169740::ClearStateBits_00169CB0(std::uint32_t bits) {
-    // FUN_00169CB0 is FUN_00169BD0 with AND-NOT in place of OR; the tail is byte-identical.
-    state_0x08 &= ~bits;
-    ApplyStateColour_00169BD0();
-}
-
-void MenuThing_00169740::ApplyStateColour_00169BD0() {
-    // The shared tail of FUN_00169BD0 / FUN_00169CB0: pick a colour from (state & 3), write it
-    // through FUN_00143F88 -> FUN_00140CA0, then stamp the widget's +0x2b byte with 1.
-    std::uint32_t packed = authored_colour_0x1C;
-    const std::uint32_t selector = state_0x08 & 3u;
-    if (selector == 0u || selector == 2u) {
-        packed = pack_rgb(kDisabledColour_gp_0x5324);
-    } else if (selector == 3u) {
-        packed = pack_rgb(kHighlightColour_gp_0x5330) |
-                 (static_cast<std::uint32_t>(kHighlightAlpha_00169BD0) << 24);
-    }
-    if (screen_0x24 == nullptr) return;
-    FeWidget* widget = FindWidget_00143D50(*screen_0x24, name_hash_0x0C, 1);
-    if (widget == nullptr) return;
-    SetColor(*widget,
-                             MenuColour_00169BD0{static_cast<std::uint8_t>(packed & 0xffu),
-                                                 static_cast<std::uint8_t>((packed >> 8) & 0xffu),
-                                                 static_cast<std::uint8_t>((packed >> 16) & 0xffu)});
-    widget->dirty_0x2b = 1;
-}
-
-void MenuThing_00169740::Highlight_00169968(const MenuCallback& callback) {
-    SetStateBits_00169BD0(kMenuThingStateHighlighted_bit1);
-    if (!callback) return;
-    MenuEvent_0016A458 event;
-    event.field_0x00 = name_hash_0x0C;
-    event.pad_index_0x04 = pad_index_0x20;
-    callback(kMenuMessage0x04, event);
-    PlayMenuSound_0016E038(event.sound_id_0x0C);
-}
-
-void MenuThing_00169740::Unhighlight_001699F8(const MenuCallback& callback) {
-    ClearStateBits_00169CB0(kMenuThingStateHighlighted_bit1);
-    if (!callback) return;
-    MenuEvent_0016A458 event;
-    event.field_0x00 = name_hash_0x0C;
-    event.pad_index_0x04 = pad_index_0x20;
-    callback(kMenuMessage0x05, event);
-    PlayMenuSound_0016E038(event.sound_id_0x0C);
-}
-
-void MenuThing_00169740::Refresh_00169858(const MenuCallback& callback) {
-    if (!callback) return;
-    MenuEvent_0016A458 event;
-    event.field_0x00 = name_hash_0x0C;
-    event.pad_index_0x04 = pad_index_0x20;
-    callback(kMenuMessage0x02, event);
-    PlayMenuSound_0016E038(event.sound_id_0x0C);
-}
-
-// ------------------------------------------------------------------- FUN_00169D98
-
-void Sub_00169D98(MenuThing_00169740& item, std::int32_t pad_index, std::int32_t joy_event,
-                   bool pressed, const MenuCallback& list_callback) {
-    if (!pressed) return; // the original's `param_4 == 0` gate
-
-    MenuEvent_0016A458 event;
-    event.field_0x00 = item.name_hash_0x0C;
-    event.pad_index_0x04 = pad_index;
-    event.result_0x08 = joy_event; // the original stores the event id in field +0x08
-    event.sound_id_0x0C = 0;
-
-    int message = 0;
-    switch (joy_event) {
-        case hp2::input::JOY_EVENT_SCROLL_LEFT:
-        case hp2::input::JOY_EVENT_MENU_ANALOG_LEFT:
-            message = kMenuMessage0x06;
-            break;
-        case hp2::input::JOY_EVENT_SCROLL_RIGHT:
-        case hp2::input::JOY_EVENT_MENU_ANALOG_RIGHT:
-            message = kMenuMessage0x07;
-            break;
-        case hp2::input::JOY_EVENT_START:
-        case hp2::input::JOY_EVENT_MENU_SELECT:
-            event.sound_id_0x0C = kMenuSoundMenuSelect_5;
-            message = kMenuMessage0x01;
-            break;
-        case hp2::input::JOY_EVENT_MENU_SQUARE:
-            // The original takes a separate exit for this case: callback message 10, then the
-            // sound, and no shared tail.
-            if (list_callback) list_callback(kMenuMessage0x0A, event);
-            PlayMenuSound_0016E038(event.sound_id_0x0C);
-            return;
-        default:
-            return; // every other event is dropped here
-    }
-
-    if (list_callback) list_callback(message, event);
-    PlayMenuSound_0016E038(event.sound_id_0x0C);
-}
-
-// ------------------------------------------------------------------- MenuList_00169F78
-
-void MenuList_00169F78::Construct_00169F78(MenuGroup_0016AA00* owner, MenuCallback callback,
-                                            std::int32_t initial_index, const char* name_format) {
-    callback_0x0C = std::move(callback);
-    next_0x00 = sentinel();
-    prev_0x04 = sentinel();
-    owner_0x10 = owner;
-    if (owner != nullptr) {
-        pad_index_0x18 = owner->pad_index_0x10;
-        screen_0x14 = owner->screen_0x14;
-    }
-    count_0x1C = 0;
-    storage_.clear();
-
-    for (int index = 0; index < kMenuItemIndexLimit_0016A330; ++index) {
-        char name[32];
-        std::snprintf(name, sizeof(name), name_format, index);
-        const std::uint32_t name_hash = bStringHash(name);
-        if (screen_0x14 == nullptr) continue;
-        if (FindWidget_00143D50(*screen_0x14, name_hash, 1) == nullptr) continue;
-
-        storage_.push_back(std::make_unique<MenuThing_00169740>());
-        MenuThing_00169740* item = storage_.back().get();
-        item->Construct_00169740(this, name_hash, index);
-        // FUN_00169F78's append: tail->next = item, list->prev = item, item->prev = old tail,
-        // item->next = the list head (sentinel).
-        MenuThing_00169740* tail = prev_0x04;
-        tail->next_0x00 = item;
-        prev_0x04 = item;
-        item->prev_0x04 = tail;
-        item->next_0x00 = sentinel();
-        ++count_0x1C;
-    }
-
-    SetCurrentIndex_0016A0F0(initial_index);
-    highlight_bar_0x20 =
-        screen_0x14 == nullptr
-            ? nullptr
-            : FindWidget_00143D50(*screen_0x14, kHighlightBarNameHash_00169F78, 2);
-}
-
-std::vector<MenuThing_00169740*> MenuList_00169F78::items() {
-    std::vector<MenuThing_00169740*> out;
-    for (MenuThing_00169740* node = next_0x00; node != nullptr && node != sentinel();
-         node = node->next_0x00) {
-        out.push_back(node);
-    }
-    return out;
-}
-
-MenuThing_00169740* MenuList_00169F78::GetNode(std::int32_t index) {
-    // FUN_002503F8: walk `index` links forward from the head; the sentinel comes back when the
-    // list is shorter than `index`.
-    if (index < 0) return sentinel();
-    MenuThing_00169740* node = next_0x00;
-    if (node == nullptr) return sentinel();
-    for (std::int32_t i = 0; i < index && node != sentinel(); ++i) node = node->next_0x00;
-    return node;
-}
-
-MenuThing_00169740* MenuList_00169F78::FindItem(std::uint32_t name_hash) {
-    // FUN_0016A5B0: the head is compared against the list address itself, so an empty list
-    // returns 0 before any field is read.
-    for (MenuThing_00169740* node = next_0x00; node != nullptr && node != sentinel();
-         node = node->next_0x00) {
-        if (node->name_hash_0x0C == name_hash) return node;
-    }
+FlailerMenuItem* FlailerMenu::FindItem(std::uint32_t objectKey)
+{
+    for (auto* item=root.next;item!=&root;item=item->next)
+        if (item->objectKey==objectKey) return item;
     return nullptr;
 }
 
-void Sub_0016D2A8(MenuList_00169F78* list, FeScreen& screen, std::uint32_t name_hash, int mode) {
-    // FUN_0016D2A8. The two lookups the port is handed the results of (FUN_0016C8C8 on the
-    // class name, FUN_0016B340 on the group) both return 0 silently when they miss, and the
-    // original then returns; so does this.
-    MenuThing_00169740* item = list == nullptr ? nullptr : list->FindItem(name_hash);
-    if (item == nullptr) return;
-    if (mode == 0 || mode == 2) item->ClearStateBits_00169CB0(kMenuThingStateEnabled_bit0);
-    else item->SetStateBits_00169BD0(kMenuThingStateEnabled_bit0);
-    if (mode == 2) SetWidgetVisible_00144968(screen, name_hash, false);
-    if (mode == 1) SetWidgetVisible_00144968(screen, name_hash, true);
+FlailerScreen::FlailerScreen(std::int32_t id,ScreenCallback handler,std::int32_t port)
+    : menu(nullptr),currentItemNumber(0),joystickPort(port),screenId(id),callback(handler)
+{
 }
 
-void MenuList_00169F78::SetCurrentIndex_0016A0F0(std::int32_t index) {
-    // FUN_0016A0F0: store the n-th node; when that is the sentinel, fall back to the first item,
-    // and when the list is empty leave the current pointer null.
-    MenuThing_00169740* node = GetNode(index);
-    current_0x08 = node;
-    if (node != sentinel()) return;
-    MenuThing_00169740* head = node->next_0x00;
-    current_0x08 = head;
-    if (head == node) current_0x08 = nullptr;
+FlailerScreen* FlailerScreenNode::FindFlailerScreen(std::int32_t id)
+{
+    for (auto* candidate=screenRoot.next;candidate!=&screenRoot;candidate=candidate->next)
+        if (candidate->screenId==id) return candidate;
+    return nullptr;
 }
 
-std::int32_t MenuList_00169F78::GetCurrentItemNumber() const {
-    // FUN_0016A130: count forward from the head to the current item; 0 for an empty list or an
-    // unreachable current pointer.
-    const MenuThing_00169740* node = next_0x00;
-    if (node == nullptr || node == sentinel()) return 0;
-    std::int32_t index = 0;
-    while (node != sentinel()) {
-        if (node == current_0x08) return index;
-        node = node->next_0x00;
-        ++index;
+bool FlailerScreenNode::IsPortFiltered(std::int32_t port) const
+{
+    for (auto* candidate=screenRoot.next;candidate!=&screenRoot;candidate=candidate->next)
+        if (candidate->joystickPort==port || candidate->joystickPort==-1) return false;
+    return true;
+}
+
+char* ScreenStack::Pop()
+{
+    if (!count) return nullptr;
+    --count;
+    return names[count].data();
+}
+
+void FlailerScreenList::SetMainScreen(const char* name)
+{
+    mainScreen=name;
+}
+
+FlailerScreenNode* FlailerScreenList::FindScreen(std::int32_t screenId)
+{
+    for (auto* node=root.next;node!=&root;node=node->next)
+        if (node->configuration->screenIds[0]==screenId) return node;
+    return nullptr;
+}
+
+bool FlailerScreenList::IsAnyPopupActive() const
+{
+    for (const auto* popup:popups) if (popup->activeState) return true;
+    return false;
+}
+
+std::int32_t FlailerScreenList::GetPopupActiveState(std::int32_t index) const
+{
+    return popups[static_cast<std::size_t>(index)]->activeState;
+}
+
+FlailerPopupConfig* FlailerScreenList::GetPopupConfig(std::int32_t index) const
+{
+    return popups[static_cast<std::size_t>(index)]->configuration;
+}
+
+float FlailerSlider::ValueToDisplay(float value) const
+{
+    return value*displayScale;
+}
+
+float FlailerSlider::DisplayToValue(float value) const
+{
+    return finiteRatio(value,displayScale);
+}
+
+FlailerSlider::FlailerSlider(FlailerUiState& state,std::uint32_t screen,std::uint32_t menuItem,
+    std::uint32_t bounds,std::uint32_t thumb,std::int32_t audioChannel,
+    float* value,float minimum,float maximum)
+    : ui(&state),screenKey(screen),menuItemKey(menuItem),boundsObjectKey(bounds),
+      thumbObjectKey(thumb),channel(audioChannel),setting(value),
+      minimumDisplay(minimum),maximumDisplay(maximum)
+{
+    Require(state.sound && state.sound->volumes && value,"Slider has no live sound settings/value owner");
+    const auto& volumes=*state.sound->volumes;
+    const float balance=GetVolumeBalance(volumes);
+    const float maximumValue=GetVolumeDefault(volumes,channel);
+    displayScale=finiteRatio(balance,maximumValue);
+    tCubic1DInitialize(&position);
+    position.duration=0.25f;position.continuous=0;
+    position.desiredValue=ValueToDisplay(*setting);
+    position.value=position.desiredValue;
+    position.mode=0;position.derivative=position.desiredDerivative;
+}
+
+void FlailerSlider::StepValue(float step,bool updateMixer)
+{
+    Require(ui && ui->sound && ui->sound->volumes && ui->sound->manager && setting,
+        "Slider change has no actual mixer/sound-settings/value owner");
+    auto& sound=*ui->sound;
+    const auto& manager=*sound.manager;
+    float displayed=ValueToDisplay(*setting+step);
+    if (maximumDisplay<displayed) displayed=maximumDisplay;
+    if (displayed<minimumDisplay) displayed=minimumDisplay;
+    const float value=DisplayToValue(displayed);
+    const bool changed=!(value==*setting);
+    *setting=value;
+    if (updateMixer)
+        Require(worldAudioSetChannelVolume(sound.audio,&manager,channel,value)==WORLD_AUDIO_OK,
+            "Slider mixer update has no matching writable owner or backend command capacity");
+    SaveVolumesForSpeech(sound);
+    if (changed) PlayCommonRegionSample(sound,"MenuAdjustVolume",displayed);
+    position.desiredValue=displayed;
+    if (!(displayed==position.value)) position.mode=2;
+}
+
+void FlailerSlider::Animate()
+{
+    Require(ui && ui->clock && ui->resources,"Slider animation has no live clock/resource owner");
+    tCubic1DUpdate(&position,ui->clock->realTimeElapsed,0.0f,0.0f);
+    std::int32_t left=0,top=0,right=0,bottom=0;
+    Require(ui->resources->GetBoundingBox(screenKey,boundsObjectKey,left,top,right,bottom,ui->language),
+        "Slider bounds object is absent from its authored screen");
+    const auto rawWidth=static_cast<std::uint32_t>(right)-static_cast<std::uint32_t>(left);
+    std::int32_t width;std::memcpy(&width,&rawWidth,sizeof(width));
+    const float x=static_cast<float>(left)+position.value*static_cast<float>(width);
+    ui->resources->SetTopLeftX(screenKey,thumbObjectKey,convertFloatToInt32(x));
+}
+
+void FlailerUiState::SetIgnoreJoystick(std::int32_t ignored)
+{
+    ignoreJoystick=ignored;
+}
+
+void FlailerUiState::SetTwoPlayerScreenMode(std::int32_t enabled)
+{
+    twoPlayerScreenMode=enabled;
+}
+
+FlailerMenuItem::FlailerMenuItem(FlailerMenu* menu,std::uint32_t key,std::uint32_t number)
+    : objectKey(key),ordinal(number)
+{
+    if (menu) { joystickPort=menu->joystickPort;screenKey=menu->screenKey;ui=menu->ui; }
+    ResetSavedParameters();
+}
+
+FlailerMenuItem::~FlailerMenuItem()
+{
+    if (ui) {
+        if (auto* text=ui->resources->FindObject(screenKey,objectKey,1))
+            static_cast<FlailerTextChunk*>(text)->color=savedColor;
     }
-    return 0;
 }
 
-void MenuList_00169F78::RefreshAll_0016A160() {
-    // FUN_0016A160: message 0x02 to every item first, then advance the current pointer onto the
-    // first enabled item, wrapping over the head. When no item is enabled the original leaves the
-    // pointer on the last node it examined -- reproduced, not tidied.
-    MenuThing_00169740* node = next_0x00;
-    if (node != nullptr && node != sentinel()) {
-        while (node != sentinel()) {
-            node->Refresh_00169858(callback_0x0C);
-            node = node->next_0x00;
+void FlailerMenuItem::ResetSavedParameters()
+{
+    if (!ui) return;
+    if (auto* text=ui->resources->FindObject(screenKey,objectKey,1))
+        savedColor=static_cast<FlailerTextChunk*>(text)->color;
+}
+
+void FlailerMenuItem::Activate(ScreenCallback handler)
+{
+    if (!handler) return;
+    ScreenCallbackData data{objectKey,joystickPort,0,0};
+    handler(ScreenMessage::ItemActivate,&data);
+    ui->sound->Play(data.sound);
+}
+
+void FlailerMenuItem::UnActivate(ScreenCallback handler)
+{
+    if (!handler) return;
+    ScreenCallbackData data{objectKey,joystickPort,0,0};
+    handler(ScreenMessage::ItemDeactivate,&data);
+    ui->sound->Play(data.sound);
+}
+
+void FlailerMenuItem::Highlight(ScreenCallback handler,FlailerBitmapChunk*)
+{
+    SetMenuItemState(2);
+    if (!handler) return;
+    ScreenCallbackData data{objectKey,joystickPort,0,0};
+    handler(ScreenMessage::Highlight,&data);
+    ui->sound->Play(data.sound);
+}
+
+void FlailerMenuItem::UnHighlight(ScreenCallback handler,FlailerBitmapChunk*)
+{
+    ClearMenuItemState(2);
+    if (!handler) return;
+    ScreenCallbackData data{objectKey,joystickPort,0,0};
+    handler(ScreenMessage::Unhighlight,&data);
+    ui->sound->Play(data.sound);
+}
+
+void FlailerMenuItem::SetMenuItemState(std::uint32_t bits)
+{
+    flags|=bits;
+    std::uint32_t color=savedColor;
+    if ((flags&3u)!=1u) {
+        const auto& rgb=(flags&3u)==3u ? ui->highlightedRgb : ui->inactiveRgb;
+        color=rgb[0]|(rgb[1]<<8)|(rgb[2]<<16);
+        if ((flags&3u)==3u) color|=0x80000000u;
+    }
+    ui->resources->SetTextColor(screenKey,objectKey,color);
+    if (auto* text=ui->resources->FindObject(screenKey,objectKey,1)) text->updateKind=1;
+}
+
+void FlailerMenuItem::ClearMenuItemState(std::uint32_t bits)
+{
+    flags&=~bits;
+    std::uint32_t color=savedColor;
+    if ((flags&3u)!=1u) {
+        const auto& rgb=(flags&3u)==3u ? ui->highlightedRgb : ui->inactiveRgb;
+        color=rgb[0]|(rgb[1]<<8)|(rgb[2]<<16);
+        if ((flags&3u)==3u) color|=0x80000000u;
+    }
+    ui->resources->SetTextColor(screenKey,objectKey,color);
+    if (auto* text=ui->resources->FindObject(screenKey,objectKey,1)) text->updateKind=1;
+}
+
+void FlailerMenuItem::JoyHandler(std::int32_t port,std::int32_t event,std::int32_t value,ScreenCallback handler)
+{
+    if (ui->ignoreJoystick || !value) return;
+    ScreenMessage message;
+    std::int32_t sound=0;
+    switch (event) {
+    case 5:case 18:message=ScreenMessage::Left;break;
+    case 6:case 19:message=ScreenMessage::Right;break;
+    case 7:case 9:message=ScreenMessage::Select;sound=5;break;
+    case 17:message=ScreenMessage::ItemEvent;break;
+    default:return;
+    }
+    ScreenCallbackData data{objectKey,port,event,sound};
+    // PAL169EE4/169F44 may delete this item during the callback.
+    // Its following MakeFrontendSound call uses the live application
+    // sound owner, not the retired menu/item. Preserve that borrow.
+    auto* const soundOwner=ui->sound;
+    if (handler) handler(message,&data);
+    soundOwner->Play(data.sound);
+}
+
+void FlailerMenu::SetCurrentItemNumber(std::int32_t number)
+{
+    auto* selected=root.next;
+    std::int32_t index=0;
+    while (selected!=&root && index!=number) { selected=selected->next;++index; }
+    current=selected;
+    // PAL16A104..16A118: an out-of-range index selects the first actual
+    // item; only an empty ring produces nullptr. Never highlight its sentinel.
+    if (selected==&root) {
+        current=root.next;
+        if (current==&root)current=nullptr;
+    }
+}
+
+void FlailerMenu::Activate()
+{
+    for (auto* item=root.next;item!=&root;item=item->next) item->Activate(callback);
+    if (!current) return;
+    auto* chosen=current;
+    while (!(chosen->flags&1u)) {
+        auto* next=chosen->next;
+        if (next==&root) next=root.next;
+        if (next==current) break;
+        chosen=next;
+    }
+    current=chosen;
+    chosen->Highlight(callback,highlightBar);
+}
+
+void FlailerMenu::UnActivate()
+{
+    if (current) current->UnHighlight(callback,highlightBar);
+    for (auto* item=root.next;item!=&root;item=item->next) item->UnActivate(callback);
+}
+
+void FlailerMenu::ResetCurrentMenuItem()
+{
+    if (!current) return;
+    auto* original=current;
+    auto* chosen=root.next;
+    current=chosen;
+    while (!(chosen->flags&1u)) {
+        auto* next=chosen->next;
+        if (next==&root) break;
+        chosen=next;current=chosen;
+    }
+    if (chosen!=original) {
+        original->UnHighlight(callback,highlightBar);
+        current->Highlight(callback,highlightBar);
+    }
+}
+
+void FlailerMenu::SetActiveMenuItem(std::uint32_t key)
+{
+    auto* item=FindItem(key);
+    if (!item || item==current || !(item->flags&1u)) return;
+    if (current) current->UnHighlight(callback,highlightBar);
+    current=item;
+    item->Highlight(callback,highlightBar);
+}
+
+void FlailerMenu::MoveToNextItem()
+{
+    if (!current) return;
+    auto* original=current;
+    auto* chosen=original->next;
+    if (ui->wrapNavigation) {
+        if (chosen==&root) chosen=root.next;
+        while (chosen!=original && !(chosen->flags&1u)) {
+            chosen=chosen->next;if (chosen==&root) chosen=root.next;
+        }
+    } else if (chosen==&root) chosen=original;
+    if (chosen==original) return;
+    original->UnHighlight(callback,highlightBar);
+    current=chosen;
+    chosen->Highlight(callback,highlightBar);
+}
+
+void FlailerMenu::MoveToPrevItem()
+{
+    if (!current) return;
+    auto* original=current;
+    auto* chosen=original->previous;
+    if (ui->wrapNavigation) {
+        if (chosen==&root) chosen=root.previous;
+        while (chosen!=original && !(chosen->flags&1u)) {
+            chosen=chosen->previous;if (chosen==&root) chosen=root.previous;
+        }
+    } else if (chosen==&root) chosen=original;
+    if (chosen==original) return;
+    original->UnHighlight(callback,highlightBar);
+    current=chosen;
+    chosen->Highlight(callback,highlightBar);
+}
+
+void FlailerMenu::JoyHandler(std::int32_t port,std::int32_t event,std::int32_t value)
+{
+    if (ui->ignoreJoystick || !value) return;
+    ScreenCallbackData data{current?current->objectKey:0,port,0,0};
+    ScreenMessage message{};
+    if (event==3 || event==20) { message=ScreenMessage::Previous;data.sound=3; }
+    else if (event==4 || event==21) { message=ScreenMessage::Next;data.sound=4; }
+    if (callback && static_cast<std::int32_t>(message)) callback(message,&data);
+    if (!data.value) {
+        if (message==ScreenMessage::Previous) { MoveToPrevItem();ui->sound->Play(data.sound); }
+        else if (message==ScreenMessage::Next) { MoveToNextItem();ui->sound->Play(data.sound); }
+    }
+    if (current) current->JoyHandler(port,event,value,callback);
+}
+
+void FlailerMenu::Tick()
+{
+    // PAL's current-item tick target is JR RA/NOP. The call has no CPU effect.
+}
+
+void FlailerScreen::Activate()
+{
+    if (!menu) {
+        ownedMenu=std::make_shared<FlailerMenuStorage>(*ui,*this,currentItemNumber);
+        menu=&ownedMenu->Menu();
+    }
+    ScreenCallbackData data{static_cast<std::uint32_t>(screenId),joystickPort,-1,0};
+    if (callback) callback(ScreenMessage::ScreenActivate,&data);
+    if (data.value!=-1) currentItemNumber=data.value-1;
+    ui->sound->Play(data.sound);
+    menu->SetCurrentItemNumber(currentItemNumber);
+    menu->Activate();
+}
+
+void FlailerScreen::UnActivate()
+{
+    ScreenCallbackData data{static_cast<std::uint32_t>(screenId),joystickPort,-1,0};
+    if (menu) {
+        currentItemNumber=menu->GetCurrentItemNumber();
+        menu->UnActivate();
+        ownedMenu.reset();menu=nullptr;
+    }
+    if (callback) callback(ScreenMessage::ScreenDeactivate,&data);
+    ui->sound->Play(data.sound);
+}
+
+void FlailerScreen::JoyHandler(std::int32_t port,std::int32_t event,std::int32_t value)
+{
+    if (ui->ignoreJoystick || (joystickPort!=-1 && joystickPort!=port) || !value) return;
+    ScreenMessage message{};
+    switch (event) {
+    case 7:message=ScreenMessage::ScreenBack;break;
+    case 8:message=ScreenMessage::ScreenEvent8;break;
+    case 13:message=ScreenMessage::ScreenEvent13;break;
+    case 15:message=ScreenMessage::ScreenEvent15;break;
+    default:break;
+    }
+    if (static_cast<std::int32_t>(message)) {
+        ScreenCallbackData data{static_cast<std::uint32_t>(screenId),port,0,0};
+        if (callback) callback(message,&data);
+        ui->sound->Play(data.sound);
+        if (event==7 && data.value==1) return;
+    }
+    if (menu) menu->JoyHandler(port,event,value);
+}
+
+void FlailerScreen::Tick()
+{
+    if (menu) menu->Tick();
+    if (callback) {
+        ScreenCallbackData data{static_cast<std::uint32_t>(screenId),joystickPort,0,0};
+        callback(ScreenMessage::Tick,&data);
+        ui->sound->Play(data.sound);
+    }
+}
+
+void FlailerScreen::SetActiveMenuItem(std::uint32_t key)
+{
+    if (menu) menu->SetActiveMenuItem(key);
+    // PAL's MapMenuHashToIndex callee is folded here. Its individual original
+    // definition path remains unknown; it adds no separately mapped body.
+    currentItemNumber=0;
+    for (std::int32_t index=0;index<16;++index) {
+        char name[32];
+        std::snprintf(name,sizeof(name),"MENUITEM_%d",index);
+        if (hashString(name)==key) { currentItemNumber=index;break; }
+    }
+}
+
+FlailerMenuStorage::FlailerMenuStorage(FlailerUiState& ui,FlailerScreen& screen,std::int32_t selected,
+    const char* itemFormat)
+{
+    menu_.root.next=menu_.root.previous=&menu_.root;
+    menu_.callback=screen.callback;menu_.ui=&ui;
+    menu_.screenKey=static_cast<std::uint32_t>(screen.screenId);menu_.joystickPort=screen.joystickPort;
+    for (std::uint32_t index=0;index<16;++index) {
+        char name[128];
+        const int written=std::snprintf(name,sizeof(name),itemFormat,index);
+        Require(written>=0 && static_cast<std::size_t>(written)<sizeof(name),"Menu item name exceeds its native buffer");
+        const auto key=hashString(name);
+        auto* object=ui.resources->FindObject(menu_.screenKey,key,1);
+        if (!object) continue;
+        auto item=std::make_unique<FlailerMenuItem>(&menu_,key,index);
+        item->object=object;
+        item->previous=menu_.root.previous;item->next=&menu_.root;
+        item->previous->next=item.get();menu_.root.previous=item.get();
+        items_.push_back(std::move(item));
+    }
+    menu_.SetCurrentItemNumber(selected);
+    menu_.highlightBar=static_cast<FlailerBitmapChunk*>(ui.resources->FindObject(menu_.screenKey,0x27c5f4abu,2));
+}
+
+FlailerMenuStorage::~FlailerMenuStorage()
+{
+    // Deleting the source list restores each item's original authored color
+    // in forward order, before freeing its node. Native ownership is RAII.
+    for (auto& item:items_) item.reset();
+}
+
+void FlailerSoundState::Play(std::int32_t event)
+{
+    if (!enabled || !audio || !clock || !(clock->ticksPerSecond>0.0f)) {
+        result=WORLD_AUDIO_INVALID_BINDING;return;
+    }
+    if (!*enabled) return;
+    if (event<0 || static_cast<std::size_t>(event)>=events.size()) {
+        result=WORLD_AUDIO_INVALID_BINDING;return;
+    }
+    const auto voice=events[static_cast<std::size_t>(event)].voice;
+    if (!voice.instance) return;
+    if (lastVoice.instance==voice.instance) {
+        const auto elapsed=static_cast<std::uint32_t>(clock->ticks-lastTicks);
+        const float milliseconds=(static_cast<float>(elapsed)/clock->ticksPerSecond)*1000.0f;
+        if (milliseconds<34.0f) return;
+    }
+    lastTicks=clock->ticks;
+    result=worldAudioValidateVoice(audio,voice);
+    if (result!=WORLD_AUDIO_OK) return;
+    // PAL16E0B0 assigns the UI category before PLAY. StopFrontendSound
+    // is a separate operation; it is not called on this path.
+    result=worldAudioSetVoiceCategory(audio,voice,3);
+    if (result!=WORLD_AUDIO_OK) return;
+    result=worldAudioPlayVoice(audio,voice,1.0f,0.0f,0.0f);
+    if (result==WORLD_AUDIO_OK) lastVoice=voice;
+}
+
+FlailerSoundState::FlailerSoundState()
+{
+    // PAL's authored event table. Entries sharing a bank cue share the same
+    // live voice, as the original bank's case-insensitive lookup does.
+    static constexpr const char* names[EventCount]={nullptr,
+        "MenuLeftRight","MenuLeftRight","MenuUpDown","MenuUpDown","MenuSelect",
+        "MenuCancel","MenuStart","MenuWrong","MenuWrong","MenuTrackRightLeft",
+        "MenuTrackRightLeft","MenuCarRight","MenuCarLeft","MenuCarColour",
+        "MenuCarDisplayOn","MenuCarDisplayActive","MenuCarDisplayOff","MenuCarSelect",
+        "TreeUpDown","TreeLeftRight","TreeZoomInOut","TreeSelectEvent","TreeEventLocked",
+        "RewardView","NameSelectText","NameDeleteText","NameCaseChange","NameKeyboard",
+        "NameFinalSelect","EasterEgg"};
+    for (std::size_t index=0;index<events.size();++index) {
+        events[index].bankKind=index<10 ? 0 : 1;
+        events[index].name=names[index];
+    }
+}
+
+// PAL16DED8..16DF5C, called by InitFlailerMenuSystem1696C0 before
+// constructing the menu screen list. Common owns these borrowed samples.
+void InitGlobalMenuSound(FlailerSoundState& sounds,const CarSoundBindings& bindings)
+{
+    Require(bindings.globals && sounds.enabled==&bindings.globals->policy.audioSystemEnabled,
+        "Global menu sound initialization has no canonical audio policy");
+    if (!*sounds.enabled)return;
+    Require(bindings.audio && sounds.audio==bindings.audio && bindings.audio->library,
+        "Global menu sound initialization has no actual bSound owner");
+    const auto* region=bindings.audio->library->CommonRegion();
+    Require(region,"Global menu sounds require the completed Common region");
+    Require(sounds.BindBank(0,&region->Bank())==WORLD_AUDIO_OK,
+        "Global menu sound sample binding failed");
+}
+
+void InitFrontendSounds(FlailerSoundState& sounds,const CarSoundBindings& bindings)
+{
+    Require(bindings.globals && sounds.enabled==&bindings.globals->policy.audioSystemEnabled,
+        "Frontend sound initialization has no canonical audio policy");
+    if (!*sounds.enabled)return;
+    Require(bindings.audio && sounds.audio==bindings.audio && bindings.audio->library,
+        "Frontend sound initialization has no actual bSound owner");
+    const auto* region=bindings.audio->library->Region("FrontEnd");
+    Require(region,"Frontend sounds require the completed FrontEnd region");
+    Require(sounds.BindBank(1,&region->Bank())==WORLD_AUDIO_OK,
+        "Frontend sound sample binding failed");
+}
+
+void UnInitFrontendSounds(FlailerSoundState& sounds)
+{
+    // PAL16DFF8 only clears the frontend event references. The owning
+    // bSound region performs voice retirement later in UnLoadSoundRegions.
+    for (auto& event:sounds.events)if (event.bankKind==1)event.voice={};
+}
+
+WorldAudioResult FlailerSoundState::BindBank(std::int32_t kind,const WorldAudioBank* bank)
+{
+    if (!audio || !enabled || (kind!=0 && kind!=1)) return result=WORLD_AUDIO_INVALID_BINDING;
+    if (!*enabled) return result=WORLD_AUDIO_OK;
+    if (!bank || !audio->library || !audio->library->OwnsLoadedBank(bank) || !bank->name)
+        return result=WORLD_AUDIO_INVALID_BINDING;
+    const auto* region=audio->library->Region(bank->name);
+    if (!region || &region->Bank()!=bank)return result=WORLD_AUDIO_INVALID_BINDING;
+    // PAL16DFC0 borrows bRegion::Sample2719B8. These event-table entries
+    // never own private copies: UnInitFrontendSounds only clears references,
+    // and the same region retires its master samples before its bank UNLOAD.
+    for (auto& event:events) {
+        if (event.bankKind!=kind || !event.name) continue;
+        event.voice=region->Sample(event.name);
+        if (kind==0) {
+            // PAL16DF34: the Common menu samples start in UI category3.
+            result=worldAudioSetVoiceCategory(audio,event.voice,3);
+            if (result!=WORLD_AUDIO_OK) return result;
         }
     }
-    MenuThing_00169740* base = current_0x08;
-    if (base == nullptr || base == sentinel()) return;
-
-    MenuThing_00169740* probe = base;
-    MenuThing_00169740* chosen = base;
-    do {
-        chosen = probe;
-        if (chosen->enabled()) break;
-        probe = chosen->next_0x00;
-        if (probe == sentinel()) probe = next_0x00;
-    } while (probe != base);
-
-    current_0x08 = chosen;
-    chosen->Highlight_00169968(callback_0x0C);
+    return result=WORLD_AUDIO_OK;
 }
 
-void MenuList_00169F78::Next_0016A5E0() {
-    // FUN_0016A5E0.
-    MenuThing_00169740* current = current_0x08;
-    if (current == nullptr || current == sentinel()) return;
-    MenuThing_00169740* target = nullptr;
-    if (!kSkipDisabledAndWrap_gp_0x533C) {
-        target = current->next_0x00;
-        if (target == sentinel()) target = current; // no wrap while the global is zero
-    } else {
-        target = current->next_0x00;
-        if (target == sentinel()) target = next_0x00;
-        if (target == current) return;
-        if (!target->enabled()) {
-            target = target->next_0x00;
-            while (true) {
-                if (target == sentinel()) target = next_0x00;
-                if (target == current) return;
-                if (target->enabled()) break;
-                target = target->next_0x00;
+WorldAudioResult FlailerSoundState::ReleaseBank(std::int32_t kind)
+{
+    if (!audio || (kind!=0 && kind!=1)) return result=WORLD_AUDIO_INVALID_BINDING;
+    for (auto& event:events) {
+        if (event.bankKind!=kind || !event.voice.instance) continue;
+        // Event-table entries borrow the region master; detaching this
+        // table must not retire another caller's shared bank sample.
+        if (lastVoice.instance==event.voice.instance && lastVoice.generation==event.voice.generation)
+            lastVoice={};
+        event.voice={};
+    }
+    return result=WORLD_AUDIO_OK;
+}
+
+void FlailerScreenNode::Activate()
+{
+    for (auto* child=screenRoot.next;child!=&screenRoot;child=child->next) child->Activate();
+}
+
+void FlailerScreenNode::UnActivate()
+{
+    for (auto* child=screenRoot.next;child!=&screenRoot;child=child->next) child->UnActivate();
+}
+
+void FlailerScreenNode::JoyHandler(std::int32_t port,std::int32_t event,std::int32_t value)
+{
+    for (auto* child=screenRoot.next;child!=&screenRoot;child=child->next) child->JoyHandler(port,event,value);
+}
+
+void FlailerScreenNode::SetCallback(ScreenCallback handler)
+{
+    configuration->callback=handler;
+    for (auto* child=screenRoot.next;child!=&screenRoot;child=child->next) child->callback=handler;
+}
+
+void FlailerScreenNode::SetFilterPort(std::int32_t port)
+{
+    for (auto* child=screenRoot.next;child!=&screenRoot;child=child->next) child->joystickPort=port;
+}
+
+void FlailerScreenNode::SetActiveMenuItem(std::uint32_t key)
+{
+    for (auto* child=screenRoot.next;child!=&screenRoot;child=child->next) child->SetActiveMenuItem(key);
+}
+
+void ScreenStack::Push(const char* name)
+{
+    Require(name,"Screen stack name has no owner");
+    const auto length=std::strlen(name);
+    Require(count<names.size() && length<NameCapacity,"Screen stack capacity exceeded");
+    auto& target=names[count++];
+    std::memcpy(target.data(),name,length+1);
+}
+
+FlailerScreenNode* FlailerScreenList::FindScreen(const char* name)
+{
+    for (auto* node=root.next;node!=&root;node=node->next)
+        if (std::strcmp(node->configuration->name,name)==0) return node;
+    return nullptr;
+}
+
+void FlailerScreenList::PopScreens(std::int32_t number)
+{
+    while (number>0) { stack.Pop();--number; }
+}
+
+const char* FlailerScreenList::GetCurrentScreenNameFromStack() const
+{
+    Require(stack.count<=stack.names.size(),"Screen stack exceeds its actual source extent");
+    return stack.count ? stack.names[stack.count-1].data() : "";
+}
+
+void FlailerScreenList::PopUntil(const char* name)
+{
+    Require(name,"Screen stack target name is null");
+    for (;;) {
+        const auto* current=GetCurrentScreenNameFromStack();
+        if (!*current || std::strcmp(current,name)==0)return;
+        stack.Pop();
+    }
+}
+
+FlailerScreenStorage::FlailerScreenStorage(FlailerUiState& ui,FlailerScreenConfig& configuration)
+{
+    Require(configuration.screenCount>=0 && configuration.screenCount<=4,
+        "Screen configuration exceeds its authored screen slots");
+    node_.configuration=&configuration;
+    node_.screenRoot.next=node_.screenRoot.previous=&node_.screenRoot;
+    for (std::int32_t index=0;index<configuration.screenCount;++index) {
+        const auto slot=static_cast<std::size_t>(index);
+        auto screen=std::make_unique<FlailerScreen>(configuration.screenIds[slot],
+            configuration.callback,configuration.joystickPorts[slot]);
+        screen->ui=&ui;
+        screen->previous=node_.screenRoot.previous;screen->next=&node_.screenRoot;
+        screen->previous->next=screen.get();node_.screenRoot.previous=screen.get();
+        if (!node_.screen) node_.screen=screen.get();
+        screens_.push_back(std::move(screen));
+    }
+}
+
+FlailerScreenStorage::~FlailerScreenStorage()
+{
+    // Source node disposal deletes children in forward registration order.
+    // A child menu, if present, restores its original colors before release.
+    for (auto& screen:screens_) screen.reset();
+}
+
+void FlailerScreenList::SetHelpOverride(const std::int32_t* items)
+{
+    // Retail PAL16D448 stores the list then calls EnableHelp1E3DC0.
+    // The beta wrapper lacks the latter side effect; use the retail contract.
+    Require(ui,"Help override has no live frontend UI owner");
+    overrideHelpItems=items;
+    ui->helpEnabled=1;
+}
+
+bool FlailerScreenList::MakeHelpGo(const std::int32_t* items,std::int32_t state)
+{
+    if (state==1) {
+        if (!help->IsActive()) help->Summon(items);
+        else help->Dismiss();
+    }
+    return help->IsActive();
+}
+
+FlailerPopup::FlailerPopup()=default;
+
+FlailerPopup::FlailerPopup(FlailerUiState& state):ui(&state)
+{
+    Require(state.clock,"Popup has no live UI clock");
+    highlight=std::make_unique<FlailerHighlightAnimation>(state,0,0xab671c9au,128);
+    for (std::uint32_t index=0;index<buttons.size();++index) {
+        buttons[index]=std::make_unique<FlailerMenuItem>(nullptr,0xe0105663u+index,index);
+        buttons[index]->ui=&state;
+    }
+}
+
+FlailerPopup::~FlailerPopup()=default;
+
+FlailerMenuItem* FlailerPopup::GetCurrentMenuItem()
+{
+    const auto count=static_cast<std::uint32_t>(configuration->buttonCount);
+    if (!count) return buttons[0].get();
+    Require(count<=buttons.size(),"Popup button count exceeds its actual three owners");
+    const auto selected=static_cast<std::uint32_t>(selectedIndex);
+    const auto index=((selected%count)+count)%count;
+    return buttons[index].get();
+}
+
+void FlailerPopup::UnHighlightCurrentMenuItem()
+{
+    GetCurrentMenuItem()->UnHighlight(nullptr,nullptr);
+}
+
+void FlailerPopup::HighlightCurrentMenuItem()
+{
+    auto* item=GetCurrentMenuItem();
+    if (configuration->buttonCount) item->Highlight(nullptr,nullptr);
+}
+
+void FlailerPopup::Summon(const FlailerPopupConfig& parameters)
+{
+    Require(ui && highlight && parameters.sourceNode && parameters.sourceNode->configuration &&
+        parameters.sourceNode->configuration->callback && parameters.buttonCount>=0 && parameters.buttonCount<=3,
+        "Popup configuration has no concrete screen callback or button owners");
+    activeState=1;ownedConfiguration=parameters;configuration=&ownedConfiguration;
+    callback=configuration->sourceNode->configuration->callback;
+    for (std::size_t index=buttons.size();index--;) buttons[index]->ClearMenuItemState(2);
+    ui->render->SetScreenVisibility(*ui->resources,configuration->screenKey,0);
+    ScreenCallbackData data{0,-1,0,0};
+    callback(ScreenMessage::PopupActivate,&data);ui->sound->Play(data.sound);
+    selectedIndex=configuration->initialButton;
+    for (auto& item:buttons) {
+        item->screenKey=configuration->screenKey;item->joystickPort=configuration->joystickPort;
+        item->ResetSavedParameters();item->ClearMenuItemState(2);
+    }
+    HighlightCurrentMenuItem();
+    const auto bottom=ui->resources->RenderTextIntoGroup(configuration->screenKey,0x5d6dd123u,configuration->message)+10;
+    if (configuration->flags&4u)
+        for (const auto& item:buttons)
+            if (auto* object=ui->resources->FindObject(configuration->screenKey,item->objectKey))
+                object->SetTopLeftY(static_cast<float>(bottom));
+    for (const auto& item:buttons) ui->resources->Printf(configuration->screenKey,item->objectKey,"");
+    ui->resources->Printf(configuration->screenKey,0x85eda094u,"");
+    for (std::size_t index=0;index<buttons.size();++index)
+        ui->resources->SetLanguageID(configuration->screenKey,buttons[index]->objectKey,
+            configuration->buttonCount ? configuration->buttonLanguageIds[index] : 0);
+    ui->resources->SetLanguageID(configuration->screenKey,0x85eda094u,configuration->footerLanguageId);
+    // AlignArrows16BAB8 is an actual JR RA/NOP method in final PAL.
+    highlight->screenKey=configuration->screenKey;
+    highlight->SetCurrentMenuItem(GetCurrentMenuItem()->objectKey);
+}
+
+void FlailerPopup::Dismiss(std::int32_t port,std::int32_t result)
+{
+    if (!(configuration->flags&16u))
+        ui->render->SetScreenVisibility(*ui->resources,configuration->screenKey,1);
+    activeState=0;
+    ScreenCallbackData data{0,port,result,5};
+    callback(ScreenMessage::PopupDismiss,&data);ui->sound->Play(data.sound);
+}
+
+void FlailerPopup::Tick()
+{
+    phase+=ui->clock->realTimeElapsed*9.0f;
+    if (phase>6.283185005187988f) phase-=6.283185005187988f;
+    // Source computes this argument even though Animate never reads it.
+    (void)rotationSineRadians(phase);
+    highlight->Animate();
+}
+
+bool FlailerPopup::JoyHandler(std::int32_t port,std::int32_t event,std::int32_t value)
+{
+    if (value!=1) return true;
+    const auto flags=configuration->flags;
+    if (flags&1u) {
+        if (event==3 || event==4) event=0;
+        if (event==5 || event==18) event=3;
+        if (event==6 || event==19) event=4;
+    } else if (event==5 || event==6) event=0;
+    if (event==3 || event==4) {
+        if (configuration->buttonCount>=2) {
+            UnHighlightCurrentMenuItem();
+            if (event==3) {
+                --selectedIndex;if (selectedIndex<0) selectedIndex=configuration->buttonCount-1;
+            } else {
+                ++selectedIndex;if (selectedIndex>=configuration->buttonCount) selectedIndex=0;
             }
-        }
-    }
-    if (target == current) return;
-    current->Unhighlight_001699F8(callback_0x0C);
-    current_0x08 = target;
-    target->Highlight_00169968(callback_0x0C);
-}
-
-void MenuList_00169F78::Previous_0016A6C8() {
-    // FUN_0016A6C8: FUN_0016A5E0 walked through the prev links, wrapping onto the tail.
-    MenuThing_00169740* current = current_0x08;
-    if (current == nullptr || current == sentinel()) return;
-    MenuThing_00169740* target = nullptr;
-    if (!kSkipDisabledAndWrap_gp_0x533C) {
-        target = current->prev_0x04;
-        if (target == sentinel()) target = current;
-    } else {
-        target = current->prev_0x04;
-        if (target == sentinel()) target = prev_0x04;
-        if (target == current) return;
-        if (!target->enabled()) {
-            target = target->prev_0x04;
-            while (true) {
-                if (target == sentinel()) target = prev_0x04;
-                if (target == current) return;
-                if (target->enabled()) break;
-                target = target->prev_0x04;
+            HighlightCurrentMenuItem();
+            if (callback) {
+                ScreenCallbackData data{GetCurrentMenuItem()->objectKey,port,0,event==3?1:2};
+                callback(event==3?ScreenMessage::PopupPrevious:ScreenMessage::PopupNext,&data);
+                ui->sound->Play(data.sound);
             }
+            highlight->SetCurrentMenuItem(GetCurrentMenuItem()->objectKey);
         }
-    }
-    if (target == current) return;
-    current->Unhighlight_001699F8(callback_0x0C);
-    current_0x08 = target;
-    target->Highlight_00169968(callback_0x0C);
-}
-
-void MenuList_00169F78::HandleJoyEvent_0016A458(std::int32_t pad_index, std::int32_t joy_event,
-                                                 bool pressed) {
-    // FUN_0016A458.
-    if (!pressed) return;
-
-    MenuEvent_0016A458 event;
-    if (current_0x08 != nullptr && current_0x08 != sentinel()) {
-        event.field_0x00 = current_0x08->name_hash_0x0C;
-    }
-    event.pad_index_0x04 = pad_index;
-
-    int message = 0;
-    switch (joy_event) {
-        case hp2::input::JOY_EVENT_SCROLL_UP:
-        case hp2::input::JOY_EVENT_MENU_ANALOG_UP:
-            message = kMenuMessage0x08;
-            event.sound_id_0x0C = kMenuSoundMenuUpDown_3;
-            break;
-        case hp2::input::JOY_EVENT_SCROLL_DOWN:
-        case hp2::input::JOY_EVENT_MENU_ANALOG_DOWN:
-            message = kMenuMessage0x09;
-            event.sound_id_0x0C = kMenuSoundMenuUpDown_4;
-            break;
-        default:
-            break; // forwarded to the current item below, exactly as the original does
-    }
-
-    if (callback_0x0C && message != 0) callback_0x0C(message, event);
-
-    if (event.result_0x08 == 0) {
-        if (message == kMenuMessage0x08) {
-            Previous_0016A6C8();
-            PlayMenuSound_0016E038(event.sound_id_0x0C);
-        } else if (message == kMenuMessage0x09) {
-            Next_0016A5E0();
-            PlayMenuSound_0016E038(event.sound_id_0x0C);
+    } else if (event==7 || event==9) {
+        auto result=configuration->buttonResults[0];
+        if (configuration->buttonCount) {
+            const auto index=static_cast<std::uint32_t>(selectedIndex)%static_cast<std::uint32_t>(configuration->buttonCount);
+            result=configuration->buttonResults[index==0?0:index==1?1:2];
         }
-    }
-
-    if (current_0x08 != nullptr && current_0x08 != sentinel()) {
-        Sub_00169D98(*current_0x08, pad_index, joy_event, pressed, callback_0x0C);
-    }
+        if (!(flags&8u)) Dismiss(port,result);
+        else if (flags&2u) Dismiss(port,configuration->cancelResult);
+    } else if (event==11 && (flags&2u)) Dismiss(port,configuration->cancelResult);
+    return true;
 }
 
-// ------------------------------------------------------------------- MenuGroup_0016AA00
-
-void MenuGroup_0016AA00::EnsureMenu_0016A858() {
-    // FUN_0016A858.
-    if (child_0x08 == nullptr) {
-        owned_list_ = std::make_unique<MenuList_00169F78>();
-        owned_list_->Construct_00169F78(this, callback_0x18, initial_index_0x0C);
-        child_0x08 = owned_list_.get();
-    }
-    MenuEvent_0016A458 event;
-    event.field_0x00 =
-        screen_0x14 == nullptr ? 0u : static_cast<std::uint32_t>(screen_0x14->index);
-    event.pad_index_0x04 = pad_index_0x10;
-    event.result_0x08 = -1;
-    if (callback_0x18) callback_0x18(kMenuMessage0x0B, event);
-    if (event.result_0x08 != -1) initial_index_0x0C = event.result_0x08 - 1;
-    PlayMenuSound_0016E038(event.sound_id_0x0C);
-    child_0x08->SetCurrentIndex_0016A0F0(initial_index_0x0C);
-    child_0x08->RefreshAll_0016A160();
-}
-
-void MenuGroup_0016AA00::HandleJoyEvent_0016AA00(std::int32_t pad_index, std::int32_t joy_event,
-                                                  bool pressed) {
-    // FUN_0016AA00: pad filter, four group-level messages, then forward to the child list.
-    if (!(pad_index_0x10 == -1 || pad_index_0x10 == pad_index)) return;
-    if (!pressed) return;
-
-    auto fire = [&](int message) -> std::int32_t {
-        MenuEvent_0016A458 event;
-        event.field_0x00 =
-            screen_0x14 == nullptr ? 0u : static_cast<std::uint32_t>(screen_0x14->index);
-        event.pad_index_0x04 = pad_index;
-        if (callback_0x18) callback_0x18(message, event);
-        PlayMenuSound_0016E038(event.sound_id_0x0C);
-        return event.result_0x08;
-    };
-
-    if (joy_event == hp2::input::JOY_EVENT_START) {
-        if (fire(kMenuMessage0x0D) == 1) return; // the original consumes the event on result 1
-    }
-    if (joy_event == hp2::input::JOY_EVENT_SELECT) fire(kMenuMessage0x0E);
-    if (joy_event == hp2::input::JOY_EVENT_MENU_L1) fire(kMenuMessage0x0F);
-    if (joy_event == hp2::input::JOY_EVENT_MENU_R1) fire(kMenuMessage0x10);
-
-    if (child_0x08 != nullptr) {
-        child_0x08->HandleJoyEvent_0016A458(pad_index, joy_event, pressed);
-    }
-}
-
-
-// ------------------------------------------- recovered but not translated (AGENT.md R3)
-
-void Sub_0016BAC0(std::int32_t, std::int32_t, bool) {
-    hp2::not_implemented("0x0016BAC0",
-                        "pop-up / help menu joypad handling (POPUP_1..3 handler table unrecovered)");
-}
-
-void Sub_0016FBB0() {
-    hp2::not_implemented("0x0016FBB0",
-                        "global FMenus constructor bindings (main-menu pulse is implemented separately)");
-}
-
-std::string localised_text(std::uint32_t) {
-    hp2::not_implemented("LANGUAGES/FE_*.BIN", "localised string table format not parsed");
-}
-
-
-// ------------------------------------------------------------- recovered screen (document) names
-namespace {
-// Confirmed by exact StringHash_002534A8 match against the hash each screen stores at
-// 0x10203 +0x08. See docs/FRONTEND_MENU_INTERACTION.md for the method and the 23 open hashes.
-constexpr RecoveredScreenName kRecoveredScreenNames[] = {
-    {0, "NEW_MAIN_MENU"},      {4, "SELECT_CAR"},         {7, "SELECT_CAR_DIALOG"},
-    {10, "SELECT_TRACK"},      {11, "CHALLENGE"},         {12, "RACE_SETUP"},
-    {13, "JOYSTICK_CONFIG"},   {14, "POPUP"},             {16, "CREDITS"},
-    {22, "TITLE_SCREEN"},      {24, "OPTIONS"},           {26, "DISPLAY_OPTIONS"},
-    {28, "AUDIO_OPTIONS"},     {29, "USERNAME_OPTIONS"},  {30, "LANGUAGE_OPTIONS"},
-    {35, "LOADSAVE"},          {36, "BLANK_SCREEN"},      {40, "CREDITS_SCREEN"},
-    // E-0022-R02: exact hashes in original FRONTB.BUN, under StringHash_002534A8.
-    {17, "TREE_DETAIL_VIEW"}, {19, "TREE_REWARD_VIEW"}, {39, "NEW_EVENT_TREE"},
-};
-} // namespace
-
-const RecoveredScreenName* recovered_screen_names(std::size_t& count) {
-    count = sizeof(kRecoveredScreenNames) / sizeof(kRecoveredScreenNames[0]);
-    return kRecoveredScreenNames;
-}
-
-int screen_index_for_name_hash(const std::vector<FeScreen>& screens, std::uint32_t name_hash) {
-    for (const FeScreen& screen : screens) {
-        if (screen.name_hash_0x08 == name_hash) return screen.index;
+std::int32_t FlailerScreenList::SummonPopup(const FlailerPopupConfig& parameters)
+{
+    for (std::size_t index=0;index<popups.size();++index) {
+        Require(popups[index],"Screen list has no popup owner");
+        if (!popups[index]->activeState) {
+            popups[index]->Summon(parameters);return static_cast<std::int32_t>(index);
+        }
     }
     return -1;
 }
 
-int screen_index_for_screen_name(const std::vector<FeScreen>& screens, const char* screen_name) {
-    return screen_index_for_name_hash(screens, bStringHash(screen_name));
+void FlailerScreenList::DismissPopup(std::int32_t index)
+{
+    if (static_cast<std::uint32_t>(index)>=popups.size()) return;
+    auto* popup=popups[static_cast<std::size_t>(index)];
+    Require(popup,"Screen list has no popup owner");
+    if (popup->activeState) popup->Dismiss(popup->configuration->joystickPort,popup->configuration->dismissResult);
 }
 
-
-// ---------------------------------------------- recovered widget geometry + highlight animation
-
-WidgetRect_00144280 GetWidgetRect_00144280(FeScreen& screen, std::uint32_t name_hash,
-                                            const WidgetMeasure& measure) {
-    WidgetRect_00144280 rect;
-    FeWidget* widget = FindWidget_00143D50(screen, name_hash, 0);
-    if (widget == nullptr) return rect;
-    const WidgetMetrics metrics = measure ? measure(*widget) : WidgetMetrics{};
-    rect.x0 = widget->x;
-    rect.y0 = widget->y;
-    rect.x1 = widget->x + metrics.width;
-    rect.y1 = widget->y + metrics.height;
-    rect.valid = true;
-    return rect;
+void FlailerScreenNode::SetVisibility(std::int32_t visibility)
+{
+    for (auto* child=screenRoot.next;child!=&screenRoot;child=child->next)
+        child->ui->render->SetScreenVisibility(*child->ui->resources,static_cast<std::uint32_t>(child->screenId),visibility);
 }
 
-void SetWidgetY_00144458(FeScreen& screen, std::uint32_t name_hash, int y) {
-    FeWidget* widget = FindWidget_00143D50(screen, name_hash, 0);
-    if (widget == nullptr) return;
-    widget->y = static_cast<float>(y);
-    widget->dirty_0x2b = 3;
-}
-
-void SetAlpha(FeWidget& widget, int alpha) {
-    const std::uint8_t value = static_cast<std::uint8_t>(alpha & 0xff);
-    // Port dispatch for existing generic callers: quad alpha is001411D8(-1), E-0039-Q09.
-    // Text00140ED0 touches only its one colour; quad setter preserves all four RGB words.
-    if (widget.type == 2) {
-        for (auto& corner : widget.field_0x5c)
-            corner = (corner & 0xffffffu) | (static_cast<std::uint32_t>(value) << 24);
-        widget.dirty_0x2b = 6;
+void FlailerScreenList::ChangeToScreen(const char* name,bool push)
+{
+    Require(ui && background && input && input->router && input->screens==this,
+        "Screen list transition has no live UI/background/input owner");
+    // Native exit animations own their destination string. UnActivate can
+    // destroy that animation and its string before FindScreen below. Retain
+    // the requested name through both lookup and the main-screen stack check.
+    // PAL names are stable authored strings; keep the same lookup/order.
+    const std::string destination=name ? name : "";
+    if (name)name=destination.c_str();
+    auto* old=active;
+    if (old) {
+        old->SetVisibility(1);
+        if (push) stack.Push(active->configuration->name);
+        active->UnActivate();active=nullptr;
     }
-    if (widget.a != value) {
-        widget.a = value;
-        widget.dirty_0x2b = 6;
+    if (name) {
+        if (auto* found=FindScreen(name)) {
+            active=found;found->SetVisibility(0);active->Activate();
+            background->ChangeScreenHash(static_cast<std::uint32_t>(found->configuration->screenIds[0]));
+        }
+    } else background->ChangeScreenHash(0);
+    // A missing non-null name deliberately leaves the previous background
+    // selection intact, as the source branch does.
+    if (active) { if (!old) AddNormalMenuJoyHandlers(); }
+    else if (old) RemoveNormalMenuJoyHandlers();
+    if (name && mainScreen && std::strcmp(name,mainScreen)==0) stack.count=0;
+}
+
+bool FlailerScreenList::MoveToPreviousScreen(std::int32_t count,bool consultCallback,std::int32_t port)
+{
+    ScreenCallbackData data{0,port,1,6};
+    if (consultCallback) {
+        Require(active && active->configuration,"Previous-screen transition has no active configuration");
+        if (active->configuration->callback) active->configuration->callback(ScreenMessage::LeaveScreen,&data);
+        ui->sound->Play(data.sound);
     }
+    if (data.value!=1) return false;
+    char* name=nullptr;
+    while (count>0) { name=stack.Pop();--count; }
+    Require(name,"Previous-screen transition has no valid stack entry");
+    if (!*name) return false;
+    ChangeToScreen(name,false);return true;
 }
 
-void CopyWidgetTransform_001410A0(FeWidget& dst, const FeWidget& src) {
-    dst.clip_hash_0x4c = src.clip_hash_0x4c;
-    // The ELF copies the raw 0x40 bytes at +0x28 and restores dst+0x2C afterwards. The fields in
-    // that window are modelled individually here; +0x2C is the one the original preserves, and it
-    // is not part of this parser's field set, so nothing has to be restored.
-    dst.type = src.type;
-    dst.visible = src.visible;
-    dst.layer = src.layer;
-    dst.x = src.x;
-    dst.y = src.y;
-    dst.scale_x = src.scale_x;
-    dst.scale_y = src.scale_y;
-    dst.field_0x40 = src.field_0x40;
-    dst.field_0x44 = src.field_0x44;
-    dst.field_0x5c = src.field_0x5c; // within the recovered +28..+67 copy window
-    dst.texture_hash = src.texture_hash;
-    dst.r = src.r;
-    dst.g = src.g;
-    dst.b = src.b;
-    dst.a = src.a;
-    dst.text_capacity = src.text_capacity;
-    dst.text_align = src.text_align;
-    dst.string_id_0x60 = src.string_id_0x60;
-    dst.text = src.text;
-    dst.dirty_0x2b = 8;
+void FlailerScreenList::AddNormalMenuJoyHandlers()
+{
+    static constexpr std::int32_t events[16]={7,8,3,4,5,6,9,11,12,13,15,17,18,19,21,20};
+    Require(input && input->router && input->screens==this,"Frontend input has no concrete list owner");
+    GameInputTarget target{};target.kind=GAME_INPUT_FRONTEND;target.owner.frontend=input;
+    for (auto event:events) for (std::int32_t port=0;port<2;++port)
+        Require(gameInputRegister(input->router,port,event,target)==GAME_INPUT_OK,
+            "Frontend input registrations exceed their live router capacity");
 }
 
-void SetWidgetScale_00140FA8(FeWidget& widget, float scale, const WidgetMetrics& metrics) {
-    widget.dirty_0x2b = 3;
-    const float half_width_per_scale =
-        widget.scale_x != 0.0f ? metrics.width / (widget.scale_x + widget.scale_x) : 0.0f;
-    const float half_height_per_scale =
-        widget.scale_y != 0.0f ? metrics.height / (widget.scale_y + widget.scale_y) : 0.0f;
-    const std::uint32_t anchor = widget.text_align;
-    if ((anchor & 2u) != 0u) {
-        widget.y += half_height_per_scale * (widget.scale_y - scale);
-        widget.x += half_width_per_scale * (widget.scale_x - scale);
-        widget.scale_y = scale;
-    } else if ((anchor & 4u) != 0u) {
-        widget.y += half_height_per_scale * (widget.scale_y - scale);
-        widget.scale_y = scale;
-    } else if ((anchor & 1u) != 0u) {
-        const float delta = widget.scale_x - scale;
-        widget.y += half_height_per_scale * delta;
-        widget.x -= half_width_per_scale * delta;
-        widget.scale_y = scale;
-    } else {
-        // The original writes only +0x3C in this arm and then falls through to +0x38.
-        widget.scale_y = scale;
+void FlailerScreenList::RemoveNormalMenuJoyHandlers()
+{
+    static constexpr std::int32_t events[16]={7,8,3,4,5,6,9,11,12,13,15,17,18,19,21,20};
+    Require(input && input->router,"Frontend input has no router owner");
+    for (auto event:events) for (std::int32_t port=0;port<2;++port) gameInputUnregister(input->router,port,event);
+}
+
+void FlailerScreenList::JoyHandler(std::int32_t port,std::int32_t event,std::uint8_t value)
+{
+    Require(ui && ui->clock && help,"Frontend input has no live clock/help owner");
+    if (value) {
+        const auto index=ui->twoPlayerScreenMode ? port : 0;
+        Require(index>=0 && index<2,"Frontend input port exceeds its actual two seats");
+        auto& previous=ui->lastInputLoop[static_cast<std::size_t>(index)];
+        if (previous==ui->clock->realLoopCounter) return;
+        previous=ui->clock->realLoopCounter;
     }
-    widget.scale_x = scale;
-}
-
-void MenuHighlightAnim_00248870::Construct_00248870(FeScreen* screen, std::uint32_t template_hash,
-                                                     std::int32_t colour, float now_seconds) {
-    screen_0x00 = screen;
-    target_hash_0x04 = 0;
-    start_time_0x08 = now_seconds;
-    template_hash_0x0C = template_hash;
-    colour_0x10 = colour;
-    scale_start_0x14 = kAnimScaleStart_gp_0x3AD8;
-    scale_end_0x18 = kAnimScaleEnd_gp_0x3AD4;
-    period_0x1C = kAnimDefaultPeriod_gp_0x3AC8;
-    active_ = false;
-}
-
-void MenuHighlightAnim_00248870::Bind_002488D0(std::uint32_t target_hash, float now_seconds) {
-    target_hash_0x04 = target_hash;
-    start_time_0x08 = now_seconds;
-    float target_scale = 1.0f;
-    if (screen_0x00 != nullptr) {
-        // FUN_001444E8 reads the widget's +0x38/+0x3C; the ELF uses +0x38 for both ends.
-        if (const FeWidget* widget = FindWidget_00143D50(*screen_0x00, target_hash, 0)) {
-            target_scale = widget->scale_x;
+    if (event==12 && !ui->ignoreJoystick && !IsAnyPopupActive()) {
+        Require(active,"Help input has no active screen");
+        if (!active->IsPortFiltered(port))
+            MakeHelpGo(overrideHelpItems ? overrideHelpItems : active->configuration->helpItems,value);
+    }
+    if (help->IsActive()) return;
+    bool popupHandled=false;
+    for (auto* popup:popups) {
+        Require(popup,"Frontend input has no popup owner");
+        if (popup->activeState && (popup->configuration->joystickPort==port || popup->configuration->joystickPort==-1)) {
+            popup->JoyHandler(port,event,value);popupHandled=true;
         }
     }
-    scale_start_0x14 = target_scale * kAnimScaleStart_gp_0x3AD8;
-    scale_end_0x18 = target_scale * kAnimScaleEnd_gp_0x3AD4;
-    active_ = true;
-}
-
-void MenuHighlightAnim_00248870::Update_00248970(float now_seconds, const WidgetMeasure& measure) {
-    if (screen_0x00 == nullptr) return;
-    const float elapsed_s = now_seconds - start_time_0x08;
-    if (elapsed_s < kAnimDuration_gp_0x3ADC) {
-        // E-0094-D04: original16-bit angle quantization and Retail polynomial.
-        const float phase = (elapsed_s * kAnimQuarterTurn_gp_0x678C) / kAnimDuration_gp_0x3ADC;
-        const float eased = bSin(phase);
-        const float scale = scale_start_0x14 + (scale_end_0x18 - scale_start_0x14) * eased;
-        const float alpha = kAnimAlphaStart_gp_0x3AD0 +
-                            (kAnimAlphaEnd_gp_0x3ACC - kAnimAlphaStart_gp_0x3AD0) * eased;
-
-        FeWidget* target = FindWidget_00143D50(*screen_0x00, target_hash_0x04, 1);
-        FeWidget* ghost = FindWidget_00143D50(*screen_0x00, template_hash_0x0C, 1);
-        if (target == nullptr) {
-            if (ghost != nullptr) ghost->visible = 0; // the original's only hide path
-        } else if (ghost != nullptr) {
-            CopyWidgetTransform_001410A0(*ghost, *target);
-            const WidgetMetrics metrics = measure ? measure(*ghost) : WidgetMetrics{};
-            SetWidgetScale_00140FA8(*ghost, scale, metrics);
-            SetAlpha(*ghost, static_cast<int>(alpha));
-            if (colour_0x10 != -1) {
-                SetColor(
-                    *ghost, MenuColour_00169BD0{
-                                static_cast<std::uint8_t>(colour_0x10 & 0xff),
-                                static_cast<std::uint8_t>((colour_0x10 >> 8) & 0xff),
-                                static_cast<std::uint8_t>((colour_0x10 >> 16) & 0xff)});
-            }
-        }
+    if (popupHandled) return;
+    Require(active && active->configuration,"Frontend input has no active screen configuration");
+    if (active->configuration->callback) {
+        ScreenCallbackData data{0,port,0,0};active->configuration->callback(ScreenMessage::Input,&data);
     }
-    if (period_0x1C < elapsed_s) start_time_0x08 = now_seconds;
+    if (event==11 && !active->IsPortFiltered(port)) MoveToPreviousScreen(1,true,port);
+    else active->JoyHandler(port,event,value);
 }
 
-void PlaceSelectionBars_00216880(FeScreen& screen, std::uint32_t mask_hash,
-                                 const WidgetMeasure& measure) {
-    const WidgetRect_00144280 rect = GetWidgetRect_00144280(screen, mask_hash, measure);
-    if (!rect.valid) return;
-    SetWidgetY_00144458(screen, bStringHash(kUnderscoreName),
-                        static_cast<int>(rect.y1 + kUnderscoreOffset_gp_0x3EF0));
-    SetWidgetY_00144458(screen, bStringHash(kOverscoreName),
-                        static_cast<int>(rect.y0 - kOverscoreOffset_gp_0x3EF4));
-}
-
-WidgetRect_00144280 GetWidgetClip_00145F30(FeScreen& screen, const FeWidget& widget,
-                                        const WidgetMeasure& measure) {
-    if (!widget.clip_hash_0x4c || (widget.type == 1 && !(widget.text_align & 0x10))) return {};
-    auto* mask = FindWidget_00143D50(screen, widget.clip_hash_0x4c, 0);
-    if (!mask) return {};
-    if (!measure) hp2::not_implemented("0x00145F30", "clip-mask measurement missing");
-    const auto size = measure(*mask);
-    if (widget.type == 1)
-        return {mask->x+4,mask->y,mask->x+static_cast<int>(size.width),
-                mask->y+static_cast<int>(size.height),true};
-    return {mask->x,mask->y,mask->x+size.width,mask->y+size.height,true};
-}
-
-void HandleHighlight(FeScreen& screen, std::uint32_t mask_hash,
-                               const WidgetMeasure& measure) {
-    const auto rect=GetWidgetRect_00144280(screen,mask_hash,measure);
-    if(!rect.valid)return;
-    SetWidgetY_00144458(screen,0x32c91dae,static_cast<int>(rect.y1));
-    SetWidgetY_00144458(screen,0xc671680c,static_cast<int>(rect.y0)-6);
-}
-
-void tScrollingMenuList::Construct_00249DE0(FeScreen& screen,std::uint32_t top_hash,
-    std::uint32_t bottom_hash,std::uint32_t up_hash,std::uint32_t down_hash,std::uint32_t clip_hash) {
-    field_0x00 = &screen; field_0x04.clear(); field_0x14 = -1; field_0x24 = 0;
-    field_0x28=up_hash;field_0x2c=down_hash;field_0x30=clip_hash;field_0x34=0;
-    auto* top = FindWidget_00143D50(screen, top_hash, 0);
-    auto* bottom = FindWidget_00143D50(screen, bottom_hash, 0);
-    field_0x0c = top ? top->y : 0; field_0x10 = bottom ? bottom->y : 0;
-    for (auto hash : {field_0x28,field_0x2c})
-        if(auto* arrow=FindWidget_00143D50(screen,hash,0))SetAlpha(*arrow,64);
-}
-void tScrollingMenuList::Sub_001EF3C8(FeScreen& screen) {
-    Construct_00249DE0(screen,0x52e039f3,0x52e039f9,0xedf2e4ee,0x20d73d01,0xc67cfb4a);
-    // ELF initialized data002B9C30..002B9C97, copied by001EF3C8.
-    constexpr std::uint32_t hashes[]{
-        0x52e039f3,0x52e039f4,0x52e039f5,0x52e039f6,0x52e039f7,0x52e039f8,
-        0x52e039f9,0x52e039fa,0x52e039fb,0xaee77883,0xaee77884,
-        0xa29f7a16,0xc866642b,0xa29f7a17,0xc866686c,0xa29f7a18,0xc8666cad,
-        0xa29f7a19,0xc86670ee,0xa29f7a1a,0xc866752f,0xa29f7a1b,0xc8667970,
-        0xa29f7a1c,0xc8667db1,0x2932dfca};
-    Add_00249FF8(std::vector<std::uint32_t>(std::begin(hashes),std::end(hashes)));
-    field_0x34=11;
-}
-void tScrollingMenuList::Sub_001F33B8(FeScreen& screen) {
-    Construct_00249DE0(screen,0x52e039f3,0x52e039f9,0xedf2e4ee,0x20d73d01,0xc67cfb4a);
-    // Exact15-element initialized list002BA178, passed by001F33B8.
-    Add_00249FF8({0x52e039f3,0x52e039f4,0x52e039f5,0x52e039f6,0x52e039f7,
-        0x52e039f8,0x52e039f9,0x52e039fa,0x52e039fb,0x55cb09f2,0x2e931f1b,
-        0x03d90172,0x5610f2f4,0x8fe4086b,0x422313cb});
-    field_0x34=9;
-    for(auto hash:{0xd1cda594u,0x9345e4a7u})if(auto*w=FindWidget_00143D50(screen,hash,0)){
-        w->clip_hash_0x4c=field_0x30;if(w->type==1)w->text_align|=0x10;
-    }
-}
-void tScrollingMenuList::Add_00249FF8(const std::vector<std::uint32_t>& hashes) {
-    if(!field_0x00)hp2::not_implemented("0x00249FF8","scrolling screen not bound");
-    auto& screen=*field_0x00;
-    for (auto hash : hashes) {
-        auto* widget = FindWidget_00143D50(screen, hash, 0);
-        if (!widget) continue;
-        widget->clip_hash_0x4c = field_0x30;
-        if (widget->type == 1) widget->text_align |= 0x10;
-        widget->dirty_0x2b = widget->type == 1 ? 5 : 4;
-        tMenuAnimElement node;
-        node.field_0x3c = static_cast<std::size_t>(widget-screen.widgets.data());
-        node.field_0x0c = node.field_0x14 = widget->y;
-        field_0x04.push_back(node);
+void FlailerScreen::RenderModels(bool advanceState)
+{
+    if (callback) {
+        Require(ui && ui->sound,"Frontend model callback has no UI/sound owner");
+        struct RestoreRenderContext {
+            FlailerUiState& state;bool previous;
+            ~RestoreRenderContext(){state.advancePresentation=previous;}
+        } restore{*ui,ui->advancePresentation};
+        const bool advance=advanceState && ui->advancePresentation;
+        ui->advancePresentation=advance;
+        ScreenCallbackData data{static_cast<std::uint32_t>(screenId),joystickPort,0,0};
+        callback(ScreenMessage::RenderModels,&data);
+        if(advance)ui->sound->Play(data.sound);
     }
 }
 
-void tScrollingMenuList::Handle_0024A480(int message, std::uint32_t item_hash) {
-    if (!field_0x00) return;
-    if (message == 8) { if (--field_0x14 < 0) field_0x14 = 0; return; }
-    if (message == 9) {
-        const int maximum=std::min(7,field_0x34);
-        if (++field_0x14 >= maximum) field_0x14 = maximum-1;
-        return;
-    }
-    if (message != 4) return;
-    if (field_0x14 == -1) {
-        const auto item = item_hash-0x52e039f3u;
-        if (item <= 8) field_0x14 = static_cast<int>(item < 6 ? item : 6);
-        else if (item_hash==0xaee77883 || item_hash==0xaee77884) field_0x14=6;
-    }
-    auto* selected = FindWidget_00143D50(*field_0x00,item_hash,0);
-    if (selected && (selected->y < field_0x0c || selected->y > field_0x10)) {
-        auto it = std::find_if(field_0x04.begin(),field_0x04.end(),[&](const auto& node){
-            return field_0x00->widgets[node.field_0x3c].name_hash==item_hash;
-        });
-        if (it == field_0x04.end()) hp2::not_implemented("0x0024A090", "selected widget not in scrolling list");
-        const float bound = selected->y < field_0x0c ? field_0x0c : field_0x10;
-        const float offset = bound-it->field_0x14;
-        for(auto& node:field_0x04) {
-            node.field_0x14 += offset;
-            if(node.field_0x14!=node.field_0x0c)node.field_0x38=2;
-        }
-    }
-    bool above=false,below=false;
-    for(const auto& node:field_0x04) if(field_0x34>7) {
-        above |= node.field_0x14 < field_0x0c;
-        below |= node.field_0x14 > field_0x10;
-    }
-    if(auto* a=FindWidget_00143D50(*field_0x00,field_0x28,0))a->visible=above?1:0;
-    if(auto* a=FindWidget_00143D50(*field_0x00,field_0x2c,0))a->visible=below?1:0;
+void FlailerScreenNode::Tick()
+{
+    for (auto* child=screenRoot.next;child!=&screenRoot;child=child->next) child->Tick();
 }
 
-void tScrollingMenuList::Update_0024A1A8(float delta) {
-    if (!field_0x00) return;
-    for(auto& node:field_0x04) {
-        if(node.field_0x38==2) {
-            node.field_0x38=1;node.field_0x2c=0;
-            const float d=node.field_0x14-node.field_0x0c;
-            node.field_0x1c=node.field_0x10-2*d;
-            node.field_0x20=3*d-2*node.field_0x10;
-            node.field_0x24=node.field_0x10;node.field_0x28=node.field_0x0c;
-        }
-        if(node.field_0x38==1) {
-            node.field_0x2c+=delta/0.5f;const float t=node.field_0x2c;
-            if(t>=1){node.field_0x0c=node.field_0x14;node.field_0x10=0;node.field_0x38=0;}
-            else {
-                node.field_0x0c=((node.field_0x1c*t+node.field_0x20)*t+node.field_0x24)*t+node.field_0x28;
-                node.field_0x10=(3*node.field_0x1c*t+2*node.field_0x20)*t+node.field_0x24;
-            }
-        }
-        auto& w=field_0x00->widgets[node.field_0x3c];
-        if(w.y!=node.field_0x0c){w.y=node.field_0x0c;w.dirty_0x2b=4;}
-    }
-    field_0x24 += delta*10;
-    if(field_0x24>6.283f)field_0x24-=6.283f;
-    const int alpha=static_cast<int>(128*(bSin(field_0x24)+1)*0.5f);
-    for(auto hash:{field_0x28,field_0x2c})
-        if(auto* a=FindWidget_00143D50(*field_0x00,hash,0))SetAlpha(*a,alpha);
-}
-std::uint32_t tScrollingMenuList::Sub_0024A368() const {
-    if(field_0x14<0 || field_0x14>6)hp2::not_implemented("0x0024A368", "uninitialized viewport slot");
-    constexpr std::uint32_t masks[]{0x6e34e350,0x708a0bf1,0x72df3492,0x75345d33,
-        0x778985d4,0x79deae75,0x7c33d716};
-    return masks[field_0x14];
+void FlailerScreenNode::RenderModels(bool advanceState)
+{
+    for (auto* child=screenRoot.next;child!=&screenRoot;child=child->next) child->RenderModels(advanceState);
 }
 
-void tLeftRightArrowScroll::Construct_0024A690(FeScreen& screen,std::uint32_t left,std::uint32_t right){
-    field_0x00=&screen;field_0x04=left;field_0x08=right;field_0x1c=0;
-    Bind_0024A860(0);
-}
-void tLeftRightArrowScroll::Bind_0024A860(std::uint32_t target){
-    field_0x0c=target;
-    if(!field_0x00)return;
-    for(auto hash:{field_0x04,field_0x08})
-        if(auto*w=FindWidget_00143D50(*field_0x00,hash,2))w->visible=target?1:0;
-}
-void tLeftRightArrowScroll::Update_0024A730(float delta,const WidgetMeasure& measure){
-    if(!field_0x00)return;
-    field_0x1c+=delta*10;
-    if(field_0x1c>6.283f)field_0x1c-=6.283f;
-    if(field_0x0c){
-        const auto rect=GetWidgetRect_00144280(*field_0x00,field_0x0c,measure);
-        if(!rect.valid)hp2::not_implemented("0x00144860","selector target bounds unavailable");
-        // 001447E0 computes centre after bounding-box conversion to integer.
-        const int top=static_cast<int>(rect.y0),bottom=static_cast<int>(rect.y1);
-        const int centre=top+(bottom-top)/2;
-        const int alpha=static_cast<int>(128*(bSin(field_0x1c)+1)*0.5f);
-        for(auto hash:{field_0x04,field_0x08})if(auto*w=FindWidget_00143D50(*field_0x00,hash,2)){
-            const auto size=measure(*w);
-            SetAlpha(*w,alpha);
-            const float y=static_cast<float>(centre)-size.height*0.5f;
-            if(w->y!=y){w->y=y;w->dirty_0x2b=4;}
-        }
-    }
-    Bind_0024A860(field_0x0c);
+std::uint32_t FlailerScreenNode::GetActiveMenuItem() const
+{
+    const auto* first=screenRoot.next;
+    if (first==&screenRoot || !first->menu) return 0;
+    return first->menu->GetActiveMenuItem();
 }
 
-void Sub_00249348() {
-    hp2::not_implemented("0x00249348",
-                        "scrolling-text update requires the bound tAnimatedBlurb screen state");
+void FlailerScreenList::RenderModels(bool advanceState)
+{
+    if (active) active->RenderModels(advanceState);
 }
 
-void tAnimatedBlurb::Construct_002491B0(FeScreen& screen) {
-    Construct_002491B0(screen, 0x75980cf0, 0x75980cf0, 0x70a404ec);
-}
+} // namespace hp2
 
-void tAnimatedBlurb::Construct_002491B0(FeScreen& screen, std::uint32_t text_hash,
-                                     std::uint32_t alpha_hash, std::uint32_t bar_hash) {
-    field_0x04 = text_hash; port_alpha_hash = alpha_hash; port_bar_hash = bar_hash;
-    field_0x00 = &screen; field_0x08 = field_0x198 = field_0x28 = 0;
-    field_0x0c = field_0x19c = 0; field_0x94.clear();
-    auto* text = FindWidget_00143D50(screen, field_0x04, 1);
-    auto* bar = FindWidget_00143D50(screen, port_bar_hash, 0);
-    field_0x194 = text ? text->x : 0;
-    auto* alpha = FindWidget_00143D50(screen, port_alpha_hash, 0);
-    field_0x5c_alpha = alpha ? alpha->a : 0;
-    field_0x78_alpha = bar ? bar->a : 0;
-    if (text) { text->x = 650; text->dirty_0x2b = 4; }
-}
-
-void tAnimatedBlurb::Bind_00249518(const std::string& text) {
-    if (field_0x19c == 2 || field_0x19c == 3) {
-        field_0x19c = 1; field_0x08 = 0; field_0x0c = 0;
-    }
-    field_0x198 = 0; field_0x94 = text;
-}
-
-void tAnimatedBlurb::Update_00249348(float delta_seconds) {
-    if (!field_0x00) return;
-    field_0x08 += delta_seconds; field_0x198 += delta_seconds;
-    auto* text = FindWidget_00143D50(*field_0x00, field_0x04, 1);
-    auto* alpha = FindWidget_00143D50(*field_0x00, port_alpha_hash, 0);
-    auto* bar = FindWidget_00143D50(*field_0x00, port_bar_hash, 0);
-    if (field_0x19c == 1) {
-        const float t = field_0x08 < 0.6f ? field_0x08 / 0.6f : 1;
-        if (alpha) SetAlpha(*alpha, static_cast<int>(field_0x5c_alpha * (1-t)));
-        if (bar) SetAlpha(*bar, static_cast<int>(field_0x78_alpha * t));
-        if (field_0x198 > 0.5f) { field_0x0c = 0; field_0x19c = 2; }
-    }
-    if (field_0x19c != 0 && field_0x19c != 2) return;
-    if (alpha) SetAlpha(*alpha, field_0x5c_alpha);
-    if (bar) SetAlpha(*bar, 0);
-    if (field_0x0c == 0) {
-        if (text) {
-            text->string_id_0x60 = 0;
-            text->text = text->text_capacity ? field_0x94.substr(0, text->text_capacity - 1) : field_0x94;
-            text->x = 650; text->dirty_0x2b = 4;
-        }
-        field_0x28 = 0; field_0x0c = 1;
-    } else if (field_0x28 >= 1 || field_0x194 == 650) {
-        field_0x19c = 3;
-    } else {
-        field_0x28 += delta_seconds / 0.25f;
-        const float t = field_0x28;
-        const float x = t >= 1 ? field_0x194 :
-            ((-2*(field_0x194-650)*t+3*(field_0x194-650))*t)*t+650;
-        if (text) { text->x = static_cast<float>(static_cast<int>(x)); text->dirty_0x2b = 4; }
-    }
-}
-
-std::int32_t bRandom(std::int32_t bound, std::uint32_t& state) {
-    if (bound == 0) hp2::not_implemented("0x0025A3D0", "original zero-bound trap");
-    const std::uint32_t old = state;
-    const std::uint32_t a = old ^ 0x1d872b41u;
-    const std::uint32_t b = a ^ (a >> 5);
-    state = b ^ a ^ (b << 27);
-    // Listing 0025A3E4 is DIVU, disproving Ghidra's signed modulo cast.
-    return static_cast<std::int32_t>(old % static_cast<std::uint32_t>(bound));
-}
-void tGlobalBackgroundAnimation::Construct_002495F0() {
-    field_0x00 = nullptr; field_0x70 = field_0x78 = field_0x30 = 0;
-    field_0x10 = field_0x18 = 320; field_0x40 = field_0x48 = 240;
-    for (auto& hash : field_0x7c) hash = 0;
-    Add_00249730(bStringHash("GRID_BLUEPRINT1"));
-    Add_00249730(bStringHash("GRID_BLUEPRINT2"));
-}
-void tGlobalBackgroundAnimation::RemoveTextureHash(std::uint32_t hash) {
-    for (auto& slot : field_0x7c) if (slot == hash) slot = 0;
-}
-void tGlobalBackgroundAnimation::Add_00249730(std::uint32_t hash) {
-    RemoveTextureHash(hash);
-    for (auto& slot : field_0x7c) if (slot == 0) { slot = hash; return; }
-}
-void tGlobalBackgroundAnimation::Bind_00249A40(FeScreen* screen, const Random_0025A488& random,
-                               const WidgetMeasure& measure) {
-    field_0x00 = screen; port_measure_ = measure;
-    if (screen) Reset_00249888(random);
-}
-void tGlobalBackgroundAnimation::Reset_00249888(const Random_0025A488& random) {
-    auto* fading = field_0x00 ? FindWidget_00143D50(*field_0x00,
-        bStringHash("FADING_BP_OBJECT"), 2) : nullptr;
-    auto* master = field_0x00 ? FindWidget_00143D50(*field_0x00,
-        bStringHash("MASTER_BP_OBJECT"), 2) : nullptr;
-    if (fading && master) {
-        if (!random) hp2::not_implemented("0x0025A488", "missing shared RNG input");
-        auto range = [&](float lo, float hi) { return lo + static_cast<float>(random(10000))*0.0001f*(hi-lo); };
-        field_0x10 = range(160, 165); field_0x40 = range(180, 300);
-        field_0x18 = range(300, 400); field_0x48 = field_0x40; field_0x30 = 0;
-        if (!port_measure_) hp2::not_implemented("0x00140638", "missing background widget measurement");
-        // 0024AAE0 invokes the centered coordinate writers before changing texture.
-        const auto metrics = port_measure_(*fading);
-        fading->x = field_0x10 - metrics.width*0.5f;
-        fading->y = field_0x40 - metrics.height*0.5f;
-        SetAlpha(*fading, 0); SetAlpha(*master, 0);
-        int count = 0; for (auto hash : field_0x7c) if (hash) ++count;
-        int index = random(count);
-        std::uint32_t hash = 0;
-        for (auto slot : field_0x7c) if (slot && index-- == 0) { hash = slot; break; }
-        fading->texture_hash = hash; fading->dirty_0x2b = 10;
-    }
-    field_0x70 = 0;
-}
-void tGlobalBackgroundAnimation::Update_00249AE8(float delta_seconds, const Random_0025A488& random) {
-    field_0x78 += delta_seconds;
-    // gp-0x676C at 0032F184 = 6.283 radians. GRID angle consumption is unknown.
-    if (field_0x78 >= 6.283f) field_0x78 -= 6.283f;
-    field_0x70 += delta_seconds;
-    auto* fading = field_0x00 ? FindWidget_00143D50(*field_0x00,
-        bStringHash("FADING_BP_OBJECT"), 2) : nullptr;
-    auto* master = field_0x00 ? FindWidget_00143D50(*field_0x00,
-        bStringHash("MASTER_BP_OBJECT"), 2) : nullptr;
-    if (!fading || !master) return;
-    if (field_0x70 < 1) SetAlpha(*fading, static_cast<int>(field_0x70*128));
-    if (field_0x70 < 50) {
-        field_0x30 += delta_seconds/50;
-        const float t = field_0x30;
-        const float d = field_0x18-field_0x10;
-        const float x = t >= 1 ? field_0x18 : ((-2*d*t+3*d)*t)*t+field_0x10;
-        if (!port_measure_) hp2::not_implemented("0x00140638", "missing background widget measurement");
-        const auto metrics = port_measure_(*fading);
-        fading->x = x - metrics.width*0.5f;
-        fading->y = field_0x48 - metrics.height*0.5f;
-        fading->dirty_0x2b = 4;
-    }
-    if (field_0x70 > 49 && field_0x70 < 50)
-        SetAlpha(*fading, static_cast<int>((1-(field_0x70-49))*128));
-    if (field_0x70 > 50) Reset_00249888(random);
-}
-
-// Main-menu action slice. Original TU is unknown; no invented source filename.
-void Sub_00216638(int message, std::uint32_t item_hash, std::int32_t& dat_002FC070,
-                  const ::port::frontend::ScreenActionServices& services) {
-    if (message != 1) return;
-    switch (item_hash) {
-    case 0x52E039F3: dat_002FC070 = 1; services.request("Cops On Mode Select", true); break;
-    case 0x52E039F4: dat_002FC070 = 0; services.request("Cops Off Mode Select", true); break;
-    case 0x52E039F5: services.request("Options", true); break;
-    default: break; // original switch ignores unmatched item hashes
-    }
-}
-
-
-const char* Sub_0016EE90(int language,int index,bool demo) {
-    static constexpr const char* logos[]={"MOVIES/INTRO/EALOGO_EN.AVI","MOVIES/INTRO/EALOGO_FR.AVI","MOVIES/INTRO/EALOGO_GE.AVI","MOVIES/INTRO/EALOGO_IT.AVI","MOVIES/INTRO/EALOGO_SP.AVI","MOVIES/INTRO/EALOGO_SW.AVI"};
-    if(language<0||language>=6||index<0||index>=(demo?1:2)) throw std::out_of_range("0016EE90 movie table bounds");
-    return index==0 ? logos[language] : language==1 ? "MOVIES/INTRO/NFSINTRO_FR.AVI" : "MOVIES/INTRO/NFSINTRO_EN.AVI";
-}
-::port::media::StartupResult TitleScreen::Sub_0016F000(bool skip,bool demo,int language,std::uint32_t ticks) {
-    port_demo=demo;port_language=language;Field_0x08=0;Field_0x10=ticks;Field_0x14=0;Field_0x0c=skip?1:2;
-    if(skip)return {::port::media::StartupAction::ShowTitle,nullptr,true};
-    return {::port::media::StartupAction::PlayMovie,Sub_0016EE90(language,0,demo)};
-}
-::port::media::StartupResult TitleScreen::Sub_0016F1F0(bool done,std::uint32_t ticks) {
-    ::port::media::StartupResult result;
-    if(Field_0x0c==2 && done) {
-        if(++Field_0x08==(port_demo?1:2)){Field_0x0c=1;Field_0x10=ticks;result.action=::port::media::StartupAction::ShowTitle;result.start_music=!port_demo;}
-        else result={::port::media::StartupAction::PlayMovie,Sub_0016EE90(port_language,Field_0x08,port_demo)};
-    }
-    if(Field_0x0c!=2&&(Field_0x14==0||Field_0x14==0x7fffffffu))Field_0x14=ticks;
-    return result;
-}
-bool TitleScreen::Sub_0016F4F8(std::uint32_t ticks) const {
-    return Field_0x14!=0&&Field_0x14!=0x7fffffffu&&4.0f<static_cast<float>(static_cast<std::int32_t>(ticks-Field_0x14))*0.00025f;
-}
-::port::media::StartupResult TitleScreen::Sub_0016EEF8(std::uint32_t ticks) {
-    if(Field_0x0c==2){
-        if(Field_0x08==0)return {};
-        Field_0x0c=1;Field_0x10=ticks;return {::port::media::StartupAction::ShowTitle,nullptr};
-    }
-    if(Field_0x0c==1&&Sub_0016F4F8(ticks)&&!port_demo){Field_0x10=ticks;return {::port::media::StartupAction::RequestMainMenu,nullptr};}
-    return {};
-}
-
-} // namespace hp2::frontend
-
-
-namespace hp2::frontend {
-// ELF 0x0016F190; E-0016-V01; E-0028-C02; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0016f190.md.
-void TitleScreen::Sub_0016F190() {
-    hp2::not_implemented("0x0016F190", "TitleScreen::Sub_0016F190 (signature and full body unresolved)");
-}
-} // namespace hp2::frontend
-
-namespace hp2::recovered {
-// ELF 0x0016A130; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/0016a130.md.
-void FlailerMenu::GetCurrentItemNumber() {
-    hp2::not_implemented("0x0016A130", "FlailerMenu::GetCurrentItemNumber (signature and full body unresolved)");
-}
-
-// ELF 0x0016A5B0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/0016a5b0.md.
-void FlailerMenu::FindItem() {
-    hp2::not_implemented("0x0016A5B0", "FlailerMenu::FindItem (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/FlailerScreenList.hpp"
-
-namespace hp2::recovered {
-// ELF 0x0016C888; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0016c888.md.
-void FlailerScreenList::FindScreen() {
-    hp2::not_implemented("0x0016C888", "FlailerScreenList::FindScreen (signature and full body unresolved)");
-}
-
-// ELF 0x0016CA08; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0016ca08.md.
-void FlailerScreenList::IsAnyPopupActive() {
-    hp2::not_implemented("0x0016CA08", "FlailerScreenList::IsAnyPopupActive (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x0016B340; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0016b340.md.
-void FlailerScreenNode::FindFlailerScreen() {
-    hp2::not_implemented("0x0016B340", "FlailerScreenNode::FindFlailerScreen (signature and full body unresolved)");
-}
-
-// ELF 0x0016B378; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0016b378.md.
-void FlailerScreenNode::SetFilterPort() {
-    hp2::not_implemented("0x0016B378", "FlailerScreenNode::SetFilterPort (signature and full body unresolved)");
-}
-
-// ELF 0x0016B3B0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/0016b3b0.md.
-void FlailerScreenNode::IsPortFiltered() {
-    hp2::not_implemented("0x0016B3B0", "FlailerScreenNode::IsPortFiltered (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x0016B438; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/0016b438.md.
-void ScreenStack::Pop() {
-    hp2::not_implemented("0x0016B438", "ScreenStack::Pop (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/tPopupMenu.hpp"
-
-namespace hp2::recovered {
-// ELF 0x0016B5A8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0016b5a8.md.
-void tPopupMenu::GetCurrentMenuItem() {
-    hp2::not_implemented("0x0016B5A8", "tPopupMenu::GetCurrentMenuItem (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::frontend {
-// ELF00144BA0/00144AE8 and whitespace00144A68, E-0092-J07. Preserve the
-// original scanner restart at start-of-next-line+1, rather than standard wrapping.
-void Sub_00144BA0(FeScreen& screen,std::uint32_t class_hash,const std::string& text) {
-    (void)Sub_00144BA0(screen,class_hash,text,{});
-}
-int Sub_00144BA0(FeScreen& screen,std::uint32_t class_hash,const std::string& text,const WidgetMeasure& measure) {
-    std::vector<FeWidget*> lines;
-    for(auto& widget:screen.widgets)if(widget.type==1 && widget.class_hash==class_hash && lines.size()<32)
-        lines.push_back(&widget);
-    if(lines.empty())return 0;
-    const auto emit=[&](std::size_t row,std::size_t begin,std::size_t end) {
-        if(end-begin>255)hp2::not_implemented("0x00144AE8","popup substring exceeds original temporary buffer");
-        auto& widget=*lines[row];
-        if(widget.text_capacity==0)hp2::not_implemented("0x00140E20","popup line has zero capacity");
-        const auto value=text.substr(begin,end-begin);
-        widget.visible=1;
-        if(widget.text!=value) {
-            widget.text=value.substr(0,widget.text_capacity-1);
-            widget.string_id_0x60=0;widget.dirty_0x2b=5;
-        }
-    };
-    std::size_t row=0,begin=0,last_break=0,pos=0,scanned=0;
-    bool has_break=false;
-    while(pos<text.size() && text[pos]!='\0') {
-        const char c=text[pos];
-        if(c==' ' || c=='\t' || c=='@') {has_break=true;last_break=pos;}
-        if(lines[row]->text_capacity<2)hp2::not_implemented("0x00144BA0","popup line capacity below recovered range");
-        bool split=false;
-        if(has_break) {
-            if(scanned>=lines[row]->text_capacity-2)split=true;
-            else {++scanned;if(c=='@')split=true;}
-            if(split) {
-                emit(row,begin,last_break);
-                begin=last_break+1;scanned=0;
-                if(++row==lines.size())return 0;
-                has_break=false;pos=begin;
-            }
-        } else ++scanned;
-        ++pos;
-    }
-    // A forced trailing break can leave the original scanner one byte beyond NUL;
-    // the host string ends at that NUL and does not copy unrelated memory.
-    emit(row,begin,std::min(pos,text.size()));
-    // Both versions measure the NEXT line when it exists, before hiding it.
-    const auto* bottom=lines[std::min(row+1,lines.size()-1)];
-    const int height=static_cast<int>(bottom->y+(measure?measure(*bottom).height:0.f));
-    for(std::size_t i=row+1;i<lines.size();++i)lines[i]->visible=0;
-    return height;
-}
-}
-
-namespace port::frontend {
-// Debug0016AE08; E-0098-X02; frontend/0016ae08.md. View service clears
-// the three item states in reverse order and hides the original document.
-void PopupMenu::Sub_0016AE08(int port,int param,const PopupServices& svc){
-    if(!svc.dismiss_view)hp2::not_implemented("0x0016AE08","original popup item/visibility teardown missing");
-    svc.dismiss_view();
-    active=false;
-    if(!svc.callback || !svc.sound)hp2::not_implemented("0x0016AE08","original popup callback/sound missing");
-    hp2::debug::ScreenCallbackData data;data.Port=port;data.Param=param;data.Noise=5;
-    svc.callback(hp2::debug::POPUP_DISMISS,data);
-    svc.sound(data.Noise);
-}
-// Debug0016AF28; E-0098-X02; frontend/0016af28.md. Original calls
-// GetCurrentMenuItem for ItemHash; popup item hashes are supplied by the view.
-bool PopupMenu::Sub_0016AF28(int port,int event,int param,const PopupServices& svc){
-    using namespace hp2::input;
-    if(param!=1)return true;
-    if(config.flags&1){
-        if(event==JOY_EVENT_SCROLL_UP || event==JOY_EVENT_SCROLL_DOWN)event=JOY_EVENT_NULL;
-        if(event==JOY_EVENT_SCROLL_LEFT || event==JOY_EVENT_MENU_ANALOG_LEFT)event=JOY_EVENT_SCROLL_UP;
-        if(event==JOY_EVENT_SCROLL_RIGHT || event==JOY_EVENT_MENU_ANALOG_RIGHT)event=JOY_EVENT_SCROLL_DOWN;
-    }else if(event==JOY_EVENT_SCROLL_LEFT || event==JOY_EVENT_SCROLL_RIGHT)event=JOY_EVENT_NULL;
-    if(event==JOY_EVENT_MENU_SELECT || event==JOY_EVENT_START){
-        if(config.flags&8){if(config.flags&2)Sub_0016AE08(port,config.cancel_param,svc);}
-        else{
-            if(config.n_buttons<0 || config.n_buttons>3 || index<0)
-                hp2::not_implemented("0x0016AF28","popup index outside decoded valid domain");
-            const int which=config.n_buttons?index%config.n_buttons:0;
-            Sub_0016AE08(port,config.button_params[which],svc);
-        }
-        return true;
-    }
-    if(event==JOY_EVENT_MENU_BACK){if(config.flags&2)Sub_0016AE08(port,config.cancel_param,svc);return true;}
-    if(event!=JOY_EVENT_SCROLL_UP && event!=JOY_EVENT_SCROLL_DOWN)return true;
-    if(config.n_buttons>=2){
-        if(config.n_buttons>3 || index<0 || index>=config.n_buttons)
-            hp2::not_implemented("0x0016AF28","popup movement outside decoded valid domain");
-        if(!svc.unhighlight || !svc.highlight)hp2::not_implemented("0x0016AF28","original popup item highlight missing");
-        svc.unhighlight(index);
-        if(event==JOY_EVENT_SCROLL_UP){if(--index<0)index=config.n_buttons-1;}
-        else if(++index>=config.n_buttons)index=0;
-        svc.highlight(index);
-        if(svc.callback){
-            if(!svc.item_hash || !svc.sound)hp2::not_implemented("0x0016AF28","original popup item/sound missing");
-            hp2::debug::ScreenCallbackData data;data.Port=port;data.ItemHash=svc.item_hash(index);
-            data.Noise=event==JOY_EVENT_SCROLL_UP?1:2;
-            svc.callback(event==JOY_EVENT_SCROLL_UP?hp2::debug::POPUP_NEXT:hp2::debug::POPUP_PREV,data);
-            svc.sound(data.Noise);
-        }
-        if(!svc.set_highlight_animation)hp2::not_implemented("0x0016AF28","original popup highlight animation missing");
-        svc.set_highlight_animation(index);
-    }
-    if(!svc.align_arrows)hp2::not_implemented("0x0016AF28","original popup arrow alignment missing");
-    svc.align_arrows();return true;
-}
-}
-
-namespace port::frontend {
-// Debug0016C028; E-0098-X02; frontend/0016c028.md.
-int PopupList::Sub_0016C028(const selection::Popup& config,
-    const std::function<void(PopupMenu&,const selection::Popup&)>& summon){
-    for(int i=0;i<2;++i)if(!menus[i].active){
-        if(!summon)hp2::not_implemented("0x0016C028","original popup Summon service missing");
-        summon(menus[i],config);return i;
-    }
-    return -1;
-}
-// Debug0016C080; E-0098-X02; frontend/0016c080.md.
-void PopupList::Sub_0016C080(int id,const PopupServices& services){
-    if(static_cast<unsigned>(id)<2 && menus[id].active)
-        menus[id].Sub_0016AE08(menus[id].config.port,menus[id].config.dismiss_param,services);
-}
-}
-
-namespace port::frontend {
-// Debug0016AAD8; E-0098-X02; frontend/0016aad8.md. No PS2 ABI overlay.
-void PopupMenu::Sub_0016AAD8(const selection::Popup& input,const PopupServices& svc){
-    active=true;config=input;
-    if(!svc.show_view || !svc.callback || !svc.sound)
-        hp2::not_implemented("0x0016AAD8","original popup visibility/callback/sound missing");
-    svc.show_view();
-    hp2::debug::ScreenCallbackData data;data.Port=-1;
-    svc.callback(hp2::debug::POPUP_ACTIVE,data);svc.sound(data.Noise);
-    index=config.start_button;
-    if(!svc.reset_item)hp2::not_implemented("0x0016AAD8","original popup item initialization missing");
-    for(int i=0;i<3;++i)svc.reset_item(i,config.screen_hash,config.port);
-    if(config.n_buttons){
-        if(!svc.highlight)hp2::not_implemented("0x0016AAD8","original popup highlight missing");
-        svc.highlight(index);
-    }
-    if(!svc.render_message)hp2::not_implemented("0x0016AAD8","original popup message rendering missing");
-    const int height=svc.render_message(config.message_id);
-    if(config.flags&4){
-        if(!svc.set_top_y)hp2::not_implemented("0x0016AAD8","original popup button placement missing");
-        for(int i=0;i<3;++i)svc.set_top_y(0xe0105663u+i,height+10);
-    }
-    if(!svc.clear_text || !svc.set_language)hp2::not_implemented("0x0016AAD8","original popup text/language missing");
-    for(int i=0;i<3;++i)svc.clear_text(0xe0105663u+i);
-    svc.clear_text(0x85eda094u);
-    for(int i=0;i<3;++i)svc.set_language(0xe0105663u+i,config.n_buttons?config.button_ids[i]:0);
-    svc.set_language(0x85eda094u,config.title_id);
-    if(!svc.align_arrows || !svc.set_highlight_animation)
-        hp2::not_implemented("0x0016AAD8","original popup arrow/animation missing");
-    svc.align_arrows();svc.set_highlight_animation(index);
-}
-}
-
-namespace port::frontend {
-// E-0098-X04: Debug0016A8F0/00168B70 constructor defaults, decoded view only.
-PopupView::PopupView(const hp2::frontend::FeScreen& document,port::driving::Memory& memory,
-    hp2::frontend::WidgetMeasure measure,std::function<std::string(int)> localize)
-    :screen(document),memory_(memory),measure_(std::move(measure)),localize_(std::move(localize)){}
-
-// Debug00169000/001690E0 +00140A90; E-0098-X04. SetColor preserves alpha.
-void PopupView::item_state(int i,std::uint32_t bits,bool set){
-    auto& state=state_.at(i);if(set)state|=bits;else state&=~bits;
-    std::uint32_t rgb=saved_.at(i);
-    if((state&3)==3)rgb=memory_.word(0x327628)|(memory_.word(0x32762c)<<8)|(memory_.word(0x327630)<<16);
-    else if((state&3)!=1)rgb=memory_.word(0x327634)|(memory_.word(0x327638)<<8)|(memory_.word(0x32763c)<<16);
-    if(auto* w=hp2::frontend::FindWidget_00143D50(screen,0xe0105663u+i,1)){
-        hp2::frontend::SetColor(*w,{std::uint8_t(rgb),std::uint8_t(rgb>>8),std::uint8_t(rgb>>16)});w->dirty_0x2b=1;
-    }
-}
-// E-0098-X04: explicit adapters of Debug0016AAD8's whole view dependencies.
-PopupServices PopupView::services(std::function<void(hp2::debug::ScreenMessage,hp2::debug::ScreenCallbackData&)> callback,
-    std::function<void(int)> sound){
-    using namespace hp2::frontend;
-    PopupServices s;s.callback=std::move(callback);s.sound=std::move(sound);
-    // Visibility is represented by the owning PopupMenu's active flag. Documents
-    // are submitted only while active; authored per-widget visibility is retained.
-    s.show_view=[]{};
-    s.dismiss_view=[this]{for(int i=2;i>=0;--i)item_state(i,2,false);};
-    s.reset_item=[this](int i,std::uint32_t hash,int){
-        if(hash!=screen.name_hash_0x08)throw std::logic_error("Popup document identity mismatch");
-        if(auto* w=FindWidget_00143D50(screen,0xe0105663u+i,1))
-            saved_.at(i)=w->r|(std::uint32_t(w->g)<<8)|(std::uint32_t(w->b)<<16)|(std::uint32_t(w->a)<<24);
-        item_state(i,2,false);
-    };
-    s.highlight=[this](int i){item_state(i,2,true);};s.unhighlight=[this](int i){item_state(i,2,false);};
-    s.item_hash=[](int i){return 0xe0105663u+i;};
-    s.align_arrows=[]{}; // Debug0016AF20 is a proven empty body, E-0098-X04.
-    s.render_message=[this](int id){return Sub_00144BA0(screen,0x5d6dd123,localize_(id),measure_);};
-    s.set_top_y=[this](std::uint32_t hash,int y){SetWidgetY_00144458(screen,hash,y);};
-    s.clear_text=[this](std::uint32_t hash){if(auto* w=FindWidget_00143D50(screen,hash,1)){
-        w->text.clear();w->string_id_0x60=0;w->dirty_0x2b=5;}};
-    s.set_language=[this](std::uint32_t hash,int id){SetWidgetStringId_001449A8(screen,hash,id);
-        if(auto* w=FindWidget_00143D50(screen,hash,1))w->text=id?localize_(id):std::string{};};
-    s.set_highlight_animation=[this](int i){bind_animation(i);};return s;
-}
-const hp2::frontend::FeWidget* PopupView::ghost_target(const hp2::frontend::FeWidget& w)const{
-    if(w.name_hash!=0xab671c9a)return nullptr;
-    // Identity is checked as well: every authored page may use the same hash.
-    for(const auto& candidate:screen.widgets)if(&candidate==&w)
-        return hp2::frontend::FindWidget_00143D50(const_cast<hp2::frontend::FeScreen&>(screen),target_,1);
-    return nullptr;
-}
-std::map<std::uint32_t,std::string> PopupView::button_targets(const hp2::frontend::FeScreen* document,int slot,int count)const{
-    std::map<std::uint32_t,std::string> out;if(document!=&screen)return out;
-    for(int i=0;i<count;++i)out[0xe0105663u+i]="popup:"+std::to_string(slot)+":"+std::to_string(i);
-    return out;
-}
-}
-
-// TASK-0113 E-0113-L03. Debug tLoadingScreenAnimation, source fmenus.cpp.
-#include "game_core/port/race/loading_screen.hpp"
-#include "game_core/indep/src/frontendscreens/feanim.hpp"
-#include "game_core/port/race/flailer_resources.hpp"
-namespace hp2::debug {
-// Debug0016ECB0. Actual demo selector and owned highlight allocation.
-void tLoadingScreenAnimation::Sub_0016ECB0(int screen){auto& m=m_;if(m.word(0x2e78e0))screen=int(hp2::frontend::bStringHash("DEMO_CONTROLS"));m.word(address_,std::uint32_t(screen));const auto highlight=m.allocate(32,16);m.word(address_+4,highlight);tHighlightAnimation animation(m,highlight);animation.Sub_00241F40(screen,int(hp2::frontend::bStringHash("GLOBAL_ANIMATING_MENUITEM")),m.signed_word(0x328a28));animation.SetCurrentMenuItem(int(hp2::frontend::bStringHash("GLOBAL_LOADING_STRING")));m.scalar(highlight+0x1c,2);m.word(address_+8,FindFlailerObject(m,std::uint32_t(screen),0x120e827c,1));}
-// Debug0016ED80. Source destroys its owned highlight before optional self.
-void tLoadingScreenAnimation::Sub_0016ED80(int flags){if(const auto highlight=m_.word(address_+4))tHighlightAnimation(m_,highlight).Sub_00241F80(3);if(flags&1)m_.release(address_);}
-// Debug0016EDD8. Original screen-list visibility, not inferred object flags.
-void tLoadingScreenAnimation::Tick(){auto& m=m_;if(m.word(0x3275ac)==3||m.word(0x3275a8))return;if(FlailerRenderManager(m,0x2e82b0).IsScreenVisible(m.word(address_)))tHighlightAnimation(m,m.word(address_+4)).Animate();const auto manual=m.word(address_+8);if(!manual)hp2::not_implemented("0x0016EDD8","authored loading ManualObject is required by source visibility call");FlailerObjectChunk(m,manual).SetVisibility(0);if(m.word(0x2f3890+0x1072c)==2&&(m.word(0x3275ac)-4u)<2&&m.signed_byte(0x2f3890+0x10d7f)==1)FlailerObjectChunk(m,manual).SetVisibility(1);}
+extern "C" GameInputResult flailerFrontendDispatchInput(FlailerFrontendInput* input,
+    std::int32_t port,std::int32_t event,std::uint8_t value)
+{
+    if (!input || !input->screens || input->screens->input!=input) return GAME_INPUT_INVALID_BINDING;
+    try { input->screens->JoyHandler(port,event,value);return GAME_INPUT_OK; }
+    catch (const std::exception&) { return GAME_INPUT_OWNER_FAILURE; }
 }

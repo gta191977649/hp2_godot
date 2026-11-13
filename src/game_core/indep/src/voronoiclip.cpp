@@ -1,492 +1,874 @@
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
-// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/indep/src/voronoiclip.hpp"
+#include "indep/inc/VoronoiClip.hpp"
+#include "indep/inc/Contact.hpp"
+#include "indep/inc/Polyhedra.hpp"
+#include "bware/inc/bMath.hpp"
+#include "bware/inc/bMath.hpp"
+#include "indep/inc/VoronoiClip.hpp"
 
-#include "game_core/port/not_implemented.hpp"
-#include "game_core/port/driving/memory.hpp"
-#include "game_core/port/race/collision_resources.hpp"
+#include <math.h>
+#include <stddef.h>
+#include <string.h>
 
-namespace hp2::debug {
-// Debug001CD8B0, E-0099-W19. Nonzero debug Caffeine objects require the original
-// espDeleteObject service; inactive witnesses have the actual empty branch.
-void Sub_001CD8B0(::port::driving::Memory& m,std::uint32_t at,int in_chrg){
-    if(m.word(at+0x44))hp2::not_implemented("0x001CD8B0","original VCWitness Caffeine-object deletion is not implemented");
-    if(in_chrg&1)m.release(at);
-}
-}
-
-namespace hp2::recovered {
-// Debug001D00E8/001D0120, E-0099-W23. Authored and Rect embedded arrays have
-// DynamicallyAllocated0; dynamic arrays follow original deletion order.
-void VCPolyhedron::Sub_001D00E8(::port::driving::Memory& m,std::uint32_t at,int in_chrg){
-    if(m.word(at+8)!=0){for(unsigned i=0;i<4;++i)if(auto array=m.word(at+0x20+4*i))m.release(array);
-        for(unsigned i=0;i<4;++i)m.word(at+0x20+4*i,0);m.word(at+8,0);}
-    if(m.word(at+0xc))hp2::not_implemented("0x001D0120","original VCPolyhedron Caffeine-object deletion is not implemented");
-    if(in_chrg&1)m.release(at);
-}
-// Debug001D01C8 ->001D00A8/001D0D10, E-0099-W23. All pointers remain logical.
-void VCPolyhedron::MemoryImageLoad(::port::driving::Memory& m,std::uint32_t at,const std::array<std::uint32_t,4>& arrays,const std::array<int,4>& counts){
-    m.word(at+8,0);
-    for(unsigned i=0;i<4;++i){if(counts[i]<0 || counts[i]>32767)throw std::out_of_range("Original collision volume count outside signed16 domain");
-        m.half(at+0x18+2*i,std::uint16_t(counts[i]));m.word(at+0x20+4*i,arrays[i]);m.half(at+0x10+2*i,std::uint16_t(counts[i]));}
-    const unsigned strides[3]={20,12,24},offsets[3]={16,8,20};
-    for(unsigned kind=0;kind<3;++kind)for(int i=0;i<counts[kind];++i){const auto feature=arrays[kind]+std::uint32_t(i)*strides[kind],field=feature+offsets[kind];
-        const auto index=m.word(field);if(std::uint64_t(index)+m.byte(feature+1)>std::uint32_t(counts[3]))throw std::out_of_range("Original collision feature plane index outside source span");
-        m.word(field,arrays[3]+index*24);}
-    for(int i=0;i<counts[3];++i){const auto field=arrays[3]+std::uint32_t(i)*24+20,code=m.word(field),kind=code&15,index=code>>4;
-        if(code==0xffffffffu || kind>2){m.word(field,0);continue;}
-        if(index>=std::uint32_t(counts[kind]))throw std::out_of_range("Original collision plane feature code outside source span");
-        m.word(field,arrays[kind]+index*strides[kind]);}
-}
-// Debug001D0990, E-0099-W23. The existing recovered feature operations are
-// shared with the raw original view; only their actual plane outputs are stored.
-void VCPolyhedron::SetVoronoiPlanes(::port::driving::Memory& m,std::uint32_t at){
-    auto p=::port::race::read_collision_polyhedron(m,at);
-    const auto store=[&](std::uint32_t plane,const ::port::track::VoronoiPlane& value){for(unsigned j=0;j<3;++j)m.scalar(plane+4+4*j,value.normal[j]);m.scalar(plane+16,value.distance);};
-    for(unsigned i=0;i<p.vertices.size();++i){VCVertex::SetVoronoiPlanes(p,i);const auto planes=m.word(m.word(at+0x20)+20*i+16);
-        for(unsigned j=0;j<p.vertices[i].planes.size();++j)store(planes+24*j,p.vertices[i].planes[j]);}
-    for(unsigned i=0;i<p.faces.size();++i){VCFace::SetVoronoiPlanes(p,i);const auto planes=m.word(m.word(at+0x28)+24*i+20);
-        for(unsigned j=0;j<p.faces[i].planes.size();++j)store(planes+24*j,p.faces[i].planes[j]);}
-    for(unsigned i=0;i<p.edges.size();++i){VCEdge::SetVoronoiPlanes(p,i);const auto planes=m.word(m.word(at+0x24)+12*i+8);
-        for(unsigned j=0;j<4;++j)store(planes+24*j,p.edges[i].planes[j]);}
-}
-// ELF 0x001D2A48; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d2a48.md.
-void VCEdge::SetVoronoiPlanes() {
-    hp2::not_implemented("0x001D2A48", "VCEdge::SetVoronoiPlanes (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x001D30A8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d30a8.md.
-void VCFace::Move() {
-    hp2::not_implemented("0x001D30A8", "VCFace::Move (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x001D3100; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d3100.md.
-void VCPolyhedron::Sub_001D3100() {
-    hp2::not_implemented("0x001D3100", "VCPolyhedron::Sub_001D3100 (signature and full body unresolved)");
+CollisionWitness* collisionWitnessInitialize(CollisionWitness* witness, CollisionGeometry* first, CollisionGeometry* second)
+{
+    for(int lane=0;lane<3;++lane) witness->firstPoint[lane]=witness->secondPoint[lane]=0.0f;
+    witness->first=first->vertices;
+    witness->second=second->vertices;
+    witness->firstGeometry=first;
+    witness->secondGeometry=second;
+    witness->side=0;
+    witness->distance=0.0f;
+    witness->firstDisplay=witness->secondDisplay=NULL;
+    return witness;
 }
 
-// ELF 0x001D3200; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d3200.md.
-void VCPolyhedron::Init() {
-    hp2::not_implemented("0x001D3200", "VCPolyhedron::Init (signature and full body unresolved)");
+float collisionPointDistance(const float first[4], const float second[4])
+{
+    float delta[4];
+    for (int lane = 0; lane < 3; ++lane) delta[lane] = first[lane] - second[lane];
+    return sqrtf(collisionGeometryDot3(delta, delta));
 }
 
-// ELF 0x001D3398; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d3398.md.
-void VCPolyhedron::NewVoronoiPlanes() {
-    hp2::not_implemented("0x001D3398", "VCPolyhedron::NewVoronoiPlanes (signature and full body unresolved)");
+void collisionTransformDirection(float output[4], const float frame[16], const float value[4])
+{
+    float result[4];
+    for (int row = 0; row < 4; ++row) {
+        float sum = frame[row] * value[0];
+        const float second = frame[4 + row] * value[1];
+        sum = sum + second;
+        const float third = frame[8 + row] * value[2];
+        result[row] = sum + third;
+    }
+    memcpy(output, result, sizeof(result));
 }
 
-// ELF 0x001D3430; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d3430.md.
-void VCPolyhedron::NewVertex() {
-    hp2::not_implemented("0x001D3430", "VCPolyhedron::NewVertex (signature and full body unresolved)");
+void collisionTransformPoint(float output[4], const float frame[16], const float value[4])
+{
+    vectorMatrixTransformPoint(output, frame, value);
 }
 
-// ELF 0x001D3498; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d3498.md.
-void VCPolyhedron::NewEdge() {
-    hp2::not_implemented("0x001D3498", "VCPolyhedron::NewEdge (signature and full body unresolved)");
+void collisionTransformVertex(CollisionTransformedVertex* output, const float frame[16],
+                               const CollisionFeature* vertex)
+{
+    const float point[4] = {vertex->vector[0], vertex->vector[1], vertex->vector[2], 0.0f};
+    output->feature = vertex;
+    vectorMatrixTransformPoint(output->point, frame, point);
 }
 
-// ELF 0x001D3540; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d3540.md.
-void VCPolyhedron::NewFace() {
-    hp2::not_implemented("0x001D3540", "VCPolyhedron::NewFace (signature and full body unresolved)");
+void collisionTransformEdge(CollisionTransformedEdge* output, const float frame[16],
+                             const CollisionFeature* edge)
+{
+    output->feature = edge;
+    const CollisionFeature* first = edge->adjacent[1].feature;
+    const CollisionFeature* second = edge->adjacent[0].feature;
+    const float firstPoint[4] = {first->vector[0], first->vector[1], first->vector[2], 0.0f};
+    const float secondPoint[4] = {second->vector[0], second->vector[1], second->vector[2], 0.0f};
+    vectorMatrixTransformPoint(output->first, frame, firstPoint);
+    vectorMatrixTransformPoint(output->second, frame, secondPoint);
+    memcpy(output->direction, output->first, sizeof(output->direction));
+    for (int lane = 0; lane < 3; ++lane) output->direction[lane] = output->first[lane] - output->second[lane];
 }
 
-// ELF 0x001D3BA8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d3ba8.md.
-void VCPolyhedron::GetFeatureCode() {
-    hp2::not_implemented("0x001D3BA8", "VCPolyhedron::GetFeatureCode (signature and full body unresolved)");
+CollisionClip* collisionClipInitialize(CollisionClip* clip)
+{
+    clip->lower = 0.0f;
+    clip->upper = 1.0f;
+    clip->lowerFeature = clip->upperFeature = NULL;
+    clip->boundary = 0;
+    return clip;
 }
 
-// ELF 0x001D3C60; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d3c60.md.
-void VCPolyhedron::GetFeature() {
-    hp2::not_implemented("0x001D3C60", "VCPolyhedron::GetFeature (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x001D0058; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d0058.md.
-void VCTransform::TransformVector() {
-    hp2::not_implemented("0x001D0058", "VCTransform::TransformVector (signature and full body unresolved)");
-}
-
-// ELF 0x001D00B0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d00b0.md.
-void VCTransform::TransformPoint() {
-    hp2::not_implemented("0x001D00B0", "VCTransform::TransformPoint (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x001D00F8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d00f8.md.
-void VCTransformedFeature::TransformVertex() {
-    hp2::not_implemented("0x001D00F8", "VCTransformedFeature::TransformVertex (signature and full body unresolved)");
-}
-
-// ELF 0x001D0168; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d0168.md.
-void VCTransformedFeature::TransformEdge() {
-    hp2::not_implemented("0x001D0168", "VCTransformedFeature::TransformEdge (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x001D2800; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d2800.md.
-void VCVertex::SetVoronoiPlanes() {
-    hp2::not_implemented("0x001D2800", "VCVertex::SetVoronoiPlanes (signature and full body unresolved)");
+int32_t collisionClipPlanes(CollisionClip* clip, const CollisionTransformedEdge* edge,
+                            const CollisionPlane* planes, int32_t count)
+{
+    for (int32_t index = 0; index < count; ++index) {
+        const CollisionPlane* plane = &planes[index];
+        const float first = collisionGeometryDot3(plane->normal, edge->second) - plane->offset;
+        const float second = collisionGeometryDot3(plane->normal, edge->first) - plane->offset;
+        if (first < 0.0f) {
+            if (second < 0.0f) {
+                clip->lowerFeature = clip->upperFeature = plane->feature;
+                return 0;
+            }
+            const float denominator = first - second;
+            const float fraction = finiteRatio(first, denominator);
+            if (clip->lower < fraction) {
+                clip->lower = fraction;
+                clip->lowerFeature = plane->feature;
+                if (clip->upper < fraction) return 0;
+            }
+        } else if (second < 0.0f) {
+            const float denominator = first - second;
+            const float fraction = finiteRatio(first, denominator);
+            if (fraction < clip->upper) {
+                clip->upper = fraction;
+                clip->upperFeature = plane->feature;
+                if (fraction < clip->lower) return 0;
+            }
+        }
+    }
+    return 1;
 }
 
-// ELF 0x001D2950; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d2950.md.
-void VCVertex::GetNextEdgeInFace() {
-    hp2::not_implemented("0x001D2950", "VCVertex::GetNextEdgeInFace (signature and full body unresolved)");
-}
-
-// ELF 0x001D29E8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d29e8.md.
-void VCVertex::Move() {
-    hp2::not_implemented("0x001D29E8", "VCVertex::Move (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x001D0228; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d0228.md.
-void VCVoronoiClip::Sub_001D0228() {
-    hp2::not_implemented("0x001D0228", "VCVoronoiClip::Sub_001D0228 (signature and full body unresolved)");
-}
-
-// ELF 0x001D0250; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d0250.md.
-void VCVoronoiClip::ClipPlanes() {
-    hp2::not_implemented("0x001D0250", "VCVoronoiClip::ClipPlanes (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x001D0890; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001d0890.md.
-void VCWitness::Sub_001D0890() {
-    hp2::not_implemented("0x001D0890", "VCWitness::Sub_001D0890 (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-// TASK-0048 E-0048-T03. Debug NFSHP2.ELF SHA-256
-// 815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
-#include <algorithm>
-#include <stdexcept>
-namespace {
-using VVector=std::array<float,3>;
-float voronoi_dot(const VVector& a,const VVector& b){return (a[0]*b[0]+a[1]*b[1])+a[2]*b[2];}
-VVector voronoi_cross(const VVector& a,const VVector& b){return {{a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]}};}
-VVector voronoi_direction(const port::track::VoronoiEdge& e){return {{e.direction[0]*(1.0f/8192),e.direction[1]*(1.0f/8192),e.direction[2]*(1.0f/8192)}};}
-VVector voronoi_negative(VVector v){for(float& f:v)f=-f;return v;}
-}
-namespace hp2::recovered {
-// Debug 0x001CF6A8; E-0048-T03. Vertex planes inherit edge direction and flip at endpoint 0.
-void VCVertex::SetVoronoiPlanes(port::track::VoronoiPolyhedron& poly,unsigned index){
-    auto& vertex=poly.vertices.at(index);
-    vertex.planes.resize(vertex.edges.size());
-    for(unsigned i=0;i<vertex.edges.size();++i){const auto& edge=poly.edges.at(vertex.edges[i]);auto n=voronoi_direction(edge);
-        if(edge.vertices[1]!=index)n=voronoi_negative(n);vertex.planes[i]={n,voronoi_dot(vertex.position,n)};}
-}
-// Debug 0x001CFC68; E-0048-T03. Face/edge Voronoi normals and original next-edge orientation.
-void VCFace::SetVoronoiPlanes(port::track::VoronoiPolyhedron& poly,unsigned index){
-    auto& face=poly.faces.at(index);face.planes.resize(face.edges.size());
-    for(unsigned i=0;i<face.edges.size();++i){const auto edge_index=face.edges[i];const auto& edge=poly.edges.at(edge_index);
-        const auto vertex_index=edge.vertices[0];const auto& vertex=poly.vertices.at(vertex_index);
-        auto n=voronoi_cross(face.plane.normal,voronoi_direction(edge));float distance=voronoi_dot(n,vertex.position);
-        // Debug VCVertex::GetNextEdgeInFace001CF7F8.
-        unsigned next=static_cast<unsigned>(-1);
-        for(auto candidate:vertex.edges)if(candidate!=edge_index&&std::find(face.edges.begin(),face.edges.end(),candidate)!=face.edges.end()){next=candidate;break;}
-        if(next==static_cast<unsigned>(-1))throw std::invalid_argument("Voronoi face has no adjacent edge");
-        const auto& other=poly.edges.at(next);const auto opposite=other.vertices[0]==vertex_index?other.vertices[1]:other.vertices[0];
-        if(voronoi_dot(n,poly.vertices.at(opposite).position)-distance<0){n=voronoi_negative(n);distance=voronoi_dot(n,vertex.position);}
-        face.planes[i]={n,distance};
+void collisionVertexSetPlanes(CollisionFeature* vertex)
+{
+    for (int index = 0; index < vertex->adjacentCount; ++index) {
+        CollisionPlane* plane = &vertex->adjacent[index];
+        CollisionFeature* edge = plane->feature;
+        for (int lane = 0; lane < 3; ++lane) {
+            float direction = (float)edge->encodedDirection[lane] * 0.0001220703125f;
+            if (edge->adjacent[1].feature != vertex) direction = 0.0f - direction;
+            plane->normal[lane] = direction;
+        }
+        plane->offset = collisionGeometryDot3(vertex->vector, plane->normal);
     }
 }
-// Debug 0x001CF8F0; E-0048-T03. Endpoint and reversed neighboring-face edge planes.
-void VCEdge::SetVoronoiPlanes(port::track::VoronoiPolyhedron& poly,unsigned index){
-    auto& edge=poly.edges.at(index);const auto direction=voronoi_direction(edge);
-    const auto& first=poly.vertices.at(edge.vertices[0]).position;const auto& second=poly.vertices.at(edge.vertices[1]).position;
-    edge.planes[0]={direction,voronoi_dot(first,direction)};auto negative=voronoi_negative(direction);edge.planes[1]={negative,voronoi_dot(second,negative)};
-    for(unsigned i=0;i<2;++i){const auto& face=poly.faces.at(edge.faces[i]);const auto it=std::find(face.edges.begin(),face.edges.end(),index);
-        if(it==face.edges.end())throw std::invalid_argument("Voronoi edge missing from neighbor face");
-        auto n=voronoi_negative(face.planes[static_cast<std::size_t>(it-face.edges.begin())].normal);edge.planes[i+2]={n,voronoi_dot(second,n)};
+
+CollisionFeature* collisionNextEdgeInFace(const CollisionFeature* vertex,
+                                         const CollisionFeature* previousEdge,
+                                         const CollisionFeature* face)
+{
+    for (int index = 0; index < vertex->adjacentCount; ++index) {
+        CollisionFeature* edge = vertex->adjacent[index].feature;
+        if (edge != previousEdge)
+            for (int other = 0; other < face->adjacentCount; ++other)
+                if (edge == face->adjacent[other].feature) return edge;
+    }
+    return NULL;
+}
+
+void collisionVertexMove(CollisionFeature* vertex, const float delta[4])
+{
+    for (int lane = 0; lane < 3; ++lane) vertex->vector[lane] = vertex->vector[lane] + delta[lane];
+}
+
+void collisionEdgeSetPlanes(CollisionFeature* edge)
+{
+    float direction[3];
+    for (int lane = 0; lane < 3; ++lane) direction[lane] = (float)edge->encodedDirection[lane] * 0.0001220703125f;
+    CollisionPlane* entries = edge->adjacent;
+    for (int lane = 0; lane < 3; ++lane) {
+        entries[0].normal[lane] = direction[lane];
+        entries[1].normal[lane] = 0.0f - direction[lane];
+    }
+    entries[0].offset = collisionGeometryDot3(direction, entries[0].feature->vector);
+    entries[1].offset = collisionGeometryDot3(entries[1].normal, entries[1].feature->vector);
+    for (int side = 2; side < 4; ++side) {
+        CollisionFeature* face = entries[side].feature;
+        for (int index = 0; index < face->adjacentCount; ++index) {
+            const CollisionPlane* facePlane = &face->adjacent[index];
+            if (facePlane->feature == edge) {
+                for (int lane = 0; lane < 3; ++lane) entries[side].normal[lane] = 0.0f - facePlane->normal[lane];
+                entries[side].offset = collisionGeometryDot3(entries[side].normal, entries[1].feature->vector);
+                break;
+            }
+        }
     }
 }
-}
-#include <cstring>
-namespace {
-std::uint32_t vcword(const std::vector<std::uint8_t>& b,std::size_t i){if(i>b.size()||b.size()-i<4)throw std::out_of_range("Truncated Voronoi memory image");return std::uint32_t(b[i])|(std::uint32_t(b[i+1])<<8)|(std::uint32_t(b[i+2])<<16)|(std::uint32_t(b[i+3])<<24);}
-float vcfloat(const std::vector<std::uint8_t>& b,std::size_t i){const auto u=vcword(b,i);float f;std::memcpy(&f,&u,4);return f;}
-unsigned vcneighbor(const port::track::VoronoiImage& image,std::uint32_t plane,unsigned type,std::size_t count){const auto code=vcword(image.planes,std::size_t(plane)*24+20);if((code&15)!=type||(code>>4)>=count)throw std::invalid_argument("Invalid Voronoi memory image neighbor");return code>>4;}
-}
-namespace hp2::recovered {
-// Debug 0x001D01C8/001D0D10, E-0048-T04. Record indices become host adjacency, never native pointer casts.
-void VCPolyhedron::MemoryImageLoad(port::track::VoronoiPolyhedron& out,const port::track::VoronoiImage& image){
-    if(image.vertices.size()%20||image.edges.size()%12||image.faces.size()%24||image.planes.size()%24)throw std::invalid_argument("Invalid Voronoi memory image record stride");
-    port::track::VoronoiPolyhedron p;p.vertices.resize(image.vertices.size()/20);p.edges.resize(image.edges.size()/12);p.faces.resize(image.faces.size()/24);
-    for(std::size_t i=0;i<p.vertices.size();++i){auto& v=p.vertices[i];const auto base=i*20;const auto count=image.vertices[base+1];const auto plane=vcword(image.vertices,base+16);
-        for(unsigned j=0;j<3;++j)v.position[j]=vcfloat(image.vertices,base+4+j*4);
-        v.planes.resize(count);for(unsigned j=0;j<count;++j)v.edges.push_back(vcneighbor(image,plane+j,1,p.edges.size()));}
-    for(std::size_t i=0;i<p.edges.size();++i){auto& e=p.edges[i];const auto base=i*12;if(image.edges[base+1]!=4)throw std::invalid_argument("Unsupported Voronoi edge plane count");const auto plane=vcword(image.edges,base+8);
-        for(unsigned j=0;j<3;++j)e.direction[j]=static_cast<std::int16_t>(std::uint16_t(image.edges[base+2+j*2])|(std::uint16_t(image.edges[base+3+j*2])<<8));
-        for(unsigned j=0;j<2;++j){e.vertices[j]=vcneighbor(image,plane+j,0,p.vertices.size());e.faces[j]=vcneighbor(image,plane+j+2,2,p.faces.size());}}
-    for(std::size_t i=0;i<p.faces.size();++i){auto& f=p.faces[i];const auto base=i*24;const auto count=image.faces[base+1];const auto plane=vcword(image.faces,base+20);
-        for(unsigned j=0;j<3;++j)f.plane.normal[j]=vcfloat(image.faces,base+4+j*4);f.plane.distance=vcfloat(image.faces,base+16);
-        f.planes.resize(count);for(unsigned j=0;j<count;++j)f.edges.push_back(vcneighbor(image,plane+j,1,p.edges.size()));}
-    for(unsigned i=0;i<p.vertices.size();++i)VCVertex::SetVoronoiPlanes(p,i);
-    for(unsigned i=0;i<p.faces.size();++i)VCFace::SetVoronoiPlanes(p,i);
-    for(unsigned i=0;i<p.edges.size();++i)VCEdge::SetVoronoiPlanes(p,i);
-    out=std::move(p);
-}
-}
-#include <cmath>
-namespace {
-constexpr std::uint32_t vc_null=0xffffffffu;
-VVector vc_sub(const VVector& a,const VVector& b){return {{a[0]-b[0],a[1]-b[1],a[2]-b[2]}};}
-VVector vc_add(const VVector& a,const VVector& b){return {{a[0]+b[0],a[1]+b[1],a[2]+b[2]}};}
-VVector vc_scale(const VVector& a,float s){return {{a[0]*s,a[1]*s,a[2]*s}};}
-float vc_plane(const port::track::VoronoiPlane& p,const VVector& q){return voronoi_dot(p.normal,q)-p.distance;}
-VVector vc_transform(const port::track::VoronoiTransform& t,const VVector& p){VVector out{};for(unsigned j=0;j<3;++j)out[j]=((t.basis[0][j]*p[0]+t.basis[1][j]*p[1])+t.basis[2][j]*p[2])+t.translation[j];return out;}
-std::vector<port::track::VoronoiPlaneNeighbor> vc_planes(const port::track::VoronoiPolyhedron& p,std::uint32_t code){
-    std::vector<port::track::VoronoiPlaneNeighbor> out;const auto index=code>>4;
-    if((code&15)==0){const auto& v=p.vertices.at(index);for(unsigned i=0;i<v.edges.size();++i)out.push_back({v.planes[i],(v.edges[i]<<4)|1u});}
-    else if((code&15)==1){const auto& e=p.edges.at(index);for(unsigned i=0;i<4;++i)out.push_back({e.planes[i],i<2?(e.vertices[i]<<4):(e.faces[i-2]<<4)|2u});}
-    else if((code&15)==2){const auto& f=p.faces.at(index);for(unsigned i=0;i<f.edges.size();++i)out.push_back({f.planes[i],(f.edges[i]<<4)|1u});}
-    else throw std::invalid_argument("Invalid Voronoi feature type");return out;
-}
-}
-namespace hp2::recovered {
-// Debug 0x001CCF28; E-0048-T05. Relative orthonormal transform (bTransposeMatrix + bMulMatrix).
-port::track::VoronoiTransform VCTransform::Sub_001CCF28(const port::track::VoronoiPose& end,const port::track::VoronoiPose& start){
-    port::track::VoronoiTransform t;for(unsigned i=0;i<3;++i)for(unsigned j=0;j<3;++j)t.basis[i][j]=voronoi_dot(end.basis[j],start.basis[i]);
-    const auto delta=vc_sub(start.position,end.position);for(unsigned j=0;j<3;++j)t.translation[j]=voronoi_dot(end.basis[j],delta);return t;
-}
-// Debug 0x001CD0C8; E-0048-T05.
-port::track::VoronoiTransformedFeature VCTransformedFeature::TransformVertex(const port::track::VoronoiPolyhedron& p,std::uint32_t code,const port::track::VoronoiTransform& t){port::track::VoronoiTransformedFeature out;out.feature=code;out.head=vc_transform(t,p.vertices.at(code>>4).position);return out;}
-// Debug 0x001CD138; E-0048-T05. Original head is edge endpoint 1; tail endpoint 0.
-port::track::VoronoiTransformedFeature VCTransformedFeature::TransformEdge(const port::track::VoronoiPolyhedron& p,std::uint32_t code,const port::track::VoronoiTransform& t){port::track::VoronoiTransformedFeature out;out.feature=code;const auto& e=p.edges.at(code>>4);out.head=vc_transform(t,p.vertices.at(e.vertices[1]).position);out.tail=vc_transform(t,p.vertices.at(e.vertices[0]).position);out.edge=vc_sub(out.head,out.tail);return out;}
-// Debug 0x001CD220; E-0048-T05. Original halfspace interval clipping and neighbor selection.
-bool VCVoronoiClip::ClipPlanes(port::track::VoronoiClip& clip,const port::track::VoronoiTransformedFeature& edge,const std::vector<port::track::VoronoiPlaneNeighbor>& planes){
-    for(const auto& p:planes){float tail=vc_plane(p.plane,edge.tail),head=vc_plane(p.plane,edge.head);
-        if(tail<0){if(head<0){clip.neighbor_min=p.feature;clip.neighbor_max=p.feature;return false;}tail=tail/(tail-head);
-            if(clip.minimum<tail){clip.minimum=tail;clip.neighbor_min=p.feature;if(clip.maximum<tail)return false;}}
-        else if(head<0){tail=tail/(tail-head);if(tail<clip.maximum){clip.maximum=tail;clip.neighbor_max=p.feature;if(tail<clip.minimum)return false;}}
-    }return true;
-}
-// Debug 0x001CD388; E-0048-T05. Squared penetration thresholds Debug00325A84/88 = 1e-5f.
-std::uint32_t VCVoronoiClip::ClipVertexPlanes(port::track::VoronoiClip& clip,const port::track::VoronoiPolyhedron& p,const port::track::VoronoiTransformedFeature& edge,const VVector* vertex,const std::vector<port::track::VoronoiPlaneNeighbor>& planes){
-    ClipPlanes(clip,edge,planes);if(clip.neighbor_min!=vc_null&&clip.neighbor_min==clip.neighbor_max)return clip.neighbor_min;
-    if(clip.neighbor_min!=vc_null){const auto v=vertex?*vertex:p.vertices.at(clip.neighbor_min>>4).position;const auto relative=vc_sub(vc_add(vc_scale(edge.edge,clip.minimum),edge.tail),v);
-        if(1.0e-5f<=voronoi_dot(relative,relative)){if(voronoi_dot(edge.edge,relative)>0)return clip.neighbor_min;}else clip.penetration=true;}
-    if(clip.neighbor_max!=vc_null){const auto v=vertex?*vertex:p.vertices.at(clip.neighbor_max>>4).position;const auto relative=vc_sub(vc_add(vc_scale(edge.edge,clip.maximum),edge.tail),v);
-        if(1.0e-5f<=voronoi_dot(relative,relative)){if(voronoi_dot(edge.edge,relative)<0)return clip.neighbor_max;}else clip.penetration=true;}
-    return vc_null;
-}
-// Debug 0x001CD590; E-0048-T05. Face derivative test thresholds Debug00325A8C/90 = 1e-4f.
-std::uint32_t VCVoronoiClip::ClipFacePlanes(port::track::VoronoiClip& clip,const port::track::VoronoiPolyhedron& p,const port::track::VoronoiTransformedFeature& edge,const port::track::VoronoiFace* face,const std::vector<port::track::VoronoiPlaneNeighbor>& planes){
-    const bool accepted=ClipPlanes(clip,edge,planes);const auto low=clip.neighbor_min,high=clip.neighbor_max;bool invalid=false;
-    if(low!=vc_null&&low==high)return low;
-    if(!accepted){if((low&15)==2){invalid=true;if((high&15)==1)return low;}else if((high&15)==2){invalid=true;if((low&15)==1)return high;}}
-    if(low!=vc_null&&(low&15)==2){const auto& f=face?*face:p.faces.at(low>>4);const auto point=vc_add(vc_scale(edge.edge,clip.minimum),edge.tail);const auto distance=vc_plane(f.plane,point);
-        if(1.0e-4f<=std::abs(distance)){if(distance*voronoi_dot(f.plane.normal,edge.edge)>0)return low;if(invalid)return high;}else clip.penetration=true;}
-    if(high!=vc_null&&(high&15)==2){const auto& f=face?*face:p.faces.at(high>>4);const auto point=vc_add(vc_scale(edge.edge,clip.maximum),edge.tail);const auto distance=vc_plane(f.plane,point);
-        if(1.0e-4f<=std::abs(distance)){if(distance*voronoi_dot(f.plane.normal,edge.edge)<0)return high;if(invalid)return low;}else clip.penetration=true;}
-    return vc_null;
-}
-}
-namespace {
-std::uint32_t& vc_first(port::track::VoronoiWitness& w){return w.switch_state==1?w.feature1:w.feature2;}
-std::uint32_t& vc_second(port::track::VoronoiWitness& w){return w.switch_state==2?w.feature1:w.feature2;}
-VVector& vc_point1(port::track::VoronoiWitness& w){return w.switch_state==1?w.point1:w.point2;}
-VVector& vc_point2(port::track::VoronoiWitness& w){return w.switch_state==2?w.point1:w.point2;}
-// E-0099-W38, port observations only; XYZ algorithms remain canonical E-0048.
-using PointWrite=port::track::VoronoiPointWrite;
-void vc_store_point1(port::track::VoronoiWitness& w,const VVector& p,PointWrite how,std::uint32_t site=0){const unsigned i=w.switch_state==1?0:1;vc_point1(w)=p;w.port_point_writes[i]=how;w.port_point_write_sites[i]=site;}
-void vc_store_point2(port::track::VoronoiWitness& w,const VVector& p,PointWrite how,std::uint32_t site=0){const unsigned i=w.switch_state==2?0:1;vc_point2(w)=p;w.port_point_writes[i]=how;w.port_point_write_sites[i]=site;}
 
-}
-namespace hp2::recovered {
-// Debug 0x001CDA08; E-0048-T05.
-int VCWitness::CheckVertexVertex(port::track::VoronoiWitness& w,const port::track::VoronoiPolyhedron& a,const port::track::VoronoiPolyhedron& b,const port::track::VoronoiTransform& ab,const port::track::VoronoiTransform& ba){
-    const auto first=vc_first(w),second=vc_second(w);const auto xa=VCTransformedFeature::TransformVertex(a,first,ab);
-    for(const auto& p:vc_planes(b,second))if(vc_plane(p.plane,xa.head)<0){vc_second(w)=p.feature;return 0;}
-    const auto xb=VCTransformedFeature::TransformVertex(b,second,ba);
-    for(const auto& p:vc_planes(a,first))if(vc_plane(p.plane,xb.head)<0){vc_first(w)=p.feature;return 0;}
-    const auto& p1=a.vertices.at(first>>4).position;const auto& p2=b.vertices.at(second>>4).position;const auto difference=vc_sub(p1,xb.head);
-    w.distance=std::sqrt(voronoi_dot(difference,difference));vc_store_point1(w,p1,PointWrite::unknown_w,0x1cdc88);vc_store_point2(w,p2,PointWrite::unknown_w,0x1cdcc0);return 1.0e-5f<w.distance?1:2;
-}
-// Debug 0x001CDD00; E-0048-T05.
-int VCWitness::CheckVertexEdge(port::track::VoronoiWitness& w,const port::track::VoronoiPolyhedron& a,const port::track::VoronoiPolyhedron& b,const port::track::VoronoiTransform& ab,const port::track::VoronoiTransform& ba){
-    const auto first=vc_first(w),second=vc_second(w);const auto xa=VCTransformedFeature::TransformVertex(a,first,ab);
-    for(const auto& p:vc_planes(b,second))if(vc_plane(p.plane,xa.head)<0){vc_second(w)=p.feature;return 0;}
-    const auto xb=VCTransformedFeature::TransformEdge(b,second,ba);port::track::VoronoiClip clip;const auto& v=a.vertices.at(first>>4).position;
-    const auto neighbor=VCVoronoiClip::ClipVertexPlanes(clip,a,xb,&v,vc_planes(a,first));if(neighbor!=vc_null){vc_first(w)=neighbor;return 0;}
-    vc_store_point1(w,v,clip.penetration?PointWrite::unknown_w:PointWrite::vector_w0,clip.penetration?0x1cdea8:0);
-    if(clip.penetration){w.distance=0;vc_store_point2(w,xa.head,PointWrite::vector_w1);return 2;}
-    const auto& edge=b.edges.at(second>>4);const auto& tail=b.vertices.at(edge.vertices[0]).position;const auto direction=voronoi_direction(edge);
-    vc_store_point2(w,vc_add(tail,vc_scale(direction,voronoi_dot(vc_sub(xa.head,tail),direction))),PointWrite::vector_w0);const auto diff=vc_sub(xa.head,vc_point2(w));w.distance=std::sqrt(voronoi_dot(diff,diff));return 1;
-}
-}
-namespace hp2::recovered {
-// Debug 0x001CE038; E-0048-T05. Vertex-face feature progression and signed closest-plane result.
-int VCWitness::CheckVertexFace(port::track::VoronoiWitness& w,const port::track::VoronoiPolyhedron& a,const port::track::VoronoiPolyhedron& b,const port::track::VoronoiTransform& ab,const port::track::VoronoiTransform&){
-    const auto first=vc_first(w),second=vc_second(w);const auto& vertex=a.vertices.at(first>>4);const auto xa=VCTransformedFeature::TransformVertex(a,first,ab);
-    const auto planes=vc_planes(b,second);float minimum=0;std::uint32_t neighbor=vc_null;
-    for(const auto& p:planes){const auto d=vc_plane(p.plane,xa.head);if(d<minimum){minimum=d;neighbor=p.feature;}}
-    if(neighbor!=vc_null){vc_second(w)=neighbor;return 0;}
-    const auto* face=&b.faces.at(second>>4);const float distance=vc_plane(face->plane,xa.head);
-    if(std::abs(distance)<1.0e-4f){w.distance=0;vc_store_point1(w,vertex.position,PointWrite::xyz_only);vc_store_point2(w,xa.head,PointWrite::vector_w1);return 2;}
-    for(auto edge_index:vertex.edges){const auto& edge=a.edges.at(edge_index);const auto other=edge.vertices[0]==(first>>4)?edge.vertices[1]:edge.vertices[0];const auto transformed=VCTransformedFeature::TransformVertex(a,other<<4,ab);
-        const auto other_distance=vc_plane(face->plane,transformed.head);if((distance<0&&distance<other_distance)||(distance>0&&other_distance<distance)){vc_first(w)=(edge_index<<4)|1u;return 0;}}
-    if(distance>0){vc_store_point1(w,vertex.position,PointWrite::xyz_only);vc_store_point2(w,vc_add(xa.head,vc_scale(face->plane.normal,-distance)),PointWrite::vector_w0);w.distance=distance;return 1;}
-    float best=distance;for(unsigned i=0;i<b.faces.size();++i){const auto d=vc_plane(b.faces[i].plane,xa.head);if(best<d){best=d;face=&b.faces[i];vc_second(w)=(i<<4)|2u;}}
-    w.distance=best;vc_store_point1(w,vertex.position,PointWrite::xyz_only);vc_store_point2(w,vc_add(xa.head,vc_scale(face->plane.normal,-best)),PointWrite::vector_w0);return best<0?2:1;
-}
-}
-namespace hp2::recovered {
-// Debug 0x001CE5F8; E-0048-T05.
-int VCWitness::SubCheckEdgeEdge(port::track::VoronoiWitness& w,const port::track::VoronoiPolyhedron& p,std::uint32_t code,const port::track::VoronoiTransformedFeature& edge,int pos){
-    const auto planes=vc_planes(p,code);port::track::VoronoiClip clip;
-    auto neighbor=VCVoronoiClip::ClipVertexPlanes(clip,p,edge,nullptr,{planes.begin(),planes.begin()+2});
-    if(neighbor==vc_null){if(clip.penetration){w.distance=0;return 2;}
-        neighbor=VCVoronoiClip::ClipFacePlanes(clip,p,edge,nullptr,{planes.begin()+2,planes.end()});
-        if(neighbor==vc_null){if(clip.penetration){w.distance=0;return 2;}return 1;}}
-    if(pos==1)vc_first(w)=neighbor;else vc_second(w)=neighbor;return 0;
-}
-// Debug 0x001CE6D8; E-0048-T05.
-int VCWitness::CheckEdgeEdge(port::track::VoronoiWitness& w,const port::track::VoronoiPolyhedron& a,const port::track::VoronoiPolyhedron& b,const port::track::VoronoiTransform& ab,const port::track::VoronoiTransform& ba){
-    const auto first=vc_first(w),second=vc_second(w);const auto xa=VCTransformedFeature::TransformEdge(a,first,ab);auto status=SubCheckEdgeEdge(w,b,second,xa,2);if(status!=1)return status;
-    const auto xb=VCTransformedFeature::TransformEdge(b,second,ba);status=SubCheckEdgeEdge(w,a,first,xb,1);if(status!=1)return status;
-    const auto& ea=a.edges.at(first>>4);const auto& eb=b.edges.at(second>>4);const auto& tail=a.vertices.at(ea.vertices[0]).position;const auto& head=a.vertices.at(ea.vertices[1]).position;
-    const auto direction1=voronoi_direction(ea),direction2=voronoi_direction(eb);VVector transformed_direction{};for(unsigned j=0;j<3;++j)transformed_direction[j]=(ba.basis[0][j]*direction2[0]+ba.basis[1][j]*direction2[1])+ba.basis[2][j]*direction2[2];
-    const auto delta=vc_sub(xb.tail,tail);const float dot=voronoi_dot(transformed_direction,direction1);const float denominator=1.0f-dot*dot;const float numerator=voronoi_dot(delta,vc_sub(direction1,vc_scale(transformed_direction,dot)));
-    if(denominator<1.0e-6f)vc_store_point1(w,numerator>0?head:tail,PointWrite::vector_w0);
-    else{float lambda=numerator/denominator;if(lambda<0)lambda=0;else{const auto length=vc_sub(head,tail);const float maximum=std::sqrt(voronoi_dot(length,length));if(lambda>maximum)lambda=maximum;}vc_store_point1(w,vc_add(tail,vc_scale(direction1,lambda)),PointWrite::vector_w0);}
-    const auto projected=vc_transform(ab,vc_point1(w));const auto& tail2=b.vertices.at(eb.vertices[0]).position;vc_store_point2(w,vc_add(tail2,vc_scale(direction2,voronoi_dot(vc_sub(projected,tail2),direction2))),PointWrite::vector_w0);
-    const auto distance=vc_sub(projected,vc_point2(w));w.distance=std::sqrt(voronoi_dot(distance,distance));return 1;
-}
-}
-namespace {
-// Port storage helper for the identical closest-edge arithmetic in Debug001CE6D8/001CEC10.
-std::pair<VVector,VVector> vc_edge_points(const port::track::VoronoiPolyhedron& a,std::uint32_t first,const port::track::VoronoiPolyhedron& b,std::uint32_t second,const port::track::VoronoiTransform& ab,const port::track::VoronoiTransform& ba){
-    const auto& ea=a.edges.at(first>>4);const auto& eb=b.edges.at(second>>4);const auto& tail=a.vertices.at(ea.vertices[0]).position;const auto& head=a.vertices.at(ea.vertices[1]).position;
-    const auto direction1=voronoi_direction(ea),direction2=voronoi_direction(eb);VVector transformed_direction{};for(unsigned j=0;j<3;++j)transformed_direction[j]=(ba.basis[0][j]*direction2[0]+ba.basis[1][j]*direction2[1])+ba.basis[2][j]*direction2[2];
-    const auto tail_b_in_a=vc_transform(ba,b.vertices.at(eb.vertices[0]).position);const auto delta=vc_sub(tail_b_in_a,tail);const float dot=voronoi_dot(transformed_direction,direction1);const float denominator=1.0f-dot*dot;const float numerator=voronoi_dot(delta,vc_sub(direction1,vc_scale(transformed_direction,dot)));
-    VVector point1{};if(denominator<1.0e-6f)point1=numerator>0?head:tail;
-    else{float lambda=numerator/denominator;if(lambda<0)lambda=0;else{const auto length=vc_sub(head,tail);const float maximum=std::sqrt(voronoi_dot(length,length));if(lambda>maximum)lambda=maximum;}point1=vc_add(tail,vc_scale(direction1,lambda));}
-    const auto projected=vc_transform(ab,point1);const auto& tail2=b.vertices.at(eb.vertices[0]).position;auto point2=vc_add(tail2,vc_scale(direction2,voronoi_dot(vc_sub(projected,tail2),direction2)));return {projected,point2};
-}
-}
-namespace hp2::recovered {
-// Debug 0x001CEC10; E-0048-T05. Edge-face clipping and original closest-face-edge feature selection.
-int VCWitness::CheckEdgeFace(port::track::VoronoiWitness& w,const port::track::VoronoiPolyhedron& a,const port::track::VoronoiPolyhedron& b,const port::track::VoronoiTransform& ab,const port::track::VoronoiTransform& ba){
-    const auto first=vc_first(w),second=vc_second(w);const auto& edge=a.edges.at(first>>4);const auto& face=b.faces.at(second>>4);const auto xa=VCTransformedFeature::TransformEdge(a,first,ab);port::track::VoronoiClip clip;
-    if(VCVoronoiClip::ClipPlanes(clip,xa,vc_planes(b,second))){
-        const auto minimum=vc_add(vc_scale(xa.edge,clip.minimum),xa.tail),maximum=vc_add(vc_scale(xa.edge,clip.maximum),xa.tail);
-        const float low=vc_plane(face.plane,minimum),high=vc_plane(face.plane,maximum);if(low*high<=0){w.distance=0;return 2;}
-        const float derivative=voronoi_dot(face.plane.normal,xa.edge);
-        if(low*derivative>0){if(clip.neighbor_min!=vc_null)vc_second(w)=clip.neighbor_min;else vc_first(w)=edge.vertices[0]<<4;}
-        else{if(clip.neighbor_max!=vc_null)vc_second(w)=clip.neighbor_max;else vc_first(w)=edge.vertices[1]<<4;}return 0;
+void collisionFaceSetPlanes(CollisionFeature* face)
+{
+    for (int index = 0; index < face->adjacentCount; ++index) {
+        CollisionPlane* plane = &face->adjacent[index];
+        CollisionFeature* edge = plane->feature;
+        CollisionFeature* endpoint = edge->adjacent[0].feature;
+        float direction[3];
+        for (int lane = 0; lane < 3; ++lane) direction[lane] = (float)edge->encodedDirection[lane] * 0.0001220703125f;
+        for (int lane = 0; lane < 3; ++lane) {
+            const int next = (lane + 1) % 3, last = (lane + 2) % 3;
+            const float positive = face->vector[next] * direction[last];
+            const float negative = direction[next] * face->vector[last];
+            plane->normal[lane] = positive - negative;
+        }
+        plane->offset = collisionGeometryDot3(plane->normal, endpoint->vector);
+        const CollisionFeature* nextEdge = collisionNextEdgeInFace(endpoint, edge, face);
+        const CollisionFeature* other = nextEdge->adjacent[0].feature;
+        if (other == endpoint) other = nextEdge->adjacent[1].feature;
+        const float distance = collisionGeometryDot3(plane->normal, other->vector) - plane->offset;
+        if (distance < 0.0f) {
+            for (int lane = 0; lane < 3; ++lane) plane->normal[lane] = 0.0f - plane->normal[lane];
+            plane->offset = collisionGeometryDot3(plane->normal, endpoint->vector);
+        }
     }
-    float minimum_distance=0;std::uint32_t chosen_edge=vc_null,chosen_vertex=vc_null;
-    for(unsigned i=0;i<face.edges.size();++i){const auto code=(face.edges[i]<<4)|1u;const auto points=vc_edge_points(a,first,b,code,ab,ba);const auto delta=vc_sub(points.first,points.second);const float distance=std::sqrt(voronoi_dot(delta,delta));
-        port::track::VoronoiClip edge_clip;const auto planes=vc_planes(b,code);const auto neighbor=VCVoronoiClip::ClipVertexPlanes(edge_clip,b,xa,nullptr,{planes.begin(),planes.begin()+2});
-        if(edge_clip.penetration)return 2;
-        if(i==0||distance<minimum_distance){minimum_distance=distance;chosen_edge=code;chosen_vertex=neighbor;}
+}
+
+void collisionFaceMove(CollisionFeature* face, const float delta[4])
+{
+    face->offset = face->offset + collisionGeometryDot3(delta, face->vector);
+}
+
+CollisionGeometry* collisionGeometryInitialize(CollisionGeometry* geometry)
+{
+    geometry->ownsStorage = 1;
+    geometry->display = NULL;
+    geometry->vertexCount = geometry->edgeCount = geometry->faceCount = geometry->planeCount = 0;
+    geometry->vertexCapacity = geometry->edgeCapacity = geometry->faceCapacity = geometry->planeCapacity = 0;
+    geometry->vertices = geometry->edges = geometry->faces = NULL;
+    geometry->planes = NULL;
+    return geometry;
+}
+
+void collisionGeometryBind(CollisionGeometry* geometry, CollisionFeature* vertices, int16_t vertexCapacity,
+                           CollisionFeature* edges, int16_t edgeCapacity,
+                           CollisionFeature* faces, int16_t faceCapacity,
+                           CollisionPlane* planes, int16_t planeCapacity)
+{
+    geometry->vertices = vertices; geometry->edges = edges; geometry->faces = faces; geometry->planes = planes;
+    geometry->vertexCapacity = vertexCapacity; geometry->edgeCapacity = edgeCapacity;
+    geometry->faceCapacity = faceCapacity; geometry->planeCapacity = planeCapacity;
+    geometry->ownsStorage = 0;
+    geometry->vertexCount = geometry->edgeCount = geometry->faceCount = geometry->planeCount = 0;
+}
+
+CollisionPlane* collisionGeometryNewPlanes(CollisionGeometry* geometry, int32_t count)
+{
+    const int32_t oldCount = geometry->planeCount;
+    if (geometry->planeCapacity < oldCount + count) return NULL;
+    CollisionPlane* result = geometry->planes + oldCount;
+    geometry->planeCount = (int16_t)(oldCount + count);
+    for (int32_t index = 0; index < count; ++index) {
+        result[index].normal[0] = result[index].normal[1] = 0.0f;
+        result[index].normal[2] = 1.0f;
+        result[index].offset = 0.0f; result[index].feature = NULL;
     }
-    if(chosen_edge==vc_null)throw std::invalid_argument("Voronoi face has no edges");vc_second(w)=chosen_vertex==vc_null?chosen_edge:chosen_vertex;return 0;
-}
-// Debug 0x001CF360; E-0048-T05. Original feature pair dispatch, persistent feature cache, 80-step bound.
-int VCWitness::VClip(port::track::VoronoiWitness& w,const port::track::VoronoiPolyhedron& a,const port::track::VoronoiPose& pose_a,const port::track::VoronoiPolyhedron& b,const port::track::VoronoiPose& pose_b){
-    const auto ab=VCTransform::Sub_001CCF28(pose_b,pose_a),ba=VCTransform::Sub_001CCF28(pose_a,pose_b);int status=0;
-    for(unsigned iteration=0;iteration<80;++iteration){const auto type1=w.feature1&15,type2=w.feature2&15;
-        if(type1==0&&type2==0){w.switch_state=1;status=CheckVertexVertex(w,a,b,ab,ba);}
-        else if(type1==0&&type2==1){w.switch_state=1;status=CheckVertexEdge(w,a,b,ab,ba);}
-        else if(type1==1&&type2==0){w.switch_state=2;status=CheckVertexEdge(w,b,a,ba,ab);}
-        else if(type1==0&&type2==2){w.switch_state=1;status=CheckVertexFace(w,a,b,ab,ba);}
-        else if(type1==2&&type2==0){w.switch_state=2;status=CheckVertexFace(w,b,a,ba,ab);}
-        else if(type1==1&&type2==1){w.switch_state=1;status=CheckEdgeEdge(w,a,b,ab,ba);}
-        else if(type1==1&&type2==2){w.switch_state=1;status=CheckEdgeFace(w,a,b,ab,ba);}
-        else if(type1==2&&type2==1){w.switch_state=2;status=CheckEdgeFace(w,b,a,ba,ab);}
-        else if(type1>2||type2>2)throw std::invalid_argument("Invalid Voronoi witness feature type");
-        if(status!=0)return status;
-    }return status;
-}
+    return result;
 }
 
-namespace hp2::debug {
-// Debug001CD860; E-0099-W38. Original voronoiclip.cpp; CP padding remains untouched.
-void Sub_001CD860(::port::driving::Memory& m,std::uint32_t p,std::uint32_t p1,std::uint32_t p2){
- for(unsigned offset:{0x20u,0x30u})for(unsigned axis=0;axis<3;++axis)m.word(p+offset+axis*4,0);
- m.word(p+4,m.word(p1+0x20));m.word(p+8,m.word(p2+0x20));m.word(p+0xc,p1);m.word(p+0x10,p2);
- m.word(p,0);m.word(p+0x40,0);m.word(p+0x44,0);m.word(p+0x48,0);
-}
-}
-
-namespace port::race::detail {
-// Port-only read view of the original already-built Voronoi planes. Never
-// regenerate normals/distances: these exact raw floats feed the canonical walk.
-::port::track::VoronoiPolyhedron shared_voronoi_planes(const ::port::driving::Memory& m,std::uint32_t poly){
- auto shape=::port::race::read_collision_polyhedron(m,poly);
- const auto plane=[&](std::uint32_t p){return ::port::track::VoronoiPlane{{{m.scalar(p+4),m.scalar(p+8),m.scalar(p+12)}},m.scalar(p+16)};};
- for(unsigned i=0;i<shape.vertices.size();++i){const auto record=m.word(poly+0x20)+20*i,planes=m.word(record+16);for(unsigned j=0;j<m.byte(record+1);++j)shape.vertices[i].planes.push_back(plane(planes+24*j));}
- for(unsigned i=0;i<shape.edges.size();++i){const auto planes=m.word(m.word(poly+0x24)+12*i+8);for(unsigned j=0;j<4;++j)shape.edges[i].planes[j]=plane(planes+24*j);}
- for(unsigned i=0;i<shape.faces.size();++i){const auto record=m.word(poly+0x28)+24*i,planes=m.word(record+20);for(unsigned j=0;j<m.byte(record+1);++j)shape.faces[i].planes.push_back(plane(planes+24*j));}
- return shape;
-}
-::port::track::VoronoiPose shared_voronoi_pose(const ::port::driving::Memory& m,std::uint32_t r,std::uint32_t p){
- const auto matrix=m.matrix(r);if(matrix[3]!=0||matrix[7]!=0||matrix[11]!=0||matrix[12]!=0||matrix[13]!=0||matrix[14]!=0||matrix[15]!=1)
-  hp2::not_implemented("0x001CCF28","Shared VClip full non-homogeneous rotation transform is not reconstructed");
- ::port::track::VoronoiPose pose;for(unsigned i=0;i<3;++i){for(unsigned j=0;j<3;++j)pose.basis[i][j]=matrix[i*4+j];pose.position[i]=m.scalar(p+i*4);}return pose;
-}
-}
-namespace hp2::recovered {
-// Debug001D0A50, E-0099-W38. Pointer differences use actual20/12/24-byte arrays.
-std::uint32_t VCPolyhedron::GetFeatureCode(const ::port::driving::Memory& m,std::uint32_t poly,std::uint32_t feature){
- if(!feature)return 0xffffffffu;const auto type=m.byte(feature);if(type>2)return 0xffffffffu;
- const unsigned strides[]{20,12,24};const auto base=m.word(poly+0x20+type*4);const auto count=m.signed_half(poly+0x10+type*2);
- if(count<0||feature<base||(feature-base)%strides[type]||(feature-base)/strides[type]>=static_cast<unsigned>(count))throw std::out_of_range("Original VC feature pointer outside its typed array");
- return ((feature-base)/strides[type]<<4)|type;
-}
-// Debug001D0B08, E-0099-W38. Invalid feature codes return null as in the original.
-std::uint32_t VCPolyhedron::GetFeature(const ::port::driving::Memory& m,std::uint32_t poly,std::uint32_t code){
- if(code==0xffffffffu||(code&15)>2)return 0;const auto type=code&15;const unsigned strides[]{20,12,24};const auto count=m.signed_half(poly+0x10+type*2);
- if(count<0||(code>>4)>=static_cast<unsigned>(count))throw std::out_of_range("Original VC feature code outside its typed array");
- return m.word(poly+0x20+type*4)+(code>>4)*strides[type];
-}
-// Debug001CF360, E-0099-W38. Real memory identity, feature cache and source planes;
-// canonical E-0048 finite XYZ walk reused after fresh dispatch/CP-store review.
-int VCWitness::VClip(::port::driving::Memory& m,std::uint32_t p,std::uint32_t r1,std::uint32_t t1,std::uint32_t r2,std::uint32_t t2,std::optional<std::uint32_t> padding){
- if(m.word(0x328408))hp2::not_implemented("0x001D0E80","Original active VClip polygon-print traversal is not reconstructed");
- const auto p1=m.word(p+0xc),p2=m.word(p+0x10);const auto a=::port::race::detail::shared_voronoi_planes(m,p1),b=::port::race::detail::shared_voronoi_planes(m,p2);
- const auto pose1=::port::race::detail::shared_voronoi_pose(m,r1,t1),pose2=::port::race::detail::shared_voronoi_pose(m,r2,t2);
- ::port::track::VoronoiWitness w;w.feature1=VCPolyhedron::GetFeatureCode(m,p1,m.word(p+4));w.feature2=VCPolyhedron::GetFeatureCode(m,p2,m.word(p+8));w.distance=m.scalar(p+0x40);w.switch_state=m.signed_word(p);
- for(unsigned i=0;i<3;++i){w.point1[i]=m.scalar(p+0x20+i*4);w.point2[i]=m.scalar(p+0x30+i*4);}
- const int status=VClip(w,a,pose1,b,pose2);
- m.word(p,static_cast<std::uint32_t>(w.switch_state));m.word(p+4,VCPolyhedron::GetFeature(m,p1,w.feature1));m.word(p+8,VCPolyhedron::GetFeature(m,p2,w.feature2));m.scalar(p+0x40,w.distance);
- for(unsigned point=0;point<2;++point){
-  using Write=::port::track::VoronoiPointWrite;const auto how=w.port_point_writes[point];if(how==Write::none)continue;
-  if(how==Write::unknown_w&&!padding){
-   switch(w.port_point_write_sites[point]){case 0x1cdea8:hp2::not_implemented("0x001CDEA8","Original CP write consumes an unknown local vector pad; explicit port policy is required");
-    case 0x1cdcc0:hp2::not_implemented("0x001CDCC0","Original CP write consumes an unknown local vector pad; explicit port policy is required");
-    default:hp2::not_implemented("0x001CDC88","Original CP write consumes an unknown local vector pad; explicit port policy is required");}
-  }
-  const auto dest=p+0x20+point*16;const auto& value=point?w.point2:w.point1;for(unsigned i=0;i<3;++i)m.scalar(dest+i*4,value[i]);
-  if(how==Write::vector_w0)m.word(dest+12,0);else if(how==Write::vector_w1)m.word(dest+12,0x3f800000u);else if(how==Write::unknown_w)m.word(dest+12,*padding);
- }
- return status;
-}
+CollisionFeature* collisionGeometryNewVertex(CollisionGeometry* geometry, const float point[3],
+                                            int8_t adjacentCount, CollisionPlane* adjacent)
+{
+    if (geometry->vertexCount >= geometry->vertexCapacity) return NULL;
+    CollisionFeature* vertex = &geometry->vertices[geometry->vertexCount++];
+    vertex->kind = 0; vertex->adjacentCount = adjacentCount; vertex->adjacent = adjacent;
+    memcpy(vertex->vector, point, sizeof(vertex->vector));
+    return vertex;
 }
 
-namespace hp2::recovered {
-// Debug001CFFA8, E-0099-W38; original voronoiclip.cpp. Node links stay untouched.
-void VCPolyhedron::Sub_001CFFA8(::port::driving::Memory& m,std::uint32_t p){
- m.word(p+8,1);for(unsigned i=0;i<8;++i)m.half(p+0x10+i*2,0);for(unsigned i=0;i<4;++i)m.word(p+0x20+i*4,0);m.word(p+0xc,0);
-}
+CollisionFeature* collisionGeometryNewEdge(CollisionGeometry* geometry, const float direction[3],
+                                          int8_t adjacentCount, CollisionPlane* adjacent)
+{
+    if (geometry->edgeCount >= geometry->edgeCapacity) return NULL;
+    CollisionFeature* edge = &geometry->edges[geometry->edgeCount++];
+    edge->kind = 1; edge->adjacentCount = adjacentCount; edge->adjacent = adjacent;
+    for (int lane = 0; lane < 3; ++lane) {
+        const float scaled = direction[lane] * 8192.0f;
+        edge->encodedDirection[lane] = (int16_t)(uint16_t)(uint32_t)(int32_t)scaled;
+    }
+    return edge;
 }
 
-#include "game_core/indep/inc/Replay.hpp"
-namespace hp2::recovered {
-// Debug001CD918, E-0099-W76. Actual feature codes, not pointer serialization;
-// fresh MIPS confirms P1+C/P2+10, F1+4/F2+8, SwitchState+0, CPs+20/+30.
-void VCWitness::DoSnapshot(::port::driving::Memory& m,std::uint32_t w,std::uint32_t snapshot){hp2::debug::ReplaySnapshot s(m,snapshot);s.BeginSection(w,0x2afbf0);::port::driving::Memory::Temporary codes(m,8);const auto p=codes.address();m.word(p,VCPolyhedron::GetFeatureCode(m,m.word(w+0xc),m.word(w+4)));m.word(p+4,VCPolyhedron::GetFeatureCode(m,m.word(w+0x10),m.word(w+8)));s.MoveData(p,4,4,0);s.MoveData(p+4,4,4,0);if(m.byte(snapshot+0x3d)){m.word(w+4,VCPolyhedron::GetFeature(m,m.word(w+0xc),m.word(p)));m.word(w+8,VCPolyhedron::GetFeature(m,m.word(w+0x10),m.word(p+4)));}s.MoveData(w,4,4,1);s.MoveData(w+0x20,12);s.MoveData(w+0x30,12);s.MoveData(w+0x40,4);s.EndSection();}
+CollisionFeature* collisionGeometryNewFace(CollisionGeometry* geometry, const float normal[3],
+                                          int8_t adjacentCount, CollisionPlane* adjacent, float offset)
+{
+    if (geometry->faceCount >= geometry->faceCapacity) return NULL;
+    CollisionFeature* face = &geometry->faces[geometry->faceCount++];
+    face->kind = 2; face->adjacentCount = adjacentCount; face->adjacent = adjacent; face->offset = offset;
+    memcpy(face->vector, normal, sizeof(face->vector));
+    return face;
+}
+
+void collisionGeometrySetPlanes(CollisionGeometry* geometry)
+{
+    for (int index = 0; index < geometry->vertexCount; ++index) collisionVertexSetPlanes(&geometry->vertices[index]);
+    for (int index = 0; index < geometry->faceCount; ++index) collisionFaceSetPlanes(&geometry->faces[index]);
+    for (int index = 0; index < geometry->edgeCount; ++index) collisionEdgeSetPlanes(&geometry->edges[index]);
+}
+
+uint32_t collisionGeometryFeatureCode(const CollisionGeometry* geometry, const CollisionFeature* feature)
+{
+    if (!feature) return UINT32_MAX;
+    if (feature->kind == 0) return (uint32_t)(feature - geometry->vertices) << 4;
+    if (feature->kind == 1) return ((uint32_t)(feature - geometry->edges) << 4) | 1u;
+    if (feature->kind == 2) return ((uint32_t)(feature - geometry->faces) << 4) | 2u;
+    return UINT32_MAX;
+}
+
+CollisionFeature* collisionGeometryFeature(const CollisionGeometry* geometry, uint32_t code)
+{
+    if (code == UINT32_MAX) return NULL;
+    const uint32_t index = code >> 4;
+    switch (code & 15u) {
+    case 0: return &geometry->vertices[index];
+    case 1: return &geometry->edges[index];
+    case 2: return &geometry->faces[index];
+    default: return NULL;
+    }
+}
+
+void collisionGeometryEncodeLinks(const CollisionGeometry* geometry, CollisionGeometryLinks* links)
+{
+    for(int index=0;index<geometry->vertexCount;++index) links->vertexPlanes[index]=(uint32_t)(geometry->vertices[index].adjacent-geometry->planes);
+    for(int index=0;index<geometry->edgeCount;++index) links->edgePlanes[index]=(uint32_t)(geometry->edges[index].adjacent-geometry->planes);
+    for(int index=0;index<geometry->faceCount;++index) links->facePlanes[index]=(uint32_t)(geometry->faces[index].adjacent-geometry->planes);
+    for(int index=0;index<geometry->planeCount;++index) links->planeFeatures[index]=collisionGeometryFeatureCode(geometry,geometry->planes[index].feature);
+}
+
+void collisionGeometryDecodeLinks(CollisionGeometry* geometry, const CollisionGeometryLinks* links)
+{
+    for(int index=0;index<geometry->vertexCount;++index) geometry->vertices[index].adjacent=geometry->planes+links->vertexPlanes[index];
+    for(int index=0;index<geometry->edgeCount;++index) geometry->edges[index].adjacent=geometry->planes+links->edgePlanes[index];
+    for(int index=0;index<geometry->faceCount;++index) geometry->faces[index].adjacent=geometry->planes+links->facePlanes[index];
+    for(int index=0;index<geometry->planeCount;++index) geometry->planes[index].feature=collisionGeometryFeature(geometry,links->planeFeatures[index]);
+}
+
+void collisionGeometryBindIndexed(CollisionGeometry* geometry, CollisionFeature* vertices, int16_t vertexCount,
+                                  CollisionFeature* edges, int16_t edgeCount,
+                                  CollisionFeature* faces, int16_t faceCount,
+                                  CollisionPlane* planes, int16_t planeCount,
+                                  const CollisionGeometryLinks* links)
+{
+    collisionGeometryBind(geometry,vertices,vertexCount,edges,edgeCount,faces,faceCount,planes,planeCount);
+    geometry->vertexCount=vertexCount;geometry->edgeCount=edgeCount;
+    geometry->faceCount=faceCount;geometry->planeCount=planeCount;
+    collisionGeometryDecodeLinks(geometry,links);
+}
+
+float* collisionRelativeTransform(float output[16], const float firstFrame[16],
+                                  const float firstPosition[4], const float secondFrame[16],
+                                  const float secondPosition[4])
+{
+    float relative[16], transposed[16];
+    memcpy(relative, secondFrame, sizeof(relative));
+    for (int lane = 0; lane < 4; ++lane) {
+        const float translated = relative[12 + lane] + secondPosition[lane];
+        relative[12 + lane] = translated - firstPosition[lane];
+    }
+    relative[15] = 1.0f;
+    vectorMatrixTranspose(transposed, firstFrame);
+    vectorMatrixMultiply(output, transposed, relative);
+    return output;
+}
+
+static float dot3(const float first[3],const float second[3])
+{
+    const float x=first[0]*second[0],y=first[1]*second[1],z=first[2]*second[2];
+    return (x+y)+z;
+}
+
+static void replaceFeature(CollisionWitness* witness,int32_t side,CollisionFeature* feature)
+{
+    if(side==1)witness->first=feature;else witness->second=feature;
+}
+
+int32_t collisionWitnessVertexEdge(CollisionWitness* witness,const float featureFrame[16],
+                                   const float otherFrame[16],CollisionTransformedVertex* vertex,
+                                   CollisionTransformedEdge* edge)
+{
+    CollisionFeature* first=witness->side==1?witness->first:witness->second;
+    CollisionFeature* second=witness->side==2?witness->first:witness->second;
+    collisionTransformVertex(vertex,featureFrame,first);
+    for(int index=0;index<4;++index) {
+        const CollisionPlane* plane=&second->adjacent[index];
+        if(dot3(plane->normal,vertex->point)-plane->offset<0.0f) {
+            replaceFeature(witness,3-witness->side,plane->feature);
+            return 0;
+        }
+    }
+    collisionTransformEdge(edge,otherFrame,second);
+    CollisionClip clip;collisionClipInitialize(&clip);
+    const float point[4]={first->vector[0],first->vector[1],first->vector[2],0.0f};
+    CollisionFeature* changed=collisionClipVertex(&clip,edge,point,first->adjacent,first->adjacentCount);
+    if(changed) {
+        replaceFeature(witness,witness->side,changed);
+        return 0;
+    }
+    float* firstPoint=witness->side==1?witness->firstPoint:witness->secondPoint;
+    float* secondPoint=witness->side==2?witness->firstPoint:witness->secondPoint;
+    memcpy(firstPoint,point,sizeof(point));
+    if(clip.boundary) {
+        witness->distance=0.0f;
+        memcpy(secondPoint,vertex->point,4*sizeof(float));
+        return 2;
+    }
+    const CollisionFeature* endpoint=second->adjacent[0].feature;
+    float direction[3],delta[3];
+    for(int lane=0;lane<3;++lane) {
+        direction[lane]=(float)second->encodedDirection[lane]*0.0001220703125f;
+        delta[lane]=vertex->point[lane]-endpoint->vector[lane];
+    }
+    const float fraction=dot3(delta,direction);
+    for(int lane=0;lane<3;++lane) {
+        const float scaled=direction[lane]*fraction;
+        secondPoint[lane]=endpoint->vector[lane]+scaled;
+        delta[lane]=vertex->point[lane]-secondPoint[lane];
+    }
+    secondPoint[3]=0.0f;
+    witness->distance=sqrtf(dot3(delta,delta));
+    return 1;
+}
+
+static float planeDistance(const CollisionFeature* face, const float point[4])
+{
+    return dot3(face->vector, point) - face->offset;
+}
+
+static void projectPlane(float output[4], const float point[4], const CollisionFeature* face, float distance)
+{
+    const float scale = -distance;
+    for (int lane = 0; lane < 3; ++lane) {
+        const float component = face->vector[lane] * scale;
+        output[lane] = point[lane] + component;
+    }
+    output[3] = 0.0f;
+}
+
+int32_t collisionWitnessVertexFace(CollisionWitness* witness, const float featureFrame[16],
+                                   CollisionTransformedVertex* transformed)
+{
+    CollisionFeature* vertex = witness->side == 1 ? witness->first : witness->second;
+    CollisionFeature* face = witness->side == 2 ? witness->first : witness->second;
+    collisionTransformVertex(transformed, featureFrame, vertex);
+    float minimum = 0.0f;
+    int32_t violated = -1;
+    for (int index = 0; index < face->adjacentCount; ++index) {
+        const CollisionPlane* plane = &face->adjacent[index];
+        const float distance = dot3(plane->normal, transformed->point) - plane->offset;
+        if (distance < minimum) { minimum = distance; violated = index; }
+    }
+    if (violated != -1) {
+        replaceFeature(witness, 3 - witness->side, face->adjacent[violated].feature);
+        return 0;
+    }
+    const float distance = planeDistance(face, transformed->point);
+    float* vertexPoint = witness->side == 1 ? witness->firstPoint : witness->secondPoint;
+    float* facePoint = witness->side == 2 ? witness->firstPoint : witness->secondPoint;
+    if (fabsf(distance) < 0.0001f) {
+        witness->distance = 0.0f;
+        memcpy(vertexPoint, vertex->vector, 3 * sizeof(float));
+        memcpy(facePoint, transformed->point, 4 * sizeof(float));
+        return 2;
+    }
+    for (int index = 0; index < vertex->adjacentCount; ++index) {
+        CollisionFeature* edge = vertex->adjacent[index].feature;
+        CollisionFeature* neighbor = edge->adjacent[0].feature;
+        if (neighbor == vertex) neighbor = edge->adjacent[1].feature;
+        CollisionTransformedVertex other;
+        collisionTransformVertex(&other, featureFrame, neighbor);
+        const float neighborDistance = planeDistance(face, other.point);
+        if ((distance < 0.0f && distance < neighborDistance) ||
+            (0.0f < distance && neighborDistance < distance)) {
+            replaceFeature(witness, witness->side, edge);
+            return 0;
+        }
+    }
+    memcpy(vertexPoint, vertex->vector, 3 * sizeof(float));
+    if (0.0f < distance) {
+        witness->distance = distance;
+        projectPlane(facePoint, transformed->point, face, distance);
+        return 1;
+    }
+    const CollisionGeometry* geometry = witness->side == 2 ? witness->firstGeometry : witness->secondGeometry;
+    float maximum = distance;
+    CollisionFeature* selected = face;
+    for (int index = 0; index < geometry->faceCount; ++index) {
+        CollisionFeature* candidate = &geometry->faces[index];
+        const float candidateDistance = planeDistance(candidate, transformed->point);
+        if (maximum < candidateDistance) {
+            maximum = candidateDistance;
+            selected = candidate;
+            replaceFeature(witness, 3 - witness->side, selected);
+        }
+    }
+    witness->distance = maximum;
+    projectPlane(facePoint, transformed->point, selected, maximum);
+    return maximum < 0.0f ? 2 : 1;
+}
+
+int32_t collisionWitnessEdgeRegions(CollisionWitness* witness, const CollisionTransformedEdge* segment,
+                                    const CollisionFeature* feature, int32_t featureRole)
+{
+    CollisionClip clip;
+    collisionClipInitialize(&clip);
+    CollisionFeature* changed = collisionClipVertex(&clip, segment, NULL, feature->adjacent, 2);
+    if (changed) {
+        replaceFeature(witness, featureRole == witness->side ? 1 : 2, changed);
+        return 0;
+    }
+    if (clip.boundary) { witness->distance = 0.0f; return 2; }
+    changed = collisionClipFace(&clip, segment, NULL, feature->adjacent + 2, 2);
+    if (changed) {
+        replaceFeature(witness, featureRole == witness->side ? 1 : 2, changed);
+        return 0;
+    }
+    if (clip.boundary) { witness->distance = 0.0f; return 2; }
+    return 1;
+}
+
+static void edgeDirection(float output[4], const CollisionFeature* edge)
+{
+    for (int lane = 0; lane < 3; ++lane)
+        output[lane] = (float)edge->encodedDirection[lane] * 0.0001220703125f;
+    output[3] = 0.0f;
+}
+
+static float closestEdgePoints(float firstPoint[4], float secondPoint[4],
+                               const CollisionFeature* firstFeature, const CollisionFeature* secondFeature,
+                               const float featureFrame[16], const float otherFrame[16],
+                               const CollisionTransformedEdge* transformedOther)
+{
+    const float* start = firstFeature->adjacent[0].feature->vector;
+    const float* end = firstFeature->adjacent[1].feature->vector;
+    float direction[4], otherDirection[4], transformedDirection[4], delta[4], perpendicular[4];
+    edgeDirection(otherDirection, secondFeature);
+    collisionTransformDirection(transformedDirection, otherFrame, otherDirection);
+    edgeDirection(direction, firstFeature);
+    const float cosine = dot3(transformedDirection, direction);
+    const float squaredCosine = cosine * cosine;
+    const float denominator = 1.0f - squaredCosine;
+    for (int lane = 0; lane < 3; ++lane) {
+        delta[lane] = transformedOther->second[lane] - start[lane];
+        const float projected = transformedDirection[lane] * cosine;
+        perpendicular[lane] = direction[lane] - projected;
+    }
+    const float numerator = dot3(delta, perpendicular);
+    if (denominator < 0.000001f) {
+        memcpy(firstPoint, 0.0f < numerator ? end : start, 3 * sizeof(float));
+        firstPoint[3] = 0.0f;
+    } else {
+        float parameter = finiteRatio(numerator, denominator);
+        if (parameter < 0.0f) parameter = 0.0f;
+        else {
+            const float start4[4] = {start[0], start[1], start[2], 0.0f};
+            const float end4[4] = {end[0], end[1], end[2], 0.0f};
+            const float length = collisionPointDistance(end4, start4);
+            if (length < parameter) parameter = length;
+        }
+        for (int lane = 0; lane < 3; ++lane) {
+            const float offset = direction[lane] * parameter;
+            firstPoint[lane] = start[lane] + offset;
+        }
+        firstPoint[3] = 0.0f;
+    }
+    float transformedPoint[4];
+    collisionTransformPoint(transformedPoint, featureFrame, firstPoint);
+    const float* otherStart = secondFeature->adjacent[0].feature->vector;
+    for (int lane = 0; lane < 3; ++lane) delta[lane] = transformedPoint[lane] - otherStart[lane];
+    const float parameter = dot3(delta, otherDirection);
+    for (int lane = 0; lane < 3; ++lane) {
+        const float offset = otherDirection[lane] * parameter;
+        secondPoint[lane] = otherStart[lane] + offset;
+    }
+    secondPoint[3] = 0.0f;
+    return collisionPointDistance(secondPoint, transformedPoint);
+}
+
+int32_t collisionWitnessEdges(CollisionWitness* witness, const float featureFrame[16],
+                              const float otherFrame[16], CollisionTransformedEdge* first,
+                              CollisionTransformedEdge* second)
+{
+    CollisionFeature* firstFeature = witness->side == 1 ? witness->first : witness->second;
+    CollisionFeature* secondFeature = witness->side == 2 ? witness->first : witness->second;
+    collisionTransformEdge(first, featureFrame, firstFeature);
+    int32_t result = collisionWitnessEdgeRegions(witness, first, secondFeature, 2);
+    if (result != 1) return result;
+    collisionTransformEdge(second, otherFrame, secondFeature);
+    result = collisionWitnessEdgeRegions(witness, second, firstFeature, 1);
+    if (result != 1) return result;
+    float* firstPoint = witness->side == 1 ? witness->firstPoint : witness->secondPoint;
+    float* secondPoint = witness->side == 2 ? witness->firstPoint : witness->secondPoint;
+    witness->distance = closestEdgePoints(firstPoint, secondPoint, firstFeature, secondFeature,
+                                         featureFrame, otherFrame, second);
+    return result;
+}
+
+static void segmentPoint(float output[4], const CollisionTransformedEdge* segment, float parameter)
+{
+    for (int lane = 0; lane < 4; ++lane) {
+        const float delta = segment->direction[lane] * parameter;
+        output[lane] = delta + segment->second[lane];
+    }
+}
+
+int32_t collisionWitnessEdgeFace(CollisionWitness* witness, const float featureFrame[16],
+                                 const float otherFrame[16], CollisionTransformedEdge* edge)
+{
+    CollisionFeature* edgeFeature = witness->side == 1 ? witness->first : witness->second;
+    CollisionFeature* face = witness->side == 2 ? witness->first : witness->second;
+    collisionTransformEdge(edge, featureFrame, edgeFeature);
+    CollisionClip clip;
+    collisionClipInitialize(&clip);
+    if (collisionClipPlanes(&clip, edge, face->adjacent, face->adjacentCount)) {
+        float lower[4], upper[4];
+        segmentPoint(lower, edge, clip.lower);
+        segmentPoint(upper, edge, clip.upper);
+        const float upperDistance = planeDistance(face, upper);
+        const float lowerDistance = planeDistance(face, lower);
+        const float product = lowerDistance * upperDistance;
+        if (product <= 0.0f) { witness->distance = 0.0f; return 2; }
+        const float derivative = dot3(face->vector, edge->direction);
+        const float signedDerivative = lowerDistance * derivative;
+        if (0.0f < signedDerivative) {
+            if (clip.lowerFeature) replaceFeature(witness, 3 - witness->side, clip.lowerFeature);
+            else replaceFeature(witness, witness->side, edgeFeature->adjacent[0].feature);
+        } else {
+            if (clip.upperFeature) replaceFeature(witness, 3 - witness->side, clip.upperFeature);
+            else replaceFeature(witness, witness->side, edgeFeature->adjacent[1].feature);
+        }
+        return 0;
+    }
+
+    CollisionFeature* selected = NULL;
+    CollisionFeature* changed = NULL;
+    float minimum = 0.0f;
+    for (int index = 0; index < face->adjacentCount; ++index) {
+        CollisionFeature* candidate = face->adjacent[index].feature;
+        CollisionTransformedEdge transformed;
+        collisionTransformEdge(&transformed, otherFrame, candidate);
+        float firstPoint[4], secondPoint[4];
+        const float distance = closestEdgePoints(firstPoint, secondPoint, edgeFeature, candidate,
+                                                featureFrame, otherFrame, &transformed);
+        CollisionClip candidateClip;
+        collisionClipInitialize(&candidateClip);
+        CollisionFeature* candidateChange = collisionClipVertex(&candidateClip, edge, NULL, candidate->adjacent, 2);
+        if (candidateClip.boundary) return 2;
+        if (index == 0 || distance < minimum) {
+            minimum = distance;
+            selected = candidate;
+            changed = candidateChange;
+        }
+    }
+    replaceFeature(witness, 3 - witness->side, changed ? changed : selected);
+    return 0;
+}
+
+int32_t collisionWitnessQuery(CollisionWitness* witness, const float firstFrame[16],
+                              const float firstPosition[4], const float secondFrame[16],
+                              const float secondPosition[4], uint32_t* randomState)
+{
+    float firstToSecond[16], secondToFirst[16];
+    collisionRelativeTransform(firstToSecond, secondFrame, secondPosition, firstFrame, firstPosition);
+    collisionRelativeTransform(secondToFirst, firstFrame, firstPosition, secondFrame, secondPosition);
+    CollisionTransformedVertex firstVertex{}, secondVertex{};
+    CollisionTransformedEdge firstEdge{}, secondEdge{};
+    CollisionFeature* firstHistory[80];
+    CollisionFeature* secondHistory[80];
+    int32_t iteration = 0, restarts = 0, result = 0;
+    do {
+        const int firstKind = witness->first->kind, secondKind = witness->second->kind;
+        if (firstKind == 0 && secondKind == 0) {
+            witness->side = 1;
+            result = collisionWitnessVertices(witness, firstToSecond, secondToFirst, &firstVertex, &secondVertex);
+        } else if (firstKind == 0 && secondKind == 1) {
+            witness->side = 1;
+            result = collisionWitnessVertexEdge(witness, firstToSecond, secondToFirst, &firstVertex, &secondEdge);
+        } else if (firstKind == 1 && secondKind == 0) {
+            witness->side = 2;
+            result = collisionWitnessVertexEdge(witness, secondToFirst, firstToSecond, &secondVertex, &firstEdge);
+        } else if (firstKind == 0 && secondKind == 2) {
+            witness->side = 1;
+            result = collisionWitnessVertexFace(witness, firstToSecond, &firstVertex);
+        } else if (firstKind == 2 && secondKind == 0) {
+            witness->side = 2;
+            result = collisionWitnessVertexFace(witness, secondToFirst, &secondVertex);
+        } else if (firstKind == 1 && secondKind == 1) {
+            witness->side = 1;
+            result = collisionWitnessEdges(witness, firstToSecond, secondToFirst, &firstEdge, &secondEdge);
+        } else if (firstKind == 1 && secondKind == 2) {
+            witness->side = 1;
+            result = collisionWitnessEdgeFace(witness, firstToSecond, secondToFirst, &firstEdge);
+        } else if (firstKind == 2 && secondKind == 1) {
+            witness->side = 2;
+            result = collisionWitnessEdgeFace(witness, secondToFirst, firstToSecond, &secondEdge);
+        }
+        if (collisionWitnessRemember(witness, firstHistory, secondHistory, iteration)) {
+            ++restarts;
+            iteration = 0;
+            witness->first = &witness->firstGeometry->vertices[vectorRandomBounded((uint32_t)witness->firstGeometry->vertexCount, randomState)];
+            witness->second = &witness->secondGeometry->vertices[vectorRandomBounded((uint32_t)witness->secondGeometry->vertexCount, randomState)];
+        } else ++iteration;
+    } while (result == 0 && restarts < 3 && iteration < 80);
+    return result;
+}
+
+int32_t collisionWitnessVertices(CollisionWitness* witness, const float featureFrame[16],
+                                 const float otherFrame[16], CollisionTransformedVertex* feature,
+                                 CollisionTransformedVertex* other)
+{
+    CollisionFeature* first=witness->side==1 ? witness->first : witness->second;
+    CollisionFeature* second=witness->side==2 ? witness->first : witness->second;
+    collisionTransformVertex(feature,featureFrame,first);
+    for(int index=0;index<second->adjacentCount;++index) {
+        const CollisionPlane* plane=&second->adjacent[index];
+        if(dot3(plane->normal,feature->point)-plane->offset<0.0f) {
+            if(witness->side==2) witness->first=plane->feature;
+            else witness->second=plane->feature;
+            return 0;
+        }
+    }
+    collisionTransformVertex(other,otherFrame,second);
+    for(int index=0;index<first->adjacentCount;++index) {
+        const CollisionPlane* plane=&first->adjacent[index];
+        if(dot3(plane->normal,other->point)-plane->offset<0.0f) {
+            if(witness->side==1) witness->first=plane->feature;
+            else witness->second=plane->feature;
+            return 0;
+        }
+    }
+    float difference[3];
+    for(int lane=0;lane<3;++lane) difference[lane]=first->vector[lane]-other->point[lane];
+    witness->distance=sqrtf(dot3(difference,difference));
+    float* firstPoint=witness->side==1 ? witness->firstPoint : witness->secondPoint;
+    float* secondPoint=witness->side==2 ? witness->firstPoint : witness->secondPoint;
+    for(int lane=0;lane<3;++lane) { firstPoint[lane]=first->vector[lane];secondPoint[lane]=second->vector[lane]; }
+    return 0.00001f<witness->distance ? 1 : 2;
+}
+
+void collisionTransformDirectionTo(float output[4], const float frame[16], const float value[4])
+{
+    float matrix[16];
+    memcpy(matrix, frame, sizeof(matrix));
+    matrix[12] = matrix[13] = matrix[14] = 0.0f;
+    matrix[15] = 1.0f;
+    vectorMatrixTransformPoint(output, matrix, value);
+}
+
+CollisionFeature* collisionClipVertex(CollisionClip* clip, const CollisionTransformedEdge* edge,
+                                      const float* point, const CollisionPlane* planes, int32_t count)
+{
+    collisionClipPlanes(clip, edge, planes, count);
+    if (clip->lowerFeature && clip->lowerFeature == clip->upperFeature) return clip->lowerFeature;
+    CollisionFeature* limits[2] = {clip->lowerFeature, clip->upperFeature};
+    const float parameters[2] = {clip->lower, clip->upper};
+    for (int side = 0; side < 2; ++side) {
+        CollisionFeature* feature = limits[side];
+        if (feature) {
+            float projected[4], reference[4], delta[4];
+            collisionGeometryPointAlong(projected, edge, parameters[side]);
+            if (point) memcpy(reference, point, sizeof(reference));
+            else { for (int lane = 0; lane < 3; ++lane) reference[lane] = feature->vector[lane]; reference[3] = 0.0f; }
+            collisionGeometrySubtract4(delta, projected, reference);
+            if (collisionGeometryDot3(delta, delta) < 0.00001f) clip->boundary = 1;
+            else {
+                const float derivative = collisionGeometryDot3(edge->direction, delta);
+                if ((side == 0 && 0.0f < derivative) || (side == 1 && derivative < 0.0f)) return feature;
+            }
+        }
+    }
+    return NULL;
+}
+
+CollisionFeature* collisionClipFace(CollisionClip* clip, const CollisionTransformedEdge* edge,
+                                    const float* plane, const CollisionPlane* planes, int32_t count)
+{
+    const int32_t accepted = collisionClipPlanes(clip, edge, planes, count);
+    CollisionFeature* first = clip->lowerFeature;
+    CollisionFeature* second = clip->upperFeature;
+    if (first && first == second) return first;
+    int32_t oppositeKinds = 0;
+    if (!accepted) {
+        if (first->kind == 2 && second->kind == 1) return first;
+        if (second->kind == 2 && first->kind == 1) return second;
+        oppositeKinds = 1;
+    }
+    CollisionFeature* features[2] = {first, second};
+    const float parameters[2] = {clip->lower, clip->upper};
+    for (int side = 0; side < 2; ++side) {
+        CollisionFeature* feature = features[side];
+        if (feature && feature->kind == 2) {
+            float projected[4];
+            collisionGeometryPointAlong(projected, edge, parameters[side]);
+            const float* normal = plane ? plane : feature->vector;
+            const float offset = plane ? plane[3] : feature->offset;
+            const float distance = collisionGeometryDot3(normal, projected) - offset;
+            if (fabsf(distance) < 0.0001f) clip->boundary = 1;
+            else {
+                const float derivative = collisionGeometryDot3(normal, edge->direction);
+                const float signedDerivative = distance * derivative;
+                if ((side == 0 && 0.0f < signedDerivative) || (side == 1 && signedDerivative < 0.0f)) return feature;
+                if (oppositeKinds) return side == 0 ? second : first;
+            }
+        }
+    }
+    return NULL;
+}
+
+void collisionFeaturePoints(const CollisionFeature* feature, float output[4][3], const float frame[16])
+{
+    const CollisionFeature* vertices[8];
+    int32_t count = 0;
+    if (feature->kind == 0) vertices[count++] = feature;
+    else if (feature->kind == 1) {
+        vertices[count++] = feature->adjacent[0].feature;
+        vertices[count++] = feature->adjacent[1].feature;
+    } else if (feature->kind == 2) {
+        for (int index = 0; index < feature->adjacentCount; ++index) {
+            const CollisionFeature* edge = feature->adjacent[index].feature;
+            for (int end = 0; end < 2; ++end) {
+                const CollisionFeature* vertex = edge->adjacent[end].feature;
+                int found = 0;
+                while (found < count && vertices[found] != vertex) ++found;
+                if (found == count) vertices[count++] = vertex;
+            }
+        }
+        count = feature->adjacentCount;
+    }
+    for (int index = 0; index < count; ++index) {
+        const CollisionFeature* vertex = vertices[index];
+        const float point[4] = {vertex->vector[0], vertex->vector[1], vertex->vector[2], 0.0f};
+        float transformed[4];
+        vectorMatrixTransformPoint(transformed, frame, point);
+        for (int lane = 0; lane < 3; ++lane) output[index][lane] = transformed[lane] - frame[12 + lane];
+    }
+    if (count > 0) for (int index = count; index < 4; ++index) memcpy(output[index], output[index - 1], sizeof(output[index]));
+}
+
+#include "indep/inc/Replay.hpp"
+
+// PAL1D0948..1D0A30. Feature codes are authored geometry indices; host
+// pointers are reconstructed only against the same two actual polyhedra.
+void collisionWitnessSnapshot(CollisionWitness* witness,ReplaySnapshot* snapshot)
+{
+    if(!snapshot)return;
+    if(!witness || !witness->firstGeometry || !witness->secondGeometry) {
+        snapshot->result=REPLAY_SNAPSHOT_INVALID_BINDING;return;
+    }
+    replaySnapshotBeginSection(snapshot,witness,"VCWitness");
+    uint32_t first=collisionGeometryFeatureCode(witness->firstGeometry,witness->first);
+    uint32_t second=collisionGeometryFeatureCode(witness->secondGeometry,witness->second);
+    replaySnapshotMoveUnsigned(snapshot,&first,4);replaySnapshotMoveUnsigned(snapshot,&second,4);
+    if(snapshot->restoring && snapshot->result==REPLAY_SNAPSHOT_OK) {
+        const auto valid=[](const CollisionGeometry& geometry,uint32_t code) {
+            if(code==UINT32_MAX)return true;
+            const auto index=code>>4;
+            switch(code&15u) {
+            case 0:return index<static_cast<uint32_t>(geometry.vertexCount);
+            case 1:return index<static_cast<uint32_t>(geometry.edgeCount);
+            case 2:return index<static_cast<uint32_t>(geometry.faceCount);
+            default:return false;
+            }
+        };
+        if(!valid(*witness->firstGeometry,first) || !valid(*witness->secondGeometry,second))
+            snapshot->result=REPLAY_SNAPSHOT_INVALID_TRANSFER;
+        else {
+            witness->first=collisionGeometryFeature(witness->firstGeometry,first);
+            witness->second=collisionGeometryFeature(witness->secondGeometry,second);
+        }
+    }
+    replaySnapshotMoveInteger(snapshot,&witness->side,4);
+    replaySnapshotMoveData(snapshot,witness->firstPoint,12,-1,0);
+    replaySnapshotMoveData(snapshot,witness->secondPoint,12,-1,0);
+    replaySnapshotMoveFloat(snapshot,&witness->distance);
+    replaySnapshotEndSection(snapshot);
+}
+
+int32_t collisionWitnessRemember(const CollisionWitness* witness, CollisionFeature** firstHistory,
+                                 CollisionFeature** secondHistory, int32_t index)
+{
+    firstHistory[index]=witness->first;
+    secondHistory[index]=witness->second;
+    --index;
+    for(int remaining=10;index>=0 && remaining>0;--index,--remaining)
+        if(firstHistory[index]==witness->first && secondHistory[index]==witness->second) return 1;
+    return 0;
+}
+
+float collisionGeometryMaximumViolation(const CollisionGeometry* geometry)
+{
+    float maximum=0.0f;
+    for(int face=0;face<geometry->faceCount;++face)
+        for(int vertex=0;vertex<geometry->vertexCount;++vertex) {
+            const float distance=collisionGeometryDot3(geometry->faces[face].vector,geometry->vertices[vertex].vector)-geometry->faces[face].offset;
+            if(maximum<distance) maximum=distance;
+        }
+    return maximum;
 }

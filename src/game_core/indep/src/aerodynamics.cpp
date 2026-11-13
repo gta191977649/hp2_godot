@@ -1,35 +1,106 @@
-// TASK-0044 E-0044-E01, full Debug001AB3F0/001AB638 listings.
-#include "game_core/indep/src/aerodynamics.hpp"
-#include "game_core/port/driving/projection_support.hpp"
-namespace hp2::recovered {
-void Aerodynamics::ResolveForces(std::uint32_t output) {
-    using namespace port::driving::native;
-    using namespace port::driving::native::detail_group_00138e08;
-    auto& m=m_;const auto a=address_;
-    const auto body=m.word(a+4),config=m.word(a);const auto velocity=m.vector(body+0x90);
-    const float speed=len(velocity)/m.scalar(a+8);float value=speed*m.scalar(a+0xc);value=value*m.scalar(config);
-    float extra=value*(m.scalar(0x327ed0)-1.0f);extra=extra*(1.0f-m.scalar(a+0x10));value=-(value+extra);
-    Vector point{{0,0,0,0}};if(0.5f<=m.scalar(a+0x14))point[2]=m.scalar(0x327ed4)*(1.0f-m.scalar(a+0x10));
-    ApplyForce(m,body,mul(velocity,value),point);
-    float f=m.scalar(body+0x48);if(f<0)f=0;if(0.5f<=m.scalar(a+0x14))f=1;
-    Vector direction{{1,0,0,0}};if(m.scalar(0x3257e0)<speed)direction=mul(m.vector(body+0x90),1.0f/speed);
-    float projection=dot(direction,m.vector(body+0x20));if(projection<0)projection=0;
-    projection=projection*projection;projection=projection*projection;
-    float front,rear;
-    if(m.scalar(a+0x14)==0){projection=projection*f;const float sum=m.scalar(config+4)+m.scalar(config+8);front=speed*m.scalar(0x3257e4);front=front*projection;front=front*sum;rear=speed*m.scalar(0x3257e8);rear=rear*projection;rear=rear*sum;}
-    else{projection=projection*f;front=speed*m.scalar(config+4);front=front*projection;rear=speed*m.scalar(config+8);rear=rear*projection;}
-    ApplyForceInFrame(m,body,{{0,0,-front,0}},m.vector(0x00308cc0));ApplyForceInFrame(m,body,{{0,0,-rear,0}},m.vector(0x00308cd0));
-    if(output)m.scalar(output,front+rear);
-}
-float Aerodynamics::GetDownforceAtSpeed(float speed) {
- const auto config=m_.word(address_);return std::max(0.0f,speed)*(m_.scalar(config+4)+m_.scalar(config+8));
-}
-void Aerodynamics::DoSnapshot(){hp2::not_implemented("0x001AB3C8","replay snapshot outside driving scope");}
-}
-namespace port::driving::native {
-float GetDownforceAtSpeed(Memory&m,std::uint32_t a,float speed){return hp2::recovered::Aerodynamics(m,a).GetDownforceAtSpeed(speed);}
-void Aerodynamics::ResolveForces(Memory&m,std::uint32_t a,std::uint32_t out){hp2::recovered::Aerodynamics(m,a).ResolveForces(out);}
+#include "indep/inc/Aerodynamics.hpp"
+#include "bware/inc/bMath.hpp"
+
+#include <math.h>
+#include <stddef.h>
+#include "indep/inc/Replay.hpp"
+
+void aerodynamicsResetTransientState(Aerodynamics* aerodynamic, ReplaySnapshot* snapshot)
+{
+    // Complete PAL1ADD48 has no stream transfer; it tests the actual two
+    // replay mode bytes and resets these same three transient fields.
+    if (snapshot->recording || snapshot->restoring) {
+        aerodynamic->downforceMode = 0.0f;
+        aerodynamic->speedScale = 0.0f;
+        aerodynamic->dragReduction = 0.0f;
+    }
 }
 
-// Debug001AB3C8; E-0099-W74; replay-frame/001ab3c8.json.
-namespace hp2::recovered {void Aerodynamics::DoSnapshot(std::uint32_t snapshot){if(m_.byte(snapshot+0x3c)||m_.byte(snapshot+0x3d)){m_.word(address_+0x14,0);m_.word(address_+8,0);m_.word(address_+0x10,0);}}}
+float aerodynamicsEstimateDownforce(const Aerodynamics* aerodynamic, float speed)
+{
+    const float nonnegative = maximumFinite(0.0f, speed);
+    const float combined = bScalarAdd(aerodynamic->info->frontDownforce, aerodynamic->info->rearDownforce);
+    return bScalarMultiply(nonnegative, combined);
+}
+
+
+
+const AerodynamicsTuning aerodynamicsDefaultTuning = {2.0f, -0.10000000149011612f};
+
+static float dotThree(const float left[4], const float right[4])
+{
+    const float x = bScalarMultiply(left[0], right[0]);
+    const float y = bScalarMultiply(left[1], right[1]);
+    const float z = bScalarMultiply(left[2], right[2]);
+    return bScalarAdd(bScalarAdd(x, y), z);
+}
+
+void aerodynamicsInitialize(Aerodynamics* aerodynamic, const AerodynamicsInfo* info,
+                            RigidBody* body, const AerodynamicsTuning* tuning)
+{
+    aerodynamic->info = info;
+    aerodynamic->body = body;
+    aerodynamic->tuning = tuning;
+    aerodynamic->speedScale = 1.0f;
+    aerodynamic->dragScale = 1.0f;
+    aerodynamic->dragReduction = 0.0f;
+    aerodynamic->downforceMode = 0.0f;
+}
+
+void aerodynamicsApplyForces(Aerodynamics* aerodynamic, float* totalDownforce)
+{
+    RigidBody* body = aerodynamic->body;
+    const float speed = bScalarSquareRoot(dotThree(body->linearVelocity, body->linearVelocity));
+    const float scaledSpeed = bScalarFiniteRatio(speed, aerodynamic->speedScale);
+    const float initial = bScalarMultiply(scaledSpeed, aerodynamic->dragScale);
+    float drag = bScalarMultiply(initial, aerodynamic->info->drag);
+    const float boost = bScalarAdd(aerodynamic->tuning->boostedDrag, -1.0f);
+    const float reduction = bScalarAdd(1.0f, -aerodynamic->dragReduction);
+    const float boosted = bScalarMultiply(drag, boost);
+    const float extra = bScalarMultiply(boosted, reduction);
+    drag = bScalarAdd(drag, extra);
+    const float dragScale = -drag;
+    float dragForce[4], dragLever[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+    for (int i = 0; i < 4; ++i) dragForce[i] = bScalarMultiply(body->linearVelocity[i], dragScale);
+    if (0.5f <= aerodynamic->downforceMode)
+        dragLever[2] = bScalarMultiply(aerodynamic->tuning->dragLeverZ, reduction);
+    rigidBodyApplyForce(body, dragForce, dragLever);
+
+    float facing = body->motion.orientation[10];
+    if (facing < 0.0f) facing = 0.0f;
+    if (0.5f <= aerodynamic->downforceMode) facing = 1.0f;
+    float direction[4] = {1.0f, 0.0f, 0.0f, 0.0f};
+    if (0.00009999999747378752f < scaledSpeed) {
+        const float inverseSpeed = bScalarFiniteRatio(1.0f, scaledSpeed);
+        for (int i = 0; i < 4; ++i)
+            direction[i] = bScalarMultiply(body->linearVelocity[i], inverseSpeed);
+    }
+    float alignment = dotThree(direction, body->motion.orientation);
+    if (alignment < 0.0f) alignment = 0.0f;
+    const float squaredAlignment = bScalarMultiply(alignment, alignment);
+    const float fourthAlignment = bScalarMultiply(squaredAlignment, squaredAlignment);
+    float front, rear;
+    if (aerodynamic->downforceMode == 0.0f) {
+        const float frontSpeed = bScalarMultiply(scaledSpeed, 0.4000000059604645f);
+        const float rearSpeed = bScalarMultiply(scaledSpeed, 0.4099999964237213f);
+        const float influence = bScalarMultiply(fourthAlignment, facing);
+        const float frontInfluence = bScalarMultiply(frontSpeed, influence);
+        const float rearInfluence = bScalarMultiply(rearSpeed, influence);
+        const float combined = bScalarAdd(aerodynamic->info->frontDownforce, aerodynamic->info->rearDownforce);
+        front = bScalarMultiply(frontInfluence, combined);
+        rear = bScalarMultiply(rearInfluence, combined);
+    } else {
+        const float influence = bScalarMultiply(fourthAlignment, facing);
+        const float rearSpeed = bScalarMultiply(scaledSpeed, aerodynamic->info->rearDownforce);
+        const float frontSpeed = bScalarMultiply(scaledSpeed, aerodynamic->info->frontDownforce);
+        rear = bScalarMultiply(rearSpeed, influence);
+        front = bScalarMultiply(frontSpeed, influence);
+    }
+    const float frontForce[4] = {0.0f, 0.0f, -front, 0.0f};
+    const float rearForce[4] = {0.0f, 0.0f, -rear, 0.0f};
+    const float frontLever[4] = {1.0f, 0.0f, 0.0f, 0.0f};
+    const float rearLever[4] = {-1.0f, 0.0f, 0.0f, 0.0f};
+    rigidBodyApplyLocalForce(body, frontForce, frontLever);
+    rigidBodyApplyLocalForce(body, rearForce, rearLever);
+    if (totalDownforce != NULL) *totalDownforce = bScalarAdd(front, rear);
+}

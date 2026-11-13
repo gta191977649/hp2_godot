@@ -1,161 +1,327 @@
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
-// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/indep/src/bodydamage.hpp"
+#include "indep/inc/CarDamage.hpp"
+#include "indep/inc/RaceParameters.hpp"
+#include "bware/inc/bMath.hpp"
+#include "indep/inc/Ecstasy.hpp"
+#include "indep/inc/Replay.hpp"
 
-#include "game_core/port/not_implemented.hpp"
-
-namespace hp2::recovered {
-// ELF 0x001B4D48; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001b4d48.md.
-void BodyDamage::SetDamage() {
-    hp2::not_implemented("0x001B4D48", "BodyDamage::SetDamage (signature and full body unresolved)");
-}
-
-// ELF 0x001B4E10; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001b4e10.md.
-void BodyDamage::GetSectorNumber() {
-    hp2::not_implemented("0x001B4E10", "BodyDamage::GetSectorNumber (signature and full body unresolved)");
-}
-
-// ELF 0x001B4F10; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001b4f10.md.
-void BodyDamage::GetDamageAmount() {
-    hp2::not_implemented("0x001B4F10", "BodyDamage::GetDamageAmount (signature and full body unresolved)");
-}
-
-// ELF 0x001B50C8; E-0042-C133; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001b50c8.md.
-void BodyDamage::GetVisibleTotalDamage() {
-    hp2::not_implemented("0x001B50C8", "BodyDamage::GetVisibleTotalDamage (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/port/race/damage_resources.hpp"
-#include "game_core/indep/src/fmenus.hpp"
-#include "game_core/port/driving/projections.hpp"
+#include "bware/inc/bWare.hpp"
+#include "bware/inc/bChunk.hpp"
+#include "bware/inc/bWare.hpp"
 #include <algorithm>
-namespace hp2::debug {
-// Debug001B2030; E-0099-W22. Name parameter is unused, models retain original padding.
-void BodyDamage::Sub_001B2030(){
- constexpr std::uint32_t list=0x327fe0;const auto tail=m_.word(list+4);
- m_.word(tail,address_);m_.word(address_+4,tail);m_.word(list+4,address_);m_.word(address_,list);
- for(unsigned i=0;i<32;++i)m_.byte(address_+8+i,0);
- for(unsigned i=0;i<32;++i)m_.byte(address_+0x2a+i,0);
- m_.half(address_+0x28,0);m_.half(address_+0x4a,0);m_.word(address_+0x4c,0);m_.word(address_+0xc0,0);
-}
-// Debug001B1C78; E-0099-W22.
-std::uint32_t FindBodyDamageInfo(Memory&m,std::uint32_t hash){
- for(auto p=m.word(0x327fd8);p!=0x327fd8;p=m.word(p))if(m.word(p+0x28)==hash)return p;
- return 0;
-}
-// Debug001B2168; E-0099-W22. Original missing-name branch publishes null.
-void BodyDamage::SetALevelBodyDamageInfo(const char*name){m_.word(address_+0xc0,FindBodyDamageInfo(m_,hp2::frontend::bStringHash(name)));}
-// Debug001B22A0; E-0099-W22. Preserve unbounded normalized coordinates for side selection.
-int BodyDamage::GetSectorNumber(std::uint32_t position){
- const auto info=m_.word(address_+0xc0);if(!info)return -1;
- const float minx=m_.scalar(info+0x2c),miny=m_.scalar(info+0x30);
- const float x=(m_.scalar(position)-minx)/(m_.scalar(info+0x34)-minx);
- const float y=(m_.scalar(position+4)-miny)/(m_.scalar(info+0x38)-miny);
- const auto ix=std::clamp(port::driving::cvt_w_s(x*8.f),0,7),iy=std::clamp(port::driving::cvt_w_s(y*8.f),0,7);
- if(x<=y){if(x<=1.f-y)return iy+16;return ix+24;}
- if(x<=1.f-y)return 16-ix;return 8-iy;
-}
-// Debug001B1BF0; E-0099-W22. Complete original record stays in mapped chunk.
-int LoaderBodyDamage(Memory&m,std::uint32_t chunk){
- if(m.word(chunk)!=0x34030)return 0;
- constexpr std::uint32_t list=0x327fd8;const auto p=chunk+8,tail=m.word(list+4);
- m.word(tail,p);m.word(p+4,tail);m.word(list+4,p);m.word(p,list);
- m.word(p+0x4c,chunk+0x5c);m.word(p+0x50,0);return 1;
-}
-// Debug001B1C40; E-0099-W22.
-int UnloaderBodyDamage(Memory&m,std::uint32_t chunk){
- if(m.word(chunk)!=0x34030)return 0;const auto p=chunk+8;
- m.word(m.word(p+4),m.word(p));m.word(m.word(p)+4,m.word(p+4));return 1;
-}
-// Debug001B20A0, E-0099-W22/W38. Embedded destructor now invokes the actual
-// RepairAllDamage/ApplyDamage chain before unlinking, including live restoration.
-void BodyDamage::Sub_001B20A0(){
- RepairAllDamage();
- const auto next=m_.word(address_),prev=m_.word(address_+4);
- m_.word(prev,next);m_.word(next+4,prev);
-}
-}
-namespace port::race {
-// Debug001B28D0 complete damage-list stores; E-0099-W22.
-void initialize_body_damage_lists(port::driving::Memory&m){
- for(const auto list:{0x327fd8u,0x327fe0u}){m.word(list+4,list);m.word(list,list);}
-}
-}
-
-#include "game_core/port/race/car_render_resources.hpp"
-namespace hp2::debug {
-// Debug001B21A0/001B1CB0; E-0099-W25. Real body model/vertex-count/info registration.
-void BodyDamage::AddModel(std::uint32_t model,const char*name,int only){
- const auto count=m_.word(address_+0x4c);m_.word(address_+0x4c,count+1);const auto object=address_+0x50+28*count;
- m_.word(object+8,0);m_.word(object,address_);m_.word(object+16,static_cast<std::uint32_t>(only));m_.word(object+4,model);
- const auto solid=m_.word(model+12);const int vertices=solid?m_.signed_half(solid+0x38):0;m_.word(object+12,static_cast<std::uint32_t>(vertices));
- if(vertices){const auto info=FindBodyDamageInfo(m_,hp2::frontend::bStringHash(name));m_.word(object+8,info);if(info){if(vertices==m_.signed_word(info+0x44)){::port::race::CallDamageVertexFunction(m_,object);return;}m_.word(object+8,0);}}
-}
-}
-namespace port::race {
-// Debug001B1FE0; E-0099-W25. Actual body-model key traversal owner.
-void CallDamageVertexFunction(Memory&m,std::uint32_t object){if(!m.word(object+8))return;m.word(object+20,0);m.word(object+24,0);CallDamageVertexFunctionForEveryVertex(m,m.word(object+4),object);}
-// Debug001B1D60; E-0099-W25. Host vertex reference is the original callback's
-// local XYZ carrier; unused vert_num/normal arguments have no recovered effect.
-bool DamageVertexFunction(Memory&m,std::uint32_t object,std::array<float,3>&vertex,std::uint32_t rgba,bool damage_poly){
- const auto info=m.word(object+8),key=m.word(m.word(info+0x4c)+4*m.word(object+24));
- const auto repeated=m.word(object+20);if(repeated==(key&7)){m.word(object+20,0);m.word(object+24,m.word(object+24)+1);}else m.word(object+20,repeated+1);
- const auto sector=(key>>3)&31,body=m.word(object);const float applied=static_cast<float>(m.byte(body+0x2a+sector))*0.0078125f;
- const float amount=m.word(0x311fb8)?static_cast<float>(m.byte(body+8+sector))*0.0078125f:0.f;const float delta=amount-applied;
- if(delta!=0&&m.word(object+16)==0){
-  if(key&0xffffc000u){const int shifts[]={12,6,0};for(unsigned axis=0;axis<3;++axis){const int signed_part=static_cast<std::int32_t>(key<<shifts[axis])>>26;vertex[axis]=vertex[axis]+(static_cast<float>(signed_part)*m.scalar(0x325858))*delta;}}
-  const int darkness=(static_cast<std::int32_t>(key<<18)>>26)*8;
-  if(darkness){const float f=static_cast<float>(darkness);const int adjustment=(driving::cvt_w_s(f*amount)>>3)-(driving::cvt_w_s(f*applied)>>3);if(adjustment)m.half(rgba,static_cast<std::uint16_t>(m.half(rgba)+adjustment*-1057));}
- }
- if(damage_poly){const int alpha=std::clamp(driving::cvt_w_s(amount*256.f),0,255);m.half(rgba,alpha<129?(m.half(rgba)&0x7fff):(m.half(rgba)|0x8000));}
- return amount!=0;
-}
-}
-
-namespace hp2::debug {
-// Debug001B2558, E-0099-W42. No clamp or invented damage amount.
-float BodyDamage::GetVisibleTotalDamage()const{return m_.word(0x311fb8)?static_cast<float>(m_.half(address_+0x28))*0.000244140625f:0.f;}
-}
-
 #include <cmath>
-namespace hp2::debug {
-// Debug001B21D8, E-0099-W38. Exact clamp, CVT.W.S quantization, total halfword
-// and replaced unsigned byte. Original consumers supply sector0..31.
-void BodyDamage::SetDamage(int sector,float amount){if(sector<0||sector>=32)throw std::out_of_range("Original damage sector");if(amount>1)amount=1;if(amount<0)amount=0;if(!std::isfinite(amount))hp2::not_implemented("0x001B222C","Exceptional original damage CVT.W.S operand");const auto compressed=::port::driving::cvt_w_s(amount*128);const auto at=address_+8+static_cast<std::uint32_t>(sector);m_.half(address_+0x28,static_cast<std::uint16_t>(m_.half(address_+0x28)+compressed-m_.byte(at)));m_.byte(at,static_cast<std::uint8_t>(compressed));}
-// Debug001B24F8/001B2538, E-0099-W38. Actual race visual-damage word, no clamp.
-int BodyDamage::GetCompressedVisibleDamageAmount(int sector)const{if(sector<0||sector>=32)throw std::out_of_range("Original damage sector");return m_.word(0x311fb8)?m_.byte(address_+8+static_cast<std::uint32_t>(sector)):0;}
-float BodyDamage::GetVisibleDamageAmount(int sector)const{return static_cast<float>(GetCompressedVisibleDamageAmount(sector))*0.0078125f;}
-// Debug001B2598, E-0099-W38. Apply the existing original W25 raw model callback
-// before updating applied sector bytes, preserving its read-before-write delta.
-void BodyDamage::ApplyDamage(){const float visible=GetVisibleTotalDamage(),applied=static_cast<float>(m_.half(address_+0x4a))*0.000244140625f;if(visible==applied)return;
- if(std::fabs(GetVisibleTotalDamage()-applied)<=m_.scalar(0x32585c)&&GetVisibleTotalDamage()!=0)return;
- for(int i=0;i<m_.signed_word(address_+0x4c);++i)::port::race::CallDamageVertexFunction(m_,address_+0x50+static_cast<std::uint32_t>(i)*28);
- unsigned total=0;for(int i=0;i<32;++i){const auto value=GetCompressedVisibleDamageAmount(i);total+=static_cast<unsigned>(value);m_.byte(address_+0x2a+static_cast<std::uint32_t>(i),static_cast<std::uint8_t>(value));}m_.half(address_+0x4a,static_cast<std::uint16_t>(total));
-}
-// Debug001B2250, E-0099-W38. Restore actual original model vertices/colour/flags
-// through ApplyDamage, then source destructor unlinks the containing node.
-void BodyDamage::RepairAllDamage(){for(int sector=0;sector<32;++sector)SetDamage(sector,0);m_.half(address_+0x28,0);ApplyDamage();}
+#include <cstring>
+#include <set>
+#include <math.h>
+#include <string.h>
+
+namespace {
+BodyDamageInfo* firstDamageInfo{};
+BodyDamageInfo* lastDamageInfo{};
 }
 
-namespace hp2::debug {
-// Debug001B26E0, E-0099-W38. Apply to every actual registered model, in order.
-void BodyDamage::SetEnvironmentMapping(std::uint32_t hash,int on){for(int i=0;i<m_.signed_word(address_+0x4c);++i)::port::race::eModel(m_,m_.word(address_+0x54+static_cast<unsigned>(i)*28)).SetEnvironmentMapping(hash,on);}
+BodyDamageList bodyDamageList{};
+
+int32_t bodyDamageLoadInfo(uint32_t chunkKind, BodyDamageInfo* info)
+{
+    if (chunkKind != 0x34030u) return 0;
+    info->previous = lastDamageInfo;
+    info->next = nullptr;
+    if (lastDamageInfo) lastDamageInfo->next = info;
+    else firstDamageInfo = info;
+    lastDamageInfo = info;
+    return 1;
 }
 
-namespace hp2::debug {
-// Debug001B2760, E-0099-W67. Original JR RA/NOP, no state read or write.
-void ServiceTweakerDamage(){}
+int32_t bodyDamageUnloadInfo(uint32_t chunkKind, BodyDamageInfo* info)
+{
+    if (chunkKind != 0x34030u) return 0;
+    if (info->previous) info->previous->next = info->next;
+    else firstDamageInfo = info->next;
+    if (info->next) info->next->previous = info->previous;
+    else lastDamageInfo = info->previous;
+    return 1;
 }
 
-#include "game_core/indep/inc/Replay.hpp"
-namespace hp2::debug {
-// Debug001B20E8; TASK-0099 E-0099-W74; replay-frame/001b20e8.json/type-BodyDamage.json.
-void BodyDamage::DoSnapshot(std::uint32_t snapshot){
- ReplaySnapshot s(m_,snapshot);s.BeginSection(0x2ae368);s.MoveData(address_+8,32,32,0);
- s.MoveData(address_+0x28,2);if(m_.byte(snapshot+0x3d))ApplyDamage();s.EndSection();
+const BodyDamageInfo* bodyDamageFindInfo(uint32_t key)
+{
+    for (auto* info = firstDamageInfo; info; info = info->next)
+        if (info->key == key) return info;
+    return nullptr;
 }
+
+BodyDamage::BodyDamage(const char*)
+    : previous(bodyDamageList.last), next(nullptr), sectors{}, total(0),
+      appliedSectors{}, appliedTotal(0), info(nullptr), models{}, modelCount(0), settings(nullptr)
+{
+    if (previous) previous->next = this;
+    else bodyDamageList.first = this;
+    bodyDamageList.last = this;
 }
+
+BodyDamage::~BodyDamage()
+{
+    bodyDamageRepair(this);
+    if (previous) previous->next = next;
+    else bodyDamageList.first = next;
+    if (next) next->previous = previous;
+    else bodyDamageList.last = previous;
+}
+
+void bodyDamageSetALevelInfo(BodyDamage* damage, const char* name)
+{
+    damage->info = bodyDamageFindInfo(hashString(name));
+}
+
+void bodyDamageModelInitialize(BodyDamageModel* state, BodyDamage* damage,
+    EditorMarkerModel* model, const char* name, int32_t deformationDisabled)
+{
+    state->info = nullptr;
+    state->owner = damage;
+    state->deformationDisabled = deformationDisabled;
+    state->model = model;
+    state->vertexCount = static_cast<size_t>(ecstasyModelNumVertices(model));
+    if (!state->vertexCount) return;
+    state->info = bodyDamageFindInfo(hashString(name));
+    if (!state->info) return;
+    if (state->info->vertexCount != state->vertexCount) {
+        state->info = nullptr;
+        return;
+    }
+    bodyDamageModelApply(state);
+}
+
+void bodyDamageModelApply(BodyDamageModel* model)
+{
+    if (!model->info) return;
+    (void)ecstasyModelNumVertices(model->model);
+    model->repeat = 0;
+    model->runIndex = 0;
+    ecstasyCallDamageVertexFunction(model->model, model, bodyDamageDeformVertex);
+}
+
+void bodyDamageAddModel(BodyDamage* damage, EditorMarkerModel* model,
+    const char* name, int32_t deformationDisabled)
+{
+    hp2::Require(damage->modelCount < BODY_DAMAGE_MODELS,
+        "BodyDamage's four original model slots are full");
+    auto& state = damage->models[damage->modelCount++];
+    bodyDamageModelInitialize(&state, damage, model, name, deformationDisabled);
+}
+
+void bodyDamageSnapshot(BodyDamage* damage, ReplaySnapshot* snapshot)
+{
+    replaySnapshotBeginSection(snapshot, nullptr, "BodyDamage");
+    replaySnapshotMoveData(snapshot, damage->sectors, BODY_DAMAGE_SECTORS, BODY_DAMAGE_SECTORS, 0);
+    replaySnapshotMoveData(snapshot, &damage->total, 2, 2, 0);
+    if (snapshot->restoring) bodyDamageApply(damage);
+    replaySnapshotEndSection(snapshot);
+}
+
+void bodyDamageSetEnvironmentMapping(BodyDamage* damage, uint32_t textureKey, int32_t enabled)
+{
+    for (size_t index = 0; index < damage->modelCount; ++index)
+        ecstasyModelSetEnvironmentMapping(damage->models[index].model, textureKey, enabled);
+}
+
+void bodyDamageSetSector(BodyDamage* damage, int32_t sector, float amount)
+{
+    if (1.0f < amount) amount = 1.0f;
+    if (amount < 0.0f) amount = 0.0f;
+    const uint8_t encoded = (uint8_t)convertFloatToInt32(amount * 128.0f);
+    damage->total = (uint16_t)(damage->total + encoded - damage->sectors[sector]);
+    damage->sectors[sector] = encoded;
+}
+
+int32_t bodyDamageFindSector(const BodyDamage* damage, const float point[2])
+{
+    if (!damage->info) return -1;
+    const BodyDamageInfo* info = damage->info;
+    const float x = finiteRatio(point[0] - info->minimum[0], info->maximum[0] - info->minimum[0]);
+    const float y = finiteRatio(point[1] - info->minimum[1], info->maximum[1] - info->minimum[1]);
+    int32_t ix = convertFloatToInt32(x * 8.0f), iy = convertFloatToInt32(y * 8.0f);
+    if (ix < 0) ix = 0;
+    if (iy < 0) iy = 0;
+    if (7 < ix) ix = 7;
+    if (7 < iy) iy = 7;
+    if (y < x) return 1.0f - y < x ? 8 - iy : 16 - ix;
+    return 1.0f - y < x ? 24 + ix : 16 + iy;
+}
+
+float bodyDamageAtPoint(const BodyDamage* damage, const float point[2])
+{
+    const int32_t sector = bodyDamageFindSector(damage, point);
+    return sector < 0 ? 0.0f : (float)damage->sectors[sector] * 0.0078125f;
+}
+
+int32_t bodyDamageEnabled(const BodyDamage* damage)
+{
+    hp2::Require(damage && damage->settings,"BodyDamage has no canonical RaceParameters damage policy");
+    return damage->settings->authoredRaceOption40;
+}
+
+float bodyDamageVisibleAtPoint(const BodyDamage* damage, const float point[2])
+{
+    return bodyDamageEnabled(damage) ? bodyDamageAtPoint(damage, point) : 0.0f;
+}
+
+float bodyDamageVisibleSector(const BodyDamage* damage, int32_t sector)
+{
+    return bodyDamageEnabled(damage) ? (float)damage->sectors[sector] * 0.0078125f : 0.0f;
+}
+
+uint32_t bodyDamageCompressedSector(const BodyDamage* damage, int32_t sector)
+{
+    return bodyDamageEnabled(damage) ? damage->sectors[sector] : 0;
+}
+
+float bodyDamageVisibleTotal(const BodyDamage* damage)
+{
+    return bodyDamageEnabled(damage) ? (float)damage->total * 0.000244140625f : 0.0f;
+}
+
+static int32_t signedSix(uint32_t bits)
+{
+    const int32_t value = (int32_t)(bits & 63u);
+    return value < 32 ? value : value - 64;
+}
+
+static int32_t floorEighth(int32_t value)
+{
+    return value >= 0 ? value / 8 : -(int32_t)(((uint32_t)(-(int64_t)value) + 7u) / 8u);
+}
+
+int32_t bodyDamageDeformVertex(BodyDamageModel* model, int32_t,
+    float position[3], uint16_t* color, float*, int32_t damageFlag)
+{
+    hp2::Require(model->runIndex < model->info->runCount,
+        "BodyDamage's RLE cursor exceeds its loaded definition");
+    const uint32_t run = model->info->runs[model->runIndex];
+    if (model->repeat == (run & 7u)) { model->repeat = 0; ++model->runIndex; }
+    else ++model->repeat;
+    const auto* damage = model->owner;
+    const int32_t sector = (int32_t)((run & 255u) >> 3);
+    const float previous = (float)damage->appliedSectors[sector] * 0.0078125f;
+    const float current = bodyDamageVisibleSector(damage, sector);
+    const float difference = current - previous;
+    if (difference != 0.0f && !model->deformationDisabled) {
+        if (run & 0xffffc000u) {
+            for (int axis = 0; axis < 3; ++axis) {
+                const float displacement = (float)signedSix(run >> (14 + axis * 6)) * 0.019999999552965164f;
+                position[axis] = position[axis] + displacement * difference;
+            }
+        }
+        const int32_t colorScale = signedSix(run >> 8) * 8;
+        if (colorScale) {
+            const int32_t oldColor = floorEighth(convertFloatToInt32((float)colorScale * previous));
+            const int32_t newColor = floorEighth(convertFloatToInt32((float)colorScale * current));
+            const int32_t change = newColor - oldColor;
+            *color = (uint16_t)((int32_t)*color - change * 1057);
+        }
+    }
+    if (damageFlag) {
+        int32_t level = convertFloatToInt32(current * 256.0f);
+        if (level > 255) level = 255;
+        if (level < 0) level = 0;
+        if (128 < level) *color |= 0x8000u;
+        else *color &= 0x7fffu;
+    }
+    return current != 0.0f;
+}
+
+void bodyDamageApply(BodyDamage* damage)
+{
+    const float current = bodyDamageVisibleTotal(damage);
+    const float previous = (float)damage->appliedTotal * 0.000244140625f;
+    if (current == previous || (!(0.019999999552965164f < fabsf(current - previous)) && current != 0.0f)) return;
+    for (size_t index = 0; index < damage->modelCount; ++index) {
+        bodyDamageModelApply(&damage->models[index]);
+    }
+    uint32_t total = 0;
+    for (int sector = 0; sector < BODY_DAMAGE_SECTORS; ++sector) {
+        const uint32_t value = bodyDamageCompressedSector(damage, sector);
+        damage->appliedSectors[sector] = (uint8_t)value;
+        total += value;
+    }
+    damage->appliedTotal = (uint16_t)total;
+}
+
+void bodyDamageRepair(BodyDamage* damage)
+{
+    for (int sector = 0; sector < BODY_DAMAGE_SECTORS; ++sector) bodyDamageSetSector(damage, sector, 0.0f);
+    damage->total = 0;
+    bodyDamageApply(damage);
+}
+
+
+namespace hp2 {
+namespace {
+float real(const std::uint8_t* bytes)
+{
+    const auto bits = ReadU32(bytes);
+    float value;
+    std::memcpy(&value, &bits, sizeof(value));
+    Require(std::isfinite(value), "Body damage definition contains a non-finite bound");
+    return value;
+}
+} // namespace
+
+CarDamageData::CarDamageData(const std::vector<std::uint8_t>& geometry)
+{
+    std::set<std::uint32_t> keys;
+    const auto visit = [&](const auto& self, std::size_t start, std::size_t size, unsigned depth) -> void {
+        Require(depth <= 32, "Body damage chunk nesting exceeds 32 levels");
+        for (const auto& chunk : ReadChunks(geometry, start, size)) {
+            if (chunk.id == 0x34030u) {
+                Require(chunk.size >= 84 && (chunk.size - 84) % 4 == 0,
+                        "Body damage definition contains a partial record");
+                const auto* data = geometry.data() + chunk.payloadOffset;
+                const auto* end = std::find(data + 8, data + 40, std::uint8_t(0));
+                Require(end != data + 40, "Body damage model name is not terminated");
+                Definition definition;
+                definition.name.assign(reinterpret_cast<const char*>(data + 8), static_cast<std::size_t>(end - data - 8));
+                definition.bounds.key = ReadU32(data + 40);
+                Require(keys.insert(definition.bounds.key).second && hashString(definition.name.c_str()) == definition.bounds.key,
+                        "Body damage definition repeats a key or has a name/hash mismatch");
+                for (int lane = 0; lane < 2; ++lane) {
+                    definition.bounds.minimum[lane] = real(data + 44 + lane * 4);
+                    definition.bounds.maximum[lane] = real(data + 52 + lane * 4);
+                    Require(definition.bounds.minimum[lane] < definition.bounds.maximum[lane],
+                            "Body damage definition has a degenerate bound");
+                }
+                definition.bounds.vertexCount = ReadU32(data + 68);
+                const std::size_t count = ReadU32(data + 72);
+                Require(count == (chunk.size - 84) / 4, "Body damage run count does not match its payload");
+                definition.runs.reserve(count);
+                std::size_t covered = 0;
+                for (std::size_t index = 0; index < count; ++index) {
+                    const auto code = ReadU32(data + 84 + index * 4);
+                    definition.runs.push_back(code);
+                    covered += (code & 7u) + 1;
+                }
+                Require(covered == definition.bounds.vertexCount, "Body damage runs do not cover the declared vertices");
+                definitions_.push_back(std::move(definition));
+            } else if (chunk.IsContainer()) self(self, chunk.payloadOffset, chunk.size, depth + 1);
+        }
+    };
+    visit(visit, 0, geometry.size(), 0);
+    // Register only once all allocations/validation have succeeded. The list
+    // borrows these same stable records and these same retained run buffers.
+    for (auto& definition : definitions_) {
+        definition.bounds.runs = definition.runs.data();
+        definition.bounds.runCount = definition.runs.size();
+        bodyDamageLoadInfo(0x34030u, &definition.bounds);
+    }
+}
+
+CarDamageData::~CarDamageData()
+{
+    for (auto& definition : definitions_) bodyDamageUnloadInfo(0x34030u, &definition.bounds);
+}
+
+const BodyDamageInfo* CarDamageData::Find(const std::string& name) const noexcept
+{
+    for (const auto& definition : definitions_) if (definition.name == name) return &definition.bounds;
+    return nullptr;
+}
+
+} // namespace hp2

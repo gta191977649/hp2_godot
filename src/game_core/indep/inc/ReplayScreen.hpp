@@ -1,28 +1,78 @@
-// TASK-0042 E-0042-S001: exact Debug source marker(s): ../indep/inc/ReplayScreen.hpp.
-// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
-// PORT-SIDE template file; destination/header extension is not original-file evidence.
 #pragma once
 
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: allocator_label; evidence: E-0027-C01.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-// Diagnostic text (not a callable signature): ReplayScreen::Update() [0x002AE150]
-namespace hp2::recovered {
-class ReplayScreen {
-public:
-    // No member address is confirmed; no speculative members are declared.
+#include "FMenus.hpp"
+#include <array>
+#include <cstdint>
 
+struct CarChaseCamera;
+struct CarFramePlayerState;
+struct CarViewMover;
+struct GameInputRouter;
+struct GameTime;
+struct ReplaySnapshot;
+class ReplayManagerOwner;
+
+namespace hp2 {
+class DemoModeReplay;
+
+// The original ReplayScreen.hpp/ReplayScreen.cpp owner. Services borrow the
+// actual session, snapshots, Flailer objects and world cameras. The selected
+// player is the existing GameSessionViewSelection cell, not a second seat.
+class ReplayScreen final {
 public:
-    // TASK-0028: missing entries; existing storage and bodies are preserved.
-    // ELF 0x001EC510; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001ec510.md.
-    // Original Debug reference: ReplayScreen::HasCameraMover(void); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void HasCameraMover();
-    // ELF 0x001ED410; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001ed410.md.
-    // Original Debug reference: ReplayScreen::GetTimelinePositionX(float); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void GetTimelinePositionX();
+    ReplayScreen(RaceScreenServices& services,std::int32_t seat);
+    ~ReplayScreen() noexcept;
+    ReplayScreen(const ReplayScreen&)=delete;
+    ReplayScreen& operator=(const ReplayScreen&)=delete;
+
+    // Checked host retirement executes the source destructor before reset.
+    // The noexcept destructor still detaches every callback/camera if Close
+    // reports a physical audio error during an exceptional parent teardown.
+    void Close();
+    void Tick();
+    void Update();
+    void ChangeCameraMover();
+    void CalculateTimelineMarkers(bool visible);
+    bool ShouldWeBeWatchingNis() const;
+    void StopWatchingNis();
+    bool HasCameraMover() const noexcept;
+    void AddJoyHandlers(std::int32_t port);
+    void RemoveJoyHandlers(std::int32_t port) noexcept;
+    void JoyHandler(std::int32_t port,std::int32_t event,std::uint8_t value);
+    static void JoyHandlerBridge(std::int32_t port,std::int32_t event,std::uint8_t value,ReplayScreen* owner);
+    std::int32_t GetTimelinePositionX(float seconds) const;
+    void SetFlailerBitmapPosition(FlailerBitmapChunk* bitmap,float seconds) const;
+    void Pause(std::int32_t paused);
+
+private:
+    struct TimelineMarker {
+        float start{},end{};
+        FlailerBitmapChunk* bitmap{};
+        ReplaySnapshot* snapshot{};
+    };
+    FlailerUiState& Ui() const;
+    CarFramePlayerState& Player() const;
+    GameInputRouter& Input() const;
+    ReplayManagerOwner& Replay() const;
+    DemoModeReplay& Demo() const;
+    const GameTime& Clock() const;
+    void RetireCameras();
+    void MuteReplay(bool paused);
+    void PlayCue(const char* name);
+    void Post(std::int32_t message,std::intptr_t argument);
+    RaceScreenServices& services_;
+    float startSeconds_{},endSeconds_{};
+    std::int32_t timelineLeft_{10},timelineWidth_{100};
+    std::int32_t hidden_{},cameraSelection_{},lastJoyLoop_{},stoppedAtTicks_{};
+    std::array<TimelineMarker,16> markers_{};
+    std::array<TimelineMarker,16> segments_{};
+    std::size_t markerCount_{},segmentCount_{};
+    FlailerBitmapChunk* cursor_{};
+    std::array<FlailerObjectChunk*,3> indicators_{};
+    CarChaseCamera* chase_{};
+    CarViewMover* demoCamera_{};
+    CarViewMover* nisCamera_{};
+    std::array<std::uint32_t,2> registered_{};
+    bool screenVisible_{},closed_{};
 };
-} // namespace hp2::recovered
+} // namespace hp2

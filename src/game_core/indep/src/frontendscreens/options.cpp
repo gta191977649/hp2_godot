@@ -1,826 +1,1609 @@
-// Original source path, recovered verbatim from the authorized ELF: `..\indep\src\frontendscreens\options.cpp`
-// (string at 0x002B9E00, SLUS_203.62 sha256 7335b8ed...facc2; TASK-0020, E-0020-N01).
-// This file sits at that path. The path is original; what the file holds is a
-// partial port-side reconstruction, not the original translation unit.
-#include "options.hpp"
-#include "game_core/port/not_implemented.hpp"
-#include <algorithm>
-#include <cstdio>
-#include <cstring>
+#include "FMenus.hpp"
+#include "FEAnim.hpp"
+#include "Fred.hpp"
+#include "NativeAudioProfileValidation.hpp"
+#include "CarLoader.hpp"
+#include "Timer.hpp"
+#include <tuple>
+#include "bware/inc/bWare.hpp"
+#include "bware/inc/bMath.hpp"
 
-bool ::port::frontend::advance_zero_velocity_path(hp2::frontend::AnimationGroup& path, float delta_seconds) {
-        if (path.field_0x48 == 0) return true;
-        if (path.field_0x48 == 2) {
-            path.field_0x28 = 0;
-            path.field_0x48 = 1;
-            // FUN_001DA780: both endpoint velocities were initialized to zero by 00248568.
-            const float difference = path.field_0x24 - path.field_0x1c;
-            path.field_0x38 = path.field_0x1c;
-            path.field_0x34 = 0;
-            path.field_0x2c = -(difference + difference);
-            path.field_0x30 = difference * 3.0f;
-        }
-        path.field_0x28 += delta_seconds / path.field_0x40;
-        if (1.0f <= path.field_0x28) {
-            path.field_0x1c = path.field_0x24;
-            path.field_0x48 = 0;
-        } else {
-            const float t = path.field_0x28;
-            path.field_0x1c = ((path.field_0x2c * t + path.field_0x30) * t +
-                             path.field_0x34) * t + path.field_0x38;
-        }
-    return path.field_0x48 == 0;
+namespace hp2 {
+
+FlailerSlideOnScreen::FlailerSlideOnScreen(FlailerUiState& state,std::uint32_t screen,
+    std::uint32_t anchor,std::uint32_t group,std::uint32_t visibilityScreen)
+    : ui_(state),screen_(screen),anchor_(anchor),group_(group),visibilityScreen_(visibilityScreen)
+{
+    Require(ui_.resources && ui_.render && ui_.clock,"Options slide has no actual UI resource/render/clock owners");
+    position.duration=position.threshold=1.0f;
+    position.continuous=1;
+    if (const auto* object=ui_.resources->FindObject(screen_,anchor_))
+        ui_.resources->GetTopLeft(*object,savedX_,savedY_,ui_.language);
+    Appear();
 }
 
-namespace port::frontend::jukebox_projection {
-// Host bounds checks surround the original array accesses; malformed/unsupported
-// inputs fail explicitly instead of manufacturing songs or clipping the list.
-std::uint32_t word(const JukeboxScreenState& state,std::size_t offset) {
-    std::uint32_t value=0;
-    for(unsigned i=0;i<4;++i)value|=std::uint32_t(state.snapshot.at(offset+i))<<(i*8);
-    return value;
-}
-std::size_t group_index(const JukeboxScreenState& state) {
-    const auto index=state.snapshot[0xae];
-    if(index>=state.groups.size()) hp2::not_implemented("0x001F0478","Jukebox category outside recovered groups");
-    return index;
-}
-void preview(const JukeboxScreenState& state,const JukeboxScreenServices& services,bool resume) {
-    const auto& group=state.groups.at(group_index(state));
-    if(state.cursor<0 || static_cast<std::size_t>(state.cursor)>=group.songs.size())
-        hp2::not_implemented("0x001F0CC8","Jukebox song cursor outside recovered group");
-    const auto song=group.songs[static_cast<std::size_t>(state.cursor)];
-    if(!services.preview) hp2::not_implemented("0x0027D6A8","Jukebox preview service missing");
-    services.preview(state.snapshot[0x1c+song*4],state.snapshot[0x1d+song*4],resume);
-}
-// ELF00143E70 ->00140E20, E-0092-J04; the owning string storage is host-side.
-void set_text(hp2::frontend::FeScreen& screen,std::uint32_t hash,const std::string& value) {
-    auto* widget=hp2::frontend::FindWidget_00143D50(screen,hash,1);
-    if(!widget || widget->text==value)return;
-    if(widget->text_capacity==0)
-        hp2::not_implemented("0x00140E20","Jukebox dynamic text has zero original capacity");
-    widget->text=value.substr(0,widget->text_capacity-1);
-    widget->string_id_0x60=0;
-    widget->dirty_0x2b=5;
-}
-void set_colour(hp2::frontend::FeScreen& screen,std::uint32_t hash,
-    const hp2::frontend::MenuColour_00169BD0& colour) {
-    if(auto* widget=hp2::frontend::FindWidget_00143D50(screen,hash,1))hp2::frontend::SetColor(*widget,colour);
-}
+FlailerSlideOnScreen::~FlailerSlideOnScreen()
+{
+    Disappear();
 }
 
-namespace port::frontend::display_projection {
-template<std::size_t N>std::uint32_t word(const std::array<std::uint8_t,N>& bytes,std::size_t offset) {
-    std::uint32_t value=0;for(unsigned b=0;b<4;++b)value|=std::uint32_t(bytes.at(offset+b))<<(b*8);return value;
-}
-template<std::size_t N>void store(std::array<std::uint8_t,N>& bytes,std::size_t offset,std::uint32_t value) {
-    for(unsigned b=0;b<4;++b)bytes.at(offset+b)=static_cast<std::uint8_t>(value>>(b*8));
-}
-void label(hp2::frontend::FeScreen& screen,std::uint32_t hash,std::uint32_t id,
-    const std::function<std::string(std::uint32_t)>& localize) {
-    hp2::frontend::SetWidgetStringId_001449A8(screen,hash,id);
-    if(auto* widget=hp2::frontend::FindWidget_00143D50(screen,hash,1))widget->text=id ? localize(id) : "";
-}
-template<std::size_t N>std::uint8_t cycle(std::uint8_t current,int direction,const std::uint8_t (&table)[N]) {
-    for(std::size_t i=0;i<N;++i)if(table[i]==current)return table[(static_cast<int>(i)+direction+static_cast<int>(N))%N];
-    return table[0]; //001BD8B0 unknown-value path ignores direction.
-}
+void FlailerSlideOnScreen::Tick()
+{
+    tCubic1DUpdate(&position,ui_.clock->realTimeElapsed,0.0f,0.0f);
+    if (ui_.resources->FindObject(screen_,anchor_))
+        ui_.resources->MoveGroupTo(screen_,group_,anchor_,
+            static_cast<float>(convertFloatToInt32(position.value)),
+            static_cast<float>(convertFloatToInt32(savedY_)));
 }
 
-namespace hp2::frontend {
-// E-0094-D01:001F3A28/001F3730/001EE148 and six original change helpers.
-const char* Sub_001F3A28(::port::frontend::DisplayOptionsState& state,int message,MenuEvent_0016A458& event,
-    const ::port::frontend::DisplayContext& context) {
-    using namespace ::port::frontend::display_projection;
-    const auto item=event.field_0x00-0x52e039f3u;
-    if(message==1) {
-        if(item==6)return "Customize P1 HUD";
-        if(item==7)return "Customize P2 HUD";
-        if(item==8)return "Calibrate display offset";
-        event.sound_id_0x0C=0;
-    } else if((message==6 || message==7) && item<6) {
-        const int direction=message==6 ? -1 : 1;
-        auto& bytes=state.snapshot;
-        if(item==0) {
-            constexpr std::uint8_t field_003140A0[]{0,1,2,3,4,6};
-            constexpr std::uint8_t field_00331090[]{7,6},field_00331098[]{8,6};
-            if(context.gameflow==3 || (context.dat_0031ab0c==0 && context.gp_ae48==1))bytes[2]=cycle(bytes[2],direction,field_003140A0);
-            else if(context.dat_0031ab0c!=0)bytes[4]=cycle(bytes[4],direction,field_00331098);
-            else bytes[3]=cycle(bytes[3],direction,field_00331090);
-            bytes[3]=bytes[2]==6 ? 6 : 7;bytes[4]=bytes[2]==6 ? 6 : 8;
-        } else if(item==1)bytes[0]=bytes[0]==0;
-        else if(item==2)bytes[1]=bytes[1]==0;
-        else if(item==3)bytes[5]=bytes[5]==2 ? 0 : 2;
-        else if(item==4)bytes[6]=bytes[6]==0;
-        else if(item==5)bytes[7]=bytes[7]==0;
-        event.sound_id_0x0C=message==6 ? 1 : 2;
-    } else if(message==13)event.sound_id_0x0C=0;
-    return nullptr;
+void FlailerSlideOnScreen::Disappear()
+{
+    ui_.resources->MoveGroupTo(screen_,group_,anchor_,
+        static_cast<float>(convertFloatToInt32(savedX_)),
+        static_cast<float>(convertFloatToInt32(savedY_)));
+    ui_.render->SetScreenVisibility(*ui_.resources,visibilityScreen_,1);
 }
-// E-0094-D01:001F37D0/001F38D0/001F3950/001F36D8/001F3630/001F3650.
-void Sub_001F3A28(const ::port::frontend::DisplayOptionsState& state,FeScreen& screen,
-    const std::function<std::string(std::uint32_t)>& localize) {
-    using namespace ::port::frontend::display_projection;
-    const auto& b=state.snapshot;
-    constexpr std::uint32_t field_001F37D0[]{0x22345,0x22346,0x22347,0x223a8,0x22348,0x22349,0x22353,0,0x223a9,0x223aa};
-    if(b[2]>=10 || b[5]>=3)hp2::not_implemented("0x001F37D0","Display value outside original string tables");
-    label(screen,0x55cb09f2,field_001F37D0[b[2]],localize);
-    label(screen,0x2e931f1b,b[0] ? 0x22352 : 0x22353,localize);
-    label(screen,0x03d90172,b[1] ? 0x2234b : 0x2234a,localize);
-    constexpr std::uint32_t field_002BA1B8[]{0x22353,0x18e71,0x22352};
-    label(screen,0x5610f2f4,field_002BA1B8[b[5]],localize);
-    label(screen,0x422313cb,b[6] ? 0x22352 : 0x22353,localize);
-    label(screen,0x8fe4086b,b[7] ? 0x22352 : 0x22353,localize);
+
+void FlailerSlideOnScreen::Appear()
+{
+    position.desiredValue=ui_.animationSettings.screenSlideStartPosition;
+    position.duration=0.5f;position.continuous=0;
+    if (position.value!=position.desiredValue)position.mode=2;
+    position.mode=0;position.value=position.desiredValue;
+    position.derivative=position.desiredDerivative;
+    position.desiredValue=savedX_;
+    if (position.value!=position.desiredValue)position.mode=2;
+    ui_.render->SetScreenVisibility(*ui_.resources,visibilityScreen_,0);
+    Tick();
 }
-// E-0094-D02,001F46D8. Address-preserving bounded changes to player settings.
-void Sub_001F46D8(::port::frontend::HudOptionsState& state,int message,MenuEvent_0016A458& event) {
-    using namespace ::port::frontend::display_projection;
-    const auto item=event.field_0x00-0x52e039f3u;
-    if((message==6 || message==7) && item<7) {
-        auto& b=state.snapshot;
-        if(item==0)store(b,0xc,word(b,0xc)==0);
-        else if(item==1)store(b,8,word(b,8)==0);
-        else if(item==2)store(b,0x10,word(b,0x10)^0x40u);
-        else if(item==3)store(b,0x10,word(b,0x10)^0x10u);
-        else if(item==4)store(b,0x10,word(b,0x10)^0x100u);
-        else if(item==5) {
-            const int next=static_cast<int>(b[6])+(message==6 ? -1 : 1);
-            b[6]=static_cast<std::uint8_t>(next<0 ? 4 : next>4 ? 0 : next);
-            store(b,0x10,b[6]==4 ? word(b,0x10)&~4u : word(b,0x10)|4u);
-        } else store(b,0x2c,word(b,0x2c)==0);
-        event.sound_id_0x0C=message==6 ? 1 : 2;
-    } else if(message==1 || message==13)event.sound_id_0x0C=0;
+
+
+namespace {
+constexpr std::uint32_t OptionsGroups[]={0x6e34e350u,0x708a0bf1u,0x72df3492u,0x75345d33u,
+    0x778985d4u,0x79deae75u,0x7c33d716u,0x7e88ffb7u};
+MainMenuScreenServices* optionsServices{};
+std::unique_ptr<OptionsScreenBase> optionsOwner;
+void ClearLanguageOptionsOwner();
+
+float OptionsLeft(FlailerUiState& ui,std::uint32_t screen)
+{
+    auto* object=ui.resources->FindObject(screen,OptionsGroups[0]);
+    Require(object,"Options slide has no authored first menu group");
+    float x,y;ui.resources->GetTopLeft(*object,x,y,ui.language);return x;
 }
-// E-0094-D02: six value helpers001F4360..001F46B0 retain original conditions.
-void Sub_001F46D8(const ::port::frontend::HudOptionsState& state,FeScreen& screen,
-    const std::function<std::string(std::uint32_t)>& localize) {
-    using namespace ::port::frontend::display_projection;
-    const auto& b=state.snapshot;const auto flags=word(b,0x10),lookback=word(b,0xc);
-    label(screen,0x2e018745,lookback==0 ? 0x22356 : lookback==1 ? 0x22351 : 0,localize);
-    label(screen,0xffc3dcd2,word(b,8)==1 ? 0x22353 : 0x22352,localize);
-    label(screen,0x4ceb3ed2,(flags&0x40) ? 0x22352 : 0x22353,localize);
-    label(screen,0x1054482b,(flags&0x10) ? 0x22352 : 0x22353,localize);
-    label(screen,0xc7e2117e,(flags&0x100) ? 0x22352 : 0x22353,localize);
-    constexpr std::uint32_t field_001F45D8[]{0x2234c,0x2234d,0x2234e,0x2234f,0x22353};
-    label(screen,0x6caf6d10,b[6]<5 ? field_001F45D8[b[6]] : 0,localize);
-    label(screen,0x6bd89c11,word(b,0x2c) ? 0x22352 : 0x22353,localize);
-}
-// E-0094-D03:001F4B20 jump table002BA3D0 and complete interior listing.
-bool Sub_001F4B20(::port::frontend::DisplayOffsetState& state,int message,int& sound) {
-    sound=0;
-    if(message==6) {const auto next=static_cast<std::int32_t>(static_cast<std::uint32_t>(state.x)-4u);state.x=next< -650 ? -650 : next;if(next>= -650)sound=1;}
-    else if(message==7){state.x=static_cast<std::int32_t>(static_cast<std::uint32_t>(state.x)+4u);sound=1;}
-    else if(message==8){const auto next=static_cast<std::int32_t>(static_cast<std::uint32_t>(state.y)-1u);state.y=next< -50 ? -50 : next;if(next>= -50)sound=1;}
-    else if(message==9){state.y=static_cast<std::int32_t>(static_cast<std::uint32_t>(state.y)+1u);sound=1;}
-    else if(message==14){state.x=state.cached_x;state.y=state.cached_y;sound=5;}
-    else if(message==17)sound=6;
-    else if(message==1){sound=5;return true;}
+
+// Full original DifferentData1EE688. This is comparison of actual values,
+// never a native object's padding, console pointer image or second owner.
+bool DifferentData(const void* first,const void* second,std::int32_t count)
+{
+    auto* a=static_cast<const std::uint8_t*>(first);
+    auto* b=static_cast<const std::uint8_t*>(second);
+    for (;count>0;--count,++a,++b)if (*a!=*b)return true;
     return false;
 }
 
-// ELF001DAEC8 bounded scalar path, E-0093-A01. All operation grouping follows
-// 001DA780,001DA7D0,001DA800; no Godot tween or zero-derivative substitution.
-void Sub_001DAEC8(::port::frontend::ScalarPath& path,float delta) {
-    if(path.phase!=1 && path.phase!=2)return;
-    if(path.phase==2) {
-        path.time=0;path.phase=1;
-        const float difference=path.target-path.current;
-        path.a=(path.velocity+path.target_velocity)-(difference+difference);
-        path.b=(difference*3.0f-path.target_velocity)-(path.velocity+path.velocity);
-        path.c=path.velocity;path.d=path.current;
-    }
-    path.time+=delta/path.duration;
-    if(path.limit<=path.time) {
-        if(path.limit>=1.0f){path.current=path.target;path.velocity=path.target_velocity;}
-        path.phase=0;
-    } else {
-        path.current=((path.a*path.time+path.b)*path.time+path.c)*path.time+path.d;
-        path.velocity=(path.a*path.time*3.0f+path.b+path.b)*path.time+path.c;
-    }
+bool DifferentPlayerSettings(const PlayerSettings& a,const PlayerSettings& b)
+{
+    // The original snapshot compares its complete 48-byte authored settings
+    // record. Native field arrangement differs: compare every logical field
+    // and all twelve name bytes, deliberately excluding native padding.
+    return std::tie(a.inputProfile,a.authoredOption,a.initialVehicleMode,a.gearInputMode,
+        a.cameraView,a.alternateCamera,a.splitTimeMode,a.authoredTimeDisplayOption,
+        a.cameraSpring,a.lookback,a.hudFlags,a.bestTotalTimeTicks,a.bestLapTimeTicks,
+        a.hudHotkey,a.scoring)!=
+        std::tie(b.inputProfile,b.authoredOption,b.initialVehicleMode,b.gearInputMode,
+        b.cameraView,b.alternateCamera,b.splitTimeMode,b.authoredTimeDisplayOption,
+        b.cameraSpring,b.lookback,b.hudFlags,b.bestTotalTimeTicks,b.bestLapTimeTicks,
+        b.hudHotkey,b.scoring) || DifferentData(a.playerName,b.playerName,12);
 }
 }
 
-namespace port::frontend::audio_projection {
-constexpr std::uint32_t defaults[]{0x3ee66666,0x3f59999a,0x3ec28f5c,0x3f0ccccd,
-    0x3ea8f5c3,0x3e9eb852,0x3f400000};
-float read_float(const std::array<std::uint8_t,0xb0>& bytes,std::size_t index) {
-    std::uint32_t bits=0;
-    for(unsigned b=0;b<4;++b)bits|=std::uint32_t(bytes.at(index*4+b))<<(b*8);
-    float result;std::memcpy(&result,&bits,4);return result;
-}
-void write_float(std::array<std::uint8_t,0xb0>& bytes,std::size_t index,float value) {
-    std::uint32_t bits;std::memcpy(&bits,&value,4);
-    for(unsigned b=0;b<4;++b)bytes.at(index*4+b)=static_cast<std::uint8_t>(bits>>(b*8));
-}
-float factor(std::size_t index) {
-    if(index>=7)hp2::not_implemented("0x0016DC20","Audio slider index outside seven original categories");
-    float value;std::memcpy(&value,&defaults[index],4);return 0.7f/value;
-}
+struct DisplayOptionsChangeManager::Storage {
+    std::array<std::int32_t,2> calibration{};
+    GlobalDisplaySettings display{};
+    std::array<PlayerSettings,2> players{};
+};
+DisplayOptionsChangeManager::DisplayOptionsChangeManager():storage_(std::make_unique<Storage>()) {}
+DisplayOptionsChangeManager::~DisplayOptionsChangeManager()=default;
+DisplayOptionsChangeManager gDisplayOptionsChangeManager;
+
+void DisplayOptionsChangeManager::Start(const FrontendPlayerManager& frontend)
+{
+    // PAL1EE6C0 snapshots FRED+144 calibration, +14C display and both real
+    // profile settings. This source-owned snapshot is intentionally separate
+    // from the live settings; it neither applies nor fabricates a change.
+    Require(frontend.players[0] && frontend.players[1],"Display change snapshot requires both actual profiles");
+    storage_->calibration=frontend.displayCalibration;
+    storage_->display=frontend.displaySettings;
+    storage_->players[0]=frontend.players[0]->settings;
+    storage_->players[1]=frontend.players[1]->settings;
 }
 
-namespace hp2::frontend {
-// ELF001EF3C8/0016DC20, E-0093-A01. Constructor snaps the initial path to
-// normalized raw amplitude (no entrance animation) and preserves the full snapshot.
-void Sub_001EF3C8(::port::frontend::AudioOptionsState& state,const std::array<std::uint8_t,0xb0>& snapshot) {
-    state={};state.snapshot=snapshot;
-    for(std::size_t i=0;i<7;++i) {
-        auto& path=state.sliders[i];
-        path.current=::port::frontend::audio_projection::read_float(snapshot,i)*::port::frontend::audio_projection::factor(i);
-        path.target=path.current;
+bool DisplayOptionsChangeManager::Different(const FrontendPlayerManager& frontend) const
+{
+    Require(frontend.players[0] && frontend.players[1],"Display change comparison requires both actual profiles");
+    if (DifferentData(storage_->calibration.data(),frontend.displayCalibration.data(),8))return true;
+    static_assert(sizeof(GlobalDisplaySettings)==8,"All eight original display choices must remain present");
+    if (DifferentData(&storage_->display,&frontend.displaySettings,8))return true;
+    if (DifferentPlayerSettings(storage_->players[0],frontend.players[0]->settings))return true;
+    return DifferentPlayerSettings(storage_->players[1],frontend.players[1]->settings);
+}
+
+OptionsMenuState::OptionsMenuState(MainMenuScreenServices& bindings,std::uint32_t key)
+    : services(bindings),screen(key),slide(*bindings.ui,key,OptionsLeft(*bindings.ui,key)),
+      highlight(*bindings.ui,key,0xab671c9au,bindings.ui->animationSettings.highlightColor),
+      selectionChange(*bindings.ui,key,0x1042eac3u,-1),selection(std::make_unique<FlailerSelectionSet>()) {}
+
+MainMenuScreenServices& OptionsScreenBase::BoundServices()
+{
+    Require(optionsServices,"Options screen has no canonical service bindings");
+    return *optionsServices;
+}
+void OptionsScreenBase::Install(std::unique_ptr<OptionsScreenBase> instance)
+{
+    Require(instance && !optionsOwner,"Options screen duplicates the original live instance");
+    optionsOwner=std::move(instance);
+}
+
+OptionsScreenBase::OptionsScreenBase(MainMenuScreenServices& services,std::uint32_t screen)
+    : state_(std::make_unique<OptionsMenuState>(services,screen))
+{
+    // PAL1F4C98; the eight groups are read from final2BA430.
+    state_->selection->showOtherItems=1;
+    state_->selection->AddItems(*services.ui->resources,screen,OptionsGroups,8);
+    services.screens->StartMovie("MOVIES\\options_movie_new.AVI");
+}
+OptionsScreenBase::~OptionsScreenBase()=default;
+
+void OptionsScreenBase::HandleHighlight(ScreenMessage,ScreenCallbackData& data,std::uint32_t group)
+{
+    if (!group && data.key>=0x52e039f3u && data.key<=0x52e039f9u)
+        group=OptionsGroups[data.key-0x52e039f3u];
+    state_->selection->SetCurrentItem(group);
+    auto& ui=*state_->services.ui;
+    std::int32_t left,top,right,bottom;
+    Require(ui.resources->GetBoundingBox(state_->screen,group,left,top,right,bottom,ui.language),
+        "Options highlight has no authored bounding rectangle");
+    // The Options lower rail is at bottom, unlike the MainMenu/Cops -3.
+    if (auto* lower=ui.resources->FindObject(state_->screen,0x32c91daeu))
+        lower->SetTopLeftY(static_cast<float>(bottom));
+    if (auto* upper=ui.resources->FindObject(state_->screen,0xc671680cu))
+        upper->SetTopLeftY(static_cast<float>(top-6));
+    state_->highlight.SetCurrentMenuItem(data.key);
+}
+
+void OptionsScreenBase::FirstCrackAtMessage(ScreenMessage message,ScreenCallbackData& data)
+{
+    if (message==ScreenMessage::Highlight)HandleHighlight(message,data,0);
+    else if (message==ScreenMessage::Tick) {
+        state_->slide.Animate();state_->highlight.Animate();state_->selectionChange.Animate();
+    }
+    if (state_->exit) {state_->exit->HandleMessages(message,data);return;}
+    HandleEvent(message,data);
+}
+
+void OptionsScreenBase::BaseCallback(ScreenMessage message,ScreenCallbackData* data)
+{
+    // PAL1F5060's one actual OptionsScreenBase::pInstance owner, shared by
+    // Options family implementations when they are implemented and bound.
+    if (message==ScreenMessage::ScreenDeactivate) {optionsOwner.reset();return;}
+    Require(optionsOwner && data,"Options callback arrived without its actual owner/data");
+    optionsOwner->FirstCrackAtMessage(message,*data);
+}
+
+OptionsScreen::OptionsScreen(MainMenuScreenServices& services,std::uint32_t screen)
+    : OptionsScreenBase(services,screen),
+      blurb_(std::make_unique<FlailerAnimatedBlurb>(*services.ui,screen,0x75980cf0u,0x75980cf0u,0x70a404ecu))
+{
+    // PAL1EEB78 initializes only the embedded RumbleTimer word. Its Tick
+    // and TriggerSomething callees are final JR RA/NOP and are not emitted.
+    rumbleTimer_=0;
+    if (gameTimeGetVideoMode(services.ui->clock)==1) {
+        // Complete relevant constant-state2 path of actual16D198: find the
+        // registered screen/menu/item, clear enabled bit1 and hide its object.
+        // No replacement menu or generic callback is created for this call.
+        if (auto* node=services.screens->FindScreen(static_cast<std::int32_t>(screen)))
+            if (auto* sourceScreen=node->FindFlailerScreen(static_cast<std::int32_t>(screen)))
+                if (sourceScreen->menu)
+                    if (auto* item=sourceScreen->menu->FindItem(0x52e039f9u)) {
+                        item->ClearMenuItemState(1);
+                        services.ui->resources->SetObjectVisibility(screen,0x52e039f9u,0);
+                    }
     }
 }
-// ELF0016DD38/0016DD18/0016DD28, E-0093-A01.
-std::optional<float> Sub_0016DD38(::port::frontend::AudioOptionsState& state,std::size_t index,float delta) {
-    using namespace ::port::frontend::audio_projection;
-    const float scale=factor(index),old=read_float(state.snapshot,index);
-    float normalized=(old+delta)*scale;
-    if(normalized>1.0f)normalized=1.0f;
-    if(normalized<0.0f)normalized=0.0f;
-    const float raw=normalized/scale;
-    write_float(state.snapshot,index,raw);
-    auto& path=state.sliders.at(index);path.target=normalized;
-    if(normalized!=path.current)path.phase=2;
-    if(raw!=old)return normalized;
-    return std::nullopt;
-}
-// ELF0016DE30 +001EFB38, E-0093-A02. Rectangle integer endpoints precede
-// normalized interpolation and final truncation. Marker scale/Y remain authored.
-void Sub_0016DE30(::port::frontend::AudioOptionsState& state,FeScreen& screen,float delta,
-    const WidgetMeasure& measure,const std::function<std::string(std::uint32_t)>& localize) {
-    constexpr std::uint32_t field_001EF3C8[]{0xc866642b,0xc866686c,0xc8666cad,0xc86670ee,0xc866752f,0xc8667970,0xc8667db1};
-    for(std::size_t i=0;i<7;++i) {
-        Sub_001DAEC8(state.sliders[i],delta);
-        const auto rect=GetWidgetRect_00144280(screen,0xa29f7a16+static_cast<std::uint32_t>(i),measure);
-        if(!rect.valid)continue;
-        const int left=static_cast<int>(rect.x0),right=static_cast<int>(rect.x1);
-        const int x=static_cast<int>(static_cast<float>(left)+state.sliders[i].current*static_cast<float>(right-left));
-        if(auto* marker=FindWidget_00143D50(screen,field_001EF3C8[i],0)) {
-            if(marker->x!=x){marker->x=static_cast<float>(x);marker->dirty_0x2b=4;}
+OptionsScreen::~OptionsScreen()=default;
+
+void OptionsScreen::HandleEvent(ScreenMessage message,ScreenCallbackData& data)
+{
+    auto& state=*state_;
+    if (message==ScreenMessage::Select) {
+        const char* destination=""; // actual PAL331660 default for unknown key
+        switch (data.key) {
+        case 0x52e039f3u:destination="Audio Options";break;
+        case 0x52e039f4u:destination="Joystick PreConfig";break;
+        case 0x52e039f5u:
+            destination="Display Options";
+            gDisplayOptionsChangeManager.Start(*state.services.frontend);
+            break;
+        case 0x52e039f6u:state.services.screens->ChangeToScreen("Phils Load Save",true);return;
+        case 0x52e039f7u:destination="NameEntry";break;
+        // Final jump table2B9BD0 selects Credits for F8, Language for F9;
+        // physical ordering of their string/basic blocks is different.
+        case 0x52e039f8u:state.services.screens->ChangeToScreen("Credits",true);return;
+        case 0x52e039f9u:state.services.screens->ChangeToScreen("Language Options",true);return;
+        default:break;
         }
+        Require(!state.exit,"Options already owns an exit animation");
+        auto& ui=*state.services.ui;
+        state.exit=std::make_unique<FlailerExitScreenAnimation>(ui,*state.services.screens,
+            state.screen,destination,true);
+        auto* anchor=ui.resources->FindObject(state.screen,0x32c91daeu);
+        Require(anchor,"Options exit has no authored lower rail anchor");
+        float x,y;ui.resources->GetTopLeft(*anchor,x,y,ui.language);
+        state.exit->AddGroup(0x97bf4b25u,0x32c91daeu,x,650.0f,state.exit->MaximumDuration());
+        return;
     }
-    const unsigned output=state.snapshot[0xac]|(unsigned(state.snapshot[0xad])<<8);
-    constexpr std::uint32_t field_001EFB38[]{0x1adb9,0x1adb8,0x1adbb};
-    if(output>2)hp2::not_implemented("0x001EFB38","Audio output mode outside original selector");
-    SetWidgetStringId_001449A8(screen,0x2932dfca,field_001EFB38[output]);
-    if(auto* widget=FindWidget_00143D50(screen,0x2932dfca,1))widget->text=localize(field_001EFB38[output]);
-}
+    if (message==ScreenMessage::Highlight) {
+        std::int32_t language=0;
+        if (data.key>=0x52e039f3u && data.key<=0x52e039f9u)
+            language=100020+static_cast<std::int32_t>(data.key-0x52e039f3u);
+        blurb_->NewText(language);
+        // Original Highlight falls through to the same Animate operation.
+    } else if (message!=ScreenMessage::Tick)return;
+    blurb_->Animate();
+    // Rumbleator.Tick PAL1EEBA8 is a proven no-op, not a sound/input stub.
 }
 
-namespace hp2::frontend {
-// ELF001F02D8 +001EF240, E-0092-J01. Portable data/grouping slice only.
-void Sub_001F02D8(::port::frontend::JukeboxScreenState& state,
-    const std::array<std::uint8_t,0xb0>& snapshot,
-    std::vector<::port::frontend::JukeboxSongMetadata> metadata) {
-    using namespace ::port::frontend;
-    JukeboxScreenState next;
-    next.snapshot=snapshot;
-    next.metadata=std::move(metadata);
-    const auto count=jukebox_projection::word(next,0x9c);
-    if(count>32 || count!=next.metadata.size())
-        hp2::not_implemented("0x001EF240","Jukebox metadata/count exceeds original 32-song block");
-    for(std::size_t i=0;i<count;++i) {
-        const auto& label=next.metadata[i].field_3;
-        if(label.empty())continue; // Original ignores null/empty metadata field3.
-        auto group=std::find_if(next.groups.begin(),next.groups.end(),[&](const auto& g){return g.label==label;});
-        if(group==next.groups.end()) {
-            if(next.groups.size()==6 || label.size()>=20)
-                hp2::not_implemented("0x001EF240","Jukebox group exceeds original storage");
-            next.groups.push_back({label,{}});
-            group=next.groups.end()-1;
-        }
-        if(group->songs.size()==20)
-            hp2::not_implemented("0x001EF240","Jukebox group exceeds original index storage");
-        next.snapshot[0x1f+i*4]=static_cast<std::uint8_t>(group-next.groups.begin());
-        group->songs.push_back(i);
-    }
-    // 001F0478 immediately reads the selected group. Preserve unsupported empty
-    // input as a gap, rather than substituting a fabricated category.
-    (void)Sub_001F0478(next);
-    state=std::move(next);
+void OptionsScreen::Callback(ScreenMessage message,ScreenCallbackData* data)
+{
+    if (message==ScreenMessage::ScreenActivate) {
+        Require(optionsServices && data && !optionsOwner,
+            "Options activation lacks actual services/data or duplicates a live owner");
+        optionsOwner=std::make_unique<OptionsScreen>(*optionsServices,data->key);
+    } else OptionsScreenBase::BaseCallback(message,data);
 }
 
-// ELF001F0478, E-0092-J02. Widget transport/colour binding is deliberately separate.
-::port::frontend::JukeboxPresentation Sub_001F0478(::port::frontend::JukeboxScreenState& state) {
-    using namespace ::port::frontend;
-    const auto genre=jukebox_projection::group_index(state);
-    const auto& songs=state.groups[genre].songs;
-    const auto count=static_cast<int>(songs.size());
-    if(state.cursor<0 || state.cursor>=count || state.first_row<0)
-        hp2::not_implemented("0x001F0478","Jukebox row state outside recovered bounds");
-    while(state.first_row+5<=state.cursor && state.first_row+5<count)++state.first_row;
-    while(state.cursor<state.first_row && state.first_row>=0)--state.first_row;
-    JukeboxPresentation result;
-    result.category_enabled=(state.snapshot[0xaf]&(1u<<genre))!=0;
-    result.category_arrows=!state.list_active;
-    const auto visible=std::min(5,count);
-    for(int row=0;row<visible;++row) {
-        const auto song=songs.at(static_cast<std::size_t>(state.first_row+row));
-        const auto mode=result.category_enabled ? state.snapshot.at(0x1e + song*4) : 0;
-        if(mode>5)hp2::not_implemented("0x001F0478","Jukebox mode outside six original string IDs");
-        const bool selected=state.list_active && state.cursor==state.first_row+row;
-        result.rows.push_back({song,selected,selected,mode});
-    }
-    result.up=state.list_active && state.first_row!=0;
-    result.down=state.list_active && count>4 && state.first_row!=count-5;
-    return result;
+void BindOptionsScreen(MainMenuScreenServices& services)
+{
+    Require(!optionsOwner && services.ui && services.screens && services.frontend,
+        "Options services cannot replace a live screen or omit original owners");
+    optionsServices=&services;
 }
+void UnbindOptionsScreen()
+{
+    ClearLanguageOptionsOwner();optionsOwner.reset();optionsServices=nullptr;
+}
+namespace {
+constexpr std::int32_t OptionsHelpItems[]={800057,800058,800059,0};
+}
+FlailerScreenConfig fOptions={
+    "Options",&OptionsScreen::Callback,
+    {{static_cast<std::int32_t>(0x95ad096bu),0,0,0}},{{-1,-1,-1,-1}},1,OptionsHelpItems};
 
-// ELF001F0478; E-0092-J04, task0092-jukebox.md. Hash arrays are the exact
-// five used entries of each six-word static block at0031AE00..0031AE77.
-void Sub_001F0478(::port::frontend::JukeboxScreenState& state,FeScreen& screen,
-    const std::function<std::string(std::uint32_t)>& localize) {
-    using namespace ::port::frontend;
-    using namespace ::port::frontend::jukebox_projection;
-    const auto view=Sub_001F0478(state);
-    constexpr std::uint32_t field_0031AE00[]{0x64a819c7,0x64a819c8,0x64a819c9,0x64a819ca,0x64a819cb};
-    constexpr std::uint32_t field_0031AE18[]{0x03b57047,0x03b57048,0x03b57049,0x03b5704a,0x03b5704b};
-    constexpr std::uint32_t field_0031AE30[]{0x89fb635f,0x8c508c00,0x8ea5b4a1,0x90fadD42,0x935005e3};
-    constexpr std::uint32_t field_0031AE48[]{0x0b825845,0x0b825846,0x0b825847,0x0b825848,0x0b825849};
-    constexpr std::uint32_t field_0031AE60[]{0xfc0279b8,0xfc0279b9,0xfc0279ba,0xfc0279bb,0xfc0279bc};
-    constexpr std::uint32_t field_002B9D30[]{0x1add9,0x1adda,0x1addd,0x1addb,0x1ade4,0x1addc};
-    for(std::size_t i=0;i<5;++i) {
-        const bool visible=i<view.rows.size();
-        for(auto hash:{field_0031AE00[i],field_0031AE18[i],field_0031AE30[i]})
-            SetWidgetVisible_00144968(screen,hash,visible);
-        const bool arrows=visible && view.rows[i].arrows;
-        SetWidgetVisible_00144968(screen,field_0031AE48[i],arrows);
-        SetWidgetVisible_00144968(screen,field_0031AE60[i],arrows);
-        if(!visible)continue;
-        const auto& row=view.rows[i];
-        const auto& metadata=state.metadata.at(row.song);
-        set_text(screen,field_0031AE00[i],metadata.field_1);
-        set_text(screen,field_0031AE18[i],metadata.field_0);
-        const auto id=field_002B9D30[row.mode];
-        SetWidgetStringId_001449A8(screen,field_0031AE30[i],id);
-        if(auto* widget=FindWidget_00143D50(screen,field_0031AE30[i],1))widget->text=localize(id);
-        const auto colour=row.highlighted ? kHighlightColour_gp_0x5330 :
-            (view.category_enabled ? MenuColour_00169BD0{128,128,128} : kDisabledColour_gp_0x5324);
-        for(auto hash:{field_0031AE00[i],field_0031AE18[i],field_0031AE30[i]})set_colour(screen,hash,colour);
-    }
-    SetWidgetVisible_00144968(screen,0xedf2e4ee,view.up);
-    SetWidgetVisible_00144968(screen,0x20d73d01,view.down);
-    const auto playing=word(state,0xa4);
-    if(playing>=state.metadata.size())hp2::not_implemented("0x001F0478","Jukebox now-playing index outside snapshot");
-    const auto& metadata=state.metadata[playing];
-    set_text(screen,0x0b41999a,metadata.field_1+" ("+metadata.field_0+")"); //00331698
-    set_text(screen,0x52e039f3,state.groups[group_index(state)].label);
-    set_colour(screen,0x52e039f3,view.category_arrows ? kHighlightColour_gp_0x5330 : MenuColour_00169BD0{128,128,128});
-    SetWidgetVisible_00144968(screen,0xd1cda594,view.category_arrows);
-    SetWidgetVisible_00144968(screen,0x9345e4a7,view.category_arrows);
-}
+} // namespace hp2
 
-// ELF001F0D10 jump table002B9D50 and listing001F0D5C..001F121C,
-// E-0092-J03. Message1/10/13 clear sound; other table default arms do nothing.
-void Sub_001F0D10(::port::frontend::JukeboxScreenState& state,int message,int& sound,
-    std::uint32_t tick,float elapsed_seconds,bool playback_active,
-    const ::port::frontend::JukeboxScreenServices& services) {
-    using namespace ::port::frontend;
-    const auto genre=jukebox_projection::group_index(state);
-    const auto count=static_cast<int>(state.groups[genre].songs.size());
-    if(message==1 || message==10 || message==13) {sound=0;return;}
-    if(message==15) {
-        state.snapshot[0xaf]^=static_cast<std::uint8_t>(1u<<genre);
-        if((state.snapshot[0xaf]&(1u<<genre))==0) {
-            state.list_active=false;state.first_row=0;state.cursor=0;
-        }
-        sound=5;
-    } else if(message==6 || message==7) {
-        const int direction=message==6 ? -1 : 1;
-        if(state.list_active) {
-            const auto song=state.groups[genre].songs.at(static_cast<std::size_t>(state.cursor));
-            auto& mode=state.snapshot.at(0x1e + song*4);
-            int next=static_cast<int>(mode)+direction;
-            if(next<0)next=5;
-            if(next>=6)next=0;
-            mode=static_cast<std::uint8_t>(next);
-        } else {
-            int next=static_cast<int>(genre)+direction;
-            if(next<0)next=static_cast<int>(state.groups.size())-1;
-            if(next>=static_cast<int>(state.groups.size()))next=0;
-            state.snapshot[0xae]=static_cast<std::uint8_t>(next);
-            state.cursor=0;
-        }
-        sound=message==6 ? 1 : 2;
-    } else if(message==8 || message==9) {
-        if(state.list_active) {
-            if(message==8 && state.cursor==0 && state.first_row==0) {
-                if(!services.stop)hp2::not_implemented("0x0027D868","Jukebox stop service missing");
-                state.list_active=false;
-                services.stop(); // Original leaves this message's sound untouched.
-            } else {
-                const int next=state.cursor+(message==8 ? -1 : 1);
-                if(next<0 || next>=count) {sound=0;return;}
-                state.cursor=next;sound=message==8 ? 3 : 4;
-                state.selection_tick=tick;state.preview_pending=true;
-            }
-        } else if(message==9) {
-            if((state.snapshot[0xaf]&(1u<<genre))!=0) {
-                state.list_active=true;state.selection_tick=tick;state.preview_pending=true;
-            } else sound=6;
-        } else sound=0;
-    } else if(message==17) {
-        if(!services.commit)hp2::not_implemented("0x001F0D10","Jukebox Back dependency chain missing");
-        services.commit(state);
-    } else if(message==18) {
-        if(elapsed_seconds>0.5f && state.preview_pending) {
-            if(!services.preview)hp2::not_implemented("0x0027D6A8","Jukebox preview service missing");
-            state.preview_pending=false;
-            jukebox_projection::preview(state,services,false);
-        }
-        if(elapsed_seconds>30.0f && !playback_active)
-            jukebox_projection::preview(state,services,false);
-    }
-    (void)Sub_001F0478(state);
-}
-}
-
-namespace hp2::frontend {
-void tExitScreenAnimation::SetupToAnimate(AnimationGroup& path) {
-    FeWidget* mask = FindWidget_00143D50(*field_0x00, path.field_0x10, 0);
-    if (!mask) return; // FUN_00144398 / FUN_00145308 return for absent anchors
-    const float x = static_cast<float>(static_cast<int>(path.field_0x1c));
-    const float y = path.field_0x18;
-    auto write = [](FeWidget& widget, float px, float py) {
-        if (widget.x != px) { widget.x = px; widget.dirty_0x2b = 4; }
-        if (widget.y != py) { widget.y = py; widget.dirty_0x2b = 4; }
+#include "bsound/include/bJukebox.h"
+#include "bsound/include/bSound.h"
+#include "CarSounds.hpp"
+#include <cstring>
+namespace hp2 {
+namespace {
+// Full original GenreMgr::Populate1EF240. Genre rows are the screen's
+// bounded derived index; the actual playlist remains in FRED and cJukebox.
+class GenreMgr {
+public:
+    struct Genre {
+        std::array<char,20> name{};
+        std::int32_t count{};
+        std::array<std::uint8_t,20> rows{};
     };
-    if (path.field_0x0c == 0) { write(*mask, x, y); return; }
-    // FUN_00145308 snapshots the mask position before traversing group members.
-    const float dx = x - mask->x, dy = y - mask->y;
-    for (FeWidget& widget : field_0x00->widgets)
-        if (widget.class_hash == path.field_0x0c) write(widget, widget.x + dx, widget.y + dy);
-}
-
-void tExitScreenAnimation::Sub_00248C60(float x, float duration, std::uint32_t group,
-                               std::uint32_t mask_hash) {
-    AnimationGroup path;
-    path.field_0x0c = group; path.field_0x10 = mask_hash;
-    path.field_0x1c = x; path.field_0x40 = duration;
-    if (FeWidget* mask = FindWidget_00143D50(*field_0x00, mask_hash, 0))
-        path.field_0x18 = static_cast<float>(static_cast<int>(mask->y)); // FUN_001440D8
-    path.field_0x48 = x == path.field_0x24 ? 0 : 2;
-    SetupToAnimate(path);
-    field_0x04.push_back(path);
-}
-
-void tExitScreenAnimation::Construct_002490D8(FeScreen& screen) {
-    field_0x00 = &screen; field_0x04.clear();
-    float maximum = 0;
-    for (int i = 0; i < 16; ++i) {
-        char text[32]; std::snprintf(text, sizeof(text), "MENUITEM_%d_GROUP", i);
-        const auto group = bStringHash(text);
-        bool present = false;
-        for (const FeWidget& widget : screen.widgets) if (widget.class_hash == group) present = true;
-        if (!present) continue;
-        std::snprintf(text, sizeof(text), "MI_%d_MASK", i);
-        const auto mask = bStringHash(text);
-        const FeWidget* widget = FindWidget_00143D50(screen, mask, 0);
-        const float duration = 0.05f + static_cast<float>(i) * 0.05f; // gp-0x3AB4/-0x3AB0
-        if (maximum < duration) maximum = duration;
-        Sub_00248C60(widget ? widget->x : 0.0f, duration, group, mask);
+    std::array<Genre,6> genres{};
+    std::int32_t count{};
+    void Populate(const CarSoundBindings& sound,FrontendMusicSettings& settings)
+    {
+        genres={};count=0;
+        Require(settings.count>=0 && static_cast<std::size_t>(settings.count)<=settings.rows.size(),
+            "Music row count exceeds the original settings table");
+        for(std::int32_t index=0;index<settings.count;++index) {
+            auto& row=settings.rows[static_cast<std::size_t>(index)];
+            const auto* name=soundJukeboxGetTrackGenre(sound,row.group,row.track);
+            if(!name || !*name)continue;
+            std::int32_t genre=0;
+            for(;genre<count;++genre)
+                if(std::strcmp(name,genres[static_cast<std::size_t>(genre)].name.data())==0)break;
+            if(genre==count) {
+                Require(static_cast<std::size_t>(count)<genres.size(),
+                    "Final jukebox exceeds the original six genres");
+                auto& destination=genres[static_cast<std::size_t>(genre)].name;
+                const auto bytes=std::strlen(name);
+                Require(bytes<destination.size(),"Final jukebox genre exceeds its original name slot");
+                std::memcpy(destination.data(),name,bytes+1);++count;
+            }
+            auto& group=genres[static_cast<std::size_t>(genre)];
+            Require(static_cast<std::size_t>(group.count)<group.rows.size(),
+                "Final jukebox genre exceeds its original track-index slots");
+            row.genreBit=static_cast<std::int8_t>(genre);
+            group.rows[static_cast<std::size_t>(group.count++)]=static_cast<std::uint8_t>(index);
+        }
     }
-    const auto mask = std::uint32_t{0x32C91DAE}; // MI_UNDERSCORE
-    const FeWidget* widget = FindWidget_00143D50(screen, mask, 0);
-    Sub_00248C60(widget ? widget->x : 0.0f, maximum, 0x97BF4B25, mask);
+};
 }
 
-bool tExitScreenAnimation::Update_00249128(float delta_seconds) {
-    for (AnimationGroup& path : field_0x04) {
-        if (path.field_0x48 == 0) continue;
-        ::port::frontend::advance_zero_velocity_path(path, delta_seconds);
-        SetupToAnimate(path);
+void FrontendPlayerManager::CaptureAudioOptions(const CarSoundBindings& sound,bool rebuildMusicList)
+{
+    Require(sound.audio && sound.audio->library,"Audio options have no actual native mixer");
+    constexpr std::array<std::uint32_t,7> categories{{5,4,0,1,2,3,6}};
+    for(std::size_t i=0;i<categories.size();++i)
+        musicSettings.savedVolumes[i]=sound.audio->library->GetCategoryVolume(categories[i]);
+    musicSettings.savedAudioMode=worldAudioGetMode();
+    if(!rebuildMusicList)return;
+    // PAL1EEF60 iterates the actual loaded cartridge's groups/tracks and
+    // retains at most32 rows. PAL1EF240 assigns genre bits in first-seen
+    // string order; strings come from the same final jukebox metadata cache.
+    musicSettings.count=0;
+    for(std::size_t group=0;group<soundJukeboxPlayer.groups.size();++group) {
+        const auto& row=soundJukeboxPlayer.groups[group];
+        for(std::size_t track=0;track<row.tunes.size();++track) {
+            if(musicSettings.count>=static_cast<std::int32_t>(musicSettings.rows.size()))continue;
+            Require(group<=127 && track<=127,"Jukebox indices exceed original signed row lanes");
+            auto& output=musicSettings.rows[static_cast<std::size_t>(musicSettings.count++)];
+            output.group=static_cast<std::int8_t>(group);output.track=static_cast<std::int8_t>(track);
+            output.status=static_cast<std::int8_t>(soundJukeboxGetTrackStatus(sound,static_cast<std::int32_t>(group),static_cast<std::int32_t>(track)));
+
+        }
     }
-    for (const AnimationGroup& path : field_0x04) if (path.field_0x48 != 0) return false;
+    // PAL DataAudioOptionsScreen::InitWithDefaults1EF1C8 calls the
+    // actual capture, initializes A0/A4/A8/AE/AF, then populates GenreMgr.
+    musicSettings.menuState={{0,5,0}};musicSettings.menuMode=0;musicSettings.enabledGenres=255;
+    GenreMgr genres;genres.Populate(sound,musicSettings);
+}
+
+void FrontendPlayerManager::ApplyAudioOptions(const CarSoundBindings& bindings,
+    const RaceParameters& parameters,FlailerSoundState& uiSound) const
+{
+    Require(bindings.audio && bindings.audio->library && uiSound.audio==bindings.audio &&
+        uiSound.manager==&bindings.audio->library->Mixer() && uiSound.volumes &&
+        bindings.volumes==uiSound.volumes,"Saved audio options have no shared canonical mixer and speech-volume owner");
+    Require(nativeAudioProfileValid(musicSettings,applicationLaunchOptions.musicEnabled?&soundJukeboxPlayer:nullptr),
+        "Saved audio options must pass validation before changing the live mixer");
+    Require(!applicationLaunchOptions.musicEnabled || soundJukeboxPlayer.audio==bindings.audio,
+        "Saved playlist has no shared canonical jukebox owner");
+    // Complete final SetSoundFromAudioOptions1EF120. Category order is
+    // source5,4,0,6,2,3,1, followed by speech-volume save, playlist and mode.
+    constexpr std::array<std::uint32_t,7> categories{{5,4,0,6,2,3,1}};
+    constexpr std::array<std::size_t,7> savedIndices{{0,1,2,6,4,5,3}};
+    for(std::size_t i=0;i<categories.size();++i)
+        Require(bindings.audio->library->SetCategoryVolume(categories[i],musicSettings.savedVolumes[savedIndices[i]])==WORLD_AUDIO_OK,
+            "Physical mixer rejected a saved category volume");
+    SaveVolumesForSpeech(uiSound);
+    Require(soundJukeboxSetSelection(bindings,*this,parameters,5)==WORLD_AUDIO_OK,
+        "Actual jukebox rejected the saved track and genre choices");
+    Require(worldAudioSetMode(bindings.audio,musicSettings.savedAudioMode)==WORLD_AUDIO_OK,
+        "Physical mixer rejected the saved audio mode");
+}
+
+} // namespace hp2
+
+#include "Language.hpp"
+namespace hp2 {
+namespace {
+// The unshipped bulk-language debug command is intentionally not exposed
+// by the native PC frontend; ordinary language selection stays unchanged.
+class LanguageOptionsScreenBase final {
+public:
+    LanguageOptionsScreenBase(MainMenuScreenServices& services,std::uint32_t screen,bool preFrontend)
+        :services_(services),screen_(screen),preFrontend_(preFrontend)
+    {
+        Require(services.ui && services.ui->language && services.screens && services.frontend && services.raceSetup,
+            "Language options lack their canonical runtime owners");
+        selected_=std::max(services.ui->language->currentLanguage,0);
+        if(!preFrontend)slide_=std::make_unique<FlailerSlideOnScreen>(*services.ui,screen,
+            0x03c790bbu,0x718cd8c3u,0x95ad096bu);
+        // FRONTB's seventh choice is "Load All Languages", an authored
+        // debug-only operation. There is no normal PAL gameplay consumer for
+        // bulk loading; leaving it selectable causes an invalid screen exit.
+        // Keep ordinary six language choices independent of this debug item.
+        // This authored bulk-load action is not a released gameplay option.
+        // Clearing the enabled bit (rather than setting the highlight bit)
+        // actually prevents navigation to the invalid debug-only callback.
+        if(auto* node=services.screens->active) {
+            for(auto* current=node->screenRoot.next;current!=&node->screenRoot;current=current->next)
+                if(current->menu)
+                    if(auto* item=current->menu->FindItem(0x52e039f9u))
+                        item->ClearMenuItemState(1);
+        }
+        services.ui->resources->SetObjectVisibility(screen,0x52e039f9u,0);
+    }
+    void HandleScreenCallback(ScreenMessage message,ScreenCallbackData& data) {
+        if(message==ScreenMessage::Tick){if(slide_)slide_->Tick();return;}
+        if(message==ScreenMessage::LeaveScreen) {
+            data.value=0;
+            if(services_.ui->language->currentLanguage==-1)return;
+            auto* active=services_.screens->active;
+            const auto choice=active?active->GetActiveMenuItem():0;
+            if(choice>=0x52e039f3u && choice<=0x52e039f8u) {
+                selected_=static_cast<std::int32_t>(choice-0x52e039f3u);CommitLanguage();
+            }
+            Require(services_.screens->MoveToPreviousScreen(1,false,data.joystickPort),
+                "Language options have no preceding original screen");return;
+        }
+        if(message!=ScreenMessage::Select)return;
+        if(data.key>=0x52e039f3u && data.key<=0x52e039f8u) {
+            selected_=static_cast<std::int32_t>(data.key-0x52e039f3u);CommitLanguage();
+            Require(services_.screens->MoveToPreviousScreen(1,false,data.joystickPort),
+                "Committed language has no preceding original screen");return;
+        }
+        if(data.key==0x52e039f9u) {
+            // A synthetic selection event must not reactivate the debug-only
+            // action even when native developer diagnostics were enabled.
+            data.sound=0;
+            return;
+        }
+    }
+private:
+    void CommitLanguage() {
+        services_.ui->language->SetLanguage(selected_);
+        if(preFrontend_ && services_.ui->language->currentLanguage!=-1) {
+            services_.frontend->InitWithDefaults(*services_.raceSetup);
+            if(services_.sounds)services_.frontend->CaptureAudioOptions(*services_.sounds,true);
+        }
+    }
+    MainMenuScreenServices& services_;
+    std::uint32_t screen_{};
+    bool preFrontend_{};
+    std::int32_t selected_{};
+    std::unique_ptr<FlailerSlideOnScreen> slide_;
+};
+std::unique_ptr<LanguageOptionsScreenBase> languageOptionsOwner;
+void ClearLanguageOptionsOwner(){languageOptionsOwner.reset();}
+constexpr std::array<std::int32_t,4> LanguageHelp{{0xc354c,0xc354d,0xc354e,0}};
+}
+void LanguageOptionsScreenCallback(ScreenMessage message,ScreenCallbackData* data)
+{
+    Require(optionsServices && data,"Language callback lacks the actual options binding/payload");
+    if(message==ScreenMessage::ScreenActivate) {
+        Require(!languageOptionsOwner,"Language options received duplicate activation");
+        auto* node=optionsServices->screens->active;
+        Require(node && node->configuration && node->configuration->name,"Language screen lacks its original configuration");
+        const bool pre=!std::strcmp(node->configuration->name,"Language Options Pre FE");
+        languageOptionsOwner=std::make_unique<LanguageOptionsScreenBase>(*optionsServices,data->key,pre);
+    } else if(message==ScreenMessage::ScreenDeactivate)languageOptionsOwner.reset();
+    else {
+        Require(languageOptionsOwner!=nullptr,"Language message arrived outside its actual screen lifetime");
+        languageOptionsOwner->HandleScreenCallback(message,*data);
+    }
+}
+std::array<FlailerScreenConfig,2>& LanguageScreenConfigurations()
+{
+    // Exact final1F5738..1F578C constructor arguments, source names and shared
+    // callback. Both configurations borrow the one final authored screen.
+    static std::array<FlailerScreenConfig,2> configurations{{
+        {"Language Options",LanguageOptionsScreenCallback,{{static_cast<std::int32_t>(0x632b068eu),0,0,0}},{{-1,-1,-1,-1}},1,LanguageHelp.data()},
+        {"Language Options Pre FE",LanguageOptionsScreenCallback,{{static_cast<std::int32_t>(0x632b068eu),0,0,0}},{{-1,-1,-1,-1}},1,nullptr}
+    }};
+    return configurations;
+}
+} // namespace hp2
+
+#include "DemoDisc.hpp"
+#include "GameFlow.hpp"
+namespace hp2 {
+namespace {
+constexpr std::uint32_t AudioChannels63[7]={5,4,0,1,2,3,6};
+constexpr std::uint32_t MenuFirst63=0x52e039f3u;
+
+bool SameAudioOptions63(const FrontendMusicSettings& first,const FrontendMusicSettings& second)
+{
+    if(first.savedVolumes!=second.savedVolumes || first.savedAudioMode!=second.savedAudioMode ||
+       first.count!=second.count || first.enabledGenres!=second.enabledGenres ||
+       first.menuState!=second.menuState || first.menuMode!=second.menuMode)return false;
+    for(std::size_t index=0;index<first.rows.size();++index) {
+        const auto& a=first.rows[index];const auto& b=second.rows[index];
+        if(std::tie(a.group,a.track,a.status,a.genreBit)!=std::tie(b.group,b.track,b.status,b.genreBit))return false;
+    }
     return true;
 }
 
-void Sub_001EECA8(int message, std::uint32_t item_hash,
-                  const ::port::frontend::ScreenActionServices& services) {
-    if (message != 1) return;
-    switch (item_hash) {
-    case 0x52E039F3: services.exit_animation("Audio Options"); break;
-    case 0x52E039F4: services.exit_animation("Joystick PreConfig"); break;
-    case 0x52E039F5:
-        services.display_prepare(); // FUN_001EE6C0 precedes construction of the exit object
-        services.exit_animation("Display Options"); break;
-    case 0x52E039F6: services.request("Phils Load Save", true); break;
-    case 0x52E039F7: services.exit_animation("NameEntry"); break;
-    case 0x52E039F8: services.request("Credits", true); break;
-    case 0x52E039F9: services.request("Language Options", true); break;
-    default:
-        hp2::not_implemented("0x001EECA8", "unmatched item uses unresolved default target at 0x00331660");
-    }
-}
-
-void Construct_001F1A78(LanguageOptionsScreenBase& instance, FeScreen& screen, MenuList_00169F78* list,
-                        std::int32_t dat_0031C1C8, std::int32_t field_0x08) {
-    // FUN_001F1A78: instance+4 is the screen from the message-0x0B payload, +8 the flag, and
-    // +0 the current language clamped to 0 when it is still the -1 "unset" value. The vtable
-    // written at +0xC (002BA520, or 002BA508 when 001F1D70 overwrites it) has no port analogue.
-    instance.field_0x08 = field_0x08;
-    instance.field_0x00 = dat_0031C1C8;
-    if (dat_0031C1C8 == -1) instance.field_0x00 = 0;
-    // FUN_0016FDB0 returns 0 unconditionally in this build, so `if (FUN_0016fdb0() == 0)` is
-    // always taken and MENUITEM_7 is always disabled and hidden. What the original condition
-    // was meant to express is not recovered; only the constant return is. (E-0025-L02)
-    Sub_0016D2A8(list, screen, kWidgetMenuItem7_52E039F9, 2);
-}
-
-void Sub_001F1B08(int message, std::uint32_t item_hash, LanguageOptionsScreenBase& instance,
-                  std::int32_t& dat_0031C1C8, std::int32_t& dat_00331A60,
-                  const ::port::frontend::ScreenActionServices& services) {
-    if (message != 1) return; // the 0x11/0x12 arms are elsewhere; every other message returns
-    if (!services.invoke) hp2::not_implemented("0x001F1B08", "activation side-effect service missing");
-    // FUN_001F1B08 case 1: the jump table on (hash - MENUITEM_1) stores the index first, and
-    // only then do the unsigned range guards decide what to do with it. An out-of-range hash
-    // leaves +0x00 alone and returns, so the store and the guards are kept in this order.
-    if (item_hash >= kWidgetMenuItem1_52E039F3 && item_hash <= kWidgetMenuItem6_52E039F8)
-        instance.field_0x00 = static_cast<std::int32_t>(item_hash - kWidgetMenuItem1_52E039F3);
-    if (item_hash < kWidgetMenuItem1_52E039F3) return; // sltu against MENUITEM_1
-    if (item_hash > kWidgetMenuItem6_52E039F8) {
-        // The always-hidden extra item. DAT_00331A60's consumer is unresolved, so the write is
-        // reproduced where the original makes it rather than being reinterpreted; 001740C0 is
-        // the only other writer. The item is unreachable from input because the constructor
-        // disables it, so this arm is recovered but not exercised. (E-0025-L06)
-        if (item_hash == kWidgetMenuItem7_52E039F9) {
-            dat_00331A60 = 1;
-            services.invoke(0x00170320, 1);
+class AudioOptionsScreen final:public OptionsScreenBase {
+    FrontendMusicSettings editing_;
+    std::array<std::unique_ptr<FlailerSlider>,7> sliders_;
+    FlailerScrollingMenuList scrolling_;
+    FlailerLeftRightArrowScroll arrows_;
+    FlailerAnimatedBlurb blurb_;
+public:
+    AudioOptionsScreen(MainMenuScreenServices& services,std::uint32_t screen)
+        :OptionsScreenBase(services,screen),editing_(services.frontend->musicSettings),
+         scrolling_(*services.ui,screen,MenuFirst63,MenuFirst63+6,0xedf2e4eeu,0x20d73d01u,0xc67cfb4au),
+         arrows_(*services.ui,screen,0xd1cda594u,0x9345e4a7u),
+         blurb_(*services.ui,screen,0x75980cf0u,0x75980cf0u,0x70a404ecu)
+    {
+        Require(services.sounds && services.sounds->audio && services.sounds->audio->library,
+            "Audio options require the original live mixer");
+        auto& mixer=*services.sounds->audio->library;
+        // PAL1EF3C8 copies FRED data, then reads the seven actual categories.
+        for(std::size_t index=0;index<7;++index) {
+            editing_.savedVolumes[index]=mixer.GetCategoryVolume(AudioChannels63[index]);
+            sliders_[index]=std::make_unique<FlailerSlider>(*services.ui,screen,
+                MenuFirst63+static_cast<std::uint32_t>(index),0xa29f7a16u+static_cast<std::uint32_t>(index),
+                0xc866642bu+0x441u*static_cast<std::uint32_t>(index),
+                static_cast<std::int32_t>(AudioChannels63[index]),&editing_.savedVolumes[index],0.0f,1.0f);
         }
-        return;
+        editing_.savedAudioMode=worldAudioGetMode();RedrawMode();
+        constexpr std::uint32_t objects[]={0x52e039f3u,0x52e039f4u,0x52e039f5u,0x52e039f6u,
+            0x52e039f7u,0x52e039f8u,0x52e039f9u,0x52e039fau,0x52e039fbu,0xaee77883u,0xaee77884u,
+            0xa29f7a16u,0xc866642bu,0xa29f7a17u,0xc866686cu,0xa29f7a18u,0xc8666cadu,
+            0xa29f7a19u,0xc86670eeu,0xa29f7a1au,0xc866752fu,0xa29f7a1bu,0xc8667970u,
+            0xa29f7a1cu,0xc8667db1u,0x2932dfcau};
+        scrolling_.AddObjects(objects,std::size(objects));scrolling_.SetItemCount(11);
     }
-    // thunk_FUN_0021E0D0(&DAT_0031C1C8, instance+0x00): the loader takes the address of the
-    // global and writes it itself, so the handler must not write it here. That matters: the
-    // check below is a re-read of what the loader left behind, and a handler-side copy of
-    // instance+0x00 would make the -1 arm unreachable.
-    services.invoke(0x0021E0D0, static_cast<std::uint32_t>(instance.field_0x00));
-    // The original tests DAT_0031C1C8 after the loader ran and returns without popping when it
-    // is still -1.
-    if (dat_0031C1C8 == -1) return;
-    if (instance.field_0x08 == 0) services.invoke(0x00183830, 0x002FC050);
-    services.invoke(0x00170320, 1);
+    void HandleHighlight(ScreenMessage,ScreenCallbackData&,std::uint32_t) override {}
+    void RedrawMode()
+    {
+        constexpr std::uint32_t labels[]={0x1adb9u,0x1adb8u,0x1adbbu};
+        Require(editing_.savedAudioMode>=0 && editing_.savedAudioMode<3,"Audio mode is outside its three source choices");
+        state_->services.ui->resources->SetLanguageID(state_->screen,0x2932dfcau,labels[editing_.savedAudioMode]);
+    }
+    void Commit()
+    {
+        state_->services.frontend->musicSettings=editing_;
+        auto& services=state_->services;
+        Require(services.raceSetup && services.raceSetup->parameters && services.ui->sound,
+            "Audio commit has no canonical race or speech-volume settings");
+        services.frontend->ApplyAudioOptions(*services.sounds,*services.raceSetup->parameters,*services.ui->sound);
+    }
+    void HandleEvent(ScreenMessage message,ScreenCallbackData& data) override
+    {
+        auto& state=*state_;auto& services=state.services;auto& ui=*services.ui;
+        scrolling_.HandleEvent(message,data);arrows_.HandleEvent(message,data);
+        if(message==ScreenMessage::LeaveScreen) {
+            if(!SameAudioOptions63(editing_,services.frontend->musicSettings)) {
+                Commit();if(services.frontend->autoSave)services.screens->stack.Push("Autosave");
+            }
+        } else if(message==ScreenMessage::ScreenBack) data.sound=0;
+        else if(message==ScreenMessage::Previous && data.key==MenuFirst63)data.value=1;
+        else if(message==ScreenMessage::Next && data.key==0xaee77884u)data.value=1;
+        else if(message==ScreenMessage::Highlight) {
+            std::int32_t label=0;
+            if(data.key>=MenuFirst63 && data.key<=MenuFirst63+8)label=0x24be4+static_cast<std::int32_t>(data.key-MenuFirst63);
+            else if(data.key==0xaee77883u)label=0x24bed;
+            else if(data.key==0xaee77884u)label=0x24bee;
+            blurb_.NewText(label);
+            OptionsScreenBase::HandleHighlight(message,data,scrolling_.GetCurrentMenuMask());
+            arrows_.SetCurrentItem(data.key==0x52e039fau?0x2932dfcau:0);
+        } else if(message==ScreenMessage::Left || message==ScreenMessage::Right) {
+            if(data.key==0x52e039fau) {
+                const auto current=worldAudioGetMode();
+                Require(current>=0 && current<3,"Current source audio mode is outside its three choices");
+                const auto requested=(current+(message==ScreenMessage::Left?2:1))%3;
+                Require(worldAudioSetMode(services.sounds->audio,requested)==WORLD_AUDIO_OK,
+                    "Audio mode change could not reach its canonical mixer");
+                editing_.savedAudioMode=worldAudioGetMode();
+                RedrawMode();data.sound=message==ScreenMessage::Left?1:2;
+            } else if(data.key>=MenuFirst63 && data.key<=MenuFirst63+6)
+                sliders_[data.key-MenuFirst63]->StepValue(message==ScreenMessage::Left?-0.05000000074505806f:0.05000000074505806f,true);
+        } else if(message==ScreenMessage::Select) {
+            if(data.key==0x52e039fbu) {
+                Commit();state.exit=std::make_unique<FlailerExitScreenAnimation>(ui,*services.screens,state.screen,"JukeBox Music",true);
+                float x{},y{};const auto* anchor=ui.resources->FindObject(state.screen,0x32c91daeu);
+                Require(anchor,"Audio exit is missing its authored rail");ui.resources->GetTopLeft(*anchor,x,y,ui.language);
+                state.exit->AddGroup(0x97bf4b25u,0x32c91daeu,x,650.0f,state.exit->MaximumDuration());
+            } else if(data.key==0xaee77883u) {
+                // PAL ResetVolumes1AFAB8 uses actual demo policy, then the
+                // canonical defaults and saves the same live speech values.
+                Require(ui.sound && ui.sound->volumes,"Volume reset has no actual default settings");
+                const auto* demo=services.demoMode?services.demoMode->demoDisc:nullptr;
+                const float scale=demo && demo->ActivationWord()?static_cast<float>(demo->Parameters().masterVolumeScale)*0.10000000149011612f:1.0f;
+                auto& mixer=*services.sounds->audio->library;
+                for(std::int32_t channel=0;channel<7;++channel)
+                    Require(mixer.SetCategoryVolume(static_cast<std::uint32_t>(channel),
+                        GetVolumeDefault(*ui.sound->volumes,channel)*scale)==WORLD_AUDIO_OK,"Volume reset rejected by mixer");
+                SaveVolumesForSpeech(*ui.sound);
+                for(std::size_t index=0;index<7;++index) {
+                    editing_.savedVolumes[index]=mixer.GetCategoryVolume(AudioChannels63[index]);sliders_[index]->StepValue(0.0f,false);
+                }
+            } else if(data.key==0xaee77884u) {
+                Require(editing_.count>=0 && static_cast<std::size_t>(editing_.count)<=editing_.rows.size(),"Music settings count is invalid");
+                for(std::int32_t index=0;index<editing_.count;++index) {
+                    auto& row=editing_.rows[static_cast<std::size_t>(index)];
+                    row.status=static_cast<std::int8_t>(soundJukeboxGetTrackStatus(*services.sounds,row.group,row.track));
+                }
+                editing_.menuState={};editing_.menuMode=0;editing_.enabledGenres=255;
+            } else data.sound=0;
+        } else if(message==ScreenMessage::Tick) {
+            for(auto& slider:sliders_)slider->Animate();
+            blurb_.Animate();
+        }
+    }
+    static void Callback(ScreenMessage message,ScreenCallbackData* data)
+    {
+        if(message==ScreenMessage::ScreenActivate) {
+            Require(data,"Audio activation has no source screen data");
+            Install(std::make_unique<AudioOptionsScreen>(BoundServices(),data->key));
+        } else BaseCallback(message,data);
+    }
+};
+} // namespace
+} // namespace hp2
+
+namespace hp2 {
+namespace {
+class DisplayOptionsScreen final:public OptionsScreenBase {
+    GlobalDisplaySettings editing_;
+    FlailerScrollingMenuList scrolling_;
+    FlailerLeftRightArrowScroll arrows_;
+    FlailerAnimatedBlurb blurb_;
+    static constexpr std::array<std::uint32_t,6> Values{{0x55cb09f2u,0x2e931f1bu,
+        0x03d90172u,0x5610f2f4u,0x422313cbu,0x8fe4086bu}};
+public:
+    DisplayOptionsScreen(MainMenuScreenServices& services,std::uint32_t screen)
+        :OptionsScreenBase(services,screen),editing_(services.frontend->displaySettings),
+         scrolling_(*services.ui,screen,MenuFirst63,MenuFirst63+6,0xedf2e4eeu,0x20d73d01u,0xc67cfb4au),
+         arrows_(*services.ui,screen,0xd1cda594u,0x9345e4a7u),
+         blurb_(*services.ui,screen,0x75980cf0u,0x75980cf0u,0x70a404ecu)
+    {
+        for(std::size_t index=0;index<6;++index)Redraw(index);
+        constexpr std::uint32_t objects[]={0x52e039f3u,0x52e039f4u,0x52e039f5u,
+            0x52e039f6u,0x52e039f7u,0x52e039f8u,0x52e039f9u,0x52e039fau,0x52e039fbu,
+            0x55cb09f2u,0x2e931f1bu,0x03d90172u,0x5610f2f4u,0x8fe4086bu,0x422313cbu};
+        scrolling_.AddObjects(objects,std::size(objects));scrolling_.SetItemCount(9);
+        // Final1F354C/1F3564 set the same real clipping polygon on both arrows.
+        for(const auto key:{0xd1cda594u,0x9345e4a7u}) {
+            auto* object=services.ui->resources->FindObject(screen,key);
+            if(!object)continue;
+            object->SetClipToPoly(0xc67cfb4au);
+        }
+    }
+    void HandleHighlight(ScreenMessage,ScreenCallbackData&,std::uint32_t) override {}
+    void Redraw(std::size_t index)
+    {
+        std::uint32_t language{};
+        switch(index) {
+        case 0: {
+            // Actual final2BA1D0 dispatch, including the empty mode7 label.
+            constexpr std::uint32_t labels[]={0x22345u,0x22346u,0x22347u,0x223a8u,0x22348u,
+                0x22349u,0x22353u,0,0x223a9u,0x223aau};
+            if(static_cast<std::uint32_t>(editing_.singleViewTrackMapMode)<std::size(labels))
+                language=labels[editing_.singleViewTrackMapMode];
+            break;
+        }
+        case 1:language=editing_.authoredOption0?0x22352u:0x22353u;break;
+        case 2:language=editing_.languageDependentOption==0?0x2234au:
+            editing_.languageDependentOption==1?0x2234bu:0;break;
+        case 3: {
+            constexpr std::uint32_t labels[]={0x22353u,0x18e71u,0x22352u};
+            Require(editing_.leaderboardMode>=0 && editing_.leaderboardMode<3,"Leaderboard display mode is invalid");
+            language=labels[editing_.leaderboardMode];break;
+        }
+        case 4:language=editing_.authoredOption6?0x22352u:0x22353u;break;
+        case 5:language=editing_.authoredOption7?0x22352u:0x22353u;break;
+        default:throw std::runtime_error("Invalid original Display option index");
+        }
+        state_->services.ui->resources->SetLanguageID(state_->screen,Values[index],language);
+    }
+    void HandleEvent(ScreenMessage message,ScreenCallbackData& data) override
+    {
+        auto& state=*state_;auto& services=state.services;auto& ui=*services.ui;
+        scrolling_.HandleEvent(message,data);arrows_.HandleEvent(message,data);
+        if(message==ScreenMessage::Left || message==ScreenMessage::Right) {
+            if(data.key>=MenuFirst63 && data.key<MenuFirst63+6) {
+                const auto index=data.key-MenuFirst63;
+                const auto direction=message==ScreenMessage::Left?-1:1;
+                if(index==0) {
+                    Require(services.raceSetup && services.raceSetup->parameters && ui.flow,
+                        "Track-map option has no canonical race and GameFlow context");
+                    globalDisplaySettingsCycleTrackMapMode(&editing_,direction,services.raceSetup->parameters,
+                        &ui.flow->currentState,&services.frontend->playerCount);
+                    if(editing_.singleViewTrackMapMode==6)editing_.splitViewTrackMapMode=editing_.pursuitTrackMapMode=6;
+                    else {
+                        editing_.splitViewTrackMapMode=static_cast<std::int8_t>(splitPlayerTrackMapModes[0]);
+                        editing_.pursuitTrackMapMode=static_cast<std::int8_t>(pursuitTrackMapModes[0]);
+                    }
+                } else if(index==1)editing_.authoredOption0=editing_.authoredOption0==0;
+                else if(index==2)editing_.languageDependentOption=editing_.languageDependentOption==0;
+                else if(index==3)globalDisplaySettingsCycleLeaderboardMode(&editing_,direction);
+                else if(index==4)editing_.authoredOption6=editing_.authoredOption6==0;
+                else editing_.authoredOption7=editing_.authoredOption7==0;
+                Redraw(index);data.sound=index>=4?1:(direction<0?1:2);
+            }
+            state.selectionChange.ForceStart();
+        } else if(message==ScreenMessage::Highlight) {
+            constexpr std::int32_t blurbs[]={0x24cac,0x24cad,0x24cae,0x24caf,0x24cb1,0x24cb2,0x24cb3,0x24cb4,0x24cb5};
+            const auto index=data.key-MenuFirst63;
+            const auto value=index<Values.size()?Values[index]:0;
+            if(index>=6)state.selectionChange.SetCurrentMenuItem(0);
+            blurb_.NewText(index<std::size(blurbs)?blurbs[index]:0);
+            state.selectionChange.SetCurrentMenuItem(value);arrows_.SetCurrentItem(value);
+            OptionsScreenBase::HandleHighlight(message,data,scrolling_.GetCurrentMenuMask());
+        } else if((message==ScreenMessage::Previous && data.key==MenuFirst63) ||
+                  (message==ScreenMessage::Next && data.key==MenuFirst63+8))data.value=1;
+        else if(message==ScreenMessage::Select) {
+            const char* destination=nullptr;
+            if(data.key==MenuFirst63+6)destination="Customize P1 HUD";
+            else if(data.key==MenuFirst63+7)destination="Customize P2 HUD";
+            else if(data.key==MenuFirst63+8)destination="Calibrate display offset";
+            else data.sound=0;
+            if(destination) {
+                services.frontend->displaySettings=editing_;
+                state.exit=std::make_unique<FlailerExitScreenAnimation>(ui,*services.screens,state.screen,destination,true);
+                float x{},y{};const auto* anchor=ui.resources->FindObject(state.screen,0x32c91daeu);
+                Require(anchor,"Display exit is missing its authored rail");ui.resources->GetTopLeft(*anchor,x,y,ui.language);
+                state.exit->AddGroup(0x97bf4b25u,0x32c91daeu,x,650.0f,state.exit->MaximumDuration());arrows_.SetCurrentItem(0);
+            }
+        } else if(message==ScreenMessage::LeaveScreen) {
+            services.frontend->displaySettings=editing_;
+            if(gDisplayOptionsChangeManager.Different(*services.frontend) && services.frontend->autoSave)
+                services.screens->stack.Push("Autosave");
+        } else if(message==ScreenMessage::Tick)blurb_.Animate();
+    }
+    static void Callback(ScreenMessage message,ScreenCallbackData* data)
+    {
+        if(message==ScreenMessage::ScreenActivate) {
+            Require(data,"Display activation has no source screen data");
+            Install(std::make_unique<DisplayOptionsScreen>(BoundServices(),data->key));
+        } else BaseCallback(message,data);
+    }
+};
+// JukeBoxMusicScreen1F02D8..1F1280 uses the same Options base, live FRED,
+// authored text objects and actual cJukebox player as the other screens.
+class JukeBoxMusicScreen final:public OptionsScreenBase {
+    FrontendMusicSettings editing_;
+    GenreMgr genres_;
+    std::int32_t previewTicks_{};
+    bool previewPending_{},listFocus_{};
+    std::int32_t topRow_{};
+    static constexpr std::array<std::uint32_t,5> Titles{{0x64a819c7u,0x64a819c8u,0x64a819c9u,0x64a819cau,0x64a819cbu}};
+    static constexpr std::array<std::uint32_t,5> Artists{{0x03b57047u,0x03b57048u,0x03b57049u,0x03b5704au,0x03b5704bu}};
+    static constexpr std::array<std::uint32_t,5> Statuses{{0x89fb635fu,0x8c508c00u,0x8ea5b4a1u,0x90fadd42u,0x935005e3u}};
+    static constexpr std::array<std::uint32_t,5> FirstMarkers{{0x0b825845u,0x0b825846u,0x0b825847u,0x0b825848u,0x0b825849u}};
+    static constexpr std::array<std::uint32_t,5> SecondMarkers{{0xfc0279b8u,0xfc0279b9u,0xfc0279bau,0xfc0279bbu,0xfc0279bcu}};
+    static constexpr std::array<std::uint32_t,6> StatusLabels{{0x1add9u,0x1addau,0x1adddu,0x1adbbu,0x1ade4u,0x1addcu}};
+    static std::uint32_t PackedColor(const std::array<std::uint32_t,3>& rgb)
+    {
+        return 0x80000000u | static_cast<std::uint32_t>(rgb[0]) |
+            (static_cast<std::uint32_t>(rgb[1])<<8) | (static_cast<std::uint32_t>(rgb[2])<<16);
+    }
+    const GenreMgr::Genre& CurrentGenre() const
+    {
+        Require(editing_.menuMode<genres_.count,"Saved music genre is absent from the actual cartridge");
+        return genres_.genres[editing_.menuMode];
+    }
+    FrontendMusicSettings::Row& SelectedRow()
+    {
+        const auto& genre=CurrentGenre();const auto selected=editing_.menuState[0];
+        Require(selected>=0 && selected<genre.count,"Music selection exceeds its actual genre rows");
+        return editing_.rows[genre.rows[static_cast<std::size_t>(selected)]];
+    }
+    const FrontendMusicSettings::Row& FavouriteRow() const
+    {
+        const auto row=editing_.menuState[1];
+        Require(row>=0 && static_cast<std::size_t>(row)<editing_.rows.size(),
+            "Saved music footer row exceeds the original settings table");
+        return editing_.rows[static_cast<std::size_t>(row)];
+    }
+    bool GenreEnabled(std::int32_t genre) const
+    {
+        Require(genre>=0 && genre<6,"Saved music genre bit is outside the original genre bank");
+        return (editing_.enabledGenres&(std::uint32_t{1}<<genre))!=0;
+    }
+    std::pair<std::string,std::string> TrackText(const FrontendMusicSettings::Row& row) const
+    {
+        const auto& sound=*state_->services.sounds;
+        const auto* name=soundJukeboxGetTrackName(sound,row.group,row.track);
+        Require(name,"Music title is absent from the actual cartridge metadata");
+        std::string title(name);
+        const auto* artist=soundJukeboxGetTrackArtist(sound,row.group,row.track);
+        Require(artist,"Music artist is absent from the actual cartridge metadata");
+        return {std::move(title),artist};
+    }
+    float PreviewElapsed() const
+    {
+        const auto difference=static_cast<std::uint32_t>(state_->services.ui->clock->realTimer)-
+            static_cast<std::uint32_t>(previewTicks_);
+        std::int32_t signedDifference;std::memcpy(&signedDifference,&difference,sizeof(signedDifference));
+        return static_cast<float>(signedDifference)*0.0002500000118743628f;
+    }
+public:
+    JukeBoxMusicScreen(MainMenuScreenServices& services,std::uint32_t screen)
+        :OptionsScreenBase(services,screen),editing_(services.frontend->musicSettings)
+    {
+        Require(services.sounds && services.sounds->audio && services.sounds->audio->library &&
+            services.raceSetup && services.raceSetup->parameters && services.ui->clock &&
+            soundJukeboxPlayer.audio==services.sounds->audio && soundJukeboxPlayer.IsCartridgeLoaded(),
+            "Music screen has no actual cartridge, mixer, race settings or source clock");
+        editing_.menuState[0]=0;
+        genres_.Populate(*services.sounds,editing_);ShowPlaylist();
+    }
+    void ShowPlaylist()
+    {
+        auto& ui=*state_->services.ui;auto& resources=*ui.resources;const auto screen=state_->screen;
+        const auto& genre=CurrentGenre();const auto selected=editing_.menuState[0];
+        Require(selected>=0 && selected<genre.count,"Music selection is outside the displayed genre");
+        while(selected>=topRow_+5 && topRow_+5<genre.count)++topRow_;
+        while(selected<topRow_ && topRow_>=0)--topRow_;
+        const bool enabled=GenreEnabled(editing_.menuMode);
+        const auto visible=std::min<std::int32_t>(5,genre.count);
+        for(std::size_t index=0;index<Titles.size();++index) {
+            if(static_cast<std::int32_t>(index)>=visible) {
+                for(const auto key:{Titles[index],Artists[index],Statuses[index],FirstMarkers[index],SecondMarkers[index]})
+                    resources.SetObjectVisibility(screen,key,0);
+                continue;
+            }
+            const auto number=topRow_+static_cast<std::int32_t>(index);
+            Require(number>=0 && number<genre.count,"Music scroller exceeded its genre index bank");
+            const auto& row=editing_.rows[genre.rows[static_cast<std::size_t>(number)]];
+            const auto text=TrackText(row);
+            resources.Printf(screen,Artists[index],"%s",text.second.c_str());
+            resources.Printf(screen,Titles[index],"%s",text.first.c_str());
+            const auto status=enabled?row.status:0;
+            Require(status>=0 && static_cast<std::size_t>(status)<StatusLabels.size(),
+                "Music status is outside its six source choices");
+            resources.SetLanguageID(screen,Statuses[index],StatusLabels[static_cast<std::size_t>(status)]);
+            const bool highlighted=listFocus_ && selected==number;
+            resources.SetObjectVisibility(screen,FirstMarkers[index],highlighted);
+            resources.SetObjectVisibility(screen,SecondMarkers[index],highlighted);
+            const auto color=highlighted?PackedColor(ui.highlightedRgb):
+                (!enabled?PackedColor(ui.inactiveRgb):0x00808080u);
+            for(const auto key:{Titles[index],Artists[index],Statuses[index]}) {
+                resources.SetTextColor(screen,key,color);resources.SetObjectVisibility(screen,key,1);
+            }
+        }
+        resources.SetObjectVisibility(screen,0xedf2e4eeu,listFocus_ && topRow_!=0);
+        resources.SetObjectVisibility(screen,0x20d73d01u,listFocus_ && genre.count>=5 && topRow_!=genre.count-5);
+        const auto footer=TrackText(FavouriteRow());
+        resources.Printf(screen,0x0b41999au,"%s (%s)",footer.first.c_str(),footer.second.c_str());
+        resources.Printf(screen,0x52e039f3u,"%s",genre.name.data());
+        resources.SetTextColor(screen,0x52e039f3u,listFocus_?0x00808080u:PackedColor(ui.highlightedRgb));
+        resources.SetObjectVisibility(screen,0xd1cda594u,!listFocus_);
+        resources.SetObjectVisibility(screen,0x9345e4a7u,!listFocus_);
+    }
+    void PlayCurrentSelectedSong()
+    {
+        const auto& row=SelectedRow();
+        Require(soundJukeboxPlayer.Start(static_cast<std::uint32_t>(row.group),
+            static_cast<std::uint32_t>(row.track),0)==WORLD_AUDIO_OK,
+            "Music preview could not start its actual selected stream");
+    }
+    void HandleEvent(ScreenMessage message,ScreenCallbackData& data) override
+    {
+        auto& services=state_->services;
+        switch(message) {
+        case ScreenMessage::LeaveScreen: {
+            if(!SameAudioOptions63(editing_,services.frontend->musicSettings) && services.frontend->autoSave)
+                services.screens->stack.Push("Autosave");
+            services.frontend->musicSettings=editing_;
+            Require(soundJukeboxSetSelection(*services.sounds,*services.frontend,
+                *services.raceSetup->parameters,5)==WORLD_AUDIO_OK,"Music selection could not apply its actual track choices");
+            const auto& row=FavouriteRow();
+            const auto result=GenreEnabled(row.genreBit) && row.status!=0 ?
+                soundJukeboxPlayer.Start(static_cast<std::uint32_t>(row.group),static_cast<std::uint32_t>(row.track),1):
+                soundJukeboxPlayer.Start(1);
+            Require(result==WORLD_AUDIO_OK,"Music exit could not resume the actual playlist");
+            break;
+        }
+        case ScreenMessage::ScreenEvent13:
+            editing_.enabledGenres^=static_cast<std::uint8_t>(std::uint32_t{1}<<editing_.menuMode);
+            if(!GenreEnabled(editing_.menuMode)){listFocus_=false;topRow_=0;editing_.menuState[0]=0;}
+            data.sound=5;ShowPlaylist();break;
+        case ScreenMessage::Left:case ScreenMessage::Right: {
+            const std::int32_t delta=message==ScreenMessage::Left?-1:1;
+            if(listFocus_) {
+                auto& row=SelectedRow();const auto value=static_cast<std::int32_t>(row.status)+delta;
+                row.status=static_cast<std::int8_t>(value<0?5:value>5?0:value);
+            } else {
+                const auto value=static_cast<std::int32_t>(editing_.menuMode)+delta;
+                editing_.menuMode=static_cast<std::uint8_t>(value<0?genres_.count-1:value>=genres_.count?0:value);
+                editing_.menuState[0]=0;
+            }
+            data.sound=message==ScreenMessage::Left?1:2;ShowPlaylist();break;
+        }
+        case ScreenMessage::Previous:case ScreenMessage::Next:
+            if(listFocus_) {
+                auto& selected=editing_.menuState[0];
+                if(message==ScreenMessage::Previous && selected==0 && topRow_==0) {
+                    listFocus_=false;
+                    Require(soundJukeboxPlayer.Stop()==WORLD_AUDIO_OK,"Music genre return could not stop its preview");
+                    ShowPlaylist();break;
+                }
+                const auto candidate=selected+(message==ScreenMessage::Previous?-1:1);
+                if(candidate<0 || candidate>=CurrentGenre().count){data.sound=0;break;}
+                selected=candidate;data.sound=message==ScreenMessage::Previous?3:4;
+                previewTicks_=services.ui->clock->realTimer;previewPending_=true;ShowPlaylist();
+            } else if(message==ScreenMessage::Previous)data.sound=0;
+            else if(GenreEnabled(editing_.menuMode)) {
+                listFocus_=true;ShowPlaylist();previewTicks_=services.ui->clock->realTimer;previewPending_=true;
+            } else data.sound=6;
+            break;
+        case ScreenMessage::Tick:
+            if(PreviewElapsed()>0.5f && previewPending_){previewPending_=false;PlayCurrentSelectedSong();}
+            if(PreviewElapsed()>30.0f) {
+                Require(soundJukeboxPlayer.Update()==WORLD_AUDIO_OK,"Music preview update failed");
+                if(soundJukeboxPlayer.state!=2 && !soundJukeboxPlayer.IsFading())PlayCurrentSelectedSong();
+            }
+            break;
+        case ScreenMessage::Select:case ScreenMessage::ItemEvent:case ScreenMessage::ScreenBack:data.sound=0;break;
+        default:break;
+        }
+    }
+    static void Callback(ScreenMessage message,ScreenCallbackData* data)
+    {
+        if(message==ScreenMessage::ScreenActivate) {
+            Require(data,"Music activation has no original screen payload");
+            Install(std::make_unique<JukeBoxMusicScreen>(BoundServices(),data->key));
+        } else BaseCallback(message,data);
+    }
+};
+
+constexpr std::int32_t AudioHelp63[]={800060,800061,800500,800063,0};
+constexpr std::int32_t DisplayHelp63[]={800067,800068,800311,800069,0};
 }
+std::array<FlailerScreenConfig,3>& AudioDisplayScreenConfigurations()
+{
+    static constexpr std::int32_t musicHelp[]={802220,802221,802223,802224,0};
+    static std::array<FlailerScreenConfig,3> configurations{{
+        {"Audio Options",&AudioOptionsScreen::Callback,{{static_cast<std::int32_t>(0xe116761cu),0,0,0}},{{-1,-1,-1,-1}},1,AudioHelp63},
+        {"Display Options",&DisplayOptionsScreen::Callback,{{static_cast<std::int32_t>(0x8bc68340u),0,0,0}},{{-1,-1,-1,-1}},1,DisplayHelp63},
+        {"JukeBox Music",&JukeBoxMusicScreen::Callback,{{static_cast<std::int32_t>(0x95b2b627u),0,0,0}},{{-1,-1,-1,-1}},1,musicHelp}}};
+    return configurations;
+}
+} // namespace hp2
+
+namespace hp2 {
+namespace {
+// PAL1F3F20..1F4A2C; the switch tables at2BA370/2BA390 put Lookback
+// and CameraSpring before the gauges, independent of basic-block order.
+class CustomizeHUDScreen final:public OptionsScreenBase {
+    std::int32_t port_;
+    PlayerSettings editing_;
+    FlailerAnimatedBlurb blurb_;
+    FlailerBitmapChunk* left_{};
+    FlailerBitmapChunk* right_{};
+    static constexpr std::array<std::uint32_t,7> Values{{0x2e018745u,0xffc3dcd2u,
+        0x4ceb3ed2u,0x1054482bu,0xc7e2117eu,0x6caf6d10u,0x6bd89c11u}};
+    static PlayerSettings& Settings(MainMenuScreenServices& services,std::int32_t port)
+    {
+        Require(services.frontend && port>=0 && port<2 && services.frontend->players[port],
+            "HUD options have no actual selected player profile");
+        return services.frontend->players[port]->settings;
+    }
+    void Redraw(std::size_t index)
+    {
+        std::uint32_t language{};
+        switch(index) {
+        case 0:language=editing_.lookback==0?0x22356u:editing_.lookback==1?0x22351u:0;break;
+        case 1:language=editing_.cameraSpring==1?0x22353u:0x22352u;break;
+        case 2:language=(editing_.hudFlags&PLAYER_HUD_GAUGES)?0x22352u:0x22353u;break;
+        case 3:language=(editing_.hudFlags&PLAYER_HUD_RACE_POSITION)?0x22352u:0x22353u;break;
+        case 4:language=(editing_.hudFlags&PLAYER_HUD_LAP_INFO)?0x22352u:0x22353u;break;
+        case 5: {
+            constexpr std::uint32_t labels[]={0x2234cu,0x2234du,0x2234eu,0x2234fu,0x22353u};
+            if(static_cast<std::uint32_t>(editing_.splitTimeMode)<std::size(labels))
+                language=labels[editing_.splitTimeMode];
+            break;
+        }
+        case 6:language=editing_.scoring?0x22352u:0x22353u;break;
+        default:throw std::runtime_error("Invalid original HUD option index");
+        }
+        state_->services.ui->resources->SetLanguageID(state_->screen,Values[index],language);
+    }
+    void DoHighlight(std::uint32_t key)
+    {
+        if(key)ArrowAligner(*state_->services.ui,state_->screen,0xd1cda594u,0x9345e4a7u,key);
+        if(left_)left_->visible=key?1:0;
+        if(right_)right_->visible=key?1:0;
+    }
+public:
+    CustomizeHUDScreen(MainMenuScreenServices& services,std::uint32_t screen,std::int32_t port)
+        :OptionsScreenBase(services,screen),port_(port),editing_(Settings(services,port)),
+         blurb_(*services.ui,screen,0x75980cf0u,0x75980cf0u,0x70a404ecu)
+    {
+        for(std::size_t index=0;index<Values.size();++index)Redraw(index);
+        left_=static_cast<FlailerBitmapChunk*>(services.ui->resources->FindObject(screen,0xd1cda594u,2));
+        right_=static_cast<FlailerBitmapChunk*>(services.ui->resources->FindObject(screen,0x9345e4a7u,2));
+    }
+    ~CustomizeHUDScreen() override
+    {
+        // Source dtor commits the complete48-byte logical settings record;
+        // the parent Display change manager controls the later autosave.
+        Settings(state_->services,port_)=editing_;
+    }
+    void HandleEvent(ScreenMessage message,ScreenCallbackData& data) override
+    {
+        const auto index=data.key-MenuFirst63;
+        if(message==ScreenMessage::Left || message==ScreenMessage::Right) {
+            if(index<Values.size()) {
+                switch(index) {
+                case 0:playerSettingsToggleLookback(&editing_);break;
+                case 1:playerSettingsToggleCameraSpring(&editing_);break;
+                case 2:playerSettingsToggleGauges(&editing_);break;
+                case 3:playerSettingsToggleRacePosition(&editing_);break;
+                case 4:playerSettingsToggleLapInfo(&editing_);break;
+                case 5:playerSettingsCycleSplitTime(&editing_,message==ScreenMessage::Left?-1:1);break;
+                case 6:playerSettingsToggleScoring(&editing_);break;
+                }
+                Redraw(index);data.sound=message==ScreenMessage::Left?1:2;
+            }
+            state_->selectionChange.ForceStart();
+        } else if(message==ScreenMessage::Highlight) {
+            constexpr std::int32_t blurbs[]={0x24d74,0x24d75,0x24d76,0x24d77,0x24d78,0x24d79,0x24cb0};
+            if(index<Values.size()) {
+                DoHighlight(index<2?data.key:Values[index]);blurb_.NewText(blurbs[index]);
+                state_->selectionChange.SetCurrentMenuItem(Values[index]);
+            } else {
+                blurb_.NewText(0);state_->selectionChange.SetCurrentMenuItem(0);
+            }
+        } else if(message==ScreenMessage::Tick) {
+            blurb_.Animate();AnimateCursor(*state_->services.ui,left_,right_,std::int32_t(0));
+        } else if(message==ScreenMessage::Select || message==ScreenMessage::ScreenBack)data.sound=0;
+    }
+    static void Callback(ScreenMessage message,ScreenCallbackData* data,std::int32_t port)
+    {
+        if(message==ScreenMessage::ScreenActivate) {
+            Require(data,"HUD activation has no authored screen data");
+            Install(std::make_unique<CustomizeHUDScreen>(BoundServices(),data->key,port));
+        } else BaseCallback(message,data);
+    }
+    static void CallbackP1(ScreenMessage message,ScreenCallbackData* data){Callback(message,data,0);}
+    static void CallbackP2(ScreenMessage message,ScreenCallbackData* data){Callback(message,data,1);}
+};
+constexpr std::int32_t CustomizeHUDHelp63[]={800067,800068,800312,0};
+}
+std::array<FlailerScreenConfig,2>& CustomizeHUDScreenConfigurations()
+{
+    static std::array<FlailerScreenConfig,2> configurations{{
+        {"Customize P1 HUD",&CustomizeHUDScreen::CallbackP1,{{static_cast<std::int32_t>(0x28891a22u),0,0,0}},{{-1,-1,-1,-1}},1,CustomizeHUDHelp63},
+        {"Customize P2 HUD",&CustomizeHUDScreen::CallbackP2,{{static_cast<std::int32_t>(0x28891a22u),0,0,0}},{{-1,-1,-1,-1}},1,CustomizeHUDHelp63}}};
+    return configurations;
+}
+} // namespace hp2
+
+#include "Ecstasy.hpp"
+namespace hp2 {
+namespace {
+std::array<std::int32_t,2> displayCalibrationDefaults{};
+bool displayCalibrationDefaultsCaptured{};
+std::uint32_t displayCalibrationScreen{};
+std::uint32_t displayCalibrationOffsetScreen{};
+
+MainMenuScreenServices& CalibrationServices()
+{
+    Require(optionsServices && optionsServices->frontend && optionsServices->screens &&
+        optionsServices->ui && optionsServices->ui->clock && optionsServices->ui->resources &&
+        optionsServices->ui->render && optionsServices->ui->language,
+        "Display calibration lacks its actual frontend/render/language owners");
+    return *optionsServices;
 }
 
-namespace port::frontend {
-namespace {
-using Context=::port::frontend::BackContext;
-using Event=::port::frontend::BackEvent;
-using Services=::port::frontend::BackServices;
-bool changed(const Context& c,const char* address) {
-    if(!c.settings_changed) ::hp2::not_implemented(address,"Back settings comparison state missing");
-    return *c.settings_changed;
+std::int32_t CalibrationAdd(std::int32_t value,std::int32_t increment)
+{
+    // Original ADDIU wraps a 32-bit field. Avoid native signed overflow.
+    const auto bits=static_cast<std::uint32_t>(value)+static_cast<std::uint32_t>(increment);
+    std::int32_t result;std::memcpy(&result,&bits,sizeof(result));return result;
 }
-void invoke(const Services& s,std::uint32_t address,std::uint32_t argument) {
-    if(!s.invoke) hp2::not_implemented("0x0016C670","Back side-effect service missing");
-    s.invoke(address,argument);
+
+void DrawCalibrationHelp(MainMenuScreenServices& services,std::uint32_t screen,std::uint32_t textId)
+{
+    auto& ui=*services.ui;
+    const auto* text=ui.language->GetString(static_cast<std::int32_t>(textId));
+    Require(text,"Display calibration has no authored localized instruction");
+    ui.render->RenderTextIntoRectangle(*ui.resources,screen,0x6586d35fu,0xaf18eb98u,text,1.0f);
 }
-void autosave(const Context& c,const Services& s) {
-    if(!c.autosave)return;
-    if(!s.push_history) hp2::not_implemented("0x001F5C28","Autosave history push service missing");
-    s.push_history("Autosave");
+
+void DisplayCalibrateCallback(ScreenMessage message,ScreenCallbackData* data)
+{
+    // Complete PAL1F4A30..1F4AD8; this screen has no OptionsScreenBase owner.
+    Require(data,"Display calibration callback has no original message payload");
+    auto& services=CalibrationServices();data->sound=0;
+    if(message==ScreenMessage::LeaveScreen)data->sound=6;
+    else if(message==ScreenMessage::ScreenActivate)displayCalibrationScreen=data->key;
+    else if(message==ScreenMessage::RenderModels)
+        DrawCalibrationHelp(services,displayCalibrationScreen,0x222f4u);
 }
-}
-} // namespace port::frontend
-namespace hp2::frontend {
-using Context=::port::frontend::BackContext;
-using Event=::port::frontend::BackEvent;
-using Services=::port::frontend::BackServices;
-using ::port::frontend::changed;
-using ::port::frontend::invoke;
-using ::port::frontend::autosave;
-// 001EFB80 case0x11 / E-0017-B01: copy0xB0 audio snapshot then apply seven gains,
-// jukebox state5 and output settings through001EF120; conditionally push Autosave.
-void Sub_001EFB80(Context& c,Event&,const Services& s) {
-    if(changed(c,"0x001EFB80")){invoke(s,0x001EFB80,0x11);autosave(c,s);}
-}
-// 001F3A28 case0x11 / E-0017-B02: save display64bits before aggregate comparison.
-void Sub_001F3A28(Context& c,Event&,const Services& s) {
-    c.dat_002FC19C=c.display_field_0x64;
-    if(changed(c,"0x001F3A28"))autosave(c,s);
-}
-// 0024D870 / E-0017-B04: keyboard cancellation blocks the outer manager pop.
-void Sub_0024D870(Context& c,Event& e,const Services& s) {
-    if(!c.keyboard_active) hp2::not_implemented("0x0024D870","NameEntry keyboard state missing");
-    if(*c.keyboard_active) {
-        invoke(s,0x0024D088,0x11); // closure updates profile/name and editor via0024C5D0
-        e.permission=0;e.sound=0x1d;*c.keyboard_active=false;
-        invoke(s,0x0016D448,0);
-    }else if(changed(c,"0x0024D370"))autosave(c,s);
-}
-// 001F1B08 / E-0017-B05: no generic Back permission; handler performs its own pop.
-void Sub_001F1B08(Context& c,Event& e,const Services& s) {
-    e.permission=0;
-    if(!c.language)hp2::not_implemented("0x001F1B08","language state missing");
-    if(*c.language==-1)return;
-    if(c.selected_hash>=0x52E039F3&&c.selected_hash<=0x52E039F8) {
-        const auto selected=c.selected_hash-0x52E039F3;
-        invoke(s,0x0021E0D0,selected); // locale loader before field/global projection
-        *c.language=static_cast<std::int32_t>(selected);
-        if(*c.language!=-1&&c.language_instance_0x08==0)invoke(s,0x00183830,0x002FC050);
-    }
-    invoke(s,0x00170320,1);
-}
-// 001F0D10 listing / E-0017-B06: conditional Autosave precedes unconditional
-// snapshot copy,001AF050(5), and selection-dependent jukebox resume/preview.
-void Sub_001F0D10(Context& c,Event&,const Services& s) {
-    if(changed(c,"0x001F0D10"))autosave(c,s);
-    invoke(s,0x001F0D10,0x11); // required0xB0 snapshot copy; native data unavailable
-    invoke(s,0x001AF050,5);
-    if(c.jukebox_selected_enabled&&c.jukebox_selected_loaded)
-        hp2::not_implemented("0x0027D6A8","Jukebox preview category/song operands missing");
-    invoke(s,0x0027D640,1);
-}
-// 001F1568 case0x11 / E-0017-B07: two0x30 profiles/name commit only if changed.
-void Sub_001F1568(Context& c,Event&,const Services& s) {
-    if(changed(c,"0x001F1568")){invoke(s,0x001F1568,0x11);autosave(c,s);}
-}
-}
-namespace port::frontend {
-BackEvent query_back(std::uint32_t handler,BackContext& c,const BackServices& s) {
-    BackEvent event;
-    // 001F4F88/002174A0/00217AF8 ->00249128 exit callback gate, E-0017-B08.
-    switch(handler) {
-    case 0x001F0278:case 0x001F3EC0:case 0x00240060:case 0x001F1220:
-    case 0x002174A0:case 0x00217AF8:
-        if(c.exit_active){event.permission=0;event.sound=0;return event;}
+
+void DisplayCalibrateOffsetCallback(ScreenMessage message,ScreenCallbackData* data)
+{
+    // Complete PAL1F4B20..1F4C98, including the final Commit on every message.
+    Require(data,"Display offset callback has no original message payload");
+    auto& services=CalibrationServices();data->sound=0;
+    auto& setting=services.frontend->displayCalibration;
+    switch(message) {
+    case ScreenMessage::Left:
+        setting[0]=CalibrationAdd(setting[0],-4);
+        if(setting[0]<-650)setting[0]=-650;else data->sound=1;
         break;
+    case ScreenMessage::Right:
+        setting[0]=CalibrationAdd(setting[0],4);data->sound=1;break;
+    case ScreenMessage::Previous:
+        setting[1]=CalibrationAdd(setting[1],-1);
+        if(setting[1]<-50)setting[1]=-50;else data->sound=1;
+        break;
+    case ScreenMessage::Next:
+        setting[1]=CalibrationAdd(setting[1],1);data->sound=1;break;
+    case ScreenMessage::LeaveScreen:data->sound=6;break;
+    case ScreenMessage::ScreenActivate:displayCalibrationOffsetScreen=data->key;break;
+    case ScreenMessage::Select:
+        data->sound=5;
+        Require(services.screens->MoveToPreviousScreen(1,false,0),
+            "Display offset calibration has no preceding original screen");
+        break;
+    case ScreenMessage::ScreenEvent8:
+        Require(displayCalibrationDefaultsCaptured,"Display calibration factory offsets were not captured");
+        setting=displayCalibrationDefaults;data->sound=5;break;
+    case ScreenMessage::RenderModels:
+        DrawCalibrationHelp(services,displayCalibrationOffsetScreen,0x222f3u);break;
     default:break;
     }
-    switch(handler) {
-    case 0x001F0278:hp2::frontend::Sub_001EFB80(c,event,s);break;
-    case 0x001F3EC0:hp2::frontend::Sub_001F3A28(c,event,s);break;
-    case 0x00240060:hp2::frontend::Sub_002402C0(c,event,s);break;
-    case 0x0024DBD8:hp2::frontend::Sub_0024D870(c,event,s);break;
-    case 0x001F1DD8:hp2::frontend::Sub_001F1B08(c,event,s);break;
-    case 0x001F1220:hp2::frontend::Sub_001F0D10(c,event,s);break;
-    case 0x001F19E8:hp2::frontend::Sub_001F1568(c,event,s);break;
-    case 0x001F21B0:break; // 001F2070 calls00248AE0, which ignoresmessage0x11
-    case 0x002174A0:case 0x00217AF8:break; // active-state handler has no0x11 write
-    // 0x001FB218 "View Event Tree" / TASK-0021, E-0021-26. FUN_001FB218 forwards message 0x11
-    // to FUN_001FAF60, whose state-0 arm calls FUN_001F5D28(0x2FC1B4, tree->type_0x08,
-    // record+0x28) and then returns without writing a permission or a sound -- so the manager's
-    // own history pop decides what happens, exactly as the two mode selects do. The
-    // FUN_001F5D28 call is a profile write and is performed by the caller, which owns the
-    // profile; see FrontEndRuntime::menu_joy_event. State 2 never reaches here, because the
-    // view consumes Back itself through FUN_001FAD20.
-    case 0x001FB218:break;
-    case 0x00247830:
-        if(c.loadsave_state_0x54!=0)hp2::not_implemented("0x00247530","load/save operation Back polling dependencies missing");
-        break; // common pulse dispatcher00248AE0 ignoresmessage0x11
-    default:hp2::not_implemented("0x0016C670","screen Back handler not recovered");
+    ApplyDisplayCalibration(*services.frontend,*services.ui->clock);
+}
+constexpr std::int32_t CalibrationHelp63[]={800313,0};
+}
+
+void InitializeDisplayCalibration(FrontendPlayerManager& frontend,const GameTime& clock)
+{
+    // Original tDisplayCalibrationData constructor1F4AD8 captures the process
+    // defaults and reads the actual current display slot into the FRED record.
+    if(!displayCalibrationDefaultsCaptured) {
+        eGetScreenDisplayOffsets(clock,displayCalibrationDefaults[0],displayCalibrationDefaults[1]);
+        displayCalibrationDefaultsCaptured=true;
     }
-    return event;
-}
+    eGetScreenDisplayOffsets(clock,frontend.displayCalibration[0],frontend.displayCalibration[1]);
 }
 
-namespace hp2::frontend {
-// ELF001EFB80 messages4/8/9; E-0017-S04, read-only handler listing/decompile.
-void Sub_001EFB80(int message,MenuEvent_0016A458& event,tScrollingMenuList& viewport,
-                  tLeftRightArrowScroll& selector,FeScreen& screen,const WidgetMeasure& measure) {
-    viewport.Handle_0024A480(message,event.field_0x00);
-    if (message == 4) {
-        selector.Bind_0024A860(event.field_0x00 == 0x52E039FA ? 0x2932DFCA : 0);
-        HandleHighlight(screen,viewport.Sub_0024A368(),measure);
+void ApplyDisplayCalibration(const FrontendPlayerManager& frontend,const GameTime& clock)
+{
+    // Original tDisplayCalibrationData::Commit1F4B10 tail-calls eSet.
+    eSetScreenDisplayOffsets(clock,frontend.displayCalibration[0],frontend.displayCalibration[1]);
+}
+
+std::array<FlailerScreenConfig,2>& DisplayCalibrationScreenConfigurations()
+{
+    static std::array<FlailerScreenConfig,2> configurations{{
+        {"Calibrate Display",&DisplayCalibrateCallback,{{static_cast<std::int32_t>(0xddf09124u),0,0,0}},{{-1,-1,-1,-1}},1,CalibrationHelp63},
+        {"Calibrate display offset",&DisplayCalibrateOffsetCallback,{{static_cast<std::int32_t>(0x7ab428c1u),0,0,0}},{{-1,-1,-1,-1}},1,CalibrationHelp63}}};
+    return configurations;
+}
+} // namespace hp2
+
+// Original Options.obj / indep/src/frontendscreens/options.cpp:
+// CreditsScreen, CreditsMoviePlayer, CreditsLine, tCreditsSlideshow and
+// CreditsScroller. Native services borrow the existing application owners.
+#include "CarSounds.hpp"
+#include "EventTree.hpp"
+#include "Language.hpp"
+#include "GameFlow.hpp"
+#include "indep/src/MoviePlayer/MV3Codec.h"
+#include "bware/inc/bWare.hpp"
+#include <algorithm>
+#include <array>
+#include <cstdio>
+#include <cstring>
+#include <limits>
+#include <string>
+#include <vector>
+
+namespace hp2 {
+namespace {
+constexpr std::int32_t CreditsHelp[]={800080,800081,800079,0};
+constexpr std::int32_t CreditsScrollHelp[]={800082,800083,800084,0};
+constexpr const char* CreditsNames[]={"Credits","Credits FE Movie","Credits Reward movie",
+    "BBG Creation movie","BBG Credits movie","EACredits","BBGCredits"};
+FrontendStartupServices* creditsServices{};
+
+MainMenuScreenServices& CreditsMenus() {return *creditsServices->menus;}
+void CreditsMusicStart(MainMenuScreenServices& menus)
+{
+    const auto& setup=*menus.raceSetup;
+    Require(soundJukeboxStart(*menus.sounds,*menus.frontend,*setup.parameters,*setup.flow,true)==WORLD_AUDIO_OK,
+        "Credits jukebox could not restart on its actual audio owner");
+}
+void CreditsGrayItem(MainMenuScreenServices& menus,std::uint32_t screen,std::uint32_t key,bool available)
+{
+    // The released GrayMenuItem(...,1/2,screen) enables/shows or disables/hides.
+    auto* node=menus.screens->FindScreen(static_cast<std::int32_t>(screen));
+    if (!node || !node->screen || !node->screen->menu)return;
+    auto* item=node->screen->menu->FindItem(key);
+    if (!item)return;
+    if (available)item->SetMenuItemState(1);else item->ClearMenuItemState(1);
+    menus.ui->resources->SetObjectVisibility(screen,key,available?1:0);
+}
+class CreditsScreen final {
+public:
+    CreditsScreen(MainMenuScreenServices& menus,std::uint32_t screen)
+        : menus_(menus),screen_(screen),slide_(*menus.ui,screen,0xaed1a723u,0x718cd8c3u,0x95ad096bu),
+          highlight_(*menus.ui,screen,0xab671c9au,menus.ui->animationSettings.highlightColor)
+    {
+        menus_.screens->StartMovie("MOVIES\\options_movie_new.AVI");
+        CreditsGrayItem(menus_,screen_,0x52e039f7u,ShouldShowRewardMovieOption());
     }
-    if ((message == 8 && event.field_0x00 == 0x52E039F3) ||
-        (message == 9 && event.field_0x00 == 0xAEE77884)) event.result_0x08 = 1;
-}
-}
-
-namespace hp2::frontend {
-// ELF001F3A28 case4/8/9; E-0017-S05. No settings writes are implied by this slice.
-void Sub_001F3A28(int message,MenuEvent_0016A458& event,tScrollingMenuList& viewport,
-                  tLeftRightArrowScroll& selector,FeScreen& screen,const WidgetMeasure& measure) {
-    viewport.Handle_0024A480(message,event.field_0x00);
-    if (message == 4) {
-        constexpr std::uint32_t targets[]{0x55CB09F2,0x2E931F1B,0x03D90172,
-            0x5610F2F4,0x422313CB,0x8FE4086B,0,0,0};
-        const auto index = event.field_0x00 - 0x52E039F3u;
-        selector.Bind_0024A860(index < 9 ? targets[index] : 0);
-        HandleHighlight(screen,viewport.Sub_0024A368(),measure);
+    bool ShouldShowRewardMovieOption() const
+    {
+        // Final2026F8: live event32 in BOTH canonical progress trees must be
+        // status4. The original GP cells map to PrimaryTree1 and PrimaryTree0.
+        const auto* events=menus_.raceSetup->events;
+        Require(events,"Credits reward query has no actual EventTree resource owner");
+        auto* first=events->PrimaryTree(1);
+        auto* second=events->PrimaryTree(0);
+        Require(first && second,"Credits reward query lacks one original event tree");
+        const auto* a=first->GetEventNumber(32);const auto* b=second->GetEventNumber(32);
+        Require(a && b,"Credits reward query lacks authored event32");
+        return a->GetStatus()==4 && b->GetStatus()==4;
     }
-    if ((message == 8 && event.field_0x00 == 0x52E039F3) ||
-        (message == 9 && event.field_0x00 == 0x52E039FB)) event.result_0x08 = 1;
+    void HandleEvent(ScreenMessage message,ScreenCallbackData& data)
+    {
+        highlight_.HandleEvents(message,data);
+        if (message==ScreenMessage::Tick)slide_.Tick();
+        else if (message==ScreenMessage::Select && data.key>=0x52e039f3u && data.key<=0x52e039f7u) {
+            static constexpr const char* destinations[]={"EACredits","BBG Credits movie",
+                "Credits FE Movie","BBG Creation movie","Credits Reward movie"};
+            menus_.screens->ChangeToScreen(destinations[data.key-0x52e039f3u],true);
+        }
+    }
+private:
+    MainMenuScreenServices& menus_;
+    std::uint32_t screen_;
+    FlailerSlideOnScreen slide_;
+    FlailerHighlightAnimation highlight_;
+};
+
+class CreditsMoviePlayer final {
+public:
+    CreditsMoviePlayer(FrontendStartupServices& services,std::uint32_t screen,
+        const char* movie,const char* following)
+        : services_(services),following_(following)
+    {
+        auto& menus=*services_.menus;auto& ui=*menus.ui;
+        Require(movie && ui.movie && services_.movieLog,"Credits movie has no actual file/player/replay owners");
+        const bool creation=std::strcmp(movie,"MOVIES\\INTRO\\MAKEOF_EN.AVI")==0;
+        const auto key=creation?0x3acf2d73u:0xbfaebf79u;
+        bitmap_=static_cast<FlailerBitmapChunk*>(ui.resources->FindObject(screen,key,2));
+        Require(bitmap_,"Credits movie lacks its authored movie bitmap");
+        ui.resources->SetObjectVisibility(screen,0x3acf2d73u,creation?1:0);
+        ui.resources->SetObjectVisibility(screen,0xbfaebf79u,creation?0:1);
+        Require(soundJukeboxStop(*menus.sounds)==WORLD_AUDIO_OK,
+            "Credits movie could not stop the actual jukebox");
+        menus.screens->StopMovie();
+        try {
+            Require(ui.movie->InitFile(movie)==1,"Credits movie could not open its original authored AVI");
+            ui.resources->SetObjectVisibility(screen,0xb070dbc9u,0);
+            ui.resources->SetGroupVisibility(screen,0xb73c8d23u,0);
+        } catch (...) {
+            const auto primary=std::current_exception();
+            if (const auto cleanup=ui.movie->Shutdown()) {
+                try {std::rethrow_exception(cleanup);}
+                catch (const std::exception& error) {RecordSessionEvent("movie.credits.cleanup_failed",error.what());}
+                catch (...) {RecordSessionEvent("movie.credits.cleanup_failed","Unknown movie cleanup failure");}
+            }
+            try {CreditsMusicStart(menus);}
+            catch (const std::exception& error) {RecordSessionEvent("movie.credits.music_restore_failed",error.what());}
+            catch (...) {RecordSessionEvent("movie.credits.music_restore_failed","Unknown credits music restore failure");}
+            std::rethrow_exception(primary);
+        }
+    }
+    void Retire()
+    {
+        // PAL1F2358 destructor actions. Explicit retirement lets a failed
+        // real audio submission preserve this owner for the caller's retry;
+        // unique_ptr destruction is never a throwing acknowledgement path.
+        if (retired_)return;
+        services_.menus->ui->movie->Close();
+        // Ordinary transitions restart music; terminal retirement has closed
+        // admission and must not create another physical audio borrower.
+        if (!carLoader.ShuttingDown())CreditsMusicStart(*services_.menus);
+        retired_=true;
+    }
+    void MovieFinished()
+    {
+        auto& screens=*services_.menus->screens;
+        if (following_)screens.ChangeToScreen(following_,false);
+        else screens.MoveToPreviousScreen(1,false,0);
+    }
+    void HandleEvent(ScreenMessage message,ScreenCallbackData& data)
+    {
+        if (message==ScreenMessage::Tick) {
+            if (DriveMovie(*services_.menus->ui,*bitmap_,*services_.movieLog)==1) {
+                services_.menus->ui->movie->Close();MovieFinished();
+            }
+        } else if (message==ScreenMessage::Select)MovieFinished();
+        else if (message==ScreenMessage::Left || message==ScreenMessage::Right ||
+            message==ScreenMessage::Previous || message==ScreenMessage::Next || message==ScreenMessage::ScreenBack)
+            data.sound=0;
+    }
+private:
+    FrontendStartupServices& services_;
+    const char* following_{};
+    FlailerBitmapChunk* bitmap_{};
+    bool retired_{};
+};
+
+bool CreditsDigit(char c) {return c>='0' && c<='9';}
+bool CreditsLetter(char c) {return (c>='a' && c<='z') || (c>='A' && c<='Z');}
+const char* CreditsSkipToDigit(const char* text) {while (*text && !CreditsDigit(*text))++text;return text;}
+const char* CreditsSkipToLetter(const char* text) {while (*text && !CreditsLetter(*text))++text;return text;}
+std::uint32_t CreditsDecimal(const char* text)
+{
+    std::uint32_t value=0;
+    while (CreditsDigit(*text)) {value=value*10u+static_cast<std::uint32_t>(*text-'0');++text;}
+    return value;
+}
+std::uint32_t ParseColor(const char* text)
+{
+    std::uint32_t channels[]={128,128,128};
+    const char* cursor=CreditsSkipToDigit(text);
+    for (std::size_t i=0;i<3 && *cursor;++i) {
+        channels[i]=CreditsDecimal(cursor);
+        const char delimiter=i==2?')':',';
+        const auto* end=std::strchr(cursor,delimiter);
+        Require(end,"Credits RGB directive has no authored closing delimiter");
+        cursor=CreditsSkipToDigit(end);
+    }
+    return 0x80000000u|channels[0]|(channels[1]<<8)|(channels[2]<<16);
+}
+std::uint32_t ParseFont(const char* text)
+{
+    const auto* first=CreditsSkipToLetter(text);
+    if (!*first)return 0;
+    const auto* end=std::strchr(first,')');
+    Require(end,"Credits FONT directive has no authored closing delimiter");
+    const std::string font(first,static_cast<std::size_t>(end-first));
+    return hashString(font.c_str());
+}
+void ParseCreditsColors(std::uint32_t& color,std::uint32_t& font,char* output,
+    std::size_t capacity,const char* source)
+{
+    Require(output && capacity && source,"Credits line parser has no actual text storage");
+    std::array<char,32> fontText{},colorText{};
+    std::fill_n(output,capacity,char{});
+    bool command=false,parenthesis=false,fontCommand=false,colorCommand=false;
+    char* token=nullptr;std::size_t tokenSize=0,outputSize=0;
+    for (const char* current=source;*current;++current) {
+        if (*current=='$') {
+            if (current[1]=='$')++current;
+            else {
+                if (std::strncmp(current+1,"FONT",4)==0)fontCommand=true;
+                if (std::strncmp(current+1,"RGB",3)==0)colorCommand=true;
+                if (fontCommand || colorCommand)command=true;
+            }
+        }
+        if (*current=='(' && command)parenthesis=true;
+        if (!command && !parenthesis) {
+            Require(outputSize+1<capacity,"Credits text exceeds the original bounded line buffer");
+            output[outputSize++]=*current;
+        }
+        if (parenthesis && !token) {
+            if (fontCommand)token=fontText.data();
+            else if (colorCommand)token=colorText.data();
+            tokenSize=0;
+        }
+        if (token) {
+            Require(tokenSize+1<fontText.size(),"Credits directive exceeds its original bounded token buffer");
+            token[tokenSize++]=*current;token[tokenSize]=0;
+        }
+        if (*current==')') {
+            parenthesis=false;command=false;fontCommand=false;colorCommand=false;token=nullptr;
+        }
+    }
+    Require(!command && !parenthesis,"Credits directive is truncated");
+    if (colorText[0])color=ParseColor(colorText.data());
+    if (fontText[0])font=ParseFont(fontText.data());
+}
+
+class CreditsLine final {
+public:
+    CreditsLine(FlailerUiState& ui,FlailerTextChunk& text):ui_(ui),text_(text) {}
+    float SetLanguageID(std::int32_t id,float y)
+    {
+        std::array<char,256> display{};std::uint32_t color=0,font=0;
+        const auto* localized=ui_.language->GetString(id);
+        Require(localized,"Credits line has no authored translation");
+        ParseCreditsColors(color,font,display.data(),display.size(),localized);
+        text_.SetColor(color?color:0x80808080u);
+        if (font==hashString("FONT_IMPACTBIG") || font==hashString("FONT_IMPACTNORMAL")) {
+            text_.SetScaleX(0.6000000238418579f);text_.SetScaleY(0.6000000238418579f);text_.fontKey=font;
+        } else {
+            text_.SetScaleX(1.0f);text_.SetScaleY(1.0f);text_.fontKey=hashString("FONT_STATS");
+        }
+        text_.updateKind=1;
+        if (color || font)text_.SetString(display.data());else text_.SetLanguageID(static_cast<std::uint32_t>(id));
+        text_.SetTopLeftY(y);text_.SetClipToPoly(0xa94bd818u);
+        return ui_.resources->ScaledTextHeight(text_);
+    }
+    void Animate(float elapsed)
+    {
+        float x,y;ui_.resources->GetTopLeft(text_,x,y,ui_.language);text_.SetTopLeftY(y-elapsed*30.0f);
+    }
+    bool PleaseResetMe() const
+    {
+        float x,y;ui_.resources->GetTopLeft(text_,x,y,ui_.language);return y<0.0f;
+    }
+    float Bottom() const
+    {
+        float x,y;ui_.resources->GetTopLeft(text_,x,y,ui_.language);return y+ui_.resources->ScaledTextHeight(text_);
+    }
+private:
+    FlailerUiState& ui_;
+    FlailerTextChunk& text_;
+};
+class tCreditsSlideshow final {
+public:
+    tCreditsSlideshow(FlailerUiState& ui,std::uint32_t screen,std::uint32_t first,std::uint32_t second)
+        : ui_(ui),screen_(screen),first_(first),second_(second),started_(ui.clock->realTimer),
+          current_(hashString("CREDITS_BG1")),secondAlpha_(ui,screen),firstAlpha_(ui,screen)
+    {
+        secondAlpha_.AddObject(second);firstAlpha_.AddObject(first);
+        if (auto* object=ui_.resources->FindObject(screen_,second_))object->SetAlpha(0);
+    }
+    std::uint32_t PickNewTexture(std::uint32_t previous)
+    {
+        for (std::int32_t attempt=0;attempt<10;++attempt) {
+            char name[32];std::snprintf(name,sizeof(name),"CREDITS_BG%u",vectorDefaultRandomBounded(8)+1);
+            const auto key=hashString(name);if (key!=previous)return key;
+        }
+        return previous;
+    }
+    void Animate()
+    {
+        const auto raw=static_cast<std::uint32_t>(ui_.clock->realTimer)-static_cast<std::uint32_t>(started_);
+        std::int32_t delta;std::memcpy(&delta,&raw,sizeof(delta));
+        float elapsed=static_cast<float>(delta)*0.0002500000118743628f;
+        if (choose_) {current_=PickNewTexture(current_);choose_=false;}
+        if (!(elapsed>4.0f))return;
+        if (elapsed>5.0f) {
+            ChangeTexture(first_,current_);started_=ui_.clock->realTimer;choose_=true;
+        } else {
+            elapsed-=4.0f;ChangeTexture(second_,current_);
+            secondAlpha_.SetAlphaScale(elapsed);firstAlpha_.SetAlphaScale(1.0f-elapsed);
+        }
+    }
+private:
+    void ChangeTexture(std::uint32_t object,std::uint32_t texture)
+    {
+        if (auto* target=ui_.resources->FindObject(screen_,object,2))
+            static_cast<FlailerBitmapChunk*>(target)->ChangeTexture(texture);
+    }
+    FlailerUiState& ui_;
+    std::uint32_t screen_,first_,second_;
+    std::int32_t started_;
+    std::uint32_t current_;
+    bool choose_{true};
+    FlailerAlphaAnimation secondAlpha_,firstAlpha_;
+};
+class CreditsScroller final {
+public:
+    CreditsScroller(MainMenuScreenServices& menus,std::uint32_t screen)
+        : menus_(menus),screen_(screen),slideshow_(*menus.ui,screen,0xf947e681u,0x4ef4d164u)
+    {
+        Require(menus_.screens->active && menus_.screens->active->configuration,
+            "Credits scroll has no actual active configuration");
+        const auto* name=menus_.screens->active->configuration->name;
+        BuildCredits(std::strcmp(name,"EACredits")==0?0:1);
+        menus_.screens->StopMovie();
+    }
+    void BuildCredits(std::int32_t kind)
+    {
+        Require(kind==0 || kind==1,"Credits scroll has no authored credit range");
+        first_=kind==0?501000:601000;last_=kind==0?501614:601226;next_=first_;
+        auto& ui=*menus_.ui;
+        auto* object=ui.resources->FindObjectByGroup(screen_,0xd2638b19u,1);
+        while (object) {
+            Require(object->kind==1,"Credits text group contains a non-text object");
+            lines_.emplace_back(ui,static_cast<FlailerTextChunk&>(*object));
+            object=ui.resources->FindObjectByGroup(screen_,0xd2638b19u,0,object);
+        }
+        Require(!lines_.empty(),"Credits screen has no authored line pool");
+        float y=240.0f;
+        for (auto& line:lines_)y+=line.SetLanguageID(next_++,y);
+    }
+    float GetMaxY() const
+    {
+        float result=-10.0f;for (const auto& line:lines_)if (result<line.Bottom())result=line.Bottom();return result;
+    }
+    void Tock(float elapsed)
+    {
+        for (auto& line:lines_) {
+            if (line.PleaseResetMe()) {
+                const auto id=next_++;line.SetLanguageID(id,GetMaxY());if (next_>last_)next_=first_;
+            } else line.Animate(elapsed);
+        }
+    }
+    void HandleEvent(ScreenMessage message,ScreenCallbackData& data)
+    {
+        if (message==ScreenMessage::Tick) {if (!paused_)Tock(menus_.ui->clock->realTimeElapsed);slideshow_.Animate();}
+        else if (message==ScreenMessage::Left || message==ScreenMessage::Right ||
+            message==ScreenMessage::Previous || message==ScreenMessage::Next) {data.sound=28;Tock(1.0f);}
+        else if (message==ScreenMessage::ItemEvent) {data.sound=5;paused_=!paused_;}
+        else if (message==ScreenMessage::Select)data.sound=0;
+    }
+private:
+    MainMenuScreenServices& menus_;
+    std::uint32_t screen_;
+    std::vector<CreditsLine> lines_;
+    std::int32_t first_{},last_{},next_{};
+    bool paused_{};
+    tCreditsSlideshow slideshow_;
+};
+std::unique_ptr<CreditsScreen> creditsOwner;
+std::unique_ptr<CreditsMoviePlayer> creditsMovieOwner;
+std::unique_ptr<CreditsScroller> creditsScrollOwner;
+}
+
+void CreditsScreenCallback(ScreenMessage message,ScreenCallbackData* data)
+{
+    Require(creditsServices && data,"Credits callback has no actual bindings/data");
+    if (message==ScreenMessage::ScreenActivate) {
+        Require(!creditsOwner,"Credits received duplicate activation");
+        creditsOwner=std::make_unique<CreditsScreen>(CreditsMenus(),data->key);
+    } else if (message==ScreenMessage::ScreenDeactivate)creditsOwner.reset();
+    else {Require(creditsOwner!=nullptr,"Credits callback precedes activation");creditsOwner->HandleEvent(message,*data);}
+}
+void CreditsMoviePlayerCallback(ScreenMessage message,ScreenCallbackData* data)
+{
+    Require(creditsServices && data,"Credits movie callback has no actual bindings/data");
+    if (message==ScreenMessage::ScreenActivate) {
+        Require(!creditsMovieOwner,"Credits movie received duplicate activation");
+        const auto& menus=CreditsMenus();
+        Require(menus.screens->active && menus.screens->active->configuration,
+            "Credits movie has no actual active configuration");
+        const auto* name=menus.screens->active->configuration->name;
+        const bool french=menus.ui->language->currentLanguage==1;
+        const char* movie=nullptr;const char* following=nullptr;
+        if (std::strcmp(name,"Credits FE Movie")==0)
+            movie=french?"MOVIES\\INTRO\\NFSINTRO_FR.AVI":"MOVIES\\INTRO\\NFSINTRO_EN.AVI";
+        else if (std::strcmp(name,"Credits Reward movie")==0)
+            movie=french?"MOVIES\\INTRO\\REWARD_FR.AVI":"MOVIES\\INTRO\\REWARD_EN.AVI";
+        else if (std::strcmp(name,"BBG Creation movie")==0)movie="MOVIES\\INTRO\\MAKEOF_EN.AVI";
+        else if (std::strcmp(name,"BBG Credits movie")==0) {
+            movie="MOVIES\\INTRO\\BBGLOGO_EN.AVI";following="BBGCredits";
+        }
+        Require(movie,"Credits movie has no released configuration mapping");
+        creditsMovieOwner=std::make_unique<CreditsMoviePlayer>(*creditsServices,data->key,movie,following);
+    } else if (message==ScreenMessage::ScreenDeactivate) {
+        if (creditsMovieOwner)creditsMovieOwner->Retire();
+        creditsMovieOwner.reset();
+    } else {Require(creditsMovieOwner!=nullptr,"Credits movie callback precedes activation");creditsMovieOwner->HandleEvent(message,*data);}
+}
+void CreditsScrollerCallback(ScreenMessage message,ScreenCallbackData* data)
+{
+    Require(creditsServices && data,"Credits scroll callback has no actual bindings/data");
+    if (message==ScreenMessage::ScreenActivate) {
+        Require(!creditsScrollOwner,"Credits scroll received duplicate activation");
+        creditsScrollOwner=std::make_unique<CreditsScroller>(CreditsMenus(),data->key);
+    } else if (message==ScreenMessage::ScreenDeactivate)creditsScrollOwner.reset();
+    else {Require(creditsScrollOwner!=nullptr,"Credits scroll callback precedes activation");creditsScrollOwner->HandleEvent(message,*data);}
+}
+void BindCreditsScreens(FrontendStartupServices& services)
+{
+    Require(!creditsOwner && !creditsMovieOwner && !creditsScrollOwner && services.menus && services.movieLog,
+        "Credits binding lacks the actual frontend/movie replay owner");
+    auto& menus=*services.menus;
+    // Menu registration precedes the asynchronous FRONTB event publication.
+    // Keep the live setup borrow here; ShouldShowRewardMovieOption validates
+    // its actual event owner, both trees and event32 when Credits activates.
+    Require(menus.ui && menus.ui->resources && menus.ui->language && menus.ui->clock && menus.ui->movie &&
+        menus.ui->render && menus.screens && menus.screens->ui==menus.ui && menus.frontend && menus.sounds &&
+        menus.raceSetup && menus.raceSetup->parameters && menus.raceSetup->flow,
+        "Credits bindings do not share the actual application owners");
+    creditsServices=&services;
+}
+void UnbindCreditsScreens()
+{
+    std::exception_ptr failure;
+    try {if (creditsMovieOwner)creditsMovieOwner->Retire();}
+    catch (...) {failure=std::current_exception();}
+    // Do not retain static Flailer borrowers after one audio failure. Movie
+    // retains its first error and pending voice for application shutdown.
+    creditsMovieOwner.reset();creditsScrollOwner.reset();creditsOwner.reset();creditsServices=nullptr;
+    if (failure)std::rethrow_exception(failure);
+}
+std::array<FlailerScreenConfig,7>& CreditsScreenConfigurations()
+{
+    static std::array<FlailerScreenConfig,7> configurations{{
+        {CreditsNames[0],CreditsScreenCallback,{{static_cast<std::int32_t>(0xfd8a3b6du),0,0,0}},{{-1,-1,-1,-1}},1,CreditsHelp},
+        {CreditsNames[1],CreditsMoviePlayerCallback,{{static_cast<std::int32_t>(0xb5761d00u),0,0,0}},{{-1,-1,-1,-1}},1,nullptr},
+        {CreditsNames[2],CreditsMoviePlayerCallback,{{static_cast<std::int32_t>(0xb5761d00u),0,0,0}},{{-1,-1,-1,-1}},1,nullptr},
+        {CreditsNames[3],CreditsMoviePlayerCallback,{{static_cast<std::int32_t>(0xb5761d00u),0,0,0}},{{-1,-1,-1,-1}},1,nullptr},
+        {CreditsNames[4],CreditsMoviePlayerCallback,{{static_cast<std::int32_t>(0xb5761d00u),0,0,0}},{{-1,-1,-1,-1}},1,nullptr},
+        {CreditsNames[5],CreditsScrollerCallback,{{static_cast<std::int32_t>(0x39c4c62cu),0,0,0}},{{-1,-1,-1,-1}},1,CreditsScrollHelp},
+        {CreditsNames[6],CreditsScrollerCallback,{{static_cast<std::int32_t>(0x39c4c62cu),0,0,0}},{{-1,-1,-1,-1}},1,CreditsScrollHelp}
+    }};
+    return configurations;
 }
 }
-
-
-namespace hp2::frontend {
-// ELF 0x001EF3C8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001ef3c8.md.
-void AudioOptionsScreen::Sub_001EF3C8() {
-    hp2::not_implemented("0x001EF3C8", "AudioOptionsScreen::Sub_001EF3C8 (signature and full body unresolved)");
-}
-
-// ELF 0x001EFA00; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001efa00.md.
-void AudioOptionsScreen::Sub_001EFA00() {
-    hp2::not_implemented("0x001EFA00", "AudioOptionsScreen::Sub_001EFA00 (signature and full body unresolved)");
-}
-
-// ELF 0x001EFB78; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001efb78.md.
-void AudioOptionsScreen::Sub_001EFB78() {
-    hp2::not_implemented("0x001EFB78", "AudioOptionsScreen::Sub_001EFB78 (signature and full body unresolved)");
-}
-
-// ELF 0x001EFB80; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001efb80.md.
-void AudioOptionsScreen::Sub_001EFB80() {
-    hp2::not_implemented("0x001EFB80", "AudioOptionsScreen::Sub_001EFB80 (signature and full body unresolved)");
-}
-} // namespace hp2::frontend
-
-namespace hp2::frontend {
-// ELF 0x001F02D8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f02d8.md.
-void JukeBoxMusicScreen::Sub_001F02D8() {
-    hp2::not_implemented("0x001F02D8", "JukeBoxMusicScreen::Sub_001F02D8 (signature and full body unresolved)");
-}
-
-// ELF 0x001F0460; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001f0460.md.
-void JukeBoxMusicScreen::Sub_001F0460() {
-    hp2::not_implemented("0x001F0460", "JukeBoxMusicScreen::Sub_001F0460 (signature and full body unresolved)");
-}
-
-// ELF 0x001F0D10; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f0d10.md.
-void JukeBoxMusicScreen::Sub_001F0D10() {
-    hp2::not_implemented("0x001F0D10", "JukeBoxMusicScreen::Sub_001F0D10 (signature and full body unresolved)");
-}
-
-
-} // namespace hp2::frontend
-
-namespace hp2::frontend {
-// ELF 0x001F33B8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f33b8.md.
-void tDisplayOptionsScreen::Sub_001F33B8() {
-    hp2::not_implemented("0x001F33B8", "tDisplayOptionsScreen::Sub_001F33B8 (signature and full body unresolved)");
-}
-
-// ELF 0x001F3588; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001f3588.md.
-void tDisplayOptionsScreen::Sub_001F3588() {
-    hp2::not_implemented("0x001F3588", "tDisplayOptionsScreen::Sub_001F3588 (signature and full body unresolved)");
-}
-
-// ELF 0x001F35E0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001f35e0.md.
-void tDisplayOptionsScreen::Sub_001F35E0() {
-    hp2::not_implemented("0x001F35E0", "tDisplayOptionsScreen::Sub_001F35E0 (signature and full body unresolved)");
-}
-
-// ELF 0x001F3A28; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f3a28.md.
-void tDisplayOptionsScreen::Sub_001F3A28() {
-    hp2::not_implemented("0x001F3A28", "tDisplayOptionsScreen::Sub_001F3A28 (signature and full body unresolved)");
-}
-} // namespace hp2::frontend
-
-namespace hp2::frontend {
-// ELF 0x001EEBB8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001eebb8.md.
-void tOptionsScreen::Sub_001EEBB8() {
-    hp2::not_implemented("0x001EEBB8", "tOptionsScreen::Sub_001EEBB8 (signature and full body unresolved)");
-}
-
-// ELF 0x001EEC50; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001eec50.md.
-void tOptionsScreen::Sub_001EEC50() {
-    hp2::not_implemented("0x001EEC50", "tOptionsScreen::Sub_001EEC50 (signature and full body unresolved)");
-}
-
-// ELF 0x001EECA8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001eeca8.md.
-void tOptionsScreen::Sub_001EECA8() {
-    hp2::not_implemented("0x001EECA8", "tOptionsScreen::Sub_001EECA8 (signature and full body unresolved)");
-}
-
-
-} // namespace hp2::frontend
-
-namespace hp2::frontend {
-// ELF 0x001EFA68; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001efa68.md.
-void AudioOptionsScreen::FindSlider() {
-    hp2::not_implemented("0x001EFA68", "AudioOptionsScreen::FindSlider (signature and full body unresolved)");
-}
-} // namespace hp2::frontend
-
-namespace hp2::recovered {
-// ELF 0x001F1A78; E-0041-R20; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f1a78.md.
-void LanguageOptionsScreenBase::Sub_001F1A78() {
-    hp2::not_implemented("0x001F1A78", "LanguageOptionsScreenBase::Sub_001F1A78 (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x001F4DC8; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001f4dc8.md.
-void OptionsScreenBase::Sub_001F4DC8() {
-    hp2::not_implemented("0x001F4DC8", "OptionsScreenBase::Sub_001F4DC8 (signature and full body unresolved)");
-}
-
-// ELF 0x001F4E68; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/frontend/001f4e68.md.
-void OptionsScreenBase::HandleHighlight() {
-    hp2::not_implemented("0x001F4E68", "OptionsScreenBase::HandleHighlight (signature and full body unresolved)");
-}
-
-// ELF 0x001F5B80; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001f5b80.md.
-void OptionsScreenBase::HandleEvent() {
-    hp2::not_implemented("0x001F5B80", "OptionsScreenBase::HandleEvent (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x001F1528; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001f1528.md.
-void UserNameOptionsScreen::DisplayGender() {
-    hp2::not_implemented("0x001F1528", "UserNameOptionsScreen::DisplayGender (signature and full body unresolved)");
-}
-} // namespace hp2::recovered

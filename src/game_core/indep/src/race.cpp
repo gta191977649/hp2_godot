@@ -1,330 +1,1468 @@
-// TASK-0042 E-0042-S001: exact Debug source marker(s): ..\indep\src\race.cpp.
-// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: qualified_string; evidence: E-0019-N03.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-// Diagnostic text (not a callable signature): Race::Update() [0x002B0020]
-#include "game_core/Race.hpp"
+#include "Race.hpp"
+#include "indep/inc/Track.hpp"
+#include "indep/inc/AICarController.hpp"
+#include "indep/inc/PsychoDriver.hpp"
+#include "indep/inc/Fred.hpp"
+#include "EventTree.hpp"
+#include "TrackedController.hpp"
+#include "indep/inc/World.hpp"
+#include "indep/inc/CarDriver.hpp"
+#include "indep/inc/Player.hpp"
+#include "indep/inc/Car.hpp"
+#include "indep/inc/Pursuit.hpp"
+#include "indep/src/speech/mgr.hpp"
+#include "Race.hpp"
+#include <limits.h>
 
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: allocator_label; evidence: E-0027-C01.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/indep/inc/Race.hpp"
+#include "indep/inc/Race.hpp"
+#include "indep/inc/Car.hpp"
+#include "bware/inc/bMath.hpp"
+#include "indep/inc/PhysicsCar.hpp"
+#include "indep/inc/Race.hpp"
+#include "indep/inc/Race.hpp"
+#include "indep/inc/Timer.hpp"
+#include "indep/inc/Race.hpp"
+#include "indep/inc/TrackPath.hpp"
+#include "indep/inc/TrackRoute.hpp"
+#include "indep/inc/CameraMover.hpp"
+#include "indep/inc/Race.hpp"
+#include "indep/inc/GhostCar.hpp"
+#include "indep/inc/Replay.hpp"
 
-#include "game_core/port/not_implemented.hpp"
-
-namespace hp2::recovered {
-// ELF 0x00148218; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00148218.md.
-void Race::SortRacingCarsByLeadership() {
-    hp2::not_implemented("0x00148218", "Race::SortRacingCarsByLeadership (signature and full body unresolved)");
-}
-
-// ELF 0x001491C0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001491c0.md.
-void Race::GetFinisher() {
-    hp2::not_implemented("0x001491C0", "Race::GetFinisher (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x001493B8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001493b8.md.
-void RacingCar::Sub_001493B8() {
-    hp2::not_implemented("0x001493B8", "RacingCar::Sub_001493B8 (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x00146AE8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00146ae8.md.
-void TimeAroundTrackTable::GetTimeTableEntry() {
-    hp2::not_implemented("0x00146AE8", "TimeAroundTrackTable::GetTimeTableEntry (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/indep/src/timer.hpp"
-#include "game_core/indep/src/trackpath.hpp"
-#include "game_core/indep/inc/CarDriver.hpp"
-#include "game_core/port/race/control_construction.hpp"
-#include "game_core/port/driving/projections.hpp"
+#include <math.h>
+#include <string.h>
 #include <cmath>
-namespace port::race {
-// Port dispatch for the original GetDesiredSpeed vtable slot. The only two
-// Debug concrete implementations are source-backed; unknown targets stay loud.
-static float racing_desired_speed(::port::driving::Memory& m,std::uint32_t driver){const auto v=m.word(driver+0x22c);const auto adjust=m.signed_half(v+0x88);const auto target=m.word(v+0x8c);const auto self=driver+static_cast<std::int32_t>(adjust);if(target==0x136bd0)return hp2::debug::CarDriver(m,self).GetDesiredSpeed();if(target==0x13ab00)return hp2::debug::PsychoDriver(m,self).GetDesiredSpeed();hp2::not_implemented("0x00146DC0","RacingCar GetDesiredSpeed virtual target is not recovered");}
+#include <new>
+#include "bware/inc/bWare.hpp"
+
+// Complete PAL1490F8..149154. Strict greater-than retains the earlier
+// creation-order Player on equal times; negative/nonpositive timers cannot
+// replace the initial zero. This is MostRecentlyFinished, not first place.
+CarFramePlayerState* raceFrameMostRecentlyFinishedPlayer(const RaceFrame* race)
+{
+    const auto* players=race->services->players;
+    int32_t mostRecent=0;
+    CarFramePlayerState* found=nullptr;
+    for(int32_t i=0;i<players->count;++i) {
+        auto* player=players->players[i];
+        if(player->drivingLocked && mostRecent<player->drivingLocked) {
+            mostRecent=player->drivingLocked;
+            found=player;
+        }
+    }
+    return found;
 }
-namespace hp2::debug {
-// Debug00149230; E-0099-W34. Original Race.hpp inline ctor emitted in race.cpp.
-// Only Timer members are initialized: all other original bytes stay untouched.
-void RacingCar::Sub_00149230(){for(unsigned a:{0x24u,0x38u,0x4cu,0x60u,0x74u})for(unsigned i=0;i<5;++i)m_.word(address_+a+4*i,0);for(unsigned i=0;i<11;++i)m_.word(address_+0x88+4*i,0);m_.word(address_+0xb4,0);}
-// Debug00146A78; E-0099-W34. Confirmed original empty non-owning method.
-void RacingCar::UnInit(){}
-// Debug001473C0; E-0099-W34.
-std::uint32_t RacingCar::GetPlayer()const{const auto car=m_.word(address_);return car?m_.word(car+0x18):0;}
-// Debug00147B60, ComparePercentDistances002034D0; E-0099-W34.
-float Race::GetLapNumberExact(float d){float value=TrackPathManager::ComparePercentDistances(d,m_.scalar(address_+0x654+4*m_.signed_byte(address_+0x653)));if(value<0)value=value+100;return value*m_.scalar(0x324f04);}
-// Debug00146C48; E-0099-W34. Original shortest-percent ties and time quantization.
-int RacingCar::CheckBoundaryCrossing(BoundaryCrossingInfo& out,float distance,float boundary){const float current=TrackPathManager::ComparePercentDistances(distance,boundary),previous=TrackPathManager::ComparePercentDistances(m_.scalar(address_+0x1c),boundary);out.CrossedForwards=0;out.CrossedBackwards=0;out.TimeSinceCrossing=0;if(25<std::abs(current))return 0;if(previous<0&&current>=0)out.CrossedForwards=1;else if(previous>=0&&current<0)out.CrossedBackwards=1;else return 0;const float speed=m_.scalar(m_.word(address_)+0x40+0x380);float time=0;if(1<speed)time=(current*m_.scalar(0x313308)*m_.scalar(0x324ee4))/speed;out.TimeSinceCrossing=::port::driving::cvt_w_s(time*4000+0.5f);return 1;}
-// Debug001469A0; E-0099-W34. Full init calls real UpdateLapCounts before NumLapsLed.
-void RacingCar::Init(std::uint32_t car){auto& m=m_;const auto a=address_;m.word(car+0x1c,a);m.byte(a+0xa,0);m.byte(a+0xb,0);m.byte(a+0xc,0);m.scalar(a+0x20,0);m.word(a,car);m.half(a+0x12,0);m.scalar(a+0x1c,m.scalar(car+0x7f0)*100);for(unsigned i=0;i<5;++i){m.word(a+0x24+4*i,0);m.word(a+0x38+4*i,0);m.word(a+0x4c+4*i,0);m.word(a+0x60+4*i,0x7fffffff);m.word(a+0x74+4*i,0x7fffffff);}for(unsigned i=0;i<11;++i)m.word(a+0x88+4*i,0);m.word(a+0xb4,0);m.scalar(a+0xb8,0);m.scalar(a+0xbc,0);m.byte(a+9,0);m.byte(a+8,0xff);m.half(a+6,0xffff);m.half(a+4,0xffff);UpdateLapCounts();m.half(a+0x10,0);}
-// Debug00147C90; E-0099-W34. Original increment/publication follows successful Init.
-void Race::AddRacingCar(std::uint32_t car){const auto n=m_.signed_word(address_+0x18);if(n<0||n>=8)throw std::out_of_range("Race original RacingCarTable exceeds8 entries");RacingCar(m_,address_+0x24+192*n).Init(car);m_.word(address_+0x18,n+1);m_.word(address_+0x624+4*n,address_+0x24+192*n);}
-// Debug00146DC0; E-0099-W34. Actual boundary/lap/timer/top-speed state sequence.
-void RacingCar::UpdateLapCounts(){
- auto& m=m_;const auto a=address_,car=m.word(a);auto race=m.word(0x327258);if(!race)hp2::not_implemented("0x00146DC0","original pCurrentRace is not constructed");const auto replay=m.word(0x3271a8);if(!replay)hp2::not_implemented("0x00146DC0","original ReplayManager is not constructed");
- m.byte(a+0xd,0);m.byte(a+0xe,0);const float distance=m.scalar(car+0x7f0)*100;
- const int count=m.signed_half(race+0x650);if(count>5)throw std::out_of_range("Race authored boundary count exceeds5 timer entries");
- for(int i=0;i<count;++i){BoundaryCrossingInfo crossing;if(!CheckBoundaryCrossing(crossing,distance,m.scalar(race+0x654+4*i)))continue;race=m.word(0x327258);
-  if(crossing.CrossedForwards){if(i==m.signed_byte(race+0x653)){m.byte(a+8,static_cast<std::uint8_t>(m.byte(a+8)+1));if(m.signed_byte(a+9)<m.signed_byte(a+8)){m.byte(a+9,m.byte(a+8));m.byte(a+0xd,1);}}
-   const auto region=static_cast<std::int16_t>(m.signed_byte(a+8)*5+i);m.half(a+4,static_cast<std::uint16_t>(region));
-   if(m.signed_half(a+6)<region){m.byte(a+0xe,1);m.half(a+6,static_cast<std::uint16_t>(region));Timer time;time.PackedTime=static_cast<std::int32_t>(m.word(0x327cf8)-static_cast<std::uint32_t>(crossing.TimeSinceCrossing));time.RoundTime(m,m.scalar(0x324ee8));const auto rounded=static_cast<std::uint32_t>(time.PackedTime);const auto first=m.signed_word(a+0x24);const bool valid=first!=0&&first!=0x7fffffff;
-    if(!m.word(replay)){if(valid){m.word(a+0x4c+4*i,m.word(a+0x38+4*i));m.word(a+0x38+4*i,rounded-static_cast<std::uint32_t>(first));m.word(a+0x74+4*i,m.word(a+0x60+4*i));if(m.signed_word(a+0x38+4*i)<m.signed_word(a+0x60+4*i))m.word(a+0x60+4*i,m.word(a+0x38+4*i));if(i!=m.signed_byte(race+0x653)){m.word(a+0x24+4*i,rounded);continue;}if(m.byte(a+8)<11)m.word(a+0x88+4*m.signed_byte(a+8),m.word(a+0x38+4*i));}}
-    else {if(m.signed_word(0x311f98)!=2)continue;if(i!=m.signed_byte(race+0x653))continue;if(valid)m.word(a+0x38+4*i,rounded-static_cast<std::uint32_t>(first));}
-    m.word(a+0x24+4*i,rounded);
-   }
-  }else if(i==m.signed_byte(race+0x653))m.byte(a+8,static_cast<std::uint8_t>(m.byte(a+8)-1));
- }
- if(!m.word(replay)){
-  if(m.signed_word(car+0x40+0x37c)>2){const float previous=m.scalar(a+0xb8);float speed;
-   if(!GetPlayer()){const float desired=::port::race::racing_desired_speed(m,m.word(car+0x2c));const float boost=m.scalar(car+0x40+0x3a0);const float limited=desired/(boost<1?1:boost);const float forward=std::abs(m.scalar(car+0x40+0x380));const float selected=limited<forward?limited:forward;const float limiter=m.scalar(m.word(car+12)+0x320)*m.scalar(0x324eec);const float chosen=selected<limiter?selected:limiter;const float top=chosen<previous?previous:chosen;speed=(top>=0&&top<=1000)?top:previous;}
-   else {const float forward=m.scalar(car+0x40+0x380);speed=forward<previous?previous:forward;}if(speed!=previous)m.scalar(a+0xb8,speed);
-  }
-  const float seconds=static_cast<float>(m.signed_word(race+0x10))*m.scalar(0x324ef0);if(seconds>0)m.scalar(a+0xbc,m.scalar(car+0x40+0x36c)/seconds);
- }
- const float previous=m.scalar(a+0x14);const float next=static_cast<float>(m.signed_byte(a+8))+Race(m,race).GetLapNumberExact(distance);const float elapsed=m.scalar(0x327d08);m.scalar(a+0x14,next);m.scalar(a+0x20,next);if(elapsed>0)m.scalar(a+0x18,m.scalar(a+0x18)*m.scalar(0x324ef4)+((next-previous)/elapsed)*m.scalar(0x324ef8));m.scalar(a+0x1c,distance);
+
+// Complete PAL148F68..148FF4. FinishCar can alter the ordered view, so the
+// released loop reloads the participant at each index, then sorts once more.
+WorldServicesResult raceFrameSimulateFinish(RaceFrame* race)
+{
+    if (!race || !race->services || race->entryCount>race->entryCapacity ||
+        (race->entryCount && !race->entries)) return WORLD_SERVICES_INVALID_BINDING;
+    for (size_t index=0;index<race->entryCount;++index) {
+        const auto* entry=race->entries[index];
+        if (!entry) return race->services->result=WORLD_SERVICES_INVALID_BINDING;
+        if (!entry->completionReason) {
+            const auto result=raceFrameFinishParticipant(race,index,0,0,1);
+            if (result!=WORLD_SERVICES_OK) return result;
+        }
+    }
+    raceFrameSortEntries(race);
+    return race->services->result=WORLD_SERVICES_OK;
+}
+
+// Complete PAL148FF8..149078. Recording is performed for every live row in
+// its actual final order, including AI entries; a prior single-player result
+// cannot stand in for this notification.
+WorldServicesResult raceFrameNotifyRaceOver(RaceFrame* race)
+{
+    if (!race || !race->services || !race->services->currentEvent ||
+        race->entryCount>race->entryCapacity || (race->entryCount && !race->entries))
+        return WORLD_SERVICES_INVALID_BINDING;
+    for (size_t index=0;index<race->entryCount;++index) {
+        const auto* entry=race->entries[index];
+        if (!entry || !entry->car ||
+            !race->services->currentEvent->RecordResult(*race,*entry,entry->position))
+            return race->services->result=WORLD_SERVICES_INVALID_BINDING;
+    }
+    return race->services->result=WORLD_SERVICES_OK;
+}
+
+// Complete PAL146C90..146E04. The source deliberately omits the Car pointer
+// and most timer arrays. Only time-trial mode transfers its three selected
+// timers, including the duplicate checkpoint[0] transfer when finish==0.
+void raceCarEntryDoSnapshot(RaceCarEntry* entry,const RaceFrame* race,ReplaySnapshot* snapshot)
+{
+    if(!snapshot)return;
+    if(!entry || !race || !race->services || !race->services->settings ||
+        race->finishCheckpoint<0 || race->finishCheckpoint>=5) {
+        snapshot->result=REPLAY_SNAPSHOT_INVALID_BINDING;return;
+    }
+    replaySnapshotBeginSection(snapshot,nullptr,"RacingCar");
+    replaySnapshotMoveData(snapshot,&entry->currentCheckpoint,2,2,1);
+    replaySnapshotMoveData(snapshot,&entry->furthestCheckpoint,2,2,1);
+    replaySnapshotMoveData(snapshot,&entry->lap,1,1,1);
+    replaySnapshotMoveData(snapshot,&entry->furthestLap,1,1,1);
+    replaySnapshotMoveData(snapshot,&entry->position,1,1,1);
+    replaySnapshotMoveData(snapshot,&entry->previousPosition,1,1,1);
+    replaySnapshotMoveData(snapshot,&entry->finishPosition,1,1,1);
+    replaySnapshotMoveData(snapshot,&entry->advancedLap,1,1,1);
+    replaySnapshotMoveData(snapshot,&entry->advancedCheckpoint,1,1,1);
+    replaySnapshotMoveData(snapshot,&entry->updateCounter,2,2,1);
+    replaySnapshotMoveData(snapshot,&entry->completionReason,2,2,1);
+    replaySnapshotMoveFloat(snapshot,&entry->progress);
+    replaySnapshotMoveFloat(snapshot,&entry->progressRate);
+    replaySnapshotMoveFloat(snapshot,&entry->previousPercent);
+    replaySnapshotMoveFloat(snapshot,&entry->displayProgress);
+    if(race->services->settings->raceKind==2) {
+        replaySnapshotMoveData(snapshot,&entry->checkpointTicks[0],4,4,0);
+        replaySnapshotMoveData(snapshot,&entry->checkpointTicks[race->finishCheckpoint],4,4,0);
+        replaySnapshotMoveData(snapshot,&entry->segmentTicks[race->finishCheckpoint],4,4,0);
+    }
+    replaySnapshotEndSection(snapshot);
+}
+
+// Complete PAL1477D0..147960. Embedded participant order and the sorted
+// pointer view are separate: each physical RacingCar is transferred first,
+// then the ordered pointer at that same ordinal is encoded as one byte.
+void raceFrameOwnerDoSnapshot(RaceFrameOwner* owner,ReplaySnapshot* snapshot)
+{
+    if(!snapshot)return;
+    if(!owner || owner->race.entries!=owner->ordered ||
+        owner->race.entryCount>RACE_PARTICIPANT_LIMIT || !owner->race.services ||
+        !owner->race.services->settings || owner->race.finishCheckpoint<0 ||
+        owner->race.finishCheckpoint>=5) {
+        snapshot->result=REPLAY_SNAPSHOT_INVALID_BINDING;return;
+    }
+    auto& race=owner->race;
+    replaySnapshotBeginSection(snapshot,nullptr,"Race");
+    // The state enum overload writes exactly its low byte without extending
+    // the other three native scalar bytes (PAL13CF08, maximumBytes=-1).
+    replaySnapshotMoveData(snapshot,&race.state,1,1,0);
+    replaySnapshotMoveInteger(snapshot,&race.startedWorldFrame,4);
+    replaySnapshotMoveInteger(snapshot,&race.countdownWorldFrame,4);
+    replaySnapshotMoveData(snapshot,&race.startTicks,4,4,0);
+    replaySnapshotMoveData(snapshot,&race.elapsedTicks,4,4,0);
+    // MoveDataForChecksumOnly13D0D0 checks the high two mode bytes. Counts
+    // are not part of normal recording/restoration; the real owners stay
+    // allocated. Preserve the actual mixed-mode precedence of MoveData.
+    if(snapshot->recordingChecksums || snapshot->verifyingChecksums) {
+        int32_t count=static_cast<int32_t>(race.entryCount);
+        replaySnapshotMoveInteger(snapshot,&count,1);
+        if(count<0 || count>RACE_PARTICIPANT_LIMIT) {
+            snapshot->result=REPLAY_SNAPSHOT_INVALID_TRANSFER;
+            replaySnapshotEndSection(snapshot);return;
+        }
+        race.entryCount=static_cast<size_t>(count);
+    }
+    replaySnapshotMoveInteger(snapshot,&race.finishedCount,1);
+    replaySnapshotMoveUnsigned(snapshot,&race.snapshotFlags,1);
+    for(size_t index=0;index<race.entryCount;++index) {
+        raceCarEntryDoSnapshot(&owner->participants[index],&race,snapshot);
+        int8_t ordinal=-1;
+        for(size_t physical=0;physical<RACE_PARTICIPANT_LIMIT;++physical)
+            if(race.entries[index]==&owner->participants[physical])ordinal=static_cast<int8_t>(physical);
+        if(ordinal<0) {
+            snapshot->result=REPLAY_SNAPSHOT_INVALID_BINDING;
+            replaySnapshotEndSection(snapshot);return;
+        }
+        replaySnapshotMoveData(snapshot,&ordinal,1,1,1);
+        if(ordinal<0 || ordinal>=RACE_PARTICIPANT_LIMIT) {
+            snapshot->result=REPLAY_SNAPSHOT_INVALID_TRANSFER;
+            replaySnapshotEndSection(snapshot);return;
+        }
+        race.entries[index]=&owner->participants[static_cast<size_t>(ordinal)];
+    }
+    if(snapshot->recordingChecksums || snapshot->verifyingChecksums)
+        replaySnapshotMoveInteger(snapshot,&race.targetLapCount,1);
+    replaySnapshotEndSection(snapshot);
+}
+
+// PAL146AE8..146B8C. Integer laps and the256 fractional bins retain the
+// source truncation and arithmetic order. NULL output is a real bin query.
+const RaceTimeAroundTrackBin* raceTimeAroundTrackEntry(const RaceTimeAroundTrackTable* table,
+    float progress,float* seconds)
+{
+    if(!table || !std::isfinite(progress) || progress>=2147483648.0f)return nullptr;
+    if(progress<0.0f)progress=0.0f;
+    const int32_t laps=convertFloatToInt32(progress);
+    const float whole=static_cast<float>(laps);
+    const float fraction=progress-whole;
+    const int32_t index=convertFloatToInt32(fraction*256.0f);
+    if(index<0 || index>=256)return nullptr;
+    const RaceTimeAroundTrackBin* bin=&table->bins[index];
+    if(seconds) {
+        const float start=static_cast<float>(index)*0.00390625f;
+        const float inBin=fraction-start;
+        const float priorLaps=whole*table->lapSeconds;
+        const float priorTime=priorLaps+bin->secondsAtStart;
+        *seconds=priorTime+finiteRatio(inBin,bin->progressPerSecond);
+    }
+    return bin;
+}
+
+// PAL146B90..146BB0, GetTimeAroundTrack. The checked native result makes a
+// missing table explicit; it never substitutes a constant lap duration.
+WorldServicesResult raceTimeAroundTrackEvaluate(const RaceTimeAroundTrackTable* table,
+    float progress,float* seconds)
+{
+    return seconds && raceTimeAroundTrackEntry(table,progress,seconds) ?
+        WORLD_SERVICES_OK : WORLD_SERVICES_INVALID_BINDING;
+}
+
+// PAL1467A0..146AE8. Class E6 selects every second authored lane record in
+// the source category0 group list. All coordinates/speeds are borrowed from
+// the existing road owner and transformed by the real route/checkpoint code.
+WorldServicesResult raceTimeAroundTrackBuild(RaceTimeAroundTrackTable* table,const RaceFrame* race,
+    const CarRecoveryPointRegistry* road,int32_t vehicleClass)
+{
+    if(!table || !race || !road || !road->route || road->route!=race->route ||
+        (road->groupCount && !road->groups) || vehicleClass<0 || vehicleClass>10)
+        return WORLD_SERVICES_INVALID_BINDING;
+    memset(table->bins,0,sizeof(table->bins));table->lapSeconds=0.0f;
+    const size_t lane=static_cast<size_t>(vehicleClass)*2;
+    for(size_t i=0;i<road->groupCount;++i) {
+        const CarRecoveryGroup& group=road->groups[i];
+        if(group.category!=0 || !(group.laneFlags[lane]&3u))continue;
+        if(group.poseCount<0 || (group.poseCount && !group.poses))return WORLD_SERVICES_INVALID_BINDING;
+        TrackRouteLocation location;trackRouteLocationInitialize(&location);
+        for(int32_t j=0;j<group.poseCount-1;++j) {
+            const CarRecoveryPose& first=group.poses[j];
+            const CarRecoveryPose& second=group.poses[j+1];
+            const float firstAcross=static_cast<float>(static_cast<int32_t>(first.laneOffsetsQuantized[lane])*256)*0.0000152587890625f;
+            const float secondAcross=static_cast<float>(static_cast<int32_t>(second.laneOffsetsQuantized[lane])*256)*0.0000152587890625f;
+            float firstPoint[2],secondPoint[2];
+            carRoadPreviewPointXY(&first,firstPoint,0.0f,firstAcross);
+            carRoadPreviewPointXY(&second,secondPoint,0.0f,secondAcross);
+            trackRouteUpdateLocation(road->route,&location,firstPoint);
+            float begin=raceFrameCheckpointFraction(race,location.progress*100.0f);
+            trackRouteUpdateLocation(road->route,&location,secondPoint);
+            float end=raceFrameCheckpointFraction(race,location.progress*100.0f);
+            float delta=end-begin;
+            if(0.5f<delta)begin+=1.0f;
+            else if(0.5f<begin-end)end+=1.0f;
+            delta=end-begin;
+            const float dx=firstPoint[0]-secondPoint[0],dy=firstPoint[1]-secondPoint[1];
+            const float xx=dx*dx,yy=dy*dy;
+            const float distance=std::sqrt(xx+yy);
+            const float speed=static_cast<float>(static_cast<uint32_t>(first.laneSpeeds[lane])*65536u)*0.0000152587890625f;
+            const float segmentSeconds=finiteRatio(distance,speed);
+            const float rate=finiteRatio(delta,segmentSeconds);
+            const RaceTimeAroundTrackBin* entry=raceTimeAroundTrackEntry(table,begin,nullptr);
+            if(!entry)return WORLD_SERVICES_INVALID_BINDING;
+            if(0.0f<rate && entry->progressPerSecond==0.0f)
+                table->bins[static_cast<size_t>(entry-table->bins)].progressPerSecond=rate;
+        }
+    }
+    float seconds=0.0f,previousRate=0.0055555556900799274f;
+    for(auto& bin:table->bins) {
+        if(bin.progressPerSecond==0.0f)bin.progressPerSecond=previousRate;
+        bin.secondsAtStart=seconds;
+        previousRate=bin.progressPerSecond;
+        const float duration=finiteRatio(0.00390625f,bin.progressPerSecond);
+        seconds+=duration;
+    }
+    table->lapSeconds=seconds;
+    return WORLD_SERVICES_OK;
+}
+
+// PAL147960..1479F4. The embedded participant storage is distinct from the
+// sorted entry-pointer view. Init selects physical row0, or row1 in mode2.
+WorldServicesResult raceFrameOwnerInitStage(RaceFrameOwner* owner,int32_t stage,
+    const CarRecoveryPointRegistry* road)
+{
+    if(!owner)return WORLD_SERVICES_INVALID_BINDING;
+    RaceFrame* race=&owner->race;
+    auto status=raceFrameOwnerPopulate(owner);
+    if(status!=WORLD_SERVICES_OK)return status;
+    status=raceFrameSetState(race,stage);
+    if(status!=WORLD_SERVICES_OK)return status;
+    if(!race->services || !race->services->settings || race->timeTable)
+        return WORLD_SERVICES_INVALID_BINDING;
+    const auto* settings=race->services->settings;
+    const size_t selected=settings->specialPursuit && settings->mode==2 ? 1u : 0u;
+    if(selected>=race->entryCount || !owner->participants[selected].car)
+        return WORLD_SERVICES_INVALID_BINDING;
+    const Car* car=owner->participants[selected].car;
+    const auto* movement=static_cast<const CarMovement*>(car->movement);
+    if(!movement || movement->bindings.owner!=car)return WORLD_SERVICES_INVALID_BINDING;
+    auto* table=new(std::nothrow) RaceTimeAroundTrackTable;
+    if(!table)return WORLD_SERVICES_CAPACITY;
+    status=raceTimeAroundTrackBuild(table,race,road,movement->info.routeVehicleClass);
+    if(status!=WORLD_SERVICES_OK){delete table;return status;}
+    race->timeTable=table;
+    return WORLD_SERVICES_OK;
+}
+
+void raceFrameDisposeTimeTable(RaceFrame* race)
+{
+    if(!race)return;
+    delete race->timeTable;race->timeTable=nullptr;
+}
+
+RaceCarEntry* raceCarEntryResetTiming(RaceCarEntry* entry)
+{
+    memset(entry->checkpointTicks, 0, sizeof(entry->checkpointTicks));
+    memset(entry->segmentTicks, 0, sizeof(entry->segmentTicks));
+    memset(entry->previousSegmentTicks, 0, sizeof(entry->previousSegmentTicks));
+    memset(entry->bestSegmentTicks, 0, sizeof(entry->bestSegmentTicks));
+    memset(entry->previousBestSegmentTicks, 0, sizeof(entry->previousBestSegmentTicks));
+    memset(entry->lapTicks, 0, sizeof(entry->lapTicks));
+    entry->finishTicks = 0;
+    return entry;
+}
+
+RaceCarEntry* raceFrameEntryForCar(const Car* car)
+{
+    return car->raceEntry;
+}
+
+void raceFrameSortEntries(RaceFrame* race)
+{
+    int32_t changed;
+    do {
+        changed = 0;
+        for (size_t index = 0; index + 1 < race->entryCount; ++index) {
+            RaceCarEntry* first = race->entries[index];
+            RaceCarEntry* second = race->entries[index + 1];
+            int32_t swap = 0;
+            if (first->finishPosition != 0)
+                swap = (int32_t)(index + 1) < (int32_t)first->finishPosition;
+            else if (second->finishPosition != 0)
+                swap = (int32_t)second->finishPosition < (int32_t)(index + 2);
+            else swap = first->displayProgress < second->displayProgress;
+            if (swap) {
+                race->entries[index] = second;
+                race->entries[index + 1] = first;
+                changed = 1;
+            }
+        }
+    } while (changed);
+    for (size_t index = 0; index < race->entryCount; ++index) {
+        RaceCarEntry* entry = race->entries[index];
+        entry->previousPosition = entry->position;
+        entry->position = (int8_t)(index + 1);
+    }
+}
+
+RaceCarEntry* raceFrameFindFinishPosition(const RaceFrame* race, int32_t position)
+{
+    for (size_t index = 0; index < race->entryCount; ++index)
+        if ((int32_t)race->entries[index]->finishPosition == position) return race->entries[index];
+    return NULL;
+}
+
+int32_t raceFrameNextFinishPosition(const RaceFrame* race)
+{
+    int32_t position = 1;
+    while (raceFrameFindFinishPosition(race, position)) ++position;
+    return position;
+}
+
+static WorldServicesResult fail(RaceFrame* race, WorldServicesResult result)
+
+{
+
+    if (race && race->services) race->services->result = result;
+
+    return result;
+
+}
+
+static int32_t validRace(const RaceFrame* race)
+
+{
+
+    return race && race->services && race->services->settings && race->clock &&
+
+        race->entryCount <= 8 && race->entryCount <= race->entryCapacity &&
+
+        (!race->entryCount || race->entries) && race->finishCheckpoint >= 0 &&
+
+        race->finishCheckpoint < 5;
+
+}
+
+WorldServicesResult raceFrameSetState(RaceFrame* race, int32_t state)
+
+{
+
+    RaceFrameServices* services;
+
+    if (!validRace(race)) return fail(race, WORLD_SERVICES_INVALID_BINDING);
+
+    services = race->services;
+
+    if (!services->world || !services->profile || !services->currentEvent)
+
+        return fail(race, WORLD_SERVICES_INVALID_BINDING);
+
+    race->state = state;
+
+    if (state == 4 && !services->profile->frontend)
+        return fail(race, WORLD_SERVICES_INVALID_BINDING);
+
+    if (state == 4 && raceProfileUsesResults(services->profile))
+
+        services->currentEvent->CaptureStartState();
+
+    for (size_t index = 0; index < race->entryCount; ++index) {
+
+        RaceCarEntry* entry = race->entries[index];
+
+        CarDriver* driver = (CarDriver*)entry->car->controller;
+
+        if (!driver) return fail(race, WORLD_SERVICES_INVALID_BINDING);
+
+        if (driver->kind == CAR_DRIVER_REAL) {
+
+            if (!driver->owner.real) return fail(race, WORLD_SERVICES_INVALID_BINDING);
+
+            if (state == 4) realDriverUnlock(&driver->owner.real->input);
+
+            else driver->owner.real->input.forceBrake = 1;
+
+        } else if (driver->kind == CAR_DRIVER_AI && state == 4) {
+
+            if (!driver->owner.ai) return fail(race, WORLD_SERVICES_INVALID_BINDING);
+
+            aiControlsFullThrottle(&driver->owner.ai->input);
+
+        }
+
+        if (state == 4) raceCarEntryBeginRace(entry, race, services->settings->pointToPoint);
+
+    }
+
+    if (state == 3) {
+
+        race->startedWorldFrame = 0;
+
+        race->countdownWorldFrame = race->clock->worldTimeFrames;
+
+    } else if (state == 4) {
+
+        race->startTicks = race->clock->worldTimer;
+
+        gameTimerRoundTime(&race->startTicks, 0.0099999997764825821f);
+
+        race->countdownWorldFrame = 0;
+
+        race->startedWorldFrame = race->clock->worldTimeFrames;
+
+    }
+
+    if (state == 3 || state == 4) {
+
+        World* world = services->world;
+
+        if (world->thirdGroupEnd < 0 || world->totalCars < world->thirdGroupEnd ||
+
+            world->totalCars > WORLD_MAX_CARS)
+
+            return fail(race, WORLD_SERVICES_INVALID_BINDING);
+
+        for (int32_t index = world->thirdGroupEnd; index < world->totalCars; ++index) {
+
+            CarMovement* movement = (CarMovement*)world->carTable[index]->movement;
+
+            if (!movement || !movement->bindings.ownerMotion)
+
+                return fail(race, WORLD_SERVICES_INVALID_BINDING);
+
+            movement->bindings.ownerMotion->actionEnabled = 1;
+
+            if (carMovementSetMode(movement, 2) != CAR_MOVEMENT_OK)
+
+                return fail(race, WORLD_SERVICES_OWNER_FAILURE);
+
+        }
+
+    }
+
+    return fail(race, WORLD_SERVICES_OK);
+
+}
+
+static WorldServicesResult result(RaceFrame* race, WorldServicesResult value)
+{
+    if (race && race->services) race->services->result = value;
+    return value;
+}
+
+WorldServicesResult raceFrameCommitGhost(RaceFrame* race, const RaceCarEntry* entry)
+{
+    RaceFrameServices* services;
+    int32_t replace;
+    WorldServicesResult status = WORLD_SERVICES_OK;
+    if (!race || !entry || !race->services) return result(race, WORLD_SERVICES_INVALID_BINDING);
+    if (entry->car != race->recordingCar) return result(race, WORLD_SERVICES_OK);
+    services = race->services;
+    if (!services->recordingStorage || race->recording != &services->recordingStorage->clip)
+        return result(race, WORLD_SERVICES_INVALID_BINDING);
+    race->recording->finishTicks = entry->finishTicks;
+    replace = !race->playback || (entry->finishTicks < race->playback->finishTicks &&
+        race->playback->lapCount == race->targetLapCount);
+    if (entry->furthestLap != race->targetLapCount) replace = 0;
+    if (replace) {
+        if (!services->ghostFile) status = WORLD_SERVICES_INVALID_BINDING;
+        else {
+            /* The caller ignores the original write return value. A native
+             * I/O failure stays on the file owner and must not prevent the
+             * race finish or the unconditional recording release. */
+            raceGhostFileSave(services->ghostFile, services->recordingStorage);
+        }
+    }
+    raceGhostDisposeRecording(services->recordingStorage);
+    services->recordingStorage = NULL;
+    race->recordingCar = NULL;
+    race->recording = NULL;
+    return result(race, status);
+}
+
+static int32_t tickDifference(int32_t first, int32_t second)
+
+{
+
+    const uint32_t bits = (uint32_t)first - (uint32_t)second;
+
+    int32_t value;
+
+    memcpy(&value, &bits, sizeof(value));
+
+    return value;
+
+}
+
+// PAL1487E8..148940. A finished entry contributes its actual finish timer;
+// an unfinished entry contributes the same owned table's progress estimate.
+WorldServicesResult raceFrameCalculateSplitTime(const RaceFrame* race,int32_t* ticks,
+    const RaceCarEntry* first,const RaceCarEntry* second)
+{
+    if(!race || !ticks || !first || !second)return WORLD_SERVICES_INVALID_BINDING;
+    const bool firstDone=first->completionReason==1,secondDone=second->completionReason==1;
+    if(firstDone && secondDone) {
+        *ticks=tickDifference(second->finishTicks,first->finishTicks);return WORLD_SERVICES_OK;
+    }
+    float firstSeconds,secondSeconds;
+    auto status=raceTimeAroundTrackEvaluate(race->timeTable,firstDone ?
+        static_cast<float>(first->furthestLap) : first->displayProgress,&firstSeconds);
+    if(status!=WORLD_SERVICES_OK)return status;
+    status=raceTimeAroundTrackEvaluate(race->timeTable,secondDone ?
+        static_cast<float>(second->furthestLap) : second->displayProgress,&secondSeconds);
+    if(status!=WORLD_SERVICES_OK)return status;
+    int32_t estimated;
+    physicsSecondsToTicks(&estimated,secondSeconds-firstSeconds);
+    uint32_t result=static_cast<uint32_t>(estimated);
+    if(firstDone || secondDone) {
+        if(!race->clock)return WORLD_SERVICES_INVALID_BINDING;
+        const int32_t finish=firstDone ? first->finishTicks : second->finishTicks;
+        const int32_t elapsed=tickDifference(tickDifference(race->clock->worldTimer,finish),race->startTicks);
+        if(firstDone)result-=static_cast<uint32_t>(elapsed);
+        else result+=static_cast<uint32_t>(elapsed);
+    }
+    memcpy(ticks,&result,sizeof(result));
+    return WORLD_SERVICES_OK;
+}
+
+static CarFramePlayerState* playerForCar(const RaceFrame* race, const Car* car)
+
+{
+
+    const CarFramePlayerRegistry* players = race->services->players;
+
+    if (!players) return NULL;
+
+    for (int32_t index = 0; index < players->count; ++index) {
+
+        CarFramePlayerState* player = players->players[index];
+
+        if (player && player->car && player->car->bindings.owner == car) return player;
+
+    }
+
+    return NULL;
+
+}
+
+WorldServicesResult raceFrameFinishParticipant(RaceFrame* race, size_t index,
+
+    int32_t finishPosition, int32_t transition, int32_t completionReason)
+
+{
+
+    RaceCarEntry* entry;
+
+    CarFramePlayerState* player;
+
+    CarDriver* driver;
+
+    CarMovement* movement;
+
+    if (!validRace(race) || index >= race->entryCount || !race->services->currentEvent || !race->services->players)
+
+        return fail(race, WORLD_SERVICES_INVALID_BINDING);
+
+    entry = race->entries[index];
+
+    player = playerForCar(race, entry->car);
+
+    movement = (CarMovement*)entry->car->movement;
+
+    driver = (CarDriver*)entry->car->controller;
+
+    if (!driver || !movement) return fail(race, WORLD_SERVICES_INVALID_BINDING);
+
+    if (completionReason == 4) {
+
+        entry->finishTicks = tickDifference(race->clock->worldTimer, race->startTicks);
+
+        gameTimerRoundTime(&entry->finishTicks, 0.0099999997764825821f);
+
+    } else if (completionReason == 5) {
+
+        const float seconds = (float)race->services->settings->timeLimitTicks * 0.00025000001187436283f;
+
+        const float adjusted = seconds + 0.0099999997764825821f;
+
+        entry->finishTicks = convertFloatToInt32(adjusted * 4000.0f + 0.5f);
+
+        gameTimerRoundTime(&entry->finishTicks, 0.0099999997764825821f);
+
+    }
+
+    if (finishPosition == 0) {
+
+        entry->finishPosition = (int8_t)raceFrameNextFinishPosition(race);
+
+        if (entry->furthestLap == race->targetLapCount) {
+
+            entry->finishTicks = tickDifference(entry->checkpointTicks[race->finishCheckpoint], race->startTicks);
+
+            if (player && raceFrameCommitGhost(race, entry) != WORLD_SERVICES_OK)
+
+                return race->services->result;
+
+        } else raceCarEntryEstimateFinish(entry, race, race->targetLapCount, &race->startTicks);
+
+    } else if (finishPosition >= 0) entry->finishPosition = (int8_t)finishPosition;
+
+    entry->completionReason = (int16_t)completionReason;
+
+    entry->displayProgress = entry->progress;
+
+    ++race->finishedCount;
+
+    if (!race->services->currentEvent->RecordResult(*race,*entry,entry->finishPosition))
+
+        return fail(race, WORLD_SERVICES_INVALID_BINDING);
+
+    if (player) {
+
+        carFramePlayerFinish(player);
+
+        if (player->result != CAR_DRIVER_OK || carDriverChange(driver, entry->car, CAR_DRIVER_AI) != CAR_DRIVER_OK)
+
+            return fail(race, WORLD_SERVICES_OWNER_FAILURE);
+
+    }
+
+    if (driver->kind == CAR_DRIVER_AI) driverAISetStopDelay(&driver->owner.ai->base, 15.0f);
+
+    if (transition) {
+
+        if (!movement->bindings.ownerMotion) return fail(race, WORLD_SERVICES_INVALID_BINDING);
+
+        carMotionBeginTransition(movement->bindings.ownerMotion, race->clock->worldTimer);
+
+    }
+
+    return fail(race, WORLD_SERVICES_OK);
+
+}
+
+WorldServicesResult raceFrameUpdate(RaceFrame* race)
+
+{
+
+    RaceFrameServices* services;
+
+    if (!validRace(race)) return fail(race, WORLD_SERVICES_INVALID_BINDING);
+
+    services = race->services;
+
+    if (!services->players || !services->replay || !services->commentary || !race->raceKind || !race->replayRestoring)
+
+        return fail(race, WORLD_SERVICES_INVALID_BINDING);
+
+    if (race->state == 3 && raceFrameCountdownStep(race, services->settings->specialPursuit) == 4 &&
+
+        raceFrameSetState(race, 4) != WORLD_SERVICES_OK)
+
+        return services->result;
+
+    if (race->state == 4) {
+
+        race->elapsedTicks = tickDifference(race->clock->worldTimer, race->startTicks);
+
+        gameTimerRoundTime(&race->elapsedTicks, 0.0099999997764825821f);
+
+    }
+
+    raceFrameAdvanceGhost(race);
+
+    for (size_t index = 0; index < race->entryCount; ++index) {
+
+        RaceCarEntry* entry = race->entries[index];
+
+        if (entry->completionReason) continue;
+
+        raceCarEntryUpdate(entry, race);
+
+        if (playerForCar(race, entry->car) && entry->bestSegmentTicks[race->finishCheckpoint] < race->bestSegmentTicks)
+
+            race->bestSegmentTicks = entry->bestSegmentTicks[race->finishCheckpoint];
+
+    }
+
+    if (race->pendingFinishPosition) {
+
+        const int32_t requestedPosition = race->pendingFinishPosition;
+
+        race->finishedCount = 0;
+
+        for (size_t index = 0; index < race->entryCount; ++index) {
+
+            RaceCarEntry* entry = race->entries[index];
+
+            CarFramePlayerState* player;
+
+            PursuitCollisionEntry* selected;
+
+            int32_t position = requestedPosition, reason = 1;
+
+            if (entry->completionReason) continue;
+
+            player = playerForCar(race, entry->car);
+
+            if (!player || player->movement.seat != race->pendingFinishPlayerIndex) continue;
+
+            selected = pursuitManagerSelectedEntry(services->pursuit);
+
+            if (selected && selected->movement && playerForCar(race, selected->movement->bindings.owner) == player) {
+
+                position = -1;
+
+                reason = requestedPosition < (int32_t)race->entryCount ? 4 : 5;
+
+            }
+
+            if (raceFrameFinishParticipant(race, index, position, 0, reason) != WORLD_SERVICES_OK)
+
+                return services->result;
+
+            break;
+
+        }
+
+        race->pendingFinishPosition = 0;
+
+        race->pendingFinishPlayerIndex = 0;
+
+    }
+
+    raceFrameSortEntries(race);
+
+    raceFrameHighlightPositionChanges(race, services->players, services->replay);
+
+    if (services->settings->raceKind == 3) {
+
+        for (size_t index = 0; index < race->entryCount; ++index) {
+
+            const RaceCarEntry* entry = race->entries[index];
+
+            if (!entry->advancedLap || entry->furthestLap + entry->position != (int32_t)race->entryCount) continue;
+
+            for (size_t later = index + 1; later < race->entryCount; ++later)
+
+                if (!race->entries[later]->completionReason &&
+
+                    raceFrameFinishParticipant(race, later, (int32_t)later + 1, 1, 3) != WORLD_SERVICES_OK)
+
+                    return services->result;
+
+        }
+
+    }
+
+    if (services->settings->raceKind == 2) {
+
+        for (size_t index = 0; index < race->entryCount; ++index) {
+
+            const RaceCarEntry* entry = race->entries[index];
+
+            const int32_t segment = entry->segmentTicks[race->finishCheckpoint];
+
+            if (entry->advancedLap && !entry->completionReason && segment && segment != INT32_MAX &&
+
+                segment <= services->settings->timeLimitTicks &&
+
+                raceFrameFinishParticipant(race, index, 0, 0, 1) != WORLD_SERVICES_OK)
+
+                return services->result;
+
+        }
+
+    }
+
+    for (size_t index = 0; index < race->entryCount; ++index) {
+
+        RaceCarEntry* entry = race->entries[index];
+
+        if (!entry->completionReason && entry->advancedLap && entry->position == 1)
+
+            entry->updateCounter = (int16_t)((uint16_t)entry->updateCounter + 1u);
+
+    }
+
+    if (race->targetLapCount) {
+
+        for (size_t index = 0; index < race->entryCount; ++index) {
+
+            const RaceCarEntry* entry = race->entries[index];
+
+            if (!entry->completionReason && entry->furthestLap == race->targetLapCount &&
+
+                raceFrameFinishParticipant(race, index, 0, 0, 1) != WORLD_SERVICES_OK)
+
+                return services->result;
+
+        }
+
+    }
+
+    for (size_t index = 0; index < race->entryCount; ++index) {
+
+        const RaceCarEntry* entry = race->entries[index];
+
+        if (!entry->completionReason && entry->advancedLap)
+
+            raceCommentaryAnnounceLap(services->commentary, entry->car, entry->furthestLap);
+
+    }
+
+    return fail(race, WORLD_SERVICES_OK);
+
+}
+
+// Native shutdown adapter for the owning race frame.
+// The source Race+6B0 table destructor precedes clearing its one host owner.
+void raceFrameOwnerDispose(RaceFrameOwner* owner)
+{
+    if (!owner) return;
+    RaceFrame* race = &owner->race;
+    raceFrameDisposeTimeTable(race);
+    if (race->services && race->services->recordingStorage &&
+        race->recording == &race->services->recordingStorage->clip) {
+        raceGhostDisposeRecording(race->services->recordingStorage);
+        race->services->recordingStorage = NULL;
+    }
+    for (size_t index = 0; index < RACE_PARTICIPANT_LIMIT; ++index) {
+        Car* car = owner->participants[index].car;
+        if (car && car->raceEntry == &owner->participants[index]) car->raceEntry = NULL;
+    }
+    memset(owner, 0, sizeof(*owner));
+}
+
+// Existing accepted Race owner and timing bodies, individually placed in51.
+WorldServicesResult raceFrameOwnerInitialize(RaceFrameOwner* owner, RaceFrameServices* services,
+    const GameTime* clock, const TrackRoute* route, const TrackScenarioCatalog* course)
+{
+    RaceFrame* race;
+    if (!owner || !services || !services->settings || !services->session || !clock || !route || !course || !services->replay)
+        return WORLD_SERVICES_INVALID_BINDING;
+    memset(owner, 0, sizeof(*owner));
+    race = &owner->race;
+    race->entries = owner->ordered;
+    race->entryCapacity = RACE_PARTICIPANT_LIMIT;
+    race->clock = clock;
+    race->route = route;
+    // PAL147104/14723C read Replay.restoring;1471B8 reads RaceParameters+20.
+    // Borrow those live owners so snapshot restore changes accounting immediately.
+    race->raceKind = &services->settings->raceKind;
+    race->replayRestoring = &services->replay->restoring;
+    race->services = services;
+    for (size_t index = 0; index < RACE_PARTICIPANT_LIMIT; ++index)
+        raceCarEntryResetTiming(&owner->participants[index]);
+    race->targetLapCount = services->settings->totalLaps;
+    if (race->targetLapCount && services->settings->pointToPoint) race->targetLapCount = 1;
+    race->bestSegmentTicks = INT32_MAX;
+    raceFrameBuildCheckpoints(race, course, services->settings->reverse, services->settings->pointToPoint);
+    return services->result = WORLD_SERVICES_OK;
+}
+
+WorldServicesResult raceFrameOwnerAddCar(RaceFrameOwner* owner, Car* car)
+{
+    RaceFrame* race;
+    CarMovement* movement;
+    RaceCarEntry* entry;
+    if (!owner || !car || !car->movement) return WORLD_SERVICES_INVALID_BINDING;
+    race = &owner->race;
+    movement = (CarMovement*)car->movement;
+    if (!race->services || !race->clock || !race->route || !race->replayRestoring || !race->raceKind ||
+        !movement->bindings.state || race->entries != owner->ordered)
+        return WORLD_SERVICES_INVALID_BINDING;
+    if (race->entryCount >= RACE_PARTICIPANT_LIMIT) return WORLD_SERVICES_CAPACITY;
+    entry = &owner->participants[race->entryCount];
+    raceCarEntryInitialize(entry, car, race);
+    race->entries[race->entryCount++] = entry;
+    return race->services->result = WORLD_SERVICES_OK;
+}
+
+WorldServicesResult raceFrameOwnerPopulate(RaceFrameOwner* owner)
+{
+    RaceFrame* race;
+    const World* world;
+    if (!owner || !owner->race.services || !owner->race.services->world)
+        return WORLD_SERVICES_INVALID_BINDING;
+    race = &owner->race;
+    world = race->services->world;
+    if (world->firstGroupEnd < 0 || world->secondGroupEnd < world->firstGroupEnd ||
+        world->secondGroupEnd > world->totalCars || world->totalCars > WORLD_MAX_CARS)
+        return race->services->result = WORLD_SERVICES_INVALID_BINDING;
+    if (race->entryCount + (size_t)world->secondGroupEnd > RACE_PARTICIPANT_LIMIT)
+        return race->services->result = WORLD_SERVICES_CAPACITY;
+    for (int32_t index = 0; index < world->firstGroupEnd; ++index) {
+        const WorldServicesResult status = raceFrameOwnerAddCar(owner, world->carTable[index]);
+        if (status != WORLD_SERVICES_OK) return race->services->result = status;
+    }
+    for (int32_t index = world->firstGroupEnd; index < world->secondGroupEnd; ++index) {
+        const WorldServicesResult status = raceFrameOwnerAddCar(owner, world->carTable[index]);
+        if (status != WORLD_SERVICES_OK) return race->services->result = status;
+    }
+    raceFrameSortEntries(race);
+    raceFrameSortEntries(race);
+    return race->services->result = WORLD_SERVICES_OK;
+}
+
+void raceCarEntryBeginRace(RaceCarEntry* entry, const RaceFrame* race, int32_t pointToPoint)
+{
+    entry->checkpointTicks[0] = race->clock->worldTimer;
+    gameTimerRoundTime(&entry->checkpointTicks[0], 0.0099999997764825821f);
+    entry->furthestCheckpoint = 0;
+    if (pointToPoint) {
+        entry->currentCheckpoint = 0;
+        entry->lap = 0;
+    }
+}
+
+void raceCarEntryEstimateFinish(RaceCarEntry* entry, const RaceFrame* race, int32_t laps, const int32_t* startTicks)
+{
+    const float lapCount = (float)laps;
+    float fraction = entry->progress / lapCount;
+    float seconds;
+    if (fraction < 0.0099999997764825821f) fraction = 0.0099999997764825821f;
+    seconds = ((float)tickDifference(race->clock->worldTimer, *startTicks) * 0.00025000001187436283f) / fraction;
+    physicsSecondsToTicks(&entry->finishTicks, seconds);
+    gameTimerRoundTime(&entry->finishTicks, 0.0099999997764825821f);
+    if (entry->furthestLap == 0 && laps > 0) {
+        const int32_t ticks = tickDifference(race->clock->worldTimer, entry->checkpointTicks[race->previousCheckpoint]);
+        const float segmentSeconds = (((float)ticks * 0.00025000001187436283f) / fraction) / lapCount;
+        const float scaled = segmentSeconds * 4000.0f;
+        entry->bestSegmentTicks[race->finishCheckpoint] = convertFloatToInt32(scaled + 0.5f);
+        gameTimerRoundTime(&entry->bestSegmentTicks[race->finishCheckpoint], 0.0099999997764825821f);
+    }
+}
+
+int32_t raceFrameCountdownStep(const RaceFrame* race, int32_t specialPursuit)
+{
+    const int32_t now = race->clock->worldTimeFrames;
+    const float duration = specialPursuit ? 1.0f : 0.89999997615814209f;
+    if (race->startedWorldFrame != 0)
+        return tickDifference(now, race->startedWorldFrame) > 60 ? 0 : 4;
+    if (race->countdownWorldFrame != 0) {
+        const float elapsed = (float)tickDifference(now, race->countdownWorldFrame) * 0.01666666753590107f;
+        if (elapsed < duration) return 3;
+        if (elapsed < duration + duration) return 2;
+        if (elapsed < duration * 3.0f) return 1;
+        return 4;
+    }
+    return 0;
+}
+
+// PAL148188. This reads the same frame counters as GetCountdownNumber;
+// neither the seconds clock nor a UI-owned timer supplies this fraction.
+float raceFrameCountdownProgress(const RaceFrame* race,int32_t specialPursuit)
+{
+    const float duration=specialPursuit ? 1.0f : 0.89999997615814209f;
+    const float total=duration*4.0f;
+    const int32_t now=race->clock->worldTimeFrames;
+    float progress=0.0f;
+    if (race->startedWorldFrame) {
+        const float elapsed=static_cast<float>(tickDifference(now,race->startedWorldFrame));
+        const float elapsedSeconds=elapsed*0.01666666753590107f;
+        progress=duration*3.0f+elapsedSeconds;
+    } else if (race->countdownWorldFrame) {
+        const float elapsed=static_cast<float>(tickDifference(now,race->countdownWorldFrame));
+        progress=elapsed*0.01666666753590107f;
+    }
+    return progress/total;
+}
+
+
+int32_t carFramePlayerAllDrivingLocked(const CarFramePlayerRegistry* registry)
+{
+    for(int32_t index=0;index<registry->count;++index)
+        if(!registry->players[index]->drivingLocked)return 0;
+    return 1;
+}
+
+// RacingCar lap values retain their signed byte representation.
+static int8_t lapValue(int32_t value)
+{
+    const uint8_t bits = (uint8_t)value;
+    int8_t result;
+    memcpy(&result, &bits, sizeof(result));
+    return result;
+}
+
+static int16_t checkpointValue(int32_t value)
+{
+    const uint16_t bits = (uint16_t)value;
+    int16_t result;
+    memcpy(&result, &bits, sizeof(result));
+    return result;
+}
+
+void raceCarEntryInitialize(RaceCarEntry* entry, Car* car, const RaceFrame* race)
+{
+    const CarMovement* movement = (const CarMovement*)car->movement;
+    memset(entry, 0, sizeof(*entry));
+    entry->car = car;
+    car->raceEntry = entry;
+    entry->previousPercent = movement->routeLocation.progress * 100.0f;
+    entry->lap = -1;
+    entry->currentCheckpoint = entry->furthestCheckpoint = -1;
+    for (int32_t index = 0; index < 5; ++index) {
+        entry->bestSegmentTicks[index] = INT32_MAX;
+        entry->previousBestSegmentTicks[index] = INT32_MAX;
+    }
+    raceCarEntryUpdate(entry, race);
+    entry->updateCounter = 0;
+}
+
+void raceCarEntryUpdate(RaceCarEntry* entry, const RaceFrame* race)
+{
+    const CarMovement* movement = (const CarMovement*)entry->car->movement;
+    const VehicleState* state = movement->bindings.state;
+    const float currentPercent = movement->routeLocation.progress * 100.0f;
+    entry->advancedLap = entry->advancedCheckpoint = 0;
+    for (int32_t index = 0; index < race->checkpointCount; ++index) {
+        RaceCheckpointCrossing crossing;
+        if (!raceCarEntryCheckCheckpoint(entry, race, &crossing,
+                                         currentPercent, race->checkpointPositions[index])) continue;
+        if (crossing.forward) {
+            int16_t checkpoint;
+            if (index == race->finishCheckpoint) {
+                entry->lap = lapValue((int32_t)entry->lap + 1);
+                if (entry->furthestLap < entry->lap) {
+                    entry->furthestLap = entry->lap;
+                    entry->advancedLap = 1;
+                }
+            }
+            checkpoint = checkpointValue((int32_t)entry->lap * 5 + index);
+            entry->currentCheckpoint = checkpoint;
+            if (entry->furthestCheckpoint < checkpoint) {
+                int32_t ticks = tickDifference(race->clock->worldTimer, crossing.correctionTicks);
+                entry->furthestCheckpoint = checkpoint;
+                entry->advancedCheckpoint = 1;
+                gameTimerRoundTime(&ticks, 0.0099999997764825821f);
+                if (*race->replayRestoring == 0) {
+                    const int32_t first = entry->checkpointTicks[0];
+                    if (first != 0 && first != INT32_MAX) {
+                        entry->previousSegmentTicks[index] = entry->segmentTicks[index];
+                        entry->segmentTicks[index] = tickDifference(ticks, first);
+                        entry->previousBestSegmentTicks[index] = entry->bestSegmentTicks[index];
+                        if (entry->segmentTicks[index] < entry->bestSegmentTicks[index])
+                            entry->bestSegmentTicks[index] = entry->segmentTicks[index];
+                        if (index == race->finishCheckpoint && (uint8_t)entry->lap < 11u)
+                            entry->lapTicks[(uint8_t)entry->lap] = entry->segmentTicks[index];
+                    }
+                    entry->checkpointTicks[index] = ticks;
+                } else if (*race->raceKind == 2 && index == race->finishCheckpoint) {
+                    const int32_t first = entry->checkpointTicks[0];
+                    if (first != 0 && first != INT32_MAX)
+                        entry->segmentTicks[index] = tickDifference(ticks, first);
+                    entry->checkpointTicks[index] = ticks;
+                }
+            }
+        } else if (index == race->finishCheckpoint)
+            entry->lap = lapValue((int32_t)entry->lap - 1);
+    }
+    if (*race->replayRestoring == 0) {
+        if (state->activeContactCount >= 3) {
+            const float previous = entry->maximumSpeed;
+            float speed;
+            if (movement->bindings.player)
+                speed = maximumFinite(previous, state->forwardSpeed);
+            else {
+                const CarDriver* driver = (const CarDriver*)entry->car->controller;
+                speed = carDriverRaceSpeedMetric(driver) / maximumFinite(1.0f, state->performanceScale);
+                speed = minimumFinite(speed, fabsf(state->forwardSpeed));
+                speed = minimumFinite(speed, movement->bindings.info->forwardSpeedLimit * 0.44702726602554321f);
+                speed = maximumFinite(previous, speed);
+                if (speed < 0.0f || 1000.0f < speed) speed = previous;
+            }
+            if (speed != previous) entry->maximumSpeed = speed;
+        }
+        {
+            const float seconds = (float)race->elapsedTicks * 0.00025000001187436283f;
+            if (0.0f < seconds) entry->averageSpeed = state->displacementDistance / seconds;
+        }
+    }
+    {
+        const float previous = entry->progress;
+        const float elapsed = race->clock->worldTimeElapsed;
+        const float fraction = raceFrameCheckpointFraction(race, currentPercent);
+        entry->progress = (float)entry->lap + fraction;
+        entry->displayProgress = entry->progress;
+        if (0.0f < elapsed) {
+            const float rate = (entry->progress - previous) / elapsed;
+            entry->progressRate = entry->progressRate * 0.33300000429153442f
+                                + rate * 0.66699999570846558f;
+        }
+    }
+    entry->previousPercent = currentPercent;
+}
+
+CarFramePlayerState* raceCarEntryPlayer(const RaceCarEntry* entry,const RaceFrame* race)
+{
+    if(!entry || !entry->car || !race || !race->services || !race->services->players)return nullptr;
+    const auto& registry=*race->services->players;
+    for(int32_t i=0;i<registry.count;++i) {
+        auto* player=registry.players[i];
+        if(player && player->car && player->car->bindings.owner==entry->car)return player;
+    }
+    return nullptr;
+}
+int32_t raceCarEntryBestLapTicks(const RaceCarEntry* entry,const RaceFrame* race)
+{
+    hp2::Require(entry && race && race->finishCheckpoint>=0 && race->finishCheckpoint<5,
+        "Best lap query has no actual race checkpoint owner");
+    return entry->bestSegmentTicks[race->finishCheckpoint];
+}
+
+#include "indep/inc/Replay.hpp"
+// Existing accepted position-change highlighting, one original Race owner.
+void raceFrameHighlightPositionChanges(const RaceFrame* race,
+    const CarFramePlayerRegistry* players, ReplayManager* replay)
+{
+    for (int32_t index = 0; index < players->count; ++index) {
+        const CarFramePlayerState* player = players->players[index];
+        const Car* car;
+        const RaceCarEntry* entry;
+        const Car* other;
+        const CarMovement *movement, *otherMovement;
+        float speed, otherSpeed, dx, dy, dz, distance;
+        if (!player) continue;
+        car = player->car->bindings.owner;
+        entry = car->raceEntry;
+        if (entry->position == entry->previousPosition) continue;
+        /* Previous position refers to a valid participant in the ordered
+         * table. Race binding validates that original domain. */
+        other = race->entries[entry->previousPosition - 1]->car;
+        movement = (const CarMovement*)car->movement;
+        otherMovement = (const CarMovement*)other->movement;
+        speed = movement->bindings.state->speed;
+        otherSpeed = otherMovement->bindings.state->speed;
+        if (!(40.0f < speed)) continue;
+        dx = car->position[0] - other->position[0];
+        dy = car->position[1] - other->position[1];
+        dz = car->position[2] - other->position[2];
+        distance = sqrtf((dx * dx + dy * dy) + dz * dz);
+        if (!(distance < 25.0f)) continue;
+        if (entry->position < entry->previousPosition)
+            replayManagerAddHighlight(replay, 4.0f / (float)entry->position + 1.0f);
+        else replayManagerAddHighlight(replay, 2.0f / (float)entry->previousPosition);
+        if (fabsf(speed - otherSpeed) < 7.0f) replayManagerAddHighlight(replay, 2.5f);
+    }
+}
+
+int32_t raceFinishReasonLanguageId(int32_t reason)
+{
+    // PAL2F0BC0, independently related to beta GetFinishReasonID146578.
+    // Runtime reasons are the original enum0..5; invalid native input does
+    // not index the adjacent method-pointer table.
+    static const int32_t ids[6]={300104,300101,300103,300105,970002,970002};
+    hp2::Require(reason>=0 && reason<6,"Race finish reason is outside its original six entries");
+    return ids[reason];
+}
+
+
+int32_t raceFrameAddCheckpoint(RaceFrame* race, const TrackScenarioCatalog* catalog,
+                               const char* name, float position[2], float fallbackPercent)
+{
+    const TrackLandmark* landmark;
+    position[0] = position[1] = 0.0f;
+    if (100.0f < fallbackPercent) fallbackPercent -= 100.0f;
+    landmark = trackLandmarkFindName(catalog, name, 0);
+    if (landmark) {
+        TrackRouteLocation location;
+        trackRouteLocationAtPoint(race->route, &location, landmark->position);
+        position[0] = landmark->position[0];
+        position[1] = landmark->position[1];
+        race->checkpointPositions[race->checkpointCount] = location.progress * 100.0f;
+        return race->checkpointCount++;
+    }
+    if (0.0f <= fallbackPercent) {
+        race->checkpointPositions[race->checkpointCount] = fallbackPercent;
+        return race->checkpointCount++;
+    }
+    return -1;
+}
+
+void raceFrameBuildCheckpoints(RaceFrame* race, const TrackScenarioCatalog* catalog,
+                                int32_t reverse, int32_t pointToPoint)
+{
+    float point[2];
+    float start;
+    race->checkpointCount = 0;
+    race->previousCheckpoint = (int8_t)raceFrameAddCheckpoint(race, catalog,
+        reverse ? "BackwardStartLine" : "ForwardStartLine", race->startPosition, 5.0f);
+    start = race->checkpointPositions[race->previousCheckpoint];
+    if (!reverse) {
+        raceFrameAddCheckpoint(race, catalog, "SplitTimeBoundary1", point, start + 33.0f);
+        raceFrameAddCheckpoint(race, catalog, "SplitTimeBoundary2", point, start + 66.0f);
+        raceFrameAddCheckpoint(race, catalog, "SplitTimeBoundary3", point, -1.0f);
+    } else {
+        raceFrameAddCheckpoint(race, catalog, "SplitTimeBoundary3", point, -1.0f);
+        raceFrameAddCheckpoint(race, catalog, "SplitTimeBoundary2", point, start + 33.0f);
+        raceFrameAddCheckpoint(race, catalog, "SplitTimeBoundary1", point, start + 66.0f);
+    }
+    if (pointToPoint) {
+        race->finishCheckpoint = (int8_t)raceFrameAddCheckpoint(race, catalog,
+            reverse ? "BackwardFinishLine" : "ForwardFinishLine", race->finishPosition, start + 95.0f);
+    } else {
+        race->finishCheckpoint = race->previousCheckpoint;
+        race->finishPosition[0] = race->startPosition[0];
+        race->finishPosition[1] = race->startPosition[1];
+    }
+}
+
+int32_t raceCarEntryCheckCheckpoint(const RaceCarEntry* entry, const RaceFrame* race,
+                                   RaceCheckpointCrossing* crossing,
+                                   float currentPercent, float checkpointPercent)
+{
+    const float current = trackWrappedDelta100(currentPercent, checkpointPercent);
+    const float previous = trackWrappedDelta100(entry->previousPercent, checkpointPercent);
+    const float distance = (current * race->route->length) * 0.0099999997764825821f;
+    const CarMovement* movement = (const CarMovement*)entry->car->movement;
+    const float speed = movement->bindings.state->forwardSpeed;
+    float seconds = 0.0f;
+    crossing->forward = crossing->backward = crossing->correctionTicks = 0;
+    if (25.0f < fabsf(current)) return 0;
+    if (previous < 0.0f && 0.0f <= current) crossing->forward = 1;
+    else if (0.0f <= previous && current < 0.0f) crossing->backward = 1;
+    else return 0;
+    if (1.0f < speed) seconds = distance / speed;
+    crossing->correctionTicks = convertFloatToInt32(seconds * 4000.0f + 0.5f);
+    return 1;
+}
+
+float raceFrameCheckpointFraction(const RaceFrame* race, float currentPercent)
+{
+    float delta = trackWrappedDelta100(currentPercent, race->checkpointPositions[race->finishCheckpoint]);
+    if (delta < 0.0f) delta += 100.0f;
+    return delta * 0.0099999997764825821f;
+}
+
+void raceFrameAdvanceGhost(RaceFrame* race)
+{
+    if (race->state == 4 && race->recordingCar) {
+        const CarMovement* movement = (const CarMovement*)race->recordingCar->movement;
+        float frame[16];
+        memcpy(frame, movement->bindings.state->orientation, sizeof(frame));
+        memcpy(frame + 12, race->recordingCar->position, 4 * sizeof(float));
+        raceGhostCapture(race->recording, frame, &race->elapsedTicks);
+    }
+    if (race->playback && race->elapsedTicks != 0 && race->elapsedTicks != INT32_MAX) {
+        float frame[16];
+        if (raceGhostSample(race->playback, frame, &race->elapsedTicks)) {
+            frame[14] += -0.5f;
+            memcpy(race->ghostModel->frame, frame, sizeof(frame));
+            race->ghostModel->visible = 1;
+        } else race->ghostModel->visible = 0;
+    }
+}
+
+const RaceConnectionTiming raceConnectionDefaultTiming = {12.0f, 0.5f};
+
+int32_t raceFrameIsDriving(const RaceFrame* race, int32_t specialPursuit)
+{
+    return race->state == 4 || (specialPursuit != 0 && race->state >= 2);
+}
+
+int32_t raceFrameConnectionWindowActive(const RaceFrame* race, const Car* car,
+                                        const RaceConnectionTiming* timing)
+{
+    const uint32_t elapsedBits = (uint32_t)race->clock->worldTimer - (uint32_t)race->startTicks;
+    int32_t elapsedTicks;
+    float duration = timing->baseSeconds;
+    memcpy(&elapsedTicks, &elapsedBits, sizeof(elapsedTicks));
+    if (101 <= car->driverNumber && car->driverNumber <= 149)
+        duration += (float)(100 - car->driverNumber) * timing->driverStepSeconds;
+    return (float)elapsedTicks * 0.00025000001187436283f <= duration;
+}
+
+// Native filesystem transport for Race::MaybeSaveGhostCarData; no extra original-body claim.
+
+#include <cstdint>
+#include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <vector>
+
+namespace {
+constexpr std::size_t headerSize = 160;
+constexpr std::size_t sampleSize = 80;
+
+void put32(unsigned char* output, std::uint32_t value)
+{
+    for (unsigned lane = 0; lane < 4; ++lane)
+        output[lane] = static_cast<unsigned char>(value >> (lane * 8));
+}
+
+std::uint32_t get32(const unsigned char* input)
+{
+    return std::uint32_t(input[0]) | (std::uint32_t(input[1]) << 8) |
+        (std::uint32_t(input[2]) << 16) | (std::uint32_t(input[3]) << 24);
+}
+
+void putSigned(unsigned char* output, std::int32_t value)
+{
+    std::uint32_t bits;
+    std::memcpy(&bits, &value, sizeof(bits));
+    put32(output, bits);
+}
+
+std::int32_t getSigned(const unsigned char* input)
+{
+    const std::uint32_t bits = get32(input);
+    std::int32_t value;
+    std::memcpy(&value, &bits, sizeof(value));
+    return value;
+}
+
+bool valid(const RaceGhostClip& clip)
+{
+    if (!clip.samples || clip.count < 0 || clip.count > RACE_GHOST_SAMPLE_LIMIT ||
+        static_cast<std::size_t>(clip.count) > clip.capacity || clip.cursor < 0 ||
+        (clip.count ? clip.cursor >= clip.count : clip.cursor != 0)) return false;
+    for (std::int32_t index = 0; index < clip.count; ++index) {
+        const auto& sample = clip.samples[index];
+        if (index && sample.ticks < clip.samples[index - 1].ticks) return false;
+        for (float value : sample.frame)
+            if (!std::isfinite(value)) return false;
+    }
+    return true;
 }
 }
 
-#include "game_core/port/track/position_markers.hpp"
-#include "game_core/indep/src/fmenus.hpp"
-namespace hp2::debug {
-// Debug00147800, E-0099-W34. Exact first-marker/default branch and one wrap.
-int Race::AddBoundaryPosition(const std::string& name,std::array<float,2>& position,float fallback,const ::port::track::RouteData& routes){position={{0,0}};if(fallback>100)fallback=fallback-100;const auto marker=GetTrackPositionMarker(m_,hp2::frontend::bStringHash(name.c_str()),0);int n=m_.signed_half(address_+0x650);if(!marker&&fallback<0)return -1;if(n<0||n>=5)throw std::out_of_range("Race boundary table exceeds5 entries");float distance=fallback;if(marker){position={{m_.scalar(marker+16),m_.scalar(marker+20)}};::port::driving::Memory::Temporary tp(m_,40);TrackPathCoordinate::Sub_002035A0(m_,tp.address());TrackPathCoordinate::UpdatePosition(m_,tp.address(),routes.paths,position);distance=m_.scalar(tp.address()+0x10)*100;TrackPathCoordinate::Sub_00203630(m_,tp.address(),2);}m_.scalar(address_+0x654+4*n,distance);m_.half(address_+0x650,static_cast<std::uint16_t>(n+1));return n;}
-// Debug00147928, E-0099-W34. Reverse split names/order differ deliberately.
-void Race::FigureOutBoundaries(const ::port::track::RouteData& routes){auto& m=m_;const auto a=address_;m.half(a+0x650,0);const bool reverse=m.signed_word(0x311f84)!=0;std::array<float,2> position;const int start=AddBoundaryPosition(reverse?"BackwardStartLine":"ForwardStartLine",position,5,routes);m.byte(a+0x652,static_cast<std::uint8_t>(start));m.scalar(a+0x668,position[0]);m.scalar(a+0x66c,position[1]);const float begin=m.scalar(a+0x654+4*start);if(!reverse){AddBoundaryPosition("SplitTimeBoundary1",position,begin+33,routes);AddBoundaryPosition("SplitTimeBoundary2",position,begin+66,routes);AddBoundaryPosition("SplitTimeBoundary3",position,-1,routes);}else{AddBoundaryPosition("SplitTimeBoundary3",position,-1,routes);AddBoundaryPosition("SplitTimeBoundary2",position,begin+33,routes);AddBoundaryPosition("SplitTimeBoundary1",position,begin+66,routes);}if(!m.word(0x311fa0)){m.byte(a+0x653,m.byte(a+0x652));m.word(a+0x670,m.word(a+0x668));m.word(a+0x674,m.word(a+0x66c));return;}const int finish=AddBoundaryPosition(reverse?"BackwardFinishLine":"ForwardFinishLine",position,begin+95,routes);m.byte(a+0x653,static_cast<std::uint8_t>(finish));m.scalar(a+0x674,position[1]);m.scalar(a+0x670,position[0]);}
-// Debug001473F0, E-0099-W34. Publishes original owner before boundary queries.
-void Race::Sub_001473F0(const ::port::track::RouteData& routes){auto& m=m_;const auto a=address_;m.word(a+0xc,0);m.word(a+0x10,0);m.word(a+0x14,0);for(unsigned i=0;i<8;++i)RacingCar(m,a+0x24+192*i).Sub_00149230();m.word(0x327258,a);m.word(a,0);const auto laps=m.word(0x311fa4);m.word(a+0x644,laps);if(laps&&m.word(0x311fa0))m.word(a+0x644,1);m.word(a+0x648,0);m.word(a+0x64c,0);m.word(a+0xc,0);m.word(a+0x10,0);m.word(a+0x18,0);m.word(a+0x1c,0);m.word(a+0x20,0);for(auto off:{0x67cu,0x678u,0x680u,0x684u,8u,4u,0x668u,0x66cu,0x670u,0x674u})m.word(a+off,0);m.word(a+0x14,0x7fffffff);FigureOutBoundaries(routes);m.word(a+0x6b0,0);}
-// Debug001474E8, E-0099-W34/W56. Real time-table lifetime; active ghost
-// ownership remains explicit. Original RacingCar.UnInit is genuinely empty.
-void Race::Sub_001474E8(int flags){const int count=m_.signed_word(address_+0x18);if(count<0||count>8)throw std::out_of_range("Race racing-car close count outside8");for(int i=0;i<count;++i)RacingCar(m_,address_+0x24+192*i).UnInit();if(m_.word(address_+0x678)||m_.word(address_+0x684))hp2::not_implemented("0x001474E8","active GhostCarData teardown requires actual owner");if(const auto table=m_.word(address_+0x6b0))TimeAroundTrackTable(m_,table).Sub_00149340(3);m_.word(0x327258,0);if(flags&1)m_.release(address_);}
+extern "C" RaceGhostFileResult raceGhostFileSave(RaceGhostFile* file, const RaceGhostStorage* recording)
+{
+    if (!file) return RACE_GHOST_FILE_INVALID;
+    if (!file->filename || !*file->filename || !recording || !valid(recording->clip))
+        return file->result = RACE_GHOST_FILE_INVALID;
+    try {
+        const RaceGhostClip& clip = recording->clip;
+        /* This buffer is the file format, not an image of the native owner.
+         * Source header reserved bytes and sample alignment are written as
+         * zero instead of disclosing uninitialized console memory. */
+        std::vector<unsigned char> bytes(headerSize + static_cast<std::size_t>(clip.count) * sampleSize, 0);
+        put32(bytes.data(), 3);
+        putSigned(bytes.data() + 4, clip.finishTicks);
+        putSigned(bytes.data() + 8, clip.lapCount);
+        put32(bytes.data() + 12, std::uint32_t(recording->identifiers[0]) |
+            (std::uint32_t(recording->identifiers[1]) << 16));
+        putSigned(bytes.data() + 16, clip.count);
+        putSigned(bytes.data() + 20, clip.cursor);
+        putSigned(bytes.data() + 24, clip.lastCaptureTicks);
+        std::memcpy(bytes.data() + 32, recording->label, sizeof(recording->label));
+        for (std::int32_t index = 0; index < clip.count; ++index) {
+            unsigned char* sample = bytes.data() + headerSize + static_cast<std::size_t>(index) * sampleSize;
+            for (unsigned lane = 0; lane < 16; ++lane) {
+                std::uint32_t bits;
+                std::memcpy(&bits, &clip.samples[index].frame[lane], sizeof(bits));
+                put32(sample + lane * 4, bits);
+            }
+            putSigned(sample + 64, clip.samples[index].ticks);
+        }
+        std::ofstream output(std::filesystem::u8path(file->filename), std::ios::binary | std::ios::trunc);
+        if (!output) return file->result = RACE_GHOST_FILE_IO_ERROR;
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+        output.flush();
+        return file->result = output ? RACE_GHOST_FILE_OK : RACE_GHOST_FILE_IO_ERROR;
+    } catch (...) {
+        return file->result = RACE_GHOST_FILE_IO_ERROR;
+    }
 }
 
-namespace hp2::debug {
-// Debug00149088; E-0099-W37. Original signed DriverNumber and stagger direction.
-bool Race::GracePeriodIsActive(std::uint32_t car)const{float period=m_.scalar(0x327268);const int number=m_.signed_half(car+0xa);if(static_cast<std::uint32_t>(number-101)<49)period=period+static_cast<float>(100-number)*m_.scalar(0x32726c);return static_cast<float>(static_cast<std::int32_t>(m_.word(0x327cf8)-m_.word(address_+12)))*m_.scalar(0x324f34)<=period;}
-}
-
-namespace hp2::debug {
-// Debug00148E50; E-0099-W47. Exact eRaceStage and BeACop data-type offsets.
-bool Race::CanAICarsStartDriving()const{return m_.signed_word(address_)==4||(m_.signed_word(0x3121ec)!=0&&m_.signed_word(address_)>1);}
-}
-
-#include "game_core/port/driving/ee_scalar.hpp"
-#include "game_core/indep/src/trackroute.hpp"
-#include "game_core/indep/src/timer.hpp"
-#include "game_core/indep/inc/Fred.hpp"
-#include "game_core/indep/inc/RealDriver.hpp"
-#include "game_core/indep/inc/Car.hpp"
-#include "game_core/port/race/physics_construction.hpp"
-namespace hp2::debug {
-// Debug001468D8/00146980; E-0099-W56. Original truncation/wrap and optional
-// fractional time output; entry pointers remain in the real shared allocation.
-std::uint32_t TimeAroundTrackTable::GetTimeTableEntry(float lap,float* seconds){if(lap<0)lap=0;if(!std::isfinite(lap)||lap>=2147483648.f)hp2::not_implemented("0x001468D8","exceptional EE lap conversion is outside scoped finite carrier");const int whole=static_cast<int>(lap);const float fraction=lap-static_cast<float>(whole);const int index=static_cast<int>(fraction*256.f);if(index<0||index>=256)hp2::not_implemented("0x001468D8","original table index outside256 entries");const auto entry=address_+4+8*index;if(seconds){const float numerator=fraction-static_cast<float>(index)*0x1p-8f,denominator=m_.scalar(entry);const float part=denominator==0?::port::driving::ee_div_s_zero(numerator,denominator,"0x00146968"):numerator/denominator;*seconds=(static_cast<float>(whole)*m_.scalar(address_)+m_.scalar(entry+4))+part;}return entry;}
-float TimeAroundTrackTable::GetTimeAroundTrack(float lap){float seconds=0;GetTimeTableEntry(lap,&seconds);return seconds;}
-void TimeAroundTrackTable::Sub_00149340(int flags){if(flags&1)m_.release(address_);}
-// Debug00146590; E-0099-W56. Original class-line selection, route-list order,
-// first positive speed per bin and forward-fill of all256 original entries.
-void TimeAroundTrackTable::Sub_00146590(int car_class,const ::port::track::RouteData& data){auto& m=m_;const auto a=address_;if(car_class<0||car_class>10)hp2::not_implemented("0x00146590","original class-selected line outside21 reviewed authored lines");for(unsigned i=0;i<0x800;++i)m.byte(a+4+i,0);m.scalar(a,0);const auto race=m.word(0x327258);const auto divide=[&](float numerator,float denominator,const char* site){const float result=denominator==0?::port::driving::ee_div_s_zero(numerator,denominator,site):numerator/denominator;if(!std::isfinite(result)||std::fpclassify(result)==FP_SUBNORMAL)hp2::not_implemented(site,"EE overflow/underflow result requires separately established scalar projection");return result;};const unsigned line=2*static_cast<unsigned>(car_class);for(auto route=m.word(0x30bb30);route!=0x30bb30;route=m.word(route)){if(!(m.word(route+0x28+0x30*line)&3))continue;::port::driving::Memory::Temporary coordinate(m,40);TrackPathCoordinate::Sub_002035A0(m,coordinate.address());for(int i=0;i<m.signed_word(route+0x10)-1;++i){const auto first=route+0x428+0x70*i,second=first+0x70;const float first_offset=static_cast<float>(static_cast<int>(m.signed_half(first+0x30+2*line))*256)*0x1p-16f,second_offset=static_cast<float>(static_cast<int>(m.signed_half(second+0x30+2*line))*256)*0x1p-16f;const auto p=TrackRoutePoint(m,first).GetPosition(0,first_offset),q=TrackRoutePoint(m,second).GetPosition(0,second_offset);if(!race)hp2::not_implemented("0x00146590","actual current Race is required when converting a route segment");TrackPathCoordinate::UpdatePosition(m,coordinate.address(),data.paths,p);float before=Race(m,race).GetLapNumberExact(m.scalar(coordinate.address()+0x10)*100.f);TrackPathCoordinate::UpdatePosition(m,coordinate.address(),data.paths,q);float after=Race(m,race).GetLapNumberExact(m.scalar(coordinate.address()+0x10)*100.f);float distance=after-before;if(.5f<distance){before=before+1.f;distance=after-before;}else if(.5f<before-after){after=after+1.f;distance=after-before;}const float x=p[0]-q[0],y=p[1]-q[1],length=std::sqrt(x*x+y*y);const float speed=static_cast<float>(std::uint32_t(m.byte(first+0x5a+line))<<16)*0x1p-16f;const float time=divide(length,speed,"0x001467D0"),rate=divide(distance,time,"0x001467D8");const auto entry=GetTimeTableEntry(before);if(0.f<rate&&m.scalar(entry)==0)m.scalar(entry,rate);}TrackPathCoordinate::Sub_00203630(m,coordinate.address(),2);}float total=0,previous=m.scalar(0x324edc);for(unsigned i=0;i<256;++i){const auto entry=a+4+8*i;float rate=m.scalar(entry);m.scalar(entry+4,total);if(rate==0){m.scalar(entry,previous);rate=previous;}total=total+divide(0x1p-8f,rate,"0x0014687C");previous=rate;}m.scalar(a,total);}
-// Debug00146BF8; E-0099-W56. Source fake crossing is a named original action,
-// not a port-generated race result; round actual WorldTimer before publication.
-void RacingCar::FakeStartlineCrossing(){auto& m=m_;m.word(address_+0x24,m.word(0x327cf8));Timer timer{m.signed_word(address_+0x24)};timer.RoundTime(m,m.scalar(0x324ee0));m.word(address_+0x24,static_cast<std::uint32_t>(timer.PackedTime));m.half(address_+6,0);if(m.word(0x311fa0)){m.half(address_+4,0);m.byte(address_+8,0);}}
-// Debug00148020; E-0099-W56. Original finishing-order/progress adjacent swaps,
-// with stable ties and separate previous/current race-position publication.
-void Race::SortRacingCarsByLeadership(){auto& m=m_;const auto a=address_;const int count=m.signed_word(a+0x18);if(count<0||count>8)hp2::not_implemented("0x00148020","original racing pointer count exceeds8");bool changed;do{changed=false;for(int i=0;i<count-1;++i){const auto first=m.word(a+0x624+4*i),second=m.word(a+0x624+4*(i+1));const int order=m.signed_byte(first+0xc),next=m.signed_byte(second+0xc);const bool swap=order==0?(next==0?m.scalar(first+0x20)<m.scalar(second+0x20):next<i+2):i+1<order;if(swap){m.word(a+0x624+4*i,second);m.word(a+0x624+4*(i+1),first);changed=true;}}}while(changed);for(int i=0;i<m.signed_word(a+0x18);++i){const auto car=m.word(a+0x624+4*i);const auto previous=m.byte(car+0xa);m.byte(car+0xa,static_cast<std::uint8_t>(i+1));m.byte(car+0xb,previous);}}
-// Debug00147BC8. Separate player and AI traversals, followed by two source sorts.
-void Race::AddRacingCars(){auto& m=m_;const auto world=m.word(0x3272f0);if(!world)hp2::not_implemented("0x00147BC8","actual current World table is required");for(int i=0;i<m.signed_word(world+0x20);++i)AddRacingCar(m.word(world+0x2c+4*i));for(int i=0;i<m.signed_word(world+0x24)-m.signed_word(world+0x20);++i)AddRacingCar(m.word(world+0x2c+4*(m.signed_word(world+0x20)+i)));SortRacingCarsByLeadership();SortRacingCarsByLeadership();}
-// Debug00147CF8. Preserve original stage side effects and original real/AI
-// driver state. Traffic transition delegates the concrete original Car bridge.
-void Race::SetRaceStage(int stage,::port::race::PhysicsConstructionServices& physics){auto& m=m_;const auto a=address_;m.word(a,static_cast<std::uint32_t>(stage));if(stage==4)FrontendDatabase::TheRaceIsOn(m,0x2f3890,a);for(int i=0;i<m.signed_word(a+0x18);++i){const auto racing=m.word(a+0x624+4*i),car=m.word(racing),driver=m.word(car+0x2c);const auto control=m.word(car+0x20);if(control==1){if(stage==4)hp2::recovered::RealDriver(m,driver).DisableStartLineState();else m.word(driver+0x23c,1);}else if(control==2&&stage==4){m.scalar(driver+0x21c,0);m.scalar(driver+0x214,1);m.scalar(driver+0x218,0);}if(stage==4)RacingCar(m,racing).FakeStartlineCrossing();}if(stage==3){m.word(a+4,0);m.word(a+8,m.word(0x327d04));}else if(stage==4){m.word(a+0xc,m.word(0x327cf8));Timer timer{m.signed_word(a+0xc)};timer.RoundTime(m,m.scalar(0x324f08));m.word(a+0xc,static_cast<std::uint32_t>(timer.PackedTime));m.word(a+8,0);m.word(a+4,m.word(0x327d04));}if(static_cast<std::uint32_t>(stage-3)<2){const auto world=m.word(0x3272f0);const int start=m.signed_word(world+0x28),count=m.signed_word(world+0x1c)-start;for(int i=0;i<count;++i){const auto car=m.word(world+0x2c+4*(start+i));m.byte(car+0x4a8,1);hp2::recovered::Car(m,car).SetMovementMode(2,physics);}}}
-// Debug00147768/001483E8; E-0099-W56.
-void Race::Init(int stage,const ::port::track::RouteData& routes,::port::race::PhysicsConstructionServices& physics){AddRacingCars();SetRaceStage(stage,physics);auto& m=m_;const int index=m.word(0x3121ec)&&m.signed_word(0x311f78+0x30)==2?1:0;const auto car=m.word(address_+0x24+0xc0*index);const int car_class=m.signed_byte(m.word(car+0xc)+0xe6);const auto table=m.allocate(0x804);TimeAroundTrackTable(m,table).Sub_00146590(car_class,routes);m.word(address_+0x6b0,table);}
-void Race::SetupGhostCars(){}
-}
-
-namespace hp2::debug {
-// E-0099-W62, exact original source; frame subtraction preserves SUBU bits.
-int Race::GetCountdownNumberToDisplay()const{
- const auto frames=m_.word(0x327d04),go=m_.word(address_+4),start=m_.word(address_+8);
- if(go)return static_cast<std::int32_t>(frames-go)>60?0:4;
- if(!start)return 0;
- const auto seconds=static_cast<float>(static_cast<std::int32_t>(frames-start))*m_.scalar(0x324f10);
- const float interval=m_.word(0x3121ec)?1.0f:m_.scalar(0x324f0c);
- if(!std::isfinite(seconds)||!std::isfinite(interval))hp2::not_implemented("0x00147EC8","exceptional EE countdown comparison operand");
- if(seconds<interval)return 3;
- if(seconds<interval+interval)return 2;
- if(seconds<interval*3.0f)return 1;
- return 4;
-}
-float Race::GetCountdownProgress()const{
- const auto frames=m_.word(0x327d04),go=m_.word(address_+4),start=m_.word(address_+8);
- const float interval=m_.word(0x3121ec)?1.0f:m_.scalar(0x324f14);float value=0;
- if(go)value=interval*3.0f+static_cast<float>(static_cast<std::int32_t>(frames-go))*m_.scalar(0x324f18);
- else if(start)value=static_cast<float>(static_cast<std::int32_t>(frames-start))*m_.scalar(0x324f1c);
- if(!std::isfinite(interval)||interval==0)hp2::not_implemented("0x00147F90","exceptional EE countdown interval division");
- return value/(interval*4.0f);
-}
-int Race::AreAllPlayersFinishedRacing()const{for(int i=0;i<m_.signed_word(0x327780);++i)if(!m_.word(m_.word(0x327778+4*i)+0x4c))return 0;return 1;}
-std::uint32_t Race::GetMostRecentlyFinishedPlayer()const{
- std::uint32_t selected=0;std::int32_t latest=0;for(int i=0;i<m_.signed_word(0x327780);++i){const auto player=m_.word(0x327778+4*i);const auto time=m_.signed_word(player+0x4c);if(time&&latest<time){selected=player;latest=time;}}return selected;
-}
-}
-
-// TASK-0099 E-0099-W70. Debug source race.cpp; authority815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
-#include "game_core/port/race/car_render_resources.hpp"
-#include "game_core/port/race/race_speech.hpp"
-#include "game_core/indep/inc/Player.hpp"
-#include "game_core/ReplayManager.hpp"
-namespace hp2::debug {
-std::uint32_t RacingCar::GetLastFinishLineCrossingTime()const{return address_+0x24+4*static_cast<std::int32_t>(m_.signed_byte(m_.word(0x327258)+0x653));}
-std::uint32_t RacingCar::GetLastLapTime()const{return address_+0x38+4*static_cast<std::int32_t>(m_.signed_byte(m_.word(0x327258)+0x653));}
-std::uint32_t RacingCar::GetBestLapTime()const{return address_+0x60+4*static_cast<std::int32_t>(m_.signed_byte(m_.word(0x327258)+0x653));}
-void RacingCar::ExtrapolateRaceTime(int laps,std::uint32_t start){
- if(!laps)hp2::not_implemented("0x001471E8","zero-lap EE extrapolation division is unresolved");
- const float fraction=m_.scalar(address_+0x14)/static_cast<float>(laps),minimum=m_.scalar(0x324efc);
- if(!std::isfinite(fraction)||!std::isfinite(minimum))hp2::not_implemented("0x001471E8","exceptional EE MAX.S extrapolation operand");
- const float progress=minimum<=fraction?fraction:minimum,scale=m_.scalar(0x324f00);
- if(progress==0||!std::isfinite(progress))hp2::not_implemented("0x001471E8","exceptional EE progress divisor");
- const float elapsed=float(static_cast<std::int32_t>(m_.word(0x327cf8)-m_.word(start)))*scale;
- const auto additional=::port::driving::cvt_w_s((elapsed/progress)*4000.f+.5f);
- Timer total{static_cast<std::int32_t>(m_.word(start)+static_cast<std::uint32_t>(additional))};total.RoundTime(m_,minimum);m_.word(address_+0xb4,static_cast<std::uint32_t>(total.PackedTime));
- if(!m_.signed_byte(address_+9)&&laps>0){const auto race=m_.word(0x327258);const auto crossing=m_.word(address_+0x24+4*static_cast<std::int32_t>(m_.signed_byte(race+0x652)));const float first=float(static_cast<std::int32_t>(m_.word(0x327cf8)-crossing))*scale;Timer best{::port::driving::cvt_w_s(((first/progress)/float(laps))*4000.f+.5f)};best.RoundTime(m_,minimum);m_.word(GetBestLapTime(),static_cast<std::uint32_t>(best.PackedTime));}
-}
-void Race::UpdateGhostCar(){if(m_.word(address_)==4&&m_.word(address_+0x680))hp2::not_implemented("0x00148718","actual capturing GhostCarData.AddSample");const auto time=m_.word(address_+0x10);if(m_.word(address_+0x678)&&time&&time!=0x7fffffff)hp2::not_implemented("0x00148718","actual GhostCarData.GetSample and WorldObject playback");}
-void Race::MaybeSaveGhostCarData(std::uint32_t racing){if(m_.word(racing)==m_.word(address_+0x680))hp2::not_implemented("0x001482F8","actual captured GhostCarData formatting/persistence lifecycle");}
-std::uint32_t Race::GetFinisher(int rank)const{for(int i=0;i<m_.signed_word(address_+0x18);++i){const auto row=m_.word(address_+0x624+4*i);if(m_.signed_byte(row+0xc)==rank)return row;}return 0;}
-int Race::GetNextFinishRank()const{int rank=1;while(GetFinisher(rank))++rank;return rank;}
-void Race::MonitorLeadership(){
- for(int i=0;i<m_.signed_word(0x327780);++i){const auto player=m_.word(0x327778+4*i);if(!player)continue;const auto racing=m_.word(m_.word(player+4)+0x1c);const int previous=m_.signed_byte(racing+0xb),rank=m_.signed_byte(racing+0xa);if(rank==previous)continue;
-  if(previous<1||previous>m_.signed_word(address_+0x18))hp2::not_implemented("0x00148128","source previous rank does not identify a live RacingCar");
-  const auto other=m_.word(address_+0x624+4*(previous-1)),car=m_.word(racing),other_car=m_.word(other);const float speed=m_.scalar(car+0x3c4),other_speed=m_.scalar(other_car+0x3c4);
-  if(!(speed>40))continue;
-  const float x=m_.scalar(car+0x60)-m_.scalar(other_car+0x60),y=m_.scalar(car+0x64)-m_.scalar(other_car+0x64),z=m_.scalar(car+0x68)-m_.scalar(other_car+0x68);const float square=(x*x+y*y)+z*z;
-  if(!std::isfinite(square)||square<0)hp2::not_implemented("0x00148128","exceptional EE leadership distance sqrt");
-  if(std::sqrt(square)<25){const auto replay=m_.word(0x3271a8);const auto name=::port::race::render_resource_text(m_,rank<previous?0x2a7488:0x2a7498);if(rank<=0||previous<=0)hp2::not_implemented("0x00148128","zero-rank EE event divisor");hp2::recovered::ReplayManager(m_,replay).RegisterInterestingEvent(rank<previous?4.f/float(rank)+1.f:2.f/float(previous),name.c_str());if(std::abs(speed-other_speed)<7){const auto close=::port::race::render_resource_text(m_,0x2a74a8);hp2::recovered::ReplayManager(m_,replay).RegisterInterestingEvent(2.5f,close.c_str());}}
- }
-}
-}
-
-namespace hp2::debug {
-void Race::FinishCar(int index,int rank,bool blink,int reason,const ::port::track::RouteData& routes){
- const auto row=m_.word(address_+0x624+4*index),car=m_.word(row),player=RacingCar(m_,row).GetPlayer();
- if(reason==4){Timer time{static_cast<std::int32_t>(m_.word(0x327cf8)-m_.word(address_+0xc))};time.RoundTime(m_,m_.scalar(0x324f20));m_.word(row+0xb4,static_cast<std::uint32_t>(time.PackedTime));}
- else if(reason==5){Timer time{m_.signed_word(row+0xb4)};time.RoundTime(m_,m_.scalar(0x324f24));m_.word(row+0xb4,static_cast<std::uint32_t>(time.PackedTime));m_.word(row+0xb4,m_.word(0x311f9c)+1);}
- if(rank==0){m_.byte(row+0xc,static_cast<std::uint8_t>(GetNextFinishRank()));if(m_.signed_byte(row+9)==m_.signed_word(address_+0x644)){m_.word(row+0xb4,m_.word(RacingCar(m_,row).GetLastFinishLineCrossingTime())-m_.word(address_+0xc));if(player)MaybeSaveGhostCarData(row);}else RacingCar(m_,row).ExtrapolateRaceTime(m_.signed_word(address_+0x644),address_+0xc);}
- else if(rank>=0)m_.byte(row+0xc,static_cast<std::uint8_t>(rank));
- const auto finished=m_.word(address_+0x1c);m_.half(row+0x12,static_cast<std::uint16_t>(reason));m_.word(row+0x20,m_.word(row+0x14));m_.word(address_+0x1c,finished+1);
- RaceEvent::RecordResults(m_,0x312cd0,address_,row,m_.signed_byte(row+0xc));
- if(player){Player(m_,player).SetFinishedRacing();hp2::recovered::Car(m_,car).SetControlMode(2,routes);}
- if(m_.word(car+0x20)==2){const auto controller=m_.word(car+0x28);m_.word(controller+0x210,6);m_.word(controller+0x224,m_.word(0x32826c));}
- if(blink)hp2::recovered::Car(m_,car).BlinkBlinkPoof();
-}
-// Debug00148D40 (NFSHP2.ELF), E-0110-F01; reverse/task0110/finish.md.
-// Complete remaining source participants only after the caller ends the race.
-void Race::SimulateRaceFinish(const ::port::track::RouteData& routes){
- for(int i=0;i<m_.signed_word(address_+0x18);++i){
-  const auto row=m_.word(address_+0x624+4*i);
-  if(!m_.signed_half(row+0x12))FinishCar(i,0,false,1,routes);
- }
- SortRacingCarsByLeadership();
-}
-// Debug00148DD0 (NFSHP2.ELF), E-0110-F01; reverse/task0110/finish.md.
-// The source LB at00148E20 reads RacePosition+A, not FinishRank+C.
-void Race::NotifyTheRaceIsOver(){
- for(int i=0;i<m_.signed_word(address_+0x18);++i){
-  const auto row=m_.word(address_+0x624+4*i);
-  RaceEvent::RecordResults(m_,0x312cd0,address_,row,m_.signed_byte(row+0xa));
- }
-}
-// Debug00148F30, E-0110-F01. The source ignores this and returns car+1C.
-std::uint32_t Race::GetRacingCar(std::uint32_t car)const{return m_.word(car+0x1c);}
-void Race::Update(::port::race::PhysicsConstructionServices& physics,const ::port::track::RouteData& routes){
- if(m_.word(address_)==3&&GetCountdownNumberToDisplay()==4)SetRaceStage(4,physics);
- if(m_.word(address_)==4){Timer time{static_cast<std::int32_t>(m_.word(0x327cf8)-m_.word(address_+0xc))};time.RoundTime(m_,m_.scalar(0x324f30));m_.word(address_+0x10,static_cast<std::uint32_t>(time.PackedTime));}
- UpdateGhostCar();
- for(int i=0;i<m_.signed_word(address_+0x18);++i){const auto row=m_.word(address_+0x624+4*i);if(!m_.signed_half(row+0x12)){RacingCar(m_,row).UpdateLapCounts();if(m_.word(m_.word(row)+0x18)){const auto best=RacingCar(m_,row).GetBestLapTime();if(m_.signed_word(best)<m_.signed_word(address_+0x14))m_.word(address_+0x14,m_.word(RacingCar(m_,row).GetBestLapTime()));}}}
- int forced=m_.signed_word(address_+0x648);
- if(forced){
-  m_.word(address_+0x1c,0);
-  for(int i=0;i<m_.signed_word(address_+0x18);++i){
-   const auto row=m_.word(address_+0x624+4*i);if(m_.signed_half(row+0x12))continue;
-   const auto player=RacingCar(m_,row).GetPlayer();if(!player||m_.signed_word(player+0x10)!=m_.signed_word(address_+0x64c))continue;
-   int reason=1;
-   if(const auto manager=m_.word(0x328c1c)){const int index=m_.signed_word(manager+0xc);const auto cop=index==-1?0:m_.word(manager+0x10+4*index);if(cop){const auto car=m_.word(cop+4);if(car&&m_.word(car+0x18)==player){reason=m_.signed_word(address_+0x18)<=forced?5:4;forced=-1;}}}
-   FinishCar(i,forced,false,reason,routes);m_.word(address_+0x648,0);break;
-  }
-  m_.word(address_+0x648,0);m_.word(address_+0x64c,0);
- }
- SortRacingCarsByLeadership();MonitorLeadership();
- if(m_.word(0x311f98)==3){for(int i=0;i<m_.signed_word(address_+0x18);++i){const auto row=m_.word(address_+0x624+4*i);if(m_.byte(row+0xd)&&m_.signed_byte(row+9)+m_.signed_byte(row+0xa)==m_.signed_word(address_+0x18)){for(int j=i+1;j<m_.signed_word(address_+0x18);++j)if(!m_.signed_half(m_.word(address_+0x624+4*j)+0x12))FinishCar(j,j+1,true,3,routes);}}}
- if(m_.word(0x311f98)==2){for(int i=0;i<m_.signed_word(address_+0x18);++i){const auto target=m_.signed_word(0x311f9c);const auto row=m_.word(address_+0x624+4*i);if(m_.byte(row+0xd)&&!m_.signed_half(row+0x12)){const auto time=m_.signed_word(RacingCar(m_,row).GetLastLapTime());if(time&&time!=0x7fffffff&&m_.signed_word(RacingCar(m_,row).GetLastLapTime())<=target)FinishCar(i,0,false,1,routes);}}}
- for(int i=0;i<m_.signed_word(address_+0x18);++i){const auto row=m_.word(address_+0x624+4*i);if(!m_.signed_half(row+0x12)&&m_.byte(row+0xd)&&m_.signed_byte(row+0xa)==1)m_.half(row+0x10,static_cast<std::uint16_t>(m_.half(row+0x10)+1));}
- if(m_.word(address_+0x644)){for(int i=0;i<m_.signed_word(address_+0x18);++i){const auto row=m_.word(address_+0x624+4*i);if(!m_.signed_half(row+0x12)&&m_.signed_byte(row+9)==m_.signed_word(address_+0x644))FinishCar(i,0,false,1,routes);}}
- for(int i=0;i<m_.signed_word(address_+0x18);++i){const auto row=m_.word(address_+0x624+4*i);if(!m_.signed_half(row+0x12)){if(m_.byte(row+0xd))LapFinishedSpeech(m_,m_.word(row),m_.signed_byte(row+9),physics.disable_race_lap_speech);else if(m_.byte(row+0xe))SplitTimeSpeech(m_,m_.word(row));}}
-}
-}
-
-#include "game_core/indep/inc/Replay.hpp"
-namespace hp2::debug {
-// Debug00146A80; E-0099-W74; replay-frame/00146a80.json/type-RacingCar.json.
-void RacingCar::DoSnapshot(std::uint32_t snapshot){
- ReplaySnapshot s(m_,snapshot);s.BeginNamedSection(0x2a7348);
- s.MoveData(address_+4,2);s.MoveData(address_+6,2);for(unsigned off=8;off<=14;++off)s.MoveData(address_+off,1);
- s.MoveData(address_+0x10,2);s.MoveData(address_+0x12,2);for(unsigned off:{0x14u,0x18u,0x1cu,0x20u})s.MoveData(address_+off,4);
- if(m_.word(0x311f98)==2){const auto race=m_.word(0x327258);const auto boundary=m_.signed_byte(race+0x653);
-  if(boundary<0||boundary>=5)hp2::not_implemented("0x00146A80","Time-trial finish boundary exceeds original timer arrays");
-  s.MoveData(address_+0x24,4);s.MoveData(address_+0x24+4*boundary,4);s.MoveData(address_+0x38+4*boundary,4);
- }
- s.EndNamedSection();
-}
-// Debug001475D8; E-0099-W74; replay-frame/001475d8.json/type-Race from W56.
-void Race::DoSnapshot(std::uint32_t snapshot){
- auto& m=m_;const auto a=address_;ReplaySnapshot s(m,snapshot);s.BeginSection(0x327260);s.MoveData(a,1);
- for(unsigned off:{4u,8u,12u,16u})s.MoveData(a+off,4);
- s.VerifyData(a+0x18,1,4,1);s.MoveData(a+0x1c,1,4,1);s.MoveData(a+0x20,1,4,0);
- if(m.signed_word(a+0x18)>8)hp2::not_implemented("0x001475D8","Race snapshot exceeds eight source participants");
- ::port::driving::Memory::Temporary local(m,1);
- for(int i=0;i<m.signed_word(a+0x18);++i){RacingCar(m,a+0x24+0xc0*i).DoSnapshot(snapshot);
-  const auto row=a+0x624+4*i,index=((m.word(row)-a-0x24)*0xaaaaaaabu)>>6;
-  m.byte(local.address(),static_cast<std::uint8_t>(index));s.MoveData(local.address(),1);const auto restored=m.signed_byte(local.address());
-  if(restored<0||restored>=8)hp2::not_implemented("0x001475D8","Restored leadership pointer index outside source array");
-  m.word(row,a+0x24+0xc0*restored);
- }
- s.VerifyData(a+0x644,1,4,1);s.EndSection();
-}
-}
-
-
-namespace hp2::debug {
-// Debug001485C8,E-0110-P01; original race.cpp. Signed FinishReason and
-// signed completed-lap byte select original table/time branches. Arithmetic
-// on packed timers wraps as the original ADDU/SUBU; no estimated host clock.
-void Race::CalculateSplitTime(Timer& result,std::uint32_t first,std::uint32_t second){
- if(!first||!second)hp2::not_implemented("0x001485C8","Original split-time inputs require two actual RacingCar owners");
- auto& m=m_;const bool first_finished=m.signed_half(first+0x12)==1,second_finished=m.signed_half(second+0x12)==1;
- if(first_finished&&second_finished){result.PackedTime=static_cast<std::int32_t>(m.word(second+0xb4)-m.word(first+0xb4));return;}
- const auto table=m.word(address_+0x6b0);if(!table)hp2::not_implemented("0x001485C8","Original split-time interpolation requires its TimeAroundTrackTable owner");
- TimeAroundTrackTable times(m,table);
- const float second_time=times.GetTimeAroundTrack(second_finished?float(m.signed_byte(second+9)):m.scalar(second+0x20));
- const float first_time=times.GetTimeAroundTrack(first_finished?float(m.signed_byte(first+9)):m.scalar(first+0x20));
- const auto packed=static_cast<std::uint32_t>(::port::driving::cvt_w_s((second_time-first_time)*4000.f+.5f)); // SetTime00136D80.
- if(first_finished)result.PackedTime=static_cast<std::int32_t>(packed-(m.word(0x327cf8)-m.word(first+0xb4)));
- else if(second_finished)result.PackedTime=static_cast<std::int32_t>((packed+m.word(0x327cf8))-m.word(second+0xb4));
- else result.PackedTime=static_cast<std::int32_t>(packed);
-}
-}
-
-namespace hp2::debug {
-// Debug00149028,E-0112-COP03. Port tag distinguishes source Car* from numeric index.
-void Race::FinishCar(::port::race::FinishCarPointer pointer,int rank,bool blink,int reason,const ::port::track::RouteData& routes){const auto racing=m_.word(pointer.value+0x1c);for(int i=0;i<m_.signed_word(address_+0x18);++i)if(racing==m_.word(address_+0x624+4*unsigned(i))){if(!rank)rank=m_.signed_byte(racing+0xa);FinishCar(i,rank,blink,reason,routes);return;}}
+extern "C" RaceGhostFileResult raceGhostFileLoad(RaceGhostFile* file, RaceGhostStorage* playback)
+{
+    if (!file) return RACE_GHOST_FILE_INVALID;
+    if (!file->filename || !*file->filename || !playback)
+        return file->result = RACE_GHOST_FILE_INVALID;
+    try {
+        std::ifstream input(std::filesystem::u8path(file->filename), std::ios::binary | std::ios::ate);
+        if (!input) return file->result = RACE_GHOST_FILE_IO_ERROR;
+        const auto length = input.tellg();
+        if (length < static_cast<std::streamoff>(headerSize) ||
+            length > static_cast<std::streamoff>(headerSize + RACE_GHOST_SAMPLE_LIMIT * sampleSize))
+            return file->result = RACE_GHOST_FILE_INVALID;
+        std::vector<unsigned char> bytes(static_cast<std::size_t>(length));
+        input.seekg(0);
+        input.read(reinterpret_cast<char*>(bytes.data()), length);
+        if (!input) return file->result = RACE_GHOST_FILE_IO_ERROR;
+        const std::int32_t count = getSigned(bytes.data() + 16);
+        const std::int32_t cursor = getSigned(bytes.data() + 20);
+        if (get32(bytes.data()) != 3 || count < 0 || count > RACE_GHOST_SAMPLE_LIMIT || cursor < 0 ||
+            (count ? cursor >= count : cursor != 0) ||
+            bytes.size() != headerSize + static_cast<std::size_t>(count) * sampleSize)
+            return file->result = RACE_GHOST_FILE_INVALID;
+        // Validate the detached file bytes before publishing any part of the
+        // live owner. The sampler requires ordered timestamps and finite
+        // poses; equal timestamps retain their original zero-duration rule.
+        for (std::int32_t index = 0; index < count; ++index) {
+            const unsigned char* sample = bytes.data() + headerSize +
+                static_cast<std::size_t>(index) * sampleSize;
+            if (index && getSigned(sample + 64) < getSigned(sample - sampleSize + 64))
+                return file->result = RACE_GHOST_FILE_INVALID;
+            for (unsigned lane = 0; lane < 16; ++lane) {
+                const std::uint32_t bits = get32(sample + lane * 4);
+                float value;
+                std::memcpy(&value, &bits, sizeof(value));
+                if (!std::isfinite(value)) return file->result = RACE_GHOST_FILE_INVALID;
+            }
+        }
+        raceGhostDataInitialize(playback, 0, 0, getSigned(bytes.data() + 8));
+        playback->clip.finishTicks = getSigned(bytes.data() + 4);
+        playback->clip.count = count;
+        playback->clip.cursor = cursor;
+        playback->clip.lastCaptureTicks = getSigned(bytes.data() + 24);
+        const std::uint32_t identifiers = get32(bytes.data() + 12);
+        playback->identifiers[0] = static_cast<std::uint16_t>(identifiers);
+        playback->identifiers[1] = static_cast<std::uint16_t>(identifiers >> 16);
+        std::memcpy(playback->label, bytes.data() + 32, sizeof(playback->label));
+        for (std::int32_t index = 0; index < count; ++index) {
+            const unsigned char* sample = bytes.data() + headerSize + static_cast<std::size_t>(index) * sampleSize;
+            for (unsigned lane = 0; lane < 16; ++lane) {
+                const std::uint32_t bits = get32(sample + lane * 4);
+                std::memcpy(&playback->samples[index].frame[lane], &bits, sizeof(bits));
+            }
+            playback->samples[index].ticks = getSigned(sample + 64);
+        }
+        return file->result = RACE_GHOST_FILE_OK;
+    } catch (...) {
+        return file->result = RACE_GHOST_FILE_IO_ERROR;
+    }
 }

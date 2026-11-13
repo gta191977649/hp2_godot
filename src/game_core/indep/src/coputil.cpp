@@ -1,50 +1,210 @@
-// TASK-0099 E-0099-W119, Debug0022B958, original ..\indep\src\coputil.cpp.
-// NFSHP2.ELF SHA815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
-#include "game_core/indep/src/coputil.hpp"
-#include "game_core/indep/src/carinfo.hpp"
-#include "game_core/indep/inc/Table.hpp"
-#include "game_core/port/not_implemented.hpp"
-#include <cmath>
-#include "game_core/indep/inc/Car.hpp"
-#include "game_core/indep/inc/CollisionBody.hpp"
-#include "game_core/indep/src/collision.hpp"
-namespace hp2::debug {
-// Debug0022B738,E-0100-PA01. Original iterator order and speed/front tests.
-std::uint32_t CarCausedRecentCollision(::port::driving::Memory& m,std::uint32_t car){const auto body=m.word(car+0x34);int index=0;while(index<m.signed_byte(body+0x12)){Collision collision(m,CollisionBody(m,body).GetCollision(index++));if(!collision.IsTwoCarCollision())continue;std::uint32_t first,second;collision.GetCollidingCars(first,second);const auto other=first==car?second:first;if(!other)return 0;const float speed=m.scalar(other+0x3c0);if(speed!=0){if(!hp2::recovered::Car(m,car).IsCarInFront(other,0x2000))continue;if(speed<0||m.scalar(car+0x3c0)<=speed)continue;}return other;}return 0;}
-// Debug0022B888,E-0100-PU03. The source iterator, not a timer/attribution
-// heuristic: skip non-two-car records and match the actual opposite owner.
-bool DidTheseCarsCollide(::port::driving::Memory& m,std::uint32_t first,std::uint32_t second){
- const auto body=m.word(first+0x34);int index=0;
- while(index<m.signed_byte(body+0x12)){
-  Collision collision(m,CollisionBody(m,body).GetCollision(index++));
-  if(!collision.IsTwoCarCollision())continue;
-  std::uint32_t left,right;collision.GetCollidingCars(left,right);
-  const auto other=left==first?right:left;
-  if(!other)return false;
-  if(other==second)return true;
- }
- return false;
-}
-// Debug0022B878,E-0110-P01; original coputil.cpp. The original signed byte
-// load is converted to bool; any nonzero collision-count encoding is true.
-bool CarInRecentCollision(::port::driving::Memory& m,std::uint32_t car){return m.byte(m.word(car+0x34)+0x12)!=0;}
-float GetTopSpeed(::port::driving::Memory& m,std::uint32_t car){const auto info=m.word(car+0xc);const float mass=m.scalar(info+0x1e0),drag=m.scalar(info+0x2f0),limit=m.scalar(0x3260b8),step=m.scalar(0x3260bc);if(mass==0||!std::isfinite(mass)||!std::isfinite(drag)||!(step>0)||!std::isfinite(step)||!std::isfinite(limit))hp2::not_implemented("0x0022B958","original top-speed finite scan/division operands are unresolved");float speed=m.scalar(0x3260b4);for(;speed<limit;speed=speed+step){const auto table=GetAccelerationTable(m.signed_word(m.word(car+0x10)));const float acceleration=hp2::recovered::Table(m,table).GetValue(speed);if(acceleration<((speed*speed)*drag)/mass)break;}return speed-m.scalar(0x3260c0);}
+#include "Chopper.hpp"
+#include "indep/inc/TrackRoute.hpp"
+#include "indep/inc/eMath.hpp"
+#include "bware/inc/bMath.hpp"
+#include "bware/inc/bMath.hpp"
+#include "indep/inc/TrackPath.hpp"
+#include "bware/inc/bMath.hpp"
+
+#include <math.h>
+
+#include "indep/inc/CarInfo.hpp"
+#include "indep/inc/Pursuit.hpp"
+
+// PAL230F00..230FF0. Each segment is a point plus its displacement. Keep
+// the source's cross-product tests, including its collinear acceptance.
+int32_t pursuitMotionSegmentsIntersect(const float first[2],const float firstMotion[2],
+    const float second[2],const float secondMotion[2])
+{
+    const float secondEndX=second[0]+secondMotion[0];
+    const float secondEndY=second[1]+secondMotion[1];
+    const float firstX=second[0]-first[0],firstY=second[1]-first[1];
+    const float endX=secondEndX-first[0],endY=secondEndY-first[1];
+    const float a=firstX*firstMotion[1],b=firstY*firstMotion[0];
+    const float c=endX*firstMotion[1],d=endY*firstMotion[0];
+    const float side0=a-b,side1=c-d;
+    if(!(side0*side1<=0.0f))return 0;
+    const float firstEndX=first[0]+firstMotion[0];
+    const float firstEndY=first[1]+firstMotion[1];
+    const float otherX=first[0]-second[0],otherY=first[1]-second[1];
+    const float otherEndX=firstEndX-second[0],otherEndY=firstEndY-second[1];
+    const float e=otherX*secondMotion[1],f=otherY*secondMotion[0];
+    const float g=otherEndX*secondMotion[1],h=otherEndY*secondMotion[0];
+    const float side2=e-f,side3=g-h;
+    return side2*side3<=0.0f;
 }
 
-#include "game_core/indep/inc/World.hpp"
-namespace hp2::debug {
-// Debug0022B408/0022B438,E-0110-F07; original ..\indep\src\coputil.cpp; mdebug FDR153/SYMR508911/508937.
-float GetForwardTrackDistance(::port::driving::Memory& m,float p1,float p0){float distance=p1-p0;if(distance<0)distance+=m.scalar(0x313308);return distance;}
-bool IsTeleportLocationClear(::port::driving::Memory& m,const std::array<float,2>& position){const auto world=m.word(0x3272f0);if(!world)hp2::not_implemented("0x0022B438","actual World required by cop teleport clearance");if(!(250.f<=World(m,world).GetDistanceToClosestPlayer(position)))return false;for(int i=0;i<m.signed_word(world+0x1c);++i){const auto car=m.word(world+0x2c+4*i);const float dx=position[0]-m.scalar(car+0x60),dy=position[1]-m.scalar(car+0x64);if(std::sqrt(dx*dx+dy*dy)<15.f)return false;}return true;}
-// Debug0022B610; E-0100-CT01; original coputil.cpp. The nearby-car test
-// intentionally uses the CURRENT location and excludes this exact car.
-bool CanTeleport(::port::driving::Memory& m,std::uint32_t car,const std::array<float,2>& destination){
- const auto world=m.word(0x3272f0);if(!world)hp2::not_implemented("0x0022B610","actual World required by original cop teleport predicate");
- const std::array<float,2> current{{m.scalar(car+0x60),m.scalar(car+0x64)}};
- if(!(250.f<=World(m,world).GetDistanceToClosestPlayer(current)))return false;
- if(!(250.f<=World(m,world).GetDistanceToClosestPlayer(destination)))return false;
- for(int i=0;i<m.signed_word(world+0x1c);++i){const auto other=m.word(world+0x2c+4*unsigned(i));if(other==car)continue;const float dx=current[0]-m.scalar(other+0x60),dy=current[1]-m.scalar(other+0x64);if(std::sqrt(dx*dx+dy*dy)<15.f)return false;}
- return true;
-}
+// PAL230E18..230F00. This query tests the prospective point against ALL
+// world cars. It is distinct from CanTeleport's current-position scan.
+WorldServicesResult pursuitPositionClear(const World* world,const float position[2],int32_t* clear)
+{
+    if(!world || !position || !clear || world->totalCars<0 || world->totalCars>WORLD_MAX_CARS)
+        return WORLD_SERVICES_INVALID_BINDING;
+    *clear=0;
+    if(worldGetDistanceToClosestPlayer2D(world,position)<250.0f)return WORLD_SERVICES_OK;
+    for(int32_t i=0;i<world->totalCars;++i) {
+        const Car* car=world->carTable[i];if(!car)return WORLD_SERVICES_INVALID_BINDING;
+        const float dx=position[0]-car->position[0],dy=position[1]-car->position[1];
+        const float y2=dy*dy,x2=dx*dx;
+        if(sqrtf(x2+y2)<15.0f)return WORLD_SERVICES_OK;
+    }
+    *clear=1;return WORLD_SERVICES_OK;
 }
 
+// PAL231338..2313DC. The acceleration samples and mutable physical info are
+// borrowed from the one model catalogue; no eager table/cache rebuild occurs.
+WorldServicesResult pursuitCarTopSpeed(const CarMovement* movement,
+    const hp2::CarInfoResource* resources,float* output)
+{
+    if(!movement || !resources || !output || !resources->CarsLoaded() ||
+        !movement->bindings.owner || !movement->bindings.owner->driverInfo)
+        return WORLD_SERVICES_INVALID_BINDING;
+    const int32_t model=movement->bindings.owner->driverInfo->appearance.modelCode;
+    if(model<0 || static_cast<size_t>(model)>=resources->Cars().size())
+        return WORLD_SERVICES_INVALID_BINDING;
+    const auto& definition=resources->Car(static_cast<size_t>(model));
+    const PhysicsCarInfo& info=movement->info;
+    if(info.body!=&definition.rigidBodyInfo || info.aerodynamics!=&definition.aerodynamicsInfo)
+        return WORLD_SERVICES_INVALID_BINDING;
+    const SampledCurve acceleration=resources->AccelerationCurve(static_cast<size_t>(model));
+    float speed=27.77777862548828f;
+    const float step=1.388888955116272f;
+    while(speed<111.11111450195312f){
+        const float available=sampledCurveEvaluate(&acceleration,speed);
+        const float squared=speed*speed;
+        const float drag=squared*info.aerodynamics->drag;
+        const float resistance=finiteRatio(drag,info.body->mass);
+        if(available<resistance)break;
+        speed=speed+step;
+    }
+    *output=speed-step;
+    return WORLD_SERVICES_OK;
+}
+
+float chopperWrapDegrees(float degrees)
+{
+    while (degrees>180.0f) degrees=bScalarAdd(degrees,-360.0f);
+    while (degrees< -180.0f) degrees=bScalarAdd(degrees,360.0f);
+    return degrees;
+}
+
+#include "indep/inc/Car.hpp"
+#include "indep/inc/Collision.hpp"
+#include "indep/inc/Collision.hpp"
+
+#include <math.h>
+
+namespace {
+
+// Native form of the original local contact iterator shared by the two
+// queries. The index and output borrow the actual collision system; there
+// is no retained contact list, copied participant or replacement callback.
+CarDriverResult nextCollidingCar(CarMovement* movement, int32_t* index, CarMovement** other)
+{
+    if (!movement || !movement->bindings.owner || !movement->bindings.ownerMotion ||
+        !movement->bindings.ownerMotion->collision ||
+        !movement->bindings.ownerMotion->collision->shape)
+        return CAR_DRIVER_INVALID_BINDING;
+    const CollisionShape* shape = movement->bindings.ownerMotion->collision->shape;
+    *other = nullptr;
+    while (*index < shape->contactCount) {
+        if (!movement->collisionSystem) return CAR_DRIVER_INVALID_BINDING;
+        const CollisionImpact* impact = collisionShapeContactAt(movement->collisionSystem, shape, *index);
+        ++*index;
+        if (!impact) return CAR_DRIVER_INVALID_BINDING;
+        if (!collisionImpactIsCarPair(impact)) continue;
+        Car* first = nullptr;
+        Car* second = nullptr;
+        collisionImpactGetCars(impact, &first, &second);
+        const Car* own = movement->bindings.owner;
+        if (!first || !second || (first != own && second != own)) return CAR_DRIVER_INVALID_BINDING;
+        Car* car = first == own ? second : first;
+        CarMovement* candidate = static_cast<CarMovement*>(car->movement);
+        if (!candidate || candidate->bindings.owner != car || !candidate->bindings.state)
+            return CAR_DRIVER_INVALID_BINDING;
+        *other = candidate;
+        return CAR_DRIVER_OK;
+    }
+    return CAR_DRIVER_OK;
+}
+
+}
+
+CarDriverResult pursuitCanTeleport(const World* world, const CarMovement* movement,
+    const float position[2], int32_t* clear)
+{
+    if (!world || !movement || !movement->bindings.owner || !movement->bindings.state ||
+        !movement->bindings.state->position || !position || !clear ||
+        world->totalCars < 0 || world->totalCars > WORLD_MAX_CARS)
+        return CAR_DRIVER_INVALID_BINDING;
+    *clear = 0;
+    const float* current = movement->bindings.state->position;
+    if (worldGetDistanceToClosestPlayer2D(world, current) < 250.0f) return CAR_DRIVER_OK;
+    if (worldGetDistanceToClosestPlayer2D(world, position) < 250.0f) return CAR_DRIVER_OK;
+    for (int32_t index = 0; index < world->totalCars; ++index) {
+        const Car* car = world->carTable[index];
+        if (!car) return CAR_DRIVER_INVALID_BINDING;
+        if (car == movement->bindings.owner) continue;
+        // Source checks other cars around the CURRENT position here, not
+        // around the prospective teleport point used by the prior query.
+        const float x = current[0] - car->position[0];
+        const float y = current[1] - car->position[1];
+        const float xx = x * x;
+        const float yy = y * y;
+        if (sqrtf(xx + yy) < 15.0f) return CAR_DRIVER_OK;
+    }
+    *clear = 1;
+    return CAR_DRIVER_OK;
+}
+
+CarDriverResult pursuitCarCausedRecentCollision(CarMovement* movement, CarMovement** other)
+{
+    if (!movement || !movement->bindings.state || !other) return CAR_DRIVER_INVALID_BINDING;
+    int32_t index = 0;
+    for (;;) {
+        CarMovement* candidate = nullptr;
+        const CarDriverResult result = nextCollidingCar(movement, &index, &candidate);
+        if (result != CAR_DRIVER_OK) return result;
+        if (!candidate) {
+            *other = nullptr;
+            return CAR_DRIVER_OK;
+        }
+        const VehicleState* state = candidate->bindings.state;
+        const float speed = state->forwardSpeed;
+        if (speed == 0.0f ||
+            (driverCarInHeadingCone(movement->bindings.state, state, 0x2000u) &&
+             0.0f <= speed && speed < movement->bindings.state->forwardSpeed)) {
+            *other = candidate;
+            return CAR_DRIVER_OK;
+        }
+    }
+}
+
+CarDriverResult pursuitCarsCollided(CarMovement* first, const CarMovement* second, int32_t* collided)
+{
+    if (!first || !second || !collided) return CAR_DRIVER_INVALID_BINDING;
+    int32_t index = 0;
+    for (;;) {
+        CarMovement* other = nullptr;
+        const CarDriverResult result = nextCollidingCar(first, &index, &other);
+        if (result != CAR_DRIVER_OK) return result;
+        if (!other) {
+            *collided = 0;
+            return CAR_DRIVER_OK;
+        }
+        if (other == second) {
+            *collided = 1;
+            return CAR_DRIVER_OK;
+        }
+    }
+}
+
+// RotateVector PAL2313E0..231474 belongs to coputil.cpp.
+void chopperRotate2(float output[2],const float input[2],float degrees)
+{
+    const int32_t quantized=convertFloatToInt32(degrees*65536.0f)/360;
+    float sine,cosine;vectorSineCosineAngle(&sine,&cosine,(uint16_t)quantized);
+    const float x=input[0],y=input[1];
+    const float ys=y*cosine,xs=x*sine,xc=x*cosine,yc=y*sine;
+    output[1]=ys-xs;output[0]=xc+yc;
+}

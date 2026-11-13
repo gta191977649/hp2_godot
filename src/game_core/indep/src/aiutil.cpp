@@ -1,215 +1,675 @@
-#include "game_core/indep/src/BeltMover.hpp"
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
-// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/indep/src/aiutil.hpp"
+#include "indep/inc/AICarController.hpp"
+#include "indep/inc/World.hpp"
+#include "indep/inc/TrackRoute.hpp"
+#include "indep/inc/AIPlan.hpp"
+#include "indep/inc/CarCollisionDetect.hpp"
+#include "indep/inc/DriveTarget.hpp"
+#include "bware/inc/bMath.hpp"
+#include "indep/inc/TrafficDriver.hpp"
+#include "indep/inc/Replay.hpp"
+#include "indep/inc/spikestrip.hpp"
+#include <math.h>
+#include <string.h>
 
-#include "game_core/port/not_implemented.hpp"
-#include "game_core/indep/src/trackroute.hpp"
-#include <cmath>
+/* Native storage for the original route-search Deque operations. */
+static inline int carRecoveryPathHistoryEmpty(const CarRecoveryGroupHistory* history)
+{
+    return !history->full && history->first == history->last;
+}
 
-namespace hp2::debug {
-// Debug001C7D98; E-0100-CM01; exact four original WheelTouchingGround bytes.
-int GetNumWheelsOnGround(const ::port::driving::Memory& m,std::uint32_t car){int count=0;for(unsigned i=0;i<4;++i)if(m.byte(car+0x350+i))++count;return count;}
+static inline void carRecoveryPathHistoryPush(CarRecoveryGroupHistory* history, const CarRecoveryGroup* group)
+{
+    if (history->full) return;
+    history->groups[history->last] = group;
+    history->last = (history->last + 1) % CAR_RECOVERY_PATH_GROUPS;
+    history->full = history->first == history->last;
+}
 
-// Debug001C87B8, E-0099-W17. Traversal uses the real original intrusive lists,
-// not numeric route order. DontTake and traffic-direction filters are original.
-bool GetNearestRoutePoint(::port::driving::Memory& memory,const ::port::track::RouteData& data,NearestRoutePointInfo& output,
-    const std::array<float,2>& position,RoutesToSearch type,int flags,float dat){
-    const bool filter=type!=ALL_RACING_ROUTES&&type!=ALL_TRAFFIC_ROUTES;
-    bool forward=memory.signed_word(0x00311f78+0xc)==0;
-    if(type==ONCOMING_TRAFFIC_ROUTES)forward=!forward;
-    const auto head=std::uint32_t(0x0030bb30+(type==ALL_RACING_ROUTES?0:8));
-    std::uint32_t chosen_route=0,chosen_point=0;float maximum=memory.scalar(0x00325a50);
-    for(auto route=memory.word(head);route!=head;route=memory.word(route)){
-        if(filter&&((memory.signed_half(route+0xa)<60)!=forward))continue;
-        if(memory.word(route+0x18)&4)continue;
-        const auto point=TrackRoute(memory,route).FindClosestPoint(position,maximum,flags,dat,data.paths.track_length);
-        if(!point)continue;
-        float distance;
-        if(flags&0x20)distance=TrackRoutePoint(memory,point).GetDistanceAway(position,dat,data.paths.track_length);
-        else{const auto x=memory.scalar(point)-position[0],y=memory.scalar(point+4)-position[1];distance=std::sqrt(x*x+y*y);}
-        if(maximum<=distance)continue;
-        chosen_route=route;chosen_point=point;maximum=distance;
+static inline int carRecoveryPathHistoryContains(const CarRecoveryGroupHistory* history, const CarRecoveryGroup* group)
+{
+    int32_t index;
+    if (carRecoveryPathHistoryEmpty(history)) return 0;
+    index = history->first;
+    do {
+        if (history->groups[index] == group) return 1;
+        index = (index + 1) % CAR_RECOVERY_PATH_GROUPS;
+    } while (index != history->last);
+    return 0;
+}
+
+typedef struct PendingPath {
+    CarRecoverySelection selections[CAR_RECOVERY_PATH_GROUPS];
+    int32_t first;
+    int32_t last;
+    int32_t full;
+} PendingPath;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+int32_t restorePendingPath(CarRecoverySelection* current, PendingPath* pending,
+    CarRecoveryGroupHistory* history);
+#ifdef __cplusplus
+}
+#endif
+
+// PAL1CD460..1CD4D4, using the real route owner for both authored references.
+void carRecoverySelectionSnapshot(const CarRecoveryPointRegistry* registry,
+    CarRecoverySelection* selection,ReplaySnapshot* snapshot)
+{
+    replaySnapshotBeginSection(snapshot,nullptr,"NearestRoutePointInfo");
+    carRecoverySnapshotGroup(registry,snapshot,&selection->group);
+    carRecoverySnapshotPoseInGroup(selection->group,snapshot,&selection->pose);
+    replaySnapshotEndSection(snapshot);
+}
+
+int32_t restorePendingPath(CarRecoverySelection* current, PendingPath* pending,
+                                  CarRecoveryGroupHistory* history)
+{
+    const CarRecoveryGroup* destination;
+    if (!pending->full && pending->first == pending->last) return 0;
+    *current = pending->selections[pending->first];
+    pending->first = (pending->first + 1) % CAR_RECOVERY_PATH_GROUPS;
+    pending->full = 0;
+    destination = current->group;
+    while (!carRecoveryPathHistoryEmpty(history)) {
+        const int32_t previous = history->last ? history->last - 1 : CAR_RECOVERY_PATH_GROUPS - 1;
+        if (history->groups[previous] == destination) return 1;
+        history->last = previous;
+        history->full = 0;
     }
-    if(!chosen_route||!chosen_point)return false;
-    output.Route=chosen_route;output.Point=chosen_point;return true;
-}
+    return 1;
 }
 
-namespace hp2::recovered {
-// ELF 0x001CD408; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001cd408.md.
-void NearestRoutePointInfo::IsValid() {
-    hp2::not_implemented("0x001CD408", "NearestRoutePointInfo::IsValid (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/src/bMath.hpp"
-namespace hp2::debug {
-// Debug001C7D78; TASK-0099 E-0099-W37. Original runtime tuning operands.
-float CalculateLookAheadDistance(const ::port::driving::Memory& m,std::uint32_t car){const float value=m.scalar(car+0x3c4)*m.scalar(0x327a00),minimum=m.scalar(0x327a04);return minimum<value?value:minimum;}
-// Debug001C7F88; E-0099-W37. Velocity-based normalized strict dot test.
-bool IsPointAheadOfCar(const ::port::driving::Memory& m,const std::array<float,2>& point,std::uint32_t car,float cosine){const auto v=hp2::recovered::bNormalize(std::array<float,2>{{m.scalar(car+0x70),m.scalar(car+0x74)}});const auto p=hp2::recovered::bNormalize(std::array<float,2>{{point[0]-m.scalar(car+0x60),point[1]-m.scalar(car+0x64)}});return cosine<v[0]*p[0]+v[1]*p[1];}
-}
-
-#include "game_core/indep/src/drivinglocation.hpp"
-namespace hp2::debug {
-// Debug001C8468; E-0099-W37. Original conditional debug-global publication.
-void HighlightDrivingLine(::port::driving::Memory& m,std::uint32_t location,int driver){if(m.signed_word(0x327540)==driver){m.word(0x3281cc,0xffffffff);if(!DrivingLocation(m,location).IsClear())m.word(0x3281cc,static_cast<std::uint32_t>(m.signed_half(m.word(location)+0xa)));m.word(0x3281d0,m.word(location+8));}}
-// Debug001C9DB8; E-0099-W37. Strict rear overlap test; player margin is -0.5.
-bool DoWeCareAboutThisCar(const ::port::driving::Memory& m,std::uint32_t car,std::uint32_t list){if(!car||m.word(car+0x18)==m.word(list))return false;const float margin=m.word(m.word(car+0x18)+0x18)?-.5f:0.f;return -(m.scalar(car+0x14)+m.scalar(list+0x1cc)+margin)<m.scalar(car+4);}
-}
-
-#include "game_core/indep/src/drivetarget.hpp"
-#include <cstring>
-namespace hp2::debug {
-// Debug001CA4A8; E-0099-W37. Listing confirms normalization sum XYZ and
-// scaled publication XYZW. Slow-branch norm_vel.W is an explicit port operand.
-void StraightLinePredict(::port::driving::Memory& m,std::uint32_t car,std::uint32_t target,std::uint32_t lane){const float distance=CalculateLookAheadDistance(m,car);std::array<float,4> direction{};if(m.scalar(car+0x3c4)<1.f){hp2::recovered::bSinCos(m,direction[1],direction[0],m.half(car+0x3a4));direction[2]=0;std::memcpy(&direction[3],&lane,4);}else{const float x=m.scalar(car+0x70),y=m.scalar(car+0x74),z=m.scalar(car+0x78),inverse=1.f/std::sqrt((x*x+y*y)+z*z);for(unsigned k=0;k<4;++k)direction[k]=m.scalar(car+0x70+4*k)*inverse;}::port::driving::Memory::Temporary point(m,16);for(unsigned k=0;k<4;++k)m.scalar(point.address()+4*k,direction[k]*distance+m.scalar(car+0x60+4*k));DriveTarget view(m,target);view.Clear(0,0);view.AddPointToTarget(point.address(),-1,-1,-1,false,0);}
-}
-
-namespace hp2::debug {
-// Debug001CA118; E-0099-W47. Original simultaneous trig and minimum5 distance.
-// Unknown temporary vector pad is intentionally absent from this XYZ projection.
-std::array<float,3> SteerStraightVector3D(::port::driving::Memory& m,std::uint32_t car,float distance){float sine=0,cosine=0;hp2::recovered::bSinCos(m,sine,cosine,m.half(car+0x3a4));const float length=distance<5.f?5.f:distance;return {{cosine*length+m.scalar(car+0x60),sine*length+m.scalar(car+0x64),m.scalar(car+0x68)}};}
-// Debug001CA1A8; E-0099-W47. Reuses actual XYZ scaled-normalize00251D28;
-// original destination pad is unknown and is not consumed by the caller.
-std::array<float,3> SteerStraightVelocity3D(::port::driving::Memory& m,std::uint32_t car,float distance){const auto v=hp2::recovered::bNormalize(std::array<float,3>{{m.scalar(car+0x70),m.scalar(car+0x74),m.scalar(car+0x78)}},distance<5.f?5.f:distance);return {{m.scalar(car+0x60)+v[0],m.scalar(car+0x64)+v[1],m.scalar(car+0x68)+v[2]}};}
-}
-
-#include "game_core/indep/src/carinfo.hpp"
-#include "game_core/indep/inc/Table.hpp"
-#include "game_core/indep/src/table.hpp"
-#include "game_core/indep/inc/Car.hpp"
-namespace hp2::debug {
-// Debug001C9E20; E-0099-W47. Actual authored acceleration table and reviewed
-// CarTypeInfo Body.Mass/Aero.Drag/Control.SpeedLimiter; no alternate force model.
-float CalculateMaxAcceleration(::port::driving::Memory& m,std::uint32_t car,float speed){const auto cfg=m.word(car+0xc);const float scaled=speed/m.scalar(car+0x3e0);float acceleration=hp2::recovered::Table(m,GetAccelerationTable(m.signed_word(m.word(car+0x10)))).GetValue(scaled);const float mass=m.scalar(cfg+0x1e0),drag=((1.f-m.scalar(car+0x458))*m.scalar(cfg+0x2f0)*scaled)*scaled;if(m.scalar(cfg+0x320)*m.scalar(0x325a54)<=scaled&&drag<acceleration)acceleration=drag;float gravity=0;if(m.word(car+0x24)==6)gravity=BeltMover(m,m.word(car+0x30)).GetAccelerationDueToGravity();else{const float x=m.scalar(car+0x90),y=m.scalar(car+0x94),z=m.scalar(car+0x98);const float square=(x*x+y*y)+z*z;if(!(square>0.f)||!std::isfinite(square))hp2::not_implemented("0x001C9E20","exceptional EE reciprocal-square-root input needs exact operand semantics");gravity=-m.scalar(0x327ba0)*(z*(1.f/std::sqrt(square)));}acceleration=acceleration*m.scalar(0x328860);return (acceleration-drag/mass)+gravity;}
-// Debug001C9FA8; E-0099-W47. Source calls but discards negative-max fallback.
-bool CanICatchThisCar(::port::driving::Memory& m,std::uint32_t nearby,std::uint32_t car,float maximum,bool debug_print){(void)debug_print;float acceleration=hp2::recovered::Car(m,car).GetForwardAcceleration();if(maximum<0)(void)CalculateMaxAcceleration(m,car,m.scalar(car+0x3c4));const auto other=m.word(nearby+0x18);const float other_acceleration=hp2::recovered::Car(m,other).GetForwardAcceleration();if(0.f<m.scalar(car+0x90)*m.scalar(other+0x90)+m.scalar(car+0x94)*m.scalar(other+0x94))acceleration=acceleration-other_acceleration;else acceleration=acceleration+other_acceleration;const float x=m.scalar(nearby),y=m.scalar(nearby+4),vx=m.scalar(nearby+8),vy=m.scalar(nearby+12),time=m.scalar(0x328264);return std::sqrt(x*x+y*y)<std::sqrt(vx*vx+vy*vy)*time+((acceleration*time)*time)*.5f;}
-}
-
-namespace hp2::debug {
-// Debug001C8618; E-0099-W47. This exact source branch is genuinely empty.
-// Marker creation/destruction/transforms remain explicit active dependencies.
-void DriveTargetRenderer::SetTargetToRender(std::uint32_t target){(void)target;if(!m_.word(0x328288)){if(!m_.word(address_))return;hp2::not_implemented("0x001C8618","original DestoryTargetMarkers dependency is not reconstructed");}hp2::not_implemented("0x001C8618","original live target marker construction/transform dependencies are not reconstructed");}
-}
-
-namespace hp2::debug {
-// Debug001CA3D8; E-0099-W56. Preserve the original inverse-multiply and
-// arithmetic-shift point-index conversion even for an unaligned explicit operand.
-bool NearestRoutePointInfo::IsValid(const ::port::driving::Memory& m)const{if(!Route||!Point||static_cast<std::uint32_t>(static_cast<std::int32_t>(m.signed_half(Route+0xa)))>=70u)return false;const std::uint32_t bits=(Point-Route-0x428u)*0xb6db6db7u;std::int32_t product=0;std::memcpy(&product,&bits,4);const int index=product>=0?product/16:~((~product)/16);return index>=0&&index<m.signed_word(Route+0x10);}
-// Debug001C8978/listing, E-0099-W60. SignNumber is the source byte2C; its
-// sentinel is FF, not a four-byte comparison over adjacent route metadata.
-void GetNextRoutePoint(::port::driving::Memory& m,NearestRoutePointInfo& output){auto route=output.Route,point=output.Point;if(m.byte(point+0x2c)!=255){const auto sign=TrackRoutePoint(m,point).GetSignpost(),flags=m.word(sign);if(!(flags&0x800)&&((flags&0x700)==0x200||!(flags&0x700))){output.Route=Signpost::GetNewRoute(m,sign);output.Point=Signpost::GetNewRoutePoint(m,sign);return;}point=output.Point;}const int next=std::int32_t(point-route-0x428u)/0x70+1;output.Point=next<m.signed_word(route+0x10)?route+0x428+std::uint32_t(next)*0x70:0;}
-// Debug001C8A88, E-0099-W60. Genuine sign-relative backwards/near-point
-// skips operate on the same output route, preserving source endpoint behavior.
-void GetNextRoutePointAhead(::port::driving::Memory& m,NearestRoutePointInfo& output){const auto previous=output.Point;if(!previous||!output.Route)return;GetNextRoutePoint(m,output);if(m.byte(previous+0x2c)==255||!output.Point)return;const auto next=output.Point;if((m.scalar(next)-m.scalar(previous))*m.scalar(previous+0xc)+(m.scalar(next+4)-m.scalar(previous+4))*m.scalar(previous+0x10)<0){GetNextRoutePoint(m,output);const float x=m.scalar(previous)-m.scalar(output.Point),y=m.scalar(previous+4)-m.scalar(output.Point+4);if(std::sqrt(x*x+y*y)<8)GetNextRoutePoint(m,output);}}
-}
-
-namespace hp2::debug {
-// Debug001C8208, E-0099-W61. Original half-open Y intervals and strict X
-// crossing parity. Zero/negative counts genuinely return0; no geometry epsilon.
-std::int64_t IsPointInPoly(::port::driving::Memory& m,const std::array<float,2>& point,std::uint32_t points,std::int64_t count){
- if(count>0x7fffffff)hp2::not_implemented("0x001C8208","original polygon index conversion outside supported addressable extent");
- if(count<=0)return 0;
- std::int64_t previous=count-1;std::uint32_t inside=0;
- for(std::int64_t i=0;i<count;++i){const auto current=points+8*std::uint32_t(i),prior=points+8*std::uint32_t(previous);const float y=m.scalar(current+4),py=m.scalar(prior+4);
-  if((y<=point[1]&&point[1]<py)||(py<=point[1]&&point[1]<y)){const float x=m.scalar(current),crossing=((m.scalar(prior)-x)*(point[1]-y))/(py-y)+x;if(point[0]<crossing)inside^=1;}
-  previous=i;
- }
- return inside;
-}
-}
-
-namespace hp2::debug {
-// Debug001CA210, E-0099-W62. Actual World category bounds and RacingCar ranks;
-// player styles are raw signed bytes, not normalized enum substitutes.
-void SetAIDriverModesFromPlayers(::port::driving::Memory& m){
- const auto second=m.word(0x327774),first=m.word(0x327770),world=m.word(0x3272f0),race=m.word(0x327258);
- if(!world||!race)return;
- const auto find=[&](std::uint32_t car){return m.word(car+0x1c);}; //GetRacingCar00148F30.
- int front=0,rear=0,split=0;
- if(m.signed_word(0x311f78+0x30)==2){
-  const int rank0=m.signed_byte(find(m.word(first+4))+0xa),rank1=m.signed_byte(find(m.word(second+4))+0xa);
-  front=m.signed_byte(first+0x1e);rear=m.signed_byte(second+0x1e);
-  if(rank1<rank0)std::swap(front,rear);
-  split=m.signed_word(0x311f78+0x34)/2;if(rank0<=split)++split;if(rank1<=split)++split;
- }else front=m.signed_byte(m.word(0x327778)+0x1e);
- const int start=m.signed_word(world+0x20),count=m.signed_word(world+0x24)-start;
- for(int i=0;i<count;++i){const auto car=m.word(world+0x2c+4*(start+i));int style=front;if(m.signed_word(0x311f78+0x30)==2&&split<m.signed_byte(find(car)+0xa))style=rear;m.word(car+0x3dc,static_cast<std::uint32_t>(style));}
-}
-}
-
-#include "game_core/indep/inc/Replay.hpp"
-#include "game_core/indep/src/trackroute.hpp"
-namespace hp2::debug {
-// Debug001CA430; E-0099-W74; actual inline wrappers delegate original pointer codecs.
-void NearestRoutePointInfo::DoSnapshot(::port::driving::Memory& m,std::uint32_t a,std::uint32_t snapshot){
- ReplaySnapshot s(m,snapshot);s.BeginSection(0x2afb28);TrackRouteManager manager(m,0x30bb30);
- manager.DoPointerSnapshot(snapshot,::port::race::SnapshotRoutePointer{a});
- manager.DoPointerSnapshot(snapshot,::port::race::SnapshotRoutePointPointer{a+4},m.word(a));s.EndSection();
-}
-}
-
-#include "game_core/indep/inc/WorldObject.hpp"
-namespace hp2::debug {
-// Debug001C85B0, E-0099-W89. MIPS is a fixed20-pointer array, not the
-// decompiler's erroneous pointer chain. Inactive flag leaves all slots intact.
-void DriveTargetRenderer::DestoryTargetMarkers(){
- if(!m_.word(address_))return;
- for(unsigned i=0;i<20;++i){const auto slot=address_+4+4*i;if(const auto object=m_.word(slot))WorldObject(m_,object).Sub_001CA7F8(3);m_.word(slot,0);}
- m_.word(address_,0);
-}
-}
-
-#include "game_core/indep/src/drivinglocation.hpp"
-#include "game_core/indep/src/trackroute.hpp"
-#include "game_core/src/bMath.hpp"
-namespace hp2::debug {
-// Debug001C9B90, E-0099-W95. Source uses route points0/6/12 and normalized
-// planar vectors, then VU cross magnitude with a sign opposite cross.z. W is
-// unconsumed by the source XYZ dot; exceptional finite-domain checks stay loud.
-float GetCurrentCurvatureOfDrivingLine(::port::driving::Memory& m,std::uint32_t location){if(DrivingLocation(m,location).IsClear())return 0;const auto route=m.word(location),point=m.word(location+4);const int line=m.signed_word(location+8),index=static_cast<std::int32_t>(point-route-0x428)/112;if(m.signed_word(route+0x10)-index<=12)return 0;auto position=[&](int offset){const auto p=point+112*offset;return TrackRoutePoint(m,p).GetPosition(0,static_cast<float>(m.signed_half(p+0x30+2*line)*256)*1.52587890625e-5f);};const auto a=position(0),b=position(6),c=position(12);const auto first=hp2::recovered::bNormalize(std::array<float,2>{{a[0]-b[0],a[1]-b[1]}}),second=hp2::recovered::bNormalize(std::array<float,2>{{b[0]-c[0],b[1]-c[1]}});const float z=first[0]*second[1]-first[1]*second[0],square=(0.f+0.f)+z*z;if(!std::isfinite(square))hp2::not_implemented("0x001C9B90","exceptional source VU normalized curvature arithmetic is not reconstructed");const float magnitude=std::sqrt(square);return z<0?magnitude:-magnitude;}
-}
-
-#include "game_core/port/driving/ee_scalar.hpp"
-namespace hp2::debug {
-// Debug001C9F48,E-0110-F11. Instruction grouping halves aero/friction before products.
-float CalculateMaxDeceleration(::port::driving::Memory& m,std::uint32_t car,float speed){const auto config=m.word(car+0xc);const float mass=m.scalar(config+0x1e0),aero=(m.scalar(config+0x2f4)+m.scalar(config+0x2f8))*.5f,friction=(m.scalar(config+0x1cc)+m.scalar(config+0x1ac))*.5f;const float force=(std::fabs(speed)*aero+m.scalar(0x327ba0)*mass)*friction;return -(mass==0?::port::driving::ee_div_s_zero(force,mass,"0x001C9F9C"):force/mass);}
-}
-
-namespace hp2::debug {
-// Debug001C8B88, E-0110-T01. Logical host storage preserves the original
-// twenty-entry deque, branch ordering, dropped pushes when full, and point flags.
-unsigned GuessTargetDestinations(::port::driving::Memory& m,NearestRoutePointInfo* out,unsigned requested,std::uint32_t route,std::uint32_t point,float distance,bool forwards){
- if(!route||!point)return 0;
- struct RouteWithDist {std::uint32_t Route,Point;float Distance;};
- std::array<RouteWithDist,20> pending{};unsigned head=0,tail=0;bool full=false;
- const auto push=[&](RouteWithDist value,bool front){if(full)return;if(front){head=head?head-1:19;pending[head]=value;}else{pending[tail]=value;tail=(tail+1)%20;}full=head==tail;};
- const auto next=[&](std::uint32_t r,std::uint32_t p){const auto index=(p-r-0x428)/0x70;if(forwards)return index+1<m.word(r+0x10)?p+0x70:0u;return index?p-0x70:0u;};
- RouteWithDist current{route,point,distance};unsigned produced=0;
- if(!forwards)current.Distance+=m.scalar(point+0x14);
- current.Distance-=m.scalar(point+0x14);
- for(;;){
-  if(!(0<=current.Distance)){out[produced++]={current.Route,current.Point};if(produced==requested)return produced;current.Point=0;}
-  else {
-   bool advance=true;const auto old=current.Point;
-   if(m.byte(old+0x2c)!=255){const auto sign=TrackRoutePoint(m,old).GetSignpost(),bits=m.word(sign);if(forwards?!(bits&0x800):bool(bits&0x800)){
-    advance=false;const auto type=bits&0x700;
-    if(type==0x300)current.Distance=-1;
-    else {const auto new_route=Signpost::GetNewRoute(m,sign),new_point=Signpost::GetNewRoutePoint(m,sign);const float d=(current.Distance+m.scalar(old+0x14))-((m.scalar(new_point)-m.scalar(old))*m.scalar(old+0xc)+(m.scalar(new_point+4)-m.scalar(old+4))*m.scalar(old+0x10));
-     if(type==0x200)current={new_route,new_point,d};
-     else {if(const auto p=next(current.Route,old))push({current.Route,p,current.Distance},true);push({new_route,new_point,d},type==0);current.Point=0;}
+int32_t carRecoveryAdvanceToConnection(CarRecoverySelection* selection, int32_t forward)
+{
+    int32_t count = 1;
+    while (selection->pose) {
+        if ((selection->pose->flags & 255u) != 255u) return count;
+        ++count;
+        selection->pose = carRecoveryAdjacentPose(selection->group, selection->pose, forward);
     }
-   }}
-   if(advance)current.Point=next(current.Route,current.Point);
-  }
-  if(current.Point&&!(m.word(current.Point+0x2c)&0x8000))current.Point=0;
-  if(!current.Point){if(!full&&head==tail)return produced;current=pending[head];head=(head+1)%20;full=false;}
-  current.Distance-=m.scalar(current.Point+0x14);
- }
+    return 0;
 }
+
+int32_t driverCollisionNeighborEligible(const DriverAINeighbor* neighbor,
+    const DriverAIPerception* perception)
+{
+    if(!neighbor||neighbor->movement==perception->movement)return 0;
+    const float adjustment=neighbor->movement->bindings.player?-0.5f:0.0f;
+    const float extent=neighbor->effectiveHalfExtents[1]+perception->forwardExtent;
+    const float boundary=extent+adjustment;
+    return -boundary<neighbor->localPosition[1];
+}
+
+int32_t driverCommandPointAhead(const float point[2],const VehicleState* vehicle,float threshold)
+{
+    float velocity[2],direction[2];
+    const float delta[2]={point[0]-vehicle->position[0],point[1]-vehicle->position[1]};
+    vectorNormalize2(velocity,vehicle->velocity);
+    vectorNormalize2(direction,delta);
+    const float first=velocity[0]*direction[0];
+    const float second=velocity[1]*direction[1];
+    return threshold<first+second;
+}
+
+float* driverPointAlongVelocity(float output[4],const VehicleState* state,float distance)
+{
+    float delta[4] = {0,0,0,0};
+    vectorSetLength3(delta,state->velocity,maximumFinite(5.0f,distance));
+    for (int axis = 0; axis < 4; ++axis) output[axis] = delta[axis]+state->position[axis];
+    return output;
+}
+
+int32_t driverRoadSelectionValid(const CarRecoverySelection* selection)
+{
+    const CarRecoveryGroup* group = selection->group;
+    if (!group || !selection->pose || group->id < 0 || 70 <= group->id) return 0;
+    for (int32_t index = 0; index < group->poseCount; ++index)
+        if (&group->poses[index] == selection->pose) return 1;
+    return 0;
+}
+
+int32_t pursuitPointInPolygon(const float point[2], const float vertices[][2], int32_t count)
+{
+    const float y=point[1];
+    const float x=point[0];
+    int32_t inside=0;
+    if (count<=0) return inside;
+    int32_t previous=count-1;
+    for (int32_t current=0;current<count;++current) {
+        const float currentY=vertices[current][1];
+        const float previousY=vertices[previous][1];
+        if ((currentY<=y && y<previousY) || (previousY<=y && y<currentY)) {
+            const float currentX=vertices[current][0];
+            const float differenceY=y-currentY;
+            const float differenceX=vertices[previous][0]-currentX;
+            const float edgeY=previousY-currentY;
+            const float scaled=differenceX*differenceY;
+            const float fraction=scaled/edgeY;
+            const float crossing=fraction+currentX;
+            if (x<crossing) inside^=1;
+        }
+        previous=current;
+    }
+    return inside;
+}
+
+int32_t vehicleStateGroundedWheelCount(const VehicleState* state)
+{
+    int32_t contacts = 0;
+    for (int32_t wheel = 0; wheel < 4; ++wheel) {
+        if (state->wheelContact[wheel] != 0) ++contacts;
+    }
+    return contacts;
+}
+#include "indep/inc/CarDriver.hpp"
+#include "indep/inc/Player.hpp"
+#include "indep/inc/Race.hpp"
+#include "bware/inc/bWare.hpp"
+#include <utility>
+
+// Complete PAL1CD240. The canonical vehicle state already owns Car+3DC;
+// this operation does not change CarMovement::mode or create another car.
+void SetAIDriverModesFromPlayers(World* world,const RaceFrame* race,
+    const RaceParameters& parameters,const CarFramePlayerRegistry& players)
+{
+    if (!world || !race)return;
+    hp2::Require(world->firstGroupEnd>=0 && world->firstGroupEnd<=world->secondGroupEnd &&
+        world->secondGroupEnd<=world->totalCars && world->totalCars<=WORLD_MAX_CARS,
+        "AI style update has no valid actual opponent range");
+    auto assign=[](Car* car,int32_t style) {
+        hp2::Require(car && car->movement,"AI style update has no actual Car movement");
+        auto* movement=static_cast<CarMovement*>(car->movement);
+        hp2::Require(movement->bindings.owner==car && movement->bindings.state,
+            "AI style update has no canonical vehicle state");
+        movement->bindings.state->pursuitMode=style;
+    };
+    if (parameters.mode==2) {
+        const auto* first=players.playersByNumber[0];const auto* second=players.playersByNumber[1];
+        hp2::Require(first && second && first->car && second->car,
+            "Two-player AI style update has no live Players");
+        const auto* firstEntry=raceFrameEntryForCar(first->car->bindings.owner);
+        const auto* secondEntry=raceFrameEntryForCar(second->car->bindings.owner);
+        hp2::Require(firstEntry && secondEntry,"Two-player AI style update has no actual RacingCar records");
+        const auto firstPosition=firstEntry->position,secondPosition=secondEntry->position;
+        int32_t firstStyle=first->settings.initialVehicleMode,secondStyle=second->settings.initialVehicleMode;
+        if (secondPosition<firstPosition)std::swap(firstStyle,secondStyle);
+        int32_t threshold=parameters.opponentCount/2;
+        if (!(threshold<firstPosition))++threshold;
+        if (!(threshold<secondPosition))++threshold;
+        for (auto index=world->firstGroupEnd;index<world->secondGroupEnd;++index) {
+            auto* car=world->carTable[index];const auto* entry=raceFrameEntryForCar(car);
+            hp2::Require(entry,"AI style update has no actual opponent RacingCar record");
+            assign(car,threshold<entry->position?secondStyle:firstStyle);
+        }
+    } else {
+        hp2::Require(players.players[0],"AI style update has no first live Player");
+        const auto style=players.players[0]->settings.initialVehicleMode;
+        for (auto index=world->firstGroupEnd;index<world->secondGroupEnd;++index)
+            assign(world->carTable[index],style);
+    }
+}
+
+// Full original StraightLinePredict; accepted body moved without token changes.
+void driverCommandBuildStraight(DriverCommand* command,const DriverPhysicsVehicle* context)
+{
+    const CarMovement* movement=context->movement;
+    const VehicleState* vehicle=movement->bindings.state;
+    const float distance=driverPlanningDistance(context);
+    float direction[4];
+    if(vehicle->speed<1.0f){
+        float sine,cosine;
+        vectorSineCosineAngle(&sine,&cosine,vehicle->heading);
+        direction[0]=cosine;direction[1]=sine;direction[2]=0.0f;direction[3]=0.0f;
+    }else{
+        const float xx=vehicle->velocity[0]*vehicle->velocity[0];
+        const float yy=vehicle->velocity[1]*vehicle->velocity[1];
+        const float zz=vehicle->velocity[2]*vehicle->velocity[2];
+        const float inverseLength=finiteRatio(1.0f,sqrtf((xx+yy)+zz));
+        for(int axis=0;axis<4;++axis)direction[axis]=vehicle->velocity[axis]*inverseLength;
+    }
+    float point[4];
+    for(int axis=0;axis<4;++axis){
+        const float offset=direction[axis]*distance;
+        point[axis]=offset+vehicle->position[axis];
+    }
+    driverCommandAdvance(command,NULL,movement->bindings.environment->clock->worldTimer,0.0f);
+    driverCommandAppend(command,point,NULL,-1,0,NULL);
+}
+
+float driverAvailableAcceleration(const DriverPhysicsVehicle* vehicle, float speed)
+{
+    CarMovement* movement = vehicle->movement;
+    const PhysicsCarInfo* info = movement->bindings.info;
+    const float scaledSpeed = bScalarFiniteRatio(speed,movement->bindings.state->performanceScale);
+    const SampledCurve curve = carPerformanceCurve(vehicle->performance);
+    float acceleration = sampledCurveEvaluate(&curve,scaledSpeed);
+    const float dragCoefficient = bScalarMultiply(bScalarAdd(1.0f,-movement->bindings.owner->interactionFactor),info->aerodynamics->drag);
+    const float dragForce = bScalarMultiply(dragCoefficient,bScalarMultiply(scaledSpeed,scaledSpeed));
+    const float speedLimit = bScalarMultiply(info->forwardSpeedLimit,vehicle->tuning->milesPerHourToMetersPerSecond);
+    const float dragAcceleration = bScalarFiniteRatio(dragForce,info->body->mass);
+    if (speedLimit <= scaledSpeed && dragForce < acceleration) acceleration = dragForce;
+    acceleration = bScalarMultiply(acceleration,vehicle->tuning->accelerationScale);
+    float slope;
+    if (movement->mode == 6) slope = beltMoverSlope(movement->belt);
+    else {
+        const float* direction = movement->bindings.state->orientation;
+        const float squared = bScalarAdd(bScalarAdd(bScalarMultiply(direction[0],direction[0]),
+                                                    bScalarMultiply(direction[1],direction[1])),
+                                          bScalarMultiply(direction[2],direction[2]));
+        const float inverse = bScalarFiniteRatio(1.0f,bScalarSquareRoot(squared));
+        slope = bScalarMultiply(-vehicle->tuning->gravity,bScalarMultiply(direction[2],inverse));
+    }
+    return bScalarAdd(bScalarAdd(acceleration,-dragAcceleration),slope);
+}
+
+// PAL1CB350..1CB3CC / beta1C8368 GetVectorOnTrack, unchanged accepted body.
+void pursuitGroundPoint(TerrainTopology* terrain, float output[4], const float point[2])
+{
+    TerrainSurface surface;
+    const float query[4] = {point[0], point[1], 0.0f, 0.0f};
+    terrainSurfaceInitialize(&surface, terrain);
+    output[0] = point[0];
+    output[1] = point[1];
+    output[2] = terrainSurfaceElevation(&surface, query, NULL, NULL, NULL);
+    output[3] = 0.0f;
+    terrainSurfaceDispose(&surface);
+}
+
+
+// Road algorithms and resource ownership.
+// Individual TrackRoute/AIUtil PDR+MAP/PAL evidence: road_paths77.json.
+// Existing PAL algorithms are retained; only native C++ casts are adapted.
+static float pointDistance(const CarRecoveryPose* pose, const float point[2])
+{
+    const float x = pose->position[0] - point[0];
+    const float y = pose->position[1] - point[1];
+    const float xx = x * x;
+    const float yy = y * y;
+    return sqrtf(xx + yy);
+}
+
+int32_t carRecoverySelectPose(CarRecoverySelection* selection, const CarRecoveryPointRegistry* registry,
+                        const float point[2], int32_t categoryMode, uint32_t flags,
+                        float routeDistance)
+{
+    float maximumDistance = 999999.0f;
+    const CarRecoveryGroup* selectedGroup = NULL;
+    const CarRecoveryPose* selectedPose = NULL;
+    int32_t lowerIds = registry->reverse == 0;
+    if (categoryMode == 3) lowerIds = !lowerIds;
+    for (size_t index = 0; index < registry->groupCount; ++index) {
+        const CarRecoveryGroup* group = &registry->groups[index];
+        if (group->category != (categoryMode == 0 ? 0 : 1)) continue;
+        if (categoryMode != 0 && categoryMode != 1 && (group->id < 60) != lowerIds) continue;
+        if (group->flags & 4u) continue;
+        const CarRecoveryPose* pose = carRecoveryFindInGroup(registry, group, point, maximumDistance,
+                                                           routeDistance, flags);
+        if (!pose) continue;
+        const float distance = flags & 32u ? carRecoveryDistance(registry->route, pose, point, routeDistance) :
+                                           pointDistance(pose, point);
+        if (distance < maximumDistance) {
+            maximumDistance = distance;
+            selectedGroup = group;
+            selectedPose = pose;
+        }
+    }
+    if (!selectedGroup || !selectedPose) return 0;
+    selection->group = selectedGroup;
+    selection->pose = selectedPose;
+    return 1;
+}
+
+CarDriverResult driverRoadNextPose(const CarRecoveryPointRegistry* registry, CarRecoverySelection* selection)
+{
+    if (!selection || carRecoveryOwnedPoseIndex(selection->group,selection->pose)<0)
+        return CAR_DRIVER_INVALID_BINDING;
+    const CarRecoveryPose* pose = selection->pose;
+    const CarRecoveryGroup* group = selection->group;
+    const int32_t index = carRecoveryOwnedPoseIndex(group,pose);
+    if ((pose->flags & 255u) != 255u) {
+        const CarRecoveryConnection* connection = carRecoveryPointConnection(registry, pose);
+        if (!connection) return CAR_DRIVER_MISSING_ROAD;
+        const uint8_t category = connection->flags & 7u;
+        if (!(connection->flags & 8u) && (category == 0 || category == 2)) {
+            selection->group = carRecoveryConnectionGroup(registry, connection);
+            selection->pose = carRecoveryConnectionPose(registry, connection);
+            return selection->group && selection->pose ? CAR_DRIVER_OK : CAR_DRIVER_MISSING_ROAD;
+        }
+    }
+    // A validated index avoids scanning every authored point for each traffic
+    // and police AI advance. The normal next-point contract is unchanged.
+    selection->pose = index + 1 < group->poseCount ? &group->poses[index + 1] : NULL;
+    return CAR_DRIVER_OK;
+}
+
+CarDriverResult driverRoadAdvanceSelection(const CarRecoveryPointRegistry* registry, CarRecoverySelection* selection)
+{
+    if (!selection || !selection->pose || !selection->group) return CAR_DRIVER_OK;
+    const CarRecoveryPose* previous = selection->pose;
+    CarDriverResult result = driverRoadNextPose(registry, selection);
+    if (result != CAR_DRIVER_OK || (previous->flags & 255u) == 255u || !selection->pose) return result;
+    const float x = selection->pose->position[0] - previous->position[0];
+    const float y = selection->pose->position[1] - previous->position[1];
+    const float first = x * previous->direction[0];
+    const float second = y * previous->direction[1];
+    if (first + second < 0.0f) {
+        result = driverRoadNextPose(registry, selection);
+        if (result != CAR_DRIVER_OK || !selection->pose) return CAR_DRIVER_MISSING_ROAD;
+        const float deltaX = previous->position[0] - selection->pose->position[0];
+        const float deltaY = previous->position[1] - selection->pose->position[1];
+        const float xx = deltaX * deltaX;
+        const float yy = deltaY * deltaY;
+        if (sqrtf(xx + yy) < 8.0f) result = driverRoadNextPose(registry, selection);
+    }
+    return result;
+}
+
+
+typedef struct PendingBranch {
+    CarRecoverySelection selection;
+    float remaining;
+} PendingBranch;
+
+static const CarRecoveryPose* adjacentPose(const CarRecoveryGroup* group,
+                                           const CarRecoveryPose* pose,int32_t forward)
+{
+    // Share the validated original-route owner with regular road traversal.
+    return carRecoveryAdjacentPose(group,pose,forward);
+}
+
+static void pushFront(PendingBranch queue[20],int32_t* first,int32_t last,int32_t* full,
+                       CarRecoverySelection selection,float remaining)
+{
+    if (*full) return;
+    *first=*first ? *first-1 : 19;
+    *full=*first==last;queue[*first].selection=selection;queue[*first].remaining=remaining;
+}
+
+int32_t carRecoveryFindFollowingBranches(const CarRecoveryPointRegistry* registry,
+                                         CarRecoverySelection* output,int32_t capacity,
+                                         const CarRecoveryGroup* group,const CarRecoveryPose* pose,
+                                         float distance,int32_t forward)
+{
+    if (!output || capacity <= 0 || carRecoveryOwnedPoseIndex(group,pose) < 0) return 0;
+    PendingBranch queue[20];
+    int32_t first=0,last=0,full=0,count=0,pops=0,steps=1;
+    float remaining=forward ? distance : distance+pose->segmentLength;
+    for (;;) {
+        remaining-=pose->segmentLength;
+        if (remaining<0.0f) {
+            output[count++]=CarRecoverySelection{group,pose};
+            if (count==capacity) return count;
+            pose=NULL;
+        } else {
+            int32_t advance=1;
+            if ((pose->flags&255u)!=255u) {
+                const CarRecoveryConnection* connection=carRecoveryPointConnection(registry,pose);
+                if (!connection) return 0;
+                const int32_t reverseConnection=(connection->flags&8u)!=0;
+                if (forward ? !reverseConnection : reverseConnection) {
+                    advance=0;
+                    const uint32_t kind=connection->flags&7u;
+                    if (kind==3u) remaining=-1.0f;
+                    else {
+                        const CarRecoveryGroup* branchGroup=carRecoveryConnectionGroup(registry,connection);
+                        const CarRecoveryPose* branchPose=carRecoveryConnectionPose(registry,connection);
+                        if (!branchGroup || !branchPose) return 0;
+                        const float dx=branchPose->position[0]-pose->position[0];
+                        const float dy=branchPose->position[1]-pose->position[1];
+                        const float x=dx*pose->direction[0],y=dy*pose->direction[1];
+                        const float branchRemaining=(remaining+pose->segmentLength)-(x+y);
+                        if (kind==2u) { group=branchGroup;pose=branchPose;remaining=branchRemaining; }
+                        else {
+                            const CarRecoveryPose* next=adjacentPose(group,pose,forward);
+                            if (next) pushFront(queue,&first,last,&full,CarRecoverySelection{group,next},remaining);
+                            if (!kind) pushFront(queue,&first,last,&full,
+                                                  CarRecoverySelection{branchGroup,branchPose},branchRemaining);
+                            else if (!full) {
+                                queue[last]=PendingBranch{{branchGroup,branchPose},branchRemaining};
+                                if (++last==20) last=0;
+                                full=last==first;
+                            }
+                            pose=NULL;
+                        }
+                    }
+                }
+            }
+            if (advance) pose=adjacentPose(group,pose,forward);
+            if (pose && !(pose->flags&0x8000u)) pose=NULL;
+        }
+        if (!pose) {
+            if (!full && first==last) return count;
+            group=queue[first].selection.group;pose=queue[first].selection.pose;
+            remaining=queue[first].remaining;
+            if (++first==20) first=0;
+            full=0;
+            if (++pops>=71) return 0;
+        }
+        if (++steps>0x11800) return 0;
+    }
+}
+
+#include "indep/inc/eMath.hpp"
+int32_t driverPerceptionNeighborCanReach(const DriverAINeighbor* neighbor,
+    const DriverPhysicsVehicle* vehicle,float acceleration)
+{
+    const float observed=driverObservedAcceleration(vehicle);
+    if(acceleration<0.0f){
+        /* The original evaluates this query but keeps its input acceleration.
+         * Retain the call because a spline mover can refresh its slope. */
+        (void)driverAvailableAcceleration(vehicle,vehicle->movement->bindings.state->speed);
+    }
+    const float xx=neighbor->localPosition[0]*neighbor->localPosition[0];
+    const float yy=neighbor->localPosition[1]*neighbor->localPosition[1];
+    const float distance=sqrtf(xx+yy);
+    const float relativeX=neighbor->travelRelativeVelocity[0]*neighbor->travelRelativeVelocity[0];
+    const float relativeY=neighbor->travelRelativeVelocity[1]*neighbor->travelRelativeVelocity[1];
+    const float relativeSpeed=sqrtf(relativeX+relativeY);
+    DriverPhysicsVehicle other=*vehicle;
+    other.movement=neighbor->movement;
+    const VehicleState* state=vehicle->movement->bindings.state;
+    const VehicleState* otherState=other.movement->bindings.state;
+    const float first=state->orientation[0]*otherState->orientation[0];
+    const float second=state->orientation[1]*otherState->orientation[1];
+    const float relative=0.0f<first+second?
+        observed-driverObservedAcceleration(&other):observed+driverObservedAcceleration(&other);
+    const float seconds=vehicle->tuning->predictionSeconds;
+    const float scaled=relative*seconds;
+    const float halfTime=seconds*0.5f;
+    const float change=scaled*halfTime;
+    const float travel=relativeSpeed*seconds+change;
+    return distance<travel;
+}
+#include "indep/inc/DrivingChoice.hpp"
+#include "indep/inc/CameraMover.hpp"
+static float authoredLateral(const CarRecoveryPose* pose,int32_t lane)
+{
+    return (float)((int32_t)pose->laneOffsetsQuantized[lane]*256)*0.0000152587890625f;
+}
+float driverLaneRoadCurvature(const DriverAIRoadState* road)
+{
+    if(driverAIRoadEmpty(road))return 0.0f;
+    const CarRecoveryGroup* group=road->group;
+    const int32_t first=carRecoveryOwnedPoseIndex(group,road->recovery.recoveryPose);
+    if(first<0 || group->poseCount-first<13 || road->lane<0 || road->lane>=21)return 0.0f;
+    float positions[3][2];
+    for(int index=0;index<3;++index){
+        const CarRecoveryPose* pose=&group->poses[first+index*6];
+        carRoadPreviewPointXY(pose,positions[index],0.0f,authoredLateral(pose,road->lane));
+    }
+    float initial[2]={positions[0][0]-positions[1][0],positions[0][1]-positions[1][1]};
+    float final[2]={positions[1][0]-positions[2][0],positions[1][1]-positions[2][1]};
+    vectorNormalize2(initial,initial);vectorNormalize2(final,final);
+    const float firstProduct=initial[0]*final[1];
+    const float secondProduct=initial[1]*final[0];
+    const float cross=firstProduct-secondProduct;
+    const float squared=cross*cross;
+    const float magnitude=sqrtf((0.0f+0.0f)+squared);
+    return 0.0f<=cross?-magnitude:magnitude;
+}
+float driverPlanningDistance(const DriverPhysicsVehicle* vehicle)
+{
+    const float distance = vehicle->movement->bindings.state->speed * vehicle->tuning->planningSeconds;
+    return maximumFinite(distance, vehicle->tuning->minimumPlanningDistance);
+}
+float driverBrakingAcceleration(const DriverPhysicsVehicle* vehicle, float speed)
+{
+    const PhysicsCarInfo* info = vehicle->movement->bindings.info;
+    const float downforce = info->aerodynamics->frontDownforce + info->aerodynamics->rearDownforce;
+    const float averageDownforce = downforce * 0.5f;
+    const float averageGrip = (info->tires[1].staticGrip + info->tires[0].staticGrip) * 0.5f;
+    const float weight = vehicle->tuning->gravity * info->body->mass;
+    const float load = fabsf(speed) * averageDownforce + weight;
+    const float gripForce = load * averageGrip;
+    return -finiteRatio(gripForce, info->body->mass);
+}
+const DriverPhysicsTuning driverPhysicsDefaultTuning = {
+    2.0f, 20.0f, 3.0f, 1.0f, 3.0f, 9.80000019073486328f,
+    0.100000001490116119f, 0.447027266025543213f
+};
+float* driverPointAlongHeading(float output[4],const VehicleState* state,float distance)
+{
+    float sine,cosine;vectorSineCosineAngle(&sine,&cosine,state->heading);
+    distance = maximumFinite(5.0f,distance);
+    const float delta[4] = {cosine*distance,sine*distance,0,0};
+    for (int axis = 0; axis < 4; ++axis) output[axis] = delta[axis]+state->position[axis];
+    return output;
+}
+
+
+// Original FindRoutesToTarget / FindPointsToTarget, PAL1CC270..1CC834.
+
+
+static void pendingPushFront(PendingPath* pending, CarRecoverySelection selection)
+{
+    if (pending->full) return;
+    pending->first = pending->first ? pending->first - 1 : CAR_RECOVERY_PATH_GROUPS - 1;
+    pending->selections[pending->first] = selection;
+    pending->full = pending->first == pending->last;
+}
+
+int32_t carRecoveryFindPathGroups(const CarRecoveryPointRegistry* registry,
+                                 const CarRecoverySelection* current,
+                                 const CarRecoveryGroup* destination,
+                                 CarRecoveryGroupHistory* history,
+                                 int32_t forward, int32_t avoidRestricted)
+{
+    if (!registry || !current || !destination || !history ||
+        carRecoveryOwnedPoseIndex(current->group,current->pose)<0) return 0;
+    PendingPath pending = {};
+    CarRecoverySelection selection = *current;
+    carRecoveryPathHistoryPush(history, selection.group);
+    if (selection.group == destination) return 1;
+    for (;;) {
+        const CarRecoveryConnection* connection;
+        const CarRecoveryGroup* next;
+        uint32_t policy;
+        if (carRecoveryOwnedPoseIndex(selection.group,selection.pose)<0) break;
+        if ((selection.pose->flags & 255u) == 255u) {
+            selection.pose = carRecoveryAdjacentPose(selection.group, selection.pose, forward);
+            if (selection.pose && avoidRestricted && (selection.pose->flags & 0x4000u)) {
+                if (!restorePendingPath(&selection, &pending, history)) break;
+            }
+            continue;
+        }
+        connection = carRecoveryPointConnection(registry, selection.pose);
+        if (!connection) break;
+        if (forward ? (connection->flags & 8u) != 0 : (connection->flags & 8u) == 0) {
+            selection.pose = carRecoveryAdjacentPose(selection.group, selection.pose, forward);
+            if (selection.pose && avoidRestricted && (selection.pose->flags & 0x4000u)) {
+                if (!restorePendingPath(&selection, &pending, history)) break;
+            }
+            continue;
+        }
+        next = carRecoveryConnectionGroup(registry, connection);
+        if (!next) break;
+        if (next == destination) {
+            carRecoveryPathHistoryPush(history, next);
+            return 1;
+        }
+        policy = connection->flags & 7u;
+        if (carRecoveryPathHistoryContains(history, next)) {
+            if (policy == 2u || policy == 3u) {
+                if (!restorePendingPath(&selection, &pending, history)) break;
+            }
+            selection.pose = carRecoveryAdjacentPose(selection.group, selection.pose, forward);
+            if (selection.pose && avoidRestricted && (selection.pose->flags & 0x4000u)) {
+                if (!restorePendingPath(&selection, &pending, history)) break;
+            }
+            continue;
+        }
+        carRecoveryPathHistoryPush(history, next);
+        if (policy != 2u) {
+            CarRecoverySelection continuation = selection;
+            continuation.pose = carRecoveryAdjacentPose(selection.group, selection.pose, forward);
+            pendingPushFront(&pending, continuation);
+        }
+        selection.group = next;
+        selection.pose = carRecoveryConnectionPose(registry, connection);
+        selection.pose = carRecoveryAdjacentPose(selection.group, selection.pose, forward);
+        if (selection.pose && avoidRestricted && (selection.pose->flags & 0x4000u)) {
+            if (!restorePendingPath(&selection, &pending, history)) break;
+        }
+    }
+    history->last = history->first;
+    history->full = 0;
+    return 0;
+}
+
+int32_t carRecoveryBuildPath(const CarRecoveryPointRegistry* registry,
+                            const CarRecoverySelection* current,
+                            const CarRecoverySelection* destination,
+                            CarRecoverySelection* output, uint32_t capacity,
+                            int32_t forward, int32_t avoidRestricted)
+{
+    if (!registry || !current || !destination || !output || !capacity ||
+        carRecoveryOwnedPoseIndex(current->group,current->pose)<0 ||
+        carRecoveryOwnedPoseIndex(destination->group,destination->pose)<0) return 0;
+    CarRecoveryGroupHistory history = {};
+    CarRecoverySelection selection = *current;
+    int32_t count = 0;
+    if (current->pose == destination->pose) {
+        output[0] = *destination;
+        return 1;
+    }
+    if (avoidRestricted && (selection.pose->flags & 0x4000u)) return 0;
+    for (;;) {
+        int32_t advance = 1;
+        if ((selection.pose->flags & 255u) != 255u) {
+            const CarRecoveryConnection* connection = carRecoveryPointConnection(registry, selection.pose);
+            if (!connection) return count;
+            if (forward ? !(connection->flags & 8u) : (connection->flags & 8u)) {
+                const CarRecoveryGroup* next;
+                const CarRecoveryGroup* expected;
+                const uint32_t policy = connection->flags & 7u;
+                if (policy == 3u) {
+                    selection.pose = NULL;
+                    advance = 0;
+                } else {
+                    if (policy == 2u) {
+                        selection.group = carRecoveryConnectionGroup(registry, connection);
+                        selection.pose = carRecoveryConnectionPose(registry, connection);
+                        advance = 0;
+                    } else {
+                        carRecoveryFindPathGroups(registry, &selection, destination->group,
+                                                  &history, forward, avoidRestricted);
+                        if (carRecoveryPathHistoryEmpty(&history)) return count;
+                        expected = history.groups[history.first];
+                        next = carRecoveryConnectionGroup(registry, connection);
+                        if (expected == next) {
+                            selection.group = next;
+                            selection.pose = carRecoveryConnectionPose(registry, connection);
+                            advance = 0;
+                        }
+                    }
+                }
+            }
+        }
+        if (advance) selection.pose = carRecoveryAdjacentPose(selection.group, selection.pose, forward);
+        if (!selection.pose || (avoidRestricted && (selection.pose->flags & 0x4000u))) return count;
+        output[count++] = selection;
+        if (selection.pose == destination->pose || (uint32_t)count >= capacity) return count;
+    }
 }

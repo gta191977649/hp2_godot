@@ -1,78 +1,583 @@
-// TASK-0099 E-0099-W40. Exact original ..\indep\src\soundcollision.cpp
-// ownership corroborated by live MCP FDR/SYMR/marker/path reads.
-#include "soundcollision.hpp"
-#include "game_core/port/not_implemented.hpp"
-#include "game_core/indep/src/collision.hpp"
-#include "game_core/inc/bSlotPool.hpp"
-#include "game_core/indep/inc/Sound3d.hpp"
-#include "game_core/port/race/car_render_resources.hpp"
-#include "game_core/indep/src/fmenus.hpp"
-#include "game_core/port/driving/projections.hpp"
-#include "game_core/src/bMath.hpp"
-#include "game_core/indep/src/sound.hpp"
-#include "game_core/indep/src/sound3dsample.hpp"
+#include "indep/inc/Collision.hpp"
+#include "bware/inc/bMath.hpp"
+#include "bware/inc/bMath.hpp"
+#include "CameraMover.hpp"
+#include "indep/inc/Sound3d.hpp"
+#include "indep/inc/Sound3dSample.hpp"
+#include "indep/inc/RaceParameters.hpp"
+#include "indep/inc/Smokeable.hpp"
+#include "bware/inc/bWare.hpp"
 #include <cmath>
-#include <cstdio>
-#include <cstring>
+#include <initializer_list>
+#include <memory>
+#include <new>
+#include <string.h>
+
+#include "bsound/include/bSample.h"
+
+// Native storage for the original expandable bSlotPool, not physical voices.
+// A POD pointer in the C-compatible owner keeps existing zero initialization
+// valid; no container object is copied or cleared by its initialization path.
+struct CollisionAudioVoiceBlock {
+    CollisionAudioVoiceBlock* next{};
+    CollisionAudioVoice voices[(40>>2)+1]{};
+};
+
+WorldAudioResult worldAudioPlayBustRoadBlock(WorldAudioRequestQueue* queue,
+    const WorldAudioManagerState* manager, const float position[4])
+{
+    if (!queue || !manager || !manager->channelVolumes ||
+        manager->channelVolumeCount == 0 || !position)
+        return WORLD_AUDIO_INVALID_BINDING;
+
+    /* The original channel-zero query has no side effects and its return
+     * value does not feed playback. Keep the actual manager binding. */
+    const float unusedChannelVolume = manager->channelVolumes[0];
+    (void)unusedChannelVolume;
+    WorldAudioInstance* voice = worldAudioPlayAtPointScaled(queue, "FinishLine", position,
+        1.0f, 0.5f, -1, 1);
+    if (!voice) return queue->result;
+    // PAL1E56D4 addresses the private bSample at object+28. Its tail
+    // setter writes category+84; it does not assign a generic object tag.
+    return worldAudioSetVoiceCategory(queue, worldAudioVoiceReference(voice), UINT32_MAX);
+}
+
+WorldAudioResult worldImpactAudioBind(WorldImpactAudio* impact, WorldAudioEffects* audio)
+{
+    if (!impact || !audio || !audio->queue || impact->registered || impact->collisions ||
+        impact->voiceBlocks || impact->firstDetached) return WORLD_AUDIO_INVALID_BINDING;
+    for (const auto& voice:impact->voices)
+        if (voice.occupied) return WORLD_AUDIO_INVALID_BINDING;
+    *impact={};
+    impact->audio = audio;
+    // Only the effect owner exists here. InGame and the original sample
+    // table are published later by CollisionSounds::LoadSampleTable.
+    return audio->queue->result;
+}
+
+size_t collisionAudioVoiceCapacity(const WorldImpactAudio* owner)
+{
+    if (!owner) return 0;
+    size_t count=40;
+    for (auto* block=owner->voiceBlocks;block;block=block->next) count+=(40>>2)+1;
+    return count;
+}
+
+const CollisionAudioVoice* collisionAudioVoiceAt(const WorldImpactAudio* owner, size_t index)
+{
+    if (!owner) return nullptr;
+    if (index<40) return &owner->voices[index];
+    index-=40;
+    for (auto* block=owner->voiceBlocks;block;block=block->next) {
+        if (index<(40>>2)+1) return &block->voices[index];
+        index-=(40>>2)+1;
+    }
+    return nullptr;
+}
+
+WorldAudioResult worldImpactAudioPlay(WorldImpactAudio* impact, const float position[4])
+{
+    if (!impact || !impact->audio || !impact->audio->enabled) return WORLD_AUDIO_INVALID_BINDING;
+    WorldAudioEffects* audio = impact->audio;
+    if (!*audio->enabled) return WORLD_AUDIO_OK;
+    if (!audio->queue || !audio->randomState || !position ||
+        impact->nextIndex < 0 || impact->nextIndex >= 3 ||
+        audio->queue->spatialEnabled != audio->enabled) return WORLD_AUDIO_INVALID_BINDING;
+    impact->nextIndex = (impact->nextIndex + 1) % 3;
+    // PAL1E5538..1E555C reads the same bSample table populated by
+    // LoadSampleTable1E4958..1E4990, after the InGame bank is available.
+    const WorldAudioVoiceRef voice = impact->woodSamples[impact->nextIndex];
+    const float pitchScale = vectorRandomFloat(audio->randomState, 0.6f) + 0.5f;
+    const WorldAudioResult valid = worldAudioValidateVoice(audio->queue, voice);
+    if (valid != WORLD_AUDIO_OK) return valid;
+    (void)worldAudioPlayCueAtPointScaled(audio->queue, voice.instance->bank,
+        voice.instance->cue, position, 2.5f, pitchScale, 0, 1);
+    return audio->queue->result;
+}
+
+WorldAudioResult worldAudioPlayBomb(WorldAudioEffects* effects, const float position[4])
+{
+    if (!effects || !effects->enabled) return WORLD_AUDIO_INVALID_BINDING;
+    if (!*effects->enabled) return WORLD_AUDIO_OK;
+    auto* queue=effects->queue;
+    if (!queue || !effects->randomState || !position || queue->spatialEnabled!=effects->enabled ||
+        !queue->positionalSamples) return WORLD_AUDIO_INVALID_BINDING;
+    for (int voice=0;voice<2;++voice) {
+        const float pitch=vectorRandomFloat(effects->randomState,0.6000000238418579f)+0.5f;
+        WorldAudioResult result;
+        auto* sample=queue->positionalSamples->Play("Bomb",position,1.0f,pitch,&result);
+        if (!sample) return result==WORLD_AUDIO_OK ? WORLD_AUDIO_INVALID_BINDING : result;
+        auto* envelope=sample->Envelope();
+        envelope->volume=6.0f;
+        envelope->inverseDistance=0.0033333334140479565f;
+        envelope->maximumDistance=300.0f;
+    }
+    return WORLD_AUDIO_OK;
+}
+
+WorldAudioResult collisionAudioPlayFoliage(WorldImpactAudio* owner, const float position[4])
+{
+    if (!owner || !owner->audio || !owner->audio->enabled) return WORLD_AUDIO_INVALID_BINDING;
+    if (!*owner->audio->enabled) return WORLD_AUDIO_OK;
+    auto* queue=owner->audio->queue;
+    if (!queue || !owner->audio->randomState || !queue->positionalSamples || !position)
+        return WORLD_AUDIO_INVALID_BINDING;
+    owner->foliageIndex=(owner->foliageIndex+1)%3;
+    const auto voice=owner->foliage[owner->foliageIndex];
+    const float pitch=vectorRandomFloat(owner->audio->randomState,0.6000000238418579f)+0.5f;
+    if (!voice.instance) return WORLD_AUDIO_OK;
+    WorldAudioResult result=worldAudioValidateVoice(queue,voice);
+    if (result!=WORLD_AUDIO_OK) return result;
+    queue->positionalSamples->Play(voice.instance->bank,voice.instance->cue,position,
+        1.899999976158142f,pitch,&result);
+    return result;
+}
+
+WorldAudioResult collisionAudioPlayGlass(WorldImpactAudio* owner, const float position[4])
+{
+    if (!owner || !owner->audio || !owner->audio->enabled) return WORLD_AUDIO_INVALID_BINDING;
+    if (!*owner->audio->enabled) return WORLD_AUDIO_OK;
+    auto* queue=owner->audio->queue;
+    if (!queue || !queue->positionalSamples || !position) return WORLD_AUDIO_INVALID_BINDING;
+    const auto voice=owner->glass;
+    if (!voice.instance) return WORLD_AUDIO_OK;
+    WorldAudioResult result=worldAudioValidateVoice(queue,voice);
+    if (result!=WORLD_AUDIO_OK) return result;
+    queue->positionalSamples->Play(voice.instance->bank,voice.instance->cue,position,
+        1.899999976158142f,1.0f,&result);
+    return result;
+}
+
+WorldAudioResult collisionAudioPlaySmokeable(WorldImpactAudio* owner, const float position[4],
+    const CollisionBreakableDefinition* definition, uint32_t modelKey)
+{
+    if (!owner || !owner->audio || !owner->audio->enabled) return WORLD_AUDIO_INVALID_BINDING;
+    if (!*owner->audio->enabled) return WORLD_AUDIO_OK;
+    WorldAudioResult result=definition && definition->materialIndex==28 ?
+        collisionAudioPlayFoliage(owner,position) : worldImpactAudioPlay(owner,position);
+    if (result!=WORLD_AUDIO_OK || !definition) return result;
+    if (modelKey!=owner->petrolPumpKey && modelKey!=owner->gasPumpKey) return WORLD_AUDIO_OK;
+    result=worldAudioPlayBomb(owner->audio,position);
+    if (result!=WORLD_AUDIO_OK) return result;
+    auto* queue=owner->audio->queue;
+    if (!queue || !queue->positionalSamples) return WORLD_AUDIO_INVALID_BINDING;
+    queue->positionalSamples->Play("PreviewZone",position,1.899999976158142f,1.0f,&result);
+    return result;
+}
+
 namespace {
-std::string port_collision_text(const ::port::driving::Memory& m,std::uint32_t at){std::string value;for(unsigned i=0;i<4096;++i){const auto c=m.byte(at+i);if(!c)return value;value.push_back(char(c));}throw std::out_of_range("Unterminated original collision sound string");}
-void port_require_collision_list(const ::port::driving::Memory& m){if(!m.word(0x3285d0)||!m.word(0x3285d4))hp2::not_implemented("0x001E2348","original collision sound static free list is not initialized");}
-void port_add_collision_free(::port::driving::Memory& m,std::uint32_t sample){port_require_collision_list(m);const auto node=sample+0xbc,first=m.word(0x3285d0);m.word(0x3285d0,node);m.word(first+4,node);m.word(node+4,0x3285d0);m.word(node,first);}
-void port_delete_collision_sample(::port::driving::Memory& m,std::uint32_t sample){const auto table=m.word(sample+0xb8),target=m.word(table+12);const auto adjusted=sample+std::uint32_t(std::int32_t(m.signed_half(table+8)));if(target!=0x001e2360){char at[11];std::snprintf(at,sizeof(at),"0x%08X",target);hp2::not_implemented(at,"original CollisionSample virtual destructor target is not implemented");}hp2::debug::CollisionSample(m,adjusted).Sub_001E2360(3);}
-std::uint32_t port_new_collision_sample(::port::driving::Memory& m,std::uint32_t source){const auto pool=m.word(0x3285c8);if(!pool)hp2::not_implemented("0x001E0D00","original CollisionSounds sample pool is not registered");const auto sample=hp2::debug::bOMalloc(m,pool);hp2::debug::bSample(m,sample).Sub_0026B2A0();m.word(sample+0xb8,0x2b1160);hp2::debug::CollisionSample(m,sample).Initialize(source);return sample;}
-float port_collision_age(const ::port::driving::Memory& m,std::uint32_t collision,std::uint32_t coefficient){return float(std::int32_t(m.word(0x327cf8)-m.word(collision+8)))*m.scalar(coefficient);}
+WorldAudioRequestQueue* audioQueue(const WorldImpactAudio* owner)
+{
+    return owner && owner->audio ? owner->audio->queue : nullptr;
 }
-namespace hp2::debug {
-// Debug001E2348, E-0099-W40. Only the observed process-static list fields.
-void Sub_001E2348(::port::driving::Memory& m){m.word(0x3285d0,0x3285d0);m.word(0x3285d4,0x3285d0);}
-// Debug001E0C18, E-0099-W40. Original nullable libraries and round-robin state.
-std::uint32_t GetCollisionSoundType(::port::driving::Memory& m,std::uint32_t collision){const auto terrain=Collision(m,collision).GetTerrainType();std::uint32_t library;
- if(terrain>14&&terrain<17)library=0x311e68;else{auto level=::port::driving::cvt_w_s((m.scalar(collision+0x50)*m.scalar(0x325b78))*3.0f);if(level<0)level=0;else if(level>=3)level=2;library=0x311e78+std::uint32_t(level)*16;}
- const auto index=(m.signed_word(library+12)+1)%3;m.word(library+12,std::uint32_t(index));return m.word(library+std::uint32_t(index)*4);
+
+bool boundContactAudio(const WorldImpactAudio* owner)
+{
+    return audioQueue(owner) && owner->audio->enabled && owner->audio->randomState &&
+        owner->collisions && owner->spatial && owner->parameters && owner->registered &&
+        owner->collisions->contactAudio == owner;
 }
-// Debug001E0D00, E-0099-W40. Register creates a pool; it does not load libraries.
-void CollisionSounds::Register(::port::driving::Memory& m){m.word(0x3285fc,0);if(!m.word(0x3285c8))m.word(0x3285c8,bNewSlotPool(m,0xc4,40,0x2b1048,0x10));if(!m.word(0x3285d8)){m.word(0x3285d8,hp2::frontend::bStringHash(port_collision_text(m,0x2b1060).c_str()));m.word(0x3285dc,hp2::frontend::bStringHash(port_collision_text(m,0x2b1070).c_str()));}}
-// Debug001E0D68, E-0099-W40. Every library pointer is a real InGame source.
-void CollisionSounds::LoadSampleTable(::port::driving::Memory& m){m.word(0x3285e0,1);const std::uint32_t names[]={0x2b1088,0x2b1098,0x2b10b0,0x2b10c0,0x2b10d0};const std::uint32_t libraries[]={0x311e78,0x311e88,0x311e98,0x311e68,0x311e58};
- for(unsigned n=0;n<5;++n){auto name=port_collision_text(m,names[n])+port_collision_text(m,0x2b1080);if(name.empty()||name.size()>=32)throw std::out_of_range("Original collision sample template outside32-byte field");::port::driving::Memory::Temporary text(m,32);for(unsigned i=0;i<3;++i){name.back()=char('1'+i);std::memcpy(m.view(text.address(),name.size()+1).data,name.c_str(),name.size()+1);const auto sample=GetInGameSample(m,text.address());if(!sample)hp2::not_implemented("0x001E0D68","required authored collision library sample is absent");m.word(libraries[n]+i*4,sample);bSample(m,sample).SetCategory(0);}m.word(libraries[n]+12,0);}
- for(const auto pair:{std::array<std::uint32_t,2>{{0x3285f8,0x2b10e0}},std::array<std::uint32_t,2>{{0x3285f4,0x2b10f8}},std::array<std::uint32_t,2>{{0x3285f0,0x2b1108}}}){const auto sample=GetInGameSample(m,pair[1]);if(!sample)hp2::not_implemented("0x001E0D68","required authored scrape/glass source is absent");m.word(pair[0],sample);bSample(m,sample).SetCategory(0);}
+
+float pointDistance(const float first[4], const float second[4])
+{
+    const float x=first[0]-second[0], y=first[1]-second[1], z=first[2]-second[2];
+    return std::sqrt((x*x+y*y)+z*z);
 }
-// Debug001E1118/listing, E-0099-W40. XYZ squared sum order is (x+y)+z.
-float GetDistanceToCamera(::port::driving::Memory& m,std::uint32_t point){const auto distance=[&](int view){const auto camera=m.word(::port::race::eGetView(m,view)+0x38);if(!camera)hp2::not_implemented("0x001E1118","actual eView camera pose required by collision sound is not initialized");const auto x=m.scalar(camera+0x40)-m.scalar(point),y=m.scalar(camera+0x44)-m.scalar(point+4),z=m.scalar(camera+0x48)-m.scalar(point+8);return std::sqrt((x*x+y*y)+z*z);};auto result=distance(1);if(m.signed_word(0x311fa8)>1){const auto other=distance(2);if(other<result)result=other;}return result;}
-// Debug001E11E8/001E10C8, E-0099-W40. Distance is evaluated BEFORE zero impulse.
-float CollisionSounds::CalcCollisionVolume(::port::driving::Memory& m,std::uint32_t collision){const auto distance=GetDistanceToCamera(m,collision+0x10);if(!(distance<35))return 0;auto volume=(m.scalar(collision+0x50)*m.scalar(0x325b80))*m.scalar(0x325b84);if(volume>1)volume=1;auto attenuation=35.0f/distance;if(attenuation>1)attenuation=1;return attenuation*volume;}
-float CollisionSounds::CalcCollisionScrapeVolume(::port::driving::Memory& m,std::uint32_t collision){auto volume=(CalcCollisionVolume(m,collision)*m.scalar(collision+0x30))*m.scalar(0x325b7c);if(volume>1)volume=1;return volume;}
-// Debug001E2358/001E2360/001E2400, E-0099-W40. Node destructor flags0 is empty;
-// subclass delete returns the wholeC4 object to its own pool, not bSample's pool.
-void CollisionSample::Initialize(std::uint32_t source){bSample::Initialize(source);}
-void CollisionSample::Sub_001E2360(int flags){m_.word(address_+0xb8,0x2b1160);Sub_0026B3F8(0);if(flags&1){const auto pool=m_.word(0x3285c8);if(!pool)hp2::not_implemented("0x001E2400","original CollisionSample pool is not registered");SlotPool(m_,pool).Free(address_);}}
-// Debug001E1288, E-0099-W40. Exact age/type/source gates and original ordering:
-// assign Scrape before volume; SetAzimuth before Play; random pitch afterward.
-void CollisionSounds::StartScraping(::port::driving::Memory& m,std::uint32_t collision){if(!(m.scalar(0x325b8c)<=port_collision_age(m,collision,0x325b88)))return;const auto terrain=Collision(m,collision).GetTerrainType();const auto source=terrain>14&&terrain<17?m.word(0x3285f4):terrain==17?m.word(0x3285f8):0;if(!source)return;const auto sample=port_new_collision_sample(m,source);m.word(collision+0x5c,sample);const auto volume=CalcCollisionScrapeVolume(m,collision);if(m.word(0x326f40)){bSample sound(m,sample);sound.SetAzimuth(Sound3d::ComputeAzimuth(m,collision+0x20));sound.Play(volume*m.scalar(0x325b90),0,0);sound.SetPitch(hp2::recovered::bRandom(m,0x327eec,m.scalar(0x325b94))+m.scalar(0x325b98));}}
-// Debug001E13C0, E-0099-W40.
-void CollisionSounds::UpdateSample(::port::driving::Memory& m,std::uint32_t collision){if(const auto sample=m.word(collision+0x5c)){const auto volume=(Sound3d::ComputeVolume(m,collision+0x20,200)*CalcCollisionScrapeVolume(m,collision))*m.scalar(0x325b9c);const auto azimuth=Sound3d::ComputeAzimuth(m,collision+0x20);bSample sound(m,sample);sound.SetVolume(volume);sound.SetAzimuth(azimuth);}}
+
+void unlinkDetached(WorldImpactAudio* owner, CollisionAudioVoice* voice)
+{
+    if (!voice->detached) return;
+    if (voice->previous) voice->previous->next=voice->next;
+    else owner->firstDetached=voice->next;
+    if (voice->next) voice->next->previous=voice->previous;
+    voice->next=voice->previous=nullptr;
+    voice->detached=0;
 }
-namespace hp2::debug::collision_sound {
-// Debug001E1768/001E1770/001E1778 wrappers, E-0099-W40.
-void Register(::port::driving::Memory& m){CollisionSounds::Register(m);}void UnRegister(::port::driving::Memory& m){CollisionSounds::UnRegister(m);}void Update(::port::driving::Memory& m){CollisionSounds::Update(m);}
-// Debug001E1788, E-0099-W40. Detach list nodes before actual destruction.
-void Reset(::port::driving::Memory& m){port_require_collision_list(m);while(m.word(0x3285d0)!=0x3285d0){const auto node=m.word(0x3285d0),next=m.word(node),previous=m.word(node+4);m.word(previous,next);m.word(next+4,previous);port_delete_collision_sample(m,node-0xbc);}}
-// Debug001E1838, E-0099-W40. Ctor calls this BEFORE stamping CollisionTime;
-// never assume age0 or bypass the real type/library/volume ordering.
-std::uint32_t CreateSample(::port::driving::Memory& m,std::uint32_t collision){if(!(m.scalar(0x325ba8)<=port_collision_age(m,collision,0x325ba4)))return 0;const auto source=GetCollisionSoundType(m,collision);if(!source)return 0;const auto volume=CollisionSounds::CalcCollisionVolume(m,collision);if(!(m.scalar(0x325bac)<volume))return 0;const auto sample=port_new_collision_sample(m,source);if(m.word(0x326f40)){const auto pitch=(hp2::recovered::bRandom(m,0x327eec,m.scalar(0x325bb0))+0.5f)-1.0f;bSample sound(m,sample);sound.Play(volume*m.scalar(0x325bb4),0,pitch);sound.SetAzimuth(Sound3d::ComputeAzimuth(m,collision+0x20));}return sample;}
-// Debug001E1970, E-0099-W40. Playing one-shots are deferred; nonplaying scrape
-// deliberately remains untouched, matching the original conditional cleanup.
-void ReleaseSample(::port::driving::Memory& m,std::uint32_t collision){if(const auto sample=m.word(collision+0x58)){if(bSample(m,sample).IsPlaying())port_add_collision_free(m,sample);else port_delete_collision_sample(m,sample);}if(const auto scrape=m.word(collision+0x5c);scrape&&bSample(m,scrape).IsPlaying()){bSample(m,scrape).Fade(0,50);port_add_collision_free(m,scrape);}}
-// Debug001E1D80, E-0099-W40. Genuine original sound gate, never forced by port.
-void PlayScrape(::port::driving::Memory& m,std::uint32_t collision){if(m.word(0x326f40)&&!m.word(collision+0x5c))CollisionSounds::StartScraping(m,collision);}
-// Debug001E1C20, E-0099-W40. Original glass source and concrete3D one-shot.
-void PlayGlass(::port::driving::Memory& m,std::uint32_t position){if(m.word(0x326f40))sound3d_oneshot::Play(m,m.word(0x3285f0),position,m.scalar(0x325bc8),1);}
+
+void detachVoice(WorldImpactAudio* owner, CollisionAudioVoice* voice)
+{
+    voice->previous=nullptr;
+    voice->next=owner->firstDetached;
+    if (voice->next) voice->next->previous=voice;
+    owner->firstDetached=voice;
+    voice->detached=1;
 }
-namespace hp2::debug {
-// Debug001E1038, E-0099-W40. Whole deferred list then actual pool teardown.
-void CollisionSounds::UnRegister(::port::driving::Memory& m){m.word(0x3285fc,0);collision_sound::Reset(m);if(const auto pool=m.word(0x3285c8)){bDeleteSlotPool(m,pool);m.word(0x3285c8,0);}}
-// Debug001E1468, E-0099-W40. Actual lazy-source loading, deferred cleanup and
-// World collision-list iteration. No invented loading-complete callback.
-void CollisionSounds::Update(::port::driving::Memory& m){const auto world=m.word(0x3272f0);if(!world)return;if(!m.word(0x3285fc)&&IsSoundRegionLoadingComplete(m)){m.word(0x3285fc,1);LoadSampleTable(m);}port_require_collision_list(m);auto node=m.word(0x3285d0);while(node!=0x3285d0){const auto sample=node-0xbc,next=m.word(node);bSample sound(m,sample);if(!sound.IsPlaying()||sound.GetVolume()<=m.scalar(0x325ba0)){const auto previous=m.word(node+4);m.word(previous,next);m.word(next+4,previous);port_delete_collision_sample(m,sample);}node=next;}
- const auto head=world+0x10;for(auto collision=m.word(head);collision!=head;collision=m.word(collision)){if(m.word(collision+0x5c))UpdateSample(m,collision);if(!m.word(collision+0x58))m.word(collision+0x58,collision_sound::CreateSample(m,collision));}}
+
+WorldAudioResult destroyVoice(WorldImpactAudio* owner, CollisionAudioVoice* voice)
+{
+    WorldAudioResult result=worldAudioRetireVoice(audioQueue(owner),voice->sample);
+    if (result!=WORLD_AUDIO_OK) return result;
+    unlinkDetached(owner,voice);
+    *voice={};
+    return WORLD_AUDIO_OK;
+}
+
+WorldAudioResult copySample(WorldImpactAudio* owner, WorldAudioVoiceRef source,
+    CollisionAudioVoice** destination)
+{
+    *destination=nullptr;
+    const auto assign=[&](CollisionAudioVoice& voice) {
+        const auto result=worldAudioCopyVoice(audioQueue(owner),source,&voice.sample);
+        if (result!=WORLD_AUDIO_OK) return result;
+        voice.occupied=1;
+        *destination=&voice;
+        return WORLD_AUDIO_OK;
+    };
+    for (auto& voice:owner->voices)
+        if (!voice.occupied) return assign(voice);
+    auto** next=&owner->voiceBlocks;
+    while (*next) {
+        for (auto& voice:(*next)->voices)
+            if (!voice.occupied) return assign(voice);
+        next=&(*next)->next;
+    }
+    // PAL Malloc expands by the initial count's quarter plus one. Own the
+    // unpublished block until the actual bSample copy also succeeds, so an
+    // allocation/sample failure cannot publish half-initialized storage.
+    std::unique_ptr<CollisionAudioVoiceBlock> block(new(std::nothrow) CollisionAudioVoiceBlock{});
+    if (!block) return audioQueue(owner)->result=WORLD_AUDIO_CAPACITY;
+    const auto result=assign(block->voices[0]);
+    if (result!=WORLD_AUDIO_OK) return result;
+    *next=block.release();
+    return WORLD_AUDIO_OK;
+}
+
+WorldAudioVoiceRef collisionSampleType(WorldImpactAudio* owner, const CollisionImpact* impact)
+{
+    const int32_t material=collisionPairMaterialIndex(impact->pair);
+    if (material>=15 && material<17) {
+        owner->nextIndex=(owner->nextIndex+1)%3;
+        return owner->woodSamples[owner->nextIndex];
+    }
+    int32_t strength=convertFloatToInt32((impact->accumulatedMagnitude*0.03333333507180214f)*3.0f);
+    if (strength<0) strength=0;
+    if (strength>2) strength=2;
+    int32_t& index=owner->metalIndex[strength];
+    index=(index+1)%3;
+    return owner->metal[strength][index];
+}
+
+bool oldEnough(const WorldImpactAudio* owner, const CollisionImpact* impact)
+{
+    // Unsigned subtraction retains the source's wrapping timer arithmetic.
+    const int32_t ticks=static_cast<int32_t>(static_cast<uint32_t>(owner->collisions->nowTicks)-
+        static_cast<uint32_t>(impact->createdTicks));
+    return static_cast<float>(ticks)*0.0002500000118743628f>=0.10000000149011612f;
+}
+
+WorldAudioResult loadBankSample(WorldImpactAudio* owner, const char* name, WorldAudioVoiceRef* sample)
+{
+    auto* queue=audioQueue(owner);
+    WorldAudioResult result=worldAudioAcquireInGameSample(queue,name,sample);
+    return result==WORLD_AUDIO_OK ? worldAudioSetVoiceCategory(queue,*sample,0) : result;
+}
+}
+
+WorldAudioResult collisionAudioRegister(WorldImpactAudio* owner, CollisionSystem* collisions,
+    const Sound3dBindings* spatial, const RaceParameters* parameters)
+{
+    if (!audioQueue(owner) || !collisions || !spatial || !parameters ||
+        (owner->collisions && owner->collisions!=collisions) ||
+        (collisions->contactAudio && collisions->contactAudio!=owner)) return WORLD_AUDIO_INVALID_BINDING;
+    owner->collisions=collisions;
+    owner->spatial=spatial;
+    owner->parameters=parameters;
+    owner->updateLoaded=0;
+    owner->registered=1;
+    collisions->contactAudio=owner;
+    if (!owner->petrolPumpKey) {
+        owner->petrolPumpKey=hashString("CS_PetrolPump");
+        owner->gasPumpKey=hashString("CS_GasPump");
+    }
+    return WORLD_AUDIO_OK;
+}
+
+WorldAudioResult collisionAudioLoadSampleTable(WorldImpactAudio* owner)
+{
+    if (!boundContactAudio(owner)) return WORLD_AUDIO_INVALID_BINDING;
+    static const char* const names[3][3]={
+        {"CrashMetalSmall01","CrashMetalSmall02","CrashMetalSmall03"},
+        {"CrashMetalMedium01","CrashMetalMedium02","CrashMetalMedium03"},
+        {"CrashMetalHard01","CrashMetalHard02","CrashMetalHard03"}};
+    static const char* const wood[3]={"CrashWood01","CrashWood02","CrashWood03"};
+    static const char* const foliage[3]={"CrashFoilage01","CrashFoilage02","CrashFoilage03"};
+    for (int strength=0;strength<3;++strength) {
+        owner->metalIndex[strength]=0;
+        for (int index=0;index<3;++index) {
+            WorldAudioResult result=loadBankSample(owner,names[strength][index],&owner->metal[strength][index]);
+            if (result!=WORLD_AUDIO_OK) return result;
+        }
+    }
+    owner->nextIndex=0;
+    for (int index=0;index<3;++index) {
+        WorldAudioResult result=loadBankSample(owner,wood[index],&owner->woodSamples[index]);
+        if (result!=WORLD_AUDIO_OK) return result;
+    }
+    owner->foliageIndex=0;
+    for (int index=0;index<3;++index) {
+        WorldAudioResult result=loadBankSample(owner,foliage[index],&owner->foliage[index]);
+        if (result!=WORLD_AUDIO_OK) return result;
+    }
+    WorldAudioResult result=loadBankSample(owner,"CrashMetalScrape",&owner->scrape[1]);
+    if (result!=WORLD_AUDIO_OK) return result;
+    result=loadBankSample(owner,"CrashWoodScrape",&owner->scrape[0]);
+    if (result!=WORLD_AUDIO_OK) return result;
+    result=loadBankSample(owner,"CrashGlass01",&owner->glass);
+    if (result==WORLD_AUDIO_OK) owner->tableLoaded=1;
+    return result;
+}
+
+WorldAudioResult collisionAudioGetDistanceToCamera(const WorldImpactAudio* owner,
+    const float position[4], float* distance)
+{
+    if (!owner || !owner->spatial || !owner->spatial->cameras || !owner->parameters ||
+        !position || !distance) return WORLD_AUDIO_INVALID_BINDING;
+    const auto& screens=owner->spatial->cameras->screens;
+    if (!screens[1].view) return WORLD_AUDIO_INVALID_BINDING;
+    *distance=pointDistance(position,screens[1].view->current.eye);
+    if (owner->parameters->mode>=2) {
+        if (!screens[2].view) return WORLD_AUDIO_INVALID_BINDING;
+        const float other=pointDistance(position,screens[2].view->current.eye);
+        if (other<*distance) *distance=other;
+    }
+    return WORLD_AUDIO_OK;
+}
+
+WorldAudioResult collisionAudioCalcVolume(const WorldImpactAudio* owner,
+    const CollisionImpact* impact, float* volume)
+{
+    if (!impact || !volume) return WORLD_AUDIO_INVALID_BINDING;
+    float distance;
+    WorldAudioResult result=collisionAudioGetDistanceToCamera(owner,impact->firstPoint,&distance);
+    if (result!=WORLD_AUDIO_OK) return result;
+    *volume=0.0f;
+    if (distance<35.0f) {
+        float strength=(impact->accumulatedMagnitude*0.03333333507180214f)*0.6499999761581421f;
+        if (strength>1.0f) strength=1.0f;
+        float attenuation=35.0f/distance;
+        if (attenuation>1.0f) attenuation=1.0f;
+        *volume=strength*attenuation;
+    }
+    return WORLD_AUDIO_OK;
+}
+
+WorldAudioResult collisionAudioCalcScrapeVolume(const WorldImpactAudio* owner,
+    const CollisionImpact* impact, float* volume)
+{
+    WorldAudioResult result=collisionAudioCalcVolume(owner,impact,volume);
+    if (result!=WORLD_AUDIO_OK) return result;
+    *volume=*volume*(impact->tangentialSpeed*0.1666666716337204f);
+    if (*volume>1.0f) *volume=1.0f;
+    return WORLD_AUDIO_OK;
+}
+
+WorldAudioResult collisionAudioCreateSample(WorldImpactAudio* owner, CollisionImpact* impact)
+{
+    if (!owner || !owner->audio || !owner->audio->enabled || !owner->collisions ||
+        owner->collisions->contactAudio!=owner || !impact || !impact->pair || impact->normalSound)
+        return WORLD_AUDIO_INVALID_BINDING;
+    // PAL1E5278 tests the live collision timer and selects the template before
+    // touching a registered sample or spatial owner. Audio-disabled startup
+    // leaves the actual template table empty (SoundLoadRegions1AE7DC), so
+    // PAL1E52DC returns no sample. Keep that path without claiming readiness.
+    if (!oldEnough(owner,impact)) return WORLD_AUDIO_OK;
+    const auto sample=collisionSampleType(owner,impact);
+    if (!sample.instance) return WORLD_AUDIO_OK;
+    if (!boundContactAudio(owner)) return WORLD_AUDIO_INVALID_BINDING;
+    float volume;
+    WorldAudioResult result=collisionAudioCalcVolume(owner,impact,&volume);
+    if (result!=WORLD_AUDIO_OK || !(0.20000000298023224f<volume)) return result;
+    result=copySample(owner,sample,&impact->normalSound);
+    if (result!=WORLD_AUDIO_OK || !*owner->audio->enabled) return result;
+    auto* queue=audioQueue(owner);
+    const float pitch=vectorRandomFloat(owner->audio->randomState,0.6000000238418579f)+0.5f;
+    result=worldAudioPlayVoice(queue,impact->normalSound->sample,volume*1.899999976158142f,0.0f,pitch-1.0f);
+    if (result!=WORLD_AUDIO_OK) return result;
+    uint16_t azimuth;
+    if (sound3dComputeAzimuth(owner->spatial,impact->point,&azimuth)!=SOUND3D_OK)
+        return WORLD_AUDIO_INVALID_BINDING;
+    return worldAudioSetVoiceControlCode(queue,impact->normalSound->sample,azimuth);
+}
+
+WorldAudioResult collisionAudioPlayScrape(WorldImpactAudio* owner, CollisionImpact* impact)
+{
+    if (!owner || !owner->audio || !owner->audio->enabled) return WORLD_AUDIO_INVALID_BINDING;
+    // PAL1E57D0 returns on disabled audio before reading the contact or SDK
+    // sample owners; sound-load deliberately did not register them.
+    if (!*owner->audio->enabled) return WORLD_AUDIO_OK;
+    if (!boundContactAudio(owner) || !impact || !impact->pair) return WORLD_AUDIO_INVALID_BINDING;
+    if (impact->scrapeSound || !oldEnough(owner,impact)) return WORLD_AUDIO_OK;
+    const int32_t material=collisionPairMaterialIndex(impact->pair);
+    if (material<15 || material>17) return WORLD_AUDIO_OK;
+    const auto sample=owner->scrape[material==17 ? 1 : 0];
+    if (!sample.instance) return WORLD_AUDIO_INVALID_BINDING;
+    WorldAudioResult result=copySample(owner,sample,&impact->scrapeSound);
+    if (result!=WORLD_AUDIO_OK) return result;
+    float volume;
+    result=collisionAudioCalcScrapeVolume(owner,impact,&volume);
+    if (result!=WORLD_AUDIO_OK) return result;
+    uint16_t azimuth;
+    if (sound3dComputeAzimuth(owner->spatial,impact->point,&azimuth)!=SOUND3D_OK)
+        return WORLD_AUDIO_INVALID_BINDING;
+    auto* queue=audioQueue(owner);
+    result=worldAudioSetVoiceControlCode(queue,impact->scrapeSound->sample,azimuth);
+    if (result!=WORLD_AUDIO_OK) return result;
+    result=worldAudioPlayVoice(queue,impact->scrapeSound->sample,volume*1.899999976158142f,0.0f,0.0f);
+    if (result!=WORLD_AUDIO_OK) return result;
+    const float pitch=vectorRandomFloat(owner->audio->randomState,0.36000001430511475f)-0.18000000715255737f;
+    return worldAudioSetVoicePitchOffset(queue,impact->scrapeSound->sample,pitch);
+}
+
+WorldAudioResult collisionAudioUpdateSample(WorldImpactAudio* owner, CollisionImpact* impact)
+{
+    if (!boundContactAudio(owner) || !impact) return WORLD_AUDIO_INVALID_BINDING;
+    if (!impact->scrapeSound) return WORLD_AUDIO_OK;
+    float spatialVolume, collisionVolume;
+    if (sound3dComputeVolume(owner->spatial,impact->point,200.0f,&spatialVolume)!=SOUND3D_OK)
+        return WORLD_AUDIO_INVALID_BINDING;
+    WorldAudioResult result=collisionAudioCalcScrapeVolume(owner,impact,&collisionVolume);
+    if (result!=WORLD_AUDIO_OK) return result;
+    uint16_t azimuth;
+    if (sound3dComputeAzimuth(owner->spatial,impact->point,&azimuth)!=SOUND3D_OK)
+        return WORLD_AUDIO_INVALID_BINDING;
+    auto* queue=audioQueue(owner);
+    result=worldAudioSetVoiceVolume(queue,impact->scrapeSound->sample,
+        (spatialVolume*collisionVolume)*1.899999976158142f);
+    return result==WORLD_AUDIO_OK ? worldAudioSetVoiceControlCode(queue,impact->scrapeSound->sample,azimuth) : result;
+}
+
+WorldAudioResult collisionAudioReleaseSample(WorldImpactAudio* owner, CollisionImpact* impact)
+{
+    if (!boundContactAudio(owner) || !impact) return WORLD_AUDIO_INVALID_BINDING;
+    auto* queue=audioQueue(owner);
+    if (impact->normalSound) {
+        auto* voice=impact->normalSound;
+        WorldAudioResult result=worldAudioValidateVoice(queue,voice->sample);
+        if (result!=WORLD_AUDIO_OK) return result;
+        if (voice->sample.instance->playing) detachVoice(owner,voice);
+        else {
+            result=destroyVoice(owner,voice);
+            if (result!=WORLD_AUDIO_OK) return result;
+        }
+        impact->normalSound=nullptr;
+    }
+    if (impact->scrapeSound) {
+        auto* voice=impact->scrapeSound;
+        WorldAudioResult result=worldAudioValidateVoice(queue,voice->sample);
+        if (result!=WORLD_AUDIO_OK) return result;
+        if (voice->sample.instance->playing) {
+            result=worldAudioFadeVoiceVolume(queue,voice->sample,0.0f,50);
+            if (result!=WORLD_AUDIO_OK) return result;
+            detachVoice(owner,voice);
+        }
+        // Source retains an inactive scrape wrapper until pool teardown.
+        impact->scrapeSound=nullptr;
+    }
+    return WORLD_AUDIO_OK;
+}
+
+WorldAudioResult collisionAudioUpdate(WorldImpactAudio* owner)
+{
+    if (!boundContactAudio(owner)) return WORLD_AUDIO_INVALID_BINDING;
+    if (!owner->collisions->world) return WORLD_AUDIO_OK;
+    // IsReady1AF2E8 reads this same sound-loader/global audio gate.
+    if (!owner->updateLoaded && worldAudioRuntime.disabled==0) {
+        owner->updateLoaded=1;
+        WorldAudioResult result=collisionAudioLoadSampleTable(owner);
+        if (result!=WORLD_AUDIO_OK) return result;
+    }
+    for (auto* voice=owner->firstDetached;voice;) {
+        auto* next=voice->next;
+        float volume;
+        WorldAudioResult result=worldAudioGetVoiceVolume(audioQueue(owner),voice->sample,&volume);
+        if (result!=WORLD_AUDIO_OK) return result;
+        if (!voice->sample.instance->playing || volume<=0.05000000074505806f) {
+            result=destroyVoice(owner,voice);
+            if (result!=WORLD_AUDIO_OK) return result;
+        }
+        voice=next;
+    }
+    for (auto* impact=owner->collisions->firstImpact;impact;impact=impact->next) {
+        WorldAudioResult result=collisionAudioUpdateSample(owner,impact);
+        if (result!=WORLD_AUDIO_OK) return result;
+        if (!impact->normalSound) {
+            result=collisionAudioCreateSample(owner,impact);
+            if (result!=WORLD_AUDIO_OK) return result;
+        }
+    }
+    return WORLD_AUDIO_OK;
+}
+
+WorldAudioResult collisionAudioPause(WorldImpactAudio* owner, int32_t paused)
+{
+    if (!boundContactAudio(owner)) return WORLD_AUDIO_INVALID_BINDING;
+    auto* queue=audioQueue(owner);
+    for (auto voice:owner->scrape) {
+        if (!voice.instance) continue;
+        WorldAudioResult result=worldAudioPauseVoice(queue,voice,paused);
+        if (result!=WORLD_AUDIO_OK) return result;
+    }
+    for (auto* impact=owner->collisions->firstImpact;impact;impact=impact->next) {
+        for (auto* voice:{impact->normalSound,impact->scrapeSound}) {
+            if (!voice) continue;
+            WorldAudioResult result=worldAudioPauseVoice(queue,voice->sample,paused);
+            if (result!=WORLD_AUDIO_OK) return result;
+        }
+    }
+    for (auto* voice=owner->firstDetached;voice;voice=voice->next) {
+        WorldAudioResult result=worldAudioPauseVoice(queue,voice->sample,paused);
+        if (result!=WORLD_AUDIO_OK) return result;
+    }
+    for (int index=0;index<3;++index) {
+        for (auto voice:{owner->woodSamples[index],owner->foliage[index]}) {
+            if (!voice.instance || !voice.instance->playing) continue;
+            WorldAudioResult result=worldAudioPauseVoice(queue,voice,paused);
+            if (result!=WORLD_AUDIO_OK) return result;
+        }
+    }
+    return WORLD_AUDIO_OK;
+}
+
+WorldAudioResult collisionAudioReset(WorldImpactAudio* owner)
+{
+    if (!audioQueue(owner)) return WORLD_AUDIO_INVALID_BINDING;
+    while (owner->firstDetached) {
+        WorldAudioResult result=destroyVoice(owner,owner->firstDetached);
+        if (result!=WORLD_AUDIO_OK) return result;
+    }
+    return WORLD_AUDIO_OK;
+}
+
+WorldAudioResult collisionAudioUnregister(WorldImpactAudio* owner)
+{
+    if (!boundContactAudio(owner)) return WORLD_AUDIO_INVALID_BINDING;
+    for (auto* impact=owner->collisions->firstImpact;impact;impact=impact->next)
+        if (impact->normalSound || impact->scrapeSound) return WORLD_AUDIO_INVALID_BINDING;
+    owner->updateLoaded=0;
+    WorldAudioResult result=collisionAudioReset(owner);
+    if (result!=WORLD_AUDIO_OK) return result;
+    for (auto& voice:owner->voices) {
+        if (!voice.occupied) continue;
+        result=destroyVoice(owner,&voice);
+        if (result!=WORLD_AUDIO_OK) return result;
+    }
+    for (auto* block=owner->voiceBlocks;block;block=block->next) {
+        for (auto& voice:block->voices) {
+            if (!voice.occupied) continue;
+            result=destroyVoice(owner,&voice);
+            if (result!=WORLD_AUDIO_OK) return result;
+        }
+    }
+    // A failed STOP above leaves every block and owner binding available for
+    // the next drain/retry. Successful retirement transfers pending payload
+    // lifetime to the actual sample queue; it never borrows these wrappers.
+    while (owner->voiceBlocks) {
+        auto* block=owner->voiceBlocks;
+        owner->voiceBlocks=block->next;
+        delete block;
+    }
+    owner->collisions->contactAudio=nullptr;
+    owner->collisions=nullptr;
+    owner->registered=0;
+    return WORLD_AUDIO_OK;
 }

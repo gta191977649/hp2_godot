@@ -1,15 +1,27 @@
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
-// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/indep/src/speech/fsm.hpp"
+#include "indep/src/speech/fsm.hpp"
 
-#include "game_core/port/not_implemented.hpp"
-
-namespace hp2::recovered {
-// ELF 0x0020BFB0; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0020bfb0.md.
-void fsm::handleEvent() {
-    hp2::not_implemented("0x0020BFB0", "fsm::handleEvent (signature and full body unresolved)");
+void worldSpeechFsmInitialize(WorldSpeechFsm* fsm)
+{
+    fsm->current = nullptr;
+    fsm->initial = nullptr;
 }
-} // namespace hp2::recovered
+
+void worldSpeechFsmAddTransition(WorldSpeechFsm*, WorldSpeechState* from,
+    WorldSpeechState* to, int32_t event, const WorldSpeechCondition* condition,
+    const WorldSpeechAction* action)
+{
+    if (!from || !to || !condition || !action) return;
+    worldSpeechStateAddTransition(from, to, event, condition, action);
+}
+
+WorldSpeechResult worldSpeechFsmHandleEvent(WorldSpeechFsm* fsm, int32_t event,
+    WorldSpeechManager* manager, const WorldSpeechContext* context)
+{
+    if (!fsm) return WORLD_SPEECH_INVALID_BINDING;
+    if (!fsm->current) return WORLD_SPEECH_OK;
+    WorldSpeechState* destination = fsm->current;
+    const WorldSpeechResult result = worldSpeechStateHandleEvent(fsm->current,
+        event, manager, context, &destination);
+    fsm->current = destination;
+    return result;
+}

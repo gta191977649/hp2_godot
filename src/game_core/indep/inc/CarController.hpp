@@ -1,49 +1,34 @@
-// TASK-0042 E-0042-S001: exact Debug source marker(s): ../indep/inc/CarController.hpp.
-// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
-// PORT-SIDE template file; destination/header extension is not original-file evidence.
-#pragma once
-
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: exact Debug declaring class with adopted retail correspondence; evidence: E-0042-S001.
-// Placement: TASK-0042 E-0042-S001; exact Debug definition source/header markers where recorded; unmatched companion remains port-side; retail ABI unconfirmed.
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-namespace hp2::recovered {
-class CarController {
-public:
-    // ELF 0x001C0100; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001c0100.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void SetToPhysicsMode();
-    // ELF 0x001C0140; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001c0140.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void ForceBoost();
-    // ELF 0x001C0160; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001c0160.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void ReleaseBoost();
-    // ELF 0x001C0198; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001c0198.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void DebugDisplay();
-
-public:
-    // TASK-0028: missing entries; existing storage and bodies are preserved.
-    // ELF 0x001C00A8; E-0042-U143; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001c00a8.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_001C00A8();
-};
-} // namespace hp2::recovered
-
-#include "game_core/port/driving/object_view.hpp"
-namespace port::race {struct PhysicsConstructionServices;}
-namespace hp2::debug {
-// E-0099-W21. Logical view, not original host ABI. Original owning source
-// ../indep/src/carcontroller.cpp, confirmed by E-0042-S001 and fresh decompile.
-class CarController : public ::port::driving::ObjectView {
-public:
- using ObjectView::ObjectView;
- void ReleaseBoost(); //001BD278,E-0099-W121; carcontroller.cpp.
- void DoSnapshot(std::uint32_t snapshot); //Debug001BD1E8, E-0099-W74.
- void Sub_001BD1A8(std::uint32_t car); // Debug001BD1A8; Driver+4 stays untouched.
- void Sub_001BD1C0(int in_chrg); // Debug001BD1C0.
- void SetToPhysicsMode(std::uint32_t,::port::race::PhysicsConstructionServices&); //Debug001BD218
-};
+#ifndef NFSHP2_CARCONTROLLER_HPP
+#define NFSHP2_CARCONTROLLER_HPP
+#include <stdint.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+struct Car;
+/* Final-only debug cell PAL330A58. Actual Pause replay event6 writes this
+ * same AI-consumer flag; it is independent of every Car.pursuitMode. */
+extern int32_t carControllerSuperEasyAI;
+// Native base owner. The canonical Car and its physical state remain borrowed.
+// Snapshot dispatch follows the actual input owner attached to this same Car.
+typedef struct CarController { struct Car* car; } CarController;
+void carControllerInitialize(CarController* controller,struct Car* car);
+void carControllerForceBoost(CarController* controller,float performanceScale);
+void carControllerReleaseBoost(CarController* controller);
+struct CarMovement;
+struct ReplaySnapshot;
+void carControllerSnapshot(struct CarMovement* movement,struct ReplaySnapshot* snapshot);
+#ifdef __cplusplus
 }
+#endif
+
+#include "indep/inc/Car.hpp"
+#include "indep/inc/DriveTarget.hpp"
+/* The inactive controller still owns its original empty command. It is a
+ * real input to prediction and snapshots, even though its update is empty. */
+typedef struct NullController {
+    CarController base;
+    CarMovement* movement;
+    CarMovementDriver recovery;
+    DriverCommand command;
+} NullController;
+#endif

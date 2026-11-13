@@ -1,445 +1,762 @@
-// TASK-0042 E-0042-S001: exact Debug source marker(s): ..\indep\src\trackroute.cpp.
-// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: qualified_string; evidence: E-0019-N03.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-// Diagnostic text (not a callable signature): TrackRoute::FindClosestPoint() [0x002B7328]
-#include "game_core/indep/inc/TrackRoute.hpp"
+#include "indep/inc/TrackRoute.hpp"
+#include "indep/inc/AICarController.hpp"
+#include "indep/inc/CameraMover.hpp"
+#include "bware/inc/bMath.hpp"
+#include "indep/inc/TrackPath.hpp"
 
-#include "game_core/port/not_implemented.hpp"
-#include "game_core/port/track/route_data.hpp"
-#include "game_core/indep/src/trackpath.hpp"
-#include "game_core/port/assets/elab_chunks.hpp"
+#include "indep/inc/Replay.hpp"
+#include "bware/inc/bWare.hpp"
+
+#include "bware/inc/bChunk.hpp"
 #include <cmath>
+#include <cstdint>
 #include <cstring>
-#include <functional>
-#include <stdexcept>
-#include <algorithm>
-#include <utility>
 #include <limits>
-#include "game_core/port/driving/projections.hpp"
 
-namespace hp2::recovered {
-// ELF 0x001C1910; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c1910.md.
-void TrackRoute::GetRelativePoint() {
-    hp2::not_implemented("0x001C1910", "TrackRoute::GetRelativePoint (signature and full body unresolved)");
-}
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
-// ELF 0x001C1D30; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c1d30.md.
-void TrackRoute::FindClosestPointAhead() {
-    hp2::not_implemented("0x001C1D30", "TrackRoute::FindClosestPointAhead (signature and full body unresolved)");
-}
-
-// ELF 0x001C2780; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c2780.md.
-void TrackRoute::DistanceIsWithinRoute() {
-    hp2::not_implemented("0x001C2780", "TrackRoute::DistanceIsWithinRoute (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace port::track {
 namespace {
-std::uint32_t route_word(const std::vector<std::uint8_t>& bytes,std::size_t at){
-    if(at>bytes.size()||bytes.size()-at<4)throw std::runtime_error("Truncated original route data");
-    return bytes[at]|std::uint32_t(bytes[at+1])<<8|std::uint32_t(bytes[at+2])<<16|std::uint32_t(bytes[at+3])<<24;
+const CarRecoveryGroup* snapshotGroupById(const CarRecoveryPointRegistry* registry,int32_t id)
+{
+    if(id<0)return nullptr;
+    for(size_t i=0;i<registry->groupCount;++i)
+        if(registry->groups[i].id==id)return &registry->groups[i];
+    hp2::Require(false,"Replay route id is absent from the actual loaded road owner");
+    return nullptr;
 }
-int route_half(const std::vector<std::uint8_t>& bytes,std::size_t at){
-    if(at>bytes.size()||bytes.size()-at<2)throw std::runtime_error("Truncated original route index");
-    return std::int16_t(std::uint16_t(bytes[at])|std::uint16_t(bytes[at+1])<<8);
+int32_t snapshotPoseIndex(const CarRecoveryGroup* group,const CarRecoveryPose* pose)
+{
+    if(!group || !pose)return -1;
+    for(int32_t i=0;i<group->poseCount;++i)if(&group->poses[i]==pose)return i;
+    hp2::Require(false,"Replay road pose is not owned by its authored route");
+    return -1;
 }
-float route_scalar(const std::vector<std::uint8_t>& bytes,std::size_t at){
-    const auto bits=route_word(bytes,at);float value;std::memcpy(&value,&bits,4);
-    if(!std::isfinite(value))throw std::runtime_error("Nonfinite original route scalar");
+}
+
+// PAL1C2B30..1C2BC4. The serialized route id is signed one-byte data,
+// regardless of host pointer size or the resource owner's array order.
+void carRecoverySnapshotGroup(const CarRecoveryPointRegistry* registry,
+    ReplaySnapshot* snapshot,const CarRecoveryGroup** group)
+{
+    int32_t id=-1;
+    if(!snapshot->restoring && *group)id=(*group)->id;
+    replaySnapshotMoveInteger(snapshot,&id,1);
+    if(snapshot->restoring)*group=snapshotGroupById(registry,id);
+}
+
+// PAL1C2BC8..1C2C9C. This overload stores an index in a known actual route.
+void carRecoverySnapshotPoseInGroup(const CarRecoveryGroup* group,
+    ReplaySnapshot* snapshot,const CarRecoveryPose** pose)
+{
+    // The enclosing snapshot has already imported its route. During restore
+    // *pose still belongs to the previous live route until MoveInteger below
+    // imports the saved index (PAL1C2C20). PAL's temporary pointer difference
+    // is overwritten by ReadData; validating that obsolete pair on a native
+    // host incorrectly rejects legitimate transitions between authored roads.
+    // Capture/checksum modes still validate the live pair, and restore still
+    // checks the incoming index against the newly imported retained owner.
+    int32_t index=snapshot->restoring?-1:snapshotPoseIndex(group,*pose);
+    replaySnapshotMoveInteger(snapshot,&index,2);
+    if((snapshot->recording || snapshot->restoring) && *pose && index==-1)*pose=nullptr;
+    if(snapshot->restoring) {
+        hp2::Require(index<0 || (group && index<group->poseCount),
+            "Replay road pose index exceeds the retained route");
+        *pose=index<0?nullptr:&group->poses[index];
+    }
+}
+
+// PAL1C2CA0..1C2D98. The global form packs authored route and pose indices.
+void carRecoverySnapshotPose(const CarRecoveryPointRegistry* registry,
+    ReplaySnapshot* snapshot,const CarRecoveryPose** pose)
+{
+    int32_t encoded=-1;
+    if(!snapshot->restoring && *pose) {
+        const auto* group=snapshotGroupById(registry,(*pose)->groupId);
+        const auto index=snapshotPoseIndex(group,*pose);
+        hp2::Require(group && index>=0 && index<65536,"Replay road reference is invalid");
+        const uint32_t bits=(static_cast<uint32_t>(static_cast<uint16_t>(group->id))<<16)|
+            static_cast<uint32_t>(index);
+        memcpy(&encoded,&bits,sizeof(encoded));
+    }
+    replaySnapshotMoveInteger(snapshot,&encoded,4);
+    if(snapshot->restoring) {
+        if(encoded==-1){*pose=nullptr;return;}
+        const int32_t groupId=static_cast<int16_t>(static_cast<uint32_t>(encoded)>>16);
+        const auto* group=snapshotGroupById(registry,groupId);
+        const int32_t index=static_cast<uint16_t>(encoded);
+        hp2::Require(group && index<group->poseCount,"Replay packed road pose is out of bounds");
+        *pose=&group->poses[index];
+    }
+}
+
+int32_t carRecoveryGroupContainsRouteDistance(const CarRecoveryGroup* group, float distance)
+{
+    const int32_t afterMinimum = group->minimumRouteDistance <= distance;
+    const int32_t beforeMaximum = distance <= group->maximumRouteDistance;
+    if (group->minimumRouteDistance < group->maximumRouteDistance)
+        return afterMinimum && beforeMaximum;
+    return afterMinimum || beforeMaximum;
+}
+
+static void copyPosePrefix(CarRecoveryPose* destination, const CarRecoveryPose* source)
+{
+    memcpy(destination->position, source->position, sizeof(destination->position));
+    memcpy(destination->direction, source->direction, sizeof(destination->direction));
+    destination->segmentLength = source->segmentLength;
+    memcpy(destination->halfWidths, source->halfWidths, sizeof(destination->halfWidths));
+    destination->gradeAcross = source->gradeAcross;
+    destination->gradeAlong = source->gradeAlong;
+    destination->routeDistance = source->routeDistance;
+    destination->flags = source->flags;
+}
+
+void carRecoverySwapPosePrefix(CarRecoveryPose* first, CarRecoveryPose* second)
+{
+    if (first == second) return;
+    const CarRecoveryPose temporary = *first;
+    copyPosePrefix(first, second);
+    copyPosePrefix(second, &temporary);
+}
+
+// Native owner validation before reproducing the PAL neighbor calculation.
+// Subtracting a stale pose pointer from another route's array is undefined C++
+// behavior and previously admitted a negative index into the reverse path.
+// Use integer addresses only to establish membership; the valid-route index
+// and neighbor arithmetic below are otherwise unchanged.
+int32_t carRecoveryOwnedPoseIndex(const CarRecoveryGroup* group,
+                                       const CarRecoveryPose* pose)
+{
+    if (!group || !pose || !group->poses || group->poseCount <= 0) return -1;
+    const std::uintptr_t base = reinterpret_cast<std::uintptr_t>(group->poses);
+    const std::uintptr_t address = reinterpret_cast<std::uintptr_t>(pose);
+    if (address < base) return -1;
+    const std::uintptr_t distance = address - base;
+    const std::uintptr_t stride = sizeof(CarRecoveryPose);
+    if (distance % stride != 0 || distance / stride >= static_cast<std::uintptr_t>(group->poseCount))
+        return -1;
+    return static_cast<int32_t>(distance / stride);
+}
+
+// PAL uses an 8-bit link index in AI connection choices. Verify that a
+// retained pointer is a member of this exact table before computing its
+// source index; cross-array subtraction is undefined in native C++.
+int32_t carRecoveryOwnedConnectionIndex(const CarRecoveryPointRegistry* registry,
+                                        const CarRecoveryConnection* connection)
+{
+    if (!registry || !connection || !registry->connections ||
+        !registry->connectionCount || registry->connectionCount > 255u) return -1;
+    const uintptr_t base = reinterpret_cast<uintptr_t>(registry->connections);
+    const uintptr_t address = reinterpret_cast<uintptr_t>(connection);
+    if (address < base) return -1;
+    const uintptr_t distance = address - base;
+    if (distance % sizeof(CarRecoveryConnection)) return -1;
+    const uintptr_t index = distance / sizeof(CarRecoveryConnection);
+    return index < registry->connectionCount ? static_cast<int32_t>(index) : -1;
+}
+
+const CarRecoveryPose* carRecoveryAdjacentPose(const CarRecoveryGroup* group,
+                                              const CarRecoveryPose* pose, int32_t forward)
+{
+    const int32_t index = carRecoveryOwnedPoseIndex(group, pose);
+    if (index < 0) return NULL;
+    if (forward) return index + 1 < group->poseCount ? &group->poses[index + 1] : NULL;
+    return index ? &group->poses[index - 1] : NULL;
+}
+
+const CarRecoveryPose* carRecoveryFirstFollowingPose(const CarRecoveryGroup* group,const float point[2],
+                                                     const CarRecoveryPose* first)
+{
+    if (!point) return NULL;
+    const int32_t firstIndex = carRecoveryOwnedPoseIndex(group, first);
+    if (firstIndex < 0) return NULL;
+    int32_t index=firstIndex;
+    const CarRecoveryPose* pose=first;
+    for (;;) {
+        ++index;
+        const float x=point[0]-pose->position[0],y=point[1]-pose->position[1];
+        const float firstProjection=x*pose->direction[0],secondProjection=y*pose->direction[1];
+        const float projection=-(firstProjection+secondProjection);
+        if (!(projection<0.0f) || !(index<group->poseCount)) break;
+        ++pose;
+    }
+    return index<group->poseCount ? pose : NULL;
+}
+
+void carRoadPreviewPointXY(const CarRecoveryPose* pose, float output[2], float along, float across)
+{
+    const float side[2] = {pose->direction[1], -pose->direction[0]};
+    vectorMultiplyAdd2(output, pose->position, side, across);
+    vectorMultiplyAdd2(output, output, pose->direction, along);
+}
+
+void driverRoadPointPosition(const CarRecoveryPose* pose, float output[4],
+                              float along, float across)
+{
+    const float origin[3] = {pose->position[0], pose->position[1], pose->position[2]};
+    const float lateral[3] = {pose->direction[1], -pose->direction[0], pose->gradeAcross};
+    const float forward[3] = {pose->direction[0], pose->direction[1], pose->gradeAlong};
+    for (int axis = 0; axis < 3; ++axis) {
+        const float lateralOffset = lateral[axis] * across;
+        const float shiftedOrigin = lateralOffset + origin[axis];
+        const float forwardOffset = forward[axis] * along;
+        output[axis] = forwardOffset + shiftedOrigin;
+    }
+    output[3] = 0.0f;
+}
+
+
+void trackRouteEditorSetWidths(CarRecoveryPose* pose,float first,float second)
+{
+    if(64.0f<first)first=64.0f;
+    if(first<1.0f)first=1.0f;
+    if(64.0f<second)second=64.0f;
+    if(second<1.0f)second=1.0f;
+    pose->halfWidths[1]=second;
+    pose->halfWidths[0]=first;
+}
+
+// Road algorithms and resource ownership.
+// Individual TrackRoute/AIUtil PDR+MAP/PAL evidence: road_paths77.json.
+// Existing PAL algorithms are retained; only native C++ casts are adapted.
+void carRecoveryUpdateRouteRange(CarRecoveryGroup* group, const TrackRoute* route)
+{
+    float minimum[2] = {route->length, route->length};
+    float maximum[2] = {0.0f, 0.0f};
+    const float halfLength = route->length * 0.5f;
+    int32_t wrapped = 0;
+    int32_t region = 0;
+    TrackRouteLocation location;
+    trackRouteLocationInitialize(&location);
+    trackRouteUpdateLocation(route, &location, group->poses[0].position);
+    float previous = location.distance;
+    for (int32_t index = 1; index < group->poseCount; ++index) {
+        trackRouteUpdateLocation(route, &location, group->poses[index].position);
+        const float distance = location.distance;
+        if (halfLength < fabsf(distance - previous)) {
+            wrapped = 1;
+            region ^= 1;
+        }
+        previous = distance;
+        if (maximum[region] < distance) maximum[region] = distance;
+        if (distance < minimum[region]) minimum[region] = distance;
+    }
+    if (wrapped) {
+        group->minimumRouteDistance = maximumFinite(minimum[0], minimum[1]);
+        group->maximumRouteDistance = minimumFinite(maximum[0], maximum[1]);
+    } else {
+        group->minimumRouteDistance = minimum[0];
+        group->maximumRouteDistance = maximum[0];
+    }
+}
+
+static float pointDistance(const CarRecoveryPose* pose, const float point[2])
+{
+    const float x = pose->position[0] - point[0];
+    const float y = pose->position[1] - point[1];
+    const float xx = x * x;
+    const float yy = y * y;
+    return sqrtf(xx + yy);
+}
+
+float carRecoveryDistance(const TrackRoute* route, const CarRecoveryPose* pose,
+                           const float point[2], float routeDistance)
+{
+    const float distance = pointDistance(pose, point);
+    const float along = fabsf(trackWrappedDelta(route->length, pose->routeDistance, routeDistance)) - 24.0f;
+    return maximumFinite(along, distance);
+}
+
+const CarRecoveryPose* carRecoveryFindInGroup(const CarRecoveryPointRegistry* registry,
+                                             const CarRecoveryGroup* group,
+                                             const float point[2], float maximumDistance,
+                                             float routeDistance, uint32_t flags)
+{
+    if (point[0] < group->minimum[0] - maximumDistance ||
+        group->maximum[0] + maximumDistance < point[0] ||
+        point[1] < group->minimum[1] - maximumDistance ||
+        group->maximum[1] + maximumDistance < point[1]) return NULL;
+    const CarRecoveryPose* selected = NULL;
+    for (int32_t index = 0; index < group->poseCount; ++index) {
+        const CarRecoveryPose* pose = &group->poses[index];
+        const float distance = flags & 32u ? carRecoveryDistance(registry->route, pose, point, routeDistance) :
+                                           pointDistance(pose, point);
+        const float x = point[0] - pose->position[0];
+        const float y = point[1] - pose->position[1];
+        const float first = x * pose->direction[0];
+        const float second = y * pose->direction[1];
+        const float projection = -(first + second);
+        if ((!(flags & 1u) || 0.0f < projection) && distance < maximumDistance &&
+            (!(flags & 2u) || (pose->flags & (1u << 15))) &&
+            (!(flags & 4u) || !(pose->flags & (1u << 14)))) {
+            selected = pose;
+            maximumDistance = distance;
+        }
+        const int32_t skip = convertFloatToInt32(distance * 0.0416666679084301f) - 2;
+        if (0 < skip) index += skip;
+    }
+    return selected;
+}
+
+
+void driverRoadReversePose(CarRecoveryPose* pose, float routeLength)
+{
+    float end[4];
+    driverRoadPointPosition(pose, end, pose->segmentLength, 0.0f);
+    for (int axis = 0; axis < 3; ++axis) pose->position[axis] = end[axis];
+    pose->direction[0] = -pose->direction[0];
+    pose->direction[1] = -pose->direction[1];
+    pose->gradeAlong = -pose->gradeAlong;
+    pose->gradeAcross = -pose->gradeAcross;
+    const float firstWidth = pose->halfWidths[0];
+    pose->halfWidths[0] = pose->halfWidths[1];
+    pose->halfWidths[1] = firstWidth;
+    pose->routeDistance = routeLength - pose->routeDistance;
+    for (int lane = 0; lane < 10; ++lane) {
+        const int16_t offset = pose->laneOffsetsQuantized[lane];
+        const uint8_t speed = pose->laneSpeeds[lane];
+        pose->laneOffsetsQuantized[lane] = pose->laneOffsetsQuantized[lane + 10];
+        pose->laneSpeeds[lane] = pose->laneSpeeds[lane + 10];
+        pose->laneOffsetsQuantized[lane + 10] = offset;
+        pose->laneSpeeds[lane + 10] = speed;
+    }
+}
+
+
+CarDriverResult driverRoadPrepareConnections(CarRecoveryPointRegistry* registry)
+{
+    if (!registry || !registry->route) return CAR_DRIVER_INVALID_BINDING;
+    TrackRouteLocation location;
+    trackRouteLocationInitialize(&location);
+    for (size_t index = 0; index < registry->connectionCount; ++index) {
+        CarRecoveryConnection* connection = &registry->connections[index];
+        const CarRecoveryPose* first = carRecoveryConnectionPose(registry, connection);
+        if (!first) return CAR_DRIVER_MISSING_ROAD;
+        const CarRecoveryConnection* following = carRecoveryPointConnection(registry, first);
+        if (!following) return CAR_DRIVER_MISSING_ROAD;
+        const CarRecoveryPose* destination = carRecoveryConnectionPose(registry, following);
+        if (!destination) return CAR_DRIVER_MISSING_ROAD;
+        trackRouteUpdateLocation(registry->route, &location, destination->position);
+        connection->routeDistance = location.distance;
+    }
+    return CAR_DRIVER_OK;
+}
+
+uint32_t carRecoveryConnectionAtDistance(const CarRecoveryPointRegistry* registry, float distance)
+{
+    // An empty/retired table contains no authored zero-th connection.
+    // Callers report MISSING_ROAD before ever using this neutral cursor.
+    if (!registry || !registry->connections || !registry->connectionCount) return 0;
+    uint32_t index = 0;
+    while (registry->connections[index].routeDistance < distance) {
+        ++index;
+        if (index == registry->connectionCount) return 0;
+    }
+    return index;
+}
+
+const CarRecoveryGroup* carRecoveryConnectionGroup(const CarRecoveryPointRegistry* registry,
+                                                   const CarRecoveryConnection* connection)
+{
+    if (!registry || !connection || (!registry->groups && registry->groupCount)) return NULL;
+    for (size_t index=0;index<registry->groupCount;++index)
+        if (registry->groups[index].id==connection->groupId) return &registry->groups[index];
+    return NULL;
+}
+
+const CarRecoveryPose* carRecoveryConnectionPose(const CarRecoveryPointRegistry* registry,
+                                                 const CarRecoveryConnection* connection)
+{
+    const CarRecoveryGroup* group=carRecoveryConnectionGroup(registry,connection);
+    if (!group || connection->poseIndex>=group->poseCount) return NULL;
+    return &group->poses[connection->poseIndex];
+}
+
+const CarRecoveryConnection* carRecoveryPointConnection(const CarRecoveryPointRegistry* registry,
+                                                         const CarRecoveryPose* pose)
+{
+    if (!registry || !pose || !registry->connections) return NULL;
+    const size_t index=pose->flags&255u;
+    return index<registry->connectionCount ? &registry->connections[index] : NULL;
+}
+
+int32_t carRecoveryConnectionsAvailable(const CarRecoveryPointRegistry* registry)
+{
+    return registry->connections!=NULL;
+}
+
+
+void carRecoveryReversePoseDistance(CarRecoveryPose* pose, float routeLength)
+{
+    pose->routeDistance = routeLength - pose->routeDistance;
+}
+
+void carRecoveryReverseGroup(CarRecoveryMutableGroup* owner, float routeLength)
+{
+    CarRecoveryGroup* group = owner->group;
+    for (int32_t index = 0; index < group->poseCount / 2; ++index)
+        carRecoverySwapPosePrefix(&owner->poses[index], &owner->poses[group->poseCount - index - 1]);
+    for (int32_t index = 0; index < group->poseCount; ++index)
+        driverRoadReversePose(&owner->poses[index], routeLength);
+    for (int32_t lane = 0; lane < 10; ++lane) {
+        const uint32_t flags = group->laneFlags[lane];
+        group->laneFlags[lane] = group->laneFlags[lane + 10];
+        group->laneFlags[lane + 10] = flags;
+        for (int32_t property = 0; property < 11; ++property) {
+            const uint32_t value = group->laneProperties[lane][property];
+            group->laneProperties[lane][property] = group->laneProperties[lane + 10][property];
+            group->laneProperties[lane + 10][property] = value;
+        }
+    }
+    group->flags ^= 2u;
+}
+
+void carRecoveryReverseGroupDistances(CarRecoveryMutableGroup* owner, float routeLength)
+{
+    for (int32_t index = 0; index < owner->group->poseCount; ++index)
+        carRecoveryReversePoseDistance(&owner->poses[index], routeLength);
+}
+
+static CarRecoveryMutableGroup* mutableGroup(CarRecoveryMutableGroup* groups, size_t count, int32_t id)
+{
+    for (size_t index = 0; index < count; ++index)
+        if (groups[index].group->id == id) return &groups[index];
+    return NULL;
+}
+
+void carRecoveryReverseGroups(CarRecoveryMutableGroup* groups, size_t count, float routeLength)
+{
+    for (int32_t id = 0; id < 70; ++id) {
+        CarRecoveryMutableGroup* owner = mutableGroup(groups, count, id);
+        if (!owner) continue;
+        if (id >= 50) carRecoveryReverseGroupDistances(owner, routeLength);
+        else carRecoveryReverseGroup(owner, routeLength);
+    }
+}
+
+void carRecoveryReverseConnections(CarRecoveryPointRegistry* registry)
+{
+    for (size_t index = 0; index < registry->connectionCount; ++index) {
+        CarRecoveryConnection* connection = &registry->connections[index];
+        if (connection->groupId >= 50) continue;
+        const CarRecoveryGroup* group = carRecoveryConnectionGroup(registry, connection);
+        connection->poseIndex = (uint16_t)(group->poseCount - connection->poseIndex - 1);
+        connection->flags ^= 8u;
+    }
+}
+
+typedef struct OrderedConnection {
+    const CarRecoveryConnection* connection;
+    uint32_t previousIndex;
+} OrderedConnection;
+
+static float connectionDistanceOrder(const void* first, const void* second)
+{
+    const OrderedConnection* a = static_cast<const OrderedConnection*>(first);
+    const OrderedConnection* b = static_cast<const OrderedConnection*>(second);
+    return a->connection->routeDistance - b->connection->routeDistance;
+}
+
+int32_t carRecoveryPreprocess(CarRecoveryPointRegistry* registry,
+    CarRecoveryMutableGroup* groups, size_t count, int32_t forward)
+{
+    // Low eight pose-flag bits encode a connection index; 255 is the
+    // no-connection sentinel. Reject invalid asset ownership *before* the
+    // reverse pass mutates any source-owned route or the 256-byte remap table.
+    if (!registry || !registry->route || (count && !groups) ||
+        (registry->groupCount && !registry->groups) ||
+        (registry->connectionCount && !registry->connections) ||
+        registry->connectionCount > 255) return 0;
+    for (size_t i=0; i<registry->connectionCount; ++i)
+        if (!carRecoveryConnectionPose(registry, &registry->connections[i])) return 0;
+    // A remap index absent from the connection table would read an
+    // uninitialized stack byte after sort and silently redirect traffic.
+    for (size_t g=0; g<registry->groupCount; ++g) {
+        const CarRecoveryGroup& group=registry->groups[g];
+        if (group.poseCount<0 || (group.poseCount && !group.poses)) return 0;
+        for (int32_t i=0; i<group.poseCount; ++i) {
+            const uint32_t previous=group.poses[i].flags & 255u;
+            if (previous != 255u && previous >= registry->connectionCount) return 0;
+        }
+    }
+    for (size_t g=0; g<count; ++g)
+        if (!groups[g].group || (groups[g].group->poseCount && !groups[g].poses)) return 0;
+    if (!forward) {
+        carRecoveryReverseGroups(groups, count, registry->route->length);
+        carRecoveryReverseConnections(registry);
+    }
+    for (size_t index = 0; index < registry->connectionCount; ++index) {
+        const CarRecoveryConnection* connection = &registry->connections[index];
+        if ((connection->flags & 7u) == 5u) {
+            CarRecoveryMutableGroup* owner = mutableGroup(groups, count, connection->groupId);
+            if (!owner) return 0;
+            owner->group->flags |= 4u;
+        }
+    }
+    for (int32_t id = 0; id < 100; ++id) {
+        CarRecoveryMutableGroup* owner = mutableGroup(groups, count, id);
+        if (owner) carRecoveryUpdateRouteRange(owner->group, registry->route);
+    }
+    if (driverRoadPrepareConnections(registry) != CAR_DRIVER_OK) return 0;
+    const size_t connectionCount = registry->connectionCount;
+    OrderedConnection* ordered = static_cast<OrderedConnection*>(malloc((connectionCount ? connectionCount : 1) * sizeof(*ordered)));
+    CarRecoveryConnection* sorted = static_cast<CarRecoveryConnection*>(malloc((connectionCount ? connectionCount : 1) * sizeof(*sorted)));
+    if (!ordered || !sorted) { free(ordered); free(sorted); return 0; }
+    for (size_t index = 0; index < connectionCount; ++index) {
+        ordered[index].connection = &registry->connections[index];
+        ordered[index].previousIndex = (uint32_t)index;
+    }
+    if (!arrayHeapSort(ordered, (int32_t)connectionCount, sizeof(*ordered), connectionDistanceOrder)) {
+        free(ordered); free(sorted); return 0;
+    }
+    uint8_t newIndices[256];
+    for (size_t index = 0; index < connectionCount; ++index)
+        newIndices[ordered[index].previousIndex] = (uint8_t)index;
+    for (int32_t id = 0; id < 100; ++id) {
+        CarRecoveryMutableGroup* owner = mutableGroup(groups, count, id);
+        if (!owner) continue;
+        for (int32_t index = 0; index < owner->group->poseCount; ++index) {
+            CarRecoveryPose* pose = &owner->poses[index];
+            const uint32_t previous = pose->flags & 255u;
+            if (previous != 255u) pose->flags = (pose->flags & ~255u) | newIndices[previous];
+        }
+    }
+    for (size_t index = 0; index < connectionCount; ++index)
+        sorted[index] = *ordered[index].connection;
+    if (connectionCount) memcpy(registry->connections, sorted, connectionCount * sizeof(*sorted));
+    free(ordered);
+    free(sorted);
+    return 1;
+}
+
+namespace hp2 {
+namespace {
+float real(const std::uint8_t* bytes)
+{
+    const auto bits = ReadU32(bytes);
+    float value;
+    std::memcpy(&value, &bits, sizeof(value));
+    Require(std::isfinite(value), "Recovery data contains a non-finite value");
     return value;
 }
+
+std::int32_t integer(const std::uint8_t* bytes)
+{
+    const auto bits = ReadU32(bytes);
+    std::int32_t value;
+    std::memcpy(&value, &bits, sizeof(value));
+    return value;
 }
-// Original byte schemas Debug001BFFC8/001BF9B0/002029C0; E-0099-W08.
-// Original list/table writes Debug001BF8A0/001BF950. Host allocation and
-// bounded input validation are port-owned; no native pointer overlay is used.
-RouteData load_retail_route_data(port::driving::Memory& memory,const std::vector<std::uint8_t>& bytes,bool reverse){
-    RouteData data;data.paths.reverse_direction=reverse;const auto chunks=hp2::assets::parse_chunks_top(bytes);
-    const auto* path_chunk=hp2::assets::find_first(chunks,0x80034147);
-    if(!path_chunk||path_chunk->children.size()<2)throw std::runtime_error("Original track path chunks missing");
-    const auto& rows=path_chunk->children[0];const auto& points=path_chunk->children[1];
-    if(rows.tag!=0x34148||points.tag!=0x34149||rows.size%40||points.size%20)
-        throw std::runtime_error("Original track path schema mismatch");
-    for(auto at=points.payload_offset();at<points.payload_offset()+points.size;at+=20){
-        PathPoint p;p.position={{route_scalar(bytes,at),route_scalar(bytes,at+4)}};
-        p.path=std::int8_t(bytes.at(at+8));for(int n=0;n<3;++n)p.neighbours[n]=route_half(bytes,at+10+2*n);
-        data.paths.geometry.points.push_back(p);
+
+std::int16_t half(const std::uint8_t* bytes)
+{
+    const auto bits = ReadU16(bytes);
+    std::int16_t value;
+    std::memcpy(&value, &bits, sizeof(value));
+    return value;
+}
+} // namespace
+
+CarRecoveryData::CarRecoveryData(const std::vector<std::uint8_t>& track, const TrackRoute* route, bool reverse)
+{
+    Chunk encoded{};
+    for (const auto& chunk : ReadChunks(track)) {
+        if (chunk.id != 0x34121u) continue;
+        Require(encoded.id == 0, "Track repeats its recovery groups");
+        encoded = chunk;
     }
-    for(auto at=rows.payload_offset();at<rows.payload_offset()+rows.size;at+=40){
-        PathRow p;p.begin=route_half(bytes,at+2);p.end=route_half(bytes,at+4);
-        const int count=route_half(bytes,at+6);p.spline.looping=bytes.at(at+1)!=0;
-        if(p.begin<0||p.end<=p.begin||std::size_t(p.end)>data.paths.geometry.points.size()||count!=p.end-p.begin)
-            throw std::runtime_error("Original track path point range invalid");
-        for(int i=p.begin;i<p.end;++i)p.spline.points.push_back(data.paths.geometry.points[i].position);
-        data.paths.geometry.paths.push_back(std::move(p));RoutePathDistance distance;
-        distance.begin=route_scalar(bytes,at+8);distance.end=route_scalar(bytes,at+12);distance.ratio=route_scalar(bytes,at+16);
-        data.paths.distances.push_back(std::move(distance));
+    Require(encoded.id != 0, "Track is missing its authored recovery groups");
+    std::vector<std::size_t> offsets;
+    std::size_t offset = 0;
+    while (offset < encoded.size) {
+        Require(encoded.size - offset >= 1064, "Recovery group has a partial header");
+        const auto count = integer(track.data() + encoded.payloadOffset + offset + 16);
+        Require(count > 0 && count <= 1024, "Recovery group has an invalid point count");
+        const std::size_t size = 1064 + static_cast<std::size_t>(count) * 112;
+        Require(size <= encoded.size - offset, "Recovery group has a partial point array");
+        offsets.push_back(offset);
+        offset += size;
     }
-    for(const auto& p:data.paths.geometry.points){
-        if(p.path<0||std::size_t(p.path)>=data.paths.geometry.paths.size())throw std::runtime_error("Original path number invalid");
-        for(int n:p.neighbours)if(n>=0&&std::size_t(n)>=data.paths.geometry.points.size())throw std::runtime_error("Original path neighbour invalid");
-    }
-    hp2::debug::TrackPathManager::Init(data.paths);
-    // E-0099-W26. Preserve the exact shipped20-byte point records in shared
-    // logical storage. TrackPathCoordinate.pTrackPoint points into this table.
-    data.paths.point_table=memory.allocate(static_cast<std::uint32_t>(points.size));
-    std::memcpy(memory.view(data.paths.point_table,points.size).data,bytes.data()+points.payload_offset(),points.size);
-    // Debug00202780 writes the original manager's TrackLength. Other recovered
-    // consumers (including cop spawn timing) read this same shared scalar.
-    memory.scalar(0x00313308,data.paths.track_length);
-    // Validate all records before publishing the shared manager table/lists.
-    std::vector<std::pair<std::size_t,std::size_t>> records;
-    const hp2::assets::Chunk* signs=nullptr;
-    std::function<void(const std::vector<hp2::assets::Chunk>&)> visit=[&](const auto& list){
-        for(const auto& chunk:list){if(chunk.tag==0x34122){if(signs)throw std::runtime_error("Duplicate original signpost chunk");signs=&chunk;}
-            if(chunk.tag==0x34121){const auto end=chunk.payload_offset()+chunk.size;
-                for(auto at=chunk.payload_offset();at<end;){
-                    if(end-at<0x428)throw std::runtime_error("Truncated original route header");
-                    const auto count=route_word(bytes,at+0x10);const auto number=route_half(bytes,at+0xa);
-                    if(count>1024||number<0||number>=100)throw std::runtime_error("Invalid original route count or number");
-                    const auto size=std::size_t(0x428)+std::size_t(count)*0x70;
-                    if(size>end-at)throw std::runtime_error("Truncated original route points");
-                    for(const auto& r:records)if(route_half(bytes,r.first+0xa)==number)throw std::runtime_error("Duplicate original route number");
-                    records.emplace_back(at,size);at+=size;
-                }
+    Require(!offsets.empty() && offsets.size() <= 100, "Track has an invalid recovery group count");
+    groups_.resize(offsets.size());
+    poses_.resize(offsets.size());
+    bool ids[100]{};
+    for (std::size_t index = 0; index < offsets.size(); ++index) {
+        const auto* bytes = track.data() + encoded.payloadOffset + offsets[index];
+        auto& group = groups_[index];
+        group.id = half(bytes + 10);
+        group.category = integer(bytes + 12);
+        group.poseCount = integer(bytes + 16);
+        group.flags = ReadU32(bytes + 24);
+        for (int lane = 0; lane < 21; ++lane) {
+            group.laneFlags[lane] = ReadU32(bytes + 40 + lane * 48);
+            for (int property = 0; property < 11; ++property)
+                group.laneProperties[lane][property] = ReadU32(bytes + 44 + lane * 48 + property * 4);
+        }
+        Require(group.id >= 0 && group.id < 100 && !ids[group.id], "Recovery group repeats an invalid ID");
+        Require(group.category == 0 || group.category == 1, "Recovery group has an unsupported category");
+        ids[group.id] = true;
+        for (int axis = 0; axis < 2; ++axis) {
+            group.minimum[axis] = real(bytes + 1048 + axis * 4);
+            group.maximum[axis] = real(bytes + 1056 + axis * 4);
+        }
+        auto& points = poses_[index];
+        points.resize(static_cast<std::size_t>(group.poseCount));
+        for (std::size_t pointIndex = 0; pointIndex < points.size(); ++pointIndex) {
+            const auto* record = bytes + 1064 + pointIndex * 112;
+            auto& point = points[pointIndex];
+            for (int axis = 0; axis < 3; ++axis) {
+                point.position[axis] = real(record + axis * 4);
             }
-            visit(chunk.children);
+            for (int axis = 0; axis < 2; ++axis)
+                point.direction[axis] = real(record + 12 + axis * 4);
+            point.segmentLength = real(record + 20);
+            point.halfWidths[0] = real(record + 24);
+            point.halfWidths[1] = real(record + 28);
+            point.routeDistance = real(record + 40);
+            point.flags = ReadU32(record + 44);
+            point.groupId = record[111];
+            point.gradeAcross = real(record + 32);
+            point.gradeAlong = real(record + 36);
+            for (int lane = 0; lane < 21; ++lane) {
+                point.laneOffsetsQuantized[lane] = half(record + 48 + lane * 2);
+                point.laneSpeeds[lane] = record[90 + lane];
+            }
+            Require(point.groupId == group.id, "Recovery point references another group");
         }
-    };visit(chunks);
-    if(records.empty()||!signs||signs->size%12)throw std::runtime_error("Original Retail routes/signposts missing or malformed");
-    constexpr std::uint32_t manager=0x30bb30;
-    memory.view(manager,0x1a0);memory.word(manager,manager);memory.word(manager+4,manager);
-    memory.word(manager+8,manager+8);memory.word(manager+12,manager+8);
-    for(int i=0;i<100;++i)memory.word(manager+0x10+i*4,0);
-    for(const auto& record:records){const auto at=record.first;const auto size=std::uint32_t(record.second);
-        const auto address=memory.allocate(size);std::memcpy(memory.view(address,size).data,bytes.data()+at,size);
-        const int number=route_half(bytes,at+0xa);data.routes[number]=address;memory.word(manager+0x10+number*4,address);
-        const auto type=route_word(bytes,at+0xc);
-        if(type==0||type==1){const auto head=manager+(type?8:0);const auto tail=memory.word(head+4);
-            memory.word(tail,address);memory.word(head+4,address);memory.word(address,head);memory.word(address+4,tail);}
+        group.poses = points.data();
     }
-    // Retail001C2F18 /001C0FF8 /001C1020 /001C1138 /001C14F8 versus
-    // Debug001BFFC8 /001BE0C0 /001BE0E8 /001BE1F0 /001BE5A8 prove the shared
-    // packed endpoint word and Distance+4, with12-byte versus8-byte stride.
-    // The extra Retail word is retained verbatim in port metadata, not guessed.
-    data.signpost_count=signs->size/12;
-    if(data.signpost_count>255)throw std::runtime_error("Retail signpost count exceeds original8-bit SignNumber domain");
-    if(data.signpost_count){data.signposts=memory.allocate(std::uint32_t(data.signpost_count*8));
-        data.retail_signposts.resize(data.signpost_count);data.retail_signpost_order.resize(data.signpost_count);
-        for(std::size_t i=0;i<data.signpost_count;++i){
-            const auto source=bytes.data()+signs->payload_offset()+i*12;
-            std::memcpy(data.retail_signposts[i].data(),source,12);
-            std::memcpy(memory.view(data.signposts+std::uint32_t(i*8),8).data,source,8);
-            data.retail_signpost_order[i]=std::uint32_t(i);
+    registry_.groups = groups_.data();
+    registry_.groupCount = groups_.size();
+    registry_.route = route;
+    registry_.reverse = reverse;
+    Require(route && route->length > 0.0f && route->sectionCount > 0 && route->nodeCount > 0,
+            "Recovery groups cannot be bound to an empty route");
+    Chunk connections{};
+    for (const auto& chunk : ReadChunks(track)) {
+        if (chunk.id != 0x34122u) continue;
+        Require(connections.id == 0, "Track repeats its road connections");
+        connections = chunk;
+    }
+    if (connections.id != 0) {
+        Require(connections.size % 12 == 0, "Road connections have a partial record");
+        connections_.resize(connections.size / 12);
+        Require(connections_.size() <= 255, "Road connections exceed the authored point index range");
+        for (std::size_t index = 0; index < connections_.size(); ++index) {
+            const auto* record = track.data() + connections.payloadOffset + index * 12;
+            auto& connection = connections_[index];
+            connection.groupId = record[0];
+            connection.flags = record[1];
+            connection.poseIndex = ReadU16(record + 2);
+            /* The load-time route pass replaces this field for every link.
+             * Serialized scratch bits can be non-finite and are not data. */
+            connection.routeDistance = 0.0f;
+            connection.properties = ReadU32(record + 8);
+            const auto* group = Group(connection.groupId);
+            Require(group && connection.poseIndex < group->poseCount,
+                    "Road connection references an invalid authored point");
         }
     }
-    memory.word(0x328190,data.signposts);memory.word(0x328194,std::uint32_t(data.signpost_count));
-    return data;
-}
-// Debug002478E0's actual002035D8 path projection, E-0099-W08.
-float route_point_distance(const RouteData& data,const port::driving::Memory& memory,int route,int point){
-    if(route<0||route>=100||!data.routes.at(route))throw std::out_of_range("Original graph route absent");
-    const auto address=data.routes.at(route);
-    if(point<0||point>=memory.signed_word(address+0x10))throw std::out_of_range("Original graph route point invalid");
-    const auto p=address+0x428+std::uint32_t(point)*0x70;
-    return hp2::debug::TrackPathCoordinate(data.paths,{{memory.scalar(p),memory.scalar(p+4)}},memory.scalar(0x325da0)).DistanceAroundTrack;
-}
-}
-
-#include "game_core/indep/src/trackroute.hpp"
-
-namespace hp2::recovered {
-// ELF 0x001C28A0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c28a0.md.
-void TrackRouteManager::AddRouteToRightList() {
-    hp2::not_implemented("0x001C28A0", "TrackRouteManager::AddRouteToRightList (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x001C1340; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c1340.md.
-void TrackRoutePoint::Sub_001C1340() {
-    hp2::not_implemented("0x001C1340", "TrackRoutePoint::Sub_001C1340 (signature and full body unresolved)");
-}
-
-// ELF 0x001C1408; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c1408.md.
-void TrackRoutePoint::GetPosition() {
-    hp2::not_implemented("0x001C1408", "TrackRoutePoint::GetPosition (signature and full body unresolved)");
-}
-
-// ELF 0x001C1490; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001c1490.md.
-void TrackRoutePoint::SetWidth() {
-    hp2::not_implemented("0x001C1490", "TrackRoutePoint::SetWidth (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace port::track {
-// Port-only validation at logical-pointer boundaries, not original failure rules.
-static std::uint32_t checked_route_point(const RouteData& data,const port::driving::Memory& memory,unsigned route,unsigned point){
-    if(route>=data.routes.size()||!data.routes[route])throw std::out_of_range("Original signpost target route missing");
-    const auto address=data.routes[route];
-    if(point>=memory.word(address+0x10))throw std::out_of_range("Original signpost target point missing");
-    return address+0x428+point*0x70;
-}
-static std::uint32_t checked_sign(const RouteData& data,const port::driving::Memory& memory,std::uint32_t point){
-    const auto index=memory.byte(point+0x2c);
-    if(index>=data.signpost_count||!data.signposts)throw std::out_of_range("Original route point sign index missing");
-    return data.signposts+index*8;
-}
-}
-namespace hp2::debug {
-// Debug001C0088, E-0099-W120; original trackroute.cpp definition.
-bool HasSignposts(::port::driving::Memory& m){return m.word(0x328190)!=0;}
-using port::driving::Memory;
-// Debug001BE440, E-0099-W17. Lateral contribution is added before along-route
-// contribution, preserving original VU grouping rather than a spline shortcut.
-std::array<float,2> TrackRoutePoint::GetPosition(float d,float l)const{
-    const float dx=memory_.scalar(address_+0xc),dy=memory_.scalar(address_+0x10);
-    const float x=dy*l+memory_.scalar(address_),y=(-dx)*l+memory_.scalar(address_+4);
-    return {{dx*d+x,dy*d+y}};
-}
-// Debug001BE750, E-0099-W17. Listing MAX.S chooses the larger of XY distance
-// and wrapped track-distance difference minus24; the original is not just XY.
-float TrackRoutePoint::GetDistanceAway(const std::array<float,2>& pos,float dat,float length)const{
-    const float x=memory_.scalar(address_)-pos[0],y=memory_.scalar(address_+4)-pos[1];
-    const float distance=std::sqrt(x*x+y*y);
-    const float around=std::abs(TrackPathManager::CompareDistances(length,memory_.scalar(address_+0x28),dat))-24;
-    return std::max(distance,around);
-}
-// Debug001BEBF8, E-0099-W17. Bounds, strict acceptance and distance-derived
-// index skipping are original. Host checks reject unsupported malformed ranges.
-std::uint32_t TrackRoute::FindClosestPoint(const std::array<float,2>& pos,float maximum,int flags,float dat,float length)const{
-    auto& memory=memory_;
-    if(!(memory.scalar(address_+0x418)-maximum<=pos[0]&&pos[0]<=memory.scalar(address_+0x420)+maximum&&
-         memory.scalar(address_+0x41c)-maximum<=pos[1]&&pos[1]<=memory.scalar(address_+0x424)+maximum))return 0;
-    std::uint32_t result=0;const auto count=memory.signed_word(address_+0x10);
-    for(int i=0;i<count;){const auto point=address_+0x428+std::uint32_t(i)*0x70;
-        const float x=memory.scalar(point),y=memory.scalar(point+4),px=pos[0],py=pos[1];
-        const float delta_x=x-px,delta_y=y-py;
-        const float distance=(flags&0x20)?TrackRoutePoint(memory,point).GetDistanceAway(pos,dat,length):std::sqrt(delta_x*delta_x+delta_y*delta_y);
-        const auto bits=memory.word(point+0x2c);
-        if((!(flags&1)||0< -((px-x)*memory.scalar(point+0xc)+(py-y)*memory.scalar(point+0x10)))&&distance<maximum&&
-           (!(flags&2)||(bits&0x8000))&&(!(flags&4)||!(bits&0x4000))){maximum=distance;result=point;}
-        const int skip=::port::driving::cvt_w_s(distance*memory.scalar(0x00325924))-2;
-        const auto next=std::int64_t(i)+(skip>0?skip:0)+1;
-        if(next>std::numeric_limits<int>::max())throw std::out_of_range("Original route search skip outside signed range");
-        i=int(next);
+    registry_.connections = connections_.data();
+    registry_.connectionCount = connections_.size();
+    std::vector<CarRecoveryMutableGroup> mutableGroups;
+    for (std::size_t index = 0; index < groups_.size(); ++index) {
+        mutableGroups.push_back({&groups_[index], poses_[index].data()});
+        for (const auto& point : poses_[index])
+            Require((point.flags & 255u) == 255u || (point.flags & 255u) < connections_.size(),
+                    "Recovery point references an invalid road connection");
     }
+    Require(carRecoveryPreprocess(&registry_, mutableGroups.data(), mutableGroups.size(), !reverse) != 0,
+            "Road groups and connections cannot be prepared on the authored route");
+}
+
+const CarRecoveryGroup* CarRecoveryData::Group(std::uint8_t id) const noexcept
+{
+    for (const auto& group : groups_) if (group.id == id) return &group;
+    return nullptr;
+}
+
+std::vector<CarRecoveryMutableGroup> CarRecoveryData::MutableGroups()
+{
+    std::vector<CarRecoveryMutableGroup> views;
+    views.reserve(groups_.size());
+    for (std::size_t index = 0; index < groups_.size(); ++index)
+        views.push_back({&groups_[index], poses_[index].data()});
+    return views;
+}
+
+} // namespace hp2
+
+int32_t arrayHeapSort(void* array, int32_t count, size_t stride, ArraySortCompare compare)
+{
+    if (count < 2) return 1;
+    unsigned char* elements = static_cast<unsigned char*>(array);
+    unsigned char* temporary = static_cast<unsigned char*>(malloc(stride));
+    if (!temporary) return 0;
+    int32_t remaining = count;
+    int32_t first = count / 2 + 1;
+    for (;;) {
+        if (first < 2) {
+            memcpy(temporary, elements + (size_t)(remaining - 1) * stride, stride);
+            --remaining;
+            memcpy(elements + (size_t)remaining * stride, elements, stride);
+            if (remaining == 1) {
+                memcpy(elements, temporary, stride);
+                break;
+            }
+        } else {
+            --first;
+            memcpy(temporary, elements + (size_t)(first - 1) * stride, stride);
+        }
+        int32_t destination = first - 1;
+        int32_t child = first * 2;
+        while (child <= remaining) {
+            if (child < remaining && compare(elements + (size_t)(child - 1) * stride,
+                                              elements + (size_t)child * stride) < 0.0f)
+                ++child;
+            if (compare(temporary, elements + (size_t)(child - 1) * stride) < 0.0f) {
+                memcpy(elements + (size_t)destination * stride,
+                       elements + (size_t)(child - 1) * stride, stride);
+                destination = child - 1;
+                child *= 2;
+            } else {
+                child = remaining + 1;
+            }
+        }
+        memcpy(elements + (size_t)destination * stride, temporary, stride);
+    }
+    free(temporary);
+    return 1;
+}
+
+
+// Individual TrackRoute methods: PAL1C1990 and PAL1C1A98.
+int32_t trackRouteEditorUpdateSegment(CarRecoveryMutableGroup* group,int32_t index)
+{
+    if(index>=group->group->poseCount-1)return 0;
+    CarRecoveryPose* point=&group->poses[index];
+    CarRecoveryPose* next=&group->poses[index+1];
+    const float dx=next->position[0]-point->position[0];
+    const float dy=next->position[1]-point->position[1];
+    point->direction[0]=dx;point->direction[1]=dy;
+    const float yy=dy*dy,xx=point->direction[0]*point->direction[0];
+    point->segmentLength=sqrtf(xx+yy);
+    const float dz=next->position[2]-point->position[2];
+    const float grade=finiteRatio(dz,point->segmentLength);
+    point->gradeAlong=grade;next->gradeAlong=grade;
+    vectorNormalize2(point->direction,point->direction);
+    return point->segmentLength>24.0f||point->segmentLength<4.0f;
+}
+
+int32_t trackRouteEditorMovePoint(CarRecoveryMutableGroup* group,int32_t index,const float point[4])
+{
+    if(index<0||index>=group->group->poseCount)return 1;
+    CarRecoveryPose* pose=&group->poses[index];
+    pose->position[0]=point[0];pose->position[1]=point[1];
+    /* The original editor stores the supplied X in the elevation cell too. */
+    pose->position[2]=point[0];
+    int32_t result=trackRouteEditorUpdateSegment(group,index);
+    if(index>0)result+=trackRouteEditorUpdateSegment(group,index-1);
     return result;
-}
-// Debug001BE5C0, E-0099-W14. Only core0x30 bytes swap; driving-line data stays
-// in its original point slot until ReversePoint performs the original exchanges.
-void TrackRoutePoint::SwapPointData(std::uint32_t other){
-    std::array<std::uint8_t,0x30> temporary{};
-    for(unsigned i=0;i<temporary.size();++i)temporary[i]=memory_.byte(address_+i);
-    memory_.copy(address_,other,temporary.size());
-    for(unsigned i=0;i<temporary.size();++i)memory_.byte(other+i,temporary[i]);
-}
-// Debug001BE620 ->001BE4B8, E-0099-W14. Position uses original multiply/add
-// grouping, including the zero lateral term;21st driving line remains untouched.
-void TrackRoutePoint::ReversePoint(float track_length){
-    const auto p=address_;auto& memory=memory_;
-    const float length=memory.scalar(p+0x14),dx=memory.scalar(p+0xc),dy=memory.scalar(p+0x10);
-    const float normal[3]{dy,-dx,memory.scalar(p+0x20)};
-    const float direction[3]{dx,dy,memory.scalar(p+0x24)};
-    for(unsigned i=0;i<3;++i){const float lateral=normal[i]*0.0f;const float base=lateral+memory.scalar(p+4*i);
-        const float along=direction[i]*length;memory.scalar(p+4*i,along+base);}
-    memory.scalar(p+0xc,-dx);memory.scalar(p+0x10,-dy);
-    const auto right=memory.word(p+0x1c);memory.word(p+0x1c,memory.word(p+0x18));
-    memory.scalar(p+0x24,-memory.scalar(p+0x24));memory.scalar(p+0x20,-memory.scalar(p+0x20));memory.word(p+0x18,right);
-    memory.scalar(p+0x28,track_length-memory.scalar(p+0x28));
-    for(unsigned i=0;i<10;++i){const auto a=p+0x30+i*2,b=a+20;
-        const auto offset=memory.half(a);const auto speed=memory.byte(p+0x5a+i);
-        memory.half(a,memory.half(b));memory.byte(p+0x5a+i,memory.byte(p+0x5a+i+10));
-        memory.half(b,offset);memory.byte(p+0x5a+i+10,speed);}
-}
-// Debug001BE738, E-0099-W14. Traffic points reverse distance only.
-void TrackRoutePoint::ReverseTrafficRoutePoint(float track_length){memory_.scalar(address_+0x28,track_length-memory_.scalar(address_+0x28));}
-// Debug001BF3E8, E-0099-W14. Reverse core point order, then original point
-// transforms, then driving-line info halves0..9 and10..19; index20 is unchanged.
-void TrackRoute::ReverseRoute(float track_length){
-    const auto count=memory_.signed_word(address_+0x10);
-    for(int i=0;i<count/2;++i)TrackRoutePoint(memory_,address_+0x428+std::uint32_t(i)*0x70).SwapPointData(address_+0x428+std::uint32_t(count-i-1)*0x70);
-    for(int i=0;i<count;++i)TrackRoutePoint(memory_,address_+0x428+std::uint32_t(i)*0x70).ReversePoint(track_length);
-    for(unsigned i=0;i<10;++i){const auto a=address_+0x28+i*0x30,b=a+10*0x30;std::array<std::uint8_t,0x30> saved{};
-        for(unsigned k=0;k<saved.size();++k)saved[k]=memory_.byte(a+k);
-        memory_.copy(a,b,saved.size());for(unsigned k=0;k<saved.size();++k)memory_.byte(b+k,saved[k]);}
-    const auto flags=memory_.word(address_+0x18);memory_.word(address_+0x18,(flags&~2u)|(((flags>>1)^1u)&1u)<<1);
-}
-// Debug001BF650, E-0099-W14.
-void TrackRoute::ReverseTrafficRoute(float track_length){
-    for(int i=0;i<memory_.signed_word(address_+0x10);++i)TrackRoutePoint(memory_,address_+0x428+std::uint32_t(i)*0x70).ReverseTrafficRoutePoint(track_length);
-}
-// Debug001BF6B0, E-0099-W14. Original excludes first point from extrema after
-// using it as the previous-distance anchor. Listing confirms MAX.S/MIN.S at wrap.
-void TrackRoute::SetFirstAndLast(const port::track::RouteData& data){
-    const auto count=memory_.signed_word(address_+0x10);
-    if(count<1)hp2::not_implemented("0x001BF6B0","original route extrema require a first point");
-    const float length=data.paths.track_length,half=length*0.5f,tolerance=memory_.scalar(0x00325da0);
-    float extrema[2][2]{{length,0},{length,0}};unsigned segment=0;bool wrapped=false;
-    TrackPathCoordinate coordinate;coordinate.UpdatePosition(data.paths,{{memory_.scalar(address_+0x428),memory_.scalar(address_+0x42c)}},tolerance);
-    float previous=coordinate.DistanceAroundTrack;
-    for(int i=1;i<count;++i){const auto point=address_+0x428+std::uint32_t(i)*0x70;
-        coordinate.UpdatePosition(data.paths,{{memory_.scalar(point),memory_.scalar(point+4)}},tolerance);
-        const float distance=coordinate.DistanceAroundTrack;
-        if(half<std::abs(distance-previous)){wrapped=true;segment^=1;}
-        if(extrema[segment][1]<distance)extrema[segment][1]=distance;
-        if(distance<extrema[segment][0])extrema[segment][0]=distance;
-        previous=distance;
-    }
-    memory_.scalar(address_+0x20,wrapped?std::max(extrema[0][0],extrema[1][0]):extrema[0][0]);
-    memory_.scalar(address_+0x24,wrapped?std::min(extrema[0][1],extrema[1][1]):extrema[0][1]);
-}
-// Debug001BE128, E-0099-W14. Only targets on racing routes(<50) change.
-void Signpost::ReverseSigns(Memory& memory,const port::track::RouteData& data){
-    for(unsigned i=0;i<data.signpost_count;++i){const auto sign=data.signposts+i*8;const unsigned route=memory.byte(sign);
-        if(route<50){if(!data.routes[route])throw std::out_of_range("Original reverse sign target route missing");
-            const auto count=memory.word(data.routes[route]+0x10);
-            memory.half(sign+2,std::uint16_t(count-memory.half(sign+2)-1));
-            const auto flags=memory.word(sign);memory.word(sign,(flags&~0x800u)|((1u-((flags>>11)&1u))&1u)<<11);}}
-}
-// Debug001BE1F0, E-0099-W14. Distance follows sign target -> its sign -> second
-// target. It is not simply the first target position; one coordinate is reused.
-void Signpost::SetDistances(Memory& memory,const port::track::RouteData& data){
-    TrackPathCoordinate coordinate;const auto tolerance=memory.scalar(0x00325da0);
-    for(unsigned i=0;i<data.signpost_count;++i){const auto sign=data.signposts+i*8;
-        const auto first=port::track::checked_route_point(data,memory,memory.byte(sign),memory.half(sign+2));
-        const auto next=port::track::checked_sign(data,memory,first);
-        const auto second=port::track::checked_route_point(data,memory,memory.byte(next),memory.half(next+2));
-        coordinate.UpdatePosition(data.paths,{{memory.scalar(second),memory.scalar(second+4)}},tolerance);
-        memory.scalar(sign+4,coordinate.DistanceAroundTrack);
-    }
-}
-// Debug001C0098, E-0099-W14. Exact one-based heap traversal over zero-based
-// storage, strict comparator branches and tie permutation, not std::sort.
-void HeapSort(Memory& memory,std::uint32_t buffer,int num,int size,const std::function<float(std::uint32_t,std::uint32_t)>& compare){
-    if(num<2)return;
-    if(size<=0||!compare)throw std::invalid_argument("Original HeapSort requires a positive item size and comparator");
-    Memory::Scratch scratch(memory);const auto temporary=memory.allocate(std::uint32_t(size));
-    int end=num-1,level=num/2+1;bool extraction=level<2;
-    auto current=buffer+std::uint32_t((level-1)*size);
-    for(;;){
-        if(extraction){const auto tail=buffer+std::uint32_t(end*size);memory.copy(temporary,tail,size);memory.copy(tail,buffer,size);
-            const bool done=end==1;num=end;--end;if(done){memory.copy(buffer,temporary,size);return;}}
-        else{--level;current-=std::uint32_t(size);memory.copy(temporary,current,size);extraction=level<2;}
-        int child=level*2,hole=level-1;
-        while(child<=num){int selected=child-1;
-            if(child<num&&compare(buffer+std::uint32_t((child-1)*size),buffer+std::uint32_t(child*size))<0){++child;selected=child-1;}
-            const auto source=buffer+std::uint32_t(selected*size);
-            if(compare(temporary,source)<0){memory.copy(buffer+std::uint32_t(hole*size),source,size);hole=child-1;child*=2;}
-            else child=num+1;
-        }
-        memory.copy(buffer+std::uint32_t(hole*size),temporary,size);
-    }
-}
-// Debug001C02D8, E-0099-W14. Compare the pointed-to Distance fields, not indices.
-float CompareSignposts(Memory& memory,std::uint32_t before,std::uint32_t after){return memory.scalar(memory.word(before)+4)-memory.scalar(memory.word(after)+4);}
-// Debug001C02F0, E-0099-W14. Whole actual postload preparation after the
-// explicit Retail-to-Debug schema adapter; original directions/order retained.
-void InitTrackRoutes(Memory& memory,port::track::RouteData& data,bool forwards){
-    data.paths.reverse_direction=!forwards;
-    if(!forwards){for(unsigned r=0;r<70;++r)if(data.routes[r]){
-            TrackRoute route(memory,data.routes[r]);if(r>=50)route.ReverseTrafficRoute(data.paths.track_length);else route.ReverseRoute(data.paths.track_length);}
-        Signpost::ReverseSigns(memory,data);}
-    for(unsigned i=0;i<data.signpost_count;++i){const auto sign=data.signposts+i*8;
-        if((memory.word(sign)&0x700)==0x500){const auto r=memory.byte(sign);
-            if(!data.routes[r])throw std::out_of_range("Original DontTake sign target route missing");
-            memory.word(data.routes[r]+0x18,memory.word(data.routes[r]+0x18)|4);}}
-    for(auto route:data.routes)if(route)TrackRoute(memory,route).SetFirstAndLast(data);
-    Signpost::SetDistances(memory,data);
-    Memory::Scratch scratch(memory);const auto count=std::uint32_t(data.signpost_count);
-    // Zero-size host allocations have no logical address. The original zero
-    // count performs no sort, remap or copy; retain those empty operations.
-    if(count==0){data.initialized=true;return;}
-    const auto rows=memory.allocate(count*8);
-    for(unsigned i=0;i<count;++i){memory.word(rows+i*8,data.signposts+i*8);memory.word(rows+i*8+4,i);}
-    HeapSort(memory,rows,int(count),8,[&](auto before,auto after){return CompareSignposts(memory,before,after);});
-    std::array<std::uint8_t,256> new_indices{};
-    std::vector<std::uint32_t> metadata_order;
-    if(!data.retail_signpost_order.empty())metadata_order.resize(count);
-    for(unsigned i=0;i<count;++i){const auto old=memory.word(rows+i*8+4);new_indices.at(old)=std::uint8_t(i);
-        if(!metadata_order.empty())metadata_order[i]=data.retail_signpost_order.at(old);}
-    for(auto route:data.routes)if(route)for(int i=0;i<memory.signed_word(route+0x10);++i){const auto point=route+0x428+std::uint32_t(i)*0x70;const auto index=memory.byte(point+0x2c);
-        if(index!=0xff){if(index>=count)throw std::out_of_range("Original remapped sign index outside array");memory.byte(point+0x2c,new_indices[index]);}}
-    const auto sorted=memory.allocate(count*8);
-    for(unsigned i=0;i<count;++i){const auto p=sorted+i*8;memory.byte(p,0);memory.word(p,memory.word(p)&0xffffc0ff);memory.half(p+2,0);memory.word(p,memory.word(p)&0xffffbfff);}
-    for(unsigned i=0;i<count;++i)memory.copy(sorted+i*8,memory.word(rows+i*8),8);
-    memory.copy(data.signposts,sorted,count*8);
-    if(!metadata_order.empty())data.retail_signpost_order=std::move(metadata_order);
-    data.initialized=true;
-}
-}
-
-namespace hp2::debug {
-// Debug001BE280; E-0099-W24; original trackroute.cpp.
-int Signpost::GetIndex(::port::driving::Memory& m,const ::port::track::RouteData& routes,float dat){
- if(!routes.initialized||!routes.signposts||!routes.signpost_count)
-  hp2::not_implemented("0x001BE280","Signpost::GetIndex requires the original nonempty loaded signpost array");
- for(std::size_t i=0;i<routes.signpost_count;++i)if(dat<=m.scalar(routes.signposts+static_cast<std::uint32_t>(i)*8+4))return static_cast<int>(i);
- return 0;
-}
-}
-
-namespace hp2::debug {
-// Debug001BE4B8, E-0099-W37. Original two vector scale-adds. The three
-// uninitialized temporary pad words cannot be recovered from the ELF; the
-// resulting host padding word is an explicit port operand, not original data.
-void TrackRoutePoint::GetPosition(std::uint32_t out,float d,float l,std::uint32_t lane)const{const auto a=address_;auto& m=memory_;const float dx=m.scalar(a+0xc),dy=m.scalar(a+0x10);const float x=dy*l+m.scalar(a),y=(-dx)*l+m.scalar(a+4),z=m.scalar(a+0x20)*l+m.scalar(a+8);m.scalar(out,x);m.scalar(out+4,y);m.scalar(out+8,z);m.word(out+12,lane);m.scalar(out,dx*d+x);m.scalar(out+4,dy*d+y);m.scalar(out+8,m.scalar(a+0x24)*d+z);}
-}
-
-namespace hp2::debug {
-// Debug001BF830; E-0099-W37. Original inclusive wrap interval; equal endpoints
-// deliberately accept all distances rather than inventing an empty interval.
-bool TrackRoute::DistanceIsWithinRoute(float distance)const{const float begin=memory_.scalar(address_+0x20),end=memory_.scalar(address_+0x24);if(begin<end)return begin<=distance&&distance<=end;return begin<=distance||distance<=end;}
-}
-
-namespace hp2::debug {
-// Debug001BEDE0; E-0099-W47. Original increments the index before testing
-// the final bound: even a forward-facing last point returns null.
-std::uint32_t TrackRoute::FindClosestPointAhead(const std::array<float,2>& position,std::uint32_t initial)const{if(!initial)return 0;auto& m=memory_;int index=static_cast<std::int32_t>(initial-(address_+0x428))/0x70;std::uint32_t point=address_+0x428+0x70*index;do{const auto current=point;++index;const float projection=-((position[0]-m.scalar(current))*m.scalar(current+0xc)+(position[1]-m.scalar(current+4))*m.scalar(current+0x10));if(0.f<=projection)return index<m.signed_word(address_+0x10)?current:0;point=current+0x70;}while(index<m.signed_word(address_+0x10));return 0;}
-// Debug001BE5A8/001BE0C0/001BE0E8; E-0099-W47. Actual shared globals.
-std::uint32_t TrackRoutePoint::GetSignpost()const{return memory_.word(0x328190)+8*memory_.byte(address_+0x2c);}
-std::uint32_t Signpost::GetNewRoute(::port::driving::Memory& m,std::uint32_t sign){return m.word(0x30bb40+4*m.byte(sign));}
-std::uint32_t Signpost::GetNewRoutePoint(::port::driving::Memory& m,std::uint32_t sign){return GetNewRoute(m,sign)+0x428+0x70*m.half(sign+2);}
-}
-
-#include "game_core/indep/inc/Replay.hpp"
-namespace hp2::debug {
-// Debug001BFBE0; E-0099-W74; replay-frame/001bfbe0.json.
-void TrackRouteManager::DoPointerSnapshot(std::uint32_t snapshot,::port::race::SnapshotRoutePointer pointer){
- ::port::driving::Memory::Temporary local(m_,4);std::int32_t number=-1;
- if(!m_.byte(snapshot+0x3d)&&m_.word(pointer.address))number=m_.signed_half(m_.word(pointer.address)+0xa);
- m_.word(local.address(),number);ReplaySnapshot(m_,snapshot).MoveData(local.address(),1,4,1);
- if(m_.byte(snapshot+0x3d)){number=m_.signed_word(local.address());if(number>=100)hp2::not_implemented("0x001BFBE0","Restored route outside original100-slot manager");m_.word(pointer.address,number<0?0:m_.word(address_+0x10+4*number));}
-}
-// Debug001BFC78; E-0099-W74. Exact inverse multiply/shift is retained for source point index.
-void TrackRouteManager::DoPointerSnapshot(std::uint32_t snapshot,::port::race::SnapshotRoutePointPointer pointer,std::uint32_t route){
- ::port::driving::Memory::Temporary local(m_,4);std::int32_t number=-1;const auto point=m_.word(pointer.address);
- if(point&&route){const std::uint32_t product=(point-route-0x428)*0xb6db6db7u;number=static_cast<std::int32_t>(product)>>4;}
- m_.word(local.address(),number);ReplaySnapshot(m_,snapshot).MoveData(local.address(),2,4,1);number=m_.signed_word(local.address());
- if((m_.byte(snapshot+0x3c)||m_.byte(snapshot+0x3d))&&m_.word(pointer.address)&&number==-1)m_.word(pointer.address,0);
- if(m_.byte(snapshot+0x3d)){if(number>=0&&!route)hp2::not_implemented("0x001BFC78","Nonnegative restored point with null route");m_.word(pointer.address,number<0?0:route+0x428+0x70*static_cast<std::uint32_t>(number));}
-}
-// Debug001BFD50; E-0099-W74; replay-frame/001bfd50.json. Full point code is four bytes.
-void TrackRouteManager::DoPointerSnapshot(std::uint32_t snapshot,::port::race::SnapshotRoutePointPointer pointer){
- ::port::driving::Memory::Temporary local(m_,4);std::uint32_t code=0xffffffffu;
- if(!m_.byte(snapshot+0x3d)){
-  if(const auto point=m_.word(pointer.address)){
-   // TrackRoutePoint.RouteNumber byte is confirmed at+0x6F by original type.
-   const auto number=m_.byte(point+0x6f);if(number>=100)hp2::not_implemented("0x001BFD50","Point route number outside manager");
-   const auto route=m_.word(address_+0x10+4*number);if(!route)hp2::not_implemented("0x001BFD50","Snapshot point references missing original route");
-   const auto index=static_cast<std::int32_t>((point-route-0x428)*0xb6db6db7u)>>4;
-   code=static_cast<std::uint32_t>(index)+static_cast<std::uint32_t>(m_.signed_half(route+0xa))*0x10000u;
-  }
- }else code=0;
- m_.word(local.address(),code);ReplaySnapshot(m_,snapshot).MoveData(local.address(),4,4,1);
- if(m_.byte(snapshot+0x3d)){code=m_.word(local.address());if(code==0xffffffffu)m_.word(pointer.address,0);else{
-  const auto number=static_cast<std::int32_t>(code)>>16;if(number<0||number>=100)hp2::not_implemented("0x001BFD50","Restored route code outside original manager");
-  const auto route=m_.word(address_+0x10+4*number);if(!route)hp2::not_implemented("0x001BFD50","Restored point references null route");
-  m_.word(pointer.address,route+0x428+0x70*(code&0xffff));
- }}
-}
 }

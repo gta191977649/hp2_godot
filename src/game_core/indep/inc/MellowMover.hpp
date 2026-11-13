@@ -1,40 +1,133 @@
-// TASK-0042 E-0042-S001: exact Debug source marker(s): ../indep/inc/MellowMover.hpp.
-// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
-// PORT-SIDE template file; destination/header extension is not original-file evidence.
-#pragma once
+#ifndef NFSHP2_MELLOWMOVER_HPP
+#define NFSHP2_MELLOWMOVER_HPP
 
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: qualified_string; evidence: E-0019-N03.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-// Diagnostic text (not a callable signature): MellowMover::Move() [0x002BC6A0]
-namespace hp2::recovered {
-class MellowMover {
-public:
-    // No member address is confirmed; no speculative members are declared.
+// Native declarations use the PC runtime layout.
 
-public:
-    // TASK-0028: missing entries; existing storage and bodies are preserved.
-    // ELF 0x002197F0; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/002197f0.md.
-    // Original Debug reference: MellowMover::~MellowMover(void); constructor/destructor entry is not a native C++ lifetime operation.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_002197F0();
-    // ELF 0x002198C8; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/002198c8.md.
-    // Original Debug reference: MellowMover::DoSnapshot(ReplaySnapshot *); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void DoSnapshot();
-    // ELF 0x00219D38; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00219d38.md.
-    // Original Debug reference: MellowMover::Move(float); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Move();
-    // ELF 0x00219ED8; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00219ed8.md.
-    // Original Debug reference: MellowMover::ComputeAuxiliaries(void); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void ComputeAuxiliaries();
-    // ELF 0x00219F50; E-0041-V01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00219f50.md.
-    // Original Debug reference: MellowMover::ResolveForces(void); exact original method spelling; void/no-argument host gap interface only.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void ResolveForces();
-};
-} // namespace hp2::recovered
+#include "indep/inc/Engine.hpp"
+#include "indep/inc/Suspension.hpp"
+#include "indep/inc/Track.hpp"
+#include "CarState.hpp"
+#include "indep/inc/Wheel.hpp"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct MellovatorInfo {
+    const EngineInfo* engine;
+    const DriveTrainInfo* driveTrain;
+    const WheelTorqueInfo* wheels;
+    const SuspensionInfo* suspension;
+    const float* centerOfMass;
+    float preloadDownforceScale;
+} MellovatorInfo;
+
+typedef struct MellovatorState {
+    float wheelAngularVelocity[4];
+} MellovatorState;
+
+/* This component integrates wheel rotation and applies its original simplified
+ * tyre/suspension model to an actual RigidBody. Terrain queries use the same
+ * decoded topology as the full PhysicsCar suspension. */
+typedef struct Mellovator {
+    MellovatorState motion;
+    MellovatorInfo info;
+    RigidBody* body;
+    TerrainSurface* terrain;
+    float travel[4];
+    float travelSpeed[4];
+    float suspensionForce[4];
+    int32_t touchingGround[4];
+    float tireForce[4][2];
+    float slip[4][2];
+    int32_t slipping[4];
+    int32_t rotationLocked[4];
+    float compressionExcess[4];
+    float groundNormal[4][4];
+    float engineRpm;
+    int32_t currentGear;
+    float throttle;
+    float brake;
+    uint16_t steeringAngle;
+    int32_t desiredGear;
+    float boost;
+    float frictionBoost;
+    float preload[4];
+    SampledCurve torqueCurve;
+    SampledCurve brakingCurve;
+    float upshiftRpm[9];
+    float downshiftRpm[9];
+} Mellovator;
+struct ReplaySnapshot;
+void mellovatorSnapshot(Mellovator* component, struct ReplaySnapshot* snapshot);
+
+Mellovator* mellovatorInitialize(Mellovator* component, const MellovatorInfo* info,
+                                RigidBody* body, TerrainSurface* terrain);
+void mellovatorCalibrate(Mellovator* component, float downforce, int useCenterOfMass);
+void mellovatorSetWheelMotion(Mellovator* component, const float angularVelocity[4]);
+static inline void mellovatorRestoreState(Mellovator* component, const MellovatorState* state)
+{ component->motion = *state; }
+static inline void mellovatorSaveState(const Mellovator* component, MellovatorState* state)
+{ *state = component->motion; }
+static inline MellovatorState* mellovatorState(Mellovator* component)
+{ return &component->motion; }
+static inline int32_t mellovatorStateSize(const Mellovator* component)
+{ (void)component; return 4; }
+float* mellovatorComputeDerivatives(const Mellovator* component, float derivatives[4]);
+void mellovatorGroundHeightsAndPositions(Mellovator* component, float positions[4][4], float heights[4]);
+void mellovatorComputeSuspensionForces(Mellovator* component, float elapsed);
+void mellovatorPrepareStep(Mellovator* component, float elapsed);
+void mellovatorResolveForces(Mellovator* component);
+float mellovatorResolveBottomOutImpulses(Mellovator* component, VehicleState* state,
+                                        float impulseScale);
+
+#ifdef __cplusplus
+}
+#endif
+
+#include "indep/inc/PhysicsCar.hpp"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct MellowMover {
+    PhysicsCarInfo info;
+    CarControls* controls;
+    Car* owner;
+    CarMotionState* ownerMotion;
+    VehicleState* state;
+    PhysicsCarEnvironment* environment;
+    PhysicsPools* pools;
+    RigidBody* body;
+    Mellovator* suspension;
+    Aerodynamics* aerodynamics;
+    Wheel* wheels[4];
+    WheelVehicleState wheelView;
+    ComponentSystem components;
+    ComponentBinding bindings[2];
+    float derivatives[33];
+    WheelTrail* wheelTrails[4];
+    WheelTrailStore localTrailStore;
+    WheelTrail localTrails[16];
+} MellowMover;
+
+PhysicsPoolStatus mellowMoverInitialize(MellowMover* mover, const PhysicsCarInfo* info,
+                                        CarControls* controls, Car* owner,
+                                        CarMotionState* ownerMotion, VehicleState* state,
+                                        PhysicsCarEnvironment* environment, PhysicsPools* pools);
+void mellowMoverDispose(MellowMover* mover);
+void mellowMoverSnapshot(MellowMover* mover,struct ReplaySnapshot* snapshot);
+void mellowMoverCalibrate(MellowMover* mover);
+void mellowMoverLoadState(MellowMover* mover);
+void mellowMoverPublishState(MellowMover* mover, float elapsed);
+void mellowMoverPrepare(MellowMover* mover);
+void mellowMoverCollectForces(MellowMover* mover);
+void mellowMoverSetBoost(MellowMover* mover, float boost);
+void mellowMoverStabilizeAirborne(MellowMover* mover);
+float mellowMoverMove(MellowMover* mover, float elapsed);
+
+#ifdef __cplusplus
+}
+#endif
+#endif

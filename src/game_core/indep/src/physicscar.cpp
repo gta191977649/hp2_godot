@@ -1,621 +1,1150 @@
-// TASK-0044: canonical Debug PhysicsCar, original source ../indep/src/physicscar.cpp.
-// NFSHP2.ELF SHA815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
-#include "game_core/indep/inc/PhysicsCar.hpp"
-#include "game_core/indep/src/carstate.hpp"
-#include "game_core/indep/src/engine.hpp"
-#include "game_core/port/driving/projection_support.hpp"
-namespace hp2::recovered {
-// Debug 001375B0; E-0044-P01/P02.
-void PhysicsCar::Calibrate() {
-    auto& m=m_; [[maybe_unused]] const auto object=address_,s=address_,mover=address_;
-    using namespace port::driving; using namespace port::driving::native;
+#include "indep/inc/PhysicsCar.hpp"
+#include "indep/inc/Car.hpp"
+#include "indep/inc/Table.hpp"
+#include "indep/inc/eMath.hpp"
+#include "bware/inc/bMath.hpp"
+#include "bware/inc/bMath.hpp"
+#include "bware/inc/bMath.hpp"
+#include "indep/inc/CarDamage.hpp"
+#include "indep/inc/Replay.hpp"
+#include "indep/inc/RealDriver.hpp"
+#include "indep/inc/TrackedController.hpp"
+#include "bware/inc/bWare.hpp"
 
-    using namespace detail_group_00137100_runtime;
-    const auto config=m.word(object+0x4c),body=m.word(object+0x18);
-    m.copy(body+0x160,config+0x110,16);
-    init::CalculateInertiaTensor(m.view(body,0x180),m.view(m.word(body+0xc),0x50));
-    float offset=m.scalar(config+0x110);if(!m.word(global_address(0xa704)))offset=0;
-    const float numerator=m.scalar(config+0x120)-offset;
-    const float split=(numerator/(numerator-(m.scalar(config+0x180)-offset)))*0.5f;
-    float total=m.scalar(body+0x118)*global(m,0x83d0);
-    const float additional=GetDownforceAtSpeed(m,m.word(object+0x48),m.scalar(m.word(object+0x54)+0x3c0));
-    total=total+m.scalar(config+0x2fc)*additional;
-    const float first=total*(0.5f-split),second=total*split;
-    for(unsigned i=0;i<4;++i){const auto controller=m.word(object+0x20+4*i);m.scalar(controller+0x78,i<2?first:second);refresh(m,controller);}
-    for(unsigned i=0;i<4;++i)m.word(m.word(object+0x30+4*i)+0x24,m.word(global_address(0xb3b0)));
+#include <limits.h>
+#include <math.h>
+#include <string.h>
 
+// Complete PAL137450..1375EC. These are the existing component instances
+// and exact source transfer order, including both momentum timers and the
+// source steering virtual call. CarMover::DoSnapshot1309F0 is truly empty.
+
+#include "indep/inc/MellowMover.hpp"
+#include "indep/inc/CarMover.hpp"
+#include <stdlib.h>
+extern "C" void* bMalloc(int,const char*,int,int);
+extern "C" void bFree(void*);
+
+// InitPhysics / ClosePhysics own these ten component families. PAL creates
+// ordinary bWare pools and the component constructors call bOMalloc, whose
+// expansion is (initialCount >> 2) + 1. Host pointers require wider slots;
+// linked blocks retain every live component address across that expansion.
+struct PhysicsSlotEntry {
+    PhysicsSlotEntry* next;
+    unsigned char* object;
+    unsigned char state; // 0 never acquired, 1 live, 2 released
+};
+
+struct PhysicsSlotBlock {
+    PhysicsSlotBlock* next;
+    unsigned char* memory;
+    PhysicsSlotEntry* entries;
+    uint32_t count;
+};
+
+struct PhysicsSlotPool {
+    PhysicsSlotBlock* blocks;
+    PhysicsSlotEntry* freeHead;
+    size_t nativeBytes;
+    size_t stride;
+    uint32_t initialCount;
+    uint32_t capacity;
+    uint32_t liveCount;
+    uint32_t peakCount;
+};
+
+struct PhysicsPools {
+    PhysicsSlotPool slots[PHYSICS_OBJECT_TYPE_COUNT];
+};
+
+static const PhysicsObjectInfo componentInfo[PHYSICS_OBJECT_TYPE_COUNT] = {
+    {"RigidBodySlotPool", 0x180u, 16u, 1u, 32u},
+    {"TwoWheelAckermanSteeringSlotPool", 0x90u, 16u, 1u, 0u},
+    {"WheelSlotPool", 0x190u, 16u, 4u, 0u},
+    {"EngineSlotPool", 0x5cu, 16u, 1u, 0u},
+    {"DriveTrainSlotPool", 0x98u, 16u, 1u, 0u},
+    {"AerodynamicsSlotPool", 0x18u, 16u, 1u, 0u},
+    {"SuspensionSlotPool", 0xb0u, 16u, 4u, 0u},
+    {"MellovatorSlotPool", 0x1c0u, 16u, 1u, 0u},
+    {"MellowMoverSlotPool", 0x40u, 16u, 1u, 0u},
+    {"NullMoverSlotPool", 0x0cu, 16u, 1u, 0u}
+};
+
+static int physicsPoolValidType(PhysicsObjectType type)
+{
+    return type >= PHYSICS_OBJECT_RIGID_BODY && type < PHYSICS_OBJECT_TYPE_COUNT;
 }
 
-// Debug 00138C80; E-0044-P01/P02.
-void PhysicsCar::InitializeStateFromCar() {
-    auto& m=m_; [[maybe_unused]] const auto object=address_,s=address_,mover=address_;
-    using namespace port::driving; using namespace port::driving::native;
+const PhysicsObjectInfo* physicsObjectInfo(PhysicsObjectType type)
+{
+    return physicsPoolValidType(type) ? &componentInfo[type] : NULL;
+}
 
-    using namespace detail_group_00137100_runtime;
-    const auto car=m.word(object+0x50);
-    Sub_0019CC88(m,m.word(object+0x18),car+0x20,car+0x50,car+0x30,car+0x90);
-    for(unsigned i=0;i<4;++i){
-        init::Sub_001A5FB0(m.view(m.word(object+0x20+4*i),0xa0));
-        init::SetState(m.view(m.word(object+0x30+4*i),0x184),m.scalar(car+0x2c0+4*i),m.scalar(car+0x2b0+4*i));
+static void physicsPoolFreeStorage(PhysicsSlotPool* slot)
+{
+    PhysicsSlotBlock* block = slot->blocks;
+    while (block != NULL) {
+        PhysicsSlotBlock* next = block->next;
+        bFree(block->memory);
+        bFree(block->entries);
+        free(block);
+        block = next;
     }
-    float value=global(m,0xb834);if(value==100.0f)value=m.scalar(car+0x390);
-    m.scalar(m.word(object+0x40)+0xc,value*global(m,0x844c));
-    const auto drive=m.word(object+0x44),word=m.word(car+0x388);
-    m.word(drive+0x2c,word);m.word(drive+0x38,3);m.scalar(drive+0xc,1);m.word(drive+0x4c,0);m.word(drive+0x30,word);
-
+    memset(slot, 0, sizeof(*slot));
 }
 
-// Debug 00137798; E-0044-P01/P02.
-DampingSuitability PhysicsCar::CheckDampingSuitability() {
-    auto& m=m_; [[maybe_unused]] const auto object=address_,s=address_,mover=address_;
-    using namespace port::driving; using namespace port::driving::native;
-
-    using namespace detail_group_00137100_runtime;
-    const auto car=m.word(object+0x54),body=m.word(object+0x18);const auto mode=m.signed_word(car+0x3bc);
-    if(!(m.scalar(m.word(object)+0x214)<=global(m,0x83d4))&&mode>=1)return DS_NO_DAMP;
-    const auto speed=length(m.vector(body+0x90)),angular=length(m.vector(body+0xa0));
-    if(!(speed<=global(m,0x83d8))||!(angular<=global(m,0x83d8))||!(std::abs(m.scalar(body+0x28))<=0.25f)||!(std::abs(m.scalar(body+0x38))<=0.25f))return DS_NO_DAMP;
-    if(IsBlinking(m,car)||(mode==0&&m.byte(m.word(car+0x34)+0x12)==0))return DS_NO_DAMP;
-    return speed<=0.25f&&angular<=0.25f?DS_DOUSE:DS_DAMP;
-
-}
-
-// Debug 001378C0; E-0044-P01/P02.
-void PhysicsCar::BottomOut(port::driving::native::InitServices& services) {
-    auto& m=m_; [[maybe_unused]] const auto object=address_,s=address_,mover=address_;
-    using namespace port::driving; using namespace port::driving::native;
-
-    using namespace detail_group_00137100_runtime;
-    bool changed=false;const auto body=m.word(object+0x18),car=m.word(object+0x54);
-    for(unsigned i=0;i<4;++i){const auto wheel=m.word(object+0x20+4*i);
-        if(m.scalar(wheel+0x14)==m.scalar(m.word(wheel+0xc)+0x14)){changed=true;const float result=ApplyGroundPenaltyImpulse(m,wheel);const auto target=m.word(object+0x50)+0x2f0+4*i;m.scalar(target,m.scalar(target)+result);}}
-    const auto mode=CheckDampingSuitability();
-    if(mode==1){const auto factor=global(m,0x83e0);for(auto offset:{0x60,0x70}){auto v=m.vector(body+offset);for(auto& lane:v)lane=lane*factor;m.vector(body+offset,v);}
-        for(unsigned i=0;i<4;++i){const auto wheel=m.word(object+0x30+4*i);m.scalar(wheel+0x20,m.scalar(wheel+0x20)*factor);}
-        changed=true;if(global(m,0x83e4)<length(m.vector(body+0x90)))m.word(object+0x6c,0);m.byte(m.word(car+0x34)+0x13,1);
-    }else if(mode==0){if(global(m,0x83dc)<length(m.vector(body+0x90)))m.word(object+0x6c,0);m.byte(m.word(car+0x34)+0x13,1);
-    }else if(mode==2){
-        if(!services.Field_00137938_stack_w)hp2::not_implemented("0x001378C0","Explicit original temporary W projection is absent");
-        for(auto offset:{0x60,0x70}){for(unsigned i=0;i<3;++i)m.word(body+offset+4*i,0);m.word(body+offset+12,*services.Field_00137938_stack_w);}
-        if(m.signed_word(car+0x3bc)>0)for(unsigned i=0;i<4;++i)m.word(m.word(object+0x30+4*i)+0x20,0);
-        changed=true;
-        if(m.scalar(body+0x48)<global(m,0x83e8)){
-            const auto start=m.word(object+0x6c);if(!start||start==0x7fffffff)m.word(object+0x6c,m.word(global_address(0xb388)));
-            else if(1.0f<float(signed_bits(m.word(global_address(0xb388))-start))*global(m,0x83ec))PleaseResetMeLater(m,car,services);
-        }else m.word(object+0x6c,0);
-        m.byte(m.word(car+0x34)+0x13,0);
+static PhysicsPoolStatus physicsPoolAddBlock(PhysicsSlotPool* slot, uint32_t count,
+                                             const char* name)
+{
+    if (count == 0) return PHYSICS_POOL_OK;
+    if (count > UINT32_MAX - slot->capacity || slot->stride > INT_MAX / count ||
+        sizeof(PhysicsSlotEntry) > INT_MAX / count)
+        return PHYSICS_POOL_OVERFLOW;
+    PhysicsSlotBlock* block = static_cast<PhysicsSlotBlock*>(calloc(1, sizeof(*block)));
+    if (block == NULL) return PHYSICS_POOL_OUT_OF_MEMORY;
+    block->memory = static_cast<unsigned char*>(bMalloc(static_cast<int>(slot->stride * count), name, 0, 0x10));
+    block->entries = static_cast<PhysicsSlotEntry*>(bMalloc(static_cast<int>(sizeof(PhysicsSlotEntry) * count),
+                                                           "PhysicsSlotLinks", 0, 0x10));
+    if (block->memory == NULL || block->entries == NULL) {
+        bFree(block->memory);
+        bFree(block->entries);
+        free(block);
+        return PHYSICS_POOL_OUT_OF_MEMORY;
     }
-    if(m.word(global_address(0xa708))&&m.word(car+0x20)==1){
-        if(!services.Field_00137938_stack_w)hp2::not_implemented("0x001378C0","Explicit original temporary W projection is absent");
-        std::array<float,4> point{{0,0,0,0}};std::memcpy(&point[3],&*services.Field_00137938_stack_w,4);
-        auto input=point;input[2]=25;
-        m.word(global_address(0xa708),0);ApplyImpulse(m,body,input,point);changed=true;
+    block->count = count;
+    for (uint32_t i = 0; i < count; ++i) {
+        block->entries[i].object = block->memory + static_cast<size_t>(i) * slot->stride;
+        block->entries[i].state = 0;
+        block->entries[i].next = i + 1 < count ? &block->entries[i + 1] : slot->freeHead;
     }
-    if(changed){m.word(global_address(0xb408),0);PhysicsSystem::ComputeAuxiliaries(m,object+8,services);}
-
+    // Publish only after all allocations succeed: failure keeps the pool and
+    // all borrowed component pointers unchanged.
+    block->next = slot->blocks;
+    slot->blocks = block;
+    slot->freeHead = block->entries;
+    slot->capacity += count;
+    return PHYSICS_POOL_OK;
 }
 
-// Debug00137748 E-0044-P01/P02.
-void PhysicsCar::ComputeAuxiliaries(port::driving::native::InitServices& services){
- auto& m=m_;const auto object=address_;
- port::driving::native::PhysicsSystem::ComputeAuxiliaries(m,object+8,services);BottomOut(services);
- const auto table=m.word(object+0x14),target=m.word(table+0x1c),adjusted=object+8+static_cast<std::int32_t>(m.signed_half(table+0x18));
- if(target!=0x00138d90)hp2::not_implemented("0x00137748","Unknown final virtual target");
- if(!services.ResolveForces)hp2::not_implemented("0x00138D90","Final constructor synchronization service is absent");
- services.ResolveForces(m,adjusted);
+PhysicsPools* physicsPoolsCreate(uint32_t vehicles,
+                                 const size_t nativeBytes[PHYSICS_OBJECT_TYPE_COUNT],
+                                 PhysicsPoolStatus* status)
+{
+    size_t strides[PHYSICS_OBJECT_TYPE_COUNT];
+    size_t selectedBytes[PHYSICS_OBJECT_TYPE_COUNT];
+    uint32_t capacities[PHYSICS_OBJECT_TYPE_COUNT];
+    for (int i = 0; i < PHYSICS_OBJECT_TYPE_COUNT; ++i) {
+        const PhysicsObjectInfo* info = &componentInfo[i];
+        const size_t bytes = nativeBytes != NULL && nativeBytes[i] > info->originalBytes
+            ? nativeBytes[i] : info->originalBytes;
+        if (vehicles > (UINT32_MAX - info->permanentExtraInstances) / info->instancesPerVehicle ||
+            bytes > SIZE_MAX - (info->allocationAlignment - 1)) {
+            if (status != NULL) *status = PHYSICS_POOL_OVERFLOW;
+            return NULL;
+        }
+        capacities[i] = vehicles * info->instancesPerVehicle + info->permanentExtraInstances;
+        strides[i] = (bytes + info->allocationAlignment - 1) & ~(info->allocationAlignment - 1);
+        if (capacities[i] != 0 && (strides[i] > INT_MAX / capacities[i] ||
+                                  sizeof(PhysicsSlotEntry) > INT_MAX / capacities[i])) {
+            if (status != NULL) *status = PHYSICS_POOL_OVERFLOW;
+            return NULL;
+        }
+        selectedBytes[i] = bytes;
+    }
+    PhysicsPools* pools = static_cast<PhysicsPools*>(calloc(1, sizeof(*pools)));
+    if (pools == NULL) {
+        if (status != NULL) *status = PHYSICS_POOL_OUT_OF_MEMORY;
+        return NULL;
+    }
+    for (int i = 0; i < PHYSICS_OBJECT_TYPE_COUNT; ++i) {
+        PhysicsSlotPool* slot = &pools->slots[i];
+        slot->nativeBytes = selectedBytes[i];
+        slot->stride = strides[i];
+        slot->initialCount = capacities[i];
+        const PhysicsPoolStatus result = physicsPoolAddBlock(slot, capacities[i], componentInfo[i].name);
+        if (result != PHYSICS_POOL_OK) {
+            for (int j = 0; j <= i; ++j) physicsPoolFreeStorage(&pools->slots[j]);
+            free(pools);
+            if (status != NULL) *status = result;
+            return NULL;
+        }
+    }
+    if (status != NULL) *status = PHYSICS_POOL_OK;
+    return pools;
 }
-// Debug 001370C0; E-0044-P01/P02.
-void PhysicsCar::Initialize(std::uint32_t config,std::uint32_t controls,std::uint32_t car,port::driving::native::InitServices& services) {
-    auto& m=m_; [[maybe_unused]] const auto object=address_,s=address_,mover=address_;
-    using namespace port::driving; using namespace port::driving::native;
 
-    using namespace detail_group_00137100_runtime;
-    m.word(object+4,0x002a67d0);init::Sub_0019C170(m.view(object+8,0x10),object+8);m.word(object+0x14,0x002a6b18);
-    m.word(object,controls);m.word(object+0x58,0);m.word(object+0x5c,0);m.word(object+0x6c,0);m.word(object+0x4c,config);m.word(object+0x54,car);
-    m.word(object+0x14,0x002a6ad8);m.word(object+4,0x002a6af8);m.word(object+0x50,car+0x40);m.scalar(object+0x70,1);
-    // Port-owned capacities are bounds for recovered offsets, not recovered pool sizes.
-    const auto body=m.allocate(0x180);init::Sub_0019C9B0(m.view(body,0x180),config+0x1e0,m.view(config+0x1e0,0x50));m.word(object+0x18,body);AddComponent(m,object+8,body);
-    m.word(body+0x174,m.word(config+0x320));m.word(body+0x114,m.byte(config+0xe4)!=0);
-    const auto steering=m.allocate(0x90);m.word(steering,config);m.word(steering+8,0x002adad8);m.word(steering+4,steering+0x10);m.word(object+0x1c,steering);
-    for(unsigned i=0;i<4;++i){const auto axle=(i/2)*0x20;const auto wheel=m.allocate(0x184);
-        init::Sub_001A3F10(m.view(wheel,0x184),config+0x120+i*0x20,config+0x1a0+axle,config+0x300,car+0x40);m.word(object+0x30+4*i,wheel);
-        const auto controller=m.allocate(0xb0);init::Sub_001A5EA0(m.view(controller,0xb0),i,body,wheel,i<2?steering:0,config+0x230+axle);m.word(object+0x20+4*i,controller);
-        AddComponent(m,object+8,wheel);AddComponent(m,object+8,controller);}
-    for(unsigned i=0;i<4;++i)m.word(m.word(object+0x20+4*i)+0x10,m.word(object+0x20+4*(i^1)));
-    const auto engine=m.allocate(0x60);port::driving::Sub_0018A7E8(m,engine,config+0x2b0,car+0x40);m.word(object+0x40,engine);AddComponent(m,object+8,engine);m.word(engine+0x40,m.byte(config+0xe4)!=0);
-    const auto drive=m.allocate(0xa0);port::driving::Sub_0018AE70(m,drive,config+0x270,engine,object+0x30,car+0x40);m.word(object+0x44,drive);AddComponent(m,object+8,drive);
-    const auto helper=m.allocate(0x18);m.scalar(helper+8,1);m.scalar(helper+0xc,1);m.word(helper+0x10,0);m.word(helper+0x14,0);m.word(object+0x48,helper);m.word(helper+4,body);m.word(helper,config+0x2f0);
-    m.word(global_address(0xb408),0);Calibrate();InitializeStateFromCar();ComputeAuxiliaries(services);
-    m.scalar(object+0x74,1);m.word(object+0x64,1);m.word(object+0x68,2);m.word(object+0x60,1);return;
-
+PhysicsPoolStatus physicsPoolsClose(PhysicsPools* pools)
+{
+    if (pools == NULL) return PHYSICS_POOL_INVALID_ARGUMENT;
+    for (int i = 0; i < PHYSICS_OBJECT_TYPE_COUNT; ++i)
+        if (pools->slots[i].liveCount != 0) return PHYSICS_POOL_STILL_IN_USE;
+    physicsPoolsDestroy(pools);
+    return PHYSICS_POOL_OK;
 }
 
-// Debug 00139418; E-0044-P01/P02.
-void PhysicsCar::SetBoost(float value) {
-    auto& m=m_; [[maybe_unused]] const auto object=address_,s=address_,mover=address_;
-    using namespace port::driving; using namespace port::driving::native;
-
-    using namespace detail_group_00137d90;
-    const auto car=m.word(s+0x54);float f6=value;
-    m.scalar(m.word(s+0x40)+0x58,f6);m.scalar(m.word(s+0x18)+0x178,value);
-    const auto helper=m.word(s+0x48);m.scalar(helper+8,value);m.scalar(helper+0xc,1.0f-m.scalar(car+0x458));
-    for(unsigned i=0;i<4;++i)m.scalar(m.word(s+0x30+4*i)+0x17c,value);
-
+void physicsPoolsDestroy(PhysicsPools* pools)
+{
+    if (pools != NULL) {
+        for (int i = 0; i < PHYSICS_OBJECT_TYPE_COUNT; ++i) physicsPoolFreeStorage(&pools->slots[i]);
+        free(pools);
+    }
 }
 
-// Debug 00137D18; E-0044-P01/P02.
-float PhysicsCar::Move(float dt,port::driving::native::DrivingServices& hooks) {
-    auto& m=m_; [[maybe_unused]] const auto object=address_,s=address_,mover=address_;
-    using namespace port::driving; using namespace port::driving::native;
+void* physicsPoolAcquire(PhysicsPools* pools, PhysicsObjectType type, PhysicsPoolStatus* status)
+{
+    if (pools == NULL || !physicsPoolValidType(type)) {
+        if (status != NULL) *status = PHYSICS_POOL_INVALID_ARGUMENT;
+        return NULL;
+    }
+    PhysicsSlotPool* slot = &pools->slots[type];
+    if (slot->freeHead == NULL) {
+        const PhysicsPoolStatus result = physicsPoolAddBlock(slot, (slot->initialCount >> 2) + 1,
+                                                           componentInfo[type].name);
+        if (result != PHYSICS_POOL_OK) {
+            if (status != NULL) *status = result;
+            return NULL;
+        }
+    }
+    PhysicsSlotEntry* entry = slot->freeHead;
+    slot->freeHead = entry->next;
+    // Default source flags15 include the SlotPool::Malloc zeroing bit.
+    // Apply it to the widened native slot on first use and on LIFO reuse.
+    memset(entry->object, 0, slot->stride);
+    entry->state = 1;
+    ++slot->liveCount;
+    if (slot->liveCount > slot->peakCount) slot->peakCount = slot->liveCount;
+    if (status != NULL) *status = PHYSICS_POOL_OK;
+    return entry->object;
+}
 
-    using namespace detail_group_00137d90;
-    const auto car=m.word(s+0x54);
-    const auto mode_address=m.word(ga(0xa900));
-    if(m.signed_word(mode_address)==4 && m.word(ga(0xa758))!=0)hp2::not_implemented("0x00137D18","Excluded original Race4 diagnostic position-restore branch");
-    const auto start=invoke(hooks.Sub_00250F38,"0x0024A340");
-    SetBoost(m.scalar(car+0x3e0));Calibrate();
-    const auto controls=m.word(s),body=m.word(s+0x18),state=m.word(s+0x50),config=m.word(s+0x4c);
-    const auto engine=m.word(s+0x40),drive=m.word(s+0x44);
-    if(m.scalar(controls+0x218)<m.scalar(controls+0x214) && m.scalar(controls+0x21c)<m.scalar(controls+0x214)) {
-        if(m.scalar(controls+0x218)<0.5f)m.word(controls+0x218,0);
-        if(m.scalar(controls+0x21c)<0.5f)m.word(controls+0x21c,0);
-    }else if(m.scalar(controls+0x214)<0.5f)m.word(controls+0x214,0);
-    const auto steering=m.word(s+0x1c),table=m.word(steering+8);
-    if(m.word(table+0x14)!=0x001a3540)hp2::not_implemented("0x00137D18","Unrecovered steering virtual target");
-    Sub_001A5D60(m,steering+static_cast<std::int32_t>(m.signed_half(table+0x10)),m.half(controls+0x210));
-    m.word(engine+0x44,m.word(controls+0x214));
-    SetSportGear(m,drive,m.signed_word(controls+0x224));
-    if(m.word(controls+0x228)!=0){m.word(engine+0x50,1);m.scalar(engine+0x54,static_cast<float>(m.signed_word(ga(0xb388)))*g(m,0x83f4));}
-    DecrementNitro(m,engine);m.word(controls+0x228,0);
-    m.word(controls+0x220,static_cast<std::uint32_t>(SetDesiredGear(m,drive,m.signed_word(controls+0x220))));
-    m.word(controls+0x224,m.word(drive+0x48));
-    const bool active=g(m,0x83f8)<m.scalar(controls+0x214) ||
-        (m.word(state+0x37c)==4 && g(m,0x83fc)<std::fabs(m.scalar(state+0x58)));
-    m.word(body+0x110,active?0:1);
-    float f24=m.scalar(s+0x70);if(m.word(state+0x39c)==0)f24=f24*g(m,0xa724);
-    for(unsigned i=0;i<4;++i)m.word(state+0x2fc-4*i,0);
-    const float f25=m.scalar(state+0x380)*g(m,0x8400);
-    // Debug00137F60..00138294; E-0046-P01. REAL_CONTROL burnout state,
-    // original source ../indep/src/physicscar.cpp. These are Debug globals,
-    // not a Retail address delta; preserve instruction comparison/order.
-    if(m.word(car+0x20)==1) {
-        if(!hooks.IsJoystickTypeWheel)hp2::not_implemented("0x0011D720","Joystick classification service is absent");
-        if(!hooks.IsJoystickTypeWheel(m.signed_word(controls+0x234))) {
-            if(m.word(state+0x3a4)!=0) {
-                const float remaining=m.scalar(state+0x3a8)-m.scalar(0x00327d08);
-                m.scalar(state+0x3a8,remaining);
-                if(remaining<0)m.word(state+0x3a4,0);
-                else if(m.scalar(0x003270a4)<std::fabs(GetYaw(m,state)))m.word(state+0x3a4,0);
-                else {
-                    bool below=true;
-                    for(unsigned i=0;i<4;++i)if(!(m.scalar(m.word(s+0x30+4*i)+0x108)<m.scalar(0x0032708c))){below=false;break;}
-                    if(below){const float allow=m.scalar(state+0x3b0)+m.scalar(0x00327d08);m.scalar(state+0x3b0,allow);
-                        if(m.scalar(0x0032709c)<allow)m.word(state+0x3a4,0);
-                    }else m.word(state+0x3b0,0);
-                }
-            } else if(m.word(state+0x39c)==1 && m.half(controls+0x210)==0 &&
-                      0<f25 && f25<m.scalar(0x00327090) && std::fabs(GetYaw(m,state))<m.scalar(0x003270a0)) {
-                const float threshold=m.scalar(0x00327084);
-                const float rear_left=m.scalar(m.word(s+0x38)+0x108),rear_right=m.scalar(m.word(s+0x3c)+0x108);
-                int selected=-1;
-                if(threshold<rear_left || threshold<rear_right){
-                    if(rear_right<rear_left){selected=2;m.word(state+0x3a4,1);}
-                    else{selected=3;m.word(state+0x3a4,2);}
-                }else{
-                    const float front_left=m.scalar(m.word(s+0x30)+0x108),front_right=m.scalar(m.word(s+0x34)+0x108);
-                    if(threshold<front_left || threshold<front_right){
-                        if(front_left<front_right){selected=1;m.word(state+0x3a4,1);}
-                        else{selected=0;m.word(state+0x3a4,2);}
-                    }
-                }
-                if(selected>=0 && !IsBlinking(m,car)){
-                    float torque=(m.scalar(m.word(s+0x30+4*selected)+0x108)-threshold)/(m.scalar(0x00327088)-threshold);
-                    if(1<torque)torque=1;
-                    const float speed=f25/m.scalar(0x00327090);
-                    float traction=m.scalar(0x00327094);
-                    const auto terrain2=m.word(m.word(s+0x38)+0x150),terrain3=m.word(m.word(s+0x3c)+0x150);
-                    if(m.scalar(0x003102e8+0x90*terrain2+0x20)!=1 || m.scalar(0x003102e8+0x90*terrain3+0x20)!=1)traction=traction*1.25f;
-                    m.word(state+0x3a8,m.word(0x00327098));
-                    float result=speed*(1.0f-torque);result=result*(1.0f-traction);result=traction+result;
-                    m.scalar(state+0x3ac,result);
-                }
+PhysicsPoolStatus physicsPoolRelease(PhysicsPools* pools, PhysicsObjectType type, void* object)
+{
+    if (pools == NULL || !physicsPoolValidType(type) || object == NULL)
+        return PHYSICS_POOL_INVALID_ARGUMENT;
+    PhysicsSlotPool* slot = &pools->slots[type];
+    const uintptr_t value = reinterpret_cast<uintptr_t>(object);
+    for (PhysicsSlotBlock* block = slot->blocks; block != NULL; block = block->next) {
+        const uintptr_t begin = reinterpret_cast<uintptr_t>(block->memory);
+        if (value < begin) continue;
+        const uintptr_t offset = value - begin;
+        if (offset >= static_cast<size_t>(block->count) * slot->stride) continue;
+        if (offset % slot->stride != 0) return PHYSICS_POOL_FOREIGN_POINTER;
+        PhysicsSlotEntry* entry = &block->entries[offset / slot->stride];
+        if (entry->state == 0) return PHYSICS_POOL_FOREIGN_POINTER;
+        if (entry->state == 2) return PHYSICS_POOL_DOUBLE_RELEASE;
+        entry->state = 2;
+        entry->next = slot->freeHead;
+        slot->freeHead = entry;
+        --slot->liveCount;
+        return PHYSICS_POOL_OK;
+    }
+    return PHYSICS_POOL_FOREIGN_POINTER;
+}
+
+PhysicsPoolStatus physicsPoolGetUsage(const PhysicsPools* pools, PhysicsObjectType type, PhysicsPoolUsage* out)
+{
+    if (pools == NULL || !physicsPoolValidType(type) || out == NULL)
+        return PHYSICS_POOL_INVALID_ARGUMENT;
+    const PhysicsSlotPool* slot = &pools->slots[type];
+    out->capacity = slot->capacity;
+    out->allocated = slot->liveCount;
+    out->peakAllocated = slot->peakCount;
+    out->nativeObjectBytes = slot->nativeBytes;
+    out->slotStride = slot->stride;
+    return PHYSICS_POOL_OK;
+}
+
+
+PhysicsPools* physicsObjectsCreatePools(uint32_t vehicleCapacity, PhysicsPoolStatus* status)
+{
+    const size_t nativeBytes[PHYSICS_OBJECT_TYPE_COUNT] = {
+        sizeof(RigidBody), sizeof(Steering), sizeof(Wheel), sizeof(Engine),
+        sizeof(DriveTrain), sizeof(Aerodynamics), sizeof(Suspension),
+        sizeof(Mellovator), sizeof(MellowMover), sizeof(NullMover)
+    };
+    return physicsPoolsCreate(vehicleCapacity, nativeBytes, status);
+}
+
+PhysicsPoolStatus physicsObjectsClosePools(PhysicsPools* pools)
+{
+    return physicsPoolsClose(pools);
+}
+
+RigidBody* physicsObjectsAcquireRigidBody(PhysicsPools* pools, PhysicsPoolStatus* status)
+{ return (RigidBody*)physicsPoolAcquire(pools, PHYSICS_OBJECT_RIGID_BODY, status); }
+PhysicsPoolStatus physicsObjectsReleaseRigidBody(PhysicsPools* pools, RigidBody* object)
+{ return physicsPoolRelease(pools, PHYSICS_OBJECT_RIGID_BODY, object); }
+Steering* physicsObjectsAcquireSteering(PhysicsPools* pools, PhysicsPoolStatus* status)
+{ return (Steering*)physicsPoolAcquire(pools, PHYSICS_OBJECT_STEERING, status); }
+PhysicsPoolStatus physicsObjectsReleaseSteering(PhysicsPools* pools, Steering* object)
+{ return physicsPoolRelease(pools, PHYSICS_OBJECT_STEERING, object); }
+Wheel* physicsObjectsAcquireWheel(PhysicsPools* pools, PhysicsPoolStatus* status)
+{ return (Wheel*)physicsPoolAcquire(pools, PHYSICS_OBJECT_WHEEL, status); }
+PhysicsPoolStatus physicsObjectsReleaseWheel(PhysicsPools* pools, Wheel* object)
+{ return physicsPoolRelease(pools, PHYSICS_OBJECT_WHEEL, object); }
+Engine* physicsObjectsAcquireEngine(PhysicsPools* pools, PhysicsPoolStatus* status)
+{ return (Engine*)physicsPoolAcquire(pools, PHYSICS_OBJECT_ENGINE, status); }
+PhysicsPoolStatus physicsObjectsReleaseEngine(PhysicsPools* pools, Engine* object)
+{ return physicsPoolRelease(pools, PHYSICS_OBJECT_ENGINE, object); }
+DriveTrain* physicsObjectsAcquireDriveTrain(PhysicsPools* pools, PhysicsPoolStatus* status)
+{ return (DriveTrain*)physicsPoolAcquire(pools, PHYSICS_OBJECT_DRIVE_TRAIN, status); }
+PhysicsPoolStatus physicsObjectsReleaseDriveTrain(PhysicsPools* pools, DriveTrain* object)
+{ return physicsPoolRelease(pools, PHYSICS_OBJECT_DRIVE_TRAIN, object); }
+Aerodynamics* physicsObjectsAcquireAerodynamics(PhysicsPools* pools, PhysicsPoolStatus* status)
+{ return (Aerodynamics*)physicsPoolAcquire(pools, PHYSICS_OBJECT_AERODYNAMICS, status); }
+
+Suspension* physicsObjectsAcquireSuspension(PhysicsPools* pools, PhysicsPoolStatus* status)
+{ return (Suspension*)physicsPoolAcquire(pools, PHYSICS_OBJECT_SUSPENSION, status); }
+PhysicsPoolStatus physicsObjectsReleaseSuspension(PhysicsPools* pools, Suspension* object)
+{ return physicsPoolRelease(pools, PHYSICS_OBJECT_SUSPENSION, object); }
+Mellovator* physicsObjectsAcquireMellovator(PhysicsPools* pools, PhysicsPoolStatus* status)
+{ return (Mellovator*)physicsPoolAcquire(pools, PHYSICS_OBJECT_MELLOVATOR, status); }
+PhysicsPoolStatus physicsObjectsReleaseMellovator(PhysicsPools* pools, Mellovator* object)
+{ return physicsPoolRelease(pools, PHYSICS_OBJECT_MELLOVATOR, object); }
+MellowMover* physicsObjectsAcquireMellowMover(PhysicsPools* pools, PhysicsPoolStatus* status)
+{ return (MellowMover*)physicsPoolAcquire(pools, PHYSICS_OBJECT_MELLOW_MOVER, status); }
+PhysicsPoolStatus physicsObjectsReleaseMellowMover(PhysicsPools* pools, MellowMover* object)
+{ return physicsPoolRelease(pools, PHYSICS_OBJECT_MELLOW_MOVER, object); }
+NullMover* physicsObjectsAcquireNullMover(PhysicsPools* pools, PhysicsPoolStatus* status)
+{ return (NullMover*)physicsPoolAcquire(pools, PHYSICS_OBJECT_NULL_MOVER, status); }
+PhysicsPoolStatus physicsObjectsReleaseNullMover(PhysicsPools* pools, NullMover* object)
+{ return physicsPoolRelease(pools, PHYSICS_OBJECT_NULL_MOVER, object); }
+
+static int requireArgument(const void* argument, PhysicsPoolStatus* status)
+{
+    if (argument != NULL) return 1;
+    if (status != NULL) *status = PHYSICS_POOL_INVALID_ARGUMENT;
+    return 0;
+}
+
+RigidBody* physicsObjectsCreateRigidBody(PhysicsPools* pools, const RigidBodyInfo* info,
+                                        const RigidBodyTuning* tuning, PhysicsPoolStatus* status)
+{
+    if (!requireArgument(info, status) || !requireArgument(tuning, status)) return NULL;
+    RigidBody* body = physicsObjectsAcquireRigidBody(pools, status);
+    if (body != NULL) *body = RigidBody{};
+    return body != NULL ? rigidBodyInitialize(body, info, tuning) : NULL;
+}
+
+Engine* physicsObjectsCreateEngine(PhysicsPools* pools, const EngineInfo* info,
+                                   const EngineVehicleState* vehicle, const EngineTuning* tuning,
+                                   PhysicsPoolStatus* status)
+{
+    if (!requireArgument(info, status) || !requireArgument(vehicle, status) ||
+        !requireArgument(tuning, status)) return NULL;
+    Engine* engine = physicsObjectsAcquireEngine(pools, status);
+    if (engine != NULL) *engine = Engine{};
+    return engine != NULL ? engineInitialize(engine, info, vehicle, tuning) : NULL;
+}
+
+DriveTrain* physicsObjectsCreateDriveTrain(PhysicsPools* pools, const DriveTrainInfo* info,
+                                          Engine* engine, Wheel* const wheels[4],
+                                          DriveTrainVehicleState* vehicle,
+                                          const DriveTrainTuning* tuning, PhysicsPoolStatus* status)
+{
+    if (!requireArgument(info, status) || !requireArgument(engine, status) ||
+        !requireArgument(wheels, status) || !requireArgument(vehicle, status) ||
+        !requireArgument(tuning, status)) return NULL;
+    for (int i = 0; i < 4; ++i) if (!requireArgument(wheels[i], status)) return NULL;
+    DriveTrain* driveTrain = physicsObjectsAcquireDriveTrain(pools, status);
+    if (driveTrain != NULL) *driveTrain = DriveTrain{};
+    return driveTrain != NULL ? driveTrainInitialize(driveTrain, info, engine, wheels, vehicle, tuning) : NULL;
+}
+
+Steering* physicsObjectsCreateSteering(PhysicsPools* pools, const SteeringGeometry* geometry,
+                                      PhysicsPoolStatus* status)
+{
+    if (!requireArgument(geometry, status)) return NULL;
+    Steering* steering = physicsObjectsAcquireSteering(pools, status);
+    if (steering != NULL) *steering = Steering{};
+    if (steering != NULL) steeringInitialize(steering, geometry);
+    return steering;
+}
+
+Aerodynamics* physicsObjectsCreateAerodynamics(PhysicsPools* pools, const AerodynamicsInfo* info,
+                                               RigidBody* body, const AerodynamicsTuning* tuning,
+                                               PhysicsPoolStatus* status)
+{
+    if (!requireArgument(info, status) || !requireArgument(body, status) ||
+        !requireArgument(tuning, status)) return NULL;
+    Aerodynamics* aerodynamic = physicsObjectsAcquireAerodynamics(pools, status);
+    if (aerodynamic != NULL) *aerodynamic = Aerodynamics{};
+    if (aerodynamic != NULL) aerodynamicsInitialize(aerodynamic, info, body, tuning);
+    return aerodynamic;
+}
+
+
+void physicsCarSnapshot(PhysicsCar* car,ReplaySnapshot* snapshot)
+{
+    replaySnapshotBeginSection(snapshot,nullptr,"PhysicsCar");
+    replaySnapshotMoveFloat(snapshot,&car->gripScale);
+    rigidBodySnapshot(car->body,snapshot);
+    steeringDoSnapshot(car->steering,snapshot);
+    for(int wheel=0;wheel<4;++wheel) {
+        wheelSerializePersistentState(car->wheels[wheel],snapshot);
+        suspensionSerializePersistentState(car->suspension[wheel],snapshot);
+    }
+    engineSnapshot(car->engine,snapshot);
+    driveTrainSnapshot(car->driveTrain,snapshot);
+    aerodynamicsResetTransientState(car->aerodynamics,snapshot);
+    replaySnapshotMoveFloat(snapshot,&car->brakeRecovery);
+    replaySnapshotMoveData(snapshot,&car->momentumHoldTicks,4,-1,0);
+    replaySnapshotMoveData(snapshot,&car->momentumHoldStart,4,-1,0);
+    replaySnapshotMoveData(snapshot,&car->momentumHold,1,4,0);
+    replaySnapshotMoveData(snapshot,&car->momentumHoldArmed,1,4,0);
+    replaySnapshotMoveInteger(snapshot,&car->momentumHoldStarts,4);
+    replaySnapshotMoveData(snapshot,&car->uprightRecoveryStart,4,-1,0);
+    replaySnapshotEndSection(snapshot);
+}
+
+const PhysicsCarTuning physicsCarDefaultTuning = {
+    0.8500000238418579f, 0.004399999976158142f,
+    1.5f, 3.0f, 1.0f, 15.0f, 0.4000000059604645f, 1.0f,
+    0.1666666716337204f, 0.1963493824005127f, 0.30000001192092896f,
+    6.0f, 1, 0
+};
+
+static float dotThree(const float first[3], const float second[3])
+{
+    const float x = first[0] * second[0];
+    const float y = first[1] * second[1];
+    const float z = first[2] * second[2];
+    const float xy = x + y;
+    return xy + z;
+}
+
+static void toBodyFrame(float output[3], const float orientation[16], const float value[3])
+{
+    // PAL138FBC uses the original transpose and VU point-transform sequence.
+    float inverse[16], transformed[4];
+    motionMatrixTransposeRotation(inverse, orientation);
+    vectorMatrixTransformPoint(transformed, inverse, value);
+    for (int axis = 0; axis < 3; ++axis) output[axis] = transformed[axis];
+}
+
+static int32_t elapsedTicks(int32_t now, int32_t start)
+{
+    const uint32_t elapsed = (uint32_t)now - (uint32_t)start;
+    int32_t result;
+    memcpy(&result, &elapsed, sizeof(result));
+    return result;
+}
+
+static void refreshComponentViews(PhysicsCar* car)
+{
+    car->engineView.brakingMode = car->state->pursuitMode;
+    car->driveTrainView.speedMetersPerSecond = car->state->speed;
+    car->driveTrainView.differentialMode = car->state->tractionAssistPhase;
+    car->wheelView.speed = car->state->forwardSpeed;
+    car->wheelView.pursuitMode = car->state->pursuitMode;
+    for (int i = 0; i < 4; ++i) {
+        car->wheelSteps[i].elapsed = car->environment->stepContext->lastSubstepElapsed;
+        car->wheelSteps[i].rollingResistance =
+            car->environment->contact.materials[car->wheels[i]->materialIndex].rollingResistance;
+    }
+}
+
+static int32_t suspensionSize(void* object)
+{ return suspensionStateSize((Suspension*)object); }
+static void saveSuspension(void* object, float* output)
+{
+    const Suspension* suspension = (const Suspension*)object;
+    output[0] = suspension->motion.travel;
+    output[1] = suspension->motion.travelSpeed;
+}
+static void restoreSuspension(void* object, const float* input)
+{
+    const SuspensionState state = {input[0], input[1]};
+    suspensionRestoreState((Suspension*)object, &state);
+}
+static void suspensionDerivatives(void* object, const void* context, float* output)
+{
+    SuspensionState derivatives;
+    (void)context;
+    suspensionComputeDerivatives((Suspension*)object, &derivatives);
+    output[0] = derivatives.travel;
+    output[1] = derivatives.travelSpeed;
+}
+static void prepareSuspension(void* object, const void* context)
+{
+    const WheelContactContext contact=physicsCarContactContext((const PhysicsCarEnvironment*)context);
+    suspensionPrepareContact((Suspension*)object,&contact);
+}
+static void applySuspensionDelta(void* object, const float* derivatives, float elapsed)
+{
+    Suspension* suspension = (Suspension*)object;
+    const float travel = bScalarMultiply(elapsed, derivatives[0]);
+    const float speed = bScalarMultiply(elapsed, derivatives[1]);
+    suspension->motion.travel = bScalarAdd(suspension->motion.travel, travel);
+    suspension->motion.travelSpeed = bScalarAdd(suspension->motion.travelSpeed, speed);
+}
+static const ComponentOperations suspensionOperations = {
+    suspensionSize, saveSuspension, restoreSuspension, suspensionDerivatives,
+    prepareSuspension, applySuspensionDelta
+};
+
+static void prepareIntegratedCar(void* object)
+{ physicsCarPrepare((PhysicsCar*)object); }
+static void moveCar(void* object, float elapsed)
+{ (void)physicsCarMove((PhysicsCar*)object, elapsed); }
+
+WheelContactContext physicsCarContactContext(const PhysicsCarEnvironment* environment)
+{
+    const WheelContactContext contact={environment->contact.terrain,environment->contact.materials,
+        environment->contact.materialCount,environment->stepContext->lastSubstepElapsed,environment->contact.tuning};
+    return contact;
+}
+
+PhysicsPoolStatus physicsCarInitialize(PhysicsCar* car, const PhysicsCarInfo* info,
+                                       CarControls* controls, Car* owner,
+                                       CarMotionState* ownerMotion, VehicleState* state,
+                                       PhysicsCarEnvironment* environment, PhysicsPools* pools)
+{
+    if (car == NULL || info == NULL || controls == NULL || owner == NULL ||
+        ownerMotion == NULL || ownerMotion->collision == NULL || ownerMotion->collision->shape == NULL ||
+        ownerMotion->collision->policy == NULL || state == NULL ||
+        environment == NULL || environment->clock == NULL || environment->tuning == NULL || environment->settings == NULL ||
+        environment->stepContext == NULL ||
+        environment->contact.terrain == NULL || environment->contact.materials == NULL ||
+        environment->contact.materialCount == 0 || environment->contact.tuning == NULL ||
+        environment->raceStage == NULL ||
+        pools == NULL || info->body == NULL || info->centerOfMass == NULL ||
+        info->steering == NULL || info->engine == NULL || info->driveTrain == NULL ||
+        info->aerodynamics == NULL || info->wheels == NULL || info->tires == NULL ||
+        info->brakes == NULL || info->suspension == NULL)
+        return PHYSICS_POOL_INVALID_ARGUMENT;
+    // Traffic cars deliberately have no CarDamage owner. The original
+    // PhysicsCar accepts them and Move checks that optional owner before
+    // asking BodyDamage for the enabled damage amount.
+    memset(car, 0, sizeof(*car));
+    car->info = *info;
+    car->controls = controls;
+    car->owner = owner;
+    car->ownerMotion = ownerMotion;
+    car->state = state;
+    car->environment = environment;
+    car->pools = pools;
+    wheelTrailStoreInitialize(&car->localTrailStore, car->localTrails, 16);
+    state->position = owner->position;
+    state->centerOfMass = info->centerOfMass;
+    state->wheelInfo = info->wheels;
+    memcpy(state->wheelSideOffset, info->wheelSideOffset, sizeof(state->wheelSideOffset));
+    componentSystemInitialize(&car->components, car->bindings, 11);
+    car->components.stageOwner = car;
+    car->components.prepareStage = prepareIntegratedCar;
+    car->gripScale = 1.0f;
+    PhysicsPoolStatus status = PHYSICS_POOL_OK;
+    car->body = physicsObjectsCreateRigidBody(pools, info->body, &rigidBodyDefaultTuning, &status);
+    if (car->body == NULL) goto failed;
+    rigidBodySetForwardSpeedLimit(car->body, info->forwardSpeedLimit);
+    rigidBodySetPursuitSpeedEnabled(car->body, info->pursuitConfiguration != 0);
+    componentSystemAdd(&car->components, componentBindRigidBody(car->body));
+    car->steering = physicsObjectsCreateSteering(pools, info->steering, &status);
+    if (car->steering == NULL) goto failed;
+    for (int i = 0; i < 4; ++i) {
+        car->wheels[i] = physicsObjectsAcquireWheel(pools, &status);
+        if (car->wheels[i] == NULL) goto failed;
+        memset(car->wheels[i], 0, sizeof(*car->wheels[i]));
+        wheelInitialize(car->wheels[i], info->wheels + i, info->tires + i / 2,
+                        info->brakes, &car->wheelView);
+        car->suspension[i] = physicsObjectsAcquireSuspension(pools, &status);
+        if (car->suspension[i] == NULL) goto failed;
+        memset(car->suspension[i], 0, sizeof(*car->suspension[i]));
+        suspensionInitialize(car->suspension[i], i, car->body, car->wheels[i],
+                              i < 2 ? car->steering : NULL, info->suspension + i / 2);
+        componentSystemAdd(&car->components, componentBindWheel(car->wheels[i], car->wheelSteps + i));
+        const ComponentBinding binding = {
+            car->suspension[i], environment, &suspensionOperations
+        };
+        componentSystemAdd(&car->components, binding);
+    }
+    for (int i = 0; i < 4; ++i)
+        suspensionSetPairedSuspension(car->suspension[i], car->suspension[i ^ 1]);
+    car->engine = physicsObjectsCreateEngine(pools, info->engine, &car->engineView,
+                                             &engineDefaultTuning, &status);
+    if (car->engine == NULL) goto failed;
+    engineSetHotPursuit(car->engine, info->pursuitConfiguration != 0);
+    componentSystemAdd(&car->components, componentBindEngine(car->engine));
+    car->driveTrain = physicsObjectsCreateDriveTrain(pools, info->driveTrain, car->engine,
+        car->wheels, &car->driveTrainView, &driveTrainDefaultTuning, &status);
+    if (car->driveTrain == NULL) goto failed;
+    componentSystemAdd(&car->components, componentBindDriveTrain(car->driveTrain));
+    car->aerodynamics = physicsObjectsCreateAerodynamics(pools, info->aerodynamics, car->body,
+        &aerodynamicsDefaultTuning, &status);
+    if (car->aerodynamics == NULL) goto failed;
+    environment->stepContext->lastSubstepElapsed = 0.0f;
+    refreshComponentViews(car);
+    physicsCarPrepareAxleLoads(car);
+    physicsCarLoadState(car);
+    physicsCarPrepare(car);
+    car->brakeRecovery = 1.0f;
+    car->momentumHold = car->momentumHoldArmed = 1;
+    car->momentumHoldStarts = 2;
+    owner->movement = car;
+    owner->move = moveCar;
+    return PHYSICS_POOL_OK;
+failed:
+    physicsCarDispose(car);
+    return status;
+}
+
+void physicsCarDispose(PhysicsCar* car)
+{
+    if (car == NULL || car->pools == NULL) return;
+    WheelTrailStore* trails = car->environment->wheelTrails != NULL ?
+        car->environment->wheelTrails : &car->localTrailStore;
+    for (int i = 0; i < 4; ++i) wheelTrailDetach(trails, car->wheelTrails + i);
+    PhysicsPools* pools = car->pools;
+    if (car->steering != NULL) physicsObjectsReleaseSteering(pools, car->steering);
+    if (car->aerodynamics != NULL) physicsObjectsReleaseAerodynamics(pools, car->aerodynamics);
+    if (car->body != NULL) physicsObjectsReleaseRigidBody(pools, car->body);
+    for (int i = 0; i < 4; ++i) {
+        if (car->wheels[i] != NULL) physicsObjectsReleaseWheel(pools, car->wheels[i]);
+        if (car->suspension[i] != NULL) physicsObjectsReleaseSuspension(pools, car->suspension[i]);
+    }
+    if (car->engine != NULL) physicsObjectsReleaseEngine(pools, car->engine);
+    if (car->driveTrain != NULL) physicsObjectsReleaseDriveTrain(pools, car->driveTrain);
+    if (car->owner != NULL && car->owner->movement == car) {
+        car->owner->movement = NULL;
+        car->owner->move = NULL;
+    }
+    memset(car, 0, sizeof(*car));
+}
+
+void physicsCarPrepareAxleLoads(PhysicsCar* car)
+{
+    rigidBodySetCenterOfMass(car->body, car->info.centerOfMass);
+    rigidBodyRefreshMass(car->body);
+    const float center = car->environment->tuning->useCenterOfMassForLoad ? car->info.centerOfMass[0] : 0.0f;
+    const float front = bScalarAdd(car->info.steering->frontAxleX, -center);
+    const float rear = bScalarAdd(car->info.steering->rearAxleX, -center);
+    const float halfRatio = bScalarMultiply(bScalarDivide(front, bScalarAdd(front, -rear)), 0.5f);
+    const float frontRatio = bScalarAdd(0.5f, -halfRatio);
+    const float downforce = aerodynamicsEstimateDownforce(car->aerodynamics, car->state->forwardSpeed);
+    const float gravityLoad = bScalarMultiply(car->body->mass, 9.800000190734863f);
+    const float aerodynamicLoad = bScalarMultiply(car->info.preloadDownforceScale, downforce);
+    const float load = bScalarAdd(gravityLoad, aerodynamicLoad);
+    const float frontLoad = bScalarMultiply(load, frontRatio);
+    const float rearLoad = bScalarMultiply(load, halfRatio);
+    suspensionInitializeMount(car->suspension[0], frontLoad);
+    suspensionInitializeMount(car->suspension[1], frontLoad);
+    suspensionInitializeMount(car->suspension[2], rearLoad);
+    suspensionInitializeMount(car->suspension[3], rearLoad);
+    for (int i = 0; i < 4; ++i)
+        wheelInitializeRotationalInertia(car->wheels[i], car->environment->contact.tuning);
+}
+
+void physicsCarLoadState(PhysicsCar* car)
+{
+    VehicleState* state = car->state;
+    rigidBodySetMotion(car->body, state->position, state->orientation,
+                        state->velocity, state->angularVelocity);
+    for (int i = 0; i < 4; ++i) {
+        suspensionResetMotion(car->suspension[i]);
+        wheelSetMotion(car->wheels[i], state->wheelAngle[i], state->wheelAngularVelocity[i]);
+    }
+    car->engine->angularVelocity = state->engineRpm * 0.10471967607736588f;
+    car->driveTrain->desiredGear = car->driveTrain->currentGear = state->gear;
+    car->driveTrain->clutchState = 3;
+    car->driveTrain->clutch = 1.0f;
+    car->driveTrain->previousSlipRpm = 0.0f;
+}
+
+void physicsCarPrepare(PhysicsCar* car)
+{
+    componentSystemPrepare(&car->components);
+    refreshComponentViews(car);
+    physicsCarResolveSuspensionImpulses(car);
+    physicsCarCollectForces(car);
+}
+
+int32_t physicsCarRestState(const PhysicsCar* car)
+{
+    const RigidBody* body = car->body;
+    const VehicleState* state = car->state;
+    if (0.30000001192092896f < car->controls->throttle && state->activeContactCount > 0)
+        return 0;
+    const float linearSpeed = sqrtf(dotThree(body->linearVelocity, body->linearVelocity));
+    const float angularSpeed = sqrtf(dotThree(body->angularVelocity, body->angularVelocity));
+    if (0.699999988079071f < linearSpeed || 0.699999988079071f < angularSpeed ||
+        0.25f < fabsf(body->motion.orientation[2]) ||
+        0.25f < fabsf(body->motion.orientation[6]) ||
+        carMotionWindowActive(car->ownerMotion, car->environment->clock->worldTimer))
+        return 0;
+    if (state->activeContactCount == 0 && !car->ownerMotion->collision->shape->contactCount)
+        return 0;
+    return 0.25f < linearSpeed || 0.25f < angularSpeed ? 1 : 2;
+}
+
+void physicsCarResolveSuspensionImpulses(PhysicsCar* car)
+{
+    const WheelContactContext contact=physicsCarContactContext(car->environment);
+    int changed = 0;
+    RigidBody* body = car->body;
+    for (int i = 0; i < 4; ++i) {
+        if (suspensionAtBumpStop(car->suspension[i])) {
+            changed = 1;
+            const float impulse = suspensionResolveContactImpulse(car->suspension[i],&contact);
+            car->state->suspensionImpulse[i] = car->state->suspensionImpulse[i] + impulse;
+        }
+    }
+    const int32_t rest = physicsCarRestState(car);
+    if (rest == 0 || rest == 1) {
+        if (rest == 1) {
+            for (int axis = 0; axis < 4; ++axis) {
+                body->motion.linearMomentum[axis] = body->motion.linearMomentum[axis] * 0.949999988079071f;
+                body->motion.angularMomentum[axis] = body->motion.angularMomentum[axis] * 0.949999988079071f;
+            }
+            for (int i = 0; i < 4; ++i)
+                wheelSetAngularVelocity(car->wheels[i],
+                    car->wheels[i]->motion.angularVelocity * 0.949999988079071f);
+            changed = 1;
+        }
+        if (0.800000011920929f < sqrtf(dotThree(body->linearVelocity, body->linearVelocity)))
+            car->uprightRecoveryStart = 0;
+        car->ownerMotion->collision->shape->dirty = 1;
+    } else if (rest == 2) {
+        /* The console scratch vector had an unused fourth lane. Native momenta
+         * retain that lane while the three physical axes are brought to rest. */
+        for (int axis = 0; axis < 3; ++axis) {
+            body->motion.linearMomentum[axis] = 0.0f;
+            body->motion.angularMomentum[axis] = 0.0f;
+        }
+        if (car->state->activeContactCount > 0)
+            for (int i = 0; i < 4; ++i) wheelSetAngularVelocity(car->wheels[i], 0.0f);
+        changed = 1;
+        if (body->motion.orientation[10] < 0.10000000149011612f) {
+            const int32_t start = car->uprightRecoveryStart;
+            const int32_t now = car->environment->clock->worldTimer;
+            if (start != 0 && start != INT32_MAX) {
+                const float elapsed = (float)elapsedTicks(now, start) * 0.0002500000118743628f;
+                if (1.0f < elapsed)
+                    carMotionRequestRecovery(car->ownerMotion, &car->environment->recovery);
+            } else {
+                car->uprightRecoveryStart = now;
+            }
+        } else {
+            car->uprightRecoveryStart = 0;
+        }
+        car->ownerMotion->collision->shape->dirty = 0;
+    }
+    if (car->environment->requestUpwardImpulse && car->ownerMotion->inputCategory == 1) {
+        const float impulse[4] = {0.0f, 0.0f, 25.0f, 0.0f};
+        const float lever[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+        rigidBodyApplyImpulse(body, impulse, lever);
+        car->environment->requestUpwardImpulse = 0;
+        changed = 1;
+    }
+    if (changed) {
+        car->environment->stepContext->lastSubstepElapsed = 0.0f;
+        refreshComponentViews(car);
+        componentSystemPrepare(&car->components);
+    }
+}
+
+void physicsCarCollectWheelForces(PhysicsCar* car)
+{
+    const WheelContactContext contact=physicsCarContactContext(car->environment);
+    driveTrainResolveForces(car->driveTrain);
+    for (int i = 0; i < 4; ++i)
+        wheelComputeContactForces(car->wheels[i], &contact,
+                                   car->ownerMotion->collision->shape->contactCount);
+    float baseForce[3];
+    toBodyFrame(baseForce, car->body->motion.orientation, car->body->force);
+    for (int pass = 0; pass < 5; ++pass) {
+        float force[3] = {baseForce[0], baseForce[1], baseForce[2]};
+        float yawTorque = 0.0f;
+        for (int i = 0; i < 4; ++i) {
+            float reaction[3];
+            wheelCarReactionForce(car->wheels[i], reaction);
+            for (int axis = 0; axis < 3; ++axis) force[axis] = bScalarAdd(force[axis], reaction[axis]);
+            const float* lever = car->suspension[i]->mountOffset;
+            const float first = bScalarMultiply(lever[0], reaction[1]);
+            const float second = bScalarMultiply(lever[1], reaction[0]);
+            yawTorque = bScalarAdd(yawTorque, first);
+            yawTorque = bScalarAdd(yawTorque, -second);
+        }
+        const float accelerationX = bScalarDivide(force[0], car->body->mass);
+        const float accelerationY = bScalarDivide(force[1], car->body->mass);
+        const float yawAcceleration = bScalarDivide(yawTorque, rigidBodyYawInertia(car->body));
+        for (int i = 0; i < 4; ++i) {
+            Wheel* wheel = car->wheels[i];
+            if (!wheel->contactCorrectionDisabled && !wheel->rotationLocked) {
+                const float* lever = car->suspension[i]->mountOffset;
+                const float acceleration[2] = {
+                    bScalarAdd(accelerationX, -bScalarMultiply(yawAcceleration, lever[1])),
+                    bScalarAdd(accelerationY, bScalarMultiply(yawAcceleration, lever[0]))
+                };
+                wheelCorrectReactionTorque(wheel, acceleration);
             }
         }
+        driveTrainBalanceAcceleration(car->driveTrain);
     }
-    float f23=m.scalar(s+0x74);
-    if(0.5f<=m.scalar(controls+0x21c)){f23=f23-dt*20.0f;if(f23<0.5f)f23=0.5f;}
-    else {f23=f23+dt;if(1.0f<f23)f23=1.0f;}
-    m.scalar(s+0x74,f23);
-    for(unsigned i=0;i<4;++i) {
-        const auto wheel=m.word(s+0x30+4*i);
-        if(m.signed_word(mode_address)==4 || (m.word(s+0x60)!=0 && i<2)) {
-            float f0;
-            if(g(m,0x8404)<m.scalar(controls+0x214) && 0.5f<m.scalar(controls+0x218) && f25<10.0f && i>=2) f0=f25*g(m,0x8408);
-            else f0=m.scalar(controls+0x218)*m.scalar(0x2e7d90+4*i);
-            m.scalar(wheel+0x170,f0);
-        }else m.word(wheel+0x170,0);
-        float f20=m.scalar(controls+0x21c)*m.scalar(0x2e7da0+4*i);
-        bool add;
-        if(m.word(state+0x39c)==0)add=g(m,0x840c)<f20;
-        else add=g(m,0x8410)<f20 && g(m,0x8414)<std::fabs(GetYaw(m,state)) && f25<80.0f;
-        if(add)f20=f20+0.5f;
-        m.scalar(wheel+0x174,f20);
-        if(i==2) {
-            float a1=m.scalar(body+0x28);
-            const float factor=port::driving::YawFrictionBoost(m,GetYaw(m,state),f20,m.scalar(state+0x384),
-                m.scalar(config+0x310),m.scalar(config+0x314),GetPostCollisionYawControlBoost(m,car),m.signed_word(state+0x39c),a1);
-            float f0=factor-1.0f;f0=f23*f0;f0=f0+1.0f;f24=f24*f0;
+    for (int i = 0; i < 4; ++i)
+        wheelResolveContactForce(car->wheels[i], &contact);
+}
+
+void physicsCarCollectForces(PhysicsCar* car)
+{
+    float downforce;
+    aerodynamicsApplyForces(car->aerodynamics, &downforce);
+    const float load = car->environment->tuning->useDownforceForTireLoad ? bScalarMultiply(downforce, 0.25f) : 0.0f;
+    for (int i = 0; i < 4; ++i) suspensionSetContactLoad(car->suspension[i], load);
+    physicsCarCollectWheelForces(car);
+    const WheelContactContext contact=physicsCarContactContext(car->environment);
+    for (int i = 0; i < 4; ++i)
+        suspensionApplyContactForce(car->suspension[i], &contact);
+    physicsCarDampAirborneRotation(car);
+}
+
+void physicsCarDampAirborneRotation(PhysicsCar* car)
+{
+    static const CurveKey keys[3] = {{0.0f, 0.0f}, {0.4000000059604645f, 0.0f}, {2.0f, 20.0f}};
+    const KeyedCurve curve = {keys, 3};
+    if (car->state->activeContactCount < 2) {
+        const float* angular = car->body->angularVelocity;
+        const float speed = sqrtf(dotThree(angular, angular));
+        const float scale = car->body->mass * keyedCurveEvaluate(&curve, speed);
+        float torque[4];
+        for (int axis = 0; axis < 4; ++axis) torque[axis] = -scale * angular[axis];
+        rigidBodyAddTorque(car->body, torque);
+    }
+}
+
+void physicsCarSetGripScale(PhysicsCar* car, float scale)
+{
+    float engineScale = scale;
+    if (car->ownerMotion->disabledWheelMask && car->ownerMotion->collision->shape->contactCount)
+        engineScale = scale * 0.4000000059604645f;
+    car->engine->catchupMultiplier = engineScale;
+    rigidBodySetSpeedLimitScale(car->body, scale);
+    car->aerodynamics->speedScale = scale;
+    car->aerodynamics->dragScale = 1.0f - car->owner->interactionFactor;
+    for (int i = 0; i < 4; ++i) wheelSetBaseForceMultiplier(car->wheels[i], scale);
+}
+
+void physicsCarPublishState(PhysicsCar* car)
+{
+    VehicleState* state = car->state;
+    const RigidBody* body = car->body;
+    memcpy(state->position, body->motion.position, sizeof(body->motion.position));
+    memcpy(state->orientation, body->motion.orientation, sizeof(state->orientation));
+    vehicleStateUpdateCenterPosition(state);
+    memcpy(state->velocity, body->linearVelocity, sizeof(state->velocity));
+    state->speed = sqrtf(dotThree(state->velocity, state->velocity));
+    state->velocityFrameValid = 0;
+    memcpy(state->angularVelocity, body->angularVelocity, sizeof(state->angularVelocity));
+    state->heading = vectorFixedAtan2Angle((int32_t)(state->orientation[0] * 65536.0f),
+                                          (int32_t)(state->orientation[1] * 65536.0f));
+    state->steeringAngle = car->controls->steeringAngle;
+    state->forwardSpeed = dotThree(state->orientation, state->velocity);
+    for (int i = 0; i < 4; ++i) {
+        const Wheel* wheel = car->wheels[i];
+        const Suspension* suspension = car->suspension[i];
+        state->wheelAngularVelocity[i] = wheel->motion.angularVelocity;
+        state->wheelAngle[i] = wheel->motion.angle;
+        float travel = suspension->motion.travel;
+        if (suspension->info->extensionLimit <= travel)
+            travel = travel + (suspension->info->extensionLimit - travel);
+        state->suspensionTravel[i] = travel;
+        vehicleStateSetWheelContact(state, i, wheel->contactPresent);
+        vehicleStateSetWheelMaterial(state, i, wheel->materialIndex);
+        state->wheelSlipRatio[i] = wheel->slipRatio;
+        memcpy(state->wheelSlip[i], wheel->slip, sizeof(wheel->slip));
+        state->wheelNormalLoad[i] = wheel->tractionLevel;
+        state->wheelSurfaceOffset[i] = wheel->contactPresent ? wheel->surfaceOffset : 0.0f;
+    }
+    state->effectiveThrottle = car->engine->throttle * car->engine->throttleOverride;
+    state->gear = car->driveTrain->currentGear;
+    state->clutchEngaged = car->driveTrain->clutchState == 3;
+    state->engineRpm = car->engine->angularVelocity * 9.549304008483887f;
+    state->leftSlip = physicsMaximum(fabsf(car->wheels[0]->angularSpeedEstimate),
+                                     fabsf(car->wheels[3]->angularSpeedEstimate)) /
+                      car->environment->tuning->slipDisplayScale;
+    state->rightSlip = physicsMaximum(fabsf(car->wheels[1]->angularSpeedEstimate),
+                                      fabsf(car->wheels[2]->angularSpeedEstimate)) /
+                       car->environment->tuning->slipDisplayScale;
+    if (1.0f < state->leftSlip) state->leftSlip = 1.0f;
+    if (1.0f < state->rightSlip) state->rightSlip = 1.0f;
+    state->averageSlipRatio = ((state->wheelSlipRatio[0] + state->wheelSlipRatio[1]) +
+                              state->wheelSlipRatio[2]) + state->wheelSlipRatio[3];
+    state->averageSlipRatio = state->averageSlipRatio * 0.25f;
+    vehicleStateUpdateWheelPoses(state);
+}
+
+static void updateTractionAssist(PhysicsCar* car, float speedMph)
+{
+    VehicleState* state = car->state;
+    const PhysicsCarTuning* tuning = car->environment->tuning;
+    const float elapsed = car->environment->clock->worldTimeElapsed;
+    if (car->ownerMotion->inputCategory != CAR_DRIVER_REAL) return;
+    // PAL137FE4 reads the current RealDriver port (+234 on the original
+    // controls owner), then11D4F8 classifies that port's current device.
+    // The native driver owns/restores the same port. A shared environment
+    // boolean cannot represent hotplug, two players or snapshot restore.
+    const auto* driver=static_cast<const CarDriver*>(car->owner->controller);
+    hp2::Require(driver && driver->kind==CAR_DRIVER_REAL && driver->owner.real,
+        "Traction assist has no actual RealDriver owner");
+    const auto& input=driver->owner.real->input;
+    hp2::Require(input.movement && input.movement->bindings.owner==car->owner && input.inputRouter,
+        "Traction assist input belongs to a different car or has no device owner");
+    if (joystickIsTypeWheel(input.inputRouter,input.port)) return;
+    if (state->tractionAssistPhase != 0) {
+        state->tractionAssistTime = state->tractionAssistTime - elapsed;
+        if (state->tractionAssistTime < 0.0f) {
+            state->tractionAssistPhase = 0;
+            return;
         }
-        m.scalar(wheel+0x178,f24);
-        const auto selector=m.word(state+0x3a4);
-        if(((i==0 || i==3)&&selector==1) || ((i==1 || i==2)&&selector==2))m.scalar(wheel+0x178,f24*m.scalar(state+0x3ac));
-        m.scalar(wheel+0x16c,((m.signed_byte(car+0x848)>>i)&1)?1.0f:0.0f);
-    }
-    if(m.scalar(car+0x460)!=0 && m.signed_byte(car+0x848)==0)SetBoost(m.scalar(car+0x460));
-    const auto helper=m.word(s+0x48);m.word(helper+0x10,m.word(controls+0x214));
-    m.scalar(helper+0x14,static_cast<float>(m.signed_word(state+0x37c))*0.25f);
-    if(m.word(state+0x39c)==0)m.word(body+0x170,m.word(config+0x318));
-    else {
-        float f20=m.scalar(config+0x31c);
-        if(f20==0){const float angle=GetYaw(m,state);if(angle*m.scalar(body+0x78)<0 && g(m,0x8418)<std::fabs(angle))f20=20;}
-        m.scalar(body+0x170,f20);
-    }
-    float scale=1;
-    if(m.word(car+0x844)!=0)scale=1.0f-invoke(hooks.Sub_001B50C8,"0x001B50C8",m,m.word(car+0x844)+8)*g(m,0x841c);
-    if(m.word(engine+0x50)!=0)m.word(body+0x174,0);
-    else if(m.signed_byte(car+0x848)!=0)m.scalar(body+0x174,60);
-    else m.scalar(body+0x174,m.scalar(config+0x320)*scale);
-    const auto steps=sb(static_cast<std::uint32_t>(port::driving::cvt_w_s(dt/g(m,0xa728)))+1);
-    const float subdt=dt/static_cast<float>(steps);
-    for(std::int32_t i=0;i<steps;++i) {
-        if(m.word(ga(0xa758))!=0 || m.signed_word(mode_address)!=4)m.copy(0x2e7db0,body+0x10,0x50);
-        m.scalar(ga(0xb408),subdt);
-        const auto begin=invoke(hooks.Sub_00250F38,"0x0024A340");
-        invoke(hooks.IntegrateEuler,"0x00199BB8",m,s+8,subdt);
-        invoke(hooks.eOrthonormalizeMatrix,"0x0011C108",m,body+0x20);
-        const auto end=invoke(hooks.Sub_00250F38,"0x0024A340");invoke(hooks.Sub_00250F48,"0x00250F48",begin,end);
-        if(m.word(ga(0xa6fc))!=0)invoke(hooks.Sub_0019D980,"0x0019D980",m,body);
-        if(m.word(ga(0xa700))!=0)invoke(hooks.Sub_0018C030,"0x0018C030",m,drive);
-        const auto mode=m.signed_word(mode_address);
-        if(mode==4) {
-            // ELF00138B9C..00138BD4; E-0038-E13. Race state4 is the ordinary
-            // running branch when the separate A758 diagnostic flag is clear.
-            if(m.word(ga(0xa758))!=0)hp2::not_implemented("0x00137D18","Excluded original Race4 diagnostic position-restore branch");
-            m.scalar(ga(0xa784),static_cast<float>(m.signed_word(ga(0xb388)))*g(m,0x8448));
-            m.scalar(ga(0xa79c),1);m.word(ga(0xa788),0);m.scalar(ga(0xa794),1);
-            m.scalar(ga(0xa798),1);m.word(ga(0xa790),0);m.word(ga(0xa78c),0);
-        } else if(mode>=2) {
-            const float tickscale=g(m,0x8420);
-            if(static_cast<float>(m.signed_word(s+0x58))*tickscale<static_cast<float>(sb(m.word(ga(0xb388))-m.word(s+0x5c)))*tickscale)m.word(s+0x60,1);
-            if(0.5f<m.scalar(controls+0x214)) {
-                if(m.word(s+0x64)!=0 && m.word(s+0x68)!=0) {
-                    float f0=bRandom(m,g(m,0x8424));f0=f0+g(m,0x8428);f0=f0*4000;f0=f0+0.5f;
-                    m.word(s+0x60,0);m.word(s+0x64,0);m.word(s+0x58,static_cast<std::uint32_t>(port::driving::cvt_w_s(f0)));
-                    m.word(s+0x68,m.word(s+0x68)-1);
-                    f0=static_cast<float>(m.signed_word(ga(0xb388)))*tickscale;f0=f0*4000;f0=f0+0.5f;
-                    m.word(s+0x5c,static_cast<std::uint32_t>(port::driving::cvt_w_s(f0)));
-                }
-            }else{m.word(s+0x60,1);m.word(s+0x64,1);}
+        if (tuning->tractionReleaseHeadingError < fabsf(vehicleStateMovingHeadingDifference(state))) {
+            state->tractionAssistPhase = 0;
+            return;
         }
-        if(mode!=4 && m.word(s+0x60)!=0) {
-            if(!hooks.Field_001389A4_stack_w)hp2::not_implemented("0x00137D18","Explicit original temporary W projection is absent");
-            for(unsigned j=0;j<3;++j)m.word(body+0x60+4*j,0);
-            m.word(body+0x6c,*hooks.Field_001389A4_stack_w);
+        for (int i = 0; i < 4; ++i) {
+            if (!(car->wheels[i]->accumulatedDriveTorque < tuning->tractionReleaseSlip)) {
+                state->tractionAssistDwell = 0.0f;
+                return;
+            }
+        }
+        state->tractionAssistDwell = state->tractionAssistDwell + elapsed;
+        if (tuning->tractionDwellSeconds < state->tractionAssistDwell)
+            state->tractionAssistPhase = 0;
+        return;
+    }
+    if (state->pursuitMode != 1 || car->controls->steeringAngle != 0 ||
+        !(0.0f < speedMph) || !(speedMph < tuning->tractionMaximumSpeed) ||
+        !(fabsf(vehicleStateMovingHeadingDifference(state)) < tuning->tractionEntryHeadingError))
+        return;
+    const float frontLeft = car->wheels[0]->accumulatedDriveTorque;
+    const float frontRight = car->wheels[1]->accumulatedDriveTorque;
+    const float rearRight = car->wheels[2]->accumulatedDriveTorque;
+    const float rearLeft = car->wheels[3]->accumulatedDriveTorque;
+    int selected = -1;
+    if (tuning->tractionEntrySlip < rearRight || tuning->tractionEntrySlip < rearLeft) {
+        if (rearLeft < rearRight) {
+            selected = 2;
+            state->tractionAssistPhase = 1;
+        } else {
+            selected = 3;
+            state->tractionAssistPhase = 2;
+        }
+    } else if (tuning->tractionEntrySlip < frontLeft || tuning->tractionEntrySlip < frontRight) {
+        if (frontLeft < frontRight) {
+            selected = 1;
+            state->tractionAssistPhase = 1;
+        } else {
+            selected = 0;
+            state->tractionAssistPhase = 2;
         }
     }
-    if(m.word(ga(0xa758))!=0)for(auto off:{0xa788,0xa78c,0xa790})if(0<g(m,off))m.scalar(ga(off),g(m,off)-g(m,0xb398));
-    invoke(hooks.UpdateCar,"0x00139110",m,s,dt);
-    if(ShouldVisualEffectsBeGenerated(m,car))for(unsigned i=0;i<4;++i)invoke(hooks.MaybeMakeSkids,"0x001A2CF8",m,m.word(s+0x30+4*i),car,dt);
-    const auto final=invoke(hooks.Sub_00250F38,"0x0024A340");invoke(hooks.Sub_00250F48,"0x00250F48",start,final);
-    return dt;
-
+    if (selected < 0 || carMotionWindowActive(car->ownerMotion, car->environment->clock->worldTimer))
+        return;
+    float slipRatio = (car->wheels[selected]->accumulatedDriveTorque - tuning->tractionEntrySlip) /
+                      (tuning->tractionFullSlip - tuning->tractionEntrySlip);
+    if (1.0f < slipRatio) slipRatio = 1.0f;
+    float minimum = tuning->tractionMinimumBrakeScale;
+    const TerrainMaterial* materials = car->environment->contact.materials;
+    if (materials[car->wheels[2]->materialIndex].staticGrip != 1.0f ||
+        materials[car->wheels[3]->materialIndex].staticGrip != 1.0f)
+        minimum = minimum * 1.25f;
+    float scale = (speedMph / tuning->tractionMaximumSpeed) * (1.0f - slipRatio);
+    scale = scale * (1.0f - minimum);
+    state->tractionAssistTime = tuning->tractionHoldSeconds;
+    state->tractionAssistScale = minimum + scale;
 }
 
-// Debug 00139478; E-0044-P01/P02.
-void PhysicsCar::JumpStabilizer() {
-    auto& m=m_; [[maybe_unused]] const auto object=address_,s=address_,mover=address_;
-    using namespace port::driving; using namespace port::driving::native;
-
-    using namespace detail_group_00138e08;
-    if(m.signed_word(m.word(mover+0x54)+0x3bc)>=2)return;
-    const auto body=m.word(mover+0x18);const auto v=m.vector(body+0xa0);const float mass=m.scalar(body+0x118);
-    const auto inspect=[&](float result,float left,float right,unsigned lane,const char* stage,const char* pc){if(!std::isfinite(result)||!std::isfinite(left)||!std::isfinite(right)){const auto bits=[](float x){std::uint32_t word;std::memcpy(&word,&x,4);return std::to_string(word);};const auto car=m.word(mover+0x54);const std::string why=std::string("Physics jump moment producer stage=")+stage+" mover="+std::to_string(mover)+" mover4="+std::to_string(m.word(mover+4))+" body="+std::to_string(body)+" car="+std::to_string(car)+" mode="+std::to_string(m.word(car+0x24))+" lane="+std::to_string(lane)+" left_bits="+bits(left)+" right_bits="+bits(right)+" result_bits="+bits(result);hp2::not_implemented(pc,why.c_str());}return result;};
-    const float x=inspect(v[0]*v[0],v[0],v[0],0,"angular-square","0x001394A8"),y=inspect(v[1]*v[1],v[1],v[1],1,"angular-square","0x001394A8"),z=inspect(v[2]*v[2],v[2],v[2],2,"angular-square","0x001394A8");const float xy=inspect(x+y,x,y,0,"angular-sum-y","0x001394AC"),square=inspect(xy+z,xy,z,0,"angular-sum-z","0x001394B0");const float f=port::driving::Graph::GetValue(m,0x003270c0,std::sqrt(square));const float factor=-inspect(mass*f,mass,f,0,"mass-grade","0x001394CC");auto damping=v;for(unsigned i=0;i<4;++i)damping[i]=inspect(v[i]*factor,v[i],factor,i,"angular-scale","0x001394E8");auto old=m.vector(body+0x100);for(unsigned i=0;i<4;++i)old[i]=inspect(old[i]+damping[i],old[i],damping[i],i,"moment-add","0x0019A828");m.vector(body+0x100,old);
-
-}
-
-// Debug 00138EC0; E-0044-P01/P02.
-void PhysicsCar::IterateForces() {
-    auto& m=m_; [[maybe_unused]] const auto object=address_,s=address_,mover=address_;
-    using namespace port::driving; using namespace port::driving::native;
-
-    using namespace detail_group_00138e08;
-    const auto drive=m.word(mover+0x44);GuessClutchTorque(m,drive);
-    const auto ai=m.signed_byte(m.word(m.word(mover+0x54)+0x34)+0x12);
-    for(unsigned i=0;i<4;++i)port::driving::GuessGroundForce(m,m.word(mover+0x30+4*i),0,ai);
-    const auto body=m.word(mover+0x18);const auto base=transform(m,transpose(m.matrix(body+0x20)),m.vector(body+0xf0));
-    for(unsigned iteration=0;iteration<5;++iteration){
-        auto sum=base;float moment=0;
-        for(unsigned i=0;i<4;++i){const auto a=m.word(mover+0x30+4*i),s=m.word(mover+0x20+4*i);Vector value{};port::driving::GetHorizontalGroundForceInCarFrame(wheel(m,a),value);
-            for(unsigned j=0;j<4;++j)sum[j]=sum[j]+value[j];
-            const float y=m.scalar(s+0x80)*value[1],x=m.scalar(s+0x84)*value[0];moment=moment+y;moment=moment-x;
+static void updateMomentumHold(PhysicsCar* car)
+{
+    const PhysicsCarEnvironment* environment = car->environment;
+    // PAL138868..1389B0 reads the live Race stage. Stage4 bypasses the
+    // starting-line hold without clearing its persistent countdown state.
+    const int32_t raceStage = *environment->raceStage;
+    if (raceStage == 4) return;
+    if (raceStage >= 2) {
+        const int32_t now = environment->clock->worldTimer;
+        const float holdSeconds = (float)car->momentumHoldTicks * 0.0002500000118743628f;
+        const float passedSeconds = (float)elapsedTicks(now, car->momentumHoldStart) * 0.0002500000118743628f;
+        if (holdSeconds < passedSeconds) car->momentumHold = 1;
+        if (0.5f < car->controls->throttle) {
+            if (car->momentumHoldArmed && car->momentumHoldStarts != 0) {
+                const float duration = vectorDefaultRandomFloat(0.15000000596046448f) + 0.4000000059604645f;
+                car->momentumHoldTicks = convertFloatToInt32(duration * 4000.0f + 0.5f);
+                car->momentumHold = car->momentumHoldArmed = 0;
+                --car->momentumHoldStarts;
+                const float seconds = (float)now * 0.0002500000118743628f;
+                car->momentumHoldStart = convertFloatToInt32(seconds * 4000.0f + 0.5f);
+            }
+        } else {
+            car->momentumHold = car->momentumHoldArmed = 1;
         }
-        const float x=sum[0]/m.scalar(body+0x118),y=sum[1]/m.scalar(body+0x118);const float divisor=1.0f/m.scalar(body+0x148);moment=moment/divisor;
-        for(unsigned i=0;i<4;++i){const auto a=m.word(mover+0x30+4*i),s=m.word(mover+0x20+4*i);if(m.byte(a+0x154)==0&&m.word(a+0x10c)==0){auto w=wheel(m,a);const float f1=moment*m.scalar(s+0x80),f2=moment*m.scalar(s+0x84);port::driving::ModifyGroundForce(w,{{x-f2,y+f1}});m.scalar(a+0x114,w.Field_0x114);}}
-        ModifyClutchTorque(m,drive);
     }
-    for(std::int32_t i=0;i<4;++i)port::driving::FinalizeGroundForce(m,m.word(mover+0x30+4*i),i);
-    hp2::recovered::DriveTrain(m,drive).FinalizeClutchTorque(); // Debug00138EC0, W33 counterevidence.
-
+    if (car->momentumHold)
+        for (int axis = 0; axis < 3; ++axis) car->body->motion.linearMomentum[axis] = 0.0f;
 }
 
-// Debug 00138D90; E-0044-P01/P02.
-void PhysicsCar::ResolveForces() {
-    auto& m=m_; [[maybe_unused]] const auto object=address_,s=address_,mover=address_;
-    using namespace port::driving; using namespace port::driving::native;
-
-    using namespace detail_group_00138e08;
-    Memory::Scratch frame(m);const auto scratch=m.allocate(16);const auto body=m.word(mover+0x18);
-    const auto table=m.word(body+8);if(m.word(table+0x34)!=0x0019b2a0)hp2::not_implemented("0x00138D90","unknown body pre-force virtual entry");
-    m.word(0x003270b8,m.word(0x003270b8)+1u);Aerodynamics::ResolveForces(m,m.word(mover+0x48),scratch);
-    const float request=m.word(0x003270b4)==0 ? 0 : m.scalar(scratch)*0.25f;
-    for(unsigned i=0;i<4;++i)suspension_request(m,m.word(mover+0x20+4*i),request);
-    IterateForces();
-    for(unsigned i=0;i<4;++i){const auto a=m.word(mover+0x20+4*i);if(m.word(a+0x70)!=0){const auto w=m.word(a+0x90),b=m.word(a+0x94);const auto p=m.vector(w+0x130),q=m.vector(b+0x10);Vector delta;for(unsigned j=0;j<4;++j)delta[j]=p[j]-q[j];if(m.word(0x00327d90)==0)ApplyForce(m,b,m.vector(w+0x120),delta);}}
-    JumpStabilizer();
-
-}
-
-// Debug 00139110; E-0044-P01/P02.
-void PhysicsCar::UpdateCar(float /*dt*/) {
-    auto& m=m_; [[maybe_unused]] const auto object=address_,s=address_,mover=address_;
-    using namespace port::driving; using namespace port::driving::native;
-
-    using namespace detail_group_00138e08;
-    const auto body=m.word(mover+0x18),car=m.word(mover+0x50),config=m.word(car);
-    m.vector(car+0x20,m.vector(body+0x10));m.matrix(car+0x50,m.matrix(body+0x20));
-    const auto center=transform(m,m.matrix(car+0x50),m.vector(config+0x110));auto position=m.vector(car+0x20);for(unsigned i=0;i<4;++i)position[i]=position[i]-center[i];m.vector(car+0x10,position);
-    m.vector(car+0x30,m.vector(body+0x90));m.scalar(car+0x384,len(m.vector(body+0x90)));m.word(car+0x400,0);m.vector(car+0x90,m.vector(body+0xa0));
-    m.half(car+0x364,static_cast<std::uint16_t>(port::driving::bFixATan(m,cvt_w_s(m.scalar(car+0x50)*65536.0f),cvt_w_s(m.scalar(car+0x54)*65536.0f))));
-    m.half(car+0x366,m.half(m.word(mover)+0x210));m.scalar(car+0x380,dot(m.vector(car+0x30),m.vector(car+0x50)));
-    for(unsigned i=0;i<4;++i){const auto w=m.word(mover+0x30+4*i),s=m.word(mover+0x20+4*i),cfg=m.word(s+0xc);
-        m.word(car+0x2b0+i*4,m.word(w+0x20));m.word(car+0x2c0+i*4,m.word(w+0x1c));
-        const float limit=m.scalar(cfg+0x1c),value=m.scalar(s+0x14);m.scalar(car+0x300+i*4,value+(limit<=value?limit-value:0.0f));
-        const auto now=m.byte(w+0x155);hp2::recovered::CarState(m,car).SetWheelTouchingGround(static_cast<std::int32_t>(i),static_cast<char>(now));
-        hp2::recovered::CarState(m,car).SetWheelTerrain(static_cast<std::int32_t>(i),m.signed_word(w+0x150));
-        m.word(car+0x354+i*4,m.word(w+0x168));m.word(car+0x334+i*8,m.word(w+0x100));m.word(car+0x338+i*8,m.word(w+0x104));m.word(car+0x2d0+i*4,m.word(w+0x158));m.word(car+0x2e0+i*4,now?m.word(w+0x15c):0);
+float physicsCarMove(PhysicsCar* car, float elapsed)
+{
+    CarControls* controls = car->controls;
+    VehicleState* state = car->state;
+    PhysicsCarEnvironment* environment = car->environment;
+    const PhysicsCarTuning* tuning = environment->tuning;
+    physicsCarSetGripScale(car, state->performanceScale);
+    physicsCarPrepareAxleLoads(car);
+    if (controls->brake < controls->throttle && controls->handbrake < controls->throttle) {
+        if (controls->brake < 0.5f) controls->brake = 0.0f;
+        if (controls->handbrake < 0.5f) controls->handbrake = 0.0f;
+    } else if (controls->throttle < 0.5f) {
+        controls->throttle = 0.0f;
     }
-    const auto engine=m.word(mover+0x40),drive=m.word(mover+0x44);m.scalar(car+0x38c,m.scalar(engine+0x44)*m.scalar(engine+0x4c));m.word(car+0x388,m.word(drive+0x30));m.word(car+0x398,m.word(drive+0x38)==3);m.scalar(car+0x390,m.scalar(engine+0xc)*g(m,0x8450));
-    const auto w0=m.word(mover+0x30),w1=m.word(mover+0x34),w2=m.word(mover+0x38),w3=m.word(mover+0x3c);
-    float a=std::abs(m.scalar(w0+0x160)),b=std::abs(m.scalar(w1+0x160));const auto c=std::abs(m.scalar(w2+0x160)),d=std::abs(m.scalar(w3+0x160));if(a<d)a=d;if(b<c)b=c;a=a/g(m,0xa76c);b=b/g(m,0xa76c);if(1<a)a=1;if(1<b)b=1;m.scalar(car+0x374,a);m.scalar(car+0x378,b);
-    const float sum=((m.scalar(w0+0x168)+m.scalar(w1+0x168))+m.scalar(w2+0x168))+m.scalar(w3+0x168);m.scalar(car+0x370,sum*0.25f);
-    for(std::int32_t i=0;i<4;++i)port::driving::CalculateWheelMatrices(m,car,i);
-
-}
-// Debug001395D0 E-0044-P01, original single store.
-void PhysicsCar::SetFrictionBoost(float boost){m_.scalar(address_+0x70,boost);}
-// Debug00137CC0 E-0044-P01, double promotion retained in rear expression.
-float PhysicsCar::GetBrakeSettings(std::int32_t pos){const float f=m_.scalar(m_.word(address_+0x4c)+0x30c);return pos<2?f+f:static_cast<float>((1.0-static_cast<double>(f))+(1.0-static_cast<double>(f)));}
-// Debug00137C10 E-0044-P02. Memory binds original mutable globals.
-float YawFrictionBoost(port::driving::Memory& m,float yaw,float ebrake,float speed,float control,float nfs,int mode,float& grade,float post){
- grade=std::fabs(grade);const float base=grade+1.0f;if(mode!=0)nfs=post*nfs;
- if(0.5f<ebrake&&std::fabs(yaw)<m.scalar(0x00324dd0))return base;
- const float ratio=(speed-m.scalar(0x00327068))/(m.scalar(0x0032706c)-m.scalar(0x00327068));
- const float range=m.scalar(0x00327064)-m.scalar(0x00327060);const float boost=m.scalar(0x00327060)+range*ratio;
- float result=std::fabs(yaw)*(control+nfs);result=result*boost;
- if(m.scalar(0x00327070)<result)result=m.scalar(0x00327070);
- return base+result;
-}
-}
-namespace port::driving::native {
-void Calibrate(Memory& m,std::uint32_t object){hp2::recovered::PhysicsCar(m,object).Calibrate();}
-void InitializeStateFromCar(Memory& m,std::uint32_t object){hp2::recovered::PhysicsCar(m,object).InitializeStateFromCar();}
-std::uint32_t CheckDampingSuitability(Memory& m,std::uint32_t object){return hp2::recovered::PhysicsCar(m,object).CheckDampingSuitability();}
-void BottomOut(Memory& m,std::uint32_t object,InitServices& services){hp2::recovered::PhysicsCar(m,object).BottomOut(services);}
-void PhysicsCar::ComputeAuxiliaries(Memory& m,std::uint32_t object,InitServices& services){hp2::recovered::PhysicsCar(m,object).ComputeAuxiliaries(services);}
-std::uint32_t Sub_00137100(Memory& m,std::uint32_t object,std::uint32_t config,std::uint32_t controls,std::uint32_t car,InitServices& services){hp2::recovered::PhysicsCar(m,object).Initialize(config,controls,car,services);return object;}
-void SetBoost(Memory& m,std::uint32_t s,float value) {hp2::recovered::PhysicsCar(m,s).SetBoost(value);}
-float Move(Memory& m,std::uint32_t s,float dt,DrivingServices& hooks) {return hp2::recovered::PhysicsCar(m,s).Move(dt,hooks);}
-void JumpStabilizer(Memory& m,std::uint32_t mover){hp2::recovered::PhysicsCar(m,mover).JumpStabilizer();}
-void IterateForces(Memory& m,std::uint32_t mover){hp2::recovered::PhysicsCar(m,mover).IterateForces();}
-void ResolveForces(Memory& m,std::uint32_t mover){hp2::recovered::PhysicsCar(m,mover).ResolveForces();}
-void UpdateCar(Memory& m,std::uint32_t mover,float dt){hp2::recovered::PhysicsCar(m,mover).UpdateCar(dt);}
-}
-namespace port::driving {
-float YawFrictionBoost(Memory& m,float a,float b,float c,float d,float e,float post,int mode,float& grade){return hp2::recovered::YawFrictionBoost(m,a,b,c,d,e,mode,grade,post);}
-}
-namespace port::driving {
-// TASK-0044: obsolete typed composite retired; canonical PhysicsCar::IterateForces owns the algorithm.
-
-}
-
-
-
-#include "game_core/src/bMath.hpp"
-#include "game_core/indep/inc/Table.hpp"
-#include "game_core/indep/src/table.hpp"
-
-// Debug 0x00139510; E-0044-M02; source ownership E-0042-S001.
-namespace hp2::recovered {
-void Sub_00139510(Memory& m) {
-    m.word(0x002e7e00,0);m.word(0x002e7e04,0);m.word(0x002e7e08,m.word(0x00324e34));m.word(0x002e7e0c,0);
-    m.scalar(0x002e7e10,2);m.scalar(0x002e7e14,20);m.word(0x00327080,m.word(0x00324e38));
-    hp2::recovered::Graph(m,0x003270c0).Sub_0018D9E8(0x002e7e00,3);
-}
-}
-
-// Preserved unrelated historical Retail destructor gap; no Debug supersession asserted.
-#include "game_core/indep/inc/ComponentPhysics.hpp"
-namespace hp2::recovered {
-// ELF 0x00139678; E-0042-U030; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00139678.md.
-void PhysicsVehicle::Sub_00139678() {
-    hp2::not_implemented("0x00139678", "PhysicsVehicle::Sub_00139678 (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/inc/bSlotPool.hpp"
-#include <limits>
-namespace hp2::debug {
-// Debug00136EE8, E-0099-W21. Exact sizes/counts/names; these pools are
-// independent from original InitCollisionBody pools and owned by ClosePhysics.
-void InitPhysics(::port::driving::Memory& m){
- const auto n=m.signed_word(0x311f78+0x308);
- if(n<0||n>std::numeric_limits<int>::max()/4)throw std::out_of_range("Original physics driver count exceeds host integer bounds");
- const int wheel_count=n*4;
- m.word(0x327020,bNewSlotPool(m,0x180,n+32,0x2a69a0,0x10));
- m.word(0x327024,bNewSlotPool(m,0x90,n,0x2a69b8,0x10));
- m.word(0x327028,bNewSlotPool(m,0x190,wheel_count,0x2a69e0,0x10));
- m.word(0x32702c,bNewSlotPool(m,0x5c,n,0x2a69f0,0x10));
- m.word(0x327030,bNewSlotPool(m,0x94,n,0x2a6a00,0x10));
- m.word(0x327034,bNewSlotPool(m,0x18,n,0x2a6a18,0x10));
- m.word(0x327038,bNewSlotPool(m,0xb0,wheel_count,0x2a6a30,0x10));
- m.word(0x32703c,bNewSlotPool(m,0x1c0,n,0x2a6a48,0x10));
- m.word(0x327040,bNewSlotPool(m,0x40,n,0x2a6a60,0x10));
- m.word(0x327044,bNewSlotPool(m,0xc,n,0x2a6a78,0x10));
-}
-// Debug00137030, E-0099-W21. All deletes precede all ten null stores.
-void ClosePhysics(::port::driving::Memory& m){
- for(unsigned i=0;i<10;++i)bDeleteSlotPool(m,m.word(0x327020+i*4));
- for(unsigned i=0;i<10;++i)m.word(0x327020+i*4,0);
-}
-}
-
-// TASK-0099 E-0099-W33. Shared Memory and original InitPhysics pool construction.
-#include "game_core/port/race/physics_construction.hpp"
-#include "game_core/indep/inc/CarMover.hpp"
-#include "game_core/indep/src/rigidbody.hpp"
-#include "game_core/indep/src/wheel.hpp"
-#include "game_core/indep/src/suspension.hpp"
-#include <cstring>
-namespace port::race::detail {
-// Port binding of Debug0024A350 for the explicit host Count clock.
-float physics_tick_delta(::port::driving::Memory& m,std::uint32_t start,std::uint32_t end){
- return (static_cast<float>(end-start)/m.scalar(0x326254))*1000.0f;
-}
-}
-namespace hp2::debug {
-void PhysicsCar::Sub_001370C0(std::uint32_t config,std::uint32_t driver,std::uint32_t car,
-                             ::port::race::PhysicsConstructionServices& service){
- auto& m=m_;const auto p=address_;
- m.word(p+4,0x2a67d0);hp2::recovered::PhysicsSystem(m,p+8).port_initialize();m.word(p+0x14,0x2a6b18);
- m.word(p,driver);m.word(p+0x58,0);m.word(p+0x5c,0);m.word(p+0x6c,0);
- m.word(p+0x4c,config);m.word(p+0x54,car);m.word(p+0x14,0x2a6ad8);m.word(p+4,0x2a6af8);
- m.word(p+0x50,car+0x40);m.scalar(p+0x70,1);
- const auto body=bOMalloc(m,m.word(0x327020));hp2::recovered::RigidBody(m,body).port_initialize(config+0x1e0);
- m.word(p+0x18,body);hp2::recovered::PhysicsSystem system(m,p+8);system.AddComponent(body);
- m.word(body+0x174,m.word(config+0x320));m.word(body+0x114,m.byte(config+0xe4)!=0);
- const auto steering=bOMalloc(m,m.word(0x327024));hp2::recovered::TwoWheelAckermanSteering(m,steering).Sub_001A3F30(config);m.word(p+0x1c,steering);
- for(unsigned i=0;i<4;++i){
-  const auto wheel=bOMalloc(m,m.word(0x327028)),axle=(i/2)*0x20;
-  hp2::recovered::Wheel(m,wheel).port_initialize(config+0x120+i*0x20,config+0x1a0+axle,config+0x300,car+0x40);m.word(p+0x30+i*4,wheel);
-  const auto suspension=bOMalloc(m,m.word(0x327038));
-  hp2::recovered::Suspension(m,suspension).port_initialize(i,body,wheel,i<2?steering:0,config+0x230+axle);m.word(p+0x20+i*4,suspension);
-  system.AddComponent(wheel);system.AddComponent(suspension);
- }
- for(unsigned i=0;i<4;++i)m.word(m.word(p+0x20+i*4)+0x10,m.word(p+0x20+(i^1)*4));
- const auto engine=bOMalloc(m,m.word(0x32702c));hp2::recovered::Engine(m,engine).Sub_00188998(config+0x2b0,car+0x40);
- m.word(p+0x40,engine);system.AddComponent(engine);m.word(engine+0x40,m.byte(config+0xe4)!=0);
- const auto drive=bOMalloc(m,m.word(0x327030));hp2::recovered::DriveTrain(m,drive).Sub_00189020(config+0x270,engine,p+0x30,car+0x40);
- m.word(p+0x44,drive);system.AddComponent(drive);
- const auto aero=bOMalloc(m,m.word(0x327034));m.scalar(aero+8,1);m.scalar(aero+0xc,1);m.word(aero+0x10,0);m.word(aero+0x14,0);
- m.word(p+0x48,aero);m.word(aero+4,body);m.word(aero,config+0x2f0);
- m.word(::port::driving::native::detail_group_00137100_runtime::global_address(0xb408),0);
- hp2::recovered::PhysicsCar math(m,p);math.Calibrate();math.InitializeStateFromCar();
- ::port::driving::native::InitServices binding;
- // The old E0044 carriers retain historical address labels; targets below are
- // Debug0024A340/0024A350. No synthetic PhysicsSystem/ResolveForces provider.
- if(service.ticker)binding.Sub_00250F38=[&service]{return static_cast<std::uint64_t>(service.ticker());};
- binding.Sub_00250F48=[&m](std::uint64_t start,std::uint64_t end){const float v=::port::race::detail::physics_tick_delta(m,static_cast<std::uint32_t>(start),static_cast<std::uint32_t>(end));std::uint32_t bits;std::memcpy(&bits,&v,4);return bits;};
- binding.contact=service.contact;binding.Field_00137938_stack_w=service.port_stack_vector_lane;
- binding.ResolveForces=[&service](::port::driving::Memory& memory,std::uint32_t object){PhysicsCar(memory,object).ResolveForces(service);};
- math.ComputeAuxiliaries(binding);
- m.scalar(p+0x74,1);m.word(p+0x64,1);m.word(p+0x68,2);m.word(p+0x60,1);
-}
-void PhysicsCar::ResolveForces(::port::race::PhysicsConstructionServices& service){
- auto& m=m_;const auto p=address_;
- if(!service.ticker)hp2::not_implemented("0x0024A340","Original PhysicsCar profiling Count clock is absent");
- const auto start=service.ticker();const auto body=m.word(p+0x18),table=m.word(body+8);
- m.word(0x3270b8,m.word(0x3270b8)+1);
- if(m.word(table+0x34)!=0x19b2a0)hp2::not_implemented("0x00138D90","Unrecovered body pre-force virtual target");
- hp2::recovered::RigidBody(m,body+static_cast<std::int32_t>(m.signed_half(table+0x30))).ResolveForces();
- ::port::driving::Memory::Temporary temporary(m,16);const auto scratch=temporary.address();
- ::port::driving::native::Aerodynamics::ResolveForces(m,m.word(p+0x48),scratch);
- const float request=m.word(0x3270b4)?m.scalar(scratch)*0.25f:0.0f;
- for(unsigned i=0;i<4;++i)hp2::recovered::Suspension(m,m.word(p+0x20+i*4)).ResolveForces(request);
- service.ticker();hp2::recovered::PhysicsCar math(m,p);math.IterateForces();
- const auto iter_end=service.ticker();m.scalar(0x3270cc,::port::race::detail::physics_tick_delta(m,start,iter_end));
- for(unsigned i=0;i<4;++i)hp2::recovered::Suspension(m,m.word(p+0x20+i*4)).ResolveMoreForces();
- math.JumpStabilizer();const auto end=service.ticker();m.scalar(0x3270c8,::port::race::detail::physics_tick_delta(m,start,end));
-}
-void PhysicsCar::Sub_001376C8(int flags){
- auto& m=m_;const auto p=address_;m.word(p+0x14,0x2a6ad8);m.word(p+4,0x2a6af8);
- if(const auto steering=m.word(p+0x1c)){
-  const auto table=m.word(steering+8),target=m.word(table+0xc),adjusted=steering+static_cast<std::int32_t>(m.signed_half(table+8));
-  if(target!=0x1a3ed0&&target!=0x1a3f10)hp2::not_implemented("0x001376C8","Unrecovered steering destructor target");
-  hp2::recovered::TwoWheelAckermanSteering(m,adjusted).Sub_001A3ED0(3);
- }
- SlotPool(m,m.word(0x327034)).Free(m.word(p+0x48));
- // Inline PhysicsVehicle001395D8 has the same complete list destruction body
- // as PhysicsSystem00199AB8; it does not clear Size or stale member pointers.
- hp2::recovered::PhysicsSystem(m,p+8).Sub_00199AB8(0);CarMover(m,p).Sub_00136B28(flags);
-}
+    steeringSetAngle(car->steering, controls->steeringAngle);
+    engineSetThrottle(car->engine, controls->throttle);
+    driveTrainSetShiftTarget(car->driveTrain, controls->shiftTarget);
+    if (controls->nitroRequest) {
+        engineSetNitroEnabled(car->engine, 1);
+        engineSetNitroBoostTimer(car->engine, (float)environment->clock->worldTimer * 0.0002500000118743628f);
+    }
+    engineUpdateNitro(car->engine, environment->clock->worldTimer);
+    controls->nitroRequest = 0;
+    controls->gearRequest = driveTrainUpdateRequestedGear(car->driveTrain, controls->gearRequest,
+                                                          environment->clock->worldTimeElapsed);
+    controls->shiftTarget = car->driveTrain->shiftTarget;
+    rigidBodySetDampingEnabled(car->body,
+        !(0.30000001192092896f < controls->throttle ||
+          (state->activeContactCount == 4 && 0.15000000596046448f < fabsf(state->orientation[2]))));
+    float grip = car->gripScale;
+    if (state->pursuitMode == 0) grip = grip * tuning->nonPursuitGripScale;
+    memset(state->suspensionImpulse, 0, sizeof(state->suspensionImpulse));
+    const float speedMph = state->forwardSpeed * 2.236999988555908f;
+    updateTractionAssist(car, speedMph);
+    float brakeRecovery = car->brakeRecovery;
+    if (0.5f <= controls->handbrake) {
+        brakeRecovery = brakeRecovery - elapsed * 20.0f;
+        if (brakeRecovery < 0.5f) brakeRecovery = 0.5f;
+    } else {
+        brakeRecovery = brakeRecovery + elapsed;
+        if (1.0f < brakeRecovery) brakeRecovery = 1.0f;
+    }
+    car->brakeRecovery = brakeRecovery;
+    static const float serviceWeights[4] = {1.0f, 1.0f, 0.6000000238418579f, 0.6000000238418579f};
+    static const float handbrakeWeights[4] = {0.0f, 0.0f, 1.0f, 1.0f};
+    for (int i = 0; i < 4; ++i) {
+        Wheel* wheel = car->wheels[i];
+        // PAL138380..138458: all wheels use service braking in stage4;
+        // before/after racing only a held front axle receives that brake.
+        if (*environment->raceStage == 4 || (car->momentumHold && i < 2)) {
+            if (0.800000011920929f < controls->throttle && 0.5f < controls->brake &&
+                speedMph < 10.0f && i >= 2)
+                wheel->brakeTorque = speedMph * 0.05000000074505806f;
+            else
+                wheel->brakeTorque = controls->brake * serviceWeights[i];
+        } else {
+            wheel->brakeTorque = 0.0f;
+        }
+        float handbrake = controls->handbrake * handbrakeWeights[i];
+        if (state->pursuitMode == 0) {
+            if (0.20000000298023224f < handbrake) handbrake = handbrake + 0.5f;
+        } else if (0.20000000298023224f < handbrake &&
+                   0.30000001192092896f < fabsf(vehicleStateMovingHeadingDifference(state)) && speedMph < 80.0f) {
+            handbrake = handbrake + 0.5f;
+        }
+        wheelSetHandbrakeTorque(wheel, handbrake);
+        if (i == 2) {
+            float magnitude = car->body->motion.orientation[2];
+            const float headingError = vehicleStateMovingHeadingDifference(state);
+            const float collisionBoost = carMotionPostCollisionYaw(car->ownerMotion, environment->clock->worldTimer);
+            YawTuning yawTuning;
+            physicsInitializeYawTuning(&yawTuning);
+            const float boost = physicsYawFrictionBoost(&yawTuning, state->pursuitMode, &magnitude,
+                headingError, car->wheels[2]->handbrakeTorque, state->speed, car->info.yawBaseCoefficient,
+                car->info.yawCollisionCoefficient, collisionBoost);
+            grip = grip * (1.0f + brakeRecovery * (boost - 1.0f));
+        }
+        wheelSetForceMultiplier(wheel, grip);
+        if (((i == 0 || i == 3) && state->tractionAssistPhase == 1) ||
+            ((i == 1 || i == 2) && state->tractionAssistPhase == 2))
+            wheelSetForceMultiplier(wheel, grip * state->tractionAssistScale);
+        wheelSetSteeringAngle(wheel, ((car->ownerMotion->disabledWheelMask >> i) & 1u) ? 1.0f : 0.0f);
+    }
+    if (car->owner->physicsBoost != 0.0f && !car->ownerMotion->disabledWheelMask)
+        physicsCarSetGripScale(car, car->owner->physicsBoost);
+    car->aerodynamics->dragReduction = controls->throttle;
+    car->aerodynamics->downforceMode = (float)state->activeContactCount * 0.25f;
+    float yawLimit = state->pursuitMode == 0 ? car->info.ordinaryYawLimit : car->info.pursuitYawLimit;
+    if (state->pursuitMode != 0 && yawLimit == 0.0f) {
+        const float headingError = vehicleStateMovingHeadingDifference(state);
+        if (headingError * car->body->motion.angularMomentum[2] < 0.0f &&
+            0.10000000149011612f < fabsf(headingError)) yawLimit = 20.0f;
+    }
+    rigidBodySetYawTorqueLimit(car->body, yawLimit);
+    float damageScale = 1.0f;
+    // PAL1386F4..138730 keeps the full speed limit when Car+848 is null.
+    // BodyDamage::GetTotalDamage applies the live race damage option itself.
+    if (car->ownerMotion->damage)
+        damageScale = 1.0f - bodyDamageVisibleTotal(&car->ownerMotion->damage->body) * 0.029999999329447746f;
+    if (car->engine->nitroEnabled) rigidBodySetForwardSpeedLimit(car->body, 0.0f);
+    else if (car->ownerMotion->disabledWheelMask) rigidBodySetForwardSpeedLimit(car->body, 60.0f);
+    else rigidBodySetForwardSpeedLimit(car->body, car->info.forwardSpeedLimit * damageScale);
+    const int32_t steps = convertFloatToInt32(elapsed / tuning->maximumStep) + 1;
+    const float step = elapsed / (float)steps;
+    for (int32_t i = 0; i < steps; ++i) {
+        environment->stepContext->lastSubstepElapsed = step;
+        refreshComponentViews(car);
+        componentSystemIntegrateEuler(&car->components, step, car->derivatives,
+                                        sizeof(car->derivatives) / sizeof(car->derivatives[0]));
+        motionMatrixOrthonormalize(car->body->motion.orientation, car->body->motion.orientation);
+        // The integrator prepared omega before this normalization. Refresh its
+        // angular cache without discarding the forces already collected.
+        rigidBodyRefreshAngularVelocity(car->body);
+        updateMomentumHold(car);
+    }
+    physicsCarPublishState(car);
+    if (carMotionClassActionAllowed(car->ownerMotion)) {
+        const WheelContactContext contact=physicsCarContactContext(environment);
+        WheelTrailStore* trails = environment->wheelTrails != NULL ?
+            environment->wheelTrails : &car->localTrailStore;
+        for (int i = 0; i < 4; ++i)
+            wheelEffectsUpdate(car->wheels[i], &contact, trails, car->wheelTrails + i,
+                car->owner, state->centerPosition, car->ownerMotion->wheelEffectsFlags,
+                car->ownerMotion->disabledWheelMask);
+    }
+    return elapsed;
 }
 
-#include "game_core/port/race/damage_resources.hpp"
-#include "game_core/indep/src/skids.hpp"
-namespace hp2::debug {
-// Debug00137D18, E-0099-W42. Concrete shared-original callees, not the fixture
-// NativeBackend. W71 binds actual shared skid/Clan ownership; active print and
-// exceptional arithmetic gaps remain explicit original-address boundaries.
-float PhysicsCar::Move(float t,::port::race::PhysicsConstructionServices& service){
- auto& m=m_;if(!service.ticker)hp2::not_implemented("0x0024A340","actual PhysicsCar Count clock binding is required");
- ::port::driving::native::InitServices auxiliary;auxiliary.contact=service.contact;auxiliary.Field_00137938_stack_w=service.port_stack_vector_lane;
- auxiliary.Sub_00250F38=[&service]{return static_cast<std::uint64_t>(service.ticker());};
- auxiliary.Sub_00250F48=[&m](std::uint64_t start,std::uint64_t end){const auto delta=::port::race::detail::physics_tick_delta(m,static_cast<std::uint32_t>(start),static_cast<std::uint32_t>(end));std::uint32_t bits;std::memcpy(&bits,&delta,4);return bits;};
- auxiliary.ResolveForces=[&service](auto& memory,auto physics){PhysicsCar(memory,physics).ResolveForces(service);};
- ::port::driving::native::DrivingServices frame;frame.Sub_00250F38=auxiliary.Sub_00250F38;frame.Sub_00250F48=auxiliary.Sub_00250F48;frame.Field_001389A4_stack_w=service.port_stack_vector_lane;
- frame.IsJoystickTypeWheel=[&m](int port){return hp2::debug::IsJoystickTypeWheel(m,port);};
- frame.IntegrateEuler=[&auxiliary](auto& memory,auto system,float dt){::port::driving::native::integrate(memory,system,dt,auxiliary);};
- frame.eOrthonormalizeMatrix=[](auto& memory,auto matrix){hp2::recovered::eOrthonormalizeMatrix(memory,matrix);};
- frame.Sub_0019D980=[](auto& memory,auto body){hp2::recovered::RigidBody(memory,body).PrintCurrentState();};
- frame.Sub_0018C030=[](auto& memory,auto drive){hp2::recovered::DriveTrain(memory,drive).PrintCurrentState();};
- frame.Sub_001B50C8=[](auto& memory,auto damage){return BodyDamage(memory,damage).GetVisibleTotalDamage();};
- frame.UpdateCar=[](auto& memory,auto physics,float dt){hp2::recovered::PhysicsCar(memory,physics).UpdateCar(dt);};
- frame.MaybeMakeSkids=[&service](auto& memory,auto wheel,auto car,float dt){if(!service.enable_skid_trails)return;::port::driving::SkidServices skid;skid.contact=service.contact;skid.shared_world=true;skid.port_stack_vector_lane=service.port_stack_vector_lane;hp2::recovered::Wheel(memory,wheel).MaybeMakeSkids(dt,car,skid);};
- return hp2::recovered::PhysicsCar(m,address_).Move(t,frame);
-}
+PhysicsPoolStatus physicsObjectsReleaseAerodynamics(PhysicsPools* pools, Aerodynamics* object)
+{ return physicsPoolRelease(pools, PHYSICS_OBJECT_AERODYNAMICS, object); }
+
+void physicsInitializeYawTuning(YawTuning* tuning)
+{
+    tuning->lowSpeedYawBoost = 0.0f;
+    tuning->highSpeedYawBoost = 1.0f;
+    tuning->lowSpeedSpeed = 0.0f;
+    tuning->highSpeedSpeed = 30.0f;
+    tuning->maxYawBonus = 0.699999988079071f;
 }
 
-namespace hp2::debug {
-// Debug00137748, E-0099-W42. The same concrete force/clock/contact binding as
-// the original shared constructor and Euler post-integrate virtual target.
-void PhysicsCar::ComputeAuxiliaries(::port::race::PhysicsConstructionServices& service){
- auto& m=m_;::port::driving::native::InitServices auxiliary;auxiliary.contact=service.contact;auxiliary.Field_00137938_stack_w=service.port_stack_vector_lane;
- if(service.ticker)auxiliary.Sub_00250F38=[&service]{return static_cast<std::uint64_t>(service.ticker());};
- auxiliary.Sub_00250F48=[&m](std::uint64_t start,std::uint64_t end){const auto delta=::port::race::detail::physics_tick_delta(m,static_cast<std::uint32_t>(start),static_cast<std::uint32_t>(end));std::uint32_t bits;std::memcpy(&bits,&delta,4);return bits;};
- auxiliary.ResolveForces=[&service](auto& memory,auto physics){PhysicsCar(memory,physics).ResolveForces(service);};
- hp2::recovered::PhysicsCar(m,address_).ComputeAuxiliaries(auxiliary);
-}
-}
+float physicsYawFrictionBoost(const YawTuning* tuning, int scaleDelta,
+                              float* magnitude, float yaw, float handbrake,
+                              float speed, float baseCoefficient,
+                              float coefficientDelta, float coefficientScale)
+{
+    const float absolute = fabsf(*magnitude);
+    *magnitude = absolute;
+    const float initial = absolute + 1.0f;
+    const float yawMagnitude = fabsf(yaw);
 
-#include "game_core/indep/inc/Replay.hpp"
-#include "game_core/indep/src/rigidbody.hpp"
-#include "game_core/indep/src/wheel.hpp"
-#include "game_core/indep/src/suspension.hpp"
-#include "game_core/indep/src/aerodynamics.hpp"
-namespace hp2::debug {
-// Debug00137410; E-0099-W74; replay-frame/00137410.json/type-PhysicsCar.json.
-void PhysicsCar::DoSnapshot(std::uint32_t snapshot,const ::port::race::SnapshotServices& services){
- auto& m=m_;const auto a=address_;ReplaySnapshot s(m,snapshot);s.BeginNamedSection(0x2a6a90);s.MoveData(a+0x70,4);
- hp2::recovered::RigidBody(m,m.word(a+0x18)).DoSnapshot(snapshot,services);
- const auto steering=m.word(a+0x1c),entry=m.word(steering+8)+0x18;const auto delta=m.signed_half(entry);
- if(m.word(entry+4)!=0x1a34f0)hp2::not_implemented("0x00137410","Physics snapshot steering virtual target");
- hp2::recovered::TwoWheelAckermanSteering(m,steering+static_cast<std::uint32_t>(delta)).DoSnapshot(snapshot);
- for(unsigned i=0;i<4;++i){hp2::recovered::Wheel(m,m.word(a+0x30+4*i)).DoSnapshot(snapshot);hp2::recovered::Suspension(m,m.word(a+0x20+4*i)).DoSnapshot(snapshot);}
- hp2::recovered::Engine(m,m.word(a+0x40)).DoSnapshot(snapshot);hp2::recovered::DriveTrain(m,m.word(a+0x44)).DoSnapshot(snapshot);
- hp2::recovered::Aerodynamics(m,m.word(a+0x48)).DoSnapshot(snapshot);
- // CarMover::DoSnapshot00130B38 is an instruction-confirmed empty body.
- s.MoveData(a+0x74,4);s.MoveData(a+0x58,4);s.MoveData(a+0x5c,4);s.MoveData(a+0x60,1,4,0);s.MoveData(a+0x64,1,4,0);
- s.MoveData(a+0x68,4,4,1);s.MoveData(a+0x6c,4);s.EndNamedSection();
-}
+    if (scaleDelta)
+        baseCoefficient += coefficientScale * coefficientDelta;
+    else
+        baseCoefficient += coefficientDelta;
+
+    if (0.5f < handbrake && yawMagnitude < 0.349065899848938f)
+        return initial;
+
+    const float weightedYaw = yawMagnitude * baseCoefficient;
+    const float speedRange = tuning->highSpeedSpeed - tuning->lowSpeedSpeed;
+    const float ratio = (speed - tuning->lowSpeedSpeed) / speedRange;
+    const float boostRange = tuning->highSpeedYawBoost - tuning->lowSpeedYawBoost;
+    const float speedBoost = tuning->lowSpeedYawBoost + boostRange * ratio;
+    float bonus = weightedYaw * speedBoost;
+    if (tuning->maxYawBonus < bonus) bonus = tuning->maxYawBonus;
+    return initial + bonus;
 }

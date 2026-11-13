@@ -1,3 +1,110 @@
+## 2026-11-13 TASK-0124 Remove native draw translation from Godot
+
+Removed the Godot startup host, extension and draw-command adapter. The
+staged Godot project opens its status scene. The C++ bridge builds separately
+and stages World values without draw commands. Track 12 is the reference
+for the next explicit Godot race entry.
+
+## 2026-11-13 TASK-0124 Godot race launch eligibility
+
+Removed automatic native game startup from the Godot project. The native
+binding rejects game launch pending a supported Godot race. Use the Track 12
+MVP state bridge and Godot-owned scene as the reference for the next entry.
+
+## 2026-11-13 TASK-0124 MVP source layout and ownership
+
+Organized the Godot host, presentation, bridge, asset registry and systems
+under their own directories. Godot owns the track mesh node and the existing
+vehicle, scenery and effect visuals. The bridge copies auxiliary rendering
+inputs for the remaining Forward+ passes.
+
+## 2026-11-13 TASK-0124 Modular Godot presentation
+
+Split the active host's rendering into a coordinator, mesh/material
+conversion, camera, scenery, particles and vehicle node lifetime. The donor
+still owns track loading and visibility, camera decisions, lighting and
+effect simulation. The responsibility map records the live source callers
+and the deferred Godot mirror/reflection/post-processing work.
+
+## 2026-11-13 TASK-0122 Donor vehicle physics and collision
+
+Mapped the PAL-derived Windows donor to the Debug MVP World. Read-only Ghidra
+confirmed the fracture loop and post-contact recheck. The MVP World now creates
+and rechecks physical fragments, and the native fixture covers their ownership.
+TASK-0122 records the version differences and the remaining migration work.
+
+## 2026-11-13 TASK-0121 MVP vehicle dynamics
+
+Traced the live World through RealDriver, PhysicsCar, the drivetrain and the
+wheel/contact solver. Connected the four Debug input callbacks and removed the
+extra initialization store into the shift table. Ten native checks and the
+final 32-assertion MVP window run passed. Two older source-structure checks
+failed on existing registry and ownership expectations. PCSX2 booted the
+hash-matched Debug ELF. TASK-0121 remains active for a synchronized original
+driving capture. The task file records the Ghidra evidence and commands.
+
+## 2026-11-13 TASK-0119 shadow, reflection, sun and postprocessing follow-up
+
+Split baked track colour from dynamic lighting and connected the recovered
+car silhouette, shared live reflection atlas, SunInfo layers and fog/focus
+palettes to Godot. Three matched Track 12 captures and Track 11 Direct3D 12
+completed. Track 13 showed readable road in shadow and reached the source
+ticket cinematic. TASK-0119 records the frame-time tail, source gates and
+open visual comparisons.
+
+## 2026-11-13 TASK-0119 native race materials and camera synchronization
+
+Added Godot Shading Language race materials for the independent Entities
+Bridge project, plus loading-screen shader preparation, source weather,
+focus and sun binding. TASK-0118 now covers the source-clock camera pair
+and the section 41 record 8 determinant-overflow presentation regression.
+Elise Delivery reached pursuit, airborne driving and the original ticket
+cinematic. Three matched Track 12 replays ran at 97.17–115.90 FPS and
+10.90–13.26 ms P95 at 1080p. TASK-0119 records the graphics scope,
+commands, late resource creation and open visual/performance criteria.
+
+## 2026-11-13 TASK-0118 independent MVP fixed clock
+
+Read-only Ghidra timing evidence confirms the original elapsed and quantized
+clock path. Added the explicit 60 TPS diagnostic mode, fixed-tick publication,
+Godot pose interpolation, source particle identities and NIS bone interpolation.
+Five Release window caps matched all 300 measured ticks. Debug windows passed
+Championship, pursuit retry, the original ticket cinematic and a short render
+stall. TASK-0118 records the original-machine cadence gap and exact commands.
+
+## 2026-11-13 TASK-0100 Elise Delivery in the independent MVP
+
+A faster physical-keyboard Debug window run exercised the authored 13 actors,
+real pursuit, civilian PullOver and ticket NIS. Native traffic now dispatches
+the source positive PullOver, and collisions dispatch the recovered cop disable
+callee. The timed filler decision path retains source timers, selectors and RNG.
+Committed police HUD, light pulses and light texture changes feed Godot.
+Debug pursuit retry/exit and Championship startup passed. The third-ticket
+arrest at 5:27.60 entered the source result pages and returned to the Event
+Tree. The independent private save passed the byte-level roundtrip validator.
+Eleven focused checks passed. TASK-0100 tracks the remaining winning objective
+and presentation gaps.
+
+## 2026-11-13 TASK-0115 Track 12 entity bridge and native HUD
+
+Added an opt-in Godot-native renderer for the first authored Championship.
+The staged C++ entity bridge consumes the production World commit and carries
+vehicle handles, animation poses, source camera, scenery, committed particles,
+and the live race HUD view. Godot owns the 3D resources and live HUD Controls.
+The authored frontend and pause and result menus keep their existing route.
+The eight Release regressions pass. The window run reached the native HUD
+with Forward+ DOF, exercised the authored retry, and resumed physical-input
+driving with all five source participants.
+
+The first input-tape comparison matched all 600 measured source steps at
+1080p. Before the native HUD and material follow-up, effects-off P95 was
+86.552 ms legacy and 11.483 ms native. This is preliminary evidence with
+different visual workloads. The task and Track 12 guide track the full race,
+final timing matrix, visual limitations, and repeat commands. The effects-on
+window run completed two laps and stopped on the existing native exceptional
+conversion guard. The user ended testing and requested the launch shortcut,
+`./build.ps1 --run --mvp --preset godot-release`.
+
 ## 2026-11-12 TASK-0105 Debug Championship selection
 
 Paired one-process ImGui phases isolated a median 0.64–0.66 ms Info-on
@@ -1205,8 +1312,19 @@ place and kept, because the fact that a session believed it, and why, is itself 
 ## Contents
 
 <!-- generated:contents:begin -->
-<!-- Generated by reverse/scripts/generate_progress.py on 2026-11-12. Do not edit by hand. -->
+<!-- Generated by reverse/scripts/generate_progress.py on 2026-11-13. Do not edit by hand. -->
 
+- [2026-11-13 TASK-0124 Remove native draw translation from Godot](#2026-11-13-task-0124-remove-native-draw-translation-from-godot)
+- [2026-11-13 TASK-0124 Godot race launch eligibility](#2026-11-13-task-0124-godot-race-launch-eligibility)
+- [2026-11-13 TASK-0124 MVP source layout and ownership](#2026-11-13-task-0124-mvp-source-layout-and-ownership)
+- [2026-11-13 TASK-0124 Modular Godot presentation](#2026-11-13-task-0124-modular-godot-presentation)
+- [2026-11-13 TASK-0122 Donor vehicle physics and collision](#2026-11-13-task-0122-donor-vehicle-physics-and-collision)
+- [2026-11-13 TASK-0121 MVP vehicle dynamics](#2026-11-13-task-0121-mvp-vehicle-dynamics)
+- [2026-11-13 TASK-0119 shadow, reflection, sun and postprocessing follow-up](#2026-11-13-task-0119-shadow-reflection-sun-and-postprocessing-follow-up)
+- [2026-11-13 TASK-0119 native race materials and camera synchronization](#2026-11-13-task-0119-native-race-materials-and-camera-synchronization)
+- [2026-11-13 TASK-0118 independent MVP fixed clock](#2026-11-13-task-0118-independent-mvp-fixed-clock)
+- [2026-11-13 TASK-0100 Elise Delivery in the independent MVP](#2026-11-13-task-0100-elise-delivery-in-the-independent-mvp)
+- [2026-11-13 TASK-0115 Track 12 entity bridge and native HUD](#2026-11-13-task-0115-track-12-entity-bridge-and-native-hud)
 - [2026-11-12 TASK-0105 Debug Championship selection](#2026-11-12-task-0105-debug-championship-selection)
 - [2026-11-12 TASK-0016 frontend background movie](#2026-11-12-task-0016-frontend-background-movie)
 - [2026-11-12 TASK-0077 Godot race sampling and FXAA](#2026-11-12-task-0077-godot-race-sampling-and-fxaa)
@@ -1365,6 +1483,16 @@ place and kept, because the fact that a session believed it, and why, is itself 
 - [Final acceptance, 2026-11-07](#final-acceptance-2026-11-07)
 - [2026-11-11 TASK-0077 Godot Visual Profiler confirmation](#2026-11-11-task-0077-godot-visual-profiler-confirmation)
 - [2026-11-11 TASK-0077 split World and depth timings](#2026-11-11-task-0077-split-world-and-depth-timings)
+- [2026-11-13 TASK-0117 Entities Bridge performance](#2026-11-13-task-0117-entities-bridge-performance)
+- [2026-11-13 TASK-0118 high-refresh presentation follow-up](#2026-11-13-task-0118-high-refresh-presentation-follow-up)
+- [2026-11-13 TASK-0118 1080p pacing and committed effects](#2026-11-13-task-0118-1080p-pacing-and-committed-effects)
+- [2026-11-13 TASK-0120 MVP presentation ownership](#2026-11-13-task-0120-mvp-presentation-ownership)
+- [2026-11-13 TASK-0120 README and architecture diagram](#2026-11-13-task-0120-readme-and-architecture-diagram)
+- [TASK-0120 architecture overview](#task-0120-architecture-overview)
+- [TASK-0119 MVP vertex reflection and focus](#task-0119-mvp-vertex-reflection-and-focus)
+- [TASK-0119 MVP color and Player fog](#task-0119-mvp-color-and-player-fog)
+- [TASK-0119 start-line fog comparison](#task-0119-start-line-fog-comparison)
+- [TASK-0124 — Track 12 state-only race](#task-0124--track-12-state-only-race)
 
 <!-- generated:contents:end -->
 
@@ -4971,3 +5099,113 @@ subphase at 7.075 ms median, followed by proxy synchronization at 3.096 ms
 and discovery at 0.961 ms. The native regression set passed 4/4. Continue
 TASK-0077 with native World subphase attribution and variant/uniform splits.
 Exact commands, source-step ranges and artifact paths are in the task.
+
+## 2026-11-13 TASK-0117 Entities Bridge performance
+
+The 1080p Forward+ window harness now exercises the standalone MVP with engine
+debug and the original bitmap FPS/position overlay. The prior Debug World
+measured 39.3 FPS average, 30.72 ms P95. Optimized Debug and Release runs exceed
+60 FPS at the original presentation settings. Replays check committed source
+camera, race state, actor identity and poses for every tick. WASAPI racing
+captures reported zero measured audio skips. Media decode, Godot playback and
+menu resource retention are profiled separately. Warm frontend transition,
+full sound lifecycle and sector visual checks stay open where evidence is
+incomplete. See TASK-0117 for commands, scope and exact continuation.
+
+## 2026-11-13 TASK-0118 high-refresh presentation follow-up
+
+The MVP now interpolates committed gauge geometry, main and rear camera
+projection, and the two-tick original ticket camera keys. Debug Elise
+Delivery measured median 120 FPS and 17.03 ms P95 render intervals.
+The player and both cameras advanced across every sampled same-tick
+airborne frame pair. The final ticket camera advanced in 276/276 same-tick
+pairs. Fixed and source Championship startup and return passed, as did
+the headless HUD fixture and six native regressions. Godot and read-only
+Ghidra were used. The original normal-play tick distribution, isolated
+particle and audio timing, and sustained 120 FPS remain open. Reproduce
+the Godot captures from TASK-0118 using its recorded window commands.
+
+## 2026-11-13 TASK-0118 1080p pacing and committed effects
+
+Elise Delivery Debug 1080p profiling isolated the long catch-up frames
+to native collision work. The scoped Voronoi geometry cache reduced
+the observed collision peak from 536.21 ms across eight steps to
+6.40 ms in the corresponding window of a live input repeat. The clean
+Safe/VSync window averaged 119.78 FPS with 10.25 ms P95. The remaining
+render tail keeps the strict 120 FPS criterion open. The projective
+minimap and Godot particle pool now retain source identities through
+render interpolation. Both stall audits preserved PCM submission
+order and particle IDs. The 60 ms injection had no local underruns,
+and the 180 ms injection retained an audible-gap risk. Original C++
+World scheduling, quantization and integration remain unchanged.
+No PCSX2 was launched. See TASK-0118 for commands and artifact paths.
+
+## 2026-11-13 TASK-0120 MVP presentation ownership
+
+The existing World and Entity State Bridge now dispatch to separate Godot
+track, scenery, vehicle, particle, environment and preview owners.
+Main, rear and reflection views share the original section selector.
+Preview and race reuse decoded driving topology, and car preview works
+before a track is loaded. AGENT.md and the architecture and decision
+records require this ownership model for future reverse engineering.
+Both Release builds and seven CTest checks passed. Headless preview
+and HUD fixtures, the final live Championship lifecycle repeat, the
+matched World tape and legacy startup passed. The final matched window
+averaged 152.80 FPS with 11.168 ms P95 against 156.21 FPS and 10.957 ms P95
+for the direct baseline. Both samples recorded zero native mesh creations
+and 99 node creations during measurement. The replay pause revision
+timeout also occurs on the baseline. Continue with full finish and
+isolated effect captures using TASK-0120 commands.
+
+## 2026-11-13 TASK-0120 README and architecture diagram
+
+The README now documents the two launch paths, local PS2 inputs, the
+Windows build dependencies and the build-only commands. The MVP
+architecture section embeds the supplied archeture.svg. Validation covers
+document links, tool versions and command definitions. No runtime changes.
+
+## TASK-0120 architecture overview
+
+The architecture page now summarizes the current MVP data flow, core and
+host responsibilities, and the legacy entry point. The README and binding
+rules link to the new overview heading.
+
+## TASK-0119 MVP vertex reflection and focus
+
+The MVP uses recovered context-2 vertex UV and alpha on the supported car
+material route and adds a persistent per-view half-resolution focus target.
+Source function evidence, the race destination-alpha gap, native and
+Forward+ GPU checks, and matched Track 12 timing are recorded in TASK-0119.
+The final Track 12 sample averaged 143.93 FPS with 11.348 ms P95.
+
+## TASK-0119 MVP color and Player fog
+
+Vehicle base lighting now evaluates the recovered VU vertex calculation
+in Godot shaders. MVP sprites preserve GS alpha through texture upload
+and apply their authored tint in Canvas shaders. Track 13 fog follows
+source Player clip planes, GS depth slots and the track's weather
+palette. The independent rear-view fog and focus draws were removed
+after confirming original stage order. Native, HUD and Forward+ pixel
+checks passed. The Track 12 matched sample averaged 173.46 FPS at
+9.971 ms P95. TASK-0119 records reproduction and keeps exact Recomp
+capture and the 8.33 ms target open.
+
+## TASK-0119 start-line fog comparison
+
+The Track 13 matched-state capture exposed the scene-linear fog blend.
+The Godot Player compositor now applies the recovered fog equation to
+display RGB after transparent geometry, using the existing color and depth
+attachments. GPU probes cover the dark-color blend and attachment order.
+The task record holds the window results and outstanding depth and timing
+checks.
+
+## TASK-0124 — Track 12 state-only race
+
+Enabled explicit Track 12 Quick Race using the donor's existing race
+orchestration and Entity State Bridge. Godot owns track and vehicle meshes,
+the primary camera and the speed HUD. The state-only donor path ends before
+draw capture. Windows Release Forward+ passed a 49.48 m drive at 79.3 km/h,
+with World steps 6 to 96, 8,178 scenery placements and 14 vehicles. Checked
+idle and three failure paths. Continue with committed particle and dynamic
+scenery inputs and the auxiliary Godot passes. See TASK-0124 for commands,
+logs and the local screenshot.

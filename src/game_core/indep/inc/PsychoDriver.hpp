@@ -1,94 +1,88 @@
-// TASK-0042 E-0042-S001: exact Debug source marker(s): ../indep/inc/PsychoDriver.hpp.
-// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
-// PORT-SIDE template file; destination/header extension is not original-file evidence.
-#pragma once
+#ifndef NFSHP2_INDEP_INC_PSYCHODRIVER_HPP
+#define NFSHP2_INDEP_INC_PSYCHODRIVER_HPP
 
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: allocator_label; evidence: E-0027-C01.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-namespace hp2::recovered {
-class PsychoDriver {
-public:
-    // ELF 0x00130958; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00130958.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00130958();
-    // ELF 0x00136C58; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c58.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00136C58();
-    // ELF 0x00136C60; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c60.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00136C60();
-    // ELF 0x00136CE8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136ce8.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00136CE8();
-    // ELF 0x00136CF0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136cf0.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00136CF0();
-    // ELF 0x00139760; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00139760.md. Constructor entry; NOT a C++ constructor.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00139760();
-    // ELF 0x001398E8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001398e8.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_001398E8();
-    // ELF 0x00139968; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00139968.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00139968();
-    // ELF 0x00139980; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00139980.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00139980();
-    // ELF 0x00139B28; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00139b28.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00139B28();
-    // ELF 0x00139B68; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00139b68.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00139B68();
-    // ELF 0x00139C48; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00139c48.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00139C48();
-    // ELF 0x0013A3E0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013a3e0.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void SetTarget();
-    // ELF 0x0013A638; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013a638.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0013A638();
-    // ELF 0x0013A658; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013a658.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0013A658();
-    // ELF 0x0013A678; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013a678.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0013A678();
-    // ELF 0x0013AC80; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013ac80.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0013AC80();
-    // ELF 0x0013ACD8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013acd8.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0013ACD8();
-    // ELF 0x0013ACE8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013ace8.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0013ACE8();
-    // ELF 0x0013ACF0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013acf0.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0013ACF0();
-    // ELF 0x0013AD00; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013ad00.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0013AD00();
-    // ELF 0x0013AD10; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013ad10.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0013AD10();
-    // ELF 0x002A0550; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002a0550.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_002A0550();
-};
-} // namespace hp2::recovered
+#include <stddef.h>
+#include <stdint.h>
+#include "indep/inc/CarMover.hpp"
+#include "indep/inc/CarDriver.hpp"
+#include "indep/inc/DriveTarget.hpp"
+#include "indep/inc/Table.hpp"
 
-#include "game_core/port/race/control_construction.hpp"
-namespace hp2::debug {
-// Debug0013AAF8,E-0099-W102; fresh mdebug definition owner PsychoDriver.hpp.
-inline float PsychoDriver::GetDesiredTimeToSpeed()const{return m_.scalar(address_+0x244);}
-// Debug0013AB00,E-0099-W34/W102; original header owner, not its emission TU.
-inline float PsychoDriver::GetDesiredSpeed()const{return m_.scalar(address_+0x240);}
-// Debug0013AAE8,E-0110-P01; exact original inline PsychoDriver.hpp owner.
-inline void PsychoDriver::SetLowGear(){m_.word(address_+0x220,0xffffffff);}
+typedef struct AIControls AIControls;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+// Native public owner views, preserving the existing host interface.
+// Original inline path and each implementation owner are qualified separately.
+struct CarSoundState;
+typedef struct AIControlsBindings {
+    CarMovement* movement;
+    const DriverPhysicsVehicle* vehicle;
+    struct CarSoundState* sound;
+    const GameTime* clock;
+} AIControlsBindings;
+
+/* Commands and filters belong to this input owner. Output controls remain
+ * the same borrowed storage consumed by the active physical mover. */
+typedef struct AIControls {
+    AIControlsBindings bindings;
+    DriverCommand command;
+    DriverFilter headingError;
+    DriverFilter velocityHeadingError;
+    DriverFilter speedError;
+    float targetPoint[2];
+    float lookAheadScale;
+    float targetSpeed;
+    float targetDuration;
+    float speedTolerance;
+    int32_t enabled;
+    float forcedHandbrakeTime;
+    int32_t reverseHysteresis;
+    CarDriverResult result;
+} AIControls;
+
+CarDriverResult aiControlsInitialize(AIControls* controls,const AIControlsBindings* bindings);
+void aiControlsDispose(AIControls* controls);
+void aiControlsUpdate(AIControls* controls,float elapsed);
+float aiControlsWrappedAngleRadians(uint16_t angle);
+uint16_t aiControlsMeasureAngles(const AIControls* controls,float* headingError,float* velocityError);
+void aiControlsClearAngleFilters(AIControls* controls);
+void aiControlsResetAngleFilters(AIControls* controls);
+void aiControlsClearSpeedFilter(AIControls* controls);
+void aiControlsResetSpeedFilter(AIControls* controls);
+int32_t aiControlsHandlingMode(const AIControls* controls);
+void aiControlsUpdateTargetPoint(AIControls* controls);
+void aiControlsComputePedals(const AIControls* controls,float* throttle,float* brake);
+void aiControlsSetTarget(AIControls* controls,int32_t enabled,float speed,float duration,float tolerance);
+void aiControlsSetCommand(AIControls* controls,const DriverCommand* command);
+
+
+
+
+
+void aiControlsSetHandbrakeTime(AIControls* controls,float seconds);
+
+
+void aiControlsStartHorn(AIControls* controls);
+void aiControlsStopHorn(AIControls* controls);
+int32_t aiControlsHornActive(const AIControls* controls);
+
+
+struct ReplaySnapshot;
+void aiControlsSnapshot(AIControls* controls,struct ReplaySnapshot* snapshot);
+void aiControlsFullThrottle(AIControls* controls);
+void aiControlsNeutralGear(AIControls* controls);
+float aiControlsTargetDuration(const AIControls* controls);
+float aiControlsTargetSpeed(const AIControls* controls);
+void aiControlsSetLookAheadScale(AIControls* controls,float scale);
+const float* aiControlsTargetPoint(const AIControls* controls);
+void aiControlsSetTargetPoint(AIControls* controls,const float point[2]);
+
+#ifdef __cplusplus
 }
+#endif
+
+#endif

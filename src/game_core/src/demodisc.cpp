@@ -1,25 +1,68 @@
-// TASK-0042 E-0042-S001: exact Debug source marker(s): src\demodisc.cpp.
-// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: qualified_string; evidence: E-0019-N03.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-// Diagnostic text (not a callable signature): DemoDiscManager::Init() [0x002ADA80]
-// Diagnostic text (not a callable signature): DemoDiscManager::SetEndReason() [0x002ADDC8]
-// Diagnostic text (not a callable signature): DemoDiscManager::EndDemo() [0x002ADE40]
-#include "game_core/indep/inc/DemoDisc.hpp"
+#include "DemoDisc.hpp"
+#include "Flags.hpp"
+#include "Timer.hpp"
+#include "CarInfo.hpp"
+#include <stdexcept>
 
-#include "game_core/port/not_implemented.hpp"
+DemoDiscManager TheDemoDiscManager;
 
-namespace hp2::recovered {
-// ELF 0x0012E6C8; E-0019-N03; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/startup/0012e6c8.md.
-void DemoDiscManager::Init() {
-    hp2::not_implemented("0x0012E6C8", "DemoDiscManager::Init (signature and full body unresolved)");
+DemoDiscManager::DemoDiscManager()
+    :parameters_{0,0,0,60,600,1,10,0},activation_(0),
+     initialRealTime_(0),lastRealTime_(0),endReason_(-1),exitRequested_(false)
+{
 }
 
-// ELF 0x0012EB00; E-0019-N03; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/startup/0012eb00.md.
-void DemoDiscManager::SetEndReason() {
-    hp2::not_implemented("0x0012EB00", "DemoDiscManager::SetEndReason (signature and full body unresolved)");
+void DemoDiscManager::Init(const GameTime& clock,ApplicationLaunchOptions& launch,
+    const DemoDiscConfiguration& configuration)
+{
+    // The console's SDK argument decoders and optical-disc probe are retired.
+    // Retain its actual configuration activation path and the same content
+    // policy for native launch, loading screens and CarInfo publication.
+    if (configuration.useTweakables) {
+        parameters_.language=configuration.language;
+        parameters_.aspect=configuration.aspect;
+        parameters_.playMode=configuration.playMode;
+        parameters_.inactiveTimeoutSeconds=configuration.inactiveTimeoutSeconds;
+        parameters_.totalTimeoutSeconds=configuration.totalTimeoutSeconds;
+        parameters_.masterVolumeScale=configuration.masterVolumeScale;
+        activation_=1;
+    }
+    if (activation_!=0) {
+        // PAL100818 is a jump to the real language-file transition at
+        // 21E0D0. Its resource/OnChange graph must be connected before this
+        // optional configured-demo branch can complete on Windows.
+        if (parameters_.language>=1 && parameters_.language<=4)
+            throw std::logic_error("Configured demo language needs the canonical language transition");
+        launch.skipFrontend=0;
+    }
+    initialRealTime_=clock.realTimer;
+    lastRealTime_=clock.realTimer;
 }
-} // namespace hp2::recovered
+
+void DemoDiscManager::ForceActive(const GameTime& clock,ApplicationLaunchOptions& launch,
+    const DemoDiscConfiguration& configuration)
+{
+    activation_=1;
+    Init(clock,launch,configuration);
+}
+
+bool DemoDiscManager::IsAttractMode() const noexcept
+{
+    return parameters_.playMode==1;
+}
+
+hp2::CarInfoAvailability DemoDiscManager::Availability() const noexcept
+{
+    return activation_!=0 ? hp2::CarInfoAvailability::DemoDisc : hp2::CarInfoAvailability::FullGame;
+}
+
+void DemoDiscManager::SetEndReason(std::int32_t reason) noexcept
+{
+    endReason_=reason;
+}
+
+void DemoDiscManager::EndDemo() noexcept
+{
+    if (endReason_==-1)SetEndReason(5);
+    exitRequested_=true;
+}

@@ -1,46 +1,90 @@
-// TASK-0042 E-0042-S001: exact Debug source marker(s): ../indep/inc/CarMover.hpp.
-// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
-// PORT-SIDE template file; destination/header extension is not original-file evidence.
-#pragma once
+#ifndef NFSHP2_CARMOVER_HPP
+#define NFSHP2_CARMOVER_HPP
 
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: exact Debug declaring class with adopted retail correspondence; evidence: E-0042-S001.
-// Placement: TASK-0042 E-0042-S001; exact Debug definition source/header markers where recorded; unmatched companion remains port-side; retail ABI unconfirmed.
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-namespace hp2::recovered {
-class CarMover {
-public:
-    // ELF 0x001309F0; E-0041-V01; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/001309f0.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void DoSnapshot();
-
-public:
-    // TASK-0028: missing entries; existing storage and bodies are preserved.
-    // ELF 0x00136B78; E-0042-U015; E-0042-S001; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136b78.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00136B78();
-};
-} // namespace hp2::recovered
-
-#include "game_core/port/driving/object_view.hpp"
-namespace hp2::debug {
-// E-0099-W21. Original inline ../indep/inc/CarMover.hpp emitted in car.cpp.
-class CarMover : public ::port::driving::ObjectView {
-public:
- using ObjectView::ObjectView;
- void Sub_00136B50();
- // Debug00136B28, E-0099-W21/W105. Exact original CarMover.hpp definition owner.
- void Sub_00136B28(int flags){m_.word(address_+4,0x2a67d0);if(flags&1)m_.release(address_);}
- void SetDriver(std::uint32_t); // Debug00136B20.
- void DoSnapshot(std::uint32_t); //Debug00130B38, original empty car.cpp body, E-0099-W105.
-};
-class NullMover : public CarMover {
-public:
- using CarMover::CarMover;
- void Sub_00136B08(std::uint32_t state);void Sub_00136AA8(int);
- static std::uint32_t Sub_00136A88(::port::driving::Memory&); // operator new
- void SetDriver(std::uint32_t); // Debug00136A70; proven empty override.
- float Move(float); // Debug00130B40, original car.cpp.
-};
+// Native declarations use the PC runtime layout.
+#include "CarState.hpp"
+#ifdef __cplusplus
+extern "C" {
+#endif
+typedef struct NullMover { VehicleState* state; } NullMover;
+static inline void nullMoverInitialize(NullMover* mover, VehicleState* state)
+{ mover->state = state; }
+float nullMoverMove(NullMover* mover, float elapsed);
+#ifdef __cplusplus
 }
+#endif
+
+#include "indep/inc/Table.hpp"
+#include "indep/inc/QuickSpline.hpp"
+#include "indep/inc/Point.hpp"
+#include "indep/inc/Skids.hpp"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+struct CarMovement;
+struct DriverCommand;
+struct DriverPhysicsVehicle;
+struct World;
+
+/* These references address the active AI input and controller storage.
+ * They remain live through the mover lifetime, including driver rebinding. */
+typedef struct BeltMoverBindings {
+    struct DriverCommand* command;
+    const struct DriverPhysicsVehicle* vehicle;
+    const float* targetSpeed;
+    const float* targetDuration;
+    int32_t* replanDelayTicks;
+    struct World* world;
+} BeltMoverBindings;
+
+typedef struct BeltMover {
+    struct CarMovement* movement;
+    float elapsed;
+    float parameterScale;
+    float startParameter;
+    float velocityParameter;
+    float accelerationParameter;
+    QuickSpline path;
+    tCubic1D lateralOffset;
+    tCubic2D velocityFilter;
+    tCubic2D lateralFilter;
+    DriverHistory lateralHistory;
+    int32_t sliding;
+    Wheel* wheels[4];
+    WheelVehicleState wheelVehicle;
+    WheelTrail* trails[4];
+    WheelTrailStore localTrailStore;
+    WheelTrail localTrails[16];
+} BeltMover;
+
+int32_t beltMoverInitialize(BeltMover* mover, struct CarMovement* movement);
+void beltMoverDispose(BeltMover* mover);
+float beltMoverRelativePosition(BeltMover* mover,const float position[4],float parameter,
+                                 float difference[4],float tangent[4]);
+float beltMoverSlope(BeltMover* mover);
+float beltMoverAvailableAcceleration(BeltMover* mover);
+void beltMoverRecalculate(BeltMover* mover);
+void beltMoverActivate(BeltMover* mover);
+float beltMoverLateralGrip(BeltMover* mover,float acceleration);
+float beltMoverPredictRoadError(BeltMover* mover,float duration);
+float beltMoverMove(BeltMover* mover,float elapsed);
+float* beltMoverPosition(BeltMover* mover,float output[4],float elapsed);
+float* beltMoverVelocity(BeltMover* mover,float output[4],float elapsed);
+float* beltMoverAcceleration(BeltMover* mover,float output[4],float elapsed);
+
+#ifdef __cplusplus
+}
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+struct ReplaySnapshot;
+void beltMoverSnapshot(BeltMover* mover,struct ReplaySnapshot* snapshot);
+#ifdef __cplusplus
+}
+#endif
+
+#endif

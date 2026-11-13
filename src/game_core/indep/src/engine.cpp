@@ -1,473 +1,806 @@
-// TASK-0044 E-0044-E01. Debug NFSHP2.ELF behavior authority:
-// SHA-256 815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
-// Raw read-only decompilation/listing queries and hashes: local/task0044/engine/manifest.json.
-#include "game_core/indep/src/engine.hpp"
-#include "game_core/indep/inc/Table.hpp"
-#include "game_core/port/driving/projection_support.hpp"
-namespace hp2::recovered {
-using namespace port::driving;
-std::int32_t DriveTrain::SetSportGear(DrivetrainProjection& s,std::int32_t value) {
-    using namespace detail_group_0018bce0;
-    if(value>1 && value<=add_one(s.config_Field_0x18)) {
-        if(s.Field_0x48==1) s.Field_0x44=0;
-        s.Field_0x48=value;
-    }
-    return s.Field_0x48;
+#include "indep/inc/Engine.hpp"
+#include "bware/inc/bMath.hpp"
+#include "bware/inc/bWare.hpp"
+
+#include <math.h>
+#include <cmath>
+
+int32_t driveTrainIsClutchEngaged(const DriveTrain* driveTrain)
+{
+    return driveTrain->clutchState == 3;
 }
-std::int32_t DriveTrain::SetDesiredGear(DrivetrainProjection& s,std::int32_t request,const DrivetrainGlobals& g) {
-    using namespace detail_group_0018bce0;
-    const auto current=s.Field_0x30;
-    if(request==-1) {
-        s.Field_0x48=1;
-        if(current<2) { s.Field_0x2c=2; return -1; }
-        if(s.Field_0x38!=3) return -1;
-        const float f3=s.engine_Field_0xc*g.Field_0032e388;
-        float f2;
-        if(current<3) f2=s.engine_Field_0x44<g.Field_0032e38c ? s.engine_config_Field_0x0+100.0f : 0.0f;
-        else f2=s.Field_0x74.at(index(current));
-        bool increase=s.Field_0x50.at(index(current))<f3 &&
-            current<add_one(s.config_Field_0x18);
-        for(const auto& w:s.wheels) increase=increase && w.Field_0x160<4.0f && w.Field_0x155!=0;
-        if(increase) s.Field_0x2c=current+1;
-        else if(f3<f2) s.Field_0x2c=current-1;
-        return -1;
+
+int32_t driveTrainGetHighestGear(const DriveTrain* driveTrain)
+{
+    return driveTrain->info->forwardGearCount + 1;
+}
+
+int32_t driveTrainSetShiftTarget(DriveTrain* driveTrain, int32_t gear)
+{
+    if (2 <= gear && gear <= driveTrainGetHighestGear(driveTrain)) {
+        if (driveTrain->shiftTarget == 1)
+            driveTrain->shiftWaitSeconds = 0.0f;
+        driveTrain->shiftTarget = gear;
     }
-    if(request!=-2) { s.Field_0x2c=request; return request; }
-    s.Field_0x44=s.Field_0x44+g.Field_00330c88;
-    if(s.Field_0x38!=3) return -2;
-    const float f5=s.engine_config_Field_0x8, f4=s.engine_config_Field_0x0;
-    const float f3=s.engine_Field_0xc*g.Field_0032e390;
-    float f0;
-    if(current<3) f0=s.engine_Field_0x44<g.Field_0032e394 ? f4+100.0f : 0.0f;
-    else {
-        f0=f5*g.Field_003308c4;
-        f0=f0*s.config_Field_0x20.at(index(current));
-        f0=f0/s.config_Field_0x20.at(index(current-1));
+    return driveTrain->shiftTarget;
+}
+
+void engineSetThrottle(Engine* engine, float throttle)
+{
+    engine->throttle = throttle;
+}
+
+float engineGetThrottle(const Engine* engine)
+{
+    return engine->throttle;
+}
+
+float engineGetEffectiveThrottle(const Engine* engine)
+{
+    return engine->throttle * engine->throttleOverride;
+}
+
+void engineAddRoadTorque(Engine* engine, float torque)
+{
+    engine->roadTorque = engine->roadTorque + torque;
+}
+
+void engineSetNitroEnabled(Engine* engine, int32_t enabled)
+{
+    engine->nitroEnabled = enabled;
+}
+
+void engineSetNitroBoostTimer(Engine* engine, float seconds)
+{
+    engine->nitroBoostTimer = seconds;
+}
+
+float engineGetNitroBoostTimer(const Engine* engine)
+{
+    return engine->nitroBoostTimer;
+}
+
+float engineGetTorqueResponse(const Engine* engine)
+{
+    return 1.0f / engine->info->momentOfInertia;
+}
+
+float engineGetIdleRpm(const Engine* engine)
+{
+    return engine->info->idleRpm;
+}
+
+float engineGetRedlineRpm(const Engine* engine)
+{
+    return engine->info->redlineRpm;
+}
+
+float engineGetMaximumRpm(const Engine* engine)
+{
+    return engine->info->maximumRpm;
+}
+
+const EngineTuning engineDefaultTuning = {1.0499999523162842f, 15.0f};
+
+Engine* engineInitialize(Engine* engine, const EngineInfo* info,
+                         const EngineVehicleState* vehicle,
+                         const EngineTuning* tuning)
+{
+    sampledCurveInitialize(&engine->torque, info->torqueCurve, 9,
+                           info->idleRpm, info->maximumRpm);
+    sampledCurveInitialize(&engine->braking, info->brakingCurve, 3,
+                           info->idleRpm, info->maximumRpm);
+    engine->info = info;
+    engine->vehicle = vehicle;
+    engine->tuning = tuning;
+    engine->catchupMultiplier = 1.0f;
+    engine->hotPursuit = 0;
+    engine->nitroEnabled = 0;
+    engine->nitroBoostTimer = 0.0f;
+    engine->throttleOverride = 1.0f;
+    return engine;
+}
+
+int32_t engineComputeDerivatives(const Engine* engine, float* output)
+{
+    const float torque = bScalarAdd(engineGetNetTorque(engine), engine->roadTorque);
+    *output = bScalarDivide(torque, engine->info->momentOfInertia);
+    return 0;
+}
+
+float engineGetCurrentOutputTorque(const Engine* engine)
+{
+    const float radiansPerSecondToRpm = 9.549304008483887f;
+    const float rpm = bScalarMultiply(engine->angularVelocity, radiansPerSecondToRpm);
+    float torque = bScalarMultiply(sampledCurveEvaluate(&engine->torque, rpm),
+                                    engine->catchupMultiplier);
+    if (engine->hotPursuit != 0)
+        torque = bScalarMultiply(torque, engine->tuning->pursuitTorqueMultiplier);
+    const float limit = bScalarAdd(engine->info->maximumRpm, -100.0f);
+    if (rpm < limit)
+        return torque;
+    return bScalarMultiply(-engine->tuning->overspeedTorqueMultiplier, torque);
+}
+
+float engineGetNetTorque(const Engine* engine)
+{
+    const float output = engineGetCurrentOutputTorque(engine);
+    const float throttle = bScalarMultiply(engine->throttle, engine->throttleOverride);
+    float driveTorque = bScalarMultiply(output, throttle);
+    if (engine->nitroEnabled != 0)
+        driveTorque = bScalarMultiply(driveTorque, 3.0f);
+
+    const float radiansPerSecondToRpm = 9.549304008483887f;
+    const float rpm = bScalarMultiply(engine->angularVelocity, radiansPerSecondToRpm);
+    const float braking = -sampledCurveEvaluate(&engine->braking, rpm);
+    const float brakingThrottle = bScalarMultiply(engine->throttle, engine->throttleOverride);
+    const float brakeTorque = bScalarMultiply(braking, bScalarAdd(1.0f, -brakingThrottle));
+    float torque = bScalarAdd(driveTorque, brakeTorque);
+    if (engine->vehicle->brakingMode == 1 && torque < 0.0f)
+        torque = bScalarMultiply(torque, 0.4000000059604645f);
+    return torque;
+}
+
+float engineGetOutputTorqueAtRpm(const Engine* engine, float rpm)
+{
+    float torque = sampledCurveEvaluate(&engine->torque, rpm)
+                   * engine->catchupMultiplier;
+    if (engine->hotPursuit != 0)
+        torque = torque * engine->tuning->pursuitTorqueMultiplier;
+    const float limit = engine->info->maximumRpm - 100.0f;
+    if (limit <= rpm)
+        torque = -engine->tuning->overspeedTorqueMultiplier * torque;
+    return torque;
+}
+
+void engineUpdateNitro(Engine* engine, int32_t worldTicks)
+{
+    if (engine->nitroEnabled != 0) {
+        const float expiry = engine->nitroBoostTimer + 4.0f;
+        const float now = (float)worldTicks * 0.0002500000118743628f;
+        if (expiry < now)
+            engine->nitroEnabled = 0;
     }
-    if(s.Field_0x2c==s.Field_0x48) {
-        if(10.0f<s.Field_0x44) return -1;
-        if(s.Field_0x34<current && f5-300.0f<f3) return -1;
-    } else {
-        s.Field_0x34=current;
-        if(s.Field_0x48<s.Field_0x2c) {
-            if(f0<f3) {
-                s.Field_0x2c=current; s.Field_0x44=0; s.Field_0x48=current;
-                return -2;
+}
+
+void engineConstrainAngularVelocity(Engine* engine)
+{
+    const float rpmToRadiansPerSecond = 0.10471967607736588f;
+    const float idle = bScalarMultiply(engine->info->idleRpm, rpmToRadiansPerSecond);
+    if (engine->angularVelocity < idle)
+        engine->angularVelocity = idle;
+    const float maximum = bScalarMultiply(engine->info->maximumRpm, rpmToRadiansPerSecond);
+    if (maximum < engine->angularVelocity)
+        engine->angularVelocity = maximum;
+    engine->roadTorque = 0.0f;
+}
+
+void engineRestoreAngularVelocity(Engine* engine, const float* state)
+{
+    engine->angularVelocity = *state;
+}
+
+void engineSaveAngularVelocity(const Engine* engine, float* state)
+{
+    *state = engine->angularVelocity;
+}
+
+float* engineAngularVelocityState(Engine* engine)
+{
+    return &engine->angularVelocity;
+}
+
+int32_t engineAngularVelocityStateSize(const Engine* engine)
+{
+    (void)engine;
+    return 1;
+}
+
+void engineSetThrottleOverride(Engine* engine, float overrideValue)
+{
+    engine->throttleOverride = overrideValue;
+}
+
+void engineSetHotPursuit(Engine* engine, int32_t enabled)
+{
+    engine->hotPursuit = enabled;
+}
+
+int32_t engineGetNitroEnabled(const Engine* engine)
+{
+    return engine->nitroEnabled;
+}
+
+void engineSetCatchupMultiplier(Engine* engine, float multiplier)
+{
+    engine->catchupMultiplier = multiplier;
+}
+
+const EngineInfo* engineGetInfo(const Engine* engine)
+{
+    return engine->info;
+}
+
+void engineSetAngularVelocity(Engine* engine, float velocity)
+{
+    engine->angularVelocity = velocity;
+}
+
+float engineGetAngularVelocity(const Engine* engine)
+{
+    return engine->angularVelocity;
+}
+
+void driveTrainSelectGear(DriveTrain* driveTrain, int32_t gear)
+{
+    driveTrain->desiredGear = gear;
+    driveTrain->currentGear = gear;
+    driveTrain->clutchState = 3;
+    driveTrain->clutch = 1.0f;
+    driveTrain->previousSlipRpm = 0.0f;
+}
+
+int32_t driveTrainGetDesiredGear(const DriveTrain* driveTrain)
+{
+    return driveTrain->desiredGear;
+}
+
+int32_t driveTrainGetCurrentGear(const DriveTrain* driveTrain)
+{
+    return driveTrain->currentGear;
+}
+
+int32_t driveTrainGetClutchState(const DriveTrain* driveTrain)
+{
+    return driveTrain->clutchState;
+}
+
+const DriveTrainInfo* driveTrainGetInfo(const DriveTrain* driveTrain)
+{
+    return driveTrain->info;
+}
+
+Engine* driveTrainGetEngine(const DriveTrain* driveTrain)
+{
+    return driveTrain->engine;
+}
+
+float driveTrainGetShiftUpRpm(const DriveTrain* driveTrain, int32_t gear)
+{
+    return driveTrain->shiftUpRpm[gear];
+}
+
+float driveTrainGetShiftDownRpm(const DriveTrain* driveTrain, int32_t gear)
+{
+    return driveTrain->shiftDownRpm[gear];
+}
+
+void driveTrainRestoreClutch(DriveTrain* driveTrain, const float* state)
+{
+    driveTrain->clutch = *state;
+    driveTrain->previousSlipRpm = 0.0f;
+}
+
+void driveTrainSaveClutch(const DriveTrain* driveTrain, float* state)
+{
+    *state = driveTrain->clutch;
+}
+
+float* driveTrainClutchState(DriveTrain* driveTrain)
+{
+    return &driveTrain->clutch;
+}
+
+int32_t driveTrainClutchStateSize(const DriveTrain* driveTrain)
+{
+    (void)driveTrain;
+    return 1;
+}
+
+const DriveTrainTuning driveTrainDefaultTuning = {
+    1, 0.949999988079071f, 0.949999988079071f,
+    0.3499999940395355f, 300.0f, 50.0f, 1.2000000476837158f
+};
+
+void driveTrainBuildShiftTables(const DriveTrainInfo* info, const EngineInfo* engineInfo,
+                                float upshift[9], float downshift[9],
+                                const DriveTrainTuning* tuning)
+{
+    SampledCurve curve;
+    sampledCurveInitialize(&curve, engineInfo->torqueCurve, 9,
+                           engineInfo->idleRpm, engineInfo->maximumRpm);
+    int32_t gear = 2;
+    const int32_t highest = info->forwardGearCount + 1;
+    for (; gear < highest; ++gear) {
+        const float currentRatio = info->gearRatios[gear];
+        const float nextRatio = info->gearRatios[gear + 1];
+        if (tuning->calculateShiftFromTorque != 0) {
+            float rpm = (engineInfo->idleRpm + engineInfo->maximumRpm) * 0.5f;
+            const float limit = engineInfo->maximumRpm - 200.0f;
+            int searching = 1;
+            while (rpm < limit && searching) {
+                const float currentTorque = sampledCurveEvaluate(&curve, rpm);
+                const float nextRpmProduct = rpm * nextRatio;
+                const float nextRpm = nextRpmProduct / currentRatio;
+                const float nextTorque = sampledCurveEvaluate(&curve, nextRpm);
+                const float reflectedProduct = nextTorque * nextRatio;
+                const float reflectedTorque = reflectedProduct / currentRatio;
+                if (currentTorque < reflectedTorque) {
+                    upshift[gear] = rpm;
+                    searching = 0;
+                }
+                rpm = rpm + 50.0f;
             }
-            s.Field_0x44=0; s.Field_0x2c=current-1; return -2;
-        }
-        if(s.Field_0x2c<s.Field_0x48) {
-            s.Field_0x44=0; s.Field_0x2c=current+1; return -2;
-        }
-    }
-    if(f3<f4+100.0f && current>2) { s.Field_0x2c=current-1; return -1; }
-    return -2;
-}
-float DriveTrain::GetDifferentialAngularAcceleration(const DrivetrainProjection& s,const DrivetrainGlobals& g) {
-    using namespace detail_group_0018bce0;
-    const auto lane=[](const DrivetrainWheelProjection& w) {
-        float f=w.Field_0x114*w.config_Field_0xc;
-        f=w.Field_0x108-f; return f/w.Field_0x24;
-    };
-    float f=0;
-    if(g.Field_0032e358<=s.config_Field_0x10) {
-        f=lane(s.wheels[2])+lane(s.wheels[3]); f=f*0.5f; f=f*s.config_Field_0xc;
-    }
-    if(s.config_Field_0x10<=g.Field_0032e35c) {
-        float a=lane(s.wheels[0])+lane(s.wheels[1]); a=a*0.5f; a=a*s.config_Field_0x8;
-        f=f+a;
-        if(g.Field_0032e358<=s.config_Field_0x10) f=f*0.5f;
-    }
-    return f*s.config_Field_0x20.at(index(s.Field_0x30));
-}
-void DriveTrain::ApplyClutchTorque(float value,DrivetrainProjection& s,const DrivetrainGlobals& g) {
-    using namespace detail_group_0018bce0;
-    if(s.Field_0x30==1) return;
-    s.engine_Field_0x48=s.engine_Field_0x48-value;
-    value=value*s.config_Field_0x20.at(index(s.Field_0x30));
-    float rear=value*s.config_Field_0x10; rear=rear*s.config_Field_0xc;
-    float front=value*(1.0f-s.config_Field_0x10); front=front*s.config_Field_0x8;
-    const auto split=[&](const DrivetrainWheelProjection& a,const DrivetrainWheelProjection& b,bool rear_axle) {
-        float bound=0.5f;
-        if(a.Field_0x155!=0 && b.Field_0x155!=0) bound=g.Field_003308b8;
-        if(s.car_Field_0x3a4==1) return 1.0f-bound;
-        if(s.car_Field_0x3a4==2) return bound;
-        const float sum=a.Field_0x20+b.Field_0x20;
-        const float numerator=rear_axle ? a.Field_0x20 : b.Field_0x20;
-        // Original DIV.S0018993C/00189A48 can see zero wheel values at rest.
-        // Project only that EE exceptional operation; no epsilon/balanced substitute.
-        float ratio=sum==0.0f ? ee_div_s_zero(numerator,sum,rear_axle?"0x00189A48":"0x0018993C") : numerator/sum;
-        if(ratio<bound) ratio=1.0f-g.Field_003308b8*0.5f;
-        else if(1.0f-bound<ratio) ratio=g.Field_003308b8*0.5f;
-        return ratio;
-    };
-    const float a=split(s.wheels[0],s.wheels[1],false);
-    if(s.wheels[0].Field_0x10c==0) s.wheels[0].Field_0x108=s.wheels[0].Field_0x108+front*(1.0f-a);
-    if(s.wheels[1].Field_0x10c==0) s.wheels[1].Field_0x108=s.wheels[1].Field_0x108+front*a;
-    const float b=split(s.wheels[2],s.wheels[3],true);
-    if(s.wheels[2].Field_0x10c==0) s.wheels[2].Field_0x108=s.wheels[2].Field_0x108+rear*b;
-    if(s.wheels[3].Field_0x10c==0) s.wheels[3].Field_0x108=s.wheels[3].Field_0x108+rear*(1.0f-b);
-}
-void DriveTrain::GuessClutchTorque(DrivetrainProjection& s,const DrivetrainGlobals& g,const EngineEvaluation& engine) {
-    using namespace detail_group_0018bce0;
-    if(s.Field_0x38==3) { ApplyClutchTorque(evaluate(engine),s,g); return; }
-    if(s.Field_0x38!=0 && s.Field_0x38!=2) return;
-    float f4=s.engine_Field_0xc-s.Field_0x40;
-    if(g.Field_003308bc<f4) f4=g.Field_003308bc;
-    else if(f4< -g.Field_003308bc) f4= -g.Field_003308bc;
-    const float f0=f4*s.config_Field_0x14;
-    ApplyClutchTorque(f0*s.Field_0xc,s,g);
-}
-void DriveTrain::ModifyClutchTorque(DrivetrainProjection& s,const DrivetrainGlobals& g,const EngineEvaluation& engine) {
-    using namespace detail_group_0018bce0;
-    if(s.Field_0x38!=3) return;
-    float f20=evaluate(engine)+s.engine_Field_0x48;
-    f20=f20/s.engine_config_Field_0xc;
-    const float f12=f20-GetDifferentialAngularAcceleration(s,g);
-    float f5=1.0f/s.engine_config_Field_0xc;
-    const float f6=s.config_Field_0x10;
-    if(f6<=g.Field_0032e374) {
-        float f2=s.config_Field_0x8*s.config_Field_0x20.at(index(s.Field_0x30));
-        float f1=f2*(1.0f/s.wheels[0].Field_0x24);
-        float f0=(1.0f-f6)*0.5f; f0=f0*f1; f0=f0*f2; f5=f5+f0;
-    }
-    if(g.Field_0032e378<=f6) {
-        float f2=s.config_Field_0xc*s.config_Field_0x20.at(index(s.Field_0x30));
-        float f1=f2*(1.0f/s.wheels[2].Field_0x24);
-        float f0=f6*0.5f; f0=f0*f1; f0=f0*f2; f5=f5+f0;
-    }
-    ApplyClutchTorque(f12/f5,s,g);
-}
-void Engine::DecrementNitro(EngineTimerProjection& s,std::int32_t ticks,float scale) {
-    using namespace detail_group_0018bce0;
-    if(s.Field_0x50!=0 && s.Field_0x54+4.0f < static_cast<float>(ticks)*scale) s.Field_0x50=0;
-}
-void CalculateShiftPoints(Memory& m,std::uint32_t config,std::uint32_t engineconfig,
-                  std::uint32_t out50,std::uint32_t out74,float f26) {
-    using namespace detail_group_0018f808;
-    const float lower=m.scalar(engineconfig),upper=m.scalar(engineconfig+8);
-    const float step=8.0f/(upper-lower);
-    const auto evaluate=[&](float value) {
-        return interpolate(value,lower,upper,step,9,[&](std::int32_t i) {
-            if(i<0 || i>=9) throw std::out_of_range("Engine table generation index outside9 samples");
-            return m.scalar(engineconfig+0x10+static_cast<std::uint32_t>(i)*4);
-        });
-    };
-    const auto limit=signed_bits(m.word(config+0x18)+1);
-    std::int32_t current=2;
-    // Memory bounds reject corrupt indexes; no fabricated default or changed cap.
-    while(current<limit) {
-        const auto off=static_cast<std::uint32_t>(current)*4;
-        const float f24=m.scalar(config+0x20+off), f23=m.scalar(config+0x24+off);
-        float f0;
-        if(m.word(0x32792c)==0) {
-            float f1=m.scalar(engineconfig+4)-lower;
-            f0=m.scalar(config)*f1;f0=f0+lower;
+            if (searching)
+                upshift[gear] = engineInfo->maximumRpm - 200.0f;
+            upshift[gear] = upshift[gear] * tuning->upshiftRpmScale;
         } else {
-            const float f22=upper-200.0f;
-            float f21=(lower+upper)*0.5f;
-            bool pending=true;
-            while(f21<f22 && pending) {
-                const float f20=evaluate(f21);
-                float value=f21*f23;value=value/f24;
-                f0=evaluate(value);f0=f0*f23;f0=f0/f24;
-                if(f20<f0) { m.scalar(out50+off,f21);pending=false; }
-                const float next=f21+50.0f;
-                if(next==f21) hp2::not_implemented("0x00188DE8","non-progressing exceptional table scan");
-                f21=next;
-            }
-            if(pending) m.scalar(out50+off,upper-200.0f);
-            f0=m.scalar(out50+off)*f26;
+            const float range = engineInfo->redlineRpm - engineInfo->idleRpm;
+            const float offset = info->shiftRpmFraction * range;
+            upshift[gear] = engineInfo->idleRpm + offset;
         }
-        m.scalar(out50+off,f0);
-        f0=m.scalar(0x327928)*m.scalar(out50+off);f0=f0*f23;f0=f0/f24;
-        m.scalar(out74+off+4,f0);
-        ++current;
+        const float scaled = tuning->downshiftRpmScale * upshift[gear];
+        const float nextProduct = scaled * nextRatio;
+        downshift[gear + 1] = nextProduct / currentRatio;
     }
-    m.scalar(out50+static_cast<std::uint32_t>(current)*4,upper);
+    upshift[gear] = engineInfo->maximumRpm;
 }
-void Engine::ComputeAuxiliaries() {
-    auto& m=m_;const auto s=address_;
-    using namespace detail_group_0018f808;
-    const auto config=m.word(s+0x10);const float scale=m.scalar(0x325420);
-    float value=m.scalar(s+0xc);float bound=m.scalar(config)*scale;
-    if(value<bound) { m.scalar(s+0xc,bound);value=bound; }
-    bound=m.scalar(config+8)*scale;
-    if(bound<value) m.scalar(s+0xc,bound);
-    m.word(s+0x48,0);
+
+DriveTrain* driveTrainInitialize(DriveTrain* driveTrain, const DriveTrainInfo* info,
+                                 Engine* engine, Wheel* const wheels[4],
+                                 DriveTrainVehicleState* vehicle,
+                                 const DriveTrainTuning* tuning)
+{
+    driveTrain->engine = engine;
+    driveTrain->info = info;
+    for (int i = 0; i < 4; ++i)
+        driveTrain->wheels[i] = wheels[i];
+    driveTrain->vehicle = vehicle;
+    driveTrain->tuning = tuning;
+    driveTrainBuildShiftTables(info, engine->info, driveTrain->shiftUpRpm,
+                               driveTrain->shiftDownRpm, tuning);
+    driveTrain->desiredGear = 2;
+    driveTrain->clutch = 0.0f;
+    driveTrain->clutchState = 2;
+    driveTrain->currentGear = 2;
+    driveTrain->reengageRequested = 0;
+    driveTrain->previousSlipRpm = 0.0f;
+    return driveTrain;
 }
-float DriveTrain::GetDifferentialAngularVelocity() {
-    auto& m=m_;const auto s=address_;
-    using namespace detail_group_0018f808;
-    const auto config=m.word(s+0x10);const float f4=m.scalar(config+0x10);
-    float f3=0;
-    if(m.scalar(0x325434)<=f4) {
-        const auto a=m.word(s+0x20),b=m.word(s+0x24);
-        float f0=m.scalar(a+0x20)+m.scalar(b+0x20);f0=f0*0.5f;f3=f0*m.scalar(config+0xc);
+
+int32_t driveTrainIsRearDriven(const DriveTrain* driveTrain)
+{
+    return 0.0010000000474974513f <= driveTrain->info->rearDriveFraction;
+}
+
+int32_t driveTrainIsFrontDriven(const DriveTrain* driveTrain)
+{
+    return driveTrain->info->rearDriveFraction <= 0.9990000128746033f;
+}
+
+int32_t driveTrainGetPreviousGear(const DriveTrain* driveTrain)
+{
+    return driveTrain->previousGear;
+}
+
+int32_t driveTrainGetShiftTarget(const DriveTrain* driveTrain)
+{
+    return driveTrain->shiftTarget;
+}
+
+float driveTrainGetDrivenAngularVelocity(const DriveTrain* driveTrain)
+{
+    const DriveTrainInfo* info = driveTrain->info;
+    float velocity = 0.0f;
+    if (driveTrainIsRearDriven(driveTrain)) {
+        const float sum = bScalarAdd(driveTrain->wheels[2]->motion.angularVelocity,
+                                     driveTrain->wheels[3]->motion.angularVelocity);
+        const float average = bScalarMultiply(sum, 0.5f);
+        velocity = bScalarMultiply(average, info->rearFinalDrive);
     }
-    if(f4<=m.scalar(0x325438)) {
-        const auto a=m.word(s+0x18),b=m.word(s+0x1c);
-        float f0=m.scalar(a+0x20)+m.scalar(b+0x20);f0=f0*0.5f;f0=f0*m.scalar(config+8);f3=f3+f0;
-        if(m.scalar(0x325434)<=f4) f3=f3*0.5f;
+    if (driveTrainIsFrontDriven(driveTrain)) {
+        const float sum = bScalarAdd(driveTrain->wheels[0]->motion.angularVelocity,
+                                     driveTrain->wheels[1]->motion.angularVelocity);
+        const float average = bScalarMultiply(sum, 0.5f);
+        const float front = bScalarMultiply(average, info->frontFinalDrive);
+        velocity = bScalarAdd(velocity, front);
+        if (driveTrainIsRearDriven(driveTrain))
+            velocity = bScalarMultiply(velocity, 0.5f);
     }
-    return f3*ratio(m,s);
+    return bScalarMultiply(velocity, info->gearRatios[driveTrain->currentGear]);
 }
-float DriveTrain::GetDriveWheelSlippage() {
-    auto& m=m_;const auto s=address_;
-    using namespace detail_group_0018f808;
-    const float f4=m.scalar(m.word(s+0x10)+0x10);float f3=0;
-    if(m.scalar(0x32543c)<=f4) {
-        f3=m.scalar(m.word(s+0x20)+0x164)+m.scalar(m.word(s+0x24)+0x164);f3=f3*0.5f;
+
+float driveTrainGetCouplingFeedback(const DriveTrain* driveTrain)
+{
+    float feedback = 0.0f;
+    if (driveTrainIsRearDriven(driveTrain)) {
+        const float sum = driveTrain->wheels[2]->couplingFeedback
+                          + driveTrain->wheels[3]->couplingFeedback;
+        feedback = sum * 0.5f;
     }
-    if(f4<=m.scalar(0x325440)) {
-        float f0=m.scalar(m.word(s+0x18)+0x164)+m.scalar(m.word(s+0x1c)+0x164);
-        f0=f0*0.5f;f0=f3+f0;f3=f0*0.5f;
+    if (driveTrainIsFrontDriven(driveTrain)) {
+        const float sum = driveTrain->wheels[0]->couplingFeedback
+                          + driveTrain->wheels[1]->couplingFeedback;
+        const float front = sum * 0.5f;
+        const float combined = feedback + front;
+        feedback = combined * 0.5f;
     }
-    return f3;
+    return feedback;
 }
-void DriveTrain::SetDifferentialAngularVelocity(float value) {
-    auto& m=m_;const auto s=address_;
-    using namespace detail_group_0018f808;
-    const float f23=value-GetDifferentialAngularVelocity();
-    const float f22=m.scalar(m.word(s+0x28)+0x384)*m.scalar(0x325444);
-    auto config=m.word(s+0x10);
-    const auto axle=[&](std::uint32_t off,float config_lane) {
-        const auto a=m.word(s+off),b=m.word(s+off+4);
-        bool average=f22<40.0f;
-        if(m.signed_byte(a+0x155)==0 && m.signed_byte(b+0x155)==0) average=true;
-        float a20=m.scalar(a+0x20),b20=m.scalar(b+0x20);
-        const float denominator=ratio(m,s)*config_lane;
-        const float f21=f23/denominator;
-        if(average) {b20=(a20+b20)*0.5f;a20=b20;}
-        m.scalar(a+0x20,a20+f21);m.scalar(b+0x20,b20+f21);
-    };
-    if(m.scalar(0x325448)<=m.scalar(config+0x10)) {
-        axle(0x20,m.scalar(config+0xc));config=m.word(s+0x10);
-    }
-    if(m.scalar(config+0x10)<=m.scalar(0x32544c)) axle(0x18,m.scalar(config+8));
-}
-std::uint32_t DriveTrain::Idling() {
-    auto& m=m_;const auto s=address_;
-    using namespace detail_group_0018f808;
-    const auto engine=m.word(s+0x14);
-    if(!(m.scalar(engine+0x44)<m.scalar(0x325470))) return 0;
-    float f0=m.scalar(m.word(engine+0x10))*m.scalar(0x325474);f0=f0+m.scalar(0x325478);
-    return m.scalar(s+0x40)<=f0 ? 1:0;
-}
-std::uint32_t DriveTrain::ClutchMatched() {
-    auto& m=m_;const auto s=address_;
-    using namespace detail_group_0018f808;
-    float f0=m.scalar(m.word(s+0x14)+0xc)-m.scalar(s+0x40);f0=std::fabs(f0);
-    return f0<=m.scalar(0x327938) ? 1:0;
-}
-void DriveTrain::ComputeAuxiliaries() {
-    auto& m=m_;const auto s=address_;
-    using namespace detail_group_0018f808;
-    m.scalar(s+0x40,GetDifferentialAngularVelocity());
-    const auto state=m.signed_word(s+0x38);const auto engine=m.word(s+0x14);
-    if(state==1) {
-        const auto pending=m.word(s+0x3c);m.word(s+0x30,m.word(s+0x2c));m.word(engine+0x4c,0);
-        if(pending!=0 || m.scalar(0x325464)<m.scalar(engine+0x44)) {
-            m.word(s+0x3c,0);m.word(s+0x38,2);
+
+void driveTrainSetDrivenAngularVelocity(DriveTrain* driveTrain, float velocity)
+{
+    const float difference = velocity - driveTrainGetDrivenAngularVelocity(driveTrain);
+    const float speedMph = driveTrain->vehicle->speedMetersPerSecond * 2.236999988555908f;
+    const DriveTrainInfo* info = driveTrain->info;
+    for (int axle = 1; axle >= 0; --axle) {
+        if ((axle == 1 && !driveTrainIsRearDriven(driveTrain)) ||
+            (axle == 0 && !driveTrainIsFrontDriven(driveTrain)))
+            continue;
+        Wheel* first = driveTrain->wheels[axle * 2];
+        Wheel* second = driveTrain->wheels[axle * 2 + 1];
+        const float finalDrive = axle == 1 ? info->rearFinalDrive : info->frontFinalDrive;
+        const float ratio = info->gearRatios[driveTrain->currentGear] * finalDrive;
+        const float delta = difference / ratio;
+        float firstVelocity = first->motion.angularVelocity;
+        float secondVelocity = second->motion.angularVelocity;
+        if (speedMph < 40.0f || (!first->contactPresent && !second->contactPresent)) {
+            const float sum = firstVelocity + secondVelocity;
+            secondVelocity = sum * 0.5f;
+            firstVelocity = secondVelocity;
         }
-    } else if(state==0) {
-        m.word(engine+0x4c,0);const float f1=m.scalar(engine+0x4c);
-        if(m.scalar(s+0xc)<=f1) {m.word(s+0x38,1);m.scalar(s+0xc,f1);}
-    } else if(state==2) {
-        m.word(engine+0x4c,m.word(0x325460));
-        if(1.0f<=m.scalar(s+0xc)) {
-            m.scalar(s+0xc,1);
-            if(ClutchMatched()!=0 || m.word(s+0x30)==1) m.word(s+0x38,3);
-        }
-        if(Idling()!=0) m.word(s+0x38,0);
-    } else if(state==3) {
-        m.scalar(engine+0x4c,1);auto current=m.word(s+0x30);
-        if(current!=1) {
-            const float f20=m.scalar(s+0x40)-m.scalar(engine+0xc);
-            const float f2=GetDriveWheelSlippage();
-            if(m.scalar(0x325458)<m.scalar(engine+0x44) && 0.0f<f2) {
-                const float f0=m.scalar(engine+0xc);m.scalar(s+0x40,f0);SetDifferentialAngularVelocity(f0);
+        wheelSetAngularVelocity(first, firstVelocity + delta);
+        wheelSetAngularVelocity(second, secondVelocity + delta);
+    }
+}
+
+float driveTrainGetDrivenAngularAcceleration(const DriveTrain* driveTrain)
+{
+    const DriveTrainInfo* info = driveTrain->info;
+    float acceleration = 0.0f;
+    if (driveTrainIsRearDriven(driveTrain)) {
+        const float first = wheelGetAngularAcceleration(driveTrain->wheels[2]);
+        const float second = wheelGetAngularAcceleration(driveTrain->wheels[3]);
+        const float sum = bScalarAdd(first, second);
+        const float average = bScalarMultiply(sum, 0.5f);
+        acceleration = bScalarMultiply(average, info->rearFinalDrive);
+    }
+    if (driveTrainIsFrontDriven(driveTrain)) {
+        const float first = wheelGetAngularAcceleration(driveTrain->wheels[0]);
+        const float second = wheelGetAngularAcceleration(driveTrain->wheels[1]);
+        const float sum = bScalarAdd(first, second);
+        const float average = bScalarMultiply(sum, 0.5f);
+        const float front = bScalarMultiply(average, info->frontFinalDrive);
+        acceleration = bScalarAdd(acceleration, front);
+        if (driveTrainIsRearDriven(driveTrain))
+            acceleration = bScalarMultiply(acceleration, 0.5f);
+    }
+    return bScalarMultiply(acceleration, info->gearRatios[driveTrain->currentGear]);
+}
+
+int32_t driveTrainShouldDisengageAtIdle(const DriveTrain* driveTrain)
+{
+    if (!(driveTrain->engine->throttle < 0.30000001192092896f))
+        return 0;
+    const float idle = driveTrain->engine->info->idleRpm * 0.10471967607736588f;
+    const float threshold = idle + 0.00009999999747378752f;
+    return driveTrain->drivenAngularVelocity <= threshold;
+}
+
+int32_t driveTrainIsSynchronized(const DriveTrain* driveTrain)
+{
+    const float difference = driveTrain->engine->angularVelocity
+                             - driveTrain->drivenAngularVelocity;
+    return fabsf(difference) <= driveTrain->tuning->synchronizationTolerance;
+}
+
+void driveTrainPrepareStep(DriveTrain* driveTrain)
+{
+    driveTrain->drivenAngularVelocity = driveTrainGetDrivenAngularVelocity(driveTrain);
+    Engine* engine = driveTrain->engine;
+    switch (driveTrain->clutchState) {
+    case 3:
+        engineSetThrottleOverride(engine, 1.0f);
+        if (driveTrain->currentGear != 1) {
+            const float difference = driveTrain->drivenAngularVelocity - engine->angularVelocity;
+            const float feedback = driveTrainGetCouplingFeedback(driveTrain);
+            if (0.20000000298023224f < engine->throttle && 0.0f < feedback) {
+                driveTrain->drivenAngularVelocity = engine->angularVelocity;
+                driveTrainSetDrivenAngularVelocity(driveTrain, engine->angularVelocity);
             } else {
-                float f0=f20*m.scalar(0x32545c);f0=m.scalar(engine+0xc)+f0;m.scalar(engine+0xc,f0);
+                const float change = difference * 0.03999999910593033f;
+                engine->angularVelocity = engine->angularVelocity + change;
             }
-            if(Idling()!=0) m.word(s+0x38,0);
-            current=m.word(s+0x30);
+            if (driveTrainShouldDisengageAtIdle(driveTrain))
+                driveTrain->clutchState = 0;
         }
-        if(current!=m.word(s+0x2c)) {m.word(s+0x38,0);m.word(s+0x3c,1);}
+        if (driveTrain->currentGear != driveTrain->desiredGear) {
+            driveTrain->clutchState = 0;
+            driveTrain->reengageRequested = 1;
+        }
+        break;
+    case 2:
+        engineSetThrottleOverride(engine, 0.699999988079071f);
+        if (1.0f <= driveTrain->clutch) {
+            driveTrain->clutch = 1.0f;
+            if (driveTrainIsSynchronized(driveTrain) || driveTrain->currentGear == 1)
+                driveTrain->clutchState = 3;
+        }
+        if (driveTrainShouldDisengageAtIdle(driveTrain))
+            driveTrain->clutchState = 0;
+        break;
+    case 0:
+        engineSetThrottleOverride(engine, 0.0f);
+        if (driveTrain->clutch <= engine->throttleOverride) {
+            driveTrain->clutchState = 1;
+            driveTrain->clutch = engine->throttleOverride;
+        }
+        break;
+    case 1:
+        driveTrain->currentGear = driveTrain->desiredGear;
+        engineSetThrottleOverride(engine, 0.0f);
+        if (driveTrain->reengageRequested || 0.30000001192092896f < engine->throttle) {
+            driveTrain->reengageRequested = 0;
+            driveTrain->clutchState = 2;
+        }
+        break;
+    default:
+        break;
     }
 }
-std::uint32_t DriveTrain::GetDerivative(std::uint32_t out) {
-    auto& m=m_;const auto s=address_;
-    using namespace detail_group_0018f808;
-    const auto at=0x3077c8u+m.word(s+0x38)*4;
-    const float value=m.scalar(m.word(s+0x10)+0x1c)*m.scalar(at);
-    m.scalar(out,value);return 0;
-}
-void Engine::Sub_00188998(std::uint32_t config,std::uint32_t car) {
-    auto& m=m_;const auto s=address_;
-    using namespace detail_group_0018f808;
-    m.word(s+8,0x2ac3f8);
-    Table(m,s+0x18).Sub_0018D810(config+0x10,9,m.scalar(config),m.scalar(config+8));
-    Table(m,s+0x2c).Sub_0018D810(config+0x34,3,m.scalar(config),m.scalar(config+8));
-    m.word(s+0x10,config);m.word(s+0x14,car);m.scalar(s+0x58,1);
-    m.word(s+0x40,0);m.word(s+0x50,0);m.word(s+0x54,0);m.scalar(s+0x4c,1);
-}
-void DriveTrain::Sub_00189020(std::uint32_t config,std::uint32_t engine,
-                  std::uint32_t wheels,std::uint32_t car) {
-    auto& m=m_;const auto s=address_;
-    using namespace detail_group_0018f808;
-    m.word(s+0x14,engine);const auto engineconfig=m.word(engine+0x10);
-    m.word(s+8,0x2ac3b0);m.word(s+0x10,config);
-    for(std::uint32_t i=0;i<4;++i) m.word(s+0x18+i*4,m.word(wheels+i*4));
-    m.word(s+0x28,car);
-    CalculateShiftPoints(m,config,engineconfig,s+0x4c,s+0x70,m.scalar(0x327924));
-    m.word(s+0x2c,2);m.word(s+0xc,0);m.word(s+0x38,2);m.word(s+0x30,2);
-    m.word(s+0x3c,0);
-}
-float Engine::GetTorque() {
-    auto& m=m_;const auto s=address_;
-    using namespace detail_group_0018f808;
-    const float f20=m.scalar(s+0xc)*m.scalar(0x325424);
-    float result=Table(m,s+0x18).GetValue(f20)*m.scalar(s+0x58);
-    if(m.word(s+0x40)!=0) result=result*m.scalar(0x32791c);
-    const float f0=m.scalar(m.word(s+0x10)+8)-100.0f;
-    if(!(f20<f0)) result=(-m.scalar(0x327918))*result;
-    return result;
-}
-float Engine::GetTotalEngineTorque() {
-    auto& m=m_;const auto s=address_;
-    using namespace detail_group_0018f808;
-    float f20=GetTorque();
-    float f1=m.scalar(s+0x44)*m.scalar(s+0x4c);f20=f20*f1;
-    if(m.word(s+0x50)!=0) f20=f20*3.0f;
-    float f0=m.scalar(s+0xc)*m.scalar(0x325428);
-    f0= -Table(m,s+0x2c).GetValue(f0);
-    float f2=m.scalar(s+0x44)*m.scalar(s+0x4c);
-    f1=1.0f-f2;f0=f0*f1;f1=f20+f0;
-    if(m.word(m.word(s+0x14)+0x39c)==1 && f1<0.0f) f1=f1*m.scalar(0x32542c);
-    return f1;
-}
-std::uint32_t Engine::GetDerivative(std::uint32_t out) {
-    auto& m=m_;const auto s=address_;
-    using namespace detail_group_0018f808;
-    float f0=GetTotalEngineTorque();f0=f0+m.scalar(s+0x48);
-    f0=f0/m.scalar(m.word(s+0x10)+0xc);m.scalar(out,f0);return 0;
+
+int32_t driveTrainComputeDerivatives(const DriveTrain* driveTrain, float* output)
+{
+    static const float rates[4] = {-3.0f, 0.0f, 1.5f, 0.0f};
+    *output = driveTrain->info->clutchRate * rates[driveTrain->clutchState];
+    return 0;
 }
 
-void Engine::DecrementNitro() {
- EngineTimerProjection s{m_.signed_word(address_+0x50),m_.scalar(address_+0x54)};
- DecrementNitro(s,m_.signed_word(0x327cf8),m_.scalar(0x325430));m_.word(address_+0x50,static_cast<std::uint32_t>(s.Field_0x50));
-}
-float Engine::GetEngineTorque(float rpm) {
- float torque=Table(m_,address_+0x18).GetValue(rpm)*m_.scalar(address_+0x58);
- if(m_.word(address_+0x40)!=0) torque=torque*m_.scalar(0x32791c);
- if(m_.scalar(m_.word(address_+0x10)+8)-100.0f<=rpm) torque=torque*(-m_.scalar(0x327918));
- return torque;
-}
-void DriveTrain::FinalizeClutchTorque() {}
-void DriveTrain::PrintCurrentState() {}
-std::int32_t DriveTrain::SetSportGear(std::int32_t value){using namespace port::driving::native::detail_group_0018bce0_memory;auto s=load(m_,address_);const auto result=SetSportGear(s,value);store(m_,address_,s);return result;}
-std::int32_t DriveTrain::SetDesiredGear(std::int32_t value){using namespace port::driving::native::detail_group_0018bce0_memory;auto s=load(m_,address_);const auto result=SetDesiredGear(s,value,globals(m_));store(m_,address_,s);return result;}
-float DriveTrain::GetDifferentialAngularAcceleration(){using namespace port::driving::native::detail_group_0018bce0_memory;auto s=load(m_,address_);const auto result=GetDifferentialAngularAcceleration(s,globals(m_));store(m_,address_,s);return result;}
-void DriveTrain::ApplyClutchTorque(float value){using namespace port::driving::native::detail_group_0018bce0_memory;auto s=load(m_,address_);ApplyClutchTorque(value,s,globals(m_));store(m_,address_,s);}
-void DriveTrain::GuessClutchTorque(){using namespace port::driving::native::detail_group_0018bce0_memory;auto s=load(m_,address_);GuessClutchTorque(s,globals(m_),[&]{return Engine(m_,m_.word(address_+0x14)).GetTotalEngineTorque();});store(m_,address_,s);}
-void DriveTrain::ModifyClutchTorque(){using namespace port::driving::native::detail_group_0018bce0_memory;auto s=load(m_,address_);ModifyClutchTorque(s,globals(m_),[&]{return Engine(m_,m_.word(address_+0x14)).GetTotalEngineTorque();});store(m_,address_,s);}
-}
-namespace port::driving {
-std::int32_t SetSportGear(DrivetrainProjection& s,std::int32_t value) {return hp2::recovered::DriveTrain::SetSportGear(s,value);}
-std::int32_t SetDesiredGear(DrivetrainProjection& s,std::int32_t request,const DrivetrainGlobals& g) {return hp2::recovered::DriveTrain::SetDesiredGear(s,request,g);}
-float GetDifferentialAngularAcceleration(const DrivetrainProjection& s,const DrivetrainGlobals& g) {return hp2::recovered::DriveTrain::GetDifferentialAngularAcceleration(s,g);}
-void ApplyClutchTorque(float value,DrivetrainProjection& s,const DrivetrainGlobals& g) {return hp2::recovered::DriveTrain::ApplyClutchTorque(value,s,g);}
-void GuessClutchTorque(DrivetrainProjection& s,const DrivetrainGlobals& g,const EngineEvaluation& engine) {return hp2::recovered::DriveTrain::GuessClutchTorque(s,g,engine);}
-void ModifyClutchTorque(DrivetrainProjection& s,const DrivetrainGlobals& g,const EngineEvaluation& engine) {return hp2::recovered::DriveTrain::ModifyClutchTorque(s,g,engine);}
-void FinalizeClutchTorque() {}
-void DecrementNitro(EngineTimerProjection&s,std::int32_t ticks,float scale){hp2::recovered::Engine::DecrementNitro(s,ticks,scale);}
-void Sub_0018A7E8(Memory&m,std::uint32_t a,std::uint32_t c,std::uint32_t car){return hp2::recovered::Engine(m,a).Sub_00188998(c,car);}
-void Sub_0018AE70(Memory&m,std::uint32_t a,std::uint32_t c,std::uint32_t e,std::uint32_t w,std::uint32_t car){return hp2::recovered::DriveTrain(m,a).Sub_00189020(c,e,w,car);}
-float GetTorque(Memory&m,std::uint32_t a){return hp2::recovered::Engine(m,a).GetTorque();}
-float GetTotalEngineTorque(Memory&m,std::uint32_t a){return hp2::recovered::Engine(m,a).GetTotalEngineTorque();}
-std::uint32_t Engine::GetDerivative(Memory&m,std::uint32_t a,std::uint32_t out){return hp2::recovered::Engine(m,a).GetDerivative(out);}
-}
-namespace port::driving::native {
-std::int32_t SetSportGear(Memory&m,std::uint32_t a,std::int32_t value){return hp2::recovered::DriveTrain(m,a).SetSportGear(value);}
-std::int32_t SetDesiredGear(Memory&m,std::uint32_t a,std::int32_t value){return hp2::recovered::DriveTrain(m,a).SetDesiredGear(value);}
-void GuessClutchTorque(Memory&m,std::uint32_t a){return hp2::recovered::DriveTrain(m,a).GuessClutchTorque();}
-void ModifyClutchTorque(Memory&m,std::uint32_t a){return hp2::recovered::DriveTrain(m,a).ModifyClutchTorque();}
-void DecrementNitro(Memory&m,std::uint32_t a){return hp2::recovered::Engine(m,a).DecrementNitro();}
-}
-namespace port::driving {
-
-
-
+static float differentialShare(const DriveTrain* driveTrain, const Wheel* first,
+                                const Wheel* second, int rear)
+{
+    float limit = 0.5f;
+    if (first->contactPresent && second->contactPresent)
+        limit = driveTrain->tuning->limitedSlipFraction;
+    if (driveTrain->vehicle->differentialMode == 1)
+        return bScalarAdd(1.0f, -limit);
+    if (driveTrain->vehicle->differentialMode == 2)
+        return limit;
+    const float firstVelocity=first->motion.angularVelocity;
+    const float secondVelocity=second->motion.angularVelocity;
+    hp2::Require(std::isfinite(firstVelocity) && std::isfinite(secondVelocity),
+        "Differential wheel state is not finite");
+    const float sum = bScalarAdd(firstVelocity,secondVelocity);
+    // A stationary axle (or equal counter-rotation) has no signed speed
+    // ratio. Split its torque symmetrically, conserving the axle total;
+    // do not turn0/0 into an EE-style saturated number and a side bias.
+    if (sum==0.0f) return 0.5f;
+    const float numerator=rear ? firstVelocity:secondVelocity;
+    // Finite wheel speeds can overflow their float sum. Widen only that
+    // exceptional addition; ordinary valid ratios keep their float order.
+    float share=std::isfinite(sum) ? bScalarDivide(numerator,sum) :
+        static_cast<float>(static_cast<double>(numerator)/
+            (static_cast<double>(firstVelocity)+static_cast<double>(secondVelocity)));
+    if (share < limit)
+        share = bScalarAdd(1.0f, -bScalarMultiply(driveTrain->tuning->limitedSlipFraction, 0.5f));
+    else if (bScalarAdd(1.0f, -limit) < share)
+        share = bScalarMultiply(driveTrain->tuning->limitedSlipFraction, 0.5f);
+    return share;
 }
 
-namespace hp2::recovered {
-// Original inline member bodies, Debug0018A348..0018A4A0; E-0044-E01.
-void Engine::SetThrottleOverride(float value){m_.scalar(address_+0x4c,value);}
-void Engine::ApplyTorque(float value){m_.scalar(address_+0x48,m_.scalar(address_+0x48)+value);}
-float Engine::GetNitroBoostTimer(){return m_.scalar(address_+0x54);}
-void Engine::SetNitroBoostTimer(float value){m_.scalar(address_+0x54,value);}
-void Engine::SetNitroFlag(std::int32_t value){m_.word(address_+0x50,static_cast<std::uint32_t>(value));}
-std::int32_t Engine::GetNitroFlag(){return m_.signed_word(address_+0x50);}
-std::uint32_t Engine::GetEI(){return m_.word(address_+0x10);}
-float Engine::GetMaxRPM(){return m_.scalar(GetEI()+8);}
-float Engine::GetRedLineRPM(){return m_.scalar(GetEI()+4);}
-float Engine::GetIdleRPM(){return m_.scalar(GetEI());}
-float Engine::GetEffectiveThrottle(){return GetThrottle()*m_.scalar(address_+0x4c);}
-float Engine::GetThrottle(){return m_.scalar(address_+0x44);}
-float Engine::GetTorqueResponse(){return 1.0f/m_.scalar(GetEI()+0xc);}
-float Engine::GetAngularAcceleration(){return (GetTotalEngineTorque()+m_.scalar(address_+0x48))/m_.scalar(GetEI()+0xc);}
-float Engine::GetAngularVelocity(){return m_.scalar(address_+0xc);}
-void Engine::SetIsHP(std::int32_t value){m_.word(address_+0x40,static_cast<std::uint32_t>(value));}
-void Engine::SetState(float value){m_.scalar(address_+0xc,value);}
-void Engine::SetState(std::uint32_t input){m_.word(address_+0xc,m_.word(input));}
-void Engine::GetState(std::uint32_t out){m_.word(out,m_.word(address_+0xc));}
-float Engine::GetState(){return m_.scalar(address_+0xc);}
-std::int32_t Engine::GetSize(){return 1;}
-void Engine::SetCatchupTorqueMultiplier(float value){m_.scalar(address_+0x58,value);}
-void Engine::SetThrottle(float value){m_.scalar(address_+0x44,value);}
-// Original inline drivetrain members, Debug0018A1B0..0018A2F0; E-0044-E01.
-std::int32_t DriveTrain::RearWheelDrive(){return m_.scalar(0x32548c)<=m_.scalar(GetDriveTrainInfo()+0x10);}
-std::int32_t DriveTrain::FrontWheelDrive(){return m_.scalar(GetDriveTrainInfo()+0x10)<=m_.scalar(0x325490);}
-std::int32_t DriveTrain::GetTopGear(){return port::driving::detail_group_0018bce0::add_one(m_.signed_word(GetDriveTrainInfo()+0x18));}
-std::int32_t DriveTrain::GetDesiredGear(){return m_.signed_word(address_+0x2c);}
-std::int32_t DriveTrain::GetPreviousGear(){return m_.signed_word(address_+0x34);}
-std::int32_t DriveTrain::GetSportGear(){return m_.signed_word(address_+0x48);}
-std::int32_t DriveTrain::GetCurrentGear(){return m_.signed_word(address_+0x30);}
-std::int32_t DriveTrain::IsClutchEngaged(){return GetCurrentClutchState()==3;}
-std::uint32_t DriveTrain::GetEngine(){return m_.word(address_+0x14);}
-std::uint32_t DriveTrain::GetDriveTrainInfo(){return m_.word(address_+0x10);}
-float DriveTrain::GetShiftDownRPM(std::int32_t gear){return m_.scalar(address_+0x70+static_cast<std::uint32_t>(gear)*4);}
-float DriveTrain::GetShiftUpRPM(std::int32_t gear){return m_.scalar(address_+0x4c+static_cast<std::uint32_t>(gear)*4);}
-std::int32_t DriveTrain::GetCurrentClutchState(){return m_.signed_word(address_+0x38);}
-void DriveTrain::SetState(std::int32_t gear){m_.word(address_+0x2c,static_cast<std::uint32_t>(gear));m_.scalar(address_+0xc,1);m_.word(address_+0x38,3);m_.word(address_+0x30,static_cast<std::uint32_t>(gear));}
-void DriveTrain::SetState(std::uint32_t input){m_.word(address_+0xc,m_.word(input));}
-void DriveTrain::GetState(std::uint32_t out){m_.word(out,m_.word(address_+0xc));}
-float DriveTrain::GetState(){return m_.scalar(address_+0xc);}
-std::int32_t DriveTrain::GetSize(){return 1;}
+void driveTrainApplyTorque(DriveTrain* driveTrain, float torque)
+{
+    if (driveTrain->currentGear == 1)
+        return;
+    Engine* engine = driveTrain->engine;
+    engine->roadTorque = bScalarAdd(engine->roadTorque, -torque);
+    const DriveTrainInfo* info = driveTrain->info;
+    const float geared = bScalarMultiply(torque, info->gearRatios[driveTrain->currentGear]);
+    const float rear = bScalarMultiply(geared, info->rearDriveFraction);
+    const float front = bScalarMultiply(geared, bScalarAdd(1.0f, -info->rearDriveFraction));
+    const float rearTorque = bScalarMultiply(rear, info->rearFinalDrive);
+    const float frontTorque = bScalarMultiply(front, info->frontFinalDrive);
+    float share = differentialShare(driveTrain, driveTrain->wheels[0], driveTrain->wheels[1], 0);
+    const float firstFront = bScalarMultiply(frontTorque, bScalarAdd(1.0f, -share));
+    const float secondFront = bScalarMultiply(frontTorque, share);
+    wheelAddDriveTorque(driveTrain->wheels[0], firstFront);
+    wheelAddDriveTorque(driveTrain->wheels[1], secondFront);
+    share = differentialShare(driveTrain, driveTrain->wheels[2], driveTrain->wheels[3], 1);
+    const float firstRear = bScalarMultiply(rearTorque, share);
+    const float secondRear = bScalarMultiply(rearTorque, bScalarAdd(1.0f, -share));
+    wheelAddDriveTorque(driveTrain->wheels[2], firstRear);
+    wheelAddDriveTorque(driveTrain->wheels[3], secondRear);
 }
 
-// TASK-0099 E-0099-W33. Debug destructor bodies and real original pool ownership.
-#include "game_core/indep/inc/ComponentPhysics.hpp"
-#include "game_core/inc/bSlotPool.hpp"
-namespace hp2::recovered {
-void Engine::Sub_00188A38(int flags){m_.word(address_+8,0x2ac3f8);PhysicsComponent(m_,address_).Sub_00199A70(0);if(flags&1)hp2::debug::SlotPool(m_,m_.word(0x32702c)).Free(address_);}
-void DriveTrain::Sub_0018A2F8(int flags){PhysicsComponent(m_,address_).Sub_00199A70(0);if(flags&1)hp2::debug::SlotPool(m_,m_.word(0x327030)).Free(address_);}
+void driveTrainResolveForces(DriveTrain* driveTrain)
+{
+    if (driveTrain->clutchState == 3) {
+        driveTrainApplyTorque(driveTrain, engineGetNetTorque(driveTrain->engine));
+    } else if (driveTrain->clutchState == 0 || driveTrain->clutchState == 2) {
+        Engine* engine = driveTrain->engine;
+        float slip = bScalarAdd(engine->angularVelocity, -driveTrain->drivenAngularVelocity);
+        const float maximum = driveTrain->tuning->maximumCouplingSlip;
+        if (maximum < slip)
+            slip = maximum;
+        else if (slip < -maximum)
+            slip = -maximum;
+        const float difference = bScalarAdd(driveTrain->drivenAngularVelocity, -engine->angularVelocity);
+        const float slipRpm = bScalarMultiply(difference, 9.549304008483887f);
+        float stiffness = driveTrain->info->clutchStiffness;
+        if (driveTrain->previousSlipRpm != 0.0f) {
+            const float signProduct = bScalarMultiply(slipRpm, driveTrain->previousSlipRpm);
+            if (signProduct < 0.0f && 2000.0f < fabsf(slipRpm) &&
+                2000.0f < fabsf(driveTrain->previousSlipRpm))
+                stiffness = bScalarMultiply(stiffness, 0.5f);
+        }
+        driveTrain->previousSlipRpm = slipRpm;
+        const float coupling = bScalarMultiply(slip, stiffness);
+        driveTrainApplyTorque(driveTrain, bScalarMultiply(coupling, driveTrain->clutch));
+    }
 }
 
-#include "game_core/indep/inc/Replay.hpp"
-namespace hp2::recovered {
-// Debug00188A98; E-0099-W74; replay-frame/00188a98.json/type-Engine.json.
-void Engine::DoSnapshot(std::uint32_t snapshot){
- if(m_.byte(snapshot+0x3c)||m_.byte(snapshot+0x3d))m_.word(address_+0x58,0);
- hp2::debug::ReplaySnapshot s(m_,snapshot);s.BeginNamedSection(0x327910);
- for(unsigned off:{0xcu,0x44u,0x48u,0x4cu,0x54u})s.MoveData(address_+off,4);
- s.MoveData(address_+0x50,1,4,0);s.EndNamedSection();
+void driveTrainBalanceAcceleration(DriveTrain* driveTrain)
+{
+    if (driveTrain->clutchState != 3)
+        return;
+    Engine* engine = driveTrain->engine;
+    const float total = bScalarAdd(engineGetNetTorque(engine), engine->roadTorque);
+    const float engineAcceleration = bScalarDivide(total, engine->info->momentOfInertia);
+    const float wheelAcceleration = driveTrainGetDrivenAngularAcceleration(driveTrain);
+    const float difference = bScalarAdd(engineAcceleration, -wheelAcceleration);
+    float response = bScalarDivide(1.0f, engine->info->momentOfInertia);
+    const DriveTrainInfo* info = driveTrain->info;
+    const float rearFraction = info->rearDriveFraction;
+    if (driveTrainIsFrontDriven(driveTrain)) {
+        const float reciprocal = bScalarDivide(1.0f, driveTrain->wheels[0]->rotationalInertia);
+        const float ratio = bScalarMultiply(info->frontFinalDrive, info->gearRatios[driveTrain->currentGear]);
+        const float fraction = bScalarMultiply(bScalarAdd(1.0f, -rearFraction), 0.5f);
+        const float weighted = bScalarMultiply(ratio, reciprocal);
+        const float product = bScalarMultiply(fraction, weighted);
+        const float contribution = bScalarMultiply(product, ratio);
+        response = bScalarAdd(response, contribution);
+    }
+    if (driveTrainIsRearDriven(driveTrain)) {
+        const float reciprocal = bScalarDivide(1.0f, driveTrain->wheels[2]->rotationalInertia);
+        const float ratio = bScalarMultiply(info->rearFinalDrive, info->gearRatios[driveTrain->currentGear]);
+        const float fraction = bScalarMultiply(rearFraction, 0.5f);
+        const float weighted = bScalarMultiply(ratio, reciprocal);
+        const float product = bScalarMultiply(fraction, weighted);
+        const float contribution = bScalarMultiply(product, ratio);
+        response = bScalarAdd(response, contribution);
+    }
+    driveTrainApplyTorque(driveTrain, bScalarDivide(difference, response));
 }
-// Debug001890C0; E-0099-W74; replay-frame/001890c0.json/type-DriveTrain.json.
-void DriveTrain::DoSnapshot(std::uint32_t snapshot){
- hp2::debug::ReplaySnapshot s(m_,snapshot);s.BeginNamedSection(0x2ac370);
- for(unsigned off:{0xcu,0x2cu,0x48u,0x34u,0x30u,0x38u,0x3cu,0x40u,0x44u})s.MoveData(address_+off,4);
- s.EndNamedSection();
+
+int32_t driveTrainUpdateRequestedGear(DriveTrain* driveTrain, int32_t request,
+                                      float elapsed)
+{
+    const int32_t current = driveTrain->currentGear;
+    Engine* engine = driveTrain->engine;
+    const float radiansToRpm = 9.549304008483887f;
+    if (request == -1) {
+        driveTrain->shiftTarget = 1;
+        if (current < 2) {
+            driveTrain->desiredGear = 2;
+            return request;
+        }
+        if (driveTrain->clutchState != 3)
+            return request;
+        const float rpm = engine->angularVelocity * radiansToRpm;
+        float lower;
+        if (current >= 3)
+            lower = driveTrain->shiftDownRpm[current];
+        else if (engine->throttle < 0.20000000298023224f)
+            lower = engine->info->idleRpm + 100.0f;
+        else
+            lower = 0.0f;
+        if (driveTrain->shiftUpRpm[current] < rpm &&
+            current < driveTrainGetHighestGear(driveTrain)) {
+            int canShift = 1;
+            for (int wheel = 0; wheel < 4; ++wheel) {
+                if (!(driveTrain->wheels[wheel]->angularSpeedEstimate < 4.0f) ||
+                    !driveTrain->wheels[wheel]->contactPresent) {
+                    canShift = 0;
+                    break;
+                }
+            }
+            if (canShift) {
+                driveTrain->desiredGear = current + 1;
+                return request;
+            }
+        }
+        if (rpm < lower && current >= 2)
+            driveTrain->desiredGear = current - 1;
+        return request;
+    }
+
+    if (request != -2) {
+        driveTrain->desiredGear = request;
+        return request;
+    }
+
+    driveTrain->shiftWaitSeconds = driveTrain->shiftWaitSeconds + elapsed;
+    if (driveTrain->clutchState != 3)
+        return request;
+    const float rpm = engine->angularVelocity * radiansToRpm;
+    const float idle = engine->info->idleRpm;
+    const float maximum = engine->info->maximumRpm;
+    float lower;
+    if (current >= 3) {
+        const float overrev = maximum * driveTrain->tuning->downshiftOverrevMultiplier;
+        const float currentProduct = overrev * driveTrain->info->gearRatios[current];
+        lower = currentProduct / driveTrain->info->gearRatios[current - 1];
+    } else if (engine->throttle < 0.20000000298023224f) {
+        lower = idle + 100.0f;
+    } else {
+        lower = 0.0f;
+    }
+
+    const int32_t desired = driveTrain->desiredGear;
+    const int32_t target = driveTrain->shiftTarget;
+    if (desired != target) {
+        driveTrain->previousGear = current;
+        if (target < desired) {
+            if (lower < rpm) {
+                driveTrain->desiredGear = current;
+                driveTrain->shiftWaitSeconds = 0.0f;
+                driveTrain->shiftTarget = current;
+                return request;
+            }
+            driveTrain->shiftWaitSeconds = 0.0f;
+            driveTrain->desiredGear = current - 1;
+        } else if (desired < target) {
+            driveTrain->shiftWaitSeconds = 0.0f;
+            driveTrain->desiredGear = current + 1;
+        } else if (rpm < idle + 100.0f && current >= 3) {
+            driveTrain->desiredGear = current - 1;
+            request = -1;
+        }
+        return request;
+    }
+
+    if (10.0f < driveTrain->shiftWaitSeconds)
+        return -1;
+    if (driveTrain->previousGear < current && maximum - 300.0f < rpm)
+        return -1;
+    if (rpm < idle + 100.0f && current >= 3) {
+        driveTrain->desiredGear = current - 1;
+        request = -1;
+    }
+    return request;
 }
+
+#include "indep/inc/Replay.hpp"
+
+// PAL18A8E8..18A988. The pursuit/catchup multiplier is transient; physical
+// throttle, road torque, nitro timer and the compact enable flag are captured.
+void engineSnapshot(Engine* engine,ReplaySnapshot* snapshot)
+{
+    if(snapshot->recording || snapshot->restoring)engine->catchupMultiplier=0.0f;
+    replaySnapshotBeginSection(snapshot,nullptr,"Engine");
+    replaySnapshotMoveFloat(snapshot,&engine->angularVelocity);
+    replaySnapshotMoveFloat(snapshot,&engine->throttle);
+    replaySnapshotMoveFloat(snapshot,&engine->roadTorque);
+    replaySnapshotMoveFloat(snapshot,&engine->throttleOverride);
+    replaySnapshotMoveFloat(snapshot,&engine->nitroBoostTimer);
+    replaySnapshotMoveData(snapshot,&engine->nitroEnabled,1,4,0);
+    replaySnapshotEndSection(snapshot);
+}
+
+// Full final248-byte PAL18AF10..18B008; beta omits the final previous-slip
+// transfer. Native component links and authored shift tables stay borrowed.
+void driveTrainSnapshot(DriveTrain* train,ReplaySnapshot* snapshot)
+{
+    replaySnapshotBeginSection(snapshot,nullptr,"DriveTrain");
+    replaySnapshotMoveFloat(snapshot,&train->clutch);
+    replaySnapshotMoveData(snapshot,&train->desiredGear,4,-1,0);
+    replaySnapshotMoveData(snapshot,&train->shiftTarget,4,-1,0);
+    replaySnapshotMoveData(snapshot,&train->previousGear,4,-1,0);
+    replaySnapshotMoveData(snapshot,&train->currentGear,4,-1,0);
+    replaySnapshotMoveData(snapshot,&train->clutchState,4,-1,0);
+    replaySnapshotMoveInteger(snapshot,&train->reengageRequested,4);
+    replaySnapshotMoveFloat(snapshot,&train->drivenAngularVelocity);
+    replaySnapshotMoveFloat(snapshot,&train->shiftWaitSeconds);
+    replaySnapshotMoveFloat(snapshot,&train->previousSlipRpm);
+    replaySnapshotEndSection(snapshot);
 }

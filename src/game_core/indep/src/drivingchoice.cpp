@@ -1,216 +1,860 @@
-// TASK-0042 E-0042-S001: exact Debug source marker(s): ..\indep\src\drivingchoice.cpp.
-// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: qualified_string; evidence: E-0019-N03.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-// Diagnostic text (not a callable signature): DrivingChoice::BuildDriveTarget() [0x002BE870]
-// Diagnostic text (not a callable signature): DrivingChoice::IsDriveable() [0x002BE898]
-// Diagnostic text (not a callable signature): DrivingChoice::MakeNewChoice() [0x002BE8B8]
-// Diagnostic text (not a callable signature): DrivingChoice::TryChoice() [0x002BE8D8]
-// Diagnostic text (not a callable signature): DrivingChoice::FixupCarToExcludeFromCollisionPrediction() [0x002BE8F8]
-// Diagnostic text (not a callable signature): DrivingChoice::FillUpDriveTarget [0x002BE938]
-// Diagnostic text (not a callable signature): DrivingChoice::GetSpeedBackToLine() [0x002BE960]
-// Diagnostic text (not a callable signature): DrivingChoice::BuildDriveTargetAroundCar() [0x002BE988]
-// Diagnostic text (not a callable signature): DrivingChoice::MakeDriveTargetParallelToCar() [0x002BE9B8]
-#include "game_core/indep/inc/DrivingChoice.hpp"
+#include "indep/inc/DrivingChoice.hpp"
+#include "indep/inc/TrackRoute.hpp"
+#include "indep/inc/AICarController.hpp"
+#include "bware/inc/bMath.hpp"
+#include <math.h>
 
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: qualified_string; evidence: E-0019-N03.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-// Diagnostic text (not a callable signature): FuturePoints::BuildArray() [0x002BE9E8]
-// Diagnostic text (not a callable signature): FuturePoints::DoSmoothOffsetChange() [0x002BEA08]
-#include "game_core/indep/inc/DrivingChoice.hpp"
-
-#include "game_core/port/not_implemented.hpp"
-
-namespace hp2::recovered {
-// ELF 0x00241CF8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00241cf8.md.
-void DrivingChoice::SetChoice() {
-    hp2::not_implemented("0x00241CF8", "DrivingChoice::SetChoice (signature and full body unresolved)");
+void driverAIGoalSet(DriverAIGoal* goal,int32_t kind,CarMovement* target,int32_t parameter)
+{
+    if((driverAIGoalUsesRoad(kind)&&!target)||(driverAIGoalUsesTarget(kind)&&target)){
+        goal->kind=kind;goal->target=target;goal->parameter=parameter;
+    }
 }
 
-// ELF 0x00243988; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00243988.md.
-void DrivingChoice::ReduceCurrentL() {
-    hp2::not_implemented("0x00243988", "DrivingChoice::ReduceCurrentL (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-namespace hp2::recovered {
-// ELF 0x00244768; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00244768.md.
-void FuturePoints::AddPoint() {
-    hp2::not_implemented("0x00244768", "FuturePoints::AddPoint (signature and full body unresolved)");
+int32_t driverAILaneForClass(int32_t selector,int32_t vehicleClass)
+{
+    return vehicleClass*2+(selector-1);
 }
 
-// ELF 0x002452B0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/002452b0.md.
-void FuturePoints::Dump() {
-    hp2::not_implemented("0x002452B0", "FuturePoints::Dump (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/indep/src/trackroute.hpp"
-
-namespace hp2::recovered {
-// ELF 0x002455B0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/002455b0.md.
-void TrackRoutePoint::GetAmountOutOfBounds() {
-    hp2::not_implemented("0x002455B0", "TrackRoutePoint::GetAmountOutOfBounds (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/port/not_implemented.hpp"
-namespace hp2::debug {
-// Debug0023ECE8/0023ECD8, E-0099-W37. Unsigned subtraction is deliberate.
-bool DrivingChoice::DrivingChoiceTypeIsDrivingLine(int type){return static_cast<unsigned>(type)-1u<4u;}
-bool DrivingChoice::DrivingChoiceTypeIsSideOfCar(int type){return static_cast<unsigned>(type)-5u<2u;}
-// Debug0023B7B8, E-0099-W37. Signed remainder retained.
-int DrivingChoice::GetChoiceType(int line){return line%2+1;}
-// Debug0023B7D8, E-0099-W37. Actual signedCarClass+E6, not body-type metadata.
-int DrivingChoice::GetDrivingLine(const ::port::driving::Memory& m,int type,std::uint32_t car){return m.signed_byte(m.word(car+0xc)+0xe6)*2+(type-1);}
-// Debug0023EDA0, E-0099-W37. Exact inline stores; no full object clear.
-void DrivingChoice::Clear(){m_.word(address_+8,0);m_.word(address_,0);m_.word(address_+4,0);}
-// Debug0023B8B0, E-0099-W37. Invalid type/car pairing leaves prior choice intact.
-void DrivingChoice::SetChoice(int type,std::uint32_t car,bool extra){if((DrivingChoiceTypeIsDrivingLine(type)&&!car)||(DrivingChoiceTypeIsSideOfCar(type)&&car)){m_.word(address_+8,extra?1:0);m_.word(address_,static_cast<std::uint32_t>(type));m_.word(address_+4,car);}}
-// Debug0023ECF8, E-0099-W37.
-void DrivingChoice::SetChoice(std::uint32_t location){SetChoice(GetChoiceType(m_.signed_word(location+8)),0,false);}
+int32_t driverLaneSelectorForIndex(int32_t lane)
+{
+    return lane%2+1;
 }
 
-#include "game_core/indep/src/trackroute.hpp"
-#include "game_core/indep/src/drivinglocation.hpp"
-#include "game_core/indep/src/drivetarget.hpp"
-#include "game_core/indep/src/aiutil.hpp"
-#include "game_core/indep/inc/Race.hpp"
-#include "game_core/port/race/control_construction.hpp"
-#include <cmath>
-namespace hp2::debug {
-// Debug0023EDD0; E-0099-W37. Original inline clear touches count only.
-void FuturePoints::Clear(){m_.word(address_,0);}
-// Debug0023E130; E-0099-W37. Original20-byte row and full-word boolean store.
-void FuturePoints::AddPoint(int route,int point,int line,float offset,bool crossed){const int n=m_.signed_word(address_);if(n<0||n>=20)hp2::not_implemented("0x0023E130","original FuturePoints array exceeds20 entries");const auto p=address_+4+20*n;m_.word(p,route);m_.word(p+4,point);m_.word(p+8,line);m_.word(address_,n+1);m_.word(p+16,crossed?1:0);m_.scalar(p+12,offset);}
-// Debug0023DF50; E-0099-W37. Actual signpost decision followed by exact route
-// transition/offset. The FF byte sentinel is confirmed by0023DF9C..DFA8 listing.
-bool FuturePoints::AdvancePoint(std::uint32_t& route,std::uint32_t& point,int& index,float& offset,bool& crossed,int& line,std::uint32_t controller,const ::port::race::AiDriveTargetServices& services){auto& m=m_;if(m.byte(point+0x2c)!=0xff){if(!services.routes||!services.routes->signposts)hp2::not_implemented("0x0023DF50","actual signpost resources are not loaded");const auto sign=services.routes->signposts+8*m.byte(point+0x2c);const int previous_line=m.signed_half(point+0x30+2*line);if(AICarController(m,controller).SignPostDecision(sign,line,m.word(controller+0x1f8),services)){if(!services.port_stack_vector_lane)hp2::not_implemented("0x001BE4B8","original temporary vector padding requires an explicit port operand");::port::driving::Memory::Temporary v(m,16);TrackRoutePoint(m,point).GetPosition(v.address(),0,static_cast<float>(previous_line*256)*1.52587890625e-5f,*services.port_stack_vector_lane);route=m.word(0x30bb40+4*m.byte(sign));point=route+0x428+112*m.half(sign+2);index=static_cast<std::int32_t>(point-route-0x428)/112;const float x=m.scalar(point),y=m.scalar(point+4),dx=m.scalar(point+0xc),dy=m.scalar(point+0x10);const int line_offset=m.signed_half(point+0x30+2*line);crossed=true;offset=((m.scalar(v.address())-x)*dy-(m.scalar(v.address()+4)-y)*dx)-static_cast<float>(line_offset*256)*1.52587890625e-5f;return true;}}
- const int old=index;index=old+1;const bool valid=index<m.signed_word(route+0x10);if(valid){offset=0;crossed=false;point=route+0x428+112*(old+1);}return valid;
-}
-// Debug0023E188; E-0099-W37. Original calibrated authored point traversal,
-// lookahead and five-point minimum. It never invents or samples a host path.
-void FuturePoints::BuildArray(std::uint32_t target,std::uint32_t location,std::uint32_t nearby,float& initial_l,const ::port::race::AiDriveTargetServices& services){auto& m=m_;Clear();const auto car=m.word(nearby),controller=m.word(car+0x28);auto route=m.word(location),point=m.word(location+4);int line=m.signed_word(location+8);float offset=0;bool crossed=false;int index=DrivingLocation(m,location).IsClear()?-1:static_cast<std::int32_t>(point-route-0x428)/112;const int count=m.signed_byte(target);
- if(count>0){const int number=m.signed_byte(target+0x1a0+count-1);route=number<0?0:m.word(0x30bb40+4*number);if(m.signed_word(m.word(car+0x14)+8)==2&&m.signed_word(route+0xc)==1)route=m.word(location);else{index=m.signed_half(target+0x1b4+2*(count-1));line=m.signed_byte(target+0x1dc+count-1);point=route+0x428+112*index;}do{if(!AdvancePoint(route,point,index,offset,crossed,line,controller,services))return;}while(-10.0f<(m.scalar(target+0x10+16*(count-1))-m.scalar(point))*m.scalar(point+0xc)+(m.scalar(target+0x14+16*(count-1))-m.scalar(point+4))*m.scalar(point+0x10));}
- if(!point)return;if(count==0)initial_l=(m.scalar(car+0x60)-m.scalar(point))*m.scalar(point+0x10)-(m.scalar(car+0x64)-m.scalar(point+4))*m.scalar(point+0xc);else{std::uint32_t previous_route=0,previous_point=0;if(DriveTarget(m,target).GetRouteAndRoutePoint(count-1,previous_route,previous_point))initial_l=(m.scalar(target+0x10+16*(count-1))-m.scalar(previous_point))*m.scalar(previous_point+0x10)-(m.scalar(target+0x14+16*(count-1))-m.scalar(previous_point+4))*m.scalar(previous_point+0xc);else initial_l=(m.scalar(target+0x10+16*(count-1))-m.scalar(point))*m.scalar(point+0x10)-(m.scalar(target+0x14+16*(count-1))-m.scalar(point+4))*m.scalar(point+0xc);}
- initial_l=initial_l-static_cast<float>(m.signed_half(point+0x30+2*m.signed_word(location+8))*256)*1.52587890625e-5f;AddPoint(m.signed_half(route+0xa),static_cast<std::int32_t>(point-route-0x428)/112,line,offset,false);if(m.signed_word(address_)==1){if(!AdvancePoint(route,point,index,offset,crossed,line,controller,services))return;AddPoint(m.signed_half(route+0xa),static_cast<std::int32_t>(point-route-0x428)/112,line,offset,false);}
- const float x=m.scalar(car+0x60)-m.scalar(point),y=m.scalar(car+0x64)-m.scalar(point+4);float distance=std::sqrt(x*x+y*y);const float ahead=CalculateLookAheadDistance(m,car);while((distance<=ahead||m.signed_word(address_)<5)){distance=distance+m.scalar(point+0x14);if(m.signed_word(address_)>=20||!AdvancePoint(route,point,index,offset,crossed,line,controller,services))break;AddPoint(m.signed_half(route+0xa),static_cast<std::int32_t>(point-route-0x428)/112,line,offset,crossed);}
-}
-// Debug0023D3E0; E-0099-W37. Original grace/traffic/relaxed-switch branches.
-float DrivingChoice::GetSpeedBackToLine(::port::driving::Memory& m,std::uint32_t nearby,std::uint32_t location,int movement){if(movement==1)return 0;const auto car=m.word(nearby);if(static_cast<unsigned>(movement)-2u<2u||m.signed_word(car+0x20)==3)return 0.5f;const auto race=m.word(0x327258);if(!race)hp2::not_implemented("0x00149088","actual Race owner is not constructed");if(Race(m,race).GracePeriodIsActive(car))return 0;const float speed=m.scalar(car+0x3c4);if(m.scalar(0x3261bc)<speed){if(m.scalar(0x3261c0)<speed&&!DrivingLocation(m,location).AreWeInARelaxedSwitch())return 0.5f;return 0.25f;}return 0;}
-// Debug0023D4B8; E-0099-W37. Original line-relative conservative width clips.
-void DrivingChoice::ReduceCurrentL(::port::driving::Memory& m,float& current,float amount,int movement,std::uint32_t point,int line,float half,bool conservative){if(movement==3)current=current+amount;else if(movement==2)current=current-amount;else if(current<0)current=amount< -current?current+amount:0;else current=amount<current?current-amount:0;const float right=conservative?(m.scalar(point+0x1c)-1)-half:m.scalar(point+0x1c),left=conservative?(1-m.scalar(point+0x18))+half:-m.scalar(point+0x18);const float offset=static_cast<float>(m.signed_half(point+0x30+2*line)*256)*1.52587890625e-5f;const float upper=right-offset,lower=left-offset;const float clipped=lower<current?current:lower;current=upper<clipped?upper:clipped;}
-// Debug0023D318; E-0099-W37. Real3D bank/elevation geometry, with explicit
-// host padding operand in the separate raw TrackRoutePoint.GetPosition overload.
-void DrivingChoice::AddToDriveTarget(::port::driving::Memory& m,float lateral,std::uint32_t location,std::uint32_t future,std::uint32_t target,const ::port::race::AiDriveTargetServices& services){(void)location;const int number=m.signed_word(future);const auto route=number<0?0:m.word(0x30bb40+4*number),point=route+0x428+112*m.signed_word(future+4);if(!services.port_stack_vector_lane)hp2::not_implemented("0x001BE4B8","original temporary vector padding requires explicit port operand");::port::driving::Memory::Temporary position(m,16);const float offset=lateral+static_cast<float>(m.signed_half(point+0x30+2*m.signed_word(future+8))*256)*1.52587890625e-5f;TrackRoutePoint(m,point).GetPosition(position.address(),0,offset,*services.port_stack_vector_lane);DriveTarget(m,target).AddPointToTarget(position.address(),static_cast<std::int8_t>(number),static_cast<std::int16_t>(m.signed_word(future+4)),static_cast<std::int8_t>(m.signed_word(future+8)),true,0);}
-// Debug0023D098; E-0099-W37. The authored point sequence and original line
-// correction/clip order are retained, including Williams tuning mode operand.
-void DrivingChoice::FillUpDriveTarget(::port::driving::Memory& m,std::uint32_t target,std::uint32_t location,std::uint32_t nearby,int movement,bool conservative,const ::port::race::AiDriveTargetServices& services){if(!location||!target||!nearby||DrivingLocation(m,location).IsClear()||m.signed_byte(target)>=20)return;m.word(target+0x1f0,m.half(m.word(location+4)+0x2e)&63);::port::driving::Memory::Temporary future(m,404);FuturePoints points(m,future.address());points.Clear();float lateral=0;points.BuildArray(target,location,nearby,lateral,services);float amount=GetSpeedBackToLine(m,nearby,location,movement);const int count=m.signed_word(future.address());std::array<float,20> offsets{};for(int i=0;i<count;++i){const auto row=future.address()+4+20*i;const int number=m.signed_word(row);const auto route=number<0?0:m.word(0x30bb40+4*number),point=route+0x428+112*m.signed_word(row+4);if(movement==0&&m.word(row+16))amount=amount<0.25f?amount:0.25f;ReduceCurrentL(m,lateral,amount,movement,point,m.signed_word(location+8),m.scalar(nearby+0x1c8),conservative);lateral=lateral+m.scalar(row+12);offsets[i]=lateral;}
- for(int i=0;i<count;++i){if(m.word(0x328e08)&&movement==0)offsets[i]=0;AddToDriveTarget(m,offsets[i],location,future.address()+4+20*i,target,services);}::port::driving::Memory::Temporary choice(m,12);DrivingChoice hack(m,choice.address());hack.SetChoice(location);hack.FixupCarToExcludeFromCollisionPrediction(m.word(nearby),false,nearby,services);
-}
+void driverLaneAdjustLateral(float* lateral,int32_t mode,const CarRecoveryPose* pose,
+    int32_t lane,int32_t keepInside,float maximumStep,float halfExtent)
+{
+    if(mode==3)*lateral=*lateral+maximumStep;
+    else if(mode==2)*lateral=*lateral-maximumStep;
+    else if(*lateral<0.0f){
+        if(maximumStep < -*lateral)*lateral=*lateral+maximumStep;
+        else *lateral=0.0f;
+    }else if(maximumStep < *lateral)*lateral=*lateral-maximumStep;
+    else *lateral=0.0f;
+    float lower,upper;
+    if(keepInside){
+        lower=(1.0f-pose->halfWidths[0])+halfExtent;
+        upper=(pose->halfWidths[1]-1.0f)-halfExtent;
+    }else{
+        lower=-pose->halfWidths[0];
+        upper=pose->halfWidths[1];
+    }
+    const float authored=driverLaneGeometryAuthoredLateral(pose,lane);
+    lower=lower-authored;
+    upper=upper-authored;
+    *lateral=minimumFinite(upper,maximumFinite(*lateral,lower));
 }
 
-#include "game_core/indep/inc/AICarController.hpp"
-#include "game_core/indep/src/carcollisiondetect.hpp"
-namespace hp2::debug {
-// Debug0023B8F8; E-0099-W37. Original racing-line flags and traffic-route rule.
-bool DrivingChoice::IsValid(std::uint32_t location,std::uint32_t nearby){const int type=m_.signed_word(address_);if(DrivingChoiceTypeIsDrivingLine(type)){const auto route=m_.word(location);const int number=DrivingLocation(m_,location).IsClear()?-1:m_.signed_half(route+0xa);if(static_cast<std::uint32_t>(number)<50){const int line=GetDrivingLine(m_,type,m_.word(nearby));return (m_.word(route+0x28+48*line)&3)!=0;}if(static_cast<std::uint32_t>(number-50)<20)return type==1;return false;}if(DrivingChoiceTypeIsSideOfCar(type))return NearbyCarList(m_,nearby).GetNearbyCar(m_.word(address_+4))!=0;return false;}
-// Debug0023BA58; E-0099-W37. Original inherited target copy/clear, real authored
-// line/around-car target construction and exact exclusion fixup.
-bool DrivingChoice::BuildDriveTarget(std::uint32_t target,std::uint32_t location,std::uint32_t nearby,float projected,int movement,const ::port::race::AiDriveTargetServices& services){(void)projected;DriveTarget view(m_,target);view.Sub_002165B8(m_.word(m_.word(nearby)+0x2c));view.Clear(m_.word(nearby),0);bool valid=false;if(IsValid(location,nearby)){valid=true;if(DrivingChoiceTypeIsDrivingLine(m_.signed_word(address_))){::port::driving::Memory::Temporary copy(m_,16);m_.copy(copy.address(),location,16);const int line=GetDrivingLine(m_,m_.signed_word(address_),m_.word(nearby));DrivingLocation(m_,copy.address()).SetDrivingLine(line,false);FillUpDriveTarget(m_,target,copy.address(),nearby,movement,true,services);}else valid=BuildDriveTargetAroundCar(target,nearby,location,services);}else FillUpDriveTarget(m_,target,location,nearby,movement,true,services);FixupCarToExcludeFromCollisionPrediction(m_.word(nearby),false,nearby,services);return valid;}
-// Debug0023BBB0; E-0099-W37. Original scoring/prediction and PotentialDriveTargetID
-// always-increment rule. No caller-supplied success or zero-time prediction.
-bool DrivingChoice::IsDriveable(std::uint32_t target,bool preferred,float& score,std::uint32_t& car_to_hit,float& impact,std::uint32_t location,std::uint32_t nearby,float projected,float maximum,int movement,const ::port::race::AiDriveTargetServices& services){score=-1;car_to_hit=0;impact=m_.scalar(0x326194);bool okay=false;if(BuildDriveTarget(target,location,nearby,projected,movement,services)){score=DriveTarget(m_,target).EstimateScore(m_.word(nearby));if(-1<score){const auto controller=m_.word(m_.word(nearby)+0x28);if(preferred){score=score*m_.scalar(0x326198);m_.word(controller+0x204,m_.word(address_+4));}else m_.word(controller+0x204,0);car_to_hit=CarCollisionPredict(m_,0x328610).WhoWillThisDriveTargetHit(target,nearby,location,maximum,impact,services.port_stack_vector_lane);if(maximum<impact)okay=true;}}const auto world=m_.word(0x3272f0);if(!world)hp2::not_implemented("0x0023BBB0","actual World target-ID owner is not constructed");m_.word(world+0x19c,m_.word(world+0x19c)+1);return okay;}
+float driverLaneOutsideRoad(const CarRecoveryPose* pose,float across)
+{
+    if(0.0f<across)return across-pose->halfWidths[1];
+    return -(across+pose->halfWidths[0]);
 }
 
-namespace hp2::debug {
-// Debug0023EF70; E-0099-W37. Original inline TrackRoute.hpp owner, emitted
-// in drivingchoice.cpp. This exact leaf treats zero as the left-width branch.
-float TrackRoutePoint::GetAmountOutOfBounds(float lateral)const{return lateral<=0?-(lateral+memory_.scalar(address_+0x18)):lateral-memory_.scalar(address_+0x1c);}
+
+int32_t driverLaneGoalAllowed(const DriverAIGoal* goal,const DriverAIRoadState* road,
+    DriverAIPerception* perception,int32_t vehicleClass)
+{
+    if(driverAIGoalUsesRoad(goal->kind)){
+        const int32_t id=driverAIRoadEmpty(road)?-1:road->group->id;
+        if((uint32_t)id<50u){
+            const int32_t lane=driverAILaneForClass(goal->kind,vehicleClass);
+            return (road->group->laneFlags[lane]&3u)!=0;
+        }
+        if((uint32_t)(id-50)<20u)return goal->kind==1;
+        return 0;
+    }
+    return driverAIGoalUsesTarget(goal->kind)&&driverPerceptionFind(perception,goal->target)!=NULL;
 }
 
-#include "game_core/indep/inc/Car.hpp"
-#include "game_core/src/bMath.hpp"
-namespace hp2::debug {
-// Debug0023E748; E-0099-W37. Source distance-based point skipping and strict ahead test.
-int FuturePoints::GetClosestPointAhead(const std::array<float,2>& location)const{const auto& m=m_;int chosen=-1;float minimum=m.scalar(0x3261c8);for(int i=0;i<m.signed_word(address_);){const auto row=address_+4+20*i;const int number=m.signed_word(row);const auto route=number<0?0:m.word(0x30bb40+4*number),point=route+0x428+112*m.signed_word(row+4);const float x=m.scalar(point)-location[0],y=m.scalar(point+4)-location[1],distance=std::sqrt(x*x+y*y);if(0< -((location[0]-m.scalar(point))*m.scalar(point+0xc)+(location[1]-m.scalar(point+4))*m.scalar(point+0x10))&&distance<minimum){minimum=distance;chosen=i;}const int skip=static_cast<int>(distance*m.scalar(0x3261cc))-2;i=i+1+(skip>0?skip:0);}return chosen;}
-// Debug0023E860; E-0099-W37. Authored-line distance interpolation with original
-// end-index boundary and optional conservative road-width clipping.
-void FuturePoints::DoSmoothOffsetChange(std::uint32_t target,std::uint32_t nearby,float start,float end,int index,bool conservative,const ::port::race::AiDriveTargetServices& services){auto& m=m_;const int last=index-2;if(index-1<=1)return;const auto point_for=[&](int i){const auto row=address_+4+20*i;const int n=m.signed_word(row);const auto route=n<0?0:m.word(0x30bb40+4*n);return route+0x428+112*m.signed_word(row+4);};const auto line_l=[&](int i,std::uint32_t p){return static_cast<float>(m.signed_half(p+0x30+2*m.signed_word(address_+4+20*i+8))*256)*1.52587890625e-5f;};const auto first=point_for(0),final=point_for(last);const auto from=TrackRoutePoint(m,first).GetPosition(0,line_l(0,first)),to=TrackRoutePoint(m,final).GetPosition(0,line_l(last,final));const float dx=from[0]-to[0],dy=from[1]-to[1],change=end-start;::port::driving::Memory::Temporary position(m,16);for(int i=0;i<=last&&m.signed_byte(target)<20;++i){const auto row=address_+4+20*i,point=point_for(i);const float line=line_l(i,point);const auto xy=TrackRoutePoint(m,point).GetPosition(0,line);const float x=from[0]-xy[0],y=from[1]-xy[1],raw=start+std::sqrt(x*x+y*y)*(change/std::sqrt(dx*dx+dy*dy));const float offset=end>start?(raw<=end?raw:end):(end<=raw?raw:end);float lateral=(offset+line)+m.scalar(row+12);const float low=conservative?(1.f-m.scalar(point+0x18))+m.scalar(nearby+0x1c8):-m.scalar(point+0x18),high=conservative?(m.scalar(point+0x1c)-1.f)-m.scalar(nearby+0x1c8):m.scalar(point+0x1c);lateral=low<lateral?lateral:low;lateral=high<lateral?high:lateral;if(!services.port_stack_vector_lane)hp2::not_implemented("0x001BE4B8","smooth target requires explicit original temporary W operand");TrackRoutePoint(m,point).GetPosition(position.address(),0,lateral,*services.port_stack_vector_lane);DriveTarget(m,target).AddPointToTarget(position.address(),static_cast<std::int8_t>(m.signed_word(row)),static_cast<std::int16_t>(m.signed_word(row+4)),static_cast<std::int8_t>(m.signed_word(row+8)),true,0);}}
-// Debug0023DC90; E-0099-W37. Source line-relative gap and traffic/player minima.
-float DrivingChoice::GetLateralDistance(std::uint32_t nearby,std::uint32_t around,std::uint32_t future,int index)const{auto& m=m_;if(!around)return 0;const auto mine=m.word(nearby),other=m.word(around+0x18);float gap=0;if(m.signed_word(future)!=0&&(index!=-1||(index=FuturePoints(m,future).GetClosestPointAhead({{m.scalar(other+0x60),m.scalar(other+0x64)}}))!=-1)){const auto first=future+4,row=first+20*index;const auto point_for=[&](std::uint32_t r){const int n=m.signed_word(r);const auto route=n<0?0:m.word(0x30bb40+4*n);return route+0x428+112*m.signed_word(r+4);};const auto p=point_for(first),q=point_for(row);const float a=(((m.scalar(mine+0x60)-m.scalar(p))*m.scalar(p+0x10)-(m.scalar(mine+0x64)-m.scalar(p+4))*m.scalar(p+0xc))-static_cast<float>(m.signed_half(p+0x30+2*m.signed_word(first+8))*256)*1.52587890625e-5f)+m.scalar(first+12),b=(((m.scalar(other+0x60)-m.scalar(q))*m.scalar(q+0x10)-(m.scalar(other+0x64)-m.scalar(q+4))*m.scalar(q+0xc))-static_cast<float>(m.signed_half(q+0x30+2*m.signed_word(row+8))*256)*1.52587890625e-5f)+m.scalar(row+12);gap=(std::fabs(a-b)-m.scalar(nearby+0x1c8))-m.scalar(around+0x10);}float minimum=2;if(m.word(m.word(mine+0x14)+8)!=3){const float stopped=m.scalar(m.word(m.word(other+0x14)+8)==3?0x328e14:0x328e10);if(stopped<std::fabs(m.scalar(other+0x3c4)))minimum=m.word(other+0x18)?1.5f:2.f;else minimum=6;}return minimum<gap?gap:minimum;}
-// Debug0023DA68; E-0099-W37. Parallel extension from the actual other driver's target.
-void DrivingChoice::MakeDriveTargetParallelToCar(std::uint32_t target,std::uint32_t nearby,float lateral,const ::port::race::AiDriveTargetServices& services){auto& m=m_;const auto other=m.word(address_+4),mine=m.word(nearby);if(!(m.scalar(other+0x3c4)>5&&m.scalar(mine+0x3c4)>5&&m.signed_word(other+0x3bc)>2))return;const auto a=hp2::recovered::bNormalize(std::array<float,2>{{m.scalar(mine+0x70),m.scalar(mine+0x74)}}),b=hp2::recovered::bNormalize(std::array<float,2>{{m.scalar(other+0x70),m.scalar(other+0x74)}});if(!(m.scalar(0x3261c4)<a[0]*b[0]+a[1]*b[1]))return;const auto driver=m.word(other+0x2c);DriveTarget path(m,driver);int index=path.GetFirstPoint(other+0x40);std::uint32_t route=0,point=0;::port::driving::Memory::Temporary position(m,16);while(m.signed_byte(target)<20&&path.GetRouteAndRoutePoint(index,route,point)){const auto original=driver+0x10+16*index;float offset=((m.scalar(original)-m.scalar(point))*m.scalar(point+0x10)-(m.scalar(original+4)-m.scalar(point+4))*m.scalar(point+0xc))+lateral;if(m.signed_word(route+0xc)!=1){const float low=(1.f-m.scalar(point+0x18))+m.scalar(nearby+0x1c8),high=(m.scalar(point+0x1c)-1.f)-m.scalar(nearby+0x1c8);offset=low<offset?offset:low;offset=high<offset?high:offset;}if(!services.port_stack_vector_lane)hp2::not_implemented("0x001BE4B8","parallel target requires explicit original temporary W operand");TrackRoutePoint(m,point).GetPosition(position.address(),0,offset,*services.port_stack_vector_lane);DriveTarget(m,target).AddPointToTarget(position.address(),m.signed_byte(driver+0x1a0+index),m.signed_half(driver+0x1b4+2*index),m.signed_byte(driver+0x1dc+index),true,mine);++index;}}
+int32_t driverLaneGoalsMatch(const DriverAIGoal* first,const DriverAIGoal* second)
+{
+    if(driverAIGoalUsesTarget(first->kind))
+        return first->target==second->target&&first->kind==second->kind;
+    return first->kind==second->kind;
 }
-namespace hp2::debug {
-// Debug0023D5D8; E-0099-W37. Real nearby-car pass point, authored future
-// points, line-relative spacing and original parallel extension conditions.
-bool DrivingChoice::BuildDriveTargetAroundCar(std::uint32_t target,std::uint32_t nearby,std::uint32_t location,const ::port::race::AiDriveTargetServices& services){auto& m=m_;::port::driving::Memory::Temporary future(m,404);FuturePoints points(m,future.address());points.Clear();const auto around=NearbyCarList(m,nearby).GetNearbyCar(m.word(address_+4));float initial=0;points.BuildArray(target,location,nearby,initial,services);bool okay=false;if(m.signed_word(future.address())!=0){const auto other=m.word(around+0x18);const int index=points.GetClosestPointAhead({{m.scalar(other+0x60),m.scalar(other+0x64)}});if(index!=-1){float spacing=GetLateralDistance(nearby,around,future.address(),index);if(m.word(address_+8))spacing=spacing+4.f;const auto row=future.address()+4+20*index;const int number=m.signed_word(row),line=m.signed_word(row+8);const auto route=number<0?0:m.word(0x30bb40+4*number),point=route+0x428+112*m.signed_word(row+4);const float x=m.scalar(other+0x60)-m.scalar(point),y=m.scalar(other+0x64)-m.scalar(point+4),dx=m.scalar(point+0xc),dy=m.scalar(point+0x10),other_l=x*dy-y*dx;if(TrackRoutePoint(m,point).GetAmountOutOfBounds(other_l)<5.f){if(m.word(0x328e0c))hp2::not_implemented("0x0023D5D8","active DebugBuildDriveTargetAroundCar FuturePoints Dump is not yet bound");const float half=m.scalar(nearby+0x1c8),separation=(m.signed_word(address_)==5?-1.f:1.f)*(half+m.scalar(around+0x10)+spacing),distance=x*dx+y*dy,low=half-(m.scalar(point+0x18)-1.f),high=(m.scalar(point+0x1c)-1.f)-half;float lateral=(other_l+separation)+m.scalar(row+12);lateral=low<lateral?lateral:low;lateral=high<lateral?high:lateral;const float final_offset=lateral-static_cast<float>(m.signed_half(point+0x30+2*line)*256)*1.52587890625e-5f;if(!services.port_stack_vector_lane)hp2::not_implemented("0x001BE4B8","around-car target requires explicit original temporary W operand");::port::driving::Memory::Temporary beside(m,16);TrackRoutePoint(m,point).GetPosition(beside.address(),distance,lateral,*services.port_stack_vector_lane);points.DoSmoothOffsetChange(target,nearby,initial,final_offset,index,true,services);DriveTarget view(m,target);view.AddPointToTarget(beside.address(),static_cast<std::int8_t>(m.signed_half(route+0xa)),static_cast<std::int16_t>((point-route-0x428)/112),static_cast<std::int8_t>(line),true,0);m.byte(target+0x204,static_cast<std::uint8_t>(m.signed_byte(target)-1));const auto selected=m.word(address_+4);const auto type=m.word(m.word(selected+0x14)+8);if((m.word(selected+0x18)||(type==3&&m.word(m.word(m.word(nearby)+0x14)+8)!=3))&&type!=4)MakeDriveTargetParallelToCar(target,nearby,separation,services);okay=true;}}}FillUpDriveTarget(m,target,location,nearby,1,true,services);return okay;}
-}
-namespace hp2::debug {
-// Debug0023C638; E-0099-W37. Original signed road-width room predicate.
-bool DrivingChoice::IsEnoughRoom(std::uint32_t around,std::uint32_t nearby,const ::port::race::AiDriveTargetServices& services)const{const int type=m_.signed_word(address_);if(DrivingChoiceTypeIsDrivingLine(type))return true;if(!DrivingChoiceTypeIsSideOfCar(type))return false;const auto car=m_.word(address_+4);hp2::recovered::Car view(m_,car);if(!(view.GetAmountOutOfBounds()<m_.scalar(0x3261b0)))return true;const auto point=view.GetRoutePoint(services);const float space=(m_.scalar(around+0x10)+m_.scalar(nearby+0x1c8))+5.f,lateral=(m_.scalar(car+0x60)-m_.scalar(point))*m_.scalar(point+0x10)-(m_.scalar(car+0x64)-m_.scalar(point+4))*m_.scalar(point+0xc);return type==5?-m_.scalar(point+0x18)<lateral-space:lateral+space<m_.scalar(point+0x1c);}
-// Debug0023CC90; E-0099-W37. Source opposing traffic choice/action rules and
-// room test. Rejected preferred exclusions retain the previous pointer.
-void DrivingChoice::FixupCarToExcludeFromCollisionPrediction(std::uint32_t car,bool preferred,std::uint32_t nearby,const ::port::race::AiDriveTargetServices& services){auto& m=m_;const int type=m.signed_word(address_);if(!DrivingChoiceTypeIsDrivingLine(type)){if(!DrivingChoiceTypeIsSideOfCar(type))return;if(preferred){const auto other=m.word(address_+4);if(m.word(m.word(other+0x14)+8)==3&&m.scalar(other+0x90)*m.scalar(car+0x90)+m.scalar(other+0x94)*m.scalar(car+0x94)<0){const auto controller=m.word(other+0x28),plan=m.word(controller+0x214),choice=m.word(controller+0x1fc);const int action=plan?m.signed_word(plan+0x248):11,other_type=m.signed_word(choice);if(DrivingChoiceTypeIsSideOfCar(other_type)&&m.word(choice+4)==car&&((other_type==5&&type==6)||(other_type==6&&type==5)))return;if(action==6&&type==5)return;}const auto around=NearbyCarList(m,nearby).GetNearbyCar(other);if(!IsEnoughRoom(around,nearby,services))return;m.word(m.word(car+0x28)+0x204,other);return;}}m.word(m.word(car+0x28)+0x204,0);}
+#include "indep/inc/World.hpp"
+#include "indep/inc/Replay.hpp"
+// Full PAL241B88..241C00. The native target is the same Car's movement
+// view; its encoded identity is the source signed driver-number byte.
+void driverAIGoalSnapshot(DriverAIGoal* goal,const World* world,ReplaySnapshot* snapshot)
+{
+    replaySnapshotBeginSection(snapshot,nullptr,"DrivingChoice");
+    replaySnapshotMoveData(snapshot,&goal->kind,1,-1,0);
+    Car* car=goal->target?goal->target->bindings.owner:nullptr;
+    worldSnapshotCarPointer(world,snapshot,&car);
+    if(snapshot->restoring)goal->target=car?car->Movement():nullptr;
+    replaySnapshotMoveData(snapshot,&goal->parameter,1,4,0);
+    replaySnapshotEndSection(snapshot);
 }
 
-#include "game_core/indep/inc/Replay.hpp"
-#include "game_core/indep/inc/World.hpp"
-namespace hp2::debug {
-// Debug0023B740, E-0099-W74. Type moves one byte only; bool memory-size4.
-void DrivingChoice::DoSnapshot(std::uint32_t snapshot){ReplaySnapshot s(m_,snapshot);s.BeginSection(0x2b6330);s.MoveData(address_,1);World(m_,m_.word(0x3272f0)).DoCarPointerSnapshot(address_+4,snapshot);s.MoveData(address_+8,1,4,0);s.EndSection();}
+#include "indep/inc/AIPlan.hpp"
+#include "indep/inc/CarCollisionDetect.hpp"
+#include "indep/inc/Pursuit.hpp"
+#include "indep/inc/CarDriver.hpp"
+#include "indep/inc/Player.hpp"
+#include "indep/inc/TrackPath.hpp"
+CarDriverResult driverLaneBuildPointRange(DriverLanePoints* points,const DriverAIRoadState* road,
+    const CarRecoveryPose* last)
+{
+    points->count=0;
+    if(driverAIRoadEmpty(road)||!last || road->lane<0 || road->lane>=21)
+        return CAR_DRIVER_MISSING_ROAD;
+    const CarRecoveryGroup* group=road->group;
+    const int32_t first=carRecoveryOwnedPoseIndex(group,road->recovery.recoveryPose);
+    const int32_t finish=carRecoveryOwnedPoseIndex(group,last);
+    if(first<0||first>=group->poseCount||finish<0||finish>=group->poseCount)return CAR_DRIVER_MISSING_ROAD;
+    for(int32_t index=first;index<=finish&&points->count<DRIVER_COMMAND_CAPACITY;++index){
+        DriverLanePoint* point=&points->points[points->count++];
+        point->road.group=group;point->road.pose=&group->poses[index];point->lane=road->lane;
+        point->lateralDelta=0.0f;point->changedConnection=0;
+    }
+    return CAR_DRIVER_OK;
 }
-
-#include "game_core/indep/src/aiutil.hpp"
-namespace hp2::debug {
-// Debug0023B9E8, E-0099-W95. Extra-distance flag and padding are source-ignored.
-bool DrivingChoice::IsEqualTo(std::uint32_t other)const{if(DrivingChoiceTypeIsSideOfCar(m_.signed_word(address_)))return m_.word(address_+4)==m_.word(other+4)&&m_.word(address_)==m_.word(other);return m_.word(address_)==m_.word(other);}
-// Debug0023C488, E-0099-W95. Distinguish successful collision-free target from
-// return value (score differs from -1). Source best-preferred is always cleared.
-bool DrivingChoice::TryChoice(::port::driving::Memory& m,std::uint32_t choice,bool preferred,std::uint32_t location,std::uint32_t nearby,float maximum,bool& found,std::uint32_t this_target,std::uint32_t best_choice,std::uint32_t best_target,bool& best_preferred,float& best_score,std::uint32_t alternate_choice,std::uint32_t alternate_target,float& alternate_impact,std::uint32_t& hit,float& impact,std::uint32_t critical,const ::port::race::AiDriveTargetServices& services){float score=-1;impact=m.scalar(0x3261a8);hit=0;const bool okay=DrivingChoice(m,choice).IsDriveable(this_target,preferred,score,hit,impact,location,nearby,0,maximum,0,services);if(okay&&best_score<score){found=true;m.copy(best_choice,choice,12);DriveTarget(m,best_target).Sub_002165B8(this_target);best_score=score;best_preferred=false;}const bool valid=m.scalar(0x3261ac)<std::fabs(score- -1.f);if(DrivingChoiceTypeIsSideOfCar(m.signed_word(choice))&&!m.word(choice+8)&&m.word(choice+4)==critical&&preferred){m.copy(alternate_choice,choice,12);DriveTarget(m,alternate_target).Sub_002165B8(this_target);alternate_impact=impact;}return valid;}
-// Debug0023CE18, E-0099-W95. Original traffic/curvature/lateral choice and
-// final route-edge flip; no invented lane or geometric fallback.
-bool DrivingChoice::GetPreferredSideOfCar(std::uint32_t row,std::uint32_t nearby,std::uint32_t location){auto& m=m_;const float curvature=GetCurrentCurvatureOfDrivingLine(m,location);const auto initial=m.word(location+4),other=m.word(row+0x18),mine=m.word(nearby);const int line=m.signed_word(location+8);auto point=TrackRoute(m,m.word(location)).FindClosestPointAhead({{m.scalar(other+0x60),m.scalar(other+0x64)}},initial);if(!point)point=initial;const float lateral=(m.scalar(other+0x60)-m.scalar(point))*m.scalar(point+0x10)-(m.scalar(other+0x64)-m.scalar(point+4))*m.scalar(point+0xc);const float relative=lateral-static_cast<float>(m.signed_half(point+0x30+2*line)*256)*1.52587890625e-5f;const float my_relative=((m.scalar(mine+0x60)-m.scalar(initial))*m.scalar(initial+0x10)-(m.scalar(mine+0x64)-m.scalar(initial+4))*m.scalar(initial+0xc))-static_cast<float>(m.signed_half(initial+0x30+2*line)*256)*1.52587890625e-5f;bool left=true,decided=false;if(m.word(m.word(mine+0x14)+8)==3&&relative<5.f){decided=true;left=false;}if(!decided){if(std::fabs(my_relative)<=1.f&&std::fabs(relative)<=1.f&&50.f<m.scalar(row+4)&&m.scalar(0x3261b8)<=std::fabs(curvature)){left=curvature<=0;decided=true;}if(!decided)left=my_relative<=relative;}const float clearance=(m.scalar(row+0x10)+m.scalar(nearby+0x1c8))+5.f;const bool edge=left?lateral-clearance< -m.scalar(point+0x18):m.scalar(point+0x1c)<lateral+clearance;return edge?!left:left;}
-// Debug0023BD28, E-0099-W95. Exact original current/line/car candidate order,
-// preferred-side fallback and full target/choice publication; native scratch only.
-bool DrivingChoice::MakeNewChoice(std::uint32_t target,std::uint32_t location,std::uint32_t nearby,float maximum,bool& preferred,bool try_current,const ::port::race::AiDriveTargetServices& services){auto& m=m_;::port::driving::Memory::Temporary alternate_target(m,0x210),best_target(m,0x210),this_target(m,0x210),best_choice(m,12),alternate_choice(m,12),this_choice(m,12),current_choice(m,12);for(auto p:{alternate_target.address(),best_target.address(),this_target.address()})DriveTarget(m,p).Sub_00216528();for(auto p:{best_choice.address(),alternate_choice.address(),this_choice.address()})DrivingChoice(m,p).Clear();DrivingChoice current(m,current_choice.address());current.SetChoice(location);if(IsValid(location,nearby))m.copy(current.address(),address_,12);bool found=false,best_preferred=false;float best_score=-1,alternate_impact=m.scalar(0x32619c),impact=m.scalar(0x32619c);std::uint32_t hit=0,critical=0;float initial_score=-1,initial_impact=m.scalar(0x32619c);
- auto attempt=[&](std::uint32_t choice,bool side,std::uint32_t critical_car){return TryChoice(m,choice,side,location,nearby,maximum,found,this_target.address(),best_choice.address(),best_target.address(),best_preferred,best_score,alternate_choice.address(),alternate_target.address(),alternate_impact,hit,impact,critical_car,services);};
- if(try_current){bool side=false;if(DrivingChoiceTypeIsSideOfCar(m.signed_word(current.address()))){if(const auto row=NearbyCarList(m,nearby).GetNearbyCar(m.word(current.address()+4))){const bool left=GetPreferredSideOfCar(row,nearby,location);side=left?m.word(current.address())==5:m.word(current.address())==6;}}(void)attempt(current.address(),side,0);initial_score=best_score;critical=hit;initial_impact=impact;if(side&&m.word(current.address()+4)==hit){m.word(alternate_choice.address()+8,m.word(current.address()+8));DriveTarget(m,alternate_target.address()).Sub_002165B8(this_target.address());}}
- if(!found){for(int line=1;line<=m.signed_word(0x327ac0)&&!found;++line){DrivingChoice trial(m,this_choice.address());trial.SetChoice(line,0,false);if(!try_current||!trial.IsEqualTo(current.address()))(void)attempt(trial.address(),false,critical);}
-  if(!found){for(int index=0;index<m.signed_word(nearby+4);++index){const auto row=nearby+8+28*index;if(!DoWeCareAboutThisCar(m,row,nearby))continue;const bool left=GetPreferredSideOfCar(row,nearby,location);DrivingChoice trial(m,this_choice.address());bool valid=false;trial.SetChoice(5,m.word(row+0x18),false);if(!try_current||!trial.IsEqualTo(current.address()))valid=attempt(trial.address(),left,critical);trial.SetChoice(6,m.word(row+0x18),false);if(!try_current||!trial.IsEqualTo(current.address())){const bool right_valid=attempt(trial.address(),!left,critical);valid=valid||right_valid;}const auto other=m.word(row+0x18),mine=m.word(nearby);if(!valid&&m.scalar(other+0x70)*m.scalar(mine+0x70)+m.scalar(other+0x74)*m.scalar(mine+0x74)<0.f){trial.SetChoice(left?5:6,other,true);(void)attempt(trial.address(),true,critical);}}
-   if(!found){if(!DrivingChoice(m,alternate_choice.address()).IsValid(location,nearby)||alternate_impact<initial_impact-m.scalar(0x3261a0)){if(m.scalar(0x3261a4)<std::fabs(initial_score- -1.f)){m.copy(address_,current.address(),12);current.BuildDriveTarget(target,location,nearby,0,1,services);preferred=false;}else{SetChoice(location);FillUpDriveTarget(m,target,location,nearby,1,true,services);preferred=false;found=false;}}else{m.copy(address_,alternate_choice.address(),12);DriveTarget(m,target).Sub_002165B8(alternate_target.address());preferred=true;}FixupCarToExcludeFromCollisionPrediction(m.word(nearby),preferred,nearby,services);return found;}
-  }
- }
- m.copy(address_,best_choice.address(),12);DriveTarget(m,target).Sub_002165B8(best_target.address());preferred=best_preferred;FixupCarToExcludeFromCollisionPrediction(m.word(nearby),preferred,nearby,services);return found;
+#include "indep/inc/CameraMover.hpp"
+static float authoredLateral(const DriverLanePoint* point)
+{
+    return (float)((int32_t)point->road.pose->laneOffsetsQuantized[point->lane]*256)*0.0000152587890625f;
 }
+static float distanceXY(const float first[2],const float second[2])
+{
+    const float x=first[0]-second[0];
+    const float y=first[1]-second[1];
+    const float xx=x*x;
+    const float yy=y*y;
+    return sqrtf(xx+yy);
 }
-
-namespace hp2::debug {
-// Debug0023C750,E-0110-F10. Original current/line/preferred/opposite candidate
-// order; each attempt restores the source copy-constructed initial target.
-bool DrivingChoice::TryToDriveAroundCar(std::uint32_t target,bool& preferred,std::uint32_t around,std::uint32_t location,std::uint32_t nearby,float projected,float maximum,bool try_current,const ::port::race::AiDriveTargetServices& services){
- auto& m=m_;const bool left=GetPreferredSideOfCar(around,nearby,location);bool success=false;float score=-1,impact=m.scalar(0x3261b4);std::uint32_t hit=0;
- ::port::driving::Memory::Temporary initial_target(m,0x210),initial_choice(m,12),this_choice(m,12),first_choice(m,12),second_choice(m,12);
- DriveTarget(m,initial_target.address()).Sub_001E3EB8(target);DrivingChoice initial(m,initial_choice.address());initial.Clear();if(m.word(address_))m.copy(initial.address(),address_,12);
- const bool fast=m.scalar(0x328e00)<m.scalar(m.word(around+0x18)+0x3c4)||m.scalar(0x328e00)<m.scalar(m.word(nearby)+0x3c4);
- auto attempt=[&](DrivingChoice& choice,bool side){DriveTarget(m,target).Sub_002165B8(initial_target.address());return choice.IsDriveable(target,side,score,hit,impact,location,nearby,projected,maximum,0,services);};
- if(try_current&&(!DrivingChoiceTypeIsDrivingLine(m.signed_word(initial.address()))||fast)&&initial.IsValid(location,nearby)){
-  const int type=m.signed_word(initial.address());if(!DrivingChoiceTypeIsSideOfCar(type)||m.word(initial.address()+4)==m.word(around+0x18)){const bool side=(type==5&&left)||(type==6&&!left);if(attempt(initial,side)){success=true;preferred=side;}}
- }
- DrivingChoice trial(m,this_choice.address());trial.Clear();
- if(!success&&fast&&0<m.signed_word(0x327ac0))for(int line=1;line<=m.signed_word(0x327ac0)&&!success;++line){trial.SetChoice(line,0,false);if((!try_current||!trial.IsEqualTo(initial.address()))&&attempt(trial,false)){m.copy(address_,trial.address(),12);success=true;preferred=false;}}
- if(!success){DrivingChoice first(m,first_choice.address()),second(m,second_choice.address());first.Clear();second.Clear();first.SetChoice(left?5:6,m.word(around+0x18),false);second.SetChoice(left?6:5,m.word(around+0x18),false);
-  if((!try_current||!first.IsEqualTo(initial.address()))&&(fast||first.IsEnoughRoom(around,nearby,services))&&attempt(first,true)){m.copy(address_,first.address(),12);success=true;preferred=true;}
-  if(!success&&(!try_current||!second.IsEqualTo(initial.address()))&&(fast||second.IsEnoughRoom(around,nearby,services))&&attempt(second,false)){m.copy(address_,second.address(),12);success=true;preferred=false;}
-  if(!success){first.Clear();if(initial.IsValid(location,nearby))m.copy(first.address(),initial.address(),12);else first.SetChoice(location);first.BuildDriveTarget(target,location,nearby,projected,1,services);m.copy(address_,first.address(),12);}
- }
- FixupCarToExcludeFromCollisionPrediction(m.word(nearby),preferred,nearby,services);return success;
+void driverLaneAppendTransition(const DriverLanePoints* points,DriverCommand* command,
+    const DriverAIPerception* perception,int32_t targetIndex,int32_t keepInside,
+    float initialLateral,float finalLateral)
+{
+    if(!points || !command || !perception || targetIndex<3 ||
+        points->count>DRIVER_COMMAND_CAPACITY || targetIndex-2>=points->count) return;
+    const int32_t last=targetIndex-2;
+    // Every authored point and lane must be live before writing any of the
+    // resulting driver command. An incomplete command can lead AI through
+    // scenery after the track owner was changed during Replay/menu teardown.
+    for(int32_t i=0;i<=last;++i) {
+        const DriverLanePoint& point=points->points[i];
+        if (carRecoveryOwnedPoseIndex(point.road.group,point.road.pose)<0 ||
+            point.lane<0 || point.lane>=21) return;
+    }
+    const DriverLanePoint* first=&points->points[0];
+    const DriverLanePoint* finish=&points->points[last];
+    float start[2],end[2];
+    carRoadPreviewPointXY(first->road.pose,start,0.0f,authoredLateral(first));
+    carRoadPreviewPointXY(finish->road.pose,end,0.0f,authoredLateral(finish));
+    const float slope=finiteRatio(finalLateral-initialLateral,distanceXY(start,end));
+    for(int32_t index=0;index<=last&&command->count<DRIVER_COMMAND_CAPACITY;++index){
+        const DriverLanePoint* point=&points->points[index];
+        const CarRecoveryPose* pose=point->road.pose;
+        const float authored=authoredLateral(point);
+        float center[2];
+        carRoadPreviewPointXY(pose,center,0.0f,authored);
+        const float change=distanceXY(start,center)*slope;
+        float lateral=initialLateral+change;
+        if(initialLateral<finalLateral){
+            if(finalLateral<lateral)lateral=finalLateral;
+        }else if(finalLateral<=initialLateral&&lateral<finalLateral)lateral=finalLateral;
+        const float across=(lateral+authored)+point->lateralDelta;
+        float lower,upper;
+        if(keepInside){
+            lower=(1.0f-pose->halfWidths[0])+perception->lateralExtent;
+            upper=(pose->halfWidths[1]-1.0f)-perception->lateralExtent;
+        }else{
+            lower=-pose->halfWidths[0];upper=pose->halfWidths[1];
+        }
+        const float bounded=minimumFinite(upper,maximumFinite(across,lower));
+        float position[4];driverRoadPointPosition(pose,position,0.0f,bounded);
+        driverCommandAppend(command,position,&point->road,point->lane,1,NULL);
+    }
 }
+CarDriverResult driverLaneContinueTargetCommand(const DriverAIGoal* goal,DriverCommand* command,
+    DriverAIPerception* perception,const DriverLanePoints* points,float acrossOffset)
+{
+    CarMovement* target=goal->target;
+    const VehicleState* targetState=target->bindings.state;
+    const VehicleState* state=perception->movement->bindings.state;
+    if(!(5.0f<targetState->speed)||!(5.0f<state->speed)||targetState->activeContactCount<3)
+        return CAR_DRIVER_OK;
+    float ownDirection[2],targetDirection[2];
+    vectorNormalize2(ownDirection,state->velocity);
+    vectorNormalize2(targetDirection,targetState->velocity);
+    const float x=ownDirection[0]*targetDirection[0];
+    const float y=ownDirection[1]*targetDirection[1];
+    if(!(0.707099974155426f<x+y))return CAR_DRIVER_OK;
+    CarDriver* controller=(CarDriver*)target->bindings.owner->controller;
+    DriverCommand* targetCommand=carDriverMutableCommand(controller);
+    if(!targetCommand)return CAR_DRIVER_INVALID_BINDING;
+    const int32_t now=target->bindings.environment->clock->worldTimer;
+    int32_t index=driverCommandClosestPoint(targetCommand,targetState,now);
+    int32_t nearest=0;
+    CarRecoverySelection road;
+    while(command->count<DRIVER_COMMAND_CAPACITY&&driverCommandRoadAt(targetCommand,index,&road)){
+        const CarRecoveryPose* pose=road.pose;
+        const float* position=targetCommand->points[index].position;
+        const float dx=position[0]-pose->position[0];
+        const float dy=position[1]-pose->position[1];
+        const float first=dx*pose->direction[1];
+        const float second=dy*pose->direction[0];
+        float across=(first-second)+acrossOffset;
+        float lower=-999999.0f,upper=999999.0f;
+        if(road.group->category!=1){
+            lower=-pose->halfWidths[0];upper=pose->halfWidths[1];
+        }else{
+            nearest=driverLaneNearestFollowingPoint(points,position,nearest);
+            if(nearest!=-1){
+                const CarRecoveryPose* ownPose=points->points[nearest].road.pose;
+                float left[2],right[2];
+                carRoadPreviewPointXY(ownPose,left,0.0f,-ownPose->halfWidths[0]);
+                carRoadPreviewPointXY(ownPose,right,0.0f,ownPose->halfWidths[1]);
+                const float leftX=(left[0]-pose->position[0])*pose->direction[1];
+                const float leftY=(left[1]-pose->position[1])*pose->direction[0];
+                const float rightX=(right[0]-pose->position[0])*pose->direction[1];
+                const float rightY=(right[1]-pose->position[1])*pose->direction[0];
+                const float firstSide=leftX-leftY;
+                const float secondSide=rightX-rightY;
+                if(firstSide<secondSide){lower=firstSide;upper=secondSide;}
+                else{lower=secondSide;upper=firstSide;}
+            }
+        }
+        const float margin=perception->lateralExtent+1.0f;
+        lower=lower+margin;upper=upper-margin;
+        across=minimumFinite(upper,maximumFinite(across,lower));
+        float next[4];driverRoadPointPosition(pose,next,0.0f,across);
+        driverCommandAppend(command,next,&road,targetCommand->points[index].laneIndex,1,state);
+        ++index;
+    }
+    return CAR_DRIVER_OK;
+}
+int32_t driverLaneBuildTargetPath(const DriverAIGoal* goal,DriverCommand* command,
+    const DriverAIRoadState* road,DriverAIPerception* perception,DriverAIBase* driver)
+{
+    DriverAINeighbor* neighbor=driverPerceptionFind(perception,goal->target);
+    if(!neighbor){driver->result=CAR_DRIVER_INVALID_BINDING;return 0;}
+    DriverLanePoints points;
+    float initialLateral=0.0f;
+    CarDriverResult result=driverLaneBuildPoints(&points,command,road,perception,driver,&initialLateral);
+    if(result!=CAR_DRIVER_OK){driver->result=result;return 0;}
+    int32_t nearest=-1;
+    if(points.count)nearest=driverLaneNearestFollowingPoint(&points,goal->target->bindings.state->position,0);
+    if(nearest!=-1){
+        float passing=driverLanePassingMargin(driver,perception,neighbor,&points,nearest);
+        if(goal->parameter)passing=passing+4.0f;
+        const DriverLanePoint* point=&points.points[nearest];
+        const CarRecoveryPose* pose=point->road.pose;
+        const float* targetPosition=goal->target->bindings.state->position;
+        const float dx=targetPosition[0]-pose->position[0];
+        const float dy=targetPosition[1]-pose->position[1];
+        const float firstSide=dx*pose->direction[1];
+        const float secondSide=dy*pose->direction[0];
+        const float side=firstSide-secondSide;
+        if(driverLaneOutsideRoad(pose,side)<5.0f){
+            /* The original optional call here only counts down through NOPs. */
+            float sign=goal->kind==5?-1.0f:1.0f;
+            const int32_t ownClass=perception->movement->bindings.owner->driverInfo->driverClass;
+            if(ownClass==3&&driver->environment->tuning->predictionWideBounds)sign=-sign;
+            const float firstWidth=perception->lateralExtent+neighbor->effectiveHalfExtents[0];
+            const float totalWidth=firstWidth+passing;
+            const float offset=sign*totalWidth;
+            float across=(side+offset)+point->lateralDelta;
+            const float lower=perception->lateralExtent-(pose->halfWidths[0]-1.0f);
+            const float upper=(pose->halfWidths[1]-1.0f)-perception->lateralExtent;
+            across=minimumFinite(upper,maximumFinite(across,lower));
+            const float finalLateral=across-authoredLateral(point);
+            const float alongX=dx*pose->direction[0];
+            const float alongY=dy*pose->direction[1];
+            float position[4];driverRoadPointPosition(pose,position,alongX+alongY,across);
+            driverLaneAppendTransition(&points,command,perception,nearest,1,initialLateral,finalLateral);
+            driverCommandAppend(command,position,&point->road,point->lane,1,NULL);
+            command->lastSpeedPoint=command->count-1;
+            const CarMovement* target=goal->target;
+            const int32_t targetClass=target->bindings.owner->driverInfo->driverClass;
+            const int32_t continuePath=target->bindings.player||(targetClass==3&&ownClass!=3);
+            if(continuePath&&targetClass!=4){
+                result=driverLaneContinueTargetCommand(goal,command,perception,&points,offset);
+                if(result!=CAR_DRIVER_OK){driver->result=result;return 0;}
+            }
+            result=driverLaneBuildRoad(command,road,perception,1,1,driver);
+            if(result!=CAR_DRIVER_OK){driver->result=result;return 0;}
+            return 1;
+        }
+    }
+    result=driverLaneBuildRoad(command,road,perception,1,1,driver);
+    if(result!=CAR_DRIVER_OK)driver->result=result;
+    return 0;
+}
+#include "indep/inc/TrafficDriver.hpp"
+static float driverLaneDecisionAuthoredLateral(const CarRecoveryPose* pose,int32_t lane)
+{
+    return (float)((int32_t)pose->laneOffsetsQuantized[lane]*256)*0.0000152587890625f;
+}
+static float lateralPosition(const CarRecoveryPose* pose,const float position[2])
+{
+    const float x=(position[0]-pose->position[0])*pose->direction[1];
+    const float y=(position[1]-pose->position[1])*pose->direction[0];
+    return x-y;
+}
+int32_t driverLaneTargetHasRoom(const DriverAIGoal* goal,const DriverAINeighbor* neighbor,
+    const DriverAIPerception* perception)
+{
+    if(driverAIGoalUsesRoad(goal->kind))return 1;
+    if(!driverAIGoalUsesTarget(goal->kind))return 0;
+    const CarDriver* target=(const CarDriver*)goal->target->bindings.owner->controller;
+    if(!(carDriverLateralExcess(target)<-0.0010000000474974513f))return 1;
+    const CarRecoveryPose* pose=carDriverCurrentPose(target,1);
+    const float across=lateralPosition(pose,goal->target->bindings.state->position);
+    const float width=neighbor->effectiveHalfExtents[0]+perception->lateralExtent;
+    const float clearance=width+5.0f;
+    if(goal->kind==5)return -pose->halfWidths[0]<across-clearance;
+    return across+clearance<pose->halfWidths[1];
+}
+int32_t driverLanePreferredPassingSide(const DriverAINeighbor* neighbor,
+    const DriverAIPerception* perception,const DriverAIRoadState* road)
+{
+    const float curvature=driverLaneRoadCurvature(road);
+    const CarRecoveryPose* first=road->recovery.recoveryPose;
+    const VehicleState* other=neighbor->movement->bindings.state;
+    const CarRecoveryPose* following=carRecoveryFirstFollowingPose(road->group,other->position,first);
+    if(!following)following=first;
+    const float raw=lateralPosition(following,other->position);
+    const float own=lateralPosition(first,perception->movement->bindings.state->position)-driverLaneDecisionAuthoredLateral(first,road->lane);
+    const float target=raw-driverLaneDecisionAuthoredLateral(following,road->lane);
+    int32_t selected=1,forced=0;
+    if(perception->movement->bindings.owner->driverInfo->driverClass==3&&target<5.0f){selected=0;forced=1;}
+    if(!forced&&fabsf(own)<=1.0f&&fabsf(target)<=1.0f&&50.0f<neighbor->localPosition[1]&&
+       0.11999999731779099f<=fabsf(curvature)){
+        selected=0.0f<curvature?0:1;forced=1;
+    }
+    if(!forced)selected=target<own?0:1;
+    const float width=neighbor->effectiveHalfExtents[0]+perception->lateralExtent;
+    const float clearance=width+5.0f;
+    const int32_t fits=selected?!(raw-clearance < -following->halfWidths[0]):
+        !(following->halfWidths[1]<raw+clearance);
+    return fits?selected:selected^1;
+}
+CarDriverResult driverLanePublishTarget(const DriverAIGoal* goal,DriverAIBase* driver,
+    int32_t enabled,DriverAIPerception* perception)
+{
+    if(driverAIGoalUsesRoad(goal->kind)){
+        driver->planningTarget=NULL;return CAR_DRIVER_OK;
+    }
+    if(!driverAIGoalUsesTarget(goal->kind))return CAR_DRIVER_OK;
+    if(!enabled){driver->planningTarget=NULL;return CAR_DRIVER_OK;}
+    CarMovement* target=goal->target;
+    int32_t allowed=1;
+    if(target->bindings.owner->driverInfo->driverClass==3){
+        const float x=target->bindings.state->orientation[0]*perception->movement->bindings.state->orientation[0];
+        const float y=target->bindings.state->orientation[1]*perception->movement->bindings.state->orientation[1];
+        if(x+y<0.0f){
+            const CarDriver* controller=(const CarDriver*)target->bindings.owner->controller;
+            const DriverAIBase* other=NULL;
+            if(controller->kind==CAR_DRIVER_AI&&controller->owner.ai)other=&controller->owner.ai->base;
+            if(controller->kind==CAR_DRIVER_TRAFFIC&&controller->owner.traffic)other=&controller->owner.traffic->base;
+            if(!other||!other->currentGoal)return CAR_DRIVER_INVALID_BINDING;
+            const DriverAIGoal* current=other->currentGoal;
+            const int32_t action=other->action?driverAIActionKind(other->action):11;
+            if(driverAIGoalUsesTarget(current->kind)&&current->target==perception->movement){
+                if((current->kind==5&&goal->kind==6)||(current->kind==6&&goal->kind==5))allowed=0;
+            }
+            if(action==6&&goal->kind==5)allowed=0;
+        }
+    }
+    if(allowed){
+        DriverAINeighbor* neighbor=driverPerceptionFind(perception,target);
+        if(!neighbor)return CAR_DRIVER_INVALID_BINDING;
+        if(driverLaneTargetHasRoom(goal,neighbor,perception))driver->planningTarget=target;
+    }
+    return CAR_DRIVER_OK;
+}
+void driverLaneAppendCommandPoint(DriverCommand* command,const DriverLanePoint* point,float lateral)
+{
+    float position[4];
+    const float across=lateral+driverLaneGeometryAuthoredLateral(point->road.pose,point->lane);
+    driverRoadPointPosition(point->road.pose,position,0.0f,across);
+    driverCommandAppend(command,position,&point->road,point->lane,1,NULL);
+}
+int32_t driverLanePlanGoal(const DriverAIGoal* goal,DriverCommand* command,
+    const DriverAIRoadState* road,DriverAIPerception* perception,DriverAIBase* driver,int32_t mode)
+{
+    const CarMovement* movement=perception->movement;
+    const CarDriver* controller=(const CarDriver*)movement->bindings.owner->controller;
+    const DriverCommand* input=carDriverCommand(controller);
+    if(!input){driver->result=CAR_DRIVER_INVALID_BINDING;return 0;}
+    const int32_t now=movement->bindings.environment->clock->worldTimer;
+    driverCommandCopy(command,input);
+    driverCommandAdvance(command,movement->bindings.state,now,0.0f);
+    const int32_t allowed=driverLaneGoalAllowed(goal,road,perception,driver->physics.routeVehicleClass);
+    int32_t accepted=0;
+    CarDriverResult result=CAR_DRIVER_OK;
+    if(allowed){
+        if(driverAIGoalUsesRoad(goal->kind)){
+            DriverAIRoadState selected=*road;
+            const int32_t lane=driverAILaneForClass(goal->kind,driver->physics.routeVehicleClass);
+            driverAIRoadSetLane(&selected,lane,0,now);
+            result=driverLaneBuildRoad(command,&selected,perception,mode,1,driver);
+            accepted=1;
+        }else accepted=driverLaneBuildTargetPath(goal,command,road,perception,driver);
+    }else result=driverLaneBuildRoad(command,road,perception,mode,1,driver);
+    if(result!=CAR_DRIVER_OK){driver->result=result;return 0;}
+    /* This caller disables target publication; an unrelated goal kind does
+     * not overwrite the current target. */
+    result=driverLanePublishTarget(goal,driver,0,perception);
+    if(result!=CAR_DRIVER_OK){driver->result=result;return 0;}
+    return accepted;
+}
+int32_t driverLaneEvaluateGoal(const DriverAIGoal* goal,DriverCommand* command,
+    const DriverAIRoadState* road,DriverAIPerception* perception,DriverAIBase* driver,
+    int32_t mode,int32_t followTarget,float horizon,float* speed,CarMovement** collision,float* time)
+{
+    *speed=-1.0f;
+    *collision=NULL;
+    *time=99999.0f;
+    if(!driverLanePlanGoal(goal,command,road,perception,driver,mode))return 0;
+    *speed=driverCommandPlanSpeed(command,&driver->physics);
+    if(!(-1.0f<*speed))return 0;
+    if(followTarget){
+        *speed=*speed*1.2000000476837158f;
+        driver->planningTarget=goal->target;
+    }else driver->planningTarget=NULL;
+    *collision=driverCollisionPredictNeighbors(driver,command,perception,road,horizon,time,
+        driver->environment->simulation->world);
+    return horizon<*time;
+}
+#include "indep/inc/Race.hpp"
+static float driverLanePlanAuthoredLateral(const CarRecoveryPose* pose,int32_t lane)
+{
+    return (float)((int32_t)pose->laneOffsetsQuantized[lane]*256)*0.0000152587890625f;
+}
+float driverLaneLateralStep(const DriverAIBase* driver,const DriverAIRoadState* road,int32_t mode)
+{
+    if(mode==1)return 0.0f;
+    if(mode==2||mode==3||driver->physics.movement->bindings.ownerMotion->inputCategory==CAR_DRIVER_TRAFFIC)
+        return 0.5f;
+    const WorldSimulation* simulation=driver->environment->simulation;
+    if(raceFrameConnectionWindowActive(simulation->race,driver->physics.movement->bindings.owner,
+        &raceConnectionDefaultTiming))return 0.0f;
+    const float speed=driver->physics.movement->bindings.state->speed;
+    if(speed<=driver->environment->tuning->lateralStepSpeed)return 0.0f;
+    if(speed<=driver->environment->tuning->lateralStepFastSpeed)return 0.25f;
+    const int32_t now=driver->physics.movement->bindings.environment->clock->worldTimer;
+    return driverAIRoadSelectionLocked(road,now)?0.25f:0.5f;
+}
+int32_t driverLaneAdvancePoint(DriverAIBase* driver,CarRecoverySelection* road,int32_t* lane,
+    float* lateralDelta,int32_t* changedConnection)
+{
+    // The command can outlive a route selection during Replay or a road
+    // branch transition. Its point must still belong to this exact group.
+    if (!driver || !road || !lane || !lateralDelta || !changedConnection ||
+        *lane<0 || *lane>=21 ||
+        carRecoveryOwnedPoseIndex(road->group,road->pose)<0) {
+        if (driver) driver->result=CAR_DRIVER_MISSING_ROAD;
+        return 0;
+    }
+    const CarRecoveryPointRegistry* registry=driver->physics.movement->bindings.recoveryPoints;
+    const CarRecoveryPose* current=road->pose;
+    if((current->flags&255u)!=255u){
+        const CarRecoveryConnection* connection=carRecoveryPointConnection(registry,current);
+        if(!connection){driver->result=CAR_DRIVER_MISSING_ROAD;return 0;}
+        const float previousLateral=driverLanePlanAuthoredLateral(current,*lane);
+        if(driverAISelectConnection(driver,connection,lane,driver->currentRoad)){
+            float point[4];
+            driverRoadPointPosition(current,point,0.0f,previousLateral);
+            road->group=carRecoveryConnectionGroup(registry,connection);
+            road->pose=carRecoveryConnectionPose(registry,connection);
+            if(!road->group||!road->pose){driver->result=CAR_DRIVER_MISSING_ROAD;return 0;}
+            const float x=point[0]-road->pose->position[0];
+            const float y=point[1]-road->pose->position[1];
+            const float first=x*road->pose->direction[1];
+            const float second=y*road->pose->direction[0];
+            *lateralDelta=(first-second)-driverLanePlanAuthoredLateral(road->pose,*lane);
+            *changedConnection=1;
+            return 1;
+        }
+        if(driver->result!=CAR_DRIVER_OK)return 0;
+    }
+    const int32_t next=carRecoveryOwnedPoseIndex(road->group,current)+1;
+    if(next>=road->group->poseCount)return 0;
+    road->pose=&road->group->poses[next];
+    *lateralDelta=0.0f;
+    *changedConnection=0;
+    return 1;
+}
+static void appendLanePoint(DriverLanePoints* points,const CarRecoverySelection* road,
+    int32_t lane,float lateralDelta,int32_t changedConnection)
+{
+    DriverLanePoint* point=&points->points[points->count++];
+    point->road=*road;
+    point->lane=lane;
+    point->lateralDelta=lateralDelta;
+    point->changedConnection=changedConnection;
+}
+CarDriverResult driverLaneBuildPoints(DriverLanePoints* points,const DriverCommand* command,
+    const DriverAIRoadState* road,const DriverAIPerception* perception,DriverAIBase* driver,float* lateral)
+{
+    points->count=0;
+    CarRecoverySelection cursor={road->group,road->recovery.recoveryPose};
+    int32_t lane=road->lane,changed=0;
+    float lateralDelta=0.0f;
+    if(command->count>0){
+        const DriverCommandPoint* last=&command->points[command->count-1];
+        cursor.group=last->road.group;
+        if(perception->movement->bindings.owner->driverInfo->driverClass==2&&cursor.group&&cursor.group->category==1)
+            cursor.group=road->group;
+        else{
+            cursor.pose=last->road.pose;
+            lane=last->laneIndex;
+        }
+        if(!cursor.group||!cursor.pose)return CAR_DRIVER_MISSING_ROAD;
+        for(;;){
+            if(!driverLaneAdvancePoint(driver,&cursor,&lane,&lateralDelta,&changed))return driver->result;
+            const float x=last->position[0]-cursor.pose->position[0];
+            const float y=last->position[1]-cursor.pose->position[1];
+            const float first=x*cursor.pose->direction[0];
+            const float second=y*cursor.pose->direction[1];
+            if(!(-10.0f<first+second))break;
+        }
+    }
+    if(!cursor.pose)return CAR_DRIVER_OK;
+    const float* position=perception->movement->bindings.state->position;
+    if(command->count>0){
+        const DriverCommandPoint* last=&command->points[command->count-1];
+        CarRecoverySelection previous;
+        const CarRecoveryPose* basis=driverCommandRoadAt(command,command->count-1,&previous)?previous.pose:cursor.pose;
+        const float x=last->position[0]-basis->position[0];
+        const float y=last->position[1]-basis->position[1];
+        const float first=x*basis->direction[1];
+        const float second=y*basis->direction[0];
+        *lateral=first-second;
+    }else{
+        const float x=position[0]-cursor.pose->position[0];
+        const float y=position[1]-cursor.pose->position[1];
+        const float first=x*cursor.pose->direction[1];
+        const float second=y*cursor.pose->direction[0];
+        *lateral=first-second;
+    }
+    *lateral=*lateral-driverLanePlanAuthoredLateral(cursor.pose,road->lane);
+    appendLanePoint(points,&cursor,lane,lateralDelta,0);
+    if(!driverLaneAdvancePoint(driver,&cursor,&lane,&lateralDelta,&changed))return driver->result;
+    appendLanePoint(points,&cursor,lane,lateralDelta,0);
+    const float x=position[0]-cursor.pose->position[0];
+    const float y=position[1]-cursor.pose->position[1];
+    float distance=sqrtf(x*x+y*y);
+    const float range=driverPlanningDistance(&driver->physics);
+    while((distance<=range||points->count<5)&&points->count<DRIVER_COMMAND_CAPACITY){
+        distance=distance+cursor.pose->segmentLength;
+        if(!driverLaneAdvancePoint(driver,&cursor,&lane,&lateralDelta,&changed))return driver->result;
+        appendLanePoint(points,&cursor,lane,lateralDelta,changed);
+    }
+    return driver->result;
+}
+CarDriverResult driverLaneBuildRoad(DriverCommand* command,const DriverAIRoadState* road,
+    DriverAIPerception* perception,int32_t mode,int32_t keepInside,DriverAIBase* driver)
+{
+    if(!road||!command||!perception||driverAIRoadEmpty(road))
+        return CAR_DRIVER_OK;
+    command->roadFlags=(road->recovery.recoveryPose->flags>>16)&63u;
+    if(command->count>=DRIVER_COMMAND_CAPACITY)return CAR_DRIVER_OK;
+    DriverLanePoints points;
+    float lateral=0.0f;
+    CarDriverResult result=driverLaneBuildPoints(&points,command,road,perception,driver,&lateral);
+    if(result!=CAR_DRIVER_OK)return result;
+    float step=driverLaneLateralStep(driver,road,mode);
+    float offsets[DRIVER_COMMAND_CAPACITY];
+    for(int32_t index=0;index<points.count;++index){
+        const DriverLanePoint* point=&points.points[index];
+        if(mode==0&&point->changedConnection)step=minimumFinite(step,0.25f);
+        driverLaneAdjustLateral(&lateral,mode,point->road.pose,road->lane,
+            keepInside,step,perception->lateralExtent);
+        lateral=lateral+point->lateralDelta;
+        offsets[index]=lateral;
+    }
+    const int32_t disabled=driver->environment->simulation->collisions->carPolicy.secondaryCollisionDisabled;
+    for(int32_t index=0;index<points.count;++index){
+        if(disabled&&mode==0)offsets[index]=0.0f;
+        driverLaneAppendCommandPoint(command,&points.points[index],offsets[index]);
+    }
+    /* This caller constructs a road goal (lane parity selects kind 1 or 2).
+     * Its original goal-publication branch clears the same planner target. */
+    driver->planningTarget=NULL;
+    return CAR_DRIVER_OK;
+}
+int32_t driverLaneNearestFollowingPoint(const DriverLanePoints* points,const float position[2],int32_t first)
+{
+    float nearestDistance=100000000376832.0f;
+    int32_t nearest=-1;
+    for(int32_t index=first<0?0:first;index<points->count;){
+        const CarRecoveryPose* pose=points->points[index].road.pose;
+        const float x=pose->position[0]-position[0];
+        const float y=pose->position[1]-position[1];
+        const float distance=sqrtf(x*x+y*y);
+        const float firstProjection=(position[0]-pose->position[0])*pose->direction[0];
+        const float secondProjection=(position[1]-pose->position[1])*pose->direction[1];
+        const float projection=-(firstProjection+secondProjection);
+        if(0.0f<projection&&distance<nearestDistance){nearestDistance=distance;nearest=index;}
+        const int32_t skip=convertFloatToInt32(distance*0.0416666679084301f)-2;
+        index=index+(0<skip?skip:0)+1;
+    }
+    return nearest;
+}
+float driverLanePassingMargin(const DriverAIBase* driver,const DriverAIPerception* perception,
+    const DriverAINeighbor* neighbor,const DriverLanePoints* points,int32_t nearest)
+{
+    if(!neighbor)return 0.0f;
+    float clearance=0.0f;
+    if(points->count){
+        if(nearest==-1)
+            nearest=driverLaneNearestFollowingPoint(points,neighbor->movement->bindings.state->position,0);
+        if(nearest!=-1){
+            const DriverLanePoint* first=&points->points[0];
+            const DriverLanePoint* target=&points->points[nearest];
+            const float* ownPosition=perception->movement->bindings.state->position;
+            const float* targetPosition=neighbor->movement->bindings.state->position;
+            const CarRecoveryPose* ownPose=first->road.pose;
+            const CarRecoveryPose* targetPose=target->road.pose;
+            const float ownX=(ownPosition[0]-ownPose->position[0])*ownPose->direction[1];
+            const float ownY=(ownPosition[1]-ownPose->position[1])*ownPose->direction[0];
+            const float targetX=(targetPosition[0]-targetPose->position[0])*targetPose->direction[1];
+            const float targetY=(targetPosition[1]-targetPose->position[1])*targetPose->direction[0];
+            const float ownLateral=((ownX-ownY)-authoredLateral(first))+first->lateralDelta;
+            const float targetLateral=((targetX-targetY)-authoredLateral(target))+target->lateralDelta;
+            const float distance=fabsf(ownLateral-targetLateral)-perception->lateralExtent;
+            clearance=distance-neighbor->effectiveHalfExtents[0];
+        }
+    }
+    float margin=2.0f;
+    if(perception->movement->bindings.owner->driverInfo->driverClass!=3){
+        const int32_t offroad=neighbor->movement->bindings.owner->driverInfo->driverClass==3;
+        const float threshold=offroad?driver->environment->tuning->offroadStationaryPassSpeed:
+            driver->environment->tuning->stationaryPassSpeed;
+        if(fabsf(neighbor->movement->bindings.state->speed)<=threshold)margin=6.0f;
+        else if(neighbor->movement->bindings.player)margin=1.5f;
+    }
+    return maximumFinite(clearance,margin);
+}
+#include "indep/inc/PsychoDriver.hpp"
+int32_t driverLanePlanRoadGoal(const DriverAIGoal* goal,DriverCommand* command,
+    const DriverAIRoadState* road,DriverAIPerception* perception,DriverAIBase* driver,int32_t mode)
+{
+    if(!driverAIGoalUsesRoad(goal->kind)){
+        driver->result=CAR_DRIVER_INVALID_BINDING;
+        return 0;
+    }
+    const int32_t now=driver->physics.movement->bindings.environment->clock->worldTimer;
+    driverCommandCopy(command,&driver->controls->command);
+    driverCommandAdvance(command,driver->physics.movement->bindings.state,now,0.0f);
+    const int32_t allowed=driverLaneGoalAllowed(goal,road,perception,driver->physics.routeVehicleClass);
+    CarDriverResult result;
+    if(allowed){
+        DriverAIRoadState selected=*road;
+        const int32_t lane=driverAILaneForClass(goal->kind,driver->physics.routeVehicleClass);
+        driverAIRoadSetLane(&selected,lane,0,now);
+        result=driverLaneBuildRoad(command,&selected,perception,mode,1,driver);
+    }else result=driverLaneBuildRoad(command,road,perception,mode,1,driver);
+    if(result!=CAR_DRIVER_OK){driver->result=result;return 0;}
+    driver->planningTarget=NULL;
+    return allowed;
+}
+int32_t driverLaneEvaluateRoadGoal(const DriverAIGoal* goal,DriverCommand* command,
+    const DriverAIRoadState* road,DriverAIPerception* perception,DriverAIBase* driver,int32_t mode,float horizon,
+    float* speed,CarMovement** collision,float* time)
+{
+    *speed=-1.0f;
+    *collision=NULL;
+    *time=99999.0f;
+    if(!driverLanePlanRoadGoal(goal,command,road,perception,driver,mode))return 0;
+    *speed=driverCommandPlanSpeed(command,&driver->physics);
+    if(!(-1.0f<*speed))return 0;
+    driver->planningTarget=NULL;
+    *collision=driverCollisionPredictNeighbors(driver,command,perception,road,horizon,time,
+        driver->environment->simulation->world);
+    return horizon<*time;
+}
+static void copyGoal(DriverAIGoal* destination,const DriverAIGoal* source)
+{
+    driverAIGoalSet(destination,source->kind,source->target,source->parameter);
+}
+int32_t driverLaneConsiderGoal(const DriverAIGoal* goal,int32_t followTarget,
+    const DriverAIRoadState* road,DriverAIPerception* perception,DriverAIBase* driver,
+    DriverLaneSearch* search,CarMovement* previousCollision,float horizon)
+{
+    if(perception->movement->bindings.owner->driverInfo->driverClass==3&&
+       driver->environment->tuning->predictionWideBounds){
+        if(!driverAIGoalUsesTarget(goal->kind)||
+           (goal->target->bindings.owner->driverInfo->driverClass!=2&&!goal->target->bindings.player))return 0;
+    }
+    float speed=-1.0f;
+    search->collision=NULL;search->collisionTime=99999.0f;
+    const int32_t clear=driverLaneEvaluateGoal(goal,&search->candidateCommand,road,perception,driver,
+        0,followTarget,horizon,&speed,&search->collision,&search->collisionTime);
+    if(clear&&search->bestSpeed<speed){
+        search->accepted=1;
+        copyGoal(&search->bestGoal,goal);
+        driverCommandCopy(&search->bestCommand,&search->candidateCommand);
+        search->followTarget=0;search->bestSpeed=speed;
+    }
+    const int32_t usable=!(fabsf(speed-(-1.0f))<=0.0010000000474974513f);
+    if(driverAIGoalUsesTarget(goal->kind)&&goal->parameter==0&&goal->target==previousCollision&&followTarget){
+        copyGoal(&search->fallbackGoal,goal);
+        driverCommandCopy(&search->fallbackCommand,&search->candidateCommand);
+        search->fallbackTime=search->collisionTime;
+    }
+    return usable;
+}
+int32_t driverLaneSelectGoal(DriverAIGoal* goal,DriverCommand* command,
+    const DriverAIRoadState* road,DriverAIPerception* perception,DriverAIBase* driver,
+    int32_t* followTarget,int32_t tryCurrent,float horizon)
+{
+    DriverLaneSearch search;
+    driverCommandInitialize(&search.fallbackCommand);
+    driverCommandInitialize(&search.bestCommand);
+    driverCommandInitialize(&search.candidateCommand);
+    driverAIGoalInitialize(&search.bestGoal);driverAIGoalInitialize(&search.fallbackGoal);
+    search.accepted=0;search.followTarget=0;search.bestSpeed=-1.0f;search.fallbackTime=99999.0f;
+    search.collision=NULL;search.collisionTime=99999.0f;
+    DriverAIGoal current;
+    driverAIGoalInitialize(&current);
+    driverAIGoalSet(&current,driverLaneSelectorForIndex(road->lane),NULL,0);
+    if(driverLaneGoalAllowed(goal,road,perception,driver->physics.routeVehicleClass))copyGoal(&current,goal);
+    CarMovement* previousCollision=NULL;
+    float currentSpeed=-1.0f,currentTime=99999.0f;
+    if(tryCurrent){
+        int32_t follow=0;
+        if(driverAIGoalUsesTarget(current.kind)){
+            DriverAINeighbor* neighbor=driverPerceptionFind(perception,current.target);
+            if(neighbor){
+                const int32_t side=driverLanePreferredPassingSide(neighbor,perception,road);
+                follow=side?current.kind==5:current.kind==6;
+            }
+        }
+        driverLaneConsiderGoal(&current,follow,road,perception,driver,&search,NULL,horizon);
+        currentSpeed=search.bestSpeed;currentTime=search.collisionTime;
+        previousCollision=search.collision;
+        if(follow&&current.target==search.collision){
+            search.fallbackGoal=current;
+            driverCommandCopy(&search.fallbackCommand,&search.candidateCommand);
+        }
+    }
+    DriverAIGoal candidate;
+    driverAIGoalInitialize(&candidate);
+    const int32_t count=driver->environment->tuning->laneCandidateCount;
+    for(int32_t selector=1;!search.accepted&&selector<=count;++selector){
+        driverAIGoalSet(&candidate,selector,NULL,0);
+        if(tryCurrent&&driverLaneGoalsMatch(&candidate,&current))continue;
+        driverLaneConsiderGoal(&candidate,0,road,perception,driver,&search,previousCollision,horizon);
+    }
+    if(!search.accepted){
+        for(int32_t index=0;index<perception->count;++index){
+            const DriverAINeighbor* neighbor=&perception->neighbors[index];
+            if(!driverCollisionNeighborEligible(neighbor,perception))continue;
+            const int32_t side=driverLanePreferredPassingSide(neighbor,perception,road);
+            int32_t usable=0;
+            driverAIGoalSet(&candidate,5,neighbor->movement,0);
+            if(!tryCurrent||!driverLaneGoalsMatch(&candidate,&current))
+                usable=driverLaneConsiderGoal(&candidate,side,road,perception,driver,&search,previousCollision,horizon)!=0;
+            driverAIGoalSet(&candidate,6,neighbor->movement,0);
+            if(!tryCurrent||!driverLaneGoalsMatch(&candidate,&current)){
+                const int32_t evaluated=driverLaneConsiderGoal(&candidate,side^1,road,perception,driver,&search,previousCollision,horizon);
+                usable=usable||evaluated!=0;
+            }
+            if(!usable){
+                const float* other=neighbor->movement->bindings.state->velocity;
+                const float* own=perception->movement->bindings.state->velocity;
+                const float first=other[0]*own[0];
+                const float second=other[1]*own[1];
+                if(first+second<0.0f){
+                    driverAIGoalSet(&candidate,side?5:6,neighbor->movement,1);
+                    driverLaneConsiderGoal(&candidate,1,road,perception,driver,&search,previousCollision,horizon);
+                }
+            }
+        }
+    }
+    if(search.accepted){
+        copyGoal(goal,&search.bestGoal);driverCommandCopy(command,&search.bestCommand);
+        *followTarget=search.followTarget;
+    }else if(driverLaneGoalAllowed(&search.fallbackGoal,road,perception,driver->physics.routeVehicleClass)&&
+             currentTime-0.10000000149011612f<=search.fallbackTime){
+        copyGoal(goal,&search.fallbackGoal);driverCommandCopy(command,&search.fallbackCommand);*followTarget=1;
+    }else if(!(fabsf(currentSpeed-(-1.0f))<=0.0010000000474974513f)){
+        copyGoal(goal,&current);driverLanePlanGoal(&current,command,road,perception,driver,1);*followTarget=0;
+    }else{
+        driverAIGoalSet(goal,driverLaneSelectorForIndex(road->lane),NULL,0);
+        const CarDriverResult result=driverLaneBuildRoad(command,road,perception,1,1,driver);
+        if(result!=CAR_DRIVER_OK)driver->result=result;
+        *followTarget=0;search.accepted=0;
+    }
+    const CarDriverResult published=driverLanePublishTarget(goal,driver,*followTarget,perception);
+    if(published!=CAR_DRIVER_OK)driver->result=published;
+    return search.accepted;
+}
+int32_t driverLaneAvoidNeighbor(DriverAIGoal* goal,DriverCommand* command,int32_t* followTarget,
+    const DriverAINeighbor* neighbor,const DriverAIRoadState* road,DriverAIPerception* perception,
+    DriverAIBase* driver,int32_t tryCurrent,float horizon)
+{
+    const int32_t side=driverLanePreferredPassingSide(neighbor,perception,road);
+    DriverCommand original;
+    driverCommandCopy(&original,command);
+    DriverAIGoal current;
+    driverAIGoalInitialize(&current);
+    if(goal->kind)copyGoal(&current,goal);
+    const float threshold=driver->environment->tuning->stationaryPassSpeed;
+    const int32_t moving=threshold<neighbor->movement->bindings.state->speed||
+        threshold<perception->movement->bindings.state->speed;
+    float speed=-1.0f,time=99999.0f;
+    CarMovement* collision=NULL;
+    int32_t accepted=0;
+    if(tryCurrent&&(!driverAIGoalUsesRoad(current.kind)||moving)&&
+       driverLaneGoalAllowed(&current,road,perception,driver->physics.routeVehicleClass)&&
+       (!driverAIGoalUsesTarget(current.kind)||current.target==neighbor->movement)){
+        int32_t follow=0;
+        if(current.kind==5)follow=side;
+        if(current.kind==6)follow=side^1;
+        driverCommandCopy(command,&original);
+        if(driverLaneEvaluateGoal(&current,command,road,perception,driver,0,follow,horizon,&speed,&collision,&time)){
+            accepted=1;*followTarget=follow;
+        }
+    }
+    DriverAIGoal candidate;
+    driverAIGoalInitialize(&candidate);
+    const int32_t count=driver->environment->tuning->laneCandidateCount;
+    for(int32_t selector=1;!accepted&&moving&&selector<=count;++selector){
+        driverAIGoalSet(&candidate,selector,NULL,0);
+        if(tryCurrent&&driverLaneGoalsMatch(&candidate,&current))continue;
+        driverCommandCopy(command,&original);
+        if(driverLaneEvaluateGoal(&candidate,command,road,perception,driver,0,0,horizon,&speed,&collision,&time)){
+            copyGoal(goal,&candidate);accepted=1;*followTarget=0;
+        }
+    }
+    if(!accepted){
+        DriverAIGoal alternatives[2];
+        for(int index=0;index<2;++index){
+            driverAIGoalInitialize(&alternatives[index]);
+            driverAIGoalSet(&alternatives[index],index==0?(side?5:6):(side?6:5),neighbor->movement,0);
+        }
+        for(int index=0;index<2&&!accepted;++index){
+            const DriverAIGoal* next=&alternatives[index];
+            if(tryCurrent&&driverLaneGoalsMatch(next,&current))continue;
+            if(!moving&&!driverLaneTargetHasRoom(next,neighbor,perception))continue;
+            driverCommandCopy(command,&original);
+            const int32_t follow=index==0;
+            if(driverLaneEvaluateGoal(next,command,road,perception,driver,0,follow,horizon,&speed,&collision,&time)){
+                copyGoal(goal,next);accepted=1;*followTarget=follow;
+            }
+        }
+    }
+    if(!accepted){
+        DriverAIGoal fallback;
+        driverAIGoalInitialize(&fallback);
+        if(driverLaneGoalAllowed(&current,road,perception,driver->physics.routeVehicleClass))copyGoal(&fallback,&current);
+        else driverAIGoalSet(&fallback,driverLaneSelectorForIndex(road->lane),NULL,0);
+        driverLanePlanGoal(&fallback,command,road,perception,driver,1);
+        copyGoal(goal,&fallback);
+    }
+    const CarDriverResult published=driverLanePublishTarget(goal,driver,*followTarget,perception);
+    if(published!=CAR_DRIVER_OK)driver->result=published;
+    return accepted;
+}
+void driverAIGoalInitialize(DriverAIGoal* goal)
+{
+    goal->kind=0;goal->target=NULL;goal->parameter=0;
 }

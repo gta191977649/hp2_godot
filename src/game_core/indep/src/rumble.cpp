@@ -1,119 +1,337 @@
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
-// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/indep/src/rumble.hpp"
-
-#include "game_core/port/not_implemented.hpp"
-#include "game_core/port/driving/projections.hpp"
-#include "game_core/src/bMath.hpp"
-#include "game_core/src/ecstasy/emathe.hpp"
-#include "game_core/indep/inc/Player.hpp"
+#include "indep/inc/CameraMover.hpp"
+#include "indep/inc/eMath.hpp"
 #include <cstring>
+#include "bware/inc/bMath.hpp"
+
+
+int32_t carCameraEnvelopeSegment(const KeyedCurve* curve, float coordinate)
+{
+    int32_t next = 0;
+    if (curve->count > 0 && !(coordinate < curve->keys[0].coordinate)) {
+        next = 1;
+        while (next < curve->count && !(coordinate < curve->keys[next].coordinate)) ++next;
+    }
+    return next - (next > 0);
+}
+
+int32_t carCameraEnvelopeOutside(const KeyedCurve* curve, float coordinate)
+{
+    return coordinate < curve->keys[0].coordinate ||
+        curve->keys[curve->count - 1].coordinate <= coordinate;
+}
+
+float carCameraEnvelopeSlope(const KeyedCurve* curve, int32_t segment)
+{
+    if (segment < 0 || curve->count - 2 < segment) return 0.0f;
+    const float value = curve->keys[segment + 1].value - curve->keys[segment].value;
+    const float span = curve->keys[segment + 1].coordinate - curve->keys[segment].coordinate;
+    return finiteRatio(value, span);
+}
+
+float carCameraEnvelopeEvaluate(const KeyedCurve* curve, float coordinate)
+{
+    if (carCameraEnvelopeOutside(curve, coordinate)) return 0.0f;
+    const int32_t segment = carCameraEnvelopeSegment(curve, coordinate);
+    const float slope = carCameraEnvelopeSlope(curve, segment);
+    const float distance = coordinate - curve->keys[segment].coordinate;
+    return curve->keys[segment].value + slope * distance;
+}
+
+void carCameraShakeAdvanceChannel(CarCameraShakeChannel* channel, float elapsed)
+{
+    if (channel->envelope) {
+        channel->phase += finiteRatio(elapsed, channel->duration);
+        if (carCameraEnvelopeOutside(channel->envelope, channel->phase)) channel->envelope = NULL;
+    }
+}
+
+void carCameraShakeSample(const CarCameraShakeChannel* channel, float output[4])
+{
+    float value = 0.0f;
+    const int32_t cycle = convertFloatToInt32(channel->phase * channel->frequency);
+    if (((cycle ^ 1) & 1) && channel->envelope)
+        value = carCameraEnvelopeEvaluate(channel->envelope, channel->phase);
+    for (int axis = 0; axis < 4; ++axis) output[axis] = channel->direction[axis] * value;
+}
+
+#include "indep/inc/CarDriver.hpp"
+#include "indep/inc/Player.hpp"
+#include "indep/inc/Fred.hpp"
+#include "indep/inc/GameFlow.hpp"
+#include "indep/inc/RaceCoordinator.hpp"
+#include "indep/inc/CarDriver.hpp"
+#include "bware/inc/bWare.hpp"
 #include <cmath>
 
-namespace hp2::debug {
-// Debug00155500, E-0099-W50. Exact point interval and last-index selection.
-int tEnvelope::GetIndex(float time){int index=0;const auto count=m_.signed_word(address_+4);const auto points=m_.word(address_);if(count>0){if(time<m_.scalar(points))return 0;index=1;while(index<count&&m_.scalar(points+std::uint32_t(index)*8)<=time)++index;}return index-(index>0?1:0);}
-// Debug00155560, E-0099-W50. Last endpoint is outside the actual envelope.
-bool tEnvelope::OutOfRange(float time){const auto points=m_.word(address_);const auto count=m_.signed_word(address_+4);if(!points||count<=0)hp2::not_implemented("0x00155560","original tEnvelope point source is not initialized");return time<m_.scalar(points)||m_.scalar(points+std::uint32_t(count-1)*8)<=time;}
-// Debug001555A8, E-0099-W50. Out-of-segment slope is genuinely zero.
-float tEnvelope::GetSlope(int index){if(index<0||m_.signed_word(address_+4)-2<index)return 0;const auto point=m_.word(address_)+std::uint32_t(index)*8;const float duration=m_.scalar(point+8)-m_.scalar(point);if(duration==0)hp2::not_implemented("0x001555A8","degenerate original envelope time interval division");return (m_.scalar(point+12)-m_.scalar(point+4))/duration;}
-// Debug00155658, E-0099-W50. Original range, slope then interpolation order.
-float tEnvelope::GetValue(float time){if(OutOfRange(time))return 0;const int index=GetIndex(time);const float slope=GetSlope(index);const auto point=m_.word(address_)+std::uint32_t(index)*8;return m_.scalar(point+4)+slope*(time-m_.scalar(point));}
-// Debug00155E20, E-0099-W50. Amplitude has no alternating phase gate.
-float tShaker::GetAmplitude(){const auto envelope=m_.word(address_+0x10);return envelope?tEnvelope(m_,envelope).GetValue(m_.scalar(address_+0x14)):0;}
-// Debug00155E58, E-0099-W50. Original vector negation retains every lane.
-void tShaker::StartShaking(const std::array<float,4>& value,float duration,float frequency){auto shake=value;for(auto& lane:shake)lane*=-1;m_.vector(address_,shake);m_.scalar(address_+0x1c,frequency);m_.word(address_+0x10,0x327400);m_.scalar(address_+0x18,duration);m_.scalar(address_+0x14,0);}
-// Debug00155E90, E-0099-W50. Original normalized-time advance and source release.
-void tShaker::Update(float elapsed){const auto envelope=m_.word(address_+0x10);if(envelope){const auto time=m_.scalar(address_+0x14)+elapsed/m_.scalar(address_+0x18);m_.scalar(address_+0x14,time);if(tEnvelope(m_,envelope).OutOfRange(time))m_.word(address_+0x10,0);}}
-// Debug00155EE0, E-0099-W50. Exact even-phase pulse; inactive source yields
-// original zero gain without constructing or substituting an empty envelope.
-void tShaker::GetValue(std::array<float,4>& output){const auto phase=std::uint32_t(::port::driving::cvt_w_s(m_.scalar(address_+0x14)*m_.scalar(address_+0x1c)));float amplitude=0;const auto envelope=m_.word(address_+0x10);if((((phase^1u)&1u)!=0)&&envelope)amplitude=tEnvelope(m_,envelope).GetValue(m_.scalar(address_+0x14));output=m_.vector(address_);for(auto& lane:output)lane*=amplitude;}
-// Debug00156478, E-0099-W50. Complete observed original process-static body;
-// both-port rumble objects and camera shakers use their actual authored tables.
-void Sub_00156478(::port::driving::Memory& m){m.scalar(0x2f1f68,m.scalar(0x324f88));m.scalar(0x32b010,-1200);m.scalar(0x2f1f60,0);m.scalar(0x32b000,m.scalar(0x324f8c));m.scalar(0x32b018,0);m.scalar(0x2f1f64,0);m.scalar(0x32b008,2);m.scalar(0x32b014,2000);m.scalar(0x32b004,.5f);
- const std::uint32_t envelopes[]={0x3273c8,0x3273d0,0x3273d8,0x3273e0,0x3273e8,0x3273f0,0x3273f8,0x327400},points[]={0x2f1f70,0x2f1f90,0x2f1fb0,0x2f1fc8,0x2f1fe0,0x2f1ff0,0x2f2000,0x2f2020},counts[]={4,4,3,3,2,2,4,5};for(unsigned i=0;i<8;++i){m.word(envelopes[i],points[i]);m.word(envelopes[i]+4,counts[i]);}
- for(unsigned i=0;i<4;++i){const auto rumble=0x2f2048+i*20;m.word(rumble,0);m.scalar(rumble+4,0);m.scalar(rumble+8,1);m.word(rumble+12,0);m.word(rumble+16,0);}for(unsigned i=0;i<2;++i){const auto shaker=0x2f20a0+i*0x20;m.scalar(shaker,0);m.scalar(shaker+4,0);m.scalar(shaker+8,0);m.word(shaker+0x10,0);m.scalar(shaker+0x14,0);m.scalar(shaker+0x18,1);m.scalar(shaker+0x1c,17);}
+namespace {
+// Final data and actual156958 constructor writes; no beta assets.
+const CurveKey smallRumblePoints[]={{0.0f,255.0f},{0.05000000074505806f,200.0f},
+    {0.07000000029802322f,80.0f},{0.800000011920929f,0.0f}};
+const CurveKey binaryRumblePoints[]={{0.0f,255.0f},{0.15000000596046448f,255.0f}};
+const KeyedCurve smallRumbleEnvelope{smallRumblePoints,4};
+const KeyedCurve binaryRumbleEnvelope{binaryRumblePoints,2};
+const float impactCoefficients[]={2.0f,11.0f,0.30000001192092896f,2.0f};
+[[maybe_unused]] const char* rumbleDebugName{}; // Actual pRumbleDebugName, observer only.
+bool RumbleEnabled(int32_t port,const hp2::ApplicationFrontendFlow& flow,
+    const hp2::FrontendPlayerManager& frontend,const CarFramePlayerRegistry& players)
+{
+    const auto slot=port>0?1u:0u;
+    if (flow.currentState==3) {
+        hp2::Require(frontend.players[slot],"Rumble has no actual FRED player profile");
+        return frontend.players[slot]->settings.authoredOption!=0;
+    }
+    const auto* player=players.playersByNumber[slot];
+    return player && player->settings.authoredOption!=0;
 }
-// Debug00155F70, E-0099-W50. Actual debugger flag and both camera components.
-void UpdateCameraShakers(::port::driving::Memory& m){if(m.word(0x3273c0)){m.word(0x3273c0,0);tShaker(m,0x2f20a0).StartShaking(m.vector(0x2f1f60),m.scalar(0x324f7c),17);}for(unsigned i=0;i<2;++i)tShaker(m,0x2f20a0+i*0x20).Update(m.scalar(0x327d08));}
-// Debug00156048, E-0099-W50. Original player-indexed shaker, no copied state.
-void GetShake(::port::driving::Memory& m,int player,std::array<float,4>& output){if(player<0||player>=2)throw std::out_of_range("Original CameraShakers has two entries");tShaker(m,0x2f20a0+std::uint32_t(player)*0x20).GetValue(output);}
-// Debug00156080, E-0099-W50. Original timescale/view gates and full transform
-// chain execute even for zero shake; never substitute an identity/no-op branch.
-void ApplyCameraShake(::port::driving::Memory& m,int view,std::array<float,16>& matrix){const auto world=m.word(0x3272f0);if(!world)hp2::not_implemented("0x00156080","original camera shake requires current World timescale");if(m.scalar(world+0x184)<1)return;int player;if(view==2)player=1;else{if(view!=1&&view!=3)return;player=0;}std::array<float,4> shake{};GetShake(m,player,shake);shake[3]=0;auto transform=hp2::recovered::bIdentity();std::array<float,4> translated{};eMulVector(translated,matrix,shake);translated[3]=1;for(unsigned lane=0;lane<4;++lane)transform[12+lane]=translated[lane];hp2::recovered::eRotateX(m,transform,transform,std::uint16_t(::port::driving::cvt_w_s(m.scalar(0x32b010)*(transform[14]+transform[13]))));hp2::recovered::eRotateY(m,transform,transform,std::uint16_t(::port::driving::cvt_w_s(m.scalar(0x32b014)*transform[12])));hp2::recovered::eRotateZ(m,transform,transform,std::uint16_t(::port::driving::cvt_w_s(m.scalar(0x32b018)*(transform[12]+transform[13]))));hp2::recovered::eMulMatrix(matrix,matrix,transform);}
+}
+void joystickRumblerStart(GameInputRumbler& rumbler,const KeyedCurve& envelope,float amplitude)
+{
+    rumbler.envelope=&envelope;rumbler.amplitude=amplitude;rumbler.phase=0.0f;
+}
+bool joystickRumblerUpdate(GameInputRumbler& rumbler,float elapsed)
+{
+    rumbler.previousValue=rumbler.value;
+    if (rumbler.envelope) {
+        if (carCameraEnvelopeOutside(rumbler.envelope,rumbler.phase)) {
+            rumbler.value=0;rumbler.envelope=nullptr;
+        } else {
+            const auto value=carCameraEnvelopeEvaluate(rumbler.envelope,rumbler.phase);
+            rumbler.value=convertFloatToInt32(rumbler.amplitude*value);
+            rumbler.phase+=finiteRatio(elapsed,rumbler.amplitude);
+        }
+    }
+    if (rumbler.value<0)rumbler.value=0;
+    if (rumbler.value>=256)rumbler.value=255;
+    return rumbler.value!=rumbler.previousValue;
+}
+void joystickUpdatePortRumblers(GameInputRouter& input,const GameTime& clock)
+{
+    for (int32_t port=0;port<2;++port) {
+        bool changed=false;
+        for (auto& rumbler:input.rumblers[port])changed=joystickRumblerUpdate(rumbler,clock.realTimeElapsed)||changed;
+        if (changed && joystickSupportsPressureMode(static_cast<uint8_t>(joystickGetType(&input,port))))
+            joystickSetRumble(&input,port,static_cast<uint8_t>(input.rumblers[port][1].value>128),
+                static_cast<uint8_t>(input.rumblers[port][0].value));
+    }
+}
+void joystickPortRumble(GameInputRouter& input,int32_t port,float magnitude,
+    const float* coefficients,const KeyedCurve& envelope,bool special,
+    const hp2::ApplicationFrontendFlow& flow,const GameSession* coordinator,
+    const hp2::FrontendPlayerManager& frontend,const CarFramePlayerRegistry& players)
+{
+    hp2::Require(port>=0 && port<2 && coefficients,"Rumble has no actual controller port/coefficients");
+    if (flow.inGameFlag) {
+        hp2::Require(coordinator,"In-game rumble has no actual RaceCoordinator");
+        if (coordinator->state!=6 && coordinator->state!=3)return;
+    }
+    const float minimum=coefficients[0],maximum=coefficients[1];
+    if (magnitude<minimum)return;
+    if (maximum<magnitude) {
+        magnitude=maximum;
+        if (special && RumbleEnabled(port,flow,frontend,players))
+            joystickRumblerStart(input.rumblers[port][1],binaryRumbleEnvelope,1.0f);
+    }
+    const float amount=finiteRatio(magnitude-minimum,maximum-minimum)*(coefficients[3]-coefficients[2])+coefficients[2];
+    auto& rumbler=input.rumblers[port][0];
+    if (!special && rumbler.envelope && amount<rumbler.amplitude)return;
+    if (RumbleEnabled(port,flow,frontend,players))joystickRumblerStart(rumbler,envelope,amount);
+}
+void joystickPortRumbleImpact(GameInputRouter& input,int32_t port,float magnitude,
+    const hp2::ApplicationFrontendFlow& flow,const GameSession* coordinator,
+    const hp2::FrontendPlayerManager& frontend,const CarFramePlayerRegistry& players)
+{
+    rumbleDebugName="Impact";
+    joystickPortRumble(input,port,magnitude,impactCoefficients,smallRumbleEnvelope,true,flow,coordinator,frontend,players);
 }
 
-namespace hp2::recovered {
-// ELF 0x00155948; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/00155948.md.
-void tEnvelope::GetIndex() {
-    hp2::not_implemented("0x00155948", "tEnvelope::GetIndex (signature and full body unresolved)");
+
+namespace {
+// PAL156958 publishes one mutable three-key suspension envelope for each
+// actual port. ShockSway/RoadNoise change its first amplitude before PortRumble.
+CurveKey surfaceRumblePoints[2][3]={
+    {{0.0f,50.0f},{0.20000000298023224f,60.0f},{1.2000000476837158f,0.0f}},
+    {{0.0f,50.0f},{0.20000000298023224f,60.0f},{1.2000000476837158f,0.0f}}};
+const KeyedCurve surfaceRumbleEnvelopes[2]={{surfaceRumblePoints[0],3},{surfaceRumblePoints[1],3}};
+const CurveKey blownTirePoints[]={{0.0f,255.0f},{0.15000000596046448f,255.0f},
+    {0.20000000298023224f,120.0f},{1.2000000476837158f,0.0f}};
+const KeyedCurve blownTireEnvelope{blownTirePoints,4};
+const CurveKey singleBumpPoints[]={{0.0f,140.0f},{0.07000000029802322f,0.0f}};
+const KeyedCurve singleBumpEnvelope{singleBumpPoints,2};
+const CurveKey doubleBumpPoints[]={{0.0f,255.0f},{0.05000000074505806f,0.0f},
+    {0.07000000029802322f,255.0f},{0.15000000596046448f,0.0f}};
+const KeyedCurve doubleBumpEnvelope{doubleBumpPoints,4};
+const float swayCoefficients[]={4.0f,30.0f,1.0f,1.5f,45.0f,200.0f};
+const float roadCoefficients[]={0.0010000000474974513f,0.02500000037252903f,
+    1.100000023841858f,1.5f,60.0f,200.0f};
+const float bottomCoefficients[]={1.0f,3.0f,1.0f,2.0f};
+const float bumpCoefficients[]={0.0f,1.0f,0.30000001192092896f,2.0f};
+struct SurfaceRumbleContext {
+    GameInputRouter& input;int32_t port;float magnitude;
+    const hp2::ApplicationFrontendFlow& flow;
+    const GameSession* coordinator;
+    const hp2::FrontendPlayerManager& frontend;
+    const CarFramePlayerRegistry& players;
+};
+void SurfaceRumble(const SurfaceRumbleContext& b,const float* coefficients,
+    const KeyedCurve& envelope,bool special)
+{
+    joystickPortRumble(b.input,b.port,b.magnitude,coefficients,envelope,special,
+        b.flow,b.coordinator,b.frontend,b.players);
+}
+// Complete original wrappers. Their final data, debug name and distinct
+// envelope selections are retained; they share the existing actual rumblers.
+void PortRumbleShockSway(const SurfaceRumbleContext& b)
+{
+    auto& point=surfaceRumblePoints[b.port][0];
+    point.value=finiteRatio(b.magnitude-swayCoefficients[0],swayCoefficients[1]-swayCoefficients[0])*
+        (swayCoefficients[5]-swayCoefficients[4])+swayCoefficients[4];
+    rumbleDebugName="Shock Sway";
+    SurfaceRumble(b,swayCoefficients,surfaceRumbleEnvelopes[b.port],false);
+}
+void PortRumbleRoadNoise(const SurfaceRumbleContext& b)
+{
+    auto& point=surfaceRumblePoints[b.port][0];
+    point.value=finiteRatio(b.magnitude-roadCoefficients[0],roadCoefficients[1]-roadCoefficients[0])*
+        (roadCoefficients[5]-roadCoefficients[4])+roadCoefficients[4];
+    rumbleDebugName="Road Noise";
+    SurfaceRumble(b,roadCoefficients,surfaceRumbleEnvelopes[b.port],false);
+}
+void PortRumbleShockBottom(const SurfaceRumbleContext& b)
+{rumbleDebugName="Shock Bottom";SurfaceRumble(b,bottomCoefficients,smallRumbleEnvelope,true);}
+void PortRumbleBlownTires(const SurfaceRumbleContext& b)
+{rumbleDebugName="Blown Tires";SurfaceRumble(b,impactCoefficients,blownTireEnvelope,true);}
+void PortRumbleSingleRoadBump(const SurfaceRumbleContext& b)
+{rumbleDebugName="Single Road Bump";SurfaceRumble(b,bumpCoefficients,singleBumpEnvelope,true);}
+void PortRumbleDoubleRoadBump(const SurfaceRumbleContext& b)
+{rumbleDebugName="Double Road Bump";SurfaceRumble(b,bumpCoefficients,doubleBumpEnvelope,true);}
+// PAL1562B0, tShaker::GetAmplitude. This samples the live envelope, not
+// the signed direction vector or a manufactured hardware feedback result.
+float CameraShakeAmplitude(const CarCameraShakeChannel& channel)
+{return channel.envelope?carCameraEnvelopeEvaluate(channel.envelope,channel.phase):0.0f;}
 }
 
-// ELF 0x001559A8; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001559a8.md.
-void tEnvelope::OutOfRange() {
-    hp2::not_implemented("0x001559A8", "tEnvelope::OutOfRange (signature and full body unresolved)");
+void joystickPortRumbleSurface(GameInputRouter& input,int32_t port,int32_t code,float magnitude,
+    const hp2::ApplicationFrontendFlow& flow,const GameSession* coordinator,
+    const hp2::FrontendPlayerManager& frontend,const CarFramePlayerRegistry& players)
+{
+    hp2::Require(port>=0 && port<2,"Surface rumble has no actual controller port");
+    const SurfaceRumbleContext context{input,port,magnitude,flow,coordinator,frontend,players};
+    switch(code) {
+    case 0:PortRumbleShockSway(context);break;
+    case 1:PortRumbleRoadNoise(context);break;
+    case 2:PortRumbleShockBottom(context);break;
+    case 3:PortRumbleBlownTires(context);break;
+    case 4:PortRumbleSingleRoadBump(context);break;
+    case 5:PortRumbleDoubleRoadBump(context);break;
+    default:throw std::runtime_error("Unknown original surface rumble operation");
+    }
 }
 
-// ELF 0x001559F0; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001559f0.md.
-void tEnvelope::GetSlope() {
-    hp2::not_implemented("0x001559F0", "tEnvelope::GetSlope (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-namespace hp2::debug {
-// Debug00155820, E-0099-W38. Original leaves nValue/nValuePrevious untouched.
-void tRumbler::StartRumble(std::uint32_t envelope,float amplitude){m_.word(address_,envelope);m_.scalar(address_+8,amplitude);m_.scalar(address_+4,0);}
-// Debug001559F8, E-0099-W38. Actual RC/flow/settings/overflow/priority gates.
-// PortRumblers is imported tRumbler[2][2],20-byte elements; out-of-domain ports
-// would overrun the source global array and are a port bounds error.
-void PortRumble(::port::driving::Memory& m,int port,float intensity,std::uint32_t coefficients,std::uint32_t envelope,bool overflow){
- if(port<0||port>=2)throw std::out_of_range("Original PortRumblers has2 port rows");
- if(m.word(0x3275a8)){const auto coordinator=m.word(0x327290);if(!coordinator)hp2::not_implemented("0x001559F8","Original in-game PortRumble requires current RaceCoordinator");const auto state=m.word(coordinator);if(state!=6&&state!=3)return;}
- float minimum=m.scalar(coefficients);if(intensity<minimum)return;float maximum=m.scalar(coefficients+4);const auto base=0x2f2048+static_cast<std::uint32_t>(port)*0x28;
- const auto enabled=[&](){if(m.word(0x3275ac)==3)return m.byte(0x2f3890+0x10738+static_cast<std::uint32_t>(port!=0)*0x6d0+0x645)!=0;const auto player=m.word(0x327770+static_cast<std::uint32_t>(port!=0)*4);return player&&m.byte(player+0x1d)!=0;};
- if(maximum<intensity){intensity=maximum;if(overflow&&enabled()){tRumbler(m,base+20).StartRumble(0x3273e8,1);minimum=m.scalar(coefficients);maximum=m.scalar(coefficients+4);}}
- const float range=maximum-minimum;if(range==0)hp2::not_implemented("0x00155B38","Degenerate original rumble coefficient division is not modeled");const float amplitude=((intensity-minimum)/range)*(m.scalar(coefficients+12)-m.scalar(coefficients+8))+m.scalar(coefficients+8);
- // Fresh MIPS compares new<old and returns, rather than using the decompiler's
- // inverted <= expression; equal amplitude is allowed to replace the envelope.
- if(!overflow&&m.word(base)&&amplitude<m.scalar(base+8))return;
- if(enabled())tRumbler(m,base).StartRumble(envelope,amplitude);
-}
-// Debug00155C40, E-0099-W38. This is actual game queue state, not a host event.
-void PortRumbleImpact(::port::driving::Memory& m,int port,float intensity){m.word(0x327408,0x327410);PortRumble(m,port,intensity,0x2a92f0,0x3273c8,true);}
-// E-0099-W66: the first point is changed before PortRumble's range/gates.
-void PortRumbleShockSway(::port::driving::Memory& m,int port,float intensity){const auto envelope=port==0?0x3273d8u:0x3273e0u;m.word(0x327408,0x2a9280);const auto c=0x2a9300u;const float width=m.scalar(c+4)-m.scalar(c);if(width==0)hp2::not_implemented("0x00155C60","degenerate original rumble coefficient interval");m.scalar(m.word(envelope)+4,((intensity-m.scalar(c))/width)*(m.scalar(c+20)-m.scalar(c+16))+m.scalar(c+16));PortRumble(m,port,intensity,c,envelope,false);}
-void PortRumbleRoadNoise(::port::driving::Memory& m,int port,float intensity){const auto envelope=port==0?0x3273d8u:0x3273e0u;m.word(0x327408,0x2a9290);const auto c=0x2a9318u;const float width=m.scalar(c+4)-m.scalar(c);if(width==0)hp2::not_implemented("0x00155CB8","degenerate original rumble coefficient interval");m.scalar(m.word(envelope)+4,((intensity-m.scalar(c))/width)*(m.scalar(c+20)-m.scalar(c+16))+m.scalar(c+16));PortRumble(m,port,intensity,c,envelope,false);}
-void PortRumbleShockBottom(::port::driving::Memory& m,int port,float intensity){m.word(0x327408,0x2a92a0);PortRumble(m,port,intensity,0x2a9330,0x3273c8,true);}
-void PortRumbleBlownTires(::port::driving::Memory& m,int port,float intensity){m.word(0x327408,0x2a92b0);PortRumble(m,port,intensity,0x2a9340,0x3273d0,true);}
-void PortRumbleSingleRoadBump(::port::driving::Memory& m,int port,float intensity){m.word(0x327408,0x2a92c0);PortRumble(m,port,intensity,0x2a9350,0x3273f0,true);}
-void PortRumbleDoubleRoadBump(::port::driving::Memory& m,int port,float intensity){m.word(0x327408,0x2a92d8);PortRumble(m,port,intensity,0x2a9350,0x3273f8,true);}
+// PAL1566C0: MaybeCameraShake(int,bVector3*). The released constructor
+// writes acceleration weights {0.7,0.5,2}; data2B13F0 supplies all thresholds.
+void carCameraMaybeShake(CarCameraShake& shake,const CarFramePlayerRegistry& players,
+    int32_t port,const float acceleration[4])
+{
+    hp2::Require(port>=0 && port<2 && acceleration && players.playersByNumber[port],
+        "Acceleration camera shake has no actual player/view owner");
+    const auto* player=players.playersByNumber[port];
+    if(carFramePlayerReplayActive(player))return;
+    const float weighted[4]={acceleration[0]*0.699999988079071f,
+        acceleration[1]*0.5f,acceleration[2]*2.0f,0.0f};
+    float magnitude=std::sqrt((weighted[0]*weighted[0]+weighted[1]*weighted[1])+weighted[2]*weighted[2]);
+    if(magnitude<250.0f)return;
+    if(600.0f<magnitude)magnitude=600.0f;
+    const float amount=finiteRatio(magnitude-250.0f,600.0f-250.0f);
+    float amplitude=amount*(0.1599999964237213f-0.07999999821186066f)+0.07999999821186066f;
+    auto& channel=shake.channels[port];
+    if(!(CameraShakeAmplitude(channel)<amplitude))return;
+    float duration=amount*(0.699999988079071f-0.30000001192092896f)+0.30000001192092896f;
+    if(player->movement.steeringFeedbackBusy==7) {
+        amplitude*=0.800000011920929f;duration*=1.2000000476837158f;
+    }
+    float direction[4]{};vectorSetLength3(direction,weighted,amplitude);
+    carCameraShakeStart(&channel,&shake.envelope,direction,duration,17.0f);
 }
 
-namespace hp2::debug {
-// Debug001561E0, E-0099-W58. Source XYZ bias/dot/clamp/interpolation and
-// actual per-player shaker. The local vShake.W is never written by bNormalize;
-// an explicit port operand is required only when the original full-vector copy
-// is reached. No implicit zero or assertion about the original stack is made.
-void MaybeCameraShake(::port::driving::Memory& m,int player,std::uint32_t acceleration,std::optional<std::uint32_t> port_stack_shake_w){
- if(player<0||player>=2)throw std::out_of_range("Original camera shake has two player rows");
- const auto owner=m.word(0x327770+std::uint32_t(player)*4);
- if(!owner)hp2::not_implemented("0x001561E0","original camera shake requires Player owner");
- if(Player(m,owner).IsCameraPOVInCar())return;
- std::array<float,3> biased{};for(unsigned i=0;i<3;++i){biased[i]=m.scalar(0x32b000+4*i)*m.scalar(acceleration+4*i);if(!std::isfinite(biased[i]))hp2::not_implemented("0x00156240","exceptional EE camera-shake bias operands");}
- const float xy=biased[0]*biased[0]+biased[1]*biased[1];float intensity=std::sqrt(xy+biased[2]*biased[2]);
- if(!std::isfinite(intensity))hp2::not_implemented("0x00156278","exceptional EE camera-shake dot/sqrt operands");
- const auto coefficients=0x2a9360u;const float minimum=m.scalar(coefficients);if(intensity<minimum)return;
- const float maximum=m.scalar(coefficients+4);if(maximum<intensity)intensity=maximum;
- if(maximum==minimum)hp2::not_implemented("0x001562C4","degenerate original camera-shake coefficient interval");
- const float fraction=(intensity-minimum)/(maximum-minimum);
- float amplitude=m.scalar(coefficients+8)+fraction*(m.scalar(coefficients+12)-m.scalar(coefficients+8));
- tShaker shaker(m,0x2f20a0+std::uint32_t(player)*0x20);if(!(shaker.GetAmplitude()<amplitude))return;
- float duration=m.scalar(coefficients+16)+fraction*(m.scalar(coefficients+20)-m.scalar(coefficients+16));
- if(m.word(owner+0x54)==7){amplitude*=m.scalar(0x324f80);duration*=m.scalar(0x324f84);}
- if(!port_stack_shake_w)hp2::not_implemented("0x00156350","original vShake.W is unwritten; explicit port_stack_shake_w operand required");
- const auto xyz=hp2::recovered::bNormalize(biased,amplitude);float w;const auto bits=*port_stack_shake_w;std::memcpy(&w,&bits,4);
- shaker.StartShaking({{xyz[0],xyz[1],xyz[2],w}},duration,17);
+/* Camera path support. */
+void carCameraShakeReset(CarCameraShake* shake)
+{
+    for (int index = 0; index < 2; ++index) {
+        CarCameraShakeChannel* channel = &shake->channels[index];
+        memset(channel->direction, 0, sizeof(channel->direction));
+        channel->envelope = NULL;
+        channel->phase = 0.0f;
+        channel->duration = 1.0f;
+        channel->frequency = 17.0f;
+    }
 }
+
+void carCameraShakeInitialize(CarCameraShake* shake)
+{
+    /* The authored envelope is initialized together with the camera/input
+     * service. A channel keeps a reference to this one curve after Start. */
+    static const CurveKey keys[5] = {
+        {0.0f, 1.0f}, {0.10000000149011612f, 0.699999988079071f},
+        {0.30000001192092896f, 0.5f}, {0.5f, 0.4000000059604645f}, {1.0f, 0.0f}
+    };
+    memset(shake, 0, sizeof(*shake));
+    memcpy(shake->envelopeKeys, keys, sizeof(keys));
+    shake->envelope.keys = shake->envelopeKeys;
+    shake->envelope.count = 5;
+    shake->rotationScale[0] = -1200.0f;
+    shake->rotationScale[1] = 2000.0f;
+    shake->testDirection[2] = 0.30000001192092896f;
+    shake->testDuration = 0.6000000238418579f;
+    carCameraShakeReset(shake);
+}
+
+void carCameraShakeStart(CarCameraShakeChannel* channel, const KeyedCurve* envelope,
+    const float direction[4], float duration, float frequency)
+{
+    for (int axis = 0; axis < 4; ++axis) channel->direction[axis] = direction[axis] * -1.0f;
+    channel->frequency = frequency;
+    channel->envelope = envelope;
+    channel->duration = duration;
+    channel->phase = 0.0f;
+}
+
+void carCameraShakeAdvance(CarCameraShake* shake, float elapsed)
+{
+    if (shake->testRequested) {
+        carCameraShakeStart(&shake->channels[0], &shake->envelope,
+            shake->testDirection, shake->testDuration, 17.0f);
+        shake->testRequested = 0;
+    }
+    for (int index = 0; index < 2; ++index) carCameraShakeAdvanceChannel(&shake->channels[index], elapsed);
+}
+
+void carCameraShakeSampleScreen(const CarCameraShake* shake, int32_t channel, float output[4])
+{
+    carCameraShakeSample(&shake->channels[channel], output);
+}
+
+void carCameraShakeApply(const CarCameraShake* shake, const World* world,
+    int32_t viewNumber, float matrix[16])
+{
+    if (world->timing.timeScale < 1.0f) return;
+    int32_t channel;
+    if (viewNumber == 1 || viewNumber == 3) channel = 0;
+    else if (viewNumber == 2) channel = 1;
+    else return;
+    float direction[4], local[4], rotation[16];
+    carCameraShakeSampleScreen(shake, channel, direction);
+    direction[3] = 0.0f;
+    vectorMatrixTransform(local, matrix, direction);
+    rotation[0] = rotation[5] = rotation[10] = rotation[15] = 1.0f;
+    rotation[1] = rotation[2] = rotation[3] = rotation[4] = rotation[6] = rotation[7] =
+        rotation[8] = rotation[9] = rotation[11] = 0.0f;
+    local[3] = 1.0f;
+    for (int axis = 0; axis < 4; ++axis) rotation[12 + axis] = local[axis];
+    const uint16_t x = (uint16_t)convertFloatToInt32(shake->rotationScale[0] * (local[2] + local[1]));
+    motionMatrixRotateX(rotation, rotation, x);
+    const uint16_t y = (uint16_t)convertFloatToInt32(shake->rotationScale[1] * local[0]);
+    motionMatrixRotateY(rotation, rotation, y);
+    const uint16_t z = (uint16_t)convertFloatToInt32(shake->rotationScale[2] * (local[0] + local[1]));
+    motionMatrixRotateYaw(rotation, rotation, z);
+    vectorMatrixMultiply(matrix, rotation, matrix);
 }

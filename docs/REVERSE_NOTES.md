@@ -1,5 +1,31 @@
 # Reverse engineering knowledge base
 
+## TASK-0123 — Donor source authority
+
+The imported Windows distribution identifies PAL functions in its source
+comments. Its exact original ELF hash is unresolved. This source is the
+sole current game implementation. The Debug and US Retail findings below
+retain their original scope and verification history.
+
+
+## TASK-0122 - Donor collision fracture (2026-11-13)
+
+E-0122-C01 binds Debug `Smokeable::Break` at `0021C050` to the World collision
+recheck at `0014D630`. E-0122-P01 records why donor clutch history, stationary
+torque splitting and the post-orthonormalization angular cache refresh have
+different behavior from the current Debug authority.
+See [TASK-0122](../tasks/active/TASK-0122-donor-vehicle-physics.md).
+
+## TASK-0121 - MVP vehicle dynamics (2026-11-13)
+
+E-0121-I01 binds Debug RealDriver scanner callbacks for steering, throttle,
+brake and handbrake. E-0121-P01 removes a stray zero store into the first
+Debug shift-up table entry during vehicle state restoration. E-0121-V01
+corroborates the Retail clutch-history branch and its absence in Debug.
+E-0121-W01 traces the live World through chassis, suspension, tire and contact
+resolution. Original trajectory comparison remains open.
+See [TASK-0121](../tasks/active/TASK-0121-mvp-vehicle-dynamics.md).
+
 ## TASK-0081 - Movement state and ResetCar leaf (2026-10-21)
 
 E-0081-L01 records exact Debug Begin/FinishMovement listings and Car/CarState

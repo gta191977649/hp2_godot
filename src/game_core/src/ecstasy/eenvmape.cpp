@@ -1,67 +1,232 @@
-// TASK0052, original src/ecstasy/eenvmape.cpp established by Debug ECOFF E-0042-S001.
-#include "eenvmape.hpp"
-#include "game_core/src/bMath.hpp"
-#include "game_core/CarRenderInfo.hpp"
+// Source identities and raw PAL boundaries: ENVIRONMENT69_SOURCE_PROOF.json.
+#include "indep/inc/eEnvMap.hpp"
+#include "indep/inc/NativeRenderSettings.hpp"
+#include "indep/inc/CameraMover.hpp"
+#include "indep/inc/FlailerChunks.hpp"
+#include "indep/inc/eMath.hpp"
+#include "bware/inc/bMath.hpp"
+#include "bware/inc/bWare.hpp"
+#include <algorithm>
 #include <cmath>
-#include <stdexcept>
-namespace hp2::recovered {
-using namespace port::track;
-// Retail001179B0 / Debug00117D78. Original normalization followed by sphere ST.
-void ComputeReflectionST(EnvironmentVector& vector,std::array<float,2>& st){
-    float square=vector[0]*vector[0];square+=vector[1]*vector[1];square+=vector[2]*vector[2];
-    if(!(square>0)||!std::isfinite(square))throw std::invalid_argument("Invalid original reflection vector");
-    const float inverse=1/std::sqrt(square);for(auto& value:vector)value*=inverse;
-    const float z=vector[2]+1;float divisor=std::sqrt(vector[0]*vector[0]+vector[1]*vector[1]+z*z);divisor+=divisor;
-    if(divisor==0)throw std::invalid_argument("Original reflection ST singularity");
-    st={{vector[0]/divisor+.5f,vector[1]/divisor+.5f}};
-}
-// Retail00117A38 / Debug00117E00. Original 6x6 face grid and four back patches.
-ReflectionTables CreateRefSampleTable(){
-    ReflectionTables tables;const float step=.4f,stretch=.16f;
-    for(unsigned face=0;face<6;++face)for(unsigned row=0;row<6;++row)for(unsigned col=0;col<6;++col){
-        const float r=step*float(row),c=step*float(col);EnvironmentVector v{};
-        switch(face){case 0:v={{r-1,c-1,1}};break;case 1:v={{1,c-1,1-r}};break;case 2:v={{1-r,c-1,-1}};break;case 3:v={{-1,c-1,r-1}};break;case 4:v={{r-1,-1,c-1}};break;case 5:v={{r-1,1,1-c}};break;}
-        auto raw=v;std::array<float,2> st;ComputeReflectionST(v,st);tables.front[face][row*6+col]={raw[0],raw[1],raw[2],st[0],st[1],r*.5f,c*.5f};
-    }
-    for(unsigned patch=0;patch<4;++patch)for(unsigned row=0;row<6;++row){
-        const ReflectionSample* edge=nullptr;
-        if(patch==0)edge=&tables.front[4][row*6];if(patch==1)edge=&tables.front[1][5*6+row];if(patch==2)edge=&tables.front[5][row*6+5];if(patch==3)edge=&tables.front[3][row];
-        const float x=edge->rs-.5f,y=edge->rt-.5f;const float inverse=1/std::sqrt(x*x+y*y);const float nx=x*inverse,ny=y*inverse;
-        for(unsigned col=0;col<6;++col){const float t=float(col)/5.f,r=float(row)/5.f;auto& sample=tables.back[patch][row*6+col];sample.rs=x+.5f+nx*.5f*t*stretch;sample.rt=y+.5f+ny*.5f*t*stretch;
-            if(patch==0){const float a=1-r;sample.fs=a+(.5f-a)*t;sample.ft=t*.5f;}
-            if(patch==1){sample.fs=t*.5f;sample.ft=r+(.5f-r)*t;}
-            if(patch==2){const float a=1-r;sample.fs=a+(.5f-a)*t;sample.ft=1-t*.5f;}
-            if(patch==3){sample.fs=1-t*.5f;sample.ft=r+(.5f-r)*t;}
-        }
-    }return tables;
-}
+#include <cstring>
+
+namespace hp2 {
 namespace {
-EnvironmentWarp warp(const std::array<ReflectionSample,36>& samples,unsigned face,bool back,unsigned width,unsigned height){
-    if(!width||!height||width>4096||height>4096)throw std::invalid_argument("Invalid original environment destination dimensions");
-    EnvironmentWarp out;out.source_face=face;out.back=back;
-    for(unsigned row=0;row<5;++row){const auto begin=out.vertices.size();for(unsigned col=0;col<6;++col)for(unsigned side=0;side<2;++side){const auto& s=samples[(row+side)*6+col];EnvironmentWarpVertex vertex;const float w=float(width),h=float(height);vertex.destination={{(std::trunc(s.rs*w-w*.5f+2048)-2048+w*.5f)/w,(std::trunc(s.rt*h-h*.5f+2048)-2048+h*.5f)/h}};vertex.source_uv={{s.fs,s.ft}};out.vertices.push_back(vertex);}
-        for(unsigned k=2;k<12;++k){auto a=std::uint32_t(begin+k-2),b=std::uint32_t(begin+k-1),c=std::uint32_t(begin+k);if(k&1)std::swap(a,b);out.indices.insert(out.indices.end(),{a,b,c});}}
-    return out;
+// Released HackDirArray2D6E50 and HackDirArrayUp2D6F10, two actual banks.
+constexpr float directions[2][6][4]={
+    {{-1,0,0,0},{0,1,0,0},{1,0,0,0},{0,-1,0,0},{0,0,1,0},{0,0,-1,0}},
+    {{0,1,0,0},{0,-1,0,0},{0,0,-1,0},{0,0,1,0},{-1,0,0,0},{1,0,0,0}}};
+constexpr float upDirections[2][6][4]={
+    {{0,0,1,0},{0,0,1,0},{0,0,1,0},{0,0,1,0},{1,0,0,0},{-1,0,0,0}},
+    {{-1,0,0,0},{-1,0,0,0},{-1,0,0,0},{-1,0,0,0},{0,0,-1,0},{0,0,1,0}}};
+constexpr bool primarySchedule[4][6]={
+    {1,1,0,0,0,1},{1,0,1,0,0,1},{1,0,0,1,0,1},{1,0,0,0,1,1}};
+
+void rotationOnly(float matrix[16])
+{
+    matrix[3]=matrix[7]=matrix[11]=0.0f;
+    matrix[12]=matrix[13]=matrix[14]=0.0f;matrix[15]=1.0f;
 }
-EnvironmentMatrix rotation(EnvironmentMatrix matrix){matrix[12]=matrix[13]=matrix[14]=0;matrix[15]=1;matrix[3]=matrix[7]=matrix[11]=0;return matrix;}
-EnvironmentVector transform(const EnvironmentMatrix& matrix,const EnvironmentVector& v){EnvironmentVector out{};for(unsigned k=0;k<3;++k){out[k]=matrix[k]*v[0];out[k]+=matrix[4+k]*v[1];out[k]+=matrix[8+k]*v[2];out[k]+=matrix[12+k];}return out;}
+
+std::array<float,2> computeReflectionST(std::array<float,3> direction)
+{
+    // PAL1179B0..117A38. The source normalizes its temporary vector first.
+    float square=direction[0]*direction[0]+direction[1]*direction[1];
+    square+=direction[2]*direction[2];
+    const float inverse=1.0f/std::sqrt(square);
+    for(auto& axis:direction)axis*=inverse;
+    const float z=direction[2]+1.0f;
+    square=direction[0]*direction[0]+direction[1]*direction[1];
+    square+=z*z;
+    float denominator=std::sqrt(square);denominator+=denominator;
+    return {{direction[0]/denominator+0.5f,direction[1]/denominator+0.5f}};
 }
-// Retail00118150 / Debug00118518; packed XY truncation retained in normalized host positions.
-EnvironmentWarp CreateEnvMap(const ReflectionTables& tables,unsigned face,unsigned width,unsigned height){return warp(tables.front.at(face),face,false,width,height);}
-// Retail00118498 / Debug00118860; all back sectors sample original source face2.
-EnvironmentWarp CreateBackEnvMap(const ReflectionTables& tables,unsigned patch,unsigned width,unsigned height){return warp(tables.back.at(patch),2,true,width,height);}
-// Retail00118810 / Debug00118BD8, exact front then back submission order.
-std::vector<EnvironmentWarp> eCreateEnvMapPrims(const ReflectionTables& tables,const std::array<bool,6>& active,unsigned width,unsigned height){std::vector<EnvironmentWarp> out;for(unsigned i=0;i<6;++i)if(i!=2&&active[i])out.push_back(CreateEnvMap(tables,i,width,height));if(active[2])for(unsigned i=0;i<4;++i)out.push_back(CreateBackEnvMap(tables,i,width,height));return out;}
-// Retail001175C8 controls schedule, not the different Debug parity-only table.
-EnvironmentCameras eEnvMap::UpdateCameras(const EnvironmentVector& viewer,const EnvironmentVector& position,std::uint32_t counter,int mode,bool in_game){
-    const EnvironmentVector zero{{0,0,0}},forward{{1,0,0}},up{{0,0,1}};
-    auto basis=rotation(port::eCreateLookAtMatrix(zero,forward,up));auto camera=rotation(port::eCreateLookAtMatrix(viewer,position,up));EnvironmentMatrix transposed{},orientation{};bTransposeMatrix(transposed,basis);eMulMatrix(orientation,camera,transposed);orientation=rotation(orientation);bTransposeMatrix(transposed,orientation);orientation=transposed;
-    constexpr std::array<EnvironmentVector,6> directions_fe{{{{-1,0,0}},{{0,1,0}},{{1,0,0}},{{0,-1,0}},{{0,0,1}},{{0,0,-1}}}};
-    constexpr std::array<EnvironmentVector,6> directions_ig{{{{0,0,1}},{{0,-1,0}},{{0,0,-1}},{{0,1,0}},{{-1,0,0}},{{1,0,0}}}};
-    constexpr std::array<EnvironmentVector,6> up_fe{{{{0,0,1}},{{0,0,1}},{{0,0,1}},{{0,0,1}},{{1,0,0}},{{-1,0,0}}}};
-    constexpr std::array<EnvironmentVector,6> up_ig{{{{-1,0,0}},{{-1,0,0}},{{-1,0,0}},{{-1,0,0}},{{0,0,-1}},{{0,0,1}}}};
-    constexpr unsigned phases[4][3]={{0,1,5},{0,2,5},{0,3,5},{0,4,5}};const bool single=mode==1||mode==2;EnvironmentCameras out;out.hack_man_matrix=camera;
-    for(unsigned i=0;i<6;++i){auto look=transform(orientation,in_game?directions_ig[i]:directions_fe[i]);const auto vertical=transform(orientation,in_game?up_ig[i]:up_fe[i]);for(unsigned k=0;k<3;++k)look[k]+=position[k];out.faces[i].camera_matrix=port::eCreateLookAtMatrix(position,look,vertical);out.faces[i].active=single?(i==phases[counter%4][0]||i==phases[counter%4][1]||i==phases[counter%4][2]):i==counter%6;if(i==2)out.hack_man_matrix=out.faces[i].camera_matrix;}
-    return out;
+}
+
+EnvironmentMap::EnvironmentMap(CarCinematicServices& views,EcstasyRenderTarget* targets,std::size_t count)
+    :views_(views)
+{
+    Require(targets && count>=15,"Environment map lacks the original fifteen render targets");
+    mappedTarget_=&targets[14];
+    Require(mappedTarget_->id==14 && mappedTarget_->width==256 && mappedTarget_->height==256 &&
+        mappedTarget_->format==0x32 && !mappedTarget_->opaqueOnly,
+        "Environment map target differs from released SetScreenBuffers");
+    CreateReflectionSamples();
+    for(std::size_t index=0;index<6;++index) {
+        auto& view=views_.screens[index+4];auto& target=targets[index+8];
+        Require(target.id==static_cast<std::int32_t>(index+8) && target.width==64 && target.height==64 &&
+            target.format==0x32 && target.opaqueOnly,
+            "Environment face differs from released SetScreenBuffers");
+        carCinematicViewInitialize(&views_,&cameras_[index]);
+        // eInitEnvMap117508..1175BC binds the existing view records.
+        view.enabled=1;
+        view.id=static_cast<std::int32_t>(index+4);
+        view.view=&cameras_[index];view.target=&target;target.enabled=1;
+    }
+}
+
+EnvironmentMap::~EnvironmentMap()
+{
+    // Native RAII revokes only our six borrowed cameras after GPU retirement.
+    for(std::size_t index=0;index<6;++index) {
+        auto& view=views_.screens[index+4];
+        if(view.view==&cameras_[index]) {view.view=nullptr;view.enabled=0;}
+    }
+}
+
+void EnvironmentMap::CreateReflectionSamples()
+{
+    // PAL117A38..11814C: the original 7x7 storage has six initialized rows
+    // and columns. Keep that stride; the emitted strips use only 6x6.
+    for(std::size_t face=0;face<6;++face)for(std::size_t row=0;row<6;++row)
+        for(std::size_t column=0;column<6;++column) {
+            const float x=0.4000000059604645f*static_cast<float>(row);
+            const float y=0.4000000059604645f*static_cast<float>(column);
+            auto& sample=samples_[face][row*7+column];
+            switch(face) {
+            case 0:sample.direction={{x-1.0f,y-1.0f,1.0f}};break;
+            case 1:sample.direction={{1.0f,y-1.0f,1.0f-x}};break;
+            case 2:sample.direction={{1.0f-x,y-1.0f,-1.0f}};break;
+            case 3:sample.direction={{-1.0f,y-1.0f,x-1.0f}};break;
+            case 4:sample.direction={{x-1.0f,-1.0f,y-1.0f}};break;
+            default:sample.direction={{x-1.0f,1.0f,1.0f-y}};break;
+            }
+            sample.mappedST=computeReflectionST(sample.direction);
+            sample.faceST={{x*0.5f,y*0.5f}};
+        }
+    for(std::size_t patch=0;patch<4;++patch)for(std::size_t row=0;row<6;++row) {
+        const auto& edge=patch==0 ? samples_[4][row*7]:patch==1 ? samples_[1][5*7+row]:
+            patch==2 ? samples_[5][row*7+5]:samples_[3][row];
+        std::array<float,2> radial{{edge.mappedST[0]-0.5f,edge.mappedST[1]-0.5f}};
+        vectorNormalize2(radial.data(),radial.data());
+        radial[0]*=0.5f;radial[1]*=0.5f;
+        const float t=static_cast<float>(row)/5.0f;
+        const std::array<float,2> start=patch==0 ? std::array<float,2>{{1.0f-t,0.0f}}:
+            patch==1 ? std::array<float,2>{{0.0f,t}}:
+            patch==2 ? std::array<float,2>{{1.0f-t,1.0f}}:std::array<float,2>{{1.0f,t}};
+        for(std::size_t column=0;column<6;++column) {
+            auto& sample=backSamples_[patch][row*7+column];
+            const float factor=static_cast<float>(column)/5.0f;
+            for(std::size_t axis=0;axis<2;++axis) {
+                float delta=radial[axis]*factor;delta*=0.1599999964237213f;
+                // Source preserves the subtract/add0.5 rounding on the edge.
+                sample.mappedST[axis]=(edge.mappedST[axis]-0.5f)+0.5f+delta;
+                sample.faceST[axis]=start[axis]+(0.5f-start[axis])*factor;
+            }
+        }
+    }
+}
+
+const EnvironmentReflectionSample& EnvironmentMap::Sample(std::size_t face,std::size_t row,std::size_t column) const
+{
+    Require(face<6 && row<6 && column<6,"Reflection sample lies outside its original grid");
+    return samples_[face][row*7+column];
+}
+const EnvironmentReflectionSample& EnvironmentMap::BackSample(std::size_t patch,std::size_t row,std::size_t column) const
+{
+    Require(patch<4 && row<6 && column<6,"Back reflection sample lies outside its original grid");
+    return backSamples_[patch][row*7+column];
+}
+
+void EnvironmentMap::UpdateCameras(const float viewEye[3],const float reflectionOrigin[3],
+    std::int32_t applicationState,float realTimeElapsed)
+{
+    // PAL1175C8..1178E8 defines the six-camera order at the source display
+    // cadence. Advance that visual schedule by elapsed time on PC; repeated
+    // high-FPS presentation must not multiply the reflection workload.
+    Require(views_.clock && std::isfinite(realTimeElapsed) && realTimeElapsed>=0.0f,
+        "Environment schedule has no finite real clock interval");
+    const float zero[4]{},reference[4]{1,0,0,0},up[4]{0,0,1,0};
+    float eye[4]{viewEye[0],viewEye[1],viewEye[2],0};
+    float origin[4]{reflectionOrigin[0],reflectionOrigin[1],reflectionOrigin[2],0};
+    float baseline[16],towardOrigin[16],orientation[16];
+    carCinematicLookAt(baseline,zero,reference,up);rotationOnly(baseline);
+    carCinematicLookAt(towardOrigin,eye,origin,up);rotationOnly(towardOrigin);
+    std::copy(towardOrigin,towardOrigin+16,bodyMatrix_.begin());
+    eTransposeMatrix(orientation,baseline);eMulMatrix(orientation,towardOrigin,orientation);
+    rotationOnly(orientation);eTransposeMatrix(orientation,orientation);
+    const std::size_t bank=applicationState==3 ? 0:1;
+    const bool primary=views_.presentationLayout==1 || views_.presentationLayout==2;
+    std::array<bool,6> due{};
+    const auto select=[&](std::uint32_t phase) {
+        for(std::size_t face=0;face<6;++face)
+            due[face]=due[face] || (primary ? primarySchedule[phase%4u][face]:phase%6u==face);
+    };
+    if(!scheduleInitialized_) {
+        scheduleInitialized_=true;select(schedulePhase_);
+    } else {
+        const double frequency=gameTimeGetVideoMode(views_.clock)==HP2_VIDEO_PAL ? 50.0:60.0;
+        scheduleRemainder_+=static_cast<double>(realTimeElapsed)*frequency;
+        const double elapsedPhases=std::floor(scheduleRemainder_+1.0e-7);
+        scheduleRemainder_=std::max(0.0,scheduleRemainder_-elapsedPhases);
+        // A low-FPS frame renders the union of due faces, with each image
+        // using the latest pose. Six phases already cover the whole bank.
+        const auto count=static_cast<std::uint32_t>(std::min(elapsedPhases,6.0));
+        for(std::uint32_t index=1;index<=count;++index)select(schedulePhase_+index);
+        schedulePhase_=(schedulePhase_+static_cast<std::uint32_t>(std::fmod(elapsedPhases,12.0)))%12u;
+        if(primary!=previousPrimary_)select(schedulePhase_);
+    }
+    previousPrimary_=primary;
+    for(std::size_t face=0;face<6;++face) {
+        cameraElapsed_[face]+=realTimeElapsed;
+        auto& view=views_.screens[face+4];view.enabled=static_cast<std::uint8_t>(due[face]);
+        if(!view.view)continue;
+        // Face2 additionally supplies the body's current environment matrix;
+        // it must follow the car even between texture refresh intervals.
+        if(!view.enabled && face!=2)continue;
+        float target[4],direction[4],cameraUp[4],matrix[16];
+        eMulVector3(direction,orientation,directions[bank][face]);
+        eMulVector3(cameraUp,orientation,upDirections[bank][face]);
+        for(std::size_t axis=0;axis<4;++axis)target[axis]=origin[axis]+direction[axis];
+        carCinematicLookAt(matrix,origin,target,cameraUp);
+        if(face==2)std::copy(matrix,matrix+16,bodyMatrix_.begin());
+        if(!view.enabled)continue;
+        carCinematicViewPublish(&views_,view.view,matrix,cameraElapsed_[face]);
+        cameraElapsed_[face]=0.0f;
+        if(!views_.suppressPublication) {
+            view.view->resetHistory=0;view.view->current.minimumVisibility=0.0f;
+        }
+        view.view->current.nearClip=0.5f;view.view->current.farClip=10000.0f;
+        if(!views_.suppressPublication)view.view->current.fieldOfView=0x75e4;
+    }
+}
+
+void EnvironmentMap::CreateFacePrimitive(EcstasyFrame& frame,const CarCinematicScreen& view,
+    const EnvironmentReflectionSample* samples) const
+{
+    // PAL118150/118498 quantize to whole pixels before emitting five
+    // 12-vertex strips. The GPU samples the face attachment after its fence
+    // dependency; no CPU image or substitute texture is created.
+    Require(view.target,"Environment face has no actual render target");
+    const float width=static_cast<float>(mappedTarget_->width),height=static_cast<float>(mappedTarget_->height);
+    for(std::size_t row=0;row<5;++row) {
+        std::vector<FlailerPolyVertex> vertices;vertices.reserve(12);
+        for(std::size_t column=0;column<6;++column)for(std::size_t pair=0;pair<2;++pair) {
+            const auto& sample=samples[(row+pair)*7+column];
+            FlailerPolyVertex vertex;
+            // All authored samples fit the target. Remove the former
+            // GS2048/12.4 address round trip while retaining its pixel grid.
+            vertex.position={{std::floor(sample.mappedST[0]*width),
+                std::floor(sample.mappedST[1]*height),0,1}};
+            vertex.textureCoordinate={{sample.faceST[0],sample.faceST[1],1}};
+            vertex.color=0x40606060u;vertices.push_back(vertex);
+        }
+        frame.RenderTargetStrip(vertices,*view.target,*mappedTarget_);
+    }
+}
+
+void EnvironmentMap::CreatePrimitives(EcstasyFrame& frame) const
+{
+    // PAL118848..118880 excludes face2 from the ordinary loop. The four
+    // back patches follow ALL ordinary faces (including5), never split it.
+    for(std::size_t face=0;face<6;++face) {
+        if(face==2)continue;
+        const auto& view=views_.screens[face+4];
+        if(!view.enabled || !view.target || !view.target->enabled)continue;
+        CreateFacePrimitive(frame,view,samples_[face].data());
+    }
+    const auto& back=views_.screens[6];
+    if(back.enabled && back.target && back.target->enabled)
+        for(std::size_t patch=0;patch<4;++patch)CreateFacePrimitive(frame,back,backSamples_[patch].data());
 }
 }

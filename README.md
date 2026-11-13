@@ -1,156 +1,35 @@
-# HP2 PS2 Reversed
+# HP2 Godot MVP
 
-TASK-0071 changes the Windows default to **Vulkan + Forward+**, retaining the
-global `./build.ps1 --profile` ImGui profiler. Track11 performance/visual
-acceptance and original-runtime verification are tracked separately; see
-[migration results and limitations](docs/PERFORMANCE_TASK0071.md).
+The repository contains the Windows C++ game core from `D:/dev/hp2_ps2_rev`
+and a Godot 4.7.2 project for the Track 12 integration.
 
-A native C++ reconstruction of *Need for Speed: Hot Pursuit 2* (PS2), with Godot as the host and rendering backend. The current target is the US PS2 release, `SLUS_203.62`, on Windows x86-64.
+## Build and launch
 
-The CarViewer **Test drive** closure now targets the user-supplied symbol-rich Debug
-`NFSHP2.ELF` separately (TASK-0044). Its canonical original-class implementation,
-version binding and remaining limits are documented in [DEBUG_DRIVING_AUDIT.md](docs/DEBUG_DRIVING_AUDIT.md).
-
-Player transmission controls, the centralized driving InputMap and original skid
-rendering are described in [PLAYER_DRIVING.md](docs/PLAYER_DRIVING.md) (TASK-0046).
-Original wheel smoke/tire-spew and remaining physics work are documented in
-[DRIVING_EFFECTS.md](docs/DRIVING_EFFECTS.md) and [DRIVING_GAPS.md](docs/DRIVING_GAPS.md).
-
-TASK-0107 unifies **Drive on track**, **Test drive**, F8 `driving` and the direct
-race scene behind one real source WorldSession. Run `.\build.ps1 --run`, open
-`trackviewer` in F8, select car/skin/track, then use **Drive on track**. TASK-0111
-now defaults to **Minimal FreeRun**: one source player, original no-cops/zero-traffic
-configuration, and incomplete skid trails disabled with F8 console WARNINGs.
-`--world-strict` retains the prior guarded13-car diagnostic route. Mandatory
-simulation gaps still preserve the last complete frame. P pauses, period
-single-steps, R restarts and Esc returns. No production results/save closure or
-Verified claim is implied. See [World debug delivery](docs/TASK0107_WORLD_DEBUG_UI.md).
-
-TASK-0110 additionally binds the first Hot Pursuit and Championship Event Tree
-entries through original selection and authored World requests. Use the real main
-menu mode -> Event Tree -> first event -> selected car. The first Championship
-event now passes actual Python keyboard-driven
-three-lap completion, five-driver source results, private-save content/checksum
-validation and retained Event Tree return. Other events and full original
-presentation remain separate scope; optional missing features emit console
-WARNINGs. No whole-game PS2 equivalence or60FPS claim. See
-[event integration and current limits](reverse/task0110/event-world-integration.md).
-
-Static viewers and the unified World use the same track renderer. See [TRACK_VIEWER.md](docs/TRACK_VIEWER.md) for controls, Effects gates
-and current rendering limits. TASK-0052 is still active; complete original effects
-and1080p/60FPS performance have not been established.
-
-## 1. Project Goals
-
-Reconstruct the original game's behavior from binary and asset evidence and run it natively on modern PC hardware. Preserve original logic, names and function addresses where recovered; keep unknown behavior explicit rather than replacing it with guesses or Godot physics.
-
-## 2. Architecture
-
-- **`src/game_core/`** â€” independent C++17 game logic and class/function templates, without Godot dependencies. Confirmed original directories are preserved; classes with unknown paths remain at this directory's root.
-- **`src/port/`** â€” native frontend runtime, asset handling and render-command generation.
-- **`src/platform/` + `godot/`** â€” platform services, GDExtension adapters and the Godot host. Godot currently handles rendering, windowing, input, audio and frame scheduling; some frontend orchestration also remains in GDScript.
-- **`reverse/`, `docs/`, `tasks/`** â€” evidence, recovery records, progress and scoped work items.
-
-Unimplemented recovered paths throw `hp2::NotImplemented` with their original ELF address.
-
-## 3. Progress
-
-**Early development: this is not yet a playable reconstruction of the full game.**
-
-- Partial frontend recovery includes startup/title flow, menu navigation, several options screens, localization, event-tree logic, media playback and profile/save handling using the player's original data.
-- Class scaffolding covers 190 class names and 611 member attributions, including 605 throwing whole-entry templates. Typed vehicle-rendering slices coexist with untranslated whole entries; these counts describe missing work, not completed game behavior.
-- Racing, vehicle physics, AI and other gameplay systems remain largely untranslated. Native builds and tests pass, but no behavior has been verified against original hardware or PCSX2.
-
-See the generated [progress tracker](docs/PROGRESS.md) for current recovery status, blockers and the next task.
-
-## 4. Build Instructions
-
-On Windows, install a C++17 compiler, CMake 3.24+, Ninja and Python 3. The frontend also requires Godot **4.7.2**, the pinned `godot-cpp` submodule and the pinned FFmpeg **8.1** SDK. Follow the [development guide](docs/DEVELOPMENT.md) for dependency setup and local engine paths.
-
-Provide your own original PS2 `ZZDATA` directory through `HP2_PS2_ASSET_ROOT`, or copy [the configuration example](config/ps2_assets.example.json) to `config/ps2_assets.local.json` and set its `root`. Game binaries and assets are not distributed with this project.
-
-From the repository root in PowerShell:
+Use CMake 3.24+, Ninja, a Windows x64 C++17 toolchain. Place the Godot 4.7.2 console executable under
+`local/tools/godot-4.7.2/`.
 
 ```powershell
-git submodule update --init --recursive
-./build.ps1                  # Build the Godot frontend
-./build.ps1 --run            # Build and launch
-ctest --preset godot-debug   # Run tests
+./build.ps1 --run
 ```
 
-Build and test the independent core without Godot:
+The default launch opens the original title sequence in a Godot
+`VideoStreamPlayer`. Set `HP2_FFMPEG` to an FFmpeg build with MV30, Theora
+and Vorbis support, or place it under `local/tools/ffmpeg` for the launcher
+to discover. On first play in each session FFmpeg prepares the original
+AVI as a temporary Ogg stream.
 
-```powershell
-./build.ps1 --preset native-debug
-ctest --preset native-debug
-```
+Use the arrow keys and Enter in the menus. World Racing leads to Quick
+Race or the Championship event list. Track 12 is the supported race.
+Use WASD or the arrow keys to drive, Space for handbrake and Esc to quit.
+`./build.ps1 --run --race-track=12` opens the diagnostic race directly.
 
-Close a running frontend before rebuilding its DLL. Some integration tests require the configured original assets; see the development guide for details.
+For race integration, use a complete extracted game directory, a PS2 disc image, or a
+`ZZDATA.BIN` archive with its matching directory file. The extracted tree
+must include the original sound banks. The asset path can also come from
+`config/ps2_assets.local.json` (see `config/ps2_assets.example.json`).
+Use `HP2_PROFILE_DIR` to select a profile directory. By default the game
+uses the Godot project's `user://profile` directory.
 
-Debug builds show FPS / frame milliseconds at the top right. **F8** toggles the debug
-console (when enabled); TAB completes commands and Up/Down recall history. Commands:
-`help`, `clear`, `filter <text>`, `status`, `info on/off`. The console captures input while
-the game continues updating. TAB no longer toggles information; Page Up/Down and brackets
-no longer browse screens. `--info` enables only the detailed information panel.
-
-Debug also includes **CarViewer** and **TrackViewer**. Open them
-with `carviewer` / `trackviewer` in the F8 console; `viewer.close` returns to a fresh
-frontend. In CarViewer, `viewer.load "CARS/911TURBO/GEOMETRY.BIN"` loads original
-geometry, shared textures and static parts, with recovered LOD selection. Its material
-uses the recovered VU base material slice; full original GS materials remain incomplete.
-Viewer controls/FPS are native ImGui, with all 64 original cars and 235 skin records.
-TrackViewer loads all 30 shipped tracks, original textures/mips and scenery, and can enter
-real-track driving with topology-based wheel materials and static track collision. See
-[the track guide](docs/TRACK_VIEWER.md) for version boundaries and remaining render limits.
-Both retain explicit asset-free fixtures. See the
-[viewer guide](docs/DEBUG_VIEWERS.md) for camera controls, commands and direct launch.
-
-## 5. Docs & Help
-
-- [Development](docs/DEVELOPMENT.md) â€” setup, build, launch and troubleshooting.
-- [Architecture](docs/ARCHITECTURE.md) and [decisions](docs/DECISIONS.md) â€” layer ownership and recorded design choices.
-- [Progress](docs/PROGRESS.md) and [session log](docs/PROGRESS_LOG.md) â€” current state and its evidence/history.
-- [Class templates](docs/CLASS_TEMPLATES.md) and [source paths](docs/CLASS_SOURCE_PATHS.md) â€” existing scaffolding and how to continue recovery.
-
-Before contributing, read [AGENTS.md](AGENTS.md), the binding [AGENT.md](AGENT.md) rules and the selected file under `tasks/`. Record evidence and limitations, preserve existing implementations, and keep proprietary inputs outside Git.
-
-CarViewer's **Preview Mode** continuously orbits while retaining mouse control; launch with
-`--preview` to enable it immediately. Vehicle shader sources are centralized in
-`src/platform/shaders/` and shared by the runtime backend. See [vehicle rendering](docs/VEHICLE_RENDERING.md)
-for recovered material/light scope and remaining reflection limitations.
-
-CarViewer's **Wheel Blur (high speed)** enables tire rotation and the original `WHEEL_BLUR`
-overlay. The **Wheel speed (rad/s)** slider underneath adjusts preview angular velocity
-from -150 to150: negative reverses, zero stops. Default80 rad/s is a port-side demonstration
-input, not an original vehicle physics constant. Original per-wheel strength is
-clamp(abs(velocity)*0.02,0,1), with alpha scale90; the blur layer has its own original
-non-spinning matrix. Changes update existing resources and continue while F8 is open.
-Disabling resets the static pose; selected speed and switch survive car changes.
-`--wheel-blur` enables it on direct launch. Original contact/damage gates and physics remain
-untranslated. Missing resources fail explicitly; no synthetic blur texture is generated.
-
-Grip/material test controls and original-data boundaries: [DRIVING_GRIP.md](docs/DRIVING_GRIP.md).
-
-
-Independent single-car runtime (TASK-0051): launch `godot/scenes/race_scene.tscn`
-with `--track=11 --car=ELISE`. It uses the same native frame packets and GPU host as
-TrackViewer in Debug and Release. See [Track rendering](docs/TRACK_VIEWER.md) for
-controls, tests and remaining dynamic environment-capture limitations.
-
-
-### TASK-0055 rendering optimization
-
-The shared TrackViewer/Test drive/race renderer now defaults to accepted host
-resource and particle-buffer reuse, preserving native visibility/LOD/effects and
-physics. Full30-track Release1080p paired tests reduce median-route frame time
-10.03% and host submission33.16%, with no persistent tail regression. Debug118/118
-and Release98/98 checks pass. Loading stalls and original effects gaps remain.
-See [results and limits](docs/PERFORMANCE_TASK0055.md). Local DLL/config snapshots
-and launchers: `local/task0055/delivery/`. Use
-`--track-optimization-profile=baseline` to disable the new policy.
-
-Track rendering uses the original zone/section/tree/instance LOD selection.
-TASK0058 retires the optional Godot HLOD backend; `godot_hlod` is rejected.
-See [native culling integration](docs/NATIVE_TRACK_CULLING.md).
-
-TASK-0111 control policy (2026-11-06): the minimal-driving PC preset selects manual transmission through recovered RealDriver::SetManualTransmission so Q/E operate gears. Strict mode retains original setup. Ghidra inspection of Debug001770D8/0013BC90/0013BD70 confirms automatic-mode callbacks reroute to Player preview/freeze, whose dependencies remain unrecovered. This is an explicit PC preset, not original FreeRun parity. Pause changes its label to Resume while paused.
+`./build.ps1` stages the project in `build/godot-mvp-release/mvp-project`.
+`./build.ps1 --debug` builds and runs the Debug configuration.
+See [TASK-0125](tasks/active/TASK-0125-godot-frontend.md) for frontend validation and open coverage.

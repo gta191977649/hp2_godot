@@ -1,63 +1,120 @@
-// TASK-0042 E-0042-S001: exact Debug source marker(s): ..\indep\src\terraineffects.cpp.
-// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: allocator_label; evidence: E-0027-C01.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/TerrainEffectEmitters.hpp"
-#include "game_core/indep/src/fmenus.hpp"
-#include "game_core/port/not_implemented.hpp"
+#include "indep/inc/TerrainEffects.hpp"
+#include "indep/inc/TerrainType.hpp"
+#include "bware/inc/bMath.hpp"
+#include "bware/inc/bWare.hpp"
+#include <array>
+#include <cstring>
+#include <memory>
+#include <new>
+#include <vector>
 
-namespace hp2::debug {
-// Debug0021CB40, E-0099-W06. Original source ../indep/src/terraineffects.cpp.
-TerrainEffectEmitters::TerrainEffectEmitters(::port::driving::Memory& memory,std::uint32_t address,const ::port::race::EmitterGroupLookup& lookup){
-    for(unsigned effect=0;effect<7;++effect)for(unsigned terrain=0;terrain<33;++terrain){
-        const auto list=address+(effect*33+terrain)*8;
-        memory.word(list,list);memory.word(list+4,list);
-    }
-    // Lookup order is terrain first, effect second, after *all* lists exist.
-    for(unsigned terrain=0;terrain<33;++terrain)for(unsigned effect=0;effect<7;++effect){
-        const auto name=memory.word(0x003102e8+terrain*0x90+0x3c+effect*0xc);
-        if(!name||!memory.byte(name))continue;
-        std::string text;
-        for(unsigned offset=0;;++offset){
-            if(offset==4096)hp2::not_implemented("0x0024C8B0","unterminated TerrainTypeInfo emitter group");
-            const auto c=memory.byte(name+offset);if(!c)break;text.push_back(static_cast<char>(c));
+struct TerrainEffectEmitters {
+    WorldParticleSystem* particles=nullptr;
+    std::array<std::array<std::vector<ChopperEffectInstance>,33>,7> channels;
+    size_t count=0;
+};
+
+namespace {
+bool copyTerrainEmitters(TerrainEffectEmitters& emitters,const ChopperEffectGroup* groups,size_t groupCount)
+{
+    size_t materialCount=0;
+    const TerrainMaterial* materials=terrainDefaultMaterials(&materialCount);
+    if (!materials || materialCount!=33) return false;
+    for(size_t material=0;material<materialCount;++material)for(size_t effect=0;effect<7;++effect){
+        const char* name=materials[material].effects[effect].name;
+        if(!name[0])continue;
+        const uint32_t key=hashString(name);
+        for(size_t group=0;group<groupCount;++group){
+            if(groups[group].key!=key)continue;
+            if(groups[group].count && !groups[group].members)return false;
+            auto& instances=emitters.channels[effect][material];
+            instances.resize(groups[group].count);
+            for(size_t index=0;index<instances.size();++index){
+                const ChopperEffectTemplate* resource=groups[group].members[index];
+                if(!resource || resource->groupKey!=key)return false;
+                auto& instance=instances[index];
+                instance={};
+                instance.resource=resource;
+                instance.particleDefinition=resource->particleDefinition;
+                std::memcpy(instance.frame,resource->frame,sizeof(instance.frame));
+                instance.occupied=1;
+            }
+            emitters.count+=instances.size();
+            break;
         }
-        const auto hash=hp2::frontend::bStringHash(text.c_str());
-        if(!lookup)hp2::not_implemented("0x00127438","original afxGetEmitters service is not bound");
-        lookup(memory,address+(effect*33+terrain)*8,hash);
     }
+    return true;
 }
-// Debug0021CE28, E-0099-W06. Publish only after original construction returns.
-void InitTerrainEffectEmitters(::port::driving::Memory& memory,const ::port::race::EmitterGroupLookup& lookup){
-    if(memory.word(0x00328b58)==0){
-        const auto address=memory.allocate(0x738);
-        TerrainEffectEmitters emitters(memory,address,lookup);
-        memory.word(0x00328b58,address);
+
+void releaseTerrainEmitters(TerrainEffectEmitters& emitters)
+{
+    for(auto& channel:emitters.channels)for(auto& group:channel)for(auto& instance:group){
+        if(instance.particleSystem)worldParticlesRemoveEmitter(instance.particleSystem,&instance);
+        for(WorldParticleGroup* live=emitters.particles->firstGroup;live;live=live->next)
+            if(live->emitter==&instance)live->emitter=nullptr;
     }
 }
 }
 
-#include "game_core/port/track/emitter_bindings.hpp"
-namespace hp2::debug {
-// Debug0021CE68 ->0021CCA8, E-0099-W18. Reverse array/list destruction.
-void CloseTerrainEffectEmitters(::port::driving::Memory& m){
- const auto object=m.word(0x328b58);if(!object)return;
- for(int i=230;i>=0;--i)afxDeleteEmitters(m,object+8*i);
- m.release(object);m.word(0x328b58,0);
-}
+WorldServicesResult terrainEffectEmittersInitialize(TerrainEffectEmitters** owner,
+    WorldParticleSystem* particles,const ChopperEffectGroup* groups,size_t groupCount)
+{
+    if(!owner)return WORLD_SERVICES_INVALID_BINDING;
+    if(*owner)return WORLD_SERVICES_OK;
+    if(!particles || (groupCount && !groups))return WORLD_SERVICES_INVALID_BINDING;
+    try {
+        auto emitters=std::make_unique<TerrainEffectEmitters>();
+        emitters->particles=particles;
+        if(!copyTerrainEmitters(*emitters,groups,groupCount))return WORLD_SERVICES_INVALID_BINDING;
+        *owner=emitters.release();
+        return WORLD_SERVICES_OK;
+    } catch(const std::bad_alloc&) {return WORLD_SERVICES_CAPACITY;}
 }
 
-#include "game_core/indep/inc/AcidFX.hpp"
-#include "game_core/src/bMath.hpp"
-namespace hp2::debug {
-// Debug0021CD30, E-0099-W38. Exact actual list heads and emitter state writes,
-// followed by original WorldEffects call; no ParticleSimulation mirror.
-void TerrainEffectEmitters::TriggerEffect(::port::driving::Memory& m,std::uint32_t object,int effect,int terrain,float intensity,std::uint32_t position,std::uint32_t velocity){
- if(effect<0||effect>=7||terrain<0||terrain>=33)throw std::out_of_range("Original terrain effect list index");const auto head=object+static_cast<std::uint32_t>(effect*33+terrain)*8;if(m.word(head)==head)return;
- auto matrix=hp2::recovered::bIdentity();for(unsigned i=0;i<3;++i)matrix[12+i]=m.scalar(position+i*4);matrix[15]=1;
- for(auto emitter=m.word(head);emitter!=head;emitter=m.word(emitter)){m.matrix(emitter+0x30,matrix);m.vector(emitter+0x70,{{m.scalar(velocity),m.scalar(velocity+4),m.scalar(velocity+8),0}});AcidEffectSystem(m,0x2e6f40).TriggerEmitter(emitter,-intensity,0);}
+void terrainEffectEmittersClose(TerrainEffectEmitters** owner)
+{
+    if(!owner || !*owner)return;
+    releaseTerrainEmitters(**owner);
+    delete *owner;
+    *owner=nullptr;
 }
+
+WorldServicesResult terrainEffectEmittersTrigger(TerrainEffectEmitters* emitters,
+    int32_t effect,int32_t material,float strength,const float position[4],const float velocity[4])
+{
+    if(!emitters || effect<0 || effect>=7 || material<0 || material>=33 || !position || !velocity)
+        return WORLD_SERVICES_INVALID_BINDING;
+    auto& instances=emitters->channels[static_cast<size_t>(effect)][static_cast<size_t>(material)];
+    if(instances.empty())return WORLD_SERVICES_OK;
+    float frame[16];
+    rotationMatrixIdentity(frame);
+    for(int axis=0;axis<3;++axis)frame[12+axis]=position[axis];
+    for(auto& instance:instances){
+        std::memcpy(instance.frame,frame,sizeof(frame));
+        for(int axis=0;axis<3;++axis)instance.carVelocity[axis]=velocity[axis];
+        instance.carVelocity[3]=0.0f;
+        const auto result=worldParticlesTriggerEmitter(emitters->particles,&instance,-strength,nullptr);
+        if(result!=WORLD_SERVICES_OK)return result;
+    }
+    return WORLD_SERVICES_OK;
+}
+
+size_t terrainEffectEmittersCount(const TerrainEffectEmitters* emitters)
+{
+    return emitters ? emitters->count:0;
+}
+
+const WorldParticleSystem* terrainEffectEmittersParticles(const TerrainEffectEmitters* emitters)
+{
+    return emitters ? emitters->particles : nullptr;
+}
+
+ChopperEffectInstance* terrainEffectEmittersGroup(TerrainEffectEmitters* emitters,
+    int32_t effect,int32_t material,size_t* count)
+{
+    if(count)*count=0;
+    if(!emitters || effect<0 || effect>=7 || material<0 || material>=33)return nullptr;
+    auto& group=emitters->channels[static_cast<size_t>(effect)][static_cast<size_t>(material)];
+    if(count)*count=group.size();
+    return group.empty() ? nullptr:group.data();
 }

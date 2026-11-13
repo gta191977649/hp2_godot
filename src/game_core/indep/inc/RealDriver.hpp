@@ -1,106 +1,121 @@
-// TASK-0046: typed members below target Debug815b60c7...332f1b, E-0046-C01.
-// Historical Retail template provenance/gaps remain explicitly address-labelled;
-// they do not describe the typed Debug implementation or its PS2 ABI.
-// TASK-0042 E-0042-S001: exact Debug source marker(s): ../indep/inc/RealDriver.hpp.
-// TASK-0046 typed player entries use Debug NFSHP2.ELF SHA-256
-// 815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
-// Unrelated historical Retail gaps are separately documented below.
-// PORT-SIDE template file; destination/header extension is not original-file evidence.
-#pragma once
-#include "game_core/port/driving/object_view.hpp"
-#include "game_core/port/driving/player_services.hpp"
-#include "CarDriver.hpp"
+#ifndef NFSHP2_REAL_DRIVER_HPP
+#define NFSHP2_REAL_DRIVER_HPP
 
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: allocator_label; evidence: E-0027-C01.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-namespace hp2::recovered {
-class RealDriver : public CarDriver {
-public:
-    using CarDriver::CarDriver;
-    void Sub_0013AB98(std::uint32_t car); // Debug constructor; E-0046-C01
-    // Debug0013B198,0013B200,0013B438,0013B948; E-0046-C01.
-    void SetManualTransmission(int type);
-    void Drive(float t,port::driving::PlayerServices&);
-    bool NitroActive()const; //0013C118, E-0099-W63.
-    bool NitroWasActive()const; //0013C098.
-    bool NitroAvailable()const; //0013C178.
-    void JoyHandler_NitroBoost(int port,int event,std::uint8_t param); //0013C028, explicit original callback binding to this view.
-    void DoSteering(float t,int port,port::driving::PlayerServices&);
-    void DoThrottleBrakeReverse(float t,port::driving::PlayerServices&);
-    // Debug0013BC90/0013BD70; original static handler bound to this PS2 address.
-    void JoyHandler_ShiftUp(int port,int event,std::uint8_t param);
-    void JoyHandler_ShiftDown(int port,int event,std::uint8_t param);
-    // Debug0013BF58; E-0082-H01. Host-bound original press/release callback.
-    void JoyHandler_HonkHorn(int port,int event,std::uint8_t param);
-    void DisableStartLineState(); // Debug0013B168
-    // ELF 0x00130958; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00130958.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00130958();
-    // ELF 0x00136C58; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c58.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00136C58();
-    // ELF 0x00136C60; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136c60.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00136C60();
-    // ELF 0x00136CE8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136ce8.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00136CE8();
-    // ELF 0x00136CF0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00136cf0.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_00136CF0();
-    // ELF 0x0013AD90; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013ad90.md. Constructor entry; NOT a C++ constructor.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0013AD90();
-    // ELF 0x0013AE58; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013ae58.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_0013AE58();
-    // ELF 0x0013AEB8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013aeb8.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    // Debug reference: RealDriver::DoSnapshot(ReplaySnapshot *); E-0041-V01; retail ABI unconfirmed.
-    void DoSnapshot();
-    // ELF 0x0013B080; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b080.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    // Debug reference: RealDriver::AddJoyHandlers(void); E-0041-V01; retail ABI unconfirmed.
-    void AddJoyHandlers();
-    // ELF 0x0013B250; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013b250.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    // Debug reference: RealDriver::RemoveJoyHandlers(void); E-0041-V01; retail ABI unconfirmed.
-    void RemoveJoyHandlers();
-    // Debug0013B1D8; E-0046-C01.
-    void ForceEBrakeStop(float); //0013B360,E-0099-W121; actual realdriver.cpp.
-    void SetLowGear();
-    // ELF 0x0013C420; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013c420.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    // Debug0013C220; E-0082-H01; canonical driving/host-audio activation binding.
-    void StartHonkHorn();
-    // ELF 0x0013C460; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013c460.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    // Debug0013C260; E-0082-H01; canonical driving/host-audio activation binding.
-    void StopHonkHorn();
-    // ELF 0x0013CAE0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013cae0.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    // Debug reference: RealDriver::GetDriverNumber(void); E-0041-V01; retail ABI unconfirmed.
-    void GetDriverNumber();
-    // ELF 0x0013CAF0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/0013caf0.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    // Debug reference: RealDriver::SetDesiredSpeed(float, float, bool); E-0041-V01; retail ABI unconfirmed.
-    void SetDesiredSpeed();
-    // ELF 0x002A0550; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002a0550.md.
-    // Port-side void/no-argument placeholder; original signature unknown.
-    void Sub_002A0550();
+#include "indep/inc/CarDriver.hpp"
+#include "indep/inc/Car.hpp"
+#include "CarSounds.hpp"
+#include "indep/inc/Table.hpp"
+#include "indep/inc/DriveTarget.hpp"
+#include "indep/inc/CarDriver.hpp"
 
-public:
-    // TASK-0028: missing entries; existing storage and bodies are preserved.
-    // Debug0013B368; E-0046-C01.
-    void ResetJoyValues();
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+struct CarFramePlayerState;
+struct Chopper;
+struct ReplayManager;
+struct CarFrame;
+struct PursuitManager;
+typedef struct RealDriver RealDriver;
+
+typedef struct RealDriverConfiguration {
+    float steeringRangeDegrees;
+    int32_t forwardGearCount;
+    int32_t bodyCategory;
+} RealDriverConfiguration;
+
+typedef struct RealDriverTuning {
+    SampledCurve wheelSteeringRange;
+    SampledCurve padSteeringRange;
+    SampledCurve steeringRate;
+    SampledCurve steeringResponse;
+    SampledCurve pedalResponse;
+    SampledCurve countersteerScale;
+    SampledCurve linearResponse;
+    float countersteerWeight;
+} RealDriverTuning;
+
+typedef struct RealDriverBindings {
+    const RealDriverConfiguration* configuration;
+    RealDriverTuning* tuning;
+    struct CarFramePlayerState* player;
+    CarSoundState* sound;
+    struct Chopper* chopper;
+    struct ReplayManager* replay;
+    struct CarFrame* frame;
+    GameInputRouter* inputRouter;
+    struct PursuitManager* pursuitManager;
+} RealDriverBindings;
+
+struct RealDriver {
+    CarMovement* movement;
+    const RealDriverConfiguration* configuration;
+    RealDriverTuning* tuning;
+    struct CarFramePlayerState* player;
+    CarSoundState* sound;
+    struct Chopper* chopper;
+    struct ReplayManager* replay;
+    struct CarFrame* frame;
+    GameInputRouter* inputRouter;
+    int32_t port;
+    int32_t inputEnabled;
+    int32_t forceBrake;
+    int32_t forceReverse;
+    float handbrakeTime;
+    int32_t countersteering;
+    int32_t gearInputMode;
+    uint8_t steeringBytes[2];
+    float steeringInput;
+    uint8_t throttleBytes[3];
+    float throttleInput;
+    uint8_t brakeBytes[3];
+    float brakeInput;
+    uint8_t alternateThrottleBytes[2];
+    float alternateThrottle;
+    uint8_t handbrakeBytes[2];
+    float handbrakeInput;
+    int32_t nitroStartedTicks;
+    int32_t reverseRequested;
+    CarDriverResult result;
+    DriverCommand command;
+    struct PursuitManager* pursuitManager;
 };
-} // namespace hp2::recovered
 
-namespace hp2::recovered {
-void Sub_0013C750(port::driving::Memory&); // Debug global table constructor; E-0046-C01
-void MaybeAddTrackRoutePoint(port::driving::Memory&,std::uint32_t car); // Debug001C2ED0
-void RealDriverAddNearbyDebugTopology(port::driving::Memory&,std::uint32_t car); // Debug001FEE80
+
+
+void realDriverTuningInitialize(RealDriverTuning* tuning);
+CarDriverResult realDriverInitialize(RealDriver* driver,CarMovement* movement,const RealDriverBindings* bindings);
+void realDriverDispose(RealDriver* driver);
+void realDriverClearInput(RealDriver* driver);
+void realDriverSteeringInput(RealDriver* driver, int32_t event, uint8_t value);
+void realDriverThrottleInput(RealDriver* driver, int32_t event, uint8_t value);
+void realDriverAlternateThrottleInput(RealDriver* driver, int32_t event, uint8_t value);
+void realDriverBrakeInput(RealDriver* driver, int32_t event, uint8_t value);
+void realDriverHandbrakeInput(RealDriver* driver, int32_t event, uint8_t value);
+void realDriverSelectDefaultGear(RealDriver* driver);
+void realDriverSetHandbrakeTime(RealDriver* driver,float seconds);
+void realDriverUnlock(RealDriver* driver);
+void realDriverSetGearInputMode(RealDriver* driver,int32_t mode);
+void realDriverDispatchInput(RealDriver* driver,int32_t device,int32_t event,uint8_t value);
+void realDriverHornInput(RealDriver* driver,uint8_t pressed);
+void realDriverUpdatePedals(RealDriver* driver, float elapsed);
+void realDriverUpdateSteering(RealDriver* driver, float elapsed);
+void realDriverReadInput(RealDriver* driver, float elapsed);
+void realDriverDoSnapshot(RealDriver* driver,struct ReplaySnapshot* snapshot);
+CarDriverResult realDriverActivateInput(RealDriver* driver);
+CarDriverResult realDriverDeactivateInput(RealDriver* driver);
+CarDriverResult realDriverStartHorn(RealDriver* driver);
+CarDriverResult realDriverStopHorn(RealDriver* driver);
+void realDriverShiftUpInput(RealDriver* driver, int32_t device, int32_t event, uint8_t pressed);
+void realDriverShiftDownInput(RealDriver* driver, int32_t device, int32_t event, uint8_t pressed);
+void realDriverRecoverInput(RealDriver* driver, uint8_t pressed);
+void realDriverNitroInput(RealDriver* driver, uint8_t pressed);
+int32_t realDriverNitroPreviouslyActive(const RealDriver* driver);
+int32_t realDriverNitroActive(const RealDriver* driver);
+int32_t realDriverNitroReady(const RealDriver* driver);
+
+#ifdef __cplusplus
 }
+#endif
+#endif

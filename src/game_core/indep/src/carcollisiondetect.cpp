@@ -1,82 +1,373 @@
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: exact Debug declaring owner with adopted Retail correspondence; evidence: E-0043-M01.
-// Placement: E-0042-S001 exact Debug translation unit/definition marker; CPP partition follows that marker; companion header is port-side unless the header marker is recorded; no Retail ABI or layout claim.
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/indep/src/carcollisiondetect.hpp"
+#include "indep/inc/CarCollisionDetect.hpp"
+#include "indep/inc/AICarController.hpp"
+#include "indep/inc/AIPlan.hpp"
+#include "indep/inc/TrafficDriver.hpp"
+#include "bware/inc/bMath.hpp"
+#include <math.h>
+#include <string.h>
 
-#include "game_core/port/not_implemented.hpp"
-
-namespace hp2::recovered {
-// ELF 0x001E6010; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/001e6010.md.
-void CarCollisionPredict::IsThisCarStoppedDirectlyInFrontOfMe() {
-    hp2::not_implemented("0x001E6010", "CarCollisionPredict::IsThisCarStoppedDirectlyInFrontOfMe (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/indep/src/drivinglocation.hpp"
-#include "game_core/indep/src/aiutil.hpp"
-#include "game_core/indep/inc/World.hpp"
-#include <cmath>
-namespace hp2::debug {
-// Debug001E25C0; TASK-0099 E-0099-W37. Original strict lateral/forward bounds.
-bool CarCollisionPredict::IsThisCarStoppedDirectlyInFrontOfMe(std::uint32_t row,std::uint32_t list)const{return std::fabs(m_.scalar(m_.word(row+0x18)+0x3c4))<=5.f&&std::fabs(m_.scalar(row))<m_.scalar(list+0x1c8)+m_.scalar(row+0x10)&&m_.scalar(row+4)<m_.scalar(list+0x1cc)+m_.scalar(row+0x14)+23.f;}
-// Debug001E2410; E-0099-W37. Invalid target/location leaves impact unchanged.
-// Original rear filtering, stopped/excluded/low-speed and moving best-hit
-// branches; missing explicit unknown W operand fails only on the needed path.
-std::uint32_t CarCollisionPredict::WhoWillThisDriveTargetHit(std::uint32_t target,std::uint32_t nearby,std::uint32_t location,float maximum,float& impact,std::optional<std::uint32_t> lane){
- if(!location||DrivingLocation(m_,location).IsClear())return 0;
- const int count=m_.signed_byte(target);if(count<=0||count>=21)return 0;
- float best=m_.scalar(0x325bd8);std::uint32_t hit_car=0;
- const auto my=m_.word(nearby),excluded=m_.word(m_.word(my+0x28)+0x204);
- for(int i=0;i<m_.signed_word(nearby+4);++i){const auto row=nearby+8+28*i;if(!DoWeCareAboutThisCar(m_,row,nearby))continue;float time=m_.scalar(0x325bdc);bool hit=IsThisCarStoppedDirectlyInFrontOfMe(row,nearby);if(hit)time=0.f;else if(m_.scalar(0x325be0)<std::fabs(m_.scalar(my+0x3c4))&&m_.word(row+0x18)!=excluded){if(!lane)hp2::not_implemented("0x001E2650","prediction requires explicit original unknown vector-stack W operand");hit=WillIHitThisCar(target,location,my,m_.word(row+0x18),maximum,time,*lane);}if(hit&&time<best){hit_car=m_.word(row+0x18);best=time;}World(m_,m_.word(0x3272f0)).IncrementCollisionPredictionID();}
- impact=best;return hit_car;
-}
+static inline float driverCollisionPredictionDotTwo(const float first[2],const float second[2])
+{
+    const float x=first[0]*second[0];
+    const float y=first[1]*second[1];
+    return x+y;
 }
 
-namespace hp2::debug {
-// Debug001E3048; E-0099-W37. Inclusive overlap; failed outputs unchanged.
-int IntervalOverlap(float a,float b,float c,float d,float& low,float& high){float ray[4]={a,b,c,d};for(int count=3;count>0;--count)for(int i=0;i<count;++i)if(ray[i+1]<ray[i]){const auto temp=ray[i];ray[i]=ray[i+1];ray[i+1]=temp;}if(a<=ray[1]&&ray[1]<=b&&c<=ray[1]&&ray[1]<=d){low=ray[1];high=ray[2];return 1;}return 0;}
-// Debug001E37C0; E-0099-W37. Source epsilon and finite sentinels retained.
-void TimeIntervalForSeparatingAxis(const ::port::driving::Memory& m,float v,float t,float sum,float& low,float& high){float result=m.scalar(0x325c14);if(std::fabs(v)<m.scalar(0x325c08)){if(sum<std::fabs(t)){low=m.scalar(0x325c0c);high=m.scalar(0x325c0c);return;}low=m.scalar(0x325c10);}else{high=(sum-t)/v;low=-(sum+t)/v;if(v>=0)return;result=low;low=high;}high=result;}
-// Debug001E3880; E-0099-W37. Four original 2D OBB separating axes, source
-// operation order and overlap handling. Inputs are logical original OBB views.
-float WhenWillOverlapOccur2D(const ::port::driving::Memory& m,std::uint32_t a,std::uint32_t b,const std::array<float,2>& t,const std::array<float,2>& v){
- const float a0x=m.scalar(a+0x10),a0y=m.scalar(a+0x14),a1x=m.scalar(a+0x20),a1y=m.scalar(a+0x24),b0x=m.scalar(b+0x10),b0y=m.scalar(b+0x14),b1x=m.scalar(b+0x20),b1y=m.scalar(b+0x24);
- const float r10=a1x*b0x+a1y*b0y,r00=a0x*b0x+a0y*b0y,r11=a1x*b1x+a1y*b1y,r01=a0x*b1x+a0y*b1y,aa0=m.scalar(a+0x40),aa1=m.scalar(a+0x44),ba0=m.scalar(b+0x40),ba1=m.scalar(b+0x44);
- float l1,g1,l2,g2,l3,g3,l4,g4,low,high;
- TimeIntervalForSeparatingAxis(m,v[0]*a1x+v[1]*a1y,t[0]*a1x+t[1]*a1y,std::fabs(aa1)+std::fabs(ba0*r10)+std::fabs(ba1*r11),l1,g1);
- TimeIntervalForSeparatingAxis(m,v[0]*a0x+v[1]*a0y,t[0]*a0x+t[1]*a0y,std::fabs(aa0)+std::fabs(ba0*r00)+std::fabs(ba1*r01),l2,g2);
- TimeIntervalForSeparatingAxis(m,v[0]*b1x+v[1]*b1y,t[0]*b1x+t[1]*b1y,std::fabs(ba1)+std::fabs(aa0*r01)+std::fabs(aa1*r11),l3,g3);
- TimeIntervalForSeparatingAxis(m,v[0]*b0x+v[1]*b0y,t[0]*b0x+t[1]*b0y,std::fabs(ba0)+std::fabs(aa0*r00)+std::fabs(aa1*r10),l4,g4);
- if(!IntervalOverlap(l1,g1,l2,g2,low,high)||!IntervalOverlap(low,high,l3,g3,low,high)||!IntervalOverlap(low,high,l4,g4,low,high)){low=m.scalar(0x325c18);high=m.scalar(0x325c18);}if(low<=0){const bool negative=low<0;low=m.scalar(0x325c1c);if(negative&&high>0)low=0;}return low;
-}
+static inline float driverCollisionPredictionDotThree(const float first[4],const float second[4])
+{
+    const float x=first[0]*second[0];
+    const float y=first[1]*second[1];
+    const float z=first[2]*second[2];
+    return (x+y)+z;
 }
 
-#include "game_core/indep/inc/Car.hpp"
-#include "game_core/indep/src/drivetarget.hpp"
-#include "game_core/src/bMath.hpp"
-namespace hp2::debug {
-// Debug001E2DE8; E-0099-W37. Original dynamic collision body's authored local
-// bounds; first angle and subsequent point-to-previous axes are source behavior.
-void CarCollisionPredict::MakeOBBsForDriveTarget(std::uint32_t target,std::uint32_t obbs,std::uint32_t car,float exaggeration){auto& m=m_;if(!target)return;const int count=m.signed_byte(target);if(count<=0||!obbs||!car)return;::port::driving::Memory::Temporary bounds(m,32);hp2::recovered::Car(m,car).GetCarSpaceBoundingBox(bounds.address(),bounds.address()+16);std::array<float,3> half{};for(unsigned k=0;k<3;++k)half[k]=std::fabs((m.scalar(bounds.address()+16+4*k)-m.scalar(bounds.address()+4*k))*.5f)*exaggeration;float sine=0,cosine=0;hp2::recovered::bSinCos(m,sine,cosine,m.half(car+0x3a4));for(int i=0;i<count;++i){const auto obb=obbs+80*i,point=target+0x10+16*i;std::array<float,2> direction{{cosine,sine}};if(i)direction=hp2::recovered::bNormalize(std::array<float,2>{{m.scalar(point-16)-m.scalar(point),m.scalar(point-12)-m.scalar(point+4)}});m.scalar(obb+0x10,direction[0]);m.scalar(obb+0x14,direction[1]);m.word(obb+0x18,0);m.word(obb+0x1c,0);m.scalar(obb+0x20,-direction[1]);m.scalar(obb+0x24,direction[0]);m.word(obb+0x28,0);m.word(obb+0x2c,0);m.word(obb+0x30,0);m.word(obb+0x34,0);m.scalar(obb+0x38,1);m.word(obb+0x3c,0);for(unsigned k=0;k<3;++k)m.scalar(obb+0x40+4*k,half[k]);m.copy(obb,point,16);}}
-// Debug001E2650; E-0099-W37. Original per-segment swept OBB prediction.
-// Scratch storage models original stack objects; their WorldObj stays0, so the
-// captured OBB destructor has no WorldObject side effect on this original path.
-bool CarCollisionPredict::WillIHitThisCar(std::uint32_t target,std::uint32_t location,std::uint32_t mine,std::uint32_t other,float maximum,float& impact,std::uint32_t lane){(void)location;auto& m=m_;::port::driving::Memory::Temporary storage(m,0x420+3200);const auto my_target=storage.address(),other_target=my_target+0x210,my_obbs=other_target+0x210,other_obbs=my_obbs+1600;DriveTarget a(m,my_target),b(m,other_target);a.Sub_001E3EB8(target);b.Sub_001E3EB8(m.word(other+0x2c));float result=m.scalar(0x325be4);const auto action=[&](std::uint32_t car){const auto plan=m.word(m.word(car+0x28)+0x214);return plan?m.signed_word(plan+0x248):11;};
- if(m.word(m.word(mine+0x14)+8)!=3||hp2::recovered::Car(m,mine).GetAmountOutOfBounds()<=-.25f)a.BlendWithCurrentAcceleration(mine,lane);else a.FillWithCurrentAcceleration(mine,lane);
- if(m.word(m.word(other+0x14)+8)==3){if(hp2::recovered::Car(m,other).GetAmountOutOfBounds()>-.25f)b.FillWithCurrentAcceleration(other,lane);else if(action(other)!=5)b.BlendWithCurrentAcceleration(other,lane);}
- float my_factor=m.word(mine+0x20)==3?m.scalar(0x325be8):1.f,other_factor=m.word(other+0x20)==3?m.scalar(0x325bec):1.f,my_speed=m.scalar(mine+0x3c4),other_speed=m.scalar(other+0x3c4);
- if(m.scalar(mine+0x3c0)<0){const int type=action(mine);if(type==7||type==11||type==10||m.signed_byte(my_target)==0){StraightLinePredict(m,mine,my_target,lane);my_speed=std::fabs(my_speed);my_factor=m.scalar(0x325bf0);}}
- if(m.scalar(other+0x3c0)<0&&(m.word(other+0x20)==2||m.word(other+0x20)==3)){const int type=action(other);if(type==7||type==11||type==10||m.signed_byte(other_target)==0){StraightLinePredict(m,other,other_target,lane);other_speed=std::fabs(other_speed);other_factor=m.scalar(0x325bf4);}}
- const float minimum=m.scalar(0x325bf8);my_speed=minimum<my_speed?my_speed:minimum;other_speed=minimum<other_speed?other_speed:minimum;if(my_speed<2)my_factor=1;if(other_speed<2)other_factor=1;
- for(unsigned i=0;i<20;++i){OBB(m,my_obbs+80*i);OBB(m,other_obbs+80*i);}MakeOBBsForDriveTarget(my_target,my_obbs,mine,my_factor);MakeOBBsForDriveTarget(other_target,other_obbs,other,other_factor);int ai=a.GetFirstPoint(mine+0x40),bi=b.GetFirstPoint(other+0x40);std::array<float,2> ap{{m.scalar(mine+0x60),m.scalar(mine+0x64)}},bp{{m.scalar(other+0x60),m.scalar(other+0x64)}};float elapsed=0;
- while(ai<m.signed_byte(my_target)&&bi<m.signed_byte(other_target)&&elapsed<=maximum){const std::array<float,2> aq{{m.scalar(my_obbs+80*ai),m.scalar(my_obbs+80*ai+4)}},bq{{m.scalar(other_obbs+80*bi),m.scalar(other_obbs+80*bi+4)}};const std::array<float,2> ad{{aq[0]-ap[0],aq[1]-ap[1]}},bd{{bq[0]-bp[0],bq[1]-bp[1]}};const float al=std::sqrt(ad[0]*ad[0]+ad[1]*ad[1]),bl=std::sqrt(bd[0]*bd[0]+bd[1]*bd[1]),at=al/my_speed,bt=bl/other_speed,duration=bt<=at?bt:at;const auto av=hp2::recovered::bNormalize(ad,my_speed),bv=hp2::recovered::bNormalize(bd,other_speed);const float entry=WhenWillOverlapOccur2D(m,my_obbs+80*ai,other_obbs+80*bi,{{bp[0]-ap[0],bp[1]-ap[1]}},{{bv[0]-av[0],bv[1]-av[1]}});if(entry<=duration){result=elapsed+entry;break;}const float ar=(duration*my_speed)/al,br=(duration*other_speed)/bl;for(unsigned k=0;k<2;++k){bp[k]=bp[k]+(bq[k]-bp[k])*br;ap[k]=ap[k]+(aq[k]-ap[k])*ar;}if(m.scalar(0x325bfc)<std::fabs(at-duration))++bi;else ++ai;elapsed=elapsed+duration;}
- impact=result;return !(m.scalar(0x325c00)<=result||std::fabs(result-m.scalar(0x325c00))<=m.scalar(0x325c04));}
+static inline void driverCollisionPredictionCrossThree(float output[4],const float first[4],const float second[4])
+{
+    for(int axis=0;axis<3;++axis){
+        const int next=(axis+1)%3;
+        const int last=(axis+2)%3;
+        const float positive=first[next]*second[last];
+        const float negative=second[next]*first[last];
+        output[axis]=positive-negative;
+    }
+    output[3]=0.0f;
 }
 
-namespace hp2::debug {
-// Debug001E3EB8; E-0099-W37. Original inline copy constructor differs from
-// assignment: named fields are copied; object padding remains untouched.
-void DriveTarget::Sub_001E3EB8(std::uint32_t source){auto& m=memory_;const auto a=address_;m.byte(a,m.byte(source));for(unsigned i=0;i<20;++i)m.copy(a+0x10+16*i,source+0x10+16*i,16);for(unsigned i=0;i<20;++i)m.word(a+0x150+4*i,m.word(source+0x150+4*i));for(unsigned i=0;i<20;++i)m.byte(a+0x1a0+i,m.byte(source+0x1a0+i));for(unsigned i=0;i<20;++i)m.half(a+0x1b4+2*i,m.half(source+0x1b4+2*i));for(unsigned i=0;i<20;++i)m.byte(a+0x1dc+i,m.byte(source+0x1dc+i));m.word(a+0x1f0,m.word(source+0x1f0));m.byte(a+0x1f4,m.byte(source+0x1f4));m.word(a+0x1f8,m.word(source+0x1f8));m.word(a+0x1fc,m.word(source+0x1fc));m.word(a+0x200,m.word(source+0x200));m.byte(a+0x204,m.byte(source+0x204));}
+static inline float driverCollisionPredictionProjectedRadius(const DriverCollisionBox* first,const DriverCollisionBox* second,
+    int32_t firstAxis,int32_t secondAxis)
+{
+    const DriverCollisionBox* basis=firstAxis>=0?first:second;
+    const DriverCollisionBox* other=firstAxis>=0?second:first;
+    const int32_t selected=firstAxis>=0?firstAxis:secondAxis;
+    const float own=fabsf(basis->halfExtents[selected]);
+    const float firstDot=driverCollisionPredictionDotTwo(other->axes[0],basis->axes[selected]);
+    const float secondDot=driverCollisionPredictionDotTwo(other->axes[1],basis->axes[selected]);
+    const float firstRadius=fabsf(other->halfExtents[0]*firstDot);
+    const float secondRadius=fabsf(other->halfExtents[1]*secondDot);
+    return (own+firstRadius)+secondRadius;
+}
+
+static inline void driverCollisionPredictionSetPlanarBasis(DriverCollisionBox* box,float firstX,float firstY)
+{
+    const float axes[3][4]={{firstX,firstY,0.0f,0.0f},{-firstY,firstX,0.0f,0.0f},
+                           {0.0f,0.0f,1.0f,0.0f}};
+    memcpy(box->axes,axes,sizeof(axes));
+}
+
+static inline const DriverAIBase* driverCollisionPredictionAiOwner(const CarMovement* movement)
+{
+    const CarDriver* driver=(const CarDriver*)movement->bindings.owner->controller;
+    if(driver->kind==CAR_DRIVER_AI)return &driver->owner.ai->base;
+    if(driver->kind==CAR_DRIVER_TRAFFIC)return &driver->owner.traffic->base;
+    return NULL;
+}
+
+static inline int32_t driverCollisionPredictionActionKind(const CarMovement* movement)
+{
+    const DriverAIBase* driver=driverCollisionPredictionAiOwner(movement);
+    return driver&&driver->action?driverAIActionKind(driver->action):11;
+}
+
+static inline int32_t driverCollisionPredictionReverseNeedsStraight(const DriverCommand* command,int32_t kind)
+{
+    return kind==7||kind==11||kind==10||command->count==0;
+}
+
+int32_t driverCollisionIntersectIntervals(float* minimum,float* maximum,
+    float firstMinimum,float firstMaximum,float secondMinimum,float secondMaximum)
+{
+    float values[4]={firstMinimum,firstMaximum,secondMinimum,secondMaximum};
+    for(int end=3;end>0;--end){
+        for(int index=0;index<end;++index){
+            if(values[index+1]<values[index]){
+                const float value=values[index];
+                values[index]=values[index+1];
+                values[index+1]=value;
+            }
+        }
+    }
+    const float begin=values[1];
+    if(firstMinimum<=begin&&begin<=firstMaximum&&secondMinimum<=begin&&begin<=secondMaximum){
+        *minimum=begin;
+        *maximum=values[2];
+        return 1;
+    }
+    return 0;
+}
+
+int32_t driverCollisionSeparatedOnAxis(const DriverCollisionBox* first,
+    const DriverCollisionBox* second,const float axis[4],const float displacement[4])
+{
+    const float distance=fabsf(driverCollisionPredictionDotThree(displacement,axis));
+    float terms[6];
+    for(int index=0;index<3;++index){
+        terms[index]=fabsf(first->halfExtents[index]*driverCollisionPredictionDotThree(first->axes[index],axis));
+        terms[index+3]=fabsf(second->halfExtents[index]*driverCollisionPredictionDotThree(second->axes[index],axis));
+    }
+    float radius=terms[0]+terms[1];
+    for(int index=2;index<6;++index)radius=radius+terms[index];
+    return radius<distance;
+}
+
+int32_t driverCollisionBoxesOverlap2D(const DriverCollisionBox* first,
+    const DriverCollisionBox* second,const float displacement[2])
+{
+    for(int index=0;index<4;++index){
+        const int axis=index%2==0?1:0;
+        const DriverCollisionBox* basis=index<2?first:second;
+        const float radius=driverCollisionPredictionProjectedRadius(first,second,index<2?axis:-1,axis);
+        const float distance=fabsf(driverCollisionPredictionDotTwo(displacement,basis->axes[axis]));
+        if(radius<distance)return 0;
+    }
+    return 1;
+}
+
+int32_t driverCollisionBoxesOverlap3D(const DriverCollisionBox* first,
+    const DriverCollisionBox* second,const float displacement[4])
+{
+    /* The original visits the fifteen pairwise crosses of the two bases
+     * in this exact order and stops at the first separating axis. */
+    const float* axes[6]={first->axes[0],first->axes[1],first->axes[2],
+                          second->axes[0],second->axes[1],second->axes[2]};
+    for(int firstAxis=0;firstAxis<5;++firstAxis){
+        for(int secondAxis=firstAxis+1;secondAxis<6;++secondAxis){
+            float axis[4];
+            driverCollisionPredictionCrossThree(axis,axes[firstAxis],axes[secondAxis]);
+            if(driverCollisionSeparatedOnAxis(first,second,axis,displacement))return 0;
+        }
+    }
+    return 1;
+}
+
+int32_t driverCollisionLowSpeedClose(const DriverAINeighbor* neighbor,
+    const DriverAIPerception* perception)
+{
+    if(!(fabsf(neighbor->movement->bindings.state->speed)<=5.0f))return 0;
+    const float lateral=perception->lateralExtent+neighbor->effectiveHalfExtents[0];
+    if(!(fabsf(neighbor->localPosition[0])<lateral))return 0;
+    const float forward=perception->forwardExtent+neighbor->effectiveHalfExtents[1];
+    return neighbor->localPosition[1]<forward+23.0f;
+}
+
+void driverCollisionAxisInterval(float* minimum,float* maximum,
+    float relativeVelocity,float displacement,float radius)
+{
+    if(fabsf(relativeVelocity)<0.00009999999747378752f){
+        if(radius<fabsf(displacement)){
+            *minimum=9999.0f;
+            *maximum=9999.0f;
+        }else{
+            *minimum=-9999.0f;
+            *maximum=9999.0f;
+        }
+    }else{
+        const float sum=radius+displacement;
+        const float difference=radius-displacement;
+        *maximum=finiteRatio(difference,relativeVelocity);
+        *minimum=finiteRatio(-sum,relativeVelocity);
+        if(relativeVelocity<0.0f){
+            const float value=*minimum;
+            *minimum=*maximum;
+            *maximum=value;
+        }
+    }
+}
+float driverCollisionBoxTime2D(const DriverCollisionBox* first,
+    const DriverCollisionBox* second,const float displacement[2],const float relativeVelocity[2])
+{
+    float intervals[4][2];
+    for(int index=0;index<4;++index){
+        const int axis=index%2==0?1:0;
+        const DriverCollisionBox* basis=index<2?first:second;
+        const float radius=driverCollisionPredictionProjectedRadius(first,second,index<2?axis:-1,axis);
+        const float velocity=driverCollisionPredictionDotTwo(relativeVelocity,basis->axes[axis]);
+        const float position=driverCollisionPredictionDotTwo(displacement,basis->axes[axis]);
+        driverCollisionAxisInterval(&intervals[index][0],&intervals[index][1],velocity,position,radius);
+    }
+    float minimum,maximum;
+    if(!driverCollisionIntersectIntervals(&minimum,&maximum,intervals[0][0],intervals[0][1],intervals[1][0],intervals[1][1])||
+       !driverCollisionIntersectIntervals(&minimum,&maximum,minimum,maximum,intervals[2][0],intervals[2][1])||
+       !driverCollisionIntersectIntervals(&minimum,&maximum,minimum,maximum,intervals[3][0],intervals[3][1]))
+        minimum=maximum=99999.0f;
+    if(0.0f<minimum)return minimum;
+    if(minimum<0.0f&&0.0f<maximum)return 0.0f;
+    return 99999.0f;
+}
+void driverCollisionBuildPathBoxes(const DriverCommand* command,DriverCollisionBox* boxes,
+    const DriverPhysicsVehicle* vehicle,float scale)
+{
+    if(!command||command->count<=0||!boxes||!vehicle)return;
+    float minimum[4],maximum[4],extents[3];
+    driverCollisionBounds(vehicle,minimum,maximum);
+    for(int axis=0;axis<3;++axis){
+        const float difference=maximum[axis]-minimum[axis];
+        const float half=difference*0.5f;
+        extents[axis]=fabsf(half)*scale;
+    }
+    float sine,cosine;
+    vectorSineCosineAngle(&sine,&cosine,vehicle->movement->bindings.state->heading);
+    driverCollisionPredictionSetPlanarBasis(&boxes[0],cosine,sine);
+    memcpy(boxes[0].halfExtents,extents,sizeof(extents));
+    memcpy(boxes[0].center,command->points[0].position,sizeof(boxes[0].center));
+    for(int32_t index=1;index<command->count;++index){
+        float direction[2]={command->points[index-1].position[0]-command->points[index].position[0],
+                            command->points[index-1].position[1]-command->points[index].position[1]};
+        vectorNormalize2(direction,direction);
+        driverCollisionPredictionSetPlanarBasis(&boxes[index],direction[0],direction[1]);
+        memcpy(boxes[index].halfExtents,extents,sizeof(extents));
+        memcpy(boxes[index].center,command->points[index].position,sizeof(boxes[index].center));
+    }
+}
+float driverCollisionVelocityTime(const DriverPhysicsVehicle* first,
+    const DriverPhysicsVehicle* second,float scale)
+{
+    const VehicleState* firstState=first->movement->bindings.state;
+    const VehicleState* secondState=second->movement->bindings.state;
+    float firstMinimum[4],firstMaximum[4],secondMinimum[4],secondMaximum[4];
+    driverCollisionBounds(first,firstMinimum,firstMaximum);
+    driverCollisionBounds(second,secondMinimum,secondMaximum);
+    DriverCollisionBox boxes[2];
+    const DriverPhysicsVehicle* vehicles[2]={first,second};
+    const float* maxima[2]={firstMaximum,secondMaximum};
+    for(int index=0;index<2;++index){
+        const uint16_t heading=vehicles[index]->movement->bindings.state->heading;
+        driverCollisionPredictionSetPlanarBasis(&boxes[index],vectorCosineAngle(heading),rotationSineAngle(heading));
+        boxes[index].halfExtents[0]=fabsf(maxima[index][1]*scale);
+        boxes[index].halfExtents[1]=fabsf(maxima[index][0]*scale);
+        boxes[index].halfExtents[2]=fabsf(maxima[index][2]*scale);
+    }
+    const float position[2]={secondState->position[0]-firstState->position[0],
+                             secondState->position[1]-firstState->position[1]};
+    const float velocity[2]={secondState->velocity[0]-firstState->velocity[0],
+                             secondState->velocity[1]-firstState->velocity[1]};
+    return driverCollisionBoxTime2D(&boxes[0],&boxes[1],position,velocity);
+}
+int32_t driverCollisionPredictPair(const DriverPhysicsVehicle* first,const DriverCommand* firstCommand,
+    const DriverPhysicsVehicle* second,const DriverCommand* secondCommand,float horizon,float* time)
+{
+    const CarMovement* firstMovement=first->movement;
+    const CarMovement* secondMovement=second->movement;
+    const VehicleState* firstState=firstMovement->bindings.state;
+    const VehicleState* secondState=secondMovement->bindings.state;
+    const CarDriver* firstDriver=(const CarDriver*)firstMovement->bindings.owner->controller;
+    const CarDriver* secondDriver=(const CarDriver*)secondMovement->bindings.owner->controller;
+    DriverCommand paths[2];
+    driverCommandCopy(&paths[0],firstCommand);
+    driverCommandCopy(&paths[1],secondCommand);
+    if(firstMovement->bindings.owner->driverInfo->driverClass==3&&
+       -0.25f<carDriverLateralExcess(firstDriver))
+        driverCommandBuildVelocityPath(&paths[0],first);
+    else driverCommandBlendPredictedPath(&paths[0],first);
+    if(secondMovement->bindings.owner->driverInfo->driverClass==3){
+        if(-0.25f<carDriverLateralExcess(secondDriver))
+            driverCommandBuildVelocityPath(&paths[1],second);
+        else if(driverCollisionPredictionActionKind(secondMovement)!=5)
+            driverCommandBlendPredictedPath(&paths[1],second);
+    }
+    float firstScale=firstMovement->bindings.ownerMotion->inputCategory==3?1.2999999523162842f:1.0f;
+    float secondScale=secondMovement->bindings.ownerMotion->inputCategory==3?1.2999999523162842f:1.0f;
+    float firstSpeed=firstState->speed;
+    float secondSpeed=secondState->speed;
+    if(firstState->forwardSpeed<0.0f&&driverCollisionPredictionReverseNeedsStraight(&paths[0],driverCollisionPredictionActionKind(firstMovement))){
+        driverCommandBuildStraight(&paths[0],first);
+        firstSpeed=fabsf(firstState->speed);
+        firstScale=1.2999999523162842f;
+    }
+    const int32_t secondCategory=secondMovement->bindings.ownerMotion->inputCategory;
+    if(secondState->forwardSpeed<0.0f&&(secondCategory==2||secondCategory==3)&&
+       driverCollisionPredictionReverseNeedsStraight(&paths[1],driverCollisionPredictionActionKind(secondMovement))){
+        driverCommandBuildStraight(&paths[1],second);
+        secondSpeed=fabsf(secondState->speed);
+        secondScale=1.2999999523162842f;
+    }
+    firstSpeed=maximumFinite(firstSpeed,0.0010000000474974513f);
+    secondSpeed=maximumFinite(secondSpeed,0.0010000000474974513f);
+    if(firstSpeed<2.0f)firstScale=1.0f;
+    if(secondSpeed<2.0f)secondScale=1.0f;
+    const DriverAIBase* firstAI=driverCollisionPredictionAiOwner(firstMovement);
+    if(firstMovement->bindings.owner->driverInfo->driverClass==3&&
+       firstAI->environment->tuning->predictionWideBounds)
+        firstScale=1000.0f;
+    DriverCollisionBox boxes[2][DRIVER_COMMAND_CAPACITY];
+    driverCollisionBuildPathBoxes(&paths[0],boxes[0],first,firstScale);
+    driverCollisionBuildPathBoxes(&paths[1],boxes[1],second,secondScale);
+    int32_t firstIndex=driverCommandClosestPoint(&paths[0],firstState,
+        firstMovement->bindings.environment->clock->worldTimer);
+    int32_t secondIndex=driverCommandClosestPoint(&paths[1],secondState,
+        secondMovement->bindings.environment->clock->worldTimer);
+    float firstPosition[2]={firstState->position[0],firstState->position[1]};
+    float secondPosition[2]={secondState->position[0],secondState->position[1]};
+    float accumulated=0.0f;
+    float collisionTime=99999.0f;
+    while(firstIndex<paths[0].count&&secondIndex<paths[1].count&&accumulated<=horizon){
+        float firstDelta[2]={boxes[0][firstIndex].center[0]-firstPosition[0],
+                              boxes[0][firstIndex].center[1]-firstPosition[1]};
+        float secondDelta[2]={boxes[1][secondIndex].center[0]-secondPosition[0],
+                               boxes[1][secondIndex].center[1]-secondPosition[1]};
+        const float firstLength=sqrtf(driverCollisionPredictionDotTwo(firstDelta,firstDelta));
+        const float secondLength=sqrtf(driverCollisionPredictionDotTwo(secondDelta,secondDelta));
+        const float firstSeconds=finiteRatio(firstLength,firstSpeed);
+        const float secondSeconds=finiteRatio(secondLength,secondSpeed);
+        const float step=minimumFinite(firstSeconds,secondSeconds);
+        const float displacement[2]={secondPosition[0]-firstPosition[0],
+                                     secondPosition[1]-firstPosition[1]};
+        float firstVelocity[2],secondVelocity[2];
+        vectorSetLength2(firstVelocity,firstDelta,firstSpeed);
+        vectorSetLength2(secondVelocity,secondDelta,secondSpeed);
+        const float relativeVelocity[2]={secondVelocity[0]-firstVelocity[0],
+                                         secondVelocity[1]-firstVelocity[1]};
+        const float intersection=driverCollisionBoxTime2D(&boxes[0][firstIndex],
+            &boxes[1][secondIndex],displacement,relativeVelocity);
+        if(intersection<=step){collisionTime=accumulated+intersection;break;}
+        const float firstFraction=finiteRatio(step*firstSpeed,firstLength);
+        const float secondFraction=finiteRatio(step*secondSpeed,secondLength);
+        for(int axis=0;axis<2;++axis){
+            const float firstOffset=firstDelta[axis]*firstFraction;
+            const float secondOffset=secondDelta[axis]*secondFraction;
+            firstPosition[axis]=firstPosition[axis]+firstOffset;
+            secondPosition[axis]=secondPosition[axis]+secondOffset;
+        }
+        if(fabsf(firstSeconds-step)<=0.0010000000474974513f)++firstIndex;
+        else ++secondIndex;
+        accumulated=accumulated+step;
+    }
+    *time=collisionTime;
+    return collisionTime<99999.0f&&
+        !(fabsf(collisionTime-99999.0f)<=0.0010000000474974513f);
+}
+CarMovement* driverCollisionPredictNeighbors(const DriverAIBase* driver,
+    const DriverCommand* command,const DriverAIPerception* perception,const DriverAIRoadState* road,
+    float horizon,float* time,World* world)
+{
+    if(!road||driverAIRoadEmpty(road)||command->count<=0||command->count>DRIVER_COMMAND_CAPACITY)
+        return NULL;
+    const DriverPhysicsVehicle* vehicle=&driver->physics;
+    CarMovement* closest=NULL;
+    float closestTime=99999.0f;
+    for(int32_t index=0;index<perception->count;++index){
+        const DriverAINeighbor* neighbor=&perception->neighbors[index];
+        if(!driverCollisionNeighborEligible(neighbor,perception))continue;
+        float candidateTime=1234.0f;
+        int32_t collision=driverCollisionLowSpeedClose(neighbor,perception);
+        if(collision)candidateTime=0.0f;
+        if(!collision&&!(fabsf(vehicle->movement->bindings.state->speed)<=0.0010000000474974513f)&&
+           neighbor->movement!=driver->planningTarget){
+            DriverPhysicsVehicle other=*vehicle;
+            other.movement=neighbor->movement;
+            const CarDriver* otherDriver=(const CarDriver*)other.movement->bindings.owner->controller;
+            const DriverCommand* otherCommand=carDriverCommand(otherDriver);
+            if(!otherCommand){
+                vehicle->movement->result=CAR_MOVEMENT_INVALID_BINDING;
+                return NULL;
+            }
+            collision=driverCollisionPredictPair(vehicle,command,&other,otherCommand,horizon,&candidateTime);
+        }
+        if(collision&&candidateTime<closestTime){
+            closest=neighbor->movement;
+            closestTime=candidateTime;
+        }
+        worldAdvanceFrame(world);
+    }
+    *time=closestTime;
+    return closest;
 }

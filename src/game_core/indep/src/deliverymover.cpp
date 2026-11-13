@@ -1,32 +1,84 @@
-// TASK-0042 E-0042-S001: exact Debug source marker(s): ..\indep\src\deliverymover.cpp.
-// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: allocator_label; evidence: E-0027-C01.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/indep/inc/DeliveryMover.hpp"
+#include "indep/inc/DeliveryMover.hpp"
+#include "indep/inc/Car.hpp"
+#include "indep/inc/Car.hpp"
+#include "bware/inc/bMath.hpp"
+#include "bware/inc/bMath.hpp"
 
-#include "game_core/port/not_implemented.hpp"
+#include <math.h>
+#include <string.h>
 
-namespace hp2::recovered {
-// ELF 0x00202F60; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00202f60.md.
-void DeliveryMover::Sub_00202F60() {
-    hp2::not_implemented("0x00202F60", "DeliveryMover::Sub_00202F60 (signature and full body unresolved)");
+void deliveryMoverInitialize(DeliveryMover* mover, CarMovement* movement)
+{
+    mover->movement = movement;
 }
 
-// ELF 0x00202F78; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/00202f78.md.
-void DeliveryMover::Sub_00202F78() {
-    hp2::not_implemented("0x00202F78", "DeliveryMover::Sub_00202F78 (signature and full body unresolved)");
+void deliveryMoverSetTarget(DeliveryMover* mover, const float position[2], uint16_t heading,
+                            float speed, float duration)
+{
+    CarMovement* movement = mover->movement;
+    VehicleState* state = movement->bindings.state;
+    memcpy(mover->startPosition, state->position, sizeof(mover->startPosition));
+    vectorQuaternionFromMatrixCopy(mover->startOrientation, state->orientation);
+    memcpy(mover->startVelocity, state->velocity, sizeof(mover->startVelocity));
+
+    float target[4] = {position[0], position[1], state->position[2], 0};
+    float orientation[16];
+    const float stationary[2] = {0,0};
+    TerrainSurface terrain;
+    terrainSurfaceInitialize(&terrain, movement->bindings.environment->contact.terrain->topology);
+    terrainSurfaceUpdate(&terrain, target, 1.5f, stationary);
+    carMovementAlignTerrainPose(&movement->info, &terrain, orientation, target, heading);
+    for (int axis = 0; axis < 4; ++axis)
+        mover->positionDelta[axis] = target[axis] - mover->startPosition[axis];
+    vectorQuaternionFromMatrixCopy(mover->targetOrientation, orientation);
+    for (int axis = 0; axis < 4; ++axis)
+        mover->velocityDelta[axis] = orientation[axis] * speed - mover->startVelocity[axis];
+    mover->duration = duration;
+    mover->elapsed = 0.0f;
+    terrainSurfaceDispose(&terrain);
 }
 
-// ELF 0x002030C0; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002030c0.md.
-void DeliveryMover::Sub_002030C0() {
-    hp2::not_implemented("0x002030C0", "DeliveryMover::Sub_002030C0 (signature and full body unresolved)");
-}
+float deliveryMoverMove(DeliveryMover* mover, float elapsed)
+{
+    const float remaining = mover->duration - mover->elapsed;
+    if (remaining <= elapsed) elapsed = remaining;
+    mover->elapsed += elapsed;
+    const float fraction = mover->duration == 0.0f ? 1.0f : mover->elapsed / mover->duration;
+    float position[4], velocity[4], quaternion[4], orientation[16];
+    for (int axis = 0; axis < 4; ++axis) {
+        position[axis] = mover->startPosition[axis] + mover->positionDelta[axis] * fraction;
+        velocity[axis] = mover->startVelocity[axis] + mover->velocityDelta[axis] * fraction;
+    }
+    vectorQuaternionInterpolate(quaternion, mover->startOrientation, mover->targetOrientation, fraction);
+    vectorMatrixFromQuaternion(orientation, quaternion);
+    vectorMatrixTranspose(orientation, orientation);
 
-// ELF 0x002033D8; E-0027-C01; E-0028-C01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/unknown/002033d8.md.
-void DeliveryMover::Sub_002033D8() {
-    hp2::not_implemented("0x002033D8", "DeliveryMover::Sub_002033D8 (signature and full body unresolved)");
+    CarMovement* movement = mover->movement;
+    VehicleState* state = movement->bindings.state;
+    memcpy(state->position, position, sizeof(position));
+    carMovementUpdateTerrainPose(movement);
+    memcpy(state->velocity, velocity, sizeof(velocity));
+    const float speed = sqrtf((velocity[0]*velocity[0] + velocity[1]*velocity[1]) + velocity[2]*velocity[2]);
+    state->speed = speed;
+    state->velocityFrameValid = 0;
+    memcpy(state->orientation, orientation, sizeof(orientation));
+    memset(state->angularVelocity, 0, 3*sizeof(float));
+    state->heading = vectorFixedAtan2Angle(convertFloatToInt32(orientation[0]*65536.0f),
+                                           convertFloatToInt32(orientation[1]*65536.0f));
+    state->steeringAngle = 0;
+    state->forwardSpeed = speed;
+    for (int wheel = 0; wheel < 4; ++wheel) {
+        state->wheelAngularVelocity[wheel] = speed / movement->info.wheels[wheel].reactionScale;
+        state->wheelAngle[wheel] += state->wheelAngularVelocity[wheel] * elapsed;
+        state->suspensionTravel[wheel] = 0.0f;
+        vehicleStateSetWheelContact(state, wheel, 1);
+        vehicleStateSetWheelMaterial(state, wheel, 1);
+        state->wheelSlip[wheel][0] = state->wheelSlip[wheel][1] = 0.0f;
+        state->wheelSlipRatio[wheel] = 0.0f;
+        state->wheelNormalLoad[wheel] = 0.0f;
+        memset(state->suspensionImpulse, 0, sizeof(state->suspensionImpulse));
+    }
+    vehicleStateUpdateWheelPoses(state);
+    carMovementUpdatePowertrainDisplay(movement, &carDriveDisplayDefaultTuning);
+    return elapsed;
 }
-} // namespace hp2::recovered

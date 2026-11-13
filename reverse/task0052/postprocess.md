@@ -104,3 +104,37 @@ Depth-alpha saturation independent check: Retail00118A60's post-copy clear packe
 Post-target alpha dependency clarification (TASK0052): MainDisp RGB is the preceding displayed frame, but MainDisp alpha is scratch modified by the current stage5 DepthIntoAlpha. When enabled, BW preserves the current clamped-depth alpha LSB, not the preceding frame alpha LSB. MainDraw alpha initially receives the wrapped depth byte; Fog replaces it with palette alpha. FocusMask replaces it again with focus-palette alpha before jitter; final Focus output alpha is the halfimage focus alpha. DisplayBlendPrevious samples preceding RGB with current MainDisp scratch alpha. The production GPU fixture distinguishes these resources: Focus expects alpha128 despite Fog alpha64; BW with green170 and preceding alpha128 returns171 when current depth alpha255 is enabled, but170 when depth transfer is disabled. Earlier standalone history-only examples omit the stage5 override and do not establish full-frame target dependencies.
 
 Host mesh cache update: mark_tracked_mesh explicitly seals mesh/visibility/transform/material-layout/sorting state until mark_mesh_changed. Material parameter notifications remain independent of mesh state. Unsealed vehicles and particles retain dynamic checks. Discovery excludes nested Viewports, including the six environment-capture scene copies, and repeats on node-count changes, new registrations or deleted cached sources. This is a host optimization, not original culling behavior. Writing screen-space particles retain their original custom DEPTH and encode particle_z directly into RGB; deriving raw Z from their packed screen-space VERTEX would be invalid. Nonwriting particles never enter the depth capture.
+
+### E-0052-P01 follow-up, Player projection and mirror routing
+
+TASK-0119 read-only Debug review used SHA-256
+815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
+`eDisplayFrame` 00112C60 chooses ZBUF mode 0x31 during gameplay and calls
+`CalculateViewMatricies` 00106F18 at 00113438 with zero near/far overrides
+for the normal Player world pass. `CreateViewMatricies` 0010EA18 uses
+Camera::CurrentKey near/far and the existing Player-only FOV adjustment
+for movers other than 1 and 5. Initialization writes aBaselineFovZ
+0x238E at 001149FC. Camera default FarZ is 10000 at 00324F90.
+`GetWeatherQuery` samples Camera::CurrentKey.Position. `CreateFogPalette`
+reads FogMode1 for Player 1 and converts weather FogStart from reversed
+palette space. Debug globals 00326B00..0F initialize mode1=0, mode2=0,
+DrawFog=1 and FogPower=4.
+
+`eInitViews` 001079B8 binds Player view IDs 1 and 2 and the mirror as ID 3.
+`eAttachFog` 00119B30 and `eAttachDepthOfField` 0011A338 restrict the
+attachment to 1 and 2. Stage 7 calls `DisplayRVMs` 0010F1A8 to draw the
+mirror separately after stage 5. The standalone Godot mirror target
+therefore receives no independent fog or focus pass.
+
+The MVP samples the Godot depth attachment and converts to source
+normal-projection depth before using the 256-entry palette. The host
+uses slot 0 for clear depth and clamps host fragments beyond the original
+clip planes to the closest endpoint. Godot depth availability, alpha
+blending and the GS raster remain distinct. PC verification is recorded
+in TASK-0119 and original hardware equivalence remains open.
+
+TASK-0119 start-line follow-up confirmed from Debug `eAttachFog` 00119B30
+that TEX0 sources the MainDisp alpha plane and the packet uses the selected
+FogModeInfos ALPHA values. `eDisplayFrame` 00112C60 attaches the Player fog
+after world transparent draws. Godot now maps the default normal fog blend
+in a post-transparent dispatch using the current scene color and depth.

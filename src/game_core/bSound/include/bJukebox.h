@@ -1,72 +1,115 @@
-// Original source path, recovered verbatim from the authorized ELF: `include/bJukebox.h`
-// (string at 0x002C4208, SLUS_203.62 sha256 7335b8ed...facc2; TASK-0020, E-0020-N01).
-// This file sits at that path. The path is original; what the file holds is a
-// partial port-side reconstruction, not the original translation unit. The `bSound/`
-// root is inferred from `bSound/include/bFragmentedVector2.hpp` (0x002AE1D0), not
-// recovered verbatim; `bJukebox.cpp`'s own assert text names `include/bJukebox.h`.
-#pragma once
-#include "game_core/indep/src/sound.hpp"
-#include <optional>
+#ifndef NFSHP2_BJUKEBOX_H
+#define NFSHP2_BJUKEBOX_H
 
-// Original __FILE__ is src/bJukebox.cpp. This is port-side cartridge I/O; scheduling
-// projection retains ELF addresses. E-0016-A04, A05; hardware equivalence unverified.
-namespace hp2::port::audio {
-struct MusicTune {
-    std::string name;
-    std::string category;
-    std::uint32_t offset = 0, size = 0, sync_size = 0;
-    int type = 0; // Exact name field 4, parsed by original 001AEFD0 via001AED90.
-    // TASK-0092 E-0092-J04: host metadata for the 001AED90 split and the
-    // 001EEF60 cartridge/song pair, distinct from the flattened host index.
-    std::vector<std::string> metadata_fields;
-    std::uint8_t cartridge_category=0, cartridge_song=0;
-};
-class JukeboxCartridge {
+#include "bsound/include/bSample.h"
+#include <memory>
+#include <string>
+#include <vector>
+#include <stdexcept>
+
+namespace hp2 { class GameResources; }
+struct bSound;
+
+class cJukeboxCartridge {
 public:
-    static JukeboxCartridge load_from_zzdata(const std::string& root);
-    const std::vector<MusicTune>& tunes() const { return tunes_; }
-    PcmSound decode(std::size_t index) const;
-private:
-    std::string path_;
-    std::vector<MusicTune> tunes_;
+    struct Tune {
+        std::string name;
+        bool enabled{true};
+        uint32_t size{},offset{},syncSize{},id{};
+    };
+    struct Group {
+        std::string name;
+        std::vector<size_t> tunes;
+        bool enabled{true};
+        uint32_t cursor{};
+    };
+    const char* GetTuneName(uint32_t group,uint32_t track) const;
+    uint32_t GetTuneOffset(uint32_t group,uint32_t track) const;
+    uint32_t GetSyncOffset(uint32_t group,uint32_t track) const;
+    uint32_t GetTuneSize(uint32_t group,uint32_t track) const;
+    uint32_t GetSyncSize(uint32_t group,uint32_t track) const;
+    uint32_t GetTuneID(uint32_t group,uint32_t track) const;
+    uint32_t AddCategory(const char* name);
+    uint32_t AddTune(const char* group,const char* name,uint32_t offset,
+        uint32_t size,uint32_t syncSize,uint32_t id);
+    const Tune& Track(uint32_t group,uint32_t track) const;
+    std::vector<Group> groups;
+    std::vector<Tune> tunes;
 };
 
-// Original selection matrix002B6300, FUN001AF050(mode5). Genre/user disable flags
-// are explicit caller input; never assumed enabled by this predicate.
-bool Sub_001AF050(int type, bool genre_enabled);
-// Single category projection of FUN0027ECA8. Original increments before searching,
-// wraps in authored order and leaves the cursor unchanged if no enabled tune exists.
-std::optional<std::size_t> Sub_0027ECA8(const std::vector<bool>& enabled, std::size_t& cursor);
-// FUN0025A3D0 counter-seeded integer transform, source frame counter supplied by host.
-int bRandom(int count, std::uint32_t& seed);
-
-// Frontend-only projection of003115D0/001AEAB0. Fresh original AudioOptions permits
-// all genres (001EF1C8 +0xaf=0xff). User saves and race scheduling are not represented.
-class FrontendMusic {
+/* The one actual music player. This is native ownership of the touched
+ * source cells, not the console class layout. The SDK music loader/update
+ * must publish its real current sample into this same owner. */
+struct cJukeboxPlayer final : cJukeboxCartridge {
 public:
-    explicit FrontendMusic(const std::vector<MusicTune>& tunes);
-    std::optional<std::size_t> enter(std::uint32_t frame_counter);
-    std::optional<std::size_t> finished(std::uint32_t frame_counter);
-    // Port audio-device seam: recovered selection/genre filtering supplies this
-    // mask; explicit0027D6A8 requests can select even a filtered-out song.
-    void set_enabled(std::vector<bool> enabled);
-    void select(std::size_t index);
-    void stop() { playing_=false; }
-private:
-    std::vector<bool> enabled_;
-    std::size_t cursor_=0;
-    bool first_frontend_=true; // gp b610 initial1, consumed by001AEA40 category5.
-    bool first_random_=true; // gp b61c initial1, consumed by001AEAB0 fallback.
-    bool playing_=false;
-};
-} // namespace hp2::port::audio
+    WorldAudioRequestQueue* audio{};
+    WorldAudioVoiceRef currentSample{};
+    uint32_t category{UINT32_MAX};
+    uint32_t state{},repeat{},currentGroup{},currentTrack{},lastCategory{};
+    int32_t enabled{1},pendingPlay{},paused{};
+    float volumeScale{1.0f};
 
-#include "game_core/port/driving/object_view.hpp"
-namespace hp2::debug {
-// E-0099-W62; no-varargs caller warning retained, active cartridge explicit.
-class cJukeboxPlayer:public ::port::driving::ObjectView {
-public:using ObjectView::ObjectView;
- bool IsCartridgeLoaded()const; //00275560.
- void Stop(); //002757F8.
+    WorldAudioResult Bind(bSound& library,const hp2::GameResources& files);
+    // Native terminal detach after Close and the real audio owner shutdown.
+    WorldAudioResult UnbindAfterAudioShutdown(bSound& library,WorldAudioRequestQueue& queue);
+    bool IsCartridgeLoaded() const noexcept;
+    WorldAudioResult LoadCartridge(const char* path,bool unused);
+    WorldAudioResult Close();
+    WorldAudioResult Start(uint32_t repeatMode);
+    WorldAudioResult Start(uint32_t group,uint32_t track,uint32_t repeatMode);
+    WorldAudioResult Start(const char* name,uint32_t repeatMode);
+    WorldAudioResult Stop();
+    WorldAudioResult FadeOut(uint32_t milliseconds);
+    WorldAudioResult FadeOutAdvance(uint32_t milliseconds);
+    WorldAudioResult Advance();
+    WorldAudioResult Update();
+    WorldAudioResult SetOn(int32_t on);
+    WorldAudioResult SampleCallback(uint32_t event,WorldAudioVoiceRef voice);
+    WorldAudioResult StopPlaying();
+    WorldAudioResult Pause(int32_t pause);
+    WorldAudioResult StartFading(uint32_t milliseconds);
+    WorldAudioResult StartPlaying(uint32_t group,uint32_t track);
+    WorldAudioResult StartPlaying();
+    WorldAudioResult SetVolume(float volume);
+    WorldAudioResult SetTuneOn(uint32_t group,uint32_t track);
+    WorldAudioResult SetTuneOff(uint32_t group,uint32_t track);
+    bool GetTuneOn(uint32_t group,uint32_t track) const;
+    WorldAudioResult SetCategoryOn(uint32_t group);
+    WorldAudioResult SetCategoryOff(uint32_t group);
+    bool PickNextTune(uint32_t& group,uint32_t& track);
+    bool FindTuneByName(uint32_t& group,uint32_t& track,const char* name);
+    bool IsDonePlaying() const noexcept { return currentSample.instance && state==4; }
+    bool IsDoneFading() const noexcept { return currentSample.instance && state==6; }
+    bool IsFading()
+    {
+        const auto result=Update();
+        if (result!=WORLD_AUDIO_OK) throw std::runtime_error("Jukebox update failed");
+        return state==5;
+    }
+    bool IsPlaying()
+    {
+        const auto result=Update();
+        if (result!=WORLD_AUDIO_OK) throw std::runtime_error("Jukebox update failed");
+        return state==2 || IsFading();
+    }
+    uint32_t GetSampleRate() const noexcept { return sampleRate_; }
+
+    WorldAudioResult SetCategory(uint32_t value)
+    {
+        category=value;
+        if (!currentSample.instance) return WORLD_AUDIO_OK;
+        if (!audio) return WORLD_AUDIO_INVALID_BINDING;
+        return worldAudioSetVoiceCategory(audio,currentSample,value);
+    }
+
+private:
+    bSound* library_{};
+    const hp2::GameResources* files_{};
+    std::unique_ptr<WorldAudioStreamSource> stream_;
+    uint32_t sampleRate_{};
+    bool closing_{};
 };
-}
+
+extern cJukeboxPlayer soundJukeboxPlayer;
+
+#endif

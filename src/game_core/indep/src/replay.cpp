@@ -1,437 +1,1068 @@
-// TASK-0042 E-0042-S001: exact Debug source marker(s): ..\indep\src\replay.cpp.
-// Older placement comments below describe the historical host partitions; no retail ABI is asserted.
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: allocator_label; evidence: E-0027-C01.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-// Diagnostic text (not a callable signature): ReplayManager::BeginFrame() [0x002AEF30]
-// Diagnostic text (not a callable signature): ReplayManager::HandleSnapshot() [0x002AEFF8]
-#include "game_core/ReplayManager.hpp"
-#include <string>
+#include "indep/inc/Replay.hpp"
+#include "indep/inc/Timer.hpp"
+#include <cstring>
+#include "indep/inc/DemoModeReplay.hpp"
+#include "bware/inc/bWare.hpp"
+#include "bware/inc/bMath.hpp"
+#include "indep/inc/CarDriver.hpp"
+#include <algorithm>
+#include <cstdio>
 
-namespace hp2::recovered {
-// Debug0013E0F0, E-0099-W122; original replay.cpp. Existing registration owns
-// event scoring/storage; this wrapper does not replace the source replay owner.
-void ReplayManager::InvalidateInterestingEvents(){RegisterInterestingEvent(-99.f,"Invalidate");}
-// Debug0013E070; E-0046-C01. Name is intentionally unused by the original.
-void ReplayManager::RegisterInterestingEvent(float value,const char*){
-    if(m_.word(address_+4)==0)return;
-    const auto head=address_+0x6c;
-    for(auto node=m_.word(head);node!=head;node=m_.word(node)){
-        const char expected[]="INSTANT_REPLAY";unsigned i=0;
-        while(expected[i]!=0&&m_.byte(node+8+i)==static_cast<unsigned char>(expected[i]))++i;
-        if(expected[i]==0&&m_.byte(node+8+i)==0)m_.scalar(node+0x14c,m_.scalar(node+0x14c)+value);
+void ReplayStreamIndex::Build(const BitStream& source)
+{
+    hp2::Require(source.bytes && source.channelCount==4 && source.dataStart==192 &&
+        source.storageBytes<=INT32_MAX/8 && source.storageBytes>=source.dataStart &&
+        source.writePosition>=source.dataStart*8u && source.writePosition<=source.storageBytes*8ull,
+        "Demo index has no bounded four-channel recorded stream");
+    constexpr std::uint32_t repeats[4]={8,4,0,8};
+    for(std::size_t i=0;i<4;++i)
+        hp2::Require(source.channels[i].repeatBits==repeats[i] &&
+            source.channels[i].defaultValue==(i==1?1u:0u),
+            "Demo stream channel configuration differs from the released replay writer");
+    // bRepeat publishes reader cursors into its header. Validate an owned
+    // copy so preflight cannot mutate the recording or its live reader.
+    std::vector<std::uint8_t> bytes(source.bytes,source.bytes+source.storageBytes);
+    BitStream reader=source;reader.bytes=bytes.data();reader.output=nullptr;reader.transport=nullptr;
+    bitStreamBeginRead(&reader);
+    std::vector<Boundary> boundaries;
+    const auto save=[&]() {
+        Boundary boundary;boundary.position=reader.readPosition;boundary.count=reader.readCount;
+        for(std::size_t i=0;i<4;++i) {
+            const auto& channel=reader.channels[i];
+            boundary.channels[i]={channel.readRepeats,channel.readRepeatPosition,
+                channel.readRepeatPosition?channel.currentValue:0u};
+        }
+        boundaries.push_back(boundary);
+    };
+    const auto read=[&](std::uint32_t bits,std::uint32_t channel) {
+        hp2::Require(reader.readCount<reader.writeCount,"Demo frame is truncated before its required value");
+        const auto value=bitStreamRead(&reader,bits,channel);
+        hp2::Require(!reader.readError && reader.result==BIT_STREAM_OK,
+            "Demo frame does not follow the recorded timestep/input/checksum channel order");
+        return value;
+    };
+    save();
+    // Channel2 has repeatBits0: each completed frame consumes at least its
+    // four-bit channel tag and eight-bit checksum, even with repeated input.
+    const auto maximumFrames=(source.writePosition-source.dataStart*8u)/12u;
+    while(reader.readCount<reader.writeCount) {
+        hp2::Require(boundaries.size()<=maximumFrames,"Demo frame count exceeds its actual encoded bit extent");
+        (void)read(8,1);
+        const auto events=read(8,0);
+        for(std::uint32_t i=0;i<events;++i)
+            hp2::Require((read(19,0)>>16)<2,"Demo input contains an unsupported joystick port");
+        (void)read(8,2);
+        save();
+    }
+    hp2::Require(reader.readCount==reader.writeCount && reader.readPosition==reader.writePosition,
+        "Demo does not end on the exact complete-frame boundary");
+    boundaries_.swap(boundaries);writtenBits_=source.writePosition;writtenValues_=source.writeCount;
+}
+
+std::size_t ReplayStreamIndex::FindFrame(const BitStream& reader) const noexcept
+{
+    if(reader.channelCount!=4 || reader.dataStart!=192 || reader.result!=BIT_STREAM_OK ||
+        reader.readError || reader.writePosition!=writtenBits_ ||
+        reader.writeCount!=writtenValues_)return NoFrame;
+    const auto found=std::lower_bound(boundaries_.begin(),boundaries_.end(),reader.readCount,
+        [](const Boundary& boundary,std::uint32_t count){return boundary.count<count;});
+    if(found==boundaries_.end() || found->count!=reader.readCount || found->position!=reader.readPosition)return NoFrame;
+    for(std::size_t i=0;i<4;++i) {
+        const auto& channel=reader.channels[i];const auto& expected=found->channels[i];
+        if(channel.readRepeats!=expected.repeats || channel.readRepeatPosition!=expected.position ||
+            (channel.readRepeatPosition && channel.currentValue!=expected.value))return NoFrame;
+    }
+    return static_cast<std::size_t>(found-boundaries_.begin());
+}
+
+// Full PAL13E008..13E074, individual source proof53. Recording takes
+// precedence if both flags are set, and must not clear restoring/paused.
+void replayManagerEndFrame(ReplayManager* replay,const GameTime* clock)
+{
+    if(replay->recording) {
+        const uint32_t loop=static_cast<uint32_t>(clock->worldLoopCounter)+1u;
+        std::memcpy(&replay->endCapturingLoopCount,&loop,sizeof(loop));
+        // The actual Timer(float)136DD0 performs the two separate binary32
+        // operations before truncation. Preserve modular MIPS ADDU below.
+        const float scaled=clock->worldTimeElapsed*4000.0f;
+        const int32_t elapsed=convertFloatToInt32(scaled+0.5f);
+        const uint32_t end=static_cast<uint32_t>(clock->worldTimer)+static_cast<uint32_t>(elapsed);
+        replay->recording=0;
+        std::memcpy(&replay->endCapturingTime,&end,sizeof(end));
+    } else if(replay->restoring) {
+        replay->replayPausedThisFrame=0;
+        replay->restoring=0;
     }
 }
-}
 
-// TASK-0028. SLUS_203.62, executable revision unknown; SHA-256 7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2.
-// Class spelling: allocator_label; evidence: E-0027-C01.
-// Placement: user_requested_root; port-side placement; original path unknown (TASK-0029).
-// No original layout, inheritance, exclusive ownership or PS2 ABI is asserted.
-// Allocation extent is not sizeof. Implicit C++ lifetime is port-side only.
-#include "game_core/indep/inc/Replay.hpp"
-
-#include "game_core/port/not_implemented.hpp"
-#include "game_core/indep/src/brepeat.hpp"
-
-namespace hp2::recovered {
-// ELF 0x0013CD68; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0013cd68.md.
-void ReplaySnapshot::GetChecksum() {
-    hp2::not_implemented("0x0013CD68", "ReplaySnapshot::GetChecksum (signature and full body unresolved)");
-}
-
-// ELF 0x0013CE78; E-0041-M01; E-0042-S001; E-0043-M01; reverse/functions/sha256-7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2/reference/0013ce78.md.
-void ReplaySnapshot::ReadData() {
-    hp2::not_implemented("0x0013CE78", "ReplaySnapshot::ReadData (signature and full body unresolved)");
-}
-} // namespace hp2::recovered
-
-#include "game_core/port/not_implemented.hpp"
-#include "game_core/indep/src/brepeat.hpp"
-namespace hp2::recovered {
-// Debug0013D248, E-0099-W41. Do not clear the omitted MaxNumAutoReplaySnapshots,
-// FancyJoyEventTable or SnapshotTimeTable; source leaves those bytes untouched.
-void ReplayManager::Sub_0013D248(){
- auto& m=m_;const auto a=address_,free=a+0x64,used=a+0x6c;
- m.word(free,free);m.word(free+4,free);m.word(used,used);m.word(used+4,used);
- m.word(a+0xa0,0xffffffffu);m.scalar(a+0x94,15);m.word(a+0x18,9999999);
- m.word(a+0x4c,0xffffffffu);m.word(a+0x50,0xffffffffu);
- for(auto off:{0u,4u,8u,0xcu,0x10u,0x14u,0x54u,0x58u,0x5cu,0x48u,0xa4u,0xa8u,0x1cu,0x20u,0x24u,0x60u,0x74u,0x78u,0x80u,0x84u,0x88u,0x8cu,0x90u,0x98u,0x9cu,0x40acu,0x40b0u})m.word(a+off,0);
- for(unsigned i=0;i<0x1000;++i)m.byte(a+0x40b4+i,0);
- if(m.word(0x2e81f0)){
-  m.word(a+0x60,m.word(0x2e8224));m.word(0x2e8224,0);
-  // Original AddTail0013EA80 moves a complete intrusive list and resets source.
-  const auto source=0x2e8228u,first=m.word(source),last=m.word(source+4);
-  if(first!=source){const auto previous=m.word(used+4);m.word(last,used);m.word(first+4,previous);m.word(previous,first);m.word(used+4,last);m.word(source+4,source);m.word(source,source);}
-  m.word(a+0x74,1);
-  int i=0;do{const auto snapshot=m.allocate(0x9558);m.word(snapshot+0x28,0);m.word(snapshot+0x2c,0);
-   const auto previous=m.word(free+4);m.word(previous,snapshot);m.word(free+4,snapshot);m.word(snapshot+4,previous);m.word(snapshot,free);++i;
-  }while(i<m.signed_word(a+0x74));
- }
-}
-// Debug0013D3C0, E-0099-W41. Snapshot dtor0013EB40 only releases on bit1.
-void ReplayManager::Sub_0013D3C0(int flags){
- auto& m=m_;const auto a=address_,used=a+0x6c,free=a+0x64;
- while(m.word(used)!=used){const auto snapshot=m.word(used),next=m.word(snapshot),previous=m.word(snapshot+4);const auto image=m.word(snapshot+0x38);
-  m.word(previous,next);m.word(next+4,previous);
-  if(!image)m.release(snapshot);
-  else {const auto repeat=m.word(a+0x60),demo=0x2e8228u,tail=m.word(demo+4);m.word(tail,snapshot);m.word(snapshot+4,tail);m.word(demo+4,snapshot);m.word(snapshot,demo);if(repeat){m.word(0x2e8224,repeat);m.word(a+0x60,0);}}
- }
- while(m.word(free)!=free){const auto snapshot=m.word(free),next=m.word(snapshot),previous=m.word(snapshot+4);m.word(previous,next);m.word(next+4,previous);m.release(snapshot);}
- if(const auto repeat=m.word(a+0x60))m.release(repeat);
- if(flags&1)m.release(a);
-}
-// Debug0013E978/0013EA10, E-0099-W41. Inactive original branches perform no
-// repeat access; active bitstream behavior is a required dependency, not zero data.
-std::uint32_t ReplayManager::GetData(int bits,int channel){
- if(!m_.word(address_)||m_.word(address_+8))return 0;
- const auto repeat=m_.word(address_+0x60);const auto data=hp2::debug::bRepeat(m_,repeat).RemoveData(bits,channel);
- if(m_.word(repeat+0x28))m_.word(address_+8,1);return static_cast<std::uint32_t>(data);
-}
-void ReplayManager::MarkTheEndOfTime(){if(!m_.word(address_+0x54))m_.word(address_+0x54,1);}
-void ReplayManager::AddData(std::int32_t data,int bits,int channel){
- if(!m_.word(address_+4))return;const auto repeat=m_.word(address_+0x60);hp2::debug::bRepeat(m_,repeat).AddData(data,bits,channel);
- if(static_cast<std::int32_t>(m_.word(repeat+0x14)*8-0x44)<=m_.signed_word(repeat+8)){m_.word(address_+4,0);MarkTheEndOfTime();}
+namespace {
+bool TransferBinding(ReplaySnapshot* snapshot,const void* values,int32_t bytes,int32_t maximum)
+{
+    if (!snapshot || snapshot->result!=REPLAY_SNAPSHOT_OK)return false;
+    if (!snapshot->bytes || (!values && bytes>0)) {
+        snapshot->result=REPLAY_SNAPSHOT_INVALID_BINDING;return false;
+    }
+    // The released PAL caller uses maximumBytes=-1 for a raw, unextended
+    // transfer. Most World/Race/AI snapshot fields, including floats and
+    // matrices, use that exact convention. Rejecting -1 makes every authentic
+    // Demo replay fail even though its source bytes are intact.
+    if (bytes<0 || (maximum!=-1 && maximum<bytes) || snapshot->cursor<0) {
+        snapshot->result=REPLAY_SNAPSHOT_INVALID_TRANSFER;return false;
+    }
+    return true;
 }
 }
 
-#include "game_core/port/race/replay_memory.hpp"
-namespace hp2::recovered {
-// Debug0013E9D8, E-0099-W41. Fresh MIPS0013EA00 is SRLV, not SRAV.
-// Preserve the misleading original name: values below32 bits are zero-extended.
-std::int32_t ReplayManager::GetSignedData(int bits,int channel){const auto value=GetData(bits,channel);const unsigned shift=(32u-static_cast<unsigned>(bits))&31;return static_cast<std::int32_t>((value<<shift)>>shift);}
-// Debug0013D4F8, E-0099-W41. Actual free-heap query is a required platform
-// primitive; no forced sufficient-memory result, skipped snapshot pool or flag.
-void ReplayManager::MarkTheBeginningOfTime(const ::port::race::ReplayMemoryServices& services){
- auto& m=m_;const auto a=address_;if(m.signed_word(a+0x4c)!=-1)return;
- m.word(a+0x50,m.word(0x327d10));m.word(a+0x4c,m.word(0x327d10));m.word(a+0x58,m.word(0x327cf8));m.word(a+0x5c,m.word(0x327cf8));
- if(!services.count_free_memory)hp2::not_implemented("0x00250D58","original replay free-heap primitive needs its actual port allocation budget binding");
- const auto free=services.count_free_memory(0x10);if(static_cast<std::int32_t>(static_cast<std::uint32_t>(free)-0x8000u)<0xd0ad8)return;
- const auto repeat=m.allocate(0x32000);hp2::debug::bRepeat(m,repeat).PrepareToAddData(0x32000,4,0);
- m.word(repeat+0x54,4);m.word(repeat+0x30,8);m.word(repeat+0x58,1);m.word(repeat+0x34,0);m.word(repeat+0x78,0);m.word(repeat+0x7c,0);m.word(repeat+0x9c,8);m.word(repeat+0xa0,0);
- m.word(a+0x60,repeat);m.word(a+0x74,17);m.word(a+0x78,2);m.word(a+0x80,8);m.word(a+0x84,5);m.word(a+0x54,0);m.word(a+0x7c,0);
- int i=0;const auto head=a+0x64;do{const auto snapshot=m.allocate(0x9558);m.word(snapshot+0x28,0);m.word(snapshot+0x2c,0);const auto previous=m.word(head+4);m.word(previous,snapshot);m.word(head+4,snapshot);m.word(snapshot+4,previous);m.word(snapshot,head);++i;}while(i<m.signed_word(a+0x74));
+void replaySnapshotInitialize(ReplaySnapshot* snapshot,const char* name,const GameTime* clock)
+{
+    if (!snapshot)return;
+    if (!name || !clock || std::strlen(name)>=sizeof(snapshot->name)) {
+        snapshot->result=REPLAY_SNAPSHOT_INVALID_BINDING;return;
+    }
+    std::memcpy(snapshot->name,name,std::strlen(name)+1);
+    snapshot->worldTimer=clock->worldTimer;
+    snapshot->worldLoopCounter=clock->worldLoopCounter;
+    snapshot->sectionDepth=-1;snapshot->debugDepth=-1;
+    snapshot->dataSize=0;
+    snapshot->recording=0;snapshot->restoring=0;
+    snapshot->recordingChecksums=0;snapshot->verifyingChecksums=0;
+    snapshot->overflowReported=0;snapshot->nextSectionOrdinal=0;
+    snapshot->debugLoopCounter=0;snapshot->cursor=0;
+    snapshot->clock=clock;snapshot->result=REPLAY_SNAPSHOT_OK;
+    snapshot->endLoopCounter=0;snapshot->memoryImageLoaded=0;snapshot->totalInterestingValue=0.0f;
+    snapshot->wireFormat=REPLAY_SNAPSHOT_NATIVE;
+    snapshot->clockPolicy=clock->worldTimerPolicy;
+    snapshot->sourcePlayerTokens[0]=0;snapshot->sourcePlayerTokens[1]=0;
+}
+
+uint32_t replaySnapshotChecksum(const ReplaySnapshot* snapshot,const void* values,int32_t bytes,int32_t ignored)
+{
+    (void)snapshot;(void)ignored;
+    const auto* input=static_cast<const uint8_t*>(values);
+    uint32_t hash=UINT32_MAX;
+    for (int32_t index=0;index<bytes;++index)hash=hash*33u+input[index];
+    return hash;
+}
+
+void replaySnapshotWriteData(ReplaySnapshot* snapshot,const void* values,int32_t bytes,
+    int32_t maximumBytes,int32_t signedExtension)
+{
+    if (!TransferBinding(snapshot,values,bytes,maximumBytes))return;
+    const auto end=static_cast<uint64_t>(snapshot->cursor)+static_cast<uint32_t>(bytes);
+    if (end>REPLAY_SNAPSHOT_WRITE_LIMIT || end>snapshot->capacity) {
+        snapshot->overflowReported=1;snapshot->result=REPLAY_SNAPSHOT_CAPACITY;return;
+    }
+    const auto* source=static_cast<const uint8_t*>(values);
+    int32_t index=0,cursor=snapshot->cursor;uint8_t last=0;
+    // Preserve the source's bytewise forward order, including aliases into
+    // this same stream. memmove would change its overlapping-write behavior.
+    for (;index<bytes;++index) {
+        last=source[index];snapshot->bytes[cursor++]=last;
+    }
+    const uint8_t extension=signedExtension && (last&0x80u) ? 0xffu : 0;
+    for (;index<maximumBytes;++index) {
+        if (source[index]!=extension) {
+            // Source250AB0 is the noncanonical-width diagnostic. Keep a
+            // readable native result; all already-written bytes remain.
+            snapshot->result=REPLAY_SNAPSHOT_NONCANONICAL_EXTENSION;snapshot->cursor=cursor;return;
+        }
+    }
+    snapshot->cursor=cursor;
+}
+
+void replaySnapshotReadData(ReplaySnapshot* snapshot,void* values,int32_t bytes,
+    int32_t maximumBytes,int32_t signedExtension)
+{
+    if (!TransferBinding(snapshot,values,bytes,maximumBytes))return;
+    const auto end=static_cast<uint64_t>(snapshot->cursor)+static_cast<uint32_t>(bytes);
+    // A retained resource may carry a corrupt signed payload length. Casting
+    // -1 to unsigned would otherwise allow unpublished bytes to be read as a
+    // valid snapshot. Keep the source transfer order on every healthy stream.
+    if (snapshot->dataSize<0 || static_cast<uint64_t>(snapshot->dataSize)>snapshot->capacity ||
+        end>static_cast<uint32_t>(snapshot->dataSize) || end>snapshot->capacity) {
+        snapshot->result=REPLAY_SNAPSHOT_READ_BOUNDS;return;
+    }
+    auto* destination=static_cast<uint8_t*>(values);
+    int32_t index=0,cursor=snapshot->cursor;uint8_t last=0;
+    for (;index<bytes;++index) {
+        last=snapshot->bytes[cursor++];destination[index]=last;
+    }
+    const uint8_t extension=signedExtension && (last&0x80u) ? 0xffu : 0;
+    for (;index<maximumBytes;++index)destination[index]=extension;
+    snapshot->cursor=cursor;
+}
+
+void replaySnapshotMoveData(ReplaySnapshot* snapshot,void* values,int32_t bytes,
+    int32_t maximumBytes,int32_t signedExtension)
+{
+    if (!snapshot || snapshot->result!=REPLAY_SNAPSHOT_OK)return;
+    if (snapshot->sectionDepth<0 || snapshot->sectionDepth>=REPLAY_SNAPSHOT_MAX_SECTIONS) {
+        snapshot->result=REPLAY_SNAPSHOT_SECTION_BOUNDS;return;
+    }
+    auto& section=snapshot->sections[snapshot->sectionDepth];
+    ++section.transferCount;
+    const auto maximum=maximumBytes==-1 ? bytes : maximumBytes;
+    if (snapshot->recording)replaySnapshotWriteData(snapshot,values,bytes,maximum,signedExtension);
+    else if (snapshot->restoring)replaySnapshotReadData(snapshot,values,bytes,maximum,signedExtension);
+    else if (snapshot->recordingChecksums) {
+        const auto checksum=static_cast<uint16_t>(replaySnapshotChecksum(snapshot,values,bytes,signedExtension));
+        replaySnapshotWriteData(snapshot,&checksum,2,2,0);
+    } else if (snapshot->verifyingChecksums) {
+        const auto checksum=static_cast<uint16_t>(replaySnapshotChecksum(snapshot,values,bytes,signedExtension));
+        uint16_t recorded=0;
+        replaySnapshotReadData(snapshot,&recorded,2,2,0);
+        if (snapshot->result==REPLAY_SNAPSHOT_OK && checksum!=recorded) {
+            section.mismatchReported=1;
+            // PAL13CFF4->13D0A4->250AB0 traps, rather than merely reporting.
+            // Native verification returns a sticky typed failure; callers must
+            // reject it without installing a hardware exception interpreter.
+            snapshot->result=REPLAY_SNAPSHOT_CHECKSUM_MISMATCH;
+        }
+    }
+}
+
+// Complete PAL13D0D0..13D0F4; beta VerifyData(Pviii)13CED0..13CEF4.
+// The high halfword at source+3C holds the two checksum modes. Ordinary
+// record/restore must not advance this verification-only transfer stream.
+void replaySnapshotVerifyData(ReplaySnapshot* snapshot,void* values,int32_t bytes,
+    int32_t maximumBytes,int32_t signedExtension)
+{
+    if(snapshot && (snapshot->recordingChecksums || snapshot->verifyingChecksums))
+        replaySnapshotMoveData(snapshot,values,bytes,maximumBytes,signedExtension);
+}
+
+// bRepeat::DoSnapshot is defined in the original replay.cpp, PAL13CB90.
+// A capture at the live end writes the writer cursor/channel histories;
+// restoring consumes those bytes into the reader side of the same stream.
+void replaySnapshotBitStream(BitStream* stream,ReplaySnapshot* snapshot,int32_t writingEnd)
+{
+    hp2::Require(stream && snapshot && stream->channelCount<=BIT_STREAM_MAX_CHANNELS,
+        "Replay bRepeat snapshot has no live stream or valid channel count");
+    // Preserve the reader's entire live channel/cursor state if a retained
+    // replay snapshot is truncated after some of its fields. Publishing the
+    // partially read header changes subsequent Demo input/checksum decoding.
+    BitStream staged=*stream;
+    replaySnapshotBeginSection(snapshot,nullptr,"bRepeat");
+    if(writingEnd) {
+        replaySnapshotMoveUnsigned(snapshot,&staged.writePosition,4);
+        replaySnapshotMoveUnsigned(snapshot,&staged.writeCount,4);
+        for(uint32_t index=0;index<stream->channelCount;++index) {
+            auto& channel=staged.channels[index];
+            replaySnapshotMoveUnsigned(snapshot,&channel.writeRepeats,4);
+            replaySnapshotMoveUnsigned(snapshot,&channel.writeRepeatPosition,4);
+            replaySnapshotMoveUnsigned(snapshot,&channel.previousValue,4);
+        }
+    } else {
+        staged.readError=0;
+        replaySnapshotMoveUnsigned(snapshot,&staged.readPosition,4);
+        replaySnapshotMoveUnsigned(snapshot,&staged.readCount,4);
+        for(uint32_t index=0;index<stream->channelCount;++index) {
+            auto& channel=staged.channels[index];
+            replaySnapshotMoveUnsigned(snapshot,&channel.readRepeats,4);
+            replaySnapshotMoveUnsigned(snapshot,&channel.readRepeatPosition,4);
+            replaySnapshotMoveUnsigned(snapshot,&channel.currentValue,4);
+        }
+    }
+    replaySnapshotEndSection(snapshot);
+    if (snapshot->result!=REPLAY_SNAPSHOT_OK)return;
+    if(snapshot->restoring) {
+        bool valid=staged.readCount<=staged.writeCount && staged.readPosition>=staged.dataStart*8u &&
+            staged.readPosition<=staged.writePosition;
+        for(std::uint32_t index=0;index<staged.channelCount && valid;++index) {
+            const auto& channel=staged.channels[index];
+            const auto position=channel.readRepeatPosition;
+            if(!position)valid=channel.readRepeats==0;
+            else {
+                valid=channel.repeatBits<=31 && position>=staged.dataStart*8u+4u &&
+                    position<=staged.writePosition && channel.repeatBits<=staged.writePosition-position;
+                if(valid)valid=bitStreamReadBitsAt(staged.bytes,position-4u,4)==index &&
+                    channel.readRepeats<=bitStreamReadBitsAt(staged.bytes,position,channel.repeatBits);
+            }
+        }
+        if(!valid) {snapshot->result=REPLAY_SNAPSHOT_INVALID_TRANSFER;return;}
+    }
+    hp2::Require(bitStreamStore(&staged)==BIT_STREAM_OK,
+        "Replay bRepeat snapshot cannot publish the real stream header");
+    *stream=staged;
+}
+
+void replaySnapshotBeginSection(ReplaySnapshot* snapshot,const void* object,const char* name)
+{
+    if (!snapshot)return;
+    if (snapshot->sectionDepth>=REPLAY_SNAPSHOT_MAX_SECTIONS-1) {
+        snapshot->result=REPLAY_SNAPSHOT_SECTION_BOUNDS;return;
+    }
+    if (snapshot->sectionDepth==-1)snapshot->nextSectionOrdinal=0;
+    ++snapshot->sectionDepth;
+    auto& section=snapshot->sections[snapshot->sectionDepth];
+    section.transferCount=0;section.mismatchReported=0;
+    section.ordinal=snapshot->nextSectionOrdinal++;
+    section.byteCount=snapshot->cursor;section.object=object;section.name=name;
+    // Source13D0F8 is exactly JR RA/NOP. Source13D3D0/13CB28 here only
+    // formats the debug trace when a section breakpoint is selected.
+}
+
+void replaySnapshotEndSection(ReplaySnapshot* snapshot)
+{
+    if (!snapshot)return;
+    if (snapshot->sectionDepth<0 || snapshot->sectionDepth>=REPLAY_SNAPSHOT_MAX_SECTIONS) {
+        if(snapshot->result==REPLAY_SNAPSHOT_OK)snapshot->result=REPLAY_SNAPSHOT_SECTION_BOUNDS;
+        return;
+    }
+    auto& section=snapshot->sections[snapshot->sectionDepth];
+    section.byteCount=snapshot->cursor-section.byteCount;
+    --snapshot->sectionDepth;
+    if (snapshot->sectionDepth<snapshot->debugDepth)snapshot->debugDepth=-1;
+}
+
+void replaySnapshotMoveInteger(ReplaySnapshot* snapshot,int32_t* value,int32_t bytes)
+{
+    replaySnapshotMoveData(snapshot,value,bytes,4,1);
+}
+
+void replaySnapshotMoveUnsigned(ReplaySnapshot* snapshot,uint32_t* value,int32_t bytes)
+{
+    replaySnapshotMoveData(snapshot,value,bytes,4,0);
+}
+
+void replaySnapshotMoveFloat(ReplaySnapshot* snapshot,float* value)
+{
+    replaySnapshotMoveData(snapshot,value,4,-1,0);
+}
+
+// PAL13D100..13D288. The source overload ignores its nominal byte argument.
+// A matrix keeps its original stream encoding and is restored in place.
+void replaySnapshotMoveMatrix(ReplaySnapshot* snapshot,float matrix[16],int32_t bytes)
+{
+    (void)bytes;
+    int8_t encoding=0;
+    if (matrix[3]==0.0f && matrix[7]==0.0f && matrix[11]==0.0f && matrix[15]==1.0f)
+        encoding=matrix[12]==0.0f && matrix[13]==0.0f && matrix[14]==0.0f ? 1 : 2;
+    replaySnapshotMoveData(snapshot,&encoding,1,1,1);
+    if (snapshot->result!=REPLAY_SNAPSHOT_OK)return;
+    // Final PAL uses only the three stream layouts 0, 1 and 2. Reject a
+    // damaged selector before touching the live transform, rather than
+    // interpreting arbitrary bytes as a rotation-only matrix.
+    if (encoding<0 || encoding>2) {
+        snapshot->result=REPLAY_SNAPSHOT_INVALID_TRANSFER;return;
+    }
+    if (snapshot->restoring) {
+        // All lanes are one logical world transform. In a damaged Demo or
+        // replay file the original sequential reader could copy the first
+        // rotation row and then fail on the next row, leaving an invalid
+        // physics/camera matrix. Preflight the exact PAL encoded extent; a
+        // complete healthy stream still follows its original transfer order.
+        const std::uint64_t transferBytes=encoding==0 ? 64u : (encoding==1 ? 36u : 48u);
+        if (snapshot->cursor<0 || snapshot->dataSize<0 ||
+            static_cast<std::uint64_t>(snapshot->dataSize)>snapshot->capacity ||
+            static_cast<std::uint64_t>(snapshot->cursor)+transferBytes>
+                static_cast<std::uint64_t>(snapshot->dataSize) ||
+            static_cast<std::uint64_t>(snapshot->cursor)+transferBytes>snapshot->capacity) {
+            snapshot->result=REPLAY_SNAPSHOT_READ_BOUNDS;
+            return;
+        }
+    }
+    if (encoding==0) {
+        replaySnapshotMoveData(snapshot,matrix,64,-1,0);
+    } else {
+        replaySnapshotMoveData(snapshot,matrix,12,-1,0);
+        replaySnapshotMoveData(snapshot,matrix+4,12,-1,0);
+        replaySnapshotMoveData(snapshot,matrix+8,12,-1,0);
+        matrix[15]=1.0f;
+        matrix[3]=0.0f;matrix[7]=0.0f;matrix[11]=0.0f;
+        if (encoding==2)replaySnapshotMoveData(snapshot,matrix+12,12,-1,0);
+        else {matrix[14]=0.0f;matrix[12]=0.0f;matrix[13]=0.0f;}
+    }
+}
+
+static int streamFull(const BitStream* stream)
+{
+    return stream->writePosition >= stream->capacity * 8u - 68u;
+}
+
+uint32_t replayManagerRead(ReplayManager* replay, uint32_t bits, uint32_t channel)
+{
+    if (!replay->restoring || replay->exhausted) return 0;
+    const uint32_t value = bitStreamRead(replay->stream, bits, channel);
+    if (replay->stream->readError) replay->exhausted = 1;
+    return value;
+}
+
+uint32_t replayManagerReadUnsigned(ReplayManager* replay, uint32_t bits, uint32_t channel)
+{
+    const uint32_t value = replayManagerRead(replay, bits, channel);
+    const uint32_t shift = (32u - bits) & 31u;
+    return (value << shift) >> shift;
+}
+
+void replayManagerRequestStop(ReplayManager* replay)
+{
+    if (!replay->stopRequested) replay->stopRequested = 1;
+}
+
+void replayManagerWrite(ReplayManager* replay, uint32_t value, uint32_t bits, uint32_t channel)
+{
+    if (!replay->recording) return;
+    (void)bitStreamWrite(replay->stream, value, bits, channel);
+    if (streamFull(replay->stream)) {
+        replay->recording = 0;
+        replayManagerRequestStop(replay);
+    }
+}
+
+struct ReplayManagerOwner::Storage {
+    ReplayManager state{};
+    hp2::DemoModeReplay* demo{};
+    bool borrowedDemoPayload{};
+    GameSession* coordinator{};
+    RaceParameters* parameters{};
+    const GameTime* clock{};
+    const CarDriverAppearanceCatalogue* characters{};
+    GameInputRouter* input{};
+    std::vector<std::unique_ptr<ReplaySnapshotStorage>> freeSnapshots;
+    std::vector<std::unique_ptr<ReplaySnapshotStorage>> snapshots;
+    std::unique_ptr<BitStream> repeat;
+    std::vector<uint8_t> recordingBytes;
+};
+
+void ReplayManagerOwner::BindRace(GameSession& coordinator,RaceParameters& parameters,
+    const GameTime& clock,const CarDriverAppearanceCatalogue& characters,GameInputRouter& input)
+{
+    auto& owner=*storage_;
+    hp2::Require(!owner.coordinator && coordinator.bindings && coordinator.bindings->world &&
+        coordinator.bindings->replayOwner==this && coordinator.bindings->clock==&clock,
+        "Replay snapshot bindings differ from the canonical race owners");
+    owner.coordinator=&coordinator;owner.parameters=&parameters;
+    owner.clock=&clock;owner.characters=&characters;owner.input=&input;
+}
+
+namespace {
+std::unique_ptr<ReplaySnapshotStorage> AllocateReplaySnapshot()
+{
+    auto node=std::make_unique<ReplaySnapshotStorage>();
+    // PAL allocates 0x9558 total bytes, of which the actual data area is
+    // 0x9400 bytes. Source ctor initializes only the two Timer members;
+    // native value initialization makes inactive metadata safe to inspect.
+    node->allocation.resize(0x9400);
+    node->snapshot.bytes=node->allocation.data();
+    node->snapshot.capacity=node->allocation.size();
+    node->snapshot.worldTimer=0;node->snapshot.endTime=0;
+    return node;
 }
 }
 
-// TASK-0099 E-0099-W74. Debug NFSHP2.ELF SHA-256
-// 815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
-// Raw read-only queries: local/task0099/replay-frame/0013{cae8,cb68,cba0,cc78,cd08,ced0,cef8,cf00,d088,d158}.json.
-namespace hp2::debug {
-// Debug0013CAE8. Init does not reset the reused snapshot's EndTime+2C.
-void ReplaySnapshot::Init(std::uint32_t name){
- auto& m=m_;const auto a=address_;unsigned i=0;
- do{const auto c=m.byte(name+i);m.byte(a+8+i,c);++i;if(!c)break;
-  if(i>=32)hp2::not_implemented("0x0013CAE8","Snapshot name exceeds original inline storage");
- }while(true);
- m.word(a+0x28,m.word(0x327cf8));m.word(a+0x30,m.word(0x327d10));
- m.byte(a+0x40,255);m.word(a+0x44,0xffffffffu);
- for(auto off:{0x154u,0x34u,0x38u,0x3cu,0x48u,0x14cu,0x150u})m.word(a+off,0);
- m.byte(a+0x41,0);m.half(a+0x42,0);
+ReplayManagerOwner::ReplayManagerOwner(hp2::DemoModeReplay& demo)
+    : storage_(std::make_unique<Storage>())
+{
+    auto& owner=*storage_;
+    auto& state=owner.state;
+    state.owner=this;
+    state.firstSourceReferenceMismatchLoop=-1;
+    state.lapSnapshotSpacing=15.0f;
+    state.nextFancyDebugTime=9999999;
+    state.beginCapturingLoopCount=-1;state.endCapturingLoopCount=-1;
+    state.lastSnapshotTime=-1;
+    hp2::Require(!demo.replayBorrower_,"Demo replay already has a live ReplayManager");
+    if (demo.active) {
+        hp2::Require(demo.repeat_ && demo.repeat_->bytes && demo.repeat_->channelCount>0 &&
+            !demo.snapshots_.empty(),
+            "Active Demo cannot borrow a missing recorded stream or empty snapshot list");
+        // Allocate before publishing the move, so native allocation failure
+        // leaves the original live recording and its byte references intact.
+        owner.freeSnapshots.push_back(AllocateReplaySnapshot());
+        owner.snapshots=std::move(demo.snapshots_);
+        owner.repeat=std::move(demo.repeat_);
+        state.stream=owner.repeat.get();
+        state.maximumSnapshots=1;
+        owner.borrowedDemoPayload=true;
+        state.synchronizationPolicy=hp2::ReadU32(demo.metadata_)==8u?
+            REPLAY_SYNC_PAL_REFERENCE:REPLAY_SYNC_NATIVE_STRICT;
+    }
+    owner.demo=&demo;demo.replayBorrower_=this;
 }
-// Debug0013CB68. memory_size is unused by the original hash.
-std::uint32_t ReplaySnapshot::GetChecksum(std::uint32_t pdata,int data_size,int)const{
- std::uint32_t result=0xffffffffu;
- for(int i=0;i<data_size;++i)result=result*33u+m_.byte(pdata+static_cast<unsigned>(i));
- return result;
+
+ReplayManagerOwner::~ReplayManagerOwner()
+{
+    if (!storage_)return;
+    auto& owner=*storage_;
+    if (owner.demo && owner.borrowedDemoPayload) {
+        // Source returns every memory-image node to the same demo list.
+        // Native snapshots are deleted here, and free snapshots below.
+        owner.snapshots.erase(std::remove_if(owner.snapshots.begin(),owner.snapshots.end(),
+            [](const auto& node){return !node->snapshot.memoryImageLoaded;}),owner.snapshots.end());
+        auto& demo=*owner.demo;
+        demo.snapshots_=std::move(owner.snapshots);
+        // bRepeat belongs to the authored recording independently of how
+        // many snapshot nodes survived playback. The old conditional lost
+        // the stream whenever all Demo snapshots had been consumed/deleted.
+        if(owner.repeat)demo.repeat_=std::move(owner.repeat);
+    }
+    if(owner.demo)owner.demo->replayBorrower_=nullptr;
+    owner.state.stream=nullptr;
+    owner.snapshots.clear();owner.freeSnapshots.clear();owner.repeat.reset();
 }
-// Debug0013CBA0. Capacity test is strictly less-than; overflow does not advance.
-void ReplaySnapshot::WriteData(std::uint32_t pdata,int size,int memory_size,int sign_extend){
- auto& m=m_;const auto a=address_;auto pos=m.word(a+0x150);
- if(size<0||memory_size<0||pos>0x9400u)hp2::not_implemented("0x0013CBA0","Invalid snapshot byte-count domain");
- if(static_cast<std::uint64_t>(pos)+static_cast<unsigned>(size)<0x9400u){
-  std::uint8_t last=0;for(int i=0;i<size;++i){last=m.byte(pdata+i);m.byte(a+0x158+pos++,last);}
-  const auto extension=static_cast<std::uint8_t>(sign_extend&&(last&128)?255:0);
-  for(int i=size;i<memory_size;++i)if(m.byte(pdata+i)!=extension)
-   hp2::not_implemented("0x0013CBA0",(std::string("Original bBreak: snapshot field does not fit serialized width; address=")+std::to_string(pdata)+" dataSize="+std::to_string(size)+" memorySize="+std::to_string(memory_size)+" tailOffset="+std::to_string(i)).c_str());
- }else if(!m.byte(a+0x41))m.byte(a+0x41,1);
- m.word(a+0x150,pos);
+
+ReplayManager& ReplayManagerOwner::State() noexcept {return storage_->state;}
+const ReplayManager& ReplayManagerOwner::State() const noexcept {return storage_->state;}
+std::size_t ReplayManagerOwner::FreeSnapshotCount() const noexcept {return storage_->freeSnapshots.size();}
+std::size_t ReplayManagerOwner::ActiveSnapshotCount() const noexcept
+{return storage_->snapshots.size();}
+ReplaySnapshot* ReplayManagerOwner::ActiveSnapshot(std::size_t index) noexcept
+{
+    return index<storage_->snapshots.size()?&storage_->snapshots[index]->snapshot:nullptr;
 }
-// Debug0013CC78. A short input genuinely leaves destination and cursor unchanged.
-void ReplaySnapshot::ReadData(std::uint32_t pdata,int size,int memory_size,int sign_extend){
- auto& m=m_;const auto a=address_;auto pos=m.word(a+0x150);
- if(size<0||memory_size<0)hp2::not_implemented("0x0013CC78","Invalid snapshot byte-count domain");
- if(static_cast<std::uint64_t>(pos)+static_cast<unsigned>(size)<=m.word(a+0x154)){
-  std::uint8_t last=0;for(int i=0;i<size;++i){last=m.byte(a+0x158+pos++);m.byte(pdata+i,last);}
-  const auto extension=static_cast<std::uint8_t>(sign_extend&&(last&128)?255:0);
-  for(int i=size;i<memory_size;++i)m.byte(pdata+i,extension);
- }
- m.word(a+0x150,pos);
+const ReplaySnapshotStorage* ReplayManagerOwner::ActiveSnapshotStorage(std::size_t index) const noexcept
+{
+    return index<storage_->snapshots.size()?storage_->snapshots[index].get():nullptr;
 }
-// Debug0013CD08. Capture/restore/checksum/verify priority and per-section byte counter.
-void ReplaySnapshot::MoveData(std::uint32_t pdata,int size,int memory_size,int sign_extend){
- auto& m=m_;const auto a=address_;const int depth=m.signed_byte(a+0x40);
- if(depth<0||depth>=16)hp2::not_implemented("0x0013CD08","MoveData outside original section stack");
- const auto section=a+0x4c+16u*depth;m.byte(section+10,m.byte(section+10)+1);
- const int extent=memory_size==-1?size:memory_size;
- if(m.byte(a+0x3c))WriteData(pdata,size,extent,sign_extend);
- else if(m.byte(a+0x3d))ReadData(pdata,size,extent,sign_extend);
- else if(m.byte(a+0x3e)||m.byte(a+0x3f)){
-  const auto checksum=static_cast<std::uint16_t>(GetChecksum(pdata,size,extent));
-  ::port::driving::Memory::Temporary local(m,2);m.half(local.address(),checksum);
-  if(m.byte(a+0x3e))WriteData(local.address(),2,2,0);
-  else{
-   if(static_cast<std::uint64_t>(m.word(a+0x150))+2>m.word(a+0x154))
-    hp2::not_implemented("0x0013CD08","Short checksum input leaves original prior-stack halfword unresolved");
-   ReadData(local.address(),2,2,0);
-   if(checksum!=m.half(local.address())&&!m.byte(section+11)){
-    m.byte(section+11,1);
-    hp2::not_implemented("0x0013CD08","Original checksum diagnostic/bBreak after snapshot mismatch");
-   }
-  }
- }
+
+void ReplayManagerOwner::MarkTheBeginningOfTime(const GameTime& clock,std::size_t availableBytes)
+{
+    auto& owner=*storage_;auto& state=owner.state;
+    hp2::Require(!owner.clock || owner.clock==&clock,"Replay begin time uses a different GameTime owner");
+    owner.clock=&clock;
+    if (state.beginCapturingLoopCount!=-1)return;
+    state.endCapturingLoopCount=clock.worldLoopCounter;
+    state.beginCapturingLoopCount=clock.worldLoopCounter;
+    state.beginCapturingTime=clock.worldTimer;state.endCapturingTime=clock.worldTimer;
+    if (availableBytes<0x8000u || availableBytes-0x8000u<0xd0ad8u)return;
+    hp2::Require(!owner.repeat && !state.stream,
+        "Replay recording cannot replace the live borrowed demo BitStream");
+    std::vector<uint8_t> bytes(0x32000);
+    auto repeat=std::make_unique<BitStream>();
+    hp2::Require(bitStreamInitialize(repeat.get(),bytes.data(),static_cast<uint32_t>(bytes.size()),4)==BIT_STREAM_OK,
+        "Replay allocation cannot initialize its actual BitStream");
+    const uint32_t repeatBits[4]={8,4,0,8};
+    for (uint32_t index=0;index<4;++index)
+        hp2::Require(bitStreamConfigureChannel(repeat.get(),index,repeatBits[index],index==1 ? 1u : 0u)==BIT_STREAM_OK,
+            "Replay BitStream channel configuration failed");
+    std::vector<std::unique_ptr<ReplaySnapshotStorage>> snapshots;
+    snapshots.reserve(17);
+    for (int32_t index=0;index<17;++index)snapshots.push_back(AllocateReplaySnapshot());
+    owner.recordingBytes=std::move(bytes);owner.repeat=std::move(repeat);
+    owner.freeSnapshots=std::move(snapshots);
+    state.stream=owner.repeat.get();state.maximumSnapshots=17;
+    state.maximumInstantReplaySnapshots=2;state.maximumLapSnapshots=8;
+    state.maximumHighlightSnapshots=5;state.stopRequested=0;state.maximumAutoReplaySnapshots=0;
 }
-// Debug0013CED0. VerifyData is intentionally inactive during ordinary take/restore.
-void ReplaySnapshot::VerifyData(std::uint32_t p,int size,int memory_size,int sign_extend){
- if(m_.byte(address_+0x3e)||m_.byte(address_+0x3f))MoveData(p,size,memory_size,sign_extend);
+
+// PAL13E270 RegisterInterestingEvent: the name argument is unused in the
+// released body. The active snapshot list is its sole intensity owner.
+void replayManagerAddHighlight(ReplayManager* manager,float intensity)
+{
+    hp2::Require(manager,"Replay interesting event has no manager");
+    if(!manager->recording)return;
+    hp2::Require(manager->owner && &manager->owner->State()==manager,
+        "Replay interesting event has no canonical active-snapshot owner");
+    for(std::size_t index=0;index<manager->owner->ActiveSnapshotCount();++index) {
+        auto* snapshot=manager->owner->ActiveSnapshot(index);
+        if(!std::strcmp(snapshot->name,"INSTANT_REPLAY"))
+            snapshot->totalInterestingValue+=intensity;
+    }
 }
-// Debug0013CEF8. Exact empty source body, not a substitute synchronization marker.
-void ReplaySnapshot::VerifyMoveDataInSync(std::uint32_t,std::uint32_t){}
-// Debug0013D088. Raw name/object addresses remain borrowed until EndSection.
-void ReplaySnapshot::BeginSection(std::uint32_t object,std::uint32_t name){
- auto& m=m_;const auto a=address_;const int old=m.signed_byte(a+0x40),depth=old+1;
- if(depth<0||depth>=16)hp2::not_implemented("0x0013D088","Original snapshot section stack overflow");
- if(old==-1)m.half(a+0x42,0);
- const auto number=m.half(a+0x42);m.byte(a+0x40,depth);m.half(a+0x42,number+1);
- const auto s=a+0x4c+16u*depth;m.byte(s+10,0);m.byte(s+11,0);m.half(s+8,number);
- m.word(s+4,object);m.word(s+12,m.word(a+0x150));m.word(s,name);
- if(m.signed_word(a+0x44)>=0&&m.signed_word(a+0x44)<=depth&&m.word(a+0x48)==m.word(0x327d10))
-  hp2::not_implemented("0x0013D088","Active PrintSectionName/PrintSpaces diagnostic output");
+
+
+#include "indep/inc/PauseMenu.hpp"
+#include "bware/inc/bWare.hpp"
+int replayManagerHandleSpecialEvent(ReplayManager& replay,hp2::RaceScreenServices& services,
+    const ReplaySpecialEventInfo& event)
+{
+    (void)replay;
+    return hp2::HandlePauseMenuReplaySpecialEvents(services,event);
 }
-// Debug0013D158.
-void ReplaySnapshot::EndSection(){
- auto& m=m_;const auto a=address_;const int depth=m.signed_byte(a+0x40);
- if(depth<0||depth>=16)hp2::not_implemented("0x0013D158","EndSection outside original section stack");
- const auto s=a+0x4c+16u*depth;m.word(s+12,m.word(a+0x150)-m.word(s+12));
- m.byte(a+0x40,depth-1);if(depth-1<m.signed_word(a+0x44))m.word(a+0x44,0xffffffffu);
+int replayManagerAddSpecialEvent(ReplayManager& replay,hp2::RaceScreenServices& services,
+    int32_t kind,int32_t argument1,int32_t argument2)
+{
+    hp2::Require(services.frontend && services.frontend->ui && services.frontend->ui->clock,
+        "Replay special event has no actual world clock");
+    const ReplaySpecialEventInfo event{kind,services.frontend->ui->clock->worldLoopCounter,argument1,argument2};
+    if (replay.beginCapturingLoopCount!=-1 && !replay.stopRequested && replay.stream) {
+        hp2::Require(replay.specialEventCount>=0,"Replay special event count is corrupt");
+        if (replay.specialEventCount<256)replay.specialEvents[replay.specialEventCount++]=event;
+        else replayManagerRequestStop(&replay);
+    }
+    return replayManagerHandleSpecialEvent(replay,services,event);
 }
-// Debug0013CF00. Compact affine matrix format, including source capture-side W writes.
-void ReplaySnapshot::MoveData(::port::race::SnapshotMatrix matrix,int){
- auto& m=m_;const auto p=matrix.address;
- // EE comparisons of denormal inputs have not been established for this overload.
- for(unsigned off:{12u,28u,44u,60u,48u,52u,56u}){
-  const auto bits=m.word(p+off);
-  if((bits&0x7f800000u)==0&&(bits&0x7fffffu)!=0)
-   hp2::not_implemented("0x0013CF00","EE denormal matrix classification comparison");
- }
- std::uint8_t type=0;
- if(m.scalar(p+12)==0&&m.scalar(p+28)==0&&m.scalar(p+44)==0&&m.scalar(p+60)==1){
-  type=2;if(m.scalar(p+48)==0&&m.scalar(p+52)==0&&m.scalar(p+56)==0)type=1;
- }
- ::port::driving::Memory::Temporary local(m,1);m.byte(local.address(),type);MoveData(local.address(),1);type=m.byte(local.address());
- if(type==0){MoveData(p,64);return;}
- for(unsigned off:{0u,16u,32u})MoveData(p+off,12);
- for(unsigned off:{12u,28u,44u})m.word(p+off,0);
- m.scalar(p+60,1);
- if(type!=2){m.word(p+48,0);m.word(p+52,0);m.word(p+56,0);return;}
- MoveData(p+48,12);
+
+int32_t replayChecksumSnapshotTimes[4]={-1,-1,-1,-1};
+namespace {
+int32_t ReplayAdd(int32_t a,int32_t b)
+{
+    const auto bits=static_cast<uint32_t>(a)+static_cast<uint32_t>(b);
+    int32_t value;std::memcpy(&value,&bits,sizeof(value));return value;
+}
+int32_t ReplaySubtract(int32_t a,int32_t b)
+{
+    const auto bits=static_cast<uint32_t>(a)-static_cast<uint32_t>(b);
+    int32_t value;std::memcpy(&value,&bits,sizeof(value));return value;
+}
+}
+ReplaySnapshot* ReplayManagerOwner::FindSnapshot(const char* name,int32_t ordinal) noexcept
+{
+    if(!name)return nullptr;
+    for(auto& owner:storage_->snapshots)
+        if(!std::strcmp(owner->snapshot.name,name)) {
+            if(ordinal==0)return &owner->snapshot;
+            --ordinal;
+        }
+    return nullptr;
+}
+void ReplayManagerOwner::DeleteSnapshot(ReplaySnapshot& snapshot)
+{
+    auto& owner=*storage_;
+    const auto found=std::find_if(owner.snapshots.begin(),owner.snapshots.end(),[&](const auto& node) {
+        return &node->snapshot==&snapshot;
+    });
+    hp2::Require(found!=owner.snapshots.end(),"Replay cannot retire a snapshot from a different owner");
+    owner.freeSnapshots.push_back(std::move(*found));owner.snapshots.erase(found);
+}
+bool ReplayManagerOwner::DeleteSnapshot(const char* name)
+{
+    auto* snapshot=FindSnapshot(name);
+    if(!snapshot)return false;
+    DeleteSnapshot(*snapshot);return true;
+}
+
+void ReplayManagerOwner::SortSnapshots(const char* name)
+{
+    hp2::Require(name,"Replay snapshot sorting has no name");
+    auto& snapshots=storage_->snapshots;
+    std::vector<std::unique_ptr<ReplaySnapshotStorage>> matching;
+    for(auto item=snapshots.begin();item!=snapshots.end();) {
+        if(std::strcmp((*item)->snapshot.name,name)) {++item;continue;}
+        matching.push_back(std::move(*item));item=snapshots.erase(item);
+    }
+    std::stable_sort(matching.begin(),matching.end(),[](const auto& a,const auto& b) {
+        return a->snapshot.worldLoopCounter<b->snapshot.worldLoopCounter;
+    });
+    for(auto& item:matching)snapshots.push_back(std::move(item));
+}
+
+namespace {
+void TransferManagerState(ReplayManager& state,ReplaySnapshot& snapshot)
+{
+    replaySnapshotBeginSection(&snapshot,nullptr,"ReplayManager");
+    replaySnapshotMoveInteger(&snapshot,&state.beginCapturingLoopCount,4);
+    replaySnapshotMoveInteger(&snapshot,&state.endCapturingLoopCount,4);
+    replaySnapshotMoveInteger(&snapshot,&state.snapshotsTaken,4);
+    hp2::Require(snapshot.result==REPLAY_SNAPSHOT_OK,"Replay manager snapshot header is truncated");
+    hp2::Require(state.snapshotsTaken>=0 && state.snapshotsTaken<=4096,
+        "Replay manager snapshot exceeds the original snapshot-time allocation");
+    for(int32_t index=0;index<state.snapshotsTaken;++index)
+        replaySnapshotMoveInteger(&snapshot,&state.snapshotTimes[index],4);
+    replaySnapshotMoveInteger(&snapshot,&state.specialEventCount,4);
+    hp2::Require(snapshot.result==REPLAY_SNAPSHOT_OK,"Replay manager snapshot times are truncated");
+    hp2::Require(state.specialEventCount>=0 && state.specialEventCount<=256,
+        "Replay manager snapshot exceeds the original special-event allocation");
+    static_assert(sizeof(ReplaySpecialEventInfo)==16);
+    for(int32_t index=0;index<state.specialEventCount;++index)
+        replaySnapshotMoveData(&snapshot,&state.specialEvents[index],16,-1,0);
+    replaySnapshotEndSection(&snapshot);
+    hp2::Require(snapshot.result==REPLAY_SNAPSHOT_OK,"Replay manager special events are truncated");
 }
 }
 
-#include "game_core/indep/inc/Replay.hpp"
-namespace hp2::debug {
-// Debug0013C990; E-0099-W74; replay-frame/0013c990.json/type-bRepeatChannel.json.
-void bRepeat::DoSnapshot(std::uint32_t snapshot,bool add_data_position){
- ReplaySnapshot s(m_,snapshot);s.BeginNamedSection(0x3271b0);const auto a=address_;
- if(!add_data_position)m_.word(a+0x28,0);
- s.MoveData(a+(add_data_position?8:0x10),4,4,1);s.MoveData(a+(add_data_position?0x20:0x24),4,4,1);
- for(int i=0;i<m_.signed_word(a+0x18);++i){const auto c=a+0x30+0x24*i+(add_data_position?12:24);s.MoveData(c,4,4,1);s.MoveData(c+4,4,4,1);s.MoveData(c+8,4,4,1);}
- s.EndNamedSection();
-}
-}
-
-#include "game_core/indep/inc/RaceCoordinator.hpp"
-#include "game_core/indep/src/joystick.hpp"
-#include "game_core/indep/src/raceparameters.hpp"
-#include "game_core/port/driving/projections.hpp"
-#include <cstring>
-#include <cstdio>
-namespace hp2::recovered {
-// Debug0013D7B8; E-0099-W74; replay-frame/0013d7b8.json.
-bool ReplayManager::WasSnapshotTakenAtThisTime(int time){
- int index=0;const auto last=m_.signed_word(address_+0xa8);
- if(last<0||last>=4096)hp2::not_implemented("0x0013D7B8","Snapshot history cursor outside source array");
- if(last&&m_.signed_word(address_+0xac+4*last)<time)index=last;
- for(;index<m_.signed_word(address_+0xa4);++index){if(index>=4096)hp2::not_implemented("0x0013D7B8","Snapshot history count outside source array");if(m_.signed_word(address_+0xac+4*index)==time){m_.word(address_+0xa8,index);return true;}}
- return false;
-}
-// Debug0013E3B8; E-0099-W74; exact case-sensitive source name/order/countdown.
-std::uint32_t ReplayManager::FindSnapshot(const char* name,int number){
- const auto head=address_+0x6c;for(auto p=m_.word(head);p!=head;p=m_.word(p)){
-  unsigned i=0;while(name[i]&&m_.byte(p+8+i)==static_cast<unsigned char>(name[i]))++i;
-  if(!name[i]&&!m_.byte(p+8+i)){if(number==0)return p;number=static_cast<int>(static_cast<std::uint32_t>(number)-1);}
- }return 0;
-}
-// Debug0013E5C8; E-0099-W74. Move used node to free tail, never release here.
-void ReplayManager::DeleteSnapshot(std::uint32_t p){const auto next=m_.word(p),previous=m_.word(p+4),head=address_+0x64,tail=m_.word(head+4);m_.word(previous,next);m_.word(next+4,previous);m_.word(tail,p);m_.word(head+4,p);m_.word(p,head);m_.word(p+4,tail);}
-// Debug0013E580; E-0099-W74.
-int ReplayManager::DeleteSnapshot(const char* name){const auto p=FindSnapshot(name,0);if(p)DeleteSnapshot(p);return p!=0;}
-// Debug0013E6C8; E-0099-W74; replay-frame/0013e6c8.json.
-void ReplayManager::DoEndSnapshot(std::uint32_t snapshot){
- hp2::debug::ReplaySnapshot s(m_,snapshot);s.BeginSection(0x2a7060);
- for(unsigned off:{0x4cu,0x50u,0xa4u})s.MoveData(address_+off,4,4,1);
- for(int i=0;i<m_.signed_word(address_+0xa4);++i){if(i>=4096)hp2::not_implemented("0x0013E6C8","Snapshot time count exceeds source table");s.MoveData(address_+0xac+4*i,4,4,1);}
- s.MoveData(address_+0x40ac,4,4,1);
- for(int i=0;i<m_.signed_word(address_+0x40ac);++i){if(i>=256)hp2::not_implemented("0x0013E6C8","Special event count exceeds source table");s.MoveData(address_+0x40b4+16*i,16);}
- s.EndSection();
-}
-// Debug0013E5F8; E-0099-W74; no synthetic top-level section is inserted.
-void ReplayManager::HandleSnapshot(std::uint32_t snapshot,const ::port::race::SnapshotServices& services){
- const char expected[]="REPLAY_MANAGER_STATE";unsigned i=0;while(expected[i]&&m_.byte(snapshot+8+i)==static_cast<unsigned char>(expected[i]))++i;
- if(!expected[i]&&!m_.byte(snapshot+8+i)){DoEndSnapshot(snapshot);return;}
- hp2::debug::RaceParameters(m_,0x311f78).DoSnapshot(snapshot);
- const bool add=(m_.byte(snapshot+0x3c)||m_.byte(snapshot+0x3e))&&m_.word(0x327d10)==m_.word(address_+0x50);
- hp2::debug::bRepeat(m_,m_.word(address_+0x60)).DoSnapshot(snapshot,add);
- hp2::debug::JoystickDoSnapshot(m_,snapshot);
- hp2::debug::RaceCoordinator(m_,m_.word(0x327290)).DoSnapshot(snapshot,services);
-}
-// Debug0013E7E0; E-0099-W74. Name is a host string operand copied into original inline storage.
-std::uint32_t ReplayManager::TakeSnapshot(const char* name,const ::port::race::SnapshotServices& services){
- auto& m=m_;const auto a=address_,free=a+0x64,used=a+0x6c;if(m.signed_word(a+0x4c)<0)return 0;
- auto p=m.word(free);if(p==free){p=m.allocate(0x9558);m.word(p+0x28,0);m.word(p+0x2c,0);const auto tail=m.word(free+4);m.word(tail,p);m.word(free+4,p);m.word(p,free);m.word(p+4,tail);p=m.word(free);}
- const auto next=m.word(p),previous=m.word(p+4);m.word(previous,next);m.word(next+4,previous);const auto tail=m.word(used+4);m.word(tail,p);m.word(used+4,p);m.word(p+4,tail);m.word(p,used);
- ::port::driving::Memory::Temporary text(m,static_cast<std::uint32_t>(std::strlen(name)+1));for(unsigned j=0;j<=std::strlen(name);++j)m.byte(text.address()+j,static_cast<unsigned char>(name[j]));hp2::debug::ReplaySnapshot(m,p).Init(text.address());
- const auto loop=m.word(0x327d10);if(loop==m.word(a+0x50)&&m.signed_word(a+0xa4)<4096){const auto count=m.word(a+0xa4);m.word(a+0xac+4*count,loop);m.word(a+0xa4,count+1);}m.word(a+0xa0,loop);
- m.word(p+0x150,0);m.byte(p+0x3c,1);HandleSnapshot(p,services);m.word(p+0x154,m.word(p+0x150));m.byte(p+0x3c,0);if(m.byte(p+0x41)){DeleteSnapshot(p);return 0;}return p;
-}
-// Debug0013D820; E-0099-W74.
-void ReplayManager::MaybeTakeDummySnapshot(const ::port::race::SnapshotServices& services){
- auto& m=m_;const auto a=address_;const auto loop=m.signed_word(0x327d10);bool take=false;
- if(m.word(a)&&!m.word(a+0x14)&&m.signed_word(a+0xa0)!=loop)take=WasSnapshotTakenAtThisTime(loop);
- if(m.word(a+4)&&(loop%211==0||static_cast<std::int32_t>(m.word(a+0xa0)+30)<loop))take=true;
- if(take&&TakeSnapshot("DUMMY_SNAPSHOT",services))DeleteSnapshot("DUMMY_SNAPSHOT");
-}
+void ReplayManagerOwner::DoEndSnapshot(ReplaySnapshot& snapshot)
+{
+    auto& state=storage_->state;
+    if(!snapshot.restoring) {TransferManagerState(state,snapshot);return;}
+    // Counts are read before their arrays. Do not publish a prefix from a
+    // truncated retained manager node into the live replay owner.
+    auto staged=std::make_unique<ReplayManager>(state);
+    try {TransferManagerState(*staged,snapshot);}
+    catch(...) {snapshot.restoring=0;throw;}
+    state.beginCapturingLoopCount=staged->beginCapturingLoopCount;
+    state.endCapturingLoopCount=staged->endCapturingLoopCount;
+    state.snapshotsTaken=staged->snapshotsTaken;
+    std::copy_n(staged->snapshotTimes,state.snapshotsTaken,state.snapshotTimes);
+    state.specialEventCount=staged->specialEventCount;
+    std::copy_n(staged->specialEvents,state.specialEventCount,state.specialEvents);
 }
 
-namespace hp2::recovered {
-// Debug0013D8F0; E-0099-W74; replay-frame/0013d8f0.json.
-void ReplayManager::MaybeTakeInstantReplaySnapshot(const ::port::race::SnapshotServices& services){
- auto& m=m_;const auto a=address_;if(m.signed_word(0x327d04)<m.signed_word(a+0x48))return;
- m.word(a+0x48,m.word(0x327d04)+300);
- if(m.signed_word(a+0x88)!=0&&m.signed_word(a+0x88)>=m.signed_word(a+0x78)){
-  const auto instant=FindSnapshot("INSTANT_REPLAY",0);if(!instant)hp2::not_implemented("0x0013D8F0","Original instant count has no matching snapshot node");
-  std::uint32_t minimum=0,candidate=0;bool overlap=false;
-  for(int i=0;i<m.signed_word(a+0x84);++i){if(i<m.signed_word(a+0x90)){
-   const auto p=FindSnapshot("HIGHLIGHT_SNAPSHOT",i);if(!p)hp2::not_implemented("0x0013D8F0","Original highlight count has no matching snapshot node");
-   if(m.signed_word(instant+0x30)<m.signed_word(p+0x34)){candidate=p;overlap=true;break;}
-   if(!minimum||m.scalar(p+0x14c)<m.scalar(minimum+0x14c))minimum=p;
-  }else minimum=0;}
-  if(!overlap)candidate=minimum;
-  const auto interesting=m.scalar(instant+0x14c);
-  if(0<interesting&&(!candidate||interesting>m.scalar(candidate+0x14c))){
-   if(m.word(a+0x90)==m.word(a+0x84)||(candidate&&m.signed_word(instant+0x30)<m.signed_word(candidate+0x34))){
-    if(!candidate)hp2::not_implemented("0x0013D8F0","Original highlight replacement would dereference null snapshot");
-    DeleteSnapshot(candidate);m.word(a+0x90,m.word(a+0x90)-1);
-   }
-   const char text[]="HIGHLIGHT_SNAPSHOT";for(unsigned i=0;i<sizeof(text);++i)m.byte(instant+8+i,static_cast<unsigned char>(text[i]));
-   m.word(instant+0x34,m.word(0x327d10));m.word(instant+0x2c,m.word(0x327cf8));m.word(a+0x88,m.word(a+0x88)-1);m.word(a+0x90,m.word(a+0x90)+1);
-  }else{DeleteSnapshot("INSTANT_REPLAY");m.word(a+0x88,m.word(a+0x88)-1);}
- }
- if(TakeSnapshot("INSTANT_REPLAY",services))m.word(a+0x88,m.word(a+0x88)+1);
-}
-// Debug0013DCD8; E-0099-W74. Original thinning removes odd-indexed source nodes as the list shrinks.
-void ReplayManager::MaybeTakeLapSnapshot(const ::port::race::SnapshotServices& services){
- auto& m=m_;const auto a=address_;
- for(;;){const float elapsed=static_cast<float>(static_cast<std::int32_t>(m.word(0x327cf8)-m.word(a+0x58)))*m.scalar(0x324ecc);
-  if(elapsed<m.scalar(a+0x94)*static_cast<float>(m.signed_word(a+0x8c)))return;
-  if(m.word(a+0x8c)!=m.word(a+0x80))break;
-  m.scalar(a+0x94,m.scalar(a+0x94)+m.scalar(a+0x94));int index=0;
-  while(FindSnapshot("LAP_SNAPSHOT",index)){++index;const auto p=FindSnapshot("LAP_SNAPSHOT",index);if(p){DeleteSnapshot(p);m.word(a+0x8c,m.word(a+0x8c)-1);}}
-  if(m.signed_word(a+0x80)<=m.signed_word(a+0x8c))return;
- }
- if(TakeSnapshot("LAP_SNAPSHOT",services))m.word(a+0x8c,m.word(a+0x8c)+1);
-}
-// Debug0013DB88; E-0099-W74; checksum snapshots do not enter SnapshotTimeTable.
-void ReplayManager::DoChecksumSnapshot(const char* name,const ::port::race::SnapshotServices& services){
- auto& m=m_;const auto a=address_;if(!m.word(a+4)){
-  if(m.word(a)&&!m.word(a+0x14)){if(const auto p=FindSnapshot(name,0)){m.word(p+0x150,0);m.byte(p+0x3f,1);HandleSnapshot(p,services);m.byte(p+0x3f,0);}}return;
- }
- if(FindSnapshot(name,0))hp2::not_implemented("0x0013DB88","Original bBreak on duplicate named checksum snapshot");
- const auto free=a+0x64,used=a+0x6c;auto p=m.word(free);
- if(p==free){p=m.allocate(0x9558);m.word(p+0x28,0);m.word(p+0x2c,0);const auto tail=m.word(free+4);m.word(tail,p);m.word(free+4,p);m.word(p+4,tail);m.word(p,free);p=m.word(free);}
- if(p!=free){const auto next=m.word(p),previous=m.word(p+4),tail=m.word(used+4);m.word(previous,next);m.word(next+4,previous);m.word(tail,p);m.word(used+4,p);m.word(p+4,tail);m.word(p,used);
-  const auto length=std::strlen(name)+1;::port::driving::Memory::Temporary text(m,static_cast<std::uint32_t>(length));for(unsigned i=0;i<length;++i)m.byte(text.address()+i,static_cast<unsigned char>(name[i]));hp2::debug::ReplaySnapshot(m,p).Init(text.address());
-  m.word(p+0x150,0);m.byte(p+0x3e,1);HandleSnapshot(p,services);m.byte(p+0x3e,0);m.word(p+0x154,m.word(p+0x150));
- }
-}
-// Debug0013DB00; E-0099-W74; first matching configured loop wins.
-void ReplayManager::MaybeDoChecksumSnapshot(const ::port::race::SnapshotServices& services){for(int i=0;i<4;++i)if(m_.word(0x327d10)==m_.word(0x2e8168+4*i)){char name[32];std::snprintf(name,sizeof(name),"CHECKSUM_%d",i);DoChecksumSnapshot(name,services);return;}}
-// Debug0013E2A0; E-0099-W81. ReplaySpecialEventInfo time is+4, not event+0.
-// Counterevidence: W74 native tests exercised only empty lists; fresh MIPS
-// 0013E2D0/314 points at table+40B8, and0013E340 reads info+4.
-void ReplayManager::CheckForSpecialEvents(){
- auto& m=m_;const auto a=address_;int count=m.signed_word(a+0x40ac);if(!count)return;
- if(count<0||count>256)hp2::not_implemented("0x0013E2A0","Replay special-event count outside source array");
- int i=m.signed_word(a+0x40b0);if(i>=256)hp2::not_implemented("0x0013E2A0","Replay special-event cursor outside original physical table");
- const auto loop=m.signed_word(0x327d10);while(i>=0&&m.signed_word(a+0x40b8+16*i)>=loop)--i;if(i<0)i=0;
- if(i<count&&m.signed_word(a+0x40b8+16*i)<=m.signed_word(0x327d10)){
-  for(;;){const auto info=a+0x40b4+16*i;if(m.signed_word(info+4)==m.signed_word(0x327d10)){HandleSpecialEvent(info);count=m.signed_word(a+0x40ac);}
-   ++i;if(i>=count||m.signed_word(0x327d10)<m.signed_word(a+0x40b8+16*i))break;
-  }
- }
- if(count-1<i)i=count-1;
- m.word(a+0x40b0,static_cast<std::uint32_t>(i));
-}
-// Debug0013D680; E-0099-W74; exact source order, no fabricated forced capture.
-void ReplayManager::BeginFrame(const ::port::race::SnapshotServices& services){
- auto& m=m_;const auto a=address_;const auto loop=m.signed_word(0x327d10);
- if(m.word(a+0x60)){
-  if(m.word(0x2e81f0))m.word(a,1);
-  else if(loop==m.signed_word(a+0x50)){
-   if(m.word(a+0xc))m.word(a,1);
-   else if(!m.word(a+0x54))m.word(a+4,1);
-   else if(m.signed_word(a+0x4c)<=loop&&loop<m.signed_word(a+0x50))m.word(a,1);
-  }else if(m.signed_word(a+0x4c)<=loop&&loop<m.signed_word(a+0x50))m.word(a,1);
- }
- if(m.word(a+4)){MaybeTakeInstantReplaySnapshot(services);if(m.word(a+4))MaybeTakeLapSnapshot(services);}
- if(m.word(a)){if(m.word(a+0xc))m.word(a+0x14,1);else if(m.word(a+0x10))m.word(a+0x14,m.signed_word(0x327cf4)%4!=0);CheckForSpecialEvents();}
- MaybeTakeDummySnapshot(services);MaybeDoChecksumSnapshot(services);hp2::debug::DemoModeReplay(m,0x2e81f0).ServiceRecording(m.word(0x327d10)==m.word(a+0xa0),services);
-}
-// Debug0013DE08 +inline SetTime0013EB50; E-0099-W74. Capture takes priority over replay reset.
-void ReplayManager::EndFrame(){auto& m=m_;const auto a=address_;if(m.word(a+4)){m.word(a+0x50,m.word(0x327d10)+1);float delta=m.scalar(0x327d08)*4000.f;delta=delta+0.5f;const auto packed=::port::driving::cvt_w_s(delta);m.word(a+4,0);m.word(a+0x5c,m.word(0x327cf8)+static_cast<std::uint32_t>(packed));}else if(m.word(a)){m.word(a+0x14,0);m.word(a,0);}}
-}
-namespace hp2::debug {
-// Debug0013F2F0; E-0099-W74; source normal recording component. External save,
-// erase/re-sort operations keep explicit reached boundaries.
-void DemoModeReplay::ServiceRecording(bool took_snapshot,const ::port::race::SnapshotServices& services){
- auto& m=m_;const auto a=address_;hp2::recovered::ReplayManager replay(m,m.word(0x3271a8));
- if(took_snapshot){
-  if(m.word(a+0x10)&&!m.word(a+0x18)){replay.DeleteSnapshot("REPLAY_MANAGER_STATE");replay.TakeSnapshot("REPLAY_MANAGER_STATE",services);m.word(a+0x18,replay.TakeSnapshot("DEMO_MODE_SNAPSHOT",services));}
-  if(m.word(a+0x14)){if(const auto playing=m.word(a+0x20)){
-   if(m.signed_word(0x327cf8)<static_cast<std::int32_t>(m.word(playing+0x28)+12000))hp2::not_implemented("0x0013F2F0","Active demo erase requires original SortSnapshots after replacement");
-  }}
- }
- if(const auto p=m.word(a+0x18)){m.word(p+0x34,m.word(0x327d10));m.word(p+0x2c,m.word(0x327cf8));}
- if(m.word(a+0x28))hp2::not_implemented("0x0013F2F0","Active original DemoModeReplay.Save/bRefreshTweaker file boundary");
- if(m.word(a+0x2c))hp2::not_implemented("0x0013F2F0","Active original EraseRecordedSnapshots/bRefreshTweaker boundary");
-}
+ReplayCaptureRange ReplayManagerOwner::ValidateStateSnapshot(const ReplaySnapshot& source)
+{
+    auto state=std::make_unique<ReplayManager>();
+    ReplaySnapshot snapshot=source;
+    snapshot.cursor=0;snapshot.recording=0;snapshot.restoring=1;snapshot.result=REPLAY_SNAPSHOT_OK;
+    snapshot.sectionDepth=-1;
+    TransferManagerState(*state,snapshot);
+    hp2::Require(snapshot.cursor==snapshot.dataSize,"Replay manager snapshot has unconsumed trailing data");
+    return {state->beginCapturingLoopCount,state->endCapturingLoopCount};
 }
 
-namespace hp2::recovered {
-// Debug0013E538; E-0099-W74; replay-frame/0013e538.json. First matching named node.
-int ReplayManager::RestoreSnapshot(const char* name,const ::port::race::SnapshotServices& services){
- const auto snapshot=FindSnapshot(name,0);if(snapshot)RestoreSnapshot(snapshot,services);return snapshot!=0;
-}
-// Debug0013E928; E-0099-W74; replay-frame/0013e928.json. Only original wrapper owns restore flag.
-void ReplayManager::RestoreSnapshot(std::uint32_t snapshot,const ::port::race::SnapshotServices& services){
- m_.word(snapshot+0x150,0);m_.byte(snapshot+0x3d,1);HandleSnapshot(snapshot,services);m_.byte(snapshot+0x3d,0);
- m_.word(address_+8,0);m_.word(address_+0xa0,m_.word(0x327d10));
-}
-}
-
-#include "game_core/PauseMenu.hpp"
-namespace hp2::recovered {
-// Debug0013E298; E-0099-W81. Actual J0016F4D8/MOVE a0,a1 thunk; no dummy acknowledgement.
-void ReplayManager::HandleSpecialEvent(std::uint32_t info){(void)hp2::debug::HandlePauseMenuReplaySpecialEvents(m_,info);}
+void ReplayManagerOwner::HandleSnapshot(ReplaySnapshot& snapshot)
+{
+    if(!std::strcmp(snapshot.name,"REPLAY_MANAGER_STATE")) {DoEndSnapshot(snapshot);return;}
+    auto& owner=*storage_;auto& state=owner.state;
+    hp2::Require(owner.coordinator && owner.parameters && owner.characters && owner.input && owner.clock && state.stream,
+        "Replay world snapshot has incomplete actual race/input/stream bindings");
+    raceParametersSnapshot(owner.parameters,&snapshot,owner.characters);
+    const bool end=(snapshot.recording || snapshot.recordingChecksums) &&
+        owner.clock->worldLoopCounter==state.endCapturingLoopCount;
+    replaySnapshotBitStream(state.stream,&snapshot,end);
+    joystickDoSnapshot(owner.input,&snapshot);
+    raceCoordinatorDoSnapshot(*owner.coordinator,snapshot);
 }
 
-namespace hp2::recovered {
-// Debug0013E1E8; E-0112-P03. Capture before synchronous original handler.
-void ReplayManager::AddSpecialEvent(int event,int param1,int param2){
- auto& m=m_;const auto a=address_;::port::driving::Memory::Temporary storage(m,16);const auto info=storage.address();m.word(info,std::uint32_t(event));m.word(info+4,m.word(0x327d10));m.word(info+8,std::uint32_t(param1));m.word(info+12,std::uint32_t(param2));
- if(m.signed_word(a+0x4c)!=-1&&!m.word(a+0x54)&&m.word(a+0x60)){const auto index=m.signed_word(a+0x40ac);if(index<0x100){if(index<0)hp2::not_implemented("0x0013E1E8","negative source replay event count");const auto to=a+0x40b4+16*unsigned(index);for(unsigned i=0;i<4;++i)m.word(to+4*i,m.word(info+4*i));m.word(a+0x40ac,std::uint32_t(index+1));}else MarkTheEndOfTime();}
- HandleSpecialEvent(info);
+ReplaySnapshot* ReplayManagerOwner::TakeSnapshot(const char* name)
+{
+    auto& owner=*storage_;auto& state=owner.state;
+    if(state.beginCapturingLoopCount<0)return nullptr;
+    hp2::Require(owner.clock,"Replay capture has no actual race clock");
+    if(owner.freeSnapshots.empty())owner.freeSnapshots.push_back(AllocateReplaySnapshot());
+    auto node=std::move(owner.freeSnapshots.front());owner.freeSnapshots.erase(owner.freeSnapshots.begin());
+    auto* snapshot=&node->snapshot;owner.snapshots.push_back(std::move(node));
+    const auto oldSnapshotCount=state.snapshotsTaken;
+    const auto oldLastSnapshotTime=state.lastSnapshotTime;
+    try {
+        replaySnapshotInitialize(snapshot,name,owner.clock);
+        hp2::Require(snapshot->result==REPLAY_SNAPSHOT_OK,"Replay snapshot initialization failed");
+        if(owner.clock->worldLoopCounter==state.endCapturingLoopCount) {
+            hp2::Require(state.snapshotsTaken>=0,"Replay snapshot-time count is invalid");
+            if(state.snapshotsTaken<4096)
+                state.snapshotTimes[state.snapshotsTaken++]=owner.clock->worldLoopCounter;
+        }
+        state.lastSnapshotTime=owner.clock->worldLoopCounter;
+        snapshot->cursor=0;snapshot->recording=1;
+        HandleSnapshot(*snapshot);
+        snapshot->dataSize=snapshot->cursor;snapshot->recording=0;
+        hp2::Require(snapshot->overflowReported || snapshot->result==REPLAY_SNAPSHOT_OK,
+            "Replay snapshot capture failed in an actual participant");
+    } catch (...) {
+        // The real PAL list node cannot remain published after a failed
+        // transfer. Return this allocation to its owner and restore the
+        // prior snapshot-time cursor, without accepting the failed capture.
+        snapshot->recording=0;
+        state.snapshotsTaken=oldSnapshotCount;
+        state.lastSnapshotTime=oldLastSnapshotTime;
+        owner.freeSnapshots.push_back(std::move(owner.snapshots.back()));
+        owner.snapshots.pop_back();
+        throw;
+    }
+    if(snapshot->overflowReported) {
+        // Capacity rejection is not exceptional, but it is still a failed
+        // capture: an end-of-replay phantom time must not be published.
+        state.snapshotsTaken=oldSnapshotCount;
+        state.lastSnapshotTime=oldLastSnapshotTime;
+        DeleteSnapshot(*snapshot);
+        return nullptr;
+    }
+    return snapshot;
 }
+
+void ReplayManagerOwner::RestoreSnapshot(ReplaySnapshot& snapshot)
+{
+    auto& owner=*storage_;
+    snapshot.restoring=0;owner.state.restoring=0;
+    hp2::Require(owner.clock,"Replay restoration has no actual race clock");
+    if(!std::strcmp(snapshot.name,"REPLAY_MANAGER_STATE"))ValidateStateSnapshot(snapshot);
+    else if(owner.borrowedDemoPayload && owner.demo && owner.demo->active) {
+        hp2::Require(owner.parameters && owner.characters,"Demo restore has no actual parameter/character owners");
+        owner.demo->ValidateSnapshotReader(snapshot,*owner.parameters,*owner.characters);
+    }
+    const BitStream oldStream=owner.state.stream?*owner.state.stream:BitStream{};
+    std::vector<std::uint8_t> oldHeader;
+    if(oldStream.bytes)oldHeader.assign(oldStream.bytes,oldStream.bytes+oldStream.dataStart);
+    RaceParameters oldParameters{};RaceRuntimeSettings oldSettings{};
+    std::array<RaceDriverInfo,RACE_DRIVER_LIMIT> oldDrivers{};
+    if(owner.parameters) {
+        oldParameters=*owner.parameters;
+        hp2::Require(oldParameters.drivers && oldParameters.runtimeSettings,
+            "Replay restore has no live parameter allocation");
+        oldSettings=*oldParameters.runtimeSettings;
+        std::copy_n(oldParameters.drivers,RACE_DRIVER_LIMIT,oldDrivers.begin());
+    }
+    std::array<std::uint8_t,2> oldTypes{};
+    if(owner.input)std::copy_n(owner.input->monitoredTypes,2,oldTypes.begin());
+    const auto restorePrefix=[&]() noexcept {
+        if(oldStream.bytes) {
+            std::copy(oldHeader.begin(),oldHeader.end(),oldStream.bytes);
+            *owner.state.stream=oldStream;
+        }
+        if(owner.parameters) {
+            *owner.parameters=oldParameters;
+            *oldParameters.runtimeSettings=oldSettings;
+            std::copy(oldDrivers.begin(),oldDrivers.end(),oldParameters.drivers);
+        }
+        if(owner.input)std::copy(oldTypes.begin(),oldTypes.end(),owner.input->monitoredTypes);
+    };
+    snapshot.cursor=0;snapshot.restoring=1;
+    // Native transfer status belongs to this attempt; the original snapshot
+    // bytes and source record flags are retained across retries.
+    snapshot.result=REPLAY_SNAPSHOT_OK;
+    try {
+        HandleSnapshot(snapshot);
+    }
+    catch (const std::exception& error) {
+        snapshot.restoring=0;restorePrefix();
+        if(owner.demo)owner.demo->RecordSessionEvent("demo.restore_error",&snapshot,error.what());
+        std::string section;
+        for(int32_t depth=0;depth<=snapshot.sectionDepth && depth<REPLAY_SNAPSHOT_MAX_SECTIONS;++depth) {
+            if(!section.empty())section+='/';
+            if(snapshot.sections[depth].name)section+=snapshot.sections[depth].name;
+        }
+        throw std::runtime_error("Replay participant restore failed: "+std::string(error.what())+
+            " cursor="+std::to_string(snapshot.cursor)+" section="+section);
+    }
+    catch (...) {
+        // The restored data is still invalid and the error must propagate;
+        // never leave this retained node permanently in restoring mode.
+        snapshot.restoring=0;
+        restorePrefix();
+        throw;
+    }
+    snapshot.restoring=0;
+    if (snapshot.result!=REPLAY_SNAPSHOT_OK || snapshot.cursor!=snapshot.dataSize) {
+        restorePrefix();
+        if(owner.demo)owner.demo->RecordSessionEvent("demo.restore_error",&snapshot,"participant status or complete byte consumption failed");
+        // Diagnose the first real snapshot transfer failure, rather than
+        // losing its section/cursor behind a generic GameFlow exception.
+        const auto result=static_cast<int>(snapshot.result);
+        throw std::runtime_error("Replay snapshot restoration failed in an actual participant: name="+
+            std::string(snapshot.name)+" result="+std::to_string(result)+
+            " cursor="+std::to_string(snapshot.cursor)+
+            " data="+std::to_string(snapshot.dataSize)+
+            " capacity="+std::to_string(snapshot.capacity));
+    }
+    if(std::strcmp(snapshot.name,"REPLAY_MANAGER_STATE"))
+        hp2::Require(worldValidateReplayState(owner.coordinator->bindings->world,owner.clock)!=0,
+            "Replay snapshot restored nonfinite native World/Car state");
+    owner.state.exhausted=0;owner.state.lastSnapshotTime=owner.clock->worldLoopCounter;
+}
+bool ReplayManagerOwner::RestoreSnapshot(const char* name)
+{
+    auto* snapshot=FindSnapshot(name);
+    if(!snapshot)return false;
+    RestoreSnapshot(*snapshot);return true;
+}
+
+bool ReplayManagerOwner::WasSnapshotTakenAtThisTime(int32_t worldLoop)
+{
+    auto& state=storage_->state;
+    hp2::Require(state.snapshotsTaken>=0 && state.snapshotsTaken<=4096 &&
+        state.lastSnapshotIndex>=0 && state.lastSnapshotIndex<4096,
+        "Replay snapshot-time search has invalid native bounds");
+    int32_t first=0;
+    if(state.lastSnapshotIndex && state.snapshotTimes[state.lastSnapshotIndex]<worldLoop)
+        first=state.lastSnapshotIndex;
+    for(int32_t index=first;index<state.snapshotsTaken;++index)
+        if(state.snapshotTimes[index]==worldLoop) {state.lastSnapshotIndex=index;return true;}
+    return false;
+}
+
+void ReplayManagerOwner::MaybeTakeDummySnapshot()
+{
+    auto& owner=*storage_;auto& state=owner.state;
+    hp2::Require(owner.clock,"Replay dummy snapshot has no actual race clock");
+    const auto loop=owner.clock->worldLoopCounter;
+    bool capture=false;
+    if(state.restoring && !state.replayPausedThisFrame && loop!=state.lastSnapshotTime)
+        capture=WasSnapshotTakenAtThisTime(loop);
+    if(state.recording && (loop%211==0 || ReplayAdd(state.lastSnapshotTime,30)<loop))capture=true;
+    if(capture && TakeSnapshot("DUMMY_SNAPSHOT"))DeleteSnapshot("DUMMY_SNAPSHOT");
+}
+
+void ReplayManagerOwner::MaybeTakeInstantReplaySnapshot()
+{
+    auto& owner=*storage_;auto& state=owner.state;
+    hp2::Require(owner.clock,"Instant replay snapshot has no actual race clock");
+    const auto& clock=*owner.clock;
+    if(clock.worldTimeFrames<state.nextInstantReplaySnapshotTime)return;
+    state.nextInstantReplaySnapshotTime=ReplayAdd(clock.worldTimeFrames,300);
+    if(state.instantReplaySnapshotCount && state.instantReplaySnapshotCount>=state.maximumInstantReplaySnapshots) {
+        auto* oldest=FindSnapshot("INSTANT_REPLAY");
+        hp2::Require(oldest,"Instant replay count has no matching active snapshot");
+        ReplaySnapshot* replacement=nullptr;
+        for(int32_t index=0;index<state.maximumHighlightSnapshots;++index) {
+            if(index>=state.highlightSnapshotCount) {replacement=nullptr;break;}
+            auto* current=FindSnapshot("HIGHLIGHT_SNAPSHOT",index);
+            hp2::Require(current,"Replay highlight count has no matching active snapshot");
+            if(oldest->worldLoopCounter<current->endLoopCounter) {replacement=current;break;}
+            if(!replacement || current->totalInterestingValue<replacement->totalInterestingValue)replacement=current;
+        }
+        if(oldest->totalInterestingValue>0.0f &&
+            (!replacement || replacement->totalInterestingValue<oldest->totalInterestingValue)) {
+            if(state.highlightSnapshotCount==state.maximumHighlightSnapshots ||
+                (replacement && oldest->worldLoopCounter<replacement->endLoopCounter)) {
+                hp2::Require(replacement,"Replay highlight allocation is inconsistent");
+                DeleteSnapshot(*replacement);--state.highlightSnapshotCount;
+            }
+            std::strcpy(oldest->name,"HIGHLIGHT_SNAPSHOT");
+            oldest->endLoopCounter=clock.worldLoopCounter;oldest->endTime=clock.worldTimer;
+            --state.instantReplaySnapshotCount;++state.highlightSnapshotCount;
+        } else {
+            DeleteSnapshot("INSTANT_REPLAY");--state.instantReplaySnapshotCount;
+        }
+    }
+    if(TakeSnapshot("INSTANT_REPLAY"))++state.instantReplaySnapshotCount;
+}
+
+void ReplayManagerOwner::MaybeTakeLapSnapshot()
+{
+    auto& owner=*storage_;auto& state=owner.state;
+    hp2::Require(owner.clock,"Lap replay snapshot has no actual race clock");
+    for(;;) {
+        const auto elapsed=ReplaySubtract(owner.clock->worldTimer,state.beginCapturingTime);
+        const float due=static_cast<float>(state.lapSnapshotCount)*state.lapSnapshotSpacing;
+        if(!(due<=static_cast<float>(elapsed)*0.0002500000118743628f))return;
+        if(state.lapSnapshotCount!=state.maximumLapSnapshots) {
+            if(TakeSnapshot("LAP_SNAPSHOT"))++state.lapSnapshotCount;
+            return;
+        }
+        state.lapSnapshotSpacing+=state.lapSnapshotSpacing;
+        // Source Find(index), increment, Find(index) deletes every other
+        // remaining snapshot. Deleting all snapshots would lose its anchor.
+        int32_t index=0;
+        while(FindSnapshot("LAP_SNAPSHOT",index)) {
+            ++index;
+            if(auto* discard=FindSnapshot("LAP_SNAPSHOT",index)) {
+                DeleteSnapshot(*discard);--state.lapSnapshotCount;
+            }
+        }
+        if(state.lapSnapshotCount>=state.maximumLapSnapshots)return;
+    }
+}
+
+void ReplayManagerOwner::DoChecksumSnapshot(const char* name)
+{
+    auto& owner=*storage_;auto& state=owner.state;
+    hp2::Require(owner.clock,"Checksum replay snapshot has no actual race clock");
+    if(state.recording) {
+        hp2::Require(!FindSnapshot(name),"Replay checksum snapshot name is already active");
+        if(owner.freeSnapshots.empty())owner.freeSnapshots.push_back(AllocateReplaySnapshot());
+        auto node=std::move(owner.freeSnapshots.front());owner.freeSnapshots.erase(owner.freeSnapshots.begin());
+        auto* snapshot=&node->snapshot;owner.snapshots.push_back(std::move(node));
+        try {
+            replaySnapshotInitialize(snapshot,name,owner.clock);
+            hp2::Require(snapshot->result==REPLAY_SNAPSHOT_OK,
+                "Replay checksum snapshot initialization failed");
+            snapshot->cursor=0;snapshot->recordingChecksums=1;
+            HandleSnapshot(*snapshot);
+            snapshot->recordingChecksums=0;snapshot->dataSize=snapshot->cursor;
+            hp2::Require(snapshot->result==REPLAY_SNAPSHOT_OK,"Replay checksum capture failed");
+        } catch(...) {
+            snapshot->recordingChecksums=0;
+            owner.freeSnapshots.push_back(std::move(owner.snapshots.back()));
+            owner.snapshots.pop_back();
+            throw;
+        }
+    } else if(state.restoring && !state.replayPausedThisFrame) {
+        if(auto* snapshot=FindSnapshot(name)) {
+            snapshot->cursor=0;snapshot->verifyingChecksums=1;
+            snapshot->result=REPLAY_SNAPSHOT_OK;
+            try {HandleSnapshot(*snapshot);}
+            catch(...) {snapshot->verifyingChecksums=0;throw;}
+            snapshot->verifyingChecksums=0;
+            hp2::Require(snapshot->result==REPLAY_SNAPSHOT_OK,"Replay checksum verification could not read the stream");
+        }
+    }
+}
+
+void ReplayManagerOwner::MaybeDoChecksumSnapshot()
+{
+    hp2::Require(storage_->clock,"Checksum replay selection has no actual race clock");
+    constexpr const char* names[4]={"CHECKSUM0","CHECKSUM1","CHECKSUM2","CHECKSUM3"};
+    for(int32_t index=0;index<4;++index)
+        if(replayChecksumSnapshotTimes[index]==storage_->clock->worldLoopCounter) {
+            DoChecksumSnapshot(names[index]);return;
+        }
+}
+void ReplayManagerOwner::BeginRaceHighlights(const GameTime& clock)
+{
+    storage_->state.nextHighlightNumber=0;BeginNextRaceHighlight(clock);
+}
+void ReplayManagerOwner::BeginNextRaceHighlight(const GameTime& clock)
+{
+    auto& state=storage_->state;
+    if(state.desynchronized) {
+        state.paused=1;state.endCurrentHighlightTime=ReplayAdd(clock.worldLoopCounter,1);return;
+    }
+    auto* snapshot=FindSnapshot("HIGHLIGHT_SNAPSHOT",state.nextHighlightNumber);
+    if(snapshot) {
+        state.endCurrentHighlightTime=snapshot->endLoopCounter;
+        state.nextHighlightNumber=ReplayAdd(state.nextHighlightNumber,1);
+        if(!FindSnapshot("HIGHLIGHT_SNAPSHOT",state.nextHighlightNumber))state.nextHighlightNumber=0;
+    } else {
+        snapshot=FindSnapshot("LAP_SNAPSHOT",0);
+        state.endCurrentHighlightTime=snapshot?state.endCapturingLoopCount:0;
+        state.nextHighlightNumber=0;
+    }
+    if(snapshot)RestoreSnapshot(*snapshot);
+}
+
+const RaceParameters& ReplayManagerOwner::Parameters() const
+{
+    hp2::Require(storage_->parameters,"Replay recording has no live race parameters");
+    return *storage_->parameters;
+}
+
+void ReplayManagerOwner::DoFancyJoylogDebugging(const GameTime& clock,ReplayIntegerLog& log)
+{
+    hp2::Require(log.clock==&clock,"Fancy replay uses a different Joylog clock owner");
+    auto& state=storage_->state;
+    const auto phase=state.fancyReplayInProgress;
+    if(phase==0 && log.replaying && clock.worldLoopCounter==ReplayAdd(state.nextFancyDebugTime,-1)) {
+        state.fancyReplayInProgress=1;std::fill(std::begin(state.fancyJoyEvents),std::end(state.fancyJoyEvents),uint8_t{});
+        state.fancyJoyEvents[0]=0x83;state.fancyJoyEvents[6]=4;state.fancyJoyEvents[11]=4;
+        state.fancyJoyEvents[16]=4;state.fancyJoyEvents[23]=9;
+        state.fancyJoyEventCount=24;state.fancyJoyEventNumber=0;
+    } else if(phase==1) {
+        log.replaying=0;state.fancyReplayInProgress=2;
+    } else if(phase==2) {
+        if(clock.worldLoopCounter!=state.endCapturingLoopCount || !state.paused)return;
+        state.nextFancyDebugTime=ReplayAdd(state.nextFancyDebugTime,211);
+        DeleteSnapshot("CHECKSUM0");DeleteSnapshot("CHECKSUM1");DeleteSnapshot("CHECKSUM2");DeleteSnapshot("CHECKSUM3");
+        replayChecksumSnapshotTimes[0]=ReplayAdd(clock.worldLoopCounter,1);
+        replayChecksumSnapshotTimes[1]=ReplayAdd(clock.worldLoopCounter,52);
+        replayChecksumSnapshotTimes[2]=ReplayAdd(clock.worldLoopCounter,105);
+        replayChecksumSnapshotTimes[3]=ReplayAdd(clock.worldLoopCounter,158);
+        state.fancyReplayInProgress=3;std::fill(std::begin(state.fancyJoyEvents),std::end(state.fancyJoyEvents),uint8_t{});
+        state.fancyJoyEvents[0]=99;state.fancyJoyEvents[12]=9;
+        state.fancyJoyEventCount=13;state.fancyJoyEventNumber=0;
+    } else if(phase==3 && state.fancyJoyEventNumber>=state.fancyJoyEventCount) {
+        hp2::Require(log.stream && !log.readFailures && !log.stream->readError,
+            "Fancy replay cannot resume an exhausted or failed Joylog source");
+        log.replaying=1;state.fancyReplayInProgress=0;
+    }
+}
+
+bool ReplayManagerOwner::WillRestoreFrame(const GameTime& clock) const
+{
+    const auto& owner=*storage_;const auto& state=owner.state;
+    hp2::Require(owner.demo && owner.clock==&clock,"Replay timeline has no actual Demo/race clock owners");
+    return state.stream && (owner.demo->active ||
+        (clock.worldLoopCounter==state.endCapturingLoopCount && state.paused) ||
+        (state.beginCapturingLoopCount<=clock.worldLoopCounter && clock.worldLoopCounter<state.endCapturingLoopCount));
+}
+
+void ReplayManagerOwner::BeginFrame(const GameTime& clock,hp2::RaceScreenServices& services)
+{
+    auto& owner=*storage_;auto& state=owner.state;
+    hp2::Require(owner.demo && owner.clock==&clock,"Replay BeginFrame has no actual DemoModeReplay/race clock owners");
+    if(state.stream) {
+        if(WillRestoreFrame(clock))state.restoring=1;
+        else if(clock.worldLoopCounter==state.endCapturingLoopCount && !state.stopRequested)state.recording=1;
+    }
+    if(state.recording)MaybeTakeInstantReplaySnapshot();
+    if(state.recording)MaybeTakeLapSnapshot();
+    if(state.restoring) {
+        if(state.paused)state.replayPausedThisFrame=1;
+        else if(state.slowMotion)state.replayPausedThisFrame=clock.realLoopCounter%4!=0;
+        hp2::Require(state.specialEventCount>=0 && state.specialEventCount<=256,
+            "Replay special-event count exceeds its original allocation");
+        if(state.specialEventCount) {
+            auto index=state.lastSpecialEventNumber;
+            hp2::Require(index<state.specialEventCount,"Replay special-event cursor is out of range");
+            while(index>=0 && state.specialEvents[index].worldLoopCounter>=clock.worldLoopCounter)--index;
+            if(index<0)index=0;
+            while(index<state.specialEventCount && state.specialEvents[index].worldLoopCounter<=clock.worldLoopCounter) {
+                if(state.specialEvents[index].worldLoopCounter==clock.worldLoopCounter)
+                    (void)replayManagerHandleSpecialEvent(state,services,state.specialEvents[index]);
+                ++index;
+            }
+            state.lastSpecialEventNumber=std::min(index,state.specialEventCount-1);
+        }
+    }
+    MaybeTakeDummySnapshot();MaybeDoChecksumSnapshot();
+    owner.demo->ServiceRecording(clock.worldLoopCounter==state.lastSnapshotTime,*this,clock);
 }
