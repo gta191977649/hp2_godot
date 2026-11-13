@@ -10,9 +10,26 @@
 - [x] Enter Track 12 through Quick Race and Championship. Present the starting grid, race HUD and pause menu, then resume or return to the frontend.
 - [x] Keep resources local and record donor and asset provenance.
 - [ ] Finish migration of authored visual animations to Godot and validate the latest changes when requested.
-- [ ] Cover race results, replay presentation, remaining screens and unverified locales. Rear-view target and GS blend/sampler parity remain open.
+- [x] Present the live rear view with original textures and centered resize behavior.
+- [ ] Cover race results, replay presentation, remaining screens and unverified locales. Exact GS blend and sampler parity remains open.
 
 ## Evidence
+
+The rotating minimap uses the reflected world Y axis and aligns local
+positive Y with the player forward direction. The resulting source angle
+is map rotation minus player heading minus a quarter turn. The texture and
+markers consume the same angle. The original mode table is documented in
+TASK-0131.
+
+The Godot rear view follows the donor layout-2 gate and the attached
+camera on view 3. PAL 10EC70 and 10EDC8 provide the 256 by 64 target,
+mirrored sampling, frame and mask textures, and the destination rectangle
+on the 512-wide source canvas. The donor `src/ecstasy/ecstasye.cpp` SHA-256
+is `f3480f34b044ed251efd492644b091a0ca95b506318838bf083c477fe5d4232d`.
+The Godot host shares the live 3D world with a SubViewport and applies
+the source camera's per-view vehicle visibility. The centered HUD canvas
+owns the mirror quad and composes the original textures. Matching PAL
+hardware capture and the cost of the additional render pass remain open.
 
 The Godot host maps Esc to the original controller Start action during a
 race. Frontend Esc keeps its exit action. The MVP's default map uses the

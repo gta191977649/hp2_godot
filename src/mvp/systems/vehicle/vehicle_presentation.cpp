@@ -18,6 +18,8 @@ void VehiclePresentation::attach(Node3D& parent, Car& car, const VehicleEntitySt
     if (!source[0]) throw std::runtime_error("Missing body model for car " + std::to_string(state.model));
     model = state.model;
     skin = state.skin;
+    meshes.clear();
+    layers = 0;
     root = memnew(Node3D);
     parent.add_child(root);
     MeshConverter converter;
@@ -32,6 +34,7 @@ void VehiclePresentation::attach(Node3D& parent, Car& car, const VehicleEntitySt
         auto* node = memnew(MeshInstance3D);
         root->add_child(node);
         node->set_mesh(mesh);
+        meshes.push_back(node);
     }
     for (std::size_t axle = 0; axle < 2; ++axle) {
         const auto* part = source[5 + axle];
@@ -42,14 +45,21 @@ void VehiclePresentation::attach(Node3D& parent, Car& car, const VehicleEntitySt
             auto* node = memnew(MeshInstance3D);
             root->add_child(node);
             node->set_mesh(mesh);
+            meshes.push_back(node);
             wheels[index] = node;
         }
     }
 }
 
-void VehiclePresentation::update(const VehicleEntityState& state) const {
+void VehiclePresentation::update(const VehicleEntityState& state) {
     root->set_transform(race_transform(state.transform.data()));
-    root->set_visible(state.visible);
+    const auto nextLayers = (state.visible ? primaryLayer : 0u) |
+        (state.rearVisible ? rearLayer : 0u);
+    root->set_visible(nextLayers != 0);
+    if (nextLayers != layers) {
+        for (auto* mesh : meshes) mesh->set_layer_mask(nextLayers);
+        layers = nextLayers;
+    }
     for (std::size_t index = 0; index < wheels.size(); ++index)
         wheels[index]->set_transform(race_transform(state.wheels[index].data()));
 }

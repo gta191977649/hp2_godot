@@ -155,6 +155,17 @@ func _resize_sweep(name: String, maximize := false) -> bool:
         if not canvas.scale.is_equal_approx(Vector2.ONE * fitted_scale) or not canvas.position.is_equal_approx(
                 (Vector2(wanted) - Vector2(640, 480) * fitted_scale) * 0.5):
             return _resize_error("centered_aspect_" + name)
+        if name == "direct-hud":
+            var mirror := canvas.get_node_or_null("RearViewMirror") as TextureRect
+            var target := race.get_node_or_null("RaceScene/RearViewTarget") as SubViewport
+            if not mirror or not mirror.visible or not target or mirror.texture != target.get_texture():
+                return _resize_error("rear_view_target")
+            var mirror_rect := mirror.get_global_rect()
+            if not is_equal_approx(mirror_rect.get_center().x, wanted.x * 0.5):
+                return _resize_error("rear_view_center")
+            var expected_height := maxi(64, ceili(64 * fitted_scale))
+            if target.size != Vector2i(roundi(expected_height * 2.88), expected_height):
+                return _resize_error("rear_view_projection_size")
         if name == "select-car" or name == "select-track":
             var display := canvas.get_node_or_null("PreviewDisplay1") as TextureRect
             var preview := display.get_node_or_null("PreviewViewport") as SubViewport if display else null

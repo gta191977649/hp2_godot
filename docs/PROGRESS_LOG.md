@@ -1518,6 +1518,7 @@ place and kept, because the fact that a session believed it, and why, is itself 
 - [2026-11-13 TASK-0139 Original speech streaming](#2026-11-13-task-0139-original-speech-streaming)
 - [2026-11-13 TASK-0127 ImGui console shortcut](#2026-11-13-task-0127-imgui-console-shortcut)
 - [2026-11-13 TASK-0126 Race pause key and minimap heading](#2026-11-13-task-0126-race-pause-key-and-minimap-heading)
+- [2026-11-13 TASK-0126 Rotating minimap and rear view](#2026-11-13-task-0126-rotating-minimap-and-rear-view)
 
 <!-- generated:contents:end -->
 
@@ -5379,3 +5380,13 @@ Esc opens the original Pause Menu through the controller Start action.
 Godot races use the player's heading for rotating minimaps. The existing
 Track 12 resize smoke reached Pause Menu and restart confirmation. Debug
 and Release staging passed.
+
+## 2026-11-13 TASK-0126 Rotating minimap and rear view
+
+The map angle now reflects world Y and aligns the player's forward axis
+to the top of the map. Godot renders the donor's rear camera in a shared
+World3D SubViewport and composes the original frame and mask behind the HUD.
+Debug and Release staged. Track 12 Forward+ showed the live mirror in
+the captured HUD. The Release resize smoke checked the mirror center,
+target binding and projection size at 800x600, 1120x630, 1260x540 and
+540x720. Exact PAL raster parity and performance measurements remain open.

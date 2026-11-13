@@ -141,6 +141,9 @@ void fragment() {
     Node2D& mapTexture;
     Node2D& mapForeground;
     CanvasLayout layout;
+    TextureRect* rearView{};
+    Ref<ShaderMaterial> rearMaterial;
+    std::array<Ref<ImageTexture>, 2> rearOverlays;
     struct MapMesh {
         Ref<ArrayMesh> mesh;
         Array geometry;
@@ -540,6 +543,72 @@ FrontendPresentation::~FrontendPresentation() = default;
 bool FrontendPresentation::video_playing() const noexcept {return storage_->video.playing();}
 std::uint64_t FrontendPresentation::video_request() const noexcept {return storage_->video.request_id();}
 bool FrontendPresentation::showing_loading() const noexcept {return storage_->loading;}
+
+void FrontendPresentation::update_rear_view(const Ref<Texture2D>& view,
+    const std::array<const EditorMarkerTexture*, 2>& textures, bool ntsc) {
+    auto& s = *storage_;
+    if (view.is_null()) {
+        if (s.rearView) {
+            s.rearView->hide();
+            s.rearView->set_texture({});
+        }
+        return;
+    }
+    std::array<Ref<ImageTexture>, 2> overlays;
+    for (std::size_t index = 0; index < overlays.size(); ++index) {
+        if (!textures[index]) throw std::runtime_error("Missing original RVM or RVM_MASK descriptor");
+        const auto* texture = textureInfoForDescriptor(textures[index]);
+        if (!texture || !texture->pixels.Data() || (texture->paletteBytes && !texture->palette.Data())) {
+            if (s.rearView) s.rearView->hide();
+            return;
+        }
+        overlays[index] = s.texture_for(*texture);
+    }
+    if (!s.rearView) {
+        s.rearView = memnew(TextureRect);
+        s.rearView->set_name("RearViewMirror");
+        s.rearView->set_expand_mode(TextureRect::EXPAND_IGNORE_SIZE);
+        s.rearView->set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
+        s.rearView->set_z_index(19);
+        s.canvas.add_child(s.rearView);
+        Ref<Shader> shader;
+        shader.instantiate();
+        // PAL10EC70 draws both overlays in target coordinates. PAL10EDC8
+        // flips the completed image. ALPHA44 blends the frame and ALPHA48
+        // adds the mask RGB and replaces the resulting target alpha.
+        shader->set_code(R"(
+shader_type canvas_item;
+render_mode unshaded;
+uniform sampler2D frame_texture : repeat_disable, filter_linear;
+uniform sampler2D mask_texture : repeat_disable, filter_linear;
+varying vec4 tint;
+void vertex() {
+    tint = COLOR;
+}
+void fragment() {
+    vec2 scene_uv = vec2(1.0 - UV.x, UV.y);
+    vec2 overlay_uv = vec2(UV.x + 1.0 / 256.0, (UV.y * 64.0 + 14.0) / 90.0);
+    vec4 frame = texture(frame_texture, overlay_uv);
+    vec4 mask = texture(mask_texture, overlay_uv);
+    vec3 rear = texture(TEXTURE, scene_uv).rgb;
+    COLOR = vec4(mix(rear, frame.rgb, frame.a) + mask.rgb * mask.a, mask.a) * tint;
+}
+)");
+        s.rearMaterial.instantiate();
+        s.rearMaterial->set_shader(shader);
+        s.rearView->set_material(s.rearMaterial);
+    }
+    const float yScale = 480.0f / (ntsc ? 448.0f : 512.0f);
+    s.rearView->set_position({200, 20 * yScale});
+    s.rearView->set_size({240, 64 * yScale});
+    if (s.rearView->get_texture() != view) s.rearView->set_texture(view);
+    if (s.rearOverlays != overlays) {
+        s.rearMaterial->set_shader_parameter("frame_texture", overlays[0]);
+        s.rearMaterial->set_shader_parameter("mask_texture", overlays[1]);
+        s.rearOverlays = overlays;
+    }
+    s.rearView->show();
+}
 
 void FrontendPresentation::update(const FrontendStateView& state, Vector2 viewport) {
     auto& s = *storage_;

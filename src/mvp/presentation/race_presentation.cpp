@@ -27,7 +27,11 @@
 #include <godot_cpp/classes/input_event.hpp>
 #include <godot_cpp/classes/input_event_key.hpp>
 #include <godot_cpp/classes/os.hpp>
+#include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/scene_tree.hpp>
+#include <godot_cpp/classes/sub_viewport.hpp>
+#include <godot_cpp/classes/viewport_texture.hpp>
+#include <godot_cpp/classes/world3d.hpp>
 #include <godot_cpp/classes/viewport.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -155,6 +159,8 @@ struct RacePresentation::Session {
 #endif
     Node3D* scene{};
     Camera3D* camera{};
+    SubViewport* rearViewport{};
+    Camera3D* rearCamera{};
     std::unordered_map<std::uint64_t, VehiclePresentation> vehicles;
     std::size_t placements{};
     std::chrono::steady_clock::time_point loadingSince{std::chrono::steady_clock::now()};
@@ -305,12 +311,15 @@ void RacePresentation::_process(double delta) {
         stage = "frontend_scene";
         s.frontend->update(state, get_viewport()->get_visible_rect().size);
         if (!race.simulation) {
+            s.frontend->update_rear_view({}, {}, false);
             if (s.scene) {
                 s.cinematic->clear();
                 remove_child(s.scene);
                 s.scene->queue_free();
                 s.scene = nullptr;
                 s.camera = nullptr;
+                s.rearViewport = nullptr;
+                s.rearCamera = nullptr;
                 s.vehicles.clear();
             }
             if (!s.frontendMode && !s.bridge.current().generation &&
@@ -351,6 +360,7 @@ void RacePresentation::_process(double delta) {
             stage = "track_assets";
             if (!race.scenery) throw std::runtime_error("Committed track has no loaded scenery");
             if (s.scene) {
+                s.frontend->update_rear_view({}, {}, false);
                 s.cinematic->clear();
                 remove_child(s.scene);
                 s.scene->queue_free();
@@ -362,7 +372,10 @@ void RacePresentation::_process(double delta) {
             s.placements = attach_track(*s.scene, *race.scenery, race.sky);
             s.camera = memnew(Camera3D);
             s.scene->add_child(s.camera);
+            s.camera->set_cull_mask_value(3, false);
             s.camera->make_current();
+            s.rearViewport = nullptr;
+            s.rearCamera = nullptr;
         }
         stage = "vehicle_assets";
         const auto& world = *race.simulation->world;
@@ -395,6 +408,34 @@ void RacePresentation::_process(double delta) {
         if (race.nis) s.cinematic->update(*s.scene, *race.nis, race.blackAndWhite);
         stage = "camera";
         apply_race_camera(*s.camera, frame.camera);
+        stage = "rear_view";
+        if (frame.rearCamera) {
+            if (!s.rearViewport) {
+                s.rearViewport = memnew(SubViewport);
+                s.rearViewport->set_name("RearViewTarget");
+                s.rearViewport->set_world_3d(get_viewport()->find_world_3d());
+                s.scene->add_child(s.rearViewport);
+                RenderingServer::get_singleton()->viewport_set_disable_2d(
+                    s.rearViewport->get_viewport_rid(), true);
+                s.rearCamera = memnew(Camera3D);
+                s.rearViewport->add_child(s.rearCamera);
+                s.rearCamera->set_cull_mask_value(2, false);
+                s.rearCamera->make_current();
+            }
+            // Target 7 has 256x64 logical pixels and focal scales 1.5x/1.08y.
+            // Render square pixels at the matching frustum aspect.
+            const auto window = get_viewport()->get_visible_rect().size;
+            const float scale = std::min(window.x / 640.0f, window.y / 480.0f);
+            const int height = std::max(64, static_cast<int>(std::ceil(64 * scale)));
+            const Vector2i size(static_cast<int>(std::round(height * 2.88f)), height);
+            if (s.rearViewport->get_size() != size) s.rearViewport->set_size(size);
+            s.rearViewport->set_update_mode(SubViewport::UPDATE_WHEN_VISIBLE);
+            apply_race_camera(*s.rearCamera, *frame.rearCamera);
+            s.frontend->update_rear_view(s.rearViewport->get_texture(), race.rearTextures, race.ntsc);
+        } else {
+            if (s.rearViewport) s.rearViewport->set_update_mode(SubViewport::UPDATE_DISABLED);
+            s.frontend->update_rear_view({}, {}, false);
+        }
         if (newScene)
             std::fprintf(stderr, "HP2_MVP_TRACE stage=scene_publish track=%d generation=%llu step=%u placements=%zu vehicles=%zu\n",
                 frame.track, static_cast<unsigned long long>(frame.generation), frame.step, s.placements, s.vehicles.size());

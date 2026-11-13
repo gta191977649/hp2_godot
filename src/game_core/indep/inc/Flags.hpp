@@ -104,6 +104,7 @@ void applicationVerifyJoylogChecksum(ApplicationChecksumState& state,ReplayInteg
     const hp2::ApplicationFrontendFlow& flow);
 
 struct CarCinematicServices;
+struct EditorMarkerTexture;
 struct CarViewCameraResources;
 struct WorldSimulation;
 struct Scenery;
@@ -337,6 +338,9 @@ struct RaceStateView {
     NisManagerRegistry* nis{};
     bool blackAndWhite{};
     ::CarViewMoverRegistry* viewMovers{};
+    const ::CarCinematicViewFrame* rearCamera{};
+    const ::Car* rearHiddenCar{};
+    std::array<const EditorMarkerTexture*, 2> rearTextures{};
 };
 class ApplicationRuntime final {
 public:

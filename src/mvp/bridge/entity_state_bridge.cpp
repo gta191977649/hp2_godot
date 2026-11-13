@@ -20,6 +20,21 @@ template<class Range>
 bool finite(const Range& values) {
     return std::all_of(values.begin(), values.end(), [](float value) { return std::isfinite(value); });
 }
+RaceCameraState capture_camera(const CarCinematicViewFrame& camera, float sourceRatio) {
+    RaceCameraState result;
+    std::copy_n(camera.eye, 3, result.eye.begin());
+    std::copy_n(camera.forward, 3, result.forward.begin());
+    result.up = {camera.matrix[1], camera.matrix[5], camera.matrix[9]};
+    result.verticalFov = 2.0f * std::atan(
+        std::tan(camera.fieldOfView * (3.141592654f / 65536.0f)) * sourceRatio) * 57.2957795f;
+    result.nearClip = camera.nearClip;
+    result.farClip = camera.farClip;
+    if (!finite(result.eye) || !finite(result.forward) || !finite(result.up) ||
+        !(result.verticalFov > 0 && result.verticalFov < 180 &&
+          camera.nearClip > 0 && camera.farClip > camera.nearClip && std::isfinite(camera.farClip)))
+        throw std::runtime_error("Race camera has an invalid committed projection");
+    return result;
+}
 }
 
 const EntityFrame& EntityStateBridge::stage(const RaceStateView& race) {
@@ -30,20 +45,11 @@ const EntityFrame& EntityStateBridge::stage(const RaceStateView& race) {
     if (!world || !race.camera)
         throw std::runtime_error("Committed race is missing World or primary camera");
 
-    const auto& camera = *race.camera;
-    std::copy_n(camera.eye, 3, frame.camera.eye.begin());
-    std::copy_n(camera.forward, 3, frame.camera.forward.begin());
-    frame.camera.up = {camera.matrix[1], camera.matrix[5], camera.matrix[9]};
-    // Ecstasy primary view preserves authored vertical framing on square PC pixels.
     const float sourceRatio = race.ntsc ? 448.0f / (512.0f * 1.0714286566f) : 1.0f / 1.285f;
-    frame.camera.verticalFov = 2.0f * std::atan(
-        std::tan(camera.fieldOfView * (3.141592654f / 65536.0f)) * sourceRatio) * 57.2957795f;
-    frame.camera.nearClip = camera.nearClip;
-    frame.camera.farClip = camera.farClip;
-    if (!finite(frame.camera.eye) || !finite(frame.camera.forward) || !finite(frame.camera.up) ||
-        !(frame.camera.verticalFov > 0 && frame.camera.verticalFov < 180 &&
-          camera.nearClip > 0 && camera.farClip > camera.nearClip && std::isfinite(camera.farClip)))
-        throw std::runtime_error("Primary camera has an invalid committed projection");
+    frame.camera = capture_camera(*race.camera, sourceRatio);
+    frame.rearCamera.reset();
+    if (race.rearCamera)
+        frame.rearCamera = capture_camera(*race.rearCamera, 64.0f / (512.0f * 1.08f));
 
     frame.step = world->frameCounter;
     frame.generation = world->presentationGeneration;
@@ -69,8 +75,10 @@ const EntityFrame& EntityStateBridge::stage(const RaceStateView& race) {
         entity.skin = appearance.skinNumber;
         entity.player = player->car == movement;
         const auto& motion = *movement->bindings.ownerMotion;
-        entity.visible = car != race.hiddenCar && motion.actionEnabled &&
+        const bool visible = motion.actionEnabled &&
             !carMotionTransitionFlag(&motion) && (motion.wheelEffectsFlags & 2u);
+        entity.visible = visible && car != race.hiddenCar;
+        entity.rearVisible = visible && car != race.rearHiddenCar;
         const bool replayPose = (motion.wheelExclusionMask & 2u) != 0;
         const auto* presentation = replayPose && race.viewMovers ?
             carViewMoverPresentation(race.viewMovers, car) : nullptr;

@@ -15,7 +15,7 @@ The active game implementation is the Windows donor. See [TASK-0123](../tasks/ac
 
 [TASK-0130](../tasks/completed/TASK-0130-godot-vertex-colors.md) connects authored RGB555 model colors to Godot materials and records the Track 12 Forward+ checks.
 
-[TASK-0131](../tasks/completed/TASK-0131-godot-minimap-projection.md) records Track 12 minimap projection validation. TASK-0126 connects Esc to Pause and uses the player car heading for the default minimap.
+[TASK-0131](../tasks/completed/TASK-0131-godot-minimap-projection.md) records Track 12 minimap projection validation. TASK-0126 corrects the player-up transform and connects the live rear-view target to Godot.
 
 [TASK-0132](../tasks/completed/TASK-0132-godot-window-title.md) shows the active graphics API and measured FPS in the Godot window title, with a Debug Mode suffix for debug launches.
 

@@ -776,11 +776,18 @@ RaceStateView ApplicationRuntime::RaceState() const noexcept
     const auto* simulation=s.Simulation();
     const auto* session=s.Session();
     const auto* view=s.cameras.screens[1].view;
+    const auto& rear=s.cameras.screens[3];
+    const auto layout=s.cameras.presentationLayoutOverride ?
+        s.cameras.presentationLayoutOverride:s.cameras.presentationLayout;
+    const auto* rearView=layout==2 && rear.last && rear.view && rear.view->current.fieldOfView ?
+        rear.view:nullptr;
     auto* scenery=s.trackPhase->trackFile->Resources().scenery;
     return {simulation,scenery?&scenery->Native():nullptr,view?&view->current:nullptr,
         view?view->hiddenCar:nullptr,s.trackPhase->Sky(),s.clock.worldTimeFrames,
         s.parameters.selectedScenario,session?session->state:0,gameTimeGetVideoMode(&s.clock)==HP2_VIDEO_NTSC,
-        s.trackPhase->NisManagers(),s.cameras.screens[1].blackAndWhite!=0,s.trackPhase->ViewMovers()};
+        s.trackPhase->NisManagers(),s.cameras.screens[1].blackAndWhite!=0,s.trackPhase->ViewMovers(),
+        rearView?&rearView->current:nullptr,rearView?rearView->hiddenCar:nullptr,
+        {s.resources->Registry().RearViewTexture(0),s.resources->Registry().RearViewTexture(1)}};
 }
 
 bool ApplicationRuntime::Tick()

@@ -162,7 +162,9 @@ bool TrackMap::GetAngle(std::uint16_t& angle)
     if (!CurrentMode().followCamera) {angle=32768;return true;}
     if (playerHeading_) {
         Require(car_->bindings.state,"TrackMap direction has no actual car");
-        angle=static_cast<std::uint16_t>(track_->mapRotation+car_->bindings.state->heading);
+        // World Y is reflected in GetCarUVPosition. The map's positive
+        // local Y axis projects to screen up.
+        angle=static_cast<std::uint16_t>(track_->mapRotation-car_->bindings.state->heading-0x4000);
         return true;
     }
     std::array<float,4> target{};if (!GetCameraDirection(target))return false;

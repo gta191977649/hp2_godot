@@ -292,7 +292,7 @@ def render_compact(report):
              '[TASK-0128](../tasks/completed/TASK-0128-display-refresh.md) restored the Debug main menu to approximately 120 FPS on the 120 Hz test display and measured the same presentation rate in Track 12.', '',
              '[TASK-0129](../tasks/active/TASK-0129-first-pursuit-roundtrip.md) admits the first Ultimate Racer event on Track 13 and records driving and return checks in Godot.', '',
              '[TASK-0130](../tasks/completed/TASK-0130-godot-vertex-colors.md) connects authored RGB555 model colors to Godot materials and records the Track 12 Forward+ checks.', '',
-             '[TASK-0131](../tasks/completed/TASK-0131-godot-minimap-projection.md) records Track 12 minimap projection validation. TASK-0126 connects Esc to Pause and uses the player car heading for the default minimap.', '',
+             '[TASK-0131](../tasks/completed/TASK-0131-godot-minimap-projection.md) records Track 12 minimap projection validation. TASK-0126 corrects the player-up transform and connects the live rear-view target to Godot.', '',
              '[TASK-0132](../tasks/completed/TASK-0132-godot-window-title.md) shows the active graphics API and measured FPS in the Godot window title, with a Debug Mode suffix for debug launches.', '',
              '[TASK-0133](../tasks/active/TASK-0133-responsive-frontend.md) tracks live window resize, tiled menu backgrounds and the centered 4:3 frontend, HUD and video.', '',
              '[TASK-0134](../tasks/completed/TASK-0134-native-preview-resolution.md) records native pixel sizing for frontend previews and the Select Car grid fix.', '',

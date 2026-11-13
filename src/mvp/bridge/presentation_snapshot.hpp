@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <vector>
 
 namespace hp2 {
@@ -9,7 +10,7 @@ namespace hp2 {
 struct VehicleEntityState {
     std::uint64_t handle{};
     int model{}, skin{};
-    bool player{}, visible{};
+    bool player{}, visible{}, rearVisible{};
     std::array<float, 16> transform{};
     std::array<std::array<float, 16>, 4> wheels{};
     float speed{};
@@ -25,6 +26,7 @@ struct EntityFrame {
     std::uint32_t step{};
     int track{-1};
     RaceCameraState camera;
+    std::optional<RaceCameraState> rearCamera;
     std::vector<VehicleEntityState> vehicles;
 };
 
