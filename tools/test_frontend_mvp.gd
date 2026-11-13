@@ -35,7 +35,7 @@ func _process(_delta: float) -> bool:
         stage = 2
     if stage == 2 and screen == "Title Screen" and request == 2 and playing:
         stage = 10
-        next_input = Time.get_ticks_msec() + 2000
+        next_input = Time.get_ticks_msec() + 9500
     if stage == 10 and Time.get_ticks_msec() >= next_input:
         _capture("nfs-intro")
         stage = 11
