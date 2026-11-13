@@ -10,8 +10,9 @@ class RaceEffectsPresentation {
 public:
     explicit RaceEffectsPresentation(godot::Node3D& scene);
     ~RaceEffectsPresentation();
+    void prepare_particles(const std::vector<RaceParticleAsset>& assets);
     void update(const RaceEffectsFrame& frame, godot::Camera3D& camera, godot::Camera3D* rear,
-        std::uint64_t generation);
+        std::uint64_t generation, bool ntsc, int worldFrames);
     void update_preview_lights(const std::vector<RaceLightEffect>& lights, godot::Camera3D& camera,int view);
     void update_preview_particles(const RaceEffectsFrame& frame);
     void reset();

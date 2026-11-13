@@ -97,3 +97,20 @@ The source keeps the AcidFX emitter scheduler, random streams and lifetime
 ledger. Godot consumes ordered effects through the race scene and shares GPU
 particle nodes by effect definition. It renders tyre marks from original
 trail data and performs lamp and sun composition using Godot camera depth.
+The race prepares the particle catalogue when the scene loads. Godot owns
+billboard orientation, depth occlusion and soft intersections in Forward+.
+Tailpipe smoke is a host presentation effect driven by source vehicle markers
+and engine state. The shipped US exhaust slot has no particle definition.
+
+## TASK-0141 - Authored single-player race admission
+
+ApplicationRuntime uses the authored track catalogue for state-only race
+handoff and diagnostics. The original menu and RaceCoordinator still select
+the scenario, direction, rules and continuation. Godot retires presentation
+on World generation changes and clears transient particle state when the
+source successfully restores a World replay snapshot.
+
+The campaign command is a port-side diagnostic entry. It resolves a tree
+and event in the donor resource bank, uses the authored car availability,
+and hands the request to the donor race flow. Its default profile lives
+under the diagnostic directory.

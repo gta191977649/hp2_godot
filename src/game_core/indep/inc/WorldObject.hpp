@@ -17,6 +17,8 @@ typedef struct WorldObject {
     // physical owner. Borrow those exact cells instead of duplicating them.
     const float* borrowedFrame;
     const int32_t* borrowedEnabled;
+    // Port-side identity for presentation across pool-slot reuse.
+    uint64_t presentationId;
 } WorldObject;
 
 typedef struct WorldObjectRegistry {
@@ -31,6 +33,7 @@ typedef struct WorldObjectRegistry {
     WorldObject* freeObjects;
     struct WorldObjectPoolBlock* expanded;
     size_t totalCapacity;
+    uint64_t nextPresentationId;
 } WorldObjectRegistry;
 
 void worldObjectsInitialize(WorldObjectRegistry* registry,WorldObject* storage,

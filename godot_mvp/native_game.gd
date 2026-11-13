@@ -1,6 +1,7 @@
 extends Node
 
 const RACE_ARGUMENT := "--race-track="
+const EVENT_ARGUMENT := "--race-event="
 
 var title_renderer := ""
 var title_suffix := ""
@@ -10,17 +11,31 @@ func _ready() -> void:
     _start_window_title()
     var arguments := OS.get_cmdline_user_args()
     var frontend := arguments.is_empty()
-    var track := "12"
+    var track := "unknown"
+    var track_id := -1
+    var event_tree := -1
+    var event_number := 0
     if not frontend:
-        if arguments.size() != 1 or not arguments[0].begins_with(RACE_ARGUMENT):
-            _fail("launch", "unknown", "expected --race-track=<id>")
+        if arguments.size() != 1:
+            _fail("launch", "unknown", "expected --race-track=<id> or --race-event=<tree>:<id>")
             return
-        track = arguments[0].trim_prefix(RACE_ARGUMENT)
-        if not track.is_valid_int() or track.to_int() < 0:
-            _fail("launch", track, "expected a nonnegative track ID")
-            return
-        if track.to_int() != 12:
-            _fail("race_entry", track, "Godot scene is unimplemented for this track")
+        if arguments[0].begins_with(RACE_ARGUMENT):
+            track = arguments[0].trim_prefix(RACE_ARGUMENT)
+            track_id = _parse_id(track)
+            if track_id < 0:
+                _fail("launch", track, "expected a nonnegative 32-bit track ID")
+                return
+        elif arguments[0].begins_with(EVENT_ARGUMENT):
+            var event_spec := arguments[0].trim_prefix(EVENT_ARGUMENT)
+            var fields := event_spec.split(":")
+            if fields.size() == 2:
+                event_tree = ["championship", "ultimate-racer"].find(fields[0])
+                event_number = _parse_id(fields[1])
+            if event_tree < 0 or event_number <= 0:
+                _fail("launch", "unknown", "expected --race-event=championship:<id> or --race-event=ultimate-racer:<id>")
+                return
+        else:
+            _fail("launch", "unknown", "expected --race-track=<id> or --race-event=<tree>:<id>")
             return
     if not ClassDB.class_exists(&"RacePresentation"):
         _fail("extension", track, "RacePresentation GDExtension class is unavailable")
@@ -43,14 +58,27 @@ func _ready() -> void:
 
     var profile := OS.get_environment("HP2_PROFILE_DIR")
     if profile.is_empty():
-        profile = ProjectSettings.globalize_path("user://profile")
+        if event_tree >= 0:
+            profile = ProjectSettings.globalize_path("user://diagnostic-events/%s-%s-%s-%s" % [
+                event_tree, event_number, OS.get_process_id(), Time.get_ticks_usec()])
+        else:
+            profile = ProjectSettings.globalize_path("user://profile")
     var race: Node = ClassDB.instantiate(&"RacePresentation")
     race.name = &"RacePresentation"
     add_child(race)
     if frontend:
         race.call(&"start_frontend", assets, profile)
+    elif event_tree >= 0:
+        race.call(&"start_event_race", assets, profile, event_tree, event_number)
     else:
-        race.call(&"start_race", assets, profile)
+        race.call(&"start_race", assets, profile, track_id)
+
+func _parse_id(value: String) -> int:
+    if value.length() <= 10 and value.is_valid_int():
+        var parsed := value.to_int()
+        if parsed >= 0 and parsed <= 2147483647:
+            return parsed
+    return -1
 
 func _start_window_title() -> void:
     if DisplayServer.get_name() == "headless":

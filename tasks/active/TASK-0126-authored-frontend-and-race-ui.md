@@ -107,9 +107,10 @@ and the event-number anchors when runtime testing resumes.
 
 Godot consumes Flailer geometry and source identities for pointer hit testing.
 The source UI tick validates the queued screen generation and runs existing
-selection, menu, popup, campaign, name entry and replay callbacks. Godot buttons
-provide click targets for actions with no suitable authored geometry. The live
-race HUD is informational. The open ImGui console captures pointer and keyboard
+selection, menu, popup, campaign, name entry and replay callbacks. The Godot
+pointer Control uses the default arrow and draws no buttons. Mouse clicks use
+authored hit regions, with the existing title-screen shortcut. The live race
+HUD is informational. The open ImGui console captures pointer and keyboard
 events before the frontend controls. The smoke scripts read the actual console
 state and use the grave key to dismiss it before sending game input.
 `build.ps1 --rendering-driver d3d12` selects the SDR D3D12 Forward+ path. Vulkan
@@ -132,3 +133,35 @@ New-Item -ItemType Directory -Force $env:HP2_MVP_SCREENSHOT_DIR | Out-Null
 
 Continue by exercising settings and post-race pages with mouse events and
 checking the Game Bar Auto HDR indicator after `./build.ps1 --run --rendering-driver d3d12`.
+
+## Godot InputMap
+
+Project input actions supply the existing PS2 scanner. Esc and Backspace
+share the Start action in races. Outside a race, Backspace sends menu
+cancel and Esc exits. Debug Console capture precedes gameplay input.
+
+Debug and Release staged with
+`cmake --build --preset godot-mvp-<configuration> --target stage_mvp --parallel 16`.
+With Godot 4.7.2 Vulkan Forward+, the Track 12 command above passed in both
+configurations with `HP2_MVP_PAUSE_BINDINGS=1` and `HP2_MVP_MOUSE_PAUSE=1`.
+The probe checked Esc, Backspace, held and overlapping keys, temporary
+rebinding to P, cancellation of the restart confirmation, and resume.
+Debug also checked Console capture of Backspace. Logs are
+`local/task0126-inputmap-debug.log` and `local/task0126-inputmap-release.log`.
+The Release frontend smoke passed from title to Quick Race, pause and resume.
+The Debug frontend smoke also passed with `HP2_MVP_PAUSE_BINDINGS=1`,
+which checks that Backspace returns from World Racing mode selection to
+the main menu before reentering Quick Race. Both ran
+`tools/test_frontend_mvp.gd` on Vulkan at 960x720 with isolated profiles.
+Logs are `local/task0126-inputmap-frontend.log` and
+`local/task0126-inputmap-frontend-debug.log`.
+
+The follow-up removes all supplemental Godot buttons and checks the pointer
+Control for an empty child list and the default arrow. Godot 4.7.2 Debug
+Vulkan passed the Track 12 mouse pause, restart dialog, cancel and resume
+smoke with the command above. Debug and Release staged with
+`cmake --build --preset godot-mvp-<configuration> --target stage_mvp --parallel 16`.
+The Release runtime probe exited with Windows access violation
+`0xc0000005` before producing Godot logs. The Release script parse check
+passed with `--headless --script tools/test_mvp_frontend_resize.gd --check-only`.
+See `local/task0126-authored-pointer-debug.log` for the Debug run.

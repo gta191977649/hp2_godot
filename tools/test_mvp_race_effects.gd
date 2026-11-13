@@ -10,10 +10,18 @@ var phase := 0
 var restart_at := 0
 var race_step := 0
 var with_particles: Image
+var captured_particles: Array[GPUParticles3D] = []
 var next_capture_step := 0
 var before_capture := 0
+var terrain_groups := {}
 
 func _initialize() -> void:
+    for effect in ["XETT_ROAD_DR", "XETT_ROAD_SK", "XETT_DIRTRD_DR", "XETT_DIRTRD_SK",
+            "XETT_GRASS_DR", "XETT_GRASS_SK", "XETT_SAND_DR", "XETT_SAND_SK"]:
+        var group := 0xffffffff
+        for byte in effect.to_ascii_buffer():
+            group = (group * 33 + byte) & 0xffffffff
+        terrain_groups[group] = effect
     deadline = Time.get_ticks_msec() + 45000
     call_deferred("change_scene_to_file", "res://native_game.tscn")
 
@@ -52,9 +60,9 @@ func _process(_delta: float) -> bool:
     var births := 0
     var marks := 0
     for node in effects.get_children():
-        if not node.visible:
+        if not node is Node3D or not node.visible:
             continue
-        if node is GPUParticles3D:
+        if node is GPUParticles3D and _is_terrain_particle(node):
             births += 1
         elif node is MeshInstance3D:
             if node.mesh is ArrayMesh:
@@ -76,12 +84,22 @@ func _process(_delta: float) -> bool:
     return false
 
 func _compare_particles(effects: Node) -> void:
+    captured_particles.clear()
     with_particles = root.get_texture().get_image()
     capture("effects", with_particles)
     for node in effects.get_children():
-        if node is GPUParticles3D:
+        if node is GPUParticles3D and node.visible and _is_terrain_particle(node):
+            captured_particles.push_back(node)
             node.hide()
+    var groups := {}
+    for node in captured_particles:
+        var group := int(node.get_meta("source_effect_group"))
+        groups[terrain_groups[group]] = true
+    print("HP2_EFFECTS_TERRAIN_GROUPS ", groups.keys())
     _capture_hidden.call_deferred()
+
+func _is_terrain_particle(node: GPUParticles3D) -> bool:
+    return terrain_groups.has(node.get_meta("source_effect_group", 0))
 
 func _capture_hidden() -> void:
     await process_frame
@@ -98,10 +116,8 @@ func _capture_hidden() -> void:
     if changed >= 24:
         quit(0)
         return
-    var effects := race.get_node("RaceScene/RaceEffects")
-    for node in effects.get_children():
-        if node is GPUParticles3D:
-            node.show()
+    for node in captured_particles:
+        node.show()
     next_capture_step = race.telemetry().step + 8
     phase = before_capture
     race.set_process(true)

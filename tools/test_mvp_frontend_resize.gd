@@ -9,10 +9,12 @@ var initial_mode: Window.Mode
 var resize_failed := false
 var loading_captured := false
 var mouse_pause := false
+var check_pause_bindings := false
 
 func _initialize() -> void:
     direct = not OS.get_cmdline_user_args().is_empty()
     mouse_pause = OS.get_environment("HP2_MVP_MOUSE_PAUSE") == "1"
+    check_pause_bindings = OS.get_environment("HP2_MVP_PAUSE_BINDINGS") == "1"
     track_picker = OS.get_environment("HP2_MVP_RESIZE_TRACK_PICKER") == "1"
     initial_mode = root.mode
     super._initialize()
@@ -99,8 +101,17 @@ func _process(delta: float) -> bool:
     elif stage == 1 and sample.get("speed", 0) > 12.0:
         stage = 2
         _key(KEY_W, false)
-        _tap(KEY_ESCAPE)
+        if check_pause_bindings:
+            stage = 41
+            _verify_pause_bindings()
+        else:
+            _tap(KEY_ESCAPE)
     elif stage == 2 and screen == "Pause Menu":
+        var pointer := race.get_node_or_null("FrontendCanvas/FrontendPointer") as Control
+        if not pointer or pointer.get_child_count() != 0:
+            return _fail("frontend_pointer_controls")
+        if pointer.mouse_default_cursor_shape != Control.CURSOR_ARROW:
+            return _fail("frontend_pointer_cursor")
         stage = 3
         _resize_sweep("direct-pause", true)
     elif stage == 3:
@@ -175,6 +186,62 @@ func _open_restart_popup() -> bool:
     stage = 5
     next_input = Time.get_ticks_msec() + 650
     return false
+
+func _verify_pause_bindings() -> void:
+    const PAUSE := &"hp2_pause"
+    root.size = Vector2i(800, 600)
+    await create_timer(0.25).timeout
+    if race.telemetry().has("debug_console_open"):
+        await _tap(KEY_QUOTELEFT)
+        await _tap(KEY_BACKSPACE)
+        if not race.telemetry().debug_console_open or race.telemetry().race_state != 3:
+            _fail("console_backspace_passthrough")
+            return
+        await _tap(KEY_QUOTELEFT)
+    for key in [KEY_ESCAPE, KEY_BACKSPACE]:
+        _key(key, true)
+        await create_timer(0.7).timeout
+        if race.telemetry().screen != "Pause Menu":
+            _key(key, false)
+            _fail("pause_key_or_repeat_%s" % key)
+            return
+        if key == KEY_ESCAPE:
+            _key(KEY_BACKSPACE, true)
+            _key(key, false)
+            await create_timer(0.35).timeout
+            if race.telemetry().screen != "Pause Menu":
+                _key(KEY_BACKSPACE, false)
+                _fail("combined_pause_keys")
+                return
+            _key(KEY_BACKSPACE, false)
+        else:
+            _key(key, false)
+        await create_timer(0.25).timeout
+        _click_design(Vector2(270, 165))
+        await create_timer(0.7).timeout
+        if race.telemetry().race_state != 3:
+            _fail("resume_after_pause_key_%s" % key)
+            return
+    var original := InputMap.action_get_events(PAUSE)
+    InputMap.action_erase_events(PAUSE)
+    var mapped := InputEventKey.new()
+    mapped.physical_keycode = KEY_P
+    InputMap.action_add_event(PAUSE, mapped)
+    await _tap(KEY_ESCAPE)
+    await _tap(KEY_BACKSPACE)
+    if race.telemetry().race_state != 3:
+        _fail("unbound_pause_key")
+        return
+    await _tap(KEY_P)
+    await create_timer(0.5).timeout
+    InputMap.action_erase_events(PAUSE)
+    for event in original:
+        InputMap.action_add_event(PAUSE, event)
+    if race.telemetry().screen != "Pause Menu":
+        _fail("remapped_pause_key")
+        return
+    print("HP2_MVP_PAUSE_BINDINGS_PASS")
+    stage = 2
 
 func _finish_direct() -> bool:
     stage = 7

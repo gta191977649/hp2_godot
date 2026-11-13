@@ -12,6 +12,7 @@ struct RaceParticleEvent {
     std::uint64_t world{};
     std::uint32_t step{};
     bool frameEffects{};
+    std::uint64_t replayEpoch{};
 };
 
 struct RaceLightEffect {
@@ -34,7 +35,23 @@ struct RaceSunEffect {
     std::array<float,2> positionOverride{};
 };
 
+struct RaceParticleAsset {
+    const WorldParticleDefinition* definition{};
+    const EditorMarkerTexture* texture{};
+};
+
+// Port-side exhaust presentation inputs, sampled from the actual engine
+// and authored exhaust marker list. The host owns its cosmetic emission.
+struct RaceExhaustOutlet {
+    std::uint64_t car{};
+    std::size_t outlet{};
+    std::array<float, 3> position{}, direction{}, velocity{};
+    float throttle{};
+    bool active{};
+};
+
 struct RaceEffectsFrame {
+    std::vector<RaceExhaustOutlet> exhaust;
     std::vector<RaceParticleEvent> particles;
     std::vector<RaceLightEffect> lights;
     std::vector<RaceSunEffect> sun;

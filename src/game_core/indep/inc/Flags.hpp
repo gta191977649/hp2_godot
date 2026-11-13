@@ -317,6 +317,8 @@ struct FlailerRenderManager;
 struct FrontendFrame;
 struct NisManagerRegistry;
 struct RaceEffectsFrame;
+struct RaceParticleAsset;
+struct MainMenuScreenServices;
 enum class FrontendPointerAction { Focus, Confirm, Back, Left, Right, Previous, Next, Item,
     CaretLeft, CaretRight, Help, ReplayPause, ReplayPrevious, ReplayNext, ReplaySlow, ReplayCamera, ReplayHud };
 struct FrontendPointerTarget {
@@ -353,6 +355,8 @@ struct RaceStateView {
     const ::CarCinematicViewFrame* rearCamera{};
     const ::Car* rearHiddenCar{};
     std::array<const EditorMarkerTexture*, 2> rearTextures{};
+    bool reverse{};
+    bool beTheCop{};
 };
 class ApplicationRuntime final {
 public:
@@ -364,16 +368,17 @@ public:
     ApplicationRuntime& operator=(const ApplicationRuntime&)=delete;
     void Initialize(const std::filesystem::path& configFile={});
     bool Tick();
-    // Port-side explicit Quick Race. AdvanceRace only updates source owners.
-    void InitializeRace(int track);
+    // The host can request one race once the authored frontend banks are ready.
+    void InitializeRace(void (*start)(MainMenuScreenServices&, const void*), const void* context);
     // Port-side policy, evaluated before starting a selected frontend race.
-    void InitializeFrontend(int quickRaceTrack, bool (*supportsTrack)(int));
+    void InitializeFrontend();
     FrontendStateView FrontendState() const;
     void QueueFrontendPointer(std::uint64_t epoch, FrontendPointerTarget target);
     bool AdvanceRace();
     int SelectedTrack() const noexcept;
     RaceStateView RaceState() const noexcept;
     void TakeRaceEffects(RaceEffectsFrame& frame);
+    std::vector<RaceParticleAsset> RaceParticleAssets() const;
     void SetDisplayOptions(int32_t width,int32_t height,bool fullscreen,bool vsync);
     void Shutdown();
     EcstasyFrame& Frame() noexcept;

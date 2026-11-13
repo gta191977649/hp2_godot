@@ -201,6 +201,7 @@ typedef struct World {
         ;
 #ifdef __cplusplus
     std::uint64_t presentationGeneration{};
+    std::uint64_t presentationReplayEpoch{};
     World() noexcept = default;
     explicit World(const hp2::WorldConstructionBindings& bindings);
     ~World();

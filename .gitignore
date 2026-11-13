@@ -265,6 +265,7 @@ saves/
 !/tasks/active/
 /tasks/active/*
 !/tasks/active/TASK-0140-godot-race-effects.md
+!/tasks/active/TASK-0141-godot-single-player-races.md
 !/tasks/active/TASK-0115-track12-native-rendering.md
 !/tasks/active/TASK-0116-independent-entities-edition.md
 !/tasks/active/TASK-0117-entities-performance.md
@@ -275,6 +276,14 @@ saves/
 !/tasks/active/TASK-0122-donor-vehicle-physics.md
 /tools/*
 !/tools/test_mvp_race_effects.gd
+!/tools/test_mvp_sun_alignment.gd
+!/tools/test_mvp_race_catalog.cpp
+!/tools/test_mvp_race_lifecycle.gd
+!/tools/test_mvp_campaign_matrix.ps1
+!/tools/test_mvp_campaign_drive.gd
+!/tools/test_mvp_be_the_cop.gd
+!/tools/test_mvp_police_support_visuals.gd
+!/tools/test_mvp_particle_routes.gd
 !/tools/test_event_window.py
 !/tools/test_mvp_hud_interpolation.gd
 !/tools/test_mvp_presentation_previews.gd

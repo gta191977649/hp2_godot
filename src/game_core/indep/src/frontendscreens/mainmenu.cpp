@@ -390,8 +390,7 @@ void StartQuickRace(MainMenuScreenServices& services,std::int32_t manualTransmis
     const auto cops=frontend.copsEnabled;
     frontend.gameType=2;
     frontend.playerCount=1;
-    const auto trackOverride=requestedTrack>=0 ? requestedTrack : services.quickRaceTrack;
-    const auto description=trackOverride>=0 ? MainMenuTrackDescription{trackOverride,0}:PickTrackNumberForExpressGame(services);
+    const auto description=requestedTrack>=0 ? MainMenuTrackDescription{requestedTrack,0}:PickTrackNumberForExpressGame(services);
     const auto* track=setup.tracks->Find(description.trackNumber);
     Require(track,"Quick race selected a missing authored track");
     race.selectedScenario=description.trackNumber;
@@ -424,7 +423,7 @@ void StartQuickRace(MainMenuScreenServices& services,std::int32_t manualTransmis
     race.eventDescription[0]='\0';
     race.authoredRaceOption4C=0;
     frontend.MakeChallengeCarsAvailable(*setup.cars,*setup.events,*setup.demoDisc);
-    if (trackOverride<0 && applicationBootState.trackSelectedInConfigFile>=0) {
+    if (requestedTrack<0 && applicationBootState.trackSelectedInConfigFile>=0) {
         const auto model=setup.applicationOptions->startupPlayerModel[0];
         profile.SetCarAvailability(0,model,-1,true);
         profile.AssignCarOfType(frontend.gameType,model,

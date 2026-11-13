@@ -2,17 +2,26 @@
 
 #include "assets/mesh_converter.hpp"
 #include "indep/inc/Texture.hpp"
+#include "bware/inc/bWare.hpp"
+#include "bware/inc/bMath.hpp"
+#include "systems/track/track_presentation.hpp"
 
 #include <godot_cpp/classes/camera3d.hpp>
 #include <godot_cpp/classes/gpu_particles3d.hpp>
 #include <godot_cpp/classes/image.hpp>
+#include <godot_cpp/classes/gradient.hpp>
+#include <godot_cpp/classes/gradient_texture1_d.hpp>
+#include <godot_cpp/classes/particle_process_material.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/mesh_instance3d.hpp>
 #include <godot_cpp/classes/quad_mesh.hpp>
 #include <godot_cpp/classes/shader.hpp>
 #include <godot_cpp/classes/shader_material.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
+#include <godot_cpp/classes/sub_viewport.hpp>
 #include <godot_cpp/classes/viewport.hpp>
+#include <godot_cpp/classes/viewport_texture.hpp>
+#include <godot_cpp/classes/world3d.hpp>
 #include <godot_cpp/variant/packed_vector4_array.hpp>
 
 #include <algorithm>
@@ -80,6 +89,7 @@ constexpr auto particleDraw = R"(
 shader_type spatial;
 render_mode unshaded, blend_mix, cull_disabled, depth_draw_never, shadows_disabled;
 uniform sampler2D atlas : source_color, filter_linear, repeat_disable;
+uniform sampler2D scene_depth : hint_depth_texture, filter_nearest, repeat_disable;
 uniform vec4 color_curve[4];
 uniform vec4 size_curve[4];
 uniform vec2 atlas_size;
@@ -90,26 +100,35 @@ uniform float alpha_cutoff;
 uniform int texture_function;
 uniform sampler2D group_epochs : filter_nearest, repeat_disable;
 varying vec4 tint;
-varying float visible_in_view;
+varying flat float visible_in_view;
+varying flat float particle_depth;
 
 void vertex() {
     float age = 1.0 - float(int(INSTANCE_CUSTOM.x) & 65535) / (1024.0 * lifetime);
     vec4 shape = ((size_curve[0] * age + size_curve[1]) * age + size_curve[2]) * age + size_curve[3];
     tint = clamp(((color_curve[0] * age + color_curve[1]) * age + color_curve[2]) * age + color_curve[3],
                  vec4(0.0), vec4(255.0)) / 128.0;
-    int angle = int(INSTANCE_CUSTOM.y);
+    int angle = int(INSTANCE_CUSTOM.y) & 65535;
     float rotation = float(angle + (((angle & 1) == 0) ? int(shape.y) : -int(shape.y))) * TAU / 65536.0;
     vec2 offset = mat2(vec2(cos(rotation), sin(rotation)), vec2(-sin(rotation), cos(rotation))) * VERTEX.xy;
-    vec4 center = MODELVIEW_MATRIX * vec4(0.0, 0.0, 0.0, 1.0);
+    vec4 center = VIEW_MATRIX * MODEL_MATRIX[3];
     float depth = -center.z;
-    float size = clamp(shape.x, 0.0, pixel_cap * max(depth,0.0) / (240.0 * PROJECTION_MATRIX[1][1]));
+    // Forward+ may flip the projection Y axis for a render target. Its
+    // magnitude sets the focal length; using the sign collapses large FX.
+    float focal = 240.0 * abs(PROJECTION_MATRIX[1][1]);
+    float size = clamp(shape.x, 0.0, pixel_cap * max(depth, 0.0) / focal);
     int identity = int(INSTANCE_CUSTOM.w);
     vec4 group = texelFetch(group_epochs, ivec2(identity & 1023, 0), 0);
     int mask = int(group.g);
     int view = int(CAMERA_VISIBLE_LAYERS) & 6;
     visible_in_view = float(int(group.r) == (identity >> 10) && (mask & view) != 0 &&
         depth > 0.0 && depth < interest_distance && size > 0.0);
-    POSITION = PROJECTION_MATRIX * (center + vec4(offset * size * vec2(1.0, 0.875), 0.0, 0.0));
+    particle_depth = depth;
+    // Keep the billboard in the standard spatial vertex path. This gives
+    // Forward+ the same view-space position for depth, fog and rasterization.
+    MODELVIEW_MATRIX = mat4(vec4(1.0, 0.0, 0.0, 0.0), vec4(0.0, 1.0, 0.0, 0.0),
+        vec4(0.0, 0.0, 1.0, 0.0), center);
+    VERTEX = vec3(offset * size * vec2(1.0, 0.875), 0.0);
     float frame = float(int(INSTANCE_CUSTOM.z) & 255);
     UV = (UV + vec2(mod(frame, atlas_size.x), floor(frame / atlas_size.x))) / atlas_size;
 }
@@ -126,48 +145,129 @@ void fragment() {
     ALBEDO = result.rgb;
     ALPHA = clamp(result.a, 0.0, 1.0);
     if (ALPHA <= alpha_cutoff) discard;
+    float depth = textureLod(scene_depth, SCREEN_UV, 0.0).r;
+    if (depth > 0.0) {
+        vec4 scene_view = INV_PROJECTION_MATRIX * vec4(SCREEN_UV * 2.0 - 1.0, depth, 1.0);
+        float gap = -scene_view.z / scene_view.w - particle_depth;
+        ALPHA *= smoothstep(0.0, 0.3, gap);
+    }
 }
 )";
 
+// StuffSun / StuffSunGlare and ePoly::Render (Debug 125430, 125A70, 10FE48).
+// Composite the complete ordered stack over Godot's opaque scene in GS byte
+// space. Forward+ uses linear color, so convert only at the pass boundary.
 constexpr auto sunDraw = R"(
 shader_type spatial;
-render_mode unshaded, blend_add, cull_disabled, depth_draw_never, depth_test_disabled, shadows_disabled;
+render_mode unshaded, fog_disabled, blend_mix, cull_disabled, depth_draw_never, depth_test_disabled, shadows_disabled;
+uniform sampler2D scene_color : hint_screen_texture, filter_nearest, repeat_disable;
+uniform sampler2D sky_color : filter_nearest, repeat_disable;
+uniform bool has_sky;
 uniform sampler2D depth_texture : hint_depth_texture, filter_nearest, repeat_disable;
-uniform sampler2D flare : source_color, filter_linear, repeat_disable;
+uniform sampler2D flare_0 : filter_linear, repeat_disable;
+uniform sampler2D flare_1 : filter_linear, repeat_disable;
+uniform sampler2D flare_2 : filter_linear, repeat_disable;
+uniform sampler2D flare_3 : filter_linear, repeat_disable;
+uniform sampler2D flare_4 : filter_linear, repeat_disable;
+uniform vec4 layer_rect[12]; // UV center, UV half extents
+uniform vec4 layer_color[12]; // raw RGBA, including the pre-occlusion alpha
+uniform vec4 layer_state[12]; // rotation cosine/sine, texture slot, visibility and blend flags
+uniform int layer_count;
+uniform int disc_layer = -1;
+uniform vec4 bounds_uv;
 uniform vec2 sun_uv;
-uniform vec2 center_uv;
-uniform vec2 extent_uv;
-uniform float rotation;
 uniform float source_scale;
-uniform vec4 tint;
 uniform bool sample_sky;
-uniform bool depth_test_disc;
-varying float visibility;
+varying flat float visibility;
+
+bool sky_at(vec2 uv) {
+    return textureLod(depth_texture, uv, 0.0).r == 0.0;
+}
 
 void vertex() {
     visibility = 1.0;
-    if (sample_sky || depth_test_disc) {
+    if (sample_sky) {
         visibility = 0.0;
-        vec2 origin = floor(sun_uv * VIEWPORT_SIZE / source_scale - vec2(16.0));
+        vec2 source_pixel = source_scale / VIEWPORT_SIZE;
+        vec2 origin = trunc(sun_uv / source_pixel - vec2(16.0));
         for (int y = 0; y < 32; ++y) {
             for (int x = 0; x < 32; ++x) {
-                vec2 uv = (origin + vec2(float(x), float(y)) + 0.5) * source_scale / VIEWPORT_SIZE;
+                vec2 uv = (origin + vec2(float(x), float(y)) + 0.5) * source_pixel;
                 if (all(greaterThanEqual(uv, vec2(0.0))) && all(lessThan(uv, vec2(1.0)))) {
-                    visibility += float(textureLod(depth_texture, uv, 0.0).r <= 0.00000012);
+                    visibility += float(sky_at(uv));
                 }
             }
         }
         visibility /= 1024.0;
     }
-    vec2 p = mat2(vec2(cos(rotation), sin(rotation)), vec2(-sin(rotation), cos(rotation))) * (UV * 2.0 - 1.0);
-    vec2 pixel = center_uv + p * extent_uv;
-    POSITION = vec4(pixel.x * 2.0 - 1.0, 1.0 - pixel.y * 2.0, 1.0, 1.0);
+    // The submitted Godot screen coordinates and SCREEN_UV both start at the top left.
+    POSITION = vec4(mix(bounds_uv.xy, bounds_uv.zw, UV) * 2.0 - 1.0, 0.0, 1.0);
+}
+
+// ePoly sends Q=1. TEX1 has K=0, so the GS selects MMAG at level zero.
+vec4 flare_texel(int slot, vec2 uv) {
+    if (slot == 0) return textureLod(flare_0, uv, 0.0);
+    if (slot == 1) return textureLod(flare_1, uv, 0.0);
+    if (slot == 2) return textureLod(flare_2, uv, 0.0);
+    if (slot == 3) return textureLod(flare_3, uv, 0.0);
+    return textureLod(flare_4, uv, 0.0);
+}
+
+vec3 to_gs_bytes(vec3 linear_rgb) {
+    vec3 rgb = clamp(linear_rgb, vec3(0.0), vec3(1.0));
+    return round(mix(1.055 * pow(rgb, vec3(1.0 / 2.4)) - 0.055, rgb * 12.92,
+        lessThanEqual(rgb, vec3(0.0031308))) * 255.0);
+}
+
+vec3 from_gs_bytes(vec3 bytes) {
+    vec3 rgb = bytes / 255.0;
+    return mix(pow((rgb + 0.055) / 1.055, vec3(2.4)), rgb / 12.92,
+        lessThanEqual(rgb, vec3(0.04045)));
 }
 
 void fragment() {
-    vec4 texel = texture(flare, UV);
-    ALBEDO = texel.rgb * tint.rgb;
-    ALPHA = clamp(texel.a * tint.a * visibility, 0.0, 1.0);
+    vec3 destination = vec3(0.0);
+    bool has_destination = false;
+    // All sun textures share priority 7. The source alpha sorter walks
+    // equal positive Z keys in reverse submission order, with the disc last.
+    for (int order = 0; order < layer_count; ++order) {
+        int i = layer_count - 1 - order;
+        if (disc_layer >= 0 && i <= disc_layer) {
+            i = i == 0 ? disc_layer : i - 1;
+        }
+        vec4 rect = layer_rect[i];
+        vec4 state = layer_state[i];
+        vec2 p = (SCREEN_UV - rect.xy) / rect.zw;
+        vec2 uv = mat2(vec2(state.x, -state.y), vec2(state.y, state.x)) * p * 0.5 + 0.5;
+        if (any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0)))) continue;
+        int flags = int(state.w);
+        if ((flags & 8) != 0 && !sky_at(SCREEN_UV)) continue;
+
+        vec4 tint = layer_color[i];
+        if ((flags & 16) != 0) tint.a *= visibility;
+        tint.a = float(int(tint.a) & 255);
+
+        vec4 texel = floor(flare_texel(int(state.z), uv) * 255.0 + 0.001);
+        // TEX0 TFX=MODULATE, TCC=RGBA. Context TEST accepts alpha >= 0.
+        vec4 source = min(floor(texel * tint / 128.0), vec4(255.0));
+        if (source.a == 0.0) continue;
+
+        if (!has_destination) {
+            // The original sky meshes are depth-free and draw outside the
+            // opaque scene copy. Read their color only where depth is clear.
+            destination = has_sky && sky_at(SCREEN_UV)
+                ? round(textureLod(sky_color, SCREEN_UV, 0.0).rgb * 255.0)
+                : to_gs_bytes(textureLod(scene_color, SCREEN_UV, 0.0).rgb);
+            has_destination = true;
+        }
+        // GS ALPHA A=Cs, C=As, D=Cd. B=Cd for blend and zero for add.
+        vec3 b = (flags & 4) != 0 ? vec3(0.0) : destination;
+        destination = clamp(destination + floor((source.rgb - b) * source.a / 128.0),
+            vec3(0.0), vec3(255.0));
+    }
+    if (!has_destination) discard;
+    ALBEDO = from_gs_bytes(destination);
+    ALPHA = 1.0;
 }
 )";
 
@@ -245,6 +345,8 @@ PackedVector4Array curve(const float* values) {
 }
 
 constexpr int historySize=16;
+constexpr int maxSunLayers = 12; // Six glare and six track rows.
+enum SunFlags { SunAdd = 4, SunDisc = 8, SunSampleSky = 16 };
 }
 
 struct RaceEffectsPresentation::Storage {
@@ -253,6 +355,7 @@ struct RaceEffectsPresentation::Storage {
         Ref<ShaderMaterial> process;
         Ref<ShaderMaterial> draw;
         bool dirty{};
+        int groups{};
     };
 
     struct Mark {
@@ -270,6 +373,8 @@ struct RaceEffectsPresentation::Storage {
     }
 
     Node3D* root{};
+    SubViewport* skyViewport{};
+    Camera3D* skyCamera{};
     Ref<QuadMesh> quad;
     Ref<Shader> processShader=shader(particleProcess);
     std::array<Ref<Shader>,3> drawShaders{
@@ -280,13 +385,8 @@ struct RaceEffectsPresentation::Storage {
         effect_shader(lightDraw,BaseMaterial3D::BLEND_MODE_MIX),
         effect_shader(lightDraw,BaseMaterial3D::BLEND_MODE_ADD),
         effect_shader(lightDraw,BaseMaterial3D::BLEND_MODE_SUB)};
-    Ref<Shader> sunAddShader=shader(sunDraw);
-    Ref<Shader> sunMixShader=[] {
-        std::string code(sunDraw);
-        code.replace(code.find("blend_add"),9,"blend_mix");
-        return shader(code.c_str());
-    }();
-    std::unordered_map<const EditorMarkerTexture*,Ref<Texture2D>> textures;
+    Ref<Shader> sunShader=shader(sunDraw);
+    std::unordered_map<const EditorMarkerTexture*,Ref<Texture2D>> textures, sunTextures;
     std::unordered_map<const EditorMarkerTexture*,Ref<StandardMaterial3D>> skidMaterials;
     std::unordered_map<const EditorMarkerTexture*,Ref<ShaderMaterial>> lightMaterials;
     std::unordered_map<const WorldParticleDefinition*,Particle> particles;
@@ -304,20 +404,34 @@ struct RaceEffectsPresentation::Storage {
     std::array<std::array<float,4>,slots*historySize*2> steps{};
     std::array<std::array<float,4>,slots> epochs{};
     Ref<ImageTexture> stepTexture, epochTexture;
+    Ref<Image> stepImage, epochImage;
+    GPUParticles3D* exhaust{};
+    struct ExhaustClock {
+        std::uint64_t car{};
+        std::size_t outlet{};
+        float remainder{};
+    };
+    std::vector<ExhaustClock> exhaustClocks;
+    int exhaustFrame{-1};
     PackedByteArray stepBytes, epochBytes;
     bool epochsDirty{};
     std::array<Mark,128> marks, rearMarks;
     std::vector<MeshInstance3D*> lights, rearLights;
-    std::vector<MeshInstance3D*> sun;
+    MeshInstance3D* sun{};
+    Ref<ShaderMaterial> sunMaterial;
+    std::array<const EditorMarkerTexture*,5> sunBindings{};
+    PackedVector4Array sunRects, sunColors, sunStates;
 
-    Ref<Texture2D> texture(const EditorMarkerTexture* descriptor) {
-        auto [it, inserted]=textures.try_emplace(descriptor);
+    Ref<Texture2D> texture(const EditorMarkerTexture* descriptor, bool rawGs = false) {
+        auto [it, inserted]=(rawGs ? sunTextures : textures).try_emplace(descriptor);
         if (!inserted) return it->second;
         const auto* source=textureInfoForDescriptor(descriptor);
         if (!source || !source->pixels.Data()) throw std::runtime_error("Original effect texture is unloaded");
         std::uint32_t width{},height{};
         auto rgba=DecodeTextureMipRgba(*source,0,0,source->pixels.size,width,height);
-        for (std::size_t i=3;i<rgba.size();i+=4) rgba[i]=std::min(255,int(rgba[i])*2);
+        if (!rawGs) {
+            for (std::size_t i=3;i<rgba.size();i+=4) rgba[i]=std::min(255,int(rgba[i])*2);
+        }
         PackedByteArray bytes;
         bytes.resize(rgba.size());
         std::memcpy(bytes.ptrw(),rgba.data(),rgba.size());
@@ -359,17 +473,20 @@ struct RaceEffectsPresentation::Storage {
         return *instance;
     }
 
-    void upload_texture(Ref<ImageTexture>& target,PackedByteArray& bytes,const void* data,
+    void upload_texture(Ref<ImageTexture>& target,Ref<Image>& image,PackedByteArray& bytes,const void* data,
         int width,int height) {
         bytes.resize(width*height*4*sizeof(float));
         std::memcpy(bytes.ptrw(),data,bytes.size());
-        auto image=Image::create_from_data(width,height,false,Image::FORMAT_RGBAF,bytes);
-        if (target.is_null()) target=ImageTexture::create_from_image(image);
-        else target->update(image);
+        if (target.is_null()) {
+            image=Image::create_from_data(width,height,false,Image::FORMAT_RGBAF,bytes);
+            target=ImageTexture::create_from_image(image);
+        } else {
+            image->set_data(width,height,false,Image::FORMAT_RGBAF,bytes);
+            target->update(image);
+        }
     }
 
-    Particle& acquire(const RaceParticleEvent& request) {
-        const auto& definition=*request.event.definition;
+    Particle& acquire(const WorldParticleDefinition& definition, const EditorMarkerTexture& descriptor) {
         auto [it,added]=particles.try_emplace(&definition);
         auto& particle=it->second;
         if (!added) return particle;
@@ -377,25 +494,27 @@ struct RaceEffectsPresentation::Storage {
             definition.atlasWidthPower+definition.atlasHeightPower>8 || definition.lifetime<=0)
             throw std::runtime_error("Invalid authored AcidFX particle definition");
         if (stepTexture.is_null()) {
-            upload_texture(stepTexture,stepBytes,steps.data(),slots,historySize*2);
-            upload_texture(epochTexture,epochBytes,epochs.data(),slots,1);
+            upload_texture(stepTexture,stepImage,stepBytes,steps.data(),slots,historySize*2);
+            upload_texture(epochTexture,epochImage,epochBytes,epochs.data(),slots,1);
         }
-        auto draw=material(drawShaders.at(texture_blend(*request.texture)));
+        auto draw=material(drawShaders.at(texture_blend(descriptor)));
         particle.draw=draw;
-        draw->set_shader_parameter("atlas",texture(request.texture));
+        draw->set_shader_parameter("atlas",texture(&descriptor));
         draw->set_shader_parameter("color_curve",curve(definition.colorCurve));
         draw->set_shader_parameter("size_curve",curve(definition.sizeRotationCurve));
         draw->set_shader_parameter("atlas_size",Vector2(1u<<definition.atlasWidthPower,1u<<definition.atlasHeightPower));
         draw->set_shader_parameter("lifetime",definition.lifetime);
         draw->set_shader_parameter("pixel_cap",definition.maximumPixelSize==0 ? 512.0f:definition.maximumPixelSize);
         draw->set_shader_parameter("interest_distance",definition.interestDistance);
-        const auto* source=textureInfoForDescriptor(request.texture);
-        draw->set_shader_parameter("alpha_cutoff",request.texture->authoredRecord[0x4f] ||
+        const auto* source=textureInfoForDescriptor(&descriptor);
+        draw->set_shader_parameter("alpha_cutoff",descriptor.authoredRecord[0x4f] ||
             source->drawFlag4Enabled ? -1.0f:48.0f/128.0f);
-        draw->set_shader_parameter("texture_function",request.texture->authoredRecord[0x4e]);
+        draw->set_shader_parameter("texture_function",descriptor.authoredRecord[0x4e]);
         draw->set_shader_parameter("group_epochs",epochTexture);
         auto* node=memnew(GPUParticles3D);
         particle.node=node;
+        node->set_meta("source_effect_group", static_cast<std::int64_t>(definition.groupKey));
+        node->set_meta("source_effect_key", static_cast<std::int64_t>(definition.key));
         particle.process=material(processShader);
         particle.process->set_shader_parameter("step_history",stepTexture);
         particle.process->set_shader_parameter("group_epochs",epochTexture);
@@ -419,7 +538,83 @@ struct RaceEffectsPresentation::Storage {
         node->set_cast_shadows_setting(GeometryInstance3D::SHADOW_CASTING_SETTING_OFF);
         node->set_visibility_aabb(AABB(Vector3(-16000,-16000,-16000),Vector3(32000,32000,32000)));
         root->add_child(node);
+        node->hide();
         return particle;
+    }
+
+    void prepare_exhaust(const EditorMarkerTexture& descriptor) {
+        // The shipped CARFX_EXHAUST_SMOKE slot has no emitter definition.
+        // Use its authored tailpipe markers and reuse the original smoke atlas.
+        Ref<ParticleProcessMaterial> process;
+        process.instantiate();
+        process->set_gravity(Vector3(0, 0.35f, 0));
+        process->set_param(ParticleProcessMaterial::PARAM_SCALE, Vector2(0.75f, 1.2f));
+        Ref<Gradient> fade;
+        fade.instantiate();
+        fade->set_color(0, Color(0.72f, 0.72f, 0.72f, 0.24f));
+        fade->set_color(1, Color(0.72f, 0.72f, 0.72f, 0));
+        Ref<GradientTexture1D> ramp;
+        ramp.instantiate();
+        ramp->set_gradient(fade);
+        process->set_color_ramp(ramp);
+
+        Ref<StandardMaterial3D> draw;
+        draw.instantiate();
+        draw->set_shading_mode(BaseMaterial3D::SHADING_MODE_UNSHADED);
+        draw->set_transparency(BaseMaterial3D::TRANSPARENCY_ALPHA);
+        draw->set_depth_draw_mode(BaseMaterial3D::DEPTH_DRAW_DISABLED);
+        draw->set_proximity_fade_enabled(true);
+        draw->set_proximity_fade_distance(0.3f);
+        draw->set_billboard_mode(BaseMaterial3D::BILLBOARD_PARTICLES);
+        draw->set_particles_anim_h_frames(4);
+        draw->set_particles_anim_v_frames(4);
+        draw->set_flag(BaseMaterial3D::FLAG_ALBEDO_FROM_VERTEX_COLOR, true);
+        draw->set_texture(BaseMaterial3D::TEXTURE_ALBEDO, texture(&descriptor));
+        Ref<QuadMesh> mesh;
+        mesh.instantiate();
+        mesh->set_size(Vector2(0.38f, 0.38f));
+        exhaust = memnew(GPUParticles3D);
+        exhaust->set_name("TailpipeExhaust");
+        exhaust->set_process_material(process);
+        exhaust->set_material_override(draw);
+        exhaust->set_draw_pass_mesh(0, mesh);
+        exhaust->set_amount(192);
+        exhaust->set_lifetime(0.65);
+        exhaust->set_emitting(false);
+        exhaust->set_layer_mask(6);
+        exhaust->set_use_local_coordinates(false);
+        exhaust->set_cast_shadows_setting(GeometryInstance3D::SHADOW_CASTING_SETTING_OFF);
+        exhaust->set_visibility_aabb(AABB(Vector3(-16000,-16000,-16000),Vector3(32000,32000,32000)));
+        root->add_child(exhaust);
+        exhaustClocks.reserve(64);
+    }
+
+    void update_exhaust(const std::vector<RaceExhaustOutlet>& outlets, Camera3D& camera, int worldFrames) {
+        if (!exhaust) return;
+        const int elapsed = exhaustFrame < 0 ? 0 : std::clamp(worldFrames - exhaustFrame, 0, 6);
+        exhaustFrame = worldFrames;
+        exhaust->set_speed_scale(elapsed * (1.0 / 60.0) / std::max(1.0e-4, camera.get_process_delta_time()));
+        if (!elapsed) return;
+        const auto eye = camera.get_global_position();
+        exhaustClocks.resize(outlets.size());
+        for (std::size_t i = 0; i < outlets.size(); ++i) {
+            const auto& outlet = outlets[i];
+            auto& clock = exhaustClocks[i];
+            if (clock.car != outlet.car || clock.outlet != outlet.outlet)
+                clock = {outlet.car, outlet.outlet, 0};
+            const auto position = race_vector(outlet.position.data());
+            if (!outlet.active || position.distance_squared_to(eye) > 3600.0f) {
+                clock.remainder = 0;
+                continue;
+            }
+            clock.remainder += elapsed * (4.0f + 12.0f * outlet.throttle) / 60.0f;
+            const int count = static_cast<int>(clock.remainder);
+            clock.remainder -= count;
+            const auto velocity = race_vector(outlet.velocity.data()) * 0.45f +
+                race_vector(outlet.direction.data()) * (0.9f + 1.8f * outlet.throttle);
+            for (int i = 0; i < count; ++i)
+                exhaust->emit_particle(Transform3D(Basis(), position), velocity, Color(1,1,1), Color(0,0,0,0), 31);
+        }
     }
 
     void update_particles(const RaceEffectsFrame& frame,std::uint64_t generation) {
@@ -432,7 +627,9 @@ struct RaceEffectsPresentation::Storage {
             if (event.operation==ParticleEffectOperation::Spawn) {
                 if (!request.texture) continue;
                 if (group.generation!=event.generation) {
-                    group.particle=&acquire(request);
+                    if (group.particle && --group.particle->groups == 0) group.particle->node->hide();
+                    group.particle=&acquire(*event.definition, *request.texture);
+                    if (group.particle->groups++ == 0) group.particle->node->show();
                     group.generation=event.generation;
                     group.sequence=0;
                     group.mask=generation==0 ? 2:0;
@@ -454,6 +651,7 @@ struct RaceEffectsPresentation::Storage {
             } else if (group.particle && group.generation==event.generation) {
                 group.particle->dirty=true;
                 if (event.operation==ParticleEffectOperation::Remove) {
+                    if (--group.particle->groups == 0) group.particle->node->hide();
                     group.particle=nullptr;
                     group.generation=0;
                     group.epoch=(group.epoch+1)&0x3fff;
@@ -479,8 +677,8 @@ struct RaceEffectsPresentation::Storage {
             epochs[slot][1]=float(mask);
             epochsDirty=true;
         }
-        if (stepsDirty) upload_texture(stepTexture,stepBytes,steps.data(),slots,historySize*2);
-        if (epochsDirty && epochTexture.is_valid()) upload_texture(epochTexture,epochBytes,epochs.data(),slots,1);
+        if (stepsDirty) upload_texture(stepTexture,stepImage,stepBytes,steps.data(),slots,historySize*2);
+        if (epochsDirty && epochTexture.is_valid()) upload_texture(epochTexture,epochImage,epochBytes,epochs.data(),slots,1);
         epochsDirty=false;
         for (auto& [definition,particle]:particles) {
             if (!particle.dirty) continue;
@@ -569,63 +767,148 @@ struct RaceEffectsPresentation::Storage {
         for (;count<sprites.size();++count) sprites[count]->hide();
     }
 
-    void update_sun(const std::vector<RaceSunEffect>& effects,Camera3D& camera) {
-        const auto viewport=camera.get_viewport()->get_visible_rect().size;
-        if (viewport.x<=0 || viewport.y<=0) return;
-        const float scale=viewport.y/480.0f;
-        std::size_t count=0;
-        for (const auto& effect:effects) {
-            const auto position=race_vector(effect.position.data());
-            if (camera.is_position_behind(position)) continue;
-            auto projected=camera.unproject_position(position);
-            if (effect.positionOverride[0]!=0 || effect.positionOverride[1]!=0)
-                projected=Vector2(effect.positionOverride[0],effect.positionOverride[1])*scale;
-            const auto& row=effect.parameters;
-            const float halfSize=row.size*effect.sizeScale*scale*0.5f;
-            const float margin=effect.margin*scale;
-            if (!Rect2(Vector2(-margin,-margin),viewport+Vector2(2*margin,2*margin)).has_point(projected)) continue;
-            const auto center=projected+Vector2(row.offset[0],row.offset[1])*scale;
-            if (!Rect2(-Vector2(halfSize,halfSize),viewport+Vector2(2*halfSize,2*halfSize)).has_point(center)) continue;
-            if (count==sun.size()) {
-                auto& sprite=mesh();
-                sprite.set_name(String("SunFlare")+String::num_uint64(count));
-                sprite.set_mesh(quad);
-                sprite.set_material_override(material(row.enabled ? sunAddShader:sunMixShader));
-                sprite.set_custom_aabb(AABB(Vector3(-16000,-16000,-16000),Vector3(32000,32000,32000)));
-                sprite.set_extra_cull_margin(1.0f);
-                sun.push_back(&sprite);
-            }
-            auto& sprite=*sun[count++];
-            Ref<ShaderMaterial> mat=sprite.get_material_override();
-            const auto& shader=row.enabled ? sunAddShader:sunMixShader;
-            if (mat->get_shader()!=shader) mat->set_shader(shader);
-            mat->set_shader_parameter("flare",texture(effect.texture));
-            mat->set_shader_parameter("sun_uv",projected/viewport);
-            mat->set_shader_parameter("center_uv",center/viewport);
-            mat->set_shader_parameter("extent_uv",Vector2(halfSize,halfSize)/viewport);
-            const float angleFraction=(projected.x+margin)/(viewport.x+2*margin);
-            mat->set_shader_parameter("rotation",(row.angle/65536.0f+row.parameter20*angleFraction)*6.283185307f);
-            mat->set_shader_parameter("tint",Color(row.color[0]/128.0f,row.color[1]/128.0f,row.color[2]/128.0f,effect.opacityScale));
-            mat->set_shader_parameter("source_scale",scale);
-            mat->set_shader_parameter("sample_sky",effect.sampleSky);
-            mat->set_shader_parameter("depth_test_disc",effect.depthTestDisc);
-            sprite.show();
+    void update_sun_sky(Camera3D& camera, Vector2i viewport) {
+        if (!skyViewport) {
+            if (!root->get_parent()->has_node("TrackSky")) return;
+            skyViewport = memnew(SubViewport);
+            skyViewport->set_name("SunSkyTarget");
+            skyViewport->set_world_3d(camera.get_world_3d());
+            root->add_child(skyViewport);
+            RenderingServer::get_singleton()->viewport_set_disable_2d(skyViewport->get_viewport_rid(), true);
+            skyCamera = memnew(Camera3D);
+            skyViewport->add_child(skyCamera);
+            skyCamera->set_cull_mask(trackSkyLayer);
+            skyCamera->make_current();
+            sunMaterial->set_shader_parameter("sky_color", skyViewport->get_texture());
+            sunMaterial->set_shader_parameter("has_sky", true);
         }
-        for (;count<sun.size();++count) sun[count]->hide();
+        if (skyViewport->get_size() != viewport) skyViewport->set_size(viewport);
+        skyCamera->set_global_transform(camera.get_global_transform());
+        skyCamera->set_keep_aspect_mode(camera.get_keep_aspect_mode());
+        skyCamera->set_perspective(camera.get_fov(), camera.get_near(), camera.get_far());
+        skyViewport->set_update_mode(SubViewport::UPDATE_ALWAYS);
+    }
+
+    void update_sun(const std::vector<RaceSunEffect>& effects, Camera3D& camera, bool ntsc) {
+        const auto viewport = camera.get_viewport()->get_visible_rect().size;
+        if (viewport.x <= 0 || viewport.y <= 0) return;
+        // Same source focal ratio as the primary Godot camera and ProjectSun.
+        const float scale = viewport.y * (ntsc ? 1.0714286566f / 448.0f : 1.285f / 512.0f);
+        Rect2 bounds;
+        Vector2 sunUv;
+        bool sampleSky = false;
+        int count = 0;
+        int discLayer = -1;
+        for (const auto& effect : effects) {
+            const auto position = race_vector(effect.position.data());
+            if (camera.is_position_behind(position)) continue;
+            auto projected = camera.unproject_position(position);
+            if (effect.positionOverride[0] != 0 || effect.positionOverride[1] != 0)
+                projected = Vector2(effect.positionOverride[0], effect.positionOverride[1]) * scale;
+            const auto& row = effect.parameters;
+            const float halfSize = row.size * effect.sizeScale * scale * 0.5f;
+            const float margin = effect.margin * scale;
+            if (!Rect2(Vector2(-margin, -margin), viewport + Vector2(2*margin, 2*margin)).has_point(projected))
+                continue;
+            const auto center = projected + Vector2(row.offset[0], row.offset[1]) * scale;
+            const float fraction = (projected.x + margin) / (viewport.x + 2*margin);
+            const auto sweep = static_cast<int>(row.parameter20 * fraction * 65536.0f);
+            const auto angle = static_cast<std::uint16_t>(row.angle + sweep);
+            const float cosine = vectorCosineAngle(angle);
+            const float sine = rotationSineAngle(angle);
+            const float radius = halfSize * (std::abs(cosine) + std::abs(sine));
+            const Vector2 halfBounds(radius, radius);
+            const Rect2 clipped = Rect2(center - halfBounds, 2 * halfBounds).intersection(Rect2({}, viewport));
+            if (!clipped.has_area()) continue;
+
+            if (!sun) {
+                sun = &mesh();
+                sun->set_name("SunFlare0");
+                sun->set_mesh(quad);
+                sun->set_custom_aabb(AABB(Vector3(-16000,-16000,-16000), Vector3(32000,32000,32000)));
+                sunMaterial = material(sunShader);
+                sunMaterial->set_render_priority(Material::RENDER_PRIORITY_MIN + 1);
+                sun->set_material_override(sunMaterial);
+                sunRects.resize(maxSunLayers);
+                sunColors.resize(maxSunLayers);
+                sunStates.resize(maxSunLayers);
+            }
+            const int slot = row.kind;
+            if (count >= maxSunLayers || slot < 0 || slot >= static_cast<int>(sunBindings.size()))
+                throw std::runtime_error("Sun layers exceed the authored bank");
+            if (sunBindings[slot] != effect.texture) {
+                const auto image = texture(effect.texture, true);
+                const auto* wire = effect.texture->authoredRecord;
+                // TEX0, TEX1 and TEST from the actual sun bank. Keep
+                // unsupported resource states visible instead of inventing
+                // a different filter or blend path.
+                if (wire[0x4e] != 0 || wire[0x4f] == 0 || wire[0x50] != 0 ||
+                    wire[0x6e] != 0 || wire[0x6f] != 1 || wire[0x70] != 3 || wire[0x71] != 0 ||
+                    wire[0x72] != 0 || wire[0x73] != 0)
+                    throw std::runtime_error("Unsupported authored GS state for sun texture");
+                sunMaterial->set_shader_parameter(String("flare_") + String::num_int64(slot), image);
+                sunBindings[slot] = effect.texture;
+            }
+            int flags = row.enabled ? SunAdd : 0;
+            if (effect.depthTestDisc) {
+                flags |= SunDisc;
+                discLayer = count;
+            }
+            if (effect.sampleSky) {
+                flags |= SunSampleSky;
+                sampleSky = true;
+                sunUv = projected / viewport;
+            }
+
+            const Vector2 extent = Vector2(halfSize, halfSize) / viewport;
+            sunRects.set(count, Vector4(center.x / viewport.x, center.y / viewport.y, extent.x, extent.y));
+            sunColors.set(count, Vector4(row.color[0], row.color[1], row.color[2], effect.opacityScale * 128.0f));
+            sunStates.set(count, Vector4(cosine, sine, slot, flags));
+            bounds = count == 0 ? clipped : bounds.merge(clipped);
+            ++count;
+        }
+        if (!count) {
+            if (sun) sun->hide();
+            if (skyViewport) skyViewport->set_update_mode(SubViewport::UPDATE_DISABLED);
+            return;
+        }
+        const auto start = bounds.position / viewport;
+        const auto end = bounds.get_end() / viewport;
+        sunMaterial->set_shader_parameter("bounds_uv", Vector4(start.x, start.y, end.x, end.y));
+        sunMaterial->set_shader_parameter("layer_rect", sunRects);
+        sunMaterial->set_shader_parameter("layer_color", sunColors);
+        sunMaterial->set_shader_parameter("layer_state", sunStates);
+        sunMaterial->set_shader_parameter("layer_count", count);
+        sunMaterial->set_shader_parameter("disc_layer", discLayer);
+        sunMaterial->set_shader_parameter("sun_uv", sunUv);
+        sunMaterial->set_shader_parameter("source_scale", scale);
+        sunMaterial->set_shader_parameter("sample_sky", sampleSky);
+        update_sun_sky(camera, Vector2i(viewport));
+        sun->show();
     }
 };
 
 RaceEffectsPresentation::RaceEffectsPresentation(Node3D& scene):storage_(std::make_unique<Storage>(scene)) {}
 RaceEffectsPresentation::~RaceEffectsPresentation()=default;
 
+void RaceEffectsPresentation::prepare_particles(const std::vector<RaceParticleAsset>& assets) {
+    const auto smokeKey = hashString("SMOKE_CS");
+    for (const auto& asset : assets) {
+        storage_->acquire(*asset.definition, *asset.texture);
+        if (!storage_->exhaust && asset.texture->key == smokeKey)
+            storage_->prepare_exhaust(*asset.texture);
+    }
+}
+
 void RaceEffectsPresentation::update(const RaceEffectsFrame& frame,Camera3D& camera,Camera3D* rear,
-    std::uint64_t generation) {
+    std::uint64_t generation, bool ntsc, int worldFrames) {
     storage_->update_particles(frame,generation);
+    storage_->update_exhaust(frame.exhaust, camera, worldFrames);
     storage_->update_skids(frame.skids,storage_->marks,2);
     storage_->update_lights(frame.lights,camera,storage_->lights,1,2);
     storage_->update_skids(frame.rearSkids,storage_->rearMarks,4);
     if (rear) storage_->update_lights(frame.lights,*rear,storage_->rearLights,3,4);
-    storage_->update_sun(frame.sun,camera);
+    storage_->update_sun(frame.sun, camera, ntsc);
 }
 
 void RaceEffectsPresentation::update_preview_lights(const std::vector<RaceLightEffect>& lights,Camera3D& camera,int view) {
@@ -637,7 +920,17 @@ void RaceEffectsPresentation::update_preview_particles(const RaceEffectsFrame& f
 }
 
 void RaceEffectsPresentation::reset() {
+    if (storage_->sun) storage_->sun->hide();
+    if (storage_->skyViewport) storage_->skyViewport->set_update_mode(SubViewport::UPDATE_DISABLED);
+    if (storage_->exhaust) {
+        storage_->exhaust->restart();
+        storage_->exhaust->set_emitting(false);
+        storage_->exhaustFrame = -1;
+        storage_->exhaustClocks.clear();
+    }
     for (auto& [definition,particle]:storage_->particles) {
+        particle.groups = 0;
+        particle.node->hide();
         particle.node->restart();
         particle.node->set_emitting(false);
     }

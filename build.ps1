@@ -11,7 +11,11 @@ for ($index = 0; $index -lt $args.Count; $index++) {
         '--mvp' { }
         '--run' { $run = $true }
         '--editor' { $editor = $true }
-        { $_ -match '^--race-track=\d+$' } { $raceArgument = [string]$_; $run = $true }
+        { $_ -match '^--race-(track|event)=' } {
+            if ($raceArgument) { throw 'Choose one race diagnostic.' }
+            $raceArgument = [string]$_
+            $run = $true
+        }
         '--debug' { $run = $true; $preset = 'godot-mvp-debug' }
         '--clean' { $clean = $true }
         '--rendering-driver' {
@@ -36,7 +40,7 @@ for ($index = 0; $index -lt $args.Count; $index++) {
         default { throw "Unknown option $($args[$index])." }
     }
 }
-if ($editor -and $raceArgument) { throw '--editor cannot be combined with --race-track.' }
+if ($editor -and $raceArgument) { throw '--editor cannot be combined with a race diagnostic.' }
 if ($preset -notin @('godot-mvp-release', 'godot-mvp-debug')) { throw "Unsupported preset $preset." }
 
 Push-Location -LiteralPath $PSScriptRoot

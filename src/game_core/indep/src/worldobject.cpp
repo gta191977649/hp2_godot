@@ -96,6 +96,7 @@ void worldObjectRegister(WorldObjectRegistry* registry,WorldObject* object,
     }
     if(frame){std::memcpy(object->frame,frame,sizeof(object->frame));object->hasFrame=1;}
     object->alternatePass=alternatePass;
+    object->presentationId=++registry->nextPresentationId;
     object->occupied=1;
     object->previous=registry->last;
     if(registry->last)registry->last->next=object;

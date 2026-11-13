@@ -6,6 +6,7 @@
 #include "indep/inc/Flags.hpp"
 #include "indep/inc/Player.hpp"
 #include "indep/inc/World.hpp"
+#include "indep/inc/WorldObject.hpp"
 #include "indep/inc/eMath.hpp"
 
 #include <algorithm>
@@ -53,7 +54,9 @@ const EntityFrame& EntityStateBridge::stage(const RaceStateView& race) {
 
     frame.step = world->frameCounter;
     frame.generation = world->presentationGeneration;
+    frame.replayEpoch = world->presentationReplayEpoch;
     frame.track = race.track;
+    frame.reverse = race.reverse;
     const auto* player = simulation->players ? simulation->players->playersByNumber[0] : nullptr;
     if (!frame.generation || !player || world->totalCars < 1 || world->totalCars > WORLD_MAX_CARS)
         throw std::runtime_error("Committed World has an invalid car table or no player");
@@ -107,10 +110,32 @@ const EntityFrame& EntityStateBridge::stage(const RaceStateView& race) {
     if (std::count_if(frame.vehicles.begin(), frame.vehicles.end(),
             [](const VehicleEntityState& vehicle) { return vehicle.player; }) != 1)
         throw std::runtime_error("Committed race must have exactly one player");
+    // PAL1CDB20 traverses the committed live list. Keep hidden pool entries
+    // in the snapshot so blinking and parked objects retain their instances.
+    const auto& objects = WorldObjects(*simulation->world);
+    frame.worldObjects.clear();
+    frame.worldObjects.reserve(objects.count);
+    for (auto* object = objects.first; object; object = object->next) {
+        if (frame.worldObjects.size() == objects.count || !object->occupied || !object->presentationId)
+            throw std::runtime_error("Invalid WorldObject presentation registry");
+        auto& entity = frame.worldObjects.emplace_back();
+        entity.handle = object->presentationId;
+        entity.model = &object->model;
+        entity.visible = object->borrowedEnabled ? *object->borrowedEnabled : object->hasFrame;
+        if (entity.visible) {
+            const auto* transform = object->borrowedFrame ? object->borrowedFrame : object->frame;
+            std::copy_n(transform, 16, entity.transform.begin());
+            if (!finite(entity.transform)) throw std::runtime_error("Nonfinite WorldObject transform");
+        }
+    }
+    if (frame.worldObjects.size() != objects.count)
+        throw std::runtime_error("WorldObject list does not match its committed count");
     return frame;
 }
 
 void EntityStateBridge::publish() noexcept {
+    // The draw loop already uploaded or reused each borrowed model.
+    pending_.worldObjects.clear();
     std::swap(current_, pending_);
 }
 

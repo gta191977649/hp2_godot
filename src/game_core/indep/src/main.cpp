@@ -399,7 +399,7 @@ struct ApplicationRuntime::Storage {
             self.resources->Registry().Effects().Texture(*event.definition):nullptr;
         self.particleEvents.push_back({event,texture,world ? world->presentationGeneration:0,
             world ? world->frameCounter:static_cast<std::uint32_t>(self.clock.realTimeFrames),
-            owner.frameEffects});
+            owner.frameEffects,world ? world->presentationReplayEpoch:0});
     }
 
     std::unique_ptr<FlailerHelpMenu> help;
@@ -417,11 +417,11 @@ struct ApplicationRuntime::Storage {
     GameFlowBindings flowBindings{};
     std::unique_ptr<EcstasyFrame> frame{std::make_unique<EcstasyFrame>()};
     int32_t skipStartSequence{},alternateSkin{};
-    int requestedTrack{-1};
-    bool (*supportsFrontendTrack)(int){};
+    void (*raceStart)(MainMenuScreenServices&,const void*){};
+    const void* raceStartContext{};
     bool showFrontend{};
-    bool stateOnly() const noexcept {return requestedTrack>=0;}
-    bool quickRaceRequested{};
+    bool stateOnly() const noexcept {return showFrontend || raceStart;}
+    bool diagnosticRaceRequested{};
     // PAL1BE910 requests the same bStartGlare consumed by StuffSunGlare.
     // The application's Sun owner retains its original textures and clock.
     int32_t impactPresentationMode{1};
@@ -666,20 +666,25 @@ struct ApplicationRuntime::Storage {
         if(setup.events && !mainMenuBound) {
             BindMainMenuScreen(menus);mainMenuBound=true;
         }
-        if(showFrontend && flow.currentState==3 && flow.requestedState==2 &&
-            (!supportsFrontendTrack(parameters.selectedScenario) || profilesOwner.playerCount!=1))
-            throw NotImplemented("PAL185528", ("Godot race handoff for track "+
-                std::to_string(parameters.selectedScenario)+", players="+std::to_string(profilesOwner.playerCount)).c_str());
+        const bool enteringRace=flow.currentState==3 && flow.requestedState==2;
+        const bool continuingRace=flow.requestedState==7 && flow.argument==5;
+        if(stateOnly() && (enteringRace || continuingRace)) {
+            if(!tracks->Find(parameters.selectedScenario))
+                throw std::runtime_error("Race handoff selected an absent authored track "+
+                    std::to_string(parameters.selectedScenario));
+            if(profilesOwner.playerCount>1 || parameters.mode>1)
+                throw NotImplemented("Godot race handoff", "Local multiplayer presentation and input");
+        }
         const auto result=ServiceGameFlow(flow,flowBindings);
         if(result.status!=GameFlowServiceStatus::Complete &&
            result.status!=GameFlowServiceStatus::PendingRenderCompletion)
             throw std::runtime_error("Original GameFlow failed at "+std::to_string(result.sourceFunction)+
                 ", state="+std::to_string(result.state));
         setup.events=profilesOwner.boundEventResources;trackSelection.events=profilesOwner.boundEventResources;
-        if(stateOnly() && !showFrontend && !quickRaceRequested && mainMenuBound &&
+        if(raceStart && !diagnosticRaceRequested && mainMenuBound &&
             flow.currentState==3 && flow.requestedState==3) {
-            StartQuickRace(menus,0,requestedTrack);
-            quickRaceRequested=true;
+            raceStart(menus,raceStartContext);
+            diagnosticRaceRequested=true;
         }
     }
     void GenerateInput(ReplayManager* replay)
@@ -746,7 +751,7 @@ void ApplicationRuntime::Initialize(const std::filesystem::path& configFile)
         }
     }
     ecstasyViewsBind(&s.cameras,s.views.data(),s.targets.data());
-    if(s.requestedTrack<0)s.environmentMap=std::make_unique<EnvironmentMap>(s.cameras,s.targets.data(),s.targets.size());
+    if(!s.stateOnly())s.environmentMap=std::make_unique<EnvironmentMap>(s.cameras,s.targets.data(),s.targets.size());
     ecstasyViewProjectionInitialize(&s.cameras.projection,s.host.Width());
     s.cameras.projection.nativeAspectCorrection=1;
     s.cameras.projection.nativeSourceVideoMode=gameTimeGetVideoMode(&s.clock);
@@ -863,7 +868,6 @@ void ApplicationRuntime::Initialize(const std::filesystem::path& configFile)
     // before the screen-list constructor; Common is now fully published.
     InitGlobalMenuSound(s.uiSound,s.soundBindings);
     s.BindMenus();
-    if(s.showFrontend)s.menus.quickRaceTrack=s.requestedTrack;
     s.frontendPhase=std::make_unique<GameFlowFrontendResources>(loader,s.startup,applicationLaunchOptions);
     ResourceFileBindings trackBinding;trackBinding.parameters=&s.parameters;trackBinding.sound=&s.soundBindings;
     trackBinding.cameras=&s.resources->CameraResources();trackBinding.particles=&s.resources->FX().Particles();
@@ -885,22 +889,20 @@ void ApplicationRuntime::Initialize(const std::filesystem::path& configFile)
     ChangeGameFlow(s.flow,1,0);s.initialized=true;
 }
 
-void ApplicationRuntime::InitializeRace(int track)
+void ApplicationRuntime::InitializeFrontend()
 {
-    Require(track>=0 && storage_->requestedTrack<0 && !storage_->initialized,
-        "Quick Race must be requested before initialization");
-    storage_->requestedTrack=track;
+    Require(!storage_->stateOnly() && !storage_->initialized,
+        "Frontend must be requested before initialization");
+    storage_->showFrontend=true;
     Initialize();
 }
 
-void ApplicationRuntime::InitializeFrontend(int quickRaceTrack, bool (*supportsTrack)(int))
+void ApplicationRuntime::InitializeRace(void (*start)(MainMenuScreenServices&,const void*),const void* context)
 {
-    Require(quickRaceTrack>=0 && supportsTrack && supportsTrack(quickRaceTrack) &&
-        !storage_->stateOnly() && !storage_->initialized,
-        "Frontend must be requested before initialization");
-    storage_->requestedTrack=quickRaceTrack;
-    storage_->supportsFrontendTrack=supportsTrack;
-    storage_->showFrontend=true;
+    Require(start && !storage_->stateOnly() && !storage_->initialized,
+        "Race startup callback must be registered before initialization");
+    storage_->raceStart=start;
+    storage_->raceStartContext=context;
     Initialize();
 }
 
@@ -952,7 +954,7 @@ int ApplicationRuntime::SelectedTrack() const noexcept {return storage_->paramet
 RaceStateView ApplicationRuntime::RaceState() const noexcept
 {
     auto& s=*storage_;
-    if(s.requestedTrack<0 || !s.flow.inGameFlag || !s.trackPhase || !s.trackPhase->trackFile)return {};
+    if(!s.stateOnly() || !s.flow.inGameFlag || !s.trackPhase || !s.trackPhase->trackFile)return {};
     const auto* simulation=s.Simulation();
     const auto* session=s.Session();
     const auto* view=s.cameras.screens[1].view;
@@ -967,7 +969,18 @@ RaceStateView ApplicationRuntime::RaceState() const noexcept
         s.parameters.selectedScenario,session?session->state:0,gameTimeGetVideoMode(&s.clock)==HP2_VIDEO_NTSC,
         s.trackPhase->NisManagers(),s.cameras.screens[1].blackAndWhite!=0,s.trackPhase->ViewMovers(),
         rearView?&rearView->current:nullptr,rearView?rearView->hiddenCar:nullptr,
-        {s.resources->Registry().RearViewTexture(0),s.resources->Registry().RearViewTexture(1)}};
+        {s.resources->Registry().RearViewTexture(0),s.resources->Registry().RearViewTexture(1)},
+        s.parameters.reverse==1,s.parameters.specialPursuit!=0};
+}
+
+std::vector<RaceParticleAsset> ApplicationRuntime::RaceParticleAssets() const
+{
+    const auto& catalogue = storage_->resources->Registry().Effects();
+    std::vector<RaceParticleAsset> assets;
+    for (auto* definition = *catalogue.DefinitionList(); definition; definition = definition->nextDefinition)
+        if (const auto* texture = catalogue.Texture(*definition))
+            assets.push_back({definition, texture});
+    return assets;
 }
 
 void ApplicationRuntime::TakeRaceEffects(RaceEffectsFrame& frame)
@@ -980,9 +993,36 @@ void ApplicationRuntime::TakeRaceEffects(RaceEffectsFrame& frame)
     frame.visibility.clear();
     frame.lights.clear();
     frame.sun.clear();
+    frame.exhaust.clear();
     const auto race=RaceState();
     if (!race.simulation || !race.camera) return;
     auto& world=*race.simulation->world;
+    frame.particles.erase(std::remove_if(frame.particles.begin(),frame.particles.end(),
+        [&world](const RaceParticleEvent& event) {
+            return event.world==world.presentationGeneration && event.replayEpoch!=world.presentationReplayEpoch;
+        }),frame.particles.end());
+    for (int i = 0; i < world.totalCars; ++i) {
+        auto& car = *world.carTable[i];
+        const auto* movement = car.Movement();
+        if (!movement || !movement->bindings.state || !movement->bindings.ownerMotion) continue;
+        const auto& state = *movement->bindings.state;
+        const auto& motion = *movement->bindings.ownerMotion;
+        const bool active = motion.actionEnabled && !motion.wheelExclusionMask &&
+            (motion.wheelEffectsFlags & 2u) && state.engineRpm > 0.0f;
+        for (std::size_t outlet = 0; const auto* marker = carAppearanceEffectPosition(&car, 10, outlet); ++outlet) {
+            auto& value = frame.exhaust.emplace_back();
+            value.car = car.presentationId;
+            value.outlet = outlet;
+            value.active = active;
+            value.throttle = std::clamp(state.effectiveThrottle, 0.0f, 1.0f);
+            for (int axis = 0; axis < 3; ++axis) {
+                value.position[axis] = state.centerPosition[axis] + state.orientation[axis] * marker[0] +
+                    state.orientation[4 + axis] * marker[1] + state.orientation[8 + axis] * marker[2];
+                value.direction[axis] = -state.orientation[axis];
+                value.velocity[axis] = state.velocity[axis];
+            }
+        }
+    }
     auto& registry=s.resources->Registry();
     auto& screen=s.cameras.screens[1];
     auto& rear=s.cameras.screens[3];
@@ -1043,24 +1083,26 @@ void ApplicationRuntime::TakeRaceEffects(RaceEffectsFrame& frame)
                     sky && row.scale>0,sky && &row==rows.data(),margin,sun.Glare().positionOverride});
         }
     };
-    publishSun(sun.AuthoredFlares(),sun.Vector(),1.0f,1.0f,true);
+    // StuffSun draws StuffSunGlare first (Debug 125430 / PAL1252B0).
     const auto [size,fade]=sun.AdvanceGlare(s.clock);
-    if (size<=0) return;
-    std::array<float,3> point{};
-    for (std::size_t axis=0;axis<3;++axis)
-        point[axis]=race.camera->eye[axis]+race.camera->forward[axis]*sun.Glare().distance;
-    publishSun(sun.Flares(),point,size,fade*size,false);
+    if (size > 0) {
+        std::array<float,3> point{};
+        for (std::size_t axis=0;axis<3;++axis)
+            point[axis]=race.camera->eye[axis]+race.camera->forward[axis]*sun.Glare().distance;
+        publishSun(sun.Flares(),point,size,fade*size,false);
+    }
+    publishSun(sun.AuthoredFlares(),sun.Vector(),1.0f,1.0f,true);
 }
 
 bool ApplicationRuntime::Tick()
 {
-    Require(storage_->requestedTrack<0,"Native presentation is disabled for this race");
+    Require(!storage_->stateOnly(),"Native presentation is disabled for this race");
     return TickInternal();
 }
 
 bool ApplicationRuntime::AdvanceRace()
 {
-    Require(storage_->requestedTrack>=0,"No explicit Quick Race was requested");
+    Require(storage_->stateOnly(),"State-only presentation was not requested");
     return TickInternal();
 }
 
@@ -1081,7 +1123,7 @@ bool ApplicationRuntime::TickInternal()
     }
     auto observed=s.host.FrameTime();
     if(!s.simulationClock.UpdateDue(observed) &&
-        (s.requestedTrack>=0 || !s.host.PresentationDue(observed))) {
+        (s.stateOnly() || !s.host.PresentationDue(observed))) {
         s.host.WaitUntil(std::min(s.simulationClock.Deadline(),s.host.PresentationDeadline()));
         return true;
     }
@@ -1319,7 +1361,7 @@ bool ApplicationRuntime::TickInternal()
             }
             if(simulation)carCameraShakeAdvance(s.trackPhase->ViewMovers()->environment.shake,s.clock.realTimeElapsed);
         }
-        if(s.requestedTrack>=0) {
+        if(s.stateOnly()) {
             // Publish authored 2D layout and preview operands without building an Ecstasy frame.
             s.renderer.BeginFrame(*s.ui.resources,&s.language,
                 static_cast<float>(s.clock.realTimer)*0.0002500000118743628f);

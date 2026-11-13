@@ -1,6 +1,6 @@
 # Development
 
-Read [AGENT.md](../AGENT.md) for current source and evidence rules and
+Read [AGENTS.md](../AGENTS.md) for current source and evidence rules and
 [TASK-0123](../tasks/active/TASK-0123-native-source-migration.md) for the
 migration acceptance checks.
 
@@ -21,13 +21,18 @@ Press F6 on `native_game.tscn` or F5 for the project, then start
 **Debugger → Profiler** and **Debugger → Visual Profiler** in the editor.
 Press the grave/tilde key in the game to give keyboard input back to the frontend.
 
-Use `--race-track=12` for direct diagnostics. The default launch enters
+Use `--race-track=<id>` for direct single-player diagnostics. The default launch enters
 the frontend and needs the shared FFmpeg 8 SDK described in the README.
 The original game data is read locally. The former Debug and Retail
 reconstruction tasks and symbol records are historical references. Use their
 addresses only with their recorded ELF identities.
 
 See TASK-0124 for the current Godot entry checks.
+See [TASK-0141](../tasks/active/TASK-0141-godot-single-player-races.md)
+for the race catalogue and lifecycle smoke commands.
+Use `./tools/test_mvp_campaign_matrix.ps1` in PowerShell 7 to start and
+drive every campaign entry using its authored event ID. Build the staged
+project and `mvp_race_catalog` first.
 
 The Godot launcher reads `mvp_root` from `config/ps2_assets.local.json`
 when present and otherwise uses `root`. `HP2_PS2_ASSET_ROOT` overrides

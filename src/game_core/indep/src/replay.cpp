@@ -824,9 +824,12 @@ void ReplayManagerOwner::RestoreSnapshot(ReplaySnapshot& snapshot)
             " data="+std::to_string(snapshot.dataSize)+
             " capacity="+std::to_string(snapshot.capacity));
     }
-    if(std::strcmp(snapshot.name,"REPLAY_MANAGER_STATE"))
-        hp2::Require(worldValidateReplayState(owner.coordinator->bindings->world,owner.clock)!=0,
+    if(std::strcmp(snapshot.name,"REPLAY_MANAGER_STATE")) {
+        auto* world=owner.coordinator->bindings->world;
+        hp2::Require(worldValidateReplayState(world,owner.clock)!=0,
             "Replay snapshot restored nonfinite native World/Car state");
+        ++world->presentationReplayEpoch;
+    }
     owner.state.exhausted=0;owner.state.lastSnapshotTime=owner.clock->worldLoopCounter;
 }
 bool ReplayManagerOwner::RestoreSnapshot(const char* name)

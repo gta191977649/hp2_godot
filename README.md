@@ -21,8 +21,14 @@ the FFmpeg MV30 decoder. Playback needs no generated media files.
 Use the arrow keys and Enter in the menus. World Racing leads to Quick
 Race or the Championship event tree (Track 12). Hot Pursuit → Ultimate
 Racer leads to the first event, Lotus Elise Delivery (Track 13).
-Use WASD or the arrow keys to drive, Space for handbrake and Esc to pause.
-In the frontend, Esc exits the application.
+Use WASD or the arrow keys to drive, Space for handbrake, and Esc or Backspace to pause.
+Use H for the horn or police signal, Q/E to shift, Shift to look back,
+C to change camera, Tab to recover the car and N for nitrous where available.
+In Be the Cop, H changes the pursuit target. Hold Space and press E to
+request a roadblock or Q to request helicopter support. R and T are
+shortcuts for those two requests.
+In the frontend, Backspace goes back and Esc exits the application. Edit the
+game's keyboard bindings in Godot under **Project Settings → Input Map**.
 Click menu items to select them, scroll to navigate lists, and right-click
 to go back. The race HUD uses its existing driving controls.
 
@@ -32,7 +38,11 @@ games when HDR and Auto HDR are enabled in Windows Display Settings.
 The default launcher uses Vulkan.
 The default race minimap rotates with the player's car. Single-player
 fixed-map choices are available in Display Options.
-`./build.ps1 --run --race-track=12` opens the diagnostic race directly.
+`./build.ps1 --run --race-track=33` opens the diagnostic race directly.
+Use an authored scenario ID to choose a track for this single-player Quick Race.
+Use `./build.ps1 --race-event=ultimate-racer:2` to play the authored Track 33
+career event directly. The other tree is `--race-event=championship:<id>`.
+The diagnostic uses an isolated profile by default.
 
 For race integration, use a complete extracted game directory, a PS2 disc image, or a
 `ZZDATA.BIN` archive with its matching directory file. The extracted tree
@@ -40,6 +50,8 @@ must include the original sound banks. The asset path can also come from
 `config/ps2_assets.local.json` (see `config/ps2_assets.example.json`).
 Use `HP2_PROFILE_DIR` to select a profile directory. By default the game
 uses the Godot project's `user://profile` directory.
+The Nitro action is bound to **N**. To enable the donor PC racer option,
+add `racer_nitro=1` to `NFSHP2_pc.ini` in that profile directory.
 
 `./build.ps1` stages the project in `build/godot-mvp-release/mvp-project`.
 `./build.ps1 --run --mvp --debug --jobs 16` builds and runs the Debug

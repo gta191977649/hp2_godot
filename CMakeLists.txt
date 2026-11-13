@@ -11,6 +11,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_C_STANDARD 11)
 
 add_subdirectory(src/game_core)
+add_executable(mvp_race_catalog EXCLUDE_FROM_ALL tools/test_mvp_race_catalog.cpp)
+target_link_libraries(mvp_race_catalog PRIVATE game_core)
+
 add_library(mvp_entity_bridge STATIC src/mvp/bridge/entity_state_bridge.cpp)
 target_include_directories(mvp_entity_bridge PUBLIC src/mvp)
 target_link_libraries(mvp_entity_bridge PUBLIC game_core)
@@ -36,6 +39,7 @@ add_library(hp2_track12 SHARED
   src/mvp/godot/register_types.cpp
   src/mvp/presentation/race_presentation.cpp
   src/mvp/assets/mesh_converter.cpp
+  src/mvp/assets/race_diagnostics.cpp
   src/mvp/systems/audio/godot_speech_output.cpp
   src/mvp/systems/frontend/frontend_presentation.cpp
   src/mvp/systems/frontend/frontend_video.cpp

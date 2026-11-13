@@ -300,7 +300,6 @@ struct MainMenuScreenServices {
     const FrontendRaceSetupBindings* raceSetup{};
     const ::CarSoundBindings* sounds{};
     FrontendDemoMode* demoMode{};
-    int quickRaceTrack{-1}; // Explicit port-side eligibility for the Quick Race entry.
 };
 // Actual source GP-C0FC main-menu screen lifetime. Bindings borrow existing
 // services; activation owns one concrete NewMainMenu, never a second FRED.

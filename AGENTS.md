@@ -1,62 +1,71 @@
-# Session contract
+# HP2 Godot MVP integration
 
-This repository initializes a PS2-to-PC native port. No actual game functions
-have been recovered. Repository files are the durable project memory.
+**Keep original game logic and state in `src/game_core`. Let Godot manage
+presentation components and their lifetimes.** Follow the
+[MVP architecture diagram](docs/ARCHITECTURE.md) when integrating new features.
 
-no guesswork; identifiers, functions must be recovered-verbatim, address-anchored, or explicitly port-side; unimplemented paths throw
-`hp2::NotImplemented`). AGENT.md is stricter than this file wherever they overlap.
+## Ownership and data flow
 
-## Mandatory rules
+- `src/game_core` owns original game logic and state. Keep menu decisions,
+  race rules, physics, AI, saves, audio scheduling, and effect triggers in
+  C/C++ with no Godot dependencies. Preserve the source behavior, clocks,
+  and resource identifiers.
+- `src/mvp/bridge` carries committed state and ordered events from
+  `ApplicationRuntime`. Reuse its interfaces. Include the scene generation,
+  logical step, and stable source IDs where needed to identify updates and
+  retire objects. Read borrowed resources synchronously within their source
+  lifetime. Godot owns uploaded resources and retires stale nodes and events
+  on restart, replay seek, scene change, or return to the menu.
+- `src/mvp/systems` and `godot_mvp` own presentation and host input. Use
+  Godot controls for pointer hit testing and send actions to the original
+  handlers. Godot manages scenes, visual entities, presentation streaming,
+  UI drawing and layout, Tweens, audio playback and mixing, particles, and
+  render resources. Face billboards in shaders and
+  sample Godot's scene depth for sun occlusion. Preserve the authored UI and
+  video aspect ratios. Fit backgrounds and curtains to cover the viewport.
+- Use Godot's built-in Visual Profiler to investigate rendering performance.
 
-1. Read project documentation before making changes.
-2. Read the current task file before implementation.
-3. Work on one clearly scoped task at a time; record its ID in progress notes.
-4. Never invent unverified PS2 behavior. Unknown means unknown.
-5. Preserve original function addresses and provenance, including ELF SHA-256 and version.
-6. Separate confirmed findings, hypotheses, and unresolved questions.
-7. Keep recovered C++ logic independent of Godot and its headers/types.
-8. Avoid unnecessary modifications to unrelated modules and preserve user files.
-9. Require tests for reconstructed behavior whenever practical. Explain omissions.
-10. Update task status and documentation after completing work.
-11. Never mark unverified code as Verified. PC tests alone do not establish equivalence.
-12. Ensure the next session can continue from repository files without chat history.
-13. Follow AGENT.md identifier provenance: recovered names verbatim, otherwise address-anchored
-    (`Sub_<ADDR>`), never an invented descriptive name for recovered code.
-14. An unimplemented recovered path throws `hp2::NotImplemented`; never a silent default.
+## Game Core Change Rules
 
-Do not replace recovered physics with Godot physics without an explicit recorded
-decision. Never add proprietary ELF/ISO files, extracted assets, secrets, or Ghidra
-databases to Git. Infrastructure examples have no original-game provenance.
+- Preserve the donor and reverse-engineered implementations under
+  `src/game_core` by default. Change them only to correct original-game
+  behavior supported by evidence or to provide a required integration
+  capability that existing interfaces cannot supply. For each core change,
+  record why it is needed, its evidence or integration dependency, and how
+  it was checked in the task record.
+- Reuse existing interfaces first. Keep new boundaries minimal and
+  Godot-independent in C/C++. Expose only the committed state, original
+  input entry point, or generic lifecycle callback that the host needs.
+  Mark port-side interfaces explicitly. Keep `main.cpp` focused on
+  runtime orchestration.
+- Put diagnostic event selection, test unlocks, forced triggers, debug
+  UI, and diagnostic state collection in `src/mvp/assets`. The launcher
+  parses command-line arguments and forwards the request to the MVP
+  adapter. Keep C++ tests and AI driving helpers in `src/mvp/tests` and
+  smoke and batch validation scripts in `tools`.
+- Require explicit activation for debug behavior. Diagnostics that change
+  progression or race state must use an isolated test profile by default.
+  Preserve original identifiers and provenance when correcting recovered
+  behavior. Unimplemented original paths must throw `hp2::NotImplemented`.
 
-## Startup protocol
+## Original-game evidence
 
-1. Inspect `git status --short`, active tasks, and local instructions before edits.
-2. Read `README.md`, `docs/PROGRESS.md` (the tracker; `docs/PROGRESS_LOG.md` holds the
-   session narrative behind it), `docs/ARCHITECTURE.md`,
-   `docs/DECISIONS.md`, `docs/DEVELOPMENT.md`, and `docs/REVERSE_NOTES.md`.
-3. Read the selected task. If no task is active, select the earliest unblocked
-   backlog task matching the user's request and move it to active before work.
-   A new request may require its own scoped task; do not silently widen another.
-4. Read relevant function/structure records and evidence. Check dependency pins
-   and tool availability; do not assume the last machine's environment.
-5. Record scope, acceptance checks, and blockers. Continue independent work when
-   blocked; do not manufacture evidence or advance verification status.
+Use recovered names verbatim and `Sub_<ADDR>` when only an address is known.
+Clearly identify port-side interfaces. Record the source address, ELF version,
+and SHA-256 for recovered behavior. Leave unresolved behavior explicit and
+throw `hp2::NotImplemented` for unimplemented original paths. Mark original
+equivalence as verified only after comparison with the original game. Keep
+proprietary assets, ELF and ISO files, analysis databases, and secrets out of Git.
 
-## Completion protocol
+## Workflow
 
-1. Run relevant builds/tests and record exact commands, results, tool versions,
-   and limitations. Distinguish passed, failed, and blocked checks.
-2. Update knowledge records and symbols index when findings change. Keep evidence
-   identifiers stable; record counterevidence and unresolved assumptions.
-3. Update the task's findings, acceptance criteria, next steps, and related commits.
-   Move to completed only when every criterion has evidence; blocked/incomplete
-   tasks stay active or return to backlog with an explicit explanation.
-4. Update `docs/PROGRESS.md` with active work, blockers, validation, and exact next
-   action. Its tables are generated -- run `py -3 reverse/scripts/generate_progress.py`
-   rather than editing between the `generated:` markers; the `progress_tables` test
-   fails when they are stale. Session narrative goes in `docs/PROGRESS_LOG.md`, not in
-   the tracker. Record architecture changes in `docs/DECISIONS.md`.
-5. Inspect the diff and Git status for unrelated edits and restricted material.
-   Never stage everything blindly. Do not claim a commit exists until made.
-6. Report outcome and remaining limitations. Leave a reproducible continuation
-   prompt or command, including the task ID and any missing prerequisites.
+Check `git status --short` and read the relevant task and architecture before
+editing. Keep changes scoped to the task and preserve existing work. Review
+the diff and run the relevant builds or smoke checks. Record the commands,
+results, and remaining gaps in the task record.
+
+See [Decisions](docs/DECISIONS.md),
+[Development](docs/DEVELOPMENT.md), [Reverse notes](docs/REVERSE_NOTES.md),
+and [Progress](docs/PROGRESS.md). Record session notes in the
+[progress log](docs/PROGRESS_LOG.md). Regenerate progress tables with
+`py -3 reverse/scripts/generate_progress.py` when tracker inputs change.

@@ -212,10 +212,8 @@ bool ImGuiOverlay::input(const Ref<InputEvent>& event) {
     ImGui::SetCurrentContext(s.context);
     auto& io = ImGui::GetIO();
     if (const Ref<InputEventKey> key = event; key.is_valid()) {
-        const auto logical_key = key->get_keycode();
-        if (key->get_physical_keycode() == KEY_QUOTELEFT ||
-            logical_key == KEY_QUOTELEFT || logical_key == KEY_ASCIITILDE) {
-            if (key->is_pressed() && !key->is_echo()) {
+        if (event->is_action("hp2_debug_console")) {
+            if (event->is_action_pressed("hp2_debug_console")) {
                 s.open = !s.open;
                 s.console->focus = s.open;
                 std::fill(std::begin(io.KeysDown), std::end(io.KeysDown), false);

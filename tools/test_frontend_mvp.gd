@@ -86,6 +86,29 @@ func _process(_delta: float) -> bool:
         _tap(KEY_ENTER)
         stage = 5
     if stage == 5 and screen == ("Cops On Mode Select" if pursuit else "Cops Off Mode Select"):
+        if OS.get_environment("HP2_MVP_PAUSE_BINDINGS") == "1":
+            stage = 47
+            next_input = Time.get_ticks_msec() + 600
+            return false
+        stage = 6
+        next_input = Time.get_ticks_msec() + 1000
+    if stage == 47 and Time.get_ticks_msec() >= next_input:
+        _tap(KEY_BACKSPACE)
+        stage = 48
+    if stage == 48 and screen == "New Main Menu":
+        print("HP2_MVP_FRONTEND_BACKSPACE_PASS")
+        stage = 49
+        next_input = Time.get_ticks_msec() + 1000
+    if stage == 49 and Time.get_ticks_msec() >= next_input:
+        var wanted := 0x52e039f3 if pursuit else 0x52e039f4
+        var selected: int = sample.get("selected_item", 0)
+        if selected == wanted:
+            _tap(KEY_ENTER)
+            stage = 50
+        else:
+            _tap(KEY_UP if selected > wanted else KEY_DOWN)
+            next_input = Time.get_ticks_msec() + 400
+    if stage == 50 and screen == ("Cops On Mode Select" if pursuit else "Cops Off Mode Select"):
         stage = 6
         next_input = Time.get_ticks_msec() + 1000
     if stage == 6 and Time.get_ticks_msec() >= next_input:

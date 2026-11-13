@@ -5,6 +5,8 @@
 #include <optional>
 #include <vector>
 
+struct EditorMarkerModel;
+
 namespace hp2 {
 
 struct VehicleEntityState {
@@ -16,6 +18,14 @@ struct VehicleEntityState {
     float speed{};
 };
 
+struct WorldObjectEntityState {
+    std::uint64_t handle{};
+    // Borrowed only during synchronous presentation of the staged frame.
+    const EditorMarkerModel* model{};
+    bool visible{};
+    std::array<float, 16> transform{};
+};
+
 struct RaceCameraState {
     std::array<float, 3> eye{}, forward{}, up{};
     float verticalFov{}, nearClip{}, farClip{};
@@ -23,11 +33,14 @@ struct RaceCameraState {
 
 struct EntityFrame {
     std::uint64_t generation{};
+    std::uint64_t replayEpoch{};
     std::uint32_t step{};
     int track{-1};
+    bool reverse{};
     RaceCameraState camera;
     std::optional<RaceCameraState> rearCamera;
     std::vector<VehicleEntityState> vehicles;
+    std::vector<WorldObjectEntityState> worldObjects;
 };
 
 }
