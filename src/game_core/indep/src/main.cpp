@@ -277,6 +277,7 @@ struct ApplicationRuntime::Storage {
     std::unique_ptr<EcstasyFrame> frame{std::make_unique<EcstasyFrame>()};
     int32_t skipStartSequence{},alternateSkin{};
     int requestedTrack{-1};
+    bool (*supportsFrontendTrack)(int){};
     bool showFrontend{};
     bool stateOnly() const noexcept {return requestedTrack>=0;}
     bool quickRaceRequested{};
@@ -525,7 +526,7 @@ struct ApplicationRuntime::Storage {
             BindMainMenuScreen(menus);mainMenuBound=true;
         }
         if(showFrontend && flow.currentState==3 && flow.requestedState==2 &&
-            (parameters.selectedScenario!=requestedTrack || profilesOwner.playerCount!=1))
+            (!supportsFrontendTrack(parameters.selectedScenario) || profilesOwner.playerCount!=1))
             throw NotImplemented("PAL185528", ("Godot race handoff for track "+
                 std::to_string(parameters.selectedScenario)+", players="+std::to_string(profilesOwner.playerCount)).c_str());
         const auto result=ServiceGameFlow(flow,flowBindings);
@@ -583,8 +584,8 @@ void ApplicationRuntime::Initialize(const std::filesystem::path& configFile)
     s.demoReplay.BindSessionHost(&s.host);
     applicationSeedRandomNumber(s.joylog);
     applicationLoadConfig(configFile.empty()?s.profileDirectory/"config.ini":configFile,s.joylog);
-    if(s.stateOnly()) {
-        if(!s.showFrontend)applicationLaunchOptions.skipMovies=1;
+    if(s.stateOnly() && !s.showFrontend) {
+        applicationLaunchOptions.skipMovies=1;
         s.skipStartSequence=1;
     }
     eMathInit();
@@ -707,7 +708,7 @@ void ApplicationRuntime::Initialize(const std::filesystem::path& configFile)
     s.movie=std::make_unique<MoviePlayer>(s.files,s.resources->FileIo(),registry,s.clock,
         carSoundGlobals.policy.audioSystemEnabled,s.renderer.bitmapComposite.enabled,&s.audioQueue);s.ui.movie=s.movie.get();
     s.renderer.bitmapComposite.movie=s.movie.get();
-    if(s.showFrontend) {
+    if(s.stateOnly()) {
         s.movie->UseExternalPlayback();
         s.ui.externalPresentation=true;
     }
@@ -745,11 +746,13 @@ void ApplicationRuntime::InitializeRace(int track)
     Initialize();
 }
 
-void ApplicationRuntime::InitializeFrontend(int supportedTrack)
+void ApplicationRuntime::InitializeFrontend(int quickRaceTrack, bool (*supportsTrack)(int))
 {
-    Require(supportedTrack>=0 && !storage_->stateOnly() && !storage_->initialized,
+    Require(quickRaceTrack>=0 && supportsTrack && supportsTrack(quickRaceTrack) &&
+        !storage_->stateOnly() && !storage_->initialized,
         "Frontend must be requested before initialization");
-    storage_->requestedTrack=supportedTrack;
+    storage_->requestedTrack=quickRaceTrack;
+    storage_->supportsFrontendTrack=supportsTrack;
     storage_->showFrontend=true;
     Initialize();
 }
@@ -757,9 +760,9 @@ void ApplicationRuntime::InitializeFrontend(int supportedTrack)
 FrontendStateView ApplicationRuntime::FrontendState() const noexcept
 {
     auto& s=*storage_;
-    if(!s.showFrontend || s.flow.inGameFlag)return {};
+    if(!s.stateOnly() || !s.initialized)return {};
     const auto* active=s.screens.active;
-    return {s.ui.resources,&s.renderer,&s.language,s.movie.get(),&s.frontendFrame,&s.cameras,
+    return {&s.renderer,s.movie.get(),&s.frontendFrame,&s.cameras,
         active && active->configuration ? active->configuration->name:nullptr,
         active ? active->GetActiveMenuItem():0};
 }
@@ -819,6 +822,10 @@ bool ApplicationRuntime::TickInternal()
     for(;;) {
         advancedPresentation=s.simulationClock.UpdateDue(observed);
         if(advancedPresentation) {
+            if(s.stateOnly()) {
+                s.renderer.CompleteSubmissions();
+                s.frontendFrame.Clear();
+            }
             // The previous logical frame stayed unchanged while additional
             // presentations borrowed it. Retire its post-draw mutations once.
             if(s.pendingClockAdvance) {
@@ -1011,17 +1018,19 @@ bool ApplicationRuntime::TickInternal()
             }
             s.soundClock.ticks=static_cast<uint32_t>(s.clock.realTimer);
             MenuSystemTick(&s.screens);
-            if(s.showFrontend && !s.flow.inGameFlag) {
-                s.frontendFrame.Clear();
-                s.screens.RenderModels(true);
-                CollectFrontendCarModels(s.frontendFrame);
-                s.renderer.CompleteSubmissions();
-                // The port consumes model operands synchronously as Godot nodes.
-                s.frontendFrame.modelDrawCpuClosureRequired=false;
-            }
             s.trackPhase->ServicePresentation(s.flow,s.profilesOwner);
-            if(s.requestedTrack>=0)AdvancePlayersWithoutFlailerHud(players);
-            else carFramePlayerUpdateNonGameStateAll(players);
+            // DamageAbove normally publishes this operand during RenderCars.
+            // The Godot host has no Ecstasy pass to service the HUD dependency.
+            const auto* view=s.cameras.screens[1].view;
+            if(s.stateOnly() && simulation && view && view->current.fieldOfView) {
+                auto& world=*simulation->world;
+                for(int32_t i=0;i<world.totalCars;++i) {
+                    auto* car=world.carTable[i];
+                    if(car)
+                        car->PublishTrackerBearing(view->current.eye,view->current.forward);
+                }
+            }
+            carFramePlayerUpdateNonGameStateAll(players);
             // PAL12F58C..12F5A8 updates the existing RC+2C ReplayScreen after the
             // Player HUD and before camera movers. Tick is a separate RC message.
             if(session)raceCoordinatorUpdateReplayScreen(*session);
@@ -1040,7 +1049,17 @@ bool ApplicationRuntime::TickInternal()
             if(simulation)carCameraShakeAdvance(s.trackPhase->ViewMovers()->environment.shake,s.clock.realTimeElapsed);
         }
         if(s.requestedTrack>=0) {
-            // Commit simulation and service its resource reads without capturing a draw frame.
+            // Publish authored 2D layout and preview operands without building an Ecstasy frame.
+            s.renderer.BeginFrame(*s.ui.resources,&s.language,
+                static_cast<float>(s.clock.realTimer)*0.0002500000118743628f);
+            s.screens.RenderModels(true);
+            if(!s.flow.inGameFlag)CollectFrontendCarModels(s.frontendFrame);
+            s.frontendFrame.modelDrawCpuClosureRequired=false;
+            auto* players=s.trackPhase->Players();
+            Require(players && players->count>=0 && players->count<=2,
+                "Flailer track map player registry is invalid");
+            for(int32_t index=0;index<players->count;++index)
+                carFramePlayerRenderTrackMap(players->players[index]);
             s.pendingClockAdvance=true;
             s.simulationClock.CompleteStep(s.scheduledStepQuanta);
             texturePackRegistry.ServiceReads();

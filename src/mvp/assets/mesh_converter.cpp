@@ -54,6 +54,8 @@ Ref<StandardMaterial3D> MeshConverter::material(const EditorMarkerTexture& descr
     result->set_texture(BaseMaterial3D::TEXTURE_ALBEDO, texture);
     result->set_texture_filter(BaseMaterial3D::TEXTURE_FILTER_LINEAR_WITH_MIPMAPS);
     result->set_shading_mode(BaseMaterial3D::SHADING_MODE_UNSHADED);
+    result->set_flag(BaseMaterial3D::FLAG_ALBEDO_FROM_VERTEX_COLOR, true);
+    result->set_flag(BaseMaterial3D::FLAG_SRGB_VERTEX_COLOR, true);
     result->set_cull_mode(BaseMaterial3D::CULL_DISABLED);
     if (cutout) {
         // CreateTextureContext108CC0 and UpdateGifTags105AC0: TEST GREATER 48.
@@ -77,6 +79,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         Ref<StandardMaterial3D> material;
         PackedVector3Array vertices;
         PackedVector2Array uv;
+        PackedColorArray colors;
         PackedInt32Array indices;
     };
     std::vector<Surface> surfaces;
@@ -87,9 +90,10 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         if (strip.nativeTopologyCount != strip.positions.size() ||
             strip.nativeTopologyMask != strip.drawDisableMask ||
             strip.textureCoordinates.size() != strip.positions.size() ||
+            strip.colors.size() != strip.positions.size() ||
             strip.nativeTriangleOrder.size() % 3 ||
             strip.textureIndex < 0 || std::size_t(strip.textureIndex) >= geometry.textures.size())
-            throw std::runtime_error("Invalid strip topology or texture slot for model " + std::to_string(model.key));
+            throw std::runtime_error("Invalid strip channels, topology or texture slot for model " + std::to_string(model.key));
         const auto& binding = geometry.textures[strip.textureIndex];
         const auto* descriptor = binding.texture;
         for (int slot = 0; slot < model.replacementCount; ++slot) {
@@ -114,6 +118,14 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         for (std::size_t i = 0; i < strip.positions.size(); ++i) {
             surface.vertices.push_back(race_vector(strip.positions[i].data()));
             surface.uv.push_back({strip.textureCoordinates[i][0], strip.textureCoordinates[i][1]});
+            const auto rgb555 = strip.colors[i];
+            // VIF expands each RGB lane by eight, and GS modulation uses 128 as unity.
+            // Godot's mesh color channel stores UNORM8. Texture alpha supplies opacity.
+            surface.colors.push_back({
+                std::min(rgb555 & 31u, 16u) / 16.0f,
+                std::min((rgb555 >> 5) & 31u, 16u) / 16.0f,
+                std::min((rgb555 >> 10) & 31u, 16u) / 16.0f,
+                1.0f});
         }
         for (const auto index : strip.nativeTriangleOrder) {
             if (index >= strip.positions.size())
@@ -129,6 +141,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         arrays.resize(Mesh::ARRAY_MAX);
         arrays[Mesh::ARRAY_VERTEX] = surface.vertices;
         arrays[Mesh::ARRAY_TEX_UV] = surface.uv;
+        arrays[Mesh::ARRAY_COLOR] = surface.colors;
         arrays[Mesh::ARRAY_INDEX] = surface.indices;
         const auto index = mesh->get_surface_count();
         mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays);

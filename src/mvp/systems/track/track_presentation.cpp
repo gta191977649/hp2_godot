@@ -60,7 +60,7 @@ std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResource
         node->set_mesh(mesh);
         node->set_transform(race_transform(sky->Transform(0)));
     }
-    if (!placements) throw std::runtime_error("No drawable Track 12 placements");
+    if (!placements) throw std::runtime_error("No drawable track placements");
     return placements;
 }
 

@@ -1493,6 +1493,11 @@ place and kept, because the fact that a session believed it, and why, is itself 
 - [TASK-0119 MVP color and Player fog](#task-0119-mvp-color-and-player-fog)
 - [TASK-0119 start-line fog comparison](#task-0119-start-line-fog-comparison)
 - [TASK-0124 — Track 12 state-only race](#task-0124--track-12-state-only-race)
+- [TASK-0125 - Direct original AVI playback](#task-0125---direct-original-avi-playback)
+- [2026-11-13 TASK-0126 Original UI assets in the Godot frontend and race](#2026-11-13-task-0126-original-ui-assets-in-the-godot-frontend-and-race)
+- [2026-11-13 TASK-0126 Godot selection echo and event number alignment](#2026-11-13-task-0126-godot-selection-echo-and-event-number-alignment)
+- [2026-11-13 TASK-0127 Debug launch and ImGui diagnostics](#2026-11-13-task-0127-debug-launch-and-imgui-diagnostics)
+- [2026-11-13 TASK-0128 Display refresh pacing](#2026-11-13-task-0128-display-refresh-pacing)
 
 <!-- generated:contents:end -->
 
@@ -5209,3 +5214,48 @@ with World steps 6 to 96, 8,178 scenery placements and 14 vehicles. Checked
 idle and three failure paths. Continue with committed particle and dynamic
 scenery inputs and the auxiliary Godot passes. See TASK-0124 for commands,
 logs and the local screenshot.
+
+
+## TASK-0125 - Direct original AVI playback
+
+Replaced the Ogg preparation path with FFmpeg-backed Godot video playback
+over original game byte ranges. Windows Release Forward+ showed the EA logo
+and NFS pursuit footage. The former conversion cache and scratch media were
+removed. See TASK-0125 for measured startup and Godot mixer submission.
+
+## 2026-11-13 TASK-0126 Original UI assets in the Godot frontend and race
+
+Godot consumes authored Flailer bitmap and glyph layouts for the frontend
+and race. The source event tree, pre-race screens, gauges, timing, pause
+menu and exit confirmation replace the placeholder presentation. The
+Godot adapter now reads the donor's low-to-high RGBA byte order. Quick
+Race and Championship reached Track 12 in Forward+ and resumed after
+pause. A Quick Race quit confirmation returned to the main menu. See
+[TASK-0126](../tasks/active/TASK-0126-authored-frontend-and-race-ui.md)
+for provenance and remaining coverage.
+
+## 2026-11-13 TASK-0126 Godot selection echo and event number alignment
+
+The donor highlight owner publishes its selected label layout and timing.
+Godot uses a sine-out Tween for echo scale and alpha, restarting on
+selection changes and releasing the node when the request disappears.
+Event numbers keep their authored vertical anchor relative to the panel.
+Single-digit numbers now center without a format-padding space. Release
+compiled and staged. Runtime validation was deferred at the user's request.
+
+## 2026-11-13 TASK-0127 Debug launch and ImGui diagnostics
+
+The exact Debug launcher reached the main menu with the complete local disc
+selected via mvp_root. The Godot MVP overlay showed the live frame graph and
+console at 200% DPI. F8 handed input back to Track 12 and the missing Common
+bank assertion appeared in red in the console. Release built without ImGui.
+See [TASK-0127](../tasks/completed/TASK-0127-debug-launch.md).
+
+## 2026-11-13 TASK-0128 Display refresh pacing
+
+External menu movies stopped requesting writable pointers to shared
+Flailer textures, restoring reuse of the Godot texture cache. The
+project explicitly uses window VSync with no software FPS cap. Debug
+measured about 120 FPS at the title, main menu and in Track 12 on the
+120 Hz host. The baseline main menu measured 29.2 FPS. Debug and Release
+both built. See [TASK-0128](../tasks/completed/TASK-0128-display-refresh.md).

@@ -1075,20 +1075,31 @@ void Car::BindWorldServices(ReplayManager* replay,PursuitManager* pursuit,Choppe
 
 // PAL133898 IsCarInFront: compare the car position with the view direction.
 #include "indep/inc/Pursuit.hpp"
-void Car::DamageAbove(const float eye[3],const float forward[3],
-    const hp2::CarDamageDisplayBindings& display)
+void Car::PublishTrackerBearing(const float eye[3],const float forward[3])
 {
-    // Full final PAL135280. The scalar is produced even if the subsequent
+    // PAL135280. The scalar is produced even if the subsequent
     // damage-cap branch is suppressed by NIS, race policy or flow state.
     hp2::Require(eye && forward,"Car bearing has no actual camera vectors");
     const float delta[3]={eye[0]-position[0],eye[1]-position[1],eye[2]-position[2]};
     const float length=std::sqrt((delta[0]*delta[0]+delta[1]*delta[1])+delta[2]*delta[2]);
+    if (length==0.0f) {
+        // A camera exactly on the car has no bearing. Keep the marker outside
+        // the tracker's display interval until the camera and car separate.
+        trackerBearing=1.0f;
+        return;
+    }
     const float reciprocal=1.0f/length;
     const float direction[3]={delta[0]*reciprocal,delta[1]*reciprocal,delta[2]*reciprocal};
     const float dot=(forward[0]*direction[0]+forward[1]*direction[1])+forward[2]*direction[2];
     const float crossZ=forward[0]*direction[1]-forward[1]*direction[0];
     trackerBearing=(dot+1.0f)*0.5f;
     if (crossZ>=0.0f)trackerBearing=-trackerBearing;
+}
+
+void Car::DamageAbove(const float eye[3],const float forward[3],
+    const hp2::CarDamageDisplayBindings& display)
+{
+    PublishTrackerBearing(eye,forward);
     for (const auto* player:display.players.playersByNumber)
         if (player && carFramePlayerReplayActive(player))return;
     if (!display.parameters.specialPursuit || display.sessionState!=3 || !display.pursuit)return;

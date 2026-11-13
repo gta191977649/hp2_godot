@@ -816,17 +816,8 @@ struct FrontendModelRequest {
     std::array<float,16> transform{};
     std::int32_t viewNumber{-1}; // borrowed source view, never the Flailer view0 by inference
 };
-struct FrontendEventEntry {
-    int number{}, status{};
-    std::string title;
-    std::array<float,2> position{};
-};
 struct FrontendFrame {
     std::vector<FrontendModelRequest> models;
-    std::vector<FrontendEventEntry> events;
-    std::string eventDescription;
-    int selectedEvent{};
-    bool eventDetails{};
     // Explicit outstanding CPU renderer obligations, not a ready flag.
     bool modelDrawCpuClosureRequired{};
     FlailerRenderManager* textRenderer{};

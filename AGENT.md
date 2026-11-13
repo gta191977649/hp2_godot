@@ -24,8 +24,9 @@ runtime into the donor without checking the donor and the original evidence.
 - The frontend presents its menus, movies and transitions with Godot
   components. Keep menu actions, event eligibility and progression with
   the source owners. Movie requests carry the resource path, request ID and
-  playback completion. FFmpeg decodes MV30 into an encoded stream for
-  Godot playback.
+  playback completion. Godot plays original AVI through FFmpeg over the
+  game resource byte range. Keep media decoding and output in the Godot
+  playback backend and play from the source bytes.
   Simulation must never depend on Godot node state or use Godot physics.
 - Keep source camera decisions, asset decoding, authored visibility, effect
   state and decoded assets with their donor owners. Copy borrowed assets

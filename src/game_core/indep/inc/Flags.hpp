@@ -314,9 +314,8 @@ class LanguageManager;
 struct FlailerRenderManager;
 struct FrontendFrame;
 struct FrontendStateView {
-    FlailerResources* resources{};
-    const FlailerRenderManager* visibility{};
-    const LanguageManager* language{};
+    // Borrowed CPU layout. Consume synchronously before the next runtime advance.
+    const FlailerRenderManager* layout{};
     MoviePlayer* movie{};
     const FrontendFrame* previews{};
     const ::CarCinematicServices* cameras{};
@@ -346,7 +345,8 @@ public:
     bool Tick();
     // Port-side explicit Quick Race. AdvanceRace only updates source owners.
     void InitializeRace(int track);
-    void InitializeFrontend(int supportedTrack);
+    // Port-side policy, evaluated before starting a selected frontend race.
+    void InitializeFrontend(int quickRaceTrack, bool (*supportsTrack)(int));
     FrontendStateView FrontendState() const noexcept;
     bool AdvanceRace();
     int SelectedTrack() const noexcept;

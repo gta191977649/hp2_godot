@@ -153,7 +153,10 @@ void FlailerScreenList::UpdateMovie()
     // Frontend desired/current remain3 while this owner keeps decoding.
     if (ui->flow->inGameFlag) {StopMovie();return;}
     auto& pixels=movieTextures[0];
-    if (ui->movie->Update(ui->clock->realTimeElapsed,pixels.MutableData(),pixels.size)!=1)
+    // External playback never writes to the shared texture pack allocation.
+    const bool external=ui->movie->RequestedMovie()!=nullptr;
+    if (ui->movie->Update(ui->clock->realTimeElapsed,external ? nullptr:pixels.MutableData(),
+        external ? 0:pixels.size)!=1)
         ui->movie->InitFile(movieFilename.c_str());
 }
 

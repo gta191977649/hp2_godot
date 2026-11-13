@@ -265,7 +265,7 @@ void FrontendFrame::Clear() noexcept
 {
     if (textRenderer)textRenderer->CompleteSubmissions();
     textRenderer=nullptr;
-    models.clear();events.clear();eventDescription.clear();selectedEvent=0;eventDetails=false;
+    models.clear();
     modelDrawCpuClosureRequired=false;
 }
 

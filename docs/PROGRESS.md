@@ -5,6 +5,14 @@
 
 The active game implementation is the Windows donor. See [TASK-0123](../tasks/active/TASK-0123-native-source-migration.md) for the current build. [TASK-0124](../tasks/active/TASK-0124-modular-godot-presentation.md) tracks the Godot presentation refactor.
 
+[TASK-0126](../tasks/active/TASK-0126-authored-frontend-and-race-ui.md) tracks authored frontend and race UI. Windows Release smoke reached Track 12 from Quick Race and Championship, including pause and return to menu. Continue with menu slide, arrow pulse and background Tweens. Latest highlight and number alignment edits await runtime validation.
+
+[TASK-0127](../tasks/completed/TASK-0127-debug-launch.md) restored Debug startup with the complete disc and verified the ImGui overlay at 200% DPI, including a missing-bank assertion and live Track 12 input handoff.
+
+[TASK-0128](../tasks/completed/TASK-0128-display-refresh.md) restored the Debug main menu to approximately 120 FPS on the 120 Hz test display and measured the same presentation rate in Track 12.
+
+[TASK-0129](../tasks/active/TASK-0129-first-pursuit-roundtrip.md) admits the first Ultimate Racer event on Track 13 and records driving and return checks in Godot.
+
 Current source attribution 0.0% (0/7544 functions)
 
 <details>

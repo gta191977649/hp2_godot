@@ -352,10 +352,20 @@ struct CampaignLeaf {
                 RenderBitmap(ui,copy,alpha);
             } else if (object->kind==1) {
                 TextCopy copy(*static_cast<FlailerTextChunk*>(object));
-                const auto placed=Transform(position,matrix);
+                const bool alignNumber=ui.externalPresentation && copy.key==0x16b7d629u;
+                auto anchor=position;
+                // EVENT_NUMBER is centered. Keep its authored vertical
+                // relation to the panel instead of using the panel center
+                // as the top of the glyphs.
+                if (alignNumber)anchor[1]+=copy.topLeftY-masterCenter[1];
+                const auto placed=Transform(anchor,matrix);
                 copy.topLeftX=placed[0];copy.SetTopLeftY(placed[1]);copy.scaleX*=matrix[0];copy.scaleY*=matrix[5];
                 copy.SetFormatOptions(16);
-                if (copy.key==0x16b7d629u) {char number[32];std::snprintf(number,sizeof(number),"%2d",event->number);copy.SetString(number);}
+                if (copy.key==0x16b7d629u) {
+                    char number[32];
+                    std::snprintf(number,sizeof(number),alignNumber?"%d":"%2d",event->number);
+                    copy.SetString(number);
+                }
                 copy.SetAlpha(convertFloatToInt32((Fogged()?campaignPresentation.fog:campaignPresentation.white)[3]));
                 RenderText(ui,copy,alpha);
             }
@@ -628,29 +638,14 @@ public:
             else if (state_==4) {state_=5;ActivateReward();}
         }
         Ui().resources->SetGroupVisibility(CampaignScreen,0xa2a16ea1u,state_==0?1:0);
-        tCubic2DUpdate(&parallax_,elapsed);animated_.Animate();
+        tCubic2DUpdate(&parallax_,elapsed);
+        animated_.Animate();
         if (current_->track)current_->track->TickTrack(*camera_);
         if (current_->car)current_->car->Tick(*camera_);
         carLogos_.Animate();trackLogos_.Animate();
     }
     void OnRender()
     {
-        if (Ui().externalPresentation) {
-            auto& frame=*services_.frame;
-            frame.selectedEvent=current_->event->number;
-            frame.eventDetails=state_!=0 && state_!=3;
-            for(const auto& leaf:leaves_) {
-                const auto& event=*leaf->event;
-                frame.events.push_back({event.number,event.GetStatus(),
-                    Ui().language->GetString(event.summaryLanguageId),leaf->position});
-            }
-            if(frame.eventDetails) {
-                RenderDetails(1.0f);
-                frame.eventDescription=description_.data();
-                if(state_==4 || state_==5 || state_==6)RenderReward(1.0f);
-            } else UnActivateReward();
-            return;
-        }
         if (state_==0 || state_==1 || state_==3) {
             std::array<float,16> matrix{};eIdentity(matrix.data());matrix[0]=matrix[5]=zoom_.value;
             matrix[12]=pan_.axes[0].value;matrix[13]=pan_.axes[1].value;
@@ -796,7 +791,6 @@ private:
                 Frontend().gameType=tree_.TreeType()==0?8:9;Frontend().MakeEventCarsAvailable(tree_,event);PreloadCurrentSelectedCars(Frontend());
             }
         }
-        if (Ui().externalPresentation)return;
         RenderGroup(Ui(),DetailsScreen,DetailsGroup,alpha);
         Ui().render->RenderTextIntoRectangle(*Ui().resources,DetailsScreen,0x7a31036bu,0x7ad2801eu,description_.data(),alpha);
     }
@@ -804,7 +798,7 @@ private:
     {
         if (current_->track)current_->track->RenderTrack();
         if (current_->car)current_->car->MakeVisible();
-        if (!Ui().externalPresentation)RenderGroup(Ui(),RewardScreen,RewardGroup,alpha);
+        RenderGroup(Ui(),RewardScreen,RewardGroup,alpha);
     }
     void StartEvent(ScreenCallbackData& data)
     {

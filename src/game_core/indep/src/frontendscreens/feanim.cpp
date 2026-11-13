@@ -383,7 +383,31 @@ void FlailerHighlightAnimation::SetCurrentMenuItem(std::uint32_t key)
 
 void FlailerHighlightAnimation::Animate()
 {
-    if(ui_->externalPresentation)return;
+    if(ui_->externalPresentation) {
+        const auto& settings=ui_->animationSettings;
+        const auto* target=static_cast<const FlailerTextChunk*>(ui_->resources->FindObject(screenKey,targetKey,1));
+        auto* echo=static_cast<FlailerTextChunk*>(ui_->resources->FindObject(screenKey,echoKey,1));
+        if(!target || !echo || target==echo || target->visible!=1 || startScale<=0.0f ||
+            settings.highlightStartAlpha<=0.0f || settings.highlightDuration<=0.0f)return;
+        echo->CopyAttributesFrom(*target);
+        if(!target->languageId)echo->SetString(target->text);
+        ui_->resources->ScaleTextAboutCenter(*echo,startScale,ui_->language);
+        echo->SetAlpha(convertFloatToInt32(settings.highlightStartAlpha));
+        if(color!=-1)echo->SetColor(static_cast<std::uint32_t>(color));
+        echo->visible=0;
+        // Publish the start pose directly. It is excluded from the normal
+        // screen list and never enters the Ecstasy queues.
+        echo->DeleteFlailerStrip();
+        echo->Render(*ui_->resources,ui_->language,nullptr,nullptr,1.0f);
+        if(echo->strip) {
+            auto& highlights=ui_->render->highlights;
+            highlights.push_back({echo->strip,screenKey,echoKey,targetKey,startedTicks,peakScale/startScale,
+                settings.highlightDuration,restartDuration,settings.highlightEndAlpha/settings.highlightStartAlpha});
+            try {echo->strip->pool->Retain(*echo->strip);}
+            catch(...) {highlights.pop_back();throw;}
+        }
+        return;
+    }
     const auto now=static_cast<std::uint32_t>(ui_->clock->realTimer);
     const auto raw=now-startedTicks;
     std::int32_t ticks;std::memcpy(&ticks,&raw,sizeof(ticks));

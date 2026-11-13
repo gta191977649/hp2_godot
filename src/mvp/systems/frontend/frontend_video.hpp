@@ -10,7 +10,7 @@ class MoviePlayer;
 
 class FrontendVideo {
 public:
-    FrontendVideo(godot::VideoStreamPlayer& player, const GameResources& assets, const godot::String& ffmpeg);
+    FrontendVideo(godot::VideoStreamPlayer& player, const GameResources& assets);
     ~FrontendVideo();
     void update(MoviePlayer& request);
     bool playing() const noexcept;

@@ -12,6 +12,7 @@
     "'root' value with your own path, OR set the HP2_PS2_ASSET_ROOT environment variable to the",
     "same kind of path instead (the env var always wins over the local config file).",
     "'root' may point either directly at .../GAME/ZZDATA or at its parent; see tools/ps2_assets.py.",
+    "Optional 'mvp_root' selects a complete disc image, archive pair or extracted source for the Godot launcher while extraction tools keep using 'root'. HP2_PS2_ASSET_ROOT still takes priority.",
     "",
     "TASK-0021 added two optional keys, both empty by default, both for the save system:",
     "'profile_path' points at an existing 70880-byte settings.db for the port to READ (the",

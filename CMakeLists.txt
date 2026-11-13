@@ -16,23 +16,56 @@ target_include_directories(mvp_entity_bridge PUBLIC src/mvp)
 target_link_libraries(mvp_entity_bridge PUBLIC game_core)
 
 add_subdirectory(third_party/godot-cpp EXCLUDE_FROM_ALL)
+file(GLOB local_ffmpeg_sdks LIST_DIRECTORIES true
+  "${CMAKE_SOURCE_DIR}/local/tools/ffmpeg/*")
+set(HP2_FFMPEG_SDK "" CACHE PATH "FFmpeg 8 SDK directory")
+find_path(hp2_ffmpeg_include libavformat/avformat.h
+  HINTS "${HP2_FFMPEG_SDK}" ${local_ffmpeg_sdks} PATH_SUFFIXES include REQUIRED)
+get_filename_component(hp2_ffmpeg_root "${hp2_ffmpeg_include}" DIRECTORY)
+set(hp2_ffmpeg_dlls)
+foreach(component avformat avcodec avutil)
+  find_library(hp2_ffmpeg_${component} NAMES ${component}
+    PATHS "${hp2_ffmpeg_root}/lib" NO_DEFAULT_PATH REQUIRED)
+endforeach()
+foreach(dll avformat-62 avcodec-62 avutil-60 swresample-6)
+  find_file(hp2_${dll} "${dll}.dll" PATHS "${hp2_ffmpeg_root}/bin" NO_DEFAULT_PATH REQUIRED)
+  list(APPEND hp2_ffmpeg_dlls "${hp2_${dll}}")
+endforeach()
+
 add_library(hp2_track12 SHARED
   src/mvp/godot/register_types.cpp
   src/mvp/presentation/race_presentation.cpp
   src/mvp/assets/mesh_converter.cpp
   src/mvp/systems/frontend/frontend_presentation.cpp
   src/mvp/systems/frontend/frontend_video.cpp
+  src/mvp/systems/frontend/original_video_stream.cpp
   src/mvp/systems/track/track_presentation.cpp
   src/mvp/systems/vehicle/vehicle_presentation.cpp
   src/mvp/systems/camera/camera_presentation.cpp)
 # Godot's exception setting is a usage requirement. Link its library without
 # exporting that compiler flag to the exception-using HP2 boundary.
-target_link_libraries(hp2_track12 PRIVATE mvp_entity_bridge $<LINK_ONLY:godot::cpp>)
+target_link_libraries(hp2_track12 PRIVATE mvp_entity_bridge $<LINK_ONLY:godot::cpp>
+  "${hp2_ffmpeg_avformat}" "${hp2_ffmpeg_avcodec}" "${hp2_ffmpeg_avutil}")
+target_include_directories(hp2_track12 SYSTEM PRIVATE "${hp2_ffmpeg_include}")
 target_include_directories(hp2_track12 SYSTEM PRIVATE
   $<TARGET_PROPERTY:godot-cpp,INTERFACE_INCLUDE_DIRECTORIES>)
 target_compile_definitions(hp2_track12 PRIVATE
   $<TARGET_PROPERTY:godot-cpp,INTERFACE_COMPILE_DEFINITIONS>)
 set_target_properties(hp2_track12 PROPERTIES PREFIX "")
+set(imgui_console_dir "${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui-console")
+set(imgui_dir "${imgui_console_dir}/example/thirdparty/imgui")
+target_sources(hp2_track12 PRIVATE "$<$<CONFIG:Debug>:src/mvp/assets/imgui_overlay.cpp>")
+target_compile_definitions(hp2_track12 PRIVATE "$<$<CONFIG:Debug>:HP2_MVP_IMGUI>")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES)
+  add_library(mvp_imgui STATIC EXCLUDE_FROM_ALL
+    "${imgui_dir}/imgui.cpp"
+    "${imgui_dir}/imgui_draw.cpp"
+    "${imgui_dir}/imgui_widgets.cpp"
+    "${imgui_console_dir}/src/imgui_console.cpp")
+  target_include_directories(mvp_imgui SYSTEM PUBLIC "${imgui_dir}"
+    "${imgui_console_dir}/include" "${imgui_console_dir}/include/imgui_console")
+  target_link_libraries(hp2_track12 PRIVATE "$<$<CONFIG:Debug>:mvp_imgui>")
+endif()
 if(MINGW)
   target_link_options(hp2_track12 PRIVATE -static -static-libgcc -static-libstdc++)
 endif()
@@ -52,4 +85,5 @@ add_custom_target(stage_mvp ALL
     "${CMAKE_SOURCE_DIR}/godot_mvp/hp2_track12.gdextension"
     "${project_dir}"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:hp2_track12>" "${project_dir}/bin"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${hp2_ffmpeg_dlls} "${project_dir}/bin"
   DEPENDS hp2_track12 VERBATIM)

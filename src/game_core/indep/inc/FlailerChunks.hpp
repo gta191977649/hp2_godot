@@ -175,6 +175,14 @@ struct FlailerBitmapComposite {
 };
 
 struct FlailerRenderManager {
+    // Port-side animation inputs. Flailer lays out the echo at its start
+    // pose and the host owns its playback.
+    struct Highlight {
+        FlailerStrip* layout{};
+        std::uint32_t screen{}, echo{}, target{}, revision{};
+        float scaleRatio{}, duration{}, period{}, endAlpha{};
+    };
+    std::vector<Highlight> highlights;
     std::array<const FlailerScreenResource*,8> visibleScreens{};
     // The original manager has29 depth lists. These retain the same object
     // caches until the frontend command consumer completes its frame.

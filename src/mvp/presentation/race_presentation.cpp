@@ -1,6 +1,9 @@
 #include "race_presentation.hpp"
 
 #include "bridge/entity_state_bridge.hpp"
+#ifdef HP2_MVP_IMGUI
+#include "assets/imgui_overlay.hpp"
+#endif
 #include "systems/camera/camera_presentation.hpp"
 #include "systems/frontend/frontend_presentation.hpp"
 #include "systems/track/track_presentation.hpp"
@@ -17,7 +20,8 @@
 
 #include <godot_cpp/classes/camera3d.hpp>
 #include <godot_cpp/classes/input.hpp>
-#include <godot_cpp/classes/label.hpp>
+#include <godot_cpp/classes/input_event.hpp>
+#include <godot_cpp/classes/input_event_key.hpp>
 #include <godot_cpp/classes/scene_tree.hpp>
 #include <godot_cpp/classes/viewport.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
@@ -35,11 +39,19 @@ namespace hp2 {
 using namespace godot;
 
 namespace {
+bool supports_track(int track) noexcept {
+    return track == 12 || track == 13;
+}
+
 class RaceHost final : public NativeApplicationHost {
 public:
     explicit RaceHost(Node3D& root) : root_(root) {}
 
     bool inRace{};
+    bool menuInput{};
+#ifdef HP2_MVP_IMGUI
+    ImGuiOverlay* debug{};
+#endif
     bool PollEvents() override { return true; }
     int Width() const override { return root_.get_viewport()->get_visible_rect().size.x; }
     int Height() const override { return root_.get_viewport()->get_visible_rect().size.y; }
@@ -49,8 +61,14 @@ public:
         throw std::logic_error("Native frame submission reached the state-only host");
     }
     void RecordSessionEvent(const char* event, const char* detail) noexcept override {
-        if (std::string_view(event) == "application.state" || std::string_view(event) == "shutdown.failure")
+        const std::string_view name(event);
+        if (name == "application.state" || name == "shutdown.failure" || name == "resource.missing") {
             std::fprintf(stderr, "HP2_MVP_TRACE %s %s\n", event, detail);
+#ifdef HP2_MVP_IMGUI
+            try { if (debug) debug->log(event, detail); }
+            catch (...) { /* Preserve the native host's noexcept log boundary. */ }
+#endif
+        }
     }
     WorldAudioResult OpenAudio(bSound& sound) override { return sound.OpenWindowsDevice(); }
     WorldAudioResult PumpAudio(bSound& sound) override { return sound.PumpWindowsDevice(); }
@@ -59,10 +77,17 @@ public:
     int32_t ReadInput(int32_t port, JoystickControls& destination) override {
         ControllerState pad;
         if (port == 0) {
+            pad.connected = true;
+#ifdef HP2_MVP_IMGUI
+            if (debug && debug->captures_game_input()) {
+                destination = NativeScannerControls(pad);
+                return 1;
+            }
+#endif
             auto& input = *Input::get_singleton();
             const auto pressed = [&](Key key) { return input.is_physical_key_pressed(key); };
-            pad.connected = true;
-            if (!inRace) {
+            SetButton(pad, Ps2Button::Start, pressed(KEY_P));
+            if (!inRace || menuInput) {
                 SetButton(pad, Ps2Button::Cross, pressed(KEY_ENTER) || pressed(KEY_KP_ENTER));
                 SetButton(pad, Ps2Button::Triangle, pressed(KEY_BACKSPACE));
                 SetButton(pad, Ps2Button::Up, pressed(KEY_UP) || pressed(KEY_W));
@@ -103,13 +128,12 @@ struct RacePresentation::Session {
     std::unique_ptr<FrontendPresentation> frontend;
     String frontendScreen;
     std::uint32_t selectedItem{};
+    int raceState{};
     bool frontendMode{};
     Node3D* scene{};
     Camera3D* camera{};
-    Label* hud{};
     std::unordered_map<std::uint64_t, VehiclePresentation> vehicles;
     std::size_t placements{};
-    bool failed{};
     std::chrono::steady_clock::time_point loadingSince{std::chrono::steady_clock::now()};
 };
 
@@ -119,56 +143,89 @@ RacePresentation::~RacePresentation() {
     try {
         session_->runtime.Shutdown();
     } catch (const std::exception& error) {
-        std::fprintf(stderr, "HP2_MVP_ASSERT stage=shutdown track=12 reason=%s\n", error.what());
+        std::fprintf(stderr, "HP2_MVP_ASSERT stage=shutdown track=%d reason=%s\n",
+            session_->runtime.SelectedTrack(), error.what());
     }
 }
 
 void RacePresentation::_bind_methods() {
     ClassDB::bind_method(D_METHOD("start_race", "assets", "profile"), &RacePresentation::start_race);
-    ClassDB::bind_method(D_METHOD("start_frontend", "assets", "profile", "ffmpeg"), &RacePresentation::start_frontend);
+    ClassDB::bind_method(D_METHOD("start_frontend", "assets", "profile"), &RacePresentation::start_frontend);
     ClassDB::bind_method(D_METHOD("telemetry"), &RacePresentation::telemetry);
+    ClassDB::bind_method(D_METHOD("report_launch_error", "stage", "track", "reason"),
+        &RacePresentation::report_launch_error);
+}
+
+void RacePresentation::report_assert(const String& message) {
+    failed_ = true;
+    ERR_PRINT(message);
+#ifdef HP2_MVP_IMGUI
+    if (!debug_) debug_ = std::make_unique<ImGuiOverlay>(*this);
+    debug_->log("assert", message.utf8().get_data(), true);
+    debug_->show_console();
+    set_process_input(true);
+    set_process(true);
+#else
+    set_process(false);
+    get_tree()->quit(1);
+#endif
+}
+
+void RacePresentation::report_launch_error(const String& stage, const String& track, const String& reason) {
+    report_assert("HP2_MVP_ASSERT stage=" + stage + " track=" + track + " reason=" + reason);
+}
+
+void RacePresentation::quit_game() {
+    try {
+        session_->runtime.Shutdown();
+        session_.reset();
+        get_tree()->quit();
+    } catch (const std::exception& error) {
+        fail("shutdown", error.what());
+    }
 }
 
 void RacePresentation::fail(const char* stage, const char* reason) {
-    if (session_) session_->failed = true;
-    set_process(false);
     const auto generation = session_ ? session_->bridge.current().generation : 0;
     const auto step = session_ ? session_->bridge.current().step : 0;
     const auto track = session_ && session_->frontendMode ? session_->runtime.SelectedTrack() : 12;
-    ERR_PRINT(String("HP2_MVP_ASSERT stage=") + stage + " track=" + String::num_int64(track) + " generation=" +
+    report_assert(String("HP2_MVP_ASSERT stage=") + stage + " track=" + String::num_int64(track) + " generation=" +
         String::num_uint64(generation) + " last_step=" + String::num_uint64(step) + " reason=" + reason);
-    get_tree()->quit(1);
 }
 
-bool RacePresentation::start_frontend(const String& assets, const String& profile, const String& ffmpeg) {
-    return start(assets, profile, ffmpeg, true);
+bool RacePresentation::start_frontend(const String& assets, const String& profile) {
+    return start(assets, profile, true);
 }
 
 bool RacePresentation::start_race(const String& assets, const String& profile) {
-    return start(assets, profile, {}, false);
+    return start(assets, profile, false);
 }
 
-bool RacePresentation::start(const String& assets, const String& profile, const String& ffmpeg, bool frontend) {
+bool RacePresentation::start(const String& assets, const String& profile, bool frontend) {
     const char* stage = "asset_source";
     try {
-        if (session_) throw std::logic_error("Track 12 is already running");
+        if (session_) throw std::logic_error("Game session is already running");
         session_ = std::make_unique<Session>(*this, assets, profile);
         session_->frontendMode = frontend;
-        stage = frontend ? "frontend_initialize" : "race_initialize";
-        if (frontend) {
-            session_->runtime.InitializeFrontend(12);
-            session_->frontendCanvas = memnew(Node2D);
-            add_child(session_->frontendCanvas);
-            session_->frontend = std::make_unique<FrontendPresentation>(*session_->frontendCanvas, session_->files, ffmpeg);
-        } else {
-            session_->host.inRace = true;
-            session_->runtime.InitializeRace(12);
+        if (session_->files.IsLooseArchive()) {
+            for (const char* bank : {"SOUND/common.msh", "SOUND/common.msb"}) {
+                if (!session_->files.TryOpenPhysical(bank))
+                    throw std::runtime_error(std::string("Incomplete extracted game source, missing ") + bank +
+                        " in " + session_->files.SourcePath().u8string() +
+                        ". Set mvp_root in config/ps2_assets.local.json to a complete PS2 disc image or archive.");
+            }
         }
-        session_->hud = memnew(Label);
-        add_child(session_->hud);
-        session_->hud->set_position(Vector2(24, 24));
-        session_->hud->add_theme_font_size_override("font_size", 25);
-        session_->hud->set_text(frontend ? "Loading frontend" : "Loading Track 12");
+#ifdef HP2_MVP_IMGUI
+        debug_ = std::make_unique<ImGuiOverlay>(*this);
+        session_->host.debug = debug_.get();
+        set_process_input(true);
+#endif
+        stage = frontend ? "frontend_initialize" : "race_initialize";
+        if (frontend) session_->runtime.InitializeFrontend(12, supports_track);
+        else session_->runtime.InitializeRace(12);
+        session_->frontendCanvas = memnew(Node2D);
+        add_child(session_->frontendCanvas);
+        session_->frontend = std::make_unique<FrontendPresentation>(*session_->frontendCanvas, session_->files);
         set_process(true);
         return true;
     } catch (const std::exception& error) {
@@ -177,55 +234,71 @@ bool RacePresentation::start(const String& assets, const String& profile, const 
     }
 }
 
-void RacePresentation::_process(double) {
-    if (!session_ || session_->failed) return;
+void RacePresentation::_input(const Ref<InputEvent>& event) {
+#ifdef HP2_MVP_IMGUI
+    const Ref<InputEventKey> key = event;
+    if (failed_ && key.is_valid() && key->is_pressed() && key->get_physical_keycode() == KEY_ESCAPE) {
+        get_viewport()->set_input_as_handled();
+        get_tree()->quit(1);
+    } else if (session_ && key.is_valid() && key->is_pressed() &&
+        key->get_physical_keycode() == KEY_ESCAPE && !debug_->captures_game_input()) {
+        get_viewport()->set_input_as_handled();
+        quit_game();
+    } else if (debug_ && debug_->input(event))
+        get_viewport()->set_input_as_handled();
+#else
+    (void)event;
+#endif
+}
+
+void RacePresentation::_process(double delta) {
+#ifdef HP2_MVP_IMGUI
+    if (debug_) debug_->frame(delta);
+#else
+    (void)delta;
+#endif
+    if (!session_ || failed_) return;
     auto& s = *session_;
-    const char* stage = s.frontend ? "frontend_flow" : "world_step";
+    const char* stage = s.host.inRace ? "world_step" : "frontend_flow";
     try {
         if (!s.runtime.AdvanceRace()) {
-            get_tree()->quit();
-            set_process(false);
+            quit_game();
             return;
         }
         const auto race = s.runtime.RaceState();
+        const auto state = s.runtime.FrontendState();
+        s.raceState = race.sessionState;
+        s.host.inRace = race.simulation != nullptr;
+        s.host.menuInput = state.screen && race.sessionState != RC_STATE_RACE_IN_PROGRESS;
+        s.frontendScreen = state.screen ? String(state.screen) : String();
+        s.selectedItem = state.selectedItem;
+        stage = "frontend_scene";
+        s.frontend->update(state, get_viewport()->get_visible_rect().size);
         if (!race.simulation) {
-            if (s.frontend) {
-                stage = "frontend_scene";
-                const auto state = s.runtime.FrontendState();
-                s.frontendScreen = state.screen ? String(state.screen) : String();
-                s.selectedItem = state.selectedItem;
-                s.frontend->update(state, get_viewport()->get_visible_rect().size);
-                s.hud->set_visible(!state.screen);
-                s.hud->set_text(s.runtime.Flow().currentState >= 4 ? "Loading Track 12" : "Loading frontend");
-                return;
+            if (s.scene) {
+                remove_child(s.scene);
+                s.scene->queue_free();
+                s.scene = nullptr;
+                s.camera = nullptr;
+                s.vehicles.clear();
             }
-            if (s.scene) throw NotImplemented("Track 12 Godot", "Transition out of the Track 12 race");
-            if (std::chrono::steady_clock::now() - s.loadingSince > std::chrono::seconds(45))
+            if (!s.frontendMode && !s.bridge.current().generation &&
+                std::chrono::steady_clock::now() - s.loadingSince > std::chrono::seconds(45))
                 throw std::runtime_error(std::string("World did not start; GameFlow=") +
                     std::to_string(s.runtime.Flow().currentState));
             return;
         }
-        if (s.frontend) {
-            s.frontend.reset();
-            remove_child(s.frontendCanvas);
-            s.frontendCanvas->queue_free();
-            s.frontendCanvas = nullptr;
-            s.host.inRace = true;
-            s.hud->show();
-        }
         stage = "race_state";
-        if (race.sessionState != RC_STATE_RACE_IN_PROGRESS) {
-            const auto reason = "Godot presentation for RaceCoordinator state " + std::to_string(race.sessionState);
-            throw NotImplemented("Track 12 Godot", reason.c_str());
-        }
-        if (s.bridge.current().generation == race.simulation->world->presentationGeneration &&
-            s.bridge.current().step == race.simulation->world->frameCounter) return;
+        if (!race.camera) return;
 
         stage = "entity_state_bridge";
         auto frame = s.bridge.stage(race);
-        if (frame.track != 12) throw std::runtime_error("World committed track " + std::to_string(frame.track));
-        if (frame.generation == s.bridge.current().generation && frame.step < s.bridge.current().step)
-            throw NotImplemented("Track 12 Godot", "World rewind within a presentation generation");
+        if (!supports_track(frame.track))
+            throw std::runtime_error("World committed unsupported track " + std::to_string(frame.track));
+        if (frame.generation == s.bridge.current().generation && frame.step < s.bridge.current().step &&
+            race.sessionState != RC_STATE_INSTANT_REPLAY && race.sessionState != RC_STATE_AUTO_REPLAY &&
+            race.sessionState != RC_STATE_POST_RACE)
+            throw NotImplemented("Godot race presentation", "World rewind within a presentation generation");
         const bool newScene = !s.scene || s.bridge.current().generation != frame.generation;
         if (newScene) {
             stage = "track_assets";
@@ -237,7 +310,7 @@ void RacePresentation::_process(double) {
             s.vehicles.clear();
             s.scene = memnew(Node3D);
             add_child(s.scene);
-            s.scene->set_name("Track12Scene");
+            s.scene->set_name("RaceScene");
             s.placements = attach_track(*s.scene, *race.scenery, race.sky);
             s.camera = memnew(Camera3D);
             s.scene->add_child(s.camera);
@@ -249,12 +322,17 @@ void RacePresentation::_process(double) {
             const auto& state = frame.vehicles[slot];
             auto [it, added] = s.vehicles.try_emplace(state.handle);
             auto& vehicle = it->second;
-            if (added) vehicle.attach(*s.scene, *world.carTable[slot], state, race.worldFrames);
-            if (vehicle.model != state.model || vehicle.skin != state.skin)
-                throw NotImplemented("Track 12 Godot", "Appearance replacement within a vehicle handle");
+            if (added || vehicle.model != state.model || vehicle.skin != state.skin) {
+                // Traffic can change skin on a live Car. Swap only the Godot
+                // presentation and keep the World-issued handle.
+                auto* previous = vehicle.root;
+                vehicle.attach(*s.scene, *world.carTable[slot], state, race.worldFrames);
+                if (previous) {
+                    s.scene->remove_child(previous);
+                    previous->queue_free();
+                }
+            }
             vehicle.update(state);
-            if (state.player) s.hud->set_text("Track 12   " + String::num(std::abs(state.speed) * 3.6, 0) +
-                " km/h\nWASD / arrows    Space handbrake    Esc quit");
         }
         for (auto it = s.vehicles.begin(); it != s.vehicles.end();) {
             if (std::none_of(frame.vehicles.begin(), frame.vehicles.end(),
@@ -268,8 +346,8 @@ void RacePresentation::_process(double) {
         stage = "camera";
         apply_race_camera(*s.camera, frame.camera);
         if (newScene)
-            std::fprintf(stderr, "HP2_MVP_TRACE stage=scene_publish track=12 generation=%llu step=%u placements=%zu vehicles=%zu\n",
-                static_cast<unsigned long long>(frame.generation), frame.step, s.placements, s.vehicles.size());
+            std::fprintf(stderr, "HP2_MVP_TRACE stage=scene_publish track=%d generation=%llu step=%u placements=%zu vehicles=%zu\n",
+                frame.track, static_cast<unsigned long long>(frame.generation), frame.step, s.placements, s.vehicles.size());
         s.bridge.publish(std::move(frame));
     } catch (const std::exception& error) {
         fail(stage, error.what());
@@ -286,7 +364,10 @@ Dictionary RacePresentation::telemetry() const {
         result["video_playing"] = session_->frontend->video_playing();
         result["video_request"] = session_->frontend->video_request();
     }
+    result["race_state"] = session_->raceState;
+    if (!session_->scene) return result;
     result["generation"] = frame.generation;
+    result["track"] = frame.track;
     result["step"] = frame.step;
     result["placements"] = static_cast<int64_t>(session_->placements);
     result["vehicles"] = static_cast<int64_t>(frame.vehicles.size());
@@ -294,6 +375,7 @@ Dictionary RacePresentation::telemetry() const {
         if (!vehicle.player) continue;
         result["speed"] = vehicle.speed;
         result["position"] = Vector3(vehicle.transform[12], vehicle.transform[13], vehicle.transform[14]);
+        result["forward"] = Vector3(vehicle.transform[0], vehicle.transform[1], vehicle.transform[2]);
     }
     return result;
 }

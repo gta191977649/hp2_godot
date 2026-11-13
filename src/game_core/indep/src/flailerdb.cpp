@@ -1423,6 +1423,9 @@ void FlailerRenderManager::SubmitPolygon(FlailerStripPool& pool,const EditorMark
 
 void FlailerRenderManager::CompleteSubmissions() noexcept
 {
+    for (const auto& highlight:highlights)
+        highlight.layout->pool->Complete(*highlight.layout);
+    highlights.clear();
     for (auto& layer:layers) {
         for (auto* strip:layer)strip->pool->Complete(*strip);
         layer.clear();
@@ -1820,7 +1823,8 @@ void FlailerRenderManager::RenderSingleFlailerBitmap(FlailerResources& resources
     const float paddedWidth=static_cast<float>(next_power_of_2(static_cast<std::uint32_t>(rawWidth)));
     const float paddedHeight=static_cast<float>(next_power_of_2(static_cast<std::uint32_t>(rawHeight)));
     const bool fullMovie=bitmap.nativeFullscreenMovie &&
-        (bitmap.texture->key==0xc3f0caefu || bitmap.texture->key==0xf9117c29u);
+        ((bitmapComposite.movie && bitmapComposite.movie->RequestedMovie()) ||
+            bitmap.texture->key==0xc3f0caefu || bitmap.texture->key==0xf9117c29u);
     const auto drawWidth=fullMovie?640:convertFloatToInt32(width*bitmap.scaleX);
     const auto drawHeight=fullMovie?480:convertFloatToInt32(height*bitmap.scaleY);
     const float left=fullMovie?0.0f:bitmap.topLeftX,top=fullMovie?0.0f:bitmap.topLeftY;
@@ -1866,7 +1870,8 @@ void FlailerRenderManager::RenderFlailerBitmap(FlailerResources& resources,
     // Retail PAL143148/14314C suppresses movie planes once Close clears
     // MoviePlayer+440. Preserve that source lifetime in native CPU RGBA,
     // even though its conversion uses the source common-zero branch.
-    if (movieTexture && bitmapComposite.movie && !bitmapComposite.movie->ValidFrame())return;
+    if (movieTexture && bitmapComposite.movie && !bitmapComposite.movie->ValidFrame() &&
+        !bitmapComposite.movie->RequestedMovie())return;
     if (!bitmapComposite.enabled || !movieTexture) {
         RenderSingleFlailerBitmap(resources,bitmap,alphaScale,textureTime);return;
     }

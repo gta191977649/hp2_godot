@@ -42,10 +42,6 @@ try {
     if ($run) {
         $engine = Join-Path $PSScriptRoot 'local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe'
         if (-not (Test-Path -LiteralPath $engine -PathType Leaf)) { throw 'Godot 4.7.2 console executable is required.' }
-        if (-not $env:HP2_FFMPEG) {
-            $ffmpeg = Get-ChildItem (Join-Path $PSScriptRoot 'local/tools/ffmpeg') -Recurse -Filter ffmpeg.exe -ErrorAction SilentlyContinue | Select-Object -First 1
-            if ($ffmpeg) { $env:HP2_FFMPEG = $ffmpeg.FullName }
-        }
         $project = Join-Path $PSScriptRoot "build/$preset/mvp-project"
         $env:HP2_PS2_ASSET_CONFIG = Join-Path $PSScriptRoot 'config/ps2_assets.local.json'
         if ($raceArgument) { & $engine --path $project -- $raceArgument }

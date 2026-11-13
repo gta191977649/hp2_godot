@@ -13,7 +13,7 @@ The game core owns simulation data and gameplay. Godot owns the lifetime
 of scene nodes and presentation resources. The bridge carries committed
 state and identifies vehicle lifetimes with World generation and source ID.
 
-## Track 12 race entry
+## Race entry
 
 The default project entry runs the Godot frontend. The explicit `--race-track=12`
 entry requests the donor's single-player Quick Race and starts it in the
@@ -30,9 +30,9 @@ The scene tree owns the nodes. Godot resource references retain meshes and
 textures. Godot applies the camera and vehicle transforms from the same
 snapshot and releases nodes when their handles or generation retire.
 
-The race uses a Godot label for speed and controls. Unsupported entries
-and invalid integration data emit `HP2_MVP_ASSERT` with the stage, track
-and reason and stop the run with exit code 1.
+The donor Player and RaceCoordinator provide the HUD and race screens.
+Unsupported entries and invalid integration data emit `HP2_MVP_ASSERT`
+with the stage, track and reason and stop the run with exit code 1.
 
 [The implementation record](../tasks/active/TASK-0124-modular-godot-presentation.md)
 documents the Forward+ drive and open presentation work.
@@ -40,14 +40,24 @@ documents the Forward+ drive and open presentation work.
 
 ## Frontend
 
-The frontend starts the donor menu and profile owners. It reads authored
-object state, localized text, event entries and decoded preview assets.
-Godot creates CanvasItems, controls and preview SubViewports, and uses
-Tweens for screen fades and selection feedback. The donor validates the
-chosen event and requests the normal GameFlow transition. The port checks
-the requested track and player count before native track loading.
+The donor menu, profile, Player and RaceCoordinator owners provide state.
+Flailer resolves authored glyphs, kerning, clipping, bitmap UVs and layer
+order, including the event tree's dynamic elements and the race HUD.
+Godot synchronously consumes the CPU layout and requests decoded pixels
+from game_core's shared resource decoder. Godot CanvasItems own 2D drawing,
+ImageTextures hold the uploaded images, and SubViewports present previews.
+A Godot Tween handles screen fades and the selected item's echo, using
+the authored start pose, scale ratio, alpha and period from Flailer.
+Some authored animation values still come from Flailer and Player clocks.
+The same canvas survives race entry, pause, and the return to the frontend.
+The donor selects the event's track and checks the player count before
+loading; the Godot adapter supplies the list of tracks it can present
+(12 and 13). A traffic car can change its skin while keeping its World
+handle. Godot replaces its visual node when the committed appearance changes.
 
-The title movie owner publishes a resource path and request ID. FFmpeg
-decodes the AVI to a temporary Ogg Theora stream. The existing PS2 ADPCM
-decoder handles the title audio payload mislabeled as PCM in the AVI.
-Godot plays the resulting stream and acknowledges the request at EOF.
+The title movie owner publishes a resource path and request ID. Godot's
+VideoStreamPlayback backend gives FFmpeg a seekable view of the original AVI
+inside the game resource. FFmpeg decodes MV30 as playback advances. Godot
+presents the decoded planes and acknowledges the request at EOF. The
+existing PS2 ADPCM decoder handles title audio mislabeled as PCM, and
+the playback backend submits it to the Godot audio mixer.

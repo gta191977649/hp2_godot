@@ -9,7 +9,7 @@ class GameResources;
 
 class FrontendPresentation {
 public:
-    FrontendPresentation(godot::Node2D& canvas, const GameResources& files, const godot::String& ffmpeg);
+    FrontendPresentation(godot::Node2D& canvas, const GameResources& files);
     ~FrontendPresentation();
     void update(const FrontendStateView& state, godot::Vector2 viewport);
     bool video_playing() const noexcept;

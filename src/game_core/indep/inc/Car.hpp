@@ -108,6 +108,8 @@ typedef struct Car {
         int32_t viewNumber);
     void DamageAbove(const float eye[3],const float forward[3],
         const hp2::CarDamageDisplayBindings& display);
+    // Port-side entry for the CPU bearing shared with the Flailer tracker.
+    void PublishTrackerBearing(const float eye[3],const float forward[3]);
     void DamageCap(bool pursued,float damage,float distanceScale,
         const hp2::CarDamageDisplayBindings& display);
     // Publish the same late-created World services to retained and future

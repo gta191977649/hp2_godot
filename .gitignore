@@ -284,4 +284,11 @@ saves/
 !/tasks/active/TASK-0124-modular-godot-presentation.md
 !/tools/test_track12_mvp.gd
 !/tasks/active/TASK-0125-godot-frontend.md
+!/tasks/active/TASK-0126-authored-frontend-and-race-ui.md
+!/tasks/completed/
+/tasks/completed/*
+!/tasks/completed/TASK-0127-debug-launch.md
+!/tasks/completed/TASK-0128-display-refresh.md
+!/tasks/active/TASK-0129-first-pursuit-roundtrip.md
 !/tools/test_frontend_mvp.gd
+!/tools/mvp_test_route_driver.gd
