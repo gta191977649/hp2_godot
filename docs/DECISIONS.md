@@ -90,3 +90,10 @@ commands through the original UI callbacks on its frontend tick. Flailer
 publishes the geometry and identities needed for mouse targets. Vulkan remains
 the default Forward+ driver. The Windows launcher can also select D3D12 with
 SDR output so Windows can decide whether to apply Auto HDR.
+
+## TASK-0140 - Race effects ownership
+
+The source keeps the AcidFX emitter scheduler, random streams and lifetime
+ledger. Godot consumes ordered effects through the race scene and shares GPU
+particle nodes by effect definition. It renders tyre marks from original
+trail data and performs lamp and sun composition using Godot camera depth.

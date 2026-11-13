@@ -38,6 +38,9 @@ struct SkidRenderQuad {
     std::array<SkidRenderVertex,4> vertices{};
     const EditorMarkerTexture* texture{};
     std::array<std::uint32_t,4> rasterState{};
+    std::size_t trail{};
+    std::uint64_t revision{};
+    std::uint8_t fade{};
 };
 // Init/Flush/CloseClans1AB618..1AB6D0. Bind after SkidResources; release
 // before SkidResources and after Cars. Groups own actual SkidSet membership.

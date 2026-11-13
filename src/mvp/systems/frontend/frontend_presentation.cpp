@@ -2,6 +2,7 @@
 
 #include "assets/mesh_converter.hpp"
 #include "presentation/race_presentation.hpp"
+#include "systems/effects/race_effects_presentation.hpp"
 #include "frontend_video.hpp"
 #include "indep/inc/Flags.hpp"
 #include "indep/inc/FlailerDB.hpp"
@@ -432,13 +433,14 @@ void fragment() {
         TextureRect* display{};
         SubViewport* viewport{};
         Camera3D* camera{};
+        std::unique_ptr<RaceEffectsPresentation> effects;
         std::vector<MeshInstance3D*> nodes;
         std::vector<std::tuple<std::uint32_t, std::uintptr_t, std::uintptr_t, std::uint64_t>> models;
         std::vector<std::vector<const EditorMarkerTexture*>> textures;
     };
     std::map<int, Preview> previews;
 
-    void update_previews(const FrontendStateView& state) {
+    void update_previews(const FrontendStateView& state,const RaceEffectsFrame& effects) {
         if (!state.previews || !state.cameras) throw std::runtime_error("Frontend preview owners are unavailable");
         std::map<int, std::vector<const FrontendModelRequest*>> views;
         for (const auto& request : state.previews->models) {
@@ -449,7 +451,10 @@ void fragment() {
         for (auto& [view, preview] : previews) {
             const bool active = views.count(view) != 0;
             preview.display->set_visible(active);
-            if (!active) preview.viewport->set_update_mode(SubViewport::UPDATE_DISABLED);
+            if (!active) {
+                preview.effects->update_preview_particles(effects);
+                preview.viewport->set_update_mode(SubViewport::UPDATE_DISABLED);
+            }
         }
         // Fit the authored camera to the physical pixels occupied by its
         // 4:3 canvas. Keep the UI rectangle in design coordinates.
@@ -476,6 +481,10 @@ void fragment() {
                 preview.camera = memnew(Camera3D);
                 preview.viewport->add_child(preview.camera);
                 preview.camera->make_current();
+                preview.camera->set_cull_mask_value(3,false);
+                auto* effectsRoot=memnew(Node3D);
+                preview.viewport->add_child(effectsRoot);
+                preview.effects=std::make_unique<RaceEffectsPresentation>(*effectsRoot);
             }
             if (preview.viewport->get_size() != resolution)
                 preview.viewport->set_size(resolution);
@@ -491,6 +500,8 @@ void fragment() {
                 throw std::runtime_error("Frontend preview camera basis is invalid");
             preview.camera->set_perspective(pose.fieldOfView * (360.0 / 65536.0), pose.nearClip, pose.farClip);
             preview.camera->look_at_from_position(eye, eye + forward, race_vector(up));
+            if (state.effects) preview.effects->update_preview_lights(state.effects->lights,*preview.camera,view);
+            preview.effects->update_preview_particles(effects);
 
             MeshConverter converter;
             for (std::size_t i = 0; i < models.size(); ++i) {
@@ -867,14 +878,14 @@ void fragment() {
     s.rearView->show();
 }
 
-void FrontendPresentation::update(const FrontendStateView& state, Vector2 viewport) {
+void FrontendPresentation::update(const FrontendStateView& state, Vector2 viewport,const RaceEffectsFrame& effects) {
     auto& s = *storage_;
     if (!state.layout || !state.movie)
         throw std::runtime_error("Frontend state is missing an owner");
     s.loading = state.layout->IsScreenVisible(loadingScreen);
     s.layout.resize(viewport);
     s.video.update(*state.movie);
-    s.update_previews(state);
+    s.update_previews(state,effects);
     s.player.hide();
     s.canvas.set_scale(Vector2(s.layout.scale, s.layout.scale));
     s.canvas.set_position((s.layout.visible - designSize) * (s.layout.scale * 0.5f));

@@ -414,7 +414,8 @@ struct CarRenderBindings {
 // Resources and the application-state cell must outlive this owner. Previous
 // GPU submission must have completed before ReInit or destruction.
 struct FrontendFrame;
-void CollectFrontendCarModels(FrontendFrame& frame);
+struct RaceEffectsFrame;
+void CollectFrontendCarModels(FrontendFrame& frame,RaceEffectsFrame& effects,std::int32_t worldFrames);
 class FrontEndRenderingCar final {
 public:
     FrontEndRenderingCar(const CarRenderBindings& bindings,
@@ -436,7 +437,7 @@ public:
 private:
     struct Storage;
     std::unique_ptr<Storage> storage_;
-    friend void CollectFrontendCarModels(FrontendFrame&);
+    friend void CollectFrontendCarModels(FrontendFrame&,RaceEffectsFrame&,std::int32_t);
     friend void RenderFrontEndCars(const CarCinematicScreen&,EcstasyFrame&,
         std::int32_t,std::int32_t,bool,bool,bool,bool);
     friend void UpdateEnvironmentMapCameras(EnvironmentMap&,CarCinematicServices&,

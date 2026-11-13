@@ -41,6 +41,7 @@ add_library(hp2_track12 SHARED
   src/mvp/systems/frontend/frontend_video.cpp
   src/mvp/systems/frontend/original_video_stream.cpp
   src/mvp/systems/track/track_presentation.cpp
+  src/mvp/systems/effects/race_effects_presentation.cpp
   src/mvp/systems/vehicle/vehicle_presentation.cpp
   src/mvp/systems/cinematic/nis_presentation.cpp
   src/mvp/systems/camera/camera_presentation.cpp)

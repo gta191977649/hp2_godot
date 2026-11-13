@@ -1,4 +1,5 @@
 #include "indep/inc/eLight.hpp"
+#include "indep/inc/RaceEffects.hpp"
 #include "indep/inc/Ecstasy.hpp"
 #include "bware/inc/bWare.hpp"
 #include "bware/inc/bChunk.hpp"
@@ -561,6 +562,37 @@ std::size_t RenderSingleFlare(const LightFlareParameters& parameters,const float
     frame.RenderPolygon3D(polygon,texture,eMathIdentityMatrix,view);
     return 1;
 }
+}
+
+void CollectLightEffect(const LightFlare& flare,const float transform[16],float intensity,
+    ResourceRegistry& resources,std::vector<RaceLightEffect>& output)
+{
+    if (!flare.active) return;
+    Require(flare.kind<lightFlareParameterIndices.size(),"Light flare kind exceeds its released table");
+    float world[4];
+    eMulVector3(world,transform,flare.position.data());
+    for (const auto index : lightFlareParameterIndices[flare.kind]) {
+        if (index<0) continue;
+        const auto& p=lightFlareParameters[static_cast<std::size_t>(index)];
+        const auto* texture=resources.LightTexture(p.texture);
+        if (!texture) continue;
+        RaceLightEffect effect{texture};
+        std::copy_n(world,3,effect.position.begin());
+        for (std::size_t axis=0;axis<3;++axis)
+            effect.normal[axis]=transform[axis]*flare.normal[0]+transform[4+axis]*flare.normal[1]+
+                transform[8+axis]*flare.normal[2];
+        effect.minimumColor=p.minimumColor;
+        effect.maximumColor=p.maximumColor;
+        effect.minimumSize=p.minimumSize;
+        effect.maximumSize=p.maximumSize;
+        effect.exponent=p.responseExponent;
+        effect.bias=p.positionBias;
+        effect.minimumScale=p.minimumDistanceScale;
+        effect.maximumScale=p.maximumDistanceScale;
+        effect.intensity=intensity;
+        effect.twoSided=(flare.flags&1u)!=0;
+        output.push_back(effect);
+    }
 }
 
 std::size_t RenderLightFlare(const LightFlare& flare,const float localToWorld[16],

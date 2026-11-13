@@ -316,6 +316,7 @@ class LanguageManager;
 struct FlailerRenderManager;
 struct FrontendFrame;
 struct NisManagerRegistry;
+struct RaceEffectsFrame;
 enum class FrontendPointerAction { Focus, Confirm, Back, Left, Right, Previous, Next, Item,
     CaretLeft, CaretRight, Help, ReplayPause, ReplayPrevious, ReplayNext, ReplaySlow, ReplayCamera, ReplayHud };
 struct FrontendPointerTarget {
@@ -334,6 +335,7 @@ struct FrontendStateView {
     std::vector<FrontendPointerTarget> pointerTargets;
     bool pointerModal{}, pointerReplay{}, pointerHelp{}, pointerHelpAvailable{};
     int pointerPopupButtons{};
+    const RaceEffectsFrame* effects{};
 };
 struct RaceStateView {
     const ::WorldSimulation* simulation{};
@@ -371,6 +373,7 @@ public:
     bool AdvanceRace();
     int SelectedTrack() const noexcept;
     RaceStateView RaceState() const noexcept;
+    void TakeRaceEffects(RaceEffectsFrame& frame);
     void SetDisplayOptions(int32_t width,int32_t height,bool fullscreen,bool vsync);
     void Shutdown();
     EcstasyFrame& Frame() noexcept;

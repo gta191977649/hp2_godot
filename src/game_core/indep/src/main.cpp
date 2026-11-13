@@ -8,6 +8,8 @@
 #include "bware/inc/bChunk.hpp"
 #include "bware/inc/bFile.hpp"
 #include "indep/inc/AcidFX.hpp"
+#include "indep/inc/RaceEffects.hpp"
+#include "indep/inc/eLight.hpp"
 #include "indep/inc/CarInfo.hpp"
 #include "indep/inc/CameraCoordinator.hpp"
 #include "indep/inc/Ecstasy.hpp"
@@ -378,6 +380,28 @@ struct ApplicationRuntime::Storage {
         if (action==Action::Confirm || action==Action::Back || action==Action::Item)
             ++screens.pointerEpoch;
     }
+    struct ParticlePublication {
+        Storage* runtime;
+        bool frameEffects;
+    };
+    std::vector<RaceParticleEvent> particleEvents;
+    RaceEffectsFrame previewEffects;
+    ParticlePublication worldPublication{this,false}, framePublication{this,true};
+
+    static void PublishParticle(void* context,const ParticleEffectEvent& event)
+    {
+        const auto& owner=*static_cast<ParticlePublication*>(context);
+        auto& self=*owner.runtime;
+        const auto* simulation=self.Simulation();
+        const auto* world=self.flow.inGameFlag && simulation ? simulation->world:nullptr;
+        if (!world && !owner.frameEffects) return;
+        const auto* texture=event.operation==ParticleEffectOperation::Spawn ?
+            self.resources->Registry().Effects().Texture(*event.definition):nullptr;
+        self.particleEvents.push_back({event,texture,world ? world->presentationGeneration:0,
+            world ? world->frameCounter:static_cast<std::uint32_t>(self.clock.realTimeFrames),
+            owner.frameEffects});
+    }
+
     std::unique_ptr<FlailerHelpMenu> help;
     std::unique_ptr<FlailerGlobalBackgroundAnimation> background;
     std::array<std::unique_ptr<FlailerPopup>,2> popups;
@@ -828,6 +852,12 @@ void ApplicationRuntime::Initialize(const std::filesystem::path& configFile)
     if(s.stateOnly()) {
         s.movie->UseExternalPlayback();
         s.ui.externalPresentation=true;
+        auto& worldEffects=s.resources->FX().Particles();
+        auto& frameEffects=s.resources->FX().FrameParticles();
+        worldEffects.presentationContext=&s.worldPublication;
+        frameEffects.presentationContext=&s.framePublication;
+        worldEffects.publishEffect=frameEffects.publishEffect=&Storage::PublishParticle;
+        s.particleEvents.reserve(worldEffects.particleCapacity);
     }
     // PAL InitFlailerMenuSystem1696C0 calls InitGlobalMenuSound16DED8
     // before the screen-list constructor; Common is now fully published.
@@ -883,6 +913,7 @@ FrontendStateView ApplicationRuntime::FrontendState() const
         active && active->configuration ? active->configuration->name:nullptr,
         active ? active->GetActiveMenuItem():0};
     result.pointerEpoch=s.screens.pointerEpoch;
+    result.effects=&s.previewEffects;
     result.pointerReplay=s.PointerReplay();
     result.pointerHelp=s.screens.help && s.screens.help->IsActive();
     result.pointerHelpAvailable=active && s.ui.helpEnabled &&
@@ -937,6 +968,88 @@ RaceStateView ApplicationRuntime::RaceState() const noexcept
         s.trackPhase->NisManagers(),s.cameras.screens[1].blackAndWhite!=0,s.trackPhase->ViewMovers(),
         rearView?&rearView->current:nullptr,rearView?rearView->hiddenCar:nullptr,
         {s.resources->Registry().RearViewTexture(0),s.resources->Registry().RearViewTexture(1)}};
+}
+
+void ApplicationRuntime::TakeRaceEffects(RaceEffectsFrame& frame)
+{
+    auto& s=*storage_;
+    frame.particles.clear();
+    frame.particles.swap(s.particleEvents);
+    frame.skids.clear();
+    frame.rearSkids.clear();
+    frame.visibility.clear();
+    frame.lights.clear();
+    frame.sun.clear();
+    const auto race=RaceState();
+    if (!race.simulation || !race.camera) return;
+    auto& world=*race.simulation->world;
+    auto& registry=s.resources->Registry();
+    auto& screen=s.cameras.screens[1];
+    auto& rear=s.cameras.screens[3];
+    if (ecstasyViewCalculateMatrices(&s.cameras,&screen,0,0,0)==CAR_CINEMATIC_OK)
+        WorldClans(world).PrepareRender(screen.matrices.worldToClip,screen,frame.skids);
+    if (race.rearCamera && ecstasyViewCalculateMatrices(&s.cameras,&rear,0,0,0)==CAR_CINEMATIC_OK)
+        WorldClans(world).PrepareRender(rear.matrices.worldToClip,rear,frame.rearSkids);
+    for (const auto* pack:registry.Lights().FlarePacks()) {
+        for (const auto& flare:pack->flares) {
+            const auto first=frame.lights.size();
+            CollectLightEffect(flare,eMathIdentityMatrix,1.0f,registry,frame.lights);
+            if (race.rearCamera) for (auto i=first,end=frame.lights.size();i<end;++i) {
+                auto light=frame.lights[i];
+                light.view=3;
+                frame.lights.push_back(light);
+            }
+        }
+    }
+    for (int i=0;i<world.totalCars;++i) {
+        auto& car=*world.carTable[i];
+        const auto* movement=car.Movement();
+        if (!movement || !movement->bindings.state || !movement->bindings.ownerMotion) continue;
+        const auto& motion=*movement->bindings.ownerMotion;
+        if (!motion.actionEnabled || carMotionTransitionFlag(&motion)) continue;
+        const auto& state=*movement->bindings.state;
+        const auto* pose=(motion.wheelExclusionMask&2u) && race.viewMovers ?
+            carViewMoverPresentation(race.viewMovers,&car):nullptr;
+        float transform[16];
+        eMulMatrix(transform,CarScaleMatrix,pose ? pose->orientation:state.orientation);
+        std::copy_n(pose ? pose->centerPosition:state.centerPosition,3,transform+12);
+        const auto first=frame.lights.size();
+        if (&car!=race.hiddenCar && (motion.wheelEffectsFlags&2u))
+            CollectCarLightEffects(car,transform,race.worldFrames,frame.lights);
+        if (race.rearCamera && &car!=race.rearHiddenCar && (motion.wheelEffectsFlags&8u)) {
+            const auto rearFirst=frame.lights.size();
+            if (first==rearFirst) CollectCarLightEffects(car,transform,race.worldFrames,frame.lights);
+            else for (auto i=first;i<rearFirst;++i) {
+                auto light=frame.lights[i];
+                frame.lights.push_back(light);
+            }
+            for (auto i=rearFirst;i<frame.lights.size();++i) frame.lights[i].view=3;
+        }
+    }
+    auto& effects=s.resources->FX();
+    for (const auto* system:{&effects.Particles(),&effects.FrameParticles()})
+        for (auto* group=system->firstGroup;group;group=group->next)
+            frame.visibility.push_back({static_cast<std::size_t>(group-system->groupStorage),group->generation,
+                system==&effects.FrameParticles(),ParticleEffectVisible(*group,screen),
+                race.rearCamera && ParticleEffectVisible(*group,rear)});
+    auto& sun=registry.Sun();
+    const auto publishSun=[&](const auto& rows,const auto& position,float size,float opacity,bool sky) {
+        float margin=0;
+        for (const auto& row:rows) if (row.kind==0) margin=std::max(margin,row.size);
+        for (const auto& row:rows) {
+            if (row.size<=0 || (sky && row.scale==0)) continue;
+            if (const auto* texture=sun.TrackTexture(static_cast<std::size_t>(row.kind)))
+                frame.sun.push_back({row,texture,position,size,sky ? std::fabs(row.scale):opacity,
+                    sky && row.scale>0,sky && &row==rows.data(),margin,sun.Glare().positionOverride});
+        }
+    };
+    publishSun(sun.AuthoredFlares(),sun.Vector(),1.0f,1.0f,true);
+    const auto [size,fade]=sun.AdvanceGlare(s.clock);
+    if (size<=0) return;
+    std::array<float,3> point{};
+    for (std::size_t axis=0;axis<3;++axis)
+        point[axis]=race.camera->eye[axis]+race.camera->forward[axis]*sun.Glare().distance;
+    publishSun(sun.Flares(),point,size,fade*size,false);
 }
 
 bool ApplicationRuntime::Tick()
@@ -1211,7 +1324,8 @@ bool ApplicationRuntime::TickInternal()
             s.renderer.BeginFrame(*s.ui.resources,&s.language,
                 static_cast<float>(s.clock.realTimer)*0.0002500000118743628f);
             s.screens.RenderModels(true);
-            if(!s.flow.inGameFlag)CollectFrontendCarModels(s.frontendFrame);
+            s.previewEffects.lights.clear();
+            if(!s.flow.inGameFlag)CollectFrontendCarModels(s.frontendFrame,s.previewEffects,s.clock.worldTimeFrames);
             s.frontendFrame.modelDrawCpuClosureRequired=false;
             auto* players=s.trackPhase->Players();
             Require(players && players->count>=0 && players->count<=2,

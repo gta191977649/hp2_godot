@@ -123,6 +123,24 @@ void advanceParticle(WorldParticle& particle, const WorldParticleDefinition& def
     particle.direction[2] = wrapByte(convertFloatToInt32(normalZ * 127.0f));
 }
 
+void publishParticleEffect(WorldParticleSystem& system, WorldParticleGroup& group,
+    ParticleEffectOperation operation, const WorldParticle* birth = nullptr,
+    float elapsed = 0.0f, int ticks = 0)
+{
+    if (!system.publishEffect) return;
+    ParticleEffectEvent event{operation, static_cast<std::size_t>(&group - system.groupStorage),
+        group.generation, group.definition};
+    if (birth) {
+        event.birth = *birth;
+        event.birth.next = event.birth.previous = nullptr;
+    }
+    event.seconds = elapsed;
+    event.ticks = ticks;
+    if (group.car && group.definition->followsCar && group.definition->carMotionScale > 0.0f)
+        std::memcpy(event.inherited, group.car->bindings.state->velocity, sizeof(event.inherited));
+    system.publishEffect(system.presentationContext, event);
+}
+
 } // namespace
 
 namespace {
@@ -317,6 +335,7 @@ WorldServicesResult worldParticlesTriggerEmitter(WorldParticleSystem* system,
                 particle->speed = static_cast<uint16_t>(convertFloatToInt32(minimumFinite(speed * 128.0f, 65535.0f)));
                 particle->carMotionScale = static_cast<uint8_t>(convertFloatToInt32(motion * 255.0f));
                 particle->atlasFrame = atlasFrame;
+                publishParticleEffect(*system, *group, ParticleEffectOperation::Spawn, particle);
             }
         }
         const float randomRate = particleRandomUnit(emitter->randomState) * rateVariation;
@@ -397,6 +416,7 @@ void worldParticlesUpdateInterestPoints(WorldParticleSystem* system)
 void worldParticlesDisposeGroup(WorldParticleSystem* system, WorldParticleGroup* group)
 {
     if (!system || !group || !group->occupied) return;
+    publishParticleEffect(*system, *group, ParticleEffectOperation::Remove);
     // PAL12A258 clears the two borrowed definition/Car cells before the
     // AcidParticle list destructor12A2C0 returns every live particle to its
     // original pool. The Windows pools use occupied slots, not PS2 addresses.
@@ -476,11 +496,13 @@ WorldServicesResult worldParticlesAdvance(WorldParticleSystem* system, float ela
     WorldParticleGroup* group = system->firstGroup;
     while (group) {
         WorldParticleGroup* next = group->next;
+        publishParticleEffect(*system, *group, ParticleEffectOperation::Advance, nullptr, elapsed, ticks);
         WorldParticle* particle = group->first;
         while (particle) {
             WorldParticle* following = particle->next;
             if (static_cast<int32_t>(particle->remainingTicks) - ticks <= 0)
                 removeParticle(*system, *group, *particle);
+            else if (system->publishEffect) particle->remainingTicks = wrapHalf(particle->remainingTicks - ticks);
             else advanceParticle(*particle, *group->definition, group->car, elapsed, ticks);
             particle = following;
         }
@@ -1445,8 +1467,7 @@ void afxMatrixInverse(float output[16],const float input[16])
 #include "indep/inc/Texture.hpp"
 
 namespace hp2 {
-namespace {
-bool particleCarVisible(const WorldParticleGroup& group,const CarCinematicScreen& view)
+bool ParticleEffectVisible(const WorldParticleGroup& group,const CarCinematicScreen& view)
 {
     if(!group.car)return true;
     const auto& bindings=group.car->bindings;
@@ -1460,7 +1481,6 @@ bool particleCarVisible(const WorldParticleGroup& group,const CarCinematicScreen
     case 1:case 5:case 6:return view.view->hiddenCar!=bindings.owner || !view.view->visibilityFlags;
     default:return true;
     }
-}
 }
 
 WorldParticleRenderSummary RenderWorldParticles(const WorldParticleSystem& system,
@@ -1493,7 +1513,7 @@ WorldParticleRenderSummary RenderWorldParticles(const WorldParticleSystem& syste
     for(const auto* group=system.firstGroup;group;group=group->next) {
         ++result.groups;
         Require(group->occupied && group->definition,"Particle list contains a retired definition/group");
-        if(!particleCarVisible(*group,view)) {++result.hiddenCarGroups;continue;}
+        if(!ParticleEffectVisible(*group,view)) {++result.hiddenCarGroups;continue;}
         const auto& definition=*group->definition;
         const auto* descriptor=catalogue.Texture(definition);
         if(!descriptor) {++result.missingTextures;continue;}

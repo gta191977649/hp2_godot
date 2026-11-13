@@ -159,7 +159,7 @@ FlailerPoly SunPolygon(const SunFlareParameters& row,const SunScreenPosition& ce
 }
 }
 
-void SunResources::StuffSunGlare(const CarCinematicScreen& view,EcstasyFrame& frame,const GameTime& clock)
+std::array<float,2> SunResources::AdvanceGlare(const GameTime& clock)
 {
     // PAL125918..125F6C source controls and envelope; the native clock
     // adaptation below preserves its duration across presentation rates.
@@ -169,7 +169,7 @@ void SunResources::StuffSunGlare(const CarCinematicScreen& view,EcstasyFrame& fr
     if(state.start && static_cast<float>(clock.realTimer)*0.0002500000118743628f>0.0f && !timerActive(state.timer)) {
         state.start=0;state.timer=clock.realTimer;state.phase=0;
     }
-    if(!timerActive(state.timer))return;
+    if(!timerActive(state.timer))return {};
     static constexpr std::uint32_t durationTicks[]={200,800,2600};
     Require(state.phase>=0 && state.phase<4,"Sun glare phase is outside the original four-phase table");
     auto elapsedTicks=static_cast<std::uint32_t>(clock.realTimer)-
@@ -189,12 +189,28 @@ void SunResources::StuffSunGlare(const CarCinematicScreen& view,EcstasyFrame& fr
     else if(state.phase==1)size=1.0f;
     else if(state.phase==2) {size=1.0f;fade=1.0f-static_cast<float>(elapsedTicks)/static_cast<float>(durationTicks[2]);}
     else {state.timer=0;size=0.0f;fade=0.0f;}
+    return {size*1.899999976158142f,fade};
+}
+
+std::array<SunFlareParameters,6> SunResources::AuthoredFlares() const
+{
+    std::array<SunFlareParameters,6> authored{};
+    if (!info_) return authored;
+    Require(infoSize_>=0x1cu+6u*0x24u,"Sun34202 flare bank is truncated");
+    for(std::size_t index=0;index<authored.size();++index) authored[index]=SunFlare(info_+0x1c+index*0x24);
+    return authored;
+}
+
+void SunResources::StuffSunGlare(const CarCinematicScreen& view,EcstasyFrame& frame,const GameTime& clock)
+{
+    const auto [size,fade]=AdvanceGlare(clock);
+    if (size==0.0f) return;
+    const auto& state=glare_;
     Require(view.view,"Sun glare has no original camera");
     float point[4];
     for(std::size_t axis=0;axis<3;++axis)
         point[axis]=view.view->current.forward[axis]*state.distance+view.view->current.eye[axis];
     point[3]=1;
-    size*=1.899999976158142f;
     const auto projected=ProjectSun(view,point,flares_,state.positionOverride);
     if(!projected.visible)return;
     const float maximum=view.target->format==0x31 ? 16777215.0f:65535.0f;
@@ -214,11 +230,9 @@ void SunResources::StuffSun(const CarCinematicScreen& view,EcstasyFrame& frame,
     // belongs to primary view1 only. Z samples persist across resource loads.
     StuffSunGlare(view,frame,clock);
     if(!info_ || view.id!=1)return;
-    Require(infoSize_>=0x1cu+6u*0x24u,"Sun34202 flare bank is truncated");
     Require(view.target && view.target->id>=0 && view.target->id<15,
         "Sun depth owner is outside the original15-target array");
-    std::array<SunFlareParameters,6> authored;
-    for(std::size_t index=0;index<authored.size();++index)authored[index]=SunFlare(info_+0x1c+index*0x24);
+    const auto authored=AuthoredFlares();
     const float position[4]={vector_[0],vector_[1],vector_[2],1};
     const auto projected=ProjectSun(view,position,authored,glare_.positionOverride);
     if(!projected.visible)return;

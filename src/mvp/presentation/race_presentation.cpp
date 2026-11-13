@@ -9,6 +9,7 @@
 #include "systems/audio/godot_speech_output.hpp"
 #include "systems/camera/camera_presentation.hpp"
 #include "systems/cinematic/nis_presentation.hpp"
+#include "systems/effects/race_effects_presentation.hpp"
 #include "systems/frontend/frontend_presentation.hpp"
 #include "systems/track/track_presentation.hpp"
 #include "systems/vehicle/vehicle_presentation.hpp"
@@ -148,6 +149,8 @@ struct RacePresentation::Session {
     Node2D* frontendCanvas{};
     std::unique_ptr<FrontendPresentation> frontend;
     std::unique_ptr<NisPresentation> cinematic;
+    std::unique_ptr<RaceEffectsPresentation> effects;
+    RaceEffectsFrame effectsFrame;
     String frontendScreen;
     std::uint32_t selectedItem{};
     int raceState{};
@@ -311,6 +314,8 @@ void RacePresentation::_process(double delta) {
             return;
         }
         const auto race = s.runtime.RaceState();
+        stage = "race_effects_state";
+        s.runtime.TakeRaceEffects(s.effectsFrame);
         const auto state = s.runtime.FrontendState();
         s.raceState = race.sessionState;
         s.host.inRace = race.simulation != nullptr;
@@ -318,11 +323,12 @@ void RacePresentation::_process(double delta) {
         s.frontendScreen = state.screen ? String(state.screen) : String();
         s.selectedItem = state.selectedItem;
         stage = "frontend_scene";
-        s.frontend->update(state, get_viewport()->get_visible_rect().size);
+        s.frontend->update(state, get_viewport()->get_visible_rect().size,s.effectsFrame);
         if (!race.simulation) {
             s.frontend->update_rear_view({}, {}, false);
             if (s.scene) {
                 s.cinematic->clear();
+                s.effects.reset();
                 remove_child(s.scene);
                 s.scene->queue_free();
                 s.scene = nullptr;
@@ -371,6 +377,7 @@ void RacePresentation::_process(double delta) {
             if (s.scene) {
                 s.frontend->update_rear_view({}, {}, false);
                 s.cinematic->clear();
+                s.effects.reset();
                 remove_child(s.scene);
                 s.scene->queue_free();
             }
@@ -379,6 +386,7 @@ void RacePresentation::_process(double delta) {
             add_child(s.scene);
             s.scene->set_name("RaceScene");
             s.placements = attach_track(*s.scene, *race.scenery, race.sky);
+            s.effects = std::make_unique<RaceEffectsPresentation>(*s.scene);
             s.camera = memnew(Camera3D);
             s.scene->add_child(s.camera);
             s.camera->set_cull_mask_value(3, false);
@@ -417,6 +425,8 @@ void RacePresentation::_process(double delta) {
         if (race.nis) s.cinematic->update(*s.scene, *race.nis, race.blackAndWhite);
         stage = "camera";
         apply_race_camera(*s.camera, frame.camera);
+        stage = "race_effects";
+        if (!newScene && frame.step < s.bridge.current().step) s.effects->reset();
         stage = "rear_view";
         if (frame.rearCamera) {
             if (!s.rearViewport) {
@@ -445,6 +455,8 @@ void RacePresentation::_process(double delta) {
             if (s.rearViewport) s.rearViewport->set_update_mode(SubViewport::UPDATE_DISABLED);
             s.frontend->update_rear_view({}, {}, false);
         }
+        stage = "race_effects";
+        s.effects->update(s.effectsFrame,*s.camera,frame.rearCamera ? s.rearCamera:nullptr,frame.generation);
         if (newScene)
             std::fprintf(stderr, "HP2_MVP_TRACE stage=scene_publish track=%d generation=%llu step=%u placements=%zu vehicles=%zu\n",
                 frame.track, static_cast<unsigned long long>(frame.generation), frame.step, s.placements, s.vehicles.size());

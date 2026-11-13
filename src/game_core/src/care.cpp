@@ -6,6 +6,7 @@
 #include "bware/inc/bWare.hpp"
 #include "indep/inc/Ecstasy.hpp"
 #include "indep/inc/TerrainEffects.hpp"
+#include "indep/inc/RaceEffects.hpp"
 #include "indep/inc/Car.hpp"
 #include "indep/inc/Ecstasy.hpp"
 #include "bware/inc/bWare.hpp"
@@ -841,8 +842,9 @@ std::uint32_t carRenderBrokenLightMask(const Car* car)
 {return car && car->appearance ? car->appearance->brokenLightMask:0;}
 
 namespace {
-std::size_t renderCarLightFlares(CarAppearance& render,Car* car,const CarCinematicScreen& view,
-    hp2::EcstasyFrame& frame,const float transform[16],std::int32_t worldFrames,std::uint32_t lightFlags)
+template<class Submit>
+std::size_t visitCarLightFlares(CarAppearance& render,Car* car,
+    std::int32_t worldFrames,std::uint32_t lightFlags,Submit submit)
 {
     // PAL121540..121A44: canonical frame/controls and authored marker keys.
     auto* nativeFrame=car ? car->Frame():nullptr;
@@ -905,9 +907,17 @@ std::size_t renderCarLightFlares(CarAppearance& render,Car* car,const CarCinemat
         flare.kind=source.kind;flare.flags=source.flags;
         std::copy(source.position,source.position+4,flare.position.begin());
         std::copy(source.normal,source.normal+4,flare.normal.begin());
-        count+=hp2::RenderLightFlare(flare,transform,std::min(intensity,1.0f),*render.textures,view,frame);
+        count+=submit(flare,std::min(intensity,1.0f));
     }
     return count;
+}
+
+std::size_t renderCarLightFlares(CarAppearance& render,Car* car,const CarCinematicScreen& view,
+    hp2::EcstasyFrame& frame,const float transform[16],std::int32_t worldFrames,std::uint32_t lightFlags)
+{
+    return visitCarLightFlares(render,car,worldFrames,lightFlags,[&](const auto& flare,float intensity) {
+        return hp2::RenderLightFlare(flare,transform,intensity,*render.textures,view,frame);
+    });
 }
 
 using CarShadowPoint=std::array<float,4>;
@@ -1512,6 +1522,17 @@ std::size_t RenderDashboards(const CarCinematicScreen& view,hp2::EcstasyFrame& f
 }
 
 namespace hp2 {
+void CollectCarLightEffects(Car& car,const float transform[16],std::int32_t worldFrames,
+    std::vector<RaceLightEffect>& output)
+{
+    if (!car.appearance) return;
+    auto& appearance = *car.appearance;
+    visitCarLightFlares(appearance,&car,worldFrames,0,[&](const auto& flare,float intensity) {
+        CollectLightEffect(flare,transform,intensity,*appearance.textures,output);
+        return 0u;
+    });
+}
+
 struct FrontEndRenderingCar::Storage {
     CarRenderBindings bindings;
     std::unique_ptr<CarAppearance> appearance;
@@ -1561,7 +1582,7 @@ void FrontEndRenderingCar::ReInit(const CarAppearanceSelection* selection)
     storage_->appearance=std::move(appearance);
 }
 
-void CollectFrontendCarModels(FrontendFrame& frame)
+void CollectFrontendCarModels(FrontendFrame& frame,RaceEffectsFrame& effects,std::int32_t worldFrames)
 {
     for(auto* car=FrontEndRenderingCar::Storage::first;car;car=car->storage_->next) {
         auto* render=car->storage_->appearance.get();
@@ -1585,6 +1606,13 @@ void CollectFrontendCarModels(FrontendFrame& frame)
         std::copy_n(car->position,3,body+12);
         body[12]-=(minimum[0]+maximum[0])*0.5f;
         body[15]=1.0f;
+        const auto flags=(car->headlights ? 3u:0u)|(car->policeLights ? 8u:0u);
+        visitCarLightFlares(*render,nullptr,worldFrames,flags,[&](const auto& flare,float intensity) {
+            const auto first=effects.lights.size();
+            CollectLightEffect(flare,body,intensity,*render->textures,effects.lights);
+            for (auto i=first;i<effects.lights.size();++i) effects.lights[i].view=car->viewNumber;
+            return 0u;
+        });
         for(const auto slot:{0,16,17,18,19})add(&render->models[slot],body);
         float flipped[16];motionMatrixRotateYaw(flipped,eMathIdentityMatrix,0x8000u);
         for(int i=0;i<4;++i) {

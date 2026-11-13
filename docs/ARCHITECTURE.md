@@ -33,6 +33,12 @@ The scene tree owns the nodes. Godot resource references retain meshes and
 textures. Godot applies the camera and vehicle transforms from the same
 snapshot and releases nodes when their handles or generation retire.
 
+Race effects use the same scene lifetime. AcidFX publishes ordered births,
+steps and removals from its original shared pools. Godot runs motion and
+draws billboards in GPUParticles3D nodes shared by effect definition. The
+native skid, lamp and sun owners publish authored geometry and parameters.
+Godot owns the road meshes, light billboards and sun depth sampling.
+
 The donor Player and RaceCoordinator provide the HUD and race screens.
 Unsupported entries and invalid integration data emit `HP2_MVP_ASSERT`
 with the stage, track and reason and stop the run with exit code 1.

@@ -264,6 +264,7 @@ saves/
 /tasks/*
 !/tasks/active/
 /tasks/active/*
+!/tasks/active/TASK-0140-godot-race-effects.md
 !/tasks/active/TASK-0115-track12-native-rendering.md
 !/tasks/active/TASK-0116-independent-entities-edition.md
 !/tasks/active/TASK-0117-entities-performance.md
@@ -273,6 +274,7 @@ saves/
 !/tasks/active/TASK-0121-mvp-vehicle-dynamics.md
 !/tasks/active/TASK-0122-donor-vehicle-physics.md
 /tools/*
+!/tools/test_mvp_race_effects.gd
 !/tools/test_event_window.py
 !/tools/test_mvp_hud_interpolation.gd
 !/tools/test_mvp_presentation_previews.gd

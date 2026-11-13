@@ -1185,6 +1185,8 @@ public:
     const EditorMarkerTexture* TrackTexture(std::size_t index) const;
     const std::array<float,3>& Vector() const noexcept {return vector_;}
     const std::array<SunFlareParameters,6>& Flares() const noexcept {return flares_;}
+    std::array<SunFlareParameters,6> AuthoredFlares() const;
+    std::array<float,2> AdvanceGlare(const GameTime& clock);
     std::int32_t Mode() const noexcept {return mode_;}
     const std::uint8_t* Info() const noexcept {return info_;}
     std::size_t InfoSize() const noexcept {return infoSize_;}

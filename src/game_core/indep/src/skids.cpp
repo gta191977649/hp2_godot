@@ -242,6 +242,9 @@ void prepareSkidQuads(hp2::SkidResources& skids,const WheelTrail& trail,std::uin
     for(std::size_t index=1;index<trail.pointCount;++index) {
         const auto& previous=trail.points[index-1];const auto& next=trail.points[index];
         hp2::SkidRenderQuad quad{};quad.texture=texture;
+        quad.trail=static_cast<std::size_t>(&trail-skids.Trails().storage);
+        quad.revision=trail.revision;
+        quad.fade=fade;
         quad.rasterState={0x01000100u,0x01000080u,0u,0u};
         quad.vertices[0].textureCoordinate={0.0f,0.0f,1.0f};
         quad.vertices[1].textureCoordinate={1.0f,0.0f,1.0f};

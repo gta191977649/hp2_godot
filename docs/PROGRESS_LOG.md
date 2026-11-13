@@ -1520,6 +1520,7 @@ place and kept, because the fact that a session believed it, and why, is itself 
 - [2026-11-13 TASK-0126 Race pause key and minimap heading](#2026-11-13-task-0126-race-pause-key-and-minimap-heading)
 - [2026-11-13 TASK-0126 Rotating minimap and rear view](#2026-11-13-task-0126-rotating-minimap-and-rear-view)
 - [2026-11-13 TASK-0126 Godot mouse input and Windows rendering driver](#2026-11-13-task-0126-godot-mouse-input-and-windows-rendering-driver)
+- [2026-11-13 TASK-0140 Godot race effects](#2026-11-13-task-0140-godot-race-effects)
 
 <!-- generated:contents:end -->
 
@@ -5399,3 +5400,9 @@ callbacks. Vulkan mouse probes reached Quick Race on Track 12 and the first
 Hot Pursuit event on Track 13. Debug and Release staged. Track 12 resize
 smokes passed on Vulkan and D3D12. The task records the reproduction command
 and the remaining settings, replay, results and Auto HDR checks.
+
+## 2026-11-13 TASK-0140 Godot race effects
+
+Connected the current donor's AcidFX, sun, light flares and tyre marks to
+the MVP. The task records the source owners, runtime commands and remaining
+effect-specific validation.

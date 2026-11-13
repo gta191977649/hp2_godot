@@ -194,6 +194,19 @@ struct WorldParticleGroup {
     int32_t occupied;
 };
 
+// Port-side publication at the original allocation and clock boundaries.
+enum class ParticleEffectOperation { Spawn, Advance, Remove };
+struct ParticleEffectEvent {
+    ParticleEffectOperation operation;
+    size_t slot;
+    uint64_t generation;
+    const WorldParticleDefinition* definition{};
+    WorldParticle birth{};
+    float seconds{};
+    int ticks{};
+    float inherited[3]{};
+};
+
 /* The authoring view edits the same decoded definition used by live groups.
  * Game assets retain their baked curves without a second mutable catalogue. */
 struct WorldParticleSystem {
@@ -221,6 +234,8 @@ struct WorldParticleSystem {
     // initializes both to zero. Selection is borrowed, never dereferenced.
     const ChopperEffectInstance* selectedEmitter;
     int32_t renderSelectedOnly;
+    void* presentationContext;
+    void (*publishEffect)(void*, const ParticleEffectEvent&);
 };
 
 void worldParticlesInitialize(WorldParticleSystem* system,
