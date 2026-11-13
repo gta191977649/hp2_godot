@@ -781,15 +781,16 @@ static void nisAnimationTranslation(const CarReplayAnimationController& animatio
     std::memcpy(output,clip->framePositions+static_cast<std::size_t>(sample)*4,3*sizeof(float));
 }
 
-static std::size_t nisRenderHandProp(CarLiveReplayContext& context,
+template<class Submit>
+static void nisRenderHandProp(CarLiveReplayContext& context,
     CarReplayAnimationController& animation,const float actor[16],const float translation[3],
     const std::vector<std::array<float,16>>& posed,std::size_t hand,bool first,
-    const CarCinematicScreen& view,EcstasyFrame& frame)
+    Submit& submit)
 {
     // PAL1B30A8..1B32FC: source posed-matrix25/38 is converted back from
     // the same model's inverse bind, then put in the actual actor frame.
     const std::size_t bone=hand==1 ? 38u:25u;
-    if(posed.empty())return 0;
+    if(posed.empty())return;
     const auto* tree=editorMarkerModelAnimationTree(animation.model);
     Require(tree && tree->authoredNodes && bone<posed.size() &&
         bone<static_cast<std::size_t>(tree->nodeCount),"NIS hand prop lost its source posed bone");
@@ -804,28 +805,29 @@ static std::size_t nisRenderHandProp(CarLiveReplayContext& context,
     motionMatrixTranslate(bind,bind,nisHandOffsets[hand]);
     eMulMatrix(handMatrix,bind,posed[bone].data());
     eMulMatrix(world,handMatrix,world);
-    return frame.RenderModel(context.actorModels[(first?0u:2u)+hand],world,view,0,1.0f,0);
+    auto& model=context.actorModels[(first?0u:2u)+hand];
+    if(model.solid)submit((first?0u:3u)+hand+1u,model,world,nullptr);
 }
 
-std::size_t RenderNisPlayback(CarFrameLiveReplay& playback,
-    const CarCinematicScreen& view,EcstasyFrame& frame)
+template<class Submit>
+static void visitNisPlayback(CarFrameLiveReplay& playback,int viewId,Submit&& submit)
 {
     // PAL1B2C90..1B30A8: the actual NIS actor pointers and active-view mask
     // gate rendering. Both actors are authored relative to the first car;
     // the separately placed second car is not a second animation origin.
     Require(playback.cameraContext,"NIS rendering lost its retained manager context");
     auto& context=*playback.cameraContext;
-    if(!context.firstDriver && !context.secondDriver)return 0;
-    Require(view.id>=0 && view.id<32,"NIS render view is outside the source bit mask");
-    if(!(context.activeViews&(1u<<view.id)))return 0;
-    if(!context.first)return 0;
+    if(!context.firstDriver && !context.secondDriver)return;
+    Require(viewId>=0 && viewId<32,"NIS render view is outside the source bit mask");
+    if(!(context.activeViews&(1u<<viewId)))return;
+    if(!context.first)return;
     Require(carLiveReplaySetupForRendering(&playback)==CAR_NIS_OK,
         "NIS setup lost its actual animation, car or terrain owner");
     const auto* info=carLiveReplayCurrentInfo(&playback);
     auto& movement=*context.first;
     Require(info && movement.bindings.state && movement.bindings.ownerMotion,
         "NIS rendering has no first-car physical pose");
-    const bool overridePose=(movement.bindings.ownerMotion->wheelExclusionMask&(1u<<view.id))!=0;
+    const bool overridePose=(movement.bindings.ownerMotion->wheelExclusionMask&(1u<<viewId))!=0;
     const auto* presentation=carViewMoverPresentation(context.registry,movement.bindings.owner);
     Require(presentation && presentation->motion==movement.bindings.ownerMotion,
         "NIS rendering override differs from the Max camera's Car owner");
@@ -837,14 +839,13 @@ std::size_t RenderNisPlayback(CarFrameLiveReplay& playback,
     std::memcpy(ground+8,up,sizeof(up));
     carCinematicCrossThree(ground+4,up,ground);
     carCinematicCrossThree(ground,ground+4,up);
-    std::size_t draws=0;
     // Both NIS actors are rendered sequentially. Reuse the transient native
     // quaternion and bone arrays between them rather than reallocating two
     // arrays for each actor on every rendered frame.
     std::vector<std::array<float,4>> quaternions;
-    std::vector<std::array<float,16>> posed;
+    DriverPoseCache cache;
     const auto drawActor=[&](CarReplayAnimationController* animation,const float offset[4],bool first) {
-        if(!animation || !animation->primary)return;
+        if(!animation || !animation->primary || !animation->model || !animation->model->solid)return;
         float actor[16],displacement[4],translation[3];
         std::memcpy(actor,first && info->selectionGroup?source:ground,sizeof(actor));
         eMulVector4(displacement,source,offset);
@@ -863,14 +864,40 @@ std::size_t RenderNisPlayback(CarFrameLiveReplay& playback,
         auto* rotations=reinterpret_cast<float (*)[4]>(quaternions.data());
         Require(carDriverAnimationReadAllRotations(animation->primary,rotations,count,animation->phase)!=0,
             "NIS actor phase is outside its retained authored animation");
-        posed.clear();
-        draws+=RenderAnimationPose(*animation,actor,translation,rotations,count,nullptr,view,frame,0,&posed);
-        draws+=nisRenderHandProp(context,*animation,actor,translation,posed,0,first,view,frame);
-        draws+=nisRenderHandProp(context,*animation,actor,translation,posed,1,first,view,frame);
+        const auto& posed=cache.Prepare(*tree,rotations,count);
+        float world[16],rotation[16],root[4];
+        std::memcpy(world,actor,sizeof(world));std::memcpy(rotation,actor,sizeof(rotation));
+        rotation[12]=rotation[13]=rotation[14]=0.0f;
+        eMulVector3(root,rotation,translation);
+        for(std::size_t axis=0;axis<3;++axis)world[12+axis]+=root[axis];
+        world[15]=1.0f;
+        submit(first?0u:3u,*animation->model,world,&posed);
+        nisRenderHandProp(context,*animation,actor,translation,posed,0,first,submit);
+        nisRenderHandProp(context,*animation,actor,translation,posed,1,first,submit);
     };
     drawActor(context.firstDriver,context.firstActorOffset,true);
     drawActor(context.secondDriver,context.secondActorOffset,false);
+}
+
+std::size_t RenderNisPlayback(CarFrameLiveReplay& playback,
+    const CarCinematicScreen& view,EcstasyFrame& frame)
+{
+    std::size_t draws=0;
+    visitNisPlayback(playback,view.id,[&](std::size_t,const EditorMarkerModel& model,
+        const float* transform,const std::vector<std::array<float,16>>* pose) {
+        draws+=frame.RenderModel(const_cast<EditorMarkerModel&>(model),transform,view,0,1.0f,0,nullptr,pose);
+    });
     return draws;
+}
+
+void VisitNisPoses(NisManagerRegistry& registry,int viewId,NisPoseSink sink,void* user)
+{
+    std::size_t base=0;
+    for(auto* manager=registry.first;manager;manager=manager->Next(),base+=6)
+        visitNisPlayback(manager->Playback(),viewId,[&](std::size_t slot,const EditorMarkerModel& model,
+            const float* transform,const std::vector<std::array<float,16>>* pose) {
+            sink(user,base+slot,model,transform,pose);
+        });
 }
 
 std::size_t DrawNisObjects(NisManagerRegistry& registry,

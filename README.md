@@ -21,8 +21,10 @@ the FFmpeg MV30 decoder. Playback needs no generated media files.
 Use the arrow keys and Enter in the menus. World Racing leads to Quick
 Race or the Championship event tree (Track 12). Hot Pursuit → Ultimate
 Racer leads to the first event, Lotus Elise Delivery (Track 13).
-Use WASD or the arrow keys to drive, Space for handbrake, P to pause
-and Esc to exit the application.
+Use WASD or the arrow keys to drive, Space for handbrake and Esc to pause.
+In the frontend, Esc exits the application.
+The default race minimap rotates with the player's car. Single-player
+fixed-map choices are available in Display Options.
 `./build.ps1 --run --race-track=12` opens the diagnostic race directly.
 
 For race integration, use a complete extracted game directory, a PS2 disc image, or a
@@ -35,7 +37,7 @@ uses the Godot project's `user://profile` directory.
 `./build.ps1` stages the project in `build/godot-mvp-release/mvp-project`.
 `./build.ps1 --run --mvp --debug --jobs 16` builds and runs the Debug
 configuration. The ImGui Console and live frame-time graph open by
-default. F8 toggles the console and gives the game its keyboard input
+default. The grave/tilde key toggles the console and gives the game its keyboard input
 back. The graph stays visible throughout the frontend and race.
 The window title shows the active graphics API and live FPS, for example
 `hp2 - (Vulkan) 120 FPS`. Debug launches append ` | Debug Mode`.

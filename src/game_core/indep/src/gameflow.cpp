@@ -751,6 +751,7 @@ void EndGameFlowLoadingTrackSpecific(ApplicationFrontendFlow& flow,const GameFlo
         own.playerBindings.language=menus.ui->language;own.playerBindings.clock=process.clock;
         own.playerBindings.cars=&phase.cars;
         own.playerBindings.track=track.track->CurrentInfo();
+        own.playerBindings.playerHeadingTrackMap=menus.ui->externalPresentation;
         own.playerBindings.nis={&own.nis,global.nis,&phase.files,&own.views};
         own.screenServices.frontend=&menus;own.screenServices.players=&own.players;
         own.startScreens=std::make_unique<StartRaceScreens>(own.screenServices);BindStartRaceScreens(*own.startScreens);

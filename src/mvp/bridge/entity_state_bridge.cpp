@@ -2,6 +2,7 @@
 
 #include "indep/inc/CarState.hpp"
 #include "indep/inc/CarInfo.hpp"
+#include "indep/inc/CameraCoordinator.hpp"
 #include "indep/inc/Flags.hpp"
 #include "indep/inc/Player.hpp"
 #include "indep/inc/World.hpp"
@@ -10,7 +11,6 @@
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
-#include <unordered_set>
 #include <utility>
 
 namespace hp2 {
@@ -22,8 +22,9 @@ bool finite(const Range& values) {
 }
 }
 
-EntityFrame EntityStateBridge::stage(const RaceStateView& race) const {
-    EntityFrame frame;
+const EntityFrame& EntityStateBridge::stage(const RaceStateView& race) {
+    auto& frame = pending_;
+    frame.vehicles.clear();
     const auto* simulation = race.simulation;
     const auto* world = simulation ? simulation->world : nullptr;
     if (!world || !race.camera)
@@ -51,7 +52,6 @@ EntityFrame EntityStateBridge::stage(const RaceStateView& race) const {
     if (!frame.generation || !player || world->totalCars < 1 || world->totalCars > WORLD_MAX_CARS)
         throw std::runtime_error("Committed World has an invalid car table or no player");
     frame.vehicles.reserve(world->totalCars);
-    std::unordered_set<std::uint64_t> handles;
     for (int slot = 0; slot < world->totalCars; ++slot) {
         auto* car = world->carTable[slot];
         auto* movement = car ? car->Movement() : nullptr;
@@ -59,18 +59,26 @@ EntityFrame EntityStateBridge::stage(const RaceStateView& race) const {
             throw std::runtime_error("Committed World car has incomplete bindings at slot " + std::to_string(slot));
         const auto& state = *movement->bindings.state;
         const auto& appearance = car->driverInfo->appearance;
-        auto& entity = frame.vehicles.emplace_back();
-        entity.handle = car->presentationId;
-        if (!entity.handle || !handles.insert(entity.handle).second)
+        const auto handle = car->presentationId;
+        if (!handle || std::any_of(frame.vehicles.begin(), frame.vehicles.end(),
+            [handle](const VehicleEntityState& vehicle) { return vehicle.handle == handle; }))
             throw std::runtime_error("Committed World car has an invalid or duplicate handle");
+        auto& entity = frame.vehicles.emplace_back();
+        entity.handle = handle;
         entity.model = appearance.modelCode;
         entity.skin = appearance.skinNumber;
         entity.player = player->car == movement;
         const auto& motion = *movement->bindings.ownerMotion;
         entity.visible = car != race.hiddenCar && motion.actionEnabled &&
             !carMotionTransitionFlag(&motion) && (motion.wheelEffectsFlags & 2u);
-        eMulMatrix(entity.transform.data(), CarScaleMatrix, state.orientation);
-        std::copy_n(state.centerPosition, 3, entity.transform.begin() + 12);
+        const bool replayPose = (motion.wheelExclusionMask & 2u) != 0;
+        const auto* presentation = replayPose && race.viewMovers ?
+            carViewMoverPresentation(race.viewMovers, car) : nullptr;
+        if (replayPose && (!presentation || presentation->motion != &motion))
+            throw std::runtime_error("NIS vehicle has no committed replay pose");
+        eMulMatrix(entity.transform.data(), CarScaleMatrix, presentation ? presentation->orientation : state.orientation);
+        std::copy_n(presentation ? presentation->centerPosition : state.centerPosition,
+            3, entity.transform.begin() + 12);
         entity.transform[15] = 1;
         entity.speed = state.speed;
         if (!finite(entity.transform) || !std::isfinite(entity.speed))
@@ -94,8 +102,8 @@ EntityFrame EntityStateBridge::stage(const RaceStateView& race) const {
     return frame;
 }
 
-void EntityStateBridge::publish(EntityFrame frame) noexcept {
-    current_ = std::move(frame);
+void EntityStateBridge::publish() noexcept {
+    std::swap(current_, pending_);
 }
 
 }

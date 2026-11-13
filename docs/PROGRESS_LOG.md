@@ -1513,6 +1513,11 @@ place and kept, because the fact that a session believed it, and why, is itself 
 - [2026-11-13 TASK-0134 Native frontend preview resolution](#2026-11-13-task-0134-native-frontend-preview-resolution)
 - [2026-11-13 TASK-0135 Car preview vertex shading and lamps](#2026-11-13-task-0135-car-preview-vertex-shading-and-lamps)
 - [2026-11-13 TASK-0136 Car preview and race material parity](#2026-11-13-task-0136-car-preview-and-race-material-parity)
+- [2026-11-13 TASK-0137 Track 13 pursuit profiling](#2026-11-13-task-0137-track-13-pursuit-profiling)
+- [2026-11-13 TASK-0138 Godot Busted cinematic](#2026-11-13-task-0138-godot-busted-cinematic)
+- [2026-11-13 TASK-0139 Original speech streaming](#2026-11-13-task-0139-original-speech-streaming)
+- [2026-11-13 TASK-0127 ImGui console shortcut](#2026-11-13-task-0127-imgui-console-shortcut)
+- [2026-11-13 TASK-0126 Race pause key and minimap heading](#2026-11-13-task-0126-race-pause-key-and-minimap-heading)
 
 <!-- generated:contents:end -->
 
@@ -5318,3 +5323,59 @@ Elise mesh channels, headlamp and brake lamp texture keys, and resize.
 Select Car shares the unshaded race material and its vertex color
 modulation. The preview light rig was removed and both authored Lotus
 Elise lamp bindings passed the preview check. Debug and Release staged.
+
+## 2026-11-13 TASK-0137 Track 13 pursuit profiling
+
+Godot MCP opened the staged project. Godot's built-in GPU profiler
+recorded the native-size first pursuit with the original AI driving
+the player car. Debug-only C++ test support lives in `src/mvp/tests`.
+The AI crossed the target section. Opaque rendering and the depth
+pre-pass were the largest GPU phases. CPU attribution and displayed
+frame pacing remain open. See TASK-0137 for launch settings and logs.
+
+The subsequent Godot remote Visual Profiler capture associated sustained
+slow loops with higher CPU render cost in depth and opaque passes and
+roughly twice the draw calls. The longest loop still needs native or
+present-path attribution. TASK-0137 records the capture and A/B target.
+
+The first native-size Track 13 A/B batched 1902 opaque placements into
+152 per-section MultiMeshes. Render CPU median fell from 3.93 to 2.99 ms
+and engine loop P95 from 13.95 to 12.08 ms. The candidate is opt-in while
+repeated captures and displayed pacing remain open.
+
+TASK-0137 enabled the per-section MultiMesh path by default, disabled
+synchronous audio voice tracing in the Godot host, and restored optimized
+MinGW Debug builds. The entity bridge reuses both snapshot buffers and
+the projective minimap retains unchanged meshes. The trace-disabled
+pre-reuse run still had long non-render-scope stalls. Full-route pacing
+acceptance remains open.
+
+## 2026-11-13 TASK-0138 Godot Busted cinematic
+
+The donor NIS pose traversal now supplies the Godot skeletons, rigid
+props and monochrome scene pass. The replay vehicle pose is consumed
+from the original camera registry. Debug and Release staged. The
+Track 13 arrest smoke observed two actors, a second pose, original
+BUSTED/REC overlay, and cleanup. Natural pursuit triggering and
+cinematic-entry pacing remain open. Game audio migration is TASK-0139.
+
+## 2026-11-13 TASK-0139 Original speech streaming
+
+The opt-in Godot transport reads retained speech ranges on one worker and
+uses the existing decoder with bounded PCM buffers. Debug and Release
+staged. Track 13 with the donor AI recorded five starts, four completions
+and zero reported underrun blocks before shutdown. The matched XAudio2
+comparison and migration of other audio categories remain open.
+
+## 2026-11-13 TASK-0127 ImGui console shortcut
+
+The Godot Debug overlay now toggles with the grave/tilde key. Updated its
+on-screen hint and both tracked frontend smoke scripts. The Debug staging
+build passed (`cmake --build --preset godot-mvp-debug --target stage_mvp --parallel 16`).
+
+## 2026-11-13 TASK-0126 Race pause key and minimap heading
+
+Esc opens the original Pause Menu through the controller Start action.
+Godot races use the player's heading for rotating minimaps. The existing
+Track 12 resize smoke reached Pause Menu and restart confirmation. Debug
+and Release staging passed.

@@ -36,11 +36,13 @@ add_library(hp2_track12 SHARED
   src/mvp/godot/register_types.cpp
   src/mvp/presentation/race_presentation.cpp
   src/mvp/assets/mesh_converter.cpp
+  src/mvp/systems/audio/godot_speech_output.cpp
   src/mvp/systems/frontend/frontend_presentation.cpp
   src/mvp/systems/frontend/frontend_video.cpp
   src/mvp/systems/frontend/original_video_stream.cpp
   src/mvp/systems/track/track_presentation.cpp
   src/mvp/systems/vehicle/vehicle_presentation.cpp
+  src/mvp/systems/cinematic/nis_presentation.cpp
   src/mvp/systems/camera/camera_presentation.cpp)
 # Godot's exception setting is a usage requirement. Link its library without
 # exporting that compiler flag to the exception-using HP2 boundary.
@@ -54,7 +56,9 @@ target_compile_definitions(hp2_track12 PRIVATE
 set_target_properties(hp2_track12 PROPERTIES PREFIX "")
 set(imgui_console_dir "${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui-console")
 set(imgui_dir "${imgui_console_dir}/example/thirdparty/imgui")
-target_sources(hp2_track12 PRIVATE "$<$<CONFIG:Debug>:src/mvp/assets/imgui_overlay.cpp>")
+target_sources(hp2_track12 PRIVATE
+  "$<$<CONFIG:Debug>:src/mvp/assets/imgui_overlay.cpp>"
+  "$<$<CONFIG:Debug>:src/mvp/tests/pursuit_test_driver.cpp>")
 target_compile_definitions(hp2_track12 PRIVATE "$<$<CONFIG:Debug>:HP2_MVP_IMGUI>")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES)
   add_library(mvp_imgui STATIC EXCLUDE_FROM_ALL
@@ -67,11 +71,19 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES)
   target_link_libraries(hp2_track12 PRIVATE "$<$<CONFIG:Debug>:mvp_imgui>")
 endif()
 if(MINGW)
+  # Keep Debug symbols and checks while avoiding -O0 simulation and draw preparation.
+  foreach(target game_core mvp_entity_bridge hp2_track12 mvp_imgui)
+    if(TARGET ${target})
+      target_compile_options(${target} PRIVATE "$<$<CONFIG:Debug>:-O2>")
+    endif()
+  endforeach()
   target_link_options(hp2_track12 PRIVATE -static -static-libgcc -static-libstdc++)
 endif()
 
 set(project_dir "${CMAKE_BINARY_DIR}/mvp-project")
 file(GENERATE OUTPUT "${project_dir}/.godot/extension_list.cfg" CONTENT "res://hp2_track12.gdextension\n")
+file(GENERATE OUTPUT "${project_dir}/override.cfg" CONTENT
+  "[hp2]\n\nasset_config=\"${CMAKE_SOURCE_DIR}/config/ps2_assets.local.json\"\ndebug_mode=$<IF:$<CONFIG:Debug>,true,false>\n")
 add_custom_target(stage_mvp ALL
   COMMAND ${CMAKE_COMMAND} -E make_directory "${project_dir}/bin"
   COMMAND ${CMAKE_COMMAND} -E rm -f

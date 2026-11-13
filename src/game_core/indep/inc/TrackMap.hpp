@@ -33,7 +33,7 @@ public:
     TrackMap(const TrackResourceInfo* track,CarMovement* car,CarFramePlayerState* player,
         FlailerResources& resources,FlailerRenderManager& renderer,
         CarCinematicServices& cameras,std::int32_t overlayViewNumber,
-        const RaceParameters& parameters);
+        const RaceParameters& parameters,bool playerHeading=false);
     bool Valid() const noexcept {return valid_;}
     void SetMode(std::int32_t mode);
     std::int32_t Mode() const noexcept {return configuredMode_;}
@@ -70,6 +70,7 @@ private:
     const EditorMarkerTexture *mapTexture_{},*marker_{},*orientedMarker_{},*frame_{},*background_{},*startLine_{},*roadBlock_{};
     float upperExtent_{},lowerExtent_{};
     bool valid_{};
+    bool playerHeading_{};
     std::int32_t configuredMode_{6},activeMode_{6};
 };
 }

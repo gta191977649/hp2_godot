@@ -16,6 +16,10 @@ var title_captured := false
 var countdown_captured := false
 var returning := false
 var pause_selection := 0
+var arrest_nis := false
+var arrest_seen := false
+var arrest_midpoint := 0
+var arrest_motion_captured := false
 
 func _initialize() -> void:
     deadline = Time.get_ticks_msec() + 170000
@@ -23,10 +27,14 @@ func _initialize() -> void:
     championship = OS.get_environment("HP2_MVP_CHAMPIONSHIP") == "1"
     pursuit = OS.get_environment("HP2_MVP_PURSUIT") == "1"
     returning = OS.get_environment("HP2_MVP_RETURN") == "1"
+    arrest_nis = OS.get_environment("HP2_MVP_TEST_ARREST_NIS") == "1"
     var course_path := OS.get_environment("HP2_ROUTE_CAPTURE")
     if not course_path.is_empty():
         route = RouteDriver.new()
-        if not pursuit or not route.load_course(course_path, _key):
+        var driving_input := _key
+        if OS.get_environment("HP2_MVP_PURSUIT_AI") == "1":
+            driving_input = func(_keycode: Key, _held: bool): pass
+        if not pursuit or not route.load_course(course_path, driving_input):
             _fail("invalid_pursuit_route_capture")
             return
         deadline = Time.get_ticks_msec() + 900000
@@ -41,7 +49,7 @@ func _process(_delta: float) -> bool:
     if not is_instance_valid(race):
         race = root.get_node_or_null("NativeGame/RacePresentation")
         if is_instance_valid(race) and OS.get_environment("HP2_MVP_DEBUG_CONSOLE") == "1":
-            _tap(KEY_F8)
+            _tap(KEY_QUOTELEFT)
         return false
     var sample: Dictionary = race.call("telemetry")
     var screen: String = sample.get("screen", "")
@@ -142,15 +150,31 @@ func _process(_delta: float) -> bool:
     if stage == 7 and sample.get("race_state", 0) == 3 and sample.get("step", 0) >= 1:
         if pursuit and sample.get("track", -1) != 13:
             return _fail("expected_track_13")
-        if route == null:
+        if route == null and not arrest_nis:
             _key(KEY_W, true)
         stage = 8
     if route != null and stage >= 8:
         return _run_full_event(sample, screen)
+    if arrest_nis and stage == 8:
+        var parts: int = sample.get("nis_parts", 0)
+        if parts >= 2 and not arrest_seen:
+            arrest_seen = true
+            arrest_midpoint = sample.get("step", 0) + 30
+            print("HP2_NIS_ACTORS ", parts)
+            _capture("busted")
+        elif parts >= 2 and arrest_seen and not arrest_motion_captured and sample.get("step", 0) >= arrest_midpoint:
+            arrest_motion_captured = true
+            _capture("busted-motion")
+        elif arrest_seen and parts == 0:
+            if not arrest_motion_captured:
+                return _fail("arrest_animation_ended_early")
+            stage = 46
+            _finish(sample, "busted-cleanup")
+        return false
     if stage == 8 and sample.get("speed", 0) >= 12 and sample["step"] >= 80:
         _key(KEY_W, false)
         _capture("race-hud")
-        _tap(KEY_P)
+        _tap(KEY_ESCAPE)
         stage = 9
     if stage == 9 and screen == "Pause Menu":
         _capture("pause")

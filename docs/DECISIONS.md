@@ -61,3 +61,23 @@ the committed Track 13 scene. Traffic appearance changes replace the
 Godot presentation for the same World handle. The external smoke driver
 uses read-only pose telemetry and normal input; it is not part of the
 game or the donor core.
+
+## TASK-0137 - Pursuit rendering
+
+Godot batches repeated static opaque placements by authored section and
+mesh. The entity bridge retains snapshot storage across publications, and
+the Godot HUD retains minimap meshes while submitted geometry is identical.
+
+## TASK-0138 - Busted cinematic
+
+The donor provides the original replay timeline, camera, vehicle overrides
+and actor pose matrices through the synchronous presentation boundary.
+Godot owns the skinned meshes, props and monochrome scene compositing.
+
+## TASK-0139 - Godot speech transport
+
+The donor request queue and voice manager retain ordering, completion and
+controls. The MVP can route original speech to Godot's resampled stream
+player. One worker reads and decodes bounded ADPCM blocks. The mixer reads
+PCM from a preallocated ring. The Godot route is opt-in while the other
+game audio categories and the matched performance comparison remain open.

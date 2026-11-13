@@ -168,6 +168,11 @@ class NisManager;
 /* PAL intrusive list ownership. This registry outlives each actual manager;
  * it does not own a second replay/player list. */
 struct NisManagerRegistry { NisManager* first{}; };
+// Synchronous port presentation boundary. Models and poses are borrowed
+// for the callback only. The donor retains the clip and its timeline.
+using NisPoseSink = void (*)(void*, std::size_t, const EditorMarkerModel&,
+    const float*, const std::vector<std::array<float,16>>*);
+void VisitNisPoses(NisManagerRegistry& registry, int viewId, NisPoseSink sink, void* user);
 // Original per-frame NIS consumers borrow the same live replay managers,
 // animation/model catalogues and render view; they own no second timeline.
 std::size_t RenderNisPlayback(CarFrameLiveReplay& playback,

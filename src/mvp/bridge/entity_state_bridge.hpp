@@ -8,12 +8,13 @@ struct RaceStateView;
 
 class EntityStateBridge {
 public:
-    EntityFrame stage(const RaceStateView& race) const;
-    void publish(EntityFrame frame) noexcept;
+    const EntityFrame& stage(const RaceStateView& race);
+    void publish() noexcept;
     const EntityFrame& current() const noexcept { return current_; }
 
 private:
     EntityFrame current_;
+    EntityFrame pending_;
 };
 
 }

@@ -18,7 +18,8 @@ godot::Transform3D race_transform(const float* source);
 // Temporary decode cache. The scene retains Godot Refs only.
 class MeshConverter {
 public:
-    godot::Ref<godot::ArrayMesh> convert(const EditorMarkerModel& model, bool depthWrite = true);
+    godot::Ref<godot::ArrayMesh> convert(const EditorMarkerModel& model, bool depthWrite = true,
+        std::size_t boneCount = 0);
 
 private:
     godot::Ref<godot::StandardMaterial3D> material(const EditorMarkerTexture& descriptor);

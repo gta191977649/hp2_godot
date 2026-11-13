@@ -570,6 +570,7 @@ struct PlayerConstructionBindings {
     NisManagerBindings nis;
     const class CarInfoResource* cars{};
     const TrackResourceInfo* track{};
+    bool playerHeadingTrackMap{};
 };
 CarFramePlayerState* CreatePlayer(int32_t port,int32_t seat,const PlayerConstructionBindings& bindings);
 bool DestroyPlayer(CarFramePlayerState* player);

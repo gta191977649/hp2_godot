@@ -77,9 +77,10 @@ void TrackMap::SetMode(std::int32_t mode)
 TrackMap::TrackMap(const TrackResourceInfo* track,CarMovement* car,CarFramePlayerState* player,
     FlailerResources& resources,FlailerRenderManager& renderer,
     CarCinematicServices& cameras,std::int32_t overlayViewNumber,
-    const RaceParameters& parameters)
+    const RaceParameters& parameters,bool playerHeading)
     :track_(track),car_(car),player_(player),resources_(resources),renderer_(renderer),
-    cameras_(cameras),parameters_(parameters),overlayViewNumber_(overlayViewNumber)
+    cameras_(cameras),parameters_(parameters),overlayViewNumber_(overlayViewNumber),
+    playerHeading_(playerHeading)
 {
     valid_=track_ && car_ && player_;
     if (!valid_)return;
@@ -159,6 +160,11 @@ bool TrackMap::GetCameraDirection(std::array<float,4>& direction)
 bool TrackMap::GetAngle(std::uint16_t& angle)
 {
     if (!CurrentMode().followCamera) {angle=32768;return true;}
+    if (playerHeading_) {
+        Require(car_->bindings.state,"TrackMap direction has no actual car");
+        angle=static_cast<std::uint16_t>(track_->mapRotation+car_->bindings.state->heading);
+        return true;
+    }
     std::array<float,4> target{};if (!GetCameraDirection(target))return false;
     const auto now=player_->registry->clock->worldTimer;
     const float elapsed=(static_cast<float>(static_cast<std::int32_t>(static_cast<std::uint32_t>(now)-
@@ -319,6 +325,8 @@ void TrackMap::Render()
     if (!valid_)return;
     Require(world && race,"TrackMap render has no actual World/Race owners");
     target_=nullptr;activeMode_=configuredMode_;
+    // MVP uses the authored rotating local view for the fixed on/off presets.
+    if (playerHeading_ && (configuredMode_==7 || configuredMode_==8))activeMode_=2;
     auto* pursuit=services->pursuit;
     if (configuredMode_!=6 && pursuit) {
         auto* selected=pursuitManagerSelectedEntry(pursuit);

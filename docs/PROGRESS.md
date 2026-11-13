@@ -15,7 +15,7 @@ The active game implementation is the Windows donor. See [TASK-0123](../tasks/ac
 
 [TASK-0130](../tasks/completed/TASK-0130-godot-vertex-colors.md) connects authored RGB555 model colors to Godot materials and records the Track 12 Forward+ checks.
 
-[TASK-0131](../tasks/completed/TASK-0131-godot-minimap-projection.md) corrects the follow-map heading and records Track 12 Forward+ validation of the map and markers.
+[TASK-0131](../tasks/completed/TASK-0131-godot-minimap-projection.md) records Track 12 minimap projection validation. TASK-0126 connects Esc to Pause and uses the player car heading for the default minimap.
 
 [TASK-0132](../tasks/completed/TASK-0132-godot-window-title.md) shows the active graphics API and measured FPS in the Godot window title, with a Debug Mode suffix for debug launches.
 
@@ -26,6 +26,12 @@ The active game implementation is the Windows donor. See [TASK-0123](../tasks/ac
 [TASK-0135](../tasks/completed/TASK-0135-car-preview-lighting.md) records authored vertex shading and lamp texture bindings in Select Car.
 
 [TASK-0136](../tasks/completed/TASK-0136-car-preview-material-parity.md) uses the unshaded race material in Select Car and verifies vertex colors and lamp bindings.
+
+[TASK-0137](../tasks/active/TASK-0137-track13-pursuit-performance.md) tracks native-resolution pursuit profiling with the Godot Editor.
+
+[TASK-0138](../tasks/active/TASK-0138-godot-busted-cinematic.md) connects the donor arrest cinematic to Godot skeletons and the original camera.
+
+[TASK-0139](../tasks/active/TASK-0139-godot-audio-transport.md) adds opt-in Godot radio streaming. Track 13 recorded five starts and zero reported underrun blocks. The XAudio2 comparison and remaining audio migration are open.
 
 Current source attribution 0.0% (0/7544 functions)
 

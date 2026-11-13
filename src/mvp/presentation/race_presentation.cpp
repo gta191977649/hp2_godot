@@ -3,8 +3,12 @@
 #include "bridge/entity_state_bridge.hpp"
 #ifdef HP2_MVP_IMGUI
 #include "assets/imgui_overlay.hpp"
+#include "tests/pursuit_test_driver.hpp"
+#include "indep/inc/Player.hpp"
 #endif
+#include "systems/audio/godot_speech_output.hpp"
 #include "systems/camera/camera_presentation.hpp"
+#include "systems/cinematic/nis_presentation.hpp"
 #include "systems/frontend/frontend_presentation.hpp"
 #include "systems/track/track_presentation.hpp"
 #include "systems/vehicle/vehicle_presentation.hpp"
@@ -22,6 +26,7 @@
 #include <godot_cpp/classes/input.hpp>
 #include <godot_cpp/classes/input_event.hpp>
 #include <godot_cpp/classes/input_event_key.hpp>
+#include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/classes/scene_tree.hpp>
 #include <godot_cpp/classes/viewport.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
@@ -70,9 +75,20 @@ public:
 #endif
         }
     }
-    WorldAudioResult OpenAudio(bSound& sound) override { return sound.OpenWindowsDevice(); }
+    WorldAudioResult OpenAudio(bSound& sound) override {
+        // Voice allocation traces synchronously write to stderr during World updates.
+        if (OS::get_singleton()->get_environment("HP2_MVP_AUDIO_TRACE") != "1")
+            sound.DisablePrintf();
+        if (OS::get_singleton()->get_environment("HP2_MVP_AUDIO_BACKEND") == "godot")
+            speechOutput_ = std::make_unique<GodotSpeechOutput>(root_);
+        return sound.OpenWindowsDevice(speechOutput_.get());
+    }
     WorldAudioResult PumpAudio(bSound& sound) override { return sound.PumpWindowsDevice(); }
-    WorldAudioResult CloseAudio(bSound& sound) override { return sound.CloseWindowsDevice(); }
+    WorldAudioResult CloseAudio(bSound& sound) override {
+        const auto result = sound.CloseWindowsDevice();
+        if (result == WORLD_AUDIO_OK) speechOutput_.reset();
+        return result;
+    }
     void SetRumble(int32_t, uint8_t, uint8_t) override {}
     int32_t ReadInput(int32_t port, JoystickControls& destination) override {
         ControllerState pad;
@@ -86,7 +102,7 @@ public:
 #endif
             auto& input = *Input::get_singleton();
             const auto pressed = [&](Key key) { return input.is_physical_key_pressed(key); };
-            SetButton(pad, Ps2Button::Start, pressed(KEY_P));
+            SetButton(pad, Ps2Button::Start, inRace && pressed(KEY_ESCAPE));
             if (!inRace || menuInput) {
                 SetButton(pad, Ps2Button::Cross, pressed(KEY_ENTER) || pressed(KEY_KP_ENTER));
                 SetButton(pad, Ps2Button::Triangle, pressed(KEY_BACKSPACE));
@@ -112,6 +128,7 @@ public:
 
 private:
     Node3D& root_;
+    std::unique_ptr<GodotSpeechOutput> speechOutput_;
 };
 }
 
@@ -126,10 +143,16 @@ struct RacePresentation::Session {
     EntityStateBridge bridge;
     Node2D* frontendCanvas{};
     std::unique_ptr<FrontendPresentation> frontend;
+    std::unique_ptr<NisPresentation> cinematic;
     String frontendScreen;
     std::uint32_t selectedItem{};
     int raceState{};
     bool frontendMode{};
+#ifdef HP2_MVP_IMGUI
+    bool pursuitTestDriver{};
+    std::uint64_t pursuitTestGeneration{};
+    bool arrestCinematicTest{};
+#endif
     Node3D* scene{};
     Camera3D* camera{};
     std::unordered_map<std::uint64_t, VehiclePresentation> vehicles;
@@ -218,8 +241,10 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
 #ifdef HP2_MVP_IMGUI
         debug_ = std::make_unique<ImGuiOverlay>(*this);
         session_->host.debug = debug_.get();
-        set_process_input(true);
+        session_->pursuitTestDriver = OS::get_singleton()->get_environment("HP2_MVP_PURSUIT_AI") == "1";
+        session_->arrestCinematicTest = OS::get_singleton()->get_environment("HP2_MVP_TEST_ARREST_NIS") == "1";
 #endif
+        set_process_input(true);
         stage = frontend ? "frontend_initialize" : "race_initialize";
         if (frontend) session_->runtime.InitializeFrontend(12, supports_track);
         else session_->runtime.InitializeRace(12);
@@ -227,6 +252,7 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
         session_->frontendCanvas->set_name("FrontendCanvas");
         add_child(session_->frontendCanvas);
         session_->frontend = std::make_unique<FrontendPresentation>(*session_->frontendCanvas, session_->files);
+        session_->cinematic = std::make_unique<NisPresentation>(*this);
         set_process(true);
         return true;
     } catch (const std::exception& error) {
@@ -236,20 +262,23 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
 }
 
 void RacePresentation::_input(const Ref<InputEvent>& event) {
-#ifdef HP2_MVP_IMGUI
     const Ref<InputEventKey> key = event;
-    if (failed_ && key.is_valid() && key->is_pressed() && key->get_physical_keycode() == KEY_ESCAPE) {
+    const bool escape = key.is_valid() && key->get_physical_keycode() == KEY_ESCAPE;
+    if (failed_ && escape && key->is_pressed()) {
         get_viewport()->set_input_as_handled();
         get_tree()->quit(1);
-    } else if (session_ && key.is_valid() && key->is_pressed() &&
-        key->get_physical_keycode() == KEY_ESCAPE && !debug_->captures_game_input()) {
+        return;
+    }
+#ifdef HP2_MVP_IMGUI
+    if (debug_ && debug_->input(event)) {
         get_viewport()->set_input_as_handled();
-        quit_game();
-    } else if (debug_ && debug_->input(event))
-        get_viewport()->set_input_as_handled();
-#else
-    (void)event;
+        return;
+    }
 #endif
+    if (escape && session_) {
+        get_viewport()->set_input_as_handled();
+        if (!session_->host.inRace && key->is_pressed() && !key->is_echo()) quit_game();
+    }
 }
 
 void RacePresentation::_process(double delta) {
@@ -277,6 +306,7 @@ void RacePresentation::_process(double delta) {
         s.frontend->update(state, get_viewport()->get_visible_rect().size);
         if (!race.simulation) {
             if (s.scene) {
+                s.cinematic->clear();
                 remove_child(s.scene);
                 s.scene->queue_free();
                 s.scene = nullptr;
@@ -293,7 +323,23 @@ void RacePresentation::_process(double delta) {
         if (!race.camera) return;
 
         stage = "entity_state_bridge";
-        auto frame = s.bridge.stage(race);
+        const auto& frame = s.bridge.stage(race);
+#ifdef HP2_MVP_IMGUI
+        if (s.arrestCinematicTest && frame.track == 13 && frame.step >= 60 &&
+            race.sessionState == RC_STATE_RACE_IN_PROGRESS) {
+            stage = "arrest_cinematic_test";
+            start_arrest_cinematic_test(*race.simulation);
+            s.arrestCinematicTest = false;
+        }
+        if (s.pursuitTestDriver && frame.track == 13 && race.sessionState == RC_STATE_RACE_IN_PROGRESS &&
+            s.pursuitTestGeneration != frame.generation) {
+            stage = "pursuit_test_driver";
+            attach_pursuit_test_driver(*race.simulation->world, *race.simulation->players->playersByNumber[0]);
+            s.pursuitTestGeneration = frame.generation;
+            std::fprintf(stderr, "HP2_MVP_TRACE stage=pursuit_test_driver track=13 generation=%llu\n",
+                static_cast<unsigned long long>(frame.generation));
+        }
+#endif
         if (!supports_track(frame.track))
             throw std::runtime_error("World committed unsupported track " + std::to_string(frame.track));
         if (frame.generation == s.bridge.current().generation && frame.step < s.bridge.current().step &&
@@ -305,6 +351,7 @@ void RacePresentation::_process(double delta) {
             stage = "track_assets";
             if (!race.scenery) throw std::runtime_error("Committed track has no loaded scenery");
             if (s.scene) {
+                s.cinematic->clear();
                 remove_child(s.scene);
                 s.scene->queue_free();
             }
@@ -344,12 +391,14 @@ void RacePresentation::_process(double delta) {
             } else ++it;
         }
 
+        stage = "nis_presentation";
+        if (race.nis) s.cinematic->update(*s.scene, *race.nis, race.blackAndWhite);
         stage = "camera";
         apply_race_camera(*s.camera, frame.camera);
         if (newScene)
             std::fprintf(stderr, "HP2_MVP_TRACE stage=scene_publish track=%d generation=%llu step=%u placements=%zu vehicles=%zu\n",
                 frame.track, static_cast<unsigned long long>(frame.generation), frame.step, s.placements, s.vehicles.size());
-        s.bridge.publish(std::move(frame));
+        s.bridge.publish();
     } catch (const std::exception& error) {
         fail(stage, error.what());
     }
@@ -368,6 +417,7 @@ Dictionary RacePresentation::telemetry() const {
     }
     result["race_state"] = session_->raceState;
     if (!session_->scene) return result;
+    result["nis_parts"] = static_cast<int64_t>(session_->cinematic->part_count());
     result["generation"] = frame.generation;
     result["track"] = frame.track;
     result["step"] = frame.step;

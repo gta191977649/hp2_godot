@@ -73,7 +73,7 @@ Ref<StandardMaterial3D> MeshConverter::material(const EditorMarkerTexture& descr
     return result;
 }
 
-Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depthWrite) {
+Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depthWrite, std::size_t boneCount) {
     if (!model.solid || !model.solid->geometry)
         throw std::runtime_error("Solid has no geometry for model " + std::to_string(model.key));
     struct Surface {
@@ -82,6 +82,8 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         PackedVector2Array uv;
         PackedColorArray colors;
         PackedInt32Array indices;
+        PackedInt32Array bones;
+        PackedFloat32Array weights;
     };
     std::vector<Surface> surfaces;
     std::unordered_map<const EditorMarkerTexture*, std::size_t> surfaceIndices;
@@ -123,6 +125,19 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         const auto start = surface.vertices.size();
         for (std::size_t i = 0; i < strip.positions.size(); ++i) {
             surface.vertices.push_back(race_vector(strip.positions[i].data()));
+            if (boneCount) {
+                std::array<std::uint32_t, 3> encoded{};
+                std::memcpy(encoded.data(), strip.positions[i].data(), sizeof(encoded));
+                // PAL10D778 stores the two bone indices and blend in XYZ's low bytes.
+                const auto weight = encoded[2] & 255u;
+                const auto first = encoded[weight == 1 ? 1 : 0] & 255u;
+                const auto second = weight > 1 ? encoded[1] & 255u : first;
+                if (first >= boneCount || second >= boneCount)
+                    throw std::runtime_error("NIS vertex refers to a bone outside its palette");
+                const float blend = weight > 1 ? weight / 256.0f : 0.0f;
+                for (const auto bone : {first, second, first, first}) surface.bones.push_back(bone);
+                for (const auto value : {1.0f - blend, blend, 0.0f, 0.0f}) surface.weights.push_back(value);
+            }
             surface.uv.push_back({strip.textureCoordinates[i][0], strip.textureCoordinates[i][1]});
             const auto rgb555 = strip.colors[i];
             // GS modulation uses 128 as unity. Texture alpha supplies opacity.
@@ -148,6 +163,10 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         arrays[Mesh::ARRAY_TEX_UV] = surface.uv;
         arrays[Mesh::ARRAY_COLOR] = surface.colors;
         arrays[Mesh::ARRAY_INDEX] = surface.indices;
+        if (boneCount) {
+            arrays[Mesh::ARRAY_BONES] = surface.bones;
+            arrays[Mesh::ARRAY_WEIGHTS] = surface.weights;
+        }
         const auto index = mesh->get_surface_count();
         mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays);
         if (mesh->get_surface_count() != index + 1)

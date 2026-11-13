@@ -87,7 +87,7 @@ func _process(delta: float) -> bool:
     if not is_instance_valid(race):
         race = root.get_node_or_null("NativeGame/RacePresentation")
         if is_instance_valid(race) and OS.get_environment("HP2_MVP_DEBUG_CONSOLE") == "1":
-            _tap(KEY_F8)
+            _tap(KEY_QUOTELEFT)
         return false
     var sample: Dictionary = race.call("telemetry")
     var screen: String = sample.get("screen", "")
@@ -98,7 +98,7 @@ func _process(delta: float) -> bool:
     elif stage == 1 and sample.get("speed", 0) > 12.0:
         stage = 2
         _key(KEY_W, false)
-        _tap(KEY_P)
+        _tap(KEY_ESCAPE)
     elif stage == 2 and screen == "Pause Menu":
         stage = 3
         _resize_sweep("direct-pause", true)

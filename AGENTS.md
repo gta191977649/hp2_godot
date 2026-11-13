@@ -3,8 +3,7 @@
 This repository initializes a PS2-to-PC native port. No actual game functions
 have been recovered. Repository files are the durable project memory.
 
-See **[AGENT.md](AGENT.md)** for the binding naming/evidence rules (no guesswork; identifiers
-must be recovered-verbatim, address-anchored, or explicitly port-side; unimplemented paths throw
+no guesswork; identifiers, functions must be recovered-verbatim, address-anchored, or explicitly port-side; unimplemented paths throw
 `hp2::NotImplemented`). AGENT.md is stricter than this file wherever they overlap.
 
 ## Mandatory rules

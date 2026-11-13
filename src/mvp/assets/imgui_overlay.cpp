@@ -184,7 +184,7 @@ struct ImGuiOverlay::Storage {
 
 ImGuiOverlay::ImGuiOverlay(Node& owner) : storage_(std::make_unique<Storage>(owner)) {
     storage_->console->focus = true;
-    log("debug", "ImGui ready. F8 toggles the console and returns keyboard control to the game.");
+    log("debug", "ImGui ready. The grave/tilde key toggles the console and returns keyboard control to the game.");
     std::fprintf(stderr, "HP2_MVP_TRACE stage=debug_overlay console=visible graph=visible\n");
 }
 
@@ -212,7 +212,9 @@ bool ImGuiOverlay::input(const Ref<InputEvent>& event) {
     ImGui::SetCurrentContext(s.context);
     auto& io = ImGui::GetIO();
     if (const Ref<InputEventKey> key = event; key.is_valid()) {
-        if (key->get_physical_keycode() == KEY_F8 || key->get_keycode() == KEY_F8) {
+        const auto logical_key = key->get_keycode();
+        if (key->get_physical_keycode() == KEY_QUOTELEFT ||
+            logical_key == KEY_QUOTELEFT || logical_key == KEY_ASCIITILDE) {
             if (key->is_pressed() && !key->is_echo()) {
                 s.open = !s.open;
                 s.console->focus = s.open;
@@ -295,7 +297,7 @@ void ImGuiOverlay::frame(double delta) {
         const auto offset = s.sampleCount == s.frameTimes.size() ? s.nextSample : 0;
         ImGui::PlotLines("##frame_ms", s.frameTimes.data(), static_cast<int>(s.sampleCount),
             static_cast<int>(offset), nullptr, 0.0f, std::max(16.67f, peak), {250 * scale, 72 * scale});
-        ImGui::TextUnformatted("F8 toggles console");
+        ImGui::TextUnformatted("` / ~ toggles console");
     }
     ImGui::End();
     ImGui::Render();

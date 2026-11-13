@@ -779,7 +779,8 @@ RaceStateView ApplicationRuntime::RaceState() const noexcept
     auto* scenery=s.trackPhase->trackFile->Resources().scenery;
     return {simulation,scenery?&scenery->Native():nullptr,view?&view->current:nullptr,
         view?view->hiddenCar:nullptr,s.trackPhase->Sky(),s.clock.worldTimeFrames,
-        s.parameters.selectedScenario,session?session->state:0,gameTimeGetVideoMode(&s.clock)==HP2_VIDEO_NTSC};
+        s.parameters.selectedScenario,session?session->state:0,gameTimeGetVideoMode(&s.clock)==HP2_VIDEO_NTSC,
+        s.trackPhase->NisManagers(),s.cameras.screens[1].blackAndWhite!=0,s.trackPhase->ViewMovers()};
 }
 
 bool ApplicationRuntime::Tick()

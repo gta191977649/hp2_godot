@@ -14,6 +14,19 @@
 
 ## Evidence
 
+The Godot host maps Esc to the original controller Start action during a
+race. Frontend Esc keeps its exit action. The MVP's default map uses the
+player car heading with the existing TrackMap projection. The split and
+special pursuit on/off presets use the authored rotating local view when
+enabled. Saved single-player fixed modes and the Off setting retain their
+behavior. These are port-side controls and display policy.
+Godot 4.7.2 Debug and Release staged with `cmake --build --preset
+godot-mvp-debug --target stage_mvp --parallel 8` and the corresponding
+Release preset. The Debug `tools/test_mvp_frontend_resize.gd` probe with
+`--race-track=12` opened Pause Menu on Esc and reached the restart
+confirmation. See `local/task0126-escape-direct/smoke.log`. The donor
+TrackMap source and heading projection evidence are recorded in TASK-0131.
+
 - E-0126-F01. The Windows donor `indep/src/flailerdb.cpp` SHA-256 is
   `b21a0d21dd328d8b2774e88641c09cc5451f5df4f2957a2253b611afcca56ac5`.
   Its PAL `1422F0`, `1428F0` and `145950` comments identify text layout,

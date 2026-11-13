@@ -109,6 +109,7 @@ struct WorldSimulation;
 struct Scenery;
 struct CarCinematicViewFrame;
 struct Car;
+struct CarViewMoverRegistry;
 namespace hp2 {
 class GameResources;
 class ResourceRegistry;
@@ -313,6 +314,7 @@ class FlailerResources;
 class LanguageManager;
 struct FlailerRenderManager;
 struct FrontendFrame;
+struct NisManagerRegistry;
 struct FrontendStateView {
     // Borrowed CPU layout. Consume synchronously before the next runtime advance.
     const FlailerRenderManager* layout{};
@@ -332,6 +334,9 @@ struct RaceStateView {
     int track{-1};
     int sessionState{};
     bool ntsc{};
+    NisManagerRegistry* nis{};
+    bool blackAndWhite{};
+    ::CarViewMoverRegistry* viewMovers{};
 };
 class ApplicationRuntime final {
 public:

@@ -1,6 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $preset = 'godot-mvp-release'
 $run = $false
+$editor = $false
 $clean = $false
 $jobs = 8
 $raceArgument = $null
@@ -8,6 +9,7 @@ for ($index = 0; $index -lt $args.Count; $index++) {
     switch ($args[$index]) {
         '--mvp' { }
         '--run' { $run = $true }
+        '--editor' { $editor = $true }
         { $_ -match '^--race-track=\d+$' } { $raceArgument = [string]$_; $run = $true }
         '--debug' { $run = $true; $preset = 'godot-mvp-debug' }
         '--clean' { $clean = $true }
@@ -27,6 +29,7 @@ for ($index = 0; $index -lt $args.Count; $index++) {
         default { throw "Unknown option $($args[$index])." }
     }
 }
+if ($editor -and $raceArgument) { throw '--editor cannot be combined with --race-track.' }
 if ($preset -notin @('godot-mvp-release', 'godot-mvp-debug')) { throw "Unsupported preset $preset." }
 
 Push-Location -LiteralPath $PSScriptRoot
@@ -39,19 +42,13 @@ try {
     }
     cmake --build --preset $preset --target stage_mvp --parallel $jobs
     if ($LASTEXITCODE) { exit $LASTEXITCODE }
-    if ($run) {
+    if ($run -or $editor) {
         $engine = Join-Path $PSScriptRoot 'local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe'
         if (-not (Test-Path -LiteralPath $engine -PathType Leaf)) { throw 'Godot 4.7.2 console executable is required.' }
         $project = Join-Path $PSScriptRoot "build/$preset/mvp-project"
-        $env:HP2_PS2_ASSET_CONFIG = Join-Path $PSScriptRoot 'config/ps2_assets.local.json'
-        $previousDebugMode = $env:HP2_MVP_DEBUG_MODE
-        try {
-            $env:HP2_MVP_DEBUG_MODE = if ($preset -eq 'godot-mvp-debug') { '1' } else { '0' }
-            if ($raceArgument) { & $engine --path $project -- $raceArgument }
-            else { & $engine --path $project }
-        } finally {
-            $env:HP2_MVP_DEBUG_MODE = $previousDebugMode
-        }
+        if ($editor) { & $engine --editor --path $project }
+        elseif ($raceArgument) { & $engine --path $project -- $raceArgument }
+        else { & $engine --path $project }
         exit $LASTEXITCODE
     }
 } finally {

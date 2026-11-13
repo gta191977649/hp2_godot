@@ -141,7 +141,12 @@ void fragment() {
     Node2D& mapTexture;
     Node2D& mapForeground;
     CanvasLayout layout;
-    std::vector<Ref<ArrayMesh>> mapMeshes;
+    struct MapMesh {
+        Ref<ArrayMesh> mesh;
+        Array geometry;
+    };
+    std::vector<MapMesh> mapMeshes;
+    std::size_t usedMapMeshes{};
     struct Texture {
         std::weak_ptr<const TextureMetadataStorage> metadata;
         std::weak_ptr<TexturePixelStorage> pixels;
@@ -449,13 +454,17 @@ void fragment() {
             arrays[Mesh::ARRAY_TEX_UV] = uv;
             arrays[Mesh::ARRAY_CUSTOM0] = textureQ;
             arrays[Mesh::ARRAY_INDEX] = indices;
-            Ref<ArrayMesh> mesh;
-            mesh.instantiate();
-            mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays, {}, {},
-                Mesh::ARRAY_FLAG_USE_2D_VERTICES | (Mesh::ARRAY_CUSTOM_R_FLOAT << Mesh::ARRAY_FORMAT_CUSTOM0_SHIFT));
-            rendering->canvas_item_add_mesh(target.get_canvas_item(), mesh->get_rid(), {}, Color(1, 1, 1, 1),
+            if (usedMapMeshes == mapMeshes.size()) mapMeshes.emplace_back();
+            auto& cached = mapMeshes[usedMapMeshes++];
+            if (cached.mesh.is_null() || cached.geometry != arrays) {
+                Ref<ArrayMesh> mesh;
+                mesh.instantiate();
+                mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays, {}, {},
+                    Mesh::ARRAY_FLAG_USE_2D_VERTICES | (Mesh::ARRAY_CUSTOM_R_FLOAT << Mesh::ARRAY_FORMAT_CUSTOM0_SHIFT));
+                cached = {mesh, arrays};
+            }
+            rendering->canvas_item_add_mesh(target.get_canvas_item(), cached.mesh->get_rid(), {}, Color(1, 1, 1, 1),
                 texture->get_rid());
-            mapMeshes.push_back(mesh);
         } else {
             rendering->canvas_item_add_triangle_array(target.get_canvas_item(),
                 indices, points, colors, uv, {}, {}, texture->get_rid());
@@ -562,7 +571,7 @@ void FrontendPresentation::update(const FrontendStateView& state, Vector2 viewpo
     rendering->canvas_item_clear(s.mapBackground.get_canvas_item());
     rendering->canvas_item_clear(s.mapTexture.get_canvas_item());
     rendering->canvas_item_clear(s.mapForeground.get_canvas_item());
-    s.mapMeshes.clear();
+    s.usedMapMeshes = 0;
     ++s.frame;
     s.draw_layers(*state.layout, s.background, 24, 20);
     s.draw_layers(*state.layout, s.mapBackground, 15, 15);
@@ -572,6 +581,7 @@ void FrontendPresentation::update(const FrontendStateView& state, Vector2 viewpo
     s.draw_layers(*state.layout, s.mapForeground, 13, 0);
     s.draw_layers(*state.layout, s.mapForeground, 19, 16);
     s.draw_layers(*state.layout, s.mapForeground, 28, 25);
+    s.mapMeshes.resize(s.usedMapMeshes);
     s.update_highlights(*state.layout);
     if (screen == "Title Screen" && s.video.playing()) {
         const auto rect = s.layout.fit_movie(s.layout.visible_rect());

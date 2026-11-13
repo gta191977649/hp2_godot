@@ -29,6 +29,8 @@ func _ready() -> void:
     var assets := OS.get_environment("HP2_PS2_ASSET_ROOT")
     if assets.is_empty():
         var config := OS.get_environment("HP2_PS2_ASSET_CONFIG")
+        if config.is_empty():
+            config = str(ProjectSettings.get_setting("hp2/asset_config", ""))
         if not config.is_empty() and FileAccess.file_exists(config):
             var contents: Variant = JSON.parse_string(FileAccess.get_file_as_string(config))
             if contents is Dictionary:
@@ -65,7 +67,8 @@ func _start_window_title() -> void:
             title_renderer = "Metal"
         _:
             title_renderer = driver.to_upper() if not driver.is_empty() else "Unknown"
-    if OS.get_environment("HP2_MVP_DEBUG_MODE") == "1":
+    var debug_mode := OS.get_environment("HP2_MVP_DEBUG_MODE")
+    if debug_mode == "1" or (debug_mode.is_empty() and ProjectSettings.get_setting("hp2/debug_mode", false)):
         title_suffix = " | Debug Mode"
     _update_window_title()
     var timer := Timer.new()
@@ -81,10 +84,6 @@ func _update_window_title() -> void:
     if last_window_title != caption:
         DisplayServer.window_set_title(caption, get_window().get_window_id())
         last_window_title = caption
-
-func _unhandled_key_input(event: InputEvent) -> void:
-    if event is InputEventKey and event.pressed and event.physical_keycode == KEY_ESCAPE:
-        get_tree().quit()
 
 func _fail(stage: String, track: String, reason: String) -> void:
     if ClassDB.class_exists(&"RacePresentation"):

@@ -166,6 +166,14 @@ PcmWave DecodePcmWave(const uint8_t* bytes,size_t size)
 PcmWave DecodePs2Adpcm(const uint8_t* bytes,size_t size,uint32_t sampleRate,
     uint16_t channels,size_t interleaveBytes,bool stopAtEnd,Ps2AdpcmHistory* retainedHistory)
 {
+    PcmWave result;
+    DecodePs2AdpcmInto(bytes,size,sampleRate,channels,interleaveBytes,stopAtEnd,retainedHistory,result);
+    return result;
+}
+
+void DecodePs2AdpcmInto(const uint8_t* bytes,size_t size,uint32_t sampleRate,
+    uint16_t channels,size_t interleaveBytes,bool stopAtEnd,Ps2AdpcmHistory* retainedHistory,PcmWave& result)
+{
     if (!bytes || !size || size%16 || (channels!=1 && channels!=2) ||
         !interleaveBytes || interleaveBytes%16 || size%(16u*channels) ||
         sampleRate<1000 || sampleRate>200000 || (stopAtEnd && channels!=1))
@@ -180,7 +188,8 @@ PcmWave DecodePs2Adpcm(const uint8_t* bytes,size_t size,uint32_t sampleRate,
     // Publish history only after a complete validated packet; the same core
     // remains the single implementation for whole bank/VAG resources.
     auto history=retainedHistory ? retainedHistory->channels:Ps2AdpcmHistory{}.channels;
-    PcmWave result;result.sampleRate=sampleRate;result.channels=channels;
+    result.sampleRate=sampleRate;result.channels=channels;
+    result.loopStartFrame=0;result.loopEndFrame=0;result.samples.clear();
     result.samples.reserve(size/16*28);
     size_t cursor=0;bool ended=false;
     while (cursor<size && !ended) {
@@ -228,7 +237,6 @@ PcmWave DecodePs2Adpcm(const uint8_t* bytes,size_t size,uint32_t sampleRate,
     if (stopAtEnd && !ended)
         throw std::invalid_argument("MSB cue has no ADPCM end marker before its next resource extent");
     if (retainedHistory)retainedHistory->channels=history;
-    return result;
 }
 
 bool ReadMoviePcmChunk(const WorldAudioStreamSource& source,Ps2AdpcmHistory& history,PcmWave& pcm)
@@ -732,8 +740,10 @@ struct bSound::NativeDevice {
     hp2::NativeAudioCommandPump commands;
     std::future<hp2::NativeJukeboxStart> jukeboxDecode;
     uint64_t jukeboxSequence{};
+    hp2::NativeAudioVoiceOutput* speechOutput{};
 
-    explicit NativeDevice(bSound& owner):library(owner),queue(*owner.Driver()),generation(queue.generation) {}
+    explicit NativeDevice(bSound& owner,hp2::NativeAudioVoiceOutput* output)
+        :library(owner),queue(*owner.Driver()),generation(queue.generation),speechOutput(output) {}
     ~NativeDevice()
     {
         if (std::this_thread::get_id()!=thread)std::terminate();
@@ -1099,20 +1109,19 @@ struct bSound::NativeDevice {
             snapshot[id]={voice.sample,voice.sequence,running,
                 voice.opened && buffered,voice.mix.channels};
         }
+        if(speechOutput)required(speechOutput->Observe(snapshot),"Godot speech observation failed");
         required(library.Voices().CompleteUpdate(operation,snapshot),"Matched physical voice observation was rejected");
         // A ready callback may enqueue PLAY. Dispatch after completing this
         // observation, so its captured idle status cannot stop that later
         // PLAY before the command reaches the real device.
-        for (uint16_t id=0;id<voices.size();++id) {
-            auto& voice=voices[id];if (!voice.device)continue;
-            const bool buffered=snapshot[id].prebuffered;
-            auto* sample=voice.sample.instance;
-            if (buffered && voice.opened && sample && sample->occupied && !sample->retiring &&
-                sample->generation==voice.sample.generation && !sample->prebuffered &&
-                sample->playSequence==voice.sequence) {
+        for (const auto& observed:snapshot) {
+            auto* sample=observed.sample.instance;
+            if (observed.prebuffered && sample && sample->occupied && !sample->retiring &&
+                sample->generation==observed.sample.generation && !sample->prebuffered &&
+                sample->playSequence==observed.operationSequence) {
                 const auto ready=sample->sampleType==1 ?
-                    worldAudioSpeechEvent(&queue,voice.sample,voice.sequence,4):
-                    worldAudioStreamEvent(&queue,voice.sample,voice.sequence,4);
+                    worldAudioSpeechEvent(&queue,observed.sample,observed.operationSequence,4):
+                    worldAudioStreamEvent(&queue,observed.sample,observed.operationSequence,4);
                 required(ready,"Real stream readiness callback failed");
             }
         }
@@ -1331,6 +1340,7 @@ struct bSound::NativeDevice {
             if (operation.audioMode<0 || operation.audioMode>2)
                 throw Failure{WORLD_AUDIO_INVALID_BINDING,E_INVALIDARG,"Invalid retained audio output mode"};
             mode=static_cast<uint8_t>(operation.audioMode+1);
+            if(speechOutput)speechOutput->SetMode(mode);
             for(auto& effect:effects)effectMatrix(effect);
             for (auto& voice:voices)if (voice.device) {
                 voice.mix.SetMode(mode);matrix(voice);
@@ -1352,6 +1362,8 @@ struct bSound::NativeDevice {
             for (auto& voice:voices)if (voice.device)refillFile(voice);
             const auto result=commands.Pump(queue,maximum,[&](const WorldAudioRequest& operation) {
                 using Applied=hp2::NativeAudioApply;
+                if(speechOutput && operation.instance && operation.instance->sampleType==1)
+                    return speechOutput->Apply(library,operation);
                 const bool ownsDecode=jukeboxDecode.valid() && jukeboxSequence==operation.sequence;
                 // The work item owns a FileRange. Never destroy its future
                 // on the game thread while reading/decoding is still active:
@@ -1420,14 +1432,14 @@ struct bSound::NativeDevice {
 
 void bSound::DeviceDeleter::operator()(NativeDevice* device) const noexcept { delete device; }
 
-WorldAudioResult bSound::OpenWindowsDevice()
+WorldAudioResult bSound::OpenWindowsDevice(hp2::NativeAudioVoiceOutput* speechOutput)
 {
     if (!queue_ || !status_ || windowsDevice_ || !queue_->count ||
         queue_->retainedCount!=queue_->count ||
         queue_->requests[queue_->readIndex].kind!=WORLD_AUDIO_INITIALIZE_DEVICE)
         return WORLD_AUDIO_INVALID_BINDING;
     windowsFailure_={};
-    try {windowsDevice_.reset(new NativeDevice(*this));}
+    try {windowsDevice_.reset(new NativeDevice(*this,speechOutput));}
     catch (const std::bad_alloc&) {return WORLD_AUDIO_CAPACITY;}
     const auto result=windowsDevice_->pump(1);
     if(result!=WORLD_AUDIO_OK) {
@@ -1455,6 +1467,7 @@ WorldAudioResult bSound::CloseWindowsDevice()
         return WORLD_AUDIO_INVALID_BINDING;
     auto& device=*windowsDevice_;
     if (queue_->generation!=device.generation)return WORLD_AUDIO_STALE_REFERENCE;
+    if(device.speechOutput)device.speechOutput->Close(*this);
     for (auto& voice:device.voices) {
         const auto sample=voice.sample;
         device.destroy(voice); // Real API join precedes release of every borrow.

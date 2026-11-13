@@ -82,6 +82,8 @@ struct Ps2AdpcmHistory {
 };
 PcmWave DecodePs2Adpcm(const uint8_t* bytes,size_t size,uint32_t sampleRate,
     uint16_t channels,size_t interleaveBytes,bool stopAtEnd,Ps2AdpcmHistory* history=nullptr);
+void DecodePs2AdpcmInto(const uint8_t* bytes,size_t size,uint32_t sampleRate,
+    uint16_t channels,size_t interleaveBytes,bool stopAtEnd,Ps2AdpcmHistory* history,PcmWave& result);
 // Read one complete final movie channel pair from the original MoviePlayer
 // callback. False leaves both PCM and predictor history unchanged; it is not
 // an EOF, device completion or permission to submit its zeroed short read.
@@ -161,6 +163,16 @@ private:
 // This portable implementation is shared with the real Windows device and
 // the PCM regression fixture; it is not a console runtime or source ABI.
 enum class NativeAudioApply { Blocked, Applied, Cancelled };
+
+// Port-side device delegation. The request pump retains ordering and ACK ownership.
+class NativeAudioVoiceOutput {
+public:
+    virtual ~NativeAudioVoiceOutput() = default;
+    virtual NativeAudioApply Apply(bSound& sound, const WorldAudioRequest& operation) = 0;
+    virtual WorldAudioResult Observe(bVoiceStatusSnapshot& status) = 0;
+    virtual void SetMode(uint8_t mode) = 0;
+    virtual void Close(bSound& sound) = 0;
+};
 
 // Owner-thread scheduling of the existing retained request ring. Tokens
 // borrow its INFLIGHT records; payloads, instance references and retirement
@@ -337,7 +349,7 @@ public:
     };
     // Owner-thread API. Open consumes the retained INITIALIZE operation;
     // Pump applies the same queue. Neither method exists as a Linux stub.
-    WorldAudioResult OpenWindowsDevice();
+    WorldAudioResult OpenWindowsDevice(hp2::NativeAudioVoiceOutput* speechOutput=nullptr);
     WorldAudioResult PumpWindowsDevice(size_t maximumOperations=256);
     WorldAudioResult CloseWindowsDevice();
     const WindowsAudioFailure& WindowsFailure() const noexcept { return windowsFailure_; }
