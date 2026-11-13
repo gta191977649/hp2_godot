@@ -289,6 +289,14 @@ saves/
 /tasks/completed/*
 !/tasks/completed/TASK-0127-debug-launch.md
 !/tasks/completed/TASK-0128-display-refresh.md
+!/tasks/completed/TASK-0130-godot-vertex-colors.md
 !/tasks/active/TASK-0129-first-pursuit-roundtrip.md
+!/tasks/completed/TASK-0131-godot-minimap-projection.md
+!/tasks/completed/TASK-0132-godot-window-title.md
+!/tasks/active/TASK-0133-responsive-frontend.md
+!/tasks/completed/TASK-0134-native-preview-resolution.md
+!/tasks/completed/TASK-0135-car-preview-lighting.md
+!/tasks/completed/TASK-0136-car-preview-material-parity.md
+!/tools/test_mvp_frontend_resize.gd
 !/tools/test_frontend_mvp.gd
 !/tools/mvp_test_route_driver.gd

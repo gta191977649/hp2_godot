@@ -48,6 +48,7 @@ Ref<StandardMaterial3D> MeshConverter::material(const EditorMarkerTexture& descr
         throw std::runtime_error("Godot could not build texture " + std::to_string(descriptor.key));
     const auto texture = ImageTexture::create_from_image(image);
     if (texture.is_null()) throw std::runtime_error("Godot could not allocate an ImageTexture");
+    texture->set_name(String::num_uint64(descriptor.key));
 
     Ref<StandardMaterial3D> result;
     result.instantiate();
@@ -85,6 +86,19 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
     std::vector<Surface> surfaces;
     std::unordered_map<const EditorMarkerTexture*, std::size_t> surfaceIndices;
     const auto& geometry = *model.solid->geometry;
+    // Replacement slots are resolved by the donor for each model detail.
+    // Read them without writing the shared solid table.
+    std::vector<const EditorMarkerTexture*> bindings;
+    bindings.reserve(geometry.textures.size());
+    for (const auto& binding : geometry.textures) bindings.push_back(binding.texture);
+    if (model.replacementCount > 0 && (!model.replacement || model.detailLevel < 0 || model.detailLevel >= 16))
+        throw std::runtime_error("Invalid model texture replacement table");
+    for (int index = 0; index < model.replacementCount; ++index) {
+        const auto& replacement = model.replacement[index];
+        const auto slot = replacement.textureIndices[model.detailLevel];
+        if (slot >= 0 && static_cast<std::size_t>(slot) < bindings.size())
+            bindings[slot] = replacement.texture;
+    }
     for (const auto& strip : geometry.strips) {
         if ((strip.flags & 0x400u) || strip.nativeTriangleOrder.empty()) continue;
         if (strip.nativeTopologyCount != strip.positions.size() ||
@@ -94,15 +108,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             strip.nativeTriangleOrder.size() % 3 ||
             strip.textureIndex < 0 || std::size_t(strip.textureIndex) >= geometry.textures.size())
             throw std::runtime_error("Invalid strip channels, topology or texture slot for model " + std::to_string(model.key));
-        const auto& binding = geometry.textures[strip.textureIndex];
-        const auto* descriptor = binding.texture;
-        for (int slot = 0; slot < model.replacementCount; ++slot) {
-            const auto& replacement = model.replacement[slot];
-            if (replacement.originalKey == binding.key && replacement.texture) {
-                descriptor = replacement.texture;
-                break;
-            }
-        }
+        const auto* descriptor = bindings[strip.textureIndex];
         if (!descriptor) throw std::runtime_error("Missing texture binding for model " + std::to_string(model.key));
         const auto [entry, inserted] = surfaceIndices.emplace(descriptor, surfaces.size());
         if (inserted) {
@@ -119,8 +125,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             surface.vertices.push_back(race_vector(strip.positions[i].data()));
             surface.uv.push_back({strip.textureCoordinates[i][0], strip.textureCoordinates[i][1]});
             const auto rgb555 = strip.colors[i];
-            // VIF expands each RGB lane by eight, and GS modulation uses 128 as unity.
-            // Godot's mesh color channel stores UNORM8. Texture alpha supplies opacity.
+            // GS modulation uses 128 as unity. Texture alpha supplies opacity.
             surface.colors.push_back({
                 std::min(rgb555 & 31u, 16u) / 16.0f,
                 std::min((rgb555 >> 5) & 31u, 16u) / 16.0f,

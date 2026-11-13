@@ -21,6 +21,8 @@ struct FlailerStrip {
     float alphaScale{};
     std::uint32_t renderedFrames{};
     EcstasyUiPlacement uiPlacement{EcstasyUiPlacement::OriginalCanvas};
+    // Authored object identity for the external presentation.
+    std::uint32_t sourceObject{}, sourceScreen{};
     std::unique_ptr<FlailerStrip> nextTexture;
     FlailerPoly& AddPoly(const EditorMarkerTexture* texture);
     void RemovePoly(FlailerPoly& polygon);

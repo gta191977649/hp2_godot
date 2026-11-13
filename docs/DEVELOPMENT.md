@@ -38,3 +38,8 @@ to check the pause and quit path. To drive through to the results, set
 `HP2_ROUTE_CAPTURE` to a local Track 13 road course capture (see TASK-0129).
 The route driver lives in `tools`; it reads telemetry and sends ordinary
 key events. Neither the game nor its build loads that script.
+
+Run `tools/test_mvp_frontend_resize.gd` against the staged project for
+live window checks. Use `HP2_MVP_PURSUIT=1` for the event menu path, or pass
+`-- --race-track=12` for the HUD and pause confirmation. The script
+captures each ratio in `HP2_MVP_SCREENSHOT_DIR`.

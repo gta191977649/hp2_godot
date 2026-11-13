@@ -224,6 +224,7 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
         if (frontend) session_->runtime.InitializeFrontend(12, supports_track);
         else session_->runtime.InitializeRace(12);
         session_->frontendCanvas = memnew(Node2D);
+        session_->frontendCanvas->set_name("FrontendCanvas");
         add_child(session_->frontendCanvas);
         session_->frontend = std::make_unique<FrontendPresentation>(*session_->frontendCanvas, session_->files);
         set_process(true);
@@ -363,6 +364,7 @@ Dictionary RacePresentation::telemetry() const {
         result["selected_item"] = session_->selectedItem;
         result["video_playing"] = session_->frontend->video_playing();
         result["video_request"] = session_->frontend->video_request();
+        result["loading"] = session_->frontend->showing_loading();
     }
     result["race_state"] = session_->raceState;
     if (!session_->scene) return result;

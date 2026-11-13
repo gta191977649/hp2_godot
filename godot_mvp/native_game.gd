@@ -2,7 +2,12 @@ extends Node
 
 const RACE_ARGUMENT := "--race-track="
 
+var title_renderer := ""
+var title_suffix := ""
+var last_window_title := ""
+
 func _ready() -> void:
+    _start_window_title()
     var arguments := OS.get_cmdline_user_args()
     var frontend := arguments.is_empty()
     var track := "12"
@@ -44,6 +49,38 @@ func _ready() -> void:
         race.call(&"start_frontend", assets, profile)
     else:
         race.call(&"start_race", assets, profile)
+
+func _start_window_title() -> void:
+    if DisplayServer.get_name() == "headless":
+        return
+    var driver := RenderingServer.get_current_rendering_driver_name()
+    match driver:
+        "vulkan":
+            title_renderer = "Vulkan"
+        "d3d12":
+            title_renderer = "Direct3D 12"
+        "opengl3", "opengl3_angle":
+            title_renderer = "OpenGL"
+        "metal":
+            title_renderer = "Metal"
+        _:
+            title_renderer = driver.to_upper() if not driver.is_empty() else "Unknown"
+    if OS.get_environment("HP2_MVP_DEBUG_MODE") == "1":
+        title_suffix = " | Debug Mode"
+    _update_window_title()
+    var timer := Timer.new()
+    timer.wait_time = 1.0
+    timer.ignore_time_scale = true
+    timer.process_mode = Node.PROCESS_MODE_ALWAYS
+    timer.timeout.connect(_update_window_title)
+    add_child(timer)
+    timer.start()
+
+func _update_window_title() -> void:
+    var caption := "hp2 - (%s) %d FPS%s" % [title_renderer, Engine.get_frames_per_second(), title_suffix]
+    if last_window_title != caption:
+        DisplayServer.window_set_title(caption, get_window().get_window_id())
+        last_window_title = caption
 
 func _unhandled_key_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed and event.physical_keycode == KEY_ESCAPE:

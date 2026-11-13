@@ -44,8 +44,14 @@ try {
         if (-not (Test-Path -LiteralPath $engine -PathType Leaf)) { throw 'Godot 4.7.2 console executable is required.' }
         $project = Join-Path $PSScriptRoot "build/$preset/mvp-project"
         $env:HP2_PS2_ASSET_CONFIG = Join-Path $PSScriptRoot 'config/ps2_assets.local.json'
-        if ($raceArgument) { & $engine --path $project -- $raceArgument }
-        else { & $engine --path $project }
+        $previousDebugMode = $env:HP2_MVP_DEBUG_MODE
+        try {
+            $env:HP2_MVP_DEBUG_MODE = if ($preset -eq 'godot-mvp-debug') { '1' } else { '0' }
+            if ($raceArgument) { & $engine --path $project -- $raceArgument }
+            else { & $engine --path $project }
+        } finally {
+            $env:HP2_MVP_DEBUG_MODE = $previousDebugMode
+        }
         exit $LASTEXITCODE
     }
 } finally {

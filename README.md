@@ -37,6 +37,8 @@ uses the Godot project's `user://profile` directory.
 configuration. The ImGui Console and live frame-time graph open by
 default. F8 toggles the console and gives the game its keyboard input
 back. The graph stays visible throughout the frontend and race.
+The window title shows the active graphics API and live FPS, for example
+`hp2 - (Vulkan) 120 FPS`. Debug launches append ` | Debug Mode`.
 Godot uses VSync to pace the entire game to the current display refresh.
 The donor simulation runs on its own clock.
 See [TASK-0125](tasks/active/TASK-0125-godot-frontend.md) for frontend validation and open coverage.

@@ -1577,6 +1577,8 @@ void CollectFrontendCarModels(FrontendFrame& frame)
             add(car->overrideModel,car->orientation);
             continue;
         }
+        // Match the normal frontend draw's authored lamp texture selection.
+        updateCarRenderSceneTextures(*render,nullptr,nullptr,0,nullptr,nullptr,0);
         float minimum[4]{},maximum[4]{},body[16];
         editorMarkerModelBounds(&render->models[0],minimum,maximum);
         eMulMatrix(body,CarScaleMatrix,car->orientation);

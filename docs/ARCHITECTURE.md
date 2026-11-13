@@ -25,7 +25,10 @@ Entity State Bridge copies the committed vehicle and wheel poses, speed,
 visibility and primary camera. It identifies each publication by World
 generation and step and each car by its World-issued handle. Godot creates
 track meshes from decoded authored placements and car meshes from decoded
-model assets. These reads finish synchronously before the next World step.
+model assets. The shared mesh converter uploads authored RGB555 vertex
+colors for the track, sky, vehicles and frontend previews. Godot's unshaded
+standard material multiplies the vertex color by the albedo texture.
+These reads finish synchronously before the next World step.
 The scene tree owns the nodes. Godot resource references retain meshes and
 textures. Godot applies the camera and vehicle transforms from the same
 snapshot and releases nodes when their handles or generation retire.
@@ -54,6 +57,18 @@ The donor selects the event's track and checks the player count before
 loading; the Godot adapter supplies the list of tracks it can present
 (12 and 13). A traffic car can change its skin while keeping its World
 handle. Godot replaces its visual node when the committed appearance changes.
+The donor supplies the minimap geometry and homogeneous texture coordinates.
+The Godot canvas shader interpolates those coordinates before sampling the
+road texture so it shares the marker projection in tilted modes.
+Godot fits the authored 640×480 menu and HUD canvas uniformly inside the
+live viewport. It tiles the authored grid at the same scale beyond the
+canvas and fits video at 4:3. The race camera retains vertical framing
+and renders the scene across the full viewport.
+Frontend 3D previews render at the fitted canvas's pixel dimensions
+and composite into their authored 4:3 rectangle. Clipped grid fragments
+retain their original geometry.
+Select Car uses the same unshaded texture and vertex color material
+as race vehicles, including donor-resolved lamp texture bindings.
 
 The title movie owner publishes a resource path and request ID. Godot's
 VideoStreamPlayback backend gives FFmpeg a seekable view of the original AVI

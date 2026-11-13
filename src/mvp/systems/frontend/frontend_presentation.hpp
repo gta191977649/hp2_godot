@@ -12,6 +12,7 @@ public:
     FrontendPresentation(godot::Node2D& canvas, const GameResources& files);
     ~FrontendPresentation();
     void update(const FrontendStateView& state, godot::Vector2 viewport);
+    bool showing_loading() const noexcept;
     bool video_playing() const noexcept;
     std::uint64_t video_request() const noexcept;
 private:

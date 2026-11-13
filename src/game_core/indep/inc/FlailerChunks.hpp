@@ -187,6 +187,7 @@ struct FlailerRenderManager {
     // The original manager has29 depth lists. These retain the same object
     // caches until the frontend command consumer completes its frame.
     std::array<std::vector<FlailerStrip*>,29> layers;
+    std::uint32_t submittingScreen{};
     FlailerBitmapComposite bitmapComposite;
     void BeginFrame(FlailerResources& resources,const LanguageManager* language,float textureTime);
     std::int32_t RenderObjectList(FlailerResources& resources,FlailerObjectChunk& list,

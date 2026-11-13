@@ -1164,6 +1164,7 @@ FlailerStrip* FlailerStripPool::Create(FlailerObjectChunk& object,std::vector<Fl
     Discard(object);
     auto strip=std::make_unique<FlailerStrip>();
     strip->pool=this;strip->polygons=std::move(polygons);
+    strip->sourceObject=object.key;
     // The released Player fills only this authored race-over text group
     // (PAL181558 -> RenderTextIntoGroup). Keep all ordinary HUD/menu and
     // immediate polygons on their established canvas and edge anchors.
@@ -1388,6 +1389,7 @@ void FlailerRenderManager::AddFlailerStrip(FlailerObjectChunk& object)
 {
     auto* strip=object.strip;
     if (!strip) return;
+    strip->sourceScreen=submittingScreen;
     const auto depth=static_cast<std::int8_t>(object.authoredFlags);
     Require(depth>=0 && static_cast<std::size_t>(depth)<layers.size(),
         "Flailer strip depth is outside the original29 layers");
@@ -1584,10 +1586,12 @@ void RenderFlailerTachometer(FlailerBitmapChunk& bitmap,const FlailerTachometerP
 void FlailerRenderManager::BeginFrame(FlailerResources& resources,const LanguageManager* language,float textureTime)
 {
     for (const auto* screen:visibleScreens)if (screen) {
+        submittingScreen=screen->key;
         if (auto* shared=resources.FindScreen(screen->sharedScreenKey))
             RenderObjectList(resources,shared->objects,language,textureTime);
         RenderObjectList(resources,const_cast<FlailerObjectChunk&>(screen->objects),language,textureTime);
     }
+    submittingScreen=0;
 }
 
 // PAL145F30: stable ascending depth sort, followed by the source reverse walk.

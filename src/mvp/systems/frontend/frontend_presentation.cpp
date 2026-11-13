@@ -7,6 +7,7 @@
 #include "indep/inc/Fred.hpp"
 #include "indep/inc/Texture.hpp"
 
+#include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/camera3d.hpp>
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
@@ -14,12 +15,17 @@
 #include <godot_cpp/classes/mesh_instance3d.hpp>
 #include <godot_cpp/classes/property_tweener.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
+#include <godot_cpp/classes/shader.hpp>
+#include <godot_cpp/classes/shader_material.hpp>
 #include <godot_cpp/classes/sub_viewport.hpp>
-#include <godot_cpp/classes/sub_viewport_container.hpp>
+#include <godot_cpp/classes/texture_rect.hpp>
+#include <godot_cpp/classes/viewport_texture.hpp>
 #include <godot_cpp/classes/tween.hpp>
 #include <godot_cpp/classes/video_stream_player.hpp>
+#include <godot_cpp/variant/packed_float32_array.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <map>
@@ -34,6 +40,40 @@ using namespace godot;
 namespace {
 constexpr std::uint32_t panelMovie = 0xc3f0caefu;
 constexpr std::uint32_t titleMovie = 0xf9117c29u;
+constexpr std::uint32_t gridObject = 0x00163ce5u;
+constexpr std::uint32_t loadingScreen = 0xd0131dd1u;
+bool is_player_letterbox(std::uint32_t object) {
+    switch (object) {
+    case 0x464BA8EAu: case 0xD911BEACu: case 0xF7F1CFB3u: case 0xF88DD0B1u:
+        return true; // Player letterbox bitmaps
+    default:
+        return false;
+    }
+}
+const Vector2 designSize(640, 480);
+
+constexpr float videoAspect = 4.0f / 3.0f;
+
+struct CanvasLayout {
+    Vector2 visible{designSize};
+    float scale{1};
+
+    void resize(Vector2 viewport) {
+        if (viewport.x <= 0 || viewport.y <= 0) return;
+        scale = std::min(viewport.x / designSize.x, viewport.y / designSize.y);
+        visible = viewport / scale;
+    }
+
+    Rect2 visible_rect() const {
+        return {(designSize - visible) * 0.5f, visible};
+    }
+
+    static Rect2 fit_movie(Rect2 bounds) {
+        const float width = std::min(bounds.size.x, bounds.size.y * videoAspect);
+        const Vector2 size(width, width / videoAspect);
+        return {bounds.position + (bounds.size - size) * 0.5f, size};
+    }
+};
 
 Color color(std::uint32_t rgba) {
     const float divisor = 128.0f;
@@ -58,11 +98,36 @@ Ref<Image> rgba_image(const std::uint8_t* source, int width, int height) {
 
 struct FrontendPresentation::Storage {
     Storage(Node2D& node, const GameResources& files)
-        : canvas(node), background(*memnew(Node2D)), overlay(*memnew(Node2D)),
-          player(*memnew(VideoStreamPlayer)), video(player, files) {
+        : canvas(node), background(*memnew(Node2D)), videoMatte(*memnew(Node2D)), overlay(*memnew(Node2D)),
+          mapBackground(*memnew(Node2D)), mapTexture(*memnew(Node2D)),
+          mapForeground(*memnew(Node2D)), player(*memnew(VideoStreamPlayer)), video(player, files) {
         canvas.add_child(&background);
+        canvas.add_child(&videoMatte);
+        videoMatte.set_z_index(1);
         canvas.add_child(&overlay);
         overlay.set_z_index(20);
+        overlay.add_child(&mapBackground);
+        overlay.add_child(&mapTexture);
+        overlay.add_child(&mapForeground);
+        Ref<Shader> shader;
+        shader.instantiate();
+        shader->set_code(R"(
+shader_type canvas_item;
+render_mode unshaded;
+varying float texture_q;
+varying vec4 vertex_color;
+void vertex() {
+    texture_q = CUSTOM0.x;
+    vertex_color = COLOR;
+}
+void fragment() {
+    COLOR = vertex_color * texture(TEXTURE, UV / texture_q);
+}
+)");
+        Ref<ShaderMaterial> material;
+        material.instantiate();
+        material->set_shader(shader);
+        mapTexture.set_material(material);
         canvas.add_child(&player);
         player.set_expand(true);
         player.set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
@@ -70,7 +135,13 @@ struct FrontendPresentation::Storage {
     }
     Node2D& canvas;
     Node2D& background;
+    Node2D& videoMatte;
     Node2D& overlay;
+    Node2D& mapBackground;
+    Node2D& mapTexture;
+    Node2D& mapForeground;
+    CanvasLayout layout;
+    std::vector<Ref<ArrayMesh>> mapMeshes;
     struct Texture {
         std::weak_ptr<const TextureMetadataStorage> metadata;
         std::weak_ptr<TexturePixelStorage> pixels;
@@ -87,6 +158,7 @@ struct FrontendPresentation::Storage {
     FrontendVideo video;
     Ref<Tween> transition;
     std::string screen;
+    bool loading{};
     struct Highlight {
         Node2D* node{};
         Ref<Tween> tween;
@@ -95,13 +167,15 @@ struct FrontendPresentation::Storage {
     };
     std::map<std::pair<std::uint32_t, std::uint32_t>, Highlight> highlights;
     struct Preview {
-        SubViewportContainer* container{};
+        TextureRect* display{};
         SubViewport* viewport{};
         Camera3D* camera{};
         std::vector<MeshInstance3D*> nodes;
         std::vector<std::tuple<std::uint32_t, std::uintptr_t, std::uintptr_t, std::uint64_t>> models;
+        std::vector<std::vector<const EditorMarkerTexture*>> textures;
     };
     std::map<int, Preview> previews;
+
     void update_previews(const FrontendStateView& state) {
         if (!state.previews || !state.cameras) throw std::runtime_error("Frontend preview owners are unavailable");
         std::map<int, std::vector<const FrontendModelRequest*>> views;
@@ -110,24 +184,41 @@ struct FrontendPresentation::Storage {
                 throw std::runtime_error("Unsupported frontend preview view " + std::to_string(request.viewNumber));
             if (request.model && request.model->solid) views[request.viewNumber].push_back(&request);
         }
-        for (auto& [view, preview] : previews) preview.container->set_visible(views.count(view) != 0);
+        for (auto& [view, preview] : previews) {
+            const bool active = views.count(view) != 0;
+            preview.display->set_visible(active);
+            if (!active) preview.viewport->set_update_mode(SubViewport::UPDATE_DISABLED);
+        }
+        // Fit the authored camera to the physical pixels occupied by its
+        // 4:3 canvas. Keep the UI rectangle in design coordinates.
+        const Vector2i resolution(std::max(2, int(std::ceil(designSize.x * layout.scale))),
+                                  std::max(2, int(std::ceil(designSize.y * layout.scale))));
         for (const auto& [view, models] : views) {
             auto& preview = previews[view];
             if (!preview.viewport) {
-                preview.container = memnew(SubViewportContainer);
-                canvas.add_child(preview.container);
-                preview.container->set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
-                preview.container->set_z_index(10);
-                preview.container->set_size({640,480});
+                preview.display = memnew(TextureRect);
+                preview.display->set_name(String("PreviewDisplay") + String::num_int64(view));
+                canvas.add_child(preview.display);
+                preview.display->set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
+                preview.display->set_z_index(10);
+                preview.display->set_expand_mode(TextureRect::EXPAND_IGNORE_SIZE);
+                preview.display->set_size(designSize);
                 preview.viewport = memnew(SubViewport);
-                preview.container->add_child(preview.viewport);
-                preview.viewport->set_size({640,480});
+                preview.viewport->set_name("PreviewViewport");
+                preview.display->add_child(preview.viewport);
                 preview.viewport->set_use_own_world_3d(true);
                 preview.viewport->set_transparent_background(true);
+                preview.viewport->set_msaa_3d(Viewport::MSAA_4X);
+                preview.viewport->set_scaling_3d_scale(1.0f);
+                preview.display->set_texture(preview.viewport->get_texture());
                 preview.camera = memnew(Camera3D);
                 preview.viewport->add_child(preview.camera);
                 preview.camera->make_current();
             }
+            if (preview.viewport->get_size() != resolution)
+                preview.viewport->set_size(resolution);
+            if (preview.viewport->get_update_mode() != SubViewport::UPDATE_WHEN_VISIBLE)
+                preview.viewport->set_update_mode(SubViewport::UPDATE_WHEN_VISIBLE);
             const auto* camera = state.cameras->screens[view].view;
             if (!camera) throw std::runtime_error("Frontend preview has no source camera");
             const auto& pose = camera->current;
@@ -145,16 +236,21 @@ struct FrontendPresentation::Storage {
                 const auto& model = *request.model;
                 const auto identity = std::make_tuple(model.key, reinterpret_cast<std::uintptr_t>(model.solid),
                     reinterpret_cast<std::uintptr_t>(model.replacement), model.resources ? model.resources->bindingRevision : 0);
+                std::vector<const EditorMarkerTexture*> replacements;
+                for (int slot = 0; slot < model.replacementCount; ++slot)
+                    replacements.push_back(model.replacement[slot].texture);
                 if (i == preview.nodes.size()) {
                     auto* node = memnew(MeshInstance3D);
                     preview.viewport->add_child(node);
                     preview.nodes.push_back(node);
                     preview.models.emplace_back();
+                    preview.textures.emplace_back();
                 }
                 auto* node = preview.nodes[i];
-                if (preview.models[i] != identity) {
+                if (preview.models[i] != identity || preview.textures[i] != replacements) {
                     node->set_mesh(converter.convert(model));
                     preview.models[i] = identity;
+                    preview.textures[i] = std::move(replacements);
                 }
                 node->set_transform(race_transform(request.transform.data()));
                 node->show();
@@ -187,17 +283,55 @@ struct FrontendPresentation::Storage {
         return cached.image;
     }
 
-    void draw(Node2D& target, const FlailerStrip& strip, Vector2 origin = {}) {
+    void draw_grid(Node2D& target, const FlailerPoly& polygon, const Ref<ImageTexture>& texture) {
+        const auto& topLeft = polygon.vertices[0];
+        const auto& bottomRight = polygon.vertices[2];
+        const Vector2 origin(topLeft.position[0], topLeft.position[1]);
+        const Vector2 tileSize = Vector2(bottomRight.position[0], bottomRight.position[1]) - origin;
+        if (tileSize.x <= 0 || tileSize.y <= 0) return;
+        const auto visible = layout.visible_rect();
+        const auto end = visible.get_end();
+        const Vector2 start(origin.x + std::floor((visible.position.x - origin.x) / tileSize.x) * tileSize.x,
+                            origin.y + std::floor((visible.position.y - origin.y) / tileSize.y) * tileSize.y);
+        const auto dimensions = texture->get_size();
+        const Vector2 uvStart(topLeft.textureCoordinate[0], topLeft.textureCoordinate[1]);
+        const Vector2 uvEnd(bottomRight.textureCoordinate[0], bottomRight.textureCoordinate[1]);
+        auto* rendering = RenderingServer::get_singleton();
+        for (float y = start.y; y < end.y; y += tileSize.y) {
+            for (float x = start.x; x < end.x; x += tileSize.x) {
+                const Vector2 tile(x, y);
+                const auto clipped = visible.intersection({tile, tileSize});
+                if (!clipped.has_area()) continue;
+                const auto uv = uvStart + (clipped.position - tile) / tileSize * (uvEnd - uvStart);
+                const auto uvSize = clipped.size / tileSize * (uvEnd - uvStart);
+                rendering->canvas_item_add_texture_rect_region(target.get_canvas_item(), clipped,
+                    texture->get_rid(), {uv * dimensions, uvSize * dimensions}, color(topLeft.color));
+            }
+        }
+    }
+
+    static bool spans_canvas(const FlailerPoly& polygon) {
+        const auto& first = polygon.vertices[0].position;
+        const auto& last = polygon.vertices[2].position;
+        return first[0] <= 2 && first[1] <= 3 && last[0] >= 638 && last[1] >= 477;
+    }
+
+    void draw(Node2D& target, const FlailerStrip& strip, Vector2 origin = {}, bool projective = false) {
         // PAL145950 traverses secondary atlases before the base texture.
-        if (strip.nextTexture) draw(target, *strip.nextTexture, origin);
+        if (strip.nextTexture) draw(target, *strip.nextTexture, origin, projective);
         if (strip.polygons.empty()) return;
         if (!strip.texture) throw std::runtime_error("Frontend layout is missing its texture descriptor");
         if (strip.texture->key == titleMovie || strip.texture->key == panelMovie) {
             if (!video.playing()) return;
             const auto& quad = strip.polygons.front().vertices;
             const Vector2 position(quad[0].position[0], quad[0].position[1]);
-            player.set_position(position);
-            player.set_size(Vector2(quad[2].position[0], quad[2].position[1]) - position);
+            const Rect2 panel(position, Vector2(quad[2].position[0], quad[2].position[1]) - position);
+            if (!panel.has_area()) return;
+            const auto rect = layout.fit_movie(panel);
+            RenderingServer::get_singleton()->canvas_item_add_rect(videoMatte.get_canvas_item(), panel,
+                Color(0, 0, 0));
+            player.set_position(rect.position);
+            player.set_size(rect.size);
             player.set_z_index(1);
             player.show();
             return;
@@ -214,18 +348,89 @@ struct FrontendPresentation::Storage {
                 std::to_string(strip.texture->key));
         }
         const auto texture = texture_for(*source);
+        // Select Car moves/clips its grid to reveal only the authored
+        // backdrop fragment. Repeating that thin fragment creates stripes
+        // and speckles across the car. Tile only a full-canvas grid.
+        if (strip.sourceObject == gridObject && std::all_of(strip.polygons.begin(), strip.polygons.end(), spans_canvas)) {
+            for (const auto& polygon : strip.polygons)
+                if (visible(polygon)) draw_grid(target, polygon, texture);
+            return;
+        }
         PackedVector2Array points, uv;
         PackedColorArray colors;
         PackedInt32Array indices;
+        PackedFloat32Array textureQ;
         for (const auto& polygon : strip.polygons) {
             if (!visible(polygon)) continue;
             const auto base = static_cast<int32_t>(points.size());
             const auto& bounds = polygon.glyphSamplingBounds;
+            const auto& topLeft = polygon.vertices[0].position;
+            const auto& bottomRight = polygon.vertices[2].position;
+            const bool raceLetterbox = is_player_letterbox(strip.sourceObject);
+            const bool letterboxTop = strip.sourceObject == 0xD911BEACu || strip.sourceObject == 0xF7F1CFB3u;
+            const bool fullCanvas = !raceLetterbox && origin == Vector2{} && !projective &&
+                topLeft[0] <= 1 && topLeft[1] <= 2 && bottomRight[0] >= 639 && bottomRight[1] >= 479 &&
+                bounds == std::array<float,4>{};
+            // The popup's anonymous top and bottom backdrops span the
+            // authored canvas. Keep their inner edge and fill the surround.
+            const bool edgeBackdrop = !fullCanvas && origin == Vector2{} && !projective &&
+                bounds == std::array<float,4>{} && topLeft[0] <= 4 && bottomRight[0] >= 636 &&
+                bottomRight[1] - topLeft[1] >= 48 &&
+                ((topLeft[1] <= 2 && bottomRight[1] < 120) ||
+                 (topLeft[1] > 360 && bottomRight[1] >= 478));
+            const bool curtain = edgeBackdrop && !raceLetterbox;
+            // Shared header backdrops are full-width bitmap strips. Text,
+            // preview panels and menu rows remain on the authored canvas.
+            const float height = bottomRight[1] - topLeft[1];
+            const bool decorativeBand = !raceLetterbox && origin == Vector2{} && !projective &&
+                bounds == std::array<float,4>{} && topLeft[0] <= 4 && bottomRight[0] >= 636 &&
+                topLeft[1] >= 0 && height >= 0 && height <= 48 &&
+                (screen == "Title Screen" || strip.sourceScreen == loadingScreen ||
+                 topLeft[1] <= 75 || height <= 4);
+            const float cover = std::max(layout.visible.x / designSize.x, layout.visible.y / designSize.y);
+            const auto viewport = layout.visible_rect();
+            if (raceLetterbox) {
+                const auto fill = [&](Rect2 rect) {
+                    rect = rect.intersection(viewport);
+                    if (rect.has_area())
+                        RenderingServer::get_singleton()->canvas_item_add_rect(
+                            target.get_canvas_item(), rect, Color(0, 0, 0, color(polygon.vertices[0].color).a));
+                };
+                const float top = topLeft[1], bottom = bottomRight[1];
+                const auto end = viewport.get_end();
+                fill({viewport.position.x, top, topLeft[0] - viewport.position.x, bottom - top});
+                fill({bottomRight[0], top, end.x - bottomRight[0], bottom - top});
+                if (letterboxTop && viewport.position.y < 0)
+                    fill({viewport.position.x, viewport.position.y, viewport.size.x, -viewport.position.y});
+                else if (!letterboxTop && end.y > designSize.y)
+                    fill({viewport.position.x, designSize.y, viewport.size.x, end.y - designSize.y});
+            }
             for (const auto& vertex : polygon.vertices) {
-                points.push_back(Vector2(vertex.position[0], vertex.position[1]) - origin);
+                Vector2 point(vertex.position[0], vertex.position[1]);
+                if (fullCanvas) point = (point - designSize * 0.5f) * cover + designSize * 0.5f;
+                if ((decorativeBand || curtain) && bottomRight[0] > topLeft[0])
+                    point.x = viewport.position.x + viewport.size.x *
+                        ((point.x - topLeft[0]) / (bottomRight[0] - topLeft[0]));
+                if (curtain) {
+                    // Preserve the animated inner edge. Extend only the edge
+                    // facing away from the center of the authored canvas.
+                    const float middle = (topLeft[1] + bottomRight[1]) * 0.5f;
+                    if (middle < designSize.y * 0.5f && point.y == topLeft[1])
+                        point.y = std::min(point.y, viewport.position.y);
+                    else if (middle > designSize.y * 0.5f && point.y == bottomRight[1])
+                        point.y = std::max(point.y, viewport.get_end().y);
+                }
+                points.push_back(point - origin);
                 const auto& uvq = vertex.textureCoordinate;
                 if (uvq[2] == 0.0f) throw std::runtime_error("Frontend polygon has a zero texture projection");
-                float u = uvq[0] / uvq[2], v = uvq[1] / uvq[2];
+                // TrackMap::ClipPolygon has already interpolated homogeneous
+                // UVQ. Keep its numerators and q until the fragment shader.
+                float u = uvq[0], v = uvq[1];
+                if (projective) textureQ.push_back(uvq[2]);
+                else {
+                    u /= uvq[2];
+                    v /= uvq[2];
+                }
                 if (bounds != std::array<float,4>{}) {
                     u = std::clamp(u, bounds[0], std::max(bounds[0], bounds[2]));
                     v = std::clamp(v, bounds[1], std::max(bounds[1], bounds[3]));
@@ -235,13 +440,31 @@ struct FrontendPresentation::Storage {
             }
             for (int32_t offset : {0, 1, 2, 0, 2, 3}) indices.push_back(base + offset);
         }
-        RenderingServer::get_singleton()->canvas_item_add_triangle_array(target.get_canvas_item(),
-            indices, points, colors, uv, {}, {}, texture->get_rid());
+        auto* rendering = RenderingServer::get_singleton();
+        if (projective) {
+            Array arrays;
+            arrays.resize(Mesh::ARRAY_MAX);
+            arrays[Mesh::ARRAY_VERTEX] = points;
+            arrays[Mesh::ARRAY_COLOR] = colors;
+            arrays[Mesh::ARRAY_TEX_UV] = uv;
+            arrays[Mesh::ARRAY_CUSTOM0] = textureQ;
+            arrays[Mesh::ARRAY_INDEX] = indices;
+            Ref<ArrayMesh> mesh;
+            mesh.instantiate();
+            mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays, {}, {},
+                Mesh::ARRAY_FLAG_USE_2D_VERTICES | (Mesh::ARRAY_CUSTOM_R_FLOAT << Mesh::ARRAY_FORMAT_CUSTOM0_SHIFT));
+            rendering->canvas_item_add_mesh(target.get_canvas_item(), mesh->get_rid(), {}, Color(1, 1, 1, 1),
+                texture->get_rid());
+            mapMeshes.push_back(mesh);
+        } else {
+            rendering->canvas_item_add_triangle_array(target.get_canvas_item(),
+                indices, points, colors, uv, {}, {}, texture->get_rid());
+        }
     }
 
     void draw_layers(const FlailerRenderManager& layout, Node2D& target, int first, int last) {
         for (int layer = first; layer >= last; --layer)
-            for (const auto* strip : layout.layers[layer]) draw(target, *strip);
+            for (const auto* strip : layout.layers[layer]) draw(target, *strip, {}, layer == 14);
     }
 
     void update_highlights(const FlailerRenderManager& layout) {
@@ -307,17 +530,19 @@ FrontendPresentation::FrontendPresentation(Node2D& canvas, const GameResources& 
 FrontendPresentation::~FrontendPresentation() = default;
 bool FrontendPresentation::video_playing() const noexcept {return storage_->video.playing();}
 std::uint64_t FrontendPresentation::video_request() const noexcept {return storage_->video.request_id();}
+bool FrontendPresentation::showing_loading() const noexcept {return storage_->loading;}
 
 void FrontendPresentation::update(const FrontendStateView& state, Vector2 viewport) {
     auto& s = *storage_;
     if (!state.layout || !state.movie)
         throw std::runtime_error("Frontend state is missing an owner");
+    s.loading = state.layout->IsScreenVisible(loadingScreen);
+    s.layout.resize(viewport);
     s.video.update(*state.movie);
     s.update_previews(state);
     s.player.hide();
-    const float scale = std::min(viewport.x / 640.0f, viewport.y / 480.0f);
-    s.canvas.set_scale({scale, scale});
-    s.canvas.set_position((viewport - Vector2(640, 480) * scale) * 0.5f);
+    s.canvas.set_scale(Vector2(s.layout.scale, s.layout.scale));
+    s.canvas.set_position((s.layout.visible - designSize) * (s.layout.scale * 0.5f));
     const std::string screen = state.screen ? state.screen : "";
     if (s.screen != screen) {
         s.screen = screen;
@@ -333,18 +558,29 @@ void FrontendPresentation::update(const FrontendStateView& state, Vector2 viewpo
 
     auto* rendering = RenderingServer::get_singleton();
     rendering->canvas_item_clear(s.background.get_canvas_item());
-    rendering->canvas_item_clear(s.overlay.get_canvas_item());
+    rendering->canvas_item_clear(s.videoMatte.get_canvas_item());
+    rendering->canvas_item_clear(s.mapBackground.get_canvas_item());
+    rendering->canvas_item_clear(s.mapTexture.get_canvas_item());
+    rendering->canvas_item_clear(s.mapForeground.get_canvas_item());
+    s.mapMeshes.clear();
     ++s.frame;
     s.draw_layers(*state.layout, s.background, 24, 20);
-    s.draw_layers(*state.layout, s.overlay, 15, 0);
-    s.draw_layers(*state.layout, s.overlay, 19, 16);
-    s.draw_layers(*state.layout, s.overlay, 28, 25);
+    s.draw_layers(*state.layout, s.mapBackground, 15, 15);
+    // Donor TrackMap::DrawMap submits the road texture on layer 14,
+    // between its backdrop and vehicle markers.
+    s.draw_layers(*state.layout, s.mapTexture, 14, 14);
+    s.draw_layers(*state.layout, s.mapForeground, 13, 0);
+    s.draw_layers(*state.layout, s.mapForeground, 19, 16);
+    s.draw_layers(*state.layout, s.mapForeground, 28, 25);
     s.update_highlights(*state.layout);
     if (screen == "Title Screen" && s.video.playing()) {
-        s.player.set_position({});
-        s.player.set_size({640, 480});
+        const auto rect = s.layout.fit_movie(s.layout.visible_rect());
+        s.player.set_position(rect.position);
+        s.player.set_size(rect.size);
         s.player.set_z_index(31);
         s.player.show();
+        rendering->canvas_item_add_rect(s.mapForeground.get_canvas_item(),
+            s.layout.visible_rect(), Color(0, 0, 0));
     }
 
     for (auto it = s.textures.begin(); it != s.textures.end();) {

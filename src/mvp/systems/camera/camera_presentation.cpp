@@ -16,6 +16,7 @@ void apply_race_camera(godot::Camera3D& camera, const RaceCameraState& state) {
     const auto up = -race_vector(state.up.data());
     if (forward.cross(up).length_squared() < 0.01f)
         throw std::runtime_error("Primary camera has a degenerate basis");
+    camera.set_keep_aspect_mode(godot::Camera3D::KEEP_HEIGHT);
     camera.set_perspective(state.verticalFov, state.nearClip, state.farClip);
     camera.look_at_from_position(eye, eye + forward, up);
 }

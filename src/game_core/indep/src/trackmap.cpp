@@ -165,7 +165,13 @@ bool TrackMap::GetAngle(std::uint16_t& angle)
         static_cast<std::uint32_t>(timestamp_)))*0.0002500000118743628f)*0.8999999761581421f;
     EvalCubic(direction_[0],velocity_[0],target[0],elapsed);
     EvalCubic(direction_[1],velocity_[1],target[1],elapsed);timestamp_=now;
-    angle=static_cast<std::uint16_t>(vectorAtan2Angle(direction_[1],direction_[0])-32768u);return true;
+    // GetCarUVPosition reflects world Y and rotates the map by mapRotation.
+    // Rotate the follow direction into the same map frame before building
+    // the texture crop and positioning its markers.
+    // DrawMarker negates the local map axes when projecting to screen.
+    // The forward vector must map to local +Y, hence screen up.
+    angle=static_cast<std::uint16_t>(track_->mapRotation+
+        vectorAtan2Angle(direction_[1],direction_[0]));return true;
 }
 void TrackMap::MapToScreen(FlailerPoly& polygon,
     std::array<std::array<float,4>,4>& coordinates) const
