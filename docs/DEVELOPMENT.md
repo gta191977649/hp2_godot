@@ -22,8 +22,9 @@ Press F6 on `native_game.tscn` or F5 for the project, then start
 Press the grave/tilde key in the game to give keyboard input back to the frontend.
 
 Use `./build.ps1 --run` for Release or `./build.ps1 --debug` for Debug. Both
-start in native fullscreen with race FXAA and VSync. Frame pacing follows
-the display refresh rate with no software FPS cap.
+start in windowed mode with race FXAA and VSync. Frame pacing follows the
+display refresh rate with no software FPS cap. Add `--fullscreen` to launch
+in native fullscreen.
 
 Use `--race-track=<id>` for direct single-player diagnostics. The default launch enters
 the frontend and needs the shared FFmpeg 8 SDK described in the README.

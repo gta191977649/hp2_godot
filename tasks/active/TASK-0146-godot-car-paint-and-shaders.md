@@ -4,6 +4,52 @@
 - Scope: vehicle paint, environment capture, external Godot shader resources and Forward+ race postprocessing.
 - Acceptance: native-depth and GS-history pixel checks on Vulkan and D3D12, diagnostic race lifecycle, frontend preview, and matched PS2 paint comparisons.
 
+## Removed native Godot occlusion trial
+
+The trial registered one static `ArrayOccluder3D` per forward route.
+Track 13 section 11 instance 4 is `TRN_SECTION10_CHOP1` (560 triangles).
+Track 12 section 53 instance 6 is `RR_TUNNELLOFT_CHOP1` (158 triangles).
+The trial uses a subset of the decoded, opaque, depth-writing triangles,
+inset within each triangle. The main viewport could cull only while its
+existing zone and LOD selection actually submits the source placement.
+Mixed materials, alpha cutouts, vehicles, particles, effects and sky
+explicitly ignored occlusion.
+
+Vulkan Release, Arc B390, native 2880×1800, FXAA, VSync off. Each cell
+lists whole-frame P50/P95/P99 in milliseconds.
+
+| Sample | Occlusion off | Occlusion on |
+| --- | ---: | ---: |
+| Track 13 ticks 60–120 | 7.431 / 8.933 / 9.553 | 6.730 / 9.331 / 9.489 |
+| Track 13 ticks 60–120, reverse run order | 6.829 / 8.630 / 13.568 | 6.658 / 12.381 / 13.351 |
+| Track 13 open view, ticks 600–660 | 4.748 / 5.327 / 5.524 | 5.656 / 6.754 / 7.269 |
+| Track 12 tunnel sweep, whole interval | 4.702 / 6.146 / 7.809 | 4.713 / 6.067 / 7.229 |
+
+The first slow-window pair exceeded 8.33 ms on 13/113 off and 16/138 on
+frames. Median main-viewport draws fell 495 to 494 and triangles fell
+51,025 to 50,994. The matched fixed-camera Track 13 comparison saved two
+draws. The tunnel sweep dropped one median draw overall. Fixed tunnel
+poses removed up to nine draws. The separate Track 13 Visual Profiler
+capture had whole-frame render CPU P95 3.014/2.797 ms and GPU P95
+6.266/6.227 ms off/on. Depth pre-pass GPU P95 was 0.594/0.587 ms.
+The isolated profiler run varied markedly in the slow window, so the
+quiet reverse-order pair was used to check the default decision.
+
+Identical color and depth-visualization pixels were observed on three
+nearby frozen forest poses in Vulkan and three positions across the
+tunnel approach in D3D12. Additional single poses passed on the other
+backend. The test confirmed that participating geometry was confined to
+the primary scenery layer. The trial checked sampled boundaries and
+visible transparent effects.
+
+Track 33 Vulkan passed driving, restart and return to menu, plus a
+replay seek to epoch 2 with a populated reflection atlas. This route
+had no registered occluder while the diagnostic mode was enabled.
+
+Neither route passed the performance gate. The native occlusion trial and
+its diagnostics were removed for all tracks. The original HP2 visibility
+zones, sector-tree frustum culling and LOD remain in use.
+
 ## Native fullscreen Starting Grid
 
 Vulkan Release on Arc B390, fullscreen window and main viewport both
@@ -38,10 +84,13 @@ filter paths are restored for the selected native configuration. Road-only
 FXAA disables 3D MSAA, copies native depth into a Godot-owned R32
 buffer for fog and focus, and antialiases the composed scene below the HUD.
 The FXAA path passed native-depth, GS history, resize and reset fixtures on
-both Vulkan and D3D12. Debug and Release now default to native fullscreen,
+both Vulkan and D3D12. Debug and Release default to windowed mode with
 FXAA and VSync. The project follows the display refresh rate without a
 software FPS cap. The profiler explicitly selects the historical 2× MSAA
 path unless `--fxaa` is supplied.
+
+Built `stage_mvp` with both `godot-mvp-debug` and `godot-mvp-release`
+and verified the staged window mode, FXAA and VSync settings.
 
 | Fullscreen configuration | Average FPS | Whole P95 / P99, ms | Tick 60–120 P95 / P99, ms |
 | --- | ---: | ---: | ---: |
@@ -69,7 +118,7 @@ py -3 tools/profile_mvp_reflections.py --assets $iso --out local/task0146/native
 py -3 tools/profile_mvp_reflections.py --assets $iso --out local/task0146/native-sun-pixels --grid --fog baseline --fullscreen --resolution 2880x1800 --fxaa --quiet --grid-effect compare-sun-bounds --capture-tick 90
 ```
 
-Default-launch smoke on the Arc B390 verified a 2880×1800 window and
+The earlier fullscreen smoke on the Arc B390 verified a 2880×1800 window and
 race viewport, 120 Hz display, VSync, FXAA and disabled 3D MSAA in both
 builds. Godot reported no software frame cap. The diagnostic entered
 Track 13 from the frontend with only the normal display defaults.

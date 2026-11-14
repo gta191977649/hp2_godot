@@ -1,3 +1,16 @@
+## 2026-11-15 TASK-0146 windowed launch default
+
+Debug and Release start windowed with FXAA and VSync. The fullscreen
+launcher option remains available.
+
+## 2026-11-15 TASK-0146 native occlusion trial
+
+Measured the Godot primary viewport's native occlusion on the Scenic
+Drive flyby and Track 12 tunnel approach. Opaque-only trials preserved
+color and depth at sampled Vulkan and D3D12 poses. Removed the trial and
+its diagnostics across all tracks after it missed the performance gate.
+The authored HP2 visibility zones, sector tree and LOD remain in use.
+
 ## 2026-11-15 TASK-0146 default fullscreen and VSync
 
 Debug and Release share native fullscreen, race FXAA and VSync defaults.
