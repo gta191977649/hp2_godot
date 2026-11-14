@@ -179,6 +179,19 @@ void start_campaign_race_diagnostic(MainMenuScreenServices& menus, const void* c
 }
 
 #ifdef HP2_MVP_IMGUI
+bool RaceDiagnosticChecks::finish_for_menu_test(const RaceStateView& race) {
+    if (!finishForMenuTest || race.sessionState != RC_STATE_RACE_IN_PROGRESS ||
+        !race.simulation || race.simulation->world->frameCounter < 120)
+        return false;
+    auto* frame = race.simulation->race;
+    Require(frame && frame->services && frame->services->session,
+        "Results menu test requires the original race session");
+    finishForMenuTest = false;
+    Require(raceCoordinatorTheRaceHasFinished(*frame->services->session),
+        "Results menu test could not complete the original race");
+    return true;
+}
+
 void RaceDiagnosticChecks::advance(const WorldSimulation& simulation, int track, int raceState,
     std::uint64_t generation, std::uint32_t step) {
     if (raceState != RC_STATE_RACE_IN_PROGRESS) return;

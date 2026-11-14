@@ -633,7 +633,8 @@ struct RaceEffectsPresentation::Storage {
                 sun->set_mesh(quad);
                 sun->set_custom_aabb(AABB(Vector3(-16000,-16000,-16000), Vector3(32000,32000,32000)));
                 sunMaterial = material(sunShader);
-                sunMaterial->set_render_priority(Material::RENDER_PRIORITY_MIN + 1);
+                // Draw after both the base sky and its alpha layers.
+                sunMaterial->set_render_priority(Material::RENDER_PRIORITY_MIN + 2);
                 sun->set_material_override(sunMaterial);
                 sunRects.resize(maxSunLayers);
                 sunColors.resize(maxSunLayers);

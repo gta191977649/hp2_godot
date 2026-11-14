@@ -71,7 +71,7 @@ public:
 
     bool inRace{};
     bool menuInput{};
-    bool pauseSubmenu{};
+    bool inRaceMenuBack{};
     bool demoInput{};
     bool beTheCop{};
     bool nativeDebug{};
@@ -137,7 +137,7 @@ public:
             const auto pressed = [&](const StringName& action) { return input.is_action_pressed(action); };
             const bool pause = inRace && pressed("hp2_pause");
             if (!pause) submenuPauseHeld_ = false;
-            else if (pauseSubmenu) submenuPauseHeld_ = true;
+            else if (inRaceMenuBack) submenuPauseHeld_ = true;
             // Keep a Back press from becoming a fresh Start edge on the parent screen.
             SetButton(pad, Ps2Button::Start, pause && !submenuPauseHeld_);
             if (!inRace || menuInput || demoInput) {
@@ -147,10 +147,11 @@ public:
                     Ps2Button::Cross, Ps2Button::Triangle, Ps2Button::Up, Ps2Button::Down,
                     Ps2Button::Left, Ps2Button::Right};
                 for (std::size_t i = 0; i < buttons.size(); ++i) {
-                    const bool down = pressed(menuActions[i]) || (i == 1 && pauseSubmenu && pause);
+                    const bool back = i == 1;
+                    const bool down = pressed(menuActions[i]) || (back && inRaceMenuBack && pause);
                     if (!down) consumedMenuKeys[i] = false;
                     SetButton(pad, buttons[i], down && !consumedMenuKeys[i] &&
-                        (i != 1 || !inRace || demoInput || pauseSubmenu));
+                        (!back || !inRace || demoInput || inRaceMenuBack));
                 }
                 if (scrollingCredits) SetButton(pad, Ps2Button::Square, pressed("hp2_credits_pause"));
                 destination = NativeScannerControls(pad);
@@ -403,6 +404,9 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
             debug_->attach_track_viewer(*viewer_, [this] { open_track_viewer(); });
         }
         session_->host.debug = debug_.get();
+        session_->diagnosticChecks.finishForMenuTest = !frontend && track >= 0 &&
+            OS::get_singleton()->get_environment("HP2_MVP_TEST_RESULTS_MENU") == "1" &&
+            !OS::get_singleton()->get_environment("HP2_PROFILE_DIR").is_empty();
         session_->diagnosticChecks.pursuitDriver = OS::get_singleton()->get_environment("HP2_MVP_PURSUIT_AI") == "1";
         session_->diagnosticChecks.supportVisuals = tree >= 0 &&
             OS::get_singleton()->get_environment("HP2_MVP_TEST_SUPPORT_VISUALS") == "1";
@@ -618,6 +622,9 @@ void RacePresentation::_process(double delta) {
     auto& s = *session_;
     const char* stage = s.host.inRace ? "world_step" : "frontend_flow";
     try {
+#ifdef HP2_MVP_IMGUI
+        if (s.diagnosticChecks.finish_for_menu_test(s.runtime.RaceState())) stage = "results_menu_fixture";
+#endif
         if (!s.runtime.AdvanceRace()) {
             quit_game();
             return;
@@ -642,10 +649,13 @@ void RacePresentation::_process(double delta) {
         s.host.demoInput = race.sessionState == RC_STATE_AI_DEMO || race.sessionState == RC_STATE_REPLAY_DEMO;
         s.host.beTheCop = race.beTheCop;
         s.host.menuInput = state.screen && race.sessionState != RC_STATE_RACE_IN_PROGRESS;
-        // Pause submenus return through the source LeaveScreen action (Triangle).
-        // The root Pause Menu and replay still use their existing Start binding.
-        s.host.pauseSubmenu = race.sessionState == RC_STATE_PAUSE && state.screen &&
-            !state.pointerReplay && std::string_view(state.screen) != "Pause Menu";
+        // Race information pages and pause submenus use the source LeaveScreen input.
+        // Open popups use it to cancel. The root Pause Menu and replay use Start.
+        s.host.inRaceMenuBack = s.host.menuInput && !state.pointerReplay &&
+            (race.sessionState == RC_STATE_CAMERA_FLYBY || race.sessionState == RC_STATE_PRE_RACE ||
+             race.sessionState == RC_STATE_POST_RACE ||
+             (race.sessionState == RC_STATE_PAUSE &&
+              (state.pointerModal || std::string_view(state.screen) != "Pause Menu")));
         s.frontendScreen = state.screen ? String(state.screen) : String();
         s.host.scrollingCredits = s.frontendScreen == "EACredits" || s.frontendScreen == "BBGCredits" ||
             s.frontendScreen == "Port Credits";

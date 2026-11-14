@@ -34,6 +34,11 @@ vec4 sample_rigid(int channel, int frame) {
 uniform int animation_start;
 instance uniform int hp2_animation_start = -1;
 
+#ifdef TRACK_SKY
+uniform bool sky_blend_alpha;
+uniform bool sky_cutout;
+#endif
+
 #ifdef GS_TRACK
 #include "track_material.gdshaderinc"
 #endif
@@ -84,6 +89,12 @@ void vertex() {
             vec4(-direction.y, 0.0, direction.x, 0.0), vec4(origin, 1.0));
         MODELVIEW_MATRIX = VIEW_MATRIX * pose;
     }
+#ifdef TRACK_SKY
+    // StuffSky uses its own projection range. Preserve the view and UVs
+    // while placing the sky behind world geometry, even in the 192 m mirror.
+    POSITION = PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX, 1.0);
+    POSITION.z = CLIP_SPACE_FAR * POSITION.w;
+#endif
 #ifdef GS_TRACK
     // GS Gouraud RGBA is affine in screen space; UV still uses ST/Q.
     gs_clip_weight = (PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).w;
@@ -122,6 +133,10 @@ void fragment() {
         tint = mix(tint / 12.92, pow((tint + 0.055) / 1.055, vec3(2.4)), step(vec3(0.04045), tint));
     }
     ALBEDO = color.rgb * tint;
+#ifdef TRACK_SKY
+    if (sky_cutout && color.a < 97.0 / 255.0) discard;
+    ALPHA = sky_blend_alpha ? color.a : 1.0;
+#endif
 #ifdef CUTOUT
     ALPHA = color.a;
     ALPHA_SCISSOR_THRESHOLD = 97.0 / 255.0;

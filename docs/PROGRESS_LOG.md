@@ -1,3 +1,16 @@
+## 2026-11-15 TASK-0149 race menu Back navigation
+
+Restored Back on Lap Times, the other results pages, pre-race information
+and pause confirmations. The Godot host routes these inputs through the
+existing menu callbacks. Track 13 results passed on Vulkan and D3D12, and
+the Vulkan frontend and pause navigation suites passed. TASK-0149 records
+the build results, additional lifecycle checks and untested variants.
+
+## 2026-11-15 TASK-0148 rear-view sky
+
+Restored the authored sky behind the rear-view scene while retaining the
+mirror's 192 m world range. Track 12 pixel checks passed on Vulkan and D3D12.
+
 ## 2026-11-15 TASK-0148 track materials and Roadshine
 
 Restored track overlay modulation and depth projection, including the

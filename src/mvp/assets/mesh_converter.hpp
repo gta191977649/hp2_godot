@@ -33,7 +33,7 @@ godot::Transform3D race_transform(const float* source);
 // Temporary decode cache. The scene retains Godot Refs only.
 class MeshConverter {
 public:
-    enum class ScenerySurface { Full, OpaqueOnly, Reflection, ReflectionBillboard };
+    enum class ScenerySurface { Full, OpaqueOnly, Reflection, ReflectionBillboard, Sky };
     godot::Ref<godot::ArrayMesh> convert_wheel_blur(const EditorMarkerModel& model);
     static void audit_track_model(const EditorMarkerModel& model);
     godot::Ref<godot::ArrayMesh> convert(const EditorMarkerModel& model, bool depthWrite = true,

@@ -314,6 +314,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         surfaceIndices;
     const bool billboard = scenery == ScenerySurface::ReflectionBillboard;
     const bool reflection = billboard || scenery == ScenerySurface::Reflection;
+    const bool sky = scenery == ScenerySurface::Sky;
     const auto* morph = boneCount ? nullptr : model.solid->vertexAnimation;
     if (morph && morph->count < 2) morph = nullptr;
     const auto* rigid = boneCount ? nullptr : model.solid->rigidAnimation;
@@ -407,7 +408,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         const auto* wire = descriptor->authoredRecord;
         const bool gsTrack = track_ && track_material(wire, strip.flags);
         const bool transparent = wire[0x76] == 0x44 || wire[0x76] == 0x48 || wire[0x76] == 0x42;
-        if (scenery != ScenerySurface::Full && texture && (texture->requiresDepthSort ||
+        if (scenery != ScenerySurface::Full && !sky && texture && (texture->requiresDepthSort ||
             (reflection && (gsTrack ? transparent : material(*descriptor)->get_transparency() == BaseMaterial3D::TRANSPARENCY_ALPHA) &&
                 !texture_sequence(*descriptor).cutout))) continue;
         const EditorMarkerLightMaterial* roadMaterial = nullptr;
@@ -693,7 +694,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             depth != BaseMaterial3D::DEPTH_DRAW_DISABLED;
         hasScroll |= scroll;
         hasTextureSequence |= sequence.count != 0;
-        if (!scroll && !sequence.count && !morph && !rigid && !mixedWrap && !shaft && !billboard) {
+        if (!scroll && !sequence.count && !morph && !rigid && !mixedWrap && !shaft && !billboard && !sky) {
             mesh->surface_set_material(index, surface.material);
             continue;
         }
@@ -710,16 +711,24 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         const char* coverage = transparency == BaseMaterial3D::TRANSPARENCY_ALPHA_SCISSOR ? "cutout" :
             transparency == BaseMaterial3D::TRANSPARENCY_ALPHA ? "transparent" : "opaque";
         const char* depthName = depth == BaseMaterial3D::DEPTH_DRAW_DISABLED ? "read" : "write";
-        const String shaderPath = String("res://shader/mesh_surface_") + coverage + "_" + blendName + "_" + depthName + ".gdshader";
+        const String shaderPath = sky
+            ? String("res://shader/track_sky_") + blendName + ".gdshader"
+            : String("res://shader/mesh_surface_") + coverage + "_" + blendName + "_" + depthName + ".gdshader";
         auto& shader = animatedShaders_[shaderPath];
         if (shader.is_null()) shader = load_shader(shaderPath);
         Ref<ShaderMaterial> material;
         material.instantiate();
         material->set_shader(shader);
-        material->set_render_priority(surface.material->get_render_priority());
+        material->set_render_priority(sky
+            ? Material::RENDER_PRIORITY_MIN + (transparency == BaseMaterial3D::TRANSPARENCY_ALPHA ? 1 : 0)
+            : surface.material->get_render_priority());
         material->set_shader_parameter("albedo_texture", surface.material->get_texture(BaseMaterial3D::TEXTURE_ALBEDO));
         material->set_shader_parameter("use_scroll", scroll);
         material->set_shader_parameter("use_shaft", shaft);
+        if (sky) {
+            material->set_shader_parameter("sky_blend_alpha", transparency == BaseMaterial3D::TRANSPARENCY_ALPHA);
+            material->set_shader_parameter("sky_cutout", transparency == BaseMaterial3D::TRANSPARENCY_ALPHA_SCISSOR);
+        }
         material->set_shader_parameter("use_morph", morph != nullptr);
         material->set_shader_parameter("use_rigid", rigid != nullptr);
         if (billboard) material->set_shader_parameter("face_camera", true);

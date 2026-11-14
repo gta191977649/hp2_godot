@@ -32,6 +32,7 @@ void collect_police_diagnostics(godot::Dictionary& result, const RaceStateView& 
 
 #ifdef HP2_MVP_IMGUI
 struct RaceDiagnosticChecks {
+    bool finishForMenuTest{};
     bool pursuitDriver{};
     bool arrestCinematic{};
     bool supportVisuals{};
@@ -39,6 +40,7 @@ struct RaceDiagnosticChecks {
     bool fireTruckCamera{};
     std::uint64_t pursuitGeneration{};
 
+    bool finish_for_menu_test(const RaceStateView& race);
     void advance(const WorldSimulation& simulation, int track, int raceState,
         std::uint64_t generation, std::uint32_t step);
 };

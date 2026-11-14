@@ -703,7 +703,7 @@ std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResource
     }
     if (sky && sky->Model(0).solid) {
         MeshConverter skyConverter;
-        const auto mesh = skyConverter.convert(sky->Model(0), false);
+        const auto mesh = skyConverter.convert(sky->Model(0), false, 0, false, MeshConverter::ScenerySurface::Sky);
         if (!mesh->get_surface_count()) throw std::runtime_error("Authored sky has no drawable surfaces");
         auto* node = memnew(MeshInstance3D);
         root.add_child(node);
@@ -711,13 +711,16 @@ std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResource
         // The sun pass also samples this sky through its dedicated camera.
         node->set_layer_mask(trackSkyLayer);
         node->set_mesh(mesh);
-        for (int i=0;i<mesh->get_surface_count();++i) {
-            auto material=mesh->surface_get_material(i);
-            material->set_render_priority(Material::RENDER_PRIORITY_MIN);
-        }
+        // The sky shader bypasses world far clipping. Keep Godot's CPU
+        // frustum test conservative over the original sky projection range.
+        constexpr float skyCullMargin = 50000.0f;
+        node->set_extra_cull_margin(skyCullMargin);
         node->set_transform(race_transform(sky->Transform(0)));
-        if (reflection)
-            attach_placement(reflection->storage_->root, mesh, node->get_transform()).set_layer_mask(trackSkyLayer);
+        if (reflection) {
+            auto& reflectedSky = attach_placement(reflection->storage_->root, mesh, node->get_transform());
+            reflectedSky.set_layer_mask(trackSkyLayer);
+            reflectedSky.set_extra_cull_margin(skyCullMargin);
+        }
     }
     if (!placements) throw std::runtime_error("No drawable track placements");
     return placements;

@@ -266,6 +266,7 @@ saves/
 /tasks/active/*
 !/tasks/active/TASK-0147-port-credits-native-debug.md
 !/tasks/active/TASK-0148-track-materials-and-roadshine.md
+!/tasks/active/TASK-0149-menu-back-navigation.md
 !/tasks/active/TASK-0140-godot-race-effects.md
 !/tasks/active/TASK-0141-godot-single-player-races.md
 !/tasks/active/TASK-0142-godot-scenery-animation.md
@@ -289,6 +290,8 @@ saves/
 !/tools/test_mvp_sun_alignment.gd
 !/tools/test_mvp_race_catalog.cpp
 !/tools/test_mvp_race_lifecycle.gd
+!/tools/test_mvp_results_navigation.gd
+!/tools/test_mvp_menu_navigation.gd
 !/tools/test_mvp_campaign_matrix.ps1
 !/tools/test_mvp_campaign_drive.gd
 !/tools/test_mvp_be_the_cop.gd

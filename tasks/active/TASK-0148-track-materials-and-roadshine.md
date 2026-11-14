@@ -78,3 +78,19 @@ pixel parity and GS raster precision remain unverified. All runtime strip-40
 states exercised satisfy the two-pass fusion guard. General destination-alpha
 feedback for a state outside that guard remains unsupported and raises an
 explicit error.
+
+### Rear-view sky
+
+The mirror already included the sky layer. Its world camera stops at 192 m
+(`carAttachedCameraAdvance`), while the authored sky is several kilometres
+across. The native sky pass uses an independent 100–50000 m projection
+(`ecstasye.cpp`, PAL112E38–112F24) and disables depth writes. The Godot sky
+shaders place the authored geometry at the far depth and draw its base and
+alpha layers before the sun. World geometry keeps the original mirror range
+and occludes the sky.
+
+Release staging and the Track 12 fixed-camera pixel check passed on Vulkan
+and D3D12. The sky filled at least 2,636 previously black pixels and
+left more than 23,400 foreground pixels unchanged on each driver. The Vulkan Track 12
+sun alignment and GS blend probes also passed. Logs and mirror captures
+are in `local/rear-sky`.
