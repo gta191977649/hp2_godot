@@ -182,7 +182,7 @@ Ref<StandardMaterial3D> MeshConverter::material(const EditorMarkerTexture& descr
     Ref<StandardMaterial3D> result;
     result.instantiate();
     result->set_texture(BaseMaterial3D::TEXTURE_ALBEDO, texture);
-    result->set_texture_filter(BaseMaterial3D::TEXTURE_FILTER_LINEAR_WITH_MIPMAPS);
+    result->set_texture_filter(BaseMaterial3D::TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC);
     result->set_shading_mode(BaseMaterial3D::SHADING_MODE_UNSHADED);
     result->set_flag(BaseMaterial3D::FLAG_ALBEDO_FROM_VERTEX_COLOR, true);
     result->set_flag(BaseMaterial3D::FLAG_SRGB_VERTEX_COLOR, true);
@@ -628,6 +628,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
                 !wire[0x6e] && wire[0x6f] == 1 && wire[0x70] == 3);
             draw->set_shader_parameter("gs_bias", int(wire[0x75]));
             draw->set_shader_parameter("gs_filter", Vector4i(wire[0x6e], wire[0x6f], wire[0x70], wire[0x71]));
+            draw->set_shader_parameter("gs_anisotropic", !transparent && wire[0x6e] > 0 && wire[0x70] >= 2);
             std::uint16_t rawBias = std::uint16_t(wire[0x72]) | std::uint16_t(wire[0x73]) << 8;
             const int k = (rawBias & 0x800) ? int(rawBias & 0xfff) - 4096 : int(rawBias & 0xfff);
             draw->set_shader_parameter("gs_lod_bias", k / 16.f);

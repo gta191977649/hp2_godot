@@ -19,6 +19,8 @@ var repeat_confirm_at := 0
 var flyby_start_tick := 0.0
 var capture_directory := OS.get_environment("HP2_GRID_CAPTURE_DIR")
 var next_capture_tick := 120.0
+var fog_samples: Array = []
+var fog_trace := OS.get_environment("HP2_FOG_TRACE")
 
 func _initialize() -> void:
     change_scene_to_file.call_deferred("res://native_game.tscn")
@@ -48,6 +50,9 @@ func _process(_delta: float) -> bool:
             print("REFLECTION_BEGIN ", Engine.get_process_frames())
         else:
             frames.push_back((now - previous) / 1000.0)
+            if not fog_trace.is_empty():
+                fog_samples.push_back([Engine.get_process_frames(), clock.z - flyby_start_tick,
+                    frames.back(), state.get("fog_profile", {})])
             draws.push_back(int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)))
             triangles.push_back(int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)))
             for i in range(SCENERY_KEYS.size()):
@@ -79,6 +84,13 @@ func _process(_delta: float) -> bool:
             scenery_counts[i].sort()
             medians[SCENERY_KEYS[i]] = scenery_counts[i][scenery_counts[i].size() / 2]
         print("SCENERY_P50 ", medians, " fallback_frames=", fallback_frames)
+        if not fog_trace.is_empty():
+            var trace := FileAccess.open(fog_trace, FileAccess.WRITE)
+            if not trace:
+                push_error("Could not write the flyby fog trace")
+                quit(1)
+                return false
+            trace.store_string(JSON.stringify(fog_samples))
         confirmed = true
         repeat_confirm_at = now + 500000
         confirm()

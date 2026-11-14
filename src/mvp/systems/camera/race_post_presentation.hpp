@@ -3,6 +3,8 @@
 #include "systems/effects/race_effect_options.hpp"
 
 #include <godot_cpp/classes/compositor_effect.hpp>
+#include <godot_cpp/classes/color_rect.hpp>
+#include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/texture2d.hpp>
 #include <godot_cpp/classes/render_data.hpp>
 #include <godot_cpp/classes/shader_material.hpp>
@@ -32,8 +34,14 @@ private:
     void set_test_mode(int mode);
     void prepare_frame();
     void release_scene_textures();
+    void update_fog_palette(const std::array<float, 32>& parameters);
     std::array<float, 32> parameters_{};
     godot::Ref<godot::Texture2D> mask_, filter_, neutral_;
+    godot::Ref<godot::ImageTexture> fogPalette_;
+    std::array<float, 7> fogPaletteKey_{};
+    std::array<float, 256 * 4> fogPaletteEntries_{};
+    bool baselineFog_{};
+    bool profileOptimizedFog_{};
     std::uint32_t maskKey_{}, filterKey_{};
     bool historyValid_{};
     bool historyEnabled_{};
@@ -46,8 +54,9 @@ private:
     godot::Viewport* output_{};
     godot::Camera3D* camera_{};
     godot::Node* display_{};
+    godot::ColorRect* displayRect_{};
     std::array<godot::SubViewport*, 2> historyViewports_{};
-    godot::Ref<godot::ShaderMaterial> focusPass_, displayPass_;
+    godot::Ref<godot::ShaderMaterial> focusPass_, displayPass_, directFogPass_;
     godot::Ref<godot::Shader> historyShader_, seedShader_, fixtureShader_;
     std::array<godot::Ref<godot::ShaderMaterial>, 2> historyPasses_;
     godot::Ref<godot::Texture2DRD> color_, depth_;

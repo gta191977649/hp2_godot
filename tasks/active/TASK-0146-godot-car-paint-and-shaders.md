@@ -4,6 +4,85 @@
 - Scope: vehicle paint, environment capture, external Godot shader resources and Forward+ race postprocessing.
 - Acceptance: native-depth and GS-history pixel checks on Vulkan and D3D12, diagnostic race lifecycle, frontend preview, and matched PS2 paint comparisons.
 
+## Starting Grid fog and AcidFX particles
+
+The fixed-seed Track 13 benchmark enters Quick Race through the original
+frontend callback and samples 720 source ticks of the Starting Grid
+background flyby before confirming the grid. Every sampled window had
+weather fog strength 0.15, fog start slot 125, two focus taps, and history
+available with radial blur inactive. The captures show no change in the
+authored weather values across this window.
+
+The combined postprocess defaults to the analytic fog shader, which had
+the highest median run-average FPS. Fog-only composition uses a cached
+256-slot table and draws directly into the output canvas. The table and
+encoded-color path in the combined pass remain available for isolated
+profiling. Godot's resolved scene depth is still sampled after transparent
+draws with 2× MSAA.
+
+The common AcidFX shaders collapse quads rejected by the current camera or
+known to fail the authored alpha test. Particle step history is retained in
+Godot's layered texture and only dirty pages are uploaded. Each page is
+50 KiB, compared to 400 KiB for the old full upload. Source emission, motion,
+blend modes, material priority and atlas sampling are preserved. Mipmapped
+3D surface materials use 4× anisotropic filtering by default. The opaque
+GS material passes directional gradients bounded by its authored mip range.
+The Debug console's `ver` command reads the running Godot Engine version.
+This follow-up has no game_core changes or new reverse-engineering claims.
+
+### Performance and checks
+
+Windows Arc B390, Godot 4.7.2, Vulkan Forward+, 1080p Release, VSync off.
+The six runs used the same build, both with the shared particle changes
+and anisotropic filtering. The table reports the median of each metric
+across three runs.
+
+| Combined postprocess | Run-average FPS | Frame P50 / P95 / P99, ms | Frames over 8.33 ms |
+| --- | ---: | ---: | ---: |
+| Analytic | 203.8 | 4.408 / 6.980 / 7.652 | 0.49% |
+| LUT and encoded color | 197.1 | 5.171 / 6.851 / 7.790 | 0.41% |
+
+With the Visual Profiler enabled, the analytic pass had render CPU
+P50/P95/P99 of 1.751/2.610/2.983 ms and GPU of 3.392/4.346/4.664 ms.
+The experimental pass had CPU of 1.865/2.719/3.200 ms and GPU of
+3.431/4.712/5.249 ms. The longest CPU-selected transparent scope had
+GPU P95 of 1.415/1.424 ms respectively. The similarly selected
+CanvasItems scope had GPU P95 of 0.076/0.065 ms. An earlier 120 Hz
+diagnostic run had P95 8.621 ms. The final VSync rerun was halted at
+the user's request, so final synchronized pacing remains unverified.
+
+The Track 13 postprocessing fixture passed on Vulkan and D3D12. It
+compared fog-only output to the analytic pass and checked reverse-Z,
+GS history, resize and reset. Debug Vulkan pixel probes confirmed Track 21
+sandstorm and debris, Track 12 forest smoke, and Track 61 waterfall mist.
+In a single 100-frame Track 21 diagnostic A/B with paged uploads in both
+variants, enabling vertex rejection changed frame P50/P95/P99 from
+4.668/5.497/5.610 ms to 4.100/4.923/5.394 ms. The D3D12 fire-truck shader
+probe passed its visible-pixel and priority checks. The D3D12 sandstorm
+launch failed to load a track shader in the shared Debug staging
+directory. A fresh isolated rerun, the new Track 33 lifecycle runs and the
+console screenshot check were deferred when the user stopped testing.
+The exhaust probe rendered pixels, then timed out before the nitro check.
+
+```powershell
+$iso = 'D:/ps2_game/Need for Speed - Hot Pursuit 2 (USA).iso'
+$env:HP2_PS2_ASSET_ROOT = $iso
+$engine = "$PWD/local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe"
+cmake --build --preset godot-mvp-release --target stage_mvp --parallel 8
+cmake --build --preset godot-mvp-debug --target stage_mvp --parallel 6
+py -3 tools/profile_mvp_reflections.py --assets $iso --out local/task0146/weather-grid2-ab --grid --fog ab --quiet
+py -3 tools/profile_mvp_reflections.py --assets $iso --out local/task0146/weather-grid2-visual --grid --fog ab --pairs 1
+py -3 tools/profile_mvp_reflections.py --assets $iso --out local/task0146/weather-vsync-repro --grid --pairs 0 --quiet --vsync
+$env:HP2_MVP_TEST_POST = '1'
+$env:HP2_PROFILE_DIR = "$PWD/local/task0146/weather-post-repro"
+& $engine --path build/godot-mvp-release/mvp-project --rendering-driver vulkan --resolution 960x720 --disable-vsync --script "$PWD/tools/test_mvp_race_post.gd" -- --race-track=13
+Remove-Item Env:HP2_MVP_TEST_POST
+$env:HP2_PROFILE_DIR = "$PWD/local/task0146/weather-sand-repro"
+$env:HP2_MVP_TEST_TRACK_EFFECTS = '1'
+$env:HP2_MVP_PROFILE_PARTICLES = 'baseline'
+& $engine --path build/godot-mvp-debug/mvp-project --rendering-driver vulkan --resolution 1920x1080 --disable-vsync --script "$PWD/tools/test_mvp_particle_routes.gd" -- --race-track=21
+```
+
 ## Evidence and core boundary
 
 - PAL donor annotations retain their existing provenance. ELF version and SHA-256 remain unresolved. PAL1211EC supplies body lighting, PAL123BA0 selects the environment focus, PAL1175C8–1178E8 supplies the face schedule, and PAL117A38–118880 supplies the raster grid and remap ordering. PAL10B08C–10B0F8 selects the second reflection ALPHA context.

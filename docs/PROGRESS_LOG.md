@@ -1,3 +1,11 @@
+## 2026-11-15 TASK-0146 weather and particle rendering
+
+Selected the analytic combined fog path by median Starting Grid FPS and
+added a direct fog-only canvas pass. AcidFX rejects invisible quads before
+rasterization and uploads dirty step-history pages. Enabled 4× anisotropic
+filtering for mipmapped 3D surfaces and added the Debug console's `ver`
+command. TASK-0146 records the A/B runs, particle checks and remaining gaps.
+
 ## 2026-11-15 TASK-0149 race menu Back navigation
 
 Restored Back on Lap Times, the other results pages, pre-race information

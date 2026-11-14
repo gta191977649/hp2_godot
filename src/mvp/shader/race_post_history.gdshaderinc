@@ -12,7 +12,9 @@ void fragment() {
 #ifdef HISTORY_FIXTURE
     vec4 c = vec4(0.0, 1.0, 0.0, 1.0);
 #else
-    vec4 c = vec4(fogged(xy), 1.0);
+    // Focus, filter and history already operate in encoded color. Monochrome
+    // selects the green channel, which commutes with the transfer function.
+    vec4 c = vec4(fogged(xy, use_fog_palette), 1.0);
     if (kernel.y > 0.0) {
         float slot = depth_slot(texelFetch(scene_depth, xy, 0).r);
         float near_slot = clamp(floor(slot_at(focus.x-focus.y*0.5)),0.0,255.0);
@@ -26,16 +28,23 @@ void fragment() {
             texelFetch(focus_image,clamp(base+ivec2(1,0),ivec2(0),limit),0).rgb,f.x);
         vec3 b = mix(texelFetch(focus_image,clamp(base+ivec2(0,1),ivec2(0),limit),0).rgb,
             texelFetch(focus_image,clamp(base+ivec2(1),ivec2(0),limit),0).rgb,f.x);
-        c.rgb = to_linear(mix(to_srgb(c.rgb), mix(a,b,f.y), alpha));
+        vec3 focused = mix(use_fog_palette ? c.rgb : to_srgb(c.rgb), mix(a,b,f.y), alpha);
+        c.rgb = use_fog_palette ? focused : to_linear(focused);
     }
     if (effects.w > 0.0) c.rgb = vec3(c.g);
     if (effects.z > 0.0) {
         vec3 filter_rgb = texture(filter_image, uv).rgb * filter_color.rgb;
-        vec3 dst = to_srgb(c.rgb);
-        c.rgb = to_linear(clamp(dst + (dst-filter_rgb)*effects.z, 0.0, 1.0));
+        vec3 dst = use_fog_palette ? c.rgb : to_srgb(c.rgb);
+        vec3 filtered = clamp(dst + (dst-filter_rgb)*effects.z, 0.0, 1.0);
+        c.rgb = use_fog_palette ? filtered : to_linear(filtered);
     }
 #endif
-    vec3 encoded = round(clamp(to_srgb(c.rgb), 0.0, 1.0) * 255.0);
+#ifdef HISTORY_FIXTURE
+    vec3 color = to_srgb(c.rgb);
+#else
+    vec3 color = use_fog_palette ? c.rgb : to_srgb(c.rgb);
+#endif
+    vec3 encoded = round(clamp(color, 0.0, 1.0) * 255.0);
     if (camera.z > 0.0) {
         // Retail 0010F280, Debug 0010F660 and ePoly strip 0,1,3,2.
         vec2 q = 1.0 - abs(2.0 * uv - 1.0);
@@ -56,5 +65,5 @@ void fragment() {
             encoded = clamp(encoded + floor((previous - encoded) * weight), 0.0, 255.0);
         }
     }
-    COLOR = vec4(history.x > 0.0 ? encoded / 255.0 : to_srgb(c.rgb), 1.0);
+    COLOR = vec4(history.x > 0.0 ? encoded / 255.0 : color, 1.0);
 }

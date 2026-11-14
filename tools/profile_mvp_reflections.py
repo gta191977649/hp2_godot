@@ -73,6 +73,18 @@ def report(run, visual, grid=False):
     for line in log.splitlines():
         if line.startswith(("REFLECTION_", "GRID_", "ERROR", "SCRIPT ERROR")):
             print(line, flush=True)
+    fog_trace = run / "fog.json"
+    rows = []
+    if fog_trace.exists():
+        rows = json.loads(fog_trace.read_text())
+        for tick in range(0, 720, 60):
+            window = [row for row in rows if tick <= row[1] < tick + 60]
+            if not window:
+                continue
+            fog = window[len(window) // 2][3]
+            intervals = [row[2] for row in window]
+            print(f"FOG ticks={tick}:{tick + 60} {fog} frame={percentiles(intervals)} "
+                  f"over={sum(ms > 1000 / 120 for ms in intervals)}/{len(intervals)}", flush=True)
     if not visual:
         return
     start = int(re.search(r"REFLECTION_BEGIN (\d+)", log)[1])
@@ -88,7 +100,10 @@ def report(run, visual, grid=False):
     print(f"VISUAL {len(frames)} frames CPU P50/P95/P99={percentiles(f[-2] for f in frames)} "
           f"GPU P50/P95/P99={percentiles(f[-1] for f in frames)}", flush=True)
     if grid:
-        scopes = {name: [] for name in ("Render Depth Pre-Pass", "Render Opaque Pass")}
+        names = ["Render Depth Pre-Pass", "Render Opaque Pass"]
+        if rows:
+            names += ["Render 3D Transparent Pass", "Render CanvasItems", "Resolve MSAA"]
+        scopes = {name: [] for name in names}
         for frame in frames:
             spans = list(zip(frame[2::3], frame[3::3], frame[4::3]))
             # The main race viewport submits the most geometry. Reflection and
@@ -102,6 +117,13 @@ def report(run, visual, grid=False):
             if times:
                 print(f"VISUAL {name} longest CPU scope per frame "
                       f"CPU={percentiles(cpu for cpu, _ in times)} GPU={percentiles(gpu for _, gpu in times)}", flush=True)
+    if rows:
+        ticks = {row[0]: row[1] for row in rows}
+        for tick in range(0, 720, 60):
+            window = [frame for frame in frames if tick <= ticks.get(frame[0], -1) < tick + 60]
+            if window:
+                print(f"VISUAL ticks={tick}:{tick + 60} n={len(window)} "
+                      f"CPU={percentiles(f[-2] for f in window)} GPU={percentiles(f[-1] for f in window)}", flush=True)
 
 
 def main():
@@ -116,12 +138,16 @@ def main():
     parser.add_argument("--vsync", action="store_true")
     parser.add_argument("--quiet", action="store_true", help="Run without Visual Profiler")
     parser.add_argument("--section-tree", action="store_true", help="Compare section tree culling with the existing zone and LOD path")
+    parser.add_argument("--fog", choices=("ab", "baseline", "optimized", "no-fog", "no-focus", "no-history"),
+                        help="Compare the fog paths or isolate a stage during the Starting Grid flyby")
     scene = parser.add_mutually_exclusive_group()
     scene.add_argument("--demo", action="store_true", help="Watch the demo through its natural end")
     scene.add_argument("--grid", action="store_true", help="Measure the track flyby before confirming Starting Grid")
     args = parser.parse_args()
     if args.section_tree and not args.grid:
         parser.error("--section-tree requires --grid")
+    if args.fog and (not args.grid or args.section_tree):
+        parser.error("--fog requires --grid and its default scenery path")
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=False)
     project = out / "project"
@@ -146,6 +172,10 @@ def main():
             else ("legacy" if variant == "shared" else "lod")
             for variant in variants
         ]
+    if args.fog:
+        variants = [args.fog] if args.fog != "ab" else [
+            "baseline" if variant == "legacy" else "optimized" for variant in variants
+        ]
     for i, variant in enumerate(variants, 1):
         run = out / f"{i}-{variant}"
         profile = run / "profile"
@@ -158,6 +188,9 @@ def main():
             env.update(HP2_MVP_PROFILE_GRID="1", HP2_MVP_PROFILE_REFLECTIONS="0",
                        HP2_MVP_PROFILE_LEGACY_SCENERY=str(int(variant == "legacy")),
                        HP2_MVP_PROFILE_BASELINE_SCENERY_LOD=str(int(variant in ("baseline", "lod"))))
+        if args.fog:
+            env.update(HP2_MVP_PROFILE_BASELINE_SCENERY_LOD="0", HP2_MVP_PROFILE_FOG=variant,
+                       HP2_FOG_TRACE=str(run / "fog.json"))
         visual = not (args.quiet or args.demo)
         command = [engine, "--path", project, "--rendering-driver", args.driver,
                    "--resolution", args.resolution, "--script", script]

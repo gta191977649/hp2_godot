@@ -149,6 +149,15 @@ func _check(race: Node) -> void:
         quit(1)
         return
     print("RACE_POST_NATIVE_DEPTH_PASS")
+    effect.call("set_test_mode", 11)
+    var legacy := await _frame()
+    effect.call("set_test_mode", 10)
+    var direct := await _frame()
+    if _difference(legacy, direct) != 0:
+        push_error("Direct depth fog differs from the legacy canvas pass")
+        quit(1)
+        return
+    print("RACE_POST_DIRECT_FOG_PASS")
     if not await _check_history(effect):
         quit(1)
         return

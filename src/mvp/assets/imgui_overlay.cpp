@@ -6,6 +6,7 @@
 #include <imgui_internal.h>
 #include <godot_cpp/classes/canvas_layer.hpp>
 #include <godot_cpp/classes/display_server.hpp>
+#include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/input_event_key.hpp>
 #include <godot_cpp/classes/input_event_mouse_button.hpp>
@@ -74,6 +75,11 @@ struct ImGuiOverlay::Storage {
         for (std::size_t i = 0; i < keys.size(); ++i) io.KeyMap[i] = static_cast<int>(i);
         console = std::make_unique<Console>();
         console->System().UnregisterCommand("run");
+        console->System().RegisterCommand("ver", "Show the running Godot Engine version", [this] {
+            const auto version = Engine::get_singleton()->get_version_info();
+            const String label = version["string"];
+            console->System().Log() << "Godot Engine " << label.utf8().get_data() << csys::endl;
+        });
         console->System().RegisterCommand("effect", "Open the race effect controls", [this] {
             effectsOpen = true;
             focusEffects = true;

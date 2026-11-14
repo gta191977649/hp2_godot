@@ -1,4 +1,5 @@
 #include "race_diagnostics.hpp"
+#include "systems/effects/race_effect_options.hpp"
 
 #include "bware/inc/bWare.hpp"
 #include "bware/inc/bMath.hpp"
@@ -33,6 +34,30 @@
 #endif
 
 namespace hp2 {
+
+bool profile_baseline_particle_draw() {
+    const auto* os = godot::OS::get_singleton();
+    return !os->get_environment("HP2_PROFILE_DIR").is_empty() &&
+        os->get_environment("HP2_MVP_PROFILE_PARTICLES") == "baseline";
+}
+
+void profile_fog_state(const RacePostState& post, RaceEffectOptions& options, godot::Dictionary& sample) {
+    static const auto mode = [] {
+        const auto* os = godot::OS::get_singleton();
+        if (os->get_environment("HP2_PROFILE_DIR").is_empty()) return godot::String{};
+        return os->get_environment("HP2_MVP_PROFILE_FOG");
+    }();
+    if (mode.is_empty()) return;
+    options.fog &= mode != "no-fog";
+    options.depthOfField &= mode != "no-focus";
+    options.motionBlur &= mode != "no-history";
+    sample["fog_strength"] = post.fogEnabled ? post.fog[3] : 0.0f;
+    sample["fog_distance"] = post.fogRange[0];
+    sample["fog_mode"] = post.fogMode;
+    sample["focus_taps"] = options.depthOfField && post.focusEnabled ? post.focusPasses : 0;
+    sample["radial"] = options.motionBlur && post.radialActive;
+    sample["history"] = options.motionBlur && post.radialMask != nullptr;
+}
 
 bool profile_legacy_primary_scenery() {
     const auto* os = godot::OS::get_singleton();

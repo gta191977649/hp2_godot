@@ -269,6 +269,7 @@ struct RacePresentation::Session {
 #endif
     Node3D* scene{};
     SubViewport* sceneViewport{};
+    Dictionary fogProfile;
     Camera3D* camera{};
     Ref<RacePostPresentation> post;
     SubViewport* rearViewport{};
@@ -784,6 +785,7 @@ void RacePresentation::_process(double delta) {
                 post.radialActive = true;
                 post.radialAmounts = {0, 160}; // RadialBlurOn's default envelope.
             }
+            profile_fog_state(post, effectOptions, s.fogProfile);
             s.radialBlurActive = effectOptions.motionBlur && post.radialActive;
             s.post->update(post, newScene || replayRestored, effectOptions, race.ntsc);
         }
@@ -894,6 +896,7 @@ Dictionary RacePresentation::telemetry() const {
     result["race_state"] = session_->raceState;
     result["radial_blur_active"] = session_->radialBlurActive;
     result["animation_clock"] = session_->animationClock;
+    if (!session_->fogProfile.is_empty()) result["fog_profile"] = session_->fogProfile;
     collect_police_diagnostics(result, session_->runtime.RaceState(), session_->runtime.FrontendState());
     if (!session_->scene) return result;
     result["nis_parts"] = static_cast<int64_t>(session_->cinematic->part_count());

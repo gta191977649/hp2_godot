@@ -1,6 +1,7 @@
 #include "race_effects_presentation.hpp"
 
 #include "assets/shader_resource.hpp"
+#include "assets/race_diagnostics.hpp"
 
 #include "assets/mesh_converter.hpp"
 #include "indep/inc/Texture.hpp"
@@ -21,6 +22,7 @@
 #include <godot_cpp/classes/shader_material.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/sub_viewport.hpp>
+#include <godot_cpp/classes/texture2d_array.hpp>
 #include <godot_cpp/classes/viewport.hpp>
 #include <godot_cpp/classes/viewport_texture.hpp>
 #include <godot_cpp/classes/world3d.hpp>
@@ -123,6 +125,8 @@ struct RaceEffectsPresentation::Storage {
     std::unordered_map<const EditorMarkerTexture*,Ref<ShaderMaterial>> lightMaterials;
     std::unordered_map<const WorldParticleDefinition*,Particle> particles;
     static constexpr int slots=800;
+    static constexpr int slotsPerPage=100;
+    static constexpr int pages=slots/slotsPerPage;
     struct Group {
         std::uint64_t generation{};
         Particle* particle{};
@@ -133,10 +137,14 @@ struct RaceEffectsPresentation::Storage {
     std::array<Group,slots> groups;
     // Store history by source group slot. Each node consumes all groups that
     // share its authored definition without issuing a draw for every emitter.
-    std::array<std::array<float,4>,slots*historySize*2> steps{};
+    using StepPage = std::array<std::array<float,4>,slotsPerPage*historySize*2>;
+    std::array<StepPage,pages> steps{};
     std::array<std::array<float,4>,slots> epochs{};
-    Ref<ImageTexture> stepTexture, epochTexture;
-    Ref<Image> stepImage, epochImage;
+    Ref<Texture2DArray> stepTexture;
+    Ref<ImageTexture> epochTexture;
+    Ref<Image> epochImage;
+    TypedArray<Image> stepImages;
+    PackedByteArray stepBytes;
     GPUParticles3D* exhaust{};
     struct ExhaustClock {
         std::uint64_t car{};
@@ -145,7 +153,7 @@ struct RaceEffectsPresentation::Storage {
     };
     std::vector<ExhaustClock> exhaustClocks;
     int exhaustFrame{-1};
-    PackedByteArray stepBytes, epochBytes;
+    PackedByteArray epochBytes;
     bool epochsDirty{};
     bool particlesVisible{true};
     std::array<Mark,128> marks, rearMarks;
@@ -293,7 +301,14 @@ struct RaceEffectsPresentation::Storage {
             definition.atlasWidthPower+definition.atlasHeightPower>8 || definition.lifetime<=0)
             throw std::runtime_error("Invalid authored AcidFX particle definition");
         if (stepTexture.is_null()) {
-            upload_texture(stepTexture,stepImage,stepBytes,steps.data(),slots,historySize*2);
+            stepBytes.resize(sizeof(StepPage));
+            stepBytes.fill(0);
+            for (int page=0; page<pages; ++page)
+                stepImages.push_back(Image::create_from_data(slotsPerPage,historySize*2,false,
+                    Image::FORMAT_RGBAF,stepBytes));
+            stepTexture.instantiate();
+            if (stepTexture->create_from_images(stepImages) != OK)
+                throw std::runtime_error("Could not allocate AcidFX step history");
             upload_texture(epochTexture,epochImage,epochBytes,epochs.data(),slots,1);
         }
         const auto* source=textureInfoForDescriptor(&descriptor);
@@ -315,6 +330,7 @@ struct RaceEffectsPresentation::Storage {
         draw->set_shader_parameter("nearest_minification",wire[0x6e]==0 && wire[0x6f]==1 && wire[0x70]==3);
         draw->set_shader_parameter("texture_function",wire[0x4e]);
         draw->set_shader_parameter("group_epochs",epochTexture);
+        draw->set_shader_parameter("particle_baseline",profile_baseline_particle_draw());
         auto* node=memnew(GPUParticles3D);
         particle.node=node;
         node->set_meta("source_effect_group", static_cast<std::int64_t>(definition.groupKey));
@@ -424,7 +440,7 @@ struct RaceEffectsPresentation::Storage {
     }
 
     void update_particles(const RaceEffectsFrame& frame,std::uint64_t generation) {
-        bool stepsDirty=false;
+        std::array<bool,pages> stepsDirty{};
         for (const auto& request:frame.particles) {
             if (request.world!=generation) continue;
             const auto& event=request.event;
@@ -467,10 +483,13 @@ struct RaceEffectsPresentation::Storage {
                 }
                 const auto velocity=race_vector(event.inherited);
                 const int index=group.sequence++%historySize;
-                steps[index*slots+slot]={velocity.x,velocity.y,velocity.z,event.seconds};
-                steps[(index+historySize)*slots+slot]={float(event.ticks),0,0,0};
+                const int page=slot/slotsPerPage;
+                const int column=slot%slotsPerPage;
+                steps[page][index*slotsPerPage+column]={velocity.x,velocity.y,velocity.z,event.seconds};
+                steps[page][(index+historySize)*slotsPerPage+column]={float(event.ticks),0,0,0};
                 epochs[slot][2]=float(group.sequence);
-                epochsDirty=stepsDirty=true;
+                stepsDirty[page]=true;
+                epochsDirty=true;
             }
         }
         for (const auto& visible:frame.visibility) {
@@ -483,7 +502,15 @@ struct RaceEffectsPresentation::Storage {
             epochs[slot][1]=float(mask);
             epochsDirty=true;
         }
-        if (stepsDirty) upload_texture(stepTexture,stepImage,stepBytes,steps.data(),slots,historySize*2);
+        // Emitters usually occupy only a few pages. Upload those pages
+        // before requesting simulation, preserving the full step history.
+        for (int page=0; page<pages; ++page) {
+            if (!stepsDirty[page]) continue;
+            std::memcpy(stepBytes.ptrw(),steps[page].data(),sizeof(StepPage));
+            const Ref<Image> image = stepImages[page];
+            image->set_data(slotsPerPage,historySize*2,false,Image::FORMAT_RGBAF,stepBytes);
+            stepTexture->update_layer(image,page);
+        }
         if (epochsDirty && epochTexture.is_valid()) upload_texture(epochTexture,epochImage,epochBytes,epochs.data(),slots,1);
         epochsDirty=false;
         for (auto& [definition,particle]:particles) {

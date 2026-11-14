@@ -139,6 +139,7 @@ func _check_pixels() -> void:
     if not samples.is_empty():
         samples.sort()
         print("PARTICLE_FRAME_MS count=", samples.size(), " p50=", samples[samples.size()/2],
+            " p95=", samples[int((samples.size()-1)*0.95)],
             " p99=", samples[int((samples.size()-1)*0.99)], " max=", samples.back())
     print("PARTICLE_PIXELS ", label, " track=", track, " nodes=", targets.size(),
         " warm_pool=", nodes.size(), " changed=", count, " resolution=", size)

@@ -39,12 +39,61 @@ Ref<Texture2D> upload(const EditorMarkerTexture* descriptor) {
 }
 
 RacePostPresentation::RacePostPresentation() {
+    const auto* os = OS::get_singleton();
+    const auto mode = os->get_environment("HP2_MVP_PROFILE_FOG");
+    if (!os->get_environment("HP2_PROFILE_DIR").is_empty()) {
+        baselineFog_ = mode == "baseline" || mode == "no-fog" || mode == "no-focus" || mode == "no-history";
+        profileOptimizedFog_ = mode == "optimized";
+    }
     set_effect_callback_type(EFFECT_CALLBACK_TYPE_POST_TRANSPARENT);
     set_access_resolved_color(true);
     set_access_resolved_depth(true);
     auto image = Image::create_empty(1, 1, false, Image::FORMAT_RGBA8);
     image->fill(Color(1,1,1,1));
     neutral_ = ImageTexture::create_from_image(image);
+}
+
+void RacePostPresentation::update_fog_palette(const std::array<float, 32>& p) {
+    if (p[11] < 0.0f) return;
+    const std::array key{p[0], p[1], p[2], p[3], p[8], p[9], p[11]};
+    if (fogPalette_.is_valid() && key == fogPaletteKey_) return;
+    const float denominator = std::max(1.0f, 255.0f - p[8]);
+    std::array<float, 256 * 4> entries{};
+    for (int slot = 0; slot < 256; ++slot) {
+        const float density = std::clamp((255.0f - slot - p[8]) / denominator, 0.0f, 1.0f);
+        auto* entry = entries.data() + slot * 4;
+        std::copy_n(p.data(), 3, entry);
+        switch (static_cast<int>(p[11])) {
+        case 1:
+            std::fill_n(entry, 3, 0.0f);
+            entry[3] = (1.0f - density) * p[3];
+            break;
+        case 2:
+            std::fill_n(entry, 3, slot / 255.0f);
+            entry[3] = 1.0f;
+            break;
+        case 3:
+            entry[3] = float(slot) == std::trunc(p[8]) ? p[3] : 0.0f;
+            break;
+        default:
+            entry[3] = std::floor(std::pow(std::max(0.01f, density), p[9]) * p[3] * 128.0f) / 128.0f;
+            break;
+        }
+    }
+    fogPaletteKey_ = key;
+    if (fogPalette_.is_valid() && entries == fogPaletteEntries_) return;
+    fogPaletteEntries_ = entries;
+    PackedByteArray bytes;
+    bytes.resize(sizeof(entries));
+    std::memcpy(bytes.ptrw(), entries.data(), sizeof(entries));
+    const auto image = Image::create_from_data(256, 1, false, Image::FORMAT_RGBAF, bytes);
+    if (fogPalette_.is_valid()) {
+        fogPalette_->update(image);
+    } else {
+        fogPalette_ = ImageTexture::create_from_image(image);
+        for (const auto& pass : {directFogPass_, focusPass_, historyPasses_[0], historyPasses_[1]})
+            pass->set_shader_parameter("fog_palette", fogPalette_);
+    }
 }
 
 void RacePostPresentation::_bind_methods() {
@@ -91,7 +140,7 @@ void RacePostPresentation::update(const RacePostState& s, bool reset, const Race
 }
 
 namespace {
-Ref<ShaderMaterial> full_screen_pass(Node& parent, const char* path) {
+Ref<ShaderMaterial> full_screen_pass(Node& parent, const char* path, ColorRect** output = nullptr) {
     auto* rect = memnew(ColorRect);
     rect->set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
     parent.add_child(rect);
@@ -100,6 +149,7 @@ Ref<ShaderMaterial> full_screen_pass(Node& parent, const char* path) {
     material.instantiate();
     material->set_shader(load_shader(path));
     rect->set_material(material);
+    if (output) *output = rect;
     return material;
 }
 
@@ -149,11 +199,15 @@ void RacePostPresentation::attach(SubViewport& scene, Viewport& output, Camera3D
     layer->set_layer(-2);
     output.add_child(layer);
     display_ = layer;
-    displayPass_ = full_screen_pass(*layer, "res://shader/race_post_output.gdshader");
+    displayPass_ = full_screen_pass(*layer, "res://shader/race_post_output.gdshader", &displayRect_);
     displayPass_->set_shader_parameter("fallback_scene", scene_->get_texture());
-    for (const auto& pass : {focusPass_, historyPasses_[0], historyPasses_[1]}) {
+    directFogPass_.instantiate();
+    directFogPass_->set_shader(load_shader("res://shader/race_post_fog.gdshader"));
+    for (const auto& pass : {directFogPass_, focusPass_, historyPasses_[0], historyPasses_[1]}) {
         pass->set_shader_parameter("scene_color", color_);
         pass->set_shader_parameter("scene_depth", depth_);
+        pass->set_shader_parameter("use_fog_palette", pass == directFogPass_ || profileOptimizedFog_);
+        pass->set_shader_parameter("fog_palette", neutral_);
     }
     Ref<Compositor> compositor;
     compositor.instantiate();
@@ -226,7 +280,7 @@ void RacePostPresentation::prepare_frame() {
             p[22] = testMode_ == 5 || testMode_ == 6 ? 0 : 1;
         }
         if (testMode_ == 4) { p[12] = 0.8f; p[13] = 0.3f; p[14] = 0.2f; p[18] = 0.7f; }
-        if (testMode_ == 9) {
+        if (testMode_ >= 9 && testMode_ <= 11) {
             p[8] = 0;
             p[10] = 16777215;
             p[11] = 2;
@@ -236,12 +290,24 @@ void RacePostPresentation::prepare_frame() {
 
     const bool draw = get_enabled() && (active_ || testMode_ != 0) &&
         (sceneTexturesReady_ || testMode_ == 6);
+    const bool directFog = draw && !baselineFog_ && (testMode_ == 0 || testMode_ == 10) && p[11] >= 0.0f &&
+        p[18] == 0 && p[19] == 0 && p[25] == 0 && p[28] == 0;
     const auto next = historyIndex_ ^ 1u;
     for (auto* target : historyViewports_) target->set_update_mode(SubViewport::UPDATE_DISABLED);
     focusViewport_->set_update_mode(draw && p[25] > 0 ? SubViewport::UPDATE_ALWAYS : SubViewport::UPDATE_DISABLED);
     displayPass_->set_shader_parameter("use_post", draw);
     displayPass_->set_shader_parameter("seed_history", testMode_ == 6);
+    const auto& display = directFog ? directFogPass_ : displayPass_;
+    if (displayRect_->get_material() != display) displayRect_->set_material(display);
     if (!draw) {
+        historyValid_ = false;
+        return;
+    }
+    // Prefer the legacy combined pass for the normal flyby. It averaged
+    // more FPS in the paired runs. The fog-only path avoids a full pass.
+    if (directFog || profileOptimizedFog_) update_fog_palette(p);
+    if (directFog) {
+        directFogPass_->set_shader_parameter("fog_params", Vector4(p[8], p[9], p[10], p[11]));
         historyValid_ = false;
         return;
     }
@@ -265,7 +331,14 @@ void RacePostPresentation::prepare_frame() {
         fixtureShader_ = load_shader("res://shader/race_post_history_fixture.gdshader");
     const auto& shader = testMode_ == 6 ? seedShader_ :
         testMode_ >= 7 && testMode_ <= 8 ? fixtureShader_ : historyShader_;
-    if (pass->get_shader() != shader) pass->set_shader(shader);
+    if (pass->get_shader() != shader) {
+        pass->set_shader(shader);
+        pass->set_shader_parameter("scene_color", color_);
+        pass->set_shader_parameter("scene_depth", depth_);
+        const Ref<Texture2D> palette = fogPalette_.is_valid() ? Ref<Texture2D>(fogPalette_) : neutral_;
+        pass->set_shader_parameter("fog_palette", palette);
+    }
+    pass->set_shader_parameter("use_fog_palette", profileOptimizedFog_ && testMode_ != 11);
     Ref<Texture2D> previous = neutral_;
     if (p[22] > 0) previous = historyViewports_[next ^ 1u]->get_texture();
     pass->set_shader_parameter("previous_image", previous);

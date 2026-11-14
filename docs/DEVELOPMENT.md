@@ -41,8 +41,9 @@ tree while Godot uses a complete disc or archive. The Godot host
 reports missing Common sound bank files by name for loose sources.
 
 Debug links the repository's pinned Dear ImGui and ImGui Console
-sources through the MVP target. The overlay uses the DPI reported by
-Windows for the active game window. A fatal MVP assertion stops the
+sources through the MVP target. Open the console with the grave/tilde key
+and enter `ver` to see the running Godot Engine version. The overlay uses
+the DPI reported by Windows for the active game window. A fatal MVP assertion stops the
 session and opens the Debug console. Esc exits the failed session with
 status 1. Release reports the failure and exits immediately.
 MinGW Debug builds the MVP native targets with `-O2` and debug symbols.

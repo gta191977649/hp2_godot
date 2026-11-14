@@ -1,6 +1,6 @@
 shader_type particles;
 render_mode disable_velocity, disable_force;
-uniform sampler2D step_history : filter_nearest, repeat_disable;
+uniform sampler2DArray step_history : filter_nearest, repeat_disable;
 uniform sampler2D group_epochs : filter_nearest, repeat_disable;
 
 uniform float drag;
@@ -11,6 +11,9 @@ uniform int atlas_cells;
 void process() {
     int identity = int(CUSTOM.w);
     int slot = identity & 1023;
+    int page_width = textureSize(step_history, 0).x;
+    int page = slot / page_width;
+    int column = slot % page_width;
     vec4 group = texelFetch(group_epochs, ivec2(slot, 0), 0);
     if (int(group.r) != (identity >> 10)) ACTIVE = false;
     for (int offset = 0; offset < 16 && ACTIVE; ++offset) {
@@ -19,8 +22,8 @@ void process() {
         int life = packed_life & 65535;
         if (previous == (int(group.b) & 255)) break;
         int index = previous % 16;
-        vec4 step = texelFetch(step_history, ivec2(slot, index), 0);
-        int ticks = int(texelFetch(step_history, ivec2(slot, index + 16), 0).r);
+        vec4 step = texelFetch(step_history, ivec3(column, index, page), 0);
+        int ticks = int(texelFetch(step_history, ivec3(column, index + 16, page), 0).r);
         int remaining = life - ticks;
         if (remaining <= 0) {
             ACTIVE = false;
