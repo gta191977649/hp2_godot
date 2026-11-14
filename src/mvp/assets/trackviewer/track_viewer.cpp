@@ -28,6 +28,8 @@
 #include <godot_cpp/classes/input_event_mouse_motion.hpp>
 #include <godot_cpp/classes/mesh_instance3d.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
+#include <godot_cpp/classes/shader.hpp>
+#include <godot_cpp/classes/shader_material.hpp>
 #include <godot_cpp/classes/standard_material3d.hpp>
 #include <godot_cpp/classes/sub_viewport.hpp>
 #include <godot_cpp/classes/sub_viewport_container.hpp>
@@ -153,6 +155,7 @@ struct TrackViewer::Storage {
     std::unique_ptr<RaceEffectsPresentation> effects;
     RaceEffectsFrame effectsFrame;
     Ref<RacePostPresentation> post;
+    Ref<ShaderMaterial> wireframeMaterial;
     std::size_t placementCount{};
     Rect2 viewportRect;
     AABB routeBounds;
@@ -173,6 +176,7 @@ struct TrackViewer::Storage {
     int selectedSection{-1};
     int selectedEntity{-1};
     bool active{}, confirm{}, captured{}, debugView{}, loading{};
+    bool wireframeView{};
     bool sectionsVisible{}, entitiesVisible{}, hideEmpty{true};
     bool filterDirty{true};
     bool poseDirty{};
@@ -207,7 +211,34 @@ struct TrackViewer::Storage {
     }
 
     void update_mode() {
-        if (trackScene) trackScene->set_visible(!debugView);
+        view->set_debug_draw(wireframeView ? Viewport::DEBUG_DRAW_WIREFRAME : Viewport::DEBUG_DRAW_DISABLED);
+        if (trackScene) {
+            trackScene->set_visible(!debugView);
+            if (wireframeView && wireframeMaterial.is_null()) {
+                Ref<Shader> shader;
+                shader.instantiate();
+                shader->set_code(R"(
+shader_type spatial;
+render_mode unshaded, shadows_disabled, fog_disabled;
+void fragment() {
+    ALBEDO = vec3(2.5, 0.85, 0.08);
+}
+)");
+                wireframeMaterial.instantiate();
+                wireframeMaterial->set_shader(shader);
+            }
+            const Ref<Material> material = wireframeView ? Ref<Material>(wireframeMaterial) : Ref<Material>();
+            for (int i = 0; i < trackScene->get_child_count(); ++i) {
+                auto* geometry = Object::cast_to<GeometryInstance3D>(trackScene->get_child(i));
+                if (geometry && geometry->get_layer_mask() != trackSkyLayer &&
+                    geometry->get_material_override() != material)
+                    geometry->set_material_override(material);
+            }
+        }
+        if (camera) {
+            camera->set_cull_mask_value(4, !wireframeView);
+            camera->get_environment()->set_glow_enabled(wireframeView);
+        }
         if (sectionLines) sectionLines->set_visible(debugView || sectionsVisible);
         for (std::size_t category = 0; category < entityLines.size(); ++category)
             if (entityLines[category])
@@ -628,7 +659,14 @@ void TrackViewer::draw(float width, float height, float dpi, float fps, bool blo
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Render")) {
-                if (ImGui::Checkbox("Entity view", &s.debugView)) s.update_mode();
+                if (ImGui::Checkbox("Entity view", &s.debugView)) {
+                    if (s.debugView) s.wireframeView = false;
+                    s.update_mode();
+                }
+                if (ImGui::Checkbox("Wireframe view", &s.wireframeView)) {
+                    if (s.wireframeView) s.debugView = false;
+                    s.update_mode();
+                }
                 if (ImGui::Checkbox("Section bounds", &s.sectionsVisible)) s.update_mode();
                 if (ImGui::Checkbox("Entity markers", &s.entitiesVisible)) s.update_mode();
                 ImGui::Checkbox("Scene particles", &effects.particles);
@@ -706,6 +744,9 @@ void TrackViewer::Storage::attach() {
     background.instantiate();
     background->set_background(Environment::BG_COLOR);
     background->set_bg_color(Color(0, 0, 0));
+    background->set_glow_blend_mode(Environment::GLOW_BLEND_MODE_ADDITIVE);
+    background->set_glow_intensity(0.35f);
+    background->set_glow_strength(0.8f);
     s.camera->set_environment(background);
     s.update_mode();
     s.update_camera();
@@ -756,10 +797,11 @@ void TrackViewer::update_scene(double delta, const RaceEffectOptions& options) {
         Vector4(clock.worldTimeFrames + offset * 60.0f, clock.worldTimer * 0.0002500000118743628f + offset,
             clock.realTimeFrames, clock.worldTimeFrames));
     s.source->take_effects(s.effectsFrame);
+    const bool showEffects = !s.debugView && !s.wireframeView;
     if (s.post.is_valid())
-        s.post->update(s.source->post(), loaded, s.debugView ? RaceEffectOptions{false, false, false, false, false, false, false} : options);
+        s.post->update(s.source->post(), loaded, showEffects ? options : RaceEffectOptions{false, false, false, false, false, false, false});
     s.effects->update(s.effectsFrame, *s.camera, nullptr, s.source->generation(), s.source->ntsc(),
-        clock.worldTimeFrames, !s.debugView && options.particles, !s.debugView && options.sunGlare);
+        clock.worldTimeFrames, showEffects && options.particles, showEffects && options.sunGlare);
 }
 
 void TrackViewer::return_to_main_menu(MainMenuScreenServices& menus, const void*) {

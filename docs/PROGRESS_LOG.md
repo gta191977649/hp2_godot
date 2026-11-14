@@ -7,6 +7,9 @@ the viewer. Recorded the 30-track dropdown run, fire and sandstorm activation,
 profile roundtrip and built-in profiler comparison in TASK-0144.
 Added live HP2 camera coordinates to the toolbar and Camera tab, with clipboard
 copy verified at 1200×800, 1920×800 and 2560×800.
+Added a native Godot wireframe mode under Entity view and verified toggling
+back to the normal track view on Vulkan.
+Styled the wireframe with bright amber edges and viewport glow on black.
 
 ## 2026-11-14 TASK-0143 Forward+ race postprocessing
 

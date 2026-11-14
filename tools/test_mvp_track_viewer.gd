@@ -127,7 +127,7 @@ func run() -> void:
         print("VIEWER_PROFILE_OFF_BEGIN ", Engine.get_process_frames())
         await create_timer(4.0).timeout
         print("VIEWER_PROFILE_OFF_END ", Engine.get_process_frames())
-        await click(Vector2(33, 250) + sidebar_offset)
+        await click(Vector2(33, 296) + sidebar_offset)
         await create_timer(1.0).timeout
         print("VIEWER_PROFILE_ON_BEGIN ", Engine.get_process_frames())
         await create_timer(4.0).timeout
@@ -141,6 +141,23 @@ func run() -> void:
         await click(Vector2(90, 295) + sidebar_offset)
     await capture("entity-view")
     var viewport := container.get_child(0) as SubViewport
+    if OS.get_environment("HP2_MVP_VIEWER_WIREFRAME") == "1":
+        await click(Vector2(33, 206) + sidebar_offset)
+        await create_timer(0.15).timeout
+        if viewport.debug_draw != Viewport.DEBUG_DRAW_WIREFRAME or not viewport.get_node("RaceScene").visible:
+            push_error("Wireframe view did not replace Entity view")
+            quit(1)
+            return
+        await capture("wireframe")
+        await create_timer(0.2).timeout
+        await click(Vector2(33, 206) + sidebar_offset)
+        await create_timer(0.15).timeout
+        if viewport.debug_draw != Viewport.DEBUG_DRAW_DISABLED or not viewport.get_node("RaceScene").visible:
+            push_error("Disabling Wireframe view did not restore the track")
+            quit(1)
+            return
+        await click(Vector2(33, 160) + sidebar_offset)
+        print("TRACK_VIEWER_WIREFRAME_PASS")
     if OS.get_environment("HP2_MVP_VIEWER_EFFECTS") == "1":
         if not await check_environment(viewport, next_track, sidebar_offset):
             quit(1)

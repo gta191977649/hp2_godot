@@ -64,3 +64,14 @@ both triples to the clipboard. The Debug build and the viewer smoke with
 `HP2_MVP_VIEWER_COORDINATES=1` passed on Godot 4.7.2 Vulkan at 1200×800,
 1920×800 and 2560×800. The smoke checks the copied values against the camera pose after
 moving and releasing the camera.
+
+Render now offers Wireframe view directly below Entity view. It uses Godot's
+viewport debug draw and switches between mesh edges and entity markers. Debug
+compilation and the Vulkan toggle smoke passed at 1200×800 using a separate
+staging directory because the normal staged DLL was in use. Set
+`HP2_MVP_VIEWER_WIREFRAME=1` to repeat the toggle check.
+
+Wireframe uses a shared bright amber debug material and viewport glow on black.
+The override applies to the viewer's track geometry only. Normal materials and
+the sky return when the mode is disabled. Verified the rendered screenshot and
+toggle on Godot 4.7.2 Vulkan at 1200×800 from the isolated staged project.
