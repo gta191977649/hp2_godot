@@ -12,7 +12,13 @@ Use CMake 3.24+, Ninja, a Windows x64 C++17 toolchain. Place the Godot 4.7.2 con
 ./build.ps1 --run
 ```
 
-The default launch opens the original title sequence in Godot.
+The default launch opens the original title sequence in Godot. Leave the
+Start Game prompt idle for 30 seconds to start the original attract demo.
+Press a menu button to stop the demo and return to the main menu.
+
+With `./build.ps1 --run --mvp --debug --jobs 16`, select **Debug** just before
+**Exit** to open **Track Viewer**, see the **Car Viewer** placeholder, or start
+the attract demo immediately with **View Demo Scene**.
 The build uses the shared FFmpeg 8 SDK under `local/tools/ffmpeg`.
 For another installation, configure CMake with `-DHP2_FFMPEG_SDK=<sdk-directory>`.
 Godot plays the original AVI directly from the game asset source through
@@ -31,6 +37,9 @@ In the frontend, Backspace goes back and Esc exits the application. Edit the
 game's keyboard bindings in Godot under **Project Settings → Input Map**.
 Click menu items to select them, scroll to navigate lists, and right-click
 to go back. The race HUD uses its existing driving controls.
+Under **Options → Player Name**, open the name editor and type directly.
+Use Left/Right to move the caret, Backspace or Delete to remove characters,
+and Enter or Esc to commit the name.
 
 On Windows, `./build.ps1 --run --rendering-driver d3d12` starts Forward+
 with Direct3D 12 and SDR output. Windows 11 can apply Auto HDR to eligible

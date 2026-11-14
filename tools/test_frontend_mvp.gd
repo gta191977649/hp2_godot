@@ -20,6 +20,7 @@ var arrest_nis := false
 var arrest_seen := false
 var arrest_midpoint := 0
 var arrest_motion_captured := false
+var name_test := OS.get_environment("HP2_MVP_NAME_TEST")
 
 func _initialize() -> void:
     deadline = Time.get_ticks_msec() + 170000
@@ -74,6 +75,10 @@ func _process(_delta: float) -> bool:
         _tap(KEY_ENTER)
         next_input = Time.get_ticks_msec() + 550
     if stage == 11 and screen == "New Main Menu":
+        if not name_test.is_empty():
+            stage = 90
+            _test_player_name.call_deferred()
+            return false
         stage = 3
         next_input = Time.get_ticks_msec() + 1400
     if stage == 3 and Time.get_ticks_msec() >= next_input:
@@ -281,6 +286,93 @@ func _run_full_event(sample: Dictionary, screen: String) -> bool:
 func _dismiss_debug_console() -> void:
     if is_instance_valid(race) and race.telemetry().get("debug_console_open", false):
         _tap(KEY_QUOTELEFT)
+
+func _name_wait(screen: String, editing := false, item := 0) -> void:
+    while true:
+        var state: Dictionary = race.telemetry()
+        if state.get("screen") == screen and state.get("name_editing", false) == editing and (
+                item == 0 or state.get("selected_item") == item):
+            return
+        await process_frame
+
+func _name_key(code: Key, character := 0) -> void:
+    var event := InputEventKey.new()
+    event.keycode = code
+    event.physical_keycode = code
+    event.unicode = character
+    event.pressed = true
+    Input.parse_input_event(event)
+    await create_timer(0.055).timeout
+    event = event.duplicate()
+    event.pressed = false
+    Input.parse_input_event(event)
+    await create_timer(0.055).timeout
+
+func _name_click(position: Vector2) -> void:
+    var event := InputEventMouseButton.new()
+    event.button_index = MOUSE_BUTTON_LEFT
+    event.position = position
+    event.global_position = position
+    event.pressed = true
+    Input.parse_input_event(event)
+    await create_timer(0.1).timeout
+    event = event.duplicate()
+    event.pressed = false
+    Input.parse_input_event(event)
+    await create_timer(0.15).timeout
+
+func _test_player_name() -> void:
+    await _name_wait("New Main Menu")
+    await create_timer(1.2).timeout
+    for item in [0x52e039f5, 0x52e039f7]:
+        var screen: String = race.telemetry().screen
+        while race.telemetry().selected_item != item:
+            await _name_key(KEY_DOWN)
+            await create_timer(0.18).timeout
+        await _name_key(KEY_ENTER)
+        await _name_wait("Options" if screen == "New Main Menu" else "NameEntry")
+        await create_timer(0.8).timeout
+    await _name_wait("NameEntry", false, 0x52e039f3)
+    await _name_key(KEY_ENTER)
+    await _name_wait("NameEntry", true)
+    if name_test == "reload":
+        for i in range(7):
+            await _name_key(KEY_RIGHT)
+        await _name_key(KEY_BACKSPACE)
+        await _name_key(KEY_W, 87)
+        await _name_key(KEY_ESCAPE)
+    else:
+        for i in range(7):
+            await _name_key(KEY_DELETE)
+        if race.telemetry().has("debug_console_open"):
+            await _name_key(KEY_QUOTELEFT)
+            await _name_key(KEY_W, 87)
+            await _name_key(KEY_QUOTELEFT)
+        for letter in "WaSd9.!Z":
+            await _name_key(letter.to_upper().unicode_at(0), letter.unicode_at(0))
+        await _name_key(KEY_LEFT)
+        await _name_key(KEY_BACKSPACE)
+        await _name_key(KEY_3, 35)
+        await _name_key(KEY_DELETE)
+        await create_timer(0.35).timeout
+        await _capture("player-name")
+        var canvas := Vector2(root.size)
+        var scale_factor := minf(canvas.x / 640, canvas.y / 480)
+        await _name_click((canvas - Vector2(640, 480) * scale_factor) * 0.5 +
+            Vector2(58, 326) * scale_factor)
+        await _name_key(KEY_ENTER)
+    await _name_wait("NameEntry")
+    await _name_key(KEY_BACKSPACE)
+    await _name_wait("Options")
+    var file := OS.get_environment("HP2_PROFILE_DIR").path_join("profile.json")
+    var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(file))
+    var actual: String = saved.players[0].settings.player_name
+    var expected := "WaSd9#W" if name_test == "reload" else "WaSd9#a"
+    if actual != expected:
+        _fail("name_saved_%s_expected_%s" % [actual, expected])
+        return
+    print("HP2_MVP_NAME_PASS ", name_test, " ", actual)
+    quit()
 
 func _key(key: Key, held: bool) -> void:
     var event := InputEventKey.new()

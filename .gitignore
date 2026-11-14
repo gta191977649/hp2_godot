@@ -298,6 +298,8 @@ saves/
 
 !/tasks/active/TASK-0123-native-source-migration.md
 !/tasks/active/TASK-0144-godot-track-viewer.md
+!/tasks/active/TASK-0145-debug-menu-and-attract-demo.md
+!/tools/test_mvp_debug_menu.gd
 
 !/tasks/active/TASK-0124-modular-godot-presentation.md
 !/tools/test_track12_mvp.gd

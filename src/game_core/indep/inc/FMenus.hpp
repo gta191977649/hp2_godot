@@ -291,6 +291,19 @@ struct FrontendDemoMode {
     void BuildDemoTrackList();
     void StartDemoMode();
     void ConsiderStartDemoMode(std::int32_t idleStartedTicks);
+    // Port-side entry for a frontend action using the same launch policy.
+    void RequestDemoMode();
+};
+
+struct MainMenuScreenServices;
+// Port-side registration for one host-owned frontend page and its menu entry.
+struct FrontendMenuExtension {
+    const char* label{};
+    const char* description{};
+    FlailerScreenConfig* screen{};
+    void (*bind)(MainMenuScreenServices&,void*){};
+    void (*service)(void*){};
+    void* context{};
 };
 
 struct MainMenuScreenServices {
@@ -300,6 +313,7 @@ struct MainMenuScreenServices {
     const FrontendRaceSetupBindings* raceSetup{};
     const ::CarSoundBindings* sounds{};
     FrontendDemoMode* demoMode{};
+    const FrontendMenuExtension* extension{};
 };
 // Actual source GP-C0FC main-menu screen lifetime. Bindings borrow existing
 // services; activation owns one concrete NewMainMenu, never a second FRED.
@@ -852,6 +866,9 @@ namespace hp2 {
 void BindNameEntryScreen(MainMenuScreenServices&);
 void UnbindNameEntryScreen();
 void NameEntryScreenCallback(ScreenMessage,ScreenCallbackData*);
+enum class FrontendNameEditAction;
+std::uint64_t ActiveNameEditSession();
+void ApplyNameEditCommand(FrontendNameEditAction action, std::uint32_t character);
 extern FlailerScreenConfig fNameEntry;
 void BindCreditsScreens(FrontendStartupServices&);
 void UnbindCreditsScreens();

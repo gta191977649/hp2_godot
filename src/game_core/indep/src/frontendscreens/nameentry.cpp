@@ -1,6 +1,7 @@
 #include "FMenus.hpp"
 #include "FEAnim.hpp"
 #include "Fred.hpp"
+#include "Flags.hpp"
 #include "Timer.hpp"
 #include "bware/inc/bWare.hpp"
 #include "bware/inc/bMath.hpp"
@@ -20,6 +21,7 @@ constexpr std::int32_t KeyboardHelp[]={803001,803007,803008,803004,803006,803005
 constexpr std::uint32_t NameObjects[]={0x71450a81u,0x71572302u};
 constexpr std::uint32_t GenderObjects[]={0xd6f9d954u,0xc33bae35u};
 MainMenuScreenServices* nameServices{};
+std::uint64_t nextNameEditSession{};
 
 void CopyNameBytes(char* destination,const char* source,std::size_t limit)
 {
@@ -128,16 +130,47 @@ public:
         const auto character=GetChar(row_,column_);
         if (character==')') {data.sound=29;return false;}
         if (character=='(') {data.sound=26;DeleteCharacter();return true;}
+        editPosition_=std::min(editPosition_,6);
         edit_[static_cast<std::size_t>(editPosition_)]=character;
         Ui().resources->Printf(screen_,nameObject_,"%s",edit_.data());
         MoveEditText(1);data.sound=25;return true;
     }
     void DeleteCharacter()
     {
+        editPosition_=std::min(editPosition_,6);
         for (auto i=editPosition_;i<6;++i)edit_[static_cast<std::size_t>(i)]=edit_[static_cast<std::size_t>(i+1)];
         edit_[6]=' ';edit_[7]=0;
         Ui().resources->Printf(screen_,nameObject_,"%s",edit_.data());
         SyncEditWithDisplay();MoveEditText(-1);
+    }
+    int ApplyPhysicalKey(FrontendNameEditAction action, std::uint32_t character)
+    {
+        using Action=FrontendNameEditAction;
+        const auto length=static_cast<int>(std::find(edit_.begin(),edit_.end(),'\0')-edit_.begin());
+        const int position=std::min(editPosition_,length);
+        int sound=0;
+        switch (action) {
+        case Action::Left: editPosition_=std::max(0,position-1);sound=1;break;
+        case Action::Right: editPosition_=std::min(length,position+1);sound=2;break;
+        case Action::Insert:
+            if (length>=7 || !((character>='a' && character<='z') ||
+                (character>='A' && character<='Z') || (character>='0' && character<='9') ||
+                character==' ' || character=='!' || character=='.' || character=='#')) return 0;
+            std::move_backward(edit_.begin()+position,edit_.begin()+length+1,edit_.begin()+length+2);
+            edit_[position]=static_cast<char>(character);
+            editPosition_=position+1;sound=25;break;
+        case Action::Backspace:
+        case Action::Delete: {
+            const int index=position-(action==Action::Backspace ? 1:0);
+            if (index<0 || index>=length) return 0;
+            std::move(edit_.begin()+index+1,edit_.begin()+length+1,edit_.begin()+index);
+            edit_[length]=0;editPosition_=index;sound=26;break;
+        }
+        case Action::Commit: return 0;
+        }
+        Ui().resources->Printf(screen_,nameObject_,"%s",edit_.data());
+        SyncEditWithDisplay();
+        return sound;
     }
     void SyncEditWithDisplay()
     {
@@ -148,8 +181,10 @@ public:
             ui.resources->Printf(screen_,key,"%c",edit_[static_cast<std::size_t>(i)]);
             auto* object=ui.resources->FindObject(screen_,key);
             ObjectColor(object,i==editPosition_?0x80004080u:0x80808080u);
-            if (i==editPosition_ && object) {
+            if ((i==editPosition_ || (i==6 && editPosition_==7)) && object) {
                 float x,y;ui.resources->GetTopLeft(*object,x,y,ui.language);
+                if (editPosition_==7 && object->kind==1)
+                    x+=ui.resources->ScaledTextWidth(static_cast<FlailerTextChunk&>(*object),ui.language);
                 if (auto* caret=ui.resources->FindObject(screen_,0xc01086b5u)) {
                     caret->SetTopLeftX(x);
                     caret->SetTopLeftY(y+static_cast<float>(convertFloatToInt32(ObjectHeight(ui,*object)))+2.0f);
@@ -246,6 +281,18 @@ struct tNameEntryData {
 
 class NameEntry final {
 public:
+    std::uint64_t EditSession() const {return editing_ ? editSession_:0;}
+    void ApplyPhysicalKey(FrontendNameEditAction action, std::uint32_t character)
+    {
+        if (!editing_) return;
+        if (action==FrontendNameEditAction::Commit) {
+            ScreenCallbackData data{0,0,1,0};
+            HandleEvent(ScreenMessage::LeaveScreen,data);
+            services_.ui->sound->Play(data.sound);
+        } else if (const int sound=keyboard_.ApplyPhysicalKey(action,character)) {
+            services_.ui->sound->Play(sound);
+        }
+    }
     bool FocusPointerCharacter(std::uint32_t key)
     {
         return editing_ && keyboard_.FocusPointerCharacter(key);
@@ -266,7 +313,8 @@ public:
     {
         const std::int32_t player=data.key==0x52e039f5u?1:0;
         if (data.joystickPort!=player)return false;
-        keyboard_.Activate(player);editing_=true;services_.screens->SetHelpOverride(KeyboardHelp);return true;
+        keyboard_.Activate(player);editing_=true;editSession_=++nextNameEditSession;
+        services_.screens->SetHelpOverride(KeyboardHelp);return true;
     }
     void ChangeGender(ScreenMessage message,ScreenCallbackData& data)
     {
@@ -332,6 +380,7 @@ private:
     FlailerLeftRightArrowScroll arrows_;
     FlailerAnimatedBlurb blurb_;
     bool editing_{};
+    std::uint64_t editSession_{};
 };
 std::unique_ptr<NameEntry> nameOwner;
 }
@@ -339,6 +388,16 @@ std::unique_ptr<NameEntry> nameOwner;
 bool FocusNamePointerCharacter(std::uint32_t key)
 {
     return nameOwner && nameOwner->FocusPointerCharacter(key);
+}
+
+std::uint64_t ActiveNameEditSession()
+{
+    return nameOwner ? nameOwner->EditSession():0;
+}
+
+void ApplyNameEditCommand(FrontendNameEditAction action, std::uint32_t character)
+{
+    if (nameOwner) nameOwner->ApplyPhysicalKey(action,character);
 }
 
 void BindNameEntryScreen(MainMenuScreenServices& services)

@@ -55,3 +55,27 @@ loaded frontend documents (not a behavior-completeness claim). Headless editor
 import passed. Final frame-order fixture and NameEntry routes are included.
 Tools CMake3.29.2/GCC13.2.0/Python3.14.4/Godot4.7.2. Shared Help, physical devices
 and original comparison stay open. Exact commands in docs/PROGRESS_LOG.md.
+
+## Godot physical keyboard
+
+Godot sends Unicode characters and InputMap editing actions through a port-side
+`ApplicationRuntime` command. The active screen epoch, edit session and modal
+state gate each command on the source UI tick. The original NameEntry owner
+keeps the seven-character buffer, caret, commit and autosave. The new insertion
+and deletion semantics apply to physical keyboard commands. The PAL grid
+keeps its original overwrite and delete actions.
+
+Godot 4.7.2 Vulkan at 960×720 passed the Debug `HP2_MVP_NAME_TEST=edit` route
+with `tools/test_frontend_mvp.gd` and an isolated `HP2_PROFILE_DIR`. The route
+tested uppercase and lowercase, WASD, punctuation, the length limit, caret
+editing, Console priority, a mouse grid click, Enter and autosave. Release
+`HP2_MVP_NAME_TEST=reload` restarted from that profile, edited its last
+character and saved using Esc followed by Backspace.
+
+`cmake --build --preset godot-mvp-debug --target hp2_track12 --parallel 12`
+and `cmake --build --preset godot-mvp-release --target stage_mvp --parallel 12`
+passed with CMake 3.29.2. The Debug runtime test used a separate staged project
+while the normal Debug DLL was locked by the running game. The normal Debug
+`stage_mvp --parallel 16` build then passed after the lock cleared. The Release
+frontend smoke with a fresh profile reached Quick Race, drove, paused and resumed.
+Physical gamepad and modal-interruption behavior were not independently exercised.

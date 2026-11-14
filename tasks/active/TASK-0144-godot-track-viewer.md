@@ -75,3 +75,5 @@ Wireframe uses a shared bright amber debug material and viewport glow on black.
 The override applies to the viewer's track geometry only. Normal materials and
 the sky return when the mode is disabled. Verified the rendered screenshot and
 toggle on Godot 4.7.2 Vulkan at 1200×800 from the isolated staged project.
+The shared wireframe shader disables face culling so both triangle orientations
+draw. The Debug staging build and Vulkan wireframe toggle smoke passed.

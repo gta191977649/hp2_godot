@@ -445,7 +445,14 @@ void FrontendDemoMode::ConsiderStartDemoMode(std::int32_t idleStartedTicks)
     bool start=raceSetup->applicationOptions->beginDemoSeconds<
         static_cast<float>(elapsed)*0.0002500000118743628f;
     if (demoDisc->ActivationWord() && demoDisc->IsAttractMode())start=true;
-    if (!start)return;
+    if (start)RequestDemoMode();
+}
+
+void FrontendDemoMode::RequestDemoMode()
+{
+    Require(screens && screens->ui && screens->ui->clock && raceSetup &&
+        raceSetup->demoReplay && demoDisc && files,
+        "Demo launch has no actual frontend/clock/replay/resource owners");
     auto& replay=*raceSetup->demoReplay;
     if (replay.IsLoadPending())return;
     if (!demoDisc->ActivationWord() && replay.forcedRecording<0) {

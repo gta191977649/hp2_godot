@@ -306,6 +306,7 @@ def render_compact(report):
              '[TASK-0142](../tasks/active/TASK-0142-godot-scenery-animation.md) moves scenery animation sampling and interpolation to Forward+ and records the Tropical, waterwheel, windmill and UV checks.', '',
              '[TASK-0143](../tasks/active/TASK-0143-godot-race-postprocessing.md) connects race postprocessing and authored surface blends to Forward+ and records the thirty track captures.', '',
              '[TASK-0144](../tasks/active/TASK-0144-godot-track-viewer.md) adds a Debug-only track catalogue, free camera and read-only entity inspection.', '',
+             '[TASK-0145](../tasks/active/TASK-0145-debug-menu-and-attract-demo.md) adds the Debug submenu and connects manual and Title-idle launch to the same attract demo.', '',
              f'Current source attribution {percent} ({done}/{total if total else "?"} functions)', '',
              '<details>', '<summary>CLASS</summary>', '',
              '| Binary | Class | Progress (evidenced / bound) |', '|---|---|---|']

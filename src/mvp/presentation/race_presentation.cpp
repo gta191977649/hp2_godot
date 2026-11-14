@@ -3,6 +3,7 @@
 #include "assets/race_diagnostics.hpp"
 #include "bridge/entity_state_bridge.hpp"
 #ifdef HP2_MVP_IMGUI
+#include "assets/frontend_debug_menu.hpp"
 #include "assets/imgui_overlay.hpp"
 #include "assets/trackviewer/track_viewer.hpp"
 #endif
@@ -34,6 +35,7 @@
 #include <godot_cpp/classes/input_event.hpp>
 #include <godot_cpp/classes/input_event_key.hpp>
 #include <godot_cpp/classes/os.hpp>
+#include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/scene_tree.hpp>
 #include <godot_cpp/classes/sub_viewport.hpp>
@@ -43,6 +45,7 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -56,13 +59,18 @@ namespace hp2 {
 using namespace godot;
 
 namespace {
+constexpr std::array<const char*,6> menuActions{
+    "hp2_menu_confirm", "hp2_menu_back", "hp2_menu_up", "hp2_menu_down", "hp2_menu_left", "hp2_menu_right"};
+
 class RaceHost final : public NativeApplicationHost {
 public:
     explicit RaceHost(Node3D& root) : root_(root) {}
 
     bool inRace{};
     bool menuInput{};
+    bool demoInput{};
     bool beTheCop{};
+    std::array<bool, menuActions.size()> consumedMenuKeys{};
 #ifdef HP2_MVP_IMGUI
     ImGuiOverlay* debug{};
 #endif
@@ -112,15 +120,18 @@ public:
             auto& input = *Input::get_singleton();
             const auto pressed = [&](const StringName& action) { return input.is_action_pressed(action); };
             SetButton(pad, Ps2Button::Start, inRace && pressed("hp2_pause"));
-            if (!inRace || menuInput) {
+            if (!inRace || menuInput || demoInput) {
                 policeSupportHeld_ = false;
                 nitroModifierHeld_ = false;
-                SetButton(pad, Ps2Button::Cross, pressed("hp2_menu_confirm"));
-                SetButton(pad, Ps2Button::Triangle, !inRace && pressed("hp2_menu_back"));
-                SetButton(pad, Ps2Button::Up, pressed("hp2_menu_up"));
-                SetButton(pad, Ps2Button::Down, pressed("hp2_menu_down"));
-                SetButton(pad, Ps2Button::Left, pressed("hp2_menu_left"));
-                SetButton(pad, Ps2Button::Right, pressed("hp2_menu_right"));
+                constexpr std::array<Ps2Button, menuActions.size()> buttons{
+                    Ps2Button::Cross, Ps2Button::Triangle, Ps2Button::Up, Ps2Button::Down,
+                    Ps2Button::Left, Ps2Button::Right};
+                for (std::size_t i = 0; i < buttons.size(); ++i) {
+                    const bool down = pressed(menuActions[i]);
+                    if (!down) consumedMenuKeys[i] = false;
+                    SetButton(pad, buttons[i], down && !consumedMenuKeys[i] &&
+                        (i != 1 || !inRace || demoInput));
+                }
                 destination = NativeScannerControls(pad);
                 return 1;
             }
@@ -168,6 +179,9 @@ struct RacePresentation::Session {
 
     RaceHost host;
     GameResources files;
+#ifdef HP2_MVP_IMGUI
+    std::unique_ptr<FrontendDebugMenu> debugMenu;
+#endif
     ApplicationRuntime runtime;
     EntityStateBridge bridge;
     Node2D* frontendCanvas{};
@@ -182,6 +196,8 @@ struct RacePresentation::Session {
     String frontendScreen;
     std::uint32_t selectedItem{};
     bool modal{};
+    std::uint64_t frontendEpoch{}, nameEditSession{};
+    bool nameEditInput{};
     int raceState{};
     bool frontendMode{};
     int requestedTrack{-1};
@@ -318,11 +334,19 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
 #endif
         set_process_input(true);
         stage = frontend ? "frontend_initialize" : "race_initialize";
+        if (frontend) {
 #ifdef HP2_MVP_IMGUI
-        if (frontend && returnToMenu) session_->runtime.InitializeFrontend(TrackViewer::return_to_main_menu);
-        else
+            const String mode = OS::get_singleton()->get_environment("HP2_MVP_DEBUG_MODE");
+            if (mode == "1" || (mode.is_empty() &&
+                    bool(ProjectSettings::get_singleton()->get_setting("hp2/debug_mode", false)))) {
+                session_->debugMenu = std::make_unique<FrontendDebugMenu>([this] { open_track_viewer(); });
+            }
+            session_->runtime.InitializeFrontend(returnToMenu ? TrackViewer::return_to_main_menu : nullptr,
+                nullptr, session_->debugMenu ? &session_->debugMenu->extension() : nullptr);
+#else
+            session_->runtime.InitializeFrontend();
 #endif
-        if (frontend) session_->runtime.InitializeFrontend();
+        }
         else if (tree >= 0) session_->runtime.InitializeRace(start_campaign_race_diagnostic, &session_->campaignDiagnostic);
         else session_->runtime.InitializeRace(start_quick_race_diagnostic, &session_->requestedTrack);
         session_->frontendCanvas = memnew(Node2D);
@@ -343,6 +367,11 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
 }
 
 void RacePresentation::_input(const Ref<InputEvent>& event) {
+    const Ref<InputEventKey> key = event;
+    if (session_ && key.is_valid() && !key->is_pressed()) {
+        for (std::size_t i = 0; i < menuActions.size(); ++i)
+            if (key->is_action(menuActions[i])) session_->host.consumedMenuKeys[i] = false;
+    }
     if (failed_ && event->is_action_pressed("hp2_quit")) {
         get_viewport()->set_input_as_handled();
         get_tree()->quit(1);
@@ -359,6 +388,30 @@ void RacePresentation::_input(const Ref<InputEvent>& event) {
     }
 #endif
     if (session_) {
+        auto& s = *session_;
+        if (!failed_ && key.is_valid() && s.nameEditSession) {
+            using Action = FrontendNameEditAction;
+            constexpr std::array<std::pair<const char*, Action>,5> editActions{{
+                {"hp2_name_edit_left", Action::Left}, {"hp2_name_edit_right", Action::Right},
+                {"hp2_name_edit_backspace", Action::Backspace}, {"hp2_name_edit_delete", Action::Delete},
+                {"hp2_name_edit_commit", Action::Commit}}};
+            const auto binding = std::find_if(editActions.begin(), editActions.end(),
+                [&](const auto& entry) { return key->is_action(entry.first); });
+            const auto character = key->get_unicode();
+            const bool typed = character >= 32 && !key->is_ctrl_pressed() &&
+                !key->is_alt_pressed() && !key->is_meta_pressed();
+            if ((s.nameEditInput && (binding != editActions.end() || typed)) || event->is_action("hp2_quit")) {
+                if (key->is_pressed() && s.nameEditInput) {
+                    for (std::size_t i = 0; i < menuActions.size(); ++i)
+                        if (key->is_action(menuActions[i])) s.host.consumedMenuKeys[i] = true;
+                    const auto action = binding != editActions.end() ? binding->second : Action::Insert;
+                    if (action != Action::Commit || !key->is_echo())
+                        s.runtime.QueueFrontendNameEdit(s.frontendEpoch, s.nameEditSession, action, character);
+                }
+                get_viewport()->set_input_as_handled();
+                return;
+            }
+        }
         const auto action = session_->host.inRace ? "hp2_pause" : "hp2_quit";
         if (!event->is_action(action)) return;
         get_viewport()->set_input_as_handled();
@@ -472,8 +525,12 @@ void RacePresentation::_process(double delta) {
         stage = "race_effects_state";
         s.runtime.TakeRaceEffects(s.effectsFrame);
         const auto state = s.runtime.FrontendState();
+        s.frontendEpoch = state.pointerEpoch;
+        s.nameEditSession = state.nameEditSession;
+        s.nameEditInput = state.nameEditInput;
         s.raceState = race.sessionState;
         s.host.inRace = race.simulation != nullptr;
+        s.host.demoInput = race.sessionState == RC_STATE_AI_DEMO || race.sessionState == RC_STATE_REPLAY_DEMO;
         s.host.beTheCop = race.beTheCop;
         s.host.menuInput = state.screen && race.sessionState != RC_STATE_RACE_IN_PROGRESS;
         s.frontendScreen = state.screen ? String(state.screen) : String();
@@ -579,7 +636,7 @@ void RacePresentation::_process(double delta) {
         stage = "race_effects";
         if (!newScene && replayRestored) s.effects->reset();
         stage = "rear_view";
-        if (frame.rearCamera) {
+        if (frame.rearCamera && !s.host.demoInput) {
             if (!s.rearViewport) {
                 s.rearViewport = memnew(SubViewport);
                 s.rearViewport->set_name("RearViewTarget");
@@ -607,7 +664,7 @@ void RacePresentation::_process(double delta) {
             s.frontend->update_rear_view({}, {}, false);
         }
         stage = "race_effects";
-        s.effects->update(s.effectsFrame, *s.camera, frame.rearCamera ? s.rearCamera : nullptr,
+        s.effects->update(s.effectsFrame, *s.camera, frame.rearCamera && !s.host.demoInput ? s.rearCamera : nullptr,
             frame.generation, race.ntsc, race.worldFrames, effectOptions.particles, effectOptions.sunGlare);
         if (newScene)
             std::fprintf(stderr, "HP2_MVP_TRACE stage=scene_publish track=%d generation=%llu step=%u placements=%zu vehicles=%zu reverse=%d game_type=%d event=%d\n",
@@ -655,6 +712,7 @@ Dictionary RacePresentation::telemetry() const {
         }
         result["screen"] = session_->frontendScreen;
         result["selected_item"] = session_->selectedItem;
+        result["name_editing"] = session_->nameEditSession != 0;
         result["modal"] = session_->modal;
         result["video_playing"] = session_->frontend->video_playing();
         result["video_request"] = session_->frontend->video_request();

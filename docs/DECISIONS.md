@@ -1,5 +1,14 @@
 # Design decisions
 
+## TASK-0145 - Host frontend menu extension
+
+The Debug host registers its submenu through the runtime's optional frontend
+extension. It borrows the Options layout while active and restores it before
+the original frontend resources retire. The existing Flailer input and popup
+owners provide navigation, highlighting and sound. The host requests the
+same demo launch policy used by the Title idle timer. The original coordinator
+owns AI, camera and demo lifecycle. Godot presents the committed state.
+
 ## TASK-0123 — One Windows donor game implementation
 
 The user selected the Windows source distribution at `D:/dev/hp2_ps2_rev`

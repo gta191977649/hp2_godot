@@ -264,6 +264,25 @@ struct ApplicationRuntime::Storage {
     FlailerScreenList screens;
     struct PointerCommand { std::uint64_t epoch; FrontendPointerTarget target; };
     std::deque<PointerCommand> pointerCommands;
+    struct NameEditCommand {
+        std::uint64_t epoch, session;
+        FrontendNameEditAction action;
+        std::uint32_t character;
+    };
+    std::deque<NameEditCommand> nameEditCommands;
+
+    bool NameEditInputAvailable() const {
+        return screens.active && screens.active->configuration==&fNameEntry &&
+            !ui.ignoreJoystick && !PointerPopup() && !(screens.help && screens.help->IsActive());
+    }
+    void ApplyNameEditCommands() {
+        while (!nameEditCommands.empty()) {
+            const auto command=nameEditCommands.front();nameEditCommands.pop_front();
+            if (command.epoch==screens.pointerEpoch && NameEditInputAvailable() &&
+                command.session==ActiveNameEditSession())
+                ApplyNameEditCommand(command.action,command.character);
+        }
+    }
 
     FlailerPopup* PointerPopup() const {
         for (auto it=screens.popups.rbegin();it!=screens.popups.rend();++it)
@@ -416,6 +435,7 @@ struct ApplicationRuntime::Storage {
     int32_t skipStartSequence{},alternateSkin{};
     void (*raceStart)(MainMenuScreenServices&,const void*){};
     const void* raceStartContext{};
+    const FrontendMenuExtension* frontendExtension{};
     bool showFrontend{};
     bool stateOnly() const noexcept {return showFrontend || raceStart;}
     bool diagnosticRaceRequested{};
@@ -608,7 +628,7 @@ struct ApplicationRuntime::Storage {
         frontendInput={&input,&screens};screens.input=&frontendInput;screens.soundBindings=&soundBindings;
         demoMode.screens=&screens;demoMode.frontend=&profilesOwner;demoMode.raceSetup=&setup;
         demoMode.demoDisc=&demo;demoMode.files=&files;
-        menus={&ui,&screens,&profilesOwner,&setup,&soundBindings,&demoMode};
+        menus={&ui,&screens,&profilesOwner,&setup,&soundBindings,&demoMode,frontendExtension};
         startup={&menus,&joylog,dynamicTextures.get()};
         menusBound=true;
         BindFrontendStartup(startup);
@@ -631,6 +651,10 @@ struct ApplicationRuntime::Storage {
             &fPauseMenuScreen,&fPauseDisplayScreen,&fPauseOptionsScreen,&fPauseControlsScreen,&fPauseAudioScreen,
             &fPauseRaceObjectiveScreen,&fPauseRaceObjective2PScreen,&fPauseDebugMenu,&CampaignScreenConfiguration()};
         for(auto* configuration:configurations)RegisterScreen(*configuration);
+        if(frontendExtension) {
+            RegisterScreen(*frontendExtension->screen);
+            frontendExtension->bind(menus,frontendExtension->context);
+        }
         for(auto& configuration:EndGameScreenConfigurations())RegisterScreen(configuration);
         for(auto& configuration:MemcardScreenConfigurations())RegisterScreen(configuration);
         for(auto& configuration:LanguageScreenConfigurations())RegisterScreen(configuration);
@@ -895,13 +919,15 @@ void ApplicationRuntime::Initialize(const std::filesystem::path& configFile)
     ChangeGameFlow(s.flow,1,0);s.initialized=true;
 }
 
-void ApplicationRuntime::InitializeFrontend(void (*ready)(MainMenuScreenServices&,const void*),const void* context)
+void ApplicationRuntime::InitializeFrontend(void (*ready)(MainMenuScreenServices&,const void*),const void* context,
+    const FrontendMenuExtension* extension)
 {
     Require(!storage_->stateOnly() && !storage_->initialized,
         "Frontend must be requested before initialization");
     storage_->showFrontend=true;
     storage_->raceStart=ready;
     storage_->raceStartContext=context;
+    storage_->frontendExtension=extension;
     Initialize();
 }
 
@@ -923,6 +949,8 @@ FrontendStateView ApplicationRuntime::FrontendState() const
         active && active->configuration ? active->configuration->name:nullptr,
         active ? active->GetActiveMenuItem():0};
     result.pointerEpoch=s.screens.pointerEpoch;
+    result.nameEditSession=ActiveNameEditSession();
+    result.nameEditInput=result.nameEditSession && s.NameEditInputAvailable();
     result.effects=&s.previewEffects;
     result.pointerReplay=s.PointerReplay();
     result.pointerHelp=s.screens.help && s.screens.help->IsActive();
@@ -955,6 +983,15 @@ void ApplicationRuntime::QueueFrontendPointer(std::uint64_t epoch,FrontendPointe
     if (!s.pointerCommands.empty() && s.pointerCommands.back().target.action==FrontendPointerAction::Focus)
         s.pointerCommands.pop_back();
     if (s.pointerCommands.size()<16) s.pointerCommands.push_back({epoch,target});
+}
+
+void ApplicationRuntime::QueueFrontendNameEdit(std::uint64_t epoch,std::uint64_t session,
+    FrontendNameEditAction action,std::uint32_t character)
+{
+    auto& s=*storage_;
+    if (s.stateOnly() && session && epoch==s.screens.pointerEpoch && s.NameEditInputAvailable() &&
+        session==ActiveNameEditSession() && s.nameEditCommands.size()<32)
+        s.nameEditCommands.push_back({epoch,session,action,character});
 }
 
 int ApplicationRuntime::SelectedTrack() const noexcept {return storage_->parameters.selectedScenario;}
@@ -1376,8 +1413,13 @@ bool ApplicationRuntime::TickInternal()
                 }
             }
             s.soundClock.ticks=static_cast<uint32_t>(s.clock.realTimer);
-            if (s.stateOnly()) s.ApplyPointerCommand();
+            if (s.stateOnly()) {
+                s.ApplyPointerCommand();
+                s.ApplyNameEditCommands();
+            }
             MenuSystemTick(&s.screens);
+            if(s.frontendExtension && s.frontendExtension->service)
+                s.frontendExtension->service(s.frontendExtension->context);
             s.trackPhase->ServicePresentation(s.flow,s.profilesOwner);
             // DamageAbove normally publishes this operand during RenderCars.
             // The Godot host has no Ecstasy pass to service the HUD dependency.

@@ -43,6 +43,8 @@ The active game implementation is the Windows donor. See [TASK-0123](../tasks/ac
 
 [TASK-0144](../tasks/active/TASK-0144-godot-track-viewer.md) adds a Debug-only track catalogue, free camera and read-only entity inspection.
 
+[TASK-0145](../tasks/active/TASK-0145-debug-menu-and-attract-demo.md) adds the Debug submenu and connects manual and Title-idle launch to the same attract demo.
+
 Current source attribution 0.0% (0/7544 functions)
 
 <details>

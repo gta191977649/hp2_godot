@@ -219,7 +219,7 @@ struct TrackViewer::Storage {
                 shader.instantiate();
                 shader->set_code(R"(
 shader_type spatial;
-render_mode unshaded, shadows_disabled, fog_disabled;
+render_mode unshaded, cull_disabled, shadows_disabled, fog_disabled;
 void fragment() {
     ALBEDO = vec3(2.5, 0.85, 0.08);
 }

@@ -34,40 +34,41 @@ float MainMenuLeft(FlailerUiState& ui,std::uint32_t screen)
     return x;
 }
 
-// FRONTB contains three authored rows. This native fourth row belongs to
-// the active main menu: real Flailer text/geometry plus a real menu node, all
-// retired before its borrowed resource bundle. Authored objects stay intact.
-class NativeMainMenuExit final {
+// Port-side rows borrow the third authored row's font and geometry.
+class PortMainMenuRow final {
 public:
-    NativeMainMenuExit(MainMenuScreenServices& services,std::uint32_t screen)
+    PortMainMenuRow(MainMenuScreenServices& services,std::uint32_t screen,int slot)
         :ui_(*services.ui)
     {
         resources_=ui_.resources->FindScreen(screen);
-        auto* node=services.screens->FindScreen(static_cast<std::int32_t>(screen));
+        auto* node=services.screens->active;
         screen_=node?node->FindFlailerScreen(static_cast<std::int32_t>(screen)):nullptr;
-        Require(resources_ && screen_ && screen_->menu,"Native Exit has no active main-menu owner");
+        Require(resources_ && screen_ && screen_->menu,"Port row has no active main-menu owner");
         menu_=screen_->menu;
         const auto* sourceText=static_cast<const FlailerTextChunk*>(ui_.resources->FindObject(screen,0x52e039f5u,1));
         const auto* sourceMask=static_cast<const FlailerBitmapChunk*>(ui_.resources->FindObject(screen,MainMenuItems[2],2));
-        Require(sourceText && sourceMask && !ui_.resources->FindObject(screen,0x52e039f6u),
-            "Native Exit requires the original three-row main menu");
+        const auto key=sourceText ? sourceText->key+static_cast<std::uint32_t>(slot-3):0;
+        Require(sourceText && sourceMask && !ui_.resources->FindObject(screen,key),
+            "Port row requires the original three-row main menu");
         text_=std::make_unique<FlailerTextChunk>(*sourceText);
         mask_=std::make_unique<FlailerBitmapChunk>(*sourceMask);
-        const auto group=hashString("MENUITEM_4_GROUP");
-        PrepareObject(*text_,0x52e039f6u,group,"MENUITEM_4");
-        PrepareObject(*mask_,MainMenuItems[3],group,"MI_4_MASK");
+        const bool fourth=slot==4;
+        const auto group=hashString(fourth?"MENUITEM_4_GROUP":"MENUITEM_5_GROUP");
+        const float offset=55.0f*static_cast<float>(slot-3);
+        PrepareObject(*text_,key,group,fourth?"MENUITEM_4":"MENUITEM_5",offset);
+        PrepareObject(*mask_,MainMenuItems[slot-1],group,fourth?"MI_4_MASK":"MI_5_MASK",offset);
         if(text_->clipObjectKey==sourceMask->key)text_->clipObjectKey=mask_->key;
         text_->textCapacity=64;text_->ownedText.assign(65,0);text_->text=text_->ownedText.data();
-        text_->languageId=0;text_->SetString(Label());
+        text_->languageId=0;
         // Allocate the node before publishing either object into live rings.
-        item_=std::make_unique<FlailerMenuItem>(menu_,text_->key,4);
+        item_=std::make_unique<FlailerMenuItem>(menu_,text_->key,slot);
         item_->object=text_.get();
         Append(*mask_);Append(*text_);++resources_->bitmapCount;++resources_->textCount;
         item_->ResetSavedParameters();
         item_->previous=menu_->root.previous;item_->next=&menu_->root;
         item_->previous->next=item_.get();menu_->root.previous=item_.get();
     }
-    ~NativeMainMenuExit()
+    ~PortMainMenuRow()
     {
         // Normal FlailerScreen deactivation destroys its authored menu first
         // and clears screen.menu before this callback owner is retired. On a
@@ -79,8 +80,8 @@ public:
         item_.reset();
         Remove(*text_);Remove(*mask_);--resources_->textCount;--resources_->bitmapCount;
     }
-    void UpdateLanguage() {text_->SetString(Label());}
-    const char* Description() const
+    void SetLabel(const char* label) {text_->SetString(label);}
+    const char* ExitDescription() const
     {
         if(IsPublishedRussian())return "B\xD2XO\xC4 \xD1" "3 \xD1\xC8P\xD2";
         constexpr const char* text[]{
@@ -88,6 +89,12 @@ public:
             "Spiel beenden und zu Windows zurueckkehren.","Esci dal gioco e torna a Windows.",
             "Salir del juego y volver a Windows.","Avsluta spelet och aterga till Windows."};
         return text[Language()];
+    }
+    const char* ExitLabel() const
+    {
+        if(IsPublishedRussian())return "B\xD2XO\xC4";
+        constexpr const char* labels[]{"Exit","Quitter","Beenden","Esci","Salir","Avsluta"};
+        return labels[Language()];
     }
 private:
     std::size_t Language() const
@@ -103,18 +110,13 @@ private:
         const auto* label=ui_.language?ui_.language->GetString(10005):nullptr;
         return Language()==0 && label && std::strcmp(label,"O\xC9\xD9\xD1\xD1")==0;
     }
-    const char* Label() const
-    {
-        if(IsPublishedRussian())return "B\xD2XO\xC4";
-        constexpr const char* labels[]{"Exit","Quitter","Beenden","Esci","Salir","Avsluta"};
-        return labels[Language()];
-    }
-    static void PrepareObject(FlailerObjectChunk& object,std::uint32_t key,std::uint32_t group,const char* name)
+    static void PrepareObject(FlailerObjectChunk& object,std::uint32_t key,std::uint32_t group,
+        const char* name,float offset)
     {
         object.next=nullptr;object.previous=nullptr;object.strip=nullptr;
         object.key=key;object.parentKey=group;object.name.fill(0);
         std::memcpy(object.name.data(),name,std::strlen(name));
-        object.topLeftY+=55.0f;object.visible=1;object.updateKind=10;
+        object.topLeftY+=offset;object.visible=1;object.updateKind=10;
     }
     void Append(FlailerObjectChunk& object)
     {
@@ -138,7 +140,9 @@ private:
 class NewMainMenu final {
 public:
     NewMainMenu(MainMenuScreenServices& services,std::uint32_t screen)
-        : services_(services),screenKey_(screen),exit_(services,screen),
+        : services_(services),screenKey_(screen),
+          extra_(services.extension?std::make_unique<PortMainMenuRow>(services,screen,4):nullptr),
+          exit_(services,screen,extra_?5:4),
           blurb_(*services.ui,screen,0x75980cf0u,0x75980cf0u,0x70a404ecu),
           highlight_(*services.ui,screen,0xab671c9au,services.ui->animationSettings.highlightColor),
           slide_(*services.ui,screen,MainMenuLeft(*services.ui,screen))
@@ -153,7 +157,9 @@ public:
         Require(soundJukeboxStart(*services_.sounds,*services_.frontend,*setup.parameters,
             *setup.flow,true)==WORLD_AUDIO_OK,"Main menu jukebox failed on its real audio owner");
         selection_.showOtherItems=1;
-        selection_.AddItems(*services_.ui->resources,screenKey_,MainMenuItems,4);
+        if(extra_)extra_->SetLabel(services.extension->label);
+        exit_.SetLabel(exit_.ExitLabel());
+        selection_.AddItems(*services_.ui->resources,screenKey_,MainMenuItems,extra_?5:4);
         services_.screens->StartMovie("MOVIES\\mainmenu_movie.AVI");
         Require(easterEggs.Activate()==GAME_INPUT_OK,"Main menu could not register actual EasterEgg input");
         services_.ui->resources->SetGroupVisibility(GlobalScreen,EasterEggGroup,0);
@@ -186,7 +192,9 @@ public:
                 services_.screens->ChangeToScreen("Cops Off Mode Select",true);
             } else if (data.key==0x52e039f5u) {
                 services_.screens->ChangeToScreen("Options",true);
-            } else if (data.key==0x52e039f6u) {
+            } else if (data.key==0x52e039f6u && extra_) {
+                services_.screens->ChangeToScreen(services_.extension->screen->name,true);
+            } else if (data.key==(extra_?0x52e039f7u:0x52e039f6u)) {
                 // The next native application tick exits through normal
                 // ApplicationRuntime::Shutdown and its actual owner cleanup.
                 applicationDebugExitRequested=true;
@@ -200,7 +208,6 @@ public:
     {
         auto& ui=*services_.ui;
         auto& screens=*services_.screens;
-        exit_.UpdateLanguage();
         const auto now=ui.clock->realTimer;
         if (screens.help->IsActive()) {
             easterEggs.active=0;
@@ -259,7 +266,11 @@ public:
         case 0x52e039f3u:HighlightMenuItem(0x6e34e350u,10016);break;
         case 0x52e039f4u:HighlightMenuItem(0x708a0bf1u,10015);break;
         case 0x52e039f5u:HighlightMenuItem(0x72df3492u,10009);break;
-        case 0x52e039f6u:HighlightMenuItem(MainMenuItems[3],0,exit_.Description());break;
+        case 0x52e039f6u:HighlightMenuItem(MainMenuItems[3],0,
+            extra_?services_.extension->description:exit_.ExitDescription());break;
+        case 0x52e039f7u:
+            if(extra_)HighlightMenuItem(MainMenuItems[4],0,exit_.ExitDescription());
+            break;
         default:break;
         }
     }
@@ -267,7 +278,8 @@ public:
 private:
     MainMenuScreenServices& services_;
     std::uint32_t screenKey_;
-    NativeMainMenuExit exit_;
+    std::unique_ptr<PortMainMenuRow> extra_;
+    PortMainMenuRow exit_;
     FlailerAnimatedBlurb blurb_;
     FlailerHighlightAnimation highlight_;
     FlailerSlideInAnimation slide_;

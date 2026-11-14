@@ -64,6 +64,7 @@ set(imgui_console_dir "${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui-console")
 set(imgui_dir "${imgui_console_dir}/example/thirdparty/imgui")
 target_sources(hp2_track12 PRIVATE
   "$<$<CONFIG:Debug>:src/mvp/assets/imgui_overlay.cpp>"
+  "$<$<CONFIG:Debug>:src/mvp/assets/frontend_debug_menu.cpp>"
   "$<$<CONFIG:Debug>:src/mvp/assets/trackviewer/track_viewer.cpp>"
   "$<$<CONFIG:Debug>:src/mvp/assets/trackviewer/track_viewer_scene.cpp>"
   "$<$<CONFIG:Debug>:src/mvp/tests/pursuit_test_driver.cpp>")
