@@ -9,6 +9,7 @@ namespace hp2 {
 struct MainMenuScreenServices;
 struct FrontendStateView;
 struct RaceStateView;
+using FrontendReady = void (*)(MainMenuScreenServices&, const void*);
 godot::PackedVector3Array race_photo_route(const RaceStateView& race);
 
 struct CampaignRaceDiagnostic {
@@ -20,6 +21,8 @@ struct CampaignRaceDiagnostic {
 void start_campaign_race_diagnostic(MainMenuScreenServices& menus, const void* context);
 void start_quick_race_diagnostic(MainMenuScreenServices& menus, const void* context);
 void configure_race_diagnostics(bool unlockRaces);
+bool profile_shared_world_reflections();
+FrontendReady reflection_profile_frontend_ready();
 void collect_police_diagnostics(godot::Dictionary& result, const RaceStateView& race,
     const FrontendStateView& frontend);
 

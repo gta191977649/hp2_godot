@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <map>
+#include <tuple>
 #include <unordered_map>
 
 struct EditorMarkerModel;
@@ -32,14 +33,17 @@ godot::Transform3D race_transform(const float* source);
 // Temporary decode cache. The scene retains Godot Refs only.
 class MeshConverter {
 public:
+    enum class ScenerySurface { Full, OpaqueOnly, Reflection, ReflectionBillboard };
+    godot::Ref<godot::ArrayMesh> convert_wheel_blur(const EditorMarkerModel& model);
     godot::Ref<godot::ArrayMesh> convert(const EditorMarkerModel& model, bool depthWrite = true,
         std::size_t boneCount = 0);
     godot::Ref<godot::ArrayMesh> convert(const EditorMarkerModel& model, bool depthWrite,
-        std::size_t boneCount, bool canTriggerRigidAnimation, bool opaqueOnly = false);
+        std::size_t boneCount, bool canTriggerRigidAnimation, ScenerySurface scenery = ScenerySurface::Full);
     explicit MeshConverter(const CarPaintAssets* paint = nullptr, bool paintWheel = false)
         : paint_(paint), paintWheel_(paintWheel) {}
 
 private:
+    bool wheelBlur_{};
     struct TextureSequence {
         godot::Ref<godot::Texture2DArray> texture;
         int count{}, rate{};
@@ -51,7 +55,7 @@ private:
     std::unordered_map<const EditorMarkerTexture*, godot::Ref<godot::StandardMaterial3D>> materials_;
     std::unordered_map<const EditorMarkerTexture*, TextureSequence> textureSequences_;
     std::map<godot::String, godot::Ref<godot::Shader>> animatedShaders_;
-    std::map<std::pair<const EditorMarkerTexture*, bool>, godot::Ref<godot::Material>> animatedTextures_;
+    std::map<std::tuple<const EditorMarkerTexture*, bool, bool>, godot::Ref<godot::Material>> animatedTextures_;
     std::unordered_map<const EditorMarkerTexture*, godot::Ref<godot::Texture2D>> paintTextures_;
     const CarPaintAssets* paint_;
     bool paintWheel_;

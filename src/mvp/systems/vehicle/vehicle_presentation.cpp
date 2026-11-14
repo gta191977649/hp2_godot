@@ -6,6 +6,7 @@
 #include "indep/inc/eLight.hpp"
 #include "indep/inc/eMath.hpp"
 #include "indep/inc/CameraMover.hpp"
+#include "indep/inc/CarInfo.hpp"
 #include "indep/inc/Flags.hpp"
 #include "indep/inc/RaceCarModels.hpp"
 
@@ -27,8 +28,11 @@ void VehiclePresentation::attach(Node3D& parent, Car& car, const VehicleEntitySt
     model = state.model;
     skin = state.skin;
     meshes.clear();
+    wheelBlur.fill(nullptr);
+    rearWheelBlur.fill(nullptr);
     layers = 0;
     root = memnew(Node3D);
+    root->set_meta("hp2_player_vehicle", state.player);
     parent.add_child(root);
     MeshConverter converter(&paint);
     for (std::size_t index = 0; index < 5; ++index) {
@@ -52,11 +56,32 @@ void VehiclePresentation::attach(Node3D& parent, Car& car, const VehicleEntitySt
         if (!mesh->get_surface_count()) throw std::runtime_error("Wheel has no drawable surfaces");
         for (std::size_t index = axle * 2; index < axle * 2 + 2; ++index) {
             auto* node = memnew(MeshInstance3D);
+            node->set_name(String("Wheel") + String::num_int64(index));
             root->add_child(node);
             node->set_mesh(mesh);
             meshes.push_back(node);
             wheels[index] = node;
         }
+    }
+    std::array<Ref<ArrayMesh>, 2> blurMeshes;
+    for (std::size_t axle = 0; axle < blurMeshes.size(); ++axle) {
+        const auto* part = carRenderModel(&car, 10 + axle);
+        if (part && part->solid) blurMeshes[axle] = converter.convert_wheel_blur(*part);
+    }
+    for (const auto index : {0, 3, 1, 2}) {
+        const auto& mesh = blurMeshes[index / 2];
+        if (mesh.is_null() || !mesh->get_surface_count()) continue;
+        const auto addBlur = [&](const char* name, std::uint32_t layer) {
+            auto* node = memnew(MeshInstance3D);
+            node->set_name(String(name) + String::num_int64(index));
+            node->set_mesh(mesh);
+            node->set_layer_mask(layer);
+            node->hide();
+            root->add_child(node);
+            return node;
+        };
+        wheelBlur[index] = addBlur("WheelBlur", primaryLayer);
+        rearWheelBlur[index] = addBlur("RearWheelBlur", rearLayer);
     }
 }
 
@@ -70,8 +95,18 @@ void VehiclePresentation::update(const VehicleEntityState& state, const LightSce
         for (auto* mesh : meshes) mesh->set_layer_mask(nextLayers);
         layers = nextLayers;
     }
-    for (std::size_t index = 0; index < wheels.size(); ++index)
+    const auto updateBlur = [](MeshInstance3D* node, const WheelBlurState& blur) {
+        if (!node) return;
+        node->set_visible(blur.alpha > 0.0f);
+        if (blur.alpha <= 0.0f) return;
+        node->set_transform(race_transform(blur.transform.data()));
+        node->set_instance_shader_parameter("hp2_wheel_blur_alpha", blur.alpha);
+    };
+    for (std::size_t index = 0; index < wheels.size(); ++index) {
         wheels[index]->set_transform(race_transform(state.wheels[index].data()));
+        updateBlur(wheelBlur[index], state.wheelBlur[index]);
+        updateBlur(rearWheelBlur[index], state.rearWheelBlur[index]);
+    }
     if (!nextLayers) return;
     LightContextBatch batch(lights);
     const auto body = batch.SetupRace(state.transform.data(), environment, race.camera->eye);

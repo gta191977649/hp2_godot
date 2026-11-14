@@ -172,8 +172,14 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
     return convert(model, depthWrite, boneCount, false);
 }
 
+Ref<ArrayMesh> MeshConverter::convert_wheel_blur(const EditorMarkerModel& model) {
+    MeshConverter converter;
+    converter.wheelBlur_ = true;
+    return converter.convert(model, false);
+}
+
 Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depthWrite, std::size_t boneCount,
-    bool canTriggerRigidAnimation, bool opaqueOnly) {
+    bool canTriggerRigidAnimation, ScenerySurface scenery) {
     if (!model.solid || !model.solid->geometry)
         throw std::runtime_error("Solid has no geometry for model " + std::to_string(model.key));
     struct Surface {
@@ -193,6 +199,8 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
     std::vector<Surface> surfaces;
     std::map<std::tuple<const EditorMarkerTexture*, const EditorMarkerLightMaterial*, std::uint32_t>, std::size_t>
         surfaceIndices;
+    const bool billboard = scenery == ScenerySurface::ReflectionBillboard;
+    const bool reflection = billboard || scenery == ScenerySurface::Reflection;
     const auto* morph = boneCount ? nullptr : model.solid->vertexAnimation;
     if (morph && morph->count < 2) morph = nullptr;
     const auto* rigid = boneCount ? nullptr : model.solid->rigidAnimation;
@@ -286,7 +294,9 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         const auto* descriptor = bindings[strip.textureIndex];
         if (!descriptor) throw std::runtime_error("Missing texture binding for model " + std::to_string(model.key));
         const auto* texture = textureInfoForDescriptor(descriptor);
-        if (opaqueOnly && texture && texture->requiresDepthSort) continue;
+        if (scenery != ScenerySurface::Full && texture && (texture->requiresDepthSort ||
+            (reflection && material(*descriptor)->get_transparency() == BaseMaterial3D::TRANSPARENCY_ALPHA &&
+                !texture_sequence(*descriptor).cutout))) continue;
         const EditorMarkerLightMaterial* lightMaterial = nullptr;
         std::uint32_t paintFlags = 0;
         if (paint_ && texture && !texture->requiresDepthSort && !morph && !rigid &&
@@ -341,6 +351,12 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
                 for (const float component : strip.normals[i]) surface.paintVertices.push_back(component);
                 surface.paintVertices.push_back(rgb555);
             }
+            if (wheelBlur_) {
+                // Preserve all five authored bits through Godot's UNORM vertex color.
+                surface.colors.push_back({(rgb555 & 31u) / 31.0f, ((rgb555 >> 5) & 31u) / 31.0f,
+                    ((rgb555 >> 10) & 31u) / 31.0f, 1.0f});
+                continue;
+            }
             // GS modulation uses 128 as unity. Texture alpha supplies opacity.
             surface.colors.push_back({
                 std::min(rgb555 & 31u, 16u) / 16.0f,
@@ -360,6 +376,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
     bool batchable = true;
     bool hasScroll = false, hasTextureSequence = false, hasPuddle = false;
     bool hasSortedSurfaces = false;
+    bool needsReflectionFilter = false;
     int shaftSurfaces = 0;
     for (const auto& surface : surfaces) {
         Array arrays;
@@ -382,6 +399,22 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             throw std::runtime_error("Godot rejected a surface for model " + std::to_string(model.key));
         const auto* wire = surface.descriptor->authoredRecord;
         hasSortedSurfaces |= textureInfoForDescriptor(surface.descriptor)->requiresDepthSort;
+        if (wheelBlur_) {
+            auto& texture = paintTextures_[surface.descriptor];
+            if (texture.is_null()) texture = upload_paint_texture(surface.descriptor);
+            if (texture.is_null()) throw std::runtime_error("Missing authored wheel blur texture");
+            Ref<ShaderMaterial> overlay;
+            overlay.instantiate();
+            overlay->set_shader(load_shader("res://shader/wheel_blur.gdshader"));
+            overlay->set_shader_parameter("wheel_blur_texture", texture);
+            overlay->set_shader_parameter("repeat_axes", Vector2i(wire[0x4c] & 1u, (wire[0x4c] >> 1) & 1u));
+            overlay->set_shader_parameter("alpha_test", !wire[0x4f] &&
+                !textureInfoForDescriptor(surface.descriptor)->drawFlag4Enabled);
+            overlay->set_render_priority(surface.material->get_render_priority());
+            mesh->surface_set_material(index, overlay);
+            batchable = false;
+            continue;
+        }
         if (surface.lightMaterial) {
             auto& base = paintTextures_[surface.descriptor];
             if (base.is_null()) base = upload_paint_texture(surface.descriptor);
@@ -425,6 +458,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         const auto& sequence = texture_sequence(*surface.descriptor);
         const auto transparency = sequence.cutout ? BaseMaterial3D::TRANSPARENCY_ALPHA_SCISSOR :
             surface.material->get_transparency();
+        needsReflectionFilter |= transparency == BaseMaterial3D::TRANSPARENCY_ALPHA;
         const auto depth = surface.material->get_depth_draw_mode();
         const auto blend = surface.material->get_blend_mode();
         const bool mixedWrap = (wire[0x4c] & 3u) == 1u || (wire[0x4c] & 3u) == 2u;
@@ -432,11 +466,11 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             depth != BaseMaterial3D::DEPTH_DRAW_DISABLED;
         hasScroll |= scroll;
         hasTextureSequence |= sequence.count != 0;
-        if (!scroll && !sequence.count && !morph && !rigid && !mixedWrap && !shaft) {
+        if (!scroll && !sequence.count && !morph && !rigid && !mixedWrap && !shaft && !billboard) {
             mesh->surface_set_material(index, surface.material);
             continue;
         }
-        const auto textureKey = std::make_pair(surface.descriptor, depthWrite);
+        const auto textureKey = std::make_tuple(surface.descriptor, depthWrite, billboard);
         if (!morph && !rigid) {
             const auto cached = animatedTextures_.find(textureKey);
             if (cached != animatedTextures_.end()) {
@@ -461,6 +495,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         material->set_shader_parameter("use_shaft", shaft);
         material->set_shader_parameter("use_morph", morph != nullptr);
         material->set_shader_parameter("use_rigid", rigid != nullptr);
+        if (billboard) material->set_shader_parameter("face_camera", true);
         if (shaft) {
             const auto albedo = surface.material->get_texture(BaseMaterial3D::TEXTURE_ALBEDO);
             material->set_shader_parameter("albedo_minified", albedo);
@@ -495,6 +530,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
     }
     mesh->set_meta("hp2_batchable", batchable);
     mesh->set_meta("hp2_sorted_surfaces", hasSortedSurfaces);
+    mesh->set_meta("hp2_reflection_surface_filter", hasSortedSurfaces || needsReflectionFilter);
     mesh->set_meta("hp2_morph", morph != nullptr);
     mesh->set_meta("hp2_rigid", rigid != nullptr);
     mesh->set_meta("hp2_uv_scroll", hasScroll);

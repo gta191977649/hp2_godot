@@ -1,6 +1,7 @@
 #include "race_diagnostics.hpp"
 
 #include "bware/inc/bWare.hpp"
+#include "bware/inc/bMath.hpp"
 #include "indep/inc/EventTree.hpp"
 #include "indep/inc/Flags.hpp"
 #include "indep/inc/FlailerDB.hpp"
@@ -15,6 +16,7 @@
 #include "indep/inc/Track.hpp"
 #include "indep/inc/TrackPath.hpp"
 
+#include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/variant.hpp>
 #include <godot_cpp/variant/packed_vector3_array.hpp>
@@ -27,11 +29,29 @@
 #include "indep/inc/Chopper.hpp"
 #include "indep/inc/Munitions.hpp"
 #include "indep/inc/spikestrip.hpp"
-#include "bware/inc/bMath.hpp"
 #include <cstdio>
 #endif
 
 namespace hp2 {
+
+bool profile_shared_world_reflections() {
+    const auto* os = godot::OS::get_singleton();
+    return os->get_environment("HP2_MVP_PROFILE_REFLECTIONS") == "1" &&
+        !os->get_environment("HP2_PROFILE_DIR").is_empty() &&
+        os->get_environment("HP2_MVP_PROFILE_SHARED_REFLECTION_WORLD") == "1";
+}
+
+FrontendReady reflection_profile_frontend_ready() {
+    const auto* os = godot::OS::get_singleton();
+    if (os->get_environment("HP2_MVP_PROFILE_REFLECTIONS") != "1" ||
+        os->get_environment("HP2_PROFILE_DIR").is_empty()) return nullptr;
+    return [](MainMenuScreenServices& menus, const void*) {
+        constexpr std::uint32_t seed = 0x0146u;
+        menus.raceSetup->parameters->eventRandomSeed = seed;
+        (void)vectorRandomSeed(seed, &vectorDefaultRandomState);
+        menus.demoMode->RequestDemoMode();
+    };
+}
 
 godot::PackedVector3Array race_photo_route(const RaceStateView& race) {
     godot::PackedVector3Array points;

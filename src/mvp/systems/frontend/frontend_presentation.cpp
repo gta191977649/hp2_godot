@@ -673,6 +673,7 @@ struct FrontendPresentation::Storage {
     void update_highlights(const FlailerRenderManager& layout) {
         auto* rendering = RenderingServer::get_singleton();
         for (const auto& source : layout.highlights) {
+            if (!layout.IsScreenVisible(source.screen)) continue;
             const auto* first = source.layout;
             while (first && first->polygons.empty()) first = first->nextTexture.get();
             if (!first) continue;
@@ -690,6 +691,7 @@ struct FrontendPresentation::Storage {
             auto& highlight = highlights[{source.screen, source.echo}];
             if (!highlight.node) {
                 highlight.node = memnew(Node2D);
+                highlight.node->set_meta("flailer_highlight_screen", static_cast<int64_t>(source.screen));
                 overlay.add_child(highlight.node);
             }
             highlight.frame = frame;

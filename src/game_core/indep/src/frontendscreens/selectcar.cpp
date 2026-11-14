@@ -752,7 +752,7 @@ bool CarSelector::CanEnterOrbitMode(const VisibleCar* car)const
 }
 void CarSelector::EnterOrbitMode()
 {
-    auto& own=*storage_;own.lastOrbitInput=own.Ui().clock->realLoopCounter;own.desiredTransition=1.0f;own.orbitInputSeen=false;
+    auto& own=*storage_;own.lastOrbitInput=own.Ui().clock->realTimeFrames;own.desiredTransition=1.0f;own.orbitInputSeen=false;
     const auto& car=*visibleCars.current->definition;
     // Traffic has no authored manufacturer/specification narration. Do not
     // enqueue the racer-description event with an empty car-description mask.
@@ -814,7 +814,7 @@ void CarSelector::Tick()
         SetupCarOverrideModel();own.fade=std::max(own.fade-3,0);
     } else {own.fade+=7;if(own.fade>130){own.fade=130;SetupCarOverrideModel();}}
     if(auto* object=own.Ui().resources->FindObject(own.screen,0x75c8b565u))object->SetAlpha(own.fade);
-    if(own.transition==1.0f && SelectCarTickDifference(own.Ui().clock->realLoopCounter,own.lastOrbitInput)>2400)EnterChooseMode();
+    if(own.transition==1.0f && SelectCarTickDifference(own.Ui().clock->realTimeFrames,own.lastOrbitInput)>2400)EnterChooseMode();
     if(own.transition==0.0f || !own.orbitInputSeen)own.yaw=static_cast<std::uint16_t>(own.yaw+46u);
     const float statsSingle[]{0.2739799916744232f,0.0f,-0.5299999713897705f,0.0f};
     const float statsSplit[]{-0.6200000047683716f,0.0f,-1.0499999523162842f,0.0f};
@@ -877,7 +877,7 @@ void CarSelector::JoyHandler(std::int32_t,std::int32_t event,std::uint8_t value)
     // unreachable in PAL. No native cheat-success wrapper is introduced.
     if(event==34 || event==39 || event==40 || event==43)return;
     if(event>=35 && event<=42) {
-        own.lastOrbitInput=own.Ui().clock->realLoopCounter;own.orbitInputSeen=true;
+        own.lastOrbitInput=own.Ui().clock->realTimeFrames;own.orbitInputSeen=true;
         if(event==35)own.camera->desiredHorizontalSpeed=value?-9000.0f:0.0f;
         else if(event==36)own.camera->desiredHorizontalSpeed=value?9000.0f:0.0f;
         else if(event==37)own.camera->desiredVerticalSpeed=value?10000.0f:0.0f;

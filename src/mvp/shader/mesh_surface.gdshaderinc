@@ -2,6 +2,7 @@ uniform bool use_morph;
 uniform bool use_rigid;
 uniform bool use_scroll;
 uniform bool use_shaft;
+uniform bool face_camera;
 
 global uniform vec4 hp2_animation_clock; // interpolated ticks, texture seconds, real ticks, committed ticks
 uniform ivec2 repeat_axes = ivec2(1);
@@ -67,6 +68,17 @@ void vertex() {
         if (stepped_scroll) time = trunc(time / scroll_interval);
         vec2 offset = time * scroll_rate;
         UV += offset - trunc(offset);
+    }
+    if (face_camera) {
+        vec3 origin = MODEL_MATRIX[3].xyz;
+        vec2 delta = origin.xz - INV_VIEW_MATRIX[3].xz;
+        vec2 direction;
+        if (dot(delta, delta) > 1.0e-4) direction = normalize(delta);
+        else if (abs(delta.y) < abs(delta.x)) direction = vec2(sign(delta.x), 0.0);
+        else direction = vec2(0.0, delta.y > 0.0 ? 1.0 : -1.0);
+        mat4 pose = mat4(vec4(direction.x, 0.0, direction.y, 0.0), vec4(0.0, 1.0, 0.0, 0.0),
+            vec4(-direction.y, 0.0, direction.x, 0.0), vec4(origin, 1.0));
+        MODELVIEW_MATRIX = VIEW_MATRIX * pose;
     }
 }
 

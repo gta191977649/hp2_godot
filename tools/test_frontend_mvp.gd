@@ -21,6 +21,9 @@ var arrest_seen := false
 var arrest_midpoint := 0
 var arrest_motion_captured := false
 var name_test := OS.get_environment("HP2_MVP_NAME_TEST")
+var check_frontend_rate := OS.get_environment("HP2_MVP_FRONTEND_RATE") == "1"
+var frontend_rate_start := 0
+var frontend_rate_loop := 0
 
 func _initialize() -> void:
     deadline = Time.get_ticks_msec() + 170000
@@ -145,7 +148,14 @@ func _process(_delta: float) -> bool:
     if stage == 14 and screen == "View Event Tree":
         stage = 15
         next_input = Time.get_ticks_msec() + 1100
+        frontend_rate_start = Time.get_ticks_msec()
+        frontend_rate_loop = sample.get("frontend_loop", 0)
     if stage == 15 and Time.get_ticks_msec() >= next_input:
+        if check_frontend_rate:
+            var rate := 1000.0 * (int(sample.frontend_loop) - frontend_rate_loop) / (Time.get_ticks_msec() - frontend_rate_start)
+            if rate < 85.0:
+                return _fail("event_tree_frontend_rate_%s" % rate)
+            print("HP2_MVP_EVENT_TREE_RATE_PASS ", rate)
         _capture("event-tree")
         _tap(KEY_ENTER)
         stage = 16

@@ -9,12 +9,18 @@ struct EditorMarkerModel;
 
 namespace hp2 {
 
+struct WheelBlurState {
+    std::array<float, 16> transform{};
+    float alpha{};
+};
+
 struct VehicleEntityState {
     std::uint64_t handle{};
     int model{}, skin{};
     bool player{}, visible{}, rearVisible{};
     std::array<float, 16> transform{};
     std::array<std::array<float, 16>, 4> wheels{};
+    std::array<WheelBlurState, 4> wheelBlur{}, rearWheelBlur{};
     float speed{};
 };
 

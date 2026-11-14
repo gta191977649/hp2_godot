@@ -47,3 +47,50 @@ Set `HP2_MVP_DEMO_TEST=release` for the Release menu or
 `HP2_MVP_DEMO_TEST=idle` for the unattended title and demo.
 PS2 equivalence, optional recorded playback assets and audio capture have
 not been independently verified.
+
+## Debug pointer and menu SFX follow-up
+
+The startup ImGui console captured mouse events before Godot's frontend
+Control received them. With the console dismissed, a mouse click reached
+Debug through `QueueFrontendPointer` and the shared FRED `JoyHandler`.
+The console now opens on explicit input, with the frame graph still visible.
+The Debug smoke test clicks the row in frontend design coordinates.
+
+Menu SFX route through `FlailerSoundState::Play` to the original bank voice
+in category 3. The default 0.31 category gain multiplies the sample descriptor
+gain before the native pan matrix reaches XAudio2. For MenuSelect this is
+about 0.115 (-18.8 dB) before panning at default settings. The US Retail ELF
+evidence for that gain and the authored sample amplitudes is in
+[TASK-0016](../../docs/SOUND_RECOVERY.md). Code inspection supports the
+authored gain, so no volume boost was applied. Physical output level and
+an original PS2 loudness comparison remain unmeasured.
+
+`cmake --build --preset godot-mvp-debug --target stage_mvp --parallel 16`
+passed. Godot 4.7.2 ran `tools/test_mvp_debug_menu.gd` on the staged Debug
+project with `HP2_MVP_DEBUG_MODE=1` and an isolated profile. It passed mouse
+entry, the Car Viewer popup, Track Viewer return, manual demo and regular
+race reentry. The existing native build passed `frontend_actions`,
+`frontend_jukebox` and `frontend_audio` via CTest.
+
+## Mouse and popup lifetime regression
+
+The earlier default-closed console change still allowed the opened console
+to consume every mouse event. Its mouse capture now follows its window bounds.
+Track Viewer and effect controls retain their own mouse handling. Frontend
+clicks continue to enter through the existing Godot Control and FRED input.
+
+The source ticks both popup slots even after dismissal. An inactive slot
+kept its Continue label and kept publishing an external highlight despite
+the original screen being hidden. The integration guard in
+`FlailerPopup::Tick` preserves native timing and permits external publication
+only for active slots. Godot also filters any highlight whose source screen
+is absent from the visible layout. Its existing retirement path kills the
+Tween, detaches the node, and queues it for deletion.
+
+Debug staging passed. With Godot 4.7.2 at 960x720 and an isolated profile,
+`HP2_MVP_DEBUG_MODE=1` and `HP2_MVP_DEMO_TEST=pointer`, the Debug menu smoke
+clicked Debug, Car Viewer and Continue through Godot input. It verified that
+the Continue node existed with the popup open and was absent for five frames
+after dismissal, with Car Viewer still selected. This used injected Godot
+mouse events. The full smoke reached Track Viewer and did not complete its
+return-button step in this run.

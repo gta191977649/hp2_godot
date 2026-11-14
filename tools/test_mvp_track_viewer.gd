@@ -16,7 +16,7 @@ func _process(_delta: float) -> bool:
         quit(1)
     if not running:
         race = root.get_node_or_null("NativeGame/RacePresentation")
-        if is_instance_valid(race) and race.telemetry().get("debug_console_open", false):
+        if is_instance_valid(race) and race.telemetry().has("debug_console_open"):
             running = true
             run.call_deferred()
     return false
@@ -81,6 +81,8 @@ func run() -> void:
         await wait_for(func(state: Dictionary) -> bool: return state.get("screen", "") == "Title Screen")
     await create_timer(0.4).timeout
     var profile_before := FileAccess.get_sha256(profile_path) if FileAccess.file_exists(profile_path) else ""
+    if not race.telemetry().get("debug_console_open", false):
+        await tap(KEY_QUOTELEFT)
     for letter in "trackviewer":
         await tap(KEY_NONE, letter.unicode_at(0))
     await tap(KEY_ENTER)

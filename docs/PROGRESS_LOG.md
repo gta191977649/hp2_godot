@@ -1,9 +1,21 @@
+## 2026-11-14 TASK-0146 Scenic Drive reflection performance
+
+Moved reflection scenery into a dedicated Godot world with authored zones,
+LOD and opaque batches. The direct demo diagnostic eliminated the title
+idle wait. Three matched Vulkan captures reduced reflection draws from
+3,530 to 348 per refresh frame. The main viewport still limits the heavy
+view's 120 Hz frame budget. TASK-0146 records the measurements and the
+Track 33 Vulkan and D3D12 lifecycle and atlas checks.
+
 ## 2026-11-14 TASK-0146 Godot shader resources and car paint
 
 MVP shaders now load from the staged shader directory. The race and Track
 Viewer use Godot canvas shaders with a Forward+ post-transparent depth
 resolve. Vehicle presentation consumes donor material and environment
 camera inputs. TASK-0146 records PC checks and open paint fidelity work.
+The wheel blur follow-up uses each committed wheel's speed and non-spinning
+mount pose with the authored overlay texture. Track 33 verified the alpha
+cap, rim pixel changes and braking fade on Vulkan and D3D12.
 
 ## 2026-11-14 TASK-0145 Debug menu and attract demo
 
@@ -5513,3 +5525,9 @@ host startup callback at the authored frontend resource boundary.
 All five Ultimate Racer Be the Cop events presented the authored police
 timer with the player bound as officer. The Track 11 police event accepted
 both keyboard support requests and reached its dedicated results screen.
+
+- TASK-0145 follow-up. Debug console starts closed and the Godot smoke now clicks Debug through the shared pointer path. Debug staging and window smoke passed. Audited the authored menu SFX gain and recorded the remaining PS2 loudness comparison in TASK-0145.
+
+- TASK-0145 mouse and popup follow-up. Scoped the ImGui console mouse capture to its window and retired hidden popup highlights. Debug build and targeted Godot pointer/Continue lifetime smoke passed.
+
+- TASK-0126. FRED now publishes live frontend layouts per Godot render frame. The 120 FPS Championship smoke measured 107.8 Event Tree updates/s.

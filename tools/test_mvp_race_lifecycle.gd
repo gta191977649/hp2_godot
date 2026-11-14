@@ -10,10 +10,12 @@ var expected_track := 33
 var first_generation := 0
 var race_phase := 0
 var original_scene: Node
+var original_atlas: SubViewport
 var start_position := Vector3.ZERO
 var selected_mode := 0
 var mode_changes := 0
 var check_replay := false
+var check_reflections := OS.get_environment("HP2_MVP_CHECK_REFLECTION_LIFECYCLE") == "1"
 var mode_screen := ""
 var picker_direction := 0
 var campaign_moves := 0
@@ -81,6 +83,10 @@ func _process(delta: float) -> bool:
                     return _fail("expected_police_role_and_hud")
                 if selected_mode >= 3 and sample.has("reverse") and sample["reverse"] != (picker_direction == 1):
                     return _fail("expected_challenge_direction")
+                if check_reflections:
+                    original_atlas = original_scene.get_node_or_null("CarReflectionAtlas") as SubViewport
+                    if not _reflection_world_valid(original_scene):
+                        return _fail("reflection_and_rear_view_worlds")
                 first_generation = sample["generation"]
                 start_position = sample["position"]
                 _key(KEY_W, true)
@@ -123,6 +129,10 @@ func _process(delta: float) -> bool:
             elif sample.get("generation", 0) > first_generation and active:
                 if is_instance_valid(original_scene) or sample.get("track") != expected_track:
                     return _fail("restart_scene_retirement")
+                if check_reflections and (is_instance_valid(original_atlas) or not _reflection_world_valid(race.race_scene())):
+                    return _fail("restart_reflection_retirement")
+                if check_reflections:
+                    original_atlas = race.race_scene().get_node("CarReflectionAtlas") as SubViewport
                 _send(KEY_ESCAPE)
                 race_phase = 8
         8:
@@ -138,13 +148,35 @@ func _process(delta: float) -> bool:
             if returned or (direct and not sample.has("generation")):
                 if race.race_scene() != null:
                     return _fail("return_scene_retirement")
+                if check_reflections and is_instance_valid(original_atlas):
+                    return _fail("return_reflection_retirement")
                 print("HP2_MVP_LIFECYCLE_PASS track=", expected_track, " direct=", direct)
                 quit(0)
         12:
             if sample.get("race_state") == 4 and sample.get("replay_epoch", 0) > 0:
+                if check_reflections:
+                    if not is_instance_valid(original_atlas):
+                        return _fail("replay_reflection_atlas_lifetime")
+                    _check_replay_atlas.call_deferred(sample["replay_epoch"])
+                    race_phase = 13
+                    return false
                 print("HP2_MVP_REPLAY_PASS track=", expected_track, " epoch=", sample["replay_epoch"])
                 quit(0)
     return false
+
+func _reflection_world_valid(scene: Node3D) -> bool:
+    var rear := scene.get_node_or_null("RearViewTarget") as SubViewport
+    var face := scene.get_node_or_null("CarReflectionAtlas/CarReflectionFace0") as SubViewport
+    return rear != null and face != null and rear.world_3d == scene.get_world_3d() and face.world_3d != rear.world_3d
+
+func _check_replay_atlas(epoch: int) -> void:
+    await RenderingServer.frame_post_draw
+    var image := original_atlas.get_texture().get_image()
+    if image == null or image.is_empty() or image.get_pixel(128, 128).a <= 0.1:
+        _fail("replay_reflection_atlas_content")
+        return
+    print("HP2_MVP_REPLAY_PASS track=", expected_track, " epoch=", epoch, " reflection_atlas=", image.get_size())
+    quit(0)
 
 func _capture(name: String) -> bool:
     if screenshot_dir.is_empty() or name == "nfs-intro":

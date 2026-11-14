@@ -14,6 +14,21 @@ namespace hp2 {
 
 class SkyResources;
 struct WorldObjectEntityState;
+struct TrackPlacementVisibility;
+class WorldObjectPresentation;
+class TrackReflection {
+public:
+    explicit TrackReflection(godot::Node3D& root);
+    ~TrackReflection();
+    void update(const float origin[3], float focal, float frustumReach, bool reset);
+
+private:
+    struct Storage;
+    std::unique_ptr<Storage> storage_;
+    friend std::size_t attach_track(godot::Node3D&, const Scenery&, const SkyResources*, bool,
+        const CollisionObjectRegistry&, std::vector<TrackPlacementVisibility>&,
+        WorldObjectPresentation&, TrackReflection*, bool);
+};
 
 class WorldObjectPresentation {
 public:
@@ -34,6 +49,7 @@ struct TrackPlacementVisibility {
 inline constexpr std::uint32_t trackSkyLayer = 1u << 3;
 inline constexpr std::uint32_t trackReflectionLayer = 1u << 4;
 std::size_t attach_track(godot::Node3D& root, const Scenery& scenery, const SkyResources* sky, bool reverse, const CollisionObjectRegistry& objects,
-    std::vector<TrackPlacementVisibility>& movablePlacements, WorldObjectPresentation& worldObjects);
+    std::vector<TrackPlacementVisibility>& movablePlacements, WorldObjectPresentation& worldObjects,
+    TrackReflection* reflection = nullptr, bool sharedWorldReflection = false);
 
 }

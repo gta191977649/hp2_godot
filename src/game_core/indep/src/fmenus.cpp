@@ -995,6 +995,9 @@ void FlailerPopup::Tick()
     if (phase>6.283185005187988f) phase-=6.283185005187988f;
     // Source computes this argument even though Animate never reads it.
     (void)rotationSineRadians(phase);
+    // The host consumes highlight publications independently of the authored
+    // screen draw. An inactive popup retains its configuration for reuse.
+    if (ui->externalPresentation && !activeState) return;
     highlight->Animate();
 }
 

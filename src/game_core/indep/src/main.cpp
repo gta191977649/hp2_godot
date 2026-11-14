@@ -218,6 +218,8 @@ struct ApplicationRuntime::Storage {
     double deferredPresentationCpuMilliseconds{};
     NativeFrameTiming frameTiming;
     NativeSimulationClock simulationClock;
+    std::chrono::steady_clock::time_point frontendFrameTime{};
+    double frontendTimeRemainder{};
     bool pendingClockAdvance{},pendingLegacyRealClock{},sourceJoylogTiming{};
     std::uint32_t scheduledStepQuanta{60};
     float replayStepSeconds{1.0f/60.0f};
@@ -1211,9 +1213,29 @@ bool ApplicationRuntime::TickInternal()
         s.presentationTimingEpoch=s.host.PresentationTimingEpoch();
         const auto resumed=s.host.FrameTime();
         s.frameTiming.Reset(resumed);s.simulationClock.Reset(resumed);applicationFrameTiming={};
+        s.frontendFrameTime={};s.frontendTimeRemainder=0.0;
     }
     auto observed=s.host.FrameTime();
-    if(!s.simulationClock.UpdateDue(observed) &&
+    // The Godot host calls this once per rendered frame. With no World or
+    // Joylog, run FRED on that cadence instead of repeating 60 Hz layouts.
+    const bool renderDrivenFrontend=s.stateOnly() && s.flow.currentState==3 && !s.Simulation() &&
+        !s.joylog.stream && !s.joylog.replaying && !s.joylog.recording;
+    float frontendElapsed=1.0f/60.0f;
+    if(renderDrivenFrontend) {
+        if(s.frontendFrameTime!=decltype(s.frontendFrameTime){}) {
+            const double quanta=std::clamp(
+                std::chrono::duration<double>(tickStarted-s.frontendFrameTime).count()*3600.0,
+                0.0,255.0)+s.frontendTimeRemainder;
+            const auto rounded=std::round(quanta);
+            s.frontendTimeRemainder=quanta-rounded;
+            frontendElapsed=static_cast<float>(rounded)/3600.0f;
+            frontendElapsed=std::clamp(frontendElapsed,0.0f,255.0f/3600.0f);
+        }
+        s.frontendFrameTime=tickStarted;
+    } else {
+        s.frontendFrameTime={};s.frontendTimeRemainder=0.0;
+    }
+    if(!renderDrivenFrontend && !s.simulationClock.UpdateDue(observed) &&
         (s.stateOnly() || !s.host.PresentationDue(observed))) {
         s.host.WaitUntil(std::min(s.simulationClock.Deadline(),s.host.PresentationDeadline()));
         return true;
@@ -1223,7 +1245,7 @@ bool ApplicationRuntime::TickInternal()
     bool advancedPresentation=false;
     std::uint32_t updates=0;
     for(;;) {
-        advancedPresentation=s.simulationClock.UpdateDue(observed);
+        advancedPresentation=renderDrivenFrontend || s.simulationClock.UpdateDue(observed);
         if(advancedPresentation) {
             if(s.stateOnly()) {
                 s.renderer.CompleteSubmissions();
@@ -1263,6 +1285,7 @@ bool ApplicationRuntime::TickInternal()
                 // a newly created race or skip the first visible countdown.
                 observed=s.host.FrameTime();s.simulationClock.Reset(observed);
                 s.replayStepSeconds=1.0f/60.0f;
+                s.frontendFrameTime={};s.frontendTimeRemainder=0.0;
             }
             s.RecordLifecycle(simulation,session);
             // PAL12F40C gates the application checksum on the live InGameFlag.
@@ -1274,7 +1297,8 @@ bool ApplicationRuntime::TickInternal()
             auto* replay=session && session->bindings && session->bindings->replayOwner?&session->bindings->replayOwner->State():nullptr;
             if(replay)replay->owner->DoFancyJoylogDebugging(s.clock,s.joylog);
             const bool restoringFrame=replay && replay->owner->WillRestoreFrame(s.clock);
-            const auto elapsed=restoringFrame ? s.replayStepSeconds:1.0f/60.0f;
+            const auto elapsed=restoringFrame ? s.replayStepSeconds:
+                (renderDrivenFrontend && !simulation && s.flow.currentState==3 ? frontendElapsed:1.0f/60.0f);
             const bool sourceJoylog=s.joylog.stream || s.joylog.replaying || s.joylog.recording;
             if(sourceJoylog) {
                 // The original Joylog has no native clock-version marker.
@@ -1471,11 +1495,12 @@ bool ApplicationRuntime::TickInternal()
             for(int32_t index=0;index<players->count;++index)
                 carFramePlayerRenderTrackMap(players->players[index]);
             s.pendingClockAdvance=true;
-            s.simulationClock.CompleteStep(s.scheduledStepQuanta);
+            if(renderDrivenFrontend && !s.Simulation() && s.flow.currentState==3)s.simulationClock.Reset(observed);
+            else s.simulationClock.CompleteStep(s.scheduledStepQuanta);
             texturePackRegistry.ServiceReads();
             s.resources->Loader().ServiceResourceLoading();
             s.replayAvailableBytes=s.host.AvailableMemory();
-            if(++updates<8u && s.simulationClock.UpdateDue(observed))continue;
+            if(!renderDrivenFrontend && ++updates<8u && s.simulationClock.UpdateDue(observed))continue;
             return !s.demo.ExitRequested();
         }
         Require(s.frame->State()==EcstasyFrame::Phase::Complete || s.frame->Commands().empty(),"Previous CPU frame capture is still live");

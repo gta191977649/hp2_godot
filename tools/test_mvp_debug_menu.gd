@@ -63,10 +63,16 @@ func select(id: int) -> void:
 
 func open_debug() -> void:
     await wait_screen(MAIN)
-    await select(FIRST + 3)
-    await key(KEY_ENTER)
+    await create_timer(1.2).timeout
+    var canvas := race.get_node("FrontendCanvas") as Node2D
+    await click_at(canvas.to_global(Vector2(200, 258)))
     await wait_screen(DEBUG)
     await create_timer(0.25).timeout
+
+func popup_highlight_present() -> bool:
+    return not race.find_children("*", "Node2D", true, false).filter(
+        func(node: Node) -> bool: return node.get_meta("flailer_highlight_screen", 0) == 0x74d2dfa2
+    ).is_empty()
 
 func capture(label: String) -> void:
     var dir := OS.get_environment("HP2_MVP_SCREENSHOT_DIR")
@@ -88,7 +94,8 @@ func run() -> void:
         race = root.get_node_or_null("NativeGame/RacePresentation")
     await wait_screen(TITLE)
     if race.telemetry().get("debug_console_open", false):
-        await key(KEY_QUOTELEFT)
+        fail("debug console opened without input")
+        return
     await wait_for(func(state: Dictionary) -> bool: return state.get("video_request", 0) == 2)
     if mode != "idle":
         await key(KEY_ENTER)
@@ -125,14 +132,27 @@ func run() -> void:
             return
         await open_debug()
         await capture("debug-options")
-        await pad(JOY_BUTTON_DPAD_DOWN)
-        await pad(JOY_BUTTON_A)
+        var canvas := race.get_node("FrontendCanvas") as Node2D
+        await click_at(canvas.to_global(Vector2(200, 122)))
         await wait_for(func(state: Dictionary) -> bool: return state.get("modal", false))
+        await process_frame
+        if not popup_highlight_present():
+            fail("Continue highlight missing while popup is open")
+            return
         await capture("car-viewer-popup")
-        await pad(JOY_BUTTON_B)
+        await click_at(canvas.to_global(Vector2(365, 288)))
         await wait_for(func(state: Dictionary) -> bool: return not state.get("modal", false))
+        for frame in range(5):
+            await process_frame
+            if popup_highlight_present():
+                fail("Continue highlight survived popup dismissal")
+                return
         if race.telemetry().get("selected_item") != FIRST + 1:
             fail("popup did not preserve Car Viewer selection")
+            return
+        print("HP2_MVP_DEBUG_POINTER_POPUP_PASS")
+        if mode == "pointer":
+            quit()
             return
         await pad(JOY_BUTTON_B)
         await wait_screen(MAIN)
@@ -179,10 +199,16 @@ func click_at(position: Vector2) -> void:
     var motion := InputEventMouseMotion.new()
     motion.position = position
     motion.global_position = position
-    Input.parse_input_event(motion)
+    root.push_input(motion, true)
     await process_frame
     var event := InputEventMouseButton.new()
     event.button_index = MOUSE_BUTTON_LEFT
     event.position = position
     event.global_position = position
-    await input_tap(event)
+    event.pressed = true
+    root.push_input(event, true)
+    await create_timer(0.12).timeout
+    event = event.duplicate()
+    event.pressed = false
+    root.push_input(event, true)
+    await create_timer(0.12).timeout

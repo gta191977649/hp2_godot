@@ -30,7 +30,14 @@ history and the borrowed scene-buffer bindings.
 Vehicle materials consume original strip normals, light material coefficients,
 light contexts and decoded textures. Godot uses the donor environment camera
 schedule and remap samples to render the six race reflection faces and the
-reflection atlas. Frontend previews sample the original CarSelectEnvMap.
+reflection atlas. The six reflection cameras share a dedicated Godot world.
+Its static scenery uses the authored visibility zones and projected-size LODs.
+Only due faces render, reusing the other images in the atlas. Frontend previews
+sample the original CarSelectEnvMap.
+Race wheel blur consumes the committed angular velocity and non-spinning
+wheel mount pose for each wheel. It uses the authored wheel blur mesh and
+texture on the primary and rear view layers, with the original per-view part
+and LOD gates. The Godot shader blends the overlay against the visible rim.
 
 ## Game Core Integration Boundary
 

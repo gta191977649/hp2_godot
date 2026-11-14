@@ -165,3 +165,23 @@ The Release runtime probe exited with Windows access violation
 `0xc0000005` before producing Godot logs. The Release script parse check
 passed with `--headless --script tools/test_mvp_frontend_resize.gd --check-only`.
 See `local/task0126-authored-pointer-debug.log` for the Debug run.
+
+## Frontend animation cadence
+
+The Godot state-only frontend used the World scheduler even when no World
+was loaded, so FRED generated at most 60 new layouts per second. The live
+frontend now updates and republishes on each Godot render callback, using
+the elapsed time in the existing 1/3600-second native units with carried
+rounding error. Long stalls are capped to the native timestep range.
+Loading, World simulation and Joylog retain their existing scheduling.
+Select Car's 40-second orbit timeout now counts 60 Hz elapsed-time frames,
+so the increased callback count does not shorten it.
+
+Debug staging passed with
+`cmake --build --preset godot-mvp-debug --target stage_mvp --parallel 16`.
+Godot 4.7.2 with `--max-fps 120 --disable-vsync --resolution 960x720`,
+`HP2_MVP_FRONTEND_RATE=1` and `HP2_MVP_CHAMPIONSHIP=1` ran
+`tools/test_frontend_mvp.gd` against the staged Debug project using an
+isolated profile. Event Tree measured 107.8 FRED updates/s and progressed
+through event details and Select Car.
+The same smoke entered Track 12, paused, resumed, and passed at World step 84.

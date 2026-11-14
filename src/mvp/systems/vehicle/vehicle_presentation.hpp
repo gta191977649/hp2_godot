@@ -19,6 +19,7 @@ struct VehiclePresentation {
     godot::Node3D* root{};
     std::vector<godot::MeshInstance3D*> meshes;
     std::array<godot::MeshInstance3D*, 4> wheels{};
+    std::array<godot::MeshInstance3D*, 4> wheelBlur{}, rearWheelBlur{};
     int model{}, skin{};
     std::uint32_t layers{};
 

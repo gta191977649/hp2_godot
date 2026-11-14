@@ -2,6 +2,7 @@
 
 #include "assets/mesh_converter.hpp"
 #include "assets/shader_resource.hpp"
+#include "bware/inc/bMath.hpp"
 #include "indep/inc/CarState.hpp"
 #include "indep/inc/CameraMover.hpp"
 #include "indep/inc/eEnvMap.hpp"
@@ -18,11 +19,14 @@
 #include <godot_cpp/classes/viewport_texture.hpp>
 #include <godot_cpp/classes/world3d.hpp>
 
+#include <cmath>
+
 namespace hp2 {
 using namespace godot;
 namespace {
 constexpr int faceSize = 64;
 constexpr int atlasSize = 256;
+constexpr float reflectionFar = 32.0f;
 
 void add_patch(SubViewport& atlas, SubViewport& source,
     const EnvironmentMap& environment, std::size_t index, bool back) {
@@ -72,8 +76,9 @@ struct VehicleReflection::Storage {
     std::array<Camera3D*, 6> cameras{};
     SubViewport* atlas{};
     CarPaintAssets paint;
+    std::unique_ptr<TrackReflection> track;
 
-    Storage(Node3D& scene, const RaceStateView& race) {
+    Storage(Node3D& scene, const RaceStateView& race, bool sharedWorld) {
         views.clock = &clock;
         views.presentationLayout = race.rearCamera ? 2 : 1;
         gameTimeSetVideoMode(&clock, race.ntsc ? HP2_VIDEO_NTSC : HP2_VIDEO_PAL);
@@ -93,20 +98,28 @@ struct VehicleReflection::Storage {
         atlas->set_use_hdr_2d(true);
         atlas->set_transparent_background(true);
         scene.add_child(atlas);
+        Ref<World3D> world = scene.get_world_3d();
+        if (!sharedWorld) world.instantiate();
         for (std::size_t i = 0; i < faces.size(); ++i) {
             faces[i] = memnew(SubViewport);
             faces[i]->set_name(String("CarReflectionFace") + String::num_uint64(i));
             faces[i]->set_size({faceSize, faceSize});
             faces[i]->set_use_hdr_2d(true);
-            faces[i]->set_world_3d(scene.get_world_3d());
+            faces[i]->set_world_3d(world);
             faces[i]->set_update_mode(SubViewport::UPDATE_DISABLED);
             atlas->add_child(faces[i]);
             auto* camera = memnew(Camera3D);
             faces[i]->add_child(camera);
-            camera->set_cull_mask(trackReflectionLayer | trackSkyLayer);
+            camera->set_cull_mask((sharedWorld ? trackReflectionLayer : 1u) | trackSkyLayer);
             camera->make_current();
             cameras[i] = camera;
             if (i != 2) add_patch(*atlas, *faces[i], *environment, i, false);
+        }
+        if (!sharedWorld) {
+            auto* root = memnew(Node3D);
+            root->set_name("ReflectionScenery");
+            faces[0]->add_child(root);
+            track = std::make_unique<TrackReflection>(*root);
         }
         for (std::size_t patch = 0; patch < 4; ++patch)
             add_patch(*atlas, *faces[2], *environment, patch, true);
@@ -115,11 +128,12 @@ struct VehicleReflection::Storage {
     }
 };
 
-VehicleReflection::VehicleReflection(Node3D& scene, const RaceStateView& race)
-    : storage_(std::make_unique<Storage>(scene, race)) {}
+VehicleReflection::VehicleReflection(Node3D& scene, const RaceStateView& race, bool sharedWorld)
+    : storage_(std::make_unique<Storage>(scene, race, sharedWorld)) {}
 VehicleReflection::~VehicleReflection() = default;
 const CarPaintAssets& VehicleReflection::assets() const { return storage_->paint; }
 const float* VehicleReflection::matrix() const { return storage_->environment->BodyMatrix().data(); }
+TrackReflection* VehicleReflection::track() const { return storage_->track.get(); }
 
 void VehicleReflection::update(const RaceStateView& race, double elapsed, bool reset) {
     auto& s = *storage_;
@@ -139,7 +153,7 @@ void VehicleReflection::update(const RaceStateView& race, double elapsed, bool r
     }
     s.environment->UpdateCameras(race.camera->eye, origin,
         0, static_cast<float>(elapsed));
-    bool updated = reset;
+    float focal{};
     for (std::size_t i = 0; i < s.faces.size(); ++i) {
         const auto& view = s.views.screens[i + 4];
         if (!view.enabled && !reset) continue;
@@ -147,10 +161,22 @@ void VehicleReflection::update(const RaceStateView& race, double elapsed, bool r
         const auto eye = race_vector(frame.eye);
         const float up[]{frame.matrix[1], frame.matrix[5], frame.matrix[9]};
         s.cameras[i]->look_at_from_position(eye, eye + race_vector(frame.forward), -race_vector(up));
-        s.cameras[i]->set_perspective(frame.fieldOfView * (360.0f / 65536.0f), frame.nearClip, 32.0f);
+        // PAL113030 passes the short cull far plane. Ecstasy's projection uses
+        // a 512-wide focal basis and the face's actual 64-wide render target.
+        const auto halfAngle = static_cast<std::uint16_t>(frame.fieldOfView >> 1);
+        const float tangent = rotationSineAngle(halfAngle) / vectorCosineAngle(halfAngle);
+        focal = 256.0f / tangent;
+        const float fov = s.track ? 2.0f * std::atan((faceSize * 0.5f) / focal) * (180.0f / 3.141592654f) :
+            frame.fieldOfView * (360.0f / 65536.0f);
+        s.cameras[i]->set_perspective(fov, frame.nearClip, reflectionFar);
         s.faces[i]->set_update_mode(SubViewport::UPDATE_ONCE);
-        updated = true;
     }
-    if (updated) s.atlas->set_update_mode(SubViewport::UPDATE_ONCE);
+    if (focal == 0.0f) return;
+    if (s.track) {
+        const float slope = (faceSize * 0.5f) / focal;
+        const float frustumReach = reflectionFar * std::sqrt(1.0f + 2.0f * slope * slope);
+        s.track->update(origin, focal, frustumReach, reset);
+    }
+    s.atlas->set_update_mode(SubViewport::UPDATE_ONCE);
 }
 }

@@ -351,10 +351,10 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
                     bool(ProjectSettings::get_singleton()->get_setting("hp2/debug_mode", false)))) {
                 session_->debugMenu = std::make_unique<FrontendDebugMenu>([this] { open_track_viewer(); });
             }
-            session_->runtime.InitializeFrontend(returnToMenu ? TrackViewer::return_to_main_menu : nullptr,
+            session_->runtime.InitializeFrontend(returnToMenu ? TrackViewer::return_to_main_menu : reflection_profile_frontend_ready(),
                 nullptr, session_->debugMenu ? &session_->debugMenu->extension() : nullptr);
 #else
-            session_->runtime.InitializeFrontend();
+            session_->runtime.InitializeFrontend(reflection_profile_frontend_ready());
 #endif
         }
         else if (tree >= 0) session_->runtime.InitializeRace(start_campaign_race_diagnostic, &session_->campaignDiagnostic);
@@ -601,8 +601,11 @@ void RacePresentation::_process(double delta) {
             if (!race.simulation->collisions || !race.simulation->collisions->objects)
                 throw std::runtime_error("Committed track has no collision placement registry");
             s.worldObjects = std::make_unique<WorldObjectPresentation>(*s.scene);
+            const bool sharedWorldReflection = profile_shared_world_reflections();
+            s.reflections = std::make_unique<VehicleReflection>(*s.scene, race, sharedWorldReflection);
             s.placements = attach_track(*s.scene, *race.scenery, race.sky, frame.reverse,
-                *race.simulation->collisions->objects, s.movablePlacements, *s.worldObjects);
+                *race.simulation->collisions->objects, s.movablePlacements, *s.worldObjects,
+                s.reflections->track(), sharedWorldReflection);
             s.effects = std::make_unique<RaceEffectsPresentation>(*s.scene);
             s.effects->prepare_particles(s.runtime.RaceParticleAssets());
             s.camera = memnew(Camera3D);
@@ -611,7 +614,6 @@ void RacePresentation::_process(double delta) {
             s.camera->set_cull_mask(s.camera->get_cull_mask() & ~trackReflectionLayer);
             s.camera->make_current();
             s.camera->set_name("RaceCamera");
-            s.reflections = std::make_unique<VehicleReflection>(*s.scene, race);
             if (s.sceneViewport) {
                 s.post.instantiate();
                 s.post->attach(*s.sceneViewport, *get_viewport(), *s.camera);
@@ -752,6 +754,7 @@ Dictionary RacePresentation::telemetry() const {
             result["picker_availability"] = picker->tracks->current->availability;
         }
         result["screen"] = session_->frontendScreen;
+        result["frontend_loop"] = session_->runtime.Clock().realLoopCounter;
         result["selected_item"] = session_->selectedItem;
         result["name_editing"] = session_->nameEditSession != 0;
         result["modal"] = session_->modal;

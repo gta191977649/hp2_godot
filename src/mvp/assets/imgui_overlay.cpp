@@ -3,6 +3,7 @@
 #include "systems/effects/race_effect_options.hpp"
 
 #include <imgui_console/imgui_console.h>
+#include <imgui_internal.h>
 #include <godot_cpp/classes/canvas_layer.hpp>
 #include <godot_cpp/classes/display_server.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
@@ -145,7 +146,7 @@ struct ImGuiOverlay::Storage {
     std::array<float, 240> frameTimes{};
     std::size_t nextSample{}, sampleCount{};
     std::chrono::steady_clock::time_point previousFrame{};
-    bool open{true};
+    bool open{};
     bool effectsOpen{};
     bool focusEffects{};
     RaceEffectOptions effectOptions;
@@ -194,9 +195,8 @@ struct ImGuiOverlay::Storage {
 };
 
 ImGuiOverlay::ImGuiOverlay(Node& owner) : storage_(std::make_unique<Storage>(owner)) {
-    storage_->console->focus = true;
     log("debug", "ImGui ready. The grave/tilde key toggles the console and returns keyboard control to the game.");
-    std::fprintf(stderr, "HP2_MVP_TRACE stage=debug_overlay console=visible graph=visible\n");
+    std::fprintf(stderr, "HP2_MVP_TRACE stage=debug_overlay console=hidden graph=visible\n");
 }
 
 ImGuiOverlay::~ImGuiOverlay() = default;
@@ -272,8 +272,11 @@ bool ImGuiOverlay::input(const Ref<InputEvent>& event) {
                 if (index == MOUSE_BUTTON_WHEEL_DOWN) io.MouseWheel -= button->get_factor();
             }
         }
-        return s.open || (s.effectsOpen && s.effectsRect.has_point(position)) ||
-            (s.viewer && s.viewer->modal()) || io.WantCaptureMouse;
+        const auto* console = s.open ? ImGui::FindWindowByName("HP2 Debug Console") : nullptr;
+        const bool overConsole = console && console->Rect().Contains(io.MousePos);
+        return overConsole || (s.effectsOpen && s.effectsRect.has_point(position)) ||
+            (s.viewer && s.viewer->modal()) ||
+            ((s.effectsOpen || (s.viewer && s.viewer->active())) && io.WantCaptureMouse);
     }
     return false;
 }
