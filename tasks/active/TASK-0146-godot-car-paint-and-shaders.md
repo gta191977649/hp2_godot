@@ -35,11 +35,13 @@ isolate a causal cost from anisotropic filtering. The old mipmap and GS
 filter paths are restored for the selected native configuration. Road-only
 2× was left out while native 120 Hz pacing remained above budget.
 
-Opt-in FXAA disables 3D MSAA, copies native depth into a Godot-owned R32
+FXAA disables 3D MSAA, copies native depth into a Godot-owned R32
 buffer for fog and focus, and antialiases the composed scene below the HUD.
 The FXAA path passed native-depth, GS history, resize and reset fixtures on
-both Vulkan and D3D12. The runtime launcher flag is `--fxaa`; the normal
-launch uses 2× MSAA.
+both Vulkan and D3D12. Debug and Release now default to native fullscreen,
+FXAA and VSync. The project follows the display refresh rate without a
+software FPS cap. The profiler explicitly selects the historical 2× MSAA
+path unless `--fxaa` is supplied.
 
 | Fullscreen configuration | Average FPS | Whole P95 / P99, ms | Tick 60–120 P95 / P99, ms |
 | --- | ---: | ---: | ---: |
@@ -58,14 +60,31 @@ closest pacing to 120 Hz among tested configurations, with a remaining
 0.17 ms gap to the strict P95 target in the slow interval.
 
 ```powershell
-./build.ps1 --fullscreen --fxaa
-./build.ps1 --fullscreen --fxaa --fps120
+./build.ps1 --run
+./build.ps1 --debug
 $iso = 'D:/ps2_game/Need for Speed - Hot Pursuit 2 (USA).iso'
 py -3 tools/profile_mvp_reflections.py --assets $iso --out local/task0146/native-repro --grid --fog baseline --fullscreen --resolution 2880x1800 --fxaa --quiet
 py -3 tools/profile_mvp_reflections.py --assets $iso --out local/task0146/native-sync-repro --grid --fog baseline --fullscreen --resolution 2880x1800 --fxaa --quiet --vsync
 py -3 tools/profile_mvp_reflections.py --assets $iso --out local/task0146/native-sun-probe --grid --fog baseline --fullscreen --resolution 2880x1800 --grid-effect no-sun
 py -3 tools/profile_mvp_reflections.py --assets $iso --out local/task0146/native-sun-pixels --grid --fog baseline --fullscreen --resolution 2880x1800 --fxaa --quiet --grid-effect compare-sun-bounds --capture-tick 90
 ```
+
+Default-launch smoke on the Arc B390 verified a 2880×1800 window and
+race viewport, 120 Hz display, VSync, FXAA and disabled 3D MSAA in both
+builds. Godot reported no software frame cap. The diagnostic entered
+Track 13 from the frontend with only the normal display defaults.
+
+| Default Vulkan build | Whole-flyby FPS | Whole P50 / P95 / P99, ms | Tick 60–120 P95 / P99, ms |
+| --- | ---: | ---: | ---: |
+| Release | 117.1 | 8.326 / 8.688 / 9.424 | 8.528 / 8.575 |
+| Debug | 119.8 | 8.327 / 8.644 / 9.014 | 8.557 / 8.631 |
+
+Logs are under `local/task0146/default-vsync-godot-mvp-release` and
+`local/task0146/default-vsync-godot-mvp-debug`. Both P95 results still
+exceed the 8.33 ms target.
+
+The isolated windowed control reported a 1280×720 window and race
+viewport, 2× MSAA, FXAA off and VSync off.
 
 ## Starting Grid fog and AcidFX particles
 

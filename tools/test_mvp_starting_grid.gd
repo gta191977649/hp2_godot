@@ -50,8 +50,12 @@ func _process(_delta: float) -> bool:
             last_camera = camera.global_position
             print("REFLECTION_BEGIN ", Engine.get_process_frames())
             var window := get_root()
-            print("GRID_DISPLAY window=", window.size, " viewport=", camera.get_viewport().get_visible_rect().size,
-                " mode=", window.mode, " vsync=", DisplayServer.window_get_vsync_mode())
+            var viewport := camera.get_viewport()
+            print("GRID_DISPLAY window=", window.size, " viewport=", viewport.get_visible_rect().size,
+                " mode=", window.mode, " vsync=", DisplayServer.window_get_vsync_mode(),
+                " refresh_hz=", DisplayServer.screen_get_refresh_rate(window.current_screen),
+                " fxaa=", ProjectSettings.get_setting("hp2/race_fxaa", false), " msaa_3d=", viewport.msaa_3d,
+                " max_fps=", Engine.max_fps)
         else:
             frames.push_back((now - previous) / 1000.0)
             if not fog_trace.is_empty():

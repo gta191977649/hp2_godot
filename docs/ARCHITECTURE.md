@@ -21,10 +21,10 @@ resources. C++ owns material parameters, viewport order and resource lifetimes.
 
 The race and track viewer render into a dedicated Forward+ viewport. A
 post-transparent compositor callback exposes resolved color and reverse-Z
-depth to the Godot canvas passes. Forward+ resolves depth into a sampleable
-R32 texture with 2× MSAA enabled on the source viewport. Fog and focus use
-the source viewport's depth. The output is composed below the HUD and
-history uses separate alternating render targets. A size change invalidates
+depth to the Godot canvas passes. With default FXAA, the compositor copies
+the source depth into a sampleable R32 texture for fog and focus. The
+2× MSAA path uses Forward+'s resolved R32 depth. The output is composed
+below the HUD. History uses separate alternating render targets. A size change invalidates
 history and the borrowed scene-buffer bindings.
 
 Vehicle materials consume original strip normals, light material coefficients,

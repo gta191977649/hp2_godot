@@ -1,3 +1,9 @@
+## 2026-11-15 TASK-0146 default fullscreen and VSync
+
+Debug and Release share native fullscreen, race FXAA and VSync defaults.
+Removed the launcher's fixed FPS cap. The profiler still supports explicit
+windowed and 2× MSAA comparisons.
+
 ## 2026-11-15 TASK-0146 native fullscreen Starting Grid
 
 Profiled the forest flyby at 2880×1800, reduced sun glare coverage,

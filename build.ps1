@@ -8,7 +8,6 @@ $raceArgument = $null
 $nativeDebug = $false
 $fullscreen = $false
 $fxaa = $false
-$fps120 = $false
 $renderingDriver = 'vulkan'
 for ($index = 0; $index -lt $args.Count; $index++) {
     switch ($args[$index]) {
@@ -16,7 +15,6 @@ for ($index = 0; $index -lt $args.Count; $index++) {
         '--run' { $run = $true }
         '--fullscreen' { $fullscreen = $true; $run = $true }
         '--fxaa' { $fxaa = $true; $run = $true }
-        '--fps120' { $fps120 = $true; $run = $true }
         '--editor' { $editor = $true }
         { $_ -match '^--race-(track|event)=' } {
             if ($raceArgument) { throw 'Choose one race diagnostic.' }
@@ -47,7 +45,7 @@ for ($index = 0; $index -lt $args.Count; $index++) {
         default { throw "Unknown option $($args[$index])." }
     }
 }
-if ($editor -and ($raceArgument -or $fullscreen -or $fxaa -or $fps120)) {
+if ($editor -and ($raceArgument -or $fullscreen -or $fxaa)) {
     throw '--editor cannot be combined with race diagnostics or game display options.'
 }
 if ($preset -notin @('godot-mvp-release', 'godot-mvp-debug')) { throw "Unsupported preset $preset." }
@@ -69,7 +67,6 @@ try {
         $engineArgs = @('--path', $project, '--rendering-driver', $renderingDriver)
         if ($editor) { $engineArgs += '--editor' }
         if ($fullscreen) { $engineArgs += '--fullscreen' }
-        if ($fps120) { $engineArgs += @('--disable-vsync', '--max-fps', '120') }
         if ($nativeDebug -or $raceArgument -or $fxaa) { $engineArgs += '--' }
         if ($nativeDebug) { $engineArgs += '--debug' }
         if ($fxaa) { $engineArgs += '--fxaa' }

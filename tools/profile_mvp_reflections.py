@@ -135,7 +135,9 @@ def main():
     parser.add_argument("--driver", default="vulkan", choices=("vulkan", "d3d12"))
     parser.add_argument("--resolution", default="1920x1080")
     parser.add_argument("--fullscreen", action="store_true")
-    parser.add_argument("--vsync", action="store_true")
+    pacing = parser.add_mutually_exclusive_group()
+    pacing.add_argument("--vsync", action="store_true")
+    pacing.add_argument("--max-fps", type=int, help="Apply Godot's frame rate limiter with VSync off")
     parser.add_argument("--quiet", action="store_true", help="Run without Visual Profiler")
     parser.add_argument("--section-tree", action="store_true", help="Compare section tree culling with the existing zone and LOD path")
     parser.add_argument("--fog", choices=("ab", "baseline", "optimized", "no-fog", "no-focus", "no-history"),
@@ -145,7 +147,6 @@ def main():
     parser.add_argument("--capture-tick", type=int, help="Capture a flyby image in a separate run")
     parser.add_argument("--stage", type=Path, help="Use an alternate staged Godot build")
     parser.add_argument("--fxaa", action="store_true", help="Test FXAA in the race viewport")
-    parser.add_argument("--max-fps", type=int, help="Apply Godot's frame rate limiter")
     scene = parser.add_mutually_exclusive_group()
     scene.add_argument("--demo", action="store_true", help="Watch the demo through its natural end")
     scene.add_argument("--grid", action="store_true", help="Measure the track flyby before confirming Starting Grid")
@@ -167,7 +168,12 @@ def main():
         shutil.copytree(staged / directory, project / directory)
     (project / ".godot").mkdir()
     (project / ".godot/extension_list.cfg").write_text("res://hp2_track12.gdextension\n")
-    (project / "override.cfg").write_text("[debug]\nsettings/profiler/max_timestamp_query_elements=1024\n")
+    (project / "override.cfg").write_text(
+        "[debug]\nsettings/profiler/max_timestamp_query_elements=1024\n"
+        f"\n[display]\nwindow/size/mode={3 if args.fullscreen else 0}\n"
+        f"window/vsync/vsync_mode={int(args.vsync)}\n"
+        f"\n[hp2]\nrace_fxaa={str(args.fxaa).lower()}\n"
+    )
     engine = repo / "local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64.exe"
     script = repo / "tools" / ("test_mvp_starting_grid.gd" if args.grid else "test_mvp_reflection_performance.gd")
     variants = ["isolated"] if args.demo or args.pairs == 0 else [
@@ -206,8 +212,7 @@ def main():
         visual = not (args.quiet or args.demo)
         command = [engine, "--path", project, "--rendering-driver", args.driver,
                    "--resolution", args.resolution, "--script", script]
-        if args.fullscreen:
-            command.append("--fullscreen")
+        command.append("--fullscreen" if args.fullscreen else "--windowed")
         if not args.vsync:
             command.append("--disable-vsync")
         if args.max_fps:
@@ -216,8 +221,6 @@ def main():
         with socket.create_server(("127.0.0.1", 0)) as listener, (run / "run.log").open("wb") as log:
             if visual:
                 command += ["--remote-debug", f"tcp://127.0.0.1:{listener.getsockname()[1]}"]
-            if args.fxaa:
-                command += ["--", "--fxaa"]
             child = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT, env=env)
             try:
                 if visual:
