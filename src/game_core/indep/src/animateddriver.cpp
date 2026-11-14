@@ -15,14 +15,16 @@
 #include "bware/inc/bWare.hpp"
 #include <memory>
 #include <cstring>
+#include <algorithm>
+#include <cmath>
 
 // Released renderer controls330DC0/330DC4; they belong to this visual owner.
 int32_t carDriverVisualForcedDetail=-1;
 int32_t carDriverVisualForceAnimated=0;
 
 namespace hp2 {
-void BuildDriverQuaternionTable(CarDriverVisual& visual,CarReplayAnimationController& animation,
-    float rotations[CAR_DRIVER_VISUAL_BONE_COUNT][4],float translation[3])
+static void buildDriverQuaternionTable(CarDriverVisual& visual,CarReplayAnimationController& animation,
+    float rotations[CAR_DRIVER_VISUAL_BONE_COUNT][4],float translation[3],bool interpolateSteering)
 {
     // PAL1AA2F0..1AA6C0. Steering and gestures share the existing playback
     // queues/catalogue; rendering must not introduce another animation clock.
@@ -38,11 +40,28 @@ void BuildDriverQuaternionTable(CarDriverVisual& visual,CarReplayAnimationContro
     const auto steeringFrame=carDriverVisualSteeringFrame(&visual);
     const auto* steering=carReplayAnimationFind(animation.catalogue,0x2bb7f510u);
     Require(steering && steering->boneCount==CAR_DRIVER_VISUAL_BONE_COUNT && steering->framePositions &&
+        steering->frameCount>0,"Driver steering clip lacks its authored 42-bone pose");
+    const float phase=interpolateSteering ?
+        std::clamp(visual.steering.value,0.0f,static_cast<float>(steering->frameCount-1)) :
+        static_cast<float>(steeringFrame);
+    const auto sampleFrame=static_cast<int32_t>(phase);
+    Require(
         carDriverAnimationReadAllRotations(steering,rotations,CAR_DRIVER_VISUAL_BONE_COUNT,
-            static_cast<float>(steeringFrame)),"Driver steering clip lacks its authored42-bone pose");
+            static_cast<float>(sampleFrame)),"Driver steering clip sample is outside its authored poses");
     // GetTranslation1A78E0 resets an out-of-range rounded sample to frame0.
-    const auto translationFrame=steeringFrame>=0 && steeringFrame<steering->frameCount ? steeringFrame:0;
+    const auto translationFrame=sampleFrame>=0 && sampleFrame<steering->frameCount ? sampleFrame:0;
     std::memcpy(translation,steering->framePositions+static_cast<std::size_t>(translationFrame)*4,3*sizeof(float));
+    const float blend=phase-static_cast<float>(sampleFrame);
+    if(blend>0.0f) {
+        float next[CAR_DRIVER_VISUAL_BONE_COUNT][4];
+        Require(carDriverAnimationReadAllRotations(steering,next,CAR_DRIVER_VISUAL_BONE_COUNT,
+            static_cast<float>(sampleFrame+1)),"Driver steering clip lacks its next authored pose");
+        for(std::size_t bone=0;bone<CAR_DRIVER_VISUAL_BONE_COUNT;++bone)
+            vectorQuaternionSlerp(rotations[bone],rotations[bone],next[bone],blend);
+        const auto* nextTranslation=steering->framePositions+static_cast<std::size_t>(sampleFrame+1)*4;
+        for(std::size_t axis=0;axis<3;++axis)
+            translation[axis]+=(nextTranslation[axis]-translation[axis])*blend;
+    }
     if(!playing) {
         if(visual.bindings.clock->worldLoopCounter%120==0)(void)carDriverVisualStartAnimation(&visual,2);
         return;
@@ -92,6 +111,18 @@ void BuildDriverQuaternionTable(CarDriverVisual& visual,CarReplayAnimationContro
             vectorQuaternionSlerp(rotations[bone],rotations[bone],other[bone],weight);
         }
     }
+}
+
+void BuildDriverQuaternionTable(CarDriverVisual& visual,CarReplayAnimationController& animation,
+    float rotations[CAR_DRIVER_VISUAL_BONE_COUNT][4],float translation[3])
+{
+    buildDriverQuaternionTable(visual,animation,rotations,translation,false);
+}
+
+void SampleDriverPresentationPose(CarDriverVisual& visual,CarReplayAnimationController& animation,
+    float rotations[CAR_DRIVER_VISUAL_BONE_COUNT][4],float translation[3])
+{
+    buildDriverQuaternionTable(visual,animation,rotations,translation,true);
 }
 
 std::size_t RenderDriverVisual(CarDriverVisual& visual,const float localToWorld[16],

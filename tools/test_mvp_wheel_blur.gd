@@ -4,6 +4,9 @@ var deadline := Time.get_ticks_msec() + 60000
 var started := false
 
 func _initialize() -> void:
+    if OS.get_environment("HP2_MVP_TEST_DRIVER_INTERPOLATION") == "1":
+        DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+        Engine.max_fps = 120
     call_deferred("change_scene_to_file", "res://native_game.tscn")
 
 func _process(_delta: float) -> bool:
@@ -61,8 +64,26 @@ func _check(race: Node) -> void:
     var peak := 0.0
     var separate_pose := false
     var changed_bones := 0
+    var steering_subframes := 0
+    var release_subframes := 0
+    var last_step := -1
+    var last_hand := Transform3D.IDENTITY
+    var hand_deltas: Array[float] = []
     for frame in range(800):
         await process_frame
+        var step: int = race.telemetry().step
+        var hand := skeleton.get_bone_pose(25)
+        if last_step >= 0 and frame <= 72:
+            var distance := hand.origin.distance_to(last_hand.origin)
+            var angle := hand.basis.get_rotation_quaternion().angle_to(last_hand.basis.get_rotation_quaternion())
+            hand_deltas.append(distance + 0.25 * angle)
+        if step == last_step and not hand.is_equal_approx(last_hand):
+            if frame <= 36:
+                steering_subframes += 1
+            else:
+                release_subframes += 1
+        last_step = step
+        last_hand = hand
         if frame == 36:
             Input.action_release("hp2_steer_left")
             for bone in range(neutral_pose.size()):
@@ -75,13 +96,23 @@ func _check(race: Node) -> void:
             peak = maxf(peak, alpha)
             var wheel := player.get_node("Wheel" + str(overlay.name).trim_prefix("WheelBlur")) as MeshInstance3D
             separate_pose = separate_pose or not wheel.basis.is_equal_approx(overlay.basis)
-        if frame >= 36 and peak >= 89.9 and separate_pose:
+        if frame >= 72 and peak >= 89.9 and separate_pose:
             break
     Input.action_release("hp2_accelerate")
     Input.action_release("hp2_steer_left")
     if changed_bones < 3:
         _fail("Steering did not change the authored driver pose")
         return
+    if OS.get_environment("HP2_MVP_TEST_DRIVER_INTERPOLATION") == "1" and (
+        steering_subframes < 8 or release_subframes < 8 or hand_deltas.max() > 0.20
+    ):
+        _fail("Driver interpolation stalled or jumped: steering=%s release=%s max_motion=%s" %
+            [steering_subframes, release_subframes, hand_deltas.max()])
+        return
+    print("HP2_DRIVER_SUBFRAMES steering=", steering_subframes, " release=", release_subframes)
+    hand_deltas.sort()
+    print("HP2_DRIVER_FRAME_MOTION p95=", hand_deltas[int(hand_deltas.size() * 0.95)],
+        " max=", hand_deltas.back(), " samples=", hand_deltas.size())
     if peak < 89.9 or peak > 90.0 or not separate_pose:
         _fail("Wheel blur strength or independent pose failed, peak=%s state=%s" % [peak, race.telemetry()])
         return

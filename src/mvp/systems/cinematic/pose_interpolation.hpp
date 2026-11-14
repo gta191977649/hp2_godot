@@ -10,7 +10,7 @@
 
 namespace hp2 {
 
-// Render between the last two committed poses using the runtime's step fraction.
+// Render between the last two visible samples using the runtime's step fraction.
 // Seed both endpoints on spawn or seek so a retired pose never enters a new scene.
 struct PoseInterpolation {
     struct Sample {
@@ -23,7 +23,10 @@ struct PoseInterpolation {
 
     void capture(std::uint32_t nextStep, const godot::Transform3D& root,
         const std::vector<std::array<float, 16>>* palette) {
-        const bool continuous = valid && nextStep == step + 1;
+        // Catch-up can skip simulation ticks between rendered frames. Keep the
+        // last sampled endpoint so the first frame after catch-up can blend.
+        const auto elapsed = nextStep - step;
+        const bool continuous = valid && elapsed > 0 && elapsed <= 8;
         if (continuous) std::swap(previous, current);
         current.root = root;
         current.bones.resize(palette ? palette->size() : 0);

@@ -231,6 +231,9 @@ void carDriverVisualPlaybackCancel(CarDriverVisualPlayback* playback,
 namespace hp2 {
 void BuildDriverQuaternionTable(CarDriverVisual& visual,CarReplayAnimationController& animation,
     float rotations[CAR_DRIVER_VISUAL_BONE_COUNT][4],float translation[3]);
+// Port-side sampler for one committed step. Uses the unrounded steering curve.
+void SampleDriverPresentationPose(CarDriverVisual& visual,CarReplayAnimationController& animation,
+    float rotations[CAR_DRIVER_VISUAL_BONE_COUNT][4],float translation[3]);
 std::size_t RenderDriverVisual(CarDriverVisual& visual,const float localToWorld[16],
     const SceneLightContext* lightContext,const CarCinematicScreen& view,EcstasyFrame& frame,
     std::uint32_t flags,std::int32_t detail);

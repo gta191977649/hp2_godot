@@ -211,7 +211,7 @@ void VehiclePresentation::update_driver(Car& car, const VehicleEntityState& stat
     if (!driverPoseValid || driverStep != step || driverReplayEpoch != replayEpoch) {
         // The source sampler advances its steering curve. Sample once per
         // committed world step regardless of the presentation frame rate.
-        BuildDriverQuaternionTable(*visual, *visual->animations[detail], driverRotations, driverTranslation);
+        SampleDriverPresentationPose(*visual, *visual->animations[detail], driverRotations, driverTranslation);
         driverStep = step;
         driverReplayEpoch = replayEpoch;
         driverPoseValid = true;

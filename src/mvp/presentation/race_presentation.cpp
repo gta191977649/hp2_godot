@@ -813,7 +813,10 @@ void RacePresentation::_process(double delta) {
             }
             const bool showExterior = state.visible || (orbitView && s.orbit.player_exterior() && state.player);
             vehicle.update(state, race.renderResources->Lights(), s.reflections->matrix(), race, showExterior);
-            vehicle.update_driver(*world.carTable[slot], state, driverCamera, frame.step, frame.replayEpoch, poseFraction);
+            // World::frameCounter also advances during AI collision searches.
+            // Driver poses follow the source clock's actual simulation ticks.
+            vehicle.update_driver(*world.carTable[slot], state, driverCamera,
+                static_cast<std::uint32_t>(clock.worldLoopCounter), frame.replayEpoch, poseFraction);
         }
         for (auto it = s.vehicles.begin(); it != s.vehicles.end();) {
             if (std::none_of(frame.vehicles.begin(), frame.vehicles.end(),

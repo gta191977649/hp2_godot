@@ -342,3 +342,50 @@ cleanup it took 5.133 s at the 60 FPS limit and 4.949 s at the 120 FPS
 limit. The smoke observed 185 and 419 changed actor poses, respectively,
 between renders of the same committed step. These are wall-clock smoke
 measurements of the fixture, including scene publication and cleanup.
+
+### Continuous steering pose sampling
+
+The port previously blended between rendered driver palettes whose source
+steering frame was still rounded to an integer. The new port-only
+`SampleDriverPresentationPose` samples the two frames around the existing
+cubic steering value. It slerps the authored bone rotations and blends root
+translation before the existing gesture composition and skinning. Godot
+then interpolates consecutive committed poses at render cadence. The native
+renderer keeps its rounded sample. The source reference is PAL1AA2F0–1AA6C0
+and the existing steering curve and clip 0x2BB7F510. The donor PAL ELF version
+and SHA-256 remain unresolved. There is one source update per committed step.
+
+```powershell
+$engine = (Resolve-Path local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe).Path
+$env:HP2_MVP_TEST_DRIVER_INTERPOLATION = '1'
+foreach ($driver in @('vulkan', 'd3d12')) {
+    $env:HP2_PROFILE_DIR = Join-Path $env:TEMP ('hp2-driver-' + [guid]::NewGuid())
+    & $engine --path build/godot-mvp-release/mvp-project --rendering-driver $driver --resolution 1280x720 --script (Resolve-Path tools/test_mvp_wheel_blur.gd).Path -- --race-track=33
+    if ($LASTEXITCODE) { throw "Driver interpolation smoke failed ($driver)" }
+}
+```
+
+Debug and Release staging passed. In Track 33 Release at the 120 FPS
+test limit, Vulkan and D3D12 each recorded two additional hand poses
+within a committed step during steering and eleven after input release.
+Both runs passed the wheel blur and driver visibility checks.
+
+#### Driver interpolation continuity
+
+`World::frameCounter` is an AI collision search serial as well as a
+published world field. `driverCollisionPredictNeighbors` increments it for each
+eligible neighbor, so consecutive simulation ticks could have equal or
+nonconsecutive values. The former driver history snapped whenever its
+serial advanced by more than one. Use `GameTime::worldLoopCounter` for
+pose capture, with replay epochs resetting history and bounded catch-up
+preserving the last sampled endpoint. This changes only the presentation
+clock selection.
+
+Using the Release smoke command above, the same Vulkan fixture recorded
+2/11 intermediate hand poses while steering/releasing before the fix and
+31/165 afterward. D3D12 recorded 31/151 after the fix. Over 72 sampled
+render frames, the largest hand step (translation in metres plus 0.25
+times quaternion angle in radians) was 0.267 before the fix, 0.131 after
+on Vulkan, and 0.139 after on D3D12. The Vulkan P95 moved from 0.102 to
+0.111 as more frames showed motion. The regression checks both motion
+continuity and rendered wheel and driver visibility.

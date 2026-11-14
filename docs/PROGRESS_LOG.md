@@ -3,6 +3,10 @@
 Mouse orbit blends in from the displayed camera. Race drivers and
 arrest actors interpolate their render poses against the native game
 clock. The authored animation timing drives both cases.
+Steering now also blends adjacent authored poses at the fractional
+steering-curve value before render-frame interpolation.
+Driver pose history now follows the native simulation clock tick.
+AI collision queries no longer cause interpolation to reset.
 
 ## 2026-11-15 TASK-0146 race driver and wheel blur
 
