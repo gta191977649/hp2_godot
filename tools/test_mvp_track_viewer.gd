@@ -115,34 +115,38 @@ func run() -> void:
     var switched := await wait_for(func(state: Dictionary) -> bool:
         return state.get("track", 0) == next_track and state.get("generation", 0) > loaded.generation)
     print("TRACK_VIEWER_SWITCH ", switched)
-    await click(Vector2(175, 110))
+    var container := race.get_node("TrackViewerViewport") as SubViewportContainer
+    await create_timer(0.2).timeout
+    var sidebar_offset := Vector2(0, container.position.y - 78)
+    await click(Vector2(175, 110) + sidebar_offset)
     await capture("entities")
-    await click(Vector2(463, 111))
+    await click(Vector2(463, 111) + sidebar_offset)
     await capture("render")
     if OS.get_environment("HP2_MVP_VIEWER_PROFILE") == "1":
         await create_timer(1.0).timeout
         print("VIEWER_PROFILE_OFF_BEGIN ", Engine.get_process_frames())
         await create_timer(4.0).timeout
         print("VIEWER_PROFILE_OFF_END ", Engine.get_process_frames())
-        await click(Vector2(33, 250))
+        await click(Vector2(33, 250) + sidebar_offset)
         await create_timer(1.0).timeout
         print("VIEWER_PROFILE_ON_BEGIN ", Engine.get_process_frames())
         await create_timer(4.0).timeout
         print("VIEWER_PROFILE_ON_END ", Engine.get_process_frames())
         quit()
         return
-    await click(Vector2(33, 160))
+    await click(Vector2(33, 160) + sidebar_offset)
     await create_timer(0.18).timeout
     if OS.get_environment("HP2_MVP_VIEWER_CAPTURE_OVERVIEW") == "1":
-        await click(Vector2(305, 110))
-        await click(Vector2(90, 295))
+        await click(Vector2(305, 110) + sidebar_offset)
+        await click(Vector2(90, 295) + sidebar_offset)
     await capture("entity-view")
-    var viewport := race.get_node("TrackViewerViewport").get_child(0) as SubViewport
+    var viewport := container.get_child(0) as SubViewport
     if OS.get_environment("HP2_MVP_VIEWER_EFFECTS") == "1":
-        if not await check_environment(viewport, next_track):
+        if not await check_environment(viewport, next_track, sidebar_offset):
             quit(1)
             return
     var camera := viewport.get_camera_3d()
+    await create_timer(0.2).timeout
     await click(Vector2(900, 460), MOUSE_BUTTON_RIGHT)
     var movement_start := camera.position
     key(KEY_W)
@@ -154,6 +158,28 @@ func run() -> void:
         push_error("Free camera movement or release failed")
         quit(1)
         return
+    if OS.get_environment("HP2_MVP_VIEWER_COORDINATES") == "1":
+        await create_timer(0.2).timeout
+        await click(Vector2(305, 110) + sidebar_offset)
+        await create_timer(0.2).timeout
+        await capture("camera-coordinates")
+        var copy_position := Vector2(120, 351) + sidebar_offset
+        var previous_clipboard := DisplayServer.clipboard_get()
+        await click(copy_position)
+        await create_timer(0.15).timeout
+        var pose := camera.global_transform
+        var eye := pose.origin
+        var target := eye - pose.basis.z.normalized()
+        var expected := "Position (%.3f, %.3f, %.3f)\nLook At (%.3f, %.3f, %.3f)" % [
+            eye.x, -eye.z, eye.y, target.x, -target.z, target.y]
+        var copied := DisplayServer.clipboard_get().replace("\r\n", "\n")
+        DisplayServer.clipboard_set(previous_clipboard)
+        if copied != expected:
+            push_error("Camera coordinates clipboard mismatch. Expected %s, got %s" % [
+                JSON.stringify(expected), JSON.stringify(copied)])
+            quit(1)
+            return
+        print("TRACK_VIEWER_COORDINATES_PASS")
     await create_timer(0.2).timeout
     await click(Vector2(738, 34))
     await create_timer(0.2).timeout
@@ -219,7 +245,7 @@ func source_hash(name: String) -> int:
         result = (result * 33 + byte) & 0xFFFFFFFF
     return result
 
-func check_environment(viewport: SubViewport, track: int) -> bool:
+func check_environment(viewport: SubViewport, track: int, sidebar_offset: Vector2) -> bool:
     # Move the actual viewer camera to the original emitter coordinates,
     # leaving the runtime to schedule particle births and visibility.
     var target := Vector3(-654.92, -53.85, -190.07) if track == 12 else Vector3(1517.87, 15.37, -206.27)
@@ -231,7 +257,7 @@ func check_environment(viewport: SubViewport, track: int) -> bool:
     var camera := viewport.get_camera_3d()
     var effects := viewport.get_node("RaceScene/RaceEffects")
     await create_timer(0.2).timeout
-    await click(Vector2(33, 160)) # Restore normal scene rendering.
+    await click(Vector2(33, 160) + sidebar_offset) # Restore normal scene rendering.
     await process_frame
     if not viewport.get_node("RaceScene").visible:
         push_error("Could not restore normal scene rendering")

@@ -57,3 +57,10 @@ set `HP2_MVP_VIEWER_EFFECTS=1` to check emitters, and add
 `HP2_MVP_VIEWER_MATRIX=1` and use 1300×1250 for the full dropdown run. Use an
 isolated `HP2_PROFILE_DIR` for testing. Cross-monitor DPI and loss-of-focus
 checks require additional windowed coverage.
+
+The toolbar and Camera tab now show live camera Position and Look At in HP2
+XYZ. Look At is one unit along the camera's forward axis. The Camera tab copies
+both triples to the clipboard. The Debug build and the viewer smoke with
+`HP2_MVP_VIEWER_COORDINATES=1` passed on Godot 4.7.2 Vulkan at 1200×800,
+1920×800 and 2560×800. The smoke checks the copied values against the camera pose after
+moving and releasing the camera.

@@ -5,6 +5,8 @@ scene presentation. Replaced the original Free Run bootstrap with independent
 scene resource loading to remove GO, race music, race cars and progression from
 the viewer. Recorded the 30-track dropdown run, fire and sandstorm activation,
 profile roundtrip and built-in profiler comparison in TASK-0144.
+Added live HP2 camera coordinates to the toolbar and Camera tab, with clipboard
+copy verified at 1200×800, 1920×800 and 2560×800.
 
 ## 2026-11-14 TASK-0143 Forward+ race postprocessing
 

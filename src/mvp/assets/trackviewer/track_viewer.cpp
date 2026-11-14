@@ -20,6 +20,7 @@
 #include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/camera3d.hpp>
 #include <godot_cpp/classes/compositor.hpp>
+#include <godot_cpp/classes/display_server.hpp>
 #include <godot_cpp/classes/environment.hpp>
 #include <godot_cpp/classes/input.hpp>
 #include <godot_cpp/classes/input_event_key.hpp>
@@ -534,7 +535,29 @@ void TrackViewer::draw(float width, float height, float dpi, float fps, bool blo
     }
     if (!s.active) return;
     const float sidebar = std::min(260 * dpi, width * 0.46f);
-    const float top = ImGui::GetFrameHeightWithSpacing() + 2 * ImGui::GetStyle().WindowPadding.y;
+    char positionText[96] = "Position --";
+    char lookAtText[96] = "Look At --";
+    if (s.camera) {
+        const auto pose = s.camera->get_global_transform();
+        const auto position = source_vector(pose.origin);
+        // The free camera has no fixed target. Use a point one unit down its view axis.
+        const auto target = source_vector(pose.origin - pose.basis.get_column(2).normalized());
+        std::snprintf(positionText, sizeof(positionText), "Position (%.3f, %.3f, %.3f)",
+            position.x, position.y, position.z);
+        std::snprintf(lookAtText, sizeof(lookAtText), "Look At (%.3f, %.3f, %.3f)",
+            target.x, target.y, target.z);
+    }
+    const auto& style = ImGui::GetStyle();
+    const float controlsWidth = ImGui::CalcTextSize("TrackMain Menu000 FPS").x +
+        8 * style.FramePadding.x + 4 * style.ItemSpacing.x + 2 * style.WindowPadding.x;
+    const float coordinatesWidth = ImGui::CalcTextSize(
+        "Position (-0000.000, -0000.000, -0000.000)  Look At (-0000.000, -0000.000, -0000.000)").x +
+        2 * style.ItemSpacing.x;
+    const bool inlineCoordinates = width >= controlsWidth + 140 * dpi + coordinatesWidth;
+    const bool splitCoordinates = ImGui::CalcTextSize(positionText).x +
+        ImGui::CalcTextSize(lookAtText).x + style.ItemSpacing.x + 2 * style.WindowPadding.x > width;
+    const float top = ImGui::GetFrameHeightWithSpacing() + 2 * style.WindowPadding.y +
+        (inlineCoordinates ? 0 : ImGui::GetTextLineHeightWithSpacing() * (splitCoordinates ? 2 : 1));
     const Rect2 layout(sidebar, top, std::max(1.0f, width - sidebar), std::max(1.0f, height - top));
     if (layout != s.viewportRect) {
         s.viewportRect = layout;
@@ -546,11 +569,11 @@ void TrackViewer::draw(float width, float height, float dpi, float fps, bool blo
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(ImVec2(width, top));
     if (ImGui::Begin("Track Viewer Toolbar", nullptr, panelFlags | inputFlags | ImGuiWindowFlags_NoScrollbar)) {
+        ImGui::AlignTextToFramePadding();
         ImGui::TextUnformatted("Track");
         ImGui::SameLine();
-        const float controlsWidth = ImGui::CalcTextSize("TrackMain Menu000 FPS").x +
-            8 * ImGui::GetStyle().FramePadding.x + 4 * ImGui::GetStyle().ItemSpacing.x;
-        ImGui::SetNextItemWidth(std::max(40.0f, std::min(280 * dpi, width - controlsWidth)));
+        const float available = width - controlsWidth - (inlineCoordinates ? coordinatesWidth : 0);
+        ImGui::SetNextItemWidth(std::clamp(available, 40.0f, 280 * dpi));
         const auto selected = std::find_if(s.tracks.begin(), s.tracks.end(), [&](const auto& track) {
             return track.id == s.selectedTrack;
         });
@@ -571,6 +594,10 @@ void TrackViewer::draw(float width, float height, float dpi, float fps, bool blo
         if (ImGui::Button("Main Menu")) s.request = {Action::Close, 0};
         ImGui::SameLine();
         ImGui::Text("%.0f FPS", fps);
+        if (inlineCoordinates) ImGui::SameLine(0, 2 * style.ItemSpacing.x);
+        ImGui::TextUnformatted(positionText);
+        if (!splitCoordinates) ImGui::SameLine();
+        ImGui::TextUnformatted(lookAtText);
     }
     ImGui::End();
     ImGui::SetNextWindowPos(ImVec2(0, top));
@@ -592,6 +619,11 @@ void TrackViewer::draw(float width, float height, float dpi, float fps, bool blo
                     s.poseDirty = true;
                 }
                 if (ImGui::Button("Frame track") && s.camera) s.focus(s.routeBounds);
+                ImGui::Separator();
+                if (s.camera && ImGui::Button("Copy coordinates"))
+                    DisplayServer::get_singleton()->clipboard_set(String(positionText) + "\n" + lookAtText);
+                ImGui::TextWrapped("%s", positionText);
+                ImGui::TextWrapped("%s", lookAtText);
                 ImGui::TextWrapped("Right-click to fly. WASD to move, Q/E to descend or rise, Shift to boost, wheel for speed, Esc to release.");
                 ImGui::EndTabItem();
             }
