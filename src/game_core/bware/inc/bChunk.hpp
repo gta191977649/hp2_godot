@@ -17,6 +17,7 @@ struct EditorMarkerResources;
 struct RaceParameters;
 struct CarSoundBindings;
 struct WorldParticleSystem;
+struct GameTime;
 struct CarReplayAnimationCatalogue;
 class DemoDiscManager;
 
@@ -125,6 +126,9 @@ struct ResourceFileBindings {
     const ResourceFrontendBindings* frontend{};
     ApplicationFrontendFlow* flow{};
     const GameFlowBindings* gameFlow{};
+    // Port-side scene resource consumer. Track weather and effects can run
+    // on this clock independently of a gameplay audio session.
+    const ::GameTime* sceneClock{};
 };
 
 // Read-only views of the file's actual decoded owners. The file owns their

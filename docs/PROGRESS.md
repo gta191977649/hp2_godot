@@ -37,6 +37,12 @@ The active game implementation is the Windows donor. See [TASK-0123](../tasks/ac
 
 [TASK-0141](../tasks/active/TASK-0141-godot-single-player-races.md) admits authored single-player tracks, covers the Track 33 handoff and tracks remaining event completion and progression checks.
 
+[TASK-0142](../tasks/active/TASK-0142-godot-scenery-animation.md) moves scenery animation sampling and interpolation to Forward+ and records the Tropical, waterwheel, windmill and UV checks.
+
+[TASK-0143](../tasks/active/TASK-0143-godot-race-postprocessing.md) connects race postprocessing and authored surface blends to Forward+ and records the thirty track captures.
+
+[TASK-0144](../tasks/active/TASK-0144-godot-track-viewer.md) adds a Debug-only track catalogue, free camera and read-only entity inspection.
+
 Current source attribution 0.0% (0/7544 functions)
 
 <details>

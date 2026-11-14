@@ -54,9 +54,6 @@
 #include <cstdio>
 #include <thread>
 
-// Native terminal lifetime API in the proven weatherman.cpp definition path.
-// WeatherMan.hpp retains its inherited scope; no new header identity is claimed.
-extern "C" WeatherManResult weatherManUnbindClock(const GameTime* clock);
 namespace hp2 { void InitDisplaySystem(const GameResources& files,GameTime& clock); }
 
 ApplicationBootState applicationBootState={-1};
@@ -708,6 +705,15 @@ ApplicationRuntime::~ApplicationRuntime()
 EcstasyFrame& ApplicationRuntime::Frame() noexcept {return *storage_->frame;}
 bSound& ApplicationRuntime::Audio() noexcept {return storage_->sound;}
 const GameTime& ApplicationRuntime::Clock() const noexcept {return storage_->clock;}
+
+float ApplicationRuntime::PresentationStepFraction() const noexcept
+{
+    const auto& s = *storage_;
+    if (!s.pendingClockAdvance || !s.scheduledStepQuanta) return 0.0f;
+    const auto remaining = std::chrono::duration<double>(
+        s.simulationClock.Deadline() - s.host.FrameTime()).count();
+    return static_cast<float>(std::clamp(1.0 - remaining * 3600.0 / s.scheduledStepQuanta, 0.0, 1.0));
+}
 const FrontendPlayerManager& ApplicationRuntime::Frontend() const {return storage_->profilesOwner;}
 const ApplicationFrontendFlow& ApplicationRuntime::Flow() const noexcept {return storage_->flow;}
 void ApplicationRuntime::SetDisplayOptions(int32_t width,int32_t height,bool fullscreen,bool vsync)
@@ -889,11 +895,13 @@ void ApplicationRuntime::Initialize(const std::filesystem::path& configFile)
     ChangeGameFlow(s.flow,1,0);s.initialized=true;
 }
 
-void ApplicationRuntime::InitializeFrontend()
+void ApplicationRuntime::InitializeFrontend(void (*ready)(MainMenuScreenServices&,const void*),const void* context)
 {
     Require(!storage_->stateOnly() && !storage_->initialized,
         "Frontend must be requested before initialization");
     storage_->showFrontend=true;
+    storage_->raceStart=ready;
+    storage_->raceStartContext=context;
     Initialize();
 }
 
@@ -981,6 +989,45 @@ std::vector<RaceParticleAsset> ApplicationRuntime::RaceParticleAssets() const
         if (const auto* texture = catalogue.Texture(*definition))
             assets.push_back({definition, texture});
     return assets;
+}
+
+RacePostState ApplicationRuntime::RacePost() const
+{
+    const auto& s = *storage_;
+    const auto& screen = s.cameras.screens[1];
+    RacePostState result;
+    if (!screen.view || !s.flow.inGameFlag) return result;
+    const auto& camera = screen.view->current;
+    if (fogSettings.enabled) {
+        WeatherQuery weather{};
+        Require(weatherManQuery(&weather, camera.eye) == WEATHER_MAN_OK, "Race view lost its authored weather");
+        result.fogEnabled = true;
+        result.fog = {float(weather.fogColor & 255u), float((weather.fogColor >> 8) & 255u),
+            float((weather.fogColor >> 16) & 255u), weather.fogStrength};
+        result.fogRange = {weather.fogDistance, s.cameras.projection.depthRanges[1][1]};
+        result.fogMode = fogSettings.modes[0];
+        result.fogPower = fogSettings.power;
+    }
+    result.focus = {focusSettings.focalDistance != 0 ? focusSettings.focalDistance : camera.minimumVisibility,
+        focusSettings.depthOfField != 0 ? focusSettings.depthOfField : camera.maximumVisibility,
+        focusSettings.alphaMin, focusSettings.alphaMax};
+    result.focusEnabled = focusSettings.enabled && (result.focus[0] != 0 || result.focus[1] != 0);
+    result.focusTransition = focusSettings.transitionSlots;
+    result.focusPasses = focusSettings.numPasses;
+    result.focusJitter = focusSettings.jitterBlend;
+    result.monochrome = screen.blackAndWhite || nativeRenderPolicy.blackAndWhite;
+    if (s.cameras.radialBlur && s.cameras.radialBlur->texture) {
+        result.radialMask = s.cameras.radialBlur->texture->descriptor;
+        result.radialActive = screen.radialBlurTexture != nullptr;
+        result.radialAmounts = {s.cameras.radialBlur->firstAmount[0], s.cameras.radialBlur->secondAmount[0]};
+    }
+    const auto& filter = nativeRenderPolicy.screenFilters[0];
+    if (filter.enabled) {
+        result.filterTexture = s.resources->Registry().SpecialTexture(3);
+        result.filterColor = filter.color;
+        result.filterAlpha = filter.fixedAlpha;
+    }
+    return result;
 }
 
 void ApplicationRuntime::TakeRaceEffects(RaceEffectsFrame& frame)

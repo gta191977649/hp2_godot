@@ -266,6 +266,8 @@ saves/
 /tasks/active/*
 !/tasks/active/TASK-0140-godot-race-effects.md
 !/tasks/active/TASK-0141-godot-single-player-races.md
+!/tasks/active/TASK-0142-godot-scenery-animation.md
+!/tasks/active/TASK-0143-godot-race-postprocessing.md
 !/tasks/active/TASK-0115-track12-native-rendering.md
 !/tasks/active/TASK-0116-independent-entities-edition.md
 !/tasks/active/TASK-0117-entities-performance.md
@@ -284,6 +286,10 @@ saves/
 !/tools/test_mvp_be_the_cop.gd
 !/tools/test_mvp_police_support_visuals.gd
 !/tools/test_mvp_particle_routes.gd
+!/tools/test_mvp_scenery_animation.gd
+!/tools/test_mvp_race_post.gd
+!/tools/test_mvp_track_viewer.gd
+!/tools/capture_mvp_track_scenery.gd
 !/tools/test_event_window.py
 !/tools/test_mvp_hud_interpolation.gd
 !/tools/test_mvp_presentation_previews.gd
@@ -291,6 +297,7 @@ saves/
 !/tools/championship_performance.py
 
 !/tasks/active/TASK-0123-native-source-migration.md
+!/tasks/active/TASK-0144-godot-track-viewer.md
 
 !/tasks/active/TASK-0124-modular-godot-presentation.md
 !/tools/test_track12_mvp.gd

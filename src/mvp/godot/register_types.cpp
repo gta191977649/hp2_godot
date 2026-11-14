@@ -1,6 +1,7 @@
 #include "presentation/race_presentation.hpp"
 
 #include "systems/audio/godot_speech_output.hpp"
+#include "systems/camera/race_post_presentation.hpp"
 #include "systems/frontend/original_video_stream.hpp"
 #include <godot_cpp/godot.hpp>
 
@@ -14,6 +15,7 @@ extern "C" GDExtensionBool GDE_EXPORT hp2_track12_init(
             godot::ClassDB::register_internal_class<hp2::OriginalSpeechStream>();
             godot::ClassDB::register_internal_class<hp2::OriginalVideoPlayback>();
             godot::ClassDB::register_internal_class<hp2::OriginalVideoStream>();
+            godot::ClassDB::register_internal_class<hp2::RacePostPresentation>();
             godot::ClassDB::register_class<hp2::RacePresentation>();
         }
     });

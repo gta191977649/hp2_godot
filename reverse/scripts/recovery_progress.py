@@ -303,6 +303,9 @@ def render_compact(report):
              '[TASK-0139](../tasks/active/TASK-0139-godot-audio-transport.md) adds opt-in Godot radio streaming. Track 13 recorded five starts and zero reported underrun blocks. The XAudio2 comparison and remaining audio migration are open.', '',
              '[TASK-0140](../tasks/active/TASK-0140-godot-race-effects.md) connects donor effects and police support WorldObjects to Godot. The task records GS sun, support meshes, Forest fire, Desert sandstorms, tyre effects and Nitro pixel checks, plus the remaining PS2 and frame-time verification.', '',
              '[TASK-0141](../tasks/active/TASK-0141-godot-single-player-races.md) admits authored single-player tracks, covers the Track 33 handoff and tracks remaining event completion and progression checks.', '',
+             '[TASK-0142](../tasks/active/TASK-0142-godot-scenery-animation.md) moves scenery animation sampling and interpolation to Forward+ and records the Tropical, waterwheel, windmill and UV checks.', '',
+             '[TASK-0143](../tasks/active/TASK-0143-godot-race-postprocessing.md) connects race postprocessing and authored surface blends to Forward+ and records the thirty track captures.', '',
+             '[TASK-0144](../tasks/active/TASK-0144-godot-track-viewer.md) adds a Debug-only track catalogue, free camera and read-only entity inspection.', '',
              f'Current source attribution {percent} ({done}/{total if total else "?"} functions)', '',
              '<details>', '<summary>CLASS</summary>', '',
              '| Binary | Class | Progress (evidenced / bound) |', '|---|---|---|']

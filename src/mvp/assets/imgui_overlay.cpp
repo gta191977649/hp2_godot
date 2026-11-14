@@ -1,4 +1,6 @@
 #include "imgui_overlay.hpp"
+#include "trackviewer/track_viewer.hpp"
+#include "systems/effects/race_effect_options.hpp"
 
 #include <imgui_console/imgui_console.h>
 #include <godot_cpp/classes/canvas_layer.hpp>
@@ -71,6 +73,10 @@ struct ImGuiOverlay::Storage {
         for (std::size_t i = 0; i < keys.size(); ++i) io.KeyMap[i] = static_cast<int>(i);
         console = std::make_unique<Console>();
         console->System().UnregisterCommand("run");
+        console->System().RegisterCommand("effect", "Open the race effect controls", [this] {
+            effectsOpen = true;
+            focusEffects = true;
+        });
         io.ClipboardUserData = this;
         io.GetClipboardTextFn = [](void* data) {
             auto& state = *static_cast<Storage*>(data);
@@ -140,6 +146,11 @@ struct ImGuiOverlay::Storage {
     std::size_t nextSample{}, sampleCount{};
     std::chrono::steady_clock::time_point previousFrame{};
     bool open{true};
+    bool effectsOpen{};
+    bool focusEffects{};
+    RaceEffectOptions effectOptions;
+    Rect2 effectsRect;
+    TrackViewer* viewer{};
 
     void draw(const ImDrawData& data) {
         auto* rendering = RenderingServer::get_singleton();
@@ -190,7 +201,21 @@ ImGuiOverlay::ImGuiOverlay(Node& owner) : storage_(std::make_unique<Storage>(own
 
 ImGuiOverlay::~ImGuiOverlay() = default;
 
-bool ImGuiOverlay::captures_game_input() const noexcept { return storage_->open; }
+bool ImGuiOverlay::captures_game_input() const noexcept {
+    return storage_->open || (storage_->viewer && storage_->viewer->modal());
+}
+
+void ImGuiOverlay::attach_track_viewer(TrackViewer& viewer, std::function<void()> open) {
+    auto& s = *storage_;
+    s.viewer = &viewer;
+    s.console->System().RegisterCommand("trackviewer", "Browse all tracks and inspect entities",
+        [this, open = std::move(open)] {
+            storage_->open = false;
+            open();
+        });
+}
+
+const RaceEffectOptions& ImGuiOverlay::effect_options() const noexcept { return storage_->effectOptions; }
 
 void ImGuiOverlay::show_console() {
     storage_->open = true;
@@ -221,7 +246,8 @@ bool ImGuiOverlay::input(const Ref<InputEvent>& event) {
             }
             return true;
         }
-        if (!s.open) return false;
+        if (!s.open && !(s.viewer && s.viewer->modal()) &&
+            !(s.viewer && s.viewer->active() && !s.viewer->captured() && io.WantTextInput)) return false;
         const auto found = std::find(keys.begin(), keys.end(), key->get_keycode());
         if (found != keys.end()) io.KeysDown[found - keys.begin()] = key->is_pressed();
         io.KeyCtrl = key->is_ctrl_pressed();
@@ -232,7 +258,8 @@ bool ImGuiOverlay::input(const Ref<InputEvent>& event) {
             io.AddInputCharacter(key->get_unicode());
         return true;
     }
-    if (!s.open) return false;
+    if (s.viewer && s.viewer->captured() && !s.open) return false;
+    if (!s.open && !s.effectsOpen && !(s.viewer && (s.viewer->active() || s.viewer->modal()))) return false;
     if (const Ref<InputEventMouse> mouse = event; mouse.is_valid()) {
         const auto position = mouse->get_position();
         io.MousePos = {position.x, position.y};
@@ -245,7 +272,8 @@ bool ImGuiOverlay::input(const Ref<InputEvent>& event) {
                 if (index == MOUSE_BUTTON_WHEEL_DOWN) io.MouseWheel -= button->get_factor();
             }
         }
-        return true;
+        return s.open || (s.effectsOpen && s.effectsRect.has_point(position)) ||
+            (s.viewer && s.viewer->modal()) || io.WantCaptureMouse;
     }
     return false;
 }
@@ -260,10 +288,11 @@ void ImGuiOverlay::frame(double delta) {
     const auto scale = s.dpiScale;
     auto& io = ImGui::GetIO();
     io.DisplaySize = {size.x, size.y};
-    if (!s.canvas->get_window()->has_focus()) {
+    if (!s.canvas->get_window()->has_focus() || (s.viewer && s.viewer->captured() && !s.open)) {
         std::fill(std::begin(io.KeysDown), std::end(io.KeysDown), false);
         std::fill(std::begin(io.MouseDown), std::end(io.MouseDown), false);
         io.KeyCtrl = io.KeyShift = io.KeyAlt = io.KeySuper = false;
+        if (s.viewer && s.viewer->captured() && !s.open) io.MousePos = {-FLT_MAX, -FLT_MAX};
     }
     io.DeltaTime = static_cast<float>(std::max(delta, 0.000001));
     const auto now = std::chrono::steady_clock::now();
@@ -279,6 +308,7 @@ void ImGuiOverlay::frame(double delta) {
     ImGui::NewFrame();
     const float margin = 12 * scale;
     const float graphWidth = 270 * scale;
+    if (s.viewer) s.viewer->draw(size.x, size.y, scale, io.Framerate, s.open, s.effectOptions);
     if (s.open) {
         const auto condition = previousScale != scale ? ImGuiCond_Always : ImGuiCond_FirstUseEver;
         ImGui::SetNextWindowPos({margin, margin}, condition);
@@ -287,17 +317,42 @@ void ImGuiOverlay::frame(double delta) {
             std::min(270 * scale, std::max(1.0f, size.y - 2 * margin))}, condition);
         s.console->Draw();
     }
-    ImGui::SetNextWindowPos({size.x - margin, margin}, ImGuiCond_Always, {1, 0});
-    ImGui::SetNextWindowBgAlpha(0.8f);
-    if (ImGui::Begin("HP2 Frame Time", nullptr, ImGuiWindowFlags_NoInputs |
-            ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings)) {
-        ImGui::Text("%.1f FPS  %.2f ms  Peak %.2f ms", 1000.0f / std::max(ms, 0.001f), ms, peak);
-        const auto offset = s.sampleCount == s.frameTimes.size() ? s.nextSample : 0;
-        ImGui::PlotLines("##frame_ms", s.frameTimes.data(), static_cast<int>(s.sampleCount),
-            static_cast<int>(offset), nullptr, 0.0f, std::max(16.67f, peak), {250 * scale, 72 * scale});
-        ImGui::TextUnformatted("` / ~ toggles console");
+    if (s.effectsOpen) {
+        if (s.focusEffects) {
+            ImGui::SetNextWindowFocus();
+            s.focusEffects = false;
+        }
+        ImGui::SetNextWindowPos({size.x * 0.5f, margin}, ImGuiCond_FirstUseEver, {0.5f, 0});
+        if (ImGui::Begin("effect", &s.effectsOpen, ImGuiWindowFlags_AlwaysAutoResize |
+                ImGuiWindowFlags_NoSavedSettings)) {
+            ImGui::Checkbox("Fog", &s.effectOptions.fog);
+            ImGui::Checkbox("Depth of field", &s.effectOptions.depthOfField);
+            ImGui::Checkbox("Black and white", &s.effectOptions.monochrome);
+            ImGui::Checkbox("Color filter", &s.effectOptions.colorFilter);
+            ImGui::Checkbox("Motion blur", &s.effectOptions.motionBlur);
+            ImGui::Separator();
+            ImGui::Checkbox("Race particles (fire, smoke, sandstorms)", &s.effectOptions.particles);
+            ImGui::Checkbox("Sun and glare", &s.effectOptions.sunGlare);
+            ImGui::TextUnformatted("Checked effects follow race triggers.");
+        }
+        const auto position = ImGui::GetWindowPos();
+        const auto extent = ImGui::GetWindowSize();
+        s.effectsRect = Rect2(position.x, position.y, extent.x, extent.y);
+        ImGui::End();
     }
-    ImGui::End();
+    if (!s.viewer || !s.viewer->active()) {
+        ImGui::SetNextWindowPos({size.x - margin, margin}, ImGuiCond_Always, {1, 0});
+        ImGui::SetNextWindowBgAlpha(0.8f);
+        if (ImGui::Begin("HP2 Frame Time", nullptr, ImGuiWindowFlags_NoInputs |
+                ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings)) {
+            ImGui::Text("%.1f FPS  %.2f ms  Peak %.2f ms", 1000.0f / std::max(ms, 0.001f), ms, peak);
+            const auto offset = s.sampleCount == s.frameTimes.size() ? s.nextSample : 0;
+            ImGui::PlotLines("##frame_ms", s.frameTimes.data(), static_cast<int>(s.sampleCount),
+                static_cast<int>(offset), nullptr, 0.0f, std::max(16.67f, peak), {250 * scale, 72 * scale});
+            ImGui::TextUnformatted("` / ~ toggles console");
+        }
+        ImGui::End();
+    }
     ImGui::Render();
     s.draw(*ImGui::GetDrawData());
 }

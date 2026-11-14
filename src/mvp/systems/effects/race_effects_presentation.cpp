@@ -415,6 +415,7 @@ struct RaceEffectsPresentation::Storage {
     int exhaustFrame{-1};
     PackedByteArray stepBytes, epochBytes;
     bool epochsDirty{};
+    bool particlesVisible{true};
     std::array<Mark,128> marks, rearMarks;
     std::vector<MeshInstance3D*> lights, rearLights;
     MeshInstance3D* sun{};
@@ -629,7 +630,7 @@ struct RaceEffectsPresentation::Storage {
                 if (group.generation!=event.generation) {
                     if (group.particle && --group.particle->groups == 0) group.particle->node->hide();
                     group.particle=&acquire(*event.definition, *request.texture);
-                    if (group.particle->groups++ == 0) group.particle->node->show();
+                    if (group.particle->groups++ == 0 && particlesVisible) group.particle->node->show();
                     group.generation=event.generation;
                     group.sequence=0;
                     group.mask=generation==0 ? 2:0;
@@ -901,14 +902,25 @@ void RaceEffectsPresentation::prepare_particles(const std::vector<RaceParticleAs
 }
 
 void RaceEffectsPresentation::update(const RaceEffectsFrame& frame,Camera3D& camera,Camera3D* rear,
-    std::uint64_t generation, bool ntsc, int worldFrames) {
+    std::uint64_t generation, bool ntsc, int worldFrames, bool particlesVisible, bool sunGlareVisible) {
+    if (storage_->particlesVisible != particlesVisible) {
+        storage_->particlesVisible = particlesVisible;
+        for (auto& entry : storage_->particles)
+            entry.second.node->set_visible(particlesVisible && entry.second.groups > 0);
+        if (storage_->exhaust) storage_->exhaust->set_visible(particlesVisible);
+    }
     storage_->update_particles(frame,generation);
     storage_->update_exhaust(frame.exhaust, camera, worldFrames);
     storage_->update_skids(frame.skids,storage_->marks,2);
     storage_->update_lights(frame.lights,camera,storage_->lights,1,2);
     storage_->update_skids(frame.rearSkids,storage_->rearMarks,4);
     if (rear) storage_->update_lights(frame.lights,*rear,storage_->rearLights,3,4);
-    storage_->update_sun(frame.sun, camera, ntsc);
+    if (sunGlareVisible) {
+        storage_->update_sun(frame.sun, camera, ntsc);
+    } else {
+        if (storage_->sun) storage_->sun->hide();
+        if (storage_->skyViewport) storage_->skyViewport->set_update_mode(SubViewport::UPDATE_DISABLED);
+    }
 }
 
 void RaceEffectsPresentation::update_preview_lights(const std::vector<RaceLightEffect>& lights,Camera3D& camera,int view) {

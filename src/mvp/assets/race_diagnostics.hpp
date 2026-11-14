@@ -2,13 +2,14 @@
 #include <cstdint>
 
 struct WorldSimulation;
-namespace godot { class Dictionary; }
+namespace godot { class Dictionary; class PackedVector3Array; }
 
 namespace hp2 {
 
 struct MainMenuScreenServices;
 struct FrontendStateView;
 struct RaceStateView;
+godot::PackedVector3Array race_photo_route(const RaceStateView& race);
 
 struct CampaignRaceDiagnostic {
     int tree{-1};

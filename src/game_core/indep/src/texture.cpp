@@ -107,6 +107,32 @@ TextureAnimPack::~TextureAnimPack()
 
 EditorMarkerResources& TextureAnimPack::CatalogueRoot() const noexcept {return *storage_->root;}
 
+bool TextureAnimPack::ReadFrames(const EditorMarkerTexture& descriptor, std::vector<TextureInfo>& frames,
+    int& rate, bool& realClock) const
+{
+    for (const auto& animation : storage_->animations) {
+        if (!animation.enabled) continue;
+        const auto& entries = animation.entries;
+        const auto destination = std::find_if(entries.begin(), entries.end(), [&descriptor](const auto& entry) {
+            return textureMetadataPublished(entry.metadata) && entry.texture->descriptor == &descriptor;
+        });
+        if (destination == entries.end() || std::any_of(entries.begin(), entries.end(), [](const auto& entry) {
+                return !textureMetadataPublished(entry.metadata);
+            })) continue;
+        rate = storage_->registry->animationRateOverride ? storage_->registry->animationRateOverride : animation.rate;
+        realClock = animation.clock == 1;
+        frames.reserve(entries.size());
+        for (std::size_t i = 0; i < entries.size(); ++i) {
+            const auto& source = entries[(destination - entries.begin() + i) % entries.size()];
+            auto& frame = frames.emplace_back(*destination->texture);
+            frame.pixels = source.pixels;
+            frame.palette = source.palette;
+        }
+        return true;
+    }
+    return false;
+}
+
 void TextureAnimPack::Update(std::int32_t worldFrames,std::int32_t realFrames,std::int32_t rateOverride)
 {
     // Complete frame/pointer operation of PAL1ABD80..1ABEE8. Real clock is

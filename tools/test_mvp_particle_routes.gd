@@ -70,6 +70,8 @@ func _process(_delta: float) -> bool:
                 targets.push_back(node)
             if track == 21 and definition in [_hash("XE_Sandstorm_XL_01"), _hash("XE_SandDebris_XL_01")]:
                 targets.push_back(node)
+            if track == 61 and definition in [_hash("XE_WaterFall_Cloud_01"), _hash("XE_WaterFall_Mist_01")]:
+                targets.push_back(node)
         elif births_started and node.get_meta("source_effect_group", 0) == _hash("CARFX_NITRO"):
             targets.push_back(node)
         elif not births_started and node.name == "TailpipeExhaust":

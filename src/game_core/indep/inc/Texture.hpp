@@ -142,6 +142,9 @@ public:
     TextureAnimPack(const TextureAnimPack&)=delete;
     TextureAnimPack& operator=(const TextureAnimPack&)=delete;
     EditorMarkerResources& CatalogueRoot() const noexcept;
+    // Port-side read-only snapshot for uploading the original frames to Godot.
+    bool ReadFrames(const EditorMarkerTexture& descriptor, std::vector<TextureInfo>& frames,
+        int& rate, bool& realClock) const;
     void Update(std::int32_t worldFrames,std::int32_t realFrames,std::int32_t rateOverride);
 private:
     struct Storage;

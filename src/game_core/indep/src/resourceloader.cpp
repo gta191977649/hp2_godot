@@ -224,37 +224,40 @@ struct LoadedTrackResources final {
     AerialNavigationData navigation;
     WorldEventsData events;
     ChopperEffectData effects;
-    CarSoundBindings& sound;
+    CarSoundBindings* sound;
     SunResources& sun;
-    bool weatherActive{},soundActive{};
+    const GameTime* sceneClock{};
+    bool weatherActive{},soundActive{},sceneClockBound{};
 
     // PAL1691FC..169210 publishes TrackPath reverse==1 before InitTrackRoutes.
     // The path and preprocessed road must consume that same direction.
     LoadedTrackResources(const std::vector<std::uint8_t>& bytes,ResourceRegistry& registry,
-        const RaceParameters& parameters,CarSoundBindings& audio,WorldParticleSystem& particles)
-        :track(bytes),terrain(track.Authored()),route(track.Authored(),parameters.reverse==1),
-         recovery(track.Authored(),&route.Native(),parameters.reverse==1),
+        bool reverse,CarSoundBindings* audio,const GameTime* clock,WorldParticleSystem& particles)
+        :track(bytes),terrain(track.Authored()),route(track.Authored(),reverse),
+         recovery(track.Authored(),&route.Native(),reverse),
          lights(track.Authored(),registry.Lights()),
          models(track.Authored(),&registry.Models()),objects(track.Authored(),terrain.Topology()),
-         scenery(track.Authored(),registry.Models(),parameters.reverse==1),
+         scenery(track.Authored(),registry.Models(),reverse),
          navigation(track.Authored()),events(track.Authored()),
-         effects(track.Authored(),&registry.Effects()),sound(audio),sun(registry.Sun())
+         effects(track.Authored(),&registry.Effects()),sound(audio),sun(registry.Sun()),
+         sceneClock(audio ? nullptr : clock)
     {
         Require(track.CurrentInfo()!=nullptr,"Loaded track has no actual34200 owner");
-        Require(!audio.race || (audio.race->services && audio.race->services->settings==&parameters),
-            "Track and audio must borrow the same canonical race parameters");
         Require(registry.Effects().Particles()==&particles,
             "GLOBALB authored emitters must already borrow this same CPU particle owner");
         Require(effects.Register(registry.Effects()),"Track FX catalogue is already registered");
         try {
             for (const auto& chunk:ReadChunks(track.Authored()))sun.LoadChunk(track.Authored(),chunk);
             Require(effects.BindParticles(particles)==WORLD_SERVICES_OK,"Actual static FX emitter publication failed");
-            Require(carSoundBindTrackBank(sound,track)==WORLD_AUDIO_OK,"Track sound-bank binding failed");
-            Require(weatherManBindClock(sound.clock)==WEATHER_MAN_OK,"Track weather has no actual game clock");
+            if (sound)Require(carSoundBindTrackBank(*sound,track)==WORLD_AUDIO_OK,"Track sound-bank binding failed");
+            Require(weatherManBindClock(clock)==WEATHER_MAN_OK,"Track weather has no actual game clock");
+            sceneClockBound=sceneClock!=nullptr;
             Require(weatherManLoadResources(track)==WEATHER_MAN_OK,"Actual weather resource publication failed");
             weatherActive=true;
-            Require(soundScapeLoadResources(sound,track)==WORLD_AUDIO_OK,"Actual SoundScape resource publication failed");
-            soundActive=true;
+            if (sound) {
+                Require(soundScapeLoadResources(*sound,track)==WORLD_AUDIO_OK,"Actual SoundScape resource publication failed");
+                soundActive=true;
+            }
         } catch (...) {Release();throw;}
     }
     void Release()
@@ -267,7 +270,11 @@ struct LoadedTrackResources final {
             Require(weatherManUnloadResources(track)==WEATHER_MAN_OK,"Actual weather resource retirement failed");
             weatherActive=false;
         }
-        if (sound.trackInfo==track.CurrentInfo()) {sound.trackInfo=nullptr;sound.trackBank=nullptr;}
+        if (sceneClockBound) {
+            Require(weatherManUnbindClock(sceneClock)==WEATHER_MAN_OK,"Scene weather clock retirement failed");
+            sceneClockBound=false;
+        }
+        if (sound && sound->trackInfo==track.CurrentInfo()) {sound->trackInfo=nullptr;sound->trackBank=nullptr;}
         Require(effects.UnbindParticles()==WORLD_SERVICES_OK,"Track FX definitions are still borrowed by live world effects");
         effects.Unregister();
         sun.Unload();
@@ -460,8 +467,12 @@ ResourceFile* ResourceLoader::LoadResourceFile(const char* filename,std::int32_t
             completion==ResourceFileCompletion::FrontendLoaded),
             "Frontend resources require actual profile/demo owners");
     else if (bindings.kind==ResourceFileKind::TrackCommon || bindings.kind==ResourceFileKind::TrackAuxiliary)
-        Require(bindings.frontend && bindings.cameras,"Track visual resources require the same actual UI and camera owners");
-    else Require(bindings.kind==ResourceFileKind::Track && bindings.parameters && bindings.sound && bindings.cameras && bindings.particles &&
+        Require((bindings.frontend && bindings.cameras) ||
+            (bindings.kind==ResourceFileKind::TrackAuxiliary && bindings.sceneClock && completion==ResourceFileCompletion::None),
+            "Track visual resources require actual application or scene owners");
+    else Require(bindings.kind==ResourceFileKind::Track && bindings.particles &&
+            ((bindings.parameters && bindings.sound && bindings.cameras) ||
+             (bindings.sceneClock && !bindings.sound && completion==ResourceFileCompletion::None)) &&
             (completion==ResourceFileCompletion::None || completion==ResourceFileCompletion::TrackSpecificLoaded),
         "Track resources require the actual race parameters and audio bindings");
     if (bindings.kind==ResourceFileKind::Track)
@@ -552,7 +563,11 @@ std::size_t ResourceLoader::ServiceResourceLoading()
             file.resources.driverBehavior=&global->behavior;file.resources.nis=&global->nis;
             file.resources.effects=&global->effects;file.globalData=std::move(global);
         }
-        if ((file.bindings.kind==ResourceFileKind::Frontend || trackVisual) && !file.data.empty()) {
+        if (trackVisual && !file.bindings.frontend && !file.data.empty()) {
+            file.modelData=std::make_unique<TrackRouteEditorResources>(file.data,&service.registry.Models());
+            file.resources.models=&file.modelData->Native();
+        }
+        if ((file.bindings.kind==ResourceFileKind::Frontend || (trackVisual && file.bindings.frontend)) && !file.data.empty()) {
             auto frontend=std::make_unique<LoadedFrontendResources>(file.data,service.registry,
                 *file.bindings.frontend,file.bindings.kind);
             file.resources.models=&service.registry.Models();file.resources.frontendEvents=frontend->events.get();
@@ -564,7 +579,7 @@ std::size_t ResourceLoader::ServiceResourceLoading()
             file.resources.models=&file.animationData->Models();
             file.resources.animations=&file.animationData->Animations();
         }
-        if (trackVisual && !file.data.empty()) {
+        if (trackVisual && file.bindings.cameras && !file.data.empty()) {
             file.collisionObjects=std::make_unique<CollisionObjectData>(file.data,file.bindings.terrain);
             file.resources.collisionObjects=file.collisionObjects.get();
             Require(carViewCameraResourcesLoadBundle(file.bindings.cameras,file.data.data(),file.data.size()),
@@ -589,16 +604,23 @@ std::size_t ResourceLoader::ServiceResourceLoading()
             file.resources.collisionObjects=file.collisionObjects.get();file.resources.damage=file.damage.get();
         }
         if (file.bindings.kind==ResourceFileKind::Track) {
+            const auto* parameters=file.bindings.parameters;
+            auto* sound=file.bindings.sound;
+            Require(!sound || !sound->race || (sound->race->services && sound->race->services->settings==parameters),
+                "Track and audio must borrow the same canonical race parameters");
             auto track=std::make_unique<LoadedTrackResources>(file.data,service.registry,
-                *file.bindings.parameters,*file.bindings.sound,*file.bindings.particles);
-            Require(carViewCameraResourcesLoadBundle(file.bindings.cameras,file.data.data(),file.data.size()),
+                parameters && parameters->reverse==1,sound,sound ? sound->clock : file.bindings.sceneClock,
+                *file.bindings.particles);
+            if (file.bindings.cameras) {
+                Require(carViewCameraResourcesLoadBundle(file.bindings.cameras,file.data.data(),file.data.size()),
                 "Track camera resources failed actual decoding");
-            for (const auto& chunk:ReadChunks(file.data)) {
-                if (chunk.id==0x80034405u)file.trackCameraGroups|=1u;
-                if (chunk.id==0x80034425u)file.trackCameraGroups|=2u;
-                if (chunk.id==0x80034410u)file.trackCameraGroups|=4u;
-                if (chunk.id==0x80034415u)file.trackCameraGroups|=8u;
-                if (chunk.id==0x34492u)file.trackCameraGroups|=16u;
+                for (const auto& chunk:ReadChunks(file.data)) {
+                    if (chunk.id==0x80034405u)file.trackCameraGroups|=1u;
+                    if (chunk.id==0x80034425u)file.trackCameraGroups|=2u;
+                    if (chunk.id==0x80034410u)file.trackCameraGroups|=4u;
+                    if (chunk.id==0x80034415u)file.trackCameraGroups|=8u;
+                    if (chunk.id==0x34492u)file.trackCameraGroups|=16u;
+                }
             }
             file.resources.models=&track->models.Native();file.resources.collisionObjects=&track->objects;
             file.resources.track=&track->track;file.resources.terrain=&track->terrain;file.resources.route=&track->route;

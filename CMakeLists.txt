@@ -48,6 +48,7 @@ add_library(hp2_track12 SHARED
   src/mvp/systems/effects/race_effects_presentation.cpp
   src/mvp/systems/vehicle/vehicle_presentation.cpp
   src/mvp/systems/cinematic/nis_presentation.cpp
+  src/mvp/systems/camera/race_post_presentation.cpp
   src/mvp/systems/camera/camera_presentation.cpp)
 # Godot's exception setting is a usage requirement. Link its library without
 # exporting that compiler flag to the exception-using HP2 boundary.
@@ -63,6 +64,8 @@ set(imgui_console_dir "${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui-console")
 set(imgui_dir "${imgui_console_dir}/example/thirdparty/imgui")
 target_sources(hp2_track12 PRIVATE
   "$<$<CONFIG:Debug>:src/mvp/assets/imgui_overlay.cpp>"
+  "$<$<CONFIG:Debug>:src/mvp/assets/trackviewer/track_viewer.cpp>"
+  "$<$<CONFIG:Debug>:src/mvp/assets/trackviewer/track_viewer_scene.cpp>"
   "$<$<CONFIG:Debug>:src/mvp/tests/pursuit_test_driver.cpp>")
 target_compile_definitions(hp2_track12 PRIVATE "$<$<CONFIG:Debug>:HP2_MVP_IMGUI>")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES)

@@ -10,9 +10,14 @@
 #include "indep/inc/Player.hpp"
 #include "indep/inc/Pursuit.hpp"
 #include "indep/inc/World.hpp"
+#include "indep/inc/Collision.hpp"
+#include "indep/inc/Race.hpp"
+#include "indep/inc/Track.hpp"
+#include "indep/inc/TrackPath.hpp"
 
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/variant.hpp>
+#include <godot_cpp/variant/packed_vector3_array.hpp>
 #include <algorithm>
 #include <stdexcept>
 
@@ -27,6 +32,32 @@
 #endif
 
 namespace hp2 {
+
+godot::PackedVector3Array race_photo_route(const RaceStateView& race) {
+    godot::PackedVector3Array points;
+    const auto* simulation = race.simulation;
+    if (!simulation || !simulation->race || !simulation->race->route || !simulation->players) return points;
+    const auto* player = simulation->players->playersByNumber[0];
+    if (!player || !player->car) return points;
+    const auto* route = simulation->race->route;
+    const auto* movement = player->car;
+    auto* terrain = movement && movement->bindings.environment ? movement->bindings.environment->contact.terrain : nullptr;
+    if (!terrain || !terrain->topology) return points;
+    TerrainSurface query{};
+    terrainSurfaceInitialize(&query, terrain->topology);
+    constexpr int count = 96;
+    points.resize(count);
+    const auto& section = route->sections[0];
+    for (int i = 0; i < count; ++i) {
+        const auto& node = route->nodes[section.firstNode + (section.nodeCount - 1) * i / count];
+        const float point[4]{node.point[0], node.point[1], 0, 0};
+        bool found = false;
+        const auto height = terrainSurfaceElevation(&query, point, nullptr, nullptr, &found);
+        if (found) points.set(i, godot::Vector3(point[0], height, -point[1]));
+    }
+    terrainSurfaceDispose(&query);
+    return points;
+}
 
 void configure_race_diagnostics(bool unlockRaces) {
     applicationConfigureTesting(false, unlockRaces);
@@ -97,12 +128,13 @@ void start_campaign_race_diagnostic(MainMenuScreenServices& menus, const void* c
 void RaceDiagnosticChecks::advance(const WorldSimulation& simulation, int track, int raceState,
     std::uint64_t generation, std::uint32_t step) {
     if (raceState != RC_STATE_RACE_IN_PROGRESS) return;
-    if (trackEffectsCamera && (track == 12 || track == 21)) {
-        // Views beside two source 35020 emitters. The normal emitter
+    if (trackEffectsCamera && (track == 12 || track == 21 || track == 61)) {
+        // Views beside source 35020 emitters. The normal emitter
         // scheduler still decides when to emit using the actual view eye.
         const float forest[3] = {-654.92f, 190.07f, -53.85f};
         const float desert[3] = {1517.87f, 206.27f, 15.37f};
-        const float* target = track == 12 ? forest : desert;
+        const float tropical[3] = {-80.7261f, -200.3983f, 98.6204f};
+        const float* target = track == 12 ? forest : track == 21 ? desert : tropical;
         auto& view = simulation.particles->cameras->screens[1].view->current;
         std::copy_n(target, 3, view.eye);
         view.eye[0] -= 35.0f;

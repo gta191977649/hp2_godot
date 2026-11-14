@@ -55,6 +55,7 @@ WeatherManResult weatherManQuery(WeatherQuery* query, const float position[4]);
 WeatherManResult weatherSetRegionState(WeatherRegion* region, int32_t enabled);
 void weatherSetGroupState(uint32_t groupKey, int32_t enabled);
 WeatherManResult weatherManBindClock(const struct GameTime* clock);
+WeatherManResult weatherManUnbindClock(const struct GameTime* clock);
 
 #ifdef __cplusplus
 }

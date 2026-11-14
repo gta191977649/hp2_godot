@@ -58,6 +58,15 @@ add `racer_nitro=1` to `NFSHP2_pc.ini` in that profile directory.
 configuration. The ImGui Console and live frame-time graph open by
 default. The grave/tilde key toggles the console and gives the game its keyboard input
 back. The graph stays visible throughout the frontend and race.
+Enter `effect` in the console to open the live race effect checkboxes.
+The window stays available after closing the console. Checked effects
+follow the game's triggers, including forest fire smoke and sandstorms.
+Enter `trackviewer` in the Debug Console to browse the original tracks.
+Choose a track from the **Track** dropdown in the top bar. Use the inspector
+to find scenery, route nodes and emitters, or switch to the black entity view.
+Right-click the viewport to fly, use WASD and Q/E to move, Shift to boost,
+the wheel to change speed and Esc to release the mouse. The **Main Menu**
+button returns to the game frontend and reloads the player profile.
 The window title shows the active graphics API and live FPS, for example
 `hp2 - (Vulkan) 120 FPS`. Debug launches append ` | Debug Mode`.
 Godot uses VSync to pace the entire game to the current display refresh.

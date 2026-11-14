@@ -114,3 +114,26 @@ The campaign command is a port-side diagnostic entry. It resolves a tree
 and event in the donor resource bank, uses the authored car availability,
 and hands the request to the donor race flow. Its default profile lives
 under the diagnostic directory.
+
+## TASK-0142 - Godot scenery animation
+
+Godot uploads authored scenery frames when loading the scene and evaluates
+vertex deformation, rigid transforms, UV scroll and texture frame selection
+in Forward+ shaders. The host publishes one presentation clock. The donor
+continues to own the world clock, replay state and effect triggers.
+
+## TASK-0143 - Forward+ race postprocessing
+
+The primary race camera uses a Godot compositor after transparent 3D.
+The original view publishes effect operands. Forward+ owns colour, depth,
+focus and history textures, and the HUD is drawn after the compositor.
+
+## TASK-0144 - Debug Track Viewer
+
+The MVP hosts the viewer in a dedicated Godot viewport. Its scene loader
+uses the original track assets, weather and particle clock through a generic
+resource binding. It shares Godot track and effects presentation with the
+race. The viewer never constructs a RaceCoordinator, audio session or profile
+owner. The existing application runtime retires before the viewer borrows
+shared resource services. The frontend-ready callback restores the original
+main menu through the ordinary profile startup path.

@@ -3,7 +3,6 @@
 #include "assets/mesh_converter.hpp"
 #include "indep/inc/Scenery.hpp"
 #include "indep/inc/Smokeable.hpp"
-#include "indep/inc/eMath.hpp"
 #include "bridge/presentation_snapshot.hpp"
 
 #include <godot_cpp/classes/mesh_instance3d.hpp>
@@ -24,13 +23,7 @@ using namespace godot;
 namespace {
 
 bool can_batch(const ArrayMesh& mesh) {
-    for (int surface = 0; surface < mesh.get_surface_count(); ++surface) {
-        const Ref<BaseMaterial3D> material = mesh.surface_get_material(surface);
-        if (material.is_null() || material->get_transparency() != BaseMaterial3D::TRANSPARENCY_DISABLED ||
-            material->get_depth_draw_mode() == BaseMaterial3D::DEPTH_DRAW_DISABLED)
-            return false;
-    }
-    return true;
+    return mesh.get_meta("hp2_batchable", false);
 }
 
 MeshInstance3D& attach_placement(Node3D& root, const Ref<ArrayMesh>& mesh, const Transform3D& transform) {
@@ -56,7 +49,8 @@ void attach_batch(Node3D& root, const PlacementBatch& batch) {
     instances->set_transform_format(MultiMesh::TRANSFORM_3D);
     instances->set_mesh(batch.mesh);
     instances->set_instance_count(static_cast<int>(batch.transforms.size()));
-    const AABB meshBounds = batch.mesh->get_aabb();
+    const AABB meshBounds = batch.mesh->has_meta("hp2_animation_bounds") ?
+        AABB(batch.mesh->get_meta("hp2_animation_bounds")) : batch.mesh->get_aabb();
     AABB bounds = batch.transforms.front().xform(meshBounds);
     for (std::size_t i = 0; i < batch.transforms.size(); ++i) {
         const auto& transform = batch.transforms[i];
@@ -80,6 +74,7 @@ struct WorldObjectPresentation::Storage {
     struct Instance {
         MeshInstance3D* node{};
         const EditorMarkerSolid* solid{};
+        std::uint16_t animationStart{};
         std::uint64_t lastSeen{};
     };
     struct MeshAsset {
@@ -102,6 +97,13 @@ struct WorldObjectPresentation::Storage {
         scene.add_child(&root);
     }
 
+    const Ref<ArrayMesh>& mesh_for(const EditorMarkerModel& model) {
+        const MeshAsset key{model.solid, model.replacement, model.detailLevel};
+        auto [mesh, inserted] = meshes.try_emplace(key);
+        if (inserted) mesh->second = converter.convert(model, true, 0, true);
+        return mesh->second;
+    }
+
     Node3D& root;
     MeshConverter converter;
     std::unordered_map<MeshAsset, Ref<ArrayMesh>, MeshAssetHash> meshes;
@@ -114,7 +116,11 @@ WorldObjectPresentation::WorldObjectPresentation(Node3D& scene)
 
 WorldObjectPresentation::~WorldObjectPresentation() = default;
 
-void WorldObjectPresentation::update(const std::vector<WorldObjectEntityState>& objects, int worldFrames) {
+void WorldObjectPresentation::prepare_animation(const EditorMarkerModel& model) {
+    storage_->mesh_for(model);
+}
+
+void WorldObjectPresentation::update(const std::vector<WorldObjectEntityState>& objects) {
     auto& storage = *storage_;
     ++storage.serial;
     for (const auto& object : objects) {
@@ -127,21 +133,7 @@ void WorldObjectPresentation::update(const std::vector<WorldObjectEntityState>& 
             continue;
         }
 
-        auto model = *object.model;
-        auto pose = object.transform;
-        // RenderModel PAL10DC80 applies the optional rigid matrix before
-        // selecting the authored vertex animation frame. Only the local
-        // presentation copy changes here.
-        if (model.solid->rigidAnimation && model.rigidAnimationStart) {
-            const auto time = editorMarkerModelRigidAnimationTime(&model, worldFrames);
-            if (time >= 0) {
-                float sample[16];
-                if (!editorMarkerRigidAnimationMatrixAtTime(model.solid->rigidAnimation, sample, time))
-                    throw std::runtime_error("WorldObject rigid animation has no authored frame");
-                eMulMatrix(pose.data(), sample, object.transform.data());
-            }
-        }
-        editorMarkerModelSetupVertexAnimation(&model, worldFrames);
+        const auto& model = *object.model;
         if (found == storage.instances.end()) {
             auto* node = memnew(MeshInstance3D);
             const auto* name = model.solid->name;
@@ -152,13 +144,18 @@ void WorldObjectPresentation::update(const std::vector<WorldObjectEntityState>& 
         }
         auto& instance = found->second;
         if (instance.solid != model.solid) {
-            const Storage::MeshAsset key{model.solid, model.replacement, model.detailLevel};
-            auto [mesh, inserted] = storage.meshes.try_emplace(key);
-            if (inserted) mesh->second = storage.converter.convert(model);
-            instance.node->set_mesh(mesh->second);
+            const auto& mesh = storage.mesh_for(model);
+            instance.node->set_mesh(mesh);
             instance.solid = model.solid;
+            if (mesh->get_meta("hp2_rigid", false) || mesh->get_meta("hp2_morph", false))
+                instance.node->set_instance_shader_parameter("hp2_animation_start", model.rigidAnimationStart);
+            instance.animationStart = model.rigidAnimationStart;
         }
-        instance.node->set_transform(race_transform(pose.data()));
+        if (instance.animationStart != model.rigidAnimationStart) {
+            instance.node->set_instance_shader_parameter("hp2_animation_start", model.rigidAnimationStart);
+            instance.animationStart = model.rigidAnimationStart;
+        }
+        instance.node->set_transform(race_transform(object.transform.data()));
         instance.node->show();
         instance.lastSeen = storage.serial;
     }
@@ -174,7 +171,8 @@ void WorldObjectPresentation::update(const std::vector<WorldObjectEntityState>& 
 }
 
 std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResources* sky, bool reverse,
-    const CollisionObjectRegistry& objects, std::vector<TrackPlacementVisibility>& movablePlacements) {
+    const CollisionObjectRegistry& objects, std::vector<TrackPlacementVisibility>& movablePlacements,
+    WorldObjectPresentation& worldObjects) {
     MeshConverter converter;
     const bool batchScenery = OS::get_singleton()->get_environment("HP2_MVP_SCENERY_BATCHING") != "0";
     std::unordered_map<const EditorMarkerModel*, PlacementMesh> meshes;
@@ -206,8 +204,8 @@ std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResource
             if (!level) continue; // Original selection rejects placements without an authored LOD.
             // Smokeable spawners and rigid animated ferns transfer the
             // original scenery slot to a WorldObject while active.
-            const bool moves = movable.count(&instance) != 0 ||
-                editorMarkerModelRigidAnimation(&model.levels[0]) != nullptr;
+            const auto* rigid = editorMarkerModelRigidAnimation(&model.levels[0]);
+            const bool moves = movable.count(&instance) != 0 || (rigid && rigid->playbackType != 0);
             if (!moves && (instance.flags & 0x10u)) continue;
             auto& entry = meshes[level];
             const auto& mesh = entry.mesh;
@@ -215,6 +213,8 @@ std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResource
                 entry.mesh = converter.convert(*level);
                 entry.batchable = batchScenery && can_batch(*mesh.ptr());
             }
+            if (rigid && rigid->playbackType != 0)
+                worldObjects.prepare_animation(model.levels[0]);
             if (!mesh->get_surface_count()) continue; // All strips can be non-drawing.
             Transform3D transform;
             if (!(instance.flags & 0x200u)) {

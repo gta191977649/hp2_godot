@@ -339,6 +339,21 @@ struct FrontendStateView {
     int pointerPopupButtons{};
     const RaceEffectsFrame* effects{};
 };
+// Port-side operands from the original primary view and render policy.
+struct RacePostState {
+    std::array<float, 2> fogRange{};
+    std::array<float, 4> fog{}; // RGB bytes and strength
+    std::array<float, 4> focus{}; // center, range, min alpha, max alpha
+    const EditorMarkerTexture* radialMask{};
+    bool radialActive{};
+    const EditorMarkerTexture* filterTexture{};
+    std::array<std::uint8_t, 2> radialAmounts{};
+    std::array<std::uint8_t, 4> filterColor{};
+    std::uint8_t filterAlpha{};
+    int fogMode{}, focusTransition{}, focusPasses{}, focusJitter{};
+    float fogPower{};
+    bool fogEnabled{}, focusEnabled{}, monochrome{};
+};
 struct RaceStateView {
     const ::WorldSimulation* simulation{};
     const ::Scenery* scenery{};
@@ -371,12 +386,14 @@ public:
     // The host can request one race once the authored frontend banks are ready.
     void InitializeRace(void (*start)(MainMenuScreenServices&, const void*), const void* context);
     // Port-side policy, evaluated before starting a selected frontend race.
-    void InitializeFrontend();
+    void InitializeFrontend(void (*ready)(MainMenuScreenServices&, const void*) = nullptr,
+        const void* context = nullptr);
     FrontendStateView FrontendState() const;
     void QueueFrontendPointer(std::uint64_t epoch, FrontendPointerTarget target);
     bool AdvanceRace();
     int SelectedTrack() const noexcept;
     RaceStateView RaceState() const noexcept;
+    RacePostState RacePost() const;
     void TakeRaceEffects(RaceEffectsFrame& frame);
     std::vector<RaceParticleAsset> RaceParticleAssets() const;
     void SetDisplayOptions(int32_t width,int32_t height,bool fullscreen,bool vsync);
@@ -384,6 +401,8 @@ public:
     EcstasyFrame& Frame() noexcept;
     bSound& Audio() noexcept;
     const GameTime& Clock() const noexcept;
+    // Port-side fraction of the pending logical interval for visual interpolation.
+    float PresentationStepFraction() const noexcept;
     const FrontendPlayerManager& Frontend() const;
     const ApplicationFrontendFlow& Flow() const noexcept;
 private:

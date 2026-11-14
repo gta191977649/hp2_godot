@@ -82,6 +82,16 @@ with the stage, track and reason and stop the run with exit code 1.
 documents the Forward+ drive and open presentation work.
 
 
+Godot uploads scenery vertex and rigid animation frames with the track mesh.
+Forward+ samples them with the shared source clock, including UV scrolling
+and texture sequences. The same scene still submits authored emitter events
+to the Godot particle system.
+
+The race camera runs source fog, focus, colour and history effects in a
+Forward+ compositor after transparent 3D draws and before the HUD. The
+renderer owns GPU history and focus textures. Race state supplies effect
+operands and replay discontinuities.
+
 ## Frontend
 
 The donor menu, profile, Player and RaceCoordinator owners provide state.

@@ -7,6 +7,7 @@
 
 struct Scenery;
 struct CollisionObjectRegistry;
+struct EditorMarkerModel;
 namespace godot { class Node3D; }
 
 namespace hp2 {
@@ -18,7 +19,8 @@ class WorldObjectPresentation {
 public:
     explicit WorldObjectPresentation(godot::Node3D& scene);
     ~WorldObjectPresentation();
-    void update(const std::vector<WorldObjectEntityState>& objects, int worldFrames);
+    void prepare_animation(const EditorMarkerModel& model);
+    void update(const std::vector<WorldObjectEntityState>& objects);
 
 private:
     struct Storage;
@@ -31,6 +33,6 @@ struct TrackPlacementVisibility {
 };
 inline constexpr std::uint32_t trackSkyLayer = 1u << 3;
 std::size_t attach_track(godot::Node3D& root, const Scenery& scenery, const SkyResources* sky, bool reverse, const CollisionObjectRegistry& objects,
-    std::vector<TrackPlacementVisibility>& movablePlacements);
+    std::vector<TrackPlacementVisibility>& movablePlacements, WorldObjectPresentation& worldObjects);
 
 }
