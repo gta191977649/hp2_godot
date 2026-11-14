@@ -215,6 +215,7 @@ struct RacePresentation::Session {
     Camera3D* rearCamera{};
     std::unordered_map<std::uint64_t, VehiclePresentation> vehicles;
     std::unique_ptr<VehicleReflection> reflections;
+    std::unique_ptr<TrackSceneryLod> primaryScenery;
     std::size_t placements{};
     std::chrono::steady_clock::time_point loadingSince{std::chrono::steady_clock::now()};
 };
@@ -351,10 +352,10 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
                     bool(ProjectSettings::get_singleton()->get_setting("hp2/debug_mode", false)))) {
                 session_->debugMenu = std::make_unique<FrontendDebugMenu>([this] { open_track_viewer(); });
             }
-            session_->runtime.InitializeFrontend(returnToMenu ? TrackViewer::return_to_main_menu : reflection_profile_frontend_ready(),
+            session_->runtime.InitializeFrontend(returnToMenu ? TrackViewer::return_to_main_menu : race_profile_frontend_ready(),
                 nullptr, session_->debugMenu ? &session_->debugMenu->extension() : nullptr);
 #else
-            session_->runtime.InitializeFrontend(reflection_profile_frontend_ready());
+            session_->runtime.InitializeFrontend(race_profile_frontend_ready());
 #endif
         }
         else if (tree >= 0) session_->runtime.InitializeRace(start_campaign_race_diagnostic, &session_->campaignDiagnostic);
@@ -444,6 +445,7 @@ void RacePresentation::retire_scene() {
     s.movablePlacements.clear();
     s.vehicles.clear();
     s.reflections.reset();
+    s.primaryScenery.reset();
     if (s.sceneViewport) {
         if (s.post.is_valid()) {
             s.post->detach();
@@ -603,15 +605,16 @@ void RacePresentation::_process(double delta) {
             s.worldObjects = std::make_unique<WorldObjectPresentation>(*s.scene);
             const bool sharedWorldReflection = profile_shared_world_reflections();
             s.reflections = std::make_unique<VehicleReflection>(*s.scene, race, sharedWorldReflection);
+            if (!profile_legacy_primary_scenery()) s.primaryScenery = std::make_unique<TrackSceneryLod>(*s.scene, true);
             s.placements = attach_track(*s.scene, *race.scenery, race.sky, frame.reverse,
                 *race.simulation->collisions->objects, s.movablePlacements, *s.worldObjects,
-                s.reflections->track(), sharedWorldReflection);
+                s.reflections->track(), sharedWorldReflection, s.primaryScenery.get());
             s.effects = std::make_unique<RaceEffectsPresentation>(*s.scene);
             s.effects->prepare_particles(s.runtime.RaceParticleAssets());
             s.camera = memnew(Camera3D);
             s.scene->add_child(s.camera);
             s.camera->set_cull_mask_value(3, false);
-            s.camera->set_cull_mask(s.camera->get_cull_mask() & ~trackReflectionLayer);
+            s.camera->set_cull_mask(s.camera->get_cull_mask() & ~(trackReflectionLayer | trackMirrorSceneryLayer));
             s.camera->make_current();
             s.camera->set_name("RaceCamera");
             if (s.sceneViewport) {
@@ -660,6 +663,10 @@ void RacePresentation::_process(double delta) {
             s.post.is_null() && effectOptions.monochrome && race.blackAndWhite);
         stage = "camera";
         apply_race_camera(*s.camera, frame.camera);
+        if (s.primaryScenery) {
+            const float focal = 256.0f / std::tan(race.camera->fieldOfView * (3.141592654f / 65536.0f));
+            s.primaryScenery->update(frame.camera.eye.data(), focal, frame.camera.farClip, newScene || replayRestored);
+        }
         if (s.post.is_valid()) {
             auto post = s.runtime.RacePost();
             // Port presentation for the attract demo. Keep any authored
@@ -685,7 +692,7 @@ void RacePresentation::_process(double delta) {
                 s.rearCamera = memnew(Camera3D);
                 s.rearViewport->add_child(s.rearCamera);
                 s.rearCamera->set_cull_mask_value(2, false);
-                s.rearCamera->set_cull_mask(s.rearCamera->get_cull_mask() & ~trackReflectionLayer);
+                s.rearCamera->set_cull_mask(s.rearCamera->get_cull_mask() & ~(trackReflectionLayer | trackPrimarySceneryLayer));
                 s.rearCamera->make_current();
             }
             // Target 7 has 256x64 logical pixels and focal scales 1.5x/1.08y.

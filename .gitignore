@@ -289,6 +289,7 @@ saves/
 !/tools/test_mvp_scenery_animation.gd
 !/tools/test_mvp_race_post.gd
 !/tools/test_mvp_reflection_performance.gd
+!/tools/test_mvp_starting_grid.gd
 !/tools/profile_mvp_reflections.py
 !/tools/test_mvp_wheel_blur.gd
 !/tools/test_mvp_track_viewer.gd

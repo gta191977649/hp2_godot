@@ -76,7 +76,7 @@ struct VehicleReflection::Storage {
     std::array<Camera3D*, 6> cameras{};
     SubViewport* atlas{};
     CarPaintAssets paint;
-    std::unique_ptr<TrackReflection> track;
+    std::unique_ptr<TrackSceneryLod> track;
 
     Storage(Node3D& scene, const RaceStateView& race, bool sharedWorld) {
         views.clock = &clock;
@@ -119,7 +119,7 @@ struct VehicleReflection::Storage {
             auto* root = memnew(Node3D);
             root->set_name("ReflectionScenery");
             faces[0]->add_child(root);
-            track = std::make_unique<TrackReflection>(*root);
+            track = std::make_unique<TrackSceneryLod>(*root);
         }
         for (std::size_t patch = 0; patch < 4; ++patch)
             add_patch(*atlas, *faces[2], *environment, patch, true);
@@ -133,7 +133,7 @@ VehicleReflection::VehicleReflection(Node3D& scene, const RaceStateView& race, b
 VehicleReflection::~VehicleReflection() = default;
 const CarPaintAssets& VehicleReflection::assets() const { return storage_->paint; }
 const float* VehicleReflection::matrix() const { return storage_->environment->BodyMatrix().data(); }
-TrackReflection* VehicleReflection::track() const { return storage_->track.get(); }
+TrackSceneryLod* VehicleReflection::track() const { return storage_->track.get(); }
 
 void VehicleReflection::update(const RaceStateView& race, double elapsed, bool reset) {
     auto& s = *storage_;

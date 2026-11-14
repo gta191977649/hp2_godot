@@ -68,10 +68,10 @@ def percentiles(values):
     return [round(values[int((len(values) - 1) * p)], 3) for p in (.5, .95, .99)]
 
 
-def report(run, visual):
+def report(run, visual, grid=False):
     log = (run / "run.log").read_text(errors="replace")
     for line in log.splitlines():
-        if line.startswith(("REFLECTION_", "ERROR", "SCRIPT ERROR")):
+        if line.startswith(("REFLECTION_", "GRID_", "ERROR", "SCRIPT ERROR")):
             print(line, flush=True)
     if not visual:
         return
@@ -87,6 +87,21 @@ def report(run, visual):
         raise RuntimeError(f"Expected matched Visual Profiler frames, found {len(frames)}")
     print(f"VISUAL {len(frames)} frames CPU P50/P95/P99={percentiles(f[-2] for f in frames)} "
           f"GPU P50/P95/P99={percentiles(f[-1] for f in frames)}", flush=True)
+    if grid:
+        scopes = {name: [] for name in ("Render Depth Pre-Pass", "Render Opaque Pass")}
+        for frame in frames:
+            spans = list(zip(frame[2::3], frame[3::3], frame[4::3]))
+            # The main race viewport submits the most geometry. Reflection and
+            # mirror viewports also emit these stage names in the same frame.
+            for name, times in scopes.items():
+                durations = [(spans[i + 1][1] - cpu, spans[i + 1][2] - gpu)
+                             for i, (stage, cpu, gpu) in enumerate(spans[:-1]) if stage == name]
+                if durations:
+                    times.append(max(durations, key=lambda value: value[0]))
+        for name, times in scopes.items():
+            if times:
+                print(f"VISUAL {name} longest CPU scope per frame "
+                      f"CPU={percentiles(cpu for cpu, _ in times)} GPU={percentiles(gpu for _, gpu in times)}", flush=True)
 
 
 def main():
@@ -100,7 +115,9 @@ def main():
     parser.add_argument("--fullscreen", action="store_true")
     parser.add_argument("--vsync", action="store_true")
     parser.add_argument("--quiet", action="store_true", help="Run without Visual Profiler")
-    parser.add_argument("--demo", action="store_true", help="Watch the demo through its natural end")
+    scene = parser.add_mutually_exclusive_group()
+    scene.add_argument("--demo", action="store_true", help="Watch the demo through its natural end")
+    scene.add_argument("--grid", action="store_true", help="Measure the track flyby before confirming Starting Grid")
     args = parser.parse_args()
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=False)
@@ -115,11 +132,13 @@ def main():
     (project / ".godot/extension_list.cfg").write_text("res://hp2_track12.gdextension\n")
     (project / "override.cfg").write_text("[debug]\nsettings/profiler/max_timestamp_query_elements=1024\n")
     engine = repo / "local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64.exe"
-    script = repo / "tools/test_mvp_reflection_performance.gd"
+    script = repo / "tools" / ("test_mvp_starting_grid.gd" if args.grid else "test_mvp_reflection_performance.gd")
     variants = ["isolated"] if args.demo or args.pairs == 0 else [
         variant for pair in range(args.pairs)
         for variant in (("shared", "isolated") if pair % 2 == 0 else ("isolated", "shared"))
     ]
+    if args.grid:
+        variants = ["legacy" if variant == "shared" else "lod" for variant in variants]
     for i, variant in enumerate(variants, 1):
         run = out / f"{i}-{variant}"
         profile = run / "profile"
@@ -128,6 +147,9 @@ def main():
         env = dict(os.environ, HP2_PS2_ASSET_ROOT=str(args.assets.resolve()), HP2_PROFILE_DIR=str(profile),
                    HP2_MVP_PROFILE_REFLECTIONS="1", HP2_MVP_PROFILE_SHARED_REFLECTION_WORLD=str(int(variant == "shared")),
                    HP2_MVP_REFLECTION_CHECK="demo" if args.demo else "fixed")
+        if args.grid:
+            env.update(HP2_MVP_PROFILE_GRID="1", HP2_MVP_PROFILE_REFLECTIONS="0",
+                       HP2_MVP_PROFILE_LEGACY_SCENERY=str(int(variant == "legacy")))
         visual = not (args.quiet or args.demo)
         command = [engine, "--path", project, "--rendering-driver", args.driver,
                    "--resolution", args.resolution, "--script", script]
@@ -149,7 +171,7 @@ def main():
                 if child.poll() is None:
                     child.terminate()
                     child.wait(timeout=5)
-        report(run, visual)
+        report(run, visual, args.grid)
 
 
 if __name__ == "__main__":

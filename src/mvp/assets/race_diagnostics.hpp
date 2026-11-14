@@ -23,6 +23,8 @@ void start_quick_race_diagnostic(MainMenuScreenServices& menus, const void* cont
 void configure_race_diagnostics(bool unlockRaces);
 bool profile_shared_world_reflections();
 FrontendReady reflection_profile_frontend_ready();
+FrontendReady race_profile_frontend_ready();
+bool profile_legacy_primary_scenery();
 void collect_police_diagnostics(godot::Dictionary& result, const RaceStateView& race,
     const FrontendStateView& frontend);
 

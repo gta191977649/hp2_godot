@@ -99,7 +99,7 @@ AABB placement_bounds(const ArrayMesh& mesh, bool billboard) {
 
 }
 
-struct TrackReflection::Storage {
+struct TrackSceneryLod::Storage {
     struct Batch {
         Ref<ArrayMesh> mesh;
         MultiMeshInstance3D* node{};
@@ -109,7 +109,7 @@ struct TrackReflection::Storage {
         std::vector<Transform3D> pending, visible;
         int capacity{};
 
-        void commit(Node3D& root) {
+        void commit(Node3D& root, std::uint32_t layers) {
             if (pending == visible) {
                 pending.clear();
                 return;
@@ -120,6 +120,7 @@ struct TrackReflection::Storage {
             } else if (capacity == 1) {
                 if (!single) {
                     single = &attach_placement(root, mesh, pending.front());
+                    single->set_layer_mask(layers);
                     single->set_custom_aabb(meshBounds);
                 } else {
                     single->set_transform(pending.front());
@@ -132,6 +133,7 @@ struct TrackReflection::Storage {
                     instances->set_mesh(mesh);
                     instances->set_instance_count(capacity);
                     node = memnew(MultiMeshInstance3D);
+                    node->set_layer_mask(layers);
                     node->set_multimesh(instances);
                     root.add_child(node);
                 }
@@ -157,6 +159,7 @@ struct TrackReflection::Storage {
         std::array<int16_t, 3> minimumPixels;
         float radius;
         float boundsRadius;
+        std::size_t defaultLod{};
     };
     struct Section {
         std::vector<Placement> placements;
@@ -169,7 +172,7 @@ struct TrackReflection::Storage {
         int32_t pointCount;
     };
 
-    explicit Storage(Node3D& root) : root(root) {}
+    Storage(Node3D& root, bool primary) : root(root), primary(primary) {}
 
     void prepare(const Scenery& scenery) {
         sections.resize(scenery.sectionCount);
@@ -183,7 +186,7 @@ struct TrackReflection::Storage {
         std::iota(zoneOrder.begin(), zoneOrder.end(), std::size_t{});
         for (std::size_t i = 0; i < scenery.loadedSectionCount; ++i) {
             const auto* section = scenery.loadedSections[i];
-            if (section && section->number < 100) defaultSections.push_back(section->number);
+            if (section && (primary || section->number < 100)) defaultSections.push_back(section->number);
         }
     }
 
@@ -198,6 +201,10 @@ struct TrackReflection::Storage {
         const auto found = std::find_if(zoneOrder.begin(), zoneOrder.end(), [&](std::size_t i) {
             return sceneryPointInVisibleZone(origin, zones[i].polygon, zones[i].pointCount);
         });
+        const auto layers = primary ? trackPrimarySceneryLayer : 1u;
+        const bool fallback = primary && found == zoneOrder.end();
+        if (fallback && usingFallback && !reset) return;
+        usingFallback = fallback;
         for (const auto number : activeSections) sections[number].active = false;
         nextSections.clear();
         const auto activate = [&](int number) {
@@ -216,11 +223,16 @@ struct TrackReflection::Storage {
         }
         for (const auto number : activeSections) {
             auto& section = sections[number];
-            if (!section.active) for (auto& batch : section.batches) batch.commit(root);
+            if (!section.active) for (auto& batch : section.batches) batch.commit(root, layers);
         }
         for (const auto number : nextSections) {
             auto& section = sections[number];
             for (const auto& placement : section.placements) {
+                if (fallback) {
+                    const int batch = placement.batches[placement.defaultLod];
+                    if (batch >= 0) section.batches[batch].pending.push_back(placement.transform);
+                    continue;
+                }
                 const float dx = placement.position[0] - origin[0];
                 const float dy = placement.position[1] - origin[1];
                 const float dz = placement.position[2] - origin[2];
@@ -239,13 +251,15 @@ struct TrackReflection::Storage {
                     break;
                 }
             }
-            for (auto& batch : section.batches) batch.commit(root);
+            for (auto& batch : section.batches) batch.commit(root, layers);
         }
         activeSections.swap(nextSections);
     }
 
     static constexpr int missingLod = -2;
     Node3D& root;
+    bool primary;
+    bool usingFallback{};
     std::vector<Section> sections;
     std::vector<Zone> zones;
     std::vector<std::size_t> zoneOrder;
@@ -254,10 +268,10 @@ struct TrackReflection::Storage {
     float previousFocal{};
 };
 
-TrackReflection::TrackReflection(Node3D& root) : storage_(std::make_unique<Storage>(root)) {}
-TrackReflection::~TrackReflection() = default;
+TrackSceneryLod::TrackSceneryLod(Node3D& root, bool primary) : storage_(std::make_unique<Storage>(root, primary)) {}
+TrackSceneryLod::~TrackSceneryLod() = default;
 
-void TrackReflection::update(const float origin[3], float focal, float frustumReach, bool reset) {
+void TrackSceneryLod::update(const float origin[3], float focal, float frustumReach, bool reset) {
     storage_->update(origin, focal, frustumReach, reset);
 }
 
@@ -363,7 +377,7 @@ void WorldObjectPresentation::update(const std::vector<WorldObjectEntityState>& 
 
 std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResources* sky, bool reverse,
     const CollisionObjectRegistry& objects, std::vector<TrackPlacementVisibility>& movablePlacements,
-    WorldObjectPresentation& worldObjects, TrackReflection* reflection, bool sharedWorldReflection) {
+    WorldObjectPresentation& worldObjects, TrackSceneryLod* reflection, bool sharedWorldReflection, TrackSceneryLod* primary) {
     MeshConverter converter;
     const bool batchScenery = OS::get_singleton()->get_environment("HP2_MVP_SCENERY_BATCHING") != "0";
     std::unordered_map<const EditorMarkerModel*, PlacementMesh> meshes;
@@ -372,6 +386,7 @@ std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResource
     const auto directionMask = 0x1u | (reverse ? 4u : 8u);
     const auto reflectionMask = directionMask | 0x12u;
     if (reflection) reflection->storage_->prepare(scenery);
+    if (primary) primary->storage_->prepare(scenery);
     using Surface = MeshConverter::ScenerySurface;
     std::unordered_map<const EditorMarkerModel*, Ref<ArrayMesh>> facades;
     const auto reflection_mesh = [&](const EditorMarkerModel& model, bool billboard) -> const Ref<ArrayMesh>& {
@@ -399,6 +414,7 @@ std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResource
         std::map<std::pair<const EditorMarkerModel*, std::uint32_t>, std::size_t> batchIndices;
         std::vector<PlacementBatch> batches;
         std::map<std::tuple<const EditorMarkerModel*, bool, bool>, int> reflectionBatches;
+        decltype(reflectionBatches) primaryBatches;
         for (std::size_t item = 0; item < section->instanceCount; ++item) {
             const auto& instance = section->instances[item];
             if (instance.flags & directionMask) continue;
@@ -427,13 +443,16 @@ std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResource
             const bool reflect = !moves && !(instance.flags & reflectionMask);
             const bool splitReflection = sharedWorldReflection && reflect && ((instance.flags & 0x100u) ||
                 bool(mesh->get_meta("hp2_sorted_surfaces", false)));
-            const auto layers = 1u | (sharedWorldReflection && reflect && !splitReflection ? trackReflectionLayer : 0u);
+            const bool primaryLod = primary && !moves && mesh->get_surface_count() &&
+                !bool(mesh->get_meta("hp2_reflection_surface_filter", false));
+            const auto layers = (primaryLod ? trackMirrorSceneryLayer : 1u) |
+                (sharedWorldReflection && reflect && !splitReflection ? trackReflectionLayer : 0u);
             if (rigid && rigid->playbackType != 0)
                 worldObjects.prepare_animation(model.levels[0]);
             const auto transform = placement_transform(instance);
-            if (reflection && reflect && section->record34104Count) {
-                auto& reflectionSection = reflection->storage_->sections.at(section->number);
-                auto& placement = reflectionSection.placements.emplace_back();
+            const auto addLods = [&](TrackSceneryLod& lods, auto& indices, bool isReflection) {
+                auto& lodSection = lods.storage_->sections.at(section->number);
+                auto& placement = lodSection.placements.emplace_back();
                 std::copy_n(instance.position, 3, placement.position.begin());
                 std::copy_n(model.minimumPixels, 3, placement.minimumPixels.begin());
                 placement.radius = model.radius + 4.0f;
@@ -447,27 +466,39 @@ std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResource
                 placement.boundsRadius = 2.0f + std::max(placement.radius, std::sqrt(squaredExtent));
                 const bool identity = (instance.flags & 0x200u) != 0;
                 placement.transform = transform;
-                if (!identity && (instance.flags & 0x100u)) placement.transform.origin.y += 2.0f;
-                placement.batches.fill(TrackReflection::Storage::missingLod);
+                if (isReflection && !identity && (instance.flags & 0x100u)) placement.transform.origin.y += 2.0f;
+                placement.defaultLod = static_cast<std::size_t>(level - model.levels);
+                placement.batches.fill(TrackSceneryLod::Storage::missingLod);
                 for (std::size_t lod = 0; lod < placement.batches.size(); ++lod) {
                     const auto& candidate = model.levels[lod];
                     if (!candidate.solid) continue;
                     const bool billboard = !identity && model.facade[lod];
-                    const auto& opaque = reflection_mesh(candidate, billboard);
+                    auto& candidateEntry = meshes[&candidate];
+                    auto& candidateMesh = candidateEntry.mesh;
+                    if (!isReflection && candidateMesh.is_null()) {
+                        candidateMesh = converter.convert(candidate);
+                        candidateEntry.batchable = batchScenery && can_batch(*candidateMesh.ptr());
+                    }
+                    // Preserve a model's original transparent surfaces on the legacy path.
+                    const bool safeLod = isReflection || !bool(candidateMesh->get_meta("hp2_reflection_surface_filter", false));
+                    if (!safeLod) continue;
+                    const auto& opaque = isReflection ? reflection_mesh(candidate, billboard) : candidateMesh;
                     placement.batches[lod] = -1;
                     if (!opaque->get_surface_count()) continue;
-                    const auto [key, inserted] = reflectionBatches.try_emplace(
-                        std::make_tuple(&candidate, billboard, transform.basis.determinant() < 0),
-                        static_cast<int>(reflectionSection.batches.size()));
+                    const auto [key, inserted] = indices.try_emplace(
+                        std::make_tuple(&candidate, isReflection && billboard, transform.basis.determinant() < 0),
+                        static_cast<int>(lodSection.batches.size()));
                     if (inserted) {
-                        auto& batch = reflectionSection.batches.emplace_back();
+                        auto& batch = lodSection.batches.emplace_back();
                         batch.mesh = opaque;
-                        batch.meshBounds = placement_bounds(*opaque.ptr(), billboard);
+                        batch.meshBounds = placement_bounds(*opaque.ptr(), isReflection && billboard);
                     }
                     placement.batches[lod] = key->second;
-                    ++reflectionSection.batches[key->second].capacity;
+                    ++lodSection.batches[key->second].capacity;
                 }
-            }
+            };
+            if (reflection && reflect && section->record34104Count) addLods(*reflection, reflectionBatches, true);
+            if (primaryLod) addLods(*primary, primaryBatches, false);
             if (!mesh->get_surface_count()) continue; // All strips can be non-drawing.
             // A MultiMesh has one renderer instance and one culling bound.
             // Keep section boundaries and preserve per-instance winding for mirrored placements.

@@ -16,10 +16,10 @@ class SkyResources;
 struct WorldObjectEntityState;
 struct TrackPlacementVisibility;
 class WorldObjectPresentation;
-class TrackReflection {
+class TrackSceneryLod {
 public:
-    explicit TrackReflection(godot::Node3D& root);
-    ~TrackReflection();
+    explicit TrackSceneryLod(godot::Node3D& root, bool primary = false);
+    ~TrackSceneryLod();
     void update(const float origin[3], float focal, float frustumReach, bool reset);
 
 private:
@@ -27,7 +27,7 @@ private:
     std::unique_ptr<Storage> storage_;
     friend std::size_t attach_track(godot::Node3D&, const Scenery&, const SkyResources*, bool,
         const CollisionObjectRegistry&, std::vector<TrackPlacementVisibility>&,
-        WorldObjectPresentation&, TrackReflection*, bool);
+        WorldObjectPresentation&, TrackSceneryLod*, bool, TrackSceneryLod*);
 };
 
 class WorldObjectPresentation {
@@ -48,8 +48,10 @@ struct TrackPlacementVisibility {
 };
 inline constexpr std::uint32_t trackSkyLayer = 1u << 3;
 inline constexpr std::uint32_t trackReflectionLayer = 1u << 4;
+inline constexpr std::uint32_t trackMirrorSceneryLayer = 1u << 5;
+inline constexpr std::uint32_t trackPrimarySceneryLayer = 1u << 6;
 std::size_t attach_track(godot::Node3D& root, const Scenery& scenery, const SkyResources* sky, bool reverse, const CollisionObjectRegistry& objects,
     std::vector<TrackPlacementVisibility>& movablePlacements, WorldObjectPresentation& worldObjects,
-    TrackReflection* reflection = nullptr, bool sharedWorldReflection = false);
+    TrackSceneryLod* reflection = nullptr, bool sharedWorldReflection = false, TrackSceneryLod* primary = nullptr);
 
 }

@@ -46,6 +46,65 @@ authored overlays, a peak of 90, and 4,366 and 5,396 changed samples on
 Vulkan and D3D12 respectively. Debug and Release staging passed. PS2 runtime
 comparison remains open.
 
+## Scenic Drive Starting Grid flyby
+
+The benchmark starts World Racing Quick Race on Track 13 through the
+existing frontend startup callback, using a fresh profile and fixed seed.
+The profile's `track_selection=13` uses the original track selection path.
+It samples 720 source real-clock ticks of `RC_STATE_CAMERA_FLYBY` while
+Starting Grid is visible, before confirming `Pre Race Stats`. The script
+subsequently checks the transition through the countdown to GO.
+
+The main camera reuses the reflection scenery batch logic with its own
+authored zone lookup and projected-size LOD. The mirror draws the existing
+static placement meshes. Models with sorted or blended surfaces stay on
+their existing draw path. If there is no authored zone, Godot uses the full
+primary scenery coverage. This is a presentation change with no additional
+game core interface. The relevant donor zone and LOD evidence is recorded in
+the reflection section below.
+
+1080p Release on Arc B390, Vulkan Forward+, with VSync and Visual Profiler
+off. All six runs traversed the same 363.63 units of the authored camera
+path. Timing covers the rendered flyby and excludes the scene load.
+
+| Pair | Scenery | Frame P50/P95/P99 (ms) | Above 8.33 ms | Draws P50 | Triangles P50 |
+| --- | --- | --- | ---: | ---: | ---: |
+| 1 | Legacy | 13.29 / 16.09 / 19.08 | 756/895 | 4,975 | 329,266 |
+| 1 | Zone and LOD | 5.69 / 8.16 / 9.58 | 78/1,961 | 1,433 | 161,330 |
+| 2 | Legacy | 13.80 / 17.99 / 21.83 | 706/876 | 4,977 | 329,433 |
+| 2 | Zone and LOD | 5.62 / 7.93 / 8.80 | 56/1,979 | 1,444 | 161,607 |
+| 3 | Legacy | 13.68 / 17.99 / 23.61 | 678/892 | 4,969 | 328,815 |
+| 3 | Zone and LOD | 6.05 / 9.96 / 12.88 | 239/1,828 | 1,426 | 161,483 |
+
+Two of the three LOD runs met the 8.33 ms P95 gate. Draw calls fell about
+71% and submitted triangles about 51%. The third pair still missed the
+frame budget.
+
+The separate Visual Profiler pair measured render CPU P95 at 9.65 → 3.06 ms
+and render GPU P95 at 9.45 → 4.46 ms. For the longest CPU scope per frame of
+each named stage, depth pre-pass CPU/GPU P95 changed from 3.47/3.32 to
+0.86/0.87 ms, and opaque pass from 3.36/2.48 to 0.66/0.58 ms. The capture
+includes the auxiliary viewports, which repeat these stage names.
+With 120 Hz VSync and the profiler off, the LOD run averaged 118.8 FPS.
+Frame intervals at P50/P95/P99 were 8.34/9.01/10.91 ms.
+
+```powershell
+cmake --build --preset godot-mvp-release --target stage_mvp --parallel 8
+cmake --build --preset godot-mvp-debug --target stage_mvp --parallel 8
+$disc = 'D:/ps2_game/Need for Speed - Hot Pursuit 2 (USA).iso'
+py -3 tools/profile_mvp_reflections.py --assets $disc --out local/task0146/grid-accept-ab --grid --pairs 3 --quiet
+py -3 tools/profile_mvp_reflections.py --assets $disc --out local/task0146/grid-accept-visual --grid --pairs 1
+py -3 tools/profile_mvp_reflections.py --assets $disc --out local/task0146/grid-accept-sync --grid --pairs 0 --quiet --vsync
+```
+
+Track 33 Release passed the Vulkan and D3D12 mirror world, drive, pause,
+restart, retirement, replay atlas and post-pixel checks. The Track 13 flyby
+smoke captured six points while Starting Grid was visible and reached GO
+on both backends. The captures confirm the route, forest and road in the
+sampled views. Matched PS2 image comparison remains open. See
+`local/task0146/grid-regression` for logs and captures. The commands use the
+Track 33 smoke procedure below and `--grid` for Track 13.
+
 ## Scenic Drive reflection performance
 
 The six reflection viewports share a dedicated Godot `World3D`. The port

@@ -34,6 +34,13 @@
 
 namespace hp2 {
 
+bool profile_legacy_primary_scenery() {
+    const auto* os = godot::OS::get_singleton();
+    return os->get_environment("HP2_MVP_PROFILE_GRID") == "1" &&
+        !os->get_environment("HP2_PROFILE_DIR").is_empty() &&
+        os->get_environment("HP2_MVP_PROFILE_LEGACY_SCENERY") == "1";
+}
+
 bool profile_shared_world_reflections() {
     const auto* os = godot::OS::get_singleton();
     return os->get_environment("HP2_MVP_PROFILE_REFLECTIONS") == "1" &&
@@ -50,6 +57,17 @@ FrontendReady reflection_profile_frontend_ready() {
         menus.raceSetup->parameters->eventRandomSeed = seed;
         (void)vectorRandomSeed(seed, &vectorDefaultRandomState);
         menus.demoMode->RequestDemoMode();
+    };
+}
+
+FrontendReady race_profile_frontend_ready() {
+    const auto* os = godot::OS::get_singleton();
+    if (os->get_environment("HP2_MVP_PROFILE_GRID") != "1" ||
+        os->get_environment("HP2_PROFILE_DIR").is_empty()) return reflection_profile_frontend_ready();
+    return [](MainMenuScreenServices& menus, const void*) {
+        (void)vectorRandomSeed(0x0146u, &vectorDefaultRandomState);
+        menus.frontend->copsEnabled = false;
+        StartQuickRace(menus, 0);
     };
 }
 

@@ -34,6 +34,10 @@ reflection atlas. The six reflection cameras share a dedicated Godot world.
 Its static scenery uses the authored visibility zones and projected-size LODs.
 Only due faces render, reusing the other images in the atlas. Frontend previews
 sample the original CarSelectEnvMap.
+The primary race camera selects static scenery by authored visibility zone
+and projected-size LOD. Godot retains section batches and culls their bounds.
+Outside the authored zones, the primary camera keeps the full track coverage.
+The rear camera uses its original placement meshes.
 Race wheel blur consumes the committed angular velocity and non-spinning
 wheel mount pose for each wheel. It uses the authored wheel blur mesh and
 texture on the primary and rear view layers, with the original per-view part
