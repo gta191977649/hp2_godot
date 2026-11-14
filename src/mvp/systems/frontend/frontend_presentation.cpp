@@ -21,6 +21,7 @@
 #include <godot_cpp/classes/input_event_mouse_button.hpp>
 #include <godot_cpp/classes/input_event_mouse_motion.hpp>
 #include <godot_cpp/classes/interval_tweener.hpp>
+#include <godot_cpp/classes/label.hpp>
 #include <godot_cpp/classes/mesh_instance3d.hpp>
 #include <godot_cpp/classes/property_tweener.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
@@ -172,6 +173,59 @@ struct FrontendPresentation::Storage {
     Ref<Tween> transition;
     std::string screen;
     bool loading{};
+    Control* creditsClip{};
+    std::vector<Label*> creditsFallback;
+
+    void update_credits_fallback(const std::vector<FrontendCreditsText>& lines, bool active) {
+        if (!active) {
+            if (creditsClip) {
+                canvas.remove_child(creditsClip);
+                creditsClip->queue_free();
+                creditsClip = nullptr;
+                creditsFallback.clear();
+            }
+            return;
+        }
+        if (lines.empty()) {
+            if (creditsClip) creditsClip->hide();
+            return;
+        }
+        if (!creditsClip) {
+            creditsClip = memnew(Control);
+            creditsClip->set_name("PortCreditsFallback");
+            creditsClip->set_clip_contents(true);
+            creditsClip->set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
+            creditsClip->set_z_index(21);
+            canvas.add_child(creditsClip);
+        }
+        const auto& clip = lines.front();
+        creditsClip->set_position({clip.clipLeft, clip.clipTop});
+        creditsClip->set_size({clip.clipWidth, clip.clipHeight});
+        creditsClip->show();
+        for (std::size_t i = 0; i < lines.size(); ++i) {
+            const auto& line = lines[i];
+            if (i == creditsFallback.size()) {
+                auto* label = memnew(Label);
+                label->set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
+                label->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_CENTER);
+                label->set_vertical_alignment(VERTICAL_ALIGNMENT_CENTER);
+                label->add_theme_constant_override("outline_size", 3);
+                creditsClip->add_child(label);
+                creditsFallback.push_back(label);
+            }
+            auto& label = *creditsFallback[i];
+            label.add_theme_font_size_override("font_size", std::max(1, int(std::lround(line.height))));
+            label.add_theme_color_override("font_color", color(line.color));
+            label.set_text(String::utf8(line.text));
+            const float width = std::max(1.0f, 2.0f * std::min(line.centerX - clip.clipLeft,
+                clip.clipLeft + clip.clipWidth - line.centerX));
+            label.set_size({width, line.height});
+            label.set_position({line.centerX - clip.clipLeft - width * 0.5f, line.top - clip.clipTop});
+            label.show();
+        }
+        for (std::size_t i = lines.size(); i < creditsFallback.size(); ++i)
+            creditsFallback[i]->hide();
+    }
     ApplicationRuntime& pointerRuntime;
     Control& pointerSurface;
     using Action = FrontendPointerAction;
@@ -830,6 +884,7 @@ void FrontendPresentation::update(const FrontendStateView& state, Vector2 viewpo
     s.mapMeshes.resize(s.usedMapMeshes);
     s.update_highlights(*state.layout);
     s.update_pointer(state);
+    s.update_credits_fallback(state.creditsText, screen == "Port Credits");
     if (screen == "Title Screen" && s.video.playing()) {
         const auto rect = s.layout.fit_movie(s.layout.visible_rect());
         s.player.set_position(rect.position);

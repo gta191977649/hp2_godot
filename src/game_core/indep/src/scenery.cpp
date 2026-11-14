@@ -176,12 +176,7 @@ struct SceneryResources::SectionStorage {
     std::vector<SceneryRecord34104> records34104;
     // Derived once from the retained immutable authored tree. Source
     // records remain the one published resource representation.
-    struct CullNode {
-        std::array<float,3> minimum{},maximum{};
-        std::array<std::int16_t,5> children{};
-        std::int16_t count{};
-    };
-    std::vector<CullNode> cullNodes;
+    std::vector<SceneryCullNode> cullNodes;
     std::vector<uint8_t> header;
 };
 
@@ -310,10 +305,11 @@ SceneryResources::SceneryResources(const std::vector<std::uint8_t>& bundle,
                         node.maximum[axis]=static_cast<float>(sceneryHalf(data+(axis+3)*2));
                     }
                     node.count=sceneryHalf(data+12);
-                    for(std::size_t child=0;child<node.children.size();++child)
+                    for(std::size_t child=0;child<std::size(node.children);++child)
                         node.children[child]=sceneryHalf(data+14+child*2);
                 }
                 section.records34104=storage->records34104.data();section.record34104Count=count;
+                section.cullNodes=storage->cullNodes.data();
             }
             if(reverse)sceneryFlipObjectsOnBackwardsTrack(&section);
             // LoaderScenery performs the reverse flip before the track-load
@@ -764,7 +760,7 @@ void SceneryResources::Render(const CarCinematicScreen& view,EcstasyFrame& frame
             Require(item.index<section.record34104Count && ++visited<=section.record34104Count,
                 "Scenery culling tree contains an invalid index or repeated cycle");
             const auto& node=storage->cullNodes[item.index];
-            const auto clip=item.clip==1 ? ecstasyClassifyBounds(node.minimum.data(),node.maximum.data(),
+            const auto clip=item.clip==1 ? ecstasyClassifyBounds(node.minimum,node.maximum,
                 view.matrices.worldToScreenClip):item.clip;
             if (!clip)continue;
             Require(node.count>=0 && node.count<=5,"Scenery tree node exceeds its five authored children");

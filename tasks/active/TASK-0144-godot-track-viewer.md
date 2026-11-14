@@ -77,3 +77,33 @@ the sky return when the mode is disabled. Verified the rendered screenshot and
 toggle on Godot 4.7.2 Vulkan at 1200×800 from the isolated staged project.
 The shared wireframe shader disables face culling so both triangle orientations
 draw. The Debug staging build and Vulkan wireframe toggle smoke passed.
+
+## Hierarchy and model selection
+
+The left Inspector shows the current track's two authored BUN catalogues,
+sections, models and placement instances. The tree and the property pane share
+selection with the single viewport on the right. Asset ownership comes from
+the existing per-file model catalogue. Sections use their decoded numbers.
+The Inspector can be resized with its edge and toggled from the toolbar.
+
+Left-click picks one instance using the same placement transform and uploaded
+mesh as the track renderer. Picking checks the base mesh triangles after the
+instance bounds test. A single red mesh overlay shares the selected mesh.
+Double-clicking an instance flies the camera along a line for half a second.
+If a model has multiple visible placements, double-clicking its definition
+uses the nearest one. Holding the right button in the viewport enables manual
+flight until release. Track changes retire the selection, mesh and navigation.
+
+Run the windowed Debug viewer smoke with `HP2_MVP_VIEWER_HIERARCHY=1` and an
+isolated profile. Use `HP2_MVP_VIEWER_WIREFRAME=1` to exercise both render modes.
+
+Debug compiled and ran from a separate staging directory because the normal
+Debug DLL was in use. The Godot 4.7.2 Vulkan smoke passed at 1200×800 on
+Tracks 11 and 12, including click selection and clearing, the highlighted
+tree row, straight-line camera focus, Inspector resizing and hide/show,
+flight release, wireframe and entity modes, camera coordinates and return
+to the main menu. Release `stage_mvp` and the direct Track 33 race lifecycle
+smoke also passed. Logs and captures are under
+`local/task0144-hierarchy-final2` and
+`local/port-native-checks/hierarchy-release-race`. No exhaustive per-model
+or animated-mesh picking run was performed.

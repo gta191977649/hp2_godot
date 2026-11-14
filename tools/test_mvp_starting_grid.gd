@@ -8,6 +8,10 @@ var previous := 0
 var frames: Array[float] = []
 var draws: Array[int] = []
 var triangles: Array[int] = []
+var scenery_counts: Array[Array] = [[], [], [], [], []]
+var fallback_frames := 0
+const SCENERY_KEYS := ["scenery_sections", "scenery_tree_nodes", "scenery_candidates",
+    "scenery_selected", "scenery_batch_updates"]
 var camera_travel := 0.0
 var last_camera := Vector3.ZERO
 var confirmed := false
@@ -46,6 +50,10 @@ func _process(_delta: float) -> bool:
             frames.push_back((now - previous) / 1000.0)
             draws.push_back(int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)))
             triangles.push_back(int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)))
+            for i in range(SCENERY_KEYS.size()):
+                scenery_counts[i].push_back(int(state.get(SCENERY_KEYS[i], 0)))
+            if state.get("scenery_fallback", false):
+                fallback_frames += 1
             camera_travel += last_camera.distance_to(camera.global_position)
             last_camera = camera.global_position
         previous = now
@@ -66,6 +74,11 @@ func _process(_delta: float) -> bool:
             " frame_p50/p95/p99=", quantile(0.50), "/", quantile(0.95), "/", quantile(0.99),
             " over_budget=", slow, "/", frames.size(), " draw_p50=", draws[draws.size() / 2],
             " triangles_p50=", triangles[triangles.size() / 2], " camera_travel=", camera_travel)
+        var medians := {}
+        for i in range(SCENERY_KEYS.size()):
+            scenery_counts[i].sort()
+            medians[SCENERY_KEYS[i]] = scenery_counts[i][scenery_counts[i].size() / 2]
+        print("SCENERY_P50 ", medians, " fallback_frames=", fallback_frames)
         confirmed = true
         repeat_confirm_at = now + 500000
         confirm()

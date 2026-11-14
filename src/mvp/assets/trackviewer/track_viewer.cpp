@@ -5,6 +5,7 @@
 
 #include "assets/mesh_converter.hpp"
 #include "bware/inc/bFile.hpp"
+#include "bware/inc/bChunk.hpp"
 #include "indep/inc/FMenus.hpp"
 #include "indep/inc/Flags.hpp"
 #include "indep/inc/FlailerDB.hpp"
@@ -24,11 +25,13 @@
 #include <godot_cpp/classes/compositor.hpp>
 #include <godot_cpp/classes/display_server.hpp>
 #include <godot_cpp/classes/environment.hpp>
+#include <godot_cpp/classes/geometry3d.hpp>
 #include <godot_cpp/classes/input.hpp>
 #include <godot_cpp/classes/input_event_key.hpp>
 #include <godot_cpp/classes/input_event_mouse_button.hpp>
 #include <godot_cpp/classes/input_event_mouse_motion.hpp>
 #include <godot_cpp/classes/mesh_instance3d.hpp>
+#include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/shader.hpp>
 #include <godot_cpp/classes/shader_material.hpp>
@@ -44,9 +47,14 @@
 #include <array>
 #include <cmath>
 #include <cstdio>
+#include <limits>
+#include <map>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace hp2 {
@@ -73,6 +81,39 @@ struct Section {
     int count{};
     AABB bounds;
 };
+
+struct HierarchyModel {
+    std::string name;
+    int bundle{};
+    int section{-1};
+    std::size_t modelIndex{};
+    std::array<std::uint32_t, 3> keys{};
+    std::array<bool, 3> resolved{};
+    std::vector<int> instances;
+};
+
+struct HierarchyInstance {
+    const SceneryInstance* source{};
+    int model{-1};
+    std::size_t index{};
+    TrackInspectionPlacement draw;
+    AABB bounds;
+};
+
+struct HierarchySection {
+    std::uint32_t number;
+    std::vector<int> models;
+};
+
+std::string model_name(const EditorMarkerSolid* solid, std::uint32_t key) {
+    if (solid && solid->name[0]) {
+        const auto end = std::find(std::begin(solid->name), std::end(solid->name), '\0');
+        return {solid->name, end};
+    }
+    char label[24];
+    std::snprintf(label, sizeof(label), "Model 0x%08X", key);
+    return label;
+}
 
 Vector3 source_vector(Vector3 vector) {
     return {vector.x, -vector.z, vector.y};
@@ -154,8 +195,10 @@ struct TrackViewer::Storage {
     MeshInstance3D* sectionLines{};
     std::array<MeshInstance3D*, CategoryCount> entityLines{};
     MeshInstance3D* selectionLines{};
+    MeshInstance3D* modelHighlight{};
     std::unique_ptr<TrackViewerScene> source;
     std::unique_ptr<WorldObjectPresentation> worldObjects;
+    std::unique_ptr<TrackSceneryLod> sceneryVisibility;
     std::unique_ptr<RaceEffectsPresentation> effects;
     RaceEffectsFrame effectsFrame;
     Ref<RacePostPresentation> post;
@@ -166,12 +209,20 @@ struct TrackViewer::Storage {
     struct Track { int id; std::string caption; };
     std::vector<Track> tracks;
     std::vector<Section> sections;
+    std::array<std::string, 2> bundleNames;
+    std::array<std::vector<int>, 2> bundleModels;
+    std::vector<HierarchySection> hierarchySections;
+    std::vector<HierarchyModel> hierarchyModels;
+    std::vector<HierarchyInstance> hierarchyInstances;
+    std::unordered_map<const ArrayMesh*, PackedVector3Array> pickFaces;
+    int selectedModel{-1}, selectedInstance{-1};
+    bool revealInstance{};
+    bool hierarchyAudit{};
     std::vector<Entity> entities;
     std::vector<std::size_t> filtered;
     std::array<bool, CategoryCount> categoryVisible{true, true, true};
     std::array<bool, movementActions.size()> movement{};
     ImGuiTextFilter entityFilter;
-    ImGuiTextFilter sectionFilter;
     Request request;
     std::string failure;
     int selectedTrack{};
@@ -181,21 +232,31 @@ struct TrackViewer::Storage {
     int selectedEntity{-1};
     bool active{}, confirm{}, captured{}, debugView{}, loading{};
     bool wireframeView{};
-    bool sectionsVisible{}, entitiesVisible{}, hideEmpty{true};
+    bool sectionsVisible{}, entitiesVisible{};
     bool filterDirty{true};
     bool poseDirty{};
     float yaw{}, pitch{}, speed{120}, fov{60};
+    float inspectorWidth{260.0f};
+    bool inspectorVisible{true};
     Vector3 start, position;
     float startYaw{}, startPitch{};
+    struct CameraFlight {
+        Vector3 from, to;
+        float fromYaw, fromPitch, yawDelta, toPitch;
+        float elapsed{};
+    };
+    std::optional<CameraFlight> flight;
 
     void capture(bool enabled) {
         if (captured == enabled) return;
         captured = enabled;
+        if (enabled) flight.reset();
         movement.fill(false);
         Input::get_singleton()->set_mouse_mode(enabled ? Input::MOUSE_MODE_CAPTURED : Input::MOUSE_MODE_VISIBLE);
     }
 
     void focus(const AABB& bounds) {
+        flight.reset();
         const auto center = bounds.get_center();
         const float distance = std::max(9.0f,
             static_cast<float>(bounds.size.length()) * 0.65f / std::tan(fov * radians * 0.5f));
@@ -204,6 +265,24 @@ struct TrackViewer::Storage {
         yaw = std::atan2(direction.x, direction.z);
         pitch = std::asin(-direction.y);
         poseDirty = true;
+    }
+
+    void fly_to(const AABB& bounds) {
+        const auto center = bounds.get_center();
+        const float size = std::max(1.0f, static_cast<float>(bounds.size.length()));
+        const auto viewportSize = view->get_visible_rect().size;
+        const float aspect = viewportSize.x / std::max(1.0f, static_cast<float>(viewportSize.y));
+        const float halfFovTan = std::tan(fov * radians * 0.5f) * std::min(1.0f, aspect);
+        const float distance = std::max(3.0f, size * 0.65f / halfFovTan);
+        Vector3 direction = position - center;
+        direction.y = 0;
+        if (direction.is_zero_approx()) direction = Vector3(1, 0, 1);
+        direction.normalize();
+        direction.y = 0.70f;
+        direction.normalize();
+        const float targetYaw = std::atan2(direction.x, direction.z);
+        flight = CameraFlight{position, center + direction * distance, yaw, pitch,
+            std::remainder(targetYaw - yaw, 2.0f * 3.14159265358979323846f), std::asin(-direction.y)};
     }
 
     void update_camera() {
@@ -215,6 +294,7 @@ struct TrackViewer::Storage {
     }
 
     void update_mode() {
+        if (modelHighlight) modelHighlight->set_visible(!debugView && modelHighlight->get_mesh().is_valid());
         view->set_debug_draw(wireframeView ? Viewport::DEBUG_DRAW_WIREFRAME : Viewport::DEBUG_DRAW_DISABLED);
         if (trackScene) {
             trackScene->set_visible(!debugView);
@@ -342,28 +422,261 @@ struct TrackViewer::Storage {
         filterDirty = true;
     }
 
-    void draw_sections() {
-        sectionFilter.Draw("Search##sections", -80.0f);
-        ImGui::Checkbox("Hide empty sections", &hideEmpty);
-        if (ImGui::Button("All sections")) {
-            selectedSection = selectedEntity = -1;
-            filterDirty = true;
-            update_selection();
+    void index_hierarchy(const std::vector<TrackInspectionPlacement>& drawings) {
+        const auto bundles = source->track_bundles();
+        std::unordered_map<const EditorMarkerSolid*, int> owners;
+        std::unordered_set<const EditorMarkerSolid*> used;
+        for (int file = 0; file < 2; ++file) {
+            bundleNames[file] = bundles[file]->Filename();
+            const auto* catalogue = bundles[file]->Resources().models;
+            if (!catalogue) continue;
+            for (std::size_t i = 0; i < catalogue->solidCount; ++i)
+                owners.emplace(&catalogue->solids[i], file);
         }
-        if (ImGui::BeginChild("SectionList", ImVec2(0, 0), true)) {
-            for (std::size_t i = 0; i < sections.size(); ++i) {
-                const auto& section = sections[i];
-                char label[80];
-                std::snprintf(label, sizeof(label), "%d   |   %d objects", section.number, section.count);
-                if ((hideEmpty && !section.count) || !sectionFilter.PassFilter(label)) continue;
-                if (ImGui::Selectable(label, selectedSection == static_cast<int>(i),
-                        ImGuiSelectableFlags_AllowDoubleClick)) {
-                    selectedSection = static_cast<int>(i);
-                    selectedEntity = -1;
-                    filterDirty = true;
-                    update_selection();
-                    if (section.count && ImGui::IsMouseDoubleClicked(0)) focus(section.bounds);
+        std::map<std::pair<std::uint32_t, std::size_t>, const TrackInspectionPlacement*> placed;
+        for (const auto& draw : drawings) placed.emplace(std::make_pair(draw.section, draw.instance), &draw);
+        const auto& scenery = source->scenery();
+        for (std::size_t i = 0; i < scenery.sectionCount; ++i) {
+            const auto* section = scenery.sections[i];
+            if (!section) continue;
+            auto& branch = hierarchySections.emplace_back();
+            branch.number = section->number;
+            for (std::size_t j = 0; j < section->modelCount; ++j) {
+                auto& item = hierarchyModels.emplace_back();
+                item.bundle = 1;
+                item.section = section->number;
+                item.modelIndex = j;
+                const auto& sourceModel = section->models[j];
+                const EditorMarkerSolid* solid = nullptr;
+                for (std::size_t lod = 0; lod < item.keys.size(); ++lod) {
+                    const auto& level = sourceModel.levels[lod];
+                    item.keys[lod] = level.key;
+                    item.resolved[lod] = level.solid != nullptr;
+                    if (level.solid) {
+                        used.insert(level.solid);
+                        if (!solid) solid = level.solid;
+                    }
                 }
+                if (const auto owner = owners.find(solid); owner != owners.end()) item.bundle = owner->second;
+                item.name = model_name(solid, item.keys[0]);
+                branch.models.push_back(static_cast<int>(hierarchyModels.size() - 1));
+            }
+            for (std::size_t j = 0; j < section->instanceCount; ++j) {
+                const auto& instance = section->instances[j];
+                if (instance.modelIndex < 0 || std::size_t(instance.modelIndex) >= branch.models.size()) continue;
+                auto& item = hierarchyInstances.emplace_back();
+                item.source = &instance;
+                item.index = j;
+                item.model = branch.models[instance.modelIndex];
+                const auto found = placed.find({section->number, j});
+                if (found != placed.end()) {
+                    item.draw = *found->second;
+                    item.bounds = item.draw.transform.xform(item.draw.mesh->get_aabb()).grow(0.002f);
+                }
+                hierarchyModels[item.model].instances.push_back(static_cast<int>(hierarchyInstances.size() - 1));
+            }
+        }
+        for (int file = 0; file < 2; ++file) {
+            const auto* catalogue = bundles[file]->Resources().models;
+            if (!catalogue) continue;
+            for (std::size_t j = 0; j < catalogue->solidCount; ++j) {
+                const auto& solid = catalogue->solids[j];
+                if (used.count(&solid)) continue;
+                auto& item = hierarchyModels.emplace_back();
+                item.bundle = file;
+                item.modelIndex = j;
+                item.keys[0] = solid.key;
+                item.resolved[0] = true;
+                item.name = model_name(&solid, solid.key);
+                bundleModels[file].push_back(static_cast<int>(hierarchyModels.size() - 1));
+            }
+        }
+    }
+
+    void select_model(int model, int instance = -1) {
+        selectedModel = model;
+        selectedInstance = instance;
+        revealInstance = false;
+        modelHighlight->remove_meta("section");
+        modelHighlight->remove_meta("instance");
+        modelHighlight->hide();
+        modelHighlight->set_mesh({});
+        if (instance < 0) return;
+        const auto& draw = hierarchyInstances[instance].draw;
+        if (draw.mesh.is_null()) return;
+        modelHighlight->set_mesh(draw.mesh);
+        modelHighlight->set_transform(draw.transform);
+        modelHighlight->set_visible(!debugView);
+        modelHighlight->set_meta("section", draw.section);
+        modelHighlight->set_meta("instance", static_cast<int64_t>(draw.instance));
+    }
+
+    void pick(const Vector2& pointer) {
+        if (!modelHighlight || debugView) return;
+        const auto pixel = (pointer - viewportRect.position) / viewportRect.size * view->get_visible_rect().size;
+        const auto origin = camera->project_ray_origin(pixel);
+        const auto direction = camera->project_ray_normal(pixel);
+        float nearest = camera->get_far();
+        int picked = -1;
+        auto* geometry = Geometry3D::get_singleton();
+        for (std::size_t i = 0; i < hierarchyInstances.size(); ++i) {
+            const auto& item = hierarchyInstances[i];
+            if (item.draw.mesh.is_null() || !item.bounds.intersects_ray(origin, direction)) continue;
+            const auto& transform = item.draw.transform;
+            if (std::abs(transform.basis.determinant()) < 1e-8f) continue;
+            const auto inverse = transform.affine_inverse();
+            const auto localOrigin = inverse.xform(origin);
+            const auto localRay = inverse.basis.xform(direction).normalized();
+            auto [found, inserted] = pickFaces.try_emplace(item.draw.mesh.ptr());
+            if (inserted) found->second = item.draw.mesh->get_faces();
+            const auto& faces = found->second;
+            for (int64_t j = 0; j + 2 < faces.size(); j += 3) {
+                const auto hit = geometry->ray_intersects_triangle(localOrigin, localRay,
+                    faces[j], faces[j + 1], faces[j + 2]);
+                if (hit.get_type() == Variant::NIL) continue;
+                const auto distance = (transform.xform(Vector3(hit)) - origin).dot(direction);
+                if (distance < camera->get_near() || distance >= nearest) continue;
+                nearest = distance;
+                picked = static_cast<int>(i);
+            }
+        }
+        if (picked == selectedInstance) picked = -1;
+        flight.reset();
+        select_model(picked < 0 ? -1 : hierarchyInstances[picked].model, picked);
+        revealInstance = picked >= 0;
+    }
+
+    void activate_model(int index, bool locate) {
+        int nearestInstance = -1;
+        float nearest = std::numeric_limits<float>::infinity();
+        for (const int instance : hierarchyModels[index].instances) {
+            const auto& item = hierarchyInstances[instance];
+            if (item.draw.mesh.is_null()) continue;
+            const float distance = position.distance_squared_to(item.bounds.get_center());
+            if (distance < nearest) {
+                nearest = distance;
+                nearestInstance = instance;
+            }
+        }
+        select_model(index, nearestInstance);
+        if (locate && nearestInstance >= 0) {
+            revealInstance = true;
+            fly_to(hierarchyInstances[nearestInstance].bounds);
+        }
+    }
+
+    void draw_model(int index) {
+        auto& model = hierarchyModels[index];
+        ImGui::PushID(index);
+        if (revealInstance && selectedModel == index) ImGui::SetNextItemOpen(true);
+        auto flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+        if (selectedModel == index) flags |= ImGuiTreeNodeFlags_Selected;
+        if (model.instances.empty()) flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+        const bool opened = ImGui::TreeNodeEx("model", flags, "%s", model.name.c_str());
+        if (ImGui::IsItemClicked(0)) {
+            const bool doubleClicked = ImGui::IsMouseDoubleClicked(0);
+            if (doubleClicked || !ImGui::IsItemToggledOpen()) activate_model(index, doubleClicked);
+        }
+        if (opened && !model.instances.empty()) {
+            for (const int id : model.instances) {
+                const auto& item = hierarchyInstances[id];
+                const std::string row = "Instance " + std::to_string(item.index) +
+                    (item.draw.mesh.is_null() ? " (hidden)" : "");
+                ImGui::PushID(id);
+                if (ImGui::Selectable(row.c_str(), selectedInstance == id, ImGuiSelectableFlags_AllowDoubleClick)) {
+                    select_model(index, id);
+                    if (ImGui::IsMouseDoubleClicked(0) && item.draw.mesh.is_valid()) fly_to(item.bounds);
+                }
+                if (revealInstance && selectedInstance == id) {
+                    ImGui::SetScrollHereY();
+                    revealInstance = false;
+                }
+                if (hierarchyAudit && selectedInstance == id) {
+                    const auto min = ImGui::GetItemRectMin();
+                    const auto max = ImGui::GetItemRectMax();
+                    const auto origin = ImGui::GetWindowPos();
+                    if (ImGui::IsItemVisible() && min.y >= origin.y)
+                        modelHighlight->set_meta("hierarchy_row", Vector2(min.x + 20, (min.y + max.y) * 0.5f));
+                }
+                ImGui::PopID();
+            }
+            ImGui::TreePop();
+        }
+        ImGui::PopID();
+    }
+
+    void draw_hierarchy() {
+        if (hierarchyAudit && modelHighlight) modelHighlight->remove_meta("hierarchy_row");
+        const float height = ImGui::GetContentRegionAvail().y;
+        if (ImGui::BeginChild("HierarchyTree", ImVec2(0, std::max(1.0f, height * 0.58f)), true,
+                ImGuiWindowFlags_HorizontalScrollbar)) {
+            for (int file = 0; file < 2; ++file) {
+                if (bundleNames[file].empty()) continue;
+                const bool revealBundle = revealInstance && selectedModel >= 0 && hierarchyModels[selectedModel].bundle == file;
+                if (revealBundle) ImGui::SetNextItemOpen(true);
+                if (!ImGui::TreeNodeEx(bundleNames[file].c_str(), ImGuiTreeNodeFlags_DefaultOpen)) continue;
+                for (const auto& section : hierarchySections) {
+                    const auto belongs = [&](int index) { return hierarchyModels[index].bundle == file; };
+                    if (file == 0 && std::none_of(section.models.begin(), section.models.end(), belongs)) continue;
+                    if (file == 1 && !section.models.empty() &&
+                        std::none_of(section.models.begin(), section.models.end(), belongs)) continue;
+                    if (revealBundle && hierarchyModels[selectedModel].section == static_cast<int>(section.number))
+                        ImGui::SetNextItemOpen(true);
+                    const bool sectionSelected = selectedSection >= 0 &&
+                        sections[selectedSection].number == static_cast<int>(section.number);
+                    const auto flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth |
+                        (sectionSelected ? ImGuiTreeNodeFlags_Selected : 0);
+                    const bool opened = ImGui::TreeNodeEx(
+                        reinterpret_cast<const void*>(static_cast<uintptr_t>(section.number) + 1),
+                        flags, "Section %u", section.number);
+                    if (ImGui::IsItemClicked(0) && !ImGui::IsItemToggledOpen()) {
+                        const auto found = std::find_if(sections.begin(), sections.end(), [&](const auto& entry) {
+                            return entry.number == static_cast<int>(section.number);
+                        });
+                        select_model(-1);
+                        selectedSection = found == sections.end() || sectionSelected ? -1 :
+                            static_cast<int>(found - sections.begin());
+                        selectedEntity = -1;
+                        filterDirty = true;
+                        update_selection();
+                    }
+                    if (opened) {
+                        for (const int index : section.models) if (belongs(index)) draw_model(index);
+                        ImGui::TreePop();
+                    }
+                }
+                if (!bundleModels[file].empty() && ImGui::TreeNode("Model definitions")) {
+                    for (const int index : bundleModels[file]) draw_model(index);
+                    ImGui::TreePop();
+                }
+                ImGui::TreePop();
+            }
+        }
+        ImGui::EndChild();
+        if (ImGui::BeginChild("HierarchyProperties", ImVec2(0, 0), true)) {
+            if (selectedModel < 0) ImGui::TextUnformatted("Select a model to inspect it.");
+            else {
+                const auto& model = hierarchyModels[selectedModel];
+                ImGui::TextWrapped("%s", model.name.c_str());
+                ImGui::TextWrapped("%s", bundleNames[model.bundle].c_str());
+                if (model.section >= 0) ImGui::Text("Section %d", model.section);
+                ImGui::Text("Model index %zu", model.modelIndex);
+                for (std::size_t lod = 0; lod < model.keys.size(); ++lod)
+                    if (model.keys[lod]) ImGui::Text("LOD %zu   0x%08X%s", lod, model.keys[lod],
+                        model.resolved[lod] ? "" : " (unresolved)");
+                if (selectedInstance >= 0) {
+                    const auto& item = hierarchyInstances[selectedInstance];
+                    const auto& entry = *item.source;
+                    ImGui::Text("Instance %zu   Flags 0x%04X", item.index, static_cast<unsigned>(entry.flags));
+                    ImGui::Text("HP2 XYZ  %.3f, %.3f, %.3f", entry.position[0], entry.position[1], entry.position[2]);
+                    ImGui::TextUnformatted("HP2 rotation matrix");
+                    for (int row = 0; row < 3; ++row) ImGui::Text("%.4f   %.4f   %.4f",
+                        entry.rotation[row * 3] / 16384.0f, entry.rotation[row * 3 + 1] / 16384.0f,
+                        entry.rotation[row * 3 + 2] / 16384.0f);
+                    ImGui::Text("Bounds min  %d, %d, %d", entry.minimum[0], entry.minimum[1], entry.minimum[2]);
+                    ImGui::Text("Bounds max  %d, %d, %d", entry.maximum[0], entry.maximum[1], entry.maximum[2]);
+                    if (item.draw.mesh.is_null()) ImGui::TextUnformatted("Hidden in the current view");
+                } else ImGui::TextUnformatted("No visible placement");
             }
         }
         ImGui::EndChild();
@@ -501,6 +814,9 @@ int TrackViewer::track() const { return storage_->selectedTrack; }
 std::uint64_t TrackViewer::generation() const { return storage_->source && storage_->camera ? storage_->source->generation() : 0; }
 std::uint32_t TrackViewer::step() const { return storage_->source && storage_->camera ? storage_->source->clock().worldTimeFrames : 0; }
 std::size_t TrackViewer::placement_count() const { return storage_->placementCount; }
+std::size_t TrackViewer::scenery_section_count() const {
+    return storage_->sceneryVisibility ? storage_->sceneryVisibility->statistics().sections : 0;
+}
 int TrackViewer::entity_count() const { return static_cast<int>(storage_->entities.size()); }
 int TrackViewer::catalogue_size() const { return static_cast<int>(storage_->tracks.size()); }
 
@@ -513,11 +829,15 @@ bool TrackViewer::input(const Ref<InputEvent>& event) {
         s.pitch = std::clamp(s.pitch - relative.y * 0.0025f, -1.55f, 1.55f);
         s.poseDirty = true;
     }
-    if (const Ref<InputEventMouseButton> button = event; button.is_valid() && button->is_pressed() &&
-        s.camera && (s.captured || s.viewportRect.has_point(button->get_position()))) {
-        if (button->get_button_index() == MOUSE_BUTTON_RIGHT) s.capture(!s.captured);
-        if (button->get_button_index() == MOUSE_BUTTON_WHEEL_UP) s.speed = std::min(4000.0f, s.speed * 1.25f);
-        if (button->get_button_index() == MOUSE_BUTTON_WHEEL_DOWN) s.speed = std::max(5.0f, s.speed / 1.25f);
+    if (const Ref<InputEventMouseButton> button = event; button.is_valid()) {
+        if (!button->is_pressed() && button->get_button_index() == MOUSE_BUTTON_RIGHT) s.capture(false);
+        if (button->is_pressed() && s.camera && (s.captured || s.viewportRect.has_point(button->get_position()))) {
+            const auto which = button->get_button_index();
+            if (which == MOUSE_BUTTON_RIGHT) s.capture(true);
+            if (which == MOUSE_BUTTON_LEFT && !s.captured) s.pick(button->get_position());
+            if (which == MOUSE_BUTTON_WHEEL_UP) s.speed = std::min(4000.0f, s.speed * 1.25f);
+            if (which == MOUSE_BUTTON_WHEEL_DOWN) s.speed = std::max(5.0f, s.speed / 1.25f);
+        }
     }
     if (s.captured) {
         if (event->is_action_pressed("hp2_viewer_release")) s.capture(false);
@@ -532,7 +852,20 @@ bool TrackViewer::input(const Ref<InputEvent>& event) {
 void TrackViewer::advance(double delta, bool blocked) {
     auto& s = *storage_;
     if (!s.active) return;
-    if (blocked || !s.host.get_window()->has_focus()) s.capture(false);
+    if (blocked || !s.host.get_window()->has_focus()) {
+        s.capture(false);
+        s.flight.reset();
+    }
+    if (s.flight && s.camera) {
+        auto& flight = *s.flight;
+        flight.elapsed += static_cast<float>(delta);
+        const float t = std::clamp(flight.elapsed / 0.5f, 0.0f, 1.0f);
+        s.position = flight.from.lerp(flight.to, t);
+        s.yaw = flight.fromYaw + flight.yawDelta * t;
+        s.pitch = flight.fromPitch + (flight.toPitch - flight.fromPitch) * t;
+        s.poseDirty = true;
+        if (t == 1.0f) s.flight.reset();
+    }
     if (s.captured && s.camera) {
         const auto& move = s.movement;
         const auto basis = Basis::from_euler(Vector3(s.pitch, s.yaw, 0));
@@ -565,7 +898,10 @@ void TrackViewer::draw(float width, float height, float dpi, float fps, bool blo
         ImGui::EndPopup();
     }
     if (!s.active) return;
-    const float sidebar = std::min(260 * dpi, width * 0.46f);
+    const float splitter = 6.0f * dpi;
+    const float minSidebar = std::min(185.0f * dpi, width * 0.46f);
+    const float maxSidebar = std::max(minSidebar, width * 0.70f);
+    const float sidebar = s.inspectorVisible ? std::clamp(s.inspectorWidth * dpi, minSidebar, maxSidebar) : 0.0f;
     char positionText[96] = "Position --";
     char lookAtText[96] = "Look At --";
     if (s.camera) {
@@ -579,8 +915,8 @@ void TrackViewer::draw(float width, float height, float dpi, float fps, bool blo
             target.x, target.y, target.z);
     }
     const auto& style = ImGui::GetStyle();
-    const float controlsWidth = ImGui::CalcTextSize("TrackMain Menu000 FPS").x +
-        8 * style.FramePadding.x + 4 * style.ItemSpacing.x + 2 * style.WindowPadding.x;
+    const float controlsWidth = ImGui::CalcTextSize("TrackMain Menu000 FPSInspector").x +
+        10 * style.FramePadding.x + 5 * style.ItemSpacing.x + 2 * style.WindowPadding.x;
     const float coordinatesWidth = ImGui::CalcTextSize(
         "Position (-0000.000, -0000.000, -0000.000)  Look At (-0000.000, -0000.000, -0000.000)").x +
         2 * style.ItemSpacing.x;
@@ -589,7 +925,8 @@ void TrackViewer::draw(float width, float height, float dpi, float fps, bool blo
         ImGui::CalcTextSize(lookAtText).x + style.ItemSpacing.x + 2 * style.WindowPadding.x > width;
     const float top = ImGui::GetFrameHeightWithSpacing() + 2 * style.WindowPadding.y +
         (inlineCoordinates ? 0 : ImGui::GetTextLineHeightWithSpacing() * (splitCoordinates ? 2 : 1));
-    const Rect2 layout(sidebar, top, std::max(1.0f, width - sidebar), std::max(1.0f, height - top));
+    const float viewLeft = s.inspectorVisible ? sidebar + splitter : 0.0f;
+    const Rect2 layout(viewLeft, top, std::max(1.0f, width - viewLeft), std::max(1.0f, height - top));
     if (layout != s.viewportRect) {
         s.viewportRect = layout;
         s.container->set_position(layout.position);
@@ -625,24 +962,52 @@ void TrackViewer::draw(float width, float height, float dpi, float fps, bool blo
         if (ImGui::Button("Main Menu")) s.request = {Action::Close, 0};
         ImGui::SameLine();
         ImGui::Text("%.0f FPS", fps);
+        ImGui::SameLine();
+        if (ImGui::Button("Inspector")) s.inspectorVisible = !s.inspectorVisible;
+        if (s.hierarchyAudit && s.modelHighlight) {
+            const auto min = ImGui::GetItemRectMin();
+            const auto max = ImGui::GetItemRectMax();
+            s.modelHighlight->set_meta("inspector_button", Vector2((min.x + max.x) * 0.5f, (min.y + max.y) * 0.5f));
+        }
         if (inlineCoordinates) ImGui::SameLine(0, 2 * style.ItemSpacing.x);
         ImGui::TextUnformatted(positionText);
         if (!splitCoordinates) ImGui::SameLine();
         ImGui::TextUnformatted(lookAtText);
     }
     ImGui::End();
+    if (!s.inspectorVisible || sidebar <= 0) return;
+    ImGui::SetNextWindowPos(ImVec2(sidebar, top));
+    ImGui::SetNextWindowSize(ImVec2(splitter, layout.size.y));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(1, 1));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+    if (ImGui::Begin("Track Viewer Splitter", nullptr, panelFlags | inputFlags |
+            ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+        ImGui::InvisibleButton("Resize inspector", ImVec2(splitter, layout.size.y));
+        const bool dragging = ImGui::IsItemActive();
+        if (ImGui::IsItemHovered() || dragging) ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+        if (dragging)
+            s.inspectorWidth = std::clamp(ImGui::GetIO().MousePos.x, minSidebar, maxSidebar) / dpi;
+    }
+    ImGui::End();
+    ImGui::PopStyleVar(2);
     ImGui::SetNextWindowPos(ImVec2(0, top));
     ImGui::SetNextWindowSize(ImVec2(sidebar, s.viewportRect.size.y));
     if (ImGui::Begin("Track Viewer Inspector", nullptr, panelFlags | inputFlags)) {
         if (!s.failure.empty()) ImGui::TextWrapped("Track %d: %s", s.selectedTrack, s.failure.c_str());
         else if (s.loading) ImGui::TextUnformatted("Loading track...");
-        if (ImGui::BeginTabBar("Inspector", ImGuiTabBarFlags_FittingPolicyScroll)) {
-            if (ImGui::BeginTabItem("Sections")) { s.draw_sections(); ImGui::EndTabItem(); }
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(3 * dpi, style.FramePadding.y));
+        if (ImGui::BeginTabBar("Inspector", ImGuiTabBarFlags_FittingPolicyResizeDown)) {
+            const auto hierarchyFlags = s.revealInstance ? ImGuiTabItemFlags_SetSelected : 0;
+            if (ImGui::BeginTabItem("Hierarchy", nullptr, hierarchyFlags)) {
+                s.draw_hierarchy();
+                ImGui::EndTabItem();
+            }
             if (ImGui::BeginTabItem("Entities")) { s.draw_entities(dpi); ImGui::EndTabItem(); }
             if (ImGui::BeginTabItem("Camera")) {
                 if (ImGui::SliderFloat("FOV", &s.fov, 10, 100, "%.0f deg")) s.poseDirty = true;
                 ImGui::SliderFloat("Speed", &s.speed, 5, 4000, "%.0f m/s");
                 if (ImGui::Button("Reset camera")) {
+                    s.flight.reset();
                     s.position = s.start;
                     s.yaw = s.startYaw;
                     s.pitch = s.startPitch;
@@ -655,7 +1020,7 @@ void TrackViewer::draw(float width, float height, float dpi, float fps, bool blo
                     DisplayServer::get_singleton()->clipboard_set(String(positionText) + "\n" + lookAtText);
                 ImGui::TextWrapped("%s", positionText);
                 ImGui::TextWrapped("%s", lookAtText);
-                ImGui::TextWrapped("Right-click to fly. WASD to move, Q/E to descend or rise, Shift to boost, wheel for speed, Esc to release.");
+                ImGui::TextWrapped("Hold right mouse to fly. WASD to move, Q/E for height, Shift to boost. Left-click to select.");
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Render")) {
@@ -669,6 +1034,7 @@ void TrackViewer::draw(float width, float height, float dpi, float fps, bool blo
                 }
                 if (ImGui::Checkbox("Section bounds", &s.sectionsVisible)) s.update_mode();
                 if (ImGui::Checkbox("Entity markers", &s.entitiesVisible)) s.update_mode();
+                ImGui::Checkbox("Track visibility zones", &effects.sceneryVisibility);
                 ImGui::Checkbox("Scene particles", &effects.particles);
                 ImGui::Checkbox("Sun and glare", &effects.sunGlare);
                 ImGui::Checkbox("Fog", &effects.fog);
@@ -676,10 +1042,12 @@ void TrackViewer::draw(float width, float height, float dpi, float fps, bool blo
                 ImGui::Checkbox("Black and white", &effects.monochrome);
                 ImGui::Checkbox("Color filter", &effects.colorFilter);
                 ImGui::Checkbox("Motion blur", &effects.motionBlur);
+                ImGui::Checkbox("Roadshine", &effects.roadshine);
                 ImGui::EndTabItem();
             }
             ImGui::EndTabBar();
         }
+        ImGui::PopStyleVar();
     }
     ImGui::End();
     if (s.filterDirty && (s.debugView || s.entitiesVisible)) s.rebuild_filter();
@@ -693,11 +1061,14 @@ void TrackViewer::Storage::attach() {
     s.view->add_child(s.trackScene);
     s.trackScene->set_name("RaceScene");
     s.worldObjects = std::make_unique<WorldObjectPresentation>(*s.trackScene);
+    s.sceneryVisibility = std::make_unique<TrackSceneryLod>(*s.trackScene, TrackSceneryLod::View::Viewer);
     std::vector<TrackPlacementVisibility> movable;
     // A scene inspection never promotes authored placements to physics bodies.
     const CollisionObjectRegistry staticPlacements{};
+    std::vector<TrackInspectionPlacement> inspection;
     s.placementCount = attach_track(*s.trackScene, s.source->scenery(), &s.source->sky(), false,
-        staticPlacements, movable, *s.worldObjects);
+        staticPlacements, movable, *s.worldObjects, nullptr, false, s.sceneryVisibility.get(), &inspection);
+    s.index_hierarchy(inspection);
     s.effects = std::make_unique<RaceEffectsPresentation>(*s.trackScene);
     s.effects->prepare_particles(s.source->particle_assets());
     s.camera = memnew(Camera3D);
@@ -717,6 +1088,21 @@ void TrackViewer::Storage::attach() {
     s.entityLines = {make_lines(*s.lines, Color(1, 0.63f, 0.12f)),
         make_lines(*s.lines, Color(0.23f, 0.83f, 1)), make_lines(*s.lines, Color(1, 0.33f, 0.27f))};
     s.selectionLines = make_lines(*s.lines, Color(0.35f, 1, 0.35f));
+    s.modelHighlight = memnew(MeshInstance3D);
+    s.modelHighlight->set_name("TrackViewerSelection");
+    s.modelHighlight->set_cast_shadows_setting(GeometryInstance3D::SHADOW_CASTING_SETTING_OFF);
+    Ref<ShaderMaterial> highlight;
+    highlight.instantiate();
+    highlight->set_shader(load_shader("res://shader/track_viewer_selection.gdshader"));
+    s.modelHighlight->set_material_override(highlight);
+    s.hierarchyAudit = OS::get_singleton()->get_environment("HP2_MVP_VIEWER_HIERARCHY") == "1";
+    if (s.hierarchyAudit) {
+        PackedStringArray names;
+        for (const auto& name : s.bundleNames) names.push_back(name.c_str());
+        s.modelHighlight->set_meta("track_bundles", names);
+    }
+    s.modelHighlight->hide();
+    s.lines->add_child(s.modelHighlight);
     s.index(*s.source);
     const auto& route = s.source->route();
     if (route.nodeCount < 2) throw std::runtime_error("Track has no camera start route");
@@ -754,12 +1140,14 @@ void TrackViewer::Storage::attach() {
 void TrackViewer::detach() {
     auto& s = *storage_;
     s.capture(false);
+    s.flight.reset();
     if (s.lines) {
         s.view->remove_child(s.lines);
         s.lines->queue_free();
     }
     s.effects.reset();
     s.worldObjects.reset();
+    s.sceneryVisibility.reset();
     s.effectsFrame = {};
     if (s.post.is_valid()) s.post->detach();
     s.post.unref();
@@ -773,11 +1161,20 @@ void TrackViewer::detach() {
         s.view->queue_free();
         s.view = s.output;
     }
+    s.pickFaces.clear();
+    s.hierarchyInstances.clear();
+    s.hierarchyModels.clear();
+    s.hierarchySections.clear();
+    s.bundleModels = {};
+    s.bundleNames = {};
+    s.selectedModel = s.selectedInstance = -1;
+    s.revealInstance = false;
     s.source.reset();
     s.placementCount = 0;
     s.camera = nullptr;
     s.trackScene = s.lines = nullptr;
     s.sectionLines = s.selectionLines = nullptr;
+    s.modelHighlight = nullptr;
     s.entityLines.fill(nullptr);
     s.entities.clear();
     s.sections.clear();
@@ -791,8 +1188,9 @@ void TrackViewer::update_scene(double delta, const RaceEffectOptions& options) {
     if (!s.source || !s.source->service_load()) return;
     const bool loaded = !s.camera;
     if (loaded) s.attach();
-    const auto eye = source_vector(s.camera->get_position());
+    const auto eye = source_vector(s.camera->get_global_position());
     const float position[]{eye.x, eye.y, eye.z};
+    s.sceneryVisibility->update_camera(*s.camera, position, 0.0f, options.sceneryVisibility, loaded);
     s.source->set_eye(position);
     s.source->advance(delta);
     const auto& clock = s.source->clock();

@@ -41,6 +41,18 @@ bool profile_legacy_primary_scenery() {
         os->get_environment("HP2_MVP_PROFILE_LEGACY_SCENERY") == "1";
 }
 
+bool profile_baseline_scenery_lod() {
+    const auto* os = godot::OS::get_singleton();
+    return !os->get_environment("HP2_PROFILE_DIR").is_empty() &&
+        os->get_environment("HP2_MVP_PROFILE_BASELINE_SCENERY_LOD") == "1";
+}
+
+bool test_scenery_camera_enabled() {
+    const auto* os = godot::OS::get_singleton();
+    return !os->get_environment("HP2_PROFILE_DIR").is_empty() &&
+        os->get_environment("HP2_MVP_TEST_SCENERY_CAMERA") == "1";
+}
+
 bool profile_shared_world_reflections() {
     const auto* os = godot::OS::get_singleton();
     return os->get_environment("HP2_MVP_PROFILE_REFLECTIONS") == "1" &&
@@ -97,8 +109,8 @@ godot::PackedVector3Array race_photo_route(const RaceStateView& race) {
     return points;
 }
 
-void configure_race_diagnostics(bool unlockRaces) {
-    applicationConfigureTesting(false, unlockRaces);
+void configure_race_diagnostics(bool nativeDebug, bool unlockRaces) {
+    applicationConfigureTesting(nativeDebug, unlockRaces);
 }
 
 void collect_police_diagnostics(godot::Dictionary& result, const RaceStateView& race,
@@ -129,6 +141,10 @@ void start_quick_race_diagnostic(MainMenuScreenServices& menus, const void* cont
     if (!menus.raceSetup->tracks->Find(track))
         throw std::invalid_argument("Track is absent from the authored scenario catalogue");
     StartQuickRace(menus, 0, track);
+    const auto* os = godot::OS::get_singleton();
+    if (!os->get_environment("HP2_PROFILE_DIR").is_empty() &&
+        os->get_environment("HP2_MVP_TEST_TRACK_REVERSE") == "1")
+        menus.raceSetup->parameters->reverse = 1;
 }
 
 void start_campaign_race_diagnostic(MainMenuScreenServices& menus, const void* context) {
@@ -166,7 +182,18 @@ void start_campaign_race_diagnostic(MainMenuScreenServices& menus, const void* c
 void RaceDiagnosticChecks::advance(const WorldSimulation& simulation, int track, int raceState,
     std::uint64_t generation, std::uint32_t step) {
     if (raceState != RC_STATE_RACE_IN_PROGRESS) return;
-    if (trackEffectsCamera && (track == 12 || track == 21 || track == 61)) {
+    if (fireTruckCamera && (track == 12 || track == 13)) {
+        // Track B's FireTruck_WaterA..D instances span the roadside.
+        auto& view = simulation.particles->cameras->screens[1].view->current;
+        const float eye[] = {-577.0f, 121.0f, -50.0f};
+        std::copy_n(eye, 3, view.eye);
+        view.forward[0] = 0.0f;
+        view.forward[1] = 0.957826f;
+        view.forward[2] = -0.287348f;
+        view.matrix[1] = 0.0f;
+        view.matrix[5] = 0.0f;
+        view.matrix[9] = -1.0f;
+    } else if (trackEffectsCamera && (track == 12 || track == 21 || track == 61)) {
         // Views beside source 35020 emitters. The normal emitter
         // scheduler still decides when to emit using the actual view eye.
         const float forest[3] = {-654.92f, 190.07f, -53.85f};

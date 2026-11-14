@@ -264,6 +264,8 @@ saves/
 /tasks/*
 !/tasks/active/
 /tasks/active/*
+!/tasks/active/TASK-0147-port-credits-native-debug.md
+!/tasks/active/TASK-0148-track-materials-and-roadshine.md
 !/tasks/active/TASK-0140-godot-race-effects.md
 !/tasks/active/TASK-0141-godot-single-player-races.md
 !/tasks/active/TASK-0142-godot-scenery-animation.md
@@ -277,6 +279,12 @@ saves/
 !/tasks/active/TASK-0121-mvp-vehicle-dynamics.md
 !/tasks/active/TASK-0122-donor-vehicle-physics.md
 /tools/*
+!/tools/audit_mvp_track_materials.py
+!/tools/audit_mvp_track_materials.gd
+!/tools/test_mvp_native_debug.gd
+!/tools/test_mvp_port_credits.gd
+!/tools/test_mvp_car_shadows.gd
+!/tools/test_mvp_scenery_visibility.gd
 !/tools/test_mvp_race_effects.gd
 !/tools/test_mvp_sun_alignment.gd
 !/tools/test_mvp_race_catalog.cpp

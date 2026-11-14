@@ -5,6 +5,7 @@
 #include "indep/inc/Smokeable.hpp"
 #include "bridge/presentation_snapshot.hpp"
 
+#include <godot_cpp/classes/camera3d.hpp>
 #include <godot_cpp/classes/mesh_instance3d.hpp>
 #include <godot_cpp/classes/multi_mesh.hpp>
 #include <godot_cpp/classes/multi_mesh_instance3d.hpp>
@@ -45,10 +46,11 @@ struct PlacementBatch {
     std::uint32_t layers{};
 };
 
-void attach_batch(Node3D& root, const PlacementBatch& batch) {
+GeometryInstance3D& attach_batch(Node3D& root, const PlacementBatch& batch) {
     if (batch.transforms.size() == 1) {
-        attach_placement(root, batch.mesh, batch.transforms.front()).set_layer_mask(batch.layers);
-        return;
+        auto& node = attach_placement(root, batch.mesh, batch.transforms.front());
+        node.set_layer_mask(batch.layers);
+        return node;
     }
     Ref<MultiMesh> instances;
     instances.instantiate();
@@ -68,6 +70,7 @@ void attach_batch(Node3D& root, const PlacementBatch& batch) {
     root.add_child(node);
     node->set_multimesh(instances);
     node->set_layer_mask(batch.layers);
+    return *node;
 }
 
 struct PlacementMesh {
@@ -109,10 +112,10 @@ struct TrackSceneryLod::Storage {
         std::vector<Transform3D> pending, visible;
         int capacity{};
 
-        void commit(Node3D& root, std::uint32_t layers) {
+        bool commit(Node3D& root, std::uint32_t layers) {
             if (pending == visible) {
                 pending.clear();
-                return;
+                return false;
             }
             if (pending.empty()) {
                 if (single) single->hide();
@@ -150,6 +153,7 @@ struct TrackSceneryLod::Storage {
             }
             visible.swap(pending);
             pending.clear();
+            return true;
         }
     };
     struct Placement {
@@ -160,11 +164,21 @@ struct TrackSceneryLod::Storage {
         float radius;
         float boundsRadius;
         std::size_t defaultLod{};
+        AABB bounds;
     };
     struct Section {
+        struct TreeNode {
+            AABB bounds;
+            std::array<int16_t, 5> children;
+            int count{};
+        };
         std::vector<Placement> placements;
         std::vector<Batch> batches;
-        bool active{};
+        std::vector<int> placementIndices;
+        std::vector<TreeNode> tree;
+        std::vector<GeometryInstance3D*> staticNodes;
+        std::size_t staticPlacements{};
+        bool active{}, wasActive{};
     };
     struct Zone {
         std::vector<int16_t> sections;
@@ -172,7 +186,11 @@ struct TrackSceneryLod::Storage {
         int32_t pointCount;
     };
 
-    Storage(Node3D& root, bool primary) : root(root), primary(primary) {}
+    Storage(Node3D& root, View view, bool treeCulling)
+        : root(root), view(view), treeCulling(treeCulling) {}
+
+    bool primary() const { return view == View::Race; }
+    bool gate_static() const { return view == View::Viewer || (primary() && treeCulling); }
 
     void prepare(const Scenery& scenery) {
         sections.resize(scenery.sectionCount);
@@ -186,31 +204,94 @@ struct TrackSceneryLod::Storage {
         std::iota(zoneOrder.begin(), zoneOrder.end(), std::size_t{});
         for (std::size_t i = 0; i < scenery.loadedSectionCount; ++i) {
             const auto* section = scenery.loadedSections[i];
-            if (section && (primary || section->number < 100)) defaultSections.push_back(section->number);
+            if (section && (view != View::Reflection || section->number < 100)) defaultSections.push_back(section->number);
         }
     }
 
-    void update(const float origin[3], float focal, float frustumReach, bool reset) {
+    void prepare_tree(const ScenerySection& source) {
+        auto& section = sections[source.number];
+        if (section.placements.empty() || !source.cullNodes || !source.record34104Count) return;
+        section.tree.resize(source.record34104Count);
+        std::vector<bool> visited(section.tree.size()), covered(section.placements.size());
+        const auto copy = [&](const auto& self, std::size_t index, unsigned depth) -> bool {
+            if (index >= section.tree.size() || visited[index] || depth >= 64) return false;
+            visited[index] = true;
+            const auto& input = source.cullNodes[index];
+            if (input.count < 0 || input.count > 5) return false;
+            auto& node = section.tree[index];
+            const auto a = race_vector(input.minimum), b = race_vector(input.maximum);
+            node.bounds = AABB(a.min(b), (a - b).abs());
+            node.count = input.count;
+            std::copy_n(input.children, node.count, node.children.begin());
+            for (int i = 0; i < node.count; ++i) {
+                const int child = node.children[i];
+                if (child < 0) {
+                    if (!self(self, -child, depth + 1)) return false;
+                    node.bounds.merge_with(section.tree[-child].bounds);
+                } else {
+                    if (std::size_t(child) >= section.placementIndices.size()) return false;
+                    const int placement = section.placementIndices[child];
+                    if (placement < 0) continue;
+                    if (covered[placement]) return false;
+                    covered[placement] = true;
+                    node.bounds.merge_with(section.placements[placement].bounds);
+                }
+            }
+            return true;
+        };
+        // An incomplete tree cannot safely remove any of this section's placements.
+        if (!copy(copy, 0, 0) || std::find(covered.begin(), covered.end(), false) != covered.end())
+            section.tree.clear();
+    }
+
+    static int classify(const AABB& bounds, const std::array<Plane, 6>& planes) {
+        const auto half = bounds.size * 0.5f;
+        const auto center = bounds.position + half;
+        int result = 2;
+        for (const auto& plane : planes) {
+            const float distance = plane.distance_to(center);
+            const float radius = plane.normal.abs().dot(half);
+            if (distance > radius + 0.01f) return 0;
+            if (distance >= -radius - 0.01f) result = 1;
+        }
+        return result;
+    }
+
+    void update(const float origin[3], float focal, float frustumReach, bool reset,
+        const Camera3D* camera = nullptr, bool zonesEnabled = true) {
         const std::array<float, 3> eye{origin[0], origin[1], origin[2]};
+        const bool useTree = camera && primary() && treeCulling && zonesEnabled;
+        const auto pose = useTree ? camera->get_camera_transform() : Transform3D{};
+        const auto projection = useTree ? camera->get_camera_projection() : Projection{};
         if (reset) std::iota(zoneOrder.begin(), zoneOrder.end(), std::size_t{});
-        if (!reset && eye == previousEye && focal == previousFocal) return;
+        stats.batchUpdates = 0;
+        if (initialized && !reset && eye == previousEye && focal == previousFocal &&
+            frustumReach == previousReach && zonesEnabled == previousZones &&
+            pose == previousPose && projection == previousProjection) return;
+        initialized = true;
         previousEye = eye;
         previousFocal = focal;
+        previousReach = frustumReach;
+        previousZones = zonesEnabled;
+        previousPose = pose;
+        previousProjection = projection;
 
         // PAL150950..150B0C. Mirror the source zone order in presentation storage.
-        const auto found = std::find_if(zoneOrder.begin(), zoneOrder.end(), [&](std::size_t i) {
+        const auto found = zonesEnabled ? std::find_if(zoneOrder.begin(), zoneOrder.end(), [&](std::size_t i) {
             return sceneryPointInVisibleZone(origin, zones[i].polygon, zones[i].pointCount);
-        });
-        const auto layers = primary ? trackPrimarySceneryLayer : 1u;
-        const bool fallback = primary && found == zoneOrder.end();
+        }) : zoneOrder.end();
+        const auto layers = primary() ? trackPrimarySceneryLayer : 1u;
+        const bool fallback = view != View::Reflection && found == zoneOrder.end();
         if (fallback && usingFallback && !reset) return;
         usingFallback = fallback;
+        stats = {};
+        stats.fallback = fallback;
         for (const auto number : activeSections) sections[number].active = false;
         nextSections.clear();
         const auto activate = [&](int number) {
             if (number < 0 || std::size_t(number) >= sections.size()) return;
             auto& section = sections[number];
-            if (section.active || section.placements.empty()) return;
+            if (section.active || (section.placements.empty() && section.staticNodes.empty())) return;
             section.active = true;
             nextSections.push_back(number);
         };
@@ -223,57 +304,115 @@ struct TrackSceneryLod::Storage {
         }
         for (const auto number : activeSections) {
             auto& section = sections[number];
-            if (!section.active) for (auto& batch : section.batches) batch.commit(root, layers);
+            if (section.active) continue;
+            section.wasActive = false;
+            for (auto& batch : section.batches) stats.batchUpdates += batch.commit(root, layers);
+            for (auto* node : section.staticNodes) node->set_layer_mask_value(1, false);
+        }
+        stats.sections = nextSections.size();
+        std::array<Plane, 6> planes;
+        bool hasFrustum = false;
+        if (useTree && !fallback) {
+            const auto frustum = camera->get_frustum();
+            hasFrustum = frustum.size() == int(planes.size());
+            for (int i = 0; hasFrustum && i < frustum.size(); ++i) planes[i] = frustum[i];
         }
         for (const auto number : nextSections) {
             auto& section = sections[number];
-            for (const auto& placement : section.placements) {
+            if (!section.wasActive)
+                for (auto* node : section.staticNodes) node->set_layer_mask_value(1, true);
+            section.wasActive = true;
+            stats.placements += section.staticPlacements;
+            const auto select = [&](const Placement& placement) {
+                ++stats.candidates;
                 if (fallback) {
                     const int batch = placement.batches[placement.defaultLod];
-                    if (batch >= 0) section.batches[batch].pending.push_back(placement.transform);
-                    continue;
+                    if (batch >= 0) {
+                        section.batches[batch].pending.push_back(placement.transform);
+                        ++stats.placements;
+                    }
+                    return;
                 }
                 const float dx = placement.position[0] - origin[0];
                 const float dy = placement.position[1] - origin[1];
                 const float dz = placement.position[2] - origin[2];
                 const float squaredDistance = dx * dx + dy * dy + dz * dz;
                 const float reach = frustumReach + placement.boundsRadius;
-                if (squaredDistance > reach * reach) continue;
+                if (squaredDistance > reach * reach) return;
                 const float distance = std::sqrt(squaredDistance) - placement.radius;
                 // PAL150E04 and PAL14FFC4: source projected size and authored LOD thresholds.
                 const auto pixels = static_cast<int>(placement.radius < distance ?
                     placement.radius * focal / distance : focal);
-                if (pixels < 2) continue;
+                if (pixels < 2) return;
                 for (std::size_t lod = 0; lod < placement.batches.size(); ++lod) {
                     const auto batch = placement.batches[lod];
                     if (batch == missingLod || pixels < placement.minimumPixels[lod]) continue;
-                    if (batch >= 0) section.batches[batch].pending.push_back(placement.transform);
+                    if (batch >= 0) {
+                        section.batches[batch].pending.push_back(placement.transform);
+                        ++stats.placements;
+                    }
                     break;
                 }
+            };
+            if (hasFrustum && !section.tree.empty()) {
+                candidates.clear();
+                const auto visit = [&](const auto& self, int index, int clip) -> void {
+                    ++stats.treeNodes;
+                    const auto& node = section.tree[index];
+                    if (clip == 1) clip = classify(node.bounds, planes);
+                    if (!clip) return;
+                    for (int i = 0; i < node.count; ++i) {
+                        const int child = node.children[i];
+                        if (child < 0) self(self, -child, clip);
+                        else {
+                            const int placement = section.placementIndices[child];
+                            if (placement >= 0 && (clip == 2 || classify(section.placements[placement].bounds, planes)))
+                                candidates.push_back(placement);
+                        }
+                    }
+                };
+                visit(visit, 0, 1);
+                std::sort(candidates.begin(), candidates.end());
+                for (const auto placement : candidates) select(section.placements[placement]);
+            } else {
+                for (const auto& placement : section.placements) select(placement);
             }
-            for (auto& batch : section.batches) batch.commit(root, layers);
+            for (auto& batch : section.batches) stats.batchUpdates += batch.commit(root, layers);
         }
         activeSections.swap(nextSections);
     }
 
     static constexpr int missingLod = -2;
     Node3D& root;
-    bool primary;
-    bool usingFallback{};
+    View view;
+    bool treeCulling;
+    bool initialized{}, usingFallback{}, previousZones{};
+    Statistics stats;
     std::vector<Section> sections;
     std::vector<Zone> zones;
     std::vector<std::size_t> zoneOrder;
     std::vector<int> defaultSections, activeSections, nextSections;
     std::array<float, 3> previousEye{};
-    float previousFocal{};
+    std::vector<int> candidates;
+    Transform3D previousPose;
+    Projection previousProjection;
+    float previousFocal{}, previousReach{};
 };
 
-TrackSceneryLod::TrackSceneryLod(Node3D& root, bool primary) : storage_(std::make_unique<Storage>(root, primary)) {}
+TrackSceneryLod::TrackSceneryLod(Node3D& root, View view, bool treeCulling)
+    : storage_(std::make_unique<Storage>(root, view, treeCulling)) {}
 TrackSceneryLod::~TrackSceneryLod() = default;
 
 void TrackSceneryLod::update(const float origin[3], float focal, float frustumReach, bool reset) {
     storage_->update(origin, focal, frustumReach, reset);
 }
+
+void TrackSceneryLod::update_camera(const Camera3D& camera, const float origin[3], float focal,
+    bool zonesEnabled, bool reset) {
+    storage_->update(origin, focal, camera.get_far(), reset, &camera, zonesEnabled);
+}
+
+const TrackSceneryLod::Statistics& TrackSceneryLod::statistics() const { return storage_->stats; }
 
 struct WorldObjectPresentation::Storage {
     struct Instance {
@@ -310,7 +449,7 @@ struct WorldObjectPresentation::Storage {
     }
 
     Node3D& root;
-    MeshConverter converter;
+    MeshConverter converter{nullptr, false, true};
     std::unordered_map<MeshAsset, Ref<ArrayMesh>, MeshAssetHash> meshes;
     std::unordered_map<std::uint64_t, Instance> instances;
     std::uint64_t serial{};
@@ -377,9 +516,13 @@ void WorldObjectPresentation::update(const std::vector<WorldObjectEntityState>& 
 
 std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResources* sky, bool reverse,
     const CollisionObjectRegistry& objects, std::vector<TrackPlacementVisibility>& movablePlacements,
-    WorldObjectPresentation& worldObjects, TrackSceneryLod* reflection, bool sharedWorldReflection, TrackSceneryLod* primary) {
-    MeshConverter converter;
+    WorldObjectPresentation& worldObjects, TrackSceneryLod* reflection, bool sharedWorldReflection, TrackSceneryLod* primary,
+    std::vector<TrackInspectionPlacement>* inspection) {
+    MeshConverter converter{nullptr, false, true};
     const bool batchScenery = OS::get_singleton()->get_environment("HP2_MVP_SCENERY_BATCHING") != "0";
+    const bool auditMaterials = OS::get_singleton()->get_environment("HP2_MVP_TRACK_MATERIAL_AUDIT") == "1" &&
+        !OS::get_singleton()->get_environment("HP2_PROFILE_DIR").is_empty();
+    std::unordered_set<const EditorMarkerModel*> auditedModels;
     std::unordered_map<const EditorMarkerModel*, PlacementMesh> meshes;
     // PAL10F928 single-player scenery filter. The donor loader already
     // applies the authored reverse placement transforms.
@@ -411,10 +554,18 @@ std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResource
     for (std::size_t index = 0; index < scenery.loadedSectionCount; ++index) {
         const auto* section = scenery.loadedSections[index];
         if (!section) throw std::runtime_error("Loaded section table contains an empty entry");
+        if (auditMaterials)
+            for (std::size_t i = 0; i < section->modelCount; ++i)
+                for (const auto& model : section->models[i].levels)
+                    if (model.solid && auditedModels.insert(&model).second)
+                        MeshConverter::audit_track_model(model);
         std::map<std::pair<const EditorMarkerModel*, std::uint32_t>, std::size_t> batchIndices;
         std::vector<PlacementBatch> batches;
         std::map<std::tuple<const EditorMarkerModel*, bool, bool>, int> reflectionBatches;
         decltype(reflectionBatches) primaryBatches;
+        auto* primarySection = primary ? &primary->storage_->sections.at(section->number) : nullptr;
+        if (primarySection && primary->storage_->primary() && primary->storage_->treeCulling && section->record34104Count)
+            primarySection->placementIndices.assign(section->instanceCount, -1);
         for (std::size_t item = 0; item < section->instanceCount; ++item) {
             const auto& instance = section->instances[item];
             if (instance.flags & directionMask) continue;
@@ -443,15 +594,23 @@ std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResource
             const bool reflect = !moves && !(instance.flags & reflectionMask);
             const bool splitReflection = sharedWorldReflection && reflect && ((instance.flags & 0x100u) ||
                 bool(mesh->get_meta("hp2_sorted_surfaces", false)));
-            const bool primaryLod = primary && !moves && mesh->get_surface_count() &&
+            const bool primaryLod = primary && primary->storage_->primary() && !moves && mesh->get_surface_count() &&
                 !bool(mesh->get_meta("hp2_reflection_surface_filter", false));
+            const bool gated = primary && primary->storage_->gate_static() && !moves && !primaryLod &&
+                section->record34104Count && mesh->get_surface_count();
+            if (gated) ++primarySection->staticPlacements;
             const auto layers = (primaryLod ? trackMirrorSceneryLayer : 1u) |
+                (gated && primary->storage_->primary() ? trackMirrorSceneryLayer : 0u) |
                 (sharedWorldReflection && reflect && !splitReflection ? trackReflectionLayer : 0u);
             if (rigid && rigid->playbackType != 0)
                 worldObjects.prepare_animation(model.levels[0]);
             const auto transform = placement_transform(instance);
+            if (inspection && !(instance.flags & 0x10u) && mesh->get_surface_count())
+                inspection->push_back({section->number, item, mesh, transform});
             const auto addLods = [&](TrackSceneryLod& lods, auto& indices, bool isReflection) {
                 auto& lodSection = lods.storage_->sections.at(section->number);
+                if (!lodSection.placementIndices.empty())
+                    lodSection.placementIndices[item] = static_cast<int>(lodSection.placements.size());
                 auto& placement = lodSection.placements.emplace_back();
                 std::copy_n(instance.position, 3, placement.position.begin());
                 std::copy_n(model.minimumPixels, 3, placement.minimumPixels.begin());
@@ -469,6 +628,8 @@ std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResource
                 if (isReflection && !identity && (instance.flags & 0x100u)) placement.transform.origin.y += 2.0f;
                 placement.defaultLod = static_cast<std::size_t>(level - model.levels);
                 placement.batches.fill(TrackSceneryLod::Storage::missingLod);
+                if (!lodSection.placementIndices.empty())
+                    placement.bounds = transform.xform(placement_bounds(*mesh.ptr(), false));
                 for (std::size_t lod = 0; lod < placement.batches.size(); ++lod) {
                     const auto& candidate = model.levels[lod];
                     if (!candidate.solid) continue;
@@ -494,7 +655,10 @@ std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResource
                         batch.meshBounds = placement_bounds(*opaque.ptr(), isReflection && billboard);
                     }
                     placement.batches[lod] = key->second;
-                    ++lodSection.batches[key->second].capacity;
+                    auto& batch = lodSection.batches[key->second];
+                    ++batch.capacity;
+                    if (!lodSection.placementIndices.empty())
+                        placement.bounds.merge_with(transform.xform(batch.meshBounds));
                 }
             };
             if (reflection && reflect && section->record34104Count) addLods(*reflection, reflectionBatches, true);
@@ -507,12 +671,19 @@ std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResource
                 node.set_layer_mask(1);
                 node.set_visible((instance.flags & 0x10u) == 0);
                 movablePlacements.push_back({&instance.flags, &node});
-            } else if (entry.batchable && transform.basis.determinant() > 0) {
-                const auto [batch, inserted] = batchIndices.try_emplace(std::make_pair(level, layers), batches.size());
-                if (inserted) batches.push_back({mesh, {}, layers});
+            } else if (gated && primary->storage_->primary()) {
+                auto& node = attach_placement(root, mesh, transform);
+                node.set_layer_mask(layers & ~1u);
+                primarySection->staticNodes.push_back(&node);
+            } else if (meshes.at(level).batchable && transform.basis.determinant() > 0) {
+                const auto batchLayers = gated ? layers & ~1u : layers;
+                const auto [batch, inserted] = batchIndices.try_emplace(std::make_pair(level, batchLayers), batches.size());
+                if (inserted) batches.push_back({mesh, {}, batchLayers});
                 batches[batch->second].transforms.push_back(transform);
             } else {
-                attach_placement(root, mesh, transform).set_layer_mask(layers);
+                auto& node = attach_placement(root, mesh, transform);
+                node.set_layer_mask(gated ? layers & ~1u : layers);
+                if (gated) primarySection->staticNodes.push_back(&node);
             }
             if (splitReflection) {
                 if (entry.reflection.is_null()) entry.reflection = converter.convert(*level, true, 0, false, Surface::OpaqueOnly);
@@ -524,10 +695,15 @@ std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResource
             }
             ++placements;
         }
-        for (const auto& batch : batches) attach_batch(root, batch);
+        if (primarySection && !primarySection->placementIndices.empty()) primary->storage_->prepare_tree(*section);
+        for (const auto& batch : batches) {
+            auto& node = attach_batch(root, batch);
+            if (!batch.layers && primarySection) primarySection->staticNodes.push_back(&node);
+        }
     }
     if (sky && sky->Model(0).solid) {
-        const auto mesh = converter.convert(sky->Model(0), false);
+        MeshConverter skyConverter;
+        const auto mesh = skyConverter.convert(sky->Model(0), false);
         if (!mesh->get_surface_count()) throw std::runtime_error("Authored sky has no drawable surfaces");
         auto* node = memnew(MeshInstance3D);
         root.add_child(node);

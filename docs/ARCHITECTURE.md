@@ -35,9 +35,12 @@ Its static scenery uses the authored visibility zones and projected-size LODs.
 Only due faces render, reusing the other images in the atlas. Frontend previews
 sample the original CarSelectEnvMap.
 The primary race camera selects static scenery by authored visibility zone
-and projected-size LOD. Godot retains section batches and culls their bounds.
-Outside the authored zones, the primary camera keeps the full track coverage.
-The rear camera uses its original placement meshes.
+and projected-size LOD. Godot copies the decoded section tree at scene
+creation and tests conservative bounds against the primary camera frustum.
+Transparent static placements keep their materials and use per-view layer
+masks for section visibility. Track Viewer uses its free camera for the
+same authored zone lookup. Both views use full coverage outside the zones
+or when the Track visibility zones effect is disabled.
 Race wheel blur consumes the committed angular velocity and non-spinning
 wheel mount pose for each wheel. It uses the authored wheel blur mesh and
 texture on the primary and rear view layers, with the original per-view part

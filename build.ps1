@@ -5,6 +5,7 @@ $editor = $false
 $clean = $false
 $jobs = 8
 $raceArgument = $null
+$nativeDebug = $false
 $renderingDriver = 'vulkan'
 for ($index = 0; $index -lt $args.Count; $index++) {
     switch ($args[$index]) {
@@ -16,7 +17,7 @@ for ($index = 0; $index -lt $args.Count; $index++) {
             $raceArgument = [string]$_
             $run = $true
         }
-        '--debug' { $run = $true; $preset = 'godot-mvp-debug' }
+        '--debug' { $run = $true; $preset = 'godot-mvp-debug'; $nativeDebug = $true }
         '--clean' { $clean = $true }
         '--rendering-driver' {
             if (++$index -ge $args.Count -or $args[$index] -notin @('vulkan', 'd3d12')) {
@@ -57,9 +58,12 @@ try {
         $engine = Join-Path $PSScriptRoot 'local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe'
         if (-not (Test-Path -LiteralPath $engine -PathType Leaf)) { throw 'Godot 4.7.2 console executable is required.' }
         $project = Join-Path $PSScriptRoot "build/$preset/mvp-project"
-        if ($editor) { & $engine --editor --path $project --rendering-driver $renderingDriver }
-        elseif ($raceArgument) { & $engine --path $project --rendering-driver $renderingDriver -- $raceArgument }
-        else { & $engine --path $project --rendering-driver $renderingDriver }
+        $engineArgs = @('--path', $project, '--rendering-driver', $renderingDriver)
+        if ($editor) { $engineArgs += '--editor' }
+        if ($nativeDebug -or $raceArgument) { $engineArgs += '--' }
+        if ($nativeDebug) { $engineArgs += '--debug' }
+        if ($raceArgument) { $engineArgs += $raceArgument }
+        & $engine @engineArgs
         exit $LASTEXITCODE
     }
 } finally {

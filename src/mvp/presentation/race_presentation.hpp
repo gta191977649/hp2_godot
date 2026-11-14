@@ -17,15 +17,17 @@ class RacePresentation : public godot::Node3D {
 public:
     RacePresentation();
     ~RacePresentation() override;
-    bool start_frontend(const godot::String& assets, const godot::String& profile);
-    bool start_race(const godot::String& assets, const godot::String& profile, int64_t track);
-    bool start_event_race(const godot::String& assets, const godot::String& profile, int tree, int event);
+    bool start_frontend(const godot::String& assets, const godot::String& profile, bool nativeDebug = false);
+    bool start_race(const godot::String& assets, const godot::String& profile, int64_t track, bool nativeDebug = false);
+    bool start_event_race(const godot::String& assets, const godot::String& profile, int tree, int event,
+        bool nativeDebug = false);
     void _process(double delta) override;
     void _input(const godot::Ref<godot::InputEvent>& event) override;
     void report_launch_error(const godot::String& stage, const godot::String& track, const godot::String& reason);
     godot::Dictionary telemetry() const;
     godot::Node3D* race_scene() const;
     godot::PackedVector3Array photo_route() const;
+    void test_update_scenery_camera(bool enabled);
     void frontend_pointer_input(const godot::Ref<godot::InputEvent>& event);
 
 protected:
@@ -44,6 +46,7 @@ private:
 #endif
     std::unique_ptr<Session> session_;
     bool failed_{};
+    bool nativeDebug_{};
     void report_assert(const godot::String& message);
     void quit_game();
     bool start(const godot::String& assets, const godot::String& profile, bool frontend, int track,

@@ -20,11 +20,13 @@ struct CampaignRaceDiagnostic {
 // The context is borrowed from the host session through the startup callback.
 void start_campaign_race_diagnostic(MainMenuScreenServices& menus, const void* context);
 void start_quick_race_diagnostic(MainMenuScreenServices& menus, const void* context);
-void configure_race_diagnostics(bool unlockRaces);
+void configure_race_diagnostics(bool nativeDebug, bool unlockRaces);
 bool profile_shared_world_reflections();
 FrontendReady reflection_profile_frontend_ready();
 FrontendReady race_profile_frontend_ready();
 bool profile_legacy_primary_scenery();
+bool profile_baseline_scenery_lod();
+bool test_scenery_camera_enabled();
 void collect_police_diagnostics(godot::Dictionary& result, const RaceStateView& race,
     const FrontendStateView& frontend);
 
@@ -34,6 +36,7 @@ struct RaceDiagnosticChecks {
     bool arrestCinematic{};
     bool supportVisuals{};
     bool trackEffectsCamera{};
+    bool fireTruckCamera{};
     std::uint64_t pursuitGeneration{};
 
     void advance(const WorldSimulation& simulation, int track, int raceState,

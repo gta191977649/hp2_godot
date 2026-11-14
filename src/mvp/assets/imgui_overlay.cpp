@@ -311,6 +311,7 @@ void ImGuiOverlay::frame(double delta) {
     ImGui::NewFrame();
     const float margin = 12 * scale;
     const float graphWidth = 270 * scale;
+    const bool previousRoadshine = s.effectOptions.roadshine;
     if (s.viewer) s.viewer->draw(size.x, size.y, scale, io.Framerate, s.open, s.effectOptions);
     if (s.open) {
         const auto condition = previousScale != scale ? ImGuiCond_Always : ImGuiCond_FirstUseEver;
@@ -333,9 +334,11 @@ void ImGuiOverlay::frame(double delta) {
             ImGui::Checkbox("Black and white", &s.effectOptions.monochrome);
             ImGui::Checkbox("Color filter", &s.effectOptions.colorFilter);
             ImGui::Checkbox("Motion blur", &s.effectOptions.motionBlur);
+            ImGui::Checkbox("Track visibility zones", &s.effectOptions.sceneryVisibility);
             ImGui::Separator();
             ImGui::Checkbox("Race particles (fire, smoke, sandstorms)", &s.effectOptions.particles);
             ImGui::Checkbox("Sun and glare", &s.effectOptions.sunGlare);
+            ImGui::Checkbox("Roadshine", &s.effectOptions.roadshine);
             ImGui::TextUnformatted("Checked effects follow race triggers.");
         }
         const auto position = ImGui::GetWindowPos();
@@ -343,6 +346,8 @@ void ImGuiOverlay::frame(double delta) {
         s.effectsRect = Rect2(position.x, position.y, extent.x, extent.y);
         ImGui::End();
     }
+    if (previousRoadshine != s.effectOptions.roadshine)
+        RenderingServer::get_singleton()->global_shader_parameter_set("hp2_roadshine", s.effectOptions.roadshine);
     if (!s.viewer || !s.viewer->active()) {
         ImGui::SetNextWindowPos({size.x - margin, margin}, ImGuiCond_Always, {1, 0});
         ImGui::SetNextWindowBgAlpha(0.8f);

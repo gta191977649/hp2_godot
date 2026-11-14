@@ -3,6 +3,7 @@
 #include "indep/inc/AcidFX.hpp"
 #include "indep/inc/Clans.hpp"
 #include "indep/inc/eLight.hpp"
+#include "indep/inc/FlailerChunks.hpp"
 
 namespace hp2 {
 
@@ -51,6 +52,15 @@ struct RaceExhaustOutlet {
 };
 
 struct RaceEffectsFrame {
+    // Port-side staging of authored world strips. Texture descriptors are
+    // borrowed until the host uploads the frame; vertices are world-space.
+    struct ShadowStrip {
+        const EditorMarkerTexture* texture;
+        std::size_t first, count;
+        int view;
+    };
+    std::vector<ShadowStrip> shadows;
+    std::vector<FlailerPolyVertex> shadowVertices;
     std::vector<RaceExhaustOutlet> exhaust;
     std::vector<RaceParticleEvent> particles;
     std::vector<RaceLightEffect> lights;
@@ -69,6 +79,9 @@ void CollectLightEffect(const LightFlare& flare, const float transform[16], floa
     ResourceRegistry& resources, std::vector<RaceLightEffect>& output);
 void CollectCarLightEffects(Car& car, const float transform[16], std::int32_t worldFrames,
     std::vector<RaceLightEffect>& output);
+// Port-side callback for the existing projected car shadow geometry.
+void CollectCarShadowEffects(Car& car, const float transform[16], const CarCinematicScreen& view,
+    int layout, LightContextBatch& lights, RaceEffectsFrame& output);
 bool ParticleEffectVisible(const WorldParticleGroup& group,const CarCinematicScreen& view);
 
 }

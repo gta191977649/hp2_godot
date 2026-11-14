@@ -2,6 +2,7 @@ extends SceneTree
 
 var track := 12
 var route := false
+var firetruck := false
 var deadline := 0
 var race: Node
 var started := -1
@@ -17,7 +18,8 @@ func _initialize() -> void:
     for arg in OS.get_cmdline_user_args():
         if arg.begins_with("--race-track="):
             track = arg.trim_prefix("--race-track=").to_int()
-    route = OS.get_environment("HP2_MVP_TEST_TRACK_EFFECTS") == "1"
+    firetruck = OS.get_environment("HP2_MVP_TEST_TRACK_EFFECTS") == "firetruck"
+    route = firetruck or OS.get_environment("HP2_MVP_TEST_TRACK_EFFECTS") == "1"
     deadline = Time.get_ticks_msec() + 45000
     call_deferred("change_scene_to_file", "res://native_game.tscn")
 
@@ -65,8 +67,20 @@ func _process(_delta: float) -> bool:
             continue
         var definition: int = node.get_meta("source_effect_key", 0)
         if route:
-            if track == 12 and definition in [_hash("XE_FFire_FlmL_01"), _hash("XE_FFire_FlmXL_01"),
+            if firetruck and definition in [_hash("XE_FireTruck_WaterA"), _hash("XE_FireTruck_WaterB"),
+                _hash("XE_FireTruck_WaterC"), _hash("XE_FireTruck_WaterD")]:
+                if node.material_override.render_priority != 7:
+                    push_error("Fire truck water lost its authored alpha priority")
+                    quit(1)
+                    return true
+                targets.push_back(node)
+            if not firetruck and track == 12 and definition in [_hash("XE_FFire_FlmL_01"), _hash("XE_FFire_FlmXL_01"),
                 _hash("XE_FFire_SmkBLK_01"), _hash("XE_FFire_SmkWHT_01"), _hash("XE_FFire_Sparks_01")]:
+                if (definition in [_hash("XE_FFire_SmkBLK_01"), _hash("XE_FFire_SmkWHT_01")]
+                    and node.material_override.render_priority != 6):
+                    push_error("Forest smoke lost its authored alpha priority")
+                    quit(1)
+                    return true
                 targets.push_back(node)
             if track == 21 and definition in [_hash("XE_Sandstorm_XL_01"), _hash("XE_SandDebris_XL_01")]:
                 targets.push_back(node)
@@ -121,7 +135,7 @@ func _check_pixels() -> void:
             var d := shown.get_pixel(x, y) - hidden.get_pixel(x, y)
             if absf(d.r) + absf(d.g) + absf(d.b) > 0.045:
                 count += 1
-    var label := "track" if route else "nitro" if births_started else "exhaust"
+    var label := "firetruck" if firetruck else "track" if route else "nitro" if births_started else "exhaust"
     if not samples.is_empty():
         samples.sort()
         print("PARTICLE_FRAME_MS count=", samples.size(), " p50=", samples[samples.size()/2],

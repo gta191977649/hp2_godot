@@ -56,6 +56,12 @@ func _capture(race: Node) -> void:
             [84 + (track % 6), 28.0, 19.0, 20.0, 71.0],
         ]
     var surface := OS.get_environment("HP2_PHOTO_SURFACE")
+    if surface == "tunnel":
+        await _capture_tunnel(race, scene, camera, output)
+        return
+    if surface == "roadshine":
+        await _capture_roadshine(race, scene, camera, output)
+        return
     if OS.get_environment("HP2_PHOTO_WATER") == "1":
         surface = "water"
     if surface in ["water", "shaft"]:
@@ -67,13 +73,17 @@ func _capture(race: Node) -> void:
             var center: Vector3 = node.global_transform * bounds.get_center()
             var radius := clampf(bounds.size.length() * 0.7, 3.0, 18.0)
             camera.look_at_from_position(center + Vector3(0.8, 0.55, 0.8) * radius, center)
+            if OS.get_environment("HP2_MVP_TEST_SCENERY_CAMERA") == "1" and race.has_method("test_update_scenery_camera"):
+                race.test_update_scenery_camera(true)
+                if (node.layers & camera.cull_mask) == 0:
+                    continue
             await process_frame
             await RenderingServer.frame_post_draw
-            var visible := root.get_texture().get_image()
+            var visible := scene.get_viewport().get_texture().get_image()
             node.hide()
             await process_frame
             await RenderingServer.frame_post_draw
-            var hidden := root.get_texture().get_image()
+            var hidden := scene.get_viewport().get_texture().get_image()
             node.show()
             var difference := _pixel_difference(visible, hidden)
             if difference < 12:
@@ -141,6 +151,113 @@ func _pixel_difference(first: Image, second: Image) -> int:
             if absf(d.r) + absf(d.g) + absf(d.b) > 0.06:
                 count += 1
     return count
+
+func _capture_tunnel(race: Node, scene: Node3D, camera: Camera3D, output: String) -> void:
+    # Just inside the portal next to the reported HP2 position (-1482, 427, -59).
+    var eye := Vector3(-1492, -62, -416)
+    var direction := Vector3(-0.52, -0.09, -0.85)
+    var overlay_nodes: Array[MeshInstance3D] = []
+    for child in scene.get_children():
+        if child is MeshInstance3D and child.mesh:
+            for i in child.mesh.get_surface_count():
+                if _is_tunnel_mask(child.mesh.surface_get_material(i)):
+                    overlay_nodes.append(child)
+                    break
+    if overlay_nodes.is_empty():
+        push_error("No TUNNELROAD_MASK in the race scene")
+        quit(1)
+        return
+    var mask_off := ShaderMaterial.new()
+    mask_off.shader = Shader.new()
+    mask_off.shader.code = "shader_type spatial; render_mode unshaded, depth_draw_never; void fragment(){ discard; }"
+    var depth := ShaderMaterial.new()
+    depth.shader = Shader.new()
+    depth.shader.code = """
+shader_type spatial;
+render_mode unshaded, fog_disabled, depth_draw_never, depth_test_disabled, blend_mix, cull_disabled;
+uniform sampler2D scene_depth : hint_depth_texture, filter_nearest;
+void vertex() { POSITION = vec4(VERTEX.xy, 1.0, 1.0); }
+void fragment() {
+    float z = texture(scene_depth, SCREEN_UV).r;
+    vec4 p = INV_PROJECTION_MATRIX * vec4(SCREEN_UV * 2.0 - 1.0, z, 1.0);
+    float meters = abs(p.z / p.w);
+    ALBEDO = vec3(z == 0.0 ? 1.0 : clamp(log2(1.0 + meters) / 7.0, 0.0, 0.99));
+    ALPHA = 1.0;
+}"""
+    depth.render_priority = 127
+    var quad := MeshInstance3D.new()
+    var geometry := QuadMesh.new()
+    geometry.size = Vector2(2, 2)
+    quad.mesh = geometry
+    quad.material_override = depth
+    quad.extra_cull_margin = 30000.0
+    camera.add_child(quad)
+    quad.hide()
+    var covered := false
+    for take in range(5):
+        var position := Vector3(-1482, -59, -427) if take == 0 else eye + direction * (float(take - 1) * 0.65)
+        camera.look_at_from_position(position, eye + direction * 40.0)
+        if race.has_method("test_update_scenery_camera"):
+            race.test_update_scenery_camera(true)
+        await process_frame
+        await RenderingServer.frame_post_draw
+        var visible := scene.get_viewport().get_texture().get_image()
+        for node in overlay_nodes:
+            for i in node.mesh.get_surface_count():
+                if _is_tunnel_mask(node.mesh.surface_get_material(i)):
+                    node.set_surface_override_material(i, mask_off)
+        await process_frame
+        await RenderingServer.frame_post_draw
+        var hidden := scene.get_viewport().get_texture().get_image()
+        quad.show()
+        await process_frame
+        await RenderingServer.frame_post_draw
+        var depth_sample := scene.get_viewport().get_texture().get_image()
+        quad.hide()
+        for node in overlay_nodes:
+            for i in node.mesh.get_surface_count():
+                if _is_tunnel_mask(node.mesh.surface_get_material(i)):
+                    node.set_surface_override_material(i, null)
+        visible.save_png(output.path_join("tunnel-%d.png" % take))
+        hidden.save_png(output.path_join("tunnel-%d-no-mask.png" % take))
+        depth_sample.save_png(output.path_join("tunnel-%d-depth.png" % take))
+        var changed := _pixel_difference(visible, hidden)
+        covered = covered or changed > 0
+        print("TUNNEL_SAMPLE take=", take, " mask_pixels=", changed)
+    quit(0 if covered else 1)
+
+func _capture_roadshine(race: Node, scene: Node3D, camera: Camera3D, output: String) -> void:
+    # Original wet-road mask near the Track 11 bridge and adjacent road.
+    var target := Vector3(-170.32, -75.70, 70.82)
+    var covered := false
+    for i in range(3):
+        camera.look_at_from_position(target + Vector3(10.0 + 5.0 * i, 3.0, 2.0), target)
+        race.test_update_scenery_camera(true)
+        RenderingServer.global_shader_parameter_set("hp2_roadshine", true)
+        await process_frame
+        await RenderingServer.frame_post_draw
+        var enabled := scene.get_viewport().get_texture().get_image()
+        RenderingServer.global_shader_parameter_set("hp2_roadshine", false)
+        await process_frame
+        await RenderingServer.frame_post_draw
+        var disabled := scene.get_viewport().get_texture().get_image()
+        var changed := _pixel_difference(enabled, disabled)
+        covered = covered or changed > 10
+        enabled.save_png(output.path_join("roadshine-%d-on.png" % i))
+        disabled.save_png(output.path_join("roadshine-%d-off.png" % i))
+        print("ROADSHINE_SAMPLE take=", i, " changed=", changed)
+    RenderingServer.global_shader_parameter_set("hp2_roadshine", true)
+    quit(0 if covered else 1)
+
+func _is_tunnel_mask(material: Material) -> bool:
+    if material.has_meta("hp2_texture_key"):
+        return material.get_meta("hp2_texture_key") == 0xdb00d526
+    if material is StandardMaterial3D:
+        return material.albedo_texture and material.albedo_texture.resource_name == str(0xdb00d526)
+    if material is ShaderMaterial:
+        var texture: Texture2D = material.get_shader_parameter("albedo_texture")
+        return texture and texture.resource_name == str(0xdb00d526)
+    return false
 
 func _score(image: Image) -> float:
     var size := image.get_size()

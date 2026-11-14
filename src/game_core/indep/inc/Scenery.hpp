@@ -27,6 +27,14 @@ typedef struct SceneryModel {
  * Their rendering consumers assign further semantic field names. */
 typedef struct SceneryRecord34104 {uint32_t fields[6];} SceneryRecord34104;
 
+/* Port-side decoded view of the immutable 34104 records. Negative children
+ * identify tree nodes and nonnegative children identify section instances. */
+typedef struct SceneryCullNode {
+    float minimum[3],maximum[3];
+    int16_t children[5];
+    int16_t count;
+} SceneryCullNode;
+
 typedef struct ScenerySection {
     uint32_t number;
     SceneryModel* models;
@@ -35,6 +43,7 @@ typedef struct ScenerySection {
     size_t instanceCount;
     const SceneryRecord34104* records34104;
     size_t record34104Count;
+    const SceneryCullNode* cullNodes;
     const uint8_t* authoredHeader;
     size_t authoredHeaderSize;
 } ScenerySection;

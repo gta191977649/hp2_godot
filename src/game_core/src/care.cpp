@@ -1042,8 +1042,9 @@ CarShadowPoints<192> carShadowSmooth(const CarShadowPoints<64>& hull)
     return result;
 }
 
+template<class Emit>
 std::size_t renderCarSunShadow(CarAppearance& render,Car* car,const CarCinematicScreen& view,
-    hp2::EcstasyFrame& frame,const float transform[16],const hp2::SceneLightContext& lighting,
+    Emit emit,const float transform[16],const hp2::SceneLightContext& lighting,
     bool frontend,std::size_t lod,std::int32_t pixels)
 {
     if(lod>=3 || frontend || !car || !render.models[0].solid || !render.auxiliaryTexture || view.id==3)return 0;
@@ -1103,12 +1104,11 @@ std::size_t renderCarSunShadow(CarAppearance& render,Car* car,const CarCinematic
     };
     constexpr float edgeU=0.1550000011920929f;std::size_t submitted=0;
     for(std::size_t i=0;i+1<(count&~std::size_t{1});i+=2) {
-        frame.RenderWorldStrip({vertex(smooth[i],edgeU),vertex(center,0.0f),
-            vertex(smooth[i+1],edgeU),vertex(smooth[(i+2)%count],edgeU)},*texture,eMathIdentityMatrix,view);++submitted;
+        emit({vertex(smooth[i],edgeU),vertex(center,0.0f),
+            vertex(smooth[i+1],edgeU),vertex(smooth[(i+2)%count],edgeU)},*texture);++submitted;
     }
     if(count&1u) {
-        frame.RenderWorldStrip({vertex(smooth.back(),edgeU),vertex(center,0.0f),vertex(smooth.front(),edgeU)},
-            *texture,eMathIdentityMatrix,view);++submitted;
+        emit({vertex(smooth.back(),edgeU),vertex(center,0.0f),vertex(smooth.front(),edgeU)},*texture);++submitted;
     }
     const auto third=count/3;
     std::vector<hp2::FlailerPolyVertex> strip;strip.reserve((third+3)*2);
@@ -1120,20 +1120,21 @@ std::size_t renderCarSunShadow(CarAppearance& render,Car* car,const CarCinematic
             outer[0]=feather*(point[0]-center[0])+center[0];outer[1]=feather*(point[1]-center[1])+center[1];
             strip.push_back(vertex(point,edgeU));strip.push_back(vertex(outer,1.0f));
         }
-        frame.RenderWorldStrip(strip,*texture,eMathIdentityMatrix,view);++submitted;
+        emit(strip,*texture);++submitted;
     }
     return submitted;
 }
 
-std::size_t renderCarRoadShadow(CarAppearance& render,Car* car,const CarCinematicScreen& view,
-    hp2::EcstasyFrame& frame,const float transform[16],const hp2::SceneLightContext* lighting,bool frontend)
+template<class Emit>
+std::size_t renderCarRoadShadow(CarAppearance& render,Car* car,Emit emit,const float transform[16],
+    const hp2::SceneLightContext* lighting,bool frontend,bool groundVisible)
 {
     // Released independent regular branch122454..122B88. The sunlight
     // shadow is submitted first by the original121D70..122454 branch.
     if(!render.models[0].solid || !render.shadowTexture)return 0;
     auto* nativeFrame=car ? car->Frame():nullptr;
     if(nativeFrame && nativeFrame->movement && nativeFrame->movement->bindings.state &&
-        nativeFrame->movement->bindings.state->activeContactCount==4 && !render.cullers[13].culled)return 0;
+        nativeFrame->movement->bindings.state->activeContactCount==4 && !groundVisible)return 0;
     const auto* texture=hp2::textureInfoForDescriptor(render.shadowTexture);
     hp2::Require(texture && render.definition,"Car shadow lost its real texture/definition owner");
     auto* terrain=nativeFrame && nativeFrame->movement && nativeFrame->movement->bindings.environment ?
@@ -1213,7 +1214,7 @@ std::size_t renderCarRoadShadow(CarAppearance& render,Car* car,const CarCinemati
             std::copy(points[index].begin(),points[index].begin()+3,vertex.position.begin());
             vertex.textureCoordinate={uv[index][0],uv[index][1],1.0f};vertex.color=color;strip.push_back(vertex);
         }
-        frame.RenderWorldStrip(strip,*texture,eMathIdentityMatrix,view);++submitted;
+        emit(strip,*texture);++submitted;
     }
     return submitted;
 }
@@ -1355,9 +1356,11 @@ std::size_t renderCarAppearanceScene(CarAppearance& render,Car* car,
     }
     const auto shadowLod=distanceScale>1.0f ?
         std::min(lod,carRenderNativeDetailLod(render.models.data(),visibilityPixels)):lod;
-    submitted+=renderCarSunShadow(render,car,view,frame,transform,bodyLighting,frontend,shadowLod,visibilityPixels);
-    submitted+=renderCarRoadShadow(render,car,view,frame,transform,
-        &bodyLighting,frontend);
+    const auto emitShadow=[&](const std::vector<hp2::FlailerPolyVertex>& strip,const hp2::TextureInfo& texture) {
+        frame.RenderWorldStrip(strip,texture,eMathIdentityMatrix,view);
+    };
+    submitted+=renderCarSunShadow(render,car,view,emitShadow,transform,bodyLighting,frontend,shadowLod,visibilityPixels);
+    submitted+=renderCarRoadShadow(render,car,emitShadow,transform,&bodyLighting,frontend,part(13));
     submitted+=draw(lod,drawTransform,environmentFlags);
     const auto* damage=carRenderDamage(car);
     const auto intact=[&](std::uint32_t item) {return !damage || carDamageItemLevel(damage->levels,item)<2;};
@@ -1735,6 +1738,49 @@ uint32_t physicsGetPacked2Bit(uint32_t value, uint32_t index)
 }
 
 namespace hp2 {
+
+void CollectCarShadowEffects(Car& car,const float transform[16],const CarCinematicScreen& view,
+    int layout,LightContextBatch& lights,RaceEffectsFrame& output)
+{
+    if(!car.appearance || !view.matricesCalculated)return;
+    auto& render=*car.appearance;
+    if(!render.models[0].solid || (!render.shadowTexture && !render.auxiliaryTexture))return;
+    const auto scalePixels=[layout](std::int32_t pixels) {
+        return layout==3 ? convertFloatToInt32(static_cast<float>(pixels)*0.699999988079071f):pixels;
+    };
+    const auto pixels=scalePixels(ecstasyViewSourcePositionPixelSize(&view,transform+12,3.0f));
+    const auto distanceScale=nativeViewDistanceScale(view.id);
+    const auto visibilityPixels=distanceScale==1.0f ? pixels :
+        scalePixels(ecstasyViewNativePositionPixelSize(&view,transform+12,3.0f,1));
+    if(visibilityPixels<4)return;
+    float toClip[16];
+    eMulMatrix(toClip,transform,view.matrices.worldToClip);
+    if(!ecstasyClassifyBounds(render.minimum,render.maximum,toClip))return;
+    float inverse[16],localEye[4];
+    vectorMatrixInverseAffine(inverse,transform);
+    eMulVector3(localEye,inverse,view.view->current.eye);
+    auto groundCuller=render.cullers;
+    carPartCullerCull(groundCuller.data(),localEye);
+    auto lod=carRenderNativeDetailLod(render.models.data(),pixels);
+    const auto contacts=car.Movement()->bindings.state->activeContactCount;
+    if(lod>=3 && contacts==0 && groundCuller[12].culled)lod=2;
+    if(ForceCarLOD>=0)lod=static_cast<std::size_t>(ForceCarLOD);
+    if(distanceScale>1.0f)
+        lod=std::min(lod,carRenderNativeDetailLod(render.models.data(),visibilityPixels));
+    const bool sunVisible=view.id!=3 && lod<3 && render.auxiliaryTexture;
+    const bool roadVisible=render.shadowTexture && (contacts!=4 || groundCuller[13].culled);
+    if(!sunVisible && !roadVisible)return;
+    const auto lighting=lights.SetupRace(transform,view.matrices.worldToView,view.view->current.eye);
+    const auto emit=[&](const std::vector<FlailerPolyVertex>& strip,const TextureInfo& texture) {
+        if(!(strip.front().color>>24))return;
+        output.shadows.push_back({texture.descriptor,output.shadowVertices.size(),strip.size(),view.id});
+        output.shadowVertices.insert(output.shadowVertices.end(),strip.begin(),strip.end());
+    };
+    if(sunVisible && lighting.sunlightIntensity>0.4f)
+        renderCarSunShadow(render,&car,view,emit,transform,lighting,false,lod,visibilityPixels);
+    if(roadVisible)
+        renderCarRoadShadow(render,&car,emit,transform,&lighting,false,true);
+}
 
 std::array<const EditorMarkerModel*, 7> RaceCarModels(Car& car, int worldFrames)
 {

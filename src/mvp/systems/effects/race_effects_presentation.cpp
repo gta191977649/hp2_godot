@@ -38,9 +38,6 @@ namespace hp2 {
 namespace {
 using namespace godot;
 
-// StuffSun / StuffSunGlare and ePoly::Render (Debug 125430, 125A70, 10FE48).
-// Composite the complete ordered stack over Godot's opaque scene in GS byte
-// space. Forward+ uses linear color, so convert only at the pass boundary.
 Ref<ShaderMaterial> material(const Ref<Shader>& code) {
     Ref<ShaderMaterial> result;
     result.instantiate();
@@ -103,13 +100,26 @@ struct RaceEffectsPresentation::Storage {
         load_shader("res://shader/particle_billboard_mix.gdshader"),
         load_shader("res://shader/particle_billboard_add.gdshader"),
         load_shader("res://shader/particle_billboard_sub.gdshader")};
+    Ref<Shader> cutoutParticleShader=load_shader("res://shader/particle_billboard_cutout.gdshader");
     std::array<Ref<Shader>,3> lightShaders{
         load_shader("res://shader/light_flare_mix.gdshader"),
         load_shader("res://shader/light_flare_add.gdshader"),
         load_shader("res://shader/light_flare_sub.gdshader")};
     Ref<Shader> sunShader=load_shader("res://shader/sun_occlusion.gdshader");
-    std::unordered_map<const EditorMarkerTexture*,Ref<Texture2D>> textures, sunTextures;
+    std::unordered_map<const EditorMarkerTexture*,Ref<Texture2D>> textures, rawTextures;
     std::unordered_map<const EditorMarkerTexture*,Ref<StandardMaterial3D>> skidMaterials;
+    struct ShadowBatch {
+        MeshInstance3D* node{};
+        PackedVector3Array vertices;
+        PackedVector2Array uv;
+        PackedColorArray colors;
+        PackedInt32Array indices;
+        PackedVector3Array submittedVertices;
+        PackedVector2Array submittedUv;
+        PackedColorArray submittedColors;
+        PackedInt32Array submittedIndices;
+    };
+    std::array<std::unordered_map<const EditorMarkerTexture*,ShadowBatch>,2> shadows;
     std::unordered_map<const EditorMarkerTexture*,Ref<ShaderMaterial>> lightMaterials;
     std::unordered_map<const WorldParticleDefinition*,Particle> particles;
     static constexpr int slots=800;
@@ -146,7 +156,7 @@ struct RaceEffectsPresentation::Storage {
     PackedVector4Array sunRects, sunColors, sunStates;
 
     Ref<Texture2D> texture(const EditorMarkerTexture* descriptor, bool rawGs = false) {
-        auto [it, inserted]=(rawGs ? sunTextures : textures).try_emplace(descriptor);
+        auto [it, inserted]=(rawGs ? rawTextures : textures).try_emplace(descriptor);
         if (!inserted) return it->second;
         const auto* source=textureInfoForDescriptor(descriptor);
         if (!source || !source->pixels.Data()) throw std::runtime_error("Original effect texture is unloaded");
@@ -176,7 +186,71 @@ struct RaceEffectsPresentation::Storage {
         mat->set_texture(BaseMaterial3D::TEXTURE_ALBEDO,texture(descriptor));
         mat->set_flag(BaseMaterial3D::FLAG_ALBEDO_FROM_VERTEX_COLOR,true);
         mat->set_blend_mode(texture_blend(*descriptor));
+        mat->set_render_priority(textureInfoForDescriptor(descriptor)->requiresDepthSort ?
+            std::min<int>(descriptor->authoredRecord[0x29],7):-1);
         return mat;
+    }
+
+    void update_shadows(const RaceEffectsFrame& frame, bool rearVisible) {
+        for (auto& view : shadows) for (auto& [texture,batch] : view) {
+            batch.vertices.clear();
+            batch.uv.clear();
+            batch.colors.clear();
+            batch.indices.clear();
+        }
+        for (const auto& strip : frame.shadows) {
+            const bool rear=strip.view==3;
+            if (rear && !rearVisible) continue;
+            auto& batch=shadows[rear][strip.texture];
+            if (!batch.node) {
+                batch.node=&mesh();
+                batch.node->set_name(rear ? "RearCarShadow" : "CarShadow");
+                batch.node->set_layer_mask(rear ? 4:2);
+                batch.node->set_material_override(shadow_material(*strip.texture));
+            }
+            const auto base=batch.vertices.size();
+            for (std::size_t i=0;i<strip.count;++i) {
+                const auto& vertex=frame.shadowVertices[strip.first+i];
+                batch.vertices.push_back(race_vector(vertex.position.data()));
+                batch.uv.push_back({vertex.textureCoordinate[0],vertex.textureCoordinate[1]});
+                batch.colors.push_back({1,1,1,float(vertex.color>>24)/255.0f});
+                if (i<2) continue;
+                batch.indices.push_back(base+i-2);
+                batch.indices.push_back(base+i-1);
+                batch.indices.push_back(base+i);
+            }
+        }
+        for (auto& view : shadows) for (auto& [texture,batch] : view) {
+            if (batch.indices.is_empty()) {
+                batch.node->hide();
+                continue;
+            }
+            batch.node->show();
+            if (batch.vertices==batch.submittedVertices && batch.uv==batch.submittedUv &&
+                batch.colors==batch.submittedColors && batch.indices==batch.submittedIndices) continue;
+            Array arrays;
+            arrays.resize(Mesh::ARRAY_MAX);
+            arrays[Mesh::ARRAY_VERTEX]=batch.vertices;
+            arrays[Mesh::ARRAY_TEX_UV]=batch.uv;
+            arrays[Mesh::ARRAY_COLOR]=batch.colors;
+            arrays[Mesh::ARRAY_INDEX]=batch.indices;
+            Ref<ArrayMesh> mesh;
+            mesh.instantiate();
+            mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES,arrays);
+            batch.node->set_mesh(mesh);
+            batch.submittedVertices=batch.vertices;
+            batch.submittedUv=batch.uv;
+            batch.submittedColors=batch.colors;
+            batch.submittedIndices=batch.indices;
+        }
+    }
+
+    Ref<ShaderMaterial> shadow_material(const EditorMarkerTexture& descriptor) {
+        // SHADOWRAMP and the car shadow bank use source-over and no depth write.
+        auto result=material(load_shader("res://shader/car_shadow.gdshader"));
+        result->set_render_priority(std::min<int>(descriptor.authoredRecord[0x29],7));
+        result->set_shader_parameter("shadow_texture",texture(&descriptor,true));
+        return result;
     }
 
     Ref<ShaderMaterial> light_material(const EditorMarkerTexture* descriptor) {
@@ -184,6 +258,8 @@ struct RaceEffectsPresentation::Storage {
         if (inserted) {
             it->second=material(lightShaders.at(texture_blend(*descriptor)));
             it->second->set_shader_parameter("flare",texture(descriptor));
+            it->second->set_render_priority(textureInfoForDescriptor(descriptor)->requiresDepthSort ?
+                std::min<int>(descriptor->authoredRecord[0x29],7):-1);
         }
         return it->second;
     }
@@ -220,19 +296,24 @@ struct RaceEffectsPresentation::Storage {
             upload_texture(stepTexture,stepImage,stepBytes,steps.data(),slots,historySize*2);
             upload_texture(epochTexture,epochImage,epochBytes,epochs.data(),slots,1);
         }
-        auto draw=material(drawShaders.at(texture_blend(descriptor)));
+        const auto* source=textureInfoForDescriptor(&descriptor);
+        const auto* wire=descriptor.authoredRecord;
+        // GS 0x0a selects the source color without blending. Authored
+        // glass and debris write depth only where the alpha test passes.
+        const bool cutout=wire[0x76]==0x0a && wire[0x50];
+        auto draw=material(cutout ? cutoutParticleShader : drawShaders.at(texture_blend(descriptor)));
         particle.draw=draw;
-        draw->set_shader_parameter("atlas",texture(&descriptor));
+        draw->set_render_priority(source->requiresDepthSort ? std::min<int>(wire[0x29],7):-1);
+        draw->set_shader_parameter("atlas",texture(&descriptor,true));
         draw->set_shader_parameter("color_curve",curve(definition.colorCurve));
         draw->set_shader_parameter("size_curve",curve(definition.sizeRotationCurve));
         draw->set_shader_parameter("atlas_size",Vector2(1u<<definition.atlasWidthPower,1u<<definition.atlasHeightPower));
         draw->set_shader_parameter("lifetime",definition.lifetime);
         draw->set_shader_parameter("pixel_cap",definition.maximumPixelSize==0 ? 512.0f:definition.maximumPixelSize);
         draw->set_shader_parameter("interest_distance",definition.interestDistance);
-        const auto* source=textureInfoForDescriptor(&descriptor);
-        draw->set_shader_parameter("alpha_cutoff",descriptor.authoredRecord[0x4f] ||
-            source->drawFlag4Enabled ? -1.0f:48.0f/128.0f);
-        draw->set_shader_parameter("texture_function",descriptor.authoredRecord[0x4e]);
+        draw->set_shader_parameter("alpha_test",!wire[0x4f] && !source->drawFlag4Enabled);
+        draw->set_shader_parameter("nearest_minification",wire[0x6e]==0 && wire[0x6f]==1 && wire[0x70]==3);
+        draw->set_shader_parameter("texture_function",wire[0x4e]);
         draw->set_shader_parameter("group_epochs",epochTexture);
         auto* node=memnew(GPUParticles3D);
         particle.node=node;
@@ -286,6 +367,7 @@ struct RaceEffectsPresentation::Storage {
         draw->set_shading_mode(BaseMaterial3D::SHADING_MODE_UNSHADED);
         draw->set_transparency(BaseMaterial3D::TRANSPARENCY_ALPHA);
         draw->set_depth_draw_mode(BaseMaterial3D::DEPTH_DRAW_DISABLED);
+        draw->set_render_priority(std::min<int>(descriptor.authoredRecord[0x29],7));
         draw->set_proximity_fade_enabled(true);
         draw->set_proximity_fade_distance(0.3f);
         draw->set_billboard_mode(BaseMaterial3D::BILLBOARD_PARTICLES);
@@ -306,6 +388,7 @@ struct RaceEffectsPresentation::Storage {
         exhaust->set_emitting(false);
         exhaust->set_layer_mask(6);
         exhaust->set_use_local_coordinates(false);
+        exhaust->set_draw_order(GPUParticles3D::DRAW_ORDER_VIEW_DEPTH);
         exhaust->set_cast_shadows_setting(GeometryInstance3D::SHADOW_CASTING_SETTING_OFF);
         exhaust->set_visibility_aabb(AABB(Vector3(-16000,-16000,-16000),Vector3(32000,32000,32000)));
         root->add_child(exhaust);
@@ -633,6 +716,7 @@ void RaceEffectsPresentation::update(const RaceEffectsFrame& frame,Camera3D& cam
     }
     storage_->update_particles(frame,generation);
     storage_->update_exhaust(frame.exhaust, camera, worldFrames);
+    storage_->update_shadows(frame,rear!=nullptr);
     storage_->update_skids(frame.skids,storage_->marks,2);
     storage_->update_lights(frame.lights,camera,storage_->lights,1,2);
     storage_->update_skids(frame.rearSkids,storage_->rearMarks,4);

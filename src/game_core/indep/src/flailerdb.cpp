@@ -907,8 +907,10 @@ float unscaledFlailerTextWidth(const FlailerResources& resources,const FlailerTe
         value=translated ? translated : "";
     }
     float width=0.0f;
-    for (const auto* cursor=reinterpret_cast<const unsigned char*>(value);*cursor;++cursor)
-        if (const auto* glyph=font->characters[*cursor]) width+=glyph->advance;
+    for (const auto* cursor=reinterpret_cast<const unsigned char*>(value);*cursor;++cursor) {
+        const auto character=text.portAtlasUnderscore && *cursor=='_' ? '-' : *cursor;
+        if (const auto* glyph=font->characters[character]) width+=glyph->advance;
+    }
     return width;
 }
 }
@@ -1763,8 +1765,11 @@ void FlailerTextChunk::Render(FlailerResources& resources,const LanguageManager*
         const auto character=static_cast<unsigned char>(*cursor);
         if (character==' ')afterSpace=true;
         if (IsHelpCharacter(character)) {x+=RenderHelpCharacter(resources,x,y,character,alphaScale);continue;}
-        const auto* glyph=font->characters[character];if (!glyph)continue;
-        float kerning=cursor!=first ? font->GetKerning(static_cast<std::int8_t>(cursor[-1]),glyph)*scaleX:0.0f;
+        const bool underscore=portAtlasUnderscore && character=='_';
+        const auto* glyph=font->characters[underscore?'-':character];if (!glyph)continue;
+        const auto previous=cursor!=first?static_cast<std::int8_t>(cursor[-1]):0;
+        float kerning=cursor!=first && !underscore && !(portAtlasUnderscore && previous=='_')
+            ? font->GetKerning(previous,glyph)*scaleX:0.0f;
         if (std::fabs(kerning)>80.0f)kerning=0.0f;
         const float authoredU=glyph->atlasPosition[0]/font->textureWidth;
         const float authoredV=glyph->atlasPosition[1]/font->textureHeight;
@@ -1778,7 +1783,9 @@ void FlailerTextChunk::Render(FlailerResources& resources,const LanguageManager*
                 authoredU+glyph->size[0]/font->textureWidth-halfU,
                 authoredV+glyph->size[1]/font->textureHeight-halfV};
         const float vx[4]={x+kerning,x+scaleX*glyph->size[0]+kerning,x+scaleX*glyph->size[0]+kerning,x+kerning};
-        const float vy[4]={y,y,y+scaleY*glyph->size[1],y+scaleY*glyph->size[1]};
+        // The authored hyphen cell includes transparent padding above and below its ink.
+        const float glyphY=y+(underscore?scaleY*font->lineHeight*0.32f:0.0f);
+        const float vy[4]={glyphY,glyphY,glyphY+scaleY*glyph->size[1],glyphY+scaleY*glyph->size[1]};
         const float u[4]={left,right,right,left},v[4]={top,top,bottom,bottom};
         for (std::size_t index=0;index<4;++index) {
             polygon.vertices[index].position={vx[index],vy[index],z,0.0f};

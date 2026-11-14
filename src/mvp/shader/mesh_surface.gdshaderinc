@@ -34,6 +34,10 @@ vec4 sample_rigid(int channel, int frame) {
 uniform int animation_start;
 instance uniform int hp2_animation_start = -1;
 
+#ifdef GS_TRACK
+#include "track_material.gdshaderinc"
+#endif
+
 void vertex() {
     int start = hp2_animation_start >= 0 ? hp2_animation_start : animation_start;
     if (use_morph) {
@@ -80,9 +84,25 @@ void vertex() {
             vec4(-direction.y, 0.0, direction.x, 0.0), vec4(origin, 1.0));
         MODELVIEW_MATRIX = VIEW_MATRIX * pose;
     }
+#ifdef GS_TRACK
+    // GS Gouraud RGBA is affine in screen space; UV still uses ST/Q.
+    gs_clip_weight = (PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).w;
+    gs_color_weighted = gs_vertex_color(VERTEX, COLOR, CUSTOM1.xyz, MODELVIEW_MATRIX,
+        MODEL_MATRIX, INV_VIEW_MATRIX) * gs_clip_weight;
+#endif
 }
 
 void fragment() {
+#ifdef GS_TRACK
+    vec4 result = gs_fragment(UV, OUTPUT_IS_SRGB);
+    ALBEDO = result.rgb;
+#if defined(GS_MIX) || defined(GS_ADD) || defined(GS_SUB)
+    ALPHA = result.a;
+#endif
+#ifdef GS_BIASED
+    DEPTH = gs_depth(-VERTEX.z, PROJECTION_MATRIX, CLIP_SPACE_FAR);
+#endif
+#else
     vec2 margin = 0.5 / vec2(textureSize(albedo_texture, 0));
     vec2 uv = mix(clamp(UV, margin, 1.0-margin), UV, notEqual(repeat_axes, ivec2(0)));
     vec4 color;
@@ -108,5 +128,6 @@ void fragment() {
 #endif
 #ifdef TRANSPARENT
     ALPHA = color.a;
+#endif
 #endif
 }

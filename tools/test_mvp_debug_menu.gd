@@ -161,6 +161,9 @@ func run() -> void:
         await wait_for(func(state: Dictionary) -> bool: return state.get("track_viewer", false) and state.get("step", 0) > 0)
         await click_viewer_main_menu()
         await open_debug()
+        if OS.get_cmdline_user_args().has("--debug") and not race.has_node("FrontendCanvas/NativeDebugCameraCaption"):
+            fail("returning from Track Viewer lost the native debug launch flag")
+            return
         await select(FIRST + 2)
         await key(KEY_ENTER)
         var manual_state := await demo()

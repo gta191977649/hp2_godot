@@ -39,6 +39,7 @@ public:
     std::uint64_t generation() const;
     std::uint32_t step() const;
     std::size_t placement_count() const;
+    std::size_t scenery_section_count() const;
     int entity_count() const;
     int catalogue_size() const;
 

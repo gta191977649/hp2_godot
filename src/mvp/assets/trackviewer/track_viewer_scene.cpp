@@ -51,6 +51,7 @@ struct TrackViewerScene::Storage {
     CarCinematicServices cameras{};
     CarCinematicView primary{};
     std::unique_ptr<ApplicationResourceRuntime> resources;
+    ResourceFile* trackA{};
     ResourceFile* trackFile{};
     std::unique_ptr<SkyResources> sky;
     std::vector<RaceParticleEvent> events;
@@ -85,7 +86,7 @@ void TrackViewerScene::load(int track) {
     auto* common = loader.LoadResourceFile("GLOBAL/INGAMEB.LZC", 2, 9, binding);
     common->ChangeFilenameForHotChunking("GLOBAL/INGAMEB.BUN");
     const auto id = std::to_string(track);
-    loader.LoadResourceFile(("TRACKS/TRACKA" + id + ".BUN").c_str(), 3, 0, binding);
+    s.trackA = loader.LoadResourceFile(("TRACKS/TRACKA" + id + ".BUN").c_str(), 3, 0, binding);
     binding.kind = ResourceFileKind::Track;
     binding.particles = &s.resources->FX().Particles();
     s.trackFile = loader.LoadResourceFile(("TRACKS/TRACKB" + id + ".LZC").c_str(), 3, 9, binding);
@@ -177,6 +178,9 @@ RacePostState TrackViewerScene::post() {
 }
 
 const Scenery& TrackViewerScene::scenery() const { return storage_->trackFile->Resources().scenery->Native(); }
+std::array<const ResourceFile*, 2> TrackViewerScene::track_bundles() const {
+    return {storage_->trackA, storage_->trackFile};
+}
 const SkyResources& TrackViewerScene::sky() const { return *storage_->sky; }
 const TrackRoute& TrackViewerScene::route() const { return storage_->trackFile->Resources().route->Native(); }
 TerrainTopology& TrackViewerScene::terrain() const { return storage_->trackFile->Resources().terrain->Topology(); }

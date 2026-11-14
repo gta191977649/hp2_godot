@@ -91,6 +91,7 @@ struct FlailerTextChunk : FlailerObjectChunk {
     const char* text{};
     std::uint32_t languageId{};
     std::vector<char> ownedText;
+    bool portAtlasUnderscore{}; // Draw a missing underscore with the atlas hyphen at the baseline.
 
     void SetFormatOptions(std::int32_t options);
     void ClearFormatOptions(std::int32_t options);

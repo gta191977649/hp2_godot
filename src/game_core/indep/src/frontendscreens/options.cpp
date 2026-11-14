@@ -4,6 +4,7 @@
 #include "NativeAudioProfileValidation.hpp"
 #include "CarLoader.hpp"
 #include "Timer.hpp"
+#include "Flags.hpp"
 #include <tuple>
 #include "bware/inc/bWare.hpp"
 #include "bware/inc/bMath.hpp"
@@ -1187,6 +1188,8 @@ constexpr std::int32_t CreditsScrollHelp[]={800082,800083,800084,0};
 constexpr const char* CreditsNames[]={"Credits","Credits FE Movie","Credits Reward movie",
     "BBG Creation movie","BBG Credits movie","EACredits","BBGCredits"};
 FrontendStartupServices* creditsServices{};
+constexpr char PortCreditsScreenName[]="Port Credits";
+constexpr std::uint32_t PortCreditsItemKey=0x52e039f8u; // MENUITEM_6, port-side.
 
 MainMenuScreenServices& CreditsMenus() {return *creditsServices->menus;}
 void CreditsMusicStart(MainMenuScreenServices& menus)
@@ -1205,6 +1208,69 @@ void CreditsGrayItem(MainMenuScreenServices& menus,std::uint32_t screen,std::uin
     if (available)item->SetMenuItemState(1);else item->ClearMenuItemState(1);
     menus.ui->resources->SetObjectVisibility(screen,key,available?1:0);
 }
+
+// Port-side row. It shares the panel motion and uses the original menu ring.
+class PortCreditsRow final {
+public:
+    PortCreditsRow(MainMenuScreenServices& menus,std::uint32_t screen,bool reward)
+        : resources_(*menus.ui->resources),screen_(*menus.screens->active->screen)
+    {
+        auto& art=*resources_.FindScreen(screen);
+        auto& menu=*screen_.menu;
+        auto* making=menu.FindItem(0x52e039f6u);
+        Require(making && making->object && !resources_.FindObject(screen,PortCreditsItemKey),
+            "Port Credits requires the authored Making of HP2 row");
+        text_=static_cast<const FlailerTextChunk&>(*making->object);
+        text_.strip=nullptr;
+        text_.key=PortCreditsItemKey;
+        text_.name.fill(0);
+        std::memcpy(text_.name.data(),"MENUITEM_6",10);
+        text_.textCapacity=static_cast<std::uint32_t>(std::strlen(menus.credits->label)+1);
+        text_.ownedText.assign(text_.textCapacity+1,0);
+        text_.text=text_.ownedText.data();
+        text_.SetString(menus.credits->label);
+        item_=std::make_unique<FlailerMenuItem>(&menu,text_.key,6);
+        item_->object=&text_;
+        if (reward) {
+            constexpr std::array<std::uint32_t,5> keys{0x52e039f3u,0x52e039f4u,0x52e039f5u,0x52e039f6u,0x52e039f7u};
+            constexpr std::array<float,5> positions{173,201,229,257,313};
+            for (std::size_t i=0;i<keys.size();++i) {
+                auto* object=resources_.FindObject(screen,keys[i],1);
+                Require(object,"Port Credits requires all five authored rows");
+                positions_[i]={object,object->topLeftY};
+            }
+            for (std::size_t i=0;i<keys.size();++i)positions_[i].first->SetTopLeftY(positions[i]);
+        }
+        text_.SetTopLeftY(reward?285.0f:295.0f);
+        text_.previous=art.objects.previous;text_.next=&art.objects;
+        text_.previous->next=&text_;art.objects.previous=&text_;
+        ++art.textCount;
+        art_=&art;
+        item_->ResetSavedParameters();
+        item_->previous=making;item_->next=making->next;
+        making->next->previous=item_.get();making->next=item_.get();
+    }
+    ~PortCreditsRow()
+    {
+        if (auto* menu=screen_.menu) {
+            if(menu->current==item_.get())menu->current=item_->previous;
+            item_->previous->next=item_->next;item_->next->previous=item_->previous;
+        }
+        item_.reset();
+        text_.DeleteFlailerStrip();
+        text_.previous->next=text_.next;text_.next->previous=text_.previous;
+        --art_->textCount;
+        for (const auto& [object,y]:positions_)if(object)object->SetTopLeftY(y);
+    }
+private:
+    FlailerResources& resources_;
+    FlailerScreen& screen_;
+    FlailerScreenResource* art_{};
+    FlailerTextChunk text_{};
+    std::unique_ptr<FlailerMenuItem> item_;
+    std::array<std::pair<FlailerObjectChunk*,float>,5> positions_{};
+};
+
 class CreditsScreen final {
 public:
     CreditsScreen(MainMenuScreenServices& menus,std::uint32_t screen)
@@ -1212,7 +1278,9 @@ public:
           highlight_(*menus.ui,screen,0xab671c9au,menus.ui->animationSettings.highlightColor)
     {
         menus_.screens->StartMovie("MOVIES\\options_movie_new.AVI");
-        CreditsGrayItem(menus_,screen_,0x52e039f7u,ShouldShowRewardMovieOption());
+        const bool reward=ShouldShowRewardMovieOption();
+        CreditsGrayItem(menus_,screen_,0x52e039f7u,reward);
+        if(menus_.credits)portRow_=std::make_unique<PortCreditsRow>(menus_,screen_,reward);
     }
     bool ShouldShowRewardMovieOption() const
     {
@@ -1231,7 +1299,9 @@ public:
     {
         highlight_.HandleEvents(message,data);
         if (message==ScreenMessage::Tick)slide_.Tick();
-        else if (message==ScreenMessage::Select && data.key>=0x52e039f3u && data.key<=0x52e039f7u) {
+        else if (message==ScreenMessage::Select && data.key==PortCreditsItemKey && portRow_) {
+            menus_.screens->ChangeToScreen(PortCreditsScreenName,true);
+        } else if (message==ScreenMessage::Select && data.key>=0x52e039f3u && data.key<=0x52e039f7u) {
             static constexpr const char* destinations[]={"EACredits","BBG Credits movie",
                 "Credits FE Movie","BBG Creation movie","Credits Reward movie"};
             menus_.screens->ChangeToScreen(destinations[data.key-0x52e039f3u],true);
@@ -1242,6 +1312,7 @@ private:
     std::uint32_t screen_;
     FlailerSlideOnScreen slide_;
     FlailerHighlightAnimation highlight_;
+    std::unique_ptr<PortCreditsRow> portRow_;
 };
 
 class CreditsMoviePlayer final {
@@ -1391,20 +1462,52 @@ public:
     CreditsLine(FlailerUiState& ui,FlailerTextChunk& text):ui_(ui),text_(text) {}
     float SetLanguageID(std::int32_t id,float y)
     {
-        std::array<char,256> display{};std::uint32_t color=0,font=0;
         const auto* localized=ui_.language->GetString(id);
         Require(localized,"Credits line has no authored translation");
-        ParseCreditsColors(color,font,display.data(),display.size(),localized);
+        return SetText(localized,y,id);
+    }
+    float SetText(const char* source,float y,std::int32_t id=0,float scale=1.0f)
+    {
+        std::array<char,256> display{};std::uint32_t color=0,font=0;
+        ParseCreditsColors(color,font,display.data(),display.size(),source);
         text_.SetColor(color?color:0x80808080u);
         if (font==hashString("FONT_IMPACTBIG") || font==hashString("FONT_IMPACTNORMAL")) {
-            text_.SetScaleX(0.6000000238418579f);text_.SetScaleY(0.6000000238418579f);text_.fontKey=font;
+            scale*=0.6000000238418579f;text_.fontKey=font;
         } else {
-            text_.SetScaleX(1.0f);text_.SetScaleY(1.0f);text_.fontKey=hashString("FONT_STATS");
+            text_.fontKey=hashString("FONT_STATS");
         }
+        text_.SetScaleX(scale);text_.SetScaleY(scale);
         text_.updateKind=1;
-        if (color || font)text_.SetString(display.data());else text_.SetLanguageID(static_cast<std::uint32_t>(id));
+        if (color || font || !id) {
+            if (!id) {
+                text_.SetLanguageID(0);
+                const auto* atlas=ui_.resources->FindFont(text_.fontKey);
+                text_.portAtlasUnderscore=atlas && !atlas->characters['_'] && atlas->characters['-'];
+                bool missing=false;
+                if (atlas)for(const auto* c=reinterpret_cast<const unsigned char*>(display.data());*c;++c)
+                    if(!atlas->characters[*c] && !(*c=='_' && text_.portAtlasUnderscore)) {missing=true;break;}
+                text_.visible=missing?0:1;
+                const auto length=std::strlen(display.data());
+                if(length>=text_.textCapacity) {
+                    text_.textCapacity=static_cast<std::uint32_t>(length+1);
+                    text_.ownedText.assign(length+2,0);
+                    text_.text=text_.ownedText.data();
+                }
+            }
+            text_.SetString(display.data());
+        } else text_.SetLanguageID(static_cast<std::uint32_t>(id));
         text_.SetTopLeftY(y);text_.SetClipToPoly(0xa94bd818u);
         return ui_.resources->ScaledTextHeight(text_);
+    }
+    void PublishFallback(FlailerBitmapChunk& clip,std::vector<FrontendCreditsText>& result) const
+    {
+        if(text_.visible || !*text_.text)return;
+        auto& resources=*ui_.resources;
+        const auto width=resources.ScaledBitmapWidth(clip),height=resources.ScaledBitmapHeight(clip);
+        const auto lineHeight=resources.ScaledTextHeight(text_);
+        if(text_.topLeftY+lineHeight<=clip.topLeftY || text_.topLeftY>=clip.topLeftY+height)return;
+        result.push_back({text_.text,text_.color,text_.topLeftX,text_.topLeftY,lineHeight,
+            clip.topLeftX+4,clip.topLeftY,width-4,height});
     }
     void Animate(float elapsed)
     {
@@ -1467,9 +1570,48 @@ private:
     FlailerAlphaAnimation secondAlpha_,firstAlpha_;
 };
 class CreditsScroller final {
+    // Port Credits borrows the same art as EA and BBG. Restore its values
+    // before the original scrollers can borrow it again.
+    struct BorrowedArt {
+        std::vector<std::pair<FlailerTextChunk*,FlailerTextChunk>> text;
+        std::vector<std::pair<FlailerBitmapChunk*,FlailerBitmapChunk>> images;
+        BorrowedArt(MainMenuScreenServices& menus,std::uint32_t screen,bool save)
+        {
+            if(!save)return;
+            auto& art=*menus.ui->resources;
+            auto* object=art.FindObjectByGroup(screen,0xd2638b19u,1);
+            while(object) {
+                auto* line=static_cast<FlailerTextChunk*>(object);
+                text.emplace_back(line,*line);
+                object=art.FindObjectByGroup(screen,0xd2638b19u,0,object);
+            }
+            for(const auto key:{0xf947e681u,0x4ef4d164u}) {
+                if(auto* image=static_cast<FlailerBitmapChunk*>(art.FindObject(screen,key,2)))
+                    images.emplace_back(image,*image);
+            }
+        }
+        ~BorrowedArt()
+        {
+            for(auto& [target,saved]:text) {
+                target->DeleteFlailerStrip();
+                saved.next=target->next;saved.previous=target->previous;
+                saved.strip=nullptr;saved.updateKind=10;
+                *target=std::move(saved);
+                target->text=target->ownedText.data();
+            }
+            for(auto& [target,saved]:images) {
+                target->DeleteFlailerStrip();
+                saved.next=target->next;saved.previous=target->previous;
+                saved.strip=nullptr;saved.updateKind=10;
+                *target=std::move(saved);
+            }
+        }
+    };
 public:
     CreditsScroller(MainMenuScreenServices& menus,std::uint32_t screen)
-        : menus_(menus),screen_(screen),slideshow_(*menus.ui,screen,0xf947e681u,0x4ef4d164u)
+        : menus_(menus),screen_(screen),
+          port_(std::strcmp(menus.screens->active->configuration->name,PortCreditsScreenName)==0?menus.credits:nullptr),
+          borrowed_(menus,screen,port_!=nullptr),slideshow_(*menus.ui,screen,0xf947e681u,0x4ef4d164u)
     {
         Require(menus_.screens->active && menus_.screens->active->configuration,
             "Credits scroll has no actual active configuration");
@@ -1489,8 +1631,22 @@ public:
             object=ui.resources->FindObjectByGroup(screen_,0xd2638b19u,0,object);
         }
         Require(!lines_.empty(),"Credits screen has no authored line pool");
+        if(port_)Require(port_->lines && port_->count,"Port Credits requires at least one line");
         float y=240.0f;
-        for (auto& line:lines_)y+=line.SetLanguageID(next_++,y);
+        for (auto& line:lines_)y+=NextLine(line,y);
+    }
+    float NextLine(CreditsLine& line,float y)
+    {
+        if(!port_) {
+            const auto id=next_++;
+            if (next_>last_)next_=first_;
+            return line.SetLanguageID(id,y);
+        }
+        constexpr std::size_t gap=16;
+        const auto index=portNext_++;
+        if(portNext_==port_->count+gap)portNext_=0;
+        const auto text=index<port_->count?port_->lines[index]:FrontendCreditsLine{""};
+        return line.SetText(text.text,y,0,text.scale);
     }
     float GetMaxY() const
     {
@@ -1500,7 +1656,7 @@ public:
     {
         for (auto& line:lines_) {
             if (line.PleaseResetMe()) {
-                const auto id=next_++;line.SetLanguageID(id,GetMaxY());if (next_>last_)next_=first_;
+                NextLine(line,GetMaxY());
             } else line.Animate(elapsed);
         }
     }
@@ -1512,12 +1668,21 @@ public:
         else if (message==ScreenMessage::ItemEvent) {data.sound=5;paused_=!paused_;}
         else if (message==ScreenMessage::Select)data.sound=0;
     }
+    void PublishFallback(std::vector<FrontendCreditsText>& text) const
+    {
+        if(!port_)return;
+        auto* clip=static_cast<FlailerBitmapChunk*>(menus_.ui->resources->FindObject(screen_,0xa94bd818u,2));
+        if(clip)for(const auto& line:lines_)line.PublishFallback(*clip,text);
+    }
 private:
     MainMenuScreenServices& menus_;
     std::uint32_t screen_;
     std::vector<CreditsLine> lines_;
     std::int32_t first_{},last_{},next_{};
     bool paused_{};
+    const FrontendCreditsContent* port_{};
+    std::size_t portNext_{};
+    BorrowedArt borrowed_;
     tCreditsSlideshow slideshow_;
 };
 std::unique_ptr<CreditsScreen> creditsOwner;
@@ -1605,5 +1770,16 @@ std::array<FlailerScreenConfig,7>& CreditsScreenConfigurations()
         {CreditsNames[6],CreditsScrollerCallback,{{static_cast<std::int32_t>(0x39c4c62cu),0,0,0}},{{-1,-1,-1,-1}},1,CreditsScrollHelp}
     }};
     return configurations;
+}
+FlailerScreenConfig& PortCreditsScreenConfiguration()
+{
+    static FlailerScreenConfig configuration{
+        PortCreditsScreenName,CreditsScrollerCallback,{{static_cast<std::int32_t>(0x39c4c62cu),0,0,0}},
+        {{-1,-1,-1,-1}},1,CreditsScrollHelp};
+    return configuration;
+}
+void GetPortCreditsText(std::vector<FrontendCreditsText>& text)
+{
+    if(creditsScrollOwner)creditsScrollOwner->PublishFallback(text);
 }
 }

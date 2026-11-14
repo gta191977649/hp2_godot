@@ -438,6 +438,7 @@ struct ApplicationRuntime::Storage {
     void (*raceStart)(MainMenuScreenServices&,const void*){};
     const void* raceStartContext{};
     const FrontendMenuExtension* frontendExtension{};
+    const FrontendCreditsContent* frontendCredits{};
     bool showFrontend{};
     bool stateOnly() const noexcept {return showFrontend || raceStart;}
     bool diagnosticRaceRequested{};
@@ -630,7 +631,7 @@ struct ApplicationRuntime::Storage {
         frontendInput={&input,&screens};screens.input=&frontendInput;screens.soundBindings=&soundBindings;
         demoMode.screens=&screens;demoMode.frontend=&profilesOwner;demoMode.raceSetup=&setup;
         demoMode.demoDisc=&demo;demoMode.files=&files;
-        menus={&ui,&screens,&profilesOwner,&setup,&soundBindings,&demoMode,frontendExtension};
+        menus={&ui,&screens,&profilesOwner,&setup,&soundBindings,&demoMode,frontendExtension,frontendCredits};
         startup={&menus,&joylog,dynamicTextures.get()};
         menusBound=true;
         BindFrontendStartup(startup);
@@ -661,6 +662,7 @@ struct ApplicationRuntime::Storage {
         for(auto& configuration:MemcardScreenConfigurations())RegisterScreen(configuration);
         for(auto& configuration:LanguageScreenConfigurations())RegisterScreen(configuration);
         for(auto& configuration:CreditsScreenConfigurations())RegisterScreen(configuration);
+        if(frontendCredits)RegisterScreen(PortCreditsScreenConfiguration());
         for(auto& configuration:AudioDisplayScreenConfigurations())RegisterScreen(configuration);
         for(auto& configuration:CustomizeHUDScreenConfigurations())RegisterScreen(configuration);
         for(auto& configuration:DisplayCalibrationScreenConfigurations())RegisterScreen(configuration);
@@ -922,7 +924,7 @@ void ApplicationRuntime::Initialize(const std::filesystem::path& configFile)
 }
 
 void ApplicationRuntime::InitializeFrontend(void (*ready)(MainMenuScreenServices&,const void*),const void* context,
-    const FrontendMenuExtension* extension)
+    const FrontendMenuExtension* extension,const FrontendCreditsContent* credits)
 {
     Require(!storage_->stateOnly() && !storage_->initialized,
         "Frontend must be requested before initialization");
@@ -930,6 +932,7 @@ void ApplicationRuntime::InitializeFrontend(void (*ready)(MainMenuScreenServices
     storage_->raceStart=ready;
     storage_->raceStartContext=context;
     storage_->frontendExtension=extension;
+    storage_->frontendCredits=credits;
     Initialize();
 }
 
@@ -954,6 +957,7 @@ FrontendStateView ApplicationRuntime::FrontendState() const
     result.nameEditSession=ActiveNameEditSession();
     result.nameEditInput=result.nameEditSession && s.NameEditInputAvailable();
     result.effects=&s.previewEffects;
+    if(s.frontendCredits)GetPortCreditsText(result.creditsText);
     result.pointerReplay=s.PointerReplay();
     result.pointerHelp=s.screens.help && s.screens.help->IsActive();
     result.pointerHelpAvailable=active && s.ui.helpEnabled &&
@@ -1087,6 +1091,8 @@ void ApplicationRuntime::TakeRaceEffects(RaceEffectsFrame& frame)
     frame.lights.clear();
     frame.sun.clear();
     frame.exhaust.clear();
+    frame.shadows.clear();
+    frame.shadowVertices.clear();
     const auto race=RaceState();
     if (!race.simulation || !race.camera) return;
     auto& world=*race.simulation->world;
@@ -1119,9 +1125,12 @@ void ApplicationRuntime::TakeRaceEffects(RaceEffectsFrame& frame)
     auto& registry=s.resources->Registry();
     auto& screen=s.cameras.screens[1];
     auto& rear=s.cameras.screens[3];
-    if (ecstasyViewCalculateMatrices(&s.cameras,&screen,0,0,0)==CAR_CINEMATIC_OK)
+    const bool mainReady=ecstasyViewCalculateMatrices(&s.cameras,&screen,0,0,0)==CAR_CINEMATIC_OK;
+    const bool rearReady=race.rearCamera &&
+        ecstasyViewCalculateMatrices(&s.cameras,&rear,0,0,0)==CAR_CINEMATIC_OK;
+    if (mainReady)
         WorldClans(world).PrepareRender(screen.matrices.worldToClip,screen,frame.skids);
-    if (race.rearCamera && ecstasyViewCalculateMatrices(&s.cameras,&rear,0,0,0)==CAR_CINEMATIC_OK)
+    if (rearReady)
         WorldClans(world).PrepareRender(rear.matrices.worldToClip,rear,frame.rearSkids);
     for (const auto* pack:registry.Lights().FlarePacks()) {
         for (const auto& flare:pack->flares) {
@@ -1134,6 +1143,9 @@ void ApplicationRuntime::TakeRaceEffects(RaceEffectsFrame& frame)
             }
         }
     }
+    LightContextBatch shadowLights(registry.Lights());
+    const auto layout=s.cameras.presentationLayoutOverride ?
+        s.cameras.presentationLayoutOverride:s.cameras.presentationLayout;
     for (int i=0;i<world.totalCars;++i) {
         auto& car=*world.carTable[i];
         const auto* movement=car.Movement();
@@ -1147,9 +1159,19 @@ void ApplicationRuntime::TakeRaceEffects(RaceEffectsFrame& frame)
         eMulMatrix(transform,CarScaleMatrix,pose ? pose->orientation:state.orientation);
         std::copy_n(pose ? pose->centerPosition:state.centerPosition,3,transform+12);
         const auto first=frame.lights.size();
-        if (&car!=race.hiddenCar && (motion.wheelEffectsFlags&2u))
+        if (&car!=race.hiddenCar && (motion.wheelEffectsFlags&2u)) {
             CollectCarLightEffects(car,transform,race.worldFrames,frame.lights);
+            if (mainReady) CollectCarShadowEffects(car,transform,screen,layout,shadowLights,frame);
+        }
         if (race.rearCamera && &car!=race.rearHiddenCar && (motion.wheelEffectsFlags&8u)) {
+            if (rearReady) {
+                const auto* rearPose=(motion.wheelExclusionMask&8u) && race.viewMovers ?
+                    carViewMoverPresentation(race.viewMovers,&car):nullptr;
+                float rearTransform[16];
+                eMulMatrix(rearTransform,CarScaleMatrix,rearPose ? rearPose->orientation:state.orientation);
+                std::copy_n(rearPose ? rearPose->centerPosition:state.centerPosition,3,rearTransform+12);
+                CollectCarShadowEffects(car,rearTransform,rear,layout,shadowLights,frame);
+            }
             const auto rearFirst=frame.lights.size();
             if (first==rearFirst) CollectCarLightEffects(car,transform,race.worldFrames,frame.lights);
             else for (auto i=first;i<rearFirst;++i) {

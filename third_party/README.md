@@ -7,5 +7,6 @@
   [provenance and local patches](imgui-console/HP2_SOURCE.md). Only core sources are built.
 
 Initialize submodules with `git submodule update --init --recursive`; do not advance pins
-implicitly. No proprietary game libraries or assets belong here. FFmpeg's external LGPL
-SDK setup and distribution obligations are documented in docs/DEVELOPMENT.md.
+implicitly. No proprietary game libraries or assets belong here. See
+[third-party notices](THIRD_PARTY_NOTICES.md) for the license inventory,
+FFmpeg source reference and redistribution information.

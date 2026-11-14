@@ -5,6 +5,7 @@
 #include "indep/inc/Ecstasy.hpp"
 #include "indep/inc/Texture.hpp"
 #include "indep/inc/eLight.hpp"
+#include "port/not_implemented.hpp"
 
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
@@ -14,6 +15,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <cstring>
 #include <stdexcept>
 #include <tuple>
@@ -49,6 +51,44 @@ Ref<ImageTexture> animation_data(int width, int height, const std::vector<float>
     return ImageTexture::create_from_image(Image::create_from_data(width, height, false, Image::FORMAT_RGBAF, bytes));
 }
 
+Ref<Image> track_image(const TextureInfo& source, int& minAlpha, int& maxAlpha) {
+    const auto* wire = source.descriptor->authoredRecord;
+    std::uint32_t width{}, height{};
+    const auto levels = wire[0x6e];
+    if (levels > 6) throw std::runtime_error("Invalid original track mip count");
+    std::uint32_t baseSize{};
+    std::memcpy(&baseSize, wire + 0x44, sizeof(baseSize));
+    PackedByteArray bytes;
+    std::size_t offset = 0;
+    for (unsigned level = 0; level <= levels; ++level) {
+        std::uint32_t w{}, h{};
+        const auto size = levels ? baseSize >> (level * 2) : source.pixels.size;
+        auto rgba = DecodeTextureMipRgba(source, level, offset, size, w, h);
+        if (!level) { width = w; height = h; }
+        for (std::size_t i = 3; i < rgba.size(); i += 4) {
+            minAlpha = std::min(minAlpha, int(rgba[i]));
+            maxAlpha = std::max(maxAlpha, int(rgba[i]));
+        }
+        const auto end = bytes.size();
+        bytes.resize(end + rgba.size());
+        std::memcpy(bytes.ptrw() + end, rgba.data(), rgba.size());
+        offset += size;
+    }
+    // Godot expects storage down to 1x1; the shader clamps sampling to authored TEX1.MXL.
+    if (levels) {
+        std::int64_t fullSize = 0;
+        auto w = width, h = height;
+        while (true) {
+            fullSize += std::int64_t(w) * h * 4;
+            if (w == 1 && h == 1) break;
+            w = std::max(1u, w / 2);
+            h = std::max(1u, h / 2);
+        }
+        bytes.resize(fullSize);
+    }
+    return Image::create_from_data(width, height, levels != 0, Image::FORMAT_RGBA8, bytes);
+}
+
 float record_float(const std::uint8_t* record) {
     float value{};
     std::memcpy(&value, record, sizeof(value));
@@ -58,6 +98,27 @@ float record_float(const std::uint8_t* record) {
 bool is_light_shaft(std::uint32_t key) {
     // GRADIENTLIGHT, LIGHTRAYGRAD_3 and LIGHTRAYGRAD_4 in the retail texture packs.
     return key == 0x885adba5u || key == 0xba0e31b3u || key == 0xba0e31b4u;
+}
+
+bool track_material(const std::uint8_t* wire, std::uint32_t flags) {
+    return (flags & 0x40u) || wire[0x75] || wire[0x76] == 0x44 ||
+        wire[0x76] == 0x48 || wire[0x76] == 0x42;
+}
+
+std::vector<const EditorMarkerTexture*> model_bindings(const EditorMarkerModel& model,
+        const EditorMarkerSolidGeometry& geometry) {
+    std::vector<const EditorMarkerTexture*> bindings;
+    bindings.reserve(geometry.textures.size());
+    for (const auto& binding : geometry.textures) bindings.push_back(binding.texture);
+    if (model.replacementCount > 0 && (!model.replacement || model.detailLevel < 0 || model.detailLevel >= 16))
+        throw std::runtime_error("Invalid model texture replacement table");
+    for (int index = 0; index < model.replacementCount; ++index) {
+        const auto& replacement = model.replacement[index];
+        const auto slot = replacement.textureIndices[model.detailLevel];
+        if (slot >= 0 && static_cast<std::size_t>(slot) < bindings.size())
+            bindings[slot] = replacement.texture;
+    }
+    return bindings;
 }
 
 }
@@ -145,7 +206,7 @@ Ref<StandardMaterial3D> MeshConverter::material(const EditorMarkerTexture& descr
         result->set_depth_draw_mode(BaseMaterial3D::DEPTH_DRAW_ALWAYS);
     if (!(wire[0x4c] & 3u)) result->set_flag(BaseMaterial3D::FLAG_USE_TEXTURE_REPEAT, false);
     if (result->get_transparency() == BaseMaterial3D::TRANSPARENCY_ALPHA)
-        result->set_render_priority(std::min<int>(wire[0x29], 7));
+        result->set_render_priority(source->requiresDepthSort ? std::min<int>(wire[0x29],7):-1);
     materials_.emplace(&descriptor, result);
     return result;
 }
@@ -165,7 +226,56 @@ const MeshConverter::TextureSequence& MeshConverter::texture_sequence(const Edit
     if (sequence.texture->create_from_images(images) != OK)
         throw std::runtime_error("Godot rejected texture sequence " + std::to_string(descriptor.key));
     sequence.count = static_cast<int>(frames.size());
+    if (track_) {
+        TypedArray<Image> raw;
+        for (const auto& frame : frames) {
+            int lo = 255, hi = 0;
+            raw.push_back(track_image(frame, lo, hi));
+        }
+        sequence.raw.instantiate();
+        if (sequence.raw->create_from_images(raw) != OK)
+            throw std::runtime_error("Godot rejected original track texture frames");
+    }
     return sequence;
+}
+
+const MeshConverter::TrackTexture& MeshConverter::track_texture(const EditorMarkerTexture& descriptor) {
+    auto [it, inserted] = trackTextures_.try_emplace(&descriptor);
+    auto& result = it->second;
+    if (inserted) {
+        const auto* source = textureInfoForDescriptor(&descriptor);
+        if (!source || !source->pixels.Data()) throw std::runtime_error("Missing original track texture");
+        const auto image = track_image(*source, result.minAlpha, result.maxAlpha);
+        result.texture = ImageTexture::create_from_image(image);
+        if (result.texture.is_null()) throw std::runtime_error("Godot rejected original track texture");
+        result.texture->set_name(String::num_uint64(descriptor.key));
+    }
+    return result;
+}
+
+void MeshConverter::audit_track_model(const EditorMarkerModel& model) {
+    if (!model.solid || !model.solid->geometry) return;
+    const auto& geometry = *model.solid->geometry;
+    const auto bindings = model_bindings(model, geometry);
+    std::map<std::tuple<std::uint32_t, unsigned, int, int, int, int, int, int, int, bool>, int> states;
+    for (const auto& strip : geometry.strips) {
+        if ((strip.flags & 0x400u) || strip.nativeTriangleOrder.empty()) continue;
+        const auto slot = std::size_t(strip.textureIndex);
+        if (slot >= bindings.size() || !bindings[slot] || !textureInfoForDescriptor(bindings[slot])) {
+            ++states[{slot < geometry.textures.size() ? geometry.textures[slot].key : 0, strip.flags,
+                -1, -1, -1, -1, -1, -1, -1, false}];
+            continue;
+        }
+        const auto* descriptor = bindings[slot];
+        const auto* wire = descriptor->authoredRecord;
+        ++states[{descriptor->key, strip.flags, wire[0x76], wire[0x75], wire[0x4d], wire[0x50], wire[0x4f],
+            wire[0x74], wire[0x6e], descriptor != geometry.textures[slot].texture}];
+    }
+    for (const auto& [state, count] : states) {
+        const auto& [key, flags, blend, bias, sort, depth, test, gloss, mip, replaced] = state;
+        std::fprintf(stderr, "TRACK_MATERIAL model=%08x solid=%.24s lod=%d texture=%08x flags=%04x blend=%d bias=%d sort=%d depth=%d test=%d gloss=%d mip=%d replaced=%d strips=%d\n",
+            model.key, model.solid->name, model.detailLevel, key, flags, blend, bias, sort, depth, test, gloss, mip, int(replaced), count);
+    }
 }
 
 Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depthWrite, std::size_t boneCount) {
@@ -195,9 +305,12 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         PackedFloat32Array paintVertices;
         const EditorMarkerLightMaterial* lightMaterial{};
         std::uint32_t paintFlags{};
+        const EditorMarkerLightMaterial* roadMaterial{};
+        bool gsTrack{};
     };
     std::vector<Surface> surfaces;
-    std::map<std::tuple<const EditorMarkerTexture*, const EditorMarkerLightMaterial*, std::uint32_t>, std::size_t>
+    std::map<std::tuple<const EditorMarkerTexture*, const EditorMarkerLightMaterial*, std::uint32_t,
+        const EditorMarkerLightMaterial*>, std::size_t>
         surfaceIndices;
     const bool billboard = scenery == ScenerySurface::ReflectionBillboard;
     const bool reflection = billboard || scenery == ScenerySurface::Reflection;
@@ -208,6 +321,13 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             rigid->frameCount <= 0 || rigid->frameDuration <= 0))
         rigid = nullptr;
     const auto& geometry = *(morph ? morph->frames[0] : model.solid)->geometry;
+    const auto* catalogue = model.resources && model.resources->catalogueRoot ?
+        model.resources->catalogueRoot : model.resources;
+    const auto authoredMaterial = [&](const auto& strip) -> const EditorMarkerLightMaterial* {
+        if (strip.lightMaterialIndex >= 0 && std::size_t(strip.lightMaterialIndex) < geometry.lightMaterials.size())
+            if (const auto* material = geometry.lightMaterials[strip.lightMaterialIndex]) return material;
+        return catalogue ? catalogue->defaultLightMaterial : nullptr;
+    };
     int stride = 0;
     Ref<ImageTexture> vertexFrames, rigidFrames;
     Vector3 minimum, maximum;
@@ -268,17 +388,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
     }
     // Replacement slots are resolved by the donor for each model detail.
     // Read them without writing the shared solid table.
-    std::vector<const EditorMarkerTexture*> bindings;
-    bindings.reserve(geometry.textures.size());
-    for (const auto& binding : geometry.textures) bindings.push_back(binding.texture);
-    if (model.replacementCount > 0 && (!model.replacement || model.detailLevel < 0 || model.detailLevel >= 16))
-        throw std::runtime_error("Invalid model texture replacement table");
-    for (int index = 0; index < model.replacementCount; ++index) {
-        const auto& replacement = model.replacement[index];
-        const auto slot = replacement.textureIndices[model.detailLevel];
-        if (slot >= 0 && static_cast<std::size_t>(slot) < bindings.size())
-            bindings[slot] = replacement.texture;
-    }
+    const auto bindings = model_bindings(model, geometry);
     int vertexOffset = 0;
     for (const auto& strip : geometry.strips) {
         const int stripOffset = vertexOffset;
@@ -294,9 +404,19 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         const auto* descriptor = bindings[strip.textureIndex];
         if (!descriptor) throw std::runtime_error("Missing texture binding for model " + std::to_string(model.key));
         const auto* texture = textureInfoForDescriptor(descriptor);
+        const auto* wire = descriptor->authoredRecord;
+        const bool gsTrack = track_ && track_material(wire, strip.flags);
+        const bool transparent = wire[0x76] == 0x44 || wire[0x76] == 0x48 || wire[0x76] == 0x42;
         if (scenery != ScenerySurface::Full && texture && (texture->requiresDepthSort ||
-            (reflection && material(*descriptor)->get_transparency() == BaseMaterial3D::TRANSPARENCY_ALPHA &&
+            (reflection && (gsTrack ? transparent : material(*descriptor)->get_transparency() == BaseMaterial3D::TRANSPARENCY_ALPHA) &&
                 !texture_sequence(*descriptor).cutout))) continue;
+        const EditorMarkerLightMaterial* roadMaterial = nullptr;
+        if (gsTrack && (strip.flags & 0x40u)) {
+            roadMaterial = authoredMaterial(strip);
+            if (!roadMaterial || strip.normals.size() != strip.positions.size())
+                throw std::runtime_error("Track strip 0x40 is missing its original lighting inputs");
+            if (roadMaterial->inGameVariant) roadMaterial = roadMaterial->inGameVariant.get();
+        }
         const EditorMarkerLightMaterial* lightMaterial = nullptr;
         std::uint32_t paintFlags = 0;
         if (paint_ && texture && !texture->requiresDepthSort && !morph && !rigid &&
@@ -314,15 +434,17 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
                 if (!environmentMappingEnabled || paint_->reflection.is_null()) paintFlags &= ~0x100u;
             }
         }
-        const auto key = std::make_tuple(descriptor, lightMaterial, paintFlags);
+        const auto key = std::make_tuple(descriptor, lightMaterial, paintFlags, roadMaterial);
         const auto [entry, inserted] = surfaceIndices.emplace(key, surfaces.size());
         if (inserted) {
             auto& surface = surfaces.emplace_back();
             surface.descriptor = descriptor;
             surface.lightMaterial = lightMaterial;
             surface.paintFlags = paintFlags;
-            surface.material = material(*descriptor);
-            if (!depthWrite) {
+            surface.roadMaterial = roadMaterial;
+            surface.gsTrack = gsTrack;
+            if (!gsTrack) surface.material = material(*descriptor);
+            if (!gsTrack && !depthWrite) {
                 surface.material = surface.material->duplicate();
                 surface.material->set_depth_draw_mode(BaseMaterial3D::DEPTH_DRAW_DISABLED);
             }
@@ -350,6 +472,15 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             if (lightMaterial) {
                 for (const float component : strip.normals[i]) surface.paintVertices.push_back(component);
                 surface.paintVertices.push_back(rgb555);
+            }
+            if (roadMaterial) {
+                for (const float component : strip.normals[i]) surface.paintVertices.push_back(component);
+            }
+            if (gsTrack) {
+                surface.colors.push_back({float((rgb555 & 31u) * 8) / 255.f,
+                    float(((rgb555 >> 5) & 31u) * 8) / 255.f, float(((rgb555 >> 10) & 31u) * 8) / 255.f,
+                    (rgb555 & 0x8000u) ? 128.f / 255.f : 0.f});
+                continue;
             }
             if (wheelBlur_) {
                 // Preserve all five authored bits through Godot's UNORM vertex color.
@@ -387,13 +518,15 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         arrays[Mesh::ARRAY_INDEX] = surface.indices;
         if (morph) arrays[Mesh::ARRAY_CUSTOM0] = surface.animationIndices;
         if (surface.lightMaterial) arrays[Mesh::ARRAY_CUSTOM0] = surface.paintVertices;
+        if (surface.roadMaterial) arrays[Mesh::ARRAY_CUSTOM1] = surface.paintVertices;
         if (boneCount) {
             arrays[Mesh::ARRAY_BONES] = surface.bones;
             arrays[Mesh::ARRAY_WEIGHTS] = surface.weights;
         }
         const auto index = mesh->get_surface_count();
         const auto format = morph ? Mesh::ARRAY_CUSTOM_R_FLOAT : Mesh::ARRAY_CUSTOM_RGBA_FLOAT;
-        const auto flags = morph || surface.lightMaterial ? std::uint64_t(format) << Mesh::ARRAY_FORMAT_CUSTOM0_SHIFT : 0;
+        auto flags = morph || surface.lightMaterial ? std::uint64_t(format) << Mesh::ARRAY_FORMAT_CUSTOM0_SHIFT : 0;
+        if (surface.roadMaterial) flags |= std::uint64_t(Mesh::ARRAY_CUSTOM_RGB_FLOAT) << Mesh::ARRAY_FORMAT_CUSTOM1_SHIFT;
         mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays, {}, {}, flags);
         if (mesh->get_surface_count() != index + 1)
             throw std::runtime_error("Godot rejected a surface for model " + std::to_string(model.key));
@@ -456,6 +589,100 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             textureKeyValue == 0x3cf05d44u || textureKeyValue == 0x6833b84fu || textureKeyValue == 0xcfff069du;
         const bool scroll = wire[0x79] != 0;
         const auto& sequence = texture_sequence(*surface.descriptor);
+        if (surface.gsTrack) {
+            const auto* source = textureInfoForDescriptor(surface.descriptor);
+            const auto& raw = track_texture(*surface.descriptor);
+            const bool alphaTest = !wire[0x4f] && !source->drawFlag4Enabled;
+            const auto blend = wire[0x76];
+            const bool transparent = blend == 0x44 || blend == 0x48 || blend == 0x42 || source->requiresDepthSort;
+            const bool write = depthWrite && wire[0x50];
+            needsReflectionFilter |= transparent;
+            batchable &= !transparent && write;
+            hasScroll |= scroll;
+            hasTextureSequence |= sequence.count != 0;
+            const bool cacheable = !morph && !rigid && !surface.roadMaterial;
+            const auto cacheKey = std::make_tuple(surface.descriptor, depthWrite, billboard);
+            if (cacheable) {
+                const auto cached = animatedTextures_.find(cacheKey);
+                if (cached != animatedTextures_.end()) {
+                    mesh->surface_set_material(index, cached->second);
+                    continue;
+                }
+            }
+            const char* mode = !transparent ? "copy" : blend == 0x48 ? "add" : blend == 0x42 ? "sub" : "mix";
+            const String path = String("res://shader/track_material_") + mode + (write ? "_write" : "_read") +
+                (wire[0x75] ? "_biased.gdshader" : ".gdshader");
+            auto& shader = animatedShaders_[path];
+            if (shader.is_null()) shader = load_shader(path);
+            Ref<ShaderMaterial> draw;
+            draw.instantiate();
+            draw->set_shader(shader);
+            draw->set_render_priority(source->requiresDepthSort ? std::min<int>(wire[0x29], 7) : -1);
+            draw->set_shader_parameter("gs_texture_linear", raw.texture);
+            draw->set_shader_parameter("gs_texture_nearest", raw.texture);
+            draw->set_shader_parameter("gs_test", alphaTest);
+            draw->set_shader_parameter("gs_copy", blend == 0x0a);
+            // The authored shaft family uses priority 5 and this base-level TEX1 state.
+            draw->set_shader_parameter("gs_dark_blend", blend == 0x44 && wire[0x29] == 5 && !wire[0x50] &&
+                !wire[0x6e] && wire[0x6f] == 1 && wire[0x70] == 3);
+            draw->set_shader_parameter("gs_bias", int(wire[0x75]));
+            draw->set_shader_parameter("gs_filter", Vector4i(wire[0x6e], wire[0x6f], wire[0x70], wire[0x71]));
+            std::uint16_t rawBias = std::uint16_t(wire[0x72]) | std::uint16_t(wire[0x73]) << 8;
+            const int k = (rawBias & 0x800) ? int(rawBias & 0xfff) - 4096 : int(rawBias & 0xfff);
+            draw->set_shader_parameter("gs_lod_bias", k / 16.f);
+            draw->set_shader_parameter("repeat_axes", Vector2i(wire[0x4c] & 1u, (wire[0x4c] >> 1) & 1u));
+            draw->set_shader_parameter("use_scroll", scroll);
+            draw->set_shader_parameter("use_morph", morph != nullptr);
+            draw->set_shader_parameter("use_rigid", rigid != nullptr);
+            draw->set_shader_parameter("face_camera", billboard);
+            if (morph || rigid) draw->set_shader_parameter("animation_start", model.rigidAnimationStart);
+            if (morph) {
+                draw->set_shader_parameter("vertex_frames", vertexFrames);
+                draw->set_shader_parameter("frame_stride", stride);
+                draw->set_shader_parameter("morph_count", morph->count);
+                draw->set_shader_parameter("morph_rate", float(morph->framesPerSecond));
+            }
+            if (rigid) {
+                draw->set_shader_parameter("rigid_frames", rigidFrames);
+                draw->set_shader_parameter("rigid_count", rigid->frameCount);
+                draw->set_shader_parameter("rigid_duration", float(rigid->frameDuration));
+            }
+            if (scroll) {
+                draw->set_shader_parameter("scroll_rate", Vector2(record_float(wire + 0x7c), record_float(wire + 0x80)));
+                draw->set_shader_parameter("scroll_interval", record_float(wire + 0x84));
+                draw->set_shader_parameter("stepped_scroll", wire[0x79] == 2);
+            }
+            if (sequence.count) {
+                draw->set_shader_parameter("gs_frames_linear", sequence.raw);
+                draw->set_shader_parameter("gs_frames_nearest", sequence.raw);
+                draw->set_shader_parameter("texture_count", sequence.count);
+                draw->set_shader_parameter("texture_rate", float(sequence.rate));
+                draw->set_shader_parameter("real_clock", sequence.realClock);
+            }
+            if (surface.roadMaterial) {
+                auto* registry = catalogue ? catalogue->resourceRegistry : nullptr;
+                const auto* falloff = registry ? registry->SpecialTexture(6) : nullptr;
+                if (!falloff || (blend != 0x0a && blend != 0x48) || sequence.count)
+                    throw NotImplemented("0010AC50", "Unsupported track strip 0x40 state or missing SPECULARFALLOFF");
+                const auto& specular = track_texture(*falloff);
+                // TEST coverage agrees on the two kicks if the alpha test is always
+                // passing, or both textures have the same constant alpha at all mips.
+                if (alphaTest && (raw.minAlpha != raw.maxAlpha || specular.minAlpha != specular.maxAlpha ||
+                    raw.minAlpha != specular.minAlpha))
+                    throw NotImplemented("0010AC50", "Track strip 0x40 needs destination alpha feedback");
+                const auto* c = surface.roadMaterial->NativeCoefficients();
+                draw->set_shader_parameter("gs_specular", specular.texture);
+                draw->set_shader_parameter("gs_road", true);
+                draw->set_shader_parameter("gs_road_alpha", Vector4(c[12], c[13], c[14], c[15]));
+                draw->set_shader_parameter("gs_road_min_dot", c[2]);
+                const auto& sun = registry->Lights().sunlightDirection;
+                draw->set_shader_parameter("gs_sun", race_vector(sun.data()) * 10000.f);
+            }
+            draw->set_meta("hp2_texture_key", std::int64_t(textureKeyValue));
+            mesh->surface_set_material(index, draw);
+            if (cacheable) animatedTextures_.emplace(cacheKey, draw);
+            continue;
+        }
         const auto transparency = sequence.cutout ? BaseMaterial3D::TRANSPARENCY_ALPHA_SCISSOR :
             surface.material->get_transparency();
         needsReflectionFilter |= transparency == BaseMaterial3D::TRANSPARENCY_ALPHA;
@@ -538,7 +765,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
     if (hasPuddle) mesh->set_meta("hp2_road_water", true);
     if (shaftSurfaces && shaftSurfaces == mesh->get_surface_count())
         mesh->set_meta("hp2_light_shaft", true);
-    if (morph || rigid || hasScroll || hasTextureSequence)
+    if (track_ || morph || rigid || hasScroll || hasTextureSequence)
         mesh->set_name(String::utf8(model.solid->name, std::find(model.solid->name,
             model.solid->name + sizeof(model.solid->name), '\0') - model.solid->name));
     if (hasBounds) {

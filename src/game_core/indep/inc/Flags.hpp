@@ -320,6 +320,23 @@ struct RaceEffectsFrame;
 struct RaceParticleAsset;
 struct MainMenuScreenServices;
 struct FrontendMenuExtension;
+// Port-side authored content. Its strings outlive the runtime.
+struct FrontendCreditsLine {
+    const char* text;
+    float scale = 1.0f;
+};
+struct FrontendCreditsContent {
+    const char* label;
+    const FrontendCreditsLine* lines;
+    std::size_t count;
+};
+// Port-side fallback for credit lines the authored atlas cannot render.
+struct FrontendCreditsText {
+    const char* text;
+    std::uint32_t color;
+    float centerX, top, height;
+    float clipLeft, clipTop, clipWidth, clipHeight;
+};
 enum class FrontendPointerAction { Focus, Confirm, Back, Left, Right, Previous, Next, Item,
     CaretLeft, CaretRight, Help, ReplayPause, ReplayPrevious, ReplayNext, ReplaySlow, ReplayCamera, ReplayHud };
 struct FrontendPointerTarget {
@@ -343,6 +360,7 @@ struct FrontendStateView {
     const RaceEffectsFrame* effects{};
     std::uint64_t nameEditSession{};
     bool nameEditInput{};
+    std::vector<FrontendCreditsText> creditsText;
 };
 // Port-side operands from the original primary view and render policy.
 struct RacePostState {
@@ -395,7 +413,8 @@ public:
     void InitializeRace(void (*start)(MainMenuScreenServices&, const void*), const void* context);
     // Port-side frontend lifecycle hooks. The extension outlives the runtime.
     void InitializeFrontend(void (*ready)(MainMenuScreenServices&, const void*) = nullptr,
-        const void* context = nullptr, const FrontendMenuExtension* extension = nullptr);
+        const void* context = nullptr, const FrontendMenuExtension* extension = nullptr,
+        const FrontendCreditsContent* credits = nullptr);
     FrontendStateView FrontendState() const;
     void QueueFrontendPointer(std::uint64_t epoch, FrontendPointerTarget target);
     void QueueFrontendNameEdit(std::uint64_t epoch, std::uint64_t session, FrontendNameEditAction action,

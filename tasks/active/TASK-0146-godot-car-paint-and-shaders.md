@@ -30,6 +30,96 @@
 | GPU profile, Debug Vulkan at 960×720 | Godot's `--gpu-profile` reported 2.96–3.29 ms with post disabled and 4.67–5.10 ms with motion blur in the migrated build. The archived compositor build reported 1.19–2.94 ms and 2.59–10.16 ms respectively. These short runs used different randomly selected vehicle grids, so they do not isolate a migration cost. |
 | PS2 comparison | Pending. PC smoke results do not establish visual equivalence. |
 
+## Vehicle shadows and transparent effects
+
+Ghidra MCP rechecked Debug `NFSHP2.ELF` (SHA-256
+`815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b`).
+`CarRenderInfo::Render` 001210F0 uses the terrain-projected hull and
+`SHADOWRAMP` separately from the car-specific ground texture.
+`AcidEffectSystem::RenderEffects` 00128EF8 submits direct texture packets.
+`eAttachDirectData` 00110768 admits a packet into the alpha list based on
+the texture and retains its sort Z. `RadixSortAlphaKeys` 00104FE0 reads
+the authored rendering order. `AttachAlphaPolys` 0010BBF8 chooses the draw
+context. `CreateTextureContext` 00108AE0 reads the authored GS texture state.
+`StuffSun` 00125430 and `StuffSunGlare` 00125A70 are the separate screen
+sun path. The released donor flushes world alpha before fog at PAL1137CC.
+
+The Track 12/13 asset records bind `XE_FireTruck_WaterA` through `D`
+to `DUSTA_CS`, priority 7. `SMOKE_CS` and `SMOKEB_CS` use priority 6.
+The forest light shaft `GRADIENTLIGHT` and car `WINDOW` use priority 5.
+The sunlight ramp and ground shadow textures use priorities 4 and 3.
+These use source-over, full alpha range and no depth writes. The forest
+shaft, spray and shadows use no mip levels, linear magnification and
+nearest minification. Authored glass debris (`XETT_GLASSB`) uses the source
+color, an alpha test and depth writes.
+
+The port-side `RaceEffectsFrame` now transports the two original shadow
+strip producers from `care.cpp`. The state-only path needed a consumer
+because Godot never invokes the full Ecstasy car draw. The donor terrain,
+hull, light and visibility calculations supply the strips, while Godot
+owns the batched meshes per view and texture. Shadow draws test scene
+depth and avoid writing it. Godot uses the authored alpha priorities for
+particle materials, glass, shadows, skid marks and light materials.
+Particle shaders use raw texture alpha through the authored modulation
+and test, removing the extra soft-depth texture sample for AcidFX.
+Cutout debris with authoring state 0A and Z writes uses an opaque draw
+with a fragment discard. The scene compositor still applies depth fog
+after world transparency.
+
+The particle nodes still batch by definition. Equal-priority cross-group
+sorting, transparent GS destination math on all surfaces, and the exact
+projected GS shadow depth bias remain approximated by Forward+.
+The screen-sun composite retains its early alpha pass over the opaque
+scene copy. Exact PS2 pixel parity needs matched original captures.
+
+### Validation
+
+Arc B390, Godot 4.7.2, 960×720 pixel probes. Values are changed samples.
+
+| Effect | Vulkan | D3D12 |
+| --- | ---: | ---: |
+| Scenic Drive vehicle shadows, five batches | 3,746 darker | 3,746 darker |
+| Forest light shafts | 1,390 | 1,390 |
+| Fire truck spray, all four emitters | 16,121 | 16,156 |
+| Forest fire and smoke | 57,140 | 60,853 |
+
+Track 33 passed drive, pause, restart, menu and replay epoch 1 with the
+rear/reflection world checks on both drivers. Track 12 passed the authored
+weather, compositor depth and GS history probes on both drivers.
+Release staging and Debug
+linking passed. A running editor instance held the Debug stage DLL, so
+Debug effect captures used a separate staged copy. Logs are in
+`local/task0146/alpha-smoke`.
+
+Scenic Drive Track 13, Starting Grid background flyby, 1080p Release,
+Vulkan, fixed seed and camera. These are individual samples, compared
+with an isolated copy of the preceding build.
+
+| Measurement | Frame P50/P95/P99, ms | Frames over 8.33 ms |
+| --- | --- | ---: |
+| Before, no collector or VSync | 5.428 / 7.132 / 7.982 | 13 / 2113 |
+| After, no collector or VSync | 5.033 / 6.693 / 7.408 | 14 / 2252 |
+| After, Visual Profiler, no VSync | 5.372 / 6.668 / 7.512 | 8 / 2143 |
+| After, 120 Hz VSync, no collector | 8.326 / 8.634 / 9.967 | 635 / 1332 |
+
+In the profiler trace, render CPU P50/P95/P99 was 1.893/2.869/3.233 ms
+and GPU was 3.005/4.437/5.104 ms. The 120 Hz VSync sample averaged
+119.7 FPS. Frame pacing still exceeds 8.33 ms at P95.
+
+```powershell
+$iso = 'D:/ps2_game/Need for Speed - Hot Pursuit 2 (USA).iso'
+py -3 tools/profile_mvp_reflections.py --assets $iso --out local/task0146/alpha-final --grid --pairs 0 --quiet
+py -3 tools/profile_mvp_reflections.py --assets $iso --out local/task0146/alpha-visual --grid --pairs 0
+py -3 tools/profile_mvp_reflections.py --assets $iso --out local/task0146/alpha-final-vsync --grid --pairs 0 --quiet --vsync
+$env:HP2_PS2_ASSET_ROOT = $iso
+$env:HP2_PROFILE_DIR = "$PWD/local/task0146/shadow-repro"
+$engine = "$PWD/local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe"
+& $engine --path build/godot-mvp-release/mvp-project --rendering-driver vulkan --resolution 960x720 --script "$PWD/tools/test_mvp_car_shadows.gd" -- --race-track=13
+$env:HP2_PROFILE_DIR = "$PWD/local/task0146/firetruck-repro"
+$env:HP2_MVP_TEST_TRACK_EFFECTS = 'firetruck'
+& $engine --path build/godot-mvp-debug/mvp-project --rendering-driver d3d12 --resolution 960x720 --script "$PWD/tools/test_mvp_particle_routes.gd" -- --race-track=12
+```
+
 ## Wheel blur follow-up
 
 The wheel blur follow-up uses Retail SLUS_203.62 E-0035-W01/W02 and
@@ -45,6 +135,74 @@ individual runs. Both Track 33 runs passed on Godot 4.7.2 Forward+ with four
 authored overlays, a peak of 90, and 4,366 and 5,396 changed samples on
 Vulkan and D3D12 respectively. Debug and Release staging passed. PS2 runtime
 comparison remains open.
+
+## Authored scenery section trees
+
+Ghidra MCP checked US retail SLUS_203.62 (SHA-256
+`7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2`).
+`WhatSectionsShouldWeDraw` 00150950 uses the camera XY zone, global sections
+90–99 and authored sections including proxies. `TreeCull` 00150378 tests the
+24-byte 34104 tree records and `DrawAScenery` 0014FE18 tests the leaf instances.
+The Debug ELF corroborates the section selector at 001505A0 and recursive
+culling at 00150178 (SHA-256
+`815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b`).
+
+The port-side `ScenerySection::cullNodes` exposes the decoder's existing
+immutable nodes because the old interface published only packed records.
+Godot copies the topology by source section and instance index at scene
+creation. It merges authored bounds with all submitted LOD and animation
+bounds and tests the actual primary camera planes before filling the existing
+batches. Incomplete trees fall back to the flat selection in their section.
+Primary transparent placements use the source section membership on their
+main visibility layer, with the rear and reflection layers independently
+available. The shared Debug Effect and Track Viewer Render control
+`Track visibility zones` starts enabled. The viewer performs section
+selection with its free camera. Both views restore all available sections
+when disabled or outside the authored zones.
+
+Three 1080p Release Vulkan A/B pairs on Arc B390 use the fixed Track 13
+Starting Grid flyby. The baseline includes the existing authored zone and
+LOD selection. All six runs traversed 363.63 authored camera units.
+
+| Pair | Baseline frame P50/P95/P99 ms | Tree frame P50/P95/P99 ms | Draw calls P50 | Triangles P50 |
+| --- | --- | --- | --- | --- |
+| 1 | 5.513 / 7.772 / 9.098 | 5.042 / 6.630 / 7.499 | 1426 → 1068 | 161491 → 121375 |
+| 2 | 6.677 / 9.614 / 11.074 | 5.346 / 7.547 / 9.003 | 1446 → 1071 | 161513 → 121583 |
+| 3 | 5.625 / 7.883 / 8.918 | 6.295 / 10.310 / 11.701 | 1448 → 1062 | 161424 → 121390 |
+
+The median P95 was 7.883 → 7.547 ms. The typical active section count
+was 15, with 179 tree nodes visited and 329 opaque candidates versus 998.
+The median frame needed zero batch updates. The staged Visual Profiler
+pair measured render CPU P95 4.102 → 2.876 ms and render GPU P95
+6.642 → 4.391 ms. Earlier captures showed variable GPU tail timings. The
+staged 120 Hz VSync sample averaged 119.9 FPS with frame intervals of
+8.329 / 8.847 / 9.754 ms at P50/P95/P99.
+
+Vulkan and D3D12 fixed-camera probes checked forward and reverse headings
+from the same position, multiple zone boundaries, full 130-section fallback
+and Forest shaft and smoke pixels. The Track Viewer UI restored 7 → 122 → 7
+sections on both drivers and returned to the main menu. Track 33 forward
+and reverse driving, restart, return to menu and replay passed on both
+drivers. The reverse replay used the timeline mouse wheel and advanced
+the restore epoch to 2 with visible scenery and a live reflection atlas.
+
+```powershell
+$disc = 'D:/ps2_game/Need for Speed - Hot Pursuit 2 (USA).iso'
+py -3 tools/profile_mvp_reflections.py --assets $disc --out local/task0146/section-tree-staged-ab --grid --section-tree --pairs 3 --quiet
+py -3 tools/profile_mvp_reflections.py --assets $disc --out local/task0146/section-tree-staged-visual --grid --section-tree --pairs 1
+py -3 tools/profile_mvp_reflections.py --assets $disc --out local/task0146/section-tree-staged-sync --grid --section-tree --pairs 0 --quiet --vsync
+```
+
+Smoke logs are under `local/task0146/section-tree-smoke`. For the fixed
+camera checks run `tools/test_mvp_scenery_visibility.gd` with
+`-- --race-track=13` and `HP2_MVP_TEST_SCENERY_CAMERA=1`. For the Viewer
+run `tools/test_mvp_track_viewer.gd` in Debug with
+`HP2_MVP_VIEWER_VISIBILITY=1`, `-- --race-track=12` and 1200×800 at 192 DPI.
+Each diagnostic uses an isolated `HP2_PROFILE_DIR`.
+For Track 33 reverse use `HP2_MVP_TEST_TRACK_REVERSE=1` and run
+`tools/test_mvp_race_lifecycle.gd` with `-- --race-track=33`. For the
+timeline check also set `HP2_MVP_CHECK_REPLAY=1` and
+`HP2_MVP_CHECK_REPLAY_SEEK=1`.
 
 ## Scenic Drive Starting Grid flyby
 

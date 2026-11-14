@@ -8,8 +8,11 @@ var title_suffix := ""
 var last_window_title := ""
 
 func _ready() -> void:
-    _start_window_title()
     var arguments := OS.get_cmdline_user_args()
+    var native_debug := arguments.has("--debug")
+    if native_debug:
+        arguments.remove_at(arguments.find("--debug"))
+    _start_window_title(native_debug)
     var frontend := arguments.is_empty()
     var track := "unknown"
     var track_id := -1
@@ -58,7 +61,10 @@ func _ready() -> void:
 
     var profile := OS.get_environment("HP2_PROFILE_DIR")
     if profile.is_empty():
-        if event_tree >= 0:
+        if native_debug:
+            profile = ProjectSettings.globalize_path("user://native-debug/%s-%s" % [
+                OS.get_process_id(), Time.get_ticks_usec()])
+        elif event_tree >= 0:
             profile = ProjectSettings.globalize_path("user://diagnostic-events/%s-%s-%s-%s" % [
                 event_tree, event_number, OS.get_process_id(), Time.get_ticks_usec()])
         else:
@@ -67,11 +73,11 @@ func _ready() -> void:
     race.name = &"RacePresentation"
     add_child(race)
     if frontend:
-        race.call(&"start_frontend", assets, profile)
+        race.call(&"start_frontend", assets, profile, native_debug)
     elif event_tree >= 0:
-        race.call(&"start_event_race", assets, profile, event_tree, event_number)
+        race.call(&"start_event_race", assets, profile, event_tree, event_number, native_debug)
     else:
-        race.call(&"start_race", assets, profile, track_id)
+        race.call(&"start_race", assets, profile, track_id, native_debug)
 
 func _parse_id(value: String) -> int:
     if value.length() <= 10 and value.is_valid_int():
@@ -80,7 +86,7 @@ func _parse_id(value: String) -> int:
             return parsed
     return -1
 
-func _start_window_title() -> void:
+func _start_window_title(native_debug: bool) -> void:
     if DisplayServer.get_name() == "headless":
         return
     var driver := RenderingServer.get_current_rendering_driver_name()
@@ -96,7 +102,7 @@ func _start_window_title() -> void:
         _:
             title_renderer = driver.to_upper() if not driver.is_empty() else "Unknown"
     var debug_mode := OS.get_environment("HP2_MVP_DEBUG_MODE")
-    if debug_mode == "1" or (debug_mode.is_empty() and ProjectSettings.get_setting("hp2/debug_mode", false)):
+    if native_debug or debug_mode == "1" or (debug_mode.is_empty() and ProjectSettings.get_setting("hp2/debug_mode", false)):
         title_suffix = " | Debug Mode"
     _update_window_title()
     var timer := Timer.new()

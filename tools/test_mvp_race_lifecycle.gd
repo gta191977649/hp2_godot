@@ -15,6 +15,9 @@ var start_position := Vector3.ZERO
 var selected_mode := 0
 var mode_changes := 0
 var check_replay := false
+var seek_epoch := 0
+var seek_at := 0
+var seek_sent := false
 var check_reflections := OS.get_environment("HP2_MVP_CHECK_REFLECTION_LIFECYCLE") == "1"
 var mode_screen := ""
 var picker_direction := 0
@@ -83,6 +86,8 @@ func _process(delta: float) -> bool:
                     return _fail("expected_police_role_and_hud")
                 if selected_mode >= 3 and sample.has("reverse") and sample["reverse"] != (picker_direction == 1):
                     return _fail("expected_challenge_direction")
+                if OS.get_environment("HP2_MVP_TEST_TRACK_REVERSE") == "1" and not sample.get("reverse", false):
+                    return _fail("expected_reverse_track")
                 if check_reflections:
                     original_atlas = original_scene.get_node_or_null("CarReflectionAtlas") as SubViewport
                     if not _reflection_world_valid(original_scene):
@@ -92,9 +97,8 @@ func _process(delta: float) -> bool:
                 _key(KEY_W, true)
                 race_phase = 1
         1:
-            if active and sample.get("speed", 0) >= 12.0 and \
-                    start_position.distance_to(sample["position"]) >= 10.0 and \
-                    (not check_replay or sample.get("step", 0) >= 360):
+            var drove: bool = sample.get("speed", 0) >= 12.0 and start_position.distance_to(sample["position"]) >= 10.0
+            if active and ((check_replay and sample.get("step", 0) >= 360) or (not check_replay and drove)):
                 _key(KEY_W, false)
                 _send(KEY_ESCAPE)
                 race_phase = 2
@@ -154,6 +158,21 @@ func _process(delta: float) -> bool:
                 quit(0)
         12:
             if sample.get("race_state") == 4 and sample.get("replay_epoch", 0) > 0:
+                if OS.get_environment("HP2_MVP_CHECK_REPLAY_SEEK") == "1":
+                    if seek_epoch == 0:
+                        seek_epoch = sample["replay_epoch"]
+                        seek_at = now + 2500
+                    if not seek_sent and now >= seek_at:
+                        var wheel := InputEventMouseButton.new()
+                        wheel.button_index = MOUSE_BUTTON_WHEEL_UP
+                        wheel.position = Vector2(root.size) * 0.5
+                        wheel.pressed = true
+                        Input.parse_input_event(wheel)
+                        seek_sent = true
+                    if sample["replay_epoch"] <= seek_epoch:
+                        return false
+                    if sample.get("scenery_sections", 0) <= 0:
+                        return _fail("missing_sectors_after_replay_seek")
                 if check_reflections:
                     if not is_instance_valid(original_atlas):
                         return _fail("replay_reflection_atlas_lifetime")

@@ -96,6 +96,17 @@ file(GENERATE OUTPUT "${project_dir}/override.cfg" CONTENT
   "[hp2]\n\nasset_config=\"${CMAKE_SOURCE_DIR}/config/ps2_assets.local.json\"\ndebug_mode=$<IF:$<CONFIG:Debug>,true,false>\n")
 add_custom_target(stage_mvp ALL
   COMMAND ${CMAKE_COMMAND} -E make_directory "${project_dir}/bin"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${project_dir}/licenses"
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_SOURCE_DIR}/third_party/notices" "${project_dir}/licenses"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/third_party/THIRD_PARTY_NOTICES.md" "${project_dir}"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/third_party/godot-cpp/LICENSE.md" "${project_dir}/licenses/godot-cpp-LICENSE.md"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${imgui_dir}/LICENSE.txt" "${project_dir}/licenses/Dear-ImGui-LICENSE.txt"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${imgui_console_dir}/LICENSE.txt" "${project_dir}/licenses/ImGui-Console-LICENSE.txt"
   COMMAND ${CMAKE_COMMAND} -E rm -rf "${project_dir}/shader"
   COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/src/mvp/shader" "${project_dir}/shader"
   COMMAND ${CMAKE_COMMAND} -E rm -f

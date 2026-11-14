@@ -1,3 +1,53 @@
+## 2026-11-15 TASK-0148 track materials and Roadshine
+
+Restored track overlay modulation and depth projection, including the
+forest tunnel mask. Roadshine uses the decoded road and specular textures
+with the original alpha rewrite. It defaults on and is shared by the
+Effect panel and Track Viewer Render tab. TASK-0148 records the retail
+30-track inventory, Forward+ captures and validation results.
+
+## 2026-11-15 TASK-0146 authored scenery section trees
+
+The primary race view traverses the authored section trees with the Godot
+camera frustum. The Effect and Track Viewer Render panels share the default-on
+Track visibility zones control. TASK-0146 records the source evidence, route
+checks and the Starting Grid profiling results.
+
+## 2026-11-15 TASK-0144 Track Viewer Hierarchy
+
+Added per-instance selection, a red mesh overlay, and a resizable left
+Inspector for the current track's BUN hierarchy and properties. Double-click
+focuses the selected model. Manual flight uses the held right mouse button.
+
+## 2026-11-15 TASK-0147 pause Debug Back
+
+Fixed the Godot input route for returning from the pause Debug submenu.
+Backspace, controller B, Escape and right-click return to Pause Menu.
+The race stays paused until the next resume action.
+
+## 2026-11-14 TASK-0147 port credits and native debug
+
+Updated the port Credits with EA's gold headings, white body text and
+third-party library attributions. The staged project carries its notices
+and license texts. The reference FFmpeg DLLs report LGPL 3.0 or later.
+Only the opening title is italic. The two project acknowledgments use the
+same small white atlas font.
+
+Added The Porting of HP2 to Credits with editable text in
+`src/mvp/assets/port_credit.hpp`. The new page shares the EA scroller.
+Explicit `--debug` now enables the native camera and pause Debug Menu with
+an isolated profile by default. Debug and Release builds and the Credits,
+native debug, frontend and race lifecycle smoke runs passed. TASK-0147
+records authored resource provenance and remaining device coverage.
+
+## 2026-11-14 TASK-0146 vehicle shadows and transparent effects
+
+Connected the existing terrain-projected vehicle shadows to the Godot race
+and rear view. Particle materials now use the authored alpha, depth and
+texture state. Vulkan and D3D12 passed vehicle shadow, Forest light shaft,
+smoke and fire truck water pixel probes. TASK-0146 records the Ghidra
+addresses, the Starting Grid flyby measurements and remaining PS2 parity checks.
+
 ## 2026-11-14 TASK-0146 Scenic Drive Starting Grid
 
 The Starting Grid benchmark captures the authored track flyby behind the

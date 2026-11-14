@@ -115,10 +115,13 @@ def main():
     parser.add_argument("--fullscreen", action="store_true")
     parser.add_argument("--vsync", action="store_true")
     parser.add_argument("--quiet", action="store_true", help="Run without Visual Profiler")
+    parser.add_argument("--section-tree", action="store_true", help="Compare section tree culling with the existing zone and LOD path")
     scene = parser.add_mutually_exclusive_group()
     scene.add_argument("--demo", action="store_true", help="Watch the demo through its natural end")
     scene.add_argument("--grid", action="store_true", help="Measure the track flyby before confirming Starting Grid")
     args = parser.parse_args()
+    if args.section_tree and not args.grid:
+        parser.error("--section-tree requires --grid")
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=False)
     project = out / "project"
@@ -138,7 +141,11 @@ def main():
         for variant in (("shared", "isolated") if pair % 2 == 0 else ("isolated", "shared"))
     ]
     if args.grid:
-        variants = ["legacy" if variant == "shared" else "lod" for variant in variants]
+        variants = [
+            ("baseline" if variant == "shared" else "tree") if args.section_tree
+            else ("legacy" if variant == "shared" else "lod")
+            for variant in variants
+        ]
     for i, variant in enumerate(variants, 1):
         run = out / f"{i}-{variant}"
         profile = run / "profile"
@@ -149,7 +156,8 @@ def main():
                    HP2_MVP_REFLECTION_CHECK="demo" if args.demo else "fixed")
         if args.grid:
             env.update(HP2_MVP_PROFILE_GRID="1", HP2_MVP_PROFILE_REFLECTIONS="0",
-                       HP2_MVP_PROFILE_LEGACY_SCENERY=str(int(variant == "legacy")))
+                       HP2_MVP_PROFILE_LEGACY_SCENERY=str(int(variant == "legacy")),
+                       HP2_MVP_PROFILE_BASELINE_SCENERY_LOD=str(int(variant in ("baseline", "lod"))))
         visual = not (args.quiet or args.demo)
         command = [engine, "--path", project, "--rendering-driver", args.driver,
                    "--resolution", args.resolution, "--script", script]

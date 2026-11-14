@@ -35,21 +35,28 @@ class MeshConverter {
 public:
     enum class ScenerySurface { Full, OpaqueOnly, Reflection, ReflectionBillboard };
     godot::Ref<godot::ArrayMesh> convert_wheel_blur(const EditorMarkerModel& model);
+    static void audit_track_model(const EditorMarkerModel& model);
     godot::Ref<godot::ArrayMesh> convert(const EditorMarkerModel& model, bool depthWrite = true,
         std::size_t boneCount = 0);
     godot::Ref<godot::ArrayMesh> convert(const EditorMarkerModel& model, bool depthWrite,
         std::size_t boneCount, bool canTriggerRigidAnimation, ScenerySurface scenery = ScenerySurface::Full);
-    explicit MeshConverter(const CarPaintAssets* paint = nullptr, bool paintWheel = false)
-        : paint_(paint), paintWheel_(paintWheel) {}
+    explicit MeshConverter(const CarPaintAssets* paint = nullptr, bool paintWheel = false, bool track = false)
+        : paint_(paint), paintWheel_(paintWheel), track_(track) {}
 
 private:
     bool wheelBlur_{};
     struct TextureSequence {
         godot::Ref<godot::Texture2DArray> texture;
+        godot::Ref<godot::Texture2DArray> raw;
         int count{}, rate{};
         bool realClock{};
         bool cutout{};
     };
+    struct TrackTexture {
+        godot::Ref<godot::Texture2D> texture;
+        int minAlpha{255}, maxAlpha{};
+    };
+    const TrackTexture& track_texture(const EditorMarkerTexture& descriptor);
     godot::Ref<godot::StandardMaterial3D> material(const EditorMarkerTexture& descriptor);
     const TextureSequence& texture_sequence(const EditorMarkerTexture& descriptor);
     std::unordered_map<const EditorMarkerTexture*, godot::Ref<godot::StandardMaterial3D>> materials_;
@@ -57,8 +64,10 @@ private:
     std::map<godot::String, godot::Ref<godot::Shader>> animatedShaders_;
     std::map<std::tuple<const EditorMarkerTexture*, bool, bool>, godot::Ref<godot::Material>> animatedTextures_;
     std::unordered_map<const EditorMarkerTexture*, godot::Ref<godot::Texture2D>> paintTextures_;
+    std::unordered_map<const EditorMarkerTexture*, TrackTexture> trackTextures_;
     const CarPaintAssets* paint_;
     bool paintWheel_;
+    bool track_;
 };
 
 }

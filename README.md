@@ -16,6 +16,12 @@ The default launch opens the original title sequence in Godot. Leave the
 Start Game prompt idle for 30 seconds to start the original attract demo.
 Press a menu button to stop the demo and return to the main menu.
 
+Under **Options → Credits**, select **The Porting of HP2** for the port credits.
+Edit `src/mvp/assets/port_credit.hpp` and rebuild to update the text.
+Press **Space** or the controller's **X / Square** to pause or resume scrolling.
+See [third-party notices](third_party/THIRD_PARTY_NOTICES.md) for licenses
+and source references. The staged project includes these notices.
+
 With `./build.ps1 --run --mvp --debug --jobs 16`, select **Debug** just before
 **Exit** to open **Track Viewer**, see the **Car Viewer** placeholder, or start
 the attract demo immediately with **View Demo Scene**.
@@ -64,17 +70,33 @@ add `racer_nitro=1` to `NFSHP2_pc.ini` in that profile directory.
 
 `./build.ps1` stages the project in `build/godot-mvp-release/mvp-project`.
 `./build.ps1 --run --mvp --debug --jobs 16` builds and runs the Debug
-configuration. The ImGui Console and live frame-time graph open by
-default. The grave/tilde key toggles the console and gives the game its keyboard input
-back. The graph stays visible throughout the frontend and race.
+configuration and enables the native race debug tools. When launching the
+staged Godot project directly, pass `-- --debug`. Explicit debug launches
+use a fresh test profile unless `HP2_PROFILE_DIR` is set.
+In a regular single-player race, hold **Start / Menu**, then press
+**Select / Back / View** (keyboard: hold **Esc** or **Backspace**, then press
+**Tab**). Release all controls before using the camera. Short Select cycles
+the cameras; repeat the chord to restore the previous view and resume driving.
+Press and release Start by itself to pause, then choose **Debug** for the native
+pause debug menu.
+In the debug menu, press **Backspace**, **Esc**, or **B / Circle**, or
+right-click, to return to the Pause Menu.
+
+The grave/tilde key toggles the ImGui Console and gives the game its keyboard
+input back. The live frame-time graph stays visible throughout the frontend and race.
 Enter `effect` in the console to open the live race effect checkboxes.
 The window stays available after closing the console. Checked effects
 follow the game's triggers, including forest fire smoke and sandstorms.
 Enter `trackviewer` in the Debug Console to browse the original tracks.
-Choose a track from the **Track** dropdown in the top bar. Use the inspector
-to find scenery, route nodes and emitters, or switch to the black entity view.
-Right-click the viewport to fly, use WASD and Q/E to move, Shift to boost,
-the wheel to change speed and Esc to release the mouse. The **Main Menu**
+Choose a track from the **Track** dropdown in the top bar. Expand the track
+bundles, sections and models in **Hierarchy**. Left-click a model in the
+viewport to select it in red, then click it again or click empty space
+to clear the selection. Double-click an instance in
+the tree to fly the camera to it. The selected item's properties appear below
+the tree.
+Hold the right mouse button in the viewport to fly and release it to stop.
+Use WASD and Q/E to move, Shift to boost, and the wheel to change speed.
+The **Main Menu**
 button returns to the game frontend and reloads the player profile.
 The window title shows the active graphics API and live FPS, for example
 `hp2 - (Vulkan) 120 FPS`. Debug launches append ` | Debug Mode`.

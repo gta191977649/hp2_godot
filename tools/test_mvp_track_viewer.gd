@@ -44,26 +44,30 @@ func tap(code: Key, unicode := 0) -> void:
     key(code, unicode, false)
     await process_frame
 
-func click(at: Vector2, button := MOUSE_BUTTON_LEFT) -> void:
+func move_pointer(at: Vector2) -> void:
     var motion := InputEventMouseMotion.new()
     motion.position = at
     motion.global_position = at
     Input.parse_input_event(motion)
     await process_frame
+
+func click(at: Vector2, button := MOUSE_BUTTON_LEFT) -> void:
+    await move_pointer(at)
+    mouse_button(at, button, true)
+    await process_frame
+    await process_frame
+    await process_frame
+    await process_frame
+    mouse_button(at, button, false)
+    await process_frame
+
+func mouse_button(at: Vector2, button: MouseButton, pressed: bool) -> void:
     var event := InputEventMouseButton.new()
     event.button_index = button
     event.position = at
     event.global_position = at
-    event.pressed = true
+    event.pressed = pressed
     Input.parse_input_event(event)
-    await process_frame
-    await process_frame
-    await process_frame
-    await process_frame
-    event = event.duplicate()
-    event.pressed = false
-    Input.parse_input_event(event)
-    await process_frame
 
 func capture(label: String) -> void:
     if screenshots.is_empty():
@@ -104,6 +108,37 @@ func run() -> void:
     if matrix:
         await run_matrix(loaded)
         return
+    var container := race.get_node("TrackViewerViewport") as SubViewportContainer
+    if OS.get_environment("HP2_MVP_VIEWER_VISIBILITY") == "1":
+        var renderer := Vector2(455, 35 + container.position.y)
+        var checkbox := Vector2(33, 265 + container.position.y)
+        await click(renderer)
+        var enabled: Dictionary = race.telemetry()
+        await capture("visibility-on")
+        await click(checkbox)
+        await create_timer(0.15).timeout
+        var disabled: Dictionary = race.telemetry()
+        await capture("visibility-off")
+        await click(checkbox)
+        await create_timer(0.15).timeout
+        var restored: Dictionary = race.telemetry()
+        print("TRACK_VIEWER_VISIBILITY ", enabled, " -> ", disabled, " -> ", restored)
+        if (not enabled.scenery_zones_enabled or disabled.scenery_zones_enabled or
+            not restored.scenery_zones_enabled or disabled.scenery_sections <= enabled.scenery_sections or
+            restored.scenery_sections != enabled.scenery_sections):
+            push_error("Track Viewer visibility toggle did not restore the full track and original zone")
+            quit(1)
+        else:
+            await click(Vector2(738, 34))
+            await wait_for(func(state: Dictionary) -> bool:
+                return not state.get("track_viewer", false) and state.get("screen", "") == "New Main Menu")
+            print("TRACK_VIEWER_VISIBILITY_PASS")
+            quit(0)
+        return
+    if OS.get_environment("HP2_MVP_VIEWER_HIERARCHY") == "1":
+        if not await check_hierarchy(container, loaded.track):
+            quit(1)
+            return
     await capture("viewer")
     print("TRACK_VIEWER_WINDOW ", root.size, " focus=", root.has_focus())
     await click(Vector2(160, 34))
@@ -117,34 +152,58 @@ func run() -> void:
     var switched := await wait_for(func(state: Dictionary) -> bool:
         return state.get("track", 0) == next_track and state.get("generation", 0) > loaded.generation)
     print("TRACK_VIEWER_SWITCH ", switched)
-    var container := race.get_node("TrackViewerViewport") as SubViewportContainer
+    if OS.get_environment("HP2_MVP_VIEWER_HIERARCHY") == "1":
+        var selection := _scene_viewport(container).get_node("TrackViewerEntities/TrackViewerSelection") as MeshInstance3D
+        if selection.visible or selection.mesh != null or not _bundles_match(selection, next_track):
+            push_error("Hierarchy or highlight survived a track change")
+            quit(1)
+            return
     await create_timer(0.2).timeout
-    var sidebar_offset := Vector2(0, container.position.y - 78)
-    await click(Vector2(175, 110) + sidebar_offset)
+    var sidebar_offset := Vector2(0, container.position.y)
+    await click(Vector2(220, 35) + sidebar_offset)
     await capture("entities")
-    await click(Vector2(463, 111) + sidebar_offset)
+    await click(Vector2(455, 35) + sidebar_offset)
     await capture("render")
+    if OS.get_environment("HP2_MVP_VIEWER_ROADSHINE") == "1":
+        var roadshine := Vector2(35, 633) + sidebar_offset
+        if not race.telemetry().get("roadshine_enabled", false):
+            push_error("Roadshine is disabled by default")
+            quit(1)
+            return
+        await click(roadshine)
+        await process_frame
+        if race.telemetry().get("roadshine_enabled", true):
+            push_error("Render tab did not disable Roadshine")
+            quit(1)
+            return
+        await click(roadshine)
+        await process_frame
+        if not race.telemetry().get("roadshine_enabled", false):
+            push_error("Render tab did not restore Roadshine")
+            quit(1)
+            return
+        print("TRACK_VIEWER_ROADSHINE_PASS")
     if OS.get_environment("HP2_MVP_VIEWER_PROFILE") == "1":
         await create_timer(1.0).timeout
         print("VIEWER_PROFILE_OFF_BEGIN ", Engine.get_process_frames())
         await create_timer(4.0).timeout
         print("VIEWER_PROFILE_OFF_END ", Engine.get_process_frames())
-        await click(Vector2(33, 296) + sidebar_offset)
+        await click(Vector2(33, 219) + sidebar_offset)
         await create_timer(1.0).timeout
         print("VIEWER_PROFILE_ON_BEGIN ", Engine.get_process_frames())
         await create_timer(4.0).timeout
         print("VIEWER_PROFILE_ON_END ", Engine.get_process_frames())
         quit()
         return
-    await click(Vector2(33, 160) + sidebar_offset)
+    await click(Vector2(33, 81) + sidebar_offset)
     await create_timer(0.18).timeout
     if OS.get_environment("HP2_MVP_VIEWER_CAPTURE_OVERVIEW") == "1":
-        await click(Vector2(305, 110) + sidebar_offset)
-        await click(Vector2(90, 295) + sidebar_offset)
+        await click(Vector2(345, 35) + sidebar_offset)
+        await click(Vector2(90, 217) + sidebar_offset)
     await capture("entity-view")
     var viewport := _scene_viewport(container)
     if OS.get_environment("HP2_MVP_VIEWER_WIREFRAME") == "1":
-        await click(Vector2(33, 206) + sidebar_offset)
+        await click(Vector2(33, 127) + sidebar_offset)
         await create_timer(0.15).timeout
         if viewport.debug_draw != Viewport.DEBUG_DRAW_WIREFRAME or not viewport.get_node("RaceScene").visible:
             push_error("Wireframe view did not replace Entity view")
@@ -152,13 +211,13 @@ func run() -> void:
             return
         await capture("wireframe")
         await create_timer(0.2).timeout
-        await click(Vector2(33, 206) + sidebar_offset)
+        await click(Vector2(33, 127) + sidebar_offset)
         await create_timer(0.15).timeout
         if viewport.debug_draw != Viewport.DEBUG_DRAW_DISABLED or not viewport.get_node("RaceScene").visible:
             push_error("Disabling Wireframe view did not restore the track")
             quit(1)
             return
-        await click(Vector2(33, 160) + sidebar_offset)
+        await click(Vector2(33, 81) + sidebar_offset)
         print("TRACK_VIEWER_WIREFRAME_PASS")
     if OS.get_environment("HP2_MVP_VIEWER_EFFECTS") == "1":
         if not await check_environment(viewport, next_track, sidebar_offset):
@@ -166,23 +225,28 @@ func run() -> void:
             return
     var camera := viewport.get_camera_3d()
     await create_timer(0.2).timeout
-    await click(Vector2(900, 460), MOUSE_BUTTON_RIGHT)
+    var flight_point := container.position + container.size * 0.5
+    await move_pointer(flight_point)
+    mouse_button(flight_point, MOUSE_BUTTON_RIGHT, true)
+    await process_frame
     var movement_start := camera.position
     key(KEY_W)
     await create_timer(0.24).timeout
+    mouse_button(flight_point, MOUSE_BUTTON_RIGHT, false)
+    var released := camera.position
+    await create_timer(0.15).timeout
     key(KEY_W, 0, false)
-    await tap(KEY_ESCAPE)
     print("TRACK_VIEWER_CAMERA moved=", movement_start.distance_to(camera.position), " mouse=", Input.mouse_mode)
-    if movement_start.distance_to(camera.position) < 1 or Input.mouse_mode != Input.MOUSE_MODE_VISIBLE:
+    if movement_start.distance_to(released) < 1 or not released.is_equal_approx(camera.position) or Input.mouse_mode != Input.MOUSE_MODE_VISIBLE:
         push_error("Free camera movement or release failed")
         quit(1)
         return
     if OS.get_environment("HP2_MVP_VIEWER_COORDINATES") == "1":
         await create_timer(0.2).timeout
-        await click(Vector2(305, 110) + sidebar_offset)
+        await click(Vector2(345, 35) + sidebar_offset)
         await create_timer(0.2).timeout
         await capture("camera-coordinates")
-        var copy_position := Vector2(120, 351) + sidebar_offset
+        var copy_position := Vector2(120, 273) + sidebar_offset
         var previous_clipboard := DisplayServer.clipboard_get()
         await click(copy_position)
         await create_timer(0.15).timeout
@@ -263,6 +327,102 @@ func _scene_viewport(container: SubViewportContainer) -> SubViewport:
     var scene := output.get_node_or_null("RaceRenderTarget") as SubViewport
     return scene if scene else output
 
+func _bundles_match(selection: MeshInstance3D, track: int) -> bool:
+    var names: PackedStringArray = selection.get_meta("track_bundles", PackedStringArray())
+    return names.size() == 2 and names[0].ends_with("TRACKA%d.BUN" % track) and names[1].ends_with("TRACKB%d.BUN" % track)
+
+func check_hierarchy(container: SubViewportContainer, track: int) -> bool:
+    var viewport := _scene_viewport(container)
+    var selection := viewport.get_node("TrackViewerEntities/TrackViewerSelection") as MeshInstance3D
+    var camera := viewport.get_camera_3d()
+    if not _bundles_match(selection, track) or container.position.x < 1:
+        push_error("Hierarchy must start left of one viewport and list only the current track bundles")
+        return false
+    var point := Vector2.ZERO
+    for y in [0.58, 0.72, 0.85]:
+        for x in [0.50, 0.35, 0.65, 0.23, 0.77]:
+            point = container.position + container.size * Vector2(x, y)
+            await click(point)
+            if selection.visible:
+                break
+        if selection.visible:
+            break
+    if not selection.visible or selection.mesh == null or Input.mouse_mode != Input.MOUSE_MODE_VISIBLE:
+        push_error("Left click did not select a model")
+        return false
+    var section: int = selection.get_meta("section")
+    var instance: int = selection.get_meta("instance")
+    await click(point)
+    if selection.visible or selection.mesh != null:
+        push_error("Clicking the same model did not clear the selection")
+        return false
+    await click(point)
+    if selection.get_meta("section", -1) != section or selection.get_meta("instance", -1) != instance:
+        push_error("Selection did not return to the same source instance")
+        return false
+    await create_timer(0.6).timeout
+    if not selection.has_meta("hierarchy_row"):
+        push_error("Selection was not revealed in Hierarchy")
+        return false
+    await capture("hierarchy-picked")
+    var row: Vector2 = selection.get_meta("hierarchy_row")
+    var start := camera.global_position
+    await click(row)
+    await click(row)
+    var samples: Array[Vector3] = []
+    for i in range(5):
+        samples.append(camera.global_position)
+        await create_timer(0.075).timeout
+    await create_timer(0.35).timeout
+    var finish := camera.global_position
+    var travel := finish - start
+    if travel.length() < 0.1 or selection.get_meta("instance", -1) != instance:
+        push_error("Double-click did not focus the selected instance")
+        return false
+    var intermediate := false
+    for sample in samples:
+        var along := (sample - start).dot(travel) / travel.length_squared()
+        if (sample - start - travel * along).length() > 0.05:
+            push_error("Focus moved the camera off the straight path")
+            return false
+        intermediate = intermediate or (along > 0.05 and along < 0.95)
+    if not intermediate:
+        push_error("Focus did not animate through an intermediate position")
+        return false
+    await capture("hierarchy-focused")
+    var splitter := Vector2(container.position.x - 3, container.position.y + 155)
+    var initial_width := container.position.x
+    await move_pointer(splitter)
+    mouse_button(splitter, MOUSE_BUTTON_LEFT, true)
+    await process_frame
+    await move_pointer(splitter + Vector2(75, 0))
+    await process_frame
+    mouse_button(splitter + Vector2(75, 0), MOUSE_BUTTON_LEFT, false)
+    await process_frame
+    if container.position.x < initial_width + 30 or Input.mouse_mode != Input.MOUSE_MODE_VISIBLE:
+        push_error("Dragging the inspector splitter did not resize the viewport")
+        return false
+    var inspector_button: Vector2 = selection.get_meta("inspector_button")
+    await click(inspector_button)
+    await create_timer(0.15).timeout
+    if container.position.x > 1 or not selection.visible:
+        push_error("Hiding the inspector did not expand the viewport or preserve selection: %s, %s" %
+            [container.position, selection.visible])
+        return false
+    await click(inspector_button)
+    await create_timer(0.15).timeout
+    if container.position.x < initial_width + 30:
+        push_error("Showing the inspector did not restore its resized width")
+        return false
+    await move_pointer(Vector2(container.position.x - 3, splitter.y))
+    mouse_button(Vector2(container.position.x - 3, splitter.y), MOUSE_BUTTON_LEFT, true)
+    await process_frame
+    await move_pointer(splitter)
+    mouse_button(splitter, MOUSE_BUTTON_LEFT, false)
+    await process_frame
+    print("TRACK_VIEWER_HIERARCHY_PASS")
+    return true
+
 func source_hash(name: String) -> int:
     var result := 0xFFFFFFFF
     for byte in name.to_ascii_buffer():
@@ -281,7 +441,7 @@ func check_environment(viewport: SubViewport, track: int, sidebar_offset: Vector
     var camera := viewport.get_camera_3d()
     var effects := viewport.get_node("RaceScene/RaceEffects")
     await create_timer(0.2).timeout
-    await click(Vector2(33, 160) + sidebar_offset) # Restore normal scene rendering.
+    await click(Vector2(33, 81) + sidebar_offset) # Restore normal scene rendering.
     await process_frame
     if not viewport.get_node("RaceScene").visible:
         push_error("Could not restore normal scene rendering")

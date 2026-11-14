@@ -33,6 +33,7 @@ namespace {
 void ConnectScanner(GameInputRouter& router,GameInputRegistration& node);
 uint32_t nativeInputResetEpoch[2]{};
 const char* nativeDebugCaption{};
+constexpr char NativeDebugCameraCaption[]="DEBUG CAMERA - Back: next view; hold Start then Back: drive";
 bool NativeDebugTarget(const GameInputRegistration& node)
 {
     return node.target.kind==GAME_INPUT_PLAYER_CAMERA || node.target.kind==GAME_INPUT_FIXED_CAMERA ||
@@ -923,7 +924,8 @@ void NativeDebugSample(GameInputRouter& input,int32_t type,const JoystickControl
         else {
             focus.originalCameraKind=focus.predictedCameraKind;
             focus.active=1;
-            if(!QueueNativeDebugCycle(input,*player))CloseNativeDebug(input,player);
+            if(QueueNativeDebugCycle(input,*player))nativeDebugCaption=NativeDebugCameraCaption;
+            else CloseNativeDebug(input,player);
         }
         focus.startPending=0;focus.chordLatched=1;focus.waitNeutral=1;
         NeutralNativeControls(normal,*raw);return;
@@ -933,7 +935,7 @@ void NativeDebugSample(GameInputRouter& input,int32_t type,const JoystickControl
         NeutralNativeControls(normal,*raw);tools=*raw;
         tools.held&=static_cast<uint16_t>(~start);
         if(startPulse)tools.held|=start;
-        nativeDebugCaption="DEBUG CAMERA - Back: next view; hold Start then Back: drive";
+        nativeDebugCaption=NativeDebugCameraCaption;
     } else {
         // Delay standalone Start until release only in the opted-in live
         // single-player context. It still reaches the real Pause callback.

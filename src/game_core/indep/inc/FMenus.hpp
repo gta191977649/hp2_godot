@@ -296,6 +296,8 @@ struct FrontendDemoMode {
 };
 
 struct MainMenuScreenServices;
+struct FrontendCreditsContent;
+struct FrontendCreditsText;
 // Port-side registration for one host-owned frontend page and its menu entry.
 struct FrontendMenuExtension {
     const char* label{};
@@ -314,6 +316,7 @@ struct MainMenuScreenServices {
     const ::CarSoundBindings* sounds{};
     FrontendDemoMode* demoMode{};
     const FrontendMenuExtension* extension{};
+    const FrontendCreditsContent* credits{};
 };
 // Actual source GP-C0FC main-menu screen lifetime. Bindings borrow existing
 // services; activation owns one concrete NewMainMenu, never a second FRED.
@@ -873,4 +876,6 @@ extern FlailerScreenConfig fNameEntry;
 void BindCreditsScreens(FrontendStartupServices&);
 void UnbindCreditsScreens();
 std::array<FlailerScreenConfig,7>& CreditsScreenConfigurations();
+FlailerScreenConfig& PortCreditsScreenConfiguration();
+void GetPortCreditsText(std::vector<FrontendCreditsText>& text);
 }

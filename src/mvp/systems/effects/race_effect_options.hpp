@@ -10,6 +10,8 @@ struct RaceEffectOptions {
     bool motionBlur{true};
     bool particles{true};
     bool sunGlare{true};
+    bool sceneryVisibility{true};
+    bool roadshine{true};
 };
 
 }

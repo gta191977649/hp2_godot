@@ -182,6 +182,12 @@ hp2_select={
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":16,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194306,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
 ]
 }
+hp2_credits_pause={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":32)
+, Object(InputEventJoypadButton,"device":-1,"button_index":2)
+]
+}
 hp2_nitro={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":16,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":78,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
@@ -204,4 +210,8 @@ environment/defaults/default_clear_color=Color(0, 0, 0, 1)
 hp2_animation_clock={
 "type": "vec4",
 "value": Vector4(0, 0, 0, 0)
+}
+hp2_roadshine={
+"type": "bool",
+"value": true
 }

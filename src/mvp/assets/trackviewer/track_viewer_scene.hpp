@@ -2,10 +2,12 @@
 
 #include "indep/inc/Flags.hpp"
 #include "indep/inc/RaceEffects.hpp"
+#include <array>
 #include <memory>
 
 struct TerrainTopology;
 struct TrackRoute;
+namespace hp2 { class ResourceFile; }
 
 namespace hp2 {
 class TrackViewerScene {
@@ -19,6 +21,7 @@ public:
     void take_effects(RaceEffectsFrame& frame);
     RacePostState post();
     const Scenery& scenery() const;
+    std::array<const ResourceFile*, 2> track_bundles() const;
     const SkyResources& sky() const;
     const TrackRoute& route() const;
     TerrainTopology& terrain() const;
