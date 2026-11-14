@@ -70,10 +70,10 @@ func _process(delta: float) -> bool:
     match race_phase:
         0:
             if active:
-                original_scene = race.get_node_or_null("RaceScene")
+                original_scene = race.race_scene()
                 if sample.get("track") != expected_track or not original_scene or \
                         sample.get("placements", 0) <= 0 or sample.get("vehicles", 0) <= 0 or \
-                        root.get_camera_3d() == null:
+                        race.race_scene().get_viewport().get_camera_3d() == null:
                     return _fail("expected_committed_scene")
                 if selected_mode >= 3 and sample.get("game_type") != selected_mode:
                     return _fail("expected_challenge_mode")
@@ -136,7 +136,7 @@ func _process(delta: float) -> bool:
             var page: String = sample.get("screen", "")
             var returned := page == "New Main Menu" or page == "View Event Tree"
             if returned or (direct and not sample.has("generation")):
-                if race.has_node("RaceScene"):
+                if race.race_scene() != null:
                     return _fail("return_scene_retirement")
                 print("HP2_MVP_LIFECYCLE_PASS track=", expected_track, " direct=", direct)
                 quit(0)

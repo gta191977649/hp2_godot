@@ -66,6 +66,7 @@ func open_debug() -> void:
     await select(FIRST + 3)
     await key(KEY_ENTER)
     await wait_screen(DEBUG)
+    await create_timer(0.25).timeout
 
 func capture(label: String) -> void:
     var dir := OS.get_environment("HP2_MVP_SCREENSHOT_DIR")
@@ -77,7 +78,8 @@ func capture(label: String) -> void:
 
 func demo() -> Dictionary:
     return await wait_for(func(state: Dictionary) -> bool:
-        return state.get("race_state") == DEMO_STATE and state.get("step", 0) >= 120 and state.get("vehicles", 0) > 0)
+        return (state.get("race_state") == DEMO_STATE and state.get("step", 0) >= 120 and
+            state.get("vehicles", 0) > 0 and state.get("radial_blur_active", false)))
 
 func run() -> void:
     change_scene_to_file("res://native_game.tscn")
@@ -94,7 +96,7 @@ func run() -> void:
     var title_started := Time.get_ticks_msec()
     var profile := OS.get_environment("HP2_PROFILE_DIR").path_join("profile.json")
     var hash_before := FileAccess.get_sha256(profile) if FileAccess.file_exists(profile) else ""
-    if mode == "idle":
+    if mode.begins_with("idle"):
         var idle_state := await demo()
         var idle_ms := Time.get_ticks_msec() - title_started
         if idle_ms < 30000:
@@ -139,12 +141,13 @@ func run() -> void:
         await wait_for(func(state: Dictionary) -> bool: return state.get("track_viewer", false) and state.get("step", 0) > 0)
         await click_viewer_main_menu()
         await open_debug()
-        await click_at(Vector2(198, 159) * 1.5)
+        await select(FIRST + 2)
+        await key(KEY_ENTER)
         var manual_state := await demo()
         await capture("manual-demo")
         await key(KEY_ENTER)
         await wait_screen(MAIN)
-        if race.get_node_or_null("RaceScene"):
+        if race.race_scene():
             fail("demo scene survived return to Main Menu")
             return
         print("HP2_MVP_MANUAL_DEMO_PASS track=", manual_state.track)
@@ -152,7 +155,7 @@ func run() -> void:
     if hash_before != hash_after:
         fail("demo or viewer modified the isolated profile")
         return
-    if mode != "idle":
+    if not mode.begins_with("idle"):
         await select(FIRST + 1)
         await key(KEY_ENTER)
         await wait_screen("Cops Off Mode Select")

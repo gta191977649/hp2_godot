@@ -299,7 +299,8 @@ func _resize_sweep(name: String, maximize := false) -> bool:
             return _resize_error("centered_aspect_" + name)
         if name == "direct-hud":
             var mirror := canvas.get_node_or_null("RearViewMirror") as TextureRect
-            var target := race.get_node_or_null("RaceScene/RearViewTarget") as SubViewport
+            var scene: Node3D = race.race_scene()
+            var target := scene.get_node_or_null("RearViewTarget") as SubViewport if scene else null
             if not mirror or not mirror.visible or not target or mirror.texture != target.get_texture():
                 return _resize_error("rear_view_target")
             var mirror_rect := mirror.get_global_rect()
@@ -365,7 +366,15 @@ func _has_race_preview_materials(preview: SubViewport) -> bool:
         if not node is MeshInstance3D or not node.visible or not node.mesh:
             continue
         for i in range(node.mesh.get_surface_count()):
-            var material := node.mesh.surface_get_material(i) as StandardMaterial3D
+            var surface: Material = node.mesh.surface_get_material(i)
+            if surface is ShaderMaterial and surface.shader.resource_path == "res://shader/car_paint.gdshader":
+                var paint: Texture2D = surface.get_shader_parameter("base_image")
+                if not paint or node.mesh.surface_get_arrays(i)[Mesh.ARRAY_CUSTOM0].is_empty():
+                    return false
+                texture_keys[paint.resource_name] = true
+                surfaces += 1
+                continue
+            var material := surface as StandardMaterial3D
             if material and material.albedo_texture:
                 texture_keys[material.albedo_texture.resource_name] = true
             if not material or material.shading_mode != BaseMaterial3D.SHADING_MODE_UNSHADED:

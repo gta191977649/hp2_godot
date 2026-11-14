@@ -15,6 +15,7 @@
 #include "systems/frontend/frontend_presentation.hpp"
 #include "systems/track/track_presentation.hpp"
 #include "systems/vehicle/vehicle_presentation.hpp"
+#include "systems/vehicle/vehicle_reflection.hpp"
 
 #include "bsound/include/bSound.h"
 #include "bware/inc/bFile.hpp"
@@ -199,6 +200,7 @@ struct RacePresentation::Session {
     std::uint64_t frontendEpoch{}, nameEditSession{};
     bool nameEditInput{};
     int raceState{};
+    bool radialBlurActive{};
     bool frontendMode{};
     int requestedTrack{-1};
     CampaignRaceDiagnostic campaignDiagnostic;
@@ -206,11 +208,13 @@ struct RacePresentation::Session {
     RaceDiagnosticChecks diagnosticChecks;
 #endif
     Node3D* scene{};
+    SubViewport* sceneViewport{};
     Camera3D* camera{};
     Ref<RacePostPresentation> post;
     SubViewport* rearViewport{};
     Camera3D* rearCamera{};
     std::unordered_map<std::uint64_t, VehiclePresentation> vehicles;
+    std::unique_ptr<VehicleReflection> reflections;
     std::size_t placements{};
     std::chrono::steady_clock::time_point loadingSince{std::chrono::steady_clock::now()};
 };
@@ -231,9 +235,15 @@ void RacePresentation::_bind_methods() {
     ClassDB::bind_method(D_METHOD("start_event_race", "assets", "profile", "tree", "event"), &RacePresentation::start_event_race);
     ClassDB::bind_method(D_METHOD("start_frontend", "assets", "profile"), &RacePresentation::start_frontend);
     ClassDB::bind_method(D_METHOD("telemetry"), &RacePresentation::telemetry);
+    ClassDB::bind_method(D_METHOD("race_scene"), &RacePresentation::race_scene);
     ClassDB::bind_method(D_METHOD("photo_route"), &RacePresentation::photo_route);
     ClassDB::bind_method(D_METHOD("report_launch_error", "stage", "track", "reason"),
         &RacePresentation::report_launch_error);
+}
+
+void RacePresentation::_notification(int what) {
+    if (what == NOTIFICATION_EXIT_TREE && session_ && session_->post.is_valid())
+        session_->post->stop();
 }
 
 void RacePresentation::report_assert(const String& message) {
@@ -425,6 +435,7 @@ void RacePresentation::frontend_pointer_input(const Ref<InputEvent>& event) {
 
 void RacePresentation::retire_scene() {
     auto& s = *session_;
+    s.radialBlurActive = false;
     if (!s.scene) return;
     s.frontend->update_rear_view({}, {}, false);
     s.cinematic->clear();
@@ -432,8 +443,20 @@ void RacePresentation::retire_scene() {
     s.worldObjects.reset();
     s.movablePlacements.clear();
     s.vehicles.clear();
-    remove_child(s.scene);
-    s.scene->queue_free();
+    s.reflections.reset();
+    if (s.sceneViewport) {
+        if (s.post.is_valid()) {
+            s.post->detach();
+            s.post.unref();
+        }
+        auto* parent = s.sceneViewport->get_parent();
+        parent->remove_child(s.sceneViewport);
+        s.sceneViewport->queue_free();
+    } else {
+        remove_child(s.scene);
+        s.scene->queue_free();
+    }
+    s.sceneViewport = nullptr;
     s.scene = nullptr;
     s.camera = nullptr;
     s.rearViewport = nullptr;
@@ -568,7 +591,12 @@ void RacePresentation::_process(double delta) {
             stage = "track_assets";
             if (!race.scenery) throw std::runtime_error("Committed track has no loaded scenery");
             s.scene = memnew(Node3D);
-            add_child(s.scene);
+            if (RenderingServer::get_singleton()->get_rendering_device()) {
+                s.sceneViewport = RacePostPresentation::create_scene(*get_viewport());
+                s.sceneViewport->add_child(s.scene);
+            } else {
+                add_child(s.scene);
+            }
             s.scene->set_name("RaceScene");
             if (!race.simulation->collisions || !race.simulation->collisions->objects)
                 throw std::runtime_error("Committed track has no collision placement registry");
@@ -580,19 +608,17 @@ void RacePresentation::_process(double delta) {
             s.camera = memnew(Camera3D);
             s.scene->add_child(s.camera);
             s.camera->set_cull_mask_value(3, false);
+            s.camera->set_cull_mask(s.camera->get_cull_mask() & ~trackReflectionLayer);
             s.camera->make_current();
             s.camera->set_name("RaceCamera");
-            if (RenderingServer::get_singleton()->get_rendering_device()) {
-                if (s.post.is_null()) s.post.instantiate();
-                Ref<Compositor> compositor;
-                compositor.instantiate();
-                TypedArray<CompositorEffect> effects;
-                effects.push_back(s.post);
-                compositor->set_compositor_effects(effects);
-                s.camera->set_compositor(compositor);
+            s.reflections = std::make_unique<VehicleReflection>(*s.scene, race);
+            if (s.sceneViewport) {
+                s.post.instantiate();
+                s.post->attach(*s.sceneViewport, *get_viewport(), *s.camera);
             }
         }
         stage = "vehicle_assets";
+        s.reflections->update(race, delta, newScene || replayRestored);
         for (std::size_t slot = 0; slot < frame.vehicles.size(); ++slot) {
             const auto& state = frame.vehicles[slot];
             auto [it, added] = s.vehicles.try_emplace(state.handle);
@@ -601,13 +627,13 @@ void RacePresentation::_process(double delta) {
                 // Traffic can change skin on a live Car. Swap only the Godot
                 // presentation and keep the World-issued handle.
                 auto* previous = vehicle.root;
-                vehicle.attach(*s.scene, *world.carTable[slot], state, race.worldFrames);
+                vehicle.attach(*s.scene, *world.carTable[slot], state, race.worldFrames, s.reflections->assets());
                 if (previous) {
                     s.scene->remove_child(previous);
                     previous->queue_free();
                 }
             }
-            vehicle.update(state);
+            vehicle.update(state, race.renderResources->Lights(), s.reflections->matrix(), race);
         }
         for (auto it = s.vehicles.begin(); it != s.vehicles.end();) {
             if (std::none_of(frame.vehicles.begin(), frame.vehicles.end(),
@@ -632,7 +658,17 @@ void RacePresentation::_process(double delta) {
             s.post.is_null() && effectOptions.monochrome && race.blackAndWhite);
         stage = "camera";
         apply_race_camera(*s.camera, frame.camera);
-        if (s.post.is_valid()) s.post->update(s.runtime.RacePost(), newScene || replayRestored, effectOptions);
+        if (s.post.is_valid()) {
+            auto post = s.runtime.RacePost();
+            // Port presentation for the attract demo. Keep any authored
+            // replay or camera trigger authoritative when it supplies a mask.
+            if (s.host.demoInput && post.radialMask && !post.radialActive) {
+                post.radialActive = true;
+                post.radialAmounts = {0, 160}; // RadialBlurOn's default envelope.
+            }
+            s.radialBlurActive = effectOptions.motionBlur && post.radialActive;
+            s.post->update(post, newScene || replayRestored, effectOptions, race.ntsc);
+        }
         stage = "race_effects";
         if (!newScene && replayRestored) s.effects->reset();
         stage = "rear_view";
@@ -640,13 +676,14 @@ void RacePresentation::_process(double delta) {
             if (!s.rearViewport) {
                 s.rearViewport = memnew(SubViewport);
                 s.rearViewport->set_name("RearViewTarget");
-                s.rearViewport->set_world_3d(get_viewport()->find_world_3d());
+                s.rearViewport->set_world_3d(s.camera->get_world_3d());
                 s.scene->add_child(s.rearViewport);
                 RenderingServer::get_singleton()->viewport_set_disable_2d(
                     s.rearViewport->get_viewport_rid(), true);
                 s.rearCamera = memnew(Camera3D);
                 s.rearViewport->add_child(s.rearCamera);
                 s.rearCamera->set_cull_mask_value(2, false);
+                s.rearCamera->set_cull_mask(s.rearCamera->get_cull_mask() & ~trackReflectionLayer);
                 s.rearCamera->make_current();
             }
             // Target 7 has 256x64 logical pixels and focal scales 1.5x/1.08y.
@@ -675,6 +712,10 @@ void RacePresentation::_process(double delta) {
     } catch (const std::exception& error) {
         fail(stage, error.what());
     }
+}
+
+Node3D* RacePresentation::race_scene() const {
+    return session_ ? session_->scene : nullptr;
 }
 
 PackedVector3Array RacePresentation::photo_route() const {
@@ -719,6 +760,7 @@ Dictionary RacePresentation::telemetry() const {
         result["loading"] = session_->frontend->showing_loading();
     }
     result["race_state"] = session_->raceState;
+    result["radial_blur_active"] = session_->radialBlurActive;
     result["animation_clock"] = session_->animationClock;
     collect_police_diagnostics(result, session_->runtime.RaceState(), session_->runtime.FrontendState());
     if (!session_->scene) return result;

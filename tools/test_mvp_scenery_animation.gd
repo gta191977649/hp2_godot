@@ -32,7 +32,7 @@ func _process(_delta: float) -> bool:
     return false
 
 func _check(race: Node) -> void:
-    var scene := race.get_node("RaceScene")
+    var scene: Node3D = race.race_scene()
     var choices := {}
     var counts := {}
     for node in scene.get_children():

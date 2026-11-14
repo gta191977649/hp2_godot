@@ -35,8 +35,8 @@ func _process(_delta: float) -> bool:
         start_support = Vector2i(sample["police_roadblocks"], sample["police_helicopters"])
         _key(KEY_W, true)
 
-    var objects := race.get_node_or_null("RaceScene/WorldObjects")
-    var effects := race.get_node_or_null("RaceScene/RaceEffects")
+    var objects: Node = race.race_scene().get_node_or_null("WorldObjects") if race.race_scene() else null
+    var effects: Node = race.race_scene().get_node_or_null("RaceEffects") if race.race_scene() else null
     if effects:
         for child in effects.get_children():
             if child is GPUParticles3D and child.has_meta("source_effect_group"):
@@ -76,10 +76,10 @@ func _process(_delta: float) -> bool:
 
 func _check_pixels(mesh: MeshInstance3D, label: String) -> void:
     race.set_process(false)
-    var source_camera := root.get_camera_3d()
+    var source_camera: Camera3D = race.race_scene().get_viewport().get_camera_3d()
     var camera := Camera3D.new()
     camera.far = source_camera.far
-    race.get_node("RaceScene").add_child(camera)
+    race.race_scene().add_child(camera)
     camera.make_current()
     var bounds := mesh.get_aabb()
     var center := mesh.to_global(bounds.get_center())

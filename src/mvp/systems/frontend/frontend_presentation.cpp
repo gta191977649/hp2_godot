@@ -1,6 +1,10 @@
 #include "frontend_presentation.hpp"
 
+#include "assets/shader_resource.hpp"
+
 #include "assets/mesh_converter.hpp"
+#include "indep/inc/eLight.hpp"
+#include "indep/inc/CameraMover.hpp"
 #include "presentation/race_presentation.hpp"
 #include "systems/effects/race_effects_presentation.hpp"
 #include "frontend_video.hpp"
@@ -117,20 +121,7 @@ struct FrontendPresentation::Storage {
         overlay.add_child(&mapTexture);
         overlay.add_child(&mapForeground);
         Ref<Shader> shader;
-        shader.instantiate();
-        shader->set_code(R"(
-shader_type canvas_item;
-render_mode unshaded;
-varying float texture_q;
-varying vec4 vertex_color;
-void vertex() {
-    texture_q = CUSTOM0.x;
-    vertex_color = COLOR;
-}
-void fragment() {
-    COLOR = vertex_color * texture(TEXTURE, UV / texture_q);
-}
-)");
+        shader = load_shader("res://shader/minimap.gdshader");
         Ref<ShaderMaterial> material;
         material.instantiate();
         material->set_shader(shader);
@@ -356,6 +347,7 @@ void fragment() {
         std::vector<std::vector<const EditorMarkerTexture*>> textures;
     };
     std::map<int, Preview> previews;
+    CarPaintAssets previewPaint;
 
     void update_previews(const FrontendStateView& state,const RaceEffectsFrame& effects) {
         if (!state.previews || !state.cameras) throw std::runtime_error("Frontend preview owners are unavailable");
@@ -364,6 +356,14 @@ void fragment() {
             if (request.viewNumber < 1 || request.viewNumber > 2)
                 throw std::runtime_error("Unsupported frontend preview view " + std::to_string(request.viewNumber));
             if (request.model && request.model->solid) views[request.viewNumber].push_back(&request);
+        }
+        if (!views.empty() && previewPaint.reflection.is_null()) {
+            auto& resources = pointerRuntime.PresentationResources();
+            previewPaint.specular = upload_paint_texture(resources.SpecialTexture(6));
+            previewPaint.reflection = upload_paint_texture(resources.SpecialTexture(8));
+            previewPaint.frontend = true;
+            if (previewPaint.reflection.is_null())
+                throw std::runtime_error("Frontend paint is missing CarSelectEnvMap");
         }
         for (auto& [view, preview] : previews) {
             const bool active = views.count(view) != 0;
@@ -420,7 +420,11 @@ void fragment() {
             if (state.effects) preview.effects->update_preview_lights(state.effects->lights,*preview.camera,view);
             preview.effects->update_preview_particles(effects);
 
-            MeshConverter converter;
+            MeshConverter converter(&previewPaint);
+            const auto& screen = state.cameras->screens[view];
+            auto sourceView = screen;
+            std::copy_n(pose.matrix, 16, sourceView.matrices.worldToView);
+            LightContextBatch lights(pointerRuntime.PresentationResources().Lights());
             for (std::size_t i = 0; i < models.size(); ++i) {
                 const auto& request = *models[i];
                 const auto& model = *request.model;
@@ -443,6 +447,11 @@ void fragment() {
                     preview.textures[i] = std::move(replacements);
                 }
                 node->set_transform(race_transform(request.transform.data()));
+                float environment[16];
+                carCinematicLookAt(environment, pose.eye, request.transform.data() + 12,
+                    std::array<float, 4>{0, 0, 1, 0}.data());
+                apply_paint_lighting(*node, lights.Setup(request.transform.data(), environment,
+                    pose.eye, sourceView, 3));
                 node->show();
             }
             for (std::size_t i = models.size(); i < preview.nodes.size(); ++i) preview.nodes[i]->hide();
@@ -756,28 +765,10 @@ void FrontendPresentation::update_rear_view(const Ref<Texture2D>& view,
         s.rearView->set_z_index(19);
         s.canvas.add_child(s.rearView);
         Ref<Shader> shader;
-        shader.instantiate();
         // PAL10EC70 draws both overlays in target coordinates. PAL10EDC8
         // flips the completed image. ALPHA44 blends the frame and ALPHA48
         // adds the mask RGB and replaces the resulting target alpha.
-        shader->set_code(R"(
-shader_type canvas_item;
-render_mode unshaded;
-uniform sampler2D frame_texture : repeat_disable, filter_linear;
-uniform sampler2D mask_texture : repeat_disable, filter_linear;
-varying vec4 tint;
-void vertex() {
-    tint = COLOR;
-}
-void fragment() {
-    vec2 scene_uv = vec2(1.0 - UV.x, UV.y);
-    vec2 overlay_uv = vec2(UV.x + 1.0 / 256.0, (UV.y * 64.0 + 14.0) / 90.0);
-    vec4 frame = texture(frame_texture, overlay_uv);
-    vec4 mask = texture(mask_texture, overlay_uv);
-    vec3 rear = texture(TEXTURE, scene_uv).rgb;
-    COLOR = vec4(mix(rear, frame.rgb, frame.a) + mask.rgb * mask.a, mask.a) * tint;
-}
-)");
+        shader = load_shader("res://shader/rear_view_mask.gdshader");
         s.rearMaterial.instantiate();
         s.rearMaterial->set_shader(shader);
         s.rearView->set_material(s.rearMaterial);

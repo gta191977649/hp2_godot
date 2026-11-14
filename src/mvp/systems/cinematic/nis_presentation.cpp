@@ -1,5 +1,7 @@
 #include "nis_presentation.hpp"
 
+#include "assets/shader_resource.hpp"
+
 #include "assets/mesh_converter.hpp"
 #include "indep/inc/NIS.hpp"
 
@@ -75,16 +77,7 @@ NisPresentation::NisPresentation(Node& host) : storage_(std::make_unique<Storage
     filter->set_anchors_and_offsets_preset(Control::PRESET_FULL_RECT);
     filter->set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
     Ref<Shader> shader;
-    shader.instantiate();
-    shader->set_code(R"(
-shader_type canvas_item;
-render_mode unshaded, blend_disabled;
-uniform sampler2D scene_color : hint_screen_texture, repeat_disable, filter_nearest;
-void fragment() {
-    float green = texture(scene_color, SCREEN_UV).g;
-    COLOR = vec4(vec3(green), 1.0);
-}
-)");
+    shader = load_shader("res://shader/nis_video.gdshader");
     Ref<ShaderMaterial> material;
     material.instantiate();
     material->set_shader(shader);

@@ -11,6 +11,7 @@
 #include <godot_cpp/classes/os.hpp>
 
 #include <algorithm>
+#include <map>
 #include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
@@ -37,11 +38,12 @@ MeshInstance3D& attach_placement(Node3D& root, const Ref<ArrayMesh>& mesh, const
 struct PlacementBatch {
     Ref<ArrayMesh> mesh;
     std::vector<Transform3D> transforms;
+    std::uint32_t layers{};
 };
 
 void attach_batch(Node3D& root, const PlacementBatch& batch) {
     if (batch.transforms.size() == 1) {
-        attach_placement(root, batch.mesh, batch.transforms.front());
+        attach_placement(root, batch.mesh, batch.transforms.front()).set_layer_mask(batch.layers);
         return;
     }
     Ref<MultiMesh> instances;
@@ -61,10 +63,12 @@ void attach_batch(Node3D& root, const PlacementBatch& batch) {
     auto* node = memnew(MultiMeshInstance3D);
     root.add_child(node);
     node->set_multimesh(instances);
+    node->set_layer_mask(batch.layers);
 }
 
 struct PlacementMesh {
     Ref<ArrayMesh> mesh;
+    Ref<ArrayMesh> reflection;
     bool batchable{};
 };
 
@@ -179,6 +183,7 @@ std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResource
     // PAL10F928 single-player scenery filter. The donor loader already
     // applies the authored reverse placement transforms.
     const auto directionMask = 0x1u | (reverse ? 4u : 8u);
+    const auto reflectionMask = directionMask | 2u;
     std::unordered_set<const SceneryInstance*> movable;
     for (std::size_t i = 0; i < objects.placementCount; ++i)
         if (const auto* placement = objects.placements[i].scenery) movable.insert(placement);
@@ -186,7 +191,7 @@ std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResource
     for (std::size_t index = 0; index < scenery.loadedSectionCount; ++index) {
         const auto* section = scenery.loadedSections[index];
         if (!section) throw std::runtime_error("Loaded section table contains an empty entry");
-        std::unordered_map<const EditorMarkerModel*, std::size_t> batchIndices;
+        std::map<std::pair<const EditorMarkerModel*, std::uint32_t>, std::size_t> batchIndices;
         std::vector<PlacementBatch> batches;
         for (std::size_t item = 0; item < section->instanceCount; ++item) {
             const auto& instance = section->instances[item];
@@ -213,6 +218,10 @@ std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResource
                 entry.mesh = converter.convert(*level);
                 entry.batchable = batchScenery && can_batch(*mesh.ptr());
             }
+            const bool reflect = !moves && !(instance.flags & reflectionMask);
+            const bool splitReflection = reflect && ((instance.flags & 0x100u) ||
+                bool(mesh->get_meta("hp2_sorted_surfaces", false)));
+            const auto layers = 1u | (reflect && !splitReflection ? trackReflectionLayer : 0u);
             if (rigid && rigid->playbackType != 0)
                 worldObjects.prepare_animation(model.levels[0]);
             if (!mesh->get_surface_count()) continue; // All strips can be non-drawing.
@@ -229,14 +238,23 @@ std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResource
             // Keep section boundaries and preserve per-instance winding for mirrored placements.
             if (moves) {
                 auto& node = attach_placement(root, mesh, transform);
+                node.set_layer_mask(1);
                 node.set_visible((instance.flags & 0x10u) == 0);
                 movablePlacements.push_back({&instance.flags, &node});
             } else if (entry.batchable && transform.basis.determinant() > 0) {
-                const auto [batch, inserted] = batchIndices.try_emplace(level, batches.size());
-                if (inserted) batches.push_back({mesh, {}});
+                const auto [batch, inserted] = batchIndices.try_emplace(std::make_pair(level, layers), batches.size());
+                if (inserted) batches.push_back({mesh, {}, layers});
                 batches[batch->second].transforms.push_back(transform);
             } else {
-                attach_placement(root, mesh, transform);
+                attach_placement(root, mesh, transform).set_layer_mask(layers);
+            }
+            if (splitReflection) {
+                if (entry.reflection.is_null()) entry.reflection = converter.convert(*level, true, 0, false, true);
+                if (entry.reflection->get_surface_count()) {
+                    auto reflected = transform;
+                    if (instance.flags & 0x100u) reflected.origin.y += 2.0f;
+                    attach_placement(root, entry.reflection, reflected).set_layer_mask(trackReflectionLayer);
+                }
             }
             ++placements;
         }

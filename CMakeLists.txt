@@ -47,6 +47,7 @@ add_library(hp2_track12 SHARED
   src/mvp/systems/track/track_presentation.cpp
   src/mvp/systems/effects/race_effects_presentation.cpp
   src/mvp/systems/vehicle/vehicle_presentation.cpp
+  src/mvp/systems/vehicle/vehicle_reflection.cpp
   src/mvp/systems/cinematic/nis_presentation.cpp
   src/mvp/systems/camera/race_post_presentation.cpp
   src/mvp/systems/camera/camera_presentation.cpp)
@@ -95,6 +96,8 @@ file(GENERATE OUTPUT "${project_dir}/override.cfg" CONTENT
   "[hp2]\n\nasset_config=\"${CMAKE_SOURCE_DIR}/config/ps2_assets.local.json\"\ndebug_mode=$<IF:$<CONFIG:Debug>,true,false>\n")
 add_custom_target(stage_mvp ALL
   COMMAND ${CMAKE_COMMAND} -E make_directory "${project_dir}/bin"
+  COMMAND ${CMAKE_COMMAND} -E rm -rf "${project_dir}/shader"
+  COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/src/mvp/shader" "${project_dir}/shader"
   COMMAND ${CMAKE_COMMAND} -E rm -f
     "${project_dir}/ps2_mvp.gdextension"
     "${project_dir}/ps2_mvp.gdextension.uid"

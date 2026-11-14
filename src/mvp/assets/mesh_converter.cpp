@@ -1,10 +1,14 @@
 #include "mesh_converter.hpp"
 
+#include "assets/shader_resource.hpp"
+
 #include "indep/inc/Ecstasy.hpp"
 #include "indep/inc/Texture.hpp"
+#include "indep/inc/eLight.hpp"
 
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
+#include <godot_cpp/classes/mesh_instance3d.hpp>
 #include <godot_cpp/classes/shader.hpp>
 #include <godot_cpp/classes/shader_material.hpp>
 
@@ -12,6 +16,7 @@
 #include <cmath>
 #include <cstring>
 #include <stdexcept>
+#include <tuple>
 #include <vector>
 
 namespace hp2 {
@@ -55,119 +60,6 @@ bool is_light_shaft(std::uint32_t key) {
     return key == 0x885adba5u || key == 0xba0e31b3u || key == 0xba0e31b4u;
 }
 
-constexpr auto animatedSurface = R"(
-global uniform vec4 hp2_animation_clock; // interpolated ticks, texture seconds, real ticks, committed ticks
-uniform ivec2 repeat_axes = ivec2(1);
-#ifdef SHAFT
-uniform sampler2D albedo_texture : source_color, filter_linear, repeat_enable;
-uniform sampler2D albedo_minified : source_color, filter_nearest, repeat_enable;
-#else
-uniform sampler2D albedo_texture : source_color, filter_linear_mipmap, repeat_enable;
-#endif
-#ifdef FLIPBOOK
-uniform sampler2DArray frame_textures : source_color, filter_linear_mipmap, repeat_enable;
-uniform int texture_count;
-uniform float texture_rate;
-uniform bool real_clock;
-#endif
-#ifdef SCROLL
-uniform vec2 scroll_rate;
-uniform float scroll_interval;
-uniform bool stepped_scroll;
-#endif
-#ifdef MORPH
-uniform sampler2D vertex_frames : filter_nearest, repeat_disable;
-uniform int frame_stride;
-uniform int morph_count;
-uniform float morph_rate;
-vec4 sample_vertex(int frame, int vertex) {
-    int i = frame * frame_stride + vertex;
-    return texelFetch(vertex_frames, ivec2(i % 1024, i / 1024), 0);
-}
-#endif
-#ifdef RIGID
-uniform sampler2D rigid_frames : filter_nearest, repeat_disable;
-uniform int rigid_count;
-uniform float rigid_duration;
-vec4 sample_rigid(int channel, int frame) {
-    return texelFetch(rigid_frames, ivec2(channel, frame), 0);
-}
-#endif
-#if defined(MORPH) || defined(RIGID)
-uniform int animation_start;
-instance uniform int hp2_animation_start = -1;
-#endif
-
-void vertex() {
-#if defined(MORPH) || defined(RIGID)
-    int start = hp2_animation_start >= 0 ? hp2_animation_start : animation_start;
-#endif
-#ifdef MORPH
-    float phase = (hp2_animation_clock.x - float(start & 16383)) * morph_rate / 60.0;
-    int frame = int(floor(phase));
-    // Donor selects an unsigned remainder when the random start is ahead.
-    int current = int(uint(frame % morph_count) % uint(morph_count));
-    int next = int(uint((frame + 1) % morph_count) % uint(morph_count));
-    int vertex = int(CUSTOM0.x);
-    VERTEX = mix(sample_vertex(current, vertex).xyz, sample_vertex(next, vertex).xyz, fract(phase));
-#endif
-#ifdef RIGID
-    if (start != 0) {
-        float tick = float((int(hp2_animation_clock.x) - start) & 16383) + fract(hp2_animation_clock.x);
-        float phase = tick / rigid_duration;
-        bool loop = (start & 16384) != 0;
-        if (loop || phase < float(rigid_count)) {
-            int current = int(phase) % rigid_count;
-            int next = loop ? (current + 1) % rigid_count : min(current + 1, rigid_count - 1);
-            float weight = fract(phase);
-            vec4 a = sample_rigid(0, current);
-            vec4 b = sample_rigid(0, next);
-            vec4 q = normalize(mix(a, dot(a, b) < 0.0 ? -b : b, weight));
-            vec3 point = VERTEX * mix(sample_rigid(2, current).xyz, sample_rigid(2, next).xyz, weight);
-            VERTEX = point + 2.0 * cross(q.xyz, cross(q.xyz, point) + q.w * point)
-                + mix(sample_rigid(1, current).xyz, sample_rigid(1, next).xyz, weight);
-        }
-    }
-#endif
-#ifdef SCROLL
-    float time = hp2_animation_clock.y;
-    if (stepped_scroll) time = trunc(time / scroll_interval);
-    vec2 offset = time * scroll_rate;
-    UV += offset - trunc(offset);
-#endif
-}
-
-void fragment() {
-    vec2 margin = 0.5 / vec2(textureSize(albedo_texture, 0));
-    vec2 uv = mix(clamp(UV, margin, 1.0-margin), UV, notEqual(repeat_axes, ivec2(0)));
-#ifdef FLIPBOOK
-    float clock = real_clock ? hp2_animation_clock.z : hp2_animation_clock.w;
-    float frame = mod(trunc(texture_rate * (clock / 60.0)), float(texture_count));
-    vec4 color = texture(frame_textures, vec3(uv, frame));
-#else
-#ifdef SHAFT
-    vec2 texels = UV * vec2(textureSize(albedo_texture, 0));
-    float footprint = max(length(dFdx(texels)), length(dFdy(texels)));
-    vec4 color = footprint > 1.0 ? texture(albedo_minified, uv) : texture(albedo_texture, uv);
-#else
-    vec4 color = texture(albedo_texture, uv);
-#endif
-#endif
-    vec3 tint = COLOR.rgb;
-    if (!OUTPUT_IS_SRGB) {
-        tint = mix(tint / 12.92, pow((tint + 0.055) / 1.055, vec3(2.4)), step(vec3(0.04045), tint));
-    }
-    ALBEDO = color.rgb * tint;
-#ifdef CUTOUT
-    ALPHA = color.a;
-    ALPHA_SCISSOR_THRESHOLD = 97.0 / 255.0;
-#endif
-#ifdef TRANSPARENT
-    ALPHA = color.a;
-#endif
-}
-)";
-
 }
 
 Vector3 race_vector(const float* source) {
@@ -177,6 +69,39 @@ Vector3 race_vector(const float* source) {
 Transform3D race_transform(const float* source) {
     return {Basis(race_vector(source), race_vector(source + 8), -race_vector(source + 4)),
         race_vector(source + 12)};
+}
+
+Ref<Texture2D> upload_paint_texture(const EditorMarkerTexture* descriptor) {
+    const auto* source = textureInfoForDescriptor(descriptor);
+    if (!source || !source->pixels.Data()) return {};
+    std::uint32_t width{}, height{};
+    const auto rgba = DecodeTextureMipRgba(*source, 0, 0, source->pixels.size, width, height);
+    PackedByteArray bytes;
+    bytes.resize(rgba.size());
+    std::memcpy(bytes.ptrw(), rgba.data(), rgba.size());
+    const auto image = Image::create_from_data(width, height, false, Image::FORMAT_RGBA8, bytes);
+    image->generate_mipmaps();
+    auto texture = ImageTexture::create_from_image(image);
+    texture->set_name(String::num_uint64(descriptor->key));
+    return texture;
+}
+
+void apply_paint_lighting(MeshInstance3D& mesh, const SceneLightContext& context) {
+    if (!mesh.get_mesh()->has_meta("hp2_car_paint")) return;
+    constexpr std::array colors{"hp2_paint_light_r", "hp2_paint_light_g", "hp2_paint_light_b", "hp2_paint_light_a"};
+    constexpr std::array lights{"hp2_paint_direction_0", "hp2_paint_direction_1", "hp2_paint_direction_2"};
+    constexpr std::array environment{"hp2_paint_env_x", "hp2_paint_env_y", "hp2_paint_env_z"};
+    for (std::size_t axis = 0; axis < colors.size(); ++axis)
+        mesh.set_instance_shader_parameter(colors[axis], Vector4(context.colorMatrix[axis],
+            context.colorMatrix[4 + axis], context.colorMatrix[8 + axis], context.colorMatrix[12 + axis]));
+    for (std::size_t axis = 0; axis < lights.size(); ++axis) {
+        mesh.set_instance_shader_parameter(lights[axis], Vector3(context.directionMatrix[axis],
+            context.directionMatrix[4 + axis], context.directionMatrix[8 + axis]));
+        mesh.set_instance_shader_parameter(environment[axis], Vector3(context.environmentMatrix[axis],
+            context.environmentMatrix[4 + axis], context.environmentMatrix[8 + axis]));
+    }
+    mesh.set_instance_shader_parameter("hp2_paint_eye", Vector3(context.localEye[0], context.localEye[1], context.localEye[2]));
+    mesh.set_instance_shader_parameter("hp2_paint_bound", true);
 }
 
 Ref<StandardMaterial3D> MeshConverter::material(const EditorMarkerTexture& descriptor) {
@@ -248,7 +173,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
 }
 
 Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depthWrite, std::size_t boneCount,
-    bool canTriggerRigidAnimation) {
+    bool canTriggerRigidAnimation, bool opaqueOnly) {
     if (!model.solid || !model.solid->geometry)
         throw std::runtime_error("Solid has no geometry for model " + std::to_string(model.key));
     struct Surface {
@@ -261,9 +186,13 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         PackedInt32Array bones;
         PackedFloat32Array weights;
         PackedFloat32Array animationIndices;
+        PackedFloat32Array paintVertices;
+        const EditorMarkerLightMaterial* lightMaterial{};
+        std::uint32_t paintFlags{};
     };
     std::vector<Surface> surfaces;
-    std::unordered_map<const EditorMarkerTexture*, std::size_t> surfaceIndices;
+    std::map<std::tuple<const EditorMarkerTexture*, const EditorMarkerLightMaterial*, std::uint32_t>, std::size_t>
+        surfaceIndices;
     const auto* morph = boneCount ? nullptr : model.solid->vertexAnimation;
     if (morph && morph->count < 2) morph = nullptr;
     const auto* rigid = boneCount ? nullptr : model.solid->rigidAnimation;
@@ -356,10 +285,32 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             throw std::runtime_error("Invalid strip channels, topology or texture slot for model " + std::to_string(model.key));
         const auto* descriptor = bindings[strip.textureIndex];
         if (!descriptor) throw std::runtime_error("Missing texture binding for model " + std::to_string(model.key));
-        const auto [entry, inserted] = surfaceIndices.emplace(descriptor, surfaces.size());
+        const auto* texture = textureInfoForDescriptor(descriptor);
+        if (opaqueOnly && texture && texture->requiresDepthSort) continue;
+        const EditorMarkerLightMaterial* lightMaterial = nullptr;
+        std::uint32_t paintFlags = 0;
+        if (paint_ && texture && !texture->requiresDepthSort && !morph && !rigid &&
+            (strip.flags & 0x1c0u) && strip.normals.size() == strip.positions.size()) {
+            if (strip.lightMaterialIndex >= 0 && std::size_t(strip.lightMaterialIndex) < geometry.lightMaterials.size())
+                lightMaterial = geometry.lightMaterials[strip.lightMaterialIndex];
+            if (!lightMaterial && model.resources) {
+                const auto* root = model.resources->catalogueRoot ? model.resources->catalogueRoot : model.resources;
+                lightMaterial = root->defaultLightMaterial;
+            }
+            if (lightMaterial && !paint_->frontend && lightMaterial->inGameVariant)
+                lightMaterial = lightMaterial->inGameVariant.get();
+            if (lightMaterial) {
+                paintFlags = strip.flags | (texture->drawFlag4Enabled ? 4u : 0u);
+                if (!environmentMappingEnabled || paint_->reflection.is_null()) paintFlags &= ~0x100u;
+            }
+        }
+        const auto key = std::make_tuple(descriptor, lightMaterial, paintFlags);
+        const auto [entry, inserted] = surfaceIndices.emplace(key, surfaces.size());
         if (inserted) {
             auto& surface = surfaces.emplace_back();
             surface.descriptor = descriptor;
+            surface.lightMaterial = lightMaterial;
+            surface.paintFlags = paintFlags;
             surface.material = material(*descriptor);
             if (!depthWrite) {
                 surface.material = surface.material->duplicate();
@@ -386,6 +337,10 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             }
             surface.uv.push_back({strip.textureCoordinates[i][0], strip.textureCoordinates[i][1]});
             const auto rgb555 = strip.colors[i];
+            if (lightMaterial) {
+                for (const float component : strip.normals[i]) surface.paintVertices.push_back(component);
+                surface.paintVertices.push_back(rgb555);
+            }
             // GS modulation uses 128 as unity. Texture alpha supplies opacity.
             surface.colors.push_back({
                 std::min(rgb555 & 31u, 16u) / 16.0f,
@@ -404,6 +359,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
     mesh.instantiate();
     bool batchable = true;
     bool hasScroll = false, hasTextureSequence = false, hasPuddle = false;
+    bool hasSortedSurfaces = false;
     int shaftSurfaces = 0;
     for (const auto& surface : surfaces) {
         Array arrays;
@@ -413,16 +369,51 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         arrays[Mesh::ARRAY_COLOR] = surface.colors;
         arrays[Mesh::ARRAY_INDEX] = surface.indices;
         if (morph) arrays[Mesh::ARRAY_CUSTOM0] = surface.animationIndices;
+        if (surface.lightMaterial) arrays[Mesh::ARRAY_CUSTOM0] = surface.paintVertices;
         if (boneCount) {
             arrays[Mesh::ARRAY_BONES] = surface.bones;
             arrays[Mesh::ARRAY_WEIGHTS] = surface.weights;
         }
         const auto index = mesh->get_surface_count();
-        const auto flags = morph ? std::uint64_t(Mesh::ARRAY_CUSTOM_R_FLOAT) << Mesh::ARRAY_FORMAT_CUSTOM0_SHIFT : 0;
+        const auto format = morph ? Mesh::ARRAY_CUSTOM_R_FLOAT : Mesh::ARRAY_CUSTOM_RGBA_FLOAT;
+        const auto flags = morph || surface.lightMaterial ? std::uint64_t(format) << Mesh::ARRAY_FORMAT_CUSTOM0_SHIFT : 0;
         mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays, {}, {}, flags);
         if (mesh->get_surface_count() != index + 1)
             throw std::runtime_error("Godot rejected a surface for model " + std::to_string(model.key));
         const auto* wire = surface.descriptor->authoredRecord;
+        hasSortedSurfaces |= textureInfoForDescriptor(surface.descriptor)->requiresDepthSort;
+        if (surface.lightMaterial) {
+            auto& base = paintTextures_[surface.descriptor];
+            if (base.is_null()) base = upload_paint_texture(surface.descriptor);
+            if (base.is_null() || ((surface.paintFlags & 0x40u) && paint_->specular.is_null()))
+                throw std::runtime_error("Car paint is missing an authored texture");
+            Ref<ShaderMaterial> material;
+            material.instantiate();
+            material->set_shader(load_shader("res://shader/car_paint.gdshader"));
+            material->set_shader_parameter("base_image", base);
+            material->set_shader_parameter("specular_image", paint_->specular);
+            material->set_shader_parameter("reflection_image", paint_->reflection);
+            material->set_shader_parameter("paint_flags", int(surface.paintFlags));
+            material->set_shader_parameter("frontend", paint_->frontend);
+            material->set_shader_parameter("wheel", paintWheel_);
+            material->set_shader_parameter("alpha_test", !wire[0x4f] &&
+                !textureInfoForDescriptor(surface.descriptor)->drawFlag4Enabled);
+            material->set_shader_parameter("repeat_axes", Vector2i(wire[0x4c] & 1u, (wire[0x4c] >> 1) & 1u));
+            PackedVector4Array coefficients;
+            const auto* values = surface.lightMaterial->NativeCoefficients();
+            for (int i = 0; i < 16; i += 4)
+                coefficients.push_back({values[i], values[i + 1], values[i + 2], values[i + 3]});
+            material->set_shader_parameter("coefficients", coefficients);
+            const auto& blend = nativeRenderPolicy.reflectionBlend;
+            const bool overrideBlend = (surface.paintFlags & 4u) && !paint_->frontend;
+            material->set_shader_parameter("reflection_selectors", overrideBlend ?
+                Vector4i(blend[0], blend[1], blend[2], blend[3]) : Vector4i(0, 2, 0, 1));
+            material->set_shader_parameter("reflection_fixed", float(overrideBlend ? blend[4] : paint_->frontend ? 64 : 16));
+            mesh->surface_set_material(index, material);
+            mesh->set_meta("hp2_car_paint", true);
+            batchable = false;
+            continue;
+        }
         const auto textureKeyValue = surface.descriptor->key;
         // TEX1 has MXL=0, MMAG=1 and MMIN=3 on the original shaft textures.
         const bool shaft = is_light_shaft(textureKeyValue) && !wire[0x6e] && wire[0x6f] == 1 && wire[0x70] == 3;
@@ -453,32 +444,28 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
                 continue;
             }
         }
-        String source = "shader_type spatial;\nrender_mode unshaded, cull_disabled";
-        if (blend == BaseMaterial3D::BLEND_MODE_ADD) source += ", blend_add";
-        if (blend == BaseMaterial3D::BLEND_MODE_SUB) source += ", blend_sub";
-        if (depth == BaseMaterial3D::DEPTH_DRAW_DISABLED) source += ", depth_draw_never";
-        else if (transparency == BaseMaterial3D::TRANSPARENCY_ALPHA) source += ", depth_draw_always";
-        source += ";\n";
-        if (transparency == BaseMaterial3D::TRANSPARENCY_ALPHA_SCISSOR) source += "#define CUTOUT\n";
-        if (transparency == BaseMaterial3D::TRANSPARENCY_ALPHA) source += "#define TRANSPARENT\n";
-        if (morph) source += "#define MORPH\n";
-        if (rigid) source += "#define RIGID\n";
-        if (scroll) source += "#define SCROLL\n";
-        if (shaft) source += "#define SHAFT\n";
-        if (sequence.count) source += "#define FLIPBOOK\n";
-        source += animatedSurface;
-        auto& shader = animatedShaders_[source];
-        if (shader.is_null()) {
-            shader.instantiate();
-            shader->set_code(source);
-        }
+        const char* blendName = blend == BaseMaterial3D::BLEND_MODE_ADD ? "add" :
+            blend == BaseMaterial3D::BLEND_MODE_SUB ? "sub" : "mix";
+        const char* coverage = transparency == BaseMaterial3D::TRANSPARENCY_ALPHA_SCISSOR ? "cutout" :
+            transparency == BaseMaterial3D::TRANSPARENCY_ALPHA ? "transparent" : "opaque";
+        const char* depthName = depth == BaseMaterial3D::DEPTH_DRAW_DISABLED ? "read" : "write";
+        const String shaderPath = String("res://shader/mesh_surface_") + coverage + "_" + blendName + "_" + depthName + ".gdshader";
+        auto& shader = animatedShaders_[shaderPath];
+        if (shader.is_null()) shader = load_shader(shaderPath);
         Ref<ShaderMaterial> material;
         material.instantiate();
         material->set_shader(shader);
         material->set_render_priority(surface.material->get_render_priority());
         material->set_shader_parameter("albedo_texture", surface.material->get_texture(BaseMaterial3D::TEXTURE_ALBEDO));
-        if (shaft) material->set_shader_parameter("albedo_minified",
-            surface.material->get_texture(BaseMaterial3D::TEXTURE_ALBEDO));
+        material->set_shader_parameter("use_scroll", scroll);
+        material->set_shader_parameter("use_shaft", shaft);
+        material->set_shader_parameter("use_morph", morph != nullptr);
+        material->set_shader_parameter("use_rigid", rigid != nullptr);
+        if (shaft) {
+            const auto albedo = surface.material->get_texture(BaseMaterial3D::TEXTURE_ALBEDO);
+            material->set_shader_parameter("albedo_minified", albedo);
+            material->set_shader_parameter("albedo_magnified", albedo);
+        }
         material->set_shader_parameter("repeat_axes", Vector2i(wire[0x4c] & 1u, (wire[0x4c] >> 1) & 1u));
         if (morph || rigid) material->set_shader_parameter("animation_start", model.rigidAnimationStart);
         if (morph) {
@@ -507,6 +494,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         if (!morph && !rigid) animatedTextures_.emplace(textureKey, material);
     }
     mesh->set_meta("hp2_batchable", batchable);
+    mesh->set_meta("hp2_sorted_surfaces", hasSortedSurfaces);
     mesh->set_meta("hp2_morph", morph != nullptr);
     mesh->set_meta("hp2_rigid", rigid != nullptr);
     mesh->set_meta("hp2_uv_scroll", hasScroll);

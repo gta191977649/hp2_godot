@@ -377,6 +377,9 @@ struct RaceStateView {
     std::array<const EditorMarkerTexture*, 2> rearTextures{};
     bool reverse{};
     bool beTheCop{};
+    // Port-side borrowed render operands, consumed with the committed view.
+    const float* reflectionOrigin{};
+    ResourceRegistry* renderResources{};
 };
 class ApplicationRuntime final {
 public:
@@ -401,6 +404,8 @@ public:
     int SelectedTrack() const noexcept;
     RaceStateView RaceState() const noexcept;
     RacePostState RacePost() const;
+    // Port-side borrowed original resource catalogue for frontend previews.
+    ResourceRegistry& PresentationResources() const noexcept;
     void TakeRaceEffects(RaceEffectsFrame& frame);
     std::vector<RaceParticleAsset> RaceParticleAssets() const;
     void SetDisplayOptions(int32_t width,int32_t height,bool fullscreen,bool vsync);

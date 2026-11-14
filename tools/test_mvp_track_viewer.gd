@@ -140,7 +140,7 @@ func run() -> void:
         await click(Vector2(305, 110) + sidebar_offset)
         await click(Vector2(90, 295) + sidebar_offset)
     await capture("entity-view")
-    var viewport := container.get_child(0) as SubViewport
+    var viewport := _scene_viewport(container)
     if OS.get_environment("HP2_MVP_VIEWER_WIREFRAME") == "1":
         await click(Vector2(33, 206) + sidebar_offset)
         await create_timer(0.15).timeout
@@ -230,7 +230,7 @@ func verify_race_reentry() -> void:
 func run_matrix(loaded: Dictionary) -> void:
     deadline = Time.get_ticks_msec() + 180000
     var index := 0
-    var viewport := race.get_node("TrackViewerViewport").get_child(0) as SubViewport
+    var container := race.get_node("TrackViewerViewport") as SubViewportContainer
     for decade in [10, 20, 30, 40, 60]:
         for variant in range(1, 7):
             var track: int = decade + variant
@@ -246,7 +246,7 @@ func run_matrix(loaded: Dictionary) -> void:
                 loaded = await wait_for(func(state: Dictionary) -> bool:
                     return state.get("track", 0) == track and state.get("generation", 0) > generation)
                 print("TRACK_VIEWER_LOAD_MS ", track, " ", Time.get_ticks_msec() - started)
-            if viewport.get_child_count() != 3 or loaded.vehicles != 0 or loaded.reverse or loaded.viewer_entities <= 0:
+            if _scene_viewport(container).get_child_count() != 3 or loaded.vehicles != 0 or loaded.reverse or loaded.viewer_entities <= 0:
                 push_error("Incorrect viewer scene or retired children for track %d" % track)
                 quit(1)
                 return
@@ -255,6 +255,11 @@ func run_matrix(loaded: Dictionary) -> void:
     await capture("last-track")
     print("TRACK_VIEWER_MATRIX_PASS")
     quit()
+
+func _scene_viewport(container: SubViewportContainer) -> SubViewport:
+    var output := container.get_child(0) as SubViewport
+    var scene := output.get_node_or_null("RaceRenderTarget") as SubViewport
+    return scene if scene else output
 
 func source_hash(name: String) -> int:
     var result := 0xFFFFFFFF

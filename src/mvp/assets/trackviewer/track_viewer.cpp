@@ -1,4 +1,6 @@
 #include "track_viewer.hpp"
+
+#include "assets/shader_resource.hpp"
 #include "track_viewer_scene.hpp"
 
 #include "assets/mesh_converter.hpp"
@@ -133,7 +135,8 @@ struct TrackViewer::Storage {
         container->set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
         container->hide();
         host.add_child(container);
-        view = memnew(SubViewport);
+        output = memnew(SubViewport);
+        view = output;
         Ref<World3D> world;
         world.instantiate();
         view->set_world_3d(world);
@@ -143,6 +146,7 @@ struct TrackViewer::Storage {
 
     Node3D& host;
     SubViewportContainer* container{};
+    SubViewport* output{};
     SubViewport* view{};
     Camera3D* camera{};
     Node3D* trackScene{};
@@ -216,14 +220,7 @@ struct TrackViewer::Storage {
             trackScene->set_visible(!debugView);
             if (wireframeView && wireframeMaterial.is_null()) {
                 Ref<Shader> shader;
-                shader.instantiate();
-                shader->set_code(R"(
-shader_type spatial;
-render_mode unshaded, cull_disabled, shadows_disabled, fog_disabled;
-void fragment() {
-    ALBEDO = vec3(2.5, 0.85, 0.08);
-}
-)");
+                shader = load_shader("res://shader/track_viewer.gdshader");
                 wireframeMaterial.instantiate();
                 wireframeMaterial->set_shader(shader);
             }
@@ -423,7 +420,10 @@ void fragment() {
 };
 
 TrackViewer::TrackViewer(Node3D& host) : storage_(std::make_unique<Storage>(host)) {}
-TrackViewer::~TrackViewer() { storage_->capture(false); }
+TrackViewer::~TrackViewer() {
+    if (storage_->post.is_valid()) storage_->post->stop();
+    storage_->capture(false);
+}
 
 void TrackViewer::open(bool inRace, int currentTrack, int language) {
     auto& s = *storage_;
@@ -477,7 +477,7 @@ void TrackViewer::show() {
     auto& s = *storage_;
     s.active = true;
     s.container->show();
-    s.view->set_update_mode(SubViewport::UPDATE_ALWAYS);
+    s.output->set_update_mode(SubViewport::UPDATE_ALWAYS);
 }
 
 void TrackViewer::error(const char* message) {
@@ -491,7 +491,7 @@ void TrackViewer::close() {
     s.active = false;
     s.confirm = false;
     s.container->hide();
-    s.view->set_update_mode(SubViewport::UPDATE_DISABLED);
+    s.output->set_update_mode(SubViewport::UPDATE_DISABLED);
 }
 
 bool TrackViewer::active() const { return storage_->active; }
@@ -687,6 +687,8 @@ void TrackViewer::draw(float width, float height, float dpi, float fps, bool blo
 
 void TrackViewer::Storage::attach() {
     auto& s = *this;
+    if (RenderingServer::get_singleton()->get_rendering_device())
+        s.view = RacePostPresentation::create_scene(*s.output);
     s.trackScene = memnew(Node3D);
     s.view->add_child(s.trackScene);
     s.trackScene->set_name("RaceScene");
@@ -702,15 +704,11 @@ void TrackViewer::Storage::attach() {
     s.view->add_child(s.camera);
     s.camera->make_current();
     s.camera->set_cull_mask_value(3, false);
+    s.camera->set_cull_mask(s.camera->get_cull_mask() & ~trackReflectionLayer);
     s.camera->set_cull_mask_value(10, true);
-    if (RenderingServer::get_singleton()->get_rendering_device()) {
+    if (s.view != s.output) {
         s.post.instantiate();
-        Ref<Compositor> compositor;
-        compositor.instantiate();
-        TypedArray<CompositorEffect> passes;
-        passes.push_back(s.post);
-        compositor->set_compositor_effects(passes);
-        s.camera->set_compositor(compositor);
+        s.post->attach(*s.view, *s.output, *s.camera);
     }
     s.lines = memnew(Node3D);
     s.view->add_child(s.lines);
@@ -763,11 +761,17 @@ void TrackViewer::detach() {
     s.effects.reset();
     s.worldObjects.reset();
     s.effectsFrame = {};
+    if (s.post.is_valid()) s.post->detach();
     s.post.unref();
     for (auto* node : {static_cast<Node3D*>(s.camera), s.trackScene}) {
         if (!node) continue;
         s.view->remove_child(node);
         node->queue_free();
+    }
+    if (s.view != s.output) {
+        s.output->remove_child(s.view);
+        s.view->queue_free();
+        s.view = s.output;
     }
     s.source.reset();
     s.placementCount = 0;

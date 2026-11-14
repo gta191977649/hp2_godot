@@ -24,7 +24,7 @@
 - RacePost publishes the original operands. The Godot CompositorEffect
   runs after transparent 3D on the main camera. Inactive passes are skipped.
   GPU focus and history storage is owned by the render buffers and history
-  is reset on race reload, replay restore, resize and radial state changes.
+  is reset on race reload, replay restore, resize and motion-blur option changes.
   The existing sun and particle passes still use Godot scene depth.
 - Full PS2 colour equivalence remains open. Reverse-Z conversion and the
   GS focus/history raster phase use host approximations. Godot hardware
@@ -110,3 +110,47 @@ Track 12 restored 11 previously visible particle nodes and Track 21 restored
 three, with the race advancing in both runs. The running Godot instance
 locked the usual Debug staged DLL, so the smoke used an isolated staging
 directory under local/task0143-effect-project.
+
+## PS2 radial history correction
+
+Ghidra checked US Retail `0010F280` (mask), `0010F4F0` (previous frame),
+`0010F238` (alpha conversion), `0013B3F8` (Nitro), and `00112858` (order)
+against Debug `0010F660`, `0010F8D0`, `0010F618`, `0013B200`,
+`0010FE48` (strip order), and `00112C60`. The ELF hashes are above.
+The retail RADIALBLUR bytes in GLOBAL/INGAMEB.BUN have alpha 33–63.
+At Nitro's outer vertex, alpha 63 × 204 gives destination alpha 100
+after the GS shift, or 100/128 historical weight.
+
+The Forward+ pass uses the strip diagonal, GS byte modulation and signed
+blend, and bilinear sampling of the previous encoded RGB across the
+half-texel-inset active raster. It primes two reusable RGBA8 textures before
+the effect starts and discards their validity on discontinuities. The host
+normalizes fractional decay to a nominal 60 Hz NTSC or 50 Hz PAL cadence;
+this is a high-refresh presentation policy. Previous HUD and mirror pixels
+are absent from the Godot history. The requested attract demo look is a
+Godot presentation override with the original RadialBlurOn default
+center/edge bytes 0/160, and yields to any authored camera or replay blur.
+
+Both staged configurations built. The Release Track 12 Vulkan and D3D12
+smoke passed numeric probes for four corners, center, both sides of the
+strip diagonal, half-texel sampling, 60/120 Hz coefficients, viewport resize
+and explicit reset. The real Nitro input started and stopped the effect
+on Track 12 at both 60 and 120 FPS limits; captures are in
+`local/task0143-blur-60` and `local/task0143-blur-120`. These are PC captures
+using the optional racer Nitro setting. Matched PCSX2 imagery was dropped at
+the user's request, so original visual equivalence remains unverified.
+The Debug-menu smoke required active radial blur in the Track 11 demo, then
+interrupted it and entered a regular Track 44 race. The demo capture is
+`local/task0143-blur-demo/manual-demo.png`. Title idle and manual launch
+share the same demo state and compositor.
+
+Godot Visual Profiler, Debug Vulkan at 960×720, fixed Track 12 camera:
+post-transparent GPU P50/P95 was 0.133/0.195 ms for history capture only
+(250 frames) and 0.240/0.882 ms for active blur (258 frames). The pass
+measured 0.000/0.000 ms with the compositor disabled (228 frames).
+Capture: `local/task0137-visual/blur-post-profile/capture.jsonl`.
+
+Reproduce the pixel and Nitro probes with the existing postprocessing
+command above. For Nitro set `HP2_MVP_TEST_NITRO=1`,
+`HP2_MVP_TEST_POST_FPS=60` or `120`, and add `racer_nitro=1` to the
+isolated profile's `NFSHP2_pc.ini`.

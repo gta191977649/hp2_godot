@@ -1009,13 +1009,20 @@ RaceStateView ApplicationRuntime::RaceState() const noexcept
     const auto* rearView=layout==2 && rear.last && rear.view && rear.view->current.fieldOfView ?
         rear.view:nullptr;
     auto* scenery=s.trackPhase->trackFile->Resources().scenery;
+    auto* reflectionCar=carCinematicGetCarToFollow(s.cameras.screens[1].last);
     return {simulation,scenery?&scenery->Native():nullptr,view?&view->current:nullptr,
         view?view->hiddenCar:nullptr,s.trackPhase->Sky(),s.clock.worldTimeFrames,
         s.parameters.selectedScenario,session?session->state:0,gameTimeGetVideoMode(&s.clock)==HP2_VIDEO_NTSC,
         s.trackPhase->NisManagers(),s.cameras.screens[1].blackAndWhite!=0,s.trackPhase->ViewMovers(),
         rearView?&rearView->current:nullptr,rearView?rearView->hiddenCar:nullptr,
         {s.resources->Registry().RearViewTexture(0),s.resources->Registry().RearViewTexture(1)},
-        s.parameters.reverse==1,s.parameters.specialPursuit!=0};
+        s.parameters.reverse==1,s.parameters.specialPursuit!=0,
+        reflectionCar ? reflectionCar->Movement()->bindings.state->centerPosition : nullptr, &s.resources->Registry()};
+}
+
+ResourceRegistry& ApplicationRuntime::PresentationResources() const noexcept
+{
+    return storage_->resources->Registry();
 }
 
 std::vector<RaceParticleAsset> ApplicationRuntime::RaceParticleAssets() const

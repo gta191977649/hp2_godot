@@ -39,7 +39,7 @@ func _process(_delta: float) -> bool:
     var state: Dictionary = race.telemetry()
     if state.get("race_state") != 3:
         return false
-    var effects := race.get_node_or_null("RaceScene/RaceEffects")
+    var effects: Node = race.race_scene().get_node_or_null("RaceEffects") if race.race_scene() else null
     if not effects:
         return false
     if phase == 0:

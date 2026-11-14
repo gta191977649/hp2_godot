@@ -32,6 +32,7 @@ struct TrackPlacementVisibility {
     godot::Node3D* node{};
 };
 inline constexpr std::uint32_t trackSkyLayer = 1u << 3;
+inline constexpr std::uint32_t trackReflectionLayer = 1u << 4;
 std::size_t attach_track(godot::Node3D& root, const Scenery& scenery, const SkyResources* sky, bool reverse, const CollisionObjectRegistry& objects,
     std::vector<TrackPlacementVisibility>& movablePlacements, WorldObjectPresentation& worldObjects);
 

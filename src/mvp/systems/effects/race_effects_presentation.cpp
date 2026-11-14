@@ -1,5 +1,7 @@
 #include "race_effects_presentation.hpp"
 
+#include "assets/shader_resource.hpp"
+
 #include "assets/mesh_converter.hpp"
 #include "indep/inc/Texture.hpp"
 #include "bware/inc/bWare.hpp"
@@ -36,281 +38,9 @@ namespace hp2 {
 namespace {
 using namespace godot;
 
-constexpr auto particleProcess = R"(
-shader_type particles;
-render_mode disable_velocity, disable_force;
-uniform sampler2D step_history : filter_nearest, repeat_disable;
-uniform sampler2D group_epochs : filter_nearest, repeat_disable;
-
-uniform float drag;
-uniform float gravity;
-uniform int atlas_period;
-uniform int atlas_cells;
-
-void process() {
-    int identity = int(CUSTOM.w);
-    int slot = identity & 1023;
-    vec4 group = texelFetch(group_epochs, ivec2(slot, 0), 0);
-    if (int(group.r) != (identity >> 10)) ACTIVE = false;
-    for (int offset = 0; offset < 16 && ACTIVE; ++offset) {
-        int packed_life = int(CUSTOM.x);
-        int previous = packed_life >> 16;
-        int life = packed_life & 65535;
-        if (previous == (int(group.b) & 255)) break;
-        int index = previous % 16;
-        vec4 step = texelFetch(step_history, ivec2(slot, index), 0);
-        int ticks = int(texelFetch(step_history, ivec2(slot, index + 16), 0).r);
-        int remaining = life - ticks;
-        if (remaining <= 0) {
-            ACTIVE = false;
-            break;
-        }
-        int packed = int(CUSTOM.z);
-        int frame = packed & 255;
-        if (atlas_period != 0) {
-            frame = (frame + life / atlas_period - remaining / atlas_period) & (atlas_cells - 1);
-        }
-        vec3 velocity = VELOCITY - drag * abs(VELOCITY) * VELOCITY * step.w;
-        velocity.y -= gravity * step.w;
-        TRANSFORM[3].xyz += (velocity + step.xyz * float(packed >> 8) / 255.0) * step.w;
-        float speed = length(velocity);
-        if (speed > 0.0) {
-            VELOCITY = trunc(velocity / speed * 127.0) * float(int(speed * 128.0) & 65535) / (128.0 * 127.0);
-        } else {
-            VELOCITY = vec3(0.0);
-        }
-        CUSTOM.x = float(remaining | (((previous + 1) & 255) << 16));
-        CUSTOM.z = float((packed & 65280) | frame);
-    }
-}
-)";
-
-constexpr auto particleDraw = R"(
-shader_type spatial;
-render_mode unshaded, blend_mix, cull_disabled, depth_draw_never, shadows_disabled;
-uniform sampler2D atlas : source_color, filter_linear, repeat_disable;
-uniform sampler2D scene_depth : hint_depth_texture, filter_nearest, repeat_disable;
-uniform vec4 color_curve[4];
-uniform vec4 size_curve[4];
-uniform vec2 atlas_size;
-uniform float lifetime;
-uniform float pixel_cap;
-uniform float interest_distance;
-uniform float alpha_cutoff;
-uniform int texture_function;
-uniform sampler2D group_epochs : filter_nearest, repeat_disable;
-varying vec4 tint;
-varying flat float visible_in_view;
-varying flat float particle_depth;
-
-void vertex() {
-    float age = 1.0 - float(int(INSTANCE_CUSTOM.x) & 65535) / (1024.0 * lifetime);
-    vec4 shape = ((size_curve[0] * age + size_curve[1]) * age + size_curve[2]) * age + size_curve[3];
-    tint = clamp(((color_curve[0] * age + color_curve[1]) * age + color_curve[2]) * age + color_curve[3],
-                 vec4(0.0), vec4(255.0)) / 128.0;
-    int angle = int(INSTANCE_CUSTOM.y) & 65535;
-    float rotation = float(angle + (((angle & 1) == 0) ? int(shape.y) : -int(shape.y))) * TAU / 65536.0;
-    vec2 offset = mat2(vec2(cos(rotation), sin(rotation)), vec2(-sin(rotation), cos(rotation))) * VERTEX.xy;
-    vec4 center = VIEW_MATRIX * MODEL_MATRIX[3];
-    float depth = -center.z;
-    // Forward+ may flip the projection Y axis for a render target. Its
-    // magnitude sets the focal length; using the sign collapses large FX.
-    float focal = 240.0 * abs(PROJECTION_MATRIX[1][1]);
-    float size = clamp(shape.x, 0.0, pixel_cap * max(depth, 0.0) / focal);
-    int identity = int(INSTANCE_CUSTOM.w);
-    vec4 group = texelFetch(group_epochs, ivec2(identity & 1023, 0), 0);
-    int mask = int(group.g);
-    int view = int(CAMERA_VISIBLE_LAYERS) & 6;
-    visible_in_view = float(int(group.r) == (identity >> 10) && (mask & view) != 0 &&
-        depth > 0.0 && depth < interest_distance && size > 0.0);
-    particle_depth = depth;
-    // Keep the billboard in the standard spatial vertex path. This gives
-    // Forward+ the same view-space position for depth, fog and rasterization.
-    MODELVIEW_MATRIX = mat4(vec4(1.0, 0.0, 0.0, 0.0), vec4(0.0, 1.0, 0.0, 0.0),
-        vec4(0.0, 0.0, 1.0, 0.0), center);
-    VERTEX = vec3(offset * size * vec2(1.0, 0.875), 0.0);
-    float frame = float(int(INSTANCE_CUSTOM.z) & 255);
-    UV = (UV + vec2(mod(frame, atlas_size.x), floor(frame / atlas_size.x))) / atlas_size;
-}
-
-void fragment() {
-    if (visible_in_view < 0.5) discard;
-    vec4 texel = texture(atlas, UV);
-    vec4 result = texel * tint;
-    if (texture_function == 1) result = texel;
-    if (texture_function >= 2) {
-        result.rgb += tint.a;
-        result.a = texel.a + (texture_function == 2 ? tint.a : 0.0);
-    }
-    ALBEDO = result.rgb;
-    ALPHA = clamp(result.a, 0.0, 1.0);
-    if (ALPHA <= alpha_cutoff) discard;
-    float depth = textureLod(scene_depth, SCREEN_UV, 0.0).r;
-    if (depth > 0.0) {
-        vec4 scene_view = INV_PROJECTION_MATRIX * vec4(SCREEN_UV * 2.0 - 1.0, depth, 1.0);
-        float gap = -scene_view.z / scene_view.w - particle_depth;
-        ALPHA *= smoothstep(0.0, 0.3, gap);
-    }
-}
-)";
-
 // StuffSun / StuffSunGlare and ePoly::Render (Debug 125430, 125A70, 10FE48).
 // Composite the complete ordered stack over Godot's opaque scene in GS byte
 // space. Forward+ uses linear color, so convert only at the pass boundary.
-constexpr auto sunDraw = R"(
-shader_type spatial;
-render_mode unshaded, fog_disabled, blend_mix, cull_disabled, depth_draw_never, depth_test_disabled, shadows_disabled;
-uniform sampler2D scene_color : hint_screen_texture, filter_nearest, repeat_disable;
-uniform sampler2D sky_color : filter_nearest, repeat_disable;
-uniform bool has_sky;
-uniform sampler2D depth_texture : hint_depth_texture, filter_nearest, repeat_disable;
-uniform sampler2D flare_0 : filter_linear, repeat_disable;
-uniform sampler2D flare_1 : filter_linear, repeat_disable;
-uniform sampler2D flare_2 : filter_linear, repeat_disable;
-uniform sampler2D flare_3 : filter_linear, repeat_disable;
-uniform sampler2D flare_4 : filter_linear, repeat_disable;
-uniform vec4 layer_rect[12]; // UV center, UV half extents
-uniform vec4 layer_color[12]; // raw RGBA, including the pre-occlusion alpha
-uniform vec4 layer_state[12]; // rotation cosine/sine, texture slot, visibility and blend flags
-uniform int layer_count;
-uniform int disc_layer = -1;
-uniform vec4 bounds_uv;
-uniform vec2 sun_uv;
-uniform float source_scale;
-uniform bool sample_sky;
-varying flat float visibility;
-
-bool sky_at(vec2 uv) {
-    return textureLod(depth_texture, uv, 0.0).r == 0.0;
-}
-
-void vertex() {
-    visibility = 1.0;
-    if (sample_sky) {
-        visibility = 0.0;
-        vec2 source_pixel = source_scale / VIEWPORT_SIZE;
-        vec2 origin = trunc(sun_uv / source_pixel - vec2(16.0));
-        for (int y = 0; y < 32; ++y) {
-            for (int x = 0; x < 32; ++x) {
-                vec2 uv = (origin + vec2(float(x), float(y)) + 0.5) * source_pixel;
-                if (all(greaterThanEqual(uv, vec2(0.0))) && all(lessThan(uv, vec2(1.0)))) {
-                    visibility += float(sky_at(uv));
-                }
-            }
-        }
-        visibility /= 1024.0;
-    }
-    // The submitted Godot screen coordinates and SCREEN_UV both start at the top left.
-    POSITION = vec4(mix(bounds_uv.xy, bounds_uv.zw, UV) * 2.0 - 1.0, 0.0, 1.0);
-}
-
-// ePoly sends Q=1. TEX1 has K=0, so the GS selects MMAG at level zero.
-vec4 flare_texel(int slot, vec2 uv) {
-    if (slot == 0) return textureLod(flare_0, uv, 0.0);
-    if (slot == 1) return textureLod(flare_1, uv, 0.0);
-    if (slot == 2) return textureLod(flare_2, uv, 0.0);
-    if (slot == 3) return textureLod(flare_3, uv, 0.0);
-    return textureLod(flare_4, uv, 0.0);
-}
-
-vec3 to_gs_bytes(vec3 linear_rgb) {
-    vec3 rgb = clamp(linear_rgb, vec3(0.0), vec3(1.0));
-    return round(mix(1.055 * pow(rgb, vec3(1.0 / 2.4)) - 0.055, rgb * 12.92,
-        lessThanEqual(rgb, vec3(0.0031308))) * 255.0);
-}
-
-vec3 from_gs_bytes(vec3 bytes) {
-    vec3 rgb = bytes / 255.0;
-    return mix(pow((rgb + 0.055) / 1.055, vec3(2.4)), rgb / 12.92,
-        lessThanEqual(rgb, vec3(0.04045)));
-}
-
-void fragment() {
-    vec3 destination = vec3(0.0);
-    bool has_destination = false;
-    // All sun textures share priority 7. The source alpha sorter walks
-    // equal positive Z keys in reverse submission order, with the disc last.
-    for (int order = 0; order < layer_count; ++order) {
-        int i = layer_count - 1 - order;
-        if (disc_layer >= 0 && i <= disc_layer) {
-            i = i == 0 ? disc_layer : i - 1;
-        }
-        vec4 rect = layer_rect[i];
-        vec4 state = layer_state[i];
-        vec2 p = (SCREEN_UV - rect.xy) / rect.zw;
-        vec2 uv = mat2(vec2(state.x, -state.y), vec2(state.y, state.x)) * p * 0.5 + 0.5;
-        if (any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0)))) continue;
-        int flags = int(state.w);
-        if ((flags & 8) != 0 && !sky_at(SCREEN_UV)) continue;
-
-        vec4 tint = layer_color[i];
-        if ((flags & 16) != 0) tint.a *= visibility;
-        tint.a = float(int(tint.a) & 255);
-
-        vec4 texel = floor(flare_texel(int(state.z), uv) * 255.0 + 0.001);
-        // TEX0 TFX=MODULATE, TCC=RGBA. Context TEST accepts alpha >= 0.
-        vec4 source = min(floor(texel * tint / 128.0), vec4(255.0));
-        if (source.a == 0.0) continue;
-
-        if (!has_destination) {
-            // The original sky meshes are depth-free and draw outside the
-            // opaque scene copy. Read their color only where depth is clear.
-            destination = has_sky && sky_at(SCREEN_UV)
-                ? round(textureLod(sky_color, SCREEN_UV, 0.0).rgb * 255.0)
-                : to_gs_bytes(textureLod(scene_color, SCREEN_UV, 0.0).rgb);
-            has_destination = true;
-        }
-        // GS ALPHA A=Cs, C=As, D=Cd. B=Cd for blend and zero for add.
-        vec3 b = (flags & 4) != 0 ? vec3(0.0) : destination;
-        destination = clamp(destination + floor((source.rgb - b) * source.a / 128.0),
-            vec3(0.0), vec3(255.0));
-    }
-    if (!has_destination) discard;
-    ALBEDO = from_gs_bytes(destination);
-    ALPHA = 1.0;
-}
-)";
-
-constexpr auto lightDraw = R"(
-shader_type spatial;
-render_mode unshaded, blend_mix, cull_disabled, depth_draw_never, shadows_disabled;
-uniform sampler2D flare : source_color, filter_linear, repeat_disable;
-instance uniform vec4 normal_and_sides;
-instance uniform vec4 response;
-instance uniform vec4 distance_scale;
-instance uniform vec4 minimum_color;
-instance uniform vec4 maximum_color;
-varying vec4 tint;
-
-void vertex() {
-    vec3 center = MODEL_MATRIX[3].xyz;
-    vec3 to_camera = normalize(INV_VIEW_MATRIX[3].xyz - center);
-    float facing = dot(normal_and_sides.xyz, to_camera);
-    if (normal_and_sides.w > 0.5) facing = abs(facing);
-    float blend = pow(max(facing, 0.01), response.z) * response.w;
-    vec4 view_center = VIEW_MATRIX * vec4(center, 1.0);
-    float focal = 240.0 * PROJECTION_MATRIX[1][1];
-    float size = mix(response.x, response.y, blend) *
-        clamp(-view_center.z / focal, distance_scale.x, distance_scale.y);
-    vec4 biased = VIEW_MATRIX * vec4(center + to_camera * distance_scale.z, 1.0);
-    POSITION = PROJECTION_MATRIX * (biased + vec4(VERTEX.xy * 2.0 * size, 0.0, 0.0));
-    tint = mix(minimum_color, maximum_color, blend);
-}
-
-void fragment() {
-    vec4 texel = texture(flare, UV);
-    ALBEDO = texel.rgb * tint.rgb;
-    ALPHA = clamp(texel.a * tint.a, 0.0, 1.0);
-}
-)";
-
-Ref<Shader> shader(const char* source) {
-    Ref<Shader> result;
-    result.instantiate();
-    result->set_code(source);
-    return result;
-}
-
 Ref<ShaderMaterial> material(const Ref<Shader>& code) {
     Ref<ShaderMaterial> result;
     result.instantiate();
@@ -324,14 +54,6 @@ BaseMaterial3D::BlendMode texture_blend(const EditorMarkerTexture& texture) {
     if (alpha==0x48) return BaseMaterial3D::BLEND_MODE_ADD;
     if (alpha==0x42) return BaseMaterial3D::BLEND_MODE_SUB;
     return BaseMaterial3D::BLEND_MODE_MIX;
-}
-
-Ref<Shader> effect_shader(const char* source, BaseMaterial3D::BlendMode blend) {
-    std::string code(source);
-    const auto position=code.find("blend_mix");
-    if (blend!=BaseMaterial3D::BLEND_MODE_MIX)
-        code.replace(position,9,blend==BaseMaterial3D::BLEND_MODE_ADD ? "blend_add":"blend_sub");
-    return shader(code.c_str());
 }
 
 Color source_color(const std::array<float,4>& rgba) {
@@ -376,16 +98,16 @@ struct RaceEffectsPresentation::Storage {
     SubViewport* skyViewport{};
     Camera3D* skyCamera{};
     Ref<QuadMesh> quad;
-    Ref<Shader> processShader=shader(particleProcess);
+    Ref<Shader> processShader=load_shader("res://shader/particle_process.gdshader");
     std::array<Ref<Shader>,3> drawShaders{
-        effect_shader(particleDraw,BaseMaterial3D::BLEND_MODE_MIX),
-        effect_shader(particleDraw,BaseMaterial3D::BLEND_MODE_ADD),
-        effect_shader(particleDraw,BaseMaterial3D::BLEND_MODE_SUB)};
+        load_shader("res://shader/particle_billboard_mix.gdshader"),
+        load_shader("res://shader/particle_billboard_add.gdshader"),
+        load_shader("res://shader/particle_billboard_sub.gdshader")};
     std::array<Ref<Shader>,3> lightShaders{
-        effect_shader(lightDraw,BaseMaterial3D::BLEND_MODE_MIX),
-        effect_shader(lightDraw,BaseMaterial3D::BLEND_MODE_ADD),
-        effect_shader(lightDraw,BaseMaterial3D::BLEND_MODE_SUB)};
-    Ref<Shader> sunShader=shader(sunDraw);
+        load_shader("res://shader/light_flare_mix.gdshader"),
+        load_shader("res://shader/light_flare_add.gdshader"),
+        load_shader("res://shader/light_flare_sub.gdshader")};
+    Ref<Shader> sunShader=load_shader("res://shader/sun_occlusion.gdshader");
     std::unordered_map<const EditorMarkerTexture*,Ref<Texture2D>> textures, sunTextures;
     std::unordered_map<const EditorMarkerTexture*,Ref<StandardMaterial3D>> skidMaterials;
     std::unordered_map<const EditorMarkerTexture*,Ref<ShaderMaterial>> lightMaterials;

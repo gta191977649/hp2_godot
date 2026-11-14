@@ -12,6 +12,26 @@ distribution at `D:/dev/hp2_ps2_rev`.
 | Scene, Entities, Effects / Particles, World / Streaming | `src/mvp/systems` and `godot_mvp` own presentation and its lifetimes. Godot creates and retires scene nodes, vehicle visuals, particles, and streamed presentation resources from the original state and assets. Godot also manages UI, animation, and audio playback. |
 | Godot Renderer | Godot owns culling, batching, shaders, and GPU resources. The diagram shows the default Vulkan path. The Windows launcher also supports D3D12 Forward+. |
 
+## Shader resources and scene buffers
+
+Author MVP shaders in Godot Shader Language under
+[`src/mvp/shader`](../src/mvp/shader). Name resources by effect. The staging
+target copies them to `res://shader/`, and the MVP loads them as Godot Shader
+resources. C++ owns material parameters, viewport order and resource lifetimes.
+
+The race and track viewer render into a dedicated Forward+ viewport. A
+post-transparent compositor callback exposes resolved color and reverse-Z
+depth to the Godot canvas passes. Forward+ resolves depth into a sampleable
+R32 texture with 2× MSAA enabled on the source viewport. Fog and focus use
+the source viewport's depth. The output is composed below the HUD and
+history uses separate alternating render targets. A size change invalidates
+history and the borrowed scene-buffer bindings.
+
+Vehicle materials consume original strip normals, light material coefficients,
+light contexts and decoded textures. Godot uses the donor environment camera
+schedule and remap samples to render the six race reflection faces and the
+reflection atlas. Frontend previews sample the original CarSelectEnvMap.
+
 ## Game Core Integration Boundary
 
 Preserve the donor and reverse-engineered code in `src/game_core` by default.

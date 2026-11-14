@@ -42,7 +42,7 @@ func _process(_delta: float) -> bool:
         event.pressed = false
         Input.parse_input_event(event)
         return false
-    var effects := race.get_node_or_null("RaceScene/RaceEffects")
+    var effects: Node = race.race_scene().get_node_or_null("RaceEffects") if race.race_scene() else null
     if state.get("race_state", -1) != 3 or not effects:
         return false
     var step: int = state.step

@@ -12,7 +12,7 @@ func run() -> void:
         await process_frame
         race = root.get_node_or_null("NativeGame/RacePresentation")
         if race:
-            flare = race.get_node_or_null("RaceScene/RaceEffects/SunFlare0")
+            flare = race.race_scene().get_node_or_null("RaceEffects/SunFlare0") if race.race_scene() else null
             if flare and flare.visible:
                 break
     if not flare or not flare.visible:
@@ -23,7 +23,7 @@ func run() -> void:
     for node in race.get_children():
         if node is CanvasItem:
             node.hide()
-    var camera := root.get_camera_3d()
+    var camera: Camera3D = race.race_scene().get_viewport().get_camera_3d()
     var scene := flare.get_parent().get_parent()
     var sky := scene.get_node_or_null("TrackSky") as MeshInstance3D
     if not sky:

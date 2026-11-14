@@ -27,11 +27,11 @@ func _capture(race: Node) -> void:
         return
     race.set_process(false)
     RenderingServer.viewport_set_disable_2d(root.get_viewport_rid(), true)
-    var scene := race.get_node("RaceScene")
+    var scene: Node3D = race.race_scene()
     for node in scene.get_children():
         if node is SubViewport and node.name == &"RearViewTarget":
             node.render_target_update_mode = SubViewport.UPDATE_DISABLED
-    var camera := root.get_camera_3d()
+    var camera: Camera3D = race.race_scene().get_viewport().get_camera_3d()
     var output := OS.get_environment("HP2_PHOTO_DIR")
     var takes := [
         [8 + (track % 6) * 3, 24.0, 11.0, 54.0],
