@@ -12,6 +12,8 @@ struct RaceStateView;
 struct RacePostState;
 struct RaceEffectOptions;
 void profile_fog_state(const RacePostState& post, RaceEffectOptions& options, godot::Dictionary& sample);
+bool profile_grid_effect_disabled(const char* mode);
+bool profile_legacy_sun_bounds();
 using FrontendReady = void (*)(MainMenuScreenServices&, const void*);
 godot::PackedVector3Array race_photo_route(const RaceStateView& race);
 

@@ -6,11 +6,11 @@ uniform bool face_camera;
 
 global uniform vec4 hp2_animation_clock; // interpolated ticks, texture seconds, real ticks, committed ticks
 uniform ivec2 repeat_axes = ivec2(1);
-uniform sampler2D albedo_texture : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D albedo_texture : source_color, filter_linear_mipmap, repeat_enable;
 uniform sampler2D albedo_magnified : source_color, filter_linear, repeat_enable;
 uniform sampler2D albedo_minified : source_color, filter_nearest, repeat_enable;
 
-uniform sampler2DArray frame_textures : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2DArray frame_textures : source_color, filter_linear_mipmap, repeat_enable;
 uniform int texture_count;
 uniform float texture_rate;
 uniform bool real_clock;

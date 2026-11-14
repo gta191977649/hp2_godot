@@ -6,11 +6,17 @@ $clean = $false
 $jobs = 8
 $raceArgument = $null
 $nativeDebug = $false
+$fullscreen = $false
+$fxaa = $false
+$fps120 = $false
 $renderingDriver = 'vulkan'
 for ($index = 0; $index -lt $args.Count; $index++) {
     switch ($args[$index]) {
         '--mvp' { }
         '--run' { $run = $true }
+        '--fullscreen' { $fullscreen = $true; $run = $true }
+        '--fxaa' { $fxaa = $true; $run = $true }
+        '--fps120' { $fps120 = $true; $run = $true }
         '--editor' { $editor = $true }
         { $_ -match '^--race-(track|event)=' } {
             if ($raceArgument) { throw 'Choose one race diagnostic.' }
@@ -41,7 +47,9 @@ for ($index = 0; $index -lt $args.Count; $index++) {
         default { throw "Unknown option $($args[$index])." }
     }
 }
-if ($editor -and $raceArgument) { throw '--editor cannot be combined with a race diagnostic.' }
+if ($editor -and ($raceArgument -or $fullscreen -or $fxaa -or $fps120)) {
+    throw '--editor cannot be combined with race diagnostics or game display options.'
+}
 if ($preset -notin @('godot-mvp-release', 'godot-mvp-debug')) { throw "Unsupported preset $preset." }
 
 Push-Location -LiteralPath $PSScriptRoot
@@ -60,8 +68,11 @@ try {
         $project = Join-Path $PSScriptRoot "build/$preset/mvp-project"
         $engineArgs = @('--path', $project, '--rendering-driver', $renderingDriver)
         if ($editor) { $engineArgs += '--editor' }
-        if ($nativeDebug -or $raceArgument) { $engineArgs += '--' }
+        if ($fullscreen) { $engineArgs += '--fullscreen' }
+        if ($fps120) { $engineArgs += @('--disable-vsync', '--max-fps', '120') }
+        if ($nativeDebug -or $raceArgument -or $fxaa) { $engineArgs += '--' }
         if ($nativeDebug) { $engineArgs += '--debug' }
+        if ($fxaa) { $engineArgs += '--fxaa' }
         if ($raceArgument) { $engineArgs += $raceArgument }
         & $engine @engineArgs
         exit $LASTEXITCODE

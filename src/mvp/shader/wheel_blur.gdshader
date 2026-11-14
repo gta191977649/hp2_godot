@@ -1,7 +1,7 @@
 shader_type spatial;
 render_mode unshaded, cull_disabled, shadows_disabled, depth_draw_never, blend_mix;
 
-uniform sampler2D wheel_blur_texture : filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D wheel_blur_texture : filter_linear_mipmap, repeat_enable;
 uniform ivec2 repeat_axes;
 uniform bool alpha_test;
 instance uniform float hp2_wheel_blur_alpha;

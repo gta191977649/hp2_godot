@@ -14,7 +14,8 @@ uniform vec4 layer_color[12]; // raw RGBA, including the pre-occlusion alpha
 uniform vec4 layer_state[12]; // rotation cosine/sine, texture slot, visibility and blend flags
 uniform int layer_count;
 uniform int disc_layer = -1;
-uniform vec4 bounds_uv;
+uniform vec4 regions[32];
+uniform int region_count;
 uniform vec2 sun_uv;
 uniform float source_scale;
 uniform bool sample_sky;
@@ -26,7 +27,8 @@ bool sky_at(vec2 uv) {
 
 void vertex() {
     visibility = 1.0;
-    if (sample_sky) {
+    int region = int(VERTEX.z);
+    if (region < region_count && sample_sky) {
         visibility = 0.0;
         vec2 source_pixel = source_scale / VIEWPORT_SIZE;
         vec2 origin = trunc(sun_uv / source_pixel - vec2(16.0));
@@ -41,7 +43,8 @@ void vertex() {
         visibility /= 1024.0;
     }
     // The submitted Godot screen coordinates and SCREEN_UV both start at the top left.
-    POSITION = vec4(mix(bounds_uv.xy, bounds_uv.zw, UV) * 2.0 - 1.0, 0.0, 1.0);
+    vec4 rect = region < region_count ? regions[region] : vec4(0.0);
+    POSITION = vec4(mix(rect.xy, rect.zw, VERTEX.xy) * 2.0 - 1.0, 0.0, 1.0);
 }
 
 // ePoly sends Q=1. TEX1 has K=0, so the GS selects MMAG at level zero.

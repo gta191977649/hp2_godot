@@ -140,6 +140,12 @@ def main():
     parser.add_argument("--section-tree", action="store_true", help="Compare section tree culling with the existing zone and LOD path")
     parser.add_argument("--fog", choices=("ab", "baseline", "optimized", "no-fog", "no-focus", "no-history"),
                         help="Compare the fog paths or isolate a stage during the Starting Grid flyby")
+    parser.add_argument("--grid-effect", choices=("no-shafts", "no-sun", "no-particles", "legacy-sun-bounds", "compare-sun-bounds"),
+                        help="Isolate an effect during the Starting Grid flyby")
+    parser.add_argument("--capture-tick", type=int, help="Capture a flyby image in a separate run")
+    parser.add_argument("--stage", type=Path, help="Use an alternate staged Godot build")
+    parser.add_argument("--fxaa", action="store_true", help="Test FXAA in the race viewport")
+    parser.add_argument("--max-fps", type=int, help="Apply Godot's frame rate limiter")
     scene = parser.add_mutually_exclusive_group()
     scene.add_argument("--demo", action="store_true", help="Watch the demo through its natural end")
     scene.add_argument("--grid", action="store_true", help="Measure the track flyby before confirming Starting Grid")
@@ -148,10 +154,12 @@ def main():
         parser.error("--section-tree requires --grid")
     if args.fog and (not args.grid or args.section_tree):
         parser.error("--fog requires --grid and its default scenery path")
+    if (args.grid_effect or args.capture_tick is not None) and not args.grid:
+        parser.error("--grid-effect and --capture-tick require --grid")
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=False)
     project = out / "project"
-    staged = repo / "build/godot-mvp-release/mvp-project"
+    staged = args.stage.resolve() if args.stage else repo / "build/godot-mvp-release/mvp-project"
     project.mkdir()
     for file in ("project.godot", "hp2_track12.gdextension", "native_game.gd", "native_game.tscn"):
         shutil.copy2(staged / file, project / file)
@@ -191,6 +199,10 @@ def main():
         if args.fog:
             env.update(HP2_MVP_PROFILE_BASELINE_SCENERY_LOD="0", HP2_MVP_PROFILE_FOG=variant,
                        HP2_FOG_TRACE=str(run / "fog.json"))
+        if args.grid_effect:
+            env["HP2_MVP_PROFILE_GRID_EFFECT"] = args.grid_effect
+        if args.capture_tick is not None:
+            env.update(HP2_GRID_CAPTURE_DIR=str(run), HP2_GRID_CAPTURE_TICK=str(args.capture_tick))
         visual = not (args.quiet or args.demo)
         command = [engine, "--path", project, "--rendering-driver", args.driver,
                    "--resolution", args.resolution, "--script", script]
@@ -198,10 +210,14 @@ def main():
             command.append("--fullscreen")
         if not args.vsync:
             command.append("--disable-vsync")
+        if args.max_fps:
+            command += ["--max-fps", str(args.max_fps)]
         print(f"{i} {variant} {args.driver} {args.resolution} vsync={args.vsync} visual={visual}", flush=True)
         with socket.create_server(("127.0.0.1", 0)) as listener, (run / "run.log").open("wb") as log:
             if visual:
                 command += ["--remote-debug", f"tcp://127.0.0.1:{listener.getsockname()[1]}"]
+            if args.fxaa:
+                command += ["--", "--fxaa"]
             child = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT, env=env)
             try:
                 if visual:

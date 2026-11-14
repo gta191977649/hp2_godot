@@ -14,6 +14,8 @@
 #include <atomic>
 #include <chrono>
 
+namespace godot { class RenderSceneBuffersRD; }
+
 namespace hp2 {
 struct RacePostState;
 
@@ -34,6 +36,8 @@ private:
     void set_test_mode(int mode);
     void prepare_frame();
     void release_scene_textures();
+    void release_render_resources();
+    godot::RID copy_depth(godot::RenderSceneBuffersRD& buffers, const godot::RID& source);
     void update_fog_palette(const std::array<float, 32>& parameters);
     std::array<float, 32> parameters_{};
     godot::Ref<godot::Texture2D> mask_, filter_, neutral_;
@@ -61,6 +65,8 @@ private:
     std::array<godot::Ref<godot::ShaderMaterial>, 2> historyPasses_;
     godot::Ref<godot::Texture2DRD> color_, depth_;
     godot::RID colorRid_, depthRid_;
+    godot::RID depthCopyShader_, depthCopyPipeline_, depthCopySampler_;
+    bool fxaa_{};
     bool unsupportedDepthReported_{};
     godot::Vector2i extent_;
     std::atomic<bool> sceneTexturesReady_{};

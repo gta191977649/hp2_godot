@@ -19,6 +19,7 @@ var repeat_confirm_at := 0
 var flyby_start_tick := 0.0
 var capture_directory := OS.get_environment("HP2_GRID_CAPTURE_DIR")
 var next_capture_tick := 120.0
+var capture_tick := OS.get_environment("HP2_GRID_CAPTURE_TICK")
 var fog_samples: Array = []
 var fog_trace := OS.get_environment("HP2_FOG_TRACE")
 
@@ -48,6 +49,9 @@ func _process(_delta: float) -> bool:
             flyby_start_tick = clock.z
             last_camera = camera.global_position
             print("REFLECTION_BEGIN ", Engine.get_process_frames())
+            var window := get_root()
+            print("GRID_DISPLAY window=", window.size, " viewport=", camera.get_viewport().get_visible_rect().size,
+                " mode=", window.mode, " vsync=", DisplayServer.window_get_vsync_mode())
         else:
             frames.push_back((now - previous) / 1000.0)
             if not fog_trace.is_empty():
@@ -62,8 +66,11 @@ func _process(_delta: float) -> bool:
             camera_travel += last_camera.distance_to(camera.global_position)
             last_camera = camera.global_position
         previous = now
-        if not capture_directory.is_empty() and clock.z - flyby_start_tick >= next_capture_tick:
-            capture_frame.call_deferred(int(next_capture_tick))
+        if not capture_directory.is_empty() and not capture_tick.is_empty() and clock.z - flyby_start_tick >= capture_tick.to_int():
+            capture_frame.call_deferred(capture_directory.path_join("flyby-%03d.png" % capture_tick.to_int()))
+            capture_directory = ""
+        elif not capture_directory.is_empty() and capture_tick.is_empty() and clock.z - flyby_start_tick >= next_capture_tick:
+            capture_frame.call_deferred(capture_directory.path_join("flyby-%03d.png" % int(next_capture_tick)))
             next_capture_tick += 120.0
         if clock.z - flyby_start_tick < FLYBY_DURATION_TICKS:
             return false
@@ -102,9 +109,30 @@ func _process(_delta: float) -> bool:
 func quantile(percent: float) -> float:
     return frames[int((frames.size() - 1) * percent)]
 
-func capture_frame(tick: int) -> void:
+func capture_frame(destination: String) -> void:
+    if OS.get_environment("HP2_MVP_PROFILE_GRID_EFFECT") == "compare-sun-bounds":
+        var flare: MeshInstance3D = race.race_scene().get_node_or_null("RaceEffects/SunFlare0")
+        if flare and flare.visible and flare.has_meta("hp2_profile_sun_bounds"):
+            race.set_process(false)
+            await RenderingServer.frame_post_draw
+            root.get_texture().get_image().save_png(destination)
+            var material := flare.material_override as ShaderMaterial
+            var regions: PackedVector4Array = material.get_shader_parameter("regions")
+            var count: int = material.get_shader_parameter("region_count")
+            var original := regions.duplicate()
+            regions[0] = flare.get_meta("hp2_profile_sun_bounds")
+            material.set_shader_parameter("regions", regions)
+            material.set_shader_parameter("region_count", 1)
+            await process_frame
+            await RenderingServer.frame_post_draw
+            root.get_texture().get_image().save_png(destination.get_basename() + "-rectangle.png")
+            material.set_shader_parameter("regions", original)
+            material.set_shader_parameter("region_count", count)
+            race.set_process(true)
+            return
+        push_error("Could not compare sun coverage at the requested camera pose")
     await RenderingServer.frame_post_draw
-    root.get_texture().get_image().save_png(capture_directory.path_join("flyby-%03d.png" % tick))
+    root.get_texture().get_image().save_png(destination)
 
 func confirm() -> void:
     var input := InputEventKey.new()

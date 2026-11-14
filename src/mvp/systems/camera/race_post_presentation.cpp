@@ -13,10 +13,16 @@
 #include <godot_cpp/variant/callable_method_pointer.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/os.hpp>
+#include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/classes/render_data.hpp>
 #include <godot_cpp/classes/rd_texture_format.hpp>
+#include <godot_cpp/classes/rd_sampler_state.hpp>
+#include <godot_cpp/classes/rd_shader_source.hpp>
+#include <godot_cpp/classes/rd_shader_spirv.hpp>
+#include <godot_cpp/classes/rd_uniform.hpp>
 #include <godot_cpp/classes/render_scene_buffers_rd.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
+#include <godot_cpp/classes/uniform_set_cache_rd.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
 #include <algorithm>
@@ -26,6 +32,10 @@
 namespace hp2 {
 using namespace godot;
 namespace {
+bool race_fxaa_enabled() {
+    return ProjectSettings::get_singleton()->get_setting("hp2/race_fxaa", false);
+}
+
 Ref<Texture2D> upload(const EditorMarkerTexture* descriptor) {
     const auto* source = textureInfoForDescriptor(descriptor);
     if (!source || !source->pixels.Data()) return {};
@@ -39,6 +49,7 @@ Ref<Texture2D> upload(const EditorMarkerTexture* descriptor) {
 }
 
 RacePostPresentation::RacePostPresentation() {
+    fxaa_ = race_fxaa_enabled();
     const auto* os = OS::get_singleton();
     const auto mode = os->get_environment("HP2_MVP_PROFILE_FOG");
     if (!os->get_environment("HP2_PROFILE_DIR").is_empty()) {
@@ -168,9 +179,9 @@ SubViewport* RacePostPresentation::create_scene(Viewport& output) {
     auto* scene = memnew(SubViewport);
     scene->set_name("RaceRenderTarget");
     scene->set_size(output.get_visible_rect().size);
-    // Forward+ resolves multisampled depth into a sampleable R32 color
-    // texture. Texture2DRD cannot wrap a depth/stencil attachment.
-    scene->set_msaa_3d(Viewport::MSAA_2X);
+    // With MSAA, Forward+ exposes R32 resolved depth. The FXAA path copies
+    // the native depth into an R32 texture before the canvas samples it.
+    scene->set_msaa_3d(race_fxaa_enabled() ? Viewport::MSAA_DISABLED : Viewport::MSAA_2X);
     scene->set_update_mode(SubViewport::UPDATE_ALWAYS);
     output.add_child(scene);
     return scene;
@@ -201,6 +212,9 @@ void RacePostPresentation::attach(SubViewport& scene, Viewport& output, Camera3D
     display_ = layer;
     displayPass_ = full_screen_pass(*layer, "res://shader/race_post_output.gdshader", &displayRect_);
     displayPass_->set_shader_parameter("fallback_scene", scene_->get_texture());
+    displayPass_->set_shader_parameter("fallback_fxaa_scene", scene_->get_texture());
+    displayPass_->set_shader_parameter("post_fxaa_color", neutral_);
+    displayPass_->set_shader_parameter("fxaa", fxaa_);
     directFogPass_.instantiate();
     directFogPass_->set_shader(load_shader("res://shader/race_post_fog.gdshader"));
     for (const auto& pass : {directFogPass_, focusPass_, historyPasses_[0], historyPasses_[1]}) {
@@ -231,7 +245,7 @@ void RacePostPresentation::stop() {
         callable_mp(this, &RacePostPresentation::prepare_frame));
     connected_ = false;
     RenderingServer::get_singleton()->call_on_render_thread(callable_mp(this,
-        &RacePostPresentation::release_scene_textures));
+        &RacePostPresentation::release_render_resources));
 }
 
 void RacePostPresentation::detach() {
@@ -254,6 +268,7 @@ void RacePostPresentation::prepare_frame() {
         // borrowed RenderingDevice textures and their cached canvas bindings.
         sceneTexturesReady_ = false;
         displayPass_->set_shader_parameter("post_color", neutral_);
+        if (fxaa_) displayPass_->set_shader_parameter("post_fxaa_color", neutral_);
         for (const auto& pass : historyPasses_) {
             pass->set_shader_parameter("previous_image", neutral_);
             pass->set_shader_parameter("focus_image", neutral_);
@@ -290,7 +305,7 @@ void RacePostPresentation::prepare_frame() {
 
     const bool draw = get_enabled() && (active_ || testMode_ != 0) &&
         (sceneTexturesReady_ || testMode_ == 6);
-    const bool directFog = draw && !baselineFog_ && (testMode_ == 0 || testMode_ == 10) && p[11] >= 0.0f &&
+    const bool directFog = draw && !fxaa_ && !baselineFog_ && (testMode_ == 0 || testMode_ == 10) && p[11] >= 0.0f &&
         p[18] == 0 && p[19] == 0 && p[25] == 0 && p[28] == 0;
     const auto next = historyIndex_ ^ 1u;
     for (auto* target : historyViewports_) target->set_update_mode(SubViewport::UPDATE_DISABLED);
@@ -354,6 +369,7 @@ void RacePostPresentation::prepare_frame() {
     pass->set_shader_parameter("radial_mask", mask_.is_valid() ? mask_ : neutral_);
     pass->set_shader_parameter("filter_image", filter_.is_valid() ? filter_ : neutral_);
     displayPass_->set_shader_parameter("post_color", historyViewports_[next]->get_texture());
+    if (fxaa_) displayPass_->set_shader_parameter("post_fxaa_color", historyViewports_[next]->get_texture());
     historyViewports_[next]->set_update_mode(SubViewport::UPDATE_ALWAYS);
 }
 
@@ -364,7 +380,12 @@ void RacePostPresentation::_render_callback(int32_t type, RenderData* data) {
     // Godot owns these textures. Refresh the resource wrappers when its render
     // buffers change. The dependent canvas viewports sample them after this pass.
     const auto color = buffers->get_color_texture();
-    const auto depth = buffers->get_depth_texture();
+    auto depth = buffers->get_depth_texture();
+    if (fxaa_ && depth.is_valid()) depth = copy_depth(*buffers.ptr(), depth);
+    if (!depth.is_valid()) {
+        sceneTexturesReady_ = false;
+        return;
+    }
     if (color.is_valid() && color != colorRid_) {
         color_->set_texture_rd_rid(color);
         colorRid_ = color;
@@ -382,6 +403,69 @@ void RacePostPresentation::_render_callback(int32_t type, RenderData* data) {
         depthRid_ = depth;
     }
     sceneTexturesReady_ = colorRid_.is_valid() && depthRid_.is_valid();
+}
+
+RID RacePostPresentation::copy_depth(RenderSceneBuffersRD& buffers, const RID& source) {
+    using RD = RenderingDevice;
+    auto* rd = RenderingServer::get_singleton()->get_rendering_device();
+    if (!depthCopyPipeline_.is_valid()) {
+        Ref<RDShaderSource> code;
+        code.instantiate();
+        code->set_stage_source(RD::SHADER_STAGE_COMPUTE, R"glsl(#version 450
+layout(local_size_x=16, local_size_y=16) in;
+layout(set=0, binding=0) uniform sampler2D native_depth;
+layout(r32f, set=0, binding=1) uniform writeonly image2D color_depth;
+void main() {
+    ivec2 xy = ivec2(gl_GlobalInvocationID.xy);
+    if (any(greaterThanEqual(xy, imageSize(color_depth)))) return;
+    imageStore(color_depth, xy, vec4(texelFetch(native_depth, xy, 0).r));
+}
+)glsl");
+        const auto spirv = rd->shader_compile_spirv_from_source(code);
+        if (spirv.is_null()) return {};
+        depthCopyShader_ = rd->shader_create_from_spirv(spirv, "HP2 single-sample depth");
+        if (!depthCopyShader_.is_valid()) return {};
+        depthCopyPipeline_ = rd->compute_pipeline_create(depthCopyShader_);
+        Ref<RDSamplerState> sampler;
+        sampler.instantiate();
+        depthCopySampler_ = rd->sampler_create(sampler);
+    }
+    const auto size = buffers.get_internal_size();
+    const auto target = buffers.has_texture("HP2RacePost", "DepthCopy")
+        ? buffers.get_texture("HP2RacePost", "DepthCopy")
+        : buffers.create_texture("HP2RacePost", "DepthCopy", RD::DATA_FORMAT_R32_SFLOAT,
+            RD::TEXTURE_USAGE_SAMPLING_BIT | RD::TEXTURE_USAGE_STORAGE_BIT, RD::TEXTURE_SAMPLES_1,
+            size, 1, 1, true, false);
+    if (!target.is_valid()) return {};
+    Ref<RDUniform> input, output;
+    input.instantiate();
+    input->set_uniform_type(RD::UNIFORM_TYPE_SAMPLER_WITH_TEXTURE);
+    input->add_id(depthCopySampler_);
+    input->add_id(source);
+    output.instantiate();
+    output->set_uniform_type(RD::UNIFORM_TYPE_IMAGE);
+    output->set_binding(1);
+    output->add_id(target);
+    TypedArray<RDUniform> uniforms;
+    uniforms.push_back(input);
+    uniforms.push_back(output);
+    const auto set = UniformSetCacheRD::get_cache(depthCopyShader_, 0, uniforms);
+    if (!set.is_valid()) return {};
+    const auto list = rd->compute_list_begin();
+    rd->compute_list_bind_compute_pipeline(list, depthCopyPipeline_);
+    rd->compute_list_bind_uniform_set(list, set, 0);
+    rd->compute_list_dispatch(list, (size.x+15)/16, (size.y+15)/16, 1);
+    rd->compute_list_end();
+    return target;
+}
+
+void RacePostPresentation::release_render_resources() {
+    release_scene_textures();
+    auto* rd = RenderingServer::get_singleton()->get_rendering_device();
+    for (auto* resource : {&depthCopyPipeline_, &depthCopyShader_, &depthCopySampler_}) {
+        if (resource->is_valid()) rd->free_rid(*resource);
+        *resource = {};
+    }
 }
 
 void RacePostPresentation::release_scene_textures() {

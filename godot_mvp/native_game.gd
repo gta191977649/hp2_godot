@@ -12,6 +12,9 @@ func _ready() -> void:
     var native_debug := arguments.has("--debug")
     if native_debug:
         arguments.remove_at(arguments.find("--debug"))
+    if arguments.has("--fxaa"):
+        arguments.remove_at(arguments.find("--fxaa"))
+        ProjectSettings.set_setting("hp2/race_fxaa", true)
     _start_window_title(native_debug)
     var frontend := arguments.is_empty()
     var track := "unknown"

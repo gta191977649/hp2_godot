@@ -1,6 +1,7 @@
 #include "mesh_converter.hpp"
 
 #include "assets/shader_resource.hpp"
+#include "assets/race_diagnostics.hpp"
 
 #include "indep/inc/Ecstasy.hpp"
 #include "indep/inc/Texture.hpp"
@@ -182,7 +183,7 @@ Ref<StandardMaterial3D> MeshConverter::material(const EditorMarkerTexture& descr
     Ref<StandardMaterial3D> result;
     result.instantiate();
     result->set_texture(BaseMaterial3D::TEXTURE_ALBEDO, texture);
-    result->set_texture_filter(BaseMaterial3D::TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC);
+    result->set_texture_filter(BaseMaterial3D::TEXTURE_FILTER_LINEAR_WITH_MIPMAPS);
     result->set_shading_mode(BaseMaterial3D::SHADING_MODE_UNSHADED);
     result->set_flag(BaseMaterial3D::FLAG_ALBEDO_FROM_VERTEX_COLOR, true);
     result->set_flag(BaseMaterial3D::FLAG_SRGB_VERTEX_COLOR, true);
@@ -511,6 +512,11 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
     bool needsReflectionFilter = false;
     int shaftSurfaces = 0;
     for (const auto& surface : surfaces) {
+        const auto textureKeyValue = surface.descriptor->key;
+        const auto* wire = surface.descriptor->authoredRecord;
+        // The original shaft textures use TEX1.MXL=0, MMAG=1 and MMIN=3.
+        const bool shaft = is_light_shaft(textureKeyValue) && !wire[0x6e] && wire[0x6f] == 1 && wire[0x70] == 3;
+        if (shaft && profile_grid_effect_disabled("no-shafts")) continue;
         Array arrays;
         arrays.resize(Mesh::ARRAY_MAX);
         arrays[Mesh::ARRAY_VERTEX] = surface.vertices;
@@ -531,7 +537,6 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays, {}, {}, flags);
         if (mesh->get_surface_count() != index + 1)
             throw std::runtime_error("Godot rejected a surface for model " + std::to_string(model.key));
-        const auto* wire = surface.descriptor->authoredRecord;
         hasSortedSurfaces |= textureInfoForDescriptor(surface.descriptor)->requiresDepthSort;
         if (wheelBlur_) {
             auto& texture = paintTextures_[surface.descriptor];
@@ -581,9 +586,6 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             batchable = false;
             continue;
         }
-        const auto textureKeyValue = surface.descriptor->key;
-        // TEX1 has MXL=0, MMAG=1 and MMIN=3 on the original shaft textures.
-        const bool shaft = is_light_shaft(textureKeyValue) && !wire[0x6e] && wire[0x6f] == 1 && wire[0x70] == 3;
         if (shaft) ++shaftSurfaces;
         hasPuddle |= textureKeyValue == 0x8bbf7d4eu || textureKeyValue == 0x79940f30u ||
             textureKeyValue == 0x0cca6e99u || textureKeyValue == 0x5ef002d2u ||
@@ -628,7 +630,6 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
                 !wire[0x6e] && wire[0x6f] == 1 && wire[0x70] == 3);
             draw->set_shader_parameter("gs_bias", int(wire[0x75]));
             draw->set_shader_parameter("gs_filter", Vector4i(wire[0x6e], wire[0x6f], wire[0x70], wire[0x71]));
-            draw->set_shader_parameter("gs_anisotropic", !transparent && wire[0x6e] > 0 && wire[0x70] >= 2);
             std::uint16_t rawBias = std::uint16_t(wire[0x72]) | std::uint16_t(wire[0x73]) << 8;
             const int k = (rawBias & 0x800) ? int(rawBias & 0xfff) - 4096 : int(rawBias & 0xfff);
             draw->set_shader_parameter("gs_lod_bias", k / 16.f);

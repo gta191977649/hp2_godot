@@ -35,6 +35,20 @@
 
 namespace hp2 {
 
+bool profile_grid_effect_disabled(const char* mode) {
+    static const auto selected = [] {
+        const auto* os = godot::OS::get_singleton();
+        if (os->get_environment("HP2_PROFILE_DIR").is_empty() ||
+            os->get_environment("HP2_MVP_PROFILE_GRID") != "1") return godot::String{};
+        return os->get_environment("HP2_MVP_PROFILE_GRID_EFFECT");
+    }();
+    return selected == mode;
+}
+
+bool profile_legacy_sun_bounds() {
+    return profile_grid_effect_disabled("legacy-sun-bounds");
+}
+
 bool profile_baseline_particle_draw() {
     const auto* os = godot::OS::get_singleton();
     return !os->get_environment("HP2_PROFILE_DIR").is_empty() &&

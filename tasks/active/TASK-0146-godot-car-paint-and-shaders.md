@@ -4,6 +4,69 @@
 - Scope: vehicle paint, environment capture, external Godot shader resources and Forward+ race postprocessing.
 - Acceptance: native-depth and GS-history pixel checks on Vulkan and D3D12, diagnostic race lifecycle, frontend preview, and matched PS2 paint comparisons.
 
+## Native fullscreen Starting Grid
+
+Vulkan Release on Arc B390, fullscreen window and main viewport both
+2880×1800 at 120 Hz. The benchmark starts Track 13 directly through the
+frontend and records the background flyby before confirmation. Tick 90
+shows the forest warning sign. Tick 60–120 is the slow camera interval.
+Image readbacks were performed in separate runs.
+
+Closing just weather fog changed whole-flyby P95 from 12.498 to 12.455 ms.
+The matched Visual Profiler capture with original mip filtering measured
+14.885 ms GPU P95 in the slow interval, including a 10.656 ms main 3D
+scope, 2.981 ms transparent draw, and 1.228 ms screen copy. Suppressing
+sun glare reduced GPU P95 to 10.658 ms and removed the screen-copy scope.
+Suppressing AcidFX reduced GPU P95 to 12.186 ms and its transparent scope
+to 1.327 ms. Suppressing authored light shafts alone measured 13.969 ms
+GPU P95. The production path keeps all three effects enabled.
+
+Sun glare now submits a disjoint cover of the visible texture alpha bounds.
+The draw preserves the existing depth and sky sampling, screen copy, and
+ordered blend. Geometry is allocated once, with pixel-aligned rectangles
+and a conservative margin for linear sampling. A frozen tick-90 comparison
+against the old rectangle produced identical RGB pixels. The existing sun
+alignment and blend fixture passed on Vulkan and D3D12.
+
+The first 4× anisotropic versus old-filter comparison measured 14.235
+versus 14.818 ms P95 in the slow interval. A later 4× run spiked to
+21.664 ms P95 and 22.644 ms P99 in that window. This variation does not
+isolate a causal cost from anisotropic filtering. The old mipmap and GS
+filter paths are restored for the selected native configuration. Road-only
+2× was left out while native 120 Hz pacing remained above budget.
+
+Opt-in FXAA disables 3D MSAA, copies native depth into a Godot-owned R32
+buffer for fog and focus, and antialiases the composed scene below the HUD.
+The FXAA path passed native-depth, GS history, resize and reset fixtures on
+both Vulkan and D3D12. The runtime launcher flag is `--fxaa`; the normal
+launch uses 2× MSAA.
+
+| Fullscreen configuration | Average FPS | Whole P95 / P99, ms | Tick 60–120 P95 / P99, ms |
+| --- | ---: | ---: | ---: |
+| Old filter, original sun rectangle, 2× MSAA | 108.3 | 13.273 / 14.314 | 14.392 / 14.565 |
+| Old filter, sun regions, 2× MSAA | 108.9 | 10.305 / 14.282 | 14.586 / 14.904 |
+| Old filter, original sun rectangle, FXAA | 147.7 | 7.908 / 10.193 | 10.847 / 11.549 |
+| Old filter, sun regions, FXAA | 173.3 | 7.483 / 8.555 | 8.015 / 8.644 |
+| Old filter, sun regions, FXAA, 120 Hz VSync | 119.7 | 8.727 / 9.157 | 8.570 / 8.808 |
+
+The staged launcher run with VSync disabled and the 120 FPS limit averaged
+119.4 FPS. Whole-flyby P95/P99 were 8.512/8.908 ms and the slow interval
+was 8.501/8.745 ms. The uncapped launcher run had 7.931/8.010 ms in
+that interval with all 71 sampled frames in budget. VSync averaged
+119.6 FPS with whole-flyby P95/P99 of 8.701/8.987 ms. The limiter gave the
+closest pacing to 120 Hz among tested configurations, with a remaining
+0.17 ms gap to the strict P95 target in the slow interval.
+
+```powershell
+./build.ps1 --fullscreen --fxaa
+./build.ps1 --fullscreen --fxaa --fps120
+$iso = 'D:/ps2_game/Need for Speed - Hot Pursuit 2 (USA).iso'
+py -3 tools/profile_mvp_reflections.py --assets $iso --out local/task0146/native-repro --grid --fog baseline --fullscreen --resolution 2880x1800 --fxaa --quiet
+py -3 tools/profile_mvp_reflections.py --assets $iso --out local/task0146/native-sync-repro --grid --fog baseline --fullscreen --resolution 2880x1800 --fxaa --quiet --vsync
+py -3 tools/profile_mvp_reflections.py --assets $iso --out local/task0146/native-sun-probe --grid --fog baseline --fullscreen --resolution 2880x1800 --grid-effect no-sun
+py -3 tools/profile_mvp_reflections.py --assets $iso --out local/task0146/native-sun-pixels --grid --fog baseline --fullscreen --resolution 2880x1800 --fxaa --quiet --grid-effect compare-sun-bounds --capture-tick 90
+```
+
 ## Starting Grid fog and AcidFX particles
 
 The fixed-seed Track 13 benchmark enters Quick Race through the original

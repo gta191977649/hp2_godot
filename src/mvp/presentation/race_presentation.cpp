@@ -768,6 +768,8 @@ void RacePresentation::_process(double delta) {
 #ifdef HP2_MVP_IMGUI
         if (debug_) effectOptions = debug_->effect_options();
 #endif
+        effectOptions.particles &= !profile_grid_effect_disabled("no-particles");
+        effectOptions.sunGlare &= !profile_grid_effect_disabled("no-sun");
         if (race.nis) s.cinematic->update(*s.scene, *race.nis,
             s.post.is_null() && effectOptions.monochrome && race.blackAndWhite);
         stage = "camera";

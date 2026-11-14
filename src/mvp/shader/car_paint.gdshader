@@ -1,7 +1,7 @@
 shader_type spatial;
 render_mode unshaded, cull_disabled;
 
-uniform sampler2D base_image : filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D base_image : filter_linear_mipmap, repeat_enable;
 uniform sampler2D specular_image : filter_linear, repeat_disable;
 uniform sampler2D reflection_image : filter_linear, repeat_disable;
 uniform int paint_flags;

@@ -21,6 +21,10 @@ Press F6 on `native_game.tscn` or F5 for the project, then start
 **Debugger → Profiler** and **Debugger → Visual Profiler** in the editor.
 Press the grave/tilde key in the game to give keyboard input back to the frontend.
 
+Use `./build.ps1 --fullscreen --fxaa` to launch Release with native fullscreen
+and FXAA on the race view. Use `--fullscreen` alone for the default 2× MSAA.
+Add `--fps120` to use Godot's 120 FPS limit with VSync off.
+
 Use `--race-track=<id>` for direct single-player diagnostics. The default launch enters
 the frontend and needs the shared FFmpeg 8 SDK described in the README.
 The original game data is read locally. The former Debug and Retail

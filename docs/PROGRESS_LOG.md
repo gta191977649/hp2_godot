@@ -1,3 +1,10 @@
+## 2026-11-15 TASK-0146 native fullscreen Starting Grid
+
+Profiled the forest flyby at 2880×1800, reduced sun glare coverage,
+restored the old mipmap filters, and added a native fullscreen FXAA
+launch option. TASK-0146 records the same-pose sun comparison, the
+Vulkan and D3D12 checks, and the remaining 120 Hz pacing gap.
+
 ## 2026-11-15 TASK-0146 weather and particle rendering
 
 Selected the analytic combined fog path by median Starting Grid FPS and

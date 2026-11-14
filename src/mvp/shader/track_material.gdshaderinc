@@ -1,12 +1,11 @@
 // Port-side material path for the original GS track overlays.
-uniform sampler2D gs_texture_linear : filter_linear_mipmap_anisotropic, repeat_enable;
-uniform sampler2D gs_texture_nearest : filter_nearest_mipmap_anisotropic, repeat_enable;
-uniform sampler2DArray gs_frames_linear : filter_linear_mipmap_anisotropic, repeat_enable;
-uniform sampler2DArray gs_frames_nearest : filter_nearest_mipmap_anisotropic, repeat_enable;
+uniform sampler2D gs_texture_linear : filter_linear_mipmap, repeat_enable;
+uniform sampler2D gs_texture_nearest : filter_nearest_mipmap, repeat_enable;
+uniform sampler2DArray gs_frames_linear : filter_linear_mipmap, repeat_enable;
+uniform sampler2DArray gs_frames_nearest : filter_nearest_mipmap, repeat_enable;
 uniform sampler2D gs_specular : filter_linear, repeat_enable;
 uniform ivec4 gs_filter;
 uniform float gs_lod_bias;
-uniform bool gs_anisotropic;
 uniform bool gs_test;
 uniform bool gs_copy;
 uniform bool gs_dark_blend;
@@ -63,8 +62,8 @@ vec4 gs_sample(vec2 uv, int level, bool linear, float frame) {
 vec4 gs_sample_base(vec2 uv) {
     vec2 texels = uv * vec2(textureSize(gs_texture_linear, 0));
     vec2 dx = dFdx(texels), dy = dFdy(texels);
-    float footprint_lod = 0.5 * log2(max(1e-12, max(dot(dx, dx), dot(dy, dy))));
-    float lod = footprint_lod * float(1 << gs_filter.w) + gs_lod_bias;
+    float lod = 0.5 * log2(max(1e-12, max(dot(dx, dx), dot(dy, dy))));
+    lod = lod * float(1 << gs_filter.w) + gs_lod_bias;
     float frame = 0.0;
     if (texture_count > 0) {
         float clock = real_clock ? hp2_animation_clock.z : hp2_animation_clock.w;
@@ -75,19 +74,6 @@ vec4 gs_sample_base(vec2 uv) {
     if (mode < 2 || gs_filter.x == 0) return gs_sample(uv, 0, mode == 1 || mode >= 4, frame);
     lod = clamp(lod, 0.0, float(gs_filter.x));
     bool linear = mode >= 4;
-    if (gs_anisotropic) {
-        // Send directional UV gradients to Godot's sampler, respecting the
-        // authored mip cap so the backing texture's padding isn't sampled.
-        vec2 size = vec2(textureSize(gs_texture_linear, 0));
-        vec2 p = gs_uv(uv, vec2(textureSize(gs_texture_linear, int(ceil(lod)))));
-        vec2 scale = exp2(lod - footprint_lod) / size;
-        if (texture_count > 0) {
-            return linear ? textureGrad(gs_frames_linear, vec3(p, frame), dx * scale, dy * scale) :
-                textureGrad(gs_frames_nearest, vec3(p, frame), dx * scale, dy * scale);
-        }
-        return linear ? textureGrad(gs_texture_linear, p, dx * scale, dy * scale) :
-            textureGrad(gs_texture_nearest, p, dx * scale, dy * scale);
-    }
     if ((mode & 1) == 0) return gs_sample(uv, int(floor(lod + 0.5)), linear, frame);
     int level = int(floor(lod));
     return mix(gs_sample(uv, level, linear, frame),

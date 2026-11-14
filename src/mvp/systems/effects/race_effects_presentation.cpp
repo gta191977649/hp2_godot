@@ -67,6 +67,7 @@ PackedVector4Array curve(const float* values) {
 
 constexpr int historySize=16;
 constexpr int maxSunLayers = 12; // Six glare and six track rows.
+constexpr int maxSunRegions = 32;
 enum SunFlags { SunAdd = 4, SunDisc = 8, SunSampleSky = 16 };
 }
 
@@ -161,6 +162,10 @@ struct RaceEffectsPresentation::Storage {
     MeshInstance3D* sun{};
     Ref<ShaderMaterial> sunMaterial;
     std::array<const EditorMarkerTexture*,5> sunBindings{};
+    std::array<Rect2,5> sunAlphaBounds{};
+    std::vector<Rect2> sunRegions;
+    std::vector<Rect2> uncoveredSunRegions, splitSunRegions;
+    PackedVector4Array sunRegionUniforms;
     PackedVector4Array sunRects, sunColors, sunStates;
 
     Ref<Texture2D> texture(const EditorMarkerTexture* descriptor, bool rawGs = false) {
@@ -180,6 +185,75 @@ struct RaceEffectsPresentation::Storage {
         if (image.is_null()) throw std::runtime_error("Godot could not decode an effect texture");
         it->second=ImageTexture::create_from_image(image);
         return it->second;
+    }
+
+    Rect2 sun_alpha_bounds(const EditorMarkerTexture& descriptor) {
+        const auto* source = textureInfoForDescriptor(&descriptor);
+        std::uint32_t width{}, height{};
+        const auto rgba = DecodeTextureMipRgba(*source,0,0,source->pixels.size,width,height);
+        Vector2i first(width,height), last(-1,-1);
+        for (std::uint32_t y=0; y<height; ++y) {
+            for (std::uint32_t x=0; x<width; ++x) {
+                if (!rgba[(y*width+x)*4+3]) continue;
+                first = first.min(Vector2i(x,y));
+                last = last.max(Vector2i(x,y));
+            }
+        }
+        if (last.x < 0) return {};
+        // Linear sampling reaches half a texel beyond the first and last
+        // contributing texel, with the shader clamping UV to the sprite.
+        const Vector2 size(width,height);
+        const Vector2 start = (Vector2(first)-Vector2(0.5,0.5)).max(Vector2()) / size;
+        const Vector2 end = (Vector2(last)+Vector2(1.5,1.5)).min(size) / size;
+        return {start,end-start};
+    }
+
+    void add_sun_region(Rect2 rect) {
+        // Subtract covered rectangles so every fragment composites all its
+        // layers once, in the same order as the original single quad.
+        uncoveredSunRegions.clear();
+        uncoveredSunRegions.push_back(rect);
+        for (const auto& covered : sunRegions) {
+            splitSunRegions.clear();
+            for (const auto& region : uncoveredSunRegions) {
+                const auto overlap = region.intersection(covered);
+                if (!overlap.has_area()) {
+                    splitSunRegions.push_back(region);
+                    continue;
+                }
+                const auto end = region.get_end();
+                const auto joint = overlap.get_end();
+                for (const auto& slice : {
+                    Rect2(region.position, {region.size.x, overlap.position.y-region.position.y}),
+                    Rect2({region.position.x,joint.y}, {region.size.x, end.y-joint.y}),
+                    Rect2({region.position.x,overlap.position.y}, {overlap.position.x-region.position.x,overlap.size.y}),
+                    Rect2({joint.x,overlap.position.y}, {end.x-joint.x,overlap.size.y})}) {
+                    if (slice.has_area()) splitSunRegions.push_back(slice);
+                }
+            }
+            uncoveredSunRegions.swap(splitSunRegions);
+            if (uncoveredSunRegions.empty()) return;
+        }
+        sunRegions.insert(sunRegions.end(), uncoveredSunRegions.begin(), uncoveredSunRegions.end());
+    }
+
+    Ref<ArrayMesh> sun_mesh() {
+        PackedVector3Array vertices;
+        PackedInt32Array indices;
+        for (int i=0; i<maxSunRegions; ++i) {
+            const int base = vertices.size();
+            for (const auto& point : {Vector3(0,0,i), Vector3(1,0,i), Vector3(1,1,i), Vector3(0,1,i)})
+                vertices.push_back(point);
+            for (const int offset : {0,1,2,0,2,3}) indices.push_back(base+offset);
+        }
+        Array arrays;
+        arrays.resize(Mesh::ARRAY_MAX);
+        arrays[Mesh::ARRAY_VERTEX] = vertices;
+        arrays[Mesh::ARRAY_INDEX] = indices;
+        Ref<ArrayMesh> result;
+        result.instantiate();
+        result->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES,arrays);
+        return result;
     }
 
     Ref<StandardMaterial3D> skid_material(const EditorMarkerTexture* descriptor) {
@@ -632,6 +706,8 @@ struct RaceEffectsPresentation::Storage {
         bool sampleSky = false;
         int count = 0;
         int discLayer = -1;
+        const bool legacyBounds = profile_legacy_sun_bounds();
+        sunRegions.clear();
         for (const auto& effect : effects) {
             const auto position = race_vector(effect.position.data());
             if (camera.is_position_behind(position)) continue;
@@ -657,7 +733,7 @@ struct RaceEffectsPresentation::Storage {
             if (!sun) {
                 sun = &mesh();
                 sun->set_name("SunFlare0");
-                sun->set_mesh(quad);
+                sun->set_mesh(sun_mesh());
                 sun->set_custom_aabb(AABB(Vector3(-16000,-16000,-16000), Vector3(32000,32000,32000)));
                 sunMaterial = material(sunShader);
                 // Draw after both the base sky and its alpha layers.
@@ -666,6 +742,7 @@ struct RaceEffectsPresentation::Storage {
                 sunRects.resize(maxSunLayers);
                 sunColors.resize(maxSunLayers);
                 sunStates.resize(maxSunLayers);
+                sunRegionUniforms.resize(maxSunRegions);
             }
             const int slot = row.kind;
             if (count >= maxSunLayers || slot < 0 || slot >= static_cast<int>(sunBindings.size()))
@@ -682,6 +759,26 @@ struct RaceEffectsPresentation::Storage {
                     throw std::runtime_error("Unsupported authored GS state for sun texture");
                 sunMaterial->set_shader_parameter(String("flare_") + String::num_int64(slot), image);
                 sunBindings[slot] = effect.texture;
+                sunAlphaBounds[slot] = sun_alpha_bounds(*effect.texture);
+            }
+            if (effect.sampleSky) {
+                sampleSky = true;
+                sunUv = projected / viewport;
+            }
+            if (!legacyBounds && sunRegions.size() <= maxSunRegions) {
+                const auto& alpha = sunAlphaBounds[slot];
+                if (alpha.has_area() && effect.opacityScale != 0.0f) {
+                    const auto offset = (2.0f * alpha.get_center()-Vector2(1,1))*halfSize;
+                    const Vector2 axisX(cosine,sine), axisY(-sine,cosine);
+                    const auto visibleCenter = center + axisX*offset.x + axisY*offset.y;
+                    const auto halfExtent = (axisX.abs()*alpha.size.x + axisY.abs()*alpha.size.y)*halfSize;
+                    // Shared edges sit on pixel boundaries. Keep one pixel
+                    // for projection and interpolation rounding.
+                    const auto min = (visibleCenter-halfExtent).floor()-Vector2(1,1);
+                    const auto max = (visibleCenter+halfExtent).ceil()+Vector2(1,1);
+                    const auto region = Rect2(min,max-min).intersection(Rect2({},viewport));
+                    if (region.has_area()) add_sun_region(Rect2(region.position/viewport,region.size/viewport));
+                }
             }
             int flags = row.enabled ? SunAdd : 0;
             if (effect.depthTestDisc) {
@@ -690,8 +787,6 @@ struct RaceEffectsPresentation::Storage {
             }
             if (effect.sampleSky) {
                 flags |= SunSampleSky;
-                sampleSky = true;
-                sunUv = projected / viewport;
             }
 
             const Vector2 extent = Vector2(halfSize, halfSize) / viewport;
@@ -701,14 +796,27 @@ struct RaceEffectsPresentation::Storage {
             bounds = count == 0 ? clipped : bounds.merge(clipped);
             ++count;
         }
-        if (!count) {
+        if (!count || (!legacyBounds && sunRegions.empty())) {
             if (sun) sun->hide();
             if (skyViewport) skyViewport->set_update_mode(SubViewport::UPDATE_DISABLED);
             return;
         }
-        const auto start = bounds.position / viewport;
-        const auto end = bounds.get_end() / viewport;
-        sunMaterial->set_shader_parameter("bounds_uv", Vector4(start.x, start.y, end.x, end.y));
+        if (legacyBounds || sunRegions.size() > maxSunRegions) {
+            sunRegions.clear();
+            sunRegions.emplace_back(bounds.position/viewport,bounds.size/viewport);
+        }
+        for (int i=0; i<static_cast<int>(sunRegions.size()); ++i) {
+            const auto& region = sunRegions[i];
+            const auto end = region.get_end();
+            sunRegionUniforms.set(i, Vector4(region.position.x,region.position.y,end.x,end.y));
+        }
+        sunMaterial->set_shader_parameter("regions", sunRegionUniforms);
+        sunMaterial->set_shader_parameter("region_count", static_cast<int>(sunRegions.size()));
+        if (profile_grid_effect_disabled("compare-sun-bounds")) {
+            const auto start = bounds.position/viewport;
+            const auto end = bounds.get_end()/viewport;
+            sun->set_meta("hp2_profile_sun_bounds", Vector4(start.x,start.y,end.x,end.y));
+        }
         sunMaterial->set_shader_parameter("layer_rect", sunRects);
         sunMaterial->set_shader_parameter("layer_color", sunColors);
         sunMaterial->set_shader_parameter("layer_state", sunStates);
