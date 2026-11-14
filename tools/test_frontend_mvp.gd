@@ -20,6 +20,10 @@ var arrest_nis := false
 var arrest_seen := false
 var arrest_midpoint := 0
 var arrest_motion_captured := false
+var arrest_start_ms := 0
+var arrest_last_step := -1
+var arrest_last_pose := Transform3D.IDENTITY
+var arrest_subframes := 0
 var name_test := OS.get_environment("HP2_MVP_NAME_TEST")
 var check_frontend_rate := OS.get_environment("HP2_MVP_FRONTEND_RATE") == "1"
 var frontend_rate_start := 0
@@ -32,6 +36,9 @@ func _initialize() -> void:
     pursuit = OS.get_environment("HP2_MVP_PURSUIT") == "1"
     returning = OS.get_environment("HP2_MVP_RETURN") == "1"
     arrest_nis = OS.get_environment("HP2_MVP_TEST_ARREST_NIS") == "1"
+    if arrest_nis and OS.has_environment("HP2_MVP_TEST_RENDER_FPS"):
+        DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+        Engine.max_fps = int(OS.get_environment("HP2_MVP_TEST_RENDER_FPS"))
     var course_path := OS.get_environment("HP2_ROUTE_CAPTURE")
     if not course_path.is_empty():
         route = RouteDriver.new()
@@ -45,6 +52,8 @@ func _initialize() -> void:
     call_deferred("_open")
 
 func _open() -> void:
+    if arrest_nis and OS.get_cmdline_user_args().has("--race-track=13"):
+        stage = 7
     change_scene_to_file("res://native_game.tscn")
 
 func _process(_delta: float) -> bool:
@@ -194,8 +203,20 @@ func _process(_delta: float) -> bool:
         return _run_full_event(sample, screen)
     if arrest_nis and stage == 8:
         var parts: int = sample.get("nis_parts", 0)
+        if parts >= 2:
+            for mesh in race.race_scene().get_children():
+                var skeleton := mesh.get_node_or_null("NisPose") as Skeleton3D
+                if not skeleton:
+                    continue
+                var pose := skeleton.get_bone_pose(25)
+                if arrest_last_step == sample.step and not pose.is_equal_approx(arrest_last_pose):
+                    arrest_subframes += 1
+                arrest_last_pose = pose
+                arrest_last_step = sample.step
+                break
         if parts >= 2 and not arrest_seen:
             arrest_seen = true
+            arrest_start_ms = Time.get_ticks_msec()
             arrest_midpoint = sample.get("step", 0) + 30
             print("HP2_NIS_ACTORS ", parts)
             _capture("busted")
@@ -205,6 +226,8 @@ func _process(_delta: float) -> bool:
         elif arrest_seen and parts == 0:
             if not arrest_motion_captured:
                 return _fail("arrest_animation_ended_early")
+            print("HP2_NIS_TIMING duration_ms=", Time.get_ticks_msec() - arrest_start_ms,
+                " interpolated_frames=", arrest_subframes)
             stage = 46
             _finish(sample, "busted-cleanup")
         return false

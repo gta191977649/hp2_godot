@@ -11,7 +11,6 @@
 #include <godot_cpp/classes/shader.hpp>
 #include <godot_cpp/classes/shader_material.hpp>
 #include <godot_cpp/classes/skeleton3d.hpp>
-#include <godot_cpp/classes/skin.hpp>
 
 #include <unordered_map>
 
@@ -28,6 +27,12 @@ struct NisPresentation::Storage {
     };
     std::unordered_map<std::size_t, Part> parts;
     ColorRect* filter{};
+    std::uint32_t step{};
+    std::uint64_t replayEpoch{};
+    bool sampled{};
+    float sampledFraction{};
+
+    void sample(Node3D& scene, NisManagerRegistry& registry, float worldFrameFraction);
 
     void submit(Node3D& scene, MeshConverter& converter, std::size_t slot, const EditorMarkerModel& model,
         const float* transform, const std::vector<std::array<float,16>>* pose) {
@@ -42,28 +47,17 @@ struct NisPresentation::Storage {
             const auto mesh = converter.convert(model, true, pose ? pose->size() : 0);
             part = {memnew(MeshInstance3D), nullptr, model.solid, false};
             part.mesh->set_mesh(mesh);
-            if (pose) {
-                // The donor provides final inverse-bind-adjusted matrices.
-                // Flat bones with identity binds pass those matrices to Godot's GPU skinning.
-                part.skeleton = memnew(Skeleton3D);
-                part.skeleton->set_name("NisPose");
-                part.mesh->add_child(part.skeleton);
-                Ref<Skin> skin;
-                skin.instantiate();
-                for (std::size_t bone = 0; bone < pose->size(); ++bone) {
-                    part.skeleton->add_bone(String("NisBone") + String::num_uint64(bone));
-                    skin->add_bind(static_cast<int>(bone), Transform3D());
-                }
-                part.mesh->set_skin(skin);
-                part.mesh->set_skeleton_path(NodePath("NisPose"));
-            }
+            if (pose) part.skeleton = attach_pose_palette(*part.mesh, "NisPose", pose->size());
             scene.add_child(part.mesh);
         }
         part.seen = true;
         part.mesh->set_transform(race_transform(transform));
         if (pose) {
-            for (std::size_t bone = 0; bone < pose->size(); ++bone)
-                part.skeleton->set_bone_pose(static_cast<int>(bone), race_transform((*pose)[bone].data()));
+            for (std::size_t bone = 0; bone < pose->size(); ++bone) {
+                const auto transform = race_transform((*pose)[bone].data());
+                if (part.skeleton->get_bone_pose(bone) != transform)
+                    part.skeleton->set_bone_pose(bone, transform);
+            }
         }
     }
 };
@@ -90,28 +84,40 @@ NisPresentation::~NisPresentation() = default;
 
 std::size_t NisPresentation::part_count() const { return storage_->parts.size(); }
 
-void NisPresentation::update(Node3D& scene, NisManagerRegistry& registry, bool monochrome) {
-    auto& storage = *storage_;
-    storage.filter->set_visible(monochrome);
-    for (auto& part : storage.parts) part.second.seen = false;
+void NisPresentation::Storage::sample(Node3D& scene, NisManagerRegistry& registry, float worldFrameFraction) {
+    for (auto& part : parts) part.second.seen = false;
     MeshConverter converter;
     struct Submission { Storage& storage; Node3D& scene; MeshConverter& converter; };
-    Submission submission{storage, scene, converter};
+    Submission submission{*this, scene, converter};
     VisitNisPoses(registry, 1, [](void* user, std::size_t slot, const EditorMarkerModel& model,
         const float* transform, const std::vector<std::array<float,16>>* pose) {
         auto& context = *static_cast<Submission*>(user);
         context.storage.submit(context.scene, context.converter, slot, model, transform, pose);
-    }, &submission);
-    for (auto it = storage.parts.begin(); it != storage.parts.end();) {
+    }, &submission, worldFrameFraction);
+    for (auto it = parts.begin(); it != parts.end();) {
         if (it->second.seen) { ++it; continue; }
         scene.remove_child(it->second.mesh);
         it->second.mesh->queue_free();
-        it = storage.parts.erase(it);
+        it = parts.erase(it);
     }
+}
+
+void NisPresentation::update(Node3D& scene, NisManagerRegistry& registry, bool monochrome,
+    std::uint32_t step, std::uint64_t replayEpoch, float worldFrameFraction) {
+    auto& storage = *storage_;
+    storage.filter->set_visible(monochrome);
+    if (storage.sampled && storage.step == step && storage.replayEpoch == replayEpoch &&
+        storage.sampledFraction == worldFrameFraction) return;
+    storage.step = step;
+    storage.replayEpoch = replayEpoch;
+    storage.sampled = true;
+    storage.sampledFraction = worldFrameFraction;
+    storage.sample(scene, registry, worldFrameFraction);
 }
 
 void NisPresentation::clear() {
     storage_->parts.clear(); // The scene owns these nodes and is retiring.
+    storage_->sampled = false;
     storage_->filter->hide();
 }
 

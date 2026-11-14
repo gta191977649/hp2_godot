@@ -44,14 +44,30 @@ func _check(race: Node) -> void:
             _fail("Wheel blur was active before accelerating")
             return
 
+    var driver := player.get_node_or_null("RaceDriver1") as MeshInstance3D
+    if not driver or not driver.is_visible_in_tree():
+        _fail("The player driver's authored mesh is missing")
+        return
+    var skeleton := driver.get_node_or_null("DriverPose") as Skeleton3D
+    if not skeleton or skeleton.get_bone_count() < 30:
+        _fail("The player driver has no authored skeleton")
+        return
+    var neutral_pose: Array[Transform3D] = []
+    for bone in range(skeleton.get_bone_count()):
+        neutral_pose.append(skeleton.get_bone_pose(bone))
+
     Input.action_press("hp2_accelerate")
+    Input.action_press("hp2_steer_left")
     var peak := 0.0
     var separate_pose := false
+    var changed_bones := 0
     for frame in range(800):
         await process_frame
-        # Turn briefly so the chase camera sees the face of a rim.
-        if frame == 180: Input.action_press("hp2_steer_left")
-        if frame == 300: Input.action_release("hp2_steer_left")
+        if frame == 36:
+            Input.action_release("hp2_steer_left")
+            for bone in range(neutral_pose.size()):
+                if not skeleton.get_bone_pose(bone).is_equal_approx(neutral_pose[bone]):
+                    changed_bones += 1
         for overlay in overlays:
             if not overlay.is_visible_in_tree():
                 continue
@@ -59,10 +75,13 @@ func _check(race: Node) -> void:
             peak = maxf(peak, alpha)
             var wheel := player.get_node("Wheel" + str(overlay.name).trim_prefix("WheelBlur")) as MeshInstance3D
             separate_pose = separate_pose or not wheel.basis.is_equal_approx(overlay.basis)
-        if peak >= 89.9 and separate_pose:
+        if frame >= 36 and peak >= 89.9 and separate_pose:
             break
     Input.action_release("hp2_accelerate")
     Input.action_release("hp2_steer_left")
+    if changed_bones < 3:
+        _fail("Steering did not change the authored driver pose")
+        return
     if peak < 89.9 or peak > 90.0 or not separate_pose:
         _fail("Wheel blur strength or independent pose failed, peak=%s state=%s" % [peak, race.telemetry()])
         return
@@ -71,51 +90,67 @@ func _check(race: Node) -> void:
     var viewport := scene.get_viewport()
     var race_camera := viewport.get_camera_3d()
     var shown := overlays.filter(func(overlay: MeshInstance3D) -> bool: return overlay.visible)
-    var target: MeshInstance3D = shown[0]
     var camera := Camera3D.new()
     scene.add_child(camera)
-    var side := player.global_basis.z.normalized()
-    if (race_camera.global_position - target.global_position).dot(side) < 0.0:
-        side = -side
-    camera.look_at_from_position(target.global_position + side * 1.4 + Vector3.UP * 0.25, target.global_position)
+    var axle := player.global_basis.z.normalized()
     camera.cull_mask = 3
     camera.make_current()
-    await process_frame
-    await RenderingServer.frame_post_draw
-    var with_blur := viewport.get_texture().get_image()
-    for overlay in shown:
-        overlay.hide()
-    await process_frame
-    await RenderingServer.frame_post_draw
-    var without_blur := viewport.get_texture().get_image()
-    for overlay in shown:
-        overlay.show()
     var changed := 0
-    for overlay in shown:
-        if camera.is_position_behind(overlay.global_position):
-            continue
-        var center := Vector2i(camera.unproject_position(overlay.global_position))
+    for sign in [-1.0, 1.0]:
+        var side: Vector3 = axle * sign
+        var side_wheels := shown.filter(func(overlay: MeshInstance3D) -> bool:
+            return (overlay.global_position - player.global_position).dot(side) > 0.0)
+        if side_wheels.is_empty():
+            _fail("Wheel blur missing on one side of the moving car")
+            return
+        var target: MeshInstance3D = side_wheels[0]
+        camera.look_at_from_position(target.global_position + side * 1.4 + Vector3.UP * 0.25, target.global_position)
+        await process_frame
+        await RenderingServer.frame_post_draw
+        var with_blur := viewport.get_texture().get_image()
+        for overlay in shown:
+            overlay.hide()
+        await process_frame
+        await RenderingServer.frame_post_draw
+        var without_blur := viewport.get_texture().get_image()
+        for overlay in shown:
+            overlay.show()
+        var side_pixels := 0
+        var center := Vector2i(camera.unproject_position(target.global_position))
         for y in range(maxi(center.y - 110, 0), mini(center.y + 110, with_blur.get_height()), 2):
             for x in range(maxi(center.x - 110, 0), mini(center.x + 110, with_blur.get_width()), 2):
                 var before := with_blur.get_pixel(x, y)
                 var after := without_blur.get_pixel(x, y)
                 if absf(before.r - after.r) + absf(before.g - after.g) + absf(before.b - after.b) > 0.03:
-                    changed += 1
+                    side_pixels += 1
+        if side_pixels < 5:
+            _fail("No visible wheel blur from side %s" % sign)
+            return
+        changed += side_pixels
+    var seat := driver.global_position
+    var front := player.global_basis.x.normalized()
+    camera.look_at_from_position(seat + front * 2.8 + Vector3.UP * 1.2 + axle * 0.4, seat)
+    await process_frame
+    await RenderingServer.frame_post_draw
+    var with_driver := viewport.get_texture().get_image()
+    driver.hide()
+    await process_frame
+    await RenderingServer.frame_post_draw
+    var without_driver := viewport.get_texture().get_image()
+    driver.show()
+    var driver_pixels := 0
+    var seat_pixel := Vector2i(camera.unproject_position(seat))
+    for y in range(maxi(seat_pixel.y - 180, 0), mini(seat_pixel.y + 180, with_driver.get_height()), 2):
+        for x in range(maxi(seat_pixel.x - 180, 0), mini(seat_pixel.x + 180, with_driver.get_width()), 2):
+            var difference := with_driver.get_pixel(x, y) - without_driver.get_pixel(x, y)
+            if absf(difference.r) + absf(difference.g) + absf(difference.b) > 0.025:
+                driver_pixels += 1
     race_camera.make_current()
     camera.queue_free()
     race.set_process(true)
-    if changed < 5:
-        var material := shown[0].mesh.surface_get_material(0) as ShaderMaterial
-        var texture: Texture2D = material.get_shader_parameter("wheel_blur_texture")
-        var texture_image := texture.get_image()
-        var maximum_alpha := 0.0
-        for y in range(texture_image.get_height()):
-            for x in range(texture_image.get_width()):
-                maximum_alpha = maxf(maximum_alpha, texture_image.get_pixel(x, y).a)
-        _fail("Active overlay made no rim pixels change, count=%s alpha_test=%s texture_alpha=%s" %
-            [shown.size(), material.get_shader_parameter("alpha_test"), maximum_alpha])
+    if driver_pixels < 10:
+        _fail("The cabin driver was not visible through the windshield: %d pixels" % driver_pixels)
         return
-
     Input.action_press("hp2_brake")
     var reduced := false
     for frame in range(650):
@@ -131,7 +166,8 @@ func _check(race: Node) -> void:
     if not reduced:
         _fail("Wheel blur did not fade while braking")
         return
-    print("HP2_MVP_WHEEL_BLUR_PASS peak=", peak, " authored_overlays=", overlays.size(), " changed_pixels=", changed)
+    print("HP2_MVP_WHEEL_BLUR_PASS peak=", peak, " authored_overlays=", overlays.size(),
+        " changed_pixels=", changed, " driver_bones_changed=", changed_bones, " driver_pixels=", driver_pixels)
     quit(0)
 
 func _fail(reason: String) -> void:

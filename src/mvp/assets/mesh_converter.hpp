@@ -14,7 +14,7 @@
 
 struct EditorMarkerModel;
 struct EditorMarkerTexture;
-namespace godot { class MeshInstance3D; }
+namespace godot { class MeshInstance3D; class Skeleton3D; }
 
 namespace hp2 {
 
@@ -29,6 +29,8 @@ void apply_paint_lighting(godot::MeshInstance3D& mesh, const SceneLightContext& 
 
 godot::Vector3 race_vector(const float* source);
 godot::Transform3D race_transform(const float* source);
+godot::Skeleton3D* attach_pose_palette(godot::MeshInstance3D& mesh, const godot::String& name,
+    std::size_t boneCount);
 
 // Temporary decode cache. The scene retains Godot Refs only.
 class MeshConverter {

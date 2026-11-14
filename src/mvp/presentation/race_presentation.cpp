@@ -1,7 +1,8 @@
 #include "race_presentation.hpp"
 
-#include "assets/race_diagnostics.hpp"
+#include "assets/mesh_converter.hpp"
 #include "assets/port_credit.hpp"
+#include "assets/race_diagnostics.hpp"
 #include "bridge/entity_state_bridge.hpp"
 #ifdef HP2_MVP_IMGUI
 #include "assets/frontend_debug_menu.hpp"
@@ -26,7 +27,10 @@
 #include "indep/inc/FMenus.hpp"
 #include "indep/inc/Fred.hpp"
 #include "indep/inc/GameFlow.hpp"
+#include "indep/inc/NIS.hpp"
+#include "indep/inc/Player.hpp"
 #include "indep/inc/RaceCoordinator.hpp"
+#include "indep/inc/Track.hpp"
 #include "indep/inc/Timer.hpp"
 #include "indep/inc/World.hpp"
 #include "port/not_implemented.hpp"
@@ -36,6 +40,7 @@
 #include <godot_cpp/classes/input.hpp>
 #include <godot_cpp/classes/input_event.hpp>
 #include <godot_cpp/classes/input_event_key.hpp>
+#include <godot_cpp/classes/input_event_mouse_motion.hpp>
 #include <godot_cpp/classes/label.hpp>
 #include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/classes/project_settings.hpp>
@@ -44,6 +49,7 @@
 #include <godot_cpp/classes/sub_viewport.hpp>
 #include <godot_cpp/classes/viewport_texture.hpp>
 #include <godot_cpp/classes/world3d.hpp>
+#include <godot_cpp/classes/window.hpp>
 #include <godot_cpp/classes/viewport.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -271,6 +277,8 @@ struct RacePresentation::Session {
     SubViewport* sceneViewport{};
     Dictionary fogProfile;
     Camera3D* camera{};
+    RaceOrbitCamera orbit;
+    int orbitStockView = -1;
     Ref<RacePostPresentation> post;
     SubViewport* rearViewport{};
     Camera3D* rearCamera{};
@@ -308,6 +316,9 @@ void RacePresentation::_bind_methods() {
 }
 
 void RacePresentation::_notification(int what) {
+    if (session_ && (what == NOTIFICATION_APPLICATION_FOCUS_OUT ||
+        what == NOTIFICATION_WM_WINDOW_FOCUS_OUT || what == NOTIFICATION_EXIT_TREE))
+        session_->orbit.capture(false);
     if (what == NOTIFICATION_APPLICATION_FOCUS_OUT && session_ && nativeDebug_)
         joystickNotifyNativeInputReset(0);
     if (what == NOTIFICATION_EXIT_TREE && session_ && session_->post.is_valid())
@@ -315,6 +326,7 @@ void RacePresentation::_notification(int what) {
 }
 
 void RacePresentation::report_assert(const String& message) {
+    if (session_) session_->orbit.capture(false);
     failed_ = true;
     ERR_PRINT(message);
 #ifdef HP2_MVP_IMGUI
@@ -479,6 +491,7 @@ void RacePresentation::_input(const Ref<InputEvent>& event) {
     }
 #ifdef HP2_MVP_IMGUI
     if (debug_ && debug_->input(event)) {
+        if (session_ && debug_->needs_mouse_cursor()) session_->orbit.capture(false);
         get_viewport()->set_input_as_handled();
         return;
     }
@@ -489,6 +502,13 @@ void RacePresentation::_input(const Ref<InputEvent>& event) {
 #endif
     if (session_) {
         auto& s = *session_;
+        if (event->is_action_pressed("hp2_camera")) s.orbit.reset();
+        if (event->is_action_pressed("hp2_pause")) s.orbit.capture(false);
+        if (const Ref<InputEventMouseMotion> motion = event; motion.is_valid() &&
+            s.orbit.mouse_motion(motion->get_screen_relative())) {
+            get_viewport()->set_input_as_handled();
+            return;
+        }
         if (!failed_ && key.is_valid() && s.nameEditSession) {
             using Action = FrontendNameEditAction;
             constexpr std::array<std::pair<const char*, Action>,5> editActions{{
@@ -525,6 +545,7 @@ void RacePresentation::frontend_pointer_input(const Ref<InputEvent>& event) {
 
 void RacePresentation::retire_scene() {
     auto& s = *session_;
+    s.orbit.capture(false);
     s.radialBlurActive = false;
     if (!s.scene) return;
     s.frontend->update_rear_view({}, {}, false);
@@ -634,6 +655,7 @@ void RacePresentation::_process(double delta) {
         const auto& clock = s.runtime.Clock();
         // One shared clock upload feeds the GPU across the race, rear view and preview.
         const float fraction = s.runtime.PresentationStepFraction();
+        const float poseFraction = clock.worldTimeElapsed > 0.0f ? fraction : 1.0f;
         const float worldOffset = clock.worldTimeElapsed * fraction;
         s.animationClock = Vector4(clock.worldTimeFrames + worldOffset * 60.0f,
             clock.worldTimer * 0.0002500000118743628f + worldOffset,
@@ -681,7 +703,10 @@ void RacePresentation::_process(double delta) {
         stage = "race_state";
         if (race.simulation->world->presentationGeneration != s.bridge.current().generation)
             retire_scene();
-        if (!race.camera) return;
+        if (!race.camera) {
+            s.orbit.capture(false);
+            return;
+        }
 
 #ifdef HP2_MVP_IMGUI
         stage = "race_diagnostics";
@@ -731,6 +756,45 @@ void RacePresentation::_process(double delta) {
                 s.post->attach(*s.sceneViewport, *get_viewport(), *s.camera);
             }
         }
+        stage = "camera";
+        apply_race_camera(*s.camera, frame.camera);
+        const auto playerState = std::find_if(frame.vehicles.begin(), frame.vehicles.end(),
+            [](const auto& vehicle) { return vehicle.player; });
+        const auto playerVisual = playerState != frame.vehicles.end() ?
+            s.vehicles.find(playerState->handle) : s.vehicles.end();
+        const auto* players = race.simulation->players;
+        const auto* player = players ? players->playersByNumber[0] : nullptr;
+        const auto* movement = player ? player->car : nullptr;
+        const auto* terrain = movement && movement->bindings.environment ?
+            movement->bindings.environment->contact.terrain : nullptr;
+        const int stockView = player ? player->settings.cameraView : -1;
+        bool cinematicActive = false;
+        for (auto* manager = race.nis ? race.nis->first : nullptr; manager; manager = manager->Next())
+            cinematicActive |= manager->Playback().active != 0;
+        bool canOrbit = race.sessionState == RC_STATE_RACE_IN_PROGRESS && !s.host.menuInput && !cinematicActive &&
+            !state.pointerModal && playerVisual != s.vehicles.end() && playerState->exteriorVisible &&
+            playerVisual->second.model == playerState->model && playerVisual->second.skin == playerState->skin &&
+            terrain && terrain->topology && !player->lookBack && get_window()->has_focus() &&
+            !Input::get_singleton()->is_action_pressed("hp2_pause") &&
+            !Input::get_singleton()->is_action_pressed("hp2_l1");
+#ifdef HP2_MVP_IMGUI
+        canOrbit = canOrbit && (!debug_ || !debug_->needs_mouse_cursor());
+#endif
+        if (replayRestored || stockView != s.orbitStockView) s.orbit.reset();
+        s.orbitStockView = stockView;
+        s.orbit.capture(canOrbit);
+        const bool orbitView = canOrbit && s.orbit.apply(*s.camera, *playerState,
+            playerVisual->second.bodyBounds, terrain->topology, delta);
+        const auto cameraEye = s.camera->get_global_position();
+        const std::array<float, 3> renderEye{cameraEye.x, -cameraEye.z, cameraEye.y};
+        auto driverCamera = *race.camera;
+        if (orbitView) {
+            const auto forward = -s.camera->get_global_basis().get_column(2);
+            std::copy(renderEye.begin(), renderEye.end(), driverCamera.eye);
+            driverCamera.forward[0] = forward.x;
+            driverCamera.forward[1] = -forward.z;
+            driverCamera.forward[2] = forward.y;
+        }
         stage = "vehicle_assets";
         s.reflections->update(race, delta, newScene || replayRestored);
         for (std::size_t slot = 0; slot < frame.vehicles.size(); ++slot) {
@@ -747,7 +811,9 @@ void RacePresentation::_process(double delta) {
                     previous->queue_free();
                 }
             }
-            vehicle.update(state, race.renderResources->Lights(), s.reflections->matrix(), race);
+            const bool showExterior = state.visible || (orbitView && s.orbit.player_exterior() && state.player);
+            vehicle.update(state, race.renderResources->Lights(), s.reflections->matrix(), race, showExterior);
+            vehicle.update_driver(*world.carTable[slot], state, driverCamera, frame.step, frame.replayEpoch, poseFraction);
         }
         for (auto it = s.vehicles.begin(); it != s.vehicles.end();) {
             if (std::none_of(frame.vehicles.begin(), frame.vehicles.end(),
@@ -771,12 +837,12 @@ void RacePresentation::_process(double delta) {
         effectOptions.particles &= !profile_grid_effect_disabled("no-particles");
         effectOptions.sunGlare &= !profile_grid_effect_disabled("no-sun");
         if (race.nis) s.cinematic->update(*s.scene, *race.nis,
-            s.post.is_null() && effectOptions.monochrome && race.blackAndWhite);
+            s.post.is_null() && effectOptions.monochrome && race.blackAndWhite, frame.step, frame.replayEpoch,
+            worldOffset * 60.0f);
         stage = "camera";
-        apply_race_camera(*s.camera, frame.camera);
         if (s.primaryScenery) {
             const float focal = 256.0f / std::tan(race.camera->fieldOfView * (3.141592654f / 65536.0f));
-            s.primaryScenery->update_camera(*s.camera, frame.camera.eye.data(), focal,
+            s.primaryScenery->update_camera(*s.camera, orbitView ? renderEye.data() : frame.camera.eye.data(), focal,
                 effectOptions.sceneryVisibility, newScene || replayRestored);
         }
         if (s.post.is_valid()) {
@@ -897,10 +963,14 @@ Dictionary RacePresentation::telemetry() const {
     }
     result["race_state"] = session_->raceState;
     result["radial_blur_active"] = session_->radialBlurActive;
+    result["orbit_active"] = session_->orbit.active();
+    result["orbit_terrain_queries"] = session_->orbit.terrain_queries();
     result["animation_clock"] = session_->animationClock;
     if (!session_->fogProfile.is_empty()) result["fog_profile"] = session_->fogProfile;
     collect_police_diagnostics(result, session_->runtime.RaceState(), session_->runtime.FrontendState());
     if (!session_->scene) return result;
+    result["stock_camera_eye"] = race_vector(frame.camera.eye.data());
+    result["stock_camera_forward"] = race_vector(frame.camera.forward.data());
     result["nis_parts"] = static_cast<int64_t>(session_->cinematic->part_count());
     result["generation"] = frame.generation;
     result["track"] = frame.track;

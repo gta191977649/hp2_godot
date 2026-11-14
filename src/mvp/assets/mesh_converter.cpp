@@ -13,6 +13,8 @@
 #include <godot_cpp/classes/mesh_instance3d.hpp>
 #include <godot_cpp/classes/shader.hpp>
 #include <godot_cpp/classes/shader_material.hpp>
+#include <godot_cpp/classes/skeleton3d.hpp>
+#include <godot_cpp/classes/skin.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -131,6 +133,22 @@ Vector3 race_vector(const float* source) {
 Transform3D race_transform(const float* source) {
     return {Basis(race_vector(source), race_vector(source + 8), -race_vector(source + 4)),
         race_vector(source + 12)};
+}
+
+Skeleton3D* attach_pose_palette(MeshInstance3D& mesh, const String& name, std::size_t boneCount) {
+    // The source palette already includes the inverse binds.
+    auto* skeleton = memnew(Skeleton3D);
+    skeleton->set_name(name);
+    mesh.add_child(skeleton);
+    Ref<Skin> skin;
+    skin.instantiate();
+    for (std::size_t bone = 0; bone < boneCount; ++bone) {
+        skeleton->add_bone(String("Bone") + String::num_uint64(bone));
+        skin->add_bind(static_cast<int>(bone), Transform3D());
+    }
+    mesh.set_skin(skin);
+    mesh.set_skeleton_path(NodePath(name));
+    return skeleton;
 }
 
 Ref<Texture2D> upload_paint_texture(const EditorMarkerTexture* descriptor) {
@@ -464,7 +482,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
                 const auto first = encoded[weight == 1 ? 1 : 0] & 255u;
                 const auto second = weight > 1 ? encoded[1] & 255u : first;
                 if (first >= boneCount || second >= boneCount)
-                    throw std::runtime_error("NIS vertex refers to a bone outside its palette");
+                    throw std::runtime_error("Skinned vertex refers to a bone outside its palette");
                 const float blend = weight > 1 ? weight / 256.0f : 0.0f;
                 for (const auto bone : {first, second, first, first}) surface.bones.push_back(bone);
                 for (const auto value : {1.0f - blend, blend, 0.0f, 0.0f}) surface.weights.push_back(value);

@@ -42,9 +42,11 @@ masks for section visibility. Track Viewer uses its free camera for the
 same authored zone lookup. Both views use full coverage outside the zones
 or when the Track visibility zones effect is disabled.
 Race wheel blur consumes the committed angular velocity and non-spinning
-wheel mount pose for each wheel. It uses the authored wheel blur mesh and
-texture on the primary and rear view layers, with the original per-view part
-and LOD gates. The Godot shader blends the overlay against the visible rim.
+wheel mount pose for each wheel. The authored wheel overlay uses the same
+view layers as the vehicle, with Godot depth testing against the visible rim.
+Race drivers use the authored seat offset, character variants and native
+steering and gesture poses. Godot uploads the character mesh and skins it
+using the native bone palette. The original rear view omits the driver.
 
 ## Game Core Integration Boundary
 

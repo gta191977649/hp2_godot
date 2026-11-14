@@ -21,6 +21,7 @@ public:
     ~ImGuiOverlay();
     bool input(const godot::Ref<godot::InputEvent>& event);
     bool captures_game_input() const noexcept;
+    bool needs_mouse_cursor() const noexcept;
     const RaceEffectOptions& effect_options() const noexcept;
     void log(const char* event, const char* detail, bool error = false);
     void show_console();

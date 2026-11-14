@@ -211,6 +211,10 @@ bool ImGuiOverlay::captures_game_input() const noexcept {
     return storage_->open || (storage_->viewer && storage_->viewer->modal());
 }
 
+bool ImGuiOverlay::needs_mouse_cursor() const noexcept {
+    return captures_game_input() || storage_->effectsOpen;
+}
+
 void ImGuiOverlay::attach_track_viewer(TrackViewer& viewer, std::function<void()> open) {
     auto& s = *storage_;
     s.viewer = &viewer;

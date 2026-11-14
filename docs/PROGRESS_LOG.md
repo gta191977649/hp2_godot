@@ -1,3 +1,25 @@
+## 2026-11-15 TASK-0124 camera takeover and animation interpolation
+
+Mouse orbit blends in from the displayed camera. Race drivers and
+arrest actors interpolate their render poses against the native game
+clock. The authored animation timing drives both cases.
+
+## 2026-11-15 TASK-0146 race driver and wheel blur
+
+Race drivers now use the authored seating and animated steering and gesture
+data in the Godot exterior view. Wheel overlays follow the vehicle's render
+layers and use Godot depth testing for both the default and orbit views.
+
+## 2026-11-15 TASK-0124 driving camera
+
+Added GTA SA-inspired mouse orbit in the Godot primary view. The camera
+uses HP2 terrain queries for clearance, selects scenery from its displayed
+position and returns to the current HP2 view when the mouse is idle.
+Corrected vertical mouse response and centered the orbit on the rendered
+car body. The updated smoke passed on Vulkan and D3D12.
+Low rear orbit now retracts toward the bumper during ground contact and
+extends again when the camera has clearance.
+
 ## 2026-11-15 TASK-0146 windowed launch default
 
 Debug and Release start windowed with FXAA and VSync. The fullscreen

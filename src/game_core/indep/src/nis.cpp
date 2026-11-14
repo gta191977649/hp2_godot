@@ -810,7 +810,8 @@ static void nisRenderHandProp(CarLiveReplayContext& context,
 }
 
 template<class Submit>
-static void visitNisPlayback(CarFrameLiveReplay& playback,int viewId,Submit&& submit)
+static void visitNisPlayback(CarFrameLiveReplay& playback,int viewId,Submit&& submit,
+    float worldFrameFraction=0.0f,bool interpolate=false)
 {
     // PAL1B2C90..1B30A8: the actual NIS actor pointers and active-view mask
     // gate rendering. Both actors are authored relative to the first car;
@@ -843,6 +844,7 @@ static void visitNisPlayback(CarFrameLiveReplay& playback,int viewId,Submit&& su
     // quaternion and bone arrays between them rather than reallocating two
     // arrays for each actor on every rendered frame.
     std::vector<std::array<float,4>> quaternions;
+    std::vector<std::array<float,4>> nextQuaternions;
     DriverPoseCache cache;
     const auto drawActor=[&](CarReplayAnimationController* animation,const float offset[4],bool first) {
         if(!animation || !animation->primary || !animation->model || !animation->model->solid)return;
@@ -851,6 +853,17 @@ static void visitNisPlayback(CarFrameLiveReplay& playback,int viewId,Submit&& su
         eMulVector4(displacement,source,offset);
         for(std::size_t axis=0;axis<4;++axis)actor[12+axis]+=displacement[axis];
         nisAnimationTranslation(*animation,translation);
+        const auto* clip=animation->primary;
+        const auto sample=static_cast<int32_t>(animation->phase);
+        const auto next=std::min({sample+1,info->frameCount-1,static_cast<int32_t>(clip->frameCount)-1});
+        const auto worldFrame=static_cast<uint32_t>(context.registry->environment.services->clock->worldTimeFrames);
+        // The authored clip advances once per two world frames. Sample only
+        // the interval ahead of the committed phase without advancing playback.
+        const float blend=interpolate && next>sample ?
+            (static_cast<float>((worldFrame-static_cast<uint32_t>(context.startedWorldTicks))&1u)+worldFrameFraction)*0.5f : 0.0f;
+        if(blend>0.0f)
+            for(std::size_t axis=0;axis<3;++axis)
+                translation[axis]+=(clip->framePositions[static_cast<std::size_t>(next)*4+axis]-translation[axis])*blend;
         if(!first || !info->selectionGroup) {
             float position[4];eMulVector3(position,actor,translation);
             const auto height=terrainSurfaceElevation(movement.bindings.environment->contact.terrain,
@@ -864,6 +877,14 @@ static void visitNisPlayback(CarFrameLiveReplay& playback,int viewId,Submit&& su
         auto* rotations=reinterpret_cast<float (*)[4]>(quaternions.data());
         Require(carDriverAnimationReadAllRotations(animation->primary,rotations,count,animation->phase)!=0,
             "NIS actor phase is outside its retained authored animation");
+        if(blend>0.0f) {
+            nextQuaternions.resize(count);
+            auto* nextRotations=reinterpret_cast<float (*)[4]>(nextQuaternions.data());
+            Require(carDriverAnimationReadAllRotations(clip,nextRotations,count,static_cast<float>(next))!=0,
+                "NIS actor interpolation lacks its next authored pose");
+            for(std::size_t bone=0;bone<count;++bone)
+                vectorQuaternionSlerp(rotations[bone],rotations[bone],nextRotations[bone],blend);
+        }
         const auto& posed=cache.Prepare(*tree,rotations,count);
         float world[16],rotation[16],root[4];
         std::memcpy(world,actor,sizeof(world));std::memcpy(rotation,actor,sizeof(rotation));
@@ -890,14 +911,14 @@ std::size_t RenderNisPlayback(CarFrameLiveReplay& playback,
     return draws;
 }
 
-void VisitNisPoses(NisManagerRegistry& registry,int viewId,NisPoseSink sink,void* user)
+void VisitNisPoses(NisManagerRegistry& registry,int viewId,NisPoseSink sink,void* user,float worldFrameFraction)
 {
     std::size_t base=0;
     for(auto* manager=registry.first;manager;manager=manager->Next(),base+=6)
         visitNisPlayback(manager->Playback(),viewId,[&](std::size_t slot,const EditorMarkerModel& model,
             const float* transform,const std::vector<std::array<float,16>>* pose) {
             sink(user,base+slot,model,transform,pose);
-        });
+        },std::clamp(worldFrameFraction,0.0f,1.0f),true);
 }
 
 std::size_t DrawNisObjects(NisManagerRegistry& registry,

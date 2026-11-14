@@ -38,48 +38,6 @@ RaceCameraState capture_camera(const CarCinematicViewFrame& camera, float source
     return result;
 }
 
-void capture_wheel_blur(Car& car, const CarCinematicViewFrame& camera, const float* body,
-    const float* flipped, const float mounts[4][16], std::array<WheelBlurState, 4>& result) {
-    const auto& state = *car.Movement()->bindings.state;
-    std::array<float, 4> alpha{};
-    for (std::size_t wheel = 0; wheel < result.size(); ++wheel) {
-        // Retail E-0035-W02: authoring uses a maximum GS alpha of 90.
-        alpha[wheel] = std::clamp(std::fabs(state.wheelAngularVelocity[wheel]) * 0.02f, 0.0f, 1.0f) * 90.0f;
-    }
-    if (std::none_of(alpha.begin(), alpha.end(), [](float amount) { return amount > 0.1f; })) return;
-    const auto* models = carRenderModel(&car, 0);
-    const auto* parts = carRenderPartCullers(&car);
-    if (!models || !parts) return;
-
-    CarCinematicView view{};
-    view.current = camera;
-    CarCinematicScreen screen{};
-    screen.view = &view;
-    screen.matricesCalculated = 1;
-    screen.sourcePixelScale = 256.0f / std::tan(camera.fieldOfView * (3.141592654f / 65536.0f));
-    const auto pixels = ecstasyViewSourcePositionPixelSize(&screen, body + 12, 3.0f);
-    const auto lod = carRenderNativeDetailLod(models, pixels);
-    if (pixels < 4 || (ForceCarLOD >= 0 ? std::size_t(ForceCarLOD) : lod) >= 3 ||
-        (ForceTireLOD >= 0 ? std::size_t(ForceTireLOD) : lod) >= 2) return;
-
-    float inverse[16], localEye[4];
-    vectorMatrixInverseAffine(inverse, body);
-    eMulVector3(localEye, inverse, camera.eye);
-    std::array<CarPartCuller, 14> cullers;
-    std::copy_n(parts, cullers.size(), cullers.begin());
-    carPartCullerCull(cullers.data(), localEye);
-    for (std::size_t wheel = 0; wheel < result.size(); ++wheel) {
-        const bool flippedSide = wheel == 0 || wheel == 3;
-        if (alpha[wheel] <= 0.1f || !cullers[wheel].culled || !cullers[flippedSide ? 4 : 5].culled) continue;
-        // Retail E-0035-W01: blur uses the mount pose without tire spin.
-        auto& blur = result[wheel];
-        blur.alpha = alpha[wheel];
-        if (flippedSide) eMulMatrix(blur.transform.data(), flipped, mounts[wheel]);
-        else std::copy_n(mounts[wheel], 16, blur.transform.begin());
-        if (!finite(blur.transform) || !std::isfinite(blur.alpha))
-            throw std::runtime_error("Invalid committed wheel blur state");
-    }
-}
 }
 
 const EntityFrame& EntityStateBridge::stage(const RaceStateView& race) {
@@ -125,6 +83,7 @@ const EntityFrame& EntityStateBridge::stage(const RaceStateView& race) {
         const bool visible = motion.actionEnabled &&
             !carMotionTransitionFlag(&motion) && (motion.wheelEffectsFlags & 2u);
         entity.visible = visible && car != race.hiddenCar;
+        entity.exteriorVisible = visible;
         entity.rearVisible = visible && car != race.rearHiddenCar;
         const bool replayPose = (motion.wheelExclusionMask & 2u) != 0;
         const auto* presentation = replayPose && race.viewMovers ?
@@ -150,11 +109,15 @@ const EntityFrame& EntityStateBridge::stage(const RaceStateView& race) {
             if (!finite(pose))
                 throw std::runtime_error("Nonfinite wheel pose for handle " + std::to_string(entity.handle));
         }
-        if (entity.visible)
-            capture_wheel_blur(*car, *race.camera, entity.transform.data(), flipped, brakes, entity.wheelBlur);
-        if (entity.rearVisible && race.rearCamera) {
-            car->GetRenderingWheelAndBrakeMatrices(wheels, brakes, 3);
-            capture_wheel_blur(*car, *race.rearCamera, entity.transform.data(), flipped, brakes, entity.rearWheelBlur);
+        // Publish the physical blur pose once. The active Godot view and the
+        // depth buffer determine which rims are visible, including in orbit.
+        for (std::size_t wheel = 0; wheel < entity.wheelBlur.size(); ++wheel) {
+            auto& blur = entity.wheelBlur[wheel];
+            blur.alpha = std::clamp(std::fabs(state.wheelAngularVelocity[wheel]) * 0.02f, 0.0f, 1.0f) * 90.0f;
+            if (wheel == 0 || wheel == 3) eMulMatrix(blur.transform.data(), flipped, brakes[wheel]);
+            else std::copy_n(brakes[wheel], 16, blur.transform.begin());
+            if (!finite(blur.transform) || !std::isfinite(blur.alpha))
+                throw std::runtime_error("Invalid committed wheel blur state");
         }
     }
     if (std::count_if(frame.vehicles.begin(), frame.vehicles.end(),

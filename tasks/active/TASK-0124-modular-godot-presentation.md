@@ -214,3 +214,131 @@ TASK-0124 remains active for committed dynamic scenery and particle state,
 original section visibility and full materials, mirror and reflection targets,
 post-processing, and full race completion and restart verification. This
 short PC drive does not establish equivalence to the PS2 release.
+
+## 2026-11-15 GTA SA-inspired player orbit
+
+The primary Godot camera follows raw relative mouse input while the human
+player is driving. Mouse input changes world-space yaw and pitch at a gain
+scaled by the current field of view. After 1.5 seconds of idle time, the
+camera arcs back to the live HP2 view with a linear blend over 0.6 seconds.
+Mouse movement during the return resumes orbit from the last safe pose.
+The display camera selects the authored HP2 visibility zone during orbit.
+Camera switching, looking back, pause and focus loss relinquish orbit.
+The behind-car fallback applies when starting from an interior camera.
+
+Reference checkout: `D:/dev/gta-reversed`, commit
+`04c5b6643a9059e879f6015ec02e618f141fb27a`. Recovered PC functions inspected:
+`CPad::UpdateMouse` (0x53F3C0), `CCamera::ConeCastCollisionResolve`
+(0x51A5D0), and `CCollision::CameraConeCastVsWorldCollision` (0x41B000).
+`CCam::Process_FollowCar_SA` (0x5245B0) has no recovered body in this
+checkout. The [independent SA camera adaptation](https://github.com/erorcun/SACarCam/blob/master/SACarCam/SACarCam.cpp#L662-L692)
+provided the world-angle mouse and FOV reference. The available 2014 Steam
+PC executable, SHA-256
+`15e3cfedba9a841df67d8194e7249afb493b0e10d6138fb8ebab2c136e543efb`,
+uses a different address layout. Original-game equivalence remains unverified.
+
+The HP2 adaptation uses the existing two-sided terrain segment query on the
+center and four sides of the arm, plus ground clearance at the result.
+A blocked arm retracts immediately and extends gradually when clear.
+Terrain topology is borrowed during the current presentation frame only.
+No changes to `game_core` were needed. Individual moving obstacles and
+scenery outside the authored terrain collision are outside this query.
+
+```powershell
+cmake --build --preset godot-mvp-release --target stage_mvp --parallel 12
+cmake --build --preset godot-mvp-debug --target hp2_track12 --parallel 12
+$engine = (Resolve-Path local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe).Path
+$project = 'build/godot-mvp-release/mvp-project'
+$script = (Resolve-Path tools/test_mvp_orbit_camera.gd).Path
+foreach ($case in @(@('vulkan',13), @('d3d12',33), @('vulkan',12))) {
+    $driver, $track = $case
+    $env:HP2_PROFILE_DIR = Join-Path $env:TEMP ('hp2-orbit-' + [guid]::NewGuid())
+    & $engine --path $project --rendering-driver $driver --resolution 1280x720 --script $script -- "--race-track=$track"
+    if ($LASTEXITCODE) { throw "Orbit smoke failed on track $track ($driver)" }
+}
+```
+
+Release staging and the Debug extension build passed. The windowed Release
+smoke passed on tracks 13 and 12 with Vulkan and on track 33 with D3D12.
+Each run exercised four orbit quadrants, terrain queries during orbit,
+mouse interruption during the return, convergence to the current native
+camera pose, cancellation with the original camera action and cursor
+release on pause. `git -c core.safecrlf=false diff --check` passed. A moving
+car along tunnel walls and a side-by-side comparison with GTA SA were
+outside the automated coverage.
+
+### Vertical orbit and vehicle center
+
+GTA's controller defaults use non-inverted mouse Y and a 0.0025 mouse
+sensitivity. The SA camera adaptation applies positive vertical input to the
+forward vector elevation. HP2 stores the opposite elevation on the pivot-to-eye
+arm. The Godot orbit now uses that direction, the car pitch response of 0.8,
+and the reference car angular limits of about 45 degrees below and 89 degrees
+above the target. The HP2 terrain query still limits the ground-level view.
+The pivot and look target both use the center of the uploaded main body
+mesh bounds transformed by the committed vehicle pose, including pitch and roll.
+The existing smoke now checks both vertical directions and compares the
+look direction against the rendered vehicle body center.
+The Release smoke passed on tracks 13 (Vulkan) and 33 (D3D12) with the
+commands above. Release and Debug staging passed.
+
+### Low-angle camera distance
+
+GTA SA's recovered `CCamera::ConeCastCollisionResolve` (0x51A5D0)
+shortens the arm along the line from target to eye.
+`CCollision::CameraConeCastVsWorldCollision` (0x41B000) tests the
+collision volume at progressively shorter distances. The independent
+[SA camera adaptation](https://github.com/erorcun/SACarCam/blob/master/SACarCam/SACarCam.cpp#L853-L918)
+also retracts toward the target and reduces the near clip plane for nearby
+surfaces. The original `CameraColDetAndReact` (0x520190) remains a wrapper
+in the supplied GTA checkout.
+
+HP2 keeps the requested pitch during ground contact. It solves for the
+shortest necessary retraction with the HP2 terrain queries and uses the
+body bounds to stay outside the car. At the body clearance limit, the eye
+follows the road near the body along the requested bearing. The orbit
+reduces its near plane for clearance and extends the arm when space opens.
+The smoke now verifies a shorter low rear radius, an eye outside the body
+bounds, aim at the body center, and radius recovery. It passed with the
+commands above on Scenic Drive (Vulkan) and Track 33 (D3D12). Debug and
+Release staging and `git -c core.safecrlf=false diff --check` passed.
+
+### Smooth mouse takeover and animation sampling
+
+Mouse orbit begins from the current HP2 view and blends position, look
+direction and near clip over 240 ms of monotonic time. The transition
+checks terrain and resumes from the displayed pose if the player moves
+the mouse during the return. Active NIS playback owns the camera.
+
+Race drivers interpolate between the two committed skinning palettes.
+The native steering sampler still runs once per world step. The existing
+`VisitNisPoses` boundary now accepts fractional world time for the
+arrest actors. The core change reuses the decoded clips, inverse binds,
+root offsets and hand prop attachments. It was needed because the old
+boundary only provided the already rounded native pose. The world
+clock, animation phase and playback expiry still use the donor's
+PAL1B2C70–1B2C8C and PAL1B13F0–1B1510 paths. The exact PAL ELF version
+and SHA-256 remain unresolved. Interpolation uses the authored cadence
+of one clip frame per two world frames.
+
+```powershell
+$engine = (Resolve-Path local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe).Path
+$env:HP2_MVP_TEST_ARREST_NIS = '1'
+foreach ($cap in @(60, 120)) {
+    $runDir = New-Item -ItemType Directory (Join-Path $env:TEMP ('hp2-arrest-' + [guid]::NewGuid()))
+    $env:HP2_PROFILE_DIR = Join-Path $runDir.FullName 'profile'
+    $env:HP2_MVP_SCREENSHOT_DIR = $runDir.FullName
+    $env:HP2_MVP_TEST_RENDER_FPS = "$cap"
+    & $engine --path build/godot-mvp-debug/mvp-project --rendering-driver vulkan --resolution 960x720 --script (Resolve-Path tools/test_frontend_mvp.gd).Path -- --race-track=13
+    if ($LASTEXITCODE) { throw "Arrest smoke failed at $cap FPS" }
+}
+```
+
+Debug and Release staging passed. Scenic Drive Vulkan passed the orbit
+entry, terrain and return checks. Track 33 D3D12 passed the steering and
+wheel rendering checks. The Debug Vulkan arrest fixture played through
+and cleaned up at both render limits. From first visible actors to
+cleanup it took 5.133 s at the 60 FPS limit and 4.949 s at the 120 FPS
+limit. The smoke observed 185 and 419 changed actor poses, respectively,
+between renders of the same committed step. These are wall-clock smoke
+measurements of the fixture, including scene publication and cleanup.

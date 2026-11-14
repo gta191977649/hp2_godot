@@ -290,6 +290,7 @@ saves/
 !/tools/test_mvp_sun_alignment.gd
 !/tools/test_mvp_race_catalog.cpp
 !/tools/test_mvp_race_lifecycle.gd
+!/tools/test_mvp_orbit_camera.gd
 !/tools/test_mvp_results_navigation.gd
 !/tools/test_mvp_menu_navigation.gd
 !/tools/test_mvp_campaign_matrix.ps1

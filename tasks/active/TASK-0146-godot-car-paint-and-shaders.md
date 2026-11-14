@@ -346,6 +346,46 @@ authored overlays, a peak of 90, and 4,366 and 5,396 changed samples on
 Vulkan and D3D12 respectively. Debug and Release staging passed. PS2 runtime
 comparison remains open.
 
+### Orbit wheel blur and seated race drivers
+
+The primary blur previously used the native camera's part and LOD gates
+after the displayed view became an independent Godot camera. It could
+hide an overlay on a wheel the player could see. The bridge now publishes
+the authored mount pose and angular-velocity alpha once per wheel. Each
+overlay uses the vehicle's view mask and the Godot depth test. The render
+path continues to use the optional original blur models and textures.
+
+The only new core boundary is `RaceCarDriverSeat`. The native renderer
+reads `CarAppearance::definition->driverAnimationOffset` in the PAL
+121A84–121D10 path. The presentation borrows that resource during vehicle
+attachment and copies the offset. The native steering and gesture builder
+(PAL1AA2F0–1AA6C0) and `DriverPoseCache` provide the authored translation
+and final skinning matrices. The Godot vehicle owns its driver meshes and
+GPU skinning nodes. The player uses the animated model when visible.
+Nearby traffic uses the original distance and facing detail criteria.
+The donor PAL ELF version and SHA-256 remain unresolved. The Debug ELF
+SHA-256 `815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b`
+independently documents `AssignAnimatedDriver` at 0x1334F0 and
+`SetupSteeringFrame` at 0x1A6B90 in the existing reverse notes.
+
+```powershell
+cmake --build --preset godot-mvp-release --target stage_mvp --parallel 12
+cmake --build --preset godot-mvp-debug --target stage_mvp --parallel 12
+$engine = (Resolve-Path local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe).Path
+$project = 'build/godot-mvp-release/mvp-project'
+foreach ($driver in @('vulkan', 'd3d12')) {
+    $env:HP2_PROFILE_DIR = Join-Path $env:TEMP ('hp2-wheel-' + [guid]::NewGuid())
+    & $engine --path $project --rendering-driver $driver --resolution 1280x720 --script (Resolve-Path tools/test_mvp_wheel_blur.gd).Path -- --race-track=33
+    if ($LASTEXITCODE) { throw "Wheel and driver smoke failed ($driver)" }
+}
+```
+
+Debug and Release staging passed. The Release smoke measures rendered
+wheel pixels and driver pixels through the glass, checks that the
+authored skeleton responds to steering, and checks wheel fade while
+braking. Scenic Drive's existing Vulkan orbit smoke also passed. Native
+PS2 comparison and a full-race GPU benchmark remain open.
+
 ## Authored scenery section trees
 
 Ghidra MCP checked US retail SLUS_203.62 (SHA-256

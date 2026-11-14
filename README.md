@@ -36,6 +36,8 @@ Racer leads to the first event, Lotus Elise Delivery (Track 13).
 Use WASD or the arrow keys to drive, Space for handbrake, and Esc or Backspace to pause.
 Use H for the horn or police signal, Q/E to shift, Shift to look back,
 C to change camera, Tab to recover the car and N for nitrous where available.
+While driving, move the mouse to orbit the car. After 1.5 seconds without
+mouse movement, the view blends back to the selected HP2 camera.
 In Be the Cop, H changes the pursuit target. Hold Space and press E to
 request a roadblock or Q to request helicopter support. R and T are
 shortcuts for those two requests.

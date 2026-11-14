@@ -17,10 +17,10 @@ struct WheelBlurState {
 struct VehicleEntityState {
     std::uint64_t handle{};
     int model{}, skin{};
-    bool player{}, visible{}, rearVisible{};
+    bool player{}, visible{}, rearVisible{}, exteriorVisible{};
     std::array<float, 16> transform{};
     std::array<std::array<float, 16>, 4> wheels{};
-    std::array<WheelBlurState, 4> wheelBlur{}, rearWheelBlur{};
+    std::array<WheelBlurState, 4> wheelBlur{};
     float speed{};
 };
 

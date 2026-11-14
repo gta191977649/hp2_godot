@@ -1803,4 +1803,10 @@ std::array<const EditorMarkerModel*, 7> RaceCarModels(Car& car, int worldFrames)
     return {body,&models[16],&models[17],&models[18],&models[19],&models[4],&models[5]};
 }
 
+const float* RaceCarDriverSeat(const Car& car)
+{
+    return car.appearance && car.appearance->definition ?
+        car.appearance->definition->driverAnimationOffset.data() : nullptr;
+}
+
 }
