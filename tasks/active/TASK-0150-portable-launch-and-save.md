@@ -72,3 +72,16 @@ and reopened the picker. Isolated Debug and trimmed Release exports
 repeated drop, rejection and successful retry through the Windows
 templates with Godot's drop signal. Both build commands exported the final
 packages. Logs are in `local/rd-lifetime`.
+
+## Blackbox extension name
+
+The native Windows extension, Godot descriptor, and entry symbol use the
+`hp2_blackbox` name. Packaging removes the old DLL from an existing output
+folder after export succeeds. The first Release cleanup encountered a
+temporary access denial. Removing the old generated file and rerunning
+the build completed the migration.
+
+`build.ps1 --mvp --jobs 8` and
+`build.ps1 --mvp --preset godot-mvp-debug --jobs 8` exported both packages.
+Each package contained `hp2_blackbox.dll` and reached Title Screen from a
+temporary directory with the retail ISO. Logs are in `local/blackbox-rename`.

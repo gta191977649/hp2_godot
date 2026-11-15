@@ -246,7 +246,7 @@ scenery outside the authored terrain collision are outside this query.
 
 ```powershell
 cmake --build --preset godot-mvp-release --target stage_mvp --parallel 12
-cmake --build --preset godot-mvp-debug --target hp2_track12 --parallel 12
+cmake --build --preset godot-mvp-debug --target hp2_blackbox --parallel 12
 $engine = (Resolve-Path local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe).Path
 $project = 'build/godot-mvp-release/mvp-project'
 $script = (Resolve-Path tools/test_mvp_orbit_camera.gd).Path

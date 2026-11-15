@@ -5,7 +5,7 @@
 #include "systems/frontend/original_video_stream.hpp"
 #include <godot_cpp/godot.hpp>
 
-extern "C" GDExtensionBool GDE_EXPORT hp2_track12_init(
+extern "C" GDExtensionBool GDE_EXPORT hp2_blackbox_init(
     GDExtensionInterfaceGetProcAddress get_proc_address, GDExtensionClassLibraryPtr library,
     GDExtensionInitialization* initialization) {
     godot::GDExtensionBinding::InitObject entry(get_proc_address, library, initialization);

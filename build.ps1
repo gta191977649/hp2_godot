@@ -87,7 +87,7 @@ try {
     $buildDirectory = (Resolve-Path -LiteralPath "build/$preset").Path
     $exportProject = Join-Path $buildDirectory ('export-' + [guid]::NewGuid().ToString('N'))
     $null = New-Item -ItemType Directory -Path $exportProject
-    foreach ($item in @('project.godot', 'export_presets.cfg', 'native_game.gd', 'native_game.tscn', 'hp2_track12.gdextension', 'shader', 'bin')) {
+    foreach ($item in @('project.godot', 'export_presets.cfg', 'native_game.gd', 'native_game.tscn', 'hp2_blackbox.gdextension', 'hp2_blackbox.gdextension.uid', 'shader', 'bin')) {
         Copy-Item -LiteralPath (Join-Path $project $item) -Destination $exportProject -Recurse -Force
     }
     if ($useSlimTemplate) {
@@ -106,6 +106,8 @@ try {
     }
     & $engine --headless --path $exportProject "--export-$configuration" 'Windows MVP' (Join-Path $package 'HP2.exe')
     if ($LASTEXITCODE) { exit $LASTEXITCODE }
+    $oldExtension = Join-Path $package 'hp2_track12.dll'
+    if (Test-Path -LiteralPath $oldExtension -PathType Leaf) { Remove-Item -LiteralPath $oldExtension }
     Copy-Item -LiteralPath (Join-Path $project 'licenses') -Destination $package -Recurse -Force
     Copy-Item -LiteralPath (Join-Path $project 'THIRD_PARTY_NOTICES.md') -Destination $package -Force
 } finally {

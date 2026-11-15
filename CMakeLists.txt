@@ -35,7 +35,7 @@ foreach(dll avformat-62 avcodec-62 avutil-60 swresample-6)
   list(APPEND hp2_ffmpeg_dlls "${hp2_${dll}}")
 endforeach()
 
-add_library(hp2_track12 SHARED
+add_library(hp2_blackbox SHARED
   src/mvp/godot/register_types.cpp
   src/mvp/presentation/race_presentation.cpp
   src/mvp/assets/mesh_converter.cpp
@@ -53,23 +53,23 @@ add_library(hp2_track12 SHARED
   src/mvp/systems/camera/camera_presentation.cpp)
 # Godot's exception setting is a usage requirement. Link its library without
 # exporting that compiler flag to the exception-using HP2 boundary.
-target_link_libraries(hp2_track12 PRIVATE mvp_entity_bridge $<LINK_ONLY:godot::cpp>
+target_link_libraries(hp2_blackbox PRIVATE mvp_entity_bridge $<LINK_ONLY:godot::cpp>
   "${hp2_ffmpeg_avformat}" "${hp2_ffmpeg_avcodec}" "${hp2_ffmpeg_avutil}")
-target_include_directories(hp2_track12 SYSTEM PRIVATE "${hp2_ffmpeg_include}")
-target_include_directories(hp2_track12 SYSTEM PRIVATE
+target_include_directories(hp2_blackbox SYSTEM PRIVATE "${hp2_ffmpeg_include}")
+target_include_directories(hp2_blackbox SYSTEM PRIVATE
   $<TARGET_PROPERTY:godot-cpp,INTERFACE_INCLUDE_DIRECTORIES>)
-target_compile_definitions(hp2_track12 PRIVATE
+target_compile_definitions(hp2_blackbox PRIVATE
   $<TARGET_PROPERTY:godot-cpp,INTERFACE_COMPILE_DEFINITIONS>)
-set_target_properties(hp2_track12 PROPERTIES PREFIX "")
+set_target_properties(hp2_blackbox PROPERTIES PREFIX "")
 set(imgui_console_dir "${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui-console")
 set(imgui_dir "${imgui_console_dir}/example/thirdparty/imgui")
-target_sources(hp2_track12 PRIVATE
+target_sources(hp2_blackbox PRIVATE
   "$<$<CONFIG:Debug>:src/mvp/assets/imgui_overlay.cpp>"
   "$<$<CONFIG:Debug>:src/mvp/assets/frontend_debug_menu.cpp>"
   "$<$<CONFIG:Debug>:src/mvp/assets/trackviewer/track_viewer.cpp>"
   "$<$<CONFIG:Debug>:src/mvp/assets/trackviewer/track_viewer_scene.cpp>"
   "$<$<CONFIG:Debug>:src/mvp/tests/pursuit_test_driver.cpp>")
-target_compile_definitions(hp2_track12 PRIVATE "$<$<CONFIG:Debug>:HP2_MVP_IMGUI>")
+target_compile_definitions(hp2_blackbox PRIVATE "$<$<CONFIG:Debug>:HP2_MVP_IMGUI>")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES)
   add_library(mvp_imgui STATIC EXCLUDE_FROM_ALL
     "${imgui_dir}/imgui.cpp"
@@ -78,20 +78,20 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_CONFIGURATION_TYPES)
     "${imgui_console_dir}/src/imgui_console.cpp")
   target_include_directories(mvp_imgui SYSTEM PUBLIC "${imgui_dir}"
     "${imgui_console_dir}/include" "${imgui_console_dir}/include/imgui_console")
-  target_link_libraries(hp2_track12 PRIVATE "$<$<CONFIG:Debug>:mvp_imgui>")
+  target_link_libraries(hp2_blackbox PRIVATE "$<$<CONFIG:Debug>:mvp_imgui>")
 endif()
 if(MINGW)
   # Keep Debug symbols and checks while avoiding -O0 simulation and draw preparation.
-  foreach(target game_core mvp_entity_bridge hp2_track12 mvp_imgui)
+  foreach(target game_core mvp_entity_bridge hp2_blackbox mvp_imgui)
     if(TARGET ${target})
       target_compile_options(${target} PRIVATE "$<$<CONFIG:Debug>:-O2>")
     endif()
   endforeach()
-  target_link_options(hp2_track12 PRIVATE -static -static-libgcc -static-libstdc++)
+  target_link_options(hp2_blackbox PRIVATE -static -static-libgcc -static-libstdc++)
 endif()
 
 set(project_dir "${CMAKE_BINARY_DIR}/mvp-project")
-file(GENERATE OUTPUT "${project_dir}/.godot/extension_list.cfg" CONTENT "res://hp2_track12.gdextension\n")
+file(GENERATE OUTPUT "${project_dir}/.godot/extension_list.cfg" CONTENT "res://hp2_blackbox.gdextension\n")
 file(GENERATE OUTPUT "${project_dir}/override.cfg" CONTENT
   "[hp2]\n\nasset_config=\"${CMAKE_SOURCE_DIR}/config/ps2_assets.local.json\"\ndebug_mode=$<IF:$<CONFIG:Debug>,true,false>\n")
 add_custom_target(stage_mvp ALL
@@ -113,13 +113,17 @@ add_custom_target(stage_mvp ALL
     "${project_dir}/ps2_mvp.gdextension"
     "${project_dir}/ps2_mvp.gdextension.uid"
     "${project_dir}/bin/ps2_mvp.dll"
+    "${project_dir}/hp2_track12.gdextension"
+    "${project_dir}/hp2_track12.gdextension.uid"
+    "${project_dir}/bin/hp2_track12.dll"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${CMAKE_SOURCE_DIR}/godot_mvp/project.godot"
     "${CMAKE_SOURCE_DIR}/godot_mvp/export_presets.cfg"
     "${CMAKE_SOURCE_DIR}/godot_mvp/native_game.gd"
     "${CMAKE_SOURCE_DIR}/godot_mvp/native_game.tscn"
-    "${CMAKE_SOURCE_DIR}/godot_mvp/hp2_track12.gdextension"
+    "${CMAKE_SOURCE_DIR}/godot_mvp/hp2_blackbox.gdextension"
+    "${CMAKE_SOURCE_DIR}/godot_mvp/hp2_blackbox.gdextension.uid"
     "${project_dir}"
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:hp2_track12>" "${project_dir}/bin"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:hp2_blackbox>" "${project_dir}/bin"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${hp2_ffmpeg_dlls} "${project_dir}/bin"
-  DEPENDS hp2_track12 VERBATIM)
+  DEPENDS hp2_blackbox VERBATIM)

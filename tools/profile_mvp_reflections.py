@@ -162,12 +162,12 @@ def main():
     project = out / "project"
     staged = args.stage.resolve() if args.stage else repo / "build/godot-mvp-release/mvp-project"
     project.mkdir()
-    for file in ("project.godot", "hp2_track12.gdextension", "native_game.gd", "native_game.tscn"):
+    for file in ("project.godot", "hp2_blackbox.gdextension", "native_game.gd", "native_game.tscn"):
         shutil.copy2(staged / file, project / file)
     for directory in ("bin", "shader"):
         shutil.copytree(staged / directory, project / directory)
     (project / ".godot").mkdir()
-    (project / ".godot/extension_list.cfg").write_text("res://hp2_track12.gdextension\n")
+    (project / ".godot/extension_list.cfg").write_text("res://hp2_blackbox.gdextension\n")
     (project / "override.cfg").write_text(
         "[debug]\nsettings/profiler/max_timestamp_query_elements=1024\n"
         f"\n[display]\nwindow/size/mode={3 if args.fullscreen else 0}\n"

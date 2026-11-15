@@ -1,3 +1,8 @@
+## 2026-11-15 TASK-0150 native extension rename
+
+The native extension ships as `hp2_blackbox.dll`. The rebuilt Windows
+Debug and Release packages reached Title Screen using the renamed DLL.
+
 ## 2026-11-15 TASK-0143 and TASK-0150 launcher and renderer teardown
 
 Invalid or incomplete ISOs now leave the picker open, including when
