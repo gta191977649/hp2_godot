@@ -62,6 +62,9 @@ func _capture(race: Node) -> void:
     if surface == "roadshine":
         await _capture_roadshine(race, scene, camera, output)
         return
+    if surface == "shoulder":
+        await _capture_shoulder(race, scene, camera, route, output)
+        return
     if OS.get_environment("HP2_PHOTO_WATER") == "1":
         surface = "water"
     if surface in ["water", "shaft"]:
@@ -124,11 +127,13 @@ func _capture(race: Node) -> void:
             # Place the bend to one side, leaving room in its direction.
             target += side * (8.0 if take[1] > 0.0 else -8.0)
         camera.look_at_from_position(eye, target)
+        if OS.get_environment("HP2_MVP_TEST_SCENERY_CAMERA") == "1":
+            race.test_update_scenery_camera(true)
         await process_frame
         await RenderingServer.frame_post_draw
         await process_frame
         await RenderingServer.frame_post_draw
-        var image := root.get_texture().get_image()
+        var image := scene.get_viewport().get_texture().get_image()
         var score := _score(image)
         if not output.is_empty() and OS.get_environment("HP2_PHOTO_TAKES") == "1":
             image.save_png(output.path_join("%02d-take-%02d.png" % [track, index]))
@@ -258,6 +263,42 @@ func _is_tunnel_mask(material: Material) -> bool:
         var texture: Texture2D = material.get_shader_parameter("albedo_texture")
         return texture and texture.resource_name == str(0xdb00d526)
     return false
+
+func _capture_shoulder(race: Node, scene: Node3D, camera: Camera3D,
+        route: PackedVector3Array, output: String) -> void:
+    if OS.get_environment("HP2_MVP_TEST_SCENERY_CAMERA") != "1":
+        push_error("Shoulder capture requires HP2_MVP_TEST_SCENERY_CAMERA=1")
+        quit(1)
+        return
+    var sample := OS.get_environment("HP2_PHOTO_TAKE").to_int()
+    if sample <= 0 or sample >= route.size() - 2 or route[sample] == Vector3.ZERO:
+        push_error("Shoulder capture requires a valid HP2_PHOTO_TAKE route index")
+        quit(1)
+        return
+    var direction := route[sample + 1] - route[sample - 1]
+    direction.y = 0.0
+    if direction.length_squared() < 0.01:
+        push_error("Shoulder capture route sample has no heading")
+        quit(1)
+        return
+    if OS.get_environment("HP2_PHOTO_REVERSE") == "1":
+        direction = -direction
+    direction = direction.normalized()
+    camera.fov = 55.0
+    for i in range(12):
+        var eye := route[sample] + direction * (float(i) * 0.85 - 5.0) + Vector3.UP * 2.6
+        camera.look_at_from_position(eye, eye + direction * 32.0 - Vector3.UP * 1.8)
+        race.test_update_scenery_camera(true)
+        for roadshine in [true, false]:
+            RenderingServer.global_shader_parameter_set("hp2_roadshine", roadshine)
+            await process_frame
+            await RenderingServer.frame_post_draw
+            var image := scene.get_viewport().get_texture().get_image()
+            var variant := "on" if roadshine else "off"
+            image.save_png(output.path_join("shoulder-%02d-%s.png" % [i, variant]))
+    RenderingServer.global_shader_parameter_set("hp2_roadshine", true)
+    print("SHOULDER_SAMPLE route_index=", sample, " position=", route[sample], " forward=", direction)
+    quit(0)
 
 func _score(image: Image) -> float:
     var size := image.get_size()

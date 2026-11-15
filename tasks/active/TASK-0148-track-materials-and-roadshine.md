@@ -94,3 +94,67 @@ and D3D12. The sky filled at least 2,636 previously black pixels and
 left more than 23,400 foreground pixels unchanged on each driver. The Vulkan Track 12
 sun alignment and GS blend probes also passed. Logs and mirror captures
 are in `local/rear-sky`.
+
+## Track 33 shoulder and scenery color
+
+The column-side fixture is in Mediterranean Paradise, around HP2
+`(-490.4113, 1160.793, 151.9114)`. A ray from the fixed capture at pixel
+`(300,530)` hit `RD_SECTION20_CHOP1`, texture `8253B146`. The resolved
+strip is prelit and uses ALPHA `0x0A`, four authored mip levels, no depth
+bias and depth writes. One triangle vertex is RGB `(192,184,144)` with
+effective K `86/16`. The old Godot converter limited all three RGB
+modulation factors to one. The nearby terrain uses the same unclipped
+vertex RGB on the sampled strip with texture `AA987B5A`.
+
+The render source in `D:/dev/hp2_ps2_rev` and the existing retail recovery
+records identify `CalcAutoK` `0010C0F0`, `SetMipMapK` `0011C328`,
+`RenderStrips` `0010DD58` and `CreateTextureContext` `00108CC0`. Retail US
+`SLUS_203.62` was verified on disk with SHA-256
+`7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2`.
+The per-strip TEX1 K byte and projected Q now select the original mip
+levels. Raw texel bytes are modulated by raw vertex bytes before the
+result is clamped and converted once for Forward+. The new opaque path
+is limited to prelit MODULATE/copy surfaces. GS overlays use the same
+strip K transport and keep their existing blend and coverage rules.
+Static GS copy shaders omit the instance animation parameter so these
+surfaces fit the GPU instance parameter budget. No game-core edits were
+needed.
+
+At 960×720, the central shoulder crop in frame 5 measured median RGB
+`(101,96,88)` before and `(150,136,97)` after on each backend. The adjacent
+terrain crop measured `(90,88,77)` and `(132,125,82)`. The twelve moving
+camera samples retain the authored road/terrain edge. Frame 5 is identical
+with Roadshine enabled or disabled. In the distinct Track 11 wet-road
+fixture the toggle still changes 4,054 Vulkan and 4,055 D3D12 pixels.
+The supplied PS2 reference is a different position and the captured moving
+camera sequence does not establish a matching full-speed original run.
+
+The HUD rank color differed between the provided captures. The HUD is
+drawn after the 3D output and uses its own atlas and canvas modulation.
+The current `color()` conversion also clamps modulation before sampling.
+The incoming bytes for the exact reference glyph have not been matched,
+so the HUD path and global grading were left alone. The existing race post
+smoke passed fog, filtering, depth and radial history on both backends.
+
+Debug `hp2_track12` and Release `stage_mvp` built. The Debug viewer ran in
+an isolated staging copy because a live user session held the standard
+Debug DLL. The Track 33 race lifecycle and mirror/reflection checks,
+Track 12 shaft and tunnel mask, and Track 11 Roadshine passed on Vulkan
+and D3D12. Track Viewer track switching and Roadshine toggle passed in
+Debug Vulkan. The production GPU shader fixture reports `(144,123,64)`
+and `(48,72,48)` for two per-strip K values on both backends.
+
+```powershell
+$engine = "$PWD/local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe"
+$project = "$PWD/build/godot-mvp-release/mvp-project"
+$env:HP2_MVP_TEST_SCENERY_CAMERA = '1'
+$env:HP2_PHOTO_SURFACE = 'shoulder'
+$env:HP2_PHOTO_TAKE = '17'
+$env:HP2_PHOTO_DIR = (New-Item -ItemType Directory -Force local/track-color/reproduce).FullName
+& $engine --path $project --resolution 960x720 --rendering-driver vulkan --script "$PWD/tools/capture_mvp_track_scenery.gd" -- --race-track=33
+& $engine --path $project --resolution 640x480 --rendering-driver vulkan --script "$PWD/tools/test_mvp_track_material.gd"
+```
+
+Use an isolated `HP2_PROFILE_DIR` and the retail disc in
+`HP2_PS2_ASSET_ROOT`. Repeat with `d3d12`. Logs, before/after PNGs, and the
+moving-camera frame sequences are under `local/track-color`.

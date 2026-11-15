@@ -5,12 +5,12 @@ uniform sampler2DArray gs_frames_linear : filter_linear_mipmap, repeat_enable;
 uniform sampler2DArray gs_frames_nearest : filter_nearest_mipmap, repeat_enable;
 uniform sampler2D gs_specular : filter_linear, repeat_enable;
 uniform ivec4 gs_filter;
-uniform float gs_lod_bias;
 uniform bool gs_test;
 uniform bool gs_copy;
 uniform bool gs_dark_blend;
 uniform bool gs_road;
 global uniform bool hp2_roadshine;
+global uniform float hp2_track_focal_scale;
 uniform vec4 gs_road_alpha;
 uniform float gs_road_min_dot;
 uniform vec3 gs_sun;
@@ -18,6 +18,7 @@ uniform int gs_bias;
 
 varying vec4 gs_color_weighted;
 varying float gs_clip_weight;
+varying flat float gs_mip_bias;
 
 vec4 gs_vertex_color(vec3 point, vec4 color, vec3 native_normal, mat4 modelview, mat4 model,
         mat4 inverse_view) {
@@ -59,11 +60,8 @@ vec4 gs_sample(vec2 uv, int level, bool linear, float frame) {
         textureLod(gs_texture_nearest, p, float(level));
 }
 
-vec4 gs_sample_base(vec2 uv) {
-    vec2 texels = uv * vec2(textureSize(gs_texture_linear, 0));
-    vec2 dx = dFdx(texels), dy = dFdy(texels);
-    float lod = 0.5 * log2(max(1e-12, max(dot(dx, dx), dot(dy, dy))));
-    lod = lod * float(1 << gs_filter.w) + gs_lod_bias;
+vec4 gs_sample_base(vec2 uv, float q) {
+    float lod = -log2(max(q, 1e-12)) * float(1 << gs_filter.w) + gs_mip_bias;
     float frame = 0.0;
     if (texture_count > 0) {
         float clock = real_clock ? hp2_animation_clock.z : hp2_animation_clock.w;
@@ -84,9 +82,9 @@ vec3 gs_to_linear(vec3 color) {
     return mix(color / 12.92, pow((color + 0.055) / 1.055, vec3(2.4)), greaterThan(color, vec3(0.04045)));
 }
 
-vec4 gs_fragment(vec2 uv, bool srgb) {
+vec4 gs_fragment(vec2 uv, bool srgb, float q) {
     vec4 rgba = gs_color_weighted / gs_clip_weight;
-    vec4 texel = floor(gs_sample_base(uv) * 255.0 + 0.001);
+    vec4 texel = floor(gs_sample_base(uv, q) * 255.0 + 0.001);
     vec4 source = min(floor(texel * rgba / 128.0 + 0.001), vec4(255.0));
     if (gs_test && source.a <= 48.0) discard;
     float alpha = source.a / 128.0;

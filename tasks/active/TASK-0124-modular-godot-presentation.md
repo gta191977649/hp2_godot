@@ -389,3 +389,18 @@ times quaternion angle in radians) was 0.267 before the fix, 0.131 after
 on Vulkan, and 0.139 after on D3D12. The Vulkan P95 moved from 0.102 to
 0.111 as more frames showed motion. The regression checks both motion
 continuity and rendered wheel and driver visibility.
+
+### Driving key bindings
+
+The Godot keyboard actions had the desired defaults but reached the opposite
+native scanner buttons. The default scanner maps Triangle to camera event 93
+and R1 to handbrake event 121. The Godot host now reads C and Space from
+InputMap and sends those buttons respectively. Be the Cop translates the
+documented Space+E and Space+Q chords through the existing support path.
+R and T still invoke that path directly.
+
+`cmake --build --preset godot-mvp-release --target stage_mvp --parallel 8`
+passed. The Track 13 Vulkan smoke injected physical C, checked a race camera
+change, rebound the camera action to V in memory and checked another change.
+It held Space with W and measured the car accelerating after Space was
+released. The local smoke and logs are in `local/input-map-check`.

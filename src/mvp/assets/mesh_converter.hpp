@@ -64,7 +64,7 @@ private:
     std::unordered_map<const EditorMarkerTexture*, godot::Ref<godot::StandardMaterial3D>> materials_;
     std::unordered_map<const EditorMarkerTexture*, TextureSequence> textureSequences_;
     std::map<godot::String, godot::Ref<godot::Shader>> animatedShaders_;
-    std::map<std::tuple<const EditorMarkerTexture*, bool, bool>, godot::Ref<godot::Material>> animatedTextures_;
+    std::map<std::tuple<const EditorMarkerTexture*, bool, bool, bool>, godot::Ref<godot::Material>> animatedTextures_;
     std::unordered_map<const EditorMarkerTexture*, godot::Ref<godot::Texture2D>> paintTextures_;
     std::unordered_map<const EditorMarkerTexture*, TrackTexture> trackTextures_;
     const CarPaintAssets* paint_;

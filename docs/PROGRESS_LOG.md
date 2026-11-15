@@ -1,3 +1,16 @@
+## 2026-11-15 TASK-0148 shoulder and scenery color
+
+The Track 33 column-side shoulder uses the full authored GS vertex RGB
+and projected-Q mip selection. Prelit opaque scenery shares that path.
+The same-camera pixel check and the GS material fixture passed on Vulkan
+and D3D12. TASK-0148 records the color samples and remaining reference gaps.
+
+## 2026-11-15 TASK-0124 driving key bindings
+
+C cycles the race camera and Space operates the handbrake through Godot
+InputMap. The port routes each action to the matching default native
+scanner button and retains the police support shortcuts.
+
 ## 2026-11-15 TASK-0124 camera takeover and animation interpolation
 
 Mouse orbit blends in from the displayed camera. Race drivers and

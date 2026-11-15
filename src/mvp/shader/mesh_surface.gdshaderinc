@@ -32,7 +32,9 @@ vec4 sample_rigid(int channel, int frame) {
     return texelFetch(rigid_frames, ivec2(channel, frame), 0);
 }
 uniform int animation_start;
+#ifndef STATIC_TRACK
 instance uniform int hp2_animation_start = -1;
+#endif
 
 #ifdef TRACK_SKY
 uniform bool sky_blend_alpha;
@@ -44,6 +46,7 @@ uniform bool sky_cutout;
 #endif
 
 void vertex() {
+#ifndef STATIC_TRACK
     int start = hp2_animation_start >= 0 ? hp2_animation_start : animation_start;
     if (use_morph) {
         float phase = (hp2_animation_clock.x - float(start & 16383)) * morph_rate / 60.0;
@@ -72,6 +75,7 @@ void vertex() {
             }
         }
     }
+#endif
     if (use_scroll) {
         float time = hp2_animation_clock.y;
         if (stepped_scroll) time = trunc(time / scroll_interval);
@@ -98,6 +102,7 @@ void vertex() {
 #ifdef GS_TRACK
     // GS Gouraud RGBA is affine in screen space; UV still uses ST/Q.
     gs_clip_weight = (PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).w;
+    gs_mip_bias = CUSTOM2.x;
     gs_color_weighted = gs_vertex_color(VERTEX, COLOR, CUSTOM1.xyz, MODELVIEW_MATRIX,
         MODEL_MATRIX, INV_VIEW_MATRIX) * gs_clip_weight;
 #endif
@@ -105,7 +110,18 @@ void vertex() {
 
 void fragment() {
 #ifdef GS_TRACK
-    vec4 result = gs_fragment(UV, OUTPUT_IS_SRGB);
+    // Original projection uses a 512-wide focal basis. Recover it from the
+    // vertical Godot projection for the main, mirror and cubemap cameras.
+    // Match the scenery cull masks in track_presentation.hpp.
+    uint reflection_layer = 1u << 4u;
+    uint mirror_layer = 1u << 5u;
+    uint primary_layer = 1u << 6u;
+    uint scenery_layers = CAMERA_VISIBLE_LAYERS & (reflection_layer | mirror_layer | primary_layer);
+    bool mirror = scenery_layers == mirror_layer;
+    bool reflection = scenery_layers == reflection_layer;
+    float focal_scale = mirror ? 32.0 / 1.08 : reflection ? 32.0 : hp2_track_focal_scale;
+    float focal = abs(PROJECTION_MATRIX[1][1]) * focal_scale;
+    vec4 result = gs_fragment(UV, OUTPUT_IS_SRGB, focal / abs(gs_clip_weight));
     ALBEDO = result.rgb;
 #if defined(GS_MIX) || defined(GS_ADD) || defined(GS_SUB)
     ALPHA = result.a;

@@ -300,6 +300,7 @@ saves/
 !/tools/test_mvp_particle_routes.gd
 !/tools/test_mvp_scenery_animation.gd
 !/tools/test_mvp_race_post.gd
+!/tools/test_mvp_track_material.gd
 !/tools/test_mvp_reflection_performance.gd
 !/tools/test_mvp_starting_grid.gd
 !/tools/profile_mvp_reflections.py

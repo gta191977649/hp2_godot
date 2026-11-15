@@ -155,8 +155,7 @@ hp2_helicopter={
 }
 hp2_handbrake={
 "deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":16,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":32,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
-]
+"events": [Object(InputEventKey,"physical_keycode":32)]
 }
 hp2_horn={
 "deadzone": 0.5,
@@ -180,8 +179,7 @@ hp2_l1={
 }
 hp2_camera={
 "deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":16,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":67,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
-]
+"events": [Object(InputEventKey,"physical_keycode":67)]
 }
 hp2_select={
 "deadzone": 0.5,
@@ -220,4 +218,8 @@ hp2_animation_clock={
 hp2_roadshine={
 "type": "bool",
 "value": true
+}
+hp2_track_focal_scale={
+"type": "float",
+"value": 209.06665
 }

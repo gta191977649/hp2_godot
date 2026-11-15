@@ -167,8 +167,11 @@ public:
             const bool brake = pressed("hp2_brake");
             const bool left = pressed("hp2_steer_left");
             const bool right = pressed("hp2_steer_right");
-            const bool roadblock = beTheCop && pressed("hp2_roadblock");
-            const bool helicopter = beTheCop && pressed("hp2_helicopter");
+            const bool handbrake = pressed("hp2_handbrake");
+            const bool shiftDown = pressed("hp2_l2");
+            const bool shiftUp = pressed("hp2_r2");
+            const bool roadblock = beTheCop && (pressed("hp2_roadblock") || (handbrake && shiftUp));
+            const bool helicopter = beTheCop && (pressed("hp2_helicopter") || (handbrake && shiftDown));
             const bool nitro = pressed("hp2_nitro");
             const bool policeSupport = roadblock || helicopter;
             // PAL scanner requires the Triangle modifier to be held across
@@ -178,12 +181,13 @@ public:
             pad.sticks[2] = left == right ? 128 : left ? 0 : 255;
             SetButton(pad, Ps2Button::Cross, accelerate);
             SetButton(pad, Ps2Button::Square, brake);
-            SetButton(pad, Ps2Button::Triangle, pressed("hp2_handbrake") || policeSupport || nitro);
+            // The default PS2 scanner uses Triangle for camera and R1 for handbrake.
+            SetButton(pad, Ps2Button::Triangle, pressed("hp2_camera") || policeSupport || nitro);
             SetButton(pad, Ps2Button::Circle, pressed("hp2_horn"));
-            SetButton(pad, Ps2Button::L2, pressed("hp2_l2") || (supportReady && helicopter));
-            SetButton(pad, Ps2Button::R2, pressed("hp2_r2") || (supportReady && roadblock));
+            SetButton(pad, Ps2Button::L2, (shiftDown && !helicopter) || (supportReady && helicopter));
+            SetButton(pad, Ps2Button::R2, (shiftUp && !roadblock) || (supportReady && roadblock));
             SetButton(pad, Ps2Button::L1, pressed("hp2_l1"));
-            SetButton(pad, Ps2Button::R1, pressed("hp2_camera") || (nitro && nitroModifierHeld_));
+            SetButton(pad, Ps2Button::R1, handbrake || (nitro && nitroModifierHeld_));
             SetButton(pad, Ps2Button::Select, pressed("hp2_select"));
             SetButton(pad, Ps2Button::R3, nitro);
             if (nativeDebug) {
@@ -721,6 +725,8 @@ void RacePresentation::_process(double delta) {
             throw NotImplemented("Godot race presentation", "World rewind within a presentation generation");
         const auto& world = *race.simulation->world;
         const bool newScene = !s.scene;
+        if (newScene) RenderingServer::get_singleton()->global_shader_parameter_set(
+            "hp2_track_focal_scale", race.ntsc ? 224.0f / 1.0714286566f : 256.0f / 1.285f);
         if (newScene) {
             stage = "track_assets";
             if (!race.scenery) throw std::runtime_error("Committed track has no loaded scenery");
