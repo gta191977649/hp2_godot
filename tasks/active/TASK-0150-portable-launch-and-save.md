@@ -1,6 +1,90 @@
 # TASK-0150 Portable MVP launch, profiles, and Windows export
 
-## Changes and evidence
+## Profile selection and creation
+
+Normal Windows launches enumerate `profiles` beside the executable.
+Staged projects use the project directory as the launch root. The list
+includes the legacy `profile.json` and separate `profile-<id>.json` files.
+Startup loads a single valid entry or opens the shared profile picker.
+With no entries, it opens the first-run creation flow. An unreadable
+profile appears as unavailable and keeps its file. The picker excludes
+`*.backup.json`, which remains available for manual recovery.
+
+Options > Save/Load opens the same picker and offers direct creation.
+Manual and automatic saves use the active filename and its own backup.
+The switch prompt offers Save and Continue, Discard, and Cancel when the
+live serialized profile differs from its last successful load or write.
+New profiles start from the runtime's initial defaults. Each creation
+publishes a unique file, then activates it. Cancelling the switch prompt
+or the name editor keeps the live profile and its current changes.
+
+The shared picker reuses the Display screen's rows, selection rails and
+scroll arrows. The unsaved-changes prompt uses the authored three-choice
+car-selection dialog. Profile enumeration, identity, detached name
+validation and transition policy are port-side integrations in
+`game_core`. Godot continues to present the Flailer commands and send
+input through the existing bridge. The new picker and switch policies are
+PC behavior.
+
+## Original startup presentation
+
+Ghidra MCP confirmed the authored startup order in US PS2 `SLUS_203.62`
+`0016F950`, the `BootAutoload` constructor and callbacks at
+`002478C0`, `002479D8`, and `00247AB0`, and registration of resource
+`FA2AC5C6` at `00247DE8`. The status popup `0CE3F7CE` and status
+strings `24DE5` and `24DD9` come from `00245E30`, `00247320`, and
+`00247378`. The check and load timing use the source clock as observed in
+`00246C00`. ELF SHA-256 is
+`7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2`.
+
+Required first-run naming is a PC integration. It keeps the original
+startup stack and borrows the original `NameEntry` editor so both
+controller selection and Godot keyboard input reach the same draft.
+`0024DBD8` and `0024D088` establish the editor and its commit path.
+The startup editor supports cancellation back to the creation prompt.
+The name is written through the existing atomic no-replace file owner.
+Existing, corrupt, and competing files retain their data. The explicit
+`HP2_MVP_TEST_PROFILE=1` retains disposable profiles for older smoke scripts.
+
+Run `tools/test_mvp_boot_profile.gd` against a disposable staged project
+with a distinct Godot user directory. Set
+`HP2_MVP_BOOT_PROFILE_PROJECT` to its absolute project path,
+`HP2_MVP_BOOT_PROFILE` to the scenario, and
+`HP2_MVP_TEST_MENU_ALIGNMENT=1` for authored pointer bounds.
+Use `create`, `load`, `corrupt`, `retry`, `collision`, `mouse`, `options`, or `scroll`.
+The `collision` scenario also takes a valid JSON file through
+`HP2_MVP_BOOT_PROFILE_SEED`. For `options`, seed `profile.json` and
+`profile-second.json` with valid profiles named Arc and Zed and Autosave
+enabled. For `scroll`, seed eight valid profiles. Set
+`HP2_MVP_SCREENSHOT_DIR` to capture the HP2 screens.
+
+The multi-profile implementation passed Debug and Release builds using
+`cmake --build --preset godot-mvp-debug --target stage_mvp --parallel 8`
+and the equivalent Release preset. Release Vulkan passed creation,
+legacy load, unreadable-file protection, blocked-directory retry,
+concurrent-file protection, Options switching and creation, and the
+eight-profile scroll check. The Options check verified all three
+unsaved-change outcomes and compared the active file's backup hash.
+Captured frames were checked for row alignment and dialog text fit.
+`./build.ps1 --mvp --jobs 8` exported Windows Release. Disposable copies
+launched from a separate working directory and verified startup with
+zero, one, and multiple profiles. `tools/test_mvp_portable_launch.gd`
+also passed with `--select-iso` and verified the generated profile file.
+Logs and captures are in
+`local/multi-profile-031639`.
+
+Earlier first-run validation used Debug and Release `stage_mvp`. Release Vulkan passed
+creation, restart, corrupt input, blocked-directory retry, and competing
+save checks. It prompted for a name with valid JSON only in the old
+user-data location and a backup and binary save beside the absent
+primary. Debug D3D12 passed the on-screen keyboard confirmation check.
+The Windows Release export built with `./build.ps1 --mvp --jobs 10`.
+Two disposable copies of that export launched from a different working
+directory. The copy with the primary profile reached the title and kept
+the file hash. The empty copy stayed on the creation flow. Neither wrote
+a profile to the working directory or the old user-data location.
+
+## Earlier portable launch work
 
 - Godot resolves the launch root from the exported executable or the staged
   project. `launcher.cfg` stores the selected ISO, and `profiles` stores

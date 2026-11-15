@@ -67,6 +67,7 @@ private:
     godot::RID colorRid_, depthRid_;
     godot::RID depthCopyShader_, depthCopyPipeline_, depthCopySampler_;
     bool fxaa_{};
+    godot::String aaMode_;
     bool unsupportedDepthReported_{};
     godot::Vector2i extent_;
     std::atomic<bool> sceneTexturesReady_{};

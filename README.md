@@ -1,121 +1,55 @@
-# HP2 Godot MVP
+# Need for Speed: Hot Pursuit 2 — Godot PC Port
 
-The repository contains the Windows C++ game core from `D:/dev/hp2_ps2_rev`
-and a Godot 4.7.2 project for the race and frontend integration.
+A Windows x64 port of the US PlayStation 2 release (`SLUS_203.62`). The native C++ game core runs the original race logic, physics, AI, and menus. Godot handles graphics, audio playback, and input.
 
-## Build and launch
+**You need your own US PS2 game ISO. The download contains no original game data.**
 
-Use CMake 3.24+, Ninja, a Windows x64 C++17 toolchain. Place the Godot 4.7.2 console executable under
-`local/tools/godot-4.7.2/`.
+## Requirements
+
+- 64-bit Windows and a GPU with current drivers that support Vulkan or DirectX 12. Vulkan is the default.
+- A complete ISO of the US PlayStation 2 release of *Need for Speed: Hot Pursuit 2*.
+
+## Build from source
+
+If you're using a prebuilt release, skip to [Run](#run).
+
+1. From the repository root, run `git submodule update --init --recursive`.
+2. Install CMake 3.24 or newer, Ninja, Python 3, and a Windows x64 C++17 toolchain. Put `Godot_v4.7.2-stable_win64_console.exe` in `local/tools/godot-4.7.2/` and extract the shared FFmpeg 8 SDK into a subfolder of `local/tools/ffmpeg/`.
+3. Run `.\build.ps1 --run` in PowerShell to build and play from the checkout.
+
+Run `.\build.ps1 --mvp` to create a standalone Windows package in `out/mvp/windows-release/`. The default package uses a custom Godot export template. See the [development guide](docs/DEVELOPMENT.md) for its build dependencies and the official-template option.
+
+## Run
+
+1. Extract the entire release into a folder you can write to. Keep `HP2.exe`, `HP2Runtime.exe`, the PCK, and the DLLs together.
+2. Open `HP2.exe`. Drop your ISO onto the launcher or use the browse button. The launcher remembers your selection.
+3. On first launch, type a profile name and press **Enter**. If you already have multiple profiles, choose one from the list.
+
+To choose a different ISO later, run this from the game folder:
 
 ```powershell
-./build.ps1 --run
+.\HP2.exe -- --select-iso
 ```
 
-Run `./build.ps1` or `./build.ps1 --mvp` to package the Windows Release MVP
-at `out/mvp/windows-release/HP2.exe`. Keep the EXE, PCK, DLLs and notices
-together. Release builds use the smaller project-specific Godot template.
-See [Development](docs/DEVELOPMENT.md) for template build dependencies.
+## Settings and controls
 
-Open the EXE and drop the US PS2 Hot Pursuit 2 ISO onto the launch screen,
-or click **Please Drop / Browse Your Game ISO**. The selected path is saved
-in `launcher.cfg` beside the EXE. To replace it, run `HP2.exe -- --select-iso`.
+Open **Options → Graphic** for the render API, window mode, resolution, aspect ratio, frame-rate cap, VSync, anti-aliasing, and FPS counter. Restart the game after changing the render API. In Window mode, the resolution follows the window size. **Auto Fit** fills the window by default. **Restore to Default** resets graphics settings and keeps the selected ISO.
 
-The default launch opens the original title sequence in Godot. Leave the
-Start Game prompt idle for 30 seconds to start the original attract demo.
-Press a menu button to stop the demo and return to the main menu.
+| Action | Default keyboard controls |
+| --- | --- |
+| Navigate menus | Arrow keys |
+| Confirm / Go back | Enter / Backspace |
+| Accelerate, brake, and steer | WASD or arrow keys |
+| Handbrake / Change camera / Recover car | Space / C / Tab |
+| Shift gears / Look back / Horn | Q and E / Shift / H |
+| Pause a race | Esc or Backspace |
 
-Under **Options → Credits**, select **The Porting of HP2** for the port credits.
-Edit `src/mvp/assets/port_credit.hpp` and rebuild to update the text.
-Press **Space** or the controller's **X / Square** to pause or resume scrolling.
-See [third-party notices](third_party/THIRD_PARTY_NOTICES.md) for licenses
-and source references. The staged project includes these notices.
+Menus also support a mouse and gamepad. Controller settings are available under **Options**.
 
-With `./build.ps1 --run --mvp --debug --jobs 16`, select **Debug** just before
-**Exit** to open **Track Viewer**, see the **Car Viewer** placeholder, or start
-the attract demo immediately with **View Demo Scene**.
-The build uses the shared FFmpeg 8 SDK under `local/tools/ffmpeg`.
-For another installation, configure CMake with `-DHP2_FFMPEG_SDK=<sdk-directory>`.
-Godot plays the original AVI directly from the game asset source through
-the FFmpeg MV30 decoder. Playback needs no generated media files.
+## Saves and troubleshooting
 
-Use the arrow keys and Enter in the menus. World Racing leads to Quick
-Race or the Championship event tree (Track 12). Hot Pursuit → Ultimate
-Racer leads to the first event, Lotus Elise Delivery (Track 13).
-Use WASD or the arrow keys to drive, Space for handbrake, and Esc or Backspace to pause.
-Use H for the horn or police signal, Q/E to shift, Shift to look back,
-C to change camera, Tab to recover the car and N for nitrous where available.
-While driving, move the mouse to orbit the car. After 1.5 seconds without
-mouse movement, the view blends back to the selected HP2 camera.
-In Be the Cop, H changes the pursuit target. Hold Space and press E to
-request a roadblock or Q to request helicopter support. R and T are
-shortcuts for those two requests.
-In the frontend, Backspace goes back and Esc exits the application. Edit the
-game's keyboard bindings in Godot under **Project Settings → Input Map**.
-Click menu items to select them, scroll to navigate lists, and right-click
-to go back. The race HUD uses its existing driving controls.
-Under **Options → Player Name**, open the name editor and type directly.
-Use Left/Right to move the caret, Backspace or Delete to remove characters,
-and Enter or Esc to commit the name.
+`profiles/` holds player saves and `launcher.cfg` holds the ISO path and graphics settings. Both are beside `HP2.exe`. Keep them when updating. Use **Options → Save/Load** to create or switch profiles. Save and Autosave write to the active profile.
 
-On Windows, `./build.ps1 --run --rendering-driver d3d12` starts Forward+
-with Direct3D 12 and SDR output. Windows 11 can apply Auto HDR to eligible
-games when HDR and Auto HDR are enabled in Windows Display Settings.
-The default launcher uses Vulkan.
-The default race minimap rotates with the player's car. Single-player
-fixed-map choices are available in Display Options.
-`./build.ps1 --run --race-track=33` opens the diagnostic race directly.
-Use an authored scenario ID to choose a track for this single-player Quick Race.
-Use `./build.ps1 --race-event=ultimate-racer:2` to play the authored Track 33
-career event directly. The other tree is `--race-event=championship:<id>`.
-The diagnostic uses an isolated profile by default.
+If the game rejects an ISO, check that it is the complete US PS2 release (`SLUS_203.62`). If you report a problem, include the release version, graphics API, and steps to reproduce it. To capture a log, launch with `.\HP2.exe --log-file hp2.log` and attach `hp2.log`.
 
-For race integration, use a complete extracted game directory, a PS2 disc image, or a
-`ZZDATA.BIN` archive with its matching directory file. The extracted tree
-must include the original sound banks. The asset path can also come from
-`config/ps2_assets.local.json` (see `config/ps2_assets.example.json`).
-The game creates `profiles/` beside the EXE, or inside the staged
-`mvp-project` for development launches. On the first run, it imports the
-previous `user://profile` save if the new directory has no save yet. Rename
-players under **Options → Player Name**. Renaming keeps the existing profile
-and saves after the edit commits when automatic saving is enabled.
-The Nitro action is bound to **N**. To enable the donor PC racer option,
-add `racer_nitro=1` to `NFSHP2_pc.ini` in that profile directory.
-
-The script stages its development project in `build/godot-mvp-release/mvp-project`.
-`./build.ps1 --run --mvp --debug --jobs 16` builds and runs the Debug
-configuration and enables the native race debug tools. When launching the
-staged Godot project directly, pass `-- --debug`. Explicit Debug and race
-diagnostics use fresh subdirectories inside `profiles/diagnostics/`.
-In a regular single-player race, hold **Start / Menu**, then press
-**Select / Back / View** (keyboard: hold **Esc** or **Backspace**, then press
-**Tab**). Release all controls before using the camera. Short Select cycles
-the cameras; repeat the chord to restore the previous view and resume driving.
-Press and release Start by itself to pause, then choose **Debug** for the native
-pause debug menu.
-In the debug menu, press **Backspace**, **Esc**, or **B / Circle**, or
-right-click, to return to the Pause Menu.
-
-The grave/tilde key toggles the ImGui Console and gives the game its keyboard
-input back. The live frame-time graph stays visible throughout the frontend and race.
-Enter `effect` in the console to open the live race effect checkboxes.
-The window stays available after closing the console. Checked effects
-follow the game's triggers, including forest fire smoke and sandstorms.
-Enter `trackviewer` in the Debug Console to browse the original tracks.
-Choose a track from the **Track** dropdown in the top bar. Expand the track
-bundles, sections and models in **Hierarchy**. Left-click a model in the
-viewport to select it in red, then click it again or click empty space
-to clear the selection. Double-click an instance in
-the tree to fly the camera to it. The selected item's properties appear below
-the tree.
-Hold the right mouse button in the viewport to fly and release it to stop.
-Use WASD and Q/E to move, Shift to boost, and the wheel to change speed.
-The **Main Menu**
-button returns to the game frontend and reloads the player profile.
-The window title shows the active graphics API and live FPS, for example
-`hp2 - (Vulkan) 120 FPS`. Debug launches append ` | Debug Mode`.
-Godot uses VSync to pace the entire game to the current display refresh.
-The donor simulation runs on its own clock.
-See [TASK-0125](tasks/active/TASK-0125-godot-frontend.md) for frontend validation and open coverage.
-See [TASK-0126](tasks/active/TASK-0126-authored-frontend-and-race-ui.md)
-for original font, texture and in-race UI coverage.
+This port is in beta. See [Third-party notices](third_party/THIRD_PARTY_NOTICES.md) for licenses and acknowledgments.

@@ -2,70 +2,359 @@
 #include "Fred.hpp"
 #include "Language.hpp"
 #include "Flags.hpp"
+#include "Timer.hpp"
+#include "FEAnim.hpp"
 #include "inc/dbFiles.hpp"
 #include "bware/inc/bWare.hpp"
+#include <algorithm>
 #include <cstring>
+#include <random>
+#include <string_view>
 #include <utility>
 
 namespace hp2 {
 namespace {
 constexpr const char* ProfileFilename="profile.json";
-constexpr const char* ProfileBackupFilename="profile.backup.json";
-constexpr const char* LegacyProfileFilename="settings.db";
 constexpr std::uint32_t ManualScreen=0x9829bfabu;
+constexpr std::uint32_t PickerScreen=0x8bc68340u; // Borrow the authored Display rows and masks.
+constexpr std::uint32_t FirstRow=0x52e039f3u;
+constexpr std::size_t VisibleRows=7;
+constexpr std::array<std::uint32_t,VisibleRows> RowMasks{
+    0x6e34e350u,0x708a0bf1u,0x72df3492u,0x75345d33u,0x778985d4u,0x79deae75u,0x7c33d716u};
+constexpr std::uint32_t UpperRail=0xc671680cu,LowerRail=0x32c91daeu;
+constexpr std::uint32_t ScrollUp=0xedf2e4eeu,ScrollDown=0x20d73d01u;
 constexpr std::uint32_t TransferScreen=0xfa2ac5c6u;
+constexpr std::uint32_t BootStatusPopup=0x0ce3f7ceu;
+constexpr std::uint32_t ContinuePopup=0x74d2dfa2u;
 constexpr std::array<std::int32_t,4> LoadSaveHelp{{0xc3546,0xc3547,0xc3548,0}};
 MemcardScreens* boundMemcards{};
 // PAL245640..2457C0 SavegameData owns the detached transfer, while the
-// original live FRED owns progress. PC files now carry named UTF-8 JSON;
-// the legacy binary image is accepted only by the migration reader.
+// original live FRED owns progress. PC files carry named UTF-8 JSON.
 class SavegameData final {
 public:
     explicit SavegameData(FrontendPlayerManager& frontend):frontend_(frontend) {}
     void* SetupForSave() {text_=frontend_.SerializeNativeProfileText();return text_.data();}
     std::int32_t Size() const {return static_cast<std::int32_t>(text_.size());}
+    const std::string& Text() const {return text_;}
 private:
     FrontendPlayerManager& frontend_;
     std::string text_;
 };
+
+// A port page borrows its art for one activation, just like the other
+// frontend extensions. The original Flailer ring still handles focus.
+class ProfileMenuArt final {
+public:
+    ProfileMenuArt(MainMenuScreenServices& menus,std::uint32_t screen)
+        :resources(*menus.ui->resources),art(*resources.FindScreen(screen)),
+         page(*menus.screens->active->FindFlailerScreen(static_cast<std::int32_t>(screen))),menu(*page.menu) {}
+
+    ~ProfileMenuArt()
+    {
+        if(extraItem) {
+            if(page.menu==&menu) {
+                if(menu.current==extraItem.get())menu.current=extraItem->previous;
+                extraItem->previous->next=extraItem->next;
+                extraItem->next->previous=extraItem->previous;
+            }
+            extraItem.reset();
+            extraText.DeleteFlailerStrip();
+            extraText.previous->next=extraText.next;
+            extraText.next->previous=extraText.previous;
+            --art.textCount;
+        }
+        for(auto& saved:texts) {
+            Write(*saved.object,saved.value);
+            if(saved.language)saved.object->SetLanguageID(saved.language);
+        }
+        for(const auto& saved:objects) {
+            saved.object->SetTopLeftY(saved.y);
+            resources.SetObjectVisibility(art.key,saved.object->key,saved.visible);
+        }
+    }
+
+    void Show(std::uint32_t key,bool visible)
+    {
+        if(auto* object=resources.FindObject(art.key,key)) {
+            Remember(*object);
+            resources.SetObjectVisibility(art.key,key,visible?1:0);
+        }
+    }
+    void Relabel(std::uint32_t key,const std::string& value)
+    {
+        if(auto* object=resources.FindObject(art.key,key,1))
+            Relabel(static_cast<FlailerTextChunk&>(*object),value);
+    }
+    void Relabel(FlailerTextChunk& text,const std::string& value)
+    {
+        if(std::none_of(texts.begin(),texts.end(),[&](const auto& saved){return saved.object==&text;}))
+            texts.push_back({&text,text.text?text.text:"",text.languageId});
+        Write(text,value);
+    }
+    void Place(std::uint32_t key,float y)
+    {
+        if(auto* object=resources.FindObject(art.key,key)) {
+            Remember(*object);
+            object->SetTopLeftY(y);
+        }
+    }
+    void AddCreateRow()
+    {
+        auto* previous=menu.FindItem(FirstRow+2);
+        Require(previous && previous->object,"Save/Load requires the original Autosave row");
+        extraText=static_cast<const FlailerTextChunk&>(*previous->object);
+        extraText.key=FirstRow+3;
+        extraText.strip=nullptr;
+        extraText.clipObjectKey=0;
+        extraText.languageId=0;
+        extraText.textCapacity=64;
+        extraText.ownedText.assign(65,0);
+        extraText.text=extraText.ownedText.data();
+        extraText.SetString("Create Profile");
+        const auto* above=resources.FindObject(art.key,FirstRow+1,1);
+        const auto* first=resources.FindObject(art.key,FirstRow,1);
+        Require(first && above,"Save/Load requires the original Save and Load rows");
+        // Fit four rows within the original memory-card panel.
+        const auto top=first->topLeftY;
+        const auto spacing=(extraText.topLeftY-above->topLeftY)*0.75f;
+        Place(FirstRow+1,top+spacing);
+        Place(FirstRow+2,top+2*spacing);
+        extraText.SetTopLeftY(top+3*spacing);
+        extraText.previous=art.objects.previous;extraText.next=&art.objects;
+        extraText.previous->next=&extraText;art.objects.previous=&extraText;++art.textCount;
+        extraItem=std::make_unique<FlailerMenuItem>(&menu,extraText.key,4);
+        extraItem->object=&extraText;extraItem->previous=previous;extraItem->next=previous->next;
+        previous->next->previous=extraItem.get();previous->next=extraItem.get();
+    }
+    void SetPickerTitle()
+    {
+        for(auto* object=art.objects.next;object!=&art.objects;object=object->next) {
+            if(object->kind==1 && object->key==0x6eb9985du && object->topLeftY<40) {
+                Relabel(static_cast<FlailerTextChunk&>(*object),"Select Profile");
+                break;
+            }
+        }
+        for(auto key:{0x55cb09f2u,0x2e931f1bu,0x03d90172u,0x5610f2f4u,0x422313cbu,0x8fe4086bu,
+                      0xd1cda594u,0x9345e4a7u,FirstRow+7,FirstRow+8})Show(key,false);
+    }
+
+    FlailerResources& resources;
+    FlailerScreenResource& art;
+    FlailerScreen& page;
+    FlailerMenu& menu;
+private:
+    struct Text {FlailerTextChunk* object;std::string value;std::uint32_t language;};
+    struct Object {FlailerObjectChunk* object;float y;std::uint8_t visible;};
+    std::vector<Text> texts;
+    std::vector<Object> objects;
+    FlailerTextChunk extraText;
+    std::unique_ptr<FlailerMenuItem> extraItem;
+
+    void Remember(FlailerObjectChunk& object)
+    {
+        if(std::none_of(objects.begin(),objects.end(),[&](const auto& saved){return saved.object==&object;}))
+            objects.push_back({&object,object.topLeftY,object.visible});
+    }
+    static void Write(FlailerTextChunk& text,const std::string& value)
+    {
+        if(value.size()>=text.textCapacity) {
+            text.textCapacity=static_cast<std::uint32_t>(value.size()+1);
+            text.ownedText.resize(text.textCapacity+1);
+            text.text=text.ownedText.data();
+        }
+        text.SetString(value.c_str());
+        text.languageId=0;
+    }
+};
+
+bool IsProfileFile(std::string_view name)
+{
+    return name==ProfileFilename || (name.size()>13 && name.substr(0,8)=="profile-" &&
+        name.substr(name.size()-5)==".json" && name.substr(name.size()-12)!=".backup.json");
+}
+
+std::string NewProfileFilename()
+{
+    std::random_device random;
+    constexpr std::string_view hex="0123456789abcdef";
+    std::string name="profile-";
+    for(int i=0;i<32;++i)name+=hex[random()&15u];
+    return name+".json";
+}
 }
 
 struct MemcardScreens::Storage {
     FrontendPlayerManager& frontend;
     cDBFileSys files;
     SavegameData data;
-    std::unique_ptr<cMC> legacyFiles;
     MainMenuScreenServices* menus{};
     std::function<void()> completion;
     std::string error,popupMessage;
     enum class Operation {None,Save,Load,Autosave};
+    enum class BootStage {Idle,Checking,Loading,Missing,LoadError,Choosing,Complete};
+    enum class Creation {None,Boot,StartupPicker,OptionsPicker,Options};
+    struct Profile {std::string file,name;bool valid{};};
     Operation operation{Operation::None};
     Operation retryOperation{Operation::None};
+    BootStage bootStage{BootStage::Idle};
+    Creation creation{Creation::None},pendingCreation{Creation::None};
+    std::string activeFile,savedProfile,defaults,pendingFile;
+    std::vector<Profile> profiles;
+    std::unique_ptr<ProfileMenuArt> page;
+    std::unique_ptr<FlailerHighlightAnimation> highlight;
+    std::size_t offset{};
+    bool pickerAtBoot{},switchPopup{};
+    int switchDecision{};
+    bool requireNamedProfile{};
+    std::int32_t bootPopup{-1};
+    std::uint32_t bootTime{};
     bool awaitingCallback{},showingError{},returnAfterTick{},creatingBootProfile{},blockedByLoadFailure{};
     LoadResult lastLoad{LoadResult::Absent};
-    Storage(FrontendPlayerManager& owner,const char* directory,const char* legacyDirectory):frontend(owner),files(directory),data(owner) {
-        if(legacyDirectory && *legacyDirectory)legacyFiles=std::make_unique<cMC>(legacyDirectory);
+    Storage(FrontendPlayerManager& owner,const char* directory):frontend(owner),files(directory),data(owner) {}
+    bool ScanProfiles() {
+        profiles.clear();
+        std::vector<std::string> names;
+        const auto result=files.ListFiles(names);
+        if(result==cMC::NotFound)return true;
+        if(result!=cMC::Ok){error=files.LastErrorMessage();return false;}
+        for(const auto& file:names) {
+            if(!IsProfileFile(file))continue;
+            Profile profile{file,{},false};
+            std::vector<std::uint8_t> bytes;
+            std::string reason;
+            profile.valid=files.ReadFile(file.c_str(),bytes)==cMC::Ok &&
+                frontend.ValidateNativeProfileText(bytes.data(),bytes.size(),reason,true,&profile.name);
+            if(profile.name.empty())profile.name=profile.valid?"Unnamed Profile":file;
+            profiles.push_back(std::move(profile));
+        }
+        std::sort(profiles.begin(),profiles.end(),[](const auto& left,const auto& right){
+            if(left.name!=right.name)return left.name<right.name;
+            return left.file<right.file;
+        });
+        return true;
+    }
+    void RefreshPicker() {
+        for(std::size_t row=0;row<VisibleRows;++row) {
+            const auto index=offset+row;
+            const auto key=FirstRow+static_cast<std::uint32_t>(row);
+            const bool visible=index<=profiles.size();
+            if(auto* item=page->menu.FindItem(key)) {
+                if(visible)item->SetMenuItemState(1);
+                else item->ClearMenuItemState(1);
+            }
+            page->Show(key,visible);
+            page->Show(RowMasks[row],visible);
+            if(!visible)continue;
+            if(index==profiles.size()) {
+                page->Relabel(key,"Create Profile");
+                continue;
+            }
+            const auto& profile=profiles[index];
+            std::string caption=profile.name;
+            if(profile.valid && std::count_if(profiles.begin(),profiles.end(),[&](const Profile& other){
+                return other.valid && other.name==profile.name;
+            })>1)caption+=" ("+(profile.file==ProfileFilename?std::string("legacy"):profile.file.substr(8,6))+")";
+            if(profile.file==activeFile)caption+=" (Active)";
+            if(!profile.valid)caption+=" (Unavailable)";
+            page->Relabel(key,caption);
+        }
+        page->Show(ScrollUp,offset>0);
+        page->Show(ScrollDown,offset+VisibleRows<=profiles.size());
+    }
+    void PositionPicker(std::size_t row) {
+        const auto index=offset+row;
+        if(row>=VisibleRows || index>profiles.size())return;
+        std::int32_t x,top,width,bottom;
+        if(page->resources.GetBoundingBox(PickerScreen,RowMasks[row],x,top,width,bottom,menus->ui->language)) {
+            page->Place(UpperRail,static_cast<float>(top-6));
+            page->Place(LowerRail,static_cast<float>(bottom));
+        }
+        highlight->SetCurrentMenuItem(FirstRow+static_cast<std::uint32_t>(row));
+        page->Relabel(0x75980cf0u,index==profiles.size()?"Create a new profile.":
+            profiles[index].valid?"Load this profile.":"This profile is unavailable.");
+    }
+    void ShowNotice(const std::string& message) {
+        popupMessage=message;
+        FlailerPopupConfig popup;
+        popup.sourceNode=menus->screens->active;popup.screenKey=ContinuePopup;
+        popup.message=popupMessage.c_str();popup.buttonCount=1;popup.flags=2;popup.joystickPort=-1;
+        popup.buttonLanguageIds[0]=0x24a55;
+        Require(menus->screens->SummonPopup(popup)>=0,"Profile notice has no popup owner");
+    }
+    void RequestSwitch(std::string filename,Creation origin=Creation::None) {
+        pendingFile=std::move(filename);pendingCreation=origin;
+        if(activeFile.empty() || savedProfile==frontend.SerializeNativeProfileText()) {
+            switchDecision=2;
+            return;
+        }
+        constexpr std::uint32_t dialog=0x41c2fdc3u; // Authored three-choice car selection dialog.
+        popupMessage="Save Profile Changes?";
+        FlailerPopupConfig popup;
+        popup.sourceNode=menus->screens->active;popup.screenKey=dialog;
+        popup.message=popupMessage.c_str();popup.buttonCount=3;popup.flags=3;popup.joystickPort=-1;
+        popup.buttonResults={{1,2,0}};popup.initialButton=2;
+        Require(menus->screens->SummonPopup(popup)>=0,"Profile switch has no popup owner");
+        constexpr std::array labels{"Save","Discard","Cancel"};
+        for(std::size_t i=0;i<labels.size();++i)
+            menus->ui->resources->SetLocalizedText(dialog,0xe0105663u+static_cast<std::uint32_t>(i),labels[i]);
+        switchPopup=true;
+    }
+    void ShowBootPopup(std::uint32_t screen,std::string message,bool button) {
+        auto& screens=*menus->screens;
+        if(bootPopup>=0) {
+            screens.DismissPopup(bootPopup);
+            bootPopup=-1;
+        }
+        popupMessage=std::move(message);
+        FlailerPopupConfig popup;
+        popup.sourceNode=screens.active;popup.screenKey=screen;popup.message=popupMessage.c_str();
+        popup.joystickPort=-1;
+        if(button) {
+            popup.buttonCount=1;
+            popup.buttonLanguageIds[0]=0x24a55;
+        } else {
+            popup.flags=9; // Source status popup ignores confirm and cancel.
+            popup.footerLanguageId=0x249f4;
+        }
+        bootPopup=screens.SummonPopup(popup);
+        Require(bootPopup>=0,"Boot profile status has no original popup owner");
+    }
+    void ShowBootStatus(std::int32_t languageId) {
+        const auto* text=menus->ui->language->GetString(languageId);
+        Require(text,"Boot profile status has no authored text");
+        std::string message=text;
+        // The authored status displays memory-card slot 1 for the PC profile.
+        for(auto slot=message.find("%d");slot!=std::string::npos;slot=message.find("%d",slot+1))
+            message.replace(slot,2,"1");
+        bootTime=static_cast<std::uint32_t>(menus->ui->clock->realTimer);
+        ShowBootPopup(BootStatusPopup,std::move(message),false);
+    }
+    bool BootStatusElapsed() const {
+        return static_cast<std::uint32_t>(menus->ui->clock->realTimer)-bootTime>=
+            static_cast<std::uint32_t>(gameTimeQuantizeElapsed(2.0f));
     }
     bool PrepareSave() {
+        if(activeFile.empty()){error="Create or load a profile before saving.";return false;}
         if(blockedByLoadFailure) {
             error="The previous profile load failed. Restore or correct that file and load it successfully before saving; existing progress was retained.";
             return false;
         }
         try {
-            std::vector<std::uint8_t> previous;const auto read=files.ReadFile(ProfileFilename,previous);
+            std::vector<std::uint8_t> previous;const auto read=files.ReadFile(activeFile.c_str(),previous);
             if(read!=cMC::Ok && read!=cMC::NotFound) {
                 error=files.LastErrorMessage();
                 return false;
             }
             if(read==cMC::Ok && !frontend.ValidateNativeProfileText(previous.data(),previous.size(),error)) {
-                error="Existing profile.json was retained because it failed validation: "+error;
+                error="Existing profile was retained because it failed validation: "+error;
                 return false;
             }
             // Serialize before changing either durable file. The I/O owner
             // borrows this detached string until its one completion callback.
             void* transfer=data.SetupForSave();
-            files.SetBackupFile(read==cMC::Ok?ProfileBackupFilename:nullptr,std::move(previous));
-            files.SetFileData(ProfileFilename,transfer,data.Size());return true;
+            const auto backup=activeFile.substr(0,activeFile.size()-5)+".backup.json";
+            files.SetBackupFile(read==cMC::Ok?backup.c_str():nullptr,std::move(previous));
+            files.SetFileData(activeFile.c_str(),transfer,data.Size());return true;
         } catch(const std::exception& e) {
             error=e.what();return false;
         }
@@ -87,8 +376,12 @@ struct MemcardScreens::Storage {
     }
 };
 
-MemcardScreens::MemcardScreens(FrontendPlayerManager& frontend,const char* directory,const char* legacyDirectory)
-    :storage_(std::make_unique<Storage>(frontend,directory,legacyDirectory)) {}
+MemcardScreens::MemcardScreens(FrontendPlayerManager& frontend,const char* directory,bool requireNamedProfile)
+    :storage_(std::make_unique<Storage>(frontend,directory))
+{
+    storage_->requireNamedProfile=requireNamedProfile;
+    if(!requireNamedProfile)storage_->activeFile=ProfileFilename; // Isolated diagnostic startup.
+}
 MemcardScreens::~MemcardScreens()
 {
     // A destructor may finish an already authorized atomic write, but never
@@ -97,50 +390,35 @@ MemcardScreens::~MemcardScreens()
     if(boundMemcards==this)boundMemcards=nullptr;
 }
 
-MemcardScreens::LoadResult MemcardScreens::LoadProfile()
+MemcardScreens::LoadResult MemcardScreens::LoadProfile(const char* filename)
 {
     auto& state=*storage_;state.error.clear();state.retryOperation=Storage::Operation::Load;
+    const std::string file=filename?filename:state.activeFile;
     const auto failed=[&](const std::string& reason) {
-        state.error=reason;state.blockedByLoadFailure=true;state.lastLoad=LoadResult::Failed;
+        state.error=reason;
+        if(file==state.activeFile)state.blockedByLoadFailure=true;
+        state.lastLoad=LoadResult::Failed;
         return state.lastLoad;
     };
     if(state.files.Busy())return failed("A profile transfer is already active");
-    std::vector<std::uint8_t> bytes;auto read=state.files.ReadFile(ProfileFilename,bytes);
+    if(file.empty())return LoadResult::Absent;
+    std::vector<std::uint8_t> bytes;const auto read=state.files.ReadFile(file.c_str(),bytes);
     if(read==cMC::NotFound) {
-        // Only a genuinely absent primary may recover its previous durable
-        // text version. An existing malformed file is reported and retained;
-        // it must never be mistaken for a fresh profile or silently rolled back.
-        read=state.files.ReadFile(ProfileBackupFilename,bytes);
-        if(read==cMC::NotFound && state.legacyFiles) {
-            // Port-side relocation, preserving the previous directory and its
-            // primary/backup precedence. WriteNewFile publishes without replacing.
-            read=state.legacyFiles->MCReadFile(ProfileFilename,bytes);
-            if(read==cMC::NotFound)read=state.legacyFiles->MCReadFile(ProfileBackupFilename,bytes);
-            if(read!=cMC::Ok && read!=cMC::NotFound)return failed(state.legacyFiles->LastError());
-        }
-        if(read==cMC::Ok) {
-            if(!state.frontend.ValidateNativeProfileText(bytes.data(),bytes.size(),state.error,true))return failed(state.error);
-            if(state.files.WriteNewFile(ProfileFilename,bytes.data(),bytes.size())!=cMC::Ok)return failed(state.files.LastErrorMessage());
-        } else if(read==cMC::NotFound) {
-            read=state.files.ReadFile(LegacyProfileFilename,bytes,GAME_SAVE_SIZE);
-            if(read==cMC::NotFound && state.legacyFiles) {
-                read=state.legacyFiles->MCReadFile(LegacyProfileFilename,bytes,GAME_SAVE_SIZE);
-                if(read!=cMC::Ok && read!=cMC::NotFound)return failed(state.legacyFiles->LastError());
-            }
-            if(read==cMC::NotFound) {
-                state.blockedByLoadFailure=false;state.lastLoad=LoadResult::Absent;
-                return state.lastLoad;
-            }
-            if(read!=cMC::Ok)return failed(state.files.LastErrorMessage());
-            std::string text;
-            if(!state.frontend.ConvertLegacyProfileToText(bytes.data(),bytes.size(),text,state.error))return failed(state.error);
-            if(state.files.WriteNewFile(ProfileFilename,text.data(),text.size())!=cMC::Ok)return failed(state.files.LastErrorMessage());
-            bytes.assign(text.begin(),text.end());
-        } else return failed(state.files.LastErrorMessage());
+        state.lastLoad=LoadResult::Absent;
+        return state.lastLoad;
     } else if(read!=cMC::Ok)return failed(state.files.LastErrorMessage());
     if(!state.frontend.DeserializeNativeProfileText(bytes.data(),bytes.size(),state.error))return failed(state.error);
     state.blockedByLoadFailure=false;
+    state.activeFile=file;
+    state.savedProfile=state.frontend.SerializeNativeProfileText();
+    ApplyProfileOptions();
+    state.lastLoad=LoadResult::Loaded;
+    return state.lastLoad;
+}
 
+void MemcardScreens::ApplyProfileOptions()
+{
+    auto& state=*storage_;
     if(state.menus && state.menus->ui && state.menus->ui->language &&
        state.menus->ui->language->currentLanguage!=state.frontend.currentLanguage)
         state.menus->ui->language->SetLanguage(state.frontend.currentLanguage);
@@ -164,7 +442,7 @@ MemcardScreens::LoadResult MemcardScreens::LoadProfile()
             "Loaded display calibration has no canonical platform clock");
         ApplyDisplayCalibration(state.frontend,*state.menus->ui->clock);
     }
-    state.SetCaption();state.lastLoad=LoadResult::Loaded;return state.lastLoad;
+    state.SetCaption();
 }
 
 bool MemcardScreens::SaveProfile()
@@ -178,6 +456,7 @@ bool MemcardScreens::SaveProfile()
         state.error=state.files.LastErrorMessage();return false;
     }
 
+    state.savedProfile=state.data.Text();
     state.SetCaption();return true;
 }
 
@@ -209,6 +488,7 @@ void MemcardScreens::Service()
     // Completion is detached before the original transition. It may retire
     // a screen or this entire application owner; no member is read afterward.
 
+    state.savedProfile=state.data.Text();
     auto completion=std::move(state.completion);state.operation=Storage::Operation::None;
     if(completion)completion();
 }
@@ -216,6 +496,67 @@ void MemcardScreens::Service()
 bool MemcardScreens::Busy() const noexcept
 {return storage_->files.Busy() || storage_->operation!=Storage::Operation::None;}
 const std::string& MemcardScreens::LastError() const noexcept {return storage_->error;}
+
+bool MemcardScreens::BootNameEntryActive() const noexcept
+{
+    return storage_->creation!=Storage::Creation::None;
+}
+
+bool MemcardScreens::CreateBootProfile(const char* name)
+{
+    auto& state=*storage_;
+    Require(BootNameEntryActive(),"Boot profile creation has no active name editor");
+    Require(name && *name && std::strlen(name)<=7,"Boot profile name exceeds the authored keyboard buffer");
+    state.error.clear();
+    if(Busy()){state.error="A profile transfer is already active";return false;}
+    std::string previous, text, filename;
+    try {
+        previous=state.frontend.SerializeNativeProfileText();
+        Require(!state.defaults.empty(),"Profile creation requires the startup defaults");
+        if(!state.frontend.DeserializeNativeProfileText(state.defaults.data(),state.defaults.size(),state.error))return false;
+        auto& playerName=state.frontend.players[0]->settings.playerName;
+        std::fill(std::begin(playerName),std::end(playerName),'\0');
+        std::copy_n(name,std::strlen(name),playerName);
+        state.frontend.autoSave=1;
+        text=state.frontend.SerializeNativeProfileText();
+        filename=NewProfileFilename();
+        if(state.files.WriteNewFile(filename.c_str(),text.data(),text.size())!=cMC::Ok) {
+            state.error=state.files.LastErrorMessage();
+        }
+    } catch(const std::exception& error) {
+        state.error=error.what();
+    }
+    if(!state.error.empty()) {
+        std::string rollbackError;
+        if(!previous.empty())Require(state.frontend.DeserializeNativeProfileText(previous.data(),previous.size(),rollbackError),
+            "Unable to restore the live profile after a failed creation");
+        return false;
+    }
+    state.activeFile=std::move(filename);
+    state.savedProfile=std::move(text);
+    state.blockedByLoadFailure=false;
+    ApplyProfileOptions();
+    return true;
+}
+
+void MemcardScreens::FinishBootNameEntry(bool saved)
+{
+    auto& state=*storage_;
+    Require(BootNameEntryActive(),"Boot profile name has no active continuation");
+    using Creation=Storage::Creation;
+    using Stage=Storage::BootStage;
+    const auto origin=std::exchange(state.creation,Creation::None);
+    if(origin==Creation::Boot)state.bootStage=saved?Stage::Complete:Stage::Missing;
+    if(origin==Creation::StartupPicker && saved)state.bootStage=Stage::Complete;
+    const bool skipPicker=saved && (origin==Creation::StartupPicker || origin==Creation::OptionsPicker);
+    Require(state.menus->screens->MoveToPreviousScreen(skipPicker?2:1,false,-1),
+        "Profile name editor has no retained caller");
+}
+
+MemcardScreens* GetBootNameEntryOwner()
+{
+    return boundMemcards && boundMemcards->BootNameEntryActive()?boundMemcards:nullptr;
+}
 
 void MemcardScreens::HandleEvent(ScreenMessage message,ScreenCallbackData& payload)
 {
@@ -225,6 +566,121 @@ void MemcardScreens::HandleEvent(ScreenMessage message,ScreenCallbackData& paylo
     const auto* name=screens.active && screens.active->configuration?screens.active->configuration->name:nullptr;
     Require(name,"Memcard callback has no original screen configuration");
     const bool boot=!std::strcmp(name,"BootAutoload"),automatic=!std::strcmp(name,"Autosave");
+    const bool picker=!std::strcmp(name,"Select Profile");
+    const bool manual=!boot && !automatic && !picker;
+    using Stage=Storage::BootStage;
+    using Creation=Storage::Creation;
+
+    if(message==ScreenMessage::ScreenActivate && boot && state.defaults.empty())
+        state.defaults=state.frontend.SerializeNativeProfileText();
+    if(message==ScreenMessage::PopupDismiss && state.switchPopup) {
+        state.switchPopup=false;
+        state.switchDecision=payload.value;
+        return;
+    }
+    if(message==ScreenMessage::Tick && (picker || manual) && state.switchDecision) {
+        const auto decision=std::exchange(state.switchDecision,0);
+        const auto creation=std::exchange(state.pendingCreation,Creation::None);
+        auto filename=std::move(state.pendingFile);
+        if(decision==1 && !SaveProfile()) {
+            state.ShowNotice("Cannot save the active profile. "+state.error);
+        } else if(creation!=Creation::None) {
+            state.creation=creation;
+            screens.ChangeToScreen("NameEntry",true);
+        } else if(LoadProfile(filename.c_str())==LoadResult::Loaded) {
+            if(state.pickerAtBoot)state.bootStage=Stage::Loading;
+            Require(screens.MoveToPreviousScreen(1,false,-1),"Profile picker has no retained caller");
+        } else {
+            state.ShowNotice(state.error.empty()?"This profile is no longer available.":"Cannot load the profile. "+state.error);
+        }
+        return;
+    }
+    if(picker) {
+        const auto row=static_cast<std::size_t>(payload.key-FirstRow);
+        if(message==ScreenMessage::ScreenActivate) {
+            state.page=std::make_unique<ProfileMenuArt>(*state.menus,PickerScreen);
+            state.page->SetPickerTitle();
+            state.highlight=std::make_unique<FlailerHighlightAnimation>(*state.menus->ui,PickerScreen,0xab671c9au,
+                state.menus->ui->animationSettings.highlightColor);
+            state.RefreshPicker();
+            if(!state.offset)payload.value=1;
+        } else if(message==ScreenMessage::ScreenDeactivate) {
+            state.highlight.reset();
+            state.page.reset();
+        } else if(message==ScreenMessage::Tick) {
+            state.highlight->Animate();
+        } else if(message==ScreenMessage::Highlight) {
+            state.PositionPicker(row);
+        } else if(message==ScreenMessage::Previous && row==0) {
+            payload.value=1;
+            if(state.offset) {--state.offset;state.RefreshPicker();state.PositionPicker(row);}
+        } else if(message==ScreenMessage::Next &&
+                  (row==VisibleRows-1 || state.offset+row>=state.profiles.size())) {
+            payload.value=1;
+            if(state.offset+VisibleRows<=state.profiles.size()) {++state.offset;state.RefreshPicker();state.PositionPicker(row);}
+        } else if(message==ScreenMessage::LeaveScreen && (state.pickerAtBoot || Busy())) {
+            payload.value=0;payload.sound=0;
+        } else if(message==ScreenMessage::Select && row<VisibleRows && !Busy()) {
+            const auto index=state.offset+row;
+            if(index==state.profiles.size()) {
+                state.RequestSwitch({},state.pickerAtBoot?Creation::StartupPicker:Creation::OptionsPicker);
+            } else if(index<state.profiles.size()) {
+                const auto& profile=state.profiles[index];
+                if(profile.valid)state.RequestSwitch(profile.file);
+                else state.ShowNotice("This profile could not be read. Its file has been kept.");
+            }
+        }
+        return;
+    }
+    if(boot && state.requireNamedProfile) {
+        if(message==ScreenMessage::ScreenActivate) {
+            screens.StopMovie();
+            if(state.bootStage==Stage::Missing)
+                state.ShowBootPopup(ContinuePopup,"No saved profile was found. Create a profile to continue.",true);
+            else if(state.bootStage==Stage::Loading)
+                state.ShowBootStatus(0x24dd9);
+            else if(state.bootStage!=Stage::Complete) {
+                state.bootStage=Stage::Checking;
+                state.ShowBootStatus(0x24de5);
+            }
+        } else if(message==ScreenMessage::Tick) {
+            if(state.bootStage==Stage::Checking && state.BootStatusElapsed()) {
+                const auto scanned=state.ScanProfiles();
+                if(scanned && state.profiles.size()==1 && state.profiles.front().valid &&
+                   LoadProfile(state.profiles.front().file.c_str())==LoadResult::Loaded) {
+                    state.bootStage=Stage::Loading;
+                    state.ShowBootStatus(0x24dd9);
+                } else if(scanned && state.profiles.empty()) {
+                    state.bootStage=Stage::Missing;
+                    state.ShowBootPopup(ContinuePopup,"No saved profile was found. Create a profile to continue.",true);
+                } else if(scanned) {
+                    screens.DismissPopup(state.bootPopup);
+                    state.bootStage=Stage::Choosing;
+                    state.pickerAtBoot=true;
+                    state.offset=0;
+                    screens.ChangeToScreen("Select Profile",true);
+                } else {
+                    state.bootStage=Stage::LoadError;
+                    state.ShowBootPopup(ContinuePopup,"Cannot check the saved profiles. "+state.error+
+                        "\nPress Continue to retry.",true);
+                }
+            } else if(state.bootStage==Stage::Missing && state.bootPopup<0) {
+                state.creation=Creation::Boot;
+                screens.ChangeToScreen("NameEntry",true);
+            } else if(state.bootStage==Stage::LoadError && state.bootPopup<0) {
+                state.bootStage=Stage::Checking;
+                state.ShowBootStatus(0x24de5);
+            } else if(state.bootStage==Stage::Complete ||
+                (state.bootStage==Stage::Loading && state.BootStatusElapsed())) {
+                state.bootStage=Stage::Idle;
+                if(state.bootPopup>=0)screens.DismissPopup(state.bootPopup);
+                state.bootPopup=-1;
+                Require(screens.MoveToPreviousScreen(1,false,-1),"Boot autoload has no retained startup screen");
+            }
+        } else if(message==ScreenMessage::PopupDismiss)state.bootPopup=-1;
+        else if(message==ScreenMessage::LeaveScreen){payload.value=0;payload.sound=0;}
+        return;
+    }
     // Explicit native-PC first-run policy: only a genuinely absent profile
     // enables autosave. Existing preferences and invalid files are retained.
     const auto loadBootProfile=[this,&state] {
@@ -245,9 +701,18 @@ void MemcardScreens::HandleEvent(ScreenMessage message,ScreenCallbackData& paylo
                 auto* menus=storage_->menus;
                 Require(menus && menus->screens->MoveToPreviousScreen(1,false,-1),"Autosave has no previous original screen");
             }),"Autosave screen could not schedule its transfer");
-        } else state.SetCaption();
+        } else if(manual) {
+            state.page=std::make_unique<ProfileMenuArt>(*state.menus,ManualScreen);
+            state.page->AddCreateRow();
+            if(!state.activeFile.empty()) {
+                const auto& player=state.frontend.players[0]->settings;
+                state.page->Relabel(FirstRow,"Save ("+std::string(player.playerName)+")");
+            }
+            state.SetCaption();
+        }
         return;
     }
+    if(message==ScreenMessage::ScreenDeactivate && manual) {state.page.reset();return;}
     if(message==ScreenMessage::Tick) {
         if(state.returnAfterTick) {
             state.returnAfterTick=false;
@@ -262,10 +727,6 @@ void MemcardScreens::HandleEvent(ScreenMessage message,ScreenCallbackData& paylo
             else if(automatic || (boot && state.creatingBootProfile)) {
                 auto continuation=std::move(state.completion);state.operation=Storage::Operation::None;
                 Require(RequestAutosave(std::move(continuation)),"Retry cannot schedule its actual file owner");
-            } else if(state.retryOperation==Storage::Operation::Load) {
-                const auto loaded=LoadProfile();
-                if(loaded==LoadResult::Absent)state.error="No saved native profile exists";
-                if(loaded!=LoadResult::Loaded)state.ShowError();
             } else if(!SaveProfile())state.ShowError();
         } else {
             // Explicit user cancellation carries no save success and cannot
@@ -279,13 +740,16 @@ void MemcardScreens::HandleEvent(ScreenMessage message,ScreenCallbackData& paylo
     if(message==ScreenMessage::LeaveScreen && Busy()){payload.value=0;payload.sound=0;return;}
     if(automatic || boot)return;
     if(message==ScreenMessage::Select) {
-        if(payload.key==0x52e039f3u) {if(!SaveProfile())state.ShowError();}
-        else if(payload.key==0x52e039f4u) {
-            const auto loaded=LoadProfile();
-            if(loaded==LoadResult::Absent)state.error="No saved native profile exists";
-            if(loaded!=LoadResult::Loaded)state.ShowError();
-        }
-    } else if((message==ScreenMessage::Left || message==ScreenMessage::Right) && payload.key==0x52e039f5u) {
+        if(payload.key==FirstRow) {if(!SaveProfile())state.ShowError();}
+        else if(payload.key==FirstRow+1) {
+            if(!state.ScanProfiles())state.ShowNotice("Cannot check the saved profiles. "+state.error);
+            else {
+                state.pickerAtBoot=false;
+                state.offset=0;
+                screens.ChangeToScreen("Select Profile",true);
+            }
+        } else if(payload.key==FirstRow+3)state.RequestSwitch({},Creation::Options);
+    } else if((message==ScreenMessage::Left || message==ScreenMessage::Right) && payload.key==FirstRow+2) {
         state.frontend.autoSave=!state.frontend.autoSave;state.SetCaption();payload.sound=2;
         if(state.frontend.autoSave && !SaveProfile())state.ShowError();
     }
@@ -298,7 +762,14 @@ void BindMemcardScreens(MemcardScreens& owner,MainMenuScreenServices& services)
         "Memcard screen binding is not the live application profile/UI");
     owner.storage_->menus=&services;boundMemcards=&owner;
 }
-void UnbindMemcardScreens() {boundMemcards=nullptr;}
+void UnbindMemcardScreens()
+{
+    if(boundMemcards) {
+        boundMemcards->storage_->highlight.reset();
+        boundMemcards->storage_->page.reset();
+    }
+    boundMemcards=nullptr;
+}
 
 bool RequestProfileAutosave(std::function<void()> completed,std::function<bool()> ownerAlive)
 {
@@ -318,14 +789,15 @@ bool RequestProfileAutosave(std::function<void()> completed,std::function<bool()
     return queued;
 }
 
-std::array<FlailerScreenConfig,3>& MemcardScreenConfigurations()
+std::array<FlailerScreenConfig,4>& MemcardScreenConfigurations()
 {
     // Actual PAL247DE8 constructor arguments, callbacks and final strings.
     // PC I/O completion replaces the Sony polling states, never fake success.
-    static std::array<FlailerScreenConfig,3> configurations{{
+    static std::array<FlailerScreenConfig,4> configurations{{
         {"Phils Load Save",MemcardScreenCallback,{{static_cast<std::int32_t>(ManualScreen),0,0,0}},{{-1,-1,-1,-1}},1,LoadSaveHelp.data()},
         {"BootAutoload",MemcardScreenCallback,{{static_cast<std::int32_t>(TransferScreen),0,0,0}},{{-1,-1,-1,-1}},1,nullptr},
-        {"Autosave",MemcardScreenCallback,{{static_cast<std::int32_t>(TransferScreen),0,0,0}},{{-1,-1,-1,-1}},1,nullptr}
+        {"Autosave",MemcardScreenCallback,{{static_cast<std::int32_t>(TransferScreen),0,0,0}},{{-1,-1,-1,-1}},1,nullptr},
+        {"Select Profile",MemcardScreenCallback,{{static_cast<std::int32_t>(PickerScreen),0,0,0}},{{-1,-1,-1,-1}},1,LoadSaveHelp.data()}
     }};
     return configurations;
 }

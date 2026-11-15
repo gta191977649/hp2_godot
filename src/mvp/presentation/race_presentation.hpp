@@ -2,6 +2,7 @@
 
 #include <godot_cpp/classes/input_event.hpp>
 #include <godot_cpp/classes/node3d.hpp>
+#include <godot_cpp/variant/callable.hpp>
 #include <godot_cpp/variant/packed_vector3_array.hpp>
 #include <memory>
 
@@ -18,7 +19,7 @@ public:
     RacePresentation();
     ~RacePresentation() override;
     static godot::String validate_game_iso(const godot::String& path);
-    void set_legacy_profile_directory(const godot::String& path);
+    void set_graphics_menu_settings(const godot::Callable& settings);
     godot::String start_game(const godot::String& assets, const godot::String& profile, int track,
         int tree, int event, bool nativeDebug);
     void _process(double delta) override;
@@ -45,7 +46,7 @@ private:
     void service_track_viewer(double delta);
 #endif
     std::unique_ptr<Session> session_;
-    godot::String legacyProfileDirectory_;
+    godot::Callable graphicsMenuSettings_;
     bool failed_{};
     bool nativeDebug_{};
     void report_assert(const godot::String& message);

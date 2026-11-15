@@ -121,6 +121,13 @@ void vertex() {
         gs_wet_mask_mip_bias = CUSTOM3.w;
     }
 #endif
+#if defined(GS_ROAD_WATER) && defined(GS_ADD)
+    if (gs_has_puddle_base) {
+        gs_puddle_base_uv = CUSTOM0.xy;
+        gs_puddle_base_mip_bias = CUSTOM0.z;
+        gs_puddle_base_color_weighted = round(CUSTOM3 * 255.0) * gs_clip_weight;
+    }
+#endif
 #endif
 }
 

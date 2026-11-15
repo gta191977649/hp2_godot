@@ -229,7 +229,7 @@ struct ApplicationRuntime::Storage {
     std::uint64_t renderTimedFrames{},gpuTimedFrames{},lastCompletedGpuFrame{};
     double renderUpdateMs{},renderGatherMs{},renderFenceMs{},renderSubmitMs{},renderPresentMs{},renderGpuMs{};
     GameResources& files;NativeApplicationHost& host;
-    std::filesystem::path profileDirectory,legacyProfileDirectory;
+    std::filesystem::path profileDirectory;
     GameTime clock{};ReplayIntegerLog joylog{};ApplicationChecksumState checksum{};
     DemoDiscManager& demo{TheDemoDiscManager};
     CarCinematicServices cameras{};
@@ -438,8 +438,10 @@ struct ApplicationRuntime::Storage {
     void (*raceStart)(MainMenuScreenServices&,const void*){};
     const void* raceStartContext{};
     const FrontendMenuExtension* frontendExtension{};
+    const FrontendMenuExtension* optionsExtension{};
     const FrontendCreditsContent* frontendCredits{};
     bool showFrontend{};
+    bool requireNamedProfile{};
     bool stateOnly() const noexcept {return showFrontend || raceStart;}
     bool diagnosticRaceRequested{};
     // PAL1BE910 requests the same bStartGlare consumed by StuffSunGlare.
@@ -583,9 +585,8 @@ struct ApplicationRuntime::Storage {
         // six cubemap faces and mapped environment image keep authored sizes.
         ecstasyViewsApplyMode(&cameras);
     }
-    Storage(GameResources& source,NativeApplicationHost& physical,const std::filesystem::path& directory,
-        const std::filesystem::path& legacyDirectory)
-        :files(source),host(physical),profileDirectory(directory),legacyProfileDirectory(legacyDirectory)
+    Storage(GameResources& source,NativeApplicationHost& physical,const std::filesystem::path& directory)
+        :files(source),host(physical),profileDirectory(directory)
     {
         gameTimeInitialize(&clock);gameTimeUseNativeTiming(&clock);joylog.clock=&clock;cameras.clock=&clock;
         parameters.drivers=drivers.data();parameters.runtimeSettings=&runtime;
@@ -631,15 +632,14 @@ struct ApplicationRuntime::Storage {
         frontendInput={&input,&screens};screens.input=&frontendInput;screens.soundBindings=&soundBindings;
         demoMode.screens=&screens;demoMode.frontend=&profilesOwner;demoMode.raceSetup=&setup;
         demoMode.demoDisc=&demo;demoMode.files=&files;
-        menus={&ui,&screens,&profilesOwner,&setup,&soundBindings,&demoMode,frontendExtension,frontendCredits};
+        menus={&ui,&screens,&profilesOwner,&setup,&soundBindings,&demoMode,frontendExtension,frontendCredits,optionsExtension};
         startup={&menus,&joylog,dynamicTextures.get()};
         menusBound=true;
         BindFrontendStartup(startup);
         BindCreditsScreens(startup);
         const auto nativeDirectory=profileDirectory.u8string();
-        const auto legacyDirectory=legacyProfileDirectory.u8string();
         memcards=std::make_unique<MemcardScreens>(profilesOwner,nativeDirectory.empty()?nullptr:nativeDirectory.c_str(),
-            legacyDirectory.empty()?nullptr:legacyDirectory.c_str());
+            requireNamedProfile);
         BindMemcardScreens(*memcards,menus);
         trackSelection.ui=&ui;trackSelection.screens=&screens;trackSelection.frontend=&profilesOwner;
         trackSelection.tracks=tracks.get();trackSelection.resources=&files;trackSelection.raceSetup=&setup;
@@ -657,6 +657,10 @@ struct ApplicationRuntime::Storage {
         if(frontendExtension) {
             RegisterScreen(*frontendExtension->screen);
             frontendExtension->bind(menus,frontendExtension->context);
+        }
+        if(optionsExtension) {
+            RegisterScreen(*optionsExtension->screen);
+            optionsExtension->bind(menus,optionsExtension->context);
         }
         for(auto& configuration:EndGameScreenConfigurations())RegisterScreen(configuration);
         for(auto& configuration:MemcardScreenConfigurations())RegisterScreen(configuration);
@@ -720,8 +724,8 @@ struct ApplicationRuntime::Storage {
 };
 
 ApplicationRuntime::ApplicationRuntime(GameResources& files,NativeApplicationHost& host,
-    const std::filesystem::path& profileDirectory,const std::filesystem::path& legacyProfileDirectory)
-    :storage_(std::make_unique<Storage>(files,host,profileDirectory,legacyProfileDirectory))
+    const std::filesystem::path& profileDirectory)
+    :storage_(std::make_unique<Storage>(files,host,profileDirectory))
 {
     Require(!applicationHost,"Only one source application process may own input");applicationHost=&host;
 }
@@ -924,15 +928,18 @@ void ApplicationRuntime::Initialize(const std::filesystem::path& configFile)
 }
 
 void ApplicationRuntime::InitializeFrontend(void (*ready)(MainMenuScreenServices&,const void*),const void* context,
-    const FrontendMenuExtension* extension,const FrontendCreditsContent* credits)
+    const FrontendMenuExtension* extension,const FrontendCreditsContent* credits,const FrontendMenuExtension* options,
+    bool requireNamedProfile)
 {
     Require(!storage_->stateOnly() && !storage_->initialized,
         "Frontend must be requested before initialization");
     storage_->showFrontend=true;
+    storage_->requireNamedProfile=requireNamedProfile;
     storage_->raceStart=ready;
     storage_->raceStartContext=context;
     storage_->frontendExtension=extension;
     storage_->frontendCredits=credits;
+    storage_->optionsExtension=options;
     Initialize();
 }
 
@@ -956,6 +963,7 @@ FrontendStateView ApplicationRuntime::FrontendState() const
     result.pointerEpoch=s.screens.pointerEpoch;
     result.nameEditSession=ActiveNameEditSession();
     result.nameEditInput=result.nameEditSession && s.NameEditInputAvailable();
+    result.creatingProfile=result.nameEditSession && GetBootNameEntryOwner()!=nullptr;
     result.effects=&s.previewEffects;
     if(s.frontendCredits)GetPortCreditsText(result.creditsText);
     result.pointerReplay=s.PointerReplay();

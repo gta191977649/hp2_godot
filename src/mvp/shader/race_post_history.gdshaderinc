@@ -16,7 +16,7 @@ void fragment() {
     // selects the green channel, which commutes with the transfer function.
     vec4 c = vec4(fogged(xy, use_fog_palette), 1.0);
     if (kernel.y > 0.0) {
-        float slot = depth_slot(texelFetch(scene_depth, xy, 0).r);
+        float slot = depth_slot(scene_depth_at(xy));
         float near_slot = clamp(floor(slot_at(focus.x-focus.y*0.5)),0.0,255.0);
         float far_slot = clamp(floor(slot_at(focus.x+focus.y*0.5)),0.0,255.0);
         float edge = max(max(slot-near_slot, far_slot-slot), 0.0);

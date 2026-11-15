@@ -8,6 +8,7 @@ uniform sampler2D post_fxaa_color : filter_linear, repeat_disable;
 uniform bool use_post;
 uniform bool seed_history;
 uniform bool fxaa;
+uniform bool fallback_linear;
 
 float luma(vec3 color) { return dot(color, vec3(0.299, 0.587, 0.114)); }
 
@@ -33,6 +34,11 @@ vec3 antialias(sampler2D image, vec2 uv, vec3 center) {
 void fragment() {
     bool show_post = use_post && !seed_history;
     COLOR = show_post ? texture(post_color, UV) : texture(fallback_scene, UV);
+    if (!show_post && fallback_linear) {
+        vec3 color = max(COLOR.rgb, vec3(0.0));
+        COLOR.rgb = mix(color * 12.92, 1.055 * pow(color, vec3(1.0/2.4)) - 0.055,
+            greaterThan(color, vec3(0.0031308)));
+    }
     if (fxaa && !seed_history) {
         COLOR.rgb = show_post ? antialias(post_fxaa_color, UV, COLOR.rgb) :
             antialias(fallback_fxaa_scene, UV, COLOR.rgb);

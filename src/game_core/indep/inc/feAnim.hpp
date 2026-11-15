@@ -233,6 +233,8 @@ public:
     void SetDesiredTopLeftY(std::uint32_t key,float desired);
     void SetCurrentObject(std::uint32_t key);
     std::uint32_t GetCurrentMenuMask() const;
+    // Port-side displacement of the selected label from its authored mask slot.
+    float CurrentMenuOffsetY() const;
     void HandleEvent(ScreenMessage message,ScreenCallbackData& data);
 private:
     struct Storage;

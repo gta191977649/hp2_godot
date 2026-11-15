@@ -28,6 +28,15 @@ uniform ivec2 gs_wet_mask_repeat;
 varying vec4 gs_wet_mask_color_weighted;
 varying flat float gs_wet_mask_mip_bias;
 #endif
+#if defined(GS_ROAD_WATER) && defined(GS_ADD)
+uniform bool gs_has_puddle_base;
+uniform sampler2D gs_puddle_base_linear : filter_linear_mipmap, repeat_enable;
+uniform sampler2D gs_puddle_base_nearest : filter_nearest_mipmap, repeat_enable;
+uniform ivec2 gs_puddle_base_repeat;
+varying vec2 gs_puddle_base_uv;
+varying vec4 gs_puddle_base_color_weighted;
+varying flat float gs_puddle_base_mip_bias;
+#endif
 
 vec4 gs_vertex_color(vec3 point, vec4 color, vec3 native_normal, mat4 modelview, mat4 model,
         mat4 inverse_view, bool road) {
@@ -91,6 +100,11 @@ vec3 gs_to_linear(vec3 color) {
     return mix(color / 12.92, pow((color + 0.055) / 1.055, vec3(2.4)), greaterThan(color, vec3(0.04045)));
 }
 
+vec4 gs_modulate(vec4 sample_color, vec4 tint) {
+    vec4 texel = floor(sample_color * 255.0 + 0.001);
+    return min(floor(texel * tint / 128.0 + 0.001), vec4(255.0));
+}
+
 vec3 gs_road_specular(vec2 uv, vec3 tint, float alpha) {
     vec3 specular = floor(textureLod(gs_specular, uv, 0.0).rgb * 255.0 + 0.001);
     specular = min(floor(specular * tint / 128.0 + 0.001), vec3(255.0));
@@ -99,8 +113,7 @@ vec3 gs_road_specular(vec2 uv, vec3 tint, float alpha) {
 
 vec4 gs_fragment(vec2 uv, bool srgb, float q) {
     vec4 rgba = gs_color_weighted / gs_clip_weight;
-    vec4 texel = floor(gs_sample_base(uv, q) * 255.0 + 0.001);
-    vec4 source = min(floor(texel * rgba / 128.0 + 0.001), vec4(255.0));
+    vec4 source = gs_modulate(gs_sample_base(uv, q), rgba);
     if (gs_test && source.a <= 48.0) discard;
     float alpha = source.a / 128.0;
     vec3 color = source.rgb;
@@ -133,11 +146,11 @@ vec4 gs_fragment(vec2 uv, bool srgb, float q) {
 
 #ifdef GS_ROAD_WATER
 uniform sampler2D gs_road_background : hint_screen_texture, filter_nearest, repeat_disable;
-#ifdef GS_MIX
 uniform sampler2D gs_road_depth : hint_depth_texture, filter_nearest, repeat_disable;
 uniform sampler2D gs_water_sky : filter_linear, repeat_disable;
 uniform bool gs_has_water_sky;
 
+#ifdef GS_MIX
 vec3 gs_wet_mask(vec2 uv, float q) {
     if (!gs_has_wet_mask) return vec3(0.0);
     vec2 p = gs_uv(uv, vec2(textureSize(gs_wet_mask_linear, 0)), gs_wet_mask_repeat);
@@ -145,12 +158,48 @@ vec3 gs_wet_mask(vec2 uv, float q) {
     vec4 sample_color = lod <= 0.0 ? textureLod(gs_wet_mask_linear, p, 0.0) :
         textureLod(gs_wet_mask_nearest, p, 0.0);
     vec4 rgba = gs_wet_mask_color_weighted / gs_clip_weight;
-    vec4 texel = floor(sample_color * 255.0 + 0.001);
-    vec4 source = min(floor(texel * rgba / 128.0 + 0.001), vec4(255.0));
+    vec4 source = gs_modulate(sample_color, rgba);
     float alpha = source.a / 128.0;
     vec3 contribution = floor(source.rgb * alpha);
     if (hp2_roadshine) contribution += gs_road_specular(uv, rgba.rgb, alpha);
     return contribution;
+}
+#endif
+
+#ifdef GS_ADD
+vec4 gs_puddle_texel(vec2 uv, int level, bool linear_filter) {
+    vec2 size = vec2(textureSize(gs_puddle_base_linear, level));
+    vec2 p = gs_uv(uv, size, gs_puddle_base_repeat);
+    return linear_filter ? textureLod(gs_puddle_base_linear, p, float(level)) :
+        textureLod(gs_puddle_base_nearest, p, float(level));
+}
+
+vec3 gs_puddle_destination(vec3 opaque, vec2 screen_uv, float surface_depth, float q, bool mirror) {
+    if (!gs_has_puddle_base) return opaque;
+    float depth = textureLod(gs_road_depth, screen_uv, 0.0).r;
+    // This is the base's unbiased depth. The mask can pass on its own
+    // against a nearer receiver, in which case the opaque color is current.
+    if (depth > surface_depth) return opaque;
+    float lod = -log2(max(q, 1e-12)) + gs_puddle_base_mip_bias;
+    vec2 uv = gs_puddle_base_uv;
+    vec4 sample_color;
+    if (lod <= 0.0) {
+        sample_color = gs_puddle_texel(uv, 0, true);
+    } else {
+        // The paired bases have TEX1.MMIN=3 and MXL=4.
+        lod = min(lod, 4.0);
+        int level = int(floor(lod));
+        sample_color = mix(gs_puddle_texel(uv, level, false),
+            gs_puddle_texel(uv, min(level + 1, 4), false), fract(lod));
+    }
+    vec4 rgba = gs_puddle_base_color_weighted / gs_clip_weight;
+    vec4 wet = gs_modulate(sample_color, rgba);
+    bool at_road = depth != 0.0 && abs(depth - surface_depth) <= max(fwidth(surface_depth), 1e-6);
+    vec3 underneath = opaque;
+    if (!at_road && gs_has_water_sky && !mirror)
+        underneath = round(textureLod(gs_water_sky, screen_uv, 0.0).rgb * 255.0);
+    return clamp(underneath + floor((wet.rgb - underneath) * min(wet.a / 128.0, 1.0)),
+        vec3(0.0), vec3(255.0));
 }
 #endif
 
@@ -195,9 +244,10 @@ vec4 gs_water_blend(vec4 source, vec2 uv, float surface_depth, bool srgb, bool m
     // Convert the source term to Forward+ units while retaining source alpha.
     return vec4((blended - background * (1.0 - alpha)) / alpha, alpha);
 #else
-    // ALPHA 0x48: add the linear difference for the GS byte increment at
-    // this road brightness. Fixed-function add preserves the earlier underlay.
-    vec3 combined = (destination + contribution) / 255.0;
+    // Convert the GS byte increment at the brightness of the earlier
+    // source-over draw. Keep the mask's own depth projection and order.
+    destination = gs_puddle_destination(destination, uv, surface_depth, q, mirror);
+    vec3 combined = min(destination + contribution, vec3(255.0)) / 255.0;
     vec3 base = destination / 255.0;
     return vec4(srgb ? combined - base : gs_to_linear(combined) - gs_to_linear(base), 1.0);
 #endif

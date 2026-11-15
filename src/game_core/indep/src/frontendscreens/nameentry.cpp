@@ -72,7 +72,7 @@ public:
         if (!visible)resources.MoveGroupTo(screen_,0x670b6fddu,0x35b2f256u,
             static_cast<float>(convertFloatToInt32(savedX_)),static_cast<float>(convertFloatToInt32(savedY_)));
     }
-    void Activate(std::int32_t player)
+    void Activate(std::int32_t player,bool blank=false)
     {
         Require(player==0 || player==1,"Name keyboard has no authored player slot");
         player_=player;SetVisible(player_,1);nameObject_=NameObjects[player_];
@@ -82,7 +82,7 @@ public:
         SnapCurve(slide_);slide_.desiredValue=savedX_;
         if (slide_.value!=slide_.desiredValue)slide_.mode=2;
         Tick();map_=DefaultMap;edit_.fill(0);
-        CopyNameBytes(edit_.data(),Profile().playerName,7);
+        if (!blank)CopyNameBytes(edit_.data(),Profile().playerName,7);
         SyncEditWithDisplay();RedrawCharSet();
     }
     void Unactivate() {SetVisible(player_,0);}
@@ -166,7 +166,8 @@ public:
             std::move(edit_.begin()+index+1,edit_.begin()+length+1,edit_.begin()+index);
             edit_[length]=0;editPosition_=index;sound=26;break;
         }
-        case Action::Commit: return 0;
+        case Action::Commit:
+        case Action::Cancel: return 0;
         }
         Ui().resources->Printf(screen_,nameObject_,"%s",edit_.data());
         SyncEditWithDisplay();
@@ -201,6 +202,7 @@ public:
         }
     }
     bool PlayerRight(std::int32_t port) const {return (player_==0 || player_==1) && player_==port;}
+    const char* Name() const {return edit_.data();}
     bool FocusPointerCharacter(std::uint32_t key)
     {
         if (!PlayerRight(0)) return false;
@@ -211,7 +213,7 @@ public:
         }
         return false;
     }
-    bool HandleEvent(ScreenMessage message,ScreenCallbackData& data)
+    bool HandleEvent(ScreenMessage message,ScreenCallbackData& data,bool commit=true)
     {
         // Closed PAL2BF270 table: ScreenEvent13/15 move the edit caret;
         // LeaveScreen commits the same seven-character buffer and consumes Back.
@@ -229,7 +231,10 @@ public:
         case ScreenMessage::ScreenEvent13:MoveEditText(-1);data.sound=1;return true;
         case ScreenMessage::ScreenEvent15:MoveEditText(1);data.sound=2;return true;
         case ScreenMessage::ItemEvent:SwitchCharSet();data.sound=27;return true;
-        case ScreenMessage::Select:if (SelectChar(data))return true;Commit();return false;
+        case ScreenMessage::Select:
+            if (SelectChar(data))return true;
+            if (commit)Commit();
+            return false;
         default:return true;
         }
     }
@@ -286,11 +291,16 @@ struct tNameEntryData {
 
 class NameEntry final {
 public:
-    std::uint64_t EditSession() const {return editing_ ? editSession_:0;}
+    std::uint64_t EditSession() const {return editing_ && bootAction_==BootAction::None ? editSession_:0;}
     void ApplyPhysicalKey(FrontendNameEditAction action, std::uint32_t character)
     {
         if (!editing_) return;
+        if (action==FrontendNameEditAction::Cancel) {
+            if (boot_)bootAction_=BootAction::Cancel;
+            return;
+        }
         if (action==FrontendNameEditAction::Commit) {
+            if (boot_) {bootAction_=BootAction::Save;return;}
             ScreenCallbackData data{0,0,1,0};
             HandleEvent(ScreenMessage::LeaveScreen,data);
             services_.ui->sound->Play(data.sound);
@@ -313,13 +323,45 @@ public:
         for (std::size_t i=0;i<2;++i)
             services_.ui->resources->Printf(screen_,NameObjects[i],"%s",services_.frontend->players[i]->settings.playerName);
         RedrawGenders();snapshot_.Init(*services_.frontend);
+        boot_=GetBootNameEntryOwner();
+        if (boot_) {
+            auto& resources=*services_.ui->resources;
+            auto& art=*resources.FindScreen(screen_);
+            for (auto* object=art.objects.next;object!=&art.objects;object=object->next) {
+                const auto key=object->key;
+                // The two player captions have the same anonymous key. The
+                // Player 2 caption is the text in the lower left panel.
+                const bool playerTwoCaption=key==0x6eb9985du && object->kind==1 &&
+                    object->topLeftX<140.0f && object->topLeftY>=200.0f && object->topLeftY<250.0f;
+                const bool hiddenRow=(key>=0x52e039f4u && key<=0x52e039f6u) ||
+                    key==NameObjects[1] || key==GenderObjects[0] || key==GenderObjects[1];
+                if (playerTwoCaption || hiddenRow) {
+                    hidden_.emplace_back(object,object->visible);
+                    object->visible=0;
+                    object->DeleteFlailerStrip();
+                }
+                if (key==0x75980cf0u || key==0x70a404ecu || key==0x5e11b599u) {
+                    blurbPositions_.emplace_back(object,object->topLeftY);
+                    // Leave the original keyboard panel and its cursor clear.
+                    object->SetTopLeftY(object->topLeftY-210.0f);
+                }
+            }
+            OpenKeyboard(0,true);
+            blurb_.NewText("Enter a profile name.");
+        }
+    }
+    ~NameEntry()
+    {
+        if (!boot_)return;
+        keyboard_.Unactivate();
+        for (const auto& [object,visible]:hidden_)object->visible=visible;
+        for (const auto& [object,y]:blurbPositions_)object->SetTopLeftY(y);
     }
     bool MaybeActivateKeyboard(ScreenCallbackData& data)
     {
         const std::int32_t player=data.key==0x52e039f5u?1:0;
         if (data.joystickPort!=player)return false;
-        keyboard_.Activate(player);editing_=true;editSession_=++nextNameEditSession;
-        services_.screens->SetHelpOverride(KeyboardHelp);return true;
+        OpenKeyboard(player,false);return true;
     }
     void ChangeGender(ScreenMessage message,ScreenCallbackData& data)
     {
@@ -351,6 +393,7 @@ public:
     }
     void HandleEvent(ScreenMessage message,ScreenCallbackData& data)
     {
+        if (boot_) {HandleBootName(message,data);return;}
         if (message==ScreenMessage::Tick) {
             // Port-side persistence after the editor commits to the existing player slot.
             if (!editing_ && saveNamePending_ && services_.frontend->autoSave &&
@@ -385,6 +428,57 @@ public:
         }
     }
 private:
+    enum class BootAction {None,Save,Cancel};
+    void OpenKeyboard(std::int32_t player,bool blank)
+    {
+        keyboard_.Activate(player,blank);editing_=true;editSession_=++nextNameEditSession;
+        services_.screens->SetHelpOverride(KeyboardHelp);
+    }
+    void HandleBootName(ScreenMessage message,ScreenCallbackData& data)
+    {
+        if (message==ScreenMessage::LeaveScreen) {
+            data.value=0;
+            data.sound=0;
+            if (data.joystickPort<=0)bootAction_=BootAction::Cancel;
+            return;
+        }
+        if (message==ScreenMessage::PopupDismiss && retryPopup_) {
+            retryPopup_=false;
+            if (data.value)bootAction_=BootAction::Save;
+            return;
+        }
+        if (message==ScreenMessage::Tick) {
+            if (bootAction_==BootAction::Cancel) {boot_->FinishBootNameEntry(false);return;}
+            if (bootAction_==BootAction::Save) {
+                bootAction_=BootAction::None;
+                const std::string name=keyboard_.Name();
+                const auto first=name.find_first_not_of(' ');
+                if (first==std::string::npos) {
+                    blurb_.NewText("Enter a name before continuing.");
+                } else {
+                    const auto trimmed=name.substr(first,name.find_last_not_of(' ')-first+1);
+                    if (boot_->CreateBootProfile(trimmed.c_str())) {
+                        services_.ui->sound->Play(29);
+                        boot_->FinishBootNameEntry(true);
+                        return;
+                    }
+                    popupMessage_="Cannot create the profile. "+boot_->LastError()+"\nRetry?";
+                    FlailerPopupConfig popup;
+                    popup.sourceNode=services_.screens->active;popup.screenKey=0x037f3133u;
+                    popup.message=popupMessage_.c_str();popup.joystickPort=-1;popup.flags=3;
+                    popup.buttonCount=2;popup.buttonLanguageIds={{0x38277,0x38278,0}};
+                    popup.buttonResults={{1,0,0}};popup.initialButton=0;
+                    Require(services_.screens->SummonPopup(popup)>=0,"Boot profile retry has no original popup owner");
+                    retryPopup_=true;
+                }
+            }
+            blurb_.Animate();
+        }
+        if (!keyboard_.HandleEvent(message,data,false)) {
+            bootAction_=BootAction::Save;
+            data.sound=0;
+        }
+    }
     MainMenuScreenServices& services_;
     std::uint32_t screen_;
     tKeyboard keyboard_;
@@ -395,6 +489,12 @@ private:
     bool editing_{};
     bool saveNamePending_{};
     std::uint64_t editSession_{};
+    MemcardScreens* boot_{};
+    BootAction bootAction_{BootAction::None};
+    bool retryPopup_{};
+    std::string popupMessage_;
+    std::vector<std::pair<FlailerObjectChunk*,std::uint8_t>> hidden_;
+    std::vector<std::pair<FlailerObjectChunk*,float>> blurbPositions_;
 };
 std::unique_ptr<NameEntry> nameOwner;
 }

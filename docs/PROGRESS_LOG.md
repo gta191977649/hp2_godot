@@ -1,3 +1,48 @@
+## 2026-11-16 Player README
+
+Rewrote the README around the Windows release and source build. Checked
+the US PS2 disc requirement, launcher flags, keyboard defaults, graphics
+menu, portable settings, and profile paths against the implementation.
+
+## 2026-11-16 TASK-0150 Multiple portable profiles
+
+Boot and Options > Save/Load share an HP2-style profile picker. The
+active profile owns manual saves, autosaves, and its backup. Loading
+another profile or creating one prompts for unsaved changes. The
+Windows Release package was rebuilt and its startup was checked from
+a different working directory.
+
+## 2026-11-16 TASK-0133 Portable graphic settings
+
+Graphic preferences now share launcher.cfg with the ISO path. Restore to
+Default is below Advanced Setting. The Windows launcher keeps generated
+runtime data beside the package.
+
+## 2026-11-16 TASK-0150 Startup profile creation
+
+BootAutoload shows the authored memory-card status screens. First-run
+creation reuses NameEntry and requires a valid name and a successful
+save. Packaged launches read the primary JSON profile beside the EXE.
+
+## 2026-11-16 TASK-0149 Escape shortcut
+
+Escape no longer quits the application. The race pause binding and
+name-edit commit continue to use it.
+
+## 2026-11-16 TASK-0133 Graphic menu and selection rails
+
+Options now includes Graphic below Display with the authored Flailer
+style. Auto Fit defaults to the full viewport. Full Screen and Borderless
+can change render resolution. The FPS overlay defaults off and scales its
+green text and black outline by monitor DPI. Scrolling selection rails
+now track the committed highlighted item.
+
+## 2026-11-16 TASK-0126 live leaderboard vehicle swatches
+
+The four live rank numerals now use each vehicle's authored swatch
+texture. The retail HUD passes SkinInfo+0x30 to Flailer ChangeTexture.
+Track 12 HUD captures confirmed the swatches on Vulkan and D3D12.
+
 ## 2026-11-16 TASK-0146 Select Car paint and lighting
 
 The showroom uses the original body and part light matrices, authored
@@ -5749,3 +5794,8 @@ both keyboard support requests and reached its dedicated results screen.
   boundary and blue-gray sheen were checked in Vulkan and D3D12. See
   TASK-0148 for the samples, Roadshine-off comparison, and remaining
   view differences.
+
+- TASK-0148. Audited wet surfaces across 30 retail routes. Fixed the
+  projection-1 puddle masks on routes 41–46 and the unmasked wet dirt on
+  routes 11–16. Vulkan and D3D12 covered all 12 affected routes and passed
+  the placement and occlusion pixel checks. Release loaded Track 41.

@@ -6,6 +6,7 @@
 #include "bware/inc/bWare.hpp"
 #include "bware/inc/bWare.hpp"
 #include "Language.hpp"
+#include <cmath>
 #include <cstring>
 #include <cstdio>
 #include <limits>
@@ -635,9 +636,11 @@ struct FlailerScrollingMenuList::Storage {
         }
     };
     FlailerUiState& ui;
-    std::uint32_t screen,up,down,clip;
+    std::uint32_t screen,up,down,clip,first{};
     float top{},bottom{};
     std::int32_t mask{-1},count{};
+    Element* selected{};
+    float maskRowY{};
     FlailerSineWave pulse{0.0f,128.0f,10.0f};
     std::vector<std::unique_ptr<Element>> elements;
     Storage(FlailerUiState& state,std::uint32_t s,std::uint32_t u,std::uint32_t d,std::uint32_t c)
@@ -650,6 +653,19 @@ struct FlailerScrollingMenuList::Storage {
     Element* Find(std::uint32_t key) const {
         for(const auto& entry:elements)if(entry->object.key==key)return entry.get();
         return nullptr;
+    }
+    void SyncSelectedMask(std::uint32_t key) {
+        selected=Find(key);
+        Require(selected,"Scrolling menu highlight has no authored row");
+        float closest=std::numeric_limits<float>::max();
+        for(std::int32_t slot=0;slot<std::min(count,7);++slot) {
+            const auto* row=Find(first+static_cast<std::uint32_t>(slot));
+            if(!row)continue;
+            const float distance=std::abs(selected->position.desiredValue-row->originalY);
+            if(distance>=closest)continue;
+            closest=distance;mask=slot;maskRowY=row->originalY;
+        }
+        Require(closest<std::numeric_limits<float>::max(),"Scrolling menu has no authored mask row");
     }
     void Alpha() {
         for(const auto key:{up,down})if(auto* object=ui.resources->FindObject(screen,key))
@@ -676,7 +692,7 @@ FlailerScrollingMenuList::~FlailerScrollingMenuList()
 }
 void FlailerScrollingMenuList::SetVisibleArea(std::uint32_t first,std::uint32_t last)
 {
-    auto& s=*storage_;s.top=s.Y(first);s.bottom=s.Y(last);
+    auto& s=*storage_;s.first=first;s.top=s.Y(first);s.bottom=s.Y(last);
 }
 void FlailerScrollingMenuList::AddObject(std::uint32_t key)
 {
@@ -704,7 +720,10 @@ void FlailerScrollingMenuList::SetDesiredTopLeftY(std::uint32_t key,float desire
 }
 void FlailerScrollingMenuList::SetCurrentObject(std::uint32_t key)
 {
-    auto& s=*storage_;const float y=s.Y(key);
+    auto& s=*storage_;
+    const auto* selected=s.Find(key);
+    if(!selected)return;
+    const float y=s.ui.externalPresentation ? selected->position.desiredValue:s.Y(key);
     if(y<s.top)SetDesiredTopLeftY(key,s.top);
     else if(s.bottom<y)SetDesiredTopLeftY(key,s.bottom);
 }
@@ -717,22 +736,32 @@ std::uint32_t FlailerScrollingMenuList::GetCurrentMenuMask() const
     Require(storage_->mask>=0 && storage_->mask<7,"Scrolling menu mask has no highlighted item");
     return masks[storage_->mask];
 }
+float FlailerScrollingMenuList::CurrentMenuOffsetY() const
+{
+    const auto& s=*storage_;
+    return s.selected ? s.selected->position.value-s.maskRowY:0.0f;
+}
 void FlailerScrollingMenuList::HandleEvent(ScreenMessage message,ScreenCallbackData& data)
 {
     auto& s=*storage_;
     if(message==ScreenMessage::Highlight) {
-        if(s.mask==-1) {
+        if(!s.ui.externalPresentation && s.mask==-1) {
             if(data.key>=0x52e039f3u && data.key<=0x52e039fbu)
                 s.mask=std::min(static_cast<std::int32_t>(data.key-0x52e039f3u),6);
             else if(data.key==0xaee77883u || data.key==0xaee77884u)s.mask=6;
         }
         SetCurrentObject(data.key);
+        // Godot can focus any visible row directly. Resolve the fixed mask
+        // from the committed row's scroll target, including mid-scroll input.
+        if(s.ui.externalPresentation)s.SyncSelectedMask(data.key);
         s.ui.resources->SetObjectVisibility(s.screen,s.up,s.Show(true)?1:0);
         s.ui.resources->SetObjectVisibility(s.screen,s.down,s.Show(false)?1:0);
     } else if(message==ScreenMessage::Tick) {
         for(auto& entry:s.elements)entry->Tick(s.ui.clock->realTimeElapsed);
         s.pulse.Step(s.ui.clock->realTimeElapsed);s.Alpha();
-    } else if(message==ScreenMessage::Next)s.mask=std::min(s.mask+1,std::min(s.count,7)-1);
-    else if(message==ScreenMessage::Previous)s.mask=std::max(s.mask-1,0);
+    } else if(!s.ui.externalPresentation) {
+        if(message==ScreenMessage::Next)s.mask=std::min(s.mask+1,std::min(s.count,7)-1);
+        else if(message==ScreenMessage::Previous)s.mask=std::max(s.mask-1,0);
+    }
 }
 }

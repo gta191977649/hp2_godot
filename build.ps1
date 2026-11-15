@@ -10,7 +10,7 @@ $fullscreen = $false
 $fxaa = $false
 $selectIso = $false
 $stockTemplate = $false
-$renderingDriver = 'vulkan'
+$renderingDriver = $null
 for ($index = 0; $index -lt $args.Count; $index++) {
     switch ($args[$index]) {
         '--mvp' { }
@@ -69,7 +69,8 @@ try {
     if (-not (Test-Path -LiteralPath $engine -PathType Leaf)) { throw 'Godot 4.7.2 console executable is required.' }
     $project = Join-Path $PSScriptRoot "build/$preset/mvp-project"
     if ($run -or $editor) {
-        $engineArgs = @('--path', $project, '--rendering-driver', $renderingDriver)
+        $engineArgs = @('--path', $project)
+        if ($renderingDriver) { $engineArgs += @('--rendering-driver', $renderingDriver) }
         if ($editor) { $engineArgs += '--editor' }
         if ($fullscreen) { $engineArgs += '--fullscreen' }
         if ($nativeDebug -or $raceArgument -or $fxaa -or $selectIso) { $engineArgs += '--' }
@@ -77,7 +78,22 @@ try {
         if ($fxaa) { $engineArgs += '--fxaa' }
         if ($raceArgument) { $engineArgs += $raceArgument }
         if ($selectIso) { $engineArgs += '--select-iso' }
-        & $engine @engineArgs
+        if ($editor) {
+            & $engine @engineArgs
+        } else {
+            $cache = Join-Path $project '.hp2-runtime'
+            $null = New-Item -ItemType Directory -Force $cache
+            $previousAppData = $env:APPDATA
+            $previousLocalAppData = $env:LOCALAPPDATA
+            try {
+                $env:APPDATA = $cache
+                $env:LOCALAPPDATA = $cache
+                & $engine @engineArgs
+            } finally {
+                $env:APPDATA = $previousAppData
+                $env:LOCALAPPDATA = $previousLocalAppData
+            }
+        }
         exit $LASTEXITCODE
     }
     $configuration = if ($preset -eq 'godot-mvp-debug') { 'debug' } else { 'release' }
@@ -87,7 +103,7 @@ try {
     $buildDirectory = (Resolve-Path -LiteralPath "build/$preset").Path
     $exportProject = Join-Path $buildDirectory ('export-' + [guid]::NewGuid().ToString('N'))
     $null = New-Item -ItemType Directory -Path $exportProject
-    foreach ($item in @('project.godot', 'export_presets.cfg', 'native_game.gd', 'native_game.tscn', 'hp2_blackbox.gdextension', 'hp2_blackbox.gdextension.uid', 'shader', 'bin')) {
+    foreach ($item in @('project.godot', 'export_presets.cfg', 'native_game.gd', 'graphics_settings.gd', 'native_game.tscn', 'hp2_blackbox.gdextension', 'hp2_blackbox.gdextension.uid', 'shader', 'bin')) {
         Copy-Item -LiteralPath (Join-Path $project $item) -Destination $exportProject -Recurse -Force
     }
     if ($useSlimTemplate) {
@@ -104,10 +120,15 @@ try {
             throw "Install the Godot 4.7.2 Windows x86_64 $configuration export template ($template)."
         }
     }
-    & $engine --headless --path $exportProject "--export-$configuration" 'Windows MVP' (Join-Path $package 'HP2.exe')
+    cmake --build --preset $preset --target hp2_windows_launcher
     if ($LASTEXITCODE) { exit $LASTEXITCODE }
-    $oldExtension = Join-Path $package 'hp2_track12.dll'
-    if (Test-Path -LiteralPath $oldExtension -PathType Leaf) { Remove-Item -LiteralPath $oldExtension }
+    & $engine --headless --path $exportProject "--export-$configuration" 'Windows MVP' (Join-Path $package 'HP2Runtime.exe')
+    if ($LASTEXITCODE) { exit $LASTEXITCODE }
+    Copy-Item -LiteralPath (Join-Path $buildDirectory 'hp2_windows_launcher.exe') -Destination (Join-Path $package 'HP2.exe') -Force
+    foreach ($obsolete in @('hp2_track12.dll', 'HP2.pck')) {
+        $oldFile = Join-Path $package $obsolete
+        if (Test-Path -LiteralPath $oldFile -PathType Leaf) { Remove-Item -LiteralPath $oldFile }
+    }
     Copy-Item -LiteralPath (Join-Path $project 'licenses') -Destination $package -Recurse -Force
     Copy-Item -LiteralPath (Join-Path $project 'THIRD_PARTY_NOTICES.md') -Destination $package -Force
 } finally {

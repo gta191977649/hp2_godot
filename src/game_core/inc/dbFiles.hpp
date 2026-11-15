@@ -22,6 +22,7 @@ public:
     cMC::Result ReadFile(const char* name,std::vector<std::uint8_t>& bytes,
         std::size_t maximumBytes=4u*1024u*1024u);
     cMC::Result WriteNewFile(const char* name,const void* data,std::size_t bytes);
+    cMC::Result ListFiles(std::vector<std::string>& names) {return card_.MCGetDir(names);}
     void SetBackupFile(const char* name,std::vector<std::uint8_t> bytes);
 private:
     cMC card_;

@@ -310,7 +310,7 @@ struct FrontendPointerTarget {
     FrontendPointerAction action{FrontendPointerAction::Confirm};
 };
 // Port-side physical keyboard input for the active original name editor.
-enum class FrontendNameEditAction { Insert, Left, Right, Backspace, Delete, Commit };
+enum class FrontendNameEditAction { Insert, Left, Right, Backspace, Delete, Commit, Cancel };
 struct FrontendStateView {
     // Borrowed CPU layout. Consume synchronously before the next runtime advance.
     const FlailerRenderManager* layout{};
@@ -326,6 +326,7 @@ struct FrontendStateView {
     const RaceEffectsFrame* effects{};
     std::uint64_t nameEditSession{};
     bool nameEditInput{};
+    bool creatingProfile{};
     std::vector<FrontendCreditsText> creditsText;
 };
 // Port-side operands from the original primary view and render policy.
@@ -368,8 +369,7 @@ struct RaceStateView {
 class ApplicationRuntime final {
 public:
     ApplicationRuntime(GameResources& files,NativeApplicationHost& host,
-        const std::filesystem::path& profileDirectory,
-        const std::filesystem::path& legacyProfileDirectory={});
+        const std::filesystem::path& profileDirectory);
     ~ApplicationRuntime();
     ApplicationRuntime(const ApplicationRuntime&)=delete;
     ApplicationRuntime& operator=(const ApplicationRuntime&)=delete;
@@ -380,7 +380,8 @@ public:
     // Port-side frontend lifecycle hooks. The extension outlives the runtime.
     void InitializeFrontend(void (*ready)(MainMenuScreenServices&, const void*) = nullptr,
         const void* context = nullptr, const FrontendMenuExtension* extension = nullptr,
-        const FrontendCreditsContent* credits = nullptr);
+        const FrontendCreditsContent* credits = nullptr, const FrontendMenuExtension* optionsExtension = nullptr,
+        bool requireNamedProfile = false);
     FrontendStateView FrontendState() const;
     void QueueFrontendPointer(std::uint64_t epoch, FrontendPointerTarget target);
     void QueueFrontendNameEdit(std::uint64_t epoch, std::uint64_t session, FrontendNameEditAction action,

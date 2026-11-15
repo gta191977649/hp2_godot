@@ -1532,6 +1532,7 @@ struct FrontendProfileStream {
     FrontendProfileJson* json{};
     FrontendProfileStream* validated{};
     bool checkEventBindings{true};
+    std::string* playerName{};
     std::array<std::array<std::unique_ptr<EventStateSnapshot>,256>,2> preparedEvents{};
     bool Reading() const noexcept {return mode!=Mode::Save && mode!=Mode::ExportText;}
     bool Applying() const noexcept {return mode==Mode::Commit;}
@@ -1584,6 +1585,10 @@ struct FrontendProfileStream {
             }
         }
         if(terminated)ProfileCheck(std::memchr(source,0,count)!=nullptr,"Native saved name has no terminator");
+        if(playerName && name && std::strcmp(name,"player_name")==0) {
+            *playerName=source;
+            playerName=nullptr;
+        }
         if(Applying())std::memcpy(values,source,count);
         if(WritingBinary())std::memcpy(output+position,source,count);
         position+=count;
@@ -1850,14 +1855,19 @@ std::string FrontendPlayerManager::SerializeNativeProfileText() const
     stream.Run(const_cast<FrontendPlayerManager&>(*this));json.End();return json.Finish();
 }
 
-bool FrontendPlayerManager::ValidateNativeProfileText(const void* data,std::size_t bytes,std::string& error,bool checkEventBindings) const
+bool FrontendPlayerManager::ValidateNativeProfileText(const void* data,std::size_t bytes,std::string& error,
+    bool checkEventBindings,std::string* playerName) const
 {
     error.clear();
     try {
         auto& owner=const_cast<FrontendPlayerManager&>(*this);const auto image=ParseTextProfile(data,bytes,owner,checkEventBindings);
         const auto end=ValidateProfileEnvelope(image.data(),image.size());
-        FrontendProfileStream validate{FrontendProfileStream::Mode::Validate,nullptr,image.data(),20,end};validate.checkEventBindings=checkEventBindings;validate.Run(owner);
-        ProfileCheck(validate.position==end,"Saved text profile has an incomplete logical payload");return true;
+        std::string name;
+        FrontendProfileStream validate{FrontendProfileStream::Mode::Validate,nullptr,image.data(),20,end};
+        validate.checkEventBindings=checkEventBindings;validate.playerName=playerName?&name:nullptr;validate.Run(owner);
+        ProfileCheck(validate.position==end,"Saved text profile has an incomplete logical payload");
+        if(playerName)*playerName=std::move(name);
+        return true;
     } catch(const std::exception& e){error=e.what();return false;}
 }
 

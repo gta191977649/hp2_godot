@@ -26,10 +26,18 @@ float slot_at(float distance) {
     float n = camera.x, f = camera.y;
     return fog_params.z / 256.0 * ((n*f/max(n,distance)-n)/(f-n));
 }
+float scene_depth_at(ivec2 xy) {
+    ivec2 color_size = textureSize(scene_color, 0);
+    ivec2 depth_size = textureSize(scene_depth, 0);
+    if (color_size != depth_size) {
+        xy = ivec2((vec2(xy) + 0.5) * vec2(depth_size) / vec2(color_size));
+    }
+    return texelFetch(scene_depth, xy, 0).r;
+}
 vec3 fogged(ivec2 xy, bool encoded) {
     vec3 color = texelFetch(scene_color, xy, 0).rgb;
     if (fog_params.w >= 0.0) {
-        float slot = depth_slot(texelFetch(scene_depth, xy, 0).r);
+        float slot = depth_slot(scene_depth_at(xy));
         if (use_fog_palette) {
             vec4 entry = texelFetch(fog_palette, ivec2(int(slot), 0), 0);
             if (entry.a > 0.0) {

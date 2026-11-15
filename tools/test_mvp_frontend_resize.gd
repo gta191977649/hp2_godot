@@ -259,7 +259,7 @@ func _click_design(position: Vector2) -> void:
         event.position = canvas.to_global(position)
         event.global_position = event.position
         event.pressed = down
-        root.push_input(event)
+        root.push_input(event, true)
 
 func _capture(name: String) -> bool:
     if tested_screens.has(name):
@@ -279,25 +279,31 @@ func _resize_sweep(name: String, maximize := false) -> bool:
         return _resize_error("canvas_" + name)
     var original_size := root.size
     root.mode = Window.MODE_WINDOWED
+    var graphics := root.get_node("NativeGame/GraphicsSettings")
+    var aspect: String = graphics.menu_settings(-1, 0)[3]
+    var ratio: Vector2 = {"16:9": Vector2(16, 9), "16:10": Vector2(16, 10), "4:3": Vector2(4, 3)}.get(aspect, Vector2.ZERO)
     var sizes := SIZES.duplicate()
     if name == "select-car" or name == "select-track":
         # Capture the loaded preview after the initial screen fade.
         await create_timer(0.6).timeout
         sizes.append(Vector2i(1280, 900))
     for wanted in sizes:
+        var rendered: Vector2i = wanted
+        if ratio != Vector2.ZERO:
+            rendered = Vector2i((ratio * minf(wanted.x / ratio.x, wanted.y / ratio.y)).round())
         root.size = wanted
         var image: Image
         for attempt in range(5):
             await process_frame
             await RenderingServer.frame_post_draw
             image = root.get_texture().get_image()
-            if root.size == wanted and image != null and image.get_size() == wanted:
+            if root.size == wanted and image != null and image.get_size() == rendered:
                 break
-        if root.size != wanted or image == null or image.get_size() != wanted:
+        if root.size != wanted or image == null or image.get_size() != rendered:
             return _resize_error("extent_" + name)
-        var fitted_scale := minf(wanted.x / 640.0, wanted.y / 480.0)
+        var fitted_scale := minf(rendered.x / 640.0, rendered.y / 480.0)
         if not canvas.scale.is_equal_approx(Vector2.ONE * fitted_scale) or not canvas.position.is_equal_approx(
-                (Vector2(wanted) - Vector2(640, 480) * fitted_scale) * 0.5):
+                (Vector2(rendered) - Vector2(640, 480) * fitted_scale) * 0.5):
             return _resize_error("centered_aspect_" + name)
         if name == "direct-hud":
             var mirror := canvas.get_node_or_null("RearViewMirror") as TextureRect
@@ -306,7 +312,7 @@ func _resize_sweep(name: String, maximize := false) -> bool:
             if not mirror or not mirror.visible or not target or mirror.texture != target.get_texture():
                 return _resize_error("rear_view_target")
             var mirror_rect := mirror.get_global_rect()
-            if not is_equal_approx(mirror_rect.get_center().x, wanted.x * 0.5):
+            if not is_equal_approx(mirror_rect.get_center().x, rendered.x * 0.5):
                 return _resize_error("rear_view_center")
             var expected_height := maxi(64, ceili(64 * fitted_scale))
             if target.size != Vector2i(roundi(expected_height * 2.88), expected_height):

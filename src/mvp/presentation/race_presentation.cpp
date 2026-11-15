@@ -15,6 +15,7 @@
 #include "systems/cinematic/nis_presentation.hpp"
 #include "systems/effects/race_effects_presentation.hpp"
 #include "systems/frontend/frontend_presentation.hpp"
+#include "systems/frontend/graphic_menu.hpp"
 #include "systems/track/track_presentation.hpp"
 #include "systems/vehicle/vehicle_presentation.hpp"
 #include "systems/vehicle/vehicle_reflection.hpp"
@@ -243,13 +244,13 @@ private:
 }
 
 struct RacePresentation::Session {
-    Session(RacePresentation& owner, const String& assets, const String& profile, const String& legacyProfile)
+    Session(RacePresentation& owner, const String& assets, const String& profile)
         : host(owner), files(std::filesystem::path(assets.wide_string().get_data())),
-          runtime(files, host, std::filesystem::path(profile.wide_string().get_data()),
-              std::filesystem::path(legacyProfile.wide_string().get_data())) {}
+          runtime(files, host, std::filesystem::path(profile.wide_string().get_data())) {}
 
     RaceHost host;
     GameResources files;
+    std::unique_ptr<GraphicMenu> graphicMenu;
 #ifdef HP2_MVP_IMGUI
     std::unique_ptr<FrontendDebugMenu> debugMenu;
 #endif
@@ -269,7 +270,7 @@ struct RacePresentation::Session {
     std::uint32_t selectedItem{};
     bool modal{};
     std::uint64_t frontendEpoch{}, nameEditSession{};
-    bool nameEditInput{};
+    bool nameEditInput{}, creatingProfile{};
     int raceState{};
     bool radialBlurActive{};
     bool frontendMode{};
@@ -307,7 +308,7 @@ RacePresentation::~RacePresentation() {
 
 void RacePresentation::_bind_methods() {
     ClassDB::bind_static_method("RacePresentation", D_METHOD("validate_game_iso", "path"), &RacePresentation::validate_game_iso);
-    ClassDB::bind_method(D_METHOD("set_legacy_profile_directory", "path"), &RacePresentation::set_legacy_profile_directory);
+    ClassDB::bind_method(D_METHOD("set_graphics_menu_settings", "settings"), &RacePresentation::set_graphics_menu_settings);
     ClassDB::bind_method(D_METHOD("start_game", "assets", "profile", "track", "tree", "event", "native_debug"),
         &RacePresentation::start_game);
     ClassDB::bind_method(D_METHOD("telemetry"), &RacePresentation::telemetry);
@@ -319,6 +320,7 @@ void RacePresentation::_bind_methods() {
 }
 
 void RacePresentation::_notification(int what) {
+    if (what == NOTIFICATION_WM_CLOSE_REQUEST && failed_) get_tree()->quit(1);
     if (session_ && (what == NOTIFICATION_APPLICATION_FOCUS_OUT ||
         what == NOTIFICATION_WM_WINDOW_FOCUS_OUT || what == NOTIFICATION_EXIT_TREE))
         session_->orbit.capture(false);
@@ -387,8 +389,8 @@ String RacePresentation::validate_game_iso(const String& path) {
     }
 }
 
-void RacePresentation::set_legacy_profile_directory(const String& path) {
-    if (!session_) legacyProfileDirectory_ = path;
+void RacePresentation::set_graphics_menu_settings(const Callable& settings) {
+    if (!session_) graphicsMenuSettings_ = settings;
 }
 
 String RacePresentation::start_game(const String& assets, const String& profile, int track, int tree,
@@ -404,7 +406,7 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
     const char* stage = "asset_source";
     try {
         if (session_) throw std::logic_error("Game session is already running");
-        session_ = std::make_unique<Session>(*this, assets, profile, legacyProfileDirectory_);
+        session_ = std::make_unique<Session>(*this, assets, profile);
         // Reuse the donor's explicit racer Nitro option in the Godot host.
         applicationNativeGameplay = loadNativePcSettings(
             std::filesystem::path(profile.wide_string().get_data()) / "NFSHP2_pc.ini").gameplay;
@@ -449,6 +451,10 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
         set_process_input(true);
         stage = frontend ? "frontend_initialize" : "race_initialize";
         if (frontend) {
+            const bool requireNamedProfile = OS::get_singleton()->get_environment("HP2_MVP_TEST_PROFILE") != "1";
+            if (graphicsMenuSettings_.is_valid())
+                session_->graphicMenu = std::make_unique<GraphicMenu>(graphicsMenuSettings_);
+            const auto* graphics = session_->graphicMenu ? &session_->graphicMenu->extension() : nullptr;
 #ifdef HP2_MVP_IMGUI
             const String mode = OS::get_singleton()->get_environment("HP2_MVP_DEBUG_MODE");
             if (nativeDebug_ || mode == "1" || (mode.is_empty() &&
@@ -456,9 +462,11 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
                 session_->debugMenu = std::make_unique<FrontendDebugMenu>([this] { open_track_viewer(); });
             }
             session_->runtime.InitializeFrontend(returnToMenu ? TrackViewer::return_to_main_menu : race_profile_frontend_ready(),
-                nullptr, session_->debugMenu ? &session_->debugMenu->extension() : nullptr, &portCredit);
+                nullptr, session_->debugMenu ? &session_->debugMenu->extension() : nullptr, &portCredit, graphics,
+                requireNamedProfile);
 #else
-            session_->runtime.InitializeFrontend(race_profile_frontend_ready(), nullptr, nullptr, &portCredit);
+            session_->runtime.InitializeFrontend(race_profile_frontend_ready(), nullptr, nullptr, &portCredit, graphics,
+                requireNamedProfile);
 #endif
         }
         else if (tree >= 0) session_->runtime.InitializeRace(start_campaign_race_diagnostic, &session_->campaignDiagnostic);
@@ -498,11 +506,6 @@ void RacePresentation::_input(const Ref<InputEvent>& event) {
         for (std::size_t i = 0; i < menuActions.size(); ++i)
             if (key->is_action(menuActions[i])) session_->host.consumedMenuKeys[i] = false;
     }
-    if (failed_ && event->is_action_pressed("hp2_quit")) {
-        get_viewport()->set_input_as_handled();
-        get_tree()->quit(1);
-        return;
-    }
 #ifdef HP2_MVP_IMGUI
     if (debug_ && debug_->input(event)) {
         if (session_ && debug_->needs_mouse_cursor()) session_->orbit.capture(false);
@@ -534,22 +537,23 @@ void RacePresentation::_input(const Ref<InputEvent>& event) {
             const auto character = key->get_unicode();
             const bool typed = character >= 32 && !key->is_ctrl_pressed() &&
                 !key->is_alt_pressed() && !key->is_meta_pressed();
-            if ((s.nameEditInput && (binding != editActions.end() || typed)) || event->is_action("hp2_quit")) {
-                if (key->is_pressed() && s.nameEditInput) {
+            if (s.nameEditInput && (binding != editActions.end() || typed)) {
+                if (key->is_pressed()) {
                     for (std::size_t i = 0; i < menuActions.size(); ++i)
                         if (key->is_action(menuActions[i])) s.host.consumedMenuKeys[i] = true;
-                    const auto action = binding != editActions.end() ? binding->second : Action::Insert;
-                    if (action != Action::Commit || !key->is_echo())
+                    auto action = binding != editActions.end() ? binding->second : Action::Insert;
+                    if (action == Action::Commit && s.creatingProfile &&
+                        (key->get_physical_keycode() == KEY_ESCAPE || key->get_keycode() == KEY_ESCAPE))
+                        action = Action::Cancel;
+                    if ((action != Action::Commit && action != Action::Cancel) || !key->is_echo())
                         s.runtime.QueueFrontendNameEdit(s.frontendEpoch, s.nameEditSession, action, character);
                 }
                 get_viewport()->set_input_as_handled();
                 return;
             }
         }
-        const auto action = session_->host.inRace ? "hp2_pause" : "hp2_quit";
-        if (!event->is_action(action)) return;
-        get_viewport()->set_input_as_handled();
-        if (!session_->host.inRace && event->is_action_pressed(action)) quit_game();
+        if (s.host.inRace && event->is_action("hp2_pause"))
+            get_viewport()->set_input_as_handled();
     }
 }
 
@@ -681,6 +685,7 @@ void RacePresentation::_process(double delta) {
         s.frontendEpoch = state.pointerEpoch;
         s.nameEditSession = state.nameEditSession;
         s.nameEditInput = state.nameEditInput;
+        s.creatingProfile = state.creatingProfile;
         s.raceState = race.sessionState;
         s.host.inRace = race.simulation != nullptr;
         s.host.demoInput = race.sessionState == RC_STATE_AI_DEMO || race.sessionState == RC_STATE_REPLAY_DEMO;
@@ -976,6 +981,7 @@ Dictionary RacePresentation::telemetry() const {
         result["frontend_loop"] = session_->runtime.Clock().realLoopCounter;
         result["selected_item"] = session_->selectedItem;
         result["name_editing"] = session_->nameEditSession != 0;
+        result["creating_profile"] = session_->creatingProfile;
         result["modal"] = session_->modal;
         result["video_playing"] = session_->frontend->video_playing();
         result["video_request"] = session_->frontend->video_request();
@@ -987,7 +993,9 @@ Dictionary RacePresentation::telemetry() const {
     result["orbit_terrain_queries"] = session_->orbit.terrain_queries();
     result["animation_clock"] = session_->animationClock;
     if (!session_->fogProfile.is_empty()) result["fog_profile"] = session_->fogProfile;
-    collect_police_diagnostics(result, session_->runtime.RaceState(), session_->runtime.FrontendState());
+    const auto frontend = session_->runtime.FrontendState();
+    collect_police_diagnostics(result, session_->runtime.RaceState(), frontend);
+    collect_menu_alignment_diagnostics(result, frontend);
     if (!session_->scene) return result;
     result["stock_camera_eye"] = race_vector(frame.camera.eye.data());
     result["stock_camera_forward"] = race_vector(frame.camera.forward.data());

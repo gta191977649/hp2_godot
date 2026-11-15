@@ -2358,7 +2358,10 @@ void carFramePlayerRenderHud(CarFramePlayerState* player)
             const auto* selection=current->car->driverInfo;
             hp2::Require(selection && own.bindings.cars,"Leaderboard has no original CarInfo selection");
             const auto* skin=own.bindings.cars->FindSkin(selection->appearance.modelCode,selection->appearance.skinNumber,true);
-            hp2::Require(skin,"Leaderboard authored skin is absent");own.liveSwatch[row]->SetColor(skin->authoredWord30);
+            hp2::Require(skin,"Leaderboard authored skin is absent");
+            // Retail 17FE6C passes SkinInfo+30 as a texture hash to ChangeTexture.
+            auto& swatch=*own.liveSwatch[row];
+            if(swatch.textureKey!=skin->authoredWord30)swatch.ChangeTexture(skin->authoredWord30);
             auto* text=own.liveStatus[row];const bool started=PlayerTimerActive(current->checkpointTicks[race.previousCheckpoint]);
             if (clock.worldTimeFrames%500<100 || !started) {
                 if ((clock.worldTimeFrames/500)&1)text->SetString(own.bindings.cars->Car(static_cast<size_t>(selection->appearance.modelCode)).GetShortName(*own.bindings.language));

@@ -124,6 +124,40 @@ func run() -> void:
         if (paired-expected_pair).length() > 3:
             quit(1)
             return
+    wet_material.set_shader_parameter("gs_has_wet_mask", false)
+    var biased := water_layer(meshes[0], "add_read_biased")
+    var biased_material: ShaderMaterial = biased.mesh.surface_get_material(0)
+    biased_material.render_priority = 4
+    biased_material.set_shader_parameter("gs_bias", 1)
+    biased_material.set_shader_parameter("gs_has_puddle_base", true)
+    biased_material.set_shader_parameter("gs_puddle_base_linear", mask_tex)
+    biased_material.set_shader_parameter("gs_puddle_base_nearest", mask_tex)
+    biased_material.set_shader_parameter("gs_has_water_sky", true)
+    biased_material.set_shader_parameter("gs_water_sky", wet_material.get_shader_parameter("gs_water_sky"))
+    for i in range(3):
+        await process_frame
+        await RenderingServer.frame_post_draw
+    a = root.get_texture().get_image().get_pixel(center.x-x, center.y)
+    var biased_mix := Vector3i(a.r8, a.g8, a.b8)
+    print("GS_ROAD_WATER biased mask over wet asphalt=", biased_mix)
+    if (biased_mix-Vector3i(92,144,196)).length() > 3:
+        quit(1)
+        return
+    # Move the opaque receiver in front of pack 0, first within pack 1's
+    # depth offset and then in front of both wet draws.
+    for receiver_z in [0.001, 0.01]:
+        meshes[0].position.z = receiver_z
+        for i in range(3):
+            await process_frame
+            await RenderingServer.frame_post_draw
+        a = root.get_texture().get_image().get_pixel(center.x-x, center.y)
+        var receiver := Vector3i(a.r8, a.g8, a.b8)
+        var expected_receiver := Vector3i(160,155,112) if receiver_z < 0.01 else Vector3i(144,123,64)
+        print("GS_ROAD_WATER biased receiver z=", receiver_z, " rgb=", receiver)
+        if (receiver-expected_receiver).length() > 3:
+            quit(1)
+            return
+    biased.queue_free()
     meshes[0].position.z = 0.0
     underlay.queue_free()
     highlight.queue_free()
@@ -144,12 +178,16 @@ func water_layer(road: MeshInstance3D, shader_name: String) -> MeshInstance3D:
     arrays[Mesh.ARRAY_COLOR] = PackedColorArray([tint, tint, tint, tint])
     arrays[Mesh.ARRAY_CUSTOM2] = PackedFloat32Array([0.0, 0.0, 0.0, 0.0])
     var mask_vertex := PackedFloat32Array([128.0 / 255.0, 128.0 / 255.0, 128.0 / 255.0, 0.0])
+    if shader_name == "add_read_biased":
+        mask_vertex[3] = 128.0 / 255.0
     var mask_vertices := PackedFloat32Array()
     for vertex in range(4):
         mask_vertices.append_array(mask_vertex)
     arrays[Mesh.ARRAY_CUSTOM3] = mask_vertices
+    arrays[Mesh.ARRAY_CUSTOM0] = PackedFloat32Array([0,0,0, 1,0,0, 0,1,0, 1,1,0])
     var mesh := ArrayMesh.new()
     mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays, [], {},
+        (Mesh.ARRAY_CUSTOM_RGB_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM0_SHIFT) |
         (Mesh.ARRAY_CUSTOM_R_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM2_SHIFT) |
         (Mesh.ARRAY_CUSTOM_RGBA_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM3_SHIFT))
     var material := ShaderMaterial.new()

@@ -57,15 +57,41 @@ func run() -> void:
         fail("Valid ISO path was not stored beside the project")
         return
     var deadline := Time.get_ticks_msec() + 25000
-    var profile := project.path_join("profiles/profile.json")
+    var profile := ""
+    var next_confirm := 0
     while Time.get_ticks_msec() < deadline:
         var race := launch.get_node_or_null("RacePresentation")
-        if race and race.telemetry().get("screen") in ["Title Screen", "New Main Menu"] and FileAccess.file_exists(profile):
-            print("PORTABLE_LAUNCH_PASS picker=", changed or not had_config, " profile=", profile)
-            quit(0)
-            return
+        if race and race.telemetry().get("screen") in ["Title Screen", "New Main Menu"]:
+            for file in DirAccess.get_files_at(project.path_join("profiles")):
+                if file == "profile.json" or (file.begins_with("profile-") and file.ends_with(".json") and not file.ends_with(".backup.json")):
+                    profile = file
+                    break
+            if not profile.is_empty():
+                print("PORTABLE_LAUNCH_PASS picker=", changed or not had_config, " profile=", profile)
+                quit(0)
+                return
+        if race and race.telemetry().get("creating_profile", false):
+            for character in "Launch":
+                await tap(KEY_NONE, character.unicode_at(0))
+            await tap(KEY_ENTER)
+        elif race and race.telemetry().get("screen") == "BootAutoload" and Time.get_ticks_msec() >= next_confirm:
+            next_confirm = Time.get_ticks_msec() + 400
+            await tap(KEY_ENTER)
         await process_frame
     fail("The game or portable profile did not start")
+
+func tap(code: Key, character := 0) -> void:
+    var event := InputEventKey.new()
+    event.keycode = code
+    event.physical_keycode = code
+    event.unicode = character
+    event.pressed = true
+    Input.parse_input_event(event)
+    await create_timer(0.08).timeout
+    event = event.duplicate()
+    event.pressed = false
+    Input.parse_input_event(event)
+    await create_timer(0.08).timeout
 
 func fail(reason: String) -> void:
     push_error(reason)

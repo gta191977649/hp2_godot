@@ -25,7 +25,9 @@ depth to the Godot canvas passes. With default FXAA, the compositor copies
 the source depth into a sampleable R32 texture for fog and focus. The
 2× MSAA path uses Forward+'s resolved R32 depth. The output is composed
 below the HUD. History uses separate alternating render targets. A size change invalidates
-history and the borrowed scene-buffer bindings.
+history and the borrowed scene-buffer bindings. The screen-space, temporal
+and scaling AA modes sample the viewport's resolved color with depth from
+the same scene. Switching AA invalidates history and refreshes those bindings.
 
 Vehicle materials consume original strip normals, light material coefficients,
 light contexts and decoded textures. Godot uses the donor environment camera

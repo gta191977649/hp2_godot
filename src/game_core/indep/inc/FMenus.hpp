@@ -317,6 +317,7 @@ struct MainMenuScreenServices {
     FrontendDemoMode* demoMode{};
     const FrontendMenuExtension* extension{};
     const FrontendCreditsContent* credits{};
+    const FrontendMenuExtension* optionsExtension{};
 };
 // Actual source GP-C0FC main-menu screen lifetime. Bindings borrow existing
 // services; activation owns one concrete NewMainMenu, never a second FRED.
@@ -460,15 +461,20 @@ public:
     void FirstCrackAtMessage(ScreenMessage message,ScreenCallbackData& data);
     static void BaseCallback(ScreenMessage message,ScreenCallbackData* data);
 protected:
+    void SetMenuHighlight(ScreenCallbackData& data,std::uint32_t group,float rowOffset=0.0f);
+    void PositionHighlightBars(std::uint32_t group,float rowOffset=0.0f);
     static MainMenuScreenServices& BoundServices();
     static void Install(std::unique_ptr<OptionsScreenBase> instance);
     std::unique_ptr<OptionsMenuState> state_;
 };
 class OptionsScreen final : public OptionsScreenBase {
+    class PortRow;
+    std::unique_ptr<PortRow> portRow_;
 public:
     OptionsScreen(MainMenuScreenServices& services,std::uint32_t screen);
     ~OptionsScreen() override;
     void HandleEvent(ScreenMessage message,ScreenCallbackData& data) override;
+    void HandleHighlight(ScreenMessage message,ScreenCallbackData& data,std::uint32_t group) override;
     static void Callback(ScreenMessage message,ScreenCallbackData* data);
 private:
     std::unique_ptr<FlailerAnimatedBlurb> blurb_;
@@ -828,28 +834,34 @@ namespace hp2 {
 class MemcardScreens final {
 public:
     enum class LoadResult {Loaded,Absent,Failed};
-    MemcardScreens(FrontendPlayerManager& frontend,const char* utf8Directory=nullptr,
-        const char* legacyDirectory=nullptr);
+    MemcardScreens(FrontendPlayerManager& frontend,const char* utf8Directory=nullptr,bool requireNamedProfile=false);
     ~MemcardScreens();
     MemcardScreens(const MemcardScreens&)=delete;
     MemcardScreens& operator=(const MemcardScreens&)=delete;
-    LoadResult LoadProfile();
+    LoadResult LoadProfile(const char* filename=nullptr);
     bool SaveProfile();
     bool RequestAutosave(std::function<void()> completed);
     void Service();
     bool Busy() const noexcept;
     const std::string& LastError() const noexcept;
     void HandleEvent(ScreenMessage message,ScreenCallbackData& data);
+    // Port-side creation continuation using the existing NameEntry page.
+    bool BootNameEntryActive() const noexcept;
+    bool CreateBootProfile(const char* name);
+    void FinishBootNameEntry(bool saved);
 private:
+    void ApplyProfileOptions();
     friend void BindMemcardScreens(MemcardScreens&,MainMenuScreenServices&);
+    friend void UnbindMemcardScreens();
     friend bool RequestProfileAutosave(std::function<void()>,std::function<bool()>);
     struct Storage;
     std::unique_ptr<Storage> storage_;
 };
 void BindMemcardScreens(MemcardScreens& owner,MainMenuScreenServices& services);
 void UnbindMemcardScreens();
+MemcardScreens* GetBootNameEntryOwner();
 bool RequestProfileAutosave(std::function<void()> completed,std::function<bool()> ownerAlive={});
-std::array<FlailerScreenConfig,3>& MemcardScreenConfigurations();
+std::array<FlailerScreenConfig,4>& MemcardScreenConfigurations();
 void MemcardScreenCallback(ScreenMessage message,ScreenCallbackData* data);
 }
 

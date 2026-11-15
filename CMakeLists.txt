@@ -11,6 +11,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_C_STANDARD 11)
 
 add_subdirectory(src/game_core)
+add_executable(hp2_windows_launcher WIN32 EXCLUDE_FROM_ALL src/mvp/godot/windows_launcher.cpp)
+if(MINGW)
+  target_link_options(hp2_windows_launcher PRIVATE -municode -static -static-libgcc -static-libstdc++)
+endif()
 add_executable(mvp_race_catalog EXCLUDE_FROM_ALL tools/test_mvp_race_catalog.cpp)
 target_link_libraries(mvp_race_catalog PRIVATE game_core)
 
@@ -42,6 +46,7 @@ add_library(hp2_blackbox SHARED
   src/mvp/assets/race_diagnostics.cpp
   src/mvp/systems/audio/godot_speech_output.cpp
   src/mvp/systems/frontend/frontend_presentation.cpp
+  src/mvp/systems/frontend/graphic_menu.cpp
   src/mvp/systems/frontend/frontend_video.cpp
   src/mvp/systems/frontend/original_video_stream.cpp
   src/mvp/systems/track/track_presentation.cpp
@@ -120,6 +125,7 @@ add_custom_target(stage_mvp ALL
     "${CMAKE_SOURCE_DIR}/godot_mvp/project.godot"
     "${CMAKE_SOURCE_DIR}/godot_mvp/export_presets.cfg"
     "${CMAKE_SOURCE_DIR}/godot_mvp/native_game.gd"
+    "${CMAKE_SOURCE_DIR}/godot_mvp/graphics_settings.gd"
     "${CMAKE_SOURCE_DIR}/godot_mvp/native_game.tscn"
     "${CMAKE_SOURCE_DIR}/godot_mvp/hp2_blackbox.gdextension"
     "${CMAKE_SOURCE_DIR}/godot_mvp/hp2_blackbox.gdextension.uid"

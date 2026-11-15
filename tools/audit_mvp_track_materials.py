@@ -39,17 +39,23 @@ def main():
         rows = [m.groups() for line in result.stderr.splitlines() if (m := ROW.fullmatch(line))]
         if result.returncode or not rows or f"TRACK_AUDIT_READY {track}" not in result.stdout:
             raise RuntimeError(f"Track {track} failed; see {out / f'{track}.log'}")
-        return track, rows
+        puddles = [line.removeprefix("TRACK_PUDDLE ").split() for line in result.stdout.splitlines()
+                   if line.startswith("TRACK_PUDDLE ")]
+        return track, rows, puddles
 
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
         with (out / "materials.csv").open("w", encoding="utf-8", newline="") as detail, (
-            out / "coverage.csv").open("w", encoding="utf-8", newline="") as summary:
+            out / "coverage.csv").open("w", encoding="utf-8", newline="") as summary, (
+            out / "puddle-submissions.csv").open("w", encoding="utf-8", newline="") as puddle_file:
             writer = csv.writer(detail)
             writer.writerow(["track", *FIELDS])
             coverage = csv.writer(summary)
             coverage.writerow(["track", "strips", "shafts", "road40", "blend44", "blend48", "bias1", "bias2",
                                "replacement", "unresolved"])
-            for track, rows in pool.map(run, TRACKS):
+            puddle_writer = csv.writer(puddle_file)
+            puddle_writer.writerow(["track", "texture", "base", "combined_mask", "shader", "triangles"])
+            for track, rows, puddles in pool.map(run, TRACKS):
+                puddle_writer.writerows([track, *row] for row in puddles)
                 counts = Counter()
                 for row in rows:
                     writer.writerow([track, *row])

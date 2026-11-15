@@ -1,5 +1,6 @@
 extends Node
 
+const CONFIG_NAME := "launcher.cfg"
 const RACE_ARGUMENT := "--race-track="
 const EVENT_ARGUMENT := "--race-event="
 const ISO_PROMPT := "Please Drop / Browse Your Game ISO"
@@ -15,6 +16,7 @@ var iso_panel: CenterContainer
 var iso_error: Label
 var iso_dialog: FileDialog
 var selecting_iso := false
+var graphics := preload("res://graphics_settings.gd").new()
 
 func _ready() -> void:
     var arguments := OS.get_cmdline_user_args()
@@ -26,6 +28,14 @@ func _ready() -> void:
     if arguments.has("--fxaa"):
         arguments.remove_at(arguments.find("--fxaa"))
         ProjectSettings.set_setting("hp2/race_fxaa", true)
+    launch_root = OS.get_executable_path().get_base_dir() if OS.has_feature("template") \
+        else ProjectSettings.globalize_path("res://").simplify_path()
+    var load_error := launch_config.load(launch_root.path_join(CONFIG_NAME))
+    if load_error != OK:
+        launch_config.clear()
+    graphics.configure(launch_config, _save_launcher_config)
+    graphics.name = &"GraphicsSettings"
+    add_child(graphics)
     _start_window_title(native_debug)
     var frontend := arguments.is_empty()
     var track := "unknown"
@@ -58,27 +68,21 @@ func _ready() -> void:
         _fail("extension", track, "RacePresentation GDExtension class is unavailable")
         return
 
-    launch_root = OS.get_executable_path().get_base_dir() if OS.has_feature("template") \
-        else ProjectSettings.globalize_path("res://").simplify_path()
     var profiles := launch_root.path_join("profiles")
     var test_profile := OS.get_environment("HP2_MVP_TEST_PROFILE") == "1"
     var isolated := test_profile or native_debug or track_id >= 0 or event_tree >= 0
     profile_directory = profiles.path_join("diagnostics/%s-%s" % [OS.get_process_id(), Time.get_ticks_usec()]) \
         if isolated else profiles
-    var legacy := "" if isolated else ProjectSettings.globalize_path("user://profile")
-    launch_action = _launch.bind(legacy, track_id, event_tree, event_number, native_debug)
-    _resolve_assets(select_iso, track)
+    launch_action = _launch.bind(track_id, event_tree, event_number, native_debug)
+    _resolve_assets(select_iso, track, load_error)
 
-func _resolve_assets(select_iso: bool, track: String) -> void:
-    var config_path := launch_root.path_join("launcher.cfg")
-    var load_error := launch_config.load(config_path)
+func _resolve_assets(select_iso: bool, track: String, load_error: Error) -> void:
     var reason := ""
     if load_error == ERR_FILE_NOT_FOUND:
         launch_config.set_value("game", "iso_path", "")
         if DisplayServer.get_name() != "headless":
             reason = _write_launcher_config()
     elif load_error != OK:
-        launch_config = ConfigFile.new()
         reason = "Cannot read launcher.cfg. Choose your ISO to update it."
     if select_iso:
         _show_iso_picker(reason, track)
@@ -121,11 +125,11 @@ func _open_configured_assets(assets: String, track: String, require_iso := false
     if not reason.is_empty():
         _fail("asset_source", track, reason)
 
-func _launch(assets: String, legacy: String, track_id: int,
+func _launch(assets: String, track_id: int,
         event_tree: int, event_number: int, native_debug: bool) -> String:
     var race: Node = ClassDB.instantiate(&"RacePresentation")
     race.name = &"RacePresentation"
-    race.call(&"set_legacy_profile_directory", legacy)
+    race.call(&"set_graphics_menu_settings", graphics.menu_settings)
     add_child(race)
     var reason: String = race.call(&"start_game", assets, profile_directory,
         track_id, event_tree, event_number, native_debug)
@@ -143,7 +147,12 @@ func _try_iso(path: String) -> String:
     return "Invalid game ISO: " + reason + "\nChoose the US PS2 Hot Pursuit 2 ISO and try again."
 
 func _write_launcher_config() -> String:
-    var path := launch_root.path_join("launcher.cfg")
+    var path := launch_root.path_join(CONFIG_NAME)
+    var error := _save_launcher_config()
+    return "Cannot save %s (%s)." % [path, error_string(error)] if error != OK else ""
+
+func _save_launcher_config() -> Error:
+    var path := launch_root.path_join(CONFIG_NAME)
     var temporary := path + ".%s-%s.tmp" % [OS.get_process_id(), Time.get_ticks_usec()]
     var error := launch_config.save(temporary)
     if error == OK:
@@ -151,8 +160,7 @@ func _write_launcher_config() -> String:
     if error != OK:
         if FileAccess.file_exists(temporary):
             DirAccess.remove_absolute(temporary)
-        return "Cannot save %s (%s)." % [path, error_string(error)]
-    return ""
+    return error
 
 func _show_iso_picker(reason: String, track: String) -> void:
     if DisplayServer.get_name() == "headless":

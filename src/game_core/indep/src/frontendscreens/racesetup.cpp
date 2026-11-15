@@ -60,16 +60,16 @@ float FirstItemX(MainMenuScreenServices& s,std::uint32_t screen)
     Require(object,"Race setup has no authored first item anchor");
     float x,y;s.ui->resources->GetTopLeft(*object,x,y,s.ui->language);return x;
 }
-void SetupHighlight(MainMenuScreenServices& s,std::uint32_t screen,std::uint32_t key)
+void SetupHighlight(MainMenuScreenServices& s,std::uint32_t screen,std::uint32_t key,float rowOffset=0.0f)
 {
     // PAL1B63F0/1B7D50; source globals331A00=-3,3319FC=6.
     std::int32_t left,top,right,bottom;
     Require(s.ui->resources->GetBoundingBox(screen,key,left,top,right,bottom,s.ui->language),
         "Race setup highlight has no authored bounding rectangle");
     if(auto* lower=s.ui->resources->FindObject(screen,0x32c91daeu))
-        lower->SetTopLeftY(static_cast<float>(bottom)-3.0f);
+        lower->SetTopLeftY(static_cast<float>(bottom)-3.0f+rowOffset);
     if(auto* upper=s.ui->resources->FindObject(screen,0xc671680cu))
-        upper->SetTopLeftY(static_cast<float>(top)-6.0f);
+        upper->SetTopLeftY(static_cast<float>(top)-6.0f+rowOffset);
 }
 void SetItemState(MainMenuScreenServices& s,const char* name,std::uint32_t screen,
     std::uint32_t key,std::int32_t state)
@@ -296,10 +296,12 @@ public:
     }
     void HandleEvent(ScreenMessage message,ScreenCallbackData& event)
     {
-        if(message==ScreenMessage::Tick){highlight_.Animate();valueHighlight_.Animate();}
-        arrows_.HandleEvent(message,event);
+        const bool external=s_.ui->externalPresentation;
+        if(message==ScreenMessage::Tick && (!external || exit_)){highlight_.Animate();valueHighlight_.Animate();}
+        if(!external)arrows_.HandleEvent(message,event);
         if(exit_){exit_->HandleMessages(message,event);return;}
         scroll_.HandleEvent(message,event);
+        if(external)arrows_.HandleEvent(message,event);
         switch(message) {
         case ScreenMessage::Previous:if(event.key==FirstMenu)event.value=1;break;
         case ScreenMessage::Next:
@@ -318,12 +320,15 @@ public:
             blurb_.NewText(rows_[index].blurb);current_=event.key;
             arrows_.SetCurrentItem(Values[index]);
             const auto mask=scroll_.GetCurrentMenuMask();
-            selection_.SetCurrentItem(mask);SetupHighlight(s_,screen_,mask);
+            selection_.SetCurrentItem(mask);SetupHighlight(s_,screen_,mask,scroll_.CurrentMenuOffsetY());
             highlight_.SetCurrentMenuItem(Items[index]);valueHighlight_.SetCurrentMenuItem(Values[index]);
             break;
         }
         case ScreenMessage::Tick:
+            if(external && current_)
+                SetupHighlight(s_,screen_,scroll_.GetCurrentMenuMask(),scroll_.CurrentMenuOffsetY());
             blurb_.Animate();if(!slide_.IsFinished())slide_.Animate();
+            if(external){highlight_.Animate();valueHighlight_.Animate();}
             break;
         case ScreenMessage::Select:
             // The source advanced menu does not push another stack frame.

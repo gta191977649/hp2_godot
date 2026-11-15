@@ -19,6 +19,7 @@
 
 #include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
+#include <godot_cpp/variant/rect2.hpp>
 #include <godot_cpp/variant/variant.hpp>
 #include <godot_cpp/variant/packed_vector3_array.hpp>
 #include <algorithm>
@@ -173,6 +174,29 @@ void collect_police_diagnostics(godot::Dictionary& result, const RaceStateView& 
     result["police_target_active"] = group && group->target;
     result["police_support_flags"] = group ? group->requestFlags : 0u;
     result["police_busts"] = pursuit.completedPullovers;
+}
+
+void collect_menu_alignment_diagnostics(godot::Dictionary& result, const FrontendStateView& frontend) {
+    static const bool enabled = godot::OS::get_singleton()->get_environment("HP2_MVP_TEST_MENU_ALIGNMENT") == "1";
+    if (!enabled || !frontend.layout) return;
+    const auto page = std::find_if(frontend.pointerTargets.begin(), frontend.pointerTargets.end(),
+        [](const auto& target) { return target.object == 0; });
+    if (page == frontend.pointerTargets.end()) return;
+    godot::Dictionary bounds;
+    for (const auto& layer : frontend.layout->layers) for (const auto* strip : layer) {
+        if (strip->sourceScreen != page->screen || !strip->sourceObject) continue;
+        const auto key = static_cast<int64_t>(strip->sourceObject);
+        for (auto* batch = strip; batch; batch = batch->nextTexture.get()) for (const auto& poly : batch->polygons) {
+            if (std::none_of(poly.vertices.begin(), poly.vertices.end(),
+                    [](const auto& vertex) { return (vertex.color >> 24) != 0; })) continue;
+            godot::Rect2 rect({poly.vertices[0].position[0], poly.vertices[0].position[1]}, {});
+            for (const auto& vertex : poly.vertices)
+                rect = rect.expand({vertex.position[0], vertex.position[1]});
+            if (bounds.has(key)) rect = rect.merge(static_cast<godot::Rect2>(bounds[key]));
+            bounds[key] = rect;
+        }
+    }
+    result["menu_alignment_bounds"] = bounds;
 }
 
 void start_quick_race_diagnostic(MainMenuScreenServices& menus, const void* context) {

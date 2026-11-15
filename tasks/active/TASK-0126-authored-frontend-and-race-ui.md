@@ -4,6 +4,31 @@
 - Depends on TASK-0123, TASK-0124 and TASK-0125.
 - Scope: present the donor's Flailer fonts, bitmaps, event tree and in-race UI in Godot. Keep input, screen flow, HUD values and authored layout in game_core.
 
+## Live leaderboard vehicle swatches
+
+Retail US PS2 `SLUS_203.62` SHA-256
+`7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2`.
+In `RenderHud__6Player`, `0017FE60` calls `GetSkinInfo` and
+`0017FE6C` calls `ChangeTexture__18FlailerBitmapChunkUi` at
+`00141350` with the word at SkinInfo+0x30. The older Debug
+`RenderHud` at `0017D738` names the same field `ColourSwatchHash`.
+The core had passed the hash to `SetColor`, which produced unrelated
+RGBA values. Each existing `LIVE_SPLIT_SWATCH` now switches to the
+authored texture for its current ranked vehicle, with the normal
+Flailer cache reused until the hash changes. The row's status panel
+and player highlight retain their authored treatments.
+
+Debug `stage_mvp` built. Release linked successfully, and the running
+Godot instance held the standard staged Release DLL. The verification
+project under `local/hud-rank-swatches/project` uses the newly linked
+DLL, confirmed by SHA-256. Godot 4.7.2 Forward+ passed
+`tools/test_mvp_frontend_resize.gd -- --race-track=12` with an isolated
+profile on Vulkan and D3D12, including the HUD, pause and restart.
+The Vulkan HUD capture shows green, silver, yellow and black swatches.
+The D3D12 capture shows yellow, silver, green and blue swatches.
+See the two `direct-hud-800x600.png` captures under
+`local/hud-rank-swatches`. `git diff --check` passed.
+
 ## Acceptance
 
 - [x] Render original atlas glyphs and bitmaps through Godot in the title, main menu, mode selection, event tree, event details and car selection.

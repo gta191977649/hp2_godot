@@ -17,6 +17,7 @@
 #include <godot_cpp/classes/skin.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -107,7 +108,44 @@ bool is_light_shaft(std::uint32_t key) {
 bool is_road_water(std::uint32_t key) {
     // W_RDWATER and RD_PUDDLE families, including their separate additive masks.
     return key == 0x8bbf7d4eu || key == 0x79940f30u || key == 0x0cca6e99u ||
-        key == 0x5ef002d2u || key == 0x3cf05d44u || key == 0x6833b84fu || key == 0xcfff069du;
+        key == 0x5ef002d2u || key == 0x3cf05d44u || key == 0x6833b84fu || key == 0xcfff069du ||
+        key == 0x63b2010bu; // W_DIRTWATER, authored without a separate mask.
+}
+
+// A puddle's base and mask may enumerate the same triangle corners in a
+// different order. Read the base channels at the corresponding mask corner.
+std::vector<int> wet_base_corners(const PackedVector3Array& base, const PackedInt32Array& baseIndices,
+    const PackedVector3Array& mask, const PackedInt32Array& maskIndices) {
+    if (baseIndices.size() != maskIndices.size()) return {};
+    using Point = std::array<float, 3>;
+    using Triangle = std::array<Point, 3>;
+    const auto point = [](const Vector3& p) -> Point { return {p.x, p.y, p.z}; };
+    const auto triangle = [&](const PackedVector3Array& positions, const int32_t* indices) {
+        Triangle key{point(positions[indices[0]]), point(positions[indices[1]]), point(positions[indices[2]])};
+        std::sort(key.begin(), key.end());
+        return key;
+    };
+    std::multimap<Triangle, int> triangles;
+    const auto* bi = baseIndices.ptr();
+    const auto* mi = maskIndices.ptr();
+    for (int i = 0; i < baseIndices.size(); i += 3)
+        triangles.emplace(triangle(base, bi + i), i);
+    std::vector<int> corners;
+    corners.reserve(maskIndices.size());
+    for (int i = 0; i < maskIndices.size(); i += 3) {
+        const auto matches = triangles.equal_range(triangle(mask, mi + i));
+        if (matches.first == matches.second) return {};
+        const auto match = matches.first;
+        const auto* indices = bi + match->second;
+        for (int j = 0; j < 3; ++j) {
+            const auto source = std::find_if(indices, indices + 3,
+                [&](int index) { return base[index] == mask[mi[i + j]]; });
+            if (source == indices + 3) return {};
+            corners.push_back(*source);
+        }
+        triangles.erase(match);
+    }
+    return corners;
 }
 
 bool track_material(const std::uint8_t* wire, std::uint32_t flags) {
@@ -557,7 +595,13 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
     mesh.instantiate();
     std::map<const Surface*, const Surface*> wetMasks;
     std::set<const Surface*> mergedMasks;
-    if (depthWrite && !morph && !rigid && !boneCount && !sky && !reflection) {
+    struct BiasedPuddle {
+        const Surface* base;
+        std::vector<int> baseCorners;
+    };
+    std::map<const Surface*, BiasedPuddle> biasedPuddles;
+    const bool staticTrack = track_ && depthWrite && !morph && !rigid && !boneCount && !sky && !reflection;
+    if (staticTrack) {
         for (const auto& base : surfaces) {
             const auto key = base.descriptor->key;
             if (!base.gsTrack || base.roadMaterial || (key != 0x8bbf7d4eu && key != 0x79940f30u))
@@ -594,6 +638,33 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             }
         }
     }
+    if (staticTrack) {
+        for (const auto& mask : surfaces) {
+            const auto key = mask.descriptor->key;
+            if (key != 0xcfff069du && key != 0x6833b84fu) continue;
+            const auto* state = mask.descriptor->authoredRecord;
+            if (!mask.gsTrack || mask.lightMaterial || state[0x29] != 4 || state[0x4e] ||
+                !state[0x4f] || state[0x50] || state[0x75] != 1 || state[0x76] != 0x48 ||
+                state[0x79] || textureInfoForDescriptor(mask.descriptor)->requiresDepthSort ||
+                texture_sequence(*mask.descriptor).count)
+                continue;
+            for (const auto& base : surfaces) {
+                if (base.descriptor->key != (key == 0xcfff069du ? 0x5ef002d2u : 0x3cf05d44u))
+                    continue;
+                const auto* wire = base.descriptor->authoredRecord;
+                if (!base.gsTrack || base.roadMaterial || wire[0x29] != 2 || wire[0x4e] ||
+                    !wire[0x4f] || !wire[0x50] || wire[0x6e] != 4 || wire[0x6f] != 1 ||
+                    wire[0x70] != 3 || wire[0x71] || wire[0x75] || wire[0x76] != 0x44 ||
+                    wire[0x79] || textureInfoForDescriptor(base.descriptor)->requiresDepthSort ||
+                    texture_sequence(*base.descriptor).count)
+                    continue;
+                auto corners = wet_base_corners(base.vertices, base.indices, mask.vertices, mask.indices);
+                if (corners.empty()) continue;
+                biasedPuddles.emplace(&mask, BiasedPuddle{&base, std::move(corners)});
+                break;
+            }
+        }
+    }
     bool batchable = true;
     bool hasScroll = false, hasTextureSequence = false, hasPuddle = false;
     bool hasSortedSurfaces = false;
@@ -603,6 +674,8 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         if (mergedMasks.count(&surface)) continue;
         const auto paired = wetMasks.find(&surface);
         const auto* wetMask = paired != wetMasks.end() ? paired->second : nullptr;
+        const auto biased = biasedPuddles.find(&surface);
+        const auto* puddleBase = biased == biasedPuddles.end() ? nullptr : biased->second.base;
         const auto textureKeyValue = surface.descriptor->key;
         const auto* wire = surface.descriptor->authoredRecord;
         // The original shaft textures use TEX1.MXL=0, MMAG=1 and MMIN=3.
@@ -628,6 +701,37 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             }
             arrays[Mesh::ARRAY_CUSTOM3] = tint;
         }
+        if (puddleBase) {
+            PackedVector3Array positions;
+            PackedVector2Array uv;
+            PackedColorArray colors;
+            PackedFloat32Array normals, mipBias, baseUvBias, baseColor;
+            PackedInt32Array indices;
+            const auto& corners = biased->second.baseCorners;
+            for (int i = 0; i < surface.indices.size(); ++i) {
+                const int at = surface.indices[i];
+                const int base = corners[i];
+                positions.push_back(surface.vertices[at]);
+                uv.push_back(surface.uv[at]);
+                colors.push_back(surface.colors[at]);
+                mipBias.push_back(surface.mipBias[at]);
+                indices.push_back(i);
+                if (surface.roadMaterial)
+                    for (int axis = 0; axis < 3; ++axis) normals.push_back(surface.paintVertices[3 * at + axis]);
+                for (const float channel : {puddleBase->uv[base].x, puddleBase->uv[base].y, puddleBase->mipBias[base]})
+                    baseUvBias.push_back(channel);
+                const auto& color = puddleBase->colors[base];
+                for (const float channel : {color.r, color.g, color.b, color.a}) baseColor.push_back(channel);
+            }
+            arrays[Mesh::ARRAY_VERTEX] = positions;
+            arrays[Mesh::ARRAY_TEX_UV] = uv;
+            arrays[Mesh::ARRAY_COLOR] = colors;
+            arrays[Mesh::ARRAY_INDEX] = indices;
+            arrays[Mesh::ARRAY_CUSTOM0] = baseUvBias;
+            if (surface.roadMaterial) arrays[Mesh::ARRAY_CUSTOM1] = normals;
+            arrays[Mesh::ARRAY_CUSTOM2] = mipBias;
+            arrays[Mesh::ARRAY_CUSTOM3] = baseColor;
+        }
         if (boneCount) {
             arrays[Mesh::ARRAY_BONES] = surface.bones;
             arrays[Mesh::ARRAY_WEIGHTS] = surface.weights;
@@ -639,6 +743,9 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             flags |= std::uint64_t(Mesh::ARRAY_CUSTOM_RGB_FLOAT) << Mesh::ARRAY_FORMAT_CUSTOM1_SHIFT;
         if (!surface.mipBias.is_empty()) flags |= std::uint64_t(Mesh::ARRAY_CUSTOM_R_FLOAT) << Mesh::ARRAY_FORMAT_CUSTOM2_SHIFT;
         if (wetMask) flags |= std::uint64_t(Mesh::ARRAY_CUSTOM_RGBA_FLOAT) << Mesh::ARRAY_FORMAT_CUSTOM3_SHIFT;
+        if (puddleBase) flags |=
+            (std::uint64_t(Mesh::ARRAY_CUSTOM_RGB_FLOAT) << Mesh::ARRAY_FORMAT_CUSTOM0_SHIFT) |
+            (std::uint64_t(Mesh::ARRAY_CUSTOM_RGBA_FLOAT) << Mesh::ARRAY_FORMAT_CUSTOM3_SHIFT);
         mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays, {}, {}, flags);
         if (mesh->get_surface_count() != index + 1)
             throw std::runtime_error("Godot rejected a surface for model " + std::to_string(model.key));
@@ -743,7 +850,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             batchable &= !transparent && write;
             hasScroll |= scroll;
             hasTextureSequence |= sequence.count != 0;
-            const bool cacheable = !morph && !rigid && !surface.roadMaterial && !wetMask;
+            const bool cacheable = !morph && !rigid && !surface.roadMaterial && !wetMask && !puddleBase;
             const auto cacheKey = std::make_tuple(surface.descriptor, depthWrite, billboard, true);
             if (cacheable) {
                 const auto cached = animatedTextures_.find(cacheKey);
@@ -765,6 +872,16 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             draw.instantiate();
             draw->set_shader(shader);
             if (waterBlend && blend == 0x44) draw->set_meta("hp2_wet_road", true);
+            if (puddleBase) {
+                const auto& base = track_texture(*puddleBase->descriptor);
+                const auto repeat = puddleBase->descriptor->authoredRecord[0x4c];
+                draw->set_meta("hp2_wet_road", true);
+                draw->set_meta("hp2_puddle_base_key", std::int64_t(puddleBase->descriptor->key));
+                draw->set_shader_parameter("gs_has_puddle_base", true);
+                draw->set_shader_parameter("gs_puddle_base_linear", base.texture);
+                draw->set_shader_parameter("gs_puddle_base_nearest", base.texture);
+                draw->set_shader_parameter("gs_puddle_base_repeat", Vector2i(repeat & 1u, (repeat >> 1) & 1u));
+            }
             // Authored projected shadows in bucket 4 follow the wet asphalt and
             // its bucket-3 mask. Drawing them first loses their road coverage.
             const bool projectedShadow = blend == 0x44 && !write && wire[0x75] == 1 && wire[0x29] == 4;

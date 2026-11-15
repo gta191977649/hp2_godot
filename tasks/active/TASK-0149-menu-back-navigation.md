@@ -1,5 +1,26 @@
 # TASK-0149 — Pause and results menu Back navigation
 
+## Escape shortcut
+
+Removed the port's global Escape quit action. Escape still routes through
+the race pause binding and commits an active name edit. The main-menu Exit
+item still ends the session. On a Debug assertion, closing the window
+ends the failed process with status 1.
+
+The navigation smoke presses Escape at the title and main menu, then
+continues through the frontend. Its Track 12 invocation opens and resumes
+the pause menu with Escape. The test uses the Release staged project and
+`tools/test_mvp_menu_navigation.gd`, with `-- --race-track=12` for the pause
+run. Debug and Release are built with
+`cmake --build --preset godot-mvp-debug --target stage_mvp --parallel 8`
+and its Release equivalent. Logs under `local/esc-navigation` include a
+headless Debug assertion check with Escape followed by close notification.
+Both staging builds passed. The Release Vulkan frontend and Track 12
+pause runs reported `MENU_NAVIGATION_PASS`. The Debug assertion check
+survived Escape and exited with status 1 after the close notification.
+
+## Back navigation
+
 Backspace on the results menus was routed as the race coordinator's Start
 input. The race scene remains alive during results, so the Godot host also
 filtered the menu Triangle input in that state. The same filter affected

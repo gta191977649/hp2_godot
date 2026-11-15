@@ -246,7 +246,8 @@ struct FrontendPlayerManager {
     // PC persistence stores named UTF-8 JSON. Legacy NFRED57 images are
     // read-only migration input; these adapters add no accepted ELF bodies.
     std::string SerializeNativeProfileText() const;
-    bool ValidateNativeProfileText(const void* data,std::size_t bytes,std::string& error,bool checkEventBindings=false) const;
+    bool ValidateNativeProfileText(const void* data,std::size_t bytes,std::string& error,
+        bool checkEventBindings=false,std::string* playerName=nullptr) const;
     bool DeserializeNativeProfileText(const void* data,std::size_t bytes,std::string& error);
     bool ConvertLegacyProfileToText(const void* data,std::size_t bytes,std::string& text,std::string& error) const;
     void CaptureAudioOptions(const ::CarSoundBindings& sound,bool rebuildMusicList);

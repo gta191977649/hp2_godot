@@ -1,4 +1,5 @@
 #include "frontend_presentation.hpp"
+#include "systems/camera/viewport_antialiasing.hpp"
 
 #include "assets/shader_resource.hpp"
 
@@ -395,6 +396,7 @@ struct FrontendPresentation::Storage {
     struct Preview {
         TextureRect* display{};
         SubViewport* viewport{};
+        String aaMode;
         Camera3D* camera{};
         std::unique_ptr<RaceEffectsPresentation> effects;
         std::vector<MeshInstance3D*> nodes;
@@ -467,6 +469,11 @@ struct FrontendPresentation::Storage {
                 auto* effectsRoot=memnew(Node3D);
                 preview.viewport->add_child(effectsRoot);
                 preview.effects=std::make_unique<RaceEffectsPresentation>(*effectsRoot);
+            }
+            const auto aa = graphics_antialiasing();
+            if (preview.aaMode != aa) {
+                preview.aaMode = aa;
+                configure_viewport_antialiasing(*preview.viewport, aa);
             }
             if (preview.viewport->get_size() != resolution)
                 preview.viewport->set_size(resolution);

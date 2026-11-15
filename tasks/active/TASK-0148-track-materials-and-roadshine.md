@@ -287,3 +287,50 @@ on both APIs. D3D12 passed on retry at 60 FPS after the first automated
 console input timed out. The isolated Release package published Track 13
 on Vulkan using its `launcher.cfg` ISO path and exited normally.
 The comparison validates this Recomp reference at the reported site.
+
+### All-route wet surface sweep
+
+The resolved retail catalogue audit scanned 30 routes, including shared
+bindings, replacements and all authored LOD entries. It found 488 wet
+surface strips in routes 11–16 and 41–46. All eight effective textures
+occur at LOD 0 with no replacement binding. The other 18 routes have no
+road puddle material in this catalogue.
+
+| Family | Base strips | Mask strips | Original submission |
+| --- | ---: | ---: | --- |
+| `W_RDWATER`, `W_RDWATER02` | 108 | 108 | Base in bucket 2, mask in bucket 3 with projection 0 |
+| `RD_PUDDLE`, `RD_PUDDLE2` | 103 | 103 | Base in bucket 2, mask in bucket 4 with projection 1 |
+| `W_DIRTWATER` | 66 | 0 | Source-over base in bucket 2 |
+
+`RD_PUDDLE_MASK` includes 27 strips without the `0x40` second pass.
+Both states of that texture and the `RD_PUDDLE2_MASK` state now sample
+the destination produced by their own wet asphalt. The Godot mask
+submission keeps its original vertices, projection and draw bucket.
+It carries the base's independent UV, tint and mip bias using a
+triangle-corner match. The match includes reversed winding, reordered
+strips and authored coincident triangles. Neither road geometry nor the
+alpha textures are changed. `W_DIRTWATER` now uses byte-domain source-over
+with the same sky and road depth checks.
+
+Retail `CreateTextureContext` at `00108CC0`, `AttachSolidPolys` at
+`0010BB20` and the Z24 packs at `002C9E20` define the submission.
+Packet 320 (`0010AC50`, `002A6F78`) still controls Roadshine. The retail
+ELF SHA-256 is the one recorded above. No game-core changes were needed.
+The paired additive path reconstructs the wet destination from the opaque
+scene or clean sky. Framebuffer feedback from intervening transparent
+draws and views without a clean sky reference remain approximate.
+
+Validated with the headless `tools/audit_mvp_track_materials.py` scan and
+the GPU `tools/test_mvp_track_material.gd` fixture. All 79 submitted biased
+mask surfaces resolved to a base across routes 41–46. Both Vulkan and
+D3D12 reproduced `(92,144,196)` for a biased mask over a half-transparent
+wet road. A depth sample between packs 0 and 1 received just the mask
+`(160,155,112)`. A sample in front of both kept `(144,123,64)`.
+Both APIs captured all 12 affected routes. The 41 and 44 before/after
+captures disable only the new destination lookup for the control.
+The isolated Release export loaded Track 41 and exited normally on
+Vulkan after `build.ps1 --jobs 8`. Debug was staged with
+`cmake --build --preset godot-mvp-debug --target stage_mvp --parallel 8`.
+The Track Viewer switch-and-return smoke passed on both APIs.
+Inventories and captures are under `local/all-puddles`. The new routes
+were compared within Godot using fixed cameras.

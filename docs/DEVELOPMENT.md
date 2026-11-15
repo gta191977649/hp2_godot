@@ -40,6 +40,10 @@ the launch root's `profiles/` for frontend regression scripts. To test
 reload of a normal profile, use a disposable staged project and its
 ordinary `profiles/` directory in both launches.
 
+For a packaged game, the launch root is the directory containing the EXE.
+The game loads `profiles/profile.json` there. If that file is missing,
+the HP2 startup screens prompt for a profile name before writing it.
+
 To build and open the Debug MVP in the pinned Godot Editor, run
 `./build.ps1 --mvp --debug --editor --jobs 16`. For an existing build,
 open `build/godot-mvp-debug/mvp-project/project.godot` in the Project Manager.
@@ -50,9 +54,16 @@ Press F6 on `native_game.tscn` or F5 for the project, then start
 Press the grave/tilde key in the game to give keyboard input back to the frontend.
 
 Use `./build.ps1 --run` for Release or `./build.ps1 --debug` for Debug. Both
-start in windowed mode with race FXAA and VSync. Frame pacing follows the
-display refresh rate with no software FPS cap. Add `--fullscreen` to launch
-in native fullscreen.
+default to windowed mode with FXAA, VSync, and no software FPS cap. Options
+→ Graphic stores preferences in `launcher.cfg` beside the executable
+or in the staged project directory. Change Render API
+there and restart to apply it. An explicit `--rendering-driver` overrides the
+saved API for that launch. Add `--fullscreen` to launch in native fullscreen.
+The Resolution row cycles render resolutions in Full Screen and Borderless.
+In Window mode it follows the window size.
+Restore to Default resets the graphic settings and retains the ISO path.
+On Windows, run `HP2.exe` to start the Godot runtime with logs and caches
+under `.hp2-runtime/` beside the package.
 
 Use `--race-track=<id>` for direct single-player diagnostics. The default launch enters
 the frontend and needs the shared FFmpeg 8 SDK described in the README.
@@ -77,7 +88,7 @@ Debug links the repository's pinned Dear ImGui and ImGui Console
 sources through the MVP target. Open the console with the grave/tilde key
 and enter `ver` to see the running Godot Engine version. The overlay uses
 the DPI reported by Windows for the active game window. A fatal MVP assertion stops the
-session and opens the Debug console. Esc exits the failed session with
+session and opens the Debug console. Closing the window ends the failed session with
 status 1. Release reports the failure and exits immediately.
 MinGW Debug builds the MVP native targets with `-O2` and debug symbols.
 The game core keeps its strict floating-point options.

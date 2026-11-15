@@ -6,6 +6,7 @@
 #include "Timer.hpp"
 #include "Flags.hpp"
 #include <tuple>
+#include <optional>
 #include "bware/inc/bWare.hpp"
 #include "bware/inc/bMath.hpp"
 
@@ -158,29 +159,43 @@ OptionsScreenBase::~OptionsScreenBase()=default;
 
 void OptionsScreenBase::HandleHighlight(ScreenMessage,ScreenCallbackData& data,std::uint32_t group)
 {
+    SetMenuHighlight(data,group);
+}
+
+void OptionsScreenBase::SetMenuHighlight(ScreenCallbackData& data,std::uint32_t group,float rowOffset)
+{
     if (!group && data.key>=0x52e039f3u && data.key<=0x52e039f9u)
         group=OptionsGroups[data.key-0x52e039f3u];
     state_->selection->SetCurrentItem(group);
+    PositionHighlightBars(group,rowOffset);
+    state_->highlight.SetCurrentMenuItem(data.key);
+}
+
+void OptionsScreenBase::PositionHighlightBars(std::uint32_t group,float rowOffset)
+{
     auto& ui=*state_->services.ui;
     std::int32_t left,top,right,bottom;
     Require(ui.resources->GetBoundingBox(state_->screen,group,left,top,right,bottom,ui.language),
         "Options highlight has no authored bounding rectangle");
     // The Options lower rail is at bottom, unlike the MainMenu/Cops -3.
     if (auto* lower=ui.resources->FindObject(state_->screen,0x32c91daeu))
-        lower->SetTopLeftY(static_cast<float>(bottom));
+        lower->SetTopLeftY(static_cast<float>(bottom)+rowOffset);
     if (auto* upper=ui.resources->FindObject(state_->screen,0xc671680cu))
-        upper->SetTopLeftY(static_cast<float>(top-6));
-    state_->highlight.SetCurrentMenuItem(data.key);
+        upper->SetTopLeftY(static_cast<float>(top-6)+rowOffset);
 }
 
 void OptionsScreenBase::FirstCrackAtMessage(ScreenMessage message,ScreenCallbackData& data)
 {
+    const bool publishAfterLayout=message==ScreenMessage::Tick &&
+        state_->services.ui->externalPresentation && !state_->exit;
     if (message==ScreenMessage::Highlight)HandleHighlight(message,data,0);
     else if (message==ScreenMessage::Tick) {
-        state_->slide.Animate();state_->highlight.Animate();state_->selectionChange.Animate();
+        state_->slide.Animate();
+        if(!publishAfterLayout){state_->highlight.Animate();state_->selectionChange.Animate();}
     }
     if (state_->exit) {state_->exit->HandleMessages(message,data);return;}
     HandleEvent(message,data);
+    if(publishAfterLayout){state_->highlight.Animate();state_->selectionChange.Animate();}
 }
 
 void OptionsScreenBase::BaseCallback(ScreenMessage message,ScreenCallbackData* data)
@@ -192,10 +207,119 @@ void OptionsScreenBase::BaseCallback(ScreenMessage message,ScreenCallbackData* d
     optionsOwner->FirstCrackAtMessage(message,*data);
 }
 
+// Port-side entry in the original Options ring, immediately after Display.
+class OptionsScreen::PortRow final {
+public:
+    static constexpr std::uint32_t Key=0x52e039fau;
+    static constexpr std::uint32_t Mask=OptionsGroups[7];
+
+    PortRow(MainMenuScreenServices& services,std::uint32_t screen)
+        : art_(*services.ui->resources->FindScreen(screen)),
+          page_(*services.screens->active->FindFlailerScreen(static_cast<std::int32_t>(screen))),
+          menu_(*page_.menu),item_(&menu_,Key,8)
+    {
+        auto& resources=*services.ui->resources;
+        auto* display=menu_.FindItem(0x52e039f5u);
+        auto* displayMask=resources.FindObject(screen,OptionsGroups[2],2);
+        Require(display && display->object && displayMask && !menu_.FindItem(Key),
+            "Options extension needs the authored Display row");
+        text_=static_cast<const FlailerTextChunk&>(*display->object);
+        text_.key=Key;
+        text_.strip=nullptr;
+        text_.parentKey=hashString("MENUITEM_8_GROUP");
+        text_.name={};
+        const char name[]="MENUITEM_8";
+        std::copy_n(name,sizeof(name),text_.name.begin());
+        text_.textCapacity=64;
+        text_.ownedText.assign(65,0);
+        text_.text=text_.ownedText.data();
+        text_.SetString(services.optionsExtension->label);
+        const float start=display->object->topLeftY;
+        auto* last=resources.FindObject(screen,0x52e039f9u,1);
+        Require(last,"Options extension needs the authored last row");
+        const float step=(last->topLeftY-start)/5.0f;
+        text_.SetTopLeftY(start+step);
+        auto* mask=resources.FindObject(screen,Mask,2);
+        if (!mask) {
+            mask_.emplace(static_cast<const FlailerBitmapChunk&>(*displayMask));
+            mask_->key=Mask;
+            mask_->strip=nullptr;
+            mask_->parentKey=text_.parentKey;
+            mask_->name={};
+            Append(*mask_);
+            ++art_.bitmapCount;
+            mask=&*mask_;
+        } else {
+            Save(*mask);
+        }
+        mask->SetTopLeftY(displayMask->topLeftY+step);
+        if(text_.clipObjectKey==displayMask->key)text_.clipObjectKey=Mask;
+        for(std::uint32_t i=3;i<7;++i) {
+            auto* label=resources.FindObject(screen,0x52e039f3u+i,1);
+            auto* railMask=resources.FindObject(screen,OptionsGroups[i],2);
+            Require(label && railMask,"Options extension needs all authored row positions");
+            const float delta=start+step*static_cast<float>(i-1)-label->topLeftY;
+            Save(*label);
+            Save(*railMask);
+            label->SetTopLeftY(label->topLeftY+delta);
+            railMask->SetTopLeftY(railMask->topLeftY+delta);
+        }
+        Append(text_);
+        ++art_.textCount;
+        item_.object=&text_;
+        item_.ResetSavedParameters();
+        item_.previous=display;
+        item_.next=display->next;
+        display->next->previous=&item_;
+        display->next=&item_;
+    }
+
+    ~PortRow()
+    {
+        if(page_.menu==&menu_) {
+            if(menu_.current==&item_)menu_.current=item_.previous;
+            item_.previous->next=item_.next;
+            item_.next->previous=item_.previous;
+        }
+        for(const auto& [object,y]:positions_)object->SetTopLeftY(y);
+        Remove(text_);
+        --art_.textCount;
+        if(mask_) {Remove(*mask_);--art_.bitmapCount;}
+    }
+private:
+    void Save(FlailerObjectChunk& object) {positions_.emplace_back(&object,object.topLeftY);}
+    void Append(FlailerObjectChunk& object)
+    {
+        object.previous=art_.objects.previous;
+        object.next=&art_.objects;
+        object.previous->next=&object;
+        art_.objects.previous=&object;
+    }
+    static void Remove(FlailerObjectChunk& object)
+    {
+        object.DeleteFlailerStrip();
+        object.previous->next=object.next;
+        object.next->previous=object.previous;
+    }
+
+    FlailerScreenResource& art_;
+    FlailerScreen& page_;
+    FlailerMenu& menu_;
+    FlailerMenuItem item_;
+    FlailerTextChunk text_;
+    std::optional<FlailerBitmapChunk> mask_;
+    std::vector<std::pair<FlailerObjectChunk*,float>> positions_;
+};
+
 OptionsScreen::OptionsScreen(MainMenuScreenServices& services,std::uint32_t screen)
     : OptionsScreenBase(services,screen),
       blurb_(std::make_unique<FlailerAnimatedBlurb>(*services.ui,screen,0x75980cf0u,0x75980cf0u,0x70a404ecu))
 {
+    if(services.optionsExtension) {
+        portRow_=std::make_unique<PortRow>(services,screen);
+        if(!state_->selection->items[7])
+            state_->selection->AddItem(services.ui->resources->FindObject(screen,PortRow::Mask));
+    }
     // PAL1EEB78 initializes only the embedded RumbleTimer word. Its Tick
     // and TriggerSomething callees are final JR RA/NOP and are not emitted.
     rumbleTimer_=0;
@@ -214,6 +338,11 @@ OptionsScreen::OptionsScreen(MainMenuScreenServices& services,std::uint32_t scre
 }
 OptionsScreen::~OptionsScreen()=default;
 
+void OptionsScreen::HandleHighlight(ScreenMessage message,ScreenCallbackData& data,std::uint32_t group)
+{
+    OptionsScreenBase::HandleHighlight(message,data,portRow_ && data.key==PortRow::Key?PortRow::Mask:group);
+}
+
 void OptionsScreen::HandleEvent(ScreenMessage message,ScreenCallbackData& data)
 {
     auto& state=*state_;
@@ -225,6 +354,9 @@ void OptionsScreen::HandleEvent(ScreenMessage message,ScreenCallbackData& data)
         case 0x52e039f5u:
             destination="Display Options";
             gDisplayOptionsChangeManager.Start(*state.services.frontend);
+            break;
+        case PortRow::Key:
+            if(portRow_)destination=state.services.optionsExtension->screen->name;
             break;
         case 0x52e039f6u:state.services.screens->ChangeToScreen("Phils Load Save",true);return;
         case 0x52e039f7u:destination="NameEntry";break;
@@ -248,7 +380,8 @@ void OptionsScreen::HandleEvent(ScreenMessage message,ScreenCallbackData& data)
         std::int32_t language=0;
         if (data.key>=0x52e039f3u && data.key<=0x52e039f9u)
             language=100020+static_cast<std::int32_t>(data.key-0x52e039f3u);
-        blurb_->NewText(language);
+        if(portRow_ && data.key==PortRow::Key)blurb_->NewText(state.services.optionsExtension->description);
+        else blurb_->NewText(language);
         // Original Highlight falls through to the same Animate operation.
     } else if (message!=ScreenMessage::Tick)return;
     blurb_->Animate();
@@ -569,7 +702,7 @@ public:
             else if(data.key==0xaee77883u)label=0x24bed;
             else if(data.key==0xaee77884u)label=0x24bee;
             blurb_.NewText(label);
-            OptionsScreenBase::HandleHighlight(message,data,scrolling_.GetCurrentMenuMask());
+            SetMenuHighlight(data,scrolling_.GetCurrentMenuMask(),scrolling_.CurrentMenuOffsetY());
             arrows_.SetCurrentItem(data.key==0x52e039fau?0x2932dfcau:0);
         } else if(message==ScreenMessage::Left || message==ScreenMessage::Right) {
             if(data.key==0x52e039fau) {
@@ -611,6 +744,8 @@ public:
                 editing_.menuState={};editing_.menuMode=0;editing_.enabledGenres=255;
             } else data.sound=0;
         } else if(message==ScreenMessage::Tick) {
+            if(ui.externalPresentation && state.selection->current)
+                PositionHighlightBars(scrolling_.GetCurrentMenuMask(),scrolling_.CurrentMenuOffsetY());
             for(auto& slider:sliders_)slider->Animate();
             blurb_.Animate();
         }
@@ -714,7 +849,7 @@ public:
             if(index>=6)state.selectionChange.SetCurrentMenuItem(0);
             blurb_.NewText(index<std::size(blurbs)?blurbs[index]:0);
             state.selectionChange.SetCurrentMenuItem(value);arrows_.SetCurrentItem(value);
-            OptionsScreenBase::HandleHighlight(message,data,scrolling_.GetCurrentMenuMask());
+            SetMenuHighlight(data,scrolling_.GetCurrentMenuMask(),scrolling_.CurrentMenuOffsetY());
         } else if((message==ScreenMessage::Previous && data.key==MenuFirst63) ||
                   (message==ScreenMessage::Next && data.key==MenuFirst63+8))data.value=1;
         else if(message==ScreenMessage::Select) {
@@ -734,7 +869,11 @@ public:
             services.frontend->displaySettings=editing_;
             if(gDisplayOptionsChangeManager.Different(*services.frontend) && services.frontend->autoSave)
                 services.screens->stack.Push("Autosave");
-        } else if(message==ScreenMessage::Tick)blurb_.Animate();
+        } else if(message==ScreenMessage::Tick) {
+            if(ui.externalPresentation && state.selection->current)
+                PositionHighlightBars(scrolling_.GetCurrentMenuMask(),scrolling_.CurrentMenuOffsetY());
+            blurb_.Animate();
+        }
     }
     static void Callback(ScreenMessage message,ScreenCallbackData* data)
     {

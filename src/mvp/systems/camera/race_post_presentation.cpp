@@ -1,4 +1,5 @@
 #include "race_post_presentation.hpp"
+#include "viewport_antialiasing.hpp"
 
 #include "assets/shader_resource.hpp"
 #include "indep/inc/Flags.hpp"
@@ -278,7 +279,9 @@ void RacePostPresentation::detach() {
 void RacePostPresentation::prepare_frame() {
     const Vector2i size = output_->get_visible_rect().size;
     if (size.x < 2 || size.y < 2) return;
-    if (size != extent_) {
+    const auto mode = graphics_antialiasing();
+    const bool aaChanged = aaMode_ != mode;
+    if (size != extent_ || aaChanged) {
         // Reset the RenderingServer wrappers before resizing invalidates the
         // borrowed RenderingDevice textures and their cached canvas bindings.
         sceneTexturesReady_ = false;
@@ -290,6 +293,24 @@ void RacePostPresentation::prepare_frame() {
         }
         RenderingServer::get_singleton()->call_on_render_thread(callable_mp(this,
             &RacePostPresentation::release_scene_textures));
+        if (aaChanged) {
+            aaMode_ = mode;
+            const bool resolveColor = uses_resolved_viewport_color(mode);
+            configure_viewport_antialiasing(*scene_, mode);
+            // Read the viewport after screen-space, temporal or scaling resolves.
+            // Use its linear HDR target for the original fog and history passes.
+            scene_->set_use_hdr_2d(resolveColor);
+            const auto source = resolveColor ? Ref<Texture2D>(scene_->get_texture()) : Ref<Texture2D>(color_);
+            const auto bindColor = [&](const Ref<ShaderMaterial>& pass) {
+                pass->set_shader_parameter("scene_color", source);
+            };
+            bindColor(directFogPass_);
+            bindColor(focusPass_);
+            for (const auto& pass : historyPasses_) bindColor(pass);
+            displayPass_->set_shader_parameter("fallback_linear", resolveColor);
+            fxaa_ = mode.is_empty() && race_fxaa_enabled();
+            displayPass_->set_shader_parameter("fxaa", fxaa_);
+        }
         scene_->set_size(size);
         focusViewport_->set_size({(size.x + 1) / 2, (size.y + 1) / 2});
         for (auto* target : historyViewports_) target->set_size(size);
@@ -363,7 +384,9 @@ void RacePostPresentation::prepare_frame() {
         testMode_ >= 7 && testMode_ <= 8 ? fixtureShader_ : historyShader_;
     if (pass->get_shader() != shader) {
         pass->set_shader(shader);
-        pass->set_shader_parameter("scene_color", color_);
+        const Ref<Texture2D> source = uses_resolved_viewport_color(aaMode_)
+            ? Ref<Texture2D>(scene_->get_texture()) : Ref<Texture2D>(color_);
+        pass->set_shader_parameter("scene_color", source);
         pass->set_shader_parameter("scene_depth", depth_);
         const Ref<Texture2D> palette = fogPalette_.is_valid() ? Ref<Texture2D>(fogPalette_) : neutral_;
         pass->set_shader_parameter("fog_palette", palette);
@@ -396,7 +419,11 @@ void RacePostPresentation::_render_callback(int32_t type, RenderData* data) {
     // buffers change. The dependent canvas viewports sample them after this pass.
     const auto color = buffers->get_color_texture();
     auto depth = buffers->get_depth_texture();
-    if (fxaa_ && depth.is_valid()) depth = copy_depth(*buffers.ptr(), depth);
+    if (depth.is_valid()) {
+        const auto format = RenderingServer::get_singleton()->get_rendering_device()->texture_get_format(depth);
+        if (format->get_format() != RenderingDevice::DATA_FORMAT_R32_SFLOAT)
+            depth = copy_depth(*buffers.ptr(), depth);
+    }
     if (!depth.is_valid()) {
         sceneTexturesReady_ = false;
         return;

@@ -293,6 +293,7 @@ saves/
 !/tools/test_mvp_orbit_camera.gd
 !/tools/test_mvp_results_navigation.gd
 !/tools/test_mvp_menu_navigation.gd
+!/tools/test_mvp_graphic_menu.gd
 !/tools/test_mvp_campaign_matrix.ps1
 !/tools/test_mvp_campaign_drive.gd
 !/tools/test_mvp_be_the_cop.gd
@@ -302,6 +303,7 @@ saves/
 !/tools/test_mvp_race_post.gd
 !/tools/test_mvp_track_material.gd
 !/tools/test_mvp_portable_launch.gd
+!/tools/test_mvp_boot_profile.gd
 !/tools/build_mvp_godot_template.ps1
 !/tools/test_mvp_reflection_performance.gd
 !/tools/test_mvp_starting_grid.gd
