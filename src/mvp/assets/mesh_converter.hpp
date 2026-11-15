@@ -6,6 +6,7 @@
 #include <godot_cpp/classes/texture2d_array.hpp>
 #include <godot_cpp/classes/texture2d.hpp>
 #include <godot_cpp/variant/transform3d.hpp>
+#include <godot_cpp/variant/vector4i.hpp>
 
 #include <cstdint>
 #include <map>
@@ -22,9 +23,11 @@ struct SceneLightContext;
 struct CarPaintAssets {
     godot::Ref<godot::Texture2D> specular, reflection;
     bool frontend{};
+    godot::Vector4i specularSampling, reflectionSampling;
 };
 
-godot::Ref<godot::Texture2D> upload_paint_texture(const EditorMarkerTexture* descriptor);
+godot::Ref<godot::Texture2D> upload_paint_texture(const EditorMarkerTexture* descriptor, bool authoredMips = false);
+godot::Vector4i paint_texture_sampling(const EditorMarkerTexture& descriptor);
 void apply_paint_lighting(godot::MeshInstance3D& mesh, const SceneLightContext& context);
 
 godot::Vector3 race_vector(const float* source);
@@ -37,6 +40,7 @@ class MeshConverter {
 public:
     enum class ScenerySurface { Full, OpaqueOnly, Reflection, ReflectionBillboard, Sky };
     godot::Ref<godot::ArrayMesh> convert_wheel_blur(const EditorMarkerModel& model);
+    godot::Ref<godot::ArrayMesh> convert_frontend_platform(const EditorMarkerModel& model);
     static void audit_track_model(const EditorMarkerModel& model);
     godot::Ref<godot::ArrayMesh> convert(const EditorMarkerModel& model, bool depthWrite = true,
         std::size_t boneCount = 0);
@@ -47,6 +51,7 @@ public:
 
 private:
     bool wheelBlur_{};
+    bool frontendPlatform_{};
     struct TextureSequence {
         godot::Ref<godot::Texture2DArray> texture;
         godot::Ref<godot::Texture2DArray> raw;

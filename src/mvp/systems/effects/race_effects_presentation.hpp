@@ -11,10 +11,11 @@ public:
     explicit RaceEffectsPresentation(godot::Node3D& scene);
     ~RaceEffectsPresentation();
     void prepare_particles(const std::vector<RaceParticleAsset>& assets);
+    void update_water_sky(godot::Camera3D& camera);
     void update(const RaceEffectsFrame& frame, godot::Camera3D& camera, godot::Camera3D* rear,
         std::uint64_t generation, bool ntsc, int worldFrames, bool particlesVisible, bool sunGlareVisible);
-    void update_preview_lights(const std::vector<RaceLightEffect>& lights, godot::Camera3D& camera,int view);
-    void update_preview_particles(const RaceEffectsFrame& frame);
+    void update_preview_effects(const RaceEffectsFrame& frame, godot::Camera3D& camera,int view);
+    void update_preview_particles(const RaceEffectsFrame& frame, float sourceFocal = 0.0f);
     void reset();
 private:
     struct Storage;

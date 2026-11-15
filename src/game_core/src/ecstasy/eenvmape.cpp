@@ -28,6 +28,27 @@ void rotationOnly(float matrix[16])
     matrix[12]=matrix[13]=matrix[14]=0.0f;matrix[15]=1.0f;
 }
 
+void environmentOrientation(float towardOrigin[16],float orientation[16],
+    const float eye[4],const float origin[4])
+{
+    const float zero[4]{},reference[4]{1,0,0,0},up[4]{0,0,1,0};
+    float baseline[16];
+    carCinematicLookAt(baseline,zero,reference,up);rotationOnly(baseline);
+    carCinematicLookAt(towardOrigin,eye,origin,up);rotationOnly(towardOrigin);
+    eTransposeMatrix(orientation,baseline);eMulMatrix(orientation,towardOrigin,orientation);
+    rotationOnly(orientation);eTransposeMatrix(orientation,orientation);
+}
+
+void environmentFaceMatrix(float output[16],const float origin[4],const float orientation[16],
+    std::size_t bank,std::size_t face)
+{
+    float target[4],direction[4],cameraUp[4];
+    eMulVector3(direction,orientation,directions[bank][face]);
+    eMulVector3(cameraUp,orientation,upDirections[bank][face]);
+    for(std::size_t axis=0;axis<4;++axis)target[axis]=origin[axis]+direction[axis];
+    carCinematicLookAt(output,origin,target,cameraUp);
+}
+
 std::array<float,2> computeReflectionST(std::array<float,3> direction)
 {
     // PAL1179B0..117A38. The source normalizes its temporary vector first.
@@ -41,6 +62,16 @@ std::array<float,2> computeReflectionST(std::array<float,3> direction)
     float denominator=std::sqrt(square);denominator+=denominator;
     return {{direction[0]/denominator+0.5f,direction[1]/denominator+0.5f}};
 }
+}
+
+void BuildFrontendEnvironmentMatrix(float output[16],const float viewEye[3],const float origin[4])
+{
+    // EnvironmentMap::eyeOffset is zero. No face rendering is needed for the
+    // frontend material's static CarSelectEnvMap texture.
+    const float eye[4]{viewEye[0],viewEye[1],viewEye[2],0};
+    float towardOrigin[16],orientation[16];
+    environmentOrientation(towardOrigin,orientation,eye,origin);
+    environmentFaceMatrix(output,origin,orientation,0,2);
 }
 
 EnvironmentMap::EnvironmentMap(CarCinematicServices& views,EcstasyRenderTarget* targets,std::size_t count)
@@ -136,15 +167,11 @@ void EnvironmentMap::UpdateCameras(const float viewEye[3],const float reflection
     // high-FPS presentation must not multiply the reflection workload.
     Require(views_.clock && std::isfinite(realTimeElapsed) && realTimeElapsed>=0.0f,
         "Environment schedule has no finite real clock interval");
-    const float zero[4]{},reference[4]{1,0,0,0},up[4]{0,0,1,0};
     float eye[4]{viewEye[0],viewEye[1],viewEye[2],0};
     float origin[4]{reflectionOrigin[0],reflectionOrigin[1],reflectionOrigin[2],0};
-    float baseline[16],towardOrigin[16],orientation[16];
-    carCinematicLookAt(baseline,zero,reference,up);rotationOnly(baseline);
-    carCinematicLookAt(towardOrigin,eye,origin,up);rotationOnly(towardOrigin);
+    float towardOrigin[16],orientation[16];
+    environmentOrientation(towardOrigin,orientation,eye,origin);
     std::copy(towardOrigin,towardOrigin+16,bodyMatrix_.begin());
-    eTransposeMatrix(orientation,baseline);eMulMatrix(orientation,towardOrigin,orientation);
-    rotationOnly(orientation);eTransposeMatrix(orientation,orientation);
     const std::size_t bank=applicationState==3 ? 0:1;
     const bool primary=views_.presentationLayout==1 || views_.presentationLayout==2;
     std::array<bool,6> due{};
@@ -174,11 +201,8 @@ void EnvironmentMap::UpdateCameras(const float viewEye[3],const float reflection
         // Face2 additionally supplies the body's current environment matrix;
         // it must follow the car even between texture refresh intervals.
         if(!view.enabled && face!=2)continue;
-        float target[4],direction[4],cameraUp[4],matrix[16];
-        eMulVector3(direction,orientation,directions[bank][face]);
-        eMulVector3(cameraUp,orientation,upDirections[bank][face]);
-        for(std::size_t axis=0;axis<4;++axis)target[axis]=origin[axis]+direction[axis];
-        carCinematicLookAt(matrix,origin,target,cameraUp);
+        float matrix[16];
+        environmentFaceMatrix(matrix,origin,orientation,bank,face);
         if(face==2)std::copy(matrix,matrix+16,bodyMatrix_.begin());
         if(!view.enabled)continue;
         carCinematicViewPublish(&views_,view.view,matrix,cameraElapsed_[face]);

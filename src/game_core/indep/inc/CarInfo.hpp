@@ -415,7 +415,8 @@ struct CarRenderBindings {
 // GPU submission must have completed before ReInit or destruction.
 struct FrontendFrame;
 struct RaceEffectsFrame;
-void CollectFrontendCarModels(FrontendFrame& frame,RaceEffectsFrame& effects,std::int32_t worldFrames);
+void CollectFrontendCarModels(FrontendFrame& frame,RaceEffectsFrame& effects,std::int32_t worldFrames,
+    const CarCinematicServices& views);
 class FrontEndRenderingCar final {
 public:
     FrontEndRenderingCar(const CarRenderBindings& bindings,
@@ -437,7 +438,7 @@ public:
 private:
     struct Storage;
     std::unique_ptr<Storage> storage_;
-    friend void CollectFrontendCarModels(FrontendFrame&,RaceEffectsFrame&,std::int32_t);
+    friend void CollectFrontendCarModels(FrontendFrame&,RaceEffectsFrame&,std::int32_t,const CarCinematicServices&);
     friend void RenderFrontEndCars(const CarCinematicScreen&,EcstasyFrame&,
         std::int32_t,std::int32_t,bool,bool,bool,bool);
     friend void UpdateEnvironmentMapCameras(EnvironmentMap&,CarCinematicServices&,

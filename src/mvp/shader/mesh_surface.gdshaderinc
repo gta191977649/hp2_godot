@@ -113,7 +113,14 @@ void vertex() {
     gs_clip_weight = (PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).w;
     gs_mip_bias = CUSTOM2.x;
     gs_color_weighted = gs_vertex_color(VERTEX, COLOR, CUSTOM1.xyz, MODELVIEW_MATRIX,
-        MODEL_MATRIX, INV_VIEW_MATRIX) * gs_clip_weight;
+        MODEL_MATRIX, INV_VIEW_MATRIX, gs_road) * gs_clip_weight;
+#if defined(GS_ROAD_WATER) && defined(GS_MIX)
+    if (gs_has_wet_mask) {
+        gs_wet_mask_color_weighted = gs_vertex_color(VERTEX, vec4(CUSTOM3.rgb, 0.0), CUSTOM1.xyz,
+            MODELVIEW_MATRIX, MODEL_MATRIX, INV_VIEW_MATRIX, true) * gs_clip_weight;
+        gs_wet_mask_mip_bias = CUSTOM3.w;
+    }
+#endif
 #endif
 }
 
@@ -130,7 +137,11 @@ void fragment() {
     bool reflection = scenery_layers == reflection_layer;
     float focal_scale = mirror ? 32.0 / 1.08 : reflection ? 32.0 : hp2_track_focal_scale;
     float focal = abs(PROJECTION_MATRIX[1][1]) * focal_scale;
-    vec4 result = gs_fragment(UV, OUTPUT_IS_SRGB, focal / abs(gs_clip_weight));
+    float q = focal / abs(gs_clip_weight);
+    vec4 result = gs_fragment(UV, OUTPUT_IS_SRGB, q);
+#ifdef GS_ROAD_WATER
+    result = gs_water_blend(result, SCREEN_UV, FRAGCOORD.z, OUTPUT_IS_SRGB, mirror, UV, q);
+#endif
     ALBEDO = result.rgb;
 #if defined(GS_MIX) || defined(GS_ADD) || defined(GS_SUB)
     ALPHA = result.a;

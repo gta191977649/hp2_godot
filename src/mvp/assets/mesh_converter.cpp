@@ -20,6 +20,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <set>
 #include <stdexcept>
 #include <tuple>
 #include <vector>
@@ -54,11 +55,11 @@ Ref<ImageTexture> animation_data(int width, int height, const std::vector<float>
     return ImageTexture::create_from_image(Image::create_from_data(width, height, false, Image::FORMAT_RGBAF, bytes));
 }
 
-Ref<Image> track_image(const TextureInfo& source, int& minAlpha, int& maxAlpha) {
+Ref<Image> authored_texture_image(const TextureInfo& source, int& minAlpha, int& maxAlpha) {
     const auto* wire = source.descriptor->authoredRecord;
     std::uint32_t width{}, height{};
     const auto levels = wire[0x6e];
-    if (levels > 6) throw std::runtime_error("Invalid original track mip count");
+    if (levels > 6) throw std::runtime_error("Invalid authored mip count");
     std::uint32_t baseSize{};
     std::memcpy(&baseSize, wire + 0x44, sizeof(baseSize));
     PackedByteArray bytes;
@@ -101,6 +102,12 @@ float record_float(const std::uint8_t* record) {
 bool is_light_shaft(std::uint32_t key) {
     // GRADIENTLIGHT, LIGHTRAYGRAD_3 and LIGHTRAYGRAD_4 in the retail texture packs.
     return key == 0x885adba5u || key == 0xba0e31b3u || key == 0xba0e31b4u;
+}
+
+bool is_road_water(std::uint32_t key) {
+    // W_RDWATER and RD_PUDDLE families, including their separate additive masks.
+    return key == 0x8bbf7d4eu || key == 0x79940f30u || key == 0x0cca6e99u ||
+        key == 0x5ef002d2u || key == 0x3cf05d44u || key == 0x6833b84fu || key == 0xcfff069du;
 }
 
 bool track_material(const std::uint8_t* wire, std::uint32_t flags) {
@@ -151,9 +158,20 @@ Skeleton3D* attach_pose_palette(MeshInstance3D& mesh, const String& name, std::s
     return skeleton;
 }
 
-Ref<Texture2D> upload_paint_texture(const EditorMarkerTexture* descriptor) {
+Vector4i paint_texture_sampling(const EditorMarkerTexture& descriptor) {
+    const auto* wire = descriptor.authoredRecord;
+    return {wire[0x4c] & 3, wire[0x6f], wire[0x70], wire[0x6e]};
+}
+
+Ref<Texture2D> upload_paint_texture(const EditorMarkerTexture* descriptor, bool authoredMips) {
     const auto* source = textureInfoForDescriptor(descriptor);
     if (!source || !source->pixels.Data()) return {};
+    if (authoredMips) {
+        int minAlpha = 255, maxAlpha = 0;
+        auto texture = ImageTexture::create_from_image(authored_texture_image(*source, minAlpha, maxAlpha));
+        texture->set_name(String::num_uint64(descriptor->key));
+        return texture;
+    }
     std::uint32_t width{}, height{};
     const auto rgba = DecodeTextureMipRgba(*source, 0, 0, source->pixels.size, width, height);
     PackedByteArray bytes;
@@ -249,7 +267,7 @@ const MeshConverter::TextureSequence& MeshConverter::texture_sequence(const Edit
         TypedArray<Image> raw;
         for (const auto& frame : frames) {
             int lo = 255, hi = 0;
-            raw.push_back(track_image(frame, lo, hi));
+            raw.push_back(authored_texture_image(frame, lo, hi));
         }
         sequence.raw.instantiate();
         if (sequence.raw->create_from_images(raw) != OK)
@@ -264,7 +282,7 @@ const MeshConverter::TrackTexture& MeshConverter::track_texture(const EditorMark
     if (inserted) {
         const auto* source = textureInfoForDescriptor(&descriptor);
         if (!source || !source->pixels.Data()) throw std::runtime_error("Missing original track texture");
-        const auto image = track_image(*source, result.minAlpha, result.maxAlpha);
+        const auto image = authored_texture_image(*source, result.minAlpha, result.maxAlpha);
         result.texture = ImageTexture::create_from_image(image);
         if (result.texture.is_null()) throw std::runtime_error("Godot rejected original track texture");
         result.texture->set_name(String::num_uint64(descriptor.key));
@@ -304,6 +322,12 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
 Ref<ArrayMesh> MeshConverter::convert_wheel_blur(const EditorMarkerModel& model) {
     MeshConverter converter;
     converter.wheelBlur_ = true;
+    return converter.convert(model, false);
+}
+
+Ref<ArrayMesh> MeshConverter::convert_frontend_platform(const EditorMarkerModel& model) {
+    MeshConverter converter;
+    converter.frontendPlatform_ = true;
     return converter.convert(model, false);
 }
 
@@ -441,7 +465,8 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         }
         const EditorMarkerLightMaterial* lightMaterial = nullptr;
         std::uint32_t paintFlags = 0;
-        if (paint_ && texture && !texture->requiresDepthSort && !morph && !rigid &&
+        const bool previewGlass = paint_ && paint_->frontend && wire[0x76] == 0x44 && !wire[0x50];
+        if (paint_ && texture && (!texture->requiresDepthSort || previewGlass) && !morph && !rigid &&
             (strip.flags & 0x1c0u) && strip.normals.size() == strip.positions.size()) {
             if (strip.lightMaterialIndex >= 0 && std::size_t(strip.lightMaterialIndex) < geometry.lightMaterials.size())
                 lightMaterial = geometry.lightMaterials[strip.lightMaterialIndex];
@@ -498,11 +523,11 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             if (roadMaterial) {
                 for (const float component : strip.normals[i]) surface.paintVertices.push_back(component);
             }
-            if (gsTrack) {
+            if (gsTrack || frontendPlatform_ || (lightMaterial && paint_->frontend)) {
                 // SetMipMapK (0011C328) sends the low byte of CalcAutoK per strip.
                 surface.mipBias.push_back(static_cast<std::uint8_t>(strip.autoK) / 16.f);
             }
-            if (gsTrack || sky) {
+            if (gsTrack || sky || frontendPlatform_) {
                 surface.colors.push_back({float((rgb555 & 31u) * 8) / 255.f,
                     float(((rgb555 >> 5) & 31u) * 8) / 255.f, float(((rgb555 >> 10) & 31u) * 8) / 255.f,
                     (rgb555 & 0x8000u) ? 128.f / 255.f : 0.f});
@@ -530,12 +555,54 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
 
     Ref<ArrayMesh> mesh;
     mesh.instantiate();
+    std::map<const Surface*, const Surface*> wetMasks;
+    std::set<const Surface*> mergedMasks;
+    if (depthWrite && !morph && !rigid && !boneCount && !sky && !reflection) {
+        for (const auto& base : surfaces) {
+            const auto key = base.descriptor->key;
+            if (!base.gsTrack || base.roadMaterial || (key != 0x8bbf7d4eu && key != 0x79940f30u))
+                continue;
+            const auto* wire = base.descriptor->authoredRecord;
+            if (wire[0x29] != 2 || wire[0x4e] || !wire[0x4f] || !wire[0x50] ||
+                wire[0x75] || wire[0x76] != 0x44 || wire[0x79] ||
+                textureInfoForDescriptor(base.descriptor)->requiresDepthSort ||
+                texture_sequence(*base.descriptor).count || !track_texture(*base.descriptor).minAlpha)
+                continue;
+            const auto fullVertexAlpha = [](const PackedColorArray& colors) {
+                return std::all_of(colors.ptr(), colors.ptr() + colors.size(),
+                    [](const Color& color) { return color.a == 128.f / 255.f; });
+            };
+            if (!fullVertexAlpha(base.colors)) continue;
+            for (const auto& mask : surfaces) {
+                if (!mask.gsTrack || !mask.roadMaterial || mask.descriptor->key != 0x0cca6e99u ||
+                    mergedMasks.count(&mask))
+                    continue;
+                const auto* state = mask.descriptor->authoredRecord;
+                if (state[0x29] != 3 || state[0x4e] || !state[0x4f] || state[0x50] ||
+                    state[0x6e] || state[0x6f] != 1 || state[0x70] != 3 || state[0x71] ||
+                    state[0x75] || state[0x76] != 0x48 || state[0x79] ||
+                    textureInfoForDescriptor(mask.descriptor)->requiresDepthSort ||
+                    texture_sequence(*mask.descriptor).count)
+                    continue;
+                // The source-over strip writes depth and the next bucket's additive
+                // strip tests equal depth. Share a fragment only for identical triangles.
+                if (base.vertices != mask.vertices || base.uv != mask.uv || base.indices != mask.indices)
+                    continue;
+                wetMasks.emplace(&base, &mask);
+                mergedMasks.insert(&mask);
+                break;
+            }
+        }
+    }
     bool batchable = true;
     bool hasScroll = false, hasTextureSequence = false, hasPuddle = false;
     bool hasSortedSurfaces = false;
     bool needsReflectionFilter = false;
     int shaftSurfaces = 0;
     for (const auto& surface : surfaces) {
+        if (mergedMasks.count(&surface)) continue;
+        const auto paired = wetMasks.find(&surface);
+        const auto* wetMask = paired != wetMasks.end() ? paired->second : nullptr;
         const auto textureKeyValue = surface.descriptor->key;
         const auto* wire = surface.descriptor->authoredRecord;
         // The original shaft textures use TEX1.MXL=0, MMAG=1 and MMIN=3.
@@ -549,8 +616,18 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         arrays[Mesh::ARRAY_INDEX] = surface.indices;
         if (morph) arrays[Mesh::ARRAY_CUSTOM0] = surface.animationIndices;
         if (surface.lightMaterial) arrays[Mesh::ARRAY_CUSTOM0] = surface.paintVertices;
-        if (surface.roadMaterial) arrays[Mesh::ARRAY_CUSTOM1] = surface.paintVertices;
-        if (surface.gsTrack) arrays[Mesh::ARRAY_CUSTOM2] = surface.mipBias;
+        if (surface.roadMaterial || wetMask)
+            arrays[Mesh::ARRAY_CUSTOM1] = wetMask ? wetMask->paintVertices : surface.paintVertices;
+        if (!surface.mipBias.is_empty()) arrays[Mesh::ARRAY_CUSTOM2] = surface.mipBias;
+        if (wetMask) {
+            PackedFloat32Array tint;
+            for (int vertex = 0; vertex < wetMask->colors.size(); ++vertex) {
+                const auto& color = wetMask->colors[vertex];
+                for (const float channel : {color.r, color.g, color.b, wetMask->mipBias[vertex]})
+                    tint.push_back(channel);
+            }
+            arrays[Mesh::ARRAY_CUSTOM3] = tint;
+        }
         if (boneCount) {
             arrays[Mesh::ARRAY_BONES] = surface.bones;
             arrays[Mesh::ARRAY_WEIGHTS] = surface.weights;
@@ -558,12 +635,29 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         const auto index = mesh->get_surface_count();
         const auto format = morph ? Mesh::ARRAY_CUSTOM_R_FLOAT : Mesh::ARRAY_CUSTOM_RGBA_FLOAT;
         auto flags = morph || surface.lightMaterial ? std::uint64_t(format) << Mesh::ARRAY_FORMAT_CUSTOM0_SHIFT : 0;
-        if (surface.roadMaterial) flags |= std::uint64_t(Mesh::ARRAY_CUSTOM_RGB_FLOAT) << Mesh::ARRAY_FORMAT_CUSTOM1_SHIFT;
-        if (surface.gsTrack) flags |= std::uint64_t(Mesh::ARRAY_CUSTOM_R_FLOAT) << Mesh::ARRAY_FORMAT_CUSTOM2_SHIFT;
+        if (surface.roadMaterial || wetMask)
+            flags |= std::uint64_t(Mesh::ARRAY_CUSTOM_RGB_FLOAT) << Mesh::ARRAY_FORMAT_CUSTOM1_SHIFT;
+        if (!surface.mipBias.is_empty()) flags |= std::uint64_t(Mesh::ARRAY_CUSTOM_R_FLOAT) << Mesh::ARRAY_FORMAT_CUSTOM2_SHIFT;
+        if (wetMask) flags |= std::uint64_t(Mesh::ARRAY_CUSTOM_RGBA_FLOAT) << Mesh::ARRAY_FORMAT_CUSTOM3_SHIFT;
         mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays, {}, {}, flags);
         if (mesh->get_surface_count() != index + 1)
             throw std::runtime_error("Godot rejected a surface for model " + std::to_string(model.key));
         hasSortedSurfaces |= textureInfoForDescriptor(surface.descriptor)->requiresDepthSort;
+        if (frontendPlatform_) {
+            auto& base = paintTextures_[surface.descriptor];
+            if (base.is_null()) base = upload_paint_texture(surface.descriptor, true);
+            Ref<ShaderMaterial> material;
+            material.instantiate();
+            material->set_shader(load_shader("res://shader/frontend_platform.gdshader"));
+            material->set_render_priority(wire[0x29]);
+            material->set_shader_parameter("base_image", base);
+            material->set_shader_parameter("base_sampling", paint_texture_sampling(*surface.descriptor));
+            material->set_shader_parameter("base_lod_scale", float(1 << wire[0x71]));
+            mesh->surface_set_material(index, material);
+            mesh->set_meta("hp2_frontend_platform", true);
+            batchable = false;
+            continue;
+        }
         if (wheelBlur_) {
             auto& texture = paintTextures_[surface.descriptor];
             if (texture.is_null()) texture = upload_paint_texture(surface.descriptor);
@@ -582,12 +676,15 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         }
         if (surface.lightMaterial) {
             auto& base = paintTextures_[surface.descriptor];
-            if (base.is_null()) base = upload_paint_texture(surface.descriptor);
+            if (base.is_null()) base = upload_paint_texture(surface.descriptor, paint_->frontend);
             if (base.is_null() || ((surface.paintFlags & 0x40u) && paint_->specular.is_null()))
                 throw std::runtime_error("Car paint is missing an authored texture");
             Ref<ShaderMaterial> material;
             material.instantiate();
-            material->set_shader(load_shader("res://shader/car_paint.gdshader"));
+            const bool glass = paint_->frontend && textureInfoForDescriptor(surface.descriptor)->requiresDepthSort;
+            material->set_shader(load_shader(glass ? "res://shader/car_paint_glass.gdshader" :
+                "res://shader/car_paint.gdshader"));
+            if (glass) material->set_render_priority(std::min<int>(wire[0x29], 7));
             material->set_shader_parameter("base_image", base);
             material->set_shader_parameter("specular_image", paint_->specular);
             material->set_shader_parameter("reflection_image", paint_->reflection);
@@ -602,6 +699,24 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             for (int i = 0; i < 16; i += 4)
                 coefficients.push_back({values[i], values[i + 1], values[i + 2], values[i + 3]});
             material->set_shader_parameter("coefficients", coefficients);
+            if (paint_->frontend) {
+                // BuildDmaData 00116828 compiles the authored exponent pairs
+                // into the parameters used by the VU vertex power curve.
+                const auto intercept = [](float slope, float amplitude) {
+                    if (amplitude == 0.0f) return 0.0f;
+                    std::int32_t bits{};
+                    std::memcpy(&bits, &amplitude, sizeof(bits));
+                    return float(bits) - slope * 1065353216.0f;
+                };
+                material->set_shader_parameter("frontend_power", Vector4(
+                    values[1] == 0.0f ? 0.0f : values[0], intercept(values[0], values[1]),
+                    values[13] == 0.0f ? 0.0f : values[12], intercept(values[12], values[13])));
+                material->set_shader_parameter("base_sampling", paint_texture_sampling(*surface.descriptor));
+                material->set_shader_parameter("specular_sampling", paint_->specularSampling);
+                material->set_shader_parameter("reflection_sampling", paint_->reflectionSampling);
+                material->set_shader_parameter("base_lod_scale", float(1 << wire[0x71]));
+                material->set_shader_parameter("base_tfx", int(wire[0x4e]));
+            }
             const auto& blend = nativeRenderPolicy.reflectionBlend;
             const bool overrideBlend = (surface.paintFlags & 4u) && !paint_->frontend;
             material->set_shader_parameter("reflection_selectors", overrideBlend ?
@@ -613,9 +728,8 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             continue;
         }
         if (shaft) ++shaftSurfaces;
-        hasPuddle |= textureKeyValue == 0x8bbf7d4eu || textureKeyValue == 0x79940f30u ||
-            textureKeyValue == 0x0cca6e99u || textureKeyValue == 0x5ef002d2u ||
-            textureKeyValue == 0x3cf05d44u || textureKeyValue == 0x6833b84fu || textureKeyValue == 0xcfff069du;
+        const bool puddle = is_road_water(textureKeyValue);
+        hasPuddle |= puddle;
         const bool scroll = wire[0x79] != 0;
         const auto& sequence = texture_sequence(*surface.descriptor);
         if (surface.gsTrack) {
@@ -629,7 +743,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             batchable &= !transparent && write;
             hasScroll |= scroll;
             hasTextureSequence |= sequence.count != 0;
-            const bool cacheable = !morph && !rigid && !surface.roadMaterial;
+            const bool cacheable = !morph && !rigid && !surface.roadMaterial && !wetMask;
             const auto cacheKey = std::make_tuple(surface.descriptor, depthWrite, billboard, true);
             if (cacheable) {
                 const auto cached = animatedTextures_.find(cacheKey);
@@ -640,14 +754,22 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             }
             const char* mode = !transparent ? (!wire[0x75] && !morph && !rigid ? "copy_static" : "copy") :
                 blend == 0x48 ? "add" : blend == 0x42 ? "sub" : "mix";
-            const String path = String("res://shader/track_material_") + mode + (write ? "_write" : "_read") +
+            const bool waterBlend = puddle && !source->requiresDepthSort && wire[0x4e] == 0 &&
+                ((blend == 0x44 && write && !wire[0x75]) || (blend == 0x48 && !write));
+            const String path = String(waterBlend ? "res://shader/road_water_" : "res://shader/track_material_") +
+                mode + (write ? "_write" : "_read") +
                 (wire[0x75] ? "_biased.gdshader" : ".gdshader");
             auto& shader = animatedShaders_[path];
             if (shader.is_null()) shader = load_shader(path);
             Ref<ShaderMaterial> draw;
             draw.instantiate();
             draw->set_shader(shader);
-            draw->set_render_priority(source->requiresDepthSort ? std::min<int>(wire[0x29], 7) : -1);
+            if (waterBlend && blend == 0x44) draw->set_meta("hp2_wet_road", true);
+            // Authored projected shadows in bucket 4 follow the wet asphalt and
+            // its bucket-3 mask. Drawing them first loses their road coverage.
+            const bool projectedShadow = blend == 0x44 && !write && wire[0x75] == 1 && wire[0x29] == 4;
+            draw->set_render_priority(source->requiresDepthSort || waterBlend || projectedShadow ?
+                std::min<int>(wire[0x29], 7) : -1);
             draw->set_shader_parameter("gs_texture_linear", raw.texture);
             draw->set_shader_parameter("gs_texture_nearest", raw.texture);
             draw->set_shader_parameter("gs_test", alphaTest);
@@ -686,10 +808,11 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
                 draw->set_shader_parameter("texture_rate", float(sequence.rate));
                 draw->set_shader_parameter("real_clock", sequence.realClock);
             }
-            if (surface.roadMaterial) {
+            const auto* roadMaterial = wetMask ? wetMask->roadMaterial : surface.roadMaterial;
+            if (roadMaterial) {
                 auto* registry = catalogue ? catalogue->resourceRegistry : nullptr;
                 const auto* falloff = registry ? registry->SpecialTexture(6) : nullptr;
-                if (!falloff || (blend != 0x0a && blend != 0x48) || sequence.count)
+                if (!falloff || (!wetMask && blend != 0x0a && blend != 0x48) || sequence.count)
                     throw NotImplemented("0010AC50", "Unsupported track strip 0x40 state or missing SPECULARFALLOFF");
                 const auto& specular = track_texture(*falloff);
                 // TEST coverage agrees on the two kicks if the alpha test is always
@@ -697,13 +820,21 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
                 if (alphaTest && (raw.minAlpha != raw.maxAlpha || specular.minAlpha != specular.maxAlpha ||
                     raw.minAlpha != specular.minAlpha))
                     throw NotImplemented("0010AC50", "Track strip 0x40 needs destination alpha feedback");
-                const auto* c = surface.roadMaterial->NativeCoefficients();
+                const auto* c = roadMaterial->NativeCoefficients();
                 draw->set_shader_parameter("gs_specular", specular.texture);
-                draw->set_shader_parameter("gs_road", true);
+                draw->set_shader_parameter("gs_road", !wetMask);
                 draw->set_shader_parameter("gs_road_alpha", Vector4(c[12], c[13], c[14], c[15]));
                 draw->set_shader_parameter("gs_road_min_dot", c[2]);
                 const auto& sun = registry->Lights().sunlightDirection;
                 draw->set_shader_parameter("gs_sun", race_vector(sun.data()) * 10000.f);
+                if (wetMask) {
+                    const auto& mask = track_texture(*wetMask->descriptor);
+                    const auto repeat = wetMask->descriptor->authoredRecord[0x4c];
+                    draw->set_shader_parameter("gs_has_wet_mask", true);
+                    draw->set_shader_parameter("gs_wet_mask_linear", mask.texture);
+                    draw->set_shader_parameter("gs_wet_mask_nearest", mask.texture);
+                    draw->set_shader_parameter("gs_wet_mask_repeat", Vector2i(repeat & 1u, (repeat >> 1) & 1u));
+                }
             }
             draw->set_meta("hp2_texture_key", std::int64_t(textureKeyValue));
             mesh->surface_set_material(index, draw);

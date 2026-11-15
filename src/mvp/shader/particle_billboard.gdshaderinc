@@ -4,6 +4,7 @@ uniform vec4 size_curve[4];
 uniform vec2 atlas_size;
 uniform float lifetime;
 uniform float pixel_cap;
+uniform float preview_focal;
 uniform float interest_distance;
 uniform bool alpha_test;
 uniform bool nearest_minification;
@@ -22,6 +23,12 @@ void vertex() {
     float depth = -center.z;
     bool in_view = int(group.r) == (identity >> 10) && (int(group.g) & view) != 0 &&
         depth > 0.0 && depth < interest_distance;
+    if (preview_focal > 0.0) {
+        // RenderWorldParticles rejects an off-screen centre before expanding the quad.
+        vec4 clip = PROJECTION_MATRIX * center;
+        in_view = in_view && all(lessThanEqual(abs(clip.xy), vec2(clip.w))) &&
+            clip.z >= CLIP_SPACE_FAR * clip.w && clip.z <= clip.w;
+    }
     // Collapse rejected quads before rasterization. A fragment discard
     // still pays for every covered sample, especially with large smoke FX.
     if (!particle_baseline && (!in_view || remaining == 0)) {
@@ -37,13 +44,14 @@ void vertex() {
         vec2 offset = mat2(vec2(cos(rotation), sin(rotation)), vec2(-sin(rotation), cos(rotation))) * VERTEX.xy;
         // Forward+ may flip the projection Y axis for a render target. Its
         // magnitude sets the focal length; using the sign collapses large FX.
-        float focal = 240.0 * abs(PROJECTION_MATRIX[1][1]);
+        float focal = preview_focal > 0.0 ? preview_focal : 240.0 * abs(PROJECTION_MATRIX[1][1]);
         float size = clamp(shape.x, 0.0, pixel_cap * max(depth, 0.0) / focal);
         // GS modulate cannot produce a surviving alpha even with a fully
         // opaque texel if the quantized vertex alpha is below this limit.
         bool alpha_can_pass = texture_function != 0 ||
             floor(255.0 * tint.a / 128.0 + 0.001) > (alpha_test ? 48.0 : 0.0);
-        visible_in_view = float(in_view && size > 0.0 && (particle_baseline || alpha_can_pass));
+        bool visible_size = preview_focal > 0.0 ? size * focal > depth : size > 0.0;
+        visible_in_view = float(in_view && visible_size && (particle_baseline || alpha_can_pass));
         // Keep the billboard in the standard spatial vertex path. This gives
         // Forward+ the same view-space position for depth, fog and rasterization.
         MODELVIEW_MATRIX = mat4(vec4(1.0, 0.0, 0.0, 0.0), vec4(0.0, 1.0, 0.0, 0.0),
@@ -74,9 +82,19 @@ void fragment() {
     result = min(floor(result + 0.001), vec4(255.0));
     if (result.a <= (alpha_test ? 48.0 : 0.0)) discard;
     vec3 rgb = result.rgb / 255.0;
-    ALBEDO = mix(rgb / 12.92, pow((rgb + 0.055) / 1.055, vec3(2.4)),
+    float blend_alpha = min(result.a / 128.0, 1.0);
+    float compensation = 1.0;
+#ifdef PARTICLE_ADDITIVE
+    if (preview_focal > 0.0) {
+        // GS adds the alpha-weighted color in bytes. Convert the weighted
+        // contribution first so weak sprites have that intensity over black.
+        rgb = min(floor(result.rgb * result.a / 128.0), vec3(255.0)) / 255.0;
+        compensation = 1.0 / blend_alpha;
+    }
+#endif
+    ALBEDO = compensation * mix(rgb / 12.92, pow((rgb + 0.055) / 1.055, vec3(2.4)),
         greaterThan(rgb, vec3(0.04045)));
 #ifndef PARTICLE_CUTOUT
-    ALPHA = min(result.a / 128.0, 1.0);
+    ALPHA = blend_alpha;
 #endif
 }

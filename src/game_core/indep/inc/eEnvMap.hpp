@@ -57,4 +57,6 @@ private:
 void UpdateEnvironmentMapCameras(EnvironmentMap& environment,CarCinematicServices& views,
     World* world,const CarFramePlayerRegistry* players,std::int32_t applicationState,
     float realTimeElapsed);
+// Port-side state-only access to the source frontend body reflection basis.
+void BuildFrontendEnvironmentMatrix(float output[16],const float viewEye[3],const float origin[4]);
 }

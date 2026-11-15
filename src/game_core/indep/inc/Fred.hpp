@@ -53,12 +53,14 @@ int32_t raceProfileUsesResults(const RaceProfileTimes* profile);
 #include "CarInfo.hpp"
 #include "CarDriver.hpp"
 #include "indep/inc/Ecstasy.hpp"
+#include "indep/inc/eLight.hpp"
 #include "Track.hpp"
 #include "indep/inc/EventTree.hpp"
 #include "CameraMover.hpp"
 #include "indep/inc/Point.hpp"
 #include <array>
 #include <exception>
+#include <optional>
 #include <cstdint>
 #include <string>
 
@@ -817,6 +819,8 @@ struct FrontendModelRequest {
     const EditorMarkerModel* model{};
     std::array<float,16> transform{};
     std::int32_t viewNumber{-1}; // borrowed source view, never the Flailer view0 by inference
+    bool reflectedCar{}; // Port-side projection of the source reflected, solid-only pass.
+    std::optional<SceneLightContext> lighting; // Port-side snapshot of the original car draw context.
 };
 struct FrontendFrame {
     std::vector<FrontendModelRequest> models;

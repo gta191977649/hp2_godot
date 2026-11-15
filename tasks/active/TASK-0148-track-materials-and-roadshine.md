@@ -177,3 +177,113 @@ small sky tint difference. A full-frame recmp-to-Godot comparison still
 needs matching pose, asset, and weather data. No exposure or saturation
 adjustment was applied to the final image. Captures and logs are under
 `local/sky-color`.
+
+### Road puddle follow-up
+
+Recomp revision `8ae05937be6865dde1e45c108cecd79f247d6b7a` uses the
+authored ALPHA register in `recomp/runtime/native.cpp` (`set_blend`) and
+composites the premultiplied contributions into an unorm render target in
+`native_vk.cpp` and `shaders/native.frag`. The original order and depth
+provenance are `AttachSolidPolys` at retail `0010BB20` and `002A6F78`
+for the `0x40` specular vertex alpha. The ELF identity is recorded above.
+
+The existing 30-route runtime inventory contains 422 affected strips in
+routes 11–16 and 41–46. The wet asphalt (`0x44`) is order 2 and writes
+depth. Its additive (`0x48`) masks use order 3 or 4 and retain their
+unbiased or bias-1 depth test. Previously the non-sorted draws all shared
+one priority and the additive signal was decoded against black before
+being added to a lit road. Also, hiding the actual `W_RDWATER` underlay
+exposed the sky at the Track 12 site. The underlay is the only road there.
+
+Godot uses the same wet-material path in race and Track Viewer. It samples
+the opaque scene for the byte-space blend when the depth is at the wet
+road, within a pixel's depth variation for resolved depth. The original
+asphalt texture provides the background where the wet strip is the only
+road. The additive mask contributes in the authored order. It converts
+the increment against the opaque reference, so overlapping transparent
+layers can still differ from Recomp's live destination color.
+
+`tools/test_mvp_track_material.gd` passed on Vulkan and D3D12 for the
+underlay `(88,93,80)`, mask `(64,104,96)`, and replacement `(32,64,96)`
+pixel references. The backends also rendered the Track 12 and Track 41
+retail materials with `tools/capture_mvp_track_scenery.gd`. The matched
+Godot Track 12 camera showed the far-scene silhouettes removed from the
+asphalt, with the separate mask still affecting the road. No matched
+Recomp runtime frame was captured. Logs and images are in `local/puddle`.
+
+### Restore alpha over the original sky
+
+The preceding asphalt fallback incorrectly made the entire wet strip
+opaque where it provided the road. `SkyResources::StuffSky` (retail
+`0011C6F8`) and the sky packet group in `EcstasyDisplayFrame` establish
+that the original scene draws and flushes the sky before world scenery.
+`AttachSolidPolys` then orders the non-depth-sorted wet asphalt and mask
+by their authored material priority. This uses the existing retail ELF
+identity above and required no game-core changes.
+
+A depth-only diagnostic on Track 13 showed that the old tree silhouettes
+coincided with opaque pixels behind the wet strip. Scene color at the road
+is still used where its depth matches. Where the wet strip is the road,
+the primary view and Track Viewer reuse the sky-only viewport that serves
+sun glare. The shader applies the texture's byte alpha over that sky.
+Without a sky reference, including the rear camera, the shader retains
+source alpha over the live sky when the opaque screen copy has no depth.
+The additive mask and depth tests retain their authored order.
+
+Vulkan and D3D12 passed the distinct opaque-road, additive-mask,
+live-sky and clean-sky pixel checks in `tools/test_mvp_track_material.gd`.
+Both captured the forest puddle on Track 13, including the uphill view
+toward the hazard post. The blue-gray sheen is visible again and the
+opposite view no longer shows background tree silhouettes. The asphalt
+shade still steps at the strip boundary in the uphill view. No matched
+Recomp runtime frame was captured. Logs and images are in `local/puddle-alpha`.
+The Debug Track Viewer switch-and-return test passed on both backends
+(D3D12 passed on retry). `build.ps1 --jobs 8` exported Release, and the
+export loaded and exited Track 13 on Vulkan.
+
+### Track 13 wet-to-dry asphalt
+
+Captured the retail Scenic Drive delivery in Recomp
+`8ae05937be6865dde1e45c108cecd79f247d6b7a`. The stock `speed.exe`
+SHA-256 was `3e985020f6f67e1086080d7320b73176cd9a1bd34fcae2d093e73ceeddb9d15e`.
+The disc executable was the retail USA ELF recorded above. A local
+Recomp hook at `speed.exe+0xD21E0` set the primary camera before the world
+packet was built. `GetView` (`00107C90`) and `CreateViewMatricies`
+(`0010E6B4`) provided the view and camera fields. The applied Godot
+eye and target were `(-585.8,-81.8,-501.7)` and
+`(-593.936,-83.45987,-501.7293)`, with a 53.9993-degree vertical FOV
+derived from the Recomp projection. The captures are 1228 by 896.
+The race UI and some distant scenery differ between the captures.
+
+The native draw dump shows the depth-writing `W_RDWATER` in bucket 2,
+`W_RDWATER_MASK` in bucket 3 with strip flag `0x40`, and projected
+scenery shadows in bucket 4. A separate capture with Recomp
+`HP2_NATIVEOFF=1` and a Godot Roadshine-off capture isolate its contribution.
+At the wet sample near screen (800,635), Roadshine added about
+`(36,34,26)` in Recomp and `(10,9,7)` in Godot. The separate Godot
+additive draw converted its increment against the opaque snapshot, which
+lacks the transparent wet asphalt. The dry asphalt was already close.
+
+Godot compares positions, triangle indices, UVs, and both material
+states before pairing a `W_RDWATER` or `W_RDWATER02` underlay with
+`W_RDWATER_MASK`. The matched fragment uses the authored wet alpha,
+followed by the mask and optional packet-320 contribution in byte space.
+The normal, vertex tint and filter are taken from the mask. The other
+wet material states keep their separate draws. Projected shadows with
+the observed bucket-4 state draw after the pair. The live-sky fallback
+for views without a clean sky capture remains an approximation.
+
+`cmake --build --preset godot-mvp-debug --target stage_mvp --parallel 8`
+and `build.ps1 --jobs 8` staged and exported the change. On both Vulkan
+and D3D12, the before/after wet sample moved from `(88,82,67)` to
+`(117,109,87)`, against Recomp `(116,108,87)`. The neighboring dry
+sample stayed at `(118,112,88)`. The blue-gray patch near (800,450)
+measured `(129,125,105)`, against Recomp `(127,123,104)`.
+`tools/test_mvp_track_material.gd` passed on both APIs, including the
+paired blend at 50 percent alpha with both Roadshine states. The fixed
+camera, comparison frames, and logs are in `local/matched-puddle`.
+The Debug Track Viewer loaded, switched tracks, and returned to the menu
+on both APIs. D3D12 passed on retry at 60 FPS after the first automated
+console input timed out. The isolated Release package published Track 13
+on Vulkan using its `launcher.cfg` ISO path and exited normally.
+The comparison validates this Recomp reference at the reported site.

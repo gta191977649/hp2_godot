@@ -123,7 +123,7 @@ void TitleScreen::OpenCurrentMovie()
     const auto& movie=GetTitleMovieDescription(movieIndex,*ui.language,*menu.demoMode->demoDisc);
     Require(ui.movie->InitFile(movie.filename)!=0, std::string("Title movie could not open ")+movie.filename);
     if(auto* object=ui.resources->FindObject(TitleKey,movie.alternateBitmap?TitleAlternate:TitleMovie,2))
-        static_cast<FlailerBitmapChunk*>(object)->SetNativeFullscreenMovie(ui.externalPresentation || movie.alternateBitmap==0);
+        static_cast<FlailerBitmapChunk*>(object)->SetNativeFullscreenMovie(movie.alternateBitmap==0);
     ui.resources->SetObjectVisibility(TitleKey,movie.alternateBitmap ? TitleAlternate : TitleMovie,1);
 }
 

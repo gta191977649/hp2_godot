@@ -4,6 +4,111 @@
 - Scope: vehicle paint, environment capture, external Godot shader resources and Forward+ race postprocessing.
 - Acceptance: native-depth and GS-history pixel checks on Vulkan and D3D12, diagnostic race lifecycle, frontend preview, and matched PS2 paint comparisons.
 
+## Select Car paint and glazing
+
+Authority: local Recomp checkout `8ae05937be6865dde1e45c108cecd79f247d6b7a`,
+retail US PS2 `SLUS_203.62` SHA-256
+`7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2`.
+The Recomp runtime used for captures has SHA-256
+`3e985020f6f67e1086080d7320b73176cd9a1bd34fcae2d093e73ceeddb9d15e`.
+Recomp is a second implementation of the retail rendering sequence.
+
+- In `runtime/native.cpp`, the frontend material bank is selected at
+  `EDMA_LIGHTMATERIAL`, and `native_end_frame` binds the guest
+  `pTextureInfoCarSelectEnvMap` (`0x32f6d8`). The Vulkan backend's
+  `draw_target` uses ALPHA `0x48` for both showroom sphere-map slots,
+  following retail `0010AF58` and `0010B040`. The map texture and
+  material strength supply source alpha. The reflection of the entire
+  car on the platform is drawn with its own model pose.
+- `runtime/shaders/native.vert` and retail
+  `BuildDmaData__14eLightMaterialPUiP18eLightMaterialData` (`00116828`)
+  establish the packed power curve. The frontend shader derives the
+  intercept from the decoded material exponent and amplitude. It uses
+  the VU reciprocal-root constants for the reflected normal vector and
+  sphere-map projection. It applies the authored TEX0/TEX1 states and
+  byte-domain shading. Live target 1 register blocks from frame 2490
+  show `TEST_2=0x50000` while `TEST_1` varies by packet.
+  The sphere-map header updates TEX0/TEX1/ALPHA for context 2. Godot
+  keeps the base alpha test and lets the context-2 contribution use
+  the full source alpha range. Recomp's HLE inherits the base TEST.
+- The Elise's sorted `WINDOW` strips carry `0xc180` and resolve to
+  `0x834b8017`. They blend with the underlying scene and add the
+  sphere-map contribution. The frontend glass shader reads Godot's
+  opaque scene for the interior and body behind the glass. Overlapping
+  transparent layers can still differ from the shared GS framebuffer
+  sequence. The reflected car retains the source pass's sorted-alpha
+  and environment-map suppression.
+- The state-only core bridge now sends `SceneLightContext` per preview
+  draw. `RenderFrontEndCars` and `renderCarAppearanceScene` are the
+  reference for selecting the shared body environment matrix, the
+  actual camera matrix for wheels and brakes, the body height offset
+  and the part culler. The body matrix helper shares the existing
+  EnvironmentMap face-2 calculation with `UpdateCameras` and needs no
+  frontend cubemap allocation. Relevant donor PAL labels are
+  `1175C8–1178E8`, `1211EC`, `122EE8–1233EC` and `123BA0`.
+  The donor PAL executable identity and hash remain unresolved.
+  Recomp's retail symbol table identifies `001175C8` and `00123BA0`.
+  The Select Car camera uses the same source horizontal-to-vertical
+  projection as the primary race camera, with the fitted 4:3 preview.
+- `PLATFORM` uses BRUSHEDMETAL and BRUSHEDMETAL_OUTER with bucket 3,
+  ALPHA `0x44`, and authored RGBA `72,72,72,128`. The platform pass
+  blends the raw texels over the reflected geometry in GS byte space.
+  The same frame's target-1 packet dump shows two identical late
+  ELISE_SHADOWFE layers after the platform and an early layer before
+  the reflected car. The shared preview submits the two late layers.
+- Select Car keeps its nominal 60 Hz source update cadence for
+  `CarSelector::Tick` and FrameEffects. The selector increments the
+  idle yaw by 46 and updates nebula colour and fades per tick.
+  See PAL `1963B8–196660`, and the fixed FrameEffects constant
+  `00324A48` recorded in [frontend effects](../../reverse/task0098/frontend-effects.md).
+  Godot uses the source focal length for particle size limits and
+  rejects off-view particle centres before expanding billboards,
+  following the submissions in `RenderWorldParticles` (`128EB8`).
+  For additive showroom particles, the shader converts the
+  alpha-weighted byte contribution to linear light before Godot
+  blends it. The one-particle contribution over black follows the
+  GS equation. Godot still accumulates overlapping sprites in linear light.
+
+Recomp internal screenshots are under
+`local/frontend-fidelity/recomp-elise-yellow-ab`. The fixed yellow
+Elise pair uses an isolated profile, neutral picture grading, 2× internal
+raster scale and the same input playback. The off run sets
+`HP2_NATIVEOFF=2`. Front-quarter frame 2640 changed 23,372 pixels in
+the body crop with the sphere map active. Side frame 2880 changed 18,830.
+The images identify the material contribution at matched poses within
+Recomp. Original PS2 hardware comparison remains open.
+The target-1 state and shadow packet capture is in
+`local/select-car-paint/recomp-shadow-probe/stderr.txt`,
+starting at frame 2490.
+
+Validation uses isolated profiles with `HP2_MVP_PURSUIT=1` and a writable
+`HP2_MVP_SCREENSHOT_DIR` per driver.
+
+```powershell
+cmake --build --preset godot-mvp-debug --target stage_mvp --parallel 8
+cmake --build --preset godot-mvp-release --target stage_mvp --parallel 8
+$engine = "$PWD/local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe"
+& $engine --path build/godot-mvp-release/mvp-project --rendering-driver vulkan --resolution 960x720 --script "$PWD/tools/test_mvp_frontend_resize.gd"
+& $engine --path build/godot-mvp-release/mvp-project --rendering-driver d3d12 --resolution 960x720 --script "$PWD/tools/test_mvp_frontend_resize.gd"
+git diff --check
+```
+
+In a normalized background crop beside the Elise, the 95th percentile
+of blue minus the larger of red and green was 5 bytes in Recomp,
+26 before the Godot particle blend adjustment, and 3 after it.
+Particle phases and window rasterization differ between the captures.
+
+Both staging builds and both Release Godot 4.7.2 Forward+ runs passed.
+The resize smoke keeps the Elise pose steady while toggling the
+environment map. Vulkan and D3D12 found 19 materials including WINDOW
+and 2,169 / 2,283 changed samples, respectively. The matching nebula
+visibility probe detected 2,612 / 1,925 blue samples. Both runs checked
+the platform and two shadow layers before entering Track 13. Logs and
+captures are in `local/select-car-paint/accepted-vulkan` and
+`local/select-car-paint/accepted-d3d12`.
+The Vulkan `HP2_MVP_RESIZE_TRACK_PICKER=1` run also passed a different
+car preview and the Select Track resize sweep in `accepted-track-picker`.
+
 ## Removed native Godot occlusion trial
 
 The trial registered one static `ArrayOccluder3D` per forward route.

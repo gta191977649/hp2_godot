@@ -90,6 +90,18 @@ struct RaceEffectsPresentation::Storage {
         root=memnew(Node3D);
         root->set_name("RaceEffects");
         scene.add_child(root);
+        for (int i = 0; i < scene.get_child_count(); ++i) {
+            const auto* instance = Object::cast_to<MeshInstance3D>(scene.get_child(i));
+            if (!instance) continue;
+            const auto mesh = instance->get_mesh();
+            if (mesh.is_null() || !mesh->has_meta("hp2_road_water")) continue;
+            for (int surface = 0; surface < mesh->get_surface_count(); ++surface) {
+                const Ref<ShaderMaterial> draw = mesh->surface_get_material(surface);
+                if (draw.is_valid() && draw->has_meta("hp2_wet_road") &&
+                    std::find(wetRoads.begin(), wetRoads.end(), draw) == wetRoads.end())
+                    wetRoads.push_back(draw);
+            }
+        }
         quad.instantiate();
         quad->set_size({1,1});
     }
@@ -97,6 +109,7 @@ struct RaceEffectsPresentation::Storage {
     Node3D* root{};
     SubViewport* skyViewport{};
     Camera3D* skyCamera{};
+    std::vector<Ref<ShaderMaterial>> wetRoads;
     Ref<QuadMesh> quad;
     Ref<Shader> processShader=load_shader("res://shader/particle_process.gdshader");
     std::array<Ref<Shader>,3> drawShaders{
@@ -157,6 +170,7 @@ struct RaceEffectsPresentation::Storage {
     PackedByteArray epochBytes;
     bool epochsDirty{};
     bool particlesVisible{true};
+    float previewFocal{};
     std::array<Mark,128> marks, rearMarks;
     std::vector<MeshInstance3D*> lights, rearLights;
     MeshInstance3D* sun{};
@@ -273,7 +287,7 @@ struct RaceEffectsPresentation::Storage {
         return mat;
     }
 
-    void update_shadows(const RaceEffectsFrame& frame, bool rearVisible) {
+    void update_shadows(const RaceEffectsFrame& frame, bool rearVisible, int previewView = 0) {
         for (auto& view : shadows) for (auto& [texture,batch] : view) {
             batch.vertices.clear();
             batch.uv.clear();
@@ -281,6 +295,7 @@ struct RaceEffectsPresentation::Storage {
             batch.indices.clear();
         }
         for (const auto& strip : frame.shadows) {
+            if (previewView && strip.view != previewView) continue;
             const bool rear=strip.view==3;
             if (rear && !rearVisible) continue;
             auto& batch=shadows[rear][strip.texture];
@@ -399,6 +414,7 @@ struct RaceEffectsPresentation::Storage {
         draw->set_shader_parameter("atlas_size",Vector2(1u<<definition.atlasWidthPower,1u<<definition.atlasHeightPower));
         draw->set_shader_parameter("lifetime",definition.lifetime);
         draw->set_shader_parameter("pixel_cap",definition.maximumPixelSize==0 ? 512.0f:definition.maximumPixelSize);
+        draw->set_shader_parameter("preview_focal",previewFocal);
         draw->set_shader_parameter("interest_distance",definition.interestDistance);
         draw->set_shader_parameter("alpha_test",!wire[0x4f] && !source->drawFlag4Enabled);
         draw->set_shader_parameter("nearest_minification",wire[0x6e]==0 && wire[0x6f]==1 && wire[0x70]==3);
@@ -686,6 +702,12 @@ struct RaceEffectsPresentation::Storage {
             skyViewport->add_child(skyCamera);
             skyCamera->set_cull_mask(trackSkyLayer);
             skyCamera->make_current();
+            for (const auto& road : wetRoads) {
+                road->set_shader_parameter("gs_water_sky", skyViewport->get_texture());
+                road->set_shader_parameter("gs_has_water_sky", true);
+            }
+        }
+        if (sunMaterial.is_valid()) {
             sunMaterial->set_shader_parameter("sky_color", skyViewport->get_texture());
             sunMaterial->set_shader_parameter("has_sky", true);
         }
@@ -798,7 +820,7 @@ struct RaceEffectsPresentation::Storage {
         }
         if (!count || (!legacyBounds && sunRegions.empty())) {
             if (sun) sun->hide();
-            if (skyViewport) skyViewport->set_update_mode(SubViewport::UPDATE_DISABLED);
+            if (skyViewport && wetRoads.empty()) skyViewport->set_update_mode(SubViewport::UPDATE_DISABLED);
             return;
         }
         if (legacyBounds || sunRegions.size() > maxSunRegions) {
@@ -831,7 +853,18 @@ struct RaceEffectsPresentation::Storage {
 };
 
 RaceEffectsPresentation::RaceEffectsPresentation(Node3D& scene):storage_(std::make_unique<Storage>(scene)) {}
-RaceEffectsPresentation::~RaceEffectsPresentation()=default;
+RaceEffectsPresentation::~RaceEffectsPresentation() {
+    for (const auto& road : storage_->wetRoads) {
+        road->set_shader_parameter("gs_has_water_sky", false);
+        road->set_shader_parameter("gs_water_sky", Variant());
+    }
+}
+
+void RaceEffectsPresentation::update_water_sky(Camera3D& camera) {
+    if (storage_->wetRoads.empty()) return;
+    const Vector2i size = camera.get_viewport()->get_visible_rect().size;
+    if (size.x >= 2 && size.y >= 2) storage_->update_sun_sky(camera, size / 2);
+}
 
 void RaceEffectsPresentation::prepare_particles(const std::vector<RaceParticleAsset>& assets) {
     const auto smokeKey = hashString("SMOKE_CS");
@@ -861,15 +894,23 @@ void RaceEffectsPresentation::update(const RaceEffectsFrame& frame,Camera3D& cam
         storage_->update_sun(frame.sun, camera, ntsc);
     } else {
         if (storage_->sun) storage_->sun->hide();
-        if (storage_->skyViewport) storage_->skyViewport->set_update_mode(SubViewport::UPDATE_DISABLED);
+        if (storage_->skyViewport && storage_->wetRoads.empty())
+            storage_->skyViewport->set_update_mode(SubViewport::UPDATE_DISABLED);
     }
+    if (!storage_->sun || !storage_->sun->is_visible()) update_water_sky(camera);
 }
 
-void RaceEffectsPresentation::update_preview_lights(const std::vector<RaceLightEffect>& lights,Camera3D& camera,int view) {
-    storage_->update_lights(lights,camera,storage_->lights,view,1);
+void RaceEffectsPresentation::update_preview_effects(const RaceEffectsFrame& frame,Camera3D& camera,int view) {
+    storage_->update_lights(frame.lights,camera,storage_->lights,view,1);
+    storage_->update_shadows(frame,false,view);
 }
 
-void RaceEffectsPresentation::update_preview_particles(const RaceEffectsFrame& frame) {
+void RaceEffectsPresentation::update_preview_particles(const RaceEffectsFrame& frame,float sourceFocal) {
+    if (sourceFocal > 0.0f && storage_->previewFocal != sourceFocal) {
+        storage_->previewFocal=sourceFocal;
+        for (const auto& [definition,particle]:storage_->particles)
+            particle.draw->set_shader_parameter("preview_focal",sourceFocal);
+    }
     storage_->update_particles(frame,0);
 }
 

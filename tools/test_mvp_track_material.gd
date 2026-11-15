@@ -56,9 +56,77 @@ func run() -> void:
     if (left-Vector3i(144,123,64)).length() > 3 or (right-Vector3i(48,72,48)).length() > 3:
         quit(1)
         return
+    var meshes := root.get_children().filter(func(node: Node) -> bool: return node is MeshInstance3D)
+    var underlay := water_layer(meshes[0], "mix_write")
+    var highlight := water_layer(meshes[1], "add_read")
+    for i in range(3):
+        await process_frame
+        await RenderingServer.frame_post_draw
+    frame = root.get_texture().get_image()
+    a = frame.get_pixel(center.x-x, center.y)
+    b = frame.get_pixel(center.x+x, center.y)
+    left = Vector3i(a.r8, a.g8, a.b8)
+    right = Vector3i(b.r8, b.g8, b.b8)
+    print("GS_ROAD_WATER underlay=", left, " mask=", right)
+    if (left-Vector3i(88,93,80)).length() > 3 or (right-Vector3i(64,104,96)).length() > 3:
+        quit(1)
+        return
     var sky := ShaderMaterial.new()
     sky.shader = load("res://shader/track_sky_mix.gdshader")
     sky.set_shader_parameter("albedo_texture", tex)
+    sky.render_priority = Material.RENDER_PRIORITY_MIN
+    meshes[0].material_override = sky
+    for i in range(3):
+        await process_frame
+        await RenderingServer.frame_post_draw
+    a = root.get_texture().get_image().get_pixel(center.x-x, center.y)
+    var sky_mix := Vector3i(a.r8, a.g8, a.b8)
+    var expected := Color8(144,123,64).srgb_to_linear().lerp(
+        Color8(32,64,96).srgb_to_linear(), 0.5).linear_to_srgb()
+    print("GS_ROAD_WATER over_sky=", sky_mix)
+    if (sky_mix-Vector3i(expected.r8, expected.g8, expected.b8)).length() > 3:
+        quit(1)
+        return
+    var wet_material := underlay.mesh.surface_get_material(0) as ShaderMaterial
+    var clean_sky := Image.create_from_data(1, 1, false, Image.FORMAT_RGBA8,
+        PackedByteArray([120,160,200,255]))
+    wet_material.set_shader_parameter("gs_water_sky", ImageTexture.create_from_image(clean_sky))
+    wet_material.set_shader_parameter("gs_has_water_sky", true)
+    meshes[0].material_override = null
+    meshes[0].position.z = -0.5
+    for i in range(3):
+        await process_frame
+        await RenderingServer.frame_post_draw
+    a = root.get_texture().get_image().get_pixel(center.x-x, center.y)
+    var clean_mix := Vector3i(a.r8, a.g8, a.b8)
+    print("GS_ROAD_WATER clean_sky=", clean_mix)
+    if (clean_mix-Vector3i(76,112,148)).length() > 3:
+        quit(1)
+        return
+    # The road texture blends over the clean sky before the mask and the
+    # 0x320 falloff add their byte contributions to that same destination.
+    wet_material.set_shader_parameter("gs_has_wet_mask", true)
+    var mask_tex: Texture2D = wet_material.get_shader_parameter("gs_texture_linear")
+    wet_material.set_shader_parameter("gs_wet_mask_linear", mask_tex)
+    wet_material.set_shader_parameter("gs_wet_mask_nearest", mask_tex)
+    wet_material.set_shader_parameter("gs_road_alpha", Vector4(1, 0, 128, 0))
+    wet_material.set_shader_parameter("gs_specular", ImageTexture.create_from_image(Image.create_from_data(
+        1, 1, false, Image.FORMAT_RGBA8, PackedByteArray([8,12,16,255]))))
+    for shine in [false, true]:
+        RenderingServer.global_shader_parameter_set("hp2_roadshine", shine)
+        for i in range(3):
+            await process_frame
+            await RenderingServer.frame_post_draw
+        a = root.get_texture().get_image().get_pixel(center.x-x, center.y)
+        var paired := Vector3i(a.r8, a.g8, a.b8)
+        var expected_pair := Vector3i(96,150,204) if shine else Vector3i(92,144,196)
+        print("GS_ROAD_WATER paired, roadshine=", shine, " rgb=", paired)
+        if (paired-expected_pair).length() > 3:
+            quit(1)
+            return
+    meshes[0].position.z = 0.0
+    underlay.queue_free()
+    highlight.queue_free()
     for node in root.get_children():
         if node is MeshInstance3D:
             node.material_override = sky
@@ -69,3 +137,30 @@ func run() -> void:
     var sky_color := Vector3i(pixel.r8,pixel.g8,pixel.b8)
     print("GS_SKY_RGB ", sky_color)
     quit(0 if (sky_color-Vector3i(144,123,64)).length() <= 3 else 1)
+
+func water_layer(road: MeshInstance3D, shader_name: String) -> MeshInstance3D:
+    var arrays := road.mesh.surface_get_arrays(0)
+    var tint := Color8(128, 128, 128, 128)
+    arrays[Mesh.ARRAY_COLOR] = PackedColorArray([tint, tint, tint, tint])
+    arrays[Mesh.ARRAY_CUSTOM2] = PackedFloat32Array([0.0, 0.0, 0.0, 0.0])
+    var mask_vertex := PackedFloat32Array([128.0 / 255.0, 128.0 / 255.0, 128.0 / 255.0, 0.0])
+    var mask_vertices := PackedFloat32Array()
+    for vertex in range(4):
+        mask_vertices.append_array(mask_vertex)
+    arrays[Mesh.ARRAY_CUSTOM3] = mask_vertices
+    var mesh := ArrayMesh.new()
+    mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays, [], {},
+        (Mesh.ARRAY_CUSTOM_R_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM2_SHIFT) |
+        (Mesh.ARRAY_CUSTOM_RGBA_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM3_SHIFT))
+    var material := ShaderMaterial.new()
+    material.shader = load("res://shader/road_water_%s.gdshader" % shader_name)
+    var image := Image.create_from_data(1, 1, false, Image.FORMAT_RGBA8, PackedByteArray([32, 64, 96, 64]))
+    var tex := ImageTexture.create_from_image(image)
+    material.set_shader_parameter("gs_texture_linear", tex)
+    material.set_shader_parameter("gs_texture_nearest", tex)
+    material.set_shader_parameter("repeat_axes", Vector2i.ZERO)
+    mesh.surface_set_material(0, material)
+    var instance := MeshInstance3D.new()
+    instance.mesh = mesh
+    root.add_child(instance)
+    return instance

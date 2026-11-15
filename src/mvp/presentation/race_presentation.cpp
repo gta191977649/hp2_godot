@@ -931,12 +931,13 @@ PackedVector3Array RacePresentation::photo_route() const {
 
 void RacePresentation::test_update_scenery_camera(bool enabled) {
     if (!test_scenery_camera_enabled() || !session_ || !session_->primaryScenery || !session_->camera) return;
-    const auto& camera = *session_->camera;
+    auto& camera = *session_->camera;
     const auto position = camera.get_global_position();
     const float eye[]{position.x, -position.z, position.y};
     const auto heightFocal = 256.0f / std::tan(camera.get_fov() * (3.141592654f / 360.0f));
     const float ratio = session_->runtime.RaceState().ntsc ? 448.0f / (512.0f * 1.0714286566f) : 1.0f / 1.285f;
     session_->primaryScenery->update_camera(camera, eye, heightFocal * ratio, enabled, false);
+    if (session_->effects) session_->effects->update_water_sky(camera);
 }
 
 Dictionary RacePresentation::telemetry() const {

@@ -3,7 +3,7 @@
 #include "assets/shader_resource.hpp"
 
 #include "assets/mesh_converter.hpp"
-#include "indep/inc/eLight.hpp"
+#include "bridge/entity_state_bridge.hpp"
 #include "indep/inc/CameraMover.hpp"
 #include "presentation/race_presentation.hpp"
 #include "systems/effects/race_effects_presentation.hpp"
@@ -51,6 +51,7 @@ using namespace godot;
 namespace {
 constexpr std::uint32_t panelMovie = 0xc3f0caefu;
 constexpr std::uint32_t titleMovie = 0xf9117c29u;
+constexpr std::uint32_t titleScreen = 0xb5761d00u;
 constexpr std::uint32_t gridObject = 0x00163ce5u;
 constexpr std::uint32_t loadingScreen = 0xd0131dd1u;
 bool is_player_letterbox(std::uint32_t object) {
@@ -397,13 +398,14 @@ struct FrontendPresentation::Storage {
         Camera3D* camera{};
         std::unique_ptr<RaceEffectsPresentation> effects;
         std::vector<MeshInstance3D*> nodes;
-        std::vector<std::tuple<std::uint32_t, std::uintptr_t, std::uintptr_t, std::uint64_t>> models;
+        std::vector<std::tuple<std::uint32_t, std::uintptr_t, std::uintptr_t, std::uint64_t, bool, bool>> models;
         std::vector<std::vector<const EditorMarkerTexture*>> textures;
     };
     std::map<int, Preview> previews;
     CarPaintAssets previewPaint;
 
     void update_previews(const FrontendStateView& state,const RaceEffectsFrame& effects) {
+        static const auto platformModel = hashString("PLATFORM");
         if (!state.previews || !state.cameras) throw std::runtime_error("Frontend preview owners are unavailable");
         std::map<int, std::vector<const FrontendModelRequest*>> views;
         for (const auto& request : state.previews->models) {
@@ -413,11 +415,16 @@ struct FrontendPresentation::Storage {
         }
         if (!views.empty() && previewPaint.reflection.is_null()) {
             auto& resources = pointerRuntime.PresentationResources();
-            previewPaint.specular = upload_paint_texture(resources.SpecialTexture(6));
-            previewPaint.reflection = upload_paint_texture(resources.SpecialTexture(8));
+            const auto* specular = resources.SpecialTexture(6);
+            const auto* reflection = resources.SpecialTexture(8);
+            previewPaint.specular = upload_paint_texture(specular, true);
+            previewPaint.reflection = upload_paint_texture(reflection, true);
             previewPaint.frontend = true;
             if (previewPaint.reflection.is_null())
                 throw std::runtime_error("Frontend paint is missing CarSelectEnvMap");
+            if (previewPaint.specular.is_valid())
+                previewPaint.specularSampling = paint_texture_sampling(*specular);
+            previewPaint.reflectionSampling = paint_texture_sampling(*reflection);
         }
         for (auto& [view, preview] : previews) {
             const bool active = views.count(view) != 0;
@@ -441,6 +448,10 @@ struct FrontendPresentation::Storage {
                 preview.display->set_z_index(10);
                 preview.display->set_expand_mode(TextureRect::EXPAND_IGNORE_SIZE);
                 preview.display->set_size(designSize);
+                Ref<ShaderMaterial> composite;
+                composite.instantiate();
+                composite->set_shader(load_shader("res://shader/frontend_preview.gdshader"));
+                preview.display->set_material(composite);
                 preview.viewport = memnew(SubViewport);
                 preview.viewport->set_name("PreviewViewport");
                 preview.display->add_child(preview.viewport);
@@ -469,21 +480,28 @@ struct FrontendPresentation::Storage {
             const float up[] = {-pose.matrix[1],-pose.matrix[5],-pose.matrix[9]};
             if (forward.cross(race_vector(up)).length_squared() < 0.01f)
                 throw std::runtime_error("Frontend preview camera basis is invalid");
-            preview.camera->set_perspective(pose.fieldOfView * (360.0 / 65536.0), pose.nearClip, pose.farClip);
+            const std::string_view page = state.screen ? state.screen : "";
+            const bool carSelection = page == "Select Car" || page == "Select Car2P";
+            const bool ntsc = state.cameras->projection.nativeSourceVideoMode == HP2_VIDEO_NTSC;
+            const auto fov = carSelection ? source_main_camera(pose, ntsc).verticalFov :
+                pose.fieldOfView * (360.0f / 65536.0f);
+            preview.camera->set_perspective(fov, pose.nearClip, pose.farClip);
             preview.camera->look_at_from_position(eye, eye + forward, race_vector(up));
-            if (state.effects) preview.effects->update_preview_lights(state.effects->lights,*preview.camera,view);
-            preview.effects->update_preview_particles(effects);
+            if (state.effects) preview.effects->update_preview_effects(*state.effects,*preview.camera,view);
+            const float sourceFocal = 256.0f / std::tan(pose.fieldOfView * (3.141592654f / 65536.0f));
+            preview.effects->update_preview_particles(effects, sourceFocal);
 
             MeshConverter converter(&previewPaint);
-            const auto& screen = state.cameras->screens[view];
-            auto sourceView = screen;
-            std::copy_n(pose.matrix, 16, sourceView.matrices.worldToView);
-            LightContextBatch lights(pointerRuntime.PresentationResources().Lights());
+            MeshConverter unlitConverter;
+            auto reflectedPaint = previewPaint;
+            reflectedPaint.reflection.unref();
+            MeshConverter reflectedConverter(&reflectedPaint);
             for (std::size_t i = 0; i < models.size(); ++i) {
                 const auto& request = *models[i];
                 const auto& model = *request.model;
                 const auto identity = std::make_tuple(model.key, reinterpret_cast<std::uintptr_t>(model.solid),
-                    reinterpret_cast<std::uintptr_t>(model.replacement), model.resources ? model.resources->bindingRevision : 0);
+                    reinterpret_cast<std::uintptr_t>(model.replacement), model.resources ? model.resources->bindingRevision : 0,
+                    request.reflectedCar, request.lighting.has_value());
                 std::vector<const EditorMarkerTexture*> replacements;
                 for (int slot = 0; slot < model.replacementCount; ++slot)
                     replacements.push_back(model.replacement[slot].texture);
@@ -495,17 +513,22 @@ struct FrontendPresentation::Storage {
                     preview.textures.emplace_back();
                 }
                 auto* node = preview.nodes[i];
+                const bool platform = model.key == platformModel && !request.lighting;
                 if (preview.models[i] != identity || preview.textures[i] != replacements) {
-                    node->set_mesh(converter.convert(model));
+                    auto& meshConverter = !request.lighting ? unlitConverter :
+                        request.reflectedCar ? reflectedConverter : converter;
+                    node->set_mesh(platform ? meshConverter.convert_frontend_platform(model) :
+                        meshConverter.convert(model, true, 0, false, request.reflectedCar ?
+                            MeshConverter::ScenerySurface::OpaqueOnly : MeshConverter::ScenerySurface::Full));
+                    node->set_meta("source_reflected_car", request.reflectedCar);
                     preview.models[i] = identity;
                     preview.textures[i] = std::move(replacements);
                 }
                 node->set_transform(race_transform(request.transform.data()));
-                float environment[16];
-                carCinematicLookAt(environment, pose.eye, request.transform.data() + 12,
-                    std::array<float, 4>{0, 0, 1, 0}.data());
-                apply_paint_lighting(*node, lights.Setup(request.transform.data(), environment,
-                    pose.eye, sourceView, 3));
+                const bool hasPaint = request.lighting && node->get_mesh()->has_meta("hp2_car_paint");
+                if (hasPaint) apply_paint_lighting(*node, *request.lighting);
+                if (hasPaint || platform)
+                    node->set_instance_shader_parameter("hp2_paint_focal", Vector3(sourceFocal, 0, 0));
                 node->show();
             }
             for (std::size_t i = models.size(); i < preview.nodes.size(); ++i) preview.nodes[i]->hide();
@@ -580,12 +603,14 @@ struct FrontendPresentation::Storage {
             const Vector2 position(quad[0].position[0], quad[0].position[1]);
             const Rect2 panel(position, Vector2(quad[2].position[0], quad[2].position[1]) - position);
             if (!panel.has_area()) return;
-            const auto rect = layout.fit_movie(panel);
-            RenderingServer::get_singleton()->canvas_item_add_rect(videoMatte.get_canvas_item(), panel,
+            const bool title = strip.sourceScreen == titleScreen;
+            const auto rect = title ? panel : layout.fit_movie(panel);
+            RenderingServer::get_singleton()->canvas_item_add_rect(videoMatte.get_canvas_item(),
+                title ? layout.visible_rect() : panel,
                 Color(0, 0, 0));
             player.set_position(rect.position);
             player.set_size(rect.size);
-            player.set_z_index(1);
+            player.set_z_index(title ? 31 : 1);
             player.show();
             return;
         }
@@ -885,16 +910,6 @@ void FrontendPresentation::update(const FrontendStateView& state, Vector2 viewpo
     s.update_highlights(*state.layout);
     s.update_pointer(state);
     s.update_credits_fallback(state.creditsText, screen == "Port Credits");
-    if (screen == "Title Screen" && s.video.playing()) {
-        const auto rect = s.layout.fit_movie(s.layout.visible_rect());
-        s.player.set_position(rect.position);
-        s.player.set_size(rect.size);
-        s.player.set_z_index(31);
-        s.player.show();
-        rendering->canvas_item_add_rect(s.mapForeground.get_canvas_item(),
-            s.layout.visible_rect(), Color(0, 0, 0));
-    }
-
     for (auto it = s.textures.begin(); it != s.textures.end();) {
         if (it->second.frame != s.frame)
             it = s.textures.erase(it);

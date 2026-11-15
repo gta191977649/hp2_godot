@@ -40,6 +40,11 @@ RaceCameraState capture_camera(const CarCinematicViewFrame& camera, float source
 
 }
 
+RaceCameraState source_main_camera(const CarCinematicViewFrame& camera, bool ntsc) {
+    const float sourceRatio = ntsc ? 448.0f / (512.0f * 1.0714286566f) : 1.0f / 1.285f;
+    return capture_camera(camera, sourceRatio);
+}
+
 const EntityFrame& EntityStateBridge::stage(const RaceStateView& race) {
     auto& frame = pending_;
     frame.vehicles.clear();
@@ -48,8 +53,7 @@ const EntityFrame& EntityStateBridge::stage(const RaceStateView& race) {
     if (!world || !race.camera)
         throw std::runtime_error("Committed race is missing World or primary camera");
 
-    const float sourceRatio = race.ntsc ? 448.0f / (512.0f * 1.0714286566f) : 1.0f / 1.285f;
-    frame.camera = capture_camera(*race.camera, sourceRatio);
+    frame.camera = source_main_camera(*race.camera, race.ntsc);
     frame.rearCamera.reset();
     if (race.rearCamera)
         frame.rearCamera = capture_camera(*race.rearCamera, 64.0f / (512.0f * 1.08f));

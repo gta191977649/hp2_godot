@@ -2,9 +2,12 @@
 
 #include "bridge/presentation_snapshot.hpp"
 
+struct CarCinematicViewFrame;
+
 namespace hp2 {
 
 struct RaceStateView;
+RaceCameraState source_main_camera(const CarCinematicViewFrame& camera, bool ntsc);
 
 class EntityStateBridge {
 public:

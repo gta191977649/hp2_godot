@@ -1,3 +1,41 @@
+## 2026-11-16 TASK-0146 Select Car paint and lighting
+
+The showroom uses the original body and part light matrices, authored
+material and environment texture sampling, and the sorted window pass.
+The platform blends over the reflected car in GS byte space. The selector
+keeps its 60 Hz source updates and source limits on nebula billboards.
+TASK-0146 records the Recomp captures and material evidence.
+
+## 2026-11-15 TASK-0133 title movie and Select Car presentation
+
+Title playback now follows the EA and NFS Flailer rectangles. Select Car
+composites the nebula with the preview's premultiplied alpha and presents
+the source reflected car, wheel brakes, and projected shadow. Vulkan and
+D3D12 passed the title resize and Select Car checks through Track 13.
+
+## 2026-11-15 TASK-0143 race color and Windows Auto HDR
+
+Matched Scenic Drive internal sky RGB to within one byte per channel.
+Disabling Windows Auto HDR for an isolated Recomp copy removed the extra
+window brightness. Vulkan and D3D12 passed race postprocessing, known-color
+material samples, and Track 33 lifecycle checks. TASK-0143 records the paired
+captures, per-app comparison settings, and outstanding material differences.
+
+## 2026-11-15 TASK-0148 road puddle transparency
+
+Wet asphalt now blends with the authored sky where it covers an opening
+in the opaque road. The primary view and Track Viewer share the glare
+sky pass as a clean background. Vulkan and D3D12 passed the sky and
+road pixel probes and rendered the sheen on Track 13.
+
+## 2026-11-15 TASK-0148 road puddle blending
+
+Wet asphalt and its masks now follow the authored draw order. Godot
+uses the authored asphalt where a wet strip provides the road itself and
+uses GS byte-space blending where there is matching opaque road behind it.
+Vulkan and D3D12 passed the shader fixture and retail captures on routes
+12 and 41.
+
 ## 2026-11-15 TASK-0150 native extension rename
 
 The native extension ships as `hp2_blackbox.dll`. The rebuilt Windows
@@ -5704,3 +5742,10 @@ both keyboard support requests and reached its dedicated results screen.
 - TASK-0145 mouse and popup follow-up. Scoped the ImGui console mouse capture to its window and retired hidden popup highlights. Debug build and targeted Godot pointer/Continue lifetime smoke passed.
 
 - TASK-0126. FRED now publishes live frontend layouts per Godot render frame. The 120 FPS Championship smoke measured 107.8 Event Tree updates/s.
+
+- TASK-0148. Matched Recomp and Godot cameras at the Track 13 puddle.
+  Composited the authored wet road and its coincident mask in GS byte
+  space, and drew the projected tree shadows after it. The wet-to-dry
+  boundary and blue-gray sheen were checked in Vulkan and D3D12. See
+  TASK-0148 for the samples, Roadshine-off comparison, and remaining
+  view differences.

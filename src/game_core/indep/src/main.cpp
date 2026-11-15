@@ -1240,8 +1240,9 @@ bool ApplicationRuntime::TickInternal()
     auto observed=s.host.FrameTime();
     // The Godot host calls this once per rendered frame. With no World or
     // Joylog, run FRED on that cadence instead of repeating 60 Hz layouts.
+    // Select Car uses per-tick yaw, fades and nebula colour steps.
     const bool renderDrivenFrontend=s.stateOnly() && s.flow.currentState==3 && !s.Simulation() &&
-        !s.joylog.stream && !s.joylog.replaying && !s.joylog.recording;
+        !s.joylog.stream && !s.joylog.replaying && !s.joylog.recording && !IsCarSelectScreenActive();
     float frontendElapsed=1.0f/60.0f;
     if(renderDrivenFrontend) {
         if(s.frontendFrameTime!=decltype(s.frontendFrameTime){}) {
@@ -1509,7 +1510,9 @@ bool ApplicationRuntime::TickInternal()
                 static_cast<float>(s.clock.realTimer)*0.0002500000118743628f);
             s.screens.RenderModels(true);
             s.previewEffects.lights.clear();
-            if(!s.flow.inGameFlag)CollectFrontendCarModels(s.frontendFrame,s.previewEffects,s.clock.worldTimeFrames);
+            s.previewEffects.shadows.clear();
+            s.previewEffects.shadowVertices.clear();
+            if(!s.flow.inGameFlag)CollectFrontendCarModels(s.frontendFrame,s.previewEffects,s.clock.worldTimeFrames,s.cameras);
             s.frontendFrame.modelDrawCpuClosureRequired=false;
             auto* players=s.trackPhase->Players();
             Require(players && players->count>=0 && players->count<=2,

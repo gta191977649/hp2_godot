@@ -149,13 +149,16 @@ The Godot canvas shader interpolates those coordinates before sampling the
 road texture so it shares the marker projection in tilted modes.
 Godot fits the authored 640×480 menu and HUD canvas uniformly inside the
 live viewport. It tiles the authored grid at the same scale beyond the
-canvas and fits video at 4:3. The race camera retains vertical framing
+canvas. Title movies use the active Flailer bitmap's display rectangle.
+Menu panel videos fit at 4:3. The race camera retains vertical framing
 and renders the scene across the full viewport.
 Frontend 3D previews render at the fitted canvas's pixel dimensions
 and composite into their authored 4:3 rectangle. Clipped grid fragments
 retain their original geometry.
-Select Car uses the same unshaded texture and vertex color material
-as race vehicles, including donor-resolved lamp texture bindings.
+Select Car uses the shared vehicle material path with the source frontend
+light presets and lamp texture bindings. Its SubViewport shares depth
+between the authored platform, car, projected shadow, reflected car and
+nebula. The frontend canvas composites the viewport with premultiplied alpha.
 
 The title movie owner publishes a resource path and request ID. Godot's
 VideoStreamPlayback backend gives FFmpeg a seekable view of the original AVI

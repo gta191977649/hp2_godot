@@ -1585,20 +1585,24 @@ void FrontEndRenderingCar::ReInit(const CarAppearanceSelection* selection)
     storage_->appearance=std::move(appearance);
 }
 
-void CollectFrontendCarModels(FrontendFrame& frame,RaceEffectsFrame& effects,std::int32_t worldFrames)
+void CollectFrontendCarModels(FrontendFrame& frame,RaceEffectsFrame& effects,std::int32_t worldFrames,
+    const CarCinematicServices& views)
 {
+    const auto presentationLayout=views.presentationLayoutOverride ? views.presentationLayoutOverride:views.presentationLayout;
+    std::optional<std::array<float,16>> environment;
     for(auto* car=FrontEndRenderingCar::Storage::first;car;car=car->storage_->next) {
         auto* render=car->storage_->appearance.get();
-        if(!render || !car->enabled || car->reflected)continue;
-        const auto add=[&](const EditorMarkerModel* model,const float* matrix) {
+        if(!render || !car->enabled || (car->reflected && presentationLayout!=1))continue;
+        const auto add=[&](const EditorMarkerModel* model,const float* matrix,const SceneLightContext* lighting) {
             if(!model || !model->solid)return;
             FrontendModelRequest request{};
-            request.model=model;request.viewNumber=car->viewNumber;
+            request.model=model;request.viewNumber=car->viewNumber;request.reflectedCar=car->reflected;
             std::copy_n(matrix,16,request.transform.begin());
+            if(lighting)request.lighting=*lighting;
             frame.models.push_back(request);
         };
         if(car->overrideModel) {
-            add(car->overrideModel,car->orientation);
+            add(car->overrideModel,car->orientation,nullptr);
             continue;
         }
         // Match the normal frontend draw's authored lamp texture selection.
@@ -1609,21 +1613,67 @@ void CollectFrontendCarModels(FrontendFrame& frame,RaceEffectsFrame& effects,std
         std::copy_n(car->position,3,body+12);
         body[12]-=(minimum[0]+maximum[0])*0.5f;
         body[15]=1.0f;
+        auto view=views.screens[car->viewNumber];
+        Require(view.view && views.screens[1].view,"Frontend car has no source light camera");
+        const auto& pose=view.view->current;
+        std::copy_n(pose.matrix,16,view.matrices.worldToView);
+        if(!environment)BuildFrontendEnvironmentMatrix(environment.emplace().data(),
+            views.screens[1].view->current.eye,FrontEndRenderingCar::Storage::first->position);
+        const auto state=*car->storage_->bindings.applicationState;
+        LightContextBatch lightContexts(render->textures->Lights());
+        const auto bodyLighting=lightContexts.Setup(body,environment->data(),pose.eye,view,state);
+        float drawBody[16],inverse[16],localEye[4];
+        std::copy_n(body,16,drawBody);drawBody[14]+=0.009999999776482582f;
+        vectorMatrixInverseAffine(inverse,body);
+        eMulVector3(localEye,inverse,pose.eye);
+        carPartCullerCull(render->cullers.data(),localEye);
+        const auto addWheelPart=[&](int slot,const float* matrix) {
+            if(!render->models[slot].solid)return;
+            const auto lighting=lightContexts.Setup(matrix,view.matrices.worldToView,pose.eye,view,state);
+            add(&render->models[slot],matrix,&lighting);
+        };
         const auto flags=(car->headlights ? 3u:0u)|(car->policeLights ? 8u:0u);
-        visitCarLightFlares(*render,nullptr,worldFrames,flags,[&](const auto& flare,float intensity) {
+        if(!car->reflected)visitCarLightFlares(*render,nullptr,worldFrames,flags,[&](const auto& flare,float intensity) {
             const auto first=effects.lights.size();
             CollectLightEffect(flare,body,intensity,*render->textures,effects.lights);
             for (auto i=first;i<effects.lights.size();++i) effects.lights[i].view=car->viewNumber;
             return 0u;
         });
-        for(const auto slot:{0,16,17,18,19})add(&render->models[slot],body);
+        if(!car->reflected) {
+            const auto emit=[&](const std::vector<FlailerPolyVertex>& strip,const TextureInfo& texture) {
+                const RaceEffectsFrame::ShadowStrip shadow{texture.descriptor,effects.shadowVertices.size(),
+                    strip.size(),car->viewNumber};
+                effects.shadows.push_back(shadow);
+                // A one-view preview receives a matching second shadow in
+                // the reflected-car pass, after the platform draw.
+                if(presentationLayout==1)effects.shadows.push_back(shadow);
+                effects.shadowVertices.insert(effects.shadowVertices.end(),strip.begin(),strip.end());
+            };
+            renderCarRoadShadow(*render,nullptr,emit,body,nullptr,true,true);
+        }
+        const int lod=car->reflected ? 1:0;
+        add(&render->models[lod],drawBody,&bodyLighting);
+        for(int side=0;side<2;++side) {
+            add(&render->models[16+side],drawBody,&bodyLighting);
+            if(render->cullers[10+side].culled)add(&render->models[18+side],drawBody,&bodyLighting);
+        }
         float flipped[16];motionMatrixRotateYaw(flipped,eMathIdentityMatrix,0x8000u);
         for(int i=0;i<4;++i) {
             float local[16],world[16];
             if(i==0 || i==3)eMulMatrix(local,flipped,car->wheels[i]);
             else std::copy_n(car->wheels[i],16,local);
-            eMulMatrix(world,local,body);
-            add(&render->models[i>=2?5:4],world);
+            eMulMatrix(world,local,drawBody);
+            addWheelPart(4+lod*2+(i>=2),world);
+        }
+        if(!car->reflected) {
+            float reversed[16];eIdentity(reversed);reversed[5]=-1.0f;
+            for(int i=0;i<4;++i) {
+                float local[16],world[16];
+                if(i==0 || i==3)eMulMatrix(local,reversed,car->brakes[i]);
+                else std::copy_n(car->brakes[i],16,local);
+                eMulMatrix(world,local,drawBody);
+                addWheelPart(i>=2?13:12,world);
+            }
         }
     }
 }

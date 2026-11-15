@@ -60,25 +60,27 @@ func _process(delta: float) -> bool:
                 "End Game Menu": "end-game-menu", "Race Results": "race-results",
             }.get(page, "")
             if page == "Cops On Mode Select" and stage == 29:
+                if Time.get_ticks_msec() < next_input:
+                    return false
                 var item: int = state.get("selected_item", 0)
                 if item == 0x52e039f6:
                     stage = 14
                     _tap(KEY_ENTER)
                     return false
-                if Time.get_ticks_msec() >= next_input:
-                    _tap(KEY_DOWN if item < 0x52e039f6 else KEY_UP)
-                    next_input = Time.get_ticks_msec() + 500
+                _tap(KEY_DOWN if item < 0x52e039f6 else KEY_UP)
+                next_input = Time.get_ticks_msec() + 500
                 return false
-            var player := _find_video(root) if page == "Title Screen" and state.get("video_request") == 2 else null
-            if player and player.stream_position >= 2.0:
-                label = "intro-video"
+            var request: int = state.get("video_request", 0)
+            var player := _find_video(root) if page == "Title Screen" and request in [1, 2] else null
+            if player and player.visible and player.stream_position >= (0.75 if request == 1 else 2.0):
+                label = "ea-logo-video" if request == 1 else "intro-video"
             if page == "Title Screen" and stage == 11 and state.get("video_request") == 0:
                 label = "title-screen"
             if not label.is_empty() and not tested_screens.has(label):
                 _resize_sweep(label, label == "main-menu")
                 return false
             if pursuit and route == null and state.get("race_state") == 3 and state.get("track") == 13:
-                for required in ["intro-video", "title-screen", "main-menu", "event-tree",
+                for required in ["ea-logo-video", "intro-video", "title-screen", "main-menu", "event-tree",
                         "select-car", "pre-race-blurb", "pre-race-stats"]:
                     if not tested_screens.has(required):
                         return _fail("missing_resize_" + required)
@@ -268,7 +270,7 @@ func _resize_sweep(name: String, maximize := false) -> bool:
     resize_pending = true
     var before: Dictionary = race.call("telemetry")
     var video: VideoStreamPlayer
-    if name == "intro-video" or name == "main-menu":
+    if name in ["ea-logo-video", "intro-video", "main-menu"]:
         video = _find_video(root)
     var original_video_rect := Rect2(video.position, video.size) if video else Rect2()
     var original_video_position := video.stream_position if video else 0.0
@@ -315,15 +317,24 @@ func _resize_sweep(name: String, maximize := false) -> bool:
             var pixels := Vector2i((Vector2(640, 480) * fitted_scale).ceil())
             if not preview or not display.visible or preview.size != pixels or display.size != Vector2(640, 480):
                 return _resize_error("preview_resolution_" + name)
-            if name == "select-car" and wanted == sizes.back() and not _has_race_preview_materials(preview):
-                return _resize_error("preview_race_materials")
+            if name == "select-car" and wanted == sizes.back():
+                if not _has_race_preview_materials(preview):
+                    return _resize_error("preview_race_materials")
+                if not _has_car_preview_effects(preview):
+                    return _resize_error("preview_effects")
+                if not await _has_nebula_pixels(preview):
+                    return _resize_error("preview_nebula_pixels")
+                if pursuit and not await _verify_car_environment(preview):
+                    return _resize_error("preview_car_environment")
             print("HP2_MVP_PREVIEW screen=", name, " window=", wanted, " render_target=", preview.size)
-        if name == "intro-video" or name == "main-menu":
-            if not video is VideoStreamPlayer or not video.visible or not is_equal_approx(video.size.aspect(), 4.0 / 3.0):
+        if name in ["ea-logo-video", "intro-video", "main-menu"]:
+            if not video or not video.visible or not Rect2(video.position, video.size).is_equal_approx(original_video_rect):
+                return _resize_error("video_alignment_" + name)
+            if name == "intro-video":
+                if absf(video.size.x - 640.0) > 2.0 or not is_equal_approx(video.size.y, 304.0) or not is_equal_approx(video.position.y, 65.0):
+                    return _resize_error("intro_authored_rect_%s_%s" % [video.position, video.size])
+            elif not is_equal_approx(video.size.aspect(), 4.0 / 3.0):
                 return _resize_error("video_aspect")
-            if name == "main-menu" and original_video_rect.has_area() and not Rect2(
-                    video.position, video.size).is_equal_approx(original_video_rect):
-                return _resize_error("video_panel_alignment")
         if image.save_png(screenshot_dir.path_join("%s-%dx%d.png" % [name, wanted.x, wanted.y])) != OK:
             return _resize_error("screenshot_" + name)
     if maximize:
@@ -363,18 +374,29 @@ func _has_race_preview_materials(preview: SubViewport) -> bool:
     for node in preview.get_children():
         if node is Light3D:
             return false
-        if not node is MeshInstance3D or not node.visible or not node.mesh:
+        if not node is MeshInstance3D or not node.visible or not node.mesh or node.get_meta("source_reflected_car", false):
             continue
         for i in range(node.mesh.get_surface_count()):
             var surface: Material = node.mesh.surface_get_material(i)
-            if surface is ShaderMaterial and surface.shader.resource_path == "res://shader/car_paint.gdshader":
+            if surface is ShaderMaterial and surface.shader.resource_path in [
+                    "res://shader/car_paint.gdshader", "res://shader/car_paint_glass.gdshader",
+                    "res://shader/frontend_platform.gdshader"]:
                 var paint: Texture2D = surface.get_shader_parameter("base_image")
-                if not paint or node.mesh.surface_get_arrays(i)[Mesh.ARRAY_CUSTOM0].is_empty():
+                if not paint:
+                    return false
+                if surface.shader.resource_path != "res://shader/frontend_platform.gdshader" and (
+                        node.mesh.surface_get_arrays(i)[Mesh.ARRAY_CUSTOM0].is_empty()):
                     return false
                 texture_keys[paint.resource_name] = true
                 surfaces += 1
                 continue
             var material := surface as StandardMaterial3D
+            if surface is ShaderMaterial and surface.shader.resource_path.begins_with("res://shader/mesh_surface_"):
+                var albedo: Texture2D = surface.get_shader_parameter("albedo_texture")
+                if albedo:
+                    texture_keys[albedo.resource_name] = true
+                    surfaces += 1
+                    continue
             if material and material.albedo_texture:
                 texture_keys[material.albedo_texture.resource_name] = true
             if not material or material.shading_mode != BaseMaterial3D.SHADING_MODE_UNSHADED:
@@ -389,6 +411,115 @@ func _has_race_preview_materials(preview: SubViewport) -> bool:
     if pursuit and (not texture_keys.has("544547642") or not texture_keys.has("199674477")):
         return false
     return surfaces > 0
+
+func _has_car_preview_effects(preview: SubViewport) -> bool:
+    var reflections := 0
+    var platform := false
+    for node in preview.get_children():
+        if node is MeshInstance3D and node.visible and node.mesh and node.mesh.has_meta("hp2_frontend_platform"):
+            platform = true
+        if node is MeshInstance3D and node.visible and node.get_meta("source_reflected_car", false):
+            if node.mesh.get_surface_count() > 0:
+                reflections += 1
+            for i in range(node.mesh.get_surface_count()):
+                var surface: Material = node.mesh.surface_get_material(i)
+                if surface is ShaderMaterial and surface.shader.resource_path == "res://shader/car_paint.gdshader":
+                    if int(surface.get_shader_parameter("paint_flags")) & 0x100:
+                        return false
+    var shadow_indices := 0
+    var nebula := false
+    for node in preview.find_children("*", "MeshInstance3D", true, false):
+        if node.visible and node.material_override is ShaderMaterial and (
+                node.material_override.shader.resource_path == "res://shader/car_shadow.gdshader"):
+            shadow_indices += node.mesh.surface_get_arrays(0)[Mesh.ARRAY_INDEX].size()
+    for node in preview.find_children("*", "GPUParticles3D", true, false):
+        if not node.visible or node.get_meta("source_effect_key", 0) != 0xcdb36848: # XE_SelectCarNebula
+            continue
+        var curve: PackedVector4Array = node.material_override.get_shader_parameter("color_curve")
+        var middle := ((curve[0] * 0.5 + curve[1]) * 0.5 + curve[2]) * 0.5 + curve[3]
+        nebula = middle.z > middle.x and middle.w > 0.0
+        print("HP2_MVP_NEBULA curve_mid=", middle)
+    print("HP2_MVP_PREVIEW_EFFECTS reflections=", reflections, " shadow_indices=", shadow_indices,
+        " platform=", platform, " nebula=", nebula)
+    return reflections > 0 and shadow_indices == 108 and platform and nebula
+
+func _has_nebula_pixels(preview: SubViewport) -> bool:
+    var nebula: GPUParticles3D
+    for node in preview.find_children("*", "GPUParticles3D", true, false):
+        if node.visible and node.get_meta("source_effect_key", 0) == 0xcdb36848:
+            nebula = node
+            break
+    if not nebula:
+        return false
+    # Hold the source frame so that changing the visibility isolates the nebula.
+    race.set_process(false)
+    await process_frame
+    await RenderingServer.frame_post_draw
+    var visible := preview.get_texture().get_image()
+    nebula.hide()
+    await process_frame
+    await RenderingServer.frame_post_draw
+    var hidden := preview.get_texture().get_image()
+    nebula.show()
+    race.set_process(true)
+    var blue_samples := 0
+    for y in range(0, visible.get_height(), 4):
+        for x in range(0, visible.get_width(), 4):
+            var pixel := visible.get_pixel(x, y)
+            var background := hidden.get_pixel(x, y)
+            if pixel.b > background.b + 1.0 / 255.0 and pixel.b > maxf(pixel.r, pixel.g):
+                blue_samples += 1
+    print("HP2_MVP_NEBULA blue_samples=", blue_samples)
+    return blue_samples > 20
+
+func _verify_car_environment(preview: SubViewport) -> bool:
+    var materials := {}
+    var glass := false
+    for node in preview.get_children():
+        if not node is MeshInstance3D or not node.visible or not node.mesh:
+            continue
+        for i in range(node.mesh.get_surface_count()):
+            var material: Material = node.mesh.surface_get_material(i)
+            if not material is ShaderMaterial or material.shader.resource_path not in [
+                    "res://shader/car_paint.gdshader", "res://shader/car_paint_glass.gdshader"]:
+                continue
+            var flags: int = material.get_shader_parameter("paint_flags")
+            if not flags & 0x100:
+                continue
+            var environment: Texture2D = material.get_shader_parameter("reflection_image")
+            if not environment or environment.resource_name != "1322022556": # CARSELECTENVMAP
+                return false
+            var base: Texture2D = material.get_shader_parameter("base_image")
+            if material.shader.resource_path.ends_with("_glass.gdshader") and base.resource_name == "2202763287":
+                glass = true # WINDOW
+            materials[material] = flags
+    if not glass or materials.is_empty():
+        return false
+    # Hold the source frame so that only the sphere-map pass changes.
+    race.set_process(false)
+    await process_frame
+    await RenderingServer.frame_post_draw
+    var with_map := preview.get_texture().get_image()
+    for material in materials:
+        material.set_shader_parameter("paint_flags", int(materials[material]) & ~0x100)
+    await process_frame
+    await RenderingServer.frame_post_draw
+    var without_map := preview.get_texture().get_image()
+    for material in materials:
+        material.set_shader_parameter("paint_flags", materials[material])
+    race.set_process(true)
+    if with_map.save_png(screenshot_dir.path_join("elise-environment-on.png")) != OK or (
+            without_map.save_png(screenshot_dir.path_join("elise-environment-off.png")) != OK):
+        return false
+    var changed := 0
+    for y in range(0, with_map.get_height(), 4):
+        for x in range(0, with_map.get_width(), 4):
+            var on := with_map.get_pixel(x, y)
+            var off := without_map.get_pixel(x, y)
+            if maxf(on.r - off.r, maxf(on.g - off.g, on.b - off.b)) > 6.0 / 255.0:
+                changed += 1
+    print("HP2_MVP_CAR_ENVIRONMENT materials=", materials.size(), " window=", glass, " changed_samples=", changed)
+    return changed > 100
 
 func _resize_error(reason: String) -> bool:
     resize_failed = true
