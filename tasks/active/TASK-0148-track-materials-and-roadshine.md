@@ -158,3 +158,22 @@ $env:HP2_PHOTO_DIR = (New-Item -ItemType Directory -Force local/track-color/repr
 Use an isolated `HP2_PROFILE_DIR` and the retail disc in
 `HP2_PS2_ASSET_ROOT`. Repeat with `d3d12`. Logs, before/after PNGs, and the
 moving-camera frame sequences are under `local/track-color`.
+
+### Sky color follow-up
+
+The sky uses its own far-depth materials. It previously missed the GS RGB
+modulation correction applied to the track. `SkyResources::StuffSky` in
+the donor (`src/skye.cpp`, retail `0011C6F8`) submits the authored sky model
+through the solid-strip path. The Godot sky now samples the original RGB
+bytes, preserves the full vertex RGB5 values, and converts the result to
+linear only after the GS multiply and clamp. The mirror keeps its 192 m
+world clip and the sky keeps its existing render order.
+
+The GPU fixture expects `(144,123,64)` from sky texel `(96,110,128)` and
+vertex `(192,144,64)`. At the fixed Track 33 viewpoint, the central sky
+crop changed by 0.52 RGB byte levels on average. The median moved from
+`(113,116,118)` to `(113,115,117)` on both backends. This accounts for a
+small sky tint difference. A full-frame recmp-to-Godot comparison still
+needs matching pose, asset, and weather data. No exposure or saturation
+adjustment was applied to the final image. Captures and logs are under
+`local/sky-color`.

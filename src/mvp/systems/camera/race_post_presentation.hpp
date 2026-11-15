@@ -36,7 +36,7 @@ private:
     void set_test_mode(int mode);
     void prepare_frame();
     void release_scene_textures();
-    void release_render_resources();
+    void release_render_resources(godot::Ref<RacePostPresentation> keepAlive);
     godot::RID copy_depth(godot::RenderSceneBuffersRD& buffers, const godot::RID& source);
     void update_fog_palette(const std::array<float, 32>& parameters);
     std::array<float, 32> parameters_{};

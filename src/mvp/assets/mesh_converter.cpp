@@ -501,6 +501,8 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             if (gsTrack) {
                 // SetMipMapK (0011C328) sends the low byte of CalcAutoK per strip.
                 surface.mipBias.push_back(static_cast<std::uint8_t>(strip.autoK) / 16.f);
+            }
+            if (gsTrack || sky) {
                 surface.colors.push_back({float((rgb555 & 31u) * 8) / 255.f,
                     float(((rgb555 >> 5) & 31u) * 8) / 255.f, float(((rgb555 >> 10) & 31u) * 8) / 255.f,
                     (rgb555 & 0x8000u) ? 128.f / 255.f : 0.f});
@@ -746,7 +748,8 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         material->set_render_priority(sky
             ? Material::RENDER_PRIORITY_MIN + (transparency == BaseMaterial3D::TRANSPARENCY_ALPHA ? 1 : 0)
             : surface.material->get_render_priority());
-        material->set_shader_parameter("albedo_texture", surface.material->get_texture(BaseMaterial3D::TEXTURE_ALBEDO));
+        material->set_shader_parameter("albedo_texture", sky ? track_texture(*surface.descriptor).texture :
+            surface.material->get_texture(BaseMaterial3D::TEXTURE_ALBEDO));
         material->set_shader_parameter("use_scroll", scroll);
         material->set_shader_parameter("use_shaft", shaft);
         if (sky) {
@@ -780,7 +783,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             material->set_shader_parameter("stepped_scroll", wire[0x79] == 2);
         }
         if (sequence.count) {
-            material->set_shader_parameter("frame_textures", sequence.texture);
+            material->set_shader_parameter("frame_textures", sky ? sequence.raw : sequence.texture);
             material->set_shader_parameter("texture_count", sequence.count);
             material->set_shader_parameter("texture_rate", static_cast<float>(sequence.rate));
             material->set_shader_parameter("real_clock", sequence.realClock);

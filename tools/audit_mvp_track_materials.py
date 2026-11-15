@@ -30,7 +30,7 @@ def main():
 
     def run(track):
         env = dict(os.environ, HP2_PS2_ASSET_ROOT=str(args.assets.resolve()),
-                   HP2_PROFILE_DIR=str(out / f"profile-{track}"), HP2_MVP_TRACK_MATERIAL_AUDIT="1")
+                   HP2_MVP_TEST_PROFILE="1", HP2_MVP_TRACK_MATERIAL_AUDIT="1")
         result = subprocess.run(
             [engine, "--headless", "--path", args.project.resolve(), "--script",
              ROOT / "tools/audit_mvp_track_materials.gd", "--", f"--race-track={track}"],

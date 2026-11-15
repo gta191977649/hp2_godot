@@ -42,7 +42,7 @@ $runCases = {
     $launch.UseShellExecute = $false
     $launch.CreateNoWindow = $true
     $launch.Environment['HP2_PS2_ASSET_ROOT'] = $using:source
-    $launch.Environment['HP2_PROFILE_DIR'] = Join-Path $using:run "$name-$($case.Attempt)"
+    $launch.Environment['HP2_MVP_TEST_PROFILE'] = '1'
     foreach ($argument in @('--headless','--path',$using:project,'--max-fps','120',
             '--log-file',$log,'--script',$using:smoke,'--',"--race-event=$($case.Tree):$($case.Event)")) {
         $launch.ArgumentList.Add($argument)

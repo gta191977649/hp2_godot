@@ -53,5 +53,19 @@ func run() -> void:
     var left := Vector3i(a.r8,a.g8,a.b8)
     var right := Vector3i(b.r8,b.g8,b.b8)
     print("GS_TRACK_RGB left=", left, " right=", right)
-    quit(0 if (left-Vector3i(144,123,64)).length() <= 3 and
-        (right-Vector3i(48,72,48)).length() <= 3 else 1)
+    if (left-Vector3i(144,123,64)).length() > 3 or (right-Vector3i(48,72,48)).length() > 3:
+        quit(1)
+        return
+    var sky := ShaderMaterial.new()
+    sky.shader = load("res://shader/track_sky_mix.gdshader")
+    sky.set_shader_parameter("albedo_texture", tex)
+    for node in root.get_children():
+        if node is MeshInstance3D:
+            node.material_override = sky
+    for i in range(3):
+        await process_frame
+        await RenderingServer.frame_post_draw
+    var pixel := root.get_texture().get_image().get_pixel(center.x-x,center.y)
+    var sky_color := Vector3i(pixel.r8,pixel.g8,pixel.b8)
+    print("GS_SKY_RGB ", sky_color)
+    quit(0 if (sky_color-Vector3i(144,123,64)).length() <= 3 else 1)

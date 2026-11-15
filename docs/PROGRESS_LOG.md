@@ -1,3 +1,26 @@
+## 2026-11-15 TASK-0143 and TASK-0150 launcher and renderer teardown
+
+Invalid or incomplete ISOs now leave the picker open, including when
+runtime initialization fails after the disc check. The next valid ISO
+starts and saves its path. Exiting with Track Viewer open releases the
+compositor texture views before their viewport. Vulkan and D3D12 passed
+active exit, track switching, and the race postprocessing history check.
+
+## 2026-11-15 TASK-0150 portable save and trimmed Windows release
+
+The MVP writes `launcher.cfg` and creates `profiles/` beside the exported
+EXE. The ISO picker rejected a different PS2 title and a malformed image.
+Name Entry persisted the rename before leaving the screen, and the reload
+test preserved progression. The standalone Release EXE fell from 109,268,480
+to 48,765,440 bytes. The trimmed package reached Title Screen, published
+Track 33 on Vulkan and D3D12, and exited normally.
+
+## 2026-11-15 TASK-0148 sky color modulation
+
+The sky now applies the original RGB5 modulation to texture bytes before
+the Forward+ conversion. Track 33 showed a small sky tint change. The
+mirror still draws foreground scenery in front of the sky.
+
 ## 2026-11-15 TASK-0148 shoulder and scenery color
 
 The Track 33 column-side shoulder uses the full authored GS vertex RGB

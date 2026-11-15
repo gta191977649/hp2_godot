@@ -12,6 +12,15 @@ Use CMake 3.24+, Ninja, a Windows x64 C++17 toolchain. Place the Godot 4.7.2 con
 ./build.ps1 --run
 ```
 
+Run `./build.ps1` or `./build.ps1 --mvp` to package the Windows Release MVP
+at `out/mvp/windows-release/HP2.exe`. Keep the EXE, PCK, DLLs and notices
+together. Release builds use the smaller project-specific Godot template.
+See [Development](docs/DEVELOPMENT.md) for template build dependencies.
+
+Open the EXE and drop the US PS2 Hot Pursuit 2 ISO onto the launch screen,
+or click **Please Drop / Browse Your Game ISO**. The selected path is saved
+in `launcher.cfg` beside the EXE. To replace it, run `HP2.exe -- --select-iso`.
+
 The default launch opens the original title sequence in Godot. Leave the
 Start Game prompt idle for 30 seconds to start the original attract demo.
 Press a menu button to stop the demo and return to the main menu.
@@ -65,16 +74,19 @@ For race integration, use a complete extracted game directory, a PS2 disc image,
 `ZZDATA.BIN` archive with its matching directory file. The extracted tree
 must include the original sound banks. The asset path can also come from
 `config/ps2_assets.local.json` (see `config/ps2_assets.example.json`).
-Use `HP2_PROFILE_DIR` to select a profile directory. By default the game
-uses the Godot project's `user://profile` directory.
+The game creates `profiles/` beside the EXE, or inside the staged
+`mvp-project` for development launches. On the first run, it imports the
+previous `user://profile` save if the new directory has no save yet. Rename
+players under **Options → Player Name**. Renaming keeps the existing profile
+and saves after the edit commits when automatic saving is enabled.
 The Nitro action is bound to **N**. To enable the donor PC racer option,
 add `racer_nitro=1` to `NFSHP2_pc.ini` in that profile directory.
 
-`./build.ps1` stages the project in `build/godot-mvp-release/mvp-project`.
+The script stages its development project in `build/godot-mvp-release/mvp-project`.
 `./build.ps1 --run --mvp --debug --jobs 16` builds and runs the Debug
 configuration and enables the native race debug tools. When launching the
-staged Godot project directly, pass `-- --debug`. Explicit debug launches
-use a fresh test profile unless `HP2_PROFILE_DIR` is set.
+staged Godot project directly, pass `-- --debug`. Explicit Debug and race
+diagnostics use fresh subdirectories inside `profiles/diagnostics/`.
 In a regular single-player race, hold **Start / Menu**, then press
 **Select / Back / View** (keyboard: hold **Esc** or **Backspace**, then press
 **Tab**). Release all controls before using the camera. Short Select cycles

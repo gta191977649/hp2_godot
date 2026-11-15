@@ -269,10 +269,15 @@ struct tNameEntryData {
             genders[i]=frontend.players[i]->settings.authoredTimeDisplayOption;
         }
     }
-    bool Different(const FrontendPlayerManager& frontend) const
+    bool NamesDifferent(const FrontendPlayerManager& frontend) const
     {
         for (std::size_t i=0;i<2;++i)
             if (std::strncmp(names[i].data(),frontend.players[i]->settings.playerName,12)!=0)return true;
+        return false;
+    }
+    bool Different(const FrontendPlayerManager& frontend) const
+    {
+        if (NamesDifferent(frontend))return true;
         for (std::size_t i=0;i<2;++i)
             if (genders[i]!=frontend.players[i]->settings.authoredTimeDisplayOption)return true;
         return false;
@@ -346,9 +351,17 @@ public:
     }
     void HandleEvent(ScreenMessage message,ScreenCallbackData& data)
     {
-        if (message==ScreenMessage::Tick) {highlight_.Animate();selection_.Animate();blurb_.Animate();}
+        if (message==ScreenMessage::Tick) {
+            // Port-side persistence after the editor commits to the existing player slot.
+            if (!editing_ && saveNamePending_ && services_.frontend->autoSave &&
+                RequestProfileAutosave([] {})) return; // May retire this view.
+            highlight_.Animate();selection_.Animate();blurb_.Animate();
+        }
         if (editing_) {
-            if (!keyboard_.HandleEvent(message,data)) {editing_=false;services_.screens->SetHelpOverride(nullptr);}
+            if (!keyboard_.HandleEvent(message,data)) {
+                editing_=false;services_.screens->SetHelpOverride(nullptr);
+                saveNamePending_=snapshot_.NamesDifferent(*services_.frontend);
+            }
             return;
         }
         arrows_.HandleEvent(message,data);
@@ -380,6 +393,7 @@ private:
     FlailerLeftRightArrowScroll arrows_;
     FlailerAnimatedBlurb blurb_;
     bool editing_{};
+    bool saveNamePending_{};
     std::uint64_t editSession_{};
 };
 std::unique_ptr<NameEntry> nameOwner;

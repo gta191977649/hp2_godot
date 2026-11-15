@@ -7,3 +7,12 @@ reloadable = false
 [libraries]
 
 windows.x86_64 = "res://bin/hp2_track12.dll"
+
+[dependencies]
+
+windows.x86_64 = {
+    "res://bin/avformat-62.dll": "",
+    "res://bin/avcodec-62.dll": "",
+    "res://bin/avutil-60.dll": "",
+    "res://bin/swresample-6.dll": ""
+}

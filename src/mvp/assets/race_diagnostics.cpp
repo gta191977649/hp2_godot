@@ -38,7 +38,7 @@ namespace hp2 {
 bool profile_grid_effect_disabled(const char* mode) {
     static const auto selected = [] {
         const auto* os = godot::OS::get_singleton();
-        if (os->get_environment("HP2_PROFILE_DIR").is_empty() ||
+        if (os->get_environment("HP2_MVP_TEST_PROFILE") != "1" ||
             os->get_environment("HP2_MVP_PROFILE_GRID") != "1") return godot::String{};
         return os->get_environment("HP2_MVP_PROFILE_GRID_EFFECT");
     }();
@@ -51,14 +51,14 @@ bool profile_legacy_sun_bounds() {
 
 bool profile_baseline_particle_draw() {
     const auto* os = godot::OS::get_singleton();
-    return !os->get_environment("HP2_PROFILE_DIR").is_empty() &&
+    return os->get_environment("HP2_MVP_TEST_PROFILE") == "1" &&
         os->get_environment("HP2_MVP_PROFILE_PARTICLES") == "baseline";
 }
 
 void profile_fog_state(const RacePostState& post, RaceEffectOptions& options, godot::Dictionary& sample) {
     static const auto mode = [] {
         const auto* os = godot::OS::get_singleton();
-        if (os->get_environment("HP2_PROFILE_DIR").is_empty()) return godot::String{};
+        if (os->get_environment("HP2_MVP_TEST_PROFILE") != "1") return godot::String{};
         return os->get_environment("HP2_MVP_PROFILE_FOG");
     }();
     if (mode.is_empty()) return;
@@ -76,33 +76,33 @@ void profile_fog_state(const RacePostState& post, RaceEffectOptions& options, go
 bool profile_legacy_primary_scenery() {
     const auto* os = godot::OS::get_singleton();
     return os->get_environment("HP2_MVP_PROFILE_GRID") == "1" &&
-        !os->get_environment("HP2_PROFILE_DIR").is_empty() &&
+        os->get_environment("HP2_MVP_TEST_PROFILE") == "1" &&
         os->get_environment("HP2_MVP_PROFILE_LEGACY_SCENERY") == "1";
 }
 
 bool profile_baseline_scenery_lod() {
     const auto* os = godot::OS::get_singleton();
-    return !os->get_environment("HP2_PROFILE_DIR").is_empty() &&
+    return os->get_environment("HP2_MVP_TEST_PROFILE") == "1" &&
         os->get_environment("HP2_MVP_PROFILE_BASELINE_SCENERY_LOD") == "1";
 }
 
 bool test_scenery_camera_enabled() {
     const auto* os = godot::OS::get_singleton();
-    return !os->get_environment("HP2_PROFILE_DIR").is_empty() &&
+    return os->get_environment("HP2_MVP_TEST_PROFILE") == "1" &&
         os->get_environment("HP2_MVP_TEST_SCENERY_CAMERA") == "1";
 }
 
 bool profile_shared_world_reflections() {
     const auto* os = godot::OS::get_singleton();
     return os->get_environment("HP2_MVP_PROFILE_REFLECTIONS") == "1" &&
-        !os->get_environment("HP2_PROFILE_DIR").is_empty() &&
+        os->get_environment("HP2_MVP_TEST_PROFILE") == "1" &&
         os->get_environment("HP2_MVP_PROFILE_SHARED_REFLECTION_WORLD") == "1";
 }
 
 FrontendReady reflection_profile_frontend_ready() {
     const auto* os = godot::OS::get_singleton();
     if (os->get_environment("HP2_MVP_PROFILE_REFLECTIONS") != "1" ||
-        os->get_environment("HP2_PROFILE_DIR").is_empty()) return nullptr;
+        os->get_environment("HP2_MVP_TEST_PROFILE") != "1") return nullptr;
     return [](MainMenuScreenServices& menus, const void*) {
         constexpr std::uint32_t seed = 0x0146u;
         menus.raceSetup->parameters->eventRandomSeed = seed;
@@ -114,11 +114,11 @@ FrontendReady reflection_profile_frontend_ready() {
 FrontendReady race_profile_frontend_ready() {
     const auto* os = godot::OS::get_singleton();
     if (os->get_environment("HP2_MVP_PROFILE_GRID") != "1" ||
-        os->get_environment("HP2_PROFILE_DIR").is_empty()) return reflection_profile_frontend_ready();
+        os->get_environment("HP2_MVP_TEST_PROFILE") != "1") return reflection_profile_frontend_ready();
     return [](MainMenuScreenServices& menus, const void*) {
         (void)vectorRandomSeed(0x0146u, &vectorDefaultRandomState);
         menus.frontend->copsEnabled = false;
-        StartQuickRace(menus, 0);
+        StartQuickRace(menus, 0, 13);
     };
 }
 
@@ -181,7 +181,7 @@ void start_quick_race_diagnostic(MainMenuScreenServices& menus, const void* cont
         throw std::invalid_argument("Track is absent from the authored scenario catalogue");
     StartQuickRace(menus, 0, track);
     const auto* os = godot::OS::get_singleton();
-    if (!os->get_environment("HP2_PROFILE_DIR").is_empty() &&
+    if (os->get_environment("HP2_MVP_TEST_PROFILE") == "1" &&
         os->get_environment("HP2_MVP_TEST_TRACK_REVERSE") == "1")
         menus.raceSetup->parameters->reverse = 1;
 }

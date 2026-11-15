@@ -12,10 +12,17 @@
       "inherits": "godot-mvp-debug",
       "binaryDir": "${sourceDir}/build/godot-mvp-release",
       "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "godot-mvp-export",
+      "inherits": "godot-mvp-release",
+      "binaryDir": "${sourceDir}/build/godot-mvp-export",
+      "cacheVariables": { "GODOTCPP_TARGET": "template_release" }
     }
   ],
   "buildPresets": [
     { "name": "godot-mvp-debug", "configurePreset": "godot-mvp-debug" },
-    { "name": "godot-mvp-release", "configurePreset": "godot-mvp-release" }
+    { "name": "godot-mvp-release", "configurePreset": "godot-mvp-release" },
+    { "name": "godot-mvp-export", "configurePreset": "godot-mvp-export" }
   ]
 }

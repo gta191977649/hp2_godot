@@ -111,8 +111,15 @@ MemcardScreens::LoadResult MemcardScreens::LoadProfile()
         // text version. An existing malformed file is reported and retained;
         // it must never be mistaken for a fresh profile or silently rolled back.
         read=state.files.ReadFile(ProfileBackupFilename,bytes);
+        if(read==cMC::NotFound && state.legacyFiles) {
+            // Port-side relocation, preserving the previous directory and its
+            // primary/backup precedence. WriteNewFile publishes without replacing.
+            read=state.legacyFiles->MCReadFile(ProfileFilename,bytes);
+            if(read==cMC::NotFound)read=state.legacyFiles->MCReadFile(ProfileBackupFilename,bytes);
+            if(read!=cMC::Ok && read!=cMC::NotFound)return failed(state.legacyFiles->LastError());
+        }
         if(read==cMC::Ok) {
-            if(!state.frontend.ValidateNativeProfileText(bytes.data(),bytes.size(),state.error))return failed(state.error);
+            if(!state.frontend.ValidateNativeProfileText(bytes.data(),bytes.size(),state.error,true))return failed(state.error);
             if(state.files.WriteNewFile(ProfileFilename,bytes.data(),bytes.size())!=cMC::Ok)return failed(state.files.LastErrorMessage());
         } else if(read==cMC::NotFound) {
             read=state.files.ReadFile(LegacyProfileFilename,bytes,GAME_SAVE_SIZE);

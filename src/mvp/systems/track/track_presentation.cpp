@@ -521,7 +521,7 @@ std::size_t attach_track(Node3D& root, const Scenery& scenery, const SkyResource
     MeshConverter converter{nullptr, false, true};
     const bool batchScenery = OS::get_singleton()->get_environment("HP2_MVP_SCENERY_BATCHING") != "0";
     const bool auditMaterials = OS::get_singleton()->get_environment("HP2_MVP_TRACK_MATERIAL_AUDIT") == "1" &&
-        !OS::get_singleton()->get_environment("HP2_PROFILE_DIR").is_empty();
+        OS::get_singleton()->get_environment("HP2_MVP_TEST_PROFILE") == "1";
     std::unordered_set<const EditorMarkerModel*> auditedModels;
     std::unordered_map<const EditorMarkerModel*, PlacementMesh> meshes;
     // PAL10F928 single-player scenery filter. The donor loader already

@@ -17,10 +17,10 @@ class RacePresentation : public godot::Node3D {
 public:
     RacePresentation();
     ~RacePresentation() override;
-    bool start_frontend(const godot::String& assets, const godot::String& profile, bool nativeDebug = false);
-    bool start_race(const godot::String& assets, const godot::String& profile, int64_t track, bool nativeDebug = false);
-    bool start_event_race(const godot::String& assets, const godot::String& profile, int tree, int event,
-        bool nativeDebug = false);
+    static godot::String validate_game_iso(const godot::String& path);
+    void set_legacy_profile_directory(const godot::String& path);
+    godot::String start_game(const godot::String& assets, const godot::String& profile, int track,
+        int tree, int event, bool nativeDebug);
     void _process(double delta) override;
     void _input(const godot::Ref<godot::InputEvent>& event) override;
     void report_launch_error(const godot::String& stage, const godot::String& track, const godot::String& reason);
@@ -45,12 +45,13 @@ private:
     void service_track_viewer(double delta);
 #endif
     std::unique_ptr<Session> session_;
+    godot::String legacyProfileDirectory_;
     bool failed_{};
     bool nativeDebug_{};
     void report_assert(const godot::String& message);
     void quit_game();
     bool start(const godot::String& assets, const godot::String& profile, bool frontend, int track,
-        int tree = -1, int event = 0, bool returnToMenu = false);
+        int tree = -1, int event = 0, bool returnToMenu = false, godot::String* launchError = nullptr);
     void retire_scene();
     void retire_session();
     void fail(const char* stage, const char* reason);

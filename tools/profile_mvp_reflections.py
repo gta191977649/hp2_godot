@@ -192,10 +192,8 @@ def main():
         ]
     for i, variant in enumerate(variants, 1):
         run = out / f"{i}-{variant}"
-        profile = run / "profile"
-        profile.mkdir(parents=True)
-        (profile / "config.ini").write_text("format=1\ntrack_selection=13\n")
-        env = dict(os.environ, HP2_PS2_ASSET_ROOT=str(args.assets.resolve()), HP2_PROFILE_DIR=str(profile),
+        run.mkdir(parents=True)
+        env = dict(os.environ, HP2_PS2_ASSET_ROOT=str(args.assets.resolve()), HP2_MVP_TEST_PROFILE="1",
                    HP2_MVP_PROFILE_REFLECTIONS="1", HP2_MVP_PROFILE_SHARED_REFLECTION_WORLD=str(int(variant == "shared")),
                    HP2_MVP_REFLECTION_CHECK="demo" if args.demo else "fixed")
         if args.grid:

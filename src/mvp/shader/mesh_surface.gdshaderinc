@@ -6,11 +6,16 @@ uniform bool face_camera;
 
 global uniform vec4 hp2_animation_clock; // interpolated ticks, texture seconds, real ticks, committed ticks
 uniform ivec2 repeat_axes = ivec2(1);
+#ifdef TRACK_SKY
+uniform sampler2D albedo_texture : filter_linear_mipmap, repeat_enable;
+uniform sampler2DArray frame_textures : filter_linear_mipmap, repeat_enable;
+#else
 uniform sampler2D albedo_texture : source_color, filter_linear_mipmap, repeat_enable;
+uniform sampler2DArray frame_textures : source_color, filter_linear_mipmap, repeat_enable;
+#endif
 uniform sampler2D albedo_magnified : source_color, filter_linear, repeat_enable;
 uniform sampler2D albedo_minified : source_color, filter_nearest, repeat_enable;
 
-uniform sampler2DArray frame_textures : source_color, filter_linear_mipmap, repeat_enable;
 uniform int texture_count;
 uniform float texture_rate;
 uniform bool real_clock;
@@ -39,6 +44,8 @@ instance uniform int hp2_animation_start = -1;
 #ifdef TRACK_SKY
 uniform bool sky_blend_alpha;
 uniform bool sky_cutout;
+varying vec3 sky_color_weighted;
+varying float sky_clip_weight;
 #endif
 
 #ifdef GS_TRACK
@@ -97,6 +104,8 @@ void vertex() {
     // StuffSky uses its own projection range. Preserve the view and UVs
     // while placing the sky behind world geometry, even in the 192 m mirror.
     POSITION = PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX, 1.0);
+    sky_clip_weight = POSITION.w;
+    sky_color_weighted = round(COLOR.rgb * 255.0) * sky_clip_weight;
     POSITION.z = CLIP_SPACE_FAR * POSITION.w;
 #endif
 #ifdef GS_TRACK
@@ -144,21 +153,27 @@ void fragment() {
     } else {
         color = texture(albedo_texture, uv);
     }
+#ifdef TRACK_SKY
+    if (sky_cutout && color.a * 255.0 <= 48.0) discard;
+    vec3 vertex_rgb = sky_color_weighted / sky_clip_weight;
+    vec3 texture_rgb = floor(color.rgb * 255.0 + 0.001);
+    vec3 encoded = min(floor(texture_rgb * vertex_rgb / 128.0 + 0.001), vec3(255.0)) / 255.0;
+    ALBEDO = OUTPUT_IS_SRGB ? encoded : mix(encoded / 12.92,
+        pow((encoded + 0.055) / 1.055, vec3(2.4)), step(vec3(0.04045), encoded));
+    ALPHA = sky_blend_alpha ? min(color.a * (255.0 / 128.0), 1.0) : 1.0;
+#else
     vec3 tint = COLOR.rgb;
     if (!OUTPUT_IS_SRGB) {
         tint = mix(tint / 12.92, pow((tint + 0.055) / 1.055, vec3(2.4)), step(vec3(0.04045), tint));
     }
     ALBEDO = color.rgb * tint;
-#ifdef TRACK_SKY
-    if (sky_cutout && color.a < 97.0 / 255.0) discard;
-    ALPHA = sky_blend_alpha ? color.a : 1.0;
-#endif
 #ifdef CUTOUT
     ALPHA = color.a;
     ALPHA_SCISSOR_THRESHOLD = 97.0 / 255.0;
 #endif
 #ifdef TRANSPARENT
     ALPHA = color.a;
+#endif
 #endif
 #endif
 }

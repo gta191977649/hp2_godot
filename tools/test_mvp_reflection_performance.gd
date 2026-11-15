@@ -23,8 +23,8 @@ func fail(message: String) -> void:
     quit(1)
 
 func run() -> void:
-    if OS.get_environment("HP2_PROFILE_DIR").is_empty():
-        fail("an isolated HP2_PROFILE_DIR is required")
+    if OS.get_environment("HP2_MVP_TEST_PROFILE") != "1":
+        fail("HP2_MVP_TEST_PROFILE=1 is required")
         return
     change_scene_to_file("res://native_game.tscn")
     while not is_instance_valid(race):

@@ -52,7 +52,7 @@ RacePostPresentation::RacePostPresentation() {
     fxaa_ = race_fxaa_enabled();
     const auto* os = OS::get_singleton();
     const auto mode = os->get_environment("HP2_MVP_PROFILE_FOG");
-    if (!os->get_environment("HP2_PROFILE_DIR").is_empty()) {
+    if (os->get_environment("HP2_MVP_TEST_PROFILE") == "1") {
         baselineFog_ = mode == "baseline" || mode == "no-fog" || mode == "no-focus" || mode == "no-history";
         profileOptimizedFog_ = mode == "optimized";
     }
@@ -230,6 +230,7 @@ void RacePostPresentation::attach(SubViewport& scene, Viewport& output, Camera3D
     compositor->set_compositor_effects(passes);
     camera.set_compositor(compositor);
     RenderingServer::get_singleton()->connect("frame_pre_draw", callable_mp(this, &RacePostPresentation::prepare_frame));
+    scene.connect("tree_exiting", callable_mp(this, &RacePostPresentation::stop), Object::CONNECT_ONE_SHOT);
     connected_ = true;
     prepare_frame();
 }
@@ -241,11 +242,25 @@ RacePostPresentation::~RacePostPresentation() {
 
 void RacePostPresentation::stop() {
     if (!connected_) return;
-    RenderingServer::get_singleton()->disconnect("frame_pre_draw",
+    auto* server = RenderingServer::get_singleton();
+    server->disconnect("frame_pre_draw",
         callable_mp(this, &RacePostPresentation::prepare_frame));
     connected_ = false;
-    RenderingServer::get_singleton()->call_on_render_thread(callable_mp(this,
-        &RacePostPresentation::release_render_resources));
+    set_enabled(false);
+    // The scene viewport owns the source textures. Stop sampling and release
+    // their shared views before the viewport destroys the render buffers.
+    for (const auto& pass : {directFogPass_, focusPass_, historyPasses_[0], historyPasses_[1]}) {
+        pass->set_shader_parameter("scene_color", neutral_);
+        pass->set_shader_parameter("scene_depth", neutral_);
+    }
+    for (const auto* parameter : {"fallback_scene", "fallback_fxaa_scene", "post_color", "post_fxaa_color"})
+        displayPass_->set_shader_parameter(parameter, neutral_);
+    for (const auto& pass : historyPasses_) {
+        pass->set_shader_parameter("focus_image", neutral_);
+        pass->set_shader_parameter("previous_image", neutral_);
+    }
+    server->call_on_render_thread(callable_mp(this, &RacePostPresentation::release_render_resources)
+        .bind(Ref<RacePostPresentation>(this)));
 }
 
 void RacePostPresentation::detach() {
@@ -459,8 +474,9 @@ void main() {
     return target;
 }
 
-void RacePostPresentation::release_render_resources() {
-    release_scene_textures();
+void RacePostPresentation::release_render_resources(Ref<RacePostPresentation>) {
+    color_->set_texture_rd_rid({});
+    depth_->set_texture_rd_rid({});
     auto* rd = RenderingServer::get_singleton()->get_rendering_device();
     for (auto* resource : {&depthCopyPipeline_, &depthCopyShader_, &depthCopySampler_}) {
         if (resource->is_valid()) rd->free_rid(*resource);

@@ -243,9 +243,10 @@ private:
 }
 
 struct RacePresentation::Session {
-    Session(RacePresentation& owner, const String& assets, const String& profile)
+    Session(RacePresentation& owner, const String& assets, const String& profile, const String& legacyProfile)
         : host(owner), files(std::filesystem::path(assets.wide_string().get_data())),
-          runtime(files, host, std::filesystem::path(profile.wide_string().get_data())) {}
+          runtime(files, host, std::filesystem::path(profile.wide_string().get_data()),
+              std::filesystem::path(legacyProfile.wide_string().get_data())) {}
 
     RaceHost host;
     GameResources files;
@@ -305,12 +306,10 @@ RacePresentation::~RacePresentation() {
 }
 
 void RacePresentation::_bind_methods() {
-    ClassDB::bind_method(D_METHOD("start_race", "assets", "profile", "track", "native_debug"),
-        &RacePresentation::start_race, DEFVAL(false));
-    ClassDB::bind_method(D_METHOD("start_event_race", "assets", "profile", "tree", "event", "native_debug"),
-        &RacePresentation::start_event_race, DEFVAL(false));
-    ClassDB::bind_method(D_METHOD("start_frontend", "assets", "profile", "native_debug"),
-        &RacePresentation::start_frontend, DEFVAL(false));
+    ClassDB::bind_static_method("RacePresentation", D_METHOD("validate_game_iso", "path"), &RacePresentation::validate_game_iso);
+    ClassDB::bind_method(D_METHOD("set_legacy_profile_directory", "path"), &RacePresentation::set_legacy_profile_directory);
+    ClassDB::bind_method(D_METHOD("start_game", "assets", "profile", "track", "tree", "event", "native_debug"),
+        &RacePresentation::start_game);
     ClassDB::bind_method(D_METHOD("telemetry"), &RacePresentation::telemetry);
     ClassDB::bind_method(D_METHOD("race_scene"), &RacePresentation::race_scene);
     ClassDB::bind_method(D_METHOD("photo_route"), &RacePresentation::photo_route);
@@ -370,32 +369,42 @@ void RacePresentation::fail(const char* stage, const char* reason) {
         String::num_uint64(generation) + " last_step=" + String::num_uint64(step) + event + " reason=" + reason);
 }
 
-bool RacePresentation::start_frontend(const String& assets, const String& profile, bool nativeDebug) {
-    if (!session_) nativeDebug_ = nativeDebug;
-    return start(assets, profile, true, -1);
-}
-
-bool RacePresentation::start_race(const String& assets, const String& profile, int64_t track, bool nativeDebug) {
-    if (track < 0 || track > std::numeric_limits<int>::max()) {
-        report_launch_error("launch", String::num_int64(track), "expected a nonnegative 32-bit track ID");
-        return false;
+String RacePresentation::validate_game_iso(const String& path) {
+    try {
+        const std::filesystem::path image(path.wide_string().get_data());
+        if (!std::filesystem::is_regular_file(image) || path.get_extension().to_lower() != "iso")
+            return "Choose a PS2 ISO file.";
+        const GameFileSystem disc(image);
+        if (disc.DiscBootExecutable() != "SLUS_203.62" || !disc.Contains("SLUS_203.62"))
+            return "This disc does not boot SLUS_203.62. Choose the US PS2 Hot Pursuit 2 ISO.";
+        const auto& executable = disc.Get("SLUS_203.62").range;
+        if (executable.Size() < 52 || executable.Read(0, 4) != std::vector<std::uint8_t>{0x7f, 'E', 'L', 'F'})
+            return "The disc's SLUS_203.62 executable is invalid.";
+        const ZDirArchive archive(disc);
+        return {};
+    } catch (const std::exception& error) {
+        return String("Cannot read the game ISO. ") + String::utf8(error.what());
     }
-    if (!session_) nativeDebug_ = nativeDebug;
-    return start(assets, profile, false, static_cast<int>(track));
 }
 
-bool RacePresentation::start_event_race(const String& assets, const String& profile, int tree, int event,
-    bool nativeDebug) {
+void RacePresentation::set_legacy_profile_directory(const String& path) {
+    if (!session_) legacyProfileDirectory_ = path;
+}
+
+String RacePresentation::start_game(const String& assets, const String& profile, int track, int tree,
+    int event, bool nativeDebug) {
     if (!session_) nativeDebug_ = nativeDebug;
-    return start(assets, profile, false, -1, tree, event);
+    String error;
+    start(assets, profile, track < 0 && tree < 0, track, tree, event, false, &error);
+    return error;
 }
 
 bool RacePresentation::start(const String& assets, const String& profile, bool frontend, int track, int tree,
-    int event, bool returnToMenu) {
+    int event, bool returnToMenu, String* launchError) {
     const char* stage = "asset_source";
     try {
         if (session_) throw std::logic_error("Game session is already running");
-        session_ = std::make_unique<Session>(*this, assets, profile);
+        session_ = std::make_unique<Session>(*this, assets, profile, legacyProfileDirectory_);
         // Reuse the donor's explicit racer Nitro option in the Godot host.
         applicationNativeGameplay = loadNativePcSettings(
             std::filesystem::path(profile.wide_string().get_data()) / "NFSHP2_pc.ini").gameplay;
@@ -423,7 +432,7 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
         session_->host.debug = debug_.get();
         session_->diagnosticChecks.finishForMenuTest = !frontend && track >= 0 &&
             OS::get_singleton()->get_environment("HP2_MVP_TEST_RESULTS_MENU") == "1" &&
-            !OS::get_singleton()->get_environment("HP2_PROFILE_DIR").is_empty();
+            OS::get_singleton()->get_environment("HP2_MVP_TEST_PROFILE") == "1";
         session_->diagnosticChecks.pursuitDriver = OS::get_singleton()->get_environment("HP2_MVP_PURSUIT_AI") == "1";
         session_->diagnosticChecks.supportVisuals = tree >= 0 &&
             OS::get_singleton()->get_environment("HP2_MVP_TEST_SUPPORT_VISUALS") == "1";
@@ -476,7 +485,8 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
         set_process(true);
         return true;
     } catch (const std::exception& error) {
-        if (session_) fail(stage, error.what());
+        if (launchError) *launchError = String::utf8(error.what());
+        else if (session_) fail(stage, error.what());
         else report_launch_error(stage, frontend ? String("unknown") : String::num_int64(track), error.what());
         return false;
     }

@@ -154,24 +154,7 @@ namespace hp2 {
 class EcstasyFrame;
 struct EcstasyVulkanFrameStatistics;
 extern "C++" {struct FrontendPlayerManager;struct ApplicationFrontendFlow;}
-// Native process paths and command-line overrides. This is platform input,
-// not a second owner of the original Config.cpp or saved FRED settings.
-struct NativeProcessLaunch {
-    std::filesystem::path dataSource;
-    std::filesystem::path profileDirectory;
-    std::filesystem::path configuration;
-    std::optional<int32_t> width,height;
-    bool archiveData{},fullscreen{},vsync{true},changeDisplay{},showHelp{};
-    bool debugTools{},unlockAll{};
-    bool fullscreenSpecified{},vsyncSpecified{},debugSpecified{},unlockSpecified{};
-    bool skipConfigurator{},configureOnly{},profileSpecified{},configurationSpecified{};
-    std::optional<std::int32_t> textureFilter,antialiasing,anisotropy;
-    std::optional<bool> skipMovies,showFps;
-};
 std::filesystem::path nativeExecutablePath();
-NativeProcessLaunch resolveNativeProcessLaunch(const std::filesystem::path& executable,
-    const std::filesystem::path& workingDirectory,
-    const std::vector<std::filesystem::path>& arguments);
 // Launcher preferences are a PC adapter. This file is separate from the
 // original config.bin replay cells and from earned FRED progress.
 enum class NativeTextureFilter {Authored,Bilinear,Trilinear,Anisotropic};
@@ -197,12 +180,11 @@ struct NativePcSettings {
 void validateNativePcSettings(const NativePcSettings& settings);
 NativePcSettings loadNativePcSettings(const std::filesystem::path& file);
 void saveNativePcSettings(const std::filesystem::path& file,const NativePcSettings& settings);
-void applyNativeProcessOverrides(NativePcSettings& settings,const NativeProcessLaunch& launch);
 // Readable PC transport for the original four-byte track-selection input.
 // Replay serialization continues to use the source word and ordering.
 std::int32_t loadNativeTrackConfiguration(const std::filesystem::path& file);
 void saveNativeTrackConfiguration(const std::filesystem::path& file,std::int32_t track);
-void migrateNativeLaunchFiles(const NativeProcessLaunch& launch,const std::filesystem::path& executable);
+
 // Native content/service clock for legacy movie/input counter consumers.
 // Its50/59.94 conversion never paces the PC simulation or presentation.
 // QPC observations and physical GPU/display completions remain distinct.
@@ -248,22 +230,6 @@ private:
     Clock::time_point deadline_{};
     std::uint32_t remainder_{};
     bool initialized_{};
-};
-// Optional PC presentation limit. It never changes logical-update deadlines.
-// Each actual submission starts a new interval; overdue frames are not burst.
-class NativePresentationClock final {
-public:
-    using Clock=std::chrono::steady_clock;
-    void SetLimit(std::int32_t framesPerSecond);
-    void Reset(Clock::time_point now) noexcept;
-    bool Due(Clock::time_point now) const noexcept;
-    void Presented(Clock::time_point started) noexcept;
-    Clock::time_point Deadline() const noexcept;
-    std::int32_t Limit() const noexcept {return limit_;}
-private:
-    Clock::time_point deadline_{};
-    std::uint32_t remainder_{};
-    std::int32_t limit_{};
 };
 // Physical platform capabilities only. All game state and scheduling stay
 // in Main.cpp's one application owner. The device owns the uploaded frame

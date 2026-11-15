@@ -54,8 +54,8 @@ registrations use the same callback. Validation below exercises the Godot port.
   another session. The Debug tests used the freshly built DLL in an isolated
   staged project under `local/menu-back/project`.
 
-Run with Godot 4.7.2, a retail ISO in `HP2_PS2_ASSET_ROOT`, and a fresh
-`HP2_PROFILE_DIR` per run. The Debug results test also needs
+Run with Godot 4.7.2, a retail ISO in `HP2_PS2_ASSET_ROOT`, and
+`HP2_MVP_TEST_PROFILE=1` for a fresh diagnostic profile per run. The Debug results test also needs
 `HP2_MVP_TEST_RESULTS_MENU=1`. Its fixture calls the existing finish entry
 point once after 120 race steps to exercise the original results builders
 without a full race. Remove the flag for other tests.

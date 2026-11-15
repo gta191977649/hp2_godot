@@ -356,6 +356,8 @@ func _name_click(position: Vector2) -> void:
 
 func _test_player_name() -> void:
     await _name_wait("New Main Menu")
+    var file := str(race.get_parent().profile_directory).path_join("profile.json")
+    var original: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(file))
     await create_timer(1.2).timeout
     for item in [0x52e039f5, 0x52e039f7]:
         var screen: String = race.telemetry().screen
@@ -395,15 +397,21 @@ func _test_player_name() -> void:
             Vector2(58, 326) * scale_factor)
         await _name_key(KEY_ENTER)
     await _name_wait("NameEntry")
-    await _name_key(KEY_BACKSPACE)
-    await _name_wait("Options")
-    var file := OS.get_environment("HP2_PROFILE_DIR").path_join("profile.json")
     var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(file))
     var actual: String = saved.players[0].settings.player_name
     var expected := "WaSd9#W" if name_test == "reload" else "WaSd9#a"
     if actual != expected:
         _fail("name_saved_%s_expected_%s" % [actual, expected])
         return
+    for field in ["records", "event_progress", "task_rewards_earned", "points_rewards_earned"]:
+        if saved[field] != original[field]:
+            _fail("rename_changed_%s" % field)
+            return
+    if saved.players[0].total_points != original.players[0].total_points:
+        _fail("rename_changed_points")
+        return
+    await _name_key(KEY_BACKSPACE)
+    await _name_wait("Options")
     print("HP2_MVP_NAME_PASS ", name_test, " ", actual)
     quit()
 

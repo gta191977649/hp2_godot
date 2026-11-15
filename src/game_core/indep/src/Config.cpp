@@ -293,39 +293,7 @@ void saveNativeTrackConfiguration(const std::filesystem::path& file,std::int32_t
     WriteNativeConfiguration(file,"# Original boot track selection. -1 uses the normal menu.\nformat=1\ntrack_selection="+
         std::to_string(track)+"\n");
 }
-void migrateNativeLaunchFiles(const NativeProcessLaunch& launch,const std::filesystem::path& executable)
-{
-    const auto pc=launch.profileDirectory/"NFSHP2_pc.ini";
-    if(!launch.profileSpecified && !std::filesystem::exists(pc)) {
-        const auto legacy=executable.parent_path()/"NFSHP2_pc.ini";
-        if(std::filesystem::exists(legacy)) {
-            saveNativePcSettings(pc,loadNativePcSettings(legacy));
 
-        }
-    }
-    if(!launch.configurationSpecified && !std::filesystem::exists(launch.configuration)) {
-        auto legacy=launch.profileDirectory/"config.bin";
-        if(!std::filesystem::exists(legacy) && !launch.profileSpecified)legacy=executable.parent_path()/"config.bin";
-        const auto selected=loadNativeTrackConfiguration(legacy);saveNativeTrackConfiguration(launch.configuration,selected);
-
-    }
-}
-
-void applyNativeProcessOverrides(NativePcSettings& settings,const NativeProcessLaunch& launch)
-{
-    if(launch.width)settings.width=*launch.width;
-    if(launch.height)settings.height=*launch.height;
-    if(launch.fullscreenSpecified)settings.fullscreen=launch.fullscreen;
-    if(launch.vsyncSpecified)settings.vsync=launch.vsync;
-    if(launch.debugSpecified)settings.debugTools=launch.debugTools;
-    if(launch.unlockSpecified)settings.unlockAll=launch.unlockAll;
-    if(launch.textureFilter)settings.textureFilter=static_cast<NativeTextureFilter>(*launch.textureFilter);
-    if(launch.antialiasing)settings.antialiasing=static_cast<NativeAntialiasing>(*launch.antialiasing);
-    if(launch.anisotropy)settings.anisotropy=*launch.anisotropy;
-    if(launch.skipMovies)settings.skipMovies=*launch.skipMovies;
-    if(launch.showFps)settings.showFps=*launch.showFps;
-    validateNativePcSettings(settings);
-}
 }
 
 // Actual PAL Config.obj defaults, individually paired through the complete

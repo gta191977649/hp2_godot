@@ -115,6 +115,7 @@ add_custom_target(stage_mvp ALL
     "${project_dir}/bin/ps2_mvp.dll"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${CMAKE_SOURCE_DIR}/godot_mvp/project.godot"
+    "${CMAKE_SOURCE_DIR}/godot_mvp/export_presets.cfg"
     "${CMAKE_SOURCE_DIR}/godot_mvp/native_game.gd"
     "${CMAKE_SOURCE_DIR}/godot_mvp/native_game.tscn"
     "${CMAKE_SOURCE_DIR}/godot_mvp/hp2_track12.gdextension"

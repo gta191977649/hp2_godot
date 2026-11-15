@@ -1850,13 +1850,13 @@ std::string FrontendPlayerManager::SerializeNativeProfileText() const
     stream.Run(const_cast<FrontendPlayerManager&>(*this));json.End();return json.Finish();
 }
 
-bool FrontendPlayerManager::ValidateNativeProfileText(const void* data,std::size_t bytes,std::string& error) const
+bool FrontendPlayerManager::ValidateNativeProfileText(const void* data,std::size_t bytes,std::string& error,bool checkEventBindings) const
 {
     error.clear();
     try {
-        auto& owner=const_cast<FrontendPlayerManager&>(*this);const auto image=ParseTextProfile(data,bytes,owner,false);
+        auto& owner=const_cast<FrontendPlayerManager&>(*this);const auto image=ParseTextProfile(data,bytes,owner,checkEventBindings);
         const auto end=ValidateProfileEnvelope(image.data(),image.size());
-        FrontendProfileStream validate{FrontendProfileStream::Mode::Validate,nullptr,image.data(),20,end};validate.checkEventBindings=false;validate.Run(owner);
+        FrontendProfileStream validate{FrontendProfileStream::Mode::Validate,nullptr,image.data(),20,end};validate.checkEventBindings=checkEventBindings;validate.Run(owner);
         ProfileCheck(validate.position==end,"Saved text profile has an incomplete logical payload");return true;
     } catch(const std::exception& e){error=e.what();return false;}
 }

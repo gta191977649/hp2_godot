@@ -154,3 +154,23 @@ Reproduce the pixel and Nitro probes with the existing postprocessing
 command above. For Nitro set `HP2_MVP_TEST_NITRO=1`,
 `HP2_MVP_TEST_POST_FPS=60` or `120`, and add `racer_nitro=1` to the
 isolated profile's `NFSHP2_pc.ini`.
+
+## Viewport shutdown texture lifetime
+
+Closing the game with Track Viewer still active reproduced invalid texture
+bindings and two invalid RID frees. The compositor now stops at its source
+viewport's tree exit, switches dependent materials to an ordinary fallback,
+and releases its shared views on the render thread before the source
+viewport frees the buffers. The queued release retains the compositor.
+
+Debug Vulkan and D3D12 passed `tools/test_mvp_track_viewer.gd` with
+`HP2_MVP_VIEWER_EXIT_ACTIVE=1`, the normal switch-and-return path, and
+`tools/test_mvp_race_post.gd` with `HP2_MVP_TEST_POST=1` on Track 12.
+The post test checked depth, effects, and history reset after resize.
+Before/after logs are in `local/rd-lifetime`.
+
+Forcing Godot's experimental separate rendering thread also removed the
+reported texture errors. The previous Vulkan build crashed after the exit
+marker. The updated Vulkan and D3D12 tests returned 0, but still logged
+engine shutdown errors in this mode. The normal render thread configuration
+passed without those errors.

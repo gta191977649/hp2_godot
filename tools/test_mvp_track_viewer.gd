@@ -5,7 +5,6 @@ var deadline := Time.get_ticks_msec() + 60000
 var running := false
 var screenshots := OS.get_environment("HP2_MVP_SCREENSHOT_DIR")
 var matrix := OS.get_environment("HP2_MVP_VIEWER_MATRIX") == "1"
-var profile_path := OS.get_environment("HP2_PROFILE_DIR").path_join("profile.json")
 
 func _initialize() -> void:
     change_scene_to_file.call_deferred("res://native_game.tscn")
@@ -84,6 +83,7 @@ func run() -> void:
     else:
         await wait_for(func(state: Dictionary) -> bool: return state.get("screen", "") == "Title Screen")
     await create_timer(0.4).timeout
+    var profile_path := str(race.get_parent().profile_directory).path_join("profile.json")
     var profile_before := FileAccess.get_sha256(profile_path) if FileAccess.file_exists(profile_path) else ""
     if not race.telemetry().get("debug_console_open", false):
         await tap(KEY_QUOTELEFT)
@@ -104,6 +104,11 @@ func run() -> void:
     if loaded.has("race_state") or race.has_node("FrontendCanvas"):
         push_error("The viewer entered the gameplay runtime")
         quit(1)
+        return
+    if OS.get_environment("HP2_MVP_VIEWER_EXIT_ACTIVE") == "1":
+        await RenderingServer.frame_post_draw
+        print("TRACK_VIEWER_ACTIVE_EXIT")
+        quit(0)
         return
     if matrix:
         await run_matrix(loaded)

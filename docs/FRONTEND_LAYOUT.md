@@ -144,9 +144,8 @@ confirmed as **binding, by name, the background grid and blueprint layer widgets
   blueprint grid) and the Title Screen (HP2 splash with PRESS START).
 - Native CTest 8/8; the three existing scenes `frontend_menu_observer`, `main_loop_observer` and
   the original `--smoke-test` show no regression.
-- Standalone build: `out/windows-debug/port.exe` (plus `port.pck` and `ps2_port.dll`). The main
-  scene was temporarily pointed at `frontend.tscn` for the export and `project.godot` was restored
-  afterwards.
+- The retired standalone frontend was exported by temporarily pointing its project at
+  `frontend.tscn`. The current [Windows MVP export](DEVELOPMENT.md) uses the native game scene.
 
 ## 6. Open questions
 

@@ -101,7 +101,7 @@ func run() -> void:
         await key(KEY_ENTER)
     await wait_for(func(state: Dictionary) -> bool: return state.get("video_request", 0) == 0)
     var title_started := Time.get_ticks_msec()
-    var profile := OS.get_environment("HP2_PROFILE_DIR").path_join("profile.json")
+    var profile := str(race.get_parent().profile_directory).path_join("profile.json")
     var hash_before := FileAccess.get_sha256(profile) if FileAccess.file_exists(profile) else ""
     if mode.begins_with("idle"):
         var idle_state := await demo()

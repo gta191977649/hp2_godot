@@ -301,6 +301,8 @@ saves/
 !/tools/test_mvp_scenery_animation.gd
 !/tools/test_mvp_race_post.gd
 !/tools/test_mvp_track_material.gd
+!/tools/test_mvp_portable_launch.gd
+!/tools/build_mvp_godot_template.ps1
 !/tools/test_mvp_reflection_performance.gd
 !/tools/test_mvp_starting_grid.gd
 !/tools/profile_mvp_reflections.py
@@ -317,6 +319,7 @@ saves/
 !/tasks/active/TASK-0144-godot-track-viewer.md
 !/tasks/active/TASK-0145-debug-menu-and-attract-demo.md
 !/tasks/active/TASK-0146-godot-car-paint-and-shaders.md
+!/tasks/active/TASK-0150-portable-launch-and-save.md
 !/tools/test_mvp_debug_menu.gd
 
 !/tasks/active/TASK-0124-modular-godot-presentation.md

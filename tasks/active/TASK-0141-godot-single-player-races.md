@@ -80,7 +80,7 @@ separate local project copy.
 To test a locked event directly, use `./build.ps1 --race-event=ultimate-racer:2`
 or `./build.ps1 --race-event=championship:1`. The command selects the first
 authored allowed car and skin and skips the startup and pre-race menus.
-It uses a fresh diagnostic profile unless `HP2_PROFILE_DIR` is specified.
+It uses a fresh diagnostic profile inside the staged project's `profiles/`.
 Quick Race and campaign diagnostic selection, validation and test unlocks
 live in `src/mvp/assets/race_diagnostics.cpp`. The core exposes a one-shot
 host callback after the authored frontend banks become ready.

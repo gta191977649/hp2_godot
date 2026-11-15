@@ -12,6 +12,34 @@ py -3 reverse/scripts/generate_progress.py --check
 ```
 
 The active build stages the Godot project and its race GDExtension.
+Without `--run` or `--editor`, it exports a Windows MVP with the selected
+configuration under `out/mvp/`. Release builds compile a smaller Godot
+template from the 4.7.2-stable source extracted at
+`local/tools/godot-4.7.2/godot-4.7.2-stable`. Install SCons for `py -3`,
+provide x64 MinGW-w64 on PATH, and extract the matching Godot Mesa NIR
+`25.3.1-3` x86_64 GCC release into
+`local/tools/godot-4.7.2/build-deps/mesa-x86_64-gcc`.
+[Godot source release](https://github.com/godotengine/godot/releases/tag/4.7.2-stable)
+and [Mesa NIR libraries](https://github.com/godotengine/godot-nir-static/releases/tag/25.3.1-3).
+Subsequent builds reuse SCons objects. `--stock-template` explicitly uses
+the installed official Release template for a comparison build. Debug
+exports use the official Debug template.
+The production export uses the `godot-mvp-export` CMake preset so
+`godot-cpp` uses the runtime allocator ABI of a Release export template.
+The staged developer build runs against Godot Editor with the Debug template ABI.
+
+The project template keeps the Unicode text server, FileDialog,
+GDExtension, 3D, Vulkan and D3D12. It disables the built-in physics,
+navigation, XR and Compatibility paths. The native runtime provides
+car physics and FFmpeg provides movie decoding. The template uses a size
+optimization level, stripped symbols, and full link-time optimization.
+The first template build compiles the engine. [Godot build guidance](https://docs.godotengine.org/en/stable/engine_details/development/compiling/optimizing_for_size.html)
+
+`HP2_MVP_TEST_PROFILE=1` selects a fresh diagnostic subdirectory inside
+the launch root's `profiles/` for frontend regression scripts. To test
+reload of a normal profile, use a disposable staged project and its
+ordinary `profiles/` directory in both launches.
+
 To build and open the Debug MVP in the pinned Godot Editor, run
 `./build.ps1 --mvp --debug --editor --jobs 16`. For an existing build,
 open `build/godot-mvp-debug/mvp-project/project.godot` in the Project Manager.

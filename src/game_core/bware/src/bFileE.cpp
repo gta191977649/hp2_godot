@@ -16,6 +16,7 @@ namespace hp2 {
 namespace {
 constexpr std::uint64_t kSectorSize = 2048;
 constexpr std::uint64_t kPrimaryVolumeSector = 16;
+std::string UpperAscii(const std::string& input);
 
 void logResourceSource(const char* event,const std::string& logical,
     const std::filesystem::path& physical,std::uint32_t hash,std::uint64_t bytes,
@@ -188,14 +189,23 @@ std::string GameFileSystem::DiscBootExecutable() const {
     const auto& range = Get("SYSTEM.CNF").range;
     Require(range.Size() <= 4096, "SYSTEM.CNF unexpectedly large");
     const auto bytes = range.Read(0, static_cast<std::size_t>(range.Size()));
-    const std::string configuration(bytes.begin(), bytes.end());
-    const auto boot = configuration.find("BOOT2");
-    if (boot == std::string::npos) return {};
-    const auto slash = configuration.find_last_of("\\/", configuration.find(';', boot));
-    if (slash == std::string::npos) return {};
-    const auto end = configuration.find_first_of(";\r\n", slash + 1);
-    if (end == std::string::npos) return {};
-    return NormalizePath(configuration.substr(slash + 1, end - slash - 1));
+    auto trim = [](std::string value) {
+        const auto first = value.find_first_not_of(" \t\r");
+        if (first == std::string::npos) return std::string{};
+        return value.substr(first, value.find_last_not_of(" \t\r") - first + 1);
+    };
+    std::istringstream configuration(std::string(bytes.begin(), bytes.end()));
+    std::string boot;
+    for (std::string line; std::getline(configuration, line);) {
+        const auto equals = line.find('=');
+        if (equals == std::string::npos || UpperAscii(trim(line.substr(0, equals))) != "BOOT2") continue;
+        auto target = UpperAscii(trim(line.substr(equals + 1)));
+        std::replace(target.begin(), target.end(), '\\', '/');
+        if (!boot.empty() || target.compare(0, 8, "CDROM0:/") != 0 || target.size() <= 10 ||
+            target.compare(target.size() - 2, 2, ";1") != 0) return {};
+        boot = NormalizePath(target.substr(8, target.size() - 10));
+    }
+    return boot;
 }
 
 } // namespace hp2
