@@ -53,6 +53,56 @@ write depth. Sun visibility needs no CPU raycasts or depth readback.
 
 ## Validation
 
+### Authored track coronas and GS color (2026-11-16)
+
+The entity bridge reads the loaded `FlarePacks()` via `CollectLightEffect`
+once when a race or Track Viewer scene is attached. Godot shares the immutable
+quad meshes between the main and rear-view instances, groups additive sprites
+by texture and spatial tile, and clips/faces them in the shader. Scene
+retirement removes the batches. The native `ApplicationRuntime::TakeRaceEffects`
+port adapter no longer repacks and duplicates static lights every frame:
+their existing registry and collector provide the same inputs at scene
+creation. No native flare decisions, marker decoding or legacy drawing changed.
+
+Retail `SLUS_203.62` (revision unknown, SHA-256
+`7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2`)
+Ghidra listing: `RenderSingleFlare` `00116118`, float-bit power
+`0011616C–001161C4`, `RenderLightFlare` `001164F0`. The Debug
+`NFSHP2.ELF` (build unknown, SHA-256
+`815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b`)
+has the same power sequence at `00116574–001165BC`, camera-Z/H at
+`00116ADC–00116AF0` and `CreateTextureContext` at `00108AE0`.
+The original packet chain is recorded in [E-0086-F01](../../reverse/task0086/flares.md).
+The three actual `GLOBALB.BUN` textures (`8868656F`, `88D8E8A2`,
+`3394FE62`) use TFX MODULATE, enabled depth test with writes masked,
+clamped UVs, and ALPHA `0x48`: `Cd + floor(Cs * As / 128)`, with
+byte saturation. Godot applies the GS texel and color math in the shader.
+The additive shader computes its increment against Godot's opaque copy.
+Earlier transparent layers and overlapping sprites can still differ from the
+GS live framebuffer; there is no original-runtime pixel-equivalence claim.
+
+Use `HP2_MVP_VIEWER_MATRIX=1`, `HP2_MVP_VIEWER_CORONAS=1`, an isolated
+profile and `--resolution 1300x1250 --max-fps 90 --script
+tools/test_mvp_track_viewer.gd` with the Debug stage. The test counts
+source layers per track, renders an actual corona from a fixed camera, and
+checks that a nearer opaque blocker removes its contribution. Track 11
+also checks the GS RGB result over a colored destination.
+
+The window matrix passed all 30 tracks on Vulkan and D3D12; every probe
+drew visible pixels in one batch draw and the blocker reduced the corona
+contribution to zero. Across the five groups of six tracks, the layer-to-
+batch counts per view are 138→13, 23→8, 38→4, 114→12 and 74→4.
+The Track 11 fixture produced RGB `97,154,217` over `48,90,150` on both
+drivers, matching the integer calculation. A Track 12 driving smoke
+confirmed 13 batches for each race camera. The Godot Visual Profiler
+captured transparent scopes during the Vulkan check; no matched
+frame-time or FPS improvement is claimed. Logs are under
+`local/window-corona-*.log`.
+
+The builds used `cmake --build --preset godot-mvp-debug --target stage_mvp
+--parallel 12` and the corresponding `godot-mvp-release` preset.
+`git diff --check` passed.
+
 - Debug and Release staged with Godot 4.7.2, CMake 3.29.2 and Ninja 1.12.0.
   Track 12 HUD, rear view, pause and confirmation passed the Vulkan resize
   smoke at 800x600, 1120x630, 1260x540 and 540x720.

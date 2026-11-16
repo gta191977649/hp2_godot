@@ -1,4 +1,5 @@
 #include "PauseMenu.hpp"
+#include "subtitle_menu_row.hpp"
 #include "RaceCoordinator.hpp"
 #include "Replay.hpp"
 #include "Language.hpp"
@@ -17,10 +18,23 @@
 #include "GameFlow.hpp"
 #include "Flags.hpp"
 #include "bware/inc/bWare.hpp"
+#include <cmath>
 #include <limits>
 
 namespace hp2 {
 namespace {
+constexpr std::uint32_t pauseSubtitleRow=0xaee77886u; // Port-side MENUITEM_13.
+constexpr std::uint32_t hudHotkeyRow=0xaee77885u;
+constexpr std::uint32_t hudHotkeyValue=0x4aff0df3u;
+constexpr std::uint32_t lookbackRow=0xaee77884u;
+constexpr std::pair<std::uint32_t,std::uint32_t> pauseDisplayRows[]{
+    {0x52e039f3u,0x5b472b16u}, {0x52e039f4u,0x2e931f1bu}, {0x52e039f5u,0x55cb09f2u},
+    {0x52e039f6u,0x71a78ef4u}, {0x52e039f7u,0x8b788a68u}, {0x52e039f8u,0xe8434eb4u},
+    {0x52e039f9u,0x5d6c141bu}, {0x52e039fau,0x12b1ebd9u}, {0x52e039fbu,0x5d2a9432u},
+    {0xaee77883u,0xffc3dcd2u}, {lookbackRow,0x2e018745u}, {hudHotkeyRow,hudHotkeyValue},
+    {pauseSubtitleRow,SubtitleMenuRow::ValueKey}
+};
+
 FlailerUiState& PauseUi(RaceScreenServices& services)
 {
     Require(services.frontend && services.frontend->ui && services.frontend->ui->resources,
@@ -80,6 +94,84 @@ CarFramePlayerState& PauseDisplayOpts::Player() const
 {
     Require(player_,"Pause display port has no actual live Player");return *player_;
 }
+// Port-side scroll window over the authored row bands.
+struct PauseDisplayOpts::SubtitleOptions {
+    struct ClipState {
+        FlailerTextChunk* text{};
+        std::uint32_t clipKey{},format{};
+    };
+    static constexpr std::uint32_t clipKey=0x83ab872du;
+    static constexpr std::uint32_t firstRow=pauseDisplayRows[0].first;
+
+    FlailerResources& resources;
+    SubtitleMenuRow option;
+    FlailerBitmapChunk clip;
+    FlailerScrollingMenuList scroll;
+    std::array<ClipState,2*std::size(pauseDisplayRows)> originalClips{};
+    FlailerObjectChunk& first;
+    float originalFirstY{},pitch{};
+    std::uint32_t selectedValue{};
+    bool scrolled{};
+
+    SubtitleOptions(MainMenuScreenServices& services,std::uint32_t screen)
+        :resources(*services.ui->resources),
+         option(services,screen,pauseSubtitleRow,hudHotkeyRow,hudHotkeyValue,
+             resources.FindObject(screen,hudHotkeyRow,1)->topLeftY-
+             resources.FindObject(screen,lookbackRow,1)->topLeftY),
+         scroll(*services.ui,screen,firstRow,hudHotkeyRow,0,0,clipKey),
+         first(*resources.FindObject(screen,firstRow,1)),originalFirstY(first.topLeftY),
+         pitch(resources.FindObject(screen,pauseSubtitleRow,1)->topLeftY-
+             resources.FindObject(screen,hudHotkeyRow,1)->topLeftY)
+    {
+        // Borrow an authored bitmap's dimensions for an invisible clip object.
+        const auto* arrow=static_cast<FlailerBitmapChunk*>(resources.FindObject(screen,0xd1cda594u,2));
+        Require(arrow && pitch>0,"Pause Display scrolling needs the authored arrow and row pitch");
+        clip=*arrow;
+        clip.key=clipKey;clip.visible=0;clip.strip=nullptr;
+        clip.topLeftX=0;clip.topLeftY=originalFirstY-pitch*0.2f;
+        const float height=resources.FindObject(screen,hudHotkeyRow,1)->topLeftY-originalFirstY+pitch;
+        clip.scaleX*=640.0f/resources.ScaledBitmapWidth(clip);
+        clip.scaleY*=height/resources.ScaledBitmapHeight(clip);
+        auto& root=resources.FindScreen(screen)->objects;
+        std::size_t index=0;
+        for(const auto& [label,value]:pauseDisplayRows) {
+            for(const auto key:{label,value}) {
+                auto* text=static_cast<FlailerTextChunk*>(resources.FindObject(screen,key,1));
+                Require(text,"Pause Display scrolling needs the authored labels and values");
+                originalClips[index++]={text,text->clipObjectKey,text->formatOptions};
+                scroll.AddObject(key);
+            }
+        }
+        clip.previous=root.previous;clip.next=&root;
+        clip.previous->next=&clip;root.previous=&clip;
+    }
+
+    ~SubtitleOptions()
+    {
+        clip.previous->next=clip.next;clip.next->previous=clip.previous;
+        for(const auto& original:originalClips) {
+            original.text->clipObjectKey=original.clipKey;
+            original.text->formatOptions=original.format;
+            original.text->updateKind=5;
+        }
+    }
+
+    void ScrollTo(std::uint32_t selected)
+    {
+        if(selected!=pauseSubtitleRow && selected!=firstRow)return;
+        const bool showLast=selected==pauseSubtitleRow;
+        if(scrolled==showLast)return;
+        scrolled=showLast;
+        scroll.SetCurrentObject(selected);
+    }
+
+    bool Moving() const
+    {
+        const float target=originalFirstY-(scrolled?pitch:0.0f);
+        return std::abs(first.topLeftY-target)>1.0f;
+    }
+};
+
 PauseDisplayOpts::PauseDisplayOpts(RaceScreenServices& services,std::uint32_t screen,std::int32_t port)
     : PauseScreenBase(services,screen)
 {
@@ -96,6 +188,8 @@ PauseDisplayOpts::PauseDisplayOpts(RaceScreenServices& services,std::uint32_t sc
     DisplayRearview();DisplayCameraSpring();DisplayLookback();DisplayRacePosition();
     DisplaySplitTime();DisplayLapInfo();DisplayGauges();DisplayTrackmap();DisplayLeaderboard();
     DisplayScoring();DisplayHUD();DisplayHudHotKey();DoGrayout();AdjustLapInfo();
+    if(services.frontend->subtitleSetting)
+        subtitles_=std::make_unique<SubtitleOptions>(*services.frontend,screen);
 }
 PauseDisplayOpts::~PauseDisplayOpts() {player_=nullptr;}
 bool PauseDisplayOpts::ShouldSeeRearViewMirror() const
@@ -504,14 +598,31 @@ void PauseMenuCallback(ScreenMessage message,ScreenCallbackData* data)
 
 void PauseDisplayOpts::MenuCallback(ScreenMessage message,ScreenCallbackData& data)
 {
+    if(subtitles_ && message==ScreenMessage::Highlight)subtitles_->ScrollTo(data.key);
+    if(subtitles_ && message==ScreenMessage::Tick) {
+        const bool wasMoving=subtitles_->Moving();
+        subtitles_->scroll.HandleEvent(message,data);
+        // The separate echo and arrows return once the selected row is inside the window.
+        if(subtitles_->Moving())return;
+        if(wasMoving) {
+            arrows_.SetCurrentItem(subtitles_->selectedValue);
+            highlight_.ForceStart();valueHighlight_.ForceStart();
+        }
+    }
     PauseScreenBase::HandleEvent(message,data);
     if (message==ScreenMessage::ScreenBack) {
         Require(boundPause,"Display resume has no actual PauseMenu");
         if (boundPause->MaybeResume(data.joystickPort))data.sound=7;
     } else if (message==ScreenMessage::LeaveScreen) {
         PauseScreens(services_).ChangeToScreen(pauseNames[1],false);data.value=0;
-    } else if (message==ScreenMessage::Select)data.sound=0;
-    else if (message==ScreenMessage::Tick)valueHighlight_.Animate();
+    } else if (message==ScreenMessage::Select) {
+        data.sound=0;
+        if(subtitles_ && data.key==pauseSubtitleRow) {
+            subtitles_->option.Toggle();
+            valueHighlight_.ForceStart();
+            data.sound=2;
+        }
+    } else if (message==ScreenMessage::Tick)valueHighlight_.Animate();
     else if (message==ScreenMessage::Left || message==ScreenMessage::Right) {
         const auto direction=message==ScreenMessage::Left?-1:1;
         bool changed=false;
@@ -525,31 +636,23 @@ void PauseDisplayOpts::MenuCallback(ScreenMessage message,ScreenCallbackData& da
         case 0x52E039F9u:changed=ToggleGauges();break;
         case 0x52E039FAu:changed=CycleSplitTime(direction);break;
         case 0x52E039FBu:changed=CycleScoring(direction);break;
-        case 0xAEE77884u:changed=ToggleLookback();break;
+        case lookbackRow:changed=ToggleLookback();break;
         case 0xAEE77883u:changed=ToggleCameraSpring();break;
-        case 0xAEE77885u:changed=ToggleHudHotKey();break;
+        case hudHotkeyRow:changed=ToggleHudHotKey();break;
+        case pauseSubtitleRow:
+            if(subtitles_) {subtitles_->option.Toggle();changed=true;}
+            break;
         default:break;
         }
         data.sound=changed?(direction<0?1:2):0;
         if (changed)valueHighlight_.ForceStart();
     } else if (message==ScreenMessage::Highlight) {
         std::uint32_t value=0;
-        switch (data.key) {
-        case 0x52E039F3u:value=0x5B472B16u;break;
-        case 0x52E039F4u:value=0x2E931F1Bu;break;
-        case 0x52E039F5u:value=0x55CB09F2u;break;
-        case 0x52E039F6u:value=0x71A78EF4u;break;
-        case 0x52E039F7u:value=0x8B788A68u;break;
-        case 0x52E039F8u:value=0xE8434EB4u;break;
-        case 0x52E039F9u:value=0x5D6C141Bu;break;
-        case 0x52E039FAu:value=0x12B1EBD9u;break;
-        case 0x52E039FBu:value=0x5D2A9432u;break;
-        case 0xAEE77884u:value=0x2E018745u;break;
-        case 0xAEE77883u:value=0xFFC3DCD2u;break;
-        case 0xAEE77885u:value=0x4AFF0DF3u;break;
-        default:break;
-        }
-        arrows_.SetCurrentItem(value);valueHighlight_.SetCurrentMenuItem(value);
+        for(const auto& [row,field]:pauseDisplayRows)
+            if(row==data.key) {value=field;break;}
+        if(subtitles_)subtitles_->selectedValue=value;
+        arrows_.SetCurrentItem(subtitles_ && subtitles_->Moving()?0:value);
+        valueHighlight_.SetCurrentMenuItem(value);
     }
 }
 void PauseDisplayCallback(ScreenMessage message,ScreenCallbackData* data)
@@ -808,6 +911,10 @@ PauseDebugMenu::PauseDebugMenu(RaceScreenServices& services,std::uint32_t screen
     // Keep the authored rows visible, but do not advertise inactive tools.
     for(const auto key:{0x52E039F4u,0x52E039F5u,0x52E039F6u,0x52E039F7u,0x52E039F8u})
         SetPauseItem(services_,screen_,key,0);
+    if (!applicationDebugRaceOverridesEnabled) {
+        SetPauseItem(services_,screen_,0x52E039F3u,2);
+        SetPauseItem(services_,screen_,0xAEE77884u,2);
+    }
 }
 std::exception_ptr PauseDebugMenu::Close() noexcept
 {
@@ -838,7 +945,7 @@ void PauseDebugMenu::OnMenuItemScroll(ScreenMessage message,ScreenCallbackData& 
     auto& resources=*PauseUi(services_).resources;
     switch(data.key) {
     case 0x52E039F3u:
-        if(services_.race && services_.race->state==4) {
+        if(applicationDebugRaceOverridesEnabled && services_.race && services_.race->state==4) {
             finishPosition_+=message==ScreenMessage::Left?-1:1;
             finishPosition_=std::max(0,std::min(finishPosition_,static_cast<std::int32_t>(services_.race->entryCount)));
             resources.Printf(screen_,data.key,"Finish in %dth position",finishPosition_);
@@ -854,7 +961,9 @@ void PauseDebugMenu::OnMenuItemScroll(ScreenMessage message,ScreenCallbackData& 
     case 0x52E039FBu:
         displayPlayerDebugInfo=displayPlayerDebugInfo==0;
         resources.Printf(screen_,data.key,"Show debug Info %s",displayPlayerDebugInfo?"ON":"OFF");break;
-    case 0xAEE77884u:(void)ToggleSuperEasyAI();break;
+    case 0xAEE77884u:
+        if (applicationDebugRaceOverridesEnabled) (void)ToggleSuperEasyAI();
+        break;
     default:break;
     }
 }

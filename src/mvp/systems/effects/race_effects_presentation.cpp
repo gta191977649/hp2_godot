@@ -32,8 +32,10 @@
 #include <array>
 #include <cmath>
 #include <cstring>
+#include <map>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 
 namespace hp2 {
@@ -353,8 +355,12 @@ struct RaceEffectsPresentation::Storage {
     Ref<ShaderMaterial> light_material(const EditorMarkerTexture* descriptor) {
         auto [it, inserted]=lightMaterials.try_emplace(descriptor);
         if (inserted) {
-            it->second=material(lightShaders.at(texture_blend(*descriptor)));
-            it->second->set_shader_parameter("flare",texture(descriptor));
+            const auto blend = texture_blend(*descriptor);
+            const bool gsAdd = blend == BaseMaterial3D::BLEND_MODE_ADD;
+            it->second=material(lightShaders.at(blend));
+            it->second->set_shader_parameter("flare",texture(descriptor, gsAdd));
+            if (gsAdd)
+                it->second->set_shader_parameter("flare_sampling", paint_texture_sampling(*descriptor));
             it->second->set_render_priority(textureInfoForDescriptor(descriptor)->requiresDepthSort ?
                 std::min<int>(descriptor->authoredRecord[0x29],7):-1);
         }
@@ -690,6 +696,88 @@ struct RaceEffectsPresentation::Storage {
         for (;count<sprites.size();++count) sprites[count]->hide();
     }
 
+    void prepare_track_coronas(const std::vector<RaceLightEffect>& effects, bool ntsc, bool rear) {
+        // Spatial tiles let Godot cull whole groups. Additive coronas sharing
+        // a texture can share a draw; other blend modes retain sprite sorting.
+        using BatchKey = std::tuple<std::uint32_t, int, int, int, std::size_t>;
+        std::map<BatchKey, std::vector<const RaceLightEffect*>> batches;
+        constexpr float tile = 128.0f;
+        for (std::size_t i = 0; i < effects.size(); ++i) {
+            const auto& effect = effects[i];
+            const auto pos = race_vector(effect.position.data());
+            const bool additive = texture_blend(*effect.texture) == BaseMaterial3D::BLEND_MODE_ADD;
+            batches[{effect.texture->key, int(std::floor(pos.x / tile)), int(std::floor(pos.y / tile)),
+                int(std::floor(pos.z / tile)), additive ? 0 : i + 1}].push_back(&effect);
+        }
+        std::unordered_map<const EditorMarkerTexture*, Ref<ShaderMaterial>> materials;
+        for (const auto& [key, batch] : batches) {
+            PackedVector3Array positions;
+            PackedColorArray minimumColors;
+            PackedVector2Array uv;
+            PackedInt32Array indices;
+            std::array<PackedFloat32Array,4> attributes;
+            float padding = 0.0f;
+            for (const auto* effect : batch) {
+                const auto center = race_vector(effect->position.data());
+                const auto normal = race_vector(effect->normal.data());
+                const auto first = positions.size();
+                const float radius = std::max(effect->minimumSize, effect->maximumSize) *
+                    std::max(1.0f, effect->intensity) * effect->maximumScale;
+                padding = std::max(padding, std::abs(effect->bias) + 1.415f * radius);
+                for (const auto& corner : {Vector2(0,0), Vector2(1,0), Vector2(1,1), Vector2(0,1)}) {
+                    positions.push_back(center);
+                    uv.push_back(corner);
+                    const auto& low = effect->minimumColor;
+                    minimumColors.push_back({low[0]/255.0f,low[1]/255.0f,low[2]/255.0f,low[3]/255.0f});
+                    const float values[][4] = {
+                        {normal.x,normal.y,normal.z,float(effect->twoSided)},
+                        {effect->minimumSize,effect->maximumSize,effect->exponent,effect->intensity},
+                        {effect->minimumScale,effect->maximumScale,effect->bias,0.0f},
+                        {effect->maximumColor[0],effect->maximumColor[1],effect->maximumColor[2],effect->maximumColor[3]},
+                    };
+                    for (std::size_t channel = 0; channel < attributes.size(); ++channel)
+                        for (float value : values[channel]) attributes[channel].push_back(value);
+                }
+                for (int index : {0,1,2,0,2,3}) indices.push_back(first + index);
+            }
+            Array arrays;
+            arrays.resize(Mesh::ARRAY_MAX);
+            arrays[Mesh::ARRAY_VERTEX] = positions;
+            arrays[Mesh::ARRAY_COLOR] = minimumColors;
+            arrays[Mesh::ARRAY_TEX_UV] = uv;
+            arrays[Mesh::ARRAY_INDEX] = indices;
+            constexpr std::array shifts{Mesh::ARRAY_FORMAT_CUSTOM0_SHIFT, Mesh::ARRAY_FORMAT_CUSTOM1_SHIFT,
+                Mesh::ARRAY_FORMAT_CUSTOM2_SHIFT, Mesh::ARRAY_FORMAT_CUSTOM3_SHIFT};
+            std::uint64_t flags{};
+            for (std::size_t channel = 0; channel < attributes.size(); ++channel) {
+                arrays[Mesh::ARRAY_CUSTOM0 + channel] = attributes[channel];
+                flags |= std::uint64_t(Mesh::ARRAY_CUSTOM_RGBA_FLOAT) << shifts[channel];
+            }
+            Ref<ArrayMesh> quads;
+            quads.instantiate();
+            quads->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays, {}, {}, flags);
+            quads->set_custom_aabb(quads->get_aabb().grow(padding));
+            const auto* texture = batch.front()->texture;
+            auto& draw = materials[texture];
+            if (draw.is_null()) {
+                draw = light_material(texture)->duplicate();
+                draw->set_shader_parameter("track_batch", true);
+            }
+            for (int layer : {2,4}) {
+                if (layer == 4 && !rear) break;
+                auto& node = mesh();
+                node.set_name(layer == 2 ? "TrackCoronaBatch" : "RearTrackCoronaBatch");
+                node.set_mesh(quads);
+                node.set_layer_mask(layer);
+                node.set_material_override(draw);
+                // Source CalculateH is 256 / tan(horizontal half-FOV).
+                const float focalScale = layer == 4 ? 32.0f / 1.08f :
+                    ntsc ? 224.0f / 1.0714286566f : 256.0f / 1.285f;
+                node.set_instance_shader_parameter("focal_scale", focalScale);
+            }
+        }
+    }
+
     void update_sun_sky(Camera3D& camera, Vector2i viewport) {
         if (!skyViewport) {
             if (!root->get_parent()->has_node("TrackSky")) return;
@@ -858,6 +946,10 @@ RaceEffectsPresentation::~RaceEffectsPresentation() {
         road->set_shader_parameter("gs_has_water_sky", false);
         road->set_shader_parameter("gs_water_sky", Variant());
     }
+}
+
+void RaceEffectsPresentation::prepare_track_coronas(const std::vector<RaceLightEffect>& lights, bool ntsc, bool rear) {
+    storage_->prepare_track_coronas(lights, ntsc, rear);
 }
 
 void RaceEffectsPresentation::update_water_sky(Camera3D& camera) {

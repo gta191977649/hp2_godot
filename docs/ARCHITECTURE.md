@@ -35,7 +35,8 @@ schedule and remap samples to render the six race reflection faces and the
 reflection atlas. The six reflection cameras share a dedicated Godot world.
 Its static scenery uses the authored visibility zones and projected-size LODs.
 Only due faces render, reusing the other images in the atlas. Frontend previews
-sample the original CarSelectEnvMap.
+sample the original CarSelectEnvMap. Sorted vehicle windows blend against the
+opaque scene color, then apply the authored reflection with Godot depth testing.
 The primary race camera selects static scenery by authored visibility zone
 and projected-size LOD. Godot copies the decoded section tree at scene
 creation and tests conservative bounds against the primary camera frustum.
@@ -107,6 +108,9 @@ Race effects use the same scene lifetime. AcidFX publishes ordered births,
 steps and removals from its original shared pools. Godot runs motion and
 draws billboards in GPUParticles3D nodes shared by effect definition. The
 native skid, lamp and sun owners publish authored geometry and parameters.
+The entity bridge stages static track coronas once per scene. Godot batches
+additive coronas by texture and spatial tile, and each camera's shader applies
+the marker response, billboard pose and authored GS color math.
 Godot owns the road meshes, light billboards and sun depth sampling.
 
 The donor Player and RaceCoordinator provide the HUD and race screens.

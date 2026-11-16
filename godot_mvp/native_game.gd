@@ -4,6 +4,7 @@ const CONFIG_NAME := "launcher.cfg"
 const RACE_ARGUMENT := "--race-track="
 const EVENT_ARGUMENT := "--race-event="
 const ISO_PROMPT := "Please Drop / Browse Your Game ISO"
+const GraphicsSettings = preload("res://graphics_settings.gd")
 
 var title_renderer := ""
 var title_suffix := ""
@@ -16,10 +17,17 @@ var iso_panel: CenterContainer
 var iso_error: Label
 var iso_dialog: FileDialog
 var selecting_iso := false
-var graphics := preload("res://graphics_settings.gd").new()
+var graphics: GraphicsSettings
 
 func _ready() -> void:
     var arguments := OS.get_cmdline_user_args()
+    if DisplayServer.get_name() == "headless" and arguments == PackedStringArray(["--verify-extension"]):
+        if ClassDB.can_instantiate(&"RacePresentation"):
+            print("HP2_MVP_EXTENSION_READY")
+            get_tree().quit(0)
+        else:
+            _fail("extension", "unknown", "RacePresentation GDExtension class is unavailable")
+        return
     var select_iso := arguments.has("--select-iso")
     arguments.erase("--select-iso")
     var native_debug := arguments.has("--debug")
@@ -28,11 +36,18 @@ func _ready() -> void:
     if arguments.has("--fxaa"):
         arguments.remove_at(arguments.find("--fxaa"))
         ProjectSettings.set_setting("hp2/race_fxaa", true)
-    launch_root = OS.get_executable_path().get_base_dir() if OS.has_feature("template") \
-        else ProjectSettings.globalize_path("res://").simplify_path()
+    if OS.has_feature("template"):
+        launch_root = OS.get_environment("HP2_LAUNCH_ROOT") if OS.get_name() == "macOS" else ""
+        if launch_root.is_empty():
+            launch_root = OS.get_executable_path().get_base_dir()
+            if OS.get_name() == "macOS" and launch_root.ends_with(".app/Contents/MacOS"):
+                launch_root = launch_root.get_base_dir().get_base_dir().get_base_dir()
+    else:
+        launch_root = ProjectSettings.globalize_path("res://").simplify_path()
     var load_error := launch_config.load(launch_root.path_join(CONFIG_NAME))
     if load_error != OK:
         launch_config.clear()
+    graphics = GraphicsSettings.new()
     graphics.configure(launch_config, _save_launcher_config)
     graphics.name = &"GraphicsSettings"
     add_child(graphics)
@@ -70,10 +85,13 @@ func _ready() -> void:
 
     var profiles := launch_root.path_join("profiles")
     var test_profile := OS.get_environment("HP2_MVP_TEST_PROFILE") == "1"
-    var isolated := test_profile or native_debug or track_id >= 0 or event_tree >= 0
+    var isolated := test_profile or track_id >= 0 or event_tree >= 0
+    for fixture in ["HP2_MVP_TEST_UNLOCK_RACES", "HP2_MVP_TEST_ARREST_NIS",
+            "HP2_MVP_TEST_SUBTITLE_RADIO", "HP2_MVP_PURSUIT_AI"]:
+        isolated = isolated or OS.get_environment(fixture) == "1"
     profile_directory = profiles.path_join("diagnostics/%s-%s" % [OS.get_process_id(), Time.get_ticks_usec()]) \
         if isolated else profiles
-    launch_action = _launch.bind(track_id, event_tree, event_number, native_debug)
+    launch_action = _launch.bind(track_id, event_tree, event_number, native_debug, isolated)
     _resolve_assets(select_iso, track, load_error)
 
 func _resolve_assets(select_iso: bool, track: String, load_error: Error) -> void:
@@ -126,17 +144,38 @@ func _open_configured_assets(assets: String, track: String, require_iso := false
         _fail("asset_source", track, reason)
 
 func _launch(assets: String, track_id: int,
-        event_tree: int, event_number: int, native_debug: bool) -> String:
+        event_tree: int, event_number: int, native_debug: bool, isolated: bool) -> String:
     var race: Node = ClassDB.instantiate(&"RacePresentation")
     race.name = &"RacePresentation"
     race.call(&"set_graphics_menu_settings", graphics.menu_settings)
+    race.call(&"set_subtitle_setting", _subtitle_setting)
     add_child(race)
     var reason: String = race.call(&"start_game", assets, profile_directory,
-        track_id, event_tree, event_number, native_debug)
+        track_id, event_tree, event_number, native_debug, isolated)
     if not reason.is_empty():
         remove_child(race)
         race.free()
     return reason
+
+func _subtitle_setting(action: int) -> bool:
+    const section := "accessibility"
+    const key := "police_subtitles"
+    var previous := bool(launch_config.get_value(section, key, false))
+    if action < 0:
+        return previous
+    var enabled := action != 0
+    if enabled == previous:
+        return previous
+    var existed := launch_config.has_section_key(section, key)
+    launch_config.set_value(section, key, enabled)
+    if _save_launcher_config() == OK:
+        return enabled
+    if existed:
+        launch_config.set_value(section, key, previous)
+    else:
+        launch_config.erase_section_key(section, key)
+    push_warning("Cannot save subtitle preference in launcher.cfg.")
+    return previous
 
 func _try_iso(path: String) -> String:
     var reason: String = ClassDB.class_call_static(&"RacePresentation", &"validate_game_iso", path)

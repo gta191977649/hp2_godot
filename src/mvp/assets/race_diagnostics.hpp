@@ -25,7 +25,7 @@ struct CampaignRaceDiagnostic {
 // The context is borrowed from the host session through the startup callback.
 void start_campaign_race_diagnostic(MainMenuScreenServices& menus, const void* context);
 void start_quick_race_diagnostic(MainMenuScreenServices& menus, const void* context);
-void configure_race_diagnostics(bool nativeDebug, bool unlockRaces);
+void configure_race_diagnostics(bool nativeDebug, bool unlockRaces, bool isolatedProfile);
 bool profile_shared_world_reflections();
 FrontendReady reflection_profile_frontend_ready();
 FrontendReady race_profile_frontend_ready();
@@ -44,6 +44,7 @@ struct RaceDiagnosticChecks {
     bool arrestCinematic{};
     bool supportVisuals{};
     bool trackEffectsCamera{};
+    std::uint32_t subtitleRadioFixture{};
     bool fireTruckCamera{};
     std::uint64_t pursuitGeneration{};
 

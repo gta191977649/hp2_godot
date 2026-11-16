@@ -636,7 +636,7 @@ struct FlailerScrollingMenuList::Storage {
         }
     };
     FlailerUiState& ui;
-    std::uint32_t screen,up,down,clip,first{};
+    std::uint32_t screen,up,down,clip,first{},lastMaskRow{};
     float top{},bottom{};
     std::int32_t mask{-1},count{};
     Element* selected{};
@@ -659,7 +659,7 @@ struct FlailerScrollingMenuList::Storage {
         Require(selected,"Scrolling menu highlight has no authored row");
         float closest=std::numeric_limits<float>::max();
         for(std::int32_t slot=0;slot<std::min(count,7);++slot) {
-            const auto* row=Find(first+static_cast<std::uint32_t>(slot));
+            const auto* row=Find(slot==6 && lastMaskRow?lastMaskRow:first+static_cast<std::uint32_t>(slot));
             if(!row)continue;
             const float distance=std::abs(selected->position.desiredValue-row->originalY);
             if(distance>=closest)continue;
@@ -710,6 +710,7 @@ void FlailerScrollingMenuList::SetItemCount(std::int32_t count)
 {
     Require(count>=0,"Scrolling menu item count is negative");storage_->count=count;
 }
+void FlailerScrollingMenuList::SetLastMaskRow(std::uint32_t key) {storage_->lastMaskRow=key;}
 void FlailerScrollingMenuList::SetDesiredTopLeftY(std::uint32_t key,float desired)
 {
     auto& s=*storage_;

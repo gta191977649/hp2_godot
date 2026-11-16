@@ -58,6 +58,46 @@ local/task0035. No proprietary material was added to tracked files.
 
 ## Remaining gaps and continuation
 
+### Race WINDOW follow-up (2026-11-16)
+
+The Godot mesh converter had excluded depth-sorted race windows from
+the paint shader. Sorted WINDOW surfaces with ALPHA `0x44` and
+masked depth writes now use the glass shader in both race and Select Car.
+Race glass samples the live race atlas, preserves the original in-game
+light material and context-2 ALPHA selectors, and blends the window texture
+over opaque scene color before adding its reflection. The source references
+are `EcstasyFrame::RenderStrip` (PAL `10B08C–10B0F8`, PAL ELF identity
+and hash unresolved) and retail E-0035-R01/R02/R03 above. Godot retains
+depth tests. Prior transparent layers and overlapping glass remain a
+limitation of using the opaque scene copy.
+
+The Debug stage's `tools/test_mvp_race_post.gd` fixture runs with
+`HP2_MVP_TEST_GLASS=1` and `-- --race-track=12`. It requires the real
+WINDOW descriptor and live atlas binding, then disables only WINDOW's
+reflection on a held race frame and checks that pixels change. Vulkan
+changed 80 sampled pixels with 17 bound materials; D3D12 changed 340
+with 16 in a separate race grid. The same run observed 13 track corona
+batches bound to each camera on both drivers.
+Release Vulkan Select Car also retained the original map binding:
+19 reflective materials including WINDOW and 2,224 changed samples in
+`tools/test_mvp_frontend_resize.gd` with `HP2_MVP_PURSUIT=1`.
+
+The live race atlas was still feeding linear HDR face values to the GS
+remap modulation. The Godot remap now encodes the face sample as display
+bytes before multiplying by the authored RGB 96/128 and writing alpha 64.
+The existing race atlas serves both WINDOW and body paint. This fixes the
+Godot color conversion at the boundary with the donor's `CreateFacePrimitive`
+(PAL `118150` and `118498`, PAL executable identity unresolved).
+
+Staged both `godot-mvp-debug` and `godot-mvp-release` using
+`cmake --build --preset <preset> --target stage_mvp --parallel 10`.
+Release Track 12 passed the tightened `HP2_MVP_TEST_GLASS=1` test on
+Vulkan and D3D12. Toggling only the player car's WINDOW reflection changed
+725 and 680 sampled pixels respectively. Both drivers produced the
+expected atlas RGBA bytes `102,141,168,64` from a known linear input.
+A frozen Vulkan race also captured the same car and camera with the
+old and corrected remap under `local/race-glass-matched/`.
+
 No original runtime comparison or measured original driving input was available. This task
 remains active, with no Verified promotion. Live game six-face capture/composition through
 001175C8/00118810, alternate offsets/contexts, full render-entry branch coverage and live

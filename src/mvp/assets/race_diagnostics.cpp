@@ -16,6 +16,7 @@
 #include "indep/inc/Race.hpp"
 #include "indep/inc/Track.hpp"
 #include "indep/inc/TrackPath.hpp"
+#include "indep/src/speech/actions.hpp"
 
 #include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
@@ -149,8 +150,8 @@ godot::PackedVector3Array race_photo_route(const RaceStateView& race) {
     return points;
 }
 
-void configure_race_diagnostics(bool nativeDebug, bool unlockRaces) {
-    applicationConfigureTesting(nativeDebug, unlockRaces);
+void configure_race_diagnostics(bool nativeDebug, bool unlockRaces, bool isolatedProfile) {
+    applicationConfigureTesting(nativeDebug, unlockRaces && isolatedProfile, isolatedProfile);
 }
 
 void collect_police_diagnostics(godot::Dictionary& result, const RaceStateView& race,
@@ -258,6 +259,15 @@ bool RaceDiagnosticChecks::finish_for_menu_test(const RaceStateView& race) {
 void RaceDiagnosticChecks::advance(const WorldSimulation& simulation, int track, int raceState,
     std::uint64_t generation, std::uint32_t step) {
     if (raceState != RC_STATE_RACE_IN_PROGRESS) return;
+    if (subtitleRadioFixture && step >= subtitleRadioFixture) {
+        const auto index = subtitleRadioFixture / 240;
+        constexpr std::uint32_t events[]{96, 100, 101};
+        auto* speech = worldSpeechGetInstance();
+        if (speech && speech->messages)
+            Require(worldSpeechEnqueueAction(*speech->messages, events[index], {}) == WORLD_SPEECH_OK,
+                "Cannot queue the original subtitle radio test event");
+        subtitleRadioFixture = index + 1 < std::size(events) ? subtitleRadioFixture + 240 : 0;
+    }
     if (fireTruckCamera && (track == 12 || track == 13)) {
         // Track B's FireTruck_WaterA..D instances span the roadside.
         auto& view = simulation.particles->cameras->screens[1].view->current;

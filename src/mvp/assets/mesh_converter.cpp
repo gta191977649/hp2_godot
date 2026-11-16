@@ -503,8 +503,9 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
         }
         const EditorMarkerLightMaterial* lightMaterial = nullptr;
         std::uint32_t paintFlags = 0;
-        const bool previewGlass = paint_ && paint_->frontend && wire[0x76] == 0x44 && !wire[0x50];
-        if (paint_ && texture && (!texture->requiresDepthSort || previewGlass) && !morph && !rigid &&
+        // The sorted WINDOW strips still run the source light and reflection packets.
+        const bool glass = wire[0x76] == 0x44 && !wire[0x50];
+        if (paint_ && texture && (!texture->requiresDepthSort || glass) && !morph && !rigid &&
             (strip.flags & 0x1c0u) && strip.normals.size() == strip.positions.size()) {
             if (strip.lightMaterialIndex >= 0 && std::size_t(strip.lightMaterialIndex) < geometry.lightMaterials.size())
                 lightMaterial = geometry.lightMaterials[strip.lightMaterialIndex];
@@ -782,13 +783,14 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             continue;
         }
         if (surface.lightMaterial) {
+            const auto* source = textureInfoForDescriptor(surface.descriptor);
             auto& base = paintTextures_[surface.descriptor];
             if (base.is_null()) base = upload_paint_texture(surface.descriptor, paint_->frontend);
             if (base.is_null() || ((surface.paintFlags & 0x40u) && paint_->specular.is_null()))
                 throw std::runtime_error("Car paint is missing an authored texture");
             Ref<ShaderMaterial> material;
             material.instantiate();
-            const bool glass = paint_->frontend && textureInfoForDescriptor(surface.descriptor)->requiresDepthSort;
+            const bool glass = source->requiresDepthSort && wire[0x76] == 0x44 && !wire[0x50];
             material->set_shader(load_shader(glass ? "res://shader/car_paint_glass.gdshader" :
                 "res://shader/car_paint.gdshader"));
             if (glass) material->set_render_priority(std::min<int>(wire[0x29], 7));
@@ -798,8 +800,7 @@ Ref<ArrayMesh> MeshConverter::convert(const EditorMarkerModel& model, bool depth
             material->set_shader_parameter("paint_flags", int(surface.paintFlags));
             material->set_shader_parameter("frontend", paint_->frontend);
             material->set_shader_parameter("wheel", paintWheel_);
-            material->set_shader_parameter("alpha_test", !wire[0x4f] &&
-                !textureInfoForDescriptor(surface.descriptor)->drawFlag4Enabled);
+            material->set_shader_parameter("alpha_test", !wire[0x4f] && !source->drawFlag4Enabled);
             material->set_shader_parameter("repeat_axes", Vector2i(wire[0x4c] & 1u, (wire[0x4c] >> 1) & 1u));
             PackedVector4Array coefficients;
             const auto* values = surface.lightMaterial->NativeCoefficients();

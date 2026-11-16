@@ -4,6 +4,7 @@ var deadline := Time.get_ticks_msec() + 45000
 var checking := false
 var nitro_run := OS.get_environment("HP2_MVP_TEST_NITRO") == "1"
 var profile_run := OS.get_environment("HP2_MVP_TEST_POST_PROFILE") == "1"
+var glass_run := OS.get_environment("HP2_MVP_TEST_GLASS") == "1"
 
 func _initialize() -> void:
     var fps := OS.get_environment("HP2_MVP_TEST_POST_FPS").to_int()
@@ -94,6 +95,8 @@ func _check(race: Node) -> void:
         return
     print("RACE_PAINT_ATLAS_PASS samples=", painted)
     var paint_surfaces := 0
+    var glass := {}
+    var player_glass := {}
     for vehicle in scene.get_children():
         if not vehicle is Node3D:
             continue
@@ -104,6 +107,17 @@ func _check(race: Node) -> void:
                 var material: Material = part.mesh.surface_get_material(surface)
                 if material is ShaderMaterial and material.shader.resource_path == "res://shader/car_paint.gdshader":
                     paint_surfaces += 1
+                elif material is ShaderMaterial and material.shader.resource_path.ends_with("car_paint_glass.gdshader"):
+                    var base: Texture2D = material.get_shader_parameter("base_image")
+                    var flags: int = material.get_shader_parameter("paint_flags")
+                    if base.resource_name == "2202763287" and flags & 0x100: # WINDOW
+                        if material.get_shader_parameter("reflection_image") != atlas.get_texture():
+                            push_error("Race WINDOW does not sample the live atlas")
+                            quit(1)
+                            return
+                        glass[material] = flags
+                        if vehicle.get_meta(&"hp2_player_vehicle", false):
+                            player_glass[material] = flags
     if paint_surfaces == 0:
         push_error("Race vehicles did not bind the authored paint material")
         quit(1)
@@ -111,6 +125,36 @@ func _check(race: Node) -> void:
     print("RACE_PAINT_MATERIAL_PASS surfaces=", paint_surfaces)
     effect.enabled = false
     var unprocessed := await _frame()
+    if glass_run:
+        var main_coronas := scene.find_children("TrackCoronaBatch*", "MeshInstance3D", true, false)
+        var rear_coronas := scene.find_children("RearTrackCoronaBatch*", "MeshInstance3D", true, false)
+        if main_coronas.is_empty() or rear_coronas.size() != main_coronas.size():
+            push_error("Race did not stage coronas for both cameras")
+            quit(1)
+            return
+        for material in player_glass:
+            material.set_shader_parameter("paint_flags", int(player_glass[material]) & ~0x100)
+        var without_glass_reflection := await _frame()
+        for material in player_glass:
+            material.set_shader_parameter("paint_flags", player_glass[material])
+        var glass_pixels := _difference(unprocessed, without_glass_reflection)
+        var photo_dir := OS.get_environment("HP2_PHOTO_DIR")
+        if not photo_dir.is_empty():
+            unprocessed.save_png(photo_dir.path_join("glass-on.png"))
+            without_glass_reflection.save_png(photo_dir.path_join("glass-off.png"))
+            atlas_image.save_png(photo_dir.path_join("atlas.png"))
+        if player_glass.is_empty() or glass_pixels == 0:
+            push_error("Player WINDOW produced no live reflection pixels")
+            quit(1)
+            return
+        print("RACE_GLASS_REFLECTION_PASS materials=", glass.size(), " player_materials=", player_glass.size(),
+            " changed_samples=", glass_pixels)
+        print("RACE_CORONA_BATCH_PASS main=", main_coronas.size(), " rear=", rear_coronas.size())
+        if not await _check_reflection_color():
+            quit(1)
+            return
+        quit()
+        return
     print("RACE_POST_PIXELS authored_weather=", _difference(native, unprocessed))
     var path := OS.get_environment("HP2_PHOTO_DIR")
     for mode in [1, 2, 4, 3]:
@@ -215,6 +259,37 @@ func _frame() -> Image:
     await process_frame
     await RenderingServer.frame_post_draw
     return root.get_texture().get_image()
+
+func _check_reflection_color() -> bool:
+    var target := SubViewport.new()
+    target.size = Vector2i(8, 8)
+    target.disable_3d = true
+    target.use_hdr_2d = true
+    target.transparent_bg = true
+    target.render_target_update_mode = SubViewport.UPDATE_ONCE
+    root.add_child(target)
+    var face := Image.create_empty(1, 1, false, Image.FORMAT_RGBAF)
+    face.set_pixel(0, 0, Color(0.25, 0.5, 0.75, 1.0))
+    var patch := TextureRect.new()
+    patch.texture = ImageTexture.create_from_image(face)
+    patch.size = Vector2(target.size)
+    var draw := ShaderMaterial.new()
+    draw.shader = load("res://shader/car_environment_remap.gdshader")
+    patch.material = draw
+    target.add_child(patch)
+    await process_frame
+    await RenderingServer.frame_post_draw
+    var pixel := target.get_texture().get_image().get_pixel(4, 4)
+    target.queue_free()
+    # The linear face sample encodes to bytes (137,188,225). GS remap
+    # modulation uses RGB 96/128 and writes alpha 64.
+    var expected := Color8(102, 141, 168, 64)
+    for channel in range(4):
+        if absf(pixel[channel] - expected[channel]) > 0.003:
+            push_error("Race atlas expected %s, got %s" % [expected, pixel])
+            return false
+    print("RACE_ATLAS_DISPLAY_BYTES_PASS color=", pixel)
+    return true
 
 func _difference(a: Image, b: Image) -> int:
     var count := 0

@@ -20,8 +20,9 @@ public:
     ~RacePresentation() override;
     static godot::String validate_game_iso(const godot::String& path);
     void set_graphics_menu_settings(const godot::Callable& settings);
+    void set_subtitle_setting(const godot::Callable& setting);
     godot::String start_game(const godot::String& assets, const godot::String& profile, int track,
-        int tree, int event, bool nativeDebug);
+        int tree, int event, bool nativeDebug, bool isolatedProfile);
     void _process(double delta) override;
     void _input(const godot::Ref<godot::InputEvent>& event) override;
     void report_launch_error(const godot::String& stage, const godot::String& track, const godot::String& reason);
@@ -47,8 +48,10 @@ private:
 #endif
     std::unique_ptr<Session> session_;
     godot::Callable graphicsMenuSettings_;
+    godot::Callable subtitleSetting_;
     bool failed_{};
     bool nativeDebug_{};
+    bool isolatedProfile_{};
     void report_assert(const godot::String& message);
     void quit_game();
     bool start(const godot::String& assets, const godot::String& profile, bool frontend, int track,

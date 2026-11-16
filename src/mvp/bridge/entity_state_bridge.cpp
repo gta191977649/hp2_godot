@@ -4,6 +4,7 @@
 #include "indep/inc/CarInfo.hpp"
 #include "indep/inc/CameraCoordinator.hpp"
 #include "indep/inc/Flags.hpp"
+#include "indep/inc/Ecstasy.hpp"
 #include "indep/inc/Player.hpp"
 #include "indep/inc/World.hpp"
 #include "indep/inc/WorldObject.hpp"
@@ -43,6 +44,14 @@ RaceCameraState capture_camera(const CarCinematicViewFrame& camera, float source
 RaceCameraState source_main_camera(const CarCinematicViewFrame& camera, bool ntsc) {
     const float sourceRatio = ntsc ? 448.0f / (512.0f * 1.0714286566f) : 1.0f / 1.285f;
     return capture_camera(camera, sourceRatio);
+}
+
+std::vector<RaceLightEffect> stage_track_coronas(ResourceRegistry& resources) {
+    std::vector<RaceLightEffect> result;
+    for (const auto* pack : resources.Lights().FlarePacks())
+        for (const auto& flare : pack->flares)
+            CollectLightEffect(flare, eMathIdentityMatrix, 1.0f, resources, result);
+    return result;
 }
 
 const EntityFrame& EntityStateBridge::stage(const RaceStateView& race) {

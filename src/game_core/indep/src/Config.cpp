@@ -306,13 +306,15 @@ ApplicationLaunchOptions applicationLaunchOptions={
 };
 
 bool applicationDebugToolsEnabled=false;
+bool applicationDebugRaceOverridesEnabled=false;
 bool applicationShowFrameRate=true;
 bool applicationUnlockAllForTesting=false;
 bool applicationDebugExitRequested=false;
 int32_t applicationScreenPrintf=0;
-void applicationConfigureTesting(bool debugTools,bool unlockAll)
+void applicationConfigureTesting(bool debugTools,bool unlockAll,bool allowRaceOverrides)
 {
     applicationDebugToolsEnabled=debugTools;
+    applicationDebugRaceOverridesEnabled=debugTools && allowRaceOverrides;
     applicationUnlockAllForTesting=unlockAll;
     applicationDebugExitRequested=false;
     // Reuse the source Config and EventTree globals. The unlock override is

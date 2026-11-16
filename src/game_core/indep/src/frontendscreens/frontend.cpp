@@ -448,13 +448,24 @@ void FrontendDemoMode::ConsiderStartDemoMode(std::int32_t idleStartedTicks)
     if (start)RequestDemoMode();
 }
 
-void FrontendDemoMode::RequestDemoMode()
+void FrontendDemoMode::RequestDemoMode(std::int32_t requestedTrack)
 {
     Require(screens && screens->ui && screens->ui->clock && raceSetup &&
         raceSetup->demoReplay && demoDisc && files,
         "Demo launch has no actual frontend/clock/replay/resource owners");
     auto& replay=*raceSetup->demoReplay;
     if (replay.IsLoadPending())return;
+    if (requestedTrack>=0) {
+        // Port-side track selection starts the existing live AI demo.
+        // A recording remains tied to the track it was authored for.
+        if (demoDisc->ActivationWord() || replay.active || replay.IsReplayDataBorrowed())return;
+        const auto* track=raceSetup->tracks ? raceSetup->tracks->Find(requestedTrack):nullptr;
+        Require(track && track->routeKind==0,"Requested demo track is not eligible");
+        if (replay.HasLoadedResource())replay.UnloadResourceFile();
+        screens->StopMovie();
+        frontend->StartDemoMode(requestedTrack,*raceSetup);
+        return;
+    }
     if (!demoDisc->ActivationWord() && replay.forcedRecording<0) {
         // Native PC attract mode uses the original live AI driver/session.
         // Explicit recordings and demo-disc selection keep their source path;

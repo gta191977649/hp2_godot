@@ -14,11 +14,22 @@ func run() -> void:
         fail("Use a disposable boot profile project")
         return
     profile = project.path_join("profiles/profile.json")
+    if scenario == "load" and not FileAccess.file_exists(profile):
+        var names := DirAccess.get_files_at(profile.get_base_dir())
+        var named := Array(names).filter(func(file: String) -> bool:
+            return file.begins_with("profile-") and file.ends_with(".json") and not file.ends_with(".backup.json"))
+        if named.size() != 1:
+            fail("Expected a single saved profile to reload")
+            return
+        profile = profile.get_base_dir().path_join(named[0])
     var original := FileAccess.get_sha256(profile) if FileAccess.file_exists(profile) else ""
     change_scene_to_file("res://native_game.tscn")
     while not is_instance_valid(race):
         await process_frame
         race = root.get_node_or_null("NativeGame/RacePresentation")
+    if race.get_parent().profile_directory != profile.get_base_dir():
+        fail("Ordinary launch used a different profile directory")
+        return
     await wait_screen(BOOT)
     await key(KEY_ENTER)
     if race.telemetry().get("screen") != BOOT:

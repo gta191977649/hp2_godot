@@ -17,13 +17,20 @@ public:
     explicit FrontendDebugMenu(std::function<void()> openTrackViewer);
     ~FrontendDebugMenu();
     const FrontendMenuExtension& extension() const { return extension_; }
+    bool demoSceneOpen() const { return demoArrows_.has_value(); }
 
 private:
-    enum class Action { None, TrackViewer, Demo };
+    enum class Action { None, TrackViewer, OpenDemo, StartDemo };
     static void callback(ScreenMessage message, ScreenCallbackData* data);
+    static void demoCallback(ScreenMessage message, ScreenCallbackData* data);
     void handle(ScreenMessage message, ScreenCallbackData& data);
+    void handleDemo(ScreenMessage message, ScreenCallbackData& data);
     void service();
     void relabel(FlailerTextChunk& text, const char* label);
+    void restorePage(std::uint32_t art);
+    void positionRails(std::uint32_t art, std::uint32_t mask);
+    void updateDemoTrackLabel();
+    void cycleDemoTrack(int direction);
 
     struct SavedText {
         FlailerTextChunk* object;
@@ -34,15 +41,21 @@ private:
     static FrontendDebugMenu* active_;
     MainMenuScreenServices* menus_{};
     FlailerScreenConfig screen_;
+    FlailerScreenConfig demoScreen_;
     FrontendMenuExtension extension_;
     std::function<void()> openTrackViewer_;
     std::optional<FlailerAnimatedBlurb> blurb_;
     std::optional<FlailerHighlightAnimation> highlight_;
+    std::optional<FlailerLeftRightArrowScroll> demoArrows_;
     FlailerSelectionSet selection_;
     std::array<float, 2> originalRails_{};
+    std::array<float, 2> originalArrowY_{};
     std::vector<SavedText> originalText_;
     std::vector<std::pair<FlailerObjectChunk*, std::uint8_t>> originalVisibility_;
+    std::vector<std::int32_t> demoTracks_;
+    std::size_t demoTrackIndex_{};
     Action pending_{Action::None};
+    std::int32_t pendingDemoTrack_{-1};
     std::uint64_t pendingEpoch_{};
 };
 

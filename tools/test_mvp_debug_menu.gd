@@ -87,6 +87,14 @@ func demo() -> Dictionary:
         return (state.get("race_state") == DEMO_STATE and state.get("step", 0) >= 120 and
             state.get("vehicles", 0) > 0 and state.get("radial_blur_active", false)))
 
+func profile_hashes(directory: String) -> Dictionary:
+    var hashes := {}
+    if DirAccess.dir_exists_absolute(directory):
+        for file in DirAccess.get_files_at(directory):
+            if file.ends_with(".json"):
+                hashes[file] = FileAccess.get_sha256(directory.path_join(file))
+    return hashes
+
 func run() -> void:
     change_scene_to_file("res://native_game.tscn")
     while not is_instance_valid(race):
@@ -101,8 +109,8 @@ func run() -> void:
         await key(KEY_ENTER)
     await wait_for(func(state: Dictionary) -> bool: return state.get("video_request", 0) == 0)
     var title_started := Time.get_ticks_msec()
-    var profile := str(race.get_parent().profile_directory).path_join("profile.json")
-    var hash_before := FileAccess.get_sha256(profile) if FileAccess.file_exists(profile) else ""
+    var profile := str(race.get_parent().profile_directory)
+    var hashes_before := profile_hashes(profile)
     if mode.begins_with("idle"):
         var idle_state := await demo()
         var idle_ms := Time.get_ticks_msec() - title_started
@@ -154,19 +162,49 @@ func run() -> void:
         if mode == "pointer":
             quit()
             return
-        await pad(JOY_BUTTON_B)
-        await wait_screen(MAIN)
-        await open_debug()
-        await key(KEY_ENTER)
-        await wait_for(func(state: Dictionary) -> bool: return state.get("track_viewer", false) and state.get("step", 0) > 0)
-        await click_viewer_main_menu()
-        await open_debug()
+        if mode != "demo-track":
+            await pad(JOY_BUTTON_B)
+            await wait_screen(MAIN)
+            await open_debug()
+            await key(KEY_ENTER)
+            await wait_for(func(state: Dictionary) -> bool: return state.get("track_viewer", false) and state.get("step", 0) > 0)
+            await click_viewer_main_menu()
+            await open_debug()
         if OS.get_cmdline_user_args().has("--debug") and not race.has_node("FrontendCanvas/NativeDebugCameraCaption"):
             fail("returning from Track Viewer lost the native debug launch flag")
             return
         await select(FIRST + 2)
         await key(KEY_ENTER)
+        await wait_screen("Demo Scene")
+        if mode == "demo-track":
+            await key(KEY_BACKSPACE)
+            await wait_screen(DEBUG)
+            await select(FIRST + 2)
+            await key(KEY_ENTER)
+            await wait_screen("Demo Scene")
+            await select(FIRST)
+            await key(KEY_RIGHT)
+            await key(KEY_LEFT)
+            await key(KEY_RIGHT)
+            await create_timer(0.5).timeout
+            var bounds: Dictionary = race.telemetry().get("menu_alignment_bounds", {})
+            if not bounds.has(0xd1cda594) or not bounds.has(0x9345e4a7):
+                await capture("missing-track-arrows")
+                fail("Demo Scene did not publish both track arrows")
+                return
+            var next_arrow: Rect2 = bounds[0x9345e4a7]
+            await click_at(canvas.to_global(next_arrow.get_center()))
+            if race.race_scene() or race.telemetry().get("screen") != "Demo Scene":
+                fail("Selecting a demo track started the race before confirmation")
+                return
+            await create_timer(0.7).timeout
+            await capture("demo-track-selected")
+        await select(FIRST + 1)
+        await key(KEY_ENTER)
         var manual_state := await demo()
+        if mode == "demo-track" and manual_state.track != 12:
+            fail("The selected Track 12 did not launch: %s" % manual_state.track)
+            return
         await capture("manual-demo")
         await key(KEY_ENTER)
         await wait_screen(MAIN)
@@ -174,9 +212,8 @@ func run() -> void:
             fail("demo scene survived return to Main Menu")
             return
         print("HP2_MVP_MANUAL_DEMO_PASS track=", manual_state.track)
-    var hash_after := FileAccess.get_sha256(profile) if FileAccess.file_exists(profile) else ""
-    if hash_before != hash_after:
-        fail("demo or viewer modified the isolated profile")
+    if hashes_before != profile_hashes(profile):
+        fail("demo or viewer modified the player save")
         return
     if not mode.begins_with("idle"):
         await select(FIRST + 1)

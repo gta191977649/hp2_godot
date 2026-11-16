@@ -632,7 +632,8 @@ struct ApplicationRuntime::Storage {
         frontendInput={&input,&screens};screens.input=&frontendInput;screens.soundBindings=&soundBindings;
         demoMode.screens=&screens;demoMode.frontend=&profilesOwner;demoMode.raceSetup=&setup;
         demoMode.demoDisc=&demo;demoMode.files=&files;
-        menus={&ui,&screens,&profilesOwner,&setup,&soundBindings,&demoMode,frontendExtension,frontendCredits,optionsExtension};
+        menus={&ui,&screens,&profilesOwner,&setup,&soundBindings,&demoMode,frontendExtension,frontendCredits,
+            optionsExtension,menus.subtitleSetting,menus.subtitleContext};
         startup={&menus,&joylog,dynamicTextures.get()};
         menusBound=true;
         BindFrontendStartup(startup);
@@ -656,6 +657,7 @@ struct ApplicationRuntime::Storage {
         for(auto* configuration:configurations)RegisterScreen(*configuration);
         if(frontendExtension) {
             RegisterScreen(*frontendExtension->screen);
+            if(frontendExtension->submenu)RegisterScreen(*frontendExtension->submenu);
             frontendExtension->bind(menus,frontendExtension->context);
         }
         if(optionsExtension) {
@@ -747,6 +749,12 @@ float ApplicationRuntime::PresentationStepFraction() const noexcept
     return static_cast<float>(std::clamp(1.0 - remaining * 3600.0 / s.scheduledStepQuanta, 0.0, 1.0));
 }
 const FrontendPlayerManager& ApplicationRuntime::Frontend() const {return storage_->profilesOwner;}
+void ApplicationRuntime::BindSubtitleSetting(bool (*setting)(void*,int),void* context)
+{
+    storage_->menus.subtitleSetting=setting;
+    storage_->menus.subtitleContext=context;
+}
+const SpeechCaptionState& ApplicationRuntime::SpeechCaption() const noexcept {return storage_->speechStream.caption;}
 const ApplicationFrontendFlow& ApplicationRuntime::Flow() const noexcept {return storage_->flow;}
 void ApplicationRuntime::SetDisplayOptions(int32_t width,int32_t height,bool fullscreen,bool vsync)
 {
@@ -1140,17 +1148,6 @@ void ApplicationRuntime::TakeRaceEffects(RaceEffectsFrame& frame)
         WorldClans(world).PrepareRender(screen.matrices.worldToClip,screen,frame.skids);
     if (rearReady)
         WorldClans(world).PrepareRender(rear.matrices.worldToClip,rear,frame.rearSkids);
-    for (const auto* pack:registry.Lights().FlarePacks()) {
-        for (const auto& flare:pack->flares) {
-            const auto first=frame.lights.size();
-            CollectLightEffect(flare,eMathIdentityMatrix,1.0f,registry,frame.lights);
-            if (race.rearCamera) for (auto i=first,end=frame.lights.size();i<end;++i) {
-                auto light=frame.lights[i];
-                light.view=3;
-                frame.lights.push_back(light);
-            }
-        }
-    }
     LightContextBatch shadowLights(registry.Lights());
     const auto layout=s.cameras.presentationLayoutOverride ?
         s.cameras.presentationLayoutOverride:s.cameras.presentationLayout;

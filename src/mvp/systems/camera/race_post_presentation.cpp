@@ -78,14 +78,14 @@ void RacePostPresentation::update_fog_palette(const std::array<float, 32>& p) {
         switch (static_cast<int>(p[11])) {
         case 1:
             std::fill_n(entry, 3, 0.0f);
-            entry[3] = (1.0f - density) * p[3];
+            entry[3] = std::floor((1.0f - density) * p[3] * 128.0f) / 128.0f;
             break;
         case 2:
             std::fill_n(entry, 3, slot / 255.0f);
             entry[3] = 1.0f;
             break;
         case 3:
-            entry[3] = float(slot) == std::trunc(p[8]) ? p[3] : 0.0f;
+            entry[3] = float(slot) == std::trunc(p[8]) ? std::floor(p[3] * 128.0f) / 128.0f : 0.0f;
             break;
         default:
             entry[3] = std::floor(std::pow(std::max(0.01f, density), p[9]) * p[3] * 128.0f) / 128.0f;

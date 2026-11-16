@@ -13,6 +13,10 @@ $stockTemplate = $false
 $renderingDriver = $null
 for ($index = 0; $index -lt $args.Count; $index++) {
     switch ($args[$index]) {
+        { $_ -in @('--help', '-h') } {
+            Write-Output 'Usage: .\build.ps1 [--run | --editor] [--debug] [--preset PRESET] [--jobs N] [--clean] [--select-iso]'
+            exit 0
+        }
         '--mvp' { }
         '--run' { $run = $true }
         '--fullscreen' { $fullscreen = $true; $run = $true }
@@ -103,7 +107,7 @@ try {
     $buildDirectory = (Resolve-Path -LiteralPath "build/$preset").Path
     $exportProject = Join-Path $buildDirectory ('export-' + [guid]::NewGuid().ToString('N'))
     $null = New-Item -ItemType Directory -Path $exportProject
-    foreach ($item in @('project.godot', 'export_presets.cfg', 'native_game.gd', 'graphics_settings.gd', 'native_game.tscn', 'hp2_blackbox.gdextension', 'hp2_blackbox.gdextension.uid', 'shader', 'bin')) {
+    foreach ($item in @('project.godot', 'export_presets.cfg', 'native_game.gd', 'graphics_settings.gd', 'native_game.tscn', 'hp2_blackbox.gdextension', 'hp2_blackbox.gdextension.uid', 'shader', 'bin', 'addons')) {
         Copy-Item -LiteralPath (Join-Path $project $item) -Destination $exportProject -Recurse -Force
     }
     if ($useSlimTemplate) {
@@ -113,7 +117,14 @@ try {
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
         $binary = Join-Path $godotSource 'bin/godot.windows.template_release.x86_64.exe'
         if (-not (Test-Path -LiteralPath $binary -PathType Leaf)) { throw "Missing slim Godot template at $binary." }
-        Add-Content -LiteralPath (Join-Path $exportProject 'export_presets.cfg') -Value ('custom_template/release="' + $binary.Replace('\', '/') + '"')
+        $exportPresets = Join-Path $exportProject 'export_presets.cfg'
+        $presetsText = [IO.File]::ReadAllText($exportPresets)
+        $windowsOptions = '[preset.0.options]'
+        if (-not $presetsText.Contains($windowsOptions)) { throw 'The Windows export options are missing.' }
+        $templateLine = 'custom_template/release="' + $binary.Replace('\', '/') + '"'
+        # Godot rejects a leading BOM, which Windows PowerShell 5.1 adds with Set-Content -Encoding utf8.
+        [IO.File]::WriteAllText($exportPresets,
+            $presetsText.Replace($windowsOptions, "$windowsOptions`n$templateLine"), [Text.UTF8Encoding]::new($false))
     } else {
         $template = Join-Path $env:APPDATA "Godot/export_templates/4.7.2.stable/windows_$configuration`_x86_64.exe"
         if (-not (Test-Path -LiteralPath $template -PathType Leaf)) {

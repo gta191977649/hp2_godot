@@ -16,7 +16,7 @@ uniform ivec4 specular_sampling;
 uniform ivec4 reflection_sampling;
 uniform float base_lod_scale;
 uniform int base_tfx;
-#ifdef FRONTEND_GLASS
+#ifdef CAR_GLASS
 uniform sampler2D opaque_scene : hint_screen_texture, filter_nearest, repeat_disable;
 #endif
 instance uniform vec4 hp2_paint_light_r;
@@ -154,13 +154,18 @@ vec3 frontend_highlights(vec4 rgba, vec2 uv, float lod, float destination_alpha)
     return highlights;
 }
 
-vec3 race_paint(vec4 base, vec2 uv) {
+vec3 race_paint(vec4 base, vec2 uv, vec3 behind) {
     vec2 half_texel = 0.5 / vec2(textureSize(base_image, 0));
     uv = mix(clamp(uv, half_texel, 1.0 - half_texel), uv, notEqual(repeat_axes, ivec2(0)));
     vec4 texel = texture(base_image, uv);
     float destination_alpha = min(255.0, floor(texel.a * 255.0 * base.a / 128.0));
     if (alpha_test && destination_alpha <= 48.0) discard;
     vec3 paint = clamp(floor(texel.rgb * 255.0 * base.rgb / 128.0), 0.0, 255.0);
+#ifdef CAR_GLASS
+    // GS ALPHA 0x44 blends WINDOW into the destination before the
+    // independent context-2 reflection uses the resulting RGB and base alpha.
+    paint = clamp(behind + floor((paint - behind) * destination_alpha / 128.0), 0.0, 255.0);
+#endif
     if ((paint_flags & 64) != 0) {
         vec4 falloff = linear_clamped(specular_image, uv);
         vec3 gloss = floor(falloff.rgb * 255.0 * base.rgb / 128.0);
@@ -190,7 +195,7 @@ void fragment() {
         vec4 paint = frontend_base(rgba, UV, lod);
         if (alpha_test && paint.a <= 48.0) discard;
         vec3 highlights = frontend_highlights(rgba, UV, lod, paint.a);
-#ifdef FRONTEND_GLASS
+#ifdef CAR_GLASS
         vec4 backdrop = texture(opaque_scene, SCREEN_UV);
         float opacity = min(paint.a / 128.0, 1.0);
         // The WINDOW texture lerps in GS byte space before the environment kick.
@@ -203,7 +208,14 @@ void fragment() {
 #endif
         ALBEDO = OUTPUT_IS_SRGB ? encoded : gs_encoded_to_linear(encoded);
     } else {
-        vec3 encoded = race_paint(base, UV);
+        vec3 behind = vec3(0.0);
+#ifdef CAR_GLASS
+        behind = gs_byte_rgb(texture(opaque_scene, SCREEN_UV).rgb, OUTPUT_IS_SRGB);
+#endif
+        vec3 encoded = race_paint(base, UV, behind);
         ALBEDO = OUTPUT_IS_SRGB ? encoded : gs_encoded_to_linear(encoded);
+#ifdef CAR_GLASS
+        ALPHA = 1.0; // The shader has already composited against the opaque scene.
+#endif
     }
 }

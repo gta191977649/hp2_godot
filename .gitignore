@@ -301,10 +301,14 @@ saves/
 !/tools/test_mvp_particle_routes.gd
 !/tools/test_mvp_scenery_animation.gd
 !/tools/test_mvp_race_post.gd
+!/tools/test_mvp_fog_color.gd
 !/tools/test_mvp_track_material.gd
 !/tools/test_mvp_portable_launch.gd
 !/tools/test_mvp_boot_profile.gd
+!/tools/test_mvp_police_subtitles.gd
 !/tools/build_mvp_godot_template.ps1
+!/tools/build_unix.sh
+!/tools/stage_unix_ffmpeg.py
 !/tools/test_mvp_reflection_performance.gd
 !/tools/test_mvp_starting_grid.gd
 !/tools/profile_mvp_reflections.py

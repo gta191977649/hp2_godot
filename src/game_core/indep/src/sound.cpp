@@ -1284,6 +1284,8 @@ static WorldAudioResult finishAudioRequest(WorldAudioRequestQueue* queue,
         WorldAudioInstance* instance = stored->instance;
         if (!instance->occupied || instance->generation != stored->instanceGeneration ||
             !instance->requestReferences) return WORLD_AUDIO_STALE_REFERENCE;
+        if(instance->completionKind==WORLD_AUDIO_COMPLETION_SPEECH)
+            worldStreamAudioCaptionAcknowledge(instance->completionSpeech,stored,failed);
         --instance->requestReferences;
         releaseRetiredInstance(instance);
     }

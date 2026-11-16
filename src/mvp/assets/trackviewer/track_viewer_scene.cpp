@@ -1,5 +1,6 @@
 #include "track_viewer_scene.hpp"
 
+#include "bridge/entity_state_bridge.hpp"
 #include "bware/inc/bChunk.hpp"
 #include "bware/inc/bFile.hpp"
 #include "indep/inc/CarInfo.hpp"
@@ -55,7 +56,6 @@ struct TrackViewerScene::Storage {
     ResourceFile* trackFile{};
     std::unique_ptr<SkyResources> sky;
     std::vector<RaceParticleEvent> events;
-    std::vector<RaceLightEffect> lights;
     std::uint64_t generation{++nextGeneration};
     double remainder{};
 
@@ -106,9 +106,6 @@ bool TrackViewerScene::service_load() {
     auto& registry = s.resources->Registry();
     s.sky = std::make_unique<SkyResources>(registry.Models(), decoded.scenery->Native());
     registry.Sun().LoadTrack(registry);
-    for (const auto* pack : registry.Lights().FlarePacks())
-        for (const auto& flare : pack->flares)
-            CollectLightEffect(flare, eMathIdentityMatrix, 1.0f, registry, s.lights);
     auto& particles = s.resources->FX().Particles();
     particles.presentationContext = &s;
     particles.publishEffect = &Storage::publish;
@@ -139,6 +136,10 @@ std::vector<RaceParticleAsset> TrackViewerScene::particle_assets() {
     return assets;
 }
 
+std::vector<RaceLightEffect> TrackViewerScene::track_coronas() {
+    return stage_track_coronas(storage_->resources->Registry());
+}
+
 void TrackViewerScene::take_effects(RaceEffectsFrame& frame) {
     auto& s = *storage_;
     auto& registry = s.resources->Registry();
@@ -149,7 +150,6 @@ void TrackViewerScene::take_effects(RaceEffectsFrame& frame) {
     for (auto* group = system.firstGroup; group; group = group->next)
         frame.visibility.push_back({static_cast<std::size_t>(group - system.groupStorage),
             group->generation, false, true, false});
-    if (frame.lights.empty()) frame.lights = s.lights;
     frame.sun.clear();
     auto& sun = registry.Sun();
     float margin{};

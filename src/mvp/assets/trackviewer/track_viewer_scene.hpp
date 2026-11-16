@@ -18,6 +18,7 @@ public:
     bool service_load();
     void advance(double delta);
     std::vector<RaceParticleAsset> particle_assets();
+    std::vector<RaceLightEffect> track_coronas();
     void take_effects(RaceEffectsFrame& frame);
     RacePostState post();
     const Scenery& scenery() const;

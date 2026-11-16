@@ -26,7 +26,7 @@ public:
     void log(const char* event, const char* detail, bool error = false);
     void show_console();
     void attach_track_viewer(TrackViewer& viewer, std::function<void()> open);
-    void frame(double delta);
+    void frame(double delta, bool showFrameGraph);
 
 private:
     struct Storage;

@@ -335,6 +335,8 @@ public:
      * after the actual eager bRegion has been constructed. */
     WorldAudioResult CompleteRegion(const WorldAudioRequest& operation,bool loaded);
     bool OwnsLoadedBank(const WorldAudioBank* bank) const noexcept;
+    // Port-side handoff to the attached physical host device on the owner thread.
+    WorldAudioRequestQueue* HostDeviceRequests() noexcept { return queue_; }
     void Printf(const char* format,...) const;
     void EnablePrintf(uint32_t channel) noexcept;
     void DisablePrintf() noexcept;

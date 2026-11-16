@@ -1,6 +1,7 @@
 #include "race_presentation.hpp"
 
 #include "assets/mesh_converter.hpp"
+#include "addon/subtitles/police_subtitles.hpp"
 #include "assets/port_credit.hpp"
 #include "assets/race_diagnostics.hpp"
 #include "bridge/entity_state_bridge.hpp"
@@ -10,6 +11,7 @@
 #include "assets/trackviewer/track_viewer.hpp"
 #endif
 #include "systems/audio/godot_speech_output.hpp"
+#include "systems/audio/godot_audio_device.hpp"
 #include "systems/camera/camera_presentation.hpp"
 #include "systems/camera/race_post_presentation.hpp"
 #include "systems/cinematic/nis_presentation.hpp"
@@ -34,6 +36,7 @@
 #include "indep/inc/Track.hpp"
 #include "indep/inc/Timer.hpp"
 #include "indep/inc/World.hpp"
+#include "indep/src/speech/SEDWedge.hpp"
 #include "port/not_implemented.hpp"
 
 #include <godot_cpp/classes/camera3d.hpp>
@@ -119,15 +122,38 @@ public:
         // Voice allocation traces synchronously write to stderr during World updates.
         if (OS::get_singleton()->get_environment("HP2_MVP_AUDIO_TRACE") != "1")
             sound.DisablePrintf();
-        if (OS::get_singleton()->get_environment("HP2_MVP_AUDIO_BACKEND") == "godot")
+        const auto backend = OS::get_singleton()->get_environment("HP2_MVP_AUDIO_BACKEND");
+#ifdef _WIN32
+        if (backend == "godot")
             speechOutput_ = std::make_unique<GodotSpeechOutput>(root_);
-        return sound.OpenWindowsDevice(speechOutput_.get());
+        if (backend != "godot-device") return sound.OpenWindowsDevice(speechOutput_.get());
+#endif
+        auto device = std::make_unique<GodotAudioDevice>(root_);
+        const auto result = device->Open(sound);
+        if (result == WORLD_AUDIO_OK) audioDevice_ = std::move(device);
+        return result;
     }
-    WorldAudioResult PumpAudio(bSound& sound) override { return sound.PumpWindowsDevice(); }
+    WorldAudioResult PumpAudio(bSound& sound) override {
+        if (audioDevice_) return audioDevice_->Pump();
+#ifdef _WIN32
+        return sound.PumpWindowsDevice();
+#else
+        return WORLD_AUDIO_INVALID_BINDING;
+#endif
+    }
     WorldAudioResult CloseAudio(bSound& sound) override {
+        if (audioDevice_) {
+            const auto result = audioDevice_->Close();
+            audioDevice_.reset();
+            return result;
+        }
+#ifdef _WIN32
         const auto result = sound.CloseWindowsDevice();
         if (result == WORLD_AUDIO_OK) speechOutput_.reset();
         return result;
+#else
+        return WORLD_AUDIO_INVALID_BINDING;
+#endif
     }
     void SetRumble(int32_t, uint8_t, uint8_t) override {}
     int32_t ReadInput(int32_t port, JoystickControls& destination) override {
@@ -240,6 +266,7 @@ private:
     bool policeSupportHeld_{};
     bool nitroModifierHeld_{};
     std::unique_ptr<GodotSpeechOutput> speechOutput_;
+    std::unique_ptr<GodotAudioDevice> audioDevice_;
 };
 }
 
@@ -257,9 +284,11 @@ struct RacePresentation::Session {
     ApplicationRuntime runtime;
     EntityStateBridge bridge;
     Node2D* frontendCanvas{};
+    Node2D* subtitleCanvas{};
     Label* nativeDebugCaption{};
     Node* frontendRoot{};
     std::unique_ptr<FrontendPresentation> frontend;
+    std::unique_ptr<PoliceSubtitles> subtitles;
     std::unique_ptr<NisPresentation> cinematic;
     std::unique_ptr<RaceEffectsPresentation> effects;
     RaceEffectsFrame effectsFrame;
@@ -309,7 +338,8 @@ RacePresentation::~RacePresentation() {
 void RacePresentation::_bind_methods() {
     ClassDB::bind_static_method("RacePresentation", D_METHOD("validate_game_iso", "path"), &RacePresentation::validate_game_iso);
     ClassDB::bind_method(D_METHOD("set_graphics_menu_settings", "settings"), &RacePresentation::set_graphics_menu_settings);
-    ClassDB::bind_method(D_METHOD("start_game", "assets", "profile", "track", "tree", "event", "native_debug"),
+    ClassDB::bind_method(D_METHOD("set_subtitle_setting", "setting"), &RacePresentation::set_subtitle_setting);
+    ClassDB::bind_method(D_METHOD("start_game", "assets", "profile", "track", "tree", "event", "native_debug", "isolated_profile"),
         &RacePresentation::start_game);
     ClassDB::bind_method(D_METHOD("telemetry"), &RacePresentation::telemetry);
     ClassDB::bind_method(D_METHOD("race_scene"), &RacePresentation::race_scene);
@@ -393,9 +423,16 @@ void RacePresentation::set_graphics_menu_settings(const Callable& settings) {
     if (!session_) graphicsMenuSettings_ = settings;
 }
 
+void RacePresentation::set_subtitle_setting(const Callable& setting) {
+    if (!session_) subtitleSetting_ = setting;
+}
+
 String RacePresentation::start_game(const String& assets, const String& profile, int track, int tree,
-    int event, bool nativeDebug) {
-    if (!session_) nativeDebug_ = nativeDebug;
+    int event, bool nativeDebug, bool isolatedProfile) {
+    if (!session_) {
+        nativeDebug_ = nativeDebug;
+        isolatedProfile_ = isolatedProfile;
+    }
     String error;
     start(assets, profile, track < 0 && tree < 0, track, tree, event, false, &error);
     return error;
@@ -438,6 +475,8 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
         session_->diagnosticChecks.pursuitDriver = OS::get_singleton()->get_environment("HP2_MVP_PURSUIT_AI") == "1";
         session_->diagnosticChecks.supportVisuals = tree >= 0 &&
             OS::get_singleton()->get_environment("HP2_MVP_TEST_SUPPORT_VISUALS") == "1";
+        if (OS::get_singleton()->get_environment("HP2_MVP_TEST_SUBTITLE_RADIO") == "1")
+            session_->diagnosticChecks.subtitleRadioFixture = 120;
         session_->diagnosticChecks.trackEffectsCamera = !frontend &&
             OS::get_singleton()->get_environment("HP2_MVP_TEST_TRACK_EFFECTS") == "1";
         session_->diagnosticChecks.fireTruckCamera = !frontend &&
@@ -447,9 +486,12 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
 #else
         (void)returnToMenu;
 #endif
-        configure_race_diagnostics(nativeDebug_, unlockRaces);
+        configure_race_diagnostics(nativeDebug_, unlockRaces, isolatedProfile_);
         set_process_input(true);
         stage = frontend ? "frontend_initialize" : "race_initialize";
+        if (subtitleSetting_.is_valid()) session_->runtime.BindSubtitleSetting([](void* context, int action) {
+            return bool(static_cast<const Callable*>(context)->call(action));
+        }, &subtitleSetting_);
         if (frontend) {
             const bool requireNamedProfile = OS::get_singleton()->get_environment("HP2_MVP_TEST_PROFILE") != "1";
             if (graphicsMenuSettings_.is_valid())
@@ -487,6 +529,12 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
         }
         session_->frontend = std::make_unique<FrontendPresentation>(*session_->frontendCanvas, session_->files,
             session_->runtime, *this);
+        auto* subtitleCanvas = memnew(Node2D);
+        session_->subtitleCanvas = subtitleCanvas;
+        subtitleCanvas->set_name("PoliceSubtitles");
+        subtitleCanvas->set_z_index(40);
+        add_child(subtitleCanvas);
+        session_->subtitles = std::make_unique<PoliceSubtitles>(*subtitleCanvas, session_->files);
         session_->frontendRoot = memnew(Node);
         add_child(session_->frontendRoot);
         session_->cinematic = std::make_unique<NisPresentation>(*session_->frontendRoot);
@@ -599,8 +647,9 @@ void RacePresentation::retire_session() {
     retire_scene();
     auto old = std::move(session_);
     old->frontend.reset();
+    old->subtitles.reset();
     old->cinematic.reset();
-    for (auto* node : {static_cast<Node*>(old->frontendCanvas), old->frontendRoot}) {
+    for (auto* node : {static_cast<Node*>(old->frontendCanvas), static_cast<Node*>(old->subtitleCanvas), old->frontendRoot}) {
         if (!node) continue;
         remove_child(node);
         node->queue_free();
@@ -653,7 +702,7 @@ void RacePresentation::service_track_viewer(double delta) {
 
 void RacePresentation::_process(double delta) {
 #ifdef HP2_MVP_IMGUI
-    if (debug_) debug_->frame(delta);
+    if (debug_) debug_->frame(delta, !session_ || !session_->debugMenu || !session_->debugMenu->demoSceneOpen());
     service_track_viewer(delta);
 #else
     (void)delta;
@@ -705,6 +754,17 @@ void RacePresentation::_process(double delta) {
         s.modal = state.pointerModal;
         stage = "frontend_scene";
         s.frontend->update(state, get_viewport()->get_visible_rect().size,s.effectsFrame);
+        const auto* subtitleWorld = race.simulation ? race.simulation->world : nullptr;
+        bool cinematicActive = false;
+        for (auto* manager = race.nis ? race.nis->first : nullptr; manager; manager = manager->Next())
+            cinematicActive |= manager->Playback().active != 0;
+        s.subtitles->update(subtitleSetting_.is_valid() && bool(subtitleSetting_.call(-1)),
+            race.sessionState == RC_STATE_RACE_IN_PROGRESS && subtitleWorld && !s.host.demoInput && !cinematicActive,
+            race.sessionState == RC_STATE_PAUSE,
+            subtitleWorld ? subtitleWorld->presentationGeneration : 0,
+            subtitleWorld ? subtitleWorld->presentationReplayEpoch : 0,
+            s.runtime.SpeechCaption(), s.runtime.PresentationResources().Flailer(),
+            *state.layout, get_viewport()->get_visible_rect().size);
         if (auto* caption = s.nativeDebugCaption) {
             const auto* text = race.simulation && !s.host.menuInput && !s.host.demoInput
                 ? joystickNativeDebugCaption() : nullptr;
@@ -765,6 +825,7 @@ void RacePresentation::_process(double delta) {
                 *race.simulation->collisions->objects, s.movablePlacements, *s.worldObjects,
                 s.reflections->track(), sharedWorldReflection, s.primaryScenery.get());
             s.effects = std::make_unique<RaceEffectsPresentation>(*s.scene);
+            s.effects->prepare_track_coronas(stage_track_coronas(*race.renderResources), race.ntsc, true);
             s.effects->prepare_particles(s.runtime.RaceParticleAssets());
             s.camera = memnew(Camera3D);
             s.scene->add_child(s.camera);
@@ -789,9 +850,6 @@ void RacePresentation::_process(double delta) {
         const auto* terrain = movement && movement->bindings.environment ?
             movement->bindings.environment->contact.terrain : nullptr;
         const int stockView = player ? player->settings.cameraView : -1;
-        bool cinematicActive = false;
-        for (auto* manager = race.nis ? race.nis->first : nullptr; manager; manager = manager->Next())
-            cinematicActive |= manager->Playback().active != 0;
         bool canOrbit = race.sessionState == RC_STATE_RACE_IN_PROGRESS && !s.host.menuInput && !cinematicActive &&
             !state.pointerModal && playerVisual != s.vehicles.end() && playerState->exteriorVisible &&
             playerVisual->second.model == playerState->model && playerVisual->second.skin == playerState->skin &&
@@ -988,6 +1046,25 @@ Dictionary RacePresentation::telemetry() const {
         result["loading"] = session_->frontend->showing_loading();
     }
     result["race_state"] = session_->raceState;
+    if (session_->subtitles) {
+        std::u32string text;
+        for (unsigned char code : session_->subtitles->visible_text()) text += code;
+        result["police_subtitle"] = String(text.c_str());
+#ifdef HP2_MVP_IMGUI
+        const auto& speech = session_->runtime.SpeechCaption();
+        result["subtitle_source_verified"] = session_->subtitles->verified_source();
+        result["speech_caption_sequence"] = speech.sequence;
+        result["speech_caption_finished"] = speech.finished != 0;
+        if (speech.count) {
+            result["speech_caption_event"] = speech.events[0];
+            result["speech_caption_offset"] = speech.offsets[0];
+            Array fragments;
+            for (unsigned i = 0; i < speech.count; ++i)
+                fragments.push_back(Vector2i(speech.events[i], speech.offsets[i]));
+            result["speech_caption_parts"] = fragments;
+        }
+#endif
+    }
     result["radial_blur_active"] = session_->radialBlurActive;
     result["orbit_active"] = session_->orbit.active();
     result["orbit_terrain_queries"] = session_->orbit.terrain_queries();

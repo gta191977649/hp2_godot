@@ -10,6 +10,7 @@ class RaceEffectsPresentation {
 public:
     explicit RaceEffectsPresentation(godot::Node3D& scene);
     ~RaceEffectsPresentation();
+    void prepare_track_coronas(const std::vector<RaceLightEffect>& lights, bool ntsc, bool rear);
     void prepare_particles(const std::vector<RaceParticleAsset>& assets);
     void update_water_sky(godot::Camera3D& camera);
     void update(const RaceEffectsFrame& frame, godot::Camera3D& camera, godot::Camera3D* rear,

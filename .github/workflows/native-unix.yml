@@ -1,0 +1,91 @@
+name: Native Unix packages
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'build_linux.sh'
+      - 'build_macos.sh'
+      - 'tools/build_unix.sh'
+      - 'tools/stage_unix_ffmpeg.py'
+      - 'CMakeLists.txt'
+      - 'godot_mvp/**'
+      - 'src/**'
+      - '.github/workflows/native-unix.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+        preset: [godot-mvp-debug, godot-mvp-release]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install build dependencies
+        shell: bash
+        run: |
+          if [[ $RUNNER_OS == Linux ]]; then
+            sudo apt-get update
+            sudo apt-get install -y cmake ninja-build nasm binutils
+          else
+            command -v ninja >/dev/null || brew install ninja
+          fi
+
+      - name: Build the native FFmpeg SDK
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP"
+          curl --fail --silent --show-error --location --retry 3 \
+            https://ffmpeg.org/releases/ffmpeg-8.1.3.tar.xz -o ffmpeg.tar.xz
+          echo '7138d28c96d9d3e3af4ee3d8cad72741f8ffb40da90c1112235dea3ecd3178a3  ffmpeg.tar.xz' | shasum -a 256 -c
+          tar -xf ffmpeg.tar.xz
+          cd ffmpeg-8.1.3
+          ./configure --prefix="$RUNNER_TEMP/ffmpeg" --enable-shared --disable-static \
+            --disable-autodetect --disable-everything --enable-demuxer=avi --enable-decoder=mv30 \
+            --disable-programs --disable-doc --disable-avdevice --disable-avfilter --disable-swscale
+          make -j 3
+          make install
+          echo "HP2_FFMPEG_SDK=$RUNNER_TEMP/ffmpeg" >> "$GITHUB_ENV"
+
+      - name: Install Godot and export templates
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP"
+          release=https://github.com/godotengine/godot/releases/download/4.7.2-stable
+          if [[ $RUNNER_OS == Linux ]]; then
+            archive=Godot_v4.7.2-stable_linux.x86_64.zip
+            hash=cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+            engine=$RUNNER_TEMP/Godot_v4.7.2-stable_linux.x86_64
+            templates="$HOME/.local/share/godot/export_templates"
+          else
+            archive=Godot_v4.7.2-stable_macos.universal.zip
+            hash=c58a24e31d720be9d62f60cb5627c4e695fb72f21b0cfe1bc9ccaa9a3b3ba63e
+            engine=$RUNNER_TEMP/Godot.app/Contents/MacOS/Godot
+            templates="$HOME/Library/Application Support/Godot/export_templates"
+          fi
+          curl --fail --silent --show-error --location --retry 3 "$release/$archive" -o godot.zip
+          echo "$hash  godot.zip" | shasum -a 256 -c
+          unzip -q godot.zip
+          curl --fail --silent --show-error --location --retry 3 \
+            "$release/Godot_v4.7.2-stable_export_templates.tpz" -o templates.tpz
+          echo 'f298490b8d44d934be425a5a65a51bf15f422428b229a06a6e11d9ffea248011  templates.tpz' | shasum -a 256 -c
+          unzip -q templates.tpz
+          mkdir -p "$templates"
+          mv ./templates "$templates/4.7.2.stable"
+          echo "GODOT_BIN=$engine" >> "$GITHUB_ENV"
+
+      - name: Build and start the exported package
+        shell: bash
+        env:
+          HP2_PRESET: ${{ matrix.preset }}
+        run: |
+          if [[ $RUNNER_OS == Linux ]]; then script=build_linux.sh; else script=build_macos.sh; fi
+          bash "$script" --preset "$HP2_PRESET" --verify --jobs 3

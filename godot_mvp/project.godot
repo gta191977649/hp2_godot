@@ -23,6 +23,7 @@ window/size/viewport_width=1280
 window/size/viewport_height=720
 window/size/mode=0
 window/vsync/vsync_mode=1
+window/hdr/request_hdr_output=false
 
 [hp2]
 
@@ -204,6 +205,7 @@ hp2_debug_console={
 [rendering]
 
 rendering_device/driver.windows="vulkan"
+viewport/hdr_2d=false
 environment/defaults/default_clear_color=Color(0, 0, 0, 1)
 
 [shader_globals]

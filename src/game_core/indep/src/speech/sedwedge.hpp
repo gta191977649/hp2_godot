@@ -111,6 +111,16 @@ typedef enum WorldStreamAudioResult {
  * hardware/stop-ring representation was removed: it must not coexist with
  * the positional/JBC/movie instance pool. The private owner retains actual
  * BAN/EVT/DAT resources and ten bSegments across their real source uses. */
+// Port-side presentation snapshot. It contains values only and owns no audio.
+typedef struct SpeechCaptionState {
+    uint64_t sequence;
+    uint32_t offsets[10];
+    uint16_t events[10];
+    uint8_t count;
+    uint8_t english;
+    uint8_t finished;
+} SpeechCaptionState;
+
 typedef struct WorldStreamAudio {
     int32_t initialized;
     int32_t state;
@@ -127,7 +137,10 @@ typedef struct WorldStreamAudio {
     // Not serialized into the PAL World/Replay snapshot.
     int32_t pausedForMenu;
     float timerMilliseconds;
+    SpeechCaptionState caption;
 } WorldStreamAudio;
+
+void worldStreamAudioCaptionAcknowledge(WorldStreamAudio* stream,const WorldAudioRequest* request,int failed);
 
 int32_t worldStreamAudioStop(WorldStreamAudio* stream);
 int32_t worldStreamAudioCancel(WorldStreamAudio* stream);

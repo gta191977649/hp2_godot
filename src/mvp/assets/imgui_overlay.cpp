@@ -291,7 +291,7 @@ bool ImGuiOverlay::input(const Ref<InputEvent>& event) {
     return false;
 }
 
-void ImGuiOverlay::frame(double delta) {
+void ImGuiOverlay::frame(double delta, bool showFrameGraph) {
     auto& s = *storage_;
     ImGui::SetCurrentContext(s.context);
     const auto size = s.canvas->get_viewport_rect().size;
@@ -358,7 +358,7 @@ void ImGuiOverlay::frame(double delta) {
     }
     if (previousRoadshine != s.effectOptions.roadshine)
         RenderingServer::get_singleton()->global_shader_parameter_set("hp2_roadshine", s.effectOptions.roadshine);
-    if (!s.viewer || !s.viewer->active()) {
+    if (showFrameGraph && (!s.viewer || !s.viewer->active())) {
         ImGui::SetNextWindowPos({size.x - margin, margin}, ImGuiCond_Always, {1, 0});
         ImGui::SetNextWindowBgAlpha(0.8f);
         if (ImGui::Begin("HP2 Frame Time", nullptr, ImGuiWindowFlags_NoInputs |

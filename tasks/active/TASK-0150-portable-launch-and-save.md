@@ -1,6 +1,79 @@
 # TASK-0150 Portable MVP launch, profiles, and Windows export
 
+## Native Linux and macOS build entry points
+
+`build_linux.sh` builds Linux x86_64 and `build_macos.sh` builds Apple
+Silicon. Both stage the native extension and the FFmpeg 8 ABI libraries,
+use Godot's export templates, and package the portable launcher.
+`--verify` starts the generated package from a separate working directory
+and checks native extension startup without a game ISO. The macOS app
+uses ad-hoc signing for the local test package.
+
+The port-side `bSound::HostDeviceRequests` accessor is needed because the
+non-Windows host must apply and acknowledge the same retained sound
+operations that the Windows XAudio2 device consumes. The Godot host owns
+PCM, playback, speech workers, and reverb buses. It reuses authored
+decode and voice state logic and completes requests through the existing
+command pump. Godot's reverb uses the stereo input image, so the
+wet-return pan and release-tail behaviour are not equivalent to XAudio2.
+
+Validation on Windows used the Debug and Release CMake build presets.
+With `HP2_MVP_AUDIO_BACKEND=godot-device`, the staged Release reached the
+title, completed intro audio, drove Track 12 with
+`tools/test_track12_mvp.gd -- --race-track=12`, and returned from the
+Track 13 pursuit via `tools/test_frontend_mvp.gd` with
+`HP2_MVP_PURSUIT=1` and `HP2_MVP_RETURN=1`. Logs are under
+`local/platform-port-034439`. The shell scripts passed `bash -n` and the
+Python helper and native Unix workflow parsed successfully. The default
+Windows XAudio2 path passed the startup profile creation smoke. A Debug
+export from `build.ps1 --mvp --preset godot-mvp-debug` passed the shared
+headless extension probe when launched from a separate working directory.
+`build.ps1 --mvp --jobs 8` also passed the Release probe. The exported
+runtime size matched the 48,765,440-byte slim template. The Windows
+template override is written into the Windows options section explicitly
+so the additional export presets cannot redirect it.
+
+Native Linux and macOS builds and in-game graphics, music, speech, and
+save verification are pending on those hosts. The GitHub Actions matrix
+contains native Debug and Release package checks and uses no game data.
+
+## Windows export preset encoding
+
+Windows PowerShell 5.1 writes a UTF-8 BOM with `Set-Content -Encoding
+utf8`. A staged `export_presets.cfg` with that BOM reproduced the empty
+preset list and `Invalid export preset name: Windows MVP` in Godot 4.7.2.
+The Windows build now writes the slim-template override as UTF-8 without
+BOM. The override stays in the Windows options section.
+
+Under Windows PowerShell 5.1, the corrected preset update followed by
+`--export-release 'Windows MVP'` packed the staged project with the
+48,765,440-byte slim runtime. Launching the package with
+`--headless --quit-after 10 -- --verify-extension` emitted
+`HP2_MVP_EXTENSION_READY`. The full `build.ps1 --mvp --jobs 8` command reproduced the error
+before the fix and passed after it under Windows PowerShell 5.1.
+The stock-template variant also passed. Build and smoke logs are
+`local/windows-preset-*.log` and `local/windows-preset-bom-check`.
+
 ## Profile selection and creation
+
+The ordinary `--debug` frontend uses the launch root's `profiles/`
+directory, with the same creation and reload rules as Release. Direct
+track and event launches, explicit race fixtures and
+`HP2_MVP_TEST_PROFILE=1` still use a fresh diagnostic directory. Debug
+camera and presentation controls stay available in ordinary Debug.
+The native pause menu's Finish Position and Super Easy AI use the
+port-side race override gate in `applicationConfigureTesting`, with
+the isolation decision supplied by the launcher. This separates source
+debug presentation from overrides that could affect saved progression.
+The original save format and source action handlers are reused.
+
+On Windows, `tools/test_mvp_boot_profile.gd` launched a disposable
+staged Debug project with `-- --debug`. The create run entered a name
+and saved a native `profile-<id>.json`. The next process loaded that
+file, reached Title Screen and preserved the file hash. Logs are
+`local/debug-save-create.log` and `local/debug-save-load.log`.
+A direct Debug Track 12 launch selected a fresh diagnostics directory
+and kept the named profile hash unchanged.
 
 Normal Windows launches enumerate `profiles` beside the executable.
 Staged projects use the project directory as the launch root. The list

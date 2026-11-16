@@ -230,6 +230,7 @@ public:
     void AddObject(std::uint32_t key);
     void AddObjects(const std::uint32_t* keys,std::size_t count);
     void SetItemCount(std::int32_t count);
+    void SetLastMaskRow(std::uint32_t key);
     void SetDesiredTopLeftY(std::uint32_t key,float desired);
     void SetCurrentObject(std::uint32_t key);
     std::uint32_t GetCurrentMenuMask() const;

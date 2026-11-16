@@ -1070,6 +1070,7 @@ void TrackViewer::Storage::attach() {
         staticPlacements, movable, *s.worldObjects, nullptr, false, s.sceneryVisibility.get(), &inspection);
     s.index_hierarchy(inspection);
     s.effects = std::make_unique<RaceEffectsPresentation>(*s.trackScene);
+    s.effects->prepare_track_coronas(s.source->track_coronas(), s.source->ntsc(), false);
     s.effects->prepare_particles(s.source->particle_assets());
     s.camera = memnew(Camera3D);
     s.view->add_child(s.camera);

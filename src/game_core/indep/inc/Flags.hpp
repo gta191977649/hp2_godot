@@ -42,6 +42,7 @@ typedef struct ApplicationLaunchOptions {
 
 #ifdef __cplusplus
 class DemoDiscManager;
+struct SpeechCaptionState;
 extern "C" {
 #endif
 extern ApplicationLaunchOptions applicationLaunchOptions;
@@ -73,6 +74,8 @@ JoylogConfigItems applicationJoylogConfigBindings();
 // Explicit PC test switches requested for inspecting the original game.
 // These are process options, not saved FRED progress or Joylog config cells.
 extern bool applicationDebugToolsEnabled;
+// Port-side gate for race overrides when the host selects an isolated profile.
+extern bool applicationDebugRaceOverridesEnabled;
 // Independent native UI preference; never enables the source debug menu.
 extern bool applicationShowFrameRate;
 extern bool applicationUnlockAllForTesting;
@@ -90,7 +93,7 @@ struct ApplicationFrameTiming {
     bool frameRateAvailable{},cpuTimeAvailable{},gpuTimeAvailable{};
 };
 extern ApplicationFrameTiming applicationFrameTiming;
-void applicationConfigureTesting(bool debugTools,bool unlockAll);
+void applicationConfigureTesting(bool debugTools,bool unlockAll,bool allowRaceOverrides);
 void applicationSeedRandomNumber(ReplayIntegerLog& log);
 void applicationLoadConfig(const std::filesystem::path& filename,ReplayIntegerLog& log);
 
@@ -383,6 +386,8 @@ public:
         const FrontendCreditsContent* credits = nullptr, const FrontendMenuExtension* optionsExtension = nullptr,
         bool requireNamedProfile = false);
     FrontendStateView FrontendState() const;
+    void BindSubtitleSetting(bool (*setting)(void*,int),void* context);
+    const ::SpeechCaptionState& SpeechCaption() const noexcept;
     void QueueFrontendPointer(std::uint64_t epoch, FrontendPointerTarget target);
     void QueueFrontendNameEdit(std::uint64_t epoch, std::uint64_t session, FrontendNameEditAction action,
         std::uint32_t character = 0);

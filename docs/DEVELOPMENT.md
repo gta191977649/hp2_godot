@@ -4,6 +4,50 @@ Read [AGENTS.md](../AGENTS.md) for current source and evidence rules and
 [TASK-0123](../tasks/active/TASK-0123-native-source-migration.md) for the
 migration acceptance checks.
 
+## Linux and macOS builds
+
+Use the build script on the target operating system. Linux targets x86_64
+with Vulkan. macOS targets Apple Silicon with Metal as the default.
+Install CMake 3.24+, Ninja, Python 3, a native C++17 compiler, and Godot
+4.7.2. Linux also needs binutils. macOS needs the Xcode Command Line Tools.
+The export scripts use the official Godot templates.
+
+Use a native shared FFmpeg 8 SDK with the AVI demuxer and MV30 decoder.
+The scripts take the prefix from `HP2_FFMPEG_SDK`. To build the SDK
+from FFmpeg source, pass these options to `./configure`, then run
+`make` and `make install`. [FFmpeg releases](https://ffmpeg.org/releases/)
+
+```sh
+./configure --prefix="$HP2_FFMPEG_SDK" --enable-shared --disable-static \
+  --disable-autodetect --disable-everything --enable-demuxer=avi --enable-decoder=mv30 \
+  --disable-programs --disable-doc --disable-avdevice --disable-avfilter --disable-swscale
+```
+
+Example commands with `GODOT_BIN` pointing to the Godot executable:
+
+```sh
+bash build_linux.sh --run
+bash build_linux.sh --verify
+bash build_macos.sh --run
+bash build_macos.sh --verify
+```
+
+Add `--preset godot-mvp-debug` to export Debug and `--debug` to run the
+staged Debug project with diagnostics. `--verify` launches a fresh
+package headless from a separate working directory and checks extension
+startup without an ISO. The native Unix GitHub Actions workflow runs
+that check for both configurations. Validate graphics and sound with an
+authorized US PS2 ISO on each target. macOS packages use an ad-hoc
+signature for local testing.
+
+The package puts `launcher.cfg` and `profiles/` beside the Linux
+launcher or macOS app bundle. Linux and macOS use Godot audio players
+and two per-core reverb buses. The Windows release retains XAudio2.
+Set `HP2_MVP_AUDIO_BACKEND=godot-device` in a Windows staged run to
+exercise the Unix audio backend with the same assets.
+
+## Windows build and development runs
+
 ```powershell
 cmake --preset godot-mvp-release
 cmake --build --preset godot-mvp-release --target stage_mvp --parallel 8
@@ -40,9 +84,9 @@ the launch root's `profiles/` for frontend regression scripts. To test
 reload of a normal profile, use a disposable staged project and its
 ordinary `profiles/` directory in both launches.
 
-For a packaged game, the launch root is the directory containing the EXE.
-The game loads `profiles/profile.json` there. If that file is missing,
-the HP2 startup screens prompt for a profile name before writing it.
+For a packaged game, the launch root contains the launcher or macOS app.
+The game looks for profiles in the `profiles/` directory there. If the
+directory has no saves, the HP2 startup screens prompt for a profile name.
 
 To build and open the Debug MVP in the pinned Godot Editor, run
 `./build.ps1 --mvp --debug --editor --jobs 16`. For an existing build,
@@ -54,8 +98,13 @@ Press F6 on `native_game.tscn` or F5 for the project, then start
 Press the grave/tilde key in the game to give keyboard input back to the frontend.
 
 Use `./build.ps1 --run` for Release or `./build.ps1 --debug` for Debug. Both
-default to windowed mode with FXAA, VSync, and no software FPS cap. Options
-→ Graphic stores preferences in `launcher.cfg` beside the executable
+default to windowed mode with FXAA, VSync, and no software FPS cap. Player
+profiles persist in each launch root. For the staged Debug build,
+the player profile folder is `build/godot-mvp-debug/mvp-project/profiles/`.
+To use the pause menu's Finish Position or Super Easy AI diagnostics,
+launch with `HP2_MVP_TEST_PROFILE=1` or use a direct race diagnostic.
+
+Options → Graphic stores preferences in `launcher.cfg` beside the executable
 or in the staged project directory. Change Render API
 there and restart to apply it. An explicit `--rendering-driver` overrides the
 saved API for that launch. Add `--fullscreen` to launch in native fullscreen.

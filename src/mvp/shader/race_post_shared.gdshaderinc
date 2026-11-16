@@ -34,29 +34,35 @@ float scene_depth_at(ivec2 xy) {
     }
     return texelFetch(scene_depth, xy, 0).r;
 }
+vec3 composite_fog(vec3 color, vec4 fog_entry, bool encoded) {
+    vec3 destination = round(clamp(to_srgb(color), vec3(0.0), vec3(1.0)) * 255.0);
+    vec3 source = round(fog_entry.rgb * 255.0);
+    // Mode 1 is (Cd - Cs)*As with Cs=0. Other modes use
+    // Cd + (Cs - Cd)*As. The GS shifts signed products before adding Cd.
+    vec3 blended = fog_params.w == 1.0 ? floor(destination * fog_entry.a) :
+        destination + floor((source - destination) * fog_entry.a);
+    vec3 result = clamp(blended, vec3(0.0), vec3(255.0)) / 255.0;
+    return encoded ? result : to_linear(result);
+}
 vec3 fogged(ivec2 xy, bool encoded) {
     vec3 color = texelFetch(scene_color, xy, 0).rgb;
     if (fog_params.w >= 0.0) {
         float slot = depth_slot(scene_depth_at(xy));
         if (use_fog_palette) {
             vec4 entry = texelFetch(fog_palette, ivec2(int(slot), 0), 0);
-            if (entry.a > 0.0) {
-                vec3 result = mix(to_srgb(color), entry.rgb, entry.a);
-                return encoded ? max(result, vec3(0.0)) : to_linear(result);
-            }
+            if (entry.a > 0.0 || fog_params.w == 1.0)
+                return composite_fog(color, entry, encoded);
             return encoded ? to_srgb(color) : color;
         }
         float far_slot = 255.0 - slot;
         float density = clamp((far_slot - fog_params.x) / max(1.0, 255.0 - fog_params.x), 0.0, 1.0);
         float weight = floor(pow(max(0.01,density), fog_params.y) * fog.a * 128.0) / 128.0;
         vec3 rgb = fog.rgb;
-        if (fog_params.w == 1.0) { rgb = vec3(0); weight = (1.0-density)*fog.a; }
+        if (fog_params.w == 1.0) { rgb = vec3(0); weight = floor((1.0-density)*fog.a*128.0)/128.0; }
         if (fog_params.w == 2.0) { rgb = vec3(slot/255.0); weight = 1.0; }
-        if (fog_params.w == 3.0) weight = slot == trunc(fog_params.x) ? fog.a : 0.0;
-        if (weight > 0.0) {
-            vec3 result = mix(to_srgb(color), rgb, weight);
-            return encoded ? result : to_linear(result);
-        }
+        if (fog_params.w == 3.0) weight = slot == trunc(fog_params.x) ? floor(fog.a*128.0)/128.0 : 0.0;
+        if (weight > 0.0 || fog_params.w == 1.0)
+            return composite_fog(color, vec4(rgb, weight), encoded);
     }
     return encoded ? to_srgb(color) : color;
 }

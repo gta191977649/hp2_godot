@@ -5,6 +5,7 @@ var deadline := Time.get_ticks_msec() + 60000
 var running := false
 var screenshots := OS.get_environment("HP2_MVP_SCREENSHOT_DIR")
 var matrix := OS.get_environment("HP2_MVP_VIEWER_MATRIX") == "1"
+var check_coronas := OS.get_environment("HP2_MVP_VIEWER_CORONAS") == "1"
 
 func _initialize() -> void:
     change_scene_to_file.call_deferred("res://native_game.tscn")
@@ -300,6 +301,7 @@ func verify_race_reentry() -> void:
 
 func run_matrix(loaded: Dictionary) -> void:
     deadline = Time.get_ticks_msec() + 180000
+    const CORONA_LAYERS := {10: 138, 20: 23, 30: 38, 40: 114, 60: 74}
     var index := 0
     var container := race.get_node("TrackViewerViewport") as SubViewportContainer
     for decade in [10, 20, 30, 40, 60]:
@@ -321,11 +323,118 @@ func run_matrix(loaded: Dictionary) -> void:
                 push_error("Incorrect viewer scene or retired children for track %d" % track)
                 quit(1)
                 return
-            print("TRACK_VIEWER_MATRIX ", track, " entities=", loaded.viewer_entities)
+            var batches := _scene_viewport(container).find_children("TrackCoronaBatch*", "MeshInstance3D", true, false)
+            var coronas := 0
+            for batch in batches:
+                var vertices: int = batch.mesh.surface_get_array_len(0)
+                if vertices == 0 or vertices % 4 != 0 or not batch.material_override.get_shader_parameter("track_batch"):
+                    push_error("Invalid authored corona batch for track %d" % track)
+                    quit(1)
+                    return
+                coronas += vertices / 4
+            print("TRACK_VIEWER_MATRIX ", track, " entities=", loaded.viewer_entities,
+                " coronas=", coronas, " corona_batches=", batches.size())
+            if check_coronas:
+                if coronas != CORONA_LAYERS[decade] or batches.size() >= coronas:
+                    push_error("Missing authored coronas or ineffective batching on track %d" % track)
+                    quit(1)
+                    return
+                if not await verify_corona(_scene_viewport(container), batches[0], track):
+                    push_error("Authored corona did not draw or respect depth on track %d" % track)
+                    quit(1)
+                    return
             index += 1
     await capture("last-track")
     print("TRACK_VIEWER_MATRIX_PASS")
     quit()
+
+func verify_corona(scene: SubViewport, batch: MeshInstance3D, track: int) -> bool:
+    # Look straight at one authored marker. Isolate its real mesh and
+    # material from moving scenery so its pixels can be compared directly.
+    const TEST_LAYER := 1 << 19
+    var previous_mask := batch.layers
+    batch.layers = TEST_LAYER
+    var arrays := batch.mesh.surface_get_arrays(0)
+    var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+    var normals: PackedFloat32Array = arrays[Mesh.ARRAY_CUSTOM0]
+    var marker := batch.to_global(points[0])
+    var ray := Vector3(normals[0], normals[1], normals[2]).normalized()
+    if ray.is_zero_approx():
+        ray = Vector3.UP
+    var up := Vector3.FORWARD if absf(ray.y) > 0.95 else Vector3.UP
+    var view := SubViewport.new()
+    view.size = Vector2i(192, 192)
+    view.world_3d = scene.find_world_3d()
+    view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+    scene.add_child(view)
+    var camera := Camera3D.new()
+    camera.cull_mask = TEST_LAYER
+    view.add_child(camera)
+    camera.look_at_from_position(marker + ray * 24.0, marker, up)
+    camera.make_current()
+    await process_frame
+    await RenderingServer.frame_post_draw
+    var lit := view.get_texture().get_image()
+    var draws := view.get_render_info(Viewport.RENDER_INFO_TYPE_VISIBLE, Viewport.RENDER_INFO_DRAW_CALLS_IN_FRAME)
+    batch.hide()
+    await process_frame
+    await RenderingServer.frame_post_draw
+    var unlit := view.get_texture().get_image()
+    var blocker := MeshInstance3D.new()
+    blocker.mesh = BoxMesh.new()
+    blocker.mesh.size = Vector3(8, 8, 0.2)
+    blocker.layers = TEST_LAYER
+    view.add_child(blocker)
+    blocker.global_transform = camera.global_transform.translated(-ray * 12)
+    await process_frame
+    await RenderingServer.frame_post_draw
+    var blocked_unlit := view.get_texture().get_image()
+    batch.show()
+    await process_frame
+    await RenderingServer.frame_post_draw
+    var blocked_lit := view.get_texture().get_image()
+    var gs_ok := true
+    if track == 11:
+        # Place the same blocker behind the lamp and use known texel bytes
+        # so the expected GS MODULATE and ALPHA 0x48 result is independent.
+        blocker.global_transform = camera.global_transform.translated(-ray * 36)
+        var backdrop := StandardMaterial3D.new()
+        backdrop.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+        backdrop.albedo_color = Color8(48, 90, 150)
+        blocker.material_override = backdrop
+        var authored_material := batch.material_override as ShaderMaterial
+        var fixture := authored_material.duplicate() as ShaderMaterial
+        var sprite := Image.create_empty(2, 2, false, Image.FORMAT_RGBA8)
+        sprite.fill(Color8(90, 130, 180, 96))
+        fixture.set_shader_parameter("flare", ImageTexture.create_from_image(sprite))
+        batch.material_override = fixture
+        batch.hide()
+        await process_frame
+        await RenderingServer.frame_post_draw
+        var background := view.get_texture().get_image().get_pixel(96, 96)
+        batch.show()
+        await process_frame
+        await RenderingServer.frame_post_draw
+        var result := view.get_texture().get_image().get_pixel(96, 96)
+        batch.material_override = authored_material
+        var tint: PackedFloat32Array = arrays[Mesh.ARRAY_CUSTOM3]
+        var source_alpha := floorf(96.0 * tint[3] / 128.0)
+        for channel in range(3):
+            var texel := [90.0, 130.0, 180.0][channel] as float
+            var source := floorf(texel * tint[channel] / 128.0)
+            var expected := minf(255.0, roundf(background[channel] * 255.0) + floorf(source * source_alpha / 128.0))
+            gs_ok = gs_ok and absf(expected - result[channel] * 255.0) <= 2.0
+        print("TRACK_CORONA_GS color=", result, " background=", background, " passed=", gs_ok)
+    batch.layers = previous_mask
+    view.queue_free()
+    var changed := 0
+    var leaked := 0
+    for y in range(80, 112):
+        for x in range(80, 112):
+            changed += int(lit.get_pixel(x, y) != unlit.get_pixel(x, y))
+            leaked += int(blocked_lit.get_pixel(x, y) != blocked_unlit.get_pixel(x, y))
+    print("TRACK_CORONA_PIXELS ", track, " visible=", changed, " through_blocker=", leaked, " draws=", draws)
+    return gs_ok and changed > 0 and leaked == 0 and draws == 1
 
 func _scene_viewport(container: SubViewportContainer) -> SubViewport:
     var output := container.get_child(0) as SubViewport

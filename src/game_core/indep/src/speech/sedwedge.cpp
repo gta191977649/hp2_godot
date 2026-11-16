@@ -25,6 +25,8 @@ struct WorldStreamAudioResources {
     bool cleanupPending{};
     size_t bankCount{};
     std::array<std::unique_ptr<bSegment>,10> segments;
+    std::array<uint16_t,10> captionEvents{};
+    SpeechCaptionState pendingCaption{};
     size_t segmentCount{};
     std::array<uint8_t,2048> eventLog{};
 
@@ -197,6 +199,7 @@ WorldStreamAudioResult worldStreamAudioCleanup(WorldStreamAudio* stream)
     if (!stream)return WORLD_STREAM_AUDIO_INVALID_BINDING;
     if (!stream->resources)return stream->initialized?WORLD_STREAM_AUDIO_INVALID_BINDING:WORLD_STREAM_AUDIO_OK;
     auto& owner=*stream->resources;
+    stream->caption={};owner.pendingCaption={};
     if (owner.cleanupPending) {
         // Only actual acknowledgement of the STOP and every earlier retained
         // command ends the physical DAT borrow. Completion event8 alone does
@@ -266,7 +269,12 @@ int32_t worldStreamAudioRequestStop(WorldStreamAudio* stream)
         if (stream)stream->result=WORLD_STREAM_AUDIO_INVALID_BINDING;
         return 0;
     }
-    return audioResult(*stream,worldAudioStopInstance(stream->audio,stream->voice.instance))==WORLD_STREAM_AUDIO_OK;
+    const bool stopped=audioResult(*stream,worldAudioStopInstance(stream->audio,stream->voice.instance))==WORLD_STREAM_AUDIO_OK;
+    if(stopped) {
+        stream->caption={};
+        if(stream->resources)stream->resources->pendingCaption={};
+    }
+    return stopped;
 }
 
 int32_t worldStreamAudioStop(WorldStreamAudio* stream)
@@ -361,6 +369,7 @@ WorldStreamAudioResult worldStreamAudioAddSentencePart(WorldStreamAudio* stream,
         return stream->result=WORLD_STREAM_AUDIO_RESOURCE_FAILURE;
     segment->Cleanup();
     segment->Initialize("Segment",absolute,bytes,0);
+    owner.captionEvents[owner.segmentCount]=0xffffu;
     ++owner.segmentCount;
     return stream->result=WORLD_STREAM_AUDIO_OK;
 }
@@ -374,8 +383,11 @@ int32_t worldStreamAudioSentencePartRequest(WorldStreamAudio* stream,
     }
     int32_t bankIndex;
     std::memcpy(&bankIndex,parameters,sizeof(bankIndex));
+    const auto before=stream && stream->resources?stream->resources->segmentCount:0;
     if (worldStreamAudioAddSentencePart(stream,bankIndex,parameters[1],parameters[2])!=WORLD_STREAM_AUDIO_OK)
         return -1;
+    if(parameterCount>3 && stream->resources->segmentCount>before)
+        stream->resources->captionEvents[before]=static_cast<uint16_t>(parameters[3]);
     // PAL205A28 always returns0 after the actual AddSentencePart call.
     return 0;
 }
@@ -394,6 +406,7 @@ WorldAudioResult worldStreamAudioSampleCallback(WorldStreamAudio* stream,
         if (play) {
             const auto result=worldAudioPlayVoice(stream->audio,voice,1.0f,0.0f,0.0f);
             if (result!=WORLD_AUDIO_OK)return result;
+            if(stream->resources)stream->resources->pendingCaption.sequence=voice.instance->playSequence;
         }
         const auto volume=worldAudioSetVoiceVolume(stream->audio,voice,1.0f);
         if(volume!=WORLD_AUDIO_OK)return volume;
@@ -401,7 +414,10 @@ WorldAudioResult worldStreamAudioSampleCallback(WorldStreamAudio* stream,
             return worldAudioPauseVoice(stream->audio,voice,1);
         return WORLD_AUDIO_OK;
     }
-    if (event==8)stream->state=32;
+    if (event==8) {
+        stream->state=32;
+        if(stream->caption.sequence==voice.instance->playSequence)stream->caption.finished=1;
+    }
     return WORLD_AUDIO_OK;
 }
 
@@ -475,8 +491,13 @@ int32_t worldStreamAudioPlaySentence(WorldStreamAudio* stream,int32_t channel,fl
     const auto path=stream->audio->library->SetPath("");
     if (path!=WORLD_AUDIO_OK) {audioResult(*stream,path);return 0;}
     bSampleChain chain(*stream->audio,stream->voice,owner.chainSource);
+    SpeechCaptionState caption{};
+    caption.count=static_cast<uint8_t>(owner.segmentCount);
+    caption.english=std::strcmp(owner.chainSource.path.c_str(),"Sound\\Speech\\EnglishDAT.pck")==0;
     for (size_t i=0;i<owner.segmentCount;++i) {
         const auto& segment=*owner.segments[i];
+        caption.offsets[i]=segment.GetOffset();
+        caption.events[i]=owner.captionEvents[i];
         const auto result=chain.AddToChain(owner.chainSource.path.c_str(),segment.GetOffset()+48u,
             segment.GetSize()-48u,i+1u==owner.segmentCount);
         if (result!=WORLD_AUDIO_OK) {
@@ -485,7 +506,17 @@ int32_t worldStreamAudioPlaySentence(WorldStreamAudio* stream,int32_t channel,fl
     }
     const auto restored=stream->audio->library->SetPath("sound\\");
     if (restored!=WORLD_AUDIO_OK) {audioResult(*stream,restored);return 0;}
+    owner.pendingCaption=caption;
     owner.segmentCount=0;stream->state=2;stream->result=WORLD_STREAM_AUDIO_OK;return 1;
+}
+
+void worldStreamAudioCaptionAcknowledge(WorldStreamAudio* stream,const WorldAudioRequest* request,int failed)
+{
+    if(!stream || !stream->resources || request->kind!=WORLD_AUDIO_PLAY)return;
+    auto& pending=stream->resources->pendingCaption;
+    if(!pending.sequence || request->sequence!=pending.sequence)return;
+    if(!failed)stream->caption=pending;
+    pending={};
 }
 
 WorldStreamAudioResult worldStreamAudioUpdate(WorldStreamAudio* stream)

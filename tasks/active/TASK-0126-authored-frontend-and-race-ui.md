@@ -4,6 +4,58 @@
 - Depends on TASK-0123, TASK-0124 and TASK-0125.
 - Scope: present the donor's Flailer fonts, bitmaps, event tree and in-race UI in Godot. Keep input, screen flow, HUD values and authored layout in game_core.
 
+## Police radio subtitles
+
+The port-side Display row belongs immediately after Zone Cams in the
+frontend and below HUD Hotkey in Pause > Options > Display. Both screens
+use their authored Flailer text and native selection. The pause screen
+owns its menu and input handling in game core, so its callback installs
+the same port-side row and uses the existing host preference callback.
+The pause list uses the frontend's existing cubic scroll animation.
+When the selection reaches Subtitle the list slides by one row. A clip
+window keeps the moving labels and values inside the authored list
+above the divider. Moving back to HUD restores the first row.
+The toggle is saved in launcher.cfg under
+`accessibility/police_subtitles` and defaults to Off.
+
+The original `spchMakeSampleRequests` arguments carry the event ID and
+selected offset. SED already assembles the order and adds 48 bytes
+when submitting the PCM payload. The caption snapshot keeps the
+original VAG header offset for the text lookup. The shared queue
+acknowledgement publishes playback start, and the native voice manager
+publishes EOF using the observed PLAY sequence before its STOP changes
+the source sequence. These are port-side readouts of existing audio
+operations. They preserve the original audio scheduling and callback
+order.
+
+The English transcript comes from MTA HP2. The add-on matches its
+offsets against the English DAT hash. Godot uses the original
+`0x6486623B` Complete value's font texture and tint, including its
+baked edge. The Time Left label (`0x0390D3E1`) supplies the line height.
+Centered lines wrap upward from the visible right gauge face, excluding
+transparent texture padding. Original source is US PS2 `SLUS_203.62`
+with ELF SHA-256
+`7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2`.
+
+Windows Debug `stage_mvp` and `./build.ps1 --mvp --jobs 8` passed.
+`tools/test_mvp_police_subtitles.gd` verified Display selection rails
+and global persistence. On Track 13 it exercised original radio
+events 96, 100 and 101 through XAudio2 and Godot, including pause,
+resume, natural completion and the Off case. The alignment smoke runs
+use `--race-event=ultimate-racer:1` at 1000×750 and 1280×720. The Release
+export staged the transcript and passed the headless extension probe.
+Logs and captures are in `local/subtitles-040856`. The clean 16:9
+capture is `sample-completion/race-police-subtitle.png` in that directory.
+
+The Pause Display smoke check reused `tools/test_mvp_police_subtitles.gd`
+on Track 13 with `HP2_MVP_TEST_MENU_ALIGNMENT=1`. It checked scroll
+placement, both persisted values, reopening Display, and race resume.
+Debug `stage_mvp` and the Windows Release build and extension probe
+passed. See `pause-smooth.log` and `pause-smooth-release-extension.log`
+in the same log directory. The in-motion capture and intermediate row
+position check are under `pause-smooth-motion` and
+`pause-smooth-motion.log`.
+
 ## Live leaderboard vehicle swatches
 
 Retail US PS2 `SLUS_203.62` SHA-256

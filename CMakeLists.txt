@@ -1,17 +1,25 @@
 cmake_minimum_required(VERSION 3.24)
 project(hp2 LANGUAGES C CXX)
 
-if(NOT WIN32)
-  message(FATAL_ERROR "The HP2 native runtime currently targets Windows.")
+if(NOT WIN32 AND NOT APPLE AND NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  message(FATAL_ERROR "HP2 supports Windows, Linux and macOS.")
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_C_STANDARD 11)
+if(UNIX)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
 
 add_subdirectory(src/game_core)
-add_executable(hp2_windows_launcher WIN32 EXCLUDE_FROM_ALL src/mvp/godot/windows_launcher.cpp)
+find_package(Threads REQUIRED)
+if(WIN32)
+  add_executable(hp2_windows_launcher WIN32 EXCLUDE_FROM_ALL src/mvp/godot/windows_launcher.cpp)
+else()
+  add_executable(hp2_unix_launcher EXCLUDE_FROM_ALL src/mvp/godot/unix_launcher.cpp)
+endif()
 if(MINGW)
   target_link_options(hp2_windows_launcher PRIVATE -municode -static -static-libgcc -static-libstdc++)
 endif()
@@ -29,22 +37,37 @@ set(HP2_FFMPEG_SDK "" CACHE PATH "FFmpeg 8 SDK directory")
 find_path(hp2_ffmpeg_include libavformat/avformat.h
   HINTS "${HP2_FFMPEG_SDK}" ${local_ffmpeg_sdks} PATH_SUFFIXES include REQUIRED)
 get_filename_component(hp2_ffmpeg_root "${hp2_ffmpeg_include}" DIRECTORY)
-set(hp2_ffmpeg_dlls)
 foreach(component avformat avcodec avutil)
   find_library(hp2_ffmpeg_${component} NAMES ${component}
     PATHS "${hp2_ffmpeg_root}/lib" NO_DEFAULT_PATH REQUIRED)
 endforeach()
-foreach(dll avformat-62 avcodec-62 avutil-60 swresample-6)
-  find_file(hp2_${dll} "${dll}.dll" PATHS "${hp2_ffmpeg_root}/bin" NO_DEFAULT_PATH REQUIRED)
-  list(APPEND hp2_ffmpeg_dlls "${hp2_${dll}}")
+set(hp2_ffmpeg_runtime)
+foreach(component avformat:62 avcodec:62 avutil:60 swresample:6)
+  string(REPLACE ":" ";" parts "${component}")
+  list(GET parts 0 name)
+  list(GET parts 1 abi)
+  if(WIN32)
+    set(filename "${name}-${abi}.dll")
+    set(libdir bin)
+  elseif(APPLE)
+    set(filename "lib${name}.${abi}.dylib")
+    set(libdir lib)
+  else()
+    set(filename "lib${name}.so.${abi}")
+    set(libdir lib)
+  endif()
+  find_file(hp2_runtime_${name} "${filename}" PATHS "${hp2_ffmpeg_root}/${libdir}" NO_DEFAULT_PATH REQUIRED)
+  list(APPEND hp2_ffmpeg_runtime "${hp2_runtime_${name}}")
 endforeach()
 
 add_library(hp2_blackbox SHARED
   src/mvp/godot/register_types.cpp
+  src/mvp/addon/subtitles/police_subtitles.cpp
   src/mvp/presentation/race_presentation.cpp
   src/mvp/assets/mesh_converter.cpp
   src/mvp/assets/race_diagnostics.cpp
   src/mvp/systems/audio/godot_speech_output.cpp
+  src/mvp/systems/audio/godot_audio_device.cpp
   src/mvp/systems/frontend/frontend_presentation.cpp
   src/mvp/systems/frontend/graphic_menu.cpp
   src/mvp/systems/frontend/frontend_video.cpp
@@ -58,7 +81,7 @@ add_library(hp2_blackbox SHARED
   src/mvp/systems/camera/camera_presentation.cpp)
 # Godot's exception setting is a usage requirement. Link its library without
 # exporting that compiler flag to the exception-using HP2 boundary.
-target_link_libraries(hp2_blackbox PRIVATE mvp_entity_bridge $<LINK_ONLY:godot::cpp>
+target_link_libraries(hp2_blackbox PRIVATE mvp_entity_bridge Threads::Threads $<LINK_ONLY:godot::cpp>
   "${hp2_ffmpeg_avformat}" "${hp2_ffmpeg_avcodec}" "${hp2_ffmpeg_avutil}")
 target_include_directories(hp2_blackbox SYSTEM PRIVATE "${hp2_ffmpeg_include}")
 target_include_directories(hp2_blackbox SYSTEM PRIVATE
@@ -66,6 +89,11 @@ target_include_directories(hp2_blackbox SYSTEM PRIVATE
 target_compile_definitions(hp2_blackbox PRIVATE
   $<TARGET_PROPERTY:godot-cpp,INTERFACE_COMPILE_DEFINITIONS>)
 set_target_properties(hp2_blackbox PROPERTIES PREFIX "")
+if(UNIX AND NOT APPLE)
+  set_target_properties(hp2_blackbox PROPERTIES BUILD_RPATH "$ORIGIN" BUILD_RPATH_USE_ORIGIN ON)
+elseif(APPLE)
+  target_link_options(hp2_blackbox PRIVATE "-Wl,-headerpad_max_install_names")
+endif()
 set(imgui_console_dir "${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui-console")
 set(imgui_dir "${imgui_console_dir}/example/thirdparty/imgui")
 target_sources(hp2_blackbox PRIVATE
@@ -114,6 +142,9 @@ add_custom_target(stage_mvp ALL
     "${imgui_console_dir}/LICENSE.txt" "${project_dir}/licenses/ImGui-Console-LICENSE.txt"
   COMMAND ${CMAKE_COMMAND} -E rm -rf "${project_dir}/shader"
   COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/src/mvp/shader" "${project_dir}/shader"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${project_dir}/addons/hp2_subtitles"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/src/mvp/addon/subtitles/subtitles.en.json" "${project_dir}/addons/hp2_subtitles/"
   COMMAND ${CMAKE_COMMAND} -E rm -f
     "${project_dir}/ps2_mvp.gdextension"
     "${project_dir}/ps2_mvp.gdextension.uid"
@@ -131,5 +162,5 @@ add_custom_target(stage_mvp ALL
     "${CMAKE_SOURCE_DIR}/godot_mvp/hp2_blackbox.gdextension.uid"
     "${project_dir}"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:hp2_blackbox>" "${project_dir}/bin"
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${hp2_ffmpeg_dlls} "${project_dir}/bin"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${hp2_ffmpeg_runtime} "${project_dir}/bin"
   DEPENDS hp2_blackbox VERBATIM)

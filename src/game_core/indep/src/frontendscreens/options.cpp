@@ -1,5 +1,6 @@
 #include "FMenus.hpp"
 #include "FEAnim.hpp"
+#include "subtitle_menu_row.hpp"
 #include "Fred.hpp"
 #include "NativeAudioProfileValidation.hpp"
 #include "CarLoader.hpp"
@@ -764,7 +765,10 @@ public:
 namespace hp2 {
 namespace {
 class DisplayOptionsScreen final:public OptionsScreenBase {
+    static constexpr std::uint32_t SubtitleRow=0xaee77883u;
+    static constexpr auto SubtitleValue=SubtitleMenuRow::ValueKey;
     GlobalDisplaySettings editing_;
+    std::unique_ptr<SubtitleMenuRow> subtitles_;
     FlailerScrollingMenuList scrolling_;
     FlailerLeftRightArrowScroll arrows_;
     FlailerAnimatedBlurb blurb_;
@@ -781,7 +785,24 @@ public:
         constexpr std::uint32_t objects[]={0x52e039f3u,0x52e039f4u,0x52e039f5u,
             0x52e039f6u,0x52e039f7u,0x52e039f8u,0x52e039f9u,0x52e039fau,0x52e039fbu,
             0x55cb09f2u,0x2e931f1bu,0x03d90172u,0x5610f2f4u,0x8fe4086bu,0x422313cbu};
-        scrolling_.AddObjects(objects,std::size(objects));scrolling_.SetItemCount(9);
+        scrolling_.SetItemCount(9);
+        if(services.subtitleSetting) {
+            auto& resources=*services.ui->resources;
+            auto* zone=resources.FindObject(screen,MenuFirst63+5,1);
+            auto* firstHud=resources.FindObject(screen,MenuFirst63+6,1);
+            const float spacing=firstHud->topLeftY-zone->topLeftY;
+            subtitles_=std::make_unique<SubtitleMenuRow>(
+                services,screen,SubtitleRow,MenuFirst63+5,Values.back(),spacing);
+            for(std::uint32_t row=6;row<9;++row) {
+                auto* object=resources.FindObject(screen,MenuFirst63+row,1);
+                subtitles_->ShiftRow(*object,spacing);
+            }
+            scrolling_.SetVisibleArea(MenuFirst63,SubtitleRow);
+            scrolling_.SetLastMaskRow(SubtitleRow);
+            scrolling_.AddObject(SubtitleRow);scrolling_.AddObject(SubtitleValue);
+            scrolling_.SetItemCount(10);
+        }
+        scrolling_.AddObjects(objects,std::size(objects));
         // Final1F354C/1F3564 set the same real clipping polygon on both arrows.
         for(const auto key:{0xd1cda594u,0x9345e4a7u}) {
             auto* object=services.ui->resources->FindObject(screen,key);
@@ -820,8 +841,12 @@ public:
     {
         auto& state=*state_;auto& services=state.services;auto& ui=*services.ui;
         scrolling_.HandleEvent(message,data);arrows_.HandleEvent(message,data);
-        if(message==ScreenMessage::Left || message==ScreenMessage::Right) {
-            if(data.key>=MenuFirst63 && data.key<MenuFirst63+6) {
+        if(message==ScreenMessage::Left || message==ScreenMessage::Right ||
+           (message==ScreenMessage::Select && subtitles_ && data.key==SubtitleRow)) {
+            if(subtitles_ && data.key==SubtitleRow) {
+                subtitles_->Toggle();
+                data.sound=1;
+            } else if(data.key>=MenuFirst63 && data.key<MenuFirst63+6) {
                 const auto index=data.key-MenuFirst63;
                 const auto direction=message==ScreenMessage::Left?-1:1;
                 if(index==0) {
@@ -845,9 +870,10 @@ public:
         } else if(message==ScreenMessage::Highlight) {
             constexpr std::int32_t blurbs[]={0x24cac,0x24cad,0x24cae,0x24caf,0x24cb1,0x24cb2,0x24cb3,0x24cb4,0x24cb5};
             const auto index=data.key-MenuFirst63;
-            const auto value=index<Values.size()?Values[index]:0;
+            const auto value=data.key==SubtitleRow?SubtitleValue:index<Values.size()?Values[index]:0;
             if(index>=6)state.selectionChange.SetCurrentMenuItem(0);
-            blurb_.NewText(index<std::size(blurbs)?blurbs[index]:0);
+            if(data.key==SubtitleRow)blurb_.NewText("Show police radio subtitles during races.");
+            else blurb_.NewText(index<std::size(blurbs)?blurbs[index]:0);
             state.selectionChange.SetCurrentMenuItem(value);arrows_.SetCurrentItem(value);
             SetMenuHighlight(data,scrolling_.GetCurrentMenuMask(),scrolling_.CurrentMenuOffsetY());
         } else if((message==ScreenMessage::Previous && data.key==MenuFirst63) ||

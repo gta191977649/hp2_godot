@@ -10,6 +10,32 @@ documented in `docs/REVERSE_NOTES.md`. Debug frontend entries are port code.
 
 ## Implementation
 
+**Debug → Demo Scene** opens a separate submenu. **Select Track** uses
+the authored left and right arrows and supports the matching keyboard
+or controller input. **Start Scene** launches the displayed track.
+Automatic retains the original sequence. The menu offers the authored
+tracks eligible for the live AI demo and keeps the choice for the
+frontend session. The frame-time graph stays off the submenu so it
+does not cover the selector.
+
+The port-side frontend extension registers a second screen through the
+existing runtime owner so the submenu participates in the normal menu
+stack. The port-side `FrontendDemoMode::RequestDemoMode` accepts a requested
+track and validates it before handing it to the existing
+`FrontendPlayerManager::StartDemoMode`. This boundary is needed because
+the original request selected the track internally and also owns
+recording lifetime checks. The original idle path, replay ownership
+and demo race setup remain intact. The new explicit choice uses the
+live AI path. The PAL donor identity remains as noted above.
+
+Windows staging used `cmake --build --preset godot-mvp-debug --target
+stage_mvp --parallel 8` and the corresponding Release preset.
+`tools/test_mvp_debug_menu.gd` with `HP2_MVP_DEMO_TEST=demo-track`
+opens the submenu, checks Back, selects Track 12 using the direction
+controls, starts the AI demo and returns to a normal race. The named
+profile hash is checked before and after. See
+`local/debug-demo-submenu/run.log`.
+
 - The optional `ApplicationRuntime` frontend extension registers the Debug
   page and supplies one row before Exit. The MVP adapter owns the page and
   defers tool actions until the active screen and pointer epoch are checked.

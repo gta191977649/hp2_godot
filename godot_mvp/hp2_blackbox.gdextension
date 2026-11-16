@@ -7,6 +7,8 @@ reloadable = false
 [libraries]
 
 windows.x86_64 = "res://bin/hp2_blackbox.dll"
+linux.x86_64 = "res://bin/hp2_blackbox.so"
+macos.arm64 = "res://bin/hp2_blackbox.dylib"
 
 [dependencies]
 
@@ -15,4 +17,16 @@ windows.x86_64 = {
     "res://bin/avcodec-62.dll": "",
     "res://bin/avutil-60.dll": "",
     "res://bin/swresample-6.dll": ""
+}
+linux.x86_64 = {
+    "res://bin/libavformat.so.62": "bin",
+    "res://bin/libavcodec.so.62": "bin",
+    "res://bin/libavutil.so.60": "bin",
+    "res://bin/libswresample.so.6": "bin"
+}
+macos.arm64 = {
+    "res://bin/libavformat.62.dylib": "",
+    "res://bin/libavcodec.62.dylib": "",
+    "res://bin/libavutil.60.dylib": "",
+    "res://bin/libswresample.6.dylib": ""
 }

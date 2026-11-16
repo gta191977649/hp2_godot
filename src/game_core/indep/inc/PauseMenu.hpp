@@ -58,7 +58,9 @@ public:
     void DisplayScoring();
     ::CarFramePlayerState& Player() const;
 private:
+    struct SubtitleOptions;
     ::CarFramePlayerState* player_{};
+    std::unique_ptr<SubtitleOptions> subtitles_;
 };
 
 class PauseOptions final : public PauseScreenBase {

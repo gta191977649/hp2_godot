@@ -292,7 +292,7 @@ struct FrontendDemoMode {
     void StartDemoMode();
     void ConsiderStartDemoMode(std::int32_t idleStartedTicks);
     // Port-side entry for a frontend action using the same launch policy.
-    void RequestDemoMode();
+    void RequestDemoMode(std::int32_t requestedTrack=-1);
 };
 
 struct MainMenuScreenServices;
@@ -306,6 +306,7 @@ struct FrontendMenuExtension {
     void (*bind)(MainMenuScreenServices&,void*){};
     void (*service)(void*){};
     void* context{};
+    FlailerScreenConfig* submenu{};
 };
 
 struct MainMenuScreenServices {
@@ -318,6 +319,9 @@ struct MainMenuScreenServices {
     const FrontendMenuExtension* extension{};
     const FrontendCreditsContent* credits{};
     const FrontendMenuExtension* optionsExtension{};
+    // Port-side Display toggle. A negative action reads, zero disables, one enables.
+    bool (*subtitleSetting)(void*,int){};
+    void* subtitleContext{};
 };
 // Actual source GP-C0FC main-menu screen lifetime. Bindings borrow existing
 // services; activation owns one concrete NewMainMenu, never a second FRED.

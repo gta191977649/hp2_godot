@@ -1,5 +1,6 @@
 #include "bsound/include/bVoice.h"
 #include "bsound/include/bSound.h"
+#include "indep/src/speech/SEDWedge.hpp"
 
 #include <algorithm>
 #include <cstdio>
@@ -267,8 +268,13 @@ WorldAudioResult bVoiceMgr::Update(const bVoiceStatusSnapshot& status,bool* oper
             sample.instance->playSequence>observed.operationSequence)continue;
         if (!observed.playing && (!sample.instance->primed || sample.instance->playing)) {
             PrintVoiceAllocsAndReleases("US",voice.GetId(),sample.instance->cue->name);
+            auto* speech=sample.instance->completionKind==WORLD_AUDIO_COMPLETION_SPEECH
+                ? sample.instance->completionSpeech:nullptr;
             const auto result=worldAudioStopInstance(queue_,sample.instance);
             if (result!=WORLD_AUDIO_OK)return result;
+            // STOP changes playSequence. Use the actual device's completed
+            // PLAY identity so only the displayed sentence gets its EOF.
+            if(speech && speech->caption.sequence==observed.operationSequence)speech->caption.finished=1;
             if (!sample.instance->primed)ReleaseVoice(voice);
         }
         // A real completion callback may retire the sample. Its queued

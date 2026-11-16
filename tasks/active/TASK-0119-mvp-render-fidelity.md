@@ -332,6 +332,31 @@ The final Track 13 window passed all 16 launch/input/return checks at
 area, and sunlit/shaded forest approach with the mirror. This is a bounded
 drive and the captures do not establish exact Recomp pixel parity.
 
+## Current Godot fog pipeline check (2026-11-16)
+
+The present Forward+ viewport resolves scene color and reverse depth to
+the canvas passes. Both the fog-only palette path and the combined path
+now blend the authored tint with signed GS byte rounding and alpha/128.
+Zero-alpha pixels preserve the original scene color. The source's inverse
+palette diagnostic mode multiplies destination RGB by source alpha, as
+specified by the destination-minus-source ALPHA selectors in
+`EcstasyFrame::AttachFog` (packed selectors `0x02000001`);
+it no longer interpolates toward black by the opposite amount. No
+desaturation or global change to a track's fog color, strength or range
+was added. E-0052-P01: Retail `eAttachFog` `00119768`, `SLUS_203.62`
+revision unknown, SHA-256
+`7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2`;
+Debug `00119B30`, build unknown, SHA-256
+`815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b`.
+
+The Debug window passed `tools/test_mvp_fog_color.gd` on Vulkan and
+D3D12 (unchanged colored foreground, partial/far tint and diagnostic
+darkening, with and without the palette). The Vulkan Track 13
+`tools/test_mvp_race_post.gd` smoke with `HP2_MVP_TEST_POST=1` passed
+authored weather, native depth, direct/combined fog parity and the
+focus/history checks. These are host tests, with no new original
+runtime visual comparison.
+
 ## Track 13 start-line fog comparison
 
 The user supplied a PS2 reference at 0 mph and 4:58.53. The former Godot
