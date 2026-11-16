@@ -14,7 +14,9 @@
 #include <cstring>
 #include <exception>
 #include <limits>
+#ifdef _WIN32
 #include <malloc.h>
+#endif
 #include <cstdlib>
 #include <new>
 #include <stdexcept>

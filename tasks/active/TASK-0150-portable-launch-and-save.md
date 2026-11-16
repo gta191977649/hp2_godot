@@ -1,5 +1,77 @@
 # TASK-0150 Portable MVP launch, profiles, and Windows export
 
+## 2026-11-17 Native macOS Release build
+
+Prepared project-local Ninja 1.13.1, Godot 4.7.2 and a minimal shared
+FFmpeg 8.1.3 SDK using the workflow's configure flags. Godot, its export
+templates and FFmpeg source matched the SHA-256 values pinned in
+`.github/workflows/native-unix.yml`. Installed the macOS template in
+Godot's standard `4.7.2.stable` template directory.
+
+Required core integration fixes found by the native Apple Clang build:
+
+- `texture.cpp` included `<malloc.h>` unconditionally, which macOS does
+  not provide. Guarded it with `_WIN32`, matching `bMemory.cpp`. The
+  existing `posix_memalign` / `std::free` path and alignment stay unchanged.
+- `replayscreen.cpp` used Linux-only filesystem headers and magic numbers
+  on every Unix host. Added Apple's `<sys/mount.h>` / `statfs` boundary
+  and `f_fstypename` comparisons for `cd9660` and `udf`. The local SDK
+  declares that field, and macOS supplies `mount_cd9660` and `mount_udf`.
+  This retains the existing optical-filesystem query for the resource's
+  volume; an ISO file on APFS is not an optical volume. Windows and Linux
+  paths stay unchanged. No recovered game logic or identifiers changed.
+
+Build command (from the repository root):
+
+```sh
+PATH="$PWD/local/tools/bin:$PATH" \
+HP2_FFMPEG_SDK="$PWD/local/tools/ffmpeg/sdk-8.1.3" \
+bash build_macos.sh --verify --jobs 8
+```
+
+Packaging also needed ETC2/ASTC import enabled for ARM64 export. The
+official template ZIP contains only `.universal` executables, while the
+ARM64 exporter requires `.arm64` entries. `tools/build_unix.sh` now makes
+a temporary ARM64 template with `lipo` and selects it in the staged
+macOS preset. The installed official archive stays unchanged. See the
+[Godot 4.7.2 macOS exporter](https://github.com/godotengine/godot/blob/4.7.2-stable/platform/macos/export/export_plugin.cpp).
+
+The official runtime rejects `--main-pack` because path overrides are
+disabled. The Unix launcher now uses automatic PCK discovery, and the
+macOS package names its resource pack `HP2Runtime.pck` to match the
+runtime. Linux already uses that name. This follows the
+[engine's PCK discovery](https://github.com/godotengine/godot/blob/4.7.2-stable/core/config/project_settings.cpp)
+and avoids rebuilding the engine.
+
+Validation:
+
+- The command above passed: Release extension and launcher compiled,
+  ARM64 app exported, ad-hoc signing verified, and the package started
+  from a separate working directory with `HP2_MVP_EXTENSION_READY`.
+- `codesign --verify --deep --strict out/mvp/macos-release/HP2.app`
+  passed after copying the final package. `file` confirmed ARM64 for
+  both executables and all five dylibs. The app is approximately 86 MiB.
+- From `/private/tmp`, ran the final bundle's
+  `Contents/MacOS/HP2 Entities Bridge` with
+  `--quit-after 30 --log-file <repo>/local/macos-release-window.log -- --select-iso`.
+  It initialized Metal 4.0 / Forward+ on Apple M3 and exited 0 with no
+  reported errors. This checks windowed startup, not visual fidelity.
+- A headless `--select-iso` attempt exited 1 with the expected missing-ISO
+  assertion; the picker requires a display. The dedicated headless
+  `--verify-extension` check passed.
+- `bash -n tools/build_unix.sh` and `git diff --check` passed.
+- `python3 reverse/scripts/generate_progress.py` refreshed the session-log
+  index. Its dashboard/report output also regrouped hundreds of unrelated
+  recovery records from the pre-existing local inputs; those two generated
+  files were restored to their initial versions to keep this build task
+  scoped. No recovery tracker inputs changed in this session.
+
+Final package: `out/mvp/macos-release/HP2.app`, with sibling license
+notices. Successful export/startup log: `local/macos-release-final-build.log`.
+Earlier build diagnostics: `local/macos-release-build.log`. Logs and
+binary dependencies are ignored. No gameplay, audio, save, mounted optical
+volume, Linux or Windows regression checks were run in this session.
+
 ## Native Linux and macOS build entry points
 
 `build_linux.sh` builds Linux x86_64 and `build_macos.sh` builds Apple
@@ -33,8 +105,9 @@ runtime size matched the 48,765,440-byte slim template. The Windows
 template override is written into the Windows options section explicitly
 so the additional export presets cannot redirect it.
 
-Native Linux and macOS builds and in-game graphics, music, speech, and
-save verification are pending on those hosts. The GitHub Actions matrix
+Native Linux builds and in-game graphics, music, speech, and save
+verification remain pending on those hosts. Native macOS Release export
+and startup passed on 2026-11-17 as recorded above. The GitHub Actions matrix
 contains native Debug and Release package checks and uses no game data.
 
 ## Windows export preset encoding

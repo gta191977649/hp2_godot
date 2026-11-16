@@ -31,8 +31,12 @@
 #include <windows.h>
 #else
 #include <cerrno>
+#ifdef __APPLE__
+#include <sys/mount.h>
+#else
 #include <sys/vfs.h>
 #include <linux/magic.h>
+#endif
 #endif
 
 namespace hp2 {
@@ -74,7 +78,11 @@ bool ResourceVolumeIsOptical(const GameResources& resources)
     struct statfs volume{};
     if(statfs(path.c_str(),&volume)!=0)
         throw std::system_error(errno,std::generic_category(),"Replay resource volume query failed");
+#ifdef __APPLE__
+    return std::strcmp(volume.f_fstypename,"cd9660")==0 || std::strcmp(volume.f_fstypename,"udf")==0;
+#else
     return volume.f_type==ISOFS_SUPER_MAGIC || volume.f_type==UDF_SUPER_MAGIC;
+#endif
 #endif
 }
 }

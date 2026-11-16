@@ -168,6 +168,42 @@ if [[ $target == linux ]]; then
     install -m 755 "$build/hp2_unix_launcher" "$package/HP2"
     [[ -f $package/HP2Runtime.pck && -f $package/hp2_blackbox.so ]] || fail 'Linux export is missing the PCK or extension.'
 else
+    # Official macOS templates contain universal executables. Godot's arm64
+    # export expects executables named for that architecture inside the ZIP.
+    python3 - "$template" "$staged" <<'PY'
+import configparser
+from pathlib import Path
+import subprocess
+import sys
+import zipfile
+
+source, staged = map(Path, sys.argv[1:])
+template = staged / "macos-arm64.zip"
+with zipfile.ZipFile(source) as original, zipfile.ZipFile(template, "w", zipfile.ZIP_DEFLATED) as output:
+    names = set(original.namelist())
+    for entry in original.infolist():
+        data = original.read(entry)
+        if entry.filename.endswith(("godot_macos_release.universal", "godot_macos_debug.universal")):
+            destination = entry.filename.removesuffix(".universal") + ".arm64"
+            if destination in names:
+                continue
+            fat = staged / "template-universal"
+            thin = staged / "template-arm64"
+            fat.write_bytes(data)
+            subprocess.run(["lipo", str(fat), "-thin", "arm64", "-output", str(thin)], check=True)
+            data = thin.read_bytes()
+            entry.filename = destination
+        output.writestr(entry, data)
+
+presets = staged / "project/export_presets.cfg"
+config = configparser.ConfigParser(interpolation=None)
+config.read(presets)
+section = next(section for section in config.sections() if config.get(section, "name", fallback="") == '"macOS MVP"')
+for mode in ("debug", "release"):
+    config.set(section + ".options", "custom_template/" + mode, '"' + str(template) + '"')
+with presets.open("w") as output:
+    config.write(output)
+PY
     "$engine" --headless --path "$staged/project" "--export-$configuration" "$preset" "$package/HP2.app"
     bundle=$package/HP2.app/Contents
     entry=$(/usr/libexec/PlistBuddy -c 'Print CFBundleExecutable' "$bundle/Info.plist")
@@ -175,7 +211,7 @@ else
     install -m 755 "$build/hp2_unix_launcher" "$bundle/MacOS/$entry"
     for pack in "$bundle"/Resources/*.pck; do
         [[ -f $pack ]] || fail 'macOS export is missing its PCK.'
-        if [[ ${pack##*/} != HP2.pck ]]; then mv "$pack" "$bundle/Resources/HP2.pck"; fi
+        if [[ ${pack##*/} != HP2Runtime.pck ]]; then mv "$pack" "$bundle/Resources/HP2Runtime.pck"; fi
     done
     codesign --force --sign - "$bundle/MacOS/HP2Runtime"
     for library in "$bundle"/Frameworks/*.dylib; do codesign --force --sign - "$library"; done

@@ -78,12 +78,10 @@ int main(int argc, char** argv)
 #ifdef __APPLE__
         const auto root = bin.parent_path().parent_path().parent_path();
         const auto runtime = bin / "HP2Runtime";
-        const auto pack = bin.parent_path() / "Resources" / "HP2.pck";
         set_environment("HP2_LAUNCH_ROOT", root);
 #else
         const auto root = bin;
         const auto runtime = bin / "HP2Runtime.x86_64";
-        const auto pack = bin / "HP2Runtime.pck";
         const auto cache = root / ".hp2-runtime";
         fs::create_directories(cache);
         set_environment("XDG_DATA_HOME", cache / "data");
@@ -101,7 +99,9 @@ int main(int argc, char** argv)
             explicitLog |= std::string_view(argv[i]) == "--log-file";
             headless |= std::string_view(argv[i]) == "--headless";
         }
-        std::vector<std::string> arguments{runtime.string(), "--main-pack", pack.string()};
+        // Official templates discover the matching PCK beside the runtime
+        // (or in macOS Resources); they disable --main-pack path overrides.
+        std::vector<std::string> arguments{runtime.string()};
         if (!explicitDriver && !headless) {
             arguments.emplace_back("--rendering-driver");
             arguments.emplace_back(saved_renderer(root / "launcher.cfg"));

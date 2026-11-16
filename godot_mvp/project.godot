@@ -138,6 +138,8 @@ hp2_debug_console={
 
 [rendering]
 
+textures/vram_compression/import_etc2_astc=true
+
 rendering_device/driver.windows="vulkan"
 driver/depth_prepass/enable=false
 viewport/hdr_2d=false
