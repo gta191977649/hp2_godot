@@ -307,10 +307,18 @@ struct FrontendCreditsText {
     float clipLeft, clipTop, clipWidth, clipHeight;
 };
 enum class FrontendPointerAction { Focus, Confirm, Back, Left, Right, Previous, Next, Item,
-    CaretLeft, CaretRight, Help, ReplayPause, ReplayPrevious, ReplayNext, ReplaySlow, ReplayCamera, ReplayHud };
+    CaretLeft, CaretRight, Help, ReplayPause, ReplayPrevious, ReplayNext, ReplaySlow, ReplayCamera, ReplayHud,
+    ReplayPlayer, ReplaySeekPreview, ReplaySeek, ReplaySeekCancel };
 struct FrontendPointerTarget {
     std::uint32_t screen{}, object{}, event{};
     FrontendPointerAction action{FrontendPointerAction::Confirm};
+    float position{}; // Normalized position for a replay timeline request.
+};
+// Port-side view of the active source replay controls.
+struct ReplayPointerState {
+    std::uint32_t screen{};
+    bool canSelectPlayer{}, canSeek{}, seeking{};
+    float seekPosition{};
 };
 // Port-side physical keyboard input for the active original name editor.
 enum class FrontendNameEditAction { Insert, Left, Right, Backspace, Delete, Commit, Cancel };
@@ -331,6 +339,7 @@ struct FrontendStateView {
     bool nameEditInput{};
     bool creatingProfile{};
     std::vector<FrontendCreditsText> creditsText;
+    ReplayPointerState replayPointer;
 };
 // Port-side operands from the original primary view and render policy.
 struct RacePostState {

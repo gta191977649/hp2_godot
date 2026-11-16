@@ -11,7 +11,7 @@ void fragment() {
     for (int i=0; i<int(kernel.y); ++i) {
         ivec2 offset = ivec2(round(taps[i] * vec2(size) / vec2(640,480)));
         ivec2 uv = clamp(xy*2+offset, ivec2(0), size-1);
-        vec3 sample_color = use_fog_palette ? fogged(uv, true) : to_srgb(fogged(uv, false));
+        vec3 sample_color = fogged(uv);
         blurred = i==0 ? sample_color : mix(blurred, sample_color, kernel.z);
     }
     COLOR = vec4(blurred, 1.0);

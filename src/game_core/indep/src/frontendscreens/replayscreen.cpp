@@ -4,6 +4,7 @@
 #include "DemoModeReplay.hpp"
 #include "FlailerDB.hpp"
 #include "Fred.hpp"
+#include "Flags.hpp"
 #include "Language.hpp"
 #include "Player.hpp"
 #include "Race.hpp"
@@ -17,6 +18,7 @@
 #include "FMenus.hpp"
 #include "indep/inc/Ecstasy.hpp"
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <exception>
 #include <filesystem>
@@ -153,6 +155,7 @@ ReplayScreen::ReplayScreen(RaceScreenServices& services,std::int32_t seat):servi
         AddJoyHandlers(0);AddJoyHandlers(1);ChangeCameraMover();
         Visibility(ui,Bitmap(ui,0xc9b7f0c0u),services_.players->count==1);
         MuteReplay(false);
+        ++services_.frontend->screens->pointerEpoch;
     } catch(...) {
         const auto original=std::current_exception();
         try {Close();} catch(...) {}
@@ -177,6 +180,7 @@ ReplayScreen::~ReplayScreen() noexcept
 void ReplayScreen::Close()
 {
     if(closed_)return;
+    ++services_.frontend->screens->pointerEpoch;
     // Detach observers before reporting audio errors. No STOP/READY/PLAYING
     // completion is synthesized, and the original failed result survives.
     std::exception_ptr first;
@@ -344,10 +348,90 @@ void ReplayScreen::Pause(std::int32_t paused)
 {
     Replay().State().paused=paused;MuteReplay(paused!=0);
 }
+ReplayPointerState ReplayScreen::PointerState() const
+{
+    const auto& replay=Replay().State();
+    return {hidden_?hiddenScreenKey:replayScreenKey,services_.players->count==2,
+        !hidden_ && replay.stream && replay.endCapturingTime>replay.beginCapturingTime &&
+            replay.endCapturingLoopCount>replay.beginCapturingLoopCount && !Demo().IsTestingSnapshot(),
+        Seeking(),seek_?seek_->position:0.0f};
+}
+
+void ReplayScreen::Seek(float position,bool preview)
+{
+    if(!std::isfinite(position) || !PointerState().canSeek ||
+        services_.frontend->screens->help->IsActive())return;
+    auto& owner=Replay();
+    auto& replay=owner.State();
+    position=std::clamp(position,0.0f,1.0f);
+    const auto timeRange=static_cast<double>(replay.endCapturingTime)-replay.beginCapturingTime;
+    auto ticks=static_cast<std::int32_t>(std::lround(replay.beginCapturingTime+timeRange*position));
+    ReplaySnapshot* nearest=nullptr;
+    ReplaySnapshot* first=nullptr;
+    for(std::size_t i=0;i<owner.ActiveSnapshotCount();++i) {
+        auto* snapshot=owner.ActiveSnapshot(i);
+        if(std::strcmp(snapshot->name,"LAP_SNAPSHOT") && std::strcmp(snapshot->name,"INSTANT_REPLAY") &&
+            std::strcmp(snapshot->name,"HIGHLIGHT_SNAPSHOT"))continue;
+        if(snapshot->worldLoopCounter<replay.beginCapturingLoopCount ||
+            snapshot->worldLoopCounter>=replay.endCapturingLoopCount)continue;
+        if(!first || snapshot->worldTimer<first->worldTimer)first=snapshot;
+        if(snapshot->worldTimer<=ticks && (!nearest || snapshot->worldTimer>nearest->worldTimer))
+            nearest=snapshot;
+    }
+    if(!first)return;
+    if(!nearest) {
+        nearest=first;
+        ticks=first->worldTimer;
+        position=std::clamp(static_cast<float>((static_cast<double>(ticks)-replay.beginCapturingTime)/timeRange),
+            0.0f,1.0f);
+    }
+    const auto now=Clock().worldTimer;
+    const bool continueScrub=scrubPlayback_ && !replay.exhausted && now<=ticks && nearest->worldTimer<=now;
+    if(scrubPlayback_ && scrubPlayback_->lastTarget==ticks) {
+        if(seek_)seek_->preview=preview;
+        else if(!preview)CancelSeek();
+        return;
+    }
+    if(!scrubPlayback_)scrubPlayback_=PlaybackMode{replay.paused,replay.slowMotion,ticks};
+    else scrubPlayback_->lastTarget=ticks;
+    if(!continueScrub) {
+        StopWatchingNis();
+        Post(14,reinterpret_cast<std::intptr_t>(nearest));
+    }
+    seek_=SeekState{ticks,position,preview};
+    replay.paused=0;
+    replay.slowMotion=0;
+    MuteReplay(true);
+}
+
+void ReplayScreen::CancelSeek()
+{
+    if(!scrubPlayback_)return;
+    auto& replay=Replay().State();
+    const auto& clock=Clock();
+    const bool ended=Difference(replay.endCapturingLoopCount,clock.worldLoopCounter)<=0;
+    const auto mode=*scrubPlayback_;
+    seek_.reset();
+    scrubPlayback_.reset();
+    if(ended)stoppedAtTicks_=clock.realTimer;
+    replay.slowMotion=mode.slowMotion;
+    Pause(ended || mode.paused || replay.exhausted);
+}
+
 void ReplayScreen::Tick()
 {
     auto& replay=Replay().State();const auto& clock=Clock();
     const bool ended=Difference(replay.endCapturingLoopCount,clock.worldLoopCounter)<=0;
+    if(seek_) {
+        if(!ended && clock.worldTimer<seek_->ticks && !replay.exhausted)return;
+        if(seek_->preview) {
+            seek_.reset();
+            Pause(1);
+        } else {
+            CancelSeek();
+        }
+    }
+    if(scrubPlayback_)return;
     if(ended && !replay.paused) {stoppedAtTicks_=clock.realTimer;Pause(1);}
     if(raceCoordinatorHasEndGameScreens(*services_.coordinator) && ended && replay.paused &&
         4.0f<static_cast<float>(Difference(clock.realTimer,stoppedAtTicks_))*secondsPerTick)Post(11,0);
@@ -414,6 +498,7 @@ void ReplayScreen::JoyHandler(std::int32_t port,std::int32_t event,std::uint8_t 
     (void)port;auto& screens=*services_.frontend->screens;
     Require(screens.help,"ReplayScreen has no actual HelpMenu owner");
     if(event!=106 && screens.help->IsActive())return;
+    if(scrubPlayback_ && event!=99 && event!=104 && event!=105 && event!=106 && event!=107)return;
     if(lastJoyLoop_==Clock().realLoopCounter)return;
     lastJoyLoop_=Clock().realLoopCounter;
     if(event<99 || event>110)return;
@@ -455,12 +540,17 @@ void ReplayScreen::JoyHandler(std::int32_t port,std::int32_t event,std::uint8_t 
         }
         break;
     case 106: {
+        CancelSeek();
+        const bool wasActive=screens.help->IsActive();
         const bool paused=screens.MakeHelpGo(replayHelp.data(),value);
+        if(paused!=wasActive)++screens.pointerEpoch;
         if(Difference(replay.endCapturingLoopCount,Clock().worldLoopCounter)>0)Pause(paused?1:0);
         break;
     }
     case 107:
+        CancelSeek();
         hidden_=hidden_==0;
+        ++screens.pointerEpoch;
         Ui().render->SetScreenVisibility(*Ui().resources,hidden_?replayScreenKey:hiddenScreenKey,1);
         Ui().render->SetScreenVisibility(*Ui().resources,hidden_?hiddenScreenKey:replayScreenKey,0);
         Ui().sound->Play(5);break;

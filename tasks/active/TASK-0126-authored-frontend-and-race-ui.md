@@ -262,3 +262,40 @@ Godot 4.7.2 with `--max-fps 120 --disable-vsync --resolution 960x720`,
 isolated profile. Event Tree measured 107.8 FRED updates/s and progressed
 through event details and Select Car.
 The same smoke entered Track 12, paused, resumed, and passed at World step 84.
+
+## Windows replay mouse controls
+
+Godot subdivides the authored `REPLAYBOTTOM_NEW` bitmap in
+`GLOBAL/INGAMEB.BUN` into hit regions for the original replay controls. It
+routes clicks through the existing input dispatcher to `ReplayScreen::JoyHandler`
+events 99 through 107. The one-player cover still masks player selection.
+Hidden controls retain the authored toggle icon as a restore target.
+
+The pointer follows the authored `TIME_BAR` and `TIME_MARKER`. While held,
+the latest mouse position seeks the recorded scene. A backward move restores
+the nearest retained snapshot through coordinator action 14. Forward moves
+reuse the current playback state when it is closer to the target than the
+retained snapshot. Release restores the prior playback mode, with playback
+paused at the endpoint. The port-side input and catch-up are required because
+the source events expose discrete marker jumps. Snapshot restoration, input
+replay, timing, and scene epochs come from the existing core owners.
+
+- Windows Debug and Release passed
+  `cmake --build --preset godot-mvp-<configuration> --target stage_mvp --parallel 8`.
+  The Debug smoke ran from `local/task0126-replay-debug-project` while
+  the existing game held the staged DLL open. Staging passed after it closed.
+- Set `HP2_MVP_TEST_PROFILE=1`, `HP2_MVP_CHECK_REPLAY=1`, and
+  `HP2_MVP_MOUSE_REPLAY=1`. Run Godot 4.7.2 with
+  `--resolution 800x600 --script tools/test_mvp_race_lifecycle.gd -- --race-track=12`.
+  Release Vulkan and Debug D3D12 reached multiple replay positions before
+  mouse-up and completed `HP2_MVP_REPLAY_MOUSE_PASS`. The smoke covers playback,
+  camera, marker buttons, help, hiding and restoring the controls, focus loss,
+  resizing to 1120×630, grabbing the playhead at the endpoint, keyboard pause,
+  synthetic controller Start, and restoring the live race on exit. Debug also
+  covers console capture. See `local/task0126-replay-live-final-release.log`
+  and `local/task0126-replay-live-final-debug.log`.
+- The forced Quick Race Results fixture passed page navigation and omitted
+  the Replay row after the post-race snapshot restore. Results replay entry
+  and two-player view selection remain unverified. See
+  `local/task0126-replay-live-final-results.log`. The controller check used
+  synthetic input. Original-game equivalence remains unverified.

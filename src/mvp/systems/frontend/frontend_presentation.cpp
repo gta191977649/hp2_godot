@@ -55,6 +55,14 @@ constexpr std::uint32_t titleMovie = 0xf9117c29u;
 constexpr std::uint32_t titleScreen = 0xb5761d00u;
 constexpr std::uint32_t gridObject = 0x00163ce5u;
 constexpr std::uint32_t loadingScreen = 0xd0131dd1u;
+constexpr std::uint32_t replayScreen = 0x60befaedu;
+constexpr std::uint32_t replayLegendTexture = 0xba7fcb6au; // REPLAYBOTTOM_NEW
+constexpr std::uint32_t replayTimeBar = 0xbd2bc882u;
+constexpr std::uint32_t replayTimeMarker = 0xb8e8186fu;
+// Pixel bounds in REPLAYBOTTOM_NEW, shared by the symbol and pad-button rows.
+constexpr int replayLegendWidth = 640;
+constexpr int replayLegendHeight = 88;
+constexpr int replayLegendButtonHeight = 64;
 bool is_player_letterbox(std::uint32_t object) {
     switch (object) {
     case 0x464BA8EAu: case 0xD911BEACu: case 0xF7F1CFB3u: case 0xF88DD0B1u:
@@ -237,6 +245,17 @@ struct FrontendPresentation::Storage {
     std::uint64_t pointerEpoch{};
     FrontendPointerTarget pointerPage{};
     bool pointerModal{}, pointerReplay{}, pointerHelp{}, pointerTitle{}, pointerHorizontal{};
+    Rect2 replayBar, replayThumb, replayLegend;
+    Ref<ImageTexture> replayLegendImage;
+    std::optional<float> replayDrag, replayPreview;
+    float replayGrabOffset{};
+
+    void cancel_pointer() {
+        pressedTarget.reset();
+        hoverTarget.reset();
+        if (replayDrag) send_pointer(pointerPage, Action::ReplaySeekCancel);
+        replayDrag.reset();
+    }
 
     static bool same_target(const FrontendPointerTarget& a, const FrontendPointerTarget& b) {
         return a.screen == b.screen && a.object == b.object && a.event == b.event && a.action == b.action;
@@ -247,10 +266,28 @@ struct FrontendPresentation::Storage {
         pointerRuntime.QueueFrontendPointer(pointerEpoch, target);
     }
 
+    void send_replay_position(float position, Action action) {
+        auto target = pointerPage;
+        target.position = position;
+        send_pointer(target, action);
+    }
+
     void pointer_input(const Ref<InputEvent>& event) {
         const Ref<InputEventMouse> mouse = event;
         if (mouse.is_null()) return;
         const auto point = mouse->get_position() + pointerSurface.get_position();
+        if (replayDrag) {
+            if (const Ref<InputEventMouseButton> button = event; button.is_valid()) {
+                if (button->get_button_index() == MOUSE_BUTTON_LEFT && !button->is_pressed()) {
+                    send_replay_position(replay_fraction(point.x), Action::ReplaySeek);
+                    replayDrag.reset();
+                }
+            } else if (const auto position = replay_fraction(point.x); position != *replayDrag) {
+                replayDrag = position;
+                send_replay_position(position, Action::ReplaySeekPreview);
+            }
+            return;
+        }
         auto found = std::find_if(hits.rbegin(), hits.rend(),
             [&](const Hit& hit) { return hit.rect.has_point(point); });
         std::optional<FrontendPointerTarget> target;
@@ -268,7 +305,14 @@ struct FrontendPresentation::Storage {
         if (button.is_null()) return;
         switch (button->get_button_index()) {
         case MOUSE_BUTTON_LEFT:
-            if (button->is_pressed()) pressedTarget = target;
+            if (button->is_pressed()) {
+                if (target && target->action == Action::ReplaySeek) {
+                    replayGrabOffset = replayThumb.has_point(point) ? point.x - replayThumb.position.x : 0.0f;
+                    replayDrag = replay_fraction(point.x);
+                    send_replay_position(*replayDrag, Action::ReplaySeekPreview);
+                }
+                else pressedTarget = target;
+            }
             else {
                 if (target && pressedTarget && same_target(*target, *pressedTarget))
                     send_pointer(*target, target->action);
@@ -292,16 +336,99 @@ struct FrontendPresentation::Storage {
         }
     }
 
+    float replay_fraction(float x) const {
+        return std::clamp((x - replayGrabOffset - replayBar.position.x) / replayBar.size.x, 0.0f, 1.0f);
+    }
+
+    static Rect2 strip_bounds(const FlailerStrip& strip) {
+        Rect2 bounds;
+        for (const auto& polygon : strip.polygons) {
+            if (std::none_of(polygon.vertices.begin(), polygon.vertices.end(),
+                [](const auto& v) { return (v.color >> 24) != 0; })) continue;
+            Rect2 quad({polygon.vertices[0].position[0], polygon.vertices[0].position[1]}, {});
+            for (const auto& v : polygon.vertices) quad = quad.expand({v.position[0], v.position[1]});
+            if (quad.has_area()) bounds = bounds.has_area() ? bounds.merge(quad) : quad;
+        }
+        return bounds;
+    }
+
+    Rect2 replay_legend_region(int left, int right) const {
+        const auto units = replayLegend.size / Vector2(replayLegendWidth, replayLegendHeight);
+        return {replayLegend.position + Vector2(left * units.x, 0),
+            Vector2((right - left) * units.x, replayLegendButtonHeight * units.y)};
+    }
+
+    void update_replay_pointer(const FrontendStateView& state) {
+        const auto add = [&](Rect2 rect, Action action) {
+            rect = rect.intersection(layout.visible_rect());
+            if (!rect.has_area()) return;
+            auto target = pointerPage;
+            target.action = action;
+            hits.push_back({rect, target});
+        };
+        if (pointerHelp) {
+            add(layout.visible_rect(), Action::Help);
+            return;
+        }
+        if (state.replayPointer.screen != replayScreen) {
+            if (replayLegendImage.is_valid()) add(replay_legend_region(317, 362), Action::ReplayHud);
+            return;
+        }
+        for (const auto& layer : state.layout->layers) {
+            for (const auto* strip : layer) {
+                if (strip->sourceScreen != replayScreen) continue;
+                if (strip->sourceObject == replayTimeBar) replayBar = strip_bounds(*strip);
+                if (strip->sourceObject == replayTimeMarker) replayThumb = strip_bounds(*strip);
+                if (!strip->texture || strip->texture->key != replayLegendTexture) continue;
+                const auto bounds = strip_bounds(*strip);
+                if (!bounds.has_area()) continue;
+                replayLegend = bounds;
+                if (const auto* source = textureInfoForDescriptor(strip->texture);
+                    source && source->pixels.Data() && (!source->paletteBytes || source->palette.Data()))
+                    replayLegendImage = texture_for(*source);
+            }
+        }
+        if (replayLegend.has_area()) {
+            constexpr std::array<int,10> edges{0, 52, 97, 142, 187, 230, 274, 317, 362, 406};
+            constexpr std::array<Action,9> actions{Action::ReplayPlayer, Action::ReplayPrevious,
+                Action::ReplaySlow, Action::ReplayPause, Action::ReplayCamera, Action::Help,
+                Action::ReplayNext, Action::ReplayHud, Action::Back};
+            for (std::size_t i = 0; i < actions.size(); ++i) {
+                const auto action = actions[i];
+                if ((action == Action::ReplayPlayer && !state.replayPointer.canSelectPlayer) ||
+                    (action == Action::Help && !state.pointerHelpAvailable)) continue;
+                add(replay_legend_region(edges[i], edges[i + 1]), action);
+            }
+        }
+        if (state.replayPointer.canSeek && replayBar.has_area()) {
+            add(replayBar.grow_individual(4, 6, 4, 6), Action::ReplaySeek);
+            replayPreview = replayDrag;
+            if (!replayPreview && state.replayPointer.seeking) replayPreview = state.replayPointer.seekPosition;
+            if (replayThumb.has_area()) {
+                if (replayPreview) replayThumb.position.x = replayBar.position.x + *replayPreview * replayBar.size.x;
+                add(replayThumb, Action::ReplaySeek);
+            }
+        } else {
+            cancel_pointer();
+        }
+    }
+
     void update_pointer(const FrontendStateView& state) {
         hits.clear();
+        replayBar = {};
+        replayThumb = {};
+        replayPreview.reset();
         if (pointerEpoch != state.pointerEpoch || pointerReplay != state.pointerReplay ||
-            pointerHelp != state.pointerHelp) {
-            pressedTarget.reset();
-            hoverTarget.reset();
+            pointerHelp != state.pointerHelp || pointerModal != state.pointerModal) {
+            cancel_pointer();
             pointerEpoch = state.pointerEpoch;
         }
         pointerModal = state.pointerModal;
         pointerReplay = state.pointerReplay;
+        if (!pointerReplay) {
+            replayLegend = {};
+            replayLegendImage.unref();
+        }
         pointerHelp = state.pointerHelp;
         pointerTitle = !pointerModal && screen == "Title Screen";
         pointerHorizontal = screen == "Select Car" || screen == "Select Track";
@@ -309,14 +436,17 @@ struct FrontendPresentation::Storage {
             [](const auto& target) { return target.object == 0; });
         pointerPage = page == state.pointerTargets.end() ? FrontendPointerTarget{} : *page;
         if ((page == state.pointerTargets.end() && !pointerReplay) || loading) {
-            pressedTarget.reset();
-            hoverTarget.reset();
+            cancel_pointer();
             pointerSurface.hide();
             return;
         }
         pointerSurface.set_position(layout.visible_rect().position);
         pointerSurface.set_size(layout.visible_rect().size);
         pointerSurface.show();
+        if (pointerReplay && !pointerModal) {
+            update_replay_pointer(state);
+            return;
+        }
         if (pointerHelp) return;
         const auto add = [&](Rect2 rect, FrontendPointerTarget target) {
             rect = rect.intersection(layout.visible_rect());
@@ -753,7 +883,23 @@ struct FrontendPresentation::Storage {
 
     void draw_layers(const FlailerRenderManager& layout, Node2D& target, int first, int last) {
         for (int layer = first; layer >= last; --layer)
-            for (const auto* strip : layout.layers[layer]) draw(target, *strip, {}, layer == 14);
+            for (const auto* strip : layout.layers[layer]) {
+                Vector2 origin;
+                if (replayPreview && strip->sourceScreen == replayScreen &&
+                    strip->sourceObject == replayTimeMarker && !strip->polygons.empty()) {
+                    const float x = replayBar.position.x + *replayPreview * replayBar.size.x;
+                    origin.x = strip->polygons.front().vertices[0].position[0] - x;
+                }
+                draw(target, *strip, origin, layer == 14);
+            }
+    }
+
+    void draw_replay_restore() {
+        if (!pointerReplay || pointerModal || pointerHelp || pointerPage.screen == replayScreen ||
+            !replayLegend.has_area() || replayLegendImage.is_null()) return;
+        RenderingServer::get_singleton()->canvas_item_add_texture_rect_region(mapForeground.get_canvas_item(),
+            replay_legend_region(317, 362), replayLegendImage->get_rid(),
+            Rect2(317, 0, 45, replayLegendButtonHeight));
     }
 
     void update_highlights(const FlailerRenderManager& layout) {
@@ -821,6 +967,7 @@ FrontendPresentation::FrontendPresentation(Node2D& canvas, const GameResources& 
     : storage_(std::make_unique<Storage>(canvas, files, runtime, host)) {}
 FrontendPresentation::~FrontendPresentation() = default;
 void FrontendPresentation::pointer_input(const Ref<InputEvent>& event) { storage_->pointer_input(event); }
+void FrontendPresentation::cancel_pointer() { storage_->cancel_pointer(); }
 bool FrontendPresentation::video_playing() const noexcept {return storage_->video.playing();}
 std::uint64_t FrontendPresentation::video_request() const noexcept {return storage_->video.request_id();}
 bool FrontendPresentation::showing_loading() const noexcept {return storage_->loading;}
@@ -905,6 +1052,7 @@ void FrontendPresentation::update(const FrontendStateView& state, Vector2 viewpo
     rendering->canvas_item_clear(s.mapForeground.get_canvas_item());
     s.usedMapMeshes = 0;
     ++s.frame;
+    s.update_pointer(state);
     s.draw_layers(*state.layout, s.background, 24, 20);
     s.draw_layers(*state.layout, s.mapBackground, 15, 15);
     // Donor TrackMap::DrawMap submits the road texture on layer 14,
@@ -913,9 +1061,9 @@ void FrontendPresentation::update(const FrontendStateView& state, Vector2 viewpo
     s.draw_layers(*state.layout, s.mapForeground, 13, 0);
     s.draw_layers(*state.layout, s.mapForeground, 19, 16);
     s.draw_layers(*state.layout, s.mapForeground, 28, 25);
+    s.draw_replay_restore();
     s.mapMeshes.resize(s.usedMapMeshes);
     s.update_highlights(*state.layout);
-    s.update_pointer(state);
     s.update_credits_fallback(state.creditsText, screen == "Port Credits");
     for (auto it = s.textures.begin(); it != s.textures.end();) {
         if (it->second.frame != s.frame)

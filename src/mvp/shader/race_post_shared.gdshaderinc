@@ -15,10 +15,6 @@ vec3 to_srgb(vec3 v) {
     v = max(v, vec3(0));
     return mix(v * 12.92, 1.055 * pow(v, vec3(1.0/2.4)) - 0.055, greaterThan(v, vec3(0.0031308)));
 }
-vec3 to_linear(vec3 v) {
-    v = max(v, vec3(0));
-    return mix(v / 12.92, pow((v + 0.055) / 1.055, vec3(2.4)), greaterThan(v, vec3(0.04045)));
-}
 float depth_slot(float depth) {
     return clamp(floor(fog_params.z * depth / 256.0), 0.0, 255.0);
 }
@@ -34,25 +30,26 @@ float scene_depth_at(ivec2 xy) {
     }
     return texelFetch(scene_depth, xy, 0).r;
 }
-vec3 composite_fog(vec3 color, vec4 fog_entry, bool encoded) {
-    vec3 destination = round(clamp(to_srgb(color), vec3(0.0), vec3(1.0)) * 255.0);
+vec3 composite_fog(vec3 color, vec4 fog_entry) {
+    vec3 destination = round(clamp(color, vec3(0.0), vec3(1.0)) * 255.0);
     vec3 source = round(fog_entry.rgb * 255.0);
     // Mode 1 is (Cd - Cs)*As with Cs=0. Other modes use
     // Cd + (Cs - Cd)*As. The GS shifts signed products before adding Cd.
     vec3 blended = fog_params.w == 1.0 ? floor(destination * fog_entry.a) :
         destination + floor((source - destination) * fog_entry.a);
-    vec3 result = clamp(blended, vec3(0.0), vec3(255.0)) / 255.0;
-    return encoded ? result : to_linear(result);
+    return clamp(blended, vec3(0.0), vec3(255.0)) / 255.0;
 }
-vec3 fogged(ivec2 xy, bool encoded) {
-    vec3 color = texelFetch(scene_color, xy, 0).rgb;
+// All downstream GS operations use display color, including the focus taps
+// and history buffer. Convert scene color once before the byte operations.
+vec3 fogged(ivec2 xy) {
+    vec3 color = to_srgb(texelFetch(scene_color, xy, 0).rgb);
     if (fog_params.w >= 0.0) {
         float slot = depth_slot(scene_depth_at(xy));
         if (use_fog_palette) {
             vec4 entry = texelFetch(fog_palette, ivec2(int(slot), 0), 0);
             if (entry.a > 0.0 || fog_params.w == 1.0)
-                return composite_fog(color, entry, encoded);
-            return encoded ? to_srgb(color) : color;
+                return composite_fog(color, entry);
+            return color;
         }
         float far_slot = 255.0 - slot;
         float density = clamp((far_slot - fog_params.x) / max(1.0, 255.0 - fog_params.x), 0.0, 1.0);
@@ -62,7 +59,7 @@ vec3 fogged(ivec2 xy, bool encoded) {
         if (fog_params.w == 2.0) { rgb = vec3(slot/255.0); weight = 1.0; }
         if (fog_params.w == 3.0) weight = slot == trunc(fog_params.x) ? floor(fog.a*128.0)/128.0 : 0.0;
         if (weight > 0.0 || fog_params.w == 1.0)
-            return composite_fog(color, vec4(rgb, weight), encoded);
+            return composite_fog(color, vec4(rgb, weight));
     }
-    return encoded ? to_srgb(color) : color;
+    return color;
 }

@@ -14,6 +14,8 @@
 #include "indep/inc/World.hpp"
 #include "indep/inc/Collision.hpp"
 #include "indep/inc/Race.hpp"
+#include "indep/inc/Replay.hpp"
+#include "indep/inc/Timer.hpp"
 #include "indep/inc/Track.hpp"
 #include "indep/inc/TrackPath.hpp"
 #include "indep/src/speech/actions.hpp"
@@ -109,7 +111,8 @@ FrontendReady reflection_profile_frontend_ready() {
         constexpr std::uint32_t seed = 0x0146u;
         menus.raceSetup->parameters->eventRandomSeed = seed;
         (void)vectorRandomSeed(seed, &vectorDefaultRandomState);
-        menus.demoMode->RequestDemoMode();
+        const auto track = godot::OS::get_singleton()->get_environment("HP2_MVP_PROFILE_DEMO_TRACK");
+        menus.demoMode->RequestDemoMode(track == "44" ? 44 : -1);
     };
 }
 
@@ -198,6 +201,31 @@ void collect_menu_alignment_diagnostics(godot::Dictionary& result, const Fronten
         }
     }
     result["menu_alignment_bounds"] = bounds;
+}
+
+void collect_replay_diagnostics(godot::Dictionary& result, const RaceStateView& race,
+    const FrontendStateView& frontend) {
+    static const bool enabled = godot::OS::get_singleton()->get_environment("HP2_MVP_MOUSE_REPLAY") == "1";
+    if (!enabled || !frontend.pointerReplay || !race.simulation || !race.simulation->replay) return;
+    const auto* replay = race.simulation->replay->manager;
+    if (!replay) return;
+    result["replay_paused"] = replay->paused != 0;
+    result["replay_slow"] = replay->slowMotion != 0;
+    result["replay_seeking"] = frontend.replayPointer.seeking;
+    result["replay_hud"] = frontend.replayPointer.screen == 0x60befaedu;
+    result["replay_help"] = frontend.pointerHelp;
+    result["replay_ticks"] = race.simulation->clock->worldTimer;
+    result["replay_begin_ticks"] = replay->beginCapturingTime;
+    result["replay_end_ticks"] = replay->endCapturingTime;
+
+    for (const auto& layer : frontend.layout->layers) for (const auto* strip : layer) {
+        if (strip->sourceScreen != 0x60befaedu || strip->sourceObject != 0xbd2bc882u ||
+            strip->polygons.empty()) continue;
+        const auto& quad = strip->polygons.front().vertices;
+        const godot::Vector2 start(quad[0].position[0], quad[0].position[1]);
+        result["replay_bar"] = godot::Rect2(start, godot::Vector2(quad[2].position[0], quad[2].position[1]) - start);
+        return;
+    }
 }
 
 void start_quick_race_diagnostic(MainMenuScreenServices& menus, const void* context) {

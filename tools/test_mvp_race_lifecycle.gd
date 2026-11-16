@@ -15,6 +15,8 @@ var start_position := Vector3.ZERO
 var selected_mode := 0
 var mode_changes := 0
 var check_replay := false
+var check_mouse_replay := OS.get_environment("HP2_MVP_MOUSE_REPLAY") == "1"
+var replay_present_position := Vector3.ZERO
 var seek_epoch := 0
 var seek_at := 0
 var seek_sent := false
@@ -98,7 +100,8 @@ func _process(delta: float) -> bool:
                 race_phase = 1
         1:
             var drove: bool = sample.get("speed", 0) >= 12.0 and start_position.distance_to(sample["position"]) >= 10.0
-            if active and ((check_replay and sample.get("step", 0) >= 360) or (not check_replay and drove)):
+            var replay_start_step := 660 if check_mouse_replay else 360
+            if active and ((check_replay and sample.get("step", 0) >= replay_start_step) or (not check_replay and drove)):
                 _key(KEY_W, false)
                 _send(KEY_ESCAPE)
                 race_phase = 2
@@ -107,6 +110,8 @@ func _process(delta: float) -> bool:
                 var target := REPLAY if check_replay else RESUME
                 _select_item(selected, target)
                 if selected == target:
+                    if check_mouse_replay:
+                        replay_present_position = sample["position"]
                     race_phase = 12 if check_replay else 3
         3:
             if active:
@@ -158,6 +163,10 @@ func _process(delta: float) -> bool:
                 quit(0)
         12:
             if sample.get("race_state") == 4 and sample.get("replay_epoch", 0) > 0:
+                if check_mouse_replay:
+                    race_phase = 14
+                    _replay_mouse_smoke.call_deferred()
+                    return false
                 if OS.get_environment("HP2_MVP_CHECK_REPLAY_SEEK") == "1":
                     if seek_epoch == 0:
                         seek_epoch = sample["replay_epoch"]
@@ -182,6 +191,195 @@ func _process(delta: float) -> bool:
                 print("HP2_MVP_REPLAY_PASS track=", expected_track, " epoch=", sample["replay_epoch"])
                 quit(0)
     return false
+
+func _replay_mouse_button(point: Vector2, down: bool, button := MOUSE_BUTTON_LEFT) -> void:
+    var event := InputEventMouseButton.new()
+    event.position = (race.get_node("FrontendCanvas") as Node2D).to_global(point)
+    event.global_position = event.position
+    event.button_index = button
+    event.pressed = down
+    root.push_input(event, true)
+
+func _replay_click(point: Vector2) -> void:
+    _replay_mouse_button(point, true)
+    _replay_mouse_button(point, false)
+
+func _replay_wait(label: String, matches: Callable) -> bool:
+    var until := Time.get_ticks_msec() + 8000
+    while Time.get_ticks_msec() < until:
+        await process_frame
+        if matches.call(race.telemetry()):
+            return true
+    print("REPLAY_MOUSE_STATE ", race.telemetry())
+    _fail(label)
+    return false
+
+func _replay_motion(point: Vector2) -> void:
+    var motion := InputEventMouseMotion.new()
+    motion.position = (race.get_node("FrontendCanvas") as Node2D).to_global(point)
+    motion.global_position = motion.position
+    motion.button_mask = MOUSE_BUTTON_MASK_LEFT
+    root.push_input(motion, true)
+
+func _replay_at_fraction(state: Dictionary, fraction: float) -> bool:
+    var expected := lerpf(state.get("replay_begin_ticks", 0), state.get("replay_end_ticks", 0), clampf(fraction, 0, 1))
+    return not state.get("replay_seeking", true) and absf(state.get("replay_ticks", 0) - expected) <= 75
+
+func _replay_seek(fraction: float, drag: bool) -> bool:
+    var state: Dictionary = race.telemetry()
+    var bar: Rect2 = state.get("replay_bar", Rect2())
+    if not bar.has_area():
+        _fail("missing_replay_bar")
+        return false
+    var epoch: int = state["replay_epoch"]
+    var target := Vector2(bar.position.x + fraction * bar.size.x, bar.get_center().y)
+    if drag:
+        var midpoint := lerpf(state["replay_begin_ticks"], state["replay_end_ticks"], 0.5)
+        var start_fraction := 0.1 if state["replay_ticks"] > midpoint else 0.9
+        _replay_mouse_button(Vector2(bar.position.x + start_fraction * bar.size.x, target.y), true)
+        var intermediate := 0.4
+        _replay_motion(Vector2(bar.position.x + intermediate * bar.size.x, target.y))
+        if not await _replay_wait("replay_live_seek_intermediate", func(s: Dictionary) -> bool:
+            return s.get("replay_epoch", 0) > epoch and _replay_at_fraction(s, intermediate)):
+            return false
+        _replay_motion(target)
+        if not await _replay_wait("replay_live_seek_%s" % fraction, func(s: Dictionary) -> bool:
+            return _replay_at_fraction(s, fraction)):
+            return false
+        _replay_mouse_button(target, false)
+    else:
+        _replay_click(target)
+    return await _replay_wait("replay_seek_%s" % fraction, func(s: Dictionary) -> bool:
+        return s.get("replay_epoch", 0) > epoch and _replay_at_fraction(s, fraction))
+
+func _replay_mouse_smoke() -> void:
+    var play := Vector2(165, 438)
+    var camera := Vector2(207, 438)
+    var help := Vector2(252, 438)
+    var hud := Vector2(340, 438)
+    if not await _replay_wait("replay_mouse_entry", func(s: Dictionary) -> bool: return s.has("replay_bar")):
+        return
+    _replay_click(play)
+    if not await _replay_wait("replay_mouse_pause", func(s: Dictionary) -> bool: return s.get("replay_paused", false)):
+        return
+    var start: Dictionary = race.telemetry()
+    var bar: Rect2 = start["replay_bar"]
+    _replay_mouse_button(bar.get_center(), true)
+    race.notification(Node.NOTIFICATION_WM_WINDOW_FOCUS_OUT)
+    _replay_mouse_button(bar.get_center(), false)
+    await create_timer(0.2).timeout
+    if race.telemetry()["replay_epoch"] != start["replay_epoch"]:
+        _fail("replay_seek_after_focus_loss")
+        return
+    if start.has("debug_console_open"):
+        _replay_mouse_button(bar.get_center(), true)
+        await _tap(KEY_QUOTELEFT)
+        if not race.telemetry()["debug_console_open"]:
+            _fail("replay_console_did_not_open")
+            return
+        await _tap(KEY_QUOTELEFT)
+        _replay_mouse_button(bar.get_center(), false)
+        await create_timer(0.2).timeout
+        if race.telemetry()["replay_epoch"] != start["replay_epoch"]:
+            _fail("replay_seek_after_console_capture")
+            return
+    var before_camera: Vector3 = race.telemetry()["stock_camera_eye"]
+    _replay_click(camera)
+    if not await _replay_wait("replay_mouse_camera", func(s: Dictionary) -> bool:
+        return before_camera.distance_to(s["stock_camera_eye"]) > 0.1):
+        return
+    if not await _replay_seek(0.75, true) or not await _replay_seek(0.2, false):
+        return
+    if not race.telemetry()["replay_paused"]:
+        _fail("replay_seek_lost_pause")
+        return
+    if not await _replay_seek(-0.05, true):
+        return
+    var epoch: int = race.telemetry()["replay_epoch"]
+    _replay_click(Vector2(296, 438))
+    if not await _replay_wait("replay_mouse_next", func(s: Dictionary) -> bool: return s["replay_epoch"] > epoch):
+        return
+    epoch = race.telemetry()["replay_epoch"]
+    _replay_click(Vector2(75, 438))
+    if not await _replay_wait("replay_mouse_previous", func(s: Dictionary) -> bool: return s["replay_epoch"] > epoch):
+        return
+    _replay_click(Vector2(119, 438))
+    if not await _replay_wait("replay_mouse_slow", func(s: Dictionary) -> bool: return s["replay_slow"]):
+        return
+    if not await _replay_seek(0.55, true):
+        return
+    if not await _replay_wait("replay_seek_resume_slow_motion", func(s: Dictionary) -> bool:
+        return s["replay_slow"] and not s["replay_paused"]):
+        _fail("replay_seek_lost_slow_motion")
+        return
+    await _tap(KEY_W)
+    if not await _replay_wait("replay_keyboard_pause", func(s: Dictionary) -> bool: return s["replay_paused"]):
+        return
+    _replay_click(play)
+    if not await _replay_wait("replay_mouse_resume", func(s: Dictionary) -> bool: return not s["replay_paused"]):
+        return
+    _replay_click(help)
+    if not await _replay_wait("replay_mouse_help", func(s: Dictionary) -> bool: return s["replay_help"] and s["replay_paused"]):
+        return
+    _replay_click(help)
+    if not await _replay_wait("replay_mouse_dismiss_help", func(s: Dictionary) -> bool:
+        return not s["replay_help"] and not s["replay_paused"]):
+        return
+    _replay_click(hud)
+    if not await _replay_wait("replay_mouse_hide", func(s: Dictionary) -> bool: return not s["replay_hud"]):
+        return
+    _replay_click(hud)
+    if not await _replay_wait("replay_mouse_show", func(s: Dictionary) -> bool: return s["replay_hud"]):
+        return
+    root.size = Vector2i(1120, 630)
+    await create_timer(0.25).timeout
+    if not await _replay_seek(1.05, true):
+        return
+    if not race.telemetry()["replay_paused"]:
+        _fail("replay_endpoint_did_not_pause")
+        return
+    var end: Dictionary = race.telemetry()
+    var end_bar: Rect2 = end["replay_bar"]
+    # The authored TIME_MARKER is four design pixels wide.
+    var end_fraction: float = float(end["replay_ticks"] - end["replay_begin_ticks"]) / \
+        (end["replay_end_ticks"] - end["replay_begin_ticks"])
+    var thumb_x := end_bar.position.x + floorf(end_bar.size.x * end_fraction)
+    var grab := Vector2(thumb_x + 2, end_bar.get_center().y)
+    var destination := Vector2(end_bar.position.x + 0.7 * end_bar.size.x + 2, grab.y)
+    _replay_mouse_button(grab, true)
+    _replay_motion(destination)
+    if not await _replay_wait("replay_live_thumb_from_end", func(s: Dictionary) -> bool:
+        return _replay_at_fraction(s, 0.7)):
+        return
+    _replay_mouse_button(destination, false)
+    await create_timer(0.1).timeout
+    _replay_click(Vector2(385, 438))
+    if not await _replay_wait("replay_mouse_exit", func(s: Dictionary) -> bool: return s.get("screen") == "Pause Menu"):
+        return
+    var present: Dictionary = race.telemetry()
+    if present["generation"] != first_generation or replay_present_position.distance_to(present["position"]) > 0.1:
+        _fail("replay_exit_did_not_restore_present")
+        return
+    for row in range(8):
+        if race.telemetry()["selected_item"] == REPLAY:
+            await _tap(KEY_ENTER)
+            break
+        await _tap(KEY_DOWN)
+        await create_timer(0.1).timeout
+    if not await _replay_wait("replay_controller_entry", func(s: Dictionary) -> bool: return s["race_state"] == 4):
+        return
+    var controller := InputEventJoypadButton.new()
+    controller.button_index = JOY_BUTTON_START
+    controller.pressed = true
+    Input.parse_input_event(controller)
+    await create_timer(0.15).timeout
+    var release := controller.duplicate() as InputEventJoypadButton
+    release.pressed = false
+    Input.parse_input_event(release)
+    if not await _replay_wait("replay_controller_exit", func(s: Dictionary) -> bool: return s.get("screen") == "Pause Menu"):
+        return
+    print("HP2_MVP_REPLAY_MOUSE_PASS track=", expected_track, " live_drag=true")
+    quit(0)
 
 func _reflection_world_valid(scene: Node3D) -> bool:
     var rear := scene.get_node_or_null("RearViewTarget") as SubViewport

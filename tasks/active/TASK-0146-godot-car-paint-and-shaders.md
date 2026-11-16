@@ -682,6 +682,77 @@ For post pixels, run `test_mvp_race_post.gd` with `--race-track=33` and
 `HP2_MVP_TEST_POST=1`. Use a fresh isolated profile per run. Logs are under
 `local/task0146/reflection-final-regression`.
 
+## Native maximized Track 44 performance
+
+The opt-in benchmark starts the seeded, live Track 44 AI Demo through
+the frontend. Diagnostics use an isolated profile. The stock game core
+still owns the demo, clocks, race state, and effect inputs. The harness
+checks the native maximized viewport and FXAA, samples render-loop
+intervals after two source seconds, and checks scene retirement at the
+end of the complete demo. It saves each frame, percentile summaries by
+source second, and a separate Godot Visual Profiler stream when enabled.
+Render-loop intervals come from `frame_post_draw` and do not directly
+measure desktop display scanout.
+
+On the Intel Arc B390 at 120 Hz, the maximized window rendered at
+2880 × 1695. Godot's full baseline Visual Profiler run attributed P95
+GPU time of 1.71 ms to transparency, 1.68 ms to the combined canvas
+passes, 1.50 ms to the depth prepass, and 0.69 ms to the screen copy.
+Scope times are aggregated across viewports within each frame. The
+instrumented GPU P50/P95/P99 was 5.31/6.85/8.43 ms.
+
+The Godot project disables the optional depth prepass. Fog, focus,
+monochrome, filter, and radial history share one display-domain color
+conversion in the race canvas shaders. This removes sRGB round trips
+between the existing GS operations. Native scale, the fog operands and
+depth, and the GS history coefficients are retained.
+
+| Full live Vulkan run | Avg. FPS | P50 / P95 / P99 (ms) | Worst source-second P99 (ms) |
+| --- | ---: | ---: | ---: |
+| Baseline, uncapped | 170.18 | 5.559 / 8.098 / 10.370 | 52.943 |
+| Both changes, uncapped | 193.23 | 4.979 / 6.970 / 8.441 | 35.578 |
+| Both changes, synchronized at 120 Hz | 119.28 | 8.330 / 8.554 / 9.033 | 34.831 |
+
+These runs measure the changes together. The optimizations met the
+uncapped 7.5 ms P95 gate in this sample. The 8.33 ms full-run and
+per-second P99 gates remain open. With VSync enabled, 43 of 14,078 intervals
+were at least 12.5 ms and two adjacent pairs missed. The synchronized
+run failed the gate, so the remaining acceptance repetitions were skipped.
+Several stalls recur at nearly the
+same source time across runs, including 10.46, 24.62, 25.71, and 30.36 s.
+The first 35 seconds in a diagnostic run showed individual stalls with
+23–40 ms before draw and others with 46–54 ms in the renderer's wall
+time, with no concurrent increment in Godot's pipeline compilation
+counters on those frames. The remaining CPU or driver wait requires
+attribution before a stable 120 FPS result can be claimed.
+
+Track 12 passed the Vulkan and D3D12 regression probes for authored fog
+and resolved depth, direct fog parity, focus, monochrome, filtering,
+live player glass, main and mirror corona batches, reflection atlas
+coverage, and GS history including resize/reset. The GS fog color
+fixture also passed on both backends.
+Track 33 reached replay epoch 1 with a populated reflection atlas on
+both backends. Debug and Release staging builds passed.
+Raw results and driver logs are under `local/demo44-*`.
+
+### Benchmark commands
+
+```powershell
+cmake --build --preset godot-mvp-release --target stage_mvp --parallel 6
+$disc = (Get-Content config/ps2_assets.local.json | ConvertFrom-Json).mvp_root
+py -3 -B tools/profile_mvp_reflections.py --assets $disc --out local/demo44-profile --demo44 1
+py -3 -B tools/profile_mvp_reflections.py --assets $disc --out local/demo44-diagnostic --demo44 1 --quiet --demo44-diagnostics
+py -3 -B tools/profile_mvp_reflections.py --assets $disc --out local/demo44-uncapped --demo44 3 --quiet
+py -3 -B tools/profile_mvp_reflections.py --assets $disc --out local/demo44-synced --demo44 3 --quiet --vsync
+```
+
+The Track 12 probes use `test_mvp_race_post.gd -- --race-track=12` with
+`HP2_MVP_TEST_POST=1`, then `HP2_MVP_TEST_GLASS=1`, and the standalone
+`test_mvp_fog_color.gd`. The Track 33 replay probe uses
+`test_mvp_race_lifecycle.gd -- --race-track=33` with
+`HP2_MVP_CHECK_REPLAY=1` and `HP2_MVP_CHECK_REFLECTION_LIFECYCLE=1`.
+Run these with `HP2_MVP_TEST_PROFILE=1` on Vulkan and D3D12.
+
 ## Commands
 
 ```powershell

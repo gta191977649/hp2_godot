@@ -10,11 +10,9 @@ void fragment() {
     ivec2 xy = ivec2(FRAGCOORD.xy);
     vec2 uv = (vec2(xy) + 0.5) / vec2(size);
 #ifdef HISTORY_FIXTURE
-    vec4 c = vec4(0.0, 1.0, 0.0, 1.0);
+    vec3 color = to_srgb(vec3(0.0, 1.0, 0.0));
 #else
-    // Focus, filter and history already operate in encoded color. Monochrome
-    // selects the green channel, which commutes with the transfer function.
-    vec4 c = vec4(fogged(xy, use_fog_palette), 1.0);
+    vec3 color = fogged(xy);
     if (kernel.y > 0.0) {
         float slot = depth_slot(scene_depth_at(xy));
         float near_slot = clamp(floor(slot_at(focus.x-focus.y*0.5)),0.0,255.0);
@@ -28,21 +26,13 @@ void fragment() {
             texelFetch(focus_image,clamp(base+ivec2(1,0),ivec2(0),limit),0).rgb,f.x);
         vec3 b = mix(texelFetch(focus_image,clamp(base+ivec2(0,1),ivec2(0),limit),0).rgb,
             texelFetch(focus_image,clamp(base+ivec2(1),ivec2(0),limit),0).rgb,f.x);
-        vec3 focused = mix(use_fog_palette ? c.rgb : to_srgb(c.rgb), mix(a,b,f.y), alpha);
-        c.rgb = use_fog_palette ? focused : to_linear(focused);
+        color = mix(color, mix(a,b,f.y), alpha);
     }
-    if (effects.w > 0.0) c.rgb = vec3(c.g);
+    if (effects.w > 0.0) color = vec3(color.g);
     if (effects.z > 0.0) {
         vec3 filter_rgb = texture(filter_image, uv).rgb * filter_color.rgb;
-        vec3 dst = use_fog_palette ? c.rgb : to_srgb(c.rgb);
-        vec3 filtered = clamp(dst + (dst-filter_rgb)*effects.z, 0.0, 1.0);
-        c.rgb = use_fog_palette ? filtered : to_linear(filtered);
+        color = clamp(color + (color-filter_rgb)*effects.z, 0.0, 1.0);
     }
-#endif
-#ifdef HISTORY_FIXTURE
-    vec3 color = to_srgb(c.rgb);
-#else
-    vec3 color = use_fog_palette ? c.rgb : to_srgb(c.rgb);
 #endif
     vec3 encoded = round(clamp(color, 0.0, 1.0) * 255.0);
     if (camera.z > 0.0) {

@@ -24,6 +24,7 @@
 #include <stdexcept>
 #include <string>
 #include "indep/inc/Fred.hpp"
+#include "indep/inc/ReplayScreen.hpp"
 #include "FMenus.hpp"
 #include "indep/inc/Language.hpp"
 #include "indep/inc/DemoModeReplay.hpp"
@@ -291,10 +292,15 @@ struct ApplicationRuntime::Storage {
             if (*it && (*it)->activeState) return *it;
         return nullptr;
     }
-    bool PointerReplay() const {
+    ReplayScreen* PointerReplay() const {
         for (std::size_t index=0;index<input.count;++index)
-            if (input.registrations[index].target.kind==GAME_INPUT_REPLAY_SCREEN) return true;
-        return false;
+            if (const auto& target=input.registrations[index].target;target.kind==GAME_INPUT_REPLAY_SCREEN)
+                return target.owner.replayScreen;
+        return nullptr;
+    }
+    bool ReplaySeeking() const {
+        const auto* replay=PointerReplay();
+        return replay && replay->Seeking();
     }
     void ApplyPointerCommand() {
         if (pointerCommands.empty()) return;
@@ -303,7 +309,8 @@ struct ApplicationRuntime::Storage {
         const auto& target=command.target;
         using Action=FrontendPointerAction;
         auto action=target.action;
-        if (screens.help && screens.help->IsActive()) {
+        auto* replay=PointerReplay();
+        if (screens.help && screens.help->IsActive() && !replay) {
             if (action==Action::Back || action==Action::Confirm || action==Action::Help)
                 screens.help->Dismiss();
             return;
@@ -333,7 +340,12 @@ struct ApplicationRuntime::Storage {
             if (!popup->activeState) ++screens.pointerEpoch;
             return;
         }
-        if (PointerReplay()) {
+        if (replay) {
+            if (target.screen!=replay->PointerState().screen) return;
+            if (screens.help && screens.help->IsActive()) {
+                if (action==Action::Back || action==Action::Confirm) action=Action::Help;
+                if (action!=Action::Help) return;
+            }
             int event=0;
             switch (action) {
             case Action::Back: event=99;break;
@@ -342,7 +354,12 @@ struct ApplicationRuntime::Storage {
             case Action::ReplayNext: event=102;break;
             case Action::ReplaySlow: event=103;break;
             case Action::ReplayCamera: event=104;break;
+            case Action::ReplayPlayer: event=105;break;
+            case Action::Help: event=106;break;
             case Action::ReplayHud: event=107;break;
+            case Action::ReplaySeekPreview: case Action::ReplaySeek:
+                replay->Seek(target.position,action==Action::ReplaySeekPreview);return;
+            case Action::ReplaySeekCancel: replay->CancelSeek();return;
             default: return;
             }
             Require(gameInputDispatch(&input,0,event,1)==GAME_INPUT_OK,"Replay pointer input failed");
@@ -974,7 +991,8 @@ FrontendStateView ApplicationRuntime::FrontendState() const
     result.creatingProfile=result.nameEditSession && GetBootNameEntryOwner()!=nullptr;
     result.effects=&s.previewEffects;
     if(s.frontendCredits)GetPortCreditsText(result.creditsText);
-    result.pointerReplay=s.PointerReplay();
+    const auto* replay=s.PointerReplay();
+    result.pointerReplay=replay!=nullptr;
     result.pointerHelp=s.screens.help && s.screens.help->IsActive();
     result.pointerHelpAvailable=active && s.ui.helpEnabled &&
         (s.screens.overrideHelpItems || active->configuration->helpItems);
@@ -984,6 +1002,10 @@ FrontendStateView ApplicationRuntime::FrontendState() const
         for (int index=0;index<popup->configuration->buttonCount;++index)
             result.pointerTargets.push_back({popup->configuration->screenKey,popup->buttons[index]->objectKey});
         result.pointerTargets.push_back({popup->configuration->screenKey,0});
+    } else if (replay) {
+        result.replayPointer=replay->PointerState();
+        result.pointerHelpAvailable=s.ui.helpEnabled;
+        result.pointerTargets.push_back({result.replayPointer.screen,0});
     } else if (active && !s.ui.ignoreJoystick) {
         for (auto* screen=active->screenRoot.next;screen!=&active->screenRoot;screen=screen->next) {
             if (screen->joystickPort!=0 && screen->joystickPort!=-1) continue;
@@ -1004,6 +1026,15 @@ void ApplicationRuntime::QueueFrontendPointer(std::uint64_t epoch,FrontendPointe
     if (!s.stateOnly() || epoch!=s.screens.pointerEpoch) return;
     if (!s.pointerCommands.empty() && s.pointerCommands.back().target.action==FrontendPointerAction::Focus)
         s.pointerCommands.pop_back();
+    using Action=FrontendPointerAction;
+    const auto timeline=[](Action action) {
+        return action==Action::ReplaySeekPreview || action==Action::ReplaySeek || action==Action::ReplaySeekCancel;
+    };
+    if (timeline(target.action) && !s.pointerCommands.empty() && s.pointerCommands.back().epoch==epoch &&
+        s.pointerCommands.back().target.action==Action::ReplaySeekPreview) {
+        s.pointerCommands.back().target=target;
+        return;
+    }
     if (s.pointerCommands.size()<16) s.pointerCommands.push_back({epoch,target});
 }
 
@@ -1263,7 +1294,7 @@ bool ApplicationRuntime::TickInternal()
     } else {
         s.frontendFrameTime={};s.frontendTimeRemainder=0.0;
     }
-    if(!renderDrivenFrontend && !s.simulationClock.UpdateDue(observed) &&
+    if(!renderDrivenFrontend && !(s.stateOnly() && s.ReplaySeeking()) && !s.simulationClock.UpdateDue(observed) &&
         (s.stateOnly() || !s.host.PresentationDue(observed))) {
         s.host.WaitUntil(std::min(s.simulationClock.Deadline(),s.host.PresentationDeadline()));
         return true;
@@ -1273,7 +1304,8 @@ bool ApplicationRuntime::TickInternal()
     bool advancedPresentation=false;
     std::uint32_t updates=0;
     for(;;) {
-        advancedPresentation=renderDrivenFrontend || s.simulationClock.UpdateDue(observed);
+        const bool seeking=s.stateOnly() && s.ReplaySeeking();
+        advancedPresentation=renderDrivenFrontend || seeking || s.simulationClock.UpdateDue(observed);
         if(advancedPresentation) {
             if(s.stateOnly()) {
                 s.renderer.CompleteSubmissions();
@@ -1525,12 +1557,15 @@ bool ApplicationRuntime::TickInternal()
             for(int32_t index=0;index<players->count;++index)
                 carFramePlayerRenderTrackMap(players->players[index]);
             s.pendingClockAdvance=true;
-            if(renderDrivenFrontend && !s.Simulation() && s.flow.currentState==3)s.simulationClock.Reset(observed);
+            const bool stillSeeking=s.ReplaySeeking();
+            if(seeking || stillSeeking)s.simulationClock.Reset(observed);
+            else if(renderDrivenFrontend && !s.Simulation() && s.flow.currentState==3)s.simulationClock.Reset(observed);
             else s.simulationClock.CompleteStep(s.scheduledStepQuanta);
             texturePackRegistry.ServiceReads();
             s.resources->Loader().ServiceResourceLoading();
             s.replayAvailableBytes=s.host.AvailableMemory();
-            if(!renderDrivenFrontend && ++updates<8u && s.simulationClock.UpdateDue(observed))continue;
+            if(!renderDrivenFrontend && ++updates<8u &&
+                (stillSeeking || (!seeking && s.simulationClock.UpdateDue(observed))))continue;
             return !s.demo.ExitRequested();
         }
         Require(s.frame->State()==EcstasyFrame::Phase::Complete || s.frame->Commands().empty(),"Previous CPU frame capture is still live");

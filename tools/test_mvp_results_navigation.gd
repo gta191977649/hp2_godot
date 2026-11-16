@@ -36,6 +36,16 @@ func tap(key: Key) -> void:
     event.physical_keycode = key
     await input_tap(event)
 
+func click_design(point: Vector2) -> void:
+    var canvas := race.get_node("FrontendCanvas") as Node2D
+    for down in [true, false]:
+        var event := InputEventMouseButton.new()
+        event.button_index = MOUSE_BUTTON_LEFT
+        event.position = canvas.to_global(point)
+        event.global_position = event.position
+        event.pressed = down
+        root.push_input(event, true)
+
 func select_row(target: int) -> bool:
     for i in range(8):
         screen()
@@ -93,6 +103,23 @@ func run() -> void:
         screen()
         last_row = maxi(last_row, last_state.get("selected_item", 0))
         await tap(KEY_DOWN)
+    if OS.get_environment("HP2_MVP_MOUSE_REPLAY") == "1" and last_row == 0x52e039f5:
+        print("RESULTS_REPLAY_MOUSE_UNAVAILABLE: Quick Race results omitted the Replay row")
+    elif OS.get_environment("HP2_MVP_MOUSE_REPLAY") == "1":
+        if not await select_row(last_row - 2):
+            return
+        await tap(KEY_ENTER)
+        var replay_until := Time.get_ticks_msec() + 4000
+        while race.telemetry().get("race_state", 0) != 4:
+            if Time.get_ticks_msec() >= replay_until:
+                push_error("Results menu did not enter Replay (last row %x, state %s)" % [last_row, race.telemetry()])
+                quit(1)
+                return
+            await process_frame
+        click_design(Vector2(385, 438))
+        if not await wait_for_screen("End Game Menu"):
+            return
+        print("RESULTS_REPLAY_MOUSE_PASS")
     for key in [KEY_BACKSPACE, KEY_ESCAPE, JOY_BUTTON_B]:
         if not await select_row(last_row - 1):
             return

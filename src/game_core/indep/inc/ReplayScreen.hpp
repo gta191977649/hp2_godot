@@ -3,6 +3,7 @@
 #include "FMenus.hpp"
 #include <array>
 #include <cstdint>
+#include <optional>
 
 struct CarChaseCamera;
 struct CarFramePlayerState;
@@ -14,6 +15,7 @@ class ReplayManagerOwner;
 
 namespace hp2 {
 class DemoModeReplay;
+struct ReplayPointerState;
 
 // The original ReplayScreen.hpp/ReplayScreen.cpp owner. Services borrow the
 // actual session, snapshots, Flailer objects and world cameras. The selected
@@ -43,6 +45,11 @@ public:
     std::int32_t GetTimelinePositionX(float seconds) const;
     void SetFlailerBitmapPosition(FlailerBitmapChunk* bitmap,float seconds) const;
     void Pause(std::int32_t paused);
+    // Port-side timeline input and committed UI state.
+    ReplayPointerState PointerState() const;
+    void Seek(float position,bool preview);
+    void CancelSeek();
+    bool Seeking() const noexcept { return seek_.has_value(); }
 
 private:
     struct TimelineMarker {
@@ -74,5 +81,15 @@ private:
     CarViewMover* nisCamera_{};
     std::array<std::uint32_t,2> registered_{};
     bool screenVisible_{},closed_{};
+    struct SeekState {
+        std::int32_t ticks;
+        float position;
+        bool preview;
+    };
+    struct PlaybackMode {
+        std::int32_t paused, slowMotion, lastTarget;
+    };
+    std::optional<SeekState> seek_;
+    std::optional<PlaybackMode> scrubPlayback_;
 };
 } // namespace hp2

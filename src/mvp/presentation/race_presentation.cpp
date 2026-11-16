@@ -352,8 +352,10 @@ void RacePresentation::_bind_methods() {
 void RacePresentation::_notification(int what) {
     if (what == NOTIFICATION_WM_CLOSE_REQUEST && failed_) get_tree()->quit(1);
     if (session_ && (what == NOTIFICATION_APPLICATION_FOCUS_OUT ||
-        what == NOTIFICATION_WM_WINDOW_FOCUS_OUT || what == NOTIFICATION_EXIT_TREE))
+        what == NOTIFICATION_WM_WINDOW_FOCUS_OUT || what == NOTIFICATION_EXIT_TREE)) {
         session_->orbit.capture(false);
+        if (session_->frontend) session_->frontend->cancel_pointer();
+    }
     if (what == NOTIFICATION_APPLICATION_FOCUS_OUT && session_ && nativeDebug_)
         joystickNotifyNativeInputReset(0);
     if (what == NOTIFICATION_EXIT_TREE && session_ && session_->post.is_valid())
@@ -556,7 +558,10 @@ void RacePresentation::_input(const Ref<InputEvent>& event) {
     }
 #ifdef HP2_MVP_IMGUI
     if (debug_ && debug_->input(event)) {
-        if (session_ && debug_->needs_mouse_cursor()) session_->orbit.capture(false);
+        if (session_ && debug_->needs_mouse_cursor()) {
+            session_->orbit.capture(false);
+            if (session_->frontend) session_->frontend->cancel_pointer();
+        }
         get_viewport()->set_input_as_handled();
         return;
     }
@@ -1073,6 +1078,7 @@ Dictionary RacePresentation::telemetry() const {
     const auto frontend = session_->runtime.FrontendState();
     collect_police_diagnostics(result, session_->runtime.RaceState(), frontend);
     collect_menu_alignment_diagnostics(result, frontend);
+    collect_replay_diagnostics(result, session_->runtime.RaceState(), frontend);
     if (!session_->scene) return result;
     result["stock_camera_eye"] = race_vector(frame.camera.eye.data());
     result["stock_camera_forward"] = race_vector(frame.camera.forward.data());

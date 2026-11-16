@@ -1,7 +1,8 @@
-"""Run the Scenic Drive reflection comparison via Godot's built-in Visual Profiler."""
+"""Measure native Track 44 pacing and inspect rendering with Godot's Visual Profiler."""
 
 import argparse
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -126,6 +127,70 @@ def report(run, visual, grid=False):
                       f"CPU={percentiles(f[-2] for f in window)} GPU={percentiles(f[-1] for f in window)}", flush=True)
 
 
+def report_demo44(run, visual, vsync, diagnostics=False):
+    for line in (run / "run.log").read_text(errors="replace").splitlines():
+        if line.startswith("DEMO44_"):
+            print(line)
+    rows = json.loads((run / "frames.json").read_text())
+    expected_end = 35.0 if diagnostics else 119.9
+    if len(rows) < 300 or rows[-1][1] < expected_end:
+        raise RuntimeError(f"Incomplete live Track 44 trace in {run}")
+    frames = [row[2] for row in rows]
+    segments = {}
+    for row in rows:
+        segments.setdefault(int(row[1]), []).append(row[2])
+    def quantiles(samples):
+        ordered = sorted(samples)
+        return [ordered[math.ceil(len(ordered) * p) - 1] for p in (.50, .95, .99)]
+
+    p50, p95, p99 = quantiles(frames)
+    per_second = {second: quantiles(ms) for second, ms in sorted(segments.items())}
+    fps = 1000 * len(frames) / sum(frames)
+    missed = sum(ms >= 12.5 for ms in frames)
+    consecutive = sum(a >= 12.5 and b >= 12.5 for a, b in zip(frames, frames[1:]))
+    worst = max((values[2], second) for second, values in per_second.items())
+    passed = (fps >= 119.5 and p99 <= 9 and missed / len(frames) <= 0.001 and not consecutive
+              if vsync else p95 <= 7.5 and p99 <= 8.33 and worst[0] <= 8.33)
+    instrumented = visual or diagnostics
+    print(f"DEMO44_TIMING fps={fps:.2f} P50/P95/P99={p50:.3f}/{p95:.3f}/{p99:.3f} "
+          f"worst_second={worst[1]}:{worst[0]:.3f}ms missed={missed}/{len(frames)} "
+          f"consecutive={consecutive} gate={'instrumented' if instrumented else 'pass' if passed else 'miss'}")
+    timing = {"fps": fps, "percentiles_ms": [p50, p95, p99], "missed": missed,
+              "frames": len(frames), "consecutive_misses": consecutive, "vsync": vsync,
+              "instrumented": instrumented, "passed": None if instrumented else passed,
+              "per_source_second_ms": per_second}
+    (run / "timing.json").write_text(json.dumps(timing, indent=2) + "\n")
+    print(f"DEMO44_MAIN draws={percentiles([r[4] for r in rows])} "
+          f"primitives={percentiles([r[5] for r in rows])} batch_updates={percentiles([r[6] for r in rows])}")
+    if diagnostics:
+        for row in sorted(rows[1:], key=lambda row: row[2], reverse=True)[:16]:
+            print(f"DEMO44_STALL second={row[1]:.3f} frame={row[2]:.3f}ms "
+                  f"process/render={row[7]} pipeline_canvas/mesh/surface/draw/specialization={row[8]}")
+    if visual:
+        active = {int(row[0]) for row in rows}
+        with (run / "visual.jsonl").open(encoding="utf-8") as trace:
+            profile = [frame for kind, _, frame in map(json.loads, trace)
+                       if kind == "visual:profile_frame" and frame[0] in active]
+        if len(profile) < len(active) * 0.95:
+            raise RuntimeError(f"Incomplete Visual Profiler capture, matched {len(profile)} of {len(active)} frames")
+        print(f"DEMO44_VISUAL samples={len(profile)} CPU={percentiles([f[-2] for f in profile])} "
+              f"GPU={percentiles([f[-1] for f in profile])}")
+        scopes = {}
+        for frame in profile:
+            totals = {}
+            spans = list(zip(frame[2::3], frame[3::3], frame[4::3]))
+            for (name, cpu, gpu), (_, next_cpu, next_gpu) in zip(spans, spans[1:]):
+                if name.startswith(">") or name.startswith("<") or next_cpu < cpu or next_gpu < gpu:
+                    continue
+                was_cpu, was_gpu = totals.get(name, (0, 0))
+                totals[name] = was_cpu + next_cpu - cpu, was_gpu + next_gpu - gpu
+            for name, pair in totals.items():
+                scopes.setdefault(name, []).append(pair)
+        for name, timings in sorted(scopes.items(), key=lambda item: percentiles([p[1] for p in item[1]])[1], reverse=True)[:12]:
+            print(f"DEMO44_SCOPE {name} CPU={percentiles([p[0] for p in timings])} GPU={percentiles([p[1] for p in timings])}")
+    return timing["passed"]
+
+
 def main():
     repo = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
@@ -139,6 +204,8 @@ def main():
     pacing.add_argument("--vsync", action="store_true")
     pacing.add_argument("--max-fps", type=int, help="Apply Godot's frame rate limiter with VSync off")
     parser.add_argument("--quiet", action="store_true", help="Run without Visual Profiler")
+    parser.add_argument("--demo44-diagnostics", action="store_true",
+                        help="Collect CPU phase and pipeline timings over the first 35 source seconds")
     parser.add_argument("--section-tree", action="store_true", help="Compare section tree culling with the existing zone and LOD path")
     parser.add_argument("--fog", choices=("ab", "baseline", "optimized", "no-fog", "no-focus", "no-history"),
                         help="Compare the fog paths or isolate a stage during the Starting Grid flyby")
@@ -147,10 +214,17 @@ def main():
     parser.add_argument("--capture-tick", type=int, help="Capture a flyby image in a separate run")
     parser.add_argument("--stage", type=Path, help="Use an alternate staged Godot build")
     parser.add_argument("--fxaa", action="store_true", help="Test FXAA in the race viewport")
+    parser.add_argument("--depth-prepass", action=argparse.BooleanOptionalAction,
+                        help="Override Godot's optional depth prepass for comparisons")
     scene = parser.add_mutually_exclusive_group()
     scene.add_argument("--demo", action="store_true", help="Watch the demo through its natural end")
+    scene.add_argument("--demo44", type=int, metavar="RUNS", help="Measure full live Track 44 demos at native maximized size")
     scene.add_argument("--grid", action="store_true", help="Measure the track flyby before confirming Starting Grid")
     args = parser.parse_args()
+    if args.demo44 is not None and (args.demo44 < 1 or args.fullscreen or args.max_fps):
+        parser.error("--demo44 needs a positive run count, windowed mode and no software cap")
+    if args.demo44_diagnostics and not args.demo44:
+        parser.error("--demo44-diagnostics requires --demo44")
     if args.section_tree and not args.grid:
         parser.error("--section-tree requires --grid")
     if args.fog and (not args.grid or args.section_tree):
@@ -162,17 +236,20 @@ def main():
     project = out / "project"
     staged = args.stage.resolve() if args.stage else repo / "build/godot-mvp-release/mvp-project"
     project.mkdir()
-    for file in ("project.godot", "hp2_blackbox.gdextension", "native_game.gd", "native_game.tscn"):
+    for file in ("project.godot", "hp2_blackbox.gdextension", "native_game.gd", "native_game.tscn", "graphics_settings.gd"):
         shutil.copy2(staged / file, project / file)
-    for directory in ("bin", "shader"):
-        shutil.copytree(staged / directory, project / directory)
+    for directory in ("bin", "shader", "addons"):
+        if (staged / directory).is_dir():
+            shutil.copytree(staged / directory, project / directory)
     (project / ".godot").mkdir()
     (project / ".godot/extension_list.cfg").write_text("res://hp2_blackbox.gdextension\n")
     (project / "override.cfg").write_text(
         "[debug]\nsettings/profiler/max_timestamp_query_elements=1024\n"
         f"\n[display]\nwindow/size/mode={3 if args.fullscreen else 0}\n"
         f"window/vsync/vsync_mode={int(args.vsync)}\n"
-        f"\n[hp2]\nrace_fxaa={str(args.fxaa).lower()}\n"
+        f"\n[hp2]\nrace_fxaa={str(args.fxaa or bool(args.demo44)).lower()}\n"
+        + (f"\n[rendering]\ndriver/depth_prepass/enable={str(args.depth_prepass).lower()}\n"
+           if args.depth_prepass is not None else "")
     )
     engine = repo / "local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64.exe"
     script = repo / "tools" / ("test_mvp_starting_grid.gd" if args.grid else "test_mvp_reflection_performance.gd")
@@ -190,12 +267,22 @@ def main():
         variants = [args.fog] if args.fog != "ab" else [
             "baseline" if variant == "legacy" else "optimized" for variant in variants
         ]
+    if args.demo44:
+        variants = ["demo44"] * args.demo44
+        (project / "launcher.cfg").write_text(
+            f"[graphics]\nwindow_mode=2\naspect=3\nanti_aliasing=\"fxaa\"\nfps_limit=0\nvsync={str(args.vsync).lower()}\n")
+    gate_results = []
     for i, variant in enumerate(variants, 1):
         run = out / f"{i}-{variant}"
         run.mkdir(parents=True)
         env = dict(os.environ, HP2_PS2_ASSET_ROOT=str(args.assets.resolve()), HP2_MVP_TEST_PROFILE="1",
                    HP2_MVP_PROFILE_REFLECTIONS="1", HP2_MVP_PROFILE_SHARED_REFLECTION_WORLD=str(int(variant == "shared")),
                    HP2_MVP_REFLECTION_CHECK="demo" if args.demo else "fixed")
+        if args.demo44:
+            env.update(HP2_MVP_PROFILE_DEMO_TRACK="44", HP2_MVP_REFLECTION_CHECK="demo44",
+                       HP2_MVP_DEMO_TRACE=str(run / "frames.json"),
+                       HP2_MVP_DEMO_VSYNC=str(int(args.vsync)),
+                       HP2_MVP_DEMO_DIAGNOSTICS=str(int(args.demo44_diagnostics)))
         if args.grid:
             env.update(HP2_MVP_PROFILE_GRID="1", HP2_MVP_PROFILE_REFLECTIONS="0",
                        HP2_MVP_PROFILE_LEGACY_SCENERY=str(int(variant == "legacy")),
@@ -215,7 +302,9 @@ def main():
             command.append("--disable-vsync")
         if args.max_fps:
             command += ["--max-fps", str(args.max_fps)]
-        print(f"{i} {variant} {args.driver} {args.resolution} vsync={args.vsync} visual={visual}", flush=True)
+        size = "native-maximized" if args.demo44 else args.resolution
+        print(f"{i} {variant} {args.driver} {size} vsync={args.vsync} visual={visual} "
+              f"prepass_override={args.depth_prepass} stage={staged}", flush=True)
         with socket.create_server(("127.0.0.1", 0)) as listener, (run / "run.log").open("wb") as log:
             if visual:
                 command += ["--remote-debug", f"tcp://127.0.0.1:{listener.getsockname()[1]}"]
@@ -229,7 +318,16 @@ def main():
                 if child.poll() is None:
                     child.terminate()
                     child.wait(timeout=5)
-        report(run, visual, args.grid)
+        if args.demo44:
+            passed = report_demo44(run, visual, args.vsync, args.demo44_diagnostics)
+            if passed is not None:
+                gate_results.append(passed)
+        else:
+            report(run, visual, args.grid)
+    if gate_results:
+        print(f"DEMO44_GATE passed={sum(gate_results)}/{len(gate_results)}")
+        if not all(gate_results):
+            raise SystemExit(1)
 
 
 if __name__ == "__main__":

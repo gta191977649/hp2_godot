@@ -36,6 +36,8 @@ bool test_scenery_camera_enabled();
 void collect_police_diagnostics(godot::Dictionary& result, const RaceStateView& race,
     const FrontendStateView& frontend);
 void collect_menu_alignment_diagnostics(godot::Dictionary& result, const FrontendStateView& frontend);
+void collect_replay_diagnostics(godot::Dictionary& result, const RaceStateView& race,
+    const FrontendStateView& frontend);
 
 #ifdef HP2_MVP_IMGUI
 struct RaceDiagnosticChecks {

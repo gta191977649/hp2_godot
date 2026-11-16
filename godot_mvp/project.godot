@@ -205,6 +205,7 @@ hp2_debug_console={
 [rendering]
 
 rendering_device/driver.windows="vulkan"
+driver/depth_prepass/enable=false
 viewport/hdr_2d=false
 environment/defaults/default_clear_color=Color(0, 0, 0, 1)
 
