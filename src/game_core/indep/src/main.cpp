@@ -456,6 +456,7 @@ struct ApplicationRuntime::Storage {
     const void* raceStartContext{};
     const FrontendMenuExtension* frontendExtension{};
     const FrontendMenuExtension* optionsExtension{};
+    const FrontendMenuExtension* controlsExtension{};
     const FrontendCreditsContent* frontendCredits{};
     bool showFrontend{};
     bool requireNamedProfile{};
@@ -650,7 +651,7 @@ struct ApplicationRuntime::Storage {
         demoMode.screens=&screens;demoMode.frontend=&profilesOwner;demoMode.raceSetup=&setup;
         demoMode.demoDisc=&demo;demoMode.files=&files;
         menus={&ui,&screens,&profilesOwner,&setup,&soundBindings,&demoMode,frontendExtension,frontendCredits,
-            optionsExtension,menus.subtitleSetting,menus.subtitleContext};
+            optionsExtension,menus.subtitleSetting,menus.subtitleContext,controlsExtension};
         startup={&menus,&joylog,dynamicTextures.get()};
         menusBound=true;
         BindFrontendStartup(startup);
@@ -680,6 +681,12 @@ struct ApplicationRuntime::Storage {
         if(optionsExtension) {
             RegisterScreen(*optionsExtension->screen);
             optionsExtension->bind(menus,optionsExtension->context);
+        }
+        if(controlsExtension) {
+            RegisterScreen(*controlsExtension->screen);
+            if(controlsExtension->submenu)RegisterScreen(*controlsExtension->submenu);
+            if(controlsExtension->secondarySubmenu)RegisterScreen(*controlsExtension->secondarySubmenu);
+            controlsExtension->bind(menus,controlsExtension->context);
         }
         for(auto& configuration:EndGameScreenConfigurations())RegisterScreen(configuration);
         for(auto& configuration:MemcardScreenConfigurations())RegisterScreen(configuration);
@@ -737,7 +744,7 @@ struct ApplicationRuntime::Storage {
     }
     void GenerateInput(ReplayManager* replay)
     {
-        Require(joystickGenerateEvents(input,samples,joylog,replay,clock,demo)==GAME_INPUT_OK,
+        Require(joystickGenerateEvents(input,samples,joylog,replay,clock,demo,host.TakePortInputEdges())==GAME_INPUT_OK,
             "Source joystick scanner/typed callback dispatch failed");
     }
 };
@@ -954,7 +961,7 @@ void ApplicationRuntime::Initialize(const std::filesystem::path& configFile)
 
 void ApplicationRuntime::InitializeFrontend(void (*ready)(MainMenuScreenServices&,const void*),const void* context,
     const FrontendMenuExtension* extension,const FrontendCreditsContent* credits,const FrontendMenuExtension* options,
-    bool requireNamedProfile)
+    bool requireNamedProfile,const FrontendMenuExtension* controls)
 {
     Require(!storage_->stateOnly() && !storage_->initialized,
         "Frontend must be requested before initialization");
@@ -965,6 +972,7 @@ void ApplicationRuntime::InitializeFrontend(void (*ready)(MainMenuScreenServices
     storage_->frontendExtension=extension;
     storage_->frontendCredits=credits;
     storage_->optionsExtension=options;
+    storage_->controlsExtension=controls;
     Initialize();
 }
 

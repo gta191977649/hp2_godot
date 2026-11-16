@@ -69,6 +69,8 @@ add_library(hp2_blackbox SHARED
   src/mvp/systems/audio/godot_speech_output.cpp
   src/mvp/systems/audio/godot_audio_device.cpp
   src/mvp/systems/frontend/frontend_presentation.cpp
+  src/mvp/systems/frontend/control_settings.cpp
+  src/mvp/systems/frontend/controls_menu.cpp
   src/mvp/systems/frontend/graphic_menu.cpp
   src/mvp/systems/frontend/frontend_video.cpp
   src/mvp/systems/frontend/original_video_stream.cpp

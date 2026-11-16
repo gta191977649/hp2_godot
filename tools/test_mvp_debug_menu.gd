@@ -48,6 +48,33 @@ func key(code: Key) -> void:
     event.physical_keycode = code
     await input_tap(event)
 
+func check_smooth_row(code: Key, id: int) -> void:
+    var samples: Array[float] = []
+    var state: Dictionary = race.telemetry()
+    var bounds: Dictionary = state.get("menu_alignment_bounds", {})
+    if not bounds.has(id):
+        fail("Missing scroll sample row %x" % id)
+        return
+    samples.append(bounds[id].position.y)
+    key(code)
+    var until := Time.get_ticks_msec() + 650
+    while Time.get_ticks_msec() < until:
+        await process_frame
+        bounds = race.telemetry().get("menu_alignment_bounds", {})
+        if bounds.has(id):
+            var y: float = bounds[id].position.y
+            if absf(y - samples.back()) > 0.25:
+                samples.append(y)
+    if samples.size() < 4 or absf(samples.back() - samples.front()) < 10.0:
+        fail("Row %x snapped or did not scroll: %s" % [id, samples])
+        return
+    var direction := signf(samples.back() - samples.front())
+    for i in range(1, samples.size()):
+        if direction * (samples[i] - samples[i - 1]) < 0.0:
+            fail("Row %x reversed during one scroll step: %s" % [id, samples])
+            return
+    print("SMOOTH_SCROLL_PASS ", state.get("screen"), " samples=", samples.size())
+
 func pad(button: JoyButton) -> void:
     var event := InputEventJoypadButton.new()
     event.button_index = button

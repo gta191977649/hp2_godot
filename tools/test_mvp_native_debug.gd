@@ -34,7 +34,7 @@ func run() -> void:
         if race.telemetry().get("screen") == "Pause Menu":
             fail("Start paused before release")
             return
-        set_key(KEY_TAB, true)
+        set_key(KEY_R, true)
         await settle()
         if not caption.visible or camera.global_transform.is_equal_approx(driving):
             fail("native camera did not take focus: caption=%s start=%s select=%s pose=%s original=%s" % [
@@ -43,7 +43,7 @@ func run() -> void:
             return
         var focused := camera.global_transform
         set_key(KEY_RIGHT, true)
-        set_key(KEY_TAB, false)
+        set_key(KEY_R, false)
         set_key(KEY_ESCAPE, false)
         await settle()
         if not camera.global_transform.is_equal_approx(focused):
@@ -59,17 +59,17 @@ func run() -> void:
         set_key(KEY_RIGHT, false)
         set_key(KEY_ESCAPE, true)
         await settle()
-        set_key(KEY_TAB, true)
+        set_key(KEY_R, true)
         await settle()
-        set_key(KEY_TAB, false)
+        set_key(KEY_R, false)
         set_key(KEY_ESCAPE, false)
         await settle(0.5)
         if caption.visible or camera.global_position.distance_to(driving.origin) > 1.0:
             fail("driving camera was not restored")
             return
-        set_key(KEY_W, true)
+        set_key(KEY_UP, true)
         await wait_for(func(state: Dictionary) -> bool: return state.get("speed", 0.0) > 12.0)
-        set_key(KEY_W, false)
+        set_key(KEY_UP, false)
     await key(KEY_ESCAPE)
     await wait_screen("Pause Menu")
     var reachable := false

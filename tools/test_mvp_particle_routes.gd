@@ -48,6 +48,7 @@ func _process(_delta: float) -> bool:
     if state.get("race_state", -1) != 3 or not effects:
         return false
     var step: int = state.step
+    track = state.get("track", track)
     if started < 0:
         started = step
         if not route:
@@ -55,6 +56,12 @@ func _process(_delta: float) -> bool:
         for node in effects.get_children():
             if node is GPUParticles3D:
                 nodes[node.get_instance_id()] = true
+    if not route and not births_started and state.get("police_hud", false) and step >= started + 90:
+        births_started = true
+        var nitro := InputEventAction.new()
+        nitro.action = &"hp2_nitro"
+        nitro.pressed = true
+        Input.parse_input_event(nitro)
     targets.clear()
     for node in effects.get_children():
         if not node is GPUParticles3D:
@@ -153,12 +160,9 @@ func _check_pixels() -> void:
         previous = 0
         samples.clear()
         started = int(race.telemetry().step) - 85
-    elif route or births_started:
+    else:
         quit(0)
         return
-    else:
-        births_started = true
-        Input.action_press("hp2_nitro")
     race.set_process(true)
     checking = false
 

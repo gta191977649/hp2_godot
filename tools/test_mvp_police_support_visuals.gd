@@ -33,7 +33,7 @@ func _process(_delta: float) -> bool:
         return false
     if start_support.x < 0:
         start_support = Vector2i(sample["police_roadblocks"], sample["police_helicopters"])
-        _key(KEY_W, true)
+        _key(KEY_UP, true)
 
     var objects: Node = race.race_scene().get_node_or_null("WorldObjects") if race.race_scene() else null
     var effects: Node = race.race_scene().get_node_or_null("RaceEffects") if race.race_scene() else null
@@ -68,9 +68,9 @@ func _process(_delta: float) -> bool:
         if not sample["police_target_active"]:
             _tap(KEY_H)
         elif sample["police_roadblocks"] == start_support.x:
-            _tap(KEY_R)
+            _tap(KEY_J)
         elif sample["police_helicopters"] == start_support.y:
-            _tap(KEY_T)
+            _tap(KEY_N)
         next_input = Time.get_ticks_msec() + 1000
     return false
 

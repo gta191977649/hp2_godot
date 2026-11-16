@@ -18,6 +18,8 @@
 #include "systems/effects/race_effects_presentation.hpp"
 #include "systems/frontend/frontend_presentation.hpp"
 #include "systems/frontend/graphic_menu.hpp"
+#include "systems/frontend/control_settings.hpp"
+#include "systems/frontend/controls_menu.hpp"
 #include "systems/track/track_presentation.hpp"
 #include "systems/vehicle/vehicle_presentation.hpp"
 #include "systems/vehicle/vehicle_reflection.hpp"
@@ -43,8 +45,11 @@
 #include <godot_cpp/classes/compositor.hpp>
 #include <godot_cpp/classes/input.hpp>
 #include <godot_cpp/classes/input_event.hpp>
+#include <godot_cpp/classes/input_event_joypad_button.hpp>
+#include <godot_cpp/classes/input_event_joypad_motion.hpp>
 #include <godot_cpp/classes/input_event_key.hpp>
 #include <godot_cpp/classes/input_event_mouse_motion.hpp>
+#include <godot_cpp/classes/input_event_mouse_button.hpp>
 #include <godot_cpp/classes/label.hpp>
 #include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/classes/project_settings.hpp>
@@ -66,6 +71,7 @@
 #include <stdexcept>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
 
 namespace hp2 {
 
@@ -74,6 +80,10 @@ using namespace godot;
 namespace {
 constexpr std::array<const char*,6> menuActions{
     "hp2_menu_confirm", "hp2_menu_back", "hp2_menu_up", "hp2_menu_down", "hp2_menu_left", "hp2_menu_right"};
+constexpr float padDeadZone = 0.08f;
+constexpr float padTakeoverMargin = 0.05f;
+constexpr std::array raceTakeoverAxes{JOY_AXIS_LEFT_X, JOY_AXIS_RIGHT_Y,
+    JOY_AXIS_TRIGGER_LEFT, JOY_AXIS_TRIGGER_RIGHT};
 
 class RaceHost final : public NativeApplicationHost {
 public:
@@ -82,24 +92,95 @@ public:
     bool inRace{};
     bool menuInput{};
     bool inRaceMenuBack{};
+    bool replayInput{};
     bool demoInput{};
+    bool nameEditInput{};
     bool beTheCop{};
+    bool manualShifting{};
     bool nativeDebug{};
     bool scrollingCredits{};
+    ControlSettings* controlSettings{};
+    ControlsMenu* controlsMenu{};
     std::array<bool, menuActions.size()> consumedMenuKeys{};
 #ifdef HP2_MVP_IMGUI
     ImGuiOverlay* debug{};
 #endif
     bool PollEvents() override {
-        if (nativeDebug) {
-            const auto pads = Input::get_singleton()->get_connected_joypads();
-            if (debugPad_ < 0 || !pads.has(debugPad_)) {
-                const int next = pads.is_empty() ? -1 : static_cast<int>(pads[0]);
-                if (debugPad_ != next) joystickNotifyNativeInputReset(0);
-                debugPad_ = next;
+        auto& input = *Input::get_singleton();
+        const auto pads = input.get_connected_joypads();
+        for (auto it = lastPadAxes_.begin(); it != lastPadAxes_.end();) {
+            if (pads.has(it->first)) ++it;
+            else it = lastPadAxes_.erase(it);
+        }
+        if (racePad_ < 0 || !pads.has(racePad_)) {
+            if (!usingKeyboard_) use_keyboard();
+            select_race_pad(pads.is_empty() ? -1 : static_cast<int>(pads[0]));
+        }
+        for (int64_t index = 0; index < pads.size(); ++index) {
+            const int device = pads[index];
+            auto& previous = lastPadAxes_[device];
+            bool takeover = false;
+            for (std::size_t i = 0; i < raceTakeoverAxes.size(); ++i) {
+                const auto axis = raceTakeoverAxes[i];
+                const float threshold = (axis == JOY_AXIS_LEFT_X && controlSettings
+                    ? controlSettings->dead_zone() / 100.0f : padDeadZone) + padTakeoverMargin;
+                const float magnitude = std::abs(input.get_joy_axis(device, axis));
+                takeover |= magnitude >= threshold && previous[i] < threshold;
+                previous[i] = magnitude;
             }
+            if (takeover && driving_input()) use_joypad(device);
         }
         return true;
+    }
+    bool driving_input() const { return inRace && !menuInput && !replayInput && !demoInput; }
+    void use_joypad(int device) {
+        if (device == racePad_ && !usingKeyboard_) return;
+        auto& input = *Input::get_singleton();
+        if (!input.get_connected_joypads().has(device)) return;
+        select_race_pad(device);
+        usingKeyboard_ = false;
+        portInputEdges = {};
+        if (controlSettings) {
+            const auto name = input.get_joy_name(device);
+            controlSettings->deviceName = name.is_empty() ? String("Controller") : name;
+        }
+    }
+    void use_keyboard() {
+        if (!usingKeyboard_) stop_rumble();
+        usingKeyboard_ = true;
+        if (controlSettings) controlSettings->deviceName = "Keyboard";
+    }
+    void set_rumble_focus(bool focused) {
+        rumbleFocused_ = focused;
+        if (!focused) stop_rumble();
+    }
+
+    void stop_rumble() {
+        if (rumblingPad_ >= 0) {
+            auto* input = Input::get_singleton();
+            if (input && input->get_connected_joypads().has(rumblingPad_))
+                input->stop_joy_vibration(rumblingPad_);
+            rumblingPad_ = -1;
+        }
+        // Do not resume a pulse that began before focus or device ownership changed.
+        if (smallMotor_ || largeMotor_) interruptedRumble_ = true;
+    }
+
+    void flush_rumble(bool allowed) {
+        if (!allowed || !rumbleFocused_ || usingKeyboard_) {
+            stop_rumble();
+            return;
+        }
+        if (!std::exchange(motorUpdate_, false)) return;
+        if (!smallMotor_ && !largeMotor_) {
+            stop_rumble();
+            return;
+        }
+        if (interruptedRumble_ || racePad_ < 0) return;
+        auto* input = Input::get_singleton();
+        if (!input->get_connected_joypads().has(racePad_)) return;
+        input->start_joy_vibration(racePad_, smallMotor_ ? 1.0f : 0.0f, largeMotor_ / 255.0f);
+        rumblingPad_ = racePad_;
     }
     int Width() const override { return root_.get_viewport()->get_visible_rect().size.x; }
     int Height() const override { return root_.get_viewport()->get_visible_rect().size.y; }
@@ -155,11 +236,44 @@ public:
         return WORLD_AUDIO_INVALID_BINDING;
 #endif
     }
-    void SetRumble(int32_t, uint8_t, uint8_t) override {}
+    void SetRumble(int32_t port, uint8_t small, uint8_t large) override {
+        if (port != 0) return;
+        smallMotor_ = small;
+        largeMotor_ = large;
+        motorUpdate_ = true;
+        if (!small && !large) interruptedRumble_ = false;
+    }
+    PortInputEdges TakePortInputEdges() override {
+        auto edges = std::exchange(portInputEdges, {});
+        return usingKeyboard_ && inRace && !menuInput && !demoInput && !replayInput
+            ? edges : PortInputEdges{};
+    }
+    void queue_keyboard_edge(const InputEvent& input) {
+        struct Binding { const char* action; uint8_t event; bool copOnly; };
+        static constexpr std::array bindings{
+            Binding{"hp2_camera", kChangeCameraInput, false},
+            Binding{"hp2_zone_freeze", kZoneFreezeInput, false},
+            Binding{"hp2_zone_zoom", kZoneZoomInput, false},
+            Binding{"hp2_nitro", kNitroInput, true},
+            Binding{"hp2_roadblock", kRoadblockInput, true},
+            Binding{"hp2_helicopter", kHelicopterInput, true},
+        };
+        static_assert(bindings.size() == std::tuple_size_v<PortInputEdges>);
+        for (std::size_t i = 0; i < bindings.size(); ++i) {
+            const auto& binding = bindings[i];
+            if ((!binding.copOnly || beTheCop) && input.is_action_pressed(binding.action))
+                portInputEdges[i] = binding.event;
+        }
+    }
+    PortInputEdges portInputEdges{};
     int32_t ReadInput(int32_t port, JoystickControls& destination) override {
         ControllerState pad;
         if (port == 0) {
             pad.connected = true;
+            if (controlsMenu && controlsMenu->capturing()) {
+                destination = NativeScannerControls(pad);
+                return 1;
+            }
 #ifdef HP2_MVP_IMGUI
             if (debug && debug->captures_game_input()) {
                 destination = NativeScannerControls(pad);
@@ -173,20 +287,41 @@ public:
             else if (inRaceMenuBack) submenuPauseHeld_ = true;
             // Keep a Back press from becoming a fresh Start edge on the parent screen.
             SetButton(pad, Ps2Button::Start, pause && !submenuPauseHeld_);
-            if (!inRace || menuInput || demoInput) {
-                policeSupportHeld_ = false;
-                nitroModifierHeld_ = false;
+            if (!inRace || menuInput || replayInput || demoInput) {
+                read_joypad(input, pad);
+                if (replayInput) {
+                    if (pressed("hp2_camera")) SetButton(pad, Ps2Button::Triangle, true);
+                    if (pressed("hp2_menu_help")) SetButton(pad, Ps2Button::Circle, true);
+                    if (pressed("hp2_handbrake")) SetButton(pad, Ps2Button::Square, true);
+                    if (pressed("hp2_select")) SetButton(pad, Ps2Button::Select, true);
+                    // Replay recording and demo controls require the native debug flag.
+                    if (!nativeDebug) {
+                        SetButton(pad, Ps2Button::L2, false);
+                        SetButton(pad, Ps2Button::R2, false);
+                        SetButton(pad, Ps2Button::R1, false);
+                    }
+                } else {
+                    // The regular menu uses B for Back and Y for the native Help action.
+                    SetButton(pad, Ps2Button::Circle, !nameEditInput && (pressed("hp2_menu_help") ||
+                        (racePad_ >= 0 && input.is_joy_button_pressed(racePad_, JOY_BUTTON_Y))));
+                }
                 constexpr std::array<Ps2Button, menuActions.size()> buttons{
                     Ps2Button::Cross, Ps2Button::Triangle, Ps2Button::Up, Ps2Button::Down,
                     Ps2Button::Left, Ps2Button::Right};
                 for (std::size_t i = 0; i < buttons.size(); ++i) {
                     const bool back = i == 1;
+                    if (back && replayInput) continue;
                     const bool down = pressed(menuActions[i]) || (back && inRaceMenuBack && pause);
                     if (!down) consumedMenuKeys[i] = false;
                     SetButton(pad, buttons[i], down && !consumedMenuKeys[i] &&
                         (!back || !inRace || demoInput || inRaceMenuBack));
                 }
-                if (scrollingCredits) SetButton(pad, Ps2Button::Square, pressed("hp2_credits_pause"));
+                if (scrollingCredits && pressed("hp2_handbrake")) SetButton(pad, Ps2Button::Square, true);
+                destination = NativeScannerControls(pad);
+                return 1;
+            }
+            if (!usingKeyboard_) {
+                read_joypad(input, pad, true);
                 destination = NativeScannerControls(pad);
                 return 1;
             }
@@ -195,48 +330,42 @@ public:
             const bool left = pressed("hp2_steer_left");
             const bool right = pressed("hp2_steer_right");
             const bool handbrake = pressed("hp2_handbrake");
-            const bool shiftDown = pressed("hp2_l2");
-            const bool shiftUp = pressed("hp2_r2");
-            const bool roadblock = beTheCop && (pressed("hp2_roadblock") || (handbrake && shiftUp));
-            const bool helicopter = beTheCop && (pressed("hp2_helicopter") || (handbrake && shiftDown));
-            const bool nitro = pressed("hp2_nitro");
-            const bool policeSupport = roadblock || helicopter;
-            // PAL scanner requires the Triangle modifier to be held across
-            // two samples before the L2/R2 primary edge.
-            const bool supportReady = policeSupport && policeSupportHeld_;
-            policeSupportHeld_ = policeSupport;
             pad.sticks[2] = left == right ? 128 : left ? 0 : 255;
+            SetButton(pad, Ps2Button::Up, pressed("hp2_cycle_hud"));
             SetButton(pad, Ps2Button::Cross, accelerate);
             SetButton(pad, Ps2Button::Square, brake);
-            // The default PS2 scanner uses Triangle for camera and R1 for handbrake.
-            SetButton(pad, Ps2Button::Triangle, pressed("hp2_camera") || policeSupport || nitro);
             SetButton(pad, Ps2Button::Circle, pressed("hp2_horn"));
-            SetButton(pad, Ps2Button::L2, (shiftDown && !helicopter) || (supportReady && helicopter));
-            SetButton(pad, Ps2Button::R2, (shiftUp && !roadblock) || (supportReady && roadblock));
+            // Automatic transmission repurposes these native pad inputs for
+            // zone cameras and police support. Those have their own keys.
+            SetButton(pad, Ps2Button::L2, manualShifting && pressed("hp2_l2"));
+            SetButton(pad, Ps2Button::R2, manualShifting && pressed("hp2_r2"));
             SetButton(pad, Ps2Button::L1, pressed("hp2_l1"));
-            SetButton(pad, Ps2Button::R1, handbrake || (nitro && nitroModifierHeld_));
+            SetButton(pad, Ps2Button::R1, handbrake);
             SetButton(pad, Ps2Button::Select, pressed("hp2_select"));
-            SetButton(pad, Ps2Button::R3, nitro);
-            if (nativeDebug) {
-                if (joystickNativeDebugCaption()) {
-                    SetButton(pad, Ps2Button::Up, pressed("hp2_menu_up"));
-                    SetButton(pad, Ps2Button::Down, pressed("hp2_menu_down"));
-                    SetButton(pad, Ps2Button::Left, pressed("hp2_menu_left"));
-                    SetButton(pad, Ps2Button::Right, pressed("hp2_menu_right"));
-                }
-                read_debug_pad(input, pad);
+            if (nativeDebug && joystickNativeDebugCaption()) {
+                SetButton(pad, Ps2Button::Up, pressed("hp2_menu_up"));
+                SetButton(pad, Ps2Button::Down, pressed("hp2_menu_down"));
+                SetButton(pad, Ps2Button::Left, pressed("hp2_menu_left"));
+                SetButton(pad, Ps2Button::Right, pressed("hp2_menu_right"));
             }
-            nitroModifierHeld_ = nitro;
         }
         destination = NativeScannerControls(pad);
+        if (pad.connected) destination.portConfiguration = 30; // Authored default gamepad layout A.
         return pad.connected ? 1 : 0;
     }
 
 private:
-    void read_debug_pad(const Input& input, ControllerState& pad) const {
-        if (debugPad_ < 0) return;
+    void select_race_pad(int device) {
+        if (racePad_ == device) return;
+        stop_rumble();
+        if (nativeDebug) joystickNotifyNativeInputReset(0);
+        racePad_ = device;
+    }
+
+    void read_joypad(const Input& input, ControllerState& pad, bool driving = false) const {
+        if (racePad_ < 0) return;
         constexpr std::pair<JoyButton, Ps2Button> buttons[]{
-            {JOY_BUTTON_BACK, Ps2Button::Select}, {JOY_BUTTON_START, Ps2Button::Start},
+            {JOY_BUTTON_BACK, Ps2Button::Select},
             {JOY_BUTTON_DPAD_UP, Ps2Button::Up}, {JOY_BUTTON_DPAD_RIGHT, Ps2Button::Right},
             {JOY_BUTTON_DPAD_DOWN, Ps2Button::Down}, {JOY_BUTTON_DPAD_LEFT, Ps2Button::Left},
             {JOY_BUTTON_A, Ps2Button::Cross}, {JOY_BUTTON_B, Ps2Button::Circle},
@@ -245,26 +374,34 @@ private:
             {JOY_BUTTON_LEFT_STICK, Ps2Button::L3}, {JOY_BUTTON_RIGHT_STICK, Ps2Button::R3},
         };
         for (const auto& [source, target] : buttons)
-            if (input.is_joy_button_pressed(debugPad_, source)) SetButton(pad, target, true);
+            if (input.is_joy_button_pressed(racePad_, source)) SetButton(pad, target, true);
         constexpr std::pair<JoyAxis, Ps2Button> triggers[]{
             {JOY_AXIS_TRIGGER_LEFT, Ps2Button::L2}, {JOY_AXIS_TRIGGER_RIGHT, Ps2Button::R2}};
         for (const auto& [source, target] : triggers) {
-            const auto strength = std::clamp(input.get_joy_axis(debugPad_, source), 0.0f, 1.0f);
-            if (strength > 0.08f) SetButton(pad, target, true, static_cast<std::uint8_t>(strength * 255));
+            const auto strength = std::clamp(input.get_joy_axis(racePad_, source), 0.0f, 1.0f);
+            if (strength > padDeadZone) SetButton(pad, target, true, static_cast<std::uint8_t>(strength * 255));
         }
         constexpr JoyAxis axes[]{JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y, JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y};
         for (std::size_t i = 0; i < pad.sticks.size(); ++i) {
             if (pad.sticks[i] != 128) continue;
-            const auto value = std::clamp(input.get_joy_axis(debugPad_, axes[i]), -1.0f, 1.0f);
-            if (std::abs(value) > 0.08f)
-                pad.sticks[i] = NormalizeAxis(static_cast<std::int16_t>(value * (value < 0 ? 32768 : 32767)));
+            const auto value = std::clamp(input.get_joy_axis(racePad_, axes[i]), -1.0f, 1.0f);
+            const float adjusted = driving && axes[i] == JOY_AXIS_LEFT_X && controlSettings
+                ? controlSettings->steering(value) : std::abs(value) > padDeadZone ? value : 0.0f;
+            if (adjusted != 0.0f)
+                pad.sticks[i] = NormalizeAxis(static_cast<std::int16_t>(adjusted * (adjusted < 0 ? 32768 : 32767)));
         }
     }
-    int debugPad_{-1};
+    int racePad_{-1};
+    int rumblingPad_{-1};
+    std::uint8_t smallMotor_{};
+    std::uint8_t largeMotor_{};
+    bool motorUpdate_{};
+    bool interruptedRumble_{};
+    bool rumbleFocused_{true};
+    std::unordered_map<int, std::array<float, raceTakeoverAxes.size()>> lastPadAxes_;
+    bool usingKeyboard_{true};
     bool submenuPauseHeld_{};
     Node3D& root_;
-    bool policeSupportHeld_{};
-    bool nitroModifierHeld_{};
     std::unique_ptr<GodotSpeechOutput> speechOutput_;
     std::unique_ptr<GodotAudioDevice> audioDevice_;
 };
@@ -278,6 +415,7 @@ struct RacePresentation::Session {
     RaceHost host;
     GameResources files;
     std::unique_ptr<GraphicMenu> graphicMenu;
+    std::unique_ptr<ControlsMenu> controlsMenu;
 #ifdef HP2_MVP_IMGUI
     std::unique_ptr<FrontendDebugMenu> debugMenu;
 #endif
@@ -327,6 +465,7 @@ struct RacePresentation::Session {
 RacePresentation::RacePresentation() = default;
 RacePresentation::~RacePresentation() {
     if (!session_) return;
+    session_->host.stop_rumble();
     try {
         session_->runtime.Shutdown();
     } catch (const std::exception& error) {
@@ -339,6 +478,7 @@ void RacePresentation::_bind_methods() {
     ClassDB::bind_static_method("RacePresentation", D_METHOD("validate_game_iso", "path"), &RacePresentation::validate_game_iso);
     ClassDB::bind_method(D_METHOD("set_graphics_menu_settings", "settings"), &RacePresentation::set_graphics_menu_settings);
     ClassDB::bind_method(D_METHOD("set_subtitle_setting", "setting"), &RacePresentation::set_subtitle_setting);
+    ClassDB::bind_method(D_METHOD("set_controls_settings", "settings"), &RacePresentation::set_controls_settings);
     ClassDB::bind_method(D_METHOD("start_game", "assets", "profile", "track", "tree", "event", "native_debug", "isolated_profile"),
         &RacePresentation::start_game);
     ClassDB::bind_method(D_METHOD("telemetry"), &RacePresentation::telemetry);
@@ -353,9 +493,12 @@ void RacePresentation::_notification(int what) {
     if (what == NOTIFICATION_WM_CLOSE_REQUEST && failed_) get_tree()->quit(1);
     if (session_ && (what == NOTIFICATION_APPLICATION_FOCUS_OUT ||
         what == NOTIFICATION_WM_WINDOW_FOCUS_OUT || what == NOTIFICATION_EXIT_TREE)) {
+        session_->host.set_rumble_focus(false);
         session_->orbit.capture(false);
         if (session_->frontend) session_->frontend->cancel_pointer();
     }
+    if (session_ && (what == NOTIFICATION_APPLICATION_FOCUS_IN || what == NOTIFICATION_WM_WINDOW_FOCUS_IN))
+        session_->host.set_rumble_focus(true);
     if (what == NOTIFICATION_APPLICATION_FOCUS_OUT && session_ && nativeDebug_)
         joystickNotifyNativeInputReset(0);
     if (what == NOTIFICATION_EXIT_TREE && session_ && session_->post.is_valid())
@@ -363,7 +506,10 @@ void RacePresentation::_notification(int what) {
 }
 
 void RacePresentation::report_assert(const String& message) {
-    if (session_) session_->orbit.capture(false);
+    if (session_) {
+        session_->host.stop_rumble();
+        session_->orbit.capture(false);
+    }
     failed_ = true;
     ERR_PRINT(message);
 #ifdef HP2_MVP_IMGUI
@@ -425,6 +571,10 @@ void RacePresentation::set_graphics_menu_settings(const Callable& settings) {
     if (!session_) graphicsMenuSettings_ = settings;
 }
 
+void RacePresentation::set_controls_settings(const Callable& settings) {
+    if (!session_ && !controlSettings_) controlSettings_ = std::make_unique<ControlSettings>(settings);
+}
+
 void RacePresentation::set_subtitle_setting(const Callable& setting) {
     if (!session_) subtitleSetting_ = setting;
 }
@@ -446,13 +596,15 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
     try {
         if (session_) throw std::logic_error("Game session is already running");
         session_ = std::make_unique<Session>(*this, assets, profile);
-        // Reuse the donor's explicit racer Nitro option in the Godot host.
         applicationNativeGameplay = loadNativePcSettings(
             std::filesystem::path(profile.wide_string().get_data()) / "NFSHP2_pc.ini").gameplay;
+        applicationNativeGameplay.racerNitro = false;
         session_->frontendMode = frontend;
         session_->requestedTrack = track;
         session_->campaignDiagnostic = {tree, event};
         session_->host.nativeDebug = nativeDebug_;
+        session_->host.controlSettings = controlSettings_.get();
+        session_->host.use_keyboard();
         bool unlockRaces = false;
         if (session_->files.IsLooseArchive()) {
             for (const char* bank : {"SOUND/common.msh", "SOUND/common.msb"}) {
@@ -498,7 +650,12 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
             const bool requireNamedProfile = OS::get_singleton()->get_environment("HP2_MVP_TEST_PROFILE") != "1";
             if (graphicsMenuSettings_.is_valid())
                 session_->graphicMenu = std::make_unique<GraphicMenu>(graphicsMenuSettings_);
+            if (controlSettings_) {
+                session_->controlsMenu = std::make_unique<ControlsMenu>(*controlSettings_);
+                session_->host.controlsMenu = session_->controlsMenu.get();
+            }
             const auto* graphics = session_->graphicMenu ? &session_->graphicMenu->extension() : nullptr;
+            const auto* controls = session_->controlsMenu ? &session_->controlsMenu->extension() : nullptr;
 #ifdef HP2_MVP_IMGUI
             const String mode = OS::get_singleton()->get_environment("HP2_MVP_DEBUG_MODE");
             if (nativeDebug_ || mode == "1" || (mode.is_empty() &&
@@ -507,10 +664,10 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
             }
             session_->runtime.InitializeFrontend(returnToMenu ? TrackViewer::return_to_main_menu : race_profile_frontend_ready(),
                 nullptr, session_->debugMenu ? &session_->debugMenu->extension() : nullptr, &portCredit, graphics,
-                requireNamedProfile);
+                requireNamedProfile, controls);
 #else
             session_->runtime.InitializeFrontend(race_profile_frontend_ready(), nullptr, nullptr, &portCredit, graphics,
-                requireNamedProfile);
+                requireNamedProfile, controls);
 #endif
         }
         else if (tree >= 0) session_->runtime.InitializeRace(start_campaign_race_diagnostic, &session_->campaignDiagnostic);
@@ -572,6 +729,31 @@ void RacePresentation::_input(const Ref<InputEvent>& event) {
 #endif
     if (session_) {
         auto& s = *session_;
+        const Ref<InputEventJoypadButton> button = event;
+        const Ref<InputEventJoypadMotion> axis = event;
+        if (button.is_valid() && button->is_pressed())
+            s.host.use_joypad(event->get_device());
+        if (axis.is_valid() && !s.host.driving_input() && std::abs(axis->get_axis_value()) >= 0.5f)
+            s.host.use_joypad(axis->get_device());
+        if (key.is_valid() && key->is_pressed() && !key->is_echo()) s.host.use_keyboard();
+        if (s.controlsMenu && s.controlsMenu->capturing()) {
+            if (key.is_valid() && key->is_pressed() && !key->is_echo()) {
+                for (std::size_t i = 0; i < menuActions.size(); ++i)
+                    if (key->is_action(menuActions[i])) s.host.consumedMenuKeys[i] = true;
+                const auto code = key->get_physical_keycode();
+                s.controlsMenu->capture_key(code == KEY_NONE ? key->get_keycode() : code);
+            } else if (button.is_valid() && button->is_pressed() && button->get_button_index() == JOY_BUTTON_B) {
+                s.controlsMenu->capture_key(KEY_ESCAPE);
+                Input::get_singleton()->action_release("hp2_menu_back");
+            } else if (const Ref<InputEventMouseButton> mouse = event; mouse.is_valid() &&
+                mouse->is_pressed() && mouse->get_button_index() == MOUSE_BUTTON_RIGHT) {
+                s.controlsMenu->capture_key(KEY_ESCAPE);
+            }
+            get_viewport()->set_input_as_handled();
+            return;
+        }
+        if (s.raceState == RC_STATE_RACE_IN_PROGRESS && !s.host.menuInput)
+            s.host.queue_keyboard_edge(*event.ptr());
         if (event->is_action_pressed("hp2_camera")) s.orbit.reset();
         if (event->is_action_pressed("hp2_pause")) s.orbit.capture(false);
         if (const Ref<InputEventMouseMotion> motion = event; motion.is_valid() &&
@@ -582,22 +764,21 @@ void RacePresentation::_input(const Ref<InputEvent>& event) {
         if (!failed_ && key.is_valid() && s.nameEditSession) {
             using Action = FrontendNameEditAction;
             constexpr std::array<std::pair<const char*, Action>,5> editActions{{
-                {"hp2_name_edit_left", Action::Left}, {"hp2_name_edit_right", Action::Right},
-                {"hp2_name_edit_backspace", Action::Backspace}, {"hp2_name_edit_delete", Action::Delete},
-                {"hp2_name_edit_commit", Action::Commit}}};
+                {"hp2_menu_left", Action::Left}, {"hp2_menu_right", Action::Right},
+                {"hp2_menu_back", Action::Backspace}, {"hp2_menu_help", Action::Delete},
+                {"hp2_menu_confirm", Action::Commit}}};
             const auto binding = std::find_if(editActions.begin(), editActions.end(),
                 [&](const auto& entry) { return key->is_action(entry.first); });
             const auto character = key->get_unicode();
             const bool typed = character >= 32 && !key->is_ctrl_pressed() &&
                 !key->is_alt_pressed() && !key->is_meta_pressed();
-            if (s.nameEditInput && (binding != editActions.end() || typed)) {
+            const bool escape = key->get_physical_keycode() == KEY_ESCAPE || key->get_keycode() == KEY_ESCAPE;
+            if (s.nameEditInput && (binding != editActions.end() || typed || escape)) {
                 if (key->is_pressed()) {
                     for (std::size_t i = 0; i < menuActions.size(); ++i)
                         if (key->is_action(menuActions[i])) s.host.consumedMenuKeys[i] = true;
-                    auto action = binding != editActions.end() ? binding->second : Action::Insert;
-                    if (action == Action::Commit && s.creatingProfile &&
-                        (key->get_physical_keycode() == KEY_ESCAPE || key->get_keycode() == KEY_ESCAPE))
-                        action = Action::Cancel;
+                    const auto action = escape ? (s.creatingProfile ? Action::Cancel : Action::Commit)
+                        : binding != editActions.end() ? binding->second : Action::Insert;
                     if ((action != Action::Commit && action != Action::Cancel) || !key->is_echo())
                         s.runtime.QueueFrontendNameEdit(s.frontendEpoch, s.nameEditSession, action, character);
                 }
@@ -616,6 +797,8 @@ void RacePresentation::frontend_pointer_input(const Ref<InputEvent>& event) {
 
 void RacePresentation::retire_scene() {
     auto& s = *session_;
+    s.host.stop_rumble();
+    s.host.portInputEdges = {};
     s.orbit.capture(false);
     s.radialBlurActive = false;
     if (!s.scene) return;
@@ -739,15 +922,20 @@ void RacePresentation::_process(double delta) {
         s.frontendEpoch = state.pointerEpoch;
         s.nameEditSession = state.nameEditSession;
         s.nameEditInput = state.nameEditInput;
+        s.host.nameEditInput = state.nameEditSession;
         s.creatingProfile = state.creatingProfile;
         s.raceState = race.sessionState;
         s.host.inRace = race.simulation != nullptr;
         s.host.demoInput = race.sessionState == RC_STATE_AI_DEMO || race.sessionState == RC_STATE_REPLAY_DEMO;
         s.host.beTheCop = race.beTheCop;
+        const auto* inputPlayers = race.simulation ? race.simulation->players : nullptr;
+        const auto* inputPlayer = inputPlayers ? inputPlayers->playersByNumber[0] : nullptr;
+        s.host.manualShifting = inputPlayer && inputPlayer->settings.gearInputMode != 0;
         s.host.menuInput = state.screen && race.sessionState != RC_STATE_RACE_IN_PROGRESS;
+        s.host.replayInput = state.pointerReplay;
         // Race information pages and pause submenus use the source LeaveScreen input.
         // Open popups use it to cancel. The root Pause Menu and replay use Start.
-        s.host.inRaceMenuBack = s.host.menuInput && !state.pointerReplay &&
+        s.host.inRaceMenuBack = s.host.menuInput && !s.host.replayInput &&
             (race.sessionState == RC_STATE_CAMERA_FLYBY || race.sessionState == RC_STATE_PRE_RACE ||
              race.sessionState == RC_STATE_POST_RACE ||
              (race.sessionState == RC_STATE_PAUSE &&
@@ -801,6 +989,11 @@ void RacePresentation::_process(double delta) {
         const auto& frame = s.bridge.stage(race);
         const auto& previous = s.bridge.current();
         const bool replayRestored = frame.replayEpoch != previous.replayEpoch;
+        if (replayRestored) s.host.stop_rumble();
+        // The source pause options can request their own vibration preview.
+        const bool vibrationPreview = race.sessionState == RC_STATE_PAUSE && s.frontendScreen == "Pause Options";
+        s.host.flush_rumble(inputPlayer && inputPlayer->settings.authoredOption != 0 &&
+            (vibrationPreview || (race.sessionState == RC_STATE_RACE_IN_PROGRESS && !s.host.replayInput)));
         if (frame.generation == previous.generation && frame.step < previous.step && !replayRestored)
             throw NotImplemented("Godot race presentation", "World rewind within a presentation generation");
         const auto& world = *race.simulation->world;
@@ -855,10 +1048,12 @@ void RacePresentation::_process(double delta) {
         const auto* terrain = movement && movement->bindings.environment ?
             movement->bindings.environment->contact.terrain : nullptr;
         const int stockView = player ? player->settings.cameraView : -1;
-        bool canOrbit = race.sessionState == RC_STATE_RACE_IN_PROGRESS && !s.host.menuInput && !cinematicActive &&
+        bool canOrbit = race.sessionState == RC_STATE_RACE_IN_PROGRESS && !s.host.menuInput &&
+            !s.host.demoInput && !s.host.replayInput && !cinematicActive &&
             !state.pointerModal && playerVisual != s.vehicles.end() && playerState->exteriorVisible &&
             playerVisual->second.model == playerState->model && playerVisual->second.skin == playerState->skin &&
-            terrain && terrain->topology && !player->lookBack && get_window()->has_focus() &&
+            terrain && terrain->topology && carFramePlayerCameraKind(player) == 1 &&
+            !player->lookBack && get_window()->has_focus() &&
             !Input::get_singleton()->is_action_pressed("hp2_pause") &&
             !Input::get_singleton()->is_action_pressed("hp2_l1");
 #ifdef HP2_MVP_IMGUI
@@ -1078,6 +1273,7 @@ Dictionary RacePresentation::telemetry() const {
     const auto frontend = session_->runtime.FrontendState();
     collect_police_diagnostics(result, session_->runtime.RaceState(), frontend);
     collect_menu_alignment_diagnostics(result, frontend);
+    if (controlSettings_) collect_controls_diagnostics(result, session_->runtime.RaceState(), frontend, controlSettings_->deviceName);
     collect_replay_diagnostics(result, session_->runtime.RaceState(), frontend);
     if (!session_->scene) return result;
     result["stock_camera_eye"] = race_vector(frame.camera.eye.data());

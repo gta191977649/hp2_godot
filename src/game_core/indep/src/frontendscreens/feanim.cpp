@@ -46,7 +46,7 @@ float BlurbElapsed(std::int32_t now,std::int32_t then)
 FlailerAnimatedBlurb::FlailerAnimatedBlurb(FlailerUiState& ui,std::uint32_t screen,
     std::uint32_t text,std::uint32_t firstAlpha,std::uint32_t secondAlpha)
     : ui_(ui),screenKey_(screen),textKey_(text),
-      slide_(ui,screen,0,text,650.0f,BlurbObjectLeft(ui,screen,text),0.25f),
+      slide_(ui,screen,0,text,650.0f,BlurbObjectLeft(ui,screen,text),0.25f,true),
       firstAlpha_(ui,screen),secondAlpha_(ui,screen),destination_(slide_.position.desiredValue)
 {
     // PAL2491B0 constructs two single-object alpha owners. The existing
@@ -59,14 +59,6 @@ FlailerAnimatedBlurb::~FlailerAnimatedBlurb()=default;
 
 void FlailerAnimatedBlurb::Animate()
 {
-    if(ui_.externalPresentation) {
-        if(!disabled_ && !textInstalled_) {
-            ui_.resources->SetLanguageID(screenKey_,textKey_,0);
-            ui_.resources->Printf(screenKey_,textKey_,"%s",text_.data());
-            textInstalled_=true;
-        }
-        return;
-    }
     // PAL249348 includes the final-only disabled gate, absent from beta.
     if (disabled_)return;
     const float fadeElapsed=BlurbElapsed(ui_.clock->realTimer,fadeStartedTicks_);
@@ -113,7 +105,6 @@ void FlailerAnimatedBlurb::NewText(const char* text)
     Require(text,"Animated blurb text is null");
     const auto length=std::strlen(text);
     Require(length<text_.size(),"Animated blurb exceeds its original 256-byte text extent");
-    if(ui_.externalPresentation)textInstalled_=false;
     if (phase_==2 || phase_==3) {
         phase_=1;
         fadeStartedTicks_=ui_.clock->realTimer;
@@ -303,8 +294,8 @@ FlailerAlphaAnimation::~FlailerAlphaAnimation()
 }
 
 FlailerAnimationGroup::FlailerAnimationGroup(FlailerUiState& state,std::uint32_t screen,
-    std::uint32_t group,std::uint32_t anchor,float initial,float desired,float duration)
-    : ui(&state),screenKey(screen),groupKey(group),anchorKey(anchor)
+    std::uint32_t group,std::uint32_t anchor,float initial,float desired,float duration,bool animateExternally)
+    : ui(&state),screenKey(screen),groupKey(group),anchorKey(anchor),animateExternally_(animateExternally)
 {
     Require(ui->resources,"Animation group has no actual Flailer resource owner");
     tCubic1DInitialize(&position);
@@ -328,7 +319,7 @@ FlailerAnimationGroup::~FlailerAnimationGroup()
 
 void FlailerAnimationGroup::SetupToAnimate(float initial,float desired)
 {
-    if(ui->externalPresentation) {
+    if(ui->externalPresentation && !animateExternally_) {
         position.value=position.desiredValue=desired;
         position.mode=0;
         return;
@@ -348,7 +339,7 @@ void FlailerAnimationGroup::SetupToAnimate(float initial,float desired)
 
 void FlailerAnimationGroup::Animate()
 {
-    if(ui->externalPresentation)return;
+    if(ui->externalPresentation && !animateExternally_)return;
     Require(ui->clock,"Animation group has no live real-time clock");
     tCubic1DUpdate(&position,ui->clock->realTimeElapsed,0.0f,0.0f);
     const auto x=convertFloatToInt32(position.value);
@@ -616,6 +607,69 @@ void FlailerLeftRightArrowScroll::HandleEvent(ScreenMessage message,ScreenCallba
 }
 
 namespace hp2 {
+FlailerListViewport::FlailerListViewport(FlailerResources& resources,FlailerScreenResource& screen,
+    const FlailerBitmapChunk& model,float left,float top,float width,float height,
+    float pitch,std::size_t visibleRows)
+    :screen_(screen),clip_(model),pitch_(pitch),visibleRows_(visibleRows)
+{
+    clip_.key=hashString("HP2_LIST_VIEWPORT");
+    clip_.strip=nullptr;clip_.visible=0;clip_.parentKey=0;clip_.clipObjectKey=0;
+    clip_.SetTopLeftX(left);clip_.SetTopLeftY(top);
+    clip_.SetWidth(resources,width);clip_.SetHeight(resources,height);
+    auto& root=screen_.objects;
+    clip_.previous=root.previous;clip_.next=&root;
+    clip_.previous->next=&clip_;root.previous=&clip_;
+    Reset();
+}
+
+FlailerListViewport::~FlailerListViewport()
+{
+    for(auto& text:texts_) {
+        text.DeleteFlailerStrip();
+        text.previous->next=text.next;text.next->previous=text.previous;
+        --screen_.textCount;
+    }
+    clip_.previous->next=clip_.next;clip_.next->previous=clip_.previous;
+}
+
+void FlailerListViewport::Reset(std::size_t top)
+{
+    top_=top;scroll_={};scroll_.duration=0.24f;scroll_.threshold=1.0f;
+    scroll_.value=scroll_.desiredValue=static_cast<float>(top_)*pitch_;
+}
+
+bool FlailerListViewport::Reveal(std::size_t row)
+{
+    const auto top=row<top_?row:row-top_>=visibleRows_?row-visibleRows_+1:top_;
+    if(top==top_)return false;
+    top_=top;
+    scroll_.desiredValue=static_cast<float>(top_)*pitch_;
+    // Continue from the current pose and limit velocity when input reverses.
+    const auto limit=(scroll_.desiredValue-scroll_.value)*2.0f/scroll_.duration;
+    scroll_.derivative=std::clamp(scroll_.derivative,std::min(0.0f,limit),std::max(0.0f,limit));
+    scroll_.mode=2;
+    return true;
+}
+
+bool FlailerListViewport::Tick(float elapsed)
+{
+    if(!Moving() || elapsed<=0.0f)return false;
+    tCubic1DUpdate(&scroll_,elapsed,0.0f,0.0f);
+    return true;
+}
+
+FlailerTextChunk& FlailerListViewport::CloneText(const FlailerTextChunk& model,std::uint32_t key)
+{
+    auto& text=texts_.emplace_back(model);
+    text.key=key;text.strip=nullptr;text.parentKey=0;text.languageId=0;
+    text.textCapacity=256;text.ownedText.assign(257,0);text.text=text.ownedText.data();
+    Clip(text);
+    auto& root=screen_.objects;
+    text.previous=root.previous;text.next=&root;
+    text.previous->next=&text;root.previous=&text;++screen_.textCount;
+    return text;
+}
+
 struct FlailerScrollingMenuList::Storage {
     struct Element {
         FlailerObjectChunk& object;

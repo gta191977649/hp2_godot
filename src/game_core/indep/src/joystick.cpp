@@ -82,6 +82,7 @@ void gameInputRouterInitialize(GameInputRouter* router,GameInputRegistration* st
     router->queuedEventCount=0;router->generatingEvents=0;
     for (int32_t port=0;port<2;++port) {
         auto& scanner=router->scanners[port];
+        scanner.portConfiguration=0;
         scanner.currentType=-1;scanner.pendingType=-1;scanner.stableSamples=0;
         for (auto& axis:scanner.calibration) {
             axis.keys[0]={0.0f,0.0f};axis.keys[1]={128.0f,128.0f};
@@ -652,8 +653,9 @@ namespace {
 void ConnectScanner(GameInputRouter& router,GameInputRegistration& node)
 {
     const auto port=ScannerPort(node);
-    const auto* configuration=FindScannerConfig(node.event,
-        router.scanners[port].currentType,router.userConfigurations[port]);
+    const auto& scanner=router.scanners[port];
+    const auto requested=scanner.portConfiguration?scanner.portConfiguration:router.userConfigurations[port];
+    const auto* configuration=FindScannerConfig(node.event,scanner.currentType,requested);
     node.scannerConfiguration=configuration?static_cast<int32_t>(configuration-buttonMappings):-1;
     node.scannerValue=0;node.scannerInitial=1;
 }
@@ -972,20 +974,56 @@ int GenerateFromScanners(GameInputRouter& input,int32_t port,int32_t type,
         if (type!=scanner.pendingType) {scanner.pendingType=type;scanner.stableSamples=0;return 0;}
         if (++scanner.stableSamples<32)return 0;
         scanner.currentType=type;
+        scanner.portConfiguration=current->portConfiguration;
         for (int axis=0;axis<4;++axis)ChooseResponse(scanner.calibration[axis],type,axis);
         for (size_t i=0;i<input.count;++i)if (ScannerPort(input.registrations[i])==port)ConnectScanner(input,input.registrations[i]);
     }
     int generated=0;
-    for (size_t i=0;i<input.count;++i) {
-        auto& node=input.registrations[i];
-        if (ScannerPort(node)!=port || node.scannerConfiguration<0)continue;
+    const auto scan=[&](GameInputRegistration& node,const JoystickControls* sample,const JoystickControls* before,
+        const JoystickControls* tools,const JoystickControls* oldTools) {
+        if (node.scannerConfiguration<0)return;
         const auto& config=buttonMappings[node.scannerConfiguration];
-        if (replay && replay->restoring && !config.fields[6])continue;
-        const bool debug=applicationDebugToolsEnabled && NativeDebugTarget(node) && debugCurrent && debugPrevious;
-        if (const auto event=ScanEvent(node,scanner,config,debug?debugCurrent:current,debug?debugPrevious:previous,videoBlank)) {
+        if (replay && replay->restoring && !config.fields[6])return;
+        const bool debug=applicationDebugToolsEnabled && NativeDebugTarget(node) && tools && oldTools;
+        if (const auto event=ScanEvent(node,scanner,config,debug?tools:sample,debug?oldTools:before,videoBlank)) {
             AddQueuedEvent(input,node.device,event,node);++generated;
             if(debug && node.target.kind==GAME_INPUT_PLAYER_CAMERA)
                 input.nativeDebug.predictedCameraKind=NextNativeDebugCamera(*node.target.owner.player,input.nativeDebug.predictedCameraKind);
+        }
+    };
+    // A host-device switch is a layout change on the same logical PS2 port.
+    // Release bindings that change. Shared bindings retain their edge state
+    // so that a Start press cannot become a new pause or resume press.
+    const bool layoutChanged=scanner.portConfiguration!=current->portConfiguration;
+    const auto savedLayout=input.userConfigurations[port];
+    const auto oldLayout=scanner.portConfiguration?scanner.portConfiguration:savedLayout;
+    const auto nextLayout=current->portConfiguration?current->portConfiguration:savedLayout;
+    const auto rebind=[&](const GameInputRegistration& node) {
+        return layoutChanged && FindScannerConfig(node.event,type,oldLayout)!=FindScannerConfig(node.event,type,nextLayout);
+    };
+    JoystickControls neutral{};
+    if (layoutChanged) {
+        NeutralNativeControls(neutral,*current);
+        for (size_t i=0;i<input.count;++i) {
+            auto& node=input.registrations[i];
+            if (ScannerPort(node)==port && rebind(node))
+                scan(node,&neutral,previous,debugCurrent?&neutral:nullptr,debugPrevious);
+        }
+        scanner.portConfiguration=current->portConfiguration;
+    }
+    for (size_t i=0;i<input.count;++i) {
+        auto& node=input.registrations[i];
+        if (ScannerPort(node)!=port)continue;
+        if (rebind(node)) {
+            ConnectScanner(input,node);
+            node.scannerPhase=0;
+            if (node.scannerConfiguration>=0) {
+                const auto kind=buttonMappings[node.scannerConfiguration].scanner;
+                if (kind==ScannerKind::DigitalDown || kind==ScannerKind::AnyButton)node.scannerInitial=0;
+            }
+            scan(node,current,&neutral,debugCurrent,debugPrevious?&neutral:nullptr);
+        } else {
+            scan(node,current,previous,debugCurrent,debugPrevious);
         }
     }
     return generated;
@@ -1015,7 +1053,8 @@ uint8_t joystickGetDeadzone(const GameInputRouter* input,int32_t port,int32_t ax
 }
 
 GameInputResult joystickGenerateEvents(GameInputRouter& input,JoystickSystem& samples,
-    ReplayIntegerLog& log,ReplayManager* replay,const GameTime& clock,DemoDiscManager& demo)
+    ReplayIntegerLog& log,ReplayManager* replay,const GameTime& clock,DemoDiscManager& demo,
+    PortInputEdges portEdges)
 {
     hp2::Require(!input.generatingEvents && !input.dispatching,"Recursive joystick generation is not a source operation");
     hp2::Require(log.clock==&clock,"Joystick and Joylog must borrow the same actual game clock");
@@ -1046,6 +1085,10 @@ GameInputResult joystickGenerateEvents(GameInputRouter& input,JoystickSystem& sa
             }
             joystickAdvanceFrame(&samples);
         }
+        // Reuse the registered targets and pack the same pressed event used
+        // by the scanner so keyboard edges follow Joylog and replay rules.
+        for (const auto event:portEdges)
+            if(event)AddLoggedEvent(input,static_cast<uint32_t>(event)|0x100u);
         const auto count=input.queuedEventCount;
         replayIntegerLogWrite(&log,count,8,1);
         for (uint32_t i=0;i<count;++i)replayIntegerLogWrite(&log,LoggedEvent(input.queuedEvents[i]),19,1);

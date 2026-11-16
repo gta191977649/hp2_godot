@@ -149,6 +149,7 @@ func _launch(assets: String, track_id: int,
     race.name = &"RacePresentation"
     race.call(&"set_graphics_menu_settings", graphics.menu_settings)
     race.call(&"set_subtitle_setting", _subtitle_setting)
+    race.call(&"set_controls_settings", _controls_settings)
     add_child(race)
     var reason: String = race.call(&"start_game", assets, profile_directory,
         track_id, event_tree, event_number, native_debug, isolated)
@@ -156,6 +157,22 @@ func _launch(assets: String, track_id: int,
         remove_child(race)
         race.free()
     return reason
+
+func _controls_settings(next: Variant = null) -> Variant:
+    const section := "controls"
+    const key := "overrides"
+    var previous: Variant = launch_config.get_value(section, key, {})
+    if next == null:
+        return previous if previous is Dictionary else {}
+    var existed := launch_config.has_section_key(section, key)
+    launch_config.set_value(section, key, next)
+    if _save_launcher_config() == OK:
+        return true
+    if existed:
+        launch_config.set_value(section, key, previous)
+    else:
+        launch_config.erase_section_key(section, key)
+    return false
 
 func _subtitle_setting(action: int) -> bool:
     const section := "accessibility"

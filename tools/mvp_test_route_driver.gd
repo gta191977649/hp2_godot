@@ -53,7 +53,7 @@ func _at(distance: float) -> Vector2:
     return _point(left).lerp(_point(right),fraction)
 
 func _buttons(w: bool,s: bool,a: bool,d: bool) -> void:
-    var states := {KEY_W:w,KEY_S:s,KEY_A:a,KEY_D:d}
+    var states := {KEY_UP:w,KEY_DOWN:s,KEY_LEFT:a,KEY_RIGHT:d}
     for key in states:
         if states[key] != held.get(key,false):
             held[key] = states[key]

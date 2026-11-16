@@ -156,8 +156,12 @@ road texture so it shares the marker projection in tilted modes.
 Godot fits the authored 640×480 menu and HUD canvas uniformly inside the
 live viewport. It tiles the authored grid at the same scale beyond the
 canvas. Title movies use the active Flailer bitmap's display rectangle.
-Menu panel videos fit at 4:3. The race camera retains vertical framing
-and renders the scene across the full viewport.
+Menu backdrop videos fill their authored Flailer panels with a centered 4:3
+crop clipped to the panel. The race camera retains vertical framing and renders
+the scene across the full viewport.
+Scrollable frontend rows use the Flailer clock and cubic motion. The port's
+keyboard, jukebox and profile lists keep each row's identity while its clipped
+geometry moves, so selection and pointer hits follow the correct item.
 Frontend 3D previews render at the fitted canvas's pixel dimensions
 and composite into their authored 4:3 rectangle. Clipped grid fragments
 retain their original geometry.

@@ -10,6 +10,7 @@ var resize_failed := false
 var loading_captured := false
 var mouse_pause := false
 var check_pause_bindings := false
+var video_only := OS.get_environment("HP2_MVP_VIDEO_RESIZE_ONLY") == "1"
 
 func _initialize() -> void:
     direct = not OS.get_cmdline_user_args().is_empty()
@@ -24,6 +25,13 @@ func _process(delta: float) -> bool:
         return true
     if resize_pending:
         return false
+    if video_only and tested_screens.has("main-menu"):
+        for required in ["ea-logo-video", "intro-video"]:
+            if not tested_screens.has(required):
+                return _fail("missing_resize_" + required)
+        print("HP2_MVP_RESIZE_PASS frontend videos ", SIZES)
+        quit(0)
+        return true
     if not direct:
         if is_instance_valid(race):
             var state: Dictionary = race.call("telemetry")
@@ -98,11 +106,11 @@ func _process(delta: float) -> bool:
     var screen: String = sample.get("screen", "")
     if stage == 0 and sample.get("race_state") == 3 and sample.get("step", 0) > 20:
         stage = 1
-        _key(KEY_W, true)
+        _key(KEY_UP, true)
         _resize_sweep("direct-hud")
     elif stage == 1 and sample.get("speed", 0) > 12.0:
         stage = 2
-        _key(KEY_W, false)
+        _key(KEY_UP, false)
         if check_pause_bindings:
             stage = 41
             _verify_pause_bindings()
@@ -272,7 +280,8 @@ func _resize_sweep(name: String, maximize := false) -> bool:
     var video: VideoStreamPlayer
     if name in ["ea-logo-video", "intro-video", "main-menu"]:
         video = _find_video(root)
-    var original_video_rect := Rect2(video.position, video.size) if video else Rect2()
+    var panel := video.get_parent() as Control if video else null
+    var original_panel_rect := panel.get_rect() if panel else Rect2()
     var original_video_position := video.stream_position if video else 0.0
     var canvas := race.get_node_or_null("FrontendCanvas") as Node2D
     if canvas == null:
@@ -334,13 +343,20 @@ func _resize_sweep(name: String, maximize := false) -> bool:
                     return _resize_error("preview_car_environment")
             print("HP2_MVP_PREVIEW screen=", name, " window=", wanted, " render_target=", preview.size)
         if name in ["ea-logo-video", "intro-video", "main-menu"]:
-            if not video or not video.visible or not Rect2(video.position, video.size).is_equal_approx(original_video_rect):
+            if not video or not video.visible or not panel or not panel.clip_contents:
                 return _resize_error("video_alignment_" + name)
+            if not panel.get_rect().is_equal_approx(original_panel_rect):
+                return _resize_error("video_alignment_" + name)
+            if not video.get_global_rect().grow(1.0).encloses(panel.get_global_rect()):
+                return _resize_error("video_cover_" + name)
+            if not is_equal_approx(video.size.aspect(), 4.0 / 3.0):
+                return _resize_error("video_aspect_" + name)
+            if name == "main-menu":
+                if panel.get_global_rect().encloses(root.get_visible_rect().grow(-1.0)):
+                    return _resize_error("menu_video_panel")
             if name == "intro-video":
-                if absf(video.size.x - 640.0) > 2.0 or not is_equal_approx(video.size.y, 304.0) or not is_equal_approx(video.position.y, 65.0):
-                    return _resize_error("intro_authored_rect_%s_%s" % [video.position, video.size])
-            elif not is_equal_approx(video.size.aspect(), 4.0 / 3.0):
-                return _resize_error("video_aspect")
+                if absf(panel.size.x - 640.0) > 2.0 or not is_equal_approx(panel.size.y, 304.0) or not is_equal_approx(panel.position.y, 65.0):
+                    return _resize_error("intro_authored_rect_%s" % panel.get_rect())
         if image.save_png(screenshot_dir.path_join("%s-%dx%d.png" % [name, wanted.x, wanted.y])) != OK:
             return _resize_error("screenshot_" + name)
     if maximize:

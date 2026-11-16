@@ -89,8 +89,8 @@ struct CanvasLayout {
         return {(designSize - visible) * 0.5f, visible};
     }
 
-    static Rect2 fit_movie(Rect2 bounds) {
-        const float width = std::min(bounds.size.x, bounds.size.y * videoAspect);
+    static Rect2 cover_movie(Rect2 bounds) {
+        const float width = std::max(bounds.size.x, bounds.size.y * videoAspect);
         const Vector2 size(width, width / videoAspect);
         return {bounds.position + (bounds.size - size) * 0.5f, size};
     }
@@ -119,7 +119,8 @@ Ref<Image> rgba_image(const std::uint8_t* source, int width, int height) {
 
 struct FrontendPresentation::Storage {
     Storage(Node2D& node, const GameResources& files, ApplicationRuntime& runtime, RacePresentation& host)
-        : canvas(node), background(*memnew(Node2D)), videoMatte(*memnew(Node2D)), overlay(*memnew(Node2D)),
+        : canvas(node), background(*memnew(Node2D)), videoMatte(*memnew(Node2D)), videoPanel(*memnew(Control)),
+          overlay(*memnew(Node2D)),
           mapBackground(*memnew(Node2D)), mapTexture(*memnew(Node2D)),
           mapForeground(*memnew(Node2D)), player(*memnew(VideoStreamPlayer)), video(player, files),
           pointerRuntime(runtime), pointerSurface(*memnew(Control)) {
@@ -137,7 +138,11 @@ struct FrontendPresentation::Storage {
         material.instantiate();
         material->set_shader(shader);
         mapTexture.set_material(material);
-        canvas.add_child(&player);
+        canvas.add_child(&videoPanel);
+        videoPanel.set_name("FrontendVideoPanel");
+        videoPanel.set_clip_contents(true);
+        videoPanel.set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
+        videoPanel.add_child(&player);
         player.set_expand(true);
         player.set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
         player.hide();
@@ -152,6 +157,7 @@ struct FrontendPresentation::Storage {
     Node2D& canvas;
     Node2D& background;
     Node2D& videoMatte;
+    Control& videoPanel;
     Node2D& overlay;
     Node2D& mapBackground;
     Node2D& mapTexture;
@@ -741,13 +747,14 @@ struct FrontendPresentation::Storage {
             const Rect2 panel(position, Vector2(quad[2].position[0], quad[2].position[1]) - position);
             if (!panel.has_area()) return;
             const bool title = strip.sourceScreen == titleScreen;
-            const auto rect = title ? panel : layout.fit_movie(panel);
+            const auto rect = layout.cover_movie(Rect2({}, panel.size));
             RenderingServer::get_singleton()->canvas_item_add_rect(videoMatte.get_canvas_item(),
-                title ? layout.visible_rect() : panel,
-                Color(0, 0, 0));
+                title ? layout.visible_rect() : panel, Color(0, 0, 0));
+            videoPanel.set_position(panel.position);
+            videoPanel.set_size(panel.size);
+            videoPanel.set_z_index(title ? 31 : 2);
             player.set_position(rect.position);
             player.set_size(rect.size);
-            player.set_z_index(title ? 31 : 1);
             player.show();
             return;
         }
@@ -768,7 +775,7 @@ struct FrontendPresentation::Storage {
         // and speckles across the car. Tile only a full-canvas grid.
         if (strip.sourceObject == gridObject && std::all_of(strip.polygons.begin(), strip.polygons.end(), spans_canvas)) {
             for (const auto& polygon : strip.polygons)
-                if (visible(polygon)) draw_grid(target, polygon, texture);
+                if (visible(polygon)) draw_grid(video.playing() ? background : target, polygon, texture);
             return;
         }
         PackedVector2Array points, uv;

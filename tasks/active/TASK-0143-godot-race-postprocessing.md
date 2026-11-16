@@ -152,8 +152,8 @@ Capture: `local/task0137-visual/blur-post-profile/capture.jsonl`.
 
 Reproduce the pixel and Nitro probes with the existing postprocessing
 command above. For Nitro set `HP2_MVP_TEST_NITRO=1`,
-`HP2_MVP_TEST_POST_FPS=60` or `120`, and add `racer_nitro=1` to the
-isolated profile's `NFSHP2_pc.ini`.
+`HP2_MVP_TEST_POST_FPS=60` or `120`, and run the script with
+`-- --race-event=ultimate-racer:5`.
 
 ## Viewport shutdown texture lifetime
 

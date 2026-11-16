@@ -11,8 +11,10 @@ var race: Node
 var started := false
 var deadline := Time.get_ticks_msec() + 45000
 var requested_focus := false
+var input_only := OS.get_environment("HP2_MVP_TEST_ORBIT_INPUT") == "1"
 
 func _initialize() -> void:
+    OS.set_environment("HP2_MVP_TEST_CONTROLS", "1")
     change_scene_to_file.call_deferred("res://native_game.tscn")
 
 func _process(_delta: float) -> bool:
@@ -27,7 +29,7 @@ func _process(_delta: float) -> bool:
     if not root.has_focus() and not requested_focus:
         requested_focus = true
         root.grab_focus()
-    if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+    if root.has_focus():
         started = true
         root.add_child.call_deferred(MouseFilter.new())
         run.call_deferred()
@@ -38,7 +40,19 @@ func move_mouse(relative: Vector2) -> void:
     event.device = TEST_MOUSE
     event.relative = relative
     event.screen_relative = relative
+    root.push_input(event, true)
+
+func set_key(code: Key, pressed: bool) -> void:
+    var event := InputEventKey.new()
+    event.physical_keycode = code
+    event.pressed = pressed
     Input.parse_input_event(event)
+
+func tap_key(code: Key) -> void:
+    set_key(code, true)
+    await create_timer(0.07).timeout
+    set_key(code, false)
+    await process_frame
 
 func check(condition: bool, detail: String) -> bool:
     if not condition:
@@ -60,6 +74,22 @@ func run() -> void:
     if not check(is_instance_valid(body), "Player body mesh is missing"):
         return
     if not check(race.telemetry().orbit_terrain_queries == 0, "Idle camera queried terrain"):
+        return
+    await tap_key(KEY_S)
+    await tap_key(KEY_W)
+    if not check(not race.telemetry().orbit_active, "An obsolete keyboard shortcut started mouse orbit"):
+        return
+    var hud: int = race.telemetry().controls_hud_profile
+    await tap_key(KEY_TAB)
+    if not check(race.telemetry().controls_hud_profile != hud, "Tab failed to cycle the native HUD"):
+        return
+    set_key(KEY_SPACE, true)
+    await create_timer(0.1).timeout
+    if not check(race.telemetry().controls_handbrake > 0.9, "Space failed to apply the native handbrake"):
+        return
+    set_key(KEY_SPACE, false)
+    if input_only:
+        await check_input_orbit(camera)
         return
     move_mouse(Vector2(0, -1600))
     await process_frame
@@ -143,6 +173,8 @@ func run() -> void:
         return
     move_mouse(Vector2(90, 0))
     await process_frame
+    if not check(race.telemetry().orbit_active, "Mouse movement did not re-engage orbit after it returned"):
+        return
     var event := InputEventAction.new()
     event.action = &"hp2_camera"
     event.pressed = true
@@ -152,12 +184,56 @@ func run() -> void:
         return
     event.pressed = false
     Input.parse_input_event(event)
-    event = InputEventAction.new()
+    if await check_zone_cameras_and_pause():
+        print("ORBIT_CAMERA_PASS track=", race.telemetry().track, " quadrants=", angles.size())
+        quit(0)
+
+func check_input_orbit(camera: Camera3D) -> void:
+    move_mouse(Vector2(90, -30))
+    await create_timer(0.4).timeout
+    var sample: Dictionary = race.telemetry()
+    if not check(sample.orbit_active and camera.global_position.distance_to(sample.stock_camera_eye) > 0.1,
+        "Mouse movement failed to engage orbit without a button or key"):
+        return
+    await create_timer(1.25).timeout
+    move_mouse(Vector2(55, 0))
+    await create_timer(0.25).timeout
+    if not check(race.telemetry().orbit_active, "Mouse movement failed to interrupt the idle return"):
+        return
+    var until := Time.get_ticks_msec() + 3000
+    while race.telemetry().orbit_active and Time.get_ticks_msec() < until:
+        await process_frame
+    sample = race.telemetry()
+    if not check(not sample.orbit_active and sample.orbit_terrain_queries == 0 and
+        camera.global_position.distance_to(sample.stock_camera_eye) < 0.001,
+        "Idle mouse orbit did not return to the selected driving camera"):
+        return
+    print("MOUSE_ORBIT_INPUT_PASS track=", sample.track)
+    if await check_zone_cameras_and_pause():
+        print("ORBIT_CAMERA_PASS track=", sample.track, " input_only=true")
+        quit(0)
+
+func check_zone_cameras_and_pause() -> bool:
+    await tap_key(KEY_E)
+    if not check(race.telemetry().get("controls_camera_state") == 1 and not race.telemetry().orbit_active,
+        "E failed to start native Zone Freeze: %s" % race.telemetry().get("controls_camera_kind")):
+        return false
+    var zone_end := Time.get_ticks_msec() + 9000
+    while race.telemetry().get("controls_camera_state") == 1 and Time.get_ticks_msec() < zone_end:
+        await process_frame
+    if not check(race.telemetry().get("controls_camera_kind") == 1, "Zone Freeze failed to return to the driving view"):
+        return false
+    await create_timer(0.3).timeout
+    await tap_key(KEY_Q)
+    if not check(race.telemetry().get("controls_camera_state") == 2 and not race.telemetry().orbit_active,
+        "Q failed to start native Zone Zoom: %s" % race.telemetry().get("controls_camera_kind")):
+        return false
+    zone_end = Time.get_ticks_msec() + 9000
+    while race.telemetry().get("controls_camera_state") == 2 and Time.get_ticks_msec() < zone_end:
+        await process_frame
+    var event := InputEventAction.new()
     event.action = &"hp2_pause"
     event.pressed = true
     Input.parse_input_event(event)
     await process_frame
-    if not check(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE, "Pause failed to release the cursor"):
-        return
-    print("ORBIT_CAMERA_PASS track=", race.telemetry().track, " quadrants=", angles.size())
-    quit(0)
+    return check(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE, "Pause failed to release the cursor")

@@ -293,6 +293,9 @@ saves/
 !/tools/test_mvp_orbit_camera.gd
 !/tools/test_mvp_results_navigation.gd
 !/tools/test_mvp_menu_navigation.gd
+!/tools/test_mvp_controller_menus.gd
+!/tools/test_mvp_controls_settings.gd
+!/tools/test_mvp_control_layout_race.gd
 !/tools/test_mvp_graphic_menu.gd
 !/tools/test_mvp_campaign_matrix.ps1
 !/tools/test_mvp_campaign_drive.gd

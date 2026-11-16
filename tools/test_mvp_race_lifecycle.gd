@@ -24,8 +24,12 @@ var check_reflections := OS.get_environment("HP2_MVP_CHECK_REFLECTION_LIFECYCLE"
 var mode_screen := ""
 var picker_direction := 0
 var campaign_moves := 0
+var check_shortcuts := OS.get_environment("HP2_MVP_TEST_RACE_SHORTCUTS") == "1"
+var checking_shortcuts := false
 
 func _initialize() -> void:
+    if check_shortcuts:
+        OS.set_environment("HP2_MVP_TEST_CONTROLS", "1")
     direct = not OS.get_cmdline_user_args().is_empty()
     check_replay = OS.get_environment("HP2_MVP_CHECK_REPLAY") == "1"
     if direct:
@@ -77,6 +81,11 @@ func _process(delta: float) -> bool:
     match race_phase:
         0:
             if active:
+                if check_shortcuts:
+                    if not checking_shortcuts:
+                        checking_shortcuts = true
+                        _check_race_shortcuts.call_deferred(sample.controls_camera_view)
+                    return false
                 original_scene = race.race_scene()
                 if sample.get("track") != expected_track or not original_scene or \
                         sample.get("placements", 0) <= 0 or sample.get("vehicles", 0) <= 0 or \
@@ -96,13 +105,13 @@ func _process(delta: float) -> bool:
                         return _fail("reflection_and_rear_view_worlds")
                 first_generation = sample["generation"]
                 start_position = sample["position"]
-                _key(KEY_W, true)
+                _key(KEY_UP, true)
                 race_phase = 1
         1:
             var drove: bool = sample.get("speed", 0) >= 12.0 and start_position.distance_to(sample["position"]) >= 10.0
             var replay_start_step := 660 if check_mouse_replay else 360
             if active and ((check_replay and sample.get("step", 0) >= replay_start_step) or (not check_replay and drove)):
-                _key(KEY_W, false)
+                _key(KEY_UP, false)
                 _send(KEY_ESCAPE)
                 race_phase = 2
         2:
@@ -312,7 +321,7 @@ func _replay_mouse_smoke() -> void:
         return s["replay_slow"] and not s["replay_paused"]):
         _fail("replay_seek_lost_slow_motion")
         return
-    await _tap(KEY_W)
+    await _tap(KEY_ENTER)
     if not await _replay_wait("replay_keyboard_pause", func(s: Dictionary) -> bool: return s["replay_paused"]):
         return
     _replay_click(play)
@@ -456,6 +465,25 @@ func _challenge_setup() -> bool:
         stage = 8
         return true
     return false
+
+func _check_race_shortcuts(camera_view: int) -> void:
+    await _tap(KEY_SHIFT)
+    var state: Dictionary = race.telemetry()
+    if state.controls_camera_view != camera_view or state.controls_nitro_active or state.controls_handbrake > 0.1:
+        _fail("regular_race_shift_activated_another_action")
+        return
+    if state.controls_automatic:
+        for key in [KEY_A, KEY_Z]:
+            await _tap(key)
+            if race.telemetry().controls_camera_state != 0:
+                _fail("automatic_shift_requested_zone_camera")
+                return
+    await _tap(KEY_C)
+    if race.telemetry().controls_camera_view == camera_view:
+        _fail("c_did_not_change_the_regular_race_camera")
+        return
+    print("HP2_REGULAR_RACE_SHORTCUTS_PASS")
+    check_shortcuts = false
 
 func _send(key: Key) -> void:
     _tap(key)
